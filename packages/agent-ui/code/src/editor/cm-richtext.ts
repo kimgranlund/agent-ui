@@ -1,7 +1,9 @@
-// cm-richtext.ts — the richtext live-preview DECORATION ENGINE (ADR-0147). A pure VIEW transform over the
-// SAME EditorView/document cm-editor.ts already builds: styles the v1 markdown constructs (headings/strong/
-// emphasis/inline-code/links/bullets/blockquote) and HIDES their raw markup — except on the line(s) the
-// selection touches (reveal-near-cursor, Obsidian-style). There is no second DOM tree and no serializer: the
+// cm-richtext.ts — the richtext live-preview DECORATION ENGINE (ADR-0147, as amended 2026-07-20 for GH
+// #165). A pure VIEW transform over the SAME EditorView/document cm-editor.ts already builds: styles the v1
+// markdown constructs (headings/strong/emphasis/inline-code/links/bullets/blockquote) and HIDES their raw
+// markup — except on the line(s) the selection touches, where the construct renders as RAW SOURCE ONLY
+// (marks visible, styling suppressed — the strict either/or of the ADR-0147 GH #165 amendment; the original
+// cl.3 kept styling on the revealed line). There is no second DOM tree and no serializer: the
 // decorations are computed fresh from `syntaxTree()` (the same parse `cm-editor.ts`'s `highlightStyle` already
 // rides) on every doc/viewport/selection change, viewport-bounded via `view.visibleRanges` (the per-keystroke
 // cost stays O(visible), ADR-0147's Consequences bullet).
@@ -47,7 +49,8 @@ interface Entry {
 
 /**
  * Build the full decoration set for the CURRENT state — viewport-bounded (walks only `view.visibleRanges`),
- * reveal-aware (suppresses HIDE decorations on the selection's line(s), keeps styling everywhere).
+ * reveal-aware: a construct touching the selection's line(s) emits NEITHER its hide NOR its styling
+ * decorations — raw source only (the GH #165 either/or; ADR-0147 cl.3 as amended 2026-07-20).
  */
 function buildDecorations(view: EditorView): DecorationSet {
   const state = view.state
@@ -72,8 +75,15 @@ function buildDecorations(view: EditorView): DecorationSet {
   const style = (from: number, to: number, deco: Decoration): void => {
     entries.push({ from, to, deco })
   }
-  // A HIDE decoration is suppressed entirely when it sits on a revealed line — the raw markup then simply
-  // renders as ordinary (unhidden) source text, with its styling decoration still applied (cl.3).
+  // THE EITHER/OR LAW (GH #165 — Kim's 2026-07-20 ruling, recorded as ADR-0147's Amendment, reversing the
+  // original cl.3 styling-retention): a construct touching a revealed line renders as RAW SOURCE ONLY —
+  // its STYLING decoration is suppressed together with its HIDE decorations, decided by ONE
+  // `touchesRevealedLine` check over the construct's own extent at the top of each branch below. Richtext
+  // elsewhere is "styled, no marks"; a revealed line is "marks, no styling" — never both at once.
+  //
+  // A HIDE decoration is ALSO suppressed by its own range check when it sits on a revealed line — for the
+  // current callers this is redundant with the construct-level guard (every mark lies inside its construct's
+  // extent), kept as the defense-in-depth backstop for any future branch that forgets its guard.
   const hide = (from: number, to: number): void => {
     if (to <= from) return
     if (touchesRevealedLine(from, to)) return
@@ -95,6 +105,7 @@ function buildDecorations(view: EditorView): DecorationSet {
 
         const level = HEADING_LEVEL[name]
         if (level !== undefined) {
+          if (touchesRevealedLine(ref.from, ref.to)) return // revealed ⇒ raw source only (GH #165)
           const line = doc.lineAt(ref.from)
           style(line.from, line.from, Decoration.line({ class: `rt-heading rt-h${level}` }))
           const mark = ref.node.getChild('HeaderMark')
@@ -103,18 +114,21 @@ function buildDecorations(view: EditorView): DecorationSet {
         }
 
         if (name === 'StrongEmphasis' || name === 'Emphasis') {
+          if (touchesRevealedLine(ref.from, ref.to)) return // revealed ⇒ raw source only (GH #165)
           style(ref.from, ref.to, Decoration.mark({ class: name === 'StrongEmphasis' ? 'rt-strong' : 'rt-emphasis' }))
           for (const mark of ref.node.getChildren('EmphasisMark')) hide(mark.from, mark.to)
           return
         }
 
         if (name === 'InlineCode') {
+          if (touchesRevealedLine(ref.from, ref.to)) return // revealed ⇒ raw source only (GH #165)
           style(ref.from, ref.to, Decoration.mark({ class: 'rt-code' }))
           for (const mark of ref.node.getChildren('CodeMark')) hide(mark.from, mark.to)
           return
         }
 
         if (name === 'Link') {
+          if (touchesRevealedLine(ref.from, ref.to)) return // revealed ⇒ raw source only (GH #165)
           const marks = ref.node.getChildren('LinkMark') // [ '[', ']', '(', ')' ] in document order
           const open = marks[0]
           const close = marks[1]
@@ -133,6 +147,11 @@ function buildDecorations(view: EditorView): DecorationSet {
           // lists ("1."/"2)"...) — ADR-0147 cl.4 names UNORDERED-list bullets only; an ordered marker must
           // render as source (the ADR's own "everything unnamed renders as source" rule). Guard on the
           // mark's own TEXT rather than the parent node name — robust regardless of nesting depth.
+          //
+          // The reveal check stays on the MARK's own line (not the ListItem's multi-line extent — a cursor
+          // on a wrapped child line must not un-bullet the parent). The bullet was already GH-#165-conform
+          // by construction: the widget IS both the styling and the hide in one replace decoration, so
+          // suppressing it yields exactly "marks, no styling" on the revealed line.
           const isBulletMark = mark && /^[-*+]$/.test(doc.sliceString(mark.from, mark.to))
           if (mark && isBulletMark && !touchesRevealedLine(mark.from, mark.to)) {
             style(mark.from, mark.to, Decoration.replace({ widget: new BulletWidget() }))
@@ -141,6 +160,7 @@ function buildDecorations(view: EditorView): DecorationSet {
         }
 
         if (name === 'QuoteMark') {
+          if (touchesRevealedLine(ref.from, ref.to)) return // revealed ⇒ raw source only (GH #165)
           const line = doc.lineAt(ref.from)
           style(line.from, line.from, Decoration.line({ class: 'rt-quote-line' }))
           hideMarkAndSpace(ref.from, ref.to)

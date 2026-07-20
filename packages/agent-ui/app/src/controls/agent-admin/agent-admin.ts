@@ -1,17 +1,18 @@
 // agent-admin.ts — UIAgentAdminElement, the Agent Admin UI (TKT-0039, ADR-0131/ADR-0132): a live-editable
 // agent config + instructions with a working chat preview, composing the shipped M2 (`ui-conversation`)
-// and M4 (`ui-split`, `ui-settings`) primitives PLUS the generic ordered-entry-list primitive
-// (`entries.ts`/`entry-list.ts`, ADR-0132) — no new primitive FAMILY beyond that one, no new protocol
-// dependency.
+// and M5 shell-archetype (`ui-chat-shell`→`ui-super-shell`, GH #52/ADR-0154) + M4 (`ui-settings`)
+// primitives PLUS the generic ordered-entry-list primitive (`entries.ts`/`entry-list.ts`, ADR-0132) —
+// no new primitive FAMILY beyond that one, no new protocol dependency.
 //
-// Two fixed `ui-split-pane` children on ONE composed `ui-split` (vision rev.5, Kim's Figma frame
-// 33:1693 — superseding ADR-0131 cl.2's three-pane order): `[ chat canvas | {Settings ⇄ Context: System
-// ⇄ Context: Dialog} tabs ]`. The Settings tab carries the WHOLE config column (Agent header row +
-// ui-settings + the Model grid + prompt sections + capability sections — the old prompts pane merged
-// in); the Context tabs are the read-only introspection surface, split in two (GH #161, superseding the
-// single combined "Context" tab): "Context: System" (the compiled Agent System JSON) and "Context:
-// Dialog" (the Dialog Turns payload log). Composition is idempotent — the `master-detail.ts`/
-// `settings.ts` `#compose()` precedent: built ONCE at first connect, never rebuilt on a later reconnect.
+// ONE composed `ui-chat-shell` (GH #52/ADR-0154 — superseding vision rev.5's hand-rolled `ui-split`
+// composition, which itself superseded ADR-0131 cl.2's three-pane order): `[ chat canvas | resizable
+// options-pane with {Settings ⇄ Context: System ⇄ Context: Dialog} segments ]` (SPEC-R6/R7). The
+// Settings segment carries the WHOLE config column (Agent header row + ui-settings + the Model grid +
+// prompt sections + capability sections — the old prompts pane merged in); the Context segments are the
+// read-only introspection surface, split in two (GH #161, superseding the single combined "Context"
+// tab): "Context: System" (the compiled Agent System JSON) and "Context: Dialog" (the Dialog Turns
+// payload log). Composition is idempotent — the `master-detail.ts`/`settings.ts` `#compose()`
+// precedent: built ONCE at first connect, never rebuilt on a later reconnect.
 //
 // ADR-0132 replaced the single free-text prompt + flat-only settings with FIVE instantiations of one
 // generic entry-list primitive: prompt sections (Foundation/Personality/Critical Items, seeded,

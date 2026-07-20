@@ -87,9 +87,11 @@ ADR's Consequences bullet).
 
 **Reveal set first.** Before the walk, compute the revealed line range set: for every selection
 range, every line from `doc.lineAt(range.from).number` through `doc.lineAt(range.to).number`.
-During the walk, any **hide** decoration whose range intersects a revealed line is skipped;
-**styling** decorations (marks, line classes, sizes) are always emitted — the heading stays big
-with its `##` visible (ADR-0147 cl.3).
+During the walk, a construct whose extent intersects a revealed line emits NEITHER its **hide**
+decorations NOR its **styling** decoration (marks, line classes, sizes) — the revealed line renders
+raw source only, strictly either/or (ADR-0147 cl.3 **as amended 2026-07-20, GH #165** — the
+original "styling is always emitted, the heading stays big with its `##` visible" retention was
+reversed by Kim's ruling; the bullet widget's reveal check stays on the ListMark's own line).
 
 **Construct table** (Lezer node names from `@codemirror/lang-markdown`'s tree — the same parse the
 shipped `highlightStyle` rides):
@@ -204,7 +206,8 @@ without `mode="richtext"`: identical DOM, FACE, events); no toggle part ever; FA
 with mode set.
 
 **Browser, BOTH engines (`editor.browser.test.ts`):** the decomposition's n3/n5/n6/n7/n8/n12
-predicates verbatim — markup hidden off-cursor-line / revealed on it (styling retained), bullet
+predicates verbatim — markup hidden off-cursor-line / revealed on it (styling suppressed with the
+reveal — the GH #165 either/or amendment; originally "styling retained"), bullet
 widget, fences verbatim, modifier-click link (stubbed `window.open`, scheme refusal case), toggle
 click/Enter/Space + `aria-pressed` + single `toggle` event, undo-across-toggle, `.value`
 byte-identity under repeated mode flips + typing-in-richtext, blur-with-change timing in richtext,

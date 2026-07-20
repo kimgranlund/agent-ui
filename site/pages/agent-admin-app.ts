@@ -120,9 +120,17 @@ overflowMenu.setAttribute('placement', 'bottom-end')
 const overflowTrigger = document.createElement('ui-button') as UIButtonElement
 overflowTrigger.variant = 'ghost'
 overflowTrigger.size = 'sm'
-overflowTrigger.textContent = '…'
+// GH #168 — a real <ui-icon> in the leading adornment cell instead of a glued '…' text node (the
+// TKT-0048 anti-pattern, same fix as entry-list.ts's Remove button). No label at all → the explicit
+// `icon-only` square anatomy (button.md "icon-only (no label) → square").
+overflowTrigger.setAttribute('icon-only', '')
+const overflowIcon = document.createElement('ui-icon')
+overflowIcon.setAttribute('slot', 'leading')
+overflowIcon.setAttribute('data-role', 'icon')
+overflowIcon.setAttribute('glyph', 'dots-three')
+overflowTrigger.append(overflowIcon)
 overflowTrigger.title = 'Page actions'
-// The glyph-only trigger needs a REAL accessible name — title never reaches the accessible name
+// The icon-only trigger needs a REAL accessible name — title never reaches the accessible name
 // (PR #54 review finding; the button.ts glyph-trigger convention).
 overflowTrigger.setAttribute('aria-label', 'Page actions')
 const resetItem = document.createElement('div')
@@ -150,7 +158,17 @@ function applyPreset(preset: AgentPreset): void {
   armSurfaceTurn?.()
   titleName.textContent = preset.label
   titleTagline.textContent = preset.tagline
-  agentTrigger.textContent = `${preset.label} ▾`
+  // GH #168 — the visible label stays plain text; the dropdown affordance is a real trailing
+  // <ui-icon> caret, not a glued '▾' character (the TKT-0048 anti-pattern). The composer's
+  // #appendCaret (conversation-composer.ts) is the precedent, including its re-append law: the
+  // `textContent =` write wipes ALL children (any prior caret included), so the caret is appended
+  // fresh on every label rewrite.
+  agentTrigger.textContent = preset.label
+  const caret = document.createElement('ui-icon')
+  caret.setAttribute('slot', 'trailing')
+  caret.setAttribute('data-role', 'caret')
+  caret.setAttribute('glyph', 'caret-down')
+  agentTrigger.append(caret)
   agentTrigger.title = 'Switch agent'
   // ui-menu's own commit path (menu.ts's #commitRadio, GH #55) already sets aria-checked correctly
   // for a row the user CLICKED — but applyPreset() also runs on paths that never go through a menu

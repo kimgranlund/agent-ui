@@ -66,6 +66,12 @@ describe('agent-admin-app — the canvas-header (GH #51)', () => {
     expect(localStorage.getItem(ACTIVE_PRESET_KEY), 'the committed agent persists').toBe(target.id)
     expect((document.querySelector('.canvas-header-name') as HTMLElement).textContent, 'the title zone follows the commit').toBe(target.label)
     expect((agentMenu.querySelector('[data-part="trigger"]') as HTMLElement).textContent).toContain(target.label)
+    // GH #168 — the trailing caret ICON survives the commit's label rewrite (`textContent =` wipes
+    // children; applyPreset must re-append the caret, the composer #appendCaret law).
+    expect(
+      (agentMenu.querySelector('[data-part="trigger"]') as HTMLElement).querySelector('ui-icon[glyph="caret-down"]'),
+      'the caret icon is re-appended after the label rewrite',
+    ).not.toBeNull()
     // GH #55: the ✓-text/data-active fallback is gone — the rows are role=menuitemradio and the
     // active marker is REAL aria-checked, managed by ui-menu itself on commit (one-true).
     const activeRow = items.find((i) => i.dataset.value === target.id)!
@@ -89,6 +95,30 @@ describe('agent-admin-app — the canvas-header (GH #51)', () => {
     expect(triggerBox.right, 'the agent-menu trigger must not be pushed past the header edge').toBeLessThanOrEqual(headerBox.right + 1)
     expect(triggerBox.width, 'the trigger must remain a real, clickable target').toBeGreaterThan(20)
     expect(tagline.scrollWidth, 'the tagline is genuinely truncated (content wider than its box)').toBeGreaterThan(tagline.clientWidth)
+  })
+
+  it('GH #168: both triggers render a real ui-icon — the glued "▾"/"…" text glyphs are gone (the TKT-0048 anti-pattern)', async () => {
+    await raf()
+    // The agent switcher keeps its visible text label; the dropdown affordance is a trailing caret ICON.
+    const agentTrigger = document.querySelector('.agent-menu [data-part="trigger"]') as HTMLElement
+    expect(agentTrigger.textContent, 'no glued caret character in the label').not.toContain('▾')
+    expect(agentTrigger.textContent, 'the persona name stays a visible text label').toContain(resolvedActive().label)
+    const caret = agentTrigger.querySelector('ui-icon[glyph="caret-down"]') as HTMLElement
+    expect(caret, 'the caret is a real ui-icon').not.toBeNull()
+    expect(caret.getAttribute('slot'), 'the trailing adornment cell (the composer #appendCaret shape)').toBe('trailing')
+    expect(caret.getAttribute('data-role'), 'role sizes: caret gets the font-sized centered inset').toBe('caret')
+    expect(caret.querySelector('svg'), 'the glyph resolves against the registered Phosphor pack').not.toBeNull()
+
+    // The overflow trigger is icon-only: the vendored dots-three glyph + the accessible name kept.
+    const overflowTrigger = document.querySelector('.overflow-menu [data-part="trigger"]') as HTMLElement
+    expect(overflowTrigger.textContent ?? '', 'no glued ellipsis character').not.toContain('…')
+    expect(overflowTrigger.hasAttribute('icon-only'), 'no label → the explicit square anatomy (button.md)').toBe(true)
+    expect(overflowTrigger.getAttribute('aria-label'), 'an icon-only button keeps its accessible name').toBe('Page actions')
+    const dots = overflowTrigger.querySelector('ui-icon[glyph="dots-three"]') as HTMLElement
+    expect(dots, 'the overflow glyph is a real ui-icon').not.toBeNull()
+    expect(dots.getAttribute('slot')).toBe('leading')
+    expect(dots.getAttribute('data-role')).toBe('icon')
+    expect(dots.querySelector('svg'), 'the GH #168-vendored dots-three glyph resolves against the registered pack').not.toBeNull()
   })
 
   it('the "…" overflow carries Reset persona (the page action relocated off the strip)', async () => {

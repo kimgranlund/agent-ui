@@ -163,6 +163,11 @@ function queryOf(input: TurnInput, k: number): RetrieveQuery {
  * model sees exactly what it emitted and what was wrong (ADR-0070's "feed the failures back"). A
  * `'FEED_SCOPE'` round-failure (ADR-0097 §3) is fed back through the SAME "INVALID, re-emit" wording — a
  * feed ask hosting an out-of-scope type is exactly as re-emittable as a schema/catalog defect.
+ *
+ * GH #174: the feedback message ALSO pins the note's audience. The leading meta-line's `note` (ADR-0088
+ * §1) is the user-visible chat reply — without an explicit instruction, a compliant model narrates its
+ * compliance IN the note ("Re-emitting the corrected, validated JSONL…", observed live). The correction
+ * loop is invisible plumbing: the note must keep addressing the USER, in persona, on every round.
  */
 function messagesFor(input: TurnInput, failures: RoundFailure[] | undefined, lastRaw: string | undefined): Turn[] {
   const turns: Turn[] = [...input.session.turns, { role: 'user', content: userContent(input) }]
@@ -171,7 +176,7 @@ function messagesFor(input: TurnInput, failures: RoundFailure[] | undefined, las
     const summary = failures.map((f) => `${f.code}${f.path ? ` at ${f.path}` : ''}`).join('; ')
     turns.push({
       role: 'user',
-      content: `That output was INVALID (${summary}). Re-emit the COMPLETE corrected A2UI JSONL — nothing else.`,
+      content: `That output was INVALID (${summary}). Re-emit the COMPLETE corrected A2UI JSONL — nothing else. Your leading meta-line "note" must still address the USER in persona — never mention this correction, the re-emission, validation, or JSONL.`,
     })
   }
   return turns

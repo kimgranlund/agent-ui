@@ -226,3 +226,28 @@ This is an **intake** ADR — realized in two stages:
   the FACE contract and leave the five existing call sites behind.
 - **Do nothing.** Rejected: Kim ratified the direction; the content the five admin editors hold is
   markdown by construction and its authors read raw markup today.
+
+## Amendment (2026-07-20 — revealed-line styling reversed, GH #165)
+
+**What clause 3 said.** The reveal-near-cursor clause specified the Obsidian-style pattern: on the
+line(s) any selection range touches, "the HIDE decorations are suppressed — raw markup shows for
+editing — **while the styling stays** (the heading line keeps its size with its `##` visible)".
+`cm-richtext.ts` implemented that faithfully — `hide()` was suppressed on a revealed line while the
+styling decoration ran unconditionally — so a revealed `**Festivals**:` rendered visibly BOLD with
+the raw `**` marks showing at once (GH #165's screenshots).
+
+**What it now is.** The revealed line shows the **raw source only** — plain, unstyled text with
+every markup character visible. The two presentations are strictly either/or, for every v1
+construct uniformly: richtext elsewhere is *styled with no marks*; a revealed line is *marks with
+no styling*; never both at once. Mechanically, a construct touching a revealed line emits NEITHER
+its hide decorations NOR its styling decoration (the same reveal predicate decides both). The
+clause's other legs stand unchanged: the reveal unit is still the line, reveal still fires from the
+selection, everything off the revealed line(s) keeps the full styled-with-hidden-marks rendering,
+and there is still no toolbar — you edit markdown, near the cursor, always.
+
+**Authority.** Kim's explicit ruling on the GH #165 intake, 2026-07-20 — the issue's own
+investigation classified the reported both-at-once rendering as a correct implementation of
+clause 3 as ratified, conflicting with Kim's expected either/or; Kim ruled the ADR amends, the
+either/or wins. Recorded here per this repo's append-only convention for accepted ADRs (the
+ADR-0151 amendment precedent): the accepted body above is untouched, the Status cell does not
+move, and clause 3's styling-retention sentence is superseded by this section.

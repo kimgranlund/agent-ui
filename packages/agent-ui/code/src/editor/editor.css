@@ -200,21 +200,38 @@
     color: var(--ui-code-editor-rt-bullet-ink);
   }
 
-  /* the mode-toggle part (ADR-0147 cl.5) — availability-gated, sticky to the host's own scroller (NOT
-     `absolute`, which would scroll away with the content). `:not([hidden])` is the SAME load-bearing guard
-     as [data-part='editor']'s (an unconditional display rule would defeat a future `hidden` set the same
-     cascade-origin way — the exact regression class this file has already shipped once). The GLYPH itself
-     (not colour alone) signals the current mode — `</>`  source, `¶` rendered — satisfying SPEC-C5 alongside
-     `aria-pressed`. */
+  /* the mode-toggle part (ADR-0147 cl.5) — availability-gated, a zero-footprint OVERLAY stuck to the host
+     scrollport's top inline-end corner: sticky to the host's own scroller (NOT `absolute`, which would
+     scroll away with the content), pushed to the inline-end by the auto inline-start margin on a
+     fit-content box, and lifted out of the content flow by the negative block-end margin (exactly its own
+     block-size) so it reserves neither a row nor a column. NOT `float: inline-end` (GH #164): CodeMirror's
+     `.cm-editor` is a flex container and `.cm-scroller` an `overflow: auto` box — independent
+     formatting-context roots a float can never intrude into — so a float here can never make the text wrap
+     around the toggle; measured (both engines, 2026-07-20), it instead narrowed the ENTIRE `.cm-editor`
+     column by the toggle's width for the full document height. Wrap-around is structurally unachievable
+     while CM owns the text layout; this overlay realizes what the float + sticky always intended.
+     `z-index: 1` keeps it painted AND hit-tested above `.cm-scroller` (`position: relative; z-index: 0` in
+     CM's base theme — a later positioned sibling subtree that otherwise paints over the now genuinely
+     overlapping toggle), and `background: inherit` masks the text scrolling beneath the glyph (inherit, not
+     the bg token — the host's filled/hover/focus repaints land on the host background PROPERTY, so only
+     inherit tracks them). `:not([hidden])` is the SAME load-bearing guard as [data-part='editor']'s (an
+     unconditional display rule would defeat a future `hidden` set the same cascade-origin way — the exact
+     regression class this file has already shipped once). The GLYPH itself (not colour alone) signals the
+     current mode — `</>`  source, `¶` rendered — satisfying SPEC-C5 alongside `aria-pressed`. */
   :scope > [data-part='mode-toggle']:not([hidden]) {
     position: sticky;
     inset-block-start: 0;
-    float: inline-end;
+    z-index: 1;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-sizing: border-box;
+    inline-size: fit-content;
     min-inline-size: var(--ui-code-editor-toggle-size);
-    min-block-size: var(--ui-code-editor-toggle-size);
+    block-size: var(--ui-code-editor-toggle-size);
+    margin-inline-start: auto;
+    margin-block-end: calc(-1 * var(--ui-code-editor-toggle-size));
+    background: inherit;
     border-radius: var(--ui-code-editor-radius);
     color: var(--ui-code-editor-toggle-ink);
     font-size: var(--ui-code-editor-message-font);
