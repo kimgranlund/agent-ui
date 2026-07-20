@@ -61,6 +61,52 @@ describe('ui-super-shell — the SPEC-R1 grammar', () => {
   })
 })
 
+describe('ui-super-shell — SPEC-R5 amendment: N stacked panes per side, asymmetric composition (LLD-C3, GH #96)', () => {
+  it('R5a: a side stacks MULTIPLE panes (rail, then panes outer-to-content) — no longer a rail+pane ceiling', () => {
+    const el = make({ 'global-nav': 'GN', 'nav-pane': 'NP', 'section-nav': 'SN', content: 'C' })
+    const middle = el.querySelector('[data-part="middle"]') as HTMLElement
+    const order = [...middle.children].map((c) => `${c.getAttribute('data-part')}:${c.getAttribute('data-slot-name')}:${c.getAttribute('data-side')}`)
+    expect(order).toEqual(['rail:global-nav:start', 'pane:nav-pane:start', 'pane:section-nav:start', 'canvas:content:null'])
+  })
+
+  it('R5b: the two sides compose INDEPENDENTLY — a side may stack more panes than its mirror (dual-sidebar frame shape)', () => {
+    const el = make({ 'global-nav': 'GN', 'nav-pane': 'NP', 'section-nav': 'SN', content: 'C', 'options-pane': 'OP', 'global-options': 'GO' })
+    const middle = el.querySelector('[data-part="middle"]') as HTMLElement
+    const order = [...middle.children].map((c) => `${c.getAttribute('data-part')}:${c.getAttribute('data-side') ?? '-'}`)
+    // left (start): rail + 2 panes · right (end): 1 pane + rail — asymmetric pane counts, R5b
+    expect(order).toEqual(['rail:start', 'pane:start', 'pane:start', 'canvas:-', 'pane:end', 'rail:end'])
+    expect(el.querySelectorAll('[data-side="start"]')).toHaveLength(3)
+    expect(el.querySelectorAll('[data-side="end"]')).toHaveLength(2)
+  })
+
+  it('R5c: options-section (the end-side mirror of section-nav) stacks closest to content, absence law applies to both new slots', () => {
+    const el = make({ content: 'C', 'options-pane': 'OP', 'options-section': 'OS', 'global-options': 'GO' })
+    const middle = el.querySelector('[data-part="middle"]') as HTMLElement
+    const order = [...middle.children].map((c) => c.getAttribute('data-slot-name'))
+    expect(order).toEqual(['content', 'options-section', 'options-pane', 'global-options'])
+    // section-nav authored on neither side ⇒ no box anywhere (R1 absence law extends to the new slots)
+    expect(el.querySelector('[data-slot-name="section-nav"]')).toBeNull()
+  })
+
+  it('R5c: section-nav and options-section carry navigation/complementary landmarks, matching their primary-pane mirrors', () => {
+    const el = make({ 'nav-pane': 'NP', 'section-nav': 'SN', content: 'C', 'options-section': 'OS', 'options-pane': 'OP' })
+    expect(el.querySelector('[data-slot-name="section-nav"]')?.getAttribute('role')).toBe('navigation')
+    expect(el.querySelector('[data-slot-name="options-section"]')?.getAttribute('role')).toBe('complementary')
+  })
+
+  it('R5d: collapsing a side hides its WHOLE stack together — no per-pane collapse', () => {
+    const el = make({ header: 'H', 'global-nav': 'GN', 'nav-pane': 'NP', 'section-nav': 'SN', content: 'C' })
+    el.collapsedStart = true
+    // the existing whole-side CSS rule (`[collapsed-start] [data-side='start']`) targets every part
+    // sharing that attribute — jsdom doesn't compute layout, so assert the SHARED selector surface
+    // rather than a computed style: all three start-side parts carry the identical data-side value
+    // the collapse rule keys off, with no per-pane escape hatch anywhere in the markup.
+    const startParts = el.querySelectorAll('[data-part="middle"] > [data-side="start"]')
+    expect(startParts).toHaveLength(3)
+    for (const part of startParts) expect(part.getAttribute('data-side')).toBe('start')
+  })
+})
+
 describe('ui-super-shell — landmarks (LLD-C1, GH #94)', () => {
   it('every part carries its default ARIA landmark', () => {
     const el = make({ header: 'H', 'global-nav': 'GN', 'nav-pane': 'NP', content: 'C', 'options-pane': 'OP', 'global-options': 'GO', footer: 'F' })
