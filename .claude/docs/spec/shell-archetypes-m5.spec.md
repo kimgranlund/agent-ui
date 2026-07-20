@@ -1,6 +1,6 @@
 # SPEC — Shell archetypes M5: `ui-super-shell` (the two-level recursive shell grammar)
 
-> Status: proposed · v0.1 · 2026-07-19 · Layer: app chrome (`@agent-ui/app`)
+> Status: proposed · v0.2 · 2026-07-20 · Layer: app chrome (`@agent-ui/app`)
 > Refines: ADR-0151 — `adr/0151-named-shell-archetypes-m5.md`, in-flight on PR #45 (ratified in
 > substance 2026-07-18; the merge click is Kim's — the relative link lands when the ADR file does) ·
 > the agent-app-surfaces PRD's M5 (PRD-G9).
@@ -76,3 +76,28 @@ AC1 grammar renders (both frames reproduced structurally) · AC2 four-toggle col
 state reflected · AC3 all-collapsed = full-bleed canvas, headers/footers intact · AC4 narrow
 auto-collapse + overlay restore · AC5 depth-2 nesting with the rail ring dropped · AC6 the docs
 site adopts the shell with a collapsible nav pane (GH #84) with zero page-content regressions.
+
+## 7 · Amendment (v0.2, SPEC-R5) — N stacked panes per side, asymmetric composition
+
+Grounding: two further Figma frames (`app-shell-layout-single-nav` node 39:1629,
+`app-shell-layout-dual-sidebar` node 39:1596), reviewed 2026-07-20. Both show a side hosting more
+than one stacked pane — an extra `section-nav` register beside the primary nav — and
+`app-shell-layout-dual-sidebar` shows the two sides composed with DIFFERENT pane counts (left =
+rail + pane + pane, right = pane + rail). Driven by LLD-C3 (`../lld/shell-archetypes-m5.lld.md`).
+
+- **R5a — pane cardinality, amends R1a.** A side is `rail? + pane*` (zero or more stacked panes —
+  was `pane?`, a single-pane ceiling). The rail stays singular per side; R1a's ceiling there is
+  unchanged.
+- **R5b — asymmetric sides.** The two sides compose INDEPENDENTLY — matching pane counts left/right
+  is no longer required. R1a's "one side definition, instantiated twice" still holds for the RAIL
+  only.
+- **R5c — new slots.** `section-nav` (an additional stackable pane on the DOM-first side, nearest
+  `content`) and its mirror `options-section` (DOM-second side, nearest `content`) — both subject to
+  R1's absence law (unfilled ⇒ no box) independently of each other and of `nav-pane`/`options-pane`.
+- **R5d — collapse stays whole-side.** The paired per-side toggle (R2a/R2b) collapses the rail and
+  EVERY stacked pane on its side together — per-pane collapse is out of scope until a real frame
+  needs it (YAGNI; none do as of this amendment).
+
+AC7 (extends §6): both new frames reproduced structurally, including the dual-sidebar frame's
+asymmetric left/right pane counts · AC8 a whole-side collapse hides a multi-pane stack atomically
+(no stray pane left visible after its side collapses).

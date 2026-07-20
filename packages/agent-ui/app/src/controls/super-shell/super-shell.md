@@ -30,11 +30,11 @@ parts:
   - name: side-toggle
     description: One header-hosted collapse toggle (`data-side="start|end"`, SPEC-R2b, LOGICAL per LLD-C4) — a ui-button whose aria-expanded mirrors the side's state. Labeled "Toggle start panes"/"Toggle end panes" — direction-agnostic text, since which physical side that is depends on `dir`.
   - name: middle
-    description: The `[ rail | pane | canvas | pane | rail ]` flex row; the narrow overlay's containing block.
+    description: The `[ rail | pane* | canvas | pane* | rail ]` flex row (SPEC-R5, LLD-C3 — a side stacks ZERO OR MORE panes, not a single fixed pane); the narrow overlay's containing block.
   - name: rail
     description: A 3-module (54px) global bar (`data-slot-name="global-nav|global-options"`, `data-side`) — the OUTER level's ring; an inner nested shell simply authors no rails (SPEC-R1b ring-dropping recursion). Carries `role="navigation"` (global-nav) or `role="complementary"` (global-options) — LLD-C1.
   - name: pane
-    description: A 14-module (252px) side pane (`data-slot-name="nav-pane|options-pane"`, `data-side`), its own scroll container. Carries `role="navigation"` (nav-pane) or `role="complementary"` (options-pane) — LLD-C1.
+    description: A 14-module (252px) side pane (`data-slot-name="nav-pane|section-nav|options-pane|options-section"`, `data-side`), its own scroll container. A side may stack MULTIPLE panes (SPEC-R5/GH #96) — DOM order is rail first, then panes outer-to-content (`nav-pane` before `section-nav`; `options-section` before `options-pane`, its mirror). Collapse is still WHOLE-SIDE: every part sharing a `data-side` value hides/restores together, never per-pane. Carries `role="navigation"` (nav-pane/section-nav) or `role="complementary"` (options-pane/options-section) — LLD-C1.
   - name: canvas
     description: The mandatory content region — `flex:1 1 auto; min-inline-size:0` (console.warn when unauthored). Hosts anything, including another ui-super-shell (depth 2 is the normative test ceiling, fork F3). Carries `role="main"` (LLD-C1) — an author must ensure only one `main` per document, the same cross-instance responsibility ui-app-shell's own `main` region carries.
 
@@ -59,9 +59,11 @@ forcedColors: Bars/rails/panes are token-surfaced boxes; the toggles are real ui
 
 # ui-super-shell
 
-The shell-archetype family's grammar ceiling (M5): `[ header? | (rail?+pane?) | content | (pane?+rail?) | footer? ]`,
+The shell-archetype family's grammar ceiling (M5): `[ header? | (rail?+pane*) | content | (pane*+rail?) | footer? ]`,
 every slot optional-and-absent-when-unfilled, recursively nestable through `content` with the rail
-ring dropped per level. Consumers mark light-DOM children `data-slot="header|global-nav|nav-pane|content|options-pane|global-options|footer"`.
+ring dropped per level. A side stacks zero or more panes (SPEC-R5/GH #96 — was a single pane max) and
+the two sides need not match in pane count. Consumers mark light-DOM children
+`data-slot="header|global-nav|nav-pane|section-nav|content|options-section|options-pane|global-options|footer"`.
 Everything sits on the 18px module (`--ui-super-shell-module`): bars/rails 3 modules, panes 14.
 Collapse is per-side (LOGICAL start/end, LLD-C4/GH #95 — DOM order + ordinary CSS bidi place the
 correct physical side under `dir="rtl"`, no `:dir()` selector or runtime direction read anywhere)

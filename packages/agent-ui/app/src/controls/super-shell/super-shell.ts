@@ -3,12 +3,18 @@
 // Figma frames 34-1486 / 34-1506 (GH #44). A BEHAVIOR-ONLY composition (ADR-0151 rule 2 / SPEC-R3):
 // it owns geometry, collapse behavior, and slot placement — never data, transport, or navigation.
 //
-// Grammar (SPEC-R1): `[ header? | side-L? | content | side-R? | footer? ]`, a side = rail + pane
-// (mirrored on the right), every slot OPTIONAL — an unfilled slot is ABSENT (no box), so the inner
-// canvas-shell level is just another <ui-super-shell> composed into `content` with no rails authored
-// (R1b's ring-dropping recursion needs zero extra code). Consumers mark light-DOM children with
-// `data-slot="header|global-nav|nav-pane|content|options-pane|global-options|footer"`; unmarked
-// children fold into `content` (the mandatory slot — console.warn when absent, the app-shell law).
+// Grammar (SPEC-R1, amended v0.2/SPEC-R5 — LLD-C3, GH #96): `[ header? | side-L? | content | side-R?
+// | footer? ]`, a side = `rail? + pane*` (a rail plus ZERO OR MORE stacked panes — was one pane max;
+// two Figma frames, GH #44's follow-up wave, showed a side needing an extra `section-nav` register
+// beside the primary nav, and the two sides need not match in pane count). Every slot OPTIONAL — an
+// unfilled slot is ABSENT (no box), so the inner canvas-shell level is just another <ui-super-shell>
+// composed into `content` with no rails authored (R1b's ring-dropping recursion needs zero extra
+// code). Consumers mark light-DOM children with `data-slot="header|global-nav|nav-pane|section-nav|
+// content|options-pane|options-section|global-options|footer"`; unmarked children fold into
+// `content` (the mandatory slot — console.warn when absent, the app-shell law). `section-nav`/
+// `options-section` stack CLOSEST to `content` on their side (DOM order: rail, then panes outer-to-
+// inner) — collapse is still WHOLE-SIDE (R2a unchanged): the paired toggle hides the rail and every
+// stacked pane on its side together, never per-pane (YAGNI until a real frame needs it).
 //
 // Collapse (SPEC-R2): per-side toggles, HEADER-HOSTED (R2b — injected as the header row's leading/
 // trailing affordances; no header ⇒ no toggles, permanent chrome is authored chrome), PAIRED restore
@@ -40,7 +46,13 @@ import { UIElement, prop, type PropsSchema, type ReactiveProps } from '@agent-ui
 import '@agent-ui/components/controls/button'
 import '@agent-ui/components/controls/icon'
 
-const SLOTS = ['header', 'global-nav', 'nav-pane', 'content', 'options-pane', 'global-options', 'footer'] as const
+const SLOTS = [
+  'header',
+  'global-nav', 'nav-pane', 'section-nav',
+  'content',
+  'options-section', 'options-pane', 'global-options',
+  'footer',
+] as const
 type SlotName = (typeof SLOTS)[number]
 
 // LLD-C1 (GH #94) — every slot's default ARIA landmark, keyed by slot name. Set as a real `role="…"`
@@ -53,8 +65,10 @@ const SLOT_ROLE: Record<SlotName, string> = {
   content: 'main',
   'global-nav': 'navigation',
   'nav-pane': 'navigation',
+  'section-nav': 'navigation',
   'global-options': 'complementary',
   'options-pane': 'complementary',
+  'options-section': 'complementary',
 }
 
 // The override vocabulary — reused verbatim from ui-app-shell-region's own LANDMARK_VALUES (ADR-0083)
@@ -135,7 +149,12 @@ export class UISuperShellElement extends UIElement {
       frame.append(header)
     }
 
-    // middle row — [ rail | pane | content | pane | rail ], absent slots contribute nothing (R1).
+    // middle row — [ rail | pane* | content | pane* | rail ], absent slots contribute nothing (R1).
+    // R5b (LLD-C3, GH #96): each side is an ORDERED STACK (rail outermost, panes inner-to-content) —
+    // no longer one fixed rail+pane pair; the two sides compose independently (asymmetric pane counts
+    // are legal, R5b). Collapse stays whole-side: every part on a side shares that side's `data-side`
+    // attribute, so the existing `[data-side='start'|'end']` CSS selectors (collapse/narrow/overlay)
+    // already apply to the WHOLE stack with zero CSS changes (R5d).
     const middle = document.createElement('div')
     middle.setAttribute('data-part', 'middle')
     const place = (slot: SlotName, part: string, side?: 'start' | 'end'): void => {
@@ -149,11 +168,19 @@ export class UISuperShellElement extends UIElement {
       box.append(...children)
       middle.append(box)
     }
-    place('global-nav', 'rail', 'start')
-    place('nav-pane', 'pane', 'start')
+    const startStack: ReadonlyArray<readonly [SlotName, string]> = [
+      ['global-nav', 'rail'],
+      ['nav-pane', 'pane'],
+      ['section-nav', 'pane'],
+    ]
+    const endStack: ReadonlyArray<readonly [SlotName, string]> = [
+      ['options-section', 'pane'],
+      ['options-pane', 'pane'],
+      ['global-options', 'rail'],
+    ]
+    for (const [slot, part] of startStack) place(slot, part, 'start')
     place('content', 'canvas')
-    place('options-pane', 'pane', 'end')
-    place('global-options', 'rail', 'end')
+    for (const [slot, part] of endStack) place(slot, part, 'end')
     frame.append(middle)
 
     // Footer has no toggles (SPEC-R2c: header/footer are permanent chrome) — but its content gets the
