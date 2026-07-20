@@ -421,6 +421,11 @@ export const NAV: readonly NavGroup[] = [
     links: [{ href: './app-shell.html', label: 'App Shell' }],
   },
   {
+    // ui-super-shell (@agent-ui/app, M5 — ADR-0151/shell-archetypes-m5.spec.md, GH #83/#84). The SAME
+    // ungrouped-site-level-link posture as App Shell just above.
+    links: [{ href: './super-shell.html', label: 'Super Shell' }],
+  },
+  {
     // ui-master-detail (@agent-ui/app, ADR-0120 cl.3a; app-surfaces-m4.lld.md LLD-C10, M4 Phase 2) — the
     // SAME ungrouped-site-level-link posture as App Shell just above: a GUIDE page for an app-tier
     // composition, not a fleet component in components/src.

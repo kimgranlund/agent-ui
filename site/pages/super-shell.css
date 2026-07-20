@@ -1,0 +1,117 @@
+/* super-shell.css — PAGE-LOCAL demo chrome for the ui-super-shell composition guide (M5, GH #83). It
+ * styles the DEMO CELLS' content (labels/notes) + the resizable frame + the prose scaffold — it never
+ * restyles a ui-* control's internals. Every colour is a --md-sys-color-* role, so the demos track
+ * light/dark. The app-shell.ts doc page is this file's own precedent (class prefix `ss-` here,
+ * `as-` there — no collision when both pages' CSS load on the same site build). */
+
+/* ── prose scaffold ─────────────────────────────────────────────────────────────────────────────────────── */
+.ss-prose {
+  max-inline-size: 60rem;
+  line-height: 1.6;
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.ss-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+  padding: 0.05em 0.35em;
+  border-radius: 5px;
+  background: var(--md-sys-color-neutral-surface-high);
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.ss-api-tag {
+  margin-block: 2rem 0.5rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--md-sys-color-primary-high);
+}
+.ss-caption {
+  margin-block: 0.35rem 1.5rem;
+  font-size: 0.8rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+.ss-snippet {
+  margin-block: 0.5rem 1.5rem;
+  padding: 0.9rem 1.1rem;
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  background: var(--md-sys-color-neutral-surface-low);
+  color: var(--md-sys-color-neutral-on-surface);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+/* ── the framed live shell ──────────────────────────────────────────────────────────────────────────────── */
+/* A definite block-size makes the middle row's canvas visible; the frame + radius give the demo an edge.
+ * ui-super-shell is already display:flex/container-type:inline-size from super-shell.css — we only frame it. */
+ui-super-shell.ss-demo {
+  block-size: 320px;
+  margin-block: 1rem 1.75rem;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--md-sys-color-neutral-surface-lowest);
+  padding: 0.5rem;
+  box-sizing: border-box;
+}
+/* The nested (depth-2) demo needs more room for its own inner frame. */
+ui-super-shell.ss-demo--nested {
+  block-size: 420px;
+}
+/* The inner (depth-2) shell fills its content-slot wrapper instead of carrying its own fixed height. */
+ui-super-shell.ss-demo--inner {
+  block-size: 100%;
+  margin-block: 0;
+}
+.ss-content-wrap {
+  padding: 0.5rem;
+  box-sizing: border-box;
+  min-block-size: 0;
+  display: flex;
+  flex: 1 1 auto;
+}
+
+/* Slot CELLS — visible content boxes so the grammar reads. Tinted per slot to distinguish header/rail/
+ * pane/canvas/footer (ordinary attribute-free classes — not slot/data-role, which the site-canon guard
+ * scans; the label/note are the cell's own light-DOM content, same shape as ui-super-shell's real slots). */
+.ss-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  justify-content: center;
+  min-block-size: 100%;
+  box-sizing: border-box;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+.ss-slot-label {
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.ss-slot-note {
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.72rem;
+}
+[data-slot='header'] .ss-slot,
+[data-slot='footer'] .ss-slot {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+[data-slot='header'] { background: color-mix(in srgb, var(--md-sys-color-primary) 12%, var(--md-sys-color-neutral-surface)); }
+[data-slot='footer'] { background: color-mix(in srgb, var(--md-sys-color-primary) 12%, var(--md-sys-color-neutral-surface)); }
+[data-slot='global-nav'],
+[data-slot='global-options'] { background: color-mix(in srgb, var(--md-sys-color-secondary, var(--md-sys-color-primary)) 16%, var(--md-sys-color-neutral-surface)); text-align: center; }
+[data-slot='nav-pane'],
+[data-slot='options-pane'] { background: color-mix(in srgb, var(--md-sys-color-primary) 8%, var(--md-sys-color-neutral-surface)); }
+[data-slot='content'] { background: var(--md-sys-color-neutral-surface); align-items: flex-start; }
+
+.ss-resize {
+  resize: horizontal;
+  overflow: hidden auto;
+  min-inline-size: 20rem;
+  max-inline-size: 100%;
+  inline-size: 100%;
+}

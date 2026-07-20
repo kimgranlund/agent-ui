@@ -529,6 +529,13 @@
       "section": "Guides"
     },
     {
+      "name": "Super Shell",
+      "url": "./super-shell.html",
+      "description": "ui-super-shell is the shell-archetype family's grammar ceiling (M5): a two-level recursive frame — header/rails/panes/canvas/footer, all optional, header-hosted per-side collapse.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
       "name": "Master Detail",
       "url": "./master-detail.html",
       "description": "ui-master-detail is a docked list | detail arrangement over the shipped ui-split, drilling into one record.",
