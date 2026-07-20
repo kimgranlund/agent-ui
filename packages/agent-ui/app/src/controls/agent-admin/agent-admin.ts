@@ -76,7 +76,6 @@ import {
   AGENT_ENABLED_KEY,
   A2UI_CATALOG_KEY,
   A2UI_CATALOG_OPTIONS,
-  CUSTOM_MODELS_KEY,
   DEFAULT_MODEL_ID,
   MODELS_INCLUDED_KEY,
   SURFACE_A2UI_KEY,
@@ -287,15 +286,16 @@ export class UIAgentAdminElement extends UIElement {
       })
     }
     // The Model GRID (Kim, 2026-07-19 rev.2 — supersedes the one-day-old customModels→schema rebuild:
-    // the schema carries no model select anymore, the grid re-renders itself instead): render now from
-    // the store's current contents, and re-render on any of its three keys through its OWN teardown
+    // the schema carries no model select anymore, the grid re-renders itself instead; GH #137, 2026-07-20:
+    // the customModels admin-add capability itself is now gone too, Kim's option A): render now from
+    // the store's current contents, and re-render on either of its two keys through its OWN teardown
     // slot — NEVER the shared #unsubscribes map, which #rewireAllSections clears on every store rewire
     // (this subscription must outlive rewires; it dies with the connection).
     {
       this.#renderModelGrid()
       this.#modelGridUnsub?.()
       this.#modelGridUnsub = this.store?.subscribe?.((key) => {
-        if (key === 'model' || key === MODELS_INCLUDED_KEY || key === CUSTOM_MODELS_KEY) this.#renderModelGrid()
+        if (key === 'model' || key === MODELS_INCLUDED_KEY) this.#renderModelGrid()
       })
     }
 
@@ -778,7 +778,7 @@ export class UIAgentAdminElement extends UIElement {
     const host = this.#modelGrid
     const store = this.store
     if (!host) return
-    const roster = modelRoster(store?.get(CUSTOM_MODELS_KEY))
+    const roster = modelRoster()
     const included = store?.get(MODELS_INCLUDED_KEY)
     const current = sanitizeModel(store?.get('model'), roster)
     host.replaceChildren()
@@ -851,14 +851,14 @@ export class UIAgentAdminElement extends UIElement {
       // The picker offers the INCLUDED roster only (the Model grid's switches, 2026-07-19 rev.2); the
       // committed default always stays offered — the grid disables excluding it, and sanitizeModel
       // falls back to DEFAULT_MODEL_ID for anything off-roster.
-      const roster = modelRoster(store?.get(CUSTOM_MODELS_KEY))
+      const roster = modelRoster()
       const included = store?.get(MODELS_INCLUDED_KEY)
       conversation.models = roster.filter((m) => isModelIncluded(included, m))
       conversation.model = sanitizeModel(store?.get('model'), roster)
     }
     renderModel()
     const unsubscribe = store?.subscribe?.((key) => {
-      if (key === 'model' || key === MODELS_INCLUDED_KEY || key === CUSTOM_MODELS_KEY) renderModel()
+      if (key === 'model' || key === MODELS_INCLUDED_KEY) renderModel()
     })
     if (unsubscribe) this.#unsubscribes.set('model', unsubscribe)
   }
@@ -896,7 +896,7 @@ export class UIAgentAdminElement extends UIElement {
 
     const config: AgentConfigSnapshot = {
       name: typeof store?.get('name') === 'string' ? (store.get('name') as string) : 'Untitled agent',
-      model: sanitizeModel(store?.get('model'), modelRoster(store?.get(CUSTOM_MODELS_KEY))),
+      model: sanitizeModel(store?.get('model'), modelRoster()),
       temperature: sanitizeNumber(schema, 'temperature', store?.get('temperature'), 0.5),
       toolsEnabled: isEnabledFlag(store?.get(kindEnabledKey(ENTRY_KINDS.tool))),
       systemPrompt,
@@ -980,7 +980,7 @@ export class UIAgentAdminElement extends UIElement {
     const request = {
       turn,
       personaSystem: composeLiveSystemPrompt(sections, this.#capabilityGroups(store)),
-      model: sanitizeModel(store?.get('model'), modelRoster(store?.get(CUSTOM_MODELS_KEY))),
+      model: sanitizeModel(store?.get('model'), modelRoster()),
       // Vision rev.6 — the catalog picker's sanitized selection (see AdminSurfaceTurnRequest.catalogId).
       catalogId: sanitizeCatalog(store?.get(A2UI_CATALOG_KEY)),
       // GH #49 — the ENABLED tool entries' labels, master-gated on toolsEnabled (the SAME switch that
@@ -1034,7 +1034,7 @@ export class UIAgentAdminElement extends UIElement {
   // ── vision rev.5: master-state application + the Context tab's renderers ─────────────────────────────
 
   /** (Re-)apply the master states + (re-)render the Context tab + (re-)arm its store subscription — the
-   *  Agent System view reads nearly every key (name/model/temperature/customModels, the master toggles,
+   *  Agent System view reads nearly every key (name/model/temperature, the master toggles,
    *  all five entry lists) and writes are commit-time (never per-keystroke), so an unfiltered wholesale
    *  re-render per store write is the honest cheap option. Its OWN teardown slot (the #modelGridUnsub
    *  precedent — it must outlive `#rewireAllSections`' clears); re-armed per store (re)assignment via
@@ -1099,7 +1099,7 @@ export class UIAgentAdminElement extends UIElement {
         'Agent',
         {
           name: typeof store?.get('name') === 'string' ? (store.get('name') as string) : 'Untitled agent',
-          model: sanitizeModel(store?.get('model'), modelRoster(store?.get(CUSTOM_MODELS_KEY))),
+          model: sanitizeModel(store?.get('model'), modelRoster()),
           temperature: sanitizeNumber(schema, 'temperature', store?.get('temperature'), 0.5),
           effort: this.#effort,
           active: isEnabledFlag(store?.get(AGENT_ENABLED_KEY)),

@@ -1224,7 +1224,9 @@ describe('UIAgentAdminElement — a REJECTED library entry surfaces the same err
   })
 })
 
-// ── the model lists + admin-added models (Kim, 2026-07-19) ──────────────────────────────────────────────
+// ── the model lists (Kim, 2026-07-19; the admin-added-models capability is REMOVED, GH #137/Kim's
+//    option A, 2026-07-20 — no more free-text "Additional models" field, no more customModels roster
+//    merge) ──────────────────────────────────────────────────────────────────────────────────────────
 
 describe('SUPPORTED_MODELS lists + the Haiku default (2026-07-19)', () => {
   it('the default model is Haiku; Sonnet remains an offered option', async () => {
@@ -1236,32 +1238,20 @@ describe('SUPPORTED_MODELS lists + the Haiku default (2026-07-19)', () => {
     for (const m of SUPPORTED_MODELS) expect(m.provider.length, m.id).toBeGreaterThan(0)
   })
 
-  it('parseCustomModels: id|Label pairs, provider inference, dedupe, malformed dropped', async () => {
-    const { parseCustomModels } = await import('./agent-admin-schema.ts')
-    expect(parseCustomModels('claude-x, gpt-6 | My GPT, gemini-3, mystery-1, claude-x, claude-sonnet-5, , |')).toEqual([
-      { id: 'claude-x', label: 'claude-x', provider: 'Anthropic', includedByDefault: true },
-      { id: 'gpt-6', label: 'My GPT', provider: 'OpenAI', includedByDefault: true },
-      { id: 'gemini-3', label: 'gemini-3', provider: 'Google', includedByDefault: true },
-      { id: 'mystery-1', label: 'mystery-1', provider: 'Other', includedByDefault: true },
-    ])
-    expect(parseCustomModels(undefined)).toEqual([])
-    expect(parseCustomModels(42)).toEqual([])
-  })
-
-  it('the schema carries NO model select anymore (the grid owns it); customModels field stays; model roster helpers hold', async () => {
-    const { agentConfigSchema, CUSTOM_MODELS_KEY, modelRoster, isModelIncluded, sanitizeModel, DEFAULT_MODEL_ID } = await import('./agent-admin-schema.ts')
+  it('the schema carries NO model select and NO customModels field (GH #137); model roster helpers hold', async () => {
+    const { agentConfigSchema, modelRoster, isModelIncluded, sanitizeModel, DEFAULT_MODEL_ID, SUPPORTED_MODELS } = await import('./agent-admin-schema.ts')
     const schema = agentConfigSchema()
     expect(schema.sections[0]!.fields.some((f) => f.key === 'model'), 'no model select field').toBe(false)
-    expect(schema.sections[0]!.fields.some((f) => f.key === CUSTOM_MODELS_KEY)).toBe(true)
-    const roster = modelRoster('gpt-6 | My GPT')
-    expect(roster.at(-1)).toEqual({ id: 'gpt-6', label: 'My GPT', provider: 'OpenAI', includedByDefault: true })
+    expect(schema.sections[0]!.fields.some((f) => f.key === 'customModels'), 'the Additional models field is removed').toBe(false)
+    const roster = modelRoster()
+    expect(roster).toEqual(SUPPORTED_MODELS)
     const sonnet = roster.find((m) => m.id === 'claude-sonnet-5')!
     const gpt = roster.find((m) => m.id === 'gpt-4.1')!
     expect(isModelIncluded(undefined, sonnet), 'absent record ⇒ the model\'s own includedByDefault (Sonnet ships on)').toBe(true)
     expect(isModelIncluded(undefined, gpt), 'the OpenAI option ships OFF (rev.4)').toBe(false)
     expect(isModelIncluded({ 'claude-sonnet-5': false }, sonnet), 'an explicit record wins').toBe(false)
     expect(isModelIncluded({ 'gpt-4.1': true }, gpt)).toBe(true)
-    expect(sanitizeModel('gpt-6', roster)).toBe('gpt-6')
+    expect(sanitizeModel('claude-sonnet-5', roster)).toBe('claude-sonnet-5')
     expect(sanitizeModel('nope', roster)).toBe(DEFAULT_MODEL_ID)
   })
 })
@@ -1330,21 +1320,6 @@ describe('ui-agent-admin — the Model GRID (2026-07-19 rev.2)', () => {
       (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === 'claude-haiku-4-5-20251001',
     )!
     expect((haikuRow.querySelector('[data-part="model-default"]') as HTMLElement & { checked: boolean }).checked, 'radio semantics: the old default unchecked').toBe(false)
-  })
-
-  it('a customModels write folds new rows under their inferred provider', async () => {
-    const { el, store } = mountAdmin()
-    await el.updateComplete
-    store.set('customModels', 'gpt-6 | My GPT, mystery-1')
-    await el.updateComplete
-    const providers = [...el.querySelectorAll('[data-part="model-provider"]')].map((p) => p.textContent)
-    expect(providers).toEqual(['Anthropic', 'OpenAI', 'Google', 'Other'])
-    expect(el.querySelectorAll('[data-part="model-row"]')).toHaveLength(8)
-    // a custom add ships INCLUDED (you added it to use it) — unlike the built-in off-by-default options
-    const customRow = [...el.querySelectorAll<HTMLElement>('[data-part="model-row"]')].find(
-      (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === 'gpt-6',
-    )!
-    expect((customRow.querySelector('[data-part="model-include"]') as HTMLElement & { checked: boolean }).checked).toBe(true)
   })
 })
 
