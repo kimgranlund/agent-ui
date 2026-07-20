@@ -12,12 +12,17 @@
 body {
   margin: 0;
   font-family: var(--md-sys-typeface-sans); /* the fleet sans constant (dimensions.css) — one home, shared with base.css */
-  /* Docs text DEFAULT leading — the type-scale body step (1.429), one source of truth with
-     --md-sys-typescale-body-medium-line-height (ADR-0078; retired --ui-type-body-leading — this rule was a LIVE
-     survivor of the retirement until repaired here, since dimensions.css deletes the family it named).
-     Multi-line prose (the rendered <article>: paragraphs, lists) reads at the body step; headings and other
-     contexts that want tighter leading set their own and win by specificity. Without this the body inherited
-     the UA ~1.2. */
+  /* Docs text DEFAULT size + leading — the type-scale body step, one source of truth with
+     --md-sys-typescale-body-medium-size/-line-height (ADR-0078; retired --ui-type-body-leading — this
+     rule was a LIVE survivor of the retirement until repaired here, since dimensions.css deletes the
+     family it named). Multi-line prose (the rendered <article>: paragraphs, lists) reads at the body
+     step; headings and other contexts that want a different size/leading set their own and win by
+     specificity. Without an explicit font-size the body silently inherited the UA 16px default instead
+     of the body-medium step (GH #127) — this rule never carried one, base.css's sibling copy didn't
+     either (fixed there in the same change); leading alone was already fixed (the UA ~1.2 default this
+     comment originally described). Tracks the ADR-0150 compact-body breakpoint automatically (the token
+     itself steps 14px -> 13px below 52.5rem — no separate rule needed here). */
+  font-size: var(--md-sys-typescale-body-medium-size);
   line-height: var(--md-sys-typescale-body-medium-line-height);
   color: var(--md-sys-color-neutral-on-surface);
   background: var(--md-sys-color-neutral-surface);

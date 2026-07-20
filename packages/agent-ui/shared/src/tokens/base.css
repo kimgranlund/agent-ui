@@ -16,8 +16,12 @@ body {
   /* The fleet sans stack (--md-sys-typeface-sans, dimensions.css) — one home for the typeface the docs shell
      previously hand-rolled. Code/figure surfaces opt into --md-sys-typeface-mono themselves. */
   font-family: var(--md-sys-typeface-sans);
-  /* Body leading from the M3 typescale (ADR-0078) — multi-line prose reads at the body step; headings
-     and controls set their own and win by specificity (the _page.css precedent, now shared). */
+  /* Body size + leading from the M3 typescale (ADR-0078) — without an explicit font-size the UA default
+     (16px) silently wins instead of the fleet's own body-medium step (GH #127); multi-line prose reads
+     at the body step, headings and controls set their own and win by specificity (the _page.css
+     precedent, now shared). Tracks the ADR-0150 compact-body breakpoint automatically (the token itself
+     steps 14px -> 13px below 52.5rem — no separate rule needed here). */
+  font-size: var(--md-sys-typescale-body-medium-size);
   line-height: var(--md-sys-typescale-body-medium-line-height);
   /* The ambient plane: neutral surface + its AA-gated ink, resolving per scheme via light-dark()
      (tokens.css owns `color-scheme: light dark` on :root). */
