@@ -33,6 +33,19 @@ describe('agent-admin-app — the canvas-header (GH #51)', () => {
     expect(menus[1]!.className).toContain('agent-menu')
   })
 
+  it('GH #55: the agent rows are seeded with the correct initial aria-checked BEFORE any commit (the migration off the ✓-text/data-active fallback)', async () => {
+    await raf()
+    const items = [...document.querySelectorAll<HTMLElement>('.agent-menu [role="menuitemradio"]')]
+    expect(items).toHaveLength(AGENT_PRESETS.length)
+    const active = resolvedActive()
+    for (const item of items) {
+      const wantChecked = item.dataset.value === active.id
+      expect(item.getAttribute('aria-checked'), `row ${item.dataset.value} aria-checked`).toBe(String(wantChecked))
+    }
+    // Exactly one row is checked — one-true holds even at page-load seed time, not only post-commit.
+    expect(items.filter((i) => i.getAttribute('aria-checked') === 'true')).toHaveLength(1)
+  })
+
   it('the agent menu lists EVERY preset un-truncated and a commit switches agent + persists it', async () => {
     await raf()
     const agentMenu = document.querySelector('.agent-menu') as HTMLElement
@@ -40,7 +53,8 @@ describe('agent-admin-app — the canvas-header (GH #51)', () => {
     trigger.click()
     await raf()
 
-    const items = [...document.querySelectorAll<HTMLElement>('.agent-menu [role="menuitem"]')]
+    // GH #55: rows are role=menuitemradio (the selectable-item variant), not plain menuitem.
+    const items = [...document.querySelectorAll<HTMLElement>('.agent-menu [role="menuitemradio"]')]
     expect(items, 'one menu row per preset — the un-truncated replacement for the chips').toHaveLength(AGENT_PRESETS.length)
 
     const before = resolvedActive()
@@ -52,14 +66,14 @@ describe('agent-admin-app — the canvas-header (GH #51)', () => {
     expect(localStorage.getItem(ACTIVE_PRESET_KEY), 'the committed agent persists').toBe(target.id)
     expect((document.querySelector('.canvas-header-name') as HTMLElement).textContent, 'the title zone follows the commit').toBe(target.label)
     expect((agentMenu.querySelector('[data-part="trigger"]') as HTMLElement).textContent).toContain(target.label)
-    // The active row's marker is REAL TEXT (✓) + data-active — never aria-checked, which is invalid on
-    // role=menuitem (PR #54 review finding). Real text is what AT announces.
+    // GH #55: the ✓-text/data-active fallback is gone — the rows are role=menuitemradio and the
+    // active marker is REAL aria-checked, managed by ui-menu itself on commit (one-true).
     const activeRow = items.find((i) => i.dataset.value === target.id)!
     const previousRow = items.find((i) => i.dataset.value === before.id)!
-    expect(activeRow.hasAttribute('data-active')).toBe(true)
-    expect(activeRow.textContent).toBe(`✓ ${target.label}`)
-    expect(activeRow.hasAttribute('aria-checked'), 'aria-checked must NOT appear on a menuitem').toBe(false)
-    expect(previousRow.hasAttribute('data-active')).toBe(false)
+    expect(activeRow.getAttribute('role')).toBe('menuitemradio')
+    expect(activeRow.getAttribute('aria-checked'), 'the committed row is checked').toBe('true')
+    expect(activeRow.textContent, 'no more hand-rolled ✓ prefix — the label stays plain text').toBe(target.label)
+    expect(previousRow.getAttribute('aria-checked'), 'the previous choice is unchecked').toBe('false')
     expect(previousRow.textContent).toBe(before.label)
   })
 
