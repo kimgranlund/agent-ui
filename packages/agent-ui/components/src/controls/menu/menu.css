@@ -231,12 +231,17 @@
       outline: none;
     }
 
-    /* Checkmark glyph — HighlightText fill so it survives against both the idle Canvas surface and
-       a Highlight hover/focus wash (the checkbox.css forced-colors precedent: system Highlight for
-       the checked fill, HighlightText for the glyph riding on top of it). */
+    /* Checkmark glyph — CanvasText at idle (visible against the idle Canvas surface above); the
+       hover/focus leg below overrides to HighlightText once the row's own background switches to
+       Highlight. A single unconditional HighlightText fill is invisible at idle in the common WHCM
+       themes, where HighlightText and Canvas resolve to the same extreme colour (GH #135). */
     :scope :is([role='menuitemradio'], [role='menuitemcheckbox'])[aria-checked='true']::before {
-      background-color: HighlightText;
+      background-color: CanvasText;
       forced-color-adjust: none;
+    }
+    :scope :is([role='menuitemradio'], [role='menuitemcheckbox'])[aria-checked='true']:hover::before,
+    :scope :is([role='menuitemradio'], [role='menuitemcheckbox'])[aria-checked='true']:focus-visible::before {
+      background-color: HighlightText;
     }
   }
 }

@@ -814,6 +814,22 @@ describe('ui-menu — selectable-item aria-checked defaults at connect (menu-sel
     el.remove()
   })
 
+  it('menu-selectable-default: a menuitemradio nested inside a wrapper (not a direct panel child) still gets aria-checked stamped (GH #135)', () => {
+    const el = document.createElement('ui-menu') as UIMenuElement
+    el.innerHTML = `
+      <button>Open</button>
+      <div class="group-wrapper">
+        <div role="menuitemradio" data-value="nested-a">Nested Alpha</div>
+      </div>
+      <div role="menuitemradio" data-value="b">Beta</div>
+    `
+    document.body.append(el)
+    const panel = el.querySelector<HTMLElement>('[data-part="panel"]')!
+    const nested = panel.querySelector<HTMLElement>('[data-value="nested-a"]')!
+    expect(nested.getAttribute('aria-checked'), 'a descendant-deep item must not be the one shape left without a required ARIA attribute').toBe('false')
+    el.remove()
+  })
+
   it('menu-selectable-default: aria-checked never appears on a plain menuitem (the unchanged ban)', () => {
     const { items } = makeMenu()
     for (const item of items) expect(item.hasAttribute('aria-checked')).toBe(false)
@@ -1149,5 +1165,29 @@ describe('menu.css — TKT-0027 panel max-block-size dial (menu-max-block-size-t
     const itemRule = (menuCss.match(/:scope :is\(\[role='menuitem'\][^{]*\{[^}]*\}/) ?? [''])[0]
     expect(itemRule).toMatch(/box-sizing:\s*border-box;/)
     expect(itemRule).toMatch(/line-height:\s*1;/)
+  })
+})
+
+// ── GH #135: forced-colors (WHCM) checkmark must be visible at IDLE, not only on hover/focus ──────
+// jsdom can't emulate `forced-colors: active` — this asserts the CSS *structure* the fix depends on
+// (a real regression here is a silent revert to the single-rule shape that only paints HighlightText,
+// invisible against the idle Canvas surface in the common HC themes); menu.browser.test.ts's own
+// whole-shape paint probe covers the NON-forced-colors path this same selector also serves.
+describe('menu.css — GH #135 forced-colors checkmark visible at idle, not only hover/focus', () => {
+  const forcedColorsBlock = (menuCss.match(/@media \(forced-colors: active\) \{[\s\S]*\n {2}\}/) ?? [''])[0]
+
+  it('GH-135: the idle checked glyph is CanvasText, not HighlightText (visible against the idle Canvas row)', () => {
+    const idleRule = (forcedColorsBlock.match(
+      /:scope :is\(\[role='menuitemradio'\], \[role='menuitemcheckbox'\]\)\[aria-checked='true'\]::before \{[^}]*\}/,
+    ) ?? [''])[0]
+    expect(idleRule).toMatch(/background-color:\s*CanvasText;/)
+    expect(idleRule).not.toMatch(/background-color:\s*HighlightText;/)
+  })
+
+  it('GH-135: HighlightText applies ONLY on the checked glyph\'s own hover/focus-visible leg', () => {
+    const hoverFocusRule = (forcedColorsBlock.match(
+      /:scope :is\(\[role='menuitemradio'\], \[role='menuitemcheckbox'\]\)\[aria-checked='true'\]:hover::before,\s*\n\s*:scope :is\(\[role='menuitemradio'\], \[role='menuitemcheckbox'\]\)\[aria-checked='true'\]:focus-visible::before \{[^}]*\}/,
+    ) ?? [''])[0]
+    expect(hoverFocusRule).toMatch(/background-color:\s*HighlightText;/)
   })
 })

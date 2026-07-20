@@ -1856,10 +1856,18 @@ to opt into. On commit, the control also writes `aria-checked`:
   items in one panel form a single group) is set `false` — one-true-at-a-time.
 
 Both roles always carry `aria-checked` (the role requires it); the control stamps a default
-`"false"` at connect for any item missing it, but leaves an author-pre-set `aria-checked="true"`
+`"false"` at connect for any item missing it (over the SAME descendant-deep item set `#itemsIn`
+collects, not just direct panel children), but leaves an author-pre-set `aria-checked="true"`
 (declaring the initial choice) untouched. A checkmark indicator (`--ui-menu-check-*` tokens) renders
 on `[aria-checked='true']` — plain `menuitem` rows are unaffected (still no `aria-checked`, which
 stays invalid on that role).
+
+The control only writes `aria-checked` in response to a user commit (click/Enter/Space). A consumer
+that mutates `aria-checked` directly on a mounted item (outside a commit) owns the one-true-per-group
+invariant itself for that write — the control does not observe or reconcile it. The shipped
+agent-admin canvas-header consumer (`site/pages/agent-admin-app.ts`) satisfies this today: its own
+preset-apply loop is one-true-by-construction on every non-commit write path (persisted-load, Reset
+persona).
 
 ## Keyboard navigation
 

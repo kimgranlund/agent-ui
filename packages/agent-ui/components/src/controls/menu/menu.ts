@@ -253,18 +253,24 @@ export class UIMenuElement extends UIElement {
     // Auto-assign role=menuitem + tabindex=-1 to direct element children that do not already
     // carry a role. The roving-focus trait then manages the tabindexes from this base state.
     // An item pre-marked role=menuitemradio|menuitemcheckbox (GH #55 selectable-item variant) is
-    // left with its author-given role — only the aria-checked default below applies to it.
+    // left with its author-given role.
     for (const child of panel.children) {
       if (child instanceof HTMLElement) {
         if (!child.hasAttribute('role')) child.setAttribute('role', 'menuitem')
         if (!child.hasAttribute('tabindex')) child.setAttribute('tabindex', '-1')
-        const role = child.getAttribute('role')
-        // ARIA validity: menuitemradio/menuitemcheckbox must always carry aria-checked. Stamp the
-        // default `false` only when absent — an author-pre-set value (declaring the initial
-        // choice, e.g. the currently-active radio row) is left untouched.
-        if ((role === 'menuitemradio' || role === 'menuitemcheckbox') && !child.hasAttribute('aria-checked')) {
-          child.setAttribute('aria-checked', 'false')
-        }
+      }
+    }
+
+    // ARIA validity: every menuitemradio/menuitemcheckbox must always carry aria-checked. Stamp the
+    // default `false` only when absent — an author-pre-set value (declaring the initial choice, e.g.
+    // the currently-active radio row) is left untouched. Runs over the SAME descendant-deep item set
+    // #itemsIn collects (GH #135 review finding), not just direct children — a selectable item
+    // nested inside a wrapper is included in roving/type-ahead/commit via #itemsIn either way, so it
+    // must not be the one item shape left without a required ARIA attribute until its first commit.
+    for (const item of this.#itemsIn(panel)) {
+      const role = item.getAttribute('role')
+      if ((role === 'menuitemradio' || role === 'menuitemcheckbox') && !item.hasAttribute('aria-checked')) {
+        item.setAttribute('aria-checked', 'false')
       }
     }
 
