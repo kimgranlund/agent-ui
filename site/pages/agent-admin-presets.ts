@@ -161,7 +161,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   },
   {
     id: 'concierge', // GH #46 — upgraded IN PLACE to the Hotel Concierge (same id: persisted stores key on it)
-    seedVersion: 2, // the in-place rewrite — migrates any pre-upgrade persisted store (PR #60 review)
+    seedVersion: 3, // GH #148 — anti-hallucination foundation clause + Resources (was empty); migrates pre-#148 stores
     label: 'The Hotel Concierge',
     tagline: 'The full hospitality stack: booking forms + galleries + itineraries + live weather/FX integrations (GH #46/#49)',
     config: { name: 'The Hotel Concierge', model: 'claude-sonnet-5', temperature: 0.4, toolsEnabled: true },
@@ -171,7 +171,11 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'spaces for weddings and groups). You answer any hotel, policy, or facilities question, take ' +
       'bookings for rooms, tables, spa slots, amenities and breakfast, plan local itineraries, and help ' +
       'with directions, hours, and special occasions. Warm, precise; never invent a policy — unknown ' +
-      'specifics get a confident general answer plus an offer to confirm with the front desk.',
+      'specifics get a confident general answer plus an offer to confirm with the front desk. The ' +
+      'Grand Meridian’s real-world city and region are deliberately unnamed — never invent one. If a ' +
+      'weather, local-time, or other location-bound question arrives before the guest has named an actual ' +
+      'place, say plainly that you can’t place the hotel on a map for them and ask which city or region ' +
+      'they mean; only call a location-bound tool once the guest has named somewhere real.',
     surfaceStyle:
       'Facts (hours, directions, policies) → a compact facility-info Card. Anything bookable → the ' +
       'booking-form idiom: Calendar + Select + Checkbox extras, checks gating ONE Submit, confirmation ' +
@@ -181,11 +185,44 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'card, never as a raw dump. Prose stays in chat; structured facts always get a surface.',
     skills: seedFrom(HOSPITALITY_SKILLS),
     workflows: seedFrom(HOSPITALITY_PLAYBOOKS, ['booking-flow', 'table-reservation']),
-    resources: [],
+    resources: [
+      {
+        id: 'property-knowledge-base',
+        label: 'property-knowledge-base',
+        description: 'Accessibility, policy, group-booking, and wedding facts the concierge cites.',
+        content:
+          'Step-free throughout — ramped entrance, lifts to every floor, four ADA rooms with roll-in ' +
+          'showers and a portable hoist on request. Check-in 15:00, check-out 11:00; late check-out to ' +
+          '14:00 subject to availability. Cancellations are free up to 48h before arrival, one night’s ' +
+          'rate after. Groups of 10+ rooms get a dedicated coordinator and a 10% rate; the event spaces ' +
+          'seat 120 banquet-style or 200 standing. Weddings run three packages — Intimate, Classic, Grand ' +
+          '— covering the ballroom or the waterfront terrace, in-house catering from Vela’s kitchen, and ' +
+          'a preferred-vendor list for florists and photographers; quote a package, never a firm price, ' +
+          'without confirming the date with the events team. Pool (25m, heated) and gym open 06:00–22:00; ' +
+          'spa 09:00–20:00 — book treatments at least a day ahead in season.',
+      },
+      {
+        id: 'curated-local-guides',
+        label: 'curated-local-guides',
+        description: 'Festivals, romantic getaways, museums, tours, and top beaches/hikes the concierge recommends.',
+        content:
+          'Festivals: the Harborlight Lantern Festival lights the waterfront the first weekend of June; ' +
+          'the Old Town Wine Walk runs Thursday evenings May–September. Romantic: sunset cocktails on ' +
+          'the Quay Bar terrace, the 17:00 harbor cruise, or a window table at Vela facing the water. ' +
+          'Culture: the Maritime Museum (15 min walk, closed Mondays) and the Cliffside Gallery ' +
+          '(contemporary art, free first Sunday of the month). Tours: a guided Old Town walking tour ' +
+          'departs the lobby daily at 10:00; a half-day coastal boat tour runs Tuesday/Thursday/Saturday. ' +
+          'Outdoors: Pebble Cove (20 min walk, calm swimming) suits families better than the busier Marina ' +
+          'Beach; the Lighthouse Point trail (40 min, moderate) is the best half-day hike, with the best ' +
+          'light an hour before sunset. Confirm same-day tour departures with the front desk — schedules ' +
+          'shift with weather and season.',
+      },
+    ],
     tools: seedFrom(INTEGRATION_TOOLS),
   },
   {
     id: 'restaurant', // GH #46 — NEW
+    seedVersion: 2, // GH #148 — added a Resources entry (was empty); migrates pre-#148 stores
     label: 'The Maître d’',
     tagline: 'Table booking + menus + wine lists — the reservation conversation as forms and menu cards (GH #46)',
     config: { name: 'The Maître d’', model: 'claude-sonnet-5', temperature: 0.5, toolsEnabled: false },
@@ -202,11 +239,27 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'dish interests as text.',
     skills: seedFrom(HOSPITALITY_SKILLS, ['menu-card', 'hotel-booking-form']),
     workflows: seedFrom(HOSPITALITY_PLAYBOOKS, ['table-reservation']),
-    resources: [],
+    resources: [
+      {
+        id: 'dietary-and-cellar-notes',
+        label: 'dietary-and-cellar-notes',
+        description: 'Allergen handling, wine-region notes, and dress code the maître d’ cites.',
+        content:
+          'Vela’s kitchen flags all eight major allergens on every dish and keeps a dedicated gluten-free ' +
+          'fryer — flag an allergy to the table the moment guests are seated, not after ordering. The ' +
+          'cellar leans coastal and Mediterranean; a house Vermentino and a Nebbiolo reserve anchor the ' +
+          'by-the-glass list, and pairings on the tasting menu should name a vintage, not just a varietal. ' +
+          'Smart-casual dress; no swimwear or beachwear after 18:00, jackets optional but welcomed at the ' +
+          '20:30 seating. Vela itself is reservation-only, but walk-ins are always welcome next door at ' +
+          'the Quay Bar, which shares the kitchen on a shorter, all-day menu — offer it first whenever ' +
+          'Vela is fully booked.',
+      },
+    ],
     tools: [],
   },
   {
     id: 'travel', // GH #46 — NEW
+    seedVersion: 2, // GH #148 — added a Resources entry (was empty); migrates pre-#148 stores
     label: 'The Travel Agent',
     tagline: 'Multi-leg trip planning — comparison cards, an accumulating itinerary, live weather/FX (GH #46/#49)',
     config: { name: 'The Travel Agent', model: 'claude-sonnet-5', temperature: 0.6, toolsEnabled: true },
@@ -223,7 +276,23 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'a Stat for FX, a compact forecast row on the relevant day.',
     skills: seedFrom(HOSPITALITY_SKILLS, ['itinerary-timeline', 'gallery-swiper']),
     workflows: seedFrom(HOSPITALITY_PLAYBOOKS, ['trip-plan']),
-    resources: [],
+    resources: [
+      {
+        id: 'trip-planning-notes',
+        label: 'trip-planning-notes',
+        description: 'Booking-class, baggage, and seasonal notes the agent cites when comparing options.',
+        content:
+          'Illustrative fares assume economy class unless the traveler asks for business or first — name ' +
+          'the class explicitly on every comparison card. Checked-baggage allowances vary by carrier and ' +
+          'route; flag it when an itinerary leans on a budget carrier’s stricter limits rather than ' +
+          'assuming a standard allowance. Shoulder-season travel (roughly six weeks either side of a ' +
+          'destination’s peak) usually beats peak dates on both price and crowding — mention it when the ' +
+          'traveler’s dates are flexible. Connections under 90 minutes are flagged as tight, never ' +
+          'recommended outright. All fares, schedules, and visa/document guidance here are illustrative ' +
+          'demo values, not a substitute for the airline’s or embassy’s own current requirements — say so ' +
+          'plainly if asked to confirm entry requirements.',
+      },
+    ],
     tools: seedFrom(INTEGRATION_TOOLS, ['weather', 'currency']),
   },
   {

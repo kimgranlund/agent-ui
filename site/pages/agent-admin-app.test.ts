@@ -212,7 +212,7 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
   it('a persisted OLD-version store is dropped and the new seed applies; same-version edits survive', async () => {
     const { presetStore, AGENT_PRESETS, resetPreset } = await import('./agent-admin-presets.ts')
     const concierge = AGENT_PRESETS.find((p) => p.id === 'concierge')!
-    expect(concierge.seedVersion, 'the upgrade declares its bump').toBe(2)
+    expect(concierge.seedVersion, 'the upgrade declares its bump').toBe(3)
 
     // Simulate a PRE-upgrade browser: old persisted content, NO seedVersion marker (=1 implicitly).
     resetPreset(concierge) // clean slate for the probe (drops cache + keys)
@@ -225,7 +225,7 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
     const skills = migrated.get('entries:skill') as Array<{ id: string }>
     expect(skills.some((s) => s.id === 'form-rhythm'), 'the stale persisted store was dropped').toBe(false)
     expect(skills.some((s) => s.id === 'hotel-booking-form'), 'the NEW seed applied').toBe(true)
-    expect(localStorage.getItem('agent-admin-app.concierge.seedVersion')).toBe('2')
+    expect(localStorage.getItem('agent-admin-app.concierge.seedVersion')).toBe('3')
 
     // Same-version edits SURVIVE a rebuild (persisted-wins is untouched at the current version).
     migrated.set('entries:skill', [...skills.map((s) => s), { id: 'my-edit', kind: 'skill', label: 'my-edit', description: '', content: 'mine', order: 99, enabled: true, builtin: false }])
