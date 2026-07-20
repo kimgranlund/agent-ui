@@ -61,6 +61,50 @@ describe('ui-super-shell — the SPEC-R1 grammar', () => {
   })
 })
 
+describe('ui-super-shell — landmarks (LLD-C1, GH #94)', () => {
+  it('every part carries its default ARIA landmark', () => {
+    const el = make({ header: 'H', 'global-nav': 'GN', 'nav-pane': 'NP', content: 'C', 'options-pane': 'OP', 'global-options': 'GO', footer: 'F' })
+    expect(el.querySelector('[data-bar="header"]')?.getAttribute('role')).toBe('banner')
+    expect(el.querySelector('[data-bar="footer"]')?.getAttribute('role')).toBe('contentinfo')
+    expect(el.querySelector('[data-part="canvas"]')?.getAttribute('role')).toBe('main')
+    expect(el.querySelector('[data-slot-name="global-nav"]')?.getAttribute('role')).toBe('navigation')
+    expect(el.querySelector('[data-slot-name="nav-pane"]')?.getAttribute('role')).toBe('navigation')
+    expect(el.querySelector('[data-slot-name="global-options"]')?.getAttribute('role')).toBe('complementary')
+    expect(el.querySelector('[data-slot-name="options-pane"]')?.getAttribute('role')).toBe('complementary')
+  })
+
+  it('a data-landmark override on the first authored child wins over the slot default', () => {
+    const el = document.createElement('ui-super-shell') as UISuperShellElement
+    const nav = document.createElement('div')
+    nav.setAttribute('data-slot', 'nav-pane')
+    nav.setAttribute('data-landmark', 'complementary') // the a2ui-live chat-composer precedent (ADR-0083)
+    const content = document.createElement('div')
+    content.setAttribute('data-slot', 'content')
+    el.append(nav, content)
+    document.body.append(el)
+    mounted.push(el)
+    expect(el.querySelector('[data-slot-name="nav-pane"]')?.getAttribute('role')).toBe('complementary')
+  })
+
+  it('an unrecognized data-landmark value is ignored — falls back to the slot default (fail-closed)', () => {
+    const el = document.createElement('ui-super-shell') as UISuperShellElement
+    const nav = document.createElement('div')
+    nav.setAttribute('data-slot', 'nav-pane')
+    nav.setAttribute('data-landmark', 'not-a-real-role')
+    const content = document.createElement('div')
+    content.setAttribute('data-slot', 'content')
+    el.append(nav, content)
+    document.body.append(el)
+    mounted.push(el)
+    expect(el.querySelector('[data-slot-name="nav-pane"]')?.getAttribute('role')).toBe('navigation')
+  })
+
+  it('only the HOST carries no role of its own — the landmarks live on the parts, not the custom element', () => {
+    const el = make({ header: 'H', content: 'C' })
+    expect(el.getAttribute('role')).toBeNull()
+  })
+})
+
 describe('ui-super-shell — the SPEC-R2 collapse contract', () => {
   it('header toggles flip the reflected per-side state, PAIRED, aria-expanded mirrors (wide)', () => {
     const el = make({ header: 'H', 'global-nav': 'GN', 'nav-pane': 'NP', content: 'C', 'options-pane': 'OP' })
