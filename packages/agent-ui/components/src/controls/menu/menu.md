@@ -32,7 +32,7 @@ properties:             # IDL beyond attributes-as-API
 events:
   - name: select
     detail: '{ value: string; index: number }'
-    description: Fired when the user commits a menu item selection — via Enter/Space keydown (on non-button items) or click. `value` is the item's `data-value` attribute, or its trimmed textContent as a fallback. `index` is the item's 0-based position in the [role=menuitem] list. The menu closes immediately after this event fires (open is set to false programmatically). NOT fired when the menu closes without a selection (Escape / outside-click).
+    description: Fired when the user commits a menu item selection — via Enter/Space keydown (on non-button items) or click. `value` is the item's `data-value` attribute, or its trimmed textContent as a fallback. `index` is the item's 0-based position in the combined `[role=menuitem]`/`[role=menuitemradio]`/`[role=menuitemcheckbox]` item set (the same ordered set roving focus and type-ahead operate over) — in a mixed panel this can differ from a menuitem-only count. The menu closes immediately after this event fires (open is set to false programmatically). NOT fired when the menu closes without a selection (Escape / outside-click).
   - name: toggle
     detail: 'null'
     description: Fired on EVERY actual open-state transition — platform-driven (Escape / outside-click), component-driven (a commit or trigger action), or model-driven (a programmatic `open` write) — the two-way bind signal (ADR-0019, value:{prop:'open',event:'toggle'}). Emitted after `el.open` has settled to its new value (ADR-0101), so a two-way bind reads the correct value at listener time on every path.
@@ -169,10 +169,18 @@ to opt into. On commit, the control also writes `aria-checked`:
   items in one panel form a single group) is set `false` — one-true-at-a-time.
 
 Both roles always carry `aria-checked` (the role requires it); the control stamps a default
-`"false"` at connect for any item missing it, but leaves an author-pre-set `aria-checked="true"`
+`"false"` at connect for any item missing it (over the SAME descendant-deep item set `#itemsIn`
+collects, not just direct panel children), but leaves an author-pre-set `aria-checked="true"`
 (declaring the initial choice) untouched. A checkmark indicator (`--ui-menu-check-*` tokens) renders
 on `[aria-checked='true']` — plain `menuitem` rows are unaffected (still no `aria-checked`, which
 stays invalid on that role).
+
+The control only writes `aria-checked` in response to a user commit (click/Enter/Space). A consumer
+that mutates `aria-checked` directly on a mounted item (outside a commit) owns the one-true-per-group
+invariant itself for that write — the control does not observe or reconcile it. The shipped
+agent-admin canvas-header consumer (`site/pages/agent-admin-app.ts`) satisfies this today: its own
+preset-apply loop is one-true-by-construction on every non-commit write path (persisted-load, Reset
+persona).
 
 ## Keyboard navigation
 
