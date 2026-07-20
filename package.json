@@ -24,7 +24,8 @@
     "test:visual": "vitest run --config vitest.browser.config.ts --project visual",
     "test:visual:update": "vitest run --config vitest.browser.config.ts --project visual --update",
     "size": "node scripts/measure-size.mjs",
-    "publish:packages": "node scripts/publish/publish-packages.mjs"
+    "publish:packages": "node scripts/publish/publish-packages.mjs",
+    "deploy:docs": "npm run build && wrangler deploy"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
@@ -35,6 +36,7 @@
     "playwright": "^1.61.1",
     "typescript": "~6.0.2",
     "vite": "^8.1.0",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.9",
+    "wrangler": "^4.112.0"
   }
 }

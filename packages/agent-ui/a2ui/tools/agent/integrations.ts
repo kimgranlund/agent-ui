@@ -8,14 +8,18 @@
 // and Frankfurter (ECB FX rates). Hotel booking/PMS integrations are GH #49's named DIRECTION, not this
 // registry's scope.
 //
-// TRUST NOTE (PR #59 review): this registry widens the dev proxy's existing unauthenticated
-// localhost-only assumption — the POST route can now drive real outbound third-party fetches, not just
-// the LLM call. Outbound volume is bounded (the adapter's MAX_TOOL_ROUNDS × MAX_CALLS_PER_ROUND ceiling
-// + the per-response size cap below), every integration URL is host-pinned with encodeURIComponent'd
-// values only, and the whole path exists ONLY in `vite dev`. Do NOT run the dev server with `--host`
-// (LAN-exposed) on an untrusted network — the pre-existing key-spend caveat now also covers tool fan-out. Every `execute` returns compact TEXT for the model (never raw response dumps) and
-// throws on upstream failure — the adapter converts a rejection into an `is_error` tool_result the model
-// can react to (the ExecuteTool contract), so a downed API degrades the answer, never the turn.
+// TRUST NOTE (PR #59 review; amended by ADR-0152): this registry widens the proxy's outbound surface —
+// the POST route can now drive real outbound third-party fetches, not just the LLM call. Outbound volume
+// is bounded (the adapter's MAX_TOOL_ROUNDS × MAX_CALLS_PER_ROUND ceiling + the per-response size cap
+// below), every integration URL is host-pinned with encodeURIComponent'd values only. This path no longer
+// exists ONLY in `vite dev` — as of ADR-0152 the SAME registry ships in the production Cloudflare Worker
+// (`tools/agent/worker/index.ts`), reachable from the deployed docs site. The dev server's own
+// LAN-exposure caveat (do NOT run `--host` on an untrusted network) still applies unchanged; the
+// production path is separately gated by a same-origin check on every POST route + a Cloudflare rate-
+// limiting rule (ADR-0152's mitigations), not by dev-only reachability. Every `execute` returns compact
+// TEXT for the model (never raw response dumps) and throws on upstream failure — the adapter converts a
+// rejection into an `is_error` tool_result the model can react to (the ExecuteTool contract), so a downed
+// API degrades the answer, never the turn.
 
 import type { ToolDef } from '../../src/agent/agent-transport.ts'
 

@@ -47,6 +47,32 @@ export default defineConfig({
           include: ['scripts/**/*.test.mjs'],
         },
       },
+      {
+        extends: true,
+        // fs-shim-content.ts imports `.md`/`.jsonl` files as plain TEXT — a real behavior ONLY under
+        // Wrangler's own "Text" module rule (wrangler.jsonc `rules`), which vitest/Vite has no notion of.
+        // Vite treats an unrecognized extension as a hard parse error unless declared an asset here —
+        // `assetsInclude` is a Vite top-level option (a sibling of `test`, not nested inside it), scoped to
+        // THIS project only (never the fleet's other projects, which have no reason to touch prompt
+        // markdown). This project only inspects `fs-shim-content.ts`'s KEY SET (the drift gate, GH #110) —
+        // the asset-URL string Vite returns for the VALUE is irrelevant; real content correctness is
+        // Wrangler's own build, not this gate's job.
+        assetsInclude: ['**/*.md', '**/*.jsonl'],
+        test: {
+          // GH #112 — the per-package `tools/` trees (Node-side CLIs, dev-proxy plugins, the Cloudflare
+          // Worker) sit outside every OTHER project's `include` glob, same gap `tsconfig.tools.json` closes
+          // for TYPES only (CLAUDE.md) — this is their first BEHAVIOR gate. `environment: 'node'`: these
+          // are server-side modules (Workers/Node), never meant to run under jsdom. Deliberately narrow to
+          // `worker/` for now (route-guards.ts, fs-shim.ts + fs-shim-content.ts's drift gate) — `index.ts`
+          // and `process-shim.ts` are NOT safe to import here (process-shim.ts globally overrides
+          // `process.cwd()`, a side effect that must never leak into a shared test process; see both
+          // files' own header comments) — a future full-Worker integration test needs its own isolated
+          // runtime (e.g. `@cloudflare/vitest-pool-workers`), not this project.
+          name: 'tools',
+          environment: 'node',
+          include: ['packages/agent-ui/*/tools/agent/worker/*.test.ts'],
+        },
+      },
     ],
   },
   resolve: {

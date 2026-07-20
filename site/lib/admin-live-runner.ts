@@ -1,13 +1,14 @@
-// admin-live-runner.ts — ALM-C7 / TKT-0052 (ADR-0136): the DEV-ONLY live-turn runner for
-// `ui-agent-admin`'s chat preview. It is the site-side implementation of the app-local `AdminAgentTurn`
-// seam (agent-admin-schema.ts): one `AdminTurnRequest` in, the model's full reply string out. Browser →
-// the ALREADY-MOUNTED dev proxy (`dev-proxy-plugin.ts`'s `/chat` branch, which holds the key SERVER-side
-// and validates the {provider,model} pair against providers.json) → one JSON `{text}` back. This module is
-// reached ONLY via the page's dev-only dynamic import (`import.meta.env.DEV`, agent-admin.ts's
-// `wireLiveOverlay`), so `vite build` tree-shakes it out and no live-call path is ever baked into the
-// static build (SPEC-N2 / ADR-0131 cl.4/7 held). Plain fetch; NO key lives here (the proxy holds it) — no
-// `import.meta.env.VITE_*` reference at all. The `a2ui-live` → `live-proxy-transport.ts` precedent, adapted
-// to agent-admin's prose-reply (not A2UI-JSONL) shape.
+// admin-live-runner.ts — ALM-C7 / TKT-0052 (ADR-0136): the live-turn runner for `ui-agent-admin`'s chat
+// preview, probed at runtime in EVERY environment as of ADR-0152 (which REVERSES ADR-0131 cl.4/7's
+// dev-only ruling for this page pair — see ADR-0152 for the full rationale). It is the site-side
+// implementation of the app-local `AdminAgentTurn` seam (agent-admin-schema.ts): one `AdminTurnRequest` in,
+// the model's full reply string out. Browser → the mounted proxy: in dev, `dev-proxy-plugin.ts`'s `/chat`
+// branch (holds the key SERVER-side, validates the {provider,model} pair against providers.json); in
+// production, the Cloudflare Worker port of the same proxy (`tools/agent/worker/index.ts`) at the same
+// mount → one JSON `{text}` back. This module SHIPS in the production build (both `agent-admin.ts` and
+// `agent-admin-app.ts` reach it via a runtime `/status` probe, not a dev-only import guard). Plain fetch;
+// NO key lives here (the proxy holds it) — no `import.meta.env.VITE_*` reference at all. The `a2ui-live` →
+// `live-proxy-transport.ts` precedent, adapted to agent-admin's prose-reply (not A2UI-JSONL) shape.
 
 import type {
   AdminAgentTurn,
