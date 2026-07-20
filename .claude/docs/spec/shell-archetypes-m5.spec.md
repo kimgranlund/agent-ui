@@ -1,6 +1,6 @@
 # SPEC — Shell archetypes M5: `ui-super-shell` (the two-level recursive shell grammar)
 
-> Status: proposed · v0.2 · 2026-07-20 · Layer: app chrome (`@agent-ui/app`)
+> Status: proposed · v0.3 · 2026-07-20 · Layer: app chrome (`@agent-ui/app`)
 > Refines: ADR-0151 — `adr/0151-named-shell-archetypes-m5.md`, in-flight on PR #45 (ratified in
 > substance 2026-07-18; the merge click is Kim's — the relative link lands when the ADR file does) ·
 > the agent-app-surfaces PRD's M5 (PRD-G9).
@@ -101,3 +101,82 @@ rail + pane + pane, right = pane + rail). Driven by LLD-C3 (`../lld/shell-archet
 AC7 (extends §6): both new frames reproduced structurally, including the dual-sidebar frame's
 asymmetric left/right pane counts · AC8 a whole-side collapse hides a multi-pane stack atomically
 (no stray pane left visible after its side collapses).
+
+## 8 · Amendment (v0.3, SPEC-R6 + SPEC-R7) — resizable inner pane · pane segments · tab-based narrow collapse
+
+Grounding: GH #52 (re-hosting `ui-agent-admin`'s chat+canvas chrome, ADR-0132) — Kim's direction
+ruling 2026-07-20: EXTEND the archetype grammar rather than declare agent-admin's shape "not a
+fit." Evidence source: the shipped `agent-admin.ts`/`.css` composition (a drag-resizable
+`ui-split [ conversation | {Settings ⇄ Context} tabs ]` wide shape + a 3-tab Chat/Settings/Context
+narrow shape, `ResizeObserver`-reparented under TKT-0085's live-surface-survival hardening) and its
+two pinned regression semantics (`agent-admin.browser.test.ts`). Decision record:
+[ADR-0154](../adr/0154-shell-grammar-resizable-pane-tab-collapse.md) (proposed). Build plan:
+[`../lld/agent-admin-shell-rehost.lld.md`](../lld/agent-admin-shell-rehost.lld.md).
+
+### SPEC-R6 — the user-resizable inner pane (amends R1c's fixed-pane law, per side, opt-in)
+
+- **R6a — scope.** At most the INNERMOST pane of a side (the pane adjacent to `content`) may be
+  user-resizable; rails and outer stacked panes stay token-fixed (R1c intact). Opt-in per side via
+  two new reflected boolean props: `resizable-start` / `resizable-end` (default `false`). A side
+  with no pane ignores its flag.
+- **R6b — mechanism.** When enabled, the shell renders a separator part
+  (`[data-part='pane-resizer'][data-side='start'|'end']`, `role="separator"`,
+  `aria-orientation="vertical"`, `aria-valuemin/-max/-now`) between `content` and that pane.
+  Pointer drag and keyboard (arrows = 1 module per step; Home/End = the bounds) mirror `ui-split`'s
+  shipped separator contract (app-surfaces-m4). JS writes ONLY a namespaced custom property —
+  `--ui-super-shell-pane-size-start`/`-end`, inline on the pane box — never a raw layout style
+  (split.ts's geometry-seam law).
+- **R6c — bounds.** The pane's inline-size stays ≥ `--ui-super-shell-pane-min-size` AND the canvas
+  keeps ≥ `--ui-super-shell-canvas-min-size` (two NEW tokens on the R1c ladder, both defaulting to
+  9 modules = 162px; consumers override — the agent-admin migration sets 20rem/16rem, its shipped
+  `ui-split` floors). The no-horizontal-overflow law (R2e) holds at every drag position.
+- **R6d — state.** The committed size is the reflected numeric prop `size-start`/`size-end` (px;
+  `undefined` ⇒ the token default). Observable AND settable — the R2d persistence law, deliberately
+  the collapse-state self-owned model rather than ADR-0102's controlled `sizes` mode (the shell
+  already owns its collapse state the same way; a consumer persisting the value re-assigns the prop
+  on restore). The shell emits `change` on a resize COMMIT (pointer release / key step) — the fleet
+  event vocabulary's existing member, the `ui-split` precedent.
+- **R6e — interplay.** A collapsed side hides its separator with the rest of the side (R2a
+  whole-side law — the separator carries the side's `data-side`); the committed size SURVIVES a
+  collapse round-trip. At narrow, the separator is hidden/inert under every `narrow-*` arm.
+
+### SPEC-R7 — pane segments + the `tabs` narrow arm (amends R4's single narrow story)
+
+- **R7a — pane segments (wide).** Direct authored children of a pane slot MAY carry
+  `data-segment="<Label>"`. A segmented pane renders a pane-local tab strip
+  (`[data-part='pane-tabs']`) at its top and shows EXACTLY ONE segment at a time
+  (`data-active-segment` on the pane box, first segment default). Non-segmented panes are
+  untouched. Segments are read once at compose (the build-once law) — this replaces a consumer
+  hand-composing `ui-tabs` inside a pane (the agent-admin Settings ⇄ Context shape).
+- **R7b — the third narrow arm.** `narrow-start`/`narrow-end` widen to
+  `'collapse' | 'stack' | 'tabs'`. At narrow, a `tabs` side's panes join a shell-owned top-level
+  strip (`[data-part='narrow-tabs']`, composed once, hidden outside narrow by the container query):
+  the CONTENT tab always first (label = `data-tab-label` on content's first authored child, default
+  "Content"), then per pane in DOM order — a segmented pane contributes ONE TAB PER SEGMENT (the
+  flattening that reproduces agent-admin's Chat/Settings/Context trio), a plain pane one tab
+  (`data-tab-label` on its first child, default the slot name). Selection = the host's
+  `data-narrow-tab` attribute (content default); exactly one participant (canvas, or one
+  pane/segment) is visible. Both sides may declare `tabs`; sides on `collapse`/`stack` keep their
+  R4 behavior independently.
+- **R7c — the survival law (the TKT-0085 guarantee, lifted to grammar level).** Every R6/R7 state
+  change — band crossing, tab selection, segment switch, resize — is VISIBILITY-ONLY: the shell
+  NEVER reparents, reconnects, or rebuilds authored content. Normative consequence: a live embedded
+  surface (an open A2UI surface mid game-loop, ADR-0129) survives wide↔narrow crossings and tab
+  switches un-cycled. This deliberately UPGRADES the migrated consumer's pinned narrow-crossing
+  semantic — `agent-admin.browser.test.ts`'s *"a live surface open at a crossing INTO narrow shows
+  Closed"* documented the reparenting mechanism's honest floor, not a product goal; its analog
+  under this grammar is a SURVIVES pin in both directions. ADR-0154 records that behavior delta as
+  a ratified decision, never a silent side effect.
+- **R7d — ARIA (proposed default; the LLD may harden).** Strips are `tablist`/`tab` with
+  `aria-controls` referencing the participant boxes; participant boxes KEEP their landmark roles
+  (§the LLD-C1 map) rather than swapping to `tabpanel` at narrow (a role swap needs a JS band
+  signal the pure-CSS narrow mode deliberately avoids). Named LLD fork, default as stated.
+
+AC9 (extends §6): drag + keyboard resize move the inner pane within R6c's bounds, `size-*`
+reflects, and a collapse round-trip preserves the committed size · AC10 a segmented pane shows the
+pane-local strip at wide and flattens to per-segment top-level tabs at narrow (the
+Chat/Settings/Context trio reproduced structurally) · AC11 the survival analogs, cross-engine:
+(a) a live A2UI surface in content survives a same-band resize (the 1200→800 pin's analog — zero
+DOM moves), (b) the SAME surface survives a wide→narrow crossing and a narrow tab round-trip
+(content → pane tab → content) un-cycled · AC12 no horizontal overflow at any band with a
+resizable pane and segments both active.
