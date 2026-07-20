@@ -426,6 +426,11 @@ export const NAV: readonly NavGroup[] = [
     links: [{ href: './super-shell.html', label: 'Super Shell' }],
   },
   {
+    // ui-chat-shell (@agent-ui/app, M5 round 4 — GH #98; shell-archetypes-m5.lld.md LLD-C6). The SAME
+    // ungrouped-site-level-link posture as App Shell/Super Shell just above.
+    links: [{ href: './chat-shell.html', label: 'Chat Shell' }],
+  },
+  {
     // ui-master-detail (@agent-ui/app, ADR-0120 cl.3a; app-surfaces-m4.lld.md LLD-C10, M4 Phase 2) — the
     // SAME ungrouped-site-level-link posture as App Shell just above: a GUIDE page for an app-tier
     // composition, not a fleet component in components/src.

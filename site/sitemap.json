@@ -536,6 +536,13 @@
       "section": "Guides"
     },
     {
+      "name": "Chat Shell",
+      "url": "./chat-shell.html",
+      "description": "ui-chat-shell is a thin ui-super-shell preset for the chat archetype: header, nav-pane, content — no options side.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
       "name": "Master Detail",
       "url": "./master-detail.html",
       "description": "ui-master-detail is a docked list | detail arrangement over the shipped ui-split, drilling into one record.",
