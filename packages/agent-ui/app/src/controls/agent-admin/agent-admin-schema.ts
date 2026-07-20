@@ -53,45 +53,19 @@ export const SUPPORTED_MODELS: readonly SupportedModel[] = [
  *  commit away in the Balanced list. */
 export const DEFAULT_MODEL_ID: string = 'claude-haiku-4-5-20251001'
 
-// ── admin-added models (Kim, 2026-07-19: "admins can make additional models available") ────────────────
-
-/** The store key carrying the admin's ADDITIONAL model ids (the `customModels` config field below):
- *  comma-separated, each `id` or `id|Label`. Parsed fail-closed — malformed segments drop silently. */
-export const CUSTOM_MODELS_KEY = 'customModels'
-
-/** Infer a custom model id's provider group from its well-known id prefix — fail-open to 'Other'. */
-export function inferProvider(id: string): string {
-  if (/^claude/i.test(id)) return 'Anthropic'
-  if (/^(gpt|o\d|chatgpt)/i.test(id)) return 'OpenAI'
-  if (/^(gemini|palm)/i.test(id)) return 'Google'
-  return 'Other'
-}
-
-/** Parse the customModels config value into SupportedModel rows (provider inferred from the id).
- *  Dedupes against the built-in ids and within itself; a non-string/empty value ⇒ []. */
-export function parseCustomModels(raw: unknown): SupportedModel[] {
-  if (typeof raw !== 'string' || raw.trim().length === 0) return []
-  const seen = new Set(SUPPORTED_MODELS.map((m) => m.id))
-  const out: SupportedModel[] = []
-  for (const segment of raw.split(',')) {
-    const [idPart, labelPart] = segment.split('|')
-    const id = (idPart ?? '').trim()
-    if (id.length === 0 || seen.has(id)) continue
-    seen.add(id)
-    out.push({ id, label: (labelPart ?? '').trim() || id, provider: inferProvider(id), includedByDefault: true })
-  }
-  return out
-}
-
 // ── the Model GRID's data half (Kim, 2026-07-19 rev.2) ──────────────────────────────────────────────────
 
 /** The store key holding the per-model INCLUSION record (`Record<modelId, boolean>` — the grid's
  *  switches). A missing key means INCLUDED (default-open roster; excluding is the explicit act). */
 export const MODELS_INCLUDED_KEY = 'modelsIncluded'
 
-/** The full model roster: built-ins + the admin's parsed additions, in declaration order. */
-export function modelRoster(customRaw: unknown): SupportedModel[] {
-  return [...SUPPORTED_MODELS, ...parseCustomModels(customRaw)]
+/** The full model roster — the built-ins, in declaration order. (GH #137, Kim's option A, 2026-07-20:
+ *  the "Additional models" free-text field that used to extend this roster with admin-typed ids is
+ *  REMOVED — a raw comma-separated id blob was judged not worth the parsing ambiguity. This stays a
+ *  function, not a plain re-export of `SUPPORTED_MODELS`, because every call site still calls it — the
+ *  roster-as-a-function shape is cheap to keep and leaves room for a future non-text way to extend it.) */
+export function modelRoster(): SupportedModel[] {
+  return [...SUPPORTED_MODELS]
 }
 
 /** Whether a model is included per the store record — an explicit boolean wins; an absent entry falls
@@ -122,7 +96,8 @@ function modelLabel(id: string): string {
 /** Build the agent-config `SettingsSchema` (ADR-0131 cl.1 — no external runtime dependency). The MODEL
  *  moved OUT of this schema (Kim, 2026-07-19 rev.2): the admin's own Model GRID (provider-grouped rows,
  *  include switch + default checkbox) owns model management, writing the same `model`/`modelsIncluded`
- *  store keys; this schema keeps name/temperature/tools + the customModels add-field. Rendered by the
+ *  store keys; this schema keeps name/temperature/tools (GH #137, 2026-07-20: the "Additional models"
+ *  free-text add-field this schema used to also carry is REMOVED — Kim's option A). Rendered by the
  *  composed `ui-settings` pane exactly as any other settings schema (SPEC-R10/R11/R12). */
 export function agentConfigSchema(): SettingsSchema {
   return {
@@ -142,16 +117,6 @@ export function agentConfigSchema(): SettingsSchema {
           validation: { required: true },
         },
         {
-          key: CUSTOM_MODELS_KEY,
-          type: 'text',
-          label: 'Additional models',
-          description:
-            'Comma-separated model ids (optionally `id | Label`) — they join the Model grid under their ' +
-            'provider. Live turns still pass the dev proxy’s provider allowlist; an id it doesn’t know ' +
-            'fails that turn visibly.',
-          default: '',
-        },
-        {
           key: 'temperature',
           type: 'slider',
           label: 'Temperature',
@@ -166,7 +131,7 @@ export function agentConfigSchema(): SettingsSchema {
 }
 
 /** The shared, read-only default schema — the model select is GONE from it (the grid took over), so
- *  no customModels-driven schema rebuild exists anymore; the grid re-renders itself instead. The
+ *  no store-driven schema rebuild exists anymore; the grid re-renders itself instead. The
  *  `toolsEnabled` boolean FIELD is gone too (vision rev.5, Kim's Figma frame 33:1693): kind-level
  *  gating moved to each capability section's own header master switch — same store keys, no field. */
 export const defaultAgentConfigSchema: SettingsSchema = agentConfigSchema()

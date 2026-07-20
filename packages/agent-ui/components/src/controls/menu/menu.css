@@ -41,6 +41,20 @@
      controller measures bounds on open, so a zero-width panel would mis-position too). */
   --ui-menu-min-inline-size: 10rem;
 
+  /* Size ceiling (GH #133/#134) — without this, an auto-width panel shrink-to-fits to whatever
+     inline space is available at the trigger's position: a long label near a viewport/container
+     edge has no room to render on one line, so it wraps (GH #133) — breaking the item row's
+     line-height:1 single-line contract below. Item labels are now nowrap+ellipsis (never wrap),
+     so this cap instead bounds how WIDE an auto-sized panel can grow for a long label — min(90vw, …)
+     so the cap itself never exceeds a narrow viewport (the same reason the shift-clamp in
+     overlay.ts:135-137 can't fully save a panel whose OWN width already exceeds the viewport: with
+     no upper bound, computePosition's `pW` could still be wider than `vw`, and `vw - pW` goes
+     negative — the clamp pins `left` to 0 but the panel's right edge still overflows, GH #134). A
+     bounded, STABLE width (fixed at mount, before overlay.ts ever measures it) also removes the
+     reflow-after-measurement path #134 named as the likely stale-`pW` mechanism. 24rem = a
+     comfortably readable line for menu-item prose without approaching typical viewport widths. */
+  --ui-menu-max-inline-size: min(90vw, 24rem);
+
   /* Menu-item row geometry — the LEGACY ITEM-PAD (§4.6/§5.1, NOT the widget-box height).
      A row is: vertical block padding + inline padding, giving a comfortable reading row.
      STRUCTURAL DIVERGENCE from ui-select/ui-combo-box (flagged, not forced to fit — 2026-07-06
@@ -123,6 +137,7 @@
     box-sizing: border-box;
     margin: 0;
     min-inline-size: var(--ui-menu-min-inline-size);
+    max-inline-size: var(--ui-menu-max-inline-size); /* GH #133/#134 — public dial, default min(90vw, 24rem) */
     max-block-size: var(--ui-menu-max-block-size); /* TKT-0027 — public dial, default min(50vh, 12 item rows) */
     overflow-y: auto;
     padding: 0; /* the box-model menuitem margins provide the inset (container-box.css); no shell padding */
@@ -142,6 +157,12 @@
     box-sizing: border-box;
     display: flex;
     align-items: center;
+    /* GH #133 — the row's own height math (--ui-menu-item-block-size, above) is derived assuming
+       exactly one line of content; nowrap+ellipsis is what actually ENFORCES that, rather than
+       leaving it an unstated assumption a long label could silently violate by wrapping. */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     margin: var(--ui-box-inset, 0.375rem); /* the box-model inset — 6px from the panel edge + between rows */
     padding-block: var(--ui-menu-item-pad-block);
     padding-inline: var(--ui-menu-item-pad-inline);

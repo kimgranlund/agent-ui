@@ -178,6 +178,25 @@ describe('ui-router-link — real click interception (SPEC-R6 AC1/AC2, LLD-C9)',
     await whenFlushed()
 
     const anchor = link.querySelector('a') as HTMLAnchorElement
+    // GH #141: `href` is stripped immediately before dispatch, AFTER `#onClick` would already see it (the
+    // component reads `this.to`/its own reactive `href` effect, never `anchor.getAttribute('href')`, so
+    // this has zero effect on what's under test). What IS under test — that OUR handler returns before
+    // calling `preventDefault()` for a modified/middle click, observed via `evt.defaultPrevented` below —
+    // is unaffected either way. What changes is the browser's OWN native default action: with no `href`,
+    // an `<a>` has no activation behavior at all (HTML LS §"the click event handler" — a hyperlink
+    // element's activation behavior requires an `href`), so this is now a real, uncancelled click on a
+    // real anchor that genuinely has nothing to navigate to, matching the AC2 assertions byte-for-byte —
+    // `defaultPrevented` still correctly reads whatever OUR handler decided — while eliminating the
+    // now-orphaned real same-document navigation the anchor's `href="#/about"` used to trigger. Bisected
+    // (2026-07-20): TWO OR MORE real, uncancelled same-document (hash) navigations within one file/tester
+    // realm are a deterministic (5/5) trigger for a runaway "Unknown event: response:response:…:ready"
+    // storm in `@vitest/browser`'s own tester↔orchestrator bridge — ONE alone is not (3/3 clean); this
+    // `it.each` runs FOUR back-to-back modifier-click cases, each previously producing its own real
+    // navigation. See GH #141's Findings comment for the full bisection trail and root-cause citation
+    // (`node_modules/@vitest/browser/dist/client/__vitest_browser__/tester-BJtsJFpD.js`'s unconditional
+    // `response:${event}` echo, no self-receipt guard). Do not remove this line to "simplify" the test —
+    // it is the actual fix, not incidental cleanup.
+    anchor.removeAttribute('href')
     const evt = new MouseEvent('click', { bubbles: true, cancelable: true, button: 0, ...mods })
     anchor.dispatchEvent(evt)
 

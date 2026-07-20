@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
-import { server } from 'vitest/browser'
+import { server, userEvent } from 'vitest/browser'
 import { readNdjsonLines } from '../../../../../../site/lib/ndjson-lines.ts'
 import type { UIStatusStreamElement } from './status-stream.ts'
 import type { UITimelineItemElement } from '../timeline-item/timeline-item.ts'
@@ -293,5 +293,128 @@ describe('ui-status-stream — grouped entries render + aria-live discipline und
     const groupMarkerLeft = group.querySelector(':scope > [data-part="marker"]')!.getBoundingClientRect().left
     const innerMarkerLeft = innerItem.querySelector('[data-part="marker"]')!.getBoundingClientRect().left
     expect(innerMarkerLeft, 'the nested rail is indented past the group rail, a real rendered group').toBeGreaterThan(groupMarkerLeft)
+  })
+})
+
+// ── GH #147/ADR-0153 Fork 1 — the elapsed-timer ticking display, REAL wall-clock time (the toast
+// real-duration precedent: jsdom fake-timers cover the mechanism in status-stream.test.ts; this proves the
+// SAME behaviour against the real engine's real setInterval/Date.now()) ────────────────────────────────
+
+describe('ui-status-stream — real elapsed-timer ticking (GH #147/ADR-0153 Fork 1, real setInterval)', () => {
+  it('a real ~1.1s wait shows the timestamp cell tick from "0s" to "1s"', async () => {
+    const { stream } = mount('<ui-status-stream label="Live"></ui-status-stream>')
+    const item = stream.appendEntry({
+      key: 't1',
+      status: 'active',
+      label: 'Working',
+      startedAt: new Date().toISOString(),
+    }) as UITimelineItemElement
+    await raf2() // the reactive render effect flushes async — let the initial "0s" paint commit to the DOM
+
+    const timestampCell = () => item.querySelector('[data-role="timestamp"]') as HTMLElement
+    expect(timestampCell().textContent, 'painted immediately on append').toBe('0s')
+
+    await wait(1100)
+    await raf2()
+    expect(timestampCell().textContent, 'a real second elapsed — the display ticked').toBe('1s')
+  })
+
+  it('finalize() freezes the real ticking display — it never keeps counting past a settled turn', async () => {
+    const { stream } = mount('<ui-status-stream label="Live"></ui-status-stream>')
+    const item = stream.appendEntry({
+      key: 't1',
+      status: 'active',
+      label: 'Working',
+      startedAt: new Date().toISOString(),
+    }) as UITimelineItemElement
+    const timestampCell = () => item.querySelector('[data-role="timestamp"]') as HTMLElement
+
+    await wait(1100)
+    await raf2()
+    expect(timestampCell().textContent).toBe('1s')
+    stream.finalize()
+    await raf2()
+    const frozenAt = timestampCell().textContent
+    await wait(1500) // well past another real tick — must NOT advance
+    await raf2()
+    expect(timestampCell().textContent, 'frozen at finalize() — a settled stream never keeps a clock running').toBe(frozenAt)
+  })
+})
+
+// ── GH #147/ADR-0153 Fork 2 — the inline retry/action affordance, real click ────────────────────────────
+
+describe('ui-status-stream — inline retry/action, real rendered <ui-button> + real click (GH #147/ADR-0153 Fork 2)', () => {
+  it('an error entry with `action` renders a real, non-collapsed <ui-button>; a real click emits `action` on the stream host', async () => {
+    const { stream } = mount('<ui-status-stream label="Live"></ui-status-stream>')
+    const item = stream.appendEntry({
+      key: 'r1',
+      status: 'error',
+      label: 'Patch step',
+      description: 'Merge conflict',
+      action: { label: 'Retry' },
+    }) as UITimelineItemElement
+    await raf2()
+
+    const button = item.querySelector('[data-role="action"] ui-button') as HTMLElement
+    expect(button, 'the retry button must be a real rendered element').not.toBeNull()
+    const rect = button.getBoundingClientRect()
+    expect(rect.width, 'test-the-whole-shape — a real, non-zero box, not a collapsed dot').toBeGreaterThan(0)
+    expect(rect.height).toBeGreaterThan(0)
+    expect(button.textContent).toBe('Retry')
+
+    let receivedKey: string | undefined
+    stream.addEventListener('action', (e) => {
+      receivedKey = (e as CustomEvent<{ key: string }>).detail.key
+    })
+    await userEvent.click(button)
+    expect(receivedKey, 'a real click on the retry button emits `action` with the entry key').toBe('r1')
+  })
+
+  it('a consumer-driven retry (update back to active) removes the button live — the component itself never re-runs anything', async () => {
+    const { stream } = mount('<ui-status-stream label="Live"></ui-status-stream>')
+    const item = stream.appendEntry({
+      key: 'r1',
+      status: 'error',
+      label: 'Patch step',
+      action: { label: 'Retry' },
+    }) as UITimelineItemElement
+    await raf2()
+    expect(item.querySelector('[data-role="action"] ui-button')).not.toBeNull()
+
+    stream.addEventListener('action', () => {
+      stream.update('r1', { status: 'active', description: 'Retrying…' }) // the CONSUMER drives this, never automatic
+    })
+    const button = item.querySelector('[data-role="action"] ui-button') as HTMLElement
+    await userEvent.click(button)
+    await raf2()
+    expect(item.querySelector('[data-role="action"]'), 'the action cell disappears once status leaves error').toBeNull()
+  })
+})
+
+// ── GH #147/ADR-0153 Fork 3 — the "Planned" all-pending group renders a real, distinct clock glyph ───────
+
+describe('ui-status-stream — an all-pending ("Planned") group renders a real clock glyph, distinct from the other group states (GH #147/ADR-0153 Fork 3)', () => {
+  it('a group whose children are all still pending escalates to pending and paints a real clock SVG marker', async () => {
+    const { stream } = mount('<ui-status-stream></ui-status-stream>')
+    const group = stream.appendEntry({ key: 'g', label: 'Task Group', description: 'Planned' }) as UITimelineItemElement
+    stream.appendEntry({ key: 'c1', parent: 'g', status: 'pending', label: 'Task Step 01', description: 'Planned' })
+    stream.appendEntry({ key: 'c2', parent: 'g', status: 'pending', label: 'Task Step 02', description: 'Planned' })
+    await raf2()
+
+    expect(group.status, 'an all-pending group escalates to pending (real DOM, real appendEntry calls)').toBe('pending')
+    const marker = group.querySelector(':scope > [data-part="marker"]') as HTMLElement
+    const svg = marker.querySelector('svg[data-role="marker"]') as SVGElement
+    expect(svg, 'a real injected glyph, not the plain CSS ring').not.toBeNull()
+    expect(svg.getAttribute('data-glyph')).toBe('clock')
+    const rect = svg.getBoundingClientRect()
+    expect(rect.width, 'a real, non-zero rendered icon').toBeGreaterThan(0)
+    expect(rect.height).toBeGreaterThan(0)
+
+    // distinct from the OTHER group states, not a recolored reuse (ADR-0057 shape law)
+    const activeGroup = stream.appendEntry({ key: 'g2', status: 'active', label: 'Another group' }) as UITimelineItemElement
+    stream.appendEntry({ key: 'g2c1', parent: 'g2', status: 'active', label: 'working' })
+    await raf2()
+    const activeSvg = activeGroup.querySelector(':scope > [data-part="marker"] svg[data-role="marker"]') as SVGElement
+    expect(activeSvg.getAttribute('data-glyph'), 'pending\'s clock is a distinct glyph from active\'s spinning ring').not.toBe('clock')
   })
 })

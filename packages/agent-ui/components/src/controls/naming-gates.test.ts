@@ -97,7 +97,9 @@ describe('naming gates — fs-walk discovery (anti-vacuous)', () => {
 // site must resolve to a known name or the gate fails, forcing a human to either use a vocabulary literal or
 // extend PROTOCOL_EVENT_EXCEPTIONS with the SAME citation discipline.
 
-const ALLOWED_EVENTS = new Set(['change', 'input', 'select', 'open', 'close', 'toggle'])
+// `action` (GH #147/ADR-0153, ui-status-stream's inline retry/action affordance) — the SEVENTH member,
+// added 2026-07-20 alongside family-coherence.test.ts's own ALLOWED_EVENTS (extend both together).
+const ALLOWED_EVENTS = new Set(['change', 'input', 'select', 'open', 'close', 'toggle', 'action'])
 
 // naming.md §12 + dom/form.ts's own ADR-0050 citation — extend together (a new protocol event needs the same
 // "outside the public vocab, cited" treatment in BOTH form.ts's header comment and here).
@@ -179,13 +181,13 @@ describe('Gate 1 — the emit-seam event allowlist (naming.md §4, packages/**/s
     expect(combined).toContain("FORM_RESET_EVENT = 'ui-form-reset'")
   })
 
-  it('every emit()/new CustomEvent() event name resolves to the closed six or a cited protocol exception', () => {
+  it('every emit()/new CustomEvent() event name resolves to the closed seven (GH #147/ADR-0153 added `action`) or a cited protocol exception', () => {
     expect(violations, violations.map((v) => `${v.file}: ${v.detail}`).join('\n')).toEqual([])
   })
 
   it('negative control: an out-of-vocabulary emit literal is caught', () => {
     expect(emitSeamViolations('zz.ts', "this.emit('ui-zzchange')")).toEqual([
-      { file: 'zz.ts', detail: "emit('ui-zzchange') outside {change,input,select,open,close,toggle}" },
+      { file: 'zz.ts', detail: "emit('ui-zzchange') outside {change,input,select,open,close,toggle,action}" },
     ])
   })
 
@@ -198,7 +200,7 @@ describe('Gate 1 — the emit-seam event allowlist (naming.md §4, packages/**/s
   it('negative control: a resolved identifier outside the vocabulary/exceptions is caught', () => {
     const src = "const ZZ_EVENT = 'ui-zz-thing'\nthis.dispatchEvent(new CustomEvent(ZZ_EVENT))"
     expect(emitSeamViolations('zz.ts', src)).toEqual([
-      { file: 'zz.ts', detail: "new CustomEvent(ZZ_EVENT = 'ui-zz-thing') outside {change,input,select,open,close,toggle} ∪ PROTOCOL_EVENT_EXCEPTIONS" },
+      { file: 'zz.ts', detail: "new CustomEvent(ZZ_EVENT = 'ui-zz-thing') outside {change,input,select,open,close,toggle,action} ∪ PROTOCOL_EVENT_EXCEPTIONS" },
     ])
   })
 
@@ -310,6 +312,9 @@ const ALLOWED_ROLES = new Set([
   // adopted alongside 'detail' into the shared disclosure. Added in the SAME change as naming.md §6's
   // registry line.
   'nested',
+  // ui-status-stream's inline retry/action affordance (GH #147/ADR-0153 Fork 2) — the host-appended cell
+  // hosting the entry's `<ui-button>`. Added in the SAME change as naming.md §6's registry line.
+  'action',
 ])
 
 /** Every `data-role` value used in one file's TEXT (comment-stripped): `data-role="x"` / `data-role='x'` /

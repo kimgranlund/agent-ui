@@ -28,19 +28,29 @@ import './agent-admin-app.css' // page-local: full-viewport layout + the preset 
 import type { UIAgentAdminElement } from '@agent-ui/app/agent-admin'
 import type { UIButtonElement } from '@agent-ui/components/controls/button'
 import { AGENT_PRESETS, ACTIVE_PRESET_KEY, presetStore, resetPreset, type AgentPreset } from './agent-admin-presets.ts'
-import { ADMIN_LIBRARIES } from './agent-admin-libraries.ts'
+import { librariesForCategory } from './agent-admin-libraries.ts'
 
 const root = document.querySelector('#app') ?? document.body
 
 // ── the six A2UI-showcase personas (TKT-0074) ─────────────────────────────────────────────────────────────
 // Each preset is a persona-scoped store (its own persistKey; edits persist per persona). Switching swaps
 // `admin.store` — the component's reactive store effect re-pushes it into the settings pane, rewires every
-// entry section, and re-syncs the conversation (agent-admin.ts:162; the store-swap probe pins it).
+// entry section, and — GH #145 fix — genuinely resets the conversation (chat log, open surfaces, the
+// live-request history, and the Dialog Turns log) for a real store reassignment; the store-swap probe
+// (agent-admin-app.test.ts) and the reset regression (agent-admin.test.ts) both pin it.
 
 const admin = document.createElement('ui-agent-admin') as UIAgentAdminElement
-// GH #47/#48 — the library packs, set BEFORE the element ever connects (the compose-time capture law
-// the `libraries` prop documents).
-admin.libraries = ADMIN_LIBRARIES
+
+// GH #143 — which persona is active must be known BEFORE the first `admin.libraries` assignment (the
+// add-from-library menu is scoped to the ACTIVE preset's category from the very first paint, not just on
+// a later switch) — computed here, ahead of the header/menu wiring below that also reads it.
+const initialPreset: AgentPreset =
+  AGENT_PRESETS.find((p) => p.id === localStorage.getItem(ACTIVE_PRESET_KEY)) ?? AGENT_PRESETS[0]!
+// GH #47/#48/#143 — the library packs, scoped to the active preset's category and set BEFORE the element
+// ever connects (the compose-time capture law the `libraries` prop documents for the section SHELL;
+// `applyPreset` below reassigns this — a fresh, re-filtered object — on every persona switch, which the
+// `libraries` prop's now-reactive add-from-library MENU picks up, agent-admin.ts's GH #143 update).
+admin.libraries = librariesForCategory(initialPreset.category)
 
 // ── the canvas-header (GH #51): `[ title | … | agent-menu ]` — replaces the TKT-0074 truncating chip
 // row. The active agent NAMES the surface (the title zone); switching moves into a ui-menu (one row per
@@ -58,8 +68,7 @@ const titleTagline = document.createElement('span')
 titleTagline.className = 'canvas-header-tagline'
 title.append(titleName, titleTagline)
 
-let active: AgentPreset =
-  AGENT_PRESETS.find((p) => p.id === localStorage.getItem(ACTIVE_PRESET_KEY)) ?? AGENT_PRESETS[0]!
+let active: AgentPreset = initialPreset
 
 // Armed by the DEV overlay below once a live key probes available; re-invoked per persona switch so each
 // persona's SURFACE session (TKT-0076 — the runner closure owns the a2ui transcript) starts clean.
@@ -126,6 +135,11 @@ function applyPreset(preset: AgentPreset): void {
   active = preset
   localStorage.setItem(ACTIVE_PRESET_KEY, preset.id)
   admin.store = presetStore(preset)
+  // GH #143 — re-scope the add-from-library menu to the NEW preset's category. A fresh object every call
+  // (never a reused reference) is load-bearing: `libraries`' reactive effect (agent-admin.ts) rebuilds the
+  // menu on an identity change, the same law `store`'s reassignment above relies on — handing back a
+  // reference-equal object would be a silent no-op.
+  admin.libraries = librariesForCategory(preset.category)
   armSurfaceTurn?.()
   titleName.textContent = preset.label
   titleTagline.textContent = preset.tagline

@@ -253,6 +253,47 @@ export const INTEGRATION_TOOLS: readonly NewEntryInput[] = [
   },
 ]
 
+/** GH #143 — per-preset library scoping. Every OTHER preset (The Quant, The Curator, The Stylist —
+ *  dashboards/collections/tokens; none of them a hotel or a game) sees `undefined`: generic packs only,
+ *  never a stray Hospitality or Games pack. Kept to exactly the two flavors the pack catalog actually
+ *  has today — a THIRD flavor earns its own union member the day a third persona-flavored pack ships,
+ *  never a bare string. */
+export type PresetCategory = 'hospitality' | 'games'
+
+/** GH #143 — which packs are PERSONA-FLAVORED (relevant to one preset category only) vs GENERIC
+ *  (relevant to every preset regardless of category). The generic/flavored split is read off each pack's
+ *  OWN description text, not invented for this ticket: `a2ui-idioms` IS "the exact idioms the producer
+ *  matches at turn time" for ANY persona, `playbooks-core` self-labels "General task-navigation
+ *  playbooks", and `integrations` are keyless utilities (weather/wikipedia/currency) with no persona
+ *  affinity at all — none of the three names a persona type the way "Hospitality" and "Games" do. Kim's
+ *  open design question (GH #143) is resolved here: yes, generic packs stay visible to every preset;
+ *  only the flavored two pairs are gated. A pack id absent from this map is generic by construction —
+ *  the safe default for any future pack that doesn't explicitly opt into a flavor. */
+const FLAVORED_PACK_CATEGORY: Record<string, PresetCategory> = {
+  hospitality: 'hospitality',
+  'playbooks-hospitality': 'hospitality',
+  games: 'games',
+  'playbooks-games': 'games',
+}
+
+/** GH #143 — `ADMIN_LIBRARIES` filtered to the packs relevant to `category`: every GENERIC pack (not in
+ *  `FLAVORED_PACK_CATEGORY`) passes through for every preset; a FLAVORED pack passes through only for its
+ *  OWN category. `category` undefined (a preset with no persona-flavored home) drops every flavored pack,
+ *  keeping generic packs only. Returns a FRESH object every call (never `ADMIN_LIBRARIES` itself) — the
+ *  `ui-agent-admin.libraries` prop's identity-change law (agent-admin.ts) is what makes a reassignment on
+ *  preset switch actually rebuild the add-from-library menu; handing back the same reference would be a
+ *  silent no-op. */
+export function librariesForCategory(category: PresetCategory | undefined): Record<string, EntryLibraryPack[]> {
+  const filtered: Record<string, EntryLibraryPack[]> = {}
+  for (const [kind, packs] of Object.entries(ADMIN_LIBRARIES)) {
+    filtered[kind] = packs.filter((pack) => {
+      const flavor = FLAVORED_PACK_CATEGORY[pack.id]
+      return flavor === undefined || flavor === category
+    })
+  }
+  return filtered
+}
+
 /** The packs the page hands `ui-agent-admin` (`admin.libraries`), keyed by entry kind. */
 export const ADMIN_LIBRARIES: Record<string, EntryLibraryPack[]> = {
   [ENTRY_KINDS.skill]: [
