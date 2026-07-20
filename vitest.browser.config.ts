@@ -42,13 +42,37 @@ import { playwright } from '@vitest/browser-playwright'
 // only package.json's invocation sharding changed. THIRD SPLIT (same day): `:rest` itself flipped 134
 // under load once the M5 super-shell wave grew the app package — `:app` (packages/agent-ui/app) now runs
 // alone and `:rest` excludes components+app (still complementary by construction via --exclude).
+//
+// FOURTH FIX (2026-07-20, GH #87): the THIRD SPLIT's `:rest` invocation
+// (`vitest run --project packages --exclude 'packages/agent-ui/components/**' --exclude
+// 'packages/agent-ui/app/**'`) never actually excluded anything — verified with `-t
+// '____no_such_test____' --reporter=verbose`, which still listed every `components/` and `app/` file.
+// Vitest 4.1's CLI `--exclude` sets ROOT-level `test.exclude`; each `projects[]` entry here declares its
+// OWN `test.exclude` (even under `extends: true`), and the project's own array WINS outright rather than
+// merging with the CLI-supplied one — so `:rest` was silently running the full ~85-file `packages`
+// project (components + app + everything else) every time, the exact unsharded scale the SECOND SPLIT
+// existed to avoid. That — not the a2ui-live e2e's screenshot-timeout cascade the crash log seemed to
+// implicate (screenshot timeouts precede failures fleet-wide under heap pressure; they are a symptom of
+// the OOM, not its cause) — is why `:rest` OOM'd. Positional directory arguments (as `:components` and
+// `:app` already use) DO scope correctly — verified the same way — so the fix moves `:rest`'s exclusion
+// into the config, the one place proven to actually filter, as its own `packages-rest` project below,
+// and `:rest`'s package.json invocation now just selects that project (no more CLI `--exclude`, nothing
+// to silently no-op).
 
 // GH #56 — the named, closed set of files pulled out of `packages`/`site` into the `focus-timing` project
 // below. Absolute repo-relative paths (not globs) so they match EXACTLY these files, never a same-named
 // file added later elsewhere; append here (never edit the individual file's own test code first) when a
 // new focus/keyboard/scroll-timing leg joins the flaky-under-concurrency class.
+//
+// GH #87 addendum (2026-07-20): `markdown.browser.test.ts`'s forced-colors token-degrade leg joined this
+// class once `packages-rest` started running its OWN correctly-scoped ~6-file group — it timed out on
+// `toMatchScreenshot` under that shard's concurrency twice in a row (measured), then passed 3/3 solo on
+// both engines. Same signature as the rest of this list: a screenshot-capture race under concurrent-page
+// load, not a component regression — this is very likely the "screenshot-timeout cascade" the GH #87
+// crash log itself flagged, previously indistinguishable from the OOM it rode alongside.
 const FOCUS_TIMING_FILES = [
   'packages/agent-ui/code/src/editor/editor.browser.test.ts',
+  'packages/agent-ui/code/src/markdown/markdown.browser.test.ts',
   'packages/agent-ui/components/src/controls/swiper/swiper.browser.test.ts',
   'packages/agent-ui/components/src/controls/textarea/textarea.browser.test.ts',
   'packages/agent-ui/components/src/controls/toolbar/toolbar.browser.test.ts',
@@ -99,7 +123,33 @@ export default defineConfig({
           // explicitly so a visual file is routed to the `visual` project ONLY, never double-run here.
           // GH #56's known flaky-under-concurrency files are ALSO excluded here — routed instead to the
           // `focus-timing` project below, which runs them with zero file parallelism.
+          //
+          // This project stays the full (components + app + rest) superset — `:components` and `:app`
+          // filter it down via a positional directory ARGUMENT at invocation (proven to scope correctly,
+          // GH #87), not a project-level exclude. `:rest` used to filter the SAME way via CLI `--exclude`
+          // flags, which silently do nothing against a project that declares its own `test.exclude` (GH
+          // #87) — it now runs the dedicated `packages-rest` project below instead, which excludes
+          // components/app at the config level where filtering actually works.
           exclude: ['**/*.visual.browser.test.ts', ...FOCUS_TIMING_FILES],
+        },
+      },
+      {
+        // GH #87 — `packages` minus components/app, realized as its OWN project (not a CLI `--exclude`
+        // against the `packages` project above, which vitest 4.1 silently ignores: a project's own
+        // declared `test.exclude` wins outright over anything the CLI supplies, verified with
+        // `-t '____no_such_test____' --reporter=verbose` showing every components/app file still
+        // collected). Complementary BY CONSTRUCTION exactly like the old CLI-flag intent claimed to be —
+        // a new package's browser tests land here automatically — except now it's actually true.
+        extends: true,
+        test: {
+          name: 'packages-rest',
+          include: ['packages/agent-ui/*/src/**/*.browser.test.ts'],
+          exclude: [
+            '**/*.visual.browser.test.ts',
+            ...FOCUS_TIMING_FILES,
+            'packages/agent-ui/components/**',
+            'packages/agent-ui/app/**',
+          ],
         },
       },
       {
