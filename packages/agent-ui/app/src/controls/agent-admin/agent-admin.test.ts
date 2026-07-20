@@ -895,6 +895,95 @@ describe('UIAgentAdminElement — the DEV-only live-turn fork (TKT-0052/ADR-0136
   })
 })
 
+// GH #145 — switching `store` to a genuinely DIFFERENT object (a persona switch, e.g. agent-admin-app.ts's
+// `applyPreset`: `admin.store = presetStore(nextPersona)`) must start that persona with its OWN clean
+// conversation: the visible thread, the private multi-turn `#history` replayed into a live request, and
+// the Dialog Turns ring all belong to the OLD store's conversation and must not survive the swap. A bare
+// reconnect with the SAME store object (ordinary re-parenting) must NOT wipe an in-progress conversation —
+// the master-detail.ts/settings.ts reconnect precedent this element otherwise honors throughout.
+describe('UIAgentAdminElement — a store SWAP resets the conversation; a same-store reconnect does not (GH #145)', () => {
+  function submit(el: UIAgentAdminElement, text: string): void {
+    const composer = el.querySelector('[data-role="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = text
+    ;(composer.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+  }
+  async function waitFor(predicate: () => boolean, label: string): Promise<void> {
+    for (let i = 0; i < 100; i += 1) {
+      if (predicate()) return
+      await Promise.resolve()
+    }
+    throw new Error(`waitFor timed out: ${label}`)
+  }
+  interface Recorder {
+    fn: import('./agent-admin-schema.ts').AdminAgentTurn
+    calls: import('./agent-admin-schema.ts').AdminTurnRequest[]
+  }
+  function recordingRunner(reply: string): Recorder {
+    const calls: import('./agent-admin-schema.ts').AdminTurnRequest[] = []
+    const fn: import('./agent-admin-schema.ts').AdminAgentTurn = async (req) => {
+      calls.push(req)
+      return reply
+    }
+    return { fn, calls }
+  }
+
+  it('assigning a NEW store object clears the visible thread AND the Dialog Turns ring', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    submit(el, 'hello from persona A')
+    expect(el.querySelectorAll('[data-role="user"]').length).toBe(1)
+    expect(el.querySelectorAll('[data-role="agent"]').length).toBe(1)
+    await waitFor(() => el.querySelectorAll('[data-part="context-turn"]').length === 1, 'persona A turn logged')
+
+    el.store = createMemoryStore({ initial: initialEntryValues() }) // a genuinely different store — the persona-switch shape
+    await whenFlushed()
+
+    expect(el.querySelectorAll('[data-role="user"]').length, 'persona A\'s user bubble must be gone').toBe(0)
+    expect(el.querySelectorAll('[data-role="agent"]').length, 'persona A\'s agent bubble must be gone').toBe(0)
+    expect(el.querySelectorAll('[data-part="context-turn"]').length, 'persona A\'s Dialog Turns must be gone').toBe(0)
+
+    // the new persona's OWN first turn renders into a clean thread, at turn 01 again (the counter reset too)
+    submit(el, 'hello from persona B')
+    expect(el.querySelectorAll('[data-role="user"]').length).toBe(1)
+    await waitFor(() => el.querySelectorAll('[data-part="context-turn"]').length === 1, 'persona B turn logged')
+    const label = el.querySelector('[data-part="context-turn"] [data-part="summary-text"]')?.textContent
+    expect(label, 'the turn counter resets with the swap, not carrying persona A\'s count forward').toBe('01')
+  })
+
+  it('a store swap also clears the private multi-turn history replayed into a live request — no cross-persona leakage', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const runnerA = recordingRunner('A replies')
+    el.agentTurn = runnerA.fn
+    submit(el, 'persona A turn one')
+    await waitFor(() => runnerA.calls.length === 1, 'persona A turn one ran')
+
+    el.store = createMemoryStore({ initial: initialEntryValues() })
+    await whenFlushed()
+
+    const runnerB = recordingRunner('B replies')
+    el.agentTurn = runnerB.fn
+    submit(el, 'persona B turn one')
+    await waitFor(() => runnerB.calls.length === 1, 'persona B turn one ran')
+    expect(runnerB.calls[0]!.history, 'persona B\'s first request must carry NO history from persona A').toEqual([])
+  })
+
+  it('a bare RECONNECT with the SAME store object does NOT reset the conversation (the reconnect precedent)', async () => {
+    const store = createMemoryStore({ initial: initialEntryValues() })
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = store
+    mount(el)
+    submit(el, 'still here after reconnect')
+    expect(el.querySelectorAll('[data-role="user"]').length).toBe(1)
+
+    const wrapper = document.createElement('div')
+    document.body.append(wrapper)
+    wrapper.append(el) // detach + reattach — connectedCallback (and the store effect) fires again, SAME store
+    await whenFlushed()
+
+    expect(el.querySelectorAll('[data-role="user"]').length, 'a same-store reconnect must not wipe the thread').toBe(1)
+    wrapper.remove()
+  })
+})
+
 describe('UIAgentAdminElement — a bring-your-own store with NO subscribe() still re-renders (component-reviewer MODERATE fix)', () => {
   it('adding a custom entry to a store lacking subscribe() still appears in the rendered list', () => {
     // SettingsStore.subscribe is OPTIONAL (store.ts) — a spec-conformant store may omit it entirely.

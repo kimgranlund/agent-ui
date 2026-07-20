@@ -104,4 +104,35 @@ describe('agent-admin-app — the canvas-header (GH #51)', () => {
     await raf()
     expect(document.querySelector('.canvas-header-name')).not.toBeNull()
   })
+
+  // GH #145 — the live bug report's exact repro, on the REAL page: talk to the active persona, switch via
+  // the real header dropdown, and the previous persona's visible thread + Dialog Turns must be gone (the
+  // reset mechanism itself is unit-proven in agent-admin.test.ts; this is the page-wiring proof that a real
+  // ui-menu commit → applyPreset → admin.store swap actually reaches it end to end).
+  it('GH #145: switching persona via the real header dropdown clears the previous persona\'s visible thread + Dialog Turns', async () => {
+    await raf()
+    const admin = document.querySelector('ui-agent-admin') as HTMLElement
+    // Layout-agnostic: the fleet's default 414×896 test viewport sits BELOW agent-admin.ts's own
+    // NARROW_MAX_PX (640) responsive threshold, so the composer lives under the narrow all-tabs shell
+    // here, not `[data-role="canvas"]` (the wide-split home) — TKT-0085 MOVES the same node between
+    // shells rather than cloning it, so a plain descendant query finds the one live instance either way.
+    const composer = admin.querySelector('ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = 'a question for the current persona'
+    ;(composer.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    await raf()
+    expect(admin.querySelectorAll('[data-role="user"]').length, 'the message posted to the current persona').toBe(1)
+
+    const agentMenu = document.querySelector('.agent-menu') as HTMLElement
+    const trigger = agentMenu.querySelector('[data-part="trigger"]') as HTMLElement
+    trigger.click()
+    await raf()
+    const items = [...document.querySelectorAll<HTMLElement>('.agent-menu [role="menuitemradio"]')]
+    const before = resolvedActive()
+    const target = AGENT_PRESETS.find((p) => p.id !== before.id)!
+    items.find((i) => i.dataset.value === target.id)!.click()
+    await raf()
+
+    expect(admin.querySelectorAll('[data-role="user"]').length, 'the OLD persona\'s user bubble must be gone after the switch').toBe(0)
+    expect(admin.querySelectorAll('[data-part="context-turn"]').length, 'the OLD persona\'s Dialog Turns must be gone after the switch').toBe(0)
+  })
 })

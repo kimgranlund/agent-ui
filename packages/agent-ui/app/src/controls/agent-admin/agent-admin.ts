@@ -231,7 +231,18 @@ export class UIAgentAdminElement extends UIElement {
   // PRIOR turns only; the system prompt is rebuilt fresh every turn and NEVER stored here, so a mid-
   // conversation model/prompt/capability switch applies to the NEXT turn only and prior turns are never
   // rewritten (the acceptance criterion falls out by construction).
+  //
+  // GH #145 fix: this is exactly the state a genuine `store` REASSIGNMENT (a persona switch, e.g.
+  // agent-admin-app.ts's `applyPreset`) must clear — a store swap is a "start a new conversation with a
+  // different agent" event, not a config re-skin. See `#lastSyncedStore`/the `connected()` effect below.
   #history: AdminTurn[] = []
+  /** The store reference the conversation/turn-log state was last synced against — `undefined` before the
+   *  first sync. GH #145: the `connected()` effect fires on EVERY store (re)assignment, including a bare
+   *  reconnect with the SAME store (which must NOT wipe an in-progress conversation, the master-detail.ts/
+   *  settings.ts reconnect precedent) — only a REAL reference change (a genuine persona/store swap) may
+   *  reset the thread. Comparing against this field (not "was this the first effect run") is what tells
+   *  the two apart. */
+  #lastSyncedStore: SettingsStore | undefined = undefined
   // The composer's Effort picker selection (the Figma chat-input refactor) — ephemeral, element-lifetime
   // state, deliberately NOT persisted to `store` (unlike `model`): reasoning effort is a per-conversation
   // dial, not a saved agent-profile setting, and Figma's own composer design carries no Effort field in
@@ -301,6 +312,22 @@ export class UIAgentAdminElement extends UIElement {
       const schema = this.schema
       const store = this.store
       untracked(() => {
+        // GH #145 — a genuine store swap (a different object reference than the one this element last
+        // synced against — `applyPreset()`'s `admin.store = presetStore(nextPersona)`) means a DIFFERENT
+        // agent is now live: the previous agent's visible thread, its private multi-turn `#history` (which
+        // would otherwise leak the old persona's exchanges into the new persona's live-turn request), and
+        // its Dialog Turns ring all belong to a conversation that no longer applies. A bare reconnect with
+        // the SAME store (this field unchanged) must NOT hit this branch — that would wipe an in-progress
+        // conversation on ordinary re-parenting (the master-detail.ts/settings.ts reconnect precedent this
+        // element otherwise honors). The very first sync (`#lastSyncedStore` still `undefined`) also takes
+        // this branch — harmless, since the thread/history/log are already empty at first connect.
+        if (store !== this.#lastSyncedStore) {
+          this.#lastSyncedStore = store
+          this.#conversation?.reset()
+          this.#history = []
+          this.#turnLog = []
+          this.#turnCounter = 0
+        }
         if (this.#settingsEl) {
           this.#settingsEl.schema = schema
           this.#settingsEl.store = store
