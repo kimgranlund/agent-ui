@@ -292,6 +292,37 @@ describe('ui-settings — keyboard (rail items are real <button> activators; Tab
   })
 })
 
+describe('ui-settings — inter-field vertical rhythm (GH #136)', () => {
+  it('the generated ui-form-provider lays out as a flex column with a real, non-zero gap', async () => {
+    const { wrapper, el } = mountSettings('900px')
+    await el.updateComplete
+    const provider = el.querySelector('ui-form-provider') as HTMLElement
+    const style = getComputedStyle(provider)
+    expect(style.display).toBe('flex')
+    expect(style.flexDirection).toBe('column')
+    const gapPx = parseFloat(style.rowGap || style.gap)
+    expect(gapPx).toBeGreaterThan(0)
+    wrapper.remove()
+  })
+
+  it('two consecutive generated field blocks render with real breathing room between them, not flush (real bounding rects, no simulated scroll/resize)', async () => {
+    const { wrapper, el } = mountSettings('900px')
+    await el.updateComplete
+    // the active "profile" section renders two ui-field-wrapped controls (displayName, bio) as direct
+    // siblings inside the ONE generated ui-form-provider — exactly the reported "flush" pair.
+    const fields = [...el.querySelectorAll('[data-part="panel"] ui-field')] as HTMLElement[]
+    expect(fields).toHaveLength(2)
+    const [first, second] = fields
+    const firstRect = first.getBoundingClientRect()
+    const secondRect = second.getBoundingClientRect()
+    expect(secondRect.top, 'the second field must render below the first (sanity check on the fixture)').toBeGreaterThan(firstRect.top)
+    const verticalGap = secondRect.top - firstRect.bottom
+    // pre-fix this measures ~0 (flush, the reported bug) — post-fix it is the real computed --ui-settings-gap.
+    expect(verticalGap).toBeGreaterThan(4)
+    wrapper.remove()
+  })
+})
+
 describe('ui-settings composed inside an ISOLATED ui-app-shell region (the master-detail reconnect precedent)', () => {
   it('a settings surface relocated by ADR-0082 isolation composes EXACTLY ONCE — no duplicate ui-master-detail', async () => {
     await import('@agent-ui/app/app-shell.css')
