@@ -9,6 +9,7 @@ export const ICON_NAMES = [
   'file-pdf', 'file-text', 'file-zip', 'file-code',
   'plus',
   'arrow-up', 'microphone',
+  'list', // ui-super-shell's header-hosted collapse toggle (M5, GH #83/#90) — the fleet's one hamburger/menu glyph
   'warning', // TKT-0083/ADR-0146 F7 — the ui-timeline-item `warning` status glyph (a triangle-exclamation, shape-coded per ADR-0057, distinct from error's `x`)
   'circle-notch', 'check-circle', 'x-circle', // the Figma "Claude Code Gateway" reasoning-chain card (node 21:1641-1643) — a GROUP-level marker's own distinct glyph set: a spinning ring for `active`, a circled check for `done`, a circled X for `error` (vs. the plain dot/bare check/x a leaf step's marker uses). `x-circle` is distinct from `warning`'s triangle — ADR-0057 review finding: error and warning must stay SHAPE-distinct at the group level too, never hue-only.
 ] as const
