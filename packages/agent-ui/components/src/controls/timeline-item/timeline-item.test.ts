@@ -251,6 +251,20 @@ describe('ui-timeline-item — the GROUP marker glyph (ensureNestedSlot sets #ne
     expect(glyphOf(marker)).toBe('check-circle')
     el.remove()
   })
+
+  // GH #147/ADR-0153 Fork 3 — an all-pending group (every child still "Planned", none started) is a REAL,
+  // reachable state (unlike status-stream.ts's own stream-level HEADER_STATUS_GLYPH.pending, whose comment
+  // documents why THAT one currently is not) — status-stream.ts's `#recomputeGroups` escalates a group of
+  // all-pending children to `escalateStatus`'s `pending` rank the moment they're appended, before any child
+  // starts. Previously this fell through to the plain leaf-style CSS hollow-ring (no prominent card-level
+  // glyph, unlike active/done/error/warning); `clock` closes that gap.
+  it('status="pending" on a group parent requests clock — the same prominent-glyph treatment active/done/error/warning already get', () => {
+    const { el, marker } = makeItem()
+    el.status = 'pending'
+    el.ensureNestedSlot(() => document.createElement('ui-timeline'))
+    expect(glyphOf(marker)).toBe('clock')
+    el.remove()
+  })
 })
 
 // ── the collapsible detail — ui-disclosure reuse, toggle re-emit, one nesting level ─────────────────────

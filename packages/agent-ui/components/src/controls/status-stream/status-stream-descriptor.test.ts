@@ -50,8 +50,9 @@ describe('status-stream.md descriptor — frontmatter parses + schema-valid', ()
     expect(validateComponentDescriptor(parsed)).toEqual([])
   })
 
-  it('declares NO events (SPEC-R12 — streamed state rides role=log, never a synthetic event)', () => {
-    expect(parsed.sequences.get('events')).toEqual([])
+  it('declares exactly ONE event, `action` (GH #147/ADR-0153 Fork 2) — streamed text/state still rides role=log, never a synthetic event (SPEC-R12\'s original scope, unchanged)', () => {
+    const events = (parsed.sequences.get('events') ?? []).map((i) => i.get('name'))
+    expect(events).toEqual(['action'])
   })
 
   it('role is log (a POLITE live region)', () => {

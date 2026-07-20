@@ -8,7 +8,7 @@
 // `process-shim.ts` MUST be the first import — see its own header for why the ordering is load-bearing.
 import './process-shim.ts'
 
-import { produce } from '../../../src/agent/produce.ts'
+import { produce, ProduceHalt } from '../../../src/agent/produce.ts'
 import type { ProduceDeps } from '../../../src/agent/produce.ts'
 import { formatErrorLine } from '../../../src/agent/meta-line.ts'
 import { resolvePair, validateProvidersConfig } from '../providers-config.ts'
@@ -39,6 +39,12 @@ interface Env {
 
 const MOUNT = '/__a2ui/agent'
 const MAX_BODY = 1 << 20 // 1 MiB — matches dev-proxy-plugin.ts's cap
+// GH #144 — the generic fallback shown for any produce()-loop failure that ISN'T a ProduceHalt (an
+// upstream fault, e.g. anthropicProvider's own error message, which embeds up to 500 raw chars of the
+// provider's API response body — an internal detail that must never reach an end user's chat log).
+// ProduceHalt's own message is safe to show verbatim: it names only closed failure CODES (SCHEMA/PARSE/
+// FEED_SCOPE/…), never raw upstream text.
+const GENERIC_FAILURE_MESSAGE = "I couldn't put together a valid response for that — could you try rephrasing, or try again?"
 
 // GH #101 (review finding): dev-proxy-plugin.ts never needed a CSRF guard — it's a Vite dev middleware,
 // reachable only from localhost. Ported unmodified to the public internet, the POST routes had none: a
@@ -220,13 +226,21 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
       // rendered, no error shown"). Writing ONE terminal `error` meta-line (`formatErrorLine`, GH #144)
       // before closing gives `admin-live-runner.ts` something to throw on, routing into the SAME visible
       // fail() path a non-2xx response already uses. `request.signal.aborted` means the CLIENT is the one
-      // that's gone (a disconnect, not a produce() failure) — this write is then a no-op at best, and the
-      // outer try/catch below already swallows a failed write, so no extra guard is needed.
-      const message = err instanceof Error ? err.message : 'produce error'
-      try {
-        await writer.write(encoder.encode(formatErrorLine(message) + '\n'))
-      } catch {
-        // the writer/stream is already broken (e.g. a genuine client disconnect) — nothing left to signal
+      // that's gone (a disconnect, not a produce() failure) — nothing left to read it, stays silent.
+      //
+      // The message shown is deliberately NOT the raw caught error in every case: a `ProduceHalt`'s own
+      // text names only closed failure CODES (safe, internal identifiers — SCHEMA/PARSE/FEED_SCOPE/…),
+      // so it crosses verbatim; anything else (e.g. `anthropicProvider`'s upstream-fault message, which
+      // embeds up to 500 raw chars of the provider's own API response body) degrades to a generic,
+      // safe fallback instead — that raw text is exactly the kind of internal detail that must never
+      // reach an end user's chat log.
+      if (!request.signal.aborted) {
+        const message = err instanceof ProduceHalt ? err.message : GENERIC_FAILURE_MESSAGE
+        try {
+          await writer.write(encoder.encode(formatErrorLine(message) + '\n'))
+        } catch {
+          // the writer/stream is already broken (e.g. a genuine client disconnect) — nothing left to signal
+        }
       }
     } finally {
       // GH #107 (review finding): closing a writer whose paired stream already errored (the common case on

@@ -39,6 +39,12 @@ export interface EntryListSection {
   host: HTMLElement
   /** Rebuild the list body from `entries` (already filtered to this section's own kind by the caller). */
   render(entries: readonly Entry[]): void
+  /** GH #143 — replace the add-from-library menu with one built from `libraries` (in place, keeping the
+   *  rest of the already-mounted section shell untouched). Empty/absent removes the affordance entirely,
+   *  matching the initial "byte-identical when no packs" law. The one part of a section NOT captured by
+   *  the `mountEntryList` build-once contract — a caller (`agent-admin.ts`) may call this again whenever
+   *  the packs on offer change (e.g. a persona/preset switch re-scoping which packs apply). */
+  updateLibraries(libraries: readonly EntryLibraryPack[]): void
 }
 
 /** Build one kind's section shell (heading + list + collapsible add-form), once. `kindLabel` is the
@@ -101,8 +107,12 @@ export function mountEntryList(kind: string, kindLabel: string, addLabel: string
   // `showAddError` note). Renders ONLY when packs were handed in; the section shell is byte-identical
   // otherwise. Rows carry `data-value="packId:index"` (the menu's commit payload) and the entry's
   // description as their tooltip.
-  const libraries = options?.libraries ?? []
-  if (libraries.length > 0) {
+  //
+  // GH #143 — extracted to a factory (`buildLibraryMenu`) so `updateLibraries` can rebuild JUST this menu
+  // in place (swap it for a fresh one built from a new pack list) without touching the rest of the
+  // already-mounted section shell — the seam that lets a caller re-scope which packs a section offers
+  // (e.g. per agent preset/persona) after the section is built.
+  function buildLibraryMenu(libs: readonly EntryLibraryPack[]): HTMLElement {
     const libraryMenu = document.createElement('ui-menu')
     libraryMenu.setAttribute('data-part', 'entry-library-menu')
     const libraryTrigger = document.createElement('ui-button') as UIButtonElement
@@ -118,7 +128,7 @@ export function mountEntryList(kind: string, kindLabel: string, addLabel: string
     libraryTrigger.append(libraryIcon, 'From library')
     libraryMenu.append(libraryTrigger)
 
-    for (const pack of libraries) {
+    for (const pack of libs) {
       for (const [index, entry] of pack.entries.entries()) {
         const row = document.createElement('div')
         row.dataset.value = `${pack.id}:${index}`
@@ -131,7 +141,7 @@ export function mountEntryList(kind: string, kindLabel: string, addLabel: string
     libraryMenu.addEventListener('select', (event) => {
       const { value } = (event as CustomEvent<{ value: string; index: number }>).detail
       const splitAt = value.lastIndexOf(':')
-      const pack = libraries.find((p) => p.id === value.slice(0, splitAt))
+      const pack = libs.find((p) => p.id === value.slice(0, splitAt))
       const entry = pack?.entries[Number(value.slice(splitAt + 1))]
       if (!entry) return
       // Mirror submitAdd's contract (PR #58 review finding): `onAdd` returning false is a fail-closed
@@ -142,6 +152,13 @@ export function mountEntryList(kind: string, kindLabel: string, addLabel: string
       void handlers.onAdd(entry)
     })
 
+    return libraryMenu
+  }
+
+  let libraryMenu: HTMLElement | null = null
+  const initialLibraries = options?.libraries ?? []
+  if (initialLibraries.length > 0) {
+    libraryMenu = buildLibraryMenu(initialLibraries)
     section.append(libraryMenu)
   }
 
@@ -251,17 +268,22 @@ export function mountEntryList(kind: string, kindLabel: string, addLabel: string
       const header = document.createElement('div')
       header.setAttribute('data-part', 'entry-header')
 
-      const entryLabel = document.createElement('span')
-      entryLabel.setAttribute('data-part', 'entry-label')
-      entryLabel.textContent = entry.label
-
+      // GH #138 (row-pattern standardization, Kim's option-A ruling): switch leads, label next, a
+      // flexible spacer, then trailing action content (the Remove button) pinned to the right edge.
       const toggle = document.createElement('ui-switch') as HTMLElement & { checked: boolean }
       toggle.setAttribute('data-part', 'entry-toggle')
       toggle.setAttribute('aria-label', `${entry.label} enabled`)
       toggle.checked = entry.enabled
       toggle.addEventListener('change', () => handlers.onToggle(entry.id, toggle.checked))
 
-      header.append(entryLabel, toggle)
+      const entryLabel = document.createElement('span')
+      entryLabel.setAttribute('data-part', 'entry-label')
+      entryLabel.textContent = entry.label
+
+      const entrySpacer = document.createElement('span')
+      entrySpacer.setAttribute('data-part', 'entry-spacer')
+
+      header.append(toggle, entryLabel, entrySpacer)
 
       if (!entry.builtin) {
         // TKT-0048: a real `<ui-button>` — its label is a plain word ("Remove"), never a glued glyph, so
@@ -313,7 +335,17 @@ export function mountEntryList(kind: string, kindLabel: string, addLabel: string
     }
   }
 
-  return { host: section, render }
+  /** GH #143 — swap the library menu for one built from `libraries`, in place. `addForm` (always present,
+   *  appended after wherever a library menu lands) is the stable insertion anchor — a library menu, when
+   *  present, always sits immediately before it, so re-inserting there preserves the section's visual
+   *  order (heading → list → add-toggle → [library menu] → add-form) on every call, first build included. */
+  function updateLibraries(libraries: readonly EntryLibraryPack[]): void {
+    libraryMenu?.remove()
+    libraryMenu = libraries.length > 0 ? buildLibraryMenu(libraries) : null
+    if (libraryMenu) section.insertBefore(libraryMenu, addForm)
+  }
+
+  return { host: section, render, updateLibraries }
 }
 
 /** Show `message` in the add-form's own error note (fail-closed validation feedback, ADR-0132 cl.4) —

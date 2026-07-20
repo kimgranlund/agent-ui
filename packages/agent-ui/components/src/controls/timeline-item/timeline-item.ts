@@ -92,7 +92,16 @@ const STATUS_GLYPH = { done: 'check', error: 'x', warning: 'warning' } as const 
 // `x-circle` glyph, NOT `warning`'s triangle reused (component-review finding, ADR-0057): the two states
 // must stay SHAPE-distinct, not ink-hue-distinct only, the same law the leaf glyph set already honors —
 // reusing `warning`'s shape for `error` at the group level would make them distinguishable by colour alone.
-const GROUP_STATUS_GLYPH = { active: 'circle-notch', done: 'check-circle', error: 'x-circle', warning: 'warning' } as const satisfies Partial<
+// `pending` (GH #147/ADR-0153 Fork 3): an all-pending group — every child still "Planned", none started —
+// previously fell all the way through to the LEAF-style CSS hollow-ring (timeline-item.css's plain
+// `[status='pending']` marker rule), the one group state with no distinct, prominent card-level glyph;
+// verified REACHABLE (unlike status-stream.ts's stream-level HEADER_STATUS_GLYPH, whose own `pending`
+// entry is closing the same named gap for consistency but is NOT reachable there — see that file's
+// comment): `#recomputeGroups` escalates a group of all-`pending` children to `escalateStatus`'s `pending`
+// rank (2, above the neutral ''/done floor, below `active`) the moment they're appended, before any child
+// starts — a real, live, common "not started yet" group state. `clock` — neutral/outline, GH #147's own
+// choice — completes the four-state prominent-glyph set the OTHER three states already have.
+const GROUP_STATUS_GLYPH = { pending: 'clock', active: 'circle-notch', done: 'check-circle', error: 'x-circle', warning: 'warning' } as const satisfies Partial<
   Record<(typeof STATUS)[number], IconName>
 >
 

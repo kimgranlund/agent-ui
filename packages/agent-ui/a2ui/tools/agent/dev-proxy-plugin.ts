@@ -17,7 +17,7 @@ import { readFileSync } from 'node:fs'
 import { loadEnv } from 'vite'
 import type { Plugin } from 'vite'
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { produce } from '../../src/agent/produce.ts'
+import { produce, ProduceHalt } from '../../src/agent/produce.ts'
 import type { ProduceDeps } from '../../src/agent/produce.ts'
 import { formatErrorLine } from '../../src/agent/meta-line.ts'
 import { resolvePair, validateProvidersConfig } from './providers-config.ts'
@@ -46,6 +46,12 @@ const SHARD_PATH = `${ROOT}/packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui
 
 const MOUNT = '/__a2ui/agent'
 const MAX_BODY = 1 << 20 // 1 MiB — a dev-only intent/turn body is tiny; cap it so a runaway request can't grow unbounded
+// GH #144 — the generic fallback shown for any produce()-loop failure that ISN'T a ProduceHalt (an
+// upstream fault, e.g. anthropicProvider's own error message, which embeds up to 500 raw chars of the
+// provider's API response body — an internal detail that must never reach an end user's chat log).
+// ProduceHalt's own message is safe to show verbatim: it names only closed failure CODES (SCHEMA/PARSE/
+// FEED_SCOPE/…), never raw upstream text. Shared verbatim with worker/index.ts's production twin.
+const GENERIC_FAILURE_MESSAGE = "I couldn't put together a valid response for that — could you try rephrasing, or try again?"
 
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -226,12 +232,21 @@ export function a2uiDevProxyPlugin(): Plugin {
                 // GH #144: ProduceHalt (the round bound exhausted) or an upstream fault mid-stream — headers
                 // are already committed (200/ndjson) by the time this can fire (every earlier throw site
                 // sits before the first `res.write`, so this catch is reached only once bytes are already
-                // on the wire). Match worker/index.ts's fix: write ONE terminal `error` meta-line
-                // (`formatErrorLine`) before ending the response, so `admin-live-runner.ts` has something to
-                // throw on — routing into the SAME visible fail() path a non-2xx response already uses,
-                // instead of a stream that just stops and reads as an empty "success" client-side.
-                const message = err instanceof Error ? err.message : 'produce error'
-                res.write(formatErrorLine(message) + '\n')
+                // on the wire). Write ONE terminal `error` meta-line (`formatErrorLine`) before ending the
+                // response, so `admin-live-runner.ts` has something to throw on — routing into the SAME
+                // visible fail() path a non-2xx response already uses, instead of a stream that just stops
+                // and reads as an empty "success" client-side. The message is deliberately NOT the raw
+                // caught error in every case: a `ProduceHalt`'s own text names only closed failure CODES
+                // (safe, internal identifiers), so it crosses verbatim; anything else (e.g.
+                // `anthropicProvider`'s upstream-fault message, up to 500 raw chars of the provider's own
+                // API response body) degrades to a generic, safe fallback instead — this is EXACTLY the
+                // "report without leaking a key" discipline the outer catch below already applies to a
+                // pre-stream failure, extended to a post-stream one. `res.destroyed` (the client
+                // disconnected) is the one case that stays silent — there's no one left to read it.
+                if (!res.destroyed) {
+                  const message = err instanceof ProduceHalt ? err.message : GENERIC_FAILURE_MESSAGE
+                  res.write(formatErrorLine(message) + '\n')
+                }
               }
               res.end()
               return
@@ -240,7 +255,13 @@ export function a2uiDevProxyPlugin(): Plugin {
             res.statusCode = 404
             res.end()
           } catch (err) {
-            // produce() halted, a bad body, or an upstream fault — report without leaking a key.
+            // A pre-stream failure (a bad body, provider resolution) — headers were never sent yet, so a
+            // real HTTP error status is still possible. A post-stream failure can no longer reach here:
+            // the produce()-loop's own inner try/catch above (GH #144) fully owns and reports that case
+            // before this outer catch would ever see it, so `res.headersSent` should never be true by the
+            // time control reaches this block in normal operation — `res.end()` alone covers the residual
+            // case (e.g. the inner catch's own write somehow failing) without attempting a second write to
+            // an already-broken response.
             const message = err instanceof Error ? err.message : 'proxy error'
             if (!res.headersSent) sendJson(res, 500, { error: message })
             else res.end()

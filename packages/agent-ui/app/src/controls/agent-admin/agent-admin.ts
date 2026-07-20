@@ -76,7 +76,6 @@ import {
   AGENT_ENABLED_KEY,
   A2UI_CATALOG_KEY,
   A2UI_CATALOG_OPTIONS,
-  CUSTOM_MODELS_KEY,
   DEFAULT_MODEL_ID,
   MODELS_INCLUDED_KEY,
   SURFACE_A2UI_KEY,
@@ -132,9 +131,13 @@ const agentAdminProps = {
   // (ADR-0129) instead of a prose reply.
   agentSurfaceTurn: { ...prop.json<AdminAgentSurfaceTurn | undefined>(undefined), attribute: false as const },
   // GH #47/#48 — entry-library packs, keyed by entry kind (skill/workflow/...). Non-reflected pure
-  // type-carrier (the schema/store precedent). Read ONCE at compose time (`#makeSection`) — set it
-  // BEFORE appending the element; a post-connect reassignment takes effect on the next fresh connect,
-  // matching the sections' own build-once law.
+  // type-carrier (the schema/store precedent). The section SHELL is still built once at compose time
+  // (`#makeSection`, the sections' build-once law) — but GH #143 made the add-from-library MENU inside
+  // each shell reactive: a post-connect reassignment (a new object reference, the `schema`/`store`
+  // identity-change law) re-runs the `connected()` effect and rebuilds just that menu per kind via
+  // `EntryListSection.updateLibraries` — e.g. a caller re-scoping which packs apply on a persona/preset
+  // switch. Only the menu updates; a section's rendered ENTRIES are unaffected (those already re-render
+  // off `store`, a separate signal).
   libraries: { ...prop.json<Record<string, readonly EntryLibraryPack[]> | undefined>(undefined), attribute: false as const },
 } satisfies PropsSchema
 
@@ -238,6 +241,14 @@ export class UIAgentAdminElement extends UIElement {
   // the settings pane either. Written into `#conversation.effort` imperatively whenever it changes — see
   // `#syncConversationConfig`.
   #effort: EffortLevel = 'medium'
+  // GH #145 — the store-swap effect's own "was this a real reassignment or a bare reconnect" memory
+  // (the #modelGridUnsub precedent, generalized): a REAL reassignment (a persona switch — a different
+  // store object) must start a fresh conversation; a bare reconnect with the SAME store (a layout
+  // crossing, TKT-0085) must not wipe an in-progress one. `#storeSeen` distinguishes "never run" (the
+  // element's first ever connect — nothing to reset, the conversation is already empty) from "ran once
+  // with `undefined`" (a real state a later defined store can still differ from).
+  #storeSeen = false
+  #lastStore: SettingsStore | undefined
 
   protected connected(): void {
     this.#compose() // idempotent — builds ONLY the split/pane shell + the composed children, once ever
@@ -279,15 +290,16 @@ export class UIAgentAdminElement extends UIElement {
       })
     }
     // The Model GRID (Kim, 2026-07-19 rev.2 — supersedes the one-day-old customModels→schema rebuild:
-    // the schema carries no model select anymore, the grid re-renders itself instead): render now from
-    // the store's current contents, and re-render on any of its three keys through its OWN teardown
+    // the schema carries no model select anymore, the grid re-renders itself instead; GH #137, 2026-07-20:
+    // the customModels admin-add capability itself is now gone too, Kim's option A): render now from
+    // the store's current contents, and re-render on either of its two keys through its OWN teardown
     // slot — NEVER the shared #unsubscribes map, which #rewireAllSections clears on every store rewire
     // (this subscription must outlive rewires; it dies with the connection).
     {
       this.#renderModelGrid()
       this.#modelGridUnsub?.()
       this.#modelGridUnsub = this.store?.subscribe?.((key) => {
-        if (key === 'model' || key === MODELS_INCLUDED_KEY || key === CUSTOM_MODELS_KEY) this.#renderModelGrid()
+        if (key === 'model' || key === MODELS_INCLUDED_KEY) this.#renderModelGrid()
       })
     }
 
@@ -300,12 +312,24 @@ export class UIAgentAdminElement extends UIElement {
     this.effect(() => {
       const schema = this.schema
       const store = this.store
+      const libraries = this.libraries
       untracked(() => {
+        // GH #145 — a REAL store reassignment (a persona switch: `admin.store = presetStore(other)`)
+        // must start a genuinely fresh conversation for the newly-selected persona: the visible chat
+        // log + any open A2UI surfaces (`#conversation.reset()`), the multi-turn `#history` fed into
+        // live requests, and the Dialog Turns ring (`#turnLog`) the Context panel reads. Gated on
+        // `#storeSeen` so the element's FIRST ever connect (nothing to reset yet) and a bare reconnect
+        // with the SAME store (e.g. a TKT-0085 layout crossing) both skip it — only a genuine identity
+        // change resets. `#rewireContext` below re-renders the (now-empty) Dialog Turns view.
+        if (this.#storeSeen && this.#lastStore !== store) this.#resetConversationState()
+        this.#storeSeen = true
+        this.#lastStore = store
         if (this.#settingsEl) {
           this.#settingsEl.schema = schema
           this.#settingsEl.store = store
         }
         this.#rewireAllSections(store)
+        this.#updateLibraries(libraries)
         this.#syncConversationConfig(store)
         this.#rewireContext(store)
       })
@@ -448,19 +472,24 @@ export class UIAgentAdminElement extends UIElement {
     const surfaceOptions = document.createElement('div')
     surfaceOptions.setAttribute('data-part', 'surface-options')
 
+    // GH #138 (row-pattern standardization, Kim's option-A ruling): switch leads, label next, a
+    // flexible spacer, then trailing action/selection content pinned to the right edge — every
+    // `surfaceRow` and its caller-appended trailing content (catalog select / note) follows this.
     const surfaceRow = (surface: string, label: string, title: string): { row: HTMLElement; toggle: HTMLElement & { checked: boolean; disabled: boolean } } => {
       const row = document.createElement('div')
       row.setAttribute('data-part', 'surface-row')
       row.setAttribute('data-surface', surface)
-      const rowLabel = document.createElement('span')
-      rowLabel.setAttribute('data-part', 'surface-label')
-      rowLabel.textContent = label
-      rowLabel.title = title
       const toggle = document.createElement('ui-switch') as HTMLElement & { checked: boolean; disabled: boolean }
       toggle.setAttribute('data-part', 'surface-toggle')
       toggle.setAttribute('aria-label', `${label} surface`)
       toggle.checked = true
-      row.append(rowLabel, toggle)
+      const rowLabel = document.createElement('span')
+      rowLabel.setAttribute('data-part', 'surface-label')
+      rowLabel.textContent = label
+      rowLabel.title = title
+      const spacer = document.createElement('span')
+      spacer.setAttribute('data-part', 'surface-spacer')
+      row.append(toggle, rowLabel, spacer)
       return { row, toggle }
     }
 
@@ -742,6 +771,17 @@ export class UIAgentAdminElement extends UIElement {
     }
   }
 
+  /** GH #143 — rebuild each CAPABILITY kind's add-from-library menu from `libraries`' CURRENT contents.
+   *  Runs on every `connected()` effect tick (a fresh connect and a real `libraries` reassignment alike) —
+   *  cheap (a handful of menu rows per kind) and idempotent, the `#rewireAllSections` precedent. Prompt
+   *  sections never carry a library pack (only the four capability kinds do — `#makeSection`'s own
+   *  `{ libraries: this.libraries?.[kind] }` wiring), so this loop is scoped to `CAPABILITY_KINDS`. */
+  #updateLibraries(libraries: Record<string, readonly EntryLibraryPack[]> | undefined): void {
+    for (const { kind } of CAPABILITY_KINDS) {
+      this.#capabilitySections.get(kind)?.updateLibraries(libraries?.[kind] ?? [])
+    }
+  }
+
   /** Feed the composer's Models/Effort pickers from THIS element's own current config (the Figma
    *  chat-input refactor) — `models`/`efforts` are static option lists (no re-render cost in setting them
    *  every call); `model` re-derives from `store`'s CURRENT value (the SAME `sanitizeSelect`/fail-closed
@@ -760,7 +800,7 @@ export class UIAgentAdminElement extends UIElement {
     const host = this.#modelGrid
     const store = this.store
     if (!host) return
-    const roster = modelRoster(store?.get(CUSTOM_MODELS_KEY))
+    const roster = modelRoster()
     const included = store?.get(MODELS_INCLUDED_KEY)
     const current = sanitizeModel(store?.get('model'), roster)
     host.replaceChildren()
@@ -833,14 +873,14 @@ export class UIAgentAdminElement extends UIElement {
       // The picker offers the INCLUDED roster only (the Model grid's switches, 2026-07-19 rev.2); the
       // committed default always stays offered — the grid disables excluding it, and sanitizeModel
       // falls back to DEFAULT_MODEL_ID for anything off-roster.
-      const roster = modelRoster(store?.get(CUSTOM_MODELS_KEY))
+      const roster = modelRoster()
       const included = store?.get(MODELS_INCLUDED_KEY)
       conversation.models = roster.filter((m) => isModelIncluded(included, m))
       conversation.model = sanitizeModel(store?.get('model'), roster)
     }
     renderModel()
     const unsubscribe = store?.subscribe?.((key) => {
-      if (key === 'model' || key === MODELS_INCLUDED_KEY || key === CUSTOM_MODELS_KEY) renderModel()
+      if (key === 'model' || key === MODELS_INCLUDED_KEY) renderModel()
     })
     if (unsubscribe) this.#unsubscribes.set('model', unsubscribe)
   }
@@ -878,7 +918,7 @@ export class UIAgentAdminElement extends UIElement {
 
     const config: AgentConfigSnapshot = {
       name: typeof store?.get('name') === 'string' ? (store.get('name') as string) : 'Untitled agent',
-      model: sanitizeModel(store?.get('model'), modelRoster(store?.get(CUSTOM_MODELS_KEY))),
+      model: sanitizeModel(store?.get('model'), modelRoster()),
       temperature: sanitizeNumber(schema, 'temperature', store?.get('temperature'), 0.5),
       toolsEnabled: isEnabledFlag(store?.get(kindEnabledKey(ENTRY_KINDS.tool))),
       systemPrompt,
@@ -962,7 +1002,7 @@ export class UIAgentAdminElement extends UIElement {
     const request = {
       turn,
       personaSystem: composeLiveSystemPrompt(sections, this.#capabilityGroups(store)),
-      model: sanitizeModel(store?.get('model'), modelRoster(store?.get(CUSTOM_MODELS_KEY))),
+      model: sanitizeModel(store?.get('model'), modelRoster()),
       // Vision rev.6 — the catalog picker's sanitized selection (see AdminSurfaceTurnRequest.catalogId).
       catalogId: sanitizeCatalog(store?.get(A2UI_CATALOG_KEY)),
       // GH #49 — the ENABLED tool entries' labels, master-gated on toolsEnabled (the SAME switch that
@@ -1016,7 +1056,7 @@ export class UIAgentAdminElement extends UIElement {
   // ── vision rev.5: master-state application + the Context tab's renderers ─────────────────────────────
 
   /** (Re-)apply the master states + (re-)render the Context tab + (re-)arm its store subscription — the
-   *  Agent System view reads nearly every key (name/model/temperature/customModels, the master toggles,
+   *  Agent System view reads nearly every key (name/model/temperature, the master toggles,
    *  all five entry lists) and writes are commit-time (never per-keystroke), so an unfiltered wholesale
    *  re-render per store write is the honest cheap option. Its OWN teardown slot (the #modelGridUnsub
    *  precedent — it must outlive `#rewireAllSections`' clears); re-armed per store (re)assignment via
@@ -1081,7 +1121,7 @@ export class UIAgentAdminElement extends UIElement {
         'Agent',
         {
           name: typeof store?.get('name') === 'string' ? (store.get('name') as string) : 'Untitled agent',
-          model: sanitizeModel(store?.get('model'), modelRoster(store?.get(CUSTOM_MODELS_KEY))),
+          model: sanitizeModel(store?.get('model'), modelRoster()),
           temperature: sanitizeNumber(schema, 'temperature', store?.get('temperature'), 0.5),
           effort: this.#effort,
           active: isEnabledFlag(store?.get(AGENT_ENABLED_KEY)),
@@ -1150,6 +1190,19 @@ export class UIAgentAdminElement extends UIElement {
       { role: 'assistant', content: reply },
     ]
     this.#history.push(...turns)
+  }
+
+  /** GH #145 — every piece of PER-PERSONA conversation state, cleared together on a real store
+   *  reassignment: the visible chat log + any open A2UI surfaces (`ui-conversation.reset()`, the same
+   *  method a consumer calls for a user-facing "start over"), the live-request `#history` ring (so a
+   *  freshly-selected persona's first turn carries no prior persona's exchanges), and the Dialog Turns
+   *  log (`#turnLog`/`#turnCounter`) the Context panel's `#renderContextTurns` reads — the caller
+   *  (the connected() effect) re-renders that view immediately after via `#rewireContext`. */
+  #resetConversationState(): void {
+    this.#conversation?.reset()
+    this.#history = []
+    this.#turnLog = []
+    this.#turnCounter = 0
   }
 }
 

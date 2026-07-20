@@ -958,6 +958,95 @@ describe('UIAgentAdminElement — composition survives a RECONNECT (the master-d
   })
 })
 
+// GH #145 — switching personas (a real `admin.store = <other>` reassignment, the site's
+// agent-admin-app.ts `applyPreset()` mechanism) must start a genuinely FRESH conversation: the visible
+// chat log clears, the Dialog Turns/Context panel resets, and a new message starts its own thread rather
+// than appending onto the old persona's. Pre-fix, `applyPreset()`'s own source comment claimed the
+// reactive store effect "re-syncs the conversation", but the effect only ever re-rendered the settings
+// pane + entry sections — the chat log (`ui-conversation`'s own `#log`), the live-request `#history`
+// ring, and the Dialog Turns `#turnLog` were never cleared, so the OLD persona's thread stayed on screen
+// and a new persona's first message appended onto it. A bare RECONNECT with the SAME store (the
+// `master-detail.ts` precedent above, e.g. a TKT-0085 layout crossing) must NOT reset — only a genuine
+// store-identity change is a "switch".
+describe('UIAgentAdminElement — a persona switch resets the conversation (GH #145)', () => {
+  function submit(el: UIAgentAdminElement, text: string): void {
+    const composer = el.querySelector('[data-role="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = text
+    ;(composer.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+  }
+  function bubbleTexts(el: UIAgentAdminElement): string[] {
+    return [...el.querySelectorAll('[data-role="user"], [data-role="agent"]')].map((b) => b.textContent ?? '')
+  }
+  function turnLabels(el: UIAgentAdminElement): string[] {
+    return [...el.querySelectorAll('[data-part="context-turn"] [data-part="summary-text"]')].map((s) => s.textContent ?? '')
+  }
+
+  it('a real store reassignment clears the chat log AND the Dialog Turns log; a fresh message starts its own thread', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    submit(el, 'hello from persona A')
+    expect(bubbleTexts(el).some((t) => t.includes('hello from persona A'))).toBe(true)
+    expect(turnLabels(el)).toEqual(['01']) // one Dialog Turn logged
+
+    // A genuinely different store instance — exactly what `presetStore(otherPreset)` returns for a
+    // never-visited persona (agent-admin-presets.ts). The rewire rides the reactive store effect
+    // (agent-admin.ts's connected()), not a synchronous write — same `whenFlushed()` precedent the
+    // store-swap probe (agent-admin-app.test.ts) already follows.
+    el.store = createMemoryStore({ initial: initialEntryValues() })
+    await whenFlushed()
+
+    expect(bubbleTexts(el), 'the old thread must not survive the switch').toEqual([])
+    expect(turnLabels(el), 'the Dialog Turns log must reset too').toEqual([])
+
+    submit(el, 'hello from persona B')
+    // The fresh thread carries ONLY the new persona's exchange — no trace of persona A's message.
+    expect(bubbleTexts(el).some((t) => t.includes('hello from persona A'))).toBe(false)
+    expect(bubbleTexts(el).some((t) => t.includes('hello from persona B'))).toBe(true)
+    // The turn counter also restarts from 1 (not 2) — a fresh persona is not turn 2 of the old one.
+    expect(turnLabels(el)).toEqual(['01'])
+  })
+
+  it('the live request never replays a prior persona\'s history after a store reassignment', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const calls: import('./agent-admin-schema.ts').AdminTurnRequest[] = []
+    el.agentTurn = async (req) => {
+      calls.push(req)
+      return 'ack'
+    }
+    submit(el, 'first persona turn one')
+    // Wait for the turn to fully COMPLETE (not just the runner call) — `#recordTurn` (which feeds
+    // `#history`) runs after the awaited reply, so polling only `calls.length` races it: a store
+    // reassignment right after the runner call, but before `#recordTurn` lands, could see the reset
+    // land BEFORE the stale append rather than after. The Dialog Turns log is written in the same
+    // continuation immediately AFTER `#recordTurn`, so waiting for it orders correctly.
+    for (let i = 0; i < 100 && turnLabels(el).length < 1; i += 1) await Promise.resolve()
+    expect(calls).toHaveLength(1)
+    expect(calls[0]!.history).toEqual([]) // nothing prior yet
+
+    el.store = createMemoryStore({ initial: initialEntryValues() })
+    await whenFlushed()
+    submit(el, 'second persona turn one')
+    for (let i = 0; i < 100 && calls.length < 2; i += 1) await Promise.resolve()
+    expect(calls).toHaveLength(2)
+    // Pre-fix this replayed [{user: 'first persona turn one'}, {assistant: 'ack'}] — the OLD persona's
+    // exchange — instead of an empty history for the new persona's own first turn.
+    expect(calls[1]!.history).toEqual([])
+  })
+
+  it('a bare RECONNECT with the SAME store does NOT reset — no do-over on a layout crossing (TKT-0085)', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    submit(el, 'still here after reconnect')
+    expect(turnLabels(el)).toEqual(['01'])
+
+    const wrapper = document.createElement('div')
+    document.body.append(wrapper)
+    wrapper.append(el) // detach + reattach with the SAME `el.store` reference — connectedCallback fires again
+
+    expect(bubbleTexts(el).some((t) => t.includes('still here after reconnect'))).toBe(true)
+    expect(turnLabels(el)).toEqual(['01'])
+    wrapper.remove()
+  })
+})
+
 const DIR = `${process.cwd()}/packages/agent-ui/app/src/controls/agent-admin`
 const agentAdminTs = readFileSync(`${DIR}/agent-admin.ts`, 'utf8') as string
 const agentAdminCss = readFileSync(`${DIR}/agent-admin.css`, 'utf8') as string
@@ -1114,6 +1203,48 @@ describe('UIAgentAdminElement — entry libraries (GH #47/#48)', () => {
   })
 })
 
+describe('UIAgentAdminElement — libraries is reactive post-connect (GH #143 — per-preset library scoping)', () => {
+  const PACK_A = { skill: [{ id: 'pack-a', label: 'Pack A', description: 'fixture', entries: [{ label: 'a-idiom', description: 'a', content: 'Use A.' }] }] }
+  const PACK_B = { skill: [{ id: 'pack-b', label: 'Pack B', description: 'fixture', entries: [{ label: 'b-idiom', description: 'b', content: 'Use B.' }] }] }
+
+  it('a new object reference rebuilds the menu — old pack rows gone, new pack rows present; entries/store untouched', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore()
+    el.libraries = PACK_A
+    mount(el)
+    await el.updateComplete
+    const section = el.querySelector('[data-part="entry-section"][data-kind="skill"]') as HTMLElement
+    expect(section.querySelectorAll('[data-value^="pack-a:"]')).toHaveLength(1)
+    expect(section.querySelectorAll('[data-value^="pack-b:"]')).toHaveLength(0)
+
+    el.libraries = PACK_B // a FRESH object — the identity-change law this reactivity relies on
+    await el.updateComplete
+
+    expect(section.querySelectorAll('[data-value^="pack-a:"]'), 'the stale pack is gone').toHaveLength(0)
+    expect(section.querySelectorAll('[data-value^="pack-b:"]'), 'the new pack rendered').toHaveLength(1)
+    // the section shell + any already-added entries are untouched — only the library MENU rebuilt.
+    expect(el.querySelector('[data-part="entry-section"][data-kind="skill"]')).toBe(section)
+  })
+
+  it('reassigning to empty removes the affordance entirely; reassigning back re-adds it', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore()
+    el.libraries = PACK_A
+    mount(el)
+    await el.updateComplete
+    const section = el.querySelector('[data-part="entry-section"][data-kind="skill"]') as HTMLElement
+    expect(section.querySelector('[data-part="entry-library-menu"]')).not.toBeNull()
+
+    el.libraries = { skill: [] }
+    await el.updateComplete
+    expect(section.querySelector('[data-part="entry-library-menu"]'), 'empty ⇒ affordance removed').toBeNull()
+
+    el.libraries = PACK_A
+    await el.updateComplete
+    expect(section.querySelector('[data-part="entry-library-menu"]'), 're-populated ⇒ affordance returns').not.toBeNull()
+  })
+})
+
 describe('UIAgentAdminElement — a REJECTED library entry surfaces the same error note as the hand path (PR #58 review)', () => {
   it('an empty-label pack entry shows showAddError feedback instead of failing silently', async () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
@@ -1135,7 +1266,9 @@ describe('UIAgentAdminElement — a REJECTED library entry surfaces the same err
   })
 })
 
-// ── the model lists + admin-added models (Kim, 2026-07-19) ──────────────────────────────────────────────
+// ── the model lists (Kim, 2026-07-19; the admin-added-models capability is REMOVED, GH #137/Kim's
+//    option A, 2026-07-20 — no more free-text "Additional models" field, no more customModels roster
+//    merge) ──────────────────────────────────────────────────────────────────────────────────────────
 
 describe('SUPPORTED_MODELS lists + the Haiku default (2026-07-19)', () => {
   it('the default model is Haiku; Sonnet remains an offered option', async () => {
@@ -1147,32 +1280,20 @@ describe('SUPPORTED_MODELS lists + the Haiku default (2026-07-19)', () => {
     for (const m of SUPPORTED_MODELS) expect(m.provider.length, m.id).toBeGreaterThan(0)
   })
 
-  it('parseCustomModels: id|Label pairs, provider inference, dedupe, malformed dropped', async () => {
-    const { parseCustomModels } = await import('./agent-admin-schema.ts')
-    expect(parseCustomModels('claude-x, gpt-6 | My GPT, gemini-3, mystery-1, claude-x, claude-sonnet-5, , |')).toEqual([
-      { id: 'claude-x', label: 'claude-x', provider: 'Anthropic', includedByDefault: true },
-      { id: 'gpt-6', label: 'My GPT', provider: 'OpenAI', includedByDefault: true },
-      { id: 'gemini-3', label: 'gemini-3', provider: 'Google', includedByDefault: true },
-      { id: 'mystery-1', label: 'mystery-1', provider: 'Other', includedByDefault: true },
-    ])
-    expect(parseCustomModels(undefined)).toEqual([])
-    expect(parseCustomModels(42)).toEqual([])
-  })
-
-  it('the schema carries NO model select anymore (the grid owns it); customModels field stays; model roster helpers hold', async () => {
-    const { agentConfigSchema, CUSTOM_MODELS_KEY, modelRoster, isModelIncluded, sanitizeModel, DEFAULT_MODEL_ID } = await import('./agent-admin-schema.ts')
+  it('the schema carries NO model select and NO customModels field (GH #137); model roster helpers hold', async () => {
+    const { agentConfigSchema, modelRoster, isModelIncluded, sanitizeModel, DEFAULT_MODEL_ID, SUPPORTED_MODELS } = await import('./agent-admin-schema.ts')
     const schema = agentConfigSchema()
     expect(schema.sections[0]!.fields.some((f) => f.key === 'model'), 'no model select field').toBe(false)
-    expect(schema.sections[0]!.fields.some((f) => f.key === CUSTOM_MODELS_KEY)).toBe(true)
-    const roster = modelRoster('gpt-6 | My GPT')
-    expect(roster.at(-1)).toEqual({ id: 'gpt-6', label: 'My GPT', provider: 'OpenAI', includedByDefault: true })
+    expect(schema.sections[0]!.fields.some((f) => f.key === 'customModels'), 'the Additional models field is removed').toBe(false)
+    const roster = modelRoster()
+    expect(roster).toEqual(SUPPORTED_MODELS)
     const sonnet = roster.find((m) => m.id === 'claude-sonnet-5')!
     const gpt = roster.find((m) => m.id === 'gpt-4.1')!
     expect(isModelIncluded(undefined, sonnet), 'absent record ⇒ the model\'s own includedByDefault (Sonnet ships on)').toBe(true)
     expect(isModelIncluded(undefined, gpt), 'the OpenAI option ships OFF (rev.4)').toBe(false)
     expect(isModelIncluded({ 'claude-sonnet-5': false }, sonnet), 'an explicit record wins').toBe(false)
     expect(isModelIncluded({ 'gpt-4.1': true }, gpt)).toBe(true)
-    expect(sanitizeModel('gpt-6', roster)).toBe('gpt-6')
+    expect(sanitizeModel('claude-sonnet-5', roster)).toBe('claude-sonnet-5')
     expect(sanitizeModel('nope', roster)).toBe(DEFAULT_MODEL_ID)
   })
 })
@@ -1241,21 +1362,6 @@ describe('ui-agent-admin — the Model GRID (2026-07-19 rev.2)', () => {
       (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === 'claude-haiku-4-5-20251001',
     )!
     expect((haikuRow.querySelector('[data-part="model-default"]') as HTMLElement & { checked: boolean }).checked, 'radio semantics: the old default unchecked').toBe(false)
-  })
-
-  it('a customModels write folds new rows under their inferred provider', async () => {
-    const { el, store } = mountAdmin()
-    await el.updateComplete
-    store.set('customModels', 'gpt-6 | My GPT, mystery-1')
-    await el.updateComplete
-    const providers = [...el.querySelectorAll('[data-part="model-provider"]')].map((p) => p.textContent)
-    expect(providers).toEqual(['Anthropic', 'OpenAI', 'Google', 'Other'])
-    expect(el.querySelectorAll('[data-part="model-row"]')).toHaveLength(8)
-    // a custom add ships INCLUDED (you added it to use it) — unlike the built-in off-by-default options
-    const customRow = [...el.querySelectorAll<HTMLElement>('[data-part="model-row"]')].find(
-      (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === 'gpt-6',
-    )!
-    expect((customRow.querySelector('[data-part="model-include"]') as HTMLElement & { checked: boolean }).checked).toBe(true)
   })
 })
 

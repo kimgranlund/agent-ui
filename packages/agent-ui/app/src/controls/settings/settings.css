@@ -5,13 +5,21 @@
  *       (SPEC-R9): the rail|panel drill-in geometry is entirely the composed `ui-master-detail`/
  *       `ui-split`'s OWN shipped CSS, and (ADR-0130, nav-rail Phase 2) the rail's own anatomy is now
  *       entirely the composed `ui-nav-rail collapse="drill-in"`'s OWN shipped CSS (nav-rail.css) — this
- *       sheet adds only the panel host's content inset + the notice/unsupported-field chrome.
+ *       sheet adds only the panel host's content inset, the generated form's inter-field vertical
+ *       rhythm (GH #136, below), and the notice/unsupported-field chrome.
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-settings) declares --ui-settings-* ════════════════ */
 
 :where(ui-settings) {
   --ui-settings-ink: var(--md-sys-color-neutral-on-surface);
+  /* GH #136 — the inter-field-block gap (off the layout ladder, density-responsive for free): the SAME
+     density-bearing-token shape as `--ui-field-gap`/`--ui-radio-group-gap`. `ui-form-provider` is
+     deliberately layout-neutral (form-provider.css: vertical rhythm between its children stays the
+     PAGE AUTHOR's taught idiom, Lane C, not a provider default) — `generate.ts` mounts one bare
+     `ui-form-provider` per generated section directly into this element's panel with no such wrap, so
+     `ui-settings` IS that page author for its own generated tree and must supply the idiom itself. */
+  --ui-settings-gap: var(--md-sys-space-md);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-settings) consumes ONLY --ui-settings-* ════════════════ */
@@ -33,6 +41,21 @@
   [data-part='panel'] {
     box-sizing: border-box;
     padding: 1rem;
+  }
+
+  /* GH #136 — the generated section's `ui-form-provider` (generate.ts) is the ONE child this panel ever
+     mounts (`#showPanel`, settings.ts); `display:flex; flex-direction:column; gap` on it directly is the
+     SAME idiom the forms.ts / form-provider-demo.ts site pages apply inline to their own hand-authored
+     providers ("ui-form-provider is deliberately layout-neutral — the page supplies the vertical
+     rhythm") — here expressed as real CSS instead of an inline style, since this tree is generated, not
+     authored markup. Specificity note (the settings.css precedent above, cl. "single-section posture"):
+     `[data-part='panel'] > ui-form-provider` sits at (0,1,1), which beats form-provider.css's own
+     `:scope { display: block }` at (0,1,0) regardless of scope proximity — the cross-component override
+     is load-bearing, not incidental. */
+  [data-part='panel'] > ui-form-provider {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-settings-gap);
   }
 
   [data-part='notice'] {

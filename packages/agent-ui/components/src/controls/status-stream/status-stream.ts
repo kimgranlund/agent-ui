@@ -61,14 +61,27 @@
 // `markTruncated()` escape hatch (a `:state(truncated)` custom state, timeline-item.ts) — fail-closed, a
 // torn stream never shows "still working."
 //
-// `controls → dom + controls/timeline-item/timeline-item.ts + @agent-ui/icons` — the allowed import
-// direction (cross-folder sibling + the zero-dep icons pack, the timeline-item precedent). Holds NO
-// transport of its own (a standing negative-control grep — SPEC-R9 AC3): no fetch/ReadableStream/
-// readNdjsonLines reference anywhere in this file.
+// `controls → dom + controls/timeline-item/timeline-item.ts + controls/button/button.ts + @agent-ui/icons`
+// — the allowed import direction (cross-folder sibling + the zero-dep icons pack, the timeline-item
+// precedent; `ui-button` joins for the Fork 2 inline retry affordance below). Holds NO transport of its
+// own (a standing negative-control grep — SPEC-R9 AC3): no fetch/ReadableStream/readNdjsonLines reference
+// anywhere in this file.
+//
+// GH #147/ADR-0153 (the Figma "Claude Code Gateway" richer group-header intake) adds three genuinely
+// additive `StatusEntry` contract members, each documented at its own field/const below: `startedAt` (Fork
+// 1 — a ticking elapsed-time display the HOST owns, via ONE shared per-instance interval, into the entry's
+// existing `timestamp` cell), `action` (Fork 2 — an inline `<ui-button>` retry affordance on an `error`
+// entry, emitting a NEW closed-vocabulary `action` event the CONSUMER alone acts on), and a `pending` entry
+// in `GROUP_STATUS_GLYPH`/`HEADER_STATUS_GLYPH` (Fork 3 — the "Planned"/all-pending group glyph). Step-
+// count/score summaries (the OTHER half of Fork 1) ship as a documented `trailing`-slot consumer-content
+// pattern instead — see the doc page + status-stream.md for why (a real DOM conflict with the ADR-0143
+// collapsed-summary auto-fill, found while building this).
 
 import { UIContainerElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import { UITimelineItemElement } from '../timeline-item/timeline-item.ts' // constructs items via its own API (F4)
 import '../timeline/timeline.ts' // registers <ui-timeline> — the nested group host (ADR-0146 F5, ADR-0143's mechanism)
+import '../button/button.ts' // registers <ui-button> — the GH #147/ADR-0153 inline retry action (Fork 2)
+import type { UIButtonElement } from '../button/button.ts'
 import { resolveIcon } from '@agent-ui/icons' // the header's overall-status glyph (done/error/warning) — the timeline-item glyph precedent
 import type { IconName } from '@agent-ui/icons'
 
@@ -91,6 +104,35 @@ export interface StatusEntry {
    *  sibling. A routing fact consumed by `appendEntry`, NEVER a timeline-item prop; an unknown parent key
    *  degrades to a flat top-level append (never a throw). Set once at append time — `update` does not re-parent. */
   parent?: string
+  /** GH #147/ADR-0153 Fork 1 — an ISO 8601 timestamp: "this entry started at this wall-clock instant."
+   *  A routing fact consumed by `appendEntry`/`update`, NEVER projected onto the timeline-item directly
+   *  (mirrors `parent`'s own "fact, not a prop" treatment) — the HOST owns re-rendering a ticking elapsed
+   *  display (`formatElapsed(Date.now() - Date.parse(startedAt))`, e.g. "32s"/"1m 12s") into the item's
+   *  EXISTING `timestamp` cell once per second, for as long as the entry's (or, for a group parent, its
+   *  escalated) `status` reads `active` — the SAME visible cell a consumer's own static `timestamp` string
+   *  already occupies (the doc page's "32s"/"8s" specimens), just LIVE instead of frozen. Ticking stops the
+   *  instant `finalize()`/`fail()` settles the stream (never a forever-ticking clock past resolution) or the
+   *  entry/group transitions off `active` — the last computed value freezes as the final display. `''`/an
+   *  unparsable string is tolerated (no tick, never a throw — the SPEC-R9 AC2 no-throw posture this file
+   *  already applies to every other malformed-input edge case). ISO chosen (over a raw `elapsedMs` snapshot)
+   *  because a wall-clock anchor is the one fact a REPEATED tick can re-derive itself from; an `elapsedMs`
+   *  snapshot would need its own OWN wall-clock anchor internally anyway, duplicating state this field
+   *  already is. */
+  startedAt?: string
+  /** GH #147/ADR-0153 Fork 2 — a first-class inline action affordance: when set (and the entry's effective
+   *  status is `error`), the host renders a `<ui-button>` (`variant="soft"`, `size="sm"`) into the entry's
+   *  OWN `[data-role="action"]` cell, labelled `label`. A click emits `action` (detail `{ key: string }`,
+   *  the SAME entry key) on the STATUS-STREAM host — a NEW closed-vocabulary member (naming.md §4/ADR-0153):
+   *  none of `change`/`input`/`select`/`open`/`close`/`toggle` name "a user committed a per-entry action,"
+   *  and `select`'s own commit semantics (naming.md §4: "user commits, never programmatic") name a LIST
+   *  selection, not an arbitrary per-entry action button — reusing it would blur two different consumer
+   *  intents. The component NEVER re-runs anything itself on click — the consumer's own listener owns the
+   *  actual retry (or whatever `label` names). Persists across `update()` patches that don't touch `action`;
+   *  clearing/re-showing follows the entry's OWN status transitions (shown iff status is currently `error`),
+   *  not a one-shot render. Requires the HOST to be already connected when the entry carrying `action` is
+   *  appended/updated (the SAME precondition `ensureNestedSlot`/grouping already imposes, ADR-0143's
+   *  2026-07-18 amendment) — `this.listen()` throws outside the connected lifetime. */
+  action?: { label: string }
 }
 
 // The total severity order (ADR-0146 F6): error > warning > active > pending > done; neutral '' contributes
@@ -99,8 +141,20 @@ export interface StatusEntry {
 const STATUS_RANK: Record<ItemStatus, number> = { '': 0, done: 1, pending: 2, active: 3, warning: 4, error: 5 }
 
 /** The resolved-outcome header glyphs (mirrors timeline-item's STATUS_GLYPH) — the in-progress '' /
- *  pending / active states paint a pure-CSS dot/ring/pulse in status-stream.css instead. */
-const HEADER_STATUS_GLYPH = { done: 'check', error: 'x', warning: 'warning' } as const satisfies Partial<
+ *  active states paint a pure-CSS dot/ring/pulse in status-stream.css instead.
+ *  `pending` (GH #147/ADR-0153 Fork 3): closes the SAME named glyph gap `timeline-item.ts`'s
+ *  `GROUP_STATUS_GLYPH` closes (that one IS reachable — see its comment) — added here too for a single
+ *  consistent glyph across both group-level surfaces. Honestly flagged: at THIS stream-level header,
+ *  `pending` is NOT currently reachable through `#overallStatus()` — pre-`finalize()` the floor rule
+ *  (`escalated > active ? escalated : 'active'`) always floors a pending-only escalation up to `active`
+ *  (rank 2 never outranks rank 3), and post-`finalize()`/`fail()`, `#settle()` truncates every still-
+ *  `active`/`pending` entry, which `#effectiveStatus` then reports as `warning`, not `pending` — so no
+ *  live combination of appendEntry/update/finalize/fail ever leaves the STREAM header's escalation sitting
+ *  on `pending`. Kept anyway (additive, `Partial<...>`, zero regression to the three reachable members) so
+ *  the map is honestly COMPLETE against the closed `ItemStatus` vocabulary rather than silently gapped;
+ *  changing `#overallStatus()`'s floor/truncation rule to make it reachable is a real behavior change this
+ *  build does not make (out of scope — ADR-0153 names this explicitly, not glossed over). */
+export const HEADER_STATUS_GLYPH = { pending: 'clock', done: 'check', error: 'x', warning: 'warning' } as const satisfies Partial<
   Record<ItemStatus, IconName>
 >
 
@@ -115,6 +169,18 @@ export function escalateStatus(statuses: readonly ItemStatus[]): ItemStatus {
   let worst: ItemStatus = ''
   for (const s of statuses) if (STATUS_RANK[s] > STATUS_RANK[worst]) worst = s
   return worst
+}
+
+/** GH #147/ADR-0153 Fork 1 — render a non-negative millisecond duration the SAME short "32s"/"8s" shape
+ *  the Figma frames + the doc page's own pre-existing static specimens already use: under a minute, bare
+ *  seconds; at/past a minute, `{m}m {s}s`. Pure + exported so it is directly unit-tested (the
+ *  `escalateStatus` precedent) without needing a live ticking interval to observe it. */
+export function formatElapsed(ms: number): string {
+  const totalSeconds = Math.max(0, Math.round(ms / 1000))
+  if (totalSeconds < 60) return `${totalSeconds}s`
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${minutes}m ${seconds}s`
 }
 
 const SIZE = ['sm', 'md', 'lg'] as const
@@ -155,6 +221,13 @@ export class UIStatusStreamElement extends UIContainerElement {
   // warning-coloured truncated ring's header-level face). A WeakSet: no key bookkeeping, GC-friendly.
   #truncated = new WeakSet<UITimelineItemElement>()
 
+  // ── the elapsed-timer ticking display (GH #147/ADR-0153 Fork 1) ─────────────────────────────────────
+  #startedAtOf = new Map<string, string>() // key → the entry's own startedAt (ISO), while tracked
+  #tickHandle: ReturnType<typeof setInterval> | null = null // one shared interval per host, lazily (de)armed
+
+  // ── the inline retry/action affordance (GH #147/ADR-0153 Fork 2) ────────────────────────────────────
+  #actionOf = new Map<string, { label: string }>() // key → its action config, persists across status flips
+
   constructor() {
     super()
     this.internals.role = 'log' // a POLITE live region via internals.role (the toast role='status' precedent)
@@ -172,6 +245,12 @@ export class UIStatusStreamElement extends UIContainerElement {
       else this.#removeHeader()
     })
     this.listen(this, 'scroll', () => this.#trackStickToBottom())
+  }
+
+  /** GH #147/ADR-0153 Fork 1 — stop the shared ticking interval on disconnect (zero residue after removal,
+   *  the toast `#timerId` precedent) — a disconnected host must never keep repainting a detached tree. */
+  protected disconnected(): void {
+    this.#stopTicking()
   }
 
   /** Append a new entry, tail-follow to it, return the created item (the toast-region.show() return
@@ -220,6 +299,13 @@ export class UIStatusStreamElement extends UIContainerElement {
       this.appendChild(item)
     }
 
+    // GH #147/ADR-0153 Fork 1/2 — routing facts consumed HERE, never projected onto the item by `#assign`
+    // (the `parent` precedent). Both are keyed side-registries so a later `update()` reaches them identically.
+    if (entry.startedAt !== undefined) this.#startedAtOf.set(entry.key, entry.startedAt)
+    if (entry.action !== undefined) this.#actionOf.set(entry.key, entry.action)
+    this.#refreshTicking()
+    this.#renderAction(item, entry.key)
+
     this.#refreshHeader() // the escalation may have changed (a mid-turn error/warning flips the header)
     this.#tailFollow(item)
     return item
@@ -236,6 +322,12 @@ export class UIStatusStreamElement extends UIContainerElement {
       this.#recomputeGroups(key) // F6 — a child's status change re-escalates its group chain (mediated, no observer)
       this.#refreshHeader() // a status transition may re-escalate the header
     }
+    // GH #147/ADR-0153 Fork 1/2 — re-resolve the ticking + action registries on either a fresh `startedAt`/
+    // `action` OR a status transition (a status flip is what starts/stops ticking and shows/hides the button).
+    if (patch.startedAt !== undefined) this.#startedAtOf.set(key, patch.startedAt)
+    if (patch.action !== undefined) this.#actionOf.set(key, patch.action)
+    if (patch.startedAt !== undefined || patch.status !== undefined) this.#refreshTicking()
+    if (patch.action !== undefined || patch.status !== undefined) this.#renderAction(item, key)
     if (this.#growsTail(patch)) this.#tailFollow(item)
   }
 
@@ -272,6 +364,11 @@ export class UIStatusStreamElement extends UIContainerElement {
     this.#finalized = true
     this.#failed = failed
     this.#refreshHeader()
+    // GH #147/ADR-0153 Fork 1 — a settled stream freezes EVERY ticking display, unconditionally: a truncated
+    // entry's own `.status` prop is left untouched by `#markTruncated` (it's a custom STATE, not a prop
+    // write), so the plain `item.status === 'active'` ticking-eligibility check alone would NOT stop here —
+    // this explicit stop is what actually enforces "never a forever-ticking clock past resolution."
+    this.#stopTicking()
   }
 
   /** The entry → item projection — sets only the provided fields onto the item's typed props; `text`
@@ -353,6 +450,91 @@ export class UIStatusStreamElement extends UIContainerElement {
    *  affordance, fail-closed: an unresolved-at-end entry is truncated, never left silently "still working." */
   #markTruncated(item: UITimelineItemElement): void {
     item.markTruncated(true)
+  }
+
+  // ── the elapsed-timer ticking display (GH #147/ADR-0153 Fork 1) ─────────────────────────────────────────
+
+  /** Whether ANY tracked entry is currently ticking-eligible (has a `startedAt` AND its OWN `.status` reads
+   *  `active` — for a GROUP PARENT this is the escalated status `#recomputeGroups` already keeps in sync,
+   *  so "while any entry in that group is active" falls out of the EXISTING escalation for free, no
+   *  separate group-aware check needed). Drives whether the shared interval should be running at all. */
+  #hasActiveTicking(): boolean {
+    for (const key of this.#startedAtOf.keys()) {
+      const item = this.#byKey.get(key)
+      if (item !== undefined && item.status === 'active') return true
+    }
+    return false
+  }
+
+  /** Lazily (de)arm the ONE shared per-host interval: start it (painting once immediately, so a freshly-
+   *  started entry never waits a full tick to show its first elapsed value) the moment any tracked entry
+   *  becomes ticking-eligible; clear it the moment none remain (never an idle interval ticking nothing). */
+  #refreshTicking(): void {
+    const eligible = this.#hasActiveTicking()
+    if (eligible && this.#tickHandle === null) {
+      this.#tick()
+      this.#tickHandle = setInterval(() => this.#tick(), 1000)
+    } else if (!eligible) {
+      this.#stopTicking()
+    }
+  }
+
+  /** clearInterval + null the handle (a no-op when nothing is running) — the toast `#stopTimer` shape. */
+  #stopTicking(): void {
+    if (this.#tickHandle === null) return
+    clearInterval(this.#tickHandle)
+    this.#tickHandle = null
+  }
+
+  /** One tick: repaint every ticking-eligible entry's `timestamp` cell from `Date.now() - startedAt`, via
+   *  `#assign` directly (NOT the public `update()`) — a tick is a metadata-only repaint, never a tail-follow
+   *  trigger or a group/header re-escalation (status hasn't changed, only the displayed duration has). An
+   *  unparsable `startedAt` is skipped, never a throw (this file's standing no-throw posture). Self-stops
+   *  once nothing remains eligible (every tracked entry has since resolved) rather than waiting for the
+   *  NEXT `update()`/`#settle()` call to notice. */
+  #tick(): void {
+    const now = Date.now()
+    for (const [key, startedAt] of this.#startedAtOf) {
+      const item = this.#byKey.get(key)
+      if (item === undefined || item.status !== 'active') continue
+      const startMs = Date.parse(startedAt)
+      if (Number.isNaN(startMs)) continue
+      this.#assign(item, { timestamp: formatElapsed(now - startMs) })
+    }
+    if (!this.#hasActiveTicking()) this.#stopTicking()
+  }
+
+  // ── the inline retry/action affordance (GH #147/ADR-0153 Fork 2) ────────────────────────────────────────
+
+  /** Show/hide the entry's `[data-role="action"]` `<ui-button>` — visible iff an `action` config is tracked
+   *  for this key AND the entry's CURRENT effective status is `error` (truncation-aware, the same gate
+   *  `#topLevelStatuses`/group escalation already reads through). Idempotent: re-running when the button
+   *  already exists and should stay shown just re-stamps its label; re-running when it should no longer
+   *  show removes the cell entirely (never a stale hidden button lingering in the DOM). The click listener
+   *  is attached ONCE per button element via `this.listen` (connection-scoped, auto-removed on the STREAM's
+   *  own disconnect) — a freshly (re)created button after a remove+re-show gets its own fresh listener. */
+  #renderAction(item: UITimelineItemElement, key: string): void {
+    const cfg = this.#actionOf.get(key)
+    const shouldShow = cfg !== undefined && this.#effectiveStatus(item) === 'error'
+    let cell = item.querySelector(':scope > [data-role="action"]') as HTMLElement | null
+    if (!shouldShow) {
+      cell?.remove()
+      return
+    }
+    if (!cell) {
+      cell = document.createElement('span')
+      cell.setAttribute('data-role', 'action')
+      item.appendChild(cell)
+    }
+    let button = cell.querySelector('ui-button') as UIButtonElement | null
+    if (!button) {
+      button = document.createElement('ui-button') as UIButtonElement
+      button.setAttribute('variant', 'soft')
+      button.setAttribute('size', 'sm')
+      this.listen(button, 'click', () => this.emit<{ key: string }>('action', { key }))
+      cell.appendChild(button)
+    }
+    button.textContent = cfg.label
   }
 
   // ── the streaming header (ADR-0146 F8) + escalation (F6) ─────────────────────────────────────────────

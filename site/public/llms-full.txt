@@ -3049,8 +3049,8 @@ dot/ring/pulse for the in-progress states.
 ## The imperative API (ADR-0122 F4)
 
 - **`appendEntry(entry: StatusEntry): UITimelineItemElement`** — for a NEW `key`, creates a `ui-timeline-item`,
-  assigns the entry's fields (`key`, `status?`, `label?`, `description?`, `timestamp?`, `icon?`, `text?`),
-  appends it, tail-follows to it, and returns the element. Named `appendEntry`, not `append` — every element
+  assigns the entry's fields (`key`, `status?`, `label?`, `description?`, `timestamp?`, `icon?`, `text?`,
+  `startedAt?`, `action?`), appends it, tail-follows to it, and returns the element. Named `appendEntry`, not `append` — every element
   already inherits a native, incompatible `Node.prototype.append()` (a build-time LLD deviation from
   SPEC-R9's literal name, flagged for amendment; behaviour/signature otherwise identical). A **duplicate**
   `key` is a silent no-op — returns the existing element unchanged, never creating a second element or
@@ -3060,7 +3060,8 @@ dot/ring/pulse for the in-progress states.
   detail. A `key` with no matching entry is a silent no-op — never a throw (a late update after
   truncation is tolerated).
 - **`finalize(): void`** — the completion invariant: every still-`pending`/`active` entry renders
-  TRUNCATED (a distinct, non-color-only interrupted affordance on the item). Fail-closed.
+  TRUNCATED (a distinct, non-color-only interrupted affordance on the item). Fail-closed. Also stops every
+  ticking elapsed-time display (GH #147/ADR-0153) — a settled stream never keeps a clock running.
 
 This host holds **no transport** of its own — no `fetch`/`ReadableStream` reference anywhere in its
 source. The consumer owns the stream and drives `appendEntry`/`update`/`finalize` as it yields.
@@ -3085,6 +3086,79 @@ authored: it escalates **worst-child-wins** over the closed ladder `error > warn
 done` (the exported `escalateStatus` reduce), recomputed live from the host's own `appendEntry`/`update`
 calls — no MutationObserver. The nested `<ui-timeline>` is `role="list"` inside the outer `role="log"`: one
 live region, one addition-announcement path, no bespoke `aria-live` on the nested host.
+
+## Elapsed-timer ticking (GH #147/ADR-0153 Fork 1)
+
+Set `startedAt` (an ISO 8601 timestamp) on an entry and the host itself ticks a live elapsed-time display
+("32s", "1m 12s") into that entry's `timestamp` cell — one shared interval per stream instance, armed the
+moment any tracked entry's status reads `active` and disarmed the instant none remain (including on
+`finalize()`/`fail()`, which force-stop every ticking display — a settled turn never keeps a clock
+running):
+
+```ts
+stream.appendEntry({ key: 'g', status: 'active', label: 'Task Group', startedAt: new Date().toISOString() })
+// … the group ticks "0s", "1s", "2s"… while `active`; freezes the instant its escalated status resolves
+```
+
+For a GROUP parent, "while any entry in that group is active" falls out of the group's own already-
+escalated `.status` (ADR-0146 F6) — no separate per-child check is needed. `startedAt` is a **routing
+fact** consumed by `appendEntry`/`update`, never projected onto the item as a prop (the same treatment
+`parent` already gets) — an unparsable or absent value is tolerated, never a throw.
+
+## Inline retry/action (GH #147/ADR-0153 Fork 2)
+
+Set `action: { label: string }` on an entry and, **while that entry's effective status reads `error`**,
+the host renders a `<ui-button>` (in the entry's own `[data-role="action"]` cell) labelled `action.label`.
+A click emits `action` (`{ key }`) on the **stream host** — a new closed-vocabulary member (`naming.md`
+§4): the fleet's existing six (`change`/`input`/`select`/`open`/`close`/`toggle`) has no "a user committed
+a per-entry action button" member, and `select`'s own commit semantics name a list selection, not this.
+**The component never re-runs anything itself** — the consumer's own listener owns the actual retry:
+
+```ts
+stream.appendEntry({ key: 'r1', status: 'error', label: 'Patch step', description: 'Merge conflict', action: { label: 'Retry' } })
+stream.addEventListener('action', (e) => {
+  const { key } = (e as CustomEvent<{ key: string }>).detail
+  stream.update(key, { status: 'active', description: 'Retrying…' }) // the consumer drives the retry, not the component
+})
+```
+
+## "Planned" — the pending group glyph (GH #147/ADR-0153 Fork 3)
+
+An all-`pending` group (every child still not-yet-started) escalates to `escalateStatus`'s `pending` rank
+the moment its children are appended — before any of them starts. `ui-timeline-item`'s `GROUP_STATUS_GLYPH`
+now paints this distinctly (a neutral outline `clock`), joining the existing spinning-ring/check-circle/
+x-circle set. Pair it with a `label`/`description` reading `'Planned'` on the not-yet-started child steps
+themselves (a freeform-text convention — no enforced field; see the doc page's own `g-progress-2`/
+`g-error-3` specimens) for the full Figma "Planned" treatment.
+
+## Step-count / score group-header summaries — a `description` convention, not `trailing`
+
+The Figma frames' "3 Steps" / "94/100" group-header summaries ship as a **documented convention, zero
+`StatusEntry` contract change** — but landing in the group entry's own **`description`** field, not the
+`trailing` cell the issue's own intake first proposed. Found while building this: `trailing` on a GROUP
+parent is **already live** — ADR-0143's collapsed-summary preview auto-fills it with the last nested
+descendant's status+label whenever the group is closed (`timeline-item.ts`'s `#renderTrailingPreview()`),
+and a consumer's own direct write there would be silently clobbered the next time any nested child
+mutates (the SAME MutationObserver that drives the preview). `description` carries none of that
+competition — it's a plain stamped prop cell, untouched by any auto-fill mechanism — so it is the
+conflict-free home for this pattern:
+
+```ts
+stream.appendEntry({ key: 'g', status: 'active', label: 'Task Group', description: '3 Steps', startedAt: … })
+// … later, on success:
+stream.update('g', { status: 'done', description: '3 Steps · 94/100' })
+```
+
+The genuine `trailing`-slot **consumer-content** pattern (a light-DOM child a consumer authors and the
+component's own status-glyph paint never overwrites, `timeline-item.ts:60-62,313-322`) still holds exactly
+as documented — for a **non-grouped** (leaf, no nested children) entry, where no auto-fill effect
+competes for the cell, a consumer can safely grab the item `appendEntry` returns and write into its
+`trailing` cell directly:
+
+```ts
+const item = stream.appendEntry({ key: 'leaf', status: 'done', label: 'Fetched 42 files' })
+item.querySelector('[data-role="trailing"]')!.textContent = 'v2' // safe — no nested content to compete with it
+```
 
 ## Tail-follow + the stick-to-bottom guard
 

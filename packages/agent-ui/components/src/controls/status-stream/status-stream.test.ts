@@ -1,8 +1,15 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { whenFlushed } from '@agent-ui/components'
-import { UIStatusStreamElement, escalateStatus, type ItemStatus } from './status-stream.ts'
+import { UIStatusStreamElement, escalateStatus, formatElapsed, HEADER_STATUS_GLYPH, type ItemStatus } from './status-stream.ts'
 import { UITimelineItemElement } from '../timeline-item/timeline-item.ts'
 import { UITimelineElement } from '../timeline/timeline.ts'
+
+// jsdom has real setTimeout/clearInterval, so the Fork 1 ticking-interval mechanism is pinned directly
+// here (vi.useFakeTimers, the toast.test.ts precedent) — the REAL cross-engine, real-wall-clock proof is
+// status-stream.browser.test.ts's.
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 // timeline-family.lld.md §4 · SPEC-R8/R9/R11/R12 — ui-status-stream jsdom behaviour probes (the live
 // host): upgrade → role=log via internals → appendEntry/keyed-update/finalize → the text-growth cell → the
@@ -522,6 +529,190 @@ describe('ui-status-stream — no transport of its own (appendEntry/update never
     const { el } = makeStream()
     expect(() => el.appendEntry({ key: 'a', status: 'active', label: 'x' })).not.toThrow()
     expect(() => el.update('a', { status: 'done' })).not.toThrow()
+    el.remove()
+  })
+})
+
+// ── GH #147/ADR-0153 Fork 1 — formatElapsed, the pure duration-formatter ────────────────────────────────
+
+describe('formatElapsed — the pure ms → short-duration formatter (32s/8s Figma shape)', () => {
+  it('under a minute reads bare seconds', () => {
+    expect(formatElapsed(0)).toBe('0s')
+    expect(formatElapsed(32000)).toBe('32s')
+    expect(formatElapsed(8000)).toBe('8s')
+  })
+
+  it('rounds to the nearest second', () => {
+    expect(formatElapsed(500)).toBe('1s') // rounds up
+    expect(formatElapsed(499)).toBe('0s') // rounds down
+  })
+
+  it('at/past a minute reads `{m}m {s}s`', () => {
+    expect(formatElapsed(59999)).toBe('1m 0s') // rounds to 60s exactly, so it crosses into minutes
+    expect(formatElapsed(72000)).toBe('1m 12s')
+    expect(formatElapsed(125000)).toBe('2m 5s')
+  })
+
+  it('clamps a negative duration to 0 (never a negative display)', () => {
+    expect(formatElapsed(-500)).toBe('0s')
+  })
+})
+
+// ── GH #147/ADR-0153 Fork 3 — HEADER_STATUS_GLYPH's own pending entry (a direct object-shape check; see
+// its own in-file comment for why this specific member is not reachable through a live #overallStatus()
+// call, unlike timeline-item.ts's GROUP_STATUS_GLYPH.pending, which IS live-tested via a real group) ─────
+
+describe('HEADER_STATUS_GLYPH — closes the pending glyph gap (GH #147/ADR-0153 Fork 3)', () => {
+  it('maps pending to clock, alongside the pre-existing done/error/warning', () => {
+    expect(HEADER_STATUS_GLYPH).toEqual({ pending: 'clock', done: 'check', error: 'x', warning: 'warning' })
+  })
+})
+
+// ── GH #147/ADR-0153 Fork 1 — the elapsed-timer ticking display (fake timers, the toast.test.ts precedent) ─
+
+describe('ui-status-stream — startedAt ticks a live elapsed display into the timestamp cell while active', () => {
+  it('ticks "1s", "2s"… once per second for a top-level active entry, and freezes the instant it resolves', () => {
+    vi.useFakeTimers()
+    const now = new Date('2026-07-20T00:00:00.000Z')
+    vi.setSystemTime(now)
+    const { el } = makeStream()
+    const item = el.appendEntry({ key: 't1', status: 'active', label: 'Working', startedAt: now.toISOString() })
+
+    expect(item.timestamp, 'painted immediately on append, not after the first full interval').toBe('0s')
+    vi.advanceTimersByTime(1000)
+    expect(item.timestamp).toBe('1s')
+    vi.advanceTimersByTime(2000)
+    expect(item.timestamp).toBe('3s')
+
+    el.update('t1', { status: 'done' }) // resolves — ticking must stop
+    const frozenAt = item.timestamp
+    vi.advanceTimersByTime(10000)
+    expect(item.timestamp, 'frozen at resolution — never keeps counting past done').toBe(frozenAt)
+    el.remove()
+  })
+
+  it('a GROUP header ticks while ANY child is active (the escalated .status), and freezes once the group resolves', () => {
+    vi.useFakeTimers()
+    const now = new Date('2026-07-20T00:00:00.000Z')
+    vi.setSystemTime(now)
+    const { el } = makeStream()
+    const group = el.appendEntry({ key: 'g', status: 'active', label: 'Task Group', startedAt: now.toISOString() })
+    el.appendEntry({ key: 'c1', parent: 'g', status: 'active', label: 'step 1' })
+
+    vi.advanceTimersByTime(5000)
+    expect(group.timestamp).toBe('5s')
+
+    el.update('c1', { status: 'done' }) // the group's OWN escalated status resolves to done too (worst-child)
+    const frozenAt = group.timestamp
+    vi.advanceTimersByTime(5000)
+    expect(group.timestamp, 'the group froze the instant its escalation left active').toBe(frozenAt)
+    el.remove()
+  })
+
+  it('finalize() force-stops every ticking display, even one whose raw .status prop still reads active (truncation is a custom state, not a status write)', () => {
+    vi.useFakeTimers()
+    const now = new Date('2026-07-20T00:00:00.000Z')
+    vi.setSystemTime(now)
+    const { el } = makeStream()
+    const item = el.appendEntry({ key: 't1', status: 'active', label: 'Working', startedAt: now.toISOString() })
+    vi.advanceTimersByTime(4000)
+    expect(item.timestamp).toBe('4s')
+
+    el.finalize()
+    const frozenAt = item.timestamp
+    vi.advanceTimersByTime(20000)
+    expect(item.timestamp, 'finalize() freezes the display outright, regardless of the truncated item\'s raw .status').toBe(frozenAt)
+    el.remove()
+  })
+
+  it('an unparsable startedAt is tolerated — never ticks, never throws', () => {
+    vi.useFakeTimers()
+    const { el } = makeStream()
+    expect(() => el.appendEntry({ key: 't1', status: 'active', label: 'x', startedAt: 'not-a-date' })).not.toThrow()
+    const item = el.querySelector('[data-key="t1"]') as UITimelineItemElement
+    expect(item.timestamp).toBe('') // never painted — an unparsable anchor is skipped, not a throw
+    vi.advanceTimersByTime(5000)
+    expect(item.timestamp).toBe('')
+    el.remove()
+  })
+
+  it('an entry with no startedAt never ticks (the ticking mechanism is fully opt-in)', () => {
+    vi.useFakeTimers()
+    const { el } = makeStream()
+    const item = el.appendEntry({ key: 't1', status: 'active', label: 'x', timestamp: 'author-set' })
+    vi.advanceTimersByTime(5000)
+    expect(item.timestamp, 'a plain author-set timestamp is never touched by the ticking mechanism').toBe('author-set')
+    el.remove()
+  })
+})
+
+// ── GH #147/ADR-0153 Fork 2 — the inline retry/action affordance ───────────────────────────────────────────
+
+describe('ui-status-stream — StatusEntry.action renders a <ui-button> in [data-role="action"] while status is error', () => {
+  it('an error entry with `action` renders a labelled ui-button; a click emits `action` on the STREAM host with { key }', () => {
+    const { el } = makeStream()
+    el.appendEntry({ key: 'r1', status: 'error', label: 'Patch step', description: 'Merge conflict', action: { label: 'Retry' } })
+
+    const item = el.querySelector('[data-key="r1"]') as UITimelineItemElement
+    const cell = item.querySelector(':scope > [data-role="action"]') as HTMLElement
+    expect(cell, 'the action cell exists on an error entry carrying action').not.toBeNull()
+    const button = cell.querySelector('ui-button') as HTMLElement
+    expect(button).not.toBeNull()
+    expect(button.textContent).toBe('Retry')
+
+    let detail: { key: string } | undefined
+    el.addEventListener('action', (e) => {
+      detail = (e as CustomEvent<{ key: string }>).detail
+    })
+    button.dispatchEvent(new Event('click', { bubbles: true }))
+    expect(detail).toEqual({ key: 'r1' })
+    el.remove()
+  })
+
+  it('an active (non-error) entry with `action` renders NO button — shown only while status is error', () => {
+    const { el } = makeStream()
+    el.appendEntry({ key: 'r1', status: 'active', label: 'Working', action: { label: 'Retry' } })
+    const item = el.querySelector('[data-key="r1"]') as UITimelineItemElement
+    expect(item.querySelector(':scope > [data-role="action"]')).toBeNull()
+    el.remove()
+  })
+
+  it('an entry with no `action` never grows an action cell, even on error', () => {
+    const { el } = makeStream()
+    el.appendEntry({ key: 'r1', status: 'error', label: 'Failed' })
+    const item = el.querySelector('[data-key="r1"]') as UITimelineItemElement
+    expect(item.querySelector(':scope > [data-role="action"]')).toBeNull()
+    el.remove()
+  })
+
+  it('update() can arm `action` on an already-appended error entry — the button appears live', () => {
+    const { el } = makeStream()
+    el.appendEntry({ key: 'r1', status: 'error', label: 'Failed' })
+    const item = el.querySelector('[data-key="r1"]') as UITimelineItemElement
+    expect(item.querySelector(':scope > [data-role="action"]')).toBeNull()
+
+    el.update('r1', { action: { label: 'Retry' } })
+    expect(item.querySelector(':scope > [data-role="action"] ui-button')?.textContent).toBe('Retry')
+    el.remove()
+  })
+
+  it('a consumer-driven retry (status flips back to active via update) removes the button — the component itself never re-runs anything', () => {
+    const { el } = makeStream()
+    el.appendEntry({ key: 'r1', status: 'error', label: 'Failed', action: { label: 'Retry' } })
+    const item = el.querySelector('[data-key="r1"]') as UITimelineItemElement
+    expect(item.querySelector(':scope > [data-role="action"]')).not.toBeNull()
+
+    el.update('r1', { status: 'active', description: 'Retrying…' }) // the CONSUMER'S OWN doing, never automatic
+    expect(item.querySelector(':scope > [data-role="action"]'), 'the button hides once status leaves error').toBeNull()
+    el.remove()
+  })
+
+  it('an unrelated update (description only) does not disturb an already-shown action button', () => {
+    const { el } = makeStream()
+    el.appendEntry({ key: 'r1', status: 'error', label: 'Failed', action: { label: 'Retry' } })
+    el.update('r1', { description: 'more detail' })
+    const item = el.querySelector('[data-key="r1"]') as UITimelineItemElement
+    expect(item.querySelector(':scope > [data-role="action"] ui-button')?.textContent).toBe('Retry')
     el.remove()
   })
 })
