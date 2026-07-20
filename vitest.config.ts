@@ -32,6 +32,21 @@ export default defineConfig({
           exclude: [...configDefaults.exclude, '**/*.browser.test.ts'],
         },
       },
+      {
+        extends: true,
+        test: {
+          // GH #69 item 3 — direct, cheap regression coverage for scripts/publish/publish-packages.mjs's
+          // `rewriteSpecifiers` (a plain Node .mjs CLI script — root-level `scripts/` sits outside every
+          // tsconfig's `include` today, so this is its first automated gate of any kind). `environment:
+          // 'node'` OVERRIDES the inherited jsdom default: the module resolves its own repo-root path via
+          // `new URL('../..', import.meta.url)` unconditionally at load time, and vitest's jsdom environment
+          // does not hand modules a real `file://` `import.meta.url` (measured: `TypeError: The URL must be
+          // of scheme file` importing under the inherited jsdom default).
+          name: 'scripts',
+          environment: 'node',
+          include: ['scripts/**/*.test.mjs'],
+        },
+      },
     ],
   },
   resolve: {

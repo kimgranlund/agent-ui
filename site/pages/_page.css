@@ -38,9 +38,10 @@ body {
  * TKT-0088 shipped the tag swap). Tag-qualifying raises this rule to (0,1,1), unambiguously above the
  * scoped rule. */
 ui-theme-provider.app-shell {
-  display: grid;
-  grid-template-columns: minmax(13rem, 17rem) minmax(0, 1fr);
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  /* M5 / GH #84 — the CSS-grid placeholder retired: ui-super-shell owns the frame now. The provider
+     stays a full-height column flex hosting the shell (+ the named nav-rail collapse container). */
+  display: flex;
+  flex-direction: column;
   block-size: 100dvh;
   /* The NAMED collapse container the composed `ui-nav-rail collapse="menu" collapse-container="ancestor"`
      opts into (TKT-0035's supported seam — nav-rail.css/nav-rail.md). The rail is a narrow (~15rem) left
@@ -55,13 +56,19 @@ ui-theme-provider.app-shell {
   container-name: ui-nav-rail-collapse;
 }
 
+/* M5 / GH #84 — the ui-super-shell frame fills the provider; everything inside it is the shell's own. */
+.site-shell {
+  flex: 1 1 auto;
+  min-block-size: 0;
+}
+
 /* The nav RAIL — column 1, spanning all three rows; its own scroll if the list overflows. The composed
    ui-nav-rail carries `data-site-nav`; its internal anatomy (rows, active bar, the collapse="menu" disclosure)
    is nav-rail.css's — this shell owns only the rail's PLACEMENT + scroll container, never its containment
    (that is `collapse-container="ancestor"`'s job, set on the element itself in buildNav — TKT-0035). */
-ui-theme-provider.app-shell > [data-site-nav] {
-  grid-column: 1;
-  grid-row: 1 / -1;
+ui-theme-provider.app-shell [data-site-nav] {
+  /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
+  /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
   overflow-y: auto;
   scrollbar-width: none; /* hide the scrollbar — scroll stays functional (Firefox/standards) */
   min-block-size: 0; /* allow the rail to scroll inside the 100dvh grid rather than grow it */
@@ -71,8 +78,8 @@ ui-theme-provider.app-shell > [data-site-nav] {
 
 /* The app top-bar — right column, row 1, fixed (non-scrolling). */
 .app-context-header {
-  grid-column: 2;
-  grid-row: 1;
+  /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
+  /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -111,8 +118,8 @@ ui-theme-provider.app-shell > [data-site-nav] {
 
 /* The app footer — right column, row 3, fixed. The bar spans the column edge-to-edge (background + top divider). */
 .app-context-footer {
-  grid-column: 2;
-  grid-row: 3;
+  /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
+  /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
   background: var(--md-sys-color-neutral-surface-low);
   border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
 }
@@ -135,8 +142,8 @@ ui-theme-provider.app-shell > [data-site-nav] {
  * content grows to fill on short pages (so the footer rests at the bottom) and keeps its natural height on long
  * pages (so the region scrolls). `min-block-size: 0` lets it shrink below its content inside the grid row. */
 .app-page {
-  grid-column: 2;
-  grid-row: 2;
+  /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
+  /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
   overflow-y: auto;
   scrollbar-width: none; /* hide the scrollbar — scroll stays functional (Firefox/standards) */
   min-block-size: 0;
@@ -147,7 +154,7 @@ ui-theme-provider.app-shell > [data-site-nav] {
 
 /* WebKit/Chromium counterpart to `scrollbar-width: none` on the two scroll containers (the nav rail + the page
  * region): a hidden bar, scroll still works. */
-ui-theme-provider.app-shell > [data-site-nav]::-webkit-scrollbar,
+ui-theme-provider.app-shell [data-site-nav]::-webkit-scrollbar,
 .app-page::-webkit-scrollbar {
   display: none;
 }
@@ -228,7 +235,7 @@ ui-theme-provider.app-shell > [data-site-nav]::-webkit-scrollbar,
  * of pinning a tall block in the sticky header. Spans its own line so a page whose content region is a grid/flex
  * does not seat it in a track. */
 .page-lead {
-  grid-column: 1 / -1;
+  /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
   width: 100%;
   margin: 0 0 1.25rem;
   max-inline-size: 68ch;
@@ -403,31 +410,27 @@ code {
  * threshold so the two transitions land together — no band where a full 82-row list stacks in a one-column
  * shell. The rail's own scroll-container settings are dropped so its dropdown panel sizes to its content. */
 @media (max-width: 40rem) {
-  ui-theme-provider.app-shell {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto auto minmax(0, 1fr) auto;
-  }
 
   .app-context-header {
-    grid-column: 1;
-    grid-row: 1;
+    /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
+    /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
   }
 
-  ui-theme-provider.app-shell > [data-site-nav] {
-    grid-column: 1;
-    grid-row: 2;
+  ui-theme-provider.app-shell [data-site-nav] {
+    /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
+    /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
     border-inline-end: none;
     border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
     overflow-y: visible; /* not a scroll container here — the rail's own dropdown sizes to its content */
   }
 
   .app-page {
-    grid-column: 1;
-    grid-row: 3;
+    /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
+    /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
   }
 
   .app-context-footer {
-    grid-column: 1;
-    grid-row: 4;
+    /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
+    /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
   }
 }

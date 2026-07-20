@@ -83,10 +83,12 @@
 
   /* Narrow reflow (SPEC-R5) — the shell's OWN container width, never the viewport. Side regions yield to
      `main` UNLESS the region opts out via `collapse="stack"` (ADR-0084, below). `40rem` is LLD-C4's starting
-     threshold (tunable, C7-reviewed) — a bare literal here, matching the row.css precedent (custom properties
-     cannot drive an `@container` query condition). `grid-auto-flow: row` is the initial value already (a
-     no-op today) — stated explicitly because the `collapse="stack"` rule below relies on row-sparse
-     auto-placement to slot an extra (non-named-area) item into this template without overlap. */
+     threshold — a bare literal here (an `@container` condition cannot consume a custom property, the real
+     CSS constraint LLD-C7/GH #99's `shell-breakpoint.ts` documents once for the whole shell family; that
+     file's own `shell-breakpoint.test.ts` is this literal's consistency gate, not a live source). `grid-
+     auto-flow: row` is the initial value already (a no-op today) — stated explicitly because the
+     `collapse="stack"` rule below relies on row-sparse auto-placement to slot an extra (non-named-area)
+     item into this template without overlap. */
   @container (inline-size < 40rem) {
     :scope {
       grid-template: 'banner' auto 'main' 1fr 'footer' auto / 1fr;

@@ -75,13 +75,30 @@ function apiField(label: string, value: Node): HTMLElement {
 function apiChipset(values: readonly string[]): HTMLElement {
   const set = document.createElement('div')
   set.className = 'api-chipset'
-  for (const v of values) {
+  for (const v of sortedForDisplay(values)) {
     const chip = document.createElement('code')
     chip.className = 'api-chip'
     chip.textContent = v
     set.append(chip)
   }
   return set
+}
+
+/**
+ * sortedForDisplay — a numeric enum's declared `values[]` order is fallback-first (index 0 is the LIVE
+ * default snap target for an out-of-range attribute — `container.ts`'s `SURFACE_STEPS = ['0','1','2',
+ * '3','-1','-2','-3']` deliberately leads with `'0'` so a bad `elevation`/`brightness` value snaps to
+ * neutral, not a surprise extreme; the component-descriptor drift trip-wire's `enumMembersMatch` checks
+ * `values[0] === default`, ORDER-SIGNIFICANT), never human reading order. This table wants ascending
+ * numeric order regardless (a reader scans a signed axis −3…3 left to right, GH #92) — a DISPLAY-only
+ * copy; the returned array never reaches the parsed attribute the drift check or the runtime codec
+ * read, so the order-significant contract above is untouched. A non-numeric enum (`align`'s
+ * `'start'|'center'|'end'|…`) returns unchanged — sorting it would scramble a deliberately-ordered
+ * word enum with no natural numeric reading.
+ */
+function sortedForDisplay(values: readonly string[]): readonly string[] {
+  const allNumeric = values.length > 0 && values.every((v) => /^-?\d+$/.test(v))
+  return allNumeric ? [...values].sort((a, b) => Number(a) - Number(b)) : values
 }
 
 /** codeOrDash — `text` as a code chip, or a plain em-dash (never a lonely EMPTY chip) when `text` is absent/empty

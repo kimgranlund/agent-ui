@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · Composing a ui-super-shell</title>
+  </head>
+  <body>
+    <!-- The ui-super-shell composition guide: how the grammar, collapse-contract, recursion, and narrow-
+         reflow systems work, each shown on a live <ui-super-shell> (@agent-ui/app, M5, GH #83/#84;
+         shell-archetypes-m5.spec.md). An MPA entry auto-discovered by vite.config.ts's site/**/*.html
+         glob — no config edit. The page module imports pages/_page.ts FIRST for the foundation CSS
+         cascade + self-defining ui-* controls, then the super-shell CSS/module and its own demo chrome. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/super-shell.ts"></script>
+  </body>
+</html>

@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest'
 import { ICON_NAMES, type IconName, type IconPack } from './types.ts'
 
 describe('ICON_NAMES', () => {
-  it('has exactly twenty-seven names', () => {
-    expect(ICON_NAMES.length).toBe(27)
+  it('has exactly twenty-eight names', () => {
+    expect(ICON_NAMES.length).toBe(28)
   })
 
   it('is all distinct strings', () => {
@@ -14,7 +14,7 @@ describe('ICON_NAMES', () => {
     for (const name of ICON_NAMES) expect(typeof name).toBe('string')
   })
 
-  it('contains the curated audit set (ADR-0066 clause 2 + the feed-family LLD-C9 addition + the TKT-0048 plus glyph + the Figma chat-input refactor\'s arrow-up/microphone + the TKT-0083/ADR-0146 F7 warning glyph + the Claude Code Gateway reasoning-chain card\'s circle-notch/check-circle/x-circle group markers)', () => {
+  it('contains the curated audit set (ADR-0066 clause 2 + the feed-family LLD-C9 addition + the TKT-0048 plus glyph + the Figma chat-input refactor\'s arrow-up/microphone + the TKT-0083/ADR-0146 F7 warning glyph + the Claude Code Gateway reasoning-chain card\'s circle-notch/check-circle/x-circle group markers + ui-super-shell\'s list/hamburger glyph, M5 GH #83/#90)', () => {
     expect([...ICON_NAMES].sort()).toEqual(
       [
         'caret-down', 'caret-up', 'caret-left', 'caret-right',
@@ -23,7 +23,7 @@ describe('ICON_NAMES', () => {
         'user', 'file', 'file-image', 'file-audio', 'file-video',
         'file-pdf', 'file-text', 'file-zip', 'file-code',
         'plus', 'arrow-up', 'microphone', 'warning',
-        'circle-notch', 'check-circle', 'x-circle',
+        'circle-notch', 'check-circle', 'x-circle', 'list',
       ].sort(),
     )
   })
