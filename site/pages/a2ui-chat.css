@@ -2,9 +2,13 @@
  * (app-surfaces-m2.spec.md SPEC-R9). The thread, bubbles, composer, narration strip, per-surface mounts, the
  * "Closed." annotation, and the wire disclosure are ALL owned by the `<ui-conversation>` primitive now (its
  * own `conversation.css`, imported by the page) — this sheet keeps only the surrounding page chrome: the
- * full-bleed region, the header, the dev-overlay switcher slot, the meta-notice status line, and the reset
- * bar. Every colour is a `--md-sys-color-*` role (imported first via _page.ts), so it tracks light/dark.
- * This page never restyles a ui-* control. */
+ * full-bleed region, the header content, the dev-overlay switcher slot, the meta-notice status line, and
+ * the reset bar. Every colour is a `--md-sys-color-*` role (imported first via _page.ts), so it tracks
+ * light/dark. This page never restyles a ui-* control.
+ *
+ * Round 4 (GH #98): the OUTER flex-column shell this file used to hand-roll on a plain `.chat-shell` div is
+ * now `<ui-chat-shell>` (chat-shell.css, @agent-ui/app) — the `.chat-shell` class stays on that element
+ * (a2ui-chat.ts) only as this page's own busy-state/sizing hook, not as the layout mechanism itself. */
 
 [data-page-content] {
   display: flex;
@@ -16,11 +20,15 @@
 
 .chat-shell {
   flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
   min-inline-size: 0;
   min-block-size: 0;
+}
+
+/* The composed inner ui-super-shell's canvas box is ALREADY a flex column (super-shell.css) — this adds
+ * only the page's own gap between the conversation / switcher slot / status line / reset bar, its one
+ * remaining layout concern now that the column direction itself is the composed shell's job. */
+.chat-shell [data-part='canvas'] {
+  gap: 0.6rem;
 }
 
 /* The conversation IS the bordered card (conversation.css gives it its own border/radius/background) — it
@@ -30,9 +38,6 @@
   min-block-size: 0;
 }
 
-.chat-head {
-  flex: 0 0 auto;
-}
 .chat-title {
   margin: 0;
   font-size: 1.05rem;

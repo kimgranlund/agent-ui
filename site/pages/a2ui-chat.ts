@@ -23,6 +23,9 @@
 // dynamic-import + switcher pattern `a2ui-live.ts`/`a2a-artifact-feed.ts` each already ship (SPEC-R8).
 import { mountFullBleedPage } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
 import './a2ui-chat.css'
+import '@agent-ui/app/chat-shell.css' // ui-chat-shell's own host flex-column layout (round 4, GH #98)
+import '@agent-ui/app/chat-shell' // self-defines <ui-chat-shell> (composes an inner <ui-super-shell>)
+import '@agent-ui/app/super-shell.css' // the composed inner ui-super-shell's own geometry/collapse CSS
 import '@agent-ui/app/conversation.css' // ui-conversation's own thread/narration layout (LLD-C6)
 import '@agent-ui/app/conversation-composer.css' // TKT-0056 — the composed ui-conversation-composer's own layout/parts CSS
 import '@agent-ui/app/conversation' // self-defines <ui-conversation> (which registers <ui-surface-host>/<ui-conversation-composer> in turn)
@@ -52,10 +55,14 @@ function el(tag: string, className: string): HTMLElement {
   return node
 }
 
-const shell = el('div', 'chat-shell')
-content.append(shell)
+// `ui-chat-shell` composes its inner `ui-super-shell` from `this.children` AT CONNECT time (chat-shell.ts)
+// — unlike the plain `<div>` this replaced, children must be appended BEFORE `shell` itself joins the live
+// `content` region, or it composes empty (its own `#compose()` guard makes that permanent, never re-run).
+const shell = document.createElement('ui-chat-shell')
+shell.classList.add('chat-shell')
 
 const header = el('header', 'chat-head')
+header.setAttribute('data-slot', 'header')
 const title = document.createElement('h1')
 title.className = 'chat-title'
 title.textContent = 'A2UI Chat'
@@ -99,6 +106,8 @@ resetBtn.setAttribute('tabindex', '0')
 resetBtn.textContent = 'Reset'
 resetBar.append(resetBtn)
 shell.append(resetBar)
+
+content.append(shell) // LAST — every child is present before this element ever connects (see the note above)
 
 // ════════════════ the transport + the turn loop ════════════════
 

@@ -11,6 +11,8 @@
     "./super-shell.css": "./src/controls/super-shell/super-shell.css",
     "./workspace-shell": "./src/controls/workspace-shell/workspace-shell.ts",
     "./workspace-shell.css": "./src/controls/workspace-shell/workspace-shell.css",
+    "./chat-shell": "./src/controls/chat-shell/chat-shell.ts",
+    "./chat-shell.css": "./src/controls/chat-shell/chat-shell.css",
     "./app-shell.css": "./src/controls/app-shell/app-shell.css",
     "./master-detail": "./src/controls/master-detail/master-detail.ts",
     "./master-detail.css": "./src/controls/master-detail/master-detail.css",
