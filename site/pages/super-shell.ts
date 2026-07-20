@@ -142,9 +142,9 @@ content.append(
   para(
     'Collapse is per-side, HEADER-HOSTED (SPEC-R2b): a header slot gets two toggles injected at its ends, ' +
       'each flipping its side’s reflected ',
-    code('collapsed-left'),
+    code('collapsed-start'),
     ' / ',
-    code('collapsed-right'),
+    code('collapsed-end'),
     ' state — PAIRED restore (fork F1): one click drives the rail+pane pair together. No header, no ' +
       'toggles — permanent chrome is authored chrome. Click the hamburgers below:',
   ),
@@ -223,15 +223,16 @@ content.append(resizeDemo, el('p', 'ss-caption', '↑ Drag the resize handle (bo
 content.append(
   para(
     'A side can opt into a different narrow story via ',
-    code('narrow-left'),
+    code('narrow-start'),
     ' / ',
-    code('narrow-right'),
+    code('narrow-end'),
     ' (', code('"collapse" | "stack"'),
     '): ',
     code('stack'),
     ' keeps the side IN FLOW, full width, letting its own content own its narrow anatomy — the docs ' +
       'site’s own nav pane uses this so ui-nav-rail’s collapse="menu" dropdown takes over instead ' +
-      'of the shell’s hide/overlay arm (see it live in this very page’s left rail, narrow).',
+      'of the shell’s hide/overlay arm (see it live in this very page’s nav rail, narrow — logically ' +
+      'the start side, LLD-C4/GH #95).',
   ),
 )
 
