@@ -1901,6 +1901,11 @@ short list never over-reserves and a long list scrolls at a scannable page inste
 magic number. `--ui-menu-item-block-size` (`= font + 2×block-pad`) tracks the item-pad geometry
 directly, so a denser/spacious theme or a repointed item font repoints the cap for free.
 
+When the panel scrolls, the native scrollbar is hidden (`--ui-menu-scrollbar-width`, default `none`
+— GH #166, the fleet's "hidden scroller, live scroll" seam): the shared edge-aware scroll-fade
+carries the scroll affordance instead, and wheel/trackpad/keyboard scrolling is unchanged. A
+consumer repoints the token (e.g. `--ui-menu-scrollbar-width: thin`) to restore a visible scrollbar.
+
 ## Forced colors
 
 A `@media (forced-colors: active)` block keeps the panel surface and frame visible as system
