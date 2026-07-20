@@ -24,7 +24,7 @@ describe('ui-super-shell — the SPEC-R1 grammar', () => {
     expect(el).toBeInstanceOf(UISuperShellElement)
     const middle = el.querySelector('[data-part="middle"]') as HTMLElement
     const order = [...middle.children].map((c) => `${c.getAttribute('data-part')}:${c.getAttribute('data-side') ?? '-'}`)
-    expect(order).toEqual(['rail:left', 'pane:left', 'canvas:-', 'pane:right', 'rail:right'])
+    expect(order).toEqual(['rail:start', 'pane:start', 'canvas:-', 'pane:end', 'rail:end'])
     expect(el.querySelectorAll('[data-part="bar"]')).toHaveLength(2)
     expect((el.querySelector('[data-bar="header"]') as HTMLElement).textContent).toContain('H')
   })
@@ -105,26 +105,34 @@ describe('ui-super-shell — landmarks (LLD-C1, GH #94)', () => {
   })
 })
 
-describe('ui-super-shell — the SPEC-R2 collapse contract', () => {
+describe('ui-super-shell — the SPEC-R2 collapse contract (logical start/end, LLD-C4)', () => {
   it('header toggles flip the reflected per-side state, PAIRED, aria-expanded mirrors (wide)', () => {
     const el = make({ header: 'H', 'global-nav': 'GN', 'nav-pane': 'NP', content: 'C', 'options-pane': 'OP' })
     // jsdom rects are 0-width; the toggle's narrow arm requires width>0, so jsdom exercises the WIDE arm
-    const left = el.querySelector('[data-part="side-toggle"][data-side="left"]') as HTMLElement
-    const right = el.querySelector('[data-part="side-toggle"][data-side="right"]') as HTMLElement
-    expect(el.hasAttribute('collapsed-left')).toBe(false)
-    left.click()
-    expect(el.collapsedLeft).toBe(true)
-    expect(el.hasAttribute('collapsed-left')).toBe(true)
-    expect(el.collapsedRight).toBe(false) // sides are independent (R2a)
-    right.click()
-    expect(el.collapsedRight).toBe(true)
-    left.click()
-    expect(el.collapsedLeft).toBe(false) // round-trip
+    const start = el.querySelector('[data-part="side-toggle"][data-side="start"]') as HTMLElement
+    const end = el.querySelector('[data-part="side-toggle"][data-side="end"]') as HTMLElement
+    expect(el.hasAttribute('collapsed-start')).toBe(false)
+    start.click()
+    expect(el.collapsedStart).toBe(true)
+    expect(el.hasAttribute('collapsed-start')).toBe(true)
+    expect(el.collapsedEnd).toBe(false) // sides are independent (R2a)
+    end.click()
+    expect(el.collapsedEnd).toBe(true)
+    start.click()
+    expect(el.collapsedStart).toBe(false) // round-trip
   })
 
   it('R2d: the state is SETTABLE as props (a consumer restores a persisted choice)', () => {
     const el = make({ header: 'H', 'nav-pane': 'NP', content: 'C' })
-    el.collapsedLeft = true
-    expect(el.hasAttribute('collapsed-left')).toBe(true)
+    el.collapsedStart = true
+    expect(el.hasAttribute('collapsed-start')).toBe(true)
+  })
+
+  it('toggle aria-labels are direction-agnostic text ("start"/"end"), never "left"/"right"', () => {
+    const el = make({ header: 'H', 'nav-pane': 'NP', content: 'C', 'options-pane': 'OP' })
+    const start = el.querySelector('[data-part="side-toggle"][data-side="start"]') as HTMLElement
+    const end = el.querySelector('[data-part="side-toggle"][data-side="end"]') as HTMLElement
+    expect(start.getAttribute('aria-label')).toBe('Toggle start panes')
+    expect(end.getAttribute('aria-label')).toBe('Toggle end panes')
   })
 })

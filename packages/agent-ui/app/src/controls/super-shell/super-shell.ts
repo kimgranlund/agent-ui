@@ -13,10 +13,19 @@
 // Collapse (SPEC-R2): per-side toggles, HEADER-HOSTED (R2b — injected as the header row's leading/
 // trailing affordances; no header ⇒ no toggles, permanent chrome is authored chrome), PAIRED restore
 // (fork F1's default: one toggle drives its side's rail+pane together). State = the reflected
-// `collapsed-left`/`collapsed-right` boolean props (R2d — observable + settable, so a consumer can
+// `collapsed-start`/`collapsed-end` boolean props (R2d — observable + settable, so a consumer can
 // persist). Narrow (<40rem container, SPEC-R4/F2): CSS auto-collapses both sides; a toggle-restored
 // side overlays the canvas (super-shell.css) rather than squeezing it — and the auto state never
 // writes the props, so the consumer's persisted wide-state choice survives (R4's no-clobber law).
+//
+// Logical direction (LLD-C4, GH #95): every side-facing name here — `data-side`, `collapsed-start/
+// end`, `narrow-start/end`, `data-narrow-open` — is LOGICAL, never physical left/right. `#compose()`
+// places `global-nav`/`nav-pane` FIRST in DOM order (`data-side="start"`) and `options-pane`/
+// `global-options` SECOND (`data-side="end"`); `[data-part='middle']` is a plain row-flex container
+// with no `flex-direction` override, so an ambient `dir="rtl"` mirrors DOM-first to the PHYSICAL
+// right for free (ordinary CSS bidi — no `:dir()` selector or runtime direction read needed anywhere
+// in this file or super-shell.css). "Start"/"end" here always mean "first/second in DOM order,"
+// full stop, regardless of which physical side that renders on.
 //
 // Landmarks (LLD-C1, GH #94): every wrapper part gets a real ARIA `role` at compose time, from a
 // slot→role map (header→banner, footer→contentinfo, content→main, the nav slots→navigation, the
@@ -63,14 +72,15 @@ function roleFor(slot: SlotName, children: readonly Element[]): string {
 
 const props = {
   // SPEC-R2d — the two side states, reflected so CSS keys off the host and a consumer can persist.
-  collapsedLeft: { ...prop.boolean(false), reflect: true, attribute: 'collapsed-left' },
-  collapsedRight: { ...prop.boolean(false), reflect: true, attribute: 'collapsed-right' },
+  // LOGICAL (LLD-C4): "start"/"end" always mean DOM-first/DOM-second, never a physical side.
+  collapsedStart: { ...prop.boolean(false), reflect: true, attribute: 'collapsed-start' },
+  collapsedEnd: { ...prop.boolean(false), reflect: true, attribute: 'collapsed-end' },
   // SPEC-R4 / fork F2, widened with ADR-0084's own region vocabulary: what a side does at narrow —
   // `collapse` (default: hide, overlay on toggle-restore — the frames' all-collapsed story) or
   // `stack` (stay in flow, full-width above/below the canvas — the docs site's shipped nav UX,
   // where the ui-nav-rail's OWN collapse="menu" dropdown takes over). Pure-CSS arms.
-  narrowLeft: { ...prop.enum(['collapse', 'stack'] as const, 'collapse'), reflect: true, attribute: 'narrow-left' },
-  narrowRight: { ...prop.enum(['collapse', 'stack'] as const, 'collapse'), reflect: true, attribute: 'narrow-right' },
+  narrowStart: { ...prop.enum(['collapse', 'stack'] as const, 'collapse'), reflect: true, attribute: 'narrow-start' },
+  narrowEnd: { ...prop.enum(['collapse', 'stack'] as const, 'collapse'), reflect: true, attribute: 'narrow-end' },
 } satisfies PropsSchema
 
 export interface UISuperShellElement extends ReactiveProps<typeof props> {}
@@ -84,10 +94,10 @@ export class UISuperShellElement extends UIElement {
     this.effect(() => {
       // Reflect the side states onto the toggles' accessible pressed state (the buttons exist only
       // when a header was authored).
-      const left = this.querySelector('[data-part="side-toggle"][data-side="left"]')
-      const right = this.querySelector('[data-part="side-toggle"][data-side="right"]')
-      left?.setAttribute('aria-expanded', String(!this.collapsedLeft))
-      right?.setAttribute('aria-expanded', String(!this.collapsedRight))
+      const start = this.querySelector('[data-part="side-toggle"][data-side="start"]')
+      const end = this.querySelector('[data-part="side-toggle"][data-side="end"]')
+      start?.setAttribute('aria-expanded', String(!this.collapsedStart))
+      end?.setAttribute('aria-expanded', String(!this.collapsedEnd))
     })
   }
 
@@ -121,14 +131,14 @@ export class UISuperShellElement extends UIElement {
       const barContent = document.createElement('div')
       barContent.setAttribute('data-part', 'bar-content')
       barContent.append(...headerChildren)
-      header.append(this.#makeToggle('left'), barContent, this.#makeToggle('right'))
+      header.append(this.#makeToggle('start'), barContent, this.#makeToggle('end'))
       frame.append(header)
     }
 
     // middle row — [ rail | pane | content | pane | rail ], absent slots contribute nothing (R1).
     const middle = document.createElement('div')
     middle.setAttribute('data-part', 'middle')
-    const place = (slot: SlotName, part: string, side?: 'left' | 'right'): void => {
+    const place = (slot: SlotName, part: string, side?: 'start' | 'end'): void => {
       const children = authored.get(slot)!
       if (children.length === 0) return
       const box = document.createElement('div')
@@ -139,11 +149,11 @@ export class UISuperShellElement extends UIElement {
       box.append(...children)
       middle.append(box)
     }
-    place('global-nav', 'rail', 'left')
-    place('nav-pane', 'pane', 'left')
+    place('global-nav', 'rail', 'start')
+    place('nav-pane', 'pane', 'start')
     place('content', 'canvas')
-    place('options-pane', 'pane', 'right')
-    place('global-options', 'rail', 'right')
+    place('options-pane', 'pane', 'end')
+    place('global-options', 'rail', 'end')
     frame.append(middle)
 
     // Footer has no toggles (SPEC-R2c: header/footer are permanent chrome) — but its content gets the
@@ -166,8 +176,10 @@ export class UISuperShellElement extends UIElement {
   }
 
   /** One header-hosted side toggle (SPEC-R2b) — flips its side's reflected state; paired restore
-   *  (F1: the rail+pane pair rides ONE state, realized in CSS off the host attribute). */
-  #makeToggle(side: 'left' | 'right'): HTMLElement {
+   *  (F1: the rail+pane pair rides ONE state, realized in CSS off the host attribute). `side` is
+   *  LOGICAL (LLD-C4): no physical left/right anywhere in this method — DOM order + the browser's
+   *  own bidi reversal place the button and its rail/pane on the correct physical side under RTL. */
+  #makeToggle(side: 'start' | 'end'): HTMLElement {
     const button = document.createElement('ui-button')
     button.setAttribute('variant', 'ghost')
     button.setAttribute('icon-only', '') // button.md's icon-only-button idiom (the toast.ts close-button
@@ -175,7 +187,7 @@ export class UISuperShellElement extends UIElement {
     // near-invisible against the bar (the regression a real browser screenshot caught, GH #90).
     button.setAttribute('data-part', 'side-toggle')
     button.setAttribute('data-side', side)
-    button.setAttribute('aria-label', side === 'left' ? 'Toggle left panes' : 'Toggle right panes')
+    button.setAttribute('aria-label', side === 'start' ? 'Toggle start panes' : 'Toggle end panes')
     const icon = document.createElement('ui-icon')
     icon.setAttribute('slot', 'leading') // the icon-only anatomy's ONE adornment cell (button.md)
     icon.setAttribute('data-role', 'icon')
@@ -190,8 +202,8 @@ export class UISuperShellElement extends UIElement {
         else this.removeAttribute('data-narrow-open')
         return
       }
-      if (side === 'left') this.collapsedLeft = !this.collapsedLeft
-      else this.collapsedRight = !this.collapsedRight
+      if (side === 'start') this.collapsedStart = !this.collapsedStart
+      else this.collapsedEnd = !this.collapsedEnd
     })
     return button
   }

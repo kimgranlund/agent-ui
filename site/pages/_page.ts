@@ -905,11 +905,13 @@ function buildThemedShell(page: HTMLElement): UIThemeProviderElement {
   // header full-width (the wireframe's own shape), the ui-nav-rail as the collapsible nav-pane, the
   // page region as the canvas, the footer as permanent chrome. The provider stays the ROOT (tokens +
   // the ui-nav-rail-collapse named container both live there, TKT-0035/ADR-0141 unchanged).
-  const shell = document.createElement('ui-super-shell') as HTMLElement & { collapsedLeft: boolean }
+  const shell = document.createElement('ui-super-shell') as HTMLElement & { collapsedStart: boolean }
   shell.className = 'site-shell'
   // Narrow keeps the SHIPPED nav story (TKT-0035): the nav pane STACKS in flow and the rail's own
   // collapse="menu" dropdown takes over — never the shell's hide/overlay arm (ADR-0084 stack mode).
-  shell.setAttribute('narrow-left', 'stack')
+  // `nav` is authored FIRST (below) — the DOM-first ("start") side, per LLD-C4/GH #95's logical
+  // naming (this site is LTR-only prose, so start == physical left, unchanged in practice).
+  shell.setAttribute('narrow-start', 'stack')
   const header = buildContextHeader(provider)
   header.setAttribute('data-slot', 'header')
   const nav = buildNav()
@@ -921,13 +923,13 @@ function buildThemedShell(page: HTMLElement): UIThemeProviderElement {
   // SPEC-R2d — the collapse choice persists across navigations (the "collapsible menus" ask): restore
   // BEFORE first paint, persist on every flip (attribute observation — the reflected state IS the API).
   try {
-    if (localStorage.getItem('agent-ui.site.nav-collapsed') === 'true') shell.collapsedLeft = true
+    if (localStorage.getItem('agent-ui.site.nav-collapsed') === 'true') shell.collapsedStart = true
   } catch { /* storage unavailable — session-only state */ }
   new MutationObserver(() => {
     try {
-      localStorage.setItem('agent-ui.site.nav-collapsed', String(shell.hasAttribute('collapsed-left')))
+      localStorage.setItem('agent-ui.site.nav-collapsed', String(shell.hasAttribute('collapsed-start')))
     } catch { /* ignore */ }
-  }).observe(shell, { attributes: true, attributeFilter: ['collapsed-left'] })
+  }).observe(shell, { attributes: true, attributeFilter: ['collapsed-start'] })
   provider.append(shell)
   return provider
 }

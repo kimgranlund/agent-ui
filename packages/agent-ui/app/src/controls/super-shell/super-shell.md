@@ -5,20 +5,20 @@
 name: ui-super-shell
 
 attributes:
-  - name: collapsed-left
+  - name: collapsed-start
     type: boolean
     default: false
     reflect: true          # SPEC-R2d — observable + settable; a consumer persists it
-  - name: collapsed-right
+  - name: collapsed-end
     type: boolean
     default: false
     reflect: true
 
 properties:
-  - name: collapsedLeft
-    description: The LEFT side's paired collapse state (fork F1 — the rail+pane pair rides one state). Flipped by the header's leading side-toggle at wide; at narrow the toggle drives the one-at-a-time overlay (`data-narrow-open`) instead, so a narrow visit never rewrites the persisted wide choice (SPEC-R4's no-clobber law).
-  - name: collapsedRight
-    description: The RIGHT side's paired collapse state — the mirror (SPEC-R1a symmetry).
+  - name: collapsedStart
+    description: The START side's paired collapse state (fork F1 — the rail+pane pair rides one state), LOGICAL not physical (LLD-C4, GH #95) — "start" means the DOM-first side (global-nav/nav-pane), whichever physical edge that renders on under the current `dir`. Flipped by the header's leading side-toggle at wide; at narrow the toggle drives the one-at-a-time overlay (`data-narrow-open`) instead, so a narrow visit never rewrites the persisted wide choice (SPEC-R4's no-clobber law).
+  - name: collapsedEnd
+    description: The END side's paired collapse state — the mirror (SPEC-R1a symmetry), LOGICAL (options-pane/global-options, DOM-second).
 
 events: []                 # behavior-only composition — no event vocabulary of its own (ADR-0151 rule 2)
 
@@ -28,7 +28,7 @@ parts:
   - name: bar
     description: Header/footer chrome rows (`data-bar="header|footer"`) — 3-module (54px) min-height, PERMANENT chrome (SPEC-R2c); rendered only when authored (the absence law). The header bar hosts the two side-toggles around the authored header children. Carries `role="banner"`/`role="contentinfo"` respectively (LLD-C1), overridable via `data-landmark` on the first authored child.
   - name: side-toggle
-    description: One header-hosted collapse toggle (`data-side="left|right"`, SPEC-R2b) — a ui-button whose aria-expanded mirrors the side's state.
+    description: One header-hosted collapse toggle (`data-side="start|end"`, SPEC-R2b, LOGICAL per LLD-C4) — a ui-button whose aria-expanded mirrors the side's state. Labeled "Toggle start panes"/"Toggle end panes" — direction-agnostic text, since which physical side that is depends on `dir`.
   - name: middle
     description: The `[ rail | pane | canvas | pane | rail ]` flex row; the narrow overlay's containing block.
   - name: rail
@@ -63,8 +63,10 @@ The shell-archetype family's grammar ceiling (M5): `[ header? | (rail?+pane?) | 
 every slot optional-and-absent-when-unfilled, recursively nestable through `content` with the rail
 ring dropped per level. Consumers mark light-DOM children `data-slot="header|global-nav|nav-pane|content|options-pane|global-options|footer"`.
 Everything sits on the 18px module (`--ui-super-shell-module`): bars/rails 3 modules, panes 14.
-Collapse is per-side and header-hosted; narrow auto-collapses via the container query alone and
-re-opens sides as overlays. Every part carries a real ARIA landmark by default (header→banner,
-footer→contentinfo, content→main, nav slots→navigation, options slots→complementary), overridable
-per slot via `data-landmark="…"` on the first authored child (LLD-C1). Normative frames: Figma
-34-1486 / 34-1506 (GH #44).
+Collapse is per-side (LOGICAL start/end, LLD-C4/GH #95 — DOM order + ordinary CSS bidi place the
+correct physical side under `dir="rtl"`, no `:dir()` selector or runtime direction read anywhere)
+and header-hosted; narrow auto-collapses via the container query alone and re-opens sides as
+overlays. Every part carries a real ARIA landmark by default (header→banner, footer→contentinfo,
+content→main, nav slots→navigation, options slots→complementary), overridable per slot via
+`data-landmark="…"` on the first authored child (LLD-C1). Normative frames: Figma 34-1486 / 34-1506
+(GH #44).

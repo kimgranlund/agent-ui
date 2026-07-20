@@ -2,9 +2,15 @@
  *   [1] TOKEN BLOCK — :where(ui-super-shell) declares ONLY --ui-super-shell-*: the 18px module
  *       ladder (SPEC-R1c: bars/rails = 3 modules, panes = 14) chained onto fleet roles.
  *   [2] STYLES BLOCK — @scope (ui-super-shell) consumes ONLY --ui-super-shell-*. Collapse rides the
- *       host's reflected [collapsed-left]/[collapsed-right] (SPEC-R2d); narrow (<40rem container,
+ *       host's reflected [collapsed-start]/[collapsed-end] (SPEC-R2d); narrow (<40rem container,
  *       SPEC-R4) auto-collapses both sides via the query ALONE (never the attributes — the no-clobber
- *       law), and an attribute-restored side overlays the canvas instead of squeezing it. */
+ *       law), and an attribute-restored side overlays the canvas instead of squeezing it.
+ *   [3] LOGICAL DIRECTION (LLD-C4, GH #95) — every selector below reads `[data-side='start'|'end']`,
+ *       never `left`/`right`. `[data-part='middle']` is plain row-flex with no `flex-direction`
+ *       override, so an ambient `dir="rtl"` mirrors the DOM-first ("start") side to the physical
+ *       right for free — no `:dir()` selector needed anywhere in this file. The narrow overlay's
+ *       `inset-inline-start`/`inset-inline-end` were ALREADY logical (they always were); only the
+ *       attribute VALUES they key off changed from left/right to start/end. */
 
 :where(ui-super-shell) {
   --ui-super-shell-module: 1.125rem; /* 18px — the ONE module every dimension derives from (SPEC-R1c) */
@@ -91,8 +97,8 @@
   }
 
   /* ── SPEC-R2: paired per-side collapse off the HOST's reflected state (wide bands) ─────────── */
-  :scope[collapsed-left] [data-part='middle'] > [data-side='left'],
-  :scope[collapsed-right] [data-part='middle'] > [data-side='right'] {
+  :scope[collapsed-start] [data-part='middle'] > [data-side='start'],
+  :scope[collapsed-end] [data-part='middle'] > [data-side='end'] {
     display: none;
   }
 
@@ -103,33 +109,33 @@
      keeps the honest floor: at narrow, sides hide; the toggles re-open them as overlays by flipping
      the attribute OFF (aria-expanded true) — the overlay arm below wins over the hide arm. */
   @container ui-super-shell (inline-size < 40rem) {
-    [data-part='middle'] > [data-side='left'],
-    [data-part='middle'] > [data-side='right'] {
+    [data-part='middle'] > [data-side='start'],
+    [data-part='middle'] > [data-side='end'] {
       display: none;
     }
     /* narrow-*="stack" (ADR-0084's region vocabulary) — the side stays IN FLOW, full width, the
-       middle row turning into a column: [ left-side | canvas | right-side ] stacked. The side's own
+       middle row turning into a column: [ start-side | canvas | end-side ] stacked. The side's own
        content (e.g. ui-nav-rail collapse="menu") owns its narrow anatomy from here. */
-    :scope[narrow-left='stack'] [data-part='middle'],
-    :scope[narrow-right='stack'] [data-part='middle'] {
+    :scope[narrow-start='stack'] [data-part='middle'],
+    :scope[narrow-end='stack'] [data-part='middle'] {
       flex-direction: column;
     }
-    :scope[narrow-left='stack'] [data-part='middle'] > [data-side='left'],
-    :scope[narrow-right='stack'] [data-part='middle'] > [data-side='right'] {
+    :scope[narrow-start='stack'] [data-part='middle'] > [data-side='start'],
+    :scope[narrow-end='stack'] [data-part='middle'] > [data-side='end'] {
       display: block;
       inline-size: auto;
       flex: 0 0 auto;
       overflow-y: visible;
     }
-    :scope[data-narrow-open='left'] [data-part='middle'] > [data-side='left'],
-    :scope[data-narrow-open='right'] [data-part='middle'] > [data-side='right'] {
+    :scope[data-narrow-open='start'] [data-part='middle'] > [data-side='start'],
+    :scope[data-narrow-open='end'] [data-part='middle'] > [data-side='end'] {
       display: block;
       position: absolute;
       inset-block: 0;
       z-index: 2;
       box-shadow: var(--ui-super-shell-overlay-shadow);
     }
-    :scope[data-narrow-open='left'] [data-part='middle'] > [data-side='left'] { inset-inline-start: 0; }
-    :scope[data-narrow-open='right'] [data-part='middle'] > [data-side='right'] { inset-inline-end: 0; }
+    :scope[data-narrow-open='start'] [data-part='middle'] > [data-side='start'] { inset-inline-start: 0; }
+    :scope[data-narrow-open='end'] [data-part='middle'] > [data-side='end'] { inset-inline-end: 0; }
   }
 }
