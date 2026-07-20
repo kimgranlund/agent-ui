@@ -60,7 +60,7 @@ import type { ClientMessageListener } from '@agent-ui/a2ui'
 // pipeline (produce()) and this narration surface consume, so the two never drift. Imported from the PURE
 // `meta-line` module (not the `./agent` barrel) so the app/site type-check never drags in the barrel's
 // NODE-FIRST modules (system-prompt/mini-skills `readFileSync` at load — no node types under those tsconfigs).
-import type { TurnProgress, TurnProgressStage } from '@agent-ui/a2ui/agent/meta-line.ts'
+import type { TurnProgress, TurnProgressStage } from '@agent-ui/a2ui/agent/meta-line' // cross-package specifier stays extensionless (the repo's own local-.ts-only convention) — a2ui/package.json exports this as its own subpath
 import './conversation-composer.ts' // registers <ui-conversation-composer> (TKT-0056) — composed internally, the master-detail.ts → ui-split precedent
 import type { UIConversationComposerElement } from './conversation-composer.ts'
 import type { PickerOption, ContextItem } from './composer-options.ts'
@@ -70,6 +70,12 @@ const props = {
   // ships unconditionally; this gates only the per-turn `<details>` wire dump, a debugging/inspection
   // affordance most product surfaces should not show by default.
   disclosure: { ...prop.boolean(false), reflect: true },
+
+  // Vision rev.5 (agent-admin's Agent master switch) — the whole-conversation availability gate: while
+  // true the composer renders busy-disabled (same visual/behavioral state as a turn in flight, ONE
+  // mechanism) and `#send` no-ops. Orthogonal to the TKT-0034 in-flight COUNT — the two OR together at
+  // every reflect site, so flipping this mid-turn can never unstick or double-free the busy counter.
+  disabled: { ...prop.boolean(false), reflect: true },
 
   // ── The opt-in composer capabilities (the Figma chat-input refactor) ────────────────────────────────
   // Every one below defaults to undefined/empty, so an existing consumer that never sets them (a2ui-chat,
@@ -181,6 +187,7 @@ const PROGRESS_LABEL: Record<TurnProgressStage, string> = {
   content: 'Writing the response…',
   validating: 'Validating…',
   retry: 'Self-correcting…',
+  tool: 'Running an integration…', // GH #49 — detail carries the registry tool NAME, composed at call time
   done: 'Done',
 }
 
@@ -246,6 +253,7 @@ export class UIConversationElement extends UIElement {
       // it works regardless of whether the consumer's own `onXChange(cb)` call happens before or after
       // THIS element connects (LLD CVC-C5, code-reviewer finding F1).
       composer.onSubmit((text) => {
+        if (this.disabled) return // belt to the composer's own busy-disable — no bubble, no callback
         this.addUserMessage(text)
         this.#onSubmitCb?.(text)
       })
@@ -272,6 +280,7 @@ export class UIConversationElement extends UIElement {
       this.#composer.efforts = this.efforts
       this.#composer.effort = this.effort
       this.#composer.contextItems = this.contextItems
+      this.#reflectBusy() // `disabled` reads here too — the effect re-runs on its change
     })
   }
 
@@ -341,13 +350,13 @@ export class UIConversationElement extends UIElement {
     // ONE #endTurn() per handle guards against a caller invoking BOTH finalize() and fail() (never legal
     // per the SPEC, but a stray double-call must not under-flow the count into a stuck-busy negative).
     this.#turnsInFlight += 1
-    if (this.#composer) this.#composer.busy = true
+    this.#reflectBusy()
     let ended = false
     const endTurn = (): void => {
       if (ended) return
       ended = true
       this.#turnsInFlight = Math.max(0, this.#turnsInFlight - 1)
-      if (this.#composer) this.#composer.busy = this.#turnsInFlight > 0
+      this.#reflectBusy()
     }
     let noteText: string | undefined
     const turnLines: string[] = []
@@ -373,8 +382,20 @@ export class UIConversationElement extends UIElement {
         lastProgressKey = undefined
         return
       }
-      const label = ev.stage === 'retry' ? (ev.round === undefined ? base : `${base} (round ${ev.round})`) : base
-      const key = ev.stage === 'retry' ? `t${seq}-progress-retry-${ev.round ?? 1}` : `t${seq}-progress-${ev.stage}`
+      // `retry` composes the real round ordinal; `tool` composes the registry tool NAME from detail —
+      // both factual values from the closed vocabularies, never model prose (GH #49 / ADR-0146 F2).
+      const label =
+        ev.stage === 'retry'
+          ? (ev.round === undefined ? base : `${base} (round ${ev.round})`)
+          : ev.stage === 'tool' && ev.detail
+            ? `${base} (${ev.detail})`
+            : base
+      const key =
+        ev.stage === 'retry'
+          ? `t${seq}-progress-retry-${ev.round ?? 1}`
+          : ev.stage === 'tool'
+            ? `t${seq}-progress-tool-${ev.detail ?? 'unknown'}`
+            : `t${seq}-progress-${ev.stage}`
       if (lastProgressKey !== undefined && lastProgressKey !== key) narration.update(lastProgressKey, { status: 'done' })
       if (progressKeysSeen.has(key)) narration.update(key, { status: 'active', label })
       else {
@@ -535,7 +556,12 @@ export class UIConversationElement extends UIElement {
     this.#registry.clear()
     this.#log!.replaceChildren()
     this.#turnsInFlight = 0
-    if (this.#composer) this.#composer.busy = false
+    this.#reflectBusy()
+  }
+
+  /** The ONE composer-busy write site: in-flight turns OR the `disabled` availability gate. */
+  #reflectBusy(): void {
+    if (this.#composer) this.#composer.busy = this.disabled || this.#turnsInFlight > 0
   }
 
   /** Leak-safety net (the select.ts/text-field.ts "heavyweight per-connection resource" precedent) — a

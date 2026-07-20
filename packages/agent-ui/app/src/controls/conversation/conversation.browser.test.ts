@@ -192,11 +192,13 @@ describe('ui-conversation-composer cross-engine smoke — the v2 field frame (TK
     const composer = el.querySelector('ui-conversation-composer') as HTMLElement & { value: string }
     const editor = el.querySelector('[data-part="editor"]') as HTMLElement
 
-    const oneLine = editor.getBoundingClientRect().height
-    composer.value = 'line 1\nline 2'
+    // The 2026-07-19 two-line floor: empty and two-line content BOTH sit at the resting minimum, so
+    // growth is proven from the THIRD line (the floor's own value is pinned by its dedicated leg below).
+    const atRest = editor.getBoundingClientRect().height
+    composer.value = 'line 1\nline 2\nline 3'
     await whenFlushed()
-    const twoLines = editor.getBoundingClientRect().height
-    expect(twoLines, 'the editor must grow with a second line').toBeGreaterThan(oneLine)
+    const threeLines = editor.getBoundingClientRect().height
+    expect(threeLines, 'the editor must grow past the two-line floor with a third line').toBeGreaterThan(atRest)
 
     composer.value = Array.from({ length: 20 }, (_, i) => `line ${i + 1}`).join('\n')
     await whenFlushed()
@@ -372,5 +374,25 @@ describe('ui-conversation cross-engine smoke — forced-colors legibility (SPEC-
     } finally {
       await session.send('Emulation.setEmulatedMedia', { features: [] })
     }
+  })
+})
+
+describe('ui-conversation-composer — the editor rests at TWO line-boxes (2026-07-19 ask)', () => {
+  it('empty editor min-block-size computes to exactly 2 × the line-box; the 6em growth cap stands', async () => {
+    const el = document.createElement('ui-conversation') as HTMLElement
+    el.style.width = '600px'
+    el.style.height = '400px'
+    document.body.append(el)
+    await (el as HTMLElement & { updateComplete: Promise<void> }).updateComplete
+    const editor = el.querySelector('ui-conversation-composer [data-part="editor"]') as HTMLElement
+    expect(editor).not.toBeNull()
+    const cs = getComputedStyle(editor)
+    const lineBox = Number.parseFloat(cs.fontSize) * (Number.parseFloat(cs.lineHeight) / Number.parseFloat(cs.fontSize))
+    const twoLines = Number.parseFloat(cs.lineHeight) * 2
+    expect(Number.parseFloat(cs.minBlockSize), 'two line-boxes at rest').toBeCloseTo(twoLines, 0)
+    expect(editor.getBoundingClientRect().height, 'the empty editor actually RENDERS two lines tall').toBeGreaterThanOrEqual(twoLines - 1)
+    expect(Number.parseFloat(cs.maxBlockSize), 'the TKT-0058 cap is untouched').toBeGreaterThan(twoLines)
+    void lineBox
+    el.remove()
   })
 })

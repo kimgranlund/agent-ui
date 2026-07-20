@@ -72,8 +72,8 @@ function mountAgentAdminAt(widthPx: number): { wrapper: HTMLElement; el: UIAgent
   return { wrapper, el }
 }
 
-describe('ui-agent-admin cross-engine smoke — the responsive shell (TKT-0085)', () => {
-  it('wide (≥1024px): the 3-pane split is visible; the narrow all-tabs shell computes display:none', async () => {
+describe('ui-agent-admin cross-engine smoke — the responsive shell (TKT-0085 → vision rev.5)', () => {
+  it('split (≥640px): the 2-pane split is visible; the narrow all-tabs shell computes display:none', async () => {
     const { el } = mountAgentAdminAt(1200)
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))) // let the real ResizeObserver's first callback land
     const split = el.querySelector(':scope > ui-split') as HTMLElement
@@ -82,26 +82,34 @@ describe('ui-agent-admin cross-engine smoke — the responsive shell (TKT-0085)'
     expect(getComputedStyle(narrowTabs).display).toBe('none') // component-reviewer CRITICAL-class pin: [hidden] must actually compute none, not just carry the attribute (an author `display` declaration silently beats the UA [hidden] rule without an explicit guard — the entry-add-form/combo-box.css precedent this fix follows)
   })
 
-  it('medium (640–1023px): [ Chat | {tabs} ] — the medium tabs pane renders a real, non-zero tab strip', async () => {
+  it('the {Settings, Context} tabs pane renders a real, non-zero tab strip; clicking Context switches the visible panel', async () => {
     const { el } = mountAgentAdminAt(800)
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
     const canvas = el.querySelector('[data-role="canvas"]') as HTMLElement
-    const tabsMediumPane = el.querySelector('[data-role="tabs-medium"]') as HTMLElement
+    const tabsPane = el.querySelector('[data-role="tabs"]') as HTMLElement
     expect(canvas.getBoundingClientRect().width).toBeGreaterThan(0)
-    expect(tabsMediumPane.getBoundingClientRect().width).toBeGreaterThan(0)
-    expect(canvas.getBoundingClientRect().right).toBeLessThanOrEqual(tabsMediumPane.getBoundingClientRect().left + 1)
-    const tabs = [...tabsMediumPane.querySelectorAll('ui-tab')]
+    expect(tabsPane.getBoundingClientRect().width).toBeGreaterThan(0)
+    expect(canvas.getBoundingClientRect().right).toBeLessThanOrEqual(tabsPane.getBoundingClientRect().left + 1)
+    const tabs = [...tabsPane.querySelectorAll('ui-tab')]
+    expect(tabs.map((t) => t.textContent)).toEqual(['Settings', 'Context'])
     for (const tab of tabs) expect(tab.getBoundingClientRect().width).toBeGreaterThan(0)
-    // Clicking the Agent tab actually switches the visible panel (a real click, real ui-tabs selection wiring).
-    const agentTab = tabs.find((t) => t.textContent === 'Agent') as HTMLElement
-    agentTab.click()
-    await new Promise((r) => requestAnimationFrame(r))
+    // Settings is the default selection — the Agent header renders visibly.
     const agentHeading = el.querySelector('[data-part="agent-heading"]') as HTMLElement
-    expect((agentHeading.closest('ui-tab-panel') as HTMLElement | null)?.hidden).toBe(false)
     expect(agentHeading.getBoundingClientRect().width).toBeGreaterThan(0)
+    // Clicking the Context tab actually switches the visible panel (a real click, real ui-tabs wiring).
+    const contextTab = tabs.find((t) => t.textContent === 'Context') as HTMLElement
+    contextTab.click()
+    await new Promise((r) => requestAnimationFrame(r))
+    const contextContent = el.querySelector('[data-role="context-content"]') as HTMLElement
+    expect((contextContent.closest('ui-tab-panel') as HTMLElement | null)?.hidden).toBe(false)
+    expect(contextContent.getBoundingClientRect().width).toBeGreaterThan(0)
+    // The Agent System JSON preview is a real, visible mono block with the compiled config in it.
+    const agentJson = contextContent.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]') as HTMLElement
+    expect(agentJson.getBoundingClientRect().height).toBeGreaterThan(0)
+    expect(agentJson.textContent).toContain('systemPrompt')
   })
 
-  it('narrow (<640px): {Chat, Instructions, Agent} tabs fill the shell; the split computes display:none', async () => {
+  it('narrow (<640px): {Chat, Settings, Context} tabs fill the shell; the split computes display:none', async () => {
     const { el } = mountAgentAdminAt(500)
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
     const split = el.querySelector(':scope > ui-split') as HTMLElement
@@ -109,7 +117,7 @@ describe('ui-agent-admin cross-engine smoke — the responsive shell (TKT-0085)'
     expect(getComputedStyle(split).display).toBe('none') // the SAME [hidden]-specificity pin, the other direction
     expect(getComputedStyle(narrowTabs).display).not.toBe('none')
     const tabs = [...narrowTabs.querySelectorAll('ui-tab')]
-    expect(tabs.map((t) => t.textContent)).toEqual(['Chat', 'Instructions', 'Agent'])
+    expect(tabs.map((t) => t.textContent)).toEqual(['Chat', 'Settings', 'Context'])
     for (const tab of tabs) expect(tab.getBoundingClientRect().width).toBeGreaterThan(0)
     // The composer is reachable and has real, non-zero geometry inside the Chat tab (the default selection).
     const composer = narrowTabs.querySelector('ui-conversation-composer') as HTMLElement
@@ -137,16 +145,16 @@ describe('ui-agent-admin cross-engine smoke — the responsive shell (TKT-0085)'
     return { conversation }
   }
 
-  it('component-reviewer MAJOR regression pin: a live surface SURVIVES a wide→medium crossing — Chat genuinely stays in place, its own split pane is never removed+re-added', async () => {
+  it('regression pin (rev.5 upgrade of the wide→medium survival pin): a live surface SURVIVES a 1200→800 resize — one split band now, #applyLayout genuinely no-ops', async () => {
     const { el, wrapper } = mountAgentAdminAt(1200)
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
     const { conversation } = await openLiveSurface(el)
 
-    wrapper.style.width = '800px' // real resize into medium — canvasPane is a member of BOTH wide + medium
+    wrapper.style.width = '800px' // both widths are the SAME split band in rev.5 — nothing may move
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
 
-    expect(el.querySelector('[data-role="tabs-medium"]'), 'did not actually reach medium').not.toBeNull()
-    expect(conversation.querySelector('[data-state="closed"]'), 'the surface closed on a wide→medium crossing — it should have stayed open').toBeNull()
+    expect(el.querySelector('[data-role="tabs"]'), 'the tabs pane should still be there').not.toBeNull()
+    expect(conversation.querySelector('[data-state="closed"]'), 'the surface closed on a same-band resize — it should have stayed open').toBeNull()
     expect(conversation.querySelector('ui-surface-host ui-button'), 'the rendered surface content should still be there').not.toBeNull()
   })
 
@@ -172,21 +180,18 @@ describe('ui-agent-admin cross-engine smoke — the responsive shell (TKT-0085)'
   })
 })
 
-describe('ui-agent-admin cross-engine smoke — three panes render side by side (ADR-0131 cl.2)', () => {
-  it('canvas, prompts, and settings each occupy a non-zero, non-overlapping box, left to right', () => {
+describe('ui-agent-admin cross-engine smoke — chat + tabs render side by side (vision rev.5)', () => {
+  it('canvas and the tabs pane each occupy a non-zero, non-overlapping box, left to right', () => {
     const { el } = mountAgentAdmin()
     const canvas = el.querySelector('[data-role="canvas"]') as HTMLElement
-    const prompts = el.querySelector('[data-role="prompts"]') as HTMLElement
-    const settings = el.querySelector('[data-role="settings"]') as HTMLElement
+    const tabsPane = el.querySelector('[data-role="tabs"]') as HTMLElement
     const c = canvas.getBoundingClientRect()
-    const p = prompts.getBoundingClientRect()
-    const s = settings.getBoundingClientRect()
-    for (const box of [c, p, s]) {
+    const t = tabsPane.getBoundingClientRect()
+    for (const box of [c, t]) {
       expect(box.width).toBeGreaterThan(0)
       expect(box.height).toBeGreaterThan(0)
     }
-    expect(c.right).toBeLessThanOrEqual(p.left + 1) // canvas is left of prompts (integer rounding slop)
-    expect(p.right).toBeLessThanOrEqual(s.left + 1) // prompts is left of settings
+    expect(c.right).toBeLessThanOrEqual(t.left + 1) // canvas is left of the tabs pane (integer rounding slop)
   })
 
   it('a seeded prompt-section entry\'s content field is visibly focusable and legible (a real element, not display:none)', () => {
@@ -210,11 +215,12 @@ describe('ui-agent-admin cross-engine smoke — three panes render side by side 
     expect(box.height).toBeGreaterThan(0)
   })
 
-  it('all four capability sections (Skills/Workflows/Resources/Tools) render in the settings pane, each a real non-zero box', () => {
+  it('all FIVE sections (Instructions + Skills/Workflows/Resources/Tools) render in the Settings tab, each a real non-zero box', () => {
     const { el } = mountAgentAdmin()
-    const settings = el.querySelector('[data-role="settings"]') as HTMLElement
+    const settings = el.querySelector('[data-role="settings-content"]') as HTMLElement
     const sections = [...settings.querySelectorAll('[data-part="entry-section"]')]
     expect(sections.map((s) => s.getAttribute('data-kind'))).toEqual([
+      ENTRY_KINDS.promptSection,
       ENTRY_KINDS.skill,
       ENTRY_KINDS.workflow,
       ENTRY_KINDS.resource,
@@ -379,12 +385,10 @@ describe('ui-agent-admin cross-engine smoke — TKT-0045: no pane overflows at t
     expect(split.scrollWidth).toBe(split.clientWidth)
 
     const canvas = el.querySelector('[data-role="canvas"]') as HTMLElement
-    const prompts = el.querySelector('[data-role="prompts"]') as HTMLElement
-    const settings = el.querySelector('[data-role="settings"]') as HTMLElement
+    const tabsPane = el.querySelector('[data-role="tabs"]') as HTMLElement
     for (const [label, pane] of [
       ['canvas', canvas],
-      ['prompts', prompts],
-      ['settings', settings],
+      ['tabs', tabsPane],
     ] as const) {
       expect(pane.scrollWidth, `${label} pane must not overflow itself`).toBe(pane.clientWidth)
     }
@@ -396,7 +400,7 @@ describe('ui-agent-admin cross-engine smoke — TKT-0045: no pane overflows at t
     expect(composer.scrollWidth, 'the message composer must not overflow ui-conversation').toBeLessThanOrEqual(
       (canvas.querySelector('ui-conversation') as HTMLElement).clientWidth,
     )
-    const uiSettingsInner = settings.querySelector('ui-settings') as HTMLElement
+    const uiSettingsInner = tabsPane.querySelector('ui-settings') as HTMLElement
     expect(uiSettingsInner.scrollWidth, 'the generated settings form must not overflow its pane').toBe(uiSettingsInner.clientWidth)
   })
 })
@@ -505,13 +509,13 @@ describe('ui-agent-admin cross-engine smoke — TKT-0050/TKT-0059/ADR-0139: entr
     const { el } = mountAgentAdmin()
     const entryContent = el.querySelector('[data-entry-id="foundation"] [data-part="entry-content"]') as HTMLElement
 
-    const uiSettings = el.querySelector('[data-role="settings"] ui-settings') as HTMLElement & { updateComplete: Promise<void> }
+    const uiSettings = el.querySelector('[data-role="settings-content"] ui-settings') as HTMLElement & { updateComplete: Promise<void> }
     await uiSettings.updateComplete
     // drill-in default: the panel is empty until a rail item is activated (the settings.browser.test.ts
     // precedent) — the "Agent" section is the first/only rail item at this schema's version.
     ;(uiSettings.querySelector('ui-nav-rail-item') as HTMLElement).click()
     await uiSettings.updateComplete
-    const nameField = el.querySelector('[data-role="settings"] ui-text-field[name="name"]') as HTMLElement
+    const nameField = el.querySelector('[data-role="settings-content"] ui-text-field[name="name"]') as HTMLElement
     expect(nameField).not.toBeNull()
 
     const editorStyle = getComputedStyle(entryContent)
@@ -622,5 +626,71 @@ describe('ui-agent-admin cross-engine smoke — the live-apply loop actually ren
     const box = agentBubbles[agentBubbles.length - 1].getBoundingClientRect()
     expect(box.width).toBeGreaterThan(0)
     expect(box.height).toBeGreaterThan(0)
+  })
+})
+
+// ── GH #47/#48 — the add-from-library menu through the REAL popover path (both engines) ────────────────
+
+describe('ui-agent-admin — entry libraries commit through the real menu (GH #47/#48)', () => {
+  it('trigger opens the top-layer panel; a row commit adds the entry; the menu closes', async () => {
+    const { wrapper, el } = mountAgentAdmin()
+    el.libraries = {
+      [ENTRY_KINDS.skill]: [{
+        id: 'pack-a',
+        label: 'Pack A',
+        description: 'fixture pack',
+        entries: [{ label: 'swiper-gallery', description: 'gallery idiom', content: 'Use a Swiper.' }],
+      }],
+    }
+    // libraries is compose-time captured — set BEFORE append; mountAgentAdmin already appended, so
+    // remount fresh: the helper appends inside itself, so build our own element here instead.
+    wrapper.remove()
+    const wrap2 = document.createElement('div')
+    wrap2.style.width = '1200px'
+    wrap2.style.height = '600px'
+    const el2 = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el2.style.flex = '1 1 auto'
+    el2.libraries = el.libraries
+    wrap2.append(el2)
+    document.body.append(wrap2)
+    mounted.push(wrap2)
+    await el2.updateComplete
+
+    const section = el2.querySelector('[data-part="entry-section"][data-kind="skill"]') as HTMLElement
+    const menu = section.querySelector('[data-part="entry-library-menu"]') as HTMLElement
+    const trigger = menu.querySelector('[data-part="trigger"]') as HTMLElement
+    trigger.click()
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    const row = menu.querySelector('[data-value="pack-a:0"]') as HTMLElement
+    expect(row.getAttribute('role'), 'the row entered the menu item contract').toBe('menuitem')
+    expect(row.getBoundingClientRect().width, 'the open panel renders the row visibly').toBeGreaterThan(0)
+    row.click()
+    await el2.updateComplete
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    const entryRow = [...section.querySelectorAll<HTMLElement>('[data-part="entry"]')].find((e) =>
+      e.textContent?.includes('swiper-gallery'),
+    )
+    expect(entryRow, 'the committed library entry renders in the section list').not.toBeUndefined()
+    expect(row.getBoundingClientRect().width, 'the menu closed after the commit').toBe(0)
+  })
+})
+
+describe('ui-agent-admin — the Agent config panel is a CARD like the entry cards (design-mode ask, 2026-07-19)', () => {
+  it('the settings panel carries the entry-card chrome: real border, radius, surface — matching an entry card computed-for-computed', async () => {
+    const { el } = mountAgentAdmin()
+    await el.updateComplete
+    const panel = el.querySelector('ui-settings [data-part="panel"]') as HTMLElement
+    const entry = el.querySelector('[data-part="entry"]') as HTMLElement
+    expect(panel).not.toBeNull()
+    expect(entry, 'an entry card exists to match against (the prompt sections seed three)').not.toBeNull()
+    const p = getComputedStyle(panel)
+    const e = getComputedStyle(entry)
+    expect(p.borderTopWidth, 'a real border').toBe(e.borderTopWidth)
+    expect(p.borderTopColor, 'the same border role').toBe(e.borderTopColor)
+    expect(p.borderTopLeftRadius, 'the same card radius').toBe(e.borderTopLeftRadius)
+    expect(p.backgroundColor, 'the same card surface').toBe(e.backgroundColor)
+    expect(p.backgroundColor).not.toBe('rgba(0, 0, 0, 0)') // anti-vacuous: not transparent-matching-transparent
   })
 })

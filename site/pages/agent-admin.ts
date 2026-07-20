@@ -76,16 +76,14 @@ function demo(): UIAgentAdminElement {
   return admin
 }
 
-// ════════════════ the DEV-only live-model overlay (SPEC-N2: dynamic + DEV-guarded ⇒ tree-shaken from build)
-// The a2ui-live.ts construction-site precedent: the `import.meta.env.DEV` guard lives HERE in the site page,
-// never in the packaged component. Under `vite dev` with a configured provider key, `agent-admin`'s stub is
-// swapped for a real live turn through the already-mounted dev-proxy trust boundary; the static build never
-// reaches the dynamic import, so no live-call code is baked into it (ADR-0131 cl.4/7 held). ════════════════
+// ════════════════ the live-model overlay, probed at runtime in both dev and prod (the a2ui-live.ts
+// construction-site precedent: the swap lives HERE in the site page, never in the packaged component). In
+// dev it rides `dev-proxy-plugin.ts`'s trust boundary; in production it's the Cloudflare Worker port
+// (worker/index.ts, mounted at `/__a2ui/agent` on this same site) — a deliberate SPEC-N2/ADR-0131 cl.4/7
+// supersession (those described a build-time DEV-only tree-shake; the boundary they protected — no
+// browser-held key — still holds, just enforced by the runtime `/status` probe's graceful degrade to the
+// stub instead of a compile-time exclusion). ════════════════════════════════════════════════════════════
 function wireLiveOverlay(admin: UIAgentAdminElement, status: HTMLElement): void {
-  if (!import.meta.env.DEV) {
-    status.textContent = 'Stub preview — the shipped build makes no live model call.'
-    return
-  }
   void (async () => {
     try {
       const overlay = await import('../lib/admin-live-runner.ts')
@@ -93,8 +91,10 @@ function wireLiveOverlay(admin: UIAgentAdminElement, status: HTMLElement): void 
       if (probe.available) {
         admin.agentTurn = overlay.createAdminAgentTurn()
         status.textContent = `Live model connected (${probe.providers} provider(s)) — replies are real model output. Edit a setting, prompt, or capability and send: it applies to the next turn.`
-      } else {
+      } else if (import.meta.env.DEV) {
         status.textContent = 'Stub preview — set a provider key in .env and restart `npm run dev` for a real live model.'
+      } else {
+        status.textContent = 'Stub preview — the shipped build makes no live model call.'
       }
     } catch {
       status.textContent = 'Stub preview — the live overlay is unavailable.'
@@ -105,11 +105,14 @@ function wireLiveOverlay(admin: UIAgentAdminElement, status: HTMLElement): void 
 content.append(sectionHeading('1 · One primitive, five instantiations'))
 content.append(
   para(
-    'Left to right: the chat canvas (', code('ui-conversation'), '), the prompts pane — a generic ' +
-      'ordered-entry-list seeded with three built-in sections (Foundation/Personality/Critical Items, ' +
-      'each toggleable, none deletable) — and the settings pane: the unchanged Agent config (',
-    code('ui-settings'), ') plus four MORE instances of that same entry-list primitive — Skills, ' +
-      'Workflows, Resources, Tools — each unseeded and purely custom-authorable. Toggle a section off, ' +
+    'Left to right: the chat canvas (', code('ui-conversation'), ') and the tabbed config region ' +
+      '(vision rev.5) — the Settings tab stacks the Agent config (', code('ui-settings'),
+    ') with its ACTIVE master switch, the model grid, a generic ordered-entry-list seeded with three ' +
+      'built-in prompt sections (Foundation/Personality/Critical Items, each toggleable, none ' +
+      'deletable), and four MORE instances of that same entry-list primitive — Skills, Workflows, ' +
+      'Resources, Tools — each unseeded, custom-authorable, and master-switchable; the Context tab is ' +
+      'the read-only introspection surface (the compiled Agent System JSON + the Dialog Turns payload ' +
+      'log). Toggle a section off, ' +
       'add a custom skill, then send a message — the reply is a deterministic stub that visibly cites ' +
       'the composed prompt AND every enabled capability, proving the wiring without a live model call: ' +
       'the shipped build makes no external network dependency.',

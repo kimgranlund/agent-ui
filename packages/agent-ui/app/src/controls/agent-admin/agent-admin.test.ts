@@ -4,7 +4,7 @@ import { UIAgentAdminElement } from './agent-admin.ts'
 import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 import { UISettingsElement } from '../settings/settings.ts'
 import { UIConversationElement } from '../conversation/conversation.ts'
-import { defaultAgentConfigSchema, SUPPORTED_MODELS, DEFAULT_MODEL_ID } from './agent-admin-schema.ts'
+import { defaultAgentConfigSchema, SUPPORTED_MODELS, DEFAULT_MODEL_ID, SURFACE_MARKDOWN_KEY, SURFACE_A2UI_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID, sanitizeCatalog } from './agent-admin-schema.ts'
 import { ENTRY_KINDS, entriesStoreKey, initialEntryValues, readEntries, composeSystemPrompt, DEFAULT_SYSTEM_PROMPT_FALLBACK, type Entry } from './entries.ts'
 import { createMemoryStore } from '../settings/memory-store.ts'
 import type { SettingsStore } from '../settings/store.ts'
@@ -104,7 +104,7 @@ class FakeResizeObserver {
   }
 }
 
-describe('UIAgentAdminElement — responsive shell (TKT-0085): wide / medium / narrow', () => {
+describe('UIAgentAdminElement — responsive shell (TKT-0085 → vision rev.5): split / narrow', () => {
   let realResizeObserver: typeof ResizeObserver | undefined
   beforeAll(() => {
     realResizeObserver = globalThis.ResizeObserver
@@ -132,36 +132,35 @@ describe('UIAgentAdminElement — responsive shell (TKT-0085): wide / medium / n
     expect(ro.target).toBeNull()
   })
 
-  it('wide (≥1024px): the 3-pane split shows, the narrow all-tabs shell stays hidden', () => {
+  it('split (≥640px): [ chat | {Settings, Context} tabs ] — the narrow all-tabs shell stays hidden (vision rev.5)', () => {
     const { el } = mountAndResize(1200)
     const split = el.querySelector(':scope > ui-split') as HTMLElement
     expect(split.hidden).toBe(false)
     const paneRoles = [...split.children].filter((c) => c.tagName === 'UI-SPLIT-PANE').map((c) => c.getAttribute('data-role'))
-    expect(paneRoles).toEqual(['canvas', 'prompts', 'settings'])
+    expect(paneRoles).toEqual(['canvas', 'tabs'])
     const narrowTabs = el.querySelector(':scope > ui-tabs') as HTMLElement
     expect(narrowTabs.hidden).toBe(true)
     expect(el.querySelector('[data-role="canvas"] ui-conversation')).not.toBeNull()
-    expect(el.querySelector('[data-role="prompts"] [data-part="entry-section-heading"]')).not.toBeNull()
-    expect(el.querySelector('[data-role="settings"] [data-part="agent-heading"]')).not.toBeNull()
+    const tabsPane = el.querySelector('[data-role="tabs"]') as HTMLElement
+    const tabLabels = [...tabsPane.querySelectorAll('ui-tab')].map((t) => t.textContent)
+    expect(tabLabels).toEqual(['Settings', 'Context'])
+    // The Settings panel carries the WHOLE config column (Agent header + prompts + capabilities merged);
+    // the Context panel carries the introspection groups. Panel visibility is a CSS/ui-tabs concern —
+    // both stay in the DOM, only the inactive one is [hidden].
+    expect(tabsPane.querySelector('[data-part="agent-heading"]')).not.toBeNull()
+    expect(tabsPane.querySelector('[data-part="entry-section-heading"]')).not.toBeNull()
+    expect(tabsPane.querySelector('[data-role="context-content"]')).not.toBeNull()
   })
 
-  it('medium (640–1023px): [ Chat | {Instructions, Agent} tabs ] — canvas pane + ONE tabs-medium pane', () => {
+  it('the old medium band (640–1023px) now renders the SAME split shape — one layout above the threshold', () => {
     const { el } = mountAndResize(800)
     const split = el.querySelector(':scope > ui-split') as HTMLElement
     expect(split.hidden).toBe(false)
     const paneRoles = [...split.children].filter((c) => c.tagName === 'UI-SPLIT-PANE').map((c) => c.getAttribute('data-role'))
-    expect(paneRoles).toEqual(['canvas', 'tabs-medium'])
-    expect(el.querySelector('[data-role="canvas"] ui-conversation')).not.toBeNull()
-    const tabsMediumPane = el.querySelector('[data-role="tabs-medium"]') as HTMLElement
-    const tabLabels = [...tabsMediumPane.querySelectorAll('ui-tab')].map((t) => t.textContent)
-    expect(tabLabels).toEqual(['Instructions', 'Agent'])
-    // Both panels' real content live inside this ONE tabs-medium pane (panel visibility is a CSS/ui-tabs
-    // concern, not a DOM-presence one — both panels stay in the DOM, only the inactive one is [hidden]).
-    expect(tabsMediumPane.querySelector('[data-part="entry-section-heading"]')).not.toBeNull()
-    expect(tabsMediumPane.querySelector('[data-part="agent-heading"]')).not.toBeNull()
+    expect(paneRoles).toEqual(['canvas', 'tabs'])
   })
 
-  it('narrow (<640px): {Chat, Instructions, Agent} tabs — the split is hidden and empty', () => {
+  it('narrow (<640px): {Chat, Settings, Context} tabs — the split is hidden and empty', () => {
     const { el } = mountAndResize(500)
     const split = el.querySelector(':scope > ui-split') as HTMLElement
     expect(split.hidden).toBe(true)
@@ -169,13 +168,14 @@ describe('UIAgentAdminElement — responsive shell (TKT-0085): wide / medium / n
     const narrowTabs = el.querySelector(':scope > ui-tabs') as HTMLElement
     expect(narrowTabs.hidden).toBe(false)
     const tabLabels = [...narrowTabs.querySelectorAll('ui-tab')].map((t) => t.textContent)
-    expect(tabLabels).toEqual(['Chat', 'Instructions', 'Agent'])
+    expect(tabLabels).toEqual(['Chat', 'Settings', 'Context'])
     expect(narrowTabs.querySelector('ui-conversation')).not.toBeNull()
     expect(narrowTabs.querySelector('[data-part="entry-section-heading"]')).not.toBeNull()
     expect(narrowTabs.querySelector('[data-part="agent-heading"]')).not.toBeNull()
+    expect(narrowTabs.querySelector('[data-role="context-content"]')).not.toBeNull()
   })
 
-  it('content nodes are MOVED (same identity), never rebuilt, across a wide → narrow → wide round trip', () => {
+  it('content nodes are MOVED (same identity), never rebuilt, across a split → narrow → split round trip', () => {
     const { el, ro } = mountAndResize(1200)
     const conversation = el.querySelector('ui-conversation')
     const settingsHeading = el.querySelector('[data-part="agent-heading"]')
@@ -186,19 +186,19 @@ describe('UIAgentAdminElement — responsive shell (TKT-0085): wide / medium / n
     expect(el.querySelector('[data-part="agent-heading"]')).toBe(settingsHeading)
     expect(el.querySelector('[data-part="entry-section-heading"]')).toBe(instructionsHeading)
 
-    ro.trigger(1200) // -> back to wide
+    ro.trigger(1200) // -> back to split
     expect(el.querySelector('ui-conversation')).toBe(conversation)
     expect(el.querySelector('[data-part="agent-heading"]')).toBe(settingsHeading)
     expect(el.querySelector('[data-part="entry-section-heading"]')).toBe(instructionsHeading)
-    // Landed back in the ORIGINAL wide-shell panes, not left behind in a detached tab shell.
+    // Landed back in the ORIGINAL split-shell panes, not left behind in a detached tab shell.
     expect(el.querySelector('[data-role="canvas"] ui-conversation')).toBe(conversation)
-    expect(el.querySelector('[data-role="settings"] [data-part="agent-heading"]')).toBe(settingsHeading)
+    expect(el.querySelector('[data-role="tabs"] [data-part="agent-heading"]')).toBe(settingsHeading)
   })
 
   it('is idempotent — re-triggering a resize WITHIN the same band does not rebuild the shell', () => {
     const { el, ro } = mountAndResize(1200)
     const split = el.querySelector(':scope > ui-split') as HTMLElement
-    ro.trigger(1100) // still wide (≥1024) — a different width, same band
+    ro.trigger(700) // still split (≥640) — a different width, same band
     expect(el.querySelector(':scope > ui-split')).toBe(split) // same node — #applyLayout no-op'd
   })
 
@@ -209,29 +209,29 @@ describe('UIAgentAdminElement — responsive shell (TKT-0085): wide / medium / n
         .filter((c) => c.tagName === 'UI-SPLIT-PANE')
         .map((c) => c.getAttribute('data-role'))
 
-    ro.trigger(800) // -> medium
-    expect(paneRoles()).toEqual(['canvas', 'tabs-medium'])
-    ro.trigger(1200) // -> wide
-    expect(paneRoles()).toEqual(['canvas', 'prompts', 'settings'])
+    ro.trigger(800) // still split (one layout above the threshold)
+    expect(paneRoles()).toEqual(['canvas', 'tabs'])
     ro.trigger(500) // -> narrow
     expect(paneRoles()).toEqual([])
-    ro.trigger(800) // -> medium
-    expect(paneRoles()).toEqual(['canvas', 'tabs-medium'])
-    ro.trigger(1200) // -> wide
-    expect(paneRoles()).toEqual(['canvas', 'prompts', 'settings'])
+    ro.trigger(800) // -> split
+    expect(paneRoles()).toEqual(['canvas', 'tabs'])
+    ro.trigger(500) // -> narrow
+    expect(paneRoles()).toEqual([])
+    ro.trigger(1200) // -> split
+    expect(paneRoles()).toEqual(['canvas', 'tabs'])
 
     // Content stays reachable at real DOM locations after the whole chain — not just structurally present.
     expect(el.querySelector('[data-role="canvas"] ui-conversation')).not.toBeNull()
-    expect(el.querySelector('[data-role="prompts"] [data-part="entry-section-heading"]')).not.toBeNull()
-    expect(el.querySelector('[data-role="settings"] [data-part="agent-heading"]')).not.toBeNull()
+    expect(el.querySelector('[data-role="tabs"] [data-part="entry-section-heading"]')).not.toBeNull()
+    expect(el.querySelector('[data-role="tabs"] [data-part="agent-heading"]')).not.toBeNull()
   })
 
-  it('capability sections (Skills/Workflows/Resources/Tools) travel with the Agent content unit at every band', () => {
+  it('capability sections (Skills/Workflows/Resources/Tools) travel with the Settings content unit at every band', () => {
     const { el } = mountAndResize(500) // narrow — the smallest content-unit-grouping test
     const narrowTabs = el.querySelector(':scope > ui-tabs') as HTMLElement
-    const agentPanel = [...narrowTabs.querySelectorAll('ui-tab-panel')][2] as HTMLElement
-    for (const label of ['Skills', 'Workflows', 'Resources', 'Tools']) {
-      expect([...agentPanel.querySelectorAll('[data-part="entry-section-heading"]')].some((h) => h.textContent === label), `missing ${label} section`).toBe(true)
+    const settingsPanel = [...narrowTabs.querySelectorAll('ui-tab-panel')][1] as HTMLElement
+    for (const label of ['Instructions', 'Skills', 'Workflows', 'Resources', 'Tools']) {
+      expect([...settingsPanel.querySelectorAll('[data-part="entry-section-heading"]')].some((h) => h.textContent === label), `missing ${label} section`).toBe(true)
     }
   })
 })
@@ -244,8 +244,8 @@ describe('UIAgentAdminElement — upgrade + defaults', () => {
     expect(el.store).toBeUndefined()
   })
 
-  it('static props is exactly [schema, store, agentTurn, agentSurfaceTurn]', () => {
-    expect(Object.keys(UIAgentAdminElement.props)).toEqual(['schema', 'store', 'agentTurn', 'agentSurfaceTurn'])
+  it('static props is exactly [schema, store, agentTurn, agentSurfaceTurn, libraries]', () => {
+    expect(Object.keys(UIAgentAdminElement.props)).toEqual(['schema', 'store', 'agentTurn', 'agentSurfaceTurn', 'libraries'])
   })
 
   it('agentTurn starts undefined pre-connect and stays undefined after connect (the stub arm is the default)', () => {
@@ -264,12 +264,12 @@ describe('UIAgentAdminElement — upgrade + defaults', () => {
 })
 
 describe('UIAgentAdminElement — real models + real seeded content (TKT-0043)', () => {
-  it("the model field's options are real named models, not the old default/fast/careful tiers", () => {
-    const modelField = defaultAgentConfigSchema.sections[0].fields.find((f) => f.key === 'model')
-    expect(modelField?.options?.map((o) => o.value)).toEqual(SUPPORTED_MODELS.map((m) => m.id))
-    expect(modelField?.options?.map((o) => o.value)).not.toContain('default')
-    expect(modelField?.options?.map((o) => o.value)).not.toContain('fast')
-    expect(modelField?.default).toBe(DEFAULT_MODEL_ID)
+  it('the roster is real named models, not the old default/fast/careful tiers — and the schema carries NO model select (the GRID owns it, 2026-07-19 rev.2)', () => {
+    const ids = SUPPORTED_MODELS.map((m) => m.id)
+    expect(ids).toContain(DEFAULT_MODEL_ID)
+    expect(ids).not.toContain('default')
+    expect(ids).not.toContain('fast')
+    expect(defaultAgentConfigSchema.sections[0].fields.some((f) => f.key === 'model')).toBe(false)
   })
 
   it('selecting a model and submitting cites its display LABEL, not its raw id, in the next stub reply', () => {
@@ -304,13 +304,13 @@ describe('UIAgentAdminElement — real models + real seeded content (TKT-0043)',
   })
 })
 
-describe('UIAgentAdminElement — composition (ADR-0131 cl.2 three panes; ADR-0132 five entry-list instantiations)', () => {
-  it('builds one ui-split with three ui-split-pane children: canvas, prompts, settings', () => {
+describe('UIAgentAdminElement — composition (vision rev.5: chat + {Settings, Context} tabs; ADR-0132 five entry-list instantiations)', () => {
+  it('builds one ui-split with two ui-split-pane children: canvas, tabs', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const split = el.querySelector(':scope > ui-split')
     expect(split).not.toBeNull()
     const panes = [...split!.querySelectorAll(':scope > ui-split-pane')]
-    expect(panes.map((p) => p.getAttribute('data-role'))).toEqual(['canvas', 'prompts', 'settings'])
+    expect(panes.map((p) => p.getAttribute('data-role'))).toEqual(['canvas', 'tabs'])
   })
 
   it('TKT-0045: the three panes\' real content-floor `min`s sum (+ frame chrome) to the docs demo frame\'s stated minimum', () => {
@@ -330,13 +330,13 @@ describe('UIAgentAdminElement — composition (ADR-0131 cl.2 three panes; ADR-01
       return Number.parseFloat(match![1]!)
     })
     const paneMinsSum = paneMinsRem.reduce((sum, n) => sum + n, 0)
-    // Divider (2 × 1px) + .agent-admin-resize padding (2 × 0.5rem) + its border (2 × 1px) + .agent-admin-demo
-    // border (2 × 1px) — site/pages/agent-admin.css's own chrome constants, restated here as the ONE other
-    // place this arithmetic lives (matching that file's own comment).
-    const chromeRem = 2 / 16 + 1 + 2 / 16 + 2 / 16
+    // Divider (1 × 1px between two panes) + .agent-admin-resize padding (2 × 0.5rem) + its border
+    // (2 × 1px) + .agent-admin-demo border (2 × 1px) — site/pages/agent-admin.css's own chrome constants,
+    // restated here as the ONE other place this arithmetic lives.
+    const chromeRem = 1 / 16 + 1 + 2 / 16 + 2 / 16
     const expectedFloorRem = Math.ceil(paneMinsSum + chromeRem)
     expect(expectedFloorRem).toBeLessThanOrEqual(48) // the frame's actual stated floor must cover the real need
-    expect(paneMinsSum).toBe(46) // 16 + 10 + 20 — pins the THREE pane mins together as one changeset
+    expect(paneMinsSum).toBe(36) // 16 + 20 — vision rev.5's TWO panes, pinned together as one changeset
   })
 
   it('the canvas pane composes a real ui-conversation', () => {
@@ -345,28 +345,38 @@ describe('UIAgentAdminElement — composition (ADR-0131 cl.2 three panes; ADR-01
     expect(canvasPane?.querySelector('ui-conversation')).toBeInstanceOf(UIConversationElement)
   })
 
-  it('the prompts pane composes ONE entry-section, kind=prompt-section', () => {
+  it('the Settings content composes the Agent config (real ui-settings, wired to schema/store) PLUS all FIVE entry-sections (prompts merged in, vision rev.5)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const promptsPane = el.querySelector('[data-role="prompts"]')
-    const section = promptsPane?.querySelector('[data-part="entry-section"]')
-    expect(section?.getAttribute('data-kind')).toBe(ENTRY_KINDS.promptSection)
-  })
-
-  it('the settings pane composes the Agent config (real ui-settings, wired to schema/store) PLUS four capability entry-sections', () => {
-    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const settingsPane = el.querySelector('[data-role="settings"]') as HTMLElement
-    const settingsEl = settingsPane.querySelector('ui-settings') as UISettingsElement
+    const settingsContent = el.querySelector('[data-role="settings-content"]') as HTMLElement
+    const settingsEl = settingsContent.querySelector('ui-settings') as UISettingsElement
     expect(settingsEl).toBeInstanceOf(UISettingsElement)
     expect(settingsEl.schema).toBe(el.schema)
     expect(settingsEl.store).toBe(el.store)
 
-    const sections = [...settingsPane.querySelectorAll('[data-part="entry-section"]')]
+    const sections = [...settingsContent.querySelectorAll('[data-part="entry-section"]')]
     expect(sections.map((s) => s.getAttribute('data-kind'))).toEqual([
+      ENTRY_KINDS.promptSection,
       ENTRY_KINDS.skill,
       ENTRY_KINDS.workflow,
       ENTRY_KINDS.resource,
       ENTRY_KINDS.tool,
     ])
+  })
+
+  it('the Context content composes the Agent System + Dialog Turns groups (vision rev.5)', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const contextContent = el.querySelector('[data-role="context-content"]') as HTMLElement
+    const groups = [...contextContent.querySelectorAll('[data-part="context-section"]')]
+    expect(groups.map((g) => g.getAttribute('data-section'))).toEqual(['agent-system', 'dialog-turns'])
+    // Agent System: the Agent item (open, with the compiled JSON) + one accordion per capability kind.
+    const items = [...contextContent.querySelectorAll('[data-part="context-system"] [data-part="context-item"]')]
+    expect(items.map((i) => i.getAttribute('data-item'))).toEqual(['agent', ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool])
+    const agentJson = JSON.parse(items[0]!.querySelector('[data-part="context-json"]')!.textContent ?? '{}') as Record<string, unknown>
+    expect(agentJson['model']).toBe(DEFAULT_MODEL_ID)
+    expect(agentJson['active']).toBe(true)
+    expect(typeof agentJson['systemPrompt']).toBe('string')
+    // Dialog Turns: empty until the first turn runs.
+    expect(contextContent.querySelectorAll('[data-part="context-turn"]')).toHaveLength(0)
   })
 })
 
@@ -714,17 +724,19 @@ describe('UIAgentAdminElement — the DEV-only live-turn fork (TKT-0052/ADR-0136
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     await whenFlushed() // the models/model props ride ui-conversation's own reactive-prop effect, not synchronous
     const conversation = el.querySelector('ui-conversation') as UIConversationElement
-    expect(conversation.models).toEqual(SUPPORTED_MODELS)
+    // rev.4: the picker offers the INCLUDED roster only — Haiku + Sonnet ship on, the rest ship off
+    const included = SUPPORTED_MODELS.filter((m) => m.includedByDefault)
+    expect(conversation.models).toEqual(included)
     expect(conversation.model).toBe(DEFAULT_MODEL_ID)
 
     // An EXTERNAL store write (another tab, the settings pane's own field) feeds back into `conversation.model`.
-    const target = SUPPORTED_MODELS.find((m) => m.id !== DEFAULT_MODEL_ID)!
+    const target = included.find((m) => m.id !== DEFAULT_MODEL_ID)!
     el.store!.set('model', target.id)
     await whenFlushed()
     expect(conversation.model).toBe(target.id)
 
     // Committing a Models picker choice writes the SAME store key — never a second, parallel selection.
-    const other = SUPPORTED_MODELS.find((m) => m.id !== target.id)!
+    const other = included.find((m) => m.id !== target.id)!
     const menu = el.querySelector('[data-part="models-menu"]') as HTMLElement
     ;(menu.querySelector(`[data-value="${other.id}"]`) as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
     expect(el.store!.get('model')).toBe(other.id)
@@ -745,21 +757,81 @@ describe('UIAgentAdminElement — the DEV-only live-turn fork (TKT-0052/ADR-0136
     expect(runner.calls[0]!.effort).toBe('high')
   })
 
-  it('toolsEnabled gates the Tools projection: a Tool entry only reaches `system` when the master switch is on', async () => {
+  it('the kind MASTER switches gate the projection (vision rev.5: default ON; an explicit false gates the kind out)', async () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     addEntry(el, ENTRY_KINDS.tool, 'Calculator')
+    addEntry(el, ENTRY_KINDS.skill, 'Web search')
     const runner = recordingRunner('ok')
     el.agentTurn = runner.fn
 
-    submit(el, 'one') // toolsEnabled default false
+    submit(el, 'one') // rev.5: masters default ON — an enabled entry projects out of the box
     await waitFor(() => runner.calls.length === 1, 'first call')
-    expect(runner.calls[0]!.system).not.toContain('## Tools available to you')
+    expect(runner.calls[0]!.system).toContain('## Tools available to you')
+    expect(runner.calls[0]!.system).toContain('## Skills available to you')
 
-    el.store!.set('toolsEnabled', true)
+    el.store!.set('toolsEnabled', false) // the tool kind's master key (kindEnabledKey('tool') — the old key carries over)
+    el.store!.set('skillsEnabled', false)
     submit(el, 'two')
     await waitFor(() => runner.calls.length === 2, 'second call')
-    expect(runner.calls[1]!.system).toContain('## Tools available to you')
-    expect(runner.calls[1]!.system).toContain('### Calculator')
+    expect(runner.calls[1]!.system).not.toContain('## Tools available to you')
+    expect(runner.calls[1]!.system).not.toContain('## Skills available to you')
+  })
+
+  it('Dialog Turns (vision rev.5): every turn logs request/response JSON, newest first, failures included', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const runner = recordingRunner('first reply')
+    el.agentTurn = runner.fn
+    submit(el, 'hello')
+    await waitFor(() => runner.calls.length === 1, 'first turn')
+    await waitFor(() => el.querySelectorAll('[data-part="context-turn"]').length === 1, 'first turn logged')
+    const one = el.querySelector('[data-part="context-turn"]') as HTMLElement
+    expect(one.querySelector('[data-part="summary-text"]')?.textContent).toBe('01')
+    const payload = JSON.parse(one.querySelector('[data-part="context-json"]')!.textContent ?? '{}') as { arm: string; request: { text: string }; response: { reply: string } }
+    expect(payload.arm).toBe('live')
+    expect(payload.request.text).toBe('hello')
+    expect(payload.response.reply).toBe('first reply')
+
+    // A FAILED turn logs too (a payload inspector exists exactly for this) — newest first.
+    el.agentTurn = () => Promise.reject(new Error('proxy down'))
+    submit(el, 'again')
+    await waitFor(() => el.querySelectorAll('[data-part="context-turn"]').length === 2, 'failed turn logged')
+    const labels = [...el.querySelectorAll('[data-part="context-turn"] [data-part="summary-text"]')].map((s) => s.textContent)
+    expect(labels).toEqual(['02', '01'])
+    const failed = JSON.parse(el.querySelector('[data-part="context-turn"] [data-part="context-json"]')!.textContent ?? '{}') as { response: { error: string } }
+    expect(failed.response.error).toBe('proxy down')
+  })
+
+  it('the Context Agent System view re-derives on a store write (name + master toggles reach the JSON)', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const agentItemJson = (): Record<string, unknown> =>
+      JSON.parse(el.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]')!.textContent ?? '{}') as Record<string, unknown>
+    expect(agentItemJson()['name']).toBe('Untitled agent')
+    el.store!.set('name', 'The Concierge')
+    expect(agentItemJson()['name']).toBe('The Concierge')
+    // a kind master OFF: the kind's context item reflects it AND its section host dims
+    el.store!.set('skillsEnabled', false)
+    const skillsJson = JSON.parse(el.querySelector(`[data-part="context-item"][data-item="${ENTRY_KINDS.skill}"] [data-part="context-json"]`)!.textContent ?? '{}') as { enabled: boolean }
+    expect(skillsJson.enabled).toBe(false)
+    expect(el.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.skill}"]`)?.hasAttribute('data-kind-disabled')).toBe(true)
+  })
+
+  it('the Agent master switch OFF makes the agent unavailable: composer disabled, a programmatic submit runs NO turn (vision rev.5)', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const runner = recordingRunner('ok')
+    el.agentTurn = runner.fn
+    el.store!.set('agentEnabled', false)
+    const conversation = el.querySelector('ui-conversation') as UIConversationElement
+    await whenFlushed()
+    expect(conversation.disabled).toBe(true)
+    submit(el, 'hello') // the belt: even a programmatic submit is refused
+    await new Promise((resolve) => setTimeout(resolve, 10))
+    expect(runner.calls).toHaveLength(0)
+
+    el.store!.set('agentEnabled', true) // flipping back re-enables — the switch is the way back
+    await whenFlushed()
+    expect(conversation.disabled).toBe(false)
+    submit(el, 'hello again')
+    await waitFor(() => runner.calls.length === 1, 'turn after re-enable')
   })
 
   it('fresh-read: a store edit between two turns changes the SECOND request; history accumulates and the FIRST request object is never rewritten', async () => {
@@ -894,7 +966,7 @@ describe('agent-admin.md descriptor (ui-agent-admin)', () => {
   const md = readFileSync(`${DIR}/agent-admin.md`, 'utf8') as string
   const { fence, body } = splitFrontmatter(md)
   const parsed = parseDescriptor(fence)
-  const ATTR_NAMES = ['schema', 'store', 'agentTurn', 'agentSurfaceTurn']
+  const ATTR_NAMES = ['schema', 'store', 'agentTurn', 'agentSurfaceTurn', 'libraries']
 
   it('has a leading frontmatter fence and a /site prose body', () => {
     expect(fence.length).toBeGreaterThan(0)
@@ -935,7 +1007,7 @@ describe('agent-admin.md descriptor (ui-agent-admin)', () => {
 describe('UIAgentAdminElement — the agentSurfaceTurn arm', () => {
   it('a submit streams the runner: wire lines reach ingestLine (a surface host mounts), the note renders, and the request carries the composed persona + sanitized model', async () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
-    el.store = createMemoryStore({ initial: { model: 'claude-fable-5' } })
+    el.store = createMemoryStore({ initial: { model: 'claude-sonnet-5' } })
     const seen: unknown[] = []
     el.agentSurfaceTurn = async function* (req) {
       seen.push(req)
@@ -957,7 +1029,7 @@ describe('UIAgentAdminElement — the agentSurfaceTurn arm', () => {
     // The request rode the component's OWN seam: composed persona + the store's sanitized model.
     const req = seen[0] as { turn: { kind: string }; personaSystem: string; model: string }
     expect(req.turn).toEqual({ kind: 'intent', text: 'play' })
-    expect(req.model).toBe('claude-fable-5')
+    expect(req.model).toBe('claude-sonnet-5')
     expect(req.personaSystem.length).toBeGreaterThan(0)
 
     // The wire line mounted a REAL inline surface host; the note rendered at finalize.
@@ -990,3 +1062,309 @@ describe('UIAgentAdminElement — the agentSurfaceTurn arm', () => {
   })
 })
 
+
+// ── GH #47/#48 — the add-from-library seam ──────────────────────────────────────────────────────────────
+
+describe('UIAgentAdminElement — entry libraries (GH #47/#48)', () => {
+  const PACKS = {
+    skill: [
+      {
+        id: 'test-pack',
+        label: 'Test pack',
+        description: 'fixture',
+        entries: [
+          { label: 'grid-idiom', description: 'grids', content: 'Use a Grid.' },
+          { label: 'form-idiom', description: 'forms', content: 'Use a Form.' },
+        ],
+      },
+    ],
+  }
+
+  it('a kind WITH packs renders the library menu; a kind without stays byte-identical', () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore()
+    el.libraries = PACKS
+    mount(el)
+    const skillSection = el.querySelector('[data-part="entry-section"][data-kind="skill"]') as HTMLElement
+    const workflowSection = el.querySelector('[data-part="entry-section"][data-kind="workflow"]') as HTMLElement
+    expect(skillSection.querySelector('[data-part="entry-library-menu"]')).not.toBeNull()
+    expect(skillSection.querySelectorAll('[data-value^="test-pack:"]')).toHaveLength(2)
+    expect(workflowSection.querySelector('[data-part="entry-library-menu"]'), 'no packs ⇒ no affordance').toBeNull()
+  })
+
+  it('a library commit routes through the validated add path — the entry lands in the store, deletable and enabled', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    const store = createMemoryStore()
+    el.store = store
+    el.libraries = PACKS
+    mount(el)
+    await el.updateComplete
+    const row = el.querySelector('[data-value="test-pack:0"]') as HTMLElement
+    row.click() // the menu's delegated commit → select → handlers.onAdd (popover open not required for the handler path)
+    await el.updateComplete
+    const entries = (store.get('entries:skill') ?? []) as Array<{ id: string; label: string; enabled: boolean; builtin: boolean; content: string }>
+    expect(entries).toHaveLength(1)
+    expect(entries[0]).toMatchObject({ id: 'grid-idiom', label: 'grid-idiom', enabled: true, builtin: false, content: 'Use a Grid.' })
+    // a SECOND commit of the same library entry slug-dedups instead of colliding (the validateNewEntry law)
+    row.click()
+    await el.updateComplete
+    const after = (store.get('entries:skill') ?? []) as Array<{ id: string }>
+    expect(after).toHaveLength(2)
+    expect(after[1]!.id).toBe('grid-idiom-2')
+  })
+})
+
+describe('UIAgentAdminElement — a REJECTED library entry surfaces the same error note as the hand path (PR #58 review)', () => {
+  it('an empty-label pack entry shows showAddError feedback instead of failing silently', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore()
+    el.libraries = {
+      skill: [{ id: 'bad-pack', label: 'Bad pack', description: 'fixture', entries: [{ label: '   ', description: '', content: 'x' }] }],
+    }
+    mount(el)
+    await el.updateComplete
+    const section = el.querySelector('[data-part="entry-section"][data-kind="skill"]') as HTMLElement
+    const row = section.querySelector('[data-value="bad-pack:0"]') as HTMLElement
+    row.click()
+    await el.updateComplete
+    const note = section.querySelector('[data-part="entry-add-error"]') as HTMLElement
+    expect(note.hidden, 'the rejection must be VISIBLE (the fail-closed note un-hides)').toBe(false)
+    expect(note.textContent).toContain('name is required')
+    const entries = (el.store!.get('entries:skill') ?? []) as unknown[]
+    expect(entries, 'nothing was added').toHaveLength(0)
+  })
+})
+
+// ── the model lists + admin-added models (Kim, 2026-07-19) ──────────────────────────────────────────────
+
+describe('SUPPORTED_MODELS lists + the Haiku default (2026-07-19)', () => {
+  it('the default model is Haiku; Sonnet remains an offered option', async () => {
+    const { DEFAULT_MODEL_ID, SUPPORTED_MODELS } = await import('./agent-admin-schema.ts')
+    expect(DEFAULT_MODEL_ID).toBe('claude-haiku-4-5-20251001')
+    expect(SUPPORTED_MODELS.some((m) => m.id === 'claude-sonnet-5')).toBe(true)
+    // every model carries a list assignment (the grouped-select contract)
+    // every model carries a provider (the grid's grouping key, 2026-07-19 rev.2)
+    for (const m of SUPPORTED_MODELS) expect(m.provider.length, m.id).toBeGreaterThan(0)
+  })
+
+  it('parseCustomModels: id|Label pairs, provider inference, dedupe, malformed dropped', async () => {
+    const { parseCustomModels } = await import('./agent-admin-schema.ts')
+    expect(parseCustomModels('claude-x, gpt-6 | My GPT, gemini-3, mystery-1, claude-x, claude-sonnet-5, , |')).toEqual([
+      { id: 'claude-x', label: 'claude-x', provider: 'Anthropic', includedByDefault: true },
+      { id: 'gpt-6', label: 'My GPT', provider: 'OpenAI', includedByDefault: true },
+      { id: 'gemini-3', label: 'gemini-3', provider: 'Google', includedByDefault: true },
+      { id: 'mystery-1', label: 'mystery-1', provider: 'Other', includedByDefault: true },
+    ])
+    expect(parseCustomModels(undefined)).toEqual([])
+    expect(parseCustomModels(42)).toEqual([])
+  })
+
+  it('the schema carries NO model select anymore (the grid owns it); customModels field stays; model roster helpers hold', async () => {
+    const { agentConfigSchema, CUSTOM_MODELS_KEY, modelRoster, isModelIncluded, sanitizeModel, DEFAULT_MODEL_ID } = await import('./agent-admin-schema.ts')
+    const schema = agentConfigSchema()
+    expect(schema.sections[0]!.fields.some((f) => f.key === 'model'), 'no model select field').toBe(false)
+    expect(schema.sections[0]!.fields.some((f) => f.key === CUSTOM_MODELS_KEY)).toBe(true)
+    const roster = modelRoster('gpt-6 | My GPT')
+    expect(roster.at(-1)).toEqual({ id: 'gpt-6', label: 'My GPT', provider: 'OpenAI', includedByDefault: true })
+    const sonnet = roster.find((m) => m.id === 'claude-sonnet-5')!
+    const gpt = roster.find((m) => m.id === 'gpt-4.1')!
+    expect(isModelIncluded(undefined, sonnet), 'absent record ⇒ the model\'s own includedByDefault (Sonnet ships on)').toBe(true)
+    expect(isModelIncluded(undefined, gpt), 'the OpenAI option ships OFF (rev.4)').toBe(false)
+    expect(isModelIncluded({ 'claude-sonnet-5': false }, sonnet), 'an explicit record wins').toBe(false)
+    expect(isModelIncluded({ 'gpt-4.1': true }, gpt)).toBe(true)
+    expect(sanitizeModel('gpt-6', roster)).toBe('gpt-6')
+    expect(sanitizeModel('nope', roster)).toBe(DEFAULT_MODEL_ID)
+  })
+})
+
+describe('ui-agent-admin — the Model GRID (2026-07-19 rev.2)', () => {
+  function mountAdmin(): { el: UIAgentAdminElement; store: ReturnType<typeof createMemoryStore> } {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    const store = createMemoryStore()
+    el.store = store
+    mount(el)
+    return { el, store }
+  }
+
+  it('renders provider-grouped rows: label | include switch | default RADIO (rev.3); the default row locks its switch', async () => {
+    const { el } = mountAdmin()
+    await el.updateComplete
+    const grid = el.querySelector('[data-part="model-grid"]') as HTMLElement
+    expect(grid).not.toBeNull()
+    expect([...grid.querySelectorAll('[data-part="model-provider"]')].map((p) => p.textContent)).toEqual(['Anthropic', 'OpenAI', 'Google'])
+    const rows = grid.querySelectorAll('[data-part="model-row"]')
+    expect(rows).toHaveLength(6) // rev.4: the Haiku/Sonnet tier pair per provider — opus/fable are GONE
+    // ship state: only Haiku+Sonnet included; the OpenAI/Gemini options ship switched OFF
+    const stateOf = (title: string): boolean => {
+      const row = [...grid.querySelectorAll<HTMLElement>('[data-part="model-row"]')].find(
+        (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === title,
+      )!
+      return (row.querySelector('[data-part="model-include"]') as HTMLElement & { checked: boolean }).checked
+    }
+    expect(stateOf('claude-sonnet-5')).toBe(true)
+    expect(stateOf('gpt-4.1')).toBe(false)
+    expect(stateOf('gemini-2.5-flash')).toBe(false)
+    const defaultRow = grid.querySelector('[data-part="model-row"][data-default]') as HTMLElement
+    expect(defaultRow.querySelector('[data-part="model-row-label"]')?.getAttribute('title')).toBe('claude-haiku-4-5-20251001')
+    const lockSwitch = defaultRow.querySelector('[data-part="model-include"]') as HTMLElement & { checked: boolean; disabled: boolean }
+    expect(lockSwitch.checked, 'the default is always offered').toBe(true)
+    expect(lockSwitch.disabled, 'the default row cannot be excluded').toBe(true)
+    const defaultBox = defaultRow.querySelector('[data-part="model-default"]') as HTMLElement & { checked: boolean }
+    expect(defaultBox.checked).toBe(true)
+    expect(defaultBox.tagName.toLowerCase(), 'the default column is a RADIO system (rev.3)').toBe('ui-radio')
+  })
+
+  it('the include switch writes modelsIncluded; the default radio moves `model` and re-includes', async () => {
+    const { el, store } = mountAdmin()
+    await el.updateComplete
+    const grid = el.querySelector('[data-part="model-grid"]') as HTMLElement
+    const sonnetRow = [...grid.querySelectorAll<HTMLElement>('[data-part="model-row"]')].find(
+      (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === 'claude-sonnet-5',
+    )!
+    // exclude Sonnet
+    const sw = sonnetRow.querySelector('[data-part="model-include"]') as HTMLElement & { checked: boolean }
+    sw.checked = false
+    sw.dispatchEvent(new Event('change'))
+    expect((store.get('modelsIncluded') as Record<string, boolean>)['claude-sonnet-5']).toBe(false)
+    await el.updateComplete
+    // move the default to Sonnet — re-includes it AND moves `model`; the old default row unchecks
+    const freshSonnetRow = [...el.querySelectorAll<HTMLElement>('[data-part="model-row"]')].find(
+      (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === 'claude-sonnet-5',
+    )!
+    const box = freshSonnetRow.querySelector('[data-part="model-default"]') as HTMLElement & { checked: boolean }
+    box.checked = true
+    box.dispatchEvent(new Event('change'))
+    expect(store.get('model')).toBe('claude-sonnet-5')
+    expect((store.get('modelsIncluded') as Record<string, boolean>)['claude-sonnet-5'], 'defaulting re-includes').toBe(true)
+    await el.updateComplete
+    const haikuRow = [...el.querySelectorAll<HTMLElement>('[data-part="model-row"]')].find(
+      (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === 'claude-haiku-4-5-20251001',
+    )!
+    expect((haikuRow.querySelector('[data-part="model-default"]') as HTMLElement & { checked: boolean }).checked, 'radio semantics: the old default unchecked').toBe(false)
+  })
+
+  it('a customModels write folds new rows under their inferred provider', async () => {
+    const { el, store } = mountAdmin()
+    await el.updateComplete
+    store.set('customModels', 'gpt-6 | My GPT, mystery-1')
+    await el.updateComplete
+    const providers = [...el.querySelectorAll('[data-part="model-provider"]')].map((p) => p.textContent)
+    expect(providers).toEqual(['Anthropic', 'OpenAI', 'Google', 'Other'])
+    expect(el.querySelectorAll('[data-part="model-row"]')).toHaveLength(8)
+    // a custom add ships INCLUDED (you added it to use it) — unlike the built-in off-by-default options
+    const customRow = [...el.querySelectorAll<HTMLElement>('[data-part="model-row"]')].find(
+      (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === 'gpt-6',
+    )!
+    expect((customRow.querySelector('[data-part="model-include"]') as HTMLElement & { checked: boolean }).checked).toBe(true)
+  })
+})
+
+// ── Surface Options (vision rev.6 — the frame's node 34:1312) ──────────────────────────────────────────
+
+describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
+  function composerSubmit(el: UIAgentAdminElement, text: string): void {
+    const composer = el.querySelector('ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = text
+    const editor = composer.querySelector('[data-part="editor"]') as HTMLElement
+    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+  }
+  function lastAgentBody(el: UIAgentAdminElement): HTMLElement {
+    const bodies = el.querySelectorAll('[data-part="bubble"][data-role="agent"] [data-part="body"]')
+    return bodies[bodies.length - 1] as HTMLElement
+  }
+
+  it('composes the card: markdown/a2ui/genui rows in order; GenUI is PRD-gated (disabled); the catalog picker carries the roster', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    const rows = [...el.querySelectorAll('[data-part="surface-row"]')]
+    expect(rows.map((r) => r.getAttribute('data-surface'))).toEqual(['markdown', 'a2ui', 'genui'])
+    const genui = rows[2] as HTMLElement
+    expect(genui.hasAttribute('data-disabled')).toBe(true)
+    expect((genui.querySelector('[data-part="surface-toggle"]') as HTMLElement & { disabled: boolean }).disabled).toBe(true)
+    expect(genui.querySelector('[data-part="surface-note"]')?.textContent).toBe('PRD pending')
+    const catalog = el.querySelector('[data-part="surface-catalog"]') as HTMLElement
+    const options = [...catalog.querySelectorAll('[role="option"]')]
+    expect(options.map((o) => o.getAttribute('value'))).toEqual(A2UI_CATALOG_OPTIONS.map((o) => o.id))
+    // both live modalities ship ON
+    expect((rows[0]!.querySelector('[data-part="surface-toggle"]') as HTMLElement & { checked: boolean }).checked).toBe(true)
+    expect((rows[1]!.querySelector('[data-part="surface-toggle"]') as HTMLElement & { checked: boolean }).checked).toBe(true)
+  })
+
+  it('Markdown ON by default: an agent note renders through <ui-markdown>; an explicit OFF falls back to a plain text node (live-apply, next bubble)', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    composerSubmit(el, 'hello')
+    await whenFlushed()
+    const rendered = lastAgentBody(el).querySelector('ui-markdown') as (HTMLElement & { markdown: string }) | null
+    expect(rendered, 'the stub note should render through ui-markdown').not.toBeNull()
+    expect(rendered!.markdown.length).toBeGreaterThan(0)
+
+    el.store!.set(SURFACE_MARKDOWN_KEY, false)
+    composerSubmit(el, 'again')
+    await whenFlushed()
+    expect(lastAgentBody(el).querySelector('ui-markdown'), 'OFF ⇒ plain text, no ui-markdown').toBeNull()
+    expect(lastAgentBody(el).textContent!.length).toBeGreaterThan(0)
+  })
+
+  it('surfaceA2ui OFF bypasses an ARMED surface runner (the prose stub answers, client messages no-op); ON routes back and the request carries the sanitized catalogId', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({ initial: { [SURFACE_A2UI_KEY]: false } })
+    const seen: Array<{ catalogId?: string }> = []
+    el.agentSurfaceTurn = async function* (req) {
+      seen.push(req as { catalogId?: string })
+      yield { kind: 'note' as const, note: 'surfaced' }
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+
+    composerSubmit(el, 'draw')
+    await whenFlushed()
+    await new Promise((r) => setTimeout(r, 0))
+    expect(seen, 'the armed runner must be bypassed while the modality is off').toHaveLength(0)
+    expect(lastAgentBody(el).textContent, 'the prose stub answered instead').toContain('stub')
+
+    // the catalog picker disables with the modality (choosing a catalog for a dead surface is noise)
+    expect((el.querySelector('[data-part="surface-catalog"]') as HTMLElement & { disabled: boolean }).disabled).toBe(true)
+
+    el.store!.set(SURFACE_A2UI_KEY, true)
+    await whenFlushed()
+    expect((el.querySelector('[data-part="surface-catalog"]') as HTMLElement & { disabled: boolean }).disabled).toBe(false)
+    composerSubmit(el, 'draw again')
+    await whenFlushed()
+    await new Promise((r) => setTimeout(r, 0))
+    await whenFlushed()
+    expect(seen).toHaveLength(1)
+    expect(seen[0]!.catalogId).toBe(DEFAULT_A2UI_CATALOG_ID)
+  })
+
+  it('the Context Agent System JSON carries the surface block (markdown/a2ui/catalog/genui)', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    const agentJson = JSON.parse(
+      el.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]')!.textContent ?? '{}',
+    ) as { surface: { markdown: boolean; a2ui: boolean; catalog: string; genui: string } }
+    expect(agentJson.surface).toEqual({ markdown: true, a2ui: true, catalog: DEFAULT_A2UI_CATALOG_ID, genui: 'prd-pending' })
+    el.store!.set(SURFACE_MARKDOWN_KEY, false)
+    const after = JSON.parse(
+      el.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]')!.textContent ?? '{}',
+    ) as { surface: { markdown: boolean } }
+    expect(after.surface.markdown).toBe(false)
+  })
+
+  it('sanitizeCatalog: a known id passes, anything else coerces to the default (fail-closed)', () => {
+    expect(sanitizeCatalog(DEFAULT_A2UI_CATALOG_ID)).toBe(DEFAULT_A2UI_CATALOG_ID)
+    expect(sanitizeCatalog('not-a-catalog')).toBe(DEFAULT_A2UI_CATALOG_ID)
+    expect(sanitizeCatalog(42)).toBe(DEFAULT_A2UI_CATALOG_ID)
+    expect(sanitizeCatalog(undefined)).toBe(DEFAULT_A2UI_CATALOG_ID)
+  })
+})

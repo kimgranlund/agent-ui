@@ -872,6 +872,17 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    // ui-super-shell (@agent-ui/app, M5) — the SAME ungrouped-site-level-card posture as App Shell above.
+    cards: [
+      {
+        href: './super-shell.html',
+        title: 'Composing a ui-super-shell',
+        blurb:
+          'The shell-archetype family\'s grammar ceiling: a two-level recursive frame — grammar, collapse contract, recursion, and narrow reflow, each on a live ui-super-shell (M5, GH #83/#84).',
+      },
+    ],
+  },
+  {
     cards: [
       {
         href: './a2ui-canvas.html',

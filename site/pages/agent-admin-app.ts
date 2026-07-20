@@ -28,6 +28,7 @@ import './agent-admin-app.css' // page-local: full-viewport layout + the preset 
 import type { UIAgentAdminElement } from '@agent-ui/app/agent-admin'
 import type { UIButtonElement } from '@agent-ui/components/controls/button'
 import { AGENT_PRESETS, ACTIVE_PRESET_KEY, presetStore, resetPreset, type AgentPreset } from './agent-admin-presets.ts'
+import { ADMIN_LIBRARIES } from './agent-admin-libraries.ts'
 
 const root = document.querySelector('#app') ?? document.body
 
@@ -37,12 +38,26 @@ const root = document.querySelector('#app') ?? document.body
 // entry section, and re-syncs the conversation (agent-admin.ts:162; the store-swap probe pins it).
 
 const admin = document.createElement('ui-agent-admin') as UIAgentAdminElement
+// GH #47/#48 — the library packs, set BEFORE the element ever connects (the compose-time capture law
+// the `libraries` prop documents).
+admin.libraries = ADMIN_LIBRARIES
 
-const strip = document.createElement('nav')
-strip.className = 'preset-strip'
-strip.setAttribute('aria-label', 'Agent presets')
+// ── the canvas-header (GH #51): `[ title | … | agent-menu ]` — replaces the TKT-0074 truncating chip
+// row. The active agent NAMES the surface (the title zone); switching moves into a ui-menu (one row per
+// preset, never truncated); page actions (Reset persona today) live in the "…" overflow menu. Page-local
+// by design — a shared canvas-header COMPONENT is #44/M5's call, not this page's (GH #51 scope note).
+const header = document.createElement('header')
+header.className = 'canvas-header'
+header.setAttribute('aria-label', 'Active agent')
 
-const presetButtons = new Map<string, UIButtonElement>()
+const title = document.createElement('div')
+title.className = 'canvas-header-title'
+const titleName = document.createElement('span')
+titleName.className = 'canvas-header-name'
+const titleTagline = document.createElement('span')
+titleTagline.className = 'canvas-header-tagline'
+title.append(titleName, titleTagline)
+
 let active: AgentPreset =
   AGENT_PRESETS.find((p) => p.id === localStorage.getItem(ACTIVE_PRESET_KEY)) ?? AGENT_PRESETS[0]!
 
@@ -50,65 +65,106 @@ let active: AgentPreset =
 // persona's SURFACE session (TKT-0076 — the runner closure owns the a2ui transcript) starts clean.
 let armSurfaceTurn: (() => void) | undefined
 
+// The agent switcher — ui-menu owns the overlay/roving-focus/type-ahead; this page stages one
+// `div[data-value]` row per preset (the menu-demo idiom) and applies the committed selection.
+const agentMenu = document.createElement('ui-menu')
+agentMenu.className = 'agent-menu'
+const agentTrigger = document.createElement('ui-button') as UIButtonElement
+agentTrigger.variant = 'soft'
+agentTrigger.size = 'sm'
+agentMenu.append(agentTrigger)
+const agentItems = new Map<string, HTMLElement>()
+for (const preset of AGENT_PRESETS) {
+  const item = document.createElement('div')
+  item.dataset.value = preset.id
+  item.textContent = preset.label
+  item.title = preset.tagline
+  agentItems.set(preset.id, item)
+  agentMenu.append(item)
+}
+agentMenu.addEventListener('select', (event) => {
+  const { value } = (event as CustomEvent<{ value: string; index: number }>).detail
+  const preset = AGENT_PRESETS.find((p) => p.id === value)
+  if (preset) applyPreset(preset)
+})
+
+// The "…" overflow — page actions; Reset persona is its one row today (future actions join it here).
+const overflowMenu = document.createElement('ui-menu')
+overflowMenu.className = 'overflow-menu'
+overflowMenu.setAttribute('placement', 'bottom-end')
+const overflowTrigger = document.createElement('ui-button') as UIButtonElement
+overflowTrigger.variant = 'ghost'
+overflowTrigger.size = 'sm'
+overflowTrigger.textContent = '…'
+overflowTrigger.title = 'Page actions'
+// The glyph-only trigger needs a REAL accessible name — title never reaches the accessible name
+// (PR #54 review finding; the button.ts glyph-trigger convention).
+overflowTrigger.setAttribute('aria-label', 'Page actions')
+const resetItem = document.createElement('div')
+resetItem.dataset.value = 'reset-persona'
+resetItem.textContent = 'Reset persona'
+resetItem.title = 'Discard this persona’s edits and reseed it from the preset'
+overflowMenu.append(overflowTrigger, resetItem)
+overflowMenu.addEventListener('select', (event) => {
+  const { value } = (event as CustomEvent<{ value: string; index: number }>).detail
+  if (value === 'reset-persona') {
+    resetPreset(active)
+    applyPreset(active)
+  }
+})
+
 function applyPreset(preset: AgentPreset): void {
   active = preset
   localStorage.setItem(ACTIVE_PRESET_KEY, preset.id)
   admin.store = presetStore(preset)
   armSurfaceTurn?.()
-  for (const [id, btn] of presetButtons) btn.variant = id === preset.id ? 'solid' : 'ghost'
+  titleName.textContent = preset.label
+  titleTagline.textContent = preset.tagline
+  agentTrigger.textContent = `${preset.label} ▾`
+  agentTrigger.title = 'Switch agent'
+  for (const [id, item] of agentItems) {
+    // The active marker is REAL TEXT (a leading ✓, the platform menu convention) + a data attribute for
+    // the CSS weight — NOT aria-checked: these rows are role=menuitem (ui-menu roves over exactly that
+    // role, menu.ts:5), and aria-checked is invalid on menuitem (menu.ts:149 documents the same law for
+    // aria-selected). Real text is announced by AT for free; a menuitemradio variant is a ui-menu fleet
+    // follow-up (filed at #51 close-out), not a page-level hack.
+    const isActive = id === preset.id
+    const label = AGENT_PRESETS.find((p) => p.id === id)?.label ?? id
+    item.textContent = isActive ? `✓ ${label}` : label
+    item.toggleAttribute('data-active', isActive)
+  }
 }
 
-for (const preset of AGENT_PRESETS) {
-  const btn = document.createElement('ui-button') as UIButtonElement
-  btn.variant = 'ghost'
-  btn.size = 'sm'
-  btn.textContent = preset.label
-  btn.title = preset.tagline
-  btn.addEventListener('click', () => applyPreset(preset))
-  presetButtons.set(preset.id, btn)
-  strip.append(btn)
-}
-
-// Reset the ACTIVE persona to its seed (clears its persisted edits; the other five untouched).
-const reset = document.createElement('ui-button') as UIButtonElement
-reset.variant = 'ghost'
-reset.size = 'sm'
-reset.className = 'preset-reset'
-reset.textContent = 'Reset persona'
-reset.title = 'Discard this persona’s edits and reseed it from the preset'
-reset.addEventListener('click', () => {
-  resetPreset(active)
-  applyPreset(active)
-})
-strip.append(reset)
-
+header.append(title, overflowMenu, agentMenu)
 applyPreset(active)
-root.append(strip, admin)
+root.append(header, admin)
 
-// The DEV-only live-model overlay (the agent-admin.ts/a2ui-live.ts construction-site precedent): the
-// `import.meta.env.DEV` guard lives HERE in the site page, never in the packaged component — the static
-// build never reaches the dynamic import (ADR-0131 cl.4/7). This page has no prose chrome, so the
-// stub-vs-live status goes to the console instead of a caption.
-if (import.meta.env.DEV) {
-  void (async () => {
-    try {
-      const overlay = await import('../lib/admin-live-runner.ts')
-      const probe = await overlay.probeLive()
-      if (probe.available) {
-        admin.agentTurn = overlay.createAdminAgentTurn()
-        // The SURFACE arm (TKT-0076/ADR-0138) — takes precedence over the text runner above: turns run
-        // through the a2ui producer (persona riding the ADR-0138 seam) and stream REAL surfaces into the
-        // conversation. A fresh runner per persona switch = a fresh producer session per persona.
-        armSurfaceTurn = () => {
-          admin.agentSurfaceTurn = overlay.createAdminSurfaceTurn()
-        }
-        armSurfaceTurn()
-        console.info(`[agent-admin-app] live model connected (${probe.providers} provider(s)) — surface turns armed`)
-      } else {
-        console.info('[agent-admin-app] stub preview — set a provider key in .env and restart `npm run dev` for a live model')
+// GH #114 (review finding): this page uses the SAME site/lib/admin-live-runner.ts backend as
+// agent-admin.ts (identical /__a2ui/agent/chat + /__a2ui/agent endpoints), but was missed when that
+// page's DEV-only gate was removed to go live in production (worker/index.ts, mounted at /__a2ui/agent
+// on this same site — a deliberate SPEC-N2/ADR-0131 cl.4/7 supersession, see agent-admin.ts's header for
+// the full rationale). This page has no prose chrome, so the stub-vs-live status goes to the console
+// instead of a caption; DEV is still read for wording only, same as agent-admin.ts's pattern.
+void (async () => {
+  try {
+    const overlay = await import('../lib/admin-live-runner.ts')
+    const probe = await overlay.probeLive()
+    if (probe.available) {
+      admin.agentTurn = overlay.createAdminAgentTurn()
+      // The SURFACE arm (TKT-0076/ADR-0138) — takes precedence over the text runner above: turns run
+      // through the a2ui producer (persona riding the ADR-0138 seam) and stream REAL surfaces into the
+      // conversation. A fresh runner per persona switch = a fresh producer session per persona.
+      armSurfaceTurn = () => {
+        admin.agentSurfaceTurn = overlay.createAdminSurfaceTurn()
       }
-    } catch {
-      console.info('[agent-admin-app] stub preview — the live overlay is unavailable')
+      armSurfaceTurn()
+      console.info(`[agent-admin-app] live model connected (${probe.providers} provider(s)) — surface turns armed`)
+    } else if (import.meta.env.DEV) {
+      console.info('[agent-admin-app] stub preview — set a provider key in .env and restart `npm run dev` for a live model')
+    } else {
+      console.info('[agent-admin-app] stub preview — the shipped build makes no live model call')
     }
-  })()
-}
+  } catch {
+    console.info('[agent-admin-app] stub preview — the live overlay is unavailable')
+  }
+})()

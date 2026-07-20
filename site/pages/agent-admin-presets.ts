@@ -1,7 +1,9 @@
-// site/pages/agent-admin-presets.ts — the six A2UI-SHOWCASE personas for the standalone agent-admin
-// surface (TKT-0074) + their persona-scoped store mechanics. PAGE-LOCAL data, deliberately not a package
-// export (the ticket's scope line): the PAGE owns which personas exist; the packages own only the
-// primitives this file composes (createMemoryStore · entriesStoreKey · DEFAULT_PROMPT_SECTIONS).
+// site/pages/agent-admin-presets.ts — the agent-admin roster: the six original A2UI-SHOWCASE personas
+// (TKT-0074) + the GH #46 hospitality/travel additions (the Concierge upgraded in place to the Hotel
+// Concierge; the Maître d' and the Travel Agent new) + their persona-scoped store mechanics. PAGE-LOCAL
+// data, deliberately not a package export (the ticket's scope line): the PAGE owns which personas
+// exist; the packages own only the primitives this file composes (createMemoryStore · entriesStoreKey ·
+// DEFAULT_PROMPT_SECTIONS).
 //
 // The design (ruled in-conversation 2026-07-16, the option-2 shape): each preset is its OWN store —
 // `createMemoryStore({ initial: seed, persistKey: 'agent-admin-app.<id>' })` — so edits persist PER
@@ -12,14 +14,20 @@
 //
 // Each persona steers a DIFFERENT A2UI catalog family + interaction mechanism: its Foundation builtin is
 // rewritten to the persona, a custom "Surface style" section teaches when to emit UI vs prose, and its
-// capability entries carry labels that intent-match the shipped mini-skill registry (ADR-0091:
-// card-game-sheet · dashboard-kpi-grid · form-rhythm · login-form) so `selectMiniSkills` fires
-// differently per persona on the DEV live path. The stub path still proves the plumbing: the stub reply
+// capability entries either intent-match the shipped mini-skill registry (ADR-0091 — the game/dashboard
+// showcases: card-layout · game-table-chrome · game-hud · dashboard-kpi-grid) or carry AUTHORED
+// hospitality/travel skills seeded from the library packs (GH #46 — projected wholesale into the live
+// prompt via composeLiveSystemPrompt, stronger than registry intent-matching; form-rhythm/login-form
+// left the roster with the old Concierge). The stub path still proves the plumbing: the stub reply
 // cites the composed prompt + enabled capabilities without emitting surfaces.
 import { createMemoryStore } from '@agent-ui/app/settings-memory-store'
 import type { SettingsStore } from '@agent-ui/app/settings-store'
 import { ENTRY_KINDS, DEFAULT_PROMPT_SECTIONS, entriesStoreKey } from '@agent-ui/app'
-import type { Entry } from '@agent-ui/app'
+import type { Entry, NewEntryInput } from '@agent-ui/app'
+// GH #46 — the hospitality/travel trio seeds from the SAME pack texts the add-from-library menu offers
+// (agent-admin-libraries.ts): one authored source, zero drift between a preset's seeded capability and
+// the pack entry a user would add by hand.
+import { HOSPITALITY_SKILLS, HOSPITALITY_PLAYBOOKS, INTEGRATION_TOOLS, GAMES_SKILLS, GAMES_PLAYBOOKS, CORE_PLAYBOOKS } from './agent-admin-libraries.ts'
 
 export interface AgentPreset {
   id: string
@@ -37,6 +45,10 @@ export interface AgentPreset {
   tools: readonly SeedEntry[]
   /** Builtin prompt-section ids to seed DISABLED (coverage: disabled-but-never-removed, ADR-0132 Fork 4). */
   disabledBuiltins?: readonly string[]
+  /** Bump when a preset's SEED is rewritten in place (GH #46's Concierge upgrade): a browser holding an
+   *  older persisted store for this id gets a one-time reset-to-new-seed (see `presetStore`). Absent = 1.
+   *  User edits on the CURRENT version always survive — only a version bump migrates. */
+  seedVersion?: number
 }
 
 /** A seed capability entry — expanded to a full `Entry` (order = array index) by `presetSeed`. */
@@ -48,12 +60,20 @@ interface SeedEntry {
   enabled?: boolean
 }
 
+/** GH #46 — pack entries → seed entries (id = label, the pack law), optionally filtered to a named
+ *  subset. Presets seed from the SAME texts the library menu offers — one source, zero drift. */
+function seedFrom(entries: readonly NewEntryInput[], pick?: readonly string[]): SeedEntry[] {
+  return entries
+    .filter((e) => !pick || pick.includes(e.label))
+    .map((e) => ({ id: e.label, label: e.label, description: e.description, content: e.content }))
+}
+
 export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'croupier',
     label: 'The Croupier',
     tagline: 'Card game on ONE live surface — actions + updateDataModel in place (ADR-0129 routing)',
-    config: { name: 'The Croupier', model: 'claude-fable-5', temperature: 0.6, toolsEnabled: true },
+    config: { name: 'The Croupier', model: 'claude-sonnet-5', temperature: 0.6, toolsEnabled: true }, // rev.4: fable retired from the roster
     foundation:
       'You are The Croupier, a blackjack dealer. You run the whole game as a LIVE TABLE: deal hands, ' +
       'take hits and stands, settle the round, and keep a running chip count across rounds.',
@@ -105,7 +125,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     id: 'quant',
     label: 'The Quant',
     tagline: 'Report family — Stat/BarChart/Sparkline/Table dashboards off one bound data model',
-    config: { name: 'The Quant', model: 'claude-opus-4-8', temperature: 0.1, toolsEnabled: true },
+    config: { name: 'The Quant', model: 'claude-sonnet-5', temperature: 0.1, toolsEnabled: true }, // rev.4: opus retired from the roster
     foundation:
       'You are The Quant, a metrics analyst. Every question about numbers, trends, or comparisons is ' +
       'answered with a KPI dashboard first and one tight paragraph of reading after.',
@@ -140,42 +160,71 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     tools: [],
   },
   {
-    id: 'concierge',
-    label: 'The Concierge',
-    tagline: 'Two-way input binding + checks + submit gate — real forms that write back (LLD-C8)',
-    config: { name: 'The Concierge', model: 'claude-sonnet-5', temperature: 0.4, toolsEnabled: true },
+    id: 'concierge', // GH #46 — upgraded IN PLACE to the Hotel Concierge (same id: persisted stores key on it)
+    seedVersion: 2, // the in-place rewrite — migrates any pre-upgrade persisted store (PR #60 review)
+    label: 'The Hotel Concierge',
+    tagline: 'The full hospitality stack: booking forms + galleries + itineraries + live weather/FX integrations (GH #46/#49)',
+    config: { name: 'The Hotel Concierge', model: 'claude-sonnet-5', temperature: 0.4, toolsEnabled: true },
     foundation:
-      'You are The Concierge, a booking and intake clerk. Anything a guest asks for becomes a short, ' +
-      'well-labelled form; once submitted you confirm with a summary card built from THEIR values.',
+      'You are the concierge of the Grand Meridian, a fictional waterfront hotel (120 rooms; two ' +
+      'restaurants — Vela for fine dining, the Quay Bar for casual; a spa, a 25m pool, a gym, and event ' +
+      'spaces for weddings and groups). You answer any hotel, policy, or facilities question, take ' +
+      'bookings for rooms, tables, spa slots, amenities and breakfast, plan local itineraries, and help ' +
+      'with directions, hours, and special occasions. Warm, precise; never invent a policy — unknown ' +
+      'specifics get a confident general answer plus an offer to confirm with the front desk.',
     surfaceStyle:
-      'Collect with real inputs: TextField for names, Select for choices, Slider for budgets, Checkbox ' +
-      'for extras, Calendar for dates. Add validation checks on required fields and gate the Submit ' +
-      'button on validity. After submit, render a confirmation Card reading the submitted data model — ' +
-      'never re-ask for a value the form already holds.',
-    skills: [
-      {
-        id: 'form-rhythm',
-        label: 'form-rhythm',
-        description: 'The form-layout idiom — label/field rhythm, grouped sections, one submit.',
-        content: 'Group related fields; one primary submit; inline validation messages at the field.',
-      },
-      {
-        id: 'login-form',
-        label: 'login-form',
-        description: 'The credentials-shaped form idiom (never real credentials here).',
-        content: 'Use the login-form shape for any two-field + submit ask; demo values only.',
-      },
-    ],
-    workflows: [
-      {
-        id: 'intake-confirm',
-        label: 'intake-confirm',
-        description: 'Form → validate → submit → confirmation card from the submitted values.',
-        content: 'The confirmation card binds to the same data model the form wrote — one source of truth.',
-      },
-    ],
+      'Facts (hours, directions, policies) → a compact facility-info Card. Anything bookable → the ' +
+      'booking-form idiom: Calendar + Select + Checkbox extras, checks gating ONE Submit, confirmation ' +
+      'bound to the submitted values. Rooms/venue tours → the gallery-swiper idiom; day plans → the ' +
+      'itinerary-timeline idiom; menus and wine → the menu-card idiom. Weather for itineraries and FX ' +
+      'for international guests come from your integrations — surface the results INSIDE the relevant ' +
+      'card, never as a raw dump. Prose stays in chat; structured facts always get a surface.',
+    skills: seedFrom(HOSPITALITY_SKILLS),
+    workflows: seedFrom(HOSPITALITY_PLAYBOOKS, ['booking-flow', 'table-reservation']),
+    resources: [],
+    tools: seedFrom(INTEGRATION_TOOLS),
+  },
+  {
+    id: 'restaurant', // GH #46 — NEW
+    label: 'The Maître d’',
+    tagline: 'Table booking + menus + wine lists — the reservation conversation as forms and menu cards (GH #46)',
+    config: { name: 'The Maître d’', model: 'claude-sonnet-5', temperature: 0.5, toolsEnabled: false },
+    foundation:
+      'You are the maître d’ of Vela, the Grand Meridian’s fine-dining restaurant (tasting menu + à la ' +
+      'carte; 40 covers; two seatings, 18:00 and 20:30; the Quay Bar next door takes walk-ins). You book ' +
+      'tables, present menus and the wine list, note dietary requirements as text marks, and advise on ' +
+      'pairings. Courteous, knowledgeable, never rushed.',
+    surfaceStyle:
+      'Menu or wine enquiries → the menu-card idiom: a Card per course/section, dishes as a List, prices ' +
+      'as trailing Badges, dietary marks as text chips (never color-only). A reservation ask → a compact ' +
+      'form: Calendar (single date), a Select of the two seatings, covers as a number TextField, dietary ' +
+      'notes; checks gate the Submit; confirm with a Card reading the submitted values and echoing any ' +
+      'dish interests as text.',
+    skills: seedFrom(HOSPITALITY_SKILLS, ['menu-card', 'hotel-booking-form']),
+    workflows: seedFrom(HOSPITALITY_PLAYBOOKS, ['table-reservation']),
     resources: [],
     tools: [],
+  },
+  {
+    id: 'travel', // GH #46 — NEW
+    label: 'The Travel Agent',
+    tagline: 'Multi-leg trip planning — comparison cards, an accumulating itinerary, live weather/FX (GH #46/#49)',
+    config: { name: 'The Travel Agent', model: 'claude-sonnet-5', temperature: 0.6, toolsEnabled: true },
+    foundation:
+      'You are a full-service travel agent: flights, trains, boats, rental cars, buses, and ' +
+      'accommodation. You plan multi-leg trips, compare options honestly (duration, price, comfort), and ' +
+      'assemble the chosen legs into one clear itinerary. Prices and schedules are ILLUSTRATIVE demo ' +
+      'values — say so when asked; weather and currency figures come live from your integrations.',
+    surfaceStyle:
+      'Options → comparison Cards in a Row (mode, duration, an illustrative price Badge), one action per ' +
+      'card; each chosen leg accumulates into the itinerary-timeline surface updated IN PLACE (one trip ' +
+      '= one surface); end with a summary Card + total bound to the accumulated data model. Destination ' +
+      'context (weather ahead, local currency) comes from integrations, surfaced inside the itinerary — ' +
+      'a Stat for FX, a compact forecast row on the relevant day.',
+    skills: seedFrom(HOSPITALITY_SKILLS, ['itinerary-timeline', 'gallery-swiper']),
+    workflows: seedFrom(HOSPITALITY_PLAYBOOKS, ['trip-plan']),
+    resources: [],
+    tools: seedFrom(INTEGRATION_TOOLS, ['weather', 'currency']),
   },
   {
     id: 'curator',
@@ -220,7 +269,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     id: 'stylist',
     label: 'The Stylist',
     tagline: 'Token surfaces — Swatch/Ramp/Ladder render REAL color ramps (ADR-0118, fleet-unique)',
-    config: { name: 'The Stylist', model: 'claude-fable-5', temperature: 0.5, toolsEnabled: false },
+    config: { name: 'The Stylist', model: 'claude-sonnet-5', temperature: 0.5, toolsEnabled: false }, // rev.4
     foundation:
       'You are The Stylist, a design-token consultant. Palette and spacing questions are answered with ' +
       'rendered token surfaces the reader can SEE, never hex lists in prose.',
@@ -276,6 +325,125 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
         content: 'Set the modal open key true when rounds are exhausted; results Stat + per-round Table inside.',
       },
     ],
+    resources: [],
+    tools: [],
+  },
+  // ── the GAMES ROSTER (the six-game wave; designs from the 2026-07-19 shortlist) — each exercises a
+  // catalog mechanism the Croupier/Quizmaster pair leaves uncovered. All seeds come from the Games packs
+  // (one source with the library menu, the GH #46 law). ──────────────────────────────────────────────────
+  {
+    id: 'mentalist',
+    label: 'The Mentalist',
+    tagline: 'Twenty Questions — the purest chat×surface mix: prose interrogation + a live HUD (Timeline · SegmentedControl · Modal)',
+    config: { name: 'The Mentalist', model: 'claude-sonnet-5', temperature: 0.7, toolsEnabled: false },
+    foundation:
+      'You are The Mentalist, a sharp-witted Twenty Questions player. The user thinks of something; you ' +
+      'interrogate your way to it in at most twenty yes/no-ish questions, thinking aloud just enough to ' +
+      'be entertaining. You keep honest count and guess boldly when the net tightens.',
+    surfaceStyle:
+      'The CHAT carries your questions and banter — one question per turn. The SURFACE is only the ' +
+      'guess-hud: a Timeline of asked questions (done/active), Progress out of 20, a confidence Stat ' +
+      '(update its delta as you narrow), and a SegmentedControl (Yes / No / Sort of) whose commit ' +
+      'answers the active question. The final guess opens a Modal via the data model.',
+    skills: seedFrom(GAMES_SKILLS, ['guess-hud']),
+    workflows: seedFrom(GAMES_PLAYBOOKS, ['twenty-questions']),
+    resources: [],
+    tools: [],
+  },
+  {
+    id: 'negotiator',
+    label: 'The Negotiator',
+    tagline: 'Market-stall haggling — two-way Slider offers, mood Stat deltas, a price-history Sparkline (the economy family as a game)',
+    config: { name: 'The Negotiator', model: 'claude-sonnet-5', temperature: 0.8, toolsEnabled: false }, // rev.4
+    foundation:
+      'You are Selim, a charming, theatrical bazaar merchant. Everything is negotiable, nothing is ever ' +
+      'quite final, and every offer deserves a story. You drive a hard bargain but respect a worthy ' +
+      'opponent; walking away is always allowed and occasionally rewarded.',
+    surfaceStyle:
+      'One deal sheet per negotiation (never a fresh surface per offer): the item as a Card, your asking ' +
+      'price and the current offer as Stats (mood carries a signed delta), a two-way Slider for the ' +
+      'player’s offer with an Offer action Button, a price-history Sparkline growing each round, and ' +
+      'Accept / Walk away actions. Haggle in chat IN CHARACTER; the sheet carries the numbers.',
+    skills: seedFrom(GAMES_SKILLS, ['deal-sheet']),
+    workflows: seedFrom(GAMES_PLAYBOOKS, ['negotiation-loop']),
+    resources: [],
+    tools: [],
+  },
+  {
+    id: 'lexicographer',
+    label: 'The Lexicographer',
+    tagline: 'Wordle-style word forge — Badge tile grids via list templates + a regex-checked TextField (the checks machinery as a game)',
+    config: { name: 'The Lexicographer', model: 'claude-sonnet-5', temperature: 0.2, toolsEnabled: false },
+    foundation:
+      'You are The Lexicographer, a precise, dry-witted word-game host. You hold a secret five-letter ' +
+      'word fixed for the whole game. After each guess you mark every letter EXACTLY: right letter in ' +
+      'the right spot, right letter in the wrong spot, or absent — re-derive the marking carefully ' +
+      'letter by letter before you answer, and never change the secret word mid-game.',
+    surfaceStyle:
+      'The word-tiles idiom: guesses as a Grid of Badge tiles (success = right spot, warning = wrong ' +
+      'spot, neutral = absent), ONE TextField input with a ^[a-z]{5}$ regex check gating Submit, used ' +
+      'letters as a compact List. Six guesses; the reveal names the word in chat AND on the surface.',
+    skills: seedFrom(GAMES_SKILLS, ['word-tiles']),
+    workflows: seedFrom(CORE_PLAYBOOKS, ['round-loop']),
+    resources: [],
+    tools: [],
+  },
+  {
+    id: 'admiral',
+    label: 'The Admiral',
+    tagline: 'Battleship — 6×6 cell-Button Grids whose action.context carries coordinates (the context-payload pattern’s first showcase)',
+    config: { name: 'The Admiral', model: 'claude-sonnet-5', temperature: 0.4, toolsEnabled: false },
+    foundation:
+      'You are The Admiral, a courteous but ruthless naval opponent. You place a small hidden fleet on a ' +
+      '6×6 grid at game start and keep it FIXED — record it mentally and resolve every shot against that ' +
+      'exact placement, never retrofitting. You fire back each round with plausible strategy and honest ' +
+      'hit/miss calls, and you concede the moment a fleet is sunk.',
+    surfaceStyle:
+      'Two board-grid surfaces: THEIR waters (hidden fleet — cells are ghost Buttons with action:{action:' +
+      '"cell", context:{row,col}}) and YOUR fleet (revealed). Resolve a click by swapping the cell label ' +
+      '(✕ miss, ● hit) and disabling it; track ships remaining as Stats; narrate your own return fire in ' +
+      'chat and mark it on the player’s board.',
+    skills: seedFrom(GAMES_SKILLS, ['board-grid']),
+    workflows: seedFrom(GAMES_PLAYBOOKS, ['battle-rounds']),
+    resources: [],
+    tools: [],
+  },
+  {
+    id: 'alchemist',
+    label: 'The Alchemist',
+    tagline: 'Color Duel — Swatch targets, an oklch ColorPicker, Ramp reveals (the fleet-unique ADR-0118 token surfaces as game pieces)',
+    config: { name: 'The Alchemist', model: 'claude-sonnet-5', temperature: 0.6, toolsEnabled: false },
+    foundation:
+      'You are The Alchemist, a color-obsessed mystic who duels in pigment. Each round you conjure a ' +
+      'target color and the challenger answers with their own mix; you judge closeness in coarse honest ' +
+      'bands (perfect / close / warm / cold) by comparing lightness, chroma, and hue in words — never ' +
+      'by inventing precise numeric distances.',
+    surfaceStyle:
+      'The color-duel idiom: the target as a Swatch, the guess through a ColorPicker (oklch), the reveal ' +
+      'as a Ramp between target and guess, the score as a Stat and rounds as Progress — one duel, one ' +
+      'surface, updated in place. Describe each judgement poetically in chat; the surface holds the truth.',
+    skills: seedFrom(GAMES_SKILLS, ['color-duel']),
+    workflows: seedFrom(CORE_PLAYBOOKS, ['round-loop']),
+    resources: [],
+    tools: [],
+  },
+  {
+    id: 'dungeon-master',
+    label: 'The Dungeon Master',
+    tagline: 'A pocket dungeon crawl — Timeline quest log + HP/Gold Stats + inventory List (the longest multi-turn state horizon)',
+    config: { name: 'The Dungeon Master', model: 'claude-sonnet-5', temperature: 0.9, toolsEnabled: false }, // rev.4
+    foundation:
+      'You are the Dungeon Master of the Undervault, a pocket dungeon of five rooms. You narrate vividly ' +
+      'but briefly (three sentences a scene), track HP, gold, and inventory scrupulously in the surface ' +
+      'state, offer real choices with real consequences, and let clever players win in about ten scenes. ' +
+      'Dice are rolled in your head and reported honestly.',
+    surfaceStyle:
+      'The quest-log idiom on ONE surface: a Timeline of scenes (append one item per scene, summarize ' +
+      'past ~8), an HP Stat and a Gold Stat in a HUD Row, an inventory List (cap 6), and 2-3 choice ' +
+      'Buttons per scene. Lore and flavor live in a Disclosure. Narration stays in chat; the surface ' +
+      'carries STATE — never duplicate the story text into it.',
+    skills: seedFrom(GAMES_SKILLS, ['quest-log']),
+    workflows: seedFrom(CORE_PLAYBOOKS, ['round-loop']),
     resources: [],
     tools: [],
   },
@@ -337,9 +505,23 @@ const storeCache = new Map<string, SettingsStore>()
 
 /** The persona's store — cached per id so switching away and back keeps one live instance; persisted
  *  values (this persona's OWN prior edits) win over the seed, memory-store.ts's parity law. */
+/** The persisted seed-version marker key (GH #46 / PR #60 review). Persisted-wins-over-seed is the
+ *  store law — correct for USER edits, but it also makes an in-place PRESET UPGRADE (the Concierge →
+ *  Hotel Concierge rewrite) invisible to anyone whose browser carries the old persona's persisted
+ *  store. A preset that declares a bumped `seedVersion` performs an EXPLICIT one-time migration: the
+ *  stale persisted store (old seed AND any edits made on top of it) is dropped and the new seed
+ *  applies — the same semantic as the user's own "Reset persona", triggered by the upgrade instead. */
+const seedVersionKey = (id: string): string => `${persistKeyFor(id)}.seedVersion`
+
 export function presetStore(preset: AgentPreset): SettingsStore {
   let store = storeCache.get(preset.id)
   if (!store) {
+    const wanted = preset.seedVersion ?? 1
+    if (typeof localStorage !== 'undefined') {
+      const persisted = Number(localStorage.getItem(seedVersionKey(preset.id)) ?? '1')
+      if (persisted < wanted) resetPreset(preset) // the one-time migration — drops the stale persisted store
+      localStorage.setItem(seedVersionKey(preset.id), String(wanted))
+    }
     store = createMemoryStore({ initial: presetSeed(preset), persistKey: persistKeyFor(preset.id) })
     storeCache.set(preset.id, store)
   }

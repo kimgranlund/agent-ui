@@ -1,0 +1,86 @@
+# publish.yml — builds and publishes the 8 @agent-ui/* workspace packages to npm, unscoped
+# (agent-ui-shared, agent-ui-components, …), under the agent-ui-kit npm account. See
+# scripts/publish/publish-packages.mjs for the full build/transform/publish mechanics and the "why unscoped
+# + why a build step" reasoning; this workflow is deliberately thin — it gates, resolves the version, and
+# calls that one script.
+#
+# Two ways in:
+#   - push a tag matching v* (e.g. v0.1.0)  -> the REAL, primary release path. The tag itself IS the
+#     version (v0.1.0 -> 0.1.0); every package publishes for real, in lockstep, at that version.
+#   - workflow_dispatch (Actions tab, manual) -> a safety-net / test path. Defaults to dry-run (packs +
+#     validates against the real registry, never uploads) so a manual run never accidentally publishes;
+#     flip the dry_run input off to force a real manual publish at an explicit version.
+name: Publish packages
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (semver, no leading v — e.g. 0.1.0)'
+        required: true
+      dry_run:
+        description: 'Dry run (pack + validate against the registry, never upload)'
+        type: boolean
+        default: true
+
+# Never let two publish runs race each other — a tag push and a manual dispatch overlapping could interleave
+# two different versions across the 8 packages. Queue, don't cancel: cancelling mid-publish could leave some
+# of the 8 packages published at a version the others never reached.
+concurrency:
+  group: publish-packages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: 'https://registry.npmjs.org'
+
+      - run: npm ci
+
+      # The repo's own standing gate (CLAUDE.md: "Run npm run check && npm test green before treating a
+      # change as done") — a publish is the ultimate "done", so it must pass before anything ships.
+      - name: Gate
+        run: |
+          npm run check
+          npm test
+
+      # Version/dry-run inputs are attacker-influenceable free text on a workflow_dispatch (a repo
+      # collaborator can type anything into the "version" box) — always routed through env + "$VAR" quoting,
+      # never interpolated straight into a `run:` script string, even though this job already requires
+      # write access to trigger. Defense in depth for a job that holds NPM_TOKEN.
+      - name: Resolve version
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          DISPATCH_VERSION: ${{ inputs.version }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "value=$DISPATCH_VERSION" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Real (non-dry-run) on a tag push always; on a manual dispatch, real ONLY if dry_run was set to false.
+      - name: Build, transform, and publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          DISPATCH_DRY_RUN: ${{ inputs.dry_run }}
+          RESOLVED_VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          DRY_RUN_FLAG=""
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$DISPATCH_DRY_RUN" = "true" ]; then
+            DRY_RUN_FLAG="--dry-run"
+          fi
+          node scripts/publish/publish-packages.mjs "$RESOLVED_VERSION" $DRY_RUN_FLAG

@@ -28,7 +28,7 @@ But **there is no layer that composes them into an application.** An agent app i
 
 ## 2. Goals & success metrics
 
-Stable IDs; priority tiers; metrics baselined at **0 / not-possible-today** (nothing exists as a primitive). Targets are stated against milestones **M1–M3** (§6). **Goals are stated as OUTCOMES** — the mechanism that realizes them (the region set, the docking model, container-query reflow, the `static shadow` isolation mode) is the *ratified-decision* layer in §4/§5 and is owned in detail by the downstream SPEC/LLD; the PRD does not pre-bake it. Downstream SPEC requirements trace to these IDs.
+Stable IDs; priority tiers; metrics baselined at **0 / not-possible-today** (nothing exists as a primitive). Targets are stated against milestones **M1–M5** (§7). *(Marker corrected 2026-07-20: was "M1–M3 (§6)" — stale since v1.1 added M4 (and later M5); milestones live in §7, not §6; a factual reference fix, no decision changed — the same precedent as this doc's own v1.2 marker correction above.)* **Goals are stated as OUTCOMES** — the mechanism that realizes them (the region set, the docking model, container-query reflow, the `static shadow` isolation mode) is the *ratified-decision* layer in §4/§5 and is owned in detail by the downstream SPEC/LLD; the PRD does not pre-bake it. Downstream SPEC requirements trace to these IDs.
 
 | ID | Priority | Outcome |
 |---|---|---|

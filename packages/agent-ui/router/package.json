@@ -1,5 +1,6 @@
 {
   "name": "@agent-ui/router",
+  "description": "A memory-first SPA router for the agent-ui family: navigation state lives in a signal store, with URL reflection as an opt-in \u2014 usable in embedded surfaces that must never touch the address bar.",
   "version": "0.0.0",
   "private": true,
   "type": "module",

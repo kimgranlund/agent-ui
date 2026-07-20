@@ -1,0 +1,37 @@
+{
+	// The docs site's Workers deploy target (Cloudflare now steers static-site deploys to Workers +
+	// Static Assets rather than Pages — see the Pages→Workers migration guide). A DISTINCT Worker from
+	// `agent-ui-site` (that name is a red herring — it's the live nonoun product app, not this docs
+	// site). Custom domain: ui.nonoun.io.
+	//
+	// `main` + `assets.binding` (rather than assets-only): the docs site itself is still zero server
+	// logic, but the Worker also serves the production live-agent proxy under `/__a2ui/agent` (the
+	// Cloudflare port of `packages/agent-ui/a2ui/tools/agent/dev-proxy-plugin.ts`, superseding SPEC-R3/N2's
+	// "static site ships the recorded backbone alone" — see worker/index.ts's header). `env.ASSETS.fetch()`
+	// is the explicit fallback for any request `main` doesn't own; Cloudflare still serves a matched static
+	// file directly without invoking the Worker at all (default `run_worker_first: false`).
+	"name": "agent-ui-docs",
+	"compatibility_date": "2026-07-19",
+	"compatibility_flags": ["nodejs_compat"],
+	// GH #102 (review finding): omitting this defaults to `true`, which put the Custom Domain's zone-scoped
+	// rate-limit rule on ui.nonoun.io behind a second, completely unthrottled front door at
+	// agent-ui-docs.<account>.workers.dev — verified live (25/25 requests succeeded there with no limit).
+	// Independent of Custom Domains (a separate routing mechanism); disabling this does not affect
+	// ui.nonoun.io. Also disables Preview URLs as a side effect on Wrangler 4.44+ (another surface this
+	// closes).
+	"workers_dev": false,
+	"main": "packages/agent-ui/a2ui/tools/agent/worker/index.ts",
+	"assets": {
+		"directory": "./dist",
+		"binding": "ASSETS"
+	},
+	// Aliases `node:fs` to a Worker-safe shim (Wrangler's documented Node-API-polyfill pattern) so
+	// `system-prompt.ts`/`mini-skills.ts` — ADR-cited, drift-gated, and otherwise Node-fs-dependent —
+	// ship into the Worker bundle completely UNMODIFIED. See worker/fs-shim.ts.
+	"alias": {
+		"node:fs": "./packages/agent-ui/a2ui/tools/agent/worker/fs-shim.ts"
+	},
+	// Lets the Worker bundle statically `import` markdown prompts (worker/fs-shim-content.ts) and the
+	// corpus JSONL shard (worker/index.ts) as plain text.
+	"rules": [{ "type": "Text", "globs": ["**/*.md", "**/*.jsonl"] }]
+}

@@ -233,12 +233,13 @@ describe('a2ui-chat on ui-conversation — a thrown transport is surfaced + the 
   })
 })
 
-// ── SPEC-R8 AC1 — the live overlay is DEV-guarded + dynamically imported, so `vite build` tree-shakes it ──
-// A source-level proxy for the sibling pages' own verified contract (neither `a2ui-live.ts` nor
-// `a2a-artifact-feed.ts` carries an automated dist-grep gate for this either): confirms the CONSTRUCTION
-// that causes Rolldown-Vite to tree-shake the overlay out is genuinely present, rather than trusting the
-// comment.
-describe('a2ui-chat — SPEC-R8 AC1: the live overlay is genuinely DEV-guarded + dynamically imported', () => {
+// ── the live overlay is dynamically imported (kept code-split, never a static-chunk dependency) — SPEC-R8/
+// N2 superseded: production now carries a Cloudflare Worker port of the dev proxy (worker/index.ts,
+// `/__a2ui/agent`), so the overlay is no longer DEV-gated at the module level. It still degrades cleanly
+// (recorded transcript) whenever `GET /status` reports no live provider available, in every environment —
+// that runtime probe is what now enforces the no-browser-held-key boundary ADR-0073 clause 5 requires,
+// where a build-time tree-shake used to. A source-level proxy for the sibling pages' own verified contract.
+describe('a2ui-chat — the live overlay stays dynamically imported and degrades gracefully with no live key', () => {
   const source = readFileSync(`${process.cwd()}/site/pages/a2ui-chat.ts`, 'utf8') as string
 
   it('never statically imports live-proxy-transport.ts or provider-switcher.ts at module scope', () => {
@@ -249,14 +250,15 @@ describe('a2ui-chat — SPEC-R8 AC1: the live overlay is genuinely DEV-guarded +
     }
   })
 
-  it('the live overlay function checks `import.meta.env.DEV` BEFORE reaching either dynamic import', () => {
+  it('wireLiveOverlay attempts the live probe unconditionally (no import.meta.env.DEV gate before it)', () => {
     const fnStart = source.indexOf('function wireLiveOverlay')
     expect(fnStart, 'wireLiveOverlay() was not found').toBeGreaterThan(-1)
     const fnBody = source.slice(fnStart)
-    const devGuardIdx = fnBody.indexOf('import.meta.env.DEV')
     const dynImportIdx = fnBody.indexOf("import('../lib/live-proxy-transport.ts')")
-    expect(devGuardIdx).toBeGreaterThan(-1)
-    expect(dynImportIdx).toBeGreaterThan(-1)
-    expect(devGuardIdx, 'the DEV guard must be checked BEFORE the dynamic import is ever reached').toBeLessThan(dynImportIdx)
+    expect(dynImportIdx, 'the dynamic import was not found in wireLiveOverlay').toBeGreaterThan(-1)
+    // DEV is still read for WORDING (dev vs prod fallback copy) on the no-live-key branch, but only
+    // AFTER the probe's dynamic import — never gating whether the probe is attempted at all.
+    const devGuardIdx = fnBody.indexOf('import.meta.env.DEV')
+    expect(devGuardIdx, 'import.meta.env.DEV must only appear after the dynamic import, never before it').toBeGreaterThan(dynImportIdx)
   })
 })

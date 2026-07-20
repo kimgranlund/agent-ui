@@ -1,6 +1,8 @@
 // @agent-ui/app — package barrel. Re-exports each control's public surface as it lands.
 // LLD-C3 landed the ui-app-shell/ui-app-shell-region element; this export is its LLD-C8 public surface.
 export { UIAppShellElement, UIAppShellRegionElement } from './controls/app-shell/app-shell.ts'
+// M5 (GH #83, shell-archetypes-m5.spec.md) — the archetype family's grammar ceiling.
+export { UISuperShellElement } from './controls/super-shell/super-shell.ts'
 // M4 Phase 2 (LLD-C10/C16) — the master-detail composition + its docking sub-element.
 export { UIMasterDetailElement } from './controls/master-detail/master-detail.ts'
 export { UIMasterDetailPaneElement } from './controls/master-detail/master-detail-pane.ts'
@@ -32,9 +34,9 @@ export type { AgentTurnHandle } from './controls/conversation/conversation.ts'
 // TKT-0039 (ADR-0131) — the Agent Admin UI: composes ui-split/ui-settings/ui-conversation into one new
 // app-tier surface. No new primitive family, no new protocol dependency.
 export { UIAgentAdminElement } from './controls/agent-admin/agent-admin.ts'
-export { defaultAgentConfigSchema, runStubAgentTurn } from './controls/agent-admin/agent-admin-schema.ts'
+export { defaultAgentConfigSchema, agentConfigSchema, parseCustomModels, CUSTOM_MODELS_KEY, runStubAgentTurn } from './controls/agent-admin/agent-admin-schema.ts'
 export type { AgentConfigSnapshot } from './controls/agent-admin/agent-admin-schema.ts'
 // ADR-0132 — the generic ordered-entry-list primitive: prompt sections (Foundation/Personality/Critical
 // Items) + Skills/Workflows/Resources/Tools, five instantiations of one shape.
 export { ENTRY_KINDS, DEFAULT_PROMPT_SECTIONS, DEFAULT_SYSTEM_PROMPT_FALLBACK, composeSystemPrompt, validateNewEntry, entriesStoreKey, initialEntryValues } from './controls/agent-admin/entries.ts'
-export type { Entry, NewEntryInput } from './controls/agent-admin/entries.ts'
+export type { Entry, EntryLibraryPack, NewEntryInput } from './controls/agent-admin/entries.ts'

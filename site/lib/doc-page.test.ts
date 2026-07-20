@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { composeDocPage, renderMarkdownBody, renderPartsTable } from './doc-page.ts'
+import { composeDocPage, renderApiTable, renderMarkdownBody, renderPartsTable } from './doc-page.ts'
 import { parseDoc, loadSparklineDoc, loadBarChartDoc, loadButtonDoc, loadCardDoc } from './frontmatter.ts'
 
 // doc-page.test.ts — the DERIVATION gate for the descriptor `parts[]` surface (LLD-C7: a control's
@@ -123,6 +123,60 @@ describe('composeDocPage — real chart descriptors derive their declared parts'
     expect(section).toBeDefined()
     expect(partNames(section!)).toEqual(['label'])
     content.append(section!) // exercise the DOM attach path too, matching the other real-descriptor legs
+  })
+})
+
+// ── renderApiTable — enum chip DISPLAY order (GH #92) ───────────────────────────────────────────────────────
+// A numeric enum's descriptor `values[]` is declared FALLBACK-FIRST (container.ts's `SURFACE_STEPS`, index 0
+// = the live snap target for an out-of-range attribute — order-significant to the component-descriptor drift
+// trip-wire's `enumMembersMatch`, which this file never touches). The docs table wants ascending numeric order
+// regardless (a reader scans a signed axis left to right) — `apiChipset`'s `sortedForDisplay` sorts a COPY for
+// rendering only. This pins: the chip text itself now reads ascending on the real ui-card corpus (whose
+// elevation/brightness `values:` are declared `[0, 1, 2, 3, -1, -2, -3]`, exactly the reported bug shape), a
+// non-numeric enum stays untouched (word enums have no natural numeric reading), and a signed-single-digit
+// synthetic fence proves the general case beyond the one real corpus shape.
+
+/** The Type field's chip text, in DOM order, for the row named `name` — or undefined if no such row. */
+function chipTexts(section: HTMLElement, name: string): string[] | undefined {
+  const row = [...section.querySelectorAll('.api-row')].find((r) => r.querySelector('.api-row-name code')?.textContent === name)
+  const chips = row?.querySelectorAll('.api-chipset .api-chip')
+  return chips ? [...chips].map((c) => c.textContent ?? '') : undefined
+}
+
+describe('renderApiTable — numeric enum chips render ASCENDING, not declaration order (GH #92)', () => {
+  it('ui-card (real corpus): elevation/brightness — declared [0,1,2,3,-1,-2,-3] — render as -3…3', () => {
+    const { descriptor } = loadCardDoc()
+    const section = renderApiTable(descriptor.attributes)
+    expect(chipTexts(section, 'elevation')).toEqual(['-3', '-2', '-1', '0', '1', '2', '3'])
+    expect(chipTexts(section, 'brightness')).toEqual(['-3', '-2', '-1', '0', '1', '2', '3'])
+  })
+
+  it('a synthetic signed-numeric enum sorts ascending regardless of declared order', () => {
+    const doc = parseDoc(`---
+tag: ui-fixture-enum
+attributes:
+  - name: step
+    type: enum
+    values: [2, 0, -1, 1, -2]
+    default: 0
+---
+Body.`)
+    const section = renderApiTable(doc.descriptor.attributes)
+    expect(chipTexts(section, 'step')).toEqual(['-2', '-1', '0', '1', '2'])
+  })
+
+  it('a non-numeric (word) enum is left in its declared order — sorting it has no natural reading', () => {
+    const doc = parseDoc(`---
+tag: ui-fixture-word-enum
+attributes:
+  - name: align
+    type: enum
+    values: [start, center, end, stretch, baseline]
+    default: start
+---
+Body.`)
+    const section = renderApiTable(doc.descriptor.attributes)
+    expect(chipTexts(section, 'align')).toEqual(['start', 'center', 'end', 'stretch', 'baseline'])
   })
 })
 

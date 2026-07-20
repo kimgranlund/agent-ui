@@ -21,6 +21,7 @@
   --ui-agent-admin-error-ink: var(--md-sys-color-danger-on-surface-variant, var(--ui-agent-admin-ink)); /* TKT-0065: was --md-sys-color-error-on-surface — an ERROR family has never existed in tokens.css (the fleet family is danger), so the fallback ALWAYS won and validation errors rendered in plain neutral ink; danger-on-surface-variant is the AA-gated danger TEXT ink (the text-field message precedent) */
   --ui-agent-admin-entry-radius: var(--md-sys-shape-corner-base, 0.25rem); /* TKT-0066 item 5 ruling: dimensional constants route through the own chain */
   --ui-agent-admin-scrollbar-width: none; /* the app-chrome look: NO visible scrollbars in this surface's panes (scrolling stays live) */
+  --ui-agent-admin-code-surface: var(--md-sys-color-neutral-container-low, var(--md-sys-color-neutral-surface)); /* vision rev.5 — the Context tab's mono JSON preview plane (the frame's containerLow tint) */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-agent-admin) consumes ONLY --ui-agent-admin-* ════════════════ */
@@ -83,31 +84,32 @@
     min-block-size: 0;
   }
 
-  /* TKT-0085: the SCROLL CONTAINER role only — `display:flex; flex-direction:column; gap` moved onto
-     `[data-role='agent-content']` below (the wrapper that now migrates between this pane and a tab
-     panel), since `[data-role='settings']`'s own direct child count dropped from several to exactly one
-     (the wrapper) once the Agent pane's content became a single reparent-able unit. `[data-role='prompts']`
-     never actually needed flex/gap itself either — `promptSections.host` was already a single child;
-     splitting the rule changes nothing there, only removes a no-op. */
-  [data-role='prompts'],
-  [data-role='settings'],
-  [data-role='tabs-medium'] {
+  /* Vision rev.5 — the split layout's right pane is the {Settings, Context} ui-tabs; its OWN padding
+     lives on ui-tab-panel (the shipped panel-padding token), the pane itself is purely the scroll
+     boundary, no doubled inset (the TKT-0085 tabs-medium discipline, renamed). */
+  [data-role='tabs'] {
     box-sizing: border-box;
-    padding: 0.75rem;
+    padding: 0;
     min-block-size: 0;
     overflow-y: auto;
     scrollbar-width: var(--ui-agent-admin-scrollbar-width); /* app-chrome: hidden scroller, live scroll */
   }
-  /* the medium tabs pane's OWN padding lives on ui-tab-panel (its shipped panel-padding token) — the
-     pane itself is purely the scroll boundary, no doubled inset. */
-  [data-role='tabs-medium'] {
-    padding: 0;
-  }
 
-  [data-role='agent-content'] {
+  [data-role='settings-content'],
+  [data-role='context-content'] {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+  }
+
+  /* Vision rev.5 — the Agent header row: [ heading | ACTIVE master switch ], the frame's own
+     `[ Agent · toggle ]` shape; the entry sections' header rows reuse the identical recipe below. */
+  [data-part='agent-header'],
+  [data-part='entry-section-header'] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
   }
 
   [data-part='agent-heading'] {
@@ -115,6 +117,61 @@
     font-size: 0.875rem;
     font-weight: 600;
     color: var(--ui-agent-admin-label-ink);
+  }
+
+  /* The Model GRID (2026-07-19 rev.2) — provider-grouped rows [ label | include switch | default
+     checkbox ], carded like the entry sections (the same chrome recipe). The heading mirrors
+     agent-heading; provider labels mirror entry-section-heading's register at a quieter weight. */
+  [data-part='model-grid-heading'] {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--ui-agent-admin-label-ink);
+  }
+  [data-part='model-grid'] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    box-sizing: border-box;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--ui-agent-admin-border);
+    border-radius: var(--ui-agent-admin-entry-radius);
+    background: var(--ui-agent-admin-surface);
+  }
+  [data-part='model-provider'] {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ui-agent-admin-label-ink);
+    margin-block-start: 0.25rem;
+  }
+  [data-part='model-provider']:first-child {
+    margin-block-start: 0;
+  }
+  [data-part='model-row'] {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  [data-part='model-row-label'] {
+    color: var(--ui-agent-admin-ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* The Agent config panel reads as a CARD like the entry cards beside it (Kim, design-mode
+     2026-07-19) — the exact [data-part='entry'] chrome recipe (border/radius/surface). Scoped from the
+     ADMIN, deliberately: the card language is THIS surface's own (--ui-agent-admin-* tokens); a generic
+     ui-settings consumer stays chrome-free (settings.css never gains a card opinion). The `ui-settings`
+     type selector lifts specificity to (0,1,1), beating settings.css's own `[data-part='panel']`
+     (0,1,0) padding rule — scoped-cascade law: specificity wins BEFORE ui-settings' closer scope
+     proximity is consulted (the GH #50 settings.css note documents the same contract inverted). */
+  ui-settings [data-part='panel'] {
+    border: 1px solid var(--ui-agent-admin-border);
+    border-radius: var(--ui-agent-admin-entry-radius);
+    background: var(--ui-agent-admin-surface);
+    padding: 0.75rem;
   }
 
   /* ── #14 / ADR-0144 Q1 (retrofit of TKT-0085's hand-rolled composition): BOTH `ui-tabs` instances (the
@@ -127,7 +184,7 @@
      above). What STAYS this consumer's own is the CONTENT-rhythm of the panel's children — ADR-0144 Q3
      rule 3: content layout is never the host's job. Left on the panel (a flex column, 1rem between the
      sections composed inside it), NOT moved into tabs.css. */
-  [data-role='tabs-medium'] ui-tab-panel:not([hidden]),
+  [data-role='tabs'] ui-tab-panel:not([hidden]),
   :scope > ui-tabs ui-tab-panel:not([hidden]) {
     display: flex;
     flex-direction: column;
@@ -172,6 +229,101 @@
     gap: 0.5rem;
   }
 
+  /* Vision rev.5 — a kind whose MASTER switch is off dims its list + add affordances (the switch itself
+     stays full-strength: it is the way back). State only — never display:none; the entries stay
+     inspectable/editable, they just visibly read as inert. */
+  [data-part='entry-section'][data-kind-disabled] > :not([data-part='entry-section-header']) {
+    opacity: 0.45;
+  }
+
+  /* ── Vision rev.6: the Surface Options card — [ label | toggle (| catalog picker) ] rows ────────── */
+
+  [data-part='surface-options-heading'] {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--ui-agent-admin-label-ink);
+  }
+
+  [data-part='surface-options'] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  [data-part='surface-row'] {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-sizing: border-box;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--ui-agent-admin-border);
+    border-radius: var(--ui-agent-admin-entry-radius);
+    background: var(--ui-agent-admin-surface);
+  }
+
+  [data-part='surface-label'] {
+    flex: 1 1 auto;
+    font-weight: 600;
+  }
+
+  /* The PRD-gated GenUI row reads as inert (its switch is genuinely disabled; the dim is the visual). */
+  [data-part='surface-row'][data-disabled] {
+    opacity: 0.45;
+  }
+
+  [data-part='surface-note'] {
+    font-size: 0.75rem;
+    color: var(--ui-agent-admin-label-ink);
+  }
+
+  /* ── Vision rev.5: the Context tab — Agent System + Dialog Turns accordion groups ──────────────── */
+
+  [data-part='context-section'] {
+    border: 1px solid var(--ui-agent-admin-border);
+    border-radius: var(--ui-agent-admin-entry-radius);
+    background: var(--ui-agent-admin-surface);
+    padding: 0.5rem 0.75rem;
+  }
+
+  [data-part='context-section'] > [data-part='details'] > [data-part='summary'] {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--ui-agent-admin-label-ink);
+  }
+
+  [data-part='context-system'],
+  [data-part='context-turns'] {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-block-start: 0.5rem;
+  }
+
+  [data-part='context-item'] {
+    border: 1px solid var(--ui-agent-admin-border);
+    border-radius: var(--ui-agent-admin-entry-radius);
+    background: var(--ui-agent-admin-surface);
+    padding: 0.375rem 0.5rem;
+  }
+
+  /* The mono JSON preview — the frame's `JSON...` block. Its OWN scroll container (overflow-x) so a
+     long systemPrompt line can never widen the pane (the no-horizontal-overflow browser probe's law). */
+  [data-part='context-json'] {
+    margin: 0.375rem 0 0;
+    padding: 0.5rem;
+    border-radius: calc(var(--ui-agent-admin-entry-radius) / 2);
+    background: var(--ui-agent-admin-code-surface);
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--ui-agent-admin-label-ink);
+    overflow-x: auto;
+    max-block-size: 20rem;
+    overflow-y: auto;
+    white-space: pre;
+  }
+
   [data-part='entry'] {
     display: flex;
     flex-direction: column;
@@ -181,6 +333,17 @@
     border: 1px solid var(--ui-agent-admin-border);
     border-radius: var(--ui-agent-admin-entry-radius);
     background: var(--ui-agent-admin-surface);
+  }
+
+  /* The entry editors ride the ROW's width (column-flex cross-axis stretch guarantees a full-row typing
+     target), so ui-code-editor's free-standing 20ch floor (--ui-code-editor-min-inline-size, ADR-0021)
+     is redundant here — and since 0c50d9c made source mode MONOSPACE, 20ch(mono) ≈ 171px overflows the
+     TKT-0045 768px-frame prompts pane (190px) by 8px, the exact regression the pane-overflow browser leg
+     caught once the full gate ran. Repoint the published token (never the host property) — the floor
+     keeps protecting free-standing editors; composed rows own their width. */
+  [data-part='entry-content'],
+  [data-part='entry-add-content'] {
+    --ui-code-editor-min-inline-size: 0;
   }
 
   [data-part='entry-header'] {

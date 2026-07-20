@@ -6,8 +6,8 @@
     <title>agent-ui · Composing a ui-agent-admin surface</title>
   </head>
   <body>
-    <!-- The ui-agent-admin composition guide: a three-pane ui-split composing ui-settings (M4) + a
-         prompts pane + ui-conversation (M2) — a live-editable agent config with a working chat preview
+    <!-- The ui-agent-admin composition guide: a two-pane ui-split composing ui-conversation (M2) + a
+         {Settings, Context} tabs region (vision rev.5) — a live-editable agent config with a working chat preview
          (@agent-ui/app, TKT-0039/ADR-0131). An MPA entry auto-discovered by vite.config.ts's
          site/**/*.html glob — no config edit. The page module imports pages/_page.ts FIRST for the
          foundation CSS cascade + self-defining ui-* controls, then agent-admin's CSS/modules and its own

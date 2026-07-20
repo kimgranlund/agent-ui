@@ -1,9 +1,13 @@
-// live-proxy-transport.ts — LLD-C7 / SPEC-R9: the DEV-ONLY live overlay transport. Browser → the dev
-// proxy (LLD-C6, a Vite middleware that holds the key SERVER-side, process.env). It POSTs the framed turn
-// + the {provider,model,mode} selection and streams the proxy's VALIDATED A2UI JSONL back as AgentTransport
-// lines. This module is reached ONLY via a dev-only dynamic import (`import.meta.env.DEV`) so `vite build`
-// tree-shakes it out and no live-call path is ever baked into the static build (SPEC-N2). Plain fetch; NO
-// key lives here (the proxy holds it) — this file has no `import.meta.env.VITE_*` reference at all.
+// live-proxy-transport.ts — LLD-C7 / SPEC-R9: the live overlay transport, probed at runtime in EVERY
+// environment (ADR-0152 supersedes the old dev-only framing). Browser → the proxy: in dev, a Vite
+// middleware that holds the key SERVER-side (`process.env`, LLD-C6); in production, a Cloudflare Worker
+// port of the same proxy (`tools/agent/worker/index.ts`) holding the key as a Workers Secret, mounted at
+// the same `/__a2ui/agent` path. It POSTs the framed turn + the {provider,model,mode} selection and streams
+// the proxy's VALIDATED A2UI JSONL back as AgentTransport lines. This module DOES ship in the production
+// `dist/` bundle (it is reachable there now) — the trust boundary is enforced by a same-origin check + a
+// Cloudflare rate-limiting rule on the Worker's POST routes, not by the module's absence (SPEC-N2 amended).
+// Plain fetch; NO key lives here (the proxy holds it) — this file has no `import.meta.env.VITE_*` reference
+// at all.
 //
 // ADR-0090 §4/LLD-C7: `mode` (a `GenUiMode`) rides the SAME body + `SelectionRef` seam `{provider,model}`
 // already prove — the switcher (LLD-C12) is the only producer of a live `mode` value; the proxy (LLD-C6)

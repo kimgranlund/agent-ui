@@ -1,5 +1,6 @@
 {
   "name": "@agent-ui/a2a",
+  "description": "A2A (Agent2Agent) protocol support, pinned to spec v0.",
   "version": "0.0.0",
   "private": true,
   "type": "module",

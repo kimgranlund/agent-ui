@@ -1,6 +1,32 @@
 # SPEC — A2UI Live-Agent Example (a real LLM emitting A2UI over the wire)
 
-> Status: accepted · v0.5 · 2026-07-16 (v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> Status: accepted · v0.7 · 2026-07-20 (v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> v0.7 changelog (ADR-0152, proposed — a production Cloudflare Worker port of the live-agent proxy):
+> SPEC-R9/R10's build-time "dev-only dynamic import + `vite build` tree-shake" enforcement mechanism is
+> REPLACED, not merely extended, by a runtime `GET /status` probe + same-origin (CSRF) check — the docs
+> site's deployed build now DOES ship a live-overlay module (`live-proxy-transport.ts`,
+> `provider-switcher.ts`) and a key-holding proxy (`packages/agent-ui/a2ui/tools/agent/worker/index.ts`,
+> a Cloudflare Worker) reachable by every visitor, not only a local `vite dev` session. The trust boundary
+> ADR-0073 clause 5 protects — the browser never holds a key — is UNCHANGED; only the mechanism proving it
+> holds moves from a compile-time grep of `dist/` to a documented, live-verified set of runtime mitigations
+> (a zone-scoped rate limit, the CSRF gate, `workers_dev: false`) named in ADR-0152. SPEC-N1's "site/tools-
+> scoped only" clause for the key-holding/dev-proxy/provider-registry infra narrows similarly: that infra
+> now ALSO ships as the Worker's production runtime, under the same trust-boundary law, not a second one.
+> AC text below is updated in place (this SPEC's own established pattern across v0.1–v0.6) rather than left
+> to silently disagree with the shipped build.
+> v0.6 changelog (GH #49 — the integrations/tool-use seam, built 2026-07-19): the `AgentProvider.stream`
+> request gains the OPTIONAL `tools` (JSON-Schema `ToolDef[]`) + `executeTool` pair (the `effort?`/`onEvent?`
+> additive precedent — both absent ⇒ the request shape is byte-identical); the Anthropic adapter owns the whole
+> provider-native tool loop INTERNALLY (bounded MAX_TOOL_ROUNDS=4; scratch text from a tool round is buffered
+> into the assistant context block and NEVER yielded — only the post-tools round reaches the accumulated wire
+> the validate-then-stream law governs, so SPEC-R5 is untouched). `ProduceOptions` relays the pair verbatim.
+> ADR-0146's closed progress vocabulary grows by exactly ONE stage, `tool` — a factual process claim carrying
+> the registry tool NAME, never model-composed prose (the F2 honesty law's sanctioned growth; under the queue
+> design tool stages drain just before the final round's text — a recorded latency limit). EXECUTION stays in
+> the dev proxy's node process (`tools/agent/integrations.ts` — the v0.5 shell law: registry/key/proxy shapes
+> never enter `src/agent/`); the browser forwards only ENABLED tool-entry LABELS (master-gated on
+> `toolsEnabled`), the proxy intersects with its keyless registry (weather/wikipedia-search/currency, v1) and
+> ignores the rest. Hotel booking/PMS integrations remain GH #49's named direction, out of this contract.
 > v0.5 changelog (docs-only, no requirement/ID/AC shape added or removed): **SPEC-N1** amended for the ADR-0137
 > producer-toolkit export (TKT-0072, built + ratified 2026-07-16). The package surface list gains a FOURTH
 > subpath — `.`/`./examples`/`./corpus`/`./agent` — and the blanket "the live infra is site/tools-scoped only"
@@ -525,21 +551,31 @@ freeze above; a failed turn changes nothing.
   *given* a `ProduceHalt`/transport error on the freezing turn, *then* the prior pending ask stays pending
   and interactive — a site vitest/browser test, `npm test`/`test:browser` green, no key, no live model.
 
-**SPEC-R9 — Opt-in, dev-only live overlay (SDK-free, key never baked into a build).** The primary live
-overlay MUST be a dev-server Vite middleware proxy that resolves the matched provider's key server-side
-from the `.env` (via Vite's `loadEnv`, merged over `process.env` — see SPEC-N2; a bare `process.env`
-read misses a `.env`-only key), runs the SPEC-R4 loop with an `AgentProvider` backed by plain `fetch` (no LLM
+**SPEC-R9 — Opt-in live overlay (SDK-free, key never baked into a build, browser-reachable in every
+environment as of ADR-0152).** The primary live overlay MUST be a key-holding server-side proxy — `vite
+dev`'s Node middleware (`dev-proxy-plugin.ts`, resolving the matched provider's key from the `.env` via
+Vite's `loadEnv`, merged over `process.env` — see SPEC-N2) in local dev, and a Cloudflare Worker port of
+the SAME proxy (`packages/agent-ui/a2ui/tools/agent/worker/index.ts`, resolving the key from a Workers
+Secret) in production — that runs the SPEC-R4 loop with an `AgentProvider` backed by plain `fetch` (no LLM
 SDK, no new dependency — SPEC-R11), and streams the validated payload's JSONL back; with no key set it
 MUST degrade gracefully to "backbone only". Every live overlay (the proxy client, and the
 provisioned-but-CORS-gated client-direct `BrowserDirectTransport` that reads
-`import.meta.env.VITE_ANTHROPIC_API_KEY`) MUST be reached ONLY through a dev-only dynamic `import()`
-guarded by `import.meta.env.DEV`, so `vite build` tree-shakes it out. The live call is NEVER a CI gate.
-*(→ PRD-G7; ADR-0069)*
-- **AC1** *(manual)* *Given* `ANTHROPIC_API_KEY` set (from the gitignored `.env`) under `vite dev`,
-  *when* a prompt is submitted, *then* a real validated payload streams and renders; *given* no key,
-  *then* the endpoint returns a graceful "backbone only" signal and the page runs the recorded backbone.
-- **AC2** *Given* the built `dist/` (see SPEC-N2), *when* grepped, *then* no live-overlay module, key,
-  or `import.meta.env.VITE_*` key reference survives (the overlay is dev-only-guarded + tree-shaken).
+`import.meta.env.VITE_ANTHROPIC_API_KEY`) MUST be reached through a dynamically-imported module, probed
+at runtime via `GET /status` — dev and production alike (ADR-0152 supersedes the prior dev-only,
+build-time-tree-shaken gate). The production Worker MUST additionally enforce a same-origin (CSRF) check
+on every state-changing route and MUST sit behind a rate limit (ADR-0152's named mitigations) — neither
+applies to the local dev proxy, which has no equivalent exposure. The live call is NEVER a CI gate.
+*(→ PRD-G7; ADR-0069; ADR-0152)*
+- **AC1** *(manual)* *Given* a configured provider key (the gitignored `.env` under `vite dev`, or a
+  Workers Secret in production), *when* a prompt is submitted, *then* a real validated payload streams
+  and renders; *given* no key, *then* the endpoint returns a graceful "backbone only" signal and the page
+  runs the recorded backbone.
+- **AC2** *Given* the built `dist/`, *when* grepped, *then* it contains the live-overlay module
+  (`live-proxy-transport.ts`) and the provider switcher (`provider-switcher.ts`, including
+  `providers.json`'s env-var NAMES + model labels — never a secret value) — ADR-0152 REPLACES the prior
+  "these leave the build entirely" guarantee with "these ship, but no key value ever does, and the
+  production endpoint they call enforces the same-origin + rate-limit mitigations named in ADR-0152."
+  *(→ ADR-0152)*
 
 ### 3.4 The provider seam & switcher
 
@@ -605,12 +641,14 @@ allowlist above) — an unrecognized or absent value MUST be defaulted (never fo
 
 **SPEC-R10 — Site page rides the standing gates.** The demo MUST ship a site page
 (`a2ui-live.html` + `pages/a2ui-live.ts`) wired into the dual TOC, defaulting to the backbone, offering
-the dev-only live overlay (with the switcher) when it is available, deriving every displayed fact from
-the transport output (shown ≡ produced), and inventing NO parallel check — it rides the SPEC-R2/R6
-standing gates the way `a2ui-stream` rides `examples.test.ts`. *(→ PRD-G1)*
+the live overlay (with the switcher) when it is available — probed at runtime, in every environment as of
+ADR-0152 — deriving every displayed fact from the transport output (shown ≡ produced), and inventing NO
+parallel check — it rides the SPEC-R2/R6 standing gates the way `a2ui-stream` rides `examples.test.ts`.
+*(→ PRD-G1; ADR-0152)*
 - **AC1** *Given* the page, *when* `npm run check && npm run check:site` run, *then* both pass; *when*
-  the built static output is grepped, *then* it contains no key, no hardcoded live endpoint, and no
-  switcher/overlay (dev-only-guarded, tree-shaken).
+  the built static output is grepped, *then* it contains no key literal or key value — the live-overlay
+  module and switcher DO ship (ADR-0152), and a hardcoded live ENDPOINT (the relative `/__a2ui/agent`
+  mount path — never a key or a third-party URL) is expected, not a defect.
 
 ---
 
@@ -618,8 +656,8 @@ standing gates the way `a2ui-stream` rides `examples.test.ts`. *(→ PRD-G1)*
 
 | ID | Requirement | Target |
 |---|---|---|
-| **SPEC-N1** | Zero-dep package preserved | `@agent-ui/a2ui/package.json` deps unchanged (`@agent-ui/components` + `@agent-ui/shared` only); the package surface is `.`/`./examples`/`./corpus`/`./agent` (the `./agent` producer toolkit exported per **ADR-0137**, TKT-0072 — the portable core in `src/agent/`); no LLM SDK anywhere (plain `fetch`); the KEY-HOLDING, DEV-PROXY, and PROVIDER-REGISTRY infra (`tools/agent/dev-proxy-plugin.ts` · `providers.json`/`providers-config.ts`/`providers/{index,openai,gemini}.ts` · `agent-config-schema.ts`) stays site/tools-scoped only. Exporting `./agent` does NOT compromise the zero-dep core: the pack is hand-rolled, SDK-free, opt-in, and identity-gated (the ROOT `.` barrel carries zero producer bytes — the `./examples`/`./corpus` precedent), the ADR-0119 opt-in-pack law (Constraint C2 / ADR-0062/0069/0119/0137). |
-| **SPEC-N2** | No secret committed / none baked into a build (the `VITE_` footgun) | A gitignored `.env` (untracked) provisions the keys; no key literal appears in committed source (grep gate). The proxy resolves the non-prefixed `ANTHROPIC_API_KEY` SERVER-side via Vite's `loadEnv(mode, <repoRoot>, '')` merged over `process.env` — Vite does NOT auto-load `.env` into `process.env`, so a bare `process.env` read would miss a `.env`-only key; `loadEnv` runs in Node under `apply: 'serve'` only and the value is never inlined nor sent to the browser (`/status` answers a boolean). Vite INLINES `VITE_*` at build time, so every `import.meta.env.VITE_*` reference MUST live only inside a dev-only-guarded, tree-shaken overlay module — a standing source-level gate asserts it, and a manual `vite build` + grep of `dist/` for the key patterns returns zero hits (ADR-0069). |
+| **SPEC-N1** | Zero-dep package preserved | `@agent-ui/a2ui/package.json` deps unchanged (`@agent-ui/components` + `@agent-ui/shared` only); the package surface is `.`/`./examples`/`./corpus`/`./agent` (the `./agent` producer toolkit exported per **ADR-0137**, TKT-0072 — the portable core in `src/agent/`); no LLM SDK anywhere (plain `fetch`); the KEY-HOLDING, DEV-PROXY, and PROVIDER-REGISTRY infra (`tools/agent/dev-proxy-plugin.ts` · `tools/agent/worker/` · `tools/agent/chat-validation.ts` · `providers.json`/`providers-config.ts`/`providers/{index,openai,gemini}.ts` · `agent-config-schema.ts`) stays tools-scoped WITHIN the a2ui package — as of ADR-0152, `tools/agent/worker/` is ALSO the production Cloudflare Worker's own runtime entry (`wrangler.jsonc`'s `main`), so "tools-scoped" no longer implies "never reaches production," only "never enters the portable `src/` producer core" (which remains true — `system-prompt.ts`/`mini-skills.ts` ship into the Worker bundle unmodified, per ADR-0152). Exporting `./agent` does NOT compromise the zero-dep core: the pack is hand-rolled, SDK-free, opt-in, and identity-gated (the ROOT `.` barrel carries zero producer bytes — the `./examples`/`./corpus` precedent), the ADR-0119 opt-in-pack law (Constraint C2 / ADR-0062/0069/0119/0137). |
+| **SPEC-N2** | No secret committed / none baked into a build (the `VITE_` footgun) | A gitignored `.env` (untracked, dev) / a Workers Secret (production, ADR-0152) provisions the keys; no key literal appears in committed source (grep gate) and no key VALUE ever reaches the browser in either environment. The dev proxy resolves the non-prefixed `ANTHROPIC_API_KEY` SERVER-side via Vite's `loadEnv(mode, <repoRoot>, '')` merged over `process.env` — Vite does NOT auto-load `.env` into `process.env`, so a bare `process.env` read would miss a `.env`-only key; `loadEnv` runs in Node under `apply: 'serve'` only. The production Worker resolves the same key from `env.ANTHROPIC_API_KEY` (a Workers Secret, injected by the runtime, never in source). Both environments answer `/status` with a boolean only. Vite INLINES `VITE_*` at build time, so every `import.meta.env.VITE_*` reference MUST still live only inside a dynamically-imported overlay module — a standing source-level gate asserts it — but as of ADR-0152 that module DOES ship in `dist/` (it is reachable in production now); the manual `vite build` + grep of `dist/` (ADR-0069) checks for a KEY VALUE, not for the module's absence. |
 | **SPEC-N3** | Validator parity | The runtime loop's validation is the shared `heal`+`validateA2ui` — identical verdict to the renderer and corpus admission; no fork (streaming SPEC-N3). |
 | **SPEC-N4** | Progressive paint | The validated payload streams line-by-line (root-early → first paint before finalize), preserving the `a2ui-stream` aesthetic (streaming SPEC-N1). A turn's optional leading `note` meta-line (ADR-0088 §1) is filtered out BEFORE `host.ingest`/the JSON tab — it never enters the render path and never delays or blocks the progressive paint of the validated lines that follow it. |
 | **SPEC-N5** | Upstream-format isolation (per-provider) | Each provider's upstream (SSE) parsing lives in ONE place — that provider's adapter module (`providers/<id>.ts`); the driver, the transports, and the browser see only clean A2UI JSONL, so an upstream-contract change (Anthropic now, OpenAI/Gemini per-slice) touches exactly one module. |

@@ -19,10 +19,15 @@
 // exposes no `addSystemMessage`, and these are page chrome, not agent turns (genuine turn FAILURES still
 // surface as the primitive's own system bubble via `AgentTurnHandle.fail()`).
 //
-// Recorded-default (`createRecordedTransport`, ADR-0073); the live arm reuses the identical DEV-guarded
-// dynamic-import + switcher pattern `a2ui-live.ts`/`a2a-artifact-feed.ts` each already ship (SPEC-R8).
+// Recorded-default (`createRecordedTransport`, ADR-0073); the live arm reuses the identical runtime-probed
+// dynamic-import + switcher pattern `a2ui-live.ts` ships (SPEC-R8, superseded by ADR-0152 — the probe now
+// resolves in every environment, not only dev: production carries a Cloudflare Worker port of the dev
+// proxy under `/__a2ui/agent`). `a2a-artifact-feed.ts` stays dev-only by design — out of ADR-0152's scope.
 import { mountFullBleedPage } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
 import './a2ui-chat.css'
+import '@agent-ui/app/chat-shell.css' // ui-chat-shell's own host flex-column layout (round 4, GH #98)
+import '@agent-ui/app/chat-shell' // self-defines <ui-chat-shell> (composes an inner <ui-super-shell>)
+import '@agent-ui/app/super-shell.css' // the composed inner ui-super-shell's own geometry/collapse CSS
 import '@agent-ui/app/conversation.css' // ui-conversation's own thread/narration layout (LLD-C6)
 import '@agent-ui/app/conversation-composer.css' // TKT-0056 — the composed ui-conversation-composer's own layout/parts CSS
 import '@agent-ui/app/conversation' // self-defines <ui-conversation> (which registers <ui-surface-host>/<ui-conversation-composer> in turn)
@@ -52,10 +57,14 @@ function el(tag: string, className: string): HTMLElement {
   return node
 }
 
-const shell = el('div', 'chat-shell')
-content.append(shell)
+// `ui-chat-shell` composes its inner `ui-super-shell` from `this.children` AT CONNECT time (chat-shell.ts)
+// — unlike the plain `<div>` this replaced, children must be appended BEFORE `shell` itself joins the live
+// `content` region, or it composes empty (its own `#compose()` guard makes that permanent, never re-run).
+const shell = document.createElement('ui-chat-shell')
+shell.classList.add('chat-shell')
 
 const header = el('header', 'chat-head')
+header.setAttribute('data-slot', 'header')
 const title = document.createElement('h1')
 title.className = 'chat-title'
 title.textContent = 'A2UI Chat'
@@ -100,12 +109,14 @@ resetBtn.textContent = 'Reset'
 resetBar.append(resetBtn)
 shell.append(resetBar)
 
+content.append(shell) // LAST — every child is present before this element ever connects (see the note above)
+
 // ════════════════ the transport + the turn loop ════════════════
 
 let transport: AgentTransport = createRecordedTransport(recordedTranscript)
 
 /** Test-only injection seam (the `a2ui-live.ts` `__setTransportForTest` precedent) — otherwise reassigned
- *  ONLY by `wireLiveOverlay()`'s real, dev-only live-key probe. Never called by any production path. */
+ *  ONLY by `wireLiveOverlay()`'s real live-key probe. Never called by any other page-code path. */
 export function __setTransportForTest(next: AgentTransport): void {
   transport = next
 }
@@ -180,15 +191,14 @@ resetBtn.addEventListener('click', () => {
   session = { turns: [] }
   transport = createRecordedTransport(recordedTranscript)
   status('New conversation. Send a prompt to begin.')
-  wireLiveOverlay() // re-probe (dev only)
+  wireLiveOverlay() // re-probe
 })
 
-// ════════════════ the dev-only LIVE overlay (SPEC-R8/N2: dynamic + DEV-guarded ⇒ tree-shaken from build) ════
+// ════════════════ the LIVE overlay — probed dynamically in both dev and prod (SPEC-R8/N2 superseded: prod
+// now carries a Cloudflare Worker port of the dev proxy under `/__a2ui/agent`, worker/index.ts — see
+// a2ui-live.ts's header for the full rationale, identical here). A prompt still degrades cleanly to the
+// recorded transcript whenever `/status` reports no live provider available. ════════════════════════════
 function wireLiveOverlay(): void {
-  if (!import.meta.env.DEV) {
-    status('Recorded transcript demo. Send a prompt to render turn 1, then interact with the surface to continue.')
-    return
-  }
   void (async () => {
     try {
       const overlay = await import('../lib/live-proxy-transport.ts')
@@ -198,8 +208,10 @@ function wireLiveOverlay(): void {
         const selection = mountSwitcher(switcherSlot)
         transport = overlay.createLiveProxyTransport(selection)
         status(`Live agent connected (${probe.providers} provider(s) available). Prompt it to generate a real A2UI surface.`)
-      } else {
+      } else if (import.meta.env.DEV) {
         status('Recorded transcript (no live API key found). Set a provider key in .env and restart `npm run dev` for a live agent.')
+      } else {
+        status('Recorded transcript demo. Send a prompt to render turn 1, then interact with the surface to continue.')
       }
     } catch {
       status('Recorded transcript demo (live overlay unavailable).')

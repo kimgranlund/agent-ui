@@ -5,11 +5,15 @@
 // surface, translate-centered), JSON (the JSONL payload), HTML (the rendered markup).
 //
 // The page consumes ONLY the AgentTransport seam (SPEC-R1): the default is the deterministic RECORDED
-// BACKBONE (works offline, in the built static site, and under CI). The LIVE overlay — a real model via
-// the dev proxy + the provider switcher — is swapped in ONLY under `import.meta.env.DEV` via a dynamic
-// import, so `vite build` tree-shakes it out and no key path is ever baked into the build (SPEC-N2). No
-// `fetch`, proxy URL, or transport internal appears in this file's render/round-trip logic — the swap is
-// the construction site alone (SPEC-R1 AC1).
+// BACKBONE (works offline, under CI, and whenever no live provider is configured). The LIVE overlay — a
+// real model via a same-origin proxy + the provider switcher — is swapped in via a dynamic import, probed
+// with `GET /status` at runtime; a client browser NEVER holds a key either way (ADR-0073 clause 5). In dev
+// that proxy is `dev-proxy-plugin.ts` (Vite middleware); in production it's the Cloudflare Worker port
+// (`packages/agent-ui/a2ui/tools/agent/worker/index.ts`) mounted at `/__a2ui/agent` on this same site — a
+// deliberate SPEC-R3/N2 supersession (that spec described a build-time DEV-only tree-shake; the boundary
+// it protected — no browser-held key — still holds, just enforced by the runtime `/status` probe's
+// graceful degrade instead). No `fetch`, proxy URL, or transport internal appears in this file's
+// render/round-trip logic — the swap is the construction site alone (SPEC-R1 AC1).
 
 import { mountFullBleedPage } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
 import '@agent-ui/app/app-shell.css' // ui-app-shell region-grid CSS (LLD-C9 re-host), after foundation
@@ -456,7 +460,7 @@ resetBtn.addEventListener('click', () => {
   refreshJson([])
   refreshHtml()
   addMessage('system', 'New conversation. Send a prompt to begin.')
-  wireLiveOverlay() // re-probe (dev only)
+  wireLiveOverlay() // re-probe
 })
 const resetBar = el('div', 'reset-bar')
 resetBar.append(resetBtn)
@@ -466,12 +470,11 @@ canvasPane.append(resetBar)
 refreshJson([])
 refreshHtml()
 
-// ════════════════ the dev-only LIVE overlay (SPEC-N2: dynamic + DEV-guarded ⇒ tree-shaken from build) ════
+// ════════════════ the LIVE overlay — probed dynamically in both dev and prod (SPEC-R3/N2 superseded: prod
+// now carries a Cloudflare Worker port of the dev proxy under `/__a2ui/agent`, worker/index.ts). A prompt
+// still degrades cleanly to the recorded backbone whenever `/status` reports no live provider available
+// (no key configured), so this is a strict widening — dev's behavior is unchanged. ════════════════════════
 function wireLiveOverlay(): void {
-  if (!import.meta.env.DEV) {
-    addMessage('system', 'Recorded backbone demo. Send any prompt to render turn 1, then click the button to continue.')
-    return
-  }
   void (async () => {
     try {
       const overlay = await import('../lib/live-proxy-transport.ts')
@@ -481,8 +484,10 @@ function wireLiveOverlay(): void {
         const selection = mountSwitcher(switcherSlot)
         transport = overlay.createLiveProxyTransport(selection)
         addMessage('system', `Live agent connected (${status.providers} provider(s) available). Prompt it to generate a real A2UI surface.`)
-      } else {
+      } else if (import.meta.env.DEV) {
         addMessage('system', 'Recorded backbone (no live API key found). Set a provider key in .env and restart `npm run dev` for a live agent.')
+      } else {
+        addMessage('system', 'Recorded backbone demo. Send any prompt to render turn 1, then click the button to continue.')
       }
     } catch {
       addMessage('system', 'Recorded backbone demo (live overlay unavailable).')

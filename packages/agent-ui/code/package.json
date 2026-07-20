@@ -1,5 +1,6 @@
 {
   "name": "@agent-ui/code",
+  "description": "The code + prose family for agent-ui: a zero-dependency highlighter core, seven hand-rolled tokenizers, a sanitized markdown renderer, and an editable-first source editor (the editor pack lazy-loads CodeMirror 6 per mount \u2014 no CodeMirror in your bundle otherwise).",
   "version": "0.0.0",
   "private": true,
   "type": "module",

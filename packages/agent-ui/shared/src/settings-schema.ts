@@ -28,6 +28,10 @@ export interface SettingsFieldValidation {
 export interface SettingsFieldOption {
   value: string
   label: string
+  /** Optional listbox GROUP header this option renders under (ui-select's optgroup parity — options
+   *  sharing a `group` string render inside one `role="group"` wrapper, in first-appearance order;
+   *  ungrouped options stay direct listbox children). Consumed only by `type: 'select'`. */
+  group?: string
 }
 
 export interface SettingsField {

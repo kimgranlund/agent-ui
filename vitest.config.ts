@@ -32,6 +32,47 @@ export default defineConfig({
           exclude: [...configDefaults.exclude, '**/*.browser.test.ts'],
         },
       },
+      {
+        extends: true,
+        test: {
+          // GH #69 item 3 — direct, cheap regression coverage for scripts/publish/publish-packages.mjs's
+          // `rewriteSpecifiers` (a plain Node .mjs CLI script — root-level `scripts/` sits outside every
+          // tsconfig's `include` today, so this is its first automated gate of any kind). `environment:
+          // 'node'` OVERRIDES the inherited jsdom default: the module resolves its own repo-root path via
+          // `new URL('../..', import.meta.url)` unconditionally at load time, and vitest's jsdom environment
+          // does not hand modules a real `file://` `import.meta.url` (measured: `TypeError: The URL must be
+          // of scheme file` importing under the inherited jsdom default).
+          name: 'scripts',
+          environment: 'node',
+          include: ['scripts/**/*.test.mjs'],
+        },
+      },
+      {
+        extends: true,
+        // fs-shim-content.ts imports `.md`/`.jsonl` files as plain TEXT — a real behavior ONLY under
+        // Wrangler's own "Text" module rule (wrangler.jsonc `rules`), which vitest/Vite has no notion of.
+        // Vite treats an unrecognized extension as a hard parse error unless declared an asset here —
+        // `assetsInclude` is a Vite top-level option (a sibling of `test`, not nested inside it), scoped to
+        // THIS project only (never the fleet's other projects, which have no reason to touch prompt
+        // markdown). This project only inspects `fs-shim-content.ts`'s KEY SET (the drift gate, GH #110) —
+        // the asset-URL string Vite returns for the VALUE is irrelevant; real content correctness is
+        // Wrangler's own build, not this gate's job.
+        assetsInclude: ['**/*.md', '**/*.jsonl'],
+        test: {
+          // GH #112 — the per-package `tools/` trees (Node-side CLIs, dev-proxy plugins, the Cloudflare
+          // Worker) sit outside every OTHER project's `include` glob, same gap `tsconfig.tools.json` closes
+          // for TYPES only (CLAUDE.md) — this is their first BEHAVIOR gate. `environment: 'node'`: these
+          // are server-side modules (Workers/Node), never meant to run under jsdom. Deliberately narrow to
+          // `worker/` for now (route-guards.ts, fs-shim.ts + fs-shim-content.ts's drift gate) — `index.ts`
+          // and `process-shim.ts` are NOT safe to import here (process-shim.ts globally overrides
+          // `process.cwd()`, a side effect that must never leak into a shared test process; see both
+          // files' own header comments) — a future full-Worker integration test needs its own isolated
+          // runtime (e.g. `@cloudflare/vitest-pool-workers`), not this project.
+          name: 'tools',
+          environment: 'node',
+          include: ['packages/agent-ui/*/tools/agent/worker/*.test.ts'],
+        },
+      },
     ],
   },
   resolve: {
@@ -79,6 +120,13 @@ export default defineConfig({
       // `document.createElement('ui-textarea')` calls resolve to the REAL class explicitly. Same
       // alias-ordering necessity as `controls/button`/`controls/icon` immediately above.
       '@agent-ui/components/controls/textarea': r('./packages/agent-ui/components/src/controls/textarea/textarea.ts'),
+      // The Model GRID (2026-07-19 rev.3) — `agent-admin.ts` side-effect-imports `radio` so the grid's
+      // `document.createElement('ui-radio')` default-position column resolves to the REAL class. Same
+      // alias-ordering necessity as `controls/button`/`controls/icon`/`controls/textarea` above.
+      '@agent-ui/components/controls/radio': r('./packages/agent-ui/components/src/controls/radio/radio.ts'),
+      // Vision rev.5 (Kim's Figma frame 33:1693) — `agent-admin.ts` side-effect-imports `disclosure` so
+      // the Context tab's `document.createElement('ui-disclosure')` accordions resolve to the REAL class.
+      '@agent-ui/components/controls/disclosure': r('./packages/agent-ui/components/src/controls/disclosure/disclosure.ts'),
       // app-surfaces-m4.lld.md LLD-C13/C14 — `@agent-ui/app`'s `ui-settings` schema/generate.ts are the
       // sixth/seventh/etc. direct `./controls/{name}` subpath consumers from OUTSIDE the components
       // package: the field-type registry self-defines the four mapped controls (text-field/switch/
@@ -148,6 +196,9 @@ export default defineConfig({
       // agent-admin transitively imports it, so it resolves through this row. Placed as an exact entry (there
       // is no broad `@agent-ui/code` alias to prefix-collide with; mirrors the package's `exports['./editor']`).
       '@agent-ui/code/editor': r('./packages/agent-ui/code/src/editor/index.ts'),
+      // Vision rev.6 (Surface Options) — `agent-admin.ts` side-effect-imports `markdown` so the Markdown
+      // modality's `document.createElement('ui-markdown')` renderer resolves to the REAL class in jsdom.
+      '@agent-ui/code/markdown': r('./packages/agent-ui/code/src/markdown/index.ts'),
       // The A2A arena's zero-dep surface (board/referee/transcript/isolation, LLD-C11) — mirrors the
       // `@agent-ui/a2ui` broad alias above; the site demo page is its first consumer.
       '@agent-ui/a2a': r('./packages/agent-ui/a2a/src/index.ts'),

@@ -14,10 +14,18 @@
     "check:tools": "tsc -p tsconfig.tools.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:browser": "NODE_OPTIONS=--max-old-space-size=8192 vitest run --config vitest.browser.config.ts",
+    "test:browser": "npm run test:browser:packages && npm run test:browser:site && npm run test:browser:focus-timing && npm run test:visual",
+    "test:browser:packages": "npm run test:browser:packages:components && npm run test:browser:packages:app && npm run test:browser:packages:rest",
+    "test:browser:packages:components": "vitest run --config vitest.browser.config.ts --project packages packages/agent-ui/components",
+    "test:browser:packages:app": "vitest run --config vitest.browser.config.ts --project packages packages/agent-ui/app",
+    "test:browser:packages:rest": "vitest run --config vitest.browser.config.ts --project packages --exclude 'packages/agent-ui/components/**' --exclude 'packages/agent-ui/app/**'",
+    "test:browser:site": "vitest run --config vitest.browser.config.ts --project site",
+    "test:browser:focus-timing": "vitest run --config vitest.browser.config.ts --project focus-timing",
     "test:visual": "vitest run --config vitest.browser.config.ts --project visual",
     "test:visual:update": "vitest run --config vitest.browser.config.ts --project visual --update",
-    "size": "node scripts/measure-size.mjs"
+    "size": "node scripts/measure-size.mjs",
+    "publish:packages": "node scripts/publish/publish-packages.mjs",
+    "deploy:docs": "npm run build && wrangler deploy"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
@@ -28,6 +36,7 @@
     "playwright": "^1.61.1",
     "typescript": "~6.0.2",
     "vite": "^8.1.0",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.9",
+    "wrangler": "^4.112.0"
   }
 }

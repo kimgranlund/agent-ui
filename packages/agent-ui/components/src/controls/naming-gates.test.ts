@@ -299,15 +299,13 @@ const ALLOWED_ROLES = new Set([
   // ui-conversation's per-turn bubble speaker kind (@agent-ui/app, app-surfaces-m2.spec.md SPEC-R4) —
   // added in the SAME change as naming.md §6's registry line (the fix-on-touch rule).
   'user', 'agent', 'system',
-  // ui-agent-admin's three composed panes (@agent-ui/app, TKT-0039/ADR-0131) — the SAME "which pane is
-  // this" role category master-detail's own 'list'/'detail' already cover, added in the SAME change as
-  // naming.md §6's registry line.
-  'canvas', 'prompts', 'settings',
-  // ui-agent-admin's responsive shell (@agent-ui/app, TKT-0085): 'tabs-medium' — the medium-breakpoint
-  // pane merging prompts/settings into one 2-tab ui-tabs, the SAME "which pane" category as
-  // canvas/prompts/settings above; 'agent-content' — the wrapper bundling the Agent pane's several
-  // sibling nodes into one reparent-able unit. Added in the SAME change as naming.md §6's registry line.
-  'tabs-medium', 'agent-content',
+  // ui-agent-admin's composed panes (@agent-ui/app, TKT-0039/ADR-0131 → vision rev.5): 'canvas' (chat) +
+  // 'tabs' (the {Settings, Context} ui-tabs pane — the old 'prompts'/'settings'/'tabs-medium' pane trio
+  // dissolved into it), the SAME "which pane is this" role category master-detail's own 'list'/'detail'
+  // already cover. 'settings-content'/'context-content' are the two reparent-able content units that
+  // migrate between a split-layout tab panel and a narrow tab panel (the TKT-0085 'agent-content'
+  // wrapper discipline, renamed + doubled). Added in the SAME change as naming.md §6's registry line.
+  'canvas', 'tabs', 'settings-content', 'context-content',
   // ui-timeline-item's recursive nesting slot (ADR-0143 F1, TKT-0091) — a genuine nested `<ui-timeline>`
   // adopted alongside 'detail' into the shared disclosure. Added in the SAME change as naming.md §6's
   // registry line.

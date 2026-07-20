@@ -1,0 +1,143 @@
+/* super-shell.css — ui-super-shell (M5, GH #83; shell-archetypes-m5.spec.md).
+ *   [1] TOKEN BLOCK — :where(ui-super-shell) declares ONLY --ui-super-shell-*: the 18px module
+ *       ladder (SPEC-R1c: bars/rails = 3 modules, panes = 14) chained onto fleet roles.
+ *   [2] STYLES BLOCK — @scope (ui-super-shell) consumes ONLY --ui-super-shell-*. Collapse rides the
+ *       host's reflected [collapsed-start]/[collapsed-end] (SPEC-R2d); narrow (<40rem container — LLD-C7/
+ *       GH #99's `shell-breakpoint.ts` is the shell family's one named source of truth for this literal,
+ *       mechanically checked by `shell-breakpoint.test.ts`, SPEC-R4) auto-collapses both sides via the
+ *       query ALONE (never the attributes — the no-clobber law), and an attribute-restored side overlays
+ *       the canvas instead of squeezing it.
+ *   [3] LOGICAL DIRECTION (LLD-C4, GH #95) — every selector below reads `[data-side='start'|'end']`,
+ *       never `left`/`right`. `[data-part='middle']` is plain row-flex with no `flex-direction`
+ *       override, so an ambient `dir="rtl"` mirrors the DOM-first ("start") side to the physical
+ *       right for free — no `:dir()` selector needed anywhere in this file. The narrow overlay's
+ *       `inset-inline-start`/`inset-inline-end` were ALREADY logical (they always were); only the
+ *       attribute VALUES they key off changed from left/right to start/end. */
+
+:where(ui-super-shell) {
+  --ui-super-shell-module: 1.125rem; /* 18px — the ONE module every dimension derives from (SPEC-R1c) */
+  --ui-super-shell-bar-size: calc(var(--ui-super-shell-module) * 3); /* 54px bars + rails */
+  --ui-super-shell-pane-size: calc(var(--ui-super-shell-module) * 14); /* 252px panes */
+  --ui-super-shell-gap: var(--ui-super-shell-module);
+  --ui-super-shell-radius: var(--md-sys-shape-corner-lg, var(--ui-super-shell-module));
+  --ui-super-shell-surface: var(--md-sys-color-neutral-surface);
+  --ui-super-shell-overlay-shadow: 0 0.25rem 1.5rem rgb(0 0 0 / 0.25);
+}
+
+@scope (ui-super-shell) {
+  :scope {
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 0;
+    min-block-size: 0;
+    container-type: inline-size;
+    container-name: ui-super-shell;
+  }
+
+  [data-part='frame'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-super-shell-gap);
+    flex: 1 1 auto;
+    min-block-size: 0;
+  }
+
+  [data-part='bar'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-super-shell-gap);
+    min-block-size: var(--ui-super-shell-bar-size);
+    box-sizing: border-box;
+    border-radius: var(--ui-super-shell-radius);
+    background: var(--ui-super-shell-surface);
+    padding-inline: calc(var(--ui-super-shell-module) / 3);
+  }
+
+  /* The authored header/footer content fills the space between the toggles by construction (a row-flex
+     child defaults to flex:0 0 auto — content-width, never expanding — so without this the bar's OWN
+     content would shrink-wrap and leave the rest of the bar visibly empty; regression measured on the
+     docs site's real header/footer, GH #90). `min-inline-size:0` lets the content's own children manage
+     overflow (e.g. a `justify-content:space-between` row) instead of forcing the bar wider than the shell. */
+  [data-part='bar-content'] {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+  }
+
+  [data-part='middle'] {
+    display: flex;
+    gap: var(--ui-super-shell-gap);
+    flex: 1 1 auto;
+    min-block-size: 0;
+    position: relative; /* the narrow overlay's containing block (SPEC-R4) */
+  }
+
+  [data-part='rail'] {
+    inline-size: var(--ui-super-shell-bar-size);
+    flex: 0 0 auto;
+    border-radius: var(--ui-super-shell-radius);
+    background: var(--ui-super-shell-surface);
+    min-block-size: 0;
+    overflow: hidden;
+  }
+
+  [data-part='pane'] {
+    inline-size: var(--ui-super-shell-pane-size);
+    flex: 0 0 auto;
+    border-radius: var(--ui-super-shell-radius);
+    background: var(--ui-super-shell-surface);
+    min-block-size: 0;
+    overflow-y: auto;
+    box-sizing: border-box;
+  }
+
+  [data-part='canvas'] {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    min-block-size: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── SPEC-R2: paired per-side collapse off the HOST's reflected state (wide bands) ─────────── */
+  :scope[collapsed-start] [data-part='middle'] > [data-side='start'],
+  :scope[collapsed-end] [data-part='middle'] > [data-side='end'] {
+    display: none;
+  }
+
+  /* ── SPEC-R4: narrow (<40rem) auto-collapse — the QUERY alone hides sides (never the attrs, so a
+     persisted wide choice survives); an EXPLICITLY-restored side (attribute absent) still hides
+     unless the toggle re-opens it, and then it OVERLAYS the canvas. The `:scope:not([collapsed-*])`
+     arm can't distinguish "user re-opened at narrow" from "wide default" without JS state, so v1
+     keeps the honest floor: at narrow, sides hide; the toggles re-open them as overlays by flipping
+     the attribute OFF (aria-expanded true) — the overlay arm below wins over the hide arm. */
+  @container ui-super-shell (inline-size < 40rem) {
+    [data-part='middle'] > [data-side='start'],
+    [data-part='middle'] > [data-side='end'] {
+      display: none;
+    }
+    /* narrow-*="stack" (ADR-0084's region vocabulary) — the side stays IN FLOW, full width, the
+       middle row turning into a column: [ start-side | canvas | end-side ] stacked. The side's own
+       content (e.g. ui-nav-rail collapse="menu") owns its narrow anatomy from here. */
+    :scope[narrow-start='stack'] [data-part='middle'],
+    :scope[narrow-end='stack'] [data-part='middle'] {
+      flex-direction: column;
+    }
+    :scope[narrow-start='stack'] [data-part='middle'] > [data-side='start'],
+    :scope[narrow-end='stack'] [data-part='middle'] > [data-side='end'] {
+      display: block;
+      inline-size: auto;
+      flex: 0 0 auto;
+      overflow-y: visible;
+    }
+    :scope[data-narrow-open='start'] [data-part='middle'] > [data-side='start'],
+    :scope[data-narrow-open='end'] [data-part='middle'] > [data-side='end'] {
+      display: block;
+      position: absolute;
+      inset-block: 0;
+      z-index: 2;
+      box-shadow: var(--ui-super-shell-overlay-shadow);
+    }
+    :scope[data-narrow-open='start'] [data-part='middle'] > [data-side='start'] { inset-inline-start: 0; }
+    :scope[data-narrow-open='end'] [data-part='middle'] > [data-side='end'] { inset-inline-end: 0; }
+  }
+}

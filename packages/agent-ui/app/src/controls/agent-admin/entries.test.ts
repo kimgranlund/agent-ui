@@ -30,8 +30,8 @@ const SECTIONS: Entry[] = [
   entry({ id: 'foundation', kind: ENTRY_KINDS.promptSection, label: 'Foundation', content: 'You are helpful.', order: 0 }),
 ]
 
-function group(kind: string, heading: string, entries: Entry[]): LiveCapabilityGroup {
-  return { kind, heading, entries }
+function group(kind: string, heading: string, entries: Entry[], enabled = true): LiveCapabilityGroup {
+  return { kind, heading, entries, enabled }
 }
 
 describe('composeLiveSystemPrompt (ALM-C1 / ADR-0136 Fork 3) — the capability projection', () => {
@@ -40,7 +40,7 @@ describe('composeLiveSystemPrompt (ALM-C1 / ADR-0136 Fork 3) — the capability 
       entry({ id: 'search', label: 'Web search', description: 'Searches the web', content: 'search(q)', order: 0 }),
       entry({ id: 'calc', label: 'Calculator', description: '', content: '', order: 1 }),
     ])
-    const out = composeLiveSystemPrompt(SECTIONS, [skills], false)
+    const out = composeLiveSystemPrompt(SECTIONS, [skills])
     expect(out).toBe(
       '## Foundation\nYou are helpful.\n\n' +
         '## Skills available to you\n' +
@@ -57,7 +57,7 @@ describe('composeLiveSystemPrompt (ALM-C1 / ADR-0136 Fork 3) — the capability 
     const emptyKind = group(ENTRY_KINDS.workflow, 'Workflows available to you', [
       entry({ id: 'w', kind: ENTRY_KINDS.workflow, label: 'W', content: 'w', enabled: false }),
     ])
-    const out = composeLiveSystemPrompt(SECTIONS, [skills, emptyKind], false)
+    const out = composeLiveSystemPrompt(SECTIONS, [skills, emptyKind])
     expect(out).toContain('### Kept')
     expect(out).not.toContain('Dropped')
     expect(out).not.toContain('## Workflows available to you')
@@ -68,29 +68,34 @@ describe('composeLiveSystemPrompt (ALM-C1 / ADR-0136 Fork 3) — the capability 
       entry({ id: 'b', label: 'Second', content: '', order: 5 }),
       entry({ id: 'a', label: 'First', content: '', order: 5 }),
     ])
-    const out = composeLiveSystemPrompt(SECTIONS, [skills], false)
+    const out = composeLiveSystemPrompt(SECTIONS, [skills])
     expect(out.indexOf('### First')).toBeLessThan(out.indexOf('### Second'))
   })
 
-  it('toolsEnabled === false gates the WHOLE tool kind out; true lets it project (the master switch wins)', () => {
+  it("a group's `enabled: false` MASTER switch gates the WHOLE kind out — every kind, not just tools (vision rev.5)", () => {
     const tools = group(ENTRY_KINDS.tool, 'Tools available to you', [
       entry({ id: 'calc', kind: ENTRY_KINDS.tool, label: 'Calculator', content: 'add(a,b)', order: 0 }),
     ])
-    expect(composeLiveSystemPrompt(SECTIONS, [tools], false)).not.toContain('## Tools available to you')
-    const on = composeLiveSystemPrompt(SECTIONS, [tools], true)
+    expect(composeLiveSystemPrompt(SECTIONS, [{ ...tools, enabled: false }])).not.toContain('## Tools available to you')
+    const on = composeLiveSystemPrompt(SECTIONS, [tools])
     expect(on).toContain('## Tools available to you')
     expect(on).toContain('### Calculator')
+    // the master wins over per-entry toggles for ANY kind
+    const skills = group(ENTRY_KINDS.skill, 'Skills available to you', [
+      entry({ id: 's', label: 'S', content: 'x', enabled: true }),
+    ], false)
+    expect(composeLiveSystemPrompt(SECTIONS, [skills])).not.toContain('## Skills available to you')
   })
 
   it('EQUIVALENCE PROPERTY: no enabled capabilities ⇒ byte-identical to composeSystemPrompt(sections)', () => {
     const base = composeSystemPrompt(SECTIONS)
     // no groups at all
-    expect(composeLiveSystemPrompt(SECTIONS, [], false)).toBe(base)
+    expect(composeLiveSystemPrompt(SECTIONS, [])).toBe(base)
     // groups present but every entry disabled / the tool kind gated
     const groups: LiveCapabilityGroup[] = [
       group(ENTRY_KINDS.skill, 'Skills available to you', [entry({ id: 's', label: 'S', content: 'x', enabled: false })]),
-      group(ENTRY_KINDS.tool, 'Tools available to you', [entry({ id: 't', kind: ENTRY_KINDS.tool, label: 'T', content: 'x', enabled: true })]),
+      group(ENTRY_KINDS.tool, 'Tools available to you', [entry({ id: 't', kind: ENTRY_KINDS.tool, label: 'T', content: 'x', enabled: true })], false),
     ]
-    expect(composeLiveSystemPrompt(SECTIONS, groups, false)).toBe(base)
+    expect(composeLiveSystemPrompt(SECTIONS, groups)).toBe(base)
   })
 })

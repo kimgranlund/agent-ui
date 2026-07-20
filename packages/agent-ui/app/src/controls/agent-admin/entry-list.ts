@@ -22,7 +22,7 @@ import type { UIIconElement } from '@agent-ui/components/controls/icon'
 import type { UICodeEditorElement } from '@agent-ui/code/editor'
 import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 import type { UIFieldElement } from '@agent-ui/components/controls/field'
-import type { Entry, NewEntryInput } from './entries.ts'
+import type { Entry, EntryLibraryPack, NewEntryInput } from './entries.ts'
 
 export interface EntryListHandlers {
   onToggle(id: string, enabled: boolean): void
@@ -47,7 +47,18 @@ export interface EntryListSection {
  *  adornment (TKT-0048), so the literal `+` character no longer belongs in the string. `handlers` are
  *  called on the corresponding user action — this module owns no store access of its own (the caller
  *  wires persistence, matching `agent-admin.ts`'s existing seam). */
-export function mountEntryList(kind: string, kindLabel: string, addLabel: string, handlers: EntryListHandlers): EntryListSection {
+export interface EntryListOptions {
+  /** GH #47/#48 — packs offered by the add-from-library menu. Absent/empty ⇒ the affordance does not
+   *  render at all (byte-identical section shell to before the option existed). */
+  libraries?: readonly EntryLibraryPack[]
+  /** Vision rev.5 (Kim's Figma frame 33:1693) — a caller-owned control rendered in the section's header
+   *  row beside the heading (the capability kinds' MASTER switch). Absent ⇒ the bare `h3` shell,
+   *  byte-identical to before the option existed (prompt sections take that arm). The caller wires the
+   *  control's state/listeners; this module only places it. */
+  headerControl?: HTMLElement
+}
+
+export function mountEntryList(kind: string, kindLabel: string, addLabel: string, handlers: EntryListHandlers, options?: EntryListOptions): EntryListSection {
   const section = document.createElement('div')
   section.setAttribute('data-part', 'entry-section')
   section.setAttribute('data-kind', kind)
@@ -55,7 +66,15 @@ export function mountEntryList(kind: string, kindLabel: string, addLabel: string
   const heading = document.createElement('h3')
   heading.setAttribute('data-part', 'entry-section-heading')
   heading.textContent = kindLabel
-  section.append(heading)
+  if (options?.headerControl) {
+    // The vision frame's `[ heading | master switch ]` header row — one flex wrapper, CSS-owned gap.
+    const headerRow = document.createElement('div')
+    headerRow.setAttribute('data-part', 'entry-section-header')
+    headerRow.append(heading, options.headerControl)
+    section.append(headerRow)
+  } else {
+    section.append(heading)
+  }
 
   const list = document.createElement('div')
   list.setAttribute('data-part', 'entry-list')
@@ -75,6 +94,56 @@ export function mountEntryList(kind: string, kindLabel: string, addLabel: string
   addIcon.setAttribute('glyph', 'plus')
   addToggle.append(addIcon, addLabel)
   section.append(addToggle)
+
+  // GH #47/#48 — the add-from-library affordance: a ui-menu of pack entries, committed through the SAME
+  // validated `onAdd` path as the hand-authoring form below (a library add IS a custom add with the
+  // typing done — slug-dedup and ordering come for free, and a rejection surfaces via the same
+  // `showAddError` note). Renders ONLY when packs were handed in; the section shell is byte-identical
+  // otherwise. Rows carry `data-value="packId:index"` (the menu's commit payload) and the entry's
+  // description as their tooltip.
+  const libraries = options?.libraries ?? []
+  if (libraries.length > 0) {
+    const libraryMenu = document.createElement('ui-menu')
+    libraryMenu.setAttribute('data-part', 'entry-library-menu')
+    const libraryTrigger = document.createElement('ui-button') as UIButtonElement
+    libraryTrigger.setAttribute('variant', 'soft')
+    // NO bespoke data-part on the trigger — ui-menu's #ensureParts unconditionally stamps its first
+    // child `data-part="trigger"` (menu.ts), so any value set here is clobbered at connect (PR #58
+    // review finding). Scope queries through the MENU's own marker instead:
+    // `[data-part='entry-library-menu'] [data-part='trigger']`.
+    const libraryIcon = document.createElement('ui-icon') as UIIconElement
+    libraryIcon.setAttribute('slot', 'leading')
+    libraryIcon.setAttribute('data-role', 'icon')
+    libraryIcon.setAttribute('glyph', 'plus')
+    libraryTrigger.append(libraryIcon, 'From library')
+    libraryMenu.append(libraryTrigger)
+
+    for (const pack of libraries) {
+      for (const [index, entry] of pack.entries.entries()) {
+        const row = document.createElement('div')
+        row.dataset.value = `${pack.id}:${index}`
+        row.textContent = `${entry.label} — ${pack.label}`
+        row.title = entry.description
+        libraryMenu.append(row)
+      }
+    }
+
+    libraryMenu.addEventListener('select', (event) => {
+      const { value } = (event as CustomEvent<{ value: string; index: number }>).detail
+      const splitAt = value.lastIndexOf(':')
+      const pack = libraries.find((p) => p.id === value.slice(0, splitAt))
+      const entry = pack?.entries[Number(value.slice(splitAt + 1))]
+      if (!entry) return
+      // Mirror submitAdd's contract (PR #58 review finding): `onAdd` returning false is a fail-closed
+      // rejection the CALLER surfaces via `showAddError` (which un-hides the add-form's error note) —
+      // there is nothing to reset here, but the return must not be silently discarded: a rejected
+      // library entry (e.g. a pack shipping an empty label) shows the same visible note the
+      // hand-authored path shows, proven by the rejection test.
+      void handlers.onAdd(entry)
+    })
+
+    section.append(libraryMenu)
+  }
 
   // TKT-0060: a plain container, not a native `<form>` — a `<ui-button>` submit control cannot become a
   // form's default button (not form-associated the way a native `<button>` is), so the HTML implicit-

@@ -179,7 +179,9 @@
 
   /* NAMED (TKT-0035) — resolves against whichever ancestor establishes `container-name: ui-nav-rail-collapse`
      nearest the queried element: `:scope` itself under the default `collapse-container="self"` (unchanged
-     40rem-against-own-box behaviour), or a consumer-opted ancestor under `collapse-container="ancestor"`. */
+     40rem-against-own-box behaviour, LLD-C7/GH #99's `shell-breakpoint.ts` — the shell family's one named
+     source of truth for this literal, mechanically checked by `shell-breakpoint.test.ts`), or a consumer-
+     opted ancestor under `collapse-container="ancestor"`. */
   @container ui-nav-rail-collapse (inline-size < 40rem) {
     [data-part='disclosure'] {
       position: relative;

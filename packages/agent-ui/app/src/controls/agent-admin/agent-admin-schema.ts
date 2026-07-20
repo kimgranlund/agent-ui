@@ -13,7 +13,7 @@
 
 import type { SettingsSchema } from '../settings/schema.ts'
 import type { EffortLevel } from '../conversation/composer-options.ts'
-import type { TurnProgress } from '@agent-ui/a2ui/agent/meta-line.ts' // ADR-0146 F1 — the live-turn progress vocabulary (type-only, from the PURE meta-line module, never the node-first ./agent barrel)
+import type { TurnProgress } from '@agent-ui/a2ui/agent/meta-line' // ADR-0146 F1 — the live-turn progress vocabulary (type-only, from the PURE meta-line module, never the node-first ./agent barrel); a cross-package specifier stays extensionless (the repo's own local-.ts-only convention) — a2ui/package.json exports this as its own subpath
 // ADR-0135 Piece A / Fork 2: the fail-closed guards + seed helper hoisted to `@agent-ui/shared` so app
 // and a2ui share ONE implementation. Re-exported here so `agent-admin.ts` keeps its current
 // `'./agent-admin-schema.ts'` import path unchanged.
@@ -28,16 +28,89 @@ export { initialValuesFor, sanitizeNumber, sanitizeSelect } from '@agent-ui/shar
 export interface SupportedModel {
   id: string
   label: string
+  /** The provider this model renders under in the Model GRID (Kim, 2026-07-19 rev.2: "a grid of
+   *  options grouped by provider") — 'Anthropic' | 'Google' | 'OpenAI' | 'Other', open-ended. */
+  provider: string
+  /** Whether this model ships INCLUDED (its grid switch on) before the admin ever touches the record
+   *  (rev.4: only Haiku+Sonnet ship on; the OpenAI/Gemini tier-equivalents ship as switchable options). */
+  includedByDefault: boolean
 }
 
+/** Rev.4 (Kim, 2026-07-19): Opus and Fable are REMOVED entirely; the roster is the Haiku/Sonnet tier
+ *  pair per provider — ids match the dev proxy's own providers.json rows EXACTLY (the one id namespace;
+ *  openai/gemini are `implemented: false` there, so a live turn on them degrades visibly until their
+ *  adapters land — the grid ships them switched OFF). */
 export const SUPPORTED_MODELS: readonly SupportedModel[] = [
-  { id: 'claude-opus-4-8', label: 'Opus 4.8' },
-  { id: 'claude-sonnet-5', label: 'Sonnet 5' },
-  { id: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5' },
-  { id: 'claude-fable-5', label: 'Fable 5' },
+  { id: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5', provider: 'Anthropic', includedByDefault: true },
+  { id: 'claude-sonnet-5', label: 'Sonnet 5', provider: 'Anthropic', includedByDefault: true },
+  { id: 'gpt-4.1-mini', label: 'GPT-4.1 mini', provider: 'OpenAI', includedByDefault: false },
+  { id: 'gpt-4.1', label: 'GPT-4.1', provider: 'OpenAI', includedByDefault: false },
+  { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', provider: 'Google', includedByDefault: false },
+  { id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro', provider: 'Google', includedByDefault: false },
 ]
 
-export const DEFAULT_MODEL_ID: string = 'claude-sonnet-5'
+/** Haiku by default (Kim, 2026-07-19) — the cheap/fast tier is the demo's sane default; Sonnet stays one
+ *  commit away in the Balanced list. */
+export const DEFAULT_MODEL_ID: string = 'claude-haiku-4-5-20251001'
+
+// ── admin-added models (Kim, 2026-07-19: "admins can make additional models available") ────────────────
+
+/** The store key carrying the admin's ADDITIONAL model ids (the `customModels` config field below):
+ *  comma-separated, each `id` or `id|Label`. Parsed fail-closed — malformed segments drop silently. */
+export const CUSTOM_MODELS_KEY = 'customModels'
+
+/** Infer a custom model id's provider group from its well-known id prefix — fail-open to 'Other'. */
+export function inferProvider(id: string): string {
+  if (/^claude/i.test(id)) return 'Anthropic'
+  if (/^(gpt|o\d|chatgpt)/i.test(id)) return 'OpenAI'
+  if (/^(gemini|palm)/i.test(id)) return 'Google'
+  return 'Other'
+}
+
+/** Parse the customModels config value into SupportedModel rows (provider inferred from the id).
+ *  Dedupes against the built-in ids and within itself; a non-string/empty value ⇒ []. */
+export function parseCustomModels(raw: unknown): SupportedModel[] {
+  if (typeof raw !== 'string' || raw.trim().length === 0) return []
+  const seen = new Set(SUPPORTED_MODELS.map((m) => m.id))
+  const out: SupportedModel[] = []
+  for (const segment of raw.split(',')) {
+    const [idPart, labelPart] = segment.split('|')
+    const id = (idPart ?? '').trim()
+    if (id.length === 0 || seen.has(id)) continue
+    seen.add(id)
+    out.push({ id, label: (labelPart ?? '').trim() || id, provider: inferProvider(id), includedByDefault: true })
+  }
+  return out
+}
+
+// ── the Model GRID's data half (Kim, 2026-07-19 rev.2) ──────────────────────────────────────────────────
+
+/** The store key holding the per-model INCLUSION record (`Record<modelId, boolean>` — the grid's
+ *  switches). A missing key means INCLUDED (default-open roster; excluding is the explicit act). */
+export const MODELS_INCLUDED_KEY = 'modelsIncluded'
+
+/** The full model roster: built-ins + the admin's parsed additions, in declaration order. */
+export function modelRoster(customRaw: unknown): SupportedModel[] {
+  return [...SUPPORTED_MODELS, ...parseCustomModels(customRaw)]
+}
+
+/** Whether a model is included per the store record — an explicit boolean wins; an absent entry falls
+ *  back to the model's OWN `includedByDefault` (rev.4: built-ins ship Haiku+Sonnet on, the OpenAI/Gemini
+ *  options off; admin-added customs on — you added it to use it). */
+export function isModelIncluded(record: unknown, model: SupportedModel): boolean {
+  if (typeof record === 'object' && record !== null) {
+    const value = (record as Record<string, unknown>)[model.id]
+    if (typeof value === 'boolean') return value
+  }
+  return model.includedByDefault
+}
+
+/** Fail-closed model read for turn/composer time: a store value naming a roster model passes;
+ *  anything else falls back to DEFAULT_MODEL_ID (the sanitizeSelect discipline, roster-based now that
+ *  the Model GRID replaced the schema's select field). */
+export function sanitizeModel(value: unknown, roster: readonly SupportedModel[]): string {
+  return typeof value === 'string' && roster.some((m) => m.id === value) ? value : DEFAULT_MODEL_ID
+}
 
 /** A model id's display label for the stub reply's citation string — falls back to the raw id itself
  *  (never throws) if `id` isn't one `SUPPORTED_MODELS` names, matching this file's own fail-closed law
@@ -46,10 +119,13 @@ function modelLabel(id: string): string {
   return SUPPORTED_MODELS.find((m) => m.id === id)?.label ?? id
 }
 
-/** The default agent-config `SettingsSchema` (ADR-0131 cl.1: name/model/temperature/tools — no external
- *  runtime dependency). Rendered by the composed `ui-settings` pane exactly as any other settings schema
- *  would be (SPEC-R10/R11/R12) — nothing here is agent-admin-specific to `ui-settings` itself. */
-export const defaultAgentConfigSchema: SettingsSchema = {
+/** Build the agent-config `SettingsSchema` (ADR-0131 cl.1 — no external runtime dependency). The MODEL
+ *  moved OUT of this schema (Kim, 2026-07-19 rev.2): the admin's own Model GRID (provider-grouped rows,
+ *  include switch + default checkbox) owns model management, writing the same `model`/`modelsIncluded`
+ *  store keys; this schema keeps name/temperature/tools + the customModels add-field. Rendered by the
+ *  composed `ui-settings` pane exactly as any other settings schema (SPEC-R10/R11/R12). */
+export function agentConfigSchema(): SettingsSchema {
+  return {
   version: 1,
   sections: [
     {
@@ -66,12 +142,14 @@ export const defaultAgentConfigSchema: SettingsSchema = {
           validation: { required: true },
         },
         {
-          key: 'model',
-          type: 'select',
-          label: 'Model',
-          description: 'Which model this agent runs on — no live model call happens here (ADR-0131).',
-          default: DEFAULT_MODEL_ID,
-          options: SUPPORTED_MODELS.map((m) => ({ value: m.id, label: m.label })),
+          key: CUSTOM_MODELS_KEY,
+          type: 'text',
+          label: 'Additional models',
+          description:
+            'Comma-separated model ids (optionally `id | Label`) — they join the Model grid under their ' +
+            'provider. Live turns still pass the dev proxy’s provider allowlist; an id it doesn’t know ' +
+            'fails that turn visibly.',
+          default: '',
         },
         {
           key: 'temperature',
@@ -81,16 +159,68 @@ export const defaultAgentConfigSchema: SettingsSchema = {
           default: 0.5,
           validation: { min: 0, max: 1, step: 0.1 },
         },
-        {
-          key: 'toolsEnabled',
-          type: 'boolean',
-          label: 'Tools enabled',
-          description: 'Whether the stub reply mentions tool availability.',
-          default: false,
-        },
       ],
     },
   ],
+  }
+}
+
+/** The shared, read-only default schema — the model select is GONE from it (the grid took over), so
+ *  no customModels-driven schema rebuild exists anymore; the grid re-renders itself instead. The
+ *  `toolsEnabled` boolean FIELD is gone too (vision rev.5, Kim's Figma frame 33:1693): kind-level
+ *  gating moved to each capability section's own header master switch — same store keys, no field. */
+export const defaultAgentConfigSchema: SettingsSchema = agentConfigSchema()
+
+// ── Master toggles (vision rev.5 — Kim's Figma frame 33:1693, ruled 2026-07-19) ─────────────────────────
+
+/** The store key for the Agent card's own master switch — "is this agent active/available" (Kim's
+ *  ruling). `false` disables the composer (no turns run); everything else stays editable. */
+export const AGENT_ENABLED_KEY = 'agentEnabled'
+
+/** The store key carrying one capability kind's MASTER switch (the section-header toggle) — plural
+ *  `${kind}sEnabled`, so the `tool` kind resolves to the PRE-EXISTING `toolsEnabled` key (the old Agent-
+ *  card boolean field's persisted values carry over unchanged). */
+export function kindEnabledKey(kind: string): string {
+  return `${kind}sEnabled`
+}
+
+/** A master-switch read: default ON — only an explicit stored `false` disables (a fresh store ships
+ *  every toggle up, matching the vision frame; NOTE this flips the old `toolsEnabled === true` read,
+ *  whose unset default was OFF — the section-header switch renders its state honestly either way). */
+export function isEnabledFlag(value: unknown): boolean {
+  return value !== false
+}
+
+// ── Surface Options (vision rev.6 — the frame's node 34:1312) ──────────────────────────────────────────
+// The agent's OUTPUT MODALITY contract: Markdown (rendered rich text, plain text the fallback), A2UI
+// (the catalog picker), GenUI (PRD-gated — `.claude/docs/prd/genui-surface.prd.md` owns its five open
+// forks; the row renders disabled until Kim ratifies). Both live modalities default ON.
+
+/** Markdown surface — ON: agent-turn notes/system bubbles render through `ui-markdown` (sanitized by
+ *  construction); OFF (an explicit stored `false`): plain `textContent`, the frame's own fallback. */
+export const SURFACE_MARKDOWN_KEY = 'surfaceMarkdown'
+
+/** A2UI surface — ON: an armed `agentSurfaceTurn` runs surface turns; OFF: even an armed runner is
+ *  bypassed and the prose arm answers (surface action clicks no-op — no hidden turns from a disabled
+ *  modality). */
+export const SURFACE_A2UI_KEY = 'surfaceA2ui'
+
+/** The A2UI catalog picker's persisted selection (an id from `A2UI_CATALOG_OPTIONS`). */
+export const A2UI_CATALOG_KEY = 'a2uiCatalog'
+
+/** The pickable catalogs — ONE today (the id the producer's own `produce.ts` pins), so the picker and
+ *  the producer agree by construction; the choice is a real config value from day one, and the
+ *  create/pick-from-library affordances (Kim's 2026-07-19 ruling) land when a second catalog or the
+ *  GenUI PRD's source registry exists. */
+export const A2UI_CATALOG_OPTIONS: ReadonlyArray<{ id: string; label: string }> = [
+  { id: 'agent-ui', label: 'Default (agent-ui)' },
+]
+
+export const DEFAULT_A2UI_CATALOG_ID: string = 'agent-ui'
+
+/** Fail-closed catalog read — an unknown/malformed stored value coerces to the default id. */
+export function sanitizeCatalog(value: unknown): string {
+  return A2UI_CATALOG_OPTIONS.some((option) => option.id === value) ? (value as string) : DEFAULT_A2UI_CATALOG_ID
 }
 
 /** The agent-config values the stub turn loop reads at turn time — always the CURRENT store contents,
@@ -169,6 +299,15 @@ export interface AdminSurfaceTurnRequest {
   personaSystem: string
   /** The sanitized `SUPPORTED_MODELS` id. */
   model: string
+  /** GH #49 — the ENABLED tool-entry labels (the `tool` kind, gated on the config's `toolsEnabled`
+   *  master switch), forwarded raw: the dev proxy intersects them with ITS integration registry and
+   *  ignores everything else — the component knows entry labels, never the registry. Absent/empty ⇒
+   *  no tools on the turn. */
+  integrations?: readonly string[]
+  /** Vision rev.6 — the Surface Options catalog picker's SANITIZED selection. Today always the default
+   *  id (one option exists, and the producer pins the same id), so runner and picker agree by
+   *  construction; a future multi-catalog runner threads it into the producer's catalog choice. */
+  catalogId?: string
 }
 
 /** The injected surface runner (DEV-only, the `agentTurn` pattern): one turn in, an ordered stream of

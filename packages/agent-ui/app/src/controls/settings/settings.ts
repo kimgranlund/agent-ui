@@ -193,6 +193,12 @@ export class UISettingsElement extends UIElement {
     rail.replaceChildren()
     this.#panelHost?.replaceChildren()
 
+    // GH #50 — the single-section posture: with exactly one (supported) section there is nothing to
+    // navigate, so the rail/list pane and the narrow drill-in's Back affordance are presentation noise.
+    // settings.css keys off this host marker to render detail-only. Derived state stamped per build,
+    // never author-settable API (the master-detail `data-view` precedent).
+    this.toggleAttribute('data-single-section', schema?.version === 1 && schema.sections.length === 1)
+
     if (!schema) return // SPEC-R12 AC2 precedent generalised to "no schema yet" — never throw
 
     if (schema.version !== 1) {

@@ -87,9 +87,29 @@ export type Effort = 'low' | 'medium' | 'high' | 'xhigh'
  * (raw reasoning), forwarded onto the wire only under an explicit `progressDetail:'full'` opt-in (F3).
  */
 export interface ProviderEvent {
-  kind: 'message_start' | 'block_start' | 'thinking' | 'block_stop' | 'done'
+  kind: 'message_start' | 'block_start' | 'thinking' | 'block_stop' | 'done' | 'tool'
+  /** `thinking`: a reasoning-delta excerpt. `tool`: the tool NAME being executed (a factual process
+   *  claim from the closed registry, GH #49 — never model-composed prose). */
   text?: string
 }
+
+// ── Tool use (GH #49) — the integration seam ────────────────────────────────────────────────────────────
+
+/** One callable tool's declaration — the provider-agnostic JSON-Schema shape (it happens to be
+ *  Anthropic-native; an OpenAI adapter maps `input_schema` → `parameters`). Declarations come from a
+ *  REGISTRY the caller owns (site-side, keyless integrations first); the model never invents one. */
+export interface ToolDef {
+  name: string
+  description: string
+  /** A JSON Schema object for the tool's input (`{type:'object', properties, required?}`). */
+  input_schema: Record<string, unknown>
+}
+
+/** Execute ONE tool call and return the result TEXT handed back to the model. Rejections are surfaced
+ *  to the model as an error-text result (the adapter formats them) — a failed integration degrades the
+ *  answer, never the turn. `signal` (PR #59 review) is the TURN's abort signal, threaded so an aborted
+ *  turn also cancels in-flight tool work (an executor combines it with its own timeout). */
+export type ExecuteTool = (name: string, input: Record<string, unknown>, signal?: AbortSignal) => Promise<string>
 
 /**
  * The injected model seam (SPEC-R11): one isolated module PER provider implements this (Anthropic this
@@ -119,6 +139,15 @@ export interface AgentProvider {
      *  accumulation contract must not change (F1's principled asymmetry — on the wire it is in-band lines,
      *  here it is a side callback). */
     onEvent?: (ev: ProviderEvent) => void
+    /** GH #49 — OPTIONAL tool declarations + executor (the `effort?`/`onEvent?` additive precedent: an
+     *  adapter that ignores them is byte-behavior-unchanged; a caller passing neither gets today's
+     *  request shape exactly). When BOTH are present the adapter runs its provider-native tool-use loop
+     *  INTERNALLY — executing calls via `executeTool`, feeding results back, and yielding only TEXT
+     *  fragments throughout (the F1 principled asymmetry: the accumulation contract never changes).
+     *  Bounded by the adapter's own round cap; `tools` without `executeTool` is a caller bug the adapter
+     *  treats as "no tools". */
+    tools?: readonly ToolDef[]
+    executeTool?: ExecuteTool
     signal?: AbortSignal
   }): AsyncIterable<string>
 }

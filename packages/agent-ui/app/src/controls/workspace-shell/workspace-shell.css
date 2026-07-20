@@ -1,0 +1,20 @@
+/* workspace-shell.css — ui-workspace-shell, the single-file component stylesheet (ADR-0003). No
+ * `--ui-workspace-shell-*` tokens of its own — this element owns no geometry beyond making itself a flex
+ * container so the ONE composed `ui-super-shell` child (workspace-shell.ts) can fill the available box; every
+ * other visual property (module scale, bar/rail/pane sizing, collapse) is the inner shell's own, untouched
+ * (the master-detail.css precedent: "0 bespoke code" — this sheet adds only the host's own box behavior).
+ */
+
+@scope (ui-workspace-shell) {
+  :scope {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    min-block-size: 0;
+  }
+
+  :scope > ui-super-shell {
+    flex: 1 1 auto;
+    min-block-size: 0;
+  }
+}

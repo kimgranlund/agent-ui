@@ -4,9 +4,10 @@
 //
 // Five instantiations share this ONE shape (ADR-0132 cl.1): prompt sections (kind='prompt-section',
 // seeded with three built-in entries — Foundation/Personality/Critical Items) and four capability kinds
-// (skill/workflow/resource/tool, unseeded — purely custom-authored, no backend to seed from). A future
-// kind is a new `ENTRY_KINDS` member + optional seed data — never new list/toggle/author code
-// (ADR-0132 cl.1/Fork 2: the taxonomy is extensible, not a hardcoded enum).
+// (skill/workflow/resource/tool — their STORES start empty; entries arrive hand-authored, or since
+// GH #47/#48 from an opt-in-per-add library pack (`EntryLibraryPack` below) — still never an automatic
+// initial seed). A future kind is a new `ENTRY_KINDS` member + optional seed data — never new
+// list/toggle/author code (ADR-0132 cl.1/Fork 2: the taxonomy is extensible, not a hardcoded enum).
 //
 // Custom-entry depth is DELIBERATELY generic (ADR-0132 Fork 3): label + description + free-text content,
 // uniform across every kind. A kind-specific schema (e.g. a Tool's parameter list) is an explicitly
@@ -134,26 +135,29 @@ export interface LiveCapabilityGroup {
   /** The `## {heading}` group header (e.g. "Skills available to you"). */
   heading: string
   entries: readonly Entry[]
+  /** The kind's MASTER switch (vision rev.5 — every capability section's header toggle, generalizing
+   *  the old tools-only boolean): `false` gates the WHOLE kind out, winning over per-entry toggles. */
+  enabled: boolean
 }
 
 /**
  * The live system prompt: `composeSystemPrompt(sections)` followed by one `## {heading}` block per
  * capability kind that has ≥1 enabled entry, each enabled entry rendered as `### {label}` + its
- * description + its content, in `order` (ties by `id`, the composeSystemPrompt law). `toolsEnabled === false`
- * gates the whole `tool` kind out (the master switch wins over per-entry toggles — the flat boolean finally
- * gets a live meaning consistent with its label). GATED EQUIVALENCE (ADR-0136 Fork 3): with no enabled
- * capability entries the result is byte-identical to `composeSystemPrompt(sections)` — the live prompt
- * degrades exactly to today's composed prompt, never a trailing empty header.
+ * description + its content, in `order` (ties by `id`, the composeSystemPrompt law). A group whose
+ * `enabled` master switch is `false` is gated out wholesale (vision rev.5 generalized the old tools-only
+ * `toolsEnabled` boolean to EVERY kind's section-header switch — the master wins over per-entry toggles).
+ * GATED EQUIVALENCE (ADR-0136 Fork 3): with no enabled capability entries the result is byte-identical
+ * to `composeSystemPrompt(sections)` — the live prompt degrades exactly to today's composed prompt,
+ * never a trailing empty header.
  */
 export function composeLiveSystemPrompt(
   sections: readonly Entry[],
   capabilities: readonly LiveCapabilityGroup[],
-  toolsEnabled: boolean,
 ): string {
   const base = composeSystemPrompt(sections)
   const groups: string[] = []
   for (const group of capabilities) {
-    if (group.kind === ENTRY_KINDS.tool && !toolsEnabled) continue // the master switch gates the tools kind out
+    if (!group.enabled) continue // the kind's master switch gates the whole group out
     const enabled = [...group.entries]
       .filter((e) => e.enabled)
       .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
@@ -185,6 +189,24 @@ export interface NewEntryInput {
   label: string
   description: string
   content: string
+}
+
+// ── Entry libraries (GH #47/#48) — packs of ready-to-add entries ────────────────────────────────────────
+// A library pack is pure DATA (the ADR-0132 cl.1 law: a capability surface grows by data, never by new
+// list/toggle/author code): a named collection of `NewEntryInput`s for ONE kind, offered by the entry
+// list's add-from-library affordance and committed through the SAME `validateNewEntry` path as a
+// hand-authored entry (slug-dedup, order, enabled, deletable — a library add IS a custom add with the
+// typing done). Packs live with their consumer (page-local, the presets precedent); the component only
+// renders whatever packs it is handed.
+export interface EntryLibraryPack {
+  /** Stable kebab id — unique within the kind's pack list. */
+  id: string
+  /** Display name ("A2UI composition idioms", "Hospitality"). */
+  label: string
+  /** One-line pack description (menu row tooltip). */
+  description: string
+  /** Ready-to-add entry inputs, in menu order. */
+  entries: readonly NewEntryInput[]
 }
 
 export type ValidateNewEntryResult = { ok: true; entry: Entry } | { ok: false; error: string }

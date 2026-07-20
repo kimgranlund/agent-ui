@@ -462,3 +462,51 @@ describe('dimensions.css — the --md-sys-typescale-* fleet typographic scale (A
     expect(bare).not.toMatch(/--ui-type-[\w-]+:/)
   })
 })
+
+// ADR-0150 — the compact-window body register: ONE `@media (width < 52.5rem)` block AFTER the base `*`
+// ramp, re-declaring ONLY the three body -size legs (16/14/12 → 15/13/11), each still riding
+// var(--md-sys-scale). Position + exclusivity ARE the contract: both blocks are `*` at specificity
+// 0,0,0 and a media query adds none, so later-declaration is the ONLY win condition; any non-body or
+// non-`-size` leg in the block would silently widen the ratified scope. The rendered-px truth (13px
+// below the line, [scale] composing) is text.browser.test.ts's compact-viewport leg — this is the
+// static structural pin, same division of labor as the describes above.
+describe('dimensions.css — the compact-window body override (ADR-0150)', () => {
+  const mediaMatch = bare.match(/@media\s*\(width\s*<\s*52\.5rem\)\s*\{\s*\*\s*\{([^}]*)\}\s*\}/)
+  const overrideBlock = (mediaMatch ?? ['', ''])[1] as string
+
+  it('declares the @media (width < 52.5rem) block AFTER the base `*` ramp (order is the win condition)', () => {
+    expect(mediaMatch).not.toBeNull()
+    // Anchor the position probe on the CAPTURED match, not a bare '@media' search — a future earlier
+    // media block (prefers-reduced-motion etc.) must not silently repoint what this asserts (PR #43
+    // review nit, confirmed independently by the #54 panel).
+    expect(bare.indexOf((mediaMatch as RegExpMatchArray)[0]!)).toBeGreaterThan(bare.indexOf(universalBlock))
+    // the breakpoint is the documented literal (ADR-0150 cl.2 — not tokenizable): exactly 52.5rem
+    expect(bare).not.toMatch(/@media[^{]*992/)
+  })
+
+  it('re-declares EXACTLY the three body -size legs at 15/13/11, each × var(--md-sys-scale)', () => {
+    const COMPACT: Array<[string, number]> = [
+      ['body-large', 15],
+      ['body-medium', 13],
+      ['body-small', 11],
+    ]
+    for (const [role, px] of COMPACT) {
+      const re = new RegExp(`--md-sys-typescale-${role}-size:\\s*calc\\(\\s*${px}px\\s*\\*\\s*var\\(--md-sys-scale\\)\\s*\\)`)
+      expect(overrideBlock, `${role} compact leg`).toMatch(re)
+    }
+    // body only, -size only: no other role leaks in, no :root constant is forked into the block
+    expect(overrideBlock.match(/--md-sys-typescale-/g)).toHaveLength(3)
+    expect(overrideBlock).not.toMatch(/-(weight|line-height|tracking):/)
+    // the base rows stand byte-untouched in the base `*` ramp (M3-verbatim law, ADR-0078 cl.2)
+    for (const [role, px] of [['body-large', 16], ['body-medium', 14], ['body-small', 12]] as const) {
+      const re = new RegExp(`--md-sys-typescale-${role}-size:\\s*calc\\(\\s*${px}px\\s*\\*\\s*var\\(--md-sys-scale\\)\\s*\\)`)
+      expect(universalBlock, `${role} base row`).toMatch(re)
+    }
+  })
+
+  it('the override block carries the extension marker (it is an extension, not an M3 row)', () => {
+    const idx = css.indexOf('@media (width < 52.5rem)')
+    expect(idx).toBeGreaterThan(-1)
+    expect(css.slice(Math.max(0, idx - 1400), idx)).toMatch(/extension — not MD3/)
+  })
+})

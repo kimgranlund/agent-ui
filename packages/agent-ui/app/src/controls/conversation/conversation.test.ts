@@ -681,7 +681,7 @@ describe('conversation.md descriptor', () => {
   const md = readFileSync(`${DIR}/conversation.md`, 'utf8') as string
   const { fence, body } = splitFrontmatter(md)
   const parsed = parseDescriptor(fence)
-  const ATTR_NAMES = ['disclosure', 'models', 'model', 'efforts', 'effort', 'contextItems']
+  const ATTR_NAMES = ['disclosure', 'disabled', 'models', 'model', 'efforts', 'effort', 'contextItems']
 
   it('has a leading frontmatter fence and a /site prose body', () => {
     expect(fence.length).toBeGreaterThan(0)

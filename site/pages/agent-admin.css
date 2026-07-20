@@ -9,8 +9,9 @@
    * the settings pane's generated fields (a ui-text-field/ui-slider, each with their own real
    * content-driven floor, per agent-admin.ts's TKT-0045 per-pane `min` comment) need more room than an
    * even three-way split of 24rem provides, and used to get silently clipped rather than visibly resized.
-   * 48rem matches the sum of the three panes' own `min` (16 + 10 + 20rem) plus divider/padding/border
-   * chrome, so the native resize handle can no longer be dragged past what the composition can render. */
+   * 48rem covers the two rev.5 panes' own `min` (16 + 20rem) plus divider/padding/border chrome with
+   * headroom (the agent-admin.test.ts floor gate re-derives the need from the LIVE pane mins), so the
+   * native resize handle can no longer be dragged past what the composition can render. */
   min-inline-size: 48rem;
   max-inline-size: 100%;
   resize: horizontal;

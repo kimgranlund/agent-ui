@@ -10,6 +10,9 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+# scripts/publish/publish-packages.mjs's scratch publish-payload staging dir (per-package transformed
+# package.json + compiled dist/) — never committed, rebuilt fresh on every publish run.
+.publish
 # Scratch/cache dirs test build-shelling gates create at repo root (light-dark-minify.test.ts's
 # dist-tkt0002-gate-scratch, theme-provider-build-fixture.test.ts's dist-theme-provider-gate-scratch, and
 # build-css.ts's dist-shared-build-cache) — each is try/finally-cleaned in the normal case, but a wildcard
