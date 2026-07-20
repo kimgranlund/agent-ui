@@ -45,6 +45,10 @@ const SHARD_PATH = `${ROOT}/packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui
 
 const MOUNT = '/__a2ui/agent'
 const MAX_BODY = 1 << 20 // 1 MiB — a dev-only intent/turn body is tiny; cap it so a runaway request can't grow unbounded
+// GH #144 — the user-facing fallback note when produce() halts or faults mid-stream (never leaks the
+// internal error message — ProduceHalt's own text names round bounds/failure codes, an implementation
+// detail, not something to show a user). Shared verbatim with worker/index.ts's production twin.
+const FAILURE_NOTE = "I couldn't put together a valid response for that — could you try rephrasing, or try again?"
 
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -230,7 +234,17 @@ export function a2uiDevProxyPlugin(): Plugin {
             // produce() halted, a bad body, or an upstream fault — report without leaking a key.
             const message = err instanceof Error ? err.message : 'proxy error'
             if (!res.headersSent) sendJson(res, 500, { error: message })
-            else res.end()
+            else if (!res.destroyed) {
+              // GH #144 — headers are already committed (200/ndjson), so there's no HTTP-level error
+              // path left; silently ending here left the client with a fully empty
+              // `{"response":{"lines":[]}}` and no rendered explanation. Mirrors worker/index.ts's
+              // production fix: a note-only meta-line, the SAME wire shape a model's own note-only
+              // turn already uses (ADR-0088 §1) — every existing consumer renders it like a real reply.
+              // `res.destroyed` (the connection is already gone — the client disconnected) is the one
+              // case that stays silent; there's no one left to read it.
+              res.write(JSON.stringify({ a2uiMeta: { note: FAILURE_NOTE } }) + '\n')
+              res.end()
+            } else res.end()
           }
         })()
       })
