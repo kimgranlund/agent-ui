@@ -83,9 +83,16 @@ export interface TurnProgress {
  * verifies its integrity, and re-composes it on the outgoing meta-line only when it holds); `trace` is the
  * runtime-assembled `TurnTrace` (the model never authors `trace` itself — only `produce()` attaches it
  * before yielding); `progress` is a runtime-composed live-turn lifecycle event (ADR-0146 F1), the one kind
- * that may INTERLEAVE during the turn rather than ride only the single leading line. All four fields are
- * optional: a note-only line omits `ask`/`trace`/`progress`; a progress line carries only `progress`; a
- * malformed/leaked line may omit any of them.
+ * that may INTERLEAVE during the turn rather than ride only the single leading line. `error` is a
+ * runtime-composed, TERMINAL failure signal (GH #144) — a transport (the dev proxy / the Cloudflare
+ * Worker) writes it as the LAST line on a stream whose headers already committed 200 before `produce()`
+ * halted (`ProduceHalt`, the round bound exhausted) or otherwise threw mid-loop (an upstream fault): the
+ * ONLY way such a transport can turn an already-200 stream into a VISIBLE client-side failure instead of a
+ * silently-empty "success" (SPEC-R5's "halt-and-report" was always produce()-internal; nothing carried
+ * that report across the wire until this field). The model never authors `error` — only a transport does,
+ * exactly like `trace`. All five fields are optional: a note-only line omits `ask`/`trace`/`progress`/
+ * `error`; a progress line carries only `progress`; an error line carries only `error`; a malformed/leaked
+ * line may omit any of them.
  */
 export interface A2uiMetaEnvelope {
   a2uiMeta: {
@@ -96,6 +103,9 @@ export interface A2uiMetaEnvelope {
      *  single leading line). Shallow-validated the same way `ask` is — a malformed `progress` drops only
      *  itself, never the whole envelope. */
     progress?: TurnProgress
+    /** GH #144: a transport-composed terminal failure message — see the interface doc above. Shallow-
+     *  validated the same way `note` is (a plain string); a malformed `error` drops only itself. */
+    error?: string
   }
 }
 
@@ -123,6 +133,9 @@ export function readMetaLine(line: string): A2uiMetaEnvelope | undefined {
   const m = meta as Record<string, unknown>
   if (m.note !== undefined && typeof m.note !== 'string') return undefined
   if (m.trace !== undefined && (typeof m.trace !== 'object' || m.trace === null)) return undefined
+  // GH #144: `error` is shallow-validated the SAME way as `note` — a non-string value drops only itself
+  // (the field goes `undefined` below), never the whole envelope.
+  const error = typeof m.error === 'string' ? m.error : undefined
 
   // ADR-0097 §1: `ask` is shallow-validated the same way as note/trace, but a MALFORMED `ask` drops only
   // itself — never the whole envelope (note/trace still parse normally). Never throws, never invents a
@@ -158,8 +171,21 @@ export function readMetaLine(line: string): A2uiMetaEnvelope | undefined {
       ask,
       trace: m.trace as TurnTrace | undefined,
       progress,
+      error,
     },
   }
+}
+
+/**
+ * Format a transport-composed terminal error line (GH #144) — the wire counterpart `readMetaLine` parses
+ * back into `a2uiMeta.error`. A transport (the dev proxy / the Cloudflare Worker) writes this as the LAST
+ * line on a stream whose headers already committed 200 before `produce()` halted or otherwise threw
+ * mid-loop, so the failure is VISIBLE client-side instead of reading as an empty "success" (a stream that
+ * just ends with zero content lines and zero explanation). No `version` key ⇒ provably not an
+ * `A2uiServerMessage`, same disjointness proof `readMetaLine`'s header documents for every meta-line kind.
+ */
+export function formatErrorLine(message: string): string {
+  return JSON.stringify({ a2uiMeta: { error: message } })
 }
 
 /**

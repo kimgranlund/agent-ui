@@ -8,8 +8,9 @@
 // `process-shim.ts` MUST be the first import — see its own header for why the ordering is load-bearing.
 import './process-shim.ts'
 
-import { produce } from '../../../src/agent/produce.ts'
+import { produce, ProduceHalt } from '../../../src/agent/produce.ts'
 import type { ProduceDeps } from '../../../src/agent/produce.ts'
+import { formatErrorLine } from '../../../src/agent/meta-line.ts'
 import { resolvePair, validateProvidersConfig } from '../providers-config.ts'
 import type { ProvidersConfig } from '../providers-config.ts'
 import { providerFor } from '../providers/index.ts'
@@ -38,10 +39,12 @@ interface Env {
 
 const MOUNT = '/__a2ui/agent'
 const MAX_BODY = 1 << 20 // 1 MiB — matches dev-proxy-plugin.ts's cap
-// GH #144 — the user-facing fallback note when produce() halts or faults mid-stream (never leaks the
-// internal error message — ProduceHalt's own text names round bounds/failure codes, an implementation
-// detail, not something to show a user).
-const FAILURE_NOTE = "I couldn't put together a valid response for that — could you try rephrasing, or try again?"
+// GH #144 — the generic fallback shown for any produce()-loop failure that ISN'T a ProduceHalt (an
+// upstream fault, e.g. anthropicProvider's own error message, which embeds up to 500 raw chars of the
+// provider's API response body — an internal detail that must never reach an end user's chat log).
+// ProduceHalt's own message is safe to show verbatim: it names only closed failure CODES (SCHEMA/PARSE/
+// FEED_SCOPE/…), never raw upstream text.
+const GENERIC_FAILURE_MESSAGE = "I couldn't put together a valid response for that — could you try rephrasing, or try again?"
 
 // GH #101 (review finding): dev-proxy-plugin.ts never needed a CSRF guard — it's a Vite dev middleware,
 // reachable only from localhost. Ported unmodified to the public internet, the POST routes had none: a
@@ -213,20 +216,30 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
       })) {
         await writer.write(encoder.encode(line + '\n'))
       }
-    } catch {
-      // GH #144 — ProduceHalt (the round bound exhausted with no valid surface) or an upstream fault
-      // mid-stream: headers are already committed (200/ndjson), so there is no HTTP-level error path
-      // left — but silently closing here left the client with a fully empty `{"response":{"lines":[]}}`
-      // and no rendered explanation at all (the reported symptom). A client disconnect (GH #106's
-      // request.signal wiring) has no one left to read a note, so THAT case stays silent; anything
-      // else surfaces as an ordinary note-only meta-line — the SAME wire shape a model's own note-only
-      // turn already uses (ADR-0088 §1) — so every existing consumer renders it exactly like a real
-      // agent reply, with no new wire vocabulary needed.
+    } catch (err) {
+      // GH #144: ProduceHalt (the round bound exhausted, e.g. a persona's opening turn needing more
+      // self-correct rounds than the cap) or an upstream fault mid-stream — headers are already committed
+      // (200/ndjson), so the status can't change, but the failure must still reach the client SOMEHOW: a
+      // stream that just stops with zero content lines reads as a silent, empty "success" (the client's
+      // `for await` loop over `AdminSurfaceTurnEvent`s completes normally, `wireLines` stays `[]`, and the
+      // turn finalizes as if nothing were wrong — exactly the reported "HTTP 200, `lines: []`, nothing
+      // rendered, no error shown"). Writing ONE terminal `error` meta-line (`formatErrorLine`, GH #144)
+      // before closing gives `admin-live-runner.ts` something to throw on, routing into the SAME visible
+      // fail() path a non-2xx response already uses. `request.signal.aborted` means the CLIENT is the one
+      // that's gone (a disconnect, not a produce() failure) — nothing left to read it, stays silent.
+      //
+      // The message shown is deliberately NOT the raw caught error in every case: a `ProduceHalt`'s own
+      // text names only closed failure CODES (safe, internal identifiers — SCHEMA/PARSE/FEED_SCOPE/…),
+      // so it crosses verbatim; anything else (e.g. `anthropicProvider`'s upstream-fault message, which
+      // embeds up to 500 raw chars of the provider's own API response body) degrades to a generic,
+      // safe fallback instead — that raw text is exactly the kind of internal detail that must never
+      // reach an end user's chat log.
       if (!request.signal.aborted) {
+        const message = err instanceof ProduceHalt ? err.message : GENERIC_FAILURE_MESSAGE
         try {
-          await writer.write(encoder.encode(JSON.stringify({ a2uiMeta: { note: FAILURE_NOTE } }) + '\n'))
+          await writer.write(encoder.encode(formatErrorLine(message) + '\n'))
         } catch {
-          // the writer itself is broken (e.g. the underlying connection is already gone) — nothing left to do
+          // the writer/stream is already broken (e.g. a genuine client disconnect) — nothing left to signal
         }
       }
     } finally {

@@ -225,9 +225,13 @@ export const GAMES_PLAYBOOKS: readonly NewEntryInput[] = [
     label: 'battle-rounds',
     description: 'alternating-fire board game rounds',
     content:
-      'Two 6×6 board-grid surfaces (yours revealed, theirs hidden): the player fires by clicking a cell ' +
-      '(the action context carries coordinates); resolve, mark the cell, then take YOUR shot and narrate ' +
-      'it in chat. Track ships remaining as Stats; declare victory honestly the moment a fleet is sunk.',
+      // GH #144: the opening turn is ONE board only (theirs — the one the player fires on); yours joins
+      // the turn after the first shot lands. Keeps the heaviest turn of the game inside a small, reliable
+      // self-correct budget instead of asking for 72 cells across two boards at once.
+      'Two 6×6 board-grid surfaces, phased in: turn one is theirs (hidden) ONLY — the player fires by ' +
+      'clicking a cell (the action context carries coordinates); resolve, mark the cell, then take YOUR ' +
+      'shot and narrate it in chat. Add yours (revealed) as a second board from turn two onward. Track ' +
+      'ships remaining as Stats; declare victory honestly the moment a fleet is sunk.',
   },
 ]
 

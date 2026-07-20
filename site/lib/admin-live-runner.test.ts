@@ -1,10 +1,32 @@
 // admin-live-runner.test.ts — ALM-C7 (TKT-0052/ADR-0136): createAdminAgentTurn's fetch-boundary legs.
 // `fetch` is stubbed (no real network, no key) — the feed-live-transport.test.ts stub-fetch precedent.
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createAdminAgentTurn } from './admin-live-runner.ts'
-import type { AdminTurnRequest } from '@agent-ui/app/agent-admin-schema'
+import { createAdminAgentTurn, createAdminSurfaceTurn } from './admin-live-runner.ts'
+import type { AdminTurnRequest, AdminSurfaceTurnRequest } from '@agent-ui/app/agent-admin-schema'
+import { formatErrorLine } from '../../packages/agent-ui/a2ui/src/agent/meta-line.ts'
 
 const REQUEST: AdminTurnRequest = { text: 'hi', system: 'be helpful', model: 'claude-sonnet-5', history: [] }
+
+const SURFACE_REQUEST: AdminSurfaceTurnRequest = {
+  turn: { kind: 'intent', text: "Let's begin the game." },
+  personaSystem: 'You are The Admiral.',
+  model: 'claude-sonnet-5',
+}
+
+function streamOfLines(lines: string[]): ReadableStream<Uint8Array> {
+  const encoder = new TextEncoder()
+  let i = 0
+  return new ReadableStream<Uint8Array>({
+    pull(controller) {
+      if (i < lines.length) {
+        controller.enqueue(encoder.encode(lines[i] + '\n'))
+        i += 1
+      } else {
+        controller.close()
+      }
+    },
+  })
+}
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -27,5 +49,58 @@ describe('createAdminAgentTurn', () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({}), { status: 200 })))
     const turn = createAdminAgentTurn()
     await expect(turn(REQUEST)).rejects.toThrow(/malformed response body/)
+  })
+})
+
+// GH #144: the SURFACE-turn runner's fetch-boundary legs — a 200/ndjson response whose stream carries a
+// transport-composed `error` meta-line (worker/index.ts / dev-proxy-plugin.ts, after produce() halts or
+// faults mid-loop with headers already committed) must surface as a THROWN, visible failure — never a
+// generator that completes normally with an empty line list (the reported "HTTP 200, lines: [], nothing
+// shown" symptom).
+describe('createAdminSurfaceTurn', () => {
+  it('yields validated wire lines and the peeled note on a well-shaped stream', async () => {
+    const lines = [
+      '{"a2uiMeta":{"note":"Firing up the fleet."}}',
+      '{"version":"v1.0","createSurface":{"surfaceId":"s1","catalogId":"agent-ui"}}',
+    ]
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(streamOfLines(lines), { status: 200, headers: { 'content-type': 'application/x-ndjson' } })),
+    )
+    const runner = createAdminSurfaceTurn()
+    const events: string[] = []
+    for await (const event of runner(SURFACE_REQUEST)) events.push(event.kind)
+    expect(events).toEqual(['note', 'line'])
+  })
+
+  it('throws a visible error when the stream carries a transport-composed error meta-line (GH #144 — was a silent empty success)', async () => {
+    const lines = [
+      '{"a2uiMeta":{"progress":{"stage":"retry","round":3}}}',
+      formatErrorLine('produce: no valid surface within the round bound (SCHEMA)'),
+    ]
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(streamOfLines(lines), { status: 200, headers: { 'content-type': 'application/x-ndjson' } })),
+    )
+    const runner = createAdminSurfaceTurn()
+    await expect(
+      (async () => {
+        for await (const _event of runner(SURFACE_REQUEST)) {
+          /* drain */
+        }
+      })(),
+    ).rejects.toThrow(/produce: no valid surface within the round bound \(SCHEMA\)/)
+  })
+
+  it('a non-2xx response throws (never yields a partial)', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ error: 'no-key' }), { status: 503 })))
+    const runner = createAdminSurfaceTurn()
+    await expect(
+      (async () => {
+        for await (const _event of runner(SURFACE_REQUEST)) {
+          /* drain */
+        }
+      })(),
+    ).rejects.toThrow(/503/)
   })
 })

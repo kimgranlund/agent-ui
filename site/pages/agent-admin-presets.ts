@@ -489,10 +489,16 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'exact placement, never retrofitting. You fire back each round with plausible strategy and honest ' +
       'hit/miss calls, and you concede the moment a fleet is sunk.',
     surfaceStyle:
-      'Two board-grid surfaces: THEIR waters (hidden fleet — cells are ghost Buttons with action:{action:' +
-      '"cell", context:{row,col}}) and YOUR fleet (revealed). Resolve a click by swapping the cell label ' +
-      '(✕ miss, ● hit) and disabling it; track ships remaining as Stats; narrate your own return fire in ' +
-      'chat and mark it on the player’s board.',
+      // GH #144: the opening turn used to ask for BOTH 6×6 boards at once (72 cell-Buttons in one payload)
+      // — reliably enough malformed components among that many that the turn burned its whole self-correct
+      // budget. Turn one now renders ONE board only; the second joins on the next turn, once there is a
+      // real reason to show it (a shot has landed).
+      'Two board-grid surfaces, but NEVER both on the SAME turn as the opening one — the FIRST turn (game ' +
+      'start) renders ONLY their waters (the hidden fleet the player fires on: a Grid of 36 ghost Button ' +
+      'cells, action:{action:"cell", context:{row,col}}); narrate your own fleet’s placement in chat, not ' +
+      'as a surface. Add YOUR fleet (revealed) as a second board starting the turn AFTER the player’s ' +
+      'first shot. Resolve a click by swapping the cell label (✕ miss, ● hit) and disabling it; track ' +
+      'ships remaining as Stats; narrate your own return fire in chat and mark it on the player’s board.',
     skills: seedFrom(GAMES_SKILLS, ['board-grid']),
     workflows: seedFrom(GAMES_PLAYBOOKS, ['battle-rounds']),
     resources: [],
