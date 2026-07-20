@@ -64,4 +64,4 @@ esm.sh rewrites the bare `@agent-ui-kit/*` sibling imports for you; pin the vers
 | [`@agent-ui-kit/code`](https://www.npmjs.com/package/@agent-ui-kit/code) | Code + prose: highlighter registry, markdown renderer, source editor |
 | [`@agent-ui-kit/app`](https://www.npmjs.com/package/@agent-ui-kit/app) | App-surface compositions: shells, conversation, agent admin |
 
-MIT © Kim Granlund · [Source](https://github.com/kimgranlund/agent-ui)
+MIT © Kim Granlund · [Docs](https://ui.nonoun.io) · [Source](https://github.com/kimgranlund/agent-ui)
