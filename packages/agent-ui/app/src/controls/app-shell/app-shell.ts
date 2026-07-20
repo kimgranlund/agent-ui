@@ -29,8 +29,9 @@
 //     landmark (a2ui-live's chat composer needed `region="navigation"`'s LEFT COLUMN with a `complementary`
 //     landmark, not `navigation`'s). `internals.role = this.landmark || REGION_ROLE[this.region]`.
 //   - `collapse` (ADR-0084) governs narrow-reflow behaviour PER region: `hide` (default, today's
-//     `display:none`) or `stack` (stays visible, spans the full column) — so a region carrying essential,
-//     interactive content (the same composer) does not vanish narrow. `toggle` is a RESERVED future value.
+//     `display:none`), `stack` (stays visible, spans the full column) — so a region carrying essential,
+//     interactive content (the same composer) does not vanish narrow — or `toggle` (a user-driven
+//     collapse/restore affordance, realized M4 Phase 2 / LLD-C11, `COLLAPSE_VALUES` below).
 //
 // Content model — both elements are host-as-{grid,block} over their light-DOM children: neither `render()`s a
 // wrapper, so `render()` stays the inherited no-op and the agent's composed children are never clobbered.
