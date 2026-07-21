@@ -3,7 +3,8 @@
 // and the tabs narrow arm. Drive mechanism for the drag leg: the SPEC-R3 INSTRUMENT-BRIDGE (ui-split's
 // own split.browser.test.ts precedent) — synthetic `dispatchEvent(new PointerEvent(...))` with
 // `setPointerCapture` stubbed to a no-op (a synthetic PointerEvent is not an active pointer).
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, beforeAll, afterAll } from 'vitest'
+import { userEvent, page } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css'
 import './super-shell.css'
 import { UISuperShellElement } from './super-shell.ts'
@@ -219,5 +220,93 @@ describe('ui-super-shell — SPEC-R6c/AC12 bounds', () => {
     sep.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }))
     await el.updateComplete
     expect(el.scrollWidth, 'driven back to Home (min pane size)').toBeLessThanOrEqual(el.clientWidth + 1)
+  })
+})
+
+// ── GH #182 regression pin — the pane-resizer's THREE decoupled visual states ───────────────────────
+// The original bug: a real engine renders no jsdom probe can see (background/outline computed paint).
+// This is the permanent gate against the exact gate-blindness that let the solid full-height primary
+// slab ship green — `component-reviewer` finding, ui:component-reviewer review of GH #182's fix.
+//
+// Viewport (ADR-0150 cl.5, the text.browser.test.ts/menu.browser.test.ts precedent): this file's own
+// mount() sizes the shell at 900px so the resizer sits in WIDE mode (SPEC-R4's ≥40rem/640px line) — past
+// the fleet's default 414×896 harness viewport. `getBoundingClientRect()` numbers are viewport-independent
+// (position:fixed geometry resolves regardless), but a REAL `userEvent.hover()`/`.focus()` needs the
+// target actually on-screen for Playwright's actionability — so this describe ONLY widens the viewport,
+// then restores the fleet default for any file content appended after it.
+describe('ui-super-shell — pane-resizer visual states (GH #182 regression pin)', () => {
+  beforeAll(async () => {
+    await page.viewport(1024, 600)
+  })
+  afterAll(async () => {
+    await page.viewport(414, 896) // restore the fleet default (ADR-0150 cl.5)
+  })
+
+  it('rest vs hover: the hover/drag fill is a real repaint off the resting ink', async () => {
+    const { el } = mount()
+    await el.updateComplete
+    const sep = el.querySelector('[data-part="pane-resizer"][data-side="end"]') as HTMLElement
+    const restBg = getComputedStyle(sep).backgroundColor
+
+    await userEvent.hover(sep)
+    const hoverBg = getComputedStyle(sep).backgroundColor
+    await userEvent.unhover(sep)
+
+    expect(restBg, 'the resting ink must differ from the hover/drag fill').not.toBe(hoverBg)
+  })
+
+  it('focus-visible draws a thin ring but never ALSO fills the background (the GH #182 slab)', async () => {
+    const { el } = mount()
+    await el.updateComplete
+    const sep = el.querySelector('[data-part="pane-resizer"][data-side="end"]') as HTMLElement
+    const restBg = getComputedStyle(sep).backgroundColor
+
+    await userEvent.hover(sep)
+    const hoverBg = getComputedStyle(sep).backgroundColor
+    await userEvent.unhover(sep)
+    expect(restBg, 'the fixture must be meaningful: rest and hover must genuinely differ').not.toBe(hoverBg)
+
+    sep.focus()
+    await expect.poll(() => sep.matches(':focus-visible')).toBe(true)
+
+    const cs = getComputedStyle(sep)
+    expect(cs.backgroundColor, 'GH #182 regression: a focused-but-not-hovered resizer must stay the resting ink, not the hover fill').toBe(restBg)
+    expect(cs.backgroundColor, 'the focused background must not be the hover/drag fill either').not.toBe(hoverBg)
+    expect(cs.outlineStyle, 'no focus-visible outline drawn').toBe('solid')
+    expect(Number.parseFloat(cs.outlineWidth), 'the focus outline width is zero').toBeGreaterThan(0)
+
+    sep.blur()
+  })
+
+  it('the focus outline resolves the DEDICATED --md-sys-color-focus-ring token, never --md-sys-color-primary reused', async () => {
+    const { el } = mount()
+    // --md-sys-color-primary and --md-sys-color-focus-ring are both light-dark() roles that COINCIDE in
+    // light mode by design (ADR-0009's dedicated-role tokens.test.ts pins) — forcing dark scheme is what
+    // makes them diverge (primary-450 vs primary-400), so only here can a probe tell the two apart.
+    el.style.colorScheme = 'dark'
+    await el.updateComplete
+    const sep = el.querySelector('[data-part="pane-resizer"][data-side="end"]') as HTMLElement
+
+    const probePrimary = document.createElement('span')
+    probePrimary.style.background = 'var(--md-sys-color-primary)'
+    sep.append(probePrimary)
+    const primaryDark = getComputedStyle(probePrimary).backgroundColor
+    probePrimary.remove()
+
+    const probeRing = document.createElement('span')
+    probeRing.style.background = 'var(--md-sys-color-focus-ring)'
+    sep.append(probeRing)
+    const ringDark = getComputedStyle(probeRing).backgroundColor
+    probeRing.remove()
+
+    expect(ringDark, 'the two dark-mode swatches must genuinely differ for this probe to be meaningful').not.toBe(primaryDark)
+
+    sep.focus()
+    await expect.poll(() => sep.matches(':focus-visible')).toBe(true)
+    const outlineColor = getComputedStyle(sep).outlineColor
+    expect(outlineColor, 'the outline must resolve --md-sys-color-focus-ring').toBe(ringDark)
+    expect(outlineColor, 'the outline must NOT resolve --md-sys-color-primary directly').not.toBe(primaryDark)
+
+    sep.blur()
   })
 })
