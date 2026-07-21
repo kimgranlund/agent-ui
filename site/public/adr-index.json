@@ -1076,5 +1076,12 @@
     "description": "**The shell family goes responsive as a system: a two-line band ladder — SHELLCOMPACTBREAKPOINT_REM = 52.5 (ADR-0150's own number, container-side) joins the 40…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0156",
+    "url": "./adr-index.html#adr-0156",
+    "description": "ui-app-shell/ui-app-shell-region are DEPRECATED in favor of the ui-super-shell archetype family — the shell-archetypes LLD §7 fork ruled Option C (proposed — K…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

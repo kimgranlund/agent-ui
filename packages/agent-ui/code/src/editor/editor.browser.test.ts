@@ -113,7 +113,13 @@ describe('ui-code-editor — source mode is monospace, richtext mode is the flee
   })
 
   it('an inline code span inside richtext STAYS monospace (.rt-code) even though the surrounding prose is sans', async () => {
-    const { field } = mount(`<ui-code-editor language="markdown" mode="richtext" value="text \`code\` more" ${SIZED}></ui-code-editor>`)
+    const { field } = mount(`<ui-code-editor language="markdown" mode="richtext" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    // the caret must park AWAY from the code span's line — a revealed construct renders raw with no
+    // styling class under the GH #165 either/or, so a single-line fixture would never decorate at all.
+    field.value = 'text `code` more\n\npark here'
+    await expect.poll(() => cmContentOf(field)?.textContent?.includes('park'), { timeout: 2000 }).toBe(true)
+    field.selectToEnd()
     await expect.poll(() => field.querySelector('.rt-code') !== null, { timeout: 5000 }).toBe(true)
     expect(getComputedStyle(field.querySelector('.rt-code')!).fontFamily.toLowerCase()).toContain('monospace')
   })
@@ -318,21 +324,28 @@ describe('ui-code-editor — richtext mode mounts + reconfigures the LIVE view (
     const { field } = mount(`<ui-code-editor language="markdown" ${SIZED}></ui-code-editor>`)
     await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
 
+    // Two lines, caret ending on the SECOND — the heading must be UNREVEALED for its decoration to exist
+    // at all under the GH #165 either/or (a revealed construct now renders raw source with NO rt-* class).
     await userEvent.click(cmContentOf(field) as HTMLElement)
-    await userEvent.keyboard('## Heading')
-    await expect.poll(() => field.value, { timeout: 2000 }).toBe('## Heading')
+    await userEvent.keyboard('## Heading{Enter}tail')
+    await expect.poll(() => field.value, { timeout: 2000 }).toBe('## Heading\ntail')
 
     field.mode = 'richtext'
     await expect.poll(() => field.querySelector('.rt-h2') !== null, { timeout: 2000 }).toBe(true)
-    expect(field.value, 'the document must not change across a mode reconfigure').toBe('## Heading')
+    expect(field.value, 'the document must not change across a mode reconfigure').toBe('## Heading\ntail')
 
     field.mode = 'source'
     await expect.poll(() => field.querySelector('.rt-h2'), { timeout: 2000 }).toBeNull()
-    expect(field.value).toBe('## Heading')
+    expect(field.value).toBe('## Heading\ntail')
 
-    // undo still reaches the pre-toggle edit — the Compartment reconfigure never resets history (ADR-0147 cl.2)
+    // undo still reaches the pre-toggle edits — the Compartment reconfigure never resets history (ADR-0147
+    // cl.2). The typed burst may split into several undo groups (the Enter breaks adjacency), so undo
+    // repeatedly — REACHING '' at all is the proof; a reset history would stay stuck at the post-toggle text.
     await userEvent.click(cmContentOf(field) as HTMLElement)
-    await userEvent.keyboard(modKey('z'))
+    for (let i = 0; i < 8 && field.value !== ''; i++) {
+      await userEvent.keyboard(modKey('z'))
+      await new Promise((r) => setTimeout(r, 50))
+    }
     await expect.poll(() => field.value, { timeout: 2000 }).toBe('')
   })
 
@@ -410,35 +423,64 @@ describe('ui-code-editor — richtext construct decorations (ADR-0147 n5, both e
   })
 })
 
-describe('ui-code-editor — reveal-near-cursor (ADR-0147 n6, both engines)', () => {
-  it('the cursor on the heading line reveals its raw ## (styling stays); moving away hides it again', async () => {
+describe('ui-code-editor — reveal-near-cursor (ADR-0147 n6, as amended 2026-07-20 for GH #165, both engines)', () => {
+  it('the cursor on the heading line reveals its raw ## with NO styling (the either/or); moving away restores styling and hides the marker', async () => {
     const { field } = mount(`<ui-code-editor language="markdown" mode="richtext" ${SIZED}></ui-code-editor>`)
     await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
     field.value = RICHTEXT_SEED
     await expect.poll(() => cmContentOf(field)?.textContent?.includes('Title'), { timeout: 2000 }).toBe(true)
 
-    // CM's default initial selection sits at document position 0 — ON the heading's own line.
-    await expect.poll(() => field.querySelector('.rt-h2') !== null, { timeout: 2000 }).toBe(true)
+    // CM's default initial selection sits at document position 0 — ON the heading's own line. The
+    // decoration pass has observably run once an UNREVEALED construct (the bold two lines down) decorates.
+    await expect.poll(() => field.querySelector('.rt-strong') !== null, { timeout: 2000 }).toBe(true)
     expect(cmContentOf(field)?.textContent, 'the cursor sits on the heading line — its marker must reveal').toContain('##')
-    expect(field.querySelector('.rt-h2'), 'styling stays applied even while the line is revealed').not.toBeNull()
+    expect(field.querySelector('.rt-h2'), 'a revealed line renders RAW SOURCE ONLY — no styling class (GH #165)').toBeNull()
 
-    // move the caret to the trailing paragraph — a DIFFERENT line — the marker hides again, styling stays.
+    // move the caret to the trailing paragraph — a DIFFERENT line — the marker hides again AND styling returns.
     field.selectToEnd()
     await expect.poll(() => !cmContentOf(field)?.textContent?.includes('##'), { timeout: 2000 }).toBe(true)
-    expect(field.querySelector('.rt-h2')).not.toBeNull()
+    expect(field.querySelector('.rt-h2'), 'an unrevealed line has styling and NO visible marks').not.toBeNull()
   })
 
-  it('a multi-line selection reveals every intersected line', async () => {
+  it('a multi-line selection reveals every intersected line — marks visible, styling suppressed (GH #165)', async () => {
     const { field } = mount(`<ui-code-editor language="markdown" mode="richtext" ${SIZED}></ui-code-editor>`)
     await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
     field.value = '> line one\n> line two\n\nplain tail'
     await expect.poll(() => cmContentOf(field)?.textContent?.includes('tail'), { timeout: 2000 }).toBe(true)
     field.selectToEnd()
     await expect.poll(() => !cmContentOf(field)?.textContent?.includes('>'), { timeout: 2000 }).toBe(true)
+    expect(field.querySelectorAll('.rt-quote-line'), 'unrevealed quote lines carry the styling class').toHaveLength(2)
 
-    // select the WHOLE document (both quote lines) — both QuoteMarks must reveal.
+    // select the WHOLE document (both quote lines) — both QuoteMarks must reveal AND both quote-line
+    // styling classes must drop (marks visible ⇒ no styling, never both at once).
     await userEvent.keyboard(modKey('a'))
     await expect.poll(() => (cmContentOf(field)?.textContent?.match(/>/g) ?? []).length, { timeout: 2000 }).toBe(2)
+    expect(field.querySelectorAll('.rt-quote-line'), 'a revealed quote line must lose its styling class').toHaveLength(0)
+  })
+
+  it('the either/or invariant holds for every inline construct: a revealed line = marks visible + NO styling; an unrevealed line = styling + NO visible marks (GH #165)', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" mode="richtext" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    // the inline-construct line is LAST so selectToEnd() parks the caret ON it (revealing it) while the
+    // heading above stays unrevealed — both directions of the invariant proven in one document.
+    field.value = '## Title\n\n**bold** _em_ `code` [go](https://example.com/test)'
+    await expect.poll(() => cmContentOf(field)?.textContent?.includes('bold'), { timeout: 2000 }).toBe(true)
+    field.selectToEnd()
+
+    // the unrevealed heading keeps the richtext presentation: styled, no marks.
+    await expect.poll(() => field.querySelector('.rt-h2') !== null, { timeout: 2000 }).toBe(true)
+    const text = (): string => cmContentOf(field)?.textContent ?? ''
+    expect(text(), 'the unrevealed heading hides its marker').not.toContain('##')
+
+    // the revealed line is raw source ONLY: every mark visible, every styling class absent.
+    expect(text()).toContain('**bold**')
+    expect(text()).toContain('_em_')
+    expect(text()).toContain('`code`')
+    expect(text(), 'a revealed link shows its full raw form, URL included').toContain('[go](https://example.com/test)')
+    expect(field.querySelector('.rt-strong'), 'revealed strong must carry NO styling class').toBeNull()
+    expect(field.querySelector('.rt-emphasis'), 'revealed emphasis must carry NO styling class').toBeNull()
+    expect(field.querySelector('.rt-code'), 'revealed inline code must carry NO styling class').toBeNull()
+    expect(field.querySelector('.rt-link'), 'revealed link must carry NO styling class').toBeNull()
   })
 })
 
@@ -446,7 +488,10 @@ describe('ui-code-editor — link activation (ADR-0147 n7, both engines)', () =>
   it('Cmd/Ctrl+click on a decorated link opens via safeHref, with LINK_TARGET/LINK_REL exactly (code-review finding 2); a plain click does NOT open', async () => {
     const { field } = mount(`<ui-code-editor language="markdown" mode="richtext" ${SIZED}></ui-code-editor>`)
     await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
-    field.value = '[go](https://example.com/test) tail'
+    // the caret parks on the trailing line — a revealed link renders raw with no .rt-link (GH #165).
+    field.value = '[go](https://example.com/test) tail\n\npark here'
+    await expect.poll(() => cmContentOf(field)?.textContent?.includes('park'), { timeout: 2000 }).toBe(true)
+    field.selectToEnd()
     await expect.poll(() => field.querySelector('.rt-link') !== null, { timeout: 2000 }).toBe(true)
 
     const opened: string[][] = []
@@ -489,7 +534,10 @@ describe('ui-code-editor — link activation (ADR-0147 n7, both engines)', () =>
   ])('refuses a %s scheme link — parity with the old isSafeUrl refusal behavior (R2)', async (url) => {
     const { field } = mount(`<ui-code-editor language="markdown" mode="richtext" ${SIZED}></ui-code-editor>`)
     await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
-    field.value = `[bad](${url}) tail`
+    // the caret parks on the trailing line — a revealed link renders raw with no .rt-link (GH #165).
+    field.value = `[bad](${url}) tail\n\npark here`
+    await expect.poll(() => cmContentOf(field)?.textContent?.includes('park'), { timeout: 2000 }).toBe(true)
+    field.selectToEnd()
     await expect.poll(() => field.querySelector('.rt-link') !== null, { timeout: 2000 }).toBe(true)
 
     let opened = 0
@@ -618,8 +666,9 @@ describe('ui-code-editor — richtext CSS + a11y (ADR-0147 n9, both engines)', (
     const { field } = mount(`<ui-code-editor language="markdown" mode="richtext" ${SIZED}></ui-code-editor>`)
     await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
     field.value = '## Title\n\nplain paragraph for the cursor to park on'
+    await expect.poll(() => cmContentOf(field)?.textContent?.includes('paragraph'), { timeout: 2000 }).toBe(true)
+    field.selectToEnd() // park the caret away first — a revealed heading now renders raw with NO styling (GH #165)
     await expect.poll(() => field.querySelector('.rt-h2') !== null, { timeout: 2000 }).toBe(true)
-    field.selectToEnd()
     await expect.poll(() => !cmContentOf(field)?.textContent?.includes('##'), { timeout: 2000 }).toBe(true)
 
     if (server.browser !== 'chromium') {
@@ -865,5 +914,72 @@ describe('ui-code-editor — paste-to-link (both engines)', () => {
     await expect
       .poll(() => field.value, { timeout: 2000 })
       .toBe('[click here](https://example.com/%29[evil]%28javascript:alert%281%29%29)')
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  GH #164 — the mode-toggle is a zero-footprint STICKY OVERLAY on the top inline-end corner, not a
+//  float. Measured ground truth (both engines, 2026-07-20): `float: inline-end` + `position: sticky`
+//  DO coexist (H1 false — dropping sticky changed nothing), but CodeMirror's `.cm-editor` is a flex
+//  container and `.cm-scroller` an `overflow: auto` box — independent formatting-context roots a float
+//  can never intrude into (H2 true) — so the float could never make text wrap around the toggle; it
+//  instead narrowed the ENTIRE `.cm-editor` column by the toggle's width for the full document height
+//  (273px vs the mount's 297px at a 320px host). Wrap-around is structurally unachievable while CM owns
+//  the text layout; the shipped contract is the corner overlay the float (+ sticky) always intended.
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-code-editor — the mode-toggle is a zero-footprint corner overlay (GH #164, both engines)', () => {
+  it('overlays the top inline-end corner reserving NO column and NO row, hit-testable above the CM surface', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" ${SIZED}></ui-code-editor>`)
+    field.value = Array.from({ length: 12 }, (_, i) => `line ${i} with prose that runs fairly wide`).join('\n')
+    await expect.poll(() => field.querySelector('[data-part="mode-toggle"]') !== null, { timeout: 5000 }).toBe(true)
+    await expect.poll(() => field.querySelector('.cm-line') !== null, { timeout: 5000 }).toBe(true)
+    const toggle = field.querySelector('[data-part="mode-toggle"]') as HTMLElement
+    const cm = cmOf(field) as HTMLElement
+    const cmEditor = field.querySelector('.cm-editor') as HTMLElement
+
+    // the float is GONE (it never delivered wrap-around — see the banner above); sticky is the contract.
+    expect(getComputedStyle(toggle).float, 'float is dead here — it can never wrap CM-owned text').toBe('none')
+    expect(getComputedStyle(toggle).position).toBe('sticky')
+
+    const t = toggle.getBoundingClientRect()
+    const c = cm.getBoundingClientRect()
+    const e = cmEditor.getBoundingClientRect()
+    const host = field.getBoundingClientRect()
+    const cs = getComputedStyle(field)
+
+    // pinned to the top inline-end corner of the host's content box (LTR: the right padding edge)…
+    const contentRight = host.right - parseFloat(cs.borderRightWidth) - parseFloat(cs.paddingRight)
+    expect(Math.abs(t.right - contentRight), 'the toggle must hug the inline-end edge').toBeLessThan(2)
+    // …reserving NO row: the CM mount starts at the same block-start, not below the toggle.
+    expect(Math.abs(t.top - c.top), 'the toggle must not push the editor content down').toBeLessThan(2)
+    // …and NO column: the .cm-editor spans its mount's FULL inline size. The old float narrowed the whole
+    // .cm-editor beside it for the entire document height (measured 273 vs 297 at a 320px host) — the exact
+    // pre-fix defect this leg is the negative control for.
+    expect(e.width, 'the editor column must reclaim the full mount width — no dead toggle gutter').toBeGreaterThan(c.width - 2)
+
+    // the overlay paints + hit-tests ABOVE the CM surface (z-index: 1 over .cm-scroller's z-index: 0 —
+    // the scroller is a LATER positioned sibling subtree in tree order, so without the z-index it would
+    // paint over the toggle now that they genuinely overlap).
+    const hit = document.elementFromPoint(t.left + t.width / 2, t.top + t.height / 2)
+    expect(hit, 'the toggle must stay clickable above the CM surface').toBe(toggle)
+  })
+
+  it('stays stuck to the scrollport top while the host scrolls (the sticky leg of the contract)', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" style="inline-size: 320px; block-size: 160px; display: block"></ui-code-editor>`)
+    field.value = Array.from({ length: 40 }, (_, i) => `scroll line ${i}`).join('\n')
+    await expect.poll(() => field.querySelector('[data-part="mode-toggle"]') !== null, { timeout: 5000 }).toBe(true)
+    await expect.poll(() => field.querySelector('.cm-line') !== null, { timeout: 5000 }).toBe(true)
+    const toggle = field.querySelector('[data-part="mode-toggle"]') as HTMLElement
+
+    field.scrollTop = 100
+    await new Promise((r) => requestAnimationFrame(() => r(null)))
+    expect(field.scrollTop, 'the host itself is the scroller — it must actually have scrolled').toBeGreaterThan(50)
+    const t = toggle.getBoundingClientRect()
+    const host = field.getBoundingClientRect()
+    // stuck at the scrollport's block-start (inset-block-start: 0 — at/inside the border edge), NOT
+    // scrolled away with the content (100px up would put it far above the host's top edge).
+    expect(t.top - host.top).toBeGreaterThanOrEqual(0)
+    expect(t.top - host.top, 'the toggle must stick to the scrollport top, not ride the content away').toBeLessThan(10)
   })
 })

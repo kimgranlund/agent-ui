@@ -79,9 +79,22 @@ const FOCUS_TIMING_FILES = [
   'packages/agent-ui/code/src/markdown/markdown.browser.test.ts',
   'packages/agent-ui/components/src/controls/swiper/swiper.browser.test.ts',
   'packages/agent-ui/components/src/controls/textarea/textarea.browser.test.ts',
+  // 2026-07-20 append (the GH #56 one-line-append law): the real-timer pause-on-hover leg timed out
+  // repeatedly across the day's PR gate runs whenever a SIBLING worktree's suite ran concurrently on the
+  // same machine (measured at least 3 independent runs), then passed solo every time (20/20 both engines)
+  // — the class signature exactly (real-duration wall-clock timing under concurrent-page contention, not
+  // a component regression).
+  'packages/agent-ui/components/src/controls/toast/toast.browser.test.ts',
   'packages/agent-ui/components/src/controls/toolbar/toolbar.browser.test.ts',
   'packages/agent-ui/components/src/controls/tooltip/tooltip.browser.test.ts',
   'site/pages/a2ui-chat.browser.test.ts',
+  // 2026-07-20 append: both timed out under shard contention in PR #175's independent-reviewer gate run
+  // (the PR's own body flagged them as GH #56-class candidates) and in multiple other same-day gate runs;
+  // both pass solo every time. command-palette drives real mod+K focus + typed narrowing; adr-index
+  // drives a real click-to-focus + real keystrokes into the dogfooded ui-text-field — real-input
+  // focus/timing races under concurrent-page load, the class this project exists for.
+  'site/lib/command-palette.browser.test.ts',
+  'site/pages/adr-index.browser.test.ts',
 ]
 
 export default defineConfig({

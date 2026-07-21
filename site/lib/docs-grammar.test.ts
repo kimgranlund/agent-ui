@@ -146,7 +146,9 @@ describe('STRUCTURAL — S5-S8 (promoted at Phase 5, manifest M7-M10)', () => {
     // 151: reserved by PR #45's ADR-0151 (shell archetypes M5, unmerged on branch
     // adr-0150-shell-archetypes-intake) — this branch's own live-agent-Worker ADR claimed 0151 first
     // in-worktree and was renumbered to 0152 on discovering the collision, leaving this gap until #45 merges.
-    const KNOWN_GAPS = new Set([108, 151])
+    // 155: reserved by PR #183's ADR-0155 (shell responsive band ladder, in-flight 2026-07-20) —
+    // ADR-0156 (app-shell deprecation) skipped it to avoid the merge collision, leaving this gap until #183 merges.
+    const KNOWN_GAPS = new Set([108, 151, 155])
     const nums = readdirSync(`${DOCS}/adr`).map((f: string) => /^(\d{4})-/.exec(f)?.[1]).filter(Boolean).map(Number).sort((a: number, b: number) => a - b) as number[]
     const newGaps: number[] = []
     for (let n = nums[0]!; n <= nums[nums.length - 1]!; n++)

@@ -195,6 +195,14 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
     expect(round2.some((m) => m.role === 'assistant' && m.content.includes('NotARealComponent'))).toBe(true)
     expect(round2.some((m) => m.role === 'user' && /INVALID/i.test(m.content))).toBe(true)
     expect(round2.length).toBeGreaterThan(reqs()[0]!.messages.length) // round 2 has strictly more turns than round 1
+
+    // GH #174: the feedback must ALSO pin the note's audience — the meta-line `note` (ADR-0088 §1) is the
+    // user-visible chat reply, and without this instruction a compliant model narrates the correction IN
+    // the note ("Re-emitting the corrected, validated JSONL…", observed live). The STRING content is what
+    // is unit-testable here; model compliance is not.
+    const feedback = round2.find((m) => m.role === 'user' && /INVALID/i.test(m.content))!
+    expect(feedback.content).toMatch(/"note" must still address the USER in persona/)
+    expect(feedback.content).toMatch(/never mention this correction/)
   })
 
   it('the authoritative opts.model WINS over a client-supplied input.model (SPEC-R12 trust boundary)', async () => {
