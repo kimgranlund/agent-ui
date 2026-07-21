@@ -1069,5 +1069,12 @@
     "description": "The shell-archetype grammar gains resizable inner panes (SPEC-R6) + pane segments and a tab-based narrow-collapse arm (SPEC-R7) under a grammar-level visibilit…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0156",
+    "url": "./adr-index.html#adr-0156",
+    "description": "ui-app-shell/ui-app-shell-region are DEPRECATED in favor of the ui-super-shell archetype family — the shell-archetypes LLD §7 fork ruled Option C (proposed — K…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
