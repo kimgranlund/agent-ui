@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-20 *(authored)* |
 > | **Proposed by** | appshell-packet seat (the shell-archetypes-m5 LLD §7 fork revisit — Kim's ruling, 2026-07-20, in-session batched question round: **Option C**, overriding the §7.1 packet's A+B′ recommendation) |
-> | **Ratified by** | *(pending — Kim flips, via the in-tree hand-edit or a `ratify ADR-0156` GitHub utterance per [ADR-0149](./0149-pr-native-adr-ratification.md))* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-07-21, via the [`ratify ADR-0156` utterance](https://github.com/kimgranlund/agent-ui/pull/187#issuecomment-5033533509) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | [`../lld/shell-archetypes-m5.lld.md`](../lld/shell-archetypes-m5.lld.md) §7 (the open fork → resolved Option C; §7.1 carries the evidence base this record cites) |
 > | **Supersedes / Superseded by** | Supersedes [ADR-0082](./0082-app-shell-per-instance-isolation.md) *(in full — the isolation capability retires with the component, not ported)* · Supersedes (partial) [ADR-0083](./0083-app-shell-region-role-decouple.md) + [ADR-0084](./0084-app-shell-narrow-reflow-collapse.md) *(their `ui-app-shell` mechanisms retire; the ratified PATTERNS live on as family law in the super-shell grammar — see clause 3)* · Relates [ADR-0151](./0151-named-shell-archetypes-m5.md) / [ADR-0154](./0154-shell-grammar-resizable-pane-tab-collapse.md) (the archetype family everything consolidates onto) |
 
