@@ -5,20 +5,21 @@ description: |
   ONE multi-seat campaign (plan → build → review → integrate) in its own context so the host stays
   lean: every substantive production or analysis task is dispatched to the seat that owns it; this
   seat keeps only routing, dispatch briefs, and verification of returned evidence. In the agent-ui
-  repo this seat SUPERSEDES the generic orchestration:orchestration-coordinator — it carries the
+  repo this seat SUPERSEDES the generic teamwork:team-lead — it carries the
   repo's seat map and standing dispatch laws (preloaded). Use PROACTIVELY when a task spans multiple
   seats, slices, or contexts — a feature needing design + build + review, a fleet-wide sweep with
   fixes, a parallel multi-slice build. It orchestrates; it produces NO artifacts (no Write/Edit;
   Bash scoped to glue + the revert-first duty). NOT for work a single seat can hold — dispatch that
-  seat directly, no middleman; NOT for reviewing one artifact (the owning *-reviewer seat); NOT for
-  the abstract solo-vs-team question (orchestration-design doctrine, answered inline); NOT for
+  seat directly, no middleman; NOT for reviewing one artifact (the owning critic seat — *-checker /
+  a2ui-reviewer); NOT for
+  the abstract solo-vs-team question (team-or-solo-rules doctrine, answered inline); NOT for
   user-facing forks — it cannot reach the user, so it returns OPEN forks in its report instead of
   deciding them.
 
   <example>
   user: "Ship the ui-badge control end to end: design intake, build, review, docs page."
   assistant: "Dispatching the orchestrator seat — it routes component-builder,
-  ui:component-reviewer, and docs-writer as one campaign and rolls up the evidence."
+  screens:component-checker, and teamwork:docs-writer as one campaign and rolls up the evidence."
   </example>
 tools: Read, Grep, Glob, Bash, Task
 model: sonnet

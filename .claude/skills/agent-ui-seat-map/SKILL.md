@@ -14,16 +14,16 @@ disable-model-invocation: true
 
 | Artifact class | Maker seat | Critic seat |
 |---|---|---|
-| ui-* control source / CSS / geometry | `component-builder` | `ui:component-reviewer` (NON-optional before a control-wave commit) |
+| ui-* control source / CSS / geometry | `component-builder` | `screens:component-checker` (NON-optional before a control-wave commit) |
 | `@agent-ui/a2ui` package / renderer / catalog code | `a2ui-builder` | `a2ui-reviewer` |
 | A2UI payload composition (message streams) | `a2ui-composer` | `a2ui-reviewer` |
-| Docs-site pages / shell / non-preview prose | `orchestration:docs-writer` | `orchestration:code-reviewer` |
+| Docs-site pages / shell / non-preview prose | `teamwork:docs-writer` | `teamwork:code-checker` |
 | Preview specimens + knobs in `site/lib/component-preview.ts` | `example-builder` | host judges representativeness |
-| Color / dimension tokens | `color:token-builder` | `ui:component-reviewer` (consuming control) |
-| PRD / SPEC / LLD / ADR authoring | `orchestration:system-planner` | `scribe:doc-reviewer` |
-| Non-UI code diffs / slices | `orchestration:system-builder` | `orchestration:code-reviewer` |
+| Color / dimension tokens | `color:token-builder` | `screens:component-checker` (consuming control) |
+| PRD / SPEC / LLD / ADR authoring | `teamwork:planner` | `docs:doc-checker` |
+| Non-UI code diffs / slices | `teamwork:builder` | `teamwork:code-checker` |
 | Broad searches / codebase questions | `Explore` (read-only, conclusions not dumps) | — |
-| Measured experiment loops (regressions, tuning, stress) | `scribe:researcher` | host verifies the report |
+| Measured experiment loops (regressions, tuning, stress) | `docs:experiment-runner` | host verifies the report |
 
 `example-builder` and `docs-writer` share `component-preview.ts` by concern — never dispatch both
 onto that file concurrently.
