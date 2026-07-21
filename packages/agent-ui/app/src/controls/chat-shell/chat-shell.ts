@@ -32,7 +32,7 @@ import { UISuperShellElement } from '../super-shell/super-shell.ts'
 // forwards onto its composed ui-super-shell. Raw attribute forwarding, not new typed props of this
 // element's own (chat-shell.md's "zero new API surface" stays true — a consumer sets these on the
 // OUTER element exactly as if it were the inner shell; this element owns no reactive copy of them).
-const FORWARD_ATTRS = ['resizable-end', 'size-end', 'narrow-end', 'narrow-start', 'resizable-start', 'size-start'] as const
+const FORWARD_ATTRS = ['resizable-end', 'size-end', 'narrow-end', 'narrow-start', 'resizable-start', 'size-start', 'collapse-band'] as const
 
 export class UIChatShellElement extends UIElement {
   // No API surface of its own (chat-shell.md) — declared explicitly so the descriptor's contract↔props

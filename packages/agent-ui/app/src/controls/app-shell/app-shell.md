@@ -142,3 +142,17 @@ children, each of which sets its own role through `ElementInternals` (never a ho
 `forced-colors` block keeps the region dividers a system colour so the chrome structure stays legible under
 high-contrast mode — in **both** light and isolated mode: the isolated shadow mirror carries the identical
 divider + forced-colors rules, `:host`-scoped, so opting into style isolation never regresses SPEC-R7.
+
+## Dispositions vs. the ui-super-shell family responsive system (GH #170 / ADR-0155 clause 5)
+
+Two capabilities the `ui-super-shell` family gained under ADR-0155 are **deliberately NOT adopted** here —
+named so the absence reads as a decision, not an omission (the build's `git diff --stat` shows zero hunks in
+`app-shell.{ts,css}`):
+
+- **The scrollbar seam (SPEC-R10) is vacuous here.** `ui-app-shell` owns **no** scroll region of its own —
+  each region's scroll is consumer content, and `app-shell.css` declares no overflow scroller (verified). There
+  is nothing for a `--ui-*-scrollbar-width` seam to hide, so none is added.
+- **menu⇄X (SPEC-R9b) does not apply to the region-local disclosure.** The `app-surfaces-m4.lld.md` LLD-C11
+  `collapse="toggle"` Show/Hide affordance is a **region-local** disclosure, a different altitude from a header
+  **side** toggle that hides a whole side and restores it as an overlay. The menu⇄X glyph law governs the
+  latter; adopting it for a region's own Show/Hide control would conflate the two altitudes, so it is not.

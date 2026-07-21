@@ -12,9 +12,9 @@ extends: UIElement      # structural — NOT form-associated; the rail carries n
 attributes:              # attributes-as-API — mirrors nav-rail.ts `static props`
   - name: collapse
     type: enum
-    values: [menu, drill-in, icon-popover]
+    values: [menu, drill-in, icon-popover, none]
     default: menu
-    reflect: true         # the [collapse=…] CSS branches (nav-rail.css) + the CONSUMER's own narrow-behavior choice; out-of-set/unset coerces to `menu` (values[0] fallback, SPEC-R1 AC2)
+    reflect: true         # the [collapse=…] CSS branches (nav-rail.css) + the CONSUMER's own narrow-behavior choice; out-of-set/unset coerces to `menu` (values[0] fallback, SPEC-R1 AC2). `none` (GH #170/ADR-0155) = a plain never-collapsing vertical rail, for a consumer whose SHELL owns the narrow hide/overlay (the docs site).
   - name: collapseContainer
     type: enum
     values: [self, ancestor]
@@ -89,7 +89,7 @@ data-prop pair (ADR-0130 cl.3). Both shipped consumers construct this programmat
 source. No children ⇒ an empty rail, never a throw; children appended after connect are picked up by the
 role-derivation `MutationObserver` (SPEC-R2 AC2).
 
-## `collapse` — the three dispositions
+## `collapse` — the four dispositions
 
 - **`menu`** (default) — wide: the full grouped list. Narrow (below the rail's own `40rem` container-width
   threshold): collapses into a `<details>` disclosure naming the current item, opening a dropdown overlay on
@@ -100,6 +100,11 @@ role-derivation `MutationObserver` (SPEC-R2 AC2).
 - **`icon-popover`** — items render icon-only; a `ui-nav-rail-group` with 2+ items discloses them via an
   internally-composed `ui-menu` (roving focus, commit-and-close, dismissal — inherited wholesale). At most
   one group's menu is open at a time (ADR-0130 cl.6).
+- **`none`** (GH #170/ADR-0155) — the plain grouped vertical list at EVERY band: no `<details>` disclosure,
+  no icon-popover, no drill-in anatomy. For a consumer whose OWN container owns the narrow behavior — e.g.
+  the docs site, where `ui-super-shell` (`collapse-band="compact"` + `narrow-start="collapse"`) hides the
+  whole nav pane below the compact line and toggle-restores it as an overlay; the rail just renders its
+  vertical anatomy inside that pane/overlay.
 
 ## `collapse-container` — WHICH box `collapse="menu"` measures (TKT-0035)
 

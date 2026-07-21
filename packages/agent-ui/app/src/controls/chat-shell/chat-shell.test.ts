@@ -48,7 +48,7 @@ describe('ui-chat-shell — composition (LLD-C6, GH #98)', () => {
   it('the narrower chat slice — header + nav-pane + content — composes with no options side authored', () => {
     const el = mount({ header: 'H', 'nav-pane': 'NP', content: 'C' })
     const middle = el.querySelector('[data-part="middle"]') as HTMLElement
-    const order = [...middle.children].map((c) => c.getAttribute('data-slot-name'))
+    const order = [...middle.children].filter((c) => c.getAttribute('data-part') !== 'scrim').map((c) => c.getAttribute('data-slot-name'))
     expect(order).toEqual(['nav-pane', 'content'])
     expect(el.querySelector('[data-slot-name="options-pane"]')).toBeNull()
     expect(el.querySelector('[data-slot-name="global-options"]')).toBeNull()
@@ -75,10 +75,11 @@ describe('ui-chat-shell — composition (LLD-C6, GH #98)', () => {
 })
 
 describe('ui-chat-shell — SPEC-R6/R7 attribute forwarding (LLD-C3, ADR-0154)', () => {
-  it('forwards resizable-end/narrow-end (and every FORWARD_ATTRS member) onto the composed inner shell at compose', () => {
+  it('forwards resizable-end/narrow-end/collapse-band (and every FORWARD_ATTRS member) onto the composed inner shell at compose', () => {
     const el = document.createElement('ui-chat-shell') as UIChatShellElement
     el.setAttribute('resizable-end', '')
     el.setAttribute('narrow-end', 'tabs')
+    el.setAttribute('collapse-band', 'compact') // ADR-0155 — collapse-band joins FORWARD_ATTRS; defaults untouched
     const content = document.createElement('div')
     content.setAttribute('data-slot', 'content')
     el.append(content)
@@ -87,6 +88,14 @@ describe('ui-chat-shell — SPEC-R6/R7 attribute forwarding (LLD-C3, ADR-0154)',
     const shell = el.querySelector('ui-super-shell')!
     expect(shell.getAttribute('resizable-end')).toBe('')
     expect(shell.getAttribute('narrow-end')).toBe('tabs')
+    expect(shell.getAttribute('collapse-band')).toBe('compact')
+  })
+
+  it('collapse-band is UNSET by default — the negative control (agent-admin\'s pinned 640px narrow-tabs parity)', () => {
+    const el = mount({ content: 'C' })
+    const shell = el.querySelector('ui-super-shell')
+    expect(shell?.hasAttribute('collapse-band')).toBe(false) // defaults hold ⇒ inner shell stays narrow-band
+    expect(shell?.getAttribute('narrow-start')).toBe('stack')
   })
 
   it('an authored narrow-start overrides the "stack" default', () => {

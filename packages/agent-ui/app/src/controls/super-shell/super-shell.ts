@@ -42,9 +42,10 @@
 //
 // `controls → @agent-ui/components` + siblings only — never router/a2a (layering.test.ts).
 
-import { UIElement, prop, paneResize, type PaneResizeHandle, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
+import { UIElement, prop, paneResize, scrollFade, type PaneResizeHandle, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
 import '@agent-ui/components/controls/button'
 import '@agent-ui/components/controls/icon'
+import { SHELL_NARROW_BREAKPOINT_REM, SHELL_COMPACT_BREAKPOINT_REM } from '../../shell-breakpoint.ts'
 
 const SLOTS = [
   'header',
@@ -97,6 +98,11 @@ const props = {
   // narrow-tabs strip instead of collapsing/stacking (mutually exclusive with collapse/stack, per side).
   narrowStart: { ...prop.enum(['collapse', 'stack', 'tabs'] as const, 'collapse'), reflect: true, attribute: 'narrow-start' },
   narrowEnd: { ...prop.enum(['collapse', 'stack', 'tabs'] as const, 'collapse'), reflect: true, attribute: 'narrow-end' },
+  // SPEC-R8b (ADR-0155) — which band line auto-collapses THIS shell's collapse-MODE sides: `narrow`
+  // (40rem, default — every shipped shell byte-compatible) or `compact` (52.5rem, ADR-0150's number).
+  // `stack`/`tabs` sides are NOT governed by this — their reflow answers "the row is too cramped for
+  // side-by-side," which stays the 40rem narrow line regardless (the per-side band read in #belowBandLine).
+  collapseBand: { ...prop.enum(['narrow', 'compact'] as const, 'narrow'), reflect: true, attribute: 'collapse-band' },
   // SPEC-R6a — per-side opt-in for the INNERMOST pane only (rails/outer stacked panes stay fixed).
   resizableStart: { ...prop.boolean(false), reflect: true, attribute: 'resizable-start' },
   resizableEnd: { ...prop.boolean(false), reflect: true, attribute: 'resizable-end' },
@@ -126,16 +132,33 @@ export class UISuperShellElement extends UIElement {
   #narrowTabsHost: HTMLElement | null = null
   #narrowTabs: NarrowTab[] = []
   #idSeq = 0
+  // LLD-C2 (SPEC-R9c/R9d) — the overlay's focus landing per side (the side's first box, tabindex=-1 at
+  // compose) and the toggle that opened the current overlay (focus returns to it on close). The band
+  // observer is the ONE shell-owned ResizeObserver (SPEC-R9c) — visibility-only (attributes, never a
+  // reparent — the R7c survival law extends to it verbatim); it clears a stale overlay + re-syncs ARIA.
+  #overlayFocusTarget: { start?: HTMLElement; end?: HTMLElement } = {}
+  #openerToggle: HTMLElement | null = null
+  #bandObserver: ResizeObserver | null = null
+  // SPEC-R10b — the shell-owned scroll regions (pane boxes + active segments) captured ONCE at compose;
+  // scrollFade is (re)wired from connected() on EVERY connect, because the trait rides host.effect (the
+  // CONNECTION scope — it disposes at disconnect and must re-arm, the nav-rail.ts:106-121 `wired` precedent).
+  #scrollViewports: HTMLElement[] = []
 
   protected connected(): void {
     this.#compose()
+    // SPEC-R10b — (re)wire the scroll-fade affordance on EVERY connect: the trait rides host.effect (the
+    // connection scope), so a disconnect (ADR-0082 isolation toggle, a DOM relocation) disposes it and it
+    // must re-arm, else `scrollbar-width:none` would persist with no fade left as the scroll signal (the
+    // nav-rail.ts:106-121 disclosure-rewire precedent). The viewport set was captured once at compose.
+    for (const viewport of this.#scrollViewports) scrollFade(this, { viewport })
     this.effect(() => {
-      // Reflect the side states onto the toggles' accessible pressed state (the buttons exist only
-      // when a header was authored).
-      const start = this.querySelector('[data-part="side-toggle"][data-side="start"]')
-      const end = this.querySelector('[data-part="side-toggle"][data-side="end"]')
-      start?.setAttribute('aria-expanded', String(!this.collapsedStart))
-      end?.setAttribute('aria-expanded', String(!this.collapsedEnd))
+      // SPEC-R9c — aria-expanded is truthful at EVERY band, not just wide. Read both collapse signals
+      // so this effect re-runs on a wide-state flip; #syncAria then derives the per-side band-aware truth
+      // (below its line: `data-narrow-open === side`; above: `!collapsed`). The band observer (below) is
+      // the other driver — a band crossing writes no prop, so only the RO re-fires #syncAria there.
+      void this.collapsedStart
+      void this.collapsedEnd
+      this.#syncAria()
     })
     // SPEC-R6d — "observable AND settable": a consumer assigning `sizeStart`/`sizeEnd` (a persistence
     // restore) must apply onto the pane, not just reflect the attribute. #onResize/#handleResizerKeydown
@@ -157,12 +180,28 @@ export class UISuperShellElement extends UIElement {
         onResize: (index, deltaRatio, commit) => this.#onResize(index, deltaRatio, commit),
       })
     }
+
+    // SPEC-R9c — the ONE shell-owned band-hygiene ResizeObserver: visibility-only (attributes only —
+    // never a reparent, the R7c survival law), guarded like #resizeHandle so a reconnect never installs
+    // a second one. It clears a stale `data-narrow-open` on leaving the OPEN side's overlay band and
+    // re-syncs each toggle's aria-expanded per its OWN side's line. Feature-detected for jsdom parity.
+    if (this.#bandObserver === null && typeof ResizeObserver !== 'undefined') {
+      this.#bandObserver = new ResizeObserver(() => this.#onBandChange())
+      this.#bandObserver.observe(this)
+    }
+    // SPEC-R9d — Escape dismisses an open overlay (rides the connection AbortSignal, auto-removed on
+    // disconnect). Non-modal: no focus trap, only this one-key escape hatch beside the scrim + re-tap.
+    this.listen(this, 'keydown', (event) => {
+      if ((event as KeyboardEvent).key === 'Escape' && this.hasAttribute('data-narrow-open')) this.#closeOverlay()
+    })
   }
 
   protected override disconnected(): void {
     this.#resizeHandle?.release() // ends any in-flight drag WITHOUT a commit (the ui-split precedent)
     this.#resizeHandle = null
     this.#dragBaseline = null
+    this.#bandObserver?.disconnect()
+    this.#bandObserver = null
   }
 
   /** Idempotent (the fleet's #compose law): sort the authored children into the frame ONCE. */
@@ -176,6 +215,12 @@ export class UISuperShellElement extends UIElement {
       authored.get(slot)!.push(child)
     }
     if (authored.get('content')!.length === 0) console.warn('ui-super-shell: no content slot authored — the one mandatory slot (SPEC-R1)')
+
+    // SPEC-R9a — a side toggle composes ONLY when its side has authored content (no dead end-toggle on a
+    // one-sided shell — GH #170 defect 2). A side's content is any of its rail/pane slots being non-empty.
+    const hasContent = (slots: readonly SlotName[]): boolean => slots.some((s) => authored.get(s)!.length > 0)
+    const hasStartContent = hasContent(['global-nav', 'nav-pane', 'section-nav'])
+    const hasEndContent = hasContent(['options-section', 'options-pane', 'global-options'])
 
     const frame = document.createElement('div')
     frame.setAttribute('data-part', 'frame')
@@ -195,7 +240,13 @@ export class UISuperShellElement extends UIElement {
       const barContent = document.createElement('div')
       barContent.setAttribute('data-part', 'bar-content')
       barContent.append(...headerChildren)
-      header.append(this.#makeToggle('start'), barContent, this.#makeToggle('end'))
+      // SPEC-R9a — only an authored side gets a toggle; bar-content (flex:1) fills whatever space the
+      // present toggle(s) leave, so a one-sided shell's header is still edge-to-edge with no dead button.
+      const headerParts: HTMLElement[] = []
+      if (hasStartContent) headerParts.push(this.#makeToggle('start'))
+      headerParts.push(barContent)
+      if (hasEndContent) headerParts.push(this.#makeToggle('end'))
+      header.append(...headerParts)
       frame.append(header)
     }
 
@@ -207,6 +258,12 @@ export class UISuperShellElement extends UIElement {
     // already apply to the WHOLE stack with zero CSS changes (R5d).
     const middle = document.createElement('div')
     middle.setAttribute('data-part', 'middle')
+    // SPEC-R9d — the overlay scrim, composed once as the middle row's first child (like every part). CSS
+    // keeps it display:none except at narrow/compact while a side is overlay-open; a tap dismisses.
+    const scrim = document.createElement('div')
+    scrim.setAttribute('data-part', 'scrim')
+    scrim.addEventListener('click', () => this.#closeOverlay())
+    middle.append(scrim)
     const place = (slot: SlotName, part: string, side?: 'start' | 'end'): HTMLElement | undefined => {
       const children = authored.get(slot)!
       if (children.length === 0) return undefined
@@ -233,9 +290,10 @@ export class UISuperShellElement extends UIElement {
     // R5b's DOM order (rail outermost, panes inner-to-content) means the LAST pane a side's loop places
     // is the one adjacent to content — the innermost, and the only one R6a allows to be resizable.
     const startPaneBoxes: HTMLElement[] = []
+    let startFirstBox: HTMLElement | undefined // the side's first box in DOM order — the overlay focus landing (R9d)
     for (const [slot, part] of startStack) {
       const box = place(slot, part, 'start')
-      if (box && part === 'pane') startPaneBoxes.push(box)
+      if (box) { startFirstBox ??= box; if (part === 'pane') startPaneBoxes.push(box) }
     }
     // SPEC-R6b — the resizer sits directly adjacent to canvas, so it is ALWAYS the innermost pane's own
     // separator regardless of how many outer panes/rails the side stacks (R5b's asymmetric-count case).
@@ -245,9 +303,10 @@ export class UISuperShellElement extends UIElement {
     if (this.resizableStart && startPaneBoxes.length > 0) middle.append(this.#makeResizer('start'))
     const canvasBox = place('content', 'canvas')
     const endPaneBoxes: HTMLElement[] = []
+    let endFirstBox: HTMLElement | undefined // the end side's first box post-canvas — its overlay focus landing (R9d)
     for (const [slot, part] of endStack) {
       const box = place(slot, part, 'end')
-      if (box && part === 'pane') endPaneBoxes.push(box)
+      if (box) { endFirstBox ??= box; if (part === 'pane') endPaneBoxes.push(box) }
     }
     this.#innermostPane.end = endPaneBoxes[0] // options-section (if present) is placed FIRST post-canvas
     if (this.resizableEnd && endPaneBoxes.length > 0) {
@@ -255,8 +314,24 @@ export class UISuperShellElement extends UIElement {
       // the innermost, adjacent to canvas, so the resizer belongs directly before it.
       middle.insertBefore(this.#makeResizer('end'), endPaneBoxes[0]!)
     }
+    // SPEC-R9d — the overlay's focus landing per side (its first box); `tabindex="-1"` makes it
+    // programmatically focusable without joining the tab order (a non-modal drawer, ADR-0155 clause 2).
+    if (startFirstBox) { startFirstBox.setAttribute('tabindex', '-1'); this.#overlayFocusTarget.start = startFirstBox }
+    if (endFirstBox) { endFirstBox.setAttribute('tabindex', '-1'); this.#overlayFocusTarget.end = endFirstBox }
     frame.append(middle)
     this.#buildNarrowTabs(frame, canvasBox, startPaneBoxes, endPaneBoxes)
+
+    // SPEC-R10b — capture the shell-owned scroll regions ONCE (the scrollFade wiring itself happens in
+    // connected(), re-armed every connect — the trait is connection-scoped, see #scrollViewports). A
+    // segmented pane's SEGMENTS are the live viewports (each `overflow-y:auto` when active); a plain pane
+    // box is its own viewport. The trait's own observers no-op on a display:none (collapsed) box.
+    for (const box of [...startPaneBoxes, ...endPaneBoxes]) {
+      if (box.hasAttribute('data-segmented')) {
+        this.#scrollViewports.push(...box.querySelectorAll<HTMLElement>(':scope > [data-segment]'))
+      } else {
+        this.#scrollViewports.push(box)
+      }
+    }
 
     // Footer has no toggles (SPEC-R2c: header/footer are permanent chrome) — but its content gets the
     // SAME bar-content flex:1 wrapper, so a footer authored the same way as a header behaves identically.
@@ -290,29 +365,91 @@ export class UISuperShellElement extends UIElement {
     button.setAttribute('data-part', 'side-toggle')
     button.setAttribute('data-side', side)
     button.setAttribute('aria-label', side === 'start' ? 'Toggle start panes' : 'Toggle end panes')
-    const icon = document.createElement('ui-icon')
-    icon.setAttribute('slot', 'leading') // the icon-only anatomy's ONE adornment cell (button.md)
-    icon.setAttribute('data-role', 'icon')
-    icon.setAttribute('glyph', 'list')
-    button.append(icon)
+    // SPEC-R9b — BOTH glyphs composed in the leading cell (icon-only's single square column, button.md):
+    // `list` (menu, shown by default) + `x` (close). CSS swaps their visibility off the host's
+    // `data-narrow-open` INSIDE the band container query, so the X is band-correct by construction — a
+    // stale attribute can never paint an X at wide, with or without JS. Only one paints at a time (the
+    // other is display:none, removed from the grid), so the two children share the one column cleanly.
+    for (const [glyph, role] of [['list', 'menu'], ['x', 'close']] as const) {
+      const icon = document.createElement('ui-icon')
+      icon.setAttribute('slot', 'leading') // the icon-only anatomy's ONE adornment cell (button.md)
+      icon.setAttribute('data-role', 'icon')
+      icon.setAttribute('glyph', glyph)
+      icon.setAttribute('data-glyph', role)
+      button.append(icon)
+    }
     button.addEventListener('click', () => {
-      // SPEC-R4 — at narrow, the toggle drives the one-at-a-time OVERLAY state instead of the
-      // persisted side props (the no-clobber law: a narrow visit never rewrites the wide choice).
-      if (this.getBoundingClientRect().width < 640 && this.getBoundingClientRect().width > 0) {
-        // A `narrow-*="tabs"` side is selected exclusively via the narrow-tabs strip (SPEC-R7c) — the
-        // header toggle no-ops here rather than ALSO setting `data-narrow-open`, which would otherwise
-        // race the tabs CSS's own show/hide (the specificity conflict a real fix, not a smell, closes).
-        const narrowMode = side === 'start' ? this.narrowStart : this.narrowEnd
-        if (narrowMode === 'tabs') return
-        const open = this.getAttribute('data-narrow-open') === side ? null : side
-        if (open) this.setAttribute('data-narrow-open', open)
-        else this.removeAttribute('data-narrow-open')
+      // SPEC-R9 — below its OWN band line a `collapse`-mode side drives the one-at-a-time OVERLAY state
+      // (the no-clobber law: a narrow/compact visit never rewrites the persisted wide choice). A
+      // `stack`/`tabs` side's toggle is CSS-hidden below the 40rem line (R9a), and above the line every
+      // side takes the wide arm — so the below-line arm only ever runs for a collapse side (the old
+      // `tabs` no-op guard + the stack-conflict overlay arm are now unreachable and gone).
+      const narrowArm = side === 'start' ? this.narrowStart : this.narrowEnd
+      if (narrowArm === 'collapse' && this.#belowBandLine(side)) {
+        if (this.getAttribute('data-narrow-open') === side) this.#closeOverlay()
+        else this.#openOverlay(side)
         return
       }
       if (side === 'start') this.collapsedStart = !this.collapsedStart
       else this.collapsedEnd = !this.collapsedEnd
     })
     return button
+  }
+
+  // ── SPEC-R9: the band-read + overlay/ARIA state (the ONE JS band source of truth) ─────────────────
+
+  /** SPEC-R9c — the ONLY JS band read: is the host below the line that governs THIS side? A `collapse`
+   *  side uses the shell's `collapse-band` line (40 or 52.5rem); a `stack`/`tabs` side ALWAYS uses the
+   *  40rem narrow line (SPEC-R8b — those sides are not governed by `collapse-band`). Derived from
+   *  shell-breakpoint.ts's rem constants × the live root font-size, so px ≠ rem under a non-16px root is
+   *  handled correctly (the raw `< 640` literal this replaces was the GH #170 defect 4 drift). The
+   *  `width > 0` guard keeps jsdom (0-width rects) on the wide arm, matching the shipped unit-test model. */
+  #belowBandLine(side: 'start' | 'end'): boolean {
+    const arm = side === 'start' ? this.narrowStart : this.narrowEnd
+    const lineRem = arm === 'collapse' && this.collapseBand === 'compact' ? SHELL_COMPACT_BREAKPOINT_REM : SHELL_NARROW_BREAKPOINT_REM
+    const rootFontPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+    const width = this.getBoundingClientRect().width
+    return width > 0 && width < lineRem * rootFontPx
+  }
+
+  /** SPEC-R9d — open a side's narrow/compact overlay: set the single-value `data-narrow-open`, remember
+   *  the opener toggle (focus returns to it on close), move focus to the side's landing box, re-sync ARIA. */
+  #openOverlay(side: 'start' | 'end'): void {
+    this.setAttribute('data-narrow-open', side)
+    this.#openerToggle = this.querySelector<HTMLElement>(`[data-part="side-toggle"][data-side="${side}"]`)
+    this.#overlayFocusTarget[side]?.focus()
+    this.#syncAria()
+  }
+
+  /** SPEC-R9d — dismiss the open overlay (toggle re-tap, scrim tap, or Escape all route here): clear
+   *  `data-narrow-open`, return focus to the opener toggle, re-sync ARIA. Idempotent when nothing is open. */
+  #closeOverlay(): void {
+    if (!this.hasAttribute('data-narrow-open')) return
+    this.removeAttribute('data-narrow-open')
+    this.#openerToggle?.focus()
+    this.#openerToggle = null
+    this.#syncAria()
+  }
+
+  /** SPEC-R9c — the band-hygiene RO callback: if a side is overlay-open but the host is no longer below
+   *  THAT side's line (a resize back up past the band), clear the stale overlay; then re-sync ARIA. */
+  #onBandChange(): void {
+    const open = this.getAttribute('data-narrow-open') as 'start' | 'end' | null
+    if (open && !this.#belowBandLine(open)) this.#closeOverlay()
+    else this.#syncAria()
+  }
+
+  /** SPEC-R9c — aria-expanded truthful per band, per side: below its line it tracks `data-narrow-open`;
+   *  above it, the wide `!collapsed` effect. Attributes only (the R7c visibility-only survival law). */
+  #syncAria(): void {
+    const narrowOpen = this.getAttribute('data-narrow-open')
+    for (const side of ['start', 'end'] as const) {
+      const toggle = this.querySelector<HTMLElement>(`[data-part="side-toggle"][data-side="${side}"]`)
+      if (!toggle) continue
+      const collapsed = side === 'start' ? this.collapsedStart : this.collapsedEnd
+      const expanded = this.#belowBandLine(side) ? narrowOpen === side : !collapsed
+      toggle.setAttribute('aria-expanded', String(expanded))
+    }
   }
 
   // ── SPEC-R6: the resizable inner pane ──────────────────────────────────────────────────────────

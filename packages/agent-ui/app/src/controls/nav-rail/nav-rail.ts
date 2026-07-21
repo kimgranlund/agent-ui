@@ -43,7 +43,12 @@ import type { UIMenuElement } from '@agent-ui/components/controls/menu'
 import './nav-rail-group.ts'
 import { UINavRailItemElement } from './nav-rail-item.ts'
 
-const COLLAPSE_VALUES = ['menu', 'drill-in', 'icon-popover'] as const // 'menu' leads = the enum-fallback default (ADR-0130 cl.2)
+// 'menu' leads = the enum-fallback default (ADR-0130 cl.2). 'none' (GH #170/ADR-0155) = a plain,
+// never-collapsing vertical rail: no disclosure, no icon-popover, no drill-in anatomy — for a consumer
+// (e.g. the docs site, whose SHELL now owns the narrow hide/overlay) that wants the rail's wide vertical
+// list at EVERY band. The `if (this.collapse !== 'menu') return` disclosure guard already skips 'none';
+// the icon-popover/drill-in arms are CSS-keyed to their own `[collapse=…]`, so 'none' renders bare.
+const COLLAPSE_VALUES = ['menu', 'drill-in', 'icon-popover', 'none'] as const
 
 // `collapseContainer` (TKT-0035) — an orthogonal axis from `collapse`: WHICH box the `collapse="menu"`
 // `@container` query measures. 'self' (default, byte-identical to pre-TKT-0035 behaviour) — the rail

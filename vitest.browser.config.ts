@@ -71,6 +71,10 @@ import { playwright } from '@vitest/browser-playwright'
 // load, not a component regression — this is very likely the "screenshot-timeout cascade" the GH #87
 // crash log itself flagged, previously indistinguishable from the OOM it rode alongside.
 const FOCUS_TIMING_FILES = [
+  // GH #170 (2026-07-20) — the shell-responsive suite's AC16 legs assert document.activeElement after an
+  // overlay open/close (focus moves to the pane, returns to the toggle); the same concurrent-page focus-
+  // contention class — passes solo, races when a sibling shard steals focus.
+  'packages/agent-ui/app/src/controls/super-shell/super-shell-responsive.browser.test.ts',
   'packages/agent-ui/code/src/editor/editor.browser.test.ts',
   'packages/agent-ui/code/src/markdown/markdown.browser.test.ts',
   'packages/agent-ui/components/src/controls/swiper/swiper.browser.test.ts',

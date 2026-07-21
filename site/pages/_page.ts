@@ -10,14 +10,15 @@
 //
 // SHELL NOTE — a CSS-only app shell (the outer context frame + the per-page sticky header/footer is
 // `_page.css` grid + sticky and the structure below). The LEFT NAV RAIL is no longer hand-rolled: it is now
-// a real `ui-nav-rail collapse="menu"` (ADR-0130 / SPEC-R10, the mode-1 consumer of the shared nav-rail
-// family), fed from `sitemap.json`. The remaining top-bar / footer / CTA are still CSS-only placeholders an
+// a real `ui-nav-rail` (ADR-0130, the mode-1 consumer of the shared nav-rail family), fed from
+// `sitemap.json` and hidden/overlaid at narrow by the shell itself (GH #170/ADR-0155 — no rail-owned
+// `collapse="menu"` dropdown here). The remaining top-bar / footer / CTA are still CSS-only placeholders an
 // app-shell component family will own later, the same way the pages already dogfood ui-button / ui-text-field.
 import '@agent-ui/components/foundation-styles.css' // [1] foundation: tokens.css -> dimensions.css (FIRST)
 import '@agent-ui/components/component-styles.css' // [2] per-control CSS, after the foundation
 import '@agent-ui/components/components' // [3] self-defining ui-* controls (registers ui-button on import)
 import '@agent-ui/app/nav-rail' // [3a] the shared ui-nav-rail family (@agent-ui/app) the site nav composes (ADR-0130, mode 1)
-import '@agent-ui/app/nav-rail.css' // [3a] its stylesheet — the rail anatomy + collapse="menu" disclosure, after the foundation
+import '@agent-ui/app/nav-rail.css' // [3a] its stylesheet — the rail's grouped vertical anatomy, after the foundation
 import '@agent-ui/app/super-shell' // [3c] M5 (GH #84): the site chrome now RIDES the shell system — ui-super-shell owns the frame
 import '@agent-ui/app/super-shell.css' // [3c] its stylesheet (the 18px module ladder + per-side collapse)
 import '@agent-ui/icons/phosphor' // [3b] activate the Phosphor default pack (ADR-0065/0066): the controls above render their
@@ -46,7 +47,7 @@ export interface PageHandle {
 // ── the page-header tab-strip source (formerly ALSO the rail source) ─────────────────────────────────────────
 // `NAV` groups the site's per-component page-type links (Permutations/States/API/Demo). Since ADR-0130's mode-1
 // migration, the LEFT RAIL no longer derives from this array — it derives from `sitemap.json` (SITE_NAV_ENTRIES
-// below, rendered on `ui-nav-rail collapse="menu"`). `NAV` SURVIVES only as the residue that genuinely cannot
+// below, rendered on `ui-nav-rail`). `NAV` SURVIVES only as the residue that genuinely cannot
 // derive from the sitemap: the per-component page-type sub-links, which `sitemap.json` (one `-doc.html` per
 // component) does not carry. `activeGroup()`/`buildTabs()`/`buildPageHeader()` read it to render the page-header
 // context-label + tab strip, so a component's page-type pages tab between each other for free (SPEC-R10 AC3 —
@@ -553,25 +554,26 @@ function activeGroup(): NavGroup | undefined {
   return NAV.find((group) => group.links.some((link) => isCurrent(link.href)))
 }
 
-// buildNav — the shared cross-page browse rail, now a real `ui-nav-rail collapse="menu"` (ADR-0130, SPEC-R10,
-// the mode-1 consumer) fed from `sitemap.json`. Wide: a grouped vertical rail — one `ui-nav-rail-group` per
+// buildNav — the shared cross-page browse rail, a real `ui-nav-rail` (ADR-0130, the mode-1 consumer) fed
+// from `sitemap.json`. It renders its grouped vertical anatomy at EVERY band — one `ui-nav-rail-group` per
 // sitemap `section`, its context-label the section name, each item a real `<a>` with the proper name at the
 // leading edge and (for the tag-bearing Components) the tag right-justified in the trailing `data-role="tag"`
-// cell (SPEC-R6's name|tag row). Narrow: the component's OWN `collapse="menu"` disclosure collapses the list
-// into a dropdown (the zero-JS `<details>` mechanism, now owned by ui-nav-rail, not this shell). The rail's
-// active indicator + the collapsed trigger's label both key off the `selected` item — the current page, or,
+// cell (SPEC-R6's name|tag row). Narrow is now the SHELL's job (GH #170/ADR-0155): the ui-super-shell hides
+// this whole pane below the 52.5rem compact line and toggle-restores it as an overlay, so the rail's own
+// `collapse="menu"` dropdown + `collapse-container="ancestor"` arrangement (TKT-0035) RETIRE for this
+// consumer. The rail's active indicator keys off the `selected` item — the current page, or,
 // on a component's sub-page (Permutations/States/API), that component's own doc entry so the rail still shows
 // where you are while the tab strip carries the sub-pages. Role derivation (all items href-bearing) makes the
 // rail a `navigation` landmark and stamps `aria-current="page"` on the active link — the primitive's own job.
 function buildNav(): HTMLElement {
   const rail = document.createElement('ui-nav-rail')
-  rail.setAttribute('collapse', 'menu')
-  // TKT-0035 — the rail column is ~15rem, always below nav-rail's OWN 40rem collapse threshold; without
-  // this it would render as a dropdown at every width (no desktop vertical rail). `collapse-container=
-  // "ancestor"` relinquishes the rail's own containment so its collapse query reads the NAMED
-  // `ui-nav-rail-collapse` container `.app-shell` establishes instead (_page.css), tracking the viewport.
-  rail.setAttribute('collapse-container', 'ancestor')
-  rail.setAttribute('data-site-nav', '') // the shell's grid/scroll hook (_page.css); NOT the rail's own anatomy
+  // GH #170 / ADR-0155 — `collapse="none"`: the rail renders its FULL vertical anatomy at every band. The
+  // shell's own compact/narrow overlay (collapse-band="compact" + narrow-start="collapse" on the shell)
+  // owns the narrow story now, so the rail's own `collapse="menu"` dropdown + its TKT-0035
+  // `collapse-container="ancestor"` arrangement RETIRE for this consumer (`ui-nav-rail` keeps the
+  // capability via its other collapse modes — only the site opts into `none`).
+  rail.setAttribute('collapse', 'none')
+  rail.setAttribute('data-site-nav', '') // the shell's scroll hook (_page.css); NOT the rail's own anatomy
   rail.setAttribute('aria-label', 'Site')
 
   // On a component's sub-page the exact URL is not in the sitemap (only its `-doc.html` is), so map the active
@@ -907,16 +909,18 @@ function buildThemedShell(page: HTMLElement): UIThemeProviderElement {
   void applyTheme(provider, loadPersistedTheme())
   // M5 / GH #84 — the CSS-grid placeholder chrome retired: the frame is now a real `ui-super-shell`
   // (shell-archetypes-m5.spec.md). Region builders are UNCHANGED; they just declare their slot —
-  // header full-width (the wireframe's own shape), the ui-nav-rail as the collapsible nav-pane, the
-  // page region as the canvas, the footer as permanent chrome. The provider stays the ROOT (tokens +
-  // the ui-nav-rail-collapse named container both live there, TKT-0035/ADR-0141 unchanged).
+  // header full-width (the wireframe's own shape), the ui-nav-rail as the nav-pane, the page region as
+  // the canvas, the footer as permanent chrome. The provider stays the ROOT (tokens live there,
+  // ADR-0141 unchanged); GH #170/ADR-0155 retired its old ui-nav-rail-collapse named container.
   const shell = document.createElement('ui-super-shell') as HTMLElement & { collapsedStart: boolean }
   shell.className = 'site-shell'
-  // Narrow keeps the SHIPPED nav story (TKT-0035): the nav pane STACKS in flow and the rail's own
-  // collapse="menu" dropdown takes over — never the shell's hide/overlay arm (ADR-0084 stack mode).
-  // `nav` is authored FIRST (below) — the DOM-first ("start") side, per LLD-C4/GH #95's logical
-  // naming (this site is LTR-only prose, so start == physical left, unchanged in practice).
-  shell.setAttribute('narrow-start', 'stack')
+  // GH #170 / ADR-0155 — the nav story moves from `stack` to OVERLAY: below the 52.5rem compact-window
+  // line the nav pane hides and the header's menu toggle restores it as an overlay (X glyph, scrim/Escape
+  // dismiss, full vertical rail inside the pane). `collapse-band="compact"` selects that line (ADR-0150's
+  // number); `narrow-start="collapse"` picks the overlay arm. `nav` is authored FIRST (below) — the
+  // DOM-first ("start") side, per LLD-C4/GH #95 (this site is LTR-only prose, so start == physical left).
+  shell.setAttribute('narrow-start', 'collapse')
+  shell.setAttribute('collapse-band', 'compact')
   const header = buildContextHeader(provider)
   header.setAttribute('data-slot', 'header')
   const nav = buildNav()

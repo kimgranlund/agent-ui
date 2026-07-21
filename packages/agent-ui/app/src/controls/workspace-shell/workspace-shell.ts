@@ -8,10 +8,11 @@
 //
 // Composition (the master-detail.ts precedent — relocate real children into a freshly created inner
 // control, then let THAT control's own connectedCallback do its own internal sorting): at connect, this
-// element creates ONE inner `<ui-super-shell>`, sets a sensible workspace DEFAULT (`narrow-start="stack"` —
-// the docs site's own shipped narrow UX, where the nav pane's content owns its own narrow anatomy via
-// `ui-nav-rail`'s `collapse="menu"` rather than vanishing behind an overlay toggle), then relocates every
-// authored light-DOM child verbatim. Consumers use the EXACT SAME `data-slot` vocabulary ui-super-shell
+// element creates ONE inner `<ui-super-shell>`, sets a sensible workspace DEFAULT — `narrow-start="collapse"`
+// + `collapse-band="compact"` (ADR-0155 F3): the workspace nav side hides below the 52.5rem compact line
+// and toggle-restores as an overlay, flipping WITH the docs site (whose own narrow story moved from `stack`
+// to overlay in the SAME wave — the preset's charter is "the docs site's own shipped UX"), then relocates
+// every authored light-DOM child verbatim. Consumers use the EXACT SAME `data-slot` vocabulary ui-super-shell
 // itself defines (header/global-nav/nav-pane/section-nav/content/options-section/options-pane/
 // global-options/footer, SPEC-R1/R5) — this element adds no new slot vocabulary of its own, only the
 // default + the reduced authoring ceremony of not having to compose the inner shell by hand.
@@ -39,7 +40,8 @@ export class UIWorkspaceShellElement extends UIElement {
   #compose(): void {
     if (this.#shell) return
     const shell = document.createElement('ui-super-shell') as UISuperShellElement
-    shell.setAttribute('narrow-start', 'stack')
+    shell.setAttribute('narrow-start', 'collapse') // ADR-0155 F3 — the nav side overlays below the band line
+    shell.setAttribute('collapse-band', 'compact') // …at 52.5rem (the compact-window line), flipping with the site
     shell.append(...this.children)
     this.append(shell)
     this.#shell = shell

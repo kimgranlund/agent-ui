@@ -48,10 +48,11 @@ inherited wholesale. The one thing this element adds is the same sensible defaul
 uses: `narrow-start="stack"`, so the nav side's own content owns its narrow anatomy rather than vanishing
 behind an overlay toggle.
 
-**SPEC-R6/R7 forwarding (LLD-C3, ADR-0154).** A consumer sets `resizable-start`/`resizable-end`,
-`size-start`/`size-end`, or `narrow-start`/`narrow-end` on THIS element exactly as if it were the
-composed inner shell — they are copied at compose time (an authored `narrow-start`/`narrow-end`
-overrides the `stack` default above), and `size-start`/`size-end` relay live if changed post-connect
+**SPEC-R6/R7/R8 forwarding (LLD-C3, ADR-0154/ADR-0155).** A consumer sets `resizable-start`/`resizable-end`,
+`size-start`/`size-end`, `narrow-start`/`narrow-end`, or `collapse-band` on THIS element exactly as if it
+were the composed inner shell — they are copied at compose time (an authored `narrow-start`/`narrow-end`
+overrides the `stack` default above; `collapse-band` is UNSET by default so agent-admin's pinned 640px
+narrow-tabs parity holds — the negative control), and `size-start`/`size-end` relay live if changed post-connect
 (the one pair a consumer plausibly sets after an async persistence restore). This is attribute
 forwarding, not a new typed property of `ui-chat-shell`'s own — `attributes: []` below stays accurate;
 the API surface a consumer programs against is still `ui-super-shell`'s.

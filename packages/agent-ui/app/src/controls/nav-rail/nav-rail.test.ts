@@ -95,6 +95,14 @@ describe('UINavRailElement — upgrade + defaults', () => {
     expect(el.getAttribute('collapse-container')).toBe('ancestor')
   })
 
+  it('collapse="none" (GH #170/ADR-0155) builds NO disclosure — the plain never-collapsing vertical rail', () => {
+    const el = document.createElement('ui-nav-rail') as UINavRailElement
+    el.setAttribute('collapse', 'none')
+    mount(el)
+    expect(el.collapse).toBe('none') // a real enum member now, not coerced to "menu"
+    expect(el.querySelector('[data-part="disclosure"]'), 'none mode never creates the <details> disclosure').toBeNull()
+  })
+
   it('no children ⇒ an empty rail, never throws (SPEC-R2 AC1)', () => {
     expect(() => mount(new UINavRailElement())).not.toThrow()
   })

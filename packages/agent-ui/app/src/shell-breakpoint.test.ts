@@ -5,7 +5,7 @@
 // without updating this shared constant) reds immediately instead of silently drifting.
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { SHELL_NARROW_BREAKPOINT } from './shell-breakpoint.ts'
+import { SHELL_NARROW_BREAKPOINT, SHELL_COMPACT_BREAKPOINT } from './shell-breakpoint.ts'
 
 declare const process: { cwd(): string }
 
@@ -29,20 +29,32 @@ describe('shell family — the narrow-collapse breakpoint stays consistent acros
     for (const path of SITES) expect(() => readFileSync(path, 'utf8'), path).not.toThrow()
   })
 
-  it(`every site's @container narrow-collapse rule uses the SAME literal (${SHELL_NARROW_BREAKPOINT})`, () => {
+  // SPEC-R8/ADR-0155 — the band ladder is now TWO named lines: the narrow line (every site) and the
+  // compact line (super-shell.css's second query only). Every `@container (inline-size < …)` literal in
+  // the family must equal ONE of the two named constants — a literal that drifts from BOTH reds here.
+  const NAMED_LINES = [SHELL_NARROW_BREAKPOINT, SHELL_COMPACT_BREAKPOINT]
+  it(`every site's @container line matches a NAMED shell breakpoint (${NAMED_LINES.join(' or ')})`, () => {
     const containerRe = /@container[^{]*\(inline-size\s*<\s*([^)]+)\)/g
     for (const path of SITES) {
       const css = readFileSync(path, 'utf8') as string
       const matches = [...css.matchAll(containerRe)].map((m) => m[1].trim())
       expect(matches.length, `${path}: expected at least one @container narrow-collapse rule`).toBeGreaterThan(0)
-      for (const value of matches) expect(value, path).toBe(SHELL_NARROW_BREAKPOINT)
+      for (const value of matches) expect(NAMED_LINES, `${path}: literal ${value} drifts from both named lines`).toContain(value)
     }
+  })
+
+  it(`super-shell.css carries the compact line (${SHELL_COMPACT_BREAKPOINT}) — the second band, guarded by collapse-band='compact'`, () => {
+    const containerRe = /@container[^{]*\(inline-size\s*<\s*([^)]+)\)/g
+    const css = readFileSync(`${ROOT}/super-shell/super-shell.css`, 'utf8') as string
+    const matches = [...css.matchAll(containerRe)].map((m) => m[1].trim())
+    expect(matches, 'super-shell.css must query BOTH the narrow and the compact line').toContain(SHELL_NARROW_BREAKPOINT)
+    expect(matches, 'super-shell.css must query BOTH the narrow and the compact line').toContain(SHELL_COMPACT_BREAKPOINT)
   })
 
   it('a drifted literal FAILS (negative control)', () => {
     const css = '@container (inline-size < 41rem) { :scope { display: none; } }'
     const matches = [...css.matchAll(/@container[^{]*\(inline-size\s*<\s*([^)]+)\)/g)].map((m) => m[1].trim())
     expect(matches).toEqual(['41rem'])
-    expect(matches[0]).not.toBe(SHELL_NARROW_BREAKPOINT)
+    expect(NAMED_LINES).not.toContain(matches[0])
   })
 })

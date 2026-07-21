@@ -45,9 +45,10 @@ grammar shape Kim's `app-shell-layout-single-nav` / `app-shell-layout-dual-sideb
 header, global-nav rail, nav-pane, section-nav, content, options-section, options-pane, global-options rail,
 footer. It composes rather than reimplements: **0 bespoke layout code** (the `ui-master-detail`/`ui-split`
 precedent) — every geometry, collapse, and landmark behavior is `ui-super-shell`'s own, inherited wholesale.
-The one thing this element adds is a sensible default: `narrow-start="stack"`, so the nav side's own content
-(typically a `ui-nav-rail`) owns its narrow anatomy via `collapse="menu"` rather than the pane vanishing
-behind an overlay toggle — the docs site's own shipped narrow UX (`site/pages/_page.ts`).
+The one thing this element adds is a sensible default: `narrow-start="collapse"` + `collapse-band="compact"`
+(ADR-0155 F3), so the nav side hides below the 52.5rem compact-window line and toggle-restores as an
+overlay (X in the header, scrim/Escape dismiss) — flipping WITH the docs site, whose own narrow story
+moved from `stack` to overlay in the same wave (`site/pages/_page.ts`).
 
 **`app-shell-layout-single-nav` (Figma node 39:1629)** — one rail, one nav pane, no options side:
 
