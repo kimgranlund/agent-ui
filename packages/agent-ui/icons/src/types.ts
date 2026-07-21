@@ -14,6 +14,8 @@ export const ICON_NAMES = [
   'circle-notch', 'check-circle', 'x-circle', // the Figma "Claude Code Gateway" reasoning-chain card (node 21:1641-1643) — a GROUP-level marker's own distinct glyph set: a spinning ring for `active`, a circled check for `done`, a circled X for `error` (vs. the plain dot/bare check/x a leaf step's marker uses). `x-circle` is distinct from `warning`'s triangle — ADR-0057 review finding: error and warning must stay SHAPE-distinct at the group level too, never hue-only.
   'clock', // GH #147 / ADR-0153 — the group-level "Planned" (all-pending) marker: a neutral, outline clock glyph, distinct in SHAPE from active's spinning ring / done's check / error's x (ADR-0057), completing the GROUP_STATUS_GLYPH set that circle-notch/check-circle/x-circle started.
   'dots-three', // GH #168 — the fleet's one horizontal overflow/more-actions glyph (the agent-admin canvas-header's page-actions ui-menu trigger, replacing a glued "…" text node — the TKT-0048 anti-pattern). Phosphor's catalog has no `dots-three-horizontal`; `dots-three` IS the horizontal one, and its regular-weight dots match the pack's line weight where `dots-three-outline`'s donut dots would read heavier than every neighbor glyph.
+  'circle-half', // GH #170/ADR-0155 narrow-header rework — the scheme-cycle icon-only chip
+  'palette', // GH #170/ADR-0155 narrow-header rework — the theme-picker icon-only chip
 ] as const
 export type IconName = (typeof ICON_NAMES)[number]
 
