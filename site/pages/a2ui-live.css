@@ -1,22 +1,39 @@
-/* a2ui-live.css — PAGE-LOCAL layout chrome for the live-agent demo chat app (LLD-C9). Lays out the two
- * panes [ chat | a2ui-canvas ] as `<ui-app-shell>` regions (SPEC-R8 re-host — the shell owns the grid, this
- * sheet owns only each region's card treatment + this page's pane sizing), the canvas tabs (Canvas · JSON ·
+/* a2ui-live.css — PAGE-LOCAL layout chrome for the live-agent demo chat app (LLD-C9; ADR-0156 re-host).
+ * Lays out the two panes [ chat | a2ui-canvas ] as `<ui-super-shell>` slots (the shell owns the frame, this
+ * sheet owns only each pane's card treatment + this page's pane sizing), the canvas tabs (Canvas · JSON ·
  * HTML), the chat log + composer, and the dev-only switcher. The rendered A2UI surface keeps its own ui-*
  * control CSS — this page never restyles a control. Every colour is a `--md-sys-color-*` role (imported
  * first via _page.ts), so it tracks light/dark. Mounts via mountFullBleedPage: [data-page-content] fills the
  * bounded `.app-page` region; the panes scroll their OWN inner areas (min-block-size: 0 throughout).
  *
- * RESOLVED GAPS (ADR-0083/0084, built off THIS page's own dogfood): the chat pane's `region="navigation"`
- * used to fuse the LEFT-column placement to a wrong `navigation` ARIA landmark and to the shell's default
- * narrow-reflow `display:none` (vanishing the composer < 40rem). `ui-app-shell-region` now decouples both —
- * a2ui-live.ts sets `landmark="complementary"` (the correct role, independent of the column) and
- * `collapse="stack"` (stays visible + full-width narrow instead of hiding) — no CSS override needed HERE for
- * either; both are the shell's own attribute-selector rules (app-shell.css).
+ * ADR-0156 RE-HOST (was ADR-0083/0084 on `ui-app-shell`, now the SAME patterns as family law on
+ * `ui-super-shell`, ADR-0156 clause 3): the chat pane's ARIA landmark decouple is now `data-landmark`
+ * on the slotted child (super-shell.ts's `roleFor()`); the narrow-reflow "stay visible, full-width" choice
+ * is now the shell-level `narrow-start="stack"` attribute (a2ui-live.ts) — no CSS override needed HERE for
+ * either; both are the shell's own rules (super-shell.css).
  *
- * EQUIVALENCE SCOPE (review fix — not "unchanged at every width"): the old `.chat-pane` shrank (`flex:1 1
- * 20rem; max-inline-size:26rem`); this one is FIXED at `inline-size:26rem` — byte-identical to the old page
- * only ≳1050px wide (its old cap point). The ~640–1050px mid-band intentionally diverges (old chat shrank
- * there; this one holds 26rem) — captured by a2ui-live.browser.test.ts's "mid-band" leg. */
+ * PANE SIZING — a different mechanism than before: `.chat-pane`/`.canvas-pane` are no longer the sized
+ * boxes themselves (they were, as `ui-app-shell-region` elements). `ui-super-shell` wraps each authored
+ * slot child in its OWN part (`[data-part='pane'][data-side='start']` for `nav-pane`, `[data-part='canvas']`
+ * for `content`) and sizes THAT wrapper off its `--ui-super-shell-pane-size` token (super-shell.css) — so
+ * the 26rem chat width is now set by overriding that token on the shell instance below, the SAME
+ * token-override seam `ui-agent-admin` already uses for its own pane-size floors (agent-admin.css). Only
+ * the "start" side is authored here (no `options-pane`/`global-options`), so overriding the shared
+ * (non-side-specific) token is sufficient — no `-start` suffix needed.
+ *
+ * DIVIDER → GAP (mechanism change, not a visual regression): the old shell placed the two regions
+ * EDGE-TO-EDGE, so exactly one of them could own the shared border (the "single owner" rule this file used
+ * to carry). `ui-super-shell`'s middle row separates its parts with a REAL `gap` (`--ui-super-shell-gap`,
+ * 18px) instead — the two cards are no longer adjacent, so there is no shared edge to arbitrate: each pane
+ * now owns a complete border on all four sides (a2ui-live.browser.test.ts's re-baselined "gapped cards"
+ * describe block covers this).
+ *
+ * EQUIVALENCE SCOPE (unchanged from the ADR-0083/0084 wave — not "unchanged at every width"): the old
+ * `.chat-pane` shrank (`flex:1 1 20rem; max-inline-size:26rem`); this one is FIXED at 26rem (via the token
+ * override below) — byte-identical to the old page only ≳1050px wide (its old cap point). The ~640–1050px
+ * mid-band intentionally diverges (old chat shrank there; this one holds 26rem) — captured by
+ * a2ui-live.browser.test.ts's "mid-band" leg (re-baselined against the new markup, ADR-0156's own
+ * acceptance clause: a re-measure, not a regression). */
 
 /* ── the shell fills the page's content region ──────────────────────────────────────────────────────────── */
 [data-page-content] {
@@ -26,35 +43,45 @@
   min-block-size: 0;
   overflow: hidden; /* clip — the inner panes scroll, not the region */
 }
-[data-page-content] > ui-app-shell {
+[data-page-content] > ui-super-shell {
   flex: 1 1 auto;
   min-inline-size: 0;
   min-block-size: 0;
+  /* the fixed chat-pane width (was `.chat-pane { inline-size: 26rem }` on the region element itself) —
+     now the shell's OWN sizing token for its "start" pane wrapper (super-shell.css's own fallback chain:
+     `[data-part='pane'][data-side='start'] { inline-size: var(--ui-super-shell-pane-size-start, var(--ui-super-shell-pane-size)) }`).
+     Only one side is authored on this page, so overriding the shared token (not the `-start` variant) is
+     enough — the same override SEAM `ui-agent-admin` uses for its pane-min-size floors, just a different
+     token in the same family. */
+  --ui-super-shell-pane-size: 26rem;
 }
 
-/* ── the two pane CARDS — ui-app-shell-region[region=navigation|main], each still its own bordered card ──── */
+/* ── the two pane CARDS — plain divs docked into the shell's `nav-pane`/`content` slots, each its own
+   bordered card. No more single-owner divider special-case (see the file banner): the shell's own `gap`
+   keeps them apart, so both panes own a complete border on all four sides. ──────────────────────────── */
 .chat-pane,
 .canvas-pane {
   display: flex;
   flex-direction: column;
+  block-size: 100%; /* fill the shell's own pane/canvas wrapper part (a plain box, not itself a flex
+    container for `nav-pane`'s `[data-part='pane']`) — was implicit before, when `.chat-pane`/`.canvas-pane`
+    WERE the sized wrapper (`ui-app-shell-region`) rather than a child docked inside one. */
   min-block-size: 0;
   min-inline-size: 0;
+  box-sizing: border-box;
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
   border-radius: 12px;
   background: var(--md-sys-color-neutral-surface-low);
   overflow: hidden;
 }
-.chat-pane {
-  inline-size: 26rem;
-  margin-inline-end: 1rem; /* the shell owns no gap opinion (LLD-C4) — this page supplies its own pane spacing */
-  border-inline-end: none; /* single owner (review fix): app-shell.css's navigation-region divider owns this edge */
-}
-/* .canvas-pane needs no rule of its own — it docks to `main`, the shell's 1fr track, and fills it.
+/* .canvas-pane needs no rule of its own beyond the shared block above — it docks to `content`, the shell's
+ * mandatory canvas part, and fills it (`[data-part='canvas']` is itself flex:1 1 auto/display:flex column,
+ * super-shell.css, so `.canvas-pane`'s own `block-size:100%` above resolves against a real height).
  *
- * NO narrow-width override lives here for `collapse="stack"` (review fix — HARDENED into the shell instead,
- * app-shell.css/app-shell-isolation.css): the shell's own `[collapse='stack']` rule now neutralizes a
- * consumer's fixed width itself (out-specifying this page's `.chat-pane`) — a page-local reset would have
- * duplicated the shell's 40rem threshold AND could never reach a region relocated under isolation anyway. */
+ * NO narrow-width override lives here for `narrow-start="stack"` (unchanged from the ADR-0084 wave — still
+ * HARDENED into the shell itself, super-shell.css's `:scope[narrow-start='stack'] […] { inline-size: auto }`
+ * rule): the shell neutralizes this page's own fixed pane-size token at narrow itself, out-specifying it —
+ * a page-local reset would have duplicated the shell's 40rem threshold for no benefit. */
 
 .pane-head {
   flex: 0 0 auto;
