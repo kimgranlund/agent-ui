@@ -9,7 +9,7 @@ description: >-
   carry", "why is this shipped spec still proposed", "how do docs cite each other" — BEFORE authoring
   or judging any .claude/docs record. This repo's dialect DIVERGES from scribe's doc_lint (blockquote,
   not YAML; proposed/accepted, not draft/approved) — this skill is the local authority. NOT for the
-  document types' generic contracts (scribe:doc-authoring-standards) or component-code law
+  document types' generic contracts (docs:doc-writing-rules) or component-code law
   (agent-ui-component-standards).
 disable-model-invocation: false
 user-invocable: false
@@ -45,7 +45,7 @@ onto real GitHub primitives, not a parallel taxonomy:
 | `status` | `doing` | Issue open + the `doing` label | GitHub's own state has no "in progress" value |
 | `status` | `done` | Issue closed, close reason `completed` | native GitHub field, not a label |
 | `status` | `wontfix` | Issue closed, close reason `not planned` | native GitHub field, not a label |
-| `## Findings` | dated entries, appended | dated Issue **comments**, appended | same discipline — the SAME verb `scribe:bug-report`'s own dispatch contract already names |
+| `## Findings` | dated entries, appended | dated Issue **comments**, appended | same discipline — the SAME verb `docs:file-bug`'s own dispatch contract already names |
 
 ADR/PRD/SPEC/LLD and living-state docs (PLAN/ROADMAP) are explicitly **never** delegated — they
 stay files on this map, always; only the TICKET tier moved.

@@ -7,7 +7,7 @@ description: >-
   this settings page", "fix this page's broken scroll / collapsed regions", "make this
   screen denser". NOT for the feature fragments placed INTO the layout (agent-ui-compose-ui), the
   app-wide shell/routing/theming spine (agent-ui-compose-app), or generic layout THEORY —
-  regions, hierarchy, the two-axis method (ui:layout-decompose is the method spine; this
+  regions, hierarchy, the two-axis method (screens:break-down-layout is the method spine; this
   skill is its agent-ui realization).
 user-invocable: true
 disable-model-invocation: false
@@ -18,13 +18,13 @@ disable-model-invocation: false
 Structures a screen with the fleet's container/layout tier and proves the **whole rendered
 shape** — the known failure class is a layout that passes every per-part probe and still
 collapses to a sliver. Method questions (what regions, what hierarchy) belong to
-`ui:layout-decompose`; this skill is the agent-ui realization. Worked exemplars:
+`screens:break-down-layout`; this skill is the agent-ui realization. Worked exemplars:
 `site/pages/layout-overview.ts` (the primitives, live) and the docs site's own page shell
 (`site/pages/_page.ts` + `_page.css`).
 
 ## Procedure
 
-1. **Decompose the screen first** (ui:layout-decompose where a real design question exists;
+1. **Decompose the screen first** (screens:break-down-layout where a real design question exists;
    inline for a conventional page): regions, hierarchy, what scrolls, what's sticky.
 2. **Structure with the container/layout tier** — `ui-row`/`ui-column`/`ui-grid` for
    arrangement, `ui-card`/`ui-tabs`/`ui-disclosure`/`ui-modal` for surfaces (`ui-modal` as
