@@ -623,22 +623,60 @@ function buildNav(): HTMLElement {
 const SCHEME_CYCLE: readonly SchemeId[] = ['', 'light', 'dark']
 const SCHEME_LABEL: Record<SchemeId, string> = { '': 'Auto', light: 'Light', dark: 'Dark' }
 
+// GH #183 — the header-chip row-cramp collapse: the SAME 40rem line named by
+// `@agent-ui/app`'s `shell-breakpoint.ts` (`SHELL_NARROW_BREAKPOINT_REM`), per ADR-0155 clause 1's own
+// routing rule — "`stack`/`tabs` sides keep the 40rem line, which answers a different question (row
+// cramp, not side visibility)" — and chip truncation is exactly a row-cramp question, never a side-
+// visibility one (the docs shell's 52.5rem `collapse-band="compact"` line, below). NOT imported: the
+// site isn't in `@agent-ui/app`'s package.json `exports` map, and `shell-breakpoint.ts`'s own header
+// already documents why each of its five internal call sites keeps its own cited literal rather than a
+// shared import (no live CSS custom-property substitution point exists for an `@container` condition) —
+// this call site follows the identical convention, for a `ResizeObserver` comparison rather than a CSS
+// query (see `buildContextHeader`'s own comment for why). Empirically measured (2026-07-21, this file's
+// actual brand + 3-chip content): the real squeeze onset is ~415px (~26rem) — 40rem/640px collapses
+// with comfortable headroom above that, while 52.5rem/840px would additionally over-collapse ordinary
+// 700-800px widths where the header still fits its full text with room to spare.
+const HEADER_ICON_ONLY_BREAKPOINT_REM = 40
+
+/** Render one header action chip for the given band (GH #183): full label text (wide) or a real icon +
+ *  `aria-label` carrying the SAME text (narrow — `icon-only`, button.ts's fifth "square" content-model
+ *  structure, the toast.ts close-button precedent). `icon-only` is an explicit, author-driven content
+ *  swap — CSS alone cannot detect an empty/text-node label (button.ts's own comment) — so this always
+ *  runs in JS, on every band change AND every dynamic-label change (scheme/theme selection), never just
+ *  once at mount. */
+function renderChip(btn: UIButtonElement, glyph: string, label: string, iconOnly: boolean): void {
+  btn.toggleAttribute('icon-only', iconOnly)
+  btn.replaceChildren()
+  if (iconOnly) {
+    const icon = document.createElement('ui-icon')
+    icon.setAttribute('slot', 'leading')
+    icon.setAttribute('data-role', 'icon')
+    icon.setAttribute('glyph', glyph)
+    btn.append(icon)
+    btn.setAttribute('aria-label', label)
+  } else {
+    btn.textContent = label
+    btn.removeAttribute('aria-label')
+  }
+}
+
 /** The real Theme control (TKT-0088/ADR-0141 cl.4/5) — a scheme-cycle button + a theme `ui-menu` picker,
  *  both wired to `provider` (the shell's own `ui-theme-provider`, ADR-0141 cl.1) via `theme-loader.ts`.
  *  Mounts already showing the PERSISTED choice (no flash of the default before JS settles — the provider
  *  itself was already set from the same persisted values at shell-creation time, below; this control just
- *  reads that same state back for its own initial label). */
-function buildThemeControl(provider: UIThemeProviderElement): HTMLElement {
+ *  reads that same state back for its own initial label). Returns a `setIconOnly` handle (GH #183) so the
+ *  caller's single band observer can flip both chips together — the row-cramp collapse is one shared
+ *  band, not a per-chip decision. */
+function buildThemeControl(provider: UIThemeProviderElement): { element: HTMLElement; setIconOnly: (iconOnly: boolean) => void } {
   const group = document.createElement('div')
   group.className = 'app-context-theme-group'
+  let iconOnly = false // the shared band flag — set by the caller before this control ever paints narrow
 
   // ── the scheme-cycle button ──────────────────────────────────────────────────────────────────────────
   const schemeBtn = document.createElement('ui-button') as UIButtonElement
   schemeBtn.setAttribute('variant', 'soft')
   let scheme = loadPersistedScheme()
-  const renderScheme = (): void => {
-    schemeBtn.textContent = SCHEME_LABEL[scheme]
-  }
+  const renderScheme = (): void => renderChip(schemeBtn, 'circle-half', SCHEME_LABEL[scheme], iconOnly)
   renderScheme()
   schemeBtn.addEventListener('click', () => {
     const next = SCHEME_CYCLE[(SCHEME_CYCLE.indexOf(scheme) + 1) % SCHEME_CYCLE.length] as SchemeId
@@ -660,7 +698,8 @@ function buildThemeControl(provider: UIThemeProviderElement): HTMLElement {
 
   let currentTheme = loadPersistedTheme()
   const renderTrigger = (): void => {
-    trigger.textContent = THEME_OPTIONS.find((o) => o.id === currentTheme)?.label ?? 'Default'
+    const label = THEME_OPTIONS.find((o) => o.id === currentTheme)?.label ?? 'Default'
+    renderChip(trigger, 'palette', label, iconOnly)
   }
   renderTrigger()
 
@@ -695,14 +734,23 @@ function buildThemeControl(provider: UIThemeProviderElement): HTMLElement {
     persistTheme(id)
   })
 
-  return group
+  const setIconOnly = (value: boolean): void => {
+    if (value === iconOnly) return
+    iconOnly = value
+    renderScheme()
+    renderTrigger()
+  }
+
+  return { element: group, setIconOnly }
 }
 
 // buildContextHeader — the app top-bar (right column, row 1, fixed): the app wordmark (a Home link) + a
 // placeholder region for app-level chrome. `Search` is now a REAL button opening the already-mounted
 // `ui-command-modal` (TKT-0018's own palette, `mountCommandPaletteOnce` below — the mod+k hotkey's own
 // affordance, made clickable too); `Theme` is the REAL scheme+theme control above, wired to `provider`
-// (TKT-0088/ADR-0141 cl.4/5 — the shell's own ui-theme-provider, created by the caller).
+// (TKT-0088/ADR-0141 cl.4/5 — the shell's own ui-theme-provider, created by the caller). GH #183: the
+// wordmark (`.app-brand`, `_page.css`) never wraps or truncates at any band — when the row is cramped,
+// these three chips collapse to icon-only instead (never the brand).
 function buildContextHeader(provider: UIThemeProviderElement): HTMLElement {
   const bar = document.createElement('header')
   bar.className = 'app-context-header'
@@ -717,15 +765,54 @@ function buildContextHeader(provider: UIThemeProviderElement): HTMLElement {
   actions.className = 'app-context-actions'
   const search = document.createElement('ui-button') as UIButtonElement
   search.setAttribute('variant', 'soft')
-  search.textContent = 'Search'
+  let iconOnly = false // the shared row-cramp band flag (GH #183) — the ResizeObserver below is its one writer
+  const renderSearch = (): void => renderChip(search, 'magnifying-glass', 'Search', iconOnly)
+  renderSearch()
   // Lazy import — same module `mountCommandPaletteOnce` already pulled in at shell-build time (below),
   // so this resolves from the browser's own module cache, not a second network fetch; keeps the "a page
   // that never opens the palette pays no bundle cost" discipline intact for this call site too.
   search.addEventListener('click', () => {
     void import('../lib/command-palette.ts').then((m) => m.openCommandPalette())
   })
-  actions.append(search, buildThemeControl(provider))
+  const theme = buildThemeControl(provider)
+  actions.append(search, theme.element)
   bar.append(actions)
+
+  // GH #183 — the row-cramp icon-only collapse, keyed off THIS element's own measured width via
+  // `ResizeObserver`, deliberately NOT `window.matchMedia`. `bar` is exactly the box brand+chips squeeze
+  // inside: `ui-super-shell` (`packages/agent-ui/app/src/controls/super-shell/super-shell.ts` `#compose`)
+  // relocates this same node, unchanged, into its own `[data-part="bar-content"]` wrapper — a real
+  // container-width question, matching how the shell's OWN `@container ui-super-shell (inline-size <
+  // 40rem)` narrow arm already works (`super-shell.css`) and how its one shell-owned `#bandObserver`
+  // already watches itself via `ResizeObserver`, never `matchMedia` (same file). Concretely verified this
+  // matters: the fleet's own `_page.visual.browser.test.ts` `mountNarrow()` helper simulates a narrow
+  // viewport by constraining an ANCESTOR `<div>`'s width inside the `visual` vitest project's actual
+  // 900px-wide browser window (`vitest.browser.config.ts`'s `visual` project, chosen so a WIDE fixture's
+  // screenshot doesn't itself clip) — `window.matchMedia('(max-width: 40rem)')` reads that real 900px
+  // window and never matches, silently no-op-ing this entire fix under the exact baseline meant to prove
+  // it (measured: the CURRENT, pre-fix baseline already shows the row-cramp truncation bug at this same
+  // 900px-window/390px-div combination — proof the squeeze tracks the div's width, not the window's).
+  // Feature-detected for jsdom parity (the super-shell `#bandObserver` precedent) — jsdom has no
+  // `ResizeObserver`, so a `npm test` mount just keeps the default wide (full-text) render, which is fine:
+  // narrow-band behaviour is this exact suite's (the browser visual shard's) job, not jsdom's.
+  const iconOnlyPx = (): number => HEADER_ICON_ONLY_BREAKPOINT_REM * (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16)
+  const applyBand = (width: number): void => {
+    const next = width < iconOnlyPx()
+    if (next === iconOnly) return
+    iconOnly = next
+    renderSearch()
+    theme.setIconOnly(iconOnly)
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    // The FIRST notification after `observe()` always delivers synchronously-scheduled, PRE-PAINT (the
+    // spec's own guarantee for a newly-observed element) — so a page that loads directly at a narrow
+    // width still renders icon-only chips on first paint, never a wide-then-narrow flash.
+    new ResizeObserver((entries) => {
+      const entry = entries[0]
+      if (entry) applyBand(entry.contentRect.width)
+    }).observe(bar)
+  }
+
   return bar
 }
 

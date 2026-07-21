@@ -93,6 +93,10 @@ ui-theme-provider.app-shell [data-site-nav] {
   letter-spacing: -0.01em;
   color: var(--md-sys-color-neutral-on-surface);
   text-decoration: none;
+  /* GH #183 — the wordmark NEVER wraps, at any band: when the header row is cramped, the chips beside
+     it give way (icon-only collapse, _page.ts), never the brand. Unconditional — no media/container arm
+     lifts this. */
+  white-space: nowrap;
 }
 
 /* The app-level chrome region (search / theme) — both are now real `ui-*` controls (Search opens the
