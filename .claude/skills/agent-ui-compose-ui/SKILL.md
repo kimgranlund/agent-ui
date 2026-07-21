@@ -53,7 +53,7 @@ exemplar to read first: `site/pages/forms.ts` (one live form, narrated end-to-en
 
 An interactive flow gets `ui:flow-reviewer`; a fragment whose claim is visual/structural
 gets `ui:layout-reviewer`; a code-level change riding a repo contract gets
-`orchestration:code-reviewer`. Name the artifact and hand off before shipping.
+`teamwork:code-checker`. Name the artifact and hand off before shipping.
 
 ## Definition of done
 

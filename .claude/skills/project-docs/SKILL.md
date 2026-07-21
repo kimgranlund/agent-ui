@@ -7,7 +7,7 @@ description: >-
   the status of TKT-####", "what's already been queued or shipped". Consult table → the
   `.claude/docs/` files; Grep first, read the matching section. ANSWERS from the corpus only. NOT
   for authoring or editing a document (scribe's doc-authoring skills); NOT for capturing a new
-  feature idea (/scribe:feature) or bug (scribe's bug-report); NOT for building from a record.
+  feature idea (/docs:file-feature) or bug (docs:file-bug); NOT for building from a record.
 user-invocable: false
 disable-model-invocation: false
 ---
@@ -52,6 +52,6 @@ false "this project has none of that" is this skill's own worst failure.)
 3. Cross-references between records use the ID spine (`ADR-####` · `SPEC-R#`/`SPEC-N#` ·
    `LLD-C#` · `PRD-G#`/`PRD-D#` · `TKT-####`) — follow them rather than assuming one file is
    complete.
-4. Route all making: a new idea → `/scribe:feature`; building a queued record → the project's own
+4. Route all making: a new idea → `/docs:file-feature`; building a queued record → the project's own
    build path; authoring or revising any document → scribe's doc-authoring skills (all where
    installed — otherwise name the record that would be touched and hand back to the user).

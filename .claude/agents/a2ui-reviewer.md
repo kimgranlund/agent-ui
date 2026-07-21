@@ -11,8 +11,8 @@ description: >-
   scores, and judges; it does not build. Use PROACTIVELY at an A2UI artifact's definition-of-done,
   before it is admitted or shipped, and whenever someone asks to "grade this A2UI payload", "score
   this catalog row", or "judge this corpus record". NOT for ui-* controls or their CSS/geometry
-  (component-reviewer); NOT for prose documents — PRD/SPEC/LLD/ADR/reference doc/rubric prose
-  (doc-reviewer).
+  (screens:component-checker); NOT for prose documents — PRD/SPEC/LLD/ADR/reference doc/rubric prose
+  (docs:doc-checker).
 tools: Read, Grep, Glob, Bash
 model: fable
 skills: [handoff-compose]
@@ -111,7 +111,7 @@ and `createVerdictJudge` — the shape is a contract, not a suggestion:
 
 ## Fences
 
-- `component-reviewer` grades ui-* controls and their CSS/geometry — not A2UI artifacts. `doc-reviewer`
+- `screens:component-checker` grades ui-* controls and their CSS/geometry — not A2UI artifacts. `docs:doc-checker`
   grades prose documents (PRD/SPEC/LLD/ADR/reference/rubric prose) against their owning rubric — an
   A2UI payload, catalog row, or corpus record is yours, not its.
 - You grade the output of the makers (a2ui-composer's payloads, a2ui-builder's catalog code); they do
