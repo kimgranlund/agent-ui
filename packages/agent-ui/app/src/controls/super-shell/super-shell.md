@@ -1,7 +1,8 @@
 ---
 # super-shell.md — the attributes-as-API descriptor for ui-super-shell (M5, GH #83;
 # shell-archetypes-m5.spec.md — SPEC-R1 grammar · SPEC-R2 collapse · SPEC-R4 narrow · SPEC-R6
-# resizable inner pane · SPEC-R7 pane segments + tabs narrow arm, LLD-C1/C2, ADR-0154).
+# resizable inner pane · SPEC-R7 pane segments + tabs narrow arm · SPEC-R8 band ladder · SPEC-R9
+# toggle affordance law · SPEC-R10 scrollbar seam, LLD-C1/C2, ADR-0154/ADR-0155).
 
 name: ui-super-shell
 
@@ -38,6 +39,10 @@ attributes:
     type: number
     default: null
     reflect: true
+  - name: collapse-band
+    type: enum(narrow|compact)
+    default: narrow         # SPEC-R8b (ADR-0155) — which line auto-collapses the collapse-mode sides
+    reflect: true
 
 properties:
   - name: collapsedStart
@@ -56,6 +61,8 @@ properties:
     description: SPEC-R6d — the START pane's committed size in px, observable AND settable (a consumer persists/restores it the same way `collapsedStart` works). `null` until a first commit; the shell never persists it on its own (out of v1 scope per the LLD).
   - name: sizeEnd
     description: The mirror of `sizeStart` for the END side.
+  - name: collapseBand
+    description: SPEC-R8b (ADR-0155) — which band line auto-collapses this shell's COLLAPSE-mode sides — `narrow` (default, 40rem; every shipped shell byte-compatible) or `compact` (52.5rem, ADR-0150's compact-window line). `stack`/`tabs` sides are NOT governed by it — their reflow answers row-cramp, always the 40rem line. A depth-2 composition sets `compact` on the OUTER ring + leaves the inner shell default to get Kim's GH #44 outer-in cascade (app rails collapse first, canvas panes next).
 
 events:
   - name: change
@@ -67,7 +74,9 @@ parts:
   - name: bar
     description: Header/footer chrome rows (`data-bar="header|footer"`) — 3-module (54px) min-height, PERMANENT chrome (SPEC-R2c); rendered only when authored (the absence law). The header bar hosts the two side-toggles around the authored header children. Carries `role="banner"`/`role="contentinfo"` respectively (LLD-C1), overridable via `data-landmark` on the first authored child.
   - name: side-toggle
-    description: One header-hosted collapse toggle (`data-side="start|end"`, SPEC-R2b, LOGICAL per LLD-C4) — a ui-button whose aria-expanded mirrors the side's state. Labeled "Toggle start panes"/"Toggle end panes" — direction-agnostic text, since which physical side that is depends on `dir`.
+    description: One header-hosted collapse toggle (`data-side="start|end"`, SPEC-R2b/R9, LOGICAL per LLD-C4) — a ui-button that composes ONLY for a side with authored content (SPEC-R9a — no dead toggle on a one-sided shell), and hides below the 40rem line for `stack`/`tabs` sides (their narrow anatomy is owned elsewhere). Carries BOTH glyphs (`list` menu + `x` close, `data-glyph`); CSS swaps them off the host's `data-narrow-open` INSIDE the band query, so the X is band-correct by construction (SPEC-R9b — no stale wide X). `aria-expanded` is truthful at every band (`!collapsed` at wide, `data-narrow-open===side` below the line — SPEC-R9c). Labeled "Toggle start panes"/"Toggle end panes" — direction-agnostic text.
+  - name: scrim
+    description: SPEC-R9d — the shell-owned overlay scrim, composed once as the middle row's first child. Inert (display:none) at wide; shown at narrow/compact while a collapse side is overlay-open (z-index below the overlay). A tap dismisses the overlay (alongside Escape and a toggle re-tap); focus returns to the opener toggle on close (non-modal — no focus trap).
   - name: middle
     description: The `[ rail | pane* | canvas | pane* | rail ]` flex row (SPEC-R5, LLD-C3 — a side stacks ZERO OR MORE panes, not a single fixed pane); the narrow overlay's containing block.
   - name: rail
@@ -140,3 +149,19 @@ side's panes join a SHELL-OWNED top-level strip instead of collapsing: content i
 then each pane in DOM order, a segmented pane flattening to one tab per segment. Every state
 change here — resize, tab switch, segment switch, a band crossing — is visibility-only (SPEC-R7c):
 a live embedded surface in `content` or a pane survives every one of them un-cycled.
+
+## SPEC-R8/R9/R10 — the responsive band ladder, toggle affordance law, scrollbar seam (ADR-0155)
+
+The band vocabulary is `wide · compact · narrow`, cut by two container lines: the narrow line (40rem)
+and a new compact line (52.5rem, `collapse-band="compact"` shells only — ADR-0150's number, swept in
+`shell-breakpoint.ts`). A collapse-mode side hides below THIS shell's `collapse-band` line and
+toggle-restores as an overlay; `stack`/`tabs` sides keep the 40rem line regardless (SPEC-R8b). The
+toggle law (SPEC-R9): a toggle composes only for an authored side, hides below 40rem for `stack`/`tabs`
+sides, carries both `list`/`x` glyphs CSS-swapped inside the band query, keeps `aria-expanded` truthful
+per band via ONE visibility-only `ResizeObserver`, and dismisses via scrim tap / Escape / re-tap with
+focus returned to the toggle (non-modal). Note: when that observer clears a STALE overlay on a pure
+band-exit resize (not a user dismissal), it routes through the same close helper and so moves focus to the
+opener toggle — deliberate, since the overlay pane it lived in is now hidden and focus would otherwise
+drop to `<body>`. The scrollbar seam (SPEC-R10): `--ui-super-shell-scrollbar-width`
+(default `none`, consumer-overridable) hides the native bar on pane boxes, active segments, and the
+narrow-tabs strip, with the exported `scrollFade` trait as the replacement edge affordance.

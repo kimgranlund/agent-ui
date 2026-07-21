@@ -23,7 +23,8 @@ describe('ui-super-shell — the SPEC-R1 grammar', () => {
     const el = make({ header: 'H', 'global-nav': 'GN', 'nav-pane': 'NP', content: 'C', 'options-pane': 'OP', 'global-options': 'GO', footer: 'F' })
     expect(el).toBeInstanceOf(UISuperShellElement)
     const middle = el.querySelector('[data-part="middle"]') as HTMLElement
-    const order = [...middle.children].map((c) => `${c.getAttribute('data-part')}:${c.getAttribute('data-side') ?? '-'}`)
+    // filter the composed-once scrim (SPEC-R9d, the middle row's first child) — this asserts region placement
+    const order = [...middle.children].filter((c) => c.getAttribute('data-part') !== 'scrim').map((c) => `${c.getAttribute('data-part')}:${c.getAttribute('data-side') ?? '-'}`)
     expect(order).toEqual(['rail:start', 'pane:start', 'canvas:-', 'pane:end', 'rail:end'])
     expect(el.querySelectorAll('[data-part="bar"]')).toHaveLength(2)
     expect((el.querySelector('[data-bar="header"]') as HTMLElement).textContent).toContain('H')
@@ -65,14 +66,14 @@ describe('ui-super-shell — SPEC-R5 amendment: N stacked panes per side, asymme
   it('R5a: a side stacks MULTIPLE panes (rail, then panes outer-to-content) — no longer a rail+pane ceiling', () => {
     const el = make({ 'global-nav': 'GN', 'nav-pane': 'NP', 'section-nav': 'SN', content: 'C' })
     const middle = el.querySelector('[data-part="middle"]') as HTMLElement
-    const order = [...middle.children].map((c) => `${c.getAttribute('data-part')}:${c.getAttribute('data-slot-name')}:${c.getAttribute('data-side')}`)
+    const order = [...middle.children].filter((c) => c.getAttribute('data-part') !== 'scrim').map((c) => `${c.getAttribute('data-part')}:${c.getAttribute('data-slot-name')}:${c.getAttribute('data-side')}`)
     expect(order).toEqual(['rail:global-nav:start', 'pane:nav-pane:start', 'pane:section-nav:start', 'canvas:content:null'])
   })
 
   it('R5b: the two sides compose INDEPENDENTLY — a side may stack more panes than its mirror (dual-sidebar frame shape)', () => {
     const el = make({ 'global-nav': 'GN', 'nav-pane': 'NP', 'section-nav': 'SN', content: 'C', 'options-pane': 'OP', 'global-options': 'GO' })
     const middle = el.querySelector('[data-part="middle"]') as HTMLElement
-    const order = [...middle.children].map((c) => `${c.getAttribute('data-part')}:${c.getAttribute('data-side') ?? '-'}`)
+    const order = [...middle.children].filter((c) => c.getAttribute('data-part') !== 'scrim').map((c) => `${c.getAttribute('data-part')}:${c.getAttribute('data-side') ?? '-'}`)
     // left (start): rail + 2 panes · right (end): 1 pane + rail — asymmetric pane counts, R5b
     expect(order).toEqual(['rail:start', 'pane:start', 'pane:start', 'canvas:-', 'pane:end', 'rail:end'])
     expect(el.querySelectorAll('[data-side="start"]')).toHaveLength(3)
@@ -82,7 +83,7 @@ describe('ui-super-shell — SPEC-R5 amendment: N stacked panes per side, asymme
   it('R5c: options-section (the end-side mirror of section-nav) stacks closest to content, absence law applies to both new slots', () => {
     const el = make({ content: 'C', 'options-pane': 'OP', 'options-section': 'OS', 'global-options': 'GO' })
     const middle = el.querySelector('[data-part="middle"]') as HTMLElement
-    const order = [...middle.children].map((c) => c.getAttribute('data-slot-name'))
+    const order = [...middle.children].filter((c) => c.getAttribute('data-part') !== 'scrim').map((c) => c.getAttribute('data-slot-name'))
     expect(order).toEqual(['content', 'options-section', 'options-pane', 'global-options'])
     // section-nav authored on neither side ⇒ no box anywhere (R1 absence law extends to the new slots)
     expect(el.querySelector('[data-slot-name="section-nav"]')).toBeNull()
@@ -180,5 +181,50 @@ describe('ui-super-shell — the SPEC-R2 collapse contract (logical start/end, L
     const end = el.querySelector('[data-part="side-toggle"][data-side="end"]') as HTMLElement
     expect(start.getAttribute('aria-label')).toBe('Toggle start panes')
     expect(end.getAttribute('aria-label')).toBe('Toggle end panes')
+  })
+})
+
+describe('ui-super-shell — SPEC-R8/R9/R10 responsive system (jsdom coverage, LLD-C7/ADR-0155)', () => {
+  it('SPEC-R8b: collapse-band is a reflected enum prop (narrow default, compact settable)', () => {
+    const el = make({ header: 'H', 'nav-pane': 'NP', content: 'C' })
+    expect(el.collapseBand).toBe('narrow')
+    expect(el.hasAttribute('collapse-band')).toBe(false) // default not reflected as an attribute
+    el.collapseBand = 'compact'
+    expect(el.getAttribute('collapse-band')).toBe('compact')
+  })
+
+  it('SPEC-R9a presence: a toggle composes ONLY for an authored side — the docs-site shape (start only) has NO end toggle', () => {
+    const el = make({ header: 'H', 'nav-pane': 'NP', content: 'C' }) // the docs site: a start nav side, no end side
+    expect(el.querySelector('[data-part="side-toggle"][data-side="start"]')).not.toBeNull()
+    expect(el.querySelector('[data-part="side-toggle"][data-side="end"]')).toBeNull() // the dead end-button, gone (defect 2)
+    // an options-only shell gets the mirror: an end toggle, no start toggle
+    const endOnly = make({ header: 'H', content: 'C', 'options-pane': 'OP' })
+    expect(endOnly.querySelector('[data-part="side-toggle"][data-side="start"]')).toBeNull()
+    expect(endOnly.querySelector('[data-part="side-toggle"][data-side="end"]')).not.toBeNull()
+  })
+
+  it('SPEC-R9b: each toggle carries BOTH glyphs (list menu + x close) in the leading cell', () => {
+    const el = make({ header: 'H', 'nav-pane': 'NP', content: 'C' })
+    const toggle = el.querySelector('[data-part="side-toggle"][data-side="start"]') as HTMLElement
+    const menu = toggle.querySelector('ui-icon[data-glyph="menu"]')
+    const close = toggle.querySelector('ui-icon[data-glyph="close"]')
+    expect(menu?.getAttribute('glyph')).toBe('list')
+    expect(close?.getAttribute('glyph')).toBe('x')
+    expect(menu?.getAttribute('slot')).toBe('leading')
+    expect(close?.getAttribute('slot')).toBe('leading')
+  })
+
+  it('SPEC-R9d: the scrim part is composed once as the middle row\'s FIRST child', () => {
+    const el = make({ header: 'H', 'nav-pane': 'NP', content: 'C' })
+    const middle = el.querySelector('[data-part="middle"]') as HTMLElement
+    expect(middle.firstElementChild?.getAttribute('data-part')).toBe('scrim')
+    expect(el.querySelectorAll('[data-part="scrim"]')).toHaveLength(1)
+  })
+
+  it('SPEC-R9c: the overlay side\'s first box carries tabindex="-1" (the focus landing, non-modal)', () => {
+    const el = make({ header: 'H', 'global-nav': 'GN', 'nav-pane': 'NP', content: 'C' })
+    // the side's FIRST box in DOM order (the rail here) is the focus landing
+    const firstStart = el.querySelector('[data-part="middle"] > [data-side="start"]') as HTMLElement
+    expect(firstStart.getAttribute('tabindex')).toBe('-1')
   })
 })

@@ -10,14 +10,15 @@
 //
 // SHELL NOTE — a CSS-only app shell (the outer context frame + the per-page sticky header/footer is
 // `_page.css` grid + sticky and the structure below). The LEFT NAV RAIL is no longer hand-rolled: it is now
-// a real `ui-nav-rail collapse="menu"` (ADR-0130 / SPEC-R10, the mode-1 consumer of the shared nav-rail
-// family), fed from `sitemap.json`. The remaining top-bar / footer / CTA are still CSS-only placeholders an
+// a real `ui-nav-rail` (ADR-0130, the mode-1 consumer of the shared nav-rail family), fed from
+// `sitemap.json` and hidden/overlaid at narrow by the shell itself (GH #170/ADR-0155 — no rail-owned
+// `collapse="menu"` dropdown here). The remaining top-bar / footer / CTA are still CSS-only placeholders an
 // app-shell component family will own later, the same way the pages already dogfood ui-button / ui-text-field.
 import '@agent-ui/components/foundation-styles.css' // [1] foundation: tokens.css -> dimensions.css (FIRST)
 import '@agent-ui/components/component-styles.css' // [2] per-control CSS, after the foundation
 import '@agent-ui/components/components' // [3] self-defining ui-* controls (registers ui-button on import)
 import '@agent-ui/app/nav-rail' // [3a] the shared ui-nav-rail family (@agent-ui/app) the site nav composes (ADR-0130, mode 1)
-import '@agent-ui/app/nav-rail.css' // [3a] its stylesheet — the rail anatomy + collapse="menu" disclosure, after the foundation
+import '@agent-ui/app/nav-rail.css' // [3a] its stylesheet — the rail's grouped vertical anatomy, after the foundation
 import '@agent-ui/app/super-shell' // [3c] M5 (GH #84): the site chrome now RIDES the shell system — ui-super-shell owns the frame
 import '@agent-ui/app/super-shell.css' // [3c] its stylesheet (the 18px module ladder + per-side collapse)
 import '@agent-ui/icons/phosphor' // [3b] activate the Phosphor default pack (ADR-0065/0066): the controls above render their
@@ -46,7 +47,7 @@ export interface PageHandle {
 // ── the page-header tab-strip source (formerly ALSO the rail source) ─────────────────────────────────────────
 // `NAV` groups the site's per-component page-type links (Permutations/States/API/Demo). Since ADR-0130's mode-1
 // migration, the LEFT RAIL no longer derives from this array — it derives from `sitemap.json` (SITE_NAV_ENTRIES
-// below, rendered on `ui-nav-rail collapse="menu"`). `NAV` SURVIVES only as the residue that genuinely cannot
+// below, rendered on `ui-nav-rail`). `NAV` SURVIVES only as the residue that genuinely cannot
 // derive from the sitemap: the per-component page-type sub-links, which `sitemap.json` (one `-doc.html` per
 // component) does not carry. `activeGroup()`/`buildTabs()`/`buildPageHeader()` read it to render the page-header
 // context-label + tab strip, so a component's page-type pages tab between each other for free (SPEC-R10 AC3 —
@@ -553,25 +554,26 @@ function activeGroup(): NavGroup | undefined {
   return NAV.find((group) => group.links.some((link) => isCurrent(link.href)))
 }
 
-// buildNav — the shared cross-page browse rail, now a real `ui-nav-rail collapse="menu"` (ADR-0130, SPEC-R10,
-// the mode-1 consumer) fed from `sitemap.json`. Wide: a grouped vertical rail — one `ui-nav-rail-group` per
+// buildNav — the shared cross-page browse rail, a real `ui-nav-rail` (ADR-0130, the mode-1 consumer) fed
+// from `sitemap.json`. It renders its grouped vertical anatomy at EVERY band — one `ui-nav-rail-group` per
 // sitemap `section`, its context-label the section name, each item a real `<a>` with the proper name at the
 // leading edge and (for the tag-bearing Components) the tag right-justified in the trailing `data-role="tag"`
-// cell (SPEC-R6's name|tag row). Narrow: the component's OWN `collapse="menu"` disclosure collapses the list
-// into a dropdown (the zero-JS `<details>` mechanism, now owned by ui-nav-rail, not this shell). The rail's
-// active indicator + the collapsed trigger's label both key off the `selected` item — the current page, or,
+// cell (SPEC-R6's name|tag row). Narrow is now the SHELL's job (GH #170/ADR-0155): the ui-super-shell hides
+// this whole pane below the 52.5rem compact line and toggle-restores it as an overlay, so the rail's own
+// `collapse="menu"` dropdown + `collapse-container="ancestor"` arrangement (TKT-0035) RETIRE for this
+// consumer. The rail's active indicator keys off the `selected` item — the current page, or,
 // on a component's sub-page (Permutations/States/API), that component's own doc entry so the rail still shows
 // where you are while the tab strip carries the sub-pages. Role derivation (all items href-bearing) makes the
 // rail a `navigation` landmark and stamps `aria-current="page"` on the active link — the primitive's own job.
 function buildNav(): HTMLElement {
   const rail = document.createElement('ui-nav-rail')
-  rail.setAttribute('collapse', 'menu')
-  // TKT-0035 — the rail column is ~15rem, always below nav-rail's OWN 40rem collapse threshold; without
-  // this it would render as a dropdown at every width (no desktop vertical rail). `collapse-container=
-  // "ancestor"` relinquishes the rail's own containment so its collapse query reads the NAMED
-  // `ui-nav-rail-collapse` container `.app-shell` establishes instead (_page.css), tracking the viewport.
-  rail.setAttribute('collapse-container', 'ancestor')
-  rail.setAttribute('data-site-nav', '') // the shell's grid/scroll hook (_page.css); NOT the rail's own anatomy
+  // GH #170 / ADR-0155 — `collapse="none"`: the rail renders its FULL vertical anatomy at every band. The
+  // shell's own compact/narrow overlay (collapse-band="compact" + narrow-start="collapse" on the shell)
+  // owns the narrow story now, so the rail's own `collapse="menu"` dropdown + its TKT-0035
+  // `collapse-container="ancestor"` arrangement RETIRE for this consumer (`ui-nav-rail` keeps the
+  // capability via its other collapse modes — only the site opts into `none`).
+  rail.setAttribute('collapse', 'none')
+  rail.setAttribute('data-site-nav', '') // the shell's scroll hook (_page.css); NOT the rail's own anatomy
   rail.setAttribute('aria-label', 'Site')
 
   // On a component's sub-page the exact URL is not in the sitemap (only its `-doc.html` is), so map the active
@@ -621,22 +623,60 @@ function buildNav(): HTMLElement {
 const SCHEME_CYCLE: readonly SchemeId[] = ['', 'light', 'dark']
 const SCHEME_LABEL: Record<SchemeId, string> = { '': 'Auto', light: 'Light', dark: 'Dark' }
 
+// GH #183 — the header-chip row-cramp collapse: the SAME 40rem line named by
+// `@agent-ui/app`'s `shell-breakpoint.ts` (`SHELL_NARROW_BREAKPOINT_REM`), per ADR-0155 clause 1's own
+// routing rule — "`stack`/`tabs` sides keep the 40rem line, which answers a different question (row
+// cramp, not side visibility)" — and chip truncation is exactly a row-cramp question, never a side-
+// visibility one (the docs shell's 52.5rem `collapse-band="compact"` line, below). NOT imported: the
+// site isn't in `@agent-ui/app`'s package.json `exports` map, and `shell-breakpoint.ts`'s own header
+// already documents why each of its five internal call sites keeps its own cited literal rather than a
+// shared import (no live CSS custom-property substitution point exists for an `@container` condition) —
+// this call site follows the identical convention, for a `ResizeObserver` comparison rather than a CSS
+// query (see `buildContextHeader`'s own comment for why). Empirically measured (2026-07-21, this file's
+// actual brand + 3-chip content): the real squeeze onset is ~415px (~26rem) — 40rem/640px collapses
+// with comfortable headroom above that, while 52.5rem/840px would additionally over-collapse ordinary
+// 700-800px widths where the header still fits its full text with room to spare.
+const HEADER_ICON_ONLY_BREAKPOINT_REM = 40
+
+/** Render one header action chip for the given band (GH #183): full label text (wide) or a real icon +
+ *  `aria-label` carrying the SAME text (narrow — `icon-only`, button.ts's fifth "square" content-model
+ *  structure, the toast.ts close-button precedent). `icon-only` is an explicit, author-driven content
+ *  swap — CSS alone cannot detect an empty/text-node label (button.ts's own comment) — so this always
+ *  runs in JS, on every band change AND every dynamic-label change (scheme/theme selection), never just
+ *  once at mount. */
+function renderChip(btn: UIButtonElement, glyph: string, label: string, iconOnly: boolean): void {
+  btn.toggleAttribute('icon-only', iconOnly)
+  btn.replaceChildren()
+  if (iconOnly) {
+    const icon = document.createElement('ui-icon')
+    icon.setAttribute('slot', 'leading')
+    icon.setAttribute('data-role', 'icon')
+    icon.setAttribute('glyph', glyph)
+    btn.append(icon)
+    btn.setAttribute('aria-label', label)
+  } else {
+    btn.textContent = label
+    btn.removeAttribute('aria-label')
+  }
+}
+
 /** The real Theme control (TKT-0088/ADR-0141 cl.4/5) — a scheme-cycle button + a theme `ui-menu` picker,
  *  both wired to `provider` (the shell's own `ui-theme-provider`, ADR-0141 cl.1) via `theme-loader.ts`.
  *  Mounts already showing the PERSISTED choice (no flash of the default before JS settles — the provider
  *  itself was already set from the same persisted values at shell-creation time, below; this control just
- *  reads that same state back for its own initial label). */
-function buildThemeControl(provider: UIThemeProviderElement): HTMLElement {
+ *  reads that same state back for its own initial label). Returns a `setIconOnly` handle (GH #183) so the
+ *  caller's single band observer can flip both chips together — the row-cramp collapse is one shared
+ *  band, not a per-chip decision. */
+function buildThemeControl(provider: UIThemeProviderElement): { element: HTMLElement; setIconOnly: (iconOnly: boolean) => void } {
   const group = document.createElement('div')
   group.className = 'app-context-theme-group'
+  let iconOnly = false // the shared band flag — set by the caller before this control ever paints narrow
 
   // ── the scheme-cycle button ──────────────────────────────────────────────────────────────────────────
   const schemeBtn = document.createElement('ui-button') as UIButtonElement
   schemeBtn.setAttribute('variant', 'soft')
   let scheme = loadPersistedScheme()
-  const renderScheme = (): void => {
-    schemeBtn.textContent = SCHEME_LABEL[scheme]
-  }
+  const renderScheme = (): void => renderChip(schemeBtn, 'circle-half', SCHEME_LABEL[scheme], iconOnly)
   renderScheme()
   schemeBtn.addEventListener('click', () => {
     const next = SCHEME_CYCLE[(SCHEME_CYCLE.indexOf(scheme) + 1) % SCHEME_CYCLE.length] as SchemeId
@@ -658,7 +698,8 @@ function buildThemeControl(provider: UIThemeProviderElement): HTMLElement {
 
   let currentTheme = loadPersistedTheme()
   const renderTrigger = (): void => {
-    trigger.textContent = THEME_OPTIONS.find((o) => o.id === currentTheme)?.label ?? 'Default'
+    const label = THEME_OPTIONS.find((o) => o.id === currentTheme)?.label ?? 'Default'
+    renderChip(trigger, 'palette', label, iconOnly)
   }
   renderTrigger()
 
@@ -693,14 +734,23 @@ function buildThemeControl(provider: UIThemeProviderElement): HTMLElement {
     persistTheme(id)
   })
 
-  return group
+  const setIconOnly = (value: boolean): void => {
+    if (value === iconOnly) return
+    iconOnly = value
+    renderScheme()
+    renderTrigger()
+  }
+
+  return { element: group, setIconOnly }
 }
 
 // buildContextHeader — the app top-bar (right column, row 1, fixed): the app wordmark (a Home link) + a
 // placeholder region for app-level chrome. `Search` is now a REAL button opening the already-mounted
 // `ui-command-modal` (TKT-0018's own palette, `mountCommandPaletteOnce` below — the mod+k hotkey's own
 // affordance, made clickable too); `Theme` is the REAL scheme+theme control above, wired to `provider`
-// (TKT-0088/ADR-0141 cl.4/5 — the shell's own ui-theme-provider, created by the caller).
+// (TKT-0088/ADR-0141 cl.4/5 — the shell's own ui-theme-provider, created by the caller). GH #183: the
+// wordmark (`.app-brand`, `_page.css`) never wraps or truncates at any band — when the row is cramped,
+// these three chips collapse to icon-only instead (never the brand).
 function buildContextHeader(provider: UIThemeProviderElement): HTMLElement {
   const bar = document.createElement('header')
   bar.className = 'app-context-header'
@@ -715,15 +765,54 @@ function buildContextHeader(provider: UIThemeProviderElement): HTMLElement {
   actions.className = 'app-context-actions'
   const search = document.createElement('ui-button') as UIButtonElement
   search.setAttribute('variant', 'soft')
-  search.textContent = 'Search'
+  let iconOnly = false // the shared row-cramp band flag (GH #183) — the ResizeObserver below is its one writer
+  const renderSearch = (): void => renderChip(search, 'magnifying-glass', 'Search', iconOnly)
+  renderSearch()
   // Lazy import — same module `mountCommandPaletteOnce` already pulled in at shell-build time (below),
   // so this resolves from the browser's own module cache, not a second network fetch; keeps the "a page
   // that never opens the palette pays no bundle cost" discipline intact for this call site too.
   search.addEventListener('click', () => {
     void import('../lib/command-palette.ts').then((m) => m.openCommandPalette())
   })
-  actions.append(search, buildThemeControl(provider))
+  const theme = buildThemeControl(provider)
+  actions.append(search, theme.element)
   bar.append(actions)
+
+  // GH #183 — the row-cramp icon-only collapse, keyed off THIS element's own measured width via
+  // `ResizeObserver`, deliberately NOT `window.matchMedia`. `bar` is exactly the box brand+chips squeeze
+  // inside: `ui-super-shell` (`packages/agent-ui/app/src/controls/super-shell/super-shell.ts` `#compose`)
+  // relocates this same node, unchanged, into its own `[data-part="bar-content"]` wrapper — a real
+  // container-width question, matching how the shell's OWN `@container ui-super-shell (inline-size <
+  // 40rem)` narrow arm already works (`super-shell.css`) and how its one shell-owned `#bandObserver`
+  // already watches itself via `ResizeObserver`, never `matchMedia` (same file). Concretely verified this
+  // matters: the fleet's own `_page.visual.browser.test.ts` `mountNarrow()` helper simulates a narrow
+  // viewport by constraining an ANCESTOR `<div>`'s width inside the `visual` vitest project's actual
+  // 900px-wide browser window (`vitest.browser.config.ts`'s `visual` project, chosen so a WIDE fixture's
+  // screenshot doesn't itself clip) — `window.matchMedia('(max-width: 40rem)')` reads that real 900px
+  // window and never matches, silently no-op-ing this entire fix under the exact baseline meant to prove
+  // it (measured: the CURRENT, pre-fix baseline already shows the row-cramp truncation bug at this same
+  // 900px-window/390px-div combination — proof the squeeze tracks the div's width, not the window's).
+  // Feature-detected for jsdom parity (the super-shell `#bandObserver` precedent) — jsdom has no
+  // `ResizeObserver`, so a `npm test` mount just keeps the default wide (full-text) render, which is fine:
+  // narrow-band behaviour is this exact suite's (the browser visual shard's) job, not jsdom's.
+  const iconOnlyPx = (): number => HEADER_ICON_ONLY_BREAKPOINT_REM * (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16)
+  const applyBand = (width: number): void => {
+    const next = width < iconOnlyPx()
+    if (next === iconOnly) return
+    iconOnly = next
+    renderSearch()
+    theme.setIconOnly(iconOnly)
+  }
+  if (typeof ResizeObserver !== 'undefined') {
+    // The FIRST notification after `observe()` always delivers synchronously-scheduled, PRE-PAINT (the
+    // spec's own guarantee for a newly-observed element) — so a page that loads directly at a narrow
+    // width still renders icon-only chips on first paint, never a wide-then-narrow flash.
+    new ResizeObserver((entries) => {
+      const entry = entries[0]
+      if (entry) applyBand(entry.contentRect.width)
+    }).observe(bar)
+  }
+
   return bar
 }
 
@@ -907,16 +996,18 @@ function buildThemedShell(page: HTMLElement): UIThemeProviderElement {
   void applyTheme(provider, loadPersistedTheme())
   // M5 / GH #84 — the CSS-grid placeholder chrome retired: the frame is now a real `ui-super-shell`
   // (shell-archetypes-m5.spec.md). Region builders are UNCHANGED; they just declare their slot —
-  // header full-width (the wireframe's own shape), the ui-nav-rail as the collapsible nav-pane, the
-  // page region as the canvas, the footer as permanent chrome. The provider stays the ROOT (tokens +
-  // the ui-nav-rail-collapse named container both live there, TKT-0035/ADR-0141 unchanged).
+  // header full-width (the wireframe's own shape), the ui-nav-rail as the nav-pane, the page region as
+  // the canvas, the footer as permanent chrome. The provider stays the ROOT (tokens live there,
+  // ADR-0141 unchanged); GH #170/ADR-0155 retired its old ui-nav-rail-collapse named container.
   const shell = document.createElement('ui-super-shell') as HTMLElement & { collapsedStart: boolean }
   shell.className = 'site-shell'
-  // Narrow keeps the SHIPPED nav story (TKT-0035): the nav pane STACKS in flow and the rail's own
-  // collapse="menu" dropdown takes over — never the shell's hide/overlay arm (ADR-0084 stack mode).
-  // `nav` is authored FIRST (below) — the DOM-first ("start") side, per LLD-C4/GH #95's logical
-  // naming (this site is LTR-only prose, so start == physical left, unchanged in practice).
-  shell.setAttribute('narrow-start', 'stack')
+  // GH #170 / ADR-0155 — the nav story moves from `stack` to OVERLAY: below the 52.5rem compact-window
+  // line the nav pane hides and the header's menu toggle restores it as an overlay (X glyph, scrim/Escape
+  // dismiss, full vertical rail inside the pane). `collapse-band="compact"` selects that line (ADR-0150's
+  // number); `narrow-start="collapse"` picks the overlay arm. `nav` is authored FIRST (below) — the
+  // DOM-first ("start") side, per LLD-C4/GH #95 (this site is LTR-only prose, so start == physical left).
+  shell.setAttribute('narrow-start', 'collapse')
+  shell.setAttribute('collapse-band', 'compact')
   const header = buildContextHeader(provider)
   header.setAttribute('data-slot', 'header')
   const nav = buildNav()

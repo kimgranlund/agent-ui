@@ -26,6 +26,12 @@
      override (agent-admin's migration sets 20rem/16rem, its shipped ui-split's own floors). */
   --ui-super-shell-pane-min-size: calc(var(--ui-super-shell-module) * 9); /* 162px */
   --ui-super-shell-canvas-min-size: calc(var(--ui-super-shell-module) * 9); /* 162px */
+  /* SPEC-R10a (ADR-0155) — hidden scroller, live scroll: the fleet's command-modal.css / ui-menu (GH #166)
+     seam applied to the shell's OWN scroll regions (pane · active segment · narrow-tabs strip · the
+     overlay-restored side, which inherits the pane rule). The scroll-fade edge (scrollFade, super-shell.ts)
+     is the replacement affordance once the bar hides. Consumer-overridable (the repoint pattern) — never
+     forced; both shipped engines support `scrollbar-width` (the split-pane.css note), so no ::-webkit leg. */
+  --ui-super-shell-scrollbar-width: none;
   /* GH #182 — the pane-resizer's THREE decoupled states, matching ui-split's own precedent
      (split.css's --ui-split-divider-ink / -ink-hover + the shared ADR-0009 focus ring): a
      subtle resting ink (discoverability), a hover/drag fill, and a focus-visible ring that is
@@ -34,7 +40,13 @@
   --ui-super-shell-resizer-ink-hover: var(--md-sys-color-primary);
 }
 
-@scope (ui-super-shell) {
+/* `to (ui-super-shell)` sets the scope's LOWER boundary at any NESTED ui-super-shell (SPEC-R1b depth-2
+   recursion): without it, a `:scope … [data-part='middle'] > [data-side]` rule (collapse/narrow/compact)
+   leaks past the outer shell into an inner shell's own middle row — the outer's compact-band hide would
+   then hide the INNER canvas side too, defeating the GH #44 outer-in cascade (AC14). Each nested shell
+   still gets its OWN copy of every rule from its own `@scope` root; the limit only stops one shell's
+   rules from reaching into another's. */
+@scope (ui-super-shell) to (ui-super-shell) {
   :scope {
     display: flex;
     flex-direction: column;
@@ -97,6 +109,7 @@
     background: var(--ui-super-shell-surface);
     min-block-size: 0;
     overflow-y: auto;
+    scrollbar-width: var(--ui-super-shell-scrollbar-width); /* SPEC-R10a — hidden scroller; overlay side inherits this */
     box-sizing: border-box;
   }
 
@@ -150,6 +163,7 @@
     flex: 1 1 auto;
     min-block-size: 0;
     overflow-y: auto;
+    scrollbar-width: var(--ui-super-shell-scrollbar-width); /* SPEC-R10a — the active segment IS the live viewport */
   }
 
   /* SPEC-R7b — the shell-owned narrow-tabs strip. Hidden by default (wide); shown only under the narrow
@@ -161,7 +175,15 @@
     gap: var(--ui-super-shell-gap);
     flex: 0 0 auto;
     overflow-x: auto;
+    scrollbar-width: var(--ui-super-shell-scrollbar-width); /* SPEC-R10a — the strip scrolls horizontally when it overflows */
   }
+
+  /* SPEC-R9b — the toggle's close (X) glyph is hidden by default; each band query below reveals it while
+     that side's overlay is open (and hides the menu glyph). Band-correct by construction — no wide X. */
+  [data-part='side-toggle'] [data-glyph='close'] { display: none; }
+
+  /* SPEC-R9d — the overlay scrim is inert (no box) at wide; each band query shows it while a side is open. */
+  [data-part='scrim'] { display: none; }
 
   [data-part='canvas'] {
     flex: 1 1 auto;
@@ -212,10 +234,45 @@
       position: absolute;
       inset-block: 0;
       z-index: 2;
+      /* SPEC-R9d — cap the overlay so a canvas edge stays visible on the smallest screens (a 252px pane
+         never spans a 320px viewport): its own pane-size, but never wider than the container minus a bar. */
+      max-inline-size: calc(100cqi - var(--ui-super-shell-bar-size));
       box-shadow: var(--ui-super-shell-overlay-shadow);
     }
     :scope[data-narrow-open='start'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']) { inset-inline-start: 0; }
     :scope[data-narrow-open='end'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) { inset-inline-end: 0; }
+
+    /* SPEC-R9a — a `stack`/`tabs` side's toggle HIDES below the 40rem narrow line (its narrow anatomy is
+       owned by the stacked content / the narrow-tabs strip; today's no-op-or-conflicting click arms become
+       unreachable). A `collapse` side's toggle STAYS — it is the overlay affordance. Never in the compact
+       block: a stack/tabs side's line is always 40rem, so at 40–52.5rem its toggle keeps wide behavior. */
+    :scope[narrow-start='stack'] [data-part='side-toggle'][data-side='start'],
+    :scope[narrow-start='tabs'] [data-part='side-toggle'][data-side='start'],
+    :scope[narrow-end='stack'] [data-part='side-toggle'][data-side='end'],
+    :scope[narrow-end='tabs'] [data-part='side-toggle'][data-side='end'] {
+      display: none;
+    }
+
+    /* SPEC-R9b — menu⇄X: while a side's overlay is open, its toggle shows the X (close) and hides the menu
+       (list). Inside the band query, so a stale `data-narrow-open` can never paint an X at wide. */
+    :scope[data-narrow-open='start'] [data-part='side-toggle'][data-side='start'] [data-glyph='menu'],
+    :scope[data-narrow-open='end'] [data-part='side-toggle'][data-side='end'] [data-glyph='menu'] {
+      display: none;
+    }
+    :scope[data-narrow-open='start'] [data-part='side-toggle'][data-side='start'] [data-glyph='close'],
+    :scope[data-narrow-open='end'] [data-part='side-toggle'][data-side='end'] [data-glyph='close'] {
+      display: inline-flex;
+    }
+
+    /* SPEC-R9d — the scrim: shown while a side is overlay-open (z-index:1, below the overlay's z-index:2),
+       a tap dismisses (super-shell.ts). Absolute-filling the middle row (its positioned containing block). */
+    :scope[data-narrow-open] [data-part='scrim'] {
+      display: block;
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: rgb(0 0 0 / 0.32);
+    }
 
     /* SPEC-R7b/R7c — the narrow-tabs strip + its addressed participant. The `:has()` guard is what
        gives these rules enough specificity to win over the blanket `[data-side]` hide rule above (and
@@ -250,6 +307,60 @@
        a `stack`-side segmented pane (never marked `data-narrow-tab-target`) keeps its own switcher. */
     :scope:has([data-part='narrow-tabs']) [data-narrow-tab-target] [data-part='pane-tabs'] {
       display: none;
+    }
+  }
+
+  /* ── SPEC-R8/R9 (ADR-0155): the COMPACT band — a SECOND container line at 52.5rem ───────────────────
+     52.5rem is ADR-0150's compact-window number (shell-breakpoint.ts's SHELL_COMPACT_BREAKPOINT — the
+     literal is swept there). Guarded `collapse-band='compact'` (default shells never enter it) AND keyed
+     PER SIDE to a `collapse` arm ONLY: a `stack`/`tabs` side's line is ALWAYS 40rem (SPEC-R8b/d), so
+     between 40–52.5rem such a side keeps full WIDE behavior (no hide, no overlay, no X). This block
+     therefore carries ONLY collapse-arm rules — it must never re-stack an overlay onto an in-flow stacked
+     side (the exact narrow-block conflict this ticket kills, one band up). Every arm mirrors the narrow
+     block's COLLAPSE legs, scoped up to the compact line; the toggle-presence + narrow-tabs/stack legs
+     are deliberately ABSENT (they belong to the 40rem line alone). Duplication is kept to this one block. */
+  @container ui-super-shell (inline-size < 52.5rem) {
+    /* A COLLAPSE-mode side is keyed `:not([narrow-*='stack']):not([narrow-*='tabs'])` — NOT
+       `[narrow-*='collapse']`: the enum prop's DEFAULT value does not reflect to an attribute (props.ts
+       reflects only through the setter), so the default `collapse` side carries no `narrow-start` attribute
+       at all. The `:not()` pair matches "collapse (default or explicit)" AND excludes a stack/tabs side on
+       the SAME shell, which keeps its own 40rem line (SPEC-R8b/d) — deviating from the LLD's literal
+       `[narrow-*='collapse']` selector, whose "the attribute is always present" premise this prop system
+       breaks; the per-side contract is identical. */
+    /* hide the collapse side (query-only — never the attribute, the no-clobber law) */
+    :scope[collapse-band='compact']:not([narrow-start='stack']):not([narrow-start='tabs']) [data-part='middle'] > [data-side='start'],
+    :scope[collapse-band='compact']:not([narrow-end='stack']):not([narrow-end='tabs']) [data-part='middle'] > [data-side='end'] {
+      display: none;
+    }
+    /* toggle-restored overlay (the SAME anatomy as the narrow overlay, scoped to a collapse side) */
+    :scope[collapse-band='compact']:not([narrow-start='stack']):not([narrow-start='tabs'])[data-narrow-open='start'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']),
+    :scope[collapse-band='compact']:not([narrow-end='stack']):not([narrow-end='tabs'])[data-narrow-open='end'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) {
+      display: block;
+      position: absolute;
+      inset-block: 0;
+      z-index: 2;
+      max-inline-size: calc(100cqi - var(--ui-super-shell-bar-size));
+      box-shadow: var(--ui-super-shell-overlay-shadow);
+    }
+    :scope[collapse-band='compact']:not([narrow-start='stack']):not([narrow-start='tabs'])[data-narrow-open='start'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']) { inset-inline-start: 0; }
+    :scope[collapse-band='compact']:not([narrow-end='stack']):not([narrow-end='tabs'])[data-narrow-open='end'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) { inset-inline-end: 0; }
+    /* menu⇄X — scoped to the open collapse side */
+    :scope[collapse-band='compact']:not([narrow-start='stack']):not([narrow-start='tabs'])[data-narrow-open='start'] [data-part='side-toggle'][data-side='start'] [data-glyph='menu'],
+    :scope[collapse-band='compact']:not([narrow-end='stack']):not([narrow-end='tabs'])[data-narrow-open='end'] [data-part='side-toggle'][data-side='end'] [data-glyph='menu'] {
+      display: none;
+    }
+    :scope[collapse-band='compact']:not([narrow-start='stack']):not([narrow-start='tabs'])[data-narrow-open='start'] [data-part='side-toggle'][data-side='start'] [data-glyph='close'],
+    :scope[collapse-band='compact']:not([narrow-end='stack']):not([narrow-end='tabs'])[data-narrow-open='end'] [data-part='side-toggle'][data-side='end'] [data-glyph='close'] {
+      display: inline-flex;
+    }
+    /* scrim — shown while a collapse side is open at the compact band */
+    :scope[collapse-band='compact']:not([narrow-start='stack']):not([narrow-start='tabs'])[data-narrow-open='start'] [data-part='scrim'],
+    :scope[collapse-band='compact']:not([narrow-end='stack']):not([narrow-end='tabs'])[data-narrow-open='end'] [data-part='scrim'] {
+      display: block;
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: rgb(0 0 0 / 0.32);
     }
   }
 }

@@ -36,7 +36,11 @@ import { dirname, resolve as resolvePath } from 'node:path'
 const KB = 1024
 const targets = [
   // [label, entry (relative to this script), budget in gz bytes]
-  ['@agent-ui/components . (reactive+dom barrel)', '../packages/agent-ui/components/src/index.ts', 7 * KB],
+  // 7.5 KB re-based at the GH #170/ADR-0155 wave: the barrel gained a ratified public-API export
+  // (`scrollFade`, the paneResize/ADR-0023 precedent — ui-super-shell's SPEC-R10 scrollbar seam needs the
+  // fleet's ONE fade trait, never a deep import), which pulls the scroll-fade trait into the root surface
+  // (+~182 B gz over the old 7 KB). ADR-0155 Consequences names this re-measure explicitly (ADR-0040/0049).
+  ['@agent-ui/components . (reactive+dom barrel)', '../packages/agent-ui/components/src/index.ts', 7.5 * KB],
   // family-total = the WORST-CASE ceiling (every control defined at once), NOT the eventual distributed size:
   // a real consumer imports a subset and ships ~5–14 KB (single control ~5 KB incl. the shared dom+reactive+
   // traits+base foundation dragged in once; each extra control ~0.5–2 KB marginal — measured 2026-07-05).

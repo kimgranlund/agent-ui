@@ -1,9 +1,8 @@
 # SPEC — Shell archetypes M5: `ui-super-shell` (the two-level recursive shell grammar)
 
-> Status: proposed · v0.3 · 2026-07-20 · Layer: app chrome (`@agent-ui/app`)
-> Refines: ADR-0151 — `adr/0151-named-shell-archetypes-m5.md`, in-flight on PR #45 (ratified in
-> substance 2026-07-18; the merge click is Kim's — the relative link lands when the ADR file does) ·
-> the agent-app-surfaces PRD's M5 (PRD-G9).
+> Status: proposed · v0.4 · 2026-07-20 · Layer: app chrome (`@agent-ui/app`)
+> Refines: [ADR-0151](../adr/0151-named-shell-archetypes-m5.md) (accepted — ratified by Kim
+> 2026-07-19) · the agent-app-surfaces PRD's M5 (PRD-G9).
 > Follows the established PATTERNS of: [ADR-0082](../adr/0082-app-shell-per-instance-isolation.md) /
 > [ADR-0083](../adr/0083-app-shell-region-role-decouple.md) /
 > [ADR-0084](../adr/0084-app-shell-narrow-reflow-collapse.md) (the frame contract) ·
@@ -180,3 +179,104 @@ Chat/Settings/Context trio reproduced structurally) · AC11 the survival analogs
 DOM moves), (b) the SAME surface survives a wide→narrow crossing and a narrow tab round-trip
 (content → pane tab → content) un-cycled · AC12 no horizontal overflow at any band with a
 resizable pane and segments both active.
+
+## 9 · Amendment (v0.4, SPEC-R8 + SPEC-R9 + SPEC-R10) — the responsive band ladder, the toggle affordance law, and the scrollbar seam
+
+Grounding: GH #170 (Kim's verdict on the composed docs-site chrome at narrow: *"this still looks
+like absolute garbage"* — screenshots on the issue) + the two-plane decompose recorded at
+[`../decompositions/shell-responsive-system.decomp.json`](../decompositions/shell-responsive-system.decomp.json)
+(fourteen actions crossed against the shipped structure; six found unhosted). Decision record:
+[ADR-0155](../adr/0155-shell-responsive-band-ladder-toggle-law-scrollbar-seam.md) (proposed).
+Build plan: [`../lld/shell-responsive.lld.md`](../lld/shell-responsive.lld.md). Kim's own visual
+sign-off at narrow remains the final acceptance gate (GH #170 clause 3) — nothing in this
+amendment substitutes for it.
+
+### SPEC-R8 — the band ladder (amends R4's single 40rem story)
+
+- **R8a — two named lines, not one and not N.** The shell family's band vocabulary is exactly
+  `wide · compact · narrow`, cut by two container-relative lines: the existing **narrow line,
+  40rem** (`SHELL_NARROW_BREAKPOINT_REM`) and a new **compact line, 52.5rem**
+  (`SHELL_COMPACT_BREAKPOINT_REM`, new in `shell-breakpoint.ts`, same consistency gate). 52.5rem
+  is deliberately [ADR-0150](../adr/0150-compact-window-body-typescale-breakpoint.md)'s number —
+  the M3 compact-window boundary the fleet already owns (below it, body type itself compacts;
+  a 252px pane beside a compact reading column is the cramp Kim's doc-page screenshot shows) —
+  and the shell's own module math lands within one 18px module of it (dual full sides + canvas
+  floor: 2·(54+252) + 162 + 4·18 ≈ 846px ≈ 52.9rem). One number, two mechanisms (viewport media
+  there, container query here), both citing the same named line.
+- **R8b — `collapse-band`, per shell.** A new reflected enum prop
+  `collapse-band ∈ 'narrow' (default) | 'compact'` names which line auto-collapses the shell's
+  **collapse-mode sides** (R4 semantics otherwise unchanged: query-only hiding, overlay
+  toggle-restore, the no-clobber law). The default keeps every shipped shell byte-compatible.
+  `stack` and `tabs` sides are NOT governed by `collapse-band` — their reflow semantics answer
+  "the row is too cramped for side-by-side," which stays the 40rem narrow line regardless.
+- **R8c — the outer-in cascade (GH #44) is a parameterization, not new machinery.** A depth-2
+  composition sets `collapse-band="compact"` on the OUTER (app-ring) shell and leaves the inner
+  canvas shell on the default: the outer sides collapse at 52.5rem while the inner — by then
+  nearly full-width — holds its panes until its own container passes 40rem. App rails first,
+  canvas panes next, exactly the sketch, from two lines and one prop.
+- **R8d — per-band anatomy (normative table).** For each side, by its narrow arm:
+
+  | Band | `collapse` side | `stack` side | `tabs` side | header/footer bars |
+  |---|---|---|---|---|
+  | wide (≥ band line) | persisted `collapsed-*` state; toggle = menu glyph | same as collapse | same as collapse | permanent chrome (R2c) |
+  | compact (40–52.5rem, `collapse-band="compact"` shells only) | hidden by query; toggle restores as OVERLAY, glyph = X while open | unaffected (wide behavior) | unaffected (wide behavior) | unchanged |
+  | narrow (< 40rem) | hidden by query; toggle restores as OVERLAY, glyph = X while open | in flow, full width, middle row goes column; toggle HIDDEN | panes join the narrow-tabs strip (R7b); toggle HIDDEN | unchanged; bars never scroll |
+
+  Bars are non-scroll regions at every band; header-content compaction below the line is the
+  consumer's own job (the docs-site header proves out at 360px as part of AC17).
+
+### SPEC-R9 — the toggle affordance law (amends R2b's bare "header-hosted" clause)
+
+- **R9a — presence.** A side toggle composes ONLY when its side has authored content (no more
+  dead end-toggle on a one-sided shell), and hides below the 40rem narrow line for `stack`/`tabs` sides
+  (R8d — their narrow anatomy is owned by the stack content / the narrow-tabs strip; today's
+  no-op-or-conflicting click arms become unreachable).
+- **R9b — menu⇄X.** The toggle carries BOTH glyphs (`list` + `x`, both already in the icon pack);
+  CSS swaps their visibility off the host's `data-narrow-open` INSIDE the band container query —
+  the X is band-correct by construction (a stale attribute can never paint an X at wide, with or
+  without JS). While its side's overlay is open, the toggle reads as Close.
+- **R9c — state truth.** `aria-expanded` is truthful at every band: `!collapsed-*` at wide (the
+  shipped effect), `data-narrow-open === side` below the line. One shell-owned, VISIBILITY-ONLY
+  `ResizeObserver` (attributes only — the R7c survival law extends to it verbatim) clears a stale
+  `data-narrow-open` on leaving the overlay band and re-syncs `aria-expanded`. Every JS band read
+  derives from `shell-breakpoint.ts`'s constants × the live root font-size — the raw `< 640` px
+  literal in `super-shell.ts` retires (px ≠ rem under a non-16px root font).
+- **R9d — overlay dismissal.** An overlay-open side dismisses by toggle re-tap, by tapping a
+  shell-owned `[data-part='scrim']` (composed once; shown only at narrow while a side is open),
+  or by Escape. Focus moves to the opened pane container (`tabindex="-1"`) on open and returns to
+  the toggle on close. The overlay is non-modal (no focus trap). Its inline-size caps at
+  `min(pane-size, calc(100cqi − bar-size))` so a canvas edge stays visible on the smallest
+  screens. One side at a time (the existing `data-narrow-open` single-value law).
+
+### SPEC-R10 — the scrollbar seam (the fleet convention, applied to the shell's own scroll regions)
+
+- **R10a — hidden scroller, live scroll.** `--ui-super-shell-scrollbar-width: none` joins the R1c
+  token block (consumer-overridable — the repoint pattern; the `command-modal.css` documentation
+  comment and the GH #166 `ui-menu` realization are the canonical shape), consumed as
+  `scrollbar-width: var(…)` by every shell-owned scroll region: pane boxes (`overflow-y: auto`),
+  active segments, the narrow-tabs strip (`overflow-x: auto`), and — by inheritance of the pane
+  rule — an overlay-restored side.
+- **R10b — the fade is the affordance.** Each scrollable pane box / segment wires the fleet's
+  `scrollFade` trait (`{ viewport }`, the `menu.ts` precedent): once the bar hides, the edge fade
+  is the scroll signal. This requires exporting `scrollFade` from `@agent-ui/components`' root
+  barrel — a named public-API widening riding ADR-0155 (the `paneResize`/ADR-0023 precedent),
+  never a silent deep-import.
+- **R10c — family disposition.** `ui-workspace-shell`/`ui-chat-shell` inherit R10 by composition
+  (zero own rules). `ui-app-shell` owns NO scroll region (verified — its regions' scroll is
+  consumer content), so the seam is vacuous there; that, and its `app-surfaces-m4.lld.md` LLD-C11 `collapse="toggle"`
+  Show/Hide disclosure NOT adopting menu⇄X (a region-local affordance, not a header side toggle —
+  different altitude), are recorded in `app-shell.md` as named dispositions, not omissions.
+
+AC13 (extends §6): a `collapse-band="compact"` shell hides its collapse side below 52.5rem while a
+default shell at the same width keeps it; persisted `collapsed-*` attributes survive every band
+crossing unrewritten · AC14 depth-2 outer-in: outer sides collapse at the compact line, inner
+panes only below 40rem, cross-engine · AC15 the toggle: absent for an unauthored side, hidden at
+narrow for `stack`/`tabs` sides, menu⇄X truthfully per R9b/R9c with no stale X or stale
+`aria-expanded` after an open-overlay→wide resize · AC16 scrim tap and Escape each dismiss with
+focus returned to the toggle; the overlay never spans the full container at 320px · AC17 the
+docs-site chrome on the amended grammar: nav hidden below the compact line behind the menu toggle,
+overlay + X + dismissal live, full vertical rail inside the pane/overlay (the `collapse="menu"`
+dropdown retires from the site nav), persisted wide collapse intact, header row clean at 360px, no
+horizontal overflow at 360/640/840/1200px, both engines · AC18 every shell scroll region computes
+`scrollbar-width: none` with scroll live and the fade edge present (the GH #166 probe shape),
+both engines; a consumer token repoint restores the bar.

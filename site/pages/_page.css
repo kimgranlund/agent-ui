@@ -44,21 +44,12 @@ body {
  * scoped rule. */
 ui-theme-provider.app-shell {
   /* M5 / GH #84 — the CSS-grid placeholder retired: ui-super-shell owns the frame now. The provider
-     stays a full-height column flex hosting the shell (+ the named nav-rail collapse container). */
+     stays a full-height column flex hosting the shell. GH #170/ADR-0155 — the old `ui-nav-rail-collapse`
+     named container retired with the site nav's `collapse="menu"` arrangement: the shell (not the rail's
+     own ancestor container) now owns the narrow story, so this element no longer establishes a container. */
   display: flex;
   flex-direction: column;
   block-size: 100dvh;
-  /* The NAMED collapse container the composed `ui-nav-rail collapse="menu" collapse-container="ancestor"`
-     opts into (TKT-0035's supported seam — nav-rail.css/nav-rail.md). The rail is a narrow (~15rem) left
-     column, so its OWN inline-size would always read below the primitive's 40rem collapse threshold and it
-     would render as a dropdown at every width; `collapse-container="ancestor"` (set on the element itself
-     in buildNav, below) relinquishes the rail's own containment so its `@container ui-nav-rail-collapse`
-     query resolves against THIS container instead (whose inline-size tracks the viewport) — the desktop
-     vertical rail, the narrow dropdown, matching the site's intended behavior. `container-name` is the
-     ONLY half of the seam owned by the consumer; the rail's own container-type override is the primitive's
-     job now, not a page-level re-point. */
-  container-type: inline-size;
-  container-name: ui-nav-rail-collapse;
 }
 
 /* M5 / GH #84 — the ui-super-shell frame fills the provider; everything inside it is the shell's own. */
@@ -102,6 +93,10 @@ ui-theme-provider.app-shell [data-site-nav] {
   letter-spacing: -0.01em;
   color: var(--md-sys-color-neutral-on-surface);
   text-decoration: none;
+  /* GH #183 — the wordmark NEVER wraps, at any band: when the header row is cramped, the chips beside
+     it give way (icon-only collapse, _page.ts), never the brand. Unconditional — no media/container arm
+     lifts this. */
+  white-space: nowrap;
 }
 
 /* The app-level chrome region (search / theme) — both are now real `ui-*` controls (Search opens the
@@ -399,43 +394,13 @@ code {
 }
 
 /* ── the shared site nav (the rail) ───────────────────────────────────────────────────────────────────────
- * The rail is now a real `ui-nav-rail collapse="menu"` (ADR-0130 / SPEC-R10) — the mode-1 consumer of the
- * shared nav-rail family, fed from `sitemap.json`. Its INTERNAL anatomy (the grouped rows, the active
- * `border-inline-start` bar, the name|tag row, and the narrow `collapse="menu"` `<details>` dropdown with its
- * chevron + Escape/outside-click dismissal) all live in `nav-rail.css` now — this shell no longer hand-rolls a
- * `<nav>`/`<ul>`/`<details>` of its own. What remains here is only the rail's PLACEMENT + scroll container
- * (above) and the shell's own narrow reflow (below). The rail collapses to its dropdown off the NAMED
- * `.app-shell` `ui-nav-rail-collapse` container (`collapse-container="ancestor"`, TKT-0035) at nav-rail's
- * own 40rem threshold. */
-
-/* ── narrow viewports — stack the whole shell into one column ──────────────────────────────────────────────
- * Below the breakpoint the shell reflows to a single column: the context-header, then the nav (its OWN
- * `collapse="menu"` disclosure has already turned it into a dropdown trigger by this width — the .app-shell
- * named query container is < 40rem here), then the page, then the footer. 40rem matches nav-rail's own collapse
- * threshold so the two transitions land together — no band where a full 82-row list stacks in a one-column
- * shell. The rail's own scroll-container settings are dropped so its dropdown panel sizes to its content. */
-@media (max-width: 40rem) {
-
-  .app-context-header {
-    /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
-    /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
-  }
-
-  ui-theme-provider.app-shell [data-site-nav] {
-    /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
-    /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
-    border-inline-end: none;
-    border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
-    overflow-y: visible; /* not a scroll container here — the rail's own dropdown sizes to its content */
-  }
-
-  .app-page {
-    /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
-    /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
-  }
-
-  .app-context-footer {
-    /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
-    /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
-  }
-}
+ * The rail is a real `ui-nav-rail` (ADR-0130) — the mode-1 consumer of the shared nav-rail family, fed from
+ * `sitemap.json`. Its INTERNAL anatomy (the grouped rows, the active `border-inline-start` bar, the name|tag
+ * row) lives in `nav-rail.css`. What remains here is only the rail's PLACEMENT + scroll container (above).
+ *
+ * GH #170 / ADR-0155 — the narrow story is now the SHELL's job, not the rail's: `ui-super-shell`
+ * (`collapse-band="compact"` + `narrow-start="collapse"`, set in `_page.ts`) hides this whole pane below the
+ * 52.5rem compact-window line and toggle-restores it as an overlay (X glyph, scrim/Escape dismiss), so the
+ * rail's own `collapse="menu"` dropdown + its TKT-0035 `collapse-container="ancestor"` arrangement RETIRE for
+ * this consumer, and with them the old `@media (max-width: 40rem)` stacked-nav arms (the shell's container
+ * query owns the reflow now — the site adds no viewport media rule of its own for the nav). */

@@ -1,7 +1,8 @@
 // workspace-shell.test.ts — jsdom probes for ui-workspace-shell (LLD-C5, GH #97). jsdom cannot resolve real
 // container-query/flex layout — the geometry/collapse/landmark behavior this element composes is already
 // proven by super-shell.test.ts / super-shell.browser.test.ts; this file proves ONLY what's genuinely new
-// here: the connect-time relocation into a real inner `ui-super-shell`, the `narrow-start="stack"` default,
+// here: the connect-time relocation into a real inner `ui-super-shell`, the `narrow-start="collapse"` +
+// `collapse-band="compact"` default (ADR-0155 F3),
 // idempotent composition across a reconnect (the master-detail.ts precedent), and the descriptor's
 // structural + contract↔props + contract↔source trip-wires (ADR-0004).
 import { describe, it, expect, afterEach } from 'vitest'
@@ -50,13 +51,15 @@ describe('ui-workspace-shell — composition (LLD-C5, GH #97)', () => {
       content: 'C', 'options-section': 'OS', 'options-pane': 'OP', 'global-options': 'GO', footer: 'F',
     })
     const middle = el.querySelector('[data-part="middle"]') as HTMLElement
-    const order = [...middle.children].map((c) => c.getAttribute('data-slot-name'))
+    const order = [...middle.children].filter((c) => c.getAttribute('data-part') !== 'scrim').map((c) => c.getAttribute('data-slot-name'))
     expect(order).toEqual(['global-nav', 'nav-pane', 'section-nav', 'content', 'options-section', 'options-pane', 'global-options'])
   })
 
-  it('sets the sensible workspace default narrow-start="stack" on the inner shell', () => {
+  it('sets the workspace default narrow-start="collapse" + collapse-band="compact" on the inner shell (ADR-0155 F3)', () => {
     const el = mount({ content: 'C' })
-    expect(el.querySelector('ui-super-shell')?.getAttribute('narrow-start')).toBe('stack')
+    const shell = el.querySelector('ui-super-shell')
+    expect(shell?.getAttribute('narrow-start')).toBe('collapse')
+    expect(shell?.getAttribute('collapse-band')).toBe('compact')
   })
 
   it('composition is idempotent — a second connect (no new children) never double-composes', () => {
