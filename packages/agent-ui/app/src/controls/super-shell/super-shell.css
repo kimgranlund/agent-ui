@@ -26,6 +26,12 @@
      override (agent-admin's migration sets 20rem/16rem, its shipped ui-split's own floors). */
   --ui-super-shell-pane-min-size: calc(var(--ui-super-shell-module) * 9); /* 162px */
   --ui-super-shell-canvas-min-size: calc(var(--ui-super-shell-module) * 9); /* 162px */
+  /* GH #182 — the pane-resizer's THREE decoupled states, matching ui-split's own precedent
+     (split.css's --ui-split-divider-ink / -ink-hover + the shared ADR-0009 focus ring): a
+     subtle resting ink (discoverability), a hover/drag fill, and a focus-visible ring that is
+     NEVER also a fill. */
+  --ui-super-shell-resizer-ink: var(--md-sys-color-neutral-outline-variant);
+  --ui-super-shell-resizer-ink-hover: var(--md-sys-color-primary);
 }
 
 @scope (ui-super-shell) {
@@ -109,15 +115,18 @@
     cursor: col-resize;
     touch-action: none;
     border-radius: var(--ui-super-shell-radius);
-    background: transparent;
+    background: var(--ui-super-shell-resizer-ink);
   }
-  [data-part='pane-resizer']:hover,
-  [data-part='pane-resizer']:focus-visible {
-    background: var(--md-sys-color-primary);
+  /* GH #182 — hover/drag is a FILL (the ui-split precedent); focus-visible is a THIN RING on the
+     shared fleet focus-ring tokens ONLY (ADR-0009, the same ones split.css's own [data-separator]
+     :focus-visible consumes) — it never also sets `background`, so a keyboard-focused-but-not-
+     hovered resizer never renders as a solid full-height slab. */
+  [data-part='pane-resizer']:hover {
+    background: var(--ui-super-shell-resizer-ink-hover);
   }
   [data-part='pane-resizer']:focus-visible {
-    outline: 2px solid var(--md-sys-color-primary);
-    outline-offset: -2px;
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
   }
 
   /* SPEC-R7a — pane segments (wide): a segmented pane switches to a column layout (strip on top, the
