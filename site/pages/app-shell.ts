@@ -33,6 +33,45 @@ const { content } = mountPage({
     'narrow-reflow, and content composition.',
 })
 
+// ════════════════ ADR-0156 deprecation banner ════════════════
+// ui-app-shell/ui-app-shell-region are deprecated in favor of the ui-super-shell archetype family
+// (ADR-0156, ratified 2026-07-21) — the pair stays in-tree, functional, and gate-covered for the whole
+// deprecation window (clause 1), so this is a teaching notice, NOT a retirement: this page is not deleted,
+// rescoped, or otherwise touched this campaign — clause 4 names its own eventual re-scope-or-retire fate as
+// a SEPARATE, later decision. A real visible callout (not a source comment), since readers land on this
+// page from the nav/gallery, never from this file.
+const deprecationBanner = document.createElement('aside')
+deprecationBanner.setAttribute('role', 'note')
+Object.assign(deprecationBanner.style, {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.35rem',
+  margin: '0 0 1.5rem',
+  padding: '0.85rem 1.1rem',
+  borderRadius: '10px',
+  border: '1px solid var(--md-sys-color-warning-outline)',
+  background: 'var(--md-sys-color-warning-container-low)',
+  color: 'var(--md-sys-color-warning-on-surface)',
+  fontSize: '0.85rem',
+  lineHeight: '1.5',
+})
+const bannerTitle = document.createElement('strong')
+bannerTitle.textContent = 'Deprecated (ADR-0156).'
+const bannerBody = document.createElement('span')
+bannerBody.append(
+  document.createTextNode(
+    ' ui-app-shell and ui-app-shell-region take no new consumers as of 2026-07-20 — the pair stays in-tree, ' +
+      'functional, and gate-covered for the deprecation window, then retires in a later, separately-gated ' +
+      'removal step. New and migrated work composes the ',
+  ),
+)
+const superShellLink = document.createElement('a')
+superShellLink.href = './super-shell.html'
+superShellLink.textContent = 'ui-super-shell archetype family'
+bannerBody.append(superShellLink, document.createTextNode(' instead. This page remains as a historical composition guide.'))
+deprecationBanner.append(bannerTitle, bannerBody)
+content.append(deprecationBanner)
+
 content.append(
   pageLead(
     'ui-app-shell (@agent-ui/app) composes the shipped layout family into a persistent frame. You dock a surface ' +

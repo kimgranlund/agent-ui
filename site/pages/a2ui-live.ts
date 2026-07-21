@@ -16,8 +16,8 @@
 // render/round-trip logic — the swap is the construction site alone (SPEC-R1 AC1).
 
 import { mountFullBleedPage } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
-import '@agent-ui/app/app-shell.css' // ui-app-shell region-grid CSS (LLD-C9 re-host), after foundation
-import '@agent-ui/app/app-shell' // self-defines ui-app-shell / ui-app-shell-region
+import '@agent-ui/app/super-shell.css' // ui-super-shell's own token ladder + collapse CSS (ADR-0156 re-host), after foundation
+import '@agent-ui/app/super-shell' // self-defines ui-super-shell
 import '@agent-ui/app/surface-host.css' // ui-surface-host's own artboard chrome (ADR-0129 Amendment re-host)
 import '@agent-ui/app/surface-host' // self-defines <ui-surface-host>
 import './a2ui-live.css'
@@ -58,17 +58,21 @@ function paneTitle(title: string, blurb: string): HTMLElement {
   return head
 }
 
-// ════════════════ the two panes — ui-app-shell regions (LLD-C9/SPEC-R8: the shell replaces this page's own
-// hand-rolled two-pane flex chrome; `main` is the mandatory region — SPEC-R3 — so the canvas, the surface
-// this page exists to show, takes it, and the chat composer docks into `navigation` alongside it) ════════════════
-const shell = document.createElement('ui-app-shell')
-const chatPane = document.createElement('ui-app-shell-region')
-chatPane.setAttribute('region', 'navigation') // the LEFT column (grid placement only, ADR-0083 decouples the landmark below)
-chatPane.setAttribute('landmark', 'complementary') // ADR-0083: the correct ARIA landmark for a chat composer, not "navigation"
-chatPane.setAttribute('collapse', 'stack') // ADR-0084: stays visible + full-width when narrow — the composer is primary input, not disposable chrome
+// ════════════════ the two panes — ui-super-shell slots (ADR-0156 re-host: ui-app-shell is deprecated,
+// ui-super-shell is the one shell grammar new/migrated work composes on). `content` is the mandatory slot
+// — SPEC-R1 — so the canvas, the surface this page exists to show, takes it, and the chat composer docks
+// into `nav-pane` (the shell's "start"-side pane) alongside it. The old per-region `landmark`/`collapse`
+// props are now: `data-landmark` on the slotted child (super-shell.ts's roleFor(), the SAME ADR-0083
+// role-decoupled-from-placement pattern, continued as family law per ADR-0156 clause 3) + the shell-level
+// `narrow-start` enum (ADR-0084's region vocabulary, now a per-SIDE, not per-region, property). ════════════
+const shell = document.createElement('ui-super-shell')
+shell.setAttribute('narrow-start', 'stack') // ADR-0084's pattern, continued: the composer stays visible + full-width when narrow — primary input, not disposable chrome
+const chatPane = document.createElement('div')
+chatPane.setAttribute('data-slot', 'nav-pane') // the shell's "start"-side pane (super-shell.ts's `startStack`)
+chatPane.setAttribute('data-landmark', 'complementary') // ADR-0083's decouple, continued: the correct ARIA landmark for a chat composer, not "navigation"
 chatPane.className = 'chat-pane'
-const canvasPane = document.createElement('ui-app-shell-region')
-canvasPane.setAttribute('region', 'main')
+const canvasPane = document.createElement('div')
+canvasPane.setAttribute('data-slot', 'content') // the mandatory slot
 canvasPane.className = 'canvas-pane'
 shell.append(chatPane, canvasPane)
 content.append(shell)
