@@ -223,6 +223,57 @@ describe('ui-super-shell — SPEC-R6c/AC12 bounds', () => {
   })
 })
 
+// ── min-size-floors census (GH #185 follow-up) — the dual-collapse-side squeeze window ──────────────
+// The flagship finding: BOTH sides `resizable` + collapse-mode is reachable through the public API
+// (chat-shell.ts forwards resizable-start/-end + narrow-start/-end + collapse-band), but no shipped
+// consumer authors it — so it shipped un-exercised. At the DEFAULT `collapse-band` (40rem/640px), a
+// dual-sided shell has NO band protection between 640px and roughly the width its own fixed geometry
+// needs (~700-850px depending on rails) — a passive container resize in that window used to crush
+// `[data-part='canvas']` toward 0 (it was the row's one `flex:1 1 auto; min-inline-size:0` item; every
+// pane beside it is `flex:0 0 auto`, incapable of yielding). `min-inline-size` on canvas now reads the
+// SAME `--ui-super-shell-canvas-min-size` token the drag clamp already used — realizing SPEC-R6c's
+// unconditional "the canvas keeps ≥ canvas-min-size" bound in live layout, not just mid-drag.
+function mountDualResizable(width: number): { el: UISuperShellElement; middle: HTMLElement } {
+  const el = document.createElement('ui-super-shell') as UISuperShellElement
+  el.style.position = 'fixed'
+  el.style.insetBlockStart = '0px'
+  el.style.insetInlineStart = '0px'
+  el.style.inlineSize = `${width}px`
+  el.style.blockSize = '400px'
+  el.setAttribute('resizable-start', '')
+  el.setAttribute('resizable-end', '')
+  const nav = document.createElement('div'); nav.setAttribute('data-slot', 'nav-pane')
+  const content = document.createElement('div'); content.setAttribute('data-slot', 'content')
+  const opts = document.createElement('div'); opts.setAttribute('data-slot', 'options-pane')
+  el.append(nav, content, opts)
+  document.body.append(el)
+  mounted.push(el)
+  return { el, middle: el.querySelector('[data-part="middle"]') as HTMLElement }
+}
+
+describe('ui-super-shell — dual-collapse-side canvas floor (min-size-floors census, GH #185 follow-up)', () => {
+  it('below natural-fit width, canvas holds its floor and the row overflows deliberately (never crushes canvas thinner)', async () => {
+    const { el, middle } = mountDualResizable(700) // inside the flagged 640-846px gap; natural fit needs 746px here
+    await el.updateComplete
+    const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
+    const floorPx = 162 // 9 modules × 18px, the shell's own R1c/R6c default (no consumer repoint in this mount)
+    expect(canvas.getBoundingClientRect().width, 'canvas never shrinks below its own floor token').toBeGreaterThanOrEqual(floorPx - 1)
+    // The deliberate, visible outcome below natural-fit: the row overflows (measurable, scrollable) rather
+    // than silently crushing canvas past its floor — the fixed-geometry siblings still never yield.
+    expect(middle.scrollWidth, 'the row genuinely overflows at this width (the honest failure mode)').toBeGreaterThan(middle.clientWidth)
+  })
+
+  it('at and above natural-fit width, canvas holds ≥ its floor with zero row overflow', async () => {
+    for (const width of [750, 800, 846, 900]) {
+      const { el, middle } = mountDualResizable(width)
+      await el.updateComplete
+      const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
+      expect(canvas.getBoundingClientRect().width, `width=${width}`).toBeGreaterThanOrEqual(161)
+      expect(middle.scrollWidth, `width=${width} — no overflow once there is room to honor the floor`).toBeLessThanOrEqual(middle.clientWidth + 1)
+    }
+  })
+})
+
 // ── GH #182 regression pin — the pane-resizer's THREE decoupled visual states ───────────────────────
 // The original bug: a real engine renders no jsdom probe can see (background/outline computed paint).
 // This is the permanent gate against the exact gate-blindness that let the solid full-height primary
