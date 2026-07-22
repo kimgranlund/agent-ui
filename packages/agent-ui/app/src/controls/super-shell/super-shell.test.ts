@@ -1,6 +1,8 @@
 // super-shell.test.ts — ui-super-shell (M5, GH #83) vs shell-archetypes-m5.spec.md.
 import { describe, it, expect, afterEach, vi } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { UISuperShellElement } from './super-shell.ts'
+declare const process: { cwd(): string }
 
 const mounted: HTMLElement[] = []
 afterEach(() => { for (const el of mounted.splice(0)) el.remove() })
@@ -226,5 +228,22 @@ describe('ui-super-shell — SPEC-R8/R9/R10 responsive system (jsdom coverage, L
     // the side's FIRST box in DOM order (the rail here) is the focus landing
     const firstStart = el.querySelector('[data-part="middle"] > [data-side="start"]') as HTMLElement
     expect(firstStart.getAttribute('tabindex')).toBe('-1')
+  })
+})
+
+// GH #185 (parity gap b) — the pane-resizer's forced-colors annotation, source-presence pinned (jsdom
+// cannot evaluate `forced-colors: active` visually — the card-css.test.ts/swiper-css.test.ts precedent
+// for pinning a WHCM rule's CSS TEXT rather than its rendered paint). The rendered cross-engine leg (the
+// same "no error" smoke split.browser.test.ts itself settles for, since headless Playwright doesn't
+// emulate forced-colors:active either) lives in super-shell-resize-tabs.browser.test.ts.
+describe('ui-super-shell — pane-resizer forced-colors annotation (GH #185 parity gap b, split.css precedent)', () => {
+  const css = readFileSync(`${process.cwd()}/packages/agent-ui/app/src/controls/super-shell/super-shell.css`, 'utf8') as string
+
+  it('a forced-colors block keeps [data-part="pane-resizer"] a real, visible system colour (ButtonText)', () => {
+    expect(css).toMatch(/@media \(forced-colors: active\)/)
+    const fc = css.slice(css.indexOf('@media (forced-colors: active)'))
+    const rule = fc.slice(fc.indexOf("[data-part='pane-resizer']"), fc.indexOf('}', fc.indexOf("[data-part='pane-resizer']")))
+    expect(rule).toMatch(/background:\s*ButtonText/)
+    expect(rule).toMatch(/forced-color-adjust:\s*none/)
   })
 })

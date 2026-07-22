@@ -200,6 +200,7 @@ export class UISuperShellElement extends UIElement {
     this.#resizeHandle?.release() // ends any in-flight drag WITHOUT a commit (the ui-split precedent)
     this.#resizeHandle = null
     this.#dragBaseline = null
+    this.internals.states?.delete('dragging') // GH #185 — clear the baseline/state together, split.ts's own precedent
     this.#bandObserver?.disconnect()
     this.#bandObserver = null
   }
@@ -499,6 +500,11 @@ export class UISuperShellElement extends UIElement {
         paneMin: this.#resolvePx('--ui-super-shell-pane-min-size', 162),
         canvasMin: this.#resolvePx('--ui-super-shell-canvas-min-size', 162),
       }
+      // GH #185 (parity gap a) — mirrors split.ts's #applyPointerDelta exactly: armed on the drag's
+      // first live move (baseline null → set), cleared on commit below. super-shell.css's
+      // `:scope:state(dragging) [data-part='pane-resizer']` keeps the hover/drag fill live for the
+      // WHOLE gesture even once the pointer sweeps off the thin resizer box.
+      this.internals.states?.add('dragging')
     }
     const hostWidth = this.getBoundingClientRect().width
     const rawDeltaPx = deltaRatio * hostWidth
@@ -509,6 +515,7 @@ export class UISuperShellElement extends UIElement {
     sep?.setAttribute('aria-valuenow', String(Math.round(newSize)))
     if (commit) {
       this.#dragBaseline = null
+      this.internals.states?.delete('dragging')
       if (!isMovelessClick) {
         if (side === 'start') this.sizeStart = newSize
         else this.sizeEnd = newSize
