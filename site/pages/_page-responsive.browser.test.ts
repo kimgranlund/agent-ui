@@ -105,6 +105,27 @@ describe('docs-site chrome — site-chrome polish (S1 header hairline, S3a foote
     expect(headerRect.right, 'the border-carrying box ends at the shell\'s right edge').toBeCloseTo(shellRect.right, 0)
   })
 
+  it('S1 regression — the site-scoped header hairline never leaks onto a NESTED ui-super-shell mounted as page content', async () => {
+    // the reviewer's probe shape: a demo/guide page (super-shell.html, chat-shell.html, …) composes its
+    // OWN <ui-super-shell> several DOM levels inside [data-page-content] — a descendant selector would
+    // reach it; the child-combinator chain in _page.css must not.
+    const { shell } = mountAt(1200)
+    await raf()
+    const content = shell.querySelector('[data-page-content]') as HTMLElement
+    const nested = document.createElement('ui-super-shell')
+    const nestedHeader = document.createElement('div')
+    nestedHeader.setAttribute('data-slot', 'header')
+    nestedHeader.textContent = 'Nested demo header'
+    const nestedBody = document.createElement('div')
+    nestedBody.textContent = 'Nested demo content'
+    nested.append(nestedHeader, nestedBody) // nestedBody carries no data-slot — it defaults to 'content' (the one mandatory slot)
+    content.append(nested)
+    await raf()
+    const nestedHeaderBar = nested.querySelector('[data-part="bar"][data-bar="header"]') as HTMLElement
+    expect(nestedHeaderBar, 'the nested shell composes its own header bar').not.toBeNull()
+    expect(parseFloat(getComputedStyle(nestedHeaderBar).borderBottomWidth), 'the site-only hairline must never reach a nested demo shell\'s own header bar').toBe(0)
+  })
+
   it('S3a — .app-page fills the canvas region on a short page (no dead gap below the sticky footer)', async () => {
     const { shell } = mountAt(1200)
     await raf()
@@ -144,6 +165,33 @@ describe('docs-site chrome — site-chrome polish (S1 header hairline, S3a foote
     await raf()
     expect(last.shell.querySelector('.page-footer-next'), 'the last entry hides the dead Next rather than rendering it').toBeNull()
     expect(last.shell.querySelector('.page-footer-prev'), 'the last entry still gets a real Previous').not.toBeNull()
+  })
+
+  it('S3c sub-page — a component sub-page (not itself in SITE_NAV_ENTRIES) resolves the pager to its PARENT doc entry\'s neighbors', async () => {
+    // button-permutations.html is NOT in SITE_NAV_ENTRIES (only button-doc.html is) — isNavCurrent must
+    // map it to that parent doc entry, the SAME mapping buildNav's own rail-highlight already relies on.
+    const docIndex = SITE_NAV_ENTRIES.findIndex((e) => e.url === './button-doc.html')
+    expect(docIndex, 'button-doc.html must exist in SITE_NAV_ENTRIES for this probe to mean anything').toBeGreaterThanOrEqual(0)
+    window.history.pushState(null, '', './button-permutations.html')
+    const { shell } = mountAt(1200)
+    await raf()
+    const prevLink = shell.querySelector('.page-footer-prev') as HTMLAnchorElement | null
+    const nextLink = shell.querySelector('.page-footer-next') as HTMLAnchorElement | null
+    const resolve = (href: string): string => new URL(href, location.href).pathname
+    const expectedPrev = docIndex > 0 ? SITE_NAV_ENTRIES[docIndex - 1] : undefined
+    const expectedNext = docIndex < SITE_NAV_ENTRIES.length - 1 ? SITE_NAV_ENTRIES[docIndex + 1] : undefined
+    expect(expectedPrev && expectedNext, 'button-doc.html must have both neighbors for this probe to exercise both links').toBeTruthy()
+    expect(prevLink, 'the sub-page gets a real Previous, derived from its parent doc entry\'s own neighbor').not.toBeNull()
+    expect(resolve(prevLink!.getAttribute('href')!)).toBe(resolve(expectedPrev!.url))
+    expect(nextLink, 'the sub-page gets a real Next, derived from its parent doc entry\'s own neighbor').not.toBeNull()
+    expect(resolve(nextLink!.getAttribute('href')!)).toBe(resolve(expectedNext!.url))
+  })
+
+  it('S3c landing page — a page outside SITE_NAV_ENTRIES with no active NAV group renders NO pager band at all', async () => {
+    window.history.pushState(null, '', './index.html') // Home: an ungrouped NAV link, and absent from SITE_NAV_ENTRIES
+    const { shell } = mountAt(1200)
+    await raf()
+    expect(shell.querySelector('.page-footer'), 'no empty sticky footer band when nothing resolves to paginate').toBeNull()
   })
 })
 

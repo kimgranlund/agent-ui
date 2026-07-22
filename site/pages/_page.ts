@@ -554,6 +554,19 @@ function activeGroup(): NavGroup | undefined {
   return NAV.find((group) => group.links.some((link) => isCurrent(link.href)))
 }
 
+// isNavCurrent — is `url` (a SITE_NAV_ENTRIES entry) the one this page should be treated as "current"
+// for? True for the real current page, OR — on a component's own sub-page (Permutations/States/API,
+// which SITE_NAV_ENTRIES doesn't carry, only the `{tag}-doc.html` does) — the active NAV group's own doc
+// entry, so a sub-page still resolves to that entry. ONE predicate shared by `buildNav`'s rail-highlight
+// (`isSelected`, below) and `buildPageFooter`'s prev/next index, so a component sub-page gets a working
+// pager derived from its parent doc's neighbors instead of an empty band (the S3c pager and the rail can
+// never independently drift on what "current" means for a sub-page).
+function isNavCurrent(url: string): boolean {
+  const active = activeGroup()
+  const activeDocUrl = active?.label?.startsWith('ui-') ? `./${active.label.slice('ui-'.length)}-doc.html` : undefined
+  return isCurrent(url) || url === activeDocUrl
+}
+
 // buildNav — the shared cross-page browse rail, a real `ui-nav-rail` (ADR-0130, the mode-1 consumer) fed
 // from `sitemap.json`. It renders its grouped vertical anatomy at EVERY band — one `ui-nav-rail-group` per
 // sitemap `section`, its context-label the section name, each item a real `<a>` with the proper name at the
@@ -576,11 +589,9 @@ function buildNav(): HTMLElement {
   rail.setAttribute('data-site-nav', '') // the shell's scroll hook (_page.css); NOT the rail's own anatomy
   rail.setAttribute('aria-label', 'Site')
 
-  // On a component's sub-page the exact URL is not in the sitemap (only its `-doc.html` is), so map the active
-  // NAV group (the tab-strip residue) to that component's doc URL and mark IT selected — the rail stays oriented.
-  const active = activeGroup()
-  const activeDocUrl = active?.label?.startsWith('ui-') ? `./${active.label.slice('ui-'.length)}-doc.html` : undefined
-  const isSelected = (url: string): boolean => isCurrent(url) || url === activeDocUrl
+  // On a component's sub-page the exact URL is not in the sitemap (only its `-doc.html` is) — `isNavCurrent`
+  // maps the active NAV group (the tab-strip residue) to that component's doc URL so the rail stays oriented.
+  const isSelected = isNavCurrent
 
   // Group by the sitemap's `section`, preserving first-seen section + item order (a Map keeps insertion order).
   const bySection = new Map<string, SitemapEntry[]>()
@@ -902,12 +913,14 @@ function appendDescription(inner: HTMLElement, text: string): void {
   toggle.type = 'button'
   toggle.className = 'page-description-toggle'
   toggle.textContent = 'more'
+  toggle.setAttribute('aria-expanded', 'false')
   toggle.hidden = true
   let expanded = false
   toggle.addEventListener('click', () => {
     expanded = !expanded
     description.classList.toggle('page-description--expanded', expanded)
     toggle.textContent = expanded ? 'less' : 'more'
+    toggle.setAttribute('aria-expanded', String(expanded))
   })
   inner.append(toggle)
 
@@ -961,20 +974,24 @@ function buildPageHeader(options: PageOptions): HTMLElement {
 
 // buildPageFooter — the STICKY page footer (bottom of the row-2 scroll region): real Previous/Next
 // navigation (S3c), derived from `SITE_NAV_ENTRIES` — the SAME canonical flattened sitemap order the
-// left rail already renders from (`buildNav`, above), so the footer can never independently drift from
-// it. The current page's neighbors in that one order become the prev/next links; a page that isn't in
-// the sitemap at all (e.g. the landing page, which sits outside the flattened order) gets neither. The
-// first entry has no Previous and the last has no Next — hidden outright rather than a dead `<a>` with
-// no href, per Kim's "no dead ends" call on this fork.
-function buildPageFooter(): HTMLElement {
+// left rail already renders from (`buildNav`, above), via the SAME `isNavCurrent` predicate (so a
+// component's own sub-page — Permutations/States/API, absent from SITE_NAV_ENTRIES — resolves to its
+// parent doc entry and gets ITS working neighbors, exactly like the rail highlight does; the pager and
+// the rail share one source of truth in fact, not just in comment). Returns `undefined` when nothing
+// resolves at all (e.g. the landing page, which sits outside the sitemap AND has no active NAV group) —
+// the caller then renders NO footer band, rather than an empty sticky bar. The first entry in the order
+// has no Previous and the last has no Next — hidden outright rather than a dead `<a>` with no href, per
+// Kim's "no dead ends" call on this fork.
+function buildPageFooter(): HTMLElement | undefined {
+  const index = SITE_NAV_ENTRIES.findIndex((entry) => isNavCurrent(entry.url))
+  const prev = index > 0 ? SITE_NAV_ENTRIES[index - 1] : undefined
+  const next = index !== -1 && index < SITE_NAV_ENTRIES.length - 1 ? SITE_NAV_ENTRIES[index + 1] : undefined
+  if (!prev && !next) return undefined
+
   const footer = document.createElement('footer')
   footer.className = 'page-footer'
   const inner = document.createElement('div')
   inner.className = 'page-footer-inner'
-
-  const index = SITE_NAV_ENTRIES.findIndex((entry) => isCurrent(entry.url))
-  const prev = index > 0 ? SITE_NAV_ENTRIES[index - 1] : undefined
-  const next = index !== -1 && index < SITE_NAV_ENTRIES.length - 1 ? SITE_NAV_ENTRIES[index + 1] : undefined
 
   if (prev) {
     const link = document.createElement('a')
@@ -1095,7 +1112,9 @@ export function mountPage(options: PageOptions): PageHandle {
 
   const page = document.createElement('div')
   page.className = 'app-page'
-  page.append(buildPageHeader(options), content, buildPageFooter())
+  page.append(buildPageHeader(options), content)
+  const footer = buildPageFooter() // undefined ⇒ no prev/next resolves at all (e.g. the landing page) — no empty band
+  if (footer) page.append(footer)
 
   root.append(buildThemedShell(page))
   mountCommandPaletteOnce()

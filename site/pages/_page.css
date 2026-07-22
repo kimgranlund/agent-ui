@@ -78,12 +78,28 @@ ui-theme-provider.app-shell [data-site-nav] {
  * so a border drawn on `.app-context-header` itself starts at the toggle's trailing edge, not x=0. The
  * outer `[data-part='bar'][data-bar='header']` box IS full-bleed (the shell's own frame stretches to fill
  * `ui-theme-provider.app-shell`'s full width) — this is the site-owns-placement pattern `[data-site-nav]`
- * above already uses, scoped to `.site-shell` (THIS shell instance only) so it never reaches a `ui-super-
- * shell` rendered as page CONTENT on a demo/guide page (super-shell.html, agent-admin.html, …). The
- * component's own `[data-part='bar']` background already matches (`--ui-super-shell-surface` ==
- * `--md-sys-color-neutral-surface`) — restated here so the one declaration reads as the band's true
- * source, not a same-color coincidence between two rules. */
-ui-theme-provider.app-shell .site-shell [data-part='bar'][data-bar='header'] {
+ * above already uses.
+ *
+ * CHILD combinators throughout (`>`), never a descendant space: a bare `.site-shell [data-part='bar']…`
+ * is a DESCENDANT selector — it reaches into the ENTIRE `.site-shell` subtree, including a `<ui-super-
+ * shell>` a demo/guide page mounts as page CONTENT (super-shell.html, chat-shell.html, agent-admin.html,
+ * …), which lives many levels inside `.site-shell` (`[data-part='canvas']` → `[data-page-content]` →
+ * the page's own body). That demo shell composes its OWN `[data-part='bar'][data-bar='header']` — a
+ * descendant selector would paint THIS site-only hairline onto it too (caught in review: measured
+ * `borderBottomWidth: 1px` on a nested shell's header, both engines). The child chain below matches only
+ * the OUTER shell's own bar — `.site-shell` (the `ui-super-shell` host) → its OWN `[data-part='frame']`
+ * (`this.append(frame)`, super-shell.ts `#compose`) → its OWN header bar (`frame.append(header)`,
+ * same method) — so a nested shell's bar, several DOM levels deeper, structurally cannot match.
+ *
+ * This is the site-CSS analogue of `super-shell.css`'s own cross-shell boundary — `@scope (ui-super-
+ * shell) to (ui-super-shell)` (cited there as SPEC-R1b's depth-2 recursion): that mechanism stops the
+ * COMPONENT's own rules from crossing into a nested instance; `_page.css` sits outside that `@scope` (a
+ * separate, site-owned stylesheet), so the child-combinator chain here is the SAME genus of fix —
+ * "one shell's rule never reaches a nested shell's own part" — realized through DOM-position
+ * specificity instead. The component's own `[data-part='bar']` background already matches
+ * (`--ui-super-shell-surface` == `--md-sys-color-neutral-surface`) — restated here so the one
+ * declaration reads as the band's true source, not a same-color coincidence between two rules. */
+ui-theme-provider.app-shell > .site-shell > [data-part='frame'] > [data-part='bar'][data-bar='header'] {
   background: var(--md-sys-color-neutral-surface);
   border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
 }
