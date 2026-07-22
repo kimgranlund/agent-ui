@@ -816,18 +816,23 @@ function buildContextHeader(provider: UIThemeProviderElement): HTMLElement {
   return bar
 }
 
-// buildContextFooter — the app footer (right column, row 3, fixed): a slim placeholder app-level line. The bar
-// itself spans the column edge-to-edge (background + top divider); its CONTENT sits in an inner wrapper pinned to
-// the SAME reading column as `.page-header-inner` / `[data-page-content]`, so header, content, and footer read as
-// one column rather than the line floating at a different inset from the page body.
+// buildContextFooter — the app footer (right column, row 3, fixed): the tagline + a link to the GitHub
+// repo (S3b — real footer content, not the retired "docs shell placeholder" copy). The bar itself spans
+// the column edge-to-edge (background + top divider); its CONTENT sits in an inner wrapper pinned to the
+// SAME reading column as `.page-header-inner` / `[data-page-content]`, so header, content, and footer read
+// as one column rather than the line floating at a different inset from the page body.
 function buildContextFooter(): HTMLElement {
   const footer = document.createElement('footer')
   footer.className = 'app-context-footer'
   const inner = document.createElement('div')
   inner.className = 'app-context-footer-inner'
-  const line = document.createElement('span')
-  line.textContent = 'agent-ui — zero-dependency, signals-based web components · docs shell placeholder'
-  inner.append(line)
+  const tagline = document.createElement('span')
+  tagline.textContent = 'agent-ui — zero-dependency, signals-based web components'
+  const repo = document.createElement('a')
+  repo.className = 'app-context-footer-link'
+  repo.href = 'https://github.com/kimgranlund/agent-ui'
+  repo.textContent = 'GitHub'
+  inner.append(tagline, repo)
   footer.append(inner)
   return footer
 }
@@ -878,6 +883,39 @@ export function pageLead(text: string): HTMLElement {
   return p
 }
 
+// appendDescription — S4, Kim's standing description-clamp standard: the page-description shows up to 2
+// lines by default (CSS `line-clamp`, `.page-description`) with a quiet "more"/"less" text-button toggle
+// (the `.page-context-label` muted-ink register) that lifts/restores the clamp. The toggle stays hidden
+// (`hidden = true`) until it is PROVEN necessary: `queueMicrotask` defers the overflow measurement past
+// this whole synchronous mount (the `buildThemeControl` `populate()` precedent, above — `mountPage`'s
+// final `root.append(...)` runs after this function returns, so `description` has no real layout to
+// measure against until then), and only a description whose `scrollHeight` exceeds its clamped
+// `clientHeight` ever reveals the toggle — a permanently-visible "more" on a one-line description would
+// be noise, not a standard.
+function appendDescription(inner: HTMLElement, text: string): void {
+  const description = document.createElement('p')
+  description.className = 'page-description'
+  description.textContent = text
+  inner.append(description)
+
+  const toggle = document.createElement('button')
+  toggle.type = 'button'
+  toggle.className = 'page-description-toggle'
+  toggle.textContent = 'more'
+  toggle.hidden = true
+  let expanded = false
+  toggle.addEventListener('click', () => {
+    expanded = !expanded
+    description.classList.toggle('page-description--expanded', expanded)
+    toggle.textContent = expanded ? 'less' : 'more'
+  })
+  inner.append(toggle)
+
+  queueMicrotask(() => {
+    if (description.scrollHeight > description.clientHeight + 1) toggle.hidden = false
+  })
+}
+
 // buildPageHeader — the STICKY page header (top of the row-2 scroll region): the regions context-label ·
 // heading (the <h1>) · description (the lead <p>) · tab strip · CTA. The context-label + tabs AUTO-DERIVE from
 // the active NAV group, so a page that passes only `{ title, intro }` still gets a correct header; `contextLabel`
@@ -909,12 +947,7 @@ function buildPageHeader(options: PageOptions): HTMLElement {
   if (options.cta) headingRow.append(buildCta(options.cta))
   inner.append(headingRow)
 
-  if (options.intro) {
-    const description = document.createElement('p')
-    description.className = 'page-description'
-    description.textContent = options.intro
-    inner.append(description)
-  }
+  if (options.intro) appendDescription(inner, options.intro)
 
   // Tabs are page-TYPES of ONE subject — a LABELED component group (Permutations/States/API of ui-button). An
   // UNGROUPED site-level cluster (the A2UI pages, the ADR index) is independent destinations, not views of one
@@ -926,19 +959,38 @@ function buildPageHeader(options: PageOptions): HTMLElement {
   return header
 }
 
-// buildPageFooter — the STICKY page footer (bottom of the row-2 scroll region): a slim placeholder page-level
-// bar (prev/next or actions land here later). Inert spans for now.
+// buildPageFooter — the STICKY page footer (bottom of the row-2 scroll region): real Previous/Next
+// navigation (S3c), derived from `SITE_NAV_ENTRIES` — the SAME canonical flattened sitemap order the
+// left rail already renders from (`buildNav`, above), so the footer can never independently drift from
+// it. The current page's neighbors in that one order become the prev/next links; a page that isn't in
+// the sitemap at all (e.g. the landing page, which sits outside the flattened order) gets neither. The
+// first entry has no Previous and the last has no Next — hidden outright rather than a dead `<a>` with
+// no href, per Kim's "no dead ends" call on this fork.
 function buildPageFooter(): HTMLElement {
   const footer = document.createElement('footer')
   footer.className = 'page-footer'
   const inner = document.createElement('div')
   inner.className = 'page-footer-inner'
-  for (const [cls, text] of [['page-footer-prev', '← Previous'], ['page-footer-next', 'Next →']] as const) {
-    const span = document.createElement('span')
-    span.className = cls
-    span.textContent = text
-    inner.append(span)
+
+  const index = SITE_NAV_ENTRIES.findIndex((entry) => isCurrent(entry.url))
+  const prev = index > 0 ? SITE_NAV_ENTRIES[index - 1] : undefined
+  const next = index !== -1 && index < SITE_NAV_ENTRIES.length - 1 ? SITE_NAV_ENTRIES[index + 1] : undefined
+
+  if (prev) {
+    const link = document.createElement('a')
+    link.className = 'page-footer-prev'
+    link.href = prev.url
+    link.textContent = `← ${prev.name}`
+    inner.append(link)
   }
+  if (next) {
+    const link = document.createElement('a')
+    link.className = 'page-footer-next'
+    link.href = next.url
+    link.textContent = `${next.name} →`
+    inner.append(link)
+  }
+
   footer.append(inner)
   return footer
 }
