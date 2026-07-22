@@ -8,7 +8,12 @@
  *   [2] STYLES BLOCK — `@scope (ui-agent-admin)` fills the host, sizes the composed `ui-chat-shell` to
  *       the available space, and styles the generic entry-list primitive (heading/list/entry/toggle/
  *       add-form) — the ONE bespoke surface this element owns, reused across all five instantiations
- *       (no shipped FACE control renders long-form multi-line text, ADR-0131/ADR-0132).
+ *       (no shipped FACE control renders long-form multi-line text, ADR-0131/ADR-0132). ONE deliberate
+ *       exception: the `ui-super-shell { --ui-agent-admin-shell-gutter: ... }` rule mints a
+ *       `--ui-agent-admin-*` token by chaining off `--ui-super-shell-module` — it cannot live in the [1]
+ *       TOKEN BLOCK instead (CSS custom properties inherit strictly downward; that module token is
+ *       declared only on `ui-super-shell` itself, a DESCENDANT of `ui-agent-admin` — see that rule's own
+ *       comment for the full mechanics + the regression that proved it).
  *
  * GH #52/ADR-0154 — re-hosted onto the shell-archetype grammar: the hand-rolled `ui-split` +
  * ResizeObserver-driven narrow `ui-tabs` dual-shell (TKT-0085) is GONE, replaced by `ui-chat-shell`'s
@@ -60,21 +65,48 @@
     min-block-size: 0;
   }
 
+  /* SPEC-R1c-derived (every shell dimension chains off the ONE `--ui-super-shell-module`): the padded
+     gutter this consumer wants on BOTH of the shell's content-holding siblings, `[data-part='canvas']`
+     and `[data-part='pane']` below. `* 2 / 3` reproduces the old 0.75rem literal unchanged, so this is a
+     law fix, not a visual change.
+     THIS is the one deliberate exception to the file banner's "styles block consumes ONLY
+     --ui-agent-admin-*" — and it CANNOT move to the [1] TOKEN BLOCK: `--ui-super-shell-module` is
+     declared only on `:where(ui-super-shell)` (super-shell.css), a DESCENDANT of `ui-agent-admin`.
+     Custom properties inherit strictly downward — a var() reference resolves using whatever is
+     inherited AT ITS OWN DECLARING ELEMENT, not at wherever it's later consumed. Minting this in the
+     ancestor-scoped token block (`:where(ui-agent-admin)`) computes it BEFORE `--ui-super-shell-module`
+     exists anywhere in the inherited chain, so the calc() is invalid there and that guaranteed-invalid
+     value is what inherits down — proven by a real cross-engine 0px regression when tried. Declaring it
+     here, on the composed `ui-super-shell` instance itself (the SAME element super-shell.css's own
+     `--ui-super-shell-module` lives on), lets it resolve correctly once and then inherit normally to
+     both `canvas` and `pane` below — ONE definition, DRY, instead of duplicating the calc() at each
+     call site. */
+  ui-super-shell {
+    --ui-agent-admin-shell-gutter: calc(var(--ui-super-shell-module) * 2 / 3);
+  }
+
   /* The conversation fills super-shell's own `content`/canvas box; its internal scrolling is its own
-     concern — this file adds no overflow rule for it. Padding matches the options-pane segments below
-     (0.75rem), the one asymmetric box in the old three-pane split, unchanged by the re-host. */
+     concern — this file adds no overflow rule for it. `[data-part='pane']` below consumes the identical
+     token so canvas and pane — the shell's two content-holding siblings — render the SAME gutter. */
   [data-part='canvas'] {
-    padding: 0.75rem;
+    padding: var(--ui-agent-admin-shell-gutter);
   }
   [data-part='canvas'] > ui-conversation {
     flex: 1 1 auto;
     min-block-size: 0;
   }
 
-  /* GH #52/ADR-0154 — the options-pane (Settings ⇄ Context: System ⇄ Context: Dialog, GH #161's
-     three-way split) is now ui-super-shell's own segmented pane; its OWN padding lives on the pane-tabs
-     strip + the segment content below (this rule's old padding:0/scrollbar knob moved onto
-     ui-super-shell's `[data-part='pane']` default — no override needed here). */
+  /* The options-pane (Settings ⇄ Context: System ⇄ Context: Dialog, GH #161's three-way split) rendered
+     with ZERO padding: `[data-part='pane']`'s base rule (super-shell.css) declares none by design, so
+     OTHER ui-super-shell consumers keep a flush-fill pane (a2ui-live's `.chat-pane` fills its pane
+     wrapper's exact content-box width; a2ui-live.browser.test.ts pins that width — adding padding to the
+     shared base rule would shrink it and break that gate). This consumer wants a padded card instead, so
+     agent-admin owns the override here — the same scoped-cascade pattern already used below for
+     `ui-settings [data-part='panel']` — matching `[data-part='canvas']` above so the whole pane (tab
+     strip + active segment alike) gets the same gutter, not just the segment content. */
+  [data-part='pane'] {
+    padding: var(--ui-agent-admin-shell-gutter);
+  }
 
   [data-role='settings-content'],
   [data-role='context-system-content'],

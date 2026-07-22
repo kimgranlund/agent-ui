@@ -277,6 +277,19 @@ describe('ui-agent-admin cross-engine smoke — chat + options-pane render side 
   })
 })
 
+describe('ui-agent-admin cross-engine smoke — canvas/pane gutter is module-derived, not a silently-defeatable literal (component-reviewer finding)', () => {
+  it('[data-part="canvas"] and [data-part="pane"] both compute the SAME 12px (0.75rem) leading padding — nothing gates this today, and under @scope cascade rules a future innocuous `padding: 0` on super-shell.css\'s shared pane rule would silently defeat it with every other gate green', () => {
+    const { el } = mountAgentAdmin()
+    const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
+    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    for (const part of [canvas, pane]) {
+      const cs = getComputedStyle(part)
+      expect(cs.paddingInlineStart).toBe('12px')
+      expect(cs.paddingBlockStart).toBe('12px')
+    }
+  })
+})
+
 describe('ui-agent-admin cross-engine smoke — the add-form is GENUINELY collapsed when hidden (component-reviewer CRITICAL fix)', () => {
   it('a hidden add-form computes display:none; toggling reveals it as a real, visible box', () => {
     const { el } = mountAgentAdmin()
