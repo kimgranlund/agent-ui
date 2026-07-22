@@ -14,17 +14,18 @@ disable-model-invocation: true
 ## Canonical sources (read before you start; cite, never copy)
 
 - **The preview harness** — `site/lib/component-preview.ts`: the `<component-preview>` element, `#buildKnob`
-  (the knob→control mapping — the single source of every `cp-knob-*`), `#buildChipRow` (the redundant
-  VARIANTS chip-row), `SAMPLE_TREES` + `sampleFor` (per-container specimen trees + the generic fallback),
-  the a2ui-mode defaults, and `COMPONENT_SAMPLE_CHILDREN`. You edit the CONTENT + knob CONFIG here — never
-  the harness's render pipeline, and never concurrently with docs-writer (the maker↔maker file-race).
+  (the knob→control mapping — the single source of every `cp-knob-*`), `SAMPLE_TREES` + `sampleFor`
+  (per-container specimen trees + the generic fallback), the a2ui-mode defaults, and
+  `COMPONENT_SAMPLE_CHILDREN`. You edit the CONTENT + knob CONFIG here — never the harness's render
+  pipeline, and never concurrently with docs-writer (the maker↔maker file-race).
 - **The gallery** — `site/lib/component-gallery.ts`: composes one `<component-preview>` per fleet member
   from `ALL_DESCRIPTORS`; `themeSelect()` is the reference ui-select-knob wiring.
 - **Per-control doc pages** — `site/pages/*-doc.ts` + the shared `site/lib/doc-page.ts` renderer.
 - **What a control IS** — its `{name}.md` descriptor under `packages/agent-ui/components/src/controls/{name}/`
   (tier, attributes, slots, content model) — the source of truth for a faithful specimen; and the shipped
-  ui-* control APIs you consume for knobs (`ui-select` `value`+`select`, `ui-checkbox`/`ui-switch`
-  `checked`+`change`, `ui-slider` range, `ui-text-field` `value`+`input`, `ui-radio-group`).
+  ui-* control APIs you consume for knobs (`ui-select` `value`+`select`, `ui-segmented-control`/`ui-segment`
+  `checked`+`change` (ADR-0095, small closed enums), `ui-checkbox`/`ui-switch` `checked`+`change`,
+  `ui-slider` range, `ui-text-field` `value`+`input`).
 - **Conventions / gates** — `CLAUDE.md`; the site drift gates (site-canon / coverage / toc / nav) and the
   descriptor↔props trip-wire that pins any derived table.
 
@@ -36,10 +37,12 @@ disable-model-invocation: true
    an empty container is a defect: it teaches nothing. Derive the shape from the control's tier + content
    model in its descriptor.
 2. **One control per prop, right type, no redundancy.** A prop gets exactly one knob, chosen by type:
-   closed enum → `ui-radio-group` (small, segmented) or `ui-select` (large); boolean → `ui-switch` /
-   `ui-checkbox`; numeric range with min/max/step → `ui-slider`; free number/string → `ui-text-field`.
-   Never render the same prop twice (the doubled PROPS knob + VARIANTS chip-row is the canonical defect —
-   remove the chip-row, let the typed knob carry it).
+   closed enum → `ui-segmented-control` (small, ≤5 members — ADR-0095, superseding the retired
+   `ui-radio-group[variant="segmented"]`) or `ui-select` (large); boolean → `ui-switch` / `ui-checkbox`;
+   numeric range with min/max/step → `ui-slider`; free number/string → `ui-text-field`.
+   Never render the same prop twice — historical case in point: a doubled PROPS knob plus a redundant
+   `#buildChipRow` VARIANTS chip-row for the same prop, fixed 2026-07-06 (`7dfdecd`) by removing the
+   chip-row and letting the typed knob carry it.
 
 ## Procedure
 
@@ -50,8 +53,8 @@ disable-model-invocation: true
    redundancy to remove). Hand the inventory + proposal to the host and get direction before mass-editing —
    representativeness is the host's taste call.
 3. **Implement** the approved changes in `component-preview.ts` (the knob→control map, `SAMPLE_TREES`/
-   `sampleFor`, remove `#buildChipRow`) and any doc-page demo content — consuming the shipped ui-* controls,
-   never editing them. If a control can't express what a knob needs, STOP and report the fleet gap.
+   `sampleFor`) and any doc-page demo content — consuming the shipped ui-* controls, never editing them.
+   If a control can't express what a knob needs, STOP and report the fleet gap.
 4. **Update the probes** — re-point any preview/gallery browser test that queried the old control structure;
    add an assertion that a representative specimen renders (e.g. a grid preview mounts >1 cell).
 
