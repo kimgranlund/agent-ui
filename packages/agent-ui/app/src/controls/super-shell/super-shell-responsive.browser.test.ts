@@ -121,18 +121,18 @@ describe('ui-super-shell — SPEC-R9 toggle affordance law (AC15/AC16)', () => {
     expect(document.activeElement, 'focus returns to the toggle after Escape').toBe(toggle)
   })
 
-  it('AC16 overlay cap: at 320px the open overlay clamps to calc(100cqi - bar-size), so a canvas edge stays visible', async () => {
+  it('AC16 overlay cap: at 320px the open overlay clamps to calc(100cqi - bar-size - overlay-inset), so a canvas edge stays visible', async () => {
     const el = mount({ width: 320, narrowStart: 'collapse' }) // narrow band, default collapse-band
     // Pane default is 252px < 320, so a `width < 320` pin would pass with OR without the cap (vacuous). Push
-    // the pane's own size ABOVE the ~266px clamp (320cqi − 54px bar) so the cap rule is genuinely load-bearing:
-    // uncapped the overlay would be 300px; the cap must pull it to ~266px.
+    // the pane's own size ABOVE the ~254px clamp (320cqi − 54px bar − 12px floating inset) so the cap rule is
+    // genuinely load-bearing: uncapped the overlay would be 300px; the cap must pull it to ~254px.
     el.style.setProperty('--ui-super-shell-pane-size', '300px')
     const toggle = startToggle(el)
     toggle.click(); await settle(el)
     const width = startSide(el).getBoundingClientRect().width
-    expect(width, 'the cap clamped the overlay BELOW its own 300px pane-size (deleting the cap would leave it at 300)').toBeLessThan(290)
-    expect(Math.round(width), 'clamped to ~calc(100cqi - bar-size) = 320 - 54 = 266px').toBeGreaterThan(255)
-    expect(Math.round(width)).toBeLessThanOrEqual(267)
+    expect(width, 'the cap clamped the overlay BELOW its own 300px pane-size (deleting the cap would leave it at 300)').toBeLessThan(280)
+    expect(Math.round(width), 'clamped to ~calc(100cqi - bar-size - overlay-inset) = 320 - 54 - 12 = 254px').toBeGreaterThan(248)
+    expect(Math.round(width)).toBeLessThanOrEqual(258)
   })
 
   it('the mixed-arm compact probe: a compact shell with a STACK start side keeps a VISIBLE menu-glyph toggle at 45rem (its line is 40rem, not 52.5rem)', async () => {
@@ -144,6 +144,86 @@ describe('ui-super-shell — SPEC-R9 toggle affordance law (AC15/AC16)', () => {
     // above the 40rem line a stack side takes the WIDE arm — persisted collapse, never the overlay
     expect(el.hasAttribute('data-narrow-open'), 'no overlay reachable for a stack side above its line').toBe(false)
     expect(el.collapsedStart, 'a click toggles the persisted collapse state instead').toBe(true)
+  })
+})
+
+describe('ui-super-shell — floating overlay margin (shell-polish wave, S2): the pane floats popover-style instead of docking flush to the middle row', () => {
+  const OVERLAY_INSET = 12 // px — --ui-super-shell-overlay-inset = module(18px) × 2/3, at the default 16px root font
+  const TOLERANCE = 2 // px — cross-engine (chromium/webkit) subpixel-rounding slack
+
+  const middlePart = (el: UISuperShellElement): HTMLElement => el.querySelector('[data-part="middle"]') as HTMLElement
+  const endSide = (el: UISuperShellElement): HTMLElement => el.querySelector('[data-part="middle"] > [data-slot-name="options-pane"]') as HTMLElement
+  const endToggle = (el: UISuperShellElement): HTMLElement => el.querySelector('[data-part="side-toggle"][data-side="end"]') as HTMLElement
+
+  /** A shell with an END side (options-pane) instead of the shared `mount()`'s start side. */
+  function mountEnd(width: number, collapseBand?: 'compact'): UISuperShellElement {
+    const el = document.createElement('ui-super-shell') as UISuperShellElement
+    el.style.cssText = `position:fixed;inset-block-start:0;inset-inline-start:0;inline-size:${width}px;block-size:400px`
+    if (collapseBand) el.setAttribute('collapse-band', collapseBand)
+    const header = document.createElement('div'); header.setAttribute('data-slot', 'header'); header.textContent = 'H'
+    const options = document.createElement('div'); options.setAttribute('data-slot', 'options-pane'); options.textContent = 'OPT'
+    const content = document.createElement('div'); content.setAttribute('data-slot', 'content'); content.textContent = 'C'
+    el.append(header, options, content)
+    document.body.append(el)
+    mounted.push(el)
+    return el
+  }
+
+  it('narrow band (<40rem), START side: the open overlay is inset from the middle row on the near, top, and bottom edges', async () => {
+    const el = mount({ width: 600, narrowStart: 'collapse' })
+    const toggle = startToggle(el)
+    toggle.click(); await settle(el)
+    const middleRect = middlePart(el).getBoundingClientRect()
+    const paneRect = startSide(el).getBoundingClientRect()
+    expect(Math.abs(paneRect.left - middleRect.left - OVERLAY_INSET), 'near-edge (inline-start) floating inset ≈ 12px, not flush (0px)').toBeLessThanOrEqual(TOLERANCE)
+    expect(Math.abs(paneRect.top - middleRect.top - OVERLAY_INSET), 'top floating inset ≈ 12px, not flush (0px)').toBeLessThanOrEqual(TOLERANCE)
+    expect(Math.abs(middleRect.bottom - paneRect.bottom - OVERLAY_INSET), 'bottom floating inset ≈ 12px, not flush (0px)').toBeLessThanOrEqual(TOLERANCE)
+  })
+
+  it('compact band (<52.5rem), START side: the same floating inset holds on the mirrored compact overlay rule', async () => {
+    const el = mount({ width: 768, collapseBand: 'compact' }) // 48rem — inside the compact band only
+    const toggle = startToggle(el)
+    toggle.click(); await settle(el)
+    const middleRect = middlePart(el).getBoundingClientRect()
+    const paneRect = startSide(el).getBoundingClientRect()
+    expect(Math.abs(paneRect.left - middleRect.left - OVERLAY_INSET), 'near-edge (inline-start) floating inset ≈ 12px').toBeLessThanOrEqual(TOLERANCE)
+    expect(Math.abs(paneRect.top - middleRect.top - OVERLAY_INSET), 'top floating inset ≈ 12px').toBeLessThanOrEqual(TOLERANCE)
+    expect(Math.abs(middleRect.bottom - paneRect.bottom - OVERLAY_INSET), 'bottom floating inset ≈ 12px').toBeLessThanOrEqual(TOLERANCE)
+  })
+
+  it('narrow band, END side: the mirrored inline-end selector floats with the same inset (near/top/bottom)', async () => {
+    const el = mountEnd(600)
+    const toggle = endToggle(el)
+    toggle.click(); await settle(el)
+    const middleRect = middlePart(el).getBoundingClientRect()
+    const paneRect = endSide(el).getBoundingClientRect()
+    expect(Math.abs(middleRect.right - paneRect.right - OVERLAY_INSET), 'near-edge (inline-end) floating inset ≈ 12px').toBeLessThanOrEqual(TOLERANCE)
+    expect(Math.abs(paneRect.top - middleRect.top - OVERLAY_INSET), 'top floating inset ≈ 12px').toBeLessThanOrEqual(TOLERANCE)
+    expect(Math.abs(middleRect.bottom - paneRect.bottom - OVERLAY_INSET), 'bottom floating inset ≈ 12px').toBeLessThanOrEqual(TOLERANCE)
+  })
+
+  it('compact band, END side: the mirrored compact-block inline-end selector floats with the same inset', async () => {
+    const el = mountEnd(768, 'compact')
+    const toggle = endToggle(el)
+    toggle.click(); await settle(el)
+    const middleRect = middlePart(el).getBoundingClientRect()
+    const paneRect = endSide(el).getBoundingClientRect()
+    expect(Math.abs(middleRect.right - paneRect.right - OVERLAY_INSET), 'near-edge (inline-end) floating inset ≈ 12px').toBeLessThanOrEqual(TOLERANCE)
+    expect(Math.abs(paneRect.top - middleRect.top - OVERLAY_INSET), 'top floating inset ≈ 12px').toBeLessThanOrEqual(TOLERANCE)
+    expect(Math.abs(middleRect.bottom - paneRect.bottom - OVERLAY_INSET), 'bottom floating inset ≈ 12px').toBeLessThanOrEqual(TOLERANCE)
+  })
+
+  it('the scrim stays full-bleed behind the floated panel — the margin belongs to the panel, never the backdrop', async () => {
+    const el = mount({ width: 600 })
+    const toggle = startToggle(el)
+    toggle.click(); await settle(el)
+    const middleRect = middlePart(el).getBoundingClientRect()
+    const scrim = el.querySelector('[data-part="scrim"]') as HTMLElement
+    const scrimRect = scrim.getBoundingClientRect()
+    expect(Math.abs(scrimRect.left - middleRect.left), 'scrim flush to the middle row start edge').toBeLessThanOrEqual(TOLERANCE)
+    expect(Math.abs(scrimRect.top - middleRect.top), 'scrim flush to the middle row top edge').toBeLessThanOrEqual(TOLERANCE)
+    expect(Math.abs(scrimRect.right - middleRect.right), 'scrim flush to the middle row end edge').toBeLessThanOrEqual(TOLERANCE)
+    expect(Math.abs(scrimRect.bottom - middleRect.bottom), 'scrim flush to the middle row bottom edge').toBeLessThanOrEqual(TOLERANCE)
   })
 })
 

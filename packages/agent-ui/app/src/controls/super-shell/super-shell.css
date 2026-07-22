@@ -22,6 +22,13 @@
   --ui-super-shell-radius: var(--md-sys-shape-corner-lg, var(--ui-super-shell-module));
   --ui-super-shell-surface: var(--md-sys-color-neutral-surface);
   --ui-super-shell-overlay-shadow: 0 0.25rem 1.5rem rgb(0 0 0 / 0.25);
+  /* the floating overlay pane's margin from the viewport/container edges (Kim's shell-polish S2 ask):
+     it read as a docked, corner-clipped card flush to inset-block/inline edges — floats as a popover-
+     style panel instead. SPEC-R11a — overlay insets are FRAME-tier geometry, so this spells off the
+     module (×2/3, one of R11a's own shipped fractions), never the fleet's --md-sys-space-* ladder,
+     even though the two land on the same 0.75rem rung (R11a's "one sanctioned junction" — the
+     spelling is a declaration of ownership, not a pixel match). */
+  --ui-super-shell-overlay-inset: calc(var(--ui-super-shell-module) * 2 / 3); /* 0.75rem at the 18px module */
   /* SPEC-R6c (LLD-C1, ADR-0154) — the two-sided resize clamp: neither floor moves without a consumer
      override (agent-admin's migration sets 20rem/16rem, its shipped ui-split's own floors). ONE
      override author per shell instance: a second consumer stylesheet repointing the same instance's
@@ -284,15 +291,17 @@
     :scope[data-narrow-open='end'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) {
       display: block;
       position: absolute;
-      inset-block: 0;
+      inset-block: var(--ui-super-shell-overlay-inset);
       z-index: 2;
       /* SPEC-R9d — cap the overlay so a canvas edge stays visible on the smallest screens (a 252px pane
-         never spans a 320px viewport): its own pane-size, but never wider than the container minus a bar. */
-      max-inline-size: calc(100cqi - var(--ui-super-shell-bar-size));
+         never spans a 320px viewport): its own pane-size, but never wider than the container minus a bar
+         AND the near-edge floating inset below (so the far-edge canvas gap stays exactly one bar wide,
+         unchanged by the new margin). */
+      max-inline-size: calc(100cqi - var(--ui-super-shell-bar-size) - var(--ui-super-shell-overlay-inset));
       box-shadow: var(--ui-super-shell-overlay-shadow);
     }
-    :scope[data-narrow-open='start'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']) { inset-inline-start: 0; }
-    :scope[data-narrow-open='end'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) { inset-inline-end: 0; }
+    :scope[data-narrow-open='start'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']) { inset-inline-start: var(--ui-super-shell-overlay-inset); }
+    :scope[data-narrow-open='end'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) { inset-inline-end: var(--ui-super-shell-overlay-inset); }
 
     /* SPEC-R9a — a `stack`/`tabs` side's toggle HIDES below the 40rem narrow line (its narrow anatomy is
        owned by the stacked content / the narrow-tabs strip; today's no-op-or-conflicting click arms become
@@ -389,13 +398,13 @@
     :scope[collapse-band='compact']:not([narrow-end='stack']):not([narrow-end='tabs'])[data-narrow-open='end'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) {
       display: block;
       position: absolute;
-      inset-block: 0;
+      inset-block: var(--ui-super-shell-overlay-inset);
       z-index: 2;
-      max-inline-size: calc(100cqi - var(--ui-super-shell-bar-size));
+      max-inline-size: calc(100cqi - var(--ui-super-shell-bar-size) - var(--ui-super-shell-overlay-inset));
       box-shadow: var(--ui-super-shell-overlay-shadow);
     }
-    :scope[collapse-band='compact']:not([narrow-start='stack']):not([narrow-start='tabs'])[data-narrow-open='start'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']) { inset-inline-start: 0; }
-    :scope[collapse-band='compact']:not([narrow-end='stack']):not([narrow-end='tabs'])[data-narrow-open='end'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) { inset-inline-end: 0; }
+    :scope[collapse-band='compact']:not([narrow-start='stack']):not([narrow-start='tabs'])[data-narrow-open='start'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']) { inset-inline-start: var(--ui-super-shell-overlay-inset); }
+    :scope[collapse-band='compact']:not([narrow-end='stack']):not([narrow-end='tabs'])[data-narrow-open='end'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) { inset-inline-end: var(--ui-super-shell-overlay-inset); }
     /* menu⇄X — scoped to the open collapse side */
     :scope[collapse-band='compact']:not([narrow-start='stack']):not([narrow-start='tabs'])[data-narrow-open='start'] [data-part='side-toggle'][data-side='start'] [data-glyph='menu'],
     :scope[collapse-band='compact']:not([narrow-end='stack']):not([narrow-end='tabs'])[data-narrow-open='end'] [data-part='side-toggle'][data-side='end'] [data-glyph='menu'] {
