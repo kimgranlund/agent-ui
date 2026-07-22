@@ -61,8 +61,8 @@ ui-app-shell-region {
   background: transparent;
   border: 1px solid var(--ui-app-shell-divider);
   border-radius: 0.25rem;
-  padding-inline: 0.5rem;
-  padding-block: 0.25rem;
+  padding-inline: var(--md-sys-space-sm);
+  padding-block: var(--md-sys-space-xs);
 }
 [data-part='content'] {
   display: contents;

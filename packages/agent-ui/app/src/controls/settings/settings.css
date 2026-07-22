@@ -20,6 +20,11 @@
      `ui-form-provider` per generated section directly into this element's panel with no such wrap, so
      `ui-settings` IS that page author for its own generated tree and must supply the idiom itself. */
   --ui-settings-gap: var(--md-sys-space-md);
+  /* TKT-0066 item 5 ruling: dimensional constants route through the own chain — the STYLES block below
+     never reads --md-sys-space-* directly, it mints these role-named tokens here and consumes THOSE. */
+  --ui-settings-panel-pad: var(--md-sys-space-lg); /* the panel host's own content inset */
+  --ui-settings-notice-pad-inline: var(--md-sys-space-md);
+  --ui-settings-notice-pad-block: var(--md-sys-space-sm);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-settings) consumes ONLY --ui-settings-* ════════════════ */
@@ -40,7 +45,7 @@
 
   [data-part='panel'] {
     box-sizing: border-box;
-    padding: 1rem;
+    padding: var(--ui-settings-panel-pad);
   }
 
   /* GH #136 — the generated section's `ui-form-provider` (generate.ts) is the ONE child this panel ever
@@ -60,8 +65,8 @@
 
   [data-part='notice'] {
     color: var(--ui-settings-ink);
-    padding-inline: 0.75rem;
-    padding-block: 0.5rem;
+    padding-inline: var(--ui-settings-notice-pad-inline);
+    padding-block: var(--ui-settings-notice-pad-block);
   }
 
   [data-part='unsupported-field'] {

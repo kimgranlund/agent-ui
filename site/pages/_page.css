@@ -272,7 +272,7 @@ ui-theme-provider.app-shell [data-site-nav]::-webkit-scrollbar,
 .page-tabs ul {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem 1rem;
+  gap: var(--md-sys-space-xs) var(--md-sys-space-lg);
   margin: 0;
   padding: 0;
   list-style: none;
