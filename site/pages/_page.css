@@ -91,12 +91,19 @@ ui-theme-provider.app-shell [data-site-nav] {
  * (`this.append(frame)`, super-shell.ts `#compose`) → its OWN header bar (`frame.append(header)`,
  * same method) — so a nested shell's bar, several DOM levels deeper, structurally cannot match.
  *
- * This is the site-CSS analogue of `super-shell.css`'s own cross-shell boundary — `@scope (ui-super-
- * shell) to (ui-super-shell)` (cited there as SPEC-R1b's depth-2 recursion): that mechanism stops the
- * COMPONENT's own rules from crossing into a nested instance; `_page.css` sits outside that `@scope` (a
- * separate, site-owned stylesheet), so the child-combinator chain here is the SAME genus of fix —
- * "one shell's rule never reaches a nested shell's own part" — realized through DOM-position
- * specificity instead. The component's own `[data-part='bar']` background already matches
+ * SPEC-R12a's genus, not its letter (shell-archetypes-m5.spec.md §10): R12a's own rule is narrower —
+ * a consumer override of a component's `@scope`d `display` must TAG-QUALIFY (`{tag}.{class}`) to win
+ * specificity against that scoped rule, letter-cited exactly for `ui-theme-provider.app-shell` a few
+ * lines up in this same file. This rule touches `background`/`border-block-end`, not `display`, and
+ * has no competing `@scope`d rule to out-specificity — R12a's letter doesn't bind it. What DOES apply
+ * is the same family the clause is drawn from: a consumer-side rule reaching further into a shipped
+ * component's internals than it should, silently, unless the selector is built to stop at the right
+ * boundary. `super-shell.css`'s own `@scope (ui-super-shell) to (ui-super-shell)` (SPEC-R1b's depth-2
+ * recursion) is the component's OWN version of that same boundary — it stops the component's rules
+ * from crossing into a nested instance; `_page.css` sits outside that `@scope` (a separate, site-owned
+ * stylesheet), so the child-combinator chain here is the site-CSS realization of the identical idea —
+ * "one shell's rule never reaches a nested shell's own part" — via DOM-position specificity instead of
+ * `@scope...to()`. The component's own `[data-part='bar']` background already matches
  * (`--ui-super-shell-surface` == `--md-sys-color-neutral-surface`) — restated here so the one
  * declaration reads as the band's true source, not a same-color coincidence between two rules. */
 ui-theme-provider.app-shell > .site-shell > [data-part='frame'] > [data-part='bar'][data-bar='header'] {
