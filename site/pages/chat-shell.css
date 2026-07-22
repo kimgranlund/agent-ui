@@ -20,12 +20,12 @@
   color: var(--md-sys-color-neutral-on-surface);
 }
 .cs-api-tag {
-  margin-block: 2rem 0.5rem;
+  margin-block: var(--md-sys-space-2xl) var(--md-sys-space-sm);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   color: var(--md-sys-color-primary-high);
 }
 .cs-snippet {
-  margin-block: 0.5rem 1.5rem;
+  margin-block: var(--md-sys-space-sm) var(--md-sys-space-xl);
   padding: 0.9rem 1.1rem;
   overflow-x: auto;
   border-radius: 10px;
@@ -42,12 +42,12 @@
  * ui-chat-shell is already display:flex/flex-direction:column from chat-shell.css — we only frame it. */
 ui-chat-shell.cs-demo {
   block-size: 380px;
-  margin-block: 1rem 1.75rem;
+  margin-block: var(--md-sys-space-lg) 1.75rem;
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
   border-radius: 12px;
   overflow: hidden;
   background: var(--md-sys-color-neutral-surface-lowest);
-  padding: 0.5rem;
+  padding: var(--md-sys-space-sm);
   box-sizing: border-box;
 }
 
@@ -61,7 +61,7 @@ ui-chat-shell.cs-demo {
   flex-direction: column;
   justify-content: center;
   gap: 0.1rem;
-  padding: 0.5rem 0.75rem;
+  padding: var(--md-sys-space-sm) var(--md-sys-space-md);
   background: var(--md-sys-color-primary-container);
 }
 .cs-header-title {
@@ -78,7 +78,7 @@ ui-chat-shell.cs-demo {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  padding: 0.5rem;
+  padding: var(--md-sys-space-sm);
   overflow-y: auto;
   background: var(--md-sys-color-primary-container-low);
 }
@@ -106,8 +106,8 @@ ui-chat-shell.cs-demo {
 .cs-demo [data-slot='content'] {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.6rem 0.75rem;
+  gap: var(--md-sys-space-sm);
+  padding: 0.6rem var(--md-sys-space-md);
   overflow-y: auto;
   background: var(--md-sys-color-neutral-surface);
 }
@@ -141,7 +141,7 @@ ui-chat-shell.cs-demo {
 .cs-demo [data-slot='footer'] {
   display: flex;
   align-items: center;
-  padding: 0.45rem 0.75rem;
+  padding: 0.45rem var(--md-sys-space-md);
   background: var(--md-sys-color-neutral-surface-low);
 }
 .cs-footer-hint {

@@ -25,6 +25,11 @@
      covers the common case, not an unconditional no-scroll guarantee; content taller than this still
      scrolls (with the hidden-scrollbar treatment above), rather than blowing out page layout. */
   --ui-surface-host-wrap-max-block-size: 32rem;
+  /* SPEC-R11c/AC19 (spacing-drift gate): the STYLES block below never reads --md-sys-space-* directly
+     inside @scope (TKT-0066 item 5) — it mints these role-named tokens here and consumes THOSE. */
+  --ui-surface-host-stage-gap: var(--md-sys-space-md);
+  --ui-surface-host-stage-pad: var(--md-sys-space-lg);
+  --ui-surface-host-inline-inset: var(--md-sys-space-2xl); /* the calc() arm subtracted from 100% below — the 32rem cap itself has no ladder rung */
 }
 
 /* ════════════════ [ui-surface-host] STYLES — @scope (ui-surface-host) consumes ONLY --ui-surface-host-* ═══ */
@@ -61,13 +66,13 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: var(--ui-surface-host-stage-gap);
     align-items: center;
-    padding: 1rem;
+    padding: var(--ui-surface-host-stage-pad);
     /* A DEFINITE artboard width — NOT just max-inline-size (the collapse-to-1ch trap canvas-surface.ts's
        own comment records: an absolutely-positioned flex column with only a max width shrink-fits, and its
        align-items:center children then resolve to min-content). Content wider than the cap scrolls. */
-    inline-size: min(32rem, calc(100% - 2rem));
+    inline-size: min(32rem, calc(100% - var(--ui-surface-host-inline-inset)));
     /* ADR-0100 cl.2 — the A2UI mount boundary: THIS box (not any rendered ui-row/ui-column/ui-list/ui-grid)
        is the query container the fleet's layout primitives resolve their `@container` reflow against. It
        qualifies (an EXTERNALLY, definite-sized box) because its inline-size is fixed above, not content-

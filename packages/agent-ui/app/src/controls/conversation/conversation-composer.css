@@ -58,6 +58,12 @@
      tokens the text-field/textarea frames ride. */
   --ui-conversation-composer-radius: var(--md-sys-shape-corner-base);
   --ui-conversation-composer-min-inline-size: 20ch; /* the entry-control typing-width floor (ADR-0021) */
+
+  /* SPEC-R11c/AC19 (spacing-drift gate): the STYLES block below never reads --md-sys-space-* directly
+     inside @scope (TKT-0066 item 5) — it mints these role-named tokens here and consumes THOSE. */
+  --ui-conversation-composer-stack-gap: var(--md-sys-space-sm); /* the host's own chips/editor/options column rhythm */
+  --ui-conversation-composer-pad-inline: var(--md-sys-space-md); /* the host frame's horizontal inset (vertical stays its own 0.65rem — no ladder rung) */
+  --ui-conversation-composer-options-gap: var(--md-sys-space-sm); /* the options row's own leading/trailing spread */
 }
 
 /* busy → this element's own disabled-equivalent — TKT-0062's disabled row (bg=container-low,
@@ -83,11 +89,11 @@
   :scope {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--ui-conversation-composer-stack-gap);
     flex: 0 0 auto;
     box-sizing: border-box;
     min-inline-size: var(--ui-conversation-composer-min-inline-size);
-    padding: 0.65rem 0.75rem;
+    padding: 0.65rem var(--ui-conversation-composer-pad-inline);
     background: var(--ui-conversation-composer-bg);
     color: var(--ui-conversation-composer-ink);
     border: 1px solid var(--ui-conversation-composer-border);
@@ -190,7 +196,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.5rem;
+    gap: var(--ui-conversation-composer-options-gap);
   }
   [data-part='options-leading'],
   [data-part='options-trailing'] {

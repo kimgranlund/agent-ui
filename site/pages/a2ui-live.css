@@ -38,7 +38,7 @@
 /* ── the shell fills the page's content region ──────────────────────────────────────────────────────────── */
 [data-page-content] {
   display: flex;
-  padding: 1.25rem 1.5rem;
+  padding: 1.25rem var(--md-sys-space-xl);
   box-sizing: border-box;
   min-block-size: 0;
   overflow: hidden; /* clip — the inner panes scroll, not the region */
@@ -85,7 +85,7 @@
 
 .pane-head {
   flex: 0 0 auto;
-  padding: 0.85rem 1rem 0.6rem;
+  padding: 0.85rem var(--md-sys-space-lg) 0.6rem;
   border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
 }
 .pane-title {
@@ -105,7 +105,7 @@
   flex: 1 1 auto;
   min-block-size: 0;
   overflow-y: auto;
-  padding: 1rem;
+  padding: var(--md-sys-space-lg);
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
@@ -172,7 +172,7 @@
 .msg[data-ask] .ask-surface {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--md-sys-space-sm);
   margin-block-start: 0.35rem;
 }
 .msg[data-ask][data-state] {
@@ -188,9 +188,9 @@
 .chat-composer {
   flex: 0 0 auto;
   display: flex;
-  gap: 0.5rem;
+  gap: var(--md-sys-space-sm);
   align-items: end;
-  padding: 0.75rem;
+  padding: var(--md-sys-space-md);
   border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
 }
 .chat-composer ui-text-field {
@@ -217,8 +217,8 @@
 }
 .chat-status::before {
   content: '';
-  inline-size: 0.5rem;
-  block-size: 0.5rem;
+  inline-size: var(--md-sys-space-sm);
+  block-size: var(--md-sys-space-sm);
   border-radius: 50%;
   background: var(--md-sys-color-primary-high);
   animation: chat-status-pulse 1s ease-in-out infinite;
@@ -246,8 +246,8 @@
 }
 .switcher {
   display: flex;
-  gap: 0.75rem;
-  padding: 0.6rem 0.75rem;
+  gap: var(--md-sys-space-md);
+  padding: 0.6rem var(--md-sys-space-md);
   border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
   background: var(--md-sys-color-neutral-surface);
 }
@@ -315,6 +315,6 @@ ui-tabs.canvas-tabs {
   flex: 0 0 auto;
   display: flex;
   justify-content: flex-end;
-  padding: 0.5rem 0.75rem;
+  padding: var(--md-sys-space-sm) var(--md-sys-space-md);
   border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
 }
