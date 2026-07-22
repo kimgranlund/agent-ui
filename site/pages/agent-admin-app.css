@@ -31,16 +31,16 @@ body {
 .canvas-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--md-sys-space-sm);
   flex: 0 0 auto;
-  padding: 0.5rem 0.75rem;
+  padding: var(--md-sys-space-sm) var(--md-sys-space-md);
   border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
 }
 
 .canvas-header-title {
   display: flex;
   align-items: baseline;
-  gap: 0.5rem;
+  gap: var(--md-sys-space-sm);
   flex: 1 1 auto;
   min-inline-size: 0; /* the title zone yields — its own spans truncate, the menus never do */
 }

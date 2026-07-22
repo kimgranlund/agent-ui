@@ -44,6 +44,7 @@
   --ui-nav-rail-context-pad-block-end: var(--md-sys-space-xs);
   --ui-nav-rail-flyout-pad: var(--md-sys-space-xs);
   --ui-nav-rail-flyout-radius: var(--md-sys-shape-corner-base);
+  --ui-nav-rail-chevron-size: var(--md-sys-space-sm); /* SPEC-R11c/AC19 — the disclosure chevron glyph */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-nav-rail) consumes ONLY --ui-nav-rail-* ════════════════ */
@@ -203,8 +204,8 @@
     }
     [data-part='disclosure'] > [data-part='trigger']::after {
       content: '';
-      inline-size: 0.5rem;
-      block-size: 0.5rem;
+      inline-size: var(--ui-nav-rail-chevron-size);
+      block-size: var(--ui-nav-rail-chevron-size);
       border-inline-end: 1.5px solid currentColor;
       border-block-end: 1.5px solid currentColor;
       transform: rotate(45deg);

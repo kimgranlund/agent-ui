@@ -12,7 +12,7 @@
 
 [data-page-content] {
   display: flex;
-  padding: 1.25rem 1.5rem;
+  padding: 1.25rem var(--md-sys-space-xl);
   box-sizing: border-box;
   min-block-size: 0;
   overflow: hidden; /* clip — the conversation owns its own inner scroll, not the region */
@@ -71,8 +71,8 @@
 }
 .switcher {
   display: flex;
-  gap: 0.75rem;
-  padding: 0.6rem 0.75rem;
+  gap: var(--md-sys-space-md);
+  padding: 0.6rem var(--md-sys-space-md);
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
   border-radius: 10px;
   background: var(--md-sys-color-neutral-surface);

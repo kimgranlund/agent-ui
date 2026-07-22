@@ -52,6 +52,7 @@
   --ui-agent-admin-card-pad: var(--md-sys-space-sm) var(--md-sys-space-md); /* the shared card chrome padding (model-grid/settings-panel/surface-row/context-section/entry/entry-add-form) */
   --ui-agent-admin-compact-pad: var(--md-sys-space-sm); /* a bare fleet step, paired on its OWN axis alongside the module-derived --ui-agent-admin-compact-gap (context-item's padding) or standing alone (context-json) — the ONE case the shared roles above don't cover */
   --ui-agent-admin-provider-gap: var(--md-sys-space-xs); /* the gap above each subsequent provider-group heading in the Model grid ([data-part='model-provider']) */
+  --ui-agent-admin-spacer-min-size: var(--md-sys-space-sm); /* SPEC-R11c/AC19 — the shared flex-spacer floor (surface-spacer, entry-spacer) */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-agent-admin) consumes ONLY --ui-agent-admin-* ════════════════ */
@@ -308,7 +309,7 @@
 
   [data-part='surface-spacer'] {
     flex: 1 1 auto;
-    min-inline-size: 0.5rem;
+    min-inline-size: var(--ui-agent-admin-spacer-min-size);
   }
 
   /* The PRD-gated GenUI row reads as inert (its switch is genuinely disabled; the dim is the visual). */
@@ -407,7 +408,7 @@
 
   [data-part='entry-spacer'] {
     flex: 1 1 auto;
-    min-inline-size: 0.5rem;
+    min-inline-size: var(--ui-agent-admin-spacer-min-size);
   }
 
   [data-part='entry-description'] {

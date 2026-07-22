@@ -19,17 +19,17 @@
   color: var(--md-sys-color-neutral-on-surface);
 }
 .ss-api-tag {
-  margin-block: 2rem 0.5rem;
+  margin-block: var(--md-sys-space-2xl) var(--md-sys-space-sm);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   color: var(--md-sys-color-primary-high);
 }
 .ss-caption {
-  margin-block: 0.35rem 1.5rem;
+  margin-block: 0.35rem var(--md-sys-space-xl);
   font-size: 0.8rem;
   color: var(--md-sys-color-neutral-on-surface-variant);
 }
 .ss-snippet {
-  margin-block: 0.5rem 1.5rem;
+  margin-block: var(--md-sys-space-sm) var(--md-sys-space-xl);
   padding: 0.9rem 1.1rem;
   overflow-x: auto;
   border-radius: 10px;
@@ -46,7 +46,7 @@
  * ui-super-shell is already display:flex/container-type:inline-size from super-shell.css — we only frame it. */
 ui-super-shell.ss-demo {
   block-size: 320px;
-  margin-block: 1rem 1.75rem;
+  margin-block: var(--md-sys-space-lg) 1.75rem;
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
   border-radius: 12px;
   /* min-size-floors census (GH #185 follow-up) — a dual-sided demo (sections 1/2/4 below) can pass
@@ -60,7 +60,7 @@ ui-super-shell.ss-demo {
   overflow-x: auto;
   overflow-y: hidden;
   background: var(--md-sys-color-neutral-surface-lowest);
-  padding: 0.5rem;
+  padding: var(--md-sys-space-sm);
   box-sizing: border-box;
 }
 /* The nested (depth-2) demo needs more room for its own inner frame. */
@@ -73,7 +73,7 @@ ui-super-shell.ss-demo--inner {
   margin-block: 0;
 }
 .ss-content-wrap {
-  padding: 0.5rem;
+  padding: var(--md-sys-space-sm);
   box-sizing: border-box;
   min-block-size: 0;
   display: flex;
@@ -114,7 +114,7 @@ ui-super-shell.ss-demo--inner {
 .ss-demo [data-slot='footer'] .ss-slot {
   flex-direction: row;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--md-sys-space-sm);
 }
 /* GH #124 (ADR-0008 — no color-mix, colour opinions live in the token layer): the three-step wash
    ladder maps onto the token layer's own pre-computed container roles instead of a hand-mixed

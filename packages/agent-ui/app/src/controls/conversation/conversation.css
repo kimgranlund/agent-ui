@@ -23,6 +23,12 @@
      ruling (TKT-0066 item 5) is satisfied either way. */
   --ui-conversation-radius: var(--md-sys-shape-corner-base, 12px);
   --ui-conversation-bubble-radius: calc(var(--ui-conversation-radius) - 2px);
+  /* SPEC-R11c/AC19 (spacing-drift gate): the STYLES block below never reads --md-sys-space-* directly
+     inside @scope (TKT-0066 item 5) — it mints these role-named tokens here and consumes THOSE. */
+  --ui-conversation-log-pad: var(--md-sys-space-lg);
+  --ui-conversation-bubble-pad: var(--md-sys-space-sm) var(--md-sys-space-md);
+  --ui-conversation-mounts-gap: var(--md-sys-space-sm);
+  --ui-conversation-composer-inset: var(--md-sys-space-md);
 }
 
 /* ════════════════ [ui-conversation] STYLES — @scope (ui-conversation) consumes ONLY --ui-conversation-* ══ */
@@ -48,7 +54,7 @@
     min-block-size: 0;
     overflow-y: auto;
     scrollbar-width: var(--ui-conversation-scrollbar-width, auto); /* consumer-inherited seam (split-pane.css's own note) — deliberately NOT self-declared */
-    padding: 1rem;
+    padding: var(--ui-conversation-log-pad);
     display: flex;
     flex-direction: column;
     gap: 0.65rem;
@@ -58,7 +64,7 @@
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
-    padding: 0.5rem 0.75rem;
+    padding: var(--ui-conversation-bubble-pad);
     border-radius: var(--ui-conversation-bubble-radius);
     max-inline-size: 92%;
   }
@@ -120,7 +126,7 @@
   [data-part='mounts'] {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--ui-conversation-mounts-gap);
   }
   /* TKT-0084: conversation.ts sets `wrap` on every surface it mounts here — the bubble hugs the
      rendered surface's real content height (capped by ui-surface-host's own
@@ -169,7 +175,7 @@
      inset from the shell's edges rather than flush against them. */
   ui-conversation-composer {
     flex: 0 0 auto;
-    margin: 0 0.75rem 0.75rem;
+    margin: 0 var(--ui-conversation-composer-inset) var(--ui-conversation-composer-inset);
   }
 }
 
