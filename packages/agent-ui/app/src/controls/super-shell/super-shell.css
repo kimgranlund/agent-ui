@@ -174,11 +174,21 @@
     padding-block-end: calc(var(--ui-super-shell-module) / 3);
     flex: 0 0 auto;
   }
-  [data-segmented] > [data-segment] {
+  /* GH #197 — `:not([data-active])` (specificity 0,3,0, since `:not()` carries its argument's own
+     specificity) so this hide rule ONLY ever matches an INACTIVE segment — it used to be a bare
+     `[data-segmented] > [data-segment]` that matched active segments too, relying on the active rule
+     below to out-specificity it back to visible with an explicit `display: block`. That `display: block`
+     then always beat a CONSUMER's own display declaration on the same node (e.g. agent-admin's
+     `[data-role='settings-content'] { display: flex; gap: 1rem }`, one attribute selector, 0,1,0):
+     `[data-segmented] > [data-segment][data-active]` at 0,3,0 clobbered it, silently zeroing agent-admin's
+     flex `gap` (inert on a block container) between every top-level pane section. Scoping the hide rule to
+     `:not([data-active])` means an ACTIVE segment is no longer touched by any `display` declaration here
+     at all — a consumer's own display rule (whatever its specificity) applies cleanly, uncontested, no
+     coupling to super-shell's attribute vocabulary required on the consumer side. */
+  [data-segmented] > [data-segment]:not([data-active]) {
     display: none;
   }
   [data-segmented] > [data-segment][data-active] {
-    display: block;
     flex: 1 1 auto;
     min-block-size: 0;
     overflow-y: auto;

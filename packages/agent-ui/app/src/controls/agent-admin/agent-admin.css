@@ -108,6 +108,16 @@
     padding: var(--ui-agent-admin-shell-gutter);
   }
 
+  /* GH #197 — these three divs double as super-shell's OWN segment containers (`agent-admin.ts` sets
+     `data-segment`/`data-active` on the identical nodes, SPEC-R7a). This plain, single-attribute selector
+     used to LOSE outright to super-shell's own base hide rule, `[data-segmented] > [data-segment] {
+     display: none }` (0,2,0 — unconditional, matching active AND inactive segments alike), which forced
+     `display: block` back on via a higher-specificity active-only rule that then ALSO clobbered this
+     `display: flex; gap: 1rem`, silently zeroing the gap between every top-level pane section (the gap
+     property is inert on a block container). Fixed on the super-shell side instead (super-shell.css's hide
+     rule now reads `:not([data-active])`, so it only ever matches an inactive segment) — an active segment
+     is no longer touched by any competing `display` declaration there at all, so this selector needs no
+     changes of its own to win cleanly. */
   [data-role='settings-content'],
   [data-role='context-system-content'],
   [data-role='context-dialog-content'] {

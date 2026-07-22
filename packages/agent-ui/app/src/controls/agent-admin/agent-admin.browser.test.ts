@@ -780,3 +780,58 @@ describe('ui-agent-admin — list-row vertical rhythm stays consistent across th
     expect(gapPx).toBeCloseTo(Number.parseFloat(modelGridGap), 1)
   })
 })
+
+describe('ui-agent-admin — segment content wins its OWN display:flex, not super-shell\'s active-segment display:block (GH #197)', () => {
+  it('the Settings segment (data-role="settings-content") computes display:flex and shows a REAL, non-zero measured gap between every pair of adjacent top-level sections', async () => {
+    const { el } = mountAgentAdmin()
+    await el.updateComplete
+    const settingsContent = el.querySelector('[data-role="settings-content"]') as HTMLElement
+    expect(settingsContent).not.toBeNull()
+    // The double-duty element: agent-admin's own `[data-role='settings-content']` (specificity 0,1,0)
+    // declares `display:flex; gap:1rem`, but the SAME node is also super-shell's `[data-segment]
+    // [data-active]` (specificity 0,3,0, super-shell.css) — before the fix, super-shell's `display:block`
+    // won on raw specificity and silently zeroed the flex `gap` (gap has no effect on a block container).
+    const cs = getComputedStyle(settingsContent)
+    expect(cs.display, 'wins the specificity fight against super-shell\'s segment-visibility rule').toBe('flex')
+    expect(cs.flexDirection).toBe('column')
+
+    // Real, measured gaps (not just computed style — `row-gap` still reports its declared value even
+    // when display:block makes it inert) between EVERY adjacent pair of top-level children: Agent header
+    // → ui-settings → Model heading → model-grid → prompt section → Surface Options heading → Surface
+    // Options card → each capability entry-section.
+    const children = [...settingsContent.querySelectorAll(':scope > *')] as HTMLElement[]
+    expect(children.length, 'the Settings segment composes many top-level sections').toBeGreaterThan(5)
+    const expectedGapPx = Number.parseFloat(cs.rowGap)
+    expect(expectedGapPx, 'a real, non-zero declared gap to measure against').toBeGreaterThan(0)
+    for (let i = 1; i < children.length; i++) {
+      const prev = children[i - 1]
+      const next = children[i]
+      const gapPx = next.getBoundingClientRect().top - prev.getBoundingClientRect().bottom
+      expect(
+        gapPx,
+        `measured gap between child ${i - 1} (${prev.getAttribute('data-part') ?? prev.tagName}) and child ${i} (${next.getAttribute('data-part') ?? next.tagName})`,
+      ).toBeCloseTo(expectedGapPx, 0)
+    }
+  })
+
+  it('the Context: System and Context: Dialog segments ALSO win display:flex once activated (same super-shell specificity collision, same fix)', async () => {
+    const { el } = mountAgentAdminAt(800)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    const tabs = [...pane.querySelectorAll('[data-part="pane-tab"]')]
+
+    const systemTab = tabs.find((t) => t.textContent === 'Context: System') as HTMLElement
+    systemTab.click()
+    await new Promise((r) => requestAnimationFrame(r))
+    const systemContent = pane.querySelector('[data-role="context-system-content"]') as HTMLElement
+    expect(systemContent.hasAttribute('data-active')).toBe(true)
+    expect(getComputedStyle(systemContent).display).toBe('flex')
+
+    const dialogTab = tabs.find((t) => t.textContent === 'Context: Dialog') as HTMLElement
+    dialogTab.click()
+    await new Promise((r) => requestAnimationFrame(r))
+    const dialogContent = pane.querySelector('[data-role="context-dialog-content"]') as HTMLElement
+    expect(dialogContent.hasAttribute('data-active')).toBe(true)
+    expect(getComputedStyle(dialogContent).display).toBe('flex')
+  })
+})
