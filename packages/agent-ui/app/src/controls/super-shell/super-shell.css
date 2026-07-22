@@ -174,21 +174,20 @@
     padding-block-end: calc(var(--ui-super-shell-module) / 3);
     flex: 0 0 auto;
   }
-  [data-segmented] > [data-segment] {
+  /* GH #197 — `:not([data-active])` (specificity 0,3,0, since `:not()` carries its argument's own
+     specificity) so this hide rule ONLY ever matches an INACTIVE segment — it used to be a bare
+     `[data-segmented] > [data-segment]` that matched active segments too, relying on the active rule
+     below to out-specificity it back to visible with an explicit `display: block`. That `display: block`
+     then always beat a CONSUMER's own display declaration on the same node (e.g. agent-admin's
+     `[data-role='settings-content'] { display: flex; gap: 1rem }`, one attribute selector, 0,1,0):
+     `[data-segmented] > [data-segment][data-active]` at 0,3,0 clobbered it, silently zeroing agent-admin's
+     flex `gap` (inert on a block container) between every top-level pane section. Scoping the hide rule to
+     `:not([data-active])` means an ACTIVE segment is no longer touched by any `display` declaration here
+     at all — a consumer's own display rule (whatever its specificity) applies cleanly, uncontested, no
+     coupling to super-shell's attribute vocabulary required on the consumer side. */
+  [data-segmented] > [data-segment]:not([data-active]) {
     display: none;
   }
-  /* GH #197 — no explicit `display` here. A consumer's segment div often ALSO carries the consumer's
-     own role attribute (e.g. agent-admin's `[data-role='settings-content']`) and wants to declare its
-     OWN display type (flex/grid/block) for that same node; a `display: block` used to sit on this rule
-     and always won that fight on raw specificity (0,3,0 here vs. a plain single-attribute consumer
-     selector at 0,1,0), silently clobbering the consumer's real layout (agent-admin's `display:flex` +
-     `gap` never applied — the gap property is inert on a block container). Leaving `display` undeclared
-     here means: a bare segment div with no consumer CSS of its own still needs an explicit override to
-     become visible (the base hide rule above still matches unconditionally, 0,2,0) — agent-admin now
-     supplies one at 0,3,0 (folding `[data-segment][data-active]` into its own selector, see
-     agent-admin.css). A future segmented-pane consumer with no display override of its own must do the
-     same (qualify with `[data-segment][data-active]` for a real, non-tied specificity majority over the
-     0,2,0 hide rule), or extend this rule instead. */
   [data-segmented] > [data-segment][data-active] {
     flex: 1 1 auto;
     min-block-size: 0;
