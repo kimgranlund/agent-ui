@@ -734,7 +734,7 @@ describe('ui-agent-admin — entry libraries commit through the real menu (GH #4
 })
 
 describe('ui-agent-admin — the Agent config panel is a CARD like the entry cards (design-mode ask, 2026-07-19)', () => {
-  it('the settings panel carries the entry-card chrome: real border, radius, surface — matching an entry card computed-for-computed', async () => {
+  it('the settings panel carries the entry-card chrome: real border, radius, surface, padding — matching an entry card computed-for-computed', async () => {
     const { el } = mountAgentAdmin()
     await el.updateComplete
     const panel = el.querySelector('ui-settings [data-part="panel"]') as HTMLElement
@@ -748,5 +748,35 @@ describe('ui-agent-admin — the Agent config panel is a CARD like the entry car
     expect(p.borderTopLeftRadius, 'the same card radius').toBe(e.borderTopLeftRadius)
     expect(p.backgroundColor, 'the same card surface').toBe(e.backgroundColor)
     expect(p.backgroundColor).not.toBe('rgba(0, 0, 0, 0)') // anti-vacuous: not transparent-matching-transparent
+    // GH #191 follow-up (Kim's screenshot: the Agent card read with excess inset vs. its siblings) — the
+    // panel had been minted with a UNIFORM 0.75rem padding instead of the entry card's own asymmetric
+    // 0.5rem 0.75rem, a real 4px block-inset excess. Matching the padding, not just the chrome, is the
+    // actual regression this pane-rhythm fix protects.
+    expect(p.paddingBlockStart, 'block padding matches the entry-card norm, not a uniform 0.75rem').toBe(e.paddingBlockStart)
+    expect(p.paddingInlineStart, 'inline padding matches the entry-card norm').toBe(e.paddingInlineStart)
+  })
+})
+
+describe('ui-agent-admin — list-row vertical rhythm stays consistent across the pane (GH #191 follow-up)', () => {
+  it('the model grid\'s row gap matches the entry-list/surface-options list convention (0.5rem), not the smaller entry-internal gap it had been minted with', async () => {
+    const { el } = mountAgentAdmin()
+    await el.updateComplete
+    const modelGrid = el.querySelector('[data-part="model-grid"]') as HTMLElement
+    const entryList = el.querySelector('[data-part="entry-list"]') as HTMLElement
+    const surfaceOptions = el.querySelector('[data-part="surface-options"]') as HTMLElement
+    expect(modelGrid).not.toBeNull()
+    expect(entryList).not.toBeNull()
+    expect(surfaceOptions).not.toBeNull()
+    const modelGridGap = getComputedStyle(modelGrid).rowGap
+    expect(modelGridGap, 'a real, non-zero gap').not.toBe('0px')
+    expect(modelGridGap, 'matches entry-list\'s own row gap').toBe(getComputedStyle(entryList).rowGap)
+    expect(modelGridGap, 'matches surface-options\' own row gap').toBe(getComputedStyle(surfaceOptions).rowGap)
+    // Adjacent model rows within the SAME provider group render the declared gap, not a collapsed 0 —
+    // the live-render claim underneath the CSS-source read (a provider-group boundary adds ITS OWN
+    // margin-block-start on top, so only compare rows 0/1, both under "Anthropic").
+    const rows = [...modelGrid.querySelectorAll('[data-part="model-row"]')] as HTMLElement[]
+    expect(rows.length).toBeGreaterThanOrEqual(2)
+    const gapPx = rows[1].getBoundingClientRect().top - rows[0].getBoundingClientRect().bottom
+    expect(gapPx).toBeCloseTo(Number.parseFloat(modelGridGap), 1)
   })
 })

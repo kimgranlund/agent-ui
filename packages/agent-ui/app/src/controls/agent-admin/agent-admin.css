@@ -145,7 +145,13 @@
   [data-part='model-grid'] {
     display: flex;
     flex-direction: column;
-    gap: 0.375rem;
+    /* GH #191 follow-up — this is a LIST of rows (grouped by provider), the same kind of container as
+       [data-part='entry-list']/[data-part='surface-options'] below, both 0.5rem: it had been minted at
+       0.375rem instead, the CARD-internal gap [data-part='entry'] uses between its OWN header/description/
+       content parts — visibly denser than its two list siblings for no principled reason (measured live,
+       Chromium+WebKit: 6px vs. the fleet's 8px list-row gap). Repointed onto the list convention it
+       actually belongs to. */
+    gap: 0.5rem;
     box-sizing: border-box;
     padding: 0.5rem 0.75rem;
     border: 1px solid var(--ui-agent-admin-border);
@@ -175,17 +181,22 @@
   }
 
   /* The Agent config panel reads as a CARD like the entry cards beside it (Kim, design-mode
-     2026-07-19) — the exact [data-part='entry'] chrome recipe (border/radius/surface). Scoped from the
-     ADMIN, deliberately: the card language is THIS surface's own (--ui-agent-admin-* tokens); a generic
-     ui-settings consumer stays chrome-free (settings.css never gains a card opinion). The `ui-settings`
-     type selector lifts specificity to (0,1,1), beating settings.css's own `[data-part='panel']`
-     (0,1,0) padding rule — scoped-cascade law: specificity wins BEFORE ui-settings' closer scope
-     proximity is consulted (the GH #50 settings.css note documents the same contract inverted). */
+     2026-07-19) — the exact [data-part='entry'] chrome recipe (border/radius/surface/padding), matched
+     computed-for-computed (the agent-admin.browser.test.ts "matching an entry card" gate). Scoped from
+     the ADMIN, deliberately: the card language is THIS surface's own (--ui-agent-admin-* tokens); a
+     generic ui-settings consumer stays chrome-free (settings.css never gains a card opinion). The
+     `ui-settings` type selector lifts specificity to (0,1,1), beating settings.css's own
+     `[data-part='panel']` (0,1,0) padding rule — scoped-cascade law: specificity wins BEFORE
+     ui-settings' closer scope proximity is consulted (the GH #50 settings.css note documents the same
+     contract inverted). GH #191 follow-up: padding had been minted as a UNIFORM 0.75rem instead of the
+     entry card's own asymmetric 0.5rem 0.75rem — a real, measured 4px excess block-inset (12px vs. the
+     fleet card norm's 8px) that read as "more padding" than every sibling card in this pane (model-grid/
+     surface-row/context-section/entry all share the identical 0.5rem 0.75rem). Repointed to match. */
   ui-settings [data-part='panel'] {
     border: 1px solid var(--ui-agent-admin-border);
     border-radius: var(--ui-agent-admin-entry-radius);
     background: var(--ui-agent-admin-surface);
-    padding: 0.75rem;
+    padding: 0.5rem 0.75rem;
   }
 
   /* ── the generic entry-list primitive (ADR-0132 n1) — one shared shape, five instantiations ────── */
