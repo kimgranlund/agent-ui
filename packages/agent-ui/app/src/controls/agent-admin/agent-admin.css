@@ -8,15 +8,20 @@
  *   [2] STYLES BLOCK — `@scope (ui-agent-admin)` fills the host, sizes the composed `ui-chat-shell` to
  *       the available space, and styles the generic entry-list primitive (heading/list/entry/toggle/
  *       add-form) — the ONE bespoke surface this element owns, reused across all five instantiations
- *       (no shipped FACE control renders long-form multi-line text, ADR-0131/ADR-0132). TWO deliberate
- *       exceptions, both on the SAME rule: `ui-super-shell { --ui-agent-admin-shell-gutter: ...;
- *       --ui-agent-admin-compact-gap: ...; }` mints a PAIR of `--ui-agent-admin-*` tokens by chaining
+ *       (no shipped FACE control renders long-form multi-line text, ADR-0131/ADR-0132). THREE deliberate
+ *       exceptions, all on the SAME `ui-super-shell { ... }` rule: (a)+(b) `--ui-agent-admin-shell-gutter`
+ *       and `--ui-agent-admin-compact-gap` mint a PAIR of `--ui-agent-admin-*` tokens by chaining
  *       off `--ui-super-shell-module` — neither can live in the [1] TOKEN BLOCK instead (CSS custom
  *       properties inherit strictly downward; that module token is declared only on `ui-super-shell`
  *       itself, a DESCENDANT of `ui-agent-admin` — see that rule's own comment for the full mechanics +
- *       the regression that proved it). This is also SPEC-R11b's cited boundary-alias precedent: a
+ *       the regression that proved it), and this is SPEC-R11b's cited boundary-alias precedent: a
  *       cross-family length mints ONE named alias per role on the composed shell element, never a raw
- *       `--ui-super-shell-module` read at the consuming selector.
+ *       `--ui-super-shell-module` read at the consuming selector; (c) the R6c floor-token repoint
+ *       (`--ui-super-shell-canvas-min-size`/`-pane-min-size`) moved down here from the [1] TOKEN
+ *       BLOCK for the SIBLING reason — `:where(ui-super-shell)` unconditionally re-declares its OWN
+ *       default for those same two names, and a directly-matching declaration on an element always beats
+ *       one merely inherited from an ancestor, so the old ancestor-only repoint never won (see that
+ *       rule's own comment for the min-size-floors census's live-paint proof).
  *
  * GH #52/ADR-0154 — re-hosted onto the shell-archetype grammar: the hand-rolled `ui-split` +
  * ResizeObserver-driven narrow `ui-tabs` dual-shell (TKT-0085) is GONE, replaced by `ui-chat-shell`'s
@@ -36,11 +41,6 @@
   --ui-agent-admin-entry-radius: var(--md-sys-shape-corner-base, 0.25rem); /* TKT-0066 item 5 ruling: dimensional constants route through the own chain */
   --ui-agent-admin-scrollbar-width: none; /* the app-chrome look: NO visible scrollbars in this surface's panes (scrolling stays live) */
   --ui-agent-admin-code-surface: var(--md-sys-color-neutral-container-low, var(--md-sys-color-neutral-surface)); /* vision rev.5 — the Context tabs' mono JSON preview plane (the frame's containerLow tint) */
-  /* GH #52/ADR-0154 (LLD-C4) — today's ui-split min values, verbatim: the canvas (conversation) floor
-     was `canvasPane[min="16rem"]`; the options-pane (Settings/Context tabs) floor was
-     `tabsPane[min="20rem"]`. Repointed onto ui-super-shell's own R6c bounds tokens. */
-  --ui-super-shell-canvas-min-size: 16rem;
-  --ui-super-shell-pane-min-size: 20rem;
   /* TKT-0066 item 5 ruling: dimensional constants route through the own chain — the STYLES block below
      never reads --md-sys-space-* directly, it mints these role-named tokens here and consumes THOSE.
      Named by structural role (the file's own established groupings — the "list convention" GH #191
@@ -103,6 +103,22 @@
        below (the SAME sites' fleet-space-derived component on their other axis), never raw-read at the
        consuming selector. */
     --ui-agent-admin-compact-gap: calc(var(--ui-super-shell-module) / 3);
+    /* min-size-floors census (GH #185 follow-up) — moved down from the [1] TOKEN BLOCK's
+       `:where(ui-agent-admin)`, where it silently never won: `--ui-super-shell-canvas-min-size`/
+       `-pane-min-size` ALSO have a default declared directly on `:where(ui-super-shell)`
+       (super-shell.css's own TOKEN BLOCK), which matches every shell instance unconditionally. A
+       directly-matching declaration on an element always beats a value merely INHERITED from an
+       ancestor, regardless of the ancestor rule's specificity — inheritance is only ever the
+       fallback for a property with NO applicable rule on the element itself. So `:where(ui-agent-
+       admin) { --ui-super-shell-canvas-min-size: 16rem }` could never reach the composed
+       `ui-super-shell` no matter how it was written up there — verified: `#resolvePx`'s own probe
+       technique read 162px (the shell's bare default) here even with the old rule in place, on
+       both engines. This rule matches `ui-super-shell` DIRECTLY (a real type selector, not
+       `:where()`-wrapped), so it wins the same-element cascade against the shell's own 0-specificity
+       default — the exact reasoning `--ui-agent-admin-shell-gutter` above already documents for a
+       DIFFERENT reason (var() resolution order); this is the cascade-precedence sibling of that bug. */
+    --ui-super-shell-canvas-min-size: 16rem; /* today's ui-split canvasPane[min] value, verbatim (LLD-C4) */
+    --ui-super-shell-pane-min-size: 20rem; /* today's ui-split tabsPane[min] value, verbatim (LLD-C4) */
   }
 
   /* The conversation fills super-shell's own `content`/canvas box; its internal scrolling is its own

@@ -258,6 +258,15 @@ describe('UIAgentAdminElement — composition (GH #52/ADR-0154: chat + {Settings
     // on ui-super-shell's own R6c bounds tokens (agent-admin.css). This reads the live declaration
     // rather than a second hardcoded copy, so a drift here fails loudly instead of silently regressing
     // to the TKT-0045 clipping bug under a different mechanism.
+    //
+    // SCOPE NOTE (min-size-floors census, GH #185 follow-up): a jsdom text-regex over the CSS file proves
+    // only that these two literal strings still APPEAR in agent-admin.css — it does NOT prove the values
+    // ever reach the composed `ui-super-shell`'s own live paint (they didn't, for a real cascade reason —
+    // `:where(ui-super-shell)` unconditionally re-declares its own default for the same two names, and a
+    // directly-matching declaration on an element always wins over one merely inherited from an ancestor).
+    // The real, getComputedStyle-based proof lives in agent-admin.browser.test.ts's own
+    // "min-size-floors census" describe block — this test stays only as a coarse "don't silently delete
+    // or misspell these two lines" guard.
     const css = readFileSync(`${process.cwd()}/packages/agent-ui/app/src/controls/agent-admin/agent-admin.css`, 'utf8') as string
     expect(/--ui-super-shell-canvas-min-size:\s*16rem/.test(css), 'the canvas floor (today\'s canvasPane min) must stay 16rem').toBe(true)
     expect(/--ui-super-shell-pane-min-size:\s*20rem/.test(css), 'the options-pane floor (today\'s tabsPane min) must stay 20rem').toBe(true)

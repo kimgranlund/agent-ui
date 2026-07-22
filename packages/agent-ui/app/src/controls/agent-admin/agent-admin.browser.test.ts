@@ -461,6 +461,37 @@ describe('ui-agent-admin cross-engine smoke — TKT-0045: no pane overflows at t
   })
 })
 
+describe('ui-agent-admin cross-engine smoke — min-size-floors census (GH #185 follow-up): the LLD-C4 floor-token repoint actually reaches live paint', () => {
+  // agent-admin.test.ts's own jsdom check (line ~255) only greps agent-admin.css's TEXT for the two
+  // literal strings "16rem"/"20rem" — that proves the file still MENTIONS the right numbers, never that
+  // ui-super-shell ever resolves them. It didn't: `:where(ui-super-shell)` (super-shell.css's own TOKEN
+  // BLOCK) unconditionally re-declares its OWN default for the SAME two custom-property names, and a
+  // directly-matching declaration on an element always beats one merely inherited from an ancestor,
+  // regardless of the ancestor rule's specificity — so the OLD `:where(ui-agent-admin)`-only repoint
+  // never won on the composed shell, verified via getComputedStyle on both engines before the fix moved
+  // it onto a `ui-super-shell { ... }` rule that matches the shell directly. This is the REAL, live-paint
+  // proof the regex could never be.
+  it('the composed ui-super-shell actually resolves --ui-super-shell-canvas-min-size/-pane-min-size to 16rem/20rem, not the shell\'s own 9-module default', async () => {
+    const { el } = mountAgentAdminAt(1200)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const shell = el.querySelector('ui-super-shell') as HTMLElement
+    expect(getComputedStyle(shell).getPropertyValue('--ui-super-shell-canvas-min-size').trim()).toBe('16rem')
+    expect(getComputedStyle(shell).getPropertyValue('--ui-super-shell-pane-min-size').trim()).toBe('20rem')
+    // The REAL px the shell's own #resolvePx technique would compute (mirrors super-shell.ts:#resolvePx) —
+    // a calc()-free custom property resolves through getPropertyValue, but the shell's OWN tokens are
+    // calc() expressions elsewhere; these two are plain lengths here, so cross-check the applied px too
+    // via the same "apply to a real layout property" probe the component's own clamp code uses.
+    const probe = document.createElement('div')
+    probe.style.position = 'absolute'
+    probe.style.visibility = 'hidden'
+    probe.style.inlineSize = 'var(--ui-super-shell-pane-min-size)'
+    shell.append(probe)
+    const resolvedPx = probe.getBoundingClientRect().width
+    probe.remove()
+    expect(resolvedPx, 'resolves to 20rem = 320px, not the shell default 9×18px = 162px').toBe(320)
+  })
+})
+
 describe('ui-agent-admin cross-engine smoke — TKT-0049/ADR-0139: entry-content/entry-add-content min-height is driven by ui-code-editor\'s own `rows` lever, not dead agent-admin.css', () => {
   // `--ui-code-editor-min-block-size`'s formula (editor.css): rows × line-box + 2×padding-block, where
   // line-box = font-size × 1.5 and padding-block = font-size × 0.5 (identical to the ui-textarea it replaced,

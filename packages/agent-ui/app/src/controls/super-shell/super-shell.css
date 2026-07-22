@@ -224,9 +224,22 @@
   /* SPEC-R9d — the overlay scrim is inert (no box) at wide; each band query shows it while a side is open. */
   [data-part='scrim'] { display: none; }
 
+  /* min-size-floors census (GH #185 follow-up) — SPEC-R6c says "the canvas keeps ≥
+     `--ui-super-shell-canvas-min-size`" unconditionally, but until now the token fed ONLY
+     `#clampPaneSize` (super-shell.ts), the interactive drag/keyboard bound — a PASSIVE container
+     resize never called it, so canvas (the row's one `flex:1 1 auto` item, every rail/pane beside
+     it `flex:0 0 auto` and therefore incapable of yielding space itself) had no live floor at all
+     and could shrink toward 0 as the shell narrowed. `min-inline-size` now reads the SAME token,
+     realizing R6c in live layout, not just mid-drag. Below the width the authored fixed geometry
+     (rails/panes) plus this floor actually need, the row overflows rather than crushing the canvas
+     further — the fixed-geometry siblings still never yield (unchanged), and canvas holds its
+     floor instead of silently going unreadable; no shipped consumer's tested width falls in that
+     zone (verified: agent-admin/a2ui-live/workspace-shell/the docs shell all keep a comfortable
+     margin above their floor at every pinned width — single-sided geometry has far more headroom
+     than the dual-resizable-collapsible-side case the census flagged). */
   [data-part='canvas'] {
     flex: 1 1 auto;
-    min-inline-size: 0;
+    min-inline-size: var(--ui-super-shell-canvas-min-size);
     min-block-size: 0;
     display: flex;
     flex-direction: column;
