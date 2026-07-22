@@ -310,3 +310,37 @@ describe('ui-super-shell — pane-resizer visual states (GH #182 regression pin)
     sep.blur()
   })
 })
+
+// ── GH #185 (parity gap a) — the ui-split `:state(dragging)` fill-persistence precedent, mirrored ──────
+// The gap: without `internals.states.add/delete('dragging')` (split.ts's own mechanism), a fast drag that
+// sweeps the pointer off the thin 0.25rem resizer box drops the `:hover` fill mid-gesture, reading as the
+// resizer "letting go." No real `userEvent.hover()` is used below — the synthetic `ptr()` PointerEvents
+// never engage a real `:hover`, so a persisting fill can ONLY come from `:state(dragging)` (super-shell.css's
+// `:scope:state(dragging) [data-part='pane-resizer']`), proving the state — not incidental hover — holds it.
+describe('ui-super-shell — pane-resizer :state(dragging) fill persistence (GH #185 parity gap a)', () => {
+  it('the drag fill persists via :state(dragging) for the whole gesture, with no real :hover engaged', async () => {
+    const { el } = mount()
+    await el.updateComplete
+    const sep = el.querySelector('[data-part="pane-resizer"][data-side="end"]') as HTMLElement
+    stubCapture(sep)
+    const restBg = getComputedStyle(sep).backgroundColor
+
+    expect(el.matches(':state(dragging)'), 'dragging must not be armed before any interaction').toBe(false)
+
+    sep.dispatchEvent(ptr('pointerdown', 700))
+    sep.dispatchEvent(ptr('pointermove', 640)) // the first live move arms :state(dragging)
+    await el.updateComplete
+    expect(el.matches(':state(dragging)'), ':state(dragging) was not armed on the first live move').toBe(true)
+    const dragBg = getComputedStyle(sep).backgroundColor
+    expect(dragBg, 'the drag fill must differ from the resting ink for this probe to be meaningful').not.toBe(restBg)
+
+    sep.dispatchEvent(ptr('pointermove', 620)) // simulates the pointer sweeping further — still no real hover
+    await el.updateComplete
+    expect(getComputedStyle(sep).backgroundColor, 'the fill must still hold mid-drag with no real :hover engaged').toBe(dragBg)
+
+    sep.dispatchEvent(ptr('pointerup', 620))
+    await el.updateComplete
+    expect(el.matches(':state(dragging)'), 'dragging must clear on release').toBe(false)
+    expect(getComputedStyle(sep).backgroundColor, 'the fill must revert to the resting ink after release').toBe(restBg)
+  })
+})

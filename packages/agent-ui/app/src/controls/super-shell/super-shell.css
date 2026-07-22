@@ -133,13 +133,32 @@
   /* GH #182 — hover/drag is a FILL (the ui-split precedent); focus-visible is a THIN RING on the
      shared fleet focus-ring tokens ONLY (ADR-0009, the same ones split.css's own [data-separator]
      :focus-visible consumes) — it never also sets `background`, so a keyboard-focused-but-not-
-     hovered resizer never renders as a solid full-height slab. */
-  [data-part='pane-resizer']:hover {
+     hovered resizer never renders as a solid full-height slab.
+     GH #185 (parity gap a) — `:scope:state(dragging)` (split.ts's own `internals.states.add/delete`
+     mechanism, mirrored onto super-shell.ts's #onResize/disconnected) keeps this SAME fill live for
+     the WHOLE drag gesture, even after a fast sweep carries the pointer off the thin 0.25rem resizer
+     box (split.css's own file-header rationale — `setPointerCapture` keeps the drag routed regardless
+     of where the cursor sweeps, but a plain `:hover` alone would drop the highlight, reading as the
+     resizer "letting go" mid-drag). */
+  [data-part='pane-resizer']:hover,
+  :scope:state(dragging) [data-part='pane-resizer'] {
     background: var(--ui-super-shell-resizer-ink-hover);
   }
   [data-part='pane-resizer']:focus-visible {
     outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
     outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+
+  /* GH #185 (parity gap b) — forced-colors: the resizer stays a real, visible system colour under
+     `forced-colors: active` (the split.css `[data-separator]` precedent, SPEC-R5 AC2's sibling
+     contract) — without this, the resting/hover inks above vanish entirely under forced-colors,
+     leaving no visible affordance (only the :focus-visible ring survives for free, already mapped
+     to system Highlight via --md-sys-color-focus-ring, ADR-0009). */
+  @media (forced-colors: active) {
+    [data-part='pane-resizer'] {
+      background: ButtonText;
+      forced-color-adjust: none;
+    }
   }
 
   /* SPEC-R7a — pane segments (wide): a segmented pane switches to a column layout (strip on top, the
