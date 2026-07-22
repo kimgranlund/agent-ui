@@ -175,9 +175,14 @@ describe('ui-settings — single-section posture renders detail-only (GH #50)', 
     const listPane = el.querySelector('ui-split-pane[data-role="list"]') as HTMLElement
     const back = el.querySelector('[data-part="back"]') as HTMLElement
     const detailPane = el.querySelector('ui-split-pane[data-role="detail"]') as HTMLElement
+    const separator = el.querySelector('[data-separator]') as HTMLElement
     expect(getComputedStyle(listPane).display, 'the one-item rail is not navigation — it must hide').toBe('none')
     expect(getComputedStyle(back).display, 'no list to go back to — the Back affordance must hide').toBe('none')
     expect(getComputedStyle(detailPane).display).not.toBe('none')
+    // The third owner in the chain (split.css's own generated part, not master-detail's or settings.css's):
+    // with only one pane visible there is nothing left to divide, so the separator must hide too.
+    expect(separator, 'ui-split-pane renders its own [data-separator] part').not.toBeNull()
+    expect(getComputedStyle(separator).display, 'no second pane to divide from — the separator must hide').toBe('none')
     // the lone visible pane takes the full container width (minus nothing — no separator remains)
     expect(detailPane.getBoundingClientRect().width).toBeGreaterThan(850)
   })

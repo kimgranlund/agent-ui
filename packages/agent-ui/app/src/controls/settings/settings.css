@@ -76,7 +76,11 @@
      branch REVEALS the back affordance at (0,3,0) (`:scope[data-view='detail'] [data-part='back']`)
      inside its own closer scope — scoped-style cascade compares specificity BEFORE scope proximity, so
      each rule here carries the `ui-master-detail` type selector to sit at (0,3,1)/(0,3,2) and win.
-     Multi-section schemas never match — zero behavior change outside the one-section case. */
+     Multi-section schemas never match — zero behavior change outside the one-section case. THREE
+     component families in this one chain, not two: `ui-master-detail` owns the list/detail panes,
+     but `[data-separator]` is split.css's own generated part (a real control-rendered `<div>` inside
+     master-detail's composed `ui-split`) — settings.css reaches through master-detail into split's
+     part too, the same reach-through this rule already exercises for the panes. */
   :scope[data-single-section] ui-master-detail ui-split-pane[data-role='list'] {
     display: none;
   }
