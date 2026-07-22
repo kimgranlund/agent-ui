@@ -49,7 +49,16 @@ ui-super-shell.ss-demo {
   margin-block: 1rem 1.75rem;
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
   border-radius: 12px;
-  overflow: hidden;
+  /* min-size-floors census (GH #185 follow-up) — a dual-sided demo (sections 1/2/4 below) can pass
+     through the 640-846px window where the shell's own fixed geometry (rails/panes) plus canvas's
+     now-live floor exceed the reader's own column/window width — the shell's row then genuinely
+     overflows (the deliberate, honest outcome the control-level fix chose over silently crushing
+     canvas). A blanket `overflow: hidden` here used to CLIP that overflow with no way to reach it
+     (the end pane cut off, no scroll affordance) — `overflow-x: auto` lets the teaching render
+     scroll instead; `overflow-y` stays hidden (the fixed block-size above is deliberate framing,
+     never meant to scroll vertically). */
+  overflow-x: auto;
+  overflow-y: hidden;
   background: var(--md-sys-color-neutral-surface-lowest);
   padding: 0.5rem;
   box-sizing: border-box;
@@ -121,7 +130,12 @@ ui-super-shell.ss-demo--inner {
 
 .ss-resize {
   resize: horizontal;
-  overflow: hidden auto;
+  /* min-size-floors census (GH #185 follow-up) — the SAME clip→scroll fix as `.ss-demo` above,
+     on this wrapper's own overflow-x (was `hidden`): dragging this handle into the 640-846px
+     squeeze window is the most direct way a reader hits the shell's own row overflow. `overflow-y`
+     stays `auto` unchanged (its existing job — the section's own vertical reflow at narrow). */
+  overflow-x: auto;
+  overflow-y: auto;
   min-inline-size: 20rem;
   max-inline-size: 100%;
   inline-size: 100%;
