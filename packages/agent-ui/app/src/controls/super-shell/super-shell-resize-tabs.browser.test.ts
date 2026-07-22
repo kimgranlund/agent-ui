@@ -344,3 +344,40 @@ describe('ui-super-shell — pane-resizer :state(dragging) fill persistence (GH 
     expect(getComputedStyle(sep).backgroundColor, 'the fill must revert to the resting ink after release').toBe(restBg)
   })
 })
+
+// ── GH #196 (ui-split parity gap c) — text-selection suspension for the whole drag gesture ──────────────
+// The gap: a fast drag sweeping the pointer across pane/canvas text has no selection boundary of its own
+// and would highlight-select it, since the resizer's `:state(dragging)` (armed by #185) only drove the
+// fill, never `user-select`. Mirrors split.css's own `:scope:state(dragging) { user-select: none }`
+// (TKT-0015 pt.2) onto super-shell's `:scope` (super-shell.css).
+describe('ui-super-shell — pane-resizer text-selection suspension during drag (GH #196 parity gap c)', () => {
+  it('user-select is none on the shell for the whole drag and reverts after pointerup', async () => {
+    const { el } = mount()
+    await el.updateComplete
+    const sep = el.querySelector('[data-part="pane-resizer"][data-side="end"]') as HTMLElement
+    stubCapture(sep)
+
+    // WebKit exposes the computed value only under the prefixed CSSOM name (split.browser.test.ts's own
+    // TKT-0015 pt.2 precedent — unprefixed `userSelect` reads empty there); read both and prefer whichever
+    // is populated.
+    const userSelectOf = (target: Element): string => {
+      const cs = getComputedStyle(target)
+      return cs.userSelect || cs.webkitUserSelect
+    }
+
+    expect(userSelectOf(el), 'user-select must be unset before any interaction').not.toBe('none')
+
+    sep.dispatchEvent(ptr('pointerdown', 700))
+    sep.dispatchEvent(ptr('pointermove', 640)) // the first live move arms :state(dragging)
+    await el.updateComplete
+    expect(userSelectOf(el), 'user-select must suspend to none once dragging is armed').toBe('none')
+
+    sep.dispatchEvent(ptr('pointermove', 620)) // simulates the pointer sweeping across pane/canvas text
+    await el.updateComplete
+    expect(userSelectOf(el), 'user-select must still hold none mid-drag').toBe('none')
+
+    sep.dispatchEvent(ptr('pointerup', 620))
+    await el.updateComplete
+    expect(userSelectOf(el), 'user-select must revert after release').not.toBe('none')
+  })
+})

@@ -56,6 +56,14 @@
     container-name: ui-super-shell;
   }
 
+  /* GH #196 (ui-split parity gap c) — selection suspension during an active drag, mirroring split.css's
+     own `:scope:state(dragging)` rule (TKT-0015 pt.2): without it, a fast drag sweeping the pointer across
+     pane/canvas text highlight-selects it, since the resizer itself has no native selection boundary. */
+  :scope:state(dragging) {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
   [data-part='frame'] {
     display: flex;
     flex-direction: column;
