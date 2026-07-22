@@ -23,7 +23,9 @@
   --ui-super-shell-surface: var(--md-sys-color-neutral-surface);
   --ui-super-shell-overlay-shadow: 0 0.25rem 1.5rem rgb(0 0 0 / 0.25);
   /* SPEC-R6c (LLD-C1, ADR-0154) — the two-sided resize clamp: neither floor moves without a consumer
-     override (agent-admin's migration sets 20rem/16rem, its shipped ui-split's own floors). */
+     override (agent-admin's migration sets 20rem/16rem, its shipped ui-split's own floors). ONE
+     override author per shell instance: a second consumer stylesheet repointing the same instance's
+     floor makes cascade order (not intent) the tiebreaker — silently, since both compile clean. */
   --ui-super-shell-pane-min-size: calc(var(--ui-super-shell-module) * 9); /* 162px */
   --ui-super-shell-canvas-min-size: calc(var(--ui-super-shell-module) * 9); /* 162px */
   /* SPEC-R10a (ADR-0155) — hidden scroller, live scroll: the fleet's command-modal.css / ui-menu (GH #166)

@@ -743,9 +743,15 @@ describe('ui-agent-admin — the Agent config panel is a CARD like the entry car
     expect(entry, 'an entry card exists to match against (the prompt sections seed three)').not.toBeNull()
     const p = getComputedStyle(panel)
     const e = getComputedStyle(entry)
+    // The FULL border shorthand resolution (GH #50 settings.css's `ui-settings [data-part='panel']`
+    // specificity-lift override, agent-admin.css: width/style/color each individually, not just width),
+    // so a future settings.css specificity bump that reverts only style or color still goes red.
     expect(p.borderTopWidth, 'a real border').toBe(e.borderTopWidth)
+    expect(p.borderTopStyle, 'the same border style').toBe(e.borderTopStyle)
+    expect(p.borderTopStyle).not.toBe('none') // anti-vacuous: not none-matching-none
     expect(p.borderTopColor, 'the same border role').toBe(e.borderTopColor)
     expect(p.borderTopLeftRadius, 'the same card radius').toBe(e.borderTopLeftRadius)
+    expect(p.borderTopRightRadius, 'the radius is uniform, not just the top-left corner').toBe(e.borderTopRightRadius)
     expect(p.backgroundColor, 'the same card surface').toBe(e.backgroundColor)
     expect(p.backgroundColor).not.toBe('rgba(0, 0, 0, 0)') // anti-vacuous: not transparent-matching-transparent
     // GH #191 follow-up (Kim's screenshot: the Agent card read with excess inset vs. its siblings) — the
