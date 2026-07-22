@@ -72,6 +72,45 @@ ui-theme-provider.app-shell [data-site-nav] {
   border-inline-end: 1px solid var(--md-sys-color-neutral-outline-variant);
 }
 
+/* GH #183 follow-up (S1) — the header hairline + surface, spanning the OUTER bar box edge-to-edge, not
+ * the inset `.app-context-header` piece below: `ui-super-shell` nests that content inside its own
+ * `[data-part='bar-content']` wrapper, AFTER the leading nav-toggle button (`#compose`, super-shell.ts),
+ * so a border drawn on `.app-context-header` itself starts at the toggle's trailing edge, not x=0. The
+ * outer `[data-part='bar'][data-bar='header']` box IS full-bleed (the shell's own frame stretches to fill
+ * `ui-theme-provider.app-shell`'s full width) — this is the site-owns-placement pattern `[data-site-nav]`
+ * above already uses.
+ *
+ * CHILD combinators throughout (`>`), never a descendant space: a bare `.site-shell [data-part='bar']…`
+ * is a DESCENDANT selector — it reaches into the ENTIRE `.site-shell` subtree, including a `<ui-super-
+ * shell>` a demo/guide page mounts as page CONTENT (super-shell.html, chat-shell.html, agent-admin.html,
+ * …), which lives many levels inside `.site-shell` (`[data-part='canvas']` → `[data-page-content]` →
+ * the page's own body). That demo shell composes its OWN `[data-part='bar'][data-bar='header']` — a
+ * descendant selector would paint THIS site-only hairline onto it too (caught in review: measured
+ * `borderBottomWidth: 1px` on a nested shell's header, both engines). The child chain below matches only
+ * the OUTER shell's own bar — `.site-shell` (the `ui-super-shell` host) → its OWN `[data-part='frame']`
+ * (`this.append(frame)`, super-shell.ts `#compose`) → its OWN header bar (`frame.append(header)`,
+ * same method) — so a nested shell's bar, several DOM levels deeper, structurally cannot match.
+ *
+ * SPEC-R12a's genus, not its letter (shell-archetypes-m5.spec.md §10): R12a's own rule is narrower —
+ * a consumer override of a component's `@scope`d `display` must TAG-QUALIFY (`{tag}.{class}`) to win
+ * specificity against that scoped rule, letter-cited exactly for `ui-theme-provider.app-shell` a few
+ * lines up in this same file. This rule touches `background`/`border-block-end`, not `display`, and
+ * has no competing `@scope`d rule to out-specificity — R12a's letter doesn't bind it. What DOES apply
+ * is the same family the clause is drawn from: a consumer-side rule reaching further into a shipped
+ * component's internals than it should, silently, unless the selector is built to stop at the right
+ * boundary. `super-shell.css`'s own `@scope (ui-super-shell) to (ui-super-shell)` (SPEC-R1b's depth-2
+ * recursion) is the component's OWN version of that same boundary — it stops the component's rules
+ * from crossing into a nested instance; `_page.css` sits outside that `@scope` (a separate, site-owned
+ * stylesheet), so the child-combinator chain here is the site-CSS realization of the identical idea —
+ * "one shell's rule never reaches a nested shell's own part" — via DOM-position specificity instead of
+ * `@scope...to()`. The component's own `[data-part='bar']` background already matches
+ * (`--ui-super-shell-surface` == `--md-sys-color-neutral-surface`) — restated here so the one
+ * declaration reads as the band's true source, not a same-color coincidence between two rules. */
+ui-theme-provider.app-shell > .site-shell > [data-part='frame'] > [data-part='bar'][data-bar='header'] {
+  background: var(--md-sys-color-neutral-surface);
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+}
+
 /* The app top-bar — right column, row 1, fixed (non-scrolling). */
 .app-context-header {
   /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
@@ -82,8 +121,6 @@ ui-theme-provider.app-shell [data-site-nav] {
   gap: var(--md-sys-space-md);
   padding-inline: var(--md-sys-space-xl);
   padding-block: var(--md-sys-space-sm);
-  background: var(--md-sys-color-neutral-surface);
-  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
 }
 
 .app-brand {
@@ -133,17 +170,37 @@ ui-theme-provider.app-shell [data-site-nav] {
   padding-block: var(--md-sys-space-sm);
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: var(--md-sys-space-md);
   font-size: 0.78rem;
   color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+/* S3b — the GitHub repo link: reads at the same muted register as the tagline beside it, distinguished
+ * only on hover/focus (the `.page-tabs a` muted-link precedent). */
+.app-context-footer-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-context-footer-link:hover,
+.app-context-footer-link:focus-visible {
+  color: var(--md-sys-color-neutral-on-surface);
+  text-decoration: underline;
 }
 
 /* ── the page (right column, row 2) — THE scroll region ───────────────────────────────────────────────────
  * The one element with `overflow-y: auto`; a flex column of [ sticky header | content | sticky footer ]. The
  * content grows to fill on short pages (so the footer rests at the bottom) and keeps its natural height on long
- * pages (so the region scrolls). `min-block-size: 0` lets it shrink below its content inside the grid row. */
+ * pages (so the region scrolls). `min-block-size: 0` lets it shrink below its content inside the grid row.
+ * S3a — `.app-page` ITSELF must also grow to fill `[data-part='canvas']` (ui-super-shell's own column-flex
+ * content region): as a flex ITEM of canvas with no `flex-grow` of its own, its default `flex: 0 1 auto`
+ * sizes it to its content's natural height, leaving canvas's stretched remainder empty below the sticky
+ * footer on a short page — `flex: 1 1 auto` restores this rule's own stated intent (above). */
 .app-page {
   /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
   /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
+  flex: 1 1 auto;
   overflow-y: auto;
   scrollbar-width: none; /* hide the scrollbar — scroll stays functional (Firefox/standards) */
   min-block-size: 0;
@@ -223,11 +280,48 @@ ui-theme-provider.app-shell [data-site-nav]::-webkit-scrollbar,
   letter-spacing: -0.01em;
 }
 
+/* S4 — Kim's description-clamp standard: 2 lines by default (`.page-description-toggle` below lifts it).
+ * `line-clamp` is declared alongside the `-webkit-` legs it still needs in some engines — both key off
+ * the SAME box model (`display: -webkit-box` + `-webkit-box-orient: vertical`), so neither is a dead
+ * property here. */
 .page-description {
   margin: 0;
   max-inline-size: 62ch;
   color: var(--md-sys-color-neutral-on-surface-variant);
   line-height: 1.5;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.page-description--expanded {
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  overflow: visible;
+}
+
+/* The "more"/"less" toggle — a plain <button> reset to read as quiet text at the `.page-context-label`
+ * muted-ink register, not a real button chrome. `appendDescription` (_page.ts) keeps it `hidden` until an
+ * overflow measurement proves the clamp actually clipped something. */
+.page-description-toggle {
+  align-self: flex-start;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.75rem;
+  text-align: left;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  cursor: pointer;
+}
+
+.page-description-toggle:hover,
+.page-description-toggle:focus-visible {
+  color: var(--md-sys-color-neutral-on-surface);
+  text-decoration: underline;
 }
 
 /* page-lead — the page's descriptive copy relocated INTO the body (first child of the content region), for pages
@@ -299,7 +393,8 @@ ui-theme-provider.app-shell [data-site-nav]::-webkit-scrollbar,
 }
 
 /* ── the per-page sticky footer ───────────────────────────────────────────────────────────────────────────
- * Sticks to the BOTTOM of the page scroll region. Slim placeholder (prev/next or actions land here later). */
+ * Sticks to the BOTTOM of the page scroll region: real Previous/Next navigation (S3c), derived from
+ * SITE_NAV_ENTRIES. */
 .page-footer {
   position: sticky;
   bottom: 0;
@@ -318,6 +413,29 @@ ui-theme-provider.app-shell [data-site-nav]::-webkit-scrollbar,
   justify-content: space-between;
   font-size: 0.8rem;
   color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+/* S3c — the prev/next links: the muted `.page-tabs a` register. `.page-footer-next` gets its own
+ * `margin-inline-start: auto` (rather than relying on `.page-footer-inner`'s `justify-content:
+ * space-between` alone) so it still lands at the FAR end when it is the only link rendered (the first
+ * sitemap entry has no Previous) — `space-between` with a single flex child would otherwise leave it
+ * stranded at the start. */
+.page-footer-prev,
+.page-footer-next {
+  color: inherit;
+  text-decoration: none;
+}
+
+.page-footer-prev:hover,
+.page-footer-next:hover,
+.page-footer-prev:focus-visible,
+.page-footer-next:focus-visible {
+  color: var(--md-sys-color-neutral-on-surface);
+  text-decoration: underline;
+}
+
+.page-footer-next {
+  margin-inline-start: auto;
 }
 
 /* ── the content column ───────────────────────────────────────────────────────────────────────────────────
