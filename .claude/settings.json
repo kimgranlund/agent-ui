@@ -48,6 +48,16 @@
       }
     ]
   },
+  "extraKnownMarketplaces": {
+    "adia-ui": {
+      "source": {
+        "source": "github",
+        "repo": "adiahealth/gen-ui-kit",
+        "path": "packages/plugins/.claude-plugin/marketplace.json",
+        "sparsePaths": ["packages/plugins"]
+      }
+    }
+  },
   "enabledPlugins": {
     "llm@nonoun-plugins": true,
     "harness@nonoun-plugins": true,
