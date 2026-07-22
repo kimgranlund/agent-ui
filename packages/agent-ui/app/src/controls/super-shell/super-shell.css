@@ -177,8 +177,19 @@
   [data-segmented] > [data-segment] {
     display: none;
   }
+  /* GH #197 — no explicit `display` here. A consumer's segment div often ALSO carries the consumer's
+     own role attribute (e.g. agent-admin's `[data-role='settings-content']`) and wants to declare its
+     OWN display type (flex/grid/block) for that same node; a `display: block` used to sit on this rule
+     and always won that fight on raw specificity (0,3,0 here vs. a plain single-attribute consumer
+     selector at 0,1,0), silently clobbering the consumer's real layout (agent-admin's `display:flex` +
+     `gap` never applied — the gap property is inert on a block container). Leaving `display` undeclared
+     here means: a bare segment div with no consumer CSS of its own still needs an explicit override to
+     become visible (the base hide rule above still matches unconditionally, 0,2,0) — agent-admin now
+     supplies one at 0,3,0 (folding `[data-segment][data-active]` into its own selector, see
+     agent-admin.css). A future segmented-pane consumer with no display override of its own must do the
+     same (qualify with `[data-segment][data-active]` for a real, non-tied specificity majority over the
+     0,2,0 hide rule), or extend this rule instead. */
   [data-segmented] > [data-segment][data-active] {
-    display: block;
     flex: 1 1 auto;
     min-block-size: 0;
     overflow-y: auto;

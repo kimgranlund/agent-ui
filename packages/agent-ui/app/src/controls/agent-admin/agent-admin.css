@@ -108,9 +108,20 @@
     padding: var(--ui-agent-admin-shell-gutter);
   }
 
-  [data-role='settings-content'],
-  [data-role='context-system-content'],
-  [data-role='context-dialog-content'] {
+  /* GH #197 — these three divs double as super-shell's OWN segment containers (`agent-admin.ts` sets
+     `data-segment`/`data-active` on the identical nodes, SPEC-R7a). Plain `[data-role='...']` alone
+     (one attribute selector, specificity 0,1,0) LOSES outright to super-shell's own base hide rule,
+     `[data-segmented] > [data-segment] { display: none }` (two attribute selectors, 0,2,0, unconditional
+     — it matches active AND inactive segments alike, only the ACTIVE rule used to out-specificity it).
+     Folding in `[data-segment][data-active]` (the same attributes `agent-admin.ts` already sets on these
+     nodes, mirroring the `:not([hidden])` specificity-bump idiom already used below for
+     `entry-add-form`) brings this to 0,3,0 — a real specificity MAJORITY over the 0,2,0 hide rule, not a
+     source-order-dependent tie, and it only matches while the segment is active (so hidden segments are
+     untouched, still governed solely by the hide rule). super-shell.css's own active-segment rule no
+     longer declares `display` at all (companion fix), so nothing else contests this property here. */
+  [data-segment][data-active][data-role='settings-content'],
+  [data-segment][data-active][data-role='context-system-content'],
+  [data-segment][data-active][data-role='context-dialog-content'] {
     display: flex;
     flex-direction: column;
     gap: 1rem;
