@@ -8,12 +8,15 @@
  *   [2] STYLES BLOCK — `@scope (ui-agent-admin)` fills the host, sizes the composed `ui-chat-shell` to
  *       the available space, and styles the generic entry-list primitive (heading/list/entry/toggle/
  *       add-form) — the ONE bespoke surface this element owns, reused across all five instantiations
- *       (no shipped FACE control renders long-form multi-line text, ADR-0131/ADR-0132). ONE deliberate
- *       exception: the `ui-super-shell { --ui-agent-admin-shell-gutter: ... }` rule mints a
- *       `--ui-agent-admin-*` token by chaining off `--ui-super-shell-module` — it cannot live in the [1]
- *       TOKEN BLOCK instead (CSS custom properties inherit strictly downward; that module token is
- *       declared only on `ui-super-shell` itself, a DESCENDANT of `ui-agent-admin` — see that rule's own
- *       comment for the full mechanics + the regression that proved it).
+ *       (no shipped FACE control renders long-form multi-line text, ADR-0131/ADR-0132). TWO deliberate
+ *       exceptions, both on the SAME rule: `ui-super-shell { --ui-agent-admin-shell-gutter: ...;
+ *       --ui-agent-admin-compact-gap: ...; }` mints a PAIR of `--ui-agent-admin-*` tokens by chaining
+ *       off `--ui-super-shell-module` — neither can live in the [1] TOKEN BLOCK instead (CSS custom
+ *       properties inherit strictly downward; that module token is declared only on `ui-super-shell`
+ *       itself, a DESCENDANT of `ui-agent-admin` — see that rule's own comment for the full mechanics +
+ *       the regression that proved it). This is also SPEC-R11b's cited boundary-alias precedent: a
+ *       cross-family length mints ONE named alias per role on the composed shell element, never a raw
+ *       `--ui-super-shell-module` read at the consuming selector.
  *
  * GH #52/ADR-0154 — re-hosted onto the shell-archetype grammar: the hand-rolled `ui-split` +
  * ResizeObserver-driven narrow `ui-tabs` dual-shell (TKT-0085) is GONE, replaced by `ui-chat-shell`'s
@@ -38,6 +41,17 @@
      `tabsPane[min="20rem"]`. Repointed onto ui-super-shell's own R6c bounds tokens. */
   --ui-super-shell-canvas-min-size: 16rem;
   --ui-super-shell-pane-min-size: 20rem;
+  /* TKT-0066 item 5 ruling: dimensional constants route through the own chain — the STYLES block below
+     never reads --md-sys-space-* directly, it mints these role-named tokens here and consumes THOSE.
+     Named by structural role (the file's own established groupings — the "list convention" GH #191
+     comment, the "card chrome recipe" GH #191/design-mode comment) rather than by fleet-scale step, so a
+     future scale-ladder change never forces a rename here. */
+  --ui-agent-admin-section-gap: var(--md-sys-space-lg); /* the pane's top-level section gap (Settings/Context content) */
+  --ui-agent-admin-row-gap: var(--md-sys-space-sm); /* a tight gap between adjacent inline parts within ONE row (header/model-row/entry-header/surface-row) */
+  --ui-agent-admin-list-gap: var(--md-sys-space-sm); /* vertical rhythm between stacked rows in a list (model-grid/entry-section/entry-list/surface-options/context tree) */
+  --ui-agent-admin-card-pad: var(--md-sys-space-sm) var(--md-sys-space-md); /* the shared card chrome padding (model-grid/settings-panel/surface-row/context-section/entry/entry-add-form) */
+  --ui-agent-admin-compact-pad: var(--md-sys-space-sm); /* a bare fleet step, paired on its OWN axis alongside the module-derived --ui-agent-admin-compact-gap (context-item's padding) or standing alone (context-json) — the ONE case the shared roles above don't cover */
+  --ui-agent-admin-provider-gap: var(--md-sys-space-xs); /* the gap above each subsequent provider-group heading in the Model grid ([data-part='model-provider']) */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-agent-admin) consumes ONLY --ui-agent-admin-* ════════════════ */
@@ -69,20 +83,26 @@
      gutter this consumer wants on BOTH of the shell's content-holding siblings, `[data-part='canvas']`
      and `[data-part='pane']` below. `* 2 / 3` reproduces the old 0.75rem literal unchanged, so this is a
      law fix, not a visual change.
-     THIS is the one deliberate exception to the file banner's "styles block consumes ONLY
-     --ui-agent-admin-*" — and it CANNOT move to the [1] TOKEN BLOCK: `--ui-super-shell-module` is
+     THIS rule is the file banner's TWO deliberate exceptions to "styles block consumes ONLY
+     --ui-agent-admin-*" — and NEITHER can move to the [1] TOKEN BLOCK: `--ui-super-shell-module` is
      declared only on `:where(ui-super-shell)` (super-shell.css), a DESCENDANT of `ui-agent-admin`.
      Custom properties inherit strictly downward — a var() reference resolves using whatever is
-     inherited AT ITS OWN DECLARING ELEMENT, not at wherever it's later consumed. Minting this in the
-     ancestor-scoped token block (`:where(ui-agent-admin)`) computes it BEFORE `--ui-super-shell-module`
+     inherited AT ITS OWN DECLARING ELEMENT, not at wherever it's later consumed. Minting either alias in
+     the ancestor-scoped token block (`:where(ui-agent-admin)`) computes it BEFORE `--ui-super-shell-module`
      exists anywhere in the inherited chain, so the calc() is invalid there and that guaranteed-invalid
-     value is what inherits down — proven by a real cross-engine 0px regression when tried. Declaring it
+     value is what inherits down — proven by a real cross-engine 0px regression when tried. Declaring both
      here, on the composed `ui-super-shell` instance itself (the SAME element super-shell.css's own
-     `--ui-super-shell-module` lives on), lets it resolve correctly once and then inherit normally to
-     both `canvas` and `pane` below — ONE definition, DRY, instead of duplicating the calc() at each
-     call site. */
+     `--ui-super-shell-module` lives on), lets each resolve correctly once and then inherit normally to
+     every consuming part below — ONE definition per alias, DRY, instead of duplicating a calc() at each
+     call site (SPEC-R11b — the boundary-alias pattern; this rule IS R11b's cited precedent). */
   ui-super-shell {
     --ui-agent-admin-shell-gutter: calc(var(--ui-super-shell-module) * 2 / 3);
+    /* SPEC-R11b — the fourth-module tight-rhythm unit every "compact" card-internal gap below shares
+       (context-item's own padding component, context-json's top margin, entry/entry-add-form's own
+       internal header/description/content gap): named to pair with `--ui-agent-admin-compact-pad`
+       below (the SAME sites' fleet-space-derived component on their other axis), never raw-read at the
+       consuming selector. */
+    --ui-agent-admin-compact-gap: calc(var(--ui-super-shell-module) / 3);
   }
 
   /* The conversation fills super-shell's own `content`/canvas box; its internal scrolling is its own
@@ -123,7 +143,7 @@
   [data-role='context-dialog-content'] {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: var(--ui-agent-admin-section-gap);
   }
 
   /* Vision rev.5 — the Agent header row: [ heading | ACTIVE master switch ], the frame's own
@@ -133,7 +153,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.5rem;
+    gap: var(--ui-agent-admin-row-gap);
   }
 
   [data-part='agent-heading'] {
@@ -161,9 +181,9 @@
        content parts — visibly denser than its two list siblings for no principled reason (measured live,
        Chromium+WebKit: 6px vs. the fleet's 8px list-row gap). Repointed onto the list convention it
        actually belongs to. */
-    gap: 0.5rem;
+    gap: var(--ui-agent-admin-list-gap);
     box-sizing: border-box;
-    padding: 0.5rem 0.75rem;
+    padding: var(--ui-agent-admin-card-pad);
     border: 1px solid var(--ui-agent-admin-border);
     border-radius: var(--ui-agent-admin-entry-radius);
     background: var(--ui-agent-admin-surface);
@@ -172,7 +192,7 @@
     font-size: 0.75rem;
     font-weight: 600;
     color: var(--ui-agent-admin-label-ink);
-    margin-block-start: 0.25rem;
+    margin-block-start: var(--ui-agent-admin-provider-gap);
   }
   [data-part='model-provider']:first-child {
     margin-block-start: 0;
@@ -181,7 +201,7 @@
     display: grid;
     grid-template-columns: 1fr auto auto;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--ui-agent-admin-row-gap);
   }
   [data-part='model-row-label'] {
     color: var(--ui-agent-admin-ink);
@@ -206,7 +226,7 @@
     border: 1px solid var(--ui-agent-admin-border);
     border-radius: var(--ui-agent-admin-entry-radius);
     background: var(--ui-agent-admin-surface);
-    padding: 0.5rem 0.75rem;
+    padding: var(--ui-agent-admin-card-pad);
   }
 
   /* ── the generic entry-list primitive (ADR-0132 n1) — one shared shape, five instantiations ────── */
@@ -214,7 +234,7 @@
   [data-part='entry-section'] {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--ui-agent-admin-list-gap);
   }
 
   [data-part='entry-section-heading'] {
@@ -227,7 +247,7 @@
   [data-part='entry-list'] {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--ui-agent-admin-list-gap);
   }
 
   /* Vision rev.5 — a kind whose MASTER switch is off dims its list + add affordances (the switch itself
@@ -251,15 +271,15 @@
   [data-part='surface-options'] {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--ui-agent-admin-list-gap);
   }
 
   [data-part='surface-row'] {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--ui-agent-admin-row-gap);
     box-sizing: border-box;
-    padding: 0.5rem 0.75rem;
+    padding: var(--ui-agent-admin-card-pad);
     border: 1px solid var(--ui-agent-admin-border);
     border-radius: var(--ui-agent-admin-entry-radius);
     background: var(--ui-agent-admin-surface);
@@ -292,7 +312,7 @@
     border: 1px solid var(--ui-agent-admin-border);
     border-radius: var(--ui-agent-admin-entry-radius);
     background: var(--ui-agent-admin-surface);
-    padding: 0.5rem 0.75rem;
+    padding: var(--ui-agent-admin-card-pad);
   }
 
   [data-part='context-section'] > [data-part='details'] > [data-part='summary'] {
@@ -305,22 +325,22 @@
   [data-part='context-turns'] {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    padding-block-start: 0.5rem;
+    gap: var(--ui-agent-admin-list-gap);
+    padding-block-start: var(--ui-agent-admin-list-gap);
   }
 
   [data-part='context-item'] {
     border: 1px solid var(--ui-agent-admin-border);
     border-radius: var(--ui-agent-admin-entry-radius);
     background: var(--ui-agent-admin-surface);
-    padding: 0.375rem 0.5rem;
+    padding: var(--ui-agent-admin-compact-gap) var(--ui-agent-admin-compact-pad);
   }
 
   /* The mono JSON preview — the frame's `JSON...` block. Its OWN scroll container (overflow-x) so a
      long systemPrompt line can never widen the pane (the no-horizontal-overflow browser probe's law). */
   [data-part='context-json'] {
-    margin: 0.375rem 0 0;
-    padding: 0.5rem;
+    margin: var(--ui-agent-admin-compact-gap) 0 0;
+    padding: var(--ui-agent-admin-compact-pad);
     border-radius: calc(var(--ui-agent-admin-entry-radius) / 2);
     background: var(--ui-agent-admin-code-surface);
     font-family: ui-monospace, 'SF Mono', Menlo, monospace;
@@ -336,9 +356,9 @@
   [data-part='entry'] {
     display: flex;
     flex-direction: column;
-    gap: 0.375rem;
+    gap: var(--ui-agent-admin-compact-gap);
     box-sizing: border-box;
-    padding: 0.5rem 0.75rem;
+    padding: var(--ui-agent-admin-card-pad);
     border: 1px solid var(--ui-agent-admin-border);
     border-radius: var(--ui-agent-admin-entry-radius);
     background: var(--ui-agent-admin-surface);
@@ -360,7 +380,7 @@
   [data-part='entry-header'] {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--ui-agent-admin-row-gap);
   }
 
   [data-part='entry-label'] {
@@ -400,9 +420,9 @@
   [data-part='entry-add-form']:not([hidden]) {
     display: flex;
     flex-direction: column;
-    gap: 0.375rem;
+    gap: var(--ui-agent-admin-compact-gap);
     box-sizing: border-box;
-    padding: 0.5rem 0.75rem;
+    padding: var(--ui-agent-admin-card-pad);
     border: 1px dashed var(--ui-agent-admin-border);
     border-radius: var(--ui-agent-admin-entry-radius);
   }

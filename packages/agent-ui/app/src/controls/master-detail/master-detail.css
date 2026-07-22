@@ -27,6 +27,10 @@
      row-hover role (the surface-high step every interactive row uses since the 2026-07-07 menu.css
      consistency pass — the TKT-0047 disclosure-fix precedent). */
   --ui-master-detail-back-bg-hover: var(--md-sys-color-neutral-surface-high);
+  /* TKT-0066 item 5 ruling: dimensional constants route through the own chain — the STYLES block below
+     never reads --md-sys-space-* directly, it mints these role-named tokens here and consumes THOSE. */
+  --ui-master-detail-back-pad-block: var(--md-sys-space-sm);
+  --ui-master-detail-back-pad-inline: var(--md-sys-space-md);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-master-detail) consumes ONLY --ui-master-detail-* ════════════════ */
@@ -60,8 +64,8 @@
     background: transparent;
     border: none;
     border-block-end: 1px solid var(--ui-master-detail-divider);
-    padding-block: 0.5rem;
-    padding-inline: 0.75rem;
+    padding-block: var(--ui-master-detail-back-pad-block);
+    padding-inline: var(--ui-master-detail-back-pad-inline);
     inline-size: 100%;
     text-align: start;
   }
