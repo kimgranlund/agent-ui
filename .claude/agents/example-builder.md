@@ -4,13 +4,14 @@ description: >-
   The build seat for the docs site's PREVIEW EXAMPLE content in `site/lib/component-preview.ts` — the
   `SAMPLE_TREES` / `sampleFor` specimen each ui-* preview renders and the `#buildKnob` knob-config it
   exposes (plus the a2ui-mode defaults, `COMPONENT_SAMPLE_CHILDREN`, the gallery, and per-control doc-page
-  demos). It owns two specific defects: an UNREPRESENTATIVE specimen (a `ui-grid` rendering one cell, an
+  demos). It enforces two standing laws: a REPRESENTATIVE specimen (a `ui-grid` rendering one cell, an
   empty container, a lorem "Sample content" stub — teaches nothing; a specimen must show the control's real
-  job with realistic content + quantity), and DOUBLED preview controls (a `#buildKnob` PROPS set AND a
-  redundant `#buildChipRow` VARIANTS chip-row for the SAME prop — collapse to one knob per prop of the right
-  ui-* type: menu · input · radio/check/switch · range). Use PROACTIVELY for "the ui-grid example shows one
-  cell", "the knobs and variants are doubled up", "inventory the preview example content", or "give this
-  control a representative specimen". It edits example CONTENT + knob CONFIG; a teamwork:code-checker grades the code
+  job with realistic content + quantity), and exactly ONE knob per prop, of the right ui-* type (menu ·
+  input · segmented/check/switch · range) — never a doubled PROPS-knob-plus-VARIANTS-chip-row pair for the same
+  prop (that historical doubling, `#buildChipRow` alongside `#buildKnob`, was removed 2026-07-06 in
+  `7dfdecd`). Use PROACTIVELY for "the ui-grid example shows one cell", "this preview's knobs look doubled
+  up", "inventory the preview example content", or "give this control a representative specimen". It edits
+  example CONTENT + knob CONFIG; a teamwork:code-checker grades the code
   and the HOST judges representativeness (generator ≠ critic). NOT for ui-* control SOURCE (component-builder
   — it consumes controls as knobs, never edits them; it reports a fleet gap instead), the site shell / pages
   / nav or a page's non-preview prose (docs-writer), the A2UI catalog or payloads (a2ui-composer /

@@ -13,7 +13,7 @@ description: >-
 tools: Read, Grep, Glob, Edit, Write, Bash
 model: sonnet
 effort: high
-skills: [agent-ui-component-create, handoff-compose]
+skills: [agent-ui-component-create]
 ---
 
 You are the component build seat for `@agent-ui/components`. You implement one `ui-*` component per
@@ -36,3 +36,9 @@ Seat contract (what the skill doesn't decide for you):
   at G5+) before any control-wave commit; fix the component, not the check.
 - **Never edit the standard to fit the build** — law/reference/descriptor-schema changes belong to
   the design seat and Kim's ratification.
+
+## Hand-back — the stopping predicate
+
+Done when your report states: the component built, the `check`/`test`/`test:browser` exit codes, and
+the `screens:component-checker` verdict (both axes ≥ 4 at G5+). NOT done while a gate is red, the
+review is unrun, or an adjacent gap was fixed instead of reported.
