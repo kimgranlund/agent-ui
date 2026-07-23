@@ -97,6 +97,25 @@ const FOCUS_TIMING_FILES = [
   'site/pages/adr-index.browser.test.ts',
 ]
 
+// GH #204 — update-mode's own gap: `toMatchScreenshot`'s stability loop (inside `@vitest/browser`) seeds
+// its "is the page done rendering" comparison with the STALE reference as the first baseline, using this
+// SAME `comparatorOptions`. When a fresh capture already falls within `allowedMismatchedPixelRatio` of
+// that stale reference on its very first attempt, the loop calls it "stable" at `retries === 0` and
+// short-circuits straight to a pass — the real reference-vs-screenshot comparator (the one that would
+// gate `--update`'s rewrite) never runs at all, so `updateSnapshot === "all"` never gets a chance to fire.
+// A real, sub-tolerance rendered change (e.g. a footer text edit under ~1% of pixels) therefore survives
+// `test:visual:update` untouched — reproduced concretely (GH #204) and confirmed against this exact
+// mechanism by reading `determineOutcome`/`getStableScreenshot` in `@vitest/browser/dist/index.js`.
+// The 1% tolerance is correct for the CHECK direction (anti-flake across machines/font-rendering runs);
+// the gap is only that UPDATE mode inherits the same number. Fix: in update mode the ratio drops to 0, so
+// ANY pixel delta (down to sub-tolerance) forces the stability loop past its first attempt and into the
+// real comparator, which then always finds a mismatch and rewrites. Two back-to-back captures of the
+// SAME already-rendered, non-animating page are pixel-identical in headless Chromium, so a real "nothing
+// changed" run still settles immediately and writes nothing new — only a genuine change (of any size)
+// causes a rewrite. Detected from the CLI flag itself (`test:visual:update`'s own `--update`), not an env
+// var, so the two npm scripts stay the only two switches.
+const isUpdatingVisualBaselines = process.argv.includes('--update') || process.argv.includes('-u')
+
 export default defineConfig({
   test: {
     // Teardown force-kill window. The default 10s manifested as a ~10s "close timed out after 10000ms /
@@ -231,7 +250,10 @@ export default defineConfig({
                 comparatorOptions: {
                   includeAA: false,
                   threshold: 0.1,
-                  allowedMismatchedPixelRatio: 0.01,
+                  // GH #204 — 0 under `--update` (rewrite on ANY delta), 0.01 otherwise (the CHECK
+                  // direction's anti-flake tolerance, unchanged). See the `isUpdatingVisualBaselines`
+                  // comment above for the mechanism this closes.
+                  allowedMismatchedPixelRatio: isUpdatingVisualBaselines ? 0 : 0.01,
                 },
                 // The full `npm run test:browser` gate (Decision 8) runs ALL THREE projects × both
                 // engines concurrently — real CPU contention that the standalone `test:visual` run never
