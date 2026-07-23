@@ -49,7 +49,8 @@ export interface EntryListSection {
 
 /** Build one kind's section shell (list + collapsible add-form), once — HEADLESS since GH #225: the
  *  section's label AND its optional master switch both live on the caller's fold heading row now
- *  (agent-admin.ts's `settingsItem`/`placeSummaryControl` — the ui-disclosure summary), so the old
+ *  (agent-admin.ts's `settingsItem` + the switch's `slot="summary"` marking, GH #226/ADR-0158 — the
+ *  ui-disclosure summary), so the old
  *  `entry-section-heading` h3 / `entry-section-header` row (vision rev.5) retired with them. `addLabel`
  *  is the add-toggle's own label text ("Add skill") — a bare word, no leading "+" — the toggle supplies
  *  its own leading `plus` icon adornment (TKT-0048), so the literal `+` character no longer belongs in

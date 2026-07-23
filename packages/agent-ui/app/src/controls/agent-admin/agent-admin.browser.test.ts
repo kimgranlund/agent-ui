@@ -31,6 +31,7 @@ import type { UITextFieldElement } from '@agent-ui/components/controls/text-fiel
 // asserts a real `<path>` landed, not just a correctly-sized empty slot.
 import '@agent-ui/icons/phosphor'
 import { ENTRY_KINDS } from './entries.ts'
+import { kindEnabledKey } from './agent-admin-schema.ts'
 
 const mounted: HTMLElement[] = []
 afterEach(() => {
@@ -996,7 +997,8 @@ describe('ui-agent-admin — GH #225: the Settings sections fold like the Contex
     expect(toggle.checked).toBe(true)
 
     // Clicking the switch flips the agent's ACTIVE state — the fold must NOT toggle (the summary's
-    // activation behavior is preventDefault-cancelled by placeSummaryControl's guard; ui-switch's own
+    // activation behavior is preventDefault-cancelled by ui-disclosure's OWN summary-slot guard, GH #226/
+    // ADR-0158 — the switch rides the fold declaratively via slot="summary"; ui-switch's own
     // click-listener flip is untouched by it — indicator-element.ts LLD-C3).
     toggle.click()
     await new Promise((r) => requestAnimationFrame(r))
@@ -1035,5 +1037,34 @@ describe('ui-agent-admin — GH #225: the Settings sections fold like the Contex
     await new Promise((r) => requestAnimationFrame(r))
     expect(agentItem.open).toBe(true)
     expect(agentItem.getBoundingClientRect().height).toBeCloseTo(agentOpenHeight, 0)
+  })
+
+  it('GH #226: a destructive fold-content clobber rebuilds the disclosure and the master switch SURVIVES on the fresh heading row (ui-disclosure\'s slot rescue, ADR-0158)', async () => {
+    const { el } = mountAgentAdmin()
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const skillsItem = el.querySelector(`[data-part="settings-item"][data-item="${ENTRY_KINDS.skill}"]`) as HTMLElement & { open: boolean }
+    const toggle = skillsItem.querySelector('[data-part="kind-enabled"]') as HTMLElement & { checked: boolean }
+    expect(toggle).not.toBeNull()
+    const wasOpen = skillsItem.open
+
+    // Force the rebuild path GH #226 named as the hazard: a destructive children write detaches the
+    // fold's details part; ui-disclosure rebuilds fresh and RESCUES the slotted switch (same node).
+    skillsItem.textContent = 'clobbered section body'
+    await new Promise<void>((r) => queueMicrotask(r)) // the heal observer's callback
+    await new Promise((r) => requestAnimationFrame(r))
+
+    const freshSummary = skillsItem.querySelector(':scope > [data-part="details"] > [data-part="summary"]') as HTMLElement
+    expect(freshSummary.contains(toggle), 'the SAME switch node survives on the fresh heading row').toBe(true)
+    expect(toggle.getBoundingClientRect().width, 'and it paints').toBeGreaterThan(0)
+    expect(skillsItem.open, 'fold state re-converged across the rebuild').toBe(wasOpen)
+
+    // Still wired end-to-end: clicking it flips the kind's enabled state without folding — the
+    // component-owned guard was re-wired onto the fresh part.
+    const wasChecked = toggle.checked
+    toggle.click()
+    await new Promise((r) => requestAnimationFrame(r))
+    expect(toggle.checked).toBe(!wasChecked)
+    expect(el.store?.get(kindEnabledKey(ENTRY_KINDS.skill))).toBe(!wasChecked)
+    expect(skillsItem.open, 'the rebuilt fold did not toggle on the switch click').toBe(wasOpen)
   })
 })

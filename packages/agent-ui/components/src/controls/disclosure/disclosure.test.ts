@@ -259,6 +259,104 @@ describe('ui-disclosure — the heal invariant (children streamed in / a destruc
   })
 })
 
+// ── the summary slot (ADR-0158 — SPEC-R14's foreseen extension, realized; GH #226) ─────────────────────
+
+describe('ui-disclosure — the summary slot (ADR-0158)', () => {
+  it('adopts a pre-existing slot="summary" child into the summary part (after the label), never the body', () => {
+    const { el, details, summary } = makeDisclosure('<span slot="summary" id="ctl">Ctl</span><p>body</p>')
+    const ctl = el.querySelector('#ctl') as HTMLElement
+    const body = details.querySelector('[data-part="body"]') as HTMLElement
+    expect(summary.contains(ctl)).toBe(true) // moved, never cloned (same node — ADR-0022)
+    expect(body.contains(ctl)).toBe(false)
+    expect(body.textContent).toBe('body') // the OTHER child still converges into the body
+    // append order: chevron, label, THEN the slotted control (the label's flex-grow pushes it inline-end)
+    const summaryText = summary.querySelector('[data-part="summary-text"]') as HTMLElement
+    expect(ctl.previousElementSibling).toBe(summaryText)
+    el.remove()
+  })
+
+  it('heals a late-arriving slot="summary" host child into the summary part (the streaming/appendChild case)', async () => {
+    const { el, summary } = makeDisclosure('<p>body</p>')
+    const ctl = document.createElement('span')
+    ctl.setAttribute('slot', 'summary')
+    ctl.textContent = 'Late'
+    el.appendChild(ctl) // lands on the HOST — the heal observer's slot partition routes it
+    await new Promise<void>((r) => queueMicrotask(r))
+    expect(summary.contains(ctl)).toBe(true)
+    expect(el.children).toHaveLength(1) // the details part stays the host's only element child
+    el.remove()
+  })
+
+  it('a destructive clobber rebuild RESCUES the slotted control into the FRESH summary part — same node identity (GH #226, ADR-0158 cl.2)', async () => {
+    const { el } = makeDisclosure('<span slot="summary" id="ctl">Ctl</span><p>original</p>')
+    const ctl = el.querySelector('#ctl') as HTMLElement
+    el.summary = 'Label'
+    await whenFlushed()
+
+    el.textContent = 'fresh text' // clobbers EVERY child, details part included — the rebuild branch
+    await new Promise<void>((r) => queueMicrotask(r))
+
+    const summary = el.querySelector('[data-part="summary"]') as HTMLElement
+    expect(summary.contains(ctl)).toBe(true) // the SAME node, rescued from the detached old part
+    expect(el.querySelector('[data-part="body"]')?.textContent).toBe('fresh text') // body content replaced
+    expect(el.querySelector('[data-part="summary-text"]')?.textContent).toBe('Label') // the prop re-synced too
+    el.remove()
+  })
+
+  it('a control the author explicitly REMOVED before the clobber stays gone (the detached part is the record — no stale tracking)', async () => {
+    const { el } = makeDisclosure('<span slot="summary" id="ctl">Ctl</span><p>original</p>')
+    const ctl = el.querySelector('#ctl') as HTMLElement
+    ctl.remove() // the author takes the control off the heading row (a summary-part mutation — not host childList)
+    el.textContent = 'fresh' // then a clobber rebuild
+    await new Promise<void>((r) => queueMicrotask(r))
+    expect(el.querySelector('#ctl')).toBeNull() // NOT resurrected
+    el.remove()
+  })
+
+  it('a click inside a slotted control never folds — the component-owned activation guard (ADR-0158 cl.3); the summary itself still folds', async () => {
+    const { el, summary } = makeDisclosure('<span slot="summary" id="ctl">Ctl</span><p>body</p>')
+    const ctl = el.querySelector('#ctl') as HTMLElement
+    let toggles = 0
+    el.addEventListener('toggle', () => toggles++)
+
+    ctl.click() // the guard preventDefaults the summary's activation behaviour
+    await nextToggle()
+    expect(el.open).toBe(false)
+    expect(toggles).toBe(0)
+
+    summary.click() // the summary's own click is untouched by the guard
+    await nextToggle()
+    expect(el.open).toBe(true)
+    expect(toggles).toBe(1)
+    el.remove()
+  })
+
+  it('the guard survives a clobber rebuild (re-wired onto the fresh summary part, like the toggle listener)', async () => {
+    const { el } = makeDisclosure('<span slot="summary" id="ctl">Ctl</span><p>original</p>')
+    el.textContent = 'fresh' // rebuild
+    await new Promise<void>((r) => queueMicrotask(r))
+
+    const ctl = el.querySelector('#ctl') as HTMLElement // rescued, on the fresh summary row
+    let toggles = 0
+    el.addEventListener('toggle', () => toggles++)
+    ctl.click()
+    await nextToggle()
+    expect(el.open).toBe(false)
+    expect(toggles).toBe(0)
+    el.remove()
+  })
+
+  it('the fold\'s accessible name scopes to the summary-text part — aria-labelledby on the summary, never name-from-content over a slotted control (ADR-0158 cl.4)', () => {
+    const { el, summary } = makeDisclosure('<span slot="summary">Agent active</span>')
+    el.summary = 'Agent'
+    const summaryText = summary.querySelector('[data-part="summary-text"]') as HTMLElement
+    expect(summaryText.id).not.toBe('') // a generated, stable id
+    expect(summary.getAttribute('aria-labelledby')).toBe(summaryText.id) // the name IS the label span
+    expect(summaryText.contains(el.querySelector('[slot="summary"]'))).toBe(false) // the control sits OUTSIDE the name source
+    el.remove()
+  })
+})
+
 // ── zero residue across connect/disconnect ─────────────────────────────────────────────────────────────
 
 describe('ui-disclosure — zero residue across connect/disconnect', () => {

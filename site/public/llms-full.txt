@@ -1302,15 +1302,43 @@ header) and get no searchability story. The cost, accepted: the native `::marker
 fleet chevron, and fold animation stays out of v1 — `::details-content` interpolation is too fresh
 cross-engine to ship honestly (ADR-0113 cl.4).
 
-## Anatomy — children become the body
+## Anatomy — children become the body (summary-slotted controls excepted)
 
 The host's light-DOM children are **adopted** into a component-owned `<div data-part="body">` inside the
-`<details>` part — never a `slot=` attribute grammar (SPEC-R14): a prop-carried `summary` keeps the
-adoption invariant simple ("children = body"). Children present at connect adopt immediately; children
-streamed in afterward (parser streaming, or a later `appendChild`) are healed into the body within a
-microtask by a childList observer — the same stamp/heal lineage `ui-text` and `ui-select`'s options-move
-use (ADR-0078 cl.4). A destructive `host.textContent` write rebuilds the part fresh and re-lands the new
-content in the body — the part is never reused once detached (it would hold stale content).
+`<details>` part — a prop-carried `summary` keeps the adoption invariant simple ("children = body"), with
+**one ruled exception** (ADR-0158): a child marked `slot="summary"` joins the summary row instead (see
+below). Children present at connect adopt immediately; children streamed in afterward (parser streaming,
+or a later `appendChild`) are healed into their part within a microtask by a childList observer — the
+same stamp/heal lineage `ui-text` and `ui-select`'s options-move use (ADR-0078 cl.4). A destructive
+`host.textContent` write rebuilds the part fresh and re-lands the new content in the body — the part is
+never reused once detached (it would hold stale content), but its summary-slotted children ARE rescued
+(same node identity) onto the fresh summary row.
+
+## The summary slot — controls on the heading row
+
+A light-DOM child marked `slot="summary"` (the fleet's position-slot grammar — the button
+leading/trailing lineage, ADR-0006/0012) is adopted **into the summary part**, after the label; the
+flex-growing label pushes it to the row's inline end — the "master switch on the fold's heading row"
+shape (GH #225), now component-owned (ADR-0158):
+
+```html
+<ui-disclosure summary="Agent" open>
+  <ui-switch slot="summary" aria-label="Agent active"></ui-switch>
+  <p>Config for the agent…</p>
+</ui-disclosure>
+```
+
+Three guarantees ride the slot:
+
+- **Rebuild survival** — a destructive children write (`host.textContent = …`) replaces the *body
+  content*; the summary row's composition (label prop + slotted controls) re-converges onto the fresh
+  parts, same node identity, listeners intact. The GH #226 silent-drop hazard is closed by construction.
+- **The activation guard** — a click inside a slotted control flips the control, never the fold: the
+  component cancels the `<summary>`'s details-toggle activation behaviour for clicks originating in slot
+  content (real pointer clicks and the synthetic Space/Enter press-activation click alike). The summary
+  itself still folds on its own click and its own Enter/Space.
+- **Name isolation** — the fold's accessible name is always the `summary` prop (see Accessibility); the
+  slotted control names itself (its own `aria-label`).
 
 ## `open` — two-way, always-announced
 
@@ -1325,9 +1353,9 @@ its one ADR-0019 seam slot here: `value: { prop: 'open', event: 'toggle' }` — 
 ## `summary` — the one-line label
 
 `summary` is a bindable string prop, written into the `[data-part="summary-text"]` span via `textContent`
-only — never markup. Updating it never perturbs `open`. A rich `slot=summary` child (structured content in
-the fold header) is a named foreseen extension, deliberately not v1 — a prop keeps the "children = body"
-anatomy invariant simple.
+only — never markup. Updating it never perturbs `open`. The once-foreseen `slot=summary` extension is now
+**realized** (ADR-0158) as a sibling position slot for summary-hosted *controls* — the label itself stays
+this prop, always, which is also what the fold's accessible name is scoped to.
 
 ## Styling
 
@@ -1344,8 +1372,11 @@ interchange.
 
 The component sets **no** internals role and **no** host ARIA (SPEC-R17) — the `<details>`/`<summary>`
 part *is* the semantic element, carrying native button semantics and the expanded/collapsed announcement
-the platform supplies. The summary is natively focusable; Enter/Space toggle it exactly like a native
-`<button>`'s Space/Enter parity, with zero keyboard code in this control. A `forced-colors` block keeps
+the platform supplies. The summary part carries `aria-labelledby` pointing at the summary-text span
+(ADR-0158 cl.4 — part-level ARIA on component-owned native elements, the same layer as the chevron's
+`aria-hidden`): the fold's accessible name is **always the `summary` prop**, never absorbed from a
+`slot="summary"` control's text. The summary is natively focusable; Enter/Space toggle it exactly like a
+native `<button>`'s Space/Enter parity, with zero keyboard code in this control. A `forced-colors` block keeps
 the summary/body ink and the chevron visible as system inks (belt-and-suspenders — every value already
 resolves through a WHCM-mapped role at the token layer); the shared focus ring survives via
 `--md-sys-color-focus-ring → Highlight`.

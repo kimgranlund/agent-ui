@@ -1090,5 +1090,12 @@
     "description": "The anatomy-attribute axis vocabulary is FIXED as four axes: data-part = anatomy (which named role a node plays in its owner's built chrome — owner-stamped, de…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0158",
+    "url": "./adr-index.html#adr-0158",
+    "description": "ui-disclosure realizes the slot=summary foreseen extension — summary-hosted controls adopt declaratively, survive heal-rebuilds, carry a component-owned activa…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

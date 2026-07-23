@@ -409,6 +409,11 @@ export class UIAgentAdminElement extends UIElement {
     // retired with the fold summaries that replaced them.
     const agentSwitch = document.createElement('ui-switch') as HTMLElement & { checked: boolean }
     agentSwitch.setAttribute('data-part', 'agent-enabled')
+    // GH #226/ADR-0158 — the heading-row placement is DECLARATIVE now: `slot="summary"` marks the switch
+    // and ui-disclosure itself adopts it into the summary part at connect, re-adopts it across any heal
+    // rebuild, and owns the toggle-click-≠-fold activation guard (the app-side placeSummaryControl
+    // placement + preventDefault guard this replaces are gone).
+    agentSwitch.setAttribute('slot', 'summary')
     agentSwitch.setAttribute('aria-label', 'Agent active')
     agentSwitch.checked = true
     agentSwitch.addEventListener('change', () => {
@@ -510,13 +515,13 @@ export class UIAgentAdminElement extends UIElement {
 
     surfaceOptions.append(markdown.row, a2ui.row, genui.row)
 
-    // GH #225 — each Settings section is a heading-row fold (the GH #222 Context pattern applied to the
-    // config column). The master switches (Agent + one per kind) belong ON their fold's heading row —
-    // placed into the disclosure's own summary part AFTER `this.append(shell)` below connects the folds
-    // and their parts exist (see `placeSummaryControl`); collected here as (fold, control) pairs.
-    const summaryControls: Array<[HTMLElement, HTMLElement]> = []
+    // GH #225/#226 — each Settings section is a heading-row fold (the GH #222 Context pattern applied to
+    // the config column). The master switches (Agent + one per kind) ride their fold's heading row
+    // DECLARATIVELY: marked `slot="summary"` at creation, appended as ordinary fold children here —
+    // ui-disclosure's own slot partition adopts them into the summary part at connect (ADR-0158), no
+    // connect-order placement dance required.
     const agentItem = settingsItem('agent', 'Agent', settingsEl)
-    summaryControls.push([agentItem, agentSwitch])
+    agentItem.append(agentSwitch)
     settingsContent.append(
       agentItem,
       settingsItem('model', 'Model', modelGrid),
@@ -524,11 +529,12 @@ export class UIAgentAdminElement extends UIElement {
       settingsItem('surface', 'Surface Options', surfaceOptions),
     )
     for (const { kind, label, addLabel } of CAPABILITY_KINDS) {
-      // The kind's MASTER switch (vision rev.5) — rendered on the kind's fold heading row (GH #225);
-      // `false` gates the whole kind out of the composed prompt + the live roster (isEnabledFlag:
-      // default ON).
+      // The kind's MASTER switch (vision rev.5) — rendered on the kind's fold heading row (GH #225;
+      // declaratively slotted per GH #226/ADR-0158, like the Agent switch above); `false` gates the
+      // whole kind out of the composed prompt + the live roster (isEnabledFlag: default ON).
       const kindSwitch = document.createElement('ui-switch') as HTMLElement & { checked: boolean }
       kindSwitch.setAttribute('data-part', 'kind-enabled')
+      kindSwitch.setAttribute('slot', 'summary')
       kindSwitch.setAttribute('aria-label', `${label} enabled`)
       kindSwitch.checked = true
       kindSwitch.addEventListener('change', () => {
@@ -539,7 +545,7 @@ export class UIAgentAdminElement extends UIElement {
       this.#kindSwitches.set(kind, kindSwitch)
       const section = this.#makeSection(kind, addLabel)
       const item = settingsItem(kind, label, section.host)
-      summaryControls.push([item, kindSwitch])
+      item.append(kindSwitch)
       settingsContent.append(item)
     }
 
@@ -578,11 +584,6 @@ export class UIAgentAdminElement extends UIElement {
     shell.append(conversation, settingsContent, contextSystemContent, contextDialogContent)
     this.append(shell)
 
-    // GH #225 — NOW the folds are connected (custom-element reactions run synchronously on insertion
-    // into the connected host — `#compose` runs inside connected()), so each ui-disclosure's parts
-    // exist: place every master switch onto its fold's heading row.
-    for (const [item, control] of summaryControls) placeSummaryControl(item, control)
-
     this.#shell = shell
     this.#conversation = conversation
     this.#settingsEl = settingsEl
@@ -616,8 +617,9 @@ export class UIAgentAdminElement extends UIElement {
       },
       // GH #47/#48 — this kind's library packs, captured at compose time (the sections' build-once law;
       // the `libraries` prop doc names the set-before-append requirement). The kind's master switch no
-      // longer routes through here — it rides the kind's FOLD heading row instead (GH #225,
-      // `placeSummaryControl`); the section shell itself is headless (its fold summary labels it).
+      // longer routes through here — it rides the kind's FOLD heading row instead (GH #225, slotted
+      // `slot="summary"` per GH #226/ADR-0158); the section shell itself is headless (its fold summary
+      // labels it).
       { libraries: this.libraries?.[kind] },
     )
     this.#capabilitySections.set(kind, section)
@@ -1146,29 +1148,6 @@ function settingsItem(key: string, summary: string, ...content: HTMLElement[]): 
   const item = foldItem('settings-item', key, summary, true)
   item.append(...content)
   return item
-}
-
-/** GH #225 — place a caller-owned control (a master `ui-switch`) ON a settings fold's heading row:
- *  appended into the disclosure's own summary part, after the flex-growing summary-text (so it lands at
- *  the row's inline end — the old header rows' `space-between` shape). MUST run after the fold is
- *  connected: `#compose` appends the shell into the already-connected host first, and custom-element
- *  reactions run synchronously on insertion, so the parts exist by the time the placement loop runs —
- *  asserted loudly rather than silently mis-placing the control into the fold body (where the heal
- *  observer would adopt a host-appended child, disclosure.ts SPEC-R16).
- *
- *  Toggle click ≠ fold toggle: a `<summary>`'s details-toggle is the click's ACTIVATION BEHAVIOR — the
- *  dispatch resolves the nearest activatable ancestor on the event path, and `preventDefault()` from any
- *  listener cancels it (the DOM legacy-canceled-activation rule) — while `ui-switch`'s own checked-flip
- *  lives in its OWN click listener (indicator-element.ts LLD-C3), which `preventDefault` never touches.
- *  So the guard below kills ONLY the fold toggle, for real clicks AND the synthetic `host.click()`
- *  pressActivation fires for Space/Enter on the focused switch. Summary keyboard activation needs no
- *  guard — a summary only key-activates while ITSELF focused. Proven cross-engine by
- *  agent-admin.browser.test.ts's GH #225 toggle-vs-fold probe. */
-function placeSummaryControl(item: HTMLElement, control: HTMLElement): void {
-  const summary = item.querySelector(':scope > [data-part="details"] > [data-part="summary"]')
-  if (!summary) throw new Error('placeSummaryControl: the fold has no summary part yet — it must be connected first')
-  control.addEventListener('click', (event) => event.preventDefault())
-  summary.append(control)
 }
 
 function clientMessageSurfaceId(message: unknown): string | undefined {
