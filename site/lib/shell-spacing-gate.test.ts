@@ -11,14 +11,18 @@ import { describe, it, expect } from 'vitest'
 // declarations only; a raw rung minted INTO a `--ui-*` token (`--ui-x: 0.75rem`) then consumed
 // elsewhere would pass both this gate (it never inspected custom-property declarations) and the
 // consumption-side styling gates (they check consumption spelling, not minting spelling). The
-// predicate below now ALSO reaches `--ui-*` declarations, restricted to ones whose entire value is
-// a bare literal or a single top-level `calc()` expression (isMintedDimensionValue) — a composite
-// multi-value declaration (a `box-shadow` token) or a `var(token, literal-fallback)` pair is out of
-// scope BY CONSTRUCTION, not a carve-out: neither is "a length minted into this token" in the first
-// place, and scanning them blindly would false-positive on unrelated numeric coincidences (a
-// shadow's blur radius, a shape-token's fallback). Within an in-scope value the SAME literal-arm
-// rule applies verbatim, so `calc(var(--ui-super-shell-module) / 3)` passes (no literal arm) while
-// `calc(0.375rem * 2)` fails exactly as a spacing property's own drift would.
+// predicate below now ALSO reaches `--ui-*` declarations, via a parens-aware top-level ARM split
+// (topLevelArms/isMintedDimensionValue/mintedArmLiterals, below): a value enters scope when EVERY
+// top-level arm is dimension-shaped (a bare literal, `0`, a `var(...)` reference, or a `calc(...)`
+// expression) — a single bare literal or calc() is just the one-arm case. A composite value with a
+// non-dimension arm (a box-shadow token's `rgb(...)` arm) stays out of scope BY CONSTRUCTION, not a
+// carve-out: it is doing something other than compositing dimensions. Round 2 (this revision)
+// widened round 1's single-arm-only shape gate after review found a live hole: a genuine two-value
+// mint written with raw literals (`--ui-x: 0.5rem 0.75rem`) matched neither of round 1's whole-value
+// regexes and passed unseen — the arm split catches it, scanning each dimension-shaped arm on its
+// own (var() arms, fallback included, stay excluded — GH #213's fallback-exclusion rule held
+// consistent in multi-value position). So `calc(var(--ui-super-shell-module) / 3)` passes (no
+// literal arm), `calc(0.375rem * 2)` fails, and `0.5rem 0.75rem` now fails on BOTH arms.
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
@@ -190,19 +194,56 @@ function isCustomProperty(property: string): boolean {
   return CUSTOM_PROPERTY_RE.test(property)
 }
 
-// GH #213 — the minted-value shape gate: the ENTIRE trimmed value is a bare `<number><px|rem>`
-// literal (the direct-mint shape, `--ui-x: 0.75rem`) or a single top-level `calc(...)` expression
-// (the arithmetic-mint shape, `--ui-x: calc(0.375rem * 2)`). Deliberately excludes every other
-// shape — a composite multi-value declaration (`0 0.25rem 1.5rem rgb(0 0 0 / 0.25)`, a box-shadow
-// token) or a bare `var(...)` reference, WITH or without a literal fallback (`var(--md-sys-shape-
-// corner-base, 0.25rem)`) — because none of those are "a length minted into this token": the value
-// is either doing something else entirely (compositing a shadow) or deferring to another token's
-// own value (a fallback belongs to THAT token's declaration, not this one's).
-const BARE_LITERAL_RE = /^-?\d*\.?\d+(px|rem)$/
-const BARE_CALC_RE = /^calc\(.*\)$/i
+// GH #213 (review round 2) — a parens-aware top-level arm splitter: splits a value on whitespace
+// ONLY at paren-depth 0, so `calc(var(--x) * 2)` or `var(--y, 0.25rem)` each stay ONE arm (their
+// internal spaces sit at depth > 0) while `var(--a) var(--b)` (a genuine two-value mint) splits into
+// two. This is the SAME mechanism a real multi-value token uses (`--ui-agent-admin-card-pad:
+// var(--md-sys-space-sm) var(--md-sys-space-md)`), so it is the right unit to classify.
+function topLevelArms(value: string): string[] {
+  const arms: string[] = []
+  let depth = 0
+  let cur = ''
+  for (const ch of value.trim()) {
+    if (ch === '(') depth++
+    if (ch === ')') depth--
+    if (/\s/.test(ch) && depth === 0) {
+      if (cur) arms.push(cur)
+      cur = ''
+    } else {
+      cur += ch
+    }
+  }
+  if (cur) arms.push(cur)
+  return arms
+}
+
+// GH #213 (review round 2) — the minted-value shape gate: EVERY top-level arm of the value must be
+// dimension-shaped — a bare `<number><px|rem>` literal, a bare `0`, a `var(...)` reference (with or
+// without a fallback), or a `calc(...)` expression. A single bare literal or calc() (round 1's shape)
+// is simply the one-arm case of this same rule. Anything else in ANY arm — an `rgb(...)` arm inside
+// a box-shadow token, a bare keyword — disqualifies the WHOLE declaration: it is doing something
+// other than compositing dimensions, so it stays out of scope by construction, not by carve-out.
+// This closes the round-1 hole the review's counterfactual found: `--ui-x: 0.5rem 0.75rem` (two
+// rungs laundered in one multi-value declaration) matched NEITHER of round 1's whole-value regexes
+// (a bare-literal OR bare-calc match requires the ENTIRE value to be one token), so it passed
+// unseen. Under the arm split, both `0.5rem` and `0.75rem` are individually dimension-shaped arms,
+// so the declaration enters scope and each arm is scanned on its own (see mintedArmLiterals).
+const DIMENSION_ARM_RE = /^(?:-?\d*\.?\d+(?:px|rem)|0|var\(.*\)|calc\(.*\))$/i
 function isMintedDimensionValue(value: string): boolean {
-  const v = value.trim()
-  return BARE_LITERAL_RE.test(v) || BARE_CALC_RE.test(v)
+  const arms = topLevelArms(value)
+  return arms.length > 0 && arms.every((arm) => DIMENSION_ARM_RE.test(arm))
+}
+
+// GH #213 (review round 2) — literal scanning for an in-scope minted custom property applies PER
+// ARM, skipping any arm whose outer function is `var(...)` entirely (including its own fallback
+// literal, if it has one) — the round-1 fallback-exclusion rule ("a fallback belongs to THAT
+// token's declaration, not this one's") held consistent in multi-value position, not just the
+// single-arm case. A bare-literal or calc() arm IS scanned (via the same `literalsOf` the spacing-
+// property check already uses), so a calc() arm's own literal sub-terms are still caught arm-by-arm.
+function mintedArmLiterals(value: string): { token: string; px: number }[] {
+  return topLevelArms(value)
+    .filter((arm) => !/^var\(/i.test(arm))
+    .flatMap((arm) => literalsOf(arm))
 }
 
 function isAllowlisted(d: Declaration, literalToken: string): boolean {
@@ -238,9 +279,14 @@ describe('AC19 — the shell-family spacing-literal drift gate (SPEC-R11c/AC19)'
       const raw = readFileSync(`${ROOT}/${rel}`, 'utf8')
       const { decls, text } = declarationsOf(rel, raw)
       for (const d of decls) {
-        const inScope = SPACING_PROPERTIES.has(d.property) || (isCustomProperty(d.property) && isMintedDimensionValue(d.value))
-        if (!inScope) continue
-        for (const { token, px } of literalsOf(d.value)) {
+        const isSpacingProp = SPACING_PROPERTIES.has(d.property)
+        const isMintedCustomProp = isCustomProperty(d.property) && isMintedDimensionValue(d.value)
+        if (!isSpacingProp && !isMintedCustomProp) continue
+        // Spacing properties keep the ORIGINAL whole-value scan (unchanged by GH #213 round 2 — the
+        // review scoped the arm split to custom-property mints only); a minted custom property
+        // scans per-arm, skipping var() arms (mintedArmLiterals, above).
+        const hits = isSpacingProp ? literalsOf(d.value) : mintedArmLiterals(d.value)
+        for (const { token, px } of hits) {
           const rung = LADDER_PX.find((l) => Math.abs(px - l) < 0.01)
           if (rung === undefined) continue
           if (isAllowlisted(d, token)) continue
