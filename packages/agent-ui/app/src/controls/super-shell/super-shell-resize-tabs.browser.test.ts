@@ -624,6 +624,126 @@ describe('ui-super-shell — GH #205 auto-collapse re-checks fit on a PUBLIC col
   })
 })
 
+// ── GH #229 (SPEC-R14, Kim's ruling) — the mid-window overlay ───────────────────────────────────────
+// The #219 access inversion: in the band-line→natural-fit window (here 640 < 700 < 702px) an
+// auto-collapsed side used to hide its toggle — content unreachable exactly where BELOW 640px the same
+// content is reachable via the R9d overlay. Ruled 2026-07-23: the toggle stays VISIBLE and opens the
+// side as the SAME floating overlay (inset + scrim + X + dismissal), never an inline re-expansion
+// (which cannot fit — the fit check would immediately re-collapse it). END is the primary leg (it
+// auto-collapses FIRST under R13b's end-first escalation), not a mirror afterthought.
+describe('ui-super-shell — GH #229 mid-window overlay (SPEC-R14): an auto-collapsed side stays reachable', () => {
+  const endToggleOf = (el: UISuperShellElement): HTMLElement => el.querySelector('[data-part="side-toggle"][data-side="end"]') as HTMLElement
+
+  it('R14a/R14b: the auto-collapsed END side keeps a VISIBLE toggle; clicking opens the floating overlay — canvas floor held, zero overflow, no oscillation, scrim + X live', async () => {
+    const { el, middle } = mountDualResizableWithHeader(700) // mid-window: above the 640px line, below the 702px natural fit
+    await settleFit(el)
+    expect(el.hasAttribute('data-auto-collapsed-end'), 'precondition: END auto-collapsed at 700px').toBe(true)
+    const endToggle = endToggleOf(el)
+    expect(getComputedStyle(endToggle).display, 'R14a: the toggle stays VISIBLE (the #219 toggle-hide is reversed by ruling)').not.toBe('none')
+    expect(endToggle.getAttribute('aria-expanded'), 'aria-expanded tracks the OVERLAY while auto-collapsed, not the wide !collapsed').toBe('false')
+
+    endToggle.click()
+    await settleFit(el)
+    expect(el.getAttribute('data-narrow-open'), 'the click arms the overlay state, not the persisted wide collapse').toBe('end')
+    expect(el.hasAttribute('collapsed-end'), 'the PUBLIC prop stays untouched (R2d no-clobber)').toBe(false)
+    const optionsPane = middle.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    expect(getComputedStyle(optionsPane).display, 'the side paints').toBe('block')
+    expect(getComputedStyle(optionsPane).position, 'R14b: it FLOATS as an overlay, never an inline re-expansion').toBe('absolute')
+    const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
+    expect(canvas.getBoundingClientRect().width, 'canvas keeps its floor under the open overlay').toBeGreaterThanOrEqual(161)
+    expect(middle.scrollWidth, 'R14c: ZERO row overflow with the overlay open (AC20 stays green — the overlay is out of flow)').toBeLessThanOrEqual(middle.clientWidth + 1)
+    expect(el.hasAttribute('data-auto-collapsed-end'), 'no oscillation: the auto-collapse decision is unchanged by the open overlay').toBe(true)
+    expect(endToggle.getAttribute('aria-expanded'), 'aria-expanded truthful while open').toBe('true')
+    expect(getComputedStyle(endToggle.querySelector('[data-glyph="menu"]') as HTMLElement).display, 'menu glyph swapped out').toBe('none')
+    expect(getComputedStyle(endToggle.querySelector('[data-glyph="close"]') as HTMLElement).display, 'X glyph shown (R9b, keyed on the auto-collapsed conjunction)').not.toBe('none')
+    const scrim = el.querySelector('[data-part="scrim"]') as HTMLElement
+    expect(getComputedStyle(scrim).display, 'scrim shown behind the mid-window overlay').toBe('block')
+  })
+
+  it('AC21 dismissal: scrim tap and Escape each close the mid-window overlay with focus returned to the toggle (the AC16 contract, one band up)', async () => {
+    const { el, middle } = mountDualResizableWithHeader(700)
+    await settleFit(el)
+    const endToggle = endToggleOf(el)
+    endToggle.click()
+    await settleFit(el)
+    const optionsPane = middle.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    expect(document.activeElement, 'focus lands on the opened side box (the R9d landing)').toBe(optionsPane)
+    const scrim = el.querySelector('[data-part="scrim"]') as HTMLElement
+    scrim.click()
+    await settleFit(el)
+    expect(el.hasAttribute('data-narrow-open'), 'scrim tap dismisses').toBe(false)
+    expect(document.activeElement, 'focus returns to the toggle').toBe(endToggle)
+    endToggle.click()
+    await settleFit(el)
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    await settleFit(el)
+    expect(el.hasAttribute('data-narrow-open'), 'Escape dismisses').toBe(false)
+    expect(document.activeElement, 'focus returns after Escape too').toBe(endToggle)
+  })
+
+  it('R14c release: growing past natural fit with the overlay open closes it — auto-collapse cleared, side back INLINE, no stranded data-narrow-open, no stale X, focus UNMOVED', async () => {
+    const { el, middle } = mountDualResizableWithHeader(700)
+    await settleFit(el)
+    const endToggle = endToggleOf(el)
+    endToggle.click()
+    await settleFit(el)
+    expect(el.getAttribute('data-narrow-open'), 'precondition: overlay open at 700px').toBe('end')
+    // Review MINOR-1 — plant focus INSIDE the overlaid pane (a user tabbed onto a control in it): the
+    // passive growth-release must NOT steal it back to the toggle — the pane stays visible throughout
+    // (it never passes display:none, only absolute→static), so focus inside it survives the release.
+    const optionsPane = middle.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    const inner = document.createElement('button')
+    inner.textContent = 'inside'
+    optionsPane.append(inner)
+    inner.focus()
+    expect(document.activeElement, 'precondition: focus is inside the overlaid pane').toBe(inner)
+    el.style.inlineSize = '900px'
+    await settleFit(el)
+    expect(el.hasAttribute('data-auto-collapsed-end'), 'auto-collapse releases at 900px (above the 702px fit)').toBe(false)
+    expect(el.hasAttribute('data-narrow-open'), 'the overlay closed WITH the release — nothing stranded').toBe(false)
+    expect(getComputedStyle(optionsPane).display, 'the side is back in the row').not.toBe('none')
+    expect(getComputedStyle(optionsPane).position, 'INLINE flow, not a leftover overlay').toBe('static')
+    expect(document.activeElement, 'focus did NOT move on the passive release — no steal to the toggle (review MINOR-1)').toBe(inner)
+    expect(getComputedStyle(endToggle.querySelector('[data-glyph="close"]') as HTMLElement).display, 'no stale X at wide (R9b holds)').toBe('none')
+    expect(endToggle.getAttribute('aria-expanded'), 'aria-expanded back on the wide !collapsed truth').toBe('true')
+  })
+
+  it('R14c continuity, UP-crossing: a narrow-band overlay grown into the mid-window (still below fit) continues as the mid-window overlay — same open state, side still floating', async () => {
+    const { el, middle } = mountDualResizableWithHeader(600) // below the 640px narrow line
+    await settleFit(el)
+    const endToggle = endToggleOf(el)
+    endToggle.click() // the R9d narrow-band overlay path (unchanged pre-R14 behavior)
+    await settleFit(el)
+    expect(el.getAttribute('data-narrow-open'), 'precondition: narrow-band overlay open at 600px').toBe('end')
+    expect(el.hasAttribute('data-auto-collapsed-end'), 'precondition: below the line the band query owns hiding, no auto-collapse attr').toBe(false)
+    el.style.inlineSize = '700px' // up into the mid-window: above the line, below the 702px natural fit
+    await settleFit(el)
+    expect(el.hasAttribute('data-auto-collapsed-end'), 'the mechanism marks END auto-collapsed at the new width').toBe(true)
+    expect(el.getAttribute('data-narrow-open'), 'the SAME open state survives the up-crossing (one attribute, two lawful widths)').toBe('end')
+    const optionsPane = middle.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    expect(getComputedStyle(optionsPane).display, 'the side still paints').toBe('block')
+    expect(getComputedStyle(optionsPane).position, 'now the mid-window overlay renders it — still floating, never inline').toBe('absolute')
+    expect(middle.scrollWidth, 'and still zero row overflow').toBeLessThanOrEqual(middle.clientWidth + 1)
+  })
+
+  it('R14c continuity: crossing DOWN past the band line with the overlay open hands the SAME open state to the R9d band overlay; below-line behavior itself is unchanged', async () => {
+    const { el, middle } = mountDualResizableWithHeader(700)
+    await settleFit(el)
+    const endToggle = endToggleOf(el)
+    endToggle.click()
+    await settleFit(el)
+    el.style.inlineSize = '600px' // below the 640px narrow line — the band query now owns hiding
+    await settleFit(el)
+    expect(el.hasAttribute('data-auto-collapsed-end'), 'below the line the mechanism stands down (never marks a side below its own line)').toBe(false)
+    expect(el.getAttribute('data-narrow-open'), 'the SAME open state survives the crossing (one attribute, two lawful widths)').toBe('end')
+    const optionsPane = middle.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    expect(getComputedStyle(optionsPane).position, 'now the R9d band overlay renders it').toBe('absolute')
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    await settleFit(el)
+    expect(el.hasAttribute('data-narrow-open'), 'the unchanged AC16 dismissal below the line').toBe(false)
+  })
+})
+
 // ── GH #182 regression pin — the pane-resizer's THREE decoupled visual states ───────────────────────
 // The original bug: a real engine renders no jsdom probe can see (background/outline computed paint).
 // This is the permanent gate against the exact gate-blindness that let the solid full-height primary

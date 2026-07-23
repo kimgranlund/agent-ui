@@ -1,6 +1,6 @@
 # SPEC — Shell archetypes M5: `ui-super-shell` (the two-level recursive shell grammar)
 
-> Status: accepted · v0.5 · 2026-07-22 · Layer: app chrome (`@agent-ui/app`)
+> Status: accepted · v0.6 · 2026-07-23 · Layer: app chrome (`@agent-ui/app`)
 > Refines: [ADR-0151](../adr/0151-named-shell-archetypes-m5.md) (accepted — ratified by Kim
 > 2026-07-19) · the agent-app-surfaces PRD's M5 (PRD-G9).
 > Follows the established PATTERNS of: [ADR-0082](../adr/0082-app-shell-per-instance-isolation.md) /
@@ -452,3 +452,55 @@ auto-collapse (SPEC-R13b's own mechanism choice) hides a `collapse`-mode side wh
 live geometry would otherwise overflow, strictly above the band line where CSS alone does not
 already collapse it — so floors-hold and no-overflow now coexist at every width in the sweep,
 never one traded for the other.
+
+## 11 · Amendment (v0.6, SPEC-R14) — the mid-window overlay (auto-collapsed sides stay reachable)
+
+Grounding: the GH #219 review's access-inversion fork, ruled by Kim 2026-07-23 (AskUserQuestion
+round, recorded on GH #229). Between a side's band line and the configuration's natural-fit width
+(R13b's arithmetic), the R13b auto-collapse used to hide that side's toggle along with the side —
+its content unreachable in exactly the window where, BELOW the band line, the same content is
+reachable via the R9d overlay (the access inversion). §9's prose was silent on this window; the
+toggle-hide was the #219 build's own mechanism detail (R13b deliberately leaves mechanism to the
+repairing build's record), so this amendment appends the ruled law without rewriting any accepted
+clause.
+
+### SPEC-R14 — an auto-collapsed side's toggle opens the overlay (the band-line→natural-fit window)
+
+- **R14a — the toggle stays visible, aria-truthful.** A side hidden by the R13b measurement-based
+  auto-collapse (`data-auto-collapsed-*` set; width above that side's own band line) keeps its
+  header toggle visible. The R9a "no dead toggle" law is honored the other way around from the
+  #219 build's toggle-hide: the toggle is not dead — it is the overlay affordance, exactly as
+  below the band line. Its `aria-expanded` tracks the overlay state (`data-narrow-open === side`),
+  never the wide `!collapsed` reading, while the side is auto-collapsed (extends R9c's per-band
+  truth table with this third, JS-decided row).
+- **R14b — open = the existing overlay anatomy, never an inline re-expansion.** The toggle opens
+  the side as the SAME floating overlay R9d ships — absolute over the canvas, the R11a
+  `--ui-super-shell-overlay-inset` float (module × 2/3, the #211 spelling), scrim, menu⇄X (R9b),
+  scrim-tap/Escape/re-tap dismissal with the R9d focus round-trip — never an inline restore, which
+  cannot fit by construction (the R13b fit check would immediately re-collapse it). Both sides are
+  first-class: END auto-collapses FIRST under R13b's end-first escalation, so the end side's
+  overlay path is the primary proven leg, not a mirror afterthought. The arming key is the
+  conjunction `data-auto-collapsed-* ∧ data-narrow-open` (both JS-owned), which preserves R9b's
+  no-stale-X guarantee outside the band queries: `data-narrow-open` alone still paints nothing.
+- **R14c — the overlay never joins the fit math, and the state converges.** The floated side is
+  out of flow and inset within the middle row: AC20's zero-overflow sweep holds with the overlay
+  open, and opening/closing it never flips the R13b auto-collapse decision (no oscillation). When
+  a fit recompute clears the open side's auto-collapse (the host grew past natural fit, or a
+  public collapse freed the room), the overlay releases — closed, ARIA re-synced, the side back in
+  ordinary inline flow, no stranded `data-narrow-open` — and focus UNMOVED: the released side is
+  visible at the new width and never passes display:none, so focus inside it survives; the R9d
+  focus round-trip belongs to the USER dismissal paths (scrim/Escape/re-tap) only, never to a
+  passive resize. Crossing DOWN past the band line with the
+  overlay open hands the SAME open state to the R9d band overlay seamlessly (one attribute, two
+  lawful widths); the below-band-line contract (R4/R9, AC15/AC16) is unchanged.
+
+AC21 (extends §6) — in the band-line→natural-fit window with a side auto-collapsed: its toggle is
+visible with `aria-expanded` tracking the overlay; clicking opens the floating overlay (side
+absolute + shadow + inset, canvas holds its floor, zero row overflow, scrim and X live); scrim tap
+and Escape each dismiss with focus returned to the toggle; growing past natural fit while open
+releases cleanly (auto-collapse attribute gone, `data-narrow-open` gone, side inline, no stale X,
+focus left exactly where it was — never yanked to the toggle by a passive resize);
+shrinking below the band line with the overlay open keeps it open under the R9d band rules, and
+growing UP across the band line with the overlay open (still below natural fit) hands the same
+open state to the mid-window overlay; the
+below-band-line behavior is byte-identical to pre-R14. Cross-engine, END side proven explicitly.

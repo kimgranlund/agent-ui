@@ -74,9 +74,9 @@ parts:
   - name: bar
     description: Header/footer chrome rows (`data-bar="header|footer"`) — 3-module (54px) min-height, PERMANENT chrome (SPEC-R2c); rendered only when authored (the absence law). The header bar hosts the two side-toggles around the authored header children. Carries `role="banner"`/`role="contentinfo"` respectively (LLD-C1), overridable via `data-landmark` on the first authored child.
   - name: side-toggle
-    description: One header-hosted collapse toggle (`data-side="start|end"`, SPEC-R2b/R9, LOGICAL per LLD-C4) — a ui-button that composes ONLY for a side with authored content (SPEC-R9a — no dead toggle on a one-sided shell), and hides below the 40rem line for `stack`/`tabs` sides (their narrow anatomy is owned elsewhere). Carries BOTH glyphs (`list` menu + `x` close, `data-glyph`); CSS swaps them off the host's `data-narrow-open` INSIDE the band query, so the X is band-correct by construction (SPEC-R9b — no stale wide X). `aria-expanded` is truthful at every band (`!collapsed` at wide, `data-narrow-open===side` below the line — SPEC-R9c). Labeled "Toggle start panes"/"Toggle end panes" — direction-agnostic text.
+    description: One header-hosted collapse toggle (`data-side="start|end"`, SPEC-R2b/R9, LOGICAL per LLD-C4) — a ui-button that composes ONLY for a side with authored content (SPEC-R9a — no dead toggle on a one-sided shell), and hides below the 40rem line for `stack`/`tabs` sides (their narrow anatomy is owned elsewhere). Carries BOTH glyphs (`list` menu + `x` close, `data-glyph`); CSS swaps them off the host's `data-narrow-open` INSIDE the band query — or, for an AUTO-collapsed side in the band-line→natural-fit window (GH #229/SPEC-R14, Kim's ruling), off `data-auto-collapsed-* + data-narrow-open` together — so the X is state-correct by construction (SPEC-R9b — no stale wide X). An auto-collapsed side's toggle stays VISIBLE and opens that side as the floating overlay (never an inline re-expansion, which cannot fit). `aria-expanded` is truthful at every band (`!collapsed` at wide, `data-narrow-open===side` below the line or while auto-collapsed — SPEC-R9c/R14a). Labeled "Toggle start panes"/"Toggle end panes" — direction-agnostic text.
   - name: scrim
-    description: SPEC-R9d — the shell-owned overlay scrim, composed once as the middle row's first child. Inert (display:none) at wide; shown at narrow/compact while a collapse side is overlay-open (z-index below the overlay). A tap dismisses the overlay (alongside Escape and a toggle re-tap); focus returns to the opener toggle on close (non-modal — no focus trap).
+    description: SPEC-R9d — the shell-owned overlay scrim, composed once as the middle row's first child. Inert (display:none) at wide; shown at narrow/compact while a collapse side is overlay-open, and in the band-line→natural-fit window while an AUTO-collapsed side's overlay is open (GH #229/SPEC-R14) — always z-index below the overlay. A tap dismisses the overlay (alongside Escape and a toggle re-tap); focus returns to the opener toggle on close (non-modal — no focus trap).
   - name: middle
     description: The `[ rail | pane* | canvas | pane* | rail ]` flex row (SPEC-R5, LLD-C3 — a side stacks ZERO OR MORE panes, not a single fixed pane); the narrow overlay's containing block.
   - name: rail
@@ -159,9 +159,15 @@ toggle-restores as an overlay; `stack`/`tabs` sides keep the 40rem line regardle
 toggle law (SPEC-R9): a toggle composes only for an authored side, hides below 40rem for `stack`/`tabs`
 sides, carries both `list`/`x` glyphs CSS-swapped inside the band query, keeps `aria-expanded` truthful
 per band via ONE visibility-only `ResizeObserver`, and dismisses via scrim tap / Escape / re-tap with
-focus returned to the toggle (non-modal). Note: when that observer clears a STALE overlay on a pure
-band-exit resize (not a user dismissal), it routes through the same close helper and so moves focus to the
-opener toggle — deliberate, since the overlay pane it lived in is now hidden and focus would otherwise
-drop to `<body>`. The scrollbar seam (SPEC-R10): `--ui-super-shell-scrollbar-width`
+focus returned to the toggle (non-modal). Note: the focus round-trip belongs to the USER dismissal
+paths only (scrim tap / Escape / toggle re-tap). A PASSIVE release — the fit recompute clearing an
+open overlay on a band-exit or grow-past-fit resize (GH #229 review MINOR-1) — closes WITHOUT moving
+focus: the released side is visible inline at the new width and never passes display:none, so focus
+inside it simply survives; moving it to the toggle there would be a focus steal on a mere resize. The mid-window overlay (GH #229/SPEC-R14, Kim's ruling): between a side's band line
+and the configuration's natural-fit width, a side hidden by the SPEC-R13b measurement-based
+auto-collapse keeps a visible toggle that opens it as the SAME floating overlay (scrim, X, Escape/scrim
+dismissal, focus round-trip) — never an inline re-expansion, which cannot fit; once a recompute clears
+the auto-collapse (the host grew past fit), an open overlay releases and the side returns inline. The
+scrollbar seam (SPEC-R10): `--ui-super-shell-scrollbar-width`
 (default `none`, consumer-overridable) hides the native bar on pane boxes, active segments, and the
 narrow-tabs strip, with the exported `scrollFade` trait as the replacement edge affordance.
