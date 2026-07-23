@@ -419,8 +419,13 @@ export class UISuperShellElement extends UIElement {
       // `stack`/`tabs` side's toggle is CSS-hidden below the 40rem line (R9a), and above the line every
       // side takes the wide arm — so the below-line arm only ever runs for a collapse side (the old
       // `tabs` no-op guard + the stack-conflict overlay arm are now unreachable and gone).
+      // GH #229 (SPEC-R14, Kim's ruling) — the overlay ALSO arms in the band-line→natural-fit window:
+      // an AUTO-collapsed side (`data-auto-collapsed-*`, width above the line but below fit) opens as
+      // the same floating overlay — never an inline re-expansion, which cannot fit by construction
+      // (#syncFitCollapse would immediately re-collapse it). `data-auto-collapsed-*` is only ever set
+      // for a collapse-arm side above its line, so the two conditions never overlap.
       const narrowArm = side === 'start' ? this.narrowStart : this.narrowEnd
-      if (narrowArm === 'collapse' && this.#belowBandLine(side)) {
+      if (narrowArm === 'collapse' && (this.#belowBandLine(side) || this.hasAttribute(`data-auto-collapsed-${side}`))) {
         if (this.getAttribute('data-narrow-open') === side) this.#closeOverlay()
         else this.#openOverlay(side)
         return
@@ -447,8 +452,9 @@ export class UISuperShellElement extends UIElement {
     return width > 0 && width < lineRem * rootFontPx
   }
 
-  /** SPEC-R9d — open a side's narrow/compact overlay: set the single-value `data-narrow-open`, remember
-   *  the opener toggle (focus returns to it on close), move focus to the side's landing box, re-sync ARIA. */
+  /** SPEC-R9d — open a side's overlay (narrow/compact band, or the GH #229 auto-collapsed mid-window):
+   *  set the single-value `data-narrow-open`, remember the opener toggle (focus returns to it on close),
+   *  move focus to the side's landing box, re-sync ARIA. */
   #openOverlay(side: 'start' | 'end'): void {
     this.setAttribute('data-narrow-open', side)
     this.#openerToggle = this.querySelector<HTMLElement>(`[data-part="side-toggle"][data-side="${side}"]`)
@@ -466,15 +472,16 @@ export class UISuperShellElement extends UIElement {
     this.#syncAria()
   }
 
-  /** SPEC-R9c — the band-hygiene RO callback: if a side is overlay-open but the host is no longer below
-   *  THAT side's line (a resize back up past the band), clear the stale overlay; then re-sync ARIA.
-   *  GH #205 — every resize is also a fit re-check (the row's natural-fit arithmetic is a function of
-   *  live width, so a passive resize is exactly when the auto-collapse decision can flip either way). */
+  /** SPEC-R9c — the band-hygiene RO callback. GH #205 — every resize is also a fit re-check (the row's
+   *  natural-fit arithmetic is a function of live width, so a passive resize is exactly when the
+   *  auto-collapse decision can flip either way). GH #229 (SPEC-R14) — the fit recompute runs FIRST:
+   *  whether an open overlay is stale is now a function of the NEW width's auto-collapse decision
+   *  (#syncFitCollapse owns that release), so judging it off the pre-resize attributes here would
+   *  wrongly close a still-lawful mid-window overlay (or keep a stranded one). The ARIA re-sync then
+   *  reads the settled truth. */
   #onBandChange(): void {
-    const open = this.getAttribute('data-narrow-open') as 'start' | 'end' | null
-    if (open && !this.#belowBandLine(open)) this.#closeOverlay()
-    else this.#syncAria()
     this.#syncFitCollapse()
+    this.#syncAria()
   }
 
   // ── SPEC-R13b: measurement-based auto-collapse (GH #205) ──────────────────────────────────────────
@@ -489,9 +496,13 @@ export class UISuperShellElement extends UIElement {
    *  Internal, NON-reflected attributes (`data-auto-collapsed-start`/`-end`) — deliberately NEVER the
    *  public `collapsed-start`/`-end` props: this is ambient, JS-decided fallback layout, not a user
    *  choice, and must never masquerade as one (persisted state, `sizeStart`/`sizeEnd` round-trips,
-   *  etc. must never see it). CSS hides the side (and its toggle — no overlay-restore affordance: a
-   *  restored side has nowhere to go but back to not fitting, the R9a "no dead toggle" precedent) purely
-   *  off these attributes, unconditionally (no `@container` — JS already decided).
+   *  etc. must never see it). CSS hides the side purely off these attributes, unconditionally (no
+   *  `@container` — JS already decided). GH #229 (SPEC-R14, Kim's ruling) — the side's toggle STAYS
+   *  visible and opens the side as the floating OVERLAY (the R9d anatomy, keyed off
+   *  `data-auto-collapsed-* + data-narrow-open` in super-shell.css): the R9a "no dead toggle" law is
+   *  honored the other way around from the original #219 toggle-hide — the toggle is not dead, it is
+   *  the overlay affordance, exactly as below the band line. The overlay floats out of flow, so it
+   *  never joins this method's own fit measurement (no oscillation).
    *
    *  Reset-then-recompute EACH call (idempotent under repeat RO/effect firings): both sides are always
    *  re-examined from a clean slate, `end` first (the file's start-primacy convention read backwards —
@@ -512,17 +523,28 @@ export class UISuperShellElement extends UIElement {
       // this is the escalation-only-if-needed law, not a fixed two-side rule.
       if (middle.scrollWidth > middle.clientWidth + 1) this.setAttribute(`data-auto-collapsed-${side}`, '')
     }
+    // GH #229 (SPEC-R14c) — release: an overlay opened from the auto-collapsed mid-window state closes
+    // once this recompute no longer needs its side collapsed (the host grew past natural fit, or a
+    // public collapse freed the room) — the side returns to ordinary inline flow with no stranded
+    // `data-narrow-open` (and no stale X, #closeOverlay re-syncs ARIA). Below the band line the CSS
+    // band overlay owns the state instead, so a mid→narrow crossing keeps the SAME open state alive.
+    const open = this.getAttribute('data-narrow-open') as 'start' | 'end' | null
+    if (open && !this.#belowBandLine(open) && !this.hasAttribute(`data-auto-collapsed-${open}`)) this.#closeOverlay()
   }
 
   /** SPEC-R9c — aria-expanded truthful per band, per side: below its line it tracks `data-narrow-open`;
-   *  above it, the wide `!collapsed` effect. Attributes only (the R7c visibility-only survival law). */
+   *  above it, the wide `!collapsed` effect. GH #229 (SPEC-R14a) — an AUTO-collapsed side above its line
+   *  is in overlay mode too (its toggle drives the overlay, not the persisted wide state), so its
+   *  aria-expanded tracks `data-narrow-open` the same way the below-line arm does — a hidden-but-
+   *  "expanded" contradiction otherwise. Attributes only (the R7c visibility-only survival law). */
   #syncAria(): void {
     const narrowOpen = this.getAttribute('data-narrow-open')
     for (const side of ['start', 'end'] as const) {
       const toggle = this.querySelector<HTMLElement>(`[data-part="side-toggle"][data-side="${side}"]`)
       if (!toggle) continue
       const collapsed = side === 'start' ? this.collapsedStart : this.collapsedEnd
-      const expanded = this.#belowBandLine(side) ? narrowOpen === side : !collapsed
+      const overlayMode = this.#belowBandLine(side) || this.hasAttribute(`data-auto-collapsed-${side}`)
+      const expanded = overlayMode ? narrowOpen === side : !collapsed
       toggle.setAttribute('aria-expanded', String(expanded))
     }
   }

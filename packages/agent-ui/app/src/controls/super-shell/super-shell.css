@@ -257,11 +257,13 @@
     --ui-tabs-strip-scrollbar-width: var(--ui-super-shell-scrollbar-width); /* SPEC-R10a — the strip's tablist viewport */
   }
 
-  /* SPEC-R9b — the toggle's close (X) glyph is hidden by default; each band query below reveals it while
-     that side's overlay is open (and hides the menu glyph). Band-correct by construction — no wide X. */
+  /* SPEC-R9b — the toggle's close (X) glyph is hidden by default; each band query below (and the GH #229
+     mid-window block, which keys on `data-auto-collapsed-*` as its stale-state guard) reveals it while
+     that side's overlay is open (and hides the menu glyph). Correct by construction — no stale wide X. */
   [data-part='side-toggle'] [data-glyph='close'] { display: none; }
 
-  /* SPEC-R9d — the overlay scrim is inert (no box) at wide; each band query shows it while a side is open. */
+  /* SPEC-R9d — the overlay scrim is inert (no box) at wide; each band query (and the GH #229 mid-window
+     block) shows it while a side is open. */
   [data-part='scrim'] { display: none; }
 
   /* min-size-floors census (GH #185 follow-up) — SPEC-R6c says "the canvas keeps ≥
@@ -296,15 +298,53 @@
      natural fit varies per authored configuration/consumer override, and a container condition can't
      take a var() operand). Internal, non-reflected `data-auto-collapsed-*` — NEVER the public
      `collapsed-*` props (R2d): ambient JS fallback must never masquerade as a persisted user choice.
-     The side's toggle hides too — no overlay-restore affordance for an auto-collapsed side (clicking
-     through would just reopen a side with nowhere to fit, the R9a "no dead toggle" precedent). */
+     GH #229 (SPEC-R14, Kim's ruling) — the side's toggle STAYS VISIBLE (the original #219 toggle-hide
+     rule is gone): in the band-line→natural-fit window it opens the side as the floating OVERLAY
+     below, so the content stays reachable exactly as it is below the band line. */
   :scope[data-auto-collapsed-start] [data-part='middle'] > [data-side='start'],
   :scope[data-auto-collapsed-end] [data-part='middle'] > [data-side='end'] {
     display: none;
   }
-  :scope[data-auto-collapsed-start] [data-part='side-toggle'][data-side='start'],
-  :scope[data-auto-collapsed-end] [data-part='side-toggle'][data-side='end'] {
+
+  /* ── GH #229 (SPEC-R14) — the mid-window overlay: an AUTO-collapsed side toggle-restores as the SAME
+     floating overlay anatomy as the band overlays (R9d + the #211 float treatment), keyed off BOTH
+     JS-owned attributes (`data-auto-collapsed-*` ∧ `data-narrow-open`) and, like the auto-collapse hide
+     above, UNconditional (no @container — JS already decided; the width sits above the band queries by
+     construction, since #syncFitCollapse never marks a side below its own line). Requiring the
+     auto-collapsed attribute keeps R9b's no-stale-X guarantee: `data-narrow-open` alone still paints
+     nothing outside the band queries. The pane-resizer is excluded exactly as in the band arms (it
+     shares its side's `data-side`; dragging doesn't apply to a floating side), so it stays hidden by
+     the auto-collapse rule above. Out of flow + inset within the middle row ⇒ the overlay never joins
+     the row's fit measurement (scrollWidth), so AC20's zero-overflow sweep and the auto-collapse
+     decision are both undisturbed by an open overlay. */
+  :scope[data-auto-collapsed-start][data-narrow-open='start'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']),
+  :scope[data-auto-collapsed-end][data-narrow-open='end'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) {
+    display: block;
+    position: absolute;
+    inset-block: var(--ui-super-shell-overlay-inset);
+    z-index: 2;
+    max-inline-size: calc(100cqi - var(--ui-super-shell-bar-size) - var(--ui-super-shell-overlay-inset));
+    box-shadow: var(--ui-super-shell-overlay-shadow);
+  }
+  :scope[data-auto-collapsed-start][data-narrow-open='start'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']) { inset-inline-start: var(--ui-super-shell-overlay-inset); }
+  :scope[data-auto-collapsed-end][data-narrow-open='end'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) { inset-inline-end: var(--ui-super-shell-overlay-inset); }
+  /* menu⇄X — the same swap as the band blocks; the auto-collapsed key is the stale-X guard here */
+  :scope[data-auto-collapsed-start][data-narrow-open='start'] [data-part='side-toggle'][data-side='start'] [data-glyph='menu'],
+  :scope[data-auto-collapsed-end][data-narrow-open='end'] [data-part='side-toggle'][data-side='end'] [data-glyph='menu'] {
     display: none;
+  }
+  :scope[data-auto-collapsed-start][data-narrow-open='start'] [data-part='side-toggle'][data-side='start'] [data-glyph='close'],
+  :scope[data-auto-collapsed-end][data-narrow-open='end'] [data-part='side-toggle'][data-side='end'] [data-glyph='close'] {
+    display: inline-flex;
+  }
+  /* scrim — shown while a mid-window overlay is open (z-index:1, below the overlay's z-index:2) */
+  :scope[data-auto-collapsed-start][data-narrow-open='start'] [data-part='scrim'],
+  :scope[data-auto-collapsed-end][data-narrow-open='end'] [data-part='scrim'] {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: rgb(0 0 0 / 0.32);
   }
 
   /* ── SPEC-R4: narrow (<40rem) auto-collapse — the QUERY alone hides sides (never the attrs, so a
