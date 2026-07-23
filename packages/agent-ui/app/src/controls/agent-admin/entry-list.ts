@@ -47,40 +47,24 @@ export interface EntryListSection {
   updateLibraries(libraries: readonly EntryLibraryPack[]): void
 }
 
-/** Build one kind's section shell (heading + list + collapsible add-form), once. `kindLabel` is the
- *  plural display name ("Skills", "Workflows", ...); `addLabel` is the add-toggle's own label text
- *  ("Add skill") — a bare word, no leading "+" — the toggle supplies its own leading `plus` icon
- *  adornment (TKT-0048), so the literal `+` character no longer belongs in the string. `handlers` are
- *  called on the corresponding user action — this module owns no store access of its own (the caller
- *  wires persistence, matching `agent-admin.ts`'s existing seam). */
+/** Build one kind's section shell (list + collapsible add-form), once — HEADLESS since GH #225: the
+ *  section's label AND its optional master switch both live on the caller's fold heading row now
+ *  (agent-admin.ts's `settingsItem`/`placeSummaryControl` — the ui-disclosure summary), so the old
+ *  `entry-section-heading` h3 / `entry-section-header` row (vision rev.5) retired with them. `addLabel`
+ *  is the add-toggle's own label text ("Add skill") — a bare word, no leading "+" — the toggle supplies
+ *  its own leading `plus` icon adornment (TKT-0048), so the literal `+` character no longer belongs in
+ *  the string. `handlers` are called on the corresponding user action — this module owns no store
+ *  access of its own (the caller wires persistence, matching `agent-admin.ts`'s existing seam). */
 export interface EntryListOptions {
   /** GH #47/#48 — packs offered by the add-from-library menu. Absent/empty ⇒ the affordance does not
    *  render at all (byte-identical section shell to before the option existed). */
   libraries?: readonly EntryLibraryPack[]
-  /** Vision rev.5 (Kim's Figma frame 33:1693) — a caller-owned control rendered in the section's header
-   *  row beside the heading (the capability kinds' MASTER switch). Absent ⇒ the bare `h3` shell,
-   *  byte-identical to before the option existed (prompt sections take that arm). The caller wires the
-   *  control's state/listeners; this module only places it. */
-  headerControl?: HTMLElement
 }
 
-export function mountEntryList(kind: string, kindLabel: string, addLabel: string, handlers: EntryListHandlers, options?: EntryListOptions): EntryListSection {
+export function mountEntryList(kind: string, addLabel: string, handlers: EntryListHandlers, options?: EntryListOptions): EntryListSection {
   const section = document.createElement('div')
   section.setAttribute('data-part', 'entry-section')
   section.setAttribute('data-kind', kind)
-
-  const heading = document.createElement('h3')
-  heading.setAttribute('data-part', 'entry-section-heading')
-  heading.textContent = kindLabel
-  if (options?.headerControl) {
-    // The vision frame's `[ heading | master switch ]` header row — one flex wrapper, CSS-owned gap.
-    const headerRow = document.createElement('div')
-    headerRow.setAttribute('data-part', 'entry-section-header')
-    headerRow.append(heading, options.headerControl)
-    section.append(headerRow)
-  } else {
-    section.append(heading)
-  }
 
   const list = document.createElement('div')
   list.setAttribute('data-part', 'entry-list')
