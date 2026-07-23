@@ -39,4 +39,30 @@ describe('ui-super-shell demo page — GH #205 auto-collapse retires the squeeze
     const endRail = demo.querySelector('[data-slot-name="global-options"]') as HTMLElement
     expect(getComputedStyle(endRail).display, 'the auto-collapsed end rail is genuinely absent from layout, not just scrolled off').toBe('none')
   })
+
+  // GH #229 (SPEC-R14, Kim's ruling) — the mid-window overlay on the REAL docs-site demo: the
+  // auto-collapsed END side's toggle stays visible and opens the side as the floating overlay (never an
+  // inline re-expansion), with the row still overflow-free. Runs against the SAME squeezed demo the test
+  // above left at 700px (vitest executes this file's tests in order; the precondition re-asserts it).
+  it('GH #229: the auto-collapsed END side keeps a visible toggle that opens the floating overlay — reachable, overflow-free', async () => {
+    const demo = document.querySelector<HTMLElement>('ui-super-shell.ss-demo')!
+    expect(demo.hasAttribute('data-auto-collapsed-end'), 'precondition: still squeezed to 700px with END auto-collapsed').toBe(true)
+
+    const endToggle = demo.querySelector('[data-part="side-toggle"][data-side="end"]') as HTMLElement
+    expect(endToggle, 'the demo authors a header, so the end toggle composes').not.toBeNull()
+    expect(getComputedStyle(endToggle).display, 'SPEC-R14a: the toggle stays VISIBLE for the auto-collapsed side').not.toBe('none')
+
+    endToggle.click()
+    await raf()
+    expect(demo.getAttribute('data-narrow-open'), 'the click opens the overlay state').toBe('end')
+    const endPane = demo.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    expect(getComputedStyle(endPane).display, 'the end pane paints').toBe('block')
+    expect(getComputedStyle(endPane).position, 'SPEC-R14b: as a floating overlay, never inline').toBe('absolute')
+    expect(demo.scrollWidth, 'SPEC-R14c: the row stays overflow-free with the overlay open').toBeLessThanOrEqual(demo.clientWidth + 1)
+    expect(demo.hasAttribute('data-auto-collapsed-end'), 'the auto-collapse decision does not oscillate under the open overlay').toBe(true)
+
+    demo.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    await raf()
+    expect(demo.hasAttribute('data-narrow-open'), 'Escape dismisses (leaves the page state clean for any later test)').toBe(false)
+  })
 })

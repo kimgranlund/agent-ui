@@ -151,6 +151,13 @@ export class UISuperShellElement extends UIElement {
   #overlayFocusTarget: { start?: HTMLElement; end?: HTMLElement } = {}
   #openerToggle: HTMLElement | null = null
   #bandObserver: ResizeObserver | null = null
+  // GH #220 — the per-side "resizer is inline-visible" truth as of the LAST #syncFitCollapse call
+  // (visible ⇔ not publicly collapsed ∧ not auto-collapsed ∧ not below the side's band line — exactly
+  // the states whose CSS hides the whole side, resizer included; every overlay arm excludes the
+  // resizer, so an overlay-open side still counts hidden). `null` until the first call records a
+  // baseline (mount's own trio sync is connected()'s explicit #syncResizerValues call, not a
+  // "transition" from nothing). Reset on disconnect (the #dragBaseline hygiene precedent).
+  #resizerShown: { start: boolean; end: boolean } | null = null
   // SPEC-R10b — the shell-owned scroll regions (pane boxes + active segments) captured ONCE at compose;
   // scrollFade is (re)wired from connected() on EVERY connect, because the trait rides host.effect (the
   // CONNECTION scope — it disposes at disconnect and must re-arm, the nav-rail.ts:106-121 `wired` precedent).
@@ -234,6 +241,7 @@ export class UISuperShellElement extends UIElement {
     this.#resizeHandle?.release() // ends any in-flight drag WITHOUT a commit (the ui-split precedent)
     this.#resizeHandle = null
     this.#dragBaseline = null
+    this.#resizerShown = null // GH #220 — reconnect re-baselines; connected()'s own at-rest sync covers it
     this.internals.states?.delete('dragging') // GH #185 — clear the baseline/state together, split.ts's own precedent
     this.#bandObserver?.disconnect()
     this.#bandObserver = null
@@ -419,8 +427,13 @@ export class UISuperShellElement extends UIElement {
       // `stack`/`tabs` side's toggle is CSS-hidden below the 40rem line (R9a), and above the line every
       // side takes the wide arm — so the below-line arm only ever runs for a collapse side (the old
       // `tabs` no-op guard + the stack-conflict overlay arm are now unreachable and gone).
+      // GH #229 (SPEC-R14, Kim's ruling) — the overlay ALSO arms in the band-line→natural-fit window:
+      // an AUTO-collapsed side (`data-auto-collapsed-*`, width above the line but below fit) opens as
+      // the same floating overlay — never an inline re-expansion, which cannot fit by construction
+      // (#syncFitCollapse would immediately re-collapse it). `data-auto-collapsed-*` is only ever set
+      // for a collapse-arm side above its line, so the two conditions never overlap.
       const narrowArm = side === 'start' ? this.narrowStart : this.narrowEnd
-      if (narrowArm === 'collapse' && this.#belowBandLine(side)) {
+      if (narrowArm === 'collapse' && (this.#belowBandLine(side) || this.hasAttribute(`data-auto-collapsed-${side}`))) {
         if (this.getAttribute('data-narrow-open') === side) this.#closeOverlay()
         else this.#openOverlay(side)
         return
@@ -447,8 +460,9 @@ export class UISuperShellElement extends UIElement {
     return width > 0 && width < lineRem * rootFontPx
   }
 
-  /** SPEC-R9d — open a side's narrow/compact overlay: set the single-value `data-narrow-open`, remember
-   *  the opener toggle (focus returns to it on close), move focus to the side's landing box, re-sync ARIA. */
+  /** SPEC-R9d — open a side's overlay (narrow/compact band, or the GH #229 auto-collapsed mid-window):
+   *  set the single-value `data-narrow-open`, remember the opener toggle (focus returns to it on close),
+   *  move focus to the side's landing box, re-sync ARIA. */
   #openOverlay(side: 'start' | 'end'): void {
     this.setAttribute('data-narrow-open', side)
     this.#openerToggle = this.querySelector<HTMLElement>(`[data-part="side-toggle"][data-side="${side}"]`)
@@ -457,24 +471,30 @@ export class UISuperShellElement extends UIElement {
   }
 
   /** SPEC-R9d — dismiss the open overlay (toggle re-tap, scrim tap, or Escape all route here): clear
-   *  `data-narrow-open`, return focus to the opener toggle, re-sync ARIA. Idempotent when nothing is open. */
-  #closeOverlay(): void {
+   *  `data-narrow-open`, return focus to the opener toggle, re-sync ARIA. Idempotent when nothing is open.
+   *  GH #229 review (MINOR-1) — `returnFocus: false` is the PASSIVE-release arm (#syncFitCollapse's
+   *  recompute clearing an open overlay on a band-exit / grow-past-fit resize): there the released side
+   *  stays VISIBLE inline at the new width and never passes display:none, so focus inside it simply
+   *  survives — yanking it to the toggle on a passive resize would be a focus steal from a still-visible
+   *  element. Only the USER dismissal paths keep the round-trip. */
+  #closeOverlay(returnFocus = true): void {
     if (!this.hasAttribute('data-narrow-open')) return
     this.removeAttribute('data-narrow-open')
-    this.#openerToggle?.focus()
+    if (returnFocus) this.#openerToggle?.focus()
     this.#openerToggle = null
     this.#syncAria()
   }
 
-  /** SPEC-R9c — the band-hygiene RO callback: if a side is overlay-open but the host is no longer below
-   *  THAT side's line (a resize back up past the band), clear the stale overlay; then re-sync ARIA.
-   *  GH #205 — every resize is also a fit re-check (the row's natural-fit arithmetic is a function of
-   *  live width, so a passive resize is exactly when the auto-collapse decision can flip either way). */
+  /** SPEC-R9c — the band-hygiene RO callback. GH #205 — every resize is also a fit re-check (the row's
+   *  natural-fit arithmetic is a function of live width, so a passive resize is exactly when the
+   *  auto-collapse decision can flip either way). GH #229 (SPEC-R14) — the fit recompute runs FIRST:
+   *  whether an open overlay is stale is now a function of the NEW width's auto-collapse decision
+   *  (#syncFitCollapse owns that release), so judging it off the pre-resize attributes here would
+   *  wrongly close a still-lawful mid-window overlay (or keep a stranded one). The ARIA re-sync then
+   *  reads the settled truth. */
   #onBandChange(): void {
-    const open = this.getAttribute('data-narrow-open') as 'start' | 'end' | null
-    if (open && !this.#belowBandLine(open)) this.#closeOverlay()
-    else this.#syncAria()
     this.#syncFitCollapse()
+    this.#syncAria()
   }
 
   // ── SPEC-R13b: measurement-based auto-collapse (GH #205) ──────────────────────────────────────────
@@ -489,9 +509,13 @@ export class UISuperShellElement extends UIElement {
    *  Internal, NON-reflected attributes (`data-auto-collapsed-start`/`-end`) — deliberately NEVER the
    *  public `collapsed-start`/`-end` props: this is ambient, JS-decided fallback layout, not a user
    *  choice, and must never masquerade as one (persisted state, `sizeStart`/`sizeEnd` round-trips,
-   *  etc. must never see it). CSS hides the side (and its toggle — no overlay-restore affordance: a
-   *  restored side has nowhere to go but back to not fitting, the R9a "no dead toggle" precedent) purely
-   *  off these attributes, unconditionally (no `@container` — JS already decided).
+   *  etc. must never see it). CSS hides the side purely off these attributes, unconditionally (no
+   *  `@container` — JS already decided). GH #229 (SPEC-R14, Kim's ruling) — the side's toggle STAYS
+   *  visible and opens the side as the floating OVERLAY (the R9d anatomy, keyed off
+   *  `data-auto-collapsed-* + data-narrow-open` in super-shell.css): the R9a "no dead toggle" law is
+   *  honored the other way around from the original #219 toggle-hide — the toggle is not dead, it is
+   *  the overlay affordance, exactly as below the band line. The overlay floats out of flow, so it
+   *  never joins this method's own fit measurement (no oscillation).
    *
    *  Reset-then-recompute EACH call (idempotent under repeat RO/effect firings): both sides are always
    *  re-examined from a clean slate, `end` first (the file's start-primacy convention read backwards —
@@ -512,17 +536,49 @@ export class UISuperShellElement extends UIElement {
       // this is the escalation-only-if-needed law, not a fixed two-side rule.
       if (middle.scrollWidth > middle.clientWidth + 1) this.setAttribute(`data-auto-collapsed-${side}`, '')
     }
+    // GH #229 (SPEC-R14c) — release: an overlay opened from the auto-collapsed mid-window state closes
+    // once this recompute no longer needs its side collapsed (the host grew past natural fit, or a
+    // public collapse freed the room) — the side returns to ordinary inline flow with no stranded
+    // `data-narrow-open` (and no stale X, #closeOverlay re-syncs ARIA). WITHOUT the focus return
+    // (review MINOR-1): on this passive path the released side stays VISIBLE — it never passes
+    // display:none, so focus inside it survives the transition intact; yanking it to the toggle here
+    // would be a focus steal on a mere resize. Below the band line the CSS band overlay owns the state
+    // instead, so a mid→narrow crossing keeps the SAME open state alive.
+    const open = this.getAttribute('data-narrow-open') as 'start' | 'end' | null
+    if (open && !this.#belowBandLine(open) && !this.hasAttribute(`data-auto-collapsed-${open}`)) this.#closeOverlay(false)
+    // GH #220 — a side restored from ANY hidden state re-syncs the separator's value trio (SPEC-R6b:
+    // the trio is part of the RENDERED separator, and #syncResizerValues' mount call correctly skipped
+    // it at width 0 while hidden). TRANSITION-scoped, never steady-state: #resolvePx costs two probe
+    // layouts per side per sync, so hanging this off every RO firing is banned — it runs only when a
+    // side's resizer-visibility actually flipped hidden→visible since the LAST call. One call site
+    // covers every restore path because they ALL funnel through this method: the public collapse
+    // effect (toggle/prop restore), the sizes effect (a persisted-size flip), and #onBandChange (the
+    // auto-collapse release leg AND the narrow→wide band-crossing restore — which flips no
+    // data-auto-collapsed-* attribute, only #belowBandLine, hence the visibility key rather than an
+    // attribute-flip key). Attribute reads for the public state (reflected synchronously by the prop
+    // setters) keep this from adding reactive edges beyond the #belowBandLine reads already above.
+    const shown = {
+      start: !this.hasAttribute('collapsed-start') && !this.hasAttribute('data-auto-collapsed-start') && !this.#belowBandLine('start'),
+      end: !this.hasAttribute('collapsed-end') && !this.hasAttribute('data-auto-collapsed-end') && !this.#belowBandLine('end'),
+    }
+    const was = this.#resizerShown
+    this.#resizerShown = shown
+    if (was !== null && ((shown.start && !was.start) || (shown.end && !was.end))) this.#syncResizerValues()
   }
 
   /** SPEC-R9c — aria-expanded truthful per band, per side: below its line it tracks `data-narrow-open`;
-   *  above it, the wide `!collapsed` effect. Attributes only (the R7c visibility-only survival law). */
+   *  above it, the wide `!collapsed` effect. GH #229 (SPEC-R14a) — an AUTO-collapsed side above its line
+   *  is in overlay mode too (its toggle drives the overlay, not the persisted wide state), so its
+   *  aria-expanded tracks `data-narrow-open` the same way the below-line arm does — a hidden-but-
+   *  "expanded" contradiction otherwise. Attributes only (the R7c visibility-only survival law). */
   #syncAria(): void {
     const narrowOpen = this.getAttribute('data-narrow-open')
     for (const side of ['start', 'end'] as const) {
       const toggle = this.querySelector<HTMLElement>(`[data-part="side-toggle"][data-side="${side}"]`)
       if (!toggle) continue
       const collapsed = side === 'start' ? this.collapsedStart : this.collapsedEnd
-      const expanded = this.#belowBandLine(side) ? narrowOpen === side : !collapsed
+      const overlayMode = this.#belowBandLine(side) || this.hasAttribute(`data-auto-collapsed-${side}`)
+      const expanded = overlayMode ? narrowOpen === side : !collapsed
       toggle.setAttribute('aria-expanded', String(expanded))
     }
   }
@@ -664,10 +720,13 @@ export class UISuperShellElement extends UIElement {
 
   /** GH #206 (independent-review MAJOR-2, SPEC-R6b) — the trio is part of the RENDERED separator's
    *  contract, not just its post-interaction state (#onResize/#handleResizerKeydown only ever write it
-   *  on a live drag/keypress). Called once, at rest (end of connected(), after #syncFitCollapse so an
-   *  auto-collapsed side's now-hidden resizer is correctly skipped). Width>0-guarded like every other
-   *  measurement read in this file, so jsdom's zero-width layout (or a genuinely display:none side)
-   *  never writes a garbage/misleading zero. */
+   *  on a live drag/keypress). Two call sites, both at-rest: the end of connected() (after
+   *  #syncFitCollapse so an auto-collapsed side's now-hidden resizer is correctly skipped), and — GH
+   *  #220 — #syncFitCollapse's own hidden→visible transition leg, so a side restored AFTER mount (a
+   *  public toggle/prop restore, an auto-collapse release, a narrow→wide band crossing) carries the
+   *  trio before its first interaction too. Width>0-guarded like every other measurement read in this
+   *  file, so jsdom's zero-width layout (or a genuinely display:none side) never writes a
+   *  garbage/misleading zero. */
   #syncResizerValues(): void {
     for (const side of ['start', 'end'] as const) {
       const sep = this.#frame?.querySelector<HTMLElement>(`[data-part="pane-resizer"][data-side="${side}"]`)
