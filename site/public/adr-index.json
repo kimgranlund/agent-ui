@@ -1083,5 +1083,12 @@
     "description": "ui-app-shell/ui-app-shell-region are DEPRECATED in favor of the ui-super-shell archetype family — the shell-archetypes LLD §7 fork ruled Option C (proposed — K…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0157",
+    "url": "./adr-index.html#adr-0157",
+    "description": "The anatomy-attribute axis vocabulary is FIXED as four axes: data-part = anatomy (which named role a node plays in its owner's built chrome — owner-stamped, de…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
