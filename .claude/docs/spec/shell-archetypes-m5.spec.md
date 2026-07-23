@@ -487,7 +487,10 @@ clause.
   open, and opening/closing it never flips the R13b auto-collapse decision (no oscillation). When
   a fit recompute clears the open side's auto-collapse (the host grew past natural fit, or a
   public collapse freed the room), the overlay releases — closed, ARIA re-synced, the side back in
-  ordinary inline flow, no stranded `data-narrow-open`. Crossing DOWN past the band line with the
+  ordinary inline flow, no stranded `data-narrow-open` — and focus UNMOVED: the released side is
+  visible at the new width and never passes display:none, so focus inside it survives; the R9d
+  focus round-trip belongs to the USER dismissal paths (scrim/Escape/re-tap) only, never to a
+  passive resize. Crossing DOWN past the band line with the
   overlay open hands the SAME open state to the R9d band overlay seamlessly (one attribute, two
   lawful widths); the below-band-line contract (R4/R9, AC15/AC16) is unchanged.
 
@@ -495,6 +498,9 @@ AC21 (extends §6) — in the band-line→natural-fit window with a side auto-co
 visible with `aria-expanded` tracking the overlay; clicking opens the floating overlay (side
 absolute + shadow + inset, canvas holds its floor, zero row overflow, scrim and X live); scrim tap
 and Escape each dismiss with focus returned to the toggle; growing past natural fit while open
-releases cleanly (auto-collapse attribute gone, `data-narrow-open` gone, side inline, no stale X);
-shrinking below the band line with the overlay open keeps it open under the R9d band rules; the
+releases cleanly (auto-collapse attribute gone, `data-narrow-open` gone, side inline, no stale X,
+focus left exactly where it was — never yanked to the toggle by a passive resize);
+shrinking below the band line with the overlay open keeps it open under the R9d band rules, and
+growing UP across the band line with the overlay open (still below natural fit) hands the same
+open state to the mid-window overlay; the
 below-band-line behavior is byte-identical to pre-R14. Cross-engine, END side proven explicitly.

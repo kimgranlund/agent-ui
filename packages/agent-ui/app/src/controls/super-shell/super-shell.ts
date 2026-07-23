@@ -463,11 +463,16 @@ export class UISuperShellElement extends UIElement {
   }
 
   /** SPEC-R9d — dismiss the open overlay (toggle re-tap, scrim tap, or Escape all route here): clear
-   *  `data-narrow-open`, return focus to the opener toggle, re-sync ARIA. Idempotent when nothing is open. */
-  #closeOverlay(): void {
+   *  `data-narrow-open`, return focus to the opener toggle, re-sync ARIA. Idempotent when nothing is open.
+   *  GH #229 review (MINOR-1) — `returnFocus: false` is the PASSIVE-release arm (#syncFitCollapse's
+   *  recompute clearing an open overlay on a band-exit / grow-past-fit resize): there the released side
+   *  stays VISIBLE inline at the new width and never passes display:none, so focus inside it simply
+   *  survives — yanking it to the toggle on a passive resize would be a focus steal from a still-visible
+   *  element. Only the USER dismissal paths keep the round-trip. */
+  #closeOverlay(returnFocus = true): void {
     if (!this.hasAttribute('data-narrow-open')) return
     this.removeAttribute('data-narrow-open')
-    this.#openerToggle?.focus()
+    if (returnFocus) this.#openerToggle?.focus()
     this.#openerToggle = null
     this.#syncAria()
   }
@@ -526,10 +531,13 @@ export class UISuperShellElement extends UIElement {
     // GH #229 (SPEC-R14c) — release: an overlay opened from the auto-collapsed mid-window state closes
     // once this recompute no longer needs its side collapsed (the host grew past natural fit, or a
     // public collapse freed the room) — the side returns to ordinary inline flow with no stranded
-    // `data-narrow-open` (and no stale X, #closeOverlay re-syncs ARIA). Below the band line the CSS
-    // band overlay owns the state instead, so a mid→narrow crossing keeps the SAME open state alive.
+    // `data-narrow-open` (and no stale X, #closeOverlay re-syncs ARIA). WITHOUT the focus return
+    // (review MINOR-1): on this passive path the released side stays VISIBLE — it never passes
+    // display:none, so focus inside it survives the transition intact; yanking it to the toggle here
+    // would be a focus steal on a mere resize. Below the band line the CSS band overlay owns the state
+    // instead, so a mid→narrow crossing keeps the SAME open state alive.
     const open = this.getAttribute('data-narrow-open') as 'start' | 'end' | null
-    if (open && !this.#belowBandLine(open) && !this.hasAttribute(`data-auto-collapsed-${open}`)) this.#closeOverlay()
+    if (open && !this.#belowBandLine(open) && !this.hasAttribute(`data-auto-collapsed-${open}`)) this.#closeOverlay(false)
   }
 
   /** SPEC-R9c — aria-expanded truthful per band, per side: below its line it tracks `data-narrow-open`;

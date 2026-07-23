@@ -159,10 +159,11 @@ toggle-restores as an overlay; `stack`/`tabs` sides keep the 40rem line regardle
 toggle law (SPEC-R9): a toggle composes only for an authored side, hides below 40rem for `stack`/`tabs`
 sides, carries both `list`/`x` glyphs CSS-swapped inside the band query, keeps `aria-expanded` truthful
 per band via ONE visibility-only `ResizeObserver`, and dismisses via scrim tap / Escape / re-tap with
-focus returned to the toggle (non-modal). Note: when that observer clears a STALE overlay on a pure
-band-exit resize (not a user dismissal), it routes through the same close helper and so moves focus to the
-opener toggle — deliberate, since the overlay pane it lived in is now hidden and focus would otherwise
-drop to `<body>`. The mid-window overlay (GH #229/SPEC-R14, Kim's ruling): between a side's band line
+focus returned to the toggle (non-modal). Note: the focus round-trip belongs to the USER dismissal
+paths only (scrim tap / Escape / toggle re-tap). A PASSIVE release — the fit recompute clearing an
+open overlay on a band-exit or grow-past-fit resize (GH #229 review MINOR-1) — closes WITHOUT moving
+focus: the released side is visible inline at the new width and never passes display:none, so focus
+inside it simply survives; moving it to the toggle there would be a focus steal on a mere resize. The mid-window overlay (GH #229/SPEC-R14, Kim's ruling): between a side's band line
 and the configuration's natural-fit width, a side hidden by the SPEC-R13b measurement-based
 auto-collapse keeps a visible toggle that opens it as the SAME floating overlay (scrim, X, Escape/scrim
 dismissal, focus round-trip) — never an inline re-expansion, which cannot fit; once a recompute clears

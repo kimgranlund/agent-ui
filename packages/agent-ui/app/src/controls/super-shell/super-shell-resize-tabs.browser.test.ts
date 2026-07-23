@@ -681,22 +681,49 @@ describe('ui-super-shell — GH #229 mid-window overlay (SPEC-R14): an auto-coll
     expect(document.activeElement, 'focus returns after Escape too').toBe(endToggle)
   })
 
-  it('R14c release: growing past natural fit with the overlay open closes it — auto-collapse cleared, side back INLINE, no stranded data-narrow-open, no stale X', async () => {
+  it('R14c release: growing past natural fit with the overlay open closes it — auto-collapse cleared, side back INLINE, no stranded data-narrow-open, no stale X, focus UNMOVED', async () => {
     const { el, middle } = mountDualResizableWithHeader(700)
     await settleFit(el)
     const endToggle = endToggleOf(el)
     endToggle.click()
     await settleFit(el)
     expect(el.getAttribute('data-narrow-open'), 'precondition: overlay open at 700px').toBe('end')
+    // Review MINOR-1 — plant focus INSIDE the overlaid pane (a user tabbed onto a control in it): the
+    // passive growth-release must NOT steal it back to the toggle — the pane stays visible throughout
+    // (it never passes display:none, only absolute→static), so focus inside it survives the release.
+    const optionsPane = middle.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    const inner = document.createElement('button')
+    inner.textContent = 'inside'
+    optionsPane.append(inner)
+    inner.focus()
+    expect(document.activeElement, 'precondition: focus is inside the overlaid pane').toBe(inner)
     el.style.inlineSize = '900px'
     await settleFit(el)
     expect(el.hasAttribute('data-auto-collapsed-end'), 'auto-collapse releases at 900px (above the 702px fit)').toBe(false)
     expect(el.hasAttribute('data-narrow-open'), 'the overlay closed WITH the release — nothing stranded').toBe(false)
-    const optionsPane = middle.querySelector('[data-slot-name="options-pane"]') as HTMLElement
     expect(getComputedStyle(optionsPane).display, 'the side is back in the row').not.toBe('none')
     expect(getComputedStyle(optionsPane).position, 'INLINE flow, not a leftover overlay').toBe('static')
+    expect(document.activeElement, 'focus did NOT move on the passive release — no steal to the toggle (review MINOR-1)').toBe(inner)
     expect(getComputedStyle(endToggle.querySelector('[data-glyph="close"]') as HTMLElement).display, 'no stale X at wide (R9b holds)').toBe('none')
     expect(endToggle.getAttribute('aria-expanded'), 'aria-expanded back on the wide !collapsed truth').toBe('true')
+  })
+
+  it('R14c continuity, UP-crossing: a narrow-band overlay grown into the mid-window (still below fit) continues as the mid-window overlay — same open state, side still floating', async () => {
+    const { el, middle } = mountDualResizableWithHeader(600) // below the 640px narrow line
+    await settleFit(el)
+    const endToggle = endToggleOf(el)
+    endToggle.click() // the R9d narrow-band overlay path (unchanged pre-R14 behavior)
+    await settleFit(el)
+    expect(el.getAttribute('data-narrow-open'), 'precondition: narrow-band overlay open at 600px').toBe('end')
+    expect(el.hasAttribute('data-auto-collapsed-end'), 'precondition: below the line the band query owns hiding, no auto-collapse attr').toBe(false)
+    el.style.inlineSize = '700px' // up into the mid-window: above the line, below the 702px natural fit
+    await settleFit(el)
+    expect(el.hasAttribute('data-auto-collapsed-end'), 'the mechanism marks END auto-collapsed at the new width').toBe(true)
+    expect(el.getAttribute('data-narrow-open'), 'the SAME open state survives the up-crossing (one attribute, two lawful widths)').toBe('end')
+    const optionsPane = middle.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    expect(getComputedStyle(optionsPane).display, 'the side still paints').toBe('block')
+    expect(getComputedStyle(optionsPane).position, 'now the mid-window overlay renders it — still floating, never inline').toBe('absolute')
+    expect(middle.scrollWidth, 'and still zero row overflow').toBeLessThanOrEqual(middle.clientWidth + 1)
   })
 
   it('R14c continuity: crossing DOWN past the band line with the overlay open hands the SAME open state to the R9d band overlay; below-line behavior itself is unchanged', async () => {
