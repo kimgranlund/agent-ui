@@ -76,6 +76,26 @@
 // count/score summaries (the OTHER half of Fork 1) ship as a documented `trailing`-slot consumer-content
 // pattern instead — see the doc page + status-stream.md for why (a real DOM conflict with the ADR-0143
 // collapsed-summary auto-fill, found while building this).
+//
+// GH #238/#239/ADR-0159 (Kim's 2026-07-23 receipt-pattern ruling) adds TWO OPT-IN reflected boolean props,
+// `oneline` and `receipt` — both default false, so every existing consumer renders byte-identically (no
+// new DOM, no new listeners' observable effects, no state writes) until it opts in:
+//   · `oneline` — while the stream is un-settled, it renders as ONE morphing line: the header row (grown a
+//     `header-meta` elapsed cell + a `header-caret` affordance) shows the CURRENT step's live label + a
+//     ticking turn-elapsed display, and the entry list is hidden (`:state(collapsed)` in CSS). The line is
+//     a REAL disclosure — click or Enter/Space expands the full step list mid-turn, and collapses it back.
+//   · `receipt` — when the turn reaches a terminal state (`finalize()`/`fail()`), the stream auto-collapses
+//     to a one-line receipt: the static `label` + "N steps · total-elapsed" in the meta cell + the settled
+//     outcome glyph (the F8 header's own escalated status — `fail()`'s forced `error` stays loud). Click
+//     re-expands the full trace. Without `receipt`, a settled `oneline` stream auto-EXPANDS instead (the
+//     always-expanded terminal shape every pre-existing consumer keeps).
+// Both modes MATERIALIZE the header row (it IS the one line) even when the `header` prop is false; the
+// `header` prop's own semantics are unchanged. The disclosure state lives in a `collapsed` custom state
+// (`internals.states`, the timeline-item `:state(truncated)` precedent) + `aria-expanded` on the header
+// row (`role="button"`, `tabindex="0"` — keyboard-operable, only in the opted-in modes). Announcement
+// discipline: `role=log`'s additions-only relevance means the morphing line's textContent mutations and a
+// settled entry's done-label re-stamp (GH #238, the consumer's pair table) never re-announce — no
+// double-fire on label transitions, by the same construction the file header documents.
 
 import { UIContainerElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import { UITimelineItemElement } from '../timeline-item/timeline-item.ts' // constructs items via its own API (F4)
@@ -183,6 +203,17 @@ export function formatElapsed(ms: number): string {
   return `${minutes}m ${seconds}s`
 }
 
+/** GH #239/ADR-0159 — render the receipt's TOTAL turn duration. Under ten seconds a whole-second display
+ *  would erase most real turns ("3.2s" → "3s" → sometimes "0s"), so the sub-10s band keeps one decimal —
+ *  the issue's own "Agent activity · 5 steps · 3.2s" shape; at/past 10s it delegates to `formatElapsed`
+ *  (the SAME "32s"/"1m 12s" shape every ticking entry already shows — one vocabulary, not two). Pure +
+ *  exported for direct unit-testing (the `formatElapsed` precedent). */
+export function formatTotalElapsed(ms: number): string {
+  const clamped = Math.max(0, ms)
+  if (clamped < 10_000) return `${(clamped / 1000).toFixed(1)}s`
+  return formatElapsed(clamped)
+}
+
 const SIZE = ['sm', 'md', 'lg'] as const
 const props = {
   size: { ...prop.enum(SIZE, 'md'), reflect: true },
@@ -191,6 +222,10 @@ const props = {
   // renders byte-identically (no header DOM) until it opts in. When true, the header shows the label + the
   // live escalated overall status, pinned outside the scroll region.
   header: { ...prop.boolean(false), reflect: true },
+  // GH #239/ADR-0159 — the two receipt-pattern opt-ins (file header). Both reflected, default false: every
+  // existing consumer keeps its always-expanded shape byte-identically until it opts in.
+  oneline: { ...prop.boolean(false), reflect: true },
+  receipt: { ...prop.boolean(false), reflect: true },
 } satisfies PropsSchema
 
 // The stick-to-bottom threshold (px) — "at/near the bottom" tolerates sub-pixel/rounding scroll noise
@@ -213,6 +248,17 @@ export class UIStatusStreamElement extends UIContainerElement {
   #header: HTMLElement | null = null
   #headerMarker: HTMLElement | null = null
   #headerLabel: HTMLElement | null = null
+
+  // ── the receipt pattern (GH #238/#239/ADR-0159) ─────────────────────────────────────────────────────
+  // The one-line/receipt collapse state + the turn clock. All inert (never written, no DOM) unless
+  // `oneline`/`receipt` is set — the opt-in byte-identical guarantee.
+  #headerMeta: HTMLElement | null = null // the "12s" / "5 steps · 3.2s" cell — exists only when opted in
+  #headerCaret: HTMLElement | null = null // the expand/collapse affordance — exists only when opted in
+  #collapsed = false // the disclosure state (mirrored to :state(collapsed) + aria-expanded)
+  #userToggled = false // a user's explicit toggle wins over the oneline auto-collapse until the turn settles
+  #turnStartMs: number | null = null // the turn clock's anchor — stamped at the FIRST appendEntry
+  #totalMs: number | null = null // frozen at settle: the receipt's total elapsed
+  #currentKey: string | undefined // the most recent entry to go `active` — the morphing line's subject
   // The turn's completion state — drives the header's F8 rule (working-floor while un-finalized; the
   // settled escalation once finalized; forced `error` once failed).
   #finalized = false
@@ -236,15 +282,33 @@ export class UIStatusStreamElement extends UIContainerElement {
   protected connected(): void {
     this.effect(() => {
       this.internals.ariaLabel = this.label === '' ? null : this.label
-      this.#syncHeaderLabel() // the header shows the SAME label VISIBLY when opted in (F8)
+      this.#refreshLine() // the header shows the SAME label VISIBLY when opted in (F8; morphing per ADR-0159)
     })
     // Create/remove the header as `header` toggles — default false renders byte-identically to a headerless
-    // strip (no header DOM at all, the F8 zero-regression guarantee).
+    // strip (no header DOM at all, the F8 zero-regression guarantee). GH #239/ADR-0159: `oneline`/`receipt`
+    // ALSO materialize the header row (it IS the one line/receipt), and (de)arm the disclosure affordances +
+    // the oneline auto-collapse — all gated so a non-opted-in stream is byte-identical.
     this.effect(() => {
-      if (this.header) this.#ensureHeader()
+      if (this.header || this.oneline || this.receipt) this.#ensureHeader()
       else this.#removeHeader()
+      this.#refreshDisclosure()
     })
     this.listen(this, 'scroll', () => this.#trackStickToBottom())
+    // GH #239/ADR-0159 — the disclosure interaction, DELEGATED from the host (connection-scoped, so it
+    // survives disconnect/reconnect where a header-attached listener would silently die: `#ensureHeader`
+    // early-returns on reconnect and would never re-attach). Inert unless an opt-in mode is active.
+    this.listen(this, 'click', (e) => {
+      if (!this.#collapsible()) return
+      if (this.#header && this.#header.contains(e.target as Node)) this.#setCollapsed(!this.#collapsed, true)
+    })
+    this.listen(this, 'keydown', (e) => {
+      if (!this.#collapsible()) return
+      const key = (e as KeyboardEvent).key
+      if ((key === 'Enter' || key === ' ') && e.target === this.#header) {
+        e.preventDefault() // Space must not scroll the page while the header row has focus
+        this.#setCollapsed(!this.#collapsed, true)
+      }
+    })
   }
 
   /** GH #147/ADR-0153 Fork 1 — stop the shared ticking interval on disconnect (zero residue after removal,
@@ -303,10 +367,17 @@ export class UIStatusStreamElement extends UIContainerElement {
     // (the `parent` precedent). Both are keyed side-registries so a later `update()` reaches them identically.
     if (entry.startedAt !== undefined) this.#startedAtOf.set(entry.key, entry.startedAt)
     if (entry.action !== undefined) this.#actionOf.set(entry.key, entry.action)
+
+    // GH #239/ADR-0159 — the turn clock anchors at the FIRST observed entry (the first factual "work
+    // began" signal this host sees — never fabricated), and an `active` arrival becomes the morphing
+    // line's subject. Both are inert bookkeeping for a non-opted-in stream.
+    this.#turnStartMs ??= Date.now()
+    if (item.status === 'active') this.#currentKey = entry.key
     this.#refreshTicking()
     this.#renderAction(item, entry.key)
 
     this.#refreshHeader() // the escalation may have changed (a mid-turn error/warning flips the header)
+    this.#refreshLine()
     this.#tailFollow(item)
     return item
   }
@@ -328,6 +399,10 @@ export class UIStatusStreamElement extends UIContainerElement {
     if (patch.action !== undefined) this.#actionOf.set(key, patch.action)
     if (patch.startedAt !== undefined || patch.status !== undefined) this.#refreshTicking()
     if (patch.action !== undefined || patch.status !== undefined) this.#renderAction(item, key)
+    // GH #239/ADR-0159 — a transition TO `active` re-targets the morphing line at this entry; a label/status
+    // patch repaints the line (a textContent mutation on an existing cell — role=log never re-announces it).
+    if (patch.status === 'active') this.#currentKey = key
+    if (patch.status !== undefined || patch.label !== undefined) this.#refreshLine()
     if (this.#growsTail(patch)) this.#tailFollow(item)
   }
 
@@ -369,6 +444,16 @@ export class UIStatusStreamElement extends UIContainerElement {
     // write), so the plain `item.status === 'active'` ticking-eligibility check alone would NOT stop here —
     // this explicit stop is what actually enforces "never a forever-ticking clock past resolution."
     this.#stopTicking()
+    // GH #239/ADR-0159 — the terminal receipt: freeze the turn clock, then `receipt` auto-collapses to the
+    // one-line receipt (label + "N steps · total" + the settled outcome glyph — `fail()`'s forced `error`
+    // stays loud through the SAME header status ink/glyph), while `oneline` WITHOUT `receipt` auto-EXPANDS
+    // back to the always-expanded terminal shape. The auto move clears `#userToggled` — post-settle the
+    // disclosure toggles freely both ways.
+    if (this.#turnStartMs !== null) this.#totalMs = Date.now() - this.#turnStartMs
+    this.#userToggled = false
+    if (this.receipt) this.#setCollapsed(true, false)
+    else if (this.oneline) this.#setCollapsed(false, false)
+    this.#refreshLine()
   }
 
   /** The entry → item projection — sets only the provided fields onto the item's typed props; `text`
@@ -466,11 +551,19 @@ export class UIStatusStreamElement extends UIContainerElement {
     return false
   }
 
+  /** GH #239/ADR-0159 — whether the ONE-LINE turn-elapsed display should be ticking: opted into `oneline`,
+   *  un-settled, and the turn clock has an anchor (a first entry was observed). Rides the SAME shared
+   *  interval the ADR-0153 per-entry ticking already owns — never a second clock. */
+  #lineTicking(): boolean {
+    return this.oneline && !this.#finalized && !this.#failed && this.#turnStartMs !== null
+  }
+
   /** Lazily (de)arm the ONE shared per-host interval: start it (painting once immediately, so a freshly-
    *  started entry never waits a full tick to show its first elapsed value) the moment any tracked entry
-   *  becomes ticking-eligible; clear it the moment none remain (never an idle interval ticking nothing). */
+   *  becomes ticking-eligible; clear it the moment none remain (never an idle interval ticking nothing).
+   *  GH #239/ADR-0159: the one-line turn-elapsed display shares this exact interval. */
   #refreshTicking(): void {
-    const eligible = this.#hasActiveTicking()
+    const eligible = this.#hasActiveTicking() || this.#lineTicking()
     if (eligible && this.#tickHandle === null) {
       this.#tick()
       this.#tickHandle = setInterval(() => this.#tick(), 1000)
@@ -501,7 +594,10 @@ export class UIStatusStreamElement extends UIContainerElement {
       if (Number.isNaN(startMs)) continue
       this.#assign(item, { timestamp: formatElapsed(now - startMs) })
     }
-    if (!this.#hasActiveTicking()) this.#stopTicking()
+    // GH #239/ADR-0159 — the one-line turn-elapsed repaint (a metadata-only textContent mutation on the
+    // header's meta cell — never a tail-follow trigger, never an announcement; the per-entry discipline).
+    if (this.#lineTicking() && this.#headerMeta) this.#headerMeta.textContent = formatElapsed(now - this.#turnStartMs!)
+    if (!this.#hasActiveTicking() && !this.#lineTicking()) this.#stopTicking()
   }
 
   // ── the inline retry/action affordance (GH #147/ADR-0153 Fork 2) ────────────────────────────────────────
@@ -555,7 +651,7 @@ export class UIStatusStreamElement extends UIContainerElement {
     this.#headerMarker = marker
     this.#headerLabel = label
     this.insertBefore(header, this.firstChild) // FIRST child — before any already-appended entry
-    this.#syncHeaderLabel()
+    this.#refreshLine()
     this.#refreshHeader()
   }
 
@@ -566,11 +662,106 @@ export class UIStatusStreamElement extends UIContainerElement {
     this.#header = null
     this.#headerMarker = null
     this.#headerLabel = null
+    this.#headerMeta = null
+    this.#headerCaret = null
   }
 
-  /** Paint the CURRENT label into the header (a no-op before the header exists / when not opted in). */
-  #syncHeaderLabel(): void {
-    if (this.#headerLabel) this.#headerLabel.textContent = this.label
+  // ── the receipt pattern (GH #238/#239/ADR-0159) — the disclosure + the morphing line ────────────────
+
+  #collapsible(): boolean {
+    return this.oneline || this.receipt
+  }
+
+  #settled(): boolean {
+    return this.#finalized || this.#failed
+  }
+
+  /** Flip the disclosure state: the `collapsed` custom state (CSS hides the entry list through it — the
+   *  timeline-item `:state(truncated)` precedent, optional-chained for jsdom) + `aria-expanded` on the
+   *  header row. `fromUser` marks an explicit toggle, which the `oneline` auto-collapse then respects
+   *  until the turn settles (never yanking a deliberately-opened trace shut mid-turn). */
+  #setCollapsed(collapsed: boolean, fromUser: boolean): void {
+    if (fromUser) this.#userToggled = true
+    if (this.#collapsed === collapsed) return
+    this.#collapsed = collapsed
+    if (collapsed) this.internals.states?.add('collapsed')
+    else this.internals.states?.delete('collapsed')
+    this.#header?.setAttribute('aria-expanded', String(!collapsed))
+    this.#refreshLine()
+  }
+
+  /** (De)arm the header row's disclosure affordances as the opt-in props flip — `role="button"` +
+   *  `tabindex="0"` + `aria-expanded` + the caret/meta cells exist ONLY in an opted-in mode (a plain
+   *  `header`-prop consumer's header row stays byte-identical: marker + label, no interactive semantics).
+   *  Also applies the `oneline` initial collapse (un-settled, not user-overridden). */
+  #refreshDisclosure(): void {
+    const header = this.#header
+    if (!header) {
+      // No header ⇒ no disclosure state can persist — an un-opted stream never carries the custom state.
+      if (this.#collapsed) this.#setCollapsed(false, false)
+      return
+    }
+    if (this.#collapsible()) {
+      header.setAttribute('role', 'button')
+      header.setAttribute('tabindex', '0')
+      header.setAttribute('aria-expanded', String(!this.#collapsed))
+      if (!this.#headerCaret) {
+        const caret = document.createElement('span')
+        caret.dataset.part = 'header-caret'
+        const svg = resolveIcon('caret-down')
+        svg.setAttribute('data-role', 'marker') // the header-marker glyph-tagging precedent
+        caret.append(svg)
+        header.append(caret)
+        this.#headerCaret = caret
+      }
+      if (!this.#headerMeta) {
+        const meta = document.createElement('span')
+        meta.dataset.part = 'header-meta'
+        header.insertBefore(meta, this.#headerCaret)
+        this.#headerMeta = meta
+      }
+      // The oneline live posture: collapsed while un-settled, unless the user explicitly expanded.
+      if (this.oneline && !this.#settled() && !this.#userToggled && !this.#collapsed) this.#setCollapsed(true, false)
+      this.#refreshTicking() // arming `oneline` may start the line clock mid-turn
+    } else {
+      header.removeAttribute('role')
+      header.removeAttribute('tabindex')
+      header.removeAttribute('aria-expanded')
+      this.#headerCaret?.remove()
+      this.#headerCaret = null
+      this.#headerMeta?.remove()
+      this.#headerMeta = null
+      if (this.#collapsed) this.#setCollapsed(false, false)
+    }
+    this.#refreshLine()
+  }
+
+  /** Paint the header's label + meta cells under the receipt-pattern rules (a no-op before the header
+   *  exists). The label cell MORPHS to the current step's live label only while `oneline`, collapsed and
+   *  un-settled; everywhere else it shows the static `label` (the F8 shape). The meta cell shows the
+   *  ticking turn-elapsed while `oneline` runs, and the "N steps · total" receipt once settled. Every
+   *  write here is a textContent mutation on an existing cell — role=log's additions-only relevance means
+   *  none of it announces (no double-fire on label transitions, GH #239's a11y requirement). */
+  #refreshLine(): void {
+    const label = this.#headerLabel
+    if (label) {
+      const morphing = this.oneline && this.#collapsed && !this.#settled()
+      const current = this.#currentKey !== undefined ? this.#byKey.get(this.#currentKey)?.label : undefined
+      label.textContent = morphing && current !== undefined && current !== '' ? current : this.label
+    }
+    const meta = this.#headerMeta
+    if (meta) {
+      if (this.#settled()) {
+        const count = this.#byKey.size
+        const steps = count === 0 ? '' : `${count} ${count === 1 ? 'step' : 'steps'}`
+        const total = this.#totalMs !== null ? formatTotalElapsed(this.#totalMs) : ''
+        meta.textContent = steps === '' ? '' : total === '' ? steps : `${steps} · ${total}`
+      } else if (this.#lineTicking()) {
+        meta.textContent = formatElapsed(Date.now() - this.#turnStartMs!)
+      } else {
+        meta.textContent = ''
+      }
+    }
   }
 
   /** Recompute + paint the header's overall status (a no-op before the header exists). Called at every
@@ -620,6 +811,7 @@ export class UIStatusStreamElement extends UIContainerElement {
    *  `scrollIntoView` is guarded (absent in jsdom, the test environment's own gap — a real browser always
    *  has it) so the imperative API stays jsdom-safe without changing browser behaviour at all. */
   #tailFollow(item: UITimelineItemElement): void {
+    if (this.#collapsed) return // GH #239/ADR-0159 — a hidden entry list never drives the viewport
     if (!this.#stuckToBottom) return
     requestAnimationFrame(() =>
       requestAnimationFrame(() => {

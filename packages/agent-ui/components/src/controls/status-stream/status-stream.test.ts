@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { whenFlushed } from '@agent-ui/components'
-import { UIStatusStreamElement, escalateStatus, formatElapsed, HEADER_STATUS_GLYPH, type ItemStatus } from './status-stream.ts'
+import { UIStatusStreamElement, escalateStatus, formatElapsed, formatTotalElapsed, HEADER_STATUS_GLYPH, type ItemStatus } from './status-stream.ts'
 import { UITimelineItemElement } from '../timeline-item/timeline-item.ts'
 import { UITimelineElement } from '../timeline/timeline.ts'
 
@@ -713,6 +713,249 @@ describe('ui-status-stream — StatusEntry.action renders a <ui-button> in [data
     el.update('r1', { description: 'more detail' })
     const item = el.querySelector('[data-key="r1"]') as UITimelineItemElement
     expect(item.querySelector(':scope > [data-role="action"] ui-button')?.textContent).toBe('Retry')
+    el.remove()
+  })
+})
+
+// ── GH #238/#239/ADR-0159 — the receipt pattern (oneline + receipt, both OPT-IN) ──────────────────────────
+
+describe('formatTotalElapsed — the receipt total (GH #239/ADR-0159)', () => {
+  it('keeps one decimal under ten seconds (the "3.2s" receipt shape) and clamps negatives to 0.0s', () => {
+    expect(formatTotalElapsed(3200)).toBe('3.2s')
+    expect(formatTotalElapsed(0)).toBe('0.0s')
+    expect(formatTotalElapsed(-50)).toBe('0.0s')
+    expect(formatTotalElapsed(9949)).toBe('9.9s')
+  })
+
+  it('delegates to formatElapsed at/past ten seconds — ONE display vocabulary with the ticking entries', () => {
+    expect(formatTotalElapsed(10_000)).toBe(formatElapsed(10_000))
+    expect(formatTotalElapsed(32_000)).toBe('32s')
+    expect(formatTotalElapsed(72_000)).toBe('1m 12s')
+  })
+})
+
+/** A stream with the receipt-pattern opt-ins already materialized (the effect runs on connect, flushed). */
+async function makeReceiptStream(opts: { oneline?: boolean; receipt?: boolean; label?: string }): Promise<{
+  el: UIStatusStreamElement
+  header: () => HTMLElement | null
+  labelCell: () => HTMLElement | null
+  meta: () => HTMLElement | null
+}> {
+  const el = document.createElement('ui-status-stream') as UIStatusStreamElement
+  el.label = opts.label ?? 'Agent activity'
+  if (opts.oneline) el.oneline = true
+  if (opts.receipt) el.receipt = true
+  document.body.append(el)
+  await whenFlushed()
+  return {
+    el,
+    header: () => el.querySelector('[data-part="header"]'),
+    labelCell: () => el.querySelector('[data-part="header-label"]'),
+    meta: () => el.querySelector('[data-part="header-meta"]'),
+  }
+}
+
+describe('ui-status-stream — the opt-in default-off guarantee (GH #239: absent props ⇒ byte-identical)', () => {
+  it('a default stream renders NO header, NO meta/caret cells, NO disclosure semantics', () => {
+    const { el } = makeStream()
+    el.appendEntry({ key: 'a', status: 'active', label: 'Working…' })
+    expect(el.querySelector('[data-part="header"]')).toBeNull()
+    expect(el.querySelector('[data-part="header-meta"]')).toBeNull()
+    expect(el.querySelector('[data-part="header-caret"]')).toBeNull()
+    el.remove()
+  })
+
+  it('a header-prop-only stream keeps its F8 shape byte-identically: marker + label, no role/tabindex/aria-expanded, no meta/caret', async () => {
+    const { el, header } = await makeHeaderStream()
+    el.appendEntry({ key: 'a', status: 'active', label: 'Working…' })
+    const h = header()!
+    expect(h.hasAttribute('role')).toBe(false)
+    expect(h.hasAttribute('tabindex')).toBe(false)
+    expect(h.hasAttribute('aria-expanded')).toBe(false)
+    expect([...h.children].map((c) => c.getAttribute('data-part'))).toEqual(['header-marker', 'header-label'])
+    // and clicking the header does nothing observable — no state, no attribute change
+    h.dispatchEvent(new Event('click', { bubbles: true }))
+    expect(h.hasAttribute('aria-expanded')).toBe(false)
+    el.remove()
+  })
+})
+
+describe('ui-status-stream — oneline: the LIVE one-morphing-line mode (GH #239/ADR-0159)', () => {
+  it('materializes the header row even when `header` is false, as a real collapsed disclosure (role=button, tabindex=0, aria-expanded=false)', async () => {
+    const { el, header } = await makeReceiptStream({ oneline: true })
+    const h = header()
+    expect(h, 'oneline materializes the header row — it IS the one line').not.toBeNull()
+    expect(h!.getAttribute('role')).toBe('button')
+    expect(h!.getAttribute('tabindex')).toBe('0')
+    expect(h!.getAttribute('aria-expanded'), 'starts collapsed while live').toBe('false')
+    expect(el.querySelector('[data-part="header-caret"]'), 'the expand affordance exists').not.toBeNull()
+    el.remove()
+  })
+
+  it('the line MORPHS: it shows the current active step\'s live label, following each transition, and never creates new label nodes (the no-double-fire discipline)', async () => {
+    const { el, labelCell } = await makeReceiptStream({ oneline: true })
+    const cell = labelCell()!
+    expect(cell.textContent, 'no entry yet — the static label').toBe('Agent activity')
+
+    el.appendEntry({ key: 's1', status: 'active', label: 'Validating…' })
+    expect(cell.textContent).toBe('Validating…')
+
+    el.update('s1', { status: 'done', label: 'Validated' })
+    el.appendEntry({ key: 's2', status: 'active', label: 'Opening a new surface…' })
+    expect(cell.textContent, 'morphs to the newest active step').toBe('Opening a new surface…')
+
+    expect(labelCell(), 'the SAME cell node throughout — textContent mutations only, which role=log additions-relevance never announces').toBe(cell)
+    el.remove()
+  })
+
+  it('click expands mid-turn (aria-expanded=true) and a second click collapses again; Enter and Space work on the focused header row', async () => {
+    const { el, header } = await makeReceiptStream({ oneline: true })
+    el.appendEntry({ key: 's1', status: 'active', label: 'Working…' })
+    const h = header()!
+    h.dispatchEvent(new Event('click', { bubbles: true }))
+    expect(h.getAttribute('aria-expanded'), 'click expands the full step list while still running').toBe('true')
+    h.dispatchEvent(new Event('click', { bubbles: true }))
+    expect(h.getAttribute('aria-expanded')).toBe('false')
+
+    h.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+    expect(h.getAttribute('aria-expanded'), 'Enter toggles').toBe('true')
+    h.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }))
+    expect(h.getAttribute('aria-expanded'), 'Space toggles').toBe('false')
+    el.remove()
+  })
+
+  it('the meta cell ticks the TURN elapsed (anchored at the first appendEntry) once per second, sharing the ADR-0153 interval', async () => {
+    vi.useFakeTimers()
+    const now = new Date('2026-07-23T00:00:00.000Z')
+    vi.setSystemTime(now)
+    const { el, meta } = await makeReceiptStream({ oneline: true })
+    expect(meta()!.textContent, 'no entry yet — no clock (never fabricated)').toBe('')
+
+    el.appendEntry({ key: 's1', status: 'active', label: 'Working…' })
+    expect(meta()!.textContent, 'painted immediately at the anchor').toBe('0s')
+    vi.advanceTimersByTime(2000)
+    expect(meta()!.textContent).toBe('2s')
+    el.remove()
+  })
+
+  it('a settled oneline stream WITHOUT receipt auto-EXPANDS (the always-expanded terminal shape)', async () => {
+    const { el, header } = await makeReceiptStream({ oneline: true })
+    el.appendEntry({ key: 's1', status: 'active', label: 'Working…' })
+    expect(header()!.getAttribute('aria-expanded')).toBe('false')
+    el.finalize()
+    expect(header()!.getAttribute('aria-expanded'), 'no receipt ⇒ the settled trace expands').toBe('true')
+    el.remove()
+  })
+
+  it('a user\'s explicit mid-turn expand is respected — later entries never yank it shut', async () => {
+    const { el, header } = await makeReceiptStream({ oneline: true })
+    el.appendEntry({ key: 's1', status: 'active', label: 'Working…' })
+    const h = header()!
+    h.dispatchEvent(new Event('click', { bubbles: true }))
+    expect(h.getAttribute('aria-expanded')).toBe('true')
+    el.appendEntry({ key: 's2', status: 'active', label: 'Next step…' })
+    el.update('s2', { status: 'done' })
+    expect(h.getAttribute('aria-expanded'), 'stays expanded through appends/updates').toBe('true')
+    el.remove()
+  })
+})
+
+describe('ui-status-stream — receipt: the TERMINAL one-line receipt (GH #239/ADR-0159)', () => {
+  it('stays expanded while live (no oneline), then finalize() auto-collapses to label + "N steps · total" + the settled glyph', async () => {
+    vi.useFakeTimers()
+    const now = new Date('2026-07-23T00:00:00.000Z')
+    vi.setSystemTime(now)
+    const { el, header, labelCell, meta } = await makeReceiptStream({ receipt: true })
+    const h = header()!
+    expect(h.getAttribute('aria-expanded'), 'receipt-only: live phase stays expanded').toBe('true')
+
+    el.appendEntry({ key: 's1', status: 'active', label: 'Validating…' })
+    el.update('s1', { status: 'done', label: 'Validated' })
+    el.appendEntry({ key: 's2', status: 'active', label: 'Opening a new surface…' })
+    el.update('s2', { status: 'done', label: 'Opened a new surface' })
+    vi.advanceTimersByTime(3200)
+    el.finalize()
+
+    expect(h.getAttribute('aria-expanded'), 'terminal auto-collapse').toBe('false')
+    expect(labelCell()!.textContent, 'the receipt line reads the static label, not a step label').toBe('Agent activity')
+    expect(meta()!.textContent, 'step count + total elapsed, from the real turn clock').toBe('2 steps · 3.2s')
+    expect(h.getAttribute('data-status'), 'the settled outcome glyph state').toBe('done')
+    el.remove()
+  })
+
+  it('click re-expands the settled trace (and collapses it again) — the receipt is a real disclosure', async () => {
+    const { el, header } = await makeReceiptStream({ receipt: true })
+    el.appendEntry({ key: 's1', status: 'done', label: 'Validated' })
+    el.finalize()
+    const h = header()!
+    expect(h.getAttribute('aria-expanded')).toBe('false')
+    h.dispatchEvent(new Event('click', { bubbles: true }))
+    expect(h.getAttribute('aria-expanded'), 'the full trace re-opens').toBe('true')
+    h.dispatchEvent(new Event('click', { bubbles: true }))
+    expect(h.getAttribute('aria-expanded')).toBe('false')
+    el.remove()
+  })
+
+  it('fail() collapses to a LOUD receipt — the header keeps its forced error state', async () => {
+    const { el, header } = await makeReceiptStream({ receipt: true })
+    el.appendEntry({ key: 's1', status: 'active', label: 'Working…' })
+    el.fail()
+    const h = header()!
+    expect(h.getAttribute('aria-expanded')).toBe('false')
+    expect(h.getAttribute('data-status'), 'error stays loud on the receipt line').toBe('error')
+    el.remove()
+  })
+
+  it('a single step reads the singular "1 step · …"; an empty settled stream shows no fabricated count', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-07-23T00:00:00.000Z'))
+    const { el, meta } = await makeReceiptStream({ receipt: true })
+    el.appendEntry({ key: 'only', status: 'done', label: 'Validated' })
+    vi.advanceTimersByTime(500)
+    el.finalize()
+    expect(meta()!.textContent).toBe('1 step · 0.5s')
+    el.remove()
+
+    const empty = await makeReceiptStream({ receipt: true })
+    empty.el.finalize()
+    expect(empty.meta()!.textContent, 'zero entries ⇒ an empty meta, never "0 steps" of invented work').toBe('')
+    empty.el.remove()
+  })
+
+  it('oneline + receipt together: collapsed while live (morphing), collapsed at terminal (receipt) — the full claude.ai arc', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-07-23T00:00:00.000Z'))
+    const { el, header, labelCell, meta } = await makeReceiptStream({ oneline: true, receipt: true })
+    const h = header()!
+    expect(h.getAttribute('aria-expanded')).toBe('false')
+    el.appendEntry({ key: 's1', status: 'active', label: 'Validating…' })
+    expect(labelCell()!.textContent).toBe('Validating…')
+    vi.advanceTimersByTime(1000)
+    expect(meta()!.textContent).toBe('1s')
+
+    el.update('s1', { status: 'done', label: 'Validated' })
+    el.finalize()
+    expect(h.getAttribute('aria-expanded'), 'still one line — now the receipt').toBe('false')
+    expect(labelCell()!.textContent).toBe('Agent activity')
+    expect(meta()!.textContent).toBe('1 step · 1.0s')
+    el.remove()
+  })
+
+  it('the ADR-0153 per-entry ticking and the SPEC-R12 no-event law are unbroken in receipt mode', async () => {
+    vi.useFakeTimers()
+    const now = new Date('2026-07-23T00:00:00.000Z')
+    vi.setSystemTime(now)
+    const { el } = await makeReceiptStream({ oneline: true, receipt: true })
+    let events = 0
+    for (const type of ['toggle', 'change', 'input', 'select', 'open', 'close']) el.addEventListener(type, () => events++)
+    const item = el.appendEntry({ key: 't1', status: 'active', label: 'Working', startedAt: now.toISOString() })
+    vi.advanceTimersByTime(2000)
+    expect(item.timestamp, 'the ADR-0153 entry timer still ticks under the opt-in modes').toBe('2s')
+    el.finalize()
+    const frozen = item.timestamp
+    vi.advanceTimersByTime(5000)
+    expect(item.timestamp, 'still freezes at settle').toBe(frozen)
+    expect(events, 'collapse/expand emits nothing — the closed event vocabulary is untouched').toBe(0)
     el.remove()
   })
 })

@@ -21,7 +21,7 @@ const css = readFileSync(`${STREAM}/status-stream.css`, 'utf8') as string
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 
-const ATTR_NAMES = ['size', 'label', 'header']
+const ATTR_NAMES = ['size', 'label', 'header', 'oneline', 'receipt']
 
 describe('status-stream.md descriptor — frontmatter parses + schema-valid', () => {
   it('has a leading frontmatter fence and a prose body', () => {
@@ -64,6 +64,19 @@ describe('status-stream.md descriptor — frontmatter parses + schema-valid', ()
     expect(header?.type).toBe('boolean')
     expect(header?.default).toBe('false') // the parser stringifies scalar defaults (the disclosure `open` precedent)
     expect(header?.reflect).toBe(true)
+  })
+
+  it('oneline + receipt are reflected booleans, default false (GH #239/ADR-0159 — BOTH receipt-pattern modes are opt-in; default false is the byte-identical always-expanded guarantee)', () => {
+    for (const name of ['oneline', 'receipt'] as const) {
+      const attr = parsed.attributes.find((a) => a.name === name)
+      expect(attr?.type, `${name} is a boolean`).toBe('boolean')
+      expect(attr?.default, `${name} defaults false`).toBe('false')
+      expect(attr?.reflect, `${name} reflects`).toBe(true)
+    }
+  })
+
+  it('declares the `collapsed` custom state (GH #239/ADR-0159 — the disclosure state the CSS keys off; the contract↔source trip-wire below binds it to the real internals.states/:state() usage)', () => {
+    expect(fence).toMatch(/^\s*-\s*collapsed\b/m)
   })
 })
 

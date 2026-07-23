@@ -2,7 +2,7 @@
 # status-stream.md frontmatter — the attributes-as-API descriptor for ui-status-stream (ADR-0004;
 # timeline-family.lld.md §4 · SPEC-R8…R12 · ADR-0122 F1/F2/F4/F6). The machine-checkable public surface
 # lives HERE (frontmatter); the prose below the fence is the /site doc. The `attributes[]` block MUST
-# mirror status-stream.ts `static props` (size/label) — the contract↔props trip-wire
+# mirror status-stream.ts `static props` (size/label/header/oneline/receipt) — the contract↔props trip-wire
 # (status-stream-descriptor.test.ts) and the frontmatter schema both target this fence. NOT catalogued —
 # ADR-0122 F5's EXCLUSION_ALLOWLIST entry (a consumer-owned imperative streaming host, the
 # Toast/ToastRegion cl.6 precedent; the catalog slice is a separate a2ui-builder dispatch).
@@ -26,6 +26,14 @@ attributes:               # attributes-as-API — mirrors status-stream.ts stati
     type: boolean
     default: false
     reflect: true        # ADR-0146 F8 — opt-in visible streaming header (label + live escalated overall status, pinned above the scroll region). Default false ⇒ byte-identical to a headerless strip
+  - name: oneline
+    type: boolean
+    default: false
+    reflect: true        # GH #239/ADR-0159 — opt-in LIVE one-line mode: while un-settled the strip collapses to one morphing line (current step's live label + ticking turn-elapsed + shimmer), expandable mid-turn (a real disclosure). Materializes the header row even when `header` is false. Default false ⇒ byte-identical always-expanded shape
+  - name: receipt
+    type: boolean
+    default: false
+    reflect: true        # GH #239/ADR-0159 — opt-in TERMINAL receipt: finalize()/fail() auto-collapses the strip to one line — label + "N steps · total-elapsed" + the settled outcome glyph (fail()'s forced error stays loud); click/Enter/Space re-expands the trace. Default false ⇒ a settled oneline strip auto-expands instead
 
 properties:               # IDL beyond attributes-as-API — the imperative streaming contract (ADR-0122 F4)
   - name: appendEntry
@@ -53,8 +61,13 @@ parts:                     # the appended ui-timeline-item children are the "ent
     description: The header's visible label cell — the SAME `label` prop that also sets `internals.ariaLabel` (ADR-0146 F8 makes it visible chrome, not aria-only).
   - name: action
     description: 'GH #147/ADR-0153 Fork 2 — the `[data-role="action"]` cell the host appends onto an entry''s `ui-timeline-item` when that entry carries `action` and its effective status is `error`; hosts one `<ui-button>` (`variant="soft"`, `size="sm"`) labelled from `action.label`.'
+  - name: header-meta
+    description: 'GH #239/ADR-0159 — the header''s secondary cell, present only in an opted-in (`oneline`/`receipt`) mode: the ticking turn-elapsed ("12s") while the turn runs under `oneline`; the receipt summary ("5 steps · 3.2s") once settled. Tabular digits; secondary ink.'
+  - name: header-caret
+    description: 'GH #239/ADR-0159 — the disclosure caret (a `caret-down` glyph), present only in an opted-in mode; rotates open when the header row''s `aria-expanded` reads true.'
 
-customStates: []           # no :state() hooks of its own — the completion invariant rides the ITEM's own :state(truncated) (timeline-item.md)
+customStates:              # GH #239/ADR-0159 — the disclosure state; the completion invariant still rides the ITEM's own :state(truncated) (timeline-item.md)
+  - collapsed              # set via internals.states (jsdom-optional-chained) while the strip renders as one line — the `oneline` live posture or the settled `receipt`; CSS hides the entry list through it; never set outside the opt-in modes
 
 face:
   formAssociated: false    # NOT a FACE form control — extends UIContainerElement, no value/validity
@@ -65,7 +78,9 @@ aria:
   labelSource: label-prop   # a non-empty `label` sets internals.ariaLabel; cleared to null on ''
   liveDiscipline: 'role=log carries an implicit aria-relevant="additions" — a genuinely NEW entry (appendEntry) announces; a `text` patch that mutates an EXISTING node''s textContent does not re-trigger the additions-relevant announcement (state transitions announce, token spam does not, for free)'
 
-keyboard: []               # no keyboard interaction of its own — a display strip; items handle their own (the composed detail's disclosure)
+keyboard:                  # GH #239/ADR-0159 — the header-row disclosure, only in an opted-in (`oneline`/`receipt`) mode; a default strip keeps zero keyboard interaction of its own (items handle their own — the composed detail's disclosure)
+  - keys: Enter / Space
+    action: Toggles the one-line collapse when the header row (role="button", tabindex="0" — present only when `oneline`/`receipt` is set) is focused. Space's page-scroll default is prevented. No keyboard surface exists at all outside the opt-in modes.
 
 geometry:
   sizeClass: pattern
@@ -104,6 +119,10 @@ stream.finalize() // t2 (still active) renders TRUNCATED — never a forever-spi
 - **`header`** (boolean, default `false`) — the opt-in visible streaming header (ADR-0146 F8). When set, a
   pinned `[data-part="header"]` row shows the `label` plus a live overall-status marker escalated over the
   strip's top-level entries. Default `false` renders byte-identically to a headerless strip (no header DOM).
+- **`oneline`** (boolean, default `false`) — the opt-in LIVE one-line mode (GH #239/ADR-0159): while the
+  turn runs the strip collapses to one morphing line. Default `false` keeps the always-expanded shape.
+- **`receipt`** (boolean, default `false`) — the opt-in TERMINAL receipt (GH #239/ADR-0159): a settled
+  turn auto-collapses to a one-line summary. Default `false` keeps the always-expanded terminal shape.
 
 ## The streaming header (ADR-0146 F8)
 
@@ -117,6 +136,32 @@ to the escalated final status (a still-running entry, now truncated, contributes
 forces it `error`. The header is `position: sticky` — pinned above the scroll region, never scrolling away
 as entries overflow. The status marker is SHAPE-first (ADR-0057): a glyph for `done`/`error`/`warning`, a
 dot/ring/pulse for the in-progress states.
+
+## The receipt pattern (GH #238/#239/ADR-0159)
+
+Kim's 2026-07-23 ruling adopts the claude.ai/ChatGPT activity UX as **two independent opt-ins** — both
+default `false`, so every existing consumer keeps its always-expanded shape byte-identically:
+
+- **`oneline`** — while un-settled, the strip renders as **one morphing line**: the header row (grown a
+  `header-meta` elapsed cell + a `header-caret` affordance) shows the **current step's live label** plus a
+  ticking turn-elapsed display (anchored at the first `appendEntry` — never fabricated), with a soft
+  shimmer while active. The line is a **real disclosure**: `role="button"`, `tabindex="0"`,
+  `aria-expanded` — click or Enter/Space expands the full step list mid-turn and collapses it back. A
+  user's explicit expand is respected (the auto-collapse never yanks it shut mid-turn).
+- **`receipt`** — at a terminal state (`finalize()`/`fail()`) the strip **auto-collapses to a one-line
+  receipt**: the static `label` + `"N steps · total-elapsed"` (`5 steps · 3.2s`) in the meta cell + the
+  settled outcome glyph. `fail()`'s forced `error` header stays loud (danger ink + the x glyph). Click
+  re-expands the trace. Without `receipt`, a settled `oneline` strip auto-**expands** instead.
+
+Both modes materialize the header row (it IS the one line) even when `header` is `false`; the collapse
+state is a `collapsed` custom state (`:state(collapsed)` hides the entry list in CSS). Announcement
+discipline: the morphing line and the done-label re-stamps (GH #238 — the consumer's live/done pair
+table) are textContent **mutations** on existing cells, which `role=log`'s additions-only relevance never
+re-announces — label transitions cannot double-fire the live region.
+
+```html
+<ui-status-stream label="Agent activity" oneline receipt></ui-status-stream>
+```
 
 ## The imperative API (ADR-0122 F4)
 
