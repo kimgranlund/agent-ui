@@ -7,8 +7,9 @@
 // ONE composed `ui-chat-shell` (GH #52/ADR-0154 — superseding vision rev.5's hand-rolled `ui-split`
 // composition, which itself superseded ADR-0131 cl.2's three-pane order): `[ chat canvas | resizable
 // options-pane with {Settings ⇄ Context: System ⇄ Context: Dialog} segments ]` (SPEC-R6/R7). The
-// Settings segment carries the WHOLE config column (Agent header row + ui-settings + the Model grid +
-// prompt sections + capability sections — the old prompts pane merged in); the Context segments are the
+// Settings segment carries the WHOLE config column (Agent + ui-settings, the Model grid, the prompt
+// sections — the old prompts pane merged in — Surface Options, and the capability sections; since
+// GH #225 each is a heading-row FOLD, the GH #222 Context pattern); the Context segments are the
 // read-only introspection surface, split in two (GH #161, superseding the single combined "Context"
 // tab): "Context: System" (the compiled Agent System JSON) and "Context: Dialog" (the Dialog Turns
 // payload log). Composition is idempotent — the `master-detail.ts`/`settings.ts` `#compose()`
@@ -397,15 +398,15 @@ export class UIAgentAdminElement extends UIElement {
     // `data-segment` siblings sharing ONE `options-pane` slot (GH #161's three-way split, unchanged) —
     // the shell composes its own pane-local tab strip; no `ui-tabs`/panels of this element's own.
 
-    // The Settings segment's content unit — the Agent header row (heading + the ACTIVE master switch, Kim's
-    // ruling: "the agent master toggle is just if the agent is active/available or not"), the ui-settings
-    // card, the model grid, the prompt sections (the old prompts pane, merged in), and the capability
-    // sections — ONE reparent-able node (the TKT-0085 wrapper discipline).
-    const agentHeader = document.createElement('div')
-    agentHeader.setAttribute('data-part', 'agent-header')
-    const agentHeading = document.createElement('h3')
-    agentHeading.setAttribute('data-part', 'agent-heading')
-    agentHeading.textContent = 'Agent'
+    // The Settings segment's content unit — the config column, every section a heading-row FOLD since
+    // GH #225 (Kim's ruling, the follow-on to GH #222: the Context tabs' chevron/accordion pattern
+    // applied back to the Settings column): one `settingsItem` ui-disclosure per section — Agent (the
+    // ACTIVE master switch ON its heading row, Kim's ruling: "the agent master toggle is just if the
+    // agent is active/available or not"), Model, Instructions (the old prompts pane, merged in),
+    // Surface Options, and the four capability kinds (each kind's master switch on ITS heading row) —
+    // ONE reparent-able node (the TKT-0085 wrapper discipline). The old plain `<h3>` heading parts
+    // (agent-header/agent-heading/model-grid-heading/surface-options-heading/entry-section-heading)
+    // retired with the fold summaries that replaced them.
     const agentSwitch = document.createElement('ui-switch') as HTMLElement & { checked: boolean }
     agentSwitch.setAttribute('data-part', 'agent-enabled')
     agentSwitch.setAttribute('aria-label', 'Agent active')
@@ -418,7 +419,6 @@ export class UIAgentAdminElement extends UIElement {
       if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
     })
     this.#agentSwitch = agentSwitch
-    agentHeader.append(agentHeading, agentSwitch)
     const settingsEl = new UISettingsElement()
     // Event-boundary guard (the settings.ts `md`/`rail` precedent, same rationale): `settingsEl` is an
     // internal composition detail — its own bubbling `select`/`change` (a section switch) must not reach
@@ -429,22 +429,17 @@ export class UIAgentAdminElement extends UIElement {
     settingsContent.setAttribute('data-role', 'settings-content')
     settingsContent.setAttribute('data-slot', 'options-pane')
     settingsContent.setAttribute('data-segment', 'Settings')
-    // The Model GRID (Kim, 2026-07-19 rev.2): its own heading + card host, sitting between the Agent
-    // form card and the prompt/capability sections. Content renders/rerenders from the store.
-    const modelHeading = document.createElement('h3')
-    modelHeading.setAttribute('data-part', 'model-grid-heading')
-    modelHeading.textContent = 'Model'
+    // The Model GRID (Kim, 2026-07-19 rev.2): its own card host, sitting between the Agent form card
+    // and the prompt/capability sections (its fold's summary carries the "Model" heading, GH #225).
+    // Content renders/rerenders from the store.
     const modelGrid = document.createElement('div')
     modelGrid.setAttribute('data-part', 'model-grid')
     this.#modelGrid = modelGrid
-    const promptSections = this.#makeSection(ENTRY_KINDS.promptSection, 'Instructions', 'Add section')
+    const promptSections = this.#makeSection(ENTRY_KINDS.promptSection, 'Add section')
 
     // ── Surface Options (vision rev.6 — the frame's node 34:1312): the agent's output-modality card,
     // after the prompt sections (the frame's own Agent-card order), before the capability sections.
     // Rows build ONCE; their state is (re)applied by #applyMasterStates (the master-switch discipline).
-    const surfaceHeading = document.createElement('h3')
-    surfaceHeading.setAttribute('data-part', 'surface-options-heading')
-    surfaceHeading.textContent = 'Surface Options'
     const surfaceOptions = document.createElement('div')
     surfaceOptions.setAttribute('data-part', 'surface-options')
 
@@ -515,10 +510,23 @@ export class UIAgentAdminElement extends UIElement {
 
     surfaceOptions.append(markdown.row, a2ui.row, genui.row)
 
-    settingsContent.append(agentHeader, settingsEl, modelHeading, modelGrid, promptSections.host, surfaceHeading, surfaceOptions)
+    // GH #225 — each Settings section is a heading-row fold (the GH #222 Context pattern applied to the
+    // config column). The master switches (Agent + one per kind) belong ON their fold's heading row —
+    // placed into the disclosure's own summary part AFTER `this.append(shell)` below connects the folds
+    // and their parts exist (see `placeSummaryControl`); collected here as (fold, control) pairs.
+    const summaryControls: Array<[HTMLElement, HTMLElement]> = []
+    const agentItem = settingsItem('agent', 'Agent', settingsEl)
+    summaryControls.push([agentItem, agentSwitch])
+    settingsContent.append(
+      agentItem,
+      settingsItem('model', 'Model', modelGrid),
+      settingsItem(ENTRY_KINDS.promptSection, 'Instructions', promptSections.host),
+      settingsItem('surface', 'Surface Options', surfaceOptions),
+    )
     for (const { kind, label, addLabel } of CAPABILITY_KINDS) {
-      // The kind's MASTER switch (vision rev.5) — rendered in the section's header row; `false` gates
-      // the whole kind out of the composed prompt + the live roster (isEnabledFlag: default ON).
+      // The kind's MASTER switch (vision rev.5) — rendered on the kind's fold heading row (GH #225);
+      // `false` gates the whole kind out of the composed prompt + the live roster (isEnabledFlag:
+      // default ON).
       const kindSwitch = document.createElement('ui-switch') as HTMLElement & { checked: boolean }
       kindSwitch.setAttribute('data-part', 'kind-enabled')
       kindSwitch.setAttribute('aria-label', `${label} enabled`)
@@ -529,8 +537,10 @@ export class UIAgentAdminElement extends UIElement {
         if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
       })
       this.#kindSwitches.set(kind, kindSwitch)
-      const section = this.#makeSection(kind, label, addLabel, kindSwitch)
-      settingsContent.append(section.host)
+      const section = this.#makeSection(kind, addLabel)
+      const item = settingsItem(kind, label, section.host)
+      summaryControls.push([item, kindSwitch])
+      settingsContent.append(item)
     }
 
     // GH #161 — the old single Context tab's ONE content unit split into TWO content units:
@@ -568,6 +578,11 @@ export class UIAgentAdminElement extends UIElement {
     shell.append(conversation, settingsContent, contextSystemContent, contextDialogContent)
     this.append(shell)
 
+    // GH #225 — NOW the folds are connected (custom-element reactions run synchronously on insertion
+    // into the connected host — `#compose` runs inside connected()), so each ui-disclosure's parts
+    // exist: place every master switch onto its fold's heading row.
+    for (const [item, control] of summaryControls) placeSummaryControl(item, control)
+
     this.#shell = shell
     this.#conversation = conversation
     this.#settingsEl = settingsEl
@@ -577,10 +592,9 @@ export class UIAgentAdminElement extends UIElement {
    *  instantiation (prompt sections + all four capability kinds) reuses (ADR-0132 cl.1). Registers the
    *  result in `#capabilitySections` (keyed by `kind`, prompt sections included) so
    *  `#rewireAllSections`/`#handleSubmit` can iterate uniformly. */
-  #makeSection(kind: string, label: string, addLabel: string, headerControl?: HTMLElement): EntryListSection {
+  #makeSection(kind: string, addLabel: string): EntryListSection {
     const section = mountEntryList(
       kind,
-      label,
       addLabel,
       {
       onToggle: (id, enabled) => this.#updateEntries(kind, (entries) => entries.map((e) => (e.id === id ? { ...e, enabled } : e))),
@@ -601,9 +615,10 @@ export class UIAgentAdminElement extends UIElement {
       },
       },
       // GH #47/#48 — this kind's library packs, captured at compose time (the sections' build-once law;
-      // the `libraries` prop doc names the set-before-append requirement). `headerControl` (vision
-      // rev.5) is the kind's caller-wired master switch, placed in the section's header row.
-      { libraries: this.libraries?.[kind], headerControl },
+      // the `libraries` prop doc names the set-before-append requirement). The kind's master switch no
+      // longer routes through here — it rides the kind's FOLD heading row instead (GH #225,
+      // `placeSummaryControl`); the section shell itself is headless (its fold summary labels it).
+      { libraries: this.libraries?.[kind] },
     )
     this.#capabilitySections.set(kind, section)
     return section
@@ -1090,24 +1105,70 @@ export class UIAgentAdminElement extends UIElement {
 /** TKT-0079 — the surface a client message belongs to (`action.surfaceId` / the error union's
  *  VALIDATION_FAILED arm), for routing the follow-up turn into that surface's OWNING bubble.
  *  `undefined` (e.g. INVALID_FUNCTION_CALL) ⇒ the fresh-bubble path. */
+/** The ONE fold-host shape both tab families share (GH #222/GH #225): a chrome-free `ui-disclosure`
+ *  whose summary IS the section heading (the shared heading register, chevron on the heading row) —
+ *  `part` picks the flavor (`context-item`/`settings-item`; a Dialog turn overwrites its to
+ *  `context-turn`), `key` lands in `data-item` (query/open-state addressing). */
+function foldItem(part: string, key: string, summary: string, open: boolean): HTMLElement & { open: boolean } {
+  const item = document.createElement('ui-disclosure') as HTMLElement & { open: boolean }
+  item.setAttribute('data-part', part)
+  item.setAttribute('data-item', key)
+  item.setAttribute('summary', summary)
+  if (open) item.setAttribute('open', '')
+  return item
+}
+
 /** One Context-tab section (vision rev.5): a `ui-disclosure` labeled `summary` whose body is the
  *  pretty-printed JSON of `value` — the frame's `[ header + caret | mono JSON preview ]` shape. Built
  *  fresh per render (the wholesale-rebuild law); `data-item` keys the open-state capture across
  *  rebuilds. GH #222 (amending vision rev.5's card-in-card realization): the fold host is CHROME-FREE —
- *  its summary renders as a plain section heading (the Settings heading register, chevron kept: the
+ *  its summary renders as a plain section heading (the shared heading register, chevron kept: the
  *  folds are load-bearing, the Agent item carries the full composed system prompt and every dialog turn
  *  carries its whole request payload) and the JSON body is the section's ONE card. */
 function contextItem(key: string, summary: string, value: unknown, open: boolean): HTMLElement {
-  const item = document.createElement('ui-disclosure') as HTMLElement & { open: boolean }
-  item.setAttribute('data-part', 'context-item')
-  item.setAttribute('data-item', key)
-  item.setAttribute('summary', summary)
-  if (open) item.setAttribute('open', '')
+  const item = foldItem('context-item', key, summary, open)
   const pre = document.createElement('pre')
   pre.setAttribute('data-part', 'context-json')
   pre.textContent = JSON.stringify(value, null, 2)
   item.append(pre)
   return item
+}
+
+/** One Settings-tab section (GH #225 — Kim's ruling, the GH #222 pattern applied back to the config
+ *  column): a fold whose body is the section's content card(s). Config sections default OPEN, always —
+ *  Settings is an EDITING surface (a closed-by-default section would hide the very affordances the tab
+ *  exists for; Context's newest-open/older-closed logic is a reading-order choice specific to that log
+ *  view). Built ONCE (the sections' build-once law), never rebuilt — fold state lives in the live DOM
+ *  for the element's lifetime, so none of Context's rebuild-capture machinery applies here, and (like
+ *  Context) the state is deliberately session-ephemeral: the store persists the agent's CONFIG, never
+ *  its view state. */
+function settingsItem(key: string, summary: string, ...content: HTMLElement[]): HTMLElement {
+  const item = foldItem('settings-item', key, summary, true)
+  item.append(...content)
+  return item
+}
+
+/** GH #225 — place a caller-owned control (a master `ui-switch`) ON a settings fold's heading row:
+ *  appended into the disclosure's own summary part, after the flex-growing summary-text (so it lands at
+ *  the row's inline end — the old header rows' `space-between` shape). MUST run after the fold is
+ *  connected: `#compose` appends the shell into the already-connected host first, and custom-element
+ *  reactions run synchronously on insertion, so the parts exist by the time the placement loop runs —
+ *  asserted loudly rather than silently mis-placing the control into the fold body (where the heal
+ *  observer would adopt a host-appended child, disclosure.ts SPEC-R16).
+ *
+ *  Toggle click ≠ fold toggle: a `<summary>`'s details-toggle is the click's ACTIVATION BEHAVIOR — the
+ *  dispatch resolves the nearest activatable ancestor on the event path, and `preventDefault()` from any
+ *  listener cancels it (the DOM legacy-canceled-activation rule) — while `ui-switch`'s own checked-flip
+ *  lives in its OWN click listener (indicator-element.ts LLD-C3), which `preventDefault` never touches.
+ *  So the guard below kills ONLY the fold toggle, for real clicks AND the synthetic `host.click()`
+ *  pressActivation fires for Space/Enter on the focused switch. Summary keyboard activation needs no
+ *  guard — a summary only key-activates while ITSELF focused. Proven cross-engine by
+ *  agent-admin.browser.test.ts's GH #225 toggle-vs-fold probe. */
+function placeSummaryControl(item: HTMLElement, control: HTMLElement): void {
+  const summary = item.querySelector(':scope > [data-part="details"] > [data-part="summary"]')
+  if (!summary) throw new Error('placeSummaryControl: the fold has no summary part yet — it must be connected first')
+  control.addEventListener('click', (event) => event.preventDefault())
+  summary.append(control)
 }
 
 function clientMessageSurfaceId(message: unknown): string | undefined {

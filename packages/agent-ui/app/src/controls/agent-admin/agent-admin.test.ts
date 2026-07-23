@@ -99,8 +99,8 @@ describe('UIAgentAdminElement — shell composition (GH #52/ADR-0154): segments 
     const settings = el.querySelector('[data-segment="Settings"]') as HTMLElement
     const contextSystem = el.querySelector('[data-segment="Context: System"]') as HTMLElement
     const contextDialog = el.querySelector('[data-segment="Context: Dialog"]') as HTMLElement
-    expect(settings.querySelector('[data-part="agent-heading"]')).not.toBeNull()
-    expect(settings.querySelector('[data-part="entry-section-heading"]')).not.toBeNull()
+    expect(settings.querySelector('[data-part="settings-item"][data-item="agent"]')).not.toBeNull()
+    expect(settings.querySelector('[data-part="settings-item"] [data-part="entry-section"]')).not.toBeNull()
     expect(contextSystem.matches('[data-role="context-system-content"]')).toBe(true)
     expect(contextSystem.querySelector('[data-role="context-dialog-content"]')).toBeNull()
     expect(contextSystem.querySelector('[data-part="context-turns"]')).toBeNull()
@@ -153,8 +153,8 @@ describe('UIAgentAdminElement — shell composition (GH #52/ADR-0154): segments 
   it('content nodes are the SAME identity across repeated segment/narrow-tab switches — nothing is ever rebuilt', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const conversation = el.querySelector('ui-conversation')
-    const settingsHeading = el.querySelector('[data-part="agent-heading"]')
-    const instructionsHeading = el.querySelector('[data-part="entry-section-heading"]')
+    const agentItem = el.querySelector('[data-part="settings-item"][data-item="agent"]')
+    const instructionsSection = el.querySelector('[data-part="entry-section"]')
 
     const tabs = [...el.querySelectorAll('[data-part="narrow-tab"]')] as HTMLElement[]
     tabs.find((t) => t.textContent === 'Settings')!.click()
@@ -162,16 +162,51 @@ describe('UIAgentAdminElement — shell composition (GH #52/ADR-0154): segments 
     tabs.find((t) => t.textContent === 'Chat')!.click()
 
     expect(el.querySelector('ui-conversation')).toBe(conversation)
-    expect(el.querySelector('[data-part="agent-heading"]')).toBe(settingsHeading)
-    expect(el.querySelector('[data-part="entry-section-heading"]')).toBe(instructionsHeading)
+    expect(el.querySelector('[data-part="settings-item"][data-item="agent"]')).toBe(agentItem)
+    expect(el.querySelector('[data-part="entry-section"]')).toBe(instructionsSection)
   })
 
   it('capability sections (Skills/Workflows/Resources/Tools) live in the Settings segment', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const settings = el.querySelector('[data-segment="Settings"]') as HTMLElement
     for (const label of ['Instructions', 'Skills', 'Workflows', 'Resources', 'Tools']) {
-      expect([...settings.querySelectorAll('[data-part="entry-section-heading"]')].some((h) => h.textContent === label), `missing ${label} section`).toBe(true)
+      expect([...settings.querySelectorAll('[data-part="settings-item"]')].some((h) => h.getAttribute('summary') === label), `missing ${label} section`).toBe(true)
     }
+  })
+
+  // ── GH #225 — the Settings sections are heading-row folds (the GH #222 Context pattern applied to
+  // the config column). jsdom pins the STRUCTURE; agent-admin.browser.test.ts proves the real
+  // fold/register/toggle-vs-fold geometry cross-engine. ──────────────────────────────────────────────
+  it('GH #225: every Settings section is a settings-item fold — eight sections, in order, ALL open by default (config is an editing surface)', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const settings = el.querySelector('[data-segment="Settings"]') as HTMLElement
+    const items = [...settings.querySelectorAll(':scope > [data-part="settings-item"]')]
+    expect(items.map((i) => i.getAttribute('data-item'))).toEqual([
+      'agent', 'model', ENTRY_KINDS.promptSection, 'surface',
+      ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool,
+    ])
+    expect(items.map((i) => i.getAttribute('summary'))).toEqual([
+      'Agent', 'Model', 'Instructions', 'Surface Options', 'Skills', 'Workflows', 'Resources', 'Tools',
+    ])
+    for (const item of items) expect(item.hasAttribute('open'), `${item.getAttribute('data-item')} defaults open`).toBe(true)
+    // The section content is the fold's BODY (the disclosure adopted it — SPEC-R16 children=body).
+    expect(settings.querySelector('[data-item="agent"] [data-part="body"] ui-settings')).not.toBeNull()
+    expect(settings.querySelector('[data-item="model"] [data-part="body"] [data-part="model-grid"]')).not.toBeNull()
+    expect(settings.querySelector('[data-item="surface"] [data-part="body"] [data-part="surface-options"]')).not.toBeNull()
+    expect(settings.querySelector(`[data-item="${ENTRY_KINDS.skill}"] [data-part="body"] [data-part="entry-section"][data-kind="${ENTRY_KINDS.skill}"]`)).not.toBeNull()
+  })
+
+  it('GH #225: the master switches sit ON their fold heading rows — the Agent switch in the agent summary, one kind switch per capability summary', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    expect(el.querySelector('[data-part="settings-item"][data-item="agent"] [data-part="summary"] [data-part="agent-enabled"]')).not.toBeNull()
+    for (const kind of [ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool]) {
+      expect(
+        el.querySelector(`[data-part="settings-item"][data-item="${kind}"] [data-part="summary"] [data-part="kind-enabled"]`),
+        `missing ${kind} master switch on its heading row`,
+      ).not.toBeNull()
+    }
+    // The Instructions/Model/Surface folds carry NO switch — their summaries hold only chevron + text.
+    expect(el.querySelector(`[data-part="settings-item"][data-item="${ENTRY_KINDS.promptSection}"] [data-part="summary"] ui-switch`)).toBeNull()
   })
 })
 

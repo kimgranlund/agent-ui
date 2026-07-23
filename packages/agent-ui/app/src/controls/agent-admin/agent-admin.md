@@ -46,22 +46,16 @@ events: []               # no DOM events of its own — the composed ui-settings
 slots: []                 # content model is NOT author-composed — the split/panes/composed children are built entirely by this element's own connect-time logic, the ui-settings/ui-conversation precedent
 
 parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-DOM markers this element's own JS creates; documented for completeness (compareDescriptorToSource does not mechanically check `parts:`, the split.md/master-detail.md precedent)
-  - name: agent-header
-    description: The Settings tab's `[ agent-heading | agent-enabled ui-switch ]` header row (vision rev.5 — the frame's own `[ Agent · toggle ]` shape), preceding the composed `ui-settings` instance.
-  - name: agent-heading
-    description: The `<h3 data-part="agent-heading">` ("Agent") inside the agent-header row.
+  - name: settings-item
+    description: One Settings-tab section's FOLD (GH #225 — Kim's ruling, the GH #222 Context pattern applied back to the config column) — `<ui-disclosure data-part="settings-item" data-item="agent|model|prompt-section|surface|skill|workflow|resource|tool">`, a chrome-free fold host whose summary IS the section heading (the shared heading register, chevron on the heading row) over the section's content card(s) as its body. ALL default OPEN (config is an editing surface — Context's newest-open logic is a log-reading choice, not a config one); built once, fold state lives in the live DOM, session-ephemeral. The Agent/kind folds carry their master switch ON the summary row (a switch click never folds — toggle click ≠ fold toggle, the placeSummaryControl preventDefault guard). Replaces the old plain heading parts (agent-header/agent-heading/model-grid-heading/surface-options-heading/entry-section-header/-heading), all retired.
   - name: agent-enabled
-    description: The Agent ACTIVE master switch (vision rev.5, Kim's ruling — "is the agent active/available"). OFF sets `conversation.disabled` (composer busy-disabled, no turns run, both prose and surface arms guarded); everything stays editable. Backed by the `agentEnabled` store key (default ON — only an explicit stored `false` disables).
+    description: The Agent ACTIVE master switch (vision rev.5, Kim's ruling — "is the agent active/available"), riding the Agent fold's heading row (GH #225). OFF sets `conversation.disabled` (composer busy-disabled, no turns run, both prose and surface arms guarded); everything stays editable, and the switch stays visible even with its fold collapsed (the way back never folds away). Backed by the `agentEnabled` store key (default ON — only an explicit stored `false` disables).
   - name: kind-enabled
-    description: One capability kind's MASTER switch (vision rev.5), rendered in its section's header row. OFF gates the WHOLE kind out of the composed live prompt, the stub's roster, and the surface arm's integrations — winning over per-entry toggles — and dims the section (`data-kind-disabled` on the section host). Backed by `${kind}sEnabled` store keys — the `tool` kind resolves to the PRE-EXISTING `toolsEnabled` key (the old Agent-card boolean field, retired from the schema in the same change; persisted values carry over).
+    description: One capability kind's MASTER switch (vision rev.5), riding its kind fold's heading row (GH #225). OFF gates the WHOLE kind out of the composed live prompt, the stub's roster, and the surface arm's integrations — winning over per-entry toggles — and dims the section (`data-kind-disabled` on the section host; the switch itself sits outside the dimmed section, full-strength by construction). Backed by `${kind}sEnabled` store keys — the `tool` kind resolves to the PRE-EXISTING `toolsEnabled` key (the old Agent-card boolean field, retired from the schema in the same change; persisted values carry over).
   - name: entry-section
-    description: One kind's whole section — `<div data-part="entry-section" data-kind="...">` — the ONE shape all five instantiations share (ADR-0132 `n1`). Carries a heading, the entry list, and the add-form.
+    description: One kind's whole section — `<div data-part="entry-section" data-kind="...">` — the ONE shape all five instantiations share (ADR-0132 `n1`). HEADLESS since GH #225 (its fold's summary labels it) — carries the entry list and the add-form.
   - name: model-grid
     description: The Model management card (2026-07-19 rev.2) — provider-grouped rows, one per roster model, each `[ model-row-label | model-include ui-switch | model-default ui-radio ]` — one logical radio system across the provider groups (rev.3). Checking a row writes `model`; a standalone-radio untoggle restores via re-render (a roster always has a default) and the default row's include switch locks on (`model`'s row is always offered). Re-rendered wholesale on `model`/`modelsIncluded` store changes.
-  - name: entry-section-header
-    description: A capability section's `[ entry-section-heading | kind-enabled ui-switch ]` header row (vision rev.5) — present only when a master switch was handed in (prompt sections keep the bare heading).
-  - name: entry-section-heading
-    description: A section's `<h3 data-part="entry-section-heading">` (e.g. "Skills", "Instructions").
   - name: entry-list
     description: A section's `<div data-part="entry-list">` — the entries themselves, in order.
   - name: entry
@@ -103,7 +97,7 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
   - name: context-system
     description: The Context: System render slot, a DIRECT child of its segment container (GH #222 dropped the old outer "Agent System" wrapper card — the segment strip already labels the context) — rebuilt wholesale on ANY store write (the compiled view reads nearly every key; writes are commit-time, never per-keystroke). Carries one context-item per subject.
   - name: context-item
-    description: One Context: System section — `<ui-disclosure data-part="context-item" data-item="agent|skill|workflow|resource|tool">` rendered as the Settings-tab pattern (GH #222): a CHROME-FREE fold host whose summary reads as a plain section heading (the agent-heading register, chevron kept on the heading row) over exactly ONE card of content (the context-json body) — never a card-in-card. The `agent` item (open by default) carries the COMPILED config — name/model/temperature/effort/active + the EXACT `composeLiveSystemPrompt` output a turn would send; each kind item (closed by default — the frame's caret-right rows) carries `{ enabled, entries: [{label, enabled, description}] }`. Open/closed state survives rebuilds (`data-item`-keyed capture).
+    description: One Context: System section — `<ui-disclosure data-part="context-item" data-item="agent|skill|workflow|resource|tool">` rendered as the shared fold pattern (GH #222; the Settings tab's own settings-item folds joined it in GH #225): a CHROME-FREE fold host whose summary reads as a plain section heading (the shared heading register, chevron kept on the heading row) over exactly ONE card of content (the context-json body) — never a card-in-card. The `agent` item (open by default) carries the COMPILED config — name/model/temperature/effort/active + the EXACT `composeLiveSystemPrompt` output a turn would send; each kind item (closed by default — the frame's caret-right rows) carries `{ enabled, entries: [{label, enabled, description}] }`. Open/closed state survives rebuilds (`data-item`-keyed capture).
   - name: context-turns
     description: The Context: Dialog render slot, a DIRECT child of its segment container (GH #222 — the old outer "Dialog Turns" wrapper card is gone) — the per-turn payload log, NEWEST FIRST with zero-padded descending numbers (the frame's 04→01), bounded at 20 (the oldest fall off; numbering stays monotonic). Session-ephemeral — never persisted.
   - name: context-turn
@@ -144,14 +138,15 @@ protocol dependency.
 
 A two-pane `ui-split` (vision rev.5, Kim's Figma frame 33:1693 — superseding ADR-0131 cl.2's
 three-pane order): `[ chat canvas | {Settings ⇄ Context: System ⇄ Context: Dialog} tabs ]`. The Settings
-tab carries the WHOLE config column — the Agent header row (heading + ACTIVE master switch) +
-`ui-settings` + the Model grid + the prompt sections (the old prompts pane, merged in) + the Surface
-Options card (rev.6 — the output-modality contract: Markdown · A2UI + catalog picker · PRD-gated GenUI)
-+ the four capability sections (each with its own kind master switch). The Context tabs are the
-read-only introspection surface, split in two (GH #161, superseding the old single combined "Context"
-tab) and flattened to the Settings-tab pattern (GH #222 — plain section headings + one JSON card each,
-no outer wrapper card): **Context: System** (the compiled agent-system JSON, incl. the `surface`
-block) and **Context: Dialog** (the per-turn payload log). Below 640px the shell collapses to
+tab carries the WHOLE config column — since GH #225 every section a heading-row FOLD (`settings-item`,
+all open by default): Agent (`ui-settings`, the ACTIVE master switch on the fold's heading row) + the
+Model grid + the prompt sections (the old prompts pane, merged in) + the Surface Options card (rev.6 —
+the output-modality contract: Markdown · A2UI + catalog picker · PRD-gated GenUI) + the four capability
+sections (each kind's master switch on ITS fold heading row). The Context tabs are the read-only
+introspection surface, split in two (GH #161, superseding the old single combined "Context" tab) and
+carrying the SAME fold pattern (GH #222 — heading-row chevrons + one JSON card each, no outer wrapper
+card): **Context: System** (the compiled agent-system JSON, incl. the `surface` block) and
+**Context: Dialog** (the per-turn payload log). Below 640px the shell collapses to
 {Chat, Settings, Context: System, Context: Dialog} tabs — a flat FOURTH top-level tab, not a nested
 sub-tab-set (TKT-0085's mechanism, two bands instead of three; every tab is one content unit moved
 whole between its wide tab-panel and its narrow tab-panel, Context included).

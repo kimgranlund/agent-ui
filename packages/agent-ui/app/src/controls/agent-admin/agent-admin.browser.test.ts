@@ -94,8 +94,9 @@ describe('ui-agent-admin cross-engine smoke — the shell grammar (GH #52/ADR-01
     const tabs = [...pane.querySelectorAll('[data-part="pane-tab"]')]
     expect(tabs.map((t) => t.textContent)).toEqual(['Settings', 'Context: System', 'Context: Dialog'])
     for (const tab of tabs) expect(tab.getBoundingClientRect().width).toBeGreaterThan(0)
-    // Settings is the default active segment — the Agent header renders visibly.
-    const agentHeading = el.querySelector('[data-part="agent-heading"]') as HTMLElement
+    // Settings is the default active segment — the Agent fold's heading row renders visibly (GH #225:
+    // the old agent-heading h3 is the fold summary now).
+    const agentHeading = el.querySelector('[data-part="settings-item"][data-item="agent"] [data-part="summary"]') as HTMLElement
     expect(agentHeading.getBoundingClientRect().width).toBeGreaterThan(0)
 
     // Clicking Context: System switches to a real, visible segment carrying ONLY the System context sections.
@@ -130,8 +131,11 @@ describe('ui-agent-admin cross-engine smoke — the shell grammar (GH #52/ADR-01
     const { el } = mountAgentAdminAt(900)
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
 
-    // Capture the Settings heading register FIRST (Settings is the default active segment).
-    const headingRef = getComputedStyle(el.querySelector('[data-part="model-grid-heading"]') as HTMLElement)
+    // Capture the LIVE Settings heading register FIRST (Settings is the default active segment).
+    // GH #225: the register's live source is a Settings fold's summary row now (the old plain
+    // model-grid-heading h3 retired with the Settings accordions) — the probe's claim is unchanged:
+    // the Context flavors must match the Settings flavor, the register must not fork.
+    const headingRef = getComputedStyle(el.querySelector('[data-part="settings-item"][data-item="model"] > [data-part="details"] > [data-part="summary"]') as HTMLElement)
     const wantFont = { size: headingRef.fontSize, weight: headingRef.fontWeight, color: headingRef.color }
 
     // Log ONE stub turn so Context: Dialog has real content (the stub arm logs like every arm).
@@ -922,5 +926,114 @@ describe('ui-agent-admin — segment content wins its OWN display:flex, not supe
     const dialogContent = pane.querySelector('[data-role="context-dialog-content"]') as HTMLElement
     expect(dialogContent.hasAttribute('data-active')).toBe(true)
     expect(getComputedStyle(dialogContent).display).toBe('flex')
+  })
+})
+
+// ── GH #225 — the Settings sections are heading-row FOLDS (the GH #222 Context pattern applied back to
+// the config column): chevron on the heading row, one shared heading register, fold toggles content,
+// and the master switches ride their fold summaries WITHOUT the summary swallowing their clicks. ──────
+describe('ui-agent-admin — GH #225: the Settings sections fold like the Context sections', () => {
+  it('each Settings section renders a real chevron fold in the shared heading register; clicking a summary folds ONLY that section\'s content', async () => {
+    const { el } = mountAgentAdmin()
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const settings = el.querySelector('[data-role="settings-content"]') as HTMLElement
+    const items = [...settings.querySelectorAll(':scope > [data-part="settings-item"]')] as (HTMLElement & { open: boolean })[]
+    expect(items.map((i) => i.getAttribute('data-item'))).toEqual([
+      'agent', 'model', ENTRY_KINDS.promptSection, 'surface',
+      ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool,
+    ])
+    for (const item of items) {
+      expect(item.open, `${item.getAttribute('data-item')} defaults open (config is an editing surface)`).toBe(true)
+      // A real, visibly-sized chevron on the heading row — the fold affordance itself.
+      const chevron = item.querySelector(':scope > [data-part="details"] > [data-part="summary"] > [data-part="chevron"]') as HTMLElement
+      const box = chevron.getBoundingClientRect()
+      expect(box.width, `${item.getAttribute('data-item')} chevron width`).toBeGreaterThan(0)
+      expect(box.height, `${item.getAttribute('data-item')} chevron height`).toBeGreaterThan(0)
+      // The shared heading register — anchored ABSOLUTELY (0.875rem/600 at the fleet's 16px root), so
+      // this cannot go vacuously green by every summary drifting together; the #222 probe above pins
+      // the Context flavors against this same live register.
+      const s = getComputedStyle(item.querySelector(':scope > [data-part="details"] > [data-part="summary"]') as HTMLElement)
+      expect(s.fontSize, `${item.getAttribute('data-item')} register font`).toBe('14px')
+      expect(s.fontWeight, `${item.getAttribute('data-item')} register weight`).toBe('600')
+    }
+
+    // Folding the Model section collapses it to its heading row — and ONLY it (the sibling folds stay
+    // open). Geometry, not paint-API, on purpose: modern engines hide closed-details content via
+    // `content-visibility` on the ::details-content pseudo, so the skipped content can still REPORT
+    // client rects — the honest cross-engine claim is the fold host's own collapse.
+    const modelItem = items.find((i) => i.getAttribute('data-item') === 'model')!
+    const modelGrid = el.querySelector('[data-part="model-grid"]') as HTMLElement
+    expect(modelGrid.getBoundingClientRect().height).toBeGreaterThan(0)
+    const modelSummary = modelItem.querySelector(':scope > [data-part="details"] > [data-part="summary"]') as HTMLElement
+    const openHeight = modelItem.getBoundingClientRect().height
+    expect(openHeight).toBeGreaterThan(modelSummary.getBoundingClientRect().height)
+    modelSummary.click()
+    await new Promise((r) => requestAnimationFrame(r))
+    expect(modelItem.open).toBe(false)
+    const closedHeight = modelItem.getBoundingClientRect().height
+    expect(closedHeight, 'the closed fold collapses to just its heading row').toBeLessThanOrEqual(modelSummary.getBoundingClientRect().height + 2)
+    expect(closedHeight).toBeLessThan(openHeight)
+    const agentItem = el.querySelector('[data-part="settings-item"][data-item="agent"]') as HTMLElement & { open: boolean }
+    expect(agentItem.open).toBe(true)
+    expect(agentItem.getBoundingClientRect().height, 'the sibling fold stays expanded').toBeGreaterThan(
+      agentItem.querySelector(':scope > [data-part="details"] > [data-part="summary"]')!.getBoundingClientRect().height,
+    )
+    modelSummary.click()
+    await new Promise((r) => requestAnimationFrame(r))
+    expect(modelItem.open).toBe(true)
+    expect(modelItem.getBoundingClientRect().height).toBeCloseTo(openHeight, 0)
+  })
+
+  it('the Agent master toggle rides the Agent fold\'s heading row and switches WITHOUT folding it (toggle click ≠ fold toggle); the summary itself still folds', async () => {
+    const { el } = mountAgentAdmin()
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const agentItem = el.querySelector('[data-part="settings-item"][data-item="agent"]') as HTMLElement & { open: boolean }
+    const summary = agentItem.querySelector(':scope > [data-part="details"] > [data-part="summary"]') as HTMLElement
+    const toggle = summary.querySelector('[data-part="agent-enabled"]') as HTMLElement & { checked: boolean }
+    expect(toggle, 'the master switch sits ON the heading row').not.toBeNull()
+    expect(toggle.getBoundingClientRect().width).toBeGreaterThan(0)
+    expect(agentItem.open).toBe(true)
+    expect(toggle.checked).toBe(true)
+
+    // Clicking the switch flips the agent's ACTIVE state — the fold must NOT toggle (the summary's
+    // activation behavior is preventDefault-cancelled by placeSummaryControl's guard; ui-switch's own
+    // click-listener flip is untouched by it — indicator-element.ts LLD-C3).
+    toggle.click()
+    await new Promise((r) => requestAnimationFrame(r))
+    expect(toggle.checked).toBe(false)
+    expect(el.store?.get('agentEnabled')).toBe(false)
+    expect(agentItem.open, 'the fold did not toggle').toBe(true)
+    toggle.click()
+    await new Promise((r) => requestAnimationFrame(r))
+    expect(toggle.checked).toBe(true)
+    expect(el.store?.get('agentEnabled')).toBe(true)
+    expect(agentItem.open).toBe(true)
+
+    // A kind switch behaves identically on ITS heading row — and dims its (headless) section.
+    const skillsItem = el.querySelector(`[data-part="settings-item"][data-item="${ENTRY_KINDS.skill}"]`) as HTMLElement & { open: boolean }
+    const skillsToggle = skillsItem.querySelector(':scope > [data-part="details"] > [data-part="summary"] [data-part="kind-enabled"]') as HTMLElement & { checked: boolean }
+    skillsToggle.click()
+    await new Promise((r) => requestAnimationFrame(r))
+    expect(skillsToggle.checked).toBe(false)
+    expect(skillsItem.open, 'the kind fold did not toggle').toBe(true)
+    const skillsSection = el.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.skill}"]`) as HTMLElement
+    expect(skillsSection.hasAttribute('data-kind-disabled')).toBe(true)
+    expect(Number.parseFloat(getComputedStyle(skillsSection).opacity)).toBeLessThan(1)
+    // The switch itself stays full-strength — it lives OUTSIDE the dimmed section, on the heading row.
+    expect(Number.parseFloat(getComputedStyle(skillsToggle).opacity)).toBe(1)
+
+    // Folding the Agent section via ITS summary still works (click the summary, not the switch) — the
+    // fold collapses to its heading row and the master switch stays visible ON it: the way back never
+    // folds away. (Geometry, not paint-API — the content-visibility caveat in the fold probe above.)
+    const agentOpenHeight = agentItem.getBoundingClientRect().height
+    summary.click()
+    await new Promise((r) => requestAnimationFrame(r))
+    expect(agentItem.open).toBe(false)
+    expect(toggle.getBoundingClientRect().width, 'the switch survives the fold').toBeGreaterThan(0)
+    expect(agentItem.getBoundingClientRect().height, 'the closed fold is just its heading row').toBeLessThanOrEqual(summary.getBoundingClientRect().height + 2)
+    summary.click()
+    await new Promise((r) => requestAnimationFrame(r))
+    expect(agentItem.open).toBe(true)
+    expect(agentItem.getBoundingClientRect().height).toBeCloseTo(agentOpenHeight, 0)
   })
 })

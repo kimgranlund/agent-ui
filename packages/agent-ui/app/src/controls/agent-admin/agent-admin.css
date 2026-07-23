@@ -161,32 +161,15 @@
     gap: var(--ui-agent-admin-section-gap);
   }
 
-  /* Vision rev.5 — the Agent header row: [ heading | ACTIVE master switch ], the frame's own
-     `[ Agent · toggle ]` shape; the entry sections' header rows reuse the identical recipe below. */
-  [data-part='agent-header'],
-  [data-part='entry-section-header'] {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--ui-agent-admin-row-gap);
-  }
-
-  [data-part='agent-heading'] {
-    margin: 0;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--ui-agent-admin-label-ink);
-  }
+  /* GH #225 — the old plain heading rows (agent-header/agent-heading, model-grid-heading,
+     surface-options-heading, entry-section-header/-heading) are GONE: every Settings section's heading
+     is its fold's summary row now (the shared heading-register rule below, with the Context items).
+     The master switches ride those summary rows (placeSummaryControl) — the summary-text's flex-grow
+     pushes each to the row's inline end, reproducing the old header rows' space-between shape. */
 
   /* The Model GRID (2026-07-19 rev.2) — provider-grouped rows [ label | include switch | default
-     checkbox ], carded like the entry sections (the same chrome recipe). The heading mirrors
-     agent-heading; provider labels mirror entry-section-heading's register at a quieter weight. */
-  [data-part='model-grid-heading'] {
-    margin: 0;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--ui-agent-admin-label-ink);
-  }
+     checkbox ], carded like the entry sections (the same chrome recipe). Provider labels mirror the
+     shared heading register at a quieter weight. */
   [data-part='model-grid'] {
     display: flex;
     flex-direction: column;
@@ -253,13 +236,6 @@
     gap: var(--ui-agent-admin-list-gap);
   }
 
-  [data-part='entry-section-heading'] {
-    margin: 0;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--ui-agent-admin-label-ink);
-  }
-
   [data-part='entry-list'] {
     display: flex;
     flex-direction: column;
@@ -267,22 +243,17 @@
   }
 
   /* Vision rev.5 — a kind whose MASTER switch is off dims its list + add affordances (the switch itself
-     stays full-strength: it is the way back). State only — never display:none; the entries stay
-     inspectable/editable, they just visibly read as inert. */
-  [data-part='entry-section'][data-kind-disabled] > :not([data-part='entry-section-header']) {
+     stays full-strength: it is the way back — since GH #225 it lives OUTSIDE this section entirely, on
+     the fold's summary row, so the whole headless section dims and the switch is exempt by
+     construction; the old `:not(entry-section-header)` exemption retired with the header row). State
+     only — never display:none; the entries stay inspectable/editable, they just visibly read as inert. */
+  [data-part='entry-section'][data-kind-disabled] {
     opacity: 0.45;
   }
 
   /* ── GH #138 (Kim's option-A ruling): the Surface Options card — [switch|label|spacer|action|
      selection] rows — switch leads, label next, a flexible spacer, trailing content (catalog
      picker / note) pinned to the right edge ─────────────────────────────────────────────────── */
-
-  [data-part='surface-options-heading'] {
-    margin: 0;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--ui-agent-admin-label-ink);
-  }
 
   [data-part='surface-options'] {
     display: flex;
@@ -339,28 +310,41 @@
   }
 
   /* The fold host is CHROME-FREE (GH #222) — no border/surface/padding of its own; the heading row and
-     the JSON card are the only visible parts. BOTH item flavors, always paired below: a turn item
-     OVERWRITES its `data-part` to `context-turn` (agent-admin.ts's #renderContextTurns), so a
+     the content card(s) are the only visible parts. ALL THREE item flavors, always paired below: a turn
+     item OVERWRITES its `data-part` to `context-turn` (agent-admin.ts's #renderContextTurns), so a
      `context-item`-only selector silently misses every Dialog turn — the cross-engine 400-weight
-     heading this wave's own browser probe caught first-run. The composed ui-disclosure's body inset is
+     heading this wave's own browser probe caught first-run — and GH #225 adds `settings-item` (the
+     Settings sections' folds) to the same paired set. The composed ui-disclosure's body inset is
      zeroed by repointing its PUBLIC pad tokens (the entry-content `--ui-code-editor-min-inline-size: 0`
      precedent: repoint the published token, never fight the host property) so heading and card sit
-     flush-aligned like the Settings sections. */
+     flush-aligned. */
   [data-part='context-item'],
-  [data-part='context-turn'] {
+  [data-part='context-turn'],
+  [data-part='settings-item'] {
     --ui-disclosure-body-pad-block: 0;
     --ui-disclosure-body-pad-inline: 0;
   }
 
-  /* The heading row — the Settings heading register verbatim (agent-heading/model-grid-heading/
-     surface-options-heading: 0.875rem/600/label-ink); the summary's control-height h/2 inline inset is
-     zeroed so the heading aligns flush with its card, like every Settings heading over its card. */
+  /* The heading row — ONE shared register across both tab families (GH #225; formerly "the Settings
+     heading register" the plain h3s carried: 0.875rem/600/label-ink); the summary's control-height h/2
+     inline inset is zeroed so the heading aligns flush with its card. The #222 browser probe compares
+     the Context flavors against the live Settings flavor — the register must never fork. */
   [data-part='context-item'] > [data-part='details'] > [data-part='summary'],
-  [data-part='context-turn'] > [data-part='details'] > [data-part='summary'] {
+  [data-part='context-turn'] > [data-part='details'] > [data-part='summary'],
+  [data-part='settings-item'] > [data-part='details'] > [data-part='summary'] {
     padding-inline: 0;
     font-size: 0.875rem;
     font-weight: 600;
     color: var(--ui-agent-admin-label-ink);
+  }
+
+  /* GH #225 — a Settings fold's body: the heading-row → content gap, matching the Context flavors'
+     own card top-margin (context-json below) so both tab families share one vertical rhythm. On the
+     BODY here (not per-child): a Settings body is a section's whole content unit (ui-settings card /
+     model grid / a headless entry-section / the surface rows), not the single JSON card the Context
+     items carry. */
+  [data-part='settings-item'] > [data-part='details'] > [data-part='body'] {
+    margin-block-start: var(--ui-agent-admin-list-gap);
   }
 
   /* The mono JSON preview — GH #222: the section's ONE card of content (the shared card chrome recipe —
