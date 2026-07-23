@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-23 |
 > | **Proposed by** | build seat ([GH #226](https://github.com/kimgranlund/agent-ui/issues/226) intake — the screens:component-checker review of GH #225 named the structural hazard AND the accessible-name finding; disclosure.md:28 / SPEC-R14 had already fenced `slot=summary` as the named foreseen extension) |
-> | **Ratified by** | — |
+> | **Ratified by** | kimgranlund (repo owner), 2026-07-23, via the [`ratify ADR-0158` utterance](https://github.com/kimgranlund/agent-ui/pull/234#issuecomment-5062562653) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | SPEC-R14 (the "summary is a prop, a rich `slot=summary` child is the fenced foreseen extension" fence — lifted by this, its own named re-entry record) · SPEC-R16 (the "children = body" anatomy invariant gains its one ruled exception: `slot="summary"` children = the summary row) · SPEC-R17 (the a11y contract gains a part-level accessible-name scoping rule; the no-internals-role/no-host-ARIA law itself stands byte-unchanged). On this build: `packages/agent-ui/components/src/controls/disclosure/{disclosure.ts,disclosure.css,disclosure.md,disclosure.test.ts,disclosure.browser.test.ts}` · `packages/agent-ui/app/src/controls/agent-admin/{agent-admin.ts,agent-admin.browser.test.ts}` (the GH #225 `placeSummaryControl` app-side injection + preventDefault guard retire in favor of declarative `slot="summary"` marking) |
 > | **Supersedes / Superseded by** | Extends [ADR-0113](./0113-content-family-v1-scope.md) (cl.4's summary-as-prop fence is lifted by the extension record cl.4 itself foresaw; the native-`<details>` wrap, the component-owned parts, and the no-`[slot=]`-grammar-for-BODY-content rulings all stand) · Composes on [ADR-0101](./0101-overlay-transitions-always-announce.md) (the `open`/`toggle` announce law is untouched) and [ADR-0022](./0022-childpart-native-movebefore-reorder-focus.md) (adoption and rescue MOVE nodes, never clone) · Relates [ADR-0006](./0006-button-anatomy-optional-icon-slot-density-acceptance.md)/[ADR-0012](./0012-button-anatomy-trailing-adornment-slot.md) (the fleet's `[slot=…]` position-slot grammar this joins) · GH #226 / GH #225 |
 

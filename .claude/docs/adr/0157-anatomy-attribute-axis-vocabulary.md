@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-23 *(authored)* |
 > | **Proposed by** | GH #217 — Kim's `data-part` convention analysis (2026-07-23, autonomous fork) ruled the vocabulary; this record is the docs-only capture of that ruling, per the issue's own scope ("not a new convention — documentation of the existing one") |
-> | **Ratified by** | *(pending — Kim's flip: the in-tree Status edit, or a `ratify ADR-0157` GitHub utterance executed by `scripts/adr_ratify.py`, ADR-0149)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-07-23, via the [`ratify ADR-0157` utterance](https://github.com/kimgranlund/agent-ui/pull/231#issuecomment-5062554987) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | [`../references/naming.md`](../references/naming.md) §6 *(the per-axis registry home — on ratification it gains the `data-slot` + state/variant-axis + `part`-reserved lines cross-cited to this record; its existing `data-part`/`data-role` rows stand unchanged)* |
 > | **Supersedes / Superseded by** | Relates [ADR-0012](./0012-button-anatomy-trailing-adornment-slot.md) *(the adjacent `data-role` content-kind axis — untouched, see the Decision's boundary note)* · [ADR-0151](./0151-named-shell-archetypes-m5.md) / [ADR-0154](./0154-shell-grammar-resizable-pane-tab-collapse.md) *(the shell grammar that is this vocabulary's densest use site)* · shell-archetypes SPEC-R12 + GH #197 *(the attribute-selector algebra this vocabulary underwrites)* |
 

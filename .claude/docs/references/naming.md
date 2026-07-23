@@ -131,6 +131,16 @@ The prefix IS the ownership boundary — no allowlist needed:
 - **`data-part`** = control-CREATED anatomy; kebab NOUNS. Reuse a name across controls only for
   the same meaning (`panel` = the floating surface, everywhere). Every rendered part is declared
   in the descriptor's `parts:` (truthful-to-the-DOM — the house rule; the gate is planned, §11).
+- **`data-slot`** = the CONSUMER-side composition-slot claim — which named owner slot a light-DOM
+  child fills ([ADR-0157](../adr/0157-anatomy-attribute-axis-vocabulary.md); realized per-slot via
+  the fleet's `[slot=…]` projection grammar, e.g. ADR-0158's `slot="summary"`).
+- **State/variant axes** (`data-side` · `data-active` · `data-segment` · `data-narrow-open` · …) =
+  orthogonal runtime state, each its OWN single data attribute — never overloaded onto `data-part` —
+  keeping the uniform (0,1,0) attribute-selector algebra (shell SPEC-R12, GH #197) intact
+  ([ADR-0157](../adr/0157-anatomy-attribute-axis-vocabulary.md)).
+- **`part`** (native) = RESERVED for any future shadow-DOM surface; zero uses in `packages/` today —
+  the only textual `::part` matches are descriptor comments disclaiming it
+  ([ADR-0157](../adr/0157-anatomy-attribute-axis-vocabulary.md)).
 - **`data-role`** = author/content-model kinds inside a control's light DOM. The LIVE vocabulary
   is the law; anatomy.md's shorter list is historical (§12 repair). A new role joins via the
   descriptor's `contentModel` + this file's registry: icon · caret · marker · detail · text ·
