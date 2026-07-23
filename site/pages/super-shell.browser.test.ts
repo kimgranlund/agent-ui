@@ -4,22 +4,23 @@ import { describe, it, expect } from 'vitest'
 // precedent), self-importing the foundation cascade + ui-* controls + this page's own super-shell.css.
 import './super-shell.ts'
 
-// super-shell.browser.test.ts — min-size-floors census (GH #185 follow-up): the demo-frame clip→scroll
-// fix. Once ui-super-shell's canvas gained a live-layout floor (the control-level fix), a dual-sided demo
-// on this page can genuinely overflow its own row when squeezed into the 640-846px window (rails/panes'
-// fixed geometry + the canvas floor exceed the frame's width) — the deliberate, honest outcome the
-// control-level fix chose over silently crushing canvas. This page's own demo-frame CSS (`.ss-demo`,
-// `.ss-resize`) used to clip that overflow outright (`overflow: hidden`/`overflow: hidden auto`), cutting
-// the end pane off with no way to reach it; both now use `overflow-x: auto` so the teaching render
-// scrolls instead. This proves the SCROLL affordance is real (not just the computed keyword), on a real
-// demo shell pulled straight off the page — the section-1 full-grammar demo (both sides + rails, the
-// widest natural-fit requirement of any demo here), forced to a squeeze width no reader-visible chrome
-// change is needed to reach (dragging the browser window narrower reaches the same width on section 1/2
-// even without the `.ss-resize` handle, which only wraps section 4).
+// super-shell.browser.test.ts — min-size-floors census (GH #185 follow-up) → GH #205 auto-collapse.
+// ui-super-shell's canvas gained a live-layout floor (SPEC-R13a), which meant a dual-sided demo on this
+// page could genuinely overflow its own row when squeezed into the 640-846px window (rails/panes' fixed
+// geometry + the canvas floor exceed the frame's width) — the INTERIM outcome AC20 used to pin. GH #205
+// closed that gap with a measurement-based auto-collapse (SPEC-R13b): a `collapse`-mode side whose
+// geometry no longer fits at the row's LIVE width now hides itself (an internal, non-reflected
+// `data-auto-collapsed-*` attribute — never the public `collapsed-*` props) instead of letting the row
+// overflow. Measured live, both engines: the section-1 full-grammar demo (both sides + rails, the widest
+// natural-fit requirement of any demo here) squeezed to 700px now auto-collapses its END side — zero
+// overflow, the end rail genuinely absent from layout, nothing left to scroll to. (This page's
+// `.ss-demo`/`.ss-resize` frame CSS still carries `overflow-x: auto` as a defense-in-depth belt for any
+// future demo/config this auto-collapse mechanism doesn't cover — e.g. a `stack`/`tabs` side, R13b's own
+// carve-out — not because THIS demo needs to scroll anymore.)
 const raf = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
 
-describe('ui-super-shell demo page — the frame scrolls (not clips) when a dual-sided demo overflows its squeeze window', () => {
-  it('forcing the section-1 full-grammar demo to a squeeze width makes its frame scrollable, reaching the clipped end rail', async () => {
+describe('ui-super-shell demo page — GH #205 auto-collapse retires the squeeze-window overflow (no scroll needed)', () => {
+  it('forcing the section-1 full-grammar demo to a squeeze width auto-collapses its END side — no overflow, nothing to scroll to', async () => {
     await raf()
     const demos = [...document.querySelectorAll<HTMLElement>('ui-super-shell.ss-demo')]
     expect(demos.length, 'expected at least the section-1 full-grammar demo').toBeGreaterThan(0)
@@ -28,17 +29,14 @@ describe('ui-super-shell demo page — the frame scrolls (not clips) when a dual
 
     demo.style.inlineSize = '700px' // inside the flagged 640-846px window for a rails+panes dual-sided shell
     await raf()
-
-    expect(getComputedStyle(demo).overflowX, 'the frame must allow horizontal scroll, not clip').toBe('auto')
-    expect(demo.scrollWidth, 'the row genuinely overflows the frame at this width (the honest outcome, not a crush)').toBeGreaterThan(demo.clientWidth)
-
-    // Reachability, not just the computed keyword: the end rail (global-options) is currently scrolled
-    // past the frame's right edge — scrolling to the frame's own scroll-end brings it into view.
-    demo.scrollLeft = demo.scrollWidth
+    await new Promise((r) => setTimeout(r, 50)) // let the band-hygiene ResizeObserver's #syncFitCollapse settle
     await raf()
+
+    expect(demo.hasAttribute('data-auto-collapsed-end'), 'GH #205: the END side auto-collapses at this squeeze width').toBe(true)
+    expect(demo.hasAttribute('collapsed-end'), 'the PUBLIC collapsed-end prop is never written by the ambient mechanism (R2d)').toBe(false)
+    expect(demo.scrollWidth, 'the row no longer overflows once the offending side auto-collapses').toBeLessThanOrEqual(demo.clientWidth + 1)
+
     const endRail = demo.querySelector('[data-slot-name="global-options"]') as HTMLElement
-    const railRect = endRail.getBoundingClientRect()
-    const frameRect = demo.getBoundingClientRect()
-    expect(railRect.right, 'the end rail is reachable within the frame once scrolled, not permanently clipped').toBeLessThanOrEqual(frameRect.right + 1)
+    expect(getComputedStyle(endRail).display, 'the auto-collapsed end rail is genuinely absent from layout, not just scrolled off').toBe('none')
   })
 })

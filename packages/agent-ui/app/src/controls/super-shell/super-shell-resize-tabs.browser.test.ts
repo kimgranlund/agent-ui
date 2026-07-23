@@ -79,6 +79,32 @@ describe('ui-super-shell — SPEC-R6 resizable inner pane (AC9)', () => {
     expect(Math.round(pane.getBoundingClientRect().width)).toBe(Math.round(el.sizeEnd!))
   })
 
+  it('GH #206: a drag writes aria-valuemin/-valuemax alongside aria-valuenow (SPEC-R6b)', async () => {
+    const { el, pane } = mount()
+    await el.updateComplete
+    const sep = el.querySelector('[data-part="pane-resizer"][data-side="end"]') as HTMLElement
+    stubCapture(sep)
+
+    sep.dispatchEvent(ptr('pointerdown', 700))
+    sep.dispatchEvent(ptr('pointermove', 640)) // drag left (toward content) grows the END pane
+    await el.updateComplete
+    const valuenow = Number(sep.getAttribute('aria-valuenow'))
+    const valuemin = Number(sep.getAttribute('aria-valuemin'))
+    const valuemax = Number(sep.getAttribute('aria-valuemax'))
+    expect(sep.hasAttribute('aria-valuemin'), 'aria-valuemin is written alongside aria-valuenow').toBe(true)
+    expect(sep.hasAttribute('aria-valuemax'), 'aria-valuemax is written alongside aria-valuenow').toBe(true)
+    expect(valuenow, 'valuenow matches the live pane width').toBe(Math.round(pane.getBoundingClientRect().width))
+    expect(valuemin, 'valuemin is the resolved pane-min floor (162px, no consumer override)').toBe(162)
+    expect(valuemax, 'valuenow never exceeds the resolved valuemax').toBeGreaterThanOrEqual(valuenow)
+    expect(valuemin, 'valuemin never exceeds valuemax').toBeLessThanOrEqual(valuemax)
+
+    sep.dispatchEvent(ptr('pointerup', 640))
+    await el.updateComplete
+    expect(sep.getAttribute('aria-valuenow'), 'valuenow still present on commit').not.toBeNull()
+    expect(sep.getAttribute('aria-valuemin'), 'valuemin still present on commit').not.toBeNull()
+    expect(sep.getAttribute('aria-valuemax'), 'valuemax still present on commit').not.toBeNull()
+  })
+
   it('keyboard arrows step by one module; Home drives straight to the pane minimum (R6c)', async () => {
     const { el, pane } = mount()
     await el.updateComplete
@@ -92,6 +118,12 @@ describe('ui-super-shell — SPEC-R6 resizable inner pane (AC9)', () => {
     await el.updateComplete
     const grown = pane.getBoundingClientRect().width
     expect(grown, 'ArrowLeft grows the end pane in LTR').toBeGreaterThan(before)
+    // GH #206 (SPEC-R6b) — valuemin/-max are written alongside valuenow on every keyboard step too.
+    expect(Number(sep.getAttribute('aria-valuenow')), 'valuenow matches the live pane width').toBe(Math.round(grown))
+    expect(sep.hasAttribute('aria-valuemin'), 'aria-valuemin written on a keyboard step').toBe(true)
+    expect(sep.hasAttribute('aria-valuemax'), 'aria-valuemax written on a keyboard step').toBe(true)
+    expect(Number(sep.getAttribute('aria-valuemin')), 'valuemin is the resolved pane-min floor (162px)').toBe(162)
+    expect(Number(sep.getAttribute('aria-valuenow'))).toBeLessThanOrEqual(Number(sep.getAttribute('aria-valuemax')))
 
     sep.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
     await el.updateComplete
@@ -101,6 +133,8 @@ describe('ui-super-shell — SPEC-R6 resizable inner pane (AC9)', () => {
     await el.updateComplete
     const paneMinPx = 162 // the token default (9 modules), no consumer override in this mount
     expect(pane.getBoundingClientRect().width).toBeLessThanOrEqual(paneMinPx + 1)
+    // Home drives straight to the min bound — valuenow should now equal the reported valuemin.
+    expect(Number(sep.getAttribute('aria-valuenow'))).toBeLessThanOrEqual(Number(sep.getAttribute('aria-valuemin')) + 1)
   })
 
   it('a committed size SURVIVES a collapse round-trip (R6e)', async () => {
@@ -223,6 +257,104 @@ describe('ui-super-shell — SPEC-R6c/AC12 bounds', () => {
   })
 })
 
+// ── GH #214 — the resizer OWNS the gap it sits in (no double-spacing) ────────────────────────────────
+// The bug: `[data-part='middle']`'s flex `gap` used to stack around the resizer (gap + 4px + gap = 40px
+// at the 18px module gap) where every resizer-less seam gets exactly one 18px gap. The fix sizes the
+// resizer's hit-box to the gap itself and pulls its neighbors back in by one gap via negative
+// margin-inline, so the NET rendered distance is identical whether or not a resizer sits in the seam —
+// proven here with real rects, both engines, never hand math.
+function mountPlain(width: number): { el: UISuperShellElement; canvas: HTMLElement; pane: HTMLElement } {
+  const el = document.createElement('ui-super-shell') as UISuperShellElement
+  el.style.position = 'fixed'
+  el.style.insetBlockStart = '0px'
+  el.style.insetInlineStart = '0px'
+  el.style.inlineSize = `${width}px`
+  el.style.blockSize = '400px'
+  const content = document.createElement('div'); content.setAttribute('data-slot', 'content')
+  const opts = document.createElement('div'); opts.setAttribute('data-slot', 'options-pane')
+  el.append(content, opts)
+  document.body.append(el)
+  mounted.push(el)
+  return { el, canvas: el.querySelector('[data-part="canvas"]') as HTMLElement, pane: el.querySelector('[data-slot-name="options-pane"]') as HTMLElement }
+}
+
+function mountResizable(width: number): { el: UISuperShellElement; canvas: HTMLElement; pane: HTMLElement; resizer: HTMLElement } {
+  const el = document.createElement('ui-super-shell') as UISuperShellElement
+  el.style.position = 'fixed'
+  el.style.insetBlockStart = '0px'
+  el.style.insetInlineStart = '0px'
+  el.style.inlineSize = `${width}px`
+  el.style.blockSize = '400px'
+  el.setAttribute('resizable-end', '')
+  const content = document.createElement('div'); content.setAttribute('data-slot', 'content')
+  const opts = document.createElement('div'); opts.setAttribute('data-slot', 'options-pane')
+  el.append(content, opts)
+  document.body.append(el)
+  mounted.push(el)
+  return {
+    el,
+    canvas: el.querySelector('[data-part="canvas"]') as HTMLElement,
+    pane: el.querySelector('[data-slot-name="options-pane"]') as HTMLElement,
+    resizer: el.querySelector('[data-part="pane-resizer"][data-side="end"]') as HTMLElement,
+  }
+}
+
+describe('ui-super-shell — GH #214 resizer-gap footprint (no double-spacing)', () => {
+  it('pane→canvas rendered distance WITH a resizer equals the plain (resizer-less) gap', async () => {
+    const plain = mountPlain(900)
+    await plain.el.updateComplete
+    const plainGap = plain.pane.getBoundingClientRect().left - plain.canvas.getBoundingClientRect().right
+
+    const resizable = mountResizable(900)
+    await resizable.el.updateComplete
+    const resizerGap = resizable.pane.getBoundingClientRect().left - resizable.canvas.getBoundingClientRect().right
+
+    expect(Math.round(resizerGap), 'a resizer-bearing seam renders the SAME distance as a plain seam').toBe(Math.round(plainGap))
+    expect(Math.round(plainGap), 'sanity: the plain gap is genuinely the 18px module gap, not 0').toBe(18)
+  })
+
+  it("the resizer's hit-box occupies exactly the gap's own width (a better drag target than the old 4px)", async () => {
+    const { el, resizer } = mountResizable(900)
+    await el.updateComplete
+    expect(Math.round(resizer.getBoundingClientRect().width), 'hit-box = --ui-super-shell-gap (18px)').toBe(18)
+  })
+
+  it('single-sided (non-resizable) consumers are unchanged: every other seam still renders one plain gap', async () => {
+    // Regression pin: the fix touches ONLY [data-part='pane-resizer'] — a shell authored with NO
+    // resizable side at all must keep its ordinary rail/pane/canvas gaps untouched.
+    const el = document.createElement('ui-super-shell') as UISuperShellElement
+    el.style.position = 'fixed'; el.style.insetBlockStart = '0px'; el.style.insetInlineStart = '0px'
+    el.style.inlineSize = '900px'; el.style.blockSize = '400px'
+    const rail = document.createElement('div'); rail.setAttribute('data-slot', 'global-nav')
+    const nav = document.createElement('div'); nav.setAttribute('data-slot', 'nav-pane')
+    const content = document.createElement('div'); content.setAttribute('data-slot', 'content')
+    el.append(rail, nav, content)
+    document.body.append(el); mounted.push(el)
+    await el.updateComplete
+    const railBox = el.querySelector('[data-part="rail"]') as HTMLElement
+    const navBox = el.querySelector('[data-slot-name="nav-pane"]') as HTMLElement
+    const canvasBox = el.querySelector('[data-part="canvas"]') as HTMLElement
+    expect(Math.round(navBox.getBoundingClientRect().left - railBox.getBoundingClientRect().right), 'rail→pane gap unchanged').toBe(18)
+    expect(Math.round(canvasBox.getBoundingClientRect().left - navBox.getBoundingClientRect().right), 'pane→canvas gap unchanged (no resizer authored)').toBe(18)
+  })
+
+  it('the ink stays clipped to its content-box (4px, centered) at rest, on hover, AND while dragging — never the full hit-box', async () => {
+    const { el, resizer } = mountResizable(900)
+    await el.updateComplete
+    stubCapture(resizer)
+    expect(getComputedStyle(resizer).backgroundClip, 'rest: content-box').toBe('content-box')
+
+    resizer.dispatchEvent(ptr('pointerdown', 700))
+    resizer.dispatchEvent(ptr('pointermove', 690))
+    await el.updateComplete
+    expect(el.matches(':state(dragging)'), 'sanity: dragging is armed').toBe(true)
+    expect(getComputedStyle(resizer).backgroundClip, 'dragging: STILL content-box (background-color, never the background shorthand)').toBe('content-box')
+
+    resizer.dispatchEvent(ptr('pointerup', 690))
+    await el.updateComplete
+  })
+})
+
 // ── min-size-floors census (GH #185 follow-up) — the dual-collapse-side squeeze window ──────────────
 // The flagship finding: BOTH sides `resizable` + collapse-mode is reachable through the public API
 // (chat-shell.ts forwards resizable-start/-end + narrow-start/-end + collapse-band), but no shipped
@@ -251,26 +383,46 @@ function mountDualResizable(width: number): { el: UISuperShellElement; middle: H
   return { el, middle: el.querySelector('[data-part="middle"]') as HTMLElement }
 }
 
-describe('ui-super-shell — dual-collapse-side canvas floor (min-size-floors census, GH #185 follow-up)', () => {
-  it('below natural-fit width, canvas holds its floor and the row overflows deliberately (never crushes canvas thinner)', async () => {
-    const { el, middle } = mountDualResizable(700) // inside the flagged 640-846px gap; natural fit needs 746px here
-    await el.updateComplete
-    const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
-    const floorPx = 162 // 9 modules × 18px, the shell's own R1c/R6c default (no consumer repoint in this mount)
-    expect(canvas.getBoundingClientRect().width, 'canvas never shrinks below its own floor token').toBeGreaterThanOrEqual(floorPx - 1)
-    // The deliberate, visible outcome below natural-fit: the row overflows (measurable, scrollable) rather
-    // than silently crushing canvas past its floor — the fixed-geometry siblings still never yield.
-    expect(middle.scrollWidth, 'the row genuinely overflows at this width (the honest failure mode)').toBeGreaterThan(middle.clientWidth)
-  })
-
-  it('at and above natural-fit width, canvas holds ≥ its floor with zero row overflow', async () => {
-    for (const width of [750, 800, 846, 900]) {
+describe('ui-super-shell — dual-collapse-side canvas floor (min-size-floors census GH #185; auto-collapse GH #205)', () => {
+  // GH #205 retires the OLD interim outcome this describe block used to pin ("below natural fit, the row
+  // overflows deliberately") — AC20 is now UNCONDITIONAL: canvas ≥ floor AND zero row overflow at every
+  // step of the flagged 640-900px window, never just at-or-above natural fit. The 700px width this block
+  // used to assert OVERFLOWS at now flips to NO-overflow (folded into this one sweep, not kept as a
+  // second identically-shaped test) — its outcome is now "the end side auto-collapses," not "the row
+  // scrolls." Natural fit for THIS mount (both sides resizable, no rails) measures at exactly 702px, live,
+  // both engines (252 pane + 18 gap/resizer + 162 canvas floor + 18 gap/resizer + 252 pane) — 44px LOWER
+  // than this same config's pre-GH#214 746px, since the resizer no longer stacks a second gap around
+  // itself (its net footprint is now exactly one gap, GH #214).
+  it('across the full flagged 640-900px sweep, canvas holds ≥ its floor with ZERO row overflow at every step', async () => {
+    for (const width of [640, 700, 701, 702, 746, 800, 846, 900]) {
       const { el, middle } = mountDualResizable(width)
       await el.updateComplete
       const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
       expect(canvas.getBoundingClientRect().width, `width=${width}`).toBeGreaterThanOrEqual(161)
-      expect(middle.scrollWidth, `width=${width} — no overflow once there is room to honor the floor`).toBeLessThanOrEqual(middle.clientWidth + 1)
+      expect(middle.scrollWidth, `width=${width} — no overflow, at or below natural fit alike (GH #205)`).toBeLessThanOrEqual(middle.clientWidth + 1)
     }
+  })
+
+  it('below natural fit (700px, comfortably under the measured 702px), the END side auto-collapses — the mechanism itself, not just its outcome', async () => {
+    // 701px (exactly 1px under 702) sits INSIDE the deliberate `scrollWidth > clientWidth + 1` epsilon
+    // (the same one-pixel subpixel-rounding tolerance R6c/AC12's own overflow checks use fleet-wide) — it
+    // does NOT trigger the mechanism, by design (a hairline sub-2px "overflow" is noise, not a real fit
+    // failure). 700px is unambiguously below fit and reliably triggers it, measured live, both engines.
+    const { el, middle } = mountDualResizable(700)
+    await el.updateComplete
+    expect(el.hasAttribute('data-auto-collapsed-end'), 'end auto-collapses first (the file convention: end, then start)').toBe(true)
+    expect(el.hasAttribute('data-auto-collapsed-start'), 'collapsing end alone already resolves the fit — start is left alone (escalate-only-if-needed)').toBe(false)
+    // R9a precedent, extended to the ambient case: no dead toggle for a side auto-collapsed out of the row.
+    expect(el.hasAttribute('collapsed-end'), 'the PUBLIC collapsed-end prop must NEVER be written by the ambient mechanism (R2d — never masquerade as a user choice)').toBe(false)
+    const optionsPane = middle.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    expect(getComputedStyle(optionsPane).display, 'the auto-collapsed end pane is genuinely hidden').toBe('none')
+  })
+
+  it('at and above natural fit (702px), neither side auto-collapses — the mechanism engages only when genuinely needed', async () => {
+    const { el } = mountDualResizable(702)
+    await el.updateComplete
+    expect(el.hasAttribute('data-auto-collapsed-start')).toBe(false)
+    expect(el.hasAttribute('data-auto-collapsed-end')).toBe(false)
   })
 })
 

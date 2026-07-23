@@ -138,14 +138,28 @@
 
   /* SPEC-R6b — the drag/keyboard separator. A direct child of [data-part='middle'] carrying its side's
      OWN data-side, so the EXISTING collapse (R2a) and narrow (R4) selectors below already hide/restore
-     it with the rest of its side (R6e) — zero new selectors needed for that half of the contract. */
+     it with the rest of its side (R6e) — zero new selectors needed for that half of the contract.
+     GH #214 — the resizer OWNS the gap it sits in instead of stacking a second gap around itself
+     (gap + 4px + gap = 40px vs the 18px every resizer-less seam gets): its hit-box is sized to exactly
+     one `--ui-super-shell-gap` (a BETTER drag target than the old 4px sliver), the 4px ink is drawn
+     CENTERED via `padding-inline` + `background-clip: content-box` (never touching layout), and
+     `margin-inline: calc(-1 * gap)` pulls both neighbors back in by one gap each — net footprint =
+     exactly one gap, byte-identical to a resizer-less seam (verified: the dual-resizable natural-fit
+     arithmetic simplifies from ~890px to 846px, the same as the resizer-less R13b number). `box-sizing:
+     border-box` is required for the padding-inline math below (no universal reset in
+     foundation-styles.css) — `inline-size` must be the padding-inclusive TOTAL, or the box grows past
+     the gap it's meant to replace. */
   [data-part='pane-resizer'] {
     flex: 0 0 auto;
-    inline-size: 0.25rem;
+    box-sizing: border-box;
+    inline-size: var(--ui-super-shell-gap);
+    margin-inline: calc(-1 * var(--ui-super-shell-gap));
+    padding-inline: calc((var(--ui-super-shell-gap) - 0.25rem) / 2); /* the 4px ink (AC19's allowlisted literal, relocated to this property) */
     cursor: col-resize;
     touch-action: none;
     border-radius: var(--ui-super-shell-radius);
     background: var(--ui-super-shell-resizer-ink);
+    background-clip: content-box; /* the ink paints ONLY the padded-in content box, never the full hit-box */
   }
   /* GH #182 — hover/drag is a FILL (the ui-split precedent); focus-visible is a THIN RING on the
      shared fleet focus-ring tokens ONLY (ADR-0009, the same ones split.css's own [data-separator]
@@ -156,10 +170,14 @@
      the WHOLE drag gesture, even after a fast sweep carries the pointer off the thin 0.25rem resizer
      box (split.css's own file-header rationale — `setPointerCapture` keeps the drag routed regardless
      of where the cursor sweeps, but a plain `:hover` alone would drop the highlight, reading as the
-     resizer "letting go" mid-drag). */
+     resizer "letting go" mid-drag).
+     GH #214 — `background-color`, NEVER the `background` shorthand: the shorthand resets EVERY
+     sub-property it covers to its initial value when omitted (verified live, both engines) — including
+     `background-clip`, which would silently flip the base rule's `content-box` back to `border-box`
+     while hovering/dragging, painting the FULL hit-box instead of the centered 4px ink. */
   [data-part='pane-resizer']:hover,
   :scope:state(dragging) [data-part='pane-resizer'] {
-    background: var(--ui-super-shell-resizer-ink-hover);
+    background-color: var(--ui-super-shell-resizer-ink-hover);
   }
   [data-part='pane-resizer']:focus-visible {
     outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
@@ -170,10 +188,12 @@
      `forced-colors: active` (the split.css `[data-separator]` precedent, SPEC-R5 AC2's sibling
      contract) — without this, the resting/hover inks above vanish entirely under forced-colors,
      leaving no visible affordance (only the :focus-visible ring survives for free, already mapped
-     to system Highlight via --md-sys-color-focus-ring, ADR-0009). */
+     to system Highlight via --md-sys-color-focus-ring, ADR-0009).
+     GH #214 — `background-color`, not the shorthand, for the same content-box-clip-preservation
+     reason as the hover/dragging rule above. */
   @media (forced-colors: active) {
     [data-part='pane-resizer'] {
-      background: ButtonText;
+      background-color: ButtonText;
       forced-color-adjust: none;
     }
   }
@@ -255,6 +275,22 @@
   /* ── SPEC-R2: paired per-side collapse off the HOST's reflected state (wide bands) ─────────── */
   :scope[collapsed-start] [data-part='middle'] > [data-side='start'],
   :scope[collapsed-end] [data-part='middle'] > [data-side='end'] {
+    display: none;
+  }
+
+  /* ── GH #205 (SPEC-R13b) — measurement-based auto-collapse, unconditional (no @container: JS already
+     decided via #syncFitCollapse's live scrollWidth/clientWidth measurement, not a compile-time band —
+     natural fit varies per authored configuration/consumer override, and a container condition can't
+     take a var() operand). Internal, non-reflected `data-auto-collapsed-*` — NEVER the public
+     `collapsed-*` props (R2d): ambient JS fallback must never masquerade as a persisted user choice.
+     The side's toggle hides too — no overlay-restore affordance for an auto-collapsed side (clicking
+     through would just reopen a side with nowhere to fit, the R9a "no dead toggle" precedent). */
+  :scope[data-auto-collapsed-start] [data-part='middle'] > [data-side='start'],
+  :scope[data-auto-collapsed-end] [data-part='middle'] > [data-side='end'] {
+    display: none;
+  }
+  :scope[data-auto-collapsed-start] [data-part='side-toggle'][data-side='start'],
+  :scope[data-auto-collapsed-end] [data-part='side-toggle'][data-side='end'] {
     display: none;
   }
 
