@@ -105,7 +105,7 @@ decision (dated line in §4).
 - **GenUI surface PRD — awaiting ratification.** [`prd/genui-surface.prd.md`](prd/genui-surface.prd.md)
   sits proposed (v0.2, 2026-07-23) — Kim's 2026-07-23 rulings re-cut the identity (free-form
   HTML/CSS/JS in a sandboxed iframe; "contained, not forbidden") and resolved D1/D3/D4 + the token
-  bridge; four re-derived residual forks (wire path · sandbox/CSP posture · exemplar-pack home ·
+  bridge; four residual forks (wire path · sandbox/CSP posture · exemplar-pack home ·
   iframe-host home) carry firm recommendations and await Kim. No build is scheduled until they
   resolve and a SPEC lands. This is the one genuinely gated design record in the tree.
 - **The `ui-app-shell` removal horizon (ADR-0156).** Migration is nearly done — the production

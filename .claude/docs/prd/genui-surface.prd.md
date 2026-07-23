@@ -90,7 +90,9 @@ picked yields generated HTML that:
   external fetch, oversize document) is provably inert or never paints — asserted in the real-engine
   browser gate, not jsdom;
 - (m2) **themes**: the rendered frame reflects the active app theme via the injected `--md-sys-*`
-  bridge, and follows a live theme flip (PRD-G5);
+  bridge, and follows a live theme flip (PRD-G5) — noting that under §3's no-messaging-bridge law
+  the only v1-compliant flip mechanism is full srcdoc re-injection, which destroys frame-internal
+  state (the mechanism, and whether that trade holds, is SPEC-tier);
 - (m3) **uses the source**: judge-scored ≥ 4/5 against the corpus rubric for demonstrable use of the
   picked pack's idioms;
 - (m4) **degrades**: with GenUI off, or the envelope failing its structural gate, the turn degrades
@@ -103,7 +105,9 @@ picked yields generated HTML that:
   blue-sky`) unrelated to this surface. The SPEC must name this feature's machinery so the two
   never blur (e.g. `genui` as the surface/envelope key vs. the untouched `GenUiMode` type), or
   propose the ADR-0090 axis a clarifying rename in its own record.
-- **SPEC-R5 amendment is real scope** (§5 D6): the "one validator, three call sites" parity story
-  gains a deliberate, documented exception — worth an explicit SPEC clause, not a footnote.
+- **SPEC-R5 amendment is real scope** (§5 D6): the validator-parity law
+  ([a2ui-live-agent](../spec/a2ui-live-agent.spec.md) SPEC-R4 AC2 — driver, renderer, and corpus
+  admission all use the same `validateA2ui`/`heal`) gains a deliberate, documented exception —
+  worth an explicit SPEC clause, not a footnote.
 - The admin's disabled GenUI row and its "PRD pending" note stay accurate until B1 ships; the
   live-apply law (PRD-G1) inherits the Surface Options card's existing store discipline.
