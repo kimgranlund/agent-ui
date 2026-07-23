@@ -98,7 +98,7 @@ describe('ui-agent-admin cross-engine smoke — the shell grammar (GH #52/ADR-01
     const agentHeading = el.querySelector('[data-part="agent-heading"]') as HTMLElement
     expect(agentHeading.getBoundingClientRect().width).toBeGreaterThan(0)
 
-    // Clicking Context: System switches to a real, visible segment carrying ONLY the Agent System accordion.
+    // Clicking Context: System switches to a real, visible segment carrying ONLY the System context sections.
     const systemTab = tabs.find((t) => t.textContent === 'Context: System') as HTMLElement
     systemTab.click()
     await new Promise((r) => requestAnimationFrame(r))
@@ -124,6 +124,58 @@ describe('ui-agent-admin cross-engine smoke — the shell grammar (GH #52/ADR-01
     expect(systemContent.hasAttribute('data-active')).toBe(false)
     // Distinct content: the Dialog segment carries NO Agent System items.
     expect(dialogContent.querySelector('[data-part="context-item"]')).toBeNull()
+  })
+
+  it('GH #222: each Context segment is FLAT — Settings-register heading rows + exactly ONE card-styled container on the content card\'s ancestor chain (no card-in-card)', async () => {
+    const { el } = mountAgentAdminAt(900)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    // Capture the Settings heading register FIRST (Settings is the default active segment).
+    const headingRef = getComputedStyle(el.querySelector('[data-part="model-grid-heading"]') as HTMLElement)
+    const wantFont = { size: headingRef.fontSize, weight: headingRef.fontWeight, color: headingRef.color }
+
+    // Log ONE stub turn so Context: Dialog has real content (the stub arm logs like every arm).
+    const composer = el.querySelector('[data-part="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = 'hello'
+    ;(composer.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    const start = Date.now()
+    while (el.querySelectorAll('[data-part="context-turn"]').length === 0) {
+      if (Date.now() - start > 8000) throw new Error('stub turn never logged')
+      await new Promise((r) => setTimeout(r, 50))
+    }
+
+    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    const tabs = [...pane.querySelectorAll('[data-part="pane-tab"]')] as HTMLElement[]
+    /** The file's own card recipe — a real 1px solid border (model-grid/surface-row/entry/context-json). */
+    const isCarded = (n: Element): boolean => {
+      const s = getComputedStyle(n)
+      return s.borderTopStyle === 'solid' && parseFloat(s.borderTopWidth) > 0
+    }
+
+    for (const { label, role, jsonSelector } of [
+      { label: 'Context: System', role: 'context-system-content', jsonSelector: '[data-part="context-item"][data-item="agent"] [data-part="context-json"]' },
+      { label: 'Context: Dialog', role: 'context-dialog-content', jsonSelector: '[data-part="context-turn"] [data-part="context-json"]' },
+    ]) {
+      ;(tabs.find((t) => t.textContent === label) as HTMLElement).click()
+      await new Promise((r) => requestAnimationFrame(r))
+      const segment = pane.querySelector(`[data-role="${role}"]`) as HTMLElement
+      expect(segment.hasAttribute('data-active')).toBe(true)
+      const json = segment.querySelector(jsonSelector) as HTMLElement
+      expect(json.getBoundingClientRect().height).toBeGreaterThan(0)
+      // The flattening law (GH #222): walking from the content card up to the segment container,
+      // exactly ONE element is card-styled — the JSON card itself. No card-in-card.
+      const chain: Element[] = []
+      for (let n: Element | null = json; n !== null && n !== segment; n = n.parentElement) chain.push(n)
+      const carded = chain.filter(isCarded)
+      expect(carded, `${label}: exactly one card-styled container on the content chain`).toHaveLength(1)
+      expect(carded[0]).toBe(json)
+      // The section heading matches the Settings segment's heading register (font/weight/ink).
+      const summary = json.closest('[data-part="context-item"], [data-part="context-turn"]')!.querySelector('[data-part="summary"]') as HTMLElement
+      const s = getComputedStyle(summary)
+      expect(s.fontSize).toBe(wantFont.size)
+      expect(s.fontWeight).toBe(wantFont.weight)
+      expect(s.color).toBe(wantFont.color)
+    }
   })
 
   it('narrow (<640px): {Chat, Settings, Context: System, Context: Dialog} narrow-tabs fill the shell; the wide pane-tabs strip computes display:none (GH #161: a flat 4th tab, not a nested sub-tab-set)', async () => {

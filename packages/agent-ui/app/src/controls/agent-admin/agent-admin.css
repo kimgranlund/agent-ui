@@ -49,8 +49,7 @@
   --ui-agent-admin-section-gap: var(--md-sys-space-lg); /* the pane's top-level section gap (Settings/Context content) */
   --ui-agent-admin-row-gap: var(--md-sys-space-sm); /* a tight gap between adjacent inline parts within ONE row (header/model-row/entry-header/surface-row) */
   --ui-agent-admin-list-gap: var(--md-sys-space-sm); /* vertical rhythm between stacked rows in a list (model-grid/entry-section/entry-list/surface-options/context tree) */
-  --ui-agent-admin-card-pad: var(--md-sys-space-sm) var(--md-sys-space-md); /* the shared card chrome padding (model-grid/settings-panel/surface-row/context-section/entry/entry-add-form) */
-  --ui-agent-admin-compact-pad: var(--md-sys-space-sm); /* a bare fleet step, paired on its OWN axis alongside the module-derived --ui-agent-admin-compact-gap (context-item's padding) or standing alone (context-json) — the ONE case the shared roles above don't cover */
+  --ui-agent-admin-card-pad: var(--md-sys-space-sm) var(--md-sys-space-md); /* the shared card chrome padding (model-grid/settings-panel/surface-row/context-json/entry/entry-add-form) */
   --ui-agent-admin-provider-gap: var(--md-sys-space-xs); /* the gap above each subsequent provider-group heading in the Model grid ([data-part='model-provider']) */
   --ui-agent-admin-spacer-min-size: var(--md-sys-space-sm); /* SPEC-R11c/AC19 — the shared flex-spacer floor (surface-spacer, entry-spacer) */
 }
@@ -98,11 +97,10 @@
      call site (SPEC-R11b — the boundary-alias pattern; this rule IS R11b's cited precedent). */
   ui-super-shell {
     --ui-agent-admin-shell-gutter: calc(var(--ui-super-shell-module) * 2 / 3);
-    /* SPEC-R11b — the fourth-module tight-rhythm unit every "compact" card-internal gap below shares
-       (context-item's own padding component, context-json's top margin, entry/entry-add-form's own
-       internal header/description/content gap): named to pair with `--ui-agent-admin-compact-pad`
-       below (the SAME sites' fleet-space-derived component on their other axis), never raw-read at the
-       consuming selector. */
+    /* SPEC-R11b — the fourth-module tight-rhythm unit the card-internal gaps below share
+       (entry/entry-add-form's own internal header/description/content gap; GH #222 removed its two
+       Context-tab consumers — context-item's padding and context-json's top margin — along with the
+       card-in-card nesting itself), never raw-read at the consuming selector. */
     --ui-agent-admin-compact-gap: calc(var(--ui-super-shell-module) / 3);
     /* min-size-floors census (GH #185 follow-up) — moved down from the [1] TOKEN BLOCK's
        `:where(ui-agent-admin)`, where it silently never won: `--ui-super-shell-canvas-min-size`/
@@ -238,7 +236,8 @@
      contract inverted). GH #191 follow-up: padding had been minted as a UNIFORM 0.75rem instead of the
      entry card's own asymmetric 0.5rem 0.75rem — a real, measured 4px excess block-inset (12px vs. the
      fleet card norm's 8px) that read as "more padding" than every sibling card in this pane (model-grid/
-     surface-row/context-section/entry all share the identical 0.5rem 0.75rem). Repointed to match. */
+     surface-row/entry — and since GH #222 context-json — all share the identical 0.5rem 0.75rem).
+     Repointed to match. */
   ui-settings [data-part='panel'] {
     border: 1px solid var(--ui-agent-admin-border);
     border-radius: var(--ui-agent-admin-entry-radius);
@@ -322,43 +321,58 @@
     color: var(--ui-agent-admin-label-ink);
   }
 
-  /* ── Vision rev.5: the Context tabs — Agent System (Context: System) + Dialog Turns (Context: Dialog)
-     accordion groups, one per tab as of GH #161 (previously stacked in one combined Context tab) ──── */
-
-  [data-part='context-section'] {
-    border: 1px solid var(--ui-agent-admin-border);
-    border-radius: var(--ui-agent-admin-entry-radius);
-    background: var(--ui-agent-admin-surface);
-    padding: var(--ui-agent-admin-card-pad);
-  }
-
-  [data-part='context-section'] > [data-part='details'] > [data-part='summary'] {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--ui-agent-admin-label-ink);
-  }
+  /* ── Vision rev.5 → GH #222: the Context tabs — Context: System + Context: Dialog render slots, one
+     per tab since GH #161. GH #222 (Kim's screenshot ruling: "nesting too much and should be more like
+     the Settings tab") dropped the OUTER wrapper cards (the "Agent System"/"Dialog Turns"
+     `context-section` shells — the segment strip already labels the context) and flattened every
+     section to the Settings pattern: a plain section HEADING row + exactly ONE card of content. The
+     chevron stays ON THE HEADING ROW (never a card-in-card): the folds are load-bearing — the Agent
+     item carries the full composed system prompt, and Context: Dialog stacks up to 20 turns whose
+     request payloads each embed the whole prompt + history (newest-open/older-closed is the view's
+     designed reading order). ──── */
 
   [data-part='context-system'],
   [data-part='context-turns'] {
     display: flex;
     flex-direction: column;
-    gap: var(--ui-agent-admin-list-gap);
-    padding-block-start: var(--ui-agent-admin-list-gap);
+    gap: var(--ui-agent-admin-section-gap);
   }
 
-  [data-part='context-item'] {
+  /* The fold host is CHROME-FREE (GH #222) — no border/surface/padding of its own; the heading row and
+     the JSON card are the only visible parts. BOTH item flavors, always paired below: a turn item
+     OVERWRITES its `data-part` to `context-turn` (agent-admin.ts's #renderContextTurns), so a
+     `context-item`-only selector silently misses every Dialog turn — the cross-engine 400-weight
+     heading this wave's own browser probe caught first-run. The composed ui-disclosure's body inset is
+     zeroed by repointing its PUBLIC pad tokens (the entry-content `--ui-code-editor-min-inline-size: 0`
+     precedent: repoint the published token, never fight the host property) so heading and card sit
+     flush-aligned like the Settings sections. */
+  [data-part='context-item'],
+  [data-part='context-turn'] {
+    --ui-disclosure-body-pad-block: 0;
+    --ui-disclosure-body-pad-inline: 0;
+  }
+
+  /* The heading row — the Settings heading register verbatim (agent-heading/model-grid-heading/
+     surface-options-heading: 0.875rem/600/label-ink); the summary's control-height h/2 inline inset is
+     zeroed so the heading aligns flush with its card, like every Settings heading over its card. */
+  [data-part='context-item'] > [data-part='details'] > [data-part='summary'],
+  [data-part='context-turn'] > [data-part='details'] > [data-part='summary'] {
+    padding-inline: 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--ui-agent-admin-label-ink);
+  }
+
+  /* The mono JSON preview — GH #222: the section's ONE card of content (the shared card chrome recipe —
+     model-grid/surface-row/entry — kept on the code-surface plane). Its OWN scroll container
+     (overflow-x) so a long systemPrompt line can never widen the pane (the no-horizontal-overflow
+     browser probe's law). */
+  [data-part='context-json'] {
+    margin: var(--ui-agent-admin-list-gap) 0 0;
+    box-sizing: border-box;
+    padding: var(--ui-agent-admin-card-pad);
     border: 1px solid var(--ui-agent-admin-border);
     border-radius: var(--ui-agent-admin-entry-radius);
-    background: var(--ui-agent-admin-surface);
-    padding: var(--ui-agent-admin-compact-gap) var(--ui-agent-admin-compact-pad);
-  }
-
-  /* The mono JSON preview — the frame's `JSON...` block. Its OWN scroll container (overflow-x) so a
-     long systemPrompt line can never widen the pane (the no-horizontal-overflow browser probe's law). */
-  [data-part='context-json'] {
-    margin: var(--ui-agent-admin-compact-gap) 0 0;
-    padding: var(--ui-agent-admin-compact-pad);
-    border-radius: calc(var(--ui-agent-admin-entry-radius) / 2);
     background: var(--ui-agent-admin-code-surface);
     font-family: ui-monospace, 'SF Mono', Menlo, monospace;
     font-size: 0.75rem;
