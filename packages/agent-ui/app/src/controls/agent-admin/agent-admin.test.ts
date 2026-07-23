@@ -296,32 +296,36 @@ describe('UIAgentAdminElement — composition (GH #52/ADR-0154: chat + {Settings
     ])
   })
 
-  it('GH #161: the Context: System content composes ONLY the Agent System group — no Dialog Turns content at all', () => {
+  it('GH #161/#222: the Context: System content is the FLAT agent-system view — render slot as a direct child, no outer wrapper card, no Dialog content at all', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const systemContent = el.querySelector('[data-role="context-system-content"]') as HTMLElement
-    const groups = [...systemContent.querySelectorAll('[data-part="context-section"]')]
-    expect(groups.map((g) => g.getAttribute('data-section'))).toEqual(['agent-system'])
-    // The Agent item (open, with the compiled JSON) + one accordion per capability kind.
+    // GH #222 — the outer "Agent System" wrapper card is GONE; the render slot sits DIRECTLY in the
+    // segment container (the segment strip already labels the context).
+    expect(systemContent.querySelector('[data-part="context-section"]')).toBeNull()
+    const host = systemContent.querySelector('[data-part="context-system"]') as HTMLElement
+    expect(host.parentElement).toBe(systemContent)
+    // The Agent section (open, with the compiled JSON) + one section per capability kind.
     const items = [...systemContent.querySelectorAll('[data-part="context-system"] [data-part="context-item"]')]
     expect(items.map((i) => i.getAttribute('data-item'))).toEqual(['agent', ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool])
     const agentJson = JSON.parse(items[0]!.querySelector('[data-part="context-json"]')!.textContent ?? '{}') as Record<string, unknown>
     expect(agentJson['model']).toBe(DEFAULT_MODEL_ID)
     expect(agentJson['active']).toBe(true)
     expect(typeof agentJson['systemPrompt']).toBe('string')
-    // Cross-tab isolation: no Dialog Turns section/parts leaked into the System tab's content unit.
-    expect(systemContent.querySelector('[data-section="dialog-turns"]')).toBeNull()
+    // Cross-tab isolation: no Dialog parts leaked into the System tab's content unit.
     expect(systemContent.querySelector('[data-part="context-turns"]')).toBeNull()
   })
 
-  it('GH #161: the Context: Dialog content composes ONLY the Dialog Turns group — no Agent System content at all', () => {
+  it('GH #161/#222: the Context: Dialog content is the FLAT turn log — render slot as a direct child, no outer wrapper card, no System content at all', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const dialogContent = el.querySelector('[data-role="context-dialog-content"]') as HTMLElement
-    const groups = [...dialogContent.querySelectorAll('[data-part="context-section"]')]
-    expect(groups.map((g) => g.getAttribute('data-section'))).toEqual(['dialog-turns'])
-    // Dialog Turns: empty until the first turn runs.
+    // GH #222 — the outer "Dialog Turns" wrapper card is GONE; the render slot sits DIRECTLY in the
+    // segment container.
+    expect(dialogContent.querySelector('[data-part="context-section"]')).toBeNull()
+    const host = dialogContent.querySelector('[data-part="context-turns"]') as HTMLElement
+    expect(host.parentElement).toBe(dialogContent)
+    // Dialog turns: empty until the first turn runs.
     expect(dialogContent.querySelectorAll('[data-part="context-turn"]')).toHaveLength(0)
-    // Cross-tab isolation: no Agent System section/parts leaked into the Dialog tab's content unit.
-    expect(dialogContent.querySelector('[data-section="agent-system"]')).toBeNull()
+    // Cross-tab isolation: no System parts leaked into the Dialog tab's content unit.
     expect(dialogContent.querySelector('[data-part="context-system"]')).toBeNull()
     expect(dialogContent.querySelector('[data-part="context-item"]')).toBeNull()
   })

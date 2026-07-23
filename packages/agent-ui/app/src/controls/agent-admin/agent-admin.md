@@ -100,18 +100,16 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
     description: The A2UI catalog picker (`<ui-select data-part="surface-catalog">`, commit event `select`) — persisted to `a2uiCatalog`, sanitized fail-closed to the default id, disabled while the A2UI modality is off. ONE option today (the id the producer's own produce.ts pins, so picker and producer agree by construction); the create/pick-from-library affordances land with a second catalog or the GenUI PRD's source registry. The sanitized selection rides every surface request as `catalogId`.
   - name: surface-note
     description: The GenUI row's "PRD pending" annotation (title carries the PRD path).
-  - name: context-section
-    description: One of the two accordion groups behind the Context: System / Context: Dialog tabs (vision rev.5; GH #161 split them into separate tabs, one group per tab) — `<ui-disclosure data-part="context-section" data-section="agent-system|dialog-turns">`, both open by default.
   - name: context-system
-    description: The Agent System group's render slot — rebuilt wholesale on ANY store write (the compiled view reads nearly every key; writes are commit-time, never per-keystroke). Carries one context-item per subject.
+    description: The Context: System render slot, a DIRECT child of its segment container (GH #222 dropped the old outer "Agent System" wrapper card — the segment strip already labels the context) — rebuilt wholesale on ANY store write (the compiled view reads nearly every key; writes are commit-time, never per-keystroke). Carries one context-item per subject.
   - name: context-item
-    description: One Agent System accordion — `<ui-disclosure data-part="context-item" data-item="agent|skill|workflow|resource|tool">` whose body is the pretty-printed JSON. The `agent` item (open by default) carries the COMPILED config — name/model/temperature/effort/active + the EXACT `composeLiveSystemPrompt` output a turn would send; each kind item (closed by default — the frame's caret-right rows) carries `{ enabled, entries: [{label, enabled, description}] }`. Open/closed state survives rebuilds (`data-item`-keyed capture).
+    description: One Context: System section — `<ui-disclosure data-part="context-item" data-item="agent|skill|workflow|resource|tool">` rendered as the Settings-tab pattern (GH #222): a CHROME-FREE fold host whose summary reads as a plain section heading (the agent-heading register, chevron kept on the heading row) over exactly ONE card of content (the context-json body) — never a card-in-card. The `agent` item (open by default) carries the COMPILED config — name/model/temperature/effort/active + the EXACT `composeLiveSystemPrompt` output a turn would send; each kind item (closed by default — the frame's caret-right rows) carries `{ enabled, entries: [{label, enabled, description}] }`. Open/closed state survives rebuilds (`data-item`-keyed capture).
   - name: context-turns
-    description: The Dialog Turns group's render slot — the per-turn payload log, NEWEST FIRST with zero-padded descending numbers (the frame's 04→01), bounded at 20 (the oldest fall off; numbering stays monotonic). Session-ephemeral — never persisted.
+    description: The Context: Dialog render slot, a DIRECT child of its segment container (GH #222 — the old outer "Dialog Turns" wrapper card is gone) — the per-turn payload log, NEWEST FIRST with zero-padded descending numbers (the frame's 04→01), bounded at 20 (the oldest fall off; numbering stays monotonic). Session-ephemeral — never persisted.
   - name: context-turn
-    description: One logged turn — a context-item variant (`data-part="context-turn"`) whose JSON body is `{ arm: stub|live|surface, request, response }`; failures log too (`response.error`). The newest turn's fold defaults open.
+    description: One logged turn — a context-item variant (`data-part="context-turn"`, the same GH #222 heading-row + one-card shape) whose JSON body is `{ arm: stub|live|surface, request, response }`; failures log too (`response.error`). The newest turn's fold defaults open.
   - name: context-json
-    description: The mono pretty-printed JSON preview inside every context accordion — its OWN scroll container (overflow-x + a 20rem block cap), so a long systemPrompt line can never widen the pane.
+    description: The mono pretty-printed JSON preview — since GH #222 the section's ONE card of content (the shared card chrome recipe on the code-surface plane) — its OWN scroll container (overflow-x + a 20rem block cap), so a long systemPrompt line can never widen the pane.
 
 customStates: []          # no :state() hooks — no derived presentation state of this element's own (unlike ui-master-detail's data-view)
 
@@ -150,9 +148,10 @@ tab carries the WHOLE config column — the Agent header row (heading + ACTIVE m
 `ui-settings` + the Model grid + the prompt sections (the old prompts pane, merged in) + the Surface
 Options card (rev.6 — the output-modality contract: Markdown · A2UI + catalog picker · PRD-gated GenUI)
 + the four capability sections (each with its own kind master switch). The Context tabs are the
-read-only introspection surface, split in two (GH #161 — one tab per accordion, superseding the old
-single combined "Context" tab): **Context: System** (the compiled Agent System JSON, incl. the `surface`
-block) and **Context: Dialog** (the Dialog Turns payload log). Below 640px the shell collapses to
+read-only introspection surface, split in two (GH #161, superseding the old single combined "Context"
+tab) and flattened to the Settings-tab pattern (GH #222 — plain section headings + one JSON card each,
+no outer wrapper card): **Context: System** (the compiled agent-system JSON, incl. the `surface`
+block) and **Context: Dialog** (the per-turn payload log). Below 640px the shell collapses to
 {Chat, Settings, Context: System, Context: Dialog} tabs — a flat FOURTH top-level tab, not a nested
 sub-tab-set (TKT-0085's mechanism, two bands instead of three; every tab is one content unit moved
 whole between its wide tab-panel and its narrow tab-panel, Context included).
