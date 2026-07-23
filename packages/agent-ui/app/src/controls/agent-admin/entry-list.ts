@@ -11,7 +11,7 @@
 // change) timing are byte-identical to the ui-textarea it replaces (ADR-0139 cl.4/cl.6 make this a drop-in
 // tag+type swap); `selectToEnd()` carries over as the same mid-edit caret-restoration seam (ADR-0134).
 //
-// DOM ownership: `mountEntryList` builds the section shell (heading + list host + add-form host) ONCE
+// DOM ownership: `mountEntryList` builds the section shell (list host + add-form host — headless since GH #225) ONCE
 // and returns a `render(entries)` that rebuilds the list body from scratch on every call — acceptable
 // because `render` is only invoked on a genuine entries-array change (add/delete/toggle, or an external
 // store notification), never per-keystroke; a content edit commits on ui-code-editor's own `change` (blur),
