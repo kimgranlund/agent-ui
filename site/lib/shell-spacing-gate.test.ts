@@ -6,6 +6,19 @@ import { describe, it, expect } from 'vitest'
 // never coincidence — it silently forks that box off every future token retune (density, module).
 // This deterministic, browser-free test (plain `npm test`, no browser needed — it reads CSS source
 // as text) holds the count at the AC19 baseline. A future red here reads as law, not lint noise.
+//
+// GH #213 — the token-minting laundering hole. AC19(b) originally covered spacing-PROPERTY
+// declarations only; a raw rung minted INTO a `--ui-*` token (`--ui-x: 0.75rem`) then consumed
+// elsewhere would pass both this gate (it never inspected custom-property declarations) and the
+// consumption-side styling gates (they check consumption spelling, not minting spelling). The
+// predicate below now ALSO reaches `--ui-*` declarations, restricted to ones whose entire value is
+// a bare literal or a single top-level `calc()` expression (isMintedDimensionValue) — a composite
+// multi-value declaration (a `box-shadow` token) or a `var(token, literal-fallback)` pair is out of
+// scope BY CONSTRUCTION, not a carve-out: neither is "a length minted into this token" in the first
+// place, and scanning them blindly would false-positive on unrelated numeric coincidences (a
+// shadow's blur radius, a shape-token's fallback). Within an in-scope value the SAME literal-arm
+// rule applies verbatim, so `calc(var(--ui-super-shell-module) / 3)` passes (no literal arm) while
+// `calc(0.375rem * 2)` fails exactly as a spacing property's own drift would.
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
@@ -13,9 +26,9 @@ declare const process: { cwd(): string }
 const ROOT = process.cwd()
 
 // AC19(a) — the sheet set: every {name}.css under @agent-ui/app's controls/, plus every site sheet
-// whose selectors lay out a shell element, its parts, or a component composing one (today all six).
-// Extending this set is a one-line reviewed append — the FOCUS_TIMING_FILES precedent
-// (vitest.browser.config.ts, GH #56).
+// whose selectors lay out a shell element, its parts, or a component composing one (today all
+// seven — GH #213 appends app-shell.css). Extending this set is a one-line reviewed append — the
+// FOCUS_TIMING_FILES precedent (vitest.browser.config.ts, GH #56).
 const SHELL_FAMILY_SHEETS = [
   // @agent-ui/app's controls/ — every sheet, unconditionally (the package composes shells throughout).
   'packages/agent-ui/app/src/controls/agent-admin/agent-admin.css',
@@ -31,17 +44,21 @@ const SHELL_FAMILY_SHEETS = [
   'packages/agent-ui/app/src/controls/super-shell/super-shell.css',
   'packages/agent-ui/app/src/controls/surface-host/surface-host.css',
   'packages/agent-ui/app/src/controls/workspace-shell/workspace-shell.css',
-  // the six site sheets named in the clause.
+  // the seven site sheets named in the clause.
   'site/pages/_page.css',
   'site/pages/a2ui-live.css',
   'site/pages/a2ui-chat.css',
   'site/pages/super-shell.css',
   'site/pages/chat-shell.css',
   'site/pages/agent-admin-app.css',
+  'site/pages/app-shell.css',
 ]
 
 // AC19(b) — the property families in scope: padding*/margin*, gap/row-gap/column-gap, the inset*
 // family + top/right/bottom/left, and the logical/physical box-size properties incl. min-*/max-*.
+// (GH #213 widens (b) further, to minted `--ui-*` custom properties — see isMintedDimensionValue
+// below; that check is applied separately, inline in the violation loop, since its eligibility
+// depends on the VALUE shape, not just the property name.)
 const SPACING_PROPERTIES = new Set([
   'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
   'padding-block', 'padding-block-start', 'padding-block-end',
@@ -66,7 +83,8 @@ const SPACE_PX_DENSITY_1 = [4, 8, 12, 16, 24, 32] // --md-sys-space-* at density
 const LADDER_PX = [...new Set([...MODULE_MULTIPLES.map((m) => MODULE_PX * m), ...SPACE_PX_DENSITY_1])]
 
 // AC19(c) — the allowlist: an explicit (file, declaration, reason) list. At landing, exactly ONE
-// entry — R11c's resizer thickness. Growing it is a reviewed act, never a drive-by (R11c).
+// entry — R11c's resizer thickness. Growing it is a reviewed act, never a drive-by (R11c). GH #213
+// appends a second entry (below) for the custom-property predicate's own one necessary exception.
 interface AllowlistEntry {
   file: string
   selectorContains: string
@@ -83,6 +101,17 @@ const ALLOWLIST: AllowlistEntry[] = [
     reason:
       "SPEC-R11c's one AC19 exception — the pane-resizer's hit-target thickness is a control " +
       'dimension that coincides with --md-sys-space-xs numerically, not semantically.',
+  },
+  {
+    file: 'packages/agent-ui/app/src/controls/super-shell/super-shell.css',
+    selectorContains: ':where(ui-super-shell)',
+    property: '--ui-super-shell-module',
+    literal: '1.125rem',
+    reason:
+      "GH #213 — R11a's own ROOT definition: the module IS the 18px origin of the entire ladder " +
+      '("the head of super-shell.css\'s token block"), so there is no var() to chain it to — its ' +
+      'own literal spelling is the one lawful exception, mirrored from this same allowlist\'s ' +
+      'resizer-thickness precedent.',
   },
 ]
 
@@ -155,6 +184,27 @@ function literalsOf(value: string): { token: string; px: number }[] {
   return hits
 }
 
+// GH #213 — is this custom property a candidate for the minting check at all?
+const CUSTOM_PROPERTY_RE = /^--ui-/
+function isCustomProperty(property: string): boolean {
+  return CUSTOM_PROPERTY_RE.test(property)
+}
+
+// GH #213 — the minted-value shape gate: the ENTIRE trimmed value is a bare `<number><px|rem>`
+// literal (the direct-mint shape, `--ui-x: 0.75rem`) or a single top-level `calc(...)` expression
+// (the arithmetic-mint shape, `--ui-x: calc(0.375rem * 2)`). Deliberately excludes every other
+// shape — a composite multi-value declaration (`0 0.25rem 1.5rem rgb(0 0 0 / 0.25)`, a box-shadow
+// token) or a bare `var(...)` reference, WITH or without a literal fallback (`var(--md-sys-shape-
+// corner-base, 0.25rem)`) — because none of those are "a length minted into this token": the value
+// is either doing something else entirely (compositing a shadow) or deferring to another token's
+// own value (a fallback belongs to THAT token's declaration, not this one's).
+const BARE_LITERAL_RE = /^-?\d*\.?\d+(px|rem)$/
+const BARE_CALC_RE = /^calc\(.*\)$/i
+function isMintedDimensionValue(value: string): boolean {
+  const v = value.trim()
+  return BARE_LITERAL_RE.test(v) || BARE_CALC_RE.test(v)
+}
+
 function isAllowlisted(d: Declaration, literalToken: string): boolean {
   return ALLOWLIST.some(
     (a) =>
@@ -178,17 +228,18 @@ describe('AC19 — the shell-family spacing-literal drift gate (SPEC-R11c/AC19)'
     expect(missing, missing.join(', ')).toEqual([])
   })
 
-  it('the allowlist carries exactly ONE entry at landing (R11c — growing it is a reviewed act, never a drive-by)', () => {
-    expect(ALLOWLIST.length).toBe(1)
+  it('the allowlist carries exactly TWO entries after the GH #213 follow-up append (R11c — growing it further is a reviewed act, never a drive-by)', () => {
+    expect(ALLOWLIST.length).toBe(2)
   })
 
-  it('no raw px/rem literal in a spacing-/box-dimension declaration equals a shipped ladder rung, unless allowlisted', () => {
+  it('no raw px/rem literal in a spacing-/box-dimension declaration, OR in a minted --ui-* custom-property value, equals a shipped ladder rung, unless allowlisted', () => {
     const violations: string[] = []
     for (const rel of SHELL_FAMILY_SHEETS) {
       const raw = readFileSync(`${ROOT}/${rel}`, 'utf8')
       const { decls, text } = declarationsOf(rel, raw)
       for (const d of decls) {
-        if (!SPACING_PROPERTIES.has(d.property)) continue
+        const inScope = SPACING_PROPERTIES.has(d.property) || (isCustomProperty(d.property) && isMintedDimensionValue(d.value))
+        if (!inScope) continue
         for (const { token, px } of literalsOf(d.value)) {
           const rung = LADDER_PX.find((l) => Math.abs(px - l) < 0.01)
           if (rung === undefined) continue
