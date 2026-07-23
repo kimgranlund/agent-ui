@@ -124,6 +124,15 @@
     min-inline-size: 0;
   }
 
+  /* Summary-slotted controls (ADR-0158 — the realized `slot=summary` extension): authored children the
+     host adopts INTO the summary row after the label (disclosure.ts's slot partition). Flex-frozen so a
+     long label can never squeeze a control; the flex-growing summary-text pushes them to the row's inline
+     end — the GH #225 heading-row shape, now free for every consumer. The activation guard (a click flips
+     the control, never the fold) is behaviour, not paint — disclosure.ts owns it. */
+  :scope [data-part='summary'] > [slot='summary'] {
+    flex: none;
+  }
+
   /* Hover (TKT-0047, revised) — a background-tint wash (the combo-box.css active-descendant
      precedent), not an ink-step: disclosure's idle ink has no headroom to step to (see the
      TOKEN block comment above). */

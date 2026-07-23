@@ -164,8 +164,9 @@
   /* GH #225 — the old plain heading rows (agent-header/agent-heading, model-grid-heading,
      surface-options-heading, entry-section-header/-heading) are GONE: every Settings section's heading
      is its fold's summary row now (the shared heading-register rule below, with the Context items).
-     The master switches ride those summary rows (placeSummaryControl) — the summary-text's flex-grow
-     pushes each to the row's inline end, reproducing the old header rows' space-between shape. */
+     The master switches ride those summary rows (slotted `slot="summary"`, GH #226/ADR-0158 — the
+     disclosure adopts them) — the summary-text's flex-grow pushes each to the row's inline end,
+     reproducing the old header rows' space-between shape. */
 
   /* The Model GRID (2026-07-19 rev.2) — provider-grouped rows [ label | include switch | default
      checkbox ], carded like the entry sections (the same chrome recipe). Provider labels mirror the

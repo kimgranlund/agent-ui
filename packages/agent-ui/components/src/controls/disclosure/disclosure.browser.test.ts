@@ -12,6 +12,11 @@ import { server, cdp, userEvent } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css' // tokens (--md-sys-color-*) + dimensions (--md-sys-height/font/space-*)
 import './disclosure.css' // the control stylesheet (direct — pre-barrel)
 import './disclosure.ts' // self-define (registers ui-disclosure)
+// The summary-slot probes (ADR-0158) exercise the REAL consumer shape — a fleet ui-switch riding the
+// heading row (the GH #225 agent-admin arrangement, now component-owned). Test-only import; the control
+// source itself never imports a sibling control.
+import '../switch/switch.css'
+import '../switch/switch.ts'
 
 const px = (v: string): number => Number.parseFloat(v)
 
@@ -189,6 +194,98 @@ describe('ui-disclosure — find-in-page auto-expand (SPEC-R15 AC4 — the instr
     const { host, body } = mount('<ui-disclosure summary="X"><p id="needle">findable text</p></ui-disclosure>')
     expect(host.hasAttribute('open')).toBe(false)
     expect(body.querySelector('#needle')?.textContent).toBe('findable text')
+  })
+})
+
+describe('ui-disclosure — the summary slot, cross-engine (ADR-0158; GH #226/#225)', () => {
+  it('a real ui-switch on the heading row: a pointer click flips the switch WITHOUT folding; the summary still folds; the switch survives the fold', async () => {
+    const { host, summary } = mount(
+      '<ui-disclosure summary="Agent" open><ui-switch slot="summary" aria-label="Agent active"></ui-switch><p>Config body</p></ui-disclosure>',
+    )
+    const el = host as HTMLElement & { open: boolean }
+    const sw = host.querySelector('ui-switch') as HTMLElement & { checked: boolean }
+    expect(summary.contains(sw), 'the switch rides the summary part').toBe(true)
+    expect(sw.getBoundingClientRect().width, 'the switch paints on the heading row').toBeGreaterThan(0)
+    const wasChecked = sw.checked
+
+    // The component-owned activation guard: the click flips the switch, never the fold (ADR-0158 cl.3).
+    await userEvent.click(sw)
+    await nextToggle()
+    expect(sw.checked).toBe(!wasChecked)
+    expect(el.open, 'the fold did not toggle').toBe(true)
+
+    // The summary's own click is untouched by the guard — the fold collapses to its heading row, and the
+    // switch stays visible ON it (the "way back never folds away" shape, GH #225).
+    summary.click()
+    await nextToggle()
+    expect(el.open).toBe(false)
+    expect(sw.getBoundingClientRect().width, 'the switch survives the fold').toBeGreaterThan(0)
+    summary.click()
+    await nextToggle()
+    expect(el.open).toBe(true)
+  })
+
+  it('a destructive clobber rebuild rescues the switch onto the FRESH heading row — same node, still guarded (GH #226)', async () => {
+    const { host } = mount(
+      '<ui-disclosure summary="Agent" open><ui-switch slot="summary" aria-label="Agent active"></ui-switch><p>original body</p></ui-disclosure>',
+    )
+    const el = host as HTMLElement & { open: boolean }
+    const sw = host.querySelector('ui-switch') as HTMLElement & { checked: boolean }
+
+    host.textContent = 'fresh body' // clobbers every child — the heal rebuild path (disclosure.ts)
+    await nextToggle() // covers the observer microtask + the platform's queued toggle task
+
+    const freshSummary = host.querySelector('[data-part="summary"]') as HTMLElement
+    expect(freshSummary.contains(sw), 'the SAME switch node was rescued into the fresh summary part').toBe(true)
+    expect(sw.getBoundingClientRect().width, 'and it paints').toBeGreaterThan(0)
+    expect(host.querySelector('[data-part="body"]')?.textContent).toBe('fresh body')
+
+    // Still guarded + still functional after the rebuild (the re-wired listeners).
+    const wasChecked = sw.checked
+    await userEvent.click(sw)
+    await nextToggle()
+    expect(sw.checked).toBe(!wasChecked)
+    expect(el.open, 'the rebuilt fold did not toggle on the switch click').toBe(true)
+  })
+
+  it('activation-carrying slot content, cross-engine (review fix, ADR-0158 cl.3): a nested fold toggles ITSELF (outer stays) and a slotted native button runs un-prevented', async () => {
+    // The scoped guard's stand-down arm: the inner element is the click's single activation target, so
+    // the outer fold could never toggle from these clicks — and a preventDefault would cancel the INNER
+    // behavior (the review-proven hazard: inner.open stayed false under the unscoped first draft).
+    const { host, summary } = mount(
+      '<ui-disclosure summary="Outer"><ui-disclosure slot="summary" summary="Inner"><p>inner body</p></ui-disclosure><p>outer body</p></ui-disclosure>',
+    )
+    const outer = host as HTMLElement & { open: boolean }
+    const inner = summary.querySelector('ui-disclosure') as HTMLElement & { open: boolean }
+    expect(summary.contains(inner), 'the nested fold rides the outer summary row').toBe(true)
+    const innerSummary = inner.querySelector('[data-part="summary"]') as HTMLElement
+    innerSummary.click()
+    await nextToggle()
+    expect(inner.open, 'the inner fold toggles — the guard stood down').toBe(true)
+    expect(outer.open, 'the outer fold stays').toBe(false)
+
+    const { host: host2 } = mount(
+      '<ui-disclosure summary="X"><button slot="summary" id="slot-btn" type="button">Do</button><p>body</p></ui-disclosure>',
+    )
+    const el2 = host2 as HTMLElement & { open: boolean }
+    const btn = host2.querySelector('#slot-btn') as HTMLButtonElement
+    let captured: Event | null = null
+    btn.addEventListener('click', (e) => (captured = e))
+    await userEvent.click(btn)
+    await nextToggle()
+    expect(captured).not.toBeNull()
+    expect((captured as unknown as Event).defaultPrevented, 'no preventDefault reached the button click').toBe(false)
+    expect(el2.open, 'the fold never toggles — the button owned the activation').toBe(false)
+  })
+
+  it('the accessible name is the summary label, not the switch text — aria-labelledby scopes name-from-content (ADR-0158 cl.4)', () => {
+    const { summary } = mount(
+      '<ui-disclosure summary="Agent"><ui-switch slot="summary" aria-label="Agent active"></ui-switch><p>b</p></ui-disclosure>',
+    )
+    const label = summary.querySelector('[data-part="summary-text"]') as HTMLElement
+    expect(label.id).not.toBe('')
+    expect(summary.getAttribute('aria-labelledby')).toBe(label.id)
+    expect(label.textContent).toBe('Agent')
   })
 })
 
