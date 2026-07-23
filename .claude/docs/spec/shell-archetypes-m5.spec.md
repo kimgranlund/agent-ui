@@ -390,25 +390,41 @@ plain `npm test`) over the named shell-family sheet set fails on ANY raw length 
 spacing- or box-dimension declaration whose value equals a ladder value, unless allowlisted:
 (a) **sheet set** — a named `SHELL_FAMILY_SHEETS` list in the test: every `{name}.css` under
 `@agent-ui/app`'s `controls/`, plus every site sheet whose selectors lay out a shell element, its
-parts, or a component composing one (today all six: `_page.css`, `a2ui-live.css`, `a2ui-chat.css`,
-`super-shell.css`, `chat-shell.css`, `agent-admin-app.css`); extending the set is a one-line
-reviewed append (the `FOCUS_TIMING_FILES` precedent, GH #56) · (b) **predicate** — within
+parts, or a component composing one (today all seven: `_page.css`, `a2ui-live.css`, `a2ui-chat.css`,
+`super-shell.css`, `chat-shell.css`, `agent-admin-app.css`, `app-shell.css`); extending the set is a
+one-line reviewed append (the `FOCUS_TIMING_FILES` precedent, GH #56) · (b) **predicate** — within
 declarations of the `padding*`/`margin*` families, `gap`/`row-gap`/`column-gap`, the `inset*`
 family + `top`/`right`/`bottom`/`left`, and the logical/physical box-size properties incl.
-`min-*`/`max-*`, a `px` or `rem` literal — including a literal arm inside a `calc()` expression,
-in scope by intent — that at the 16px root equals any SHIPPED R11a module multiple
+`min-*`/`max-*`, **and within any `--ui-*` custom-property declaration whose value is split into
+top-level arms (parens-aware — a `calc(...)`'s or `var(...)`'s own internal spaces never split) and
+EVERY arm is dimension-shaped: a bare literal, a bare `0`, a `var(...)` reference (with or without a
+fallback), or a `calc(...)` expression** (GH #213 — closes the token-minting laundering hole: a raw
+rung minted INTO a token then consumed would otherwise pass both this gate and the consumption-side
+styling gates. A single bare literal or `calc()` is simply the one-arm case of this same rule — a
+genuine multi-value mint, e.g. `var(--md-sys-space-sm) var(--md-sys-space-md)`, is equally in scope
+and scanned arm-by-arm, which is what catches a raw two-value mint like `0.5rem 0.75rem` that no
+single-arm check would see. A `var(...)` arm — including any literal fallback it carries — is never
+scanned: a fallback belongs to THAT token's own declaration, not this one's, held consistent whether
+it is the whole value or one arm among several. A declaration with any NON-dimension-shaped arm (a
+`box-shadow` token's `rgb(...)` arm) stays out of scope by construction, not a carve-out — it is
+doing something other than compositing dimensions), a `px` or `rem` literal — including a literal
+arm inside a `calc()` expression, in scope by intent — that at the 16px root equals any SHIPPED R11a
+module multiple
 (18px × {1/3, 2/3, 1, 3, 9, 14}; ×2 is deliberately absent — no shipped rung, so a raw 36px has
 no lawful token spelling to convert to and is a design question, not drift) or any
 `--md-sys-space-*` value at density 1 (4/8/12/16/24/32px); `0`, `em` literals (font-relative by
 construction), and
 percentage/viewport/container units are out of scope — so every R11c `_page.css` outlier is
 exempt by construction (no ladder rung, negative, or em), and only a numerically colliding
-exception needs an entry · (c) **allowlist** — an explicit in-test list of
+exception needs an entry — so `calc(var(--ui-super-shell-module) / 3)` passes (no literal arm)
+while `calc(0.375rem * 2)`, a bare `--ui-x: 0.75rem`, or a raw multi-value `--ui-x: 0.5rem 0.75rem`
+fails exactly as a spacing property's own drift would · (c) **allowlist** — an explicit in-test list of
 `(file, declaration, reason)` entries: at landing exactly ONE, R11c's resizer thickness (the
 `[data-part='pane-resizer']` `inline-size` declaration); every later append states its reason in
-the entry · (d) **baseline** — born ZERO: the gate lands
-with (or after) the mop-up wave's conversions, never with a red or grandfathered count · (e) the
-test's header cites SPEC-R11c/AC19, so a future red reads as law, not lint noise.
+the entry (GH #213 appends a second: `--ui-super-shell-module`'s own root definition, R11a's origin
+literal — the head of the token block has no var() to chain to) · (d) **baseline** — born ZERO: the
+gate lands with (or after) the mop-up wave's conversions, never with a red or grandfathered count ·
+(e) the test's header cites SPEC-R11c/AC19, so a future red reads as law, not lint noise.
 
 AC20 (extends §6) — **floors hold under passive resize, cross-engine.** With both sides authored
 full (a dual-resizable configuration is the sweep vehicle; a rails+panes `FORWARD_ATTRS`-shaped
