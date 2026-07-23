@@ -19,6 +19,17 @@ import type { UICalendarElement } from './calendar.ts'
 //   (a) floor    — an unstretched, shrink-wrapped calendar (the pre-ADR-0105 compact rendering).
 //   (b) wide     — a ~600px stretched range-mode panel (fluid tracks + the two-layer cell: circular
 //                  point-layer endpoints, a continuous square band, the half-wash bridging them).
+//
+// DETERMINISM LAW (GH #216): the mounted month must NEVER be able to contain the real today.
+// `#today()` reads the real clock, so a today-adjacent mounted month lets the today-ring's cell
+// drift day-to-day against whenever the baselines were captured — sub-tolerance churn in check
+// mode, and (post-#215's exact-update runner) a legitimate PNG rewrite on every `--update` run.
+// July 2020 is the pin: firmly in the past (a forward-moving wall clock can never re-enter it —
+// the 6-row grid spans at most 2020-06-28..2020-08-08 incl. adjacent-month spill cells, so no
+// cell ever matches the real y/m/d), yet weekday-identical to the original July-2026 baselines
+// (both months start on a Wednesday, 31 days) — the gestalt these baselines prove is unchanged.
+// The today-ring itself is deliberately ABSENT from these pixels; its rendering is proven
+// clock-relative by calendar.browser.test.ts §[3]/§[4]. Do not remount a current-era month here.
 import '@agent-ui/components/foundation-styles.css'
 import '../_surface/container-box.css'
 import './calendar.css'
@@ -62,7 +73,8 @@ describe('ui-calendar — visual regression (ADR-0105 gestalt via the ADR-0110 p
   it.skipIf(server.browser !== 'chromium')(
     '(a) floor: a shrink-wrapped calendar panel matches the committed baseline',
     async () => {
-      const { el } = mount('<ui-calendar value="2026-07-15"></ui-calendar>')
+      // July 2020, never-today (see the DETERMINISM LAW header note, GH #216).
+      const { el } = mount('<ui-calendar value="2020-07-15"></ui-calendar>')
       await el.updateComplete
 
       const panel = el.querySelector<HTMLElement>('[data-part="panel"]')!
@@ -73,8 +85,9 @@ describe('ui-calendar — visual regression (ADR-0105 gestalt via the ADR-0110 p
   it.skipIf(server.browser !== 'chromium')(
     '(b) wide: a 600px-stretched range-mode panel (fluid tracks + two-layer cells) matches the committed baseline',
     async () => {
+      // July 2020, never-today (see the DETERMINISM LAW header note, GH #216).
       const { el } = mountStretched(
-        '<ui-calendar mode="range" value-start="2026-07-10" value-end="2026-07-20"></ui-calendar>',
+        '<ui-calendar mode="range" value-start="2020-07-10" value-end="2020-07-20"></ui-calendar>',
       )
       await el.updateComplete
 
