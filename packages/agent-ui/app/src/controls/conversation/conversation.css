@@ -1,8 +1,9 @@
 /* conversation.css — ui-conversation, the M2 thread/composer/narration layout (LLD-C6 · SPEC-R4). Single
  * file, two sectioned blocks (ADR-0003): a `:where(ui-conversation)` TOKEN block declaring only
- * `--ui-conversation-*` custom properties (promoted/renamed from site/pages/a2ui-chat.css's equivalents —
- * the SAME visual contract, no new visual design), then an `@scope (ui-conversation)` STYLES block
- * consuming ONLY that chain (role-purity, the app-shell.css/card.css discipline).
+ * `--ui-conversation-*` custom properties (promoted/renamed from site/pages/a2ui-chat.css's equivalents;
+ * GH #241 later DIVERGED the agent turn from that promoted design — de-bubbled, see the agent-role rule),
+ * then an `@scope (ui-conversation)` STYLES block consuming ONLY that chain (role-purity, the
+ * app-shell.css/card.css discipline).
  *
  * Standalone sheet — linked via the package `./conversation.css` export; NEVER injected from
  * conversation.ts (behaviour-only `.ts`, no runtime style; plan §2).
@@ -16,7 +17,8 @@
   --ui-conversation-ink: var(--md-sys-color-neutral-on-surface, currentColor);
   --ui-conversation-ink-variant: var(--md-sys-color-neutral-on-surface-variant, currentColor);
   --ui-conversation-user-bubble: var(--md-sys-color-primary-container-low, currentColor);
-  --ui-conversation-agent-bubble: var(--md-sys-color-neutral-surface-high, currentColor);
+  /* GH #241 removed --ui-conversation-agent-bubble: the agent turn de-bubbled (no background — the
+     styles block below), so the mint would be dead weight nothing consumes. */
   /* TKT-0066: the shell/bubble radii were 12px/10px literals — now the shared fleet radius + a
      nested-radius derivation off it (ADR-0018's concentric-corner spirit; identical rendered values at
      the default base). Minted here (not read directly in @scope) so the pending dimensional-constants
@@ -72,10 +74,19 @@
     align-self: flex-end;
     background: var(--ui-conversation-user-bubble);
   }
+  /* GH #241 (Kim's ruling) — the agent turn DE-BUBBLES: no background, no padding, no radius, FULL
+     message-column width (align-self: stretch against the log's flex column). The sender label
+     ([data-part='who'], still this container's first child) reads as a small name ABOVE the turn with
+     no chrome around anything; the streamed narration, the note text, and the mounted A2UI surfaces
+     all render bare — the SAME container carries the streaming and settled states, so the streaming
+     path is bare by construction. The user turn keeps its compact bubble (below, untouched). */
   [data-part='bubble'][data-role='agent'] {
-    align-self: flex-start;
-    background: var(--ui-conversation-agent-bubble);
-    inline-size: 92%; /* an agent bubble's narration/mounted surface want real room, unlike a short reply */
+    align-self: stretch;
+    background: none;
+    padding: 0;
+    border-radius: 0;
+    inline-size: auto;
+    max-inline-size: 100%; /* overrides the base bubble's 92% cap — the full-width law (GH #241) */
   }
   [data-part='bubble'][data-role='system'] {
     align-self: center;
@@ -128,11 +139,13 @@
     flex-direction: column;
     gap: var(--ui-conversation-mounts-gap);
   }
-  /* TKT-0084: conversation.ts sets `wrap` on every surface it mounts here — the bubble hugs the
-     rendered surface's real content height (capped by ui-surface-host's own
-     --ui-surface-host-wrap-max-block-size) instead of a fixed artboard height clipping taller content.
-     No block-size rule needed here anymore; `min-inline-size: 0` still guards the flex-column bubble
-     from stretching to a child's intrinsic width (the standard flex-overflow floor). */
+  /* TKT-0084 + GH #241: conversation.ts sets `wrap` AND `bare` on every surface it mounts here — the
+     turn hugs the rendered surface's real content height (capped by ui-surface-host's own
+     --ui-surface-host-wrap-max-block-size) instead of a fixed artboard height clipping taller content,
+     and the surface renders chromeless at full message-column width (no checker, no padding — the
+     [bare] contract, surface-host.css). No block-size rule needed here anymore; `min-inline-size: 0`
+     still guards the flex-column turn container from stretching to a child's intrinsic width (the
+     standard flex-overflow floor). */
   [data-part='mounts'] ui-surface-host {
     min-inline-size: 0;
   }
