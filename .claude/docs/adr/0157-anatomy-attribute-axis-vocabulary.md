@@ -22,8 +22,9 @@ settled convention; no code changes ride this record.
 
 The fleet is light-DOM by default with ARIA routed through `ElementInternals` (CLAUDE.md's standing
 convention), so the shadow-DOM part machinery (`part` / `::part()`) never applied — a repo-wide grep
-(2026-07-23) finds zero `part="…"` / `::part` uses in `packages/` — and the anatomy vocabulary grew as
-`data-*` attributes instead. By now that vocabulary is settled practice across two packages:
+(2026-07-23) finds zero USES of `part="…"` / `::part` in `packages/` (the only textual `::part` matches
+are descriptor comments DISCLAIMING it — the `parts:` blocks' "NOT shadow-DOM `::part()`" notes, e.g.
+`split.md:36`) — and the anatomy vocabulary grew as `data-*` attributes instead. By now that vocabulary is settled practice across two packages:
 
 - **`data-part`** — a control stamps the chrome it builds and selects it in its own sheet:
   `components/src/controls/disclosure/disclosure.ts:16-21` (the anatomy comment) + `:191-197` (the
@@ -53,9 +54,16 @@ live at `super-shell.css:224-241`). Second, shell SPEC-R12b (the dual-role owner
 [`shell-archetypes-m5.spec.md`](../spec/shell-archetypes-m5.spec.md) §10) presupposes that the shell's
 mechanics live on shell-owned attributes the consumer never contests. The same attributes also realize the
 fleet's ownership split — attributes are component anatomy, classes are consumer territory: component
-sheets select only their own stamped attributes, while consumer sheets key off consumer classes
+sheets select the attributes they stamp, while consumer sheets key off consumer classes
 (`site/pages/a2ui-live.css`'s `.chat-pane`/`.canvas-pane` pane rules, ADR-0156 cl.4; SPEC-R12a's
-tag-qualified class-override law).
+tag-qualified class-override law). Two shipped controls predate the partition and deviate — named here
+honestly rather than claimed away: `ui-slider-multi`'s control-created chrome is CLASS-anatomy
+(`.rail`/`.fill`/`.thumb`, stamped `slider-multi.ts:109-125`, selected `slider-multi.css:83/100/125` —
+its `data-thumb` axis IS conformant), and `ui-split`'s separator rides a bespoke `[data-separator]`
+attribute (`split.css:73-107`) that its descriptor declares under `parts:` (`split.md:36-42`) yet the
+`[data-part]`-only truthfulness gate (`naming-gates.test.ts:508`) cannot see. Both are pre-partition
+wrinkles with a fix-on-touch disposition — naming.md §6's own standing law for mechanism artifacts —
+not counter-precedents to the axes below.
 
 ## Decision
 
@@ -83,8 +91,10 @@ a node is — and is untouched by this record.
 ## Consequences
 
 - A new component's anatomy lands as `data-part` names declared in its descriptor's `parts:`; new state or
-  variant lands as its own `data-*` attribute. No component mints a competing anatomy channel (classes,
-  bespoke attributes, per-part elements, ARIA).
+  variant lands as its own `data-*` attribute. No NEW component mints a competing anatomy channel (classes,
+  bespoke attributes, per-part elements, ARIA); the two grandfathered pre-partition deviations
+  (`ui-slider-multi`'s class-anatomy, `ui-split`'s `[data-separator]` — Context) converge fix-on-touch,
+  never by a drive-by sweep.
 - The uniform (0,1,0) algebra stays load-bearing: SPEC-R12's cascade laws and the GH #197 fix reason in
   it, so a component that weights its anatomy selectors differently (compound identity values, ID or
   class hooks on its own chrome) breaks reasoning other records already depend on.
