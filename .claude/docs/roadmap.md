@@ -115,11 +115,6 @@ decision (dated line in §4).
   family today (every `@agent-ui/app` sheet + the shell-composing site sheets). Whether it extends
   further — components-package sheets, the remaining site sheets — is an open, per-sheet decision;
   the gate's own design makes each extension a one-line reviewed append, never automatic.
-- **One mechanical residual, nearly closed.** The same-day record-hygiene repair (dated line in
-  §4) aligned six of the seven lagging ADR index rows; the row for 0134 still reads `proposed`
-  while its file reads `accepted` — the repair's own commit message skips it. One more index-row
-  repair on the sanctioned path — agents are barred from Status-cell edits — noted here so it
-  doesn't silently persist.
 - **Beyond that, the backlog is clear.** As of this pass the issue tracker holds zero open items;
   the next feature arc is Kim's call at the next intake. (The older proposed scope intakes —
   content, feed, and report families, the a2ui expert system — remain parked intakes, not
@@ -148,9 +143,9 @@ decision (dated line in §4).
 - **2026-07-23** — the "ratification-lag backlog" item for ADR-0131–0137 verified **moot**: every
   one of those files has carried `accepted` since its shipping session — what actually lagged is
   the README index rows. Repaired the same day the synthesis found it (record hygiene,
-  Kim-authorized, no Status cell touched): six index rows aligned + three contradictory
-  Ratified-by cells corrected. One row (0134) was skipped by that repair and stays as §3's
-  narrowed residual.
+  Kim-authorized, no Status cell touched): all seven index rows aligned (six in the first pass,
+  the 0134 row — missed by that pass's own row check — in the follow-up that shipped with this
+  synthesis) + three contradictory Ratified-by cells corrected.
 - **2026-07-23** — the `goals.md`/`CHANGELOG.md` backfill question **decided** (Kim, 2026-07-23):
   historical-only — both stay pure historical ledgers, append-only going forward, never
   backfilled; this roadmap is the one source of "current state" (§1).
