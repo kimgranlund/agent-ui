@@ -744,6 +744,119 @@ describe('ui-super-shell — GH #229 mid-window overlay (SPEC-R14): an auto-coll
   })
 })
 
+// ── GH #220 — a RESTORED side's resizer carries the value trio BEFORE its first interaction ─────────
+// The #219 delta-check gap: #syncResizerValues ran only from connected() (width>0-guarded — correct at
+// mount, where a hidden side's resizer measures 0 and is rightly skipped), but nothing re-ran it when
+// that hidden side later became visible: a publicly-collapsed-at-mount restore, an auto-collapse
+// release, or a narrow→wide band crossing each exposed a focusable separator with NO
+// aria-valuenow/-valuemin/-valuemax until its first drag/keypress. The fix is transition-scoped inside
+// #syncFitCollapse (every restore path funnels through it): a hidden→visible flip of a side's
+// resizer-visibility re-syncs the trio; steady-state RO firings never do (the #resolvePx probe-layout
+// cost stays off the resize path).
+describe('ui-super-shell — GH #220: a restored-after-hidden resizer carries the value trio with no interaction', () => {
+  /** The full SPEC-R6b at-rest contract, asserted with the SAME rounding/bounds as the interactive
+   *  write sites (#maxPaneSize seam): valuenow = the pane's live width, valuemin = the resolved
+   *  pane-min floor, valuemax = pane + (canvasAvail − canvas floor). */
+  const expectTrio = (el: UISuperShellElement, side: 'start' | 'end', label: string): void => {
+    const sep = el.querySelector(`[data-part="pane-resizer"][data-side="${side}"]`) as HTMLElement
+    const pane = el.querySelector(`[data-slot-name="${side === 'start' ? 'nav-pane' : 'options-pane'}"]`) as HTMLElement
+    const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
+    expect(sep.hasAttribute('aria-valuenow'), `${label}: valuenow present, no interaction needed`).toBe(true)
+    expect(sep.hasAttribute('aria-valuemin'), `${label}: valuemin present`).toBe(true)
+    expect(sep.hasAttribute('aria-valuemax'), `${label}: valuemax present`).toBe(true)
+    const valuenow = Number(sep.getAttribute('aria-valuenow'))
+    const valuemin = Number(sep.getAttribute('aria-valuemin'))
+    const valuemax = Number(sep.getAttribute('aria-valuemax'))
+    expect(valuenow, `${label}: valuenow matches the pane's real rendered width`).toBe(Math.round(pane.getBoundingClientRect().width))
+    expect(valuemin, `${label}: valuemin is the resolved pane-min floor (162px, no consumer override)`).toBe(162)
+    expect(valuemax, `${label}: valuemax is the #maxPaneSize bound off the LIVE canvas slack`).toBe(
+      Math.round(pane.getBoundingClientRect().width + (canvas.getBoundingClientRect().width - 162)),
+    )
+    expect(valuenow, `${label}: valuenow sits within the reported bounds`).toBeGreaterThanOrEqual(valuemin)
+    expect(valuenow).toBeLessThanOrEqual(valuemax)
+  }
+
+  const expectNoTrio = (el: UISuperShellElement, side: 'start' | 'end', label: string): void => {
+    const sep = el.querySelector(`[data-part="pane-resizer"][data-side="${side}"]`) as HTMLElement
+    expect(sep, `${label}: the resizer part is composed even while its side is hidden`).not.toBeNull()
+    expect(getComputedStyle(sep).display, `${label}: the hidden side's resizer paints nothing`).toBe('none')
+    expect(sep.hasAttribute('aria-valuenow'), `${label}: no valuenow while hidden (the mount-time width-0 skip)`).toBe(false)
+    expect(sep.hasAttribute('aria-valuemin'), `${label}: no valuemin while hidden`).toBe(false)
+    expect(sep.hasAttribute('aria-valuemax'), `${label}: no valuemax while hidden`).toBe(false)
+  }
+
+  /** A shell whose END side is PUBLICLY collapsed at mount (the reflected attribute, R2d) — with a
+   *  header, so the real toggle-click restore path composes (SPEC-R9a). */
+  function mountCollapsedEnd(width: number): UISuperShellElement {
+    const el = document.createElement('ui-super-shell') as UISuperShellElement
+    el.style.position = 'fixed'
+    el.style.insetBlockStart = '0px'
+    el.style.insetInlineStart = '0px'
+    el.style.inlineSize = `${width}px`
+    el.style.blockSize = '400px'
+    el.setAttribute('resizable-end', '')
+    el.setAttribute('collapsed-end', '')
+    const header = document.createElement('div'); header.setAttribute('data-slot', 'header')
+    const nav = document.createElement('div'); nav.setAttribute('data-slot', 'nav-pane')
+    const content = document.createElement('div'); content.setAttribute('data-slot', 'content')
+    const opts = document.createElement('div'); opts.setAttribute('data-slot', 'options-pane')
+    el.append(header, nav, content, opts)
+    document.body.append(el)
+    mounted.push(el)
+    return el
+  }
+
+  it('publicly collapsed at mount → toggle restore → the trio is present and bound-correct, before any drag/keypress (then again via the prop round-trip)', async () => {
+    const el = mountCollapsedEnd(900) // wide: above the 640px line AND above natural fit — a plain inline restore
+    await settleFit(el)
+    expectNoTrio(el, 'end', 'precondition (collapsed at mount)')
+
+    const endToggle = el.querySelector('[data-part="side-toggle"][data-side="end"]') as HTMLElement
+    endToggle.click() // the real user restore path (wide arm: flips the public prop)
+    await settleFit(el)
+    expect(el.collapsedEnd, 'sanity: the toggle restored the side').toBe(false)
+    expectTrio(el, 'end', 'after the toggle restore')
+
+    // The other restore vehicle (R2d "settable" — a consumer's persistence round-trip): same contract.
+    el.collapsedEnd = true
+    await settleFit(el)
+    el.collapsedEnd = false
+    await settleFit(el)
+    expectTrio(el, 'end', 'after the prop-assignment restore')
+  })
+
+  it('auto-collapsed at mount (the R13b fit check) → growing past natural fit releases the side → the trio is present, no interaction', async () => {
+    const { el } = mountDualResizableWithHeader(700) // mid-window: END auto-collapses at mount (fit is 702px)
+    await settleFit(el)
+    expect(el.hasAttribute('data-auto-collapsed-end'), 'precondition: END auto-collapsed at mount').toBe(true)
+    expectNoTrio(el, 'end', 'precondition (auto-collapsed at mount)')
+    expectTrio(el, 'start', 'the visible START side synced normally at mount')
+
+    el.style.inlineSize = '900px' // grow past the 702px natural fit — the release leg (no toggle, no drag)
+    await settleFit(el)
+    expect(el.hasAttribute('data-auto-collapsed-end'), 'sanity: the auto-collapse released').toBe(false)
+    expectTrio(el, 'end', 'after the auto-collapse release')
+    // The release re-syncs BOTH sides: START's valuemax depends on the canvas's live slack, which just
+    // grew — a stale mount-time trio would mismatch the fresh #maxPaneSize recomputation expectTrio makes.
+    expectTrio(el, 'start', 'START refreshed against the grown canvas')
+  })
+
+  it('band-hidden at mount (below the 40rem line) → growing to wide restores both sides inline → both trios present (the visibility key, not an attribute-flip key)', async () => {
+    // This restore flips NO data-auto-collapsed-* attribute and NO public prop — only #belowBandLine —
+    // so it pins the fix's transition key at the side's full resizer-VISIBILITY, the breadth an
+    // auto-collapse-attribute key would silently miss.
+    const { el } = mountDualResizableWithHeader(600) // below the 640px narrow line: both sides band-hidden
+    await settleFit(el)
+    expectNoTrio(el, 'start', 'precondition (band-hidden at mount)')
+    expectNoTrio(el, 'end', 'precondition (band-hidden at mount)')
+
+    el.style.inlineSize = '900px' // wide: above the line and above natural fit — both sides restore inline
+    await settleFit(el)
+    expectTrio(el, 'start', 'after the narrow→wide crossing')
+    expectTrio(el, 'end', 'after the narrow→wide crossing')
+  })
+})
+
 // ── GH #182 regression pin — the pane-resizer's THREE decoupled visual states ───────────────────────
 // The original bug: a real engine renders no jsdom probe can see (background/outline computed paint).
 // This is the permanent gate against the exact gate-blindness that let the solid full-height primary
