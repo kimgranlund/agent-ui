@@ -1333,12 +1333,20 @@ Three guarantees ride the slot:
 - **Rebuild survival** — a destructive children write (`host.textContent = …`) replaces the *body
   content*; the summary row's composition (label prop + slotted controls) re-converges onto the fresh
   parts, same node identity, listeners intact. The GH #226 silent-drop hazard is closed by construction.
-- **The activation guard** — a click inside a slotted control flips the control, never the fold: the
-  component cancels the `<summary>`'s details-toggle activation behaviour for clicks originating in slot
-  content (real pointer clicks and the synthetic Space/Enter press-activation click alike). The summary
-  itself still folds on its own click and its own Enter/Space.
+- **The activation guard, scoped** — a click inside slot content never toggles THIS fold, by two
+  complementary mechanics (ADR-0158 cl.3): for a **listener-driven** fleet control (`ui-switch` — no
+  native activation behaviour), the summary is the click's activation target, so the component
+  `preventDefault()`s — the control flips, the fold stays (real pointer clicks and the synthetic
+  Space/Enter press-activation click alike). For **activation-carrying** content (a nested
+  `ui-disclosure`, an `a[href]`, a native `<button>`/`<input>`), the inner element is the click's single
+  activation target — the fold could never toggle from that click — so the guard stands down and the
+  inner behaviour runs intact (the nested fold toggles itself, the link navigates, the button's listener
+  sees `defaultPrevented: false`). The summary itself still folds on its own click and its own
+  Enter/Space.
 - **Name isolation** — the fold's accessible name is always the `summary` prop (see Accessibility); the
-  slotted control names itself (its own `aria-label`).
+  slotted control names itself (its own `aria-label`). Corollary: the `summary` prop is **load-bearing**
+  for the name — an empty prop with only slotted controls leaves the fold nameless; always author the
+  label.
 
 ## `open` — two-way, always-announced
 

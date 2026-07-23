@@ -63,6 +63,14 @@ const SUMMARY_SLOT = 'summary'
 const isSummarySlotted = (node: Node): node is Element =>
   node instanceof Element && node.getAttribute('slot') === SUMMARY_SLOT
 
+// Elements whose click carries a NATIVE activation behavior of their own (the HTML spec's activation-target
+// set, tight): when one sits on the path from the click target up to (exclusive) the summary part, IT — not
+// the summary — is the click's single activation target (the dispatch resolves the NEAREST activatable
+// ancestor), so (a) the summary cannot toggle from that click anyway, and (b) a `preventDefault()` would
+// cancel the INNER element's own behavior (a nested fold's toggle, a link's navigation, a button's
+// submit/popover) — the review-proven hazard the guard's scope check exists for (ADR-0158 cl.3 as shipped).
+const NATIVE_ACTIVATABLE = 'a[href], area[href], button, input, summary'
+
 // The summary-text id sequence (accessible-name scoping, ADR-0158 cl.4) — the tabs.ts `ui-tabs-${seq}`
 // precedent. Minted per part CREATION (a clobber rebuild mints fresh, consistently with its fresh part).
 let labelSeq = 0
@@ -142,7 +150,14 @@ export class UIDisclosureElement extends UIElement {
    *     (the loop-breaker's other half).
    */
   #wireToggle(details: HTMLDetailsElement): void {
-    this.listen(details, 'toggle', () => {
+    this.listen(details, 'toggle', (event) => {
+      // Scope to THIS part's own platform toggle (ADR-0158 review find): the native <details> `toggle`
+      // never bubbles (its target is always this details part), but a NESTED ui-disclosure's host
+      // `toggle` (this.emit — bubbles: true) rides the same event name straight through this listener on
+      // its way up. Without this cutoff the outer fold re-announces a `toggle` whose `open` never
+      // changed — an ADR-0101 "actual transitions only" violation the nested summary-slot probe
+      // surfaced (latent for nested-in-BODY compositions too, the ADR-0143 composed-disclosure lineage).
+      if (event.target !== details) return
       const now = details.open
       if (now !== this.open) this.open = now
       this.emit('toggle')
@@ -151,24 +166,38 @@ export class UIDisclosureElement extends UIElement {
 
   /**
    * Wire the summary-slot ACTIVATION GUARD onto the CURRENT summary part (ADR-0158 cl.3 — the GH #225
-   * `placeSummaryControl` guard, moved into the component so every consumer gets it): a click originating
-   * inside an adopted `slot="summary"` child cancels the `<summary>`'s details-toggle activation behavior
-   * via `preventDefault()` (the DOM canceled-activation rule), while the control's own click behavior
-   * (e.g. ui-switch's checked-flip, which lives in the control's OWN listener) is untouched — for real
-   * pointer clicks AND the synthetic `host.click()` press-activation fires for Space/Enter on a focused
-   * control. The summary's own keyboard activation needs no guard: a summary only key-activates while
-   * ITSELF focused, and then the target carries no `[slot="summary"]` ancestor inside this summary.
-   * `summary.contains(hit)` is load-bearing for nesting: from a click inside a NESTED ui-disclosure that
-   * itself rides an outer summary slot, the INNER instance's summary part does not contain the inner
-   * HOST's own slot marker (the host is its summary's ancestor), so the inner fold still toggles while
-   * the OUTER fold's toggle is the one cancelled. Abort-owned via `this.listen` (dies at disconnect).
+   * `placeSummaryControl` guard, moved into the component so every consumer gets it). The DOM activation
+   * model this is built on: a click has ONE activation target — the NEAREST activatable ancestor of the
+   * event target — and `preventDefault()` cancels THAT target's activation behavior, whichever it is.
+   * So the guard is SCOPED (the independent review's empirically-proven fix):
+   *
+   *   - A LISTENER-DRIVEN slotted control (ui-switch — no native activation behavior of its own): nothing
+   *     activatable sits between the click target and the summary, so the SUMMARY is the activation
+   *     target — `preventDefault()` cancels exactly the fold toggle, while the control's own click
+   *     listener (indicator-element.ts's checked-flip) is untouched, for real pointer clicks AND the
+   *     synthetic `host.click()` press-activation fires for Space/Enter on the focused control.
+   *   - ACTIVATION-CARRYING slotted content (a nested ui-disclosure's summary, `a[href]`, a native
+   *     `<button>`/`<input>`): that inner element IS the click's single activation target — the outer
+   *     summary cannot toggle from this click at all, so the guard STANDS DOWN (no `preventDefault`);
+   *     cancelling here would kill the INNER behavior instead (the nested fold's own toggle, the link's
+   *     navigation — the reviewer proved `inner.open` stayed false under the unscoped guard).
+   *
+   * The scope check walks target → (exclusive) summary looking for NATIVE_ACTIVATABLE. The summary's own
+   * keyboard activation needs no guard: a summary only key-activates while ITSELF focused, and then the
+   * target carries no `[slot="summary"]` ancestor inside this summary. Abort-owned via `this.listen`.
    */
   #wireSummaryGuard(summary: HTMLElement): void {
     this.listen(summary, 'click', (event) => {
       const target = event.target
       if (!(target instanceof Element)) return
       const hit = target.closest(`[slot="${SUMMARY_SLOT}"]`)
-      if (hit !== null && summary.contains(hit)) event.preventDefault()
+      if (hit === null || !summary.contains(hit)) return
+      // Stand down when an activatable element owns the click (it, not the summary, is the activation
+      // target — see the doc comment). The walk is bounded by the summary part itself.
+      for (let el: Element | null = target; el !== null && el !== summary; el = el.parentElement) {
+        if (el.matches(NATIVE_ACTIVATABLE)) return
+      }
+      event.preventDefault()
     })
   }
 

@@ -331,6 +331,52 @@ describe('ui-disclosure — the summary slot (ADR-0158)', () => {
     el.remove()
   })
 
+  it('a NESTED ui-disclosure in the slot: clicking the INNER summary toggles the INNER fold — the guard stands down for activation-carrying content (review fix, ADR-0158 cl.3)', async () => {
+    // The discriminator the review proved: a click has ONE activation target — the NEAREST activatable
+    // ancestor, here the INNER summary. The unscoped first-draft guard preventDefault()ed this click and
+    // cancelled exactly the inner fold's toggle (inner.open stayed false) while "protecting" an outer
+    // fold that was never at risk. The scoped guard stands down instead.
+    const { el: outer, summary: outerSummary } = makeDisclosure(
+      '<ui-disclosure slot="summary" summary="Inner"><p>inner body</p></ui-disclosure><p>outer body</p>',
+    )
+    const inner = outerSummary.querySelector('ui-disclosure') as UIDisclosureElement
+    expect(inner).not.toBeNull() // partitioned onto the outer summary row
+
+    let outerToggles = 0
+    outer.addEventListener('toggle', (e) => {
+      if (e.target === outer) outerToggles++ // the inner fold's own toggle bubbles — count only the outer's
+    })
+
+    const innerSummary = inner.querySelector('[data-part="summary"]') as HTMLElement
+    innerSummary.click() // the INNER summary is this click's activation target
+    await nextToggle()
+
+    expect(inner.open, 'the inner fold toggles — the unscoped guard cancelled exactly this').toBe(true)
+    expect(outer.open, 'the outer fold stays').toBe(false)
+    expect(outerToggles).toBe(0)
+    outer.remove()
+  })
+
+  it('a slotted native <button>: its click runs UN-prevented (defaultPrevented false after dispatch — the button is the activation target) and the fold never toggles', async () => {
+    const { el, summary } = makeDisclosure('<button slot="summary" id="act">Do</button><p>body</p>')
+    const btn = el.querySelector('#act') as HTMLButtonElement
+    expect(summary.contains(btn)).toBe(true)
+
+    let captured: Event | null = null
+    btn.addEventListener('click', (e) => (captured = e))
+    let toggles = 0
+    el.addEventListener('toggle', () => toggles++)
+
+    btn.click() // dispatch is synchronous — after this returns, the event's canceled flag is FINAL
+    await nextToggle()
+
+    expect(captured).not.toBeNull()
+    expect((captured as unknown as Event).defaultPrevented, 'the guard stood down — no preventDefault reached this click').toBe(false)
+    expect(el.open, 'the fold never toggles (the button, not the summary, owned the activation)').toBe(false)
+    expect(toggles).toBe(0)
+    el.remove()
+  })
+
   it('the guard survives a clobber rebuild (re-wired onto the fresh summary part, like the toggle listener)', async () => {
     const { el } = makeDisclosure('<span slot="summary" id="ctl">Ctl</span><p>original</p>')
     el.textContent = 'fresh' // rebuild

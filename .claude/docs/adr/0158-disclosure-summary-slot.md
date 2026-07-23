@@ -62,18 +62,34 @@ stays gone. A clobber write that itself authors new `slot="summary"` children ke
 rescued after); an author who wants the old control gone removes it explicitly. This closes GH #226's
 silent-drop hazard by construction.
 
-### 3 · The activation guard moves INTO the component
+### 3 · The activation guard moves INTO the component — SCOPED to listener-driven content
 
-A component-owned `click` listener on the summary part calls `preventDefault()` iff the click
-originated inside an adopted `slot="summary"` child — cancelling the `<summary>`'s details-toggle
-activation behavior (the DOM canceled-activation rule) while the control's own click behavior
-(e.g. `ui-switch`'s checked-flip, which lives in the control's OWN listener) is untouched — for real
-pointer clicks AND the synthetic `host.click()` press-activation fires for Space/Enter on a focused
-control. The summary's own keyboard activation needs no guard (a summary only key-activates while
-itself focused). The guard is wired wherever the toggle listener is wired: at connect and in the heal
-rebuild branch, abort-owned. Every consumer now gets the GH #225 semantics for free; the app-side
-guard retires. A native-activatable slotted child (a real `<button>`) never needed the guard (it is
-its own activation target); the guard exists for the fleet's non-natively-activatable custom controls.
+*(As shipped after the independent review — the first draft's unscoped guard `preventDefault()`ed every
+click inside slot content; the reviewer proved empirically that this cancels the WRONG behavior for
+activation-carrying children: a nested fold's `inner.open` stayed false, because a click has ONE
+activation target — the NEAREST activatable ancestor — and `preventDefault` cancels THAT, not
+per-element.)*
+
+A component-owned `click` listener on the summary part guards by the activation model itself:
+
+- **Listener-driven slotted content** (the fleet's custom controls — `ui-switch` has no native
+  activation behavior): nothing activatable sits between the click target and the summary, so the
+  SUMMARY is the click's activation target — the guard `preventDefault()`s, cancelling exactly the fold
+  toggle while the control's own click listener (the checked-flip) is untouched, for real pointer
+  clicks AND the synthetic `host.click()` press-activation fires for Space/Enter on a focused control.
+- **Activation-carrying slotted content** (a nested `ui-disclosure`'s summary, `a[href]`/`area[href]`,
+  a native `<button>`/`<input>`): the inner element IS the click's single activation target — the outer
+  summary cannot toggle from that click at all, so the guard **stands down** (no `preventDefault`); the
+  nested fold toggles itself, the link navigates, the button's listener sees `defaultPrevented: false`.
+  Cancelling here would have killed the inner behavior while "protecting" a fold that was never at risk.
+
+Mechanism: the listener walks target → (exclusive) the summary part; any element matching the tight
+native-activatable predicate (`a[href], area[href], button, input, summary`) means stand-down. The
+summary's own keyboard activation needs no guard (a summary only key-activates while itself focused).
+Wired wherever the toggle listener is wired: at connect and in the heal rebuild branch, abort-owned.
+Every consumer now gets the GH #225 semantics for free; the app-side guard retires. The fold's
+guarantee, stated once: **a click inside slot content never toggles THIS fold — either the guard
+cancels it, or the click's activation already belonged to the slotted content.**
 
 ### 4 · Accessible-name scoping: the fold's name IS the summary label
 
@@ -98,6 +114,16 @@ stands byte-unchanged. The slotted control names itself (its own `aria-label`), 
   deterministic, behavior-identical in every no-slot case, and states the cleaner law (the name is the
   prop, full stop).
 - **Keeping `placeSummaryControl` app-side** — the status quo GH #226 exists to retire.
+
+### Ride-along fix the nested-fold probe surfaced (cl.3's discriminating test, not new design)
+
+The details-part `toggle` listener now ignores events whose target is not its own details part. The
+native `<details>` toggle never bubbles, but a NESTED `ui-disclosure`'s host `toggle` (`emit` —
+`bubbles: true`) rides the same event name through the outer's listener, making the outer fold
+re-announce a `toggle` whose `open` never changed — an ADR-0101 "actual transitions only" violation,
+latent for every nested-in-body composition (the ADR-0143 composed-disclosure lineage) and made
+reachable-by-design once cl.1 blesses a nested fold on the summary row. One-line target cutoff; the
+nested-fold probe asserts zero outer announcements.
 
 ## Consequences
 

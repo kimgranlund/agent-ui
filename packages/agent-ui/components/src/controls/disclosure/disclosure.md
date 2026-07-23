@@ -35,7 +35,7 @@ events:
 slots:                 # ONE [slot=] position slot (ADR-0158 — SPEC-R14's foreseen extension, realized); all OTHER light-DOM children are ADOPTED into the component-owned body part, not attribute-slotted
   - name: summary
     optional: true
-    description: Summary-hosted controls — light-DOM `[slot="summary"]` children (the fleet's position-slot grammar, the button leading/trailing lineage) adopted INTO the component-owned summary part after the label, at connect and (late arrivals) via the heal observer; a destructive rebuild RESCUES them into the fresh summary part (same node identity — the summary row's composition is declarative state, ADR-0158 cl.2). The component owns the activation guard — a click inside a slotted control flips the control, never the fold (pointer and synthetic Space/Enter activation alike) — and the fold's accessible name never absorbs a slotted control's text (see aria). Flex-frozen at the row's inline end (the flex-growing label pushes them there).
+    description: Summary-hosted controls — light-DOM `[slot="summary"]` children (the fleet's position-slot grammar, the button leading/trailing lineage) adopted INTO the component-owned summary part after the label, at connect and (late arrivals) via the heal observer; a destructive rebuild RESCUES them into the fresh summary part (same node identity — the summary row's composition is declarative state, ADR-0158 cl.2). A click inside slot content never toggles THIS fold, via the SCOPED component-owned guard (ADR-0158 cl.3) — a listener-driven fleet control (ui-switch) is guarded (`preventDefault` cancels only the fold toggle; the control's own click flip is untouched, pointer and synthetic Space/Enter alike), while activation-carrying content (a nested ui-disclosure, `a[href]`, a native button/input) is its OWN activation target so the guard stands down and the inner behavior runs intact. The fold's accessible name never absorbs a slotted control's text (see aria) — which makes the `summary` PROP load-bearing for the name: an empty `summary` with only slotted controls yields a NAMELESS fold; always author the label. Flex-frozen at the row's inline end (the flex-growing label pushes them there).
   - name: body
     optional: true
     description: The host's OTHER light-DOM children (everything not marked `slot="summary"`) — adopted into the component-owned `<div data-part="body">` (the "children = body" anatomy invariant, SPEC-R16 + ADR-0158's one ruled exception). Children present at connect are adopted immediately; children streamed in after connect, or landing directly on the host from any later write, are healed into their part by a childList observer within a microtask. A destructive `host.textContent` write rebuilds the part fresh and re-lands the new content in the body.
@@ -65,7 +65,7 @@ aria:
 
 keyboard:
   - keys: Enter / Space
-    action: Toggles the fold when the summary is focused — native `<summary>` activation behaviour (platform, not reimplemented). Each actual transition fires exactly one `toggle`. On a focused `slot="summary"` CONTROL, Space/Enter activate the control only — its synthetic press-activation click is guarded by the component (ADR-0158 cl.3), so the fold never toggles.
+    action: Toggles the fold when the summary is focused — native `<summary>` activation behaviour (platform, not reimplemented). Each actual transition fires exactly one `toggle`. On a focused `slot="summary"` CONTROL, Space/Enter activate the control only, never the fold — a listener-driven control's synthetic press-activation click is cancelled by the scoped guard, an activation-carrying one is its own activation target (ADR-0158 cl.3, both arms).
   - keys: Tab
     action: The summary is natively focusable (no tabbable trait needed) — reached in normal tab order like any interactive element.
   - note: Find-in-page (browser UA text search) auto-expands folded content containing a match — the platform's native `<details>` behaviour, one of ADR-0113's stated reasons for wrapping the native element rather than a bespoke build.
@@ -142,12 +142,20 @@ Three guarantees ride the slot:
 - **Rebuild survival** — a destructive children write (`host.textContent = …`) replaces the *body
   content*; the summary row's composition (label prop + slotted controls) re-converges onto the fresh
   parts, same node identity, listeners intact. The GH #226 silent-drop hazard is closed by construction.
-- **The activation guard** — a click inside a slotted control flips the control, never the fold: the
-  component cancels the `<summary>`'s details-toggle activation behaviour for clicks originating in slot
-  content (real pointer clicks and the synthetic Space/Enter press-activation click alike). The summary
-  itself still folds on its own click and its own Enter/Space.
+- **The activation guard, scoped** — a click inside slot content never toggles THIS fold, by two
+  complementary mechanics (ADR-0158 cl.3): for a **listener-driven** fleet control (`ui-switch` — no
+  native activation behaviour), the summary is the click's activation target, so the component
+  `preventDefault()`s — the control flips, the fold stays (real pointer clicks and the synthetic
+  Space/Enter press-activation click alike). For **activation-carrying** content (a nested
+  `ui-disclosure`, an `a[href]`, a native `<button>`/`<input>`), the inner element is the click's single
+  activation target — the fold could never toggle from that click — so the guard stands down and the
+  inner behaviour runs intact (the nested fold toggles itself, the link navigates, the button's listener
+  sees `defaultPrevented: false`). The summary itself still folds on its own click and its own
+  Enter/Space.
 - **Name isolation** — the fold's accessible name is always the `summary` prop (see Accessibility); the
-  slotted control names itself (its own `aria-label`).
+  slotted control names itself (its own `aria-label`). Corollary: the `summary` prop is **load-bearing**
+  for the name — an empty prop with only slotted controls leaves the fold nameless; always author the
+  label.
 
 ## `open` — two-way, always-announced
 

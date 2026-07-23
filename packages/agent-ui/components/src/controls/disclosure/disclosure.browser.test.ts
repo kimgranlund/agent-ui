@@ -248,6 +248,36 @@ describe('ui-disclosure — the summary slot, cross-engine (ADR-0158; GH #226/#2
     expect(el.open, 'the rebuilt fold did not toggle on the switch click').toBe(true)
   })
 
+  it('activation-carrying slot content, cross-engine (review fix, ADR-0158 cl.3): a nested fold toggles ITSELF (outer stays) and a slotted native button runs un-prevented', async () => {
+    // The scoped guard's stand-down arm: the inner element is the click's single activation target, so
+    // the outer fold could never toggle from these clicks — and a preventDefault would cancel the INNER
+    // behavior (the review-proven hazard: inner.open stayed false under the unscoped first draft).
+    const { host, summary } = mount(
+      '<ui-disclosure summary="Outer"><ui-disclosure slot="summary" summary="Inner"><p>inner body</p></ui-disclosure><p>outer body</p></ui-disclosure>',
+    )
+    const outer = host as HTMLElement & { open: boolean }
+    const inner = summary.querySelector('ui-disclosure') as HTMLElement & { open: boolean }
+    expect(summary.contains(inner), 'the nested fold rides the outer summary row').toBe(true)
+    const innerSummary = inner.querySelector('[data-part="summary"]') as HTMLElement
+    innerSummary.click()
+    await nextToggle()
+    expect(inner.open, 'the inner fold toggles — the guard stood down').toBe(true)
+    expect(outer.open, 'the outer fold stays').toBe(false)
+
+    const { host: host2 } = mount(
+      '<ui-disclosure summary="X"><button slot="summary" id="slot-btn" type="button">Do</button><p>body</p></ui-disclosure>',
+    )
+    const el2 = host2 as HTMLElement & { open: boolean }
+    const btn = host2.querySelector('#slot-btn') as HTMLButtonElement
+    let captured: Event | null = null
+    btn.addEventListener('click', (e) => (captured = e))
+    await userEvent.click(btn)
+    await nextToggle()
+    expect(captured).not.toBeNull()
+    expect((captured as unknown as Event).defaultPrevented, 'no preventDefault reached the button click').toBe(false)
+    expect(el2.open, 'the fold never toggles — the button owned the activation').toBe(false)
+  })
+
   it('the accessible name is the summary label, not the switch text — aria-labelledby scopes name-from-content (ADR-0158 cl.4)', () => {
     const { summary } = mount(
       '<ui-disclosure summary="Agent"><ui-switch slot="summary" aria-label="Agent active"></ui-switch><p>b</p></ui-disclosure>',
