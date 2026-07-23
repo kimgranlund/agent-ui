@@ -151,6 +151,13 @@ export class UISuperShellElement extends UIElement {
   #overlayFocusTarget: { start?: HTMLElement; end?: HTMLElement } = {}
   #openerToggle: HTMLElement | null = null
   #bandObserver: ResizeObserver | null = null
+  // GH #220 — the per-side "resizer is inline-visible" truth as of the LAST #syncFitCollapse call
+  // (visible ⇔ not publicly collapsed ∧ not auto-collapsed ∧ not below the side's band line — exactly
+  // the states whose CSS hides the whole side, resizer included; every overlay arm excludes the
+  // resizer, so an overlay-open side still counts hidden). `null` until the first call records a
+  // baseline (mount's own trio sync is connected()'s explicit #syncResizerValues call, not a
+  // "transition" from nothing). Reset on disconnect (the #dragBaseline hygiene precedent).
+  #resizerShown: { start: boolean; end: boolean } | null = null
   // SPEC-R10b — the shell-owned scroll regions (pane boxes + active segments) captured ONCE at compose;
   // scrollFade is (re)wired from connected() on EVERY connect, because the trait rides host.effect (the
   // CONNECTION scope — it disposes at disconnect and must re-arm, the nav-rail.ts:106-121 `wired` precedent).
@@ -234,6 +241,7 @@ export class UISuperShellElement extends UIElement {
     this.#resizeHandle?.release() // ends any in-flight drag WITHOUT a commit (the ui-split precedent)
     this.#resizeHandle = null
     this.#dragBaseline = null
+    this.#resizerShown = null // GH #220 — reconnect re-baselines; connected()'s own at-rest sync covers it
     this.internals.states?.delete('dragging') // GH #185 — clear the baseline/state together, split.ts's own precedent
     this.#bandObserver?.disconnect()
     this.#bandObserver = null
@@ -538,6 +546,24 @@ export class UISuperShellElement extends UIElement {
     // instead, so a mid→narrow crossing keeps the SAME open state alive.
     const open = this.getAttribute('data-narrow-open') as 'start' | 'end' | null
     if (open && !this.#belowBandLine(open) && !this.hasAttribute(`data-auto-collapsed-${open}`)) this.#closeOverlay(false)
+    // GH #220 — a side restored from ANY hidden state re-syncs the separator's value trio (SPEC-R6b:
+    // the trio is part of the RENDERED separator, and #syncResizerValues' mount call correctly skipped
+    // it at width 0 while hidden). TRANSITION-scoped, never steady-state: #resolvePx costs two probe
+    // layouts per side per sync, so hanging this off every RO firing is banned — it runs only when a
+    // side's resizer-visibility actually flipped hidden→visible since the LAST call. One call site
+    // covers every restore path because they ALL funnel through this method: the public collapse
+    // effect (toggle/prop restore), the sizes effect (a persisted-size flip), and #onBandChange (the
+    // auto-collapse release leg AND the narrow→wide band-crossing restore — which flips no
+    // data-auto-collapsed-* attribute, only #belowBandLine, hence the visibility key rather than an
+    // attribute-flip key). Attribute reads for the public state (reflected synchronously by the prop
+    // setters) keep this from adding reactive edges beyond the #belowBandLine reads already above.
+    const shown = {
+      start: !this.hasAttribute('collapsed-start') && !this.hasAttribute('data-auto-collapsed-start') && !this.#belowBandLine('start'),
+      end: !this.hasAttribute('collapsed-end') && !this.hasAttribute('data-auto-collapsed-end') && !this.#belowBandLine('end'),
+    }
+    const was = this.#resizerShown
+    this.#resizerShown = shown
+    if (was !== null && ((shown.start && !was.start) || (shown.end && !was.end))) this.#syncResizerValues()
   }
 
   /** SPEC-R9c — aria-expanded truthful per band, per side: below its line it tracks `data-narrow-open`;
@@ -694,10 +720,13 @@ export class UISuperShellElement extends UIElement {
 
   /** GH #206 (independent-review MAJOR-2, SPEC-R6b) — the trio is part of the RENDERED separator's
    *  contract, not just its post-interaction state (#onResize/#handleResizerKeydown only ever write it
-   *  on a live drag/keypress). Called once, at rest (end of connected(), after #syncFitCollapse so an
-   *  auto-collapsed side's now-hidden resizer is correctly skipped). Width>0-guarded like every other
-   *  measurement read in this file, so jsdom's zero-width layout (or a genuinely display:none side)
-   *  never writes a garbage/misleading zero. */
+   *  on a live drag/keypress). Two call sites, both at-rest: the end of connected() (after
+   *  #syncFitCollapse so an auto-collapsed side's now-hidden resizer is correctly skipped), and — GH
+   *  #220 — #syncFitCollapse's own hidden→visible transition leg, so a side restored AFTER mount (a
+   *  public toggle/prop restore, an auto-collapse release, a narrow→wide band crossing) carries the
+   *  trio before its first interaction too. Width>0-guarded like every other measurement read in this
+   *  file, so jsdom's zero-width layout (or a genuinely display:none side) never writes a
+   *  garbage/misleading zero. */
   #syncResizerValues(): void {
     for (const side of ['start', 'end'] as const) {
       const sep = this.#frame?.querySelector<HTMLElement>(`[data-part="pane-resizer"][data-side="${side}"]`)
