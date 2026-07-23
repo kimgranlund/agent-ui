@@ -6,6 +6,9 @@
 import { describe, it, expect, afterEach, beforeAll, afterAll } from 'vitest'
 import { userEvent, page } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css'
+// GH #221 — the shell's tab strips compose the fleet ui-tabs control; its own sheet (tabs.css, via the
+// family barrel) supplies the real tab anatomy + the tablist overflow viewport the R7 legs assert on.
+import '@agent-ui/components/component-styles.css'
 import './super-shell.css'
 import { UISuperShellElement } from './super-shell.ts'
 
@@ -198,6 +201,51 @@ describe('ui-super-shell — SPEC-R7a pane segments (AC10, wide)', () => {
     expect(settings.hasAttribute('data-active')).toBe(false)
     expect(context.hasAttribute('data-active'), 'clicking the second tab switches the active segment').toBe(true)
     expect(settings.isConnected, 'switching segments never reparents (R7c)').toBe(true)
+  })
+
+  it('GH #221: at the default 252px pane the strip is a real ui-tabs — labels never clip mid-word, the tablist scrolls, tablist semantics ride the control', async () => {
+    // The exact defect Kim's screenshots showed: three ghost-button rows at 252px truncating to
+    // "S…"/"Conte…"/"Cont…". The recomposed strip must render every label WHOLE (each ui-tab's own
+    // box holds its full nowrap text — no internal overflow) with the CONTROL's tablist part as the
+    // lawful horizontal scroll viewport once the row outgrows the pane.
+    const el = document.createElement('ui-super-shell') as UISuperShellElement
+    el.style.cssText = 'position:fixed;inset-block-start:0;inset-inline-start:0;inline-size:900px;block-size:400px'
+    el.setAttribute('narrow-end', 'tabs')
+    const content = document.createElement('div'); content.setAttribute('data-slot', 'content'); content.textContent = 'C'
+    const labels = ['Settings', 'Context: System', 'Context: Dialog'] // agent-admin's real trio (GH #221)
+    const segs = labels.map((label) => {
+      const seg = document.createElement('div')
+      seg.setAttribute('data-slot', 'options-pane')
+      seg.setAttribute('data-segment', label)
+      seg.textContent = `${label} body`
+      return seg
+    })
+    el.append(content, ...segs)
+    document.body.append(el)
+    mounted.push(el)
+    await el.updateComplete
+
+    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    expect(Math.round(pane.getBoundingClientRect().width), 'the pane sits at its 14-module (252px) token default').toBe(252)
+
+    const strip = pane.querySelector('[data-part="pane-tabs"]') as HTMLElement
+    expect(strip.tagName.toLowerCase(), 'the strip IS the fleet control').toBe('ui-tabs')
+    const viewport = strip.querySelector('[data-part="tablist"]') as HTMLElement
+    expect(viewport.getAttribute('role'), 'tablist semantics ride the control\'s own part').toBe('tablist')
+
+    const tabs = [...strip.querySelectorAll('[data-part="pane-tab"]')] as HTMLElement[]
+    expect(tabs.map((t) => t.tagName.toLowerCase())).toEqual(['ui-tab', 'ui-tab', 'ui-tab'])
+    expect(tabs.map((t) => t.textContent)).toEqual(labels)
+    for (const tab of tabs) {
+      // Un-clipped: the tab's own box holds its whole nowrap label — zero internal text overflow.
+      expect(tab.scrollWidth, `"${tab.textContent}" clips mid-word (scrollWidth > clientWidth)`).toBeLessThanOrEqual(tab.clientWidth + 1)
+      expect(tab.getBoundingClientRect().width, `"${tab.textContent}" collapsed to nothing`).toBeGreaterThan(0)
+    }
+    // The three whole labels genuinely outgrow 252px, and the tablist part is the LIVE scroll viewport.
+    expect(viewport.scrollWidth, 'the whole-label row overflows the 252px pane').toBeGreaterThan(viewport.clientWidth + 1)
+    viewport.scrollLeft = 40
+    expect(viewport.scrollLeft, 'the strip scrolls (lawful overflow, not clipping)').toBeGreaterThan(0)
+    viewport.scrollLeft = 0
   })
 })
 

@@ -26,6 +26,13 @@ import { rovingFocus } from '../../traits/roving-focus.ts'
 import { UITabElement } from './tab.ts'
 import { UITabPanelElement } from './tab-panel.ts'
 
+// GH #221 — TYPE-only re-exports of the sub-elements: a composing consumer (ui-super-shell's panel-less
+// strips) needs the PUBLIC coordination API's type (`link`, `key`) to drive tabs it creates itself.
+// `export type` is erasable (verbatimModuleSyntax), so the runtime barrel surface is unchanged — the
+// sub-element CLASSES stay registered-only, never surfaced (the barrels.test.ts law).
+export type { UITabElement } from './tab.ts'
+export type { UITabPanelElement } from './tab-panel.ts'
+
 // A per-instance id seed so each tabs' tab/panel pair gets unique IDREFs (the reverse aria-labelledby anchor).
 let tabsSeq = 0
 

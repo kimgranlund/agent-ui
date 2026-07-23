@@ -36,8 +36,9 @@
   --ui-super-shell-pane-min-size: calc(var(--ui-super-shell-module) * 9); /* 162px */
   --ui-super-shell-canvas-min-size: calc(var(--ui-super-shell-module) * 9); /* 162px */
   /* SPEC-R10a (ADR-0155) — hidden scroller, live scroll: the fleet's command-modal.css / ui-menu (GH #166)
-     seam applied to the shell's OWN scroll regions (pane · active segment · narrow-tabs strip · the
-     overlay-restored side, which inherits the pane rule). The scroll-fade edge (scrollFade, super-shell.ts)
+     seam applied to the shell's OWN scroll regions (pane · active segment · the tab strips' tablist
+     viewports, chained via --ui-tabs-strip-scrollbar-width since GH #221 · the overlay-restored side,
+     which inherits the pane rule). The scroll-fade edge (scrollFade, super-shell.ts)
      is the replacement affordance once the bar hides. Consumer-overridable (the repoint pattern) — never
      forced; both shipped engines support `scrollbar-width` (the split-pane.css note), so no ::-webkit leg. */
   --ui-super-shell-scrollbar-width: none;
@@ -206,11 +207,19 @@
     flex-direction: column;
     overflow-y: hidden; /* the active segment now owns its own scroll, not the pane box */
   }
-  [data-part='pane-tabs'] {
-    display: flex;
-    gap: calc(var(--ui-super-shell-module) / 3);
+  /* GH #221 — the strip is the fleet ui-tabs control: its OWN sheet (tabs.css) owns the row layout,
+     gap, tab anatomy, and the tablist part's overflow-x scroll (labels never clip mid-word at pane
+     widths — the strip scrolls). This rule keeps only the SHELL-tier facts: the flex posture in the
+     segmented pane column, one module-fraction of breathing room below the strip, and the R10a
+     scrollbar seam CHAINED onto the control's own consumer-inherited token (the tablist part is the
+     live horizontal viewport now, so the shell's hidden-scroller intent rides --ui-tabs-strip-
+     scrollbar-width down to it). The `ui-tabs` type prefix is CASCADE-LOAD-BEARING: tabs.css's own
+     `@scope (ui-tabs)` rules tie a bare attribute selector on specificity, and scope proximity would
+     then hand the win to the control's sheet — the type prefix keeps shell-tier declarations ahead. */
+  ui-tabs[data-part='pane-tabs'] {
     padding-block-end: calc(var(--ui-super-shell-module) / 3);
     flex: 0 0 auto;
+    --ui-tabs-strip-scrollbar-width: var(--ui-super-shell-scrollbar-width); /* SPEC-R10a — the strip's tablist viewport */
   }
   /* GH #197 — `:not([data-active])` (specificity 0,3,0, since `:not()` carries its argument's own
      specificity) so this hide rule ONLY ever matches an INACTIVE segment — it used to be a bare
@@ -236,13 +245,16 @@
   /* SPEC-R7b — the shell-owned narrow-tabs strip. Hidden by default (wide); shown only under the narrow
      container query, and only when the strip actually exists (a shell with no `tabs` side never pays
      for this — the :has() guard also gives these rules enough specificity to win over the blanket
-     `[data-part='middle'] > [data-side]` narrow-hide rule below, the same way the `stack` arm does). */
-  [data-part='narrow-tabs'] {
+     `[data-part='middle'] > [data-side]` narrow-hide rule below, the same way the `stack` arm does).
+     GH #221 — the strip is the fleet ui-tabs control: row layout/gap/tab anatomy live in tabs.css, and
+     the horizontal overflow-scroll viewport is the control's OWN tablist part, so the R10a hidden-
+     scroller intent chains through --ui-tabs-strip-scrollbar-width (the same seam as pane-tabs above).
+     The `ui-tabs` type prefix out-specifies tabs.css's `:scope { display: block }` (0,1,1 beats 0,1,0
+     — scope proximity would otherwise un-hide the strip at wide). */
+  ui-tabs[data-part='narrow-tabs'] {
     display: none;
-    gap: var(--ui-super-shell-gap);
     flex: 0 0 auto;
-    overflow-x: auto;
-    scrollbar-width: var(--ui-super-shell-scrollbar-width); /* SPEC-R10a — the strip scrolls horizontally when it overflows */
+    --ui-tabs-strip-scrollbar-width: var(--ui-super-shell-scrollbar-width); /* SPEC-R10a — the strip's tablist viewport */
   }
 
   /* SPEC-R9b — the toggle's close (X) glyph is hidden by default; each band query below reveals it while
@@ -377,8 +389,8 @@
        gives these rules enough specificity to win over the blanket `[data-side]` hide rule above (and
        the `stack` arm's own restore rules) for a `tabs` side specifically — a side on `collapse`/`stack`
        is untouched, never matching `[data-narrow-tab-target]` at all. */
-    :scope:has([data-part='narrow-tabs']) [data-part='narrow-tabs'] {
-      display: flex;
+    :scope:has([data-part='narrow-tabs']) ui-tabs[data-part='narrow-tabs'] {
+      display: block; /* GH #221 — the ui-tabs host is a block shell; the row IS its own tablist part */
     }
     :scope:has([data-part='narrow-tabs']) [data-narrow-tab-target] {
       display: none;

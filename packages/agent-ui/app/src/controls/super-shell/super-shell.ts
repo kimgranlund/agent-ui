@@ -45,6 +45,11 @@
 import { UIElement, prop, paneResize, scrollFade, type PaneResizeHandle, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
 import '@agent-ui/components/controls/button'
 import '@agent-ui/components/controls/icon'
+// GH #221 — both tab strips (SPEC-R7a pane-tabs, SPEC-R7b narrow-tabs) compose the fleet ui-tabs
+// control (panel-less: the shell's segments are NOT ui-tab-panels; ui-tabs' pair wiring skips absent
+// panels by design, and the shell keeps driving participant visibility itself — R7c untouched).
+import '@agent-ui/components/controls/tabs'
+import type { UITabsElement, UITabElement } from '@agent-ui/components/controls/tabs'
 import { SHELL_NARROW_BREAKPOINT_REM, SHELL_COMPACT_BREAKPOINT_REM } from '../../shell-breakpoint.ts'
 
 const SLOTS = [
@@ -111,7 +116,13 @@ const props = {
   sizeEnd: { ...prop.number(null), reflect: true, attribute: 'size-end' },
 } satisfies PropsSchema
 
-type NarrowTab = { value: string; label: string; participant: HTMLElement; segmentIndex?: number }
+// `controls` is the ARIA target the strip's ui-tab points aria-controls at (via the control's own
+// internals element-reflection seam, tab.link()): the participant box itself, or — for a flattened
+// segment tab — that one segment element (more precise than the whole pane box).
+type NarrowTab = { value: string; label: string; participant: HTMLElement; controls: Element; segmentIndex?: number }
+
+// The ui-tabs commit event's detail shape (tabs.ts #commit — the ONE user-commit `select`, ADR-0019).
+type TabsSelectDetail = { value: string; index: number }
 
 export interface UISuperShellElement extends ReactiveProps<typeof props> {}
 export class UISuperShellElement extends UIElement {
@@ -128,8 +139,9 @@ export class UISuperShellElement extends UIElement {
   // makes R6c's two-sided clamp correct regardless of how many other rails/panes a side stacks (R5b).
   #dragBaseline: { pane: number; canvasAvail: number; paneMin: number; canvasMin: number } | null = null
   // LLD-C2 (SPEC-R7b) — the shell-owned narrow-tabs strip + its derived tab list, built once at compose
-  // (build-once law) when at least one side declares `narrow-*="tabs"`.
-  #narrowTabsHost: HTMLElement | null = null
+  // (build-once law) when at least one side declares `narrow-*="tabs"`. Since GH #221 the strip IS a
+  // fleet ui-tabs control (panel-less), so programmatic sync writes its `selected` prop (no event echo).
+  #narrowTabsHost: UITabsElement | null = null
   #narrowTabs: NarrowTab[] = []
   #idSeq = 0
   // LLD-C2 (SPEC-R9c/R9d) — the overlay's focus landing per side (the side's first box, tabindex=-1 at
@@ -701,25 +713,31 @@ export class UISuperShellElement extends UIElement {
 
   /** A no-op unless the pane's authored children carry `data-segment` (R7a). Builds the pane-local
    *  `[data-part='pane-tabs']` strip once, at compose (the build-once law), and activates the first
-   *  segment by default. */
+   *  segment by default. GH #221 — the strip is the fleet `ui-tabs` control (real tab anatomy: control-
+   *  height rows, selected underline, roving keyboard focus, role=tablist on its own tablist part)
+   *  composed PANEL-LESS: the segments stay the shell's own `data-active` participants (R7c — ui-tabs'
+   *  tab↔panel pair wiring skips absent panels; its selection/roving legs run unaffected). Wiring:
+   *  the control's ONE user-commit `select` event (ADR-0019) drives `#setActiveSegment`; programmatic
+   *  segment changes sync back by SETTING `selected` (no event echo, the control's binding contract).
+   *  aria-controls → the segment rides `tab.link(segment, id)` — the control's own internals
+   *  element-reflection seam, never a host aria-* attribute (the family discipline). */
   #applySegments(box: HTMLElement): void {
     const segments = [...box.children].filter((c) => c.hasAttribute('data-segment'))
     if (segments.length === 0) return
     box.setAttribute('data-segmented', '')
-    const strip = document.createElement('div')
+    const strip = document.createElement('ui-tabs') as UITabsElement
     strip.setAttribute('data-part', 'pane-tabs')
-    strip.setAttribute('role', 'tablist')
     segments.forEach((seg, i) => {
       if (!seg.id) seg.id = this.#nextId('segment')
-      const tab = document.createElement('ui-button')
-      tab.setAttribute('variant', 'ghost')
+      const tab = document.createElement('ui-tab') as UITabElement
       tab.setAttribute('data-part', 'pane-tab')
-      tab.setAttribute('role', 'tab')
-      tab.setAttribute('aria-controls', seg.id)
-      tab.setAttribute('aria-selected', i === 0 ? 'true' : 'false')
       tab.textContent = seg.getAttribute('data-segment') ?? `Segment ${i + 1}`
-      tab.addEventListener('click', () => this.#setActiveSegment(box, i))
+      tab.link(seg, this.#nextId('tab')) // aria-controls → the segment (panel-less; element-reflection)
       strip.append(tab)
+    })
+    strip.addEventListener('select', (event) => {
+      event.stopPropagation() // shell-internal mechanism — never leaks into a consumer's own scope (the settings.ts precedent)
+      this.#setActiveSegment(box, (event as CustomEvent<TabsSelectDetail>).detail.index)
     })
     box.prepend(strip)
     this.#setActiveSegment(box, 0)
@@ -727,15 +745,16 @@ export class UISuperShellElement extends UIElement {
 
   /** The ONE mechanism both the wide pane-tabs strip and a narrow-tabs segment selection drive (SPEC-R7c
    *  — visibility-only, never a reparent): sets `data-active` on the addressed segment, clears it from
-   *  its siblings, and syncs the strip's `aria-selected`. */
+   *  its siblings, and syncs the strip by SETTING its `selected` prop (a programmatic write — the
+   *  control applies aria-selected/roving itself and echoes no event back, ADR-0019). */
   #setActiveSegment(box: HTMLElement, index: number): void {
     const segments = [...box.querySelectorAll(':scope > [data-segment]')]
     const clamped = Math.max(0, Math.min(index, segments.length - 1))
     for (const s of segments) s.removeAttribute('data-active')
     segments[clamped]?.setAttribute('data-active', '')
     box.setAttribute('data-active-segment', String(clamped))
-    const strip = box.querySelector(':scope > [data-part="pane-tabs"]')
-    if (strip) for (const [i, tabEl] of [...strip.children].entries()) tabEl.setAttribute('aria-selected', String(i === clamped))
+    const strip = box.querySelector<UITabsElement>(':scope > [data-part="pane-tabs"]')
+    if (strip) strip.selected = String(clamped) // key-less tabs resolve positionally (tabs.ts #resolveIndex)
   }
 
   // ── SPEC-R7b: the shell-owned narrow-tabs strip ────────────────────────────────────────────────────
@@ -751,7 +770,7 @@ export class UISuperShellElement extends UIElement {
 
     const tabs: NarrowTab[] = []
     canvasBox.setAttribute('data-narrow-tab-target', '')
-    tabs.push({ value: 'content', label: canvasBox.firstElementChild?.getAttribute('data-tab-label') ?? 'Content', participant: canvasBox })
+    tabs.push({ value: 'content', label: canvasBox.firstElementChild?.getAttribute('data-tab-label') ?? 'Content', participant: canvasBox, controls: canvasBox })
 
     const addSideTabs = (boxes: HTMLElement[]): void => {
       for (const box of boxes) {
@@ -760,29 +779,35 @@ export class UISuperShellElement extends UIElement {
         const segments = [...box.querySelectorAll(':scope > [data-segment]')]
         if (segments.length > 0) {
           segments.forEach((seg, i) => {
-            tabs.push({ value: `${slot}:${i}`, label: seg.getAttribute('data-segment') ?? `Segment ${i + 1}`, participant: box, segmentIndex: i })
+            tabs.push({ value: `${slot}:${i}`, label: seg.getAttribute('data-segment') ?? `Segment ${i + 1}`, participant: box, controls: seg, segmentIndex: i })
           })
         } else {
-          tabs.push({ value: slot, label: box.firstElementChild?.getAttribute('data-tab-label') ?? slot, participant: box })
+          tabs.push({ value: slot, label: box.firstElementChild?.getAttribute('data-tab-label') ?? slot, participant: box, controls: box })
         }
       }
     }
     if (wantsStart) addSideTabs(startPaneBoxes)
     if (wantsEnd) addSideTabs(endPaneBoxes)
 
-    const strip = document.createElement('div')
+    // GH #221 — the strip is the fleet ui-tabs control, panel-less (the participants are the shell's
+    // own visibility targets, never ui-tab-panels). Each ui-tab carries its narrow-tab VALUE as its
+    // `key` (the control's stable-identity seam), so the commit event's detail.value IS the value
+    // `#selectNarrowTab` addresses, and a programmatic `selected = value` write resolves by key.
+    const strip = document.createElement('ui-tabs') as UITabsElement
     strip.setAttribute('data-part', 'narrow-tabs')
-    strip.setAttribute('role', 'tablist')
+    strip.setAttribute('selected', 'content') // content is the always-legal default selection
     for (const t of tabs) {
-      const btn = document.createElement('ui-button')
-      btn.setAttribute('variant', 'ghost')
-      btn.setAttribute('data-part', 'narrow-tab')
-      btn.setAttribute('role', 'tab')
-      btn.setAttribute('aria-selected', String(t.value === 'content'))
-      btn.textContent = t.label
-      btn.addEventListener('click', () => this.#selectNarrowTab(t.value))
-      strip.append(btn)
+      const tab = document.createElement('ui-tab') as UITabElement
+      tab.setAttribute('data-part', 'narrow-tab')
+      tab.setAttribute('key', t.value)
+      tab.textContent = t.label
+      tab.link(t.controls, this.#nextId('tab')) // aria-controls → participant box / one segment (element-reflection)
+      strip.append(tab)
     }
+    strip.addEventListener('select', (event) => {
+      event.stopPropagation() // shell-internal mechanism — never leaks into a consumer's own scope
+      this.#selectNarrowTab((event as CustomEvent<TabsSelectDetail>).detail.value)
+    })
     frame.querySelector('[data-part="middle"]')!.before(strip)
     this.#narrowTabsHost = strip
     this.#narrowTabs = tabs
@@ -791,9 +816,10 @@ export class UISuperShellElement extends UIElement {
   }
 
   /** Selects one narrow tab (content, a plain pane, or `{slot}:{i}` for one segment) — visibility-only
-   *  (R7c): moves `data-narrow-active` between participants, syncs the strip's `aria-selected`, and — for
-   *  a segment tab — drives the SAME `#setActiveSegment` the wide strip uses, so a wide↔narrow crossing
-   *  never disagrees about which segment is current. */
+   *  (R7c): moves `data-narrow-active` between participants, syncs the strip by SETTING its `selected`
+   *  prop (the tab keys ARE the values, so the write resolves by key; no event echo, ADR-0019), and —
+   *  for a segment tab — drives the SAME `#setActiveSegment` the wide strip uses, so a wide↔narrow
+   *  crossing never disagrees about which segment is current. */
   #selectNarrowTab(value: string): void {
     const tab = this.#narrowTabs.find((t) => t.value === value)
     if (!tab) return
@@ -801,9 +827,7 @@ export class UISuperShellElement extends UIElement {
     for (const t of this.#narrowTabs) t.participant.removeAttribute('data-narrow-active')
     tab.participant.setAttribute('data-narrow-active', '')
     if (tab.segmentIndex !== undefined) this.#setActiveSegment(tab.participant, tab.segmentIndex)
-    if (this.#narrowTabsHost) {
-      for (const [i, tabEl] of [...this.#narrowTabsHost.children].entries()) tabEl.setAttribute('aria-selected', String(this.#narrowTabs[i] === tab))
-    }
+    if (this.#narrowTabsHost) this.#narrowTabsHost.selected = value
   }
 }
 

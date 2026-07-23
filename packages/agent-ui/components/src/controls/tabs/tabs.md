@@ -45,7 +45,7 @@ slots: []              # NO named slots — the tabs/panels are component-native
 
 parts:                 # the control-created tablist strip is a PART (role=tablist rides the part div, not the host)
   - name: tablist
-    description: The control-created `<div data-part="tablist" role="tablist">` strip the ui-tab children are reparented into (the panels stay as siblings). role=tablist rides the PART div — the HOST carries no role/aria-* attribute.
+    description: The control-created `<div data-part="tablist" role="tablist">` strip the ui-tab children are reparented into (the panels stay as siblings). role=tablist rides the PART div — the HOST carries no role/aria-* attribute. The strip is the control's own horizontal overflow viewport (GH #221 — `overflow-x auto`; labels never clip mid-word, the strip scrolls); its scrollbar visibility is the consumer-inherited `--ui-tabs-strip-scrollbar-width` seam (var()-fallback `auto`, never declared in the token block).
 
 customStates:          # :state() hooks the stylesheet keys off — set via internals.states, never host attrs
   - ready              # the motion gate (ADR-0008): armed one frame past first paint on ui-tabs so the upgrade/first selection SNAPS and only later changes animate
