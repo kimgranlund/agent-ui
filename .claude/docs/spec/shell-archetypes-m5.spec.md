@@ -411,14 +411,17 @@ with (or after) the mop-up wave's conversions, never with a red or grandfathered
 test's header cites SPEC-R11c/AC19, so a future red reads as law, not lint noise.
 
 AC20 (extends §6) — **floors hold under passive resize, cross-engine.** With both sides authored
-full (the `FORWARD_ATTRS` configuration, R13b) on the default `collapse-band`, a container swept
-across 640→900px never computes the canvas box below `--ui-super-shell-canvas-min-size`, and no
-pane computes below `--ui-super-shell-pane-min-size` while visible in its band. R2e's
-no-horizontal-overflow law holds at EVERY step of that sweep, unconditionally — not only at or
-above the configuration's natural-fit width (846px, R13b's arithmetic; unchanged by GH #214's
-resizer-footprint fix, which folds a resizer-enabled side's natural fit onto the SAME 846px a
-resizer-less side always needed). GH #205 closed the BELOW-natural-fit gap this clause used to
-carve out as an interim exception: a measurement-based auto-collapse (SPEC-R13b's own mechanism
-choice) hides a `collapse`-mode side whenever the row's live geometry would otherwise overflow,
-strictly above the band line where CSS alone does not already collapse it — so floors-hold and
-no-overflow now coexist at every width in the sweep, never one traded for the other.
+full (a dual-resizable configuration is the sweep vehicle; a rails+panes `FORWARD_ATTRS`-shaped
+configuration is spot-checked at one squeeze width in the docs-site demo, R13b) on the default
+`collapse-band`, a container swept across 640→900px never computes the canvas box below
+`--ui-super-shell-canvas-min-size`, and no pane computes below `--ui-super-shell-pane-min-size`
+while visible in its band. R2e's no-horizontal-overflow law holds at every step of that sweep
+(within a deliberate ±1px subpixel-rounding epsilon, the same tolerance R6c/AC12's own overflow
+checks use fleet-wide) — not only at or above the configuration's natural-fit width (846px, R13b's
+arithmetic; unchanged by GH #214's resizer-footprint fix, which folds a resizer-enabled side's
+natural fit onto the SAME 846px a resizer-less side always needed). GH #205 closed the
+BELOW-natural-fit gap this clause used to carve out as an interim exception: a measurement-based
+auto-collapse (SPEC-R13b's own mechanism choice) hides a `collapse`-mode side whenever the row's
+live geometry would otherwise overflow, strictly above the band line where CSS alone does not
+already collapse it — so floors-hold and no-overflow now coexist at every width in the sweep,
+never one traded for the other.

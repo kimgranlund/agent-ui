@@ -167,10 +167,11 @@
      hovered resizer never renders as a solid full-height slab.
      GH #185 (parity gap a) — `:scope:state(dragging)` (split.ts's own `internals.states.add/delete`
      mechanism, mirrored onto super-shell.ts's #onResize/disconnected) keeps this SAME fill live for
-     the WHOLE drag gesture, even after a fast sweep carries the pointer off the thin 0.25rem resizer
-     box (split.css's own file-header rationale — `setPointerCapture` keeps the drag routed regardless
-     of where the cursor sweeps, but a plain `:hover` alone would drop the highlight, reading as the
-     resizer "letting go" mid-drag).
+     the WHOLE drag gesture, even after a fast sweep carries the pointer off the thin 0.25rem ink (GH
+     #214 widened the HIT-BOX itself to a full `--ui-super-shell-gap`, but the visible ink stays the
+     original thin sliver) (split.css's own file-header rationale — `setPointerCapture` keeps the drag
+     routed regardless of where the cursor sweeps, but a plain `:hover` alone would drop the highlight,
+     reading as the resizer "letting go" mid-drag).
      GH #214 — `background-color`, NEVER the `background` shorthand: the shorthand resets EVERY
      sub-property it covers to its initial value when omitted (verified live, both engines) — including
      `background-clip`, which would silently flip the base rule's `content-box` back to `border-box`
@@ -310,8 +311,9 @@
        content (e.g. ui-nav-rail collapse="menu") owns its narrow anatomy from here. `[data-part='pane-
        resizer']` shares its side's own `data-side` (line ~103's comment) — EXCLUDED from both restore
        arms below (never from the hide rule above): dragging doesn't apply once a side is stacked
-       full-width or overlaid, and without the exclusion the resizer's own `inline-size:0.25rem` gets
-       reset to `auto`/`position:absolute`, rendering it as a second full-size box on top of the pane. */
+       full-width or overlaid, and without the exclusion the resizer's own `inline-size:var(--ui-super-
+       shell-gap)` (GH #214 — a gap-sized hit-box, not the earlier flat 0.25rem) gets reset to `auto`/
+       `position:absolute`, rendering it as a second full-size box on top of the pane. */
     :scope[narrow-start='stack'] [data-part='middle'],
     :scope[narrow-end='stack'] [data-part='middle'] {
       flex-direction: column;

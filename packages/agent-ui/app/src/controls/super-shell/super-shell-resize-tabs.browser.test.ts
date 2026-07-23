@@ -59,6 +59,25 @@ function mount(width = 900): { el: UISuperShellElement; content: HTMLElement; pa
 }
 
 describe('ui-super-shell — SPEC-R6 resizable inner pane (AC9)', () => {
+  it('GH #206 (independent-review MAJOR-2): a freshly-mounted, never-touched resizer already carries aria-valuenow/-valuemin/-valuemax', async () => {
+    // SPEC-R6b names the trio as part of the RENDERED separator, not just its post-interaction state —
+    // an SR user tabbing to an untouched resizer must hear a real value, not silence.
+    const { el, pane } = mount()
+    await el.updateComplete
+    const sep = el.querySelector('[data-part="pane-resizer"][data-side="end"]') as HTMLElement
+    expect(sep.hasAttribute('aria-valuenow'), 'valuenow is present at rest, before any drag/keypress').toBe(true)
+    expect(sep.hasAttribute('aria-valuemin'), 'valuemin is present at rest').toBe(true)
+    expect(sep.hasAttribute('aria-valuemax'), 'valuemax is present at rest').toBe(true)
+    const valuenow = Number(sep.getAttribute('aria-valuenow'))
+    const valuemin = Number(sep.getAttribute('aria-valuemin'))
+    const valuemax = Number(sep.getAttribute('aria-valuemax'))
+    expect(valuenow, 'valuenow matches the pane\'s real, un-dragged rendered width').toBe(Math.round(pane.getBoundingClientRect().width))
+    expect(valuemin, 'valuemin is the resolved pane-min floor (162px, no consumer override)').toBe(162)
+    expect(valuemin, 'valuemin never exceeds valuemax').toBeLessThanOrEqual(valuemax)
+    expect(valuenow, 'valuenow sits within the reported bounds').toBeGreaterThanOrEqual(valuemin)
+    expect(valuenow).toBeLessThanOrEqual(valuemax)
+  })
+
   it('drag resizes the end pane within bounds and reflects size-end on commit', async () => {
     const { el, pane } = mount()
     await el.updateComplete
@@ -426,6 +445,69 @@ describe('ui-super-shell — dual-collapse-side canvas floor (min-size-floors ce
   })
 })
 
+// GH #205 — MAJOR-1 (independent review): the PUBLIC collapse effect (ts:154-163) used to read
+// collapsedStart/collapsedEnd and re-sync ARIA ONLY, never re-checking fit — so a toggle-restore or a
+// public collapse could leave the row overflowing (restore case) or a stale data-auto-collapsed-*
+// attribute + hidden toggle behind (mirror case) until the next ambient HOST resize. Needs a header
+// (mountDualResizable has none — no toggles compose without one, SPEC-R9a) so the real toggle CLICK path
+// (not a direct prop assignment) is what's actually exercised.
+function mountDualResizableWithHeader(width: number): { el: UISuperShellElement; middle: HTMLElement } {
+  const el = document.createElement('ui-super-shell') as UISuperShellElement
+  el.style.position = 'fixed'
+  el.style.insetBlockStart = '0px'
+  el.style.insetInlineStart = '0px'
+  el.style.inlineSize = `${width}px`
+  el.style.blockSize = '400px'
+  el.setAttribute('resizable-start', '')
+  el.setAttribute('resizable-end', '')
+  const header = document.createElement('div'); header.setAttribute('data-slot', 'header')
+  const nav = document.createElement('div'); nav.setAttribute('data-slot', 'nav-pane')
+  const content = document.createElement('div'); content.setAttribute('data-slot', 'content')
+  const opts = document.createElement('div'); opts.setAttribute('data-slot', 'options-pane')
+  el.append(header, nav, content, opts)
+  document.body.append(el)
+  mounted.push(el)
+  return { el, middle: el.querySelector('[data-part="middle"]') as HTMLElement }
+}
+
+const settleFit = async (el: UISuperShellElement): Promise<void> => {
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null))))
+  await el.updateComplete
+}
+
+describe('ui-super-shell — GH #205 auto-collapse re-checks fit on a PUBLIC collapse/restore too (independent-review MAJOR-1)', () => {
+  it('mirror case: publicly collapsing one side clears a STALE auto-collapse on the other; toggle-restore case: restoring it re-engages auto-collapse, never a stale overflow', async () => {
+    const { el, middle } = mountDualResizableWithHeader(700) // inside the flagged window; natural fit is 702px
+    await settleFit(el)
+    // Baseline: nothing manually collapsed yet — the row auto-collapses END on its own (the existing
+    // squeeze behavior, unaffected by this fix).
+    expect(el.hasAttribute('data-auto-collapsed-end'), 'baseline: end auto-collapses on its own at 700px').toBe(true)
+    expect(el.hasAttribute('data-auto-collapsed-start')).toBe(false)
+
+    // Mirror case: the user PUBLICLY collapses START (frees even more room) — the STALE auto-collapsed-end
+    // attribute (now unnecessary) must clear, not persist alongside a hidden toggle nobody can reach.
+    el.collapsedStart = true
+    await settleFit(el)
+    expect(el.hasAttribute('data-auto-collapsed-end'), 'the stale auto-collapse on END clears once START frees room (no longer needed)').toBe(false)
+    expect(el.hasAttribute('data-auto-collapsed-start'), 'START is hidden via the PUBLIC prop — the ambient mechanism need not also mark it').toBe(false)
+    const optionsPane = middle.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    expect(getComputedStyle(optionsPane).display, 'END is visually restored once its stale auto-collapse clears').not.toBe('none')
+    expect(middle.scrollWidth, 'still no overflow').toBeLessThanOrEqual(middle.clientWidth + 1)
+
+    // Toggle-restore case: the user clicks the START toggle to restore it — the row can no longer hold
+    // both sides at 700px, so the ambient mechanism must re-engage (END yields first, the file convention)
+    // rather than leaving the row to overflow until the next ambient host resize.
+    const startToggle = el.querySelector('[data-part="side-toggle"][data-side="start"]') as HTMLElement
+    expect(startToggle, 'sanity: the header composes a real start toggle').not.toBeNull()
+    startToggle.click()
+    await settleFit(el)
+    expect(el.collapsedStart, "the user's restore intent is honestly stored in the PUBLIC prop").toBe(false)
+    expect(el.hasAttribute('data-auto-collapsed-end'), 'the ambient mechanism re-engages immediately on the toggle click, not on the next host resize').toBe(true)
+    expect(el.hasAttribute('data-auto-collapsed-start')).toBe(false)
+    expect(middle.scrollWidth, 'no overflow window even momentarily — the effect re-checks fit synchronously with the click').toBeLessThanOrEqual(middle.clientWidth + 1)
+  })
+})
+
 // ── GH #182 regression pin — the pane-resizer's THREE decoupled visual states ───────────────────────
 // The original bug: a real engine renders no jsdom probe can see (background/outline computed paint).
 // This is the permanent gate against the exact gate-blindness that let the solid full-height primary
@@ -516,7 +598,8 @@ describe('ui-super-shell — pane-resizer visual states (GH #182 regression pin)
 
 // ── GH #185 (parity gap a) — the ui-split `:state(dragging)` fill-persistence precedent, mirrored ──────
 // The gap: without `internals.states.add/delete('dragging')` (split.ts's own mechanism), a fast drag that
-// sweeps the pointer off the thin 0.25rem resizer box drops the `:hover` fill mid-gesture, reading as the
+// sweeps the pointer off the thin 0.25rem ink (GH #214 widened the HIT-BOX to a full gap; the visible ink
+// stays the original thin sliver) drops the `:hover` fill mid-gesture, reading as the
 // resizer "letting go." No real `userEvent.hover()` is used below — the synthetic `ptr()` PointerEvents
 // never engage a real `:hover`, so a persisting fill can ONLY come from `:state(dragging)` (super-shell.css's
 // `:scope:state(dragging) [data-part='pane-resizer']`), proving the state — not incidental hover — holds it.

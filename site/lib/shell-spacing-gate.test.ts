@@ -87,8 +87,9 @@ const ALLOWLIST: AllowlistEntry[] = [
     property: 'padding-inline',
     literal: '0.25rem',
     reason:
-      "SPEC-R11c's one AC19 exception — the pane-resizer's hit-target thickness is a control " +
-      'dimension that coincides with --md-sys-space-xs numerically, not semantically.',
+      "SPEC-R11c's one AC19 exception — the pane-resizer's visible INK thickness (GH #214: the hit-box " +
+      "itself is the gap-sized `--ui-super-shell-gap`, no literal there — only the centered ink stays this " +
+      'value) is a control dimension that coincides with --md-sys-space-xs numerically, not semantically.',
   },
 ]
 

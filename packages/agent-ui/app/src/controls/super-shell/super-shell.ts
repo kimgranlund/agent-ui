@@ -159,6 +159,14 @@ export class UISuperShellElement extends UIElement {
       void this.collapsedStart
       void this.collapsedEnd
       this.#syncAria()
+      // GH #205 (independent-review MAJOR-1) — a PUBLIC collapse/restore is exactly as capable of
+      // pushing the row below fit as a resize is: restoring a side via its toggle can return it to a
+      // row that can no longer hold it (the band-line→natural-fit window, side hidden ⇒ fits, side
+      // shown ⇒ doesn't), and collapsing a side can just as easily free enough room to clear a STALE
+      // auto-collapse on the OTHER side (#syncFitCollapse's reset-then-recompute handles that for
+      // free). Without this call, only the next ambient host resize re-checks fit — a visible overflow
+      // (or a stale auto-collapsed side + hidden toggle) would persist until then.
+      this.#syncFitCollapse()
     })
     // SPEC-R6d — "observable AND settable": a consumer assigning `sizeStart`/`sizeEnd` (a persistence
     // restore) must apply onto the pane, not just reflect the attribute. #onResize/#handleResizerKeydown
@@ -201,6 +209,13 @@ export class UISuperShellElement extends UIElement {
     // GH #205 (SPEC-R13b) — measurement-based auto-collapse, LAST so the frame/panes/toggles it reads
     // are all composed and wired first: correct on FIRST PAINT, not just after a later resize.
     this.#syncFitCollapse()
+    // GH #206 (independent-review MAJOR-2) — SPEC-R6b names aria-valuenow/-valuemin/-valuemax as part
+    // of the RENDERED separator, not just its post-interaction state: a freshly-mounted, never-touched
+    // resizer must already carry the trio, or an SR user tabbing to it hears no value at all. AFTER
+    // #syncFitCollapse (not before): an auto-collapsed side's resizer is display:none, so its pane
+    // measures a genuine zero-width and #syncResizerValues' own guard correctly skips it (nothing to
+    // announce on a hidden, untabbable control).
+    this.#syncResizerValues()
   }
 
   protected override disconnected(): void {
@@ -633,6 +648,32 @@ export class UISuperShellElement extends UIElement {
    *  every pointermove of a drag — `#resolvePx` forces a throwaway-element layout each call). */
   #clampPaneSize(want: number, baseline: { pane: number; canvasAvail: number; paneMin: number; canvasMin: number }): number {
     return Math.min(this.#maxPaneSize(baseline), Math.max(baseline.paneMin, want))
+  }
+
+  /** GH #206 (independent-review MAJOR-2, SPEC-R6b) — the trio is part of the RENDERED separator's
+   *  contract, not just its post-interaction state (#onResize/#handleResizerKeydown only ever write it
+   *  on a live drag/keypress). Called once, at rest (end of connected(), after #syncFitCollapse so an
+   *  auto-collapsed side's now-hidden resizer is correctly skipped). Width>0-guarded like every other
+   *  measurement read in this file, so jsdom's zero-width layout (or a genuinely display:none side)
+   *  never writes a garbage/misleading zero. */
+  #syncResizerValues(): void {
+    for (const side of ['start', 'end'] as const) {
+      const sep = this.#frame?.querySelector<HTMLElement>(`[data-part="pane-resizer"][data-side="${side}"]`)
+      const pane = side === 'start' ? this.#innermostPane.start : this.#innermostPane.end
+      const canvas = this.#frame?.querySelector<HTMLElement>('[data-part="canvas"]')
+      if (!sep || !pane || !canvas) continue
+      const paneWidth = pane.getBoundingClientRect().width
+      if (paneWidth <= 0) continue // jsdom, or a genuinely hidden (collapsed/auto-collapsed) side
+      const baseline = {
+        pane: paneWidth,
+        canvasAvail: canvas.getBoundingClientRect().width,
+        paneMin: this.#resolvePx('--ui-super-shell-pane-min-size', 162),
+        canvasMin: this.#resolvePx('--ui-super-shell-canvas-min-size', 162),
+      }
+      sep.setAttribute('aria-valuenow', String(Math.round(paneWidth)))
+      sep.setAttribute('aria-valuemin', String(Math.round(baseline.paneMin)))
+      sep.setAttribute('aria-valuemax', String(Math.round(this.#maxPaneSize(baseline))))
+    }
   }
 
   /** Resolves a length custom property to a real px number — `--ui-super-shell-*` tokens are `calc()`
