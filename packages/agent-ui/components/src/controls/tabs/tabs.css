@@ -54,12 +54,22 @@
     display: block;
   }
 
-  /* The tablist strip — a horizontal row of tabs with a bottom divider. role=tablist rides the part div. */
+  /* The tablist strip — a horizontal row of tabs with a bottom divider. role=tablist rides the part div.
+     GH #221 — the strip is the control's OWN overflow viewport: when the tabs outgrow a narrow host
+     (the evidence ADR-0133's named deferral below asked for — ui-super-shell's 252px pane strips
+     truncated every label mid-word), the strip scrolls horizontally instead of clipping. Labels stay
+     whole (`white-space: nowrap` below); overflow is LAWFUL scroll, never mid-word ellipsis/clip.
+     The scrollbar-visibility seam is consumer-INHERITED (var()-fallback only, deliberately NOT
+     declared in the token block — the same TKT-0065 alias-resolution lesson the `[fill]` panel seam
+     above records): a composing shell repoints --ui-tabs-strip-scrollbar-width to hide the bar and
+     supply its own scroll affordance; the bare-control default keeps the UA scrollbar. */
   :scope > [data-part='tablist'] {
     display: flex;
     flex-direction: row;
     gap: var(--ui-tabs-strip-gap);
     border-block-end: 1px solid var(--ui-tabs-strip-line);
+    overflow-x: auto;
+    scrollbar-width: var(--ui-tabs-strip-scrollbar-width, auto);
   }
 
   /* A tab — an interactive CONTROL-height row; the host-as-content label is its light-DOM children. */
@@ -74,14 +84,13 @@
     font-size: var(--ui-tabs-tab-font);
     color: var(--ui-tabs-ink);
     white-space: nowrap; /* anonymous host-as-content label text — the SAME no-wrapper gap ui-button had
-                            (button.css, fixed by ADR-0133) also exists here: no overflow/text-overflow, so
-                            a tab label in a narrow tablist would clip/overlap with no ellipsis affordance.
-                            NAMED DEFERRAL, not fixed here (ADR-0133 §Decision cl.3, TKT-0042): no evidence
-                            has been submitted that a tab label actually overflows in practice, and
-                            ADR-0106's Alternatives already rejected a generic fleet-wide truncate fix —
-                            per-control adoption stays per-control evidence. A future report against this
-                            control reopens ADR-0133's Alternatives with its own evidence, rather than
-                            starting cold. */
+                            (button.css, fixed by ADR-0133). The former NAMED DEFERRAL here (ADR-0133
+                            §Decision cl.3, TKT-0042 — "no evidence a tab label actually overflows in
+                            practice") was RESOLVED by GH #221's evidence: ui-super-shell's 252px pane
+                            strips truncated every label mid-word once the shell strips composed real
+                            tabs. Resolution = lawful overflow-x scroll on the tablist part (above),
+                            NOT per-tab ellipsis truncation — a whole label that scrolls into view
+                            beats a clipped one (ADR-0106's rejection of a generic truncate stands). */
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none; /* WebKit honours selection-none only via the prefix (button.browser proof) */

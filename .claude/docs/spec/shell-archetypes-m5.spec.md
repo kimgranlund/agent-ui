@@ -143,13 +143,17 @@ two pinned regression semantics (`agent-admin.browser.test.ts`). Decision record
 
 - **R7a — pane segments (wide).** Direct authored children of a pane slot MAY carry
   `data-segment="<Label>"`. A segmented pane renders a pane-local tab strip
-  (`[data-part='pane-tabs']`) at its top and shows EXACTLY ONE segment at a time
+  (`[data-part='pane-tabs']` — since GH #221 the strip IS the fleet `ui-tabs` control, shell-composed
+  panel-less: real tab anatomy + roving keyboard focus from the control; the segments never become
+  `ui-tab-panel`s) at its top and shows EXACTLY ONE segment at a time
   (`data-active-segment` on the pane box, first segment default). Non-segmented panes are
   untouched. Segments are read once at compose (the build-once law) — this replaces a consumer
-  hand-composing `ui-tabs` inside a pane (the agent-admin Settings ⇄ Context shape).
+  hand-composing `ui-tabs` inside a pane (the agent-admin Settings ⇄ Context shape); the shell now
+  composes the control itself.
 - **R7b — the third narrow arm.** `narrow-start`/`narrow-end` widen to
   `'collapse' | 'stack' | 'tabs'`. At narrow, a `tabs` side's panes join a shell-owned top-level
-  strip (`[data-part='narrow-tabs']`, composed once, hidden outside narrow by the container query):
+  strip (`[data-part='narrow-tabs']` — the same panel-less `ui-tabs` composition as R7a's strip,
+  GH #221 — composed once, hidden outside narrow by the container query):
   the CONTENT tab always first (label = `data-tab-label` on content's first authored child, default
   "Content"), then per pane in DOM order — a segmented pane contributes ONE TAB PER SEGMENT (the
   flattening that reproduces agent-admin's Chat/Settings/Context trio), a plain pane one tab
@@ -170,6 +174,11 @@ two pinned regression semantics (`agent-admin.browser.test.ts`). Decision record
   `aria-controls` referencing the participant boxes; participant boxes KEEP their landmark roles
   (§the LLD-C1 map) rather than swapping to `tabpanel` at narrow (a role swap needs a JS band
   signal the pure-CSS narrow mode deliberately avoids). Named LLD fork, default as stated.
+  Realization note (GH #221): the strips being real `ui-tabs` compositions, `tablist` rides the
+  control's own tablist part, `tab`/`aria-selected` ride each `ui-tab`'s ElementInternals (the
+  family's no-host-aria discipline), and `aria-controls` is the internals ELEMENT-REFLECTION
+  relation (`tab.link(target)` → the participant box, or the one segment for a flattened segment
+  tab) — never an IDREF host attribute.
 
 AC9 (extends §6): drag + keyboard resize move the inner pane within R6c's bounds, `size-*`
 reflects, and a collapse round-trip preserves the committed size · AC10 a segmented pane shows the
@@ -254,7 +263,9 @@ amendment substitutes for it.
   token block (consumer-overridable — the repoint pattern; the `command-modal.css` documentation
   comment and the GH #166 `ui-menu` realization are the canonical shape), consumed as
   `scrollbar-width: var(…)` by every shell-owned scroll region: pane boxes (`overflow-y: auto`),
-  active segments, the narrow-tabs strip (`overflow-x: auto`), and — by inheritance of the pane
+  active segments, the tab strips' tablist viewports (`overflow-x: auto` lives in the composed
+  `ui-tabs` control's own sheet since GH #221; the shell chains its token through the control's
+  consumer-inherited `--ui-tabs-strip-scrollbar-width` seam), and — by inheritance of the pane
   rule — an overlay-restored side.
 - **R10b — the fade is the affordance.** Each scrollable pane box / segment wires the fleet's
   `scrollFade` trait (`{ viewport }`, the `menu.ts` precedent): once the bar hides, the edge fade

@@ -7,6 +7,9 @@
 // 52.5rem = 840px (compact); container widths are chosen to sit unambiguously inside each band.
 import { describe, it, expect, afterEach } from 'vitest'
 import '@agent-ui/components/foundation-styles.css'
+// GH #221 — the shell's tab strips compose the fleet ui-tabs control, whose own sheet (tabs.css, via
+// the family barrel) owns the tablist viewport this file's R10a strip assertion now targets.
+import '@agent-ui/components/component-styles.css'
 import './super-shell.css'
 import { UISuperShellElement } from './super-shell.ts'
 
@@ -282,7 +285,12 @@ describe('ui-super-shell — SPEC-R10 scrollbar seam (AC18)', () => {
     expect(getComputedStyle(activeSeg).scrollbarWidth, 'the active segment is a hidden scroller too').toBe('none')
     const strip = el.querySelector('[data-part="narrow-tabs"]') as HTMLElement
     expect(strip, 'the narrow-tabs strip composed (a tabs side is present)').not.toBeNull()
-    expect(getComputedStyle(strip).scrollbarWidth, 'the narrow-tabs strip is a hidden scroller too').toBe('none')
+    // GH #221 — the strip is a ui-tabs composition: the live horizontal viewport is the CONTROL's own
+    // tablist part (tabs.css `overflow-x: auto`), so the R10a hidden-scroller assertion targets it —
+    // reached through the shell's --ui-tabs-strip-scrollbar-width chain onto the strip host.
+    const stripViewport = strip.querySelector('[data-part="tablist"]') as HTMLElement
+    expect(stripViewport, 'the composed ui-tabs created its tablist viewport').not.toBeNull()
+    expect(getComputedStyle(stripViewport).scrollbarWidth, 'the narrow-tabs strip viewport is a hidden scroller too').toBe('none')
   })
 })
 

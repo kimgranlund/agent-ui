@@ -275,6 +275,57 @@ describe('ui-tabs — `fill` reflected boolean (ADR-0144 Q1 cl.1)', () => {
   })
 })
 
+describe('ui-tabs — PANEL-LESS composition (GH #221: the ui-super-shell strip contract)', () => {
+  // ui-super-shell composes both its tab strips from ui-tabs WITHOUT ui-tab-panel children (the
+  // shell's segments/participants are its own visibility targets, never panels). This pin freezes
+  // the tolerance that composition relies on: the tab↔panel pair wiring SKIPS absent panels while
+  // selection, roving tabindex, and the one user-commit `select` event all run unaffected.
+  function buildPanelless(): { tabs: ProbeTabs; tabEls: ProbeTab[]; strip: HTMLElement } {
+    const tabs = new ProbeTabs()
+    const tabEls: ProbeTab[] = []
+    for (let i = 0; i < 3; i++) {
+      const t = new ProbeTab()
+      t.textContent = `Tab ${i}`
+      tabs.append(t)
+      tabEls.push(t)
+    }
+    document.body.append(tabs)
+    return { tabs, tabEls, strip: tabs.querySelector('[data-part="tablist"]') as HTMLElement }
+  }
+
+  it('connects clean with zero panels: strip + roving + selection all live, nothing throws', () => {
+    const { tabEls, strip } = buildPanelless()
+    expect(strip.getAttribute('role')).toBe('tablist')
+    for (const t of tabEls) expect(t.parentElement).toBe(strip) // reparent leg unaffected
+    expect(tabEls[0].ii.ariaSelected).toBe('true') // first-tab default selection
+    expect(tabEls[0].tabIndex).toBe(0) // roving intact
+    expect(tabEls[1].tabIndex).toBe(-1)
+  })
+
+  it('a click commits + emits the ONE `select`; a programmatic `selected` write echoes NOTHING (ADR-0019)', async () => {
+    const { tabs, tabEls } = buildPanelless()
+    const seen: Array<{ value: string; index: number }> = []
+    tabs.addEventListener('select', (e) => seen.push((e as CustomEvent<{ value: string; index: number }>).detail))
+    tabEls[1].click()
+    expect(seen).toEqual([{ value: '1', index: 1 }]) // key-less ⇒ the index identity
+    await tabs.updateComplete
+    expect(tabEls[1].ii.ariaSelected).toBe('true')
+    tabs.selected = '2' // programmatic (the composing shell's sync-back write)
+    await tabs.updateComplete
+    expect(tabEls[2].ii.ariaSelected).toBe('true')
+    expect(seen, 'a programmatic write must never echo a select event').toHaveLength(1)
+  })
+
+  it('link() accepts ANY element as the aria-controls target (the shell points tabs at its segments)', () => {
+    const { tabEls } = buildPanelless()
+    const segment = document.createElement('div') // a shell segment — NOT a ui-tab-panel
+    expect(() => tabEls[0].link(segment, 'gh221-tab-id')).not.toThrow()
+    expect(tabEls[0].id, 'link seeds the tab id when the author gave none').toBe('gh221-tab-id')
+    // the element-reflection itself is a real-engine API (jsdom lacks ariaControlsElements) —
+    // proven cross-engine in tabs.browser.test.ts; here the seam's contract surface is the pin.
+  })
+})
+
 describe('ui-tabs — self-define (s8)', () => {
   it('registers all three tags', () => {
     expect(customElements.get('ui-tabs')).toBe(UITabsElement)

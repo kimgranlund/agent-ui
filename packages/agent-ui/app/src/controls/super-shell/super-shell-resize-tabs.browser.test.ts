@@ -6,6 +6,9 @@
 import { describe, it, expect, afterEach, beforeAll, afterAll } from 'vitest'
 import { userEvent, page } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css'
+// GH #221 — the shell's tab strips compose the fleet ui-tabs control; its own sheet (tabs.css, via the
+// family barrel) supplies the real tab anatomy + the tablist overflow viewport the R7 legs assert on.
+import '@agent-ui/components/component-styles.css'
 import './super-shell.css'
 import { UISuperShellElement } from './super-shell.ts'
 
@@ -198,6 +201,119 @@ describe('ui-super-shell — SPEC-R7a pane segments (AC10, wide)', () => {
     expect(settings.hasAttribute('data-active')).toBe(false)
     expect(context.hasAttribute('data-active'), 'clicking the second tab switches the active segment').toBe(true)
     expect(settings.isConnected, 'switching segments never reparents (R7c)').toBe(true)
+  })
+
+  it('GH #221: at the default 252px pane the strip is a real ui-tabs — labels never clip mid-word, the tablist scrolls, tablist semantics ride the control', async () => {
+    // The exact defect Kim's screenshots showed: three ghost-button rows at 252px truncating to
+    // "S…"/"Conte…"/"Cont…". The recomposed strip must render every label WHOLE (each ui-tab's own
+    // box holds its full nowrap text — no internal overflow) with the CONTROL's tablist part as the
+    // lawful horizontal scroll viewport once the row outgrows the pane.
+    const el = document.createElement('ui-super-shell') as UISuperShellElement
+    el.style.cssText = 'position:fixed;inset-block-start:0;inset-inline-start:0;inline-size:900px;block-size:400px'
+    el.setAttribute('narrow-end', 'tabs')
+    const content = document.createElement('div'); content.setAttribute('data-slot', 'content'); content.textContent = 'C'
+    const labels = ['Settings', 'Context: System', 'Context: Dialog'] // agent-admin's real trio (GH #221)
+    const segs = labels.map((label) => {
+      const seg = document.createElement('div')
+      seg.setAttribute('data-slot', 'options-pane')
+      seg.setAttribute('data-segment', label)
+      seg.textContent = `${label} body`
+      return seg
+    })
+    el.append(content, ...segs)
+    document.body.append(el)
+    mounted.push(el)
+    await el.updateComplete
+
+    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    expect(Math.round(pane.getBoundingClientRect().width), 'the pane sits at its 14-module (252px) token default').toBe(252)
+
+    const strip = pane.querySelector('[data-part="pane-tabs"]') as HTMLElement
+    expect(strip.tagName.toLowerCase(), 'the strip IS the fleet control').toBe('ui-tabs')
+    const viewport = strip.querySelector('[data-part="tablist"]') as HTMLElement
+    expect(viewport.getAttribute('role'), 'tablist semantics ride the control\'s own part').toBe('tablist')
+
+    const tabs = [...strip.querySelectorAll('[data-part="pane-tab"]')] as HTMLElement[]
+    expect(tabs.map((t) => t.tagName.toLowerCase())).toEqual(['ui-tab', 'ui-tab', 'ui-tab'])
+    expect(tabs.map((t) => t.textContent)).toEqual(labels)
+    for (const tab of tabs) {
+      // Un-clipped: the tab's own box holds its whole nowrap label — zero internal text overflow.
+      expect(tab.scrollWidth, `"${tab.textContent}" clips mid-word (scrollWidth > clientWidth)`).toBeLessThanOrEqual(tab.clientWidth + 1)
+      expect(tab.getBoundingClientRect().width, `"${tab.textContent}" collapsed to nothing`).toBeGreaterThan(0)
+    }
+    // The three whole labels genuinely outgrow 252px, and the tablist part is the LIVE scroll viewport.
+    expect(viewport.scrollWidth, 'the whole-label row overflows the 252px pane').toBeGreaterThan(viewport.clientWidth + 1)
+    viewport.scrollLeft = 40
+    expect(viewport.scrollLeft, 'the strip scrolls (lawful overflow, not clipping)').toBeGreaterThan(0)
+    viewport.scrollLeft = 0
+  })
+
+  it('GH #221 review MINOR-1: an inward bubbling `select` from consumer content NEVER drives the shell mechanisms (counterfactual pin)', async () => {
+    // The guarantee today holds because the shell's `select` listeners are ELEMENT-BOUND on the two
+    // strip hosts — a future delegated-listener refactor (listening on the shell/frame) would start
+    // catching consumer-content `select` events and regress silently. Pin it: a bubbles+composed
+    // CustomEvent('select') with a REAL TabsSelectDetail shape (so a hypothetical delegated handler
+    // WOULD act on it), dispatched from inside (a) a pane segment and (b) the canvas, must change
+    // neither `data-active-segment` nor `data-narrow-tab`; the strips' own tabs stay the one path.
+    const { el, content } = mount()
+    await el.updateComplete
+    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    expect(pane.getAttribute('data-active-segment'), 'baseline: first segment active').toBe('0')
+    expect(el.getAttribute('data-narrow-tab'), 'baseline: content is the narrow selection').toBe('content')
+
+    // (a) from INSIDE the active pane segment (bubbles through the pane box — never through the strip)
+    const seg = pane.querySelector('[data-segment="Settings"]') as HTMLElement
+    const inSegment = document.createElement('div')
+    seg.append(inSegment)
+    inSegment.dispatchEvent(new CustomEvent('select', { detail: { value: '1', index: 1 }, bubbles: true, composed: true }))
+    await el.updateComplete
+    expect(pane.getAttribute('data-active-segment'), 'a segment-content select must not switch segments').toBe('0')
+    expect(el.getAttribute('data-narrow-tab'), 'a segment-content select must not move the narrow selection').toBe('content')
+
+    // (b) from INSIDE the canvas content
+    const inCanvas = document.createElement('div')
+    content.append(inCanvas)
+    inCanvas.dispatchEvent(new CustomEvent('select', { detail: { value: 'options-pane:1', index: 2 }, bubbles: true, composed: true }))
+    await el.updateComplete
+    expect(pane.getAttribute('data-active-segment'), 'a canvas-content select must not switch segments').toBe('0')
+    expect(el.getAttribute('data-narrow-tab'), 'a canvas-content select must not move the narrow selection').toBe('content')
+
+    // POSITIVE CONTROLS — the strips' own tabs still drive both mechanisms (the asserts above are not vacuous).
+    const paneTabs = [...pane.querySelectorAll('[data-part="pane-tab"]')] as HTMLElement[]
+    paneTabs[1]!.click()
+    await el.updateComplete
+    expect(pane.getAttribute('data-active-segment'), 'the pane strip tab still switches the segment').toBe('1')
+    const narrowTabs = [...el.querySelectorAll('[data-part="narrow-tab"]')] as HTMLElement[]
+    narrowTabs.find((t) => t.textContent === 'Settings')!.click()
+    await el.updateComplete
+    expect(el.getAttribute('data-narrow-tab'), 'the narrow strip tab still moves the narrow selection').toBe('options-pane:0')
+    inSegment.remove()
+    inCanvas.remove()
+  })
+
+  it('GH #221 review MINOR-2: a composed strip tab aria-controls ITS segment via internals element-reflection (both engines)', async () => {
+    // The wiring rides `tab.link(segment)` → `internals.ariaControlsElements` (never a host IDREF
+    // attribute — the family discipline), so the proof reads the real engine's element-reflection.
+    // `internals` is a TS-protected prototype getter (compile-time only) — the runtime cast below is
+    // the same real-instance access tabs.browser.test.ts's probe subclasses model; feature-detect-
+    // conditional exactly like its lines 207-241 (both shipped engines DO support the API).
+    const { el } = mount()
+    await el.updateComplete
+    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    const tabs = [...pane.querySelectorAll('[data-part="pane-tab"]')] as HTMLElement[]
+    const segments = [...pane.querySelectorAll(':scope > [data-segment]')]
+    expect(tabs.length, 'one strip tab per segment').toBe(segments.length)
+    for (const [i, tab] of tabs.entries()) {
+      const internals = (tab as unknown as { internals: ElementInternals }).internals
+      const reflected = internals as unknown as { ariaControlsElements?: readonly Element[] }
+      if ('ariaControlsElements' in internals) {
+        expect(reflected.ariaControlsElements?.[0], `tab ${i} ("${tab.textContent}") does not aria-control its own segment`).toBe(segments[i])
+      } else {
+        // a stale engine: at minimum prove the link() wiring path ran (the id was seeded) — the
+        // tabs.browser.test.ts:207-241 fallback shape, so the relation is never silently absent.
+        expect(tab.id.length, `tab ${i}: no id seeded — link() never ran`).toBeGreaterThan(0)
+      }
+    }
   })
 })
 

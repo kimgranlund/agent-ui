@@ -358,3 +358,39 @@ describe('ui-tabs — `fill` panel keyboard scroll — MEASURED, not assumed (AD
     expect(panel.scrollTop, `${server.browser}: Home did not return to the top`).toBe(0)
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  [6] GH #221 — the tablist part is the control's own horizontal overflow viewport (both engines)
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-tabs — tablist overflow: whole labels scroll, never clip mid-word (GH #221, both engines)', () => {
+  const NARROW = `
+    <div style="inline-size: 252px">
+      <ui-tabs>
+        <ui-tab>Settings</ui-tab><ui-tab>Context: System</ui-tab><ui-tab>Context: Dialog</ui-tab>
+      </ui-tabs>
+    </div>` // ui-super-shell's 14-module pane width — the composition that surfaced the defect
+
+  it('at 252px the strip overflows and SCROLLS; every tab still holds its whole nowrap label', () => {
+    const { tabs, tabEls } = mount(NARROW)
+    const strip = tabs.querySelector('[data-part="tablist"]') as HTMLElement
+    expect(getComputedStyle(strip).overflowX, `${server.browser}: the tablist is not a scroll viewport`).toBe('auto')
+    // the three whole labels genuinely outgrow the 252px host — lawful overflow, reachable by scroll
+    expect(strip.scrollWidth, `${server.browser}: the row should outgrow 252px`).toBeGreaterThan(strip.clientWidth + 1)
+    strip.scrollLeft = 40
+    expect(strip.scrollLeft, `${server.browser}: the strip did not actually scroll`).toBeGreaterThan(0)
+    strip.scrollLeft = 0
+    // un-clipped: each tab's own box holds its full label (no internal text overflow = no mid-word cut)
+    for (const t of tabEls) {
+      expect(t.scrollWidth, `${server.browser}: "${t.textContent}" clips inside its own box`).toBeLessThanOrEqual(t.clientWidth + 1)
+    }
+  })
+
+  it('the scrollbar-visibility seam is consumer-INHERITED (var()-fallback, the [fill] panel-seam shape)', () => {
+    const { wrap, tabs } = mount(NARROW)
+    const strip = tabs.querySelector('[data-part="tablist"]') as HTMLElement
+    expect(getComputedStyle(strip).scrollbarWidth, `${server.browser}: the bare-control default must keep the UA bar`).toBe('auto')
+    wrap.style.setProperty('--ui-tabs-strip-scrollbar-width', 'none') // a composing shell's repoint
+    expect(getComputedStyle(strip).scrollbarWidth, `${server.browser}: the inherited repoint did not reach the tablist`).toBe('none')
+  })
+})
