@@ -1,6 +1,6 @@
 # SPEC — Shell archetypes M5: `ui-super-shell` (the two-level recursive shell grammar)
 
-> Status: proposed · v0.5 · 2026-07-22 · Layer: app chrome (`@agent-ui/app`)
+> Status: accepted · v0.5 · 2026-07-22 · Layer: app chrome (`@agent-ui/app`)
 > Refines: [ADR-0151](../adr/0151-named-shell-archetypes-m5.md) (accepted — ratified by Kim
 > 2026-07-19) · the agent-app-surfaces PRD's M5 (PRD-G9).
 > Follows the established PATTERNS of: [ADR-0082](../adr/0082-app-shell-per-instance-isolation.md) /
@@ -109,7 +109,7 @@ fit." Evidence source: the shipped `agent-admin.ts`/`.css` composition (a drag-r
 `ui-split [ conversation | {Settings ⇄ Context} tabs ]` wide shape + a 3-tab Chat/Settings/Context
 narrow shape, `ResizeObserver`-reparented under TKT-0085's live-surface-survival hardening) and its
 two pinned regression semantics (`agent-admin.browser.test.ts`). Decision record:
-[ADR-0154](../adr/0154-shell-grammar-resizable-pane-tab-collapse.md) (proposed). Build plan:
+[ADR-0154](../adr/0154-shell-grammar-resizable-pane-tab-collapse.md) (accepted). Build plan:
 [`../lld/agent-admin-shell-rehost.lld.md`](../lld/agent-admin-shell-rehost.lld.md).
 
 ### SPEC-R6 — the user-resizable inner pane (amends R1c's fixed-pane law, per side, opt-in)
@@ -195,7 +195,7 @@ Grounding: GH #170 (Kim's verdict on the composed docs-site chrome at narrow: *"
 like absolute garbage"* — screenshots on the issue) + the two-plane decompose recorded at
 [`../decompositions/shell-responsive-system.decomp.json`](../decompositions/shell-responsive-system.decomp.json)
 (fourteen actions crossed against the shipped structure; six found unhosted). Decision record:
-[ADR-0155](../adr/0155-shell-responsive-band-ladder-toggle-law-scrollbar-seam.md) (proposed).
+[ADR-0155](../adr/0155-shell-responsive-band-ladder-toggle-law-scrollbar-seam.md) (accepted).
 Build plan: [`../lld/shell-responsive.lld.md`](../lld/shell-responsive.lld.md). Kim's own visual
 sign-off at narrow remains the final acceptance gate (GH #170 clause 3) — nothing in this
 amendment substitutes for it.
