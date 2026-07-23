@@ -37,6 +37,13 @@ const props = {
   // A pure CSS hook (`[wrap]`, surface-host.css) — no JS behavior beyond reflection; the anatomy switch
   // (absolute+translate centering → in-flow flex centering) lives entirely in the stylesheet.
   wrap: { ...prop.boolean(), reflect: true },
+  // GH #241: opt-in CHROMELESS mount, default false (zero behavior change for existing consumers — the
+  // docs site's preview/canvas surfaces keep the checkered artboard affordance). Kim's ruling: on the
+  // chat path the A2UI render surface gets NO background, NO padding, and FULL available width — the
+  // rendered payload's own components carry their chrome; this host wrapper is invisible. A pure CSS
+  // hook (`[bare]`, surface-host.css) — no JS behavior beyond reflection; composes with `wrap`
+  // (ui-conversation sets BOTH on every surface it mounts inline in a bubble).
+  bare: { ...prop.boolean(), reflect: true },
 } satisfies PropsSchema
 
 export interface UISurfaceHostElement extends ReactiveProps<typeof props> {}

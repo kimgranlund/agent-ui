@@ -21,12 +21,18 @@ attributes:             # attributes-as-API — mirrors surface-host.ts `props`
     type: boolean
     default: false
     reflect: true       # TKT-0084: reflects to a `wrap` attribute → the CSS anatomy switch (surface-host.css); pure CSS hook, no JS behavior beyond reflection
+  - name: bare
+    type: boolean
+    default: false
+    reflect: true       # GH #241: reflects to a `bare` attribute → the chromeless-mount CSS hook (surface-host.css); pure CSS hook, no JS behavior beyond reflection
 
 properties:
   - name: label
     description: An OPTIONAL accessible name for the artboard region. Meaningful only when this element is composed standalone (e.g. a2ui-live's Canvas tab panel) — `ui-conversation`'s inline per-surface usage never sets it, since the surrounding turn bubble already carries the accessible structure. When non-empty, `internals.role` is set to `region` and `internals.ariaLabel` to the label text (reactively); when empty (the default), NEITHER is set — an unlabelled landmark is noise to assistive tech, not a courtesy.
   - name: wrap
     description: TKT-0084 — opt-in content-hugging artboard, default false (the always-fill-the-container behavior stands unchanged for existing consumers, e.g. a2ui-live's persistent Canvas tab panel). When set, the artboard sizes to its mounted content on both axes instead of forcing a fixed size — the anatomy switches from absolute+translate centering to normal in-flow flex centering (an absolutely positioned box contributes no intrinsic size to its parent, so `wrap` cannot be a plain CSS override of `block-size` alone). Also drops `[data-part='surface']`'s `container-type: inline-size` (ADR-0100 cl.2's own named tradeoff — a content-derived inline size cannot validly be a query container); nested layout primitives inside a wrapped surface render their default/identity layout rather than corrupting to a 0px collapse. Oversized content still scrolls, capped by `--ui-surface-host-wrap-max-block-size`, with the hidden-but-scrollable treatment every `ui-surface-host` instance now carries (`--ui-surface-host-scrollbar-width`, default `none`) — "wrap and not overflow" covers the common case, not an unconditional no-scroll guarantee. `ui-conversation` sets this by default on the surfaces it mounts inline in a bubble.
+  - name: bare
+    description: GH #241 — opt-in CHROMELESS mount, default false (the checkered docs-preview artboard stands unchanged for existing consumers). Kim's ruling for the chat path — the A2UI render surface gets NO background (the checker gradients and stage color both drop), NO padding (the `[data-part='surface']` inset zeroes), and FULL available width (host and surface span 100% of the containing box) — the rendered payload's own components carry their chrome; the host wrapper is invisible. A pure CSS hook (`[bare]`, surface-host.css), composable with `wrap` — `wrap` keeps owning the block axis (content-hug + cap + hidden scrollbars), `bare` owns the inline axis + the chrome strip; with an externally-definite 100% inline-size the surface box also QUALIFIES as the ADR-0100 cl.2 query container again, so `bare` restores the `container-type: inline-size` that plain `wrap` drops. `ui-conversation` sets this (with `wrap`) on every surface it mounts inline in a turn.
 
 events: []              # no DOM events — the mount/stream seam is exposed as imperative public methods (ingest/finalize/dispose) plus a callback registration (onClientMessage), never a CustomEvent (SPEC-R2; the closed six-event vocabulary has no streaming/client-message kind)
 
@@ -34,7 +40,7 @@ slots: []                # content model is NOT author-composed — the stage/su
 
 parts:                   # NOT shadow-DOM ::part() (light-DOM only) — light-DOM markers this element's own JS creates; documented for completeness (compareDescriptorToSource does not mechanically check `parts:`, the master-detail.md precedent)
   - name: stage
-    description: The checkered artboard box (`[data-part="stage"]`) — a positioning/measurement aid, decorative under forced-colors.
+    description: The checkered artboard box (`[data-part="stage"]`) — a positioning/measurement aid, decorative under forced-colors. Under `[bare]` (GH #241) the checker and stage color strip entirely — the chat path's chromeless mount.
   - name: surface
     description: The translate-centered mount point (`[data-part="surface"]`) the internal RendererHost mounts its rendered root into.
 
@@ -53,7 +59,7 @@ keyboard: []              # no keyboard interaction of its own — the mounted A
 geometry:
   sizeClass: container              # Container band — no control height, no flex/grid distribution of authored children
   blockSize: consumer-supplied      # fills its containing box (100% inline/block) — give it a definite block-size in the surrounding layout (the canvas-surface.ts contract, unchanged); OR set [wrap] (TKT-0084) to size to mounted content instead, capped by --ui-surface-host-wrap-max-block-size
-  paddingBlock: 0                   # the host itself adds no padding — the inner [data-part="surface"] carries its own 1rem inset
+  paddingBlock: 0                   # the host itself adds no padding — the inner [data-part="surface"] carries its own 1rem inset (zeroed under [bare], GH #241)
 
 forcedColors: The checkered `[data-part="stage"]` background is decorative (a positioning/measurement aid, not information-bearing) — it simplifies to the platform `Canvas` colour under `forced-colors: active` (surface-host.css), as long as the mounted A2UI surface's own controls keep their own forced-colors handling (proven per-control, not here).
 ---

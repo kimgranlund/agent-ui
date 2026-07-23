@@ -313,6 +313,124 @@ describe('ui-conversation cross-engine smoke — the COMPOSED path renders with 
   })
 })
 
+// GH #241 (Kim's ruling) — the chat path's chrome laws, proven on a realistic chat mount in a REAL
+// engine: (1) the A2UI render surface is CHROMELESS — no checker/background, zero padding — and spans
+// the full message-column width (rect-compared); (2) the agent turn DE-BUBBLES — no background, no
+// padding, full column width, the sender label above the content and outside the text container —
+// while (3) the user turn keeps its compact bubble. The STREAMING state is proven on the same
+// container mid-turn (before finalize()) — the text/surfaces stream bare, never inside a bubble that
+// later disappears.
+describe('ui-conversation cross-engine — chat-path chrome laws (GH #241)', () => {
+  /** The log's content-box width — the message column's available width (clientWidth excludes any
+   *  scrollbar; subtracting the log's own padding leaves the box the bubbles lay out in). */
+  const availableColumnWidth = (log: HTMLElement): number => {
+    const cs = getComputedStyle(log)
+    return log.clientWidth - Number.parseFloat(cs.paddingLeft) - Number.parseFloat(cs.paddingRight)
+  }
+
+  const driveSurfaceTurn = (el: UIConversationElement, finalize: boolean) => {
+    const handle = el.beginAgentTurn()
+    handle.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 'chrome-1', catalogId: 'agent-ui' } }))
+    handle.ingestLine(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'chrome-1',
+          components: [{ id: 'root', component: 'Button', variant: 'solid', label: 'Go', action: { action: 'go' } }],
+        },
+      }),
+    )
+    if (finalize) handle.finalize()
+    return handle
+  }
+
+  it('the mounted A2UI surface is chromeless and spans the full message-column width (rect-compared)', () => {
+    const el = mountConversation()
+    driveSurfaceTurn(el, true)
+
+    const log = logOf(el)
+    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    const host = bubble.querySelector('ui-surface-host') as HTMLElement
+    const stage = host.querySelector('[data-part="stage"]') as HTMLElement
+    const surface = host.querySelector('[data-part="surface"]') as HTMLElement
+
+    // conversation.ts sets the GH #241 pair on every inline mount.
+    expect(host.hasAttribute('bare'), 'the chat mount is missing [bare]').toBe(true)
+    expect(host.hasAttribute('wrap'), 'the chat mount lost [wrap] (TKT-0084)').toBe(true)
+
+    // NO chrome of its own: no checker image, no background color, zero padding.
+    const stageStyle = getComputedStyle(stage)
+    expect(stageStyle.backgroundImage, 'the checker leaked into the chat path').toBe('none')
+    expect(alphaOf(stageStyle.backgroundColor), 'the stage color leaked into the chat path').toBe(0)
+    // longhands, not the `padding` shorthand — cross-engine computed-shorthand serialization differs.
+    const surfaceStyle = getComputedStyle(surface)
+    for (const side of ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'] as const) {
+      expect(surfaceStyle[side], `the surface ${side} leaked into the chat path`).toBe('0px')
+    }
+
+    // FULL width: surface ≈ host ≈ the message column's available width (the de-bubbled agent turn
+    // has zero padding, so the whole chain shares one content-box width).
+    const available = availableColumnWidth(log)
+    expect(host.getBoundingClientRect().width, 'the host does not span the column').toBeCloseTo(available, 0)
+    expect(surface.getBoundingClientRect().width, 'the surface does not span the column').toBeCloseTo(available, 0)
+  })
+
+  it('the agent turn de-bubbles: no background, zero padding, full column width; the sender label sits ABOVE the content, outside the text container', () => {
+    const el = mountConversation()
+    const handle = el.beginAgentTurn()
+    handle.setNote('A bare agent reply')
+    handle.finalize()
+
+    const log = logOf(el)
+    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    const bubbleStyle = getComputedStyle(bubble)
+    expect(alphaOf(bubbleStyle.backgroundColor), 'the agent turn still paints a bubble background').toBe(0)
+    for (const side of ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'] as const) {
+      expect(bubbleStyle[side], `the agent turn still carries bubble ${side}`).toBe('0px')
+    }
+    expect(bubble.getBoundingClientRect().width, 'the agent turn does not span the column').toBeCloseTo(availableColumnWidth(log), 0)
+
+    // The sender label: present, above the message text, and OUTSIDE the text container.
+    const who = bubble.querySelector('[data-part="who"]') as HTMLElement
+    const body = bubble.querySelector('[data-part="body"]') as HTMLElement
+    expect(who).not.toBeNull()
+    expect(who.textContent).toBe('Agent')
+    expect(body.contains(who), 'the label rendered INSIDE the text container').toBe(false)
+    expect(who.getBoundingClientRect().bottom, 'the label is not above the message text').toBeLessThanOrEqual(
+      body.getBoundingClientRect().top + 0.5,
+    )
+  })
+
+  it('the STREAMING state is already bare — mid-turn (before finalize) the same container carries no chrome and full width', () => {
+    const el = mountConversation()
+    const handle = driveSurfaceTurn(el, false) // in flight — streaming, not settled
+
+    const log = logOf(el)
+    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    const stage = bubble.querySelector('ui-surface-host [data-part="stage"]') as HTMLElement
+    expect(alphaOf(getComputedStyle(bubble).backgroundColor), 'the streaming turn renders inside a bubble').toBe(0)
+    expect(getComputedStyle(bubble).paddingTop).toBe('0px')
+    expect(bubble.getBoundingClientRect().width).toBeCloseTo(availableColumnWidth(log), 0)
+    expect(getComputedStyle(stage).backgroundImage, 'the streaming surface paints the checker').toBe('none')
+
+    handle.finalize() // settle cleanly — no dangling turn leaks into the shared afterEach teardown
+  })
+
+  it('the user turn KEEPS its compact bubble — painted background, real padding, hugging its text (never full-column)', () => {
+    const el = mountConversation()
+    el.addUserMessage('hi')
+
+    const log = logOf(el)
+    const bubble = el.querySelector('[data-part="bubble"][data-role="user"]') as HTMLElement
+    const bubbleStyle = getComputedStyle(bubble)
+    expect(alphaOf(bubbleStyle.backgroundColor), 'the user bubble lost its background').toBeGreaterThan(0)
+    expect(Number.parseFloat(bubbleStyle.paddingLeft), 'the user bubble lost its padding').toBeGreaterThan(0)
+    expect(bubble.getBoundingClientRect().width, 'the user bubble stretched to the full column').toBeLessThan(
+      availableColumnWidth(log) - 24,
+    )
+  })
+})
+
 describe('ui-conversation cross-engine smoke — scroll-follow guard (SPEC-R4 AC2)', () => {
   it('near the bottom, a new turn follows to the new bottom', async () => {
     const el = mountConversation()
