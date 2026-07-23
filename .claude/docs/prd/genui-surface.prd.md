@@ -15,7 +15,8 @@
 > re-cut D1/D3/D4 + token bridge, then the residual-fork rulings D7/D8/D9) — and the completed
 > **2026-07-23 D6 ecosystem survey** (§5.1). Version history: v0.1 (2026-07-19) framed GenUI as
 > pattern-sourced A2UI composition; v0.2 (2026-07-23) replaced that identity per §4; v0.3
-> (2026-07-23) folds the D7/D8/D9 rulings and the D6 wire-path research.
+> (2026-07-23) folds the D7/D8/D9 rulings and the D6 wire-path research, plus mechanical §4 D1/D2
+> pointer touch-ups (their "§5 D7"/"§5 D8" references re-aimed at the now-ruled rows).
 
 ## 1. Problem
 
@@ -119,20 +120,24 @@ payload atomic per surface.** Concretely:
   their "never content" law); adopting MCP Apps' wire wholesale (above — session machinery we
   don't have).
 
-### 5.1 Grounding — the 2026-07-23 ecosystem survey (compact record; the full survey is not this doc)
+### 5.1 Grounding — the 2026-07-23 ecosystem survey
+
+Conducted in-session 2026-07-23 (host-coordinated web research); **this compact record is the
+survey's durable form** — there is no separate survey artifact.
 
 | Surveyed | What it is | Bearing on D6 |
 |---|---|---|
-| **MCP Apps** — the unified MCP-UI + OpenAI Apps SDK extension; spec dated 2026-01-26, marked "Stable"; jointly authored Anthropic / OpenAI / MCP-UI WG; shipped in Claude web+desktop, ChatGPT, VS Code Insiders, Goose | Whole HTML5 documents delivered via `ui://` resources (never token-streamed); sandboxed iframe; CSP built from four allow-list categories, default-deny absent; closed JSON-RPC-over-postMessage bridge (lifecycle handshake, size-changed, host-context-changed for theme, open-link, tool bridging). Sources: blog.modelcontextprotocol.io/posts/2026-01-26-mcp-apps · github.com/modelcontextprotocol/ext-apps (spec 2026-01-26) · developers.openai.com/apps-sdk/build/mcp-server | The safety-model donor (§5's SHAPE borrow). NOT the wire — presumes a real MCP session. |
-| **A2UI v0.9** — Google, open-sourced 2026 | Structured catalog JSON, transport-agnostic, resilient streaming of structured deltas | The sibling lane this repo already ships; see §6 for the deliberate two-lane split. |
+| **MCP Apps** — the unified MCP-UI + OpenAI Apps SDK extension; spec dated 2026-01-26, marked "Stable"; jointly authored Anthropic / OpenAI / MCP-UI WG; shipped in Claude web+desktop, ChatGPT, VS Code Insiders, Goose | Whole HTML5 documents delivered via `ui://` resources (never token-streamed); sandboxed iframe; CSP built from four allow-list categories, default-deny absent; closed JSON-RPC-over-postMessage bridge (lifecycle handshake, size-changed, host-context-changed for theme, open-link, tool bridging). Sources: [MCP blog 2026-01-26](https://blog.modelcontextprotocol.io/posts/2026-01-26-mcp-apps) · [ext-apps spec `specification/2026-01-26/apps.mdx`](https://github.com/modelcontextprotocol/ext-apps/blob/main/specification/2026-01-26/apps.mdx) · [OpenAI Apps SDK, build/mcp-server](https://developers.openai.com/apps-sdk/build/mcp-server) | The safety-model donor (§5's SHAPE borrow). NOT the wire — presumes a real MCP session. |
+| **A2UI v0.9.1/v1.0** — Google, open-sourced 2026; the repo's own pin posture is [a2ui-expert-system](a2ui-expert-system.prd.md) C1 (v1.0 RC target, v0.9.1 production fallback) | Structured catalog JSON, transport-agnostic, resilient streaming of structured deltas | The sibling lane this repo already ships; see §6 for the deliberate two-lane split. |
 | **AG-UI** — ~14.9k stars | The event-protocol layer BELOW GenUI — no dedicated generative-UI event exists in it | Independently validates "one stream, disjoint typed payload kinds" (ADR-0088) as the ecosystem's converged shape. |
 | **Vercel AI SDK** · **Thesys C1** | Proprietary SSE parts rendering to React, `streamUI` experimental · closed commercial DSL | Neither is an open portable standard — together they evidence that NO dominant open JSON-for-streaming-GenUI standard exists to align with. |
 | **W3C Generative UI CG** | Proposed 2026-01-30, **not yet chartered** | Record as **watch**; freshness caveat below. |
 
 **Uncertainty flags (carried honestly):** the Vercel/Thesys governance conclusions rest on
 absence-of-spec-repo, not confirmed negatives; AG-UI's exact event shapes came from a secondary
-source — pull `packages/core/src/events.ts` from github.com/ag-ui-protocol/ag-ui before citing
-exact shapes in any later doc; the W3C CG status may have moved — re-check before citing it again.
+source — pull `packages/core/src/events.ts` from
+[ag-ui-protocol/ag-ui](https://github.com/ag-ui-protocol/ag-ui) before citing exact shapes in any
+later doc; the W3C CG status may have moved — re-check before citing it again.
 
 ## 6. A2UI vs GenUI — how, why, where they differ
 
@@ -141,9 +146,9 @@ the PAYLOAD**: every node is catalog-checked, portable, accessible by constructi
 the desired shape is enumerable by the catalog's type system. **GenUI validates the BOUNDARY**: the
 HTML is opaque and never inspected semantically; safety is containment — sandbox + CSP + the closed
 bridge; it wins for genuinely novel compositions the catalog never anticipated. Where they meet:
-**one shared turn stream with disjoint wire markers** (ADR-0088's law), deliberately supporting both
-lanes side by side — the modality is picked per turn, and neither lane renders through the other
-(§3).
+**one shared turn stream with disjoint wire markers** (extending ADR-0088's law — the §5 D6
+recommended shape, awaiting adoption), deliberately supporting both lanes side by side — the
+modality is picked per turn, and neither lane renders through the other (§3).
 
 ## 7. Deliverable ladder (sketch — real milestones land in the SPEC)
 
