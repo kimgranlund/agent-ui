@@ -98,13 +98,20 @@ interface AllowlistEntry {
 }
 const ALLOWLIST: AllowlistEntry[] = [
   {
+    // GH #214 — the resizer's hit-box is now `--ui-super-shell-gap` (a var(), no literal); the
+    // 4px INK thickness moved from `inline-size` into a `padding-inline` calc arm (centers the ink
+    // within the gap-sized hit-box) — same file, same selector, same literal, same reason, only the
+    // property field follows the literal to its new declaration. (Kim's glyph-on-ladder sanction,
+    // 2026-07-23, would let this literal chain to `var(--md-sys-space-xs)` instead and drop off the
+    // allowlist entirely — a follow-up, not this wave's change.)
     file: 'packages/agent-ui/app/src/controls/super-shell/super-shell.css',
     selectorContains: "[data-part='pane-resizer']",
-    property: 'inline-size',
+    property: 'padding-inline',
     literal: '0.25rem',
     reason:
-      "SPEC-R11c's one AC19 exception — the pane-resizer's hit-target thickness is a control " +
-      'dimension that coincides with --md-sys-space-xs numerically, not semantically.',
+      "SPEC-R11c's one AC19 exception — the pane-resizer's visible INK thickness (GH #214: the hit-box " +
+      "itself is the gap-sized `--ui-super-shell-gap`, no literal there — only the centered ink stays this " +
+      'value) is a control dimension that coincides with --md-sys-space-xs numerically, not semantically.',
   },
   {
     file: 'packages/agent-ui/app/src/controls/super-shell/super-shell.css',

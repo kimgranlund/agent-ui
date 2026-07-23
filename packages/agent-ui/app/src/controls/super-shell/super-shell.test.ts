@@ -243,7 +243,10 @@ describe('ui-super-shell — pane-resizer forced-colors annotation (GH #185 pari
     expect(css).toMatch(/@media \(forced-colors: active\)/)
     const fc = css.slice(css.indexOf('@media (forced-colors: active)'))
     const rule = fc.slice(fc.indexOf("[data-part='pane-resizer']"), fc.indexOf('}', fc.indexOf("[data-part='pane-resizer']")))
-    expect(rule).toMatch(/background:\s*ButtonText/)
+    // GH #214 — `background-color`, not the `background` shorthand (the shorthand resets
+    // `background-clip` to its initial value, which would silently undo the resizer's ink
+    // content-box clip — verified live, both engines, super-shell-resize-tabs.browser.test.ts).
+    expect(rule).toMatch(/background-color:\s*ButtonText/)
     expect(rule).toMatch(/forced-color-adjust:\s*none/)
   })
 })

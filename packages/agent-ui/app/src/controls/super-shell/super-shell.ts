@@ -159,6 +159,14 @@ export class UISuperShellElement extends UIElement {
       void this.collapsedStart
       void this.collapsedEnd
       this.#syncAria()
+      // GH #205 (independent-review MAJOR-1) — a PUBLIC collapse/restore is exactly as capable of
+      // pushing the row below fit as a resize is: restoring a side via its toggle can return it to a
+      // row that can no longer hold it (the band-line→natural-fit window, side hidden ⇒ fits, side
+      // shown ⇒ doesn't), and collapsing a side can just as easily free enough room to clear a STALE
+      // auto-collapse on the OTHER side (#syncFitCollapse's reset-then-recompute handles that for
+      // free). Without this call, only the next ambient host resize re-checks fit — a visible overflow
+      // (or a stale auto-collapsed side + hidden toggle) would persist until then.
+      this.#syncFitCollapse()
     })
     // SPEC-R6d — "observable AND settable": a consumer assigning `sizeStart`/`sizeEnd` (a persistence
     // restore) must apply onto the pane, not just reflect the attribute. #onResize/#handleResizerKeydown
@@ -169,6 +177,10 @@ export class UISuperShellElement extends UIElement {
       const end = this.sizeEnd
       if (start !== null && this.#innermostPane.start) this.#innermostPane.start.style.setProperty('--ui-super-shell-pane-size-start', `${start}px`)
       if (end !== null && this.#innermostPane.end) this.#innermostPane.end.style.setProperty('--ui-super-shell-pane-size-end', `${end}px`)
+      // GH #205 — a persisted committed size (a consumer restoring sizeStart/sizeEnd, no live resize
+      // event involved) can itself be what pushes the row below natural fit; re-check the fit right
+      // after applying it, not just on the next ambient resize/band crossing.
+      this.#syncFitCollapse()
     })
     // LLD-C1 — idempotent like #compose (guarded so a reconnect never installs a second listener); the
     // trait's own outer pointerdown listener rides `host.listen`, auto-removed on disconnect.
@@ -194,6 +206,16 @@ export class UISuperShellElement extends UIElement {
     this.listen(this, 'keydown', (event) => {
       if ((event as KeyboardEvent).key === 'Escape' && this.hasAttribute('data-narrow-open')) this.#closeOverlay()
     })
+    // GH #205 (SPEC-R13b) — measurement-based auto-collapse, LAST so the frame/panes/toggles it reads
+    // are all composed and wired first: correct on FIRST PAINT, not just after a later resize.
+    this.#syncFitCollapse()
+    // GH #206 (independent-review MAJOR-2) — SPEC-R6b names aria-valuenow/-valuemin/-valuemax as part
+    // of the RENDERED separator, not just its post-interaction state: a freshly-mounted, never-touched
+    // resizer must already carry the trio, or an SR user tabbing to it hears no value at all. AFTER
+    // #syncFitCollapse (not before): an auto-collapsed side's resizer is display:none, so its pane
+    // measures a genuine zero-width and #syncResizerValues' own guard correctly skips it (nothing to
+    // announce on a hidden, untabbable control).
+    this.#syncResizerValues()
   }
 
   protected override disconnected(): void {
@@ -433,11 +455,51 @@ export class UISuperShellElement extends UIElement {
   }
 
   /** SPEC-R9c — the band-hygiene RO callback: if a side is overlay-open but the host is no longer below
-   *  THAT side's line (a resize back up past the band), clear the stale overlay; then re-sync ARIA. */
+   *  THAT side's line (a resize back up past the band), clear the stale overlay; then re-sync ARIA.
+   *  GH #205 — every resize is also a fit re-check (the row's natural-fit arithmetic is a function of
+   *  live width, so a passive resize is exactly when the auto-collapse decision can flip either way). */
   #onBandChange(): void {
     const open = this.getAttribute('data-narrow-open') as 'start' | 'end' | null
     if (open && !this.#belowBandLine(open)) this.#closeOverlay()
     else this.#syncAria()
+    this.#syncFitCollapse()
+  }
+
+  // ── SPEC-R13b: measurement-based auto-collapse (GH #205) ──────────────────────────────────────────
+
+  /** GH #205 (SPEC-R13b) — fills the strictly-ABOVE-the-band-line gap R13a/R13b named: a `collapse`-mode
+   *  side whose fixed geometry (plus every other visible box + the canvas floor) doesn't fit the row at
+   *  its CURRENT live width auto-collapses, so R2e's no-overflow law holds unconditionally rather than
+   *  only "at or above natural fit" (the interim AC20 qualification this build retires). Measurement-
+   *  based, not compile-time band arithmetic — natural fit varies per authored configuration and any
+   *  consumer token override, and a `@container` condition can't take a `var()` operand to express it.
+   *
+   *  Internal, NON-reflected attributes (`data-auto-collapsed-start`/`-end`) — deliberately NEVER the
+   *  public `collapsed-start`/`-end` props: this is ambient, JS-decided fallback layout, not a user
+   *  choice, and must never masquerade as one (persisted state, `sizeStart`/`sizeEnd` round-trips,
+   *  etc. must never see it). CSS hides the side (and its toggle — no overlay-restore affordance: a
+   *  restored side has nowhere to go but back to not fitting, the R9a "no dead toggle" precedent) purely
+   *  off these attributes, unconditionally (no `@container` — JS already decided).
+   *
+   *  Reset-then-recompute EACH call (idempotent under repeat RO/effect firings): both sides are always
+   *  re-examined from a clean slate, `end` first (the file's start-primacy convention read backwards —
+   *  R9's own DOM order places `end` second, so it is the first one asked to yield). Only a side whose
+   *  narrow arm is `collapse` AND that is not ALREADY hidden by the existing CSS band mechanism
+   *  (`#belowBandLine`) is a candidate — `stack`/`tabs` semantics and the below-the-line case are both
+   *  untouched, unrelated mechanisms (R4/R8). */
+  #syncFitCollapse(): void {
+    const middle = this.#frame?.querySelector<HTMLElement>('[data-part="middle"]')
+    if (!middle) return
+    this.removeAttribute('data-auto-collapsed-start')
+    this.removeAttribute('data-auto-collapsed-end')
+    for (const side of ['end', 'start'] as const) {
+      const arm = side === 'start' ? this.narrowStart : this.narrowEnd
+      if (arm !== 'collapse' || this.#belowBandLine(side)) continue
+      // Re-measured live on EVERY iteration (never a stale snapshot): collapsing `end` above may
+      // already have resolved the overflow, so `start` is asked again against the NOW-current layout —
+      // this is the escalation-only-if-needed law, not a fixed two-side rule.
+      if (middle.scrollWidth > middle.clientWidth + 1) this.setAttribute(`data-auto-collapsed-${side}`, '')
+    }
   }
 
   /** SPEC-R9c — aria-expanded truthful per band, per side: below its line it tracks `data-narrow-open`;
@@ -513,6 +575,10 @@ export class UISuperShellElement extends UIElement {
 
     pane.style.setProperty(`--ui-super-shell-pane-size-${side}`, `${newSize}px`)
     sep?.setAttribute('aria-valuenow', String(Math.round(newSize)))
+    // GH #206 (SPEC-R6b) — valuemin/-max alongside valuenow, same rounding, resolved off the SAME
+    // drag baseline the clamp above already used (#maxPaneSize mirrors #clampPaneSize's own bound).
+    sep?.setAttribute('aria-valuemin', String(Math.round(this.#dragBaseline.paneMin)))
+    sep?.setAttribute('aria-valuemax', String(Math.round(this.#maxPaneSize(this.#dragBaseline))))
     if (commit) {
       this.#dragBaseline = null
       this.internals.states?.delete('dragging')
@@ -559,9 +625,20 @@ export class UISuperShellElement extends UIElement {
     pane.style.setProperty(`--ui-super-shell-pane-size-${side}`, `${clamped}px`)
     const sep = event.currentTarget as HTMLElement
     sep.setAttribute('aria-valuenow', String(Math.round(clamped)))
+    // GH #206 (SPEC-R6b) — valuemin/-max alongside valuenow, same rounding, off this keypress's OWN
+    // freshly-measured baseline (mirrors #onResize's drag-baseline write above).
+    sep.setAttribute('aria-valuemin', String(Math.round(baseline.paneMin)))
+    sep.setAttribute('aria-valuemax', String(Math.round(this.#maxPaneSize(baseline))))
     if (side === 'start') this.sizeStart = clamped
     else this.sizeEnd = clamped
     this.emit('change')
+  }
+
+  /** GH #206 — the upper bound half of R6c's clamp, extracted so the aria-valuemax write sites (#onResize,
+   *  #handleResizerKeydown) can report the SAME resolved max the clamp below enforces, never a re-derived
+   *  or approximate one. What the canvas's OWN token floor leaves available, measured from `baseline`. */
+  #maxPaneSize(baseline: { pane: number; canvasAvail: number; canvasMin: number }): number {
+    return baseline.pane + (baseline.canvasAvail - baseline.canvasMin)
   }
 
   /** R6c's two-sided clamp: the pane never shrinks below its own token floor, and never grows past
@@ -570,8 +647,33 @@ export class UISuperShellElement extends UIElement {
    *  `canvasMin` are resolved once into `baseline` at that same snapshot point (not re-probed here on
    *  every pointermove of a drag — `#resolvePx` forces a throwaway-element layout each call). */
   #clampPaneSize(want: number, baseline: { pane: number; canvasAvail: number; paneMin: number; canvasMin: number }): number {
-    const maxPane = baseline.pane + (baseline.canvasAvail - baseline.canvasMin)
-    return Math.min(maxPane, Math.max(baseline.paneMin, want))
+    return Math.min(this.#maxPaneSize(baseline), Math.max(baseline.paneMin, want))
+  }
+
+  /** GH #206 (independent-review MAJOR-2, SPEC-R6b) — the trio is part of the RENDERED separator's
+   *  contract, not just its post-interaction state (#onResize/#handleResizerKeydown only ever write it
+   *  on a live drag/keypress). Called once, at rest (end of connected(), after #syncFitCollapse so an
+   *  auto-collapsed side's now-hidden resizer is correctly skipped). Width>0-guarded like every other
+   *  measurement read in this file, so jsdom's zero-width layout (or a genuinely display:none side)
+   *  never writes a garbage/misleading zero. */
+  #syncResizerValues(): void {
+    for (const side of ['start', 'end'] as const) {
+      const sep = this.#frame?.querySelector<HTMLElement>(`[data-part="pane-resizer"][data-side="${side}"]`)
+      const pane = side === 'start' ? this.#innermostPane.start : this.#innermostPane.end
+      const canvas = this.#frame?.querySelector<HTMLElement>('[data-part="canvas"]')
+      if (!sep || !pane || !canvas) continue
+      const paneWidth = pane.getBoundingClientRect().width
+      if (paneWidth <= 0) continue // jsdom, or a genuinely hidden (collapsed/auto-collapsed) side
+      const baseline = {
+        pane: paneWidth,
+        canvasAvail: canvas.getBoundingClientRect().width,
+        paneMin: this.#resolvePx('--ui-super-shell-pane-min-size', 162),
+        canvasMin: this.#resolvePx('--ui-super-shell-canvas-min-size', 162),
+      }
+      sep.setAttribute('aria-valuenow', String(Math.round(paneWidth)))
+      sep.setAttribute('aria-valuemin', String(Math.round(baseline.paneMin)))
+      sep.setAttribute('aria-valuemax', String(Math.round(this.#maxPaneSize(baseline))))
+    }
   }
 
   /** Resolves a length custom property to a real px number — `--ui-super-shell-*` tokens are `calc()`
