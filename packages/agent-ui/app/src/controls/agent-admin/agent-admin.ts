@@ -533,42 +533,34 @@ export class UIAgentAdminElement extends UIElement {
       settingsContent.append(section.host)
     }
 
-    // GH #161 — the old single Context tab's ONE content unit (two accordion groups stacked) split into
-    // TWO content units, one accordion each: `#contextSystemContent` (Agent System — what the agent
-    // actually sees, derived fresh from the store per change) and `#contextDialogContent` (Dialog Turns —
-    // the per-turn request/response JSON log, newest first). Each is its own reparent-able node (the
-    // TKT-0085 wrapper discipline, unchanged) — `data-role`s renamed accordingly. The accordion SHELLS
-    // build ONCE; their bodies are render slots rebuilt wholesale (#renderContextSystem / #renderContextTurns),
-    // completely unaffected by which tab now hosts them.
+    // GH #161 — the old single Context tab's ONE content unit split into TWO content units:
+    // `#contextSystemContent` (Agent System — what the agent actually sees, derived fresh from the store
+    // per change) and `#contextDialogContent` (Dialog Turns — the per-turn request/response JSON log,
+    // newest first). GH #222 (Kim's screenshot ruling: "nesting too much — should be more like the
+    // Settings tab") then FLATTENED both: the outer wrapper cards (the "Agent System"/"Dialog Turns"
+    // `ui-disclosure data-part="context-section"` shells) are GONE — the segment strip already labels the
+    // context, so each content unit is now just its render slot, whose items each read as [ plain section
+    // heading row + ONE card of content ] (see `contextItem` below + agent-admin.css's context block).
+    // Each unit stays its own reparent-able node (the TKT-0085 wrapper discipline) — `data-role`s
+    // unchanged; the render slots build ONCE and are rebuilt wholesale (#renderContextSystem /
+    // #renderContextTurns), completely unaffected by which tab hosts them.
     const contextSystemContent = document.createElement('div')
     contextSystemContent.setAttribute('data-role', 'context-system-content')
     contextSystemContent.setAttribute('data-slot', 'options-pane')
     contextSystemContent.setAttribute('data-segment', 'Context: System')
-    const systemSection = document.createElement('ui-disclosure') as HTMLElement & { open: boolean; summary: string }
-    systemSection.setAttribute('data-part', 'context-section')
-    systemSection.setAttribute('data-section', 'agent-system')
-    systemSection.setAttribute('summary', 'Agent System')
-    systemSection.setAttribute('open', '')
     const contextSystemHost = document.createElement('div')
     contextSystemHost.setAttribute('data-part', 'context-system')
-    systemSection.append(contextSystemHost)
     this.#contextSystemHost = contextSystemHost
-    contextSystemContent.append(systemSection)
+    contextSystemContent.append(contextSystemHost)
 
     const contextDialogContent = document.createElement('div')
     contextDialogContent.setAttribute('data-role', 'context-dialog-content')
     contextDialogContent.setAttribute('data-slot', 'options-pane')
     contextDialogContent.setAttribute('data-segment', 'Context: Dialog')
-    const turnsSection = document.createElement('ui-disclosure') as HTMLElement & { open: boolean; summary: string }
-    turnsSection.setAttribute('data-part', 'context-section')
-    turnsSection.setAttribute('data-section', 'dialog-turns')
-    turnsSection.setAttribute('summary', 'Dialog Turns')
-    turnsSection.setAttribute('open', '')
     const contextTurnsHost = document.createElement('div')
     contextTurnsHost.setAttribute('data-part', 'context-turns')
-    turnsSection.append(contextTurnsHost)
     this.#contextTurnsHost = contextTurnsHost
-    contextDialogContent.append(turnsSection)
+    contextDialogContent.append(contextTurnsHost)
 
     // GH #52/ADR-0154 — every content unit authors DIRECTLY into the shell, once, never moved again:
     // the shell's own pane-tabs strip (wide) and narrow-tabs strip (narrow-end="tabs") drive visibility
@@ -987,12 +979,12 @@ export class UIAgentAdminElement extends UIElement {
     }
   }
 
-  /** Rebuild the Agent System view (the Context: System tab) from the store's CURRENT contents:
-   *  one `Agent` accordion (open by default — the vision frame's expanded JSON preview) carrying the
-   *  compiled config + the EXACT live system prompt a turn would send, then one accordion per capability
-   *  kind (closed by default — the frame's caret-right rows; Kim's ruling: accordion with nested
-   *  elements). Wholesale rebuild per store change; each open/closed fold survives via a pre-rebuild
-   *  state capture (`data-item` keyed). */
+  /** Rebuild the Context: System view from the store's CURRENT contents: one `Agent` section (open by
+   *  default — the vision frame's expanded JSON preview) carrying the compiled config + the EXACT live
+   *  system prompt a turn would send, then one section per capability kind (closed by default — the
+   *  frame's caret-right rows). Each section is a heading-row fold + ONE JSON card (GH #222 — no outer
+   *  wrapper card, no card-in-card). Wholesale rebuild per store change; each open/closed fold survives
+   *  via a pre-rebuild state capture (`data-item` keyed). */
   #renderContextSystem(): void {
     const host = this.#contextSystemHost
     if (!host) return
@@ -1098,10 +1090,13 @@ export class UIAgentAdminElement extends UIElement {
 /** TKT-0079 — the surface a client message belongs to (`action.surfaceId` / the error union's
  *  VALIDATION_FAILED arm), for routing the follow-up turn into that surface's OWNING bubble.
  *  `undefined` (e.g. INVALID_FUNCTION_CALL) ⇒ the fresh-bubble path. */
-/** One Context-tab accordion item (vision rev.5): a `ui-disclosure` labeled `summary` whose body is the
+/** One Context-tab section (vision rev.5): a `ui-disclosure` labeled `summary` whose body is the
  *  pretty-printed JSON of `value` — the frame's `[ header + caret | mono JSON preview ]` shape. Built
  *  fresh per render (the wholesale-rebuild law); `data-item` keys the open-state capture across
- *  rebuilds. Kim's ruling: carets are accordion behavior and may nest. */
+ *  rebuilds. GH #222 (amending vision rev.5's card-in-card realization): the fold host is CHROME-FREE —
+ *  its summary renders as a plain section heading (the Settings heading register, chevron kept: the
+ *  folds are load-bearing, the Agent item carries the full composed system prompt and every dialog turn
+ *  carries its whole request payload) and the JSON body is the section's ONE card. */
 function contextItem(key: string, summary: string, value: unknown, open: boolean): HTMLElement {
   const item = document.createElement('ui-disclosure') as HTMLElement & { open: boolean }
   item.setAttribute('data-part', 'context-item')
