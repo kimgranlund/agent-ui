@@ -169,16 +169,26 @@ describe('a2ui-chat routing on ui-conversation (SPEC-R7) — the real shipped 5-
 // never model text. The recorded demo turns now author `progress` (ADR-0146), routed to handle.progress,
 // so a bubble's narration legitimately mixes category entries and progress-stage entries.
 const KNOWN_LABELS = new Set([
+  // the live forms (mid-turn) + the done forms (stamped on the settle transition — GH #238/ADR-0159's
+  // label-pair table; a settled category entry reads quiet past-tense, never a checked-off "-ing…")
   'Opening a new surface…',
+  'Opened a new surface',
   'Updating the surface…',
+  'Updated the surface',
   'Updating data…',
+  'Updated data',
   'Closing the surface…',
-  // the ADR-0146 progress stage labels (conversation.ts PROGRESS_LABEL)
+  'Closed the surface',
+  // the ADR-0146 progress stage labels (conversation.ts PROGRESS_LABEL), live + done forms
   'Request sent',
   'Generating…',
+  'Generated',
   'Reasoning…',
+  'Reasoned',
   'Writing the response…',
+  'Wrote the response',
   'Validating…',
+  'Validated',
 ])
 
 function narrationLabels(bubble: HTMLElement): string[] {
@@ -196,13 +206,17 @@ describe('a2ui-chat narration on ui-conversation (SPEC-R6 AC1) — never a fabri
     // turn 3's transcript lines touch BOTH updateComponents (restructure) and updateDataModel (react).
     const bubble3 = agentBubbles()[2]!
     await waitUntil(() => narrationLabels(bubble3).length === 2)
-    expect(narrationLabels(bubble3).sort()).toEqual(['Updating data…', 'Updating the surface…'].sort())
+    // GH #238/ADR-0159 — once the turn settles, each category entry re-stamps to its DONE form (the
+    // label-pair table): quiet past-tense, never a checked-off "-ing…".
+    await waitUntil(() => narrationLabels(bubble3).every((l) => !l.endsWith('…')))
+    expect(narrationLabels(bubble3).sort()).toEqual(['Updated data', 'Updated the surface'].sort())
 
     await sendIntent('turn 4') // data-ONLY — the single-category check
     await waitUntil(() => agentBubbles().length === 4)
     const bubble4 = agentBubbles()[3]!
     await waitUntil(() => narrationLabels(bubble4).length === 1)
-    expect(narrationLabels(bubble4)).toEqual(['Updating data…'])
+    await waitUntil(() => narrationLabels(bubble4).every((l) => !l.endsWith('…')))
+    expect(narrationLabels(bubble4)).toEqual(['Updated data'])
 
     // anti-vacuous: every label seen across the whole arc so far is one of the known, honest strings
     for (const b of agentBubbles()) for (const label of narrationLabels(b)) expect(KNOWN_LABELS.has(label)).toBe(true)

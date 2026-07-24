@@ -198,3 +198,75 @@ describe('ui-surface-host [wrap] — content-hugging artboard (TKT-0084)', () =>
     expect(lastRectAtBottom.bottom).toBeLessThanOrEqual(stageRectAtBottom.bottom + 1)
   })
 })
+
+// ── GH #241 — [bare]: the chromeless mount, cross-engine ───────────────────────────────────────────────
+
+/** A definite-width column standing in for a chat message column; the host mounts inside it with
+ *  BOTH `wrap` (the chat path's TKT-0084 block-axis behavior) and `bare` (GH #241) set — exactly the
+ *  pair conversation.ts sets on every inline bubble mount. */
+function mountBareHost(): { host: UISurfaceHostElement; column: HTMLDivElement } {
+  const column = document.createElement('div')
+  column.style.width = '480px'
+  document.body.append(column)
+  mounted.push(column)
+  const host = document.createElement('ui-surface-host') as UISurfaceHostElement
+  host.wrap = true
+  host.bare = true
+  column.append(host)
+  return { host, column }
+}
+
+const BARE_PAYLOAD = [
+  line({ version: 'v1.0', createSurface: { surfaceId: 'b1', catalogId: 'agent-ui' } }),
+  line({
+    version: 'v1.0',
+    updateComponents: {
+      surfaceId: 'b1',
+      components: [
+        { id: 'root', component: 'Column', children: ['t1', 'btn'] },
+        { id: 't1', component: 'Text', variant: 'body', text: 'A bare chat surface' },
+        { id: 'btn', component: 'Button', variant: 'solid', label: 'Go', action: { action: 'go' } },
+      ],
+    },
+  }),
+]
+
+describe('ui-surface-host [bare] — the chromeless chat mount (GH #241)', () => {
+  it('strips ALL wrapper chrome: no checker/background image, no background color, zero padding', () => {
+    const { host } = mountBareHost()
+    for (const l of BARE_PAYLOAD) host.ingest(l)
+    host.finalize()
+    const stage = host.querySelector('[data-part="stage"]') as HTMLElement
+    const surface = host.querySelector('[data-part="surface"]') as HTMLElement
+    const stageStyle = getComputedStyle(stage)
+    expect(stageStyle.backgroundImage, 'the checker gradients survived [bare]').toBe('none')
+    expect(alphaOf(stageStyle.backgroundColor), 'the stage color survived [bare]').toBe(0)
+    const surfaceStyle = getComputedStyle(surface)
+    // longhands, not the `padding` shorthand — cross-engine computed-shorthand serialization differs.
+    for (const side of ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'] as const) {
+      expect(surfaceStyle[side], `the surface ${side} survived [bare]`).toBe('0px')
+    }
+  })
+
+  it('full available width: the host AND the surface content box span the column (rect-compared), and the mount boundary is restored', () => {
+    const { host, column } = mountBareHost()
+    for (const l of BARE_PAYLOAD) host.ingest(l)
+    host.finalize()
+    const surface = host.querySelector('[data-part="surface"]') as HTMLElement
+    const columnWidth = column.getBoundingClientRect().width
+    expect(host.getBoundingClientRect().width, 'the host does not span the column').toBeCloseTo(columnWidth, 0)
+    // zero padding ⇒ the surface's border-box IS its content box — the rect compare covers both.
+    expect(surface.getBoundingClientRect().width, 'the surface does not span the column').toBeCloseTo(columnWidth, 0)
+    // ADR-0100 cl.2 — an externally-definite 100% inline-size QUALIFIES as the query container again:
+    // [bare] restores what plain [wrap] had to drop.
+    expect(getComputedStyle(surface).containerType).toBe('inline-size')
+  })
+
+  it('negative control: WITHOUT [bare] the checkered docs-preview artboard is untouched', () => {
+    const el = mountHost()
+    const stage = el.querySelector('[data-part="stage"]') as HTMLElement
+    const surface = el.querySelector('[data-part="surface"]') as HTMLElement
+    expect(getComputedStyle(stage).backgroundImage, 'the docs-preview checker vanished fleet-wide').not.toBe('none')
+    expect(getComputedStyle(surface).paddingTop).not.toBe('0px')
+  })
+})

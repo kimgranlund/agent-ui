@@ -3076,6 +3076,10 @@ stream.finalize() // t2 (still active) renders TRUNCATED — never a forever-spi
 - **`header`** (boolean, default `false`) — the opt-in visible streaming header (ADR-0146 F8). When set, a
   pinned `[data-part="header"]` row shows the `label` plus a live overall-status marker escalated over the
   strip's top-level entries. Default `false` renders byte-identically to a headerless strip (no header DOM).
+- **`oneline`** (boolean, default `false`) — the opt-in LIVE one-line mode (GH #239/ADR-0159): while the
+  turn runs the strip collapses to one morphing line. Default `false` keeps the always-expanded shape.
+- **`receipt`** (boolean, default `false`) — the opt-in TERMINAL receipt (GH #239/ADR-0159): a settled
+  turn auto-collapses to a one-line summary. Default `false` keeps the always-expanded terminal shape.
 
 ## The streaming header (ADR-0146 F8)
 
@@ -3089,6 +3093,35 @@ to the escalated final status (a still-running entry, now truncated, contributes
 forces it `error`. The header is `position: sticky` — pinned above the scroll region, never scrolling away
 as entries overflow. The status marker is SHAPE-first (ADR-0057): a glyph for `done`/`error`/`warning`, a
 dot/ring/pulse for the in-progress states.
+
+## The receipt pattern (GH #238/#239/ADR-0159)
+
+Kim's 2026-07-23 ruling adopts the claude.ai/ChatGPT activity UX as **two independent opt-ins** — both
+default `false`, so every existing consumer keeps its always-expanded shape byte-identically:
+
+- **`oneline`** — while un-settled, the strip renders as **one morphing line**: the header row (grown a
+  `header-meta` elapsed cell + a `header-caret` affordance) shows the **current step's live label** plus a
+  ticking turn-elapsed display (anchored at the first `appendEntry` — never fabricated), with a soft
+  shimmer while active. The line is a **real disclosure**: `role="button"`, `tabindex="0"`,
+  `aria-expanded` — click or Enter/Space expands the full step list mid-turn and collapses it back. A
+  user's explicit expand is respected (the auto-collapse never yanks it shut mid-turn).
+- **`receipt`** — at a terminal state (`finalize()`/`fail()`) the strip **auto-collapses to a one-line
+  receipt**: the static `label` + `"N steps · total-elapsed"` (`5 steps · 3.2s`) in the meta cell + the
+  settled outcome glyph. `fail()`'s forced `error` header stays loud (danger ink + the x glyph). Click
+  re-expands the trace. Without `receipt`, a settled `oneline` strip auto-**expands** instead.
+
+Both modes materialize the header row (it IS the one line) even when `header` is `false`; the collapse
+state is a `collapsed` custom state (`:state(collapsed)` hides the entry list in CSS). Announcement
+discipline (honestly stated): the morphing line and the done-label re-stamps (GH #238 — the consumer's
+live/done pair table) are **same-node textContent mutations, never node insertions** — the fleet's
+established `role=log` discipline (ADR-0153's ticking timestamps shipped the same bet), which is what
+keeps a label transition from riding the additions channel twice. `role=log`'s default `aria-relevant`
+is `additions text`, so a mutation is relevant in principle; a live screen-reader spot-check is
+ADR-0159's named follow-up.
+
+```html
+<ui-status-stream label="Agent activity" oneline receipt></ui-status-stream>
+```
 
 ## The imperative API (ADR-0122 F4)
 
@@ -3214,9 +3247,11 @@ follow. The stream owns its own scroll region (`overflow-y: auto`).
 ## Accessibility
 
 `internals.role = 'log'` (a **polite** live region, never `assertive` by default), set in the constructor
-— before insertion. `role="log"`'s implicit `aria-relevant="additions"` default means a genuinely new
-entry (`appendEntry`) announces, while a `text` patch mutating an existing node's content does not re-trigger
-an additions announcement — state transitions announce, token-by-token spam does not.
+— before insertion. A genuinely new entry (`appendEntry`) rides the additions channel. Honestly stated
+(ADR-0159): `role="log"`'s default `aria-relevant` is `additions text`, so an in-place text patch is
+relevant in principle — the fleet's discipline is that every such patch is a **same-node mutation, never
+an insertion**, so no transition can ride the additions channel twice; a live screen-reader spot-check
+is ADR-0159's named follow-up.
 
 ---
 

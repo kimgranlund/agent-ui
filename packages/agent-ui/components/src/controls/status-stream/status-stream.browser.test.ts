@@ -418,3 +418,98 @@ describe('ui-status-stream — an all-pending ("Planned") group renders a real c
     expect(activeSvg.getAttribute('data-glyph'), 'pending\'s clock is a distinct glyph from active\'s spinning ring').not.toBe('clock')
   })
 })
+
+// ── GH #238/#239/ADR-0159 — the receipt pattern, cross-engine truth: the collapse genuinely HIDES the
+// entry list (:state(collapsed) is a real custom state + real CSS here, both invisible to jsdom), the
+// disclosure is keyboard-reachable, and the settled receipt re-expands to the intact full trace. ─────────
+
+describe('ui-status-stream — oneline/receipt collapse, real-engine visibility (GH #239/ADR-0159)', () => {
+  it('oneline: while live, exactly ONE visible line — the entry list computes display:none; expanding shows it; collapsing hides it again', async () => {
+    const { stream } = mount('<ui-status-stream oneline label="Agent activity"></ui-status-stream>')
+    stream.appendEntry({ key: 's1', status: 'active', label: 'Validating…' })
+    stream.appendEntry({ key: 's2', status: 'active', label: 'Opening a new surface…' })
+    await raf2()
+
+    const header = stream.querySelector('[data-part="header"]') as HTMLElement
+    expect(header, 'the one line materializes even without the header prop').not.toBeNull()
+    expect(header.getAttribute('aria-expanded')).toBe('false')
+    const items = [...stream.querySelectorAll(':scope > ui-timeline-item')] as HTMLElement[]
+    expect(items).toHaveLength(2)
+    for (const item of items) {
+      expect(getComputedStyle(item).display, 'a collapsed strip genuinely hides its entries (real :state(collapsed) CSS)').toBe('none')
+    }
+    expect(stream.matches(':state(collapsed)'), 'the custom state is real in a real engine').toBe(true)
+
+    header.click()
+    await raf2()
+    expect(header.getAttribute('aria-expanded')).toBe('true')
+    for (const item of items) {
+      expect(getComputedStyle(item).display, 'expanding mid-turn reveals the full step list').not.toBe('none')
+    }
+
+    header.click()
+    await raf2()
+    for (const item of items) expect(getComputedStyle(item).display).toBe('none')
+  })
+
+  it('the disclosure is genuinely keyboard-operable: Tab reaches the header row, the shared fleet focus ring draws (:focus-visible, ADR-0009), Enter expands, Space collapses', async () => {
+    const { stream } = mount('<ui-status-stream oneline label="Agent activity"></ui-status-stream>')
+    stream.appendEntry({ key: 's1', status: 'active', label: 'Working…' })
+    await raf2()
+    const header = stream.querySelector('[data-part="header"]') as HTMLElement
+
+    await userEvent.tab() // KEYBOARD focus — the only path :focus-visible is required to match
+    expect(document.activeElement, 'tabindex=0 makes the row the tab stop').toBe(header)
+    expect(getComputedStyle(header).outlineStyle, 'the four-states law: the interactive row paints the shared fleet ring on keyboard focus').toBe('solid')
+    expect(parseFloat(getComputedStyle(header).outlineWidth), 'a real ring, not a zero-width outline').toBeGreaterThan(0)
+
+    await userEvent.keyboard('{Enter}')
+    expect(header.getAttribute('aria-expanded')).toBe('true')
+    await userEvent.keyboard(' ')
+    expect(header.getAttribute('aria-expanded')).toBe('false')
+  })
+
+  it('receipt: finalize() auto-collapses to the one-line receipt (entries hidden, "N steps · total" painted), and a click re-expands the INTACT trace', async () => {
+    const { stream } = mount('<ui-status-stream receipt label="Agent activity"></ui-status-stream>')
+    stream.appendEntry({ key: 's1', status: 'active', label: 'Validating…' })
+    stream.update('s1', { status: 'done', label: 'Validated' })
+    stream.appendEntry({ key: 's2', status: 'active', label: 'Opening a new surface…' })
+    stream.update('s2', { status: 'done', label: 'Opened a new surface' })
+    await raf2()
+    // live phase (receipt-only): still the always-expanded shape
+    expect((stream.querySelector('[data-part="header"]') as HTMLElement).getAttribute('aria-expanded')).toBe('true')
+
+    stream.finalize()
+    await raf2()
+    const header = stream.querySelector('[data-part="header"]') as HTMLElement
+    expect(header.getAttribute('aria-expanded'), 'terminal auto-collapse').toBe('false')
+    const meta = stream.querySelector('[data-part="header-meta"]') as HTMLElement
+    expect(meta.textContent, 'the receipt carries the real step count').toMatch(/^2 steps · /)
+    for (const item of stream.querySelectorAll(':scope > ui-timeline-item')) {
+      expect(getComputedStyle(item as HTMLElement).display).toBe('none')
+    }
+
+    header.click()
+    await raf2()
+    const labels = [...stream.querySelectorAll(':scope > ui-timeline-item')].map(
+      (i) => (i as UITimelineItemElement).label,
+    )
+    expect(labels, 'the re-expanded trace is intact, done-form labels preserved').toEqual(['Validated', 'Opened a new surface'])
+    for (const item of stream.querySelectorAll(':scope > ui-timeline-item')) {
+      expect(getComputedStyle(item as HTMLElement).display).not.toBe('none')
+    }
+  })
+
+  it('default-off proof in a real engine: a header-prop stream carries NO disclosure semantics and its entries stay visible after finalize()', async () => {
+    const { stream } = mount('<ui-status-stream header label="Agent activity"></ui-status-stream>')
+    stream.appendEntry({ key: 's1', status: 'done', label: 'Validated' })
+    stream.finalize()
+    await raf2()
+    const header = stream.querySelector('[data-part="header"]') as HTMLElement
+    expect(header.hasAttribute('role')).toBe(false)
+    expect(header.hasAttribute('aria-expanded')).toBe(false)
+    expect(stream.matches(':state(collapsed)')).toBe(false)
+    const item = stream.querySelector(':scope > ui-timeline-item') as HTMLElement
+    expect(getComputedStyle(item).display, 'no receipt ⇒ the settled trace stays expanded').not.toBe('none')
+  })
+})

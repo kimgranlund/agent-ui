@@ -240,7 +240,7 @@ describe('surface-host.md descriptor', () => {
   const md = readFileSync(`${DIR}/surface-host.md`, 'utf8') as string
   const { fence, body } = splitFrontmatter(md)
   const parsed = parseDescriptor(fence)
-  const ATTR_NAMES = ['label', 'wrap']
+  const ATTR_NAMES = ['label', 'wrap', 'bare']
 
   it('has a leading frontmatter fence and a /site prose body', () => {
     expect(fence.length).toBeGreaterThan(0)

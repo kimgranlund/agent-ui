@@ -681,7 +681,7 @@ describe('conversation.md descriptor', () => {
   const md = readFileSync(`${DIR}/conversation.md`, 'utf8') as string
   const { fence, body } = splitFrontmatter(md)
   const parsed = parseDescriptor(fence)
-  const ATTR_NAMES = ['disclosure', 'disabled', 'models', 'model', 'efforts', 'effort', 'contextItems']
+  const ATTR_NAMES = ['disclosure', 'disabled', 'receipt', 'models', 'model', 'efforts', 'effort', 'contextItems']
 
   it('has a leading frontmatter fence and a /site prose body', () => {
     expect(fence.length).toBeGreaterThan(0)
@@ -714,5 +714,96 @@ describe('conversation.md descriptor', () => {
 
   it('customStates/slots agree with the source (no undeclared CSS-styled slot, no unused state)', () => {
     expect(compareDescriptorToSource(parsed, { ts, css })).toEqual([])
+  })
+})
+
+// ── GH #238/ADR-0159 — the live/done label-pair table (Kim's 2026-07-23 receipt-pattern ruling, part 1) ──
+
+describe('ui-conversation — done-form labels stamp on the settle transition (GH #238/ADR-0159)', () => {
+  it('a progress stage settles to its DONE form as the next stage begins: "Validating…" → "Validated"', async () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const handle = el.beginAgentTurn()
+    const narration = el.querySelector('[data-part="narration"]')!
+    const labelOf = (key: string): string | null | undefined =>
+      narration.querySelector(`[data-key="${key}"] [data-role="label"]`)?.textContent
+
+    handle.progress({ stage: 'validating' })
+    expect(labelOf('t1-progress-validating'), 'live form while running').toBe('Validating…')
+
+    handle.progress({ stage: 'content' }) // the next stage begins — validating settles done
+    await whenFlushed() // the item's label re-stamp rides its reactive effect
+    expect(labelOf('t1-progress-validating'), 'the done checkmark never wears an "-ing…" label').toBe('Validated')
+    expect(labelOf('t1-progress-content'), 'the new current stage wears its live form').toBe('Writing the response…')
+
+    handle.progress({ stage: 'done' }) // the settle signal — the last stage checks off in its done form
+    await whenFlushed()
+    expect(labelOf('t1-progress-content')).toBe('Wrote the response')
+  })
+
+  it('the factual retry/tool suffix rides BOTH forms of the pair: "Self-correcting… (round 2)" settles to "Self-corrected (round 2)"', async () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const handle = el.beginAgentTurn()
+    const narration = el.querySelector('[data-part="narration"]')!
+    const labelOf = (key: string): string | null | undefined =>
+      narration.querySelector(`[data-key="${key}"] [data-role="label"]`)?.textContent
+
+    handle.progress({ stage: 'retry', round: 2 })
+    expect(labelOf('t1-progress-retry-2')).toBe('Self-correcting… (round 2)')
+    handle.progress({ stage: 'tool', detail: 'fetch' })
+    await whenFlushed() // the settle's label re-stamp rides the item's reactive effect
+    expect(labelOf('t1-progress-retry-2'), 'the composed ordinal survives the settle').toBe('Self-corrected (round 2)')
+    expect(labelOf('t1-progress-tool-fetch')).toBe('Running an integration… (fetch)')
+    handle.finalize()
+    await whenFlushed()
+    expect(labelOf('t1-progress-tool-fetch'), 'finalize settles the current stage with its done form').toBe('Ran an integration (fetch)')
+  })
+
+  it('category entries settle to their done forms at finalize(): "Opening a new surface…" → "Opened a new surface"', async () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const handle = el.beginAgentTurn()
+    const narration = el.querySelector('[data-part="narration"]')!
+    handle.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'agent-ui' } }))
+    handle.ingestLine(
+      line({ version: 'v1.0', updateDataModel: { surfaceId: 's1', changes: [{ path: '/x', value: 1 }] } }),
+    )
+    const labels = (): (string | null)[] =>
+      [...narration.querySelectorAll('ui-timeline-item [data-role="label"]')].map((n) => n.textContent)
+    expect(labels()).toEqual(['Opening a new surface…', 'Updating data…'])
+    handle.finalize()
+    await whenFlushed() // the settle's label re-stamps ride the items' reactive effects
+    expect(labels(), 'quiet past-tense on the settled checkmarks').toEqual(['Opened a new surface', 'Updated data'])
+  })
+
+  it('a truncated (never-finished) entry KEEPS its live form under fail() — the done form is never claimed for work not completed', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const handle = el.beginAgentTurn()
+    const narration = el.querySelector('[data-part="narration"]')!
+    handle.progress({ stage: 'validating' })
+    handle.fail('boom')
+    const label = narration.querySelector('[data-key="t1-progress-validating"] [data-role="label"]')?.textContent
+    expect(label, 'the in-flight stage truncates with its progressive label intact').toBe('Validating…')
+  })
+})
+
+// ── GH #239/ADR-0159 — the opt-in receipt pass-through (conversation → each turn's narration strip) ──────
+
+describe('ui-conversation — the receipt prop opts each narration strip into the receipt pattern (GH #239/ADR-0159)', () => {
+  it('receipt=true stamps oneline + receipt onto every turn\'s ui-status-stream (fresh AND resumed paths use the one creation site)', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.receipt = true
+    el.beginAgentTurn()
+    const narration = el.querySelector('[data-part="narration"]')!
+    expect(narration.hasAttribute('oneline'), 'the live one-morphing-line mode').toBe(true)
+    expect(narration.hasAttribute('receipt'), 'the terminal one-line receipt').toBe(true)
+    expect(narration.hasAttribute('header'), 'the ADR-0146 F8 header opt-in is unchanged').toBe(true)
+  })
+
+  it('default (receipt absent) keeps the narration strip byte-identical — neither opt-in attribute appears', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.beginAgentTurn()
+    const narration = el.querySelector('[data-part="narration"]')!
+    expect(narration.hasAttribute('oneline')).toBe(false)
+    expect(narration.hasAttribute('receipt')).toBe(false)
+    expect(narration.hasAttribute('header'), 'the pre-existing header opt-in still ships unconditionally').toBe(true)
   })
 })

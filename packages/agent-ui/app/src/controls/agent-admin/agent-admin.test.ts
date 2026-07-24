@@ -313,6 +313,12 @@ describe('UIAgentAdminElement — composition (GH #52/ADR-0154: chat + {Settings
     expect(canvasBox?.querySelector('ui-conversation')).toBeInstanceOf(UIConversationElement)
   })
 
+  it('the admin chat opts INTO the receipt pattern (GH #238/#239/ADR-0159 — Kim\'s 2026-07-23 ruling; this is the screenshotted surface): conversation.receipt is set, so each turn\'s narration collapses to one line / a receipt', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const conversation = el.querySelector('ui-conversation') as UIConversationElement
+    expect(conversation.receipt, 'the receipt opt-in rides the admin composition').toBe(true)
+  })
+
   it('the Settings content composes the Agent config (real ui-settings, wired to schema/store) PLUS all FIVE entry-sections (prompts merged in, vision rev.5)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const settingsContent = el.querySelector('[data-role="settings-content"]') as HTMLElement

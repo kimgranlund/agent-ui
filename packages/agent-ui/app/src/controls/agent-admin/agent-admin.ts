@@ -334,6 +334,10 @@ export class UIAgentAdminElement extends UIElement {
     const conversation = new UIConversationElement()
     conversation.setAttribute('data-slot', 'content')
     conversation.setAttribute('data-tab-label', 'Chat') // SPEC-R7b's narrow-tabs content label
+    // GH #238/#239/ADR-0159 — the admin chat opts INTO the receipt pattern (Kim's 2026-07-23 ruling; this
+    // is the surface the ruling's screenshot came from): each turn's activity renders as one morphing line
+    // while live and auto-collapses to a "N steps · total" receipt at the turn's end, expandable both ways.
+    conversation.receipt = true
     conversation.onSubmit((text) => this.#handleSubmit(text))
     // Models picker → the SAME persisted `model` store key the settings pane's own generated field reads/
     // writes (one source of truth, TKT-0021's own external-store-write precedent) — `#syncConversationConfig`'s

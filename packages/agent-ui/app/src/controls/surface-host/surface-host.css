@@ -133,6 +133,29 @@
        documents for an embedder that opts out of establishment. */
     container-type: normal;
   }
+
+  /* GH #241 — [bare]: the opt-in CHROMELESS mount (Kim's ruling: on the chat path the A2UI render
+     surface gets NO background, NO padding, and FULL available width — the rendered payload's own
+     components carry their chrome; this host wrapper is invisible). The checkered artboard stays the
+     docs-preview affordance — [bare] unset changes nothing anywhere. Composes with [wrap]
+     (conversation.ts sets BOTH on every inline bubble mount): [wrap] keeps owning the block axis
+     (content-hug + the --ui-surface-host-wrap-max-block-size cap + hidden scrollbars); [bare] owns the
+     inline axis + the chrome strip. These rules sit AFTER the [wrap] block deliberately — equal
+     specificity, source-order wins — so bare's inline-size/container-type prevail when both are set. */
+  :scope[bare] {
+    inline-size: 100%;
+  }
+  :scope[bare] [data-part='stage'] {
+    background: none; /* the shorthand resets the checker gradients AND background-color to transparent */
+  }
+  :scope[bare] [data-part='surface'] {
+    padding: 0;
+    inline-size: 100%;
+    /* ADR-0100 cl.2 — with an externally-supplied definite inline-size (100% of the stage, never
+       content-derived), this box QUALIFIES as the mount boundary again: [bare] restores the query
+       container that plain [wrap] had to drop. */
+    container-type: inline-size;
+  }
 }
 
 /* ════════════════ forced-colors (WHCM) ════════════════ */
