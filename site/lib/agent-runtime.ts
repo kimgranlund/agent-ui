@@ -12,6 +12,11 @@
 
 export type { AgentTransport, TurnInput, Session, Turn } from '../../packages/agent-ui/a2ui/src/agent/agent-transport.ts'
 export { createRecordedTransport } from '../../packages/agent-ui/a2ui/src/agent/recorded-transport.ts'
+// `RecordedTranscript`/`RecordedTurn` (the replay engine's OWN turn shape — `lines`/`note`/`progress`) —
+// re-exported here alongside the factory that consumes them so a site-authored transcript (gen-ui-
+// live.ts's GenUI-flavored one, `../lib/genui-transcript.ts`) can type itself against the SAME shape
+// `createRecordedTransport` accepts, without a second relative reach-through into `packages/`.
+export type { RecordedTranscript, RecordedTurn } from '../../packages/agent-ui/a2ui/src/agent/recorded-transport.ts'
 export {
   nextTurn,
   appendUserTurn,

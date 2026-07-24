@@ -939,6 +939,19 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    // genui-surface.spec.md SPEC §3.2/§3.3 (D9) — the GenUI chat demo card, mirroring the ungrouped
+    // nav link in _page.ts (same posture: an independent destination, not a fleet component, and NOT
+    // folded into the A2UI cluster above since GenUI validates the boundary, not a catalog payload).
+    cards: [
+      {
+        href: './gen-ui-live.html',
+        title: 'GenUI chat demo',
+        blurb:
+          'A chat app rendering agent-authored HTML/CSS/JS through the sandboxed ui-sandbox-frame containment host — a recorded backbone of canned turns, one exercising the genui.action bridge round-trip live.',
+      },
+    ],
+  },
+  {
     // The A2A cluster — ungrouped site-level cards, mirroring the ungrouped nav links in _page.ts (same
     // posture as the A2UI cluster above: independent destinations, not a fleet component). The arena
     // (LLD-C11), the corpus-derived concepts/demos section (corpus LLD-C12), and the A2UI-over-A2A
