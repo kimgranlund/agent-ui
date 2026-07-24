@@ -9,7 +9,7 @@
 > lives in GitHub Issues ([ADR-0145](adr/0145-ticket-tier-github-issues-backend.md)) or, on other
 > projects, Linear — **never here**. An issue may cite a section of this doc the same way it cites
 > an ADR/SPEC/LLD id; this doc never enumerates issues by number, because that list goes stale the
-> moment an issue closes and this doc isn't the place re-reading it. Last synthesis pass: 2026-07-23.
+> moment an issue closes and this doc isn't the place re-reading it. Last synthesis pass: 2026-07-24.
 
 ## 1 · Why a fourth doc
 
@@ -38,15 +38,21 @@ append-only going forward, **never backfilled**, and this roadmap's §2 is the o
 "current state." The gap is therefore the ruled shape of the doc set, not a defect awaiting a
 decision (dated line in §4).
 
-## 2 · Now — current state (as of 2026-07-23)
+## 2 · Now — current state (as of 2026-07-24)
 
 - **Component foundation — complete.** G0–G9 + the Control Suite + the icon adapter: the reactive
   kernel, FACE element layer, templating/directives, and ~50 `ui-*` controls across the
   Indicator/Range/Input/Overlay/Container/report/content/feed/chart families. Closed, not actively
-  growing — recent additions are single-control refinements riding reviews: `ui-status-stream`
-  grouping + worst-child escalation with the elapsed-timer/retry/Planned refinements (ADR-0146
-  F5/F6, ADR-0153 — which minted `action`, the seventh fleet event name), `ui-menu`'s
+  growing — recent additions are single-control refinements riding reviews: `ui-menu`'s
   selectable-item variant, and `ui-disclosure`'s `slot="summary"` foreseen extension (ADR-0158).
+  `ui-status-stream` grew the most of any single control this window: worst-child escalation with
+  the elapsed-timer/retry refinements (ADR-0146 F5/F6, ADR-0153 — which minted `action`, the
+  seventh fleet event name), then the **receipt pattern** (ADR-0159, proposed) — closed-table
+  live/done label pairs so a settled step never wears a progressive "-ing…" form, two opt-in
+  props (`oneline`: one morphing line while a turn runs; `receipt`: auto-collapse to a one-line
+  summary on turn end, error stays loud), and a per-step raw-source reveal (a `progressDetail`
+  sibling rung, fail-closed, capped) — all riding the shared `ui-timeline-item` disclosure
+  anatomy, zero new public surface on that control.
 - **The shell system — the current center of gravity.** The named-archetype family (ADR-0151):
   `ui-super-shell`, a two-level recursive rail+pane grammar on an 18px module, with
   `ui-workspace-shell`/`ui-chat-shell` as presets; resizable panes + tab collapse (ADR-0154); the
@@ -68,7 +74,10 @@ decision (dated line in §4).
   tools) with real tool execution in the live loop, Surface Options (Markdown · A2UI catalog ·
   PRD-gated GenUI), and a much larger persona roster (games, hospitality/travel). The
   long-standing page-freeze was root-caused and fixed — an unbounded synchronous client-turn
-  loop, now bounded and deferred.
+  loop, now bounded and deferred. The chat surface itself is chromeless: A2UI render surfaces
+  carry no host background/padding/width-cap on the chat path, and agent turns de-bubble entirely
+  (sender label above, bare full-width content, streaming included) while user turns keep a
+  compact bubble.
 - **A2UI layer (`@agent-ui/a2ui`)** — the zero-dep renderer/validator/default-catalog, structural
   resend reconciliation (ADR-0128), and the live-agent **producer toolkit** (ADR-0137, persona
   seam ADR-0138) — now with the live-turn lifecycle progress channel built into the transport
@@ -112,7 +121,7 @@ decision (dated line in §4).
   behavior contract is authored ahead of it ([`spec/genui-surface.spec.md`](spec/genui-surface.spec.md),
   proposed v0.1, D6-gated by its own header clause) — build-ready the moment D6 resolves; nothing
   builds before it does. This is the one genuinely gated design record in the tree.
-- **The `ui-app-shell` removal horizon (ADR-0156).** Migration is DONE (GH #243): the production
+- **The `ui-app-shell` removal horizon (ADR-0156).** Migration is DONE: the production
   consumer re-hosted, the two reconnect fixtures re-vehicled onto a direct re-parent harness (the
   `<ui-app-shell isolated>` relocation harness retired from both), and the teaching page retired —
   its one surviving teaching, the ADR-0083 landmark-decouple law, re-scoped onto the super-shell
@@ -123,10 +132,11 @@ decision (dated line in §4).
   family today (every `@agent-ui/app` sheet + the shell-composing site sheets). Whether it extends
   further — components-package sheets, the remaining site sheets — is an open, per-sheet decision;
   the gate's own design makes each extension a one-line reviewed append, never automatic.
-- **Beyond that, the backlog is clear.** As of this pass the issue tracker holds zero open items;
-  the next feature arc is Kim's call at the next intake. (The older proposed scope intakes —
-  content, feed, and report families, the a2ui expert system — remain parked intakes, not
-  scheduled work.)
+- **Beyond that, the backlog is clear.** The one open item is the removal-gate issue named above —
+  parked on Kim's own ADR-0082/0083/0084 flips, which an agent cannot perform. Nothing else is
+  outstanding; the next feature arc is Kim's call at the next intake. (The older proposed scope
+  intakes — content, feed, and report families, the a2ui expert system — remain parked intakes,
+  not scheduled work.)
 
 ## 4 · Later — deferred, revisit-triggered
 
