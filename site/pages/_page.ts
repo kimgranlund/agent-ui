@@ -273,6 +273,16 @@ export const NAV: readonly NavGroup[] = [
       { href: './command-modal-doc.html', label: 'API' },
     ],
   },
+  {
+    // genui-surface.spec.md SPEC §3.2/§3.3 (D9, B1) — the GenUI containment host: one native
+    // sandboxed iframe + the closed bridge + the fail-closed fallback. Permanently catalog-excluded
+    // (SPEC-N1/PRD-G4) — still a site-documented fleet member.
+    label: 'ui-sandbox-frame',
+    links: [
+      { href: './sandbox-frame-demo.html', label: 'Demo' },
+      { href: './sandbox-frame-doc.html', label: 'API' },
+    ],
+  },
   // Picker controls — Wave 5B (ADR-0048): standalone date picker + future type=date overlay body.
   {
     label: 'ui-calendar',

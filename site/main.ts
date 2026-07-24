@@ -566,6 +566,21 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  {
+    label: 'ui-sandbox-frame',
+    cards: [
+      {
+        href: './sandbox-frame-demo.html',
+        title: 'Demo',
+        blurb: 'The GenUI containment host — a sandboxed iframe rendering a fed HTML/CSS/JS document, the closed action bridge, and the fail-closed fallback affordance on an oversize/malformed payload.',
+      },
+      {
+        href: './sandbox-frame-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-sandbox-frame attributes (surfaceId/html/csp), generated from its sandbox-frame.md descriptor — permanently excluded from the A2UI catalog (genui-surface.spec.md SPEC-N1/PRD-G4).',
+      },
+    ],
+  },
   // Picker controls — Wave 5B (ADR-0048): standalone date picker + future type=date overlay body.
   {
     label: 'ui-calendar',
