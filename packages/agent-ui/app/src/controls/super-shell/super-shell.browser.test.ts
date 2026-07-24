@@ -78,3 +78,63 @@ describe('ui-super-shell cross-engine smoke — logical direction (LLD-C4, GH #9
     expect(rtlStart.getBoundingClientRect().left).toBeGreaterThan(rtlEnd.getBoundingClientRect().left)
   })
 })
+
+// A fuller mount for the GH #253 radius probes: a footer (not composed by the base `mount()` helper
+// above unless a `data-slot="footer"` child is authored) + a `global-nav` rail (only `global-nav`/
+// `global-options` compose a `[data-part='rail']`; `nav-pane`/`options-pane` compose a `[data-part=
+// 'pane']` instead) + `resizable-start` (the pane-resizer only composes when its side is resizable
+// AND has at least one pane, super-shell.ts).
+function mountFullChrome(): UISuperShellElement {
+  const el = document.createElement('ui-super-shell') as UISuperShellElement
+  el.style.position = 'fixed'
+  el.style.insetBlockStart = '0px'
+  el.style.insetInlineStart = '0px'
+  el.style.inlineSize = '900px'
+  el.style.blockSize = '300px'
+  el.resizableStart = true
+  const header = document.createElement('div')
+  header.setAttribute('data-slot', 'header')
+  const globalNav = document.createElement('div')
+  globalNav.setAttribute('data-slot', 'global-nav')
+  const navPane = document.createElement('div')
+  navPane.setAttribute('data-slot', 'nav-pane')
+  const content = document.createElement('div')
+  content.setAttribute('data-slot', 'content')
+  const footer = document.createElement('div')
+  footer.setAttribute('data-slot', 'footer')
+  el.append(header, globalNav, navPane, content, footer)
+  document.body.append(el)
+  mounted.push(el)
+  return el
+}
+
+describe('ui-super-shell cross-engine smoke — bar radius (GH #253)', () => {
+  it('the header and footer bars (edge-to-edge, GH #210) render with NO border-radius', () => {
+    const el = mountFullChrome()
+    const header = el.querySelector('[data-part="bar"][data-bar="header"]') as HTMLElement
+    const footer = el.querySelector('[data-part="bar"][data-bar="footer"]') as HTMLElement
+    expect(header).not.toBeNull()
+    expect(footer).not.toBeNull()
+    const headerRadius = getComputedStyle(header).borderRadius
+    const footerRadius = getComputedStyle(footer).borderRadius
+    // computed border-radius with no declared radius resolves to "0px" in every engine
+    expect(headerRadius).toBe('0px')
+    expect(footerRadius).toBe('0px')
+  })
+
+  it('rail/pane/pane-resizer (floating cards) KEEP their radius — regression-proof against the bar fix', () => {
+    const el = mountFullChrome()
+    const rail = el.querySelector('[data-part="rail"]') as HTMLElement
+    const pane = el.querySelector('[data-part="pane"]') as HTMLElement
+    const resizer = el.querySelector('[data-part="pane-resizer"]') as HTMLElement
+    expect(rail).not.toBeNull()
+    expect(pane).not.toBeNull()
+    expect(resizer).not.toBeNull()
+    const railRadius = getComputedStyle(rail).borderRadius
+    const paneRadius = getComputedStyle(pane).borderRadius
+    const resizerRadius = getComputedStyle(resizer).borderRadius
+    expect(railRadius).not.toBe('0px')
+    expect(paneRadius).not.toBe('0px')
+    expect(resizerRadius).not.toBe('0px')
+  })
+})
