@@ -328,28 +328,31 @@ describe('ui-settings — inter-field vertical rhythm (GH #136)', () => {
   })
 })
 
-describe('ui-settings composed inside an ISOLATED ui-app-shell region (the master-detail reconnect precedent)', () => {
-  it('a settings surface relocated by ADR-0082 isolation composes EXACTLY ONCE — no duplicate ui-master-detail', async () => {
-    await import('@agent-ui/app/app-shell.css')
-    await import('@agent-ui/app/app-shell')
-    const shell = document.createElement('ui-app-shell')
-    shell.setAttribute('isolated', '')
-    const region = document.createElement('ui-app-shell-region')
-    region.setAttribute('region', 'main')
-
+describe('ui-settings relocation reconnect, cross-engine (the master-detail reconnect precedent)', () => {
+  // VEHICLE (ADR-0156 clause 4): this leg used to ride `<ui-app-shell isolated>`'s shadow relocation
+  // (ADR-0082) as its relocating host. That capability retires with the deprecated component, so the
+  // harness drives the SAME lifecycle sequence directly: a single `append` onto a new parent is an atomic
+  // remove+insert — disconnectedCallback then connectedCallback fire with the element's own children
+  // untouched, exactly the sequence `shadow.append(...this.children)` produced. `#compose`'s field guard
+  // must make the second connect a structural no-op; the jsdom twin (settings.test.ts) simulates the same
+  // re-parent — THIS leg keeps it true in real engines, both Chromium and WebKit.
+  it('a settings surface RELOCATED to a new parent after its first connect composes EXACTLY ONCE — no duplicate ui-master-detail', () => {
     const settings = document.createElement('ui-settings') as UISettingsElement
     settings.schema = REALISTIC_SCHEMA
-    region.append(settings)
-    shell.append(region)
 
-    document.body.append(shell)
+    const host = document.createElement('div')
+    document.body.append(settings, host) // first connect — `#compose` builds the ONE rail|panel shell
     try {
-      const inShadow = shell.shadowRoot!.querySelector('ui-settings') as HTMLElement
-      expect(inShadow, 'the settings surface did not relocate into the shadow at all — setup broken').not.toBeNull()
-      expect(inShadow.querySelectorAll('ui-master-detail'), 'a duplicate composition survived the isolation relocation reconnect').toHaveLength(1)
-      expect(inShadow.querySelectorAll('ui-nav-rail-item')).toHaveLength(2)
+      expect(settings.querySelectorAll('ui-master-detail'), 'sanity: the first connect must compose the one shell').toHaveLength(1)
+
+      host.append(settings) // RELOCATION: implicit remove + insert — disconnected then connected, children untouched
+
+      expect(settings.isConnected && settings.parentElement === host, 'the settings surface did not relocate at all — harness broken').toBe(true)
+      expect(settings.querySelectorAll('ui-master-detail'), 'a duplicate composition survived the relocation reconnect').toHaveLength(1)
+      expect(settings.querySelectorAll('ui-nav-rail-item')).toHaveLength(2)
     } finally {
-      shell.remove()
+      host.remove()
+      settings.remove()
     }
   })
 })

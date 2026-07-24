@@ -102,21 +102,23 @@ decision (dated line in §4).
 
 ## 3 · Next — concrete, near-term
 
-- **GenUI surface PRD — one fork awaiting adoption.** [`prd/genui-surface.prd.md`](prd/genui-surface.prd.md)
+- **GenUI surface — one fork awaiting adoption; the SPEC is on main.** [`prd/genui-surface.prd.md`](prd/genui-surface.prd.md)
   sits proposed (v0.3, 2026-07-23) — Kim's 2026-07-23 rulings re-cut the identity (free-form
   HTML/CSS/JS in a sandboxed iframe; "contained, not forbidden") and resolved D1/D3/D4, the token
   bridge, and the residual D7/D8/D9 forks (external images/fonts + a closed agent↔frame bridge in
   v1 · exemplar packs in the producer layer · `ui-sandbox-frame` in components). One fork remains:
   D6, the wire path, carrying a research-backed recommendation (keep the in-house third JSONL
-  kind; borrow MCP Apps' safety shape; atomic HTML per surface) that awaits Kim's adoption. No
-  build is scheduled until it resolves and a SPEC lands. This is the one genuinely gated design
-  record in the tree.
-- **The `ui-app-shell` removal horizon (ADR-0156).** Migration is nearly done — the production
-  consumer re-hosted, the teaching page carries its deprecation banner. What remains before the
-  separately-gated removal step: replacement reconnect-test vehicles for the two fixtures that
-  ride `<ui-app-shell isolated>` as a relocation harness, then the removal gate itself (folder +
-  exports retire, ADR-0082/0083/0084 flip `superseded`, CLAUDE.md/README rows update — ADR-0156
-  clauses 4–5 name the full surface).
+  kind; borrow MCP Apps' safety shape; atomic HTML per surface) that awaits Kim's adoption. The
+  behavior contract is authored ahead of it ([`spec/genui-surface.spec.md`](spec/genui-surface.spec.md),
+  proposed v0.1, D6-gated by its own header clause) — build-ready the moment D6 resolves; nothing
+  builds before it does. This is the one genuinely gated design record in the tree.
+- **The `ui-app-shell` removal horizon (ADR-0156).** Migration is DONE (GH #243): the production
+  consumer re-hosted, the two reconnect fixtures re-vehicled onto a direct re-parent harness (the
+  `<ui-app-shell isolated>` relocation harness retired from both), and the teaching page retired —
+  its one surviving teaching, the ADR-0083 landmark-decouple law, re-scoped onto the super-shell
+  page as family law. What remains is the removal gate itself (folder + exports retire,
+  ADR-0082/0083/0084 flip `superseded`, CLAUDE.md/README/getting-started rows update — ADR-0156
+  clauses 4–5 name the full surface), dispatched as its own separately-gated issue.
 - **AC19's sheet set — widen deliberately, or not.** The spacing-drift gate covers the shell
   family today (every `@agent-ui/app` sheet + the shell-composing site sheets). Whether it extends
   further — components-package sheets, the remaining site sheets — is an open, per-sheet decision;

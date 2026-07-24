@@ -49,13 +49,6 @@
     "section": "Guides"
   },
   {
-    "href": "./app-shell.html",
-    "label": "App Shell",
-    "description": "ui-app-shell is the application frame: a presence-driven grid of named landmark regions that reflows.",
-    "level": "L2",
-    "section": "Guides"
-  },
-  {
     "href": "./super-shell.html",
     "label": "Super Shell",
     "description": "ui-super-shell is the shell-archetype family's grammar ceiling (M5): a two-level recursive frame \u2014 header/rails/panes/canvas/footer, all optional, header-hosted per-side collapse.",

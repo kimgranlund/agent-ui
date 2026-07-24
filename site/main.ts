@@ -860,25 +860,15 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
-    // The application-frame primitive (@agent-ui/app) — an ungrouped site-level card (no `label:`, so not a
-    // fleet TOC group per site-toc.test.ts), mirroring its ungrouped nav link in _page.ts.
-    cards: [
-      {
-        href: './app-shell.html',
-        title: 'Composing a ui-app-shell',
-        blurb:
-          'The application frame: how the region, role (landmark), narrow-reflow (collapse), and content-composition systems work — each on a live ui-app-shell (ADR-0082/0083/0084).',
-      },
-    ],
-  },
-  {
-    // ui-super-shell (@agent-ui/app, M5) — the SAME ungrouped-site-level-card posture as App Shell above.
+    // ui-super-shell (@agent-ui/app, M5) — the application-frame archetype family's grammar ceiling: an
+    // ungrouped site-level card (no `label:`, so not a fleet TOC group per site-toc.test.ts), mirroring its
+    // ungrouped nav link in _page.ts. (The ui-app-shell card retired with its teaching page — ADR-0156.)
     cards: [
       {
         href: './super-shell.html',
         title: 'Composing a ui-super-shell',
         blurb:
-          'The shell-archetype family\'s grammar ceiling: a two-level recursive frame — grammar, collapse contract, recursion, and narrow reflow, each on a live ui-super-shell (M5, GH #83/#84).',
+          'The shell-archetype family\'s grammar ceiling: a two-level recursive frame — grammar, collapse contract, recursion, narrow reflow, and landmarks, each on a live ui-super-shell (M5, GH #83/#84).',
       },
     ],
   },

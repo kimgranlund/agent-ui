@@ -96,7 +96,7 @@ import ladderMd from '../../packages/agent-ui/components/src/controls/ladder/lad
 // AC2: nothing in components/a2ui/shared may import router). Its two elements' `{name}.md` descriptors still
 // carry the same ADR-0004 frontmatter shape, so they still go through the ONE canonical parser here — but they
 // are NOT part of the `ALL_DESCRIPTORS` glob below (that glob is components/src-scoped, the tier/TOC/coverage
-// gates' source of truth) and router-doc.html is an ungrouped site-level page, exactly like app-shell.html.
+// gates' source of truth) and router-doc.html is an ungrouped site-level page, exactly like super-shell.html.
 import routerOutletMd from '../../packages/agent-ui/router/src/controls/router-outlet/router-outlet.md?raw'
 import routerLinkMd from '../../packages/agent-ui/router/src/controls/router-link/router-link.md?raw'
 import codeEditorMd from '../../packages/agent-ui/code/src/editor/editor.md?raw'
