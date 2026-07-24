@@ -175,6 +175,13 @@
     "section": "A2UI"
   },
   {
+    "href": "./gen-ui-live.html",
+    "label": "GenUI Chat Demo",
+    "description": "A chat app rendering agent-authored HTML/CSS/JS through the sandboxed ui-sandbox-frame containment host — a recorded backbone of canned turns, one exercising the action bridge round-trip.",
+    "level": "L2",
+    "section": "GenUI"
+  },
+  {
     "href": "./a2a-tic-tac-toe.html",
     "label": "A2A Tic-Tac-Toe Arena",
     "description": "Two agents play tic-tac-toe through a deterministic referee, an isolation-proven Agent2Agent match.",

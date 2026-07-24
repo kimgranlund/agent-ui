@@ -494,6 +494,13 @@ export const NAV: readonly NavGroup[] = [
     ],
   },
   {
+    // genui-surface.spec.md SPEC §3.2/§3.3 (D9) — the GenUI chat demo: a chat pane driving a recorded
+    // backbone of canned prompt->HTML turns, rendered through ui-sandbox-frame — NOT A2UI (GenUI
+    // validates the boundary, not a catalog payload), so it gets its own ungrouped site-level link
+    // rather than folding into the A2UI cluster above, the same posture as that cluster's own links.
+    links: [{ href: './gen-ui-live.html', label: 'GenUI Chat Demo' }],
+  },
+  {
     // The A2A cluster — ungrouped site-level links, same posture as the A2UI cluster above (independent
     // destinations, not a fleet component's page-type set). The arena (LLD-C11, a2a-tic-tac-toe.lld.md), the
     // corpus-derived concepts/demos section (corpus LLD-C12, a2a-corpus-docs.lld.md), and the A2UI-over-A2A

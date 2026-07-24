@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · GenUI chat demo</title>
+  </head>
+  <body>
+    <!-- The GenUI chat demo (genui-surface.spec.md SPEC §3.2/§3.3, D9): a chat pane driving a deterministic
+         recorded backbone of canned prompt->HTML turns, rendered through the REAL `ui-sandbox-frame`
+         containment host (never A2UI — GenUI validates the boundary, not a catalog payload). One turn
+         exercises the sandbox's ONE outward channel, `genui.action(name, payload)`, round-tripped back as
+         the next turn. No live GenUI producer exists yet (B2) — this page says so plainly, matching
+         a2ui-live's own recorded-vs-live mode signaling. An MPA entry auto-discovered by vite.config.ts's
+         site/**/*.html glob — no config edit. The page module imports pages/_page.ts FIRST for the
+         foundation CSS cascade + self-defining ui-* controls. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/gen-ui-live.ts"></script>
+  </body>
+</html>

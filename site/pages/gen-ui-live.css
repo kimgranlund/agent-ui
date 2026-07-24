@@ -1,0 +1,194 @@
+/* gen-ui-live.css — PAGE-LOCAL layout chrome for the GenUI chat demo. Mirrors a2ui-live.css's own
+ * [ chat | canvas ] two-pane shape on `<ui-super-shell>` (chat pane docks `nav-pane`, render pane docks the
+ * mandatory `content` slot) — the SAME pane-sizing seam (`--ui-super-shell-pane-size` token override), the
+ * SAME chat-log/message/narration-strip rules. This sheet does NOT restyle any ui-* control; every colour
+ * is a `--md-sys-color-*` role, so it tracks light/dark exactly like the rest of the site.
+ *
+ * WHAT'S DIFFERENT FROM a2ui-live.css: no canvas tabs (this page renders directly, no Canvas/JSON/HTML
+ * switch — there is no A2UI payload to inspect), no ask-bubble chrome (no AskRegistry precedent here,
+ * Kim's ruling), no dev-only switcher slot (no live GenUI producer exists yet — B2 — so there is nothing
+ * to switch to). The render pane instead holds a scrollable STACK of per-surface cards, one per rendered
+ * `ui-sandbox-frame`, each with its own small header naming the surface + a "Recorded demo" badge. */
+
+[data-page-content] {
+  display: flex;
+  padding: 1.25rem var(--md-sys-space-xl);
+  box-sizing: border-box;
+  min-block-size: 0;
+  overflow: hidden;
+}
+[data-page-content] > ui-super-shell {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  min-block-size: 0;
+  --ui-super-shell-pane-size: 26rem; /* the same fixed chat-pane width a2ui-live uses (super-shell.css token override) */
+}
+
+.chat-pane,
+.render-pane {
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
+  min-block-size: 0;
+  min-inline-size: 0;
+  box-sizing: border-box;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: var(--ui-super-shell-radius, 12px); /* concentric with the shell's own pane/canvas wrapper, GH #253 */
+  background: var(--md-sys-color-neutral-surface-low);
+  overflow: hidden;
+}
+
+.pane-head {
+  flex: 0 0 auto;
+  padding: 0.85rem var(--md-sys-space-lg) 0.6rem;
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--md-sys-space-sm);
+}
+.pane-head-text {
+  min-inline-size: 0;
+}
+.pane-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 650;
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.pane-blurb {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+/* The "recorded demo" mode badge (Kim's ruling — the page must be honest about being a canned backbone,
+ * matching a2ui-live's own system-message convention for signaling its mode, but ALSO surfaced as a
+ * persistent visual badge here since this page carries no live-vs-recorded switch at all to ever announce
+ * a mode change through). */
+.demo-badge {
+  flex: 0 0 auto;
+  font-size: 0.66rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  color: var(--md-sys-color-primary-on-surface-variant);
+  background: var(--md-sys-color-primary-container);
+  white-space: nowrap;
+}
+
+/* ── chat pane: log · composer (identical shape to a2ui-live.css) ──────────────────────────────────────── */
+.chat-log {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow-y: auto;
+  padding: var(--md-sys-space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.msg {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 10px;
+  max-inline-size: 92%;
+}
+.msg[data-role='user'] {
+  align-self: flex-end;
+  background: var(--md-sys-color-primary-container-low);
+}
+.msg[data-role='agent'] {
+  align-self: flex-start;
+  background: var(--md-sys-color-neutral-surface-high);
+}
+.msg[data-role='system'] {
+  align-self: center;
+  max-inline-size: 100%;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.78rem;
+  text-align: center;
+}
+.msg-who {
+  font-size: 0.66rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+.msg[data-role='system'] .msg-who {
+  display: none;
+}
+.msg-body {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.msg[data-role='system'] .msg-body {
+  color: inherit;
+  font-size: inherit;
+}
+
+/* The per-turn live narration strip (ADR-0146 F1/GH #239) — same fit rule as a2ui-live.css: the
+ * component owns its own frame, this rule only stretches it in the log's flex column. */
+.chat-log > .narration-strip {
+  align-self: stretch;
+}
+
+.chat-composer {
+  flex: 0 0 auto;
+  margin: 0 var(--md-sys-space-md) var(--md-sys-space-md);
+}
+
+/* ── render pane: a scrollable stack of per-surface cards, each one `ui-sandbox-frame` ─────────────────── */
+.surface-stack {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow-y: auto;
+  padding: var(--md-sys-space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--md-sys-space-lg);
+}
+.surface-stack:empty::after {
+  content: 'Send a message — the recorded GenUI surface appears here.';
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: 0.82rem;
+  text-align: center;
+  padding: var(--md-sys-space-xl) 0;
+}
+.surface-card {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.surface-card-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.surface-card-title {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+.surface-card-id {
+  font-size: 0.68rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-family: var(--md-sys-typeface-mono);
+}
+
+.reset-bar {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--md-sys-space-sm) var(--md-sys-space-md);
+  border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
+}

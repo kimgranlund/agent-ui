@@ -123,6 +123,10 @@
 - [Dynamic list](./a2ui-list.html): the positional list reconciler over a bound array.
 - [Canvas](./a2ui-canvas.html): the A2UI render surface — translate-centered artboard with JSON/HTML inspection tabs.
 
+## GenUI — sandboxed free-form generative UI
+
+- [GenUI chat demo](./gen-ui-live.html): a chat app rendering agent-authored HTML/CSS/JS through the sandboxed ui-sandbox-frame containment host — a recorded backbone of canned turns, one exercising the genui.action bridge round-trip (no live producer yet).
+
 ## A2A — Agent2Agent
 
 - [Concepts](./a2a-concepts.html): the A2A protocol's core concepts (tasks, messages, parts, the nine-state lifecycle), derived from the corpus records.
