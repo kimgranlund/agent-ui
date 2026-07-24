@@ -273,7 +273,17 @@ const appCssQuerySuffixPlugin = {
 // foundation (the same real cost the family-barrel re-base above cites) flows straight through here too —
 // no new app-tier code, the SAME underlying wave. Measured 73712 B gz 2026-07-24 (up from 69921); ~2.5%
 // headroom reserved (matching the prior wave's own margin).
-const APP_MARGINAL_BUDGET = 72 * KB
+//
+// 74 KB re-based at the GH #257 wave (ui-conversation-composer's providers/provider + modes/mode picker
+// pair, forwarded through ui-conversation identically to the existing models/model + efforts/effort pair):
+// real, new capability on the SAME shared barrel, not duplication — 2 new prop pairs + 2 new #sync*Picker
+// bodies + the reset-on-provider-change logic, doubled across the composer and its ui-conversation
+// forwarder. The prior 72 KB budget (73728 B gz) had only 16 B gz of headroom left over its OWN 73712 B gz
+// baseline (the SAME genui-surface B1 measurement just above) — this wave's true cost is ~399 B gz, so any
+// re-base smaller than a full KB step would leave near-zero room for the next change (the GH #170/ADR-0155
+// re-base precedent: cite the exact before/after, following the same convention). Measured 74111 B gz
+// 2026-07-24 (up from 73712); ~2.25% headroom reserved.
+const APP_MARGINAL_BUDGET = 74 * KB
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })

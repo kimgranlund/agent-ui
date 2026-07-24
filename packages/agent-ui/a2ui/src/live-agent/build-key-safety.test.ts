@@ -19,11 +19,18 @@ const stripComments = (src: string): string =>
   src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
 
 const PAGE = 'site/pages/a2ui-live.ts'
-const OVERLAY_FILES = ['site/lib/live-proxy-transport.ts', 'site/lib/provider-switcher.ts']
+// GH #257 — `provider-switcher.ts` is RETIRED (deleted alongside its own jsdom test): the Provider/Model/
+// Mode picker rides `ui-conversation-composer`'s own props now. Its replacement, `provider-mode-selection.ts`
+// (the option-list + persistence module), is deliberately NOT an overlay file — it is safe, key-free data
+// (same property `providers.json` already has below) and the page imports it STATICALLY; only the actual
+// live-proxy overlay (`live-proxy-transport.ts`) stays dynamic-import-gated (UX: never reveal a live-only
+// picker before a live provider is confirmed reachable).
+const OVERLAY_FILES = ['site/lib/live-proxy-transport.ts']
 const LIVE_AGENT_SOURCE = [
   PAGE,
   'site/lib/agent-runtime.ts',
   ...OVERLAY_FILES,
+  'site/lib/provider-mode-selection.ts',
   'packages/agent-ui/a2ui/tools/agent/providers.json',
   'packages/agent-ui/a2ui/tools/agent/dev-proxy-plugin.ts',
   'packages/agent-ui/a2ui/src/agent/providers/anthropic.ts',
@@ -32,9 +39,8 @@ const LIVE_AGENT_SOURCE = [
 describe('build-key-safety (LLD-C8c / SPEC-N2)', () => {
   it('the page reaches the live overlay ONLY via a dev-only dynamic import (tree-shaken from the build)', () => {
     const page = read(PAGE)
-    // No STATIC top-level import of the overlay modules.
+    // No STATIC top-level import of the overlay module.
     expect(page).not.toMatch(/^\s*import[^\n]*live-proxy-transport/m)
-    expect(page).not.toMatch(/^\s*import[^\n]*provider-switcher/m)
     // The overlay is dynamically imported, behind an import.meta.env.DEV guard.
     expect(page).toContain("import('../lib/live-proxy-transport.ts')")
     expect(page).toContain('import.meta.env.DEV')

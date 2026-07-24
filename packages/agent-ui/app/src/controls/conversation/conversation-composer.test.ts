@@ -371,6 +371,153 @@ describe('ui-conversation-composer — the opt-in composer capabilities', () => 
   })
 })
 
+describe('ui-conversation-composer — GH #257 Provider/Mode pickers', () => {
+  const PROVIDERS = [
+    {
+      id: 'anthropic',
+      label: 'Anthropic',
+      defaultModel: 'claude-sonnet-5',
+      models: [
+        { id: 'claude-sonnet-5', label: 'Sonnet 5' },
+        { id: 'claude-opus-4-8', label: 'Opus 4.8' },
+      ],
+    },
+    {
+      id: 'openai',
+      label: 'OpenAI',
+      defaultModel: 'gpt-4.1',
+      models: [{ id: 'gpt-4.1', label: 'GPT-4.1' }],
+    },
+    {
+      id: 'gemini',
+      label: 'Gemini — coming soon',
+      defaultModel: 'gemini-2.5-pro',
+      models: [{ id: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' }],
+      disabled: true, // the "coming soon" precedent (provider-switcher.ts) — visible, never committable
+    },
+  ]
+
+  it('providers/modes are opt-in: unset by default, no picker rendered at all', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    expect(el.querySelector('[data-part="providers-menu"]')).toBeNull()
+    expect(el.querySelector('[data-part="mode-menu"]')).toBeNull()
+  })
+
+  it('setting `providers` narrows the Models picker to the selected provider\'s OWN model list, never a plain `models` list', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.providers = PROVIDERS
+    el.provider = 'anthropic'
+    el.model = 'claude-sonnet-5'
+    await whenFlushed()
+    const modelsMenu = el.querySelector('[data-part="models-menu"]') as HTMLElement
+    expect([...modelsMenu.querySelectorAll('[role="menuitem"]')].map((i) => (i as HTMLElement).dataset.value)).toEqual([
+      'claude-sonnet-5', 'claude-opus-4-8',
+    ])
+  })
+
+  it('committing a NEW provider whose model list does not contain the CURRENT model fires onModelChange with its defaultModel, alongside onProviderChange', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.providers = PROVIDERS
+    el.provider = 'anthropic'
+    el.model = 'claude-sonnet-5'
+    await whenFlushed()
+    const providerIds: string[] = []
+    const modelIds: string[] = []
+    el.onProviderChange((id) => providerIds.push(id))
+    el.onModelChange((id) => modelIds.push(id))
+    const menu = el.querySelector('[data-part="providers-menu"]') as HTMLElement
+    ;(menu.querySelector('[data-value="openai"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    expect(providerIds).toEqual(['openai'])
+    expect(modelIds, 'the current model (claude-sonnet-5) does not belong to openai — must reset to its defaultModel').toEqual(['gpt-4.1'])
+    // props down, callbacks up — the picker never self-assigns either prop
+    expect(el.provider).toBe('anthropic')
+    expect(el.model).toBe('claude-sonnet-5')
+  })
+
+  it('code-reviewer M1 — the reset-on-provider-change ORDER is a real contract: onModelChange fires BEFORE onProviderChange in the SAME commit', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.providers = PROVIDERS
+    el.provider = 'anthropic'
+    el.model = 'claude-sonnet-5'
+    await whenFlushed()
+    // ONE shared array across BOTH callbacks — a real ordering assertion, not two isolated arrays that
+    // merely prove each fired (the prior test's own scope).
+    const calls: ['model' | 'provider', string][] = []
+    el.onModelChange((id) => calls.push(['model', id]))
+    el.onProviderChange((id) => calls.push(['provider', id]))
+    const menu = el.querySelector('[data-part="providers-menu"]') as HTMLElement
+    ;(menu.querySelector('[data-value="openai"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    expect(calls).toEqual([
+      ['model', 'gpt-4.1'],
+      ['provider', 'openai'],
+    ])
+  })
+
+  it('committing a provider whose model list DOES already contain the current model does NOT fire onModelChange', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    const sameModelId = { ...PROVIDERS[1]!, models: [{ id: 'claude-sonnet-5', label: 'Sonnet-alike' }], disabled: false }
+    el.providers = [PROVIDERS[0]!, sameModelId]
+    el.provider = 'anthropic'
+    el.model = 'claude-sonnet-5'
+    await whenFlushed()
+    const modelIds: string[] = []
+    el.onModelChange((id) => modelIds.push(id))
+    const menu = el.querySelector('[data-part="providers-menu"]') as HTMLElement
+    ;(menu.querySelector(`[data-value="${sameModelId.id}"]`) as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    expect(modelIds, 'the current model already belongs to the new provider — no reset needed').toEqual([])
+  })
+
+  it('code-reviewer L1 — `providers: []` (empty, not undefined) does NOT also hide an author-set `models` list', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.providers = []
+    el.models = [{ id: 'a', label: 'Model A' }]
+    el.model = 'a'
+    await whenFlushed()
+    expect(el.querySelector('[data-part="providers-menu"]'), 'an empty providers list must hide the Provider picker').toBeNull()
+    const trigger = el.querySelector('[data-picker="models"]') as HTMLElement
+    expect(trigger, 'an empty (not undefined) providers list must not ALSO hide the plain models picker underneath it').not.toBeNull()
+    expect(trigger.textContent).toBe('Model A')
+  })
+
+  it('a `disabled` provider option renders aria-disabled and never commits on click (ui-menu\'s own skip, menu.ts)', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.providers = PROVIDERS
+    el.provider = 'anthropic'
+    await whenFlushed()
+    const menu = el.querySelector('[data-part="providers-menu"]') as HTMLElement
+    const disabledItem = menu.querySelector('[data-value="gemini"]') as HTMLElement
+    expect(disabledItem.getAttribute('aria-disabled')).toBe('true')
+    const providerIds: string[] = []
+    el.onProviderChange((id) => providerIds.push(id))
+    disabledItem.dispatchEvent(new Event('click', { bubbles: true }))
+    expect(providerIds, 'a disabled ("coming soon") option must never commit').toEqual([])
+  })
+
+  it('the Mode picker works identically to Effort — flat options, no narrowing, firing onModeChange on commit', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.modes = [{ id: 'default', label: 'Default' }, { id: 'blue-sky', label: 'Blue-sky' }]
+    el.mode = 'default'
+    await whenFlushed()
+    const trigger = el.querySelector('[data-picker="mode"]') as HTMLElement
+    expect(trigger.textContent).toBe('Default')
+    const received: string[] = []
+    el.onModeChange((id) => received.push(id))
+    const item = (el.querySelector('[data-part="mode-menu"]') as HTMLElement).querySelector('[data-value="blue-sky"]') as HTMLElement
+    item.dispatchEvent(new Event('click', { bubbles: true }))
+    expect(received).toEqual(['blue-sky'])
+  })
+
+  it('a consumer that never sets providers/modes is byte-identical to before (no Provider/Mode triggers, `models`/`effort` unaffected)', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.models = [{ id: 'a', label: 'A' }]
+    el.model = 'a'
+    await whenFlushed()
+    expect(el.querySelector('[data-picker="providers"]')).toBeNull()
+    expect(el.querySelector('[data-picker="mode"]')).toBeNull()
+    expect((el.querySelector('[data-picker="models"]') as HTMLElement).textContent).toBe('A')
+  })
+})
+
 // ── descriptor — ADR-0004 (structural + contract↔props + contract↔source) ──────────────────────────────
 
 const DIR = `${process.cwd()}/packages/agent-ui/app/src/controls/conversation`
@@ -381,7 +528,9 @@ describe('conversation-composer.md descriptor', () => {
   const md = readFileSync(`${DIR}/conversation-composer.md`, 'utf8') as string
   const { fence, body } = splitFrontmatter(md)
   const parsed = parseDescriptor(fence)
-  const ATTR_NAMES = ['value', 'models', 'model', 'efforts', 'effort', 'contextItems', 'busy']
+  const ATTR_NAMES = [
+    'value', 'models', 'model', 'efforts', 'effort', 'providers', 'provider', 'modes', 'mode', 'contextItems', 'busy',
+  ]
 
   it('has a leading frontmatter fence and a /site prose body', () => {
     expect(fence.length).toBeGreaterThan(0)

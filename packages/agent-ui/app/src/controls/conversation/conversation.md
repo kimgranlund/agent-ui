@@ -45,6 +45,22 @@ attributes:              # attributes-as-API — mirrors conversation.ts `props`
     type: json
     default: undefined
     reflect: false
+  - name: providers
+    type: json            # readonly ProviderOption[] (composer-options.ts — PickerOption + {models, defaultModel}) — GH #257, forwarded straight through to the composed child
+    default: undefined    # undefined ⇒ no Provider picker; `models`/`model` keep working standalone, unchanged
+    reflect: false
+  - name: provider
+    type: json
+    default: undefined
+    reflect: false
+  - name: modes
+    type: json            # readonly {id,label}[] — the Gen-UI Mode axis (GH #257), same shape/opt-in law as `efforts`
+    default: undefined    # undefined ⇒ no Mode picker
+    reflect: false
+  - name: mode
+    type: json
+    default: undefined
+    reflect: false
   - name: contextItems
     type: json            # readonly {id,label}[] (composer-options.ts's ContextItem) — the dismissable chip row
     default: undefined    # undefined ⇒ no chip row (coalesced to [] at the one read site — an array literal default cannot round-trip through this token)
@@ -67,10 +83,18 @@ properties:
     description: OPTIONAL `readonly {id, label}[]` — same shape/opt-in law as `models`, for the Effort picker. `composer-options.ts` exports a ready-made `EFFORT_LEVELS` constant (low/medium/high/xhigh) a consumer may reuse verbatim rather than inventing its own scale.
   - name: effort
     description: The Effort picker's CURRENT selection. See `model` — same props-down/callbacks-up law, via `onEffortChange`.
+  - name: providers
+    description: OPTIONAL `readonly ProviderOption[]` (composer-options.ts's `PickerOption` + `{models, defaultModel}`, GH #257) — forwarded straight through to the composed child. When set (and non-empty), renders a Provider picker that narrows the Models picker to the selected provider's own model list. Default `undefined` ⇒ no Provider picker, `models`/`model` unaffected.
+  - name: provider
+    description: The Provider picker's CURRENT selection. See `model` — same props-down/callbacks-up law, via `onProviderChange`. Committing a new provider whose model list excludes the current `model` also fires `onModelChange` with that provider's own `defaultModel` (the composed child's own reset — see conversation-composer.md).
+  - name: modes
+    description: OPTIONAL `readonly {id, label}[]` (GH #257) — the Gen-UI Mode axis, same shape/opt-in law as `efforts`. `ui-conversation` never imports the a2ui-owned `GenUiMode` type — a consumer builds its own `modes` list.
+  - name: mode
+    description: The Mode picker's CURRENT selection. See `model` — same props-down/callbacks-up law, via `onModeChange`.
   - name: contextItems
     description: A `readonly {id, label}[]` of dismissable chips shown above the field (e.g. "something selected elsewhere, attached to this turn's context"). Default `undefined` — no chip row. A dismiss click fires `onContextDismiss(id)`; the consumer owns actually removing it from this list.
 
-events: []               # no DOM events — onSubmit/onClientMessage/onModelChange/onEffortChange/onContextDismiss/onMicClick/setContentRenderer are ALL callback/hook registrations, never CustomEvents (SPEC-R5/SPEC-R12; the closed six-event vocabulary has no submission/picker-commit/client-message/render-hook kind)
+events: []               # no DOM events — onSubmit/onClientMessage/onModelChange/onEffortChange/onProviderChange/onModeChange/onContextDismiss/onMicClick/setContentRenderer are ALL callback/hook registrations, never CustomEvents (SPEC-R5/SPEC-R12; the closed six-event vocabulary has no submission/picker-commit/client-message/render-hook kind)
 
 slots: []                 # content model is NOT author-composed — the thread/composer are built entirely by this element's own connect-time logic and imperative API; no slotted children
 
@@ -194,13 +218,14 @@ unescaped/unmodified (SPEC-R4 AC1), deliberately unaffected by this hook.
 ## The composer is a composed child, `ui-conversation-composer` (TKT-0056)
 
 `ui-conversation` JS-creates ONE `<ui-conversation-composer>` (the `master-detail.ts` → `ui-split`
-precedent — never author-composed), forwarding `models`/`model`/`efforts`/`effort`/`contextItems` down as
-props and forwarding its five callback registrations up to whatever THIS element's own consumer
-registered. See `conversation-composer.md` for the composer's own full contract (its parts, its `busy`
-prop, its opt-in mic/pickers/chips). Beyond the field + send button, the composer can carry a **Models
-picker**, an **Effort picker**, dismissable **context chips**, and a **mic button** — every one of them
-OFF by default, so an existing consumer that never sets `models`/`efforts`/`contextItems` gets the
-ORIGINAL composer, unchanged:
+precedent — never author-composed), forwarding `models`/`model`/`efforts`/`effort`/`providers`/`provider`/
+`modes`/`mode`/`contextItems` down as props and forwarding its seven callback registrations up to whatever
+THIS element's own consumer registered. See `conversation-composer.md` for the composer's own full
+contract (its parts, its `busy` prop, its opt-in mic/pickers/chips). Beyond the field + send button, the
+composer can carry a **Provider picker**, a **Models picker**, an **Effort picker**, a **Mode picker**,
+dismissable **context chips**, and a **mic button** — every one of them OFF by default, so an existing
+consumer that never sets `models`/`efforts`/`providers`/`modes`/`contextItems` gets the ORIGINAL composer,
+unchanged:
 
 ```ts
 import { EFFORT_LEVELS } from '@agent-ui/app/composer-options'
@@ -210,17 +235,27 @@ conv.efforts = EFFORT_LEVELS
 conv.effort = 'medium'
 conv.onModelChange((id) => { /* persist the new selection, e.g. a settings store */ })
 conv.onEffortChange((id) => { /* ephemeral — no persisted counterpart expected */ })
+// GH #257 — the Provider axis narrows the SAME Models picker (a model belongs to exactly one provider);
+// Mode is a plain flat picker mirroring Effort exactly.
+conv.providers = [{ id: 'anthropic', label: 'Anthropic', defaultModel: 'claude-sonnet-5', models: conv.models }]
+conv.provider = 'anthropic'
+conv.onProviderChange((id) => { /* persist the new provider */ })
+conv.modes = [{ id: 'default', label: 'Default' }]
+conv.mode = 'default'
+conv.onModeChange((id) => { /* persist the new mode */ })
 conv.contextItems = [{ id: 'sel-1', label: 'Context Selection' }]
 conv.onContextDismiss((id) => { /* remove `id` from contextItems */ })
 conv.onMicClick(() => { /* wire real voice input here — none is built in */ }) // ALSO reveals the mic button — hidden until this is called
 ```
 
 Every picker follows **props down, callbacks up** (the `onSubmit` precedent) — `ui-conversation` never
-writes `model`/`effort` itself; a consumer supplies the current value and reads the committed choice back
-through the matching callback. `models`/`efforts` are generic `{id, label}` option lists — `ui-conversation`
-never hardcodes a model catalog or invents Effort's own semantics beyond the shared `EFFORT_LEVELS`
-constant a consumer may reuse. All six new callbacks (`onModelChange`/`onEffortChange`/`onContextDismiss`/
-`onMicClick`, alongside `onSubmit`/`onClientMessage`) are safe to register before or after connect.
+writes `model`/`effort`/`provider`/`mode` itself; a consumer supplies the current value and reads the
+committed choice back through the matching callback. `models`/`efforts`/`modes` are generic `{id, label}`
+option lists; `providers` additionally carries each provider's own `models`/`defaultModel` — `ui-conversation`
+never hardcodes a model/provider catalog or invents Effort's/Mode's own semantics beyond the shared
+`EFFORT_LEVELS` constant a consumer may reuse. All eight new callbacks (`onModelChange`/`onEffortChange`/
+`onProviderChange`/`onModeChange`/`onContextDismiss`/`onMicClick`, alongside `onSubmit`/`onClientMessage`)
+are safe to register before or after connect.
 
 The send/mic/caret glyphs need a registered `@agent-ui/icons` pack (`ui-icon`'s own requirement, not new
 here) — a consumer that composes `ui-conversation` without one gets correctly-sized but BLANK icon-only

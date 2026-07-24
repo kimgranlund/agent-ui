@@ -210,16 +210,18 @@
     display: none;
   }
 
-  /* The Models/Effort trigger pills — `variant="soft"` gives the right STRUCTURAL treatment (a tonal
-     pill), but ui-button's own soft/ghost variants are PRIMARY-family by design (button.css's own "colour
-     channel, default family = primary" comment) — wrong color family for a neutral utility picker.
-     Repointing the exposed `--ui-button-*` channel to the neutral container ladder is the sanctioned way
-     a consumer retints a composed control (the token-repoint pattern, not a structural override).
-     `[data-picker]` (not `data-part`): `ui-menu`'s own `connected()` unconditionally overwrites its
-     trigger's `data-part` to the literal "trigger" (menu.ts) — `data-picker` is this element's OWN,
-     untouched marker set AFTER the menu connects. */
+  /* The Provider/Models/Effort/Mode trigger pills (GH #257 widened the original Models/Effort pair) —
+     `variant="soft"` gives the right STRUCTURAL treatment (a tonal pill), but ui-button's own soft/ghost
+     variants are PRIMARY-family by design (button.css's own "colour channel, default family = primary"
+     comment) — wrong color family for a neutral utility picker. Repointing the exposed `--ui-button-*`
+     channel to the neutral container ladder is the sanctioned way a consumer retints a composed control
+     (the token-repoint pattern, not a structural override). `[data-picker]` (not `data-part`): `ui-menu`'s
+     own `connected()` unconditionally overwrites its trigger's `data-part` to the literal "trigger"
+     (menu.ts) — `data-picker` is this element's OWN, untouched marker set AFTER the menu connects. */
   [data-picker='models'],
-  [data-picker='effort'] {
+  [data-picker='effort'],
+  [data-picker='providers'],
+  [data-picker='mode'] {
     --ui-button-bg: var(--md-sys-color-neutral-container-low);
     --ui-button-bg-hover: var(--md-sys-color-neutral-container);
     --ui-button-bg-active: var(--md-sys-color-neutral-container-high);
@@ -237,7 +239,9 @@
     --ui-button-ink: var(--ui-conversation-composer-ink-variant);
   }
   [data-part='models-menu'][hidden],
-  [data-part='effort-menu'][hidden] {
+  [data-part='effort-menu'][hidden],
+  [data-part='providers-menu'][hidden],
+  [data-part='mode-menu'][hidden] {
     display: none;
   }
 

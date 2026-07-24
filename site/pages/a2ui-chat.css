@@ -1,10 +1,10 @@
 /* a2ui-chat.css — PAGE-LOCAL chrome for the conversational agent surface, RE-HOSTED onto `ui-conversation`
- * (app-surfaces-m2.spec.md SPEC-R9). The thread, bubbles, composer, narration strip, per-surface mounts, the
- * "Closed." annotation, and the wire disclosure are ALL owned by the `<ui-conversation>` primitive now (its
- * own `conversation.css`, imported by the page) — this sheet keeps only the surrounding page chrome: the
- * full-bleed region, the header content, the dev-overlay switcher slot, the meta-notice status line, and
- * the reset bar. Every colour is a `--md-sys-color-*` role (imported first via _page.ts), so it tracks
- * light/dark. This page never restyles a ui-* control.
+ * (app-surfaces-m2.spec.md SPEC-R9). The thread, bubbles, composer (incl. its own opt-in Provider/Models/
+ * Effort/Mode pickers, GH #257), narration strip, per-surface mounts, the "Closed." annotation, and the
+ * wire disclosure are ALL owned by the `<ui-conversation>` primitive now (its own `conversation.css`,
+ * imported by the page) — this sheet keeps only the surrounding page chrome: the full-bleed region, the
+ * header content, the meta-notice status line, and the reset bar. Every colour is a `--md-sys-color-*` role
+ * (imported first via _page.ts), so it tracks light/dark. This page never restyles a ui-* control.
  *
  * Round 4 (GH #98): the OUTER flex-column shell this file used to hand-roll on a plain `.chat-shell` div is
  * now `<ui-chat-shell>` (chat-shell.css, @agent-ui/app) — the `.chat-shell` class stays on that element
@@ -25,8 +25,8 @@
 }
 
 /* The composed inner ui-super-shell's canvas box is ALREADY a flex column (super-shell.css) — this adds
- * only the page's own gap between the conversation / switcher slot / status line / reset bar, its one
- * remaining layout concern now that the column direction itself is the composed shell's job. */
+ * only the page's own gap between the conversation / status line / reset bar, its one remaining layout
+ * concern now that the column direction itself is the composed shell's job. */
 .chat-shell [data-part='canvas'] {
   gap: 0.6rem;
 }
@@ -60,33 +60,6 @@
 }
 .chat-status:empty {
   display: none;
-}
-
-/* ── the dev-only provider switcher slot ──────────────────────────────────────────────────────────────── */
-.switcher-slot {
-  flex: 0 0 auto;
-}
-.switcher-slot:empty {
-  display: none;
-}
-.switcher {
-  display: flex;
-  gap: var(--md-sys-space-md);
-  padding: 0.6rem var(--md-sys-space-md);
-  border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 10px;
-  background: var(--md-sys-color-neutral-surface);
-}
-.switcher-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  font-size: 0.72rem;
-}
-.switcher-label {
-  color: var(--md-sys-color-neutral-on-surface-variant);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .reset-bar {

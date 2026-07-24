@@ -20,9 +20,12 @@
 // surface as the primitive's own system bubble via `AgentTurnHandle.fail()`).
 //
 // Recorded-default (`createRecordedTransport`, ADR-0073); the live arm reuses the identical runtime-probed
-// dynamic-import + switcher pattern `a2ui-live.ts` ships (SPEC-R8, superseded by ADR-0152 — the probe now
-// resolves in every environment, not only dev: production carries a Cloudflare Worker port of the dev
-// proxy under `/__a2ui/agent`). `a2a-artifact-feed.ts` stays dev-only by design — out of ADR-0152's scope.
+// dynamic-import pattern `a2ui-live.ts` ships (SPEC-R8, superseded by ADR-0152 — the probe now resolves in
+// every environment, not only dev: production carries a Cloudflare Worker port of the dev proxy under
+// `/__a2ui/agent`). GH #257 — the Provider/Model/Mode picker rides the composed `ui-conversation-composer`'s
+// own `providers`/`provider`/`modes`/`mode` props now (`../lib/provider-mode-selection.ts` supplies the
+// option lists + localStorage persistence), replacing the old standalone `provider-switcher.ts` overlay.
+// `a2a-artifact-feed.ts` stays dev-only by design — out of ADR-0152's scope.
 import { mountFullBleedPage } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
 import './a2ui-chat.css'
 import '@agent-ui/app/chat-shell.css' // ui-chat-shell's own host flex-column layout (round 4, GH #98)
@@ -47,6 +50,18 @@ import {
   readMetaLine,
 } from '../lib/agent-runtime.ts'
 import type { AgentTransport, TurnInput, Session } from '../lib/agent-runtime.ts'
+// GH #257 — the Provider/Model/Mode picker now lives INSIDE ui-conversation's own composed
+// ui-conversation-composer (providers/provider/modes/mode props), replacing the standalone
+// `provider-switcher.ts` overlay. This module is plain, safe data (no fetch/key) — statically importable;
+// only the ACTUAL prop assignment below stays behind the live-probe branch, preserving the exact prior UX
+// (no picker shown before a live provider is confirmed reachable).
+import {
+  PROVIDER_OPTIONS,
+  MODE_OPTIONS,
+  loadPersistedSelection,
+  persistSelection,
+} from '../lib/provider-mode-selection.ts'
+import type { StoredSelection } from '../lib/provider-mode-selection.ts'
 
 const { content } = mountFullBleedPage()
 
@@ -88,9 +103,6 @@ conv.setContentRenderer((text) => {
   return node
 })
 shell.append(conv)
-
-const switcherSlot = el('div', 'switcher-slot')
-shell.append(switcherSlot) // switcher (dev-only, populated on probe) sits below the conversation
 
 // A page-level status line for meta notices that are NOT conversation turns (reset / transcript-exhausted /
 // dev-overlay connection status). aria-live so a screen reader still announces them; latest-wins.
@@ -204,9 +216,36 @@ function wireLiveOverlay(): void {
       const overlay = await import('../lib/live-proxy-transport.ts')
       const probe = await overlay.probeLive()
       if (probe.available) {
-        const { mountSwitcher } = await import('../lib/provider-switcher.ts')
-        const selection = mountSwitcher(switcherSlot)
-        transport = overlay.createLiveProxyTransport(selection)
+        // GH #257 — the Provider/Model/Mode picker now rides ui-conversation's own composed
+        // ui-conversation-composer props (providers/provider/modes/mode) instead of a standalone
+        // provider-switcher.ts overlay. `conv` never writes `model`/`provider`/`mode` itself outside this
+        // page's OWN callback handlers below (props down, callbacks up) — the restored/committed selection
+        // lives in this closure, persisted the same way provider-switcher.ts's SelectionRef did.
+        let selection = loadPersistedSelection()
+        conv.providers = PROVIDER_OPTIONS
+        conv.provider = selection.provider
+        conv.model = selection.model
+        conv.modes = MODE_OPTIONS
+        conv.mode = selection.mode
+        conv.onProviderChange((id) => {
+          selection = { ...selection, provider: id }
+          conv.provider = id
+          persistSelection(selection)
+        })
+        conv.onModelChange((id) => {
+          selection = { ...selection, model: id }
+          conv.model = id
+          persistSelection(selection)
+        })
+        conv.onModeChange((id) => {
+          // The Mode picker's own `modes` list is always built from `MODE_OPTIONS`/`GEN_UI_MODES` above —
+          // every committable id genuinely IS a `GenUiMode`; `conv.onModeChange` itself carries the
+          // composer's plain `(id: string)` shape (props down/callbacks up — it never imports `GenUiMode`).
+          selection = { ...selection, mode: id as StoredSelection['mode'] }
+          conv.mode = id
+          persistSelection(selection)
+        })
+        transport = overlay.createLiveProxyTransport({ get: () => selection })
         status(`Live agent connected (${probe.providers} provider(s) available). Prompt it to generate a real A2UI surface.`)
       } else if (import.meta.env.DEV) {
         status('Recorded transcript (no live API key found). Set a provider key in .env and restart `npm run dev` for a live agent.')

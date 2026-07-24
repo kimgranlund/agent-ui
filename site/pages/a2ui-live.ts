@@ -6,7 +6,9 @@
 //
 // The page consumes ONLY the AgentTransport seam (SPEC-R1): the default is the deterministic RECORDED
 // BACKBONE (works offline, under CI, and whenever no live provider is configured). The LIVE overlay — a
-// real model via a same-origin proxy + the provider switcher — is swapped in via a dynamic import, probed
+// real model via a same-origin proxy + the Provider/Model/Mode picker (GH #257: now the composer's own
+// `providers`/`provider`/`modes`/`mode` props, `../lib/provider-mode-selection.ts` supplying the option
+// lists + persistence) — is swapped in via a dynamic import, probed
 // with `GET /status` at runtime; a client browser NEVER holds a key either way (ADR-0073 clause 5). In dev
 // that proxy is `dev-proxy-plugin.ts` (Vite middleware); in production it's the Cloudflare Worker port
 // (`packages/agent-ui/a2ui/tools/agent/worker/index.ts`) mounted at `/__a2ui/agent` on this same site — a
@@ -49,6 +51,17 @@ import {
 import type { AgentTransport, TurnInput, Session, TurnTrace, AskDeclaration } from '../lib/agent-runtime.ts'
 import { AskRegistry, surfaceIdOf, componentTypesOf } from '../lib/ask-registry.ts'
 import type { AskEntry } from '../lib/ask-registry.ts'
+// GH #257 — the Provider/Model/Mode picker now rides the standalone composer's own `providers`/`provider`/
+// `modes`/`mode` props, replacing the standalone `ui-select` trio `provider-switcher.ts` used to mount into
+// `switcherSlot`. Plain, safe data (no fetch/key) — statically importable; only the prop ASSIGNMENT below
+// stays behind the live-probe branch, preserving the exact prior UX.
+import {
+  PROVIDER_OPTIONS,
+  MODE_OPTIONS,
+  loadPersistedSelection,
+  persistSelection,
+} from '../lib/provider-mode-selection.ts'
+import type { StoredSelection } from '../lib/provider-mode-selection.ts'
 
 const { content } = mountFullBleedPage()
 
@@ -88,7 +101,7 @@ canvasPane.className = 'canvas-pane'
 shell.append(chatPane, canvasPane)
 content.append(shell)
 
-// ── chat pane: log · composer · (dev) switcher · reset ──────────────────────────────────────────────────
+// ── chat pane: log · composer (its own dev-only Provider/Model/Mode picker, GH #257) · reset ────────────
 chatPane.append(paneTitle('Chat', 'Prompt the agent, then interact with the surface it renders.'))
 const chatLog = el('div', 'chat-log')
 chatLog.setAttribute('aria-live', 'polite')
@@ -130,8 +143,6 @@ function annotateAskFrozen(entry: AskEntry, state: 'answered' | 'bypassed'): voi
   entry.bubble.append(note)
 }
 
-const switcherSlot = el('div', 'switcher-slot')
-
 // The modern composer (Figma chat-input refactor) — a standalone `<ui-conversation-composer>` instance,
 // replacing the bare `<form>` + raw `<ui-text-field>`/`<ui-button>` pair. Composed directly (never via
 // `<ui-conversation>`, ADR-0129 Fork B): `models`/`efforts`/`contextItems` are left unset, so this gets
@@ -141,10 +152,13 @@ const switcherSlot = el('div', 'switcher-slot')
 // (its own opt-in reveal), so it never becomes "the composer's first ui-button" (the exact hazard
 // conversation-composer.ts's own header documents a2ui-chat.ts hit before its fix) for anything that
 // still needs the SEND button specifically — see `[data-part="send"]` at every such call site.
+// GH #257 — the dev-only Provider/Model/Mode picker (once wired live) now rides the composer's OWN
+// `providers`/`provider`/`modes`/`mode` props (wireLiveOverlay, below) instead of a standalone
+// `switcherSlot` mounted beside it.
 const composer = document.createElement('ui-conversation-composer') as UIConversationComposerElement
 composer.className = 'chat-composer' // kept — the pre-existing `.chat-composer [data-part="editor"]` test selectors resolve unchanged
 
-chatPane.append(switcherSlot, composer) // switcher (dev-only, populated on probe) sits ABOVE the composer
+chatPane.append(composer)
 
 // ── canvas pane: ui-tabs (Canvas · JSON · HTML) — the shipped compound, DOGFOODED in place of the former
 // hand-rolled `role=tablist` strip + roving/selectTab (Batch C). ui-tabs owns the tablist part, the tab↔panel
@@ -580,9 +594,34 @@ function wireLiveOverlay(): void {
       const overlay = await import('../lib/live-proxy-transport.ts')
       const status = await overlay.probeLive()
       if (status.available) {
-        const { mountSwitcher } = await import('../lib/provider-switcher.ts')
-        const selection = mountSwitcher(switcherSlot)
-        transport = overlay.createLiveProxyTransport(selection)
+        // GH #257 — the Provider/Model/Mode picker rides the composer's OWN props now (never a standalone
+        // `switcherSlot`); `wireLiveOverlay` re-runs on Reset, so each call simply re-registers the
+        // (single-slot) callbacks — never additive, no duplicate firing.
+        let selection = loadPersistedSelection()
+        composer.providers = PROVIDER_OPTIONS
+        composer.provider = selection.provider
+        composer.model = selection.model
+        composer.modes = MODE_OPTIONS
+        composer.mode = selection.mode
+        composer.onProviderChange((id) => {
+          selection = { ...selection, provider: id }
+          composer.provider = id
+          persistSelection(selection)
+        })
+        composer.onModelChange((id) => {
+          selection = { ...selection, model: id }
+          composer.model = id
+          persistSelection(selection)
+        })
+        composer.onModeChange((id) => {
+          // The Mode picker's own `modes` list is always built from `MODE_OPTIONS`/`GEN_UI_MODES` above —
+          // every committable id genuinely IS a `GenUiMode`; `onModeChange` itself carries the composer's
+          // plain `(id: string)` shape (props down/callbacks up — it never imports `GenUiMode`).
+          selection = { ...selection, mode: id as StoredSelection['mode'] }
+          composer.mode = id
+          persistSelection(selection)
+        })
+        transport = overlay.createLiveProxyTransport({ get: () => selection })
         addMessage('system', `Live agent connected (${status.providers} provider(s) available). Prompt it to generate a real A2UI surface.`)
       } else if (import.meta.env.DEV) {
         addMessage('system', 'Recorded backbone (no live API key found). Set a provider key in .env and restart `npm run dev` for a live agent.')
