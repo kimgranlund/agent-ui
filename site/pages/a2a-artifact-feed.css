@@ -119,10 +119,9 @@
   text-align: center;
 }
 
-/* ── live arm (LLD-C11): the dev-only switcher/"Go live" bar + the composer ──────────────────────────────
- * `.switcher*` class names are hardcoded by the SHARED `provider-switcher.ts` module (the a2ui-live
- * precedent) — this page defines its own rules for them, same as a2ui-live.css does, since page styles are
- * not shared across page CSS files. */
+/* ── live arm (LLD-C11): the "Go live" bar + the composer ────────────────────────────────────────────────
+ * GH #257 — the dev-only Provider/Model/Mode picker lives INSIDE the composer's own anatomy now (its own
+ * `ui-menu` pickers, conversation-composer.css); this page no longer hand-rolls `.switcher*` chrome. */
 .feed-live-bar {
   display: flex;
   align-items: center;
@@ -130,47 +129,17 @@
   justify-content: center;
   margin-block-start: 0.75rem;
 }
-.switcher-slot {
-  flex: 0 0 auto;
-}
-.switcher-slot:empty {
-  display: none;
-}
-.switcher {
-  display: flex;
-  gap: 0.75rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 10px;
-  background: var(--md-sys-color-neutral-surface);
-}
-.switcher-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  font-size: 0.72rem;
-}
-.switcher-label {
-  color: var(--md-sys-color-neutral-on-surface-variant);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
 
+/* `ui-conversation-composer`'s own frame/layout/parts live in conversation-composer.css (the fleet's own
+ * field-frame) — this rule ONLY places it in this page's OWN flow + a divider, the a2ui-live.css
+ * `.chat-composer` placement-rule precedent (no `display`/internal-layout override — this page never
+ * restyles a control). `[hidden]` needs an explicit author rule: the component's own `:scope{display:flex}`
+ * (equal specificity, author-origin) otherwise wins over the browser's native `[hidden]` UA rule. */
 .feed-composer {
-  display: flex;
-  gap: 0.5rem;
-  align-items: end;
   margin-block-start: 0.75rem;
   padding-block-start: 0.75rem;
   border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
 }
 .feed-composer[hidden] {
   display: none;
-}
-.feed-composer ui-text-field {
-  flex: 1 1 auto;
-  min-inline-size: 0;
-}
-.feed-composer.is-busy {
-  opacity: 0.55;
-  pointer-events: none;
 }

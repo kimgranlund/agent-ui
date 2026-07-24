@@ -1,7 +1,8 @@
 /* a2ui-live.css — PAGE-LOCAL layout chrome for the live-agent demo chat app (LLD-C9; ADR-0156 re-host).
  * Lays out the two panes [ chat | a2ui-canvas ] as `<ui-super-shell>` slots (the shell owns the frame, this
  * sheet owns only each pane's card treatment + this page's pane sizing), the canvas tabs (Canvas · JSON ·
- * HTML), the chat log + composer, and the dev-only switcher. The rendered A2UI surface keeps its own ui-*
+ * HTML), and the chat log + composer (the dev-only Provider/Model/Mode picker lives INSIDE the composer's
+ * own anatomy now, GH #257 — no page-local switcher chrome). The rendered A2UI surface keeps its own ui-*
  * control CSS — this page never restyles a control. Every colour is a `--md-sys-color-*` role (imported
  * first via _page.ts), so it tracks light/dark. Mounts via mountFullBleedPage: [data-page-content] fills the
  * bounded `.app-page` region; the panes scroll their OWN inner areas (min-block-size: 0 throughout).
@@ -129,7 +130,7 @@
   color: var(--md-sys-color-neutral-on-surface-variant);
 }
 
-/* ── chat pane: log · composer · switcher ───────────────────────────────────────────────────────────────── */
+/* ── chat pane: log · composer ────────────────────────────────────────────────────────────────────────────── */
 .chat-log {
   flex: 1 1 auto;
   min-block-size: 0;
@@ -231,31 +232,6 @@
  * it into the log's flex column (stretch, not the bubbles' own align-self/max-inline-size treatment). */
 .chat-log > .narration-strip {
   align-self: stretch;
-}
-
-.switcher-slot {
-  flex: 0 0 auto;
-}
-.switcher-slot:empty {
-  display: none;
-}
-.switcher {
-  display: flex;
-  gap: var(--md-sys-space-md);
-  padding: 0.6rem var(--md-sys-space-md);
-  border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
-  background: var(--md-sys-color-neutral-surface);
-}
-.switcher-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  font-size: 0.72rem;
-}
-.switcher-label {
-  color: var(--md-sys-color-neutral-on-surface-variant);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 /* ── canvas pane: the ui-tabs compound (Batch C dogfood — was a hand-rolled `role=tablist` strip + roving JS) ──

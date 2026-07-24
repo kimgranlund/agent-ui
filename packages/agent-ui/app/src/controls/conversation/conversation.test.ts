@@ -261,6 +261,40 @@ describe('ui-conversation — the composed ui-conversation-composer (TKT-0056): 
     expect(child.contextItems).toEqual(el.contextItems)
   })
 
+  it('providers/provider/modes/mode all forward straight through to the composed child (GH #257)', async () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.providers = [{ id: 'anthropic', label: 'Anthropic', defaultModel: 'sonnet', models: [{ id: 'sonnet', label: 'Sonnet' }] }]
+    el.provider = 'anthropic'
+    el.modes = [{ id: 'default', label: 'Default' }]
+    el.mode = 'default'
+    await whenFlushed()
+    const child = composer(el)
+    expect(child.providers).toEqual(el.providers)
+    expect(child.provider).toBe('anthropic')
+    expect(child.modes).toEqual(el.modes)
+    expect(child.mode).toBe('default')
+  })
+
+  it('committing a Provider/Mode picker choice in the composed child fires ui-conversation\'s OWN onProviderChange/onModeChange (GH #257)', async () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.providers = [
+      { id: 'a', label: 'A', defaultModel: 'm1', models: [{ id: 'm1', label: 'M1' }] },
+      { id: 'b', label: 'B', defaultModel: 'm2', models: [{ id: 'm2', label: 'M2' }] },
+    ]
+    el.provider = 'a'
+    el.modes = [{ id: 'default', label: 'Default' }, { id: 'blue-sky', label: 'Blue-sky' }]
+    el.mode = 'default'
+    await whenFlushed()
+    const providerIds: string[] = []
+    const modeIds: string[] = []
+    el.onProviderChange((id) => providerIds.push(id))
+    el.onModeChange((id) => modeIds.push(id))
+    ;(el.querySelector('[data-part="providers-menu"] [data-value="b"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    ;(el.querySelector('[data-part="mode-menu"] [data-value="blue-sky"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    expect(providerIds).toEqual(['b'])
+    expect(modeIds).toEqual(['blue-sky'])
+  })
+
   it('committing a Models/Effort picker choice in the composed child fires ui-conversation\'s OWN onModelChange/onEffortChange', async () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)
     el.models = [{ id: 'a', label: 'A' }, { id: 'b', label: 'B' }]
@@ -681,7 +715,10 @@ describe('conversation.md descriptor', () => {
   const md = readFileSync(`${DIR}/conversation.md`, 'utf8') as string
   const { fence, body } = splitFrontmatter(md)
   const parsed = parseDescriptor(fence)
-  const ATTR_NAMES = ['disclosure', 'disabled', 'receipt', 'sources', 'models', 'model', 'efforts', 'effort', 'contextItems']
+  const ATTR_NAMES = [
+    'disclosure', 'disabled', 'receipt', 'sources', 'models', 'model', 'efforts', 'effort',
+    'providers', 'provider', 'modes', 'mode', 'contextItems',
+  ]
 
   it('has a leading frontmatter fence and a /site prose body', () => {
     expect(fence.length).toBeGreaterThan(0)

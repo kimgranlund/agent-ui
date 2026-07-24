@@ -208,6 +208,47 @@ describe('ui-conversation-composer cross-engine smoke — the v2 field frame (TK
     expect(editor.scrollHeight, 'past the cap, content scrolls instead of growing').toBeGreaterThan(editor.clientHeight)
   })
 
+  // GH #257 — the whole-shape lesson (memory: a control can pass every per-part assertion and still be
+  // visually broken): with all FOUR pickers set at once, every trigger pill is a real, non-zero-area box
+  // and the options row lays them out left-to-right (Provider, Models, Effort, Mode) before the trailing
+  // mic/send group.
+  it('Provider/Models/Effort/Mode pickers all render as real, non-zero-area trigger pills, in that order', async () => {
+    const el = mountConversation()
+    const composer = el.querySelector('ui-conversation-composer') as HTMLElement & {
+      providers: unknown
+      provider: unknown
+      models: unknown
+      model: unknown
+      efforts: unknown
+      effort: unknown
+      modes: unknown
+      mode: unknown
+    }
+    composer.providers = [{ id: 'anthropic', label: 'Anthropic', defaultModel: 'sonnet', models: [{ id: 'sonnet', label: 'Sonnet' }] }]
+    composer.provider = 'anthropic'
+    composer.models = [{ id: 'sonnet', label: 'Sonnet' }]
+    composer.model = 'sonnet'
+    composer.efforts = [{ id: 'low', label: 'Low' }]
+    composer.effort = 'low'
+    composer.modes = [{ id: 'default', label: 'Default' }]
+    composer.mode = 'default'
+    await whenFlushed()
+
+    const triggers = ['providers', 'models', 'effort', 'mode'].map(
+      (name) => el.querySelector(`[data-picker="${name}"]`) as HTMLElement,
+    )
+    for (const [i, trigger] of triggers.entries()) {
+      expect(trigger, `[data-picker="${['providers', 'models', 'effort', 'mode'][i]}"] is missing`).not.toBeNull()
+      const rect = trigger.getBoundingClientRect()
+      expect(rect.width, `${['providers', 'models', 'effort', 'mode'][i]} trigger collapsed to zero width`).toBeGreaterThan(1)
+      expect(rect.height, `${['providers', 'models', 'effort', 'mode'][i]} trigger collapsed to zero height`).toBeGreaterThan(1)
+    }
+    // left-to-right order matches the options-row build order (Provider, Models, Effort, Mode).
+    for (let i = 1; i < triggers.length; i++) {
+      expect(triggers[i]!.getBoundingClientRect().left).toBeGreaterThanOrEqual(triggers[i - 1]!.getBoundingClientRect().left)
+    }
+  })
+
   it('the TKT-0062 filled/container state law: empty vs typed repaint background AND ink together', async () => {
     // code-reviewer HIGH finding: reading `composer.color` (the host) alone is vacuous — the editor
     // part carries its own color declaration reading the same token, so a state rule that only

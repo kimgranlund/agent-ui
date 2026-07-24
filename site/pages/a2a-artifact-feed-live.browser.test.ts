@@ -36,11 +36,13 @@ function lastBubbleWithRole(role: 'user' | 'agent'): HTMLElement {
   return last
 }
 
+// GH #257 — the composer is a real `ui-conversation-composer` now (its own field, no nested ui-text-field);
+// this mirrors `conversation-composer.test.ts`'s own `value` + click-Send pattern (props down, no DOM typing
+// needed — the OWN caret-guard effect keeps its editor surface in sync).
 async function typeAndSend(text: string): Promise<void> {
-  const field = query('.feed-composer ui-text-field') as HTMLElement & { value: string }
-  field.value = text
-  field.dispatchEvent(new Event('input', { bubbles: true }))
-  findButtonByText('Send').click()
+  const composer = query('.feed-composer') as HTMLElement & { value: string }
+  composer.value = text
+  ;(composer.querySelector('[data-part="send"]') as HTMLElement).click()
   await raf()
 }
 
@@ -124,8 +126,8 @@ describe('the artifact feed — live arm (LLD-C11, both engines, scripted transp
     expect(lastAgent.textContent).toMatch(/stub-injected transport fault/)
 
     // The composer re-enables (fail-closed never wedges the UI) — a SUBSEQUENT successful send still works.
-    expect(query('.feed-composer').classList.contains('is-busy')).toBe(false)
-    expect(query('.feed-composer ui-button').hasAttribute('aria-disabled')).toBe(false)
+    expect(query('.feed-composer').hasAttribute('busy'), 'the composer stayed busy after a faulted turn').toBe(false)
+    expect((query('.feed-composer').querySelector('[data-part="send"]') as HTMLElement & { disabled: boolean }).disabled).toBe(false)
 
     const { gen } = scriptedTurn()
     __setLiveApiForTest(() => gen(), { provider: 'anthropic', model: 'claude-sonnet-5' })

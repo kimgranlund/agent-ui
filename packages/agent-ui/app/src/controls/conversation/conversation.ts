@@ -63,7 +63,7 @@ import type { ClientMessageListener } from '@agent-ui/a2ui'
 import type { TurnProgress, TurnProgressStage } from '@agent-ui/a2ui/agent/meta-line' // cross-package specifier stays extensionless (the repo's own local-.ts-only convention) — a2ui/package.json exports this as its own subpath
 import './conversation-composer.ts' // registers <ui-conversation-composer> (TKT-0056) — composed internally, the master-detail.ts → ui-split precedent
 import type { UIConversationComposerElement } from './conversation-composer.ts'
-import type { PickerOption, ContextItem } from './composer-options.ts'
+import type { PickerOption, ProviderOption, ContextItem } from './composer-options.ts'
 
 const props = {
   // OPT-IN raw-wire disclosure (ADR-0129 clause 3) — reflected, default false. Narration itself (below)
@@ -102,6 +102,13 @@ const props = {
   model: { ...prop.json<string | undefined>(undefined), attribute: false as const },
   efforts: { ...prop.json<readonly PickerOption[] | undefined>(undefined), attribute: false as const },
   effort: { ...prop.json<string | undefined>(undefined), attribute: false as const },
+  // GH #257 — the Provider/Mode axes, forwarded to the composed child exactly like models/model/efforts/
+  // effort above: `undefined` (default) ⇒ neither picker renders, byte-identical for every existing
+  // consumer (a2ui-chat) that never sets them.
+  providers: { ...prop.json<readonly ProviderOption[] | undefined>(undefined), attribute: false as const },
+  provider: { ...prop.json<string | undefined>(undefined), attribute: false as const },
+  modes: { ...prop.json<readonly PickerOption[] | undefined>(undefined), attribute: false as const },
+  mode: { ...prop.json<string | undefined>(undefined), attribute: false as const },
   // `undefined`, not `[]` (the schema/store/models/efforts precedent) — an array literal default cannot
   // round-trip through the descriptor's `default:` token (ADR-0004); forwarded straight through to the
   // composed `ui-conversation-composer` child (TKT-0056), which coalesces to `[]` at its own read site.
@@ -259,6 +266,8 @@ export class UIConversationElement extends UIElement {
   #onClientMessageCb: ClientMessageListener | undefined
   #onModelChangeCb: ((id: string) => void) | undefined
   #onEffortChangeCb: ((id: string) => void) | undefined
+  #onProviderChangeCb: ((id: string) => void) | undefined
+  #onModeChangeCb: ((id: string) => void) | undefined
   #onContextDismissCb: ((id: string) => void) | undefined
   #onMicClickCb: (() => void) | undefined
   // SPEC-R12 (TKT-0071) — a consumer-supplied render hook for agent-turn note / system-bubble text.
@@ -292,6 +301,8 @@ export class UIConversationElement extends UIElement {
       })
       composer.onModelChange((id) => this.#onModelChangeCb?.(id))
       composer.onEffortChange((id) => this.#onEffortChangeCb?.(id))
+      composer.onProviderChange((id) => this.#onProviderChangeCb?.(id))
+      composer.onModeChange((id) => this.#onModeChangeCb?.(id))
       composer.onContextDismiss((id) => this.#onContextDismissCb?.(id))
       // `onMicClick` is DIFFERENT: the composer's own onMicClick has a visible side effect (revealing the
       // mic button) — forwarding it unconditionally here would un-hide the mic for every consumer
@@ -312,6 +323,10 @@ export class UIConversationElement extends UIElement {
       this.#composer.model = this.model
       this.#composer.efforts = this.efforts
       this.#composer.effort = this.effort
+      this.#composer.providers = this.providers
+      this.#composer.provider = this.provider
+      this.#composer.modes = this.modes
+      this.#composer.mode = this.mode
       this.#composer.contextItems = this.contextItems
       this.#reflectBusy() // `disabled` reads here too — the effect re-runs on its change
     })
@@ -606,6 +621,18 @@ export class UIConversationElement extends UIElement {
   /** Fires with an `efforts` entry's `id` when the Effort picker commits a choice. See `onModelChange`. */
   onEffortChange(cb: (id: string) => void): void {
     this.#onEffortChangeCb = cb
+  }
+
+  /** Fires with a `providers` entry's `id` when the Provider picker commits a choice (GH #257). See
+   *  `onModelChange` — the composed child's own reset-on-provider-change (see conversation-composer.md)
+   *  fires `onModelChange` alongside this one when the current model doesn't belong to the new provider. */
+  onProviderChange(cb: (id: string) => void): void {
+    this.#onProviderChangeCb = cb
+  }
+
+  /** Fires with a `modes` entry's `id` when the Mode picker commits a choice (GH #257). See `onModelChange`. */
+  onModeChange(cb: (id: string) => void): void {
+    this.#onModeChangeCb = cb
   }
 
   /** Fires with a `contextItems` entry's `id` when its dismiss affordance is clicked — the consumer owns

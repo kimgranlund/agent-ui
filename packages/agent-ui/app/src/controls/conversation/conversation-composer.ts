@@ -2,15 +2,21 @@
 // UI extracted out of `ui-conversation`. `tier: pattern` / `extends: UIElement` — since the v2 unroll
 // (TKT-0058) the host is ITSELF the field: one ADR-0014 field frame whose content is the opt-in
 // context-chip row (above), an OWN contenteditable multi-line editor (the ADR-0134 `ui-textarea` pattern,
-// reused — no nested `ui-text-field` anymore), and the options row (Models/Effort `ui-menu` pickers +
-// mic/send `ui-button`s, below). All parts are JS-created internal children (the `master-detail.ts` →
-// `ui-split` precedent — never author-composed; `slots: []`).
+// reused — no nested `ui-text-field` anymore), and the options row (Provider/Models/Effort/Mode `ui-menu`
+// pickers + mic/send `ui-button`s, below). All parts are JS-created internal children (the
+// `master-detail.ts` → `ui-split` precedent — never author-composed; `slots: []`).
+//
+// GH #257 — the Provider/Mode pickers join Models/Effort, built the exact same menu+trigger way. Provider
+// narrows the SAME Models picker to an internally-derived view of the selected provider's own model list
+// (a model belongs to exactly one provider — never a standalone fourth axis); Mode is a plain flat
+// PickerOption[]/id pair mirroring Models/Effort exactly (this element never imports the a2ui-owned
+// `GenUiMode` type itself — a consumer builds its own `modes` list, the `efforts`/`EFFORT_LEVELS` precedent).
 //
 // `ui-conversation` composes this ONCE (`document.createElement('ui-conversation-composer')`) and forwards
-// `models`/`model`/`efforts`/`effort`/`contextItems` down as props, sets `busy` from its own turn-in-flight
-// tracking, and listens for this element's five callback registrations (`onSubmit`/`onModelChange`/
-// `onEffortChange`/`onContextDismiss`/`onMicClick`) — see conversation.ts (LLD CVC-C5) for the pinned
-// forwarding mechanism.
+// `models`/`model`/`efforts`/`effort`/`providers`/`provider`/`modes`/`mode`/`contextItems` down as props,
+// sets `busy` from its own turn-in-flight tracking, and listens for this element's seven callback
+// registrations (`onSubmit`/`onModelChange`/`onEffortChange`/`onProviderChange`/`onModeChange`/
+// `onContextDismiss`/`onMicClick`) — see conversation.ts (LLD CVC-C5) for the pinned forwarding mechanism.
 //
 // The editable surface (LLD CVC-C3′, TKT-0058): the ADR-0014 contenteditable pattern via its multi-line
 // sibling `ui-textarea` (ADR-0134) — a stable `<div data-part="editor" contenteditable="plaintext-only"
@@ -23,7 +29,7 @@
 
 import { UIElement, prop, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
 import type { UIButtonElement, UIMenuElement } from '@agent-ui/components/components'
-import type { PickerOption, ContextItem } from './composer-options.ts'
+import type { PickerOption, ProviderOption, ContextItem } from './composer-options.ts'
 
 // The editor's editable mode (ADR-0014 cl.1, the ui-textarea reuse).
 const EDITABLE = 'plaintext-only'
@@ -41,6 +47,19 @@ const props = {
   model: { ...prop.json<string | undefined>(undefined), attribute: false as const },
   efforts: { ...prop.json<readonly PickerOption[] | undefined>(undefined), attribute: false as const },
   effort: { ...prop.json<string | undefined>(undefined), attribute: false as const },
+  // GH #257 — the Provider axis: each entry carries its OWN model list + defaultModel (composer-
+  // options.ts's `ProviderOption`). Selecting a provider narrows the SAME Models picker built from
+  // `models` above to an INTERNALLY-DERIVED view (`#effectiveModels()`) — never a separate/fourth picker
+  // — since a model belongs to exactly one provider. `undefined` (default) ⇒ no Provider picker; the
+  // plain `models`/`model` pair keeps working standalone exactly as before (byte-identical default-off).
+  providers: { ...prop.json<readonly ProviderOption[] | undefined>(undefined), attribute: false as const },
+  provider: { ...prop.json<string | undefined>(undefined), attribute: false as const },
+  // GH #257 — the Gen-UI Mode axis: a plain flat `PickerOption[]`/selected-id pair, following the exact
+  // `models`/`model` shape (no narrowing semantics of its own) — this element never imports `GenUiMode`
+  // itself (that type stays a2ui-owned); a consumer builds its own `modes` list (e.g. from
+  // `GEN_UI_MODES`/`gen-ui-mode.ts`) exactly like it already builds `efforts` from `EFFORT_LEVELS`.
+  modes: { ...prop.json<readonly PickerOption[] | undefined>(undefined), attribute: false as const },
+  mode: { ...prop.json<string | undefined>(undefined), attribute: false as const },
   // `undefined`, not `[]` (the models/efforts precedent) — an array-literal default cannot round-trip
   // through the descriptor's `default:` token (ADR-0004); coalesced to `[]` at the one read site (`#syncContextChips`).
   contextItems: { ...prop.json<readonly ContextItem[] | undefined>(undefined), attribute: false as const },
@@ -69,11 +88,18 @@ export class UIConversationComposerElement extends UIElement {
   #modelsTrigger: UIButtonElement | undefined
   #effortMenu: UIMenuElement | undefined
   #effortTrigger: UIButtonElement | undefined
+  // GH #257 — the Provider/Mode pickers, built the SAME way as Models/Effort above.
+  #providersMenu: UIMenuElement | undefined
+  #providersTrigger: UIButtonElement | undefined
+  #modesMenu: UIMenuElement | undefined
+  #modesTrigger: UIButtonElement | undefined
   // The last option list each picker's items were built from — rebuilt only when the REFERENCE changes
   // (a consumer's own list is typically a stable module-level constant, e.g. SUPPORTED_MODELS; a
   // reference-equality guard avoids tearing down/rebuilding the panel on every unrelated reactive pass).
   #modelsBuiltFrom: readonly PickerOption[] | undefined
   #effortsBuiltFrom: readonly PickerOption[] | undefined
+  #providersBuiltFrom: readonly ProviderOption[] | undefined
+  #modesBuiltFrom: readonly PickerOption[] | undefined
   #contextItemsBuiltFrom: readonly ContextItem[] | undefined
   // Whether THIS connection has armed the picker's own 'select' listener — reset false at the TOP of every
   // connect: the menu DOM (and `#modelsMenu`'s mere existence) persists across a reconnect, but
@@ -81,6 +107,8 @@ export class UIConversationComposerElement extends UIElement {
   // "build the menu" branch (which runs at most once, EVER) silently never re-arms on reconnect.
   #modelsListenerArmed = false
   #effortListenerArmed = false
+  #providersListenerArmed = false
+  #modesListenerArmed = false
   // The IME-composition guard (ADR-0014 cl.1, the ui-textarea reuse) — surface→model syncs and the
   // model→surface caret-guard write are BOTH suppressed mid-composition; compositionend catches up.
   #composing = false
@@ -88,12 +116,16 @@ export class UIConversationComposerElement extends UIElement {
   #onSubmitCb: ((text: string) => void) | undefined
   #onModelChangeCb: ((id: string) => void) | undefined
   #onEffortChangeCb: ((id: string) => void) | undefined
+  #onProviderChangeCb: ((id: string) => void) | undefined
+  #onModeChangeCb: ((id: string) => void) | undefined
   #onContextDismissCb: ((id: string) => void) | undefined
   #onMicClickCb: (() => void) | undefined
 
   protected connected(): void {
     this.#modelsListenerArmed = false
     this.#effortListenerArmed = false
+    this.#providersListenerArmed = false
+    this.#modesListenerArmed = false
     // The chip row's OWN dismiss listeners ride `this.listen(...)` too (per-chip, inside #syncContextChips)
     // — but that method only rebuilds (and re-arms) when the `contextItems` REFERENCE changes. Without this
     // reset, a reconnect with the SAME reference short-circuits the rebuild, leaving the prior connection's
@@ -203,8 +235,13 @@ export class UIConversationComposerElement extends UIElement {
     // sync WITHOUT rebuilding the composer's persistent shell above. Re-arms every connect since
     // `connected()` re-runs on reconnect but this effect does not survive a disconnect on its own.
     this.effect(() => {
-      this.#syncModelsPicker(this.models, this.model)
+      // GH #257 — Provider renders FIRST (it narrows Models, so it reads as "pick the source, then the
+      // item"), then Models (fed the internally-derived narrowed view when `providers` is set), then
+      // Effort, then Mode — the visible options-row order.
+      this.#syncProvidersPicker(this.providers, this.provider)
+      this.#syncModelsPicker(this.#effectiveModels(), this.model)
       this.#syncEffortsPicker(this.efforts, this.effort)
+      this.#syncModesPicker(this.modes, this.mode)
       this.#syncContextChips(this.contextItems ?? EMPTY_CONTEXT_ITEMS)
     })
 
@@ -269,6 +306,19 @@ export class UIConversationComposerElement extends UIElement {
     this.#onEffortChangeCb = cb
   }
 
+  /** Fires with a `providers` entry's `id` when the Provider picker commits a choice. See `onModelChange`
+   *  (props down, callbacks up — this element never writes `this.provider` itself). A provider switch that
+   *  ALSO resets the current model (because it no longer belongs to the new provider) fires `onModelChange`
+   *  alongside this one, in the same commit — see `#syncProvidersPicker`. */
+  onProviderChange(cb: (id: string) => void): void {
+    this.#onProviderChangeCb = cb
+  }
+
+  /** Fires with a `modes` entry's `id` when the Mode picker commits a choice. See `onModelChange`. */
+  onModeChange(cb: (id: string) => void): void {
+    this.#onModeChangeCb = cb
+  }
+
   /** Fires with a `contextItems` entry's `id` when its dismiss affordance is clicked — the consumer owns
    *  actually removing it from `contextItems` (props down, callbacks up, the `onModelChange` precedent). */
   onContextDismiss(cb: (id: string) => void): void {
@@ -321,6 +371,17 @@ export class UIConversationComposerElement extends UIElement {
     this.#micBtn!.disabled = busy
     if (this.#modelsTrigger) this.#modelsTrigger.disabled = busy
     if (this.#effortTrigger) this.#effortTrigger.disabled = busy
+    if (this.#providersTrigger) this.#providersTrigger.disabled = busy
+    if (this.#modesTrigger) this.#modesTrigger.disabled = busy
+  }
+
+  /** GH #257 — the Models picker's CURRENT effective option list: when `providers` is set, an INTERNALLY-
+   *  DERIVED view (the selected provider's OWN `models`) narrows it; otherwise the plain `models` prop
+   *  (unchanged, byte-identical for any consumer that never sets `providers`). Never written back into the
+   *  `models` prop itself — `models` stays exactly what its own consumer set it to. */
+  #effectiveModels(): readonly PickerOption[] | undefined {
+    if (this.providers === undefined) return this.models
+    return this.providers.find((p) => p.id === this.provider)?.models
   }
 
   // ── the opt-in picker/chip sync (models/efforts/contextItems) ───────────────────────────────────────
@@ -389,6 +450,78 @@ export class UIConversationComposerElement extends UIElement {
     this.#appendCaret(this.#effortTrigger!)
   }
 
+  /** Build-or-update the Provider picker from the CURRENT `providers`/`provider` prop pair — the SAME
+   *  shape as `#syncModelsPicker`/`#syncEffortsPicker`, plus one extra step on commit: a model belongs to
+   *  exactly one provider, so switching providers resets `model` to the NEW provider's own `defaultModel`
+   *  whenever the CURRENT `model` doesn't belong to its list (mirrors `provider-switcher.ts`'s own
+   *  provider-`select` handler exactly). This element never writes `provider`/`model` itself (props down,
+   *  callbacks up) — it fires `onModelChange` alongside `onProviderChange` in the SAME commit, so a
+   *  consumer that wires both ends up with a consistent {provider, model} pair after either call. */
+  #syncProvidersPicker(options: readonly ProviderOption[] | undefined, selected: string | undefined): void {
+    if (options === undefined || options.length === 0) {
+      if (this.#providersMenu) this.#providersMenu.open = false
+      this.#providersMenu?.toggleAttribute('hidden', true)
+      return
+    }
+    if (this.#providersMenu === undefined) {
+      const { menu, trigger } = this.#buildPicker('providers', 'Provider')
+      this.#providersMenu = menu
+      this.#providersTrigger = trigger
+    }
+    if (!this.#providersListenerArmed) {
+      this.#providersListenerArmed = true
+      this.listen(this.#providersMenu, 'select', (e) => {
+        const id = (e as CustomEvent<{ value: string }>).detail.value
+        const next = this.providers?.find((p) => p.id === id)
+        if (next && !next.models.some((m) => m.id === this.model)) {
+          this.#onModelChangeCb?.(next.defaultModel) // the reset — fired BEFORE onProviderChange so a
+          // consumer wiring both in sequence lands on a consistent {provider, model} pair either way.
+        }
+        this.#onProviderChangeCb?.(id)
+      })
+    }
+    this.#providersMenu.toggleAttribute('hidden', false)
+    if (this.#providersBuiltFrom !== options) {
+      this.#rebuildPickerItems(this.#providersMenu, options, selected)
+      this.#providersBuiltFrom = options
+    } else {
+      this.#markPickerSelection(this.#providersMenu, selected)
+    }
+    this.#providersTrigger!.textContent = options.find((o) => o.id === selected)?.label ?? 'Provider'
+    this.#appendCaret(this.#providersTrigger!)
+  }
+
+  /** Build-or-update the Mode picker from the CURRENT `modes`/`mode` prop pair — a plain flat picker with
+   *  no narrowing of its own (the GenUiMode axis, GH #257). See `#syncEffortsPicker`. */
+  #syncModesPicker(options: readonly PickerOption[] | undefined, selected: string | undefined): void {
+    if (options === undefined || options.length === 0) {
+      if (this.#modesMenu) this.#modesMenu.open = false
+      this.#modesMenu?.toggleAttribute('hidden', true)
+      return
+    }
+    if (this.#modesMenu === undefined) {
+      const { menu, trigger } = this.#buildPicker('mode', 'Mode')
+      this.#modesMenu = menu
+      this.#modesTrigger = trigger
+    }
+    if (!this.#modesListenerArmed) {
+      this.#modesListenerArmed = true
+      this.listen(this.#modesMenu, 'select', (e) => {
+        const id = (e as CustomEvent<{ value: string }>).detail.value
+        this.#onModeChangeCb?.(id)
+      })
+    }
+    this.#modesMenu.toggleAttribute('hidden', false)
+    if (this.#modesBuiltFrom !== options) {
+      this.#rebuildPickerItems(this.#modesMenu, options, selected)
+      this.#modesBuiltFrom = options
+    } else {
+      this.#markPickerSelection(this.#modesMenu, selected)
+    }
+    this.#modesTrigger!.textContent = options.find((o) => o.id === selected)?.label ?? 'Mode'
+    this.#appendCaret(this.#modesTrigger!)
+  }
+
   /** The one-time shell for either picker: a `<ui-menu>` whose trigger is a pill `<ui-button variant=soft>`
    *  (the Figma "Models"/"Effort" pill shape). Appended into the persistent `#optionsLeading` cell.
    *  `ui-menu`'s OWN `connected()`/`#ensureParts()` unconditionally overwrites its first child's
@@ -428,8 +561,9 @@ export class UIConversationComposerElement extends UIElement {
     panel.replaceChildren()
     // The roving-focus trait's own one-time settle pass only covers items present at ITS first population —
     // items added later (here) start all at tabindex=-1 with nothing focusable on Tab/open. Give the
-    // selected item (or the first, if none selected yet) the roving base tabindex=0.
-    const focusableId = selected ?? options[0]?.id
+    // selected item (or the first ENABLED one, if none selected yet) the roving base tabindex=0 — never a
+    // disabled option (GH #257's "coming soon" precedent).
+    const focusableId = selected ?? options.find((o) => !o.disabled)?.id ?? options[0]?.id
     for (const option of options) {
       const item = document.createElement('div')
       // ui-menu's OWN auto-role-assignment (menu.ts's #ensureParts) runs ONCE, over whatever children
@@ -441,6 +575,10 @@ export class UIConversationComposerElement extends UIElement {
       item.dataset.value = option.id
       item.textContent = option.label
       item.toggleAttribute('data-selected', option.id === selected)
+      // GH #257 — a non-committable option (the "coming soon" provider precedent): ui-menu's own
+      // click/keydown delegation already skips an `aria-disabled="true"` item (menu.ts), so this is the
+      // ONLY wiring a disabled entry needs here.
+      if (option.disabled) item.setAttribute('aria-disabled', 'true')
       panel.append(item)
     }
   }
