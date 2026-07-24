@@ -109,13 +109,35 @@ export interface ProduceOptions {
   /** ADR-0146 F3 — how much raw reasoning crosses the wire on `reasoning` progress events (only when
    * `progress` is on). Absent ⇒ `'stages'`: `produce()` forwards the reasoning stage TRANSITION only, NO
    * thinking text (the default, conservative posture). `'full'`: forwards bounded excerpts on
-   * `TurnProgress.detail` — an explicit consumer opt-in, never the default. Only affects `reasoning`. */
-  progressDetail?: 'stages' | 'full'
+   * `TurnProgress.detail` — an explicit consumer opt-in, never the default. Only affects `reasoning`.
+   * GH #240/ADR-0159 wave B adds `'source'` — a SIBLING member, not a rung above `'full'`: stage
+   * transitions exactly like `'stages'` (still NO thinking text — the two disclosures stay independent),
+   * PLUS the per-stage raw-source attachment (`TurnProgress.source`): the actual A2UI JSONL behind
+   * `validating` (this round's candidate lines entering heal/validate) and `retry` (the PRIOR round's
+   * failed candidate — otherwise never visible anywhere client-side). Capped at
+   * `SOURCE_ATTACHMENT_CAP`. The gate is fail-closed at every layer: absent ⇒ `'stages'` ⇒ zero raw
+   * lines ride any progress event; `'full'` does NOT imply `'source'` and vice versa (a consumer
+   * needing both is a deliberate future member, not an accident of ladder ordering). */
+  progressDetail?: 'stages' | 'full' | 'source'
 }
 
 /** The bounded raw-reasoning excerpt cap (ADR-0146 F3, `progressDetail:'full'`) — a `thinking` delta can be
  * long; a forwarded excerpt is capped so a polite live region is never token-spammed. */
 const REASONING_EXCERPT_CAP = 200
+
+/** GH #240/ADR-0159 wave B — the raw-source attachment cap (`progressDetail:'source'`), in characters:
+ * 16 KB, the SAME runaway-guard bound the proxies already apply to `personaSystem` (dev-proxy-plugin.ts /
+ * worker/index.ts — the repo's established "bounded but generous developer text" constant). Rationale: a
+ * realistic surface payload runs low single-digit KB (the corpus exemplars' own ceiling), so 16 KB never
+ * truncates real traffic; and since the `validating` attachment duplicates the payload's bytes on the
+ * wire (the final round's candidate IS the content that follows), the cap bounds that duplication to
+ * ~16 KB per progress event even against a pathological payload. A capped attachment says so explicitly
+ * (the truncation marker below) — never a silent cut. */
+export const SOURCE_ATTACHMENT_CAP = 16_384
+const SOURCE_TRUNCATION_MARKER = '\n… [truncated]'
+function capSource(source: string): string {
+  return source.length <= SOURCE_ATTACHMENT_CAP ? source : source.slice(0, SOURCE_ATTACHMENT_CAP) + SOURCE_TRUNCATION_MARKER
+}
 
 /** Serialize a runtime-composed progress meta-line (ADR-0146 F1) — the SAME reserved-envelope shape every
  * meta kind uses (no `version` key ⇒ provably not an `A2uiServerMessage`; fault-isolates to
@@ -385,14 +407,26 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
 
   const emitProgress = opts.progress === true // ADR-0146 F1 — opt-in; absent ⇒ byte-identical to before
   const progressDetail = opts.progressDetail ?? 'stages' // ADR-0146 F3 — 'stages' (default) keeps thinking text off the wire
+  // GH #240/ADR-0159 wave B — the per-step source reveal's producer gate: raw wire lines ride
+  // `TurnProgress.source` ONLY under the explicit 'source' member (fail-closed: the 'stages' default AND
+  // 'full' both attach nothing — the reasoning and source disclosures are independent opt-ins).
+  const attachSource = emitProgress && progressDetail === 'source'
   let failures: RoundFailure[] | undefined
   let lastRaw: string | undefined
+  let lastCandidate: string | undefined // the previous round's peeled candidate wire text — the `retry` stage's source
   for (let round = 0; round < opts.maxRounds; round++) {
     const failuresFedBack = failures // what THIS round's prompt carried back — the trace's failureCodes
     // ADR-0146 F1 — the lifecycle stages, yielded AS THEY HAPPEN, strictly BEFORE any content line (content
     // still streams only after full validation, SPEC-R5). A self-correct round announces `retry` with the
     // attempt ordinal first, then `sent` before the provider request. All gated on the `progress` opt-in.
-    if (emitProgress && round > 0 && failures !== undefined) yield formatProgressLine({ stage: 'retry', round: round + 1 })
+    // GH #240 — under 'source', `retry` carries the FAILED round's candidate JSONL (the invalid attempt the
+    // feedback loop is correcting — data that otherwise never crosses the wire at all), capped.
+    if (emitProgress && round > 0 && failures !== undefined)
+      yield formatProgressLine({
+        stage: 'retry',
+        round: round + 1,
+        ...(attachSource && lastCandidate !== undefined && lastCandidate !== '' ? { source: capSource(lastCandidate) } : {}),
+      })
     if (emitProgress) yield formatProgressLine({ stage: 'sent' })
 
     let raw = ''
@@ -449,13 +483,23 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
     while (pending.length > 0) yield formatProgressLine(pending.shift()!) // drain any trailing (text-less) events
     lastRaw = raw
 
-    if (emitProgress) yield formatProgressLine({ stage: 'validating' }) // AFTER accumulation, BEFORE assemble/validate
-
     const { note, ask, rest } = peelMetaLine(raw) // ADR-0088 §1 / ADR-0097 §1 — peeled BEFORE heal/validate
     const restLines = stripOuterFence(rest)
       .split('\n')
       .map((l) => l.trim())
       .filter((l) => l.length > 0)
+    // GH #240/ADR-0159 wave B — this round's candidate wire text: the peeled, fence-stripped JSONL entering
+    // heal/validate (createSurface/updateDataModel/updateComponents lines — never the meta-line note, which
+    // `peelMetaLine` already removed). Remembered across rounds for the `retry` attachment above. The peel
+    // moved ABOVE the `validating` yield so the event can carry its own source — the stage's timing contract
+    // ("AFTER accumulation, BEFORE assemble/validate") is unchanged: peel is pure string prep, not validation.
+    const candidate = restLines.join('\n')
+    lastCandidate = candidate
+    if (emitProgress)
+      yield formatProgressLine({
+        stage: 'validating',
+        ...(attachSource && candidate !== '' ? { source: capSource(candidate) } : {}),
+      }) // AFTER accumulation, BEFORE assemble/validate
 
     if (note !== undefined && restLines.length === 0) {
       // A note-only turn (ADR-0088 Consequences): zero A2UI lines is a CLEAN success — nothing to

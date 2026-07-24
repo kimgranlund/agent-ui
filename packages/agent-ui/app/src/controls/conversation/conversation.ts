@@ -83,6 +83,16 @@ const props = {
   // false: every existing consumer keeps the always-expanded narration byte-identically.
   receipt: { ...prop.boolean(false), reflect: true },
 
+  // GH #240/ADR-0159 wave B — the OPT-IN per-step SOURCE reveal (Kim's ruling, part 3): when true, each
+  // narrated step carries the raw wire line(s) it stands for as `StatusEntry.source`, and ui-status-stream
+  // renders the collapsed mono reveal — a category entry ("Opened a new surface") carries its own ingested
+  // A2UI JSONL (accumulated per category as the turn streams), and a progress entry carries whatever
+  // `TurnProgress.source` the producer attached under ITS `progressDetail:'source'` opt-in. Reflected,
+  // default false — AND fail-closed both ways: when false, category lines are never attached and a
+  // producer-attached progress `source` is DROPPED (belt to the producer's own gate), so the default
+  // narration stays byte-identical even against a source-carrying stream.
+  sources: { ...prop.boolean(false), reflect: true },
+
   // ── The opt-in composer capabilities (the Figma chat-input refactor) ────────────────────────────────
   // Every one below defaults to undefined/empty, so an existing consumer that never sets them (a2ui-chat,
   // a2ui-live) gets the ORIGINAL field+Send composer, unchanged. A consumer (e.g. ui-agent-admin) opts in
@@ -108,7 +118,9 @@ export interface AgentTurnHandle {
   /** ADR-0146 F1/F8 — routes one live-turn lifecycle event into the narration strip through a CLOSED,
    *  code-owned stage-label table (never model text, never a fabricated/speculative claim — the F2 honesty
    *  guard; an unobserved/unknown stage renders NOTHING). The fifth handle method the app-surfaces-m2 §4
-   *  amendment records. A consumer that never calls it is byte-behavior-unchanged. */
+   *  amendment records. A consumer that never calls it is byte-behavior-unchanged. GH #240/ADR-0159 wave
+   *  B: a producer-attached `ev.source` (the `progressDetail:'source'` opt-in) feeds the entry's per-step
+   *  reveal — only when this element's own `sources` prop is set; dropped otherwise (fail-closed). */
   progress(ev: TurnProgress): void
   /** Ends narration, renders the note (or a factual fallback tally), and settles every surface host this turn touched. */
   finalize(): void
@@ -386,6 +398,12 @@ export class UIConversationElement extends UIElement {
     const progressKeysSeen = new Set<string>()
     const doneLabelByKey = new Map<string, string>()
     let lastProgressKey: string | undefined
+    // GH #240/ADR-0159 wave B — the per-step source reveal's consumer gate + the per-category line
+    // accumulator. Sampled ONCE per turn (the `wasNear` discipline — a mid-turn prop flip never mixes
+    // postures within one turn's strip). When off, `catLines` stays untouched and every producer-attached
+    // progress `source` is dropped — the byte-identical default.
+    const withSources = this.sources
+    const catLines = new Map<Category, string[]>()
     /** Settle one narrated progress entry to done, stamping its done-form label (GH #238). */
     const settleProgress = (key: string): void => {
       const doneLabel = doneLabelByKey.get(key)
@@ -424,10 +442,14 @@ export class UIConversationElement extends UIElement {
             : `t${seq}-progress-${ev.stage}`
       doneLabelByKey.set(key, `${pair.done}${suffix}`)
       if (lastProgressKey !== undefined && lastProgressKey !== key) settleProgress(lastProgressKey)
-      if (progressKeysSeen.has(key)) narration.update(key, { status: 'active', label })
+      // GH #240/ADR-0159 wave B — the producer-attached raw source (present only under the server-side
+      // `progressDetail:'source'` opt-in) passes through to the entry's reveal ONLY when this consumer
+      // opted in too (`sources`) — dropped otherwise, the fail-closed belt to the producer's own gate.
+      const source = withSources && ev.source !== undefined && ev.source !== '' ? { source: ev.source } : {}
+      if (progressKeysSeen.has(key)) narration.update(key, { status: 'active', label, ...source })
       else {
         progressKeysSeen.add(key)
-        narration.appendEntry({ key, status: 'active', label })
+        narration.appendEntry({ key, status: 'active', label, ...source })
       }
       lastProgressKey = key
     }
@@ -463,6 +485,16 @@ export class UIConversationElement extends UIElement {
       ingestLine: (line: string) => {
         turnLines.push(line)
         const cat = categoryOf(line)
+        if (cat !== undefined && withSources) {
+          // GH #240/ADR-0159 wave B — each category step reveals the ACTUAL wire line(s) it stands for:
+          // "Opened a new surface" carries its createSurface JSONL, "Updated data" every updateDataModel
+          // line of the turn, accumulated newline-joined (ui-status-stream's cumulative-restamp contract —
+          // the #growText precedent: the consumer sends the whole text each time; a re-stamp is a
+          // same-node mutation on the collapsed reveal, never an insertion).
+          const lines = catLines.get(cat) ?? []
+          lines.push(line)
+          catLines.set(cat, lines)
+        }
         if (cat !== undefined && !seenCats.has(cat)) {
           seenCats.add(cat)
           categoriesSeen.push(cat)
@@ -470,8 +502,17 @@ export class UIConversationElement extends UIElement {
           // ingested — `active` during the turn, settled at finalize() — never the old post-hoc replay of
           // stages that already finished. The label table's own text is the entire vocabulary (ADR-0088
           // honesty law — never a fabricated sentence). GH #238: the live form here; finalize() stamps the
-          // done form on the settle transition.
-          narration.appendEntry({ key: `t${seq}-${cat}`, status: 'active', label: LABEL[cat].live })
+          // done form on the settle transition. GH #240: under `sources`, the entry is BORN with its first
+          // wire line attached (the reveal is a creation-time affordance on the strip).
+          narration.appendEntry({
+            key: `t${seq}-${cat}`,
+            status: 'active',
+            label: LABEL[cat].live,
+            ...(withSources ? { source: line } : {}),
+          })
+        } else if (cat !== undefined && withSources) {
+          // A later line of an already-narrated category — re-stamp the reveal with the cumulative text.
+          narration.update(`t${seq}-${cat}`, { source: catLines.get(cat)!.join('\n') })
         }
         routeLine(line)
       },

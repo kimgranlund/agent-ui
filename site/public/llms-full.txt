@@ -3123,6 +3123,33 @@ ADR-0159's named follow-up.
 <ui-status-stream label="Agent activity" oneline receipt></ui-status-stream>
 ```
 
+## The per-step source reveal (GH #240/ADR-0159 wave B)
+
+An entry appended with a non-empty **`source`** (the raw wire text that step stands for — e.g. the A2UI
+JSONL `createSurface`/`updateDataModel` line(s)) grows a per-step disclosure: a `[data-role="detail"]`
+child hosting a mono `<pre data-role="source">`, adopted by the item's **own** anatomy into its shared
+composed `ui-disclosure` (ADR-0143 — one fold primitive, never a second), collapsed by default, summary
+labelled **"Source"**. Native `details`/`summary` supplies the button semantics, the expanded/collapsed
+announcement, and Enter/Space keyboard operation (ADR-0113). The pre renders the attached text
+**exactly, byte-for-byte** — never parsed, tokenized, or highlighted (`@agent-ui/code` cannot lawfully be
+imported here: the package DAG points the other way — plain mono is the ruled v1 rendering):
+
+```ts
+stream.appendEntry({
+  key: 't1-open', status: 'active', label: 'Opening a new surface…',
+  source: '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}',
+})
+stream.update('t1-open', { status: 'done', source: cumulativeLines }) // re-stamps the SAME pre in place
+```
+
+`source` is a **creation-time** affordance (the `parent` set-once precedent): `update(key, {source})`
+re-stamps an existing reveal's pre in place — a same-node textContent mutation inside a **closed** details
+body, so the raw JSON never rides the `role=log` announcement path — but never creates a reveal on an
+entry born without one (a graceful no-op). An entry with no `source` renders **byte-identically** to
+before: no disclosure, no pre, no affordance. The gate that decides *whether* raw wire text is attached at
+all belongs to the producer/consumer (the `progressDetail:'source'` opt-in ladder + `ui-conversation`'s
+`sources` prop) — this host renders exactly what it is handed, and nothing when handed nothing.
+
 ## The imperative API (ADR-0122 F4)
 
 - **`appendEntry(entry: StatusEntry): UITimelineItemElement`** — for a NEW `key`, creates a `ui-timeline-item`,

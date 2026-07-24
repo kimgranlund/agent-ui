@@ -513,3 +513,76 @@ describe('ui-status-stream — oneline/receipt collapse, real-engine visibility 
     expect(getComputedStyle(item).display, 'no receipt ⇒ the settled trace stays expanded').not.toBe('none')
   })
 })
+
+// ── GH #240/ADR-0159 wave B — the per-step SOURCE reveal, real-engine truth ────────────────────────────
+describe('ui-status-stream — the per-step source reveal renders, hides, and operates for real (GH #240/ADR-0159 wave B)', () => {
+  const RAW = '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}'
+  const sourcePre = (stream: UIStatusStreamElement): HTMLElement =>
+    stream.querySelector('ui-timeline-item [data-role="source"]') as HTMLElement
+  const summaryOf = (item: Element): HTMLElement =>
+    item.querySelector(':scope > [data-part="detail"] [data-part="summary"]') as HTMLElement
+
+  it('collapsed by default: the raw text is genuinely NOT rendered (a closed details hides it); expanding shows the EXACT bytes, mono-rendered; collapsing hides it again', async () => {
+    const { stream } = mount('<ui-status-stream label="Agent activity"></ui-status-stream>')
+    const item = stream.appendEntry({ key: 't1-open', status: 'done', label: 'Opened a new surface', source: RAW })
+    await raf2()
+
+    const pre = sourcePre(stream)
+    expect(pre, 'the reveal exists').not.toBeNull()
+    expect(pre.textContent, 'byte-identical to the attachment').toBe(RAW)
+    // checkVisibility, not getClientRects: a closed details hides its content via content-visibility
+    // (the hidden-until-found semantics behind ADR-0113's find-in-page virtue), which keeps a layout box
+    // — visibility is the honest cross-engine "genuinely not rendered/announced" probe.
+    expect(pre.checkVisibility(), 'collapsed ⇒ the raw JSON is genuinely hidden (closed details subtree — out of the render + a11y tree)').toBe(false)
+    const summary = summaryOf(item)
+    expect(summary.textContent, 'the deliberate developer affordance reads "Source"').toContain('Source')
+
+    summary.click() // the native details/summary toggle — the composed ui-disclosure's own mechanism
+    await raf2()
+    expect(pre.checkVisibility(), 'expanded ⇒ the block really renders').toBe(true)
+    expect(pre.getClientRects().length, '…with real painted boxes').toBeGreaterThan(0)
+    expect(pre.textContent, 'still the exact bytes after reveal').toBe(RAW)
+    expect(getComputedStyle(pre).fontFamily.toLowerCase(), 'mono-rendered (the fleet mono typeface token)').toMatch(/mono|menlo|consolas/)
+
+    summary.click()
+    await raf2()
+    expect(pre.checkVisibility(), 'collapsing hides it again').toBe(false)
+  })
+
+  it('the reveal is keyboard-operable: the summary is a real tab stop; Enter toggles the fold open and closed', async () => {
+    const { stream } = mount('<ui-status-stream label="Agent activity"></ui-status-stream>')
+    const item = stream.appendEntry({ key: 't1-open', status: 'done', label: 'Opened a new surface', source: RAW })
+    await raf2()
+    const summary = summaryOf(item)
+    const details = item.querySelector('[data-part="details"]') as HTMLDetailsElement
+
+    summary.focus()
+    expect(document.activeElement, 'the native summary is focusable — the ADR-0113 platform semantics').toBe(summary)
+    expect(details.open).toBe(false)
+    await userEvent.keyboard('{Enter}')
+    expect(details.open, 'Enter expands').toBe(true)
+    expect(sourcePre(stream).checkVisibility()).toBe(true)
+    await userEvent.keyboard('{Enter}')
+    expect(details.open, 'Enter collapses again').toBe(false)
+  })
+
+  it('negative control, real engine: an entry with NO source renders zero reveal DOM — byte-identical to the pre-#240 shape', async () => {
+    const { stream } = mount('<ui-status-stream label="Agent activity"></ui-status-stream>')
+    stream.appendEntry({ key: 't1-open', status: 'done', label: 'Opened a new surface' })
+    await raf2()
+    expect(stream.querySelector('[data-role="source"]')).toBeNull()
+    expect(stream.querySelector('ui-timeline-item [data-part="detail"]'), 'no disclosure composed at all').toBeNull()
+  })
+
+  it('an update re-stamp while COLLAPSED never paints or announces (the closed details keeps the raw JSON out of the live region path)', async () => {
+    const { stream } = mount('<ui-status-stream label="Agent activity"></ui-status-stream>')
+    stream.appendEntry({ key: 't1-react', status: 'active', label: 'Updating data…', source: RAW })
+    await raf2()
+    const pre = sourcePre(stream)
+    const grown = `${RAW}\n${RAW}`
+    stream.update('t1-react', { source: grown })
+    await raf2()
+    expect(pre.textContent, 'the cumulative re-stamp landed (same node)').toBe(grown)
+    expect(pre.checkVisibility(), 'still genuinely hidden while collapsed (the closed details subtree)').toBe(false)
+  })
+})

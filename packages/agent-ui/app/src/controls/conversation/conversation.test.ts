@@ -681,7 +681,7 @@ describe('conversation.md descriptor', () => {
   const md = readFileSync(`${DIR}/conversation.md`, 'utf8') as string
   const { fence, body } = splitFrontmatter(md)
   const parsed = parseDescriptor(fence)
-  const ATTR_NAMES = ['disclosure', 'disabled', 'receipt', 'models', 'model', 'efforts', 'effort', 'contextItems']
+  const ATTR_NAMES = ['disclosure', 'disabled', 'receipt', 'sources', 'models', 'model', 'efforts', 'effort', 'contextItems']
 
   it('has a leading frontmatter fence and a /site prose body', () => {
     expect(fence.length).toBeGreaterThan(0)
@@ -805,5 +805,68 @@ describe('ui-conversation — the receipt prop opts each narration strip into th
     expect(narration.hasAttribute('oneline')).toBe(false)
     expect(narration.hasAttribute('receipt')).toBe(false)
     expect(narration.hasAttribute('header'), 'the pre-existing header opt-in still ships unconditionally').toBe(true)
+  })
+})
+
+// ── GH #240/ADR-0159 wave B — the opt-in per-step SOURCE reveal (conversation's consumer gate) ──────────
+
+describe("ui-conversation — the sources prop attaches each step's raw wire line(s) (GH #240/ADR-0159 wave B)", () => {
+  const CREATE = line({ version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'agent-ui' } })
+  const DATA_1 = line({ version: 'v1.0', updateDataModel: { surfaceId: 's1', changes: [{ path: '/x', value: 1 }] } })
+  const DATA_2 = line({ version: 'v1.0', updateDataModel: { surfaceId: 's1', changes: [{ path: '/x', value: 2 }] } })
+  const preOf = (narration: Element, key: string): HTMLElement | null =>
+    narration.querySelector(`[data-key="${key}"] [data-role="source"]`)
+
+  it('a category entry is BORN with its wire line, and later lines of the same category accumulate (byte compare)', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.sources = true
+    const handle = el.beginAgentTurn()
+    const narration = el.querySelector('[data-part="narration"]')!
+    handle.ingestLine(CREATE)
+    expect(preOf(narration, 't1-open')?.textContent, '"Opening a new surface" reveals its OWN createSurface JSONL').toBe(CREATE)
+    handle.ingestLine(DATA_1)
+    handle.ingestLine(DATA_2)
+    expect(preOf(narration, 't1-react')?.textContent, 'every updateDataModel line of the turn, newline-joined').toBe(
+      `${DATA_1}\n${DATA_2}`,
+    )
+    // and the reveal survives finalize (the settled trace keeps its sources)
+    handle.finalize()
+    expect(preOf(narration, 't1-open')?.textContent).toBe(CREATE)
+  })
+
+  it('a producer-attached progress source passes through to the stage entry (byte compare)', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.sources = true
+    const handle = el.beginAgentTurn()
+    const narration = el.querySelector('[data-part="narration"]')!
+    handle.progress({ stage: 'validating', source: CREATE })
+    expect(preOf(narration, 't1-progress-validating')?.textContent, "the wire's own attachment, verbatim").toBe(CREATE)
+  })
+
+  it('DEFAULT (sources absent): the SAME turn renders NO reveal anywhere — byte-identical narration (the negative control)', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const handle = el.beginAgentTurn()
+    const narration = el.querySelector('[data-part="narration"]')!
+    handle.ingestLine(CREATE)
+    handle.ingestLine(DATA_1)
+    handle.progress({ stage: 'validating', source: CREATE }) // even a source-CARRYING stream (the belt to the producer gate)
+    handle.finalize()
+    expect(narration.querySelector('[data-role="source"]'), 'no source pre, ever').toBeNull()
+    expect(narration.querySelector('ui-timeline-item [data-part="detail"]'), 'no reveal disclosure composed at all').toBeNull()
+  })
+
+  it('the gate samples ONCE per turn — flipping sources mid-turn never mixes postures within one strip', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const handle = el.beginAgentTurn() // sampled: off
+    el.sources = true // flips AFTER the turn began
+    const narration = el.querySelector('[data-part="narration"]')!
+    handle.ingestLine(CREATE)
+    expect(narration.querySelector('[data-role="source"]'), 'the in-flight turn keeps its sampled (off) posture').toBeNull()
+    // the NEXT turn picks the new posture up
+    handle.finalize()
+    const t2 = el.beginAgentTurn()
+    t2.ingestLine(CREATE)
+    const strips = el.querySelectorAll('[data-part="narration"]')
+    expect(strips[strips.length - 1]!.querySelector('[data-role="source"]')?.textContent).toBe(CREATE)
   })
 })

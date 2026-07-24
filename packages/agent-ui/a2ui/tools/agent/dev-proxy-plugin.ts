@@ -164,13 +164,14 @@ export function a2uiDevProxyPlugin(): Plugin {
 
             // POST — run one turn and stream validated A2UI JSONL back.
             if (req.method === 'POST') {
-              const { input, provider, model, mode, personaSystem, integrations } = JSON.parse(await readBody(req)) as {
+              const { input, provider, model, mode, personaSystem, integrations, progressDetail } = JSON.parse(await readBody(req)) as {
                 input: TurnInput
                 provider: string
                 model: string
                 mode?: unknown
                 personaSystem?: unknown
                 integrations?: unknown
+                progressDetail?: unknown
               }
               const pair = resolvePair(config, provider, model) // SPEC-R12 PAIR-allowlist — the trust boundary
               if (!pair.ok) {
@@ -224,8 +225,14 @@ export function a2uiDevProxyPlugin(): Plugin {
               // (NO structural proxy change — a progress line is an ordinary NDJSON line; the browser's
               // readMetaLine filter routes it to handle.progress). progressDetail stays the 'stages' default,
               // so no raw thinking text crosses the wire (F3).
+              // GH #240/ADR-0159 wave B — a client MAY request the per-step raw-source attachment
+              // (`progressDetail:'source'` — the admin developer surface's opt-in). Membership-validated
+              // fail-closed: EXACTLY the literal 'source' is honored; anything else (absent, 'full', a
+              // crafted value) degrades to the 'stages' default. 'full' (raw reasoning excerpts) is
+              // deliberately NOT client-grantable — the F3 CoT gate stays server-owned.
+              const detail = progressDetail === 'source' ? ('source' as const) : undefined
               try {
-                for await (const line of produce(input, deps, { maxRounds: 3, model, mode: validateMode(mode), personaSystem: persona, progress: true, ...toolOpts })) {
+                for await (const line of produce(input, deps, { maxRounds: 3, model, mode: validateMode(mode), personaSystem: persona, progress: true, ...(detail !== undefined ? { progressDetail: detail } : {}), ...toolOpts })) {
                   res.write(line + '\n')
                 }
               } catch (err) {

@@ -319,6 +319,12 @@ describe('UIAgentAdminElement — composition (GH #52/ADR-0154: chat + {Settings
     expect(conversation.receipt, 'the receipt opt-in rides the admin composition').toBe(true)
   })
 
+  it('…and INTO the per-step source reveal (GH #240/ADR-0159 wave B — part 3 of the same ruling): conversation.sources is set, so each activity step reveals the wire line(s) behind it', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const conversation = el.querySelector('ui-conversation') as UIConversationElement
+    expect(conversation.sources, 'the developer surface\'s standing opt-in — every other consumer stays default-off').toBe(true)
+  })
+
   it('the Settings content composes the Agent config (real ui-settings, wired to schema/store) PLUS all FIVE entry-sections (prompts merged in, vision rev.5)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const settingsContent = el.querySelector('[data-role="settings-content"]') as HTMLElement
@@ -1113,9 +1119,11 @@ describe('UIAgentAdminElement — the agentSurfaceTurn arm', () => {
     expect(req.model).toBe('claude-sonnet-5')
     expect(req.personaSystem.length).toBeGreaterThan(0)
 
-    // The wire line mounted a REAL inline surface host; the note rendered at finalize.
+    // The wire line mounted a REAL inline surface host; the note rendered at finalize. The body query is
+    // DIRECT-CHILD anchored (GH #240): the narration's per-step source reveal composes a ui-disclosure
+    // whose own anatomy carries a [data-part="body"] — a bare descendant query would match that first.
     expect(el.querySelector('ui-surface-host')).not.toBeNull()
-    const agentBody = el.querySelector('[data-part="bubble"][data-role="agent"] [data-part="body"]')
+    const agentBody = el.querySelector('[data-part="bubble"][data-role="agent"] > [data-part="body"]')
     expect(agentBody?.textContent).toBe('Dealt.')
   })
 

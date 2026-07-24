@@ -70,11 +70,16 @@ const TURN_PROGRESS_STAGE_SET: ReadonlySet<string> = new Set(TURN_PROGRESS_STAGE
  * the turn (never content — it never enters heal/validate/corpus; SPEC-R5 validate-then-stream untouched).
  * `round` carries the self-correct round ordinal on `'retry'`; `detail` carries OPTIONAL factual text
  * (F3-gated: absent by default, forwarded only under `progressDetail:'full'` — never required for any stage).
+ * `source` (GH #240/ADR-0159 wave B — the per-step source reveal) carries the raw A2UI JSONL line(s) behind
+ * the stage — the actual createSurface/updateDataModel/updateComponents text a step stands for, newline-
+ * joined and producer-capped. Attached ONLY under the explicit `progressDetail:'source'` opt-in (produce.ts
+ * owns the gate + the cap); absent on every default stream — the privacy gate stays fail-closed.
  */
 export interface TurnProgress {
   stage: TurnProgressStage
   round?: number
   detail?: string
+  source?: string
 }
 
 /**
@@ -147,8 +152,8 @@ export function readMetaLine(line: string): A2uiMetaEnvelope | undefined {
   }
 
   // ADR-0146 F1: `progress` is shallow-validated the SAME way — a malformed `progress` (non-object, or a
-  // `stage` outside the closed vocabulary, or a non-number `round` / non-string `detail`) drops only
-  // itself, never the whole envelope. The closed `stage` union is the honesty-law guard (F2): an
+  // `stage` outside the closed vocabulary, or a non-number `round` / non-string `detail`/`source`) drops
+  // only itself, never the whole envelope. The closed `stage` union is the honesty-law guard (F2): an
   // out-of-vocabulary stage never survives the parse, so it can never be rendered.
   let progress: TurnProgress | undefined
   if (m.progress !== undefined && typeof m.progress === 'object' && m.progress !== null && !Array.isArray(m.progress)) {
@@ -156,11 +161,13 @@ export function readMetaLine(line: string): A2uiMetaEnvelope | undefined {
     const stageOk = typeof p.stage === 'string' && TURN_PROGRESS_STAGE_SET.has(p.stage)
     const roundOk = p.round === undefined || typeof p.round === 'number'
     const detailOk = p.detail === undefined || typeof p.detail === 'string'
-    if (stageOk && roundOk && detailOk) {
+    const sourceOk = p.source === undefined || typeof p.source === 'string' // GH #240 — same posture as detail
+    if (stageOk && roundOk && detailOk && sourceOk) {
       progress = {
         stage: p.stage as TurnProgressStage,
         ...(p.round !== undefined ? { round: p.round as number } : {}),
         ...(p.detail !== undefined ? { detail: p.detail as string } : {}),
+        ...(p.source !== undefined ? { source: p.source as string } : {}),
       }
     }
   }

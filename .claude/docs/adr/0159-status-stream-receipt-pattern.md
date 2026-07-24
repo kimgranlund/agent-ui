@@ -10,6 +10,32 @@
 > | **Ratified by** | — |
 > | **Repairs** | `packages/agent-ui/components/src/controls/status-stream/{status-stream.ts,status-stream.css,status-stream.md,status-stream.test.ts,status-stream.browser.test.ts,status-stream-descriptor.test.ts}` (the `oneline`/`receipt` props, the `collapsed` custom state, the `header-meta`/`header-caret` parts, `formatTotalElapsed`) · `packages/agent-ui/app/src/controls/conversation/{conversation.ts,conversation.md,conversation.test.ts}` (the live/done label-pair tables + the `receipt` pass-through prop) · `packages/agent-ui/app/src/controls/agent-admin/agent-admin.ts` (the admin chat's opt-in) · `site/pages/a2ui-chat.test.ts` (done-form label expectations) |
 > | **Supersedes / Superseded by** | Extends [ADR-0146](./0146-live-turn-lifecycle-progress-channel.md) (the F1 closed stage vocabulary, the F2 honesty-law guard, and the F8 header this pattern renders through — all stand unchanged) and [ADR-0153](./0153-status-stream-elapsed-timer-retry-action-planned-glyph.md) (the Fork 1 shared ticking interval + `formatElapsed`, which the one-line turn clock rides — never a second clock). Relates [ADR-0122](./0122-timeline-family-and-live-status-stream.md) (the family charter's role=log announcement discipline is the mechanism that keeps label transitions from double-firing). |
+>
+> **Amendment (2026-07-23, wave-B realization, append-only — the proposed Decision above is UNCHANGED):
+> the third slice of Kim's ruling — the per-step source reveal ([GH #240](https://github.com/kimgranlund/agent-ui/issues/240)),
+> which this record's own Consequences deferred as "a later wave" — is now BUILT, on the disclosure
+> precedent this record set.** The realized mechanism, recorded here so the three slices read as one
+> pattern: the producer attaches the raw A2UI JSONL behind a stage as `TurnProgress.source`
+> (`meta-line.ts`/`produce.ts` — on `validating`, this round's candidate lines entering heal/validate;
+> on `retry`, the PRIOR round's failed candidate, data that otherwise never crosses the wire), gated
+> behind a NEW `progressDetail:'source'` member — a SIBLING of ADR-0146 F3's `'full'`, not a rung above
+> it (raw reasoning and raw wire lines stay independent opt-ins; the default `'stages'` carries neither
+> — fail-closed), capped at `SOURCE_ATTACHMENT_CAP` (16 KB, the proxies' own `personaSystem`
+> runaway-guard constant) with an explicit truncation marker. `ui-status-stream` renders a per-entry
+> reveal from a new `StatusEntry.source`: a `[data-role="detail"]` child planted at appendEntry time,
+> adopted by `ui-timeline-item`'s OWN anatomy into its shared composed `ui-disclosure` (ADR-0143 — one
+> fold primitive, never a second; ADR-0113's native details/summary supplies collapsed-by-default,
+> button semantics, and Enter/Space), summary-labelled "Source", content a mono `<pre>` rendering the
+> attached text byte-for-byte (never parsed; `@agent-ui/code` highlighting is structurally unlawful in
+> `components` — the DAG points the other way — so plain mono is the ruled v1). `ui-conversation` gains
+> a reflected `sources` prop (default false, fail-closed BOTH ways: category entries attach their own
+> ingested lines — "Opened a new surface" reveals its createSurface JSONL — and producer-attached
+> progress sources pass through, ONLY when set; a source-carrying stream against a default consumer
+> renders byte-identically). `ui-agent-admin` opts in (`conversation.sources = true` + the live runner's
+> `progressDetail:'source'` request, membership-validated by both proxies — `'full'` stays
+> server-owned); a2ui-chat and every demo stay default-off. The revealed block sits inside a CLOSED
+> details body — outside the `role=log` announcement path, so raw JSON is never live-announced; the
+> re-stamp is a same-node textContent mutation (this record's own §2 discipline).
 
 ## Context
 

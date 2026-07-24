@@ -144,6 +144,28 @@ describe('readMetaLine — the progress field (ADR-0146 F1)', () => {
     expect(parsed!.a2uiMeta.progress, 'the fabricated stage never survives the parse').toBeUndefined()
   })
 
+  // ── GH #240/ADR-0159 wave B: the additive `source` field (the per-step raw-source attachment) ──
+  it('round-trips a progress carrying a raw-source attachment (progressDetail:source)', () => {
+    const raw = '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}'
+    const line = JSON.stringify({ a2uiMeta: { progress: { stage: 'validating', source: raw } } })
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.progress).toEqual({ stage: 'validating', source: raw })
+    expect(parsed!.a2uiMeta.progress!.source, 'the attachment survives byte-for-byte').toBe(raw)
+  })
+
+  it('a malformed source (non-string) drops the progress — the same posture as round/detail', () => {
+    const line = '{"a2uiMeta":{"note":"a","progress":{"stage":"validating","source":42}}}'
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.progress).toBeUndefined()
+    expect(parsed!.a2uiMeta.note, 'the envelope itself never drops').toBe('a')
+  })
+
+  it('a source-less progress parses with source undefined — zero blast radius on every pre-#240 line', () => {
+    const parsed = readMetaLine('{"a2uiMeta":{"progress":{"stage":"validating"}}}')
+    expect(parsed!.a2uiMeta.progress).toEqual({ stage: 'validating' })
+    expect(parsed!.a2uiMeta.progress!.source).toBeUndefined()
+  })
+
   it('a malformed progress (non-object / array / non-number round / non-string detail) drops only itself', () => {
     expect(readMetaLine('{"a2uiMeta":{"note":"a","progress":"nope"}}')!.a2uiMeta.progress).toBeUndefined()
     expect(readMetaLine('{"a2uiMeta":{"note":"a","progress":["reasoning"]}}')!.a2uiMeta.progress).toBeUndefined()

@@ -15,7 +15,7 @@
 // proves the SPEC-R12 model trust boundary above.
 
 import { describe, it, expect } from 'vitest'
-import { produce, ProduceHalt } from '../agent/produce.ts'
+import { produce, ProduceHalt, SOURCE_ATTACHMENT_CAP } from '../agent/produce.ts'
 import type { ProduceDeps } from '../agent/produce.ts'
 import type { AgentProvider, TurnInput } from '../agent/agent-transport.ts'
 import { readMetaLine } from '../agent/meta-line.ts'
@@ -173,6 +173,110 @@ describe('produce() interleaved live-turn progress (ADR-0146 F1/F3)', () => {
     }
     expect(halted).toBeInstanceOf(ProduceHalt)
     expect(lines.filter(isPureContent), 'NOTHING invalid (no content) was emitted').toHaveLength(0)
+  })
+})
+
+// ── GH #240/ADR-0159 wave B: the per-step raw-source attachment (progressDetail:'source') ────────────────
+describe("produce() raw-source attachments (GH #240/ADR-0159 wave B — progressDetail:'source')", () => {
+  it("'source' attaches the EXACT candidate wire lines to the validating event (byte compare)", async () => {
+    const { provider } = progressStub([VALID])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3, progress: true, progressDetail: 'source' })) lines.push(line)
+    const validating = progressOf(lines).find((p) => p.stage === 'validating')
+    expect(validating, 'the validating stage fires').toBeDefined()
+    // byte-for-byte: the attachment IS the peeled, fence-stripped candidate — here the raw VALID JSONL itself
+    expect(validating!.source).toBe(VALID)
+  })
+
+  it('the privacy gate is fail-closed END-TO-END: the default rung attaches NO source to ANY event', async () => {
+    const { provider } = progressStub([INVALID, VALID], { thinking: 'raw chain of thought' })
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3, progress: true })) lines.push(line) // no progressDetail
+    const events = progressOf(lines)
+    expect(events.length).toBeGreaterThan(0)
+    expect(events.every((p) => p.source === undefined), 'no raw wire line rides any default-rung event').toBe(true)
+  })
+
+  it("'full' does NOT imply 'source' — the two disclosures are independent opt-ins (a negative control)", async () => {
+    const { provider } = progressStub([VALID], { thinking: 'raw chain of thought' })
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3, progress: true, progressDetail: 'full' })) lines.push(line)
+    expect(progressOf(lines).every((p) => p.source === undefined), "'full' unlocks reasoning excerpts, never wire lines").toBe(true)
+  })
+
+  it("…and symmetrically, 'source' does NOT unlock reasoning excerpts (no CoT on the wire)", async () => {
+    const { provider } = progressStub([VALID], { thinking: 'raw chain of thought' })
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3, progress: true, progressDetail: 'source' })) lines.push(line)
+    const reasoning = progressOf(lines).find((p) => p.stage === 'reasoning')
+    expect(reasoning, 'the reasoning TRANSITION still fires (the stages posture)').toBeDefined()
+    expect(reasoning!.detail, 'no thinking text crosses the wire under source').toBeUndefined()
+    expect(lines.join('\n')).not.toContain('raw chain of thought')
+  })
+
+  it("a self-correct round's retry event carries the FAILED round's candidate (otherwise never on the wire)", async () => {
+    const { provider } = progressStub([INVALID, VALID])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3, progress: true, progressDetail: 'source' })) lines.push(line)
+    const retry = progressOf(lines).find((p) => p.stage === 'retry')
+    expect(retry).toBeDefined()
+    expect(retry!.source, "the invalid attempt IS the retry's source, byte-for-byte").toBe(INVALID)
+    // validate-then-stream is untouched: the invalid text rides ONLY the meta channel, never a content line
+    expect(lines.filter(isPureContent).join('\n')).not.toContain('NotARealComponent')
+  })
+
+  it('the note is NEVER part of an attachment (peeled before the candidate is taken)', async () => {
+    const withNote = '{"a2uiMeta":{"note":"here is your button"}}\n' + VALID
+    const { provider } = progressStub([withNote])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3, progress: true, progressDetail: 'source' })) lines.push(line)
+    const validating = progressOf(lines).find((p) => p.stage === 'validating')
+    expect(validating!.source).toBe(VALID)
+    expect(validating!.source).not.toContain('here is your button')
+  })
+
+  it('a note-only turn attaches nothing (no candidate ⇒ no source key at all)', async () => {
+    const { provider } = progressStub(['{"a2uiMeta":{"note":"nothing to change"}}'])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3, progress: true, progressDetail: 'source' })) lines.push(line)
+    expect(progressOf(lines).every((p) => p.source === undefined)).toBe(true)
+  })
+
+  it('the size-cap boundary: ≤ SOURCE_ATTACHMENT_CAP passes untouched; over it is sliced + explicitly marked', async () => {
+    // AT the cap: a candidate exactly SOURCE_ATTACHMENT_CAP chars long crosses byte-identically.
+    // (An unknown component is fine — the attachment is taken BEFORE validation; the turn itself halts.)
+    const pad = (n: number): string => {
+      const shell = '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"'
+      return `${shell}${'x'.repeat(n - shell.length - 3)}"}}`
+    }
+    const atCap = pad(SOURCE_ATTACHMENT_CAP)
+    expect(atCap.length).toBe(SOURCE_ATTACHMENT_CAP)
+    const { provider: pAt } = progressStub([atCap])
+    const at: string[] = []
+    try {
+      for await (const line of produce(intent, { provider: pAt, retrieve: () => [], catalog: defaultCatalog }, { maxRounds: 1, progress: true, progressDetail: 'source' })) at.push(line)
+    } catch { /* ProduceHalt — the attachment was already yielded */ }
+    const atEvent = progressOf(at).find((p) => p.stage === 'validating')
+    expect(atEvent!.source, 'at the cap: byte-identical, no marker').toBe(atCap)
+
+    // OVER the cap: sliced to the cap + the explicit truncation marker (never a silent cut).
+    const overCap = pad(SOURCE_ATTACHMENT_CAP + 100)
+    const { provider: pOver } = progressStub([overCap])
+    const over: string[] = []
+    try {
+      for await (const line of produce(intent, { provider: pOver, retrieve: () => [], catalog: defaultCatalog }, { maxRounds: 1, progress: true, progressDetail: 'source' })) over.push(line)
+    } catch { /* ProduceHalt */ }
+    const overEvent = progressOf(over).find((p) => p.stage === 'validating')
+    expect(overEvent!.source!.startsWith(overCap.slice(0, SOURCE_ATTACHMENT_CAP))).toBe(true)
+    expect(overEvent!.source!.endsWith('… [truncated]'), 'a capped attachment says so explicitly').toBe(true)
+    expect(overEvent!.source!.length).toBe(SOURCE_ATTACHMENT_CAP + '\n… [truncated]'.length)
   })
 })
 

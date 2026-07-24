@@ -104,14 +104,18 @@
     color: var(--ui-conversation-ink-variant);
   }
 
-  [data-part='body'] {
+  /* Anchored DIRECT-CHILD (GH #240): a bubble's body is always the bubble's own child. The bare
+     `[data-part='body']` spelling also matched the ui-disclosure BODY part inside a narration entry's
+     per-step source reveal (the disclosure anatomy reuses the part name), silently restyling a composed
+     component's internals — newly reachable the moment the reveal shipped, so the anchor landed with it. */
+  [data-part='bubble'] > [data-part='body'] {
     margin: 0;
     font-size: 0.86rem;
     line-height: 1.4;
     white-space: pre-wrap;
     color: var(--ui-conversation-ink);
   }
-  [data-part='bubble'][data-role='system'] [data-part='body'] {
+  [data-part='bubble'][data-role='system'] > [data-part='body'] {
     color: inherit;
     font-size: inherit;
   }

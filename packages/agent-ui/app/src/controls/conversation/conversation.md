@@ -25,6 +25,10 @@ attributes:              # attributes-as-API — mirrors conversation.ts `props`
     type: boolean
     default: false
     reflect: true         # GH #239/ADR-0159 — opt-in receipt pattern for the per-turn narration strip: sets `oneline` + `receipt` on each turn's ui-status-stream. Default false ⇒ the always-expanded narration, byte-identical
+  - name: sources
+    type: boolean
+    default: false
+    reflect: true         # GH #240/ADR-0159 wave B — opt-in per-step SOURCE reveal: each narrated step carries the raw wire line(s) it stands for (StatusEntry.source → ui-status-stream's collapsed mono reveal). Default false ⇒ no source ever attached AND producer-attached progress sources dropped — byte-identical narration, fail-closed
   - name: models
     type: json            # readonly {id,label}[] (composer-options.ts's PickerOption) — too structured to reflect
     default: undefined    # undefined ⇒ no Models picker; the original field+Send composer, unchanged
@@ -53,6 +57,8 @@ properties:
     description: OPT-IN raw-wire disclosure (ADR-0129 clause 3). Reflected boolean, default false. Narration itself (the per-turn `ui-status-stream`) ships UNCONDITIONALLY — this prop gates only the per-turn `<details>` wire dump of the turn's own raw JSONL lines, a debugging/inspection affordance most product surfaces should not show by default. Appended at `AgentTurnHandle.finalize()` time when true and the turn carried at least one line.
   - name: receipt
     description: OPT-IN receipt pattern (GH #239/ADR-0159, Kim's 2026-07-23 ruling) for the per-turn narration strip. When true, each agent turn's `ui-status-stream` gets BOTH stream-level opt-ins — `oneline` (one morphing line while the turn runs — current step's live label + ticking elapsed + shimmer, expandable mid-turn) and `receipt` (auto-collapse to "Agent activity · N steps · total" at finalize()/fail(), click to re-expand). Reflected boolean, default false — existing consumers keep the always-expanded narration byte-identically.
+  - name: sources
+    description: 'OPT-IN per-step source reveal (GH #240/ADR-0159 wave B — Kim''s receipt-pattern ruling, part 3). When true, each narrated step carries the raw wire line(s) it stands for as `StatusEntry.source`, rendered by ui-status-stream as a collapsed-by-default mono reveal (summary "Source", one deliberate developer level deep): a CATEGORY entry ("Opened a new surface") accumulates its own ingested A2UI JSONL (createSurface/updateDataModel/… — cumulative, newline-joined), and a PROGRESS entry ("Validating…"/"Self-correcting…") passes through whatever `TurnProgress.source` the producer attached under ITS `progressDetail:''source''` opt-in (the privacy gate — a default stream carries none). Sampled once per turn. Reflected boolean, default false — and fail-closed both ways: when false, no category line is ever attached AND a producer-attached progress source is DROPPED, so default narration stays byte-identical even against a source-carrying stream.'
   - name: models
     description: OPTIONAL `readonly {id, label}[]` (composer-options.ts's `PickerOption`) — when set (and non-empty), the composer renders a Models picker. Default `undefined` ⇒ no picker, the original field+Send composer shape, unchanged for any consumer that never sets this (a2ui-chat, a2ui-live).
   - name: model

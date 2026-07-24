@@ -99,12 +99,35 @@
 // same bet), and the TESTED discipline is same-node mutation: a label morph/re-stamp never inserts a
 // node, so it can never ride the additions channel twice. A live screen-reader spot-check is the named
 // follow-up (ADR-0159 Consequences), not something this build claims to have proven.
+//
+// GH #240/ADR-0159 wave B (the per-step SOURCE reveal — Kim's receipt-pattern ruling, part 3): a
+// `StatusEntry.source` (raw wire text — the A2UI JSONL line(s) a step stands for) renders a per-entry
+// disclosure — collapsed by default, mono-rendered, one deliberate developer level deep. The mechanism is
+// the EXISTING reveal-detail seam, not a new one: at appendEntry the host plants a `[data-role="detail"]`
+// child (hosting a `<pre data-role="source">`) BEFORE the item connects, and `ui-timeline-item`'s own
+// `#ensureAnatomy` adopts it into the shared composed `ui-disclosure` (ADR-0143's ONE-disclosure-per-item
+// law — never a second fold primitive); the host then labels that disclosure's summary ("Source"). The
+// native details/summary supplies collapsed-by-default, the summary's button semantics + expanded/collapsed
+// announcement, and Enter/Space keyboard operation (the ADR-0113 ruling ui-disclosure realizes). `source`
+// is a CREATION-time affordance (the `parent` set-once precedent): `update(key,{source})` re-stamps an
+// EXISTING reveal's `<pre>` in place — a same-node textContent mutation, never an insertion (the role=log
+// discipline; and because the pre sits inside a CLOSED details body, the raw JSON is outside the live
+// region's announcement path entirely) — but never creates a reveal on an entry born without one (a
+// documented graceful degrade, never a throw). An entry with no `source` renders byte-identically to
+// before — no disclosure, no pre, no summary (the negative control the tests pin). Highlighting judgment
+// (GH #240): syntax-highlighting the raw JSONL via `@agent-ui/code` is structurally UNLAWFUL here — the
+// package DAG is `components` ← `code` (code imports components; imports point inward only, enforced by
+// layering.test.ts), so this component can never import the highlighter without inverting the DAG. Plain
+// mono `<pre>` is the v1 rendering, by law rather than by economy.
 
 import { UIContainerElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import { UITimelineItemElement } from '../timeline-item/timeline-item.ts' // constructs items via its own API (F4)
 import '../timeline/timeline.ts' // registers <ui-timeline> — the nested group host (ADR-0146 F5, ADR-0143's mechanism)
 import '../button/button.ts' // registers <ui-button> — the GH #147/ADR-0153 inline retry action (Fork 2)
 import type { UIButtonElement } from '../button/button.ts'
+// TYPE-only — the composed reveal disclosure (GH #240) is created by ui-timeline-item's own anatomy
+// (timeline-item.ts already imports/registers ui-disclosure); this host only labels its `summary` prop.
+import type { UIDisclosureElement } from '../disclosure/disclosure.ts'
 import { resolveIcon } from '@agent-ui/icons' // the header's overall-status glyph (done/error/warning) — the timeline-item glyph precedent
 import type { IconName } from '@agent-ui/icons'
 
@@ -156,6 +179,18 @@ export interface StatusEntry {
    *  appended/updated (the SAME precondition `ensureNestedSlot`/grouping already imposes, ADR-0143's
    *  2026-07-18 amendment) — `this.listen()` throws outside the connected lifetime. */
   action?: { label: string }
+  /** GH #240/ADR-0159 wave B — the RAW WIRE TEXT this step stands for (the A2UI JSONL line(s):
+   *  createSurface/updateDataModel/…, newline-joined; the consumer/producer own the gate + any cap — this
+   *  host renders EXACTLY what it is handed, byte-for-byte, never parsed/tokenized). When present at
+   *  APPEND time (and non-empty), the entry grows a per-step reveal: a `[data-role="detail"]` child
+   *  hosting a mono `<pre data-role="source">`, adopted by the item's OWN anatomy into its shared
+   *  composed `ui-disclosure` (ADR-0143 — collapsed by default, native details/summary keyboard +
+   *  expanded/collapsed semantics), whose summary the host labels "Source". A CREATION-time affordance
+   *  (the `parent` set-once precedent): `update(key,{source})` re-stamps an EXISTING reveal's pre in
+   *  place (same-node mutation — inside a closed details body, outside the live region's announcement
+   *  path) but never creates one late (graceful no-op, never a throw). Absent ⇒ byte-identical: no
+   *  disclosure, no pre, no reveal affordance at all. */
+  source?: string
 }
 
 // The total severity order (ADR-0146 F6): error > warning > active > pending > done; neutral '' contributes
@@ -236,6 +271,10 @@ const props = {
 // The stick-to-bottom threshold (px) — "at/near the bottom" tolerates sub-pixel/rounding scroll noise
 // without falsely dropping the follow guard.
 const STICK_THRESHOLD_PX = 24
+
+// GH #240/ADR-0159 wave B — the reveal disclosure's code-owned summary label: a deliberate one-word
+// developer affordance (never model text — the F2 closed-vocabulary discipline applies to chrome too).
+const SOURCE_SUMMARY_LABEL = 'Source'
 
 export interface UIStatusStreamElement extends ReactiveProps<typeof props> {}
 export class UIStatusStreamElement extends UIContainerElement {
@@ -368,6 +407,11 @@ export class UIStatusStreamElement extends UIContainerElement {
       this.appendChild(item)
     }
 
+    // GH #240/ADR-0159 wave B — the item is CONNECTED now (both branches above append synchronously), so
+    // its anatomy has adopted the planted `[data-role="detail"]` reveal into the shared composed
+    // ui-disclosure; label its summary ("Source"). A source-less entry composed no disclosure — no-op.
+    if (entry.source !== undefined && entry.source !== '') this.#labelSourceDisclosure(item)
+
     // GH #147/ADR-0153 Fork 1/2 — routing facts consumed HERE, never projected onto the item by `#assign`
     // (the `parent` precedent). Both are keyed side-registries so a later `update()` reaches them identically.
     if (entry.startedAt !== undefined) this.#startedAtOf.set(entry.key, entry.startedAt)
@@ -473,6 +517,56 @@ export class UIStatusStreamElement extends UIContainerElement {
     if (patch.timestamp !== undefined) item.timestamp = patch.timestamp
     if (patch.icon !== undefined) item.icon = patch.icon
     if (patch.text !== undefined) this.#growText(item, patch.text)
+    if (patch.source !== undefined) this.#assignSource(item, patch.source) // GH #240 — the per-step source reveal
+  }
+
+  // ── the per-step source reveal (GH #240/ADR-0159 wave B) ─────────────────────────────────────────────
+
+  /** The entry's own source `<pre>`, wherever it currently lives: as-planted (pre-connect, under a direct
+   *  `[data-role="detail"]` child) or adopted (post-connect, inside the shared disclosure's body part).
+   *  The adopted branch is anchored DIRECT-CHILD the whole way down (`disclosure > details > body >
+   *  detail > source`) — a GROUP parent's disclosure body hosts the nested `<ui-timeline>`, whose child
+   *  items compose disclosures of their OWN, so a bare descendant hop here would resolve a nested child's
+   *  pre as the parent's (and a parent-targeted re-stamp would clobber the child's reveal — pinned as a
+   *  negative test). */
+  #sourcePre(item: UITimelineItemElement): HTMLElement | null {
+    return item.querySelector(
+      ':scope > [data-role="detail"] > [data-role="source"], :scope > [data-part="detail"] > [data-part="details"] > [data-part="body"] > [data-role="detail"] > [data-role="source"]',
+    ) as HTMLElement | null
+  }
+
+  /** Stamp/plant the raw-source reveal (GH #240). An EXISTING pre re-stamps IN PLACE — a same-node
+   *  textContent mutation, never an insertion (the role=log discipline), and because it sits inside a
+   *  closed details body it is outside the live region's announcement path entirely. Otherwise ONLY a
+   *  not-yet-connected item (the appendEntry path, before the item's anatomy builds) plants the
+   *  `[data-role="detail"]` + `<pre data-role="source">` pair — `ui-timeline-item`'s own `#ensureAnatomy`
+   *  adopts it into the shared composed `ui-disclosure` at connect (ADR-0143's designed authored-detail
+   *  path; ZERO new timeline-item API, and never a second fold primitive). A late `update({source})` on an
+   *  entry born without a reveal is a graceful no-op (the `parent` set-once precedent), and an empty
+   *  creation-time source plants nothing — never a throw, this file's standing posture. */
+  #assignSource(item: UITimelineItemElement, source: string): void {
+    const pre = this.#sourcePre(item)
+    if (pre) {
+      pre.textContent = source
+      return
+    }
+    if (item.isConnected || source === '') return // late arming / empty creation — degrade, never a throw
+    const detail = document.createElement('div')
+    detail.setAttribute('data-role', 'detail')
+    const sourcePre = document.createElement('pre')
+    sourcePre.setAttribute('data-role', 'source')
+    sourcePre.textContent = source
+    detail.appendChild(sourcePre)
+    item.appendChild(detail)
+  }
+
+  /** Label the freshly-composed reveal disclosure's summary (`Source`) — runs right after `appendEntry`
+   *  connects the item (the item's anatomy builds synchronously at connect, so the shared disclosure
+   *  exists by now). Fills only an EMPTY summary — a disclosure already carrying a label is never
+   *  overwritten. */
+  #labelSourceDisclosure(item: UITimelineItemElement): void {
+    const disclosure = item.querySelector(':scope > [data-part="detail"]') as UIDisclosureElement | null
+    if (disclosure && disclosure.summary === '') disclosure.summary = SOURCE_SUMMARY_LABEL
   }
 
   /** ADR-0146 F5 — the once-per-parent nested `<ui-timeline>` host, composed into the parent item's shared
