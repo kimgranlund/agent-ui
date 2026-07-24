@@ -401,8 +401,10 @@ plain `npm test`) over the named shell-family sheet set fails on ANY raw length 
 spacing- or box-dimension declaration whose value equals a ladder value, unless allowlisted:
 (a) **sheet set** — a named `SHELL_FAMILY_SHEETS` list in the test: every `{name}.css` under
 `@agent-ui/app`'s `controls/`, plus every site sheet whose selectors lay out a shell element, its
-parts, or a component composing one (today all seven: `_page.css`, `a2ui-live.css`, `a2ui-chat.css`,
-`super-shell.css`, `chat-shell.css`, `agent-admin-app.css`, `app-shell.css`); extending the set is a
+parts, or a component composing one (today all six: `_page.css`, `a2ui-live.css`, `a2ui-chat.css`,
+`super-shell.css`, `chat-shell.css`, `agent-admin-app.css` — *REV 2026-07-23, mechanical: the
+seventh, the app-shell teaching page's `app-shell.css`, retired with that page under ADR-0156's
+migration campaign, GH #243; the membership predicate itself is unchanged*); extending the set is a
 one-line reviewed append (the `FOCUS_TIMING_FILES` precedent, GH #56) · (b) **predicate** — within
 declarations of the `padding*`/`margin*` families, `gap`/`row-gap`/`column-gap`, the `inset*`
 family + `top`/`right`/`bottom`/`left`, and the logical/physical box-size properties incl.

@@ -30,9 +30,10 @@ declare const process: { cwd(): string }
 const ROOT = process.cwd()
 
 // AC19(a) — the sheet set: every {name}.css under @agent-ui/app's controls/, plus every site sheet
-// whose selectors lay out a shell element, its parts, or a component composing one (today all
-// seven — GH #213 appends app-shell.css). Extending this set is a one-line reviewed append — the
-// FOCUS_TIMING_FILES precedent (vitest.browser.config.ts, GH #56).
+// whose selectors lay out a shell element, its parts, or a component composing one (today six — GH #213
+// appended the app-shell teaching page's sheet, retired with that page by ADR-0156's migration campaign,
+// GH #243). Extending this set is a one-line reviewed append — the FOCUS_TIMING_FILES precedent
+// (vitest.browser.config.ts, GH #56).
 const SHELL_FAMILY_SHEETS = [
   // @agent-ui/app's controls/ — every sheet, unconditionally (the package composes shells throughout).
   'packages/agent-ui/app/src/controls/agent-admin/agent-admin.css',
@@ -48,14 +49,13 @@ const SHELL_FAMILY_SHEETS = [
   'packages/agent-ui/app/src/controls/super-shell/super-shell.css',
   'packages/agent-ui/app/src/controls/surface-host/surface-host.css',
   'packages/agent-ui/app/src/controls/workspace-shell/workspace-shell.css',
-  // the seven site sheets named in the clause.
+  // the six site sheets named in the clause.
   'site/pages/_page.css',
   'site/pages/a2ui-live.css',
   'site/pages/a2ui-chat.css',
   'site/pages/super-shell.css',
   'site/pages/chat-shell.css',
   'site/pages/agent-admin-app.css',
-  'site/pages/app-shell.css',
 ]
 
 // AC19(b) — the property families in scope: padding*/margin*, gap/row-gap/column-gap, the inset*

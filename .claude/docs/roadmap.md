@@ -108,12 +108,13 @@ decision (dated line in §4).
   bridge; four residual forks (wire path · sandbox/CSP posture · exemplar-pack home ·
   iframe-host home) carry firm recommendations and await Kim. No build is scheduled until they
   resolve and a SPEC lands. This is the one genuinely gated design record in the tree.
-- **The `ui-app-shell` removal horizon (ADR-0156).** Migration is nearly done — the production
-  consumer re-hosted, the teaching page carries its deprecation banner. What remains before the
-  separately-gated removal step: replacement reconnect-test vehicles for the two fixtures that
-  ride `<ui-app-shell isolated>` as a relocation harness, then the removal gate itself (folder +
-  exports retire, ADR-0082/0083/0084 flip `superseded`, CLAUDE.md/README rows update — ADR-0156
-  clauses 4–5 name the full surface).
+- **The `ui-app-shell` removal horizon (ADR-0156).** Migration is DONE (GH #243): the production
+  consumer re-hosted, the two reconnect fixtures re-vehicled onto a direct re-parent harness (the
+  `<ui-app-shell isolated>` relocation harness retired from both), and the teaching page retired —
+  its one surviving teaching, the ADR-0083 landmark-decouple law, re-scoped onto the super-shell
+  page as family law. What remains is the removal gate itself (folder + exports retire,
+  ADR-0082/0083/0084 flip `superseded`, CLAUDE.md/README/getting-started rows update — ADR-0156
+  clauses 4–5 name the full surface), dispatched as its own separately-gated issue.
 - **AC19's sheet set — widen deliberately, or not.** The spacing-drift gate covers the shell
   family today (every `@agent-ui/app` sheet + the shell-composing site sheets). Whether it extends
   further — components-package sheets, the remaining site sheets — is an open, per-sheet decision;
