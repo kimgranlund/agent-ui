@@ -210,6 +210,45 @@ describe('a2ui-live chrome re-host (ADR-0156) — the two panes are independent 
   })
 })
 
+describe('a2ui-live pane radius stays CONCENTRIC with its shell wrapper (GH #253 bug 2)', () => {
+  // ROOT CAUSE (verified via a real-browser corner screenshot + a canvas-decoded RGB diff, both engines):
+  // `.chat-pane` flush-fills its `[data-part='pane'][data-side='start']` wrapper with ZERO gap (the
+  // wrapper declares no padding by design, agent-admin.css's own comment on that same base rule confirms
+  // THIS page is the one shipped consumer relying on the flush fill) — and that wrapper is ALSO a
+  // decorated box (`border-radius: var(--ui-super-shell-radius)` + its own background, super-shell.css —
+  // the same "floating card" treatment rail/pane/pane-resizer keep, GH #253 bug 1). Two boxes at an
+  // IDENTICAL rect need the SAME radius (the G9 nested-radius law, ADR-0018: `r_child = max(0, r_parent −
+  // padding_parent)`, here padding=0 so r_child MUST equal r_parent) — a mismatched literal (the old bare
+  // `12px`) left a thin sliver of the wrapper's own (differently-toned) background peeking around
+  // `.chat-pane`'s tighter corner, reading as a cut/discontinuous border right at the corner (next to the
+  // pane-title heading). The fix: `.chat-pane`/`.canvas-pane` consume `var(--ui-super-shell-radius)`
+  // (inherited from the `ui-super-shell` host) instead of an unrelated hardcoded literal.
+  it('.chat-pane\'s own radius equals its [data-part="pane"] wrapper\'s radius exactly (concentric, zero-gap fill)', () => {
+    const { chat } = mountChrome(1200)
+    const wrapper = chat.parentElement as HTMLElement
+    expect(wrapper.dataset.part, 'the wrapper under test must be the shell\'s own pane part').toBe('pane')
+    const chatRadius = getComputedStyle(chat).borderRadius
+    const wrapperRadius = getComputedStyle(wrapper).borderRadius
+    expect(chatRadius).toBe(wrapperRadius)
+    expect(chatRadius).not.toBe('0px') // anti-vacuous — both are genuinely rounded, not both flat
+  })
+
+  it('.canvas-pane shares the SAME radius as its sibling .chat-pane (visual consistency between the two cards — [data-part="canvas"] itself stays undecorated, no bug there to begin with)', () => {
+    const { chat, canvas } = mountChrome(1200)
+    const canvasWrapper = canvas.parentElement as HTMLElement
+    expect(canvasWrapper.dataset.part).toBe('canvas')
+    expect(getComputedStyle(canvasWrapper).borderRadius, 'the canvas wrapper itself must stay undecorated (super-shell.css, by design)').toBe('0px')
+    expect(getComputedStyle(canvas).borderRadius).toBe(getComputedStyle(chat).borderRadius)
+    expect(getComputedStyle(canvas).borderRadius).not.toBe('0px')
+  })
+
+  it('negative control: an unrelated fixed 12px literal (the OLD hardcoded radius) is NOT what either pane computes today — the concentric assertions above are not vacuously true', () => {
+    const { chat, canvas } = mountChrome(1200)
+    expect(getComputedStyle(chat).borderRadius).not.toBe('12px')
+    expect(getComputedStyle(canvas).borderRadius).not.toBe('12px')
+  })
+})
+
 describe('a2ui-live chrome re-host (ADR-0083, unchanged) — the chat composer lands on the CORRECT ARIA landmark', () => {
   it('resolves role="complementary" via internals, decoupled from its "navigation" column — never a host attribute', () => {
     const el = new ProbeRegion()

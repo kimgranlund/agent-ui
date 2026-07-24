@@ -59,6 +59,35 @@
 /* ── the two pane CARDS — plain divs docked into the shell's `nav-pane`/`content` slots, each its own
    bordered card. No more single-owner divider special-case (see the file banner): the shell's own `gap`
    keeps them apart, so both panes own a complete border on all four sides. ──────────────────────────── */
+/* GH #253 (bug 2) — ROOT CAUSE + FIX, verified with a real-browser corner screenshot + computed-style/
+ * canvas-decoded-RGB proof (both engines): `.chat-pane` flush-fills its `[data-part='pane'][data-side=
+ * 'start']` wrapper with ZERO gap/padding (super-shell.css's `[data-part='pane']` base rule declares no
+ * padding "by design" — agent-admin.css's own comment on that same rule confirms THIS is the one shipped
+ * consumer that relies on the flush fill, and a2ui-live.browser.test.ts pins the resulting width). That
+ * wrapper is ALSO a decorated box — `border-radius: var(--ui-super-shell-radius)` + a `--ui-super-shell-
+ * surface` background (super-shell.css; the SAME "floating card" treatment rail/pane/pane-resizer keep,
+ * GH #253 bug 1) — so `.chat-pane` was compositing a SECOND, independently-radiused (a bare `12px`
+ * literal, unrelated to the shell's own token) card exactly on top of it at IDENTICAL geometry (measured:
+ * both boxes' `getBoundingClientRect()` were byte-identical). Two concentric boxes at the same rect need
+ * the SAME radius (the G9 nested-radius law, ADR-0018's `r_child = max(0, r_parent − padding_parent)`,
+ * here `padding_parent = 0` so `r_child` must equal `r_parent` exactly) — a mismatched smaller radius
+ * (12 vs the wrapper's 18) leaves a thin sliver of the wrapper's own (differently-toned) background/curve
+ * peeking around `.chat-pane`'s tighter corner, which is exactly the "border looking cut/discontinuous at
+ * the corner" Kim's screenshot showed (confirmed via a decoded-canvas RGB diff: the wrapper's background
+ * really does differ from `.chat-pane`'s own, so the sliver is a real, not merely theoretical, pixel).
+ * `.canvas-pane` docks into `[data-part='canvas']` instead, which super-shell.css deliberately leaves
+ * UNDECORATED (no radius/background of its own — it is the plain content area, not a floating card) — so
+ * it never had this double-card defect; it now shares the shell's own radius TOKEN purely for visual
+ * consistency between the two sibling panes, not because it was broken. Consuming `var(--ui-super-shell-
+ * radius)` (inherited from the `ui-super-shell` host through the DOM — custom properties inherit) instead
+ * of a bare literal makes the two nested boxes genuinely concentric and keeps them that way if the shell's
+ * own radius token ever repoints — the fix belongs here (this page's own card recipe), not in super-
+ * shell.css (whose bar/rail/pane/canvas radius contract, GH #253 bug 1, is otherwise unchanged) or in
+ * conversation.css (verified NOT affected — `<ui-conversation>` docks via the shell's `content`/`canvas`
+ * slot in both a2ui-chat.ts and agent-admin.ts, the same undecorated-wrapper case as `.canvas-pane`, and
+ * agent-admin.css's own options-pane content is padded/inset rather than flush — so this is NOT the
+ * systemic conversation.css issue the ticket's hypothesis floated; it is isolated to this one flush-fill
+ * consumer). */
 .chat-pane,
 .canvas-pane {
   display: flex;
@@ -70,7 +99,7 @@
   min-inline-size: 0;
   box-sizing: border-box;
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 12px;
+  border-radius: var(--ui-super-shell-radius, 12px); /* concentric with the shell's own pane/canvas wrapper (GH #253) */
   background: var(--md-sys-color-neutral-surface-low);
   overflow: hidden;
 }

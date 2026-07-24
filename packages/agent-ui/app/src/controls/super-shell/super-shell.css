@@ -82,13 +82,18 @@
     min-block-size: 0;
   }
 
+  /* GH #253 — a bar (header/footer, the ONLY consumers of `[data-part='bar']`, super-shell.ts) sits
+     EDGE-TO-EDGE across the full frame width (the #210 fix already made its border edge-to-edge) —
+     unlike rail/pane/pane-resizer below, which are separate floating cards with gaps between them
+     and each carry their OWN `border-radius: var(--ui-super-shell-radius)` on their own selector.
+     A rounded corner on an edge-to-edge bar reads as a visible defect (Kim's DevTools screenshot);
+     bars get no radius at all — this rule intentionally omits `border-radius`. */
   [data-part='bar'] {
     display: flex;
     align-items: center;
     gap: var(--ui-super-shell-gap);
     min-block-size: var(--ui-super-shell-bar-size);
     box-sizing: border-box;
-    border-radius: var(--ui-super-shell-radius);
     background: var(--ui-super-shell-surface);
     padding-inline: calc(var(--ui-super-shell-module) / 3);
   }
