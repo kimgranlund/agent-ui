@@ -158,8 +158,8 @@ export function isEnabledFlag(value: unknown): boolean {
 
 // ── Surface Options (vision rev.6 — the frame's node 34:1312) ──────────────────────────────────────────
 // The agent's OUTPUT MODALITY contract: Markdown (rendered rich text, plain text the fallback), A2UI
-// (the catalog picker), GenUI (PRD-gated — `.claude/docs/prd/genui-surface.prd.md` owns its five open
-// forks; the row renders disabled until Kim ratifies). Both live modalities default ON.
+// (the catalog picker), GenUI (PRD-gated — `.claude/docs/prd/genui-surface.prd.md` v0.2 owns its
+// residual forks; the row renders disabled until Kim ratifies). Both live modalities default ON.
 
 /** Markdown surface — ON: agent-turn notes/system bubbles render through `ui-markdown` (sanitized by
  *  construction); OFF (an explicit stored `false`): plain `textContent`, the frame's own fallback. */

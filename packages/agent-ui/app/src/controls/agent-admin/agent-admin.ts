@@ -507,9 +507,9 @@ export class UIAgentAdminElement extends UIElement {
     this.#surfaceCatalogSelect = catalogSelect
     a2ui.row.append(catalogSelect)
 
-    const genui = surfaceRow('genui', 'GenUI', 'Pattern-sourced generative UI — PRD pending (genui-surface.prd.md)')
+    const genui = surfaceRow('genui', 'GenUI', 'Sandboxed free-form generative UI — PRD pending (genui-surface.prd.md)')
     genui.toggle.checked = false
-    genui.toggle.disabled = true // PRD-gated: .claude/docs/prd/genui-surface.prd.md owns the five open forks
+    genui.toggle.disabled = true // PRD-gated: .claude/docs/prd/genui-surface.prd.md owns the residual forks (v0.2)
     genui.row.setAttribute('data-disabled', '')
     const genuiNote = document.createElement('span')
     genuiNote.setAttribute('data-part', 'surface-note')
