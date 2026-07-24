@@ -20,10 +20,21 @@ import '@agent-ui/app/super-shell.css' // ui-super-shell's own token ladder + co
 import '@agent-ui/app/super-shell' // self-defines ui-super-shell
 import '@agent-ui/app/surface-host.css' // ui-surface-host's own artboard chrome (ADR-0129 Amendment re-host)
 import '@agent-ui/app/surface-host' // self-defines <ui-surface-host>
+// ADR-0129 Fork B (Kim's 2026-07-12 ruling, commit 4e7e386, RE-CONFIRMED 2026-07-24): a2ui-live composes
+// ONLY the two standalone widgets below, never `<ui-conversation>` itself — its ask-freeze/answered/
+// bypassed/fail-closed-gate lifecycle (ADR-0097, `../lib/ask-registry.ts`) stays entirely app-side,
+// UNTOUCHED, because it does not map onto `ui-conversation`'s own open/closed surface registry.
+import '@agent-ui/app/conversation-composer.css' // ui-conversation-composer's own field-frame chrome (TKT-0056/0058)
+import '@agent-ui/app/conversation-composer' // self-defines <ui-conversation-composer> — composed standalone, NOT via <ui-conversation>
+import type { UIConversationComposerElement } from '@agent-ui/app/conversation-composer' // the ONE subpath — never the root barrel, which would also type-name (never runtime-import) UIConversationElement
+import type { UIStatusStreamElement } from '@agent-ui/components/components' // the standalone narration widget (ui-status-stream is already registered — `_page.ts`'s `@agent-ui/components/components` import, step [3])
 import './a2ui-live.css'
 import { codeBlock } from '../lib/code-block.ts'
 import type { A2uiClientMessage, A2uiServerMessage } from '@agent-ui/a2ui'
 import type { UISurfaceHostElement } from '@agent-ui/app'
+// ADR-0146 F1 — the closed, produce-layer-owned live-turn lifecycle vocabulary (type-only: it erases at
+// build, so zero producer bytes cross the ADR-0137 identity gate — the meta-line.ts file-header precedent).
+import type { TurnProgress, TurnProgressStage } from '@agent-ui/a2ui/agent/meta-line'
 import {
   createRecordedTransport,
   recordedTranscript,
@@ -121,20 +132,17 @@ function annotateAskFrozen(entry: AskEntry, state: 'answered' | 'bypassed'): voi
 
 const switcherSlot = el('div', 'switcher-slot')
 
-const composer = el('form', 'chat-composer')
-const field = document.createElement('ui-text-field')
-field.setAttribute('label', 'Message')
-field.setAttribute('placeholder', 'Ask the agent to build something…')
-const sendBtn = document.createElement('ui-button')
-sendBtn.setAttribute('variant', 'solid')
-sendBtn.setAttribute('tabindex', '0')
-sendBtn.textContent = 'Send'
-composer.append(field, sendBtn)
-
-const readField = (): string => String((field as unknown as { value?: string }).value ?? '')
-const clearField = (): void => {
-  ;(field as unknown as { value: string }).value = ''
-}
+// The modern composer (Figma chat-input refactor) — a standalone `<ui-conversation-composer>` instance,
+// replacing the bare `<form>` + raw `<ui-text-field>`/`<ui-button>` pair. Composed directly (never via
+// `<ui-conversation>`, ADR-0129 Fork B): `models`/`efforts`/`contextItems` are left unset, so this gets
+// exactly "the ORIGINAL field+Send composer" shape conversation-composer.ts's own header names a2ui-live
+// as an example consumer of — same event contract (`onSubmit`), same turn-loop wiring below, only the
+// INPUT WIDGET itself changed. `onMicClick` is never registered either — the mic button stays hidden
+// (its own opt-in reveal), so it never becomes "the composer's first ui-button" (the exact hazard
+// conversation-composer.ts's own header documents a2ui-chat.ts hit before its fix) for anything that
+// still needs the SEND button specifically — see `[data-part="send"]` at every such call site.
+const composer = document.createElement('ui-conversation-composer') as UIConversationComposerElement
+composer.className = 'chat-composer' // kept — the pre-existing `.chat-composer [data-part="editor"]` test selectors resolve unchanged
 
 chatPane.append(switcherSlot, composer) // switcher (dev-only, populated on probe) sits ABOVE the composer
 
@@ -229,22 +237,54 @@ const knownSurfaceIds = new Set<string>()
 
 canvasHost.onClientMessage(handleClientMessage)
 
-let busyRow: HTMLElement | null = null
+// `busy` now rides the composer's OWN reflected prop (TKT-0034's mechanism, the same one `ui-conversation`
+// forwards its turn-in-flight count through) — it owns disabling/dimming its own editor + send/mic/picker
+// parts from ONE write; the page no longer hand-manipulates a send button or an aria-live "Agent is
+// working…" text row (replaced by the per-turn narration strip below, which shows the SAME "working" fact
+// plus real content instead of a static string).
 function setBusy(next: boolean): void {
   busy = next
-  composer.classList.toggle('is-busy', next)
-  if (next) {
-    sendBtn.setAttribute('aria-disabled', 'true')
-    // Show an in-flight indicator in the aria-live log so the wait is both visible and announced.
-    busyRow = el('div', 'chat-status')
-    busyRow.textContent = 'Agent is working…'
-    chatLog.append(busyRow)
-    chatLog.scrollTop = chatLog.scrollHeight
-  } else {
-    sendBtn.removeAttribute('aria-disabled')
-    busyRow?.remove()
-    busyRow = null
-  }
+  composer.busy = next
+}
+
+// ── narration (ADR-0146 F1, GH #239/ADR-0159) — a standalone `<ui-status-stream>`, ONE fresh instance per
+// turn, appended into the chat log (never inside a `.msg` bubble — the ask/message bubble chrome is
+// out of scope, GH #241). Routes the `progress` meta-lines this page used to drop entirely (see the
+// removed comment this replaces, below in runTurn) directly into the strip, bypassing `<ui-conversation>`
+// entirely (ADR-0129 Fork B — only the shared canvas migrated there, never this page's chat pane).
+function makeNarration(): UIStatusStreamElement {
+  const narration = document.createElement('ui-status-stream') as UIStatusStreamElement
+  narration.setAttribute('size', 'sm')
+  narration.setAttribute('label', 'Agent activity')
+  narration.setAttribute('header', '') // ADR-0146 F8 — reads "working" from t=0, even a zero-progress turn
+  // GH #239/ADR-0159 — the SAME two opt-in props `agent-admin.ts` sets on its conversation-owned strip
+  // (`conversation.receipt = true`), set directly here: they belong to `ui-status-stream` itself, not to
+  // `<ui-conversation>`, so this works identically on a standalone instance.
+  narration.setAttribute('oneline', '')
+  narration.setAttribute('receipt', '')
+  narration.classList.add('narration-strip')
+  return narration
+}
+
+interface ProgressLabelPair {
+  live: string
+  done: string
+}
+
+// The closed, code-owned progress stage → label table (ADR-0146 F2/F8) — promoted VERBATIM from
+// `conversation.ts`'s own `PROGRESS_LABEL` (never re-invented: same closed vocabulary, same factual
+// process labels, same live/done pair convention, GH #238/ADR-0159). a2ui-live never imports
+// `conversation.ts` (ADR-0129 Fork B bars `<ui-conversation>` entirely), so this is a deliberate,
+// small, page-local duplicate of the identical closed table, not a parallel invention.
+const PROGRESS_LABEL: Record<TurnProgressStage, ProgressLabelPair> = {
+  sent: { live: 'Request sent', done: 'Request sent' },
+  started: { live: 'Generating…', done: 'Generated' },
+  reasoning: { live: 'Reasoning…', done: 'Reasoned' },
+  content: { live: 'Writing the response…', done: 'Wrote the response' },
+  validating: { live: 'Validating…', done: 'Validated' },
+  retry: { live: 'Self-correcting…', done: 'Self-corrected' },
+  tool: { live: 'Running an integration…', done: 'Ran an integration' },
+  done: { live: 'Done', done: 'Done' },
 }
 
 function summarize(lines: string[]): string {
@@ -288,6 +328,59 @@ function noteCreatedSurface(line: string): void {
 async function runTurn(input: TurnInput): Promise<void> {
   if (busy) return
   setBusy(true)
+  // ADR-0146 F1/GH #239 — a fresh narration strip for THIS turn, appended into the log right away (so the
+  // "working" header is visible from t=0, before any line arrives) and settled at this turn's own
+  // finalize()/fail() below — never reused across turns (its own completion invariant is truly terminal).
+  const narration = makeNarration()
+  chatLog.append(narration)
+  chatLog.scrollTop = chatLog.scrollHeight
+  // Per-turn progress-routing state (promoted from conversation.ts's own `routeProgress` closure) — the
+  // keys this turn has already narrated, the current active stage's key (settled `done` as the next stage
+  // begins), and each key's own composed done-form label (GH #238 — a done checkmark never wears an
+  // "-ing…" label again).
+  const progressKeysSeen = new Set<string>()
+  const doneLabelByKey = new Map<string, string>()
+  let lastProgressKey: string | undefined
+  const settleProgress = (key: string): void => {
+    const doneLabel = doneLabelByKey.get(key)
+    narration.update(key, doneLabel === undefined ? { status: 'done' } : { status: 'done', label: doneLabel })
+  }
+  /** Route ONE live-turn progress event into the strip (ADR-0146 F1) through the CLOSED code-owned label
+   *  table — never model text. An unknown/unobserved stage renders NOTHING (the F2 honesty guard). Each
+   *  stage's entry goes `active` when it begins and settles `done` — with its done-form label — as the
+   *  NEXT stage begins; `retry`/`tool` compose the real round ordinal/tool name in (factual, never model
+   *  prose). Promoted from conversation.ts's own `routeProgress` — same closed table, same key/settle
+   *  discipline, minus the GH #240 `sources` wave-B reveal (out of this task's scope). */
+  const routeProgress = (ev: TurnProgress): void => {
+    const pair = PROGRESS_LABEL[ev.stage] as ProgressLabelPair | undefined
+    if (pair === undefined) return
+    if (ev.stage === 'done') {
+      if (lastProgressKey !== undefined) settleProgress(lastProgressKey)
+      lastProgressKey = undefined
+      return
+    }
+    const suffix =
+      ev.stage === 'retry'
+        ? (ev.round === undefined ? '' : ` (round ${ev.round})`)
+        : ev.stage === 'tool' && ev.detail
+          ? ` (${ev.detail})`
+          : ''
+    const label = `${pair.live}${suffix}`
+    const key =
+      ev.stage === 'retry'
+        ? `progress-retry-${ev.round ?? 1}`
+        : ev.stage === 'tool'
+          ? `progress-tool-${ev.detail ?? 'unknown'}`
+          : `progress-${ev.stage}`
+    doneLabelByKey.set(key, `${pair.done}${suffix}`)
+    if (lastProgressKey !== undefined && lastProgressKey !== key) settleProgress(lastProgressKey)
+    if (progressKeysSeen.has(key)) narration.update(key, { status: 'active', label })
+    else {
+      progressKeysSeen.add(key)
+      narration.appendEntry({ key, status: 'active', label })
+    }
+    lastProgressKey = key
+  }
   try {
     const turnLines: string[] = []
     const askLines: string[] = []
@@ -300,10 +393,11 @@ async function runTurn(input: TurnInput): Promise<void> {
       // ingest path pristine by construction). ADR-0097 §1: `ask`, if any, rides the SAME meta-line.
       const meta = readMetaLine(line)
       if (meta) {
-        // ADR-0146 F1: a `progress` meta-line is FILTERED here like every other meta kind — it never enters
-        // `allLines`/the JSON tab or `canvasHost.ingest`. This canvas page has no narration strip to route
-        // progress INTO (unlike a2ui-chat's ui-conversation), so filtering it out IS the correct handling.
-        // Guard note/ask so a progress-only line (both undefined on it) never clobbers a real note/ask.
+        // ADR-0146 F1: a `progress` meta-line routes into the standalone narration strip above — the SAME
+        // filter growing one arm, never a new parse path; it never reaches `allLines`/the JSON tab or
+        // `canvasHost.ingest`. Guard note/ask so a progress-only line (both undefined on it) never clobbers
+        // a real note/ask.
+        if (meta.a2uiMeta.progress !== undefined) routeProgress(meta.a2uiMeta.progress)
         if (meta.a2uiMeta.note !== undefined) note = meta.a2uiMeta.note
         if (meta.a2uiMeta.ask !== undefined) ask = meta.a2uiMeta.ask
         const trace = meta.a2uiMeta.trace
@@ -332,6 +426,12 @@ async function runTurn(input: TurnInput): Promise<void> {
       canvasHost.ingest(line) // validated JSONL streamed line-by-line → progressive paint (SPEC-N4)
     }
     canvasHost.finalize() // also stretches a root ui-column to fill the artboard (ui-surface-host's own finalize())
+    // ADR-0146 F1/GH #239 — settle this turn's own narration: the last-active progress stage (if any) to
+    // done, then the strip's own completion invariant (auto-collapses to the one-line receipt). Called
+    // ONCE per turn that actually COMPLETES — never for a turn that throws (the catch block below fails it
+    // instead), mirroring `freezePriorPendingAsk`'s own "never on a thrown turn" discipline right below.
+    if (lastProgressKey !== undefined) settleProgress(lastProgressKey)
+    narration.finalize()
 
     // ADR-0097 §2 — freeze whatever was pending BEFORE this turn, now that it has genuinely completed
     // (never on a thrown turn — the catch block below never reaches here).
@@ -379,6 +479,11 @@ async function runTurn(input: TurnInput): Promise<void> {
     refreshHtml()
     if (!askRendered) showCanvas() // an ask turn stays on whichever tab was active — the ask IS the reply, in the chat feed
   } catch (e) {
+    // A genuine finally-scoped truncation (SPEC-R6 AC3, the conversation.ts `fail()` precedent) — the
+    // live-narrated progress stage stays as it was (whatever completed shows done, the rest truncate under
+    // `fail()`); `narration.fail()` forces the streaming header to `error` (ADR-0146 F8's header-level face).
+    narration.appendEntry({ key: 'progress-error', status: 'error', label: `Turn failed — ${(e as Error).message}` })
+    narration.fail()
     addMessage('system', `⚠ ${(e as Error).message}`)
   } finally {
     setBusy(false)
@@ -421,23 +526,14 @@ function handleClientMessage(message: A2uiClientMessage): void {
   void runTurn(nextTurn(session, message))
 }
 
-function send(): void {
-  const text = readField().trim()
-  if (text === '' || busy) return
+// The composer's own `onSubmit` callback (never a CustomEvent, matching `ui-conversation`'s own event
+// contract, conversation.ts's composer-wiring section) fires with the text ALREADY trimmed and non-empty —
+// its internal `#send()` guards emptiness AND its own `busy` prop before ever calling this back, so no
+// re-check is needed here. It also already cleared its own value; this page never touches the widget's
+// value directly (props down, callbacks up — `readField`/`clearField` are gone with the raw field).
+composer.onSubmit((text) => {
   addMessage('user', text) // the chat shows the user's OWN typed text — never the digest prepended below
-  clearField()
   void runTurn({ kind: 'intent', text: traceDigest() + text, session })
-}
-sendBtn.addEventListener('click', send)
-composer.addEventListener('submit', (e) => {
-  e.preventDefault()
-  send()
-})
-field.addEventListener('keydown', (e) => {
-  if ((e as KeyboardEvent).key === 'Enter') {
-    e.preventDefault()
-    send()
-  }
 })
 
 // ── Reset: dispose the renderer, clear the session + canvas + log, restart the transport ────────────────
