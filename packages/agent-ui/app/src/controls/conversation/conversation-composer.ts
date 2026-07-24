@@ -375,12 +375,15 @@ export class UIConversationComposerElement extends UIElement {
     if (this.#modesTrigger) this.#modesTrigger.disabled = busy
   }
 
-  /** GH #257 — the Models picker's CURRENT effective option list: when `providers` is set, an INTERNALLY-
-   *  DERIVED view (the selected provider's OWN `models`) narrows it; otherwise the plain `models` prop
-   *  (unchanged, byte-identical for any consumer that never sets `providers`). Never written back into the
-   *  `models` prop itself — `models` stays exactly what its own consumer set it to. */
+  /** GH #257 — the Models picker's CURRENT effective option list: when `providers` is set AND non-empty, an
+   *  INTERNALLY-DERIVED view (the selected provider's OWN `models`) narrows it; otherwise the plain `models`
+   *  prop (unchanged, byte-identical for any consumer that never sets `providers`). `providers: []` is
+   *  treated the SAME as `undefined` (code-reviewer L1) — `#syncProvidersPicker` already hides the Provider
+   *  picker for an empty list, so this must not ALSO silently hide an author-set `models` list underneath
+   *  it (a bare `.find()` on `[]` returns `undefined`, which would). Never written back into the `models`
+   *  prop itself — `models` stays exactly what its own consumer set it to. */
   #effectiveModels(): readonly PickerOption[] | undefined {
-    if (this.providers === undefined) return this.models
+    if (this.providers === undefined || this.providers.length === 0) return this.models
     return this.providers.find((p) => p.id === this.provider)?.models
   }
 

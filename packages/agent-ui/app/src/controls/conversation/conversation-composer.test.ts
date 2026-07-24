@@ -434,6 +434,25 @@ describe('ui-conversation-composer — GH #257 Provider/Mode pickers', () => {
     expect(el.model).toBe('claude-sonnet-5')
   })
 
+  it('code-reviewer M1 — the reset-on-provider-change ORDER is a real contract: onModelChange fires BEFORE onProviderChange in the SAME commit', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.providers = PROVIDERS
+    el.provider = 'anthropic'
+    el.model = 'claude-sonnet-5'
+    await whenFlushed()
+    // ONE shared array across BOTH callbacks — a real ordering assertion, not two isolated arrays that
+    // merely prove each fired (the prior test's own scope).
+    const calls: ['model' | 'provider', string][] = []
+    el.onModelChange((id) => calls.push(['model', id]))
+    el.onProviderChange((id) => calls.push(['provider', id]))
+    const menu = el.querySelector('[data-part="providers-menu"]') as HTMLElement
+    ;(menu.querySelector('[data-value="openai"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    expect(calls).toEqual([
+      ['model', 'gpt-4.1'],
+      ['provider', 'openai'],
+    ])
+  })
+
   it('committing a provider whose model list DOES already contain the current model does NOT fire onModelChange', async () => {
     const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
     const sameModelId = { ...PROVIDERS[1]!, models: [{ id: 'claude-sonnet-5', label: 'Sonnet-alike' }], disabled: false }
@@ -446,6 +465,18 @@ describe('ui-conversation-composer — GH #257 Provider/Mode pickers', () => {
     const menu = el.querySelector('[data-part="providers-menu"]') as HTMLElement
     ;(menu.querySelector(`[data-value="${sameModelId.id}"]`) as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
     expect(modelIds, 'the current model already belongs to the new provider — no reset needed').toEqual([])
+  })
+
+  it('code-reviewer L1 — `providers: []` (empty, not undefined) does NOT also hide an author-set `models` list', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.providers = []
+    el.models = [{ id: 'a', label: 'Model A' }]
+    el.model = 'a'
+    await whenFlushed()
+    expect(el.querySelector('[data-part="providers-menu"]'), 'an empty providers list must hide the Provider picker').toBeNull()
+    const trigger = el.querySelector('[data-picker="models"]') as HTMLElement
+    expect(trigger, 'an empty (not undefined) providers list must not ALSO hide the plain models picker underneath it').not.toBeNull()
+    expect(trigger.textContent).toBe('Model A')
   })
 
   it('a `disabled` provider option renders aria-disabled and never commits on click (ui-menu\'s own skip, menu.ts)', async () => {
