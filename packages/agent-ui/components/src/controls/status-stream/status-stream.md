@@ -37,9 +37,9 @@ attributes:               # attributes-as-API — mirrors status-stream.ts stati
 
 properties:               # IDL beyond attributes-as-API — the imperative streaming contract (ADR-0122 F4)
   - name: appendEntry
-    description: 'Method — appendEntry(entry: StatusEntry) => UITimelineItemElement. NAMED appendEntry, not append — every element inherits a native, incompatible Node.prototype.append(); a same-name override fails tsc outright (a build-time LLD deviation, flagged for the SPEC-R9/LLD amendment). A NEW key creates a ui-timeline-item, assigns the entry''s fields, appends it, tail-follows to it (iff the stick-to-bottom guard holds), and returns the created element (the ui-toast-region.show() return precedent). A DUPLICATE key is a silent no-op — returns the EXISTING element unchanged, never a second element or a throw (GH #37 — the registry/DOM-consistency guard; symmetric with update()''s own no-op-on-unknown-key). ADR-0146 F5: an entry carrying a KNOWN `parent` (another entry''s key) NESTS under that group''s `[data-role="nested"]` slot (a nested ui-timeline, mounted lazily once per parent) instead of as a top-level sibling; an unknown parent degrades to a flat append. The keyed registry stays FLAT — `update(childKey, patch)` reaches a nested entry identically. GH #147/ADR-0153: `entry.startedAt` (an ISO timestamp) arms a ticking elapsed-time display into the entry''s `timestamp` cell for as long as its status reads `active`; `entry.action` (`{ label }`) arms an inline retry `<ui-button>`, shown while its status reads `error`, that emits `action` on click — see StatusEntry''s own field docs.'
+    description: 'Method — appendEntry(entry: StatusEntry) => UITimelineItemElement. NAMED appendEntry, not append — every element inherits a native, incompatible Node.prototype.append(); a same-name override fails tsc outright (a build-time LLD deviation, flagged for the SPEC-R9/LLD amendment). A NEW key creates a ui-timeline-item, assigns the entry''s fields, appends it, tail-follows to it (iff the stick-to-bottom guard holds), and returns the created element (the ui-toast-region.show() return precedent). A DUPLICATE key is a silent no-op — returns the EXISTING element unchanged, never a second element or a throw (GH #37 — the registry/DOM-consistency guard; symmetric with update()''s own no-op-on-unknown-key). ADR-0146 F5: an entry carrying a KNOWN `parent` (another entry''s key) NESTS under that group''s `[data-role="nested"]` slot (a nested ui-timeline, mounted lazily once per parent) instead of as a top-level sibling; an unknown parent degrades to a flat append. The keyed registry stays FLAT — `update(childKey, patch)` reaches a nested entry identically. GH #147/ADR-0153: `entry.startedAt` (an ISO timestamp) arms a ticking elapsed-time display into the entry''s `timestamp` cell for as long as its status reads `active`; `entry.action` (`{ label }`) arms an inline retry `<ui-button>`, shown while its status reads `error`, that emits `action` on click — see StatusEntry''s own field docs. GH #240/ADR-0159 wave B: a non-empty `entry.source` (raw wire text) grows the per-step reveal — a collapsed-by-default mono `<pre data-role="source">` inside the item''s shared composed ui-disclosure, summary "Source" — see the `source` part.'
   - name: update
-    description: 'Method — update(key: string, patch: Partial<StatusEntry>) => void. A KEYED, in-place mutation to the already-rendered entry with that key: transitions status, grows/replaces streamed text, or reveals detail. A key with no matching entry is a silent no-op (never a throw — SPEC-R9 AC2). `patch.startedAt`/`patch.action` re-arm the SAME Fork 1/2 ticking-timer/retry-button mechanism appendEntry does.'
+    description: 'Method — update(key: string, patch: Partial<StatusEntry>) => void. A KEYED, in-place mutation to the already-rendered entry with that key: transitions status, grows/replaces streamed text, or reveals detail. A key with no matching entry is a silent no-op (never a throw — SPEC-R9 AC2). `patch.startedAt`/`patch.action` re-arm the SAME Fork 1/2 ticking-timer/retry-button mechanism appendEntry does. `patch.source` (GH #240/ADR-0159 wave B) re-stamps an EXISTING per-step reveal''s `<pre data-role="source">` in place (a same-node textContent mutation inside a closed details body — outside the live region''s announcement path); it never CREATES a reveal on an entry born without one (the `parent` set-once precedent — a graceful no-op).'
   - name: finalize
     description: 'Method — finalize() => void. The completion invariant (SPEC-R11): marks every still-pending/active entry TRUNCATED, then settles the header (when opted in) to the escalated FINAL status (ADR-0146 F8; a truncated entry contributes `warning`). Fail-closed — a torn stream never shows "still working." Also stops every ticking elapsed-time display (GH #147/ADR-0153) — a settled stream never keeps a clock running.'
   - name: fail
@@ -65,6 +65,8 @@ parts:                     # the appended ui-timeline-item children are the "ent
     description: 'GH #239/ADR-0159 — the header''s secondary cell, present only in an opted-in (`oneline`/`receipt`) mode: the ticking turn-elapsed ("12s") while the turn runs under `oneline`; the receipt summary ("5 steps · 3.2s") once settled. Tabular digits; secondary ink.'
   - name: header-caret
     description: 'GH #239/ADR-0159 — the disclosure caret (a `caret-down` glyph), present only in an opted-in mode; rotates open when the header row''s `aria-expanded` reads true.'
+  - name: source
+    description: 'GH #240/ADR-0159 wave B — the `<pre data-role="source">` mono block rendering an entry''s attached raw wire text (`StatusEntry.source`) EXACTLY, byte-for-byte, never parsed. Lives inside a `[data-role="detail"]` child the host plants at appendEntry time, which the item''s OWN anatomy adopts into its shared composed `ui-disclosure` (`[data-part="detail"]`, ADR-0143 — one fold primitive, never a second) — collapsed by default, summary labelled "Source" (native details/summary supplies the button semantics, expanded/collapsed announcement, and Enter/Space keyboard operation, per ADR-0113). Absent entirely when the entry carries no `source` — the byte-identical default.'
 
 customStates:              # GH #239/ADR-0159 — the disclosure state; the completion invariant still rides the ITEM's own :state(truncated) (timeline-item.md)
   - collapsed              # set via internals.states (jsdom-optional-chained) while the strip renders as one line — the `oneline` live posture or the settled `receipt`; CSS hides the entry list through it; never set outside the opt-in modes
@@ -165,6 +167,33 @@ ADR-0159's named follow-up.
 ```html
 <ui-status-stream label="Agent activity" oneline receipt></ui-status-stream>
 ```
+
+## The per-step source reveal (GH #240/ADR-0159 wave B)
+
+An entry appended with a non-empty **`source`** (the raw wire text that step stands for — e.g. the A2UI
+JSONL `createSurface`/`updateDataModel` line(s)) grows a per-step disclosure: a `[data-role="detail"]`
+child hosting a mono `<pre data-role="source">`, adopted by the item's **own** anatomy into its shared
+composed `ui-disclosure` (ADR-0143 — one fold primitive, never a second), collapsed by default, summary
+labelled **"Source"**. Native `details`/`summary` supplies the button semantics, the expanded/collapsed
+announcement, and Enter/Space keyboard operation (ADR-0113). The pre renders the attached text
+**exactly, byte-for-byte** — never parsed, tokenized, or highlighted (`@agent-ui/code` cannot lawfully be
+imported here: the package DAG points the other way — plain mono is the ruled v1 rendering):
+
+```ts
+stream.appendEntry({
+  key: 't1-open', status: 'active', label: 'Opening a new surface…',
+  source: '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}',
+})
+stream.update('t1-open', { status: 'done', source: cumulativeLines }) // re-stamps the SAME pre in place
+```
+
+`source` is a **creation-time** affordance (the `parent` set-once precedent): `update(key, {source})`
+re-stamps an existing reveal's pre in place — a same-node textContent mutation inside a **closed** details
+body, so the raw JSON never rides the `role=log` announcement path — but never creates a reveal on an
+entry born without one (a graceful no-op). An entry with no `source` renders **byte-identically** to
+before: no disclosure, no pre, no affordance. The gate that decides *whether* raw wire text is attached at
+all belongs to the producer/consumer (the `progressDetail:'source'` opt-in ladder + `ui-conversation`'s
+`sources` prop) — this host renders exactly what it is handed, and nothing when handed nothing.
 
 ## The imperative API (ADR-0122 F4)
 

@@ -40,6 +40,16 @@
      like the existing header marker. */
   --ui-status-stream-header-meta-ink: var(--md-sys-color-neutral-on-surface-variant);
   --ui-status-stream-header-caret-box: 1em;
+
+  /* GH #240/ADR-0159 wave B — the per-step source reveal: the mono-rendered raw-wire <pre> inside the
+     entry's composed reveal disclosure. The mono face is the fleet's own typeface token (dimensions.css);
+     the block is bounded so ONE opened reveal never swallows the strip's whole scroll viewport (it grows
+     its own scrollbar past the cap instead); em-sized type rides the ambient scale (the header-cell
+     precedent). Secondary ink — the reveal is a developer affordance, never the row's primary voice. */
+  --ui-status-stream-source-font: var(--md-sys-typeface-mono);
+  --ui-status-stream-source-font-size: 0.8125em;
+  --ui-status-stream-source-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-status-stream-source-max-block-size: 12rem;
 }
 :where(ui-status-stream [data-part='header'][data-status='active']) {
   --ui-status-stream-header-status-ink: var(--md-sys-color-primary);
@@ -227,6 +237,24 @@
     margin-block-start: var(--ui-status-stream-action-gap);
   }
 
+  /* ── the per-step source reveal (GH #240/ADR-0159 wave B) — the mono raw-wire block ── */
+  /* The reveal's <pre data-role="source"> renders the attached wire text EXACTLY (byte-for-byte content;
+     `pre-wrap` + `anywhere` because a JSONL line is long and a narrow chat column must WRAP it rather than
+     force the strip wide — wrapping is presentation, the text nodes stay untouched). Bounded + self-
+     scrolling past the cap; margin zeroed (the composed disclosure's body owns the spacing rhythm). Works
+     at any nesting depth (a grouped entry's reveal, like the action cell above). */
+  :scope ui-timeline-item [data-role='source'] {
+    margin: 0;
+    max-block-size: var(--ui-status-stream-source-max-block-size);
+    overflow: auto;
+    font-family: var(--ui-status-stream-source-font);
+    font-size: var(--ui-status-stream-source-font-size);
+    line-height: 1.5;
+    color: var(--ui-status-stream-source-ink);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
   /* forced-colors (WHCM) — keep the header legible by SHAPE when fills flatten. The glyph/dot resolve to
      CanvasText; the hairline separators to CanvasText so the chrome stays delineated. */
   @media (forced-colors: active) {
@@ -245,6 +273,10 @@
        caret glyph resolve to CanvasText like the rest of the header chrome. */
     :scope > [data-part='header'] [data-part='header-meta'],
     :scope > [data-part='header'] [data-part='header-caret'] {
+      color: CanvasText;
+    }
+    /* GH #240/ADR-0159 wave B — the revealed raw-wire text stays legible when its secondary ink flattens. */
+    :scope ui-timeline-item [data-role='source'] {
       color: CanvasText;
     }
   }

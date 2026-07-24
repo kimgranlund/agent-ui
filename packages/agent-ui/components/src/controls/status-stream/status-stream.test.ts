@@ -965,3 +965,112 @@ describe('ui-status-stream — receipt: the TERMINAL one-line receipt (GH #239/A
     el.remove()
   })
 })
+
+// ── GH #240/ADR-0159 wave B — the per-step SOURCE reveal (StatusEntry.source) ──────────────────────────
+const RAW_CREATE = '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}'
+const RAW_DATA =
+  '{"version":"v1.0","updateDataModel":{"surfaceId":"main","path":"/count","contents":[{"value":1}]}}\n' +
+  '{"version":"v1.0","updateDataModel":{"surfaceId":"main","path":"/count","contents":[{"value":2}]}}'
+
+/** The entry's own reveal parts: the composed shared disclosure + the mono source pre inside its body. */
+function revealOf(item: UITimelineItemElement): { disclosure: HTMLElement | null; pre: HTMLElement | null } {
+  return {
+    disclosure: item.querySelector(':scope > [data-part="detail"]'),
+    pre: item.querySelector(':scope > [data-part="detail"] [data-part="body"] > [data-role="detail"] > [data-role="source"]'),
+  }
+}
+
+describe('ui-status-stream — the per-step source reveal (GH #240/ADR-0159 wave B)', () => {
+  it('appendEntry({source}) composes the shared reveal disclosure — collapsed by default, summary "Source", the pre BYTE-identical to the attachment', () => {
+    const { el } = makeStream()
+    const item = el.appendEntry({ key: 't1-open', status: 'active', label: 'Opening a new surface…', source: RAW_CREATE })
+    const { disclosure, pre } = revealOf(item)
+    expect(disclosure, 'the item composed its ONE shared ui-disclosure (ADR-0143 — never a second fold)').not.toBeNull()
+    expect(disclosure!.tagName.toLowerCase()).toBe('ui-disclosure')
+    expect((disclosure as { open?: boolean }).open, 'collapsed by default — one deliberate developer level deep').toBe(false)
+    expect((disclosure as { summary?: string }).summary, 'the code-owned trigger label').toBe('Source')
+    expect(pre, 'the mono block lives inside the disclosure BODY (adopted by the item anatomy)').not.toBeNull()
+    expect(pre!.tagName.toLowerCase()).toBe('pre')
+    expect(pre!.textContent, 'EXACT text — byte-for-byte, never parsed').toBe(RAW_CREATE)
+    el.remove()
+  })
+
+  it('an entry with NO source renders byte-identically — no disclosure, no pre, no reveal affordance (the negative control)', () => {
+    const { el } = makeStream()
+    const item = el.appendEntry({ key: 't1-open', status: 'active', label: 'Opening a new surface…' })
+    expect(item.querySelector(':scope > [data-part="detail"]')).toBeNull()
+    expect(item.querySelector('[data-role="source"]')).toBeNull()
+    el.remove()
+  })
+
+  it('an EMPTY source attaches nothing either (never an empty affordance)', () => {
+    const { el } = makeStream()
+    const item = el.appendEntry({ key: 'a', status: 'active', label: 'Working…', source: '' })
+    expect(item.querySelector(':scope > [data-part="detail"]')).toBeNull()
+    el.remove()
+  })
+
+  it('update({source}) re-stamps the SAME pre node in place — cumulative text, no insertion (the role=log discipline)', () => {
+    const { el } = makeStream()
+    const first = RAW_DATA.split('\n')[0]!
+    const item = el.appendEntry({ key: 't1-react', status: 'active', label: 'Updating data…', source: first })
+    const before = revealOf(item).pre!
+    el.update('t1-react', { source: RAW_DATA })
+    const after = revealOf(item).pre!
+    expect(after, 'node identity preserved — a same-node textContent mutation, never a new node').toBe(before)
+    expect(after.textContent, 'the cumulative re-stamp, byte-for-byte').toBe(RAW_DATA)
+    expect(item.querySelectorAll('[data-role="source"]').length, 'exactly ONE source pre, ever').toBe(1)
+    el.remove()
+  })
+
+  it('a late update({source}) on an entry BORN without a reveal is a graceful no-op — never a throw, still no reveal (the parent set-once precedent)', () => {
+    const { el } = makeStream()
+    const item = el.appendEntry({ key: 'a', status: 'active', label: 'Working…' })
+    expect(() => el.update('a', { source: RAW_CREATE })).not.toThrow()
+    expect(item.querySelector(':scope > [data-part="detail"]'), 'no late-armed reveal').toBeNull()
+    expect(item.querySelector('[data-role="source"]')).toBeNull()
+    el.remove()
+  })
+
+  it('the reveal opens/closes through the composed disclosure (toggleDetail — the designed reveal-detail seam), content intact', () => {
+    const { el } = makeStream()
+    const item = el.appendEntry({ key: 'a', status: 'done', label: 'Opened a new surface', source: RAW_CREATE })
+    const { disclosure } = revealOf(item)
+    item.toggleDetail(true)
+    expect((disclosure as { open?: boolean }).open).toBe(true)
+    expect(revealOf(item).pre!.textContent, 'opening reveals the SAME byte-identical text').toBe(RAW_CREATE)
+    item.toggleDetail(false)
+    expect((disclosure as { open?: boolean }).open).toBe(false)
+    el.remove()
+  })
+
+  it('a GROUPED (nested) entry carries its own reveal, and the group parent never matches the child pre (the :scope-anchored query)', () => {
+    const { el } = makeStream()
+    el.appendEntry({ key: 'g', status: 'active', label: 'Task Group' })
+    const child = el.appendEntry({ key: 'c1', parent: 'g', status: 'active', label: 'Step', source: RAW_CREATE })
+    expect(revealOf(child).pre!.textContent).toBe(RAW_CREATE)
+    // the parent's OWN reveal query must not resolve to the nested child's pre: updating the parent's
+    // source (born without one) stays a no-op rather than clobbering the child's text
+    el.update('g', { source: 'CLOBBER' })
+    expect(revealOf(child).pre!.textContent, "the child's reveal is untouched").toBe(RAW_CREATE)
+    el.remove()
+  })
+
+  it('the raw text lands as TEXT nodes, never markup (HTML-looking JSONL cannot inject)', () => {
+    const { el } = makeStream()
+    const sneaky = '{"version":"v1.0","note":"<img src=x onerror=alert(1)>"}'
+    const item = el.appendEntry({ key: 'a', status: 'done', label: 'x', source: sneaky })
+    const pre = revealOf(item).pre!
+    expect(pre.textContent).toBe(sneaky)
+    expect(pre.querySelector('img'), 'never parsed as HTML').toBeNull()
+    el.remove()
+  })
+
+  it('finalize()/fail() leave a reveal intact (the trace keeps its sources after settle)', () => {
+    const { el } = makeStream()
+    const item = el.appendEntry({ key: 'a', status: 'active', label: 'Working…', source: RAW_CREATE })
+    el.finalize()
+    expect(revealOf(item).pre!.textContent).toBe(RAW_CREATE)
+    el.remove()
+  })
+})

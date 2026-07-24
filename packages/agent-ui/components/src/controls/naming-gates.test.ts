@@ -317,6 +317,10 @@ const ALLOWED_ROLES = new Set([
   // ui-status-stream's inline retry/action affordance (GH #147/ADR-0153 Fork 2) — the host-appended cell
   // hosting the entry's `<ui-button>`. Added in the SAME change as naming.md §6's registry line.
   'action',
+  // ui-status-stream's per-step source reveal (GH #240/ADR-0159 wave B) — the mono `<pre>` rendering an
+  // entry's attached raw wire line(s), planted under a `[data-role="detail"]` child the item's own anatomy
+  // adopts into its shared disclosure. Added in the SAME change as naming.md §6's registry line.
+  'source',
 ])
 
 /** Every `data-role` value used in one file's TEXT (comment-stripped): `data-role="x"` / `data-role='x'` /

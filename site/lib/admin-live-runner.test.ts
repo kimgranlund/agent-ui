@@ -73,6 +73,38 @@ describe('createAdminSurfaceTurn', () => {
     expect(events).toEqual(['note', 'line'])
   })
 
+  it("requests the per-step raw-source attachment: the POST body carries progressDetail:'source' (GH #240/ADR-0159 wave B — the admin developer surface's standing opt-in)", async () => {
+    const fetchSpy = vi.fn(
+      async () => new Response(streamOfLines([]), { status: 200, headers: { 'content-type': 'application/x-ndjson' } }),
+    )
+    vi.stubGlobal('fetch', fetchSpy)
+    const runner = createAdminSurfaceTurn()
+    for await (const _event of runner(SURFACE_REQUEST)) {
+      /* drain */
+    }
+    const init = (fetchSpy.mock.calls[0] as unknown[])[1] as { body: string }
+    const body = JSON.parse(init.body) as Record<string, unknown>
+    expect(body.progressDetail, "the server-validated 'source' rung — never 'full' (CoT stays server-owned)").toBe('source')
+  })
+
+  it("a progress event's source attachment rides the progress event to the consumer (byte compare through the meta filter)", async () => {
+    const raw = '{"version":"v1.0","createSurface":{"surfaceId":"s1","catalogId":"agent-ui"}}'
+    const lines = [
+      JSON.stringify({ a2uiMeta: { progress: { stage: 'validating', source: raw } } }),
+      raw,
+    ]
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(streamOfLines(lines), { status: 200, headers: { 'content-type': 'application/x-ndjson' } })),
+    )
+    const runner = createAdminSurfaceTurn()
+    const progress: unknown[] = []
+    for await (const event of runner(SURFACE_REQUEST)) {
+      if (event.kind === 'progress') progress.push(event.progress)
+    }
+    expect(progress).toEqual([{ stage: 'validating', source: raw }])
+  })
+
   it('throws a visible error when the stream carries a transport-composed error meta-line (GH #144 — was a silent empty success)', async () => {
     const lines = [
       '{"a2uiMeta":{"progress":{"stage":"retry","round":3}}}',

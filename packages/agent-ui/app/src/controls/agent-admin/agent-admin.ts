@@ -338,6 +338,12 @@ export class UIAgentAdminElement extends UIElement {
     // is the surface the ruling's screenshot came from): each turn's activity renders as one morphing line
     // while live and auto-collapses to a "N steps · total" receipt at the turn's end, expandable both ways.
     conversation.receipt = true
+    // GH #240/ADR-0159 wave B — and into the per-step SOURCE reveal (part 3 of the same ruling): each
+    // expanded activity step reveals the raw wire line(s) behind it (the createSurface/updateDataModel
+    // JSONL), one deliberate developer level deep. The admin chat is the fleet's developer surface — every
+    // other conversation consumer (a2ui-chat, the demos) stays default-off, byte-identical. The producer
+    // half of the channel is the live runner's own `progressDetail:'source'` request (admin-live-runner.ts).
+    conversation.sources = true
     conversation.onSubmit((text) => this.#handleSubmit(text))
     // Models picker → the SAME persisted `model` store key the settings pane's own generated field reads/
     // writes (one source of truth, TKT-0021's own external-store-write precedent) — `#syncConversationConfig`'s

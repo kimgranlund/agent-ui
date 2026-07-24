@@ -91,7 +91,19 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
     const res = await fetch(PRODUCE_ENDPOINT, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ input, provider: PROVIDER, model: req.model, personaSystem: req.personaSystem, integrations: req.integrations }),
+      // GH #240/ADR-0159 wave B — `progressDetail:'source'`: the admin developer surface's standing opt-in
+      // to the per-step raw-source attachment (`TurnProgress.source` on validating/retry progress events).
+      // Membership-validated server-side (dev proxy + worker: only the literal 'source' is honored; 'full'
+      // stays server-owned); every other consumer (a2ui-chat/a2ui-live) never sends it — their streams stay
+      // source-free, the fail-closed default.
+      body: JSON.stringify({
+        input,
+        provider: PROVIDER,
+        model: req.model,
+        personaSystem: req.personaSystem,
+        integrations: req.integrations,
+        progressDetail: 'source',
+      }),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     })
     if (!res.ok || res.body === null) {

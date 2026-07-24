@@ -165,13 +165,14 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
 // lazy-headersSent equivalent), so this must run BEFORE the Response is constructed, not inside the
 // detached write-loop's catch.
 async function handleProduce(request: Request, env: Env): Promise<Response> {
-  const { input, provider, model, mode, personaSystem, integrations } = JSON.parse(await readBody(request)) as {
+  const { input, provider, model, mode, personaSystem, integrations, progressDetail } = JSON.parse(await readBody(request)) as {
     input: unknown
     provider: string
     model: string
     mode?: unknown
     personaSystem?: unknown
     integrations?: unknown
+    progressDetail?: unknown
   }
   if (!isValidTurnInput(input)) return json(400, { error: 'bad-request' })
   const validInput = input as TurnInput
@@ -185,6 +186,10 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
   if (!dispatch.ok) return json(503, { error: dispatch.reason })
 
   const persona = typeof personaSystem === 'string' && personaSystem.length <= 16_384 ? personaSystem : undefined
+  // GH #240/ADR-0159 wave B — the client-requested per-step raw-source attachment, membership-validated
+  // fail-closed exactly as the dev proxy does: ONLY the literal 'source' is honored ('full' — raw
+  // reasoning excerpts — stays server-owned, never client-grantable); anything else ⇒ the 'stages' default.
+  const detail = progressDetail === 'source' ? ('source' as const) : undefined
   const active = resolveIntegrations(integrations)
   const toolOpts =
     active.length > 0
@@ -211,6 +216,7 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
         mode: validateMode(mode),
         personaSystem: persona,
         progress: true,
+        ...(detail !== undefined ? { progressDetail: detail } : {}), // GH #240 — the validated 'source' opt-in only
         signal: request.signal, // GH #106 — cancel the paid upstream call if the client disconnects
         ...toolOpts,
       })) {

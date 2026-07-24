@@ -165,7 +165,10 @@ The prefix IS the ownership boundary — no allowlist needed:
   authored depth; control-emitted, agent-emittable like `detail`. `ui-status-stream` adds `action`
   (GH #147/ADR-0153 Fork 2) — the host-appended cell hosting an `error`-status entry's inline retry
   `<ui-button>`; control-emitted, the SAME "host creates a plain cell outside the item's own anatomy"
-  shape `text` already uses.
+  shape `text` already uses. `ui-status-stream` also adds `source` (GH #240/ADR-0159 wave B) — the
+  mono `<pre>` inside an entry's per-step reveal, rendering the raw wire line(s) the step stands for
+  (planted under a `[data-role="detail"]` child the item's own anatomy adopts into its shared
+  disclosure); control-emitted, host-created like `action`/`text`, never author-composed.
 - **Custom states** (`internals.states` / `:state()`) are ADJECTIVES/participles, lowercase,
   kebab: ready · user-invalid · checked · dragging · revealed · disabled · collapsed · truncated
   · selected · indeterminate. A verb or noun is not a state name.
