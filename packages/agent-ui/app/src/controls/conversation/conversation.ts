@@ -77,6 +77,12 @@ const props = {
   // every reflect site, so flipping this mid-turn can never unstick or double-free the busy counter.
   disabled: { ...prop.boolean(false), reflect: true },
 
+  // GH #239/ADR-0159 — the OPT-IN receipt pattern for the per-turn narration strip (Kim's 2026-07-23
+  // ruling): when true, every turn's `ui-status-stream` gets BOTH stream-level opt-ins (`oneline` — the
+  // live one-morphing-line mode — and `receipt` — the terminal one-line receipt). Reflected, default
+  // false: every existing consumer keeps the always-expanded narration byte-identically.
+  receipt: { ...prop.boolean(false), reflect: true },
+
   // ── The opt-in composer capabilities (the Figma chat-input refactor) ────────────────────────────────
   // Every one below defaults to undefined/empty, so an existing consumer that never sets them (a2ui-chat,
   // a2ui-live) gets the ORIGINAL field+Send composer, unchanged. A consumer (e.g. ui-agent-admin) opts in
@@ -123,11 +129,20 @@ interface SurfaceRecord {
 
 type Category = 'open' | 'restructure' | 'react' | 'close'
 
-const LABEL: Record<Category, string> = {
-  open: 'Opening a new surface…',
-  restructure: 'Updating the surface…',
-  react: 'Updating data…',
-  close: 'Closing the surface…',
+/** A stage/category label PAIR (GH #238/ADR-0159): the progressive `live` form while the step runs, the
+ *  quiet past-tense `done` form stamped ON the transition to done — a done checkmark never wears an
+ *  "-ing…" label again (Kim's 2026-07-23 receipt-pattern ruling, part 1). A step that never finishes
+ *  (truncated/failed) keeps its `live` form — the done form is never claimed for work not completed. */
+interface LabelPair {
+  live: string
+  done: string
+}
+
+const LABEL: Record<Category, LabelPair> = {
+  open: { live: 'Opening a new surface…', done: 'Opened a new surface' },
+  restructure: { live: 'Updating the surface…', done: 'Updated the surface' },
+  react: { live: 'Updating data…', done: 'Updated data' },
+  close: { live: 'Closing the surface…', done: 'Closed the surface' },
 }
 
 /** The SAME envelope-key inspection technique a2ui-live.ts's summarize()/a2ui-chat.ts's categoryOf already
@@ -180,15 +195,21 @@ function isDeleteSurfaceFor(line: string, id: string): boolean {
 // percentages, no "almost done…"). A stage ABSENT from this table renders NOTHING — an unobserved/unknown
 // stage is never shown (the honesty-law guard, asserted as a negative control). The `retry` label composes
 // the real self-correct round ordinal in at call time (a factual number, not fabricated prose).
-const PROGRESS_LABEL: Record<TurnProgressStage, string> = {
-  sent: 'Request sent',
-  started: 'Generating…',
-  reasoning: 'Reasoning…',
-  content: 'Writing the response…',
-  validating: 'Validating…',
-  retry: 'Self-correcting…',
-  tool: 'Running an integration…', // GH #49 — detail carries the registry tool NAME, composed at call time
-  done: 'Done',
+// GH #238/ADR-0159: each stage is a live/done PAIR (see LabelPair) — the done form stamps on the entry's
+// transition to done, quiet past-tense, claude.ai's register. `sent` is already a completed fact (its two
+// forms coincide); `done` is the settle signal itself, never rendered as its own row (routeProgress).
+// This table remains THE single owning site of the stage vocabulary's rendering — the F2 closed-table
+// guard (meta-line.ts's closed `TurnProgressStage` union at the wire, this closed Record here) still gates
+// every label: an out-of-vocabulary stage can neither parse nor render.
+const PROGRESS_LABEL: Record<TurnProgressStage, LabelPair> = {
+  sent: { live: 'Request sent', done: 'Request sent' },
+  started: { live: 'Generating…', done: 'Generated' },
+  reasoning: { live: 'Reasoning…', done: 'Reasoned' },
+  content: { live: 'Writing the response…', done: 'Wrote the response' },
+  validating: { live: 'Validating…', done: 'Validated' },
+  retry: { live: 'Self-correcting…', done: 'Self-corrected' },
+  tool: { live: 'Running an integration…', done: 'Ran an integration' }, // GH #49 — detail carries the registry tool NAME, composed at call time
+  done: { live: 'Done', done: 'Done' },
 }
 
 /** Backward-compat fallback for a turn with no `note` (ADR-0088: a factual message-kind tally, never a
@@ -322,19 +343,11 @@ export class UIConversationElement extends UIElement {
     let mounts: HTMLElement
     if (resumed !== undefined) {
       ;({ bubble, note, mounts } = resumed)
-      narration = document.createElement('ui-status-stream') as UIStatusStreamElement
-      narration.setAttribute('size', 'sm')
-      narration.setAttribute('label', 'Agent activity')
-      narration.setAttribute('header', '') // ADR-0146 F8 — the strip reads "working" from t=0, closing the blank-bubble symptom at its ROOT (even a zero-line, zero-progress turn shows a visible working header)
-      narration.dataset.part = 'narration'
+      narration = this.#makeNarration()
       resumed.narration.replaceWith(narration)
     } else {
       bubble = this.#makeBubble('agent')
-      narration = document.createElement('ui-status-stream') as UIStatusStreamElement
-      narration.setAttribute('size', 'sm')
-      narration.setAttribute('label', 'Agent activity')
-      narration.setAttribute('header', '') // ADR-0146 F8 — the strip reads "working" from t=0, closing the blank-bubble symptom at its ROOT (even a zero-line, zero-progress turn shows a visible working header)
-      narration.dataset.part = 'narration'
+      narration = this.#makeNarration()
       note = document.createElement('div')
       note.dataset.part = 'body'
       mounts = document.createElement('div')
@@ -367,36 +380,50 @@ export class UIConversationElement extends UIElement {
     const heldNoIdLines: string[] = []
     // ADR-0146 F1/F8 progress state — the keys this turn has already narrated, and the current active
     // progress entry (settled to `done` as the next stage begins, so lifecycle stages check off in order).
+    // GH #238/ADR-0159: each narrated key remembers its composed DONE-form label (the pair table, with the
+    // same factual round/tool suffix its live form carried) so every settle site stamps the past-tense
+    // form on the transition — a truncated/failed entry is never settled, so it keeps its live form.
     const progressKeysSeen = new Set<string>()
+    const doneLabelByKey = new Map<string, string>()
     let lastProgressKey: string | undefined
+    /** Settle one narrated progress entry to done, stamping its done-form label (GH #238). */
+    const settleProgress = (key: string): void => {
+      const doneLabel = doneLabelByKey.get(key)
+      narration.update(key, doneLabel === undefined ? { status: 'done' } : { status: 'done', label: doneLabel })
+    }
 
     /** Route ONE live-turn progress event into the strip (ADR-0146 F1/F8) through the CLOSED code-owned
      *  label table — never model text. An unknown/unobserved stage renders NOTHING (the F2 honesty guard).
-     *  Each stage's entry goes `active` when it begins and settles `done` as the NEXT stage begins; `done`
-     *  simply settles the last stage (no redundant "Done" row). `retry` composes the real round ordinal in. */
+     *  Each stage's entry goes `active` when it begins and settles `done` — with its done-form label
+     *  (GH #238) — as the NEXT stage begins; `done` simply settles the last stage (no redundant "Done"
+     *  row). `retry` composes the real round ordinal in. */
     const routeProgress = (ev: TurnProgress): void => {
-      const base = PROGRESS_LABEL[ev.stage] as string | undefined
-      if (base === undefined) return // unknown/unobserved stage — nothing is shown
+      const pair = PROGRESS_LABEL[ev.stage] as LabelPair | undefined
+      if (pair === undefined) return // unknown/unobserved stage — nothing is shown
       if (ev.stage === 'done') {
-        if (lastProgressKey !== undefined) narration.update(lastProgressKey, { status: 'done' })
+        if (lastProgressKey !== undefined) settleProgress(lastProgressKey)
         lastProgressKey = undefined
         return
       }
       // `retry` composes the real round ordinal; `tool` composes the registry tool NAME from detail —
-      // both factual values from the closed vocabularies, never model prose (GH #49 / ADR-0146 F2).
-      const label =
+      // both factual values from the closed vocabularies, never model prose (GH #49 / ADR-0146 F2). The
+      // SAME factual suffix rides both forms of the pair (live "Self-correcting… (round 2)" settles to
+      // "Self-corrected (round 2)").
+      const suffix =
         ev.stage === 'retry'
-          ? (ev.round === undefined ? base : `${base} (round ${ev.round})`)
+          ? (ev.round === undefined ? '' : ` (round ${ev.round})`)
           : ev.stage === 'tool' && ev.detail
-            ? `${base} (${ev.detail})`
-            : base
+            ? ` (${ev.detail})`
+            : ''
+      const label = `${pair.live}${suffix}`
       const key =
         ev.stage === 'retry'
           ? `t${seq}-progress-retry-${ev.round ?? 1}`
           : ev.stage === 'tool'
             ? `t${seq}-progress-tool-${ev.detail ?? 'unknown'}`
             : `t${seq}-progress-${ev.stage}`
-      if (lastProgressKey !== undefined && lastProgressKey !== key) narration.update(lastProgressKey, { status: 'done' })
+      doneLabelByKey.set(key, `${pair.done}${suffix}`)
+      if (lastProgressKey !== undefined && lastProgressKey !== key) settleProgress(lastProgressKey)
       if (progressKeysSeen.has(key)) narration.update(key, { status: 'active', label })
       else {
         progressKeysSeen.add(key)
@@ -442,8 +469,9 @@ export class UIConversationElement extends UIElement {
           // LIVE-AT-INGEST (SPEC-R6 amendment, ADR-0146): a category narrates the moment its FIRST line is
           // ingested — `active` during the turn, settled at finalize() — never the old post-hoc replay of
           // stages that already finished. The label table's own text is the entire vocabulary (ADR-0088
-          // honesty law — never a fabricated sentence).
-          narration.appendEntry({ key: `t${seq}-${cat}`, status: 'active', label: LABEL[cat] })
+          // honesty law — never a fabricated sentence). GH #238: the live form here; finalize() stamps the
+          // done form on the settle transition.
+          narration.appendEntry({ key: `t${seq}-${cat}`, status: 'active', label: LABEL[cat].live })
         }
         routeLine(line)
       },
@@ -453,10 +481,13 @@ export class UIConversationElement extends UIElement {
       progress: (ev: TurnProgress) => routeProgress(ev),
       finalize: () => {
         endTurn() // TKT-0034 — re-enable the composer THE MOMENT finalize() runs, not after narration settles
-        // Settle the LIVE entries this turn narrated (categories + the current progress stage) to `done`,
-        // then run the completion invariant (which truncates anything still un-settled, fail-closed).
-        for (const cat of categoriesSeen) narration.update(`t${seq}-${cat}`, { status: 'done' })
-        if (lastProgressKey !== undefined) narration.update(lastProgressKey, { status: 'done' })
+        // Settle the LIVE entries this turn narrated (categories + the current progress stage) to `done`
+        // — stamping each entry's done-form label on the transition (GH #238/ADR-0159: a done checkmark
+        // never wears an "-ing…" label) — then run the completion invariant (which truncates anything
+        // still un-settled, fail-closed, keeping its live form: the done form is never claimed for work
+        // not completed).
+        for (const cat of categoriesSeen) narration.update(`t${seq}-${cat}`, { status: 'done', label: LABEL[cat].done })
+        if (lastProgressKey !== undefined) settleProgress(lastProgressKey)
         narration.finalize()
         this.#renderBody(note, noteText ?? summarize(turnLines))
         if (this.disclosure && turnLines.length > 0) bubble.append(this.#buildDisclosure(turnLines))
@@ -476,6 +507,24 @@ export class UIConversationElement extends UIElement {
         this.#addSystemBubble(`⚠ ${message}`)
       },
     }
+  }
+
+  /** The per-turn narration strip, ONE creation site for both the fresh-bubble and resumed-turn paths
+   *  (they had drifted into a hand-duplicated block each). ADR-0146 F8: `header` is always set — the strip
+   *  reads "working" from t=0, closing the blank-bubble symptom at its ROOT (even a zero-line,
+   *  zero-progress turn shows a visible working header). GH #239/ADR-0159: the opt-in `receipt` prop adds
+   *  the receipt pattern's two stream-level opt-ins; default false leaves the strip byte-identical. */
+  #makeNarration(): UIStatusStreamElement {
+    const narration = document.createElement('ui-status-stream') as UIStatusStreamElement
+    narration.setAttribute('size', 'sm')
+    narration.setAttribute('label', 'Agent activity')
+    narration.setAttribute('header', '')
+    if (this.receipt) {
+      narration.setAttribute('oneline', '') // the live one-morphing-line mode (GH #239)
+      narration.setAttribute('receipt', '') // the terminal one-line receipt (GH #239)
+    }
+    narration.dataset.part = 'narration'
+    return narration
   }
 
   /** TKT-0079 — the resume probe: `id`'s OPEN record whose bubble is still in this log, plus the three

@@ -1097,5 +1097,12 @@
     "description": "ui-disclosure realizes the slot=summary foreseen extension — summary-hosted controls adopt declaratively, survive heal-rebuilds, carry a component-owned activa…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0159",
+    "url": "./adr-index.html#adr-0159",
+    "description": "ui-status-stream adopts the receipt pattern (Kim's 2026-07-23 ruling, GH #238/#239 — waves A; GH #240 per-step source reveal is a later wave B): (1) the closed…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

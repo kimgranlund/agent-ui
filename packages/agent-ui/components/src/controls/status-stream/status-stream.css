@@ -34,6 +34,12 @@
   /* GH #147/ADR-0153 Fork 2 — the inline retry/action cell's top gap, routed through the fleet's own
      dimensional-constant chain (TKT-0066 item 5 — a `@scope` body never reads `--md-sys-*` directly). */
   --ui-status-stream-action-gap: var(--md-sys-space-xs);
+
+  /* GH #239/ADR-0159 — the receipt pattern's header cells: the meta ("12s" / "5 steps · 3.2s") ink and the
+     caret affordance box. Marker-box-relative sizing (em) so both ride the ambient type scale, exactly
+     like the existing header marker. */
+  --ui-status-stream-header-meta-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-status-stream-header-caret-box: 1em;
 }
 :where(ui-status-stream [data-part='header'][data-status='active']) {
   --ui-status-stream-header-status-ink: var(--md-sys-color-primary);
@@ -137,6 +143,80 @@
     }
   }
 
+  /* ── the receipt pattern (GH #238/#239/ADR-0159) — the one-line/receipt collapse ── */
+  /* Collapsed (`:state(collapsed)`, set only in the opt-in `oneline`/`receipt` modes): the entry list
+     hides and the strip IS its one header line — the morphing live line or the terminal receipt. The
+     header's bottom hairline drops (a lone line is not a boxed region). */
+  :scope:state(collapsed) > ui-timeline-item {
+    display: none;
+  }
+  :scope:state(collapsed) > [data-part='header'] {
+    border-block-end: none;
+  }
+  /* The disclosure affordance — only an opted-in header carries role=button (status-stream.ts). */
+  :scope > [data-part='header'][role='button'] {
+    cursor: pointer;
+    user-select: none;
+  }
+  /* Keyboard focus — the ONE shared fleet ring (ADR-0009), read directly (the disclosure.css/button.css
+     exception to "consume only --ui-status-stream-*"): identical across every control, keyboard-only,
+     layout-neutral. Only the opted-in (role=button) header row is focusable at all. */
+  :scope > [data-part='header'][role='button']:focus-visible {
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+  /* The meta cell — the ticking turn-elapsed while live, "N steps · 3.2s" once settled. Secondary ink,
+     tabular digits so the ticking display never jitters the row. */
+  :scope > [data-part='header'] [data-part='header-meta'] {
+    flex: 0 0 auto;
+    color: var(--ui-status-stream-header-meta-ink);
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  /* The caret — points down (expand) collapsed, rotates open when expanded (aria-expanded is the one
+     source of truth the CSS keys off — the state the a11y layer already carries). */
+  :scope > [data-part='header'] [data-part='header-caret'] {
+    flex: 0 0 auto;
+    inline-size: var(--ui-status-stream-header-caret-box);
+    block-size: var(--ui-status-stream-header-caret-box);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ui-status-stream-header-meta-ink);
+    transition: rotate 0.15s ease;
+  }
+  :scope > [data-part='header'] [data-part='header-caret'] [data-role='marker'] {
+    inline-size: var(--ui-status-stream-header-caret-box);
+    block-size: var(--ui-status-stream-header-caret-box);
+  }
+  :scope > [data-part='header'][aria-expanded='true'] [data-part='header-caret'] {
+    rotate: 180deg;
+  }
+  /* The live shimmer — the morphing line's "actively working" affordance: a soft opacity pulse on the
+     label while the strip is collapsed AND the header still reads active (never on the settled receipt).
+     Same cadence as the marker pulse; static under reduced-motion (ADR-0122 F4 / SPEC-R4 AC3). */
+  :scope:state(collapsed) > [data-part='header'][data-status='active'] [data-part='header-label'] {
+    animation: ui-status-stream-line-shimmer 1.6s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :scope:state(collapsed) > [data-part='header'][data-status='active'] [data-part='header-label'] {
+      animation: none;
+    }
+    :scope > [data-part='header'] [data-part='header-caret'] {
+      transition: none;
+    }
+  }
+  @keyframes ui-status-stream-line-shimmer {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.55;
+    }
+  }
+
   /* the inline retry/action affordance (GH #147/ADR-0153 Fork 2) — a `[data-role="action"]` cell the host
      appends onto an entry's `ui-timeline-item` (the SAME "host-created, not part of the item's own
      anatomy" shape `#growText`'s `[data-role="text"]` cell already uses) — a small top gap separates it
@@ -160,6 +240,12 @@
     :scope > [data-part='header'] [data-part='header-marker']::before {
       background: CanvasText;
       border-color: CanvasText;
+    }
+    /* GH #239/ADR-0159 — the receipt cells stay legible by SHAPE when fills flatten: meta text + the
+       caret glyph resolve to CanvasText like the rest of the header chrome. */
+    :scope > [data-part='header'] [data-part='header-meta'],
+    :scope > [data-part='header'] [data-part='header-caret'] {
+      color: CanvasText;
     }
   }
 }
