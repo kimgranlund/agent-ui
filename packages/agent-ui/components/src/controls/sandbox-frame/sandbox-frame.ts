@@ -8,9 +8,26 @@
 // bar-chart.ts shape): `render()` stays the inherited no-op, and ONE effect (keyed on `html`/`csp`)
 // imperatively builds/replaces/tears down EXACTLY ONE light-DOM child — the `[data-part="frame"]`
 // `<iframe sandbox="allow-scripts" srcdoc>` when contained, or the `[data-part="fallback"]` inert
-// affordance when SPEC-R5's "Fail-closed/never-paint" law fires (an oversize/malformed `html`, a CSP
-// build failure, or an unestablishable sandbox posture) — never both, never neither once `html` is
-// non-empty.
+// affordance when SPEC-R5's "Fail-closed/never-paint" law fires — never both, never neither once `html`
+// is non-empty. Two triggers are PROVEN reachable and tested: an oversize `html` (the byte cap) and a CSP
+// config build failure. `buildSrcdoc` (bootstrap.ts) ALSO returns `undefined` defensively on a genuine
+// parse exception, but `DOMParser`'s `'text/html'` mode never throws/never yields `parsererror` for a
+// string input (component-review finding) — that leg is defense-in-depth, not a third proven "malformed
+// html" trigger; see bootstrap.ts's own HONEST SCOPE note.
+//
+// RECORDED LIMIT (component-review finding, PRD-G3): frame-level NAVIGATION egress
+// (`location.href`/`location.replace`, a `<meta http-equiv=refresh>`, a real `<a href>` click) is NOT
+// closable by the meta-CSP this control builds — no portable `navigate-to` CSP directive exists to name
+// in SPEC-R4's own "recorded meta-CSP limits" list. This is NOT a host-containment breach (the top-nav/
+// popup/parent-DOM/storage probes all hold, proven cross-engine — sandbox-frame.browser.test.ts — and the
+// host's own URL/DOM/storage stay byte-unchanged regardless): the sandboxed frame simply navigates
+// ITSELF, inside its own (attribute-sandboxed, opaque-origin) browsing context, to wherever it points.
+// The threat model this control relies on for that channel: the frame holds NO secrets (no cookies, no
+// storage, no host DOM reach — the opaque origin already denies all three), so a self-navigation cannot
+// exfiltrate anything the frame does not already lack. PRD-G3's "allow-listed, never open" network-reach
+// law is honored for `fetch`/`XHR`/WebSocket (`connect-src`) and image/font loads (`img-src`/`font-src`);
+// frame-level navigation is the one egress class outside that law's reach, recorded here rather than
+// silently assumed closed.
 //
 // The bridge (SPEC-R7/R8): ONE `window` `message` listener (connection-scoped via `this.listen`,
 // auto-removed on disconnect), filtering by `event.source === <this instance's iframe>.contentWindow`
@@ -123,7 +140,13 @@ export class UISandboxFrameElement extends UIElement {
   #themeObserver: MutationObserver | null = null
 
   /** SPEC-R7's observable drop counter — every out-of-vocabulary/malformed/foreign-source frame message
-   *  increments this, never throws, never emits a DOM event for the rejected message. */
+   *  increments this, never throws, never emits a DOM event for the rejected message.
+   *  OBSERVABILITY CAVEAT (component-review): with MULTIPLE `ui-sandbox-frame` instances on one page,
+   *  every instance's `window` `message` listener sees every OTHER instance's frame's normal, well-formed
+   *  traffic too — that traffic fails THIS instance's source-identity check (it isn't from THIS
+   *  instance's own iframe) and increments THIS instance's counter, even though nothing is wrong. A
+   *  nonzero count is therefore not itself an attack signal in a multi-surface page — it is a genuine
+   *  drop/reject count, but "dropped" here includes ordinary sibling cross-talk, not only hostile input. */
   get droppedMessages(): number {
     return this.#droppedMessages
   }
@@ -180,7 +203,10 @@ export class UISandboxFrameElement extends UIElement {
     const colorScheme = getComputedStyle(this).colorScheme
     const srcdoc = buildSrcdoc(html, policy, tokens, colorScheme)
     if (srcdoc === undefined) {
-      this.#renderFallback() // never-paint: malformed (SPEC-R5)
+      // Defense-in-depth only — bootstrap.ts's own HONEST SCOPE note: DOMParser's 'text/html' mode never
+      // actually returns undefined for a string `html` (no proven-reachable "malformed markup" input);
+      // this branch still routes to the SAME fail-closed fallback should that ever change.
+      this.#renderFallback()
       return
     }
     this.#renderFrame(srcdoc)

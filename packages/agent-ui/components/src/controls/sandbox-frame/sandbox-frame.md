@@ -44,7 +44,7 @@ attributes:             # attributes-as-API — mirrors sandbox-frame.ts `static
 
 properties:             # IDL beyond attributes-as-API
   - name: droppedMessages
-    description: The observable SPEC-R7 drop counter (a plain getter, not a reactive prop) — every out-of-vocabulary bridge message, a malformed payload, or a message from a foreign source increments this; never surfaced as a DOM event, never a throw (SPEC-N4).
+    description: The observable SPEC-R7 drop counter (a plain getter, not a reactive prop) — every out-of-vocabulary bridge message, a malformed payload, or a message from a foreign source increments this; never surfaced as a DOM event, never a throw (SPEC-N4). With multiple ui-sandbox-frame instances on one page, each instance's counter also counts its SIBLINGS' ordinary, well-formed traffic (it fails THIS instance's source-identity check) — a nonzero count is not itself an attack signal on a multi-surface page.
 
 events:
   - name: action
@@ -112,6 +112,15 @@ popups, no forms, no modals, no downloads, no device/display capture. With `allo
 the srcdoc document gets a unique **opaque origin**: every same-origin check against the host fails by
 construction, and storage APIs (`localStorage`, cookies, IndexedDB) deny.
 
+**Recorded limit** (PRD-G3, not a host-containment breach): frame-level **navigation egress**
+(`location.href`/`location.replace`, a `<meta http-equiv=refresh>`, a real `<a href>` click) is not
+closable by the meta-CSP this control builds — no portable `navigate-to` CSP directive exists to name
+alongside SPEC-R4's other recorded meta-CSP limits. The frame simply navigates *itself*, inside its own
+sandboxed, opaque-origin browsing context; the host's own URL/DOM/storage stay byte-unchanged regardless
+(proven cross-engine). The threat model this relies on: the frame holds **no secrets** (no cookies, no
+storage, no host-DOM reach — the opaque origin already denies all three), so a self-navigation cannot
+exfiltrate anything the frame did not already lack.
+
 ## CSP (SPEC-R4)
 
 `csp` accepts a `SandboxFrameCspConfig` carrying four allow-list categories — `connectDomains` →
@@ -140,9 +149,12 @@ rebuild (state is lost — the stated, accepted no-bridge cost).
 ## Fail-closed / never-paint (SPEC-R5)
 
 Nothing paints when containment cannot be proven: an oversize `html` (> 512 KiB), a malformed CSP
-config, an unestablishable sandbox posture, or an `html` that fails to compose into a srcdoc document.
-The control shows its inert `[data-part="fallback"]` affordance instead — the turn's other channels are
-unaffected.
+config, or an unestablishable sandbox posture — the three **proven, tested** triggers. The srcdoc
+builder also returns its fail-closed sentinel defensively on a genuine parse exception, but `DOMParser`'s
+`text/html` mode is forgiving by spec — it never actually throws or rejects a *string* `html` as
+"malformed markup", so that leg is defense-in-depth, not a fourth proven trigger (no fake malformed-HTML
+detector is built to manufacture one). The control shows its inert `[data-part="fallback"]` affordance
+whenever any trigger fires — the turn's other channels are unaffected.
 
 ## Catalog disposition
 

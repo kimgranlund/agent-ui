@@ -51,19 +51,29 @@ export const BOOTSTRAP_SCRIPT = `
  * evaluates, the SPEC-R6 token bridge available at first style resolution, and the bootstrap installed
  * before model script runs — insertion order in `<head>` is CSP meta, then the token `<style>`, then the
  * bootstrap `<script>` (each unshifted ahead of the last), so all three precede every original `<head>`
- * child (the model's own script/style/meta). Returns `undefined` only on a genuine parse exception (the
- * fail-closed leg, SPEC-R5) — pure DOM string-in/string-out; `DOMParser` exists in both jsdom and every
- * real engine, so this is jsdom-testable (unlike the live iframe/postMessage legs, which need a real
- * browser gate).
+ * child (the model's own script/style/meta). Pure DOM string-in/string-out; `DOMParser` exists in both
+ * jsdom and every real engine, so this is jsdom-testable (unlike the live iframe/postMessage legs, which
+ * need a real browser gate).
+ *
+ * HONEST SCOPE (component-review finding): `DOMParser`'s `'text/html'` mode is deliberately forgiving —
+ * per the HTML5 parsing algorithm it NEVER throws and NEVER yields a `parsererror` document for a STRING
+ * input (that behavior is XML-mode-only); this function's `try`/`catch` and `parsererror` check are
+ * therefore defensive-only for the html-markup input class, not a proven-reachable trigger — there is no
+ * "malformed HTML markup" input this function can actually reject (and no fake detector is built here to
+ * manufacture one; a real one would itself be an unproven, over-fitted heuristic). The genuinely reachable
+ * SPEC-R5 never-paint triggers this control proves are: the oversize-html byte cap and a CSP-config
+ * build failure (both exercised in `sandbox-frame.ts`/its tests) — "malformed html" as a THIRD, distinct
+ * trigger is not one this leg can demonstrate and is not claimed as proven; `undefined` here still routes
+ * to the same fail-closed fallback should some future engine or input ever exercise it.
  */
 export function buildSrcdoc(html: string, cspPolicy: string, tokens: Record<string, string>, colorScheme: string): string | undefined {
   let doc: Document
   try {
     doc = new DOMParser().parseFromString(html, 'text/html')
   } catch {
-    return undefined
+    return undefined // defensive-only for this input class — see the HONEST SCOPE note above
   }
-  if (doc.querySelector('parsererror') !== null) return undefined
+  if (doc.querySelector('parsererror') !== null) return undefined // ditto — text/html mode never produces one
 
   const head = doc.head ?? doc.documentElement.insertBefore(doc.createElement('head'), doc.documentElement.firstChild)
 
