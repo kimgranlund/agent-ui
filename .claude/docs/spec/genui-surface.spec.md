@@ -8,7 +8,8 @@
 > (`EntryLibraryPack` reuse) · D7 (images/fonts in + the bridge in) · D8 (producer-layer packs) · D9
 > (`ui-sandbox-frame` in `@agent-ui/components`) · the token-bridge ruling.
 > **D6 dependency (load-bearing, one clause):** every wire rule below (SPEC-R1/R2 and every clause that
-> derives from the `{"genui":…}` envelope) binds under PRD §5 **D6-as-RECOMMENDED** — authored ahead of
+> derives from the `{"genui":…}` envelope — plus the D6-recommended SHAPES they carry: SPEC-R4's
+> four-category CSP config and SPEC-R7's bridge vocabulary) binds under PRD §5 **D6-as-RECOMMENDED** — authored ahead of
 > adoption per the repo's tree-wins convention so the build seat has a complete contract the moment D6
 > resolves. Kim's adoption of D6 ratifies these rules as written; a different D6 ruling revises them
 > (and the §3.1 drafted amendment to the sibling SPEC is applied or discarded accordingly). Nothing
@@ -289,7 +290,8 @@ channel, NO host-DOM reach — the PRD §3 non-goal, enforced here. *(→ PRD-G8
 **SPEC-R8 — `action` outward: the fleet's seventh event, routed to the turn loop.** The bootstrap
 MUST expose exactly one model-facing outward API, `genui.action(name, payload?)`. On a valid `action`
 message (`name` a non-empty string ≤ 128 chars; `payload` absent or JSON-serializable ≤ 16 KiB
-serialized — else dropped + counted per SPEC-R7), `ui-sandbox-frame` MUST emit the fleet's **`action`**
+serialized — an order of magnitude above any observed fleet event detail while keeping a hostile
+frame from flooding the turn loop; evidence-revisable per §8 — else dropped + counted per SPEC-R7), `ui-sandbox-frame` MUST emit the fleet's **`action`**
 CustomEvent (ADR-0153's seventh closed-vocabulary member — reused, never a new event name) with detail
 `{ surfaceId: string, name: string, payload?: unknown }`; the control's descriptor declares
 `events: [action]` and both fleet gates (`naming-gates` / `family-coherence`) already allowlist the
@@ -348,7 +350,7 @@ by any of this (§4 N2). *(→ PRD-G1/G2; D8)*
 Options GenUI row MUST gain a working pattern-source picker that picks at SOURCE level (D3 — no
 per-pattern multi-select). Sources are entries of a new data-level kind `pattern-source` (the
 `ENTRY_KINDS` extensible-by-data law — no new list/toggle/author code): committed packs project via a
-pure `genuiPackLibrary(packs): EntryLibraryPack` into the EXISTING "From library" affordance (D4 — no
+pure `genuiPackLibrary(packs): EntryLibraryPack[]` into the EXISTING "From library" affordance (D4 — no
 distinct registry type; a library add commits through the SAME `validateNewEntry` path), and
 hand-authored custom sources (free-text `content` = the exemplar body) are equally legal — degradation
 (SPEC-R10) covers the none-picked state either way. The pick and the modality toggle persist through
@@ -366,8 +368,8 @@ ships. *(→ PRD-G1; D3/D4)*
 | ID | Requirement | Target |
 |---|---|---|
 | **SPEC-N1** | Layering + catalog-invisibility + zero-dep | `ui-sandbox-frame` lives in `@agent-ui/components` (no new dependency, default barrels dependency-free); the a2ui catalog NEVER maps it — no agent can compose it via A2UI (PRD-G4; a standing check asserts no catalog entry resolves to it); `app` composes it into the conversation feed; the DAG gains no upward import (`layering.test.ts` trip-wires stand); the genui wire module is zero-dep pure in `a2ui/src/agent/`. |
-| **SPEC-N2** | The naming law (the PRD §9 collision, resolved) | The wire/store/prose name is lowercase **`genui`**; NEW machinery types use the **`Genui*`** prefix (`GenuiEnvelope`, `GenuiPatternPack`); **`GenUiMode` keeps its name UNTOUCHED** — it is ADR-0090's per-turn prompt-DISPOSITION axis, shipped on the ratified `./agent` surface and riding `ProduceOptions.mode` through the proxy wire, so a rename is churn with no safety gain (rejected); its doc comment gains one clarifying line ("NOT the GenUI surface — see genui-surface SPEC"). Gate: a grep AC — no NEW exported symbol matches `GenUi[A-Z]` beyond the existing ADR-0090 family (`GenUiMode`/`GEN_UI_MODES`/`DEFAULT_GEN_UI_MODE`). |
-| **SPEC-N3** | No live-model standing gate | Every AC above is deterministic (stub transports, committed packs, real-engine probes). PRD §8 **m3** (judge-scored ≥ 4/5 pack-idiom use) is a LIVE-MODEL judgment: it is realized as a judged corpus-rubric eval in the B3 wave (PRD-G6), a NAMED MANUAL run — never `npm test`/`test:browser` (the sibling SPEC-R3 law). |
+| **SPEC-N2** | The naming law (the PRD §9 collision, resolved) | The wire/store/prose name is lowercase **`genui`**; NEW machinery types use the **`Genui*`** prefix (`GenuiEnvelope`, `GenuiPatternPack`); **`GenUiMode` keeps its name UNTOUCHED** — it is ADR-0090's per-turn prompt-DISPOSITION axis, shipped on the ratified `./agent` surface and riding `ProduceOptions.mode` through the proxy wire, so a rename is churn with no safety gain (rejected); its doc comment gains one clarifying line ("NOT the GenUI surface — see genui-surface SPEC"). Gate: a grep AC — no NEW exported symbol matches `GenUi[A-Z]` beyond the existing ADR-0090 family (today only `GenUiMode` matches the pattern; the family's `GEN_UI_MODES`/`DEFAULT_GEN_UI_MODE` sit outside it by case). |
+| **SPEC-N3** | No live-model standing gate | Every AC above is deterministic (stub transports, committed packs, real-engine probes). PRD §8 **m3** (judge-scored ≥ 4/5 pack-idiom use) is a LIVE-MODEL judgment: it is realized as a judged corpus-rubric eval in the B3 wave (PRD-G6), a NAMED MANUAL run — never `npm test`/`test:browser` (the live-agent SPEC-R3 law). |
 | **SPEC-N4** | Fail-closed observability | Every drop/rejection path increments an observable counter (`droppedMessages` on the control; `TurnTrace.failureCodes` producer-side) and NEVER throws across the page — silence is the failure mode this row forbids, crashing is the one PRD-G3 forbids. |
 
 ## 5. Typed contracts
@@ -446,7 +448,8 @@ function genuiPackLibrary(packs: readonly GenuiPatternPack[]): EntryLibraryPack[
 - **`connectDomains`/`frameDomains` stay closed (recommended).** Opening either is a one-row config
   change mechanically, but a RULED decision by law (SPEC-R3/R4's amendment clauses) — flagged so the
   first "just let it fetch" request routes to Kim, not a build.
-- **The 512 KiB cap and the 8 000-char pack budget are evidence-revisable.** Both carry stated
-  rationale; tightening or loosening on real corpus data is a SPEC version bump, not silent drift.
+- **The 512 KiB cap, the 8 000-char pack budget, and the 16 KiB action-payload cap are
+  evidence-revisable.** All three carry stated rationale; tightening or loosening on real corpus
+  data is a SPEC version bump, not silent drift.
 - **Auto-height min/max token defaults** (`--ui-sandbox-frame-{min,max}-block-size`) are LLD/build-tier
   numbers; the clamp LAW is SPEC-R7's.
