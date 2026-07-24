@@ -25,8 +25,8 @@ const { content } = mountPage({
   title: 'Composing a ui-super-shell',
   intro:
     'ui-super-shell is the shell-archetype family’s grammar ceiling (M5) — a two-level recursive ' +
-    'frame you author by marking light-DOM children with data-slot. This page explains its four systems: ' +
-    'the grammar, the collapse contract, recursion, and the narrow reflow.',
+    'frame you author by marking light-DOM children with data-slot. This page explains its five systems: ' +
+    'the grammar, the collapse contract, recursion, the narrow reflow, and the landmarks.',
 })
 
 content.append(
@@ -35,7 +35,7 @@ content.append(
       '[ header? | (rail?+pane?) | content | (pane?+rail?) | footer? ]. Every slot is OPTIONAL and ' +
       'ABSENT when unfilled — you author only the slots you need. Spec-sourced from Kim’s Figma ' +
       'frames (shell-archetypes-m5.spec.md, GH #44): the wireframe and its all-collapsed extreme. Below, ' +
-      'four systems, each shown on a live shell you can inspect and click.',
+      'five systems, each shown on a live shell you can inspect and click.',
   ),
 )
 
@@ -236,6 +236,71 @@ content.append(
   ),
 )
 
+// ════════════════ 5 · Landmarks — role decoupled from placement ════════════════
+// Re-scoped from the retired ui-app-shell composition guide (ADR-0156 clause 4): ADR-0083's
+// role-decoupled-from-placement law survives the deprecation as FAMILY law (clause 3), homed in this
+// grammar's `data-landmark` override (super-shell.ts roleFor()) — so its teaching now lives here, on the
+// family's own page, with the family's own live production reference.
+content.append(sectionHeading('5 · Landmarks — role decoupled from placement'))
+content.append(
+  para(
+    'Every control-created wrapper part carries a REAL ARIA landmark by default, keyed by its slot: ' +
+      'header → ',
+    code('banner'),
+    ', footer → ',
+    code('contentinfo'),
+    ', content → ',
+    code('main'),
+    ', the nav-side slots → ',
+    code('navigation'),
+    ', the options-side slots → ',
+    code('complementary'),
+    ' (LLD-C1). The host element itself carries no role — the landmarks live on the parts.',
+  ),
+)
+content.append(
+  para(
+    'When the right SLOT for a surface is the wrong LANDMARK for it, decouple them: mark the slot’s ' +
+      'first authored child ',
+    code('data-landmark="…"'),
+    ' and the wrapper’s role follows the override instead of the slot default. This is ADR-0083’s ' +
+      'role-decoupled-from-placement law, carried into this family as its permanent home (ADR-0156). The ' +
+      'canonical case is a chat composer: it belongs in the start side (',
+    code('nav-pane'),
+    ') but reads correctly to assistive tech as ',
+    code('complementary'),
+    ', not navigation — exactly what the ',
+    (() => {
+      const a = document.createElement('a')
+      a.href = './a2ui-live.html'
+      a.textContent = 'A2UI live-agent page'
+      return a
+    })(),
+    '’s chat pane does in production.',
+  ),
+)
+{
+  const chatPane = slot('nav-pane', 'nav-pane + data-landmark', 'Start-side placement, but role="complementary" on its wrapper part — inspect it.')
+  chatPane.setAttribute('data-landmark', 'complementary')
+  content.append(
+    demoShell([
+      slot('header', 'header', 'Chrome — role="banner" by default.'),
+      chatPane,
+      slot('content', 'content', 'The canvas — always role="main".'),
+    ]),
+  )
+}
+content.append(
+  para(
+    'The override vocabulary is ',
+    code('banner · navigation · main · complementary · contentinfo · region · form · search'),
+    ' — reused verbatim from ADR-0083’s own value set. A value outside it is ignored and the slot default ' +
+      'stands. Author responsibility stays the same as ever: exactly one ',
+    code('main'),
+    ' landmark per document.',
+  ),
+)
+
 // ════════════════ API reference — DERIVED from the descriptor ════════════════
 content.append(sectionHeading('API reference'))
 content.append(
@@ -272,6 +337,13 @@ const changelog = renderChangelogTable([
     type: 'Feature',
     id: 'GH #84',
     summary: 'The docs site’s own chrome migrated onto ui-super-shell — a collapsible, persisted nav pane.',
+  },
+  {
+    date: '2026-07-21',
+    type: 'Decision',
+    id: 'ADR-0156',
+    summary:
+      'ui-app-shell deprecated in favor of this family; ADR-0083’s landmark-override law re-homed here as family law (data-landmark), its teaching re-scoped onto this page.',
   },
 ])
 if (changelog) content.append(changelog)

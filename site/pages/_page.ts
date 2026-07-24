@@ -415,37 +415,34 @@ export const NAV: readonly NavGroup[] = [
     links: [{ href: './swiper-label-doc.html', label: 'API' }],
   },
   {
-    // The application-frame primitive (@agent-ui/app, ADR-0082/0083/0084). A GUIDE page, not a fleet component
-    // in components/src — so it is an ungrouped site-level link (no `label:`, hence no site-toc GROUP), exactly
-    // like the A2UI pages below; site-coverage/site-toc derive their fleet from components/src and never expect
-    // an `app-shell-{type}.html` set for it.
-    links: [{ href: './app-shell.html', label: 'App Shell' }],
-  },
-  {
-    // ui-super-shell (@agent-ui/app, M5 — ADR-0151/shell-archetypes-m5.spec.md, GH #83/#84). The SAME
-    // ungrouped-site-level-link posture as App Shell just above.
+    // ui-super-shell (@agent-ui/app, M5 — ADR-0151/shell-archetypes-m5.spec.md, GH #83/#84): the
+    // application-frame archetype family's grammar ceiling. A GUIDE page, not a fleet component in
+    // components/src — so it is an ungrouped site-level link (no `label:`, hence no site-toc GROUP), exactly
+    // like the A2UI pages below; site-coverage/site-toc derive their fleet from components/src and never
+    // expect a `super-shell-{type}.html` set for it. (The App Shell link retired with its teaching page —
+    // ADR-0156.)
     links: [{ href: './super-shell.html', label: 'Super Shell' }],
   },
   {
     // ui-chat-shell (@agent-ui/app, M5 round 4 — GH #98; shell-archetypes-m5.lld.md LLD-C6). The SAME
-    // ungrouped-site-level-link posture as App Shell/Super Shell just above.
+    // ungrouped-site-level-link posture as Super Shell just above.
     links: [{ href: './chat-shell.html', label: 'Chat Shell' }],
   },
   {
     // ui-master-detail (@agent-ui/app, ADR-0120 cl.3a; app-surfaces-m4.lld.md LLD-C10, M4 Phase 2) — the
-    // SAME ungrouped-site-level-link posture as App Shell just above: a GUIDE page for an app-tier
+    // SAME ungrouped-site-level-link posture as Super Shell just above: a GUIDE page for an app-tier
     // composition, not a fleet component in components/src.
     links: [{ href: './master-detail.html', label: 'Master Detail' }],
   },
   {
     // ui-settings (@agent-ui/app, ADR-0120 cl.4; app-surfaces-m4.lld.md LLD-C12, M4 Phase 3) — the SAME
-    // ungrouped-site-level-link posture as App Shell/Master Detail just above: a GUIDE page for an app-tier
-    // composition, not a fleet component in components/src.
+    // ungrouped-site-level-link posture as Super Shell/Master Detail just above: a GUIDE page for an
+    // app-tier composition, not a fleet component in components/src.
     links: [{ href: './settings.html', label: 'Settings' }],
   },
   {
     // @agent-ui/router (LLD-C10b, SPEC-R8) — another package above components on the DAG, same posture as
-    // App Shell just above: a GUIDE page for a package, not a fleet component in components/src, so it is an
+    // Super Shell just above: a GUIDE page for a package, not a fleet component in components/src, so it is an
     // ungrouped site-level link — site-coverage/site-toc/site-canon (all components/src-scoped) never expect a
     // `router-{type}.html` per-component set for it.
     links: [{ href: './router-doc.html', label: 'Router' }],
@@ -468,7 +465,7 @@ export const NAV: readonly NavGroup[] = [
   },
   {
     // ui-agent-admin (@agent-ui/app, TKT-0039/ADR-0131) — the SAME ungrouped-site-level-link posture as
-    // App Shell/Master Detail/Settings just above: a GUIDE page for an app-tier composition (ui-split +
+    // Super Shell/Master Detail/Settings just above: a GUIDE page for an app-tier composition (ui-split +
     // ui-settings + ui-conversation), not a fleet component in components/src.
     links: [{ href: './agent-admin.html', label: 'Agent Admin' }],
   },

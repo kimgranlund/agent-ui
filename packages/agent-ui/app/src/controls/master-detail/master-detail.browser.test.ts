@@ -13,11 +13,6 @@ import './master-detail.css'
 import './master-detail.ts'
 import './master-detail-pane.ts'
 import type { UIMasterDetailElement } from './master-detail.ts'
-// The isolated-shell relocation proof (component-reviewer MAJOR follow-up) — a REAL ui-app-shell composing a
-// REAL master-detail, so the reconnect master-detail.test.ts's jsdom reconnect legs simulate via a plain
-// re-parent is proven in the ACTUAL production shape that triggers it (ADR-0082's isolated connect flow).
-import '@agent-ui/app/app-shell.css'
-import '@agent-ui/app/app-shell'
 
 const mounted: HTMLElement[] = []
 afterEach(() => {
@@ -134,13 +129,20 @@ describe('ui-master-detail cross-engine smoke — narrow drill-in (SPEC-R7 AC1)'
   })
 })
 
-describe('ui-master-detail composed inside an ISOLATED ui-app-shell region (component-reviewer MAJOR follow-up)', () => {
-  it('a master-detail relocated by ADR-0082 isolation composes EXACTLY ONCE — no duplicate ui-split from the relocation reconnect', () => {
-    const shell = document.createElement('ui-app-shell')
-    shell.setAttribute('isolated', '')
-    const region = document.createElement('ui-app-shell-region')
-    region.setAttribute('region', 'main')
-
+describe('ui-master-detail relocation reconnect, cross-engine (component-reviewer MAJOR follow-up)', () => {
+  // The reconnect contract: `connected()` fires on EVERY connect, and `#compose` must be a no-op after the
+  // first — recomposing on a reconnect finds `#panes()` empty (the panes already live inside the FIRST
+  // composed split) and appends a SECOND, empty ui-split beside the real one (the MEASURED defect this
+  // suite exists for, originally reproduced by the reviewer via exactly this re-parent).
+  //
+  // VEHICLE (ADR-0156 clause 4): this leg used to ride `<ui-app-shell isolated>`'s shadow relocation
+  // (ADR-0082) as its relocating host. That capability retires with the deprecated component, so the
+  // harness now drives the SAME lifecycle sequence directly: a single `append` onto a new parent is an
+  // atomic remove+insert — disconnectedCallback then connectedCallback fire on the moved element with its
+  // own children untouched, exactly the sequence `shadow.append(...this.children)` produced. The jsdom
+  // twin (master-detail.test.ts) simulates this re-parent; THIS leg keeps it true in real engines' native
+  // custom-elements lifecycle, both Chromium and WebKit.
+  it('a master-detail RELOCATED to a new parent after its first connect composes EXACTLY ONCE — no duplicate ui-split from the reconnect', () => {
     const md = document.createElement('ui-master-detail')
     const list = document.createElement('ui-master-detail-pane')
     list.setAttribute('pane', 'list')
@@ -149,22 +151,22 @@ describe('ui-master-detail composed inside an ISOLATED ui-app-shell region (comp
     detail.setAttribute('pane', 'detail')
     detail.textContent = 'Detail'
     md.append(list, detail)
-    region.append(md)
-    shell.append(region)
 
-    // The isolated connectedCallback override relocates `region` (and everything inside it, including `md`)
-    // into the shadow root SYNCHRONOUSLY, as part of `shell`'s own connect — by the time this append call
-    // returns, the relocation (and md's resulting disconnect+reconnect) has already happened.
-    document.body.append(shell)
+    const host = document.createElement('div')
+    document.body.append(md, host) // first connect — `#compose` relocates the panes into the ONE ui-split
     try {
-      const inShadowMd = shell.shadowRoot!.querySelector('ui-master-detail') as HTMLElement
-      expect(inShadowMd, 'the master-detail did not relocate into the shadow at all — setup broken').not.toBeNull()
-      expect(inShadowMd.querySelectorAll('ui-split'), 'a second, empty ui-split survived the isolation relocation reconnect').toHaveLength(1)
-      expect(inShadowMd.querySelectorAll('[data-part="back"]')).toHaveLength(1)
-      expect(inShadowMd.querySelector('[data-role="list"]')?.textContent).toContain('List')
-      expect(inShadowMd.querySelector('[data-role="detail"]')?.textContent).toContain('Detail')
+      expect(md.querySelectorAll('ui-split'), 'sanity: the first connect must compose the one split').toHaveLength(1)
+
+      host.append(md) // RELOCATION: implicit remove + insert — disconnected then connected, children untouched
+
+      expect(md.isConnected && md.parentElement === host, 'the master-detail did not relocate at all — harness broken').toBe(true)
+      expect(md.querySelectorAll('ui-split'), 'a second, empty ui-split survived the relocation reconnect').toHaveLength(1)
+      expect(md.querySelectorAll('[data-part="back"]')).toHaveLength(1)
+      expect(md.querySelector('[data-role="list"]')?.textContent).toContain('List')
+      expect(md.querySelector('[data-role="detail"]')?.textContent).toContain('Detail')
     } finally {
-      shell.remove()
+      host.remove()
+      md.remove()
     }
   })
 })
