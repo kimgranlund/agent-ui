@@ -732,6 +732,12 @@ describe('formatTotalElapsed — the receipt total (GH #239/ADR-0159)', () => {
     expect(formatTotalElapsed(32_000)).toBe('32s')
     expect(formatTotalElapsed(72_000)).toBe('1m 12s')
   })
+
+  it('the [9950, 9999] rounding band hands off to the ≥10s vocabulary — never a "10.0s" double-spelling', () => {
+    expect(formatTotalElapsed(9950)).toBe('10s')
+    expect(formatTotalElapsed(9999)).toBe('10s')
+    expect(formatTotalElapsed(9949)).toBe('9.9s')
+  })
 })
 
 /** A stream with the receipt-pattern opt-ins already materialized (the effect runs on connect, flushed). */
@@ -804,7 +810,7 @@ describe('ui-status-stream — oneline: the LIVE one-morphing-line mode (GH #239
     el.appendEntry({ key: 's2', status: 'active', label: 'Opening a new surface…' })
     expect(cell.textContent, 'morphs to the newest active step').toBe('Opening a new surface…')
 
-    expect(labelCell(), 'the SAME cell node throughout — textContent mutations only, which role=log additions-relevance never announces').toBe(cell)
+    expect(labelCell(), 'the SAME cell node throughout — textContent mutations only, never an insertion (the fleet role=log discipline: a morph cannot ride the additions channel twice)').toBe(cell)
     el.remove()
   })
 

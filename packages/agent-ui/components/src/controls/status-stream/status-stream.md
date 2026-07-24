@@ -76,7 +76,7 @@ aria:
   role: log                 # set via ElementInternals in the CONSTRUCTOR (before insertion) — a POLITE live region (role=log's implicit aria-relevant="additions" default)
   roleSource: internals
   labelSource: label-prop   # a non-empty `label` sets internals.ariaLabel; cleared to null on ''
-  liveDiscipline: 'role=log carries an implicit aria-relevant="additions" — a genuinely NEW entry (appendEntry) announces; a `text` patch that mutates an EXISTING node''s textContent does not re-trigger the additions-relevant announcement (state transitions announce, token spam does not, for free)'
+  liveDiscipline: 'role=log — a genuinely NEW entry (appendEntry) rides the additions channel. Honestly stated (ADR-0159): the DEFAULT aria-relevant for role=log is "additions text", so a textContent mutation IS relevant in principle; the fleet''s discipline is that every in-place patch (streamed `text`, the ADR-0153 ticking timestamp, the ADR-0159 morphing line / done-label re-stamp) is a SAME-NODE mutation, never an insertion — so no label transition can ride the additions channel twice. A live screen-reader spot-check is ADR-0159''s named follow-up.'
 
 keyboard:                  # GH #239/ADR-0159 — the header-row disclosure, only in an opted-in (`oneline`/`receipt`) mode; a default strip keeps zero keyboard interaction of its own (items handle their own — the composed detail's disclosure)
   - keys: Enter / Space
@@ -155,9 +155,12 @@ default `false`, so every existing consumer keeps its always-expanded shape byte
 
 Both modes materialize the header row (it IS the one line) even when `header` is `false`; the collapse
 state is a `collapsed` custom state (`:state(collapsed)` hides the entry list in CSS). Announcement
-discipline: the morphing line and the done-label re-stamps (GH #238 — the consumer's live/done pair
-table) are textContent **mutations** on existing cells, which `role=log`'s additions-only relevance never
-re-announces — label transitions cannot double-fire the live region.
+discipline (honestly stated): the morphing line and the done-label re-stamps (GH #238 — the consumer's
+live/done pair table) are **same-node textContent mutations, never node insertions** — the fleet's
+established `role=log` discipline (ADR-0153's ticking timestamps shipped the same bet), which is what
+keeps a label transition from riding the additions channel twice. `role=log`'s default `aria-relevant`
+is `additions text`, so a mutation is relevant in principle; a live screen-reader spot-check is
+ADR-0159's named follow-up.
 
 ```html
 <ui-status-stream label="Agent activity" oneline receipt></ui-status-stream>
@@ -287,6 +290,8 @@ follow. The stream owns its own scroll region (`overflow-y: auto`).
 ## Accessibility
 
 `internals.role = 'log'` (a **polite** live region, never `assertive` by default), set in the constructor
-— before insertion. `role="log"`'s implicit `aria-relevant="additions"` default means a genuinely new
-entry (`appendEntry`) announces, while a `text` patch mutating an existing node's content does not re-trigger
-an additions announcement — state transitions announce, token-by-token spam does not.
+— before insertion. A genuinely new entry (`appendEntry`) rides the additions channel. Honestly stated
+(ADR-0159): `role="log"`'s default `aria-relevant` is `additions text`, so an in-place text patch is
+relevant in principle — the fleet's discipline is that every such patch is a **same-node mutation, never
+an insertion**, so no transition can ride the additions channel twice; a live screen-reader spot-check
+is ADR-0159's named follow-up.

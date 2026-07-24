@@ -93,9 +93,12 @@
 // `header` prop's own semantics are unchanged. The disclosure state lives in a `collapsed` custom state
 // (`internals.states`, the timeline-item `:state(truncated)` precedent) + `aria-expanded` on the header
 // row (`role="button"`, `tabindex="0"` — keyboard-operable, only in the opted-in modes). Announcement
-// discipline: `role=log`'s additions-only relevance means the morphing line's textContent mutations and a
-// settled entry's done-label re-stamp (GH #238, the consumer's pair table) never re-announce — no
-// double-fire on label transitions, by the same construction the file header documents.
+// discipline (stated honestly): role=log's DEFAULT aria-relevant is `additions text`, so a textContent
+// morph IS relevant in principle — the quietness bet here is the fleet's ESTABLISHED role=log discipline
+// (the file-header paragraph above; ADR-0153's once-per-second ticking timestamps already shipped the
+// same bet), and the TESTED discipline is same-node mutation: a label morph/re-stamp never inserts a
+// node, so it can never ride the additions channel twice. A live screen-reader spot-check is the named
+// follow-up (ADR-0159 Consequences), not something this build claims to have proven.
 
 import { UIContainerElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import { UITimelineItemElement } from '../timeline-item/timeline-item.ts' // constructs items via its own API (F4)
@@ -210,7 +213,9 @@ export function formatElapsed(ms: number): string {
  *  exported for direct unit-testing (the `formatElapsed` precedent). */
 export function formatTotalElapsed(ms: number): string {
   const clamped = Math.max(0, ms)
-  if (clamped < 10_000) return `${(clamped / 1000).toFixed(1)}s`
+  // The decimal band hands off at 9950ms, not 10000: toFixed(1) rounds, so [9950, 9999] would render
+  // "10.0s" — a value the ≥10s vocabulary already owns as "10s". One boundary, no double-spelling.
+  if (clamped < 9950) return `${(clamped / 1000).toFixed(1)}s`
   return formatElapsed(clamped)
 }
 
@@ -400,7 +405,8 @@ export class UIStatusStreamElement extends UIContainerElement {
     if (patch.startedAt !== undefined || patch.status !== undefined) this.#refreshTicking()
     if (patch.action !== undefined || patch.status !== undefined) this.#renderAction(item, key)
     // GH #239/ADR-0159 — a transition TO `active` re-targets the morphing line at this entry; a label/status
-    // patch repaints the line (a textContent mutation on an existing cell — role=log never re-announces it).
+    // patch repaints the line (a same-node textContent mutation, never an insertion — the fleet's role=log
+    // discipline; see the file header's honest announcement-discipline note).
     if (patch.status === 'active') this.#currentKey = key
     if (patch.status !== undefined || patch.label !== undefined) this.#refreshLine()
     if (this.#growsTail(patch)) this.#tailFollow(item)
@@ -740,8 +746,9 @@ export class UIStatusStreamElement extends UIContainerElement {
    *  exists). The label cell MORPHS to the current step's live label only while `oneline`, collapsed and
    *  un-settled; everywhere else it shows the static `label` (the F8 shape). The meta cell shows the
    *  ticking turn-elapsed while `oneline` runs, and the "N steps · total" receipt once settled. Every
-   *  write here is a textContent mutation on an existing cell — role=log's additions-only relevance means
-   *  none of it announces (no double-fire on label transitions, GH #239's a11y requirement). */
+   *  write here is a same-node textContent mutation, never a node insertion — the fleet's established
+   *  role=log discipline (file header's announcement-discipline note: ADR-0153's ticking timestamps made
+   *  the same bet), which is what keeps a label transition from riding the additions channel twice. */
   #refreshLine(): void {
     const label = this.#headerLabel
     if (label) {

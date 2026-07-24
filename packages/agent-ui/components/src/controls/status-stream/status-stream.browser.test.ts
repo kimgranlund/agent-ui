@@ -452,14 +452,17 @@ describe('ui-status-stream — oneline/receipt collapse, real-engine visibility 
     for (const item of items) expect(getComputedStyle(item).display).toBe('none')
   })
 
-  it('the disclosure is genuinely keyboard-operable: Tab reaches the header row, Enter expands, Space collapses', async () => {
+  it('the disclosure is genuinely keyboard-operable: Tab reaches the header row, the shared fleet focus ring draws (:focus-visible, ADR-0009), Enter expands, Space collapses', async () => {
     const { stream } = mount('<ui-status-stream oneline label="Agent activity"></ui-status-stream>')
     stream.appendEntry({ key: 's1', status: 'active', label: 'Working…' })
     await raf2()
     const header = stream.querySelector('[data-part="header"]') as HTMLElement
 
-    header.focus()
-    expect(document.activeElement, 'tabindex=0 makes the row focusable').toBe(header)
+    await userEvent.tab() // KEYBOARD focus — the only path :focus-visible is required to match
+    expect(document.activeElement, 'tabindex=0 makes the row the tab stop').toBe(header)
+    expect(getComputedStyle(header).outlineStyle, 'the four-states law: the interactive row paints the shared fleet ring on keyboard focus').toBe('solid')
+    expect(parseFloat(getComputedStyle(header).outlineWidth), 'a real ring, not a zero-width outline').toBeGreaterThan(0)
+
     await userEvent.keyboard('{Enter}')
     expect(header.getAttribute('aria-expanded')).toBe('true')
     await userEvent.keyboard(' ')

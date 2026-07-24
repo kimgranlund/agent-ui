@@ -85,9 +85,13 @@ custom state (`:state(collapsed)` hides the entry list — the `:state(truncated
 turn clock **anchors at the first `appendEntry`** (the first observed work — never fabricated) and
 rides ADR-0153's ONE shared interval; the receipt total renders through a new pure
 `formatTotalElapsed` (one decimal under 10s — "3.2s" — delegating to `formatElapsed` above, one
-display vocabulary). Announcement discipline: the morphing line and the done-label re-stamps are
-textContent **mutations** on existing cells, which `role=log`'s additions-only relevance never
-re-announces — label transitions cannot double-fire the live region.
+display vocabulary). Announcement discipline, stated honestly: `role=log`'s DEFAULT `aria-relevant`
+is `additions text`, so a textContent morph IS relevant in principle — the quietness bet this wave
+makes is the fleet's **established role=log discipline** (the ADR-0122 charter's precedent; ADR-0153's
+once-per-second ticking timestamps already shipped the same bet), and the **tested** discipline is
+same-node mutation: a label morph/re-stamp never inserts a node (asserted by node identity), so a
+label transition can never ride the additions channel twice. A live screen-reader spot-check is the
+named follow-up (Consequences).
 
 ### 3 — The consumer wiring
 
@@ -109,6 +113,10 @@ default-off, byte-identical.
   carries no role/tabindex, asserted as a negative control cross-engine.
 - Consumers asserting settled label text (a2ui-chat's narration-honesty gate) now assert the done
   forms; the KNOWN_LABELS closed set carries both forms of each pair.
+- **Named follow-up:** a live screen-reader spot-check (VoiceOver/NVDA) of the morphing line and the
+  done-label re-stamps under `role=log` — the same-node-mutation discipline is tested mechanically,
+  but actual SR quietness across engine/AT pairs is a bet inherited from ADR-0153's ticking
+  timestamps, not something this wave has observed live.
 - GH #240 (wave B — per-step source reveal) builds on this collapse mechanism later; nothing in
   this record forecloses it.
 
@@ -128,6 +136,7 @@ default-off, byte-identical.
   mechanics for a fold the header row + one custom state express with zero re-parenting.
 - **A second interval for the turn clock** — rejected: ADR-0153 fixed ONE shared per-host interval;
   the line clock is one more repaint inside the same tick.
-- **`aria-live` wiring for the morphing line** — rejected: `role=log` additions-only semantics
-  already give the required quietness for free (the ADR-0122 discipline); bespoke live-region
-  attributes are exactly what the family charter forbids.
+- **`aria-live` wiring for the morphing line** — rejected: bespoke live-region attributes are
+  exactly what the ADR-0122 family charter forbids; the wave stays on the fleet's one established
+  `role=log` discipline (same-node mutation, no insertions) rather than adding a second,
+  contradictory announcement path.

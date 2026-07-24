@@ -158,6 +158,13 @@
     cursor: pointer;
     user-select: none;
   }
+  /* Keyboard focus — the ONE shared fleet ring (ADR-0009), read directly (the disclosure.css/button.css
+     exception to "consume only --ui-status-stream-*"): identical across every control, keyboard-only,
+     layout-neutral. Only the opted-in (role=button) header row is focusable at all. */
+  :scope > [data-part='header'][role='button']:focus-visible {
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
   /* The meta cell — the ticking turn-elapsed while live, "N steps · 3.2s" once settled. Secondary ink,
      tabular digits so the ticking display never jitters the row. */
   :scope > [data-part='header'] [data-part='header-meta'] {
