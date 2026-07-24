@@ -1,6 +1,6 @@
 # SPEC — A2UI Live-Agent Example (a real LLM emitting A2UI over the wire)
 
-> Status: accepted · v0.7 · 2026-07-20 (v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> Status: accepted · v0.8 · 2026-07-24 (v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
 > v0.7 changelog (ADR-0152, proposed — a production Cloudflare Worker port of the live-agent proxy):
 > SPEC-R9/R10's build-time "dev-only dynamic import + `vite build` tree-shake" enforcement mechanism is
 > REPLACED, not merely extended, by a runtime `GET /status` probe + same-origin (CSRF) check — the docs
@@ -94,6 +94,17 @@
 > Anthropic lifecycle mapping, `produce()`'s interleaved progress (opt-in; validate-then-stream preserved),
 > `progressDetail`, and `RecordedTurn.progress` all shipped gate-green; `AgentTransport.turn()` stayed
 > byte-identical, the typed-frame trigger re-deferred as recorded.
+>
+> **Amendment (2026-07-24, docs-only — the body below is UNCHANGED, append-only):** the turn stream
+> gains a THIRD reserved line kind, `{"genui":{surfaceId, html}}` ([genui-surface
+> SPEC](./genui-surface.spec.md) SPEC-R1/R2 — Kim's 2026-07-24 D6 ruling, PRD §4). SPEC-R5's
+> validate-then-stream law is UNCHANGED for every A2UI content line, and SPEC-N4's
+> filter-before-ingest rule covers the new kind identically (no `version` key ⇒
+> `VERSION_UNSUPPORTED` fault isolation holds). SPEC-R5's SCOPE statement narrows honestly for the
+> genui kind ONLY: its payload is opaque HTML — `validateA2ui` parity does not apply; wire-time
+> validation is the structural envelope + byte cap, and the semantic fail-closed leg (containment
+> before paint) lives at render time per genui-surface SPEC-R3/R4. The genui kind never enters
+> `heal`/`validateA2ui`, the corpus, or the `allLines` path.
 
 ---
 

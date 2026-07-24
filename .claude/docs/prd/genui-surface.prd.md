@@ -1,9 +1,10 @@
 # PRD — GenUI (sandboxed free-form generative UI) for the agent-admin surface
 
-> Status: **proposed · v0.3 · 2026-07-23 · Owner: agent-ui** — the residual forks D7/D8/D9 are now
-> RULED (§4, Kim's 2026-07-23 in-session rulings, host-witnessed); **one fork remains** — §5 D6
-> (wire path), carrying a research-backed recommendation that **awaits Kim's adoption**. No build
-> exists or is scheduled until D6 resolves and a SPEC lands.
+> Status: **proposed · v0.4 · 2026-07-24 · Owner: agent-ui** — every fork is now RULED (§4): D1/D3/
+> D4/D7/D8/D9 on 2026-07-23, and **D6 (wire path) on 2026-07-24** — Kim's adoption of the
+> research-backed recommendation. The design gate on GenUI is closed; the SPEC ([genui-surface
+> SPEC](../spec/genui-surface.spec.md)) is written to this ruling and its own B0 (nothing builds
+> before D6 resolves) is now satisfied — GenUI B1 is buildable.
 > Altitude: this document owns **why + what-should-exist** for GenUI — the third Surface Options
 > modality. Behavior contracts (wire shape, sandbox/CSP directive matrix, bridge vocabulary,
 > envelope validation) land in a future SPEC; nothing below is a design commitment beyond the §4
@@ -13,10 +14,13 @@
 > the 2026-07-19 ruling *"Yes we need a PRD for GenUI work"* — Kim's **2026-07-23 in-session
 > AskUserQuestion rulings (host-witnessed)** recorded in §4 (two sittings, same date: the identity
 > re-cut D1/D3/D4 + token bridge, then the residual-fork rulings D7/D8/D9) — and the completed
-> **2026-07-23 D6 ecosystem survey** (§5.1). Version history: v0.1 (2026-07-19) framed GenUI as
-> pattern-sourced A2UI composition; v0.2 (2026-07-23) replaced that identity per §4; v0.3
-> (2026-07-23) folds the D7/D8/D9 rulings and the D6 wire-path research, plus mechanical §4 D1/D2
-> pointer touch-ups (their "§5 D7"/"§5 D8" references re-aimed at the now-ruled rows).
+> **2026-07-23 D6 ecosystem survey** (§5.1), adopted by Kim's **2026-07-24 chat ruling**: *"proceed.
+> align with best practices of claude.ai and chatgpt canvas artifacts and streaming json
+> standards"* — confirming, not redirecting, the survey's own finding (MCP Apps is the joint
+> Anthropic/OpenAI/MCP-UI-community spec for exactly this shape). Version history: v0.1
+> (2026-07-19) framed GenUI as pattern-sourced A2UI composition; v0.2 (2026-07-23) replaced that
+> identity per §4; v0.3 (2026-07-23) folds the D7/D8/D9 rulings and the D6 wire-path research; v0.4
+> (2026-07-24) folds Kim's D6 adoption — every fork is ruled.
 
 ## 1. Problem
 
@@ -45,7 +49,7 @@ agent render" currently ends at the catalog boundary.
 | **PRD-G5** | must | **Token bridge in v1** (§4, ruled): the iframe srcdoc gets the `--md-sys-*` custom properties + `color-scheme` injected, so generated UI matches the app theme from day one; live theme flips ride the §4 D7 bridge (recommended shape §5 D6; mechanics SPEC-tier). |
 | **PRD-G6** | should | A judged GenUI corpus shard + a docs page, matching the A2UI corpus discipline (facets · admission · pins). |
 | **PRD-G7** | could | Pattern sources are shareable/exportable (an admin hands a source to another workspace). |
-| **PRD-G8** | must | **Interactive GenUI in v1** (§4 D7): an agent↔frame postMessage bridge with a small **CLOSED** vocabulary — never an open message bus, no generic tool-call channel in v1. The recommended vocabulary shape (lifecycle handshake · size/theme inward · the fleet's own `action` event outward, ADR-0153) is §5 D6's, awaiting adoption; the exact message contract is SPEC-tier. |
+| **PRD-G8** | must | **Interactive GenUI in v1** (§4 D7): an agent↔frame postMessage bridge with a small **CLOSED** vocabulary — never an open message bus, no generic tool-call channel in v1. The vocabulary shape (lifecycle handshake · size/theme inward · the fleet's own `action` event outward, ADR-0153) is §4 D6's, ruled; the exact message contract is SPEC-tier (SPEC-R7/R8). |
 
 ## 3. Non-goals
 
@@ -58,12 +62,13 @@ agent render" currently ends at the catalog boundary.
   "no parent↔frame messaging bridge in v1" non-goal is removed — D7 ruled the bridge in.)*
 - **Not** per-pattern multi-select — the picker picks at source (pack) level for v1 (§4 D3).
 - **Not** built yet: the admin's GenUI row stays visible-but-disabled, pointing at this PRD, until
-  §5 D6 is adopted and the SPEC tier lands.
+  B1 (§7) ships — the design gate (D6) is closed and the SPEC is written, but no component code
+  exists yet.
 
 *(Removed from v0.1: "not arbitrary generated HTML/JS, permanently out of scope" — per §4 D1 that is
 now the definition of the feature, not its exclusion.)*
 
-## 4. Ruled record — 2026-07-23 (Kim, in-session AskUserQuestion rulings, host-witnessed; two sittings, same date)
+## 4. Ruled record — 2026-07-23 (Kim, in-session AskUserQuestion rulings, host-witnessed; two sittings, same date) + 2026-07-24 (D6, Kim's chat ruling)
 
 | Old fork | Ruling |
 |---|---|
@@ -76,14 +81,16 @@ now the definition of the feature, not its exclusion.)*
 | **PRD-D7** | **RULED — both loosenings** (overturning v0.2's twin "recommend NO" leans): external **images/fonts are allowed** in v1, AND v1 **ships a postMessage agent↔frame bridge** — interactive GenUI (→ PRD-G8). The containment law (PRD-G3) is unchanged: no `allow-same-origin`, no top navigation; external reach is allow-listed, never open (the §5 D6 survey's four-category CSP shape is the recommended pattern — images/fonts land as `resourceDomains`), and the bridge carries a small CLOSED vocabulary, not an open message bus. The exact sandbox/CSP directive matrix, allow-list defaults, and bridge message shapes stay **SPEC-tier**. |
 | **PRD-D8** | **RULED — the producer layer, as recommended**: typed, byte-pinned prompt-asset modules under the a2ui package's agent surface (`src/agent/`), exported via the existing `./agent` subpath alongside its prompt texts — NOT the `@agent-ui/a2ui/examples` seed shelf (its `ExampleSeed` is A2UI-message-shaped, the wrong shape for HTML idiom exemplars). Admin-side, packs surface through `EntryLibraryPack` per D4 — the pack module is the source of truth; the library affordance is its projection. Root-barrel purity holds: zero pack bytes in `.` (the ADR-0137 discipline). |
 | **PRD-D9** | **RULED — `ui-sandbox-frame` in `@agent-ui/components`, as recommended**: a new light-DOM FACE control (Fisher-Price: a frame that sandboxes) wrapping the one native `<iframe>`, owning the sandbox attribute set, the CSP + token-bridge injection into srcdoc, and the fail-closed never-paint path. Catalog-invisible by construction: the a2ui catalog never maps it, so no agent can compose it via A2UI (PRD-G4); `app` composes it into the conversation feed. |
+| **PRD-D6** | **RULED — 2026-07-24, Kim's chat ruling: *"proceed. align with best practices of claude.ai and chatgpt canvas artifacts and streaming json standards."*** Adopts the §5.1 survey's recommendation exactly as researched (below) — the in-house third JSONL kind, the MCP-Apps-shaped safety model, atomic HTML. Kim's phrasing confirms rather than redirects: MCP Apps is the joint Anthropic/OpenAI/MCP-UI-community spec already identified as the safety-model donor. |
 
-## 5. Open fork — one residual (D6), research-backed recommendation **awaiting Kim's adoption**
+## 5. §5 — closed. All forks ruled (§4); nothing residual.
 
-Kim redirected D6 to research (2026-07-23); the survey is complete (§5.1). Its recommendation
-stands below as a **research-backed recommendation — NOT ruled**; it becomes the contract only when
-Kim adopts it.
+D6 (wire path) was the last open fork. Kim adopted it 2026-07-24 as researched; the ruling and its
+full rationale now live in §4's D6 row + the survey below (§5.1, kept as the durable grounding
+record). The SPEC ([genui-surface SPEC](../spec/genui-surface.spec.md)) is written to this exact
+recommendation and its own B0 gate is satisfied — see §7 for the next buildable slice (B1).
 
-**PRD-D6 — wire path** (how does generated HTML travel producer → client?). **Recommend: keep the
+**PRD-D6 — wire path** (how does generated HTML travel producer → client?). **Ruled: keep the
 in-house third reserved JSONL line kind, align the safety-model SHAPE with MCP Apps, keep the HTML
 payload atomic per surface.** Concretely:
 
@@ -146,16 +153,16 @@ the PAYLOAD**: every node is catalog-checked, portable, accessible by constructi
 the desired shape is enumerable by the catalog's type system. **GenUI validates the BOUNDARY**: the
 HTML is opaque and never inspected semantically; safety is containment — sandbox + CSP + the closed
 bridge; it wins for genuinely novel compositions the catalog never anticipated. Where they meet:
-**one shared turn stream with disjoint wire markers** (extending ADR-0088's law — the §5 D6
-recommended shape, awaiting adoption), deliberately supporting both lanes side by side — the
-modality is picked per turn, and neither lane renders through the other (§3).
+**one shared turn stream with disjoint wire markers** (extending ADR-0088's law — §4 D6's ruled
+shape), deliberately supporting both lanes side by side — the modality is picked per turn, and
+neither lane renders through the other (§3).
 
 ## 7. Deliverable ladder (sketch — real milestones land in the SPEC)
 
-B0 D6 adoption (§5, Kim) → B1 the sandbox host control `ui-sandbox-frame` + token bridge (PRD-G3/
-G4/G5, §4 D9) → B2 wire path + producer integration + bridge interactivity (exemplar packs
-conditioning the code-generating prompt, the picker live — PRD-G1/G2/G8) → B3 corpus + docs
-(PRD-G6).
+B0 D6 adoption (§4, Kim, **done — 2026-07-24**) → **B1 (next, buildable now)** the sandbox host
+control `ui-sandbox-frame` + token bridge (PRD-G3/G4/G5, §4 D9) → B2 wire path + producer
+integration + bridge interactivity (exemplar packs conditioning the code-generating prompt, the
+picker live — PRD-G1/G2/G8) → B3 corpus + docs (PRD-G6).
 
 ## 8. Success metrics
 
@@ -183,9 +190,9 @@ picked yields generated HTML that:
   blue-sky`) unrelated to this surface. The SPEC must name this feature's machinery so the two
   never blur (e.g. `genui` as the surface/envelope key vs. the untouched `GenUiMode` type), or
   propose the ADR-0090 axis a clarifying rename in its own record.
-- **SPEC-R5 amendment is real scope** (§5 D6): the validator-parity law
+- **SPEC-R5 amendment is real scope** (§4 D6, ruled 2026-07-24): the validator-parity law
   ([a2ui-live-agent](../spec/a2ui-live-agent.spec.md) SPEC-R4 AC2 — driver, renderer, and corpus
-  admission all use the same `validateA2ui`/`heal`) gains a deliberate, documented exception —
-  worth an explicit SPEC clause, not a footnote.
+  admission all use the same `validateA2ui`/`heal`) gains a deliberate, documented exception,
+  applied for real in that sibling SPEC as of this ruling — not a footnote here.
 - The admin's disabled GenUI row and its "PRD pending" note stay accurate until B1 ships; the
   live-apply law (PRD-G1) inherits the Surface Options card's existing store discipline.

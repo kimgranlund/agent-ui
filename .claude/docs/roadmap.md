@@ -111,16 +111,15 @@ decision (dated line in §4).
 
 ## 3 · Next — concrete, near-term
 
-- **GenUI surface — one fork awaiting adoption; the SPEC is on main.** [`prd/genui-surface.prd.md`](prd/genui-surface.prd.md)
-  sits proposed (v0.3, 2026-07-23) — Kim's 2026-07-23 rulings re-cut the identity (free-form
-  HTML/CSS/JS in a sandboxed iframe; "contained, not forbidden") and resolved D1/D3/D4, the token
-  bridge, and the residual D7/D8/D9 forks (external images/fonts + a closed agent↔frame bridge in
-  v1 · exemplar packs in the producer layer · `ui-sandbox-frame` in components). One fork remains:
-  D6, the wire path, carrying a research-backed recommendation (keep the in-house third JSONL
-  kind; borrow MCP Apps' safety shape; atomic HTML per surface) that awaits Kim's adoption. The
-  behavior contract is authored ahead of it ([`spec/genui-surface.spec.md`](spec/genui-surface.spec.md),
-  proposed v0.1, D6-gated by its own header clause) — build-ready the moment D6 resolves; nothing
-  builds before it does. This is the one genuinely gated design record in the tree.
+- **GenUI surface — design gate CLOSED, B1 is the next buildable slice.** [`prd/genui-surface.prd.md`](prd/genui-surface.prd.md)
+  (v0.4, 2026-07-24) and [`spec/genui-surface.spec.md`](spec/genui-surface.spec.md) (v0.2,
+  2026-07-24) sit `proposed` with every fork ruled: the identity re-cut (free-form HTML/CSS/JS in a
+  sandboxed iframe; "contained, not forbidden"), D1/D3/D4, the token bridge, D7/D8/D9 (images/fonts
+  + a closed agent↔frame bridge · producer-layer exemplar packs · `ui-sandbox-frame` in
+  components), and — Kim's 2026-07-24 chat ruling — **D6** (the in-house wire, MCP-Apps-shaped
+  safety model, atomic HTML). The sibling `a2ui-live-agent.spec.md` (v0.8) carries the real,
+  applied SPEC-R5 narrowing for the new wire kind. Next: **B1** — the `ui-sandbox-frame` control,
+  producer packs, and the admin picker.
 - **The `ui-app-shell` removal horizon (ADR-0156).** Migration is DONE: the production
   consumer re-hosted, the two reconnect fixtures re-vehicled onto a direct re-parent harness (the
   `<ui-app-shell isolated>` relocation harness retired from both), and the teaching page retired —

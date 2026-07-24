@@ -1,22 +1,23 @@
 # SPEC — GenUI surface (sandboxed free-form generative UI): wire · frame · bridge · producer
 
-> Status: proposed · v0.1 · 2026-07-23 · Layer: SPEC (execution contract)
+> Status: proposed · v0.2 · 2026-07-24 · Layer: SPEC (execution contract)
 > Refines: [`../prd/genui-surface.prd.md`](../prd/genui-surface.prd.md) — PRD-G1 (working pattern-source
 > picker, live-apply), PRD-G2 (first-class pattern sources), PRD-G3 (contained, not forbidden), PRD-G4
 > (layering + catalog-invisibility), PRD-G5 (token bridge in v1), PRD-G8 (interactive GenUI, closed
 > bridge). The PRD §4 ruled record is LAW here: D1 (iframe identity) · D3 (source-level pick) · D4
 > (`EntryLibraryPack` reuse) · D7 (images/fonts in + the bridge in) · D8 (producer-layer packs) · D9
 > (`ui-sandbox-frame` in `@agent-ui/components`) · the token-bridge ruling.
-> **D6 dependency (load-bearing, one clause):** every wire rule below (SPEC-R1/R2 and every clause that
-> derives from the `{"genui":…}` envelope — plus the D6-recommended SHAPES they carry: SPEC-R4's
-> four-category CSP config and SPEC-R7's bridge vocabulary) binds under PRD §5 **D6-as-RECOMMENDED** — authored ahead of
-> adoption per the repo's tree-wins convention so the build seat has a complete contract the moment D6
-> resolves. Kim's adoption of D6 ratifies these rules as written; a different D6 ruling revises them
-> (and the §3.1 drafted amendment to the sibling SPEC is applied or discarded accordingly). Nothing
-> builds before D6 resolves (PRD §7 B0).
+> **D6 — RESOLVED, 2026-07-24.** Kim adopted the wire recommendation as researched (PRD §4 D6, PRD
+> §5.1): *"proceed. align with best practices of claude.ai and chatgpt canvas artifacts and
+> streaming json standards"* — confirming the MCP-Apps-shape safety model this SPEC was already
+> written to. Every wire rule below (SPEC-R1/R2 and every clause deriving from the `{"genui":…}`
+> envelope, including SPEC-R4's four-category CSP config and SPEC-R7's bridge vocabulary) is now
+> **settled contract, not a conditional draft**. PRD §7's B0 gate is satisfied — **B1 is buildable.**
+> The §3.1 amendment to the sibling SPEC is applied for real as of this ruling (no longer a draft
+> awaiting adoption).
 > Realizes/decides against: [`./a2ui-live-agent.spec.md`](./a2ui-live-agent.spec.md) (the sibling
 > stream this kind rides beside; its SPEC-R5 validate-then-stream law is honestly NARROWED for this one
-> kind — §3.1 carries the drafted amendment) ·
+> kind — §3.1 carries the amendment, applied to that file 2026-07-24) ·
 > [`../adr/0153-status-stream-elapsed-timer-retry-action-planned-glyph.md`](../adr/0153-status-stream-elapsed-timer-retry-action-planned-glyph.md)
 > (the fleet `action` event this bridge's one outward channel reuses) ·
 > [`../adr/0135-agent-harness-config-schema-and-prompt-files.md`](../adr/0135-agent-harness-config-schema-and-prompt-files.md)
@@ -71,7 +72,7 @@ code-generating prompt, picked source-level in the admin).
 Normative per RFC 2119; each carries an ID, an upstream trace, and acceptance criteria. Acceptance
 criteria are checkable predicates — a command, a standing test, a grep, or a named manual run.
 
-### 3.1 The wire kind (D6-as-recommended)
+### 3.1 The wire kind (D6, ruled)
 
 **SPEC-R1 — The reserved `genui` line: shape, disjointness, whole-line rejection.** The wire kind MUST
 be a single JSON line `{"genui":{"surfaceId": string, "html": string}}` on the SAME turn stream the
@@ -91,7 +92,7 @@ self-correct round naming a produce-layer failure code (`GENUI_ENVELOPE` / `GENU
 precedent), and on exhaustion the genui line is DROPPED while the turn's note/A2UI lines stand —
 degrade, never halt. A turn MUST carry AT MOST ONE genui line; subsequent ones in the same turn are
 dropped + counted (`GENUI_MULTIPLICITY`). Client-side (defense-in-depth) the identical structural
-checks reject-whole + count, with no self-correct machinery. *(→ PRD-G3; PRD §5 D6; ADR-0088's
+checks reject-whole + count, with no self-correct machinery. *(→ PRD-G3; PRD §4 D6; ADR-0088's
 one-stream/disjoint-kinds law)*
 - **AC1** *Given* `readGenuiLine`, *when* fed a well-formed envelope, *then* it round-trips
   `{surfaceId, html}`; *given* a line with a `version` key, an `a2uiMeta` key, a non-object `genui`, an
@@ -110,7 +111,7 @@ one-stream/disjoint-kinds law)*
 **SPEC-R2 — Atomic, size-capped, validation honestly narrowed.** A GenUI payload MUST be ONE whole
 HTML document per surface per turn, delivered ATOMICALLY on a single line — NEVER chunked, streamed,
 or incrementally applied (sanitizing/CSP-validating a partial HTML document mid-parse has no safe
-precedent — PRD §5; srcdoc replacement is atomic by construction). Progressive UX MUST come from the
+precedent — PRD §4 D6; srcdoc replacement is atomic by construction). Progressive UX MUST come from the
 existing turn-progress meta-lines (a `content`/pending stage while the document is authored), never
 from partial HTML. The size cap is **`GENUI_MAX_HTML_BYTES = 524_288`** (512 KiB, measured on the
 UTF-8 byte length of the `html` string). Rationale, stated so the number is revisable on evidence
@@ -119,16 +120,17 @@ budget the provider registry ships, so the cap never truncates a legitimate turn
 magnitude above what any curated exemplar produces, so headroom is real; (c) small enough that a
 session holding several surfaces stays trivially bounded and an adversarial/runaway payload cannot
 balloon memory. An over-cap payload is rejected WHOLE (SPEC-R1), never truncated-and-rendered.
-*(→ PRD-G3; PRD §5)*
+*(→ PRD-G3; PRD §4 D6)*
 
 **The honest narrowing of live-agent SPEC-R5 (validate-then-stream).** `validateA2ui` parity does NOT
 extend to an opaque HTML payload, and this SPEC MUST NOT pretend it does. For the genui kind ONLY:
 wire-time validation narrows to the STRUCTURAL envelope (SPEC-R1's checks + the byte cap), and the
 SEMANTIC fail-closed leg moves to RENDER time — containment (SPEC-R3/R4's sandbox + CSP posture) is
 what precedes paint, not schema validity. The A2UI kinds are UNTOUCHED: their lines still fully
-validate before any of them streams. **Drafted amendment to
-[`./a2ui-live-agent.spec.md`](./a2ui-live-agent.spec.md), to be applied to that file's header (its own
-versioned-amendment pattern) upon D6 adoption — verbatim:**
+validate before any of them streams. **Applied to
+[`./a2ui-live-agent.spec.md`](./a2ui-live-agent.spec.md)'s header as a real dated amendment
+(2026-07-24, upon Kim's D6 adoption — that file's own versioned-amendment pattern, v0.7→v0.8),
+verbatim:**
 
 > **Amendment (GenUI, ADR-pending — docs-only on this file):** the turn stream gains a THIRD reserved
 > line kind, `{"genui":{surfaceId, html}}` (genui-surface SPEC-R1/R2). SPEC-R5's validate-then-stream
@@ -188,7 +190,7 @@ control MUST take the never-paint path (SPEC-R5). *(→ PRD-G3/G4; D9)*
 
 **SPEC-R4 — CSP: the four MCP-Apps-shaped categories, default-deny absent, v1 defaults closed.** The
 srcdoc build MUST inject a `<meta http-equiv="Content-Security-Policy">` policy composed from a
-`SandboxFrameCspConfig` carrying the four categories (the PRD §5 SHAPE borrow):
+`SandboxFrameCspConfig` carrying the four categories (the PRD §4 D6 SHAPE borrow):
 `connectDomains` → `connect-src` · `resourceDomains` → `img-src`/`font-src` · `frameDomains` →
 `frame-src` · `baseUriDomains` → `base-uri`. An ABSENT category is DEFAULT-DENY. The composed v1
 policy floor:
@@ -209,7 +211,7 @@ Allow-listed entries MUST be https origins (scheme-pinned; no wildcards broader 
 `*.example.com` label). Recorded meta-CSP limits (so nobody "fixes" them later): `frame-ancestors` and
 the `sandbox` CSP directive are IGNORED in meta CSP — the iframe `sandbox` ATTRIBUTE (SPEC-R3) owns
 sandboxing; reporting directives are unavailable — the drop counters (SPEC-R7) are the observability
-substitute. *(→ PRD-G3; D7; PRD §5)*
+substitute. *(→ PRD-G3; D7; PRD §4 D6)*
 - **AC1** *Given* the CSP builder as a pure function, *when* fed an empty config, *then* the composed
   policy string carries every default row above verbatim; *given* `resourceDomains:
   ['https://img.example']`, *then* ONLY `img-src`/`font-src` gain it; *given* an `http:` or bare-host
@@ -277,7 +279,7 @@ post to the frame with `targetOrigin: '*'` (the only legal target for an opaque 
 recording). ANY frame message outside the six members, with a malformed payload, or from a foreign
 source MUST be DROPPED + COUNTED on an observable per-control counter (`droppedMessages`), NEVER
 surfaced as an event, NEVER a throw. There is explicitly NO generic `tools/call`-equivalent, NO eval
-channel, NO host-DOM reach — the PRD §3 non-goal, enforced here. *(→ PRD-G8; D7; PRD §5)*
+channel, NO host-DOM reach — the PRD §3 non-goal, enforced here. *(→ PRD-G8; D7; PRD §4 D6)*
 - **AC1 (out-of-vocabulary probe — browser gate).** *Given* a mounted frame whose script posts
   `{type:'tools/call', …}`, a malformed `size-changed` (`height:'lol'`), a well-formed member from a
   crafted foreign `MessageEvent`, and raw garbage, *then* `droppedMessages` increments once per drop,
@@ -428,7 +430,7 @@ function genuiPackLibrary(packs: readonly GenuiPatternPack[]): EntryLibraryPack[
 
 | Requirement | Upstream |
 |---|---|
-| SPEC-R1, R2 | PRD-G3; PRD §5 D6 (recommended — the header's dependency clause); ADR-0088's one-stream law; live-agent SPEC-R5 (narrowed honestly) |
+| SPEC-R1, R2 | PRD-G3; PRD §4 D6 (ruled 2026-07-24); ADR-0088's one-stream law; live-agent SPEC-R5 (narrowed honestly) |
 | SPEC-R3, R4, R5 | PRD-G3/G4; §4 D1/D7/D9 |
 | SPEC-R6 | PRD-G5; the §4 token-bridge ruling; PRD §8 m2 |
 | SPEC-R7, R8 | PRD-G8; §4 D7; ADR-0153; the bounded client-turn-loop law |
