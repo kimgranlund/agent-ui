@@ -145,3 +145,8 @@
 /* ADR-0134 — ui-textarea, the multi-line FACE sibling of ui-text-field (a SEPARATE geometry law, not the
  * single-line (scale×size)→§1-row lookup text-field.css uses — see textarea.css's own header). */
 @import './controls/textarea/textarea.css';
+
+/* genui-surface.spec.md SPEC-R3…R7 (D9) — ui-sandbox-frame, the GenUI containment host: one native
+ * iframe + the fail-closed fallback affordance. Catalog-invisible by construction (SPEC-N1) — still a
+ * fleet member, imported like any other control. */
+@import './controls/sandbox-frame/sandbox-frame.css';

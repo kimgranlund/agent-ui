@@ -39,6 +39,7 @@
     "./controls/radio-group": "./src/controls/radio/radio-group.ts",
     "./controls/ramp": "./src/controls/ramp/ramp.ts",
     "./controls/row": "./src/controls/row/row.ts",
+    "./controls/sandbox-frame": "./src/controls/sandbox-frame/sandbox-frame.ts",
     "./controls/segment": "./src/controls/segment/segment.ts",
     "./controls/segmented-control": "./src/controls/segmented-control/segmented-control.ts",
     "./controls/select": "./src/controls/select/select.ts",

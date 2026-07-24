@@ -716,6 +716,10 @@ export const NO_SLOT_TEXT = new Set([
   'ui-swiper',
   'ui-swiper-pagination',
   'ui-swiper-paddles',
+  // genui-surface.spec.md SPEC §3.2 (D9, B1): ui-sandbox-frame builds its ONE child (the iframe, or the
+  // fallback affordance) entirely imperatively from props (html/csp) — no light-DOM content model at all
+  // (slots: [] — sandbox-frame.md), the ui-stat/ui-swatch precedent exactly.
+  'ui-sandbox-frame',
 ])
 
 // STRUCTURAL (batch B) — the default slot IS the real content model (children ARE the grid cells / flex items /

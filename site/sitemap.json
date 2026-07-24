@@ -241,6 +241,14 @@
       "section": "Components"
     },
     {
+      "name": "Sandbox Frame",
+      "tag": "ui-sandbox-frame",
+      "url": "./sandbox-frame-doc.html",
+      "description": "The sandboxed containment host for free-form, agent-authored HTML/CSS/JS (GenUI) — one native iframe, a closed postMessage bridge, and a fail-closed never-paint law.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Segment",
       "tag": "ui-segment",
       "url": "./segment-doc.html",

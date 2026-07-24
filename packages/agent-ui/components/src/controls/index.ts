@@ -152,3 +152,9 @@ export * from './swiper/swiper-label.ts'
 // that nests a ui-modal for the surface and re-derives ui-combo-box's active-descendant filter. Permanently
 // catalog-excluded (app-owner launcher chrome, F8) — still a fleet member, exported like any other control.
 export * from './command-modal/command-modal.ts'
+
+// genui-surface.spec.md SPEC-R3…R8 (D9, B1 slice) — ui-sandbox-frame, the GenUI containment host: one
+// native iframe wrapped in the sandbox/CSP/token-bridge/bootstrap machinery, with a fail-closed fallback
+// affordance. Permanently catalog-excluded (SPEC-N1/PRD-G4) — still a fleet member, exported like any
+// other control.
+export * from './sandbox-frame/sandbox-frame.ts'
