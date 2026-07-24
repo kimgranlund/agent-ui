@@ -65,7 +65,10 @@ describe('a2ui-live — ADR-0088 §3: the wantResponse-routed click→turn', () 
     expect(editor, 'the composer field editor part was not found').not.toBeNull()
     editor.textContent = 'show me a button'
     editor.dispatchEvent(new Event('input', { bubbles: true }))
-    const sendBtn = document.querySelector('.chat-composer ui-button') as HTMLElement
+    // `[data-part="send"]`, not the bare `ui-button` descendant selector (the a2ui-chat.browser.test.ts
+    // code-reviewer BLOCKER finding, promoted here): `ui-conversation-composer`'s hidden mic button sits
+    // BEFORE send in DOM order, so a bare `ui-button` match resolves to the wrong (inert) button.
+    const sendBtn = document.querySelector('.chat-composer [data-part="send"]') as HTMLElement
     expect(sendBtn, 'the composer Send button was not found').not.toBeNull()
     sendBtn.click()
 
@@ -125,9 +128,46 @@ describe('a2ui-live — ADR-0097 §2: the recorded-transport page path is unaffe
     const editor = document.querySelector('.chat-composer [data-part="editor"]') as HTMLElement
     editor.textContent = 'show me a button again'
     editor.dispatchEvent(new Event('input', { bubbles: true }))
-    const sendBtn = document.querySelector('.chat-composer ui-button') as HTMLElement
+    const sendBtn = document.querySelector('.chat-composer [data-part="send"]') as HTMLElement
     sendBtn.click()
     await waitUntil(() => document.querySelector("ui-surface-host [data-part='surface'] ui-button") !== null)
     expect(document.querySelector("ui-surface-host [data-part='surface'] ui-button")).not.toBeNull()
+  })
+})
+
+// ── this modernization — the composer/narration widgets (Figma chat-input refactor + ADR-0146 F1/GH #239),
+// composed standalone (ADR-0129 Fork B: a2ui-live never adopts `<ui-conversation>`; its ask-freeze lifecycle
+// in `ask-registry.ts` is untouched by this build, proven elsewhere — this block exercises only the two
+// NEW widgets in a REAL engine, both chromium and webkit). ──────────────────────────────────────────────
+describe('a2ui-live composer + narration modernization — standalone widgets, ADR-0129 Fork B (never <ui-conversation>)', () => {
+  it('the chat composer is the modern <ui-conversation-composer> — the legacy <form>/<ui-text-field> pair is gone, and the opt-in mic stays hidden (never "the composer\'s first ui-button")', async () => {
+    await raf()
+    const composer = document.querySelector('.chat-composer')!
+    expect(composer.tagName, 'the composer element itself is the modern widget, not a wrapper <form>').toBe('UI-CONVERSATION-COMPOSER')
+    expect(composer.querySelector('ui-text-field'), 'the legacy raw field is gone').toBeNull()
+    expect(composer.querySelector('[data-part="mic"]')?.hasAttribute('hidden'), 'a2ui-live never registers onMicClick — the mic stays hidden by default').toBe(true)
+    expect(composer.querySelector('[data-part="send"]')?.hasAttribute('hidden'), 'send is always visible').toBe(false)
+    expect(document.querySelector('ui-conversation'), 'a2ui-live must never instantiate <ui-conversation> (ADR-0129 Fork B)').toBeNull()
+  })
+
+  it('a REAL user interaction — typing into the editor + a real click on [data-part="send"] — drives a full visible turn AND renders the standalone narration strip with the receipt pattern (oneline + receipt + header)', async () => {
+    await raf()
+    const editor = document.querySelector('.chat-composer [data-part="editor"]') as HTMLElement
+    const agentRowsBefore = chatMessages('agent').length
+    editor.textContent = 'show me a button'
+    editor.dispatchEvent(new Event('input', { bubbles: true }))
+    const sendBtn = document.querySelector('.chat-composer [data-part="send"]') as HTMLElement
+    sendBtn.click()
+
+    await waitUntil(() => chatMessages('agent').length > agentRowsBefore)
+    expect(chatMessages('agent').length, 'the real click drove a full turn through the existing turn loop').toBeGreaterThan(agentRowsBefore)
+
+    const strips = document.querySelectorAll<HTMLElement>('.chat-log .narration-strip')
+    expect(strips.length, 'a fresh narration strip was appended for this turn').toBeGreaterThan(0)
+    const strip = strips[strips.length - 1]!
+    expect(strip.tagName).toBe('UI-STATUS-STREAM')
+    expect(strip.hasAttribute('oneline')).toBe(true)
+    expect(strip.hasAttribute('receipt')).toBe(true)
+    expect(strip.hasAttribute('header')).toBe(true)
   })
 })

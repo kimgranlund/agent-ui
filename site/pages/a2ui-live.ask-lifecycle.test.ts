@@ -13,6 +13,11 @@
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest'
 import type { AgentTransport, TurnInput } from '../lib/agent-runtime.ts'
 import type { A2uiActionMessage } from '@agent-ui/a2ui'
+// This modernization (ADR-0146 F1, GH #239/ADR-0159) — the closed live-turn progress vocabulary, imported
+// TYPE-ONLY the SAME way a2ui-live.ts itself does (it erases at build; meta-line.ts's own file-header
+// precedent). `agent-runtime.ts` re-exports the OTHER meta-line types (TurnTrace/A2uiMetaEnvelope/
+// AskDeclaration) but not this one, so this test goes straight to the owning subpath.
+import type { TurnProgress } from '@agent-ui/a2ui/agent/meta-line'
 
 // `a2ui-live.ts`'s test-only injection seam — bound in `beforeAll` below via a DEFERRED (dynamic) import,
 // never a static one; see the comment there for why ordering is load-bearing here.
@@ -44,8 +49,10 @@ beforeAll(async () => {
 
 /** The reserved leading meta-line envelope (ADR-0088 §1 / ADR-0097 §1) — hand-built here rather than
  * importing `formatMetaLine` (a `src/agent/produce.ts`-private helper) since the wire shape is tiny and
- * public (`readMetaLine`'s own contract, re-exported by `agent-runtime.ts`). */
-function metaLine(fields: { note?: string; ask?: { surfaceId: string } }): string {
+ * public (`readMetaLine`'s own contract, re-exported by `agent-runtime.ts`). `progress` is an ADDITIVE
+ * optional field (this modernization, ADR-0146 F1) — every existing call site above omits it and is
+ * byte-unaffected. */
+function metaLine(fields: { note?: string; ask?: { surfaceId: string }; progress?: TurnProgress }): string {
   return JSON.stringify({ a2uiMeta: fields })
 }
 
@@ -79,11 +86,26 @@ function askBubble(surfaceId: string): HTMLElement | null {
   return document.querySelector(`.msg[data-ask="${surfaceId}"]`)
 }
 
+// ── this modernization's own helpers (ADR-0146 F1, GH #239/ADR-0159) — a2ui-live keeps every turn's own
+// narration strip as VISIBLE history in the log (never removed, mirroring the ask/message bubble
+// discipline), so a multi-turn scenario reads the LAST one (the conversation.test.ts "read the LAST one,
+// not the first" precedent, promoted here).
+function lastNarrationStrip(): HTMLElement | null {
+  const strips = document.querySelectorAll<HTMLElement>('.chat-log .narration-strip')
+  return strips.length > 0 ? strips[strips.length - 1]! : null
+}
+function narrationLabel(key: string): string | null | undefined {
+  return lastNarrationStrip()?.querySelector(`[data-key="${key}"] [data-role="label"]`)?.textContent
+}
+
 async function sendIntent(text: string): Promise<void> {
   const editor = document.querySelector('.chat-composer [data-part="editor"]') as HTMLElement
   editor.textContent = text
   editor.dispatchEvent(new Event('input', { bubbles: true }))
-  const sendBtn = document.querySelector('.chat-composer ui-button') as HTMLElement
+  // `[data-part="send"]`, not the bare `ui-button` descendant selector (the a2ui-chat.browser.test.ts
+  // code-reviewer BLOCKER finding, promoted here): `ui-conversation-composer`'s hidden mic button sits
+  // BEFORE send in DOM order, so a bare `ui-button` match resolves to the wrong (inert) button.
+  const sendBtn = document.querySelector('.chat-composer [data-part="send"]') as HTMLElement
   sendBtn.click()
 }
 
@@ -283,5 +305,101 @@ describe('a2ui-live — finding 3: a stale line targeting a still-PENDING (not y
     expect(askBubble('ask-1')?.dataset.state, 'the ask itself must still freeze normally').toBe('bypassed')
     expect(document.querySelector("ui-surface-host [data-part='surface']")?.textContent, 'the stale line must NEVER reach the canvas').not.toContain('STALE-MARKER-XYZ')
     expect(jsonTabText(), 'a dropped line is never ingested anywhere — not even the JSON tab').not.toContain('STALE-MARKER-XYZ')
+  })
+})
+
+// ── this modernization (ADR-0146 F1, GH #239/ADR-0159) — the standalone narration strip routes REAL
+// `progress` meta-lines a2ui-live used to drop entirely (the removed "this canvas page has no narration
+// strip to route progress INTO" comment). Promoted 1:1 from conversation.ts's own GH #238/#239 jsdom
+// coverage (conversation.test.ts's "done-form labels stamp on the settle transition" describe block) —
+// same closed label table, same key/settle discipline — proven here against a2ui-live's OWN standalone
+// `<ui-status-stream>` instead of `<ui-conversation>`'s internally-composed one (ADR-0129 Fork B: a2ui-live
+// never adopts `<ui-conversation>`). The ask-freeze/askRegistry machinery above is completely untouched by
+// this describe block — it exercises a DIFFERENT turn-loop leg (the progress meta-line arm), never the ask
+// buffering/collision code.
+describe('a2ui-live narration (this modernization) — the standalone ui-status-stream routes real progress meta-lines', () => {
+  it('a progress stage narrates live, then settles to its done form as the next stage begins — "Validating…" → "Validated"', async () => {
+    __setTransportForTest(
+      scriptedTransport((turn) =>
+        turn === 1
+          ? [
+              metaLine({ progress: { stage: 'validating' } }),
+              metaLine({ progress: { stage: 'content' } }),
+              metaLine({ progress: { stage: 'done' }, note: 'Here you go.' }),
+              '{"version":"v1.0","createSurface":{"surfaceId":"s1","catalogId":"agent-ui"}}',
+              '{"version":"v1.0","updateComponents":{"surfaceId":"s1","components":[{"id":"root","component":"Text","text":"hi"}]}}',
+            ]
+          : [],
+      ),
+    )
+
+    await sendIntent('build something')
+    await waitUntil(() => narrationLabel('progress-validating') === 'Validated')
+
+    expect(narrationLabel('progress-validating'), 'the done checkmark never wears an "-ing…" label again').toBe('Validated')
+    expect(narrationLabel('progress-content'), 'the last live stage before "done" also settles to its done form').toBe('Wrote the response')
+  })
+
+  it('the factual retry/tool suffix rides BOTH forms of the pair: "Self-correcting… (round 2)" settles to "Self-corrected (round 2)"', async () => {
+    __setTransportForTest(
+      scriptedTransport((turn) =>
+        turn === 1
+          ? [
+              metaLine({ progress: { stage: 'retry', round: 2 } }),
+              metaLine({ progress: { stage: 'tool', detail: 'fetch' } }),
+              metaLine({ progress: { stage: 'done' }, note: 'Done.' }),
+            ]
+          : [],
+      ),
+    )
+
+    await sendIntent('try again')
+    await waitUntil(() => narrationLabel('progress-tool-fetch') === 'Ran an integration (fetch)')
+
+    expect(narrationLabel('progress-retry-2'), 'the composed round ordinal survives the settle').toBe('Self-corrected (round 2)')
+    expect(narrationLabel('progress-tool-fetch')).toBe('Ran an integration (fetch)')
+  })
+
+  it('a turn that throws mid-stream truncates narration with a visible error entry, forcing the header to error (ADR-0146 F8) — the SAME fail() path conversation.ts\'s own composed strip uses', async () => {
+    __setTransportForTest(
+      scriptedTransport((turn) => {
+        if (turn === 1) throw new Error('ProduceHalt: exhausted self-correct rounds')
+        return []
+      }),
+    )
+
+    await sendIntent('anything')
+    await waitUntil(() => (lastNarrationStrip()?.querySelector('[data-part="header"]')?.getAttribute('data-status') ?? '') === 'error')
+
+    const strip = lastNarrationStrip()!
+    expect(strip.querySelector('[data-key="progress-error"] [data-role="label"]')?.textContent, 'a visible, factual error entry — never a silently torn stream').toContain('Turn failed')
+    expect(chatMessages('system').some((m) => m.textContent?.includes('⚠')), 'the existing system-bubble failure path is unaffected').toBe(true)
+  })
+})
+
+// ── GH #239/ADR-0159 — the receipt pattern is UNCONDITIONAL on a2ui-live's standalone stream (item 3 of
+// this task): the SAME two opt-in props `agent-admin.ts` sets on its conversation-owned strip
+// (`conversation.receipt = true`), set directly on this standalone instance instead — proving the props
+// belong to `ui-status-stream` itself, not to `<ui-conversation>`, exactly as ADR-0159 documents.
+describe('a2ui-live narration — the receipt pattern (GH #239/ADR-0159) on the standalone stream', () => {
+  it('every fresh turn narration strip carries oneline + receipt + the ADR-0146 F8 header, unconditionally', async () => {
+    __setTransportForTest(scriptedTransport(() => []))
+    await sendIntent('hello')
+    await waitUntil(() => lastNarrationStrip() !== null)
+
+    const strip = lastNarrationStrip()!
+    expect(strip.hasAttribute('oneline'), 'the live one-morphing-line mode').toBe(true)
+    expect(strip.hasAttribute('receipt'), 'the terminal one-line receipt').toBe(true)
+    expect(strip.hasAttribute('header'), 'the ADR-0146 F8 header opt-in').toBe(true)
+  })
+
+  it('a settled turn with zero narrated steps still collapses to the receipt line — fail-closed, never fabricates progress that never happened', async () => {
+    __setTransportForTest(scriptedTransport(() => []))
+    await sendIntent('hello')
+    await waitUntil(() => lastNarrationStrip() !== null)
+
+    const header = () => lastNarrationStrip()!.querySelector('[data-part="header"]')
+    await waitUntil(() => header()?.getAttribute('aria-expanded') === 'false')
+    expect(header()?.getAttribute('data-status'), 'finalized with zero entries reads the neutral escalation, never a fabricated status').toBe('')
   })
 })

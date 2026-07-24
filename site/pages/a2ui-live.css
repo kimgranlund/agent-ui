@@ -214,57 +214,23 @@
   color: var(--md-sys-color-neutral-on-surface-variant);
 }
 
+/* `ui-conversation-composer`'s own frame/layout/parts live in conversation-composer.css (the fleet's own
+ * field-frame — ADR-0014/TKT-0058, the SAME component `ui-conversation` composes internally); this rule
+ * ONLY places it as the chat pane's flex child + an inset margin, the exact `ui-conversation-composer`
+ * placement rule conversation.css already establishes (`flex: 0 0 auto` — a custom element defaults to
+ * `display:inline`, which would collapse in this flex column — + an inset margin, since the composer
+ * paints its OWN rounded field frame; no more flush border-top divider or busy opacity/pointer-events
+ * override here — both are the component's own concern now, keyed off its reflected `[busy]` attribute). */
 .chat-composer {
   flex: 0 0 auto;
-  display: flex;
-  gap: var(--md-sys-space-sm);
-  align-items: end;
-  padding: var(--md-sys-space-md);
-  border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
-}
-.chat-composer ui-text-field {
-  flex: 1 1 auto;
-  min-inline-size: 0;
-}
-.chat-composer.is-busy {
-  opacity: 0.55;
-  pointer-events: none;
+  margin: 0 var(--md-sys-space-md) var(--md-sys-space-md);
 }
 
-/* In-flight indicator — appended to the aria-live chat log while a turn is running (setBusy(true)), so the
- * wait is both visible and announced; removed when the turn settles. */
-.chat-status {
-  align-self: flex-start;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.45rem 0.7rem;
-  border-radius: 10px;
-  background: var(--md-sys-color-neutral-surface-high);
-  color: var(--md-sys-color-neutral-on-surface-variant);
-  font-size: 0.8rem;
-}
-.chat-status::before {
-  content: '';
-  inline-size: var(--md-sys-space-sm);
-  block-size: var(--md-sys-space-sm);
-  border-radius: 50%;
-  background: var(--md-sys-color-primary-high);
-  animation: chat-status-pulse 1s ease-in-out infinite;
-}
-@keyframes chat-status-pulse {
-  0%,
-  100% {
-    opacity: 0.3;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .chat-status::before {
-    animation: none;
-  }
+/* The per-turn live narration strip (ADR-0146 F1/GH #239) — a standalone `<ui-status-stream>` appended
+ * into the log alongside the message bubbles; its own component CSS owns the frame, this rule only fits
+ * it into the log's flex column (stretch, not the bubbles' own align-self/max-inline-size treatment). */
+.chat-log > .narration-strip {
+  align-self: stretch;
 }
 
 .switcher-slot {
