@@ -191,6 +191,12 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
     'token-surface precedent): the ADR ratifies the fleet primitive only and explicitly defers "whether it ' +
     'earns an A2UI catalog type" to a separate intake. Drain this entry (add the catalog + factory row) when ' +
     'that intake lands — not a permanent exclusion like Toast/ThemeProvider above.'],
+  ['SandboxFrame',
+    'genui-surface.spec.md SPEC-N1 / PRD-G4 — PERMANENT exclusion, never catalogue-bound: the GenUI ' +
+    'containment host is composed by @agent-ui/app into the conversation feed off the (B2) genui wire ' +
+    'kind, never authored by an agent through A2UI\'s catalog-typed payload — the two modalities never ' +
+    'render through each other (PRD §3/§6). Structurally the same "app-owner surface, not agent-emittable ' +
+    'content" class as ThemeProvider/StatusStream above (the ADR-0112 cl.6 reasoning applied verbatim).'],
 ])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists

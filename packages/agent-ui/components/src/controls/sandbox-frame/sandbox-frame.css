@@ -1,0 +1,83 @@
+/* sandbox-frame.css — the SINGLE-file stylesheet for ui-sandbox-frame (ADR-0003 one-sheet-per-folder).
+ * Sectioned, one TOKEN `:where()` block + one STYLES `@scope` block (button.css/card.css shape).
+ *
+ * Role-purity (tokens.md / styling-gates.test.ts, TKT-0066 item 5): every dimensional/color CONSTANT
+ * this control reads (the shared `--md-sys-shape-corner-base`/`--md-sys-color-*`/`--md-sys-font-*`
+ * roles) is minted into an OWN `--ui-sandbox-frame-*` chain in the `:where()` block below; the `@scope`
+ * STYLES block consumes ONLY that chain — never a raw `--md-sys-*` dimensional read.
+ *
+ * Geometry (tier: container, geometry.md "Container/layout" band — no control-height row): the frame's
+ * own block-size is content-driven, not a fixed control height. `--content-height` is the ONE JS-seam
+ * inline custom property (the `--value-pct` precedent, naming.md §5) sandbox-frame.ts writes on a valid
+ * `size-changed` bridge message (SPEC-R7's auto-height law); CSS `clamp()` — not JS math — enforces the
+ * min/max size-token floor/ceiling, so a malformed/absent report degrades to the min, never to 0 or an
+ * unbounded value. */
+
+/* ════════════════ [ui-sandbox-frame] TOKEN BLOCK — :where(ui-sandbox-frame) declares the chain ════════════════ */
+
+:where(ui-sandbox-frame) {
+  /* Auto-height clamp bounds (SPEC-R7; LLD-tier defaults, evidence-revisable per SPEC §8). */
+  --ui-sandbox-frame-min-block-size: 4rem;
+  --ui-sandbox-frame-max-block-size: 40rem;
+
+  /* Frame: the neutral hairline border + the fixed corner radius — the SAME referent the container
+     family (card/modal) uses (geometry.md's Entry/container fixed-radius law). */
+  --ui-sandbox-frame-border: var(--md-sys-color-neutral-outline-variant);
+  --ui-sandbox-frame-radius: var(--md-sys-shape-corner-base);
+
+  /* The fail-closed [data-part="fallback"] affordance (SPEC-R5's "a visible 'not rendered' affordance"). */
+  --ui-sandbox-frame-fallback-bg: var(--md-sys-color-neutral-surface);
+  --ui-sandbox-frame-fallback-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-sandbox-frame-fallback-font-size: var(--md-sys-font-md);
+  --ui-sandbox-frame-fallback-font-family: var(--md-sys-typeface-sans);
+}
+
+/* ════════════════ [ui-sandbox-frame] STYLES — @scope (ui-sandbox-frame) consumes ONLY --ui-sandbox-frame-* ════════════════ */
+
+@scope (ui-sandbox-frame) {
+  :scope {
+    display: block;
+    box-sizing: border-box;
+    inline-size: 100%;
+    /* The auto-height law (SPEC-R7): clamp the reported content height to the min/max size tokens —
+       absent/malformed reports (no --content-height set) fall back to the min, never 0/unbounded. */
+    block-size: clamp(
+      var(--ui-sandbox-frame-min-block-size),
+      var(--content-height, var(--ui-sandbox-frame-min-block-size)),
+      var(--ui-sandbox-frame-max-block-size)
+    );
+    border: 1px solid var(--ui-sandbox-frame-border);
+    border-radius: var(--ui-sandbox-frame-radius);
+    overflow: hidden; /* clip the iframe to the frame's own radius */
+  }
+
+  :scope > [data-part='frame'] {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    border: 0;
+  }
+
+  :scope > [data-part='fallback'] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 100%;
+    block-size: 100%;
+    min-block-size: var(--ui-sandbox-frame-min-block-size);
+    color: var(--ui-sandbox-frame-fallback-ink);
+    background: var(--ui-sandbox-frame-fallback-bg);
+    font-size: var(--ui-sandbox-frame-fallback-font-size);
+    font-family: var(--ui-sandbox-frame-fallback-font-family);
+  }
+}
+
+/* ════════════════ forced-colors (WHCM) ════════════════ */
+
+@media (forced-colors: active) {
+  :where(ui-sandbox-frame) {
+    --ui-sandbox-frame-border: CanvasText;
+    --ui-sandbox-frame-fallback-bg: Canvas;
+    --ui-sandbox-frame-fallback-ink: CanvasText;
+  }
+}

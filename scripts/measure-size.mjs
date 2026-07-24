@@ -93,7 +93,15 @@ const targets = [
   // 44.1 KB re-based GH #52/ADR-0154 (LLD-C6): `traits/pane-resize.ts` widened onto the package's public
   // barrel (already bundled here via ui-split's own static import — no new module, only a re-export's own
   // few bytes of export/type metadata). Measured 45141 B gz 2026-07-20 (up from 45056).
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 44.1 * KB],
+  // 47.3 KB re-based at the genui-surface B1 wave (SPEC §3.2/§3.3, D9, the SAME Consequences-anticipated
+  // re-base precedent): ui-sandbox-frame's real cost — the CSP builder, the bridge message-guard, the
+  // host-owned bootstrap script TEXT (a plain-JS string, not a build-time asset), and the control's own
+  // build/replace/teardown + live-theme logic. An EARLIER draft read the shared foundation stylesheets'
+  // raw TEXT via a `?raw` import to recover `--md-sys-*` NAMES — that alone cost +23 KB gz (raw stylesheet
+  // source, non-tree-shakeable, duplicated into every consumer); token-bridge.ts now walks the REAL CSSOM
+  // at runtime instead (zero extra bytes) — see that file's own banner. Measured 48295 B gz 2026-07-24
+  // (up from 45141); ~7% headroom reserved.
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 47.3 * KB],
 ]
 
 let over = false
@@ -164,6 +172,8 @@ const MARGINAL_OVERRIDES = {
   'text-field': [4352, 'the 12-type value-codec family (ADR-0044/0047), which absorbs the calendar picker bytes above — measured 4021 B gz 2026-07-05, ~8% headroom'],
   'split': [2176, 'gzip measurement-frame drift as the family bundle crossed 33 KB (leave-one-out deltas shift with the shared dictionary; toolbar added similar roving/flex/enum code) — split source byte-identical that wave; measured 2082 B gz 2026-07-10'],
   'swiper': [3072, 'a five-tag family behind one entry (the per-control 2048 cap is sized for one component; measured 2913 B gz 2026-07-10 pre-split, 2406 B gz post-split — host + item + three chrome tags, each carrying its own barrel line + package.json subpath per family-coherence.test.ts C1; the four leaf lines each measure ~0 B gz since swiper.ts already imports them transitively)'],
+  'sandbox-frame': [2304, 'genui-surface.spec.md SPEC §3.2/§3.3 (D9, B1): the CSP builder, the closed bridge message-guard, the host-owned bootstrap script TEXT, and the build/replace/teardown + live-theme control logic — measured 2124 B gz 2026-07-24, ~8% headroom'],
+  'status-stream': [2176, 'gzip measurement-frame drift from the SAME genui-surface B1 wave adding a new family member (the split-wave precedent above — leave-one-out deltas shift with the shared dictionary once the family bundle grows); status-stream source is byte-identical that wave — measured 2107 B gz 2026-07-24 (was within budget pre-wave)'],
 }
 
 console.log('\nper-control marginal (leave-one-out through the public `./controls/{name}` entries, ADR-0080):')
@@ -258,7 +268,12 @@ const appCssQuerySuffixPlugin = {
 // duplication — the TKT-0085 ResizeObserver + hand-rolled ui-split/ui-tabs docking this replaced was
 // net-negative on its OWN two files (agent-admin.ts/.css), but the grammar extension itself is real net-new
 // weight on the shared barrel. Measured 69921 B gz 2026-07-20 (up from 69632); ~2.5% headroom reserved.
-const APP_MARGINAL_BUDGET = 70 * KB
+// 72 KB re-based at the genui-surface B1 wave (SPEC §3.2/§3.3, D9): this barrel's marginal is measured
+// OVER the components foundation figure above, so ui-sandbox-frame's own ~3.2 KB gz addition to that
+// foundation (the same real cost the family-barrel re-base above cites) flows straight through here too —
+// no new app-tier code, the SAME underlying wave. Measured 73712 B gz 2026-07-24 (up from 69921); ~2.5%
+// headroom reserved (matching the prior wave's own margin).
+const APP_MARGINAL_BUDGET = 72 * KB
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })

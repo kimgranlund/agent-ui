@@ -197,10 +197,10 @@ describe('site coverage — every shipped component has its required per-tier pa
     expect(COMPONENTS.filter((c) => c.tier === 'range').map((c) => c.name).sort()).toEqual(['slider-multi'])
     // Container tier = the G9 surface/form containers (card, radio-group) + the G7 form-composition family
     // (field, form-provider — both tier=container, ADR-0050/0051) + the promoted theming subtree provider
-    // (theme-provider — ADR-0117, the same pure-coordination/carrier posture as form-provider). Each
-    // requires its {doc, demo} pages.
+    // (theme-provider — ADR-0117, the same pure-coordination/carrier posture as form-provider) + the GenUI
+    // containment host (sandbox-frame — genui-surface.spec.md SPEC §3.2, D9). Each requires its {doc, demo} pages.
     expect(COMPONENTS.filter((c) => c.tier === 'container').map((c) => c.name).sort()).toEqual(
-      ['card', 'field', 'form-provider', 'radio-group', 'theme-provider'],
+      ['card', 'field', 'form-provider', 'radio-group', 'sandbox-frame', 'theme-provider'],
     )
     // Layout tier + the Wave M1 feed family's ui-toast-region (ADR-0112, LLD-C8 — a pure inset/gap host,
     // no surface paint of its own) + M4 Phase 1's ui-split/ui-split-pane (ADR-0120 cl.2, app-surfaces-m4
