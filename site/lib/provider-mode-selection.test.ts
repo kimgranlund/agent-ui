@@ -44,33 +44,38 @@ describe('provider-mode-selection — persistence (localStorage, the provider-sw
   afterEach(() => localStorage.clear())
 
   it('with no stored selection, restores the catalog defaults', () => {
-    expect(loadPersistedSelection()).toEqual({ provider: 'anthropic', model: 'claude-sonnet-5', mode: 'default' })
+    expect(loadPersistedSelection()).toEqual({ provider: 'anthropic', model: 'claude-sonnet-5', mode: 'default', effort: 'medium' })
   })
 
   it('persists then restores a valid selection round-trip', () => {
-    persistSelection({ provider: 'anthropic', model: 'claude-opus-4-8', mode: 'blue-sky' })
-    expect(JSON.parse(localStorage.getItem(LS_KEY)!)).toEqual({ provider: 'anthropic', model: 'claude-opus-4-8', mode: 'blue-sky' })
-    expect(loadPersistedSelection()).toEqual({ provider: 'anthropic', model: 'claude-opus-4-8', mode: 'blue-sky' })
+    persistSelection({ provider: 'anthropic', model: 'claude-opus-4-8', mode: 'blue-sky', effort: 'high' })
+    expect(JSON.parse(localStorage.getItem(LS_KEY)!)).toEqual({ provider: 'anthropic', model: 'claude-opus-4-8', mode: 'blue-sky', effort: 'high' })
+    expect(loadPersistedSelection()).toEqual({ provider: 'anthropic', model: 'claude-opus-4-8', mode: 'blue-sky', effort: 'high' })
   })
 
   it('rejects an unimplemented persisted provider, falling back to the default', () => {
-    persistSelection({ provider: 'openai', model: 'gpt-4.1', mode: 'default' })
+    persistSelection({ provider: 'openai', model: 'gpt-4.1', mode: 'default', effort: 'medium' })
     expect(loadPersistedSelection().provider).toBe('anthropic')
   })
 
   it('rejects a persisted model that does not belong to its provider, falling back to that provider\'s defaultModel', () => {
-    localStorage.setItem(LS_KEY, JSON.stringify({ provider: 'anthropic', model: 'not-a-real-model', mode: 'default' }))
+    localStorage.setItem(LS_KEY, JSON.stringify({ provider: 'anthropic', model: 'not-a-real-model', mode: 'default', effort: 'medium' }))
     expect(loadPersistedSelection().model).toBe('claude-sonnet-5')
   })
 
   it('rejects an unrecognized persisted mode, falling back to "default"', () => {
-    localStorage.setItem(LS_KEY, JSON.stringify({ provider: 'anthropic', model: 'claude-sonnet-5', mode: 'not-a-real-mode' }))
+    localStorage.setItem(LS_KEY, JSON.stringify({ provider: 'anthropic', model: 'claude-sonnet-5', mode: 'not-a-real-mode', effort: 'medium' }))
     expect(loadPersistedSelection().mode).toBe('default')
+  })
+
+  it('rejects an unrecognized persisted effort, falling back to "medium"', () => {
+    localStorage.setItem(LS_KEY, JSON.stringify({ provider: 'anthropic', model: 'claude-sonnet-5', mode: 'default', effort: 'not-a-real-effort' }))
+    expect(loadPersistedSelection().effort).toBe('medium')
   })
 
   it('corrupt JSON never throws — falls back to the catalog defaults', () => {
     localStorage.setItem(LS_KEY, '{not json')
     expect(() => loadPersistedSelection()).not.toThrow()
-    expect(loadPersistedSelection()).toEqual({ provider: 'anthropic', model: 'claude-sonnet-5', mode: 'default' })
+    expect(loadPersistedSelection()).toEqual({ provider: 'anthropic', model: 'claude-sonnet-5', mode: 'default', effort: 'medium' })
   })
 })
