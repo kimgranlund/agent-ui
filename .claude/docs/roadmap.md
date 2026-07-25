@@ -45,7 +45,7 @@ decision (dated line in §4).
   Indicator/Range/Input/Overlay/Container/report/content/feed/chart families. Closed, not actively
   growing — recent additions are single-control refinements riding reviews (`ui-menu`'s
   selectable-item variant, `ui-disclosure`'s `slot="summary"` foreseen extension — ADR-0158), plus
-  one genuinely new control: `ui-sandbox-frame`, the GenUI containment host (§3).
+  one genuinely new control: `ui-sandbox-frame`, the GenUI containment host (below).
   `ui-status-stream` grew the most of any single control this window: worst-child escalation with
   the elapsed-timer/retry refinements (ADR-0146 F5/F6, ADR-0153 — which minted `action`, the
   seventh fleet event name), then the **receipt pattern** (ADR-0159, proposed) — closed-table
@@ -76,7 +76,8 @@ decision (dated line in §4).
   controls ride `slot="summary"` (ADR-0158). Substance grew too: a provider-grouped model grid
   with a default-radio system, add-from-library capability packs (skills/workflows/resources/
   tools) with real tool execution in the live loop, Surface Options (Markdown · A2UI catalog ·
-  PRD-gated GenUI), and a much larger persona roster (games, hospitality/travel). The
+  GenUI — the once-PRD-gated row now live: a fail-closed off-by-default toggle plus the
+  pattern-source picker), and a much larger persona roster (games, hospitality/travel). The
   conversation composer now owns the provider and Gen-UI-mode pickers in-field (the site's
   standalone provider-switcher retired), and the full-viewport standalone surface
   (`agent-admin-app.html`) is a listed, discoverable site page — Kim's 2026-07-25 overturn of the
@@ -92,6 +93,18 @@ decision (dated line in §4).
   seam ADR-0138) — now with the live-turn lifecycle progress channel built into the transport
   meta-line (ADR-0146), produce-halt surfacing, in-persona self-correct feedback, and the dev
   live-agent proxy ported to a Cloudflare Worker (ADR-0152).
+- **GenUI surface — shipped end to end (B0–B2).** The ruled identity: free-form HTML/CSS/JS in a
+  sandboxed iframe — "contained, not forbidden" ([PRD](prd/genui-surface.prd.md) v0.4 ·
+  [SPEC](spec/genui-surface.spec.md) v0.3, both `proposed`, every fork ruled; D6 = the in-house
+  wire, MCP-Apps-shaped safety model, atomic HTML). `ui-sandbox-frame` (components) is the
+  fail-closed containment host — CSP · closed agent↔frame bridge · token bridge. B2 made the
+  path real: the canonical wire reader/writer at `@agent-ui/a2ui/agent` (`genui-line` — the
+  site's B1-era stub is now a thin re-export of it), `produce()` peeling genui lines ahead of
+  heal/validate with structural defects tallied as `GENUI_*` failure codes on the turn trace,
+  three curated pattern-source packs plus a degradation-safe prompt block (SPEC-R9), and
+  `ui-agent-admin` mounting GenUI surfaces inside its real turn loop on a parallel path beside
+  the A2UI client. The `gen-ui-live` site demo stays deliberately recorded-only. What's left is
+  out of the SPEC's own contract: B3, the judged pack-idiom eval (§4).
 - **A2A protocol layer (`@agent-ui/a2a`)** — pinned to spec v0.3.0, the tic-tac-toe
   isolation-proof arena, its own concepts corpus.
 - **`@agent-ui/router`** — the memory-first SPA router (ADR-0115).
@@ -120,20 +133,6 @@ decision (dated line in §4).
 
 ## 3 · Next — concrete, near-term
 
-- **GenUI surface — B1 shipped; B2 is the next buildable slice.** The design gate is closed:
-  [`prd/genui-surface.prd.md`](prd/genui-surface.prd.md) (v0.4) and
-  [`spec/genui-surface.spec.md`](spec/genui-surface.spec.md) (v0.2) sit `proposed` with every fork
-  ruled — the identity re-cut (free-form HTML/CSS/JS in a sandboxed iframe; "contained, not
-  forbidden"), D1/D3/D4, the token bridge, D7/D8/D9, and — Kim's 2026-07-24 chat ruling — **D6**
-  (the in-house wire, MCP-Apps-shaped safety model, atomic HTML); the sibling
-  `a2ui-live-agent.spec.md` (v0.8) carries the applied SPEC-R5 narrowing for the new wire kind.
-  **B1 is real**: `ui-sandbox-frame`, the fail-closed containment host (CSP · closed
-  agent↔frame bridge · token bridge), shipped in components with its doc + demo pages, and the
-  site carries the GenUI chat demo (`gen-ui-live`) — deliberately **recorded-only**: it speaks
-  the real SPEC-R1 envelope shape end to end, but no live GenUI producer exists yet, and the page
-  says so plainly rather than probing for a backend that isn't there. Next: **B2** — the real
-  producer + wire, the producer exemplar packs, and the admin picker (un-gating the admin's
-  PRD-gated GenUI surface toggle) — the slice that turns the recorded demo live.
 - **The `ui-app-shell` removal horizon (ADR-0156).** Migration is DONE: the production
   consumer re-hosted, the two reconnect fixtures re-vehicled onto a direct re-parent harness (the
   `<ui-app-shell isolated>` relocation harness retired from both), and the teaching page retired —
@@ -146,7 +145,8 @@ decision (dated line in §4).
   further — components-package sheets, the remaining site sheets — is an open, per-sheet decision;
   the gate's own design makes each extension a one-line reviewed append, never automatic.
 - **Beyond that, the backlog is clear.** The one open item is the removal-gate issue named above —
-  parked on Kim's own ADR-0082/0083/0084 flips, which an agent cannot perform. Nothing else is
+  its build is in flight, and the ADR-0082/0083/0084 `superseded` flips at its heart remain Kim's
+  own to perform, which an agent cannot. Nothing else is
   outstanding; the next feature arc is Kim's call at the next intake. (The older proposed scope
   intakes — content, feed, and report families, the a2ui expert system — remain parked intakes,
   not scheduled work.)
@@ -157,6 +157,10 @@ decision (dated line in §4).
   here. If Linear becomes the standard elsewhere in the user's work, the open question is whether
   this repo follows (and how the ID-spine convention — ADR/SPEC/LLD citing an issue — survives a
   backend swap) — not a live fork today, just the thing that would reopen ADR-0145 if raised.
+- **GenUI B3 — the judged pack-idiom eval.** Out of the GenUI SPEC's contract by its own §6 cut:
+  PRD §8 m3 (judge-scored pack-idiom use) realized as a judged corpus-rubric shard plus its docs
+  page (PRD-G6) — a named manual live-model run, never part of the deterministic gates (SPEC-N3).
+  Revisit when the producer's output quality needs a measured floor.
 
 ---
 
@@ -185,5 +189,10 @@ decision (dated line in §4).
   consumer smoke in CI, and the docs site auto-deploys to `ui.nonoun.io` on push to main.
 - **2026-07-24** — **GenUI B1 shipped** (§3's named next slice at the last pass): `ui-sandbox-frame`,
   the fail-closed GenUI containment host, landed in components with its doc + demo pages, followed
-  the same day by the recorded `gen-ui-live` chat demo. §3's GenUI entry now names B2 (the live
-  producer + wire) as the next slice.
+  the same day by the recorded `gen-ui-live` chat demo.
+- **2026-07-25** — **GenUI B2 shipped**, closing the arc's buildable slices (B0–B2): the canonical
+  wire reader/writer at `@agent-ui/a2ui/agent`, `produce()`'s genui-line peel with `GENUI_*`
+  failure codes on the turn trace, the three pattern-source packs + degradation-safe prompt block
+  (SPEC-R9 — its prompt-loading parenthetical corrected by the SPEC's docs-only v0.3 amendment),
+  the admin Surface-Options GenUI row gone live, and the parallel mount path into agent-admin's
+  real turn loop. The GenUI entry retires from §3 into §2's current state; B3 stays deferred (§4).
