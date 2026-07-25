@@ -32,6 +32,8 @@ export function validateMode(mode: unknown): GenUiMode | undefined {
 // never a 400. `sourceBody` is length-capped at 16 KB (the SAME runaway-guard bound `personaSystem`
 // already uses at both transports) — a picked pattern-source pack's body is exemplar-sized prose, never a
 // multi-megabyte blob; an over-cap value degrades the FIELD to absent (never the whole `genui` object).
+// `exclusive` (genui-surface-config.ts — the genui-only-consumer signal) is validated the SAME per-field
+// degrade way: a non-boolean value drops just that field, never the whole `genui` object.
 const GENUI_SOURCE_BODY_CAP = 16_384
 
 export function validateGenuiSurface(genui: unknown): GenuiSurfaceConfig | undefined {
@@ -39,7 +41,8 @@ export function validateGenuiSurface(genui: unknown): GenuiSurfaceConfig | undef
   const g = genui as Record<string, unknown>
   if (typeof g.enabled !== 'boolean') return undefined
   const sourceBody = typeof g.sourceBody === 'string' && g.sourceBody.length <= GENUI_SOURCE_BODY_CAP ? g.sourceBody : undefined
-  return { enabled: g.enabled, ...(sourceBody !== undefined ? { sourceBody } : {}) }
+  const exclusive = typeof g.exclusive === 'boolean' ? g.exclusive : undefined
+  return { enabled: g.enabled, ...(sourceBody !== undefined ? { sourceBody } : {}), ...(exclusive !== undefined ? { exclusive } : {}) }
 }
 
 // produce()-route effort threading — the SAME fail-closed posture as `validateMode`/`validateGenuiSurface`

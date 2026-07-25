@@ -15,8 +15,23 @@
  *  never a pack id the producer looks up itself: the admin's picked library-pack ENTRY already carries the
  *  exemplar body verbatim, `genuiPackLibrary`'s own projection law) — composed into the SAME genui block,
  *  after the fixed wire/sandbox-reality teaching. Absent ⇒ the base block alone (SPEC-R10's degradation
- *  law: no source picked ⇒ the modality still works, just without pattern-source conditioning). */
+ *  law: no source picked ⇒ the modality still works, just without pattern-source conditioning).
+ *
+ *  `exclusive`, when `true`, names a per-turn CONSUMER FACT, not a stylistic preference: this turn's caller
+ *  has NO A2UI rendering path at all — a GenUI-only surface (e.g. a demo page that only mounts a sandboxed
+ *  frame, never an A2UI catalog renderer). The base teaching's own "A2UI stays your default... reach for
+ *  genui only when the catalog genuinely cannot express the shape" framing (`prompts/genui-teaching.md`) is
+ *  correct ONLY for a consumer that can render BOTH modalities (the PRD §6 coexistence model this SPEC was
+ *  written for, e.g. agent-admin's Surface Options). For an `exclusive` consumer that framing actively
+ *  misleads the model: any A2UI JSONL it emits validates and ships on the wire, but is STRUCTURALLY
+ *  invisible to that consumer (the SAME disjointness check that keeps a genui line out of `validateA2ui`
+ *  also keeps a real A2UI line out of `readGenuiLine` — a genui-only client's `readGenuiLine`-then-drop loop
+ *  silently discards it, never an error). `genuiBlock` (`system-prompt.ts`) appends an explicit override
+ *  paragraph naming this fact when `exclusive` is set. Absent/`false` ⇒ byte-identical to before this field
+ *  existed (the `sourceBody`-absent precedent) — every existing coexistence caller (agent-admin) is
+ *  unaffected. */
 export interface GenuiSurfaceConfig {
   enabled: boolean
   sourceBody?: string
+  exclusive?: boolean
 }

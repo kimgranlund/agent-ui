@@ -211,15 +211,25 @@ function miniSkillsBlock(selected: readonly MiniSkill[]): string {
 
 const GENUI_TEACHING = loadPrompt('genui-teaching.md')
 
+/** The `exclusive` override paragraph (`GenuiSurfaceConfig.exclusive`, genui-surface-config.ts) — composed
+ *  AFTER the fixed `GENUI_TEACHING` text, so it reads as a per-turn amendment to that text's own "A2UI
+ *  stays your default" framing, not a contradiction baked into the fixed prose itself (which stays correct
+ *  for a coexistence caller like agent-admin, the SAME `sourceBody` composition-order precedent). Names the
+ *  consumer fact plainly — never "prefer style X" vaguely — so a compliant model has a concrete reason to
+ *  route this turn's ENTIRE output through genui rather than the catalog. */
+const GENUI_EXCLUSIVE_OVERRIDE = `This turn's caller has NO A2UI catalog renderer at all — it can ONLY display a genui surface. Any A2UI JSONL you emit (createSurface/updateComponents/updateDataModel) will validate but never be shown to the user; it is silently invisible here. For this turn, express the ENTIRE response as ONE genui HTML surface (or as a note-only reply with no surface, if nothing needs to render) — never as A2UI JSONL, even for shapes the catalog could otherwise express.`
+
 /** SPEC-R10 — composes ONE genui block when (and only when) the modality is enabled for this turn: the
  *  fixed wire/sandbox-reality teaching, plus the picked pattern-source's body when one is picked (D3 —
- *  never a lookup by id; the caller already resolved the picked library entry's own `content`, SPEC-R11).
+ *  never a lookup by id; the caller already resolved the picked library entry's own `content`, SPEC-R11),
+ *  plus the `exclusive` override paragraph above when the caller has named itself a genui-only consumer.
  *  Undefined/`enabled:false` ⇒ `''` — the degradation law: the composed prompt is byte-identical to the
- *  pre-GenUI composition (AC1). */
+ *  pre-GenUI composition (AC1). `exclusive` absent/`false` ⇒ byte-identical to before that field existed. */
 function genuiBlock(genui: GenuiSurfaceConfig | undefined): string {
   if (genui === undefined || !genui.enabled) return ''
+  const exclusive = genui.exclusive === true ? `\n\n${GENUI_EXCLUSIVE_OVERRIDE}` : ''
   const source = genui.sourceBody !== undefined && genui.sourceBody.trim() !== '' ? `\n\n${genui.sourceBody.trim()}` : ''
-  return `\n\n${GENUI_TEACHING}${source}`
+  return `\n\n${GENUI_TEACHING}${exclusive}${source}`
 }
 
 // ADR-0091 §4 fix (independent-review defect): in `'blue-sky'` mode, `NEGOTIATE_BLUE_SKY` above already

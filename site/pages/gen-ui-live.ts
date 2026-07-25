@@ -396,7 +396,16 @@ function wireLiveOverlay(): void {
           composer.model = id
           persistSelection(selection)
         })
-        transport = overlay.createLiveProxyTransport({ get: () => selection }, { enabled: true })
+        // `exclusive: true` — this page has NO A2UI catalog renderer at all (the file banner's own "this is
+        // deliberately NOT an A2UI page"); see genui-surface-config.ts's `GenuiSurfaceConfig.exclusive` doc
+        // for why this bit matters: without it, the shared system prompt's own "A2UI stays your default"
+        // framing (genui-teaching.md) reasonably steers the model toward catalog-expressible requests (e.g.
+        // "make a card game" as buttons/text/score readouts) — real, VALID A2UI JSONL that ships on the wire
+        // but is structurally invisible to this page's genui-only consumption loop below (readGenuiLine
+        // rejects it by design, the SAME disjointness check that keeps a genui line out of the A2UI
+        // validator). Root cause of the GH card-game repro: a real agent note rendered in chat, an empty
+        // render pane, `genuiLines.length === 0` — the model chose A2UI, and this page silently dropped it.
+        transport = overlay.createLiveProxyTransport({ get: () => selection }, { enabled: true, exclusive: true })
         setDemoBadge(undefined)
         addMessage('system', `Live agent connected (${status.providers} provider(s) available). Prompt it to render a real GenUI surface.`)
       } else if (import.meta.env.DEV) {
