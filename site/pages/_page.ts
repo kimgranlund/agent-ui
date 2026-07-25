@@ -476,8 +476,15 @@ export const NAV: readonly NavGroup[] = [
   {
     // ui-agent-admin (@agent-ui/app, TKT-0039/ADR-0131) — the SAME ungrouped-site-level-link posture as
     // Super Shell/Master Detail/Settings just above: a GUIDE page for an app-tier composition (ui-split +
-    // ui-settings + ui-conversation), not a fleet component in components/src.
-    links: [{ href: './agent-admin.html', label: 'Agent Admin' }],
+    // ui-settings + ui-conversation), not a fleet component in components/src. Agent Admin App joins here
+    // too (Kim's 2026-07-25 overturn of the 2026-07-19 standalone opt-out): the full composition at real
+    // viewport scale, now discoverable from this rail/the landing grid — but still rendered shell-less
+    // (agent-admin-app.ts imports no `_page.ts`), since its whole point is the real production surface,
+    // not a docs-wrapped preview of it (agent-admin.html already owns that teaching job).
+    links: [
+      { href: './agent-admin.html', label: 'Agent Admin' },
+      { href: './agent-admin-app.html', label: 'Agent Admin App' },
+    ],
   },
   {
     links: [
