@@ -26,7 +26,7 @@ import { isSameOriginRequest, isMountedPath, isValidTurnInput } from './route-gu
 // security-adjacent PAIR-allowlist logic could silently fork between dev and prod with nothing to catch
 // it. Both transports now import the SAME zero-dep module (see its header for why that couldn't be
 // dev-proxy-plugin.ts directly).
-import { validateMode, validateGenuiSurface, isChatBody, resolveChatDispatch } from '../chat-validation.ts'
+import { validateMode, validateGenuiSurface, validateEffort, isChatBody, resolveChatDispatch } from '../chat-validation.ts'
 
 import providersConfigRaw from '../providers.json'
 import catalogRaw from '../../../src/catalog/default/catalog.json'
@@ -165,7 +165,7 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
 // lazy-headersSent equivalent), so this must run BEFORE the Response is constructed, not inside the
 // detached write-loop's catch.
 async function handleProduce(request: Request, env: Env): Promise<Response> {
-  const { input, provider, model, mode, personaSystem, integrations, progressDetail, genui } = JSON.parse(await readBody(request)) as {
+  const { input, provider, model, mode, personaSystem, integrations, progressDetail, genui, effort } = JSON.parse(await readBody(request)) as {
     input: unknown
     provider: string
     model: string
@@ -174,6 +174,7 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
     integrations?: unknown
     progressDetail?: unknown
     genui?: unknown
+    effort?: unknown
   }
   if (!isValidTurnInput(input)) return json(400, { error: 'bad-request' })
   const validInput = input as TurnInput
@@ -194,6 +195,9 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
   // genui-surface.spec.md SPEC-R10/R11 — the SAME fail-closed validation the dev proxy uses (chat-
   // validation.ts, shared): a crafted/malformed value degrades to modality-off, never a 400.
   const genuiSurface = validateGenuiSurface(genui)
+  // The reasoning-effort dial — the SAME fail-closed validation the dev proxy uses (chat-validation.ts,
+  // shared): a crafted/malformed value degrades to `undefined` (the adapter's own default), never a 400.
+  const validatedEffort = validateEffort(effort)
   const active = resolveIntegrations(integrations)
   const toolOpts =
     active.length > 0
@@ -222,6 +226,7 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
         progress: true,
         ...(detail !== undefined ? { progressDetail: detail } : {}), // GH #240 — the validated 'source' opt-in only
         ...(genuiSurface !== undefined ? { genuiSurface } : {}), // genui-surface SPEC-R10 — the validated per-turn signal
+        ...(validatedEffort !== undefined ? { effort: validatedEffort } : {}), // the validated reasoning-effort dial
         signal: request.signal, // GH #106 — cancel the paid upstream call if the client disconnects
         ...toolOpts,
       })) {

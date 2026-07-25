@@ -546,6 +546,44 @@ describe('produce() threads opts.mode to buildSystemPrompt (ADR-0090 §1/§4)', 
   })
 })
 
+// mkEffortCapturingProvider — a stub that records the `req.effort` value each round actually received, the
+// SAME capture-and-compare technique `reqs()[i].model`/`systems()[i]` already prove above, applied to the
+// reasoning-effort dial's own additive precedent on this seam.
+function mkEffortCapturingProvider(outputs: string[]): { provider: AgentProvider; efforts: () => (string | undefined)[] } {
+  let n = 0
+  const efforts: (string | undefined)[] = []
+  const provider: AgentProvider = {
+    async *stream(req) {
+      efforts.push(req.effort)
+      const out = outputs[Math.min(n, outputs.length - 1)]!
+      n += 1
+      yield out
+    },
+  }
+  return { provider, efforts: () => efforts }
+}
+
+describe('produce() threads opts.effort to deps.provider.stream (the AgentProvider.stream effort? seam)', () => {
+  it("opts.effort='high' reaches the provider's stream request verbatim", async () => {
+    const { provider, efforts } = mkEffortCapturingProvider([VALID])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3, effort: 'high' })) lines.push(line)
+
+    expect(lines).toHaveLength(2) // the loop mechanics are unaffected by effort
+    expect(efforts()).toEqual(['high'])
+  })
+
+  it('an ABSENT opts.effort reaches the provider as undefined (byte-identical to before this field existed)', async () => {
+    const { provider, efforts } = mkEffortCapturingProvider([VALID])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+
+    expect(efforts()).toEqual([undefined])
+  })
+})
+
 // ── ADR-0091 §2/§5: `produce()` selects mini-skills ONCE per turn, beside `retrieve()` ────────────────
 
 describe('produce() selects mini-skills once per turn (ADR-0091 §2, produce.ts:152-153)', () => {
