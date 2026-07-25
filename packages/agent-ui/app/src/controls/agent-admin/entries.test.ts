@@ -9,6 +9,9 @@ import {
   ENTRY_KINDS,
   composeSystemPrompt,
   composeLiveSystemPrompt,
+  pickedPatternSource,
+  initialEntryValues,
+  entriesStoreKey,
   type Entry,
   type LiveCapabilityGroup,
 } from './entries.ts'
@@ -97,5 +100,45 @@ describe('composeLiveSystemPrompt (ALM-C1 / ADR-0136 Fork 3) — the capability 
       group(ENTRY_KINDS.tool, 'Tools available to you', [entry({ id: 't', kind: ENTRY_KINDS.tool, label: 'T', content: 'x', enabled: true })], false),
     ]
     expect(composeLiveSystemPrompt(SECTIONS, groups)).toBe(base)
+  })
+})
+
+describe('pickedPatternSource — the D3 single-pick projection (genui-surface SPEC-R11)', () => {
+  it('seeds an empty pattern-source list (initialEntryValues)', () => {
+    expect(initialEntryValues()[entriesStoreKey(ENTRY_KINDS.patternSource)]).toEqual([])
+  })
+
+  it('undefined when no entry is enabled', () => {
+    const entries = [entry({ id: 'a', kind: ENTRY_KINDS.patternSource, label: 'A', enabled: false })]
+    expect(pickedPatternSource(entries)).toBeUndefined()
+  })
+
+  it('undefined over an empty list', () => {
+    expect(pickedPatternSource([])).toBeUndefined()
+  })
+
+  it('the single enabled entry when exactly one is enabled', () => {
+    const entries = [
+      entry({ id: 'a', kind: ENTRY_KINDS.patternSource, label: 'A', enabled: false }),
+      entry({ id: 'b', kind: ENTRY_KINDS.patternSource, label: 'B', content: 'b-body', enabled: true, order: 1 }),
+    ]
+    expect(pickedPatternSource(entries)?.id).toBe('b')
+    expect(pickedPatternSource(entries)?.content).toBe('b-body')
+  })
+
+  it('D3 — source-level pick: with MULTIPLE enabled, the FIRST by order wins (never an error)', () => {
+    const entries = [
+      entry({ id: 'later', kind: ENTRY_KINDS.patternSource, label: 'Later', enabled: true, order: 2 }),
+      entry({ id: 'earlier', kind: ENTRY_KINDS.patternSource, label: 'Earlier', enabled: true, order: 0 }),
+    ]
+    expect(pickedPatternSource(entries)?.id).toBe('earlier')
+  })
+
+  it('ties broken by id (the composeSystemPrompt sort law)', () => {
+    const entries = [
+      entry({ id: 'zeta', kind: ENTRY_KINDS.patternSource, label: 'Zeta', enabled: true, order: 0 }),
+      entry({ id: 'alpha', kind: ENTRY_KINDS.patternSource, label: 'Alpha', enabled: true, order: 0 }),
+    ]
+    expect(pickedPatternSource(entries)?.id).toBe('alpha')
   })
 })

@@ -64,6 +64,7 @@ describe('ui-conversation — pre-connect calls are a documented no-op', () => {
     const handle = el.beginAgentTurn()
     expect(() => {
       handle.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 's', catalogId: 'agent-ui' } }))
+      handle.mountGenui('g', '<p></p>')
       handle.setNote('x')
       handle.finalize()
       handle.fail('x')
@@ -219,6 +220,81 @@ describe('ui-conversation — per-surface registry (SPEC-R7): persistent identit
     ).not.toThrow()
     t3.finalize()
     expect(log(el).querySelectorAll('ui-surface-host')).toHaveLength(1) // still just the ONE host ever created for s2
+  })
+})
+
+describe('ui-conversation — mountGenui (genui-surface.spec.md SPEC-R5/R8): the PARALLEL per-surface mount', () => {
+  it('a fresh surfaceId mounts a NEW ui-sandbox-frame inline in that turn bubble; a KNOWN id (a later turn) rebuilds the SAME host in place', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+
+    const t1 = el.beginAgentTurn()
+    t1.mountGenui('q3-revenue', '<p>first</p>')
+    t1.finalize()
+
+    const bubble1 = log(el).querySelectorAll('[data-part="bubble"][data-role="agent"]')[0] as HTMLElement
+    const host1 = bubble1.querySelector('ui-sandbox-frame') as HTMLElement & { html: string; surfaceId: string }
+    expect(host1).not.toBeNull()
+    expect(host1.surfaceId).toBe('q3-revenue')
+    expect(host1.html).toBe('<p>first</p>')
+
+    const t2 = el.beginAgentTurn()
+    t2.mountGenui('q3-revenue', '<p>replaced</p>')
+    t2.finalize()
+
+    const bubble2 = log(el).querySelectorAll('[data-part="bubble"][data-role="agent"]')[1] as HTMLElement
+    // turn2's OWN bubble mounted NO new frame — q3-revenue is known, routed to its original bubble/host.
+    expect(bubble2.querySelector('ui-sandbox-frame')).toBeNull()
+    expect(bubble1.querySelectorAll('ui-sandbox-frame')).toHaveLength(1) // still exactly ONE frame, never a duplicate
+    expect(host1.html).toBe('<p>replaced</p>') // SPEC-R5 replace — the SAME host's html rebuilt atomically
+  })
+
+  it('mountGenui and ingestLine mount into DISJOINT id spaces — a genui surfaceId never collides with an A2UI one', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 'shared-id', catalogId: 'agent-ui' } }))
+    t1.mountGenui('shared-id', '<p>genui</p>')
+    t1.finalize()
+    const bubble = log(el).querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    expect(bubble.querySelector('ui-surface-host')).not.toBeNull()
+    expect(bubble.querySelector('ui-sandbox-frame')).not.toBeNull() // BOTH mounted — no collision
+  })
+
+  it("a frame's `action` event bubbles through onClientMessage, framed as {genuiAction}, distinct from an A2uiClientMessage shape", () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const received: unknown[] = []
+    el.onClientMessage((m) => received.push(m))
+
+    const t1 = el.beginAgentTurn()
+    t1.mountGenui('widget', '<p>rate me</p>')
+    t1.finalize()
+
+    const host = log(el).querySelector('ui-sandbox-frame') as HTMLElement
+    host.dispatchEvent(new CustomEvent('action', { detail: { surfaceId: 'widget', name: 'rate', payload: { stars: 5 } } }))
+
+    expect(received).toHaveLength(1)
+    expect(received[0]).toEqual({ genuiAction: { surfaceId: 'widget', name: 'rate', payload: { stars: 5 } } })
+  })
+
+  it('reset() clears the genui registry — a later mountGenui on the SAME surfaceId mounts fresh, never a stale reference', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn()
+    t1.mountGenui('q3-revenue', '<p>before reset</p>')
+    t1.finalize()
+    el.reset()
+    expect(log(el).querySelectorAll('ui-sandbox-frame')).toHaveLength(0)
+
+    const t2 = el.beginAgentTurn()
+    t2.mountGenui('q3-revenue', '<p>after reset</p>')
+    t2.finalize()
+    const hosts = log(el).querySelectorAll('ui-sandbox-frame')
+    expect(hosts).toHaveLength(1)
+    expect((hosts[0] as HTMLElement & { html: string }).html).toBe('<p>after reset</p>')
+  })
+
+  it('the pre-connect no-op stub handle carries mountGenui too — never throws', () => {
+    const el = document.createElement('ui-conversation') as UIConversationElement
+    const handle = el.beginAgentTurn()
+    expect(() => handle.mountGenui('x', '<p></p>')).not.toThrow()
   })
 })
 

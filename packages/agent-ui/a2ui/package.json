@@ -9,7 +9,8 @@
     "./examples": "./src/examples/index.ts",
     "./corpus": "./src/corpus/index.ts",
     "./agent": "./src/agent/index.ts",
-    "./agent/meta-line": "./src/agent/meta-line.ts"
+    "./agent/meta-line": "./src/agent/meta-line.ts",
+    "./agent/genui-line": "./src/agent/genui-line.ts"
   },
   "dependencies": {
     "@agent-ui/components": "*",

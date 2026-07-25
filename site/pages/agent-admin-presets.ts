@@ -566,10 +566,12 @@ function expand(kind: string, seeds: readonly SeedEntry[]): Entry[] {
   }))
 }
 
-/** The full store seed for a persona: the four config keys + all five entry-list keys. The prompt
- *  sections are the three shipped builtins with Foundation's CONTENT rewritten to the persona (ids,
- *  labels, and non-deletability untouched — ADR-0132 cl.2) + the persona's "Surface style" custom
- *  section appended; `disabledBuiltins` seeds those builtins toggled off (never removed, Fork 4). */
+/** The full store seed for a persona: the four config keys + all SIX entry-list keys (genui-surface
+ *  SPEC-R11/B2 added `pattern-source`, seeded EMPTY — no shipped persona scripts a picked source; the
+ *  admin picks one per agent, same as any hand-authored entry). The prompt sections are the three
+ *  shipped builtins with Foundation's CONTENT rewritten to the persona (ids, labels, and non-deletability
+ *  untouched — ADR-0132 cl.2) + the persona's "Surface style" custom section appended; `disabledBuiltins`
+ *  seeds those builtins toggled off (never removed, Fork 4). */
 export function presetSeed(preset: AgentPreset): Record<string, unknown> {
   const sections: Entry[] = [
     ...DEFAULT_PROMPT_SECTIONS.map((s) => ({
@@ -595,6 +597,9 @@ export function presetSeed(preset: AgentPreset): Record<string, unknown> {
     [entriesStoreKey(ENTRY_KINDS.workflow)]: expand(ENTRY_KINDS.workflow, preset.workflows),
     [entriesStoreKey(ENTRY_KINDS.resource)]: expand(ENTRY_KINDS.resource, preset.resources),
     [entriesStoreKey(ENTRY_KINDS.tool)]: expand(ENTRY_KINDS.tool, preset.tools),
+    // genui-surface.spec.md SPEC-R11/B2 — no shipped persona scripts a picked pattern source (D3's
+    // single-pick is an admin choice, not a persona-authored default); seeded empty like a fresh store.
+    [entriesStoreKey(ENTRY_KINDS.patternSource)]: [],
   }
 }
 

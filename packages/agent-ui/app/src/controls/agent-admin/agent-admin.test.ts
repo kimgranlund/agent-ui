@@ -177,16 +177,16 @@ describe('UIAgentAdminElement — shell composition (GH #52/ADR-0154): segments 
   // ── GH #225 — the Settings sections are heading-row folds (the GH #222 Context pattern applied to
   // the config column). jsdom pins the STRUCTURE; agent-admin.browser.test.ts proves the real
   // fold/register/toggle-vs-fold geometry cross-engine. ──────────────────────────────────────────────
-  it('GH #225: every Settings section is a settings-item fold — eight sections, in order, ALL open by default (config is an editing surface)', () => {
+  it('GH #225: every Settings section is a settings-item fold — nine sections (genui-surface B2 adds Pattern sources), in order, ALL open by default (config is an editing surface)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const settings = el.querySelector('[data-segment="Settings"]') as HTMLElement
     const items = [...settings.querySelectorAll(':scope > [data-part="settings-item"]')]
     expect(items.map((i) => i.getAttribute('data-item'))).toEqual([
       'agent', 'model', ENTRY_KINDS.promptSection, 'surface',
-      ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool,
+      ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource,
     ])
     expect(items.map((i) => i.getAttribute('summary'))).toEqual([
-      'Agent', 'Model', 'Instructions', 'Surface Options', 'Skills', 'Workflows', 'Resources', 'Tools',
+      'Agent', 'Model', 'Instructions', 'Surface Options', 'Skills', 'Workflows', 'Resources', 'Tools', 'Pattern sources',
     ])
     for (const item of items) expect(item.hasAttribute('open'), `${item.getAttribute('data-item')} defaults open`).toBe(true)
     // The section content is the fold's BODY (the disclosure adopted it — SPEC-R16 children=body).
@@ -325,7 +325,7 @@ describe('UIAgentAdminElement — composition (GH #52/ADR-0154: chat + {Settings
     expect(conversation.sources, 'the developer surface\'s standing opt-in — every other consumer stays default-off').toBe(true)
   })
 
-  it('the Settings content composes the Agent config (real ui-settings, wired to schema/store) PLUS all FIVE entry-sections (prompts merged in, vision rev.5)', () => {
+  it('the Settings content composes the Agent config (real ui-settings, wired to schema/store) PLUS all SIX entry-sections (prompts merged in, vision rev.5; genui-surface B2 adds Pattern sources)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const settingsContent = el.querySelector('[data-role="settings-content"]') as HTMLElement
     const settingsEl = settingsContent.querySelector('ui-settings') as UISettingsElement
@@ -340,6 +340,7 @@ describe('UIAgentAdminElement — composition (GH #52/ADR-0154: chat + {Settings
       ENTRY_KINDS.workflow,
       ENTRY_KINDS.resource,
       ENTRY_KINDS.tool,
+      ENTRY_KINDS.patternSource,
     ])
   })
 
@@ -353,7 +354,9 @@ describe('UIAgentAdminElement — composition (GH #52/ADR-0154: chat + {Settings
     expect(host.parentElement).toBe(systemContent)
     // The Agent section (open, with the compiled JSON) + one section per capability kind.
     const items = [...systemContent.querySelectorAll('[data-part="context-system"] [data-part="context-item"]')]
-    expect(items.map((i) => i.getAttribute('data-item'))).toEqual(['agent', ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool])
+    expect(items.map((i) => i.getAttribute('data-item'))).toEqual([
+      'agent', ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource,
+    ])
     const agentJson = JSON.parse(items[0]!.querySelector('[data-part="context-json"]')!.textContent ?? '{}') as Record<string, unknown>
     expect(agentJson['model']).toBe(DEFAULT_MODEL_ID)
     expect(agentJson['active']).toBe(true)
@@ -1151,6 +1154,186 @@ describe('UIAgentAdminElement — the agentSurfaceTurn arm', () => {
   })
 })
 
+describe('UIAgentAdminElement — genui-surface.spec.md SPEC-R8/R10/R11 (B2): the GenUI modality goes live', () => {
+  async function submit(el: UIAgentAdminElement, text: string): Promise<void> {
+    const composer = el.querySelector('ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = text
+    const editor = composer.querySelector('[data-part="editor"]') as HTMLElement
+    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+    await whenFlushed()
+    await new Promise((r) => setTimeout(r, 0))
+    await whenFlushed()
+  }
+
+  it('a `genui` event mounts a REAL ui-sandbox-frame via AgentTurnHandle.mountGenui — never ingestLine', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    el.store!.set('surfaceGenui', true)
+    el.agentSurfaceTurn = async function* () {
+      yield { kind: 'note' as const, note: 'here is a chart' }
+      yield { kind: 'genui' as const, surfaceId: 'q3-revenue', html: '<p>chart</p>' }
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    await submit(el, 'show me a chart')
+
+    const frame = el.querySelector('ui-sandbox-frame') as HTMLElement & { html: string; surfaceId: string }
+    expect(frame).not.toBeNull()
+    expect(frame.surfaceId).toBe('q3-revenue')
+    expect(frame.html).toBe('<p>chart</p>')
+    expect(el.querySelector('ui-surface-host')).toBeNull() // never routed through the A2UI mount path
+  })
+
+  it('the request carries genui:{enabled:true, sourceBody} when the modality is on AND a pattern source is picked', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    el.store!.set('surfaceGenui', true)
+    el.store!.set('entries:pattern-source', [
+      { id: 'p1', kind: 'pattern-source', label: 'P1', description: '', content: 'exemplar body here', order: 0, enabled: true, builtin: false },
+    ])
+    const seen: unknown[] = []
+    el.agentSurfaceTurn = async function* (req) {
+      seen.push(req)
+      yield { kind: 'note' as const, note: 'ok' }
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    await submit(el, 'draw a chart')
+
+    const req = seen[0] as { genui?: { enabled: boolean; sourceBody?: string } }
+    expect(req.genui).toEqual({ enabled: true, sourceBody: 'exemplar body here' })
+  })
+
+  it('the request degrades to genui:{enabled:false, sourceBody:undefined} when the modality is off (the default)', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    // A pattern-source entry exists but the modality itself is OFF (the default) — must not leak through.
+    el.store!.set('entries:pattern-source', [
+      { id: 'p1', kind: 'pattern-source', label: 'P1', description: '', content: 'exemplar body here', order: 0, enabled: true, builtin: false },
+    ])
+    const seen: unknown[] = []
+    el.agentSurfaceTurn = async function* (req) {
+      seen.push(req)
+      yield { kind: 'note' as const, note: 'ok' }
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    await submit(el, 'draw a chart')
+
+    const req = seen[0] as { genui?: { enabled: boolean; sourceBody?: string } }
+    expect(req.genui).toEqual({ enabled: false, sourceBody: undefined })
+  })
+
+  it('D3 — with MULTIPLE pattern-source entries enabled, only the FIRST-by-order body rides sourceBody (never both)', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    el.store!.set('surfaceGenui', true)
+    el.store!.set('entries:pattern-source', [
+      { id: 'later', kind: 'pattern-source', label: 'Later', description: '', content: 'later body', order: 1, enabled: true, builtin: false },
+      { id: 'earlier', kind: 'pattern-source', label: 'Earlier', description: '', content: 'earlier body', order: 0, enabled: true, builtin: false },
+    ])
+    const seen: unknown[] = []
+    el.agentSurfaceTurn = async function* (req) {
+      seen.push(req)
+      yield { kind: 'note' as const, note: 'ok' }
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    await submit(el, 'draw a chart')
+
+    const req = seen[0] as { genui?: { sourceBody?: string } }
+    expect(req.genui?.sourceBody).toBe('earlier body')
+  })
+
+  it('the "Pattern sources" entries never leak into the generic capability prompt block (no double-injection)', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    el.store!.set('surfaceGenui', true)
+    el.store!.set('entries:pattern-source', [
+      { id: 'p1', kind: 'pattern-source', label: 'P1', description: '', content: 'UNIQUE_PATTERN_SOURCE_BODY_MARKER', order: 0, enabled: true, builtin: false },
+    ])
+    const seen: unknown[] = []
+    el.agentSurfaceTurn = async function* (req) {
+      seen.push(req)
+      yield { kind: 'note' as const, note: 'ok' }
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    await submit(el, 'draw a chart')
+
+    const req = seen[0] as { personaSystem: string; genui?: { sourceBody?: string } }
+    expect(req.genui?.sourceBody).toBe('UNIQUE_PATTERN_SOURCE_BODY_MARKER') // rides the DEDICATED genui field
+    expect(req.personaSystem).not.toContain('UNIQUE_PATTERN_SOURCE_BODY_MARKER') // never ALSO the generic capability block
+    expect(req.personaSystem).not.toContain('Pattern sources available to you')
+  })
+
+  it('SURFACE_A2UI_KEY off + GenUI on: the structured arm still runs (widened OR gate, zero regression when GenUI stays off)', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    el.store!.set('surfaceA2ui', false)
+    el.store!.set('surfaceGenui', true)
+    let ran = false
+    el.agentSurfaceTurn = async function* () {
+      ran = true
+      yield { kind: 'note' as const, note: 'ok' }
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    await submit(el, 'draw a chart')
+    expect(ran).toBe(true)
+  })
+
+  it('BOTH structured modalities off: the surface arm never runs — the prose stub answers instead (zero regression)', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    el.store!.set('surfaceA2ui', false)
+    let ran = false
+    el.agentSurfaceTurn = async function* () {
+      ran = true
+      yield { kind: 'note' as const, note: 'ok' }
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    await submit(el, 'hello')
+    expect(ran).toBe(false)
+    expect(el.querySelector('[data-part="bubble"][data-role="agent"] > [data-part="body"]')).not.toBeNull() // the stub still answered
+  })
+
+  it('a genui action click bubbles as {genuiAction} and drives the NEXT surface turn, resuming the SAME bubble (TKT-0079)', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    el.store!.set('surfaceGenui', true)
+    const seenTurns: unknown[] = []
+    el.agentSurfaceTurn = async function* (req) {
+      seenTurns.push(req.turn)
+      if (req.turn.kind === 'intent') yield { kind: 'genui' as const, surfaceId: 'widget', html: '<p>rate me</p>' }
+      else yield { kind: 'note' as const, note: 'thanks for the rating' }
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    await submit(el, 'show a widget')
+
+    const frame = el.querySelector('ui-sandbox-frame') as HTMLElement
+    frame.dispatchEvent(new CustomEvent('action', { detail: { surfaceId: 'widget', name: 'rate', payload: { stars: 5 } } }))
+    await whenFlushed()
+    await new Promise((r) => setTimeout(r, 0)) // GH #63 — the client turn is DEFERRED to a fresh macrotask
+    await whenFlushed()
+
+    expect(seenTurns).toHaveLength(2)
+    expect(seenTurns[1]).toEqual({ kind: 'client', message: { genuiAction: { surfaceId: 'widget', name: 'rate', payload: { stars: 5 } } } })
+    // resumed the SAME bubble — never a second card for the follow-up reply.
+    expect(el.querySelectorAll('[data-part="bubble"][data-role="agent"]')).toHaveLength(1)
+  })
+})
+
 
 // ── GH #47/#48 — the add-from-library seam ──────────────────────────────────────────────────────────────
 
@@ -1379,7 +1562,7 @@ describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
     return bodies[bodies.length - 1] as HTMLElement
   }
 
-  it('composes the card: markdown/a2ui/genui rows in order; GenUI is PRD-gated (disabled); the catalog picker carries the roster', async () => {
+  it('composes the card: markdown/a2ui/genui rows in order; genui-surface B2 — GenUI is LIVE (its own inverse-default OFF switch, never PRD-disabled); the catalog picker carries the roster', async () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
     el.store = createMemoryStore({})
     document.body.append(el)
@@ -1388,15 +1571,32 @@ describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
     const rows = [...el.querySelectorAll('[data-part="surface-row"]')]
     expect(rows.map((r) => r.getAttribute('data-surface'))).toEqual(['markdown', 'a2ui', 'genui'])
     const genui = rows[2] as HTMLElement
-    expect(genui.hasAttribute('data-disabled')).toBe(true)
-    expect((genui.querySelector('[data-part="surface-toggle"]') as HTMLElement & { disabled: boolean }).disabled).toBe(true)
-    expect(genui.querySelector('[data-part="surface-note"]')?.textContent).toBe('PRD pending')
+    expect(genui.hasAttribute('data-disabled')).toBe(false)
+    const genuiToggle = genui.querySelector('[data-part="surface-toggle"]') as HTMLElement & { disabled: boolean; checked: boolean }
+    expect(genuiToggle.disabled).toBe(false)
+    expect(genuiToggle.checked, 'GenUI defaults OFF (the inverse of the two live-since-launch modalities)').toBe(false)
     const catalog = el.querySelector('[data-part="surface-catalog"]') as HTMLElement
     const options = [...catalog.querySelectorAll('[role="option"]')]
     expect(options.map((o) => o.getAttribute('value'))).toEqual(A2UI_CATALOG_OPTIONS.map((o) => o.id))
-    // both live modalities ship ON
+    // both live-since-launch modalities ship ON
     expect((rows[0]!.querySelector('[data-part="surface-toggle"]') as HTMLElement & { checked: boolean }).checked).toBe(true)
     expect((rows[1]!.querySelector('[data-part="surface-toggle"]') as HTMLElement & { checked: boolean }).checked).toBe(true)
+  })
+
+  it('genui-surface B2 — toggling the GenUI row persists + live-applies (the SAME store-write pattern markdown/a2ui already prove)', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    const genuiToggle = el.querySelector('[data-surface="genui"] [data-part="surface-toggle"]') as HTMLElement & { checked: boolean }
+    genuiToggle.checked = true
+    genuiToggle.dispatchEvent(new Event('change'))
+    expect(el.store!.get('surfaceGenui')).toBe(true)
+    const agentJson = JSON.parse(
+      el.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]')!.textContent ?? '{}',
+    ) as { surface: { genui: boolean } }
+    expect(agentJson.surface.genui).toBe(true)
   })
 
   it('Markdown ON by default: an agent note renders through <ui-markdown>; an explicit OFF falls back to a plain text node (live-apply, next bubble)', async () => {
@@ -1450,7 +1650,7 @@ describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
     expect(seen[0]!.catalogId).toBe(DEFAULT_A2UI_CATALOG_ID)
   })
 
-  it('the Context Agent System JSON carries the surface block (markdown/a2ui/catalog/genui)', async () => {
+  it('the Context Agent System JSON carries the surface block (markdown/a2ui/catalog/genui) — genui-surface B2, live', async () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
     el.store = createMemoryStore({})
     document.body.append(el)
@@ -1458,8 +1658,9 @@ describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
     await whenFlushed()
     const agentJson = JSON.parse(
       el.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]')!.textContent ?? '{}',
-    ) as { surface: { markdown: boolean; a2ui: boolean; catalog: string; genui: string } }
-    expect(agentJson.surface).toEqual({ markdown: true, a2ui: true, catalog: DEFAULT_A2UI_CATALOG_ID, genui: 'prd-pending' })
+    ) as { surface: { markdown: boolean; a2ui: boolean; catalog: string; genui: boolean; genuiSource?: string } }
+    // No pattern-source entry picked yet ⇒ genuiSource is absent (JSON.stringify drops an undefined key).
+    expect(agentJson.surface).toEqual({ markdown: true, a2ui: true, catalog: DEFAULT_A2UI_CATALOG_ID, genui: false })
     el.store!.set(SURFACE_MARKDOWN_KEY, false)
     const after = JSON.parse(
       el.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]')!.textContent ?? '{}',

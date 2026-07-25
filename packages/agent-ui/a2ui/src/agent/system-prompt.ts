@@ -38,6 +38,7 @@ import type { GenUiMode } from './gen-ui-mode.ts'
 import { MINI_SKILLS } from './mini-skills.ts'
 import type { MiniSkill } from './mini-skills.ts'
 import { FEED_SURFACE_TYPES } from './feed-catalog.ts'
+import type { GenuiSurfaceConfig } from './genui-surface-config.ts'
 
 declare const process: { cwd(): string }
 
@@ -203,6 +204,24 @@ function miniSkillsBlock(selected: readonly MiniSkill[]): string {
   return `\n\n## Composition idioms (matched to your request)\n\n${blocks.join('\n\n')}`
 }
 
+// ---- genui-surface SPEC-R10: the genui teaching block — a structural TWIN of `miniSkillsBlock` above
+// (degrades to '' on the modality being off, additive/orthogonal to `mode`, never touches `grammarFor`).
+// GENUI_TEACHING is the fixed wire+sandbox-reality prose (loaded once, mode-invariant — genui's own on/off
+// signal is orthogonal to the A2UI `GenUiMode` disposition, SPEC §4 N2). ----
+
+const GENUI_TEACHING = loadPrompt('genui-teaching.md')
+
+/** SPEC-R10 — composes ONE genui block when (and only when) the modality is enabled for this turn: the
+ *  fixed wire/sandbox-reality teaching, plus the picked pattern-source's body when one is picked (D3 —
+ *  never a lookup by id; the caller already resolved the picked library entry's own `content`, SPEC-R11).
+ *  Undefined/`enabled:false` ⇒ `''` — the degradation law: the composed prompt is byte-identical to the
+ *  pre-GenUI composition (AC1). */
+function genuiBlock(genui: GenuiSurfaceConfig | undefined): string {
+  if (genui === undefined || !genui.enabled) return ''
+  const source = genui.sourceBody !== undefined && genui.sourceBody.trim() !== '' ? `\n\n${genui.sourceBody.trim()}` : ''
+  return `\n\n${GENUI_TEACHING}${source}`
+}
+
 // ADR-0091 §4 fix (independent-review defect): in `'blue-sky'` mode, `NEGOTIATE_BLUE_SKY` above already
 // carries the three ★ calibration examples' `body` text verbatim (via `calibrationExampleBullet`). If
 // `selectMiniSkills` ALSO picked one of those same three ids, injecting it again through
@@ -243,6 +262,7 @@ export function buildSystemPrompt(
   mode?: GenUiMode,
   miniSkills?: readonly MiniSkill[],
   personaSystem?: string,
+  genui?: GenuiSurfaceConfig,
 ): string {
   return (
     grammarFor(mode) +
@@ -252,6 +272,7 @@ export function buildSystemPrompt(
     functionsInventory(catalog) +
     fewShot(exemplars) +
     miniSkillsBlock(miniSkillsFor(mode, miniSkills ?? [])) +
+    genuiBlock(genui) +
     personaBlock(personaSystem)
   )
 }

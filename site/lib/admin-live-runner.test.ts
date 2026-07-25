@@ -136,3 +136,39 @@ describe('createAdminSurfaceTurn', () => {
     ).rejects.toThrow(/503/)
   })
 })
+
+// genui-surface.spec.md SPEC-R1/R10/R11 (B2) — the runner threads `req.genui` into the POST body and maps
+// a genui wire line into a `{kind:'genui'}` event; never a live model dependency (the stub-fetch precedent).
+describe('createAdminSurfaceTurn — genui-surface B2', () => {
+  it('threads req.genui verbatim into the POST body', async () => {
+    const fetchSpy = vi.fn(
+      async () => new Response(streamOfLines([]), { status: 200, headers: { 'content-type': 'application/x-ndjson' } }),
+    )
+    vi.stubGlobal('fetch', fetchSpy)
+    const runner = createAdminSurfaceTurn()
+    const req: AdminSurfaceTurnRequest = { ...SURFACE_REQUEST, genui: { enabled: true, sourceBody: 'exemplar body' } }
+    for await (const _event of runner(req)) {
+      /* drain */
+    }
+    const init = (fetchSpy.mock.calls[0] as unknown[])[1] as { body: string }
+    const body = JSON.parse(init.body) as Record<string, unknown>
+    expect(body.genui).toEqual({ enabled: true, sourceBody: 'exemplar body' })
+  })
+
+  it('a genui wire line maps to a {kind:"genui", surfaceId, html} event — never ingested as A2UI content (kind:"line")', async () => {
+    const lines = [
+      '{"a2uiMeta":{"note":"here you go"}}',
+      '{"genui":{"surfaceId":"q3-revenue","html":"<p>chart</p>"}}',
+      '{"version":"v1.0","createSurface":{"surfaceId":"s1","catalogId":"agent-ui"}}',
+    ]
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(streamOfLines(lines), { status: 200, headers: { 'content-type': 'application/x-ndjson' } })),
+    )
+    const runner = createAdminSurfaceTurn()
+    const events: Array<{ kind: string; surfaceId?: string; html?: string }> = []
+    for await (const event of runner(SURFACE_REQUEST)) events.push(event)
+    expect(events.map((e) => e.kind)).toEqual(['note', 'genui', 'line'])
+    expect(events[1]).toEqual({ kind: 'genui', surfaceId: 'q3-revenue', html: '<p>chart</p>' })
+  })
+})

@@ -13,6 +13,7 @@ import clarifyBlueSky from '../../../src/agent/prompts/clarify-blue-sky.md'
 import negotiateBlueSky from '../../../src/agent/prompts/negotiate-blue-sky.md'
 import askArchetypesSpecific from '../../../src/agent/prompts/ask-archetypes-specific.md'
 import askArchetypesBlueSky from '../../../src/agent/prompts/ask-archetypes-blue-sky.md'
+import genuiTeaching from '../../../src/agent/prompts/genui-teaching.md'
 
 import cardGameSheet from '../../../src/agent/prompts/mini-skills/card-game-sheet.md'
 import cardLayout from '../../../src/agent/prompts/mini-skills/card-layout.md'
@@ -24,8 +25,15 @@ import loginForm from '../../../src/agent/prompts/mini-skills/login-form.md'
 import masterDetailSplit from '../../../src/agent/prompts/mini-skills/master-detail-split.md'
 import settingsScreen from '../../../src/agent/prompts/mini-skills/settings-screen.md'
 
+// genui-surface.spec.md SPEC-R9 — the third Node-only readFileSync/readdirSync call site
+// (`prompts/genui-packs.ts`), backed the SAME way as the mini-skills registry above.
+import dataVizLayouts from '../../../src/agent/prompts/genui-packs/data-viz-layouts.md'
+import interactiveWidgets from '../../../src/agent/prompts/genui-packs/interactive-widgets.md'
+import animatedExplainers from '../../../src/agent/prompts/genui-packs/animated-explainers.md'
+
 const PROMPTS_PATH = '/packages/agent-ui/a2ui/src/agent/prompts'
 const MINI_SKILLS_PATH = `${PROMPTS_PATH}/mini-skills`
+const GENUI_PACKS_PATH = `${PROMPTS_PATH}/genui-packs`
 
 export const FILES: Record<string, string> = {
   [`${PROMPTS_PATH}/grammar.md`]: grammar,
@@ -36,6 +44,10 @@ export const FILES: Record<string, string> = {
   [`${PROMPTS_PATH}/negotiate-blue-sky.md`]: negotiateBlueSky,
   [`${PROMPTS_PATH}/ask-archetypes-specific.md`]: askArchetypesSpecific,
   [`${PROMPTS_PATH}/ask-archetypes-blue-sky.md`]: askArchetypesBlueSky,
+  [`${PROMPTS_PATH}/genui-teaching.md`]: genuiTeaching,
+  [`${GENUI_PACKS_PATH}/data-viz-layouts.md`]: dataVizLayouts,
+  [`${GENUI_PACKS_PATH}/interactive-widgets.md`]: interactiveWidgets,
+  [`${GENUI_PACKS_PATH}/animated-explainers.md`]: animatedExplainers,
   [`${MINI_SKILLS_PATH}/card-game-sheet.md`]: cardGameSheet,
   [`${MINI_SKILLS_PATH}/card-layout.md`]: cardLayout,
   [`${MINI_SKILLS_PATH}/dashboard-kpi-grid.md`]: dashboardKpiGrid,
@@ -61,4 +73,6 @@ export const DIRS: Record<string, string[]> = {
     'master-detail-split.md',
     'settings-screen.md',
   ],
+  // genui-surface.spec.md SPEC-R9 — `genui-packs.ts`'s own readdirSync target.
+  [GENUI_PACKS_PATH]: ['animated-explainers.md', 'data-viz-layouts.md', 'interactive-widgets.md'],
 }

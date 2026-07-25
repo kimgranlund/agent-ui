@@ -14,6 +14,7 @@ import { providerForModel, resolvePair } from './providers-config.ts'
 import type { Turn, Effort } from '../../src/agent/agent-transport.ts'
 import { GEN_UI_MODES } from '../../src/agent/gen-ui-mode.ts'
 import type { GenUiMode } from '../../src/agent/gen-ui-mode.ts'
+import type { GenuiSurfaceConfig } from '../../src/agent/genui-surface-config.ts'
 
 // ADR-0090 §4 — `mode` is trusted input at a security-adjacent boundary (Consequences): a crafted/stale
 // `mode` string must NEVER reach `buildSystemPrompt` raw. Unlike `{provider,model}` (a registry lookup via
@@ -23,6 +24,22 @@ import type { GenUiMode } from '../../src/agent/gen-ui-mode.ts'
 // The membership set is `GEN_UI_MODES` (`gen-ui-mode.ts`) — the single source of truth, not a local copy.
 export function validateMode(mode: unknown): GenUiMode | undefined {
   return typeof mode === 'string' && (GEN_UI_MODES as readonly string[]).includes(mode) ? (mode as GenUiMode) : undefined
+}
+
+// genui-surface.spec.md SPEC-R10/R11 — `genui` is client-supplied, trusted-input-at-a-boundary shaped
+// (the SAME `validateMode` posture): a crafted/malformed value must NEVER reach `buildSystemPrompt` raw,
+// but must ALSO never fail the request — fail-closed to `undefined` (the modality-off degradation law),
+// never a 400. `sourceBody` is length-capped at 16 KB (the SAME runaway-guard bound `personaSystem`
+// already uses at both transports) — a picked pattern-source pack's body is exemplar-sized prose, never a
+// multi-megabyte blob; an over-cap value degrades the FIELD to absent (never the whole `genui` object).
+const GENUI_SOURCE_BODY_CAP = 16_384
+
+export function validateGenuiSurface(genui: unknown): GenuiSurfaceConfig | undefined {
+  if (typeof genui !== 'object' || genui === null || Array.isArray(genui)) return undefined
+  const g = genui as Record<string, unknown>
+  if (typeof g.enabled !== 'boolean') return undefined
+  const sourceBody = typeof g.sourceBody === 'string' && g.sourceBody.length <= GENUI_SOURCE_BODY_CAP ? g.sourceBody : undefined
+  return { enabled: g.enabled, ...(sourceBody !== undefined ? { sourceBody } : {}) }
 }
 
 /**

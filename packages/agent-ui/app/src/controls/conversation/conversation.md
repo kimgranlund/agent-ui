@@ -178,6 +178,23 @@ or closed) routes to that surface's ORIGINAL host, at its original bubble — ne
 id (persistent identity across turns, SPEC-R7). A `deleteSurface` line disposes that ONE surface's host and
 leaves a **visible**, non-removable "Closed." annotation — history is never silently removed.
 
+## Composes `ui-sandbox-frame` internally, one per open GenUI surface (genui-surface.spec.md SPEC-R5/R8)
+
+A PARALLEL mount mechanism, `AgentTurnHandle.mountGenui(surfaceId, html)` — never `ingestLine`, which
+parses A2UI envelope keys a genui line never carries. A **fresh** `surfaceId` mounts a NEW
+`ui-sandbox-frame` inline in that turn's own bubble; a **known** id rebuilds the EXISTING frame's `html`
+in place (SPEC-R5's atomic replace — frame-internal state is lost by design). The frame's `action` event
+(SPEC-R8, the fleet's seventh closed-vocabulary event, ADR-0153) bubbles through the SAME
+`onClientMessage(cb)` callback `ui-surface-host` uses, framed as `{genuiAction: {surfaceId, name,
+payload}}` — structurally distinct from an `A2uiClientMessage` (SPEC-R8's own reasoning: a GenUI action
+isn't one), narrowed by the consumer at its own boundary.
+
+```ts
+const handle = conv.beginAgentTurn()
+handle.mountGenui('q3-revenue', '<!DOCTYPE html>...')
+handle.finalize()
+```
+
 ## The reply affordance + outbound messages are callbacks, not events (SPEC-R5)
 
 `onSubmit(cb)`/`onClientMessage(cb)` are callback registrations — a deliberate divergence from the closed

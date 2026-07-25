@@ -25,6 +25,9 @@ import type { Session, TurnInput } from '../../packages/agent-ui/a2ui/src/agent/
 import type { A2uiClientMessage } from '@agent-ui/a2ui'
 import { nextTurn, appendUserTurn, appendAssistantTurn, frameClientMessage } from '../../packages/agent-ui/a2ui/src/agent/session.ts'
 import { readMetaLine } from '../../packages/agent-ui/a2ui/src/agent/meta-line.ts'
+// genui-surface.spec.md SPEC-R1 — the SAME canonical reader `produce()` peels lines with (never a
+// page-local re-implementation); zero-dep/pure, browser-safe (SPEC-N1).
+import { readGenuiLine } from '../../packages/agent-ui/a2ui/src/agent/genui-line.ts'
 import { readNdjsonLines } from './ndjson-lines.ts'
 // The live-key probe is shared verbatim with a2ui-live's overlay (a boolean + count; never the key). Static
 // import here is fine — this whole module already lives BEHIND the page's dev-only dynamic import, so it is
@@ -103,6 +106,11 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
         personaSystem: req.personaSystem,
         integrations: req.integrations,
         progressDetail: 'source',
+        // genui-surface.spec.md SPEC-R10/R11 — a FRESH per-turn read (the component's own live-apply
+        // law); the dev proxy / worker thread this straight into `ProduceOptions.genuiSurface` (server-
+        // side, Node-first — the pack registry itself never crosses the wire, only the ALREADY-RESOLVED
+        // picked source's body does, per `pickedPatternSource`'s own projection).
+        genui: req.genui,
       }),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     })
@@ -130,6 +138,16 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
             yield { kind: 'note', note: meta.a2uiMeta.note }
           }
           continue // the meta-line is never ingested (ADR-0088 §1)
+        }
+        // genui-surface.spec.md SPEC-R1 — a genui line is neither an A2uiServerMessage nor a meta-line
+        // (disjointness proof); the SAME structural reader `produce()` used server-side to peel/validate
+        // it, run again here as defense-in-depth (SPEC-R1's "reader never throws" — a line that somehow
+        // reached this far malformed is simply not a genui line, and falls through to the `line`/`ingestLine`
+        // arm below, where the A2UI healer/validator will reject it exactly as any other malformed content).
+        const genui = readGenuiLine(line)
+        if (genui) {
+          yield { kind: 'genui', surfaceId: genui.genui.surfaceId, html: genui.genui.html }
+          continue // a genui line is never ingested as A2UI content (mirrors the meta-line peel above)
         }
         turnLines.push(line)
         yield { kind: 'line', line }

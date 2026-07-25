@@ -54,7 +54,13 @@ import { UIElement, prop, type PropsSchema, type ReactiveProps } from '@agent-ui
 import type { UIStatusStreamElement } from '@agent-ui/components/components'
 import '../surface-host/surface-host.ts' // registers <ui-surface-host> — composed internally (ADR-0129 clause 2)
 import type { UISurfaceHostElement } from '../surface-host/surface-host.ts'
-import type { ClientMessageListener } from '@agent-ui/a2ui'
+// genui-surface.spec.md SPEC-R8/PRD-G8 — registers <ui-sandbox-frame> (PRD-D9, `@agent-ui/components`,
+// catalog-invisible by construction); composed internally exactly like `ui-surface-host` above, but via a
+// PARALLEL mount path (`#genuiRegistry`/`mountGenui`, not `ingestLine`'s A2UI-shaped registry) — a genui
+// line carries no `createSurface`/`updateComponents`/etc envelope key `surfaceIdOf` could ever parse.
+import '@agent-ui/components/controls/sandbox-frame'
+import type { UISandboxFrameElement, GenuiActionDetail } from '@agent-ui/components/components'
+import type { ClientMessageListener, A2uiClientMessage } from '@agent-ui/a2ui'
 // ADR-0146 F1: the live-turn progress vocabulary is produce-layer-owned (a2ui) — imported TYPE-ONLY (it
 // erases at build, so zero producer bytes cross the ADR-0137 identity gate) as the shared spine both the
 // pipeline (produce()) and this narration surface consume, so the two never drift. Imported from the PURE
@@ -120,6 +126,14 @@ export interface AgentTurnHandle {
   /** Routes one raw A2UI JSONL line by `surfaceId` to a fresh/known `ui-surface-host`, or narrates a
    *  no-surface line under this turn's own category tracking. */
   ingestLine(line: string): void
+  /** genui-surface.spec.md SPEC-R5/R8 (PRD-G8) — mounts one genui envelope by `surfaceId`: a FRESH id
+   *  mounts a NEW `ui-sandbox-frame` inline in THIS turn's own bubble (the `ingestLine` fresh-host
+   *  precedent, applied to a structurally different host); a KNOWN id rebuilds the EXISTING frame's
+   *  `.html` in place (SPEC-R5's atomic "replace" lifecycle — the control's own effect rebuilds the whole
+   *  srcdoc, frame-internal state lost BY DESIGN). A PARALLEL mechanism from `ingestLine`'s A2UI-shaped
+   *  registry, never a fork of it — a genui envelope carries no `createSurface`/`updateComponents`/etc
+   *  key `surfaceIdOf` could route on. */
+  mountGenui(surfaceId: string, html: string): void
   /** Stashes this turn's own prose note (ADR-0088); rendered verbatim at `finalize()` — never a fabricated sentence. */
   setNote(text: string): void
   /** ADR-0146 F1/F8 — routes one live-turn lifecycle event into the narration strip through a CLOSED,
@@ -142,6 +156,14 @@ interface SurfaceRecord {
   readonly host: UISurfaceHostElement
   readonly bubble: HTMLElement
   state: SurfaceState
+}
+
+/** genui-surface.spec.md SPEC-R5/R8 — the PARALLEL per-surface record for a mounted `ui-sandbox-frame`
+ *  (the `SurfaceRecord` shape, minus `state`: a genui surface has no `deleteSurface`-driven closed state —
+ *  SPEC-R5's lifecycle is build/replace/teardown only, no "Closed." annotation concept). */
+interface GenuiSurfaceRecord {
+  readonly host: UISandboxFrameElement
+  readonly bubble: HTMLElement
 }
 
 // ── narration categories (LLD-C5, SPEC-R6) — promoted UNCHANGED from a2ui-chat.ts ─────────────────────────
@@ -262,6 +284,10 @@ export class UIConversationElement extends UIElement {
   #warnedPreConnect = false
 
   readonly #registry = new Map<string, SurfaceRecord>()
+  // genui-surface.spec.md SPEC-R5/R8 — the PARALLEL per-surface registry for mounted `ui-sandbox-frame`s
+  // (never merged with `#registry` above — a genui surfaceId and an A2UI surfaceId live in disjoint id
+  // spaces by construction; the two mechanisms never route the same surfaceId to different host types).
+  readonly #genuiRegistry = new Map<string, GenuiSurfaceRecord>()
   #onSubmitCb: ((text: string) => void) | undefined
   #onClientMessageCb: ClientMessageListener | undefined
   #onModelChangeCb: ((id: string) => void) | undefined
@@ -359,7 +385,7 @@ export class UIConversationElement extends UIElement {
    *  unknown id, closed record, disconnected bubble — falls through to the fresh-bubble path unchanged. */
   beginAgentTurn(opts?: { intoSurface?: string }): AgentTurnHandle {
     if (!this.#guard('beginAgentTurn')) {
-      return { ingestLine: () => {}, setNote: () => {}, progress: () => {}, finalize: () => {}, fail: () => {} }
+      return { ingestLine: () => {}, mountGenui: () => {}, setNote: () => {}, progress: () => {}, finalize: () => {}, fail: () => {} }
     }
 
     const wasNear = this.#isNearLogBottom()
@@ -496,6 +522,39 @@ export class UIConversationElement extends UIElement {
       heldNoIdLines.length = 0
     }
 
+    // genui-surface.spec.md SPEC-R5/R8 (PRD-G8) — the PARALLEL mount routine `mountGenui` calls: a KNOWN
+    // surfaceId rebuilds the EXISTING frame's `.html` in place (a plain prop write — `ui-sandbox-frame`'s
+    // OWN effect owns the atomic srcdoc rebuild, SPEC-R5); a FRESH surfaceId mounts a NEW frame inline in
+    // THIS turn's `mounts` (the `routeLine` fresh-host precedent, applied to a structurally different host
+    // — never `ui-surface-host`, never routed through `surfaceIdOf`/`#registry`).
+    const routeGenui = (surfaceId: string, html: string): void => {
+      touchedIds.add(surfaceId) // #settleTouchedHosts only settles A2UI hosts (`state==='open'`) — a no-op for a genui id, harmless
+      const known = this.#genuiRegistry.get(surfaceId)
+      if (known !== undefined) {
+        known.host.html = html // SPEC-R5 replace — the control's own effect rebuilds the whole srcdoc atomically
+        return
+      }
+      const host = document.createElement('ui-sandbox-frame') as UISandboxFrameElement
+      host.surfaceId = surfaceId
+      host.addEventListener('action', (e) => {
+        // SPEC-R8's routing law: the ONE outward semantic channel. Framed as a genui-shaped client message
+        // (structurally distinct from an `A2uiClientMessage` — a genui action is NOT one, SPEC-R8's own
+        // reasoning) and bubbled through the SAME `onClientMessage` callback `ui-surface-host` uses (LLD-C4)
+        // — the runner/consumer distinguishes the two shapes at its own boundary (`clientMessageSurfaceId`'s
+        // own `'genuiAction'` arm, agent-admin.ts).
+        const detail = (e as CustomEvent<GenuiActionDetail>).detail
+        // A genui action is NOT an `A2uiClientMessage` (SPEC-R8) — `ClientMessageListener`'s parameter
+        // type is nonetheless pinned to that closed union (the renderer's own real client-message shape).
+        // The cast is the documented impedance mismatch this bubble intentionally carries; the consumer
+        // (agent-admin.ts's `clientMessageSurfaceId`/`#runSurfaceTurn`) narrows on the `genuiAction` key
+        // before ever treating the value as a real A2UI client message.
+        this.#onClientMessageCb?.({ genuiAction: detail } as unknown as A2uiClientMessage)
+      })
+      mounts.append(host)
+      this.#genuiRegistry.set(surfaceId, { host, bubble })
+      host.html = html
+    }
+
     return {
       ingestLine: (line: string) => {
         turnLines.push(line)
@@ -530,6 +589,9 @@ export class UIConversationElement extends UIElement {
           narration.update(`t${seq}-${cat}`, { source: catLines.get(cat)!.join('\n') })
         }
         routeLine(line)
+      },
+      mountGenui: (surfaceId: string, html: string) => {
+        routeGenui(surfaceId, html)
       },
       setNote: (text: string) => {
         noteText = text
@@ -585,17 +647,24 @@ export class UIConversationElement extends UIElement {
 
   /** TKT-0079 — the resume probe: `id`'s OPEN record whose bubble is still in this log, plus the three
    *  turn parts a resumed turn writes into. `undefined` on ANY miss (unknown id, closed record,
-   *  disconnected bubble, missing part) ⇒ the caller takes the fresh-bubble path unchanged. */
+   *  disconnected bubble, missing part) ⇒ the caller takes the fresh-bubble path unchanged.
+   *  genui-surface.spec.md SPEC-R8 — checks the A2UI `#registry` FIRST, then the PARALLEL `#genuiRegistry`
+   *  (a genui surfaceId is never in `#registry` and vice versa, the disjoint-id-space law): a genui
+   *  action click's follow-up turn (TKT-0079's own "stay in the same card" rule) resumes the bubble that
+   *  owns its genui surface exactly the way an A2UI action click already resumes its own. */
   #resumableBubble(
     id: string,
   ): { bubble: HTMLElement; narration: UIStatusStreamElement; note: HTMLElement; mounts: HTMLElement } | undefined {
     const record = this.#registry.get(id)
-    if (record === undefined || record.state !== 'open' || !record.bubble.isConnected) return undefined
-    const narration = record.bubble.querySelector<UIStatusStreamElement>(':scope > [data-part="narration"]')
-    const note = record.bubble.querySelector<HTMLElement>(':scope > [data-part="body"]')
-    const mounts = record.bubble.querySelector<HTMLElement>(':scope > [data-part="mounts"]')
+    const bubble = record?.state === 'open' && record.bubble.isConnected ? record.bubble : undefined
+    const genuiRecord = bubble === undefined ? this.#genuiRegistry.get(id) : undefined
+    const resolvedBubble = bubble ?? (genuiRecord?.bubble.isConnected ? genuiRecord.bubble : undefined)
+    if (resolvedBubble === undefined) return undefined
+    const narration = resolvedBubble.querySelector<UIStatusStreamElement>(':scope > [data-part="narration"]')
+    const note = resolvedBubble.querySelector<HTMLElement>(':scope > [data-part="body"]')
+    const mounts = resolvedBubble.querySelector<HTMLElement>(':scope > [data-part="mounts"]')
     if (narration === null || note === null || mounts === null) return undefined
-    return { bubble: record.bubble, narration, note, mounts }
+    return { bubble: resolvedBubble, narration, note, mounts }
   }
 
   /** The reply affordance — a callback, NEVER a CustomEvent (SPEC-R5). Safe to call before OR after connect. */
@@ -672,6 +741,11 @@ export class UIConversationElement extends UIElement {
     if (!this.#guard('reset')) return
     for (const record of this.#registry.values()) record.host.dispose()
     this.#registry.clear()
+    // genui-surface.spec.md — `ui-sandbox-frame` has no `dispose()` method (unlike `ui-surface-host`): its
+    // OWN `disconnected()` tears down the bridge listener/iframe automatically the moment `replaceChildren()`
+    // below removes it from the DOM (the SAME platform-fires-disconnectedCallback mechanism the leak-safety
+    // net doc comment on `disconnected()` names) — only the Map bookkeeping needs clearing here.
+    this.#genuiRegistry.clear()
     this.#log!.replaceChildren()
     this.#turnsInFlight = 0
     this.#reflectBusy()
