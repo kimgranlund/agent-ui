@@ -11,16 +11,22 @@ import { readGenuiLine, isGenuiLine } from '../agent/genui-line.ts'
 import { validateA2ui } from '../renderer/validate.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 
-function stubProvider(outputs: string[]): { provider: AgentProvider; calls: () => number } {
+interface CapturedReq {
+  messages: { role: string; content: string }[]
+}
+
+function stubProvider(outputs: string[]): { provider: AgentProvider; calls: () => number; reqs: () => CapturedReq[] } {
   let n = 0
+  const captured: CapturedReq[] = []
   const provider: AgentProvider = {
-    async *stream() {
+    async *stream(req) {
+      captured.push({ messages: req.messages.map((m) => ({ role: m.role, content: m.content })) })
       const out = outputs[Math.min(n, outputs.length - 1)]!
       n += 1
       yield out
     },
   }
-  return { provider, calls: () => n }
+  return { provider, calls: () => n, reqs: () => captured }
 }
 
 const intent: TurnInput = { kind: 'intent', text: 'show me a chart', session: { turns: [] } }
@@ -62,31 +68,34 @@ describe('produce() genui peel — the ONE reserved-kind peel, before heal/valid
     expect(lines).toHaveLength(2) // the meta-line + the genui line, nothing else
   })
 
-  it('a malformed genui candidate feeds back ONE bounded round; on exhaustion it is DROPPED while the note/A2UI lines ship (never a ProduceHalt)', async () => {
+  // Renamed from an earlier draft titled "feeds back ONE bounded round" — an independent review caught
+  // that THIS scenario ships on round 1 (A2UI is already valid there), so nothing here ever exercises a
+  // retry/feedback round at all. That behavior is its own, separate, STRENGTHENED test below. This one
+  // covers what it actually demonstrates: a genui failure on an otherwise-successful round is dropped
+  // from the wire AND its code still lands on the trace (SPEC-N4's "every drop path is observable").
+  it('a malformed genui candidate on an OTHERWISE-SUCCESSFUL round is dropped silently, but its code lands on the trace (SPEC-N4)', async () => {
     const malformed = '{"genui":{"surfaceId":"","html":"<p>bad</p>"}}' // empty surfaceId — structurally invalid
-    const round1 = `{"a2uiMeta":{"note":"here"}}\n${malformed}\n${VALID_A2UI}`
-    // The model does NOT correct the genui envelope on round 2 either (it just resends the same valid A2UI) —
-    // exhaustion of the genui-specific budget must still ship the (valid) A2UI content, never ProduceHalt.
-    const round2 = `{"a2uiMeta":{"note":"here again"}}\n${malformed}\n${VALID_A2UI}`
-    const { provider } = stubProvider([round1, round2])
+    const raw = `{"a2uiMeta":{"note":"here"}}\n${malformed}\n${VALID_A2UI}`
+    const { provider, calls } = stubProvider([raw])
     const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
     const lines: string[] = []
-    // Round 1 already ships (A2UI is valid there) — genui is silently dropped on an otherwise-successful
-    // round, per the "never manufacture an extra round purely for genui" law.
     for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+    expect(calls()).toBe(1) // ships on round 1 — never manufactures an extra round purely for genui
     expect(lines.some((l) => isGenuiLine(l))).toBe(false) // never shipped — it was structurally invalid
     const a2uiLines = lines.filter((l) => readMetaLine(l) === undefined)
     expect(validateA2ui(a2uiLines.map((l) => JSON.parse(l)), defaultCatalog).valid).toBe(true)
+    const meta = lines.find((l) => readMetaLine(l)?.a2uiMeta.trace !== undefined)
+    expect(readMetaLine(meta!)!.a2uiMeta.trace!.failureCodes).toContain('GENUI_ENVELOPE')
   })
 
-  it('a genui structural failure hitching a ride on an A2UI retry never causes a ProduceHalt on its own', async () => {
+  it('a genui structural failure hitching a ride on an A2UI retry: the retry PROMPT actually carries the code, exhaustion never causes a ProduceHalt, and the shipped trace records it (SPEC-N4)', async () => {
     const malformed = '{"genui":{"surfaceId":"x"}}' // missing html — structurally invalid
     // Round 1: BOTH genui and A2UI are invalid — this round retries anyway (for the A2UI reason), and the
-    // genui failure code rides the SAME feedback message.
+    // genui failure code rides the SAME feedback message (the "ONE bounded round" this test actually proves).
     const round1 = `{"a2uiMeta":{"note":"here"}}\n${malformed}\n${INVALID_A2UI}`
     // Round 2: A2UI is corrected; genui is STILL malformed but must not block shipping.
     const round2 = `{"a2uiMeta":{"note":"fixed"}}\n${malformed}\n${VALID_A2UI}`
-    const { provider, calls } = stubProvider([round1, round2])
+    const { provider, calls, reqs } = stubProvider([round1, round2])
     const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
     const lines: string[] = []
     for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
@@ -94,6 +103,16 @@ describe('produce() genui peel — the ONE reserved-kind peel, before heal/valid
     expect(lines.some((l) => isGenuiLine(l))).toBe(false)
     const a2uiLines = lines.filter((l) => readMetaLine(l) === undefined)
     expect(validateA2ui(a2uiLines.map((l) => JSON.parse(l)), defaultCatalog).valid).toBe(true)
+    // The round-2 REQUEST actually carries round 1's fed-back GENUI_ENVELOPE code in its correction
+    // prompt (messagesFor's "That output was INVALID (...)" wording) — the discriminating proof this
+    // test's title promises, not merely "it shipped eventually".
+    const round2Request = reqs()[1]!
+    const correctionMessage = round2Request.messages[round2Request.messages.length - 1]!
+    expect(correctionMessage.content).toContain('GENUI_ENVELOPE')
+    // The shipped trace records the code too (SPEC-N4) — round 1's fed-back failure AND round 2's own
+    // still-malformed genui both name the SAME code, so a single toContain check covers either origin.
+    const meta = lines.find((l) => readMetaLine(l)?.a2uiMeta.trace !== undefined)
+    expect(readMetaLine(meta!)!.a2uiMeta.trace!.failureCodes).toContain('GENUI_ENVELOPE')
   })
 
   it('two genui lines in one raw turn: only the FIRST ships, GENUI_MULTIPLICITY lands on the trace', async () => {
@@ -123,7 +142,7 @@ describe('produce() genui peel — the ONE reserved-kind peel, before heal/valid
     expect(validateA2ui(a2uiLines.map((l) => JSON.parse(l)), defaultCatalog).valid).toBe(true)
   })
 
-  it('a genui candidate NEVER reaches the shared validator/healer — a malformed one does not cost a PARSE round on its own', async () => {
+  it('a genui candidate NEVER reaches the shared validator/healer — a malformed one does not cost a PARSE round on its own, and SPEC-N4 still records it on the trace', async () => {
     // Zero A2UI content, only a malformed genui candidate + a note: this must ship as a clean note-only
     // success (genui silently dropped), never a PARSE-triggered retry loop (which would eventually halt).
     const malformed = '{"genui":"not-an-object"}'
@@ -134,7 +153,11 @@ describe('produce() genui peel — the ONE reserved-kind peel, before heal/valid
     for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
     expect(calls()).toBe(1) // shipped on the FIRST round — never retried
     expect(lines.some((l) => isGenuiLine(l))).toBe(false)
-    expect(readMetaLine(lines[0]!)?.a2uiMeta.note).toBe('nothing else this turn')
+    const parsed = readMetaLine(lines[0]!)
+    expect(parsed?.a2uiMeta.note).toBe('nothing else this turn')
+    // SPEC-N4 — the drop is silent on the WIRE (no genui line, no extra round) but not on the TRACE: the
+    // note-only clean-success path must still record the dropped genui failure code.
+    expect(parsed?.a2uiMeta.trace?.failureCodes).toContain('GENUI_ENVELOPE')
   })
 
   it('a genui envelope fed directly to dispatch() routes to VERSION_UNSUPPORTED, returned not thrown (SPEC-R1 AC3, defense-in-depth)', async () => {
@@ -161,5 +184,50 @@ describe('ProduceHalt still fires on a genuinely invalid A2UI payload — genui 
         /* drain */
       }
     }).rejects.toThrow(ProduceHalt)
+  })
+})
+
+// genui-surface.spec.md SPEC-R8 AC2 — the FULL server-side crash site an independent review caught live:
+// produce()'s OWN `queryOf`/`userContent` call `frameClientMessage(input.message)` at the TOP of every
+// round (agent-transport.ts/session.ts, BEFORE any provider call) — a genuiAction TurnInput reaching this
+// path with no `genuiAction` arm in `frameClientMessage` threw `TypeError: Cannot use 'in' operator to
+// search for 'functionCallId' in undefined`, crashing every real turn (the dev proxy AND the Worker both
+// call produce() with exactly this shape). This drives a REAL genuiAction TurnInput through the REAL
+// produce() (not a stub boundary that stops short of frameClientMessage) — a regression test for the fix.
+describe("produce() with a genuiAction TurnInput (genui-surface SPEC-R8 AC2) — the REAL crash site, fixed", () => {
+  it('a genuiAction client turn never throws, and the model request carries surfaceId/name/payload VERBATIM', async () => {
+    const genuiMessage = { genuiAction: { surfaceId: 'q3-revenue', name: 'rate', payload: { stars: 5 } } }
+    // Capture the ACTUAL request `produce()` sends the provider — the real proof `queryOf`/`userContent`
+    // (which call `frameClientMessage` internally, the exact crash site) completed successfully and the
+    // framed text reached the model, not a separate/parallel frameClientMessage call this test invents.
+    const captured: { messages: { role: string; content: string }[] }[] = []
+    const provider: AgentProvider = {
+      async *stream(req) {
+        captured.push({ messages: req.messages.map((m) => ({ role: m.role, content: m.content })) })
+        yield VALID_A2UI
+      },
+    }
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const genuiActionInput: TurnInput = { kind: 'client', message: genuiMessage, session: { turns: [] } }
+    const lines: string[] = []
+    // No `expect(fn).not.toThrow()` wrapper (a footgun on an async callback — it never actually awaits the
+    // rejection, so it passes trivially either way): if `produce()` throws, this `for await` rejects the
+    // enclosing `it`'s own promise directly, failing the test with the real error.
+    for await (const line of produce(genuiActionInput, deps, { maxRounds: 3 })) lines.push(line)
+    const userTurn = captured[0]!.messages.find((m) => m.role === 'user')!
+    expect(userTurn.content).toContain('q3-revenue')
+    expect(userTurn.content).toContain('rate')
+    expect(userTurn.content).toContain(JSON.stringify({ stars: 5 }))
+    const a2uiLines = lines.filter((l) => readMetaLine(l) === undefined && !isGenuiLine(l))
+    expect(validateA2ui(a2uiLines.map((l) => JSON.parse(l)), defaultCatalog).valid).toBe(true)
+  })
+
+  it('a genuiAction turn with NO payload never throws either', async () => {
+    const { provider } = stubProvider([VALID_A2UI])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const input: TurnInput = { kind: 'client', message: { genuiAction: { surfaceId: 'widget', name: 'ping' } }, session: { turns: [] } }
+    for await (const _line of produce(input, deps, { maxRounds: 3 })) {
+      /* drain — a throw here fails the test directly */
+    }
   })
 })

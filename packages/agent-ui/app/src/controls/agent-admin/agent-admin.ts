@@ -922,13 +922,24 @@ export class UIAgentAdminElement extends UIElement {
     if (!conversation || surfaceTurn === undefined) return
     const store = this.store
     // The Agent master switch gates surface turns too — BOTH kinds: a typed intent and a surface action
-    // click (an inactive agent runs nothing, Kim's ruling). At least one STRUCTURED modality must be on
-    // (vision rev.6, widened by genui-surface SPEC-R11/B2 — see #handleSubmit's own comment): a turn with
-    // BOTH structured modalities off runs no hidden turns, not even from an action click.
+    // click (an inactive agent runs nothing, Kim's ruling).
     if (!isEnabledFlag(store?.get(AGENT_ENABLED_KEY))) return
     const a2uiOn = isEnabledFlag(store?.get(SURFACE_A2UI_KEY))
     const genuiOn = isGenuiSurfaceEnabled(store?.get(SURFACE_GENUI_KEY))
-    if (!a2uiOn && !genuiOn) return
+    // genui-surface.spec.md SPEC-R10/R11 (independent-review MODERATE fix): a `client` message's OWN
+    // modality gates it — a genui action click is inert while GenUI is off (even if A2UI is on), and
+    // symmetrically an A2UI action click is inert while A2UI is off (even if GenUI is on). A lingering
+    // frame/host from a NOW-disabled modality must never spawn a hidden turn — the exact contradiction
+    // `SURFACE_GENUI_KEY`'s own doc comment already promised and this gate previously broke (an OR
+    // across both switches let a disabled modality's stale click still run). A typed `intent` targets NO
+    // specific modality — it needs at least ONE structured modality on (unchanged, vision rev.6/B2).
+    if (turn.kind === 'client') {
+      const wantsGenui = isGenuiActionClientMessage(turn.message)
+      if (wantsGenui && !genuiOn) return
+      if (!wantsGenui && !a2uiOn) return
+    } else if (!a2uiOn && !genuiOn) {
+      return
+    }
     const sections = readEntries(store, ENTRY_KINDS.promptSection)
     const toolsEnabled = isEnabledFlag(store?.get(kindEnabledKey(ENTRY_KINDS.tool)))
     const request = {
@@ -1212,6 +1223,17 @@ function clientMessageSurfaceId(message: unknown): string | undefined {
   // agent's reply to a GenUI action stays in the SAME card, never a fresh one above the click.
   if (m && typeof m === 'object' && m.genuiAction && typeof m.genuiAction.surfaceId === 'string') return m.genuiAction.surfaceId
   return undefined
+}
+
+/** genui-surface.spec.md SPEC-R10/R11 — `true` iff `message` is a genui bridge-action bubble
+ *  (`{genuiAction:{...}}`, conversation.ts's `mountGenui` routing), never a real A2UI client message
+ *  (`action`/`error`). Used ONLY to pick which modality's OWN switch gates a `kind:'client'` surface turn
+ *  — an independent review's MODERATE finding: a message's kind must match its OWN modality flag, never
+ *  an OR across both (a lingering genui frame's click must stay inert while GenUI is off, symmetrically
+ *  for a lingering A2UI surface's action while A2UI is off — SURFACE_GENUI_KEY's own doc comment promises
+ *  exactly this: "no hidden turns from a disabled modality"). */
+function isGenuiActionClientMessage(message: unknown): boolean {
+  return typeof message === 'object' && message !== null && 'genuiAction' in message
 }
 
 if (!customElements.get('ui-agent-admin')) customElements.define('ui-agent-admin', UIAgentAdminElement)

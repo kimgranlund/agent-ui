@@ -28,6 +28,9 @@ import { readMetaLine } from '../../packages/agent-ui/a2ui/src/agent/meta-line.t
 // genui-surface.spec.md SPEC-R1 — the SAME canonical reader `produce()` peels lines with (never a
 // page-local re-implementation); zero-dep/pure, browser-safe (SPEC-N1).
 import { readGenuiLine } from '../../packages/agent-ui/a2ui/src/agent/genui-line.ts'
+// genui-surface.spec.md SPEC-R8 — the sibling "client message" shape a genui bridge action bubbles as
+// (never an A2uiClientMessage); frameClientMessage/nextTurn accept the union of both.
+import type { GenuiActionMessage } from '../../packages/agent-ui/a2ui/src/agent/genui-line.ts'
 import { readNdjsonLines } from './ndjson-lines.ts'
 // The live-key probe is shared verbatim with a2ui-live's overlay (a boolean + count; never the key). Static
 // import here is fine — this whole module already lives BEHIND the page's dev-only dynamic import, so it is
@@ -90,7 +93,7 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
     const input: TurnInput =
       req.turn.kind === 'intent'
         ? { kind: 'intent', text: req.turn.text, session }
-        : nextTurn(session, req.turn.message as A2uiClientMessage)
+        : nextTurn(session, req.turn.message as A2uiClientMessage | GenuiActionMessage)
     const res = await fetch(PRODUCE_ENDPOINT, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -168,7 +171,7 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
     }
     session = appendUserTurn(
       session,
-      req.turn.kind === 'intent' ? req.turn.text : frameClientMessage(req.turn.message as A2uiClientMessage),
+      req.turn.kind === 'intent' ? req.turn.text : frameClientMessage(req.turn.message as A2uiClientMessage | GenuiActionMessage),
     )
     session = appendAssistantTurn(session, turnLines.join('\n'))
   }

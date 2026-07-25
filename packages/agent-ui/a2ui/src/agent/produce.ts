@@ -600,6 +600,11 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
     if (restLines.length === 0 && (note !== undefined || genuiLine !== undefined)) {
       const failureCodes = (failuresFedBack ?? []).map((f) => f.code)
       if (genuiMultiplicityHit) failureCodes.push('GENUI_MULTIPLICITY') // SPEC-R1 — a factual tally, never a retry trigger
+      // SPEC-N4/SPEC-R1 — a genui structural failure on THIS shipping round is dropped from the wire
+      // (never blocks a clean note-only/genui-only success), but its failure code MUST still land on the
+      // trace — SPEC-N4's "every drop path increments an observable counter" applies to this drop too,
+      // not only to the retried case already covered by `failuresFedBack` above.
+      if (genuiPeel.failure !== undefined) failureCodes.push(genuiPeel.failure.code)
       if (emitProgress) yield formatProgressLine({ stage: 'done' }) // before the final (note-only/genui-only) yield
       if (note !== undefined) yield formatMetaLine(note, traceFor(round + 1, 0, failureCodes), undefined)
       if (genuiLine !== undefined) yield genuiLine // SPEC-R1 AC2 — ships intact, the model's own line verbatim
@@ -639,6 +644,9 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
       if (note !== undefined) {
         const failureCodes = (failuresFedBack ?? []).map((f) => f.code)
         if (genuiMultiplicityHit) failureCodes.push('GENUI_MULTIPLICITY')
+        // SPEC-N4/SPEC-R1 — see the note-only branch's identical comment: a genui failure dropped on an
+        // otherwise-successful round still needs to land on the trace, not just the retried case.
+        if (genuiPeel.failure !== undefined) failureCodes.push(genuiPeel.failure.code)
         yield formatMetaLine(note, traceFor(round + 1, assembled.healedCount, failureCodes), finalAsk) // meta-line FIRST
       }
       // genui-surface SPEC-R1 — a genui structural failure on an OTHERWISE-valid A2UI round is DROPPED

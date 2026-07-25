@@ -1332,6 +1332,37 @@ describe('UIAgentAdminElement — genui-surface.spec.md SPEC-R8/R10/R11 (B2): th
     // resumed the SAME bubble — never a second card for the follow-up reply.
     expect(el.querySelectorAll('[data-part="bubble"][data-role="agent"]')).toHaveLength(1)
   })
+
+  // genui-surface.spec.md SPEC-R10/R11 — independent-review MODERATE fix, the symmetric direction: GenUI
+  // OFF must keep a REAL genui action click inert even while A2UI is ON — a lingering frame from an
+  // EARLIER turn (rendered while GenUI was still on) must not spawn a hidden turn once the modality is
+  // switched off, exactly the contradiction SURFACE_GENUI_KEY's own doc comment already promised.
+  it('GenUI OFF (A2UI ON): a REAL genui action click stays INERT — no hidden turn (independent-review MODERATE fix)', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    el.store!.set('surfaceGenui', true) // ON while the frame mounts
+    const seenTurns: unknown[] = []
+    el.agentSurfaceTurn = async function* (req) {
+      seenTurns.push(req.turn)
+      if (req.turn.kind === 'intent') yield { kind: 'genui' as const, surfaceId: 'widget', html: '<p>rate me</p>' }
+      else yield { kind: 'note' as const, note: 'should never run' }
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    await submit(el, 'show a widget')
+    expect(seenTurns).toHaveLength(1) // the intent turn that mounted the frame
+
+    // Flip GenUI OFF (A2UI stays at its default ON) — the ALREADY-MOUNTED frame is now a lingering host.
+    el.store!.set('surfaceGenui', false)
+    const frame = el.querySelector('ui-sandbox-frame') as HTMLElement
+    frame.dispatchEvent(new CustomEvent('action', { detail: { surfaceId: 'widget', name: 'rate', payload: { stars: 5 } } }))
+    await whenFlushed()
+    await new Promise((r) => setTimeout(r, 0)) // GH #63 — the client turn is DEFERRED to a fresh macrotask
+    await whenFlushed()
+
+    expect(seenTurns, 'GenUI is off — the click must never spawn a hidden client turn').toHaveLength(1)
+  })
 })
 
 

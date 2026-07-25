@@ -29,6 +29,17 @@ export interface GenuiEnvelope {
   genui: { surfaceId: string; html: string }
 }
 
+/** SPEC-R8 — the OTHER genui-shaped message: a bridge `action` bubbled up from a mounted
+ *  `ui-sandbox-frame` (`ui-conversation`'s `mountGenui` routing, `GenuiActionDetail` re-keyed under
+ *  `genuiAction`), routed as the NEXT USER TURN. Deliberately NOT an `A2uiClientMessage` — SPEC-R8's own
+ *  reasoning: a GenUI action never came from a real A2UI surface, so it cannot honestly wear that
+ *  protocol's shape. `session.ts`'s `frameClientMessage`/`nextTurn` and `agent-transport.ts`'s `TurnInput`
+ *  accept `A2uiClientMessage | GenuiActionMessage` for exactly this reason — the two are siblings on the
+ *  SAME "client message" union, never one masquerading as the other. */
+export interface GenuiActionMessage {
+  genuiAction: { surfaceId: string; name: string; payload?: unknown }
+}
+
 /** UTF-8 byte length (SPEC-R2 measures the byte length, not the JS string length — a non-ASCII payload's
  *  char count and byte count diverge). */
 export function utf8ByteLength(s: string): number {
