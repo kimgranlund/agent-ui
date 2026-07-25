@@ -1,24 +1,53 @@
 // gen-ui-live.ts — the GenUI chat demo (genui-surface.spec.md SPEC §3.2/§3.3, D9; Kim's 2026-07-24
-// ruling). Layout: [ chat | render ]. The chat drives a deterministic RECORDED transport (SPEC §6's B1/B2
-// split — only B1, `ui-sandbox-frame`, has shipped; there is no live GenUI producer yet), mirroring
-// a2ui-live.ts's own recorded-backbone-by-default construction site (SPEC-R1's "the page consumes ONLY the
-// transport seam" discipline, carried over here even though this page has no live overlay to swap in). The
-// render pane hosts one `ui-sandbox-frame` per rendered surface — the fail-closed containment host, never
-// A2UI (this is deliberately NOT an A2UI page: GenUI validates the BOUNDARY, not a catalog payload).
+// ruling). Layout: [ chat | render ]. The chat drives an AgentTransport; the render pane hosts one
+// `ui-sandbox-frame` per rendered surface — the fail-closed containment host, never A2UI (this is
+// deliberately NOT an A2UI page: GenUI validates the BOUNDARY, not a catalog payload).
 //
-// RECORDED-ONLY, BY DESIGN (not a stopgap): unlike a2ui-live.ts, this page has no `wireLiveOverlay()` at
-// all. A2UI already has a real, shipped live producer (`@agent-ui/a2ui/agent`) to probe for; GenUI's own
-// wire + producer (SPEC §6's B2 slice) has not shipped. Building a probe for a backend that does not exist
-// would be dead code, not a widening — so the page states its recorded nature plainly instead (a permanent
-// "Recorded demo" badge + an opening system message), the same honesty a2ui-live's own non-DEV system
-// message practices ("Recorded backbone demo…") when no live key is configured.
+// The page consumes ONLY the AgentTransport seam (SPEC-R1), mirroring a2ui-live.ts's own construction site:
+// the default is the deterministic RECORDED BACKBONE (works offline, under CI, and whenever no live
+// provider is configured). GH #266 (B2) shipped the server-side wiring a live overlay needed — both
+// `dev-proxy-plugin.ts` and `worker/index.ts` already parse a `genui` field through `validateGenuiSurface()`
+// (chat-validation.ts) into `ProduceOptions.genuiSurface` — this page's own live overlay was the one
+// remaining gap; it is closed here. The LIVE overlay — a real model via the SAME same-origin proxy
+// a2ui-live.ts uses (`/__a2ui/agent`; dev-proxy-plugin.ts in dev, worker/index.ts in prod), probed with
+// `GET /status` at runtime, ALWAYS sending `genui: {enabled: true}` (this demo's entire point IS GenUI —
+// there is no "off" mode for this page, unlike agent-admin's Surface Options, where GenUI is one of several
+// optional modalities) — is swapped in via the same dynamic-import + probe pattern a2ui-live.ts's own
+// `wireLiveOverlay()` uses (`live-proxy-transport.ts`'s `createLiveProxyTransport` now takes an optional
+// second `genui` param for exactly this call site — a2ui-live.ts's own one-arg call stays byte-identical).
+// A client browser never holds a key either way (ADR-0073 clause 5).
 //
-// The wire shape this page's transport yields is the REAL SPEC-R1 envelope (`{"genui":{surfaceId, html}}`,
-// `genui-line.ts`) — a site-local STUB reader, not the shipped B2 module (which does not exist yet), but
-// structurally identical to it. Swapping in the real producer later means: (a) point `transport` at a real
-// `AgentTransport` instead of `createRecordedTransport(genuiTranscript)`, and (b) swap the one `genui-
-// line.ts` import for the real `@agent-ui/a2ui/agent`'s module — no reshaping of the render/round-trip
-// path below, which already speaks the real contract.
+// This page also exposes the composer's own Provider/Model picker (GH #257's shared
+// `provider-mode-selection.ts`, reused verbatim from a2ui-live.ts — already-built shared infrastructure,
+// not new UI) once a live provider is confirmed; `models` is left unset deliberately — the composer's own
+// `#effectiveModels()` (conversation-composer.ts) already narrows the Models picker from `providers`+
+// `provider` alone. The Mode picker is deliberately left UNEXPOSED here: `GenUiMode` (gen-ui-mode.ts) is
+// the orthogonal A2UI-catalog prompt-disposition axis (default/specific/blue-sky) — `system-prompt.ts`'s
+// `genuiBlock` composes independent of `mode`, so the axis has no bearing on a GenUI-only demo; exposing
+// it would only add a control this page has no honest use for.
+//
+// The Effort picker (`efforts`/`effort`/`onEffortChange`, agent-admin.ts's own wiring pattern) is ALSO
+// deliberately left unwired here — NOT a simplification, a verified server-side gap: `produce.ts`'s
+// `ProduceOptions` has no `effort` field at all, and the generic POST branch BOTH `dev-proxy-plugin.ts` and
+// `worker/index.ts` use for this transport (the one `createLiveProxyTransport` hits) parses only
+// `{input,provider,model,mode,genui,...}` — never `effort` (only the SEPARATE `/chat` route, agent-admin's
+// own raw one-shot `provider.stream()` call bypassing `produce()` entirely, threads `effort` through
+// today). a2ui-live.ts's own composer construction leaves `efforts` unset for the identical reason. Wiring
+// this picker here would render a control with NO effect on the live call — dishonest UI; see this
+// change's own handback for the recommended produce()/dev-proxy-plugin.ts/worker/index.ts amendment
+// (mirroring the `mode`/`genui` precedent) that would need to land FIRST.
+//
+// RECORDED BY DEFAULT (still the fallback, same fail-closed/degrade-clean posture as every other live
+// surface in this repo): a "Recorded demo" badge in the render pane + an opening system message state this
+// plainly whenever no live provider is configured; both are replaced (badge removed, a live-connected
+// system message shown) once `/status` confirms a real provider key — the same honesty a2ui-live.ts's own
+// non-DEV system message practices.
+//
+// The wire shape this page's transport yields is the REAL SPEC-R1 envelope (`{"genui":{surfaceId, html}}`)
+// — `genui-line.ts` is now a thin re-export of the shipped `@agent-ui/a2ui/agent/genui-line` module
+// (SPEC-R1's "ONE implementation both producer and client use"), so the recorded backbone and the live
+// overlay both speak the identical, real contract; no reshaping of the render/round-trip path below either
+// way.
 
 import { mountFullBleedPage } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls
 import '@agent-ui/app/super-shell.css' // ui-super-shell's own token ladder + collapse CSS (ADR-0156)
@@ -38,6 +67,10 @@ import type { AgentTransport, TurnInput, Session } from '../lib/agent-runtime.ts
 import type { TurnProgress, TurnProgressStage } from '@agent-ui/a2ui/agent/meta-line' // type-only — erases at build (ADR-0146 F1 precedent)
 import { readGenuiLine } from '../lib/genui-line.ts'
 import { genuiTranscript } from '../lib/genui-transcript.ts'
+// GH #257/#266 — the shared Provider/Model option data + persistence (a2ui-live.ts's own precedent),
+// reused verbatim once a live provider is confirmed; see the file banner for why the Mode picker is not
+// wired here.
+import { PROVIDER_OPTIONS, loadPersistedSelection, persistSelection } from '../lib/provider-mode-selection.ts'
 
 const { content } = mountFullBleedPage()
 
@@ -63,6 +96,26 @@ function paneHead(title: string, blurb: string, badge?: string): HTMLElement {
     head.append(b)
   }
   return head
+}
+
+/** Show/replace/remove the render pane's own "Recorded demo" badge (`.render-pane .pane-head`) — the ONE
+ *  DOM spot `wireLiveOverlay()`/Reset update as the live probe resolves: `text` shown when running on the
+ *  recorded backbone, `undefined` to remove it once a live provider is confirmed (a2ui-live.ts has no
+ *  equivalent badge, only its own system messages — this page keeps the badge because it existed before
+ *  the live overlay shipped and remains an honest, at-a-glance signal). */
+function setDemoBadge(text: string | undefined): void {
+  const head = renderPane.querySelector('.pane-head') as HTMLElement | null
+  if (!head) return
+  let badge = head.querySelector('.demo-badge') as HTMLElement | null
+  if (text === undefined) {
+    badge?.remove()
+    return
+  }
+  if (!badge) {
+    badge = el('span', 'demo-badge')
+    head.append(badge)
+  }
+  badge.textContent = text
 }
 
 // ════════════════ the two panes — ui-super-shell slots (the a2ui-live.ts precedent, ADR-0156 re-host):
@@ -153,8 +206,9 @@ function renderGenuiSurface(surfaceId: string, html: string): void {
 }
 
 // ════════════════ the transport + the chat loop ════════════════
-// The ONLY transport this page ever constructs: the deterministic recorded backbone (SPEC §6). No live
-// overlay exists for GenUI yet (see the file banner) — `transport` is reassigned only by Reset, below.
+// Default: the deterministic recorded backbone (SPEC §6) — swapped for the live overlay by
+// `wireLiveOverlay()` (see the file banner + the bottom of this file) whenever `/status` confirms a real
+// provider key; also reassigned by Reset, which restarts recorded first, then re-probes.
 let transport: AgentTransport = createRecordedTransport(genuiTranscript)
 
 let session: Session = { turns: [] }
@@ -304,13 +358,60 @@ resetBtn.addEventListener('click', () => {
   surfaceStack.replaceChildren() // disposes every mounted ui-sandbox-frame's own disconnected() cleanup
   surfaces.clear()
   session = { turns: [] }
-  transport = createRecordedTransport(genuiTranscript)
+  transport = createRecordedTransport(genuiTranscript) // fail-closed default — wireLiveOverlay() below re-probes + swaps back in if a live key is still available
   chatLog.replaceChildren()
-  addMessage('system', 'Recorded demo. Send a message to begin — the demo advances one canned turn per message (it does not read what you type).')
+  setDemoBadge('Recorded demo') // reset to the fail-closed default; wireLiveOverlay() removes it again if the re-probe still finds a live key
+  addMessage('system', 'New conversation. Send a message to begin.')
+  wireLiveOverlay() // re-probe
 })
 const resetBar = el('div', 'reset-bar')
 resetBar.append(resetBtn)
 renderPane.append(resetBar)
 
+// ════════════════ the LIVE overlay — probed dynamically in both dev and prod (the a2ui-live.ts precedent;
+// see the file banner). Always sends `genui: {enabled: true}` — this page's entire point IS GenUI, so
+// there is no "off" branch to preserve. Degrades cleanly to the recorded backbone whenever `/status`
+// reports no live provider available (no key configured). ════════════════════════
+function wireLiveOverlay(): void {
+  void (async () => {
+    try {
+      const overlay = await import('../lib/live-proxy-transport.ts')
+      const status = await overlay.probeLive()
+      if (status.available) {
+        // GH #257's shared picker infra, reused verbatim from a2ui-live.ts's own wireLiveOverlay — Provider/
+        // Model only (see the file banner for why Mode AND Effort both stay unexposed on this page — Effort
+        // specifically is a verified server-side gap, not a scope choice: produce.ts's ProduceOptions/this
+        // transport's own POST body have no `effort` field to receive one).
+        let selection = loadPersistedSelection()
+        composer.providers = PROVIDER_OPTIONS
+        composer.provider = selection.provider
+        composer.model = selection.model
+        composer.onProviderChange((id) => {
+          selection = { ...selection, provider: id }
+          composer.provider = id
+          persistSelection(selection)
+        })
+        composer.onModelChange((id) => {
+          selection = { ...selection, model: id }
+          composer.model = id
+          persistSelection(selection)
+        })
+        transport = overlay.createLiveProxyTransport({ get: () => selection }, { enabled: true })
+        setDemoBadge(undefined)
+        addMessage('system', `Live agent connected (${status.providers} provider(s) available). Prompt it to render a real GenUI surface.`)
+      } else if (import.meta.env.DEV) {
+        setDemoBadge('Recorded demo')
+        addMessage('system', 'Recorded backbone (no live API key found). Set a provider key in .env and restart `npm run dev` for a live GenUI agent.')
+      } else {
+        setDemoBadge('Recorded demo')
+        addMessage('system', 'Recorded demo. Send a message to begin — the demo advances one canned turn per message (it does not read what you type).')
+      }
+    } catch {
+      setDemoBadge('Recorded demo')
+      addMessage('system', 'Recorded backbone demo (live overlay unavailable).')
+    }
+  })()
+}
+
 // ── initial state ───────────────────────────────────────────────────────────────────────────────────────
-addMessage('system', 'Recorded demo. Send a message to begin — the demo advances one canned turn per message (it does not read what you type).')
+wireLiveOverlay()

@@ -12,10 +12,20 @@
 // ADR-0090 §4/LLD-C7: `mode` (a `GenUiMode`) rides the SAME body + `SelectionRef` seam `{provider,model}`
 // already prove — the switcher (LLD-C12) is the only producer of a live `mode` value; the proxy (LLD-C6)
 // re-validates it independently (never trusts this body verbatim).
+//
+// genui-surface.spec.md SPEC-R10/GH #266 (B2) — `createLiveProxyTransport` takes an optional SECOND
+// `genui` param, threaded into the SAME POST body as an optional `genui` field, re-validated server-side by
+// `validateGenuiSurface()` (chat-validation.ts, shared by both dev-proxy-plugin.ts and worker/index.ts —
+// never trusted verbatim here either). Optional + additive on purpose: a2ui-live.ts's own call site
+// (`createLiveProxyTransport({ get: () => selection })`, one arg) stays byte-identical — it never wants
+// GenUI enabled — while gen-ui-live.ts's call site (this seam's other consumer) passes `{ enabled: true }`
+// as the second arg. This is the SAME "widen the existing seam, don't fork a parallel one" precedent `mode`
+// itself set alongside `{provider,model}` above.
 
 import type { AgentTransport, TurnInput } from './agent-runtime.ts'
 import type { GenUiMode } from '../../packages/agent-ui/a2ui/src/agent/gen-ui-mode.ts'
 import type { Effort } from '../../packages/agent-ui/a2ui/src/agent/agent-transport.ts'
+import type { GenuiSurfaceConfig } from '../../packages/agent-ui/a2ui/src/agent/genui-surface-config.ts'
 import { readNdjsonLines } from './ndjson-lines.ts'
 
 const ENDPOINT = '/__a2ui/agent'
@@ -48,7 +58,7 @@ export interface SelectionRef {
   get(): { provider: string; model: string; mode: GenUiMode; effort?: Effort }
 }
 
-export function createLiveProxyTransport(selection: SelectionRef): AgentTransport {
+export function createLiveProxyTransport(selection: SelectionRef, genui?: GenuiSurfaceConfig): AgentTransport {
   return {
     async *turn(input: TurnInput): AsyncIterable<string> {
       const sel = selection.get()
@@ -61,6 +71,7 @@ export function createLiveProxyTransport(selection: SelectionRef): AgentTranspor
           model: sel.model,
           mode: sel.mode,
           ...(sel.effort !== undefined ? { effort: sel.effort } : {}),
+          ...(genui !== undefined ? { genui } : {}), // absent ⇒ byte-identical body to pre-B2 (a2ui-live.ts's own call site)
         }),
       })
       if (!res.ok || res.body === null) {

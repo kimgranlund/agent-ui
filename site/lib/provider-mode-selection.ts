@@ -8,7 +8,9 @@
 // `effort` pair — neither of those persists anything either; the consumer owns ALL state, the composer only
 // renders it. Giving the composer its own localStorage side effect would be a special case for exactly two
 // of its six option axes, tying a fleet-generic FACE control to a page-specific storage key. This module is
-// the ONE shared place the three live-overlay pages (a2ui-chat/a2ui-live/a2a-artifact-feed) get identical
+// the ONE shared place the live-overlay pages (a2ui-chat/a2ui-live/a2a-artifact-feed, and — GH #266's
+// gen-ui-live.ts live overlay — gen-ui-live, Provider/Model only, no Mode picker there: `GenUiMode` is the
+// orthogonal A2UI-catalog-disposition axis, gen-ui-mode.ts, irrelevant to a GenUI-only demo) get identical
 // option lists + restore/persist logic from, mirroring `provider-switcher.ts`'s own role as the single
 // source of truth — just producing composer PROPS now instead of building `ui-select` DOM.
 //
