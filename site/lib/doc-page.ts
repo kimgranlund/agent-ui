@@ -131,8 +131,8 @@ function apiBadge(label: string, title: string): HTMLElement {
  * a titled section.
  *
  * `level` is the section-title heading level (DEFAULT 2), so the standard control doc page (composeDocPage) is
- * byte-identical, while a bespoke page that nests these tables under its own sub-headings (the app-shell guide's
- * per-element `h3` labels) can push the title down a level to keep the document outline monotonic (WCAG 1.3.1).
+ * byte-identical, while a bespoke page that nests these tables under its own sub-headings (the master-detail
+ * guide's per-element `h3` labels) can push the title down a level to keep the document outline monotonic (WCAG 1.3.1).
  */
 export function renderApiTable(attributes: readonly ParsedAttribute[], level = 2): HTMLElement {
   const section = document.createElement('section')

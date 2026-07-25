@@ -13,7 +13,7 @@ npm install @agent-ui-kit/app
 ```js
 import '@agent-ui-kit/app/agent-admin'     // <ui-agent-admin> — the whole workbench
 import '@agent-ui-kit/app/agent-admin.css'
-// …or compose the parts: app-shell, master-detail, nav-rail, settings, conversation, surface-host.
+// …or compose the parts: super-shell, master-detail, nav-rail, settings, conversation, surface-host.
 ```
 
 > **Consumer profile:** this package targets Vite/Rolldown-family bundlers — one internal module uses Vite import queries (`?raw`/`?url`), so plain Node ESM / webpack / esbuild consumers can't import the root barrel. The rest of the family has no such constraint.

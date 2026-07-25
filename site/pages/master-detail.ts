@@ -1,4 +1,4 @@
-// site/pages/master-detail.ts — the ui-master-detail COMPOSITION GUIDE (the app-shell.ts site-page
+// site/pages/master-detail.ts — the ui-master-detail COMPOSITION GUIDE (the super-shell.ts site-page
 // precedent, ported): `ui-master-detail` lives in `@agent-ui/app`, OUTSIDE the `components/src` fleet the
 // site-coverage/site-toc drift gates enumerate, so it carries no `{name}-{type}.html` page set and no
 // per-component TOC group — it is an UNGROUPED site-level link (added once to `_page.ts` NAV).
@@ -98,8 +98,8 @@ function demo(): HTMLElement {
 content.append(sectionHeading('1 · Composition'))
 content.append(
   para(
-    'Two ', code('ui-master-detail-pane'), ' children dock the list and detail content — the ',
-    code('ui-app-shell-region'), ' generic-region model, ported. Resize the frame below narrower than 40rem ' +
+    'Two ', code('ui-master-detail-pane'), ' children dock the list and detail content — a generic-region ' +
+      'model. Resize the frame below narrower than 40rem ' +
       '(the element\'s OWN container width, never the viewport) to see the drill-in.',
   ),
 )

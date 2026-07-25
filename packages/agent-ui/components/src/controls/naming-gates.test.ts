@@ -432,8 +432,8 @@ describe('Gate 3 — the data-role registry (naming.md §6, packages/**/src, non
 // ── Gate 4 — descriptor↔DOM parts[] truthfulness (the color-picker L2 hole) ──────────────────────────────────
 // SCOPE CUT: this gate constructs REAL elements, so — unlike gates 1-3's pure text scan — it can only reach
 // controls THIS package can import. `@agent-ui/components` sits BELOW `@agent-ui/app` in the package DAG
-// (components ← app), so app's own 3 parts-bearing descriptors (ui-app-shell-region, ui-master-detail,
-// ui-settings) are out of reach from here — the SAME scope cut site-coverage.test.ts's FAMILY_ROOTS already
+// (components ← app), so app's own 2 parts-bearing descriptors (ui-master-detail, ui-settings) are out of
+// reach from here — the SAME scope cut site-coverage.test.ts's FAMILY_ROOTS already
 // takes for its page-coverage gate (components/controls only, not app). Not a silent gap: named here, and an
 // app-package-local mirror of this gate is the natural follow-up if that coverage is wanted (TKT-0025 Findings).
 //
