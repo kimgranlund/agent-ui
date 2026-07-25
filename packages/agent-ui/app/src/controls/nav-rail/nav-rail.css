@@ -39,7 +39,23 @@
   --ui-nav-rail-gap: var(--md-sys-gap-md);
 
   /* TKT-0066 item 5 ruling: dimensional constants route through the own chain, never read raw in @scope. */
-  --ui-nav-rail-label-font: var(--md-sys-font-sm);
+  --ui-nav-rail-label-font: var(--md-sys-font-sm); /* still consumed by the trailing [data-role='tag'] below */
+  /* The group section-label (`[data-part='context-label']`) reads the fleet's `kicker` typescale role
+     (`@agent-ui/shared/dimensions.css`), not a bare font-size — a proper eyebrow header (small/bold/
+     tracked), matching the text.css `ui-text[variant='kicker']` consumption idiom (four separate
+     declarations off four separate tokens; no shorthand). `-small` is the register: the label previously
+     read `--md-sys-font-sm`, and the fleet's own sm↔small / md↔medium / lg↔large mapping (documented in
+     dimensions.css's typescale comment and applied by text.css) carries that SAME relative tier across —
+     `-small` (11px @ scale 1) also reads meaningfully smaller than the rail's own item-row font
+     (`--ui-nav-rail-font`, 14px), the size relationship an eyebrow header needs. Case is left AS-AUTHORED
+     (no text-transform) — the M3 kicker tokens carry no transform of their own (weight/tracking are the
+     scale-side, `text-transform: uppercase` is text.css's own OPTIONAL editorial treatment layered on top,
+     cl.2b) and these labels ("Components"/"A2A"/"Records") are proper names, not generic prose eyebrows;
+     weight + tracking alone already read as a kicker against the item rows below. */
+  --ui-nav-rail-context-label-size: var(--md-sys-typescale-kicker-small-size);
+  --ui-nav-rail-context-label-weight: var(--md-sys-typescale-kicker-small-weight);
+  --ui-nav-rail-context-label-line-height: var(--md-sys-typescale-kicker-small-line-height);
+  --ui-nav-rail-context-label-tracking: var(--md-sys-typescale-kicker-small-tracking);
   --ui-nav-rail-context-pad-block-start: var(--md-sys-space-sm);
   --ui-nav-rail-context-pad-block-end: var(--md-sys-space-xs);
   --ui-nav-rail-flyout-pad: var(--md-sys-space-xs);
@@ -74,7 +90,10 @@
   }
 
   [data-part='context-label'] {
-    font-size: var(--ui-nav-rail-label-font);
+    font-size: var(--ui-nav-rail-context-label-size);
+    font-weight: var(--ui-nav-rail-context-label-weight);
+    line-height: var(--ui-nav-rail-context-label-line-height);
+    letter-spacing: var(--ui-nav-rail-context-label-tracking);
     color: var(--ui-nav-rail-ink);
     padding-inline: calc(var(--ui-nav-rail-height) / 2);
     padding-block-start: var(--ui-nav-rail-context-pad-block-start);

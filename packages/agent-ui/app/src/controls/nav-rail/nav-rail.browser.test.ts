@@ -139,6 +139,36 @@ describe('ui-nav-rail — ARIA role derives from item shape, via internals (both
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
+//  [1b] the group section-label reads the `kicker` typescale role, not a bare font-size
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-nav-rail-group — context-label uses the kicker-small typescale role (both engines)', () => {
+  it('font-size/font-weight/letter-spacing resolve to the kicker-small register, case left as-authored', async () => {
+    const rail = document.createElement('ui-nav-rail')
+    const group = new UINavRailGroupElement()
+    group.label = 'Components'
+    group.append(makeItem('/a', 'A'))
+    rail.append(group)
+    mountRail(rail, '900px')
+    await (rail as unknown as { updateComplete: Promise<void> }).updateComplete
+    await (group as unknown as { updateComplete: Promise<void> }).updateComplete
+
+    const label = group.querySelector('[data-part="context-label"]') as HTMLElement
+    expect(label, `${server.browser}: the context-label span never rendered`).not.toBeNull()
+    expect(label.textContent, 'case stays as-authored — no text-transform: uppercase').toBe('Components')
+
+    const cs = getComputedStyle(label)
+    // kicker-small @ scale 1 (dimensions.css): size 11px, weight 700, tracking 0.08em.
+    expect(Number.parseFloat(cs.fontSize), `${server.browser}: expected the kicker-small 11px register`).toBeCloseTo(11, 0)
+    expect(cs.fontWeight, `${server.browser}: expected the kicker bold register`).toBe('700')
+    // letter-spacing resolves to px (0.08em of the 11px kicker-small font ≈ 0.88px) — a real, non-zero
+    // tracking value, the thing a bare font-size read could never produce.
+    expect(Number.parseFloat(cs.letterSpacing), `${server.browser}: expected non-zero kicker tracking`).toBeGreaterThan(0.5)
+    expect(cs.textTransform, 'no uppercase — the labels are proper names, kept as-typed').toBe('none')
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
 //  [2] collapse="menu" — whole-shape wide/narrow + Escape/outside-click dismiss (SPEC-R5)
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
