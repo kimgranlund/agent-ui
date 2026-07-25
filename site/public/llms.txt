@@ -3,8 +3,8 @@
 > A zero-dependency, signals-based web-component library in strict modern TypeScript — FACE custom
 > elements (light DOM, ARIA via ElementInternals only, no native form elements), a tagged-template
 > renderer, and typed-signal props — plus an A2UI Generative-UI runtime (`@agent-ui/a2ui`), an A2A
-> (Agent2Agent) protocol layer (`@agent-ui/a2a`), a memory-first SPA router (`@agent-ui/router`),
-> and an app-shell package. This site is the library's living documentation: component API pages
+> (Agent2Agent) protocol layer (`@agent-ui/a2a`), and a memory-first SPA router (`@agent-ui/router`).
+> This site is the library's living documentation: component API pages
 > derive from each control's own machine-checked descriptor, token/changelog pages derive from
 > their source files, and drift gates keep every page honest.
 

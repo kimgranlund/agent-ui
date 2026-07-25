@@ -27,9 +27,6 @@
 //     divider" to arbitrate (see the re-keyed describe block below).
 import { describe, it, expect, afterEach } from 'vitest'
 import '@agent-ui/components/foundation-styles.css'
-import '@agent-ui/app/app-shell.css'
-import '@agent-ui/app/app-shell'
-import { UIAppShellRegionElement } from '@agent-ui/app/app-shell'
 import '@agent-ui/app/super-shell.css'
 import '@agent-ui/app/super-shell'
 import '@agent-ui/components/component-styles.css' // the [hidden] panel rule + tab chrome (Batch C tabs legs)
@@ -61,18 +58,6 @@ function mountChrome(width: number): { chat: HTMLElement; canvas: HTMLElement } 
   mounted.push(content)
   return { chat, canvas }
 }
-
-// Probe subclass re-exposing the protected `internals` (the app package's own app-shell.test.ts precedent) —
-// a NEW tag, since the real class already claimed `ui-app-shell-region` at import time above.
-// `ui-app-shell`/`ui-app-shell-region` stay in-tree, functional, and gate-covered for the whole ADR-0156
-// deprecation window (clause 1) — the two describe blocks below exercise THAT component's own landmark-
-// override behavior in isolation and are UNCHANGED by this migration (they are not this page's composition).
-class ProbeRegion extends UIAppShellRegionElement {
-  get ii(): ElementInternals {
-    return this.internals
-  }
-}
-if (!customElements.get('a2ui-live-region-probe')) customElements.define('a2ui-live-region-probe', ProbeRegion)
 
 describe('a2ui-live chrome re-host (ADR-0156) — wide resting shape', () => {
   const WIDTH = 1200 // px — comfortably past the OLD layout's cap threshold (~1050px), see the file banner
@@ -246,27 +231,6 @@ describe('a2ui-live pane radius stays CONCENTRIC with its shell wrapper (GH #253
     const { chat, canvas } = mountChrome(1200)
     expect(getComputedStyle(chat).borderRadius).not.toBe('12px')
     expect(getComputedStyle(canvas).borderRadius).not.toBe('12px')
-  })
-})
-
-describe('a2ui-live chrome re-host (ADR-0083, unchanged) — the chat composer lands on the CORRECT ARIA landmark', () => {
-  it('resolves role="complementary" via internals, decoupled from its "navigation" column — never a host attribute', () => {
-    const el = new ProbeRegion()
-    el.region = 'navigation' // the LEFT column (ui-app-shell-region's own vocabulary, unrelated to this page)
-    el.landmark = 'complementary'
-    document.body.append(el)
-    mounted.push(el)
-    expect(el.ii.role).toBe('complementary')
-    expect(el.getAttribute('role')).toBeNull()
-  })
-
-  it('negative control: the SAME column WITHOUT the landmark override resolves to "navigation" — the assertion above bites', () => {
-    const el = new ProbeRegion()
-    el.region = 'navigation'
-    document.body.append(el)
-    mounted.push(el)
-    expect(el.ii.role).toBe('navigation')
-    expect(el.ii.role).not.toBe('complementary')
   })
 })
 

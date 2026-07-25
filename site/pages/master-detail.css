@@ -1,5 +1,5 @@
-/* master-detail.css — PAGE-LOCAL demo chrome for the ui-master-detail composition guide (the app-shell.ts
- * page's .as-resize/.as-demo precedent, ported). Styles the demo's list rows + detail body + the resizable
+/* master-detail.css — PAGE-LOCAL demo chrome for the ui-master-detail composition guide (the super-shell.ts
+ * page's .ss-demo demo-chrome precedent, ported). Styles the demo's list rows + detail body + the resizable
  * frame — it never restyles ui-master-detail/ui-split's own internals. Every colour is a --md-sys-color-*
  * role (imported first via _page.ts), so the demo tracks light/dark. */
 

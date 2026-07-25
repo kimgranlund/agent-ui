@@ -37,8 +37,6 @@ const ROOT = process.cwd()
 const SHELL_FAMILY_SHEETS = [
   // @agent-ui/app's controls/ — every sheet, unconditionally (the package composes shells throughout).
   'packages/agent-ui/app/src/controls/agent-admin/agent-admin.css',
-  'packages/agent-ui/app/src/controls/app-shell/app-shell.css',
-  'packages/agent-ui/app/src/controls/app-shell/app-shell-isolation.css',
   'packages/agent-ui/app/src/controls/chat-shell/chat-shell.css',
   'packages/agent-ui/app/src/controls/conversation/conversation.css',
   'packages/agent-ui/app/src/controls/conversation/conversation-composer.css',

@@ -16,8 +16,6 @@ const ROOT = `${process.cwd()}/packages/agent-ui/app/src/controls`
 // the ANTI-VACUOUS test below catches an accidentally-empty list, not a missing new entry, so growing the
 // family is still a manual (documented) step, same as the SLOTS list in super-shell.ts itself.
 const SITES = [
-  `${ROOT}/app-shell/app-shell.css`,
-  `${ROOT}/app-shell/app-shell-isolation.css`,
   `${ROOT}/master-detail/master-detail.css`,
   `${ROOT}/nav-rail/nav-rail.css`,
   `${ROOT}/super-shell/super-shell.css`,
