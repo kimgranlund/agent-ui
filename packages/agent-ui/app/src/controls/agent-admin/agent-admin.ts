@@ -946,6 +946,9 @@ export class UIAgentAdminElement extends UIElement {
       turn,
       personaSystem: composeLiveSystemPrompt(sections, this.#capabilityGroups(store)),
       model: sanitizeModel(store?.get('model'), modelRoster()),
+      // The composer's Effort picker selection (see AdminSurfaceTurnRequest.effort) — the same dial the
+      // plain-chat arm (`#handleSubmit`'s `AdminTurnRequest`) already threads.
+      effort: this.#effort,
       // Vision rev.6 — the catalog picker's sanitized selection (see AdminSurfaceTurnRequest.catalogId).
       catalogId: sanitizeCatalog(store?.get(A2UI_CATALOG_KEY)),
       // GH #49 — the ENABLED tool entries' labels, master-gated on toolsEnabled (the SAME switch that

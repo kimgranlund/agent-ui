@@ -205,3 +205,39 @@ describe('createAdminSurfaceTurn — genui-surface B2', () => {
     expect(body.input.message).toEqual({ genuiAction: { surfaceId: 'widget', name: 'rate', payload: { stars: 5 } } })
   })
 })
+
+// The Effort picker's wiring for SURFACE (GenUI/A2UI) turns: `AdminSurfaceTurnRequest.effort` reaches the
+// `PRODUCE_ENDPOINT` POST body, mirroring the plain-chat arm's already-correct `AdminTurnRequest.effort`
+// (createAdminAgentTurn, above) and `live-proxy-transport.ts`'s SAME additive-optional-field precedent
+// (`sel.effort`) — absent ⇒ no `effort` key at all, present ⇒ threaded verbatim.
+describe('createAdminSurfaceTurn — effort threading (the Effort picker reaching structured/surface turns)', () => {
+  it('omits `effort` from the POST body when the request carries none (byte-identical to before this field existed)', async () => {
+    const fetchSpy = vi.fn(
+      async () => new Response(streamOfLines([]), { status: 200, headers: { 'content-type': 'application/x-ndjson' } }),
+    )
+    vi.stubGlobal('fetch', fetchSpy)
+    const runner = createAdminSurfaceTurn()
+    for await (const _event of runner(SURFACE_REQUEST)) {
+      /* drain */
+    }
+    const init = (fetchSpy.mock.calls[0] as unknown[])[1] as { body: string }
+    const body = JSON.parse(init.body) as Record<string, unknown>
+    expect('effort' in body).toBe(false)
+  })
+
+  it('threads a real `effort` value from the request into the actual POST body (not just the type)', async () => {
+    const fetchSpy = vi.fn(
+      async () => new Response(streamOfLines([]), { status: 200, headers: { 'content-type': 'application/x-ndjson' } }),
+    )
+    vi.stubGlobal('fetch', fetchSpy)
+    const runner = createAdminSurfaceTurn()
+    const req: AdminSurfaceTurnRequest = { ...SURFACE_REQUEST, effort: 'high' }
+    for await (const _event of runner(req)) {
+      /* drain */
+    }
+    const init = (fetchSpy.mock.calls[0] as unknown[])[1] as { body: string }
+    const body = JSON.parse(init.body) as Record<string, unknown>
+    expect(body.effort).toBe('high')
+    expect(body.model).toBe('claude-sonnet-5')
+  })
+})

@@ -1130,6 +1130,34 @@ describe('UIAgentAdminElement — the agentSurfaceTurn arm', () => {
     expect(agentBody?.textContent).toBe('Dealt.')
   })
 
+  it("the request's `effort` reflects the composer's Effort picker selection (the same dial the plain-chat AdminTurnRequest arm already threads)", async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({ initial: { model: 'claude-sonnet-5' } })
+    const seen: unknown[] = []
+    el.agentSurfaceTurn = async function* (req) {
+      seen.push(req)
+      yield { kind: 'note' as const, note: 'ok' }
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+
+    // Drive the SAME path a real picker commit does: fire the registered onEffortChange callback.
+    const menu = el.querySelector('[data-part="effort-menu"]') as HTMLElement
+    ;(menu.querySelector('[data-value="high"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+
+    const composer = el.querySelector('ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = 'play'
+    const editor = composer.querySelector('[data-part="editor"]') as HTMLElement
+    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+    await whenFlushed()
+    await new Promise((r) => setTimeout(r, 0))
+    await whenFlushed()
+
+    const req = seen[0] as { effort?: string }
+    expect(req.effort).toBe('high')
+  })
+
   it('a thrown runner surfaces via the fail path (a system bubble), never an empty success', async () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
     el.store = createMemoryStore({})
