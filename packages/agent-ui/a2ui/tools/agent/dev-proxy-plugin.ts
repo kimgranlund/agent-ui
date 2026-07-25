@@ -32,9 +32,9 @@ import { resolveIntegrations } from './integrations.ts'
 // the Cloudflare Worker port can import it directly too, which it couldn't do from THIS file — importing
 // anything from here would drag `loadEnv`/`vite` into the Workers bundle). Re-exported unchanged so this
 // file's own tests (validate-mode.test.ts, chat-route.test.ts) needed no changes for the extraction.
-import { validateMode, validateGenuiSurface, isChatBody, resolveChatDispatch } from './chat-validation.ts'
+import { validateMode, validateGenuiSurface, validateEffort, isChatBody, resolveChatDispatch } from './chat-validation.ts'
 import type { ChatDispatch } from './chat-validation.ts'
-export { validateMode, validateGenuiSurface, isChatBody, resolveChatDispatch }
+export { validateMode, validateGenuiSurface, validateEffort, isChatBody, resolveChatDispatch }
 export type { ChatDispatch }
 
 declare const process: { cwd(): string; env: Record<string, string | undefined> }
@@ -164,7 +164,7 @@ export function a2uiDevProxyPlugin(): Plugin {
 
             // POST — run one turn and stream validated A2UI JSONL back.
             if (req.method === 'POST') {
-              const { input, provider, model, mode, personaSystem, integrations, progressDetail, genui } = JSON.parse(await readBody(req)) as {
+              const { input, provider, model, mode, personaSystem, integrations, progressDetail, genui, effort } = JSON.parse(await readBody(req)) as {
                 input: TurnInput
                 provider: string
                 model: string
@@ -173,6 +173,7 @@ export function a2uiDevProxyPlugin(): Plugin {
                 integrations?: unknown
                 progressDetail?: unknown
                 genui?: unknown
+                effort?: unknown
               }
               const pair = resolvePair(config, provider, model) // SPEC-R12 PAIR-allowlist — the trust boundary
               if (!pair.ok) {
@@ -235,8 +236,12 @@ export function a2uiDevProxyPlugin(): Plugin {
               // genui-surface.spec.md SPEC-R10/R11 — the SAME fail-closed validation both transports share
               // (chat-validation.ts); a crafted/malformed value degrades to modality-off, never a 400.
               const genuiSurface = validateGenuiSurface(genui)
+              // The reasoning-effort dial (the SAME fail-closed posture as mode/genuiSurface above,
+              // chat-validation.ts): a crafted/malformed value degrades to `undefined` (the adapter's own
+              // default), never a 400.
+              const validatedEffort = validateEffort(effort)
               try {
-                for await (const line of produce(input, deps, { maxRounds: 3, model, mode: validateMode(mode), personaSystem: persona, progress: true, ...(detail !== undefined ? { progressDetail: detail } : {}), ...(genuiSurface !== undefined ? { genuiSurface } : {}), ...toolOpts })) {
+                for await (const line of produce(input, deps, { maxRounds: 3, model, mode: validateMode(mode), personaSystem: persona, progress: true, ...(detail !== undefined ? { progressDetail: detail } : {}), ...(genuiSurface !== undefined ? { genuiSurface } : {}), ...(validatedEffort !== undefined ? { effort: validatedEffort } : {}), ...toolOpts })) {
                   res.write(line + '\n')
                 }
               } catch (err) {

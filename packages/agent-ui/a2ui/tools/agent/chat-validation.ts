@@ -42,6 +42,15 @@ export function validateGenuiSurface(genui: unknown): GenuiSurfaceConfig | undef
   return { enabled: g.enabled, ...(sourceBody !== undefined ? { sourceBody } : {}) }
 }
 
+// produce()-route effort threading — the SAME fail-closed posture as `validateMode`/`validateGenuiSurface`
+// (this file's shared trust-boundary spine), not the `/chat` route's `isChatBody` 400-on-malformed check
+// below: `effort` is a closed 4-member enum (`EFFORT_VALUES`, defined below and reused here rather than
+// redeclared), so an unrecognized/malformed value degrades to `undefined` — the provider's own default
+// applies (the `validateMode` precedent) — never a 400. The request itself must never fail on a bad effort.
+export function validateEffort(effort: unknown): Effort | undefined {
+  return typeof effort === 'string' && (EFFORT_VALUES as readonly string[]).includes(effort) ? (effort as Effort) : undefined
+}
+
 /**
  * ALM-C6 (TKT-0052/ADR-0136) — the `/chat` route's pure validation spine, extracted so its 400/503 arms
  * are deterministically testable without a live key or a real fetch (the impure `provider.stream` path

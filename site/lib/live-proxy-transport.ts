@@ -24,6 +24,7 @@
 
 import type { AgentTransport, TurnInput } from './agent-runtime.ts'
 import type { GenUiMode } from '../../packages/agent-ui/a2ui/src/agent/gen-ui-mode.ts'
+import type { Effort } from '../../packages/agent-ui/a2ui/src/agent/agent-transport.ts'
 import type { GenuiSurfaceConfig } from '../../packages/agent-ui/a2ui/src/agent/genui-surface-config.ts'
 import { readNdjsonLines } from './ndjson-lines.ts'
 
@@ -49,9 +50,12 @@ export async function probeLive(): Promise<LiveStatus> {
 
 /** The live transport reads the CURRENT switcher selection per turn (SPEC-R12: `{provider,model}` sent
  * with each turn; ADR-0090 §4 extends this to `mode`). A ref indirection so the page can swap the
- * selection without re-constructing the transport. */
+ * selection without re-constructing the transport. `effort` (the reasoning-effort dial, the SAME additive
+ * precedent `mode` set on this seam) is OPTIONAL: absent ⇒ the POST body carries no `effort` key at all —
+ * byte-identical to before this field existed — and the proxy's `validateEffort` degrades an absent/
+ * malformed value to `undefined` (the adapter's own default) either way. */
 export interface SelectionRef {
-  get(): { provider: string; model: string; mode: GenUiMode }
+  get(): { provider: string; model: string; mode: GenUiMode; effort?: Effort }
 }
 
 export function createLiveProxyTransport(selection: SelectionRef, genui?: GenuiSurfaceConfig): AgentTransport {
@@ -66,6 +70,7 @@ export function createLiveProxyTransport(selection: SelectionRef, genui?: GenuiS
           provider: sel.provider,
           model: sel.model,
           mode: sel.mode,
+          ...(sel.effort !== undefined ? { effort: sel.effort } : {}),
           ...(genui !== undefined ? { genui } : {}), // absent ⇒ byte-identical body to pre-B2 (a2ui-live.ts's own call site)
         }),
       })

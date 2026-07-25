@@ -65,7 +65,7 @@ import { heal } from '../corpus/heal.ts'
 import { validateA2ui } from '../renderer/validate.ts'
 import type { SurfaceSeed } from '../renderer/validate.ts'
 import type { A2uiComponent } from '../protocol.ts'
-import type { AgentProvider, ExecuteTool, ProviderEvent, Session, ToolDef, Turn, TurnInput } from './agent-transport.ts'
+import type { AgentProvider, Effort, ExecuteTool, ProviderEvent, Session, ToolDef, Turn, TurnInput } from './agent-transport.ts'
 import { buildSystemPrompt } from './system-prompt.ts'
 import { frameClientMessage } from './session.ts'
 import { readMetaLine } from './meta-line.ts'
@@ -95,6 +95,12 @@ export interface ProduceOptions {
    * takes PRECEDENCE over any client-supplied `input.model` — the trust boundary (SPEC-R12): a crafted
    * `input.model` must never reach the API. `input.model` is only a fallback for callers that don't set it. */
   model?: string
+  /** The reasoning-effort dial (`AgentProvider.stream`'s own `effort?: Effort` field, the SAME additive
+   * precedent `mode`/`genuiSurface` each already set on this seam), relayed VERBATIM to `deps.provider.stream`.
+   * Never consulted by `buildSystemPrompt` or any peel/heal/validate step — it is a provider-call knob, not
+   * a prompt-composition one. Absent ⇒ the request shape is byte-identical to before (the adapter's own
+   * default applies, per `AgentProvider.stream`'s doc). */
+  effort?: Effort
   /** Retrieval top-k (defaults to 3). */
   k?: number
   /** ADR-0090 §1/§4 — the per-turn Gen-UI disposition, threaded to `buildSystemPrompt`. Absent ⇒
@@ -546,6 +552,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
       model,
       system,
       messages: messagesFor(input, failures, lastRaw),
+      effort: opts.effort,
       onEvent,
       // GH #49 — relayed verbatim; the adapter owns the tool loop (its buffered rounds mean 'tool'
       // stages drain just before the final round's text under the queue design — a recorded latency
