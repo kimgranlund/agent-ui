@@ -1,0 +1,94 @@
+// a2ui-live.effort-wiring.test.ts — proves the Effort picker (GH #270's unblocked follow-up) reaches the
+// REAL live-proxy POST body end to end, not just that `wireLiveOverlay()`'s prop/callback wiring type-checks.
+// `live-proxy-transport.test.ts` already proves the TRANSPORT half generically (a `SelectionRef.effort`
+// value reaches the wire); this file proves the PAGE half this test can't see: that a2ui-live.ts's own
+// `onEffortChange` handler genuinely updates the `selection` object the transport reads from, driven through
+// the SAME picker-commit DOM path a real user click takes (`conversation-composer.test.ts`'s
+// `[data-part="effort-menu"]`/`[data-value]` precedent) — never calling any page-internal function directly.
+//
+// `fetch` is stubbed (the `live-proxy-transport.test.ts`/`admin-live-runner.test.ts` precedent) so
+// `wireLiveOverlay()`'s real `/status` probe resolves "available" in jsdom, then its `onEffortChange`
+// registration + `createLiveProxyTransport` construction run for real; the POST stub returns an
+// immediately-closed ndjson stream (a2ui-live.ts's own `runTurn` already handles a zero-line turn
+// gracefully — the "no further turns" system message — so this never needs a real produced surface).
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
+
+let capturedPostBody: Record<string, unknown> | undefined
+
+function emptyNdjsonResponse(): Response {
+  return new Response(new ReadableStream<Uint8Array>({ start: (c) => c.close() }), {
+    status: 200,
+    headers: { 'content-type': 'application/x-ndjson' },
+  })
+}
+
+function stubFetch(): void {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      if (url.endsWith('/status')) {
+        return new Response(JSON.stringify({ available: true, providers: 1 }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
+      }
+      capturedPostBody = JSON.parse(String(init?.body ?? '{}')) as Record<string, unknown>
+      return emptyNdjsonResponse()
+    }),
+  )
+}
+
+async function waitUntil(predicate: () => boolean, timeoutMs = 2000): Promise<void> {
+  const start = Date.now()
+  for (;;) {
+    if (predicate()) return
+    if (Date.now() - start > timeoutMs) throw new Error('waitUntil: condition never became true within the timeout')
+    await new Promise((r) => setTimeout(r, 0))
+  }
+}
+
+function composerEl(): HTMLElement & { effort?: string } {
+  return document.querySelector('.chat-composer') as HTMLElement & { effort?: string }
+}
+
+beforeAll(async () => {
+  localStorage.clear() // a fresh restore ⇒ DEFAULT_EFFORT ('medium'), not a leftover value from another file
+  stubFetch()
+  // A DEFERRED (dynamic) import — the `a2ui-live.ask-lifecycle.test.ts` precedent: `wireLiveOverlay()` fires
+  // as a module-scope side effect of import, so the fetch stub above must land BEFORE this import runs, not
+  // after (a static top-of-file import would race it).
+  await import('./a2ui-live.ts')
+  // `wireLiveOverlay()`'s own probe is a genuine async dynamic-import + fetch round trip — wait for its
+  // "available" branch to land (composer.efforts only gets set on that branch).
+  await waitUntil(() => (composerEl() as unknown as { efforts?: unknown }).efforts !== undefined)
+})
+
+afterEach(() => {
+  capturedPostBody = undefined
+})
+
+describe('a2ui-live.ts — Effort picker reaches the real live-proxy POST body (not just types)', () => {
+  it('wires the composer with the fleet EFFORT_LEVELS and the persisted default ("medium")', () => {
+    expect(composerEl().effort).toBe('medium')
+    const trigger = composerEl().querySelector('[data-picker="effort"]') as HTMLElement
+    expect(trigger.textContent).toBe('Medium')
+  })
+
+  it('committing a picker choice through the REAL DOM path updates the live selection, and the NEXT turn\'s POST body carries it', async () => {
+    const menu = composerEl().querySelector('[data-part="effort-menu"]') as HTMLElement
+    const item = menu.querySelector('[data-value="high"]') as HTMLElement
+    item.dispatchEvent(new Event('click', { bubbles: true }))
+    expect(composerEl().effort).toBe('high') // onEffortChange's own composer.effort = id re-assignment
+
+    const editor = composerEl().querySelector('[data-part="editor"]') as HTMLElement
+    editor.textContent = 'hello'
+    editor.dispatchEvent(new Event('input', { bubbles: true }))
+    const sendBtn = composerEl().querySelector('[data-part="send"]') as HTMLElement
+    sendBtn.click()
+
+    await waitUntil(() => capturedPostBody !== undefined)
+    expect(capturedPostBody?.effort).toBe('high')
+    expect(capturedPostBody?.provider).toBe('anthropic')
+  })
+})
