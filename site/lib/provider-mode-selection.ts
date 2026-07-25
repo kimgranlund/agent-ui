@@ -24,6 +24,14 @@ import providers from '../../packages/agent-ui/a2ui/tools/agent/providers.json'
 import type { GenUiMode } from '../../packages/agent-ui/a2ui/src/agent/gen-ui-mode.ts'
 import { DEFAULT_GEN_UI_MODE, GEN_UI_MODES } from '../../packages/agent-ui/a2ui/src/agent/gen-ui-mode.ts'
 import type { ProviderOption, PickerOption } from '../../packages/agent-ui/app/src/controls/conversation/composer-options.ts'
+// Re-exported (not just imported) below: `a2ui-live.ts`'s own `wireLiveOverlay()` needs `EFFORT_LEVELS`/
+// `EffortLevel` too, and importing them from HERE — rather than a second direct edge into
+// `composer-options.ts` — keeps this module's existing role as pages' ONE shared option-list source
+// (this file's own header) intact, and avoids a needless second module-graph entry point into
+// `composer-options.ts` purely for a re-exportable constant.
+import { EFFORT_LEVELS, type EffortLevel } from '../../packages/agent-ui/app/src/controls/conversation/composer-options.ts'
+export { EFFORT_LEVELS }
+export type { EffortLevel }
 
 interface ProviderModel {
   id: string
@@ -81,7 +89,15 @@ export interface StoredSelection {
   // its real, narrower type; a page's own `onModeChange(id: string)` callback re-asserts it at the one
   // commit site (the picker's own `modes` list is always built from `MODE_OPTIONS`/`GEN_UI_MODES`).
   mode: GenUiMode
+  // `EffortLevel`, the same fleet-wide scale `composer-options.ts` already names `EFFORT_LEVELS` from —
+  // reused here rather than a page inventing its own. See `mode` above for why this stays narrowly typed.
+  effort: EffortLevel
 }
+
+/** The default effort a fresh/invalid persisted selection restores to — `composer-options.ts` names no
+ *  canonical default of its own (unlike `providers.json`'s `defaultProvider`/`defaultModel`), so this picks
+ *  `EFFORT_LEVELS`' own middle rung, mirroring `agent-admin.ts`'s `#effort` field default exactly. */
+const DEFAULT_EFFORT: EffortLevel = 'medium'
 
 /** Restore a persisted selection, validated exactly like `provider-switcher.ts` did: only an IMPLEMENTED
  *  provider, a model genuinely in ITS list, and a recognized mode are accepted — anything else (missing,
@@ -90,6 +106,7 @@ export function loadPersistedSelection(): StoredSelection {
   let provider = DEFAULT_PROVIDER
   let model = DEFAULT_MODEL
   let mode = DEFAULT_MODE
+  let effort = DEFAULT_EFFORT
   try {
     const saved = JSON.parse(localStorage.getItem(LS_KEY) ?? 'null') as Partial<StoredSelection> | null
     const entry = saved?.provider ? CONFIG.providers[saved.provider] : undefined
@@ -98,10 +115,11 @@ export function loadPersistedSelection(): StoredSelection {
       model = saved?.model && entry.models.some((m) => m.id === saved.model) ? saved.model : entry.defaultModel
     }
     if (saved?.mode && MODE_OPTIONS.some((m) => m.id === saved.mode)) mode = saved.mode
+    if (saved?.effort && EFFORT_LEVELS.some((e) => e.id === saved.effort)) effort = saved.effort as EffortLevel
   } catch {
     /* corrupt storage — fall back to the defaults */
   }
-  return { provider, model, mode }
+  return { provider, model, mode, effort }
 }
 
 /** Persist the current selection — a no-op (never throws) when storage is unavailable, the same

@@ -58,10 +58,11 @@ import type { AskEntry } from '../lib/ask-registry.ts'
 import {
   PROVIDER_OPTIONS,
   MODE_OPTIONS,
+  EFFORT_LEVELS,
   loadPersistedSelection,
   persistSelection,
 } from '../lib/provider-mode-selection.ts'
-import type { StoredSelection } from '../lib/provider-mode-selection.ts'
+import type { StoredSelection, EffortLevel } from '../lib/provider-mode-selection.ts'
 
 const { content } = mountFullBleedPage()
 
@@ -145,10 +146,13 @@ function annotateAskFrozen(entry: AskEntry, state: 'answered' | 'bypassed'): voi
 
 // The modern composer (Figma chat-input refactor) — a standalone `<ui-conversation-composer>` instance,
 // replacing the bare `<form>` + raw `<ui-text-field>`/`<ui-button>` pair. Composed directly (never via
-// `<ui-conversation>`, ADR-0129 Fork B): `models`/`efforts`/`contextItems` are left unset, so this gets
-// exactly "the ORIGINAL field+Send composer" shape conversation-composer.ts's own header names a2ui-live
-// as an example consumer of — same event contract (`onSubmit`), same turn-loop wiring below, only the
-// INPUT WIDGET itself changed. `onMicClick` is never registered either — the mic button stays hidden
+// `<ui-conversation>`, ADR-0129 Fork B): `models`/`contextItems` are left unset (Models rides the
+// Provider-narrowed `#effectiveModels()` view instead of its own standalone list; nothing on this page
+// surfaces a dismissable context chip) — but `efforts` is NOT one of these anymore: it was left unset when
+// this comment was first written, before GH #257 widened this same page with live Provider/Model/Mode
+// pickers; Effort now rides the composer's own `efforts`/`effort` props too (wireLiveOverlay, below), same
+// event contract (`onSubmit`), same turn-loop wiring below, only the INPUT WIDGET itself changed. `onMicClick`
+// is never registered either — the mic button stays hidden
 // (its own opt-in reveal), so it never becomes "the composer's first ui-button" (the exact hazard
 // conversation-composer.ts's own header documents a2ui-chat.ts hit before its fix) for anything that
 // still needs the SEND button specifically — see `[data-part="send"]` at every such call site.
@@ -603,6 +607,8 @@ function wireLiveOverlay(): void {
         composer.model = selection.model
         composer.modes = MODE_OPTIONS
         composer.mode = selection.mode
+        composer.efforts = EFFORT_LEVELS
+        composer.effort = selection.effort
         composer.onProviderChange((id) => {
           selection = { ...selection, provider: id }
           composer.provider = id
@@ -619,6 +625,11 @@ function wireLiveOverlay(): void {
           // plain `(id: string)` shape (props down/callbacks up — it never imports `GenUiMode`).
           selection = { ...selection, mode: id as StoredSelection['mode'] }
           composer.mode = id
+          persistSelection(selection)
+        })
+        composer.onEffortChange((id) => {
+          selection = { ...selection, effort: id as EffortLevel }
+          composer.effort = id
           persistSelection(selection)
         })
         transport = overlay.createLiveProxyTransport({ get: () => selection })

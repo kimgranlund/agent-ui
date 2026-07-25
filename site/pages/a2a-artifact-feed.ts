@@ -494,10 +494,11 @@ export function __setLiveApiForTest(
   sel: { provider: string; model: string },
 ): void {
   liveApi = { sendTurn, probeFeedLive: async () => ({ available: true, providers: 1 }) }
-  // `mode` rides along unread by `sendTurn` (see `liveSelection`'s own banner above) — a fixed literal
-  // satisfies the shared `StoredSelection` shape without pulling in `gen-ui-mode.ts` for a value nothing
-  // here consumes.
-  liveSelection = { get: () => ({ ...sel, mode: 'default' }) }
+  // `mode`/`effort` ride along unread by `sendTurn` (see `liveSelection`'s own banner above) — fixed
+  // literals satisfy the shared `StoredSelection` shape without pulling in `gen-ui-mode.ts`/
+  // `composer-options.ts` for values nothing here consumes. This page doesn't wire an Effort picker of its
+  // own (out of scope, GH #257's a2ui-live-only Effort follow-up) — `StoredSelection` merely grew the field.
+  liveSelection = { get: () => ({ ...sel, mode: 'default', effort: 'medium' }) }
   liveKeyAvailable = true
   setLiveMode(liveMode)
 }
