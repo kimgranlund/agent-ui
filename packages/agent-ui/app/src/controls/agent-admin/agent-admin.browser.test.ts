@@ -315,7 +315,7 @@ describe('ui-agent-admin cross-engine smoke — chat + options-pane render side 
     expect(box.height).toBeGreaterThan(0)
   })
 
-  it('all FIVE sections (Instructions + Skills/Workflows/Resources/Tools) render in the Settings tab, each a real non-zero box', () => {
+  it('all SIX sections (Instructions + Skills/Workflows/Resources/Tools/Pattern sources) render in the Settings tab, each a real non-zero box', () => {
     const { el } = mountAgentAdmin()
     const settings = el.querySelector('[data-role="settings-content"]') as HTMLElement
     const sections = [...settings.querySelectorAll('[data-part="entry-section"]')]
@@ -325,6 +325,7 @@ describe('ui-agent-admin cross-engine smoke — chat + options-pane render side 
       ENTRY_KINDS.workflow,
       ENTRY_KINDS.resource,
       ENTRY_KINDS.tool,
+      ENTRY_KINDS.patternSource,
     ])
     for (const section of sections) {
       const box = section.getBoundingClientRect()
@@ -941,7 +942,7 @@ describe('ui-agent-admin — GH #225: the Settings sections fold like the Contex
     const items = [...settings.querySelectorAll(':scope > [data-part="settings-item"]')] as (HTMLElement & { open: boolean })[]
     expect(items.map((i) => i.getAttribute('data-item'))).toEqual([
       'agent', 'model', ENTRY_KINDS.promptSection, 'surface',
-      ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool,
+      ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource,
     ])
     for (const item of items) {
       expect(item.open, `${item.getAttribute('data-item')} defaults open (config is an editing surface)`).toBe(true)

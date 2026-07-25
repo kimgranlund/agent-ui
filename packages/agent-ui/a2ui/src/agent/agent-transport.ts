@@ -18,6 +18,7 @@
 // under `providers/` (LLD-C10); only the interface moves up.
 
 import type { A2uiClientMessage } from '../renderer/index.ts'
+import type { GenuiActionMessage } from './genui-line.ts'
 
 // ── The session (SPEC-R8 / ADR-0072) — the standard Messages-API turn array ─────────────────────────
 
@@ -48,13 +49,14 @@ export interface ProviderSelection {
 
 /**
  * One agent turn's framed input (SPEC-R1 / SPEC-R8). Turn 1 is a raw user `intent`; every later turn is
- * a `client` message (`action` | `functionResponse` | `error`) that the pure `nextTurn` reducer (LLD-C5)
- * frames into the next user turn. Both carry the running `Session` (the browser is the source of truth)
- * and the optional `{provider, model}` selection.
+ * a `client` message (`action` | `functionResponse` | `error`, OR genui-surface SPEC-R8's `genuiAction` —
+ * a SIBLING kind, never a real `A2uiClientMessage`) that the pure `nextTurn` reducer (LLD-C5) frames into
+ * the next user turn. Both carry the running `Session` (the browser is the source of truth) and the
+ * optional `{provider, model}` selection.
  */
 export type TurnInput =
   | ({ kind: 'intent'; text: string; session: Session } & ProviderSelection)
-  | ({ kind: 'client'; message: A2uiClientMessage; session: Session } & ProviderSelection)
+  | ({ kind: 'client'; message: A2uiClientMessage | GenuiActionMessage; session: Session } & ProviderSelection)
 
 // ── The transport seam (SPEC-R1 / ADR-0069) ─────────────────────────────────────────────────────────
 

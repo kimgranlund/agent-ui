@@ -175,6 +175,24 @@ describe('ADMIN_LIBRARIES — data integrity (GH #47/#48)', () => {
       expect(labels.has(known), `registry id ${known} present`).toBe(true)
     }
   })
+
+  // genui-surface.spec.md SPEC-R9/R11 (B2) — the pattern-source packs derive from the REAL genui-packs
+  // registry .md files, the SAME drift-free glob derivation the a2ui-idioms pack proves above.
+  it('the pattern-source packs derive from the REAL genui-packs registry files — one pack per .md file, each carrying exactly one ready-to-add entry', async () => {
+    const { ADMIN_LIBRARIES } = await import('./agent-admin-libraries.ts')
+    const { ENTRY_KINDS } = await import('@agent-ui/app')
+    const files = (readdirSync('packages/agent-ui/a2ui/src/agent/prompts/genui-packs') as string[]).filter((f) => f.endsWith('.md'))
+    const packs = ADMIN_LIBRARIES[ENTRY_KINDS.patternSource]!
+    expect(packs.length, 'one library pack per registry .md file — drift-free derivation').toBe(files.length)
+    const ids = new Set(packs.map((p) => p.id))
+    for (const known of ['data-viz-layouts', 'interactive-widgets', 'animated-explainers']) {
+      expect(ids.has(known), `registry id ${known} present`).toBe(true)
+    }
+    for (const pack of packs) {
+      expect(pack.entries, `${pack.id} carries exactly one ready-to-add entry (D3 single-pick)`).toHaveLength(1)
+      expect(pack.entries[0]!.content.trim().length).toBeGreaterThan(0)
+    }
+  })
 })
 
 // ── GH #49 — the Integrations pack ↔ dev-proxy registry parity (the a2ui-idioms drift-gate discipline) ──

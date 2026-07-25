@@ -22,6 +22,13 @@ export const ENTRY_KINDS = {
   workflow: 'workflow',
   resource: 'resource',
   tool: 'tool',
+  // genui-surface.spec.md SPEC-R11 (D3/D4) — the GenUI pattern-source picker's data-level kind: reuses
+  // this SAME generic entry-list primitive (no new list/toggle/author code) rather than inventing a
+  // bespoke picker. D3 rules SOURCE-level pick (never per-pattern multi-select): unlike the four
+  // capability kinds above, where every ENABLED entry composes, `agent-admin.ts` reads only the FIRST
+  // enabled `pattern-source` entry (by `order`) as the turn's picked source — enabling more than one is
+  // never an error, just a no-op past the first (a defensive degrade, never a UI-level constraint).
+  patternSource: 'pattern-source',
 } as const
 
 export interface Entry {
@@ -92,7 +99,19 @@ export function initialEntryValues(): Record<string, unknown> {
     [entriesStoreKey(ENTRY_KINDS.workflow)]: [],
     [entriesStoreKey(ENTRY_KINDS.resource)]: [],
     [entriesStoreKey(ENTRY_KINDS.tool)]: [],
+    [entriesStoreKey(ENTRY_KINDS.patternSource)]: [],
   }
+}
+
+/** genui-surface.spec.md SPEC-R11 (D3) — the single-pick projection: the FIRST enabled `pattern-source`
+ *  entry by `order` (ties by `id`, the `composeSystemPrompt` sort law), or `undefined` when none is
+ *  enabled. A source-level pick, never a per-pattern multi-select — an admin who enables more than one is
+ *  never rejected, the rest are just never read (SPEC-R10's degradation law: no source picked ⇒ the base
+ *  genui teaching block alone, the modality still works). */
+export function pickedPatternSource(entries: readonly Entry[]): Entry | undefined {
+  return [...entries]
+    .filter((e) => e.enabled)
+    .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))[0]
 }
 
 /** Read one kind's entry list from a store, defensively: a bring-your-own store, a corrupt/foreign

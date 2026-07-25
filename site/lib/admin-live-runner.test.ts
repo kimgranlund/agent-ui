@@ -136,3 +136,72 @@ describe('createAdminSurfaceTurn', () => {
     ).rejects.toThrow(/503/)
   })
 })
+
+// genui-surface.spec.md SPEC-R1/R10/R11 (B2) — the runner threads `req.genui` into the POST body and maps
+// a genui wire line into a `{kind:'genui'}` event; never a live model dependency (the stub-fetch precedent).
+describe('createAdminSurfaceTurn — genui-surface B2', () => {
+  it('threads req.genui verbatim into the POST body', async () => {
+    const fetchSpy = vi.fn(
+      async () => new Response(streamOfLines([]), { status: 200, headers: { 'content-type': 'application/x-ndjson' } }),
+    )
+    vi.stubGlobal('fetch', fetchSpy)
+    const runner = createAdminSurfaceTurn()
+    const req: AdminSurfaceTurnRequest = { ...SURFACE_REQUEST, genui: { enabled: true, sourceBody: 'exemplar body' } }
+    for await (const _event of runner(req)) {
+      /* drain */
+    }
+    const init = (fetchSpy.mock.calls[0] as unknown[])[1] as { body: string }
+    const body = JSON.parse(init.body) as Record<string, unknown>
+    expect(body.genui).toEqual({ enabled: true, sourceBody: 'exemplar body' })
+  })
+
+  it('a genui wire line maps to a {kind:"genui", surfaceId, html} event — never ingested as A2UI content (kind:"line")', async () => {
+    const lines = [
+      '{"a2uiMeta":{"note":"here you go"}}',
+      '{"genui":{"surfaceId":"q3-revenue","html":"<p>chart</p>"}}',
+      '{"version":"v1.0","createSurface":{"surfaceId":"s1","catalogId":"agent-ui"}}',
+    ]
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(streamOfLines(lines), { status: 200, headers: { 'content-type': 'application/x-ndjson' } })),
+    )
+    const runner = createAdminSurfaceTurn()
+    const events: Array<{ kind: string; surfaceId?: string; html?: string }> = []
+    for await (const event of runner(SURFACE_REQUEST)) events.push(event)
+    expect(events.map((e) => e.kind)).toEqual(['note', 'genui', 'line'])
+    expect(events[1]).toEqual({ kind: 'genui', surfaceId: 'q3-revenue', html: '<p>chart</p>' })
+  })
+
+  // genui-surface.spec.md SPEC-R8 AC2 — the REAL crash site an independent review caught live:
+  // admin-live-runner.ts's OWN `nextTurn(session, req.turn.message as ...)` (line ~96) and
+  // `frameClientMessage(req.turn.message as ...)` (line ~174) — a `kind:'client'` turn whose `message` is
+  // a genuiAction (never an A2uiClientMessage) previously threw INSIDE this exact runner, before the
+  // fetch even fires. This drives the REAL runner (not a stub that stops at the transport boundary) with
+  // a genuine `{kind:'client', message:{genuiAction:...}}` request — the fix's regression proof.
+  it('a genuiAction client turn ({kind:"client", message:{genuiAction}}) never throws inside the runner, and the POST body carries the framed text', async () => {
+    const fetchSpy = vi.fn(
+      async () => new Response(streamOfLines(['{"a2uiMeta":{"note":"thanks for the rating"}}']), { status: 200, headers: { 'content-type': 'application/x-ndjson' } }),
+    )
+    vi.stubGlobal('fetch', fetchSpy)
+    const runner = createAdminSurfaceTurn()
+    const genuiActionReq: AdminSurfaceTurnRequest = {
+      ...SURFACE_REQUEST,
+      turn: { kind: 'client', message: { genuiAction: { surfaceId: 'widget', name: 'rate', payload: { stars: 5 } } } },
+    }
+    const events: string[] = []
+    // No try/catch, no `expect(fn).not.toThrow()` wrapper (which never actually awaits an async callback's
+    // rejection — a real footgun this test avoids): if the runner throws, this `for await` rejects the
+    // enclosing test function directly, failing the test with the real error — the honest reproduction of
+    // the crash the review caught (a silently-swallowed assertion here would defeat the whole regression
+    // test's purpose).
+    for await (const event of runner(genuiActionReq)) events.push(event.kind)
+    expect(events).toEqual(['note'])
+    const init = (fetchSpy.mock.calls[0] as unknown[])[1] as { body: string }
+    const body = JSON.parse(init.body) as { input: { kind: string; message: unknown } }
+    // The runner framed the REAL TurnInput (produce()'s own `input`, carrying the raw message unframed —
+    // frameClientMessage runs SERVER-side inside produce()'s queryOf); this proves the runner itself never
+    // threw building that request, the client-side half of the crash.
+    expect(body.input.kind).toBe('client')
+    expect(body.input.message).toEqual({ genuiAction: { surfaceId: 'widget', name: 'rate', payload: { stars: 5 } } })
+  })
+})

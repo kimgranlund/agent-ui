@@ -11,12 +11,14 @@ import {
   appendAssistantTurn,
   appendUserTurn,
   shouldRunTurn,
+  isGenuiActionMessage,
 } from '../agent/session.ts'
 import type {
   A2uiActionMessage,
   A2uiFunctionResponseMessage,
   A2uiErrorMessage,
 } from '../protocol.ts'
+import type { GenuiActionMessage } from '../agent/genui-line.ts'
 
 const actionMsg: A2uiActionMessage = {
   version: 'v1.0',
@@ -61,6 +63,59 @@ describe('session reducer (LLD-C5 / SPEC-R8)', () => {
     }
   })
 
+})
+
+// genui-surface.spec.md SPEC-R8 AC2 — the genuiAction sibling arm. Reproduces the exact crash an
+// independent review caught live: a `{genuiAction:{...}}` message previously fell through
+// `frameClientMessage`'s three A2uiClientMessage-only arms into `const e = message.error;
+// 'functionCallId' in e`, throwing `TypeError: Cannot use 'in' operator to search for 'functionCallId'
+// in undefined` — hit on EVERY real genui action click, both client-side (admin-live-runner.ts) and
+// server-side (dev-proxy-plugin.ts / worker/index.ts, via produce()'s queryOf).
+describe('session reducer — the genuiAction sibling arm (genui-surface SPEC-R8 AC2)', () => {
+  const genuiActionMsg: GenuiActionMessage = { genuiAction: { surfaceId: 'q3-revenue', name: 'rate', payload: { stars: 5 } } }
+  const genuiActionNoPayload: GenuiActionMessage = { genuiAction: { surfaceId: 'widget', name: 'ping' } }
+
+  it('isGenuiActionMessage narrows correctly both ways', () => {
+    expect(isGenuiActionMessage(genuiActionMsg)).toBe(true)
+    expect(isGenuiActionMessage(actionMsg)).toBe(false)
+    expect(isGenuiActionMessage(fnRespMsg)).toBe(false)
+    expect(isGenuiActionMessage(errMsg)).toBe(false)
+  })
+
+  it('frameClientMessage NEVER throws on a genuiAction message (the reproduced crash, fixed)', () => {
+    expect(() => frameClientMessage(genuiActionMsg)).not.toThrow()
+    expect(() => frameClientMessage(genuiActionNoPayload)).not.toThrow()
+  })
+
+  it('SPEC-R8 AC2 — the framed text carries surfaceId/name/payload VERBATIM', () => {
+    const framed = frameClientMessage(genuiActionMsg)
+    expect(framed).toContain('q3-revenue')
+    expect(framed).toContain('rate')
+    expect(framed).toContain(JSON.stringify({ stars: 5 }))
+  })
+
+  it('a genuiAction with no payload frames cleanly (no "undefined" leaking into the text)', () => {
+    const framed = frameClientMessage(genuiActionNoPayload)
+    expect(framed).toContain('widget')
+    expect(framed).toContain('ping')
+    expect(framed).not.toContain('undefined')
+  })
+
+  it('frames DISTINCTLY from the three real A2uiClientMessage arms', () => {
+    const all = [genuiActionMsg, actionMsg, fnRespMsg, errMsg].map((m) => frameClientMessage(m))
+    expect(new Set(all).size).toBe(4)
+  })
+
+  it('nextTurn packages a genuiAction TurnInput without throwing', () => {
+    const session = { turns: [] }
+    expect(() => nextTurn(session, genuiActionMsg)).not.toThrow()
+    const input = nextTurn(session, genuiActionMsg)
+    expect(input.kind).toBe('client')
+    if (input.kind === 'client') expect(input.message).toBe(genuiActionMsg)
+  })
+})
+
+describe('session reducer (LLD-C5 / SPEC-R8) — turn-history helpers', () => {
   it('turn-history helpers are pure appends (the browser holds the session — SPEC-R8 statelessness)', () => {
     const s0 = { turns: [] }
     const s1 = appendUserTurn(s0, 'hello')

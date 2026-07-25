@@ -154,6 +154,24 @@ describe('ui-agent-admin — GH #42: a REAL canvas click drives the next surface
     expect(userRows(), 'a client-action click must NOT add a user echo row (TKT-0094)').toBe(userBefore)
   })
 
+  // genui-surface.spec.md SPEC-R10/R11 — independent-review MODERATE fix: a `client` message's OWN
+  // modality gates it (never an OR across both switches). A2UI OFF must keep a REAL A2UI action click
+  // inert even while GenUI is ON — the exact symmetric direction the review's fix closes (the button
+  // itself rendered from an EARLIER turn while A2UI was still on; flipping it off afterward must not let
+  // a stale, already-rendered surface's click still spawn a hidden turn).
+  it('A2UI OFF (GenUI ON): a REAL A2UI action click stays INERT — no hidden turn (independent-review MODERATE fix)', async () => {
+    const { el, requests } = await mountWithScript(() => [{ kind: 'note', note: 'should never run' }])
+    const btn = await driveIntentToButton(el)
+    el.store!.set('surfaceA2ui', false)
+    el.store!.set('surfaceGenui', true)
+    const before = requests.length
+    btn.click() // the SAME real A2uiAction the passing test above proves DOES turn when A2UI is on
+    // Give the deferred macrotask (GH #63's setTimeout(...,0) defer) every chance to fire before asserting
+    // silence — a flaky false-negative here would be worse than a slightly generous wait.
+    await new Promise((r) => setTimeout(r, 200))
+    expect(requests.length, 'A2UI is off — the click must never spawn a hidden client turn').toBe(before)
+  })
+
   it('a client turn carrying a VALID update LINE completes the round-trip', async () => {
     const { el, requests } = await mountWithScript(() => [{ kind: 'line', line: VALID_FOLLOWUP_LINE }])
     const btn = await driveIntentToButton(el)

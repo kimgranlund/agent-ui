@@ -34,6 +34,18 @@
 //       source SPEC-R15 gates) — a violation feeds the failure back as a produce-layer-only `'FEED_SCOPE'`
 //       literal (never joining the protocol's closed `ErrorCode` union) and retries, never streams.
 //
+// genui-surface SPEC-R1/R2/R10: a genui-shaped candidate line (the reserved `{"genui":{surfaceId,html}}`
+// kind) is peeled OUT of the model's raw output on EVERY round, immediately after the meta-line peel and
+// BEFORE `heal`/`validateA2ui` ever see the remaining text — mirroring the meta-line peel precedent for a
+// THIRD reserved wire kind. Unconditional: the peel runs whether or not `opts.genuiSurface` invited the
+// model to use it (a reserved kind is handled the same way regardless of that per-turn signal, which only
+// gates `buildSystemPrompt`'s teaching block). A structurally valid candidate ships intact (verbatim,
+// SPEC-R1 AC2) alongside the meta-line; a structurally invalid one MAY hitch a ride on the SAME round the
+// A2UI validator already needs to retry (never an independent extra round — genui alone never causes the
+// eventual `ProduceHalt`); on exhaustion or an otherwise-successful round it is silently dropped, never
+// halting the turn. At most one genui line ships per turn; extras are dropped + counted
+// (`GENUI_MULTIPLICITY`, carried on `TurnTrace.failureCodes` — a factual tally, never a retry trigger).
+//
 // ADR-0146 F1/F3: when the caller opts in (`opts.progress === true` — absent ⇒ BYTE-IDENTICAL to before,
 // the note-only/halt/every-deterministic-gate guarantee), the loop also INTERLEAVES live-turn lifecycle
 // progress on the SAME stream — `{"a2uiMeta":{"progress":{stage,...}}}` meta-lines yielded AS THEY HAPPEN,
@@ -61,6 +73,8 @@ import type { AskDeclaration, TurnProgress, TurnTrace } from './meta-line.ts'
 import type { GenUiMode } from './gen-ui-mode.ts'
 import { MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from './mini-skills.ts'
 import { FEED_SURFACE_TYPE_SET } from './feed-catalog.ts'
+import { isGenuiCandidate, readGenuiLine, utf8ByteLength, GENUI_MAX_HTML_BYTES } from './genui-line.ts'
+import type { GenuiSurfaceConfig } from './genui-surface-config.ts'
 
 const PROTOCOL_VERSION = 'v1.0'
 const CATALOG_ID = 'agent-ui'
@@ -119,6 +133,13 @@ export interface ProduceOptions {
    * lines ride any progress event; `'full'` does NOT imply `'source'` and vice versa (a consumer
    * needing both is a deliberate future member, not an accident of ladder ordering). */
   progressDetail?: 'stages' | 'full' | 'source'
+  /** genui-surface SPEC-R10 — the per-turn "may this turn emit GenUI" signal, threaded to
+   *  `buildSystemPrompt`'s genui teaching block. Deliberately NOT a `GenUiMode` member and never
+   *  consulted by any A2UI-composition logic in this loop (SPEC §4 N2 — a new, orthogonal axis). Absent
+   *  ⇒ `buildSystemPrompt` composes zero genui bytes (the degradation law) — but the WIRE-LEVEL peel
+   *  below (SPEC-R1) runs UNCONDITIONALLY regardless of this flag: a genui line is a reserved kind on the
+   *  stream itself, handled the same way whether or not the model was invited to use it. */
+  genuiSurface?: GenuiSurfaceConfig
 }
 
 /** The bounded raw-reasoning excerpt cap (ADR-0146 F3, `progressDetail:'full'`) — a `thinking` delta can be
@@ -263,6 +284,66 @@ function peelMetaLine(raw: string): { note: string | undefined; ask: AskDeclarat
   return { note: meta.a2uiMeta.note, ask: meta.a2uiMeta.ask, rest: lines.slice(idx + 1).join('\n') }
 }
 
+/** genui-surface SPEC-R1: which produce-layer-only failure code names a rejected genui candidate —
+ *  `'GENUI_SIZE'` when the shape is otherwise well-formed but `html` is over the SPEC-R2 byte cap,
+ *  `'GENUI_ENVELOPE'` for every other structural defect (malformed JSON, a non-object `genui`, a missing/
+ *  empty `surfaceId`, a non-string `html`, a `version`/`a2uiMeta` key present). Neither code joins the
+ *  protocol's closed `ErrorCode` union (the FEED_SCOPE precedent, ADR-0097 §3) — both are carried on
+ *  `TurnTrace.failureCodes` only. */
+function genuiFailureCode(candidateLine: string): 'GENUI_ENVELOPE' | 'GENUI_SIZE' {
+  try {
+    const parsed = JSON.parse(candidateLine) as { genui?: { html?: unknown } }
+    const html = parsed.genui?.html
+    if (typeof html === 'string' && utf8ByteLength(html) > GENUI_MAX_HTML_BYTES) return 'GENUI_SIZE'
+  } catch {
+    // malformed JSON — falls through to GENUI_ENVELOPE below
+  }
+  return 'GENUI_ENVELOPE'
+}
+
+/** One round's genui peel result (SPEC-R1/R2). `rest` is `afterMeta` with every genui-shaped candidate
+ *  line stripped OUT — the text that continues on to `heal`/`validateA2ui`, so a genui line (valid or not)
+ *  NEVER reaches the shared validator (the meta-line peel precedent, extended to this kind). */
+interface GenuiPeelResult {
+  /** The accepted candidate line, verbatim as the model authored it (SPEC-R1 AC2's "ships intact") —
+   *  `undefined` when no candidate validated this round. */
+  line: string | undefined
+  /** A produce-layer round failure, when a genui-shaped candidate existed but failed structural validation. */
+  failure: RoundFailure | undefined
+  /** `true` iff MORE than one genui-shaped candidate line appeared this round (GENUI_MULTIPLICITY) — the
+   *  turn MUST carry at most one; extras are dropped + counted, never fed back for correction. */
+  multiplicity: boolean
+  rest: string
+}
+
+/** Peel every genui-shaped candidate line (SPEC-R1: "a line carrying the `genui` key") out of `afterMeta`
+ *  — the text remaining AFTER the leading meta-line was already peeled, BEFORE `heal`/`validateA2ui` ever
+ *  see it. Detection (`isGenuiCandidate`) is deliberately cheaper than full validation (`readGenuiLine`):
+ *  a candidate that merely carries the reserved key but fails full validation must STILL be pulled out of
+ *  the A2UI stream (never partially honored, never fed to the healer, which doesn't know this kind exists)
+ *  — it just rejects whole (SPEC-R1) instead of shipping. Only the FIRST candidate is ever considered for
+ *  acceptance; every subsequent one is dropped and counted as `multiplicity`, regardless of its own
+ *  validity (SPEC-R1: "AT MOST ONE genui line; subsequent ones... dropped + counted"). */
+function peelGenuiLines(afterMeta: string): GenuiPeelResult {
+  const lines = afterMeta.split('\n')
+  const candidateIdxs: number[] = []
+  for (let i = 0; i < lines.length; i++) {
+    const trimmed = lines[i]!.trim()
+    if (trimmed.length > 0 && isGenuiCandidate(trimmed)) candidateIdxs.push(i)
+  }
+  if (candidateIdxs.length === 0) return { line: undefined, failure: undefined, multiplicity: false, rest: afterMeta }
+
+  const firstLine = lines[candidateIdxs[0]!]!.trim()
+  const envelope = readGenuiLine(firstLine)
+  const rest = lines.filter((_, i) => !candidateIdxs.includes(i)).join('\n')
+  return {
+    line: envelope !== undefined ? firstLine : undefined,
+    failure: envelope !== undefined ? undefined : { code: genuiFailureCode(firstLine), path: '' },
+    multiplicity: candidateIdxs.length > 1,
+    rest,
+  }
+}
+
 /** Serialize the outgoing meta-line (ADR-0088 §1/§2, ADR-0097 §1) — the runtime-composed envelope,
  * carrying the model's own `note`, the `ask` declaration ONLY when it has passed integrity (`undefined`
  * otherwise — JSON.stringify then omits the key entirely, so a note-only turn's wire shape is byte-
@@ -385,7 +466,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
   const query = queryOf(input, k)
   const exemplars = deps.retrieve(query) // SPEC-R7 — top-k over the judged shard
   const miniSkills = selectMiniSkills(query.intent, MINI_SKILLS, opts.miniSkillCap ?? DEFAULT_MINI_SKILL_CAP) // ADR-0091 §2 — once per turn, beside retrieve(); ADR-0135 cl.7 — cap now tunable, absent ⇒ default
-  const system = buildSystemPrompt(deps.catalog, exemplars, opts.mode, miniSkills, opts.personaSystem) // SPEC-R6 — catalog-derived; ADR-0090 mode + ADR-0091 mini-skills + ADR-0138 persona
+  const system = buildSystemPrompt(deps.catalog, exemplars, opts.mode, miniSkills, opts.personaSystem, opts.genuiSurface) // SPEC-R6 — catalog-derived; ADR-0090 mode + ADR-0091 mini-skills + ADR-0138 persona + genui-surface SPEC-R10
   const model = opts.model ?? input.model ?? DEFAULT_MODEL // opts.model = the proxy's allowlist-validated model (SPEC-R12); it WINS over a client-supplied input.model
   // ADR-0088 §2 — data ALREADY flowing above, captured once for the eventual TurnTrace (no new collection).
   // NOTE: this is a `session.turns` MESSAGE index (the alternating Messages-API array, user+assistant per
@@ -414,6 +495,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
   let failures: RoundFailure[] | undefined
   let lastRaw: string | undefined
   let lastCandidate: string | undefined // the previous round's peeled candidate wire text — the `retry` stage's source
+  let genuiMultiplicityHit = false // genui-surface SPEC-R1: sticky across rounds — a factual "this happened at least once" tally, never reset
   for (let round = 0; round < opts.maxRounds; round++) {
     const failuresFedBack = failures // what THIS round's prompt carried back — the trace's failureCodes
     // ADR-0146 F1 — the lifecycle stages, yielded AS THEY HAPPEN, strictly BEFORE any content line (content
@@ -483,7 +565,16 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
     while (pending.length > 0) yield formatProgressLine(pending.shift()!) // drain any trailing (text-less) events
     lastRaw = raw
 
-    const { note, ask, rest } = peelMetaLine(raw) // ADR-0088 §1 / ADR-0097 §1 — peeled BEFORE heal/validate
+    const { note, ask, rest: afterMeta } = peelMetaLine(raw) // ADR-0088 §1 / ADR-0097 §1 — peeled BEFORE heal/validate
+    // genui-surface SPEC-R1 — peeled SECOND, still BEFORE heal/validate: a genui line (valid or not) never
+    // reaches the shared A2UI healer/validator, which doesn't know this kind exists. Recomputed FRESH every
+    // round (never carried over): a round's genui candidate belongs to THAT round's own raw output, never
+    // paired with a later, differently-corrected A2UI payload. `multiplicity` is the one exception — a
+    // factual sticky tally across the whole turn (SPEC-R1: "dropped + counted").
+    const genuiPeel = peelGenuiLines(afterMeta)
+    const rest = genuiPeel.rest
+    if (genuiPeel.multiplicity) genuiMultiplicityHit = true
+    const genuiLine = genuiPeel.line
     const restLines = stripOuterFence(rest)
       .split('\n')
       .map((l) => l.trim())
@@ -501,20 +592,31 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
         ...(attachSource && candidate !== '' ? { source: capSource(candidate) } : {}),
       }) // AFTER accumulation, BEFORE assemble/validate
 
-    if (note !== undefined && restLines.length === 0) {
-      // A note-only turn (ADR-0088 Consequences): zero A2UI lines is a CLEAN success — nothing to
-      // validate, so nothing to self-correct. Must NOT halt-and-report (empty ≠ invalid). ADR-0097 §1: a
-      // declared `ask` here is trivially integrity-invalid too (no payload creates ANYTHING) — dropped,
-      // never even reaching `askIntegrityHolds` (there is nothing to check it against).
+    // A note-only turn (ADR-0088 Consequences) OR a genui-only turn (genui-surface SPEC-R1 — a genui
+    // line MAY ship with zero A2UI shape-changes): zero A2UI lines is a CLEAN success whenever there is a
+    // note AND/OR a valid genui line to ship — nothing to validate, so nothing to self-correct. Must NOT
+    // halt-and-report (empty ≠ invalid). ADR-0097 §1: a declared `ask` here is trivially integrity-invalid
+    // too (no payload creates ANYTHING) — dropped, never even reaching `askIntegrityHolds`.
+    if (restLines.length === 0 && (note !== undefined || genuiLine !== undefined)) {
       const failureCodes = (failuresFedBack ?? []).map((f) => f.code)
-      if (emitProgress) yield formatProgressLine({ stage: 'done' }) // before the final (note-only) meta-line yield
-      yield formatMetaLine(note, traceFor(round + 1, 0, failureCodes), undefined)
+      if (genuiMultiplicityHit) failureCodes.push('GENUI_MULTIPLICITY') // SPEC-R1 — a factual tally, never a retry trigger
+      // SPEC-N4/SPEC-R1 — a genui structural failure on THIS shipping round is dropped from the wire
+      // (never blocks a clean note-only/genui-only success), but its failure code MUST still land on the
+      // trace — SPEC-N4's "every drop path increments an observable counter" applies to this drop too,
+      // not only to the retried case already covered by `failuresFedBack` above.
+      if (genuiPeel.failure !== undefined) failureCodes.push(genuiPeel.failure.code)
+      if (emitProgress) yield formatProgressLine({ stage: 'done' }) // before the final (note-only/genui-only) yield
+      if (note !== undefined) yield formatMetaLine(note, traceFor(round + 1, 0, failureCodes), undefined)
+      if (genuiLine !== undefined) yield genuiLine // SPEC-R1 AC2 — ships intact, the model's own line verbatim
       return
     }
 
     const assembled = assembleFromRaw(rest)
     if (assembled === undefined) {
-      failures = [{ code: 'PARSE', path: '' }]
+      // genui-surface SPEC-R1 — a genui structural failure MAY hitch a ride on the SAME retry an A2UI
+      // parse failure already needs (never an EXTRA round manufactured purely for genui's sake — see the
+      // `verdict.valid` branch below for the fuller reasoning).
+      failures = genuiPeel.failure !== undefined ? [{ code: 'PARSE', path: '' }, genuiPeel.failure] : [{ code: 'PARSE', path: '' }]
       continue
     }
     // SPEC-N3 — the shared validator, no fork; TKT-0081 — seeded with the session's prior graphs so the
@@ -541,12 +643,23 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
       if (emitProgress) yield formatProgressLine({ stage: 'done' }) // ADR-0146 F1 — before the final content yield; still a meta-line, never content
       if (note !== undefined) {
         const failureCodes = (failuresFedBack ?? []).map((f) => f.code)
+        if (genuiMultiplicityHit) failureCodes.push('GENUI_MULTIPLICITY')
+        // SPEC-N4/SPEC-R1 — see the note-only branch's identical comment: a genui failure dropped on an
+        // otherwise-successful round still needs to land on the trace, not just the retried case.
+        if (genuiPeel.failure !== undefined) failureCodes.push(genuiPeel.failure.code)
         yield formatMetaLine(note, traceFor(round + 1, assembled.healedCount, failureCodes), finalAsk) // meta-line FIRST
       }
+      // genui-surface SPEC-R1 — a genui structural failure on an OTHERWISE-valid A2UI round is DROPPED
+      // silently here (never manufactures an extra round purely to fix it: "degrade, never halt" — the
+      // turn's note/A2UI lines still ship on schedule). `genuiLine` is `undefined` in exactly that case.
+      if (genuiLine !== undefined) yield genuiLine // SPEC-R1 AC2 — ships intact, alongside the note
       for (const msg of assembled.output) yield JSON.stringify(msg) // SPEC-R5 — validate-then-stream (nothing invalid ever painted)
       return
     }
-    failures = verdict.failures // SPEC-R4 — self-correct: feed the structured failures back
+    // genui-surface SPEC-R1 — a genui failure hitches a ride on the SAME retry the A2UI validator already
+    // needs (never an independent extra round; genui alone can never cause the eventual `ProduceHalt`
+    // below, since that only fires when the A2UI verdict itself is still invalid at round exhaustion).
+    failures = genuiPeel.failure !== undefined ? [...verdict.failures, genuiPeel.failure] : verdict.failures // SPEC-R4 — self-correct: feed the structured failures back
   }
   throw new ProduceHalt(failures ?? [{ code: 'SCHEMA', path: '' }])
 }

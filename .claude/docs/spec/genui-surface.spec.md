@@ -1,6 +1,11 @@
 # SPEC — GenUI surface (sandboxed free-form generative UI): wire · frame · bridge · producer
 
-> Status: proposed · v0.2 · 2026-07-24 · Layer: SPEC (execution contract)
+> Status: proposed · v0.3 · 2026-07-25 · Layer: SPEC (execution contract)
+> **v0.3 amendment (docs-only, §9 below):** SPEC-R9's prompt-loading parenthetical is corrected to
+> match the ALREADY-ESTABLISHED ADR-0135 mechanics (`process.cwd()`-relative `readFileSync`, not
+> `import.meta.url`) — an independent B2-build review verified the literal parenthetical would have
+> reintroduced the exact TKT-0044 Vite-dev bug `mini-skills.ts`/`system-prompt.ts` already fixed.
+> Append-only: no other clause in this document changes.
 > Refines: [`../prd/genui-surface.prd.md`](../prd/genui-surface.prd.md) — PRD-G1 (working pattern-source
 > picker, live-apply), PRD-G2 (first-class pattern sources), PRD-G3 (contained, not forbidden), PRD-G4
 > (layering + catalog-invisibility), PRD-G5 (token bridge in v1), PRD-G8 (interactive GenUI, closed
@@ -455,3 +460,27 @@ function genuiPackLibrary(packs: readonly GenuiPatternPack[]): EntryLibraryPack[
   data is a SPEC version bump, not silent drift.
 - **Auto-height min/max token defaults** (`--ui-sandbox-frame-{min,max}-block-size`) are LLD/build-tier
   numbers; the clamp LAW is SPEC-R7's.
+
+## 9 · Amendment (v0.3, SPEC-R9) — the prompt-loading parenthetical corrected to the shipped mechanics
+
+Grounding: an independent review of the B2 build (commit c9eb8b5, 2026-07-25) verified that the build
+seat's `genui-packs.ts` deliberately followed `process.cwd()`-relative `readFileSync` rather than
+SPEC-R9's own literal parenthetical (`readFileSync(new URL(…, import.meta.url))`) — and confirmed the
+deviation was CORRECT, not a build-seat improvisation to flag: `mini-skills.ts`/`system-prompt.ts`
+(this SPEC's own cited "EXISTING ADR-0135 mechanics") already abandoned `import.meta.url`-relative
+resolution after TKT-0044 measured it breaking under `npm run dev` — Vite bundles `vite.config.ts` and
+its whole transitive import graph (`dev-proxy-plugin.ts` → `produce.ts` → the prompt-loading modules)
+into one temp file, so an `import.meta.url`-relative path resolves against that TEMP file's location,
+not the real source file's, throwing `ENOENT`. SPEC-R9's parenthetical was imprecise about which
+concrete mechanism "the EXISTING ADR-0135 mechanics" names; this amendment corrects the parenthetical
+to match the mechanism the phrase's own referent (the already-shipped, already-fixed code) actually
+uses — an append-only correction, per the same discipline `shell-archetypes-m5.spec.md`'s SPEC-R15
+amendment (§12 of that file) already established for this repo: name the gap, correct it forward,
+never rewrite the ratified prose it sits beside.
+
+**SPEC-R9 (corrected clause, supersedes the parenthetical only):** "...loaded via the EXISTING
+ADR-0135 mechanics: the shared `frontmatter.ts` parser and `readFileSync` resolved relative to
+`process.cwd()` (the repo-root-relative pattern `mini-skills.ts`/`system-prompt.ts` hold today,
+NOT `readFileSync(new URL(…, import.meta.url))` — TKT-0044 measured that path breaking under `npm run
+dev`'s Vite-bundled import graph) at module load (Node-only, never a browser bundle)." Every other word
+of SPEC-R9, and every acceptance criterion under it, is UNCHANGED.
