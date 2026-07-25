@@ -17,25 +17,34 @@
 // second `genui` param for exactly this call site — a2ui-live.ts's own one-arg call stays byte-identical).
 // A client browser never holds a key either way (ADR-0073 clause 5).
 //
-// This page also exposes the composer's own Provider/Model picker (GH #257's shared
-// `provider-mode-selection.ts`, reused verbatim from a2ui-live.ts — already-built shared infrastructure,
-// not new UI) once a live provider is confirmed; `models` is left unset deliberately — the composer's own
-// `#effectiveModels()` (conversation-composer.ts) already narrows the Models picker from `providers`+
-// `provider` alone. The Mode picker is deliberately left UNEXPOSED here: `GenUiMode` (gen-ui-mode.ts) is
-// the orthogonal A2UI-catalog prompt-disposition axis (default/specific/blue-sky) — `system-prompt.ts`'s
+// This page also exposes a Model picker once a live provider is confirmed — but NOT a2ui-live.ts's own
+// two-step "Provider dropdown narrows a Model dropdown" shape (`providers`+`provider` driving the
+// composer's `#effectiveModels()`, conversation-composer.ts). Kim's ask (screenshot of agent-admin's
+// Surface Options Model grid — provider-grouped rows, not two pickers) is realized here as ONE flat,
+// provider-grouped Models picker instead: `provider-mode-selection.ts`'s `groupedModelOptions()` reshapes
+// the SAME `PROVIDER_OPTIONS` data (no new source) into a single list — a disabled, non-committable
+// header row per provider, its own model rows beneath — fed to the composer's plain `models`/`model`
+// axis; `providers`/`provider` are never set, so the composer's OWN Provider picker never even builds
+// (`#syncProvidersPicker`'s `options === undefined` branch). This is a deliberate SCOPE NARROWING from
+// agent-admin's own grid: agent-admin's grid layers a SECOND concept on top of the grouped rows — a
+// per-model include/exclude switch, backed by `MODELS_INCLUDED_KEY`'s admin-curated `SettingsStore`
+// roster — which has no counterpart here: this is a public demo page with no admin/end-user split and no
+// settings store, and every provider/model `providers.json` configures is already meant to be offered
+// (there's no roster to curate DOWN from). So only agent-admin's OTHER concept — one flat, provider-
+// grouped, single-active-pick list — is reproduced; see `providerIdForModel()` below for how a commit
+// recovers the `{provider,model}` pair the live-proxy POST body still needs, now that Provider is no
+// longer its own picker. The Mode picker is deliberately left UNEXPOSED here: `GenUiMode` (gen-ui-mode.ts)
+// is the orthogonal A2UI-catalog prompt-disposition axis (default/specific/blue-sky) — `system-prompt.ts`'s
 // `genuiBlock` composes independent of `mode`, so the axis has no bearing on a GenUI-only demo; exposing
 // it would only add a control this page has no honest use for.
 //
-// The Effort picker (`efforts`/`effort`/`onEffortChange`, agent-admin.ts's own wiring pattern) is ALSO
-// deliberately left unwired here — NOT a simplification, a verified server-side gap: `produce.ts`'s
-// `ProduceOptions` has no `effort` field at all, and the generic POST branch BOTH `dev-proxy-plugin.ts` and
-// `worker/index.ts` use for this transport (the one `createLiveProxyTransport` hits) parses only
-// `{input,provider,model,mode,genui,...}` — never `effort` (only the SEPARATE `/chat` route, agent-admin's
-// own raw one-shot `provider.stream()` call bypassing `produce()` entirely, threads `effort` through
-// today). a2ui-live.ts's own composer construction leaves `efforts` unset for the identical reason. Wiring
-// this picker here would render a control with NO effect on the live call — dishonest UI; see this
-// change's own handback for the recommended produce()/dev-proxy-plugin.ts/worker/index.ts amendment
-// (mirroring the `mode`/`genui` precedent) that would need to land FIRST.
+// The Effort picker (`efforts`/`effort`/`onEffortChange`) rides the SAME shared `provider-mode-selection.ts`
+// infra (`EFFORT_LEVELS`/`DEFAULT_EFFORT`/`StoredSelection.effort`) a2ui-live.ts's own `wireLiveOverlay()`
+// already wires (GH #272) — the server-side gap this comment used to describe (`ProduceOptions` had no
+// `effort` field; the generic POST branch parsed none) is CLOSED: GH #270 threaded the reasoning-effort
+// dial through `produce()`'s own provider-call seam, and GH #271 threaded it through the dev proxy + Worker
+// route this page's transport hits, so `live-proxy-transport.ts`'s `SelectionRef.effort` now genuinely
+// reaches the live call. Wired below exactly like a2ui-live.ts's own copy.
 //
 // RECORDED BY DEFAULT (still the fallback, same fail-closed/degrade-clean posture as every other live
 // surface in this repo): a "Recorded demo" badge in the render pane + an opening system message state this
@@ -67,10 +76,18 @@ import type { AgentTransport, TurnInput, Session } from '../lib/agent-runtime.ts
 import type { TurnProgress, TurnProgressStage } from '@agent-ui/a2ui/agent/meta-line' // type-only — erases at build (ADR-0146 F1 precedent)
 import { readGenuiLine } from '../lib/genui-line.ts'
 import { genuiTranscript } from '../lib/genui-transcript.ts'
-// GH #257/#266 — the shared Provider/Model option data + persistence (a2ui-live.ts's own precedent),
-// reused verbatim once a live provider is confirmed; see the file banner for why the Mode picker is not
-// wired here.
-import { PROVIDER_OPTIONS, loadPersistedSelection, persistSelection } from '../lib/provider-mode-selection.ts'
+// GH #257/#266/#270 — the shared Provider/Model/Effort option data + persistence (a2ui-live.ts's own
+// precedent), reused once a live provider is confirmed; see the file banner for why the Mode picker is not
+// wired here, and for the flat provider-grouped Model roster (`groupedModelOptions`/`providerIdForModel`)
+// this page uses INSTEAD of a2ui-live.ts's own two-step Provider→Model flow.
+import { PROVIDER_OPTIONS, EFFORT_LEVELS, groupedModelOptions, providerIdForModel, loadPersistedSelection, persistSelection } from '../lib/provider-mode-selection.ts'
+import type { EffortLevel } from '../lib/provider-mode-selection.ts'
+
+// Computed ONCE at module scope — `PROVIDER_OPTIONS` is static (built from the committed `providers.json`
+// at import time), so the grouped reshape never needs to re-run per turn/reset (`#syncModelsPicker`'s own
+// reference-identity check, conversation-composer.ts, also wants a STABLE array reference across renders —
+// recomputing per call would defeat its "unchanged options ⇒ skip the rebuild" fast path).
+const MODEL_OPTIONS = groupedModelOptions(PROVIDER_OPTIONS)
 
 const { content } = mountFullBleedPage()
 
@@ -378,22 +395,28 @@ function wireLiveOverlay(): void {
       const overlay = await import('../lib/live-proxy-transport.ts')
       const status = await overlay.probeLive()
       if (status.available) {
-        // GH #257's shared picker infra, reused verbatim from a2ui-live.ts's own wireLiveOverlay — Provider/
-        // Model only (see the file banner for why Mode AND Effort both stay unexposed on this page — Effort
-        // specifically is a verified server-side gap, not a scope choice: produce.ts's ProduceOptions/this
-        // transport's own POST body have no `effort` field to receive one).
+        // GH #257/#270's shared picker infra — Model (the flat provider-grouped roster, the file banner's
+        // scope-narrowed take on agent-admin's grid) + Effort. `providers`/`provider`/`onProviderChange`
+        // are deliberately NEVER set on this page's composer (unlike a2ui-live.ts): the grouped `models`
+        // list IS the provider axis now, visually and functionally — a second Provider picker would only
+        // reintroduce the two-step flow this upgrade replaces.
         let selection = loadPersistedSelection()
-        composer.providers = PROVIDER_OPTIONS
-        composer.provider = selection.provider
+        composer.models = MODEL_OPTIONS
         composer.model = selection.model
-        composer.onProviderChange((id) => {
-          selection = { ...selection, provider: id }
-          composer.provider = id
+        composer.efforts = EFFORT_LEVELS
+        composer.effort = selection.effort
+        composer.onModelChange((id) => {
+          // `providerIdForModel` recovers `{provider}` from the flat commit (a model belongs to exactly
+          // one provider) — the live-proxy POST body still needs BOTH fields; falls back to the current
+          // `selection.provider` for a `__group-*` header id or a stale/unknown one (never actually
+          // reachable: header rows are `disabled`, ui-menu's own click/keydown delegation skips them).
+          selection = { ...selection, model: id, provider: providerIdForModel(id) ?? selection.provider }
+          composer.model = id
           persistSelection(selection)
         })
-        composer.onModelChange((id) => {
-          selection = { ...selection, model: id }
-          composer.model = id
+        composer.onEffortChange((id) => {
+          selection = { ...selection, effort: id as EffortLevel }
+          composer.effort = id
           persistSelection(selection)
         })
         // `exclusive: true` — this page has NO A2UI catalog renderer at all (the file banner's own "this is

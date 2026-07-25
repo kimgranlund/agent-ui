@@ -7,7 +7,10 @@ import {
   DEFAULT_MODE,
   loadPersistedSelection,
   persistSelection,
+  groupedModelOptions,
+  providerIdForModel,
 } from './provider-mode-selection.ts'
+import type { ProviderOption } from '../../packages/agent-ui/app/src/controls/conversation/composer-options.ts'
 
 // provider-mode-selection.test.ts — GH #257: the shared option-list + persistence module that replaced
 // `provider-switcher.ts`'s DOM-mounting job (that file's own jsdom coverage, provider-switcher.test.ts, is
@@ -77,5 +80,67 @@ describe('provider-mode-selection — persistence (localStorage, the provider-sw
     localStorage.setItem(LS_KEY, '{not json')
     expect(() => loadPersistedSelection()).not.toThrow()
     expect(loadPersistedSelection()).toEqual({ provider: 'anthropic', model: 'claude-sonnet-5', mode: 'default', effort: 'medium' })
+  })
+})
+
+// gen-ui-live.ts's Model-roster upgrade (Kim's agent-admin Surface-Options-screenshot ask): a flat,
+// provider-grouped reshape of PROVIDER_OPTIONS — replacing the two-step Provider→Model flow with ONE
+// picker's option list. `groupedModelOptions`/`providerIdForModel` are the pure derivation + its companion
+// lookup; gen-ui-live.live-picker-wiring.test.ts proves the real page wires them into the composer end to
+// end — this suite proves the DATA SHAPE itself, independent of any DOM.
+describe('provider-mode-selection — groupedModelOptions/providerIdForModel (the flat provider-grouped Model roster)', () => {
+  it('interleaves a disabled, non-committable header row (id `__group-<providerId>`) before each provider\'s own model rows, from the REAL committed providers.json', () => {
+    const options = groupedModelOptions()
+    // anthropic (1 header + 4 models) + openai (1 + 2) + gemini (1 + 2) = 11
+    expect(options).toHaveLength(11)
+    const anthropicHeaderIndex = options.findIndex((o) => o.id === '__group-anthropic')
+    expect(anthropicHeaderIndex).toBe(0) // providers.json's own declaration order
+    expect(options[anthropicHeaderIndex]).toEqual({ id: '__group-anthropic', label: 'Anthropic', disabled: true })
+    // the 4 Anthropic models immediately follow their header, none disabled (anthropic IS implemented)
+    const anthropicModelIds = options.slice(anthropicHeaderIndex + 1, anthropicHeaderIndex + 5).map((o) => o.id)
+    expect(anthropicModelIds).toEqual(['claude-opus-4-8', 'claude-sonnet-5', 'claude-haiku-4-5-20251001', 'claude-fable-5'])
+    expect(options.find((o) => o.id === 'claude-sonnet-5')?.disabled).toBe(false)
+  })
+
+  it('a "coming soon" (not-yet-implemented) provider\'s header AND every one of its own model rows are disabled — none is genuinely selectable yet', () => {
+    const options = groupedModelOptions()
+    const openaiHeader = options.find((o) => o.id === '__group-openai')!
+    expect(openaiHeader.disabled).toBe(true)
+    expect(openaiHeader.label).toBe('OpenAI — coming soon') // PROVIDER_OPTIONS' own "coming soon" label, carried straight through
+    const gpt = options.find((o) => o.id === 'gpt-4.1')!
+    expect(gpt.disabled).toBe(true)
+    const geminiHeader = options.find((o) => o.id === '__group-gemini')!
+    expect(geminiHeader.disabled).toBe(true)
+    const gemini = options.find((o) => o.id === 'gemini-2.5-pro')!
+    expect(gemini.disabled).toBe(true)
+  })
+
+  it('providerIdForModel recovers the owning provider for a real committed model id', () => {
+    expect(providerIdForModel('claude-sonnet-5')).toBe('anthropic')
+    expect(providerIdForModel('claude-fable-5')).toBe('anthropic')
+    expect(providerIdForModel('gpt-4.1')).toBe('openai')
+    expect(providerIdForModel('gemini-2.5-flash')).toBe('gemini')
+  })
+
+  it('providerIdForModel returns undefined for a header id or an unknown model id — never throws, never guesses', () => {
+    expect(providerIdForModel('__group-anthropic')).toBeUndefined()
+    expect(providerIdForModel('not-a-real-model-id')).toBeUndefined()
+  })
+
+  // The real committed providers.json ships only ONE implemented provider (anthropic) — it cannot alone
+  // prove a commit genuinely crossing PROVIDERS (every other provider's models are disabled/non-
+  // committable). This synthetic multi-provider fixture proves the underlying mechanism itself: a flat
+  // grouped list's commit on a DIFFERENT provider's model correctly recovers THAT provider, not the
+  // previously-selected one — the exact fact gen-ui-live.ts's `onModelChange` handler depends on.
+  it('negative control: selecting a model belonging to a DIFFERENT provider than the current selection derives the NEW provider, not the old one', () => {
+    const synthetic: readonly ProviderOption[] = [
+      { id: 'alpha', label: 'Alpha', defaultModel: 'a1', models: [{ id: 'a1', label: 'A1' }, { id: 'a2', label: 'A2' }] },
+      { id: 'beta', label: 'Beta', defaultModel: 'b1', models: [{ id: 'b1', label: 'B1' }] },
+    ]
+    const options = groupedModelOptions(synthetic)
+    expect(options.map((o) => o.id)).toEqual(['__group-alpha', 'a1', 'a2', '__group-beta', 'b1'])
+    // starting selection is 'alpha' (via a1) — committing 'b1' (a Beta model) must resolve to 'beta', not 'alpha'
+    expect(providerIdForModel('a1', synthetic)).toBe('alpha')
+    expect(providerIdForModel('b1', synthetic)).toBe('beta') // the cross-provider commit this control targets
   })
 })
