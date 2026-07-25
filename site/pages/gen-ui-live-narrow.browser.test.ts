@@ -72,6 +72,13 @@ beforeAll(async () => {
   await page.viewport(414, 700) // Kim's actual reported geometry (GH #260) — NOT the fleet's 414×896 default
   await import('./gen-ui-live.ts')
   await raf()
+  // GH #266 — the page's own `wireLiveOverlay()` now probes `/status` asynchronously on mount (a real
+  // fetch round trip against the dev server, not the synchronous `addMessage` call this replaced). The
+  // "Recorded demo" BADGE is set synchronously at mount already (so waiting on it alone is a no-op) — the
+  // real settle signal is the probe's OWN system message, only appended once the round trip resolves. Wait
+  // for it BEFORE sending the turn below, so the chat pane's own content height — this test's own geometry
+  // depends on it, being GH #260's actual reproduction — is deterministic rather than racing the probe.
+  await waitFor(() => document.querySelectorAll('.chat-log .msg[data-role="system"]').length > 0, 10000) // a real network round trip, under host load — the default 4000ms budget isn't always enough
 })
 
 describe('gen-ui-live — GH #260 regression at Kim\'s actual reported geometry (414×700)', () => {
