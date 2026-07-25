@@ -95,6 +95,15 @@ const FOCUS_TIMING_FILES = [
   // focus/timing races under concurrent-page load, the class this project exists for.
   'site/lib/command-palette.browser.test.ts',
   'site/pages/adr-index.browser.test.ts',
+  // 2026-07-25 append (GH #262): the SPEC-R6 live-theme-bridge leg flips the site's OWN real header
+  // scheme control (Auto->Light->Dark) and waits on a real postMessage round trip back through a
+  // page-mounted, opaque-origin `ui-sandbox-frame` — that render/handshake settle races past its
+  // `waitFor` budget ONLY under full `test:browser:site` shard concurrency (two independent review
+  // passes measured the timeout; passes 100% solo every time). The class signature exactly — a real
+  // page working correctly, flaking under concurrent-page focus/render contention, not a defect. The
+  // theme-flip leg reads the surface card the file's earlier containment leg mounts (shared module
+  // state), so the whole file — not one describe block — takes the isolation.
+  'site/pages/gen-ui-live.browser.test.ts',
 ]
 
 // GH #204 — update-mode's own gap: `toMatchScreenshot`'s stability loop (inside `@vitest/browser`) seeds
