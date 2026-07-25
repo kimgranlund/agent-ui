@@ -148,6 +148,28 @@ describe('ui-super-shell — SPEC-R9 toggle affordance law (AC15/AC16)', () => {
     expect(el.hasAttribute('data-narrow-open'), 'no overlay reachable for a stack side above its line').toBe(false)
     expect(el.collapsedStart, 'a click toggles the persisted collapse state instead').toBe(true)
   })
+
+  it('GH #260 — narrow-stack: a stacked start side taller than the available column never squeezes canvas below its own min-size floor', async () => {
+    // A real consumer (gen-ui-live.ts, PR #255's ui-sandbox-frame demo) measured this exact squeeze on a
+    // real mobile viewport: `flex-direction: column` (narrow-stack) makes block-size the MAIN axis, so
+    // the stacked side's own `flex: 0 0 auto` sizes it to its unbounded CONTENT height (deliberate — "the
+    // side's own content owns its narrow anatomy from here") — canvas's base `min-block-size: 0` (a WIDE-
+    // mode need, so cross-axis stretch isn't fighting a floor) then lets it absorb the ENTIRE deficit,
+    // squeezing to a sliver or nothing once the stacked side's content alone exceeds the shell's own
+    // fixed block-size, exactly like a multi-turn chat log on a short phone viewport.
+    const el = mount({ width: 300, narrowStart: 'stack' }) // < 40rem — the narrow-stack band
+    const nav = startSide(el)
+    const filler = document.createElement('div')
+    filler.style.blockSize = '2000px' // far taller than the shell's own fixed 400px block-size
+    nav.append(filler)
+    await settle(el)
+    const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
+    const canvasRect = canvas.getBoundingClientRect()
+    // --ui-super-shell-canvas-min-size = 9 modules × 1.125rem = 10.125rem = 162px at the default 16px root
+    // font — the SAME floor canvas already promises inline at WIDE (min-inline-size), reused here for the
+    // orthogonal axis the column direction makes load-bearing.
+    expect(canvasRect.height, 'canvas keeps its 162px floor even against a wildly oversize stacked sibling').toBeGreaterThanOrEqual(161)
+  })
 })
 
 describe('ui-super-shell — floating overlay margin (shell-polish wave, S2): the pane floats popover-style instead of docking flush to the middle row', () => {

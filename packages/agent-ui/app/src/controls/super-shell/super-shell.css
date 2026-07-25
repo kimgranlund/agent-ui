@@ -382,6 +382,23 @@
       flex: 0 0 auto;
       overflow-y: visible;
     }
+
+    /* GH #260 — the narrow-stack canvas floor. `flex-direction: column` (just above) makes block-size
+       the MAIN axis, so the stacked side's own `flex: 0 0 auto` now sizes it to its CONTENT's natural
+       height (unbounded — the rule above deliberately lets it grow, "the side's own content owns its
+       narrow anatomy from here"). Canvas's base `min-block-size: 0` (needed at WIDE so cross-axis
+       stretch isn't fighting a floor) becomes a LIVE hazard here: a stacked side tall enough (e.g. a
+       multi-turn chat log) can shrink canvas — the one flexible sibling left to absorb the deficit —
+       all the way to 0, with nothing rendered and no error (a real GenUI/ui-sandbox-frame consumer
+       measured this: canvas squeezed to a sliver on a real mobile viewport, GH #260). Reusing
+       `--ui-super-shell-canvas-min-size` (already canvas's own WIDE-mode `min-inline-size` floor, R5's
+       162px) for the orthogonal axis the column direction now makes load-bearing guarantees canvas a
+       real, visible floor regardless of how tall the stacked side grows — the SAME invariant WIDE mode
+       already gives it, just on the axis that matters once middle turns into a column. */
+    :scope[narrow-start='stack'] [data-part='canvas'],
+    :scope[narrow-end='stack'] [data-part='canvas'] {
+      min-block-size: var(--ui-super-shell-canvas-min-size);
+    }
     :scope[data-narrow-open='start'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']),
     :scope[data-narrow-open='end'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) {
       display: block;
