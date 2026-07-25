@@ -109,6 +109,10 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
         personaSystem: req.personaSystem,
         integrations: req.integrations,
         progressDetail: 'source',
+        // GH #270's additive precedent (`live-proxy-transport.ts`'s `sel.effort`) — absent ⇒ the POST
+        // body carries no `effort` key at all (byte-identical to before this field existed); `produce()`'s
+        // own `validateEffort` degrades an absent/malformed value to `undefined` either way.
+        ...(req.effort !== undefined ? { effort: req.effort } : {}),
         // genui-surface.spec.md SPEC-R10/R11 — a FRESH per-turn read (the component's own live-apply
         // law); the dev proxy / worker thread this straight into `ProduceOptions.genuiSurface` (server-
         // side, Node-first — the pack registry itself never crosses the wire, only the ALREADY-RESOLVED

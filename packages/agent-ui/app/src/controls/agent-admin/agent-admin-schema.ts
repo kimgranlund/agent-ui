@@ -287,6 +287,11 @@ export interface AdminSurfaceTurnRequest {
   personaSystem: string
   /** The sanitized `SUPPORTED_MODELS` id. */
   model: string
+  /** The composer's Effort picker selection (the Figma chat-input refactor) — same ephemeral,
+   *  per-conversation dial as `AdminTurnRequest.effort` above; `undefined` if the picker was never
+   *  shown/committed. A runner that ignores it (or the value maps to no real dial) degrades the DIAL,
+   *  never the request. */
+  effort?: EffortLevel
   /** GH #49 — the ENABLED tool-entry labels (the `tool` kind, gated on the config's `toolsEnabled`
    *  master switch), forwarded raw: the dev proxy intersects them with ITS integration registry and
    *  ignores everything else — the component knows entry labels, never the registry. Absent/empty ⇒
