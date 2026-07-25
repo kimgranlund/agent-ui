@@ -149,6 +149,11 @@ export default defineConfig({
       // `tabs` so its `document.createElement('ui-tabs' | 'ui-tab' | 'ui-tab-panel')` calls resolve to the
       // REAL classes. Same alias-ordering necessity as `controls/split`/`controls/menu` above.
       '@agent-ui/components/controls/tabs': r('./packages/agent-ui/components/src/controls/tabs/tabs.ts'),
+      // genui-surface.spec.md SPEC-R8/PRD-G8 — `@agent-ui/app`'s `conversation.ts` is the next direct
+      // `./controls/{name}` subpath consumer from OUTSIDE the components package: it side-effect-imports
+      // `sandbox-frame` so its `document.createElement('ui-sandbox-frame')` (the genui parallel mount
+      // path, `mountGenui`) resolves to the REAL class. Same alias-ordering necessity as `controls/tabs`.
+      '@agent-ui/components/controls/sandbox-frame': r('./packages/agent-ui/components/src/controls/sandbox-frame/sandbox-frame.ts'),
       // EXACT (not prefix) matches, `?url`-suffixed: `@agent-ui/app`'s isolated-shell connect-flow
       // (app-shell.ts, LLD-C5/ADR-0082) resolves these two package CSS assets to a real runtime URL via
       // Vite's `?url` suffix, to inject as `<link>` hrefs INSIDE a shadow root. Vite's aliasing is FIRST-
@@ -189,6 +194,13 @@ export default defineConfig({
       // consumer example dogfoods the bare specifier; the site's own agent-runtime shim/switcher import
       // by relative path into `src/agent/` instead (forced by the Node-first barrel, ADR-0137 clause 4).
       // Kept ready regardless, so a future site import switching to the bare specifier needs no new row.
+      // The a2ui `./agent/genui-line` subpath (genui-surface.spec.md SPEC-R1/R2, B2) — mirrors the package's
+      // exports map. Placed BEFORE the broader `./agent` entry for the same prefix-match reason as `./agent`
+      // itself is placed before the broad `@agent-ui/a2ui` entry: this is the ZERO-DEP, browser-safe module
+      // (no `node:fs`), the reason `site/lib/genui-line.ts` (a real, non-type-only re-export, unlike the
+      // type-only `./agent/meta-line` imports elsewhere) needs to resolve it WITHOUT dragging in the Node-first
+      // `./agent` barrel (system-prompt.ts/mini-skills.ts `readFileSync` at load).
+      '@agent-ui/a2ui/agent/genui-line': r('./packages/agent-ui/a2ui/src/agent/genui-line.ts'),
       '@agent-ui/a2ui/agent': r('./packages/agent-ui/a2ui/src/agent/index.ts'),
       '@agent-ui/a2ui': r('./packages/agent-ui/a2ui/src/index.ts'),
       // ADR-0139 — the `./editor` subpath (ui-code-editor). `@agent-ui/app`'s entry-list.ts/agent-admin.ts are

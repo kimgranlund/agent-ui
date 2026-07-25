@@ -158,8 +158,11 @@ export function isEnabledFlag(value: unknown): boolean {
 
 // ── Surface Options (vision rev.6 — the frame's node 34:1312) ──────────────────────────────────────────
 // The agent's OUTPUT MODALITY contract: Markdown (rendered rich text, plain text the fallback), A2UI
-// (the catalog picker), GenUI (PRD-gated — `.claude/docs/prd/genui-surface.prd.md` v0.2 owns its
-// residual forks; the row renders disabled until Kim ratifies). Both live modalities default ON.
+// (the catalog picker), GenUI (the sandboxed free-form pattern-source picker — genui-surface.spec.md
+// SPEC-R11, B2). GenUI defaults OFF (unlike the two live-since-launch modalities, which default ON): the
+// modality's OWN row law is "visible-but-disabled until B2 ships" (PRD §3), and B2 does not flip its
+// DEFAULT state on ship — an admin opts in per agent, the same "picked source's body composes only when
+// enabled" degradation law SPEC-R10 already states for the prompt side.
 
 /** Markdown surface — ON: agent-turn notes/system bubbles render through `ui-markdown` (sanitized by
  *  construction); OFF (an explicit stored `false`): plain `textContent`, the frame's own fallback. */
@@ -169,6 +172,20 @@ export const SURFACE_MARKDOWN_KEY = 'surfaceMarkdown'
  *  bypassed and the prose arm answers (surface action clicks no-op — no hidden turns from a disabled
  *  modality). */
 export const SURFACE_A2UI_KEY = 'surfaceA2ui'
+
+/** GenUI surface — ON: an armed `agentSurfaceTurn` MAY compose a genui line (SPEC-R10's teaching block
+ *  joins the system prompt, and a real producer's peel/emit logic is live for this turn); OFF (the
+ *  default — an explicit stored `true` is required to opt in, the INVERSE default of the other two
+ *  modalities): no genui teaching composes, and any genui action click is inert (no hidden turns from a
+ *  disabled modality — the SAME law `SURFACE_A2UI_KEY` already states for A2UI surface actions). */
+export const SURFACE_GENUI_KEY = 'surfaceGenui'
+
+/** Fail-closed read for the genui modality's OWN inverse-default: absent/malformed ⇒ OFF (unlike
+ *  `isEnabledFlag`'s "absent ⇒ ON" law, which the two live-since-launch modalities use). An explicit
+ *  stored `true` is the only way this surface turns on. */
+export function isGenuiSurfaceEnabled(value: unknown): boolean {
+  return value === true
+}
 
 /** The A2UI catalog picker's persisted selection (an id from `A2UI_CATALOG_OPTIONS`). */
 export const A2UI_CATALOG_KEY = 'a2uiCatalog'
@@ -247,12 +264,18 @@ export interface AdminTurnRequest {
 
 /** One streamed event of a surface turn: a VALIDATED A2UI wire line (fed to
  *  `AgentTurnHandle.ingestLine` — it routes by surfaceId to an inline ui-surface-host, ADR-0129), the
- *  turn's prose note (the ADR-0088 meta-line, already peeled by the runner — never ingested), or a
- *  live-turn progress stage (the ADR-0146 F1 meta-line, routed to `AgentTurnHandle.progress`). */
+ *  turn's prose note (the ADR-0088 meta-line, already peeled by the runner — never ingested), a
+ *  live-turn progress stage (the ADR-0146 F1 meta-line, routed to `AgentTurnHandle.progress`), or a
+ *  genui-surface SPEC-R1 wire line (fed to `AgentTurnHandle.mountGenui` — routes by `surfaceId` to an
+ *  inline `ui-sandbox-frame`, the PARALLEL mount mechanism SPEC-R8/PRD-G8 names — never `ingestLine`,
+ *  which is A2UI-shaped and parses `surfaceId` off `createSurface`/`updateComponents`/etc envelope keys a
+ *  genui line never carries). The runner already validated the genui envelope (SPEC-R1's `readGenuiLine`)
+ *  before emitting this kind — the component never re-validates it. */
 export type AdminSurfaceTurnEvent =
   | { kind: 'line'; line: string }
   | { kind: 'note'; note: string }
   | { kind: 'progress'; progress: TurnProgress }
+  | { kind: 'genui'; surfaceId: string; html: string }
 
 /** A surface turn's request. `turn` mirrors the producer's two arms: a typed user intent, or a surface
  *  client message (an action click / function response bubbled up via `onClientMessage`) — `message` is
@@ -273,6 +296,13 @@ export interface AdminSurfaceTurnRequest {
    *  id (one option exists, and the producer pins the same id), so runner and picker agree by
    *  construction; a future multi-catalog runner threads it into the producer's catalog choice. */
   catalogId?: string
+  /** genui-surface.spec.md SPEC-R10/R11 — the GenUI modality's live-apply signal, a FRESH store read every
+   *  turn (the same live-apply law every other Surface Options/capability field already follows).
+   *  `enabled` gates whether the runner's `ProduceOptions.genuiSurface` composes the teaching block at
+   *  all; `sourceBody`, when present, is the D3-picked `pattern-source` entry's `content` VERBATIM (never
+   *  a pack id the runner looks up itself — `pickedPatternSource`'s own projection already resolved it).
+   *  Absent/`enabled:false` ⇒ the runner must compose zero genui bytes (SPEC-R10's degradation law). */
+  genui?: { enabled: boolean; sourceBody?: string }
 }
 
 /** The injected surface runner (DEV-only, the `agentTurn` pattern): one turn in, an ordered stream of

@@ -19,6 +19,10 @@
 // list) — a single place to extend for a future 4th mode.
 export const GEN_UI_MODES = ['default', 'specific', 'blue-sky'] as const
 
+/** NOT the GenUI surface — see genui-surface SPEC (genui-surface.spec.md §4 N2). This is ADR-0090's
+ *  per-turn A2UI prompt-DISPOSITION axis (directive/exploratory), a DIFFERENT and orthogonal concern
+ *  from the free-form GenUI modality's own on/off signal (`GenuiSurfaceConfig`, `genui-surface-config.ts`) —
+ *  the two never interact and this name stays untouched by that SPEC's naming law. */
 export type GenUiMode = (typeof GEN_UI_MODES)[number]
 
 /** The zero-regression neutral value — equivalent to an absent `mode` everywhere this axis is read. */

@@ -7,9 +7,10 @@
 //  2. SDK-FREE / ZERO-DEP — no module under `src/agent/` imports a third-party package (plain `fetch`, no
 //     `@anthropic-ai/sdk`, no vendored dependency in costume — ADR-0069/0073/0107, SPEC-R3 AC1). Every
 //     import specifier is a relative path or a `node:*` builtin.
-//  3. NODE-FENCE — `node:*` imports under `src/agent/` appear ONLY in the two clause-4 prompt-loading
-//     modules (`system-prompt.ts`/`mini-skills.ts`); `vite` and `node:http` (the dev-proxy fence that
-//     stays behind in `tools/agent/`) never appear anywhere under `src/agent/`.
+//  3. NODE-FENCE — `node:*` imports under `src/agent/` appear ONLY in the clause-4 prompt-loading modules
+//     (`system-prompt.ts`/`mini-skills.ts`, plus `prompts/genui-packs.ts` — genui-surface SPEC-R9's own
+//     pack registry, the SAME ADR-0135 readFileSync/frontmatter mechanics); `vite` and `node:http` (the
+//     dev-proxy fence that stays behind in `tools/agent/`) never appear anywhere under `src/agent/`.
 //  4. PROMPT BYTE-IDENTITY — carried by the pre-existing `prompt-equivalence.test.ts` (ADR-0135 equivalence
 //     gate) + `prompt-drift.test.ts`, which now exercise the MOVED `src/agent/system-prompt.ts` and its
 //     `src/agent/prompts/*.md` at their new home; both stay green across the move (no assertion duplicated
@@ -96,7 +97,7 @@ describe('ADR-0137 clause 8 — the ./agent subpath gates', () => {
   })
 
   it('NODE-FENCE: node:* imports appear ONLY in the two prompt-loading modules; never vite/node:http', () => {
-    const NODE_ALLOWED = new Set(['src/agent/system-prompt.ts', 'src/agent/mini-skills.ts'])
+    const NODE_ALLOWED = new Set(['src/agent/system-prompt.ts', 'src/agent/mini-skills.ts', 'src/agent/prompts/genui-packs.ts'])
     for (const { rel, abs } of MODULES) {
       const specs = importSpecifiers(readFileSync(abs, 'utf8') as string)
       const nodeImports = specs.filter((s) => s.startsWith('node:'))

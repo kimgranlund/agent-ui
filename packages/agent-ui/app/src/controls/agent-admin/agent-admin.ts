@@ -84,6 +84,8 @@ import {
   MODELS_INCLUDED_KEY,
   SURFACE_A2UI_KEY,
   SURFACE_MARKDOWN_KEY,
+  SURFACE_GENUI_KEY,
+  isGenuiSurfaceEnabled,
   defaultAgentConfigSchema,
   isEnabledFlag,
   kindEnabledKey,
@@ -109,6 +111,7 @@ import {
   composeSystemPrompt,
   composeLiveSystemPrompt,
   validateNewEntry,
+  pickedPatternSource,
   type Entry,
   type EntryLibraryPack,
   type LiveCapabilityGroup,
@@ -153,6 +156,14 @@ const CAPABILITY_KINDS: ReadonlyArray<{ kind: string; label: string; addLabel: s
   { kind: ENTRY_KINDS.workflow, label: 'Workflows', addLabel: 'Add workflow', liveHeading: 'Workflows available to you' },
   { kind: ENTRY_KINDS.resource, label: 'Resources', addLabel: 'Add resource', liveHeading: 'Resources available to you' },
   { kind: ENTRY_KINDS.tool, label: 'Tools', addLabel: 'Add tool', liveHeading: 'Tools available to you' },
+  // genui-surface.spec.md SPEC-R11 (D3/D4) — reuses this SAME generic entry-list section machinery for the
+  // GenUI pattern-source picker ("no new list/toggle/author code"): the fold, the add-from-library menu
+  // (`genuiPackLibrary`-projected packs), the master switch, and the live-apply store discipline are ALL
+  // the existing per-kind mechanism, zero new code. `liveHeading` here is UNUSED in practice — see
+  // `#capabilityGroups`' own filter, which excludes this ONE kind from the generic capability projection
+  // (its picked entry's body composes through the DEDICATED genui prompt block instead, SPEC-R10 — never
+  // BOTH, which would double-inject the identical prose, the exact ADR-0091 §4 defect class).
+  { kind: ENTRY_KINDS.patternSource, label: 'Pattern sources', addLabel: 'Add pattern source', liveHeading: 'Pattern sources available to you' },
 ]
 
 /** Dialog Turns retention cap (vision rev.5) — a bounded ring; the oldest records fall off. Session-
@@ -194,6 +205,8 @@ export class UIAgentAdminElement extends UIElement {
   #surfaceMarkdownSwitch: (HTMLElement & { checked: boolean }) | null = null
   #surfaceA2uiSwitch: (HTMLElement & { checked: boolean }) | null = null
   #surfaceCatalogSelect: (HTMLElement & { value: string; disabled: boolean }) | null = null
+  // genui-surface.spec.md SPEC-R11 — the GenUI modality's own row switch (live, B2).
+  #surfaceGenuiSwitch: (HTMLElement & { checked: boolean }) | null = null
   #contextSystemHost: HTMLElement | null = null // Agent System — rebuilt wholesale per store change
   #contextTurnsHost: HTMLElement | null = null // Dialog Turns — rebuilt per logged turn
   /** The Context tabs' shared store subscription (both System and Dialog read off the same store) — its
@@ -513,15 +526,19 @@ export class UIAgentAdminElement extends UIElement {
     this.#surfaceCatalogSelect = catalogSelect
     a2ui.row.append(catalogSelect)
 
-    const genui = surfaceRow('genui', 'GenUI', 'Sandboxed free-form generative UI — PRD pending (genui-surface.prd.md)')
-    genui.toggle.checked = false
-    genui.toggle.disabled = true // PRD-gated: .claude/docs/prd/genui-surface.prd.md owns the residual forks (v0.2)
-    genui.row.setAttribute('data-disabled', '')
-    const genuiNote = document.createElement('span')
-    genuiNote.setAttribute('data-part', 'surface-note')
-    genuiNote.textContent = 'PRD pending'
-    genuiNote.title = 'Ships after .claude/docs/prd/genui-surface.prd.md ratifies (pattern source picker).'
-    genui.row.append(genuiNote)
+    // genui-surface.spec.md SPEC-R11/B2 — LIVE: the row's own "visible-but-disabled, PRD pending" state
+    // (PRD §3) stood until this slice shipped; the modality's own inverse-default (OFF until an admin
+    // opts in, `isGenuiSurfaceEnabled`) replaces the PRD-gated `disabled` lock. The pattern-source PICK
+    // itself lives in the "Pattern sources" capability section below (CAPABILITY_KINDS, D4's "From
+    // library" affordance) — this row is only the modality's own on/off switch, mirroring markdown/a2ui.
+    const genui = surfaceRow('genui', 'GenUI', 'Sandboxed free-form generative UI — a pattern source, picked below, conditions it')
+    genui.toggle.checked = false // the inverse default (OFF) — applyMasterStates re-applies the real stored value below
+    genui.toggle.addEventListener('change', () => {
+      this.store?.set(SURFACE_GENUI_KEY, genui.toggle.checked)
+      this.#applyMasterStates(this.store)
+      if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
+    })
+    this.#surfaceGenuiSwitch = genui.toggle
 
     surfaceOptions.append(markdown.row, a2ui.row, genui.row)
 
@@ -833,9 +850,13 @@ export class UIAgentAdminElement extends UIElement {
       tools: enabledLabels(ENTRY_KINDS.tool),
     }
 
-    // The SURFACE arm (TKT-0076) — takes precedence when armed AND the A2UI surface is on (vision
-    // rev.6: switching the modality off bypasses even an armed runner — the prose arm answers instead).
-    if (this.agentSurfaceTurn !== undefined && isEnabledFlag(store?.get(SURFACE_A2UI_KEY))) {
+    // The SURFACE arm (TKT-0076) — takes precedence when armed AND at least ONE structured modality is on
+    // (vision rev.6: switching BOTH structured modalities off bypasses even an armed runner — the prose
+    // arm answers instead). genui-surface SPEC-R11/B2 widens this from "A2UI on" alone to "A2UI OR GenUI
+    // on": the same producer stream now carries either kind, so the structured arm must run whenever
+    // either is enabled — GenUI defaults OFF, so this is a zero-regression widening for every existing
+    // caller that never enables it.
+    if (this.agentSurfaceTurn !== undefined && (isEnabledFlag(store?.get(SURFACE_A2UI_KEY)) || isGenuiSurfaceEnabled(store?.get(SURFACE_GENUI_KEY)))) {
       // GH #63 — a typed intent is a fresh user gesture: re-arm the error-loop budget.
       this.#consecutiveErrorTurns = 0
       this.#errorLoopHalted = false
@@ -901,10 +922,24 @@ export class UIAgentAdminElement extends UIElement {
     if (!conversation || surfaceTurn === undefined) return
     const store = this.store
     // The Agent master switch gates surface turns too — BOTH kinds: a typed intent and a surface action
-    // click (an inactive agent runs nothing, Kim's ruling). The A2UI surface switch gates the same way
-    // (vision rev.6): a disabled modality runs no hidden turns, not even from an action click.
+    // click (an inactive agent runs nothing, Kim's ruling).
     if (!isEnabledFlag(store?.get(AGENT_ENABLED_KEY))) return
-    if (!isEnabledFlag(store?.get(SURFACE_A2UI_KEY))) return
+    const a2uiOn = isEnabledFlag(store?.get(SURFACE_A2UI_KEY))
+    const genuiOn = isGenuiSurfaceEnabled(store?.get(SURFACE_GENUI_KEY))
+    // genui-surface.spec.md SPEC-R10/R11 (independent-review MODERATE fix): a `client` message's OWN
+    // modality gates it — a genui action click is inert while GenUI is off (even if A2UI is on), and
+    // symmetrically an A2UI action click is inert while A2UI is off (even if GenUI is on). A lingering
+    // frame/host from a NOW-disabled modality must never spawn a hidden turn — the exact contradiction
+    // `SURFACE_GENUI_KEY`'s own doc comment already promised and this gate previously broke (an OR
+    // across both switches let a disabled modality's stale click still run). A typed `intent` targets NO
+    // specific modality — it needs at least ONE structured modality on (unchanged, vision rev.6/B2).
+    if (turn.kind === 'client') {
+      const wantsGenui = isGenuiActionClientMessage(turn.message)
+      if (wantsGenui && !genuiOn) return
+      if (!wantsGenui && !a2uiOn) return
+    } else if (!a2uiOn && !genuiOn) {
+      return
+    }
     const sections = readEntries(store, ENTRY_KINDS.promptSection)
     const toolsEnabled = isEnabledFlag(store?.get(kindEnabledKey(ENTRY_KINDS.tool)))
     const request = {
@@ -921,6 +956,11 @@ export class UIAgentAdminElement extends UIElement {
             .filter((entry) => entry.enabled)
             .map((entry) => entry.label)
         : [],
+      // genui-surface.spec.md SPEC-R10/R11 — a FRESH store read (the live-apply law): `enabled` gates
+      // whether the runner composes the genui teaching block at all; `sourceBody`, when present, is the
+      // D3-picked `pattern-source` entry's `content` VERBATIM (never a pack id — `pickedPatternSource`
+      // already resolved the single pick from whichever entries are enabled, first-by-order).
+      genui: { enabled: genuiOn, sourceBody: genuiOn ? pickedPatternSource(readEntries(store, ENTRY_KINDS.patternSource))?.content : undefined },
     }
     // TKT-0079 — an action-click/error turn RESUMES the bubble owning its surface (the game loop stays in
     // one card); a typed intent stays a fresh bubble (its reply must not appear above the question).
@@ -934,7 +974,13 @@ export class UIAgentAdminElement extends UIElement {
         for await (const event of surfaceTurn(request)) {
           if (event.kind === 'note') note = event.note
           else if (event.kind === 'progress') handle.progress(event.progress) // ADR-0146 F1 — live narration
-          else {
+          else if (event.kind === 'genui') {
+            // genui-surface.spec.md SPEC-R8/PRD-G8 — a PARALLEL mount path, never `ingestLine` (A2UI-
+            // shaped; a genui line carries neither `createSurface` nor any envelope key `surfaceIdOf`
+            // parses). `mountGenui` mirrors `ingestLine`'s own fresh/known bubble routing for a
+            // structurally different host (`ui-sandbox-frame`, not `ui-surface-host`).
+            handle.mountGenui(event.surfaceId, event.html)
+          } else {
             wireLines.push(event.line)
             handle.ingestLine(event.line)
           }
@@ -951,9 +997,13 @@ export class UIAgentAdminElement extends UIElement {
   }
 
   /** Each capability kind's raw store slice + its live `##` group heading + its MASTER switch (vision
-   *  rev.5), for `composeLiveSystemPrompt` (which does the enabled-filter/sort/master-gate itself). */
+   *  rev.5), for `composeLiveSystemPrompt` (which does the enabled-filter/sort/master-gate itself).
+   *  EXCLUDES `pattern-source` (genui-surface SPEC-R10/R11): that kind's picked entry composes through
+   *  the DEDICATED genui prompt block (`#runSurfaceTurn`'s own `pickedPatternSource` read) instead of the
+   *  generic `## Pattern sources available to you` capability projection — including it here too would
+   *  double-inject the identical body in one prompt (the exact ADR-0091 §4 defect class). */
   #capabilityGroups(store: SettingsStore | undefined): LiveCapabilityGroup[] {
-    return CAPABILITY_KINDS.map(({ kind, liveHeading }) => ({
+    return CAPABILITY_KINDS.filter(({ kind }) => kind !== ENTRY_KINDS.patternSource).map(({ kind, liveHeading }) => ({
       kind,
       heading: liveHeading,
       entries: readEntries(store, kind),
@@ -1004,6 +1054,7 @@ export class UIAgentAdminElement extends UIElement {
       this.#surfaceCatalogSelect.value = sanitizeCatalog(store?.get(A2UI_CATALOG_KEY))
       this.#surfaceCatalogSelect.disabled = !a2uiOn
     }
+    if (this.#surfaceGenuiSwitch) this.#surfaceGenuiSwitch.checked = isGenuiSurfaceEnabled(store?.get(SURFACE_GENUI_KEY))
   }
 
   /** Rebuild the Context: System view from the store's CURRENT contents: one `Agent` section (open by
@@ -1037,7 +1088,10 @@ export class UIAgentAdminElement extends UIElement {
             markdown: isEnabledFlag(store?.get(SURFACE_MARKDOWN_KEY)),
             a2ui: isEnabledFlag(store?.get(SURFACE_A2UI_KEY)),
             catalog: sanitizeCatalog(store?.get(A2UI_CATALOG_KEY)),
-            genui: 'prd-pending', // .claude/docs/prd/genui-surface.prd.md
+            // genui-surface.spec.md SPEC-R11/B2 — live: the modality's on/off state + the D3-picked
+            // pattern-source's label, when one is picked (undefined otherwise — the degradation law).
+            genui: isGenuiSurfaceEnabled(store?.get(SURFACE_GENUI_KEY)),
+            genuiSource: pickedPatternSource(readEntries(store, ENTRY_KINDS.patternSource))?.label,
           },
           systemPrompt: composeLiveSystemPrompt(sections, this.#capabilityGroups(store)),
         },
@@ -1161,10 +1215,25 @@ function settingsItem(key: string, summary: string, ...content: HTMLElement[]): 
 }
 
 function clientMessageSurfaceId(message: unknown): string | undefined {
-  const m = message as { action?: { surfaceId?: unknown }; error?: { surfaceId?: unknown } } | null
+  const m = message as { action?: { surfaceId?: unknown }; error?: { surfaceId?: unknown }; genuiAction?: { surfaceId?: unknown } } | null
   if (m && typeof m === 'object' && m.action && typeof m.action.surfaceId === 'string') return m.action.surfaceId
   if (m && typeof m === 'object' && m.error && typeof m.error.surfaceId === 'string') return m.error.surfaceId
+  // genui-surface.spec.md SPEC-R8 — a genui `action` click bubbles as `{genuiAction:{surfaceId,...}}`
+  // (conversation.ts's `mountGenui` routing) — TKT-0079's same-bubble-resume law applies identically: the
+  // agent's reply to a GenUI action stays in the SAME card, never a fresh one above the click.
+  if (m && typeof m === 'object' && m.genuiAction && typeof m.genuiAction.surfaceId === 'string') return m.genuiAction.surfaceId
   return undefined
+}
+
+/** genui-surface.spec.md SPEC-R10/R11 — `true` iff `message` is a genui bridge-action bubble
+ *  (`{genuiAction:{...}}`, conversation.ts's `mountGenui` routing), never a real A2UI client message
+ *  (`action`/`error`). Used ONLY to pick which modality's OWN switch gates a `kind:'client'` surface turn
+ *  — an independent review's MODERATE finding: a message's kind must match its OWN modality flag, never
+ *  an OR across both (a lingering genui frame's click must stay inert while GenUI is off, symmetrically
+ *  for a lingering A2UI surface's action while A2UI is off — SURFACE_GENUI_KEY's own doc comment promises
+ *  exactly this: "no hidden turns from a disabled modality"). */
+function isGenuiActionClientMessage(message: unknown): boolean {
+  return typeof message === 'object' && message !== null && 'genuiAction' in message
 }
 
 if (!customElements.get('ui-agent-admin')) customElements.define('ui-agent-admin', UIAgentAdminElement)

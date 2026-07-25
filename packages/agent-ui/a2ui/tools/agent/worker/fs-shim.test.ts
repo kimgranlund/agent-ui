@@ -52,7 +52,10 @@ describe('fs-shim-content.ts FILES/DIRS vs the real prompts directory — GH #11
         .filter((e) => e.isFile() && e.name.endsWith('.md'))
         .map((e) => `${PROMPTS_KEY_PREFIX}/${e.name}`),
     )
-    const bundledFiles = new Set(Object.keys(FILES).filter((k) => !k.includes('/mini-skills/')))
+    // genui-surface.spec.md SPEC-R9 — `/genui-packs/` is the THIRD prompt subdirectory (alongside
+    // `/mini-skills/`), excluded here the SAME way: its own top-level-vs-subdirectory parity is checked
+    // by the genui-packs-specific pair below.
+    const bundledFiles = new Set(Object.keys(FILES).filter((k) => !k.includes('/mini-skills/') && !k.includes('/genui-packs/')))
     expect([...bundledFiles].sort()).toEqual([...realFiles].sort())
   })
 
@@ -68,6 +71,22 @@ describe('fs-shim-content.ts FILES/DIRS vs the real prompts directory — GH #11
     const bundledMiniSkillsDirKey = `${PROMPTS_KEY_PREFIX}/mini-skills`
     for (const name of DIRS[bundledMiniSkillsDirKey] ?? []) {
       expect(FILES[`${bundledMiniSkillsDirKey}/${name}`], `FILES missing entry for DIRS-listed ${name}`).toBeDefined()
+    }
+  })
+
+  // genui-surface.spec.md SPEC-R9 — the SAME pair, applied to `prompts/genui-packs/`.
+  it('every REAL genui-pack .md file has a matching DIRS entry, and vice versa', () => {
+    const genuiPacksDir = `${PROMPTS_DIR}/genui-packs`
+    const realGenuiPacks = realReaddirSync(genuiPacksDir).filter((f) => f.endsWith('.md'))
+    const bundledGenuiPacksDirKey = `${PROMPTS_KEY_PREFIX}/genui-packs`
+    expect(DIRS[bundledGenuiPacksDirKey]).toBeDefined()
+    expect([...DIRS[bundledGenuiPacksDirKey]!].sort()).toEqual([...realGenuiPacks].sort())
+  })
+
+  it('every DIRS genui-packs entry also has a matching FILES entry (readFileSync must resolve what readdirSync lists)', () => {
+    const bundledGenuiPacksDirKey = `${PROMPTS_KEY_PREFIX}/genui-packs`
+    for (const name of DIRS[bundledGenuiPacksDirKey] ?? []) {
+      expect(FILES[`${bundledGenuiPacksDirKey}/${name}`], `FILES missing entry for DIRS-listed ${name}`).toBeDefined()
     }
   })
 })

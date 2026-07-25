@@ -46,6 +46,36 @@ const registryEntries: NewEntryInput[] = Object.keys(MINI_SKILL_SOURCES)
     }]
   })
 
+// ── pack #4 (genui-surface.spec.md SPEC-R9/R11, D4): the shipped GenUI pattern-source packs, derived
+// LIVE from `@agent-ui/a2ui`'s `prompts/genui-packs/*.md` — the SAME Vite raw-glob technique pack #1 uses
+// above (`GENUI_PACKS`'s own loader is `node:fs`-based, Node-only by SPEC-R9, unimportable in the
+// browser). Each pack projects to ONE `EntryLibraryPack` carrying ONE ready-to-add entry whose `content`
+// is the pack body verbatim — mirroring `@agent-ui/a2ui/agent`'s own `genuiPackLibrary` projection
+// (SPEC-R11), reimplemented here rather than imported because that function's INPUT type
+// (`GenuiPatternPack`) is Node-loaded data this browser-side glob produces independently, not a value
+// this page could hand it without ALSO importing the Node-only registry module.
+const GENUI_PACK_SOURCES = import.meta.glob('../../packages/agent-ui/a2ui/src/agent/prompts/genui-packs/*.md', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>
+
+const GENUI_PACK_LIBRARY: EntryLibraryPack[] = Object.keys(GENUI_PACK_SOURCES)
+  .sort()
+  .flatMap((path) => {
+    const parsed = splitFrontmatter(GENUI_PACK_SOURCES[path]!)
+    if (!parsed?.data.id || !parsed.data.label) return []
+    const description = parsed.data.description ?? ''
+    return [
+      {
+        id: parsed.data.id,
+        label: parsed.data.label,
+        description,
+        entries: [{ label: parsed.data.label, description, content: parsed.body }],
+      },
+    ]
+  })
+
 // ── the authored packs (hospitality lands with GH #46's trio; games join with the roster wave) ──────────
 
 export const HOSPITALITY_SKILLS: readonly NewEntryInput[] = [
@@ -348,4 +378,7 @@ export const ADMIN_LIBRARIES: Record<string, EntryLibraryPack[]> = {
       entries: INTEGRATION_TOOLS,
     },
   ],
+  // genui-surface.spec.md SPEC-R9/R11 (B2) — the shipped GenUI pattern-source packs (data-viz layouts,
+  // interactive widgets, animated explainers), live-derived from the registry's own .md files above.
+  [ENTRY_KINDS.patternSource]: GENUI_PACK_LIBRARY,
 }
