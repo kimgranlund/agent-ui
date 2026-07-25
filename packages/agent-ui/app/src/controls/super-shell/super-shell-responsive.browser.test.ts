@@ -165,10 +165,55 @@ describe('ui-super-shell — SPEC-R9 toggle affordance law (AC15/AC16)', () => {
     await settle(el)
     const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
     const canvasRect = canvas.getBoundingClientRect()
-    // --ui-super-shell-canvas-min-size = 9 modules × 1.125rem = 10.125rem = 162px at the default 16px root
-    // font — the SAME floor canvas already promises inline at WIDE (min-inline-size), reused here for the
-    // orthogonal axis the column direction makes load-bearing.
+    // --ui-super-shell-canvas-min-block-size = 9 modules × 1.125rem = 10.125rem = 162px at the default
+    // 16px root font (SPEC-R15b) — a DEDICATED block-size floor, independent from the inline-size
+    // `--ui-super-shell-canvas-min-size` token (F4 fix: reusing that one would have silently turned
+    // agent-admin.css's 16rem WIDTH override into an unrelated 256px HEIGHT floor there).
     expect(canvasRect.height, 'canvas keeps its 162px floor even against a wildly oversize stacked sibling').toBeGreaterThanOrEqual(161)
+  })
+
+  it('GH #260 — narrow-stack: canvas\'s floor is genuinely REACHABLE through an outer overflow:hidden ancestor (the real-page hazard), not just present in the DOM', async () => {
+    // A floor alone is not enough: super-shell-responsive's own isolated `mount()` has no outer
+    // clipping ancestor, so the PRECEDING test's canvasRect already reads its true visible extent.
+    // A real consuming page routinely wraps its whole shell in an `overflow: hidden` chrome region
+    // (gen-ui-live.css/a2ui-live.css's own `[data-page-content]`) — reproduced here explicitly. GH
+    // #260's own review measurement: with the floor alone (no scroll seam) canvas held 162px in the
+    // DOM while its VISIBLE intersection with that outer clip was still a 44px sliver — SPEC-R15a's
+    // fix is `overflow-y: auto` on `[data-part='middle']` itself, so the outer clip's deficit becomes
+    // a REAL, reachable scroll instead of a silent, permanent cut. Proven here by the one thing that
+    // actually distinguishes "reachable" from "clipped forever": an element with `overflow: visible`
+    // (pre-fix) makes `scrollTop` assignment a no-op (always reads back 0) — `overflow: auto` (post-
+    // fix) makes it a genuine scroll.
+    const clipWrapper = document.createElement('div')
+    clipWrapper.style.cssText = 'position:fixed;inset-block-start:0;inset-inline-start:0;inline-size:300px;block-size:400px;overflow:hidden'
+    document.body.append(clipWrapper)
+    const el = document.createElement('ui-super-shell') as UISuperShellElement
+    el.setAttribute('narrow-start', 'stack')
+    el.style.cssText = 'inline-size:300px;block-size:400px'
+    const header = document.createElement('div'); header.setAttribute('data-slot', 'header'); header.textContent = 'H'
+    const nav = document.createElement('div'); nav.setAttribute('data-slot', 'nav-pane'); nav.textContent = 'NAV'
+    const content = document.createElement('div'); content.setAttribute('data-slot', 'content'); content.textContent = 'C'
+    el.append(header, nav, content)
+    clipWrapper.append(el)
+    mounted.push(clipWrapper)
+    const filler = document.createElement('div')
+    filler.style.blockSize = '2000px'
+    nav.append(filler)
+    await settle(el)
+
+    const middle = el.querySelector('[data-part="middle"]') as HTMLElement
+    const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
+    expect(getComputedStyle(middle).overflowY, 'middle is a real scroll container at narrow-stack (SPEC-R15a)').toBe('auto')
+
+    middle.scrollTop = middle.scrollHeight // what a real touch/wheel scroll gesture accomplishes
+    expect(middle.scrollTop, 'middle genuinely scrolled — a no-op here would mean overflow stayed visible, canvas unreachable').toBeGreaterThan(0)
+
+    const canvasRect = canvas.getBoundingClientRect()
+    const clipRect = clipWrapper.getBoundingClientRect()
+    const visibleTop = Math.max(canvasRect.top, clipRect.top)
+    const visibleBottom = Math.min(canvasRect.bottom, clipRect.bottom)
+    const visibleHeight = Math.max(0, visibleBottom - visibleTop)
+    expect(visibleHeight, 'canvas\'s floor is genuinely visible THROUGH the outer clip once scrolled, not just present in the DOM').toBeGreaterThanOrEqual(161)
   })
 })
 
