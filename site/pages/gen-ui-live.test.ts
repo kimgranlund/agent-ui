@@ -53,20 +53,29 @@ function clickReset(): void {
   resetBtn?.click()
 }
 
-beforeEach(() => {
+beforeEach(async () => {
   clickReset() // restart the recorded backbone from turn 1, every test (the ask-lifecycle.test.ts precedent)
+  // GH #266 — Reset also re-probes the live overlay (`wireLiveOverlay()`, a genuine async dynamic-import +
+  // fetch round trip). jsdom has no `/__a2ui/agent/status` endpoint to reach, so it always settles to the
+  // fail-closed "Recorded demo" badge — waited out HERE, before any test body runs, so later `.at(-1)`/
+  // count-based system-message assertions below (pre-existing, written when the only system messages this
+  // page ever produced were synchronous) can never race a stray probe-driven message landing mid-assertion.
+  await waitUntil(() => document.querySelector('.render-pane .demo-badge')?.textContent === 'Recorded demo')
 })
 
-describe('gen-ui-live — the recorded/stub mode is stated honestly (Kim\'s ruling)', () => {
-  it('an opening system message names this a recorded demo, not a live producer', () => {
-    const systemMsgs = chatMessages('system')
-    expect(systemMsgs.length).toBeGreaterThan(0)
-    expect(systemMsgs[0]!.textContent).toMatch(/recorded/i)
+describe('gen-ui-live — the recorded/live overlay states its OWN mode honestly (GH #266 live probe)', () => {
+  // jsdom has no `/__a2ui/agent/status` endpoint to reach (`fetch` on a relative URL fails/throws), so
+  // `probeLive()` always resolves `available: false` here — the SAME "no live key" fallback path a real
+  // build takes when no provider key is configured. `wireLiveOverlay()`'s own probe is a genuine async
+  // dynamic-import + fetch round trip (unlike the pre-B2 synchronous `addMessage` call this replaced), so
+  // every assertion below awaits it via `waitUntil` rather than reading the DOM synchronously right after
+  // `clickReset()` — the a2ui-live.ts test suite's own established idiom for this exact probe.
+  it('an opening system message names this a recorded demo, not a live producer', async () => {
+    await waitUntil(() => chatMessages('system').some((m) => /recorded/i.test(m.textContent ?? '')))
   })
 
-  it('the render pane carries a persistent "Recorded demo" badge', () => {
-    const badge = document.querySelector('.render-pane .demo-badge')
-    expect(badge?.textContent).toBe('Recorded demo')
+  it('the render pane carries a "Recorded demo" badge — the fail-closed default with no live key configured', async () => {
+    await waitUntil(() => document.querySelector('.render-pane .demo-badge')?.textContent === 'Recorded demo')
   })
 })
 
