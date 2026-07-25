@@ -35,6 +35,14 @@
      floor makes cascade order (not intent) the tiebreaker — silently, since both compile clean. */
   --ui-super-shell-pane-min-size: calc(var(--ui-super-shell-module) * 9); /* 162px */
   --ui-super-shell-canvas-min-size: calc(var(--ui-super-shell-module) * 9); /* 162px */
+  /* SPEC-R15 (GH #260) — a SEPARATE block-size floor, deliberately NOT the same token as
+     `--ui-super-shell-canvas-min-size` above. That token is SPEC-R13a's INLINE-size floor only
+     (a consumer, e.g. agent-admin.css, overrides it to 16rem for its own width reason) — reusing
+     it as a height floor too would silently turn that 16rem WIDTH override into a 256px HEIGHT
+     floor on every ui-chat-shell/ui-agent-admin instance (both default `narrow-start='stack'`), a
+     cross-axis surprise no consumer asked for. Same 9-module default as its inline-size sibling
+     (the sensible starting floor), independently overridable per axis. */
+  --ui-super-shell-canvas-min-block-size: calc(var(--ui-super-shell-module) * 9); /* 162px */
   /* SPEC-R10a (ADR-0155) — hidden scroller, live scroll: the fleet's command-modal.css / ui-menu (GH #166)
      seam applied to the shell's OWN scroll regions (pane · active segment · the tab strips' tablist
      viewports, chained via --ui-tabs-strip-scrollbar-width since GH #221 · the overlay-restored side,
@@ -371,9 +379,24 @@
        full-width or overlaid, and without the exclusion the resizer's own `inline-size:var(--ui-super-
        shell-gap)` (GH #214 — a gap-sized hit-box, not the earlier flat 0.25rem) gets reset to `auto`/
        `position:absolute`, rendering it as a second full-size box on top of the pane. */
+    /* SPEC-R15a/b (GH #260) — narrow-stack becomes ITS OWN scroll region. `flex-direction: column`
+       makes block-size the main axis; the stacked side's `flex: 0 0 auto` (the restore rule just
+       below) sizes it to its CONTENT's natural, UNBOUNDED height by design ("the side's own content
+       owns its narrow anatomy from here") — a real chat log easily exceeds the shell's own bounded
+       height. Two things must both hold, or a floor is a lie: (1) canvas must never be squeezed
+       below its own floor to "absorb" that deficit (R15b, below) — but a min-size floor alone only
+       stops the SQUEEZE; the guaranteed space still has to reach the eye. A page that clips its
+       shell in an `overflow: hidden` wrapper (routine chrome — see gen-ui-live.css/a2ui-live.css)
+       has NO scroller between that ancestor and this row, so the floored-but-now-overflowing content
+       was silently clipped instead of squeezed — same invisible result, different mechanism
+       (measured, GH #260: canvas held its 162px in the DOM while its VISIBLE intersection was still
+       0). `overflow-y: auto` here makes middle itself the scroll boundary once the stacked side's
+       real content forces genuine overflow, so canvas's floor is reachable by scrolling the render
+       pane into view — never dependent on some ancestor page happening to leave room or scroll. */
     :scope[narrow-start='stack'] [data-part='middle'],
     :scope[narrow-end='stack'] [data-part='middle'] {
       flex-direction: column;
+      overflow-y: auto;
     }
     :scope[narrow-start='stack'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']),
     :scope[narrow-end='stack'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) {
@@ -381,6 +404,22 @@
       inline-size: auto;
       flex: 0 0 auto;
       overflow-y: visible;
+    }
+
+    /* SPEC-R15b (GH #260) — the narrow-stack canvas floor. Canvas's base `min-block-size: 0` (needed
+       at WIDE so cross-axis stretch isn't fighting a floor) becomes a LIVE hazard once middle is a
+       column: with NO floor, canvas — the one item left with nonzero flex-shrink — can shrink all
+       the way to 0 to "fit" a tall stacked sibling, which flexbox counts as a valid fit, never
+       registering as overflow at all (so the `overflow-y: auto` above would show no scrollbar and
+       canvas would just vanish). A dedicated, INDEPENDENT block-size floor token
+       (`--ui-super-shell-canvas-min-block-size` — deliberately NOT `--ui-super-shell-canvas-min-
+       size`, R13a's inline-size-only floor; reusing that one silently turns a consumer's WIDTH
+       override, e.g. agent-admin.css's 16rem, into an unrelated 256px HEIGHT floor) refuses to let
+       canvas shrink below it — which is what forces the genuine overflow the scroll seam above
+       exists to carry. */
+    :scope[narrow-start='stack'] [data-part='canvas'],
+    :scope[narrow-end='stack'] [data-part='canvas'] {
+      min-block-size: var(--ui-super-shell-canvas-min-block-size);
     }
     :scope[data-narrow-open='start'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']),
     :scope[data-narrow-open='end'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) {

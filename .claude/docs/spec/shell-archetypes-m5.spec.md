@@ -1,6 +1,6 @@
 # SPEC — Shell archetypes M5: `ui-super-shell` (the two-level recursive shell grammar)
 
-> Status: accepted · v0.6 · 2026-07-23 · Layer: app chrome (`@agent-ui/app`)
+> Status: accepted · v0.7 · 2026-07-25 · Layer: app chrome (`@agent-ui/app`)
 > Refines: [ADR-0151](../adr/0151-named-shell-archetypes-m5.md) (accepted — ratified by Kim
 > 2026-07-19) · the agent-app-surfaces PRD's M5 (PRD-G9).
 > Follows the established PATTERNS of: [ADR-0082](../adr/0082-app-shell-per-instance-isolation.md) /
@@ -506,3 +506,73 @@ shrinking below the band line with the overlay open keeps it open under the R9d 
 growing UP across the band line with the overlay open (still below natural fit) hands the same
 open state to the mid-window overlay; the
 below-band-line behavior is byte-identical to pre-R14. Cross-engine, END side proven explicitly.
+
+## 12 · Amendment (v0.7, SPEC-R15) — narrow-stack's canvas floor is live AND reachable
+
+Grounding: [GH #260](https://github.com/kimgranlund/agent-ui/issues/260) (Kim's real iPhone Safari
+report — `ui-sandbox-frame` on `gen-ui-live` rendered nothing below the render pane's own header)
++ its own build/review cycle (2026-07-25). R13a already states "every floor token is honored by
+LIVE layout... via CSS... or an observer-driven collapse — never only inside an interactive
+clamp," but R13a/R13b's own worked arithmetic (§10) is WIDE-band only (the dual-resizable
+846px-natural-fit case) — narrow-`stack` mode, where `[data-part='middle']` turns into a flex
+COLUMN (§4/§9's `narrow-*='stack'` rule), was never covered: canvas's floor token
+(`--ui-super-shell-canvas-min-size`) is R13a's INLINE-size floor only, and the narrow-stack column
+makes BLOCK-size the axis under pressure instead — a gap R13a's own prose left silent, not a
+clause it addressed and got wrong. This amendment closes that gap without rewriting R13's
+accepted prose, the same append-only discipline R14 (§11) used for its own band-line window gap.
+Two build passes, in this order — the first alone was proven, by the review that grounds this
+amendment, to be necessary but NOT sufficient:
+
+1. A `min-block-size` floor on canvas at narrow-stack stops the stacked side's own unbounded
+   content (§9's `narrow-*='stack'` rule lets it grow to its natural height BY DESIGN) from
+   squeezing canvas to zero — but a floor alone only guarantees canvas's own DOM box stays real;
+   it says nothing about whether that box is actually PAINTED where a user can see it.
+2. Measured (both engines, real page, Kim's own reported viewport class): with the floor alone,
+   canvas held its floor in the DOM while its VISIBLE intersection with a routine page-chrome
+   wrapper's `overflow: hidden` (gen-ui-live.css's `[data-page-content]`, a2ui-live.css's own
+   twin) was still a ~44px sliver — the floor's extra height had nowhere to go but a silent clip,
+   because nothing between that outer wrapper and canvas was a scroll container. A DOM-present
+   floor and a genuinely visible one are different claims; R13a's own "live, not drag-only" law
+   was written for the squeeze case and did not anticipate the clip case a column reflow creates.
+
+### SPEC-R15 — the narrow-stack canvas floor: a dedicated axis, and a reachable one
+
+- **R15a — narrow-stack is its own scroll region.** `[data-part='middle']` gets `overflow-y: auto`
+  under `narrow-start='stack'`/`narrow-end='stack'` (the SAME `@container (inline-size < 40rem)`
+  band §9's `flex-direction: column` rule already lives in). Once the stacked side's real content
+  forces the column's combined natural size past middle's own bounded height, that excess is a
+  real, user-reachable scroll — never a silent cut owned by whatever ancestor page happens to wrap
+  the shell. This is the clause that actually closes GH #260: a floor without it is provably
+  insufficient (the grounding measurement above).
+- **R15b — the floor is a DEDICATED block-size token, never a reused inline-size one.**
+  `--ui-super-shell-canvas-min-block-size` (default 9 modules, 162px — the SAME default
+  `--ui-super-shell-canvas-min-size` ships, chosen for the same reason, but a SEPARATE token) sets
+  canvas's `min-block-size` at narrow-stack. `--ui-super-shell-canvas-min-size` stays R13a's
+  inline-size floor ONLY — a consumer override of it (agent-admin.css's `16rem`, R6c) is a WIDTH
+  decision and must never silently become an unrelated HEIGHT floor on every `ui-chat-shell`/
+  `ui-agent-admin` instance (both default `narrow-start='stack'`) just because the column axis
+  swapped which dimension is load-bearing. Each axis is independently overridable; sharing one
+  token across both was a build-time bug this clause forecloses, not a design this amendment
+  merely documents after the fact.
+- **R15c — a floor still yields to genuine unavailability.** R15a/b guarantee canvas's floor is
+  real and reachable within the shell's OWN scroll region; they make no claim about a consuming
+  page's total available height being adequate in the absolute (a viewport shorter than every
+  floor combined still scrolls, it does not manufacture pixels) — the same honest limit R13a/b
+  already accept for the wide-band floors.
+
+AC22 (extends §6) — **the narrow-stack canvas floor holds, and holds VISIBLY, under content
+pressure.** With `narrow-start='stack'` (or `narrow-end='stack'`) and the stacked side holding
+content taller than the shell's own bounded block-size: (a) canvas's `min-block-size` resolves to
+`--ui-super-shell-canvas-min-block-size` (default 162px), never `--ui-super-shell-canvas-min-size`
+(R15b) — an agent-admin-shaped consumer overriding the latter to `16rem` for its own width reason
+must not observe any change to canvas's height floor; (b) `[data-part='middle']` computes
+`overflow-y: auto` in this mode (R15a) and, once the stacked side's content forces genuine
+overflow, assigning `middle.scrollTop` produces a REAL nonzero scroll (the discriminating test: an
+`overflow: visible` region always reads `scrollTop` back as `0` regardless of what is assigned —
+a floor without R15a fails this half of the criterion even though the floor itself measures
+correctly in isolation); (c) after that scroll, canvas's box — INTERSECTED with every clipping
+ancestor up to the viewport, not merely its own `getBoundingClientRect()` — measures at or above
+its floor: DOM presence and visible presence must agree. Proven cross-engine (Chromium + WebKit)
+both in isolation (a synthetic shell wrapped in an explicit `overflow: hidden` ancestor,
+reproducing the real-page hazard directly) and through a real consuming page at the reported
+geometry (a real `ui-sandbox-frame` turn, GH #260's own repro shape).
