@@ -9,7 +9,7 @@
 > lives in GitHub Issues ([ADR-0145](adr/0145-ticket-tier-github-issues-backend.md)) or, on other
 > projects, Linear — **never here**. An issue may cite a section of this doc the same way it cites
 > an ADR/SPEC/LLD id; this doc never enumerates issues by number, because that list goes stale the
-> moment an issue closes and this doc isn't the place re-reading it. Last synthesis pass: 2026-07-24.
+> moment an issue closes and this doc isn't the place re-reading it. Last synthesis pass: 2026-07-25.
 
 ## 1 · Why a fourth doc
 
@@ -38,13 +38,14 @@ append-only going forward, **never backfilled**, and this roadmap's §2 is the o
 "current state." The gap is therefore the ruled shape of the doc set, not a defect awaiting a
 decision (dated line in §4).
 
-## 2 · Now — current state (as of 2026-07-24)
+## 2 · Now — current state (as of 2026-07-25)
 
 - **Component foundation — complete.** G0–G9 + the Control Suite + the icon adapter: the reactive
   kernel, FACE element layer, templating/directives, and ~50 `ui-*` controls across the
   Indicator/Range/Input/Overlay/Container/report/content/feed/chart families. Closed, not actively
-  growing — recent additions are single-control refinements riding reviews: `ui-menu`'s
-  selectable-item variant, and `ui-disclosure`'s `slot="summary"` foreseen extension (ADR-0158).
+  growing — recent additions are single-control refinements riding reviews (`ui-menu`'s
+  selectable-item variant, `ui-disclosure`'s `slot="summary"` foreseen extension — ADR-0158), plus
+  one genuinely new control: `ui-sandbox-frame`, the GenUI containment host (below).
   `ui-status-stream` grew the most of any single control this window: worst-child escalation with
   the elapsed-timer/retry refinements (ADR-0146 F5/F6, ADR-0153 — which minted `action`, the
   seventh fleet event name), then the **receipt pattern** (ADR-0159, proposed) — closed-table
@@ -60,22 +61,31 @@ decision (dated line in §4).
   family's favor (ADR-0156, Option C ruled and ratified) — in-tree and functional through a
   migration window, frozen to new consumers; its one production page is already re-hosted. The
   shell-system **laws** are spec'd and enforced ([shell-archetypes
-  SPEC](spec/shell-archetypes-m5.spec.md), accepted v0.6): the two-system spacing ladder (SPEC-R11)
+  SPEC](spec/shell-archetypes-m5.spec.md), accepted v0.7): the two-system spacing ladder (SPEC-R11)
   backed by a deterministic spacing-drift gate born at zero (AC19 — every `@agent-ui/app` sheet
   plus the shell-composing site sheets); scope-proximity display overrides (SPEC-R12); live floors
   that hold under passive resize, not just drag (SPEC-R13, AC20) with measurement-based
-  auto-collapse; and the mid-window overlay keeping an auto-collapsed side reachable (SPEC-R14,
-  AC21). The docs-site chrome itself rides the family.
+  auto-collapse; the mid-window overlay keeping an auto-collapsed side reachable (SPEC-R14,
+  AC21); and the narrow-stack canvas floor as a dedicated, reachable axis — the canvas can't be
+  squeezed to zero, and its floor is a real scroll seam, not a clipped edge (SPEC-R15). The
+  docs-site chrome itself rides the family — down to the nav rail's group labels, which read the
+  fleet kicker typescale role rather than a bare font-size.
 - **`ui-agent-admin` — re-hosted and reworked.** Its chrome now composes the
   chat-shell/super-shell grammar (ADR-0154); its tab strips are the fleet `ui-tabs` control in the
   ADR-0144 `fill` posture; Settings/Context share one fold pattern (heading-row chevrons); summary
   controls ride `slot="summary"` (ADR-0158). Substance grew too: a provider-grouped model grid
   with a default-radio system, add-from-library capability packs (skills/workflows/resources/
   tools) with real tool execution in the live loop, Surface Options (Markdown · A2UI catalog ·
-  PRD-gated GenUI), and a much larger persona roster (games, hospitality/travel). The
-  long-standing page-freeze was root-caused and fixed — an unbounded synchronous client-turn
-  loop, now bounded and deferred. The chat surface itself is chromeless: A2UI render surfaces
-  carry no host background/padding/width-cap on the chat path, and agent turns de-bubble entirely
+  GenUI — the once-PRD-gated row now live: a fail-closed off-by-default toggle plus the
+  pattern-source picker), and a much larger persona roster (games, hospitality/travel). The
+  conversation composer now owns the provider and Gen-UI-mode pickers in-field (the site's
+  standalone provider-switcher retired), and the full-viewport standalone surface
+  (`agent-admin-app.html`) is a listed, discoverable site page — Kim's 2026-07-25 overturn of the
+  earlier deliberate opt-out — while staying shell-less, since its whole point is the production
+  surface, not a docs-wrapped preview. The long-standing page-freeze was root-caused and fixed —
+  an unbounded synchronous client-turn loop, now bounded and deferred. The chat surface itself is
+  chromeless: A2UI render surfaces carry no host background/padding/width-cap on the chat path,
+  and agent turns de-bubble entirely
   (sender label above, bare full-width content, streaming included) while user turns keep a
   compact bubble.
 - **A2UI layer (`@agent-ui/a2ui`)** — the zero-dep renderer/validator/default-catalog, structural
@@ -83,6 +93,18 @@ decision (dated line in §4).
   seam ADR-0138) — now with the live-turn lifecycle progress channel built into the transport
   meta-line (ADR-0146), produce-halt surfacing, in-persona self-correct feedback, and the dev
   live-agent proxy ported to a Cloudflare Worker (ADR-0152).
+- **GenUI surface — shipped end to end (B0–B2).** The ruled identity: free-form HTML/CSS/JS in a
+  sandboxed iframe — "contained, not forbidden" ([PRD](prd/genui-surface.prd.md) v0.4 ·
+  [SPEC](spec/genui-surface.spec.md) v0.3, both `proposed`, every fork ruled; D6 = the in-house
+  wire, MCP-Apps-shaped safety model, atomic HTML). `ui-sandbox-frame` (components) is the
+  fail-closed containment host — CSP · closed agent↔frame bridge · token bridge. B2 made the
+  path real: the canonical wire reader/writer at `@agent-ui/a2ui/agent` (`genui-line` — the
+  site's B1-era stub is now a thin re-export of it), `produce()` peeling genui lines ahead of
+  heal/validate with structural defects tallied as `GENUI_*` failure codes on the turn trace,
+  three curated pattern-source packs plus a degradation-safe prompt block (SPEC-R9), and
+  `ui-agent-admin` mounting GenUI surfaces inside its real turn loop on a parallel path beside
+  the A2UI client. The `gen-ui-live` site demo stays deliberately recorded-only. What's left is
+  out of the SPEC's own contract: B3, the judged pack-idiom eval (§4).
 - **A2A protocol layer (`@agent-ui/a2a`)** — pinned to spec v0.3.0, the tic-tac-toe
   isolation-proof arena, its own concepts corpus.
 - **`@agent-ui/router`** — the memory-first SPA router (ADR-0115).
@@ -111,15 +133,6 @@ decision (dated line in §4).
 
 ## 3 · Next — concrete, near-term
 
-- **GenUI surface — design gate CLOSED, B1 is the next buildable slice.** [`prd/genui-surface.prd.md`](prd/genui-surface.prd.md)
-  (v0.4, 2026-07-24) and [`spec/genui-surface.spec.md`](spec/genui-surface.spec.md) (v0.2,
-  2026-07-24) sit `proposed` with every fork ruled: the identity re-cut (free-form HTML/CSS/JS in a
-  sandboxed iframe; "contained, not forbidden"), D1/D3/D4, the token bridge, D7/D8/D9 (images/fonts
-  + a closed agent↔frame bridge · producer-layer exemplar packs · `ui-sandbox-frame` in
-  components), and — Kim's 2026-07-24 chat ruling — **D6** (the in-house wire, MCP-Apps-shaped
-  safety model, atomic HTML). The sibling `a2ui-live-agent.spec.md` (v0.8) carries the real,
-  applied SPEC-R5 narrowing for the new wire kind. Next: **B1** — the `ui-sandbox-frame` control,
-  producer packs, and the admin picker.
 - **The `ui-app-shell` removal horizon (ADR-0156).** Migration is DONE: the production
   consumer re-hosted, the two reconnect fixtures re-vehicled onto a direct re-parent harness (the
   `<ui-app-shell isolated>` relocation harness retired from both), and the teaching page retired —
@@ -132,7 +145,8 @@ decision (dated line in §4).
   further — components-package sheets, the remaining site sheets — is an open, per-sheet decision;
   the gate's own design makes each extension a one-line reviewed append, never automatic.
 - **Beyond that, the backlog is clear.** The one open item is the removal-gate issue named above —
-  parked on Kim's own ADR-0082/0083/0084 flips, which an agent cannot perform. Nothing else is
+  its build is in flight, and the ADR-0082/0083/0084 `superseded` flips at its heart remain Kim's
+  own to perform, which an agent cannot. Nothing else is
   outstanding; the next feature arc is Kim's call at the next intake. (The older proposed scope
   intakes — content, feed, and report families, the a2ui expert system — remain parked intakes,
   not scheduled work.)
@@ -143,6 +157,10 @@ decision (dated line in §4).
   here. If Linear becomes the standard elsewhere in the user's work, the open question is whether
   this repo follows (and how the ID-spine convention — ADR/SPEC/LLD citing an issue — survives a
   backend swap) — not a live fork today, just the thing that would reopen ADR-0145 if raised.
+- **GenUI B3 — the judged pack-idiom eval.** Out of the GenUI SPEC's contract by its own §6 cut:
+  PRD §8 m3 (judge-scored pack-idiom use) realized as a judged corpus-rubric shard plus its docs
+  page (PRD-G6) — a named manual live-model run, never part of the deterministic gates (SPEC-N3).
+  Revisit when the producer's output quality needs a measured floor.
 
 ---
 
@@ -169,3 +187,12 @@ decision (dated line in §4).
 - **2026-07-23** — **library emit / publish** (a §4 deferral since G8) resolved: the packages
   publish scoped as `@agent-ui-kit/*` to the live registry, proven by an install-from-registry
   consumer smoke in CI, and the docs site auto-deploys to `ui.nonoun.io` on push to main.
+- **2026-07-24** — **GenUI B1 shipped** (§3's named next slice at the last pass): `ui-sandbox-frame`,
+  the fail-closed GenUI containment host, landed in components with its doc + demo pages, followed
+  the same day by the recorded `gen-ui-live` chat demo.
+- **2026-07-25** — **GenUI B2 shipped**, closing the arc's buildable slices (B0–B2): the canonical
+  wire reader/writer at `@agent-ui/a2ui/agent`, `produce()`'s genui-line peel with `GENUI_*`
+  failure codes on the turn trace, the three pattern-source packs + degradation-safe prompt block
+  (SPEC-R9 — its prompt-loading parenthetical corrected by the SPEC's docs-only v0.3 amendment),
+  the admin Surface-Options GenUI row gone live, and the parallel mount path into agent-admin's
+  real turn loop. The GenUI entry retires from §3 into §2's current state; B3 stays deferred (§4).
