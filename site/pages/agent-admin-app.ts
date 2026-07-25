@@ -1,8 +1,22 @@
 // site/pages/agent-admin-app.ts — the STANDALONE ui-agent-admin surface (agent-admin-app.html): the full
-// live composition filling the viewport with NO docs container shell — no nav, no prose, no resize frame
-// (the gallery.ts ungrouped-entry precedent; agent-admin.ts remains the docs COMPOSITION GUIDE and owns
-// the teaching page). Deliberately does NOT import './_page.ts' (that IS the docs shell): the foundation
-// cascade is imported directly in the same [1]→[3b] order _page.ts documents.
+// live composition filling the viewport with NO docs container shell — no nav, no prose, no resize frame.
+// Deliberately does NOT import './_page.ts' (that IS the docs shell): the foundation cascade is imported
+// directly in the same [1]→[3b] order _page.ts documents. agent-admin.ts remains the docs COMPOSITION
+// GUIDE and owns the teaching page (an embedded, prose-wrapped demo); this page is the real thing.
+//
+// DISCOVERABLE, NOT DOCS-SHELLED (Kim's 2026-07-25 overturn of the 2026-07-19 standalone opt-out): this
+// page is now a real, listed destination — an entry in site-manifest.json/sitemap.json, an ungrouped NAV
+// link in _page.ts (alongside agent-admin.html), and a landing card in main.ts, the SAME
+// discoverability the a2ui-live.html/gen-ui-live.html standalone demos get. What did NOT change is the
+// shell posture above: registering a page in the site's nav/landing only makes it a normal link target
+// (a plain `<a href>`, a real MPA navigation) — it says nothing about what THIS page renders once you
+// land on it. Every other listed page still imports `_page.ts` (even the "full-bleed" ones,
+// `mountFullBleedPage`) and keeps at least the nav rail + context header/footer; this page is the one
+// deliberate exception, because its whole reason to exist is showing ui-agent-admin exactly as it would
+// ship in production, not a docs-wrapped preview of it (agent-admin.html already owns that job) — the
+// gallery.ts "ungrouped nav entry" precedent this file's header used to cite is about NAV grouping, not
+// about the shell; gallery.ts itself uses `mountPage` and keeps the full docs shell. Forcing `_page.ts`
+// onto this page would defeat the demo's own point, so it does not get one.
 import '@agent-ui/components/foundation-styles.css' // [1] foundation: tokens.css → dimensions.css (FIRST)
 import '@agent-ui/components/base-styles.css' // [1b] the DOCUMENT BASE layer: typeface/leading/ink/rendering (shell-less pages need this or they render in the UA serif)
 import '@agent-ui/components/component-styles.css' // [2] per-control CSS, after the foundation

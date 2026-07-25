@@ -98,6 +98,13 @@
     "section": "Guides"
   },
   {
+    "href": "./agent-admin-app.html",
+    "label": "Agent Admin App",
+    "description": "The full ui-agent-admin composition at real viewport scale, no docs-site chrome \u2014 the six-persona A2UI-showcase surface exactly as it would ship in production.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
     "href": "./layout-overview.html",
     "label": "Layout Primitives",
     "description": "The structural layout family \u2014 ui-row, ui-column, ui-list, ui-grid \u2014 sharing the UIContainerElement base and gap/align/justify props.",

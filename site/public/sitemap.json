@@ -579,6 +579,13 @@
       "section": "Guides"
     },
     {
+      "name": "Agent Admin App",
+      "url": "./agent-admin-app.html",
+      "description": "The full ui-agent-admin composition at real viewport scale, no docs-site chrome — the six-persona A2UI-showcase surface exactly as it would ship in production.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
       "name": "Layout Primitives",
       "url": "./layout-overview.html",
       "description": "The structural layout family — ui-row, ui-column, ui-list, ui-grid — sharing the UIContainerElement base and gap/align/justify props.",

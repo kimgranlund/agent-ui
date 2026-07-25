@@ -149,8 +149,9 @@ function unindexedPages(pages: readonly string[], sitemapUrls: ReadonlySet<strin
 describe('sitemap.json — every doc/manifest page resolves to an entry (minus the chrome allowlist)', () => {
   const ALLOWLIST = new Set<string>([
     'index.html',
-    'agent-admin-app.html', // app chrome (the standalone ui-agent-admin surface) — the sitemap's content
-    // entry for this composition is agent-admin.html, the docs guide (same reasoning as llms.test.ts)
+    // agent-admin-app.html left this allowlist with Kim's 2026-07-25 discoverability overturn: the page now
+    // carries a real manifest row + sitemap entry, so this gate must genuinely bite if it is ever delisted
+    // again (llms.test.ts's UNINDEXED row is a DIFFERENT judgment — content indexing, still deliberately out).
   ])
   const manifestRows = JSON.parse(read('site/lib/site-manifest.json')) as { href: string }[]
   const manifestHrefs = new Set(manifestRows.map((r) => r.href))

@@ -888,6 +888,22 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    // ui-agent-admin (@agent-ui/app, TKT-0039/ADR-0131) — the standalone full-app demo, an ungrouped
+    // site-level card (no `label:`), mirroring its ungrouped nav link in _page.ts (Kim's 2026-07-25
+    // overturn of the 2026-07-19 standalone opt-out). The docs GUIDE page (agent-admin.html) stays
+    // card-less here, as it always has (an embedded prose-column teaching page, not a landing highlight);
+    // this card is the "click through and see the real thing" entry, the a2ui-live.html/gen-ui-live.html
+    // precedent.
+    cards: [
+      {
+        href: './agent-admin-app.html',
+        title: 'Agent Admin App',
+        blurb:
+          'The full ui-agent-admin composition at real viewport scale, no docs-site chrome — the six-persona A2UI-showcase surface exactly as it would ship in production.',
+      },
+    ],
+  },
+  {
     cards: [
       {
         href: './a2ui-canvas.html',
