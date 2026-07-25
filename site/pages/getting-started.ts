@@ -49,7 +49,7 @@ const PACKAGES: readonly PackageRow[] = [
   { name: '@agent-ui/icons', summary: 'The swappable icon-pack adapter (registry · resolver · declarative <ui-icon> consumer) — Phosphor vendored as the default pack, zero runtime dependency.' },
   { name: '@agent-ui/a2ui', summary: 'The A2UI (Generative UI) layer — a zero-dep renderer for Google’s A2UI protocol over the default catalog. Depends on @agent-ui/components.' },
   { name: '@agent-ui/a2a', summary: 'The A2A (Agent2Agent) protocol layer — wire types, validation, and the tic-tac-toe isolation-proof arena. Zero dependencies.' },
-  { name: '@agent-ui/app', summary: 'App-surface compositions — ui-app-shell, the application frame. Depends on components + a2ui + shared.' },
+  { name: '@agent-ui/app', summary: 'App-surface compositions — ui-super-shell, the application frame. Depends on components + a2ui + shared.' },
   { name: '@agent-ui/router', summary: 'A memory-first SPA router with opt-in URL reflection — createRouter/connectUrl + ui-router-outlet/ui-router-link. Depends only on components + shared; never imported by a2ui or app.' },
 ]
 {
