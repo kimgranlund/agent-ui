@@ -66,6 +66,40 @@ export const PROVIDER_OPTIONS: readonly ProviderOption[] = Object.entries(CONFIG
 export const DEFAULT_PROVIDER: string = CONFIG.defaultProvider
 export const DEFAULT_MODEL: string = CONFIG.providers[CONFIG.defaultProvider]!.defaultModel
 
+/** GH #(model-roster) — a flat, provider-grouped reshape of `PROVIDER_OPTIONS`' own per-provider `models`
+ *  arrays into ONE list a single Models picker can render (Kim's agent-admin Surface-Options-screenshot
+ *  ask, gen-ui-live.ts's Model-roster upgrade): a disabled, non-committable HEADER entry per provider
+ *  (id `__group-<providerId>` — never a real model id, so it can never collide with one) followed
+ *  immediately by that provider's own model rows — the "provider header, then its models beneath" visual
+ *  grouping, built from data this module already owns (no new source; this repo's derive-don't-restate
+ *  law). A provider not yet `implemented` (its OWN `PROVIDER_OPTIONS` entry already `disabled` + its
+ *  `label` already suffixed " — coming soon") disables its header AND every one of its model rows too —
+ *  none of them is genuinely selectable yet, the SAME "visible, never committable" precedent
+ *  `PROVIDER_OPTIONS` already established for a whole provider, now applied per model row instead of
+ *  requiring a SECOND Provider picker to hide them. `ui-menu` has no native section-header primitive and
+ *  `PickerOption` carries no `group` field (conversation-composer.ts/composer-options.ts) — a disabled
+ *  header row is the documented, zero-composer-code-change way to express one (the same "coming soon"
+ *  disabled-item mechanism, GH #257). */
+export function groupedModelOptions(providers: readonly ProviderOption[] = PROVIDER_OPTIONS): PickerOption[] {
+  const out: PickerOption[] = []
+  for (const provider of providers) {
+    out.push({ id: `__group-${provider.id}`, label: provider.label, disabled: true })
+    for (const model of provider.models) out.push({ id: model.id, label: model.label, disabled: provider.disabled })
+  }
+  return out
+}
+
+/** The provider a given model id belongs to (a model belongs to exactly one provider — `ProviderOption`'s
+ *  own invariant, composer-options.ts) — `groupedModelOptions`'s companion lookup: a flat grouped Models
+ *  picker carries no separate Provider axis of its own, so when it commits a model id, this recovers
+ *  WHICH provider it came from — the fact the caller still needs to keep `StoredSelection.provider`
+ *  truthful for the wire body, without standing up a second picker to ask for it. `undefined` only for a
+ *  `__group-*` header id (never committable, so a real `onModelChange` never actually receives one) or a
+ *  stale/unknown id — the caller falls back to the current selection's own provider either way. */
+export function providerIdForModel(modelId: string, providers: readonly ProviderOption[] = PROVIDER_OPTIONS): string | undefined {
+  return providers.find((p) => p.models.some((m) => m.id === modelId))?.id
+}
+
 // ADR-0090 §4/LLD-C12 — the mode selector's demo-facing labels (promoted from provider-switcher.ts
 // verbatim); the VALUE list is derived from `GEN_UI_MODES`, the single source of truth.
 const MODE_LABELS: Record<GenUiMode, string> = {
