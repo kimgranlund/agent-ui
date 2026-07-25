@@ -3,13 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Agent Admin · agent-ui</title>
+    <title>agent-ui · Agent Admin App</title>
   </head>
   <body>
     <!-- The STANDALONE ui-agent-admin surface — the full composition with NO docs container shell (no nav,
-         no prose, no resize frame): a full-viewport app page (the gallery.html ungrouped-entry precedent).
-         MPA entry auto-discovered by the vite site/**/*.html glob → dist/agent-admin-app.html. The docs
-         COMPOSITION GUIDE (agent-admin.html) remains the teaching page; this is the surface itself. -->
+         no prose, no resize frame): a full-viewport app page. MPA entry auto-discovered by the vite
+         site/**/*.html glob → dist/agent-admin-app.html. The docs COMPOSITION GUIDE (agent-admin.html)
+         remains the teaching page; this is the surface itself. DISCOVERABLE since Kim's 2026-07-25
+         overturn of the 2026-07-19 standalone opt-out: listed in site-manifest.json/sitemap.json, the
+         _page.ts NAV, and a main.ts landing card — but still rendered shell-less on load (see
+         agent-admin-app.ts's own header for the full rationale). -->
     <div id="app"></div>
     <script type="module" src="./pages/agent-admin-app.ts"></script>
   </body>
