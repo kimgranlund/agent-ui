@@ -1,6 +1,13 @@
 # SPEC — GenUI surface (sandboxed free-form generative UI): wire · frame · bridge · producer
 
-> Status: proposed · v0.3 · 2026-07-25 · Layer: SPEC (execution contract)
+> Status: proposed · v0.4 · 2026-07-25 · Layer: SPEC (execution contract)
+> **v0.4 amendment (docs-only, §10 below):** `GenuiSurfaceConfig` (SPEC-R10) gains a new, additive
+> `exclusive?: boolean` field — the per-turn "this caller has no A2UI catalog renderer at all" signal a
+> real live defect (`gen-ui-live.ts`'s render pane staying empty despite a genuine agent note, on a real
+> "make a card game" prompt) traced back to; independent review: SHIP. §10 documents the field, its
+> `genuiBlock`/`validateGenuiSurface` wiring, and the degradation law it follows (byte-identical when
+> absent/false — every existing coexistence caller, e.g. agent-admin, unaffected). Append-only: no other
+> clause in this document changes.
 > **v0.3 amendment (docs-only, §9 below):** SPEC-R9's prompt-loading parenthetical is corrected to
 > match the ALREADY-ESTABLISHED ADR-0135 mechanics (`process.cwd()`-relative `readFileSync`, not
 > `import.meta.url`) — an independent B2-build review verified the literal parenthetical would have
@@ -484,3 +491,41 @@ ADR-0135 mechanics: the shared `frontmatter.ts` parser and `readFileSync` resolv
 NOT `readFileSync(new URL(…, import.meta.url))` — TKT-0044 measured that path breaking under `npm run
 dev`'s Vite-bundled import graph) at module load (Node-only, never a browser bundle)." Every other word
 of SPEC-R9, and every acceptance criterion under it, is UNCHANGED.
+
+## 10 · Amendment (v0.4, SPEC-R10) — `GenuiSurfaceConfig.exclusive`, the genui-only-consumer signal
+
+Grounding: a live defect report (`gen-ui-live.ts`'s render pane staying empty on a real "make a card
+game" prompt, despite genuine agent activity and a genuine agent note in the chat pane) was traced —
+statically; no live provider key was available in the build environment to reproduce interactively, but
+the mechanism is proven deterministically with a stub provider, no live model
+(`packages/agent-ui/a2ui/src/live-agent/genui-exclusive.test.ts`) — to a real prompt-composition gap
+SPEC-R10 didn't cover: `genui-teaching.md`'s own "A2UI stays your default... reach for genui only when
+the catalog genuinely cannot express the shape" framing is correct ONLY for a COEXISTENCE consumer that
+can render both modalities (agent-admin's Surface Options, this SPEC's originally-scoped consumer, PRD
+§6). `gen-ui-live.ts` is a GenUI-ONLY consumer (no A2UI catalog renderer at all — its own file banner:
+"deliberately NOT an A2UI page") that this SPEC never distinguished from the coexistence case. A model
+following the base framing for a catalog-expressible request (e.g. "make a card game" as buttons/text/
+score readouts) ships real, VALID A2UI JSONL — which such a consumer's `readGenuiLine`-then-drop loop
+(SPEC-R1's own whole-line rejection) silently discards, never rendering, never erroring: a real note
+shows in chat, the render pane gets nothing. Independent review verified the fix below: SHIP.
+
+**SPEC-R10 (amended clause, additive — supersedes nothing):** `GenuiSurfaceConfig` (the per-turn signal
+SPEC-R10 names) gains one new optional field, `exclusive?: boolean` (`genui-surface-config.ts`), naming a
+per-turn CONSUMER FACT rather than a stylistic preference: `true` means this turn's caller has NO A2UI
+catalog rendering path at all. When set, `genuiBlock` (`system-prompt.ts`) composes ONE additional
+override paragraph — AFTER the base wire/sandbox-reality teaching (a), (b) and BEFORE a picked source's
+body (c) — stating plainly that any A2UI JSONL emitted this turn will validate but never be shown to
+this caller, and that the ENTIRE response must therefore route through genui (or a note-only reply, if
+nothing needs to render). `validateGenuiSurface` (`tools/agent/chat-validation.ts`, shared by both HTTP
+transports) validates the field at the trust boundary with the SAME per-field-degrade posture
+`sourceBody` already uses: a non-boolean value drops just that field, never the whole `genui` object.
+**Degradation law, unchanged in kind:** `exclusive` absent or `false` composes ZERO additional bytes —
+byte-identical to the pre-`exclusive` prompt (every existing coexistence caller, e.g. agent-admin, is
+unaffected). `gen-ui-live.ts` is the one call site that sets it.
+- **AC2** *Given* the prompt composer with `genui.enabled:true, exclusive:true`, *then* the composed
+  block additionally carries the override paragraph naming the "no A2UI renderer" fact, positioned after
+  the base teaching and before any picked source's body; *given* `exclusive` absent or `false`, *then*
+  the composed block is byte-identical to AC1's own enabled-with-no-source case — a standing
+  grammar-style test, `npm test` green, no live model
+  (`packages/agent-ui/a2ui/src/live-agent/genui-exclusive.test.ts`). Every other word of SPEC-R10, and
+  AC1 itself, is UNCHANGED.
