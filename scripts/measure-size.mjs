@@ -23,7 +23,7 @@
 // hide inside the dominant foundation figure if solo were gated).
 //
 // A fourth leg — `@agent-ui/app` (LLD-C8, SPEC-R7 AC4): a package ABOVE components on the DAG, so its cost
-// to a consumer is what `ui-app-shell` adds ON TOP OF the components foundation a consumer already pays for
+// to a consumer is what the app-tier barrel adds ON TOP OF the components foundation a consumer already pays for
 // (the first target above), not its solo absolute (which necessarily also carries that foundation). Same
 // marginal semantics as T5, one level up: `marginal = gz(bundle(app .)) − gz(bundle(components .))`.
 
@@ -193,14 +193,17 @@ for (const [name, path] of CONTROL_ENTRIES) {
   )
 }
 
-// ── @agent-ui/app (LLD-C8, SPEC-R7 AC4) — the whole app-tier barrel (ui-app-shell + ui-master-detail,
-// LLD-C9/C16), one package UP the DAG from components. `app-shell.ts` is the fleet's first `?url`/`?raw`
-// consumer (the isolation-mode fleet-CSS
-// injection, LLD-C5): a bare `rolldown()` call can't load those Vite query-suffixed specifiers (Vite's own
-// asset pipeline resolves them; raw Rolldown has no such plugin), so this section carries a small stub
-// plugin — `?raw` inlines the real file's text (a real byte cost: this IS the CSS the shell injects at
-// runtime); `?url` returns a short placeholder path (the real Vite build emits a hashed asset URL of similar
-// length — this approximates the byte contribution, not the runtime value, which the script has no need of).
+// ── @agent-ui/app (LLD-C8, SPEC-R7 AC4) — the whole app-tier barrel (ui-super-shell + ui-master-detail,
+// LLD-C9/C16 · ADR-0151), one package UP the DAG from components.
+//
+// The stub plugin below exists for Vite query-suffixed specifiers (`?url`/`?raw`): a bare `rolldown()` call
+// can't load them (Vite's own asset pipeline resolves them; raw Rolldown has no such plugin), so `?raw`
+// inlines the real file's text (a real byte cost) and `?url` returns a short placeholder path (the real Vite
+// build emits a hashed asset URL of similar length — this approximates the byte contribution, not the runtime
+// value, which the script has no need of). Its original consumer was the removed `app-shell.ts`'s
+// isolation-mode fleet-CSS injection (ADR-0156); NO file under `packages/agent-ui/app/` carries such a
+// specifier today, so the plugin is currently unexercised — retained, not removed, because removing live
+// build config is a separate deliberate change (GH #278).
 const APP_QUERY_RE = /^(.*)\?(url|raw)$/
 const appCssQuerySuffixPlugin = {
   name: 'app-css-query-suffix-stub',
@@ -299,7 +302,7 @@ const appMarginal = appGz - foundationGz
 const appStatus = appMarginal <= APP_MARGINAL_BUDGET ? 'within' : 'OVER'
 const appOver = appMarginal > APP_MARGINAL_BUDGET
 console.log(
-  `\n@agent-ui/app . (app-shell + master-detail + settings + surface-host + conversation + nav-rail): marginal ${appMarginal} B gz — ${appStatus} budget (${APP_MARGINAL_BUDGET} B gz)   solo ${appGz} B gz (${appMin} B min, informational — includes the ${foundationGz} B gz components foundation)`,
+  `\n@agent-ui/app . (super-shell + master-detail + settings + surface-host + conversation + nav-rail): marginal ${appMarginal} B gz — ${appStatus} budget (${APP_MARGINAL_BUDGET} B gz)   solo ${appGz} B gz (${appMin} B min, informational — includes the ${foundationGz} B gz components foundation)`,
 )
 if (appLazyGz > 0) {
   console.log(

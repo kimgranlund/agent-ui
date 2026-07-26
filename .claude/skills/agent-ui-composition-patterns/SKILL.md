@@ -30,7 +30,7 @@ the owner; deviating from a row on a shared surface is a fork, not a local choic
 | Sizing a region's controls together | the `[scale]` tier attribute (ui-sm…content-lg) and `[density]` (compact/comfortable/spacious) cascade over subtrees — set them on containers, not per-control | ADR-0032/0038 (the law is [[agent-ui-component-standards]]'s territory) · `site/pages/sizing.ts` |
 | Scheme-divergence expectations | some color roles are deliberately scheme-INVARIANT (`--md-sys-color-primary` identical both branches) — check the role's two `light-dark()` branches before expecting a dark/light difference | `@agent-ui/shared` tokens.css · `site/lib/theme-provider-build.browser.test.ts` (its probe comments name the invariant) |
 | Navigation between views | memory-first routing: `createRouter`/`connectUrl` (headless core) + `ui-router-outlet`/`ui-router-link` on their own subpaths — URL reflection is opt-in; a2ui surfaces never see the router (catalog-invisible by construction) | ADR-0115 · `packages/agent-ui/router/` |
-| Regions of an application shell | `ui-app-shell` + `ui-app-shell-region` — per-instance isolation, no global singletons | ADR-0082..0084 · `packages/agent-ui/app/` |
+| Regions of an application shell | ONE `ui-super-shell`, no region sub-element — children carry `data-slot="header\|global-nav\|nav-pane\|section-nav\|content\|options-section\|options-pane\|global-options\|footer"`; per-side `collapsed-*`/`narrow-*`/`collapse-band` own the responsive story. Reach for the `ui-workspace-shell`/`ui-chat-shell` presets when the archetype fits | ADR-0151/0154/0155 (ADR-0156 removed the older `ui-app-shell`) · `packages/agent-ui/app/` |
 
 ## The one law under all of it
 

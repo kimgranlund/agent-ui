@@ -892,8 +892,9 @@ function buildTabs(tabs: readonly NavLink[]): HTMLElement {
   return nav
 }
 
-// buildCta — the page-header primary action: a styled link rendered to read as a button (CSS-only; no ui-*
-// control yet). Optional — only the pages that pass a `cta` get one.
+// buildCta — the page-header primary action: a styled link rendered to read as a button. Deliberately a
+// plain `<a>` styled by `.page-cta` in `_page.css`, NOT a `ui-button` — the CTA must stay a real navigation
+// anchor (that file's own `.page-cta` comment is the rationale). Optional — only pages passing a `cta` get one.
 function buildCta(cta: PageCta): HTMLElement {
   const anchor = document.createElement('a')
   anchor.className = 'page-cta'

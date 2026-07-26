@@ -154,9 +154,13 @@ export default defineConfig({
       // `sandbox-frame` so its `document.createElement('ui-sandbox-frame')` (the genui parallel mount
       // path, `mountGenui`) resolves to the REAL class. Same alias-ordering necessity as `controls/tabs`.
       '@agent-ui/components/controls/sandbox-frame': r('./packages/agent-ui/components/src/controls/sandbox-frame/sandbox-frame.ts'),
-      // EXACT (not prefix) matches, `?url`-suffixed: `@agent-ui/app`'s isolated-shell connect-flow
-      // (app-shell.ts, LLD-C5/ADR-0082) resolves these two package CSS assets to a real runtime URL via
-      // Vite's `?url` suffix, to inject as `<link>` hrefs INSIDE a shadow root. Vite's aliasing is FIRST-
+      // EXACT (not prefix) matches, `?url`-suffixed. ORIGINAL consumer: `@agent-ui/app`'s isolated-shell
+      // connect-flow (`app-shell.ts`, LLD-C5/ADR-0082) resolved these two package CSS assets to a real
+      // runtime URL via Vite's `?url` suffix, to inject as `<link>` hrefs INSIDE a shadow root. That file was
+      // REMOVED with `ui-app-shell` (ADR-0156), and no source in the repo carries a `?url` specifier for
+      // either asset today — so this `?url` PAIR is currently unexercised (GH #278 diagnosed it; retained
+      // rather than removed, because deleting live resolver config is a separate deliberate change). The
+      // PLAIN twins below are NOT dead — `site/pages/_page.ts` imports both. Vite's aliasing is FIRST-
       // MATCH-WINS in array order, and a plain-string alias matches on a whole path segment (`importee ===
       // find || importee.startsWith(find + '/')`) — `@agent-ui/components/foundation-styles.css?url` DOES
       // start with the broad `@agent-ui/components` alias below, so without these two exact entries placed

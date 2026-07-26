@@ -1,8 +1,10 @@
 /* super-shell.css — PAGE-LOCAL demo chrome for the ui-super-shell composition guide (M5, GH #83). It
  * styles the DEMO CELLS' content (labels/notes) + the resizable frame + the prose scaffold — it never
  * restyles a ui-* control's internals. Every colour is a --md-sys-color-* role, so the demos track
- * light/dark. The app-shell.ts doc page is this file's own precedent (class prefix `ss-` here,
- * `as-` there — no collision when both pages' CSS load on the same site build). */
+ * light/dark. Every doc page's demo chrome takes its OWN class prefix (`ss-` here) so no two collide when
+ * all pages' CSS loads on the same site build — `master-detail.css` (`md-`) and `chat-shell.css` (`cs-`)
+ * follow this page in turn. (The convention was inherited from the retired app-shell.ts doc page's `as-`
+ * prefix, which retired with that page — ADR-0156.) */
 
 /* ── prose scaffold ─────────────────────────────────────────────────────────────────────────────────────── */
 .ss-prose {

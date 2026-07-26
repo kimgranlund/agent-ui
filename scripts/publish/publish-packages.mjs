@@ -25,14 +25,20 @@
 //   --dry-run   passes --dry-run to `npm publish` (packs + validates, never uploads) — the safety-net path
 //               for the workflow's manual workflow_dispatch trigger and for local testing.
 //
-// CONSUMER-PROFILE — a deliberate, Kim-ratified decision (not a silent default): `agent-ui-app`'s
-// app-shell.ts uses Vite-only import-query specifiers — `?url` (x2) and `?raw` (x1), e.g.
-// `import ISOLATION_GRID_CSS from './app-shell-isolation.css?raw'`. tsc passes these through VERBATIM (it
-// doesn't understand the query suffix), so the compiled dist/ output only resolves under a Vite/Rolldown-
-// family bundler — plain Node ESM, webpack, and esbuild consumers will fail to import agent-ui-app's root
-// barrel. Confined to exactly this one file (checked repo-wide). Accepted as-is: agent-ui-app's real
-// consumer profile is Vite-family bundlers, not "any npm consumer" — reworking these 3 imports to a
-// portable form is a real future option, not a defect to fix here.
+// CONSUMER-PROFILE — a deliberate, Kim-ratified decision (not a silent default): `agent-ui-app` is
+// documented (see that package's own README) as targeting Vite/Rolldown-family bundlers only. The MECHANISM
+// that forced it was `app-shell.ts`'s Vite-only import-query specifiers (`?url` x2, `?raw` x1, e.g.
+// `import ISOLATION_GRID_CSS from './app-shell-isolation.css?raw'`): tsc passes those through VERBATIM (it
+// doesn't understand the query suffix), so the compiled dist/ output only resolved under a Vite/Rolldown-
+// family bundler — plain Node ESM, webpack, and esbuild consumers failed on agent-ui-app's root barrel.
+//
+// STATUS (GH #278, after ADR-0156 removed `ui-app-shell`): that file is gone, and a repo-wide sweep finds NO
+// `?url`/`?raw` import-query specifier in any publishable package source — the only remaining uses are in
+// non-published test files (`app/src/layering.test.ts`'s `import.meta.glob`, various `*.test.ts` fixtures)
+// and in `site/`. The stated Vite-family constraint is therefore no longer forced by this mechanism. It is
+// left AS DOCUMENTED on purpose: relaxing a published package's consumer profile is a deliberate,
+// verify-with-a-real-install decision (GH #71's install-from-registry smoke is the gate), not a side effect
+// of a comment sweep. Re-decide it deliberately, then update this header and `app/README.md` together.
 
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -64,7 +70,7 @@ const PACKAGE_KEYWORDS = {
   router: ['router', 'spa'],
   code: ['syntax-highlighting', 'markdown', 'code-editor', 'codemirror'],
   a2ui: ['a2ui', 'generative-ui', 'agents', 'renderer'],
-  app: ['app-shell', 'chat', 'agent-admin'],
+  app: ['super-shell', 'chat', 'agent-admin'],
 }
 const HOMEPAGE = 'https://github.com/kimgranlund/agent-ui#readme'
 const BUGS_URL = 'https://github.com/kimgranlund/agent-ui/issues'
