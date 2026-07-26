@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted |
+> | **Status** | superseded |
 > | **Date** | 2026-07-06 |
 > | **Proposed by** | planner — the M1 a2ui-live dogfood (LLD-C9) surfaced the composer-vanish; LLD §7.5 reserved this revisit |
 > | **Ratified by** | Kim — 2026-07-06 |

@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted |
+> | **Status** | superseded |
 > | **Date** | 2026-07-05 |
 > | **Proposed by** | planner — the M1 app-shell LLD (SPEC-R6 isolation), after the doc-review's F1/F2/F3 corrections to the mechanism |
 > | **Ratified by** | Kim — 2026-07-05 |
