@@ -8,12 +8,12 @@
 // page module imports `_page.ts` as its first statement, ES depth-first evaluation runs these three before any
 // other control-touching import in the page — so the cascade order holds for the whole site.
 //
-// SHELL NOTE — a CSS-only app shell (the outer context frame + the per-page sticky header/footer is
-// `_page.css` grid + sticky and the structure below). The LEFT NAV RAIL is no longer hand-rolled: it is now
-// a real `ui-nav-rail` (ADR-0130, the mode-1 consumer of the shared nav-rail family), fed from
-// `sitemap.json` and hidden/overlaid at narrow by the shell itself (GH #170/ADR-0155 — no rail-owned
-// `collapse="menu"` dropdown here). The remaining top-bar / footer / CTA are still CSS-only placeholders an
-// app-shell component family will own later, the same way the pages already dogfood ui-button / ui-text-field.
+// SHELL NOTE — the outer frame is a real `ui-super-shell` (M5/GH #84, `buildThemedShell` below); the
+// per-page sticky header/footer stays `_page.css` grid + sticky and the structure below. The LEFT NAV RAIL
+// is no longer hand-rolled: it is now a real `ui-nav-rail` (ADR-0130, the mode-1 consumer of the shared
+// nav-rail family), fed from `sitemap.json` and hidden/overlaid at narrow by the shell itself
+// (GH #170/ADR-0155 — no rail-owned `collapse="menu"` dropdown here). The top-bar / footer CONTENT stays
+// site-built chrome slotted into that frame, the same way the pages already dogfood ui-button / ui-text-field.
 import '@agent-ui/components/foundation-styles.css' // [1] foundation: tokens.css -> dimensions.css (FIRST)
 import '@agent-ui/components/component-styles.css' // [2] per-control CSS, after the foundation
 import '@agent-ui/components/components' // [3] self-defining ui-* controls (registers ui-button on import)
@@ -646,8 +646,8 @@ function buildNav(): HTMLElement {
 }
 
 // ── the app chrome frame (right column, rows 1 & 3) ──────────────────────────────────────────────────────
-// The non-scrolling top-bar + footer that bracket the page scroll region. CSS-only placeholders today (an
-// app-shell component family will own these later). Their CONTENT defaults are chosen here, not per page.
+// The non-scrolling top-bar + footer that bracket the page scroll region — site-built chrome slotted into
+// the `ui-super-shell` frame (`buildThemedShell`). Their CONTENT defaults are chosen here, not per page.
 
 // SCHEME_CYCLE — the compact toggle's three-state ring (ADR-0117's unset='' IS "Auto": it tracks the OS/an
 // ancestor, never re-mapped to a literal 'light'). Order chosen so a first click from the untouched default
@@ -1073,7 +1073,8 @@ function mountCommandPaletteOnce(): void {
 }
 
 // buildThemedShell — TKT-0088/ADR-0141 cl.1/5: the shell's root IS the site-wide `ui-theme-provider` (a
-// tag swap from the old plain `<div class="app-shell">` — `.app-shell`'s own CSS is entirely class-keyed,
+// tag swap from the old plain `<div class="app-shell">` — `.app-shell` is the SITE's own chrome class,
+// unrelated to the removed `ui-app-shell` element (ADR-0156), and its CSS is entirely class-keyed,
 // never tag-keyed, so nothing else moves). Applies the PERSISTED scheme/theme synchronously at creation,
 // before the shell ever paints, so a reload never flashes the default before JS catches up — `applyTheme`
 // for a non-default persisted choice is genuinely async (its pack must load), an accepted one-time cost

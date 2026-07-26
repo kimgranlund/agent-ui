@@ -5,8 +5,9 @@
 // schema-driven panels generated on top (LLD-C13/C14, `generate.ts`).
 //
 // Composition mirrors `ui-master-detail`'s own shape (master-detail.ts): a ONE-TIME `#compose()` (field-
-// guarded — idempotent across a relocation-induced reconnect, e.g. an ancestor `ui-app-shell` opting
-// into `isolated`) builds ONLY the rail|panel SHELL (one composed `ui-master-detail` + the empty `<nav>`/
+// guarded — idempotent across a relocation-induced reconnect, e.g. a host re-parenting the element; the
+// direct re-parent harness in settings.browser.test.ts proves it, ADR-0156 clause 4 having retired the
+// old `<ui-app-shell isolated>` relocation vehicle) builds ONLY the rail|panel SHELL (one composed `ui-master-detail` + the empty `<nav>`/
 // panel mount points). The schema-driven CONTENT is reactive: a `connected()` effect tracks `schema`/
 // `store` and (re)builds the rail buttons + every section's generated form whenever either changes BY
 // REFERENCE — a real reassignment (e.g. an async-loaded schema landing after mount) rebuilds; a bare
