@@ -74,6 +74,34 @@ const waitFor = async (predicate: () => boolean, timeoutMs = 4000): Promise<void
   }
 }
 
+// GH #276 — one scheme flip legitimately produces SEVERAL `host-context-changed` round trips, and the
+// FIRST one to arrive after the click can still carry the PRE-flip scheme. ui-theme-provider writes its
+// inline `color-scheme` inside a kernel effect, which flushes on a MICROTASK (reactive/scheduler.ts's
+// `queueMicrotask(flush)`); a MutationObserver notify is also a microtask, so any unrelated style/class
+// mutation in the same task as the scheme write gets its notify queued FIRST — `#syncTheme`
+// (sandbox-frame.ts) then reads `getComputedStyle(host).colorScheme` while the new value is still
+// pending and posts a truthful-but-pre-flip snapshot, immediately followed by the correct one once the
+// effect lands (measured: a `light` post arriving AFTER the Dark click, then three `dark` posts). The
+// bridge always CONVERGES — the final posted context matched the host's computed scheme on every
+// measured flip, both engines — so the assertable SPEC-R6 contract is the SETTLED value, never whichever
+// report happened to be in the map when a presence-only `waitFor` returned (that sampled the pre-flip
+// snapshot ~14% of the time, and `colorDark === colorLight` failed).
+async function settledThemeColor(actions: Map<string, GenuiActionDetail>, timeoutMs = 4000): Promise<string | null> {
+  const read = (): string | null =>
+    actions.has('theme-color') ? (actions.get('theme-color')!.payload as { color: string | null }).color : null
+  const start = Date.now()
+  let last: string | null = null
+  let stableFor = 0
+  while (stableFor < 3) {
+    if (Date.now() - start > timeoutMs) throw new Error('settledThemeColor timed out')
+    await new Promise((r) => setTimeout(r, 20))
+    const current = read()
+    stableFor = current !== null && current === last ? stableFor + 1 : 0
+    last = current
+  }
+  return last
+}
+
 interface GenuiActionDetail {
   surfaceId: string
   name: string
@@ -185,14 +213,13 @@ describe('gen-ui-live — the live theme bridge (SPEC-R6): the SITE\'S OWN real 
 
     actions.delete('theme-color')
     schemeBtn.click() // -> Light
-    await waitFor(() => actions.has('theme-color'))
-    const colorLight = (actions.get('theme-color')!.payload as { color: string | null }).color
+    const colorLight = await settledThemeColor(actions)
 
     actions.delete('theme-color')
     schemeBtn.click() // -> Dark
-    await waitFor(() => actions.has('theme-color'))
-    const colorDark = (actions.get('theme-color')!.payload as { color: string | null }).color
+    const colorDark = await settledThemeColor(actions)
 
+    expect(colorLight).not.toBeNull()
     expect(colorDark).not.toBe(colorLight)
   })
 })
