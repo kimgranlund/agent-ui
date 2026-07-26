@@ -27,7 +27,7 @@ Load the map skills as you go: [[agent-ui-component-standards]] (law),
 
 ## Procedure
 
-1. **Extract intent** (intent-extract where installed; its discipline inline otherwise).
+1. **Extract intent** (find-the-ask where installed; its discipline inline otherwise).
    Root goal vs literal ask; ONE batched clarifying round max. Name the component's *job* in
    one sentence — everything downstream keys off it. **Combined intakes are a valid shape**
    (two tickets whose components may be one family — the timeline/status-stream precedent):
@@ -98,7 +98,7 @@ Load the map skills as you go: [[agent-ui-component-standards]] (law),
    (only Kim flips a status, by explicit naming). Number = next free per
    `.claude/docs/adr/README.md`; add its README row.
 
-7. **Decompose + test plan.** A decomposition (system-decompose where installed;
+7. **Decompose + test plan.** A decomposition (break-down-problem where installed;
    `coverage_check.py --strict` clean) whose leaf accept-criteria cite the
    [[agent-ui-component-testing]] bar — including a built-output leg whenever the design
    depends on production CSS behavior (the TKT-0002 class). The build sequence must be

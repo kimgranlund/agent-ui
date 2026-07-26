@@ -8,7 +8,7 @@ description: >-
   compose→validate→self-correct loop (SPEC-R6). Use PROACTIVELY for any "compose a payload for X",
   "author the A2UI stream for this surface", "extend this Generative-UI payload", or "the renderer
   won't paint this payload" task. It composes payloads; it does NOT write code — NOT ui-* control
-  source or CSS (component-author), NOT @agent-ui/a2ui package / renderer / validator / catalog
+  source or CSS (make-component), NOT @agent-ui/a2ui package / renderer / validator / catalog
   source (a2ui-builder), NOT corpus curation — importing / judging / rescoring seeds
   (a2ui-corpus-curate), NOT docs-site pages (docs-author). It composes; the a2ui-reviewer critic
   grades (generator ≠ critic, SPEC-R8).

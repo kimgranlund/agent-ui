@@ -43,7 +43,7 @@ The two axes gate **independently** — the defect-quadrant rule:
 - **Every [gate] dimension is hard:** any [gate] dimension (C3, C4, C6, C7, C8, C9, C10) below 4 blocks
   promotion regardless of the [review] scores — a mechanically-checkable fact that fails is not negotiable.
 
-Shippable = both axes clear ≥ 4 **and** zero [gate] fails. The `component-reviewer` agent scores against this
+Shippable = both axes clear ≥ 4 **and** zero [gate] fails. The `component-checker` agent scores against this
 rubric and returns the per-axis verdict (the adversarial half of the gate; the probes / cross-engine smoke /
 contract trip-wire are the deterministic half).
 

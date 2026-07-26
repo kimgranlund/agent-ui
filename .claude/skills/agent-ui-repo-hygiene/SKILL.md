@@ -2,7 +2,7 @@
 name: agent-ui-repo-hygiene
 description: >-
   The judgment layer for keeping THIS repo's context substrate true — distilled from the 2026-07-12
-  repo-alignment campaign: how to read status-vs-reality (the tree-wins convention makes shipped-but-
+  clean-repo campaign: how to read status-vs-reality (the tree-wins convention makes shipped-but-
   proposed NORMAL), when a suspicion needs consumer evidence before verdicting, what historical records
   may never be rewritten, how relocations are verified (sweep-gates beat replacement lists), the
   accepted-divergence pattern for upstream-tool disagreements, and the campaign's own two failure

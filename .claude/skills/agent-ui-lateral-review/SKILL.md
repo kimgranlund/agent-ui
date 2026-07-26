@@ -8,7 +8,7 @@ description: >-
   Use for "review all components' X consistency", "sweep the fleet for pattern drift",
   "re-audit axis Y after a law change", or after any multi-component build wave. Produces a
   findings table + routed fixes/tickets/law-amendments, never a blanket patch. NOT for one
-  component's definition-of-done (the component-reviewer + rubrics/component.md own that,
+  component's definition-of-done (the component-checker + rubrics/component.md own that,
   vertically) and NOT for designing a new component (agent-ui-component-design).
 user-invocable: true
 disable-model-invocation: false

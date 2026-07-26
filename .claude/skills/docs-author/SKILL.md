@@ -16,7 +16,7 @@ user-invocable: true
 
 The one procedure for authoring a page of the agent-ui docs **site** (`site/`), so a growing component
 fleet doesn't grow a hand-maintained doc set that rots out of sync with it. Like
-[[component-author]], it is **anti-drift by construction**: the right page derives from a canonical
+[[make-component]], it is **anti-drift by construction**: the right page derives from a canonical
 source and is backed by a deterministic check, so it cannot silently diverge from the thing it
 documents. This skill is the *method*; the per-type depth and the rubrics live in `references/`.
 
@@ -26,7 +26,7 @@ documents. This skill is the *method*; the per-type depth and the rubrics live i
   for drift. Triggers: "document this control", "add an API page", "write the getting-started guide",
   "will this doc drift".
 - **Skip** for the *referential* docs under `.claude/docs/` (plan / goals / process / `references/`) — those are
-  authored with [[reference-author]], not this. This skill owns the **published site**, not the
+  authored with [[make-reference]], not this. This skill owns the **published site**, not the
   repo's internal knowledge docs.
 - **Generator, not critic.** You author *to* the rubric; a **separate** reviewer (the
   `docs-writer` agent, or the host gate) scores the page against it — build it to clear the gate,

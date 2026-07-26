@@ -143,7 +143,7 @@ hover/selected lift):
 
 (The *behavior* — `:disabled` is canonical, `mode=disabled` reflects into the `disabled` property, and
 inertness + forced-colors `GrayText` key off `:disabled` not the attribute — is a FACE rule; see
-`component-author`.)
+`make-component`.)
 
 **forced-colors is free** — every value resolves through a `--md-sys-color-{f}-{role}` role, so the token layer's
 WHCM mapping (anchors → `Highlight`, on-color → `HighlightText`, inks → `CanvasText`, disabled →

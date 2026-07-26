@@ -8,7 +8,7 @@ description: >-
   component LLD", "bring ui-y up to standard". This skill owns the procedure; the
   component-builder agent preloads it as its seat's method. NOT for the design intake —
   forks, geometry-row assignment, ADRs (agent-ui-component-design) — and never a substitute
-  for the independent component-reviewer pass (generator ≠ critic).
+  for the independent component-checker pass (generator ≠ critic).
 user-invocable: true
 disable-model-invocation: false
 ---
@@ -98,7 +98,7 @@ before a first build; `controls/checkbox/` is the gold probe template.
    (`.claude/docs/process.md`) before treating it as done.
 3. `npm run size` by hand when the bundle surface changed (manual by Kim's ruling);
    marginal size within the tier budget, tree-shake clean.
-4. **Hand off to the `component-reviewer` agent** (both rubric axes ≥ 4 at G5+) — the
+4. **Hand off to the `component-checker` agent** (both rubric axes ≥ 4 at G5+) — the
    non-optional independent pass before any control-wave commit. Fix the component, not the
    check.
 
@@ -112,4 +112,4 @@ before a first build; `controls/checkbox/` is the gold probe template.
 - [ ] `{name}.md` validates and matches `static props` AND the source.
 - [ ] Full probe set green incl. cross-engine browser truth (+ built-output leg where earned).
 - [ ] Integrated (barrel/exports/styles/site) with standing gates green; size in budget.
-- [ ] Independent `component-reviewer` pass done; findings fixed.
+- [ ] Independent `component-checker` pass done; findings fixed.
