@@ -9,7 +9,7 @@
 > | **Proposed by** | planner — the M1 app-shell LLD (SPEC-R6 isolation), after the doc-review's F1/F2/F3 corrections to the mechanism |
 > | **Ratified by** | Kim — 2026-07-05 |
 > | **Repairs** | `agent-app-surfaces.prd.md` PRD-D3 / Fork-3 (the "first `static shadow` consumer" phrasing) · `plan.md` §5 (the class-level `static shadow` model) · `plan.md` §12 (the isolation-boundary revisit note) · SPEC-R6 (`spec/agent-app-shell.spec.md`) · LLD-C4/C5 (`lld/agent-app-shell.lld.md`) — all edited in this change |
-> | **Supersedes / Superseded by** | Supersedes the class-level `static shadow` model of plan §5 **for the app-shell's per-instance opt-in** (plan §5/§12 are plan docs, not ADRs — repaired via `Repairs:`, not a reciprocal ADR link). Relates ADR-0003 (single-file `@scope` CSS barrels) · ADR-0007/0038 (the `*` derived ramp). No ADR superseded. |
+> | **Supersedes / Superseded by** | Supersedes the class-level `static shadow` model of plan §5 **for the app-shell's per-instance opt-in** (plan §5/§12 are plan docs, not ADRs — repaired via `Repairs:`, not a reciprocal ADR link). Relates ADR-0003 (single-file `@scope` CSS barrels) · ADR-0007/0038 (the `*` derived ramp). No ADR superseded. **Superseded by [ADR-0156](./0156-deprecate-app-shell-for-super-shell-family.md)** *(in full — the isolation capability retires with the component, not ported: ADR-0156 clause 2 · REV 2026-07-26, the ADR-0156 clause-5 mechanical pointer repair post-ratification; the Status cell stays `accepted` through the deprecation window and flips at the removal gate only, per that clause)*. |
 
 ## Context
 
