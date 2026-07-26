@@ -13,9 +13,9 @@
 // since `:popover-open` matching is unavailable there); 0 ⇒ hidePopover() (SPEC-R12 AC1).
 //
 // Ownership (fork F2, "the ownership ruling" — feed-family.lld.md §5, resolved not left open): v1
-// ownership is CONSUMER-mounted — a page/app-shell declares `<ui-toast-region>` and holds the reference
-// it calls `show()` on. NO static singleton exists anywhere (ADR-0082's per-instance isolation); the
-// app-shell does NOT compose a default region this wave (a scope allocation inside F2's ratified
+// ownership is CONSUMER-mounted — a page/app frame declares `<ui-toast-region>` and holds the reference
+// it calls `show()` on. NO static singleton exists anywhere (ADR-0082's per-instance isolation); no
+// shell composes a default region (a scope allocation inside F2's ratified
 // architecture, not a new fork — no ADR owed).
 //
 // `show()` (SPEC-R13): normalizes a string shorthand to `{ message }`, creates a `<ui-toast>`, assigns

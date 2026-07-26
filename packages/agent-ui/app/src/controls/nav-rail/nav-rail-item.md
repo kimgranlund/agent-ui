@@ -58,7 +58,7 @@ geometry:
   paddingBlock: 0
   inlinePad: h/2 (slotless label) · presence-driven leading/trailing cells (anatomy.md, one level down from ui-button)
 
-forcedColors: The active item's `border-inline-start` indicator repaints to `Highlight` under `forced-colors: active` (SPEC-R4, the ui-app-shell divider precedent), never vanishing.
+forcedColors: The active item's `border-inline-start` indicator repaints to `Highlight` under `forced-colors: active` (SPEC-R4), never vanishing — a border, not a fill-only affordance, survives forced colors (the same law master-detail.md's divider states; first proven on the retired `ui-app-shell`'s dividers, ADR-0156).
 ---
 
 # ui-nav-rail-item

@@ -138,8 +138,9 @@
    in row.css/column.css keep their ADR-0096-gated selectors unchanged and now resolve, as they always
    mechanically did, against the nearest ANCESTOR query container — one an externally-sized composition
    boundary establishes (the A2UI mount surfaces: `site/lib/canvas-surface.css`'s `.canvas-surface`,
-   `site/lib/a2ui-gallery.css`'s `.seed-surface`, the various page `.surface` mounts, app-shell — ADR-0084 is
-   the shipped model case). `ui-grid`'s auto-fit/`minmax` responsiveness is track sizing, not a query, so it is
+   `site/lib/a2ui-gallery.css`'s `.seed-surface`, the various page `.surface` mounts, an app shell frame —
+   ADR-0084, superseded, is
+   the model case that shipped first). `ui-grid`'s auto-fit/`minmax` responsiveness is track sizing, not a query, so it is
    unaffected either way. */
 
 /* ════════════════ forced-colors (WHCM) ════════════════ */

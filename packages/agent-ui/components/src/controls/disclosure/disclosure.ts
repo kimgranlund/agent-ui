@@ -58,7 +58,7 @@ import { setIcon } from '@agent-ui/icons'
 
 // The one authored position slot (ADR-0158): a light-DOM child marked `slot="summary"` rides the summary
 // row (adopted after the label) instead of the body — the fleet's `[slot=…]` grammar (button ADR-0006/0012),
-// NOT the app-shell `data-slot` vocabulary.
+// NOT the shell family's `data-slot` vocabulary (super-shell.ts).
 const SUMMARY_SLOT = 'summary'
 const isSummarySlotted = (node: Node): node is Element =>
   node instanceof Element && node.getAttribute('slot') === SUMMARY_SLOT

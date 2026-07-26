@@ -36,8 +36,8 @@
 // `select`/`change` pair `ui-nav-rail` emits for a top-level item — the observable-behavior equivalent of
 // LLD-C2's "dispatches the equivalent activation" (never re-deriving `ui-menu`'s own roving-focus/commit-
 // and-close/dismissal contract, inherited wholesale per ADR-0130 cl.6). The forwarding LISTENER is wired on
-// EVERY `connected()` (a closure-local `wired` flag, fresh per call — the `ui-app-shell-region` `wired`
-// precedent, app-shell.ts), never gated behind the persistent `#composed` DOM-construction guard: `this.
+// EVERY `connected()` (a closure-local `wired` flag, fresh per call — the `wired` idiom first established
+// by the retired app-shell.ts's ui-app-shell-region, ADR-0156), never gated behind the persistent `#composed` DOM-construction guard: `this.
 // listen` rides the CURRENT connection's AbortController and dies at disconnect, so a single guard covering
 // BOTH construction and wiring would leave the forwarding dead forever after a reconnect even though the
 // composed `ui-menu` itself survives (the component-reviewer's Finding 1).

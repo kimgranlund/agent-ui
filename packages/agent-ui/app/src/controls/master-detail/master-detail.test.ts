@@ -183,8 +183,10 @@ describe('UIMasterDetailElement — residue-free disconnect', () => {
 })
 
 describe('UIMasterDetailElement — composition survives a RECONNECT (component-reviewer MAJOR fix)', () => {
-  // A relocation-induced reconnect (e.g. an ancestor ui-app-shell opting into `isolated`, ADR-0082's
-  // `shadow.append(...this.children)`) fires disconnectedCallback then connectedCallback on this element
+  // A relocation-induced reconnect — a single `append` onto a new parent is an atomic remove+insert,
+  // exactly the sequence the retired `<ui-app-shell isolated>`'s `shadow.append(...this.children)`
+  // produced (ADR-0082, superseded; the browser sibling documents the vehicle swap, ADR-0156 clause 4) —
+  // fires disconnectedCallback then connectedCallback on this element
   // WITHOUT any of ITS OWN children changing — `connected()` re-running must NOT recompose (the reviewer's
   // reproduction: re-parenting a connected instance previously appended a SECOND, empty ui-split beside the
   // real one, since #panes() found nothing left to move on the second pass).

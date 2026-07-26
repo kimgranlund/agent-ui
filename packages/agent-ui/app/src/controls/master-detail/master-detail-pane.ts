@@ -1,8 +1,10 @@
 // master-detail-pane.ts — UIMasterDetailPaneElement, the generic docking sub-element `ui-master-detail`
-// composes (app-surfaces-m4.lld.md LLD-C10, SPEC-R7; the ui-app-shell-region generic-region precedent,
-// LLD §3.1's fork recommendation). A structural, non-interactive content region — the author docks a
+// composes (app-surfaces-m4.lld.md LLD-C10, SPEC-R7; the generic-region model ported from the retired
+// ui-app-shell-region, ADR-0156 — LLD §3.1's fork recommendation). A structural, non-interactive content
+// region — the author docks a
 // surface into the list or detail position by composing this element and setting its OWN `pane` prop
-// (`'list' | 'detail'`), exactly as `ui-app-shell-region`'s `region` prop docks into a named grid area.
+// (`'list' | 'detail'`), the same dock-by-own-prop shape the retired `ui-app-shell-region`'s `region`
+// prop established for named grid areas.
 // No attribute-on-arbitrary-child mechanism, no two named `ui-master-detail-{list,detail}` tags.
 //
 // `ui-master-detail` (master-detail.ts) discovers its `list`/`detail` pane children at connect and RELOCATES
@@ -19,7 +21,7 @@ const PANE_VALUES = ['list', 'detail'] as const // `list` LEADS — an out-of-se
 
 const masterDetailPaneProps = {
   // Which position this pane docks into — read ONCE by the parent `ui-master-detail` at connect (LLD-C10,
-  // static composition at M1, the ui-app-shell isolation precedent for "children present at connect only").
+  // static composition at M1 — "children present at connect only", master-detail.ts's documented limitation).
   pane: { ...prop.enum(PANE_VALUES, 'list'), reflect: true },
 } satisfies PropsSchema
 

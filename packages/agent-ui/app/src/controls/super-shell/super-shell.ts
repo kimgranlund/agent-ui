@@ -11,7 +11,7 @@
 // composed into `content` with no rails authored (R1b's ring-dropping recursion needs zero extra
 // code). Consumers mark light-DOM children with `data-slot="header|global-nav|nav-pane|section-nav|
 // content|options-pane|options-section|global-options|footer"`; unmarked children fold into
-// `content` (the mandatory slot — console.warn when absent, the app-shell law). `section-nav`/
+// `content` (the mandatory slot — console.warn when absent, the shell family's mandatory-content law). `section-nav`/
 // `options-section` stack CLOSEST to `content` on their side (DOM order: rail, then panes outer-to-
 // inner) — collapse is still WHOLE-SIDE (R2a unchanged): the paired toggle hides the rail and every
 // stacked pane on its side together, never per-pane (YAGNI until a real frame needs it).
@@ -35,8 +35,8 @@
 //
 // Landmarks (LLD-C1, GH #94): every wrapper part gets a real ARIA `role` at compose time, from a
 // slot→role map (header→banner, footer→contentinfo, content→main, the nav slots→navigation, the
-// options slots→complementary) mirroring ui-app-shell-region's own map (ADR-0083) for cross-family
-// vocabulary consistency — an independent implementation, not shared code (see the SPEC header's
+// options slots→complementary) matching the slot→role map the retired ui-app-shell-region carried
+// (ADR-0083, superseded) — an independent implementation, not shared code (see the SPEC header's
 // corrected "follows the pattern of" line). An authored child's `data-landmark="…"` overrides its
 // slot's default, the same role-decoupled-from-placement idea ADR-0083 established.
 //
@@ -64,7 +64,7 @@ type SlotName = (typeof SLOTS)[number]
 // LLD-C1 (GH #94) — every slot's default ARIA landmark, keyed by slot name. Set as a real `role="…"`
 // attribute directly on the plain <div> wrapper part at compose time (these wrappers are NOT custom
 // elements — no ElementInternals handle exists on them — so this is the honest mechanism, unlike
-// ui-app-shell-region's `internals.role`, which only a host custom element can use).
+// the retired ui-app-shell-region's `internals.role`, which only a host custom element could use).
 const SLOT_ROLE: Record<SlotName, string> = {
   header: 'banner',
   footer: 'contentinfo',

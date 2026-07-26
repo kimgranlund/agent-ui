@@ -1,18 +1,21 @@
 // master-detail.ts — UIMasterDetailElement, the app-tier master-detail composition (app-surfaces-m4.lld.md
 // LLD-C10, SPEC-R7; ADR-0120 cl.3a — a SHIPPED composition, not a new interactive primitive). A docked
 // list | detail arrangement over the shipped `ui-split` (LLD-C1), drilling into a single view below a
-// narrow container-width threshold (the M1 `ui-app-shell` `@container` precedent, LLD-C4).
+// narrow container-width threshold (the shell family's own-container-width law — shell-breakpoint.ts's
+// named 40rem line; first established at M1 on the since-retired `ui-app-shell`, LLD-C4/ADR-0156).
 //
 // Composition (SPEC-R7 "0 bespoke split/resize code"): the author docks content with two
 // `ui-master-detail-pane` children (`pane="list"` / `pane="detail"`, master-detail-pane.ts — the
-// `ui-app-shell-region` generic-region model). At connect, this element RELOCATES each whole pane element
+// generic-region model ported from the retired `ui-app-shell-region`, ADR-0156). At connect, this element RELOCATES each whole pane element
 // (never its individual grandchildren) into a freshly created `ui-split-pane`, wraps both in a freshly
 // created `ui-split`, and appends that ONE composed child — the split's own resize/keyboard/ARIA/CSS DoD
 // is inherited wholesale; nothing here re-implements it. Static composition at M1 (children present at
-// connect only — the `ui-app-shell` isolation precedent for the identical limitation). Composition runs
+// connect only — the same limitation the retired `ui-app-shell`'s isolation mode documented, ADR-0156).
+// Composition runs
 // IDEMPOTENTLY — once ever, never again on a later reconnect (`#compose`'s own doc comment): `connected()`
-// fires on every connect, including a relocation-induced disconnect/reconnect of the WHOLE subtree (e.g. an
-// ancestor `ui-app-shell` opting into `isolated`, ADR-0082) that never actually changes this element's own
+// fires on every connect, including a relocation-induced disconnect/reconnect of the WHOLE subtree (a
+// single `append` onto a new parent is an atomic remove+insert, firing disconnected/connected on every
+// custom element inside it) that never actually changes this element's own
 // children — recomposing there would find the panes already moved into the first split and append a
 // second, empty one beside it (a MEASURED defect, fixed).
 //
@@ -20,7 +23,8 @@
 // handler inside its own list content, or a router binding, ADR-0115's "3 lines of consumer wiring") — this
 // element owns no item-picking UI of its own. A reactive effect over `selected` derives the narrow-drill-in
 // view (`detail` when a selection is present, else `list`) and — on every run AFTER the first (the
-// app-shell.ts isolated/toggle-warn precedent: the first run is registration, not a chosen item) — emits
+// first-run-is-registration idiom, first established by the retired app-shell.ts's toggle-warn,
+// ADR-0156: the first run is registration, not a chosen item) — emits
 // the allow-listed `select`/`change` pair. The view is exposed as a reflected `data-view` HOST ATTRIBUTE
 // (never a `static props` member — it is derived state, not author-settable API) that the CSS narrow branch
 // reads to show one pane at a time plus a control-rendered "back" affordance; the back click flips the view
@@ -57,18 +61,18 @@ export class UIMasterDetailElement extends UIElement {
 
   // The composed anatomy (LLD-C10) — created ONCE (idempotent, `#compose`'s own field guard below) and
   // PERSISTS across a reconnect; `#split` doubles as that guard. NOT reset in `disconnected()` — the same
-  // "parts created once, never torn down short of the instance itself going away" shape `#ensureToggleParts`
-  // (app-shell.ts) and disclosure.ts's own parts use.
+  // "parts created once, never torn down short of the instance itself going away" shape disclosure.ts's
+  // own parts use (first established by the retired app-shell.ts's `#ensureToggleParts`, ADR-0156).
   #split: HTMLElement | null = null
   #backBtn: HTMLButtonElement | null = null
 
   protected connected(): void {
     // Compose ONCE (component-reviewer MAJOR fix): `connected()` runs on EVERY connect, including a
-    // RECONNECT with no DOM change of ITS OWN — e.g. a master-detail docked inside an `ui-app-shell` region
-    // that later opts into `isolated` (ADR-0082's `shadow.append(...this.children)`) relocates the WHOLE
-    // subtree, firing disconnectedCallback then connectedCallback on every custom element inside it,
-    // master-detail included (the SAME relocation class the `collapse="toggle"` fix, app-shell.ts, already
-    // hardened against). Composing unconditionally on a reconnect would find `#panes()` empty (the panes
+    // RECONNECT with no DOM change of ITS OWN — any whole-subtree relocation (a single `append` onto a
+    // new parent is an atomic remove+insert) fires disconnectedCallback then connectedCallback on every
+    // custom element inside it, master-detail included (historically, the retired `ui-app-shell`'s
+    // `isolated` shadow relocation — ADR-0082, superseded — was the motivating case of this class).
+    // Composing unconditionally on a reconnect would find `#panes()` empty (the panes
     // already live inside the FIRST composed split, no longer direct children of `this`) and append a
     // SECOND, empty `ui-split` beside the real one — reproduced by the reviewer via a re-parent. `#split`
     // being already-set is what makes this a no-op the second time.
@@ -77,8 +81,8 @@ export class UIMasterDetailElement extends UIElement {
     // Re-wire the back button's click listener on EVERY connect (the SAME reconnect concern, one level
     // down): `this.listen` scopes to the CURRENT connection's AbortSignal, so a listener bound only inside
     // `#compose`'s one-time branch would die with the FIRST connection and never rebind post-relocation,
-    // leaving an inert button — the exact bug class `#ensureToggleParts`'s own `wired` flag (app-shell.ts)
-    // fixes for the toggle affordance. The button DOM node persists (via `#backBtn`); only the listener
+    // leaving an inert button — the exact bug class the retired app-shell.ts's `#ensureToggleParts`
+    // `wired` flag fixed for its toggle affordance (ADR-0156). The button DOM node persists (via `#backBtn`); only the listener
     // needs re-arming.
     if (this.#backBtn) {
       this.listen(this.#backBtn, 'click', () => {
@@ -87,7 +91,7 @@ export class UIMasterDetailElement extends UIElement {
     }
 
     // selection → view + the select/change announcement pair. First run is registration (deep-link/initial
-    // markup), never an "item chosen" — no event (the app-shell.ts toggle-warn / isolated-connect precedent).
+    // markup), never an "item chosen" — no event (the first-run-is-registration idiom; header comment above).
     let firstRun = true
     this.effect(() => {
       const key = this.selected

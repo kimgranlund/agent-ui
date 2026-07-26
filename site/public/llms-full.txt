@@ -4426,7 +4426,7 @@ hand-authored `<ui-toast>` must replicate by hand.
 A toast is **app-surface chrome, not agent-emittable content** (ADR-0112 cl.6): a self-expiring message
 inside an append-only feed would break the history-must-not-lie doctrine, and an agent-raised toast
 would mutate page chrome outside the payload↔DOM traceability the A2UI renderer's charter guarantees.
-`ui-toast`/`ui-toast-region` are consequently **not** in the default catalog — they are page/app-shell
+`ui-toast`/`ui-toast-region` are consequently **not** in the default catalog — they are page/app-frame
 primitives, mounted and driven imperatively (`region.show({ message, action })`), never something a
 model emits directly.
 
@@ -4511,7 +4511,7 @@ consumption story."
 
 ## Ownership
 
-**v1 ownership is consumer-mounted.** A page (or an app embedding `agent-app-shell`) declares
+**v1 ownership is consumer-mounted.** A page (or an app frame) declares
 `<ui-toast-region>` where it wants announcement scope and holds the reference it calls `show()` on.
 There is **no static singleton anywhere** in this component — `UIToastRegionElement.show` does not
 exist as a class-level API, only as an instance method (ADR-0082's per-instance isolation: two

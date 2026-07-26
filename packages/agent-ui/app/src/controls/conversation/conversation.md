@@ -6,7 +6,7 @@
 tag: ui-conversation
 # geometry size-class: the schema's SIZE_CLASSES has no literal "structural" member (the LLD's own informal
 # label) — `layout` is the closest real class: a CSS-flex distributor of its OWN thread/composer bands, no
-# control height of its own (the ui-app-shell/ui-master-detail precedent).
+# control height of its own (the ui-master-detail precedent).
 tier: layout
 extends: UIElement      # a plain structural base — composes ui-surface-host/ui-status-stream/ui-conversation-composer rather than extending any of them (ADR-0129 clause 2)
 composes: [ui-surface-host, ui-status-stream, ui-conversation-composer]  # all JS-created internal children — documentary only (component-descriptor.ts's FIELD_SHAPE has no `composes` key)
@@ -136,7 +136,7 @@ keyboard:
 
 geometry:
   sizeClass: layout                 # Container/layout band — a flex distributor of its own bands, no control height
-  blockSize: consumer-supplied      # fills its containing box (100% inline/block) — give it a definite block-size in the surrounding layout (the ui-surface-host/ui-app-shell precedent)
+  blockSize: consumer-supplied      # fills its containing box (100% inline/block) — give it a definite block-size in the surrounding layout (the ui-surface-host precedent)
   paddingBlock: 0                    # the host itself adds no block padding — the log owns its own insets; the composed ui-conversation-composer owns its own
 
 forcedColors: The bordered shell stays legible under `forced-colors: active` (`conversation.css`, `CanvasText`-repointed). The narration strip (`ui-status-stream`) and the composed `ui-conversation-composer` (its own field frame + `ui-button`/`ui-menu` parts) carry their own forced-colors handling; the "Closed." annotation and bubble text are plain text, legible for free under the platform's own forced-colors text/background repaint.

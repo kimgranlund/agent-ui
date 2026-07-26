@@ -7,7 +7,7 @@ tag: ui-surface-host
 # geometry size-class: the schema's SIZE_CLASSES has no literal "structural" member (the LLD's own informal
 # label) — `container` is the closest real class: a passive artboard/mount region contributing no control
 # height and no flex/grid distribution of AUTHORED children (it builds its own subtree; nothing is ever
-# author-composed here), the app-shell-region.md/master-detail-pane.md precedent.
+# author-composed here), the master-detail-pane.md precedent.
 tier: container
 extends: UIElement      # a plain structural base — NOT UIContainerElement: no surfaceProps/flexProps, this element owns no elevation/flex grammar of its own
 # marginal: measured at the @agent-ui/app integration slice (scripts/measure-size.mjs, LLD-C9), after the M2 reference-app re-host — the M1/M4 kickoff discipline, never guessed in advance
@@ -92,8 +92,8 @@ transport/provider-shaped prop anywhere on this element's public surface (SPEC-R
 
 ## Standalone-usable (SPEC-R3)
 
-`ui-surface-host` holds no reference to any ancestor. Composed directly into a `ui-app-shell-region` (a
-persistent, chat-external canvas, `a2ui-live`'s shape) it behaves identically to one nested inline inside
+`ui-surface-host` holds no reference to any ancestor. Composed directly into an app frame's persistent,
+chat-external canvas (e.g. a `ui-super-shell` content region — `a2ui-live`'s re-hosted shape, ADR-0156) it behaves identically to one nested inline inside
 `ui-conversation`'s own per-surface registry (`ui-conversation` creates one instance per open A2UI
 surface, ADR-0129 clause 2) — same class, same public methods, no conditional behaviour keyed on ancestry.
 
@@ -101,8 +101,8 @@ surface, ADR-0129 clause 2) — same class, same public methods, no conditional 
 
 `ingest`/`finalize`/`dispose`/`onClientMessage` called before this element has connected (no
 `RendererHost` exists yet) are no-ops rather than throws — a single `console.warn` fires the first time
-any of them is called pre-connect (not repeated per call), mirroring `ui-app-shell`'s connect-time-only
-`isolated` precedent.
+any of them is called pre-connect (not repeated per call), the warn-once-never-throw idiom first
+established on the retired `ui-app-shell`'s connect-time-only `isolated` (ADR-0156).
 
 ## Disconnect disposes the `RendererHost` (leak-safety)
 

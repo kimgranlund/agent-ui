@@ -3,8 +3,9 @@ import { describe, it, expect, afterEach } from 'vitest'
 // theme-provider-build.browser.test.ts — the BROWSER-side half of the LLD-C11 built-output `light-dark()`
 // regression guard (SPEC-R11, ADR-0117 Consequences; the TKT-0002 regression class). A REAL
 // `.browser.test.ts` (the test:browser project, Chromium at minimum) — it executes IN the browser and
-// imports the fixture as a plain asset via Vite's `?raw` (the app-shell.ts `ISOLATION_GRID_CSS` precedent,
-// proven live by app-shell-isolation.browser.test.ts; jsdom's empty resolution of the same query is a
+// imports the fixture as a plain asset via Vite's `?raw` (the `ISOLATION_GRID_CSS` idiom the retired
+// app-shell.ts established and its app-shell-isolation.browser.test.ts proved live before both retired
+// with the component, ADR-0156; jsdom's empty resolution of the same query is a
 // documented, unrelated caveat that does not apply here). NO node: module import anywhere in this file —
 // the build step lives entirely in theme-provider-build-fixture.test.ts (the node-context freshness gate);
 // this file only PROVES resolution against the REAL production bytes that OTHER test independently keeps fresh.

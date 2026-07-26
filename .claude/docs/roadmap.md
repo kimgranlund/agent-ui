@@ -190,7 +190,8 @@ decision (dated line in §4).
   the admin Surface-Options GenUI row gone live, and the parallel mount path into agent-admin's
   real turn loop. The GenUI entry retires from §3 into §2's current state; B3 stays deferred (§4).
 - **2026-07-26** — **the `ui-app-shell` removal gate closed** (§3's last named open item): the
-  folder + exports retired (merge `9db4596`), ADR-0082/0083/0084 flipped `superseded` via the
-  sanctioned script path with their clause-5 forward pointers (`8261636`/`f0debd6`), and the
-  CLAUDE.md/README/getting-started rows updated — ADR-0156 clauses 4–5's full surface. §2's
-  shell-system entry now reads removed, not deprecated.
+  folder + exports retired (merge `9db4596`), ADR-0082/0083/0084 flipped `superseded` by Kim's
+  own owner-reserved Status-cell edit (`8261636` — `adr_ratify.py` covers `proposed`→`accepted`
+  only, no script path exists for `accepted`→`superseded`), their clause-5 forward pointers
+  landing via `f0debd6`, and the CLAUDE.md/README/getting-started rows updated — ADR-0156
+  clauses 4–5's full surface. §2's shell-system entry now reads removed, not deprecated.

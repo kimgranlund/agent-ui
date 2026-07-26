@@ -1,6 +1,6 @@
 // shell-breakpoint.test.ts — LLD-C7 (GH #99, round 5): the mechanical half of the DRY fix. A CSS
 // `@container` condition can't consume a custom property (shell-breakpoint.ts's own header comment), so
-// each of the five shell-family sites keeps its own literal `40rem` — this gate asserts every one of
+// each of the three shell-family sites keeps its own literal `40rem` — this gate asserts every one of
 // them still equals SHELL_NARROW_BREAKPOINT, so a future edit to one site without updating the rest (or
 // without updating this shared constant) reds immediately instead of silently drifting.
 import { describe, it, expect } from 'vitest'
