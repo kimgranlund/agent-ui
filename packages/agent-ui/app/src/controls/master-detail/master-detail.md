@@ -3,7 +3,7 @@
 # app-surfaces-m4.lld.md LLD-C10, SPEC-R7). The `attributes[]` block MUST mirror master-detail.ts
 # `masterDetailProps` — the contract↔props trip-wire (master-detail.test.ts) targets this fence.
 tag: ui-master-detail
-tier: layout            # geometry size-class (Container/layout band, the ui-app-shell precedent — a composition over the shipped layout family, no control height of its own)
+tier: layout            # geometry size-class (Container/layout band — a composition over the shipped layout family, no control height of its own; the shell-family shape ui-super-shell also carries)
 extends: UIElement      # a plain structural base — composes ui-split rather than extending it (LLD-C10)
 # marginal: measured at the @agent-ui/app integration slice (scripts/measure-size.mjs, LLD-C9/C16)
 
@@ -46,7 +46,7 @@ geometry:
   sizeClass: layout          # Container/layout — NO control height
   blockSize: auto             # fills its flex parent (flex:1 1 auto on the host is the CONSUMER's job — a bare instance is content-driven)
   paddingBlock: 0             # no padding of its own — the composed ui-split/panes own any inset
-  narrowThreshold: 40rem      # the @container inline-size threshold below which the view drills in (mirrors ui-app-shell's own starting value)
+  narrowThreshold: 40rem      # the @container inline-size threshold below which the view drills in — the shared 40rem line `shell-breakpoint.ts` names (`SHELL_NARROW_BREAKPOINT_REM`, ADR-0155)
 
 forcedColors: The "back" affordance's bottom divider is a real `border-block-end` (currentColor-derived via the role-pure ink token), not a fill-only affordance — it survives forced-colors the same way the composed ui-split's separator does (inherited, split.md).
 ---
@@ -70,13 +70,13 @@ threshold. It composes rather than reimplements: **0 bespoke split/resize code**
 
 ## Composition — docking, then relocation into a real `ui-split`
 
-Docking uses **`ui-master-detail-pane`** children (`pane="list"` / `pane="detail"`, the
-`ui-app-shell-region` generic-region model — see `master-detail-pane.md`). At connect, `ui-master-detail`
+Docking uses **`ui-master-detail-pane`** children (`pane="list"` / `pane="detail"`, the generic-region
+model ported from the retired `ui-app-shell-region`, ADR-0156 — see `master-detail-pane.md`). At connect, `ui-master-detail`
 relocates each **whole** pane element into a freshly created `ui-split-pane`, wraps both in a freshly
 created `ui-split`, and appends that one composed child. The split's own resize/keyboard/ARIA contract is
 inherited wholesale — this element adds no split code of its own, only the narrow drill-in behaviour below.
-**Static composition at M1**: only pane children present at connect are discovered (the `ui-app-shell`
-isolation precedent for the identical limitation).
+**Static composition at M1**: only pane children present at connect are discovered (the same limitation
+the retired `ui-app-shell`'s isolation mode documented, ADR-0156).
 
 ## Selection — a plain reflected prop, consumer-owned
 
@@ -87,8 +87,8 @@ deep-link state at connect does not fire — it is not "an item chosen").
 
 ## Narrow drill-in
 
-Below `40rem` inline-size (the element's **own** container width, never the viewport — the `ui-app-shell`
-precedent), only one pane shows at a time: `list` when nothing is selected, `detail` once a selection is
+Below `40rem` inline-size (the element's **own** container width, never the viewport — the shell family's
+own-container-width law, `shell-breakpoint.ts`), only one pane shows at a time: `list` when nothing is selected, `detail` once a selection is
 present. A control-rendered **"back"** button appears inside the detail pane, narrow only, to return to the
 list view without clearing the selection. Wide, both panes show side-by-side via the composed `ui-split`,
 fully resizable.

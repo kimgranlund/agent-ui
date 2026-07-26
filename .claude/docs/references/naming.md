@@ -33,7 +33,7 @@
   (`{name}.md` frontmatter names its family root). Do not write code that parses tags into
   families; read the descriptor graph.
 - Family-member tags are `ui-{family}-{part}` with the part a single noun where possible; 4-hyphen
-  tags are legal when the family root is itself compound (ui-app-shell-region). Never abbreviate.
+  tags are legal when the family root is itself compound (ui-master-detail-pane). Never abbreviate.
 - **Site-local elements** (`component-preview`, `component-gallery`) are a second, deliberate
   namespace: un-prefixed = "not fleet, not agent-emittable, not descriptor-bound." A site element
   that graduates to the fleet takes the `ui-` name at promotion (theme-provider precedent).

@@ -100,7 +100,7 @@ hand-authored `<ui-toast>` must replicate by hand.
 A toast is **app-surface chrome, not agent-emittable content** (ADR-0112 cl.6): a self-expiring message
 inside an append-only feed would break the history-must-not-lie doctrine, and an agent-raised toast
 would mutate page chrome outside the payload↔DOM traceability the A2UI renderer's charter guarantees.
-`ui-toast`/`ui-toast-region` are consequently **not** in the default catalog — they are page/app-shell
+`ui-toast`/`ui-toast-region` are consequently **not** in the default catalog — they are page/app-frame
 primitives, mounted and driven imperatively (`region.show({ message, action })`), never something a
 model emits directly.
 

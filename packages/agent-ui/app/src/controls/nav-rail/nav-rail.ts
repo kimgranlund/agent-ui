@@ -111,10 +111,12 @@ export class UINavRailElement extends UIElement {
     // collapse="menu" — the narrow disclosure (LLD-C4). The DOM structure (`#ensureDisclosure`) is built
     // ONCE and persists across reconnect; the dismissal listeners + label-sync effect (`#wireDisclosure`)
     // are re-armed on EVERY connect via a closure-local `wired` flag — fresh per `connected()` call, the
-    // `ui-app-shell-region` `wired` precedent (app-shell.ts) — because `this.listen`/`this.effect` ride the
+    // `wired` idiom first established by the retired app-shell.ts's ui-app-shell-region (ADR-0156) —
+    // because `this.listen`/`this.effect` ride the
     // CURRENT connection's AbortController/scope (element.ts) and die at disconnect. A single `#`-field
     // guard covering BOTH construction and wiring would leave the listeners/effect dead forever after a
-    // real disconnect+reconnect (e.g. an ancestor `ui-app-shell` opting into `isolated`, ADR-0082) even
+    // real disconnect+reconnect (any whole-subtree relocation — an `append` onto a new parent is an
+    // atomic remove+insert) even
     // though the disclosure DOM (and its content) survives — the component-reviewer's Finding 1.
     let wired = false
     this.effect(() => {

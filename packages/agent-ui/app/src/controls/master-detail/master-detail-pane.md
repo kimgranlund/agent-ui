@@ -16,7 +16,7 @@ attributes:             # attributes-as-API — mirrors master-detail-pane.ts `m
 
 properties:
   - name: pane
-    description: Which position this pane docks into (`list` or `detail`, default `list`). Read ONCE by the parent `ui-master-detail` at connect (static composition, the ui-app-shell isolation precedent) — a runtime reassignment after connect is not re-derived (documented M1 limitation). An out-of-set value coerces to `list` (order-significant codec fallback) rather than throwing.
+    description: Which position this pane docks into (`list` or `detail`, default `list`). Read ONCE by the parent `ui-master-detail` at connect (static composition, master-detail.md's documented limitation) — a runtime reassignment after connect is not re-derived (documented M1 limitation). An out-of-set value coerces to `list` (order-significant codec fallback) rather than throwing.
 
 events: []              # a passive docking marker fires no events of its own
 
@@ -45,8 +45,8 @@ forcedColors: This element carries no CSS of its own beyond `display: block` —
 
 # ui-master-detail-pane
 
-`ui-master-detail-pane` is the **generic docking marker** `ui-master-detail` composes (the `ui-app-shell-region`
-generic-region model, ported). It is a structural, **non-form-associated** `UIContainerElement` carrying one
+`ui-master-detail-pane` is the **generic docking marker** `ui-master-detail` composes (the generic-region
+model ported from the retired `ui-app-shell-region`, ADR-0156). It is a structural, **non-form-associated** `UIContainerElement` carrying one
 reflected prop: **`pane`** (`list` · `detail`, default `list`).
 
 ```html
@@ -65,5 +65,5 @@ whole pane element into a `ui-split-pane` it creates — this element itself car
 ## Static composition (M1 limitation)
 
 Only pane children present at the moment `ui-master-detail` connects are discovered and relocated — a
-`ui-master-detail-pane` appended afterward is not picked up (documented, the `ui-app-shell` isolation
-precedent for the same limitation).
+`ui-master-detail-pane` appended afterward is not picked up (documented, the same limitation the retired
+`ui-app-shell`'s isolation mode carried, ADR-0156).

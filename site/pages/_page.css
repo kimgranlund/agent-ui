@@ -5,8 +5,9 @@
  * still imports AFTER this and owns the `[data-page-content]` INNER layout — this file never restyles a ui-*
  * control.
  *
- * CSS-ONLY app shell (no `ui-*` components) — see the SHELL NOTE in _page.ts: a deliberate placeholder, to be
- * rebuilt to dogfood an app-shell component family once one ships. Every colour is a `--md-sys-color-*` role (no raw
+ * The outer frame itself is a real `ui-super-shell` + `ui-nav-rail` (see the SHELL NOTE in _page.ts) — this file
+ * styles the site-built CHROME slotted into that frame (header/footer bars, nav content, body base), not the frame
+ * mechanics. Every colour is a `--md-sys-color-*` role (no raw
  * literals); every gutter a token where the ramp has one. */
 
 body {
@@ -338,7 +339,8 @@ ui-theme-provider.app-shell [data-site-nav]::-webkit-scrollbar,
 }
 
 /* The CTA — a styled link reading as a primary (filled) button, using the strongest neutral contrast pair
- * (no brand-accent role exists in the neutral ramp). CSS-only until an app-shell ui-* button lands. */
+ * (no brand-accent role exists in the neutral ramp). Stays a CSS-styled link deliberately — a plain <a>, not a
+ * ui-button, so the CTA remains a real navigation anchor. */
 .page-cta {
   flex: none;
   padding: 0.45rem 0.9rem;

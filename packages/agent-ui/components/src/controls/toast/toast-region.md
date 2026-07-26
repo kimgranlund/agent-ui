@@ -66,7 +66,7 @@ consumption story."
 
 ## Ownership
 
-**v1 ownership is consumer-mounted.** A page (or an app embedding `agent-app-shell`) declares
+**v1 ownership is consumer-mounted.** A page (or an app frame) declares
 `<ui-toast-region>` where it wants announcement scope and holds the reference it calls `show()` on.
 There is **no static singleton anywhere** in this component — `UIToastRegionElement.show` does not
 exist as a class-level API, only as an instance method (ADR-0082's per-instance isolation: two

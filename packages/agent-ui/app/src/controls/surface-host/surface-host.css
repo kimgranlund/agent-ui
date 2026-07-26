@@ -128,7 +128,7 @@
        container (the containment paradox the whole ADR is about) — [wrap] drops it explicitly rather
        than silently breaking the boundary law. Nested ui-row/ui-column/etc. inside a wrapped surface
        resolve their `@container` reflow against the nearest ANCESTOR boundary instead (e.g. an
-       enclosing ui-app-shell region, if one establishes one) — or render identity if none exists —
+       enclosing shell frame or A2UI mount surface, if one establishes one) — or render identity if none exists —
        graceful degradation, never a corrupted 0px collapse; exactly the consequence ADR-0100 cl.2
        documents for an embedder that opts out of establishment. */
     container-type: normal;

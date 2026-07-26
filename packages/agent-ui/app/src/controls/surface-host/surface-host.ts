@@ -10,10 +10,12 @@
 // provider reference, or reads an API key — mount + stream only (ADR-0129 clause 1, SPEC-R2/R8).
 //
 // Standalone-usable (SPEC-R3): holds no reference to any `ui-conversation` ancestor, so it behaves
-// identically composed directly into a `ui-app-shell-region` (a2ui-live's persistent canvas) or nested
+// identically composed directly into an app frame's persistent canvas (a2ui-live's re-hosted
+// `ui-super-shell` shape, ADR-0156) or nested
 // inline inside `ui-conversation`'s own per-surface registry (conversation.ts).
 //
-// Idempotent connect (the `app-shell-region.ts` `#ensureToggleParts` precedent): `connected()` re-runs on
+// Idempotent connect (the build-once idiom first established by the retired app-shell's
+// `#ensureToggleParts`, ADR-0156): `connected()` re-runs on
 // every reconnect, but the artboard + the ONE `RendererHost` are built only the FIRST time — a reconnect
 // (e.g. a DOM reorder elsewhere in the tree) never mints a second host or a duplicate subtree.
 //
@@ -126,8 +128,8 @@ export class UISurfaceHostElement extends UIElement {
   }
 
   /** `true` once connected (a live `#host` exists); else warns ONCE (across every method, not per-method)
-   *  and returns `false` — a documented no-op, never a throw (mirrors `ui-app-shell`'s connect-time-only
-   *  `isolated` precedent). */
+   *  and returns `false` — a documented no-op, never a throw (the warn-once idiom first established on
+   *  the retired `ui-app-shell`'s connect-time-only `isolated`, ADR-0156). */
   #guard(method: string): boolean {
     if (this.#host !== undefined) return true
     if (!this.#warnedPreConnect) {

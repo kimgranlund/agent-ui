@@ -467,8 +467,9 @@ describe('UINavRailElement — collapse="menu" narrow disclosure structure (LLD-
 })
 
 // component-reviewer Finding 1 (BLOCKING) — a build-once `#`-field guard ALSO gated listener/effect
-// wiring, so a real disconnect+reconnect (e.g. an ancestor `ui-app-shell` opting into `isolated`,
-// ADR-0082's `shadow.append(...this.children)`) permanently killed live behavior: `this.listen`/
+// wiring, so a real disconnect+reconnect (any whole-subtree relocation — an `append` onto a new parent
+// is an atomic remove+insert; historically the retired `<ui-app-shell isolated>`'s
+// `shadow.append(...this.children)`, ADR-0082, superseded) permanently killed live behavior: `this.listen`/
 // `this.effect` ride the CURRENT connection's AbortController/scope (element.ts) and die at disconnect,
 // so re-arming must happen on EVERY `connected()`, never be gated behind a persistent field alongside the
 // one-time DOM construction. Both instances (nav-rail.ts's disclosure dismissal, nav-rail-group.ts's menu-
@@ -533,9 +534,10 @@ describe('component-reviewer Finding 1 — listener/effect wiring survives a REA
     stubRects(rail)
     await whenFlushed()
 
-    // Reconnect the WHOLE RAIL (never just the group in isolation) — the realistic ADR-0082 shape: an
-    // ancestor `ui-app-shell` relocating `isolated` moves an ENTIRE subtree together
-    // (`shadow.append(...this.children)`), preserving every descendant's nesting. Reconnecting the group
+    // Reconnect the WHOLE RAIL (never just the group in isolation) — the realistic relocation shape: a
+    // whole-subtree move (a single `append` onto a new parent — historically the retired ADR-0082
+    // `shadow.append(...this.children)` relocation) moves an ENTIRE subtree together,
+    // preserving every descendant's nesting. Reconnecting the group
     // alone would sever `group.closest('ui-nav-rail')` outright (a test-setup artifact, not the real
     // hazard Finding 1 describes) — moving `rail` keeps the group correctly nested inside it throughout.
     reconnect(rail)

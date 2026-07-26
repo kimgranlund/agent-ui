@@ -41,7 +41,7 @@ control ships. Three owners answer every "what exists / which one" question:
 
 The fleet organizes by job family: action (e.g. `ui-button`) · entry (e.g. `ui-text-field`)
 · selection (e.g. `ui-checkbox`) · range (e.g. `ui-slider`) · overlay (e.g. `ui-popover`) ·
-container/layout (e.g. `ui-card`; plus `ui-app-shell` in `@agent-ui/app`) · display (e.g.
+container/layout (e.g. `ui-card`; plus `ui-super-shell` in `@agent-ui/app`) · display (e.g.
 `ui-text`). No roster here — an omission from a list is invisible, so a list here would
 quietly answer "the fleet doesn't have that" wrongly (it already did once, at review). Even
 the family SET grows: the form spine (`ui-field`/`ui-form-provider`) and app-owner chrome

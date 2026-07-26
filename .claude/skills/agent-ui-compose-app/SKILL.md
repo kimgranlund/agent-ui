@@ -2,7 +2,7 @@
 name: agent-ui-compose-app
 description: >-
   Compose an APPLICATION on agent-ui — the system spine screens plug into: the package DAG
-  and imports, the ui-app-shell regions, memory-first routing (createRouter/connectUrl +
+  and imports, the ui-super-shell regions, memory-first routing (createRouter/connectUrl +
   the outlet/link element subpaths), app-wide theming with ui-theme-provider, and the
   optional A2UI arm. Use for "scaffold an app with agent-ui", "wire the router into this
   app", "add an app shell", "theme the whole app / a workspace", "hook a live agent surface
@@ -30,9 +30,14 @@ entirely from the fleet — read them before scaffolding a new host.
    the app uses (barrel, or subpaths where tree-shaking matters — single-control subpath
    consumers under vitest need the `resolve.alias` precedent,
    [[agent-ui-component-packaging]]).
-3. **Shell** — `ui-app-shell` + `ui-app-shell-region` (`@agent-ui/app`): per-instance
-   isolation, no global singletons (ADR-0082..0084 own the region contract and the
-   isolation law; the shell demo page is `site/pages/app-shell.ts`).
+3. **Shell** — `ui-super-shell` (`@agent-ui/app`, ADR-0151/0154/0155): ONE element, no
+   region sub-element. Mark light-DOM children with `data-slot="header|global-nav|nav-pane|
+   section-nav|content|options-section|options-pane|global-options|footer"` (SPEC-R1/R5);
+   `content` is mandatory. Per-side behavior rides `collapsed-start|-end`,
+   `narrow-start|-end` (`collapse|stack|tabs`), `collapse-band`. Prefer a PRESET when the
+   archetype fits — `ui-workspace-shell` or `ui-chat-shell` (behavior-only, zero
+   data/transport ownership, the SAME `data-slot` vocabulary). Demo pages:
+   `site/pages/super-shell.ts`, `site/pages/chat-shell.ts`.
 4. **Routing — memory-first, URL opt-in** (ADR-0115): route state is one signal;
    `createRouter` + plain navigate/back/forward from the HEADLESS barrel
    (`@agent-ui/router`); `connectUrl` only when the host wants URL reflection (hash default,

@@ -2,15 +2,15 @@
  * blocks:
  *
  *   [1] TOKEN BLOCK — `:where(ui-master-detail)` declares ONLY `--ui-master-detail-*`: the narrow
- *       threshold (mirroring `ui-app-shell`'s own bare-literal 40rem — an `@container` condition cannot
+ *       threshold (the shell family's shared bare-literal 40rem — an `@container` condition cannot
  *       consume a custom property, the real CSS constraint LLD-C7/GH #99's `shell-breakpoint.ts` documents
  *       once for the whole shell family; that file's own `shell-breakpoint.test.ts` is this literal's
  *       consistency gate, not a live source).
  *   [2] STYLES BLOCK — `@scope (ui-master-detail)` consumes ONLY `--ui-master-detail-*` for the host; the
  *       composed `ui-split`/`ui-split-pane` children keep their OWN shipped CSS untouched — this sheet adds
  *       only the narrow drill-in (show one `[data-role]` pane at a time, hide the separator, let the
- *       visible pane fill) + the "back" affordance's visibility, exactly as `ui-app-shell`'s `collapse`
- *       narrow branch adds behaviour on TOP of the shipped layout family rather than reimplementing it.
+ *       visible pane fill) + the "back" affordance's visibility — the shell-family discipline of adding
+ *       narrow behaviour on TOP of the shipped layout family rather than reimplementing it.
  *
  * Wide (above the threshold): NO rule in this sheet applies at all — both `[data-role]` panes show via the
  * composed `ui-split`, resizable, with 0 CSS of this file's own touching them (SPEC-R7 "0 bespoke split
@@ -40,7 +40,7 @@
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    container-type: inline-size; /* reflow on the element's OWN width, never the viewport (the ui-app-shell precedent) */
+    container-type: inline-size; /* reflow on the element's OWN width, never the viewport (the shell family's own-container-width law, shell-breakpoint.ts) */
   }
 
   /* The one composed child (the JS-created ui-split) fills the available block space; min-block-size:0
@@ -80,7 +80,7 @@
     outline-offset: calc(-1 * var(--md-sys-state-focus-ring-offset)); /* inset — the row spans the pane edge-to-edge (the nav-rail/tabs inset-ring precedent) */
   }
 
-  /* Narrow drill-in (SPEC-R7 AC1) — `40rem` mirrors ui-app-shell.css's own starting threshold (LLD-C7/
+  /* Narrow drill-in (SPEC-R7 AC1) — `40rem` is the shell family's named narrow line (LLD-C7/
      GH #99's `shell-breakpoint.ts` + `shell-breakpoint.test.ts`, this file's banner above). */
   @container (inline-size < 40rem) {
     :scope[data-view='list'] [data-role='detail'] {

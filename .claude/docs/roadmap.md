@@ -38,7 +38,7 @@ append-only going forward, **never backfilled**, and this roadmap's §2 is the o
 "current state." The gap is therefore the ruled shape of the doc set, not a defect awaiting a
 decision (dated line in §4).
 
-## 2 · Now — current state (as of 2026-07-25)
+## 2 · Now — current state (as of 2026-07-26)
 
 - **Component foundation — complete.** G0–G9 + the Control Suite + the icon adapter: the reactive
   kernel, FACE element layer, templating/directives, and ~50 `ui-*` controls across the
@@ -57,9 +57,10 @@ decision (dated line in §4).
 - **The shell system — the current center of gravity.** The named-archetype family (ADR-0151):
   `ui-super-shell`, a two-level recursive rail+pane grammar on an 18px module, with
   `ui-workspace-shell`/`ui-chat-shell` as presets; resizable panes + tab collapse (ADR-0154); the
-  responsive band ladder and menu⇄X toggle law (ADR-0155). `ui-app-shell` is **deprecated** in the
-  family's favor (ADR-0156, Option C ruled and ratified) — in-tree and functional through a
-  migration window, frozen to new consumers; its one production page is already re-hosted. The
+  responsive band ladder and menu⇄X toggle law (ADR-0155). `ui-app-shell` is **removed** (ADR-0156,
+  Option C ruled and ratified; the removal gate closed 2026-07-26 — §4's dated line): the migration
+  window is over, ADR-0082/0083/0084 carry `superseded` with clause-5 forward pointers, and the
+  super-shell family is the package's one shell grammar. The
   shell-system **laws** are spec'd and enforced ([shell-archetypes
   SPEC](spec/shell-archetypes-m5.spec.md), accepted v0.7): the two-system spacing ladder (SPEC-R11)
   backed by a deterministic spacing-drift gate born at zero (AC19 — every `@agent-ui/app` sheet
@@ -133,21 +134,13 @@ decision (dated line in §4).
 
 ## 3 · Next — concrete, near-term
 
-- **The `ui-app-shell` removal horizon (ADR-0156).** Migration is DONE: the production
-  consumer re-hosted, the two reconnect fixtures re-vehicled onto a direct re-parent harness (the
-  `<ui-app-shell isolated>` relocation harness retired from both), and the teaching page retired —
-  its one surviving teaching, the ADR-0083 landmark-decouple law, re-scoped onto the super-shell
-  page as family law. What remains is the removal gate itself (folder + exports retire,
-  ADR-0082/0083/0084 flip `superseded`, CLAUDE.md/README/getting-started rows update — ADR-0156
-  clauses 4–5 name the full surface), dispatched as its own separately-gated issue.
 - **AC19's sheet set — widen deliberately, or not.** The spacing-drift gate covers the shell
   family today (every `@agent-ui/app` sheet + the shell-composing site sheets). Whether it extends
   further — components-package sheets, the remaining site sheets — is an open, per-sheet decision;
   the gate's own design makes each extension a one-line reviewed append, never automatic.
-- **Beyond that, the backlog is clear.** The one open item is the removal-gate issue named above —
-  its build is in flight, and the ADR-0082/0083/0084 `superseded` flips at its heart remain Kim's
-  own to perform, which an agent cannot. Nothing else is
-  outstanding; the next feature arc is Kim's call at the next intake. (The older proposed scope
+- **Beyond that, the backlog is clear.** The `ui-app-shell` removal gate closed 2026-07-26 (§4's
+  dated line); nothing else is
+  outstanding — the next feature arc is Kim's call at the next intake. (The older proposed scope
   intakes — content, feed, and report families, the a2ui expert system — remain parked intakes,
   not scheduled work.)
 
@@ -196,3 +189,9 @@ decision (dated line in §4).
   (SPEC-R9 — its prompt-loading parenthetical corrected by the SPEC's docs-only v0.3 amendment),
   the admin Surface-Options GenUI row gone live, and the parallel mount path into agent-admin's
   real turn loop. The GenUI entry retires from §3 into §2's current state; B3 stays deferred (§4).
+- **2026-07-26** — **the `ui-app-shell` removal gate closed** (§3's last named open item): the
+  folder + exports retired (merge `9db4596`), ADR-0082/0083/0084 flipped `superseded` by Kim's
+  own owner-reserved Status-cell edit (`8261636` — `adr_ratify.py` covers `proposed`→`accepted`
+  only, no script path exists for `accepted`→`superseded`), their clause-5 forward pointers
+  landing via `f0debd6`, and the CLAUDE.md/README/getting-started rows updated — ADR-0156
+  clauses 4–5's full surface. §2's shell-system entry now reads removed, not deprecated.

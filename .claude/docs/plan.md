@@ -54,7 +54,7 @@ The kernel is small (rce's is ~2.3k lines across 8 modules). agent-ui is an **np
 now **seven packages**: the framework (`components`), `shared` for cross-cutting tokens/styles/utils,
 `a2ui` (the A2UI layer, team-led; docs on the unified `.claude/docs/{spec,lld,prd}/` map), `a2a` (the A2A/Agent2Agent protocol layer
 + the tic-tac-toe arena + its concepts corpus), `icons` (the swappable icon-pack adapter), `app`
-(app-surface compositions, the agent-app-shell) and `router` (the SPA router, ADR-0115).
+(app-surface compositions — the `ui-super-shell` archetype family, ADR-0151) and `router` (the SPA router, ADR-0115).
 
 ```
 packages/agent-ui/
@@ -86,7 +86,7 @@ packages/agent-ui/
   a2a/                         # @agent-ui/a2a — A2A protocol layer (wire types + validation, spec v0.3.0),
                                 #   the tic-tac-toe isolation-proof arena, its own concepts-corpus shards; zero deps
   icons/                       # @agent-ui/icons — swappable icon-pack adapter (pure core + ./phosphor subpath); zero deps
-  app/                         # @agent-ui/app — app-surface compositions (agent-app-shell, ADR-0082..0084);
+  app/                         # @agent-ui/app — app-surface compositions (ui-super-shell + presets, ADR-0151);
                                 #   depends on components + a2ui + shared
   router/                      # @agent-ui/router — SPA router (ADR-0115); depends on components
 .claude/docs/  plan.md  goals.md  process.md  references/  adr/  specs/  prd/  spec/  lld/  rubrics/    # agent-scoped project docs
@@ -164,7 +164,7 @@ Maps the four platform callbacks onto the graph's two lifetimes:
 - Helpers: `this.effect(fn)` (scope-owned), `this.listen(target, type, fn)` (rides `{ signal }`),
   `this.emit(type, detail)` (composed/bubbling/cancelable `CustomEvent`), `updateComplete`.
 - **Light DOM by default**; `static shadow` opts a single shadow root (a class-level, all-instances seam).
-  *(The app-shell's isolation does NOT use this seam — it isolates **per instance** at connect, [ADR-0082](adr/0082-app-shell-per-instance-isolation.md); `static shadow` stays unused, available for a genuine all-instances-shadow class.)*
+  *(No fleet component uses this seam today — `static shadow` stays UNUSED, available for a genuine all-instances-shadow class. The one **per-instance** alternative ever built, `ui-app-shell`'s connect-time `isolated` opt-in ([ADR-0082](adr/0082-app-shell-per-instance-isolation.md), superseded), retired with that component — [ADR-0156](adr/0156-deprecate-app-shell-for-super-shell-family.md); nothing in the fleet calls `attachShadow` outside this seam now.)*
 - ARIA via `attachInternals()`, never host attributes.
 - The lazy-property upgrade dance (`upgradeProps` at connect; `upgradeProperty(...)` for manual
   array/object accessors) — a `.prop=` binding set before upgrade otherwise shadows the accessor.
@@ -402,6 +402,10 @@ quality bar, including the global token wiring) before G6–G7 fan out.
   `static shadow` seam stays UNUSED — the app-shell family (agent-app-surfaces M1) instead isolates per instance
   via an `isolated` opt-in that `attachShadow`s at connect and injects the fleet CSS inside the boundary. The
   NEXT-tier scope dial that would revisit this is now chosen (agent-app-surfaces, `prd/agent-app-surfaces.prd.md`).
+  **SINCE (2026-07-26):** `ui-app-shell` and its `isolated` opt-in were REMOVED
+  ([ADR-0156](adr/0156-deprecate-app-shell-for-super-shell-family.md)) — the light-DOM default and the unused
+  `static shadow` seam both HELD, and no fleet component isolates per instance any more (see §"Light DOM by
+  default" above). The record above stands as what was decided on 2026-07-05.
 - **Risk — the `declare`-merge prop pattern**: **RESOLVED / CLOSED at G2.** Validated against the strict
   tsconfig (`props-typing.test.ts`, negative-control-proven) and load-bearing fleet-wide since.
 ```

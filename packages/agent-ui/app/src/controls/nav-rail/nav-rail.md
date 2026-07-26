@@ -41,7 +41,7 @@ parts:                   # control-created, `collapse="menu"` mode only (LLD-C4)
   - name: list
     description: A `<div data-part="list">` wrapping the original group/item tree — always visible wide (overriding the UA closed-`<details>` hiding rule); narrow, shown only while the disclosure is open, absolutely positioned to overlay rather than reflow the page.
 
-customStates: []          # the rail itself carries no interaction state of its own — states live on the item child (ui-app-shell.md "shared-file, states live on the child" precedent); ui-nav-rail-item carries none either (a plain reflected `selected` attribute already drives its CSS, no :state() needed)
+customStates: []          # the rail itself carries no interaction state of its own — states live on the item child (the family-folder law first recorded by the retired ui-app-shell.md — ADR-0156; the pattern is now the family descriptors' own convention); ui-nav-rail-item carries none either (a plain reflected `selected` attribute already drives its CSS, no :state() needed)
 
 face:
   formAssociated: false   # NOT a FACE form control — a coordinating container; items commit selections as events, never a form value
@@ -59,9 +59,9 @@ geometry:
   sizeClass: pattern
   blockSize: auto            # fills its layout parent; each item ROW takes --ui-nav-rail-height (the Pattern law)
   paddingBlock: 0
-  narrowThreshold: 40rem     # the NAMED `@container ui-nav-rail-collapse` threshold (collapse="menu"); mirrors ui-app-shell/ui-master-detail's own starting value. Measured against the rail's own box under collapse-container="self" (default), or a consumer-opted ancestor under collapse-container="ancestor" (TKT-0035)
+  narrowThreshold: 40rem     # the NAMED `@container ui-nav-rail-collapse` threshold (collapse="menu"); mirrors ui-master-detail's own starting value — the shared 40rem line `shell-breakpoint.ts` names (`SHELL_NARROW_BREAKPOINT_REM`, ADR-0155). Measured against the rail's own box under collapse-container="self" (default), or a consumer-opted ancestor under collapse-container="ancestor" (TKT-0035)
 
-forcedColors: The active item's indicator border (ui-nav-rail-item's own signifier) repaints to `Highlight` under `forced-colors: active` (SPEC-R4), never vanishing — the `ui-app-shell` divider precedent.
+forcedColors: The active item's indicator border (ui-nav-rail-item's own signifier) repaints to `Highlight` under `forced-colors: active` (SPEC-R4), never vanishing — a border, not a fill-only affordance, survives forced colors (the same law master-detail.md's divider states; first proven on the retired `ui-app-shell`'s dividers, ADR-0156).
 ---
 
 # ui-nav-rail
@@ -84,8 +84,8 @@ a later wave.
 ## Content model
 
 An authored light-DOM `ChildList` of `ui-nav-rail-group` (optional; carries a context-label) and/or bare
-`ui-nav-rail-item` — the `ui-app-shell-region` generic-sub-element precedent, not a `schema`/`store`
-data-prop pair (ADR-0130 cl.3). Both shipped consumers construct this programmatically from their own data
+`ui-nav-rail-item` — component-native sub-elements (the `ui-tabs` precedent, ADR-0130 cl.3), not a
+`schema`/`store` data-prop pair. Both shipped consumers construct this programmatically from their own data
 source. No children ⇒ an empty rail, never a throw; children appended after connect are picked up by the
 role-derivation `MutationObserver` (SPEC-R2 AC2).
 

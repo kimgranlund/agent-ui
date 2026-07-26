@@ -10,7 +10,8 @@
  *   [2] STYLES BLOCK — `@scope (ui-nav-rail)` consumes ONLY `--ui-nav-rail-*` (+ the shared focus-ring
  *       tokens, the button.css exception) for all three elements' anatomy. `[collapse=…]` attribute-
  *       selector branches (menu narrow disclosure; icon-popover icon-only sizing) live in this ONE file
- *       (the `ui-app-shell-region [collapse=…]` precedent) — never a second stylesheet.
+ *       (the precedent set by the retired `ui-app-shell-region`'s own `[collapse=…]` branches, ADR-0156)
+ *       — never a second stylesheet.
  *
  * `collapse="menu"`'s narrow threshold (TKT-0035) is a NAMED `@container ui-nav-rail-collapse (…)` query.
  * `:scope` establishes that named container itself by default (`collapse-container="self"`, the fallback

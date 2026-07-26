@@ -99,10 +99,12 @@ never restate their internals here.
   `@import` silently breaks the documented recipe — GH #71 (install-from-registry smoke) is the gate
   that should catch it.
 - License: MIT (`LICENSE` at repo root) — Kim's decision, 2026-07-19.
-- `agent-ui-app` currently targets Vite/Rolldown-family bundlers only (`?url`/`?raw` import-query
-  specifiers in `app-shell.ts`, documented in `publish-packages.mjs`'s own header — see there for the
-  current count, which can drift as that file changes) — an accepted, deliberate consumer-profile
-  constraint, not a defect to chase.
+- `agent-ui-app` is DOCUMENTED as targeting Vite/Rolldown-family bundlers only (`app/README.md`) — an
+  accepted, deliberate consumer-profile constraint, not a defect to chase. Its forcing mechanism was
+  `?url`/`?raw` import-query specifiers in the now-removed `app-shell.ts` (ADR-0156); no publishable
+  package source carries such a specifier today. `publish-packages.mjs`'s own header is the authority on
+  the current status — read it there rather than restating it here, and treat relaxing the profile as a
+  deliberate decision gated on a real install smoke (GH #71), never a doc edit.
 - npm version numbers are burned forever once published, even after unpublish — decide deliberately
   per step 1 above rather than tagging speculatively and fixing forward.
 
