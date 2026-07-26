@@ -19,7 +19,7 @@ disable-model-invocation: true
 | A2UI payload composition (message streams) | `a2ui-composer` | `a2ui-reviewer` |
 | Docs-site pages / shell / non-preview prose | `teamwork:docs-writer` | `teamwork:code-checker` |
 | Preview specimens + knobs in `site/lib/component-preview.ts` | `example-builder` | host judges representativeness |
-| Color / dimension tokens | `color:token-builder` | `screens:component-checker` (consuming control) |
+| Color / dimension tokens | `design:token-builder` | `screens:component-checker` (consuming control) |
 | PRD / SPEC / LLD / ADR authoring | `teamwork:planner` | `docs:doc-checker` |
 | Non-UI code diffs / slices | `teamwork:builder` | `teamwork:code-checker` |
 | Broad searches / codebase questions | `Explore` (read-only, conclusions not dumps) | — |
