@@ -4,12 +4,12 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | accepted |
+> | **Status** | superseded |
 > | **Date** | 2026-07-06 |
 > | **Proposed by** | planner — the M1 a2ui-live dogfood (LLD-C9) surfaced the coupling; a refinement of the ratified generic region model |
 > | **Ratified by** | Kim — 2026-07-06 |
 > | **Repairs** | SPEC-R3 (+ §4 typed contracts) (`spec/agent-app-shell.spec.md`) · LLD-C3 (`lld/agent-app-shell.lld.md`) — now NORMATIVE (ratified 2026-07-06) |
-> | **Supersedes / Superseded by** | Refines (does not reverse) the ratified generic region model (LLD §4/§7.1, Kim 2026-07-05). Relates ADR-0082 (same M1 app-shell family). No ADR superseded. |
+> | **Supersedes / Superseded by** | Refines (does not reverse) the ratified generic region model (LLD §4/§7.1, Kim 2026-07-05). Relates ADR-0082 (same M1 app-shell family). No ADR superseded. **Superseded by (partial) [ADR-0156](./0156-deprecate-app-shell-for-super-shell-family.md)** *(the `ui-app-shell-region` mechanism — the `landmark` prop — retires with the component; the role-decoupled-from-placement LAW lives on as family law in the super-shell grammar: ADR-0156 clause 3 · REV 2026-07-26, the ADR-0156 clause-5 mechanical pointer repair post-ratification; the Status cell stays `accepted` through the deprecation window and flips at the removal gate only, per that clause)*. |
 
 ## Context
 
