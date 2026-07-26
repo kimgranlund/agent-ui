@@ -55,7 +55,7 @@ collapses to a sliver. Method questions (what regions, what hierarchy) belong to
 
 ## Review (generator ≠ critic)
 
-`ui:layout-reviewer` grades the composed screen (the two-axis rubric). Hand off before
+`screens:layout-checker` grades the composed screen (the two-axis rubric). Hand off before
 shipping; fix the layout, not the check.
 
 ## Definition of done
@@ -64,4 +64,4 @@ shipping; fix the layout, not the check.
 - [ ] Exactly one owned scroll region; sticky via the box-model.
 - [ ] Axes set at region roots; theme boundaries via `ui-theme-provider`.
 - [ ] Whole-shape browser proof green (gestalt + scroll + axis response).
-- [ ] `ui:layout-reviewer` pass done.
+- [ ] `screens:layout-checker` pass done.

@@ -188,9 +188,9 @@ so the reference control exercises the full slot/gap/density law; the dimensiona
 `@agent-ui/shared` (the `--ui-{height,font}-{sm,md,lg}` ramp **plus** the `[scale]`/`[density]`
 multipliers the geometry smoke asserts); the `components` / `component-styles` / `foundation-styles`
 barrels + the host page (tokens loaded first). The G5 governance machinery lands **with** the button
-(`process.md` sequencing): the `component-author` skill, the **frontmatter contract schema** +
+(`process.md` sequencing): the `make-component` skill, the **frontmatter contract schema** +
 contract↔props trip-wire (ADR-0004), the **COMPOSE/REALIZE component rubric** (`.claude/docs/rubrics/`), the
-**`component-reviewer`** agent, and the **browser-truth harness** (`@vitest/browser` + Playwright —
+**`component-checker`** agent, and the **browser-truth harness** (`@vitest/browser` + Playwright —
 a devDep + config add; absent today, jsdom-only).
 
 **Definition of done (the gold bar — G5 is declared done from this).**
@@ -214,11 +214,11 @@ a devDep + config add; absent today, jsdom-only).
       roles; survives `forced-colors: active` (the ink doesn't vanish).
 - [x] `button.md` frontmatter validates against the frontmatter contract schema and matches the live
       `finalize(Class)` table (the contract↔props trip-wire); the COMPOSE/REALIZE rubric scores both axes
-      ≥ 4 via the `component-reviewer` agent.
+      ≥ 4 via the `component-checker` agent.
 - [x] `tsc` clean, probes green (jsdom), the cross-engine geometry/forced-colors smoke green (Chromium
       **and** WebKit), marginal size within budget. The token sheet is loaded first in the host page.
 
-**Verdict.** Component rubric (`.claude/docs/rubrics/component.md`), scored by the **`component-reviewer`** (s16 —
+**Verdict.** Component rubric (`.claude/docs/rubrics/component.md`), scored by the **`component-checker`** (s16 —
 the separate critic): **COMPOSE 5/5** (C1–C5 all 5) · **REALIZE 4/5** (C6–C9 = 5; C10 = 4). Promotion gate
 (both axes ≥ 4; no `[gate]` dimension < 4; zero blockers): **PASS — G5-DONE, `ui-button` shippable as the
 reference control.** Evidence: **245 jsdom probes** green; the **cross-engine geometry/forced-colors smoke
@@ -250,7 +250,7 @@ focus trait lands. **G5 done.**
 **Definition of done.**
 - [x] Per control: behaviour probes + browser smoke + the `{name}.md` descriptor (**ADR-0004 replaced
       `.api.json`** with `.md` frontmatter) + rubric ≥ 4 on both axes (the G5 DoD, applied to each). *(All
-      three ship a `.md` + jsdom + cross-engine browser tests; the `component-reviewer` gated each ≥4 both
+      three ship a `.md` + jsdom + cross-engine browser tests; the `component-checker` gated each ≥4 both
       axes before commit — `ui-checkbox` was taken to the gold bar as the family template.)*
 - [x] `ui-text-field` round-trips through a `<form>` and reports validity; the value is a tracked signal.
 - [x] Indicator geometry responds to `[size]`/`[scale]`/`[density]` in the browser; `--checked` state
@@ -395,7 +395,7 @@ Pulls renderer **LLD-C8 (two-way input binding)** into scope.
 *Per element (the G5/G6 control bar, applied to each of the ~12 elements):*
 - [x] Behaviour probes (jsdom) + the cross-engine browser smoke (Chromium AND WebKit) + the `{name}.md` descriptor
       validating against the frontmatter schema with the contract↔props trip-wire green + the COMPOSE/REALIZE
-      rubric ≥ 4 on both axes via the `component-reviewer`.
+      rubric ≥ 4 on both axes via the `component-checker`.
 - [x] `tsc` clean; single `{name}.css` (ADR-0003) — `:where()` token block + `@scope` styles consuming only
       `--ui-{name}-*`; survives `forced-colors: active`; the import-layering trip-wire stays green
       (containers extend `UIContainerElement`/`UIElement`, imports point inward only).
@@ -456,7 +456,7 @@ budget). The container box-model (ADR-0046) later re-based card/modal spacing (s
 > **A milestone TRACK, not a strict `Gn`** (Kim's "maximally use agent teams" directive). It **realizes and
 > extends** the G6/G7 control ambitions into a complete control family, built as file-disjoint parallel **waves**
 > rather than the sequential march. All work on branch `feat/control-suite-waves-3-4` (**9 commits, NOT pushed**
-> as of 2026-07-01). The load-bearing discipline held every wave: **`component-reviewer` ≥4 both axes + the
+> as of 2026-07-01). The load-bearing discipline held every wave: **`component-checker` ≥4 both axes + the
 > cross-engine browser gate run BEFORE each wave-commit** (jsdom-green ≠ done — the browser gate caught 18
 > cross-engine bugs in Wave 4 alone; `ui-checkbox` is the gold template).
 
@@ -492,7 +492,7 @@ budget). The container box-model (ADR-0046) later re-based card/modal spacing (s
 
 **Definition of done.**
 - [x] Every control meets the G5/G6 control bar (jsdom probes + cross-engine browser smoke + `{name}.md`
-      descriptor + contract↔props trip-wire + `component-reviewer` ≥4 both axes) **before** its wave-commit.
+      descriptor + contract↔props trip-wire + `component-checker` ≥4 both axes) **before** its wave-commit.
 - [x] `npm run check` (incl. `check:site`) + `npm test` **green** — re-verified 2026-07-01: **1936 jsdom tests,
       118 files, 0 failures**; `tsc` + `tsc -p site` clean.
 - [x] The cross-engine browser gate (Chromium **and** WebKit) green — **514 browser tests** (host-run;
@@ -529,7 +529,7 @@ any existing control's CSS** (verified by git diff) — the same SVG asset natur
 cell and insets to font-rhythm in a caret cell via the pre-existing padding law.
 
 **Definition of done.**
-- [x] Design intake (system-planner) → independent doc-review (3 must-fix + 4 polish, incl. a real
+- [x] Design intake (planner) → independent check-doc (3 must-fix + 4 polish, incl. a real
       contradiction between the frozen registry interface and the `ui-icon` prose — resolved by
       deferring pack-swap reactivity rather than inverting the `icons ↛ components` dependency arrow) →
       revision → build (3 seats, prep → parallel core/Phosphor chains → integration → verify).
@@ -539,7 +539,7 @@ cell and insets to font-rhythm in a caret cell via the pre-existing padding law.
 - [x] `npm run check` + `npm test` green — **143 files, 2311 tests**; `npm run test:browser` green —
       **64 files, 564 tests**, Chromium + WebKit both.
 - [x] `npm run size` within budget — **22 193 B gz of the 22 528 B family budget** (335 B headroom).
-- [x] Independent `component-reviewer` pass: GO, zero blocker/major (4 minor/note items, 2 folded into
+- [x] Independent `component-checker` pass: GO, zero blocker/major (4 minor/note items, 2 folded into
       the same wave as hardening — synthetic-violation assertions added to both architectural negative
       controls so they're proven to bite, not just proven-by-construction).
 - [x] ADRs **0065–0066** authored + ratified (`accepted`).

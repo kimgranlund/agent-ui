@@ -1,7 +1,7 @@
 # Rubric — docs-site page (the skill's output)
 
 > Scores one `/site` page for whether it derives from a canonical source, runs the real thing, is backed
-> by a deterministic drift gate, and reads honestly. Built with `rubric-author`. The author builds to
+> by a deterministic drift gate, and reads honestly. Built with `make-rubric`. The author builds to
 > this; a **separate** reviewer (the `docs-writer` agent, or the host gate) scores it. Scale 1–5;
 > `[gate]` = mechanically checkable (a named check/build green is the evidence), `[review]` = judgement on
 > `file:line` + the committed gate results. The reference page the anchors cite is `button-doc.ts` (T4).

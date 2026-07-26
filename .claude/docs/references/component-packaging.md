@@ -5,7 +5,7 @@
 > (single-file CSS + barrels + host-page packaging) and [`ADR-0004`](../adr/0004-component-descriptor-md-frontmatter.md)
 > (the `{name}.md` frontmatter descriptor) — those carry the rationale; this doc is the resolved shape.
 > The styling *content* rules live in [`geometry.md`](./geometry.md) + [`tokens.md`](./tokens.md); the
-> authoring procedure is the `component-author` skill, which points here. Distilled 2026-06-27.
+> authoring procedure is the `make-component` skill, which points here. Distilled 2026-06-27.
 
 ## The per-component folder
 
@@ -121,7 +121,7 @@ the public subpaths never change.
 
 ## Siblings
 
-- `component-author` (skill) — the procedure that *produces* this shape; points here for the layout.
+- `make-component` (skill) — the procedure that *produces* this shape; points here for the layout.
 - [`tokens.md`](./tokens.md) — the colour-role channel pattern the `:where()` block declares.
 - [`geometry.md`](./geometry.md) — the geometry law the `@scope` block obeys.
 - [`ADR-0003`](../adr/0003-single-file-component-css-barrels-host-page.md) · [`ADR-0004`](../adr/0004-component-descriptor-md-frontmatter.md) — the decisions this doc applies.

@@ -12,7 +12,7 @@ description: >-
   stream / node shapes an agent emits against a catalog (a2ui-composer; this seat owns the
   package / renderer / catalog CODE those payloads render through), ui-* controls or their
   CSS/geometry (component-builder), kernel/base-class work (dom/, reactive/), or spec/LLD
-  authoring (system-planner).
+  authoring (planner).
 tools: Read, Grep, Glob, Edit, Write, Bash
 model: sonnet
 effort: high

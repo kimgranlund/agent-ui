@@ -9,7 +9,7 @@
 
 `site/` is the **published** docs site — a zero-framework, light-DOM Vite app that documents the
 `@agent-ui/components` fleet by *showing the real controls*, not by describing them. It is distinct from
-`.claude/docs/` (the repo's internal plan / goals / process / `references/`, authored with `reference-author`).
+`.claude/docs/` (the repo's internal plan / goals / process / `references/`, authored with `make-reference`).
 The site is built from page modules under `site/pages/`, each mounted through one shared shell.
 
 ## The page shell — `mountPage` (`site/pages/_page.ts`)
@@ -70,6 +70,6 @@ consumed, not copied:
 ## Generator / critic split
 
 The author **builds to the rubric**; a **separate** reviewer scores against it. For the site that
-reviewer is the `docs-writer` agent (or the host gate). This mirrors the `component-author` →
-`component-reviewer` relationship: the maker doesn't grade its own output, and the deterministic gates
+reviewer is the `docs-writer` agent (or the host gate). This mirrors the `make-component` →
+`component-checker` relationship: the maker doesn't grade its own output, and the deterministic gates
 (the trip-wires above) are the non-negotiable half of the verdict either way.

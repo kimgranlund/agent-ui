@@ -113,4 +113,4 @@ see Δ below.
   5. Both ≥ 4; the admission outcome is identical (`qualityScore` 4, `passed` true), so the spread is
   within tolerance and does not require an anchor repair.
 
-<!-- Independent critic: the doc-reviewer agent scores this rubric against rubric-for-rubrics (generator ≠ critic). Author self-check only: D1 typed/scaled ✓ · D3 anchors ✓ · D5 evidence column ✓ · D8 gate+aggregation+top-failure ✓ · harness_checks.py rubric exit 0. -->
+<!-- Independent critic: the doc-checker agent scores this rubric against rubric-for-rubrics (generator ≠ critic). Author self-check only: D1 typed/scaled ✓ · D3 anchors ✓ · D5 evidence column ✓ · D8 gate+aggregation+top-failure ✓ · harness_checks.py rubric exit 0. -->
