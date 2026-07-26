@@ -58,10 +58,11 @@ import type { AgentTransport, TurnInput, Session } from '../lib/agent-runtime.ts
 import {
   PROVIDER_OPTIONS,
   MODE_OPTIONS,
+  EFFORT_LEVELS,
   loadPersistedSelection,
   persistSelection,
 } from '../lib/provider-mode-selection.ts'
-import type { StoredSelection } from '../lib/provider-mode-selection.ts'
+import type { StoredSelection, EffortLevel } from '../lib/provider-mode-selection.ts'
 
 const { content } = mountFullBleedPage()
 
@@ -218,15 +219,21 @@ function wireLiveOverlay(): void {
       if (probe.available) {
         // GH #257 — the Provider/Model/Mode picker now rides ui-conversation's own composed
         // ui-conversation-composer props (providers/provider/modes/mode) instead of a standalone
-        // provider-switcher.ts overlay. `conv` never writes `model`/`provider`/`mode` itself outside this
-        // page's OWN callback handlers below (props down, callbacks up) — the restored/committed selection
-        // lives in this closure, persisted the same way provider-switcher.ts's SelectionRef did.
+        // provider-switcher.ts overlay. `conv` never writes `model`/`provider`/`mode`/`effort` itself outside
+        // this page's OWN callback handlers below (props down, callbacks up) — the restored/committed
+        // selection lives in this closure, persisted the same way provider-switcher.ts's SelectionRef did.
+        // GH #273 — `effort` rides the SAME forwarded prop pair (efforts/effort, already shared with
+        // a2ui-live.ts's `createLiveProxyTransport` seam via `StoredSelection`); this page's own live
+        // requests were already sending the persisted effort with no picker to explain or change it — this
+        // closes that gap by parity with a2ui-live.ts, the smaller of the issue's two fix options.
         let selection = loadPersistedSelection()
         conv.providers = PROVIDER_OPTIONS
         conv.provider = selection.provider
         conv.model = selection.model
         conv.modes = MODE_OPTIONS
         conv.mode = selection.mode
+        conv.efforts = EFFORT_LEVELS
+        conv.effort = selection.effort
         conv.onProviderChange((id) => {
           selection = { ...selection, provider: id }
           conv.provider = id
@@ -243,6 +250,11 @@ function wireLiveOverlay(): void {
           // composer's plain `(id: string)` shape (props down/callbacks up — it never imports `GenUiMode`).
           selection = { ...selection, mode: id as StoredSelection['mode'] }
           conv.mode = id
+          persistSelection(selection)
+        })
+        conv.onEffortChange((id) => {
+          selection = { ...selection, effort: id as EffortLevel }
+          conv.effort = id
           persistSelection(selection)
         })
         transport = overlay.createLiveProxyTransport({ get: () => selection })
