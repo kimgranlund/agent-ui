@@ -30,6 +30,8 @@ import '../checkbox/checkbox.css'
 import '../checkbox/checkbox.ts'
 import '../radio/radio.css'
 import '../radio/radio.ts'
+import '../radio/radio-group.css'
+import '../radio/radio-group.ts'
 import '../text-field/text-field.css'
 import '../text-field/text-field.ts'
 import './form-popover.css'
@@ -350,6 +352,46 @@ describe('ui-form-popover — whole-shape assertion (T10, the Test-the-whole-sha
     const minWidth = px(getComputedStyle(panel).minInlineSize)
     expect(minWidth, `${server.browser}: panel min-inline-size is not a positive px — collapse risk`).toBeGreaterThan(0)
     expect(panelRect.width, 'panel rendered narrower than its own min-inline-size floor').toBeGreaterThanOrEqual(minWidth - 1)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  REGRESSION — GH #302
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-form-popover — GH #302 regression (rovingFocus survives the #ensureParts() child-move)', () => {
+  it('nesting ui-radio-group does not throw during #ensureParts(), and its rovingFocus keyboard wiring actually works', async () => {
+    const errors: unknown[] = []
+    const onError = (e: ErrorEvent): void => { errors.push(e.error ?? e.message) }
+    window.addEventListener('error', onError)
+
+    const { el } = mount(`
+      <ui-form-popover label="Filters">
+        <ui-radio-group name="sort">
+          <ui-radio value="newest">Newest</ui-radio>
+          <ui-radio value="oldest">Oldest</ui-radio>
+        </ui-radio-group>
+      </ui-form-popover>
+    `)
+    el.open = true
+    await el.updateComplete
+    // A real window-error listener won't catch every "reported" reaction exception synchronously in every
+    // engine, but this yields the event loop once so any that DO surface land before the assertion below.
+    await new Promise((r) => setTimeout(r, 0))
+    window.removeEventListener('error', onError)
+    expect(errors, `${server.browser}: nesting ui-radio-group threw during #ensureParts() (GH #302)`).toEqual([])
+
+    // Functional proof, not just "didn't throw": rovingFocus's keydown listener must have actually
+    // registered on the (correctly reconnected) group — ArrowDown moves focus + selection to the next radio.
+    const first = el.querySelector<HTMLElement>('ui-radio[value="newest"]')!
+    const second = el.querySelector<HTMLElement>('ui-radio[value="oldest"]')!
+    first.focus()
+    expect(document.activeElement).toBe(first)
+    await userEvent.keyboard('{ArrowDown}')
+    expect(
+      document.activeElement,
+      `${server.browser}: rovingFocus's keydown listener never registered — the GH #302 reentrancy silently dropped it`,
+    ).toBe(second)
   })
 })
 

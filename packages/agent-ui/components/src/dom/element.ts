@@ -60,34 +60,120 @@ export class UIElement extends HTMLElement {
     }
   }
 
+  // GH #302 — a real engine can invoke a SYNCHRONOUS, NESTED `disconnectedCallback` for THIS SAME
+  // instance while `connectedCallback` (below, including a SUBCLASS's `super.connectedCallback()`
+  // wrapper — e.g. `UIFormElement`'s, dom/form.ts) is still on the call stack, mid-`connected()`. Repro:
+  // a host moves an author child that is STILL AWAITING its own first `connectedCallback` reaction into
+  // a not-yet-connected wrapper (`ui-form-popover`'s `#ensureParts()` child-move-then-reconnect cycle,
+  // form-popover.ts) — the move enqueues BOTH the child's original (stale, now-detached-by-the-time-it-
+  // runs) "connected" reaction AND a fresh "disconnected" reaction (correctly, since the child WAS
+  // connected an instant earlier). A real engine does not always drain one element's reaction queue to
+  // completion before starting the next: a NESTED CEReactions-annotated DOM op performed from WITHIN the
+  // still-running "connected" reaction (here, `setAttribute` — any reflecting prop write, radio-group.ts's
+  // `this.orientation = …`) triggers the ALSO-pending "disconnected" reaction to run to completion right
+  // then, mid-`connected()`.
+  //
+  // Fix locus: the real defect is ORDERING (candidate (c) from the GH #302 triage), not a missing
+  // tolerance at each `listen`/`effect` call site — a disconnect reaction that lands WHILE this instance's
+  // own connect is still resolving must not tear down `#scope`/`#ac` out from under STILL-EXECUTING
+  // connect wiring, wherever in the override chain that wiring runs. `#connectingDepth` marks the WHOLE
+  // window (a depth counter, not a boolean, so a subclass's `super.connectedCallback()` wrapper — the
+  // ONE documented exception, `UIFormElement.connectedCallback`, dom/form.ts, clause 4 — composes: it
+  // brackets its OWN post-super effects with `beginConnecting()`/`endConnecting()` too, so the window
+  // spans the FULL platform-invoked call, not just this base class's own body). A nested
+  // `disconnectedCallback` landing inside the window still runs the `disconnected()` hook (the resources
+  // are genuinely still live, matching this method's existing contract) but DEFERS the actual
+  // scope-dispose/abort-signal teardown via `#deferredTeardown` until the OUTERMOST `endConnecting()` —
+  // so wiring installed AFTER the reentrant disconnect still rides a live signal, then gets correctly
+  // torn down the instant the whole connectedCallback call returns — the same "disconnected, zero
+  // residue" end state as if no reentrancy had ever happened. A later LEGITIMATE reconnect (the wrapper's
+  // eventual reattachment) still gets a fully fresh `connectedCallback` pass, same as always.
+  #connectingDepth = 0
+  #deferredTeardown = false
+
+  /** Open (or extend, if already open) the GH #302 reentrancy window — see the banner above. Call ONLY
+   *  paired with `endConnecting()` (a `try`/`finally`), and only around code that runs as part of THIS
+   *  instance's own connectedCallback override chain (`UIFormElement`'s the one existing caller). */
+  protected beginConnecting(): void {
+    this.#connectingDepth++
+  }
+
+  /** Close (or un-nest, if still nested) the GH #302 reentrancy window opened by `beginConnecting()`.
+   *  Only the OUTERMOST close (depth reaches 0) applies a teardown deferred by a reentrant disconnect
+   *  while the window was open — see the banner above. */
+  protected endConnecting(): void {
+    this.#connectingDepth--
+    if (this.#connectingDepth === 0 && this.#deferredTeardown) {
+      // A nested disconnect landed mid-connect (GH #302, banner above) — the truth this whole time was
+      // "disconnected"; apply the deferred teardown NOW so nothing this pass just wired outlives it.
+      this.#deferredTeardown = false
+      this.#teardown()
+    }
+  }
+
   connectedCallback(): void {
+    // Review finding (GH #302 follow-up, Q2(b)): a NESTED `connectedCallback` for this SAME instance
+    // landing while `#connectingDepth > 0` (a reentrant re-connect during an already-open window) would
+    // otherwise overwrite the still-live `#scope`/`#ac` below WITHOUT disposing them (a leak), and the
+    // stale `#deferredTeardown` flag left over from an earlier reentrant disconnect would then tear down
+    // THIS new, legitimate connection at the outermost `endConnecting()` — connected in the DOM but dead
+    // (no listeners, no effects). Apply any pending deferred teardown NOW, before minting anything new,
+    // so a fresh connect always starts from a genuinely clean slate.
+    if (this.#deferredTeardown) {
+      this.#deferredTeardown = false
+      this.#teardown()
+    }
     // FIRST: replay any pre-upgrade `.prop=` shadow into its signal — before the render effect installs
     // and before anything reads a prop, so first render sees the assigned value, not the default.
     this.upgradeProps()
     this.#scope = createScope()
     this.#ac = new AbortController()
-    // The connection scope + AbortController are now live, so a `this.effect`/`this.listen` registered in
-    // `connected()` is scope-owned + rides the abort signal. `connected()` runs BEFORE the first render so
-    // host-level setup (traits, signals) is in place before the first commit — see the ordering note below.
-    this.connected()
-    // The ONE render effect, installed through `this.effect` so there is a SINGLE scope-owned-effect
-    // path (no duplication). It is created inside the scope (the kernel's `activeOwner.add`) and
-    // disposed with it at disconnect — every render pass runs under the scope, so a directive attaching
-    // on a later conditional re-render is scope-owned too. The disposer is intentionally discarded.
-    // `render()` returns a `TemplateResult` (or nothing); when it returns one, commit it into `renderRoot`.
-    this.effect(() => {
-      const result = this.render()
-      // Pass `this` as the RenderContext (the scope_seam): `UIElement` structurally satisfies it via the
-      // scope-owned `effect`, so a per-hole directive (`watch`) installs its effect under the connection
-      // scope — surviving unrelated re-renders, dying on disconnect — not under this transient render effect.
-      if (result instanceof TemplateResult) commitTemplate(result, this.renderRoot, this)
-    })
+    this.beginConnecting()
+    try {
+      // The connection scope + AbortController are now live, so a `this.effect`/`this.listen` registered in
+      // `connected()` is scope-owned + rides the abort signal. `connected()` runs BEFORE the first render so
+      // host-level setup (traits, signals) is in place before the first commit — see the ordering note below.
+      this.connected()
+      // The ONE render effect, installed through `this.effect` so there is a SINGLE scope-owned-effect
+      // path (no duplication). It is created inside the scope (the kernel's `activeOwner.add`) and
+      // disposed with it at disconnect — every render pass runs under the scope, so a directive attaching
+      // on a later conditional re-render is scope-owned too. The disposer is intentionally discarded.
+      // `render()` returns a `TemplateResult` (or nothing); when it returns one, commit it into `renderRoot`.
+      this.effect(() => {
+        const result = this.render()
+        // Pass `this` as the RenderContext (the scope_seam): `UIElement` structurally satisfies it via the
+        // scope-owned `effect`, so a per-hole directive (`watch`) installs its effect under the connection
+        // scope — surviving unrelated re-renders, dying on disconnect — not under this transient render effect.
+        if (result instanceof TemplateResult) commitTemplate(result, this.renderRoot, this)
+      })
+    } finally {
+      // Always close, even if `connected()`/the render effect throws for an UNRELATED reason.
+      this.endConnecting()
+    }
   }
 
   disconnectedCallback(): void {
+    if (this.#connectingDepth > 0) {
+      // Reentrant: this instance's OWN connectedCallback (possibly a subclass's still-open
+      // `beginConnecting()`/`endConnecting()` bracket) is still resolving elsewhere on the call stack
+      // (GH #302, banner above). `#scope`/`#ac` are genuinely still live — run the `disconnected()` hook
+      // now (the existing "act while resources are still live" contract), but defer the actual dispose/
+      // abort to the OUTERMOST `endConnecting()`, so wiring the still-running connect pass installs after
+      // this point rides a live signal instead of throwing.
+      this.disconnected()
+      this.#deferredTeardown = true
+      return
+    }
     // Let the control act while its connected resources are STILL live (scope/effects alive, listeners
     // unaborted) — `disconnected()` runs BEFORE the teardown below.
     this.disconnected()
+    this.#teardown()
+  }
+
+  /** The connection-resource teardown proper (scope dispose + abort-signal abort + null-out) — the
+   *  ordinary disconnect path's tail AND the GH #302 deferred-reentrancy path's tail converge here, so
+   *  "zero residue after removal" has exactly one implementation regardless of which path reached it. */
+  #teardown(): void {
     this.#scope?.dispose() // every computed/effect created under the scope dies → zero subscribers
     this.#ac?.abort() // every listener riding the connection signal dies → zero live listeners
     this.#scope = null
@@ -143,7 +229,10 @@ export class UIElement extends HTMLElement {
    * when the host disconnects (the scope owns it). This is the one effect-install primitive —
    * `connectedCallback` routes the render effect through it too. Returns the effect's disposer (call it
    * to end the effect early; otherwise disconnect ends it). Throws if called outside the connected
-   * lifetime, where there is no scope to own it.
+   * lifetime, where there is no scope to own it — the GH #302 reentrancy window
+   * (`beginConnecting`/`endConnecting`'s own banner above) keeps `#scope` LIVE for the whole
+   * connectedCallback override chain regardless of a nested disconnect, so this throw stays a genuine
+   * misuse signal (called truly outside the connected lifetime), never a false positive from that race.
    */
   effect(fn: () => void | (() => void)): () => void {
     const scope = this.#scope
@@ -155,7 +244,8 @@ export class UIElement extends HTMLElement {
    * Add a platform event listener that rides the connection `AbortSignal`, so it is removed
    * automatically on disconnect (`ac.abort()`) — zero live listeners after removal, no manual teardown.
    * `type` stays an open string so custom event names are accepted; a control narrows at its call site.
-   * Throws if called outside the connected lifetime, where there is no signal to bind to.
+   * Throws if called outside the connected lifetime, where there is no signal to bind to — see `effect()`'s
+   * note on why the GH #302 reentrancy window does not weaken this into a false-positive risk.
    */
   listen(target: EventTarget, type: string, handler: (event: Event) => void, opts?: AddEventListenerOptions): void {
     const ac = this.#ac

@@ -165,30 +165,44 @@ export class UIFormElement extends UIElement {
    * effects below are scope-owned and disposed on disconnect (zero residue). They install AFTER the render
    * effect — harmless: the form family's `render()` is the inherited void. The subclass keeps the clean,
    * no-`super` `connected()` hook — it never sees this wrapper.
+   *
+   * GH #302 — this whole body (not just `super.connectedCallback()`'s own) is bracketed in the base
+   * class's `beginConnecting()`/`endConnecting()` reentrancy window (element.ts, `#connectingDepth`'s own
+   * banner): a real engine can synchronously re-enter `disconnectedCallback` for THIS instance mid-connect
+   * (a host moving an author child through a detached wrapper, e.g. `ui-form-popover`'s
+   * `#ensureParts()`), and without this bracket the effects below — installed AFTER
+   * `super.connectedCallback()` returns, i.e. OUTSIDE its own (narrower) window — would see a torn-down
+   * `#scope` and throw. Bracketing here extends the window across the FULL override chain, so the base
+   * class defers the teardown until this method's own `endConnecting()` instead.
    */
   connectedCallback(): void {
-    super.connectedCallback()
-    // Publish the control's value to the form, reactively: reading `formValue()` tracks whatever signals the
-    // subclass's hook reads (its `value` prop), so a value change re-runs ONLY this effect → one setFormValue.
-    this.effect(() => {
-      this.internals.setFormValue(this.formValue())
-    })
-    // Publish the control's MERGED validity verdict to the platform, reactively (same tracking discipline;
-    // `#mergedValidity` is the single source — also fed to the ADR-0050 connect detail below).
-    this.effect(() => {
-      this.#applyValidity(this.#mergedValidity())
-    })
-    // ADR-0051 — forward the current field labelling through the overridable hook. Base scope-owned, so
-    // association (a `ui-field`'s `setFieldLabelling` call) / clear re-apply reactively. Installed BEFORE
-    // the connect dispatch below (LLD-C2) — nothing can call `setFieldLabelling` before this control has
-    // even announced itself, so there is no real race, but the ordering is the documented contract.
-    this.effect(() => {
-      this.applyFieldLabelling(this.#fieldLabelling.value)
-    })
-    // ADR-0050 — announce full connection to the nearest provider/field ancestor. Dispatched LAST — the
-    // scope is open, `connected()` has run, and all three effects above are installed, so a listener sees
-    // a fully-wired control.
-    this.#dispatchFormConnect()
+    this.beginConnecting()
+    try {
+      super.connectedCallback()
+      // Publish the control's value to the form, reactively: reading `formValue()` tracks whatever signals the
+      // subclass's hook reads (its `value` prop), so a value change re-runs ONLY this effect → one setFormValue.
+      this.effect(() => {
+        this.internals.setFormValue(this.formValue())
+      })
+      // Publish the control's MERGED validity verdict to the platform, reactively (same tracking discipline;
+      // `#mergedValidity` is the single source — also fed to the ADR-0050 connect detail below).
+      this.effect(() => {
+        this.#applyValidity(this.#mergedValidity())
+      })
+      // ADR-0051 — forward the current field labelling through the overridable hook. Base scope-owned, so
+      // association (a `ui-field`'s `setFieldLabelling` call) / clear re-apply reactively. Installed BEFORE
+      // the connect dispatch below (LLD-C2) — nothing can call `setFieldLabelling` before this control has
+      // even announced itself, so there is no real race, but the ordering is the documented contract.
+      this.effect(() => {
+        this.applyFieldLabelling(this.#fieldLabelling.value)
+      })
+      // ADR-0050 — announce full connection to the nearest provider/field ancestor. Dispatched LAST — the
+      // scope is open, `connected()` has run, and all three effects above are installed, so a listener sees
+      // a fully-wired control.
+      this.#dispatchFormConnect()
+    } finally {
+      this.endConnecting()
+    }
   }
 
   /**
