@@ -33,6 +33,7 @@
 
 import { readFileSync } from 'node:fs'
 import type { Catalog } from '../catalog/catalog.ts'
+import { describePropType } from '../catalog/catalog.ts'
 import type { CorpusRecord } from '../corpus/record.ts'
 import type { GenUiMode } from './gen-ui-mode.ts'
 import { MINI_SKILLS } from './mini-skills.ts'
@@ -167,11 +168,16 @@ function grammarFor(mode: GenUiMode | undefined): string {
   return GRAMMAR // undefined or 'default' — byte-identical to the pre-mode ADR-0089 grammar
 }
 
+// GH #288 (root-caused by #286): each prop line now names its declared type/enum (`describePropType`,
+// catalog.ts — the SAME description `produce.ts`'s self-correct feedback resolves per failing path), not
+// just the prop's bare name. Grounds the model on what SHAPE a value must take (e.g. `variant:
+// h1|h2|h3|h4|h5|caption|body`, `emphasis: boolean`) instead of leaving it to guess-and-check blind — the
+// #286 root cause: the corpus carries zero `Text.emphasis` exemplars, so few-shot alone never compensated.
 function catalogInventory(catalog: Catalog): string {
   const lines: string[] = []
   for (const id of Object.keys(catalog.components)) {
     const def = catalog.components[id]!
-    const props = Object.keys(def.properties)
+    const props = Object.keys(def.properties).map((p) => `${p}: ${describePropType(def.properties[p]!)}`)
     const child = def.children ? ` · children model: ${def.children}` : ''
     lines.push(`- ${id} (props: ${props.length > 0 ? props.join(', ') : 'none'}${child})`)
   }

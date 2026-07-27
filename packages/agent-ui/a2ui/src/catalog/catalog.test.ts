@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { loadCatalog, CatalogError, CatalogLoadCode } from './catalog.ts'
+import { loadCatalog, CatalogError, CatalogLoadCode, describePropType } from './catalog.ts'
+import type { PropDef } from './catalog.ts'
 import { demoCatalogDoc } from '../fixtures.ts'
 
 describe('loadCatalog — structural validation (catalog LLD-C1, SPEC-R1/R4)', () => {
@@ -79,4 +80,47 @@ describe('loadCatalog — structural validation (catalog LLD-C1, SPEC-R1/R4)', (
     },
     CatalogLoadCode.NAME_INVALID,
   )
+})
+
+// GH #288 (root-caused by #286) — describePropType is the single source both the system prompt's
+// catalog inventory (system-prompt.ts's catalogInventory) and produce.ts's self-correct feedback
+// (expectedTypeNote) render from; every type-shape a shipped catalog row can declare gets its own case.
+describe('describePropType (GH #288) — the compact model-facing type/enum description', () => {
+  const pd = (type: PropDef['type']): PropDef => ({ type, mapsTo: 'x' })
+
+  it('an enum schema renders its members |-joined, in declared order', () => {
+    expect(describePropType(pd({ type: 'string', enum: ['h1', 'h2', 'caption', 'body'] }))).toBe('h1|h2|caption|body')
+  })
+
+  it('a boolean schema renders "boolean"', () => {
+    expect(describePropType(pd({ type: 'boolean' }))).toBe('boolean')
+  })
+
+  it('a string schema renders "string"', () => {
+    expect(describePropType(pd({ type: 'string' }))).toBe('string')
+  })
+
+  it('a number schema renders "number"', () => {
+    expect(describePropType(pd({ type: 'number' }))).toBe('number')
+  })
+
+  it('an array-of-types schema |-joins the members', () => {
+    expect(describePropType(pd({ type: ['string', 'number'] }))).toBe('string|number')
+  })
+
+  it('an unconstrained schema (no `type` keyword) renders "any"', () => {
+    expect(describePropType(pd({}))).toBe('any')
+  })
+
+  it('a bare `true` boolean JSON-Schema renders "any" (accepts everything)', () => {
+    expect(describePropType(pd(true))).toBe('any')
+  })
+
+  it('a bare `false` boolean JSON-Schema renders "never" (accepts nothing)', () => {
+    expect(describePropType(pd(false))).toBe('never')
+  })
+
+  it('enum takes priority over `type` when both are present', () => {
+    expect(describePropType(pd({ type: 'string', enum: ['single', 'range'] }))).toBe('single|range')
+  })
 })

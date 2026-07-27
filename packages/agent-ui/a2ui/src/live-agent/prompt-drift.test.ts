@@ -80,4 +80,35 @@ describe('buildSystemPrompt drift gate (LLD-C4 / SPEC-R6)', () => {
     expect(withPlanted).toContain('plantedGhostFn') // a new function row surfaces automatically
     expect(sectionIds(withPlanted, 'Available functions')).toContain('plantedGhostFn')
   })
+
+  // GH #288 (root-caused by #286) — each prop line now carries its declared type/enum
+  // (`describePropType`, catalog.ts), not just its bare name. Real shipped catalog rows already prove
+  // this end-to-end (Text.variant/emphasis below); a planted component covers every remaining
+  // type-shape a catalog can declare, the same "plant + rebuild" technique the tests above use.
+  it('each prop line names its declared type/enum, not just the bare prop name (SPEC-R6 grounding, GH #288)', () => {
+    const prompt = buildSystemPrompt(defaultCatalog, [])
+    // Text.variant is a declared enum; Text.emphasis is a declared boolean — the #286 root cause's own
+    // two properties, now grounded instead of silently name-only.
+    expect(prompt).toContain('variant: h1|h2|h3|h4|h5|caption|body')
+    expect(prompt).toContain('emphasis: boolean')
+  })
+
+  it('a planted component covers every remaining type-shape (string/number/unconstrained) in one inventory line', () => {
+    const planted: Catalog = {
+      ...defaultCatalog,
+      components: {
+        ...defaultCatalog.components,
+        PlantedTypeShapes: {
+          name: 'PlantedTypeShapes',
+          properties: {
+            aString: { type: { type: 'string' }, mapsTo: 'aString' },
+            aNumber: { type: { type: 'number' }, mapsTo: 'aNumber' },
+            anyShape: { type: {}, mapsTo: 'anyShape' },
+          },
+        },
+      },
+    }
+    const prompt = buildSystemPrompt(planted, [])
+    expect(prompt).toContain('- PlantedTypeShapes (props: aString: string, aNumber: number, anyShape: any)')
+  })
 })
