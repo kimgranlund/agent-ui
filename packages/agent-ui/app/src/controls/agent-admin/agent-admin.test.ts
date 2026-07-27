@@ -319,6 +319,16 @@ describe('UIAgentAdminElement — composition (GH #52/ADR-0154: chat + {Settings
     expect(conversation.receipt, 'the receipt opt-in rides the admin composition').toBe(true)
   })
 
+  it('GH #285 — the opt-in reaches the REAL per-turn narration element, not just the flag: a submitted turn\'s [data-part="narration"] carries both `oneline` and `receipt`', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const composer = el.querySelector('[data-part="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = 'hello'
+    ;(composer.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    const narration = el.querySelector('[data-part="narration"]')
+    expect(narration?.getAttribute('oneline'), 'the live one-morphing-line mode').toBe('')
+    expect(narration?.getAttribute('receipt'), 'the terminal one-line receipt').toBe('')
+  })
+
   it('…and INTO the per-step source reveal (GH #240/ADR-0159 wave B — part 3 of the same ruling): conversation.sources is set, so each activity step reveals the wire line(s) behind it', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const conversation = el.querySelector('ui-conversation') as UIConversationElement
