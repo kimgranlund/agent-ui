@@ -129,6 +129,14 @@
       "section": "Components"
     },
     {
+      "name": "Form Popover",
+      "tag": "ui-form-popover",
+      "url": "./form-popover-doc.html",
+      "description": "ui-form-popover is a pattern-tier control that packages the ui-popover + form-spine composition recipe (GH #294's first design leg) as one tag: a control-creat…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Form Provider",
       "tag": "ui-form-provider",
       "url": "./form-provider-doc.html",
