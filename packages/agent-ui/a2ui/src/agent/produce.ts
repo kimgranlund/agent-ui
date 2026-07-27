@@ -221,16 +221,20 @@ async function* interleaveProgress(
 ): AsyncGenerator<{ kind: 'progress'; ev: TurnProgress } | { kind: 'frag'; text: string }> {
   const iter = stream[Symbol.asyncIterator]()
   let nextFrag = iter.next()
-  for (;;) {
-    const race = await Promise.race([
-      nextFrag.then((r): { tag: 'frag'; r: IteratorResult<string> } => ({ tag: 'frag', r })),
-      channel.waitForPush().then((): { tag: 'progress' } => ({ tag: 'progress' })),
-    ])
-    while (channel.pending.length > 0) yield { kind: 'progress', ev: channel.pending.shift()! }
-    if (race.tag === 'progress') continue
-    if (race.r.done) return
-    yield { kind: 'frag', text: race.r.value }
-    nextFrag = iter.next()
+  try {
+    for (;;) {
+      const race = await Promise.race([
+        nextFrag.then((r): { tag: 'frag'; r: IteratorResult<string> } => ({ tag: 'frag', r })),
+        channel.waitForPush().then((): { tag: 'progress' } => ({ tag: 'progress' })),
+      ])
+      while (channel.pending.length > 0) yield { kind: 'progress', ev: channel.pending.shift()! }
+      if (race.tag === 'progress') continue
+      if (race.r.done) return
+      yield { kind: 'frag', text: race.r.value }
+      nextFrag = iter.next()
+    }
+  } finally {
+    await iter.return?.()
   }
 }
 
