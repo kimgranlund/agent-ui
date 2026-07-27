@@ -176,6 +176,54 @@ describe('produce() interleaved live-turn progress (ADR-0146 F1/F3)', () => {
   })
 })
 
+// ── GH #290 fix: progress delivery decoupled from a WITHHELD-TEXT tool round ──────────────────────────
+// anthropic.ts's GH #49 tool loop withholds ALL text until a round completes without requesting more
+// tools — but its onEvent('tool') pushes fire in real time. Before the fix, produce()'s `for await` only
+// drained its pending-progress queue between TEXT fragments, so a whole tool round's progress sat buffered
+// until the round's text finally arrived (Kim's live repro: one chunk at t=0, 20s of silence, one 2.7KB
+// burst at t=20.3s). This stub reproduces the withholding shape directly (onEvent, THEN a real delay,
+// THEN — only after BOTH delays — the round's text), proving the fix without needing anthropic.ts's own
+// internal tool-loop plumbing.
+describe('produce() interleaves progress across a text-withholding round (GH #290 fix)', () => {
+  it('tool events surface AS THEY HAPPEN, separated by real time — not bursted together right before the round text', async () => {
+    const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms))
+    const ROUND_DELAY_MS = 60
+    const provider: AgentProvider = {
+      async *stream(req) {
+        req.onEvent?.({ kind: 'message_start' })
+        req.onEvent?.({ kind: 'tool', text: 'checkInHours' })
+        await delay(ROUND_DELAY_MS) // simulates the withheld round's OWN network/tool-exec latency
+        req.onEvent?.({ kind: 'tool', text: 'roomAvailability' })
+        await delay(ROUND_DELAY_MS) // a SECOND withheld round — proves it's not just "first vs last"
+        yield VALID // the adapter's text only arrives once every round is done (GH #49's intentional buffer)
+      },
+    }
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const t0 = Date.now()
+    const stamped: { stage: string; t: number }[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3, progress: true })) {
+      const p = readMetaLine(line)?.a2uiMeta.progress
+      if (p !== undefined) stamped.push({ stage: p.stage, t: Date.now() - t0 })
+    }
+    const [tool1, tool2] = stamped.filter((s) => s.stage === 'tool')
+    const content = stamped.find((s) => s.stage === 'content')!
+
+    expect(tool1, 'the first tool event must surface').toBeDefined()
+    expect(tool2, 'the second tool event must surface').toBeDefined()
+    // the FIRST tool event arrives essentially immediately (pushed before either delay starts) — the
+    // pre-fix bug would instead hold it until `content`, ~2×ROUND_DELAY_MS later.
+    expect(tool1!.t).toBeLessThan(ROUND_DELAY_MS / 2)
+    // the SECOND tool event arrives after the first delay has elapsed but well before the second one has —
+    // i.e. it is delivered mid-flight, not bunched with tool1 or with content.
+    expect(tool2!.t).toBeGreaterThanOrEqual(ROUND_DELAY_MS * 0.7)
+    expect(tool2!.t).toBeLessThan(ROUND_DELAY_MS * 1.5)
+    // content (the round's text) only arrives after BOTH delays — and materially later than tool2, proving
+    // the two tool events were NOT bursted together right before it (the bug's exact signature).
+    expect(content.t).toBeGreaterThanOrEqual(ROUND_DELAY_MS * 1.7)
+    expect(content.t - tool2!.t).toBeGreaterThanOrEqual(ROUND_DELAY_MS * 0.7)
+  })
+})
+
 // ── GH #240/ADR-0159 wave B: the per-step raw-source attachment (progressDetail:'source') ────────────────
 describe("produce() raw-source attachments (GH #240/ADR-0159 wave B — progressDetail:'source')", () => {
   it("'source' attaches the EXACT candidate wire lines to the validating event (byte compare)", async () => {
