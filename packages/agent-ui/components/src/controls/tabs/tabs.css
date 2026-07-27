@@ -23,9 +23,14 @@
 /* ════════════════════════ [1] TOKEN BLOCK — :where() declarations (the --md-sys-color-* + ramp entry) ════════════════════════ */
 
 :where(ui-tabs) {
-  /* Tab-row geometry — the CONTROL band (the rows are interactive; geometry.md Pattern class). Fixed at the md
-     ramp step (ui-tabs exposes no [size] axis). */
-  --ui-tabs-tab-height: var(--md-sys-height-md);
+  /* Tab-row geometry — the CONTROL band (the rows are interactive; geometry.md Pattern class). Fixed at the lg
+     ramp step (ui-tabs exposes no [size] axis) — GH #297: Kim's "one more spacing unit top and bottom" ask,
+     resolved per geometry.md's centering law ("block-size is the vertical lever, never block-padding") by
+     repointing UP the control-height ramp rather than adding block-padding to the fixed frame. md→lg is
+     28px→36px (+8px block-size, i.e. +4px = one --md-sys-space-xs unit per edge) — the ramp step that matches
+     Kim's ask exactly; font/icon stay at md (Kim asked for room, not larger text) since ui-tabs has no glyph to
+     keep in step with the row and pins only ONE quantity (height) to the ramp. */
+  --ui-tabs-tab-height: var(--md-sys-height-lg);
   --ui-tabs-tab-font: var(--md-sys-font-md);
   --ui-tabs-tab-pad-inline: var(--md-sys-space-md); /* a tab's horizontal padding — the layout ladder */
 

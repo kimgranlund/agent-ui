@@ -62,11 +62,12 @@ describe('ui-tabs — keyboard roving moves focus + switches the visible panel (
     const { tabs, tabEls, panelEls } = mount(THREE)
     // C6 geometry — the tab rows resolve to a REAL MEASURED control height in a live engine, not a silent
     // 0-collapse if the token chain broke (e.g. a dropped token block — the `*/`-in-comment class of bug the
-    // css-text regex cannot see). Anti-vacuous: it equals the --md-sys-height-md ramp step (28px @ scale 1), not
-    // merely >0 — so a broken --ui-tabs-tab-height → --md-sys-height-md chain fails HERE, where jsdom/css-text can't.
+    // css-text regex cannot see). Anti-vacuous: it equals the --md-sys-height-lg ramp step (36px @ scale 1, GH
+    // #297), not merely >0 — so a broken --ui-tabs-tab-height → --md-sys-height-lg chain fails HERE, where
+    // jsdom/css-text can't.
     const rowHeight = Number.parseFloat(getComputedStyle(tabEls[0]).blockSize)
-    expect(rowHeight, 'the tab row collapsed — the --ui-tabs-tab-height → --md-sys-height-md chain did not resolve').toBeGreaterThan(0)
-    expect(rowHeight, 'the tab row height is not the --md-sys-height-md ramp step (28px @ scale 1)').toBeCloseTo(28, 0)
+    expect(rowHeight, 'the tab row collapsed — the --ui-tabs-tab-height → --md-sys-height-lg chain did not resolve').toBeGreaterThan(0)
+    expect(rowHeight, 'the tab row height is not the --md-sys-height-lg ramp step (36px @ scale 1, GH #297)').toBeCloseTo(36, 0)
 
     // baseline: tab 0 selected → its panel shows, the others are display:none (the [hidden] author rule).
     expect(getComputedStyle(panelEls[0]).display, 'panel 0 not shown at baseline').toBe('block')
@@ -135,8 +136,8 @@ describe('ui-tabs — the selected-tab indicator paints + survives forced-colors
 describe('ui-tabs — [density] shifts shell spacing; the tab control height is density-invariant (both engines)', () => {
   it('[density] strip-gap + panel-pad SHIFT (--md-sys-space-driven); the tab block-size (--md-sys-height) HOLDS', () => {
     // tabs.css:29-30: --ui-tabs-strip-gap rides --md-sys-space-xs; --ui-tabs-panel-pad rides --md-sys-space-md.
-    // Both are shell/layout-ladder quantities (density-responsive). The tab CONTROL HEIGHT is --md-sys-height-md
-    // (28px explicit literal, ADR-0038 — not a --md-sys-space quantity, density-invariant). Anti-vacuous: strip-gap
+    // Both are shell/layout-ladder quantities (density-responsive). The tab CONTROL HEIGHT is --md-sys-height-lg
+    // (36px explicit literal, ADR-0038, GH #297 — not a --md-sys-space quantity, density-invariant). Anti-vacuous: strip-gap
     // and panel-pad must measurably CHANGE, AND the tab height must be the same at compact and spacious.
     const { tabs, tabEls, panelEls } = mount(THREE)
     const tablist = tabs.querySelector('[data-part="tablist"]') as HTMLElement
@@ -148,7 +149,7 @@ describe('ui-tabs — [density] shifts shell spacing; the tab control height is 
     const tabHeightBase = px(getComputedStyle(tabEls[0]).blockSize)
     expect(stripGapBase, 'comfortable strip-gap is not a positive px').toBeGreaterThan(0)
     expect(panelPadBase, 'comfortable panel-pad is not a positive px').toBeGreaterThan(0)
-    expect(tabHeightBase, 'comfortable tab height is not 28px').toBeCloseTo(28, 0)
+    expect(tabHeightBase, 'comfortable tab height is not 36px (GH #297)').toBeCloseTo(36, 0)
 
     // compact (density 0.5) — shell spacing halves; control height HOLDS
     tabs.setAttribute('density', 'compact')
@@ -171,7 +172,7 @@ describe('ui-tabs — [density] shifts shell spacing; the tab control height is 
     // anti-vacuity: shell spacing change is measurably nonzero (compact < spacious)
     expect(stripGapCompact, 'strip-gap is the same at compact and spacious (density has no effect)').toBeLessThan(stripGapSpacious)
     expect(panelPadCompact, 'panel-pad is the same at compact and spacious (density has no effect)').toBeLessThan(panelPadSpacious)
-    // anti-vacuity: the tab height invariant is a real value (28px), not vacuously zero
+    // anti-vacuity: the tab height invariant is a real value (36px, GH #297), not vacuously zero
     expect(tabHeightCompact, 'tab height is 0 (control-height invariant is vacuous)').toBeGreaterThan(0)
   })
 })

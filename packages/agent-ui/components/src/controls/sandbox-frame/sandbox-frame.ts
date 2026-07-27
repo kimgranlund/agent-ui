@@ -138,6 +138,7 @@ export class UISandboxFrameElement extends UIElement {
   #handshaken = false
   #droppedMessages = 0
   #themeObserver: MutationObserver | null = null
+  #themeSyncPending = false
 
   /** SPEC-R7's observable drop counter — every out-of-vocabulary/malformed/foreign-source frame message
    *  increments this, never throws, never emits a DOM event for the rejected message.
@@ -161,8 +162,17 @@ export class UISandboxFrameElement extends UIElement {
     // a spurious sync on every `size-changed` report (measured: a real cross-engine race — the frame's
     // proactive initial size report fired a sync BEFORE a deliberate ambient flip in the same test tick,
     // reporting the stale color first and starving the real one from the test's first `waitFor`).
+    // GH #284 — coalesce: the observer callback already batches records fired within one microtask
+    // checkpoint, but a single theme flip can still cross MULTIPLE checkpoints (the theme-provider's
+    // own `color-scheme` write is itself a microtask-flushed effect, and unrelated subtree churn can
+    // land in an earlier checkpoint) — each checkpoint was calling `#syncTheme()` directly, producing
+    // 4+ redundant `host-context-changed` posts per flip (#284). A per-task latch collapses every
+    // callback invocation that lands before the queued flush runs into ONE `#syncTheme()` call, while
+    // any mutation arriving AFTER the flush (a later checkpoint — e.g. the provider's own write) finds
+    // the latch already cleared and re-arms it, so the trailing correct notify is never swallowed
+    // (`#scheduleThemeSync` below).
     this.#themeObserver = new MutationObserver((records) => {
-      if (records.some((r) => r.target !== this)) this.#syncTheme()
+      if (records.some((r) => r.target !== this)) this.#scheduleThemeSync()
     })
     this.#themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class'], subtree: true })
 
@@ -294,6 +304,22 @@ export class UISandboxFrameElement extends UIElement {
   }
 
   // ── live theme (SPEC-R6) ──────────────────────────────────────────────────────────────────────────
+
+  /** GH #284's coalescing latch: first caller in a task arms it and schedules the ONE flush via
+   *  `queueMicrotask` (a fresh microtask checkpoint AFTER the current one, so any records already queued
+   *  land first); every subsequent caller before that flush runs is a no-op. The latch clears itself
+   *  at flush time (not a long-lived boolean) — a mutation that arrives in a LATER microtask than the
+   *  one that armed the latch always finds it cleared and re-arms, so a genuinely later theme change
+   *  still produces its own trailing, correct `#syncTheme()` call. `#syncTheme()` itself always reads
+   *  the CURRENT computed scheme at flush time, never a snapshot taken when the latch was armed. */
+  #scheduleThemeSync(): void {
+    if (this.#themeSyncPending) return
+    this.#themeSyncPending = true
+    queueMicrotask(() => {
+      this.#themeSyncPending = false
+      this.#syncTheme()
+    })
+  }
 
   #syncTheme(): void {
     if (!this.#iframe) return

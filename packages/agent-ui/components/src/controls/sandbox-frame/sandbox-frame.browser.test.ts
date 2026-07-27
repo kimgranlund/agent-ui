@@ -186,6 +186,45 @@ describe('ui-sandbox-frame — the token bridge + live theme flip (SPEC-R6 AC1, 
     wrapper.remove()
   })
 
+  it('a single flip produces exactly ONE host-context-changed post (GH #284 — the old code posted 4+)', async () => {
+    const wrapper = document.createElement('div')
+    wrapper.style.setProperty('--md-sys-color-primary', 'rgb(1, 2, 3)')
+    document.body.append(wrapper)
+    const el = document.createElement('ui-sandbox-frame') as UISandboxFrameElement
+    wrapper.append(el)
+    const actions = collectActions(el)
+
+    // Counts every `host-context-changed` this instance receives and reports the RUNNING total on
+    // each one — the test settles on the LAST `count` report and then holds a further window to prove
+    // no MORE posts arrive (a bare "first post wins" read would miss a second, redundant post landing
+    // shortly after).
+    const doc = `<!DOCTYPE html><html><body><script>
+      window.__hostContextCount = 0;
+      window.addEventListener('message', function (e) {
+        var data = e.data;
+        if (data && data.type === 'initialized') window.genui.action('handshake', {});
+        if (data && data.type === 'host-context-changed') {
+          window.__hostContextCount += 1;
+          window.genui.action('count', { n: window.__hostContextCount });
+        }
+      });
+    </` + `script></body></html>`
+
+    el.html = doc
+    await waitFor(() => actions.has('handshake'))
+
+    wrapper.style.setProperty('--md-sys-color-primary', 'rgb(9, 9, 9)')
+    await waitFor(() => actions.has('count'))
+
+    // Hold past the coalescing window — proves the count doesn't keep climbing (the pre-fix behaviour:
+    // 4+ separate `host-context-changed` posts for this one flip).
+    await new Promise((r) => setTimeout(r, 300))
+    expect((actions.get('count')?.payload as { n?: number })?.n).toBe(1)
+
+    el.remove()
+    wrapper.remove()
+  })
+
   it('a NON-handshaken frame (bootstrap never ran) falls back to a full rebuild on a theme flip — themed, state lost', async () => {
     const wrapper = document.createElement('div')
     wrapper.style.setProperty('--md-sys-color-primary', 'rgb(10, 20, 30)')

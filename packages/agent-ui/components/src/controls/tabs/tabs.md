@@ -77,7 +77,7 @@ keyboard:
 
 geometry:
   sizeClass: pattern
-  tabBlockSize: var(--ui-tabs-tab-height)   # the interactive tab rows take the CONTROL height (--md-sys-height-md)
+  tabBlockSize: var(--ui-tabs-tab-height)   # the interactive tab rows take the CONTROL height (--md-sys-height-lg, GH #297)
   tabPaddingInline: var(--ui-tabs-tab-pad-inline)  # off the --md-sys-space layout ladder
   stripGap: var(--ui-tabs-strip-gap)        # the inter-tab gap — --md-sys-space (density-responsive)
   panelPadding: var(--ui-tabs-panel-pad)    # the panel body padding — --md-sys-space
