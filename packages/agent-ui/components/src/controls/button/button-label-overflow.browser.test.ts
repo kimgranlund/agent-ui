@@ -66,6 +66,65 @@ describe('ui-button label-wrapper geometry regression (ADR-0133) — the label F
   })
 })
 
+describe('ui-button label centering when stretched wider than its content (GH #293)', () => {
+  it('a slotless button stretched past its label\'s intrinsic width centers the label — not flush-left', () => {
+    const { btn } = mount('<ui-button>Save</ui-button>')
+    btn.style.inlineSize = '400px' // stretched WAY past "Save"'s intrinsic width
+
+    const btnRect = btn.getBoundingClientRect()
+    const labelRect = label(btn).getBoundingClientRect()
+    const insetStart = labelRect.left - btnRect.left
+    const insetEnd = btnRect.right - labelRect.right
+    expect(insetStart, 'the label sat flush-left instead of centered (GH #293)').toBeCloseTo(insetEnd, 0)
+    // anti-vacuous: the label box is genuinely narrower than the button — there IS leftover space to center within.
+    expect(labelRect.width, 'the label must not have stretched to fill the whole button (defeats the centering claim)').toBeLessThan(
+      btnRect.width - 40,
+    )
+  })
+
+  it('leading+label stretched wide: the label centers within ITS OWN track (not the whole button)', () => {
+    const { btn } = mount('<ui-button><svg slot="leading" data-role="icon"><rect width="18" height="18"/></svg>Download</ui-button>')
+    btn.style.inlineSize = '400px'
+
+    const iconRect = (btn.querySelector('[slot="leading"]') as HTMLElement).getBoundingClientRect()
+    const btnRect = btn.getBoundingClientRect()
+    const labelRect = label(btn).getBoundingClientRect()
+    // the label's OWN track runs from just after the icon+gap to the button's trailing h/2 edge — center
+    // within THAT span, not the whole button (which would ignore the leading icon's real estate).
+    const trackStart = iconRect.right + Number.parseFloat(getComputedStyle(btn).columnGap)
+    const trackEnd = btnRect.right - Number.parseFloat(getComputedStyle(btn).paddingInlineEnd)
+    const insetStart = labelRect.left - trackStart
+    const insetEnd = trackEnd - labelRect.right
+    // ≤2px slack — cross-engine sub-pixel layout rounding (webkit vs. chromium), not a centering defect.
+    expect(
+      Math.abs(insetStart - insetEnd),
+      `the label did not center within its own [leading | label] track (GH #293): start=${insetStart} end=${insetEnd}`,
+    ).toBeLessThanOrEqual(2)
+  })
+
+  it('a too-long label in a stretched-but-narrow-for-its-text button still clips at the OLD (stretch) width — centering never widens the clip box', () => {
+    const { btn } = mount('<ui-button>This label is far too long to fit in a narrow button</ui-button>')
+    btn.style.inlineSize = '80px'
+    const el = label(btn)
+    const btnCs = getComputedStyle(btn)
+    const contentBoxWidth =
+      btn.getBoundingClientRect().width -
+      Number.parseFloat(btnCs.borderLeftWidth) -
+      Number.parseFloat(btnCs.borderRightWidth) -
+      Number.parseFloat(btnCs.paddingInlineStart) -
+      Number.parseFloat(btnCs.paddingInlineEnd)
+    const labelRect = el.getBoundingClientRect()
+    // the overflowing label's own box is clamped to the track width (byte-identical to the pre-fix stretch
+    // box) — max-inline-size: 100% is the safety catch that keeps ellipsis triggering.
+    expect(labelRect.width, 'an overflowing label must still be clamped to the track width, not its full text width').toBeCloseTo(
+      contentBoxWidth,
+      0,
+    )
+    expect(el.scrollWidth, 'the long label must still genuinely overflow its (clamped) wrapper box').toBeGreaterThan(el.clientWidth)
+    expect(getComputedStyle(el).textOverflow).toBe('ellipsis')
+  })
+})
+
 describe('ui-button label overflow — a real ellipsis when the label does NOT fit (ADR-0133)', () => {
   it('a long label in a narrow host clips with a real rendered ellipsis — text-overflow engages, the host stays the constrained width', () => {
     const { btn } = mount('<ui-button>This label is far too long to fit in a narrow button</ui-button>')

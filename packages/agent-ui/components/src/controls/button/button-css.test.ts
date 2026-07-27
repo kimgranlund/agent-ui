@@ -71,6 +71,16 @@ describe('button.css — structure + token hygiene (s7)', () => {
   it('a forced-colors block keeps the ink/border from vanishing', () => {
     expect(stylesBlock).toMatch(/@media \(forced-colors: active\)/)
   })
+
+  it('GH #293: the label wrapper centers within its (flexible, 1fr) track — justify-self, clamped by max-inline-size so an overflowing label still clips at the SAME width as before (stretch)', () => {
+    const m = stylesBlock.match(/:scope > \[data-part='label'\]\s*\{([^}]*)\}/)
+    expect(m, "[data-part='label'] rule missing").not.toBeNull()
+    const rule = (m as RegExpMatchArray)[1]
+    expect(rule).toMatch(/justify-self:\s*center/)
+    expect(rule).toMatch(/max-inline-size:\s*100%/)
+    // NOT text-align: center — that pitfall breaks end-anchored text-overflow: ellipsis once both edges overflow.
+    expect(rule).not.toMatch(/text-align/)
+  })
 })
 
 // ── Interaction states + the shared focus ring (ADR-0008 / ADR-0009) ─────────────────────────────────

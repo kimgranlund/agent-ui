@@ -114,11 +114,26 @@
      already lives on `:scope` above and inherits here for free — only the two CLIPPING properties are
      needed. `min-inline-size: 0` overrides the grid item's default `min-width: auto` (its content's
      intrinsic size), which would otherwise refuse to shrink below the label's full width and defeat the
-     clip — the one addition ADR-0106's block-level two-leg pattern never needed, host-as-grid's own. */
+     clip — the one addition ADR-0106's block-level two-leg pattern never needed, host-as-grid's own.
+     `justify-self: center` + `max-inline-size: 100%` (GH #293) — every label track in this file (base
+     `1fr`, and the leading/trailing-only `1fr` legs below) is a FLEXIBLE track that always consumes 100%
+     of its leftover space, so `justify-content: center` (the [icon-only] mechanism, an `auto`-sized track
+     centered in real container leftover) is a no-op here — there IS no leftover to distribute. `text-align:
+     center` was also rejected: once the label overflows, centered text overflows BOTH edges symmetrically,
+     and `text-overflow: ellipsis` only anchors to the line's END — a well-known combination that clips the
+     wrong edge or drops the ellipsis marker entirely. `justify-self: center` instead sizes the item to its
+     OWN fit-content width (shrinking off `stretch` when the label is short) and centers that box within the
+     track; `max-inline-size: 100%` is the safety catch — with `white-space: nowrap`, min-content ==
+     max-content, so fit-content alone would size the item to the label's FULL width even past the track,
+     never overflowing itself and defeating the clip. Clamped to 100%, an overflowing label's box is capped
+     at exactly the track's width — byte-identical to the old `stretch` box — so `overflow: hidden` +
+     `text-overflow: ellipsis` fire exactly as before, still anchored at the end. */
   :scope > [data-part='label'] {
     overflow: hidden;
     text-overflow: ellipsis;
     min-inline-size: 0;
+    max-inline-size: 100%;
+    justify-self: center;
   }
 
   /* Anatomy (ADR-0006, extended by ADR-0012): host-as-grid with three POSITION regions — an OPTIONAL leading
