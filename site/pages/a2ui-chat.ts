@@ -171,7 +171,21 @@ async function runTurn(input: TurnInput): Promise<void> {
       handle.ingestLine(line) // routes by surfaceId to a fresh/known inline ui-surface-host, or narrates
     }
     if (note !== undefined) handle.setNote(note)
-    handle.finalize()
+    // GH #291/ADR-0160 clause 3 — the pre-hydrated action-chip mechanism's own proof-of-concept
+    // consumer wiring: a settled turn with real content gets a Helpful/Not-Helpful feedback pair (the
+    // reference's own illustrative example — this page's choice, not something the primitive hardcodes).
+    // GH #291 review — "real content" includes a NOTE-ONLY settled turn (a prose note IS the turn's
+    // content when there are no wire lines, ADR-0088's own note law); gating on `turnLines.length > 0`
+    // alone silently excluded that case even though `note !== undefined` was already checked two lines
+    // above for the identical reason.
+    handle.finalize(
+      turnLines.length > 0 || note !== undefined
+        ? [
+            { id: 'helpful', label: 'Helpful 👍' },
+            { id: 'not-helpful', label: 'Not Helpful 👎' },
+          ]
+        : undefined,
+    )
   } catch (e) {
     failed = true
     handle.fail((e as Error).message) // SPEC-R6 AC3 — the primitive truncates narration + surfaces a system bubble
@@ -197,6 +211,21 @@ function handleClientMessage(message: A2uiClientMessage): void {
 // to register before OR after the element connects.
 conv.onSubmit((text) => void runTurn({ kind: 'intent', text, session }))
 conv.onClientMessage(handleClientMessage)
+
+// GH #291/ADR-0160 clause 3 — `action` IS a real CustomEvent (ADR-0153's seventh closed-vocabulary
+// member, reused, never an eighth): the feedback pair's own commit. This page just surfaces it as a
+// status line — a real product would send it to telemetry.
+// GH #291 review — `action` is ALSO the shape a genui `ui-sandbox-frame`'s own game-loop action
+// bubbles as (conversation.ts's `routeGenui`, SPEC-R8), and it bubbles/composes through `ui-conversation`
+// the same as the chip row's own commit (conversation.md's `action` entry). Discriminate by
+// `event.target`: the chip row fires ON `conv` itself (conversation.md's `action` entry); a genui
+// action's target is the sandbox-frame that mounted it, never `conv`. Without this guard a genui action
+// click on this page misfires this thank-you line.
+conv.addEventListener('action', (e) => {
+  if (e.target !== conv) return
+  const id = (e as CustomEvent<{ id: string }>).detail.id
+  status(id === 'helpful' ? 'Thanks for the feedback!' : "Thanks — noted, we'll do better.")
+})
 
 // ════════════════ reset ════════════════
 resetBtn.addEventListener('click', () => {

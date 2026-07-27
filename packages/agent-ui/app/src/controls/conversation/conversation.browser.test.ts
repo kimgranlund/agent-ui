@@ -354,14 +354,16 @@ describe('ui-conversation cross-engine smoke — the COMPOSED path renders with 
   })
 })
 
-// GH #241 (Kim's ruling) — the chat path's chrome laws, proven on a realistic chat mount in a REAL
-// engine: (1) the A2UI render surface is CHROMELESS — no checker/background, zero padding — and spans
-// the full message-column width (rect-compared); (2) the agent turn DE-BUBBLES — no background, no
-// padding, full column width, the sender label above the content and outside the text container —
-// while (3) the user turn keeps its compact bubble. The STREAMING state is proven on the same
-// container mid-turn (before finalize()) — the text/surfaces stream bare, never inside a bubble that
-// later disappears.
-describe('ui-conversation cross-engine — chat-path chrome laws (GH #241)', () => {
+// GH #241 (Kim's original ruling) — the chat path's chrome laws, proven on a realistic chat mount in
+// a REAL engine: the A2UI render surface is CHROMELESS — no checker/background, zero padding —
+// UNCHANGED below. GH #291/ADR-0160 (Kim's 2026-07-27 ruling) REVERSES the other half fleet-wide: the
+// agent turn RE-BUBBLES (a painted background, real padding, the base bubble's own width cap) instead
+// of #241's de-bubbled full-width bare text; the sender label above the content and outside the text
+// container stays unchanged (that was never #241's own doing). The user turn keeps its compact bubble,
+// unaffected either way. The STREAMING state is proven on the same container mid-turn (before
+// finalize()) — it already carries the SAME chrome the settled state does, never a bubble that
+// vanishes/appears across the streaming→settled transition.
+describe('ui-conversation cross-engine — chat-path chrome laws (GH #241 + GH #291/ADR-0160)', () => {
   /** The log's content-box width — the message column's available width (clientWidth excludes any
    *  scrollbar; subtracting the log's own padding leaves the box the bubbles lay out in). */
   const availableColumnWidth = (log: HTMLElement): number => {
@@ -385,7 +387,7 @@ describe('ui-conversation cross-engine — chat-path chrome laws (GH #241)', () 
     return handle
   }
 
-  it('the mounted A2UI surface is chromeless and spans the full message-column width (rect-compared)', () => {
+  it('the mounted A2UI surface is chromeless and spans the full width available INSIDE its bubble (rect-compared)', () => {
     const el = mountConversation()
     driveSurfaceTurn(el, true)
 
@@ -395,7 +397,8 @@ describe('ui-conversation cross-engine — chat-path chrome laws (GH #241)', () 
     const stage = host.querySelector('[data-part="stage"]') as HTMLElement
     const surface = host.querySelector('[data-part="surface"]') as HTMLElement
 
-    // conversation.ts sets the GH #241 pair on every inline mount.
+    // conversation.ts sets the GH #241 pair on every inline mount — UNCHANGED by GH #291/ADR-0160:
+    // the surface itself stays chromeless even though the bubble around it is chromed again.
     expect(host.hasAttribute('bare'), 'the chat mount is missing [bare]').toBe(true)
     expect(host.hasAttribute('wrap'), 'the chat mount lost [wrap] (TKT-0084)').toBe(true)
 
@@ -409,29 +412,43 @@ describe('ui-conversation cross-engine — chat-path chrome laws (GH #241)', () 
       expect(surfaceStyle[side], `the surface ${side} leaked into the chat path`).toBe('0px')
     }
 
-    // FULL width: surface ≈ host ≈ the message column's available width (the de-bubbled agent turn
-    // has zero padding, so the whole chain shares one content-box width).
-    const available = availableColumnWidth(log)
-    expect(host.getBoundingClientRect().width, 'the host does not span the column').toBeCloseTo(available, 0)
-    expect(surface.getBoundingClientRect().width, 'the surface does not span the column').toBeCloseTo(available, 0)
+    // FULL width WITHIN THE BUBBLE (GH #291/ADR-0160 — the bubble itself is narrower than the column
+    // again, its own padding restored; the surface still fills whatever content-box the bubble hands
+    // it — ONE padding layer, contributed by the bubble, never a second one from [bare]).
+    const bubbleStyle = getComputedStyle(bubble)
+    const bubbleContentWidth =
+      bubble.clientWidth - Number.parseFloat(bubbleStyle.paddingLeft) - Number.parseFloat(bubbleStyle.paddingRight)
+    expect(host.getBoundingClientRect().width, 'the host does not span the bubble content box').toBeCloseTo(bubbleContentWidth, 0)
+    expect(surface.getBoundingClientRect().width, 'the surface does not span the bubble content box').toBeCloseTo(
+      bubbleContentWidth,
+      0,
+    )
+    expect(
+      bubble.getBoundingClientRect().width,
+      'the bubble spans the full column (the ADR-0160 width cap regressed)',
+    ).toBeLessThan(availableColumnWidth(log) - 1)
   })
 
-  it('the agent turn de-bubbles: no background, zero padding, full column width; the sender label sits ABOVE the content, outside the text container', () => {
+  it('the agent turn RE-BUBBLES (GH #291/ADR-0160): a painted background, real padding, capped width; the sender label sits ABOVE the content, outside the text container', () => {
     const el = mountConversation()
     const handle = el.beginAgentTurn()
-    handle.setNote('A bare agent reply')
+    handle.setNote('A bubbled agent reply')
     handle.finalize()
 
     const log = logOf(el)
     const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
     const bubbleStyle = getComputedStyle(bubble)
-    expect(alphaOf(bubbleStyle.backgroundColor), 'the agent turn still paints a bubble background').toBe(0)
-    for (const side of ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'] as const) {
-      expect(bubbleStyle[side], `the agent turn still carries bubble ${side}`).toBe('0px')
-    }
-    expect(bubble.getBoundingClientRect().width, 'the agent turn does not span the column').toBeCloseTo(availableColumnWidth(log), 0)
+    expect(alphaOf(bubbleStyle.backgroundColor), 'the agent turn lost its bubble background (ADR-0160 regressed)').toBeGreaterThan(0)
+    expect(Number.parseFloat(bubbleStyle.paddingLeft), 'the agent turn lost its bubble padding (ADR-0160 regressed)').toBeGreaterThan(
+      0,
+    )
+    expect(
+      bubble.getBoundingClientRect().width,
+      'the agent turn spans the full column (the ADR-0160 width cap regressed)',
+    ).toBeLessThan(availableColumnWidth(log) - 1)
 
-    // The sender label: present, above the message text, and OUTSIDE the text container.
+    // The sender label: present, above the message text, and OUTSIDE the text container — unaffected
+    // by the re-bubble (this was never GH #241's own doing; #241 only ever touched background/padding/width).
     const who = bubble.querySelector('[data-part="who"]') as HTMLElement
     const body = bubble.querySelector('[data-part="body"]') as HTMLElement
     expect(who).not.toBeNull()
@@ -442,16 +459,18 @@ describe('ui-conversation cross-engine — chat-path chrome laws (GH #241)', () 
     )
   })
 
-  it('the STREAMING state is already bare — mid-turn (before finalize) the same container carries no chrome and full width', () => {
+  it('the STREAMING state already carries the bubble — mid-turn (before finalize) the same container is chromed and capped, matching the settled state', () => {
     const el = mountConversation()
     const handle = driveSurfaceTurn(el, false) // in flight — streaming, not settled
 
     const log = logOf(el)
     const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
     const stage = bubble.querySelector('ui-surface-host [data-part="stage"]') as HTMLElement
-    expect(alphaOf(getComputedStyle(bubble).backgroundColor), 'the streaming turn renders inside a bubble').toBe(0)
-    expect(getComputedStyle(bubble).paddingTop).toBe('0px')
-    expect(bubble.getBoundingClientRect().width).toBeCloseTo(availableColumnWidth(log), 0)
+    expect(alphaOf(getComputedStyle(bubble).backgroundColor), 'the streaming turn lost its bubble background').toBeGreaterThan(0)
+    expect(Number.parseFloat(getComputedStyle(bubble).paddingTop), 'the streaming turn lost its bubble padding').toBeGreaterThan(0)
+    expect(bubble.getBoundingClientRect().width, 'the streaming turn spans the full column').toBeLessThan(
+      availableColumnWidth(log) - 1,
+    )
     expect(getComputedStyle(stage).backgroundImage, 'the streaming surface paints the checker').toBe('none')
 
     handle.finalize() // settle cleanly — no dangling turn leaks into the shared afterEach teardown
@@ -469,6 +488,84 @@ describe('ui-conversation cross-engine — chat-path chrome laws (GH #241)', () 
     expect(bubble.getBoundingClientRect().width, 'the user bubble stretched to the full column').toBeLessThan(
       availableColumnWidth(log) - 24,
     )
+  })
+})
+
+// GH #291/ADR-0160 clause 3 — the pre-hydrated action-chip row (`finalize(actions?)`). Zero prior
+// coverage of this mechanism (GH #291 review finding): pins the row's render/removal/event contract, the
+// omitted-`actions` no-op, and the `event.target` discriminant the `action` event entry + this same
+// review's Major-1 fix (`conversation.md`'s `action` entry, `a2ui-chat.ts`'s guard) both depend on.
+describe('ui-conversation cross-engine smoke — the pre-hydrated action-chip row (GH #291/ADR-0160 clause 3)', () => {
+  it('a non-empty actions list renders one chip per action in a [data-part="actions"] row', () => {
+    const el = mountConversation()
+    const handle = el.beginAgentTurn()
+    handle.setNote('Was this helpful?')
+    handle.finalize([
+      { id: 'helpful', label: 'Helpful' },
+      { id: 'not-helpful', label: 'Not helpful' },
+    ])
+
+    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    const row = bubble.querySelector('[data-part="actions"]') as HTMLElement
+    expect(row, 'the actions row did not render').not.toBeNull()
+    const chips = row.querySelectorAll('ui-button')
+    expect(chips).toHaveLength(2)
+    expect(chips[0]!.textContent).toBe('Helpful')
+    expect(chips[1]!.textContent).toBe('Not helpful')
+  })
+
+  it('clicking a chip removes the WHOLE row and fires exactly one action event on the host, with the clicked id', () => {
+    const el = mountConversation()
+    const handle = el.beginAgentTurn()
+    handle.setNote('Was this helpful?')
+    handle.finalize([
+      { id: 'helpful', label: 'Helpful' },
+      { id: 'not-helpful', label: 'Not helpful' },
+    ])
+
+    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    const row = bubble.querySelector('[data-part="actions"]') as HTMLElement
+    const firstChip = row.querySelector('ui-button') as HTMLElement
+
+    const received: Array<{ id: string }> = []
+    el.addEventListener('action', (e) => received.push((e as CustomEvent<{ id: string }>).detail))
+
+    firstChip.click()
+
+    // one-shot commit — the whole row is gone, not just the clicked chip.
+    expect(bubble.querySelector('[data-part="actions"]'), 'the row did not remove itself on commit').toBeNull()
+    // exactly one event, naming the clicked action — a second chip can never fire (it no longer exists).
+    expect(received).toHaveLength(1)
+    expect(received[0]).toEqual({ id: 'helpful' })
+  })
+
+  it('finalize() with no actions argument renders no [data-part="actions"] row at all', () => {
+    const el = mountConversation()
+    const handle = el.beginAgentTurn()
+    handle.setNote('A plain reply, no chips')
+    handle.finalize()
+
+    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    expect(bubble.querySelector('[data-part="actions"]'), 'a row rendered despite no actions argument').toBeNull()
+  })
+
+  it("the chip's action event fires with target === the ui-conversation host itself (the discriminant conversation.md's action entry and a2ui-chat.ts's guard both rely on)", () => {
+    const el = mountConversation()
+    const handle = el.beginAgentTurn()
+    handle.setNote('Was this helpful?')
+    handle.finalize([{ id: 'helpful', label: 'Helpful' }])
+
+    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    const chip = bubble.querySelector('[data-part="actions"] ui-button') as HTMLElement
+
+    let target: EventTarget | null = null
+    el.addEventListener('action', (e) => {
+      target = e.target
+    })
+    chip.click()
+
+    expect(target, 'the action event never reached the host').not.toBeNull()
+    expect(target === el, 'the action event target was not ui-conversation itself (never the button, never the bubble)').toBe(true)
   })
 })
 

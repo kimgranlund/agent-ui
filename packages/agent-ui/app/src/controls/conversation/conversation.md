@@ -94,7 +94,10 @@ properties:
   - name: contextItems
     description: A `readonly {id, label}[]` of dismissable chips shown above the field (e.g. "something selected elsewhere, attached to this turn's context"). Default `undefined` — no chip row. A dismiss click fires `onContextDismiss(id)`; the consumer owns actually removing it from this list.
 
-events: []               # no DOM events — onSubmit/onClientMessage/onModelChange/onEffortChange/onProviderChange/onModeChange/onContextDismiss/onMicClick/setContentRenderer are ALL callback/hook registrations, never CustomEvents (SPEC-R5/SPEC-R12; the closed six-event vocabulary has no submission/picker-commit/client-message/render-hook kind)
+events:                   # onSubmit/onClientMessage/onModelChange/onEffortChange/onProviderChange/onModeChange/onContextDismiss/onMicClick/setContentRenderer are ALL callback/hook registrations, never CustomEvents (SPEC-R5/SPEC-R12; the closed vocabulary has no submission/picker-commit/client-message/render-hook kind). GH #291/ADR-0160 clause 3 adds the ONE real DOM event: `action`, fired from the settled-turn action-chip row — the SAME closed-vocabulary member ui-status-stream's inline retry button already uses (ADR-0153's seventh member), never an eighth.
+  - name: action
+    detail: '{ id: string }'
+    description: Fired when the user clicks a settled agent turn's pre-hydrated action chip (rendered when `AgentTurnHandle.finalize()` was called with a non-empty `actions` list). `id` is the clicked `TurnAction.id` — the consumer's own vocabulary (e.g. `'helpful'`/`'not-helpful'`, or `'yes'`/`'no'`), never interpreted by this primitive. Clicking any chip in the row removes the WHOLE row first (one-shot commit — a settled turn's feedback/reply choice can never double-fire), then fires this event on `ui-conversation` itself (never on the button, never on the bubble). GH #291 review — a consumer must still discriminate by `event.target === conv` before treating an `action` event as this chip commit: a genui `ui-sandbox-frame`'s own game-loop `action` (SPEC-R8, `routeGenui`) is a DIFFERENT `action` shape (`{surfaceId, name, payload}`, not `{id}`) that this build stops from bubbling past its own frame (`stopPropagation()`), but a consumer listening directly on a mounted surface, or on any DOM ancestor of `ui-conversation`, can still observe it — `event.target` is the only reliable discriminant between the two closed-vocabulary `action` shapes sharing this fleet's seventh event name (ADR-0153/ADR-0160).
 
 slots: []                 # content model is NOT author-composed — the thread/composer are built entirely by this element's own connect-time logic and imperative API; no slotted children
 
@@ -111,6 +114,8 @@ parts:                    # NOT shadow-DOM ::part() (light-DOM only) — light-D
     description: The visible "Closed." note (`[data-part="annotation"]`) appended to a surface's bubble on deletion (SPEC-R7).
   - name: disclosure
     description: The opt-in raw-wire `<details>` dump (`[data-part="disclosure"]`), shown only when `disclosure` is true.
+  - name: actions
+    description: 'GH #291/ADR-0160 clause 3 — the pre-hydrated action-chip row (`[data-part="actions"]`), appended to a settled agent turn''s bubble ONLY when `AgentTurnHandle.finalize()` was called with a non-empty `actions` list (after the wire disclosure, when both are present). One `ui-button` chip per `TurnAction`; see the `action` event.'
 
   Note (TKT-0056): the composer's own parts (`composer`, `context-chips`, `options`, the picker triggers,
   `mic`, `send`) moved to `ui-conversation-composer` — see `conversation-composer.md`'s own `parts:` block.
@@ -207,6 +212,30 @@ Each agent turn renders a fresh `ui-status-stream` narrating the turn's own mech
 (open/restructure/react/close, derived from the same envelope-key inspection `categoryOf` already proves
 elsewhere in the fleet) — this ships **unconditionally** (ADR-0088's honest-narration law). The raw JSONL
 `<details>` wire dump is an **opt-in** debugging affordance behind the `disclosure` prop (default `false`).
+
+## Pre-hydrated action chips on a settled turn (GH #291/ADR-0160 clause 3, Kim's 2026-07-27 ruling)
+
+`AgentTurnHandle.finalize(actions?: readonly TurnAction[])` accepts an OPTIONAL row of
+consumer-defined `{ id, label }` chips — a GENERAL mechanism, never a hardcoded pair: "was this any
+good?" → `[{id:'helpful', label:'Helpful 👍'}, {id:'not-helpful', label:'Not Helpful 👎'}]`, or a
+question's quick replies → `[{id:'yes', label:'Yes'}, {id:'no', label:'No'}]`. Omitted or empty ⇒
+byte-identical to every existing caller (no new DOM). When present, one `ui-button` chip per action
+renders below the turn's note (after the wire disclosure, when both are present); clicking ANY chip
+removes the WHOLE row (a one-shot commit) and fires this element's `action` event with `{ id }`
+naming the chosen action — the SAME closed-vocabulary member `ui-status-stream`'s inline retry button
+already uses (ADR-0153's seventh member), never an eighth.
+
+```ts
+handle.setNote('Task completed and here is the output')
+handle.finalize([
+  { id: 'helpful', label: 'Helpful 👍' },
+  { id: 'not-helpful', label: 'Not Helpful 👎' },
+])
+// …
+conv.addEventListener('action', (e) => {
+  console.log((e as CustomEvent<{ id: string }>).detail.id) // 'helpful' | 'not-helpful'
+})
+```
 
 ## Transport-free by construction (SPEC-R8)
 

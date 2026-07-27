@@ -52,6 +52,11 @@
 
 import { UIElement, prop, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
 import type { UIStatusStreamElement } from '@agent-ui/components/components'
+// GH #291/ADR-0160 clause 3 — the settled-turn action-chip row reuses `ui-button` (the
+// ui-status-stream inline-retry-action precedent, GH #147/ADR-0153 Fork 2) rather than hand-rolling a
+// chip control; registered here exactly like that precedent's own import.
+import '@agent-ui/components/controls/button'
+import type { UIButtonElement } from '@agent-ui/components/controls/button'
 import '../surface-host/surface-host.ts' // registers <ui-surface-host> — composed internally (ADR-0129 clause 2)
 import type { UISurfaceHostElement } from '../surface-host/surface-host.ts'
 // genui-surface.spec.md SPEC-R8/PRD-G8 — registers <ui-sandbox-frame> (PRD-D9, `@agent-ui/components`,
@@ -121,6 +126,16 @@ const props = {
   contextItems: { ...prop.json<readonly ContextItem[] | undefined>(undefined), attribute: false as const },
 } satisfies PropsSchema
 
+/** GH #291/ADR-0160 clause 3 (Kim's 2026-07-27 ruling) — a CONSUMER-DEFINED pre-hydrated inline-action
+ *  chip on a settled agent turn: "was this any good?" → a Helpful/Not-Helpful pair, or a question's
+ *  quick replies → "Yes"/"No" — a GENERAL mechanism, never a hardcoded pair. `id` is the value the
+ *  fired `action` event names (the consumer's own vocabulary — never interpreted by this primitive);
+ *  `label` is the chip's visible text. */
+export interface TurnAction {
+  readonly id: string
+  readonly label: string
+}
+
 /** The imperative per-turn driver the APP'S OWN transport loop calls — NOT a DOM type (SPEC-R8). */
 export interface AgentTurnHandle {
   /** Routes one raw A2UI JSONL line by `surfaceId` to a fresh/known `ui-surface-host`, or narrates a
@@ -143,8 +158,14 @@ export interface AgentTurnHandle {
    *  B: a producer-attached `ev.source` (the `progressDetail:'source'` opt-in) feeds the entry's per-step
    *  reveal — only when this element's own `sources` prop is set; dropped otherwise (fail-closed). */
   progress(ev: TurnProgress): void
-  /** Ends narration, renders the note (or a factual fallback tally), and settles every surface host this turn touched. */
-  finalize(): void
+  /** Ends narration, renders the note (or a factual fallback tally), and settles every surface host this
+   *  turn touched. GH #291/ADR-0160 clause 3 — an optional, non-empty `actions` row renders as a
+   *  pre-hydrated chip row on THIS settled turn's bubble, appended after the wire disclosure (when
+   *  both are present); clicking any chip removes the whole row (one-shot commit) and fires this
+   *  host's `action` event with `{ id }` naming the chosen action — the SAME closed-vocabulary member
+   *  ui-status-stream's inline retry button already uses (ADR-0153), never an eighth. Omitted/empty
+   *  ⇒ byte-identical to every existing caller. */
+  finalize(actions?: readonly TurnAction[]): void
   /** A thrown turn (SPEC-R6 AC3): narration truncates with an error entry, a system bubble surfaces `message`, still finalizes cleanly. */
   fail(message: string): void
 }
@@ -539,9 +560,16 @@ export class UIConversationElement extends UIElement {
       host.addEventListener('action', (e) => {
         // SPEC-R8's routing law: the ONE outward semantic channel. Framed as a genui-shaped client message
         // (structurally distinct from an `A2uiClientMessage` — a genui action is NOT one, SPEC-R8's own
-        // reasoning) and bubbled through the SAME `onClientMessage` callback `ui-surface-host` uses (LLD-C4)
-        // — the runner/consumer distinguishes the two shapes at its own boundary (`clientMessageSurfaceId`'s
-        // own `'genuiAction'` arm, agent-admin.ts).
+        // reasoning) and re-routed through the SAME `onClientMessage` callback `ui-surface-host` uses
+        // (LLD-C4) — the runner/consumer distinguishes the two shapes at its own boundary
+        // (`clientMessageSurfaceId`'s own `'genuiAction'` arm, agent-admin.ts).
+        // GH #291 review — `ui-sandbox-frame` emits this `action` CustomEvent bubbling+composed
+        // (`emit()`'s fleet default); once re-routed above there is no reason for the SAME event to also
+        // continue bubbling out through `ui-conversation` itself, where it collides with the chip row's OWN
+        // `action` event (ADR-0160 clause 3, `#buildActions`) — a consumer listening on `ui-conversation`
+        // for the chip commit would otherwise also catch every genui action click. Stopped here, at the
+        // frame that owns it, before it reaches `ui-conversation`'s host boundary.
+        e.stopPropagation()
         const detail = (e as CustomEvent<GenuiActionDetail>).detail
         // A genui action is NOT an `A2uiClientMessage` (SPEC-R8) — `ClientMessageListener`'s parameter
         // type is nonetheless pinned to that closed union (the renderer's own real client-message shape).
@@ -597,7 +625,7 @@ export class UIConversationElement extends UIElement {
         noteText = text
       },
       progress: (ev: TurnProgress) => routeProgress(ev),
-      finalize: () => {
+      finalize: (actions?: readonly TurnAction[]) => {
         endTurn() // TKT-0034 — re-enable the composer THE MOMENT finalize() runs, not after narration settles
         // Settle the LIVE entries this turn narrated (categories + the current progress stage) to `done`
         // — stamping each entry's done-form label on the transition (GH #238/ADR-0159: a done checkmark
@@ -609,6 +637,9 @@ export class UIConversationElement extends UIElement {
         narration.finalize()
         this.#renderBody(note, noteText ?? summarize(turnLines))
         if (this.disclosure && turnLines.length > 0) bubble.append(this.#buildDisclosure(turnLines))
+        // GH #291/ADR-0160 clause 3 — the pre-hydrated action-chip row, LAST (after the wire disclosure,
+        // when both are present): a settled turn's feedback/reply row reads as the final word on that turn.
+        if (actions && actions.length > 0) bubble.append(this.#buildActions(actions))
         this.#settleTouchedHosts(touchedIds)
         void this.#tailFollowLog(wasNear)
       },
@@ -852,6 +883,29 @@ export class UIConversationElement extends UIElement {
     pre.textContent = pretty || '(no payload this turn)'
     details.append(summary, pre)
     return details
+  }
+
+  /** GH #291/ADR-0160 clause 3 — one `ui-button` chip per consumer-supplied `TurnAction` (the
+   *  ui-status-stream inline-retry-action precedent, GH #147/ADR-0153 Fork 2 — same variant/size).
+   *  Clicking ANY chip removes the WHOLE row (a one-shot commit — a settled turn's feedback/reply
+   *  choice can never double-fire) and fires the `action` event on THIS host (never on the button,
+   *  never on the bubble — one owning emitter, the ui-conversation public surface) naming the chosen
+   *  action's `id`. */
+  #buildActions(actions: readonly TurnAction[]): HTMLElement {
+    const row = document.createElement('div')
+    row.dataset.part = 'actions'
+    for (const action of actions) {
+      const button = document.createElement('ui-button') as UIButtonElement
+      button.setAttribute('variant', 'soft')
+      button.setAttribute('size', 'sm')
+      button.textContent = action.label
+      this.listen(button, 'click', () => {
+        row.remove()
+        this.emit<{ id: string }>('action', { id: action.id })
+      })
+      row.append(button)
+    }
+    return row
   }
 
   #isNearLogBottom(): boolean {

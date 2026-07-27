@@ -28,7 +28,7 @@ export { UINavRailItemElement } from './controls/nav-rail/nav-rail-item.ts'
 // seam) + ui-conversation (thread/composer/narration, composing ui-surface-host internally, ADR-0129).
 export { UISurfaceHostElement } from './controls/surface-host/surface-host.ts'
 export { UIConversationElement } from './controls/conversation/conversation.ts'
-export type { AgentTurnHandle } from './controls/conversation/conversation.ts'
+export type { AgentTurnHandle, TurnAction } from './controls/conversation/conversation.ts'
 // TKT-0039 (ADR-0131) — the Agent Admin UI: composes ui-split/ui-settings/ui-conversation into one new
 // app-tier surface. No new primitive family, no new protocol dependency.
 export { UIAgentAdminElement } from './controls/agent-admin/agent-admin.ts'

@@ -1104,5 +1104,12 @@
     "description": "ui-status-stream adopts the receipt pattern (Kim's 2026-07-23 ruling, GH #238/#239 — waves A; GH #240 per-step source reveal is a later wave B): (1) the closed…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0160",
+    "url": "./adr-index.html#adr-0160",
+    "description": "GH #291 chat redesign, three Kim-ruled slices (2026-07-27): (1) ui-status-stream's opt-in header loses its boxed background — --ui-status-stream-header-surface…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
