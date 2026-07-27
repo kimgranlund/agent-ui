@@ -53,18 +53,15 @@ const checkGroup = el('fieldset', { role: 'group', 'aria-label': 'Options' }, [
   ...checkboxes,
 ])
 
-// A plain native radio group (the form-popover.md example markup's own idiom) — NOT `ui-radio-group`: its
-// rovingFocus trait's connection wiring does not survive the #ensureParts() child-move-then-reconnect cycle
-// (a real cross-control interaction gap; a fleet fix is out of this docs-only slice's scope, tracked
-// separately, GH #302 (GH #294 follow-up)).
+// The real `ui-radio-group` (GH #302, fixed: rovingFocus's connection wiring now survives the
+// #ensureParts() child-move-then-reconnect cycle — element.ts's `beginConnecting`/`endConnecting`
+// reentrancy window, dom/element.ts).
 const radio = (value: string, label: string): HTMLElement => {
-  const wrapper = el('label', {})
-  const input = el('input', { type: 'radio', name: 'sort', value })
-  wrapper.append(input, text(` ${label}`))
-  return wrapper
+  const r = el('ui-radio', { value })
+  r.textContent = label
+  return r
 }
-const radioGroup = el('fieldset', { role: 'radiogroup', 'aria-label': 'Sort by' }, [
-  el('legend', {}, [text('Sort by')]),
+const radioGroup = el('ui-radio-group', { name: 'sort', 'aria-label': 'Sort by' }, [
   radio('newest', 'Newest'),
   radio('oldest', 'Oldest'),
   radio('relevant', 'Most relevant'),

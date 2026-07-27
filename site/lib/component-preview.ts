@@ -456,21 +456,17 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
     checkGroup.append(
       ...(['a', 'b', 'c', 'd', 'e', 'f'] as const).map((v, i) => checkbox(v, `Option ${String.fromCharCode(65 + i)}`)),
     )
-    // A plain native radio group (form-popover.md's own example-markup idiom) — NOT `ui-radio-group`: its
-    // rovingFocus trait's connection wiring does not survive the #ensureParts() child-move-then-reconnect
-    // cycle (a real cross-control interaction gap; a fleet fix is out of scope here, tracked separately,
-    // GH #302 (GH #294 follow-up)).
-    const radioGroup = document.createElement('fieldset')
-    radioGroup.setAttribute('role', 'radiogroup')
+    // The real `ui-radio-group` (GH #302, fixed: rovingFocus's connection wiring now survives the
+    // #ensureParts() child-move-then-reconnect cycle — element.ts's `beginConnecting`/`endConnecting`
+    // reentrancy window, dom/element.ts).
+    const radioGroup = document.createElement('ui-radio-group')
+    radioGroup.setAttribute('name', 'sort')
     radioGroup.setAttribute('aria-label', 'Sort by')
     const radio = (value: string, label: string): HTMLElement => {
-      const wrapper = document.createElement('label')
-      const input = document.createElement('input')
-      input.type = 'radio'
-      input.name = 'sort'
-      input.value = value
-      wrapper.append(input, document.createTextNode(` ${label}`))
-      return wrapper
+      const r = document.createElement('ui-radio')
+      r.setAttribute('value', value)
+      r.textContent = label
+      return r
     }
     radioGroup.append(radio('newest', 'Newest'), radio('oldest', 'Oldest'), radio('relevant', 'Most relevant'))
     const search = document.createElement('ui-text-field')
