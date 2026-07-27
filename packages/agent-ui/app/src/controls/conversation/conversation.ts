@@ -383,18 +383,20 @@ export class UIConversationElement extends UIElement {
   addUserMessage(text: string): void {
     if (!this.#guard('addUserMessage')) return
     const wasNear = this.#isNearLogBottom()
-    const bubble = this.#makeBubble('user')
+    const { outer, bubble } = this.#makeBubble('user')
     const body = document.createElement('p')
     body.dataset.part = 'body'
     body.textContent = text
     bubble.append(body)
-    this.#log!.append(bubble)
+    this.#log!.append(outer)
     void this.#tailFollowLog(wasNear)
   }
 
-  /** Opens one agent turn: a fresh bubble (narration strip + note + mounts container, reserved in that
-   *  literal order, SPEC-R2) and the routing state the returned handle closes over (SPEC-R6/R7). A
-   *  no-op-stub handle pre-connect (never throws — the same documented-no-op discipline as ui-surface-host).
+  /** Opens one agent turn: a fresh `[data-part='turn']` wrapper (who → narration → bubble, GH #306/
+   *  ADR-0160 — the sender label and the narration strip render OUTSIDE the bubble) whose bubble reserves
+   *  a note + mounts container, in that literal order (SPEC-R2), and the routing state the returned
+   *  handle closes over (SPEC-R6/R7). A no-op-stub handle pre-connect (never throws — the same
+   *  documented-no-op discipline as ui-surface-host).
    *
    *  TKT-0079 — `opts.intoSurface`: when it names an OPEN registry record whose bubble is still connected,
    *  the turn RESUMES that bubble instead of opening a new card (Kim: "stay in the same card unless it has
@@ -420,14 +422,21 @@ export class UIConversationElement extends UIElement {
       narration = this.#makeNarration()
       resumed.narration.replaceWith(narration)
     } else {
-      bubble = this.#makeBubble('agent')
+      const built = this.#makeBubble('agent')
+      bubble = built.bubble
       narration = this.#makeNarration()
       note = document.createElement('div')
       note.dataset.part = 'body'
       mounts = document.createElement('div')
       mounts.dataset.part = 'mounts'
-      bubble.append(narration, note, mounts)
-      this.#log!.append(bubble)
+      // GH #306/ADR-0160 amendment — the sender label + narration strip render OUTSIDE the bubble now
+      // (free-standing turn chrome, `#makeBubble`'s own `[data-part='turn']` wrapper); only the content
+      // (note + mounts) lives inside the bubble. `bubble.before(narration)` plants the strip as the
+      // wrapper's own child, immediately before the bubble — after the `[data-part='who']` label
+      // `#makeBubble` already appended, giving the who → narration → bubble reading order.
+      bubble.append(note, mounts)
+      bubble.before(narration)
+      this.#log!.append(built.outer)
     }
     void this.#tailFollowLog(wasNear)
 
@@ -682,7 +691,12 @@ export class UIConversationElement extends UIElement {
    *  genui-surface.spec.md SPEC-R8 — checks the A2UI `#registry` FIRST, then the PARALLEL `#genuiRegistry`
    *  (a genui surfaceId is never in `#registry` and vice versa, the disjoint-id-space law): a genui
    *  action click's follow-up turn (TKT-0079's own "stay in the same card" rule) resumes the bubble that
-   *  owns its genui surface exactly the way an A2UI action click already resumes its own. */
+   *  owns its genui surface exactly the way an A2UI action click already resumes its own.
+   *
+   *  GH #306/ADR-0160 amendment — the narration strip is no longer the bubble's own child (it sits
+   *  outside, in the owning `[data-part='turn']` wrapper `#makeBubble` creates), so it's found via the
+   *  bubble's PARENT rather than the bubble itself; every other part (note/mounts) is still the bubble's
+   *  own direct child, unchanged. */
   #resumableBubble(
     id: string,
   ): { bubble: HTMLElement; narration: UIStatusStreamElement; note: HTMLElement; mounts: HTMLElement } | undefined {
@@ -691,7 +705,9 @@ export class UIConversationElement extends UIElement {
     const genuiRecord = bubble === undefined ? this.#genuiRegistry.get(id) : undefined
     const resolvedBubble = bubble ?? (genuiRecord?.bubble.isConnected ? genuiRecord.bubble : undefined)
     if (resolvedBubble === undefined) return undefined
-    const narration = resolvedBubble.querySelector<UIStatusStreamElement>(':scope > [data-part="narration"]')
+    const turn = resolvedBubble.parentElement
+    const narration =
+      turn?.dataset.part === 'turn' ? turn.querySelector<UIStatusStreamElement>(':scope > [data-part="narration"]') : null
     const note = resolvedBubble.querySelector<HTMLElement>(':scope > [data-part="body"]')
     const mounts = resolvedBubble.querySelector<HTMLElement>(':scope > [data-part="mounts"]')
     if (narration === null || note === null || mounts === null) return undefined
@@ -833,12 +849,15 @@ export class UIConversationElement extends UIElement {
 
   #addSystemBubble(text: string): void {
     const wasNear = this.#isNearLogBottom()
-    const bubble = this.#makeBubble('system')
+    // A system bubble has no `[data-part='who']` label and no narration strip — it never gets a
+    // `[data-part='turn']` wrapper (`#makeBubble` returns `outer === bubble` for this role, the smaller
+    // diff than inventing an empty, chrome-less wrapper for a role that never carries any).
+    const { outer, bubble } = this.#makeBubble('system')
     const body = document.createElement('div')
     body.dataset.part = 'body'
     this.#renderBody(body, text)
     bubble.append(body)
-    this.#log!.append(bubble)
+    this.#log!.append(outer)
     void this.#tailFollowLog(wasNear)
   }
 
@@ -853,20 +872,33 @@ export class UIConversationElement extends UIElement {
     el.replaceChildren(this.#contentRenderer(text))
   }
 
-  #makeBubble(role: Role): HTMLElement {
+  /** GH #306/ADR-0160 amendment (Kim's 2026-07-27 revision) — the sender label (`[data-part='who']`) and,
+   *  for an agent turn, the narration strip both move OUTSIDE the message bubble: free-standing turn
+   *  chrome on the page background, above the chromed bubble. `outer` is what the caller appends to the
+   *  log; `bubble` is where content (user text / agent note + mounts) goes. For `user`/`agent`, `outer`
+   *  is a NEW `[data-part='turn']` wrapper — the log's own alignment role (`align-self`, the base
+   *  bubble's 92% width cap) moves onto IT, so the label/strip line up with their own bubble's edge; the
+   *  wrapper owns the `[data-role]` a live turn carries (mirroring the bubble's own, the naming-gates.
+   *  test.ts Gate-3 dynamic-role matcher already allowlists this `role` identifier for BOTH call sites,
+   *  same file/variable). `system` has neither a label nor a strip — no wrapper is minted for it (the
+   *  smaller diff): `outer === bubble`, appended to the log exactly as before this change. */
+  #makeBubble(role: Role): { outer: HTMLElement; bubble: HTMLElement } {
     const bubble = document.createElement('div')
     bubble.dataset.part = 'bubble'
     // setAttribute, NOT `dataset.role =` — naming-gates.test.ts's Gate-3 dynamic-role matcher recognizes
     // `setAttribute('data-role', ident)` but not a `dataset.X =` write, so this is what makes the closed
     // §6 registry actually govern THIS call site (not just the CSS attribute selectors that consume it).
     bubble.setAttribute('data-role', role)
-    if (role !== 'system') {
-      const who = document.createElement('span')
-      who.dataset.part = 'who'
-      who.textContent = role === 'user' ? 'You' : 'Agent'
-      bubble.append(who)
-    }
-    return bubble
+    if (role === 'system') return { outer: bubble, bubble }
+
+    const turn = document.createElement('div')
+    turn.dataset.part = 'turn'
+    turn.setAttribute('data-role', role)
+    const who = document.createElement('span')
+    who.dataset.part = 'who'
+    who.textContent = role === 'user' ? 'You' : 'Agent'
+    turn.append(who, bubble)
+    return { outer: turn, bubble }
   }
 
   /** A collapsed raw-wire disclosure of this turn's own JSONL lines (ADR-0129 clause 3, opt-in via

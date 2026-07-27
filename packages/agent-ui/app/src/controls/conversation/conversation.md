@@ -104,10 +104,14 @@ slots: []                 # content model is NOT author-composed — the thread/
 parts:                    # NOT shadow-DOM ::part() (light-DOM only) — light-DOM markers this element's own JS creates; documented for completeness (compareDescriptorToSource does not mechanically check `parts:`, the master-detail.md precedent)
   - name: log
     description: The scrolling thread region (`[data-part="log"]`), `aria-live="polite"`. Owns its own scroll (SPEC-R4).
+  - name: turn
+    description: 'GH #306/ADR-0160 amendment (Kim''s 2026-07-27 revision) — the free-standing turn-chrome wrapper (`[data-part="turn"][data-role="user"|"agent"]`) a user/agent turn renders into: `[data-part="who"]` then (agent only) `[data-part="narration"]`, both OUTSIDE the bubble, followed by the bubble itself. Owns the log-level alignment (`align-self`) and the 92% width cap the bubble used to carry on its own. A system turn has no `who`/`narration` and so gets no wrapper — its bubble is still a direct child of `[data-part="log"]`, unchanged.'
   - name: bubble
-    description: One turn (`[data-part="bubble"][data-role="user"|"agent"|"system"]`).
+    description: One turn's content container (`[data-part="bubble"][data-role="user"|"agent"|"system"]`) — a user/agent bubble is the last child of its `[data-part="turn"]` wrapper; a system bubble is a direct child of `[data-part="log"]` (no wrapper).
+  - name: who
+    description: 'GH #306/ADR-0160 amendment — the sender label ("You"/"Agent"), `[data-part="who"]`, the first child of a user/agent turn''s `[data-part="turn"]` wrapper (OUTSIDE the bubble). Absent for a system turn.'
   - name: narration
-    description: The per-agent-turn `ui-status-stream` instance (`[data-part="narration"]`), composed fresh per turn.
+    description: 'The per-agent-turn `ui-status-stream` instance (`[data-part="narration"]`), composed fresh per turn. GH #306/ADR-0160 amendment — renders OUTSIDE the bubble, as the agent turn''s `[data-part="turn"]` wrapper''s second child (after `who`, before the bubble).'
   - name: mounts
     description: The container (`[data-part="mounts"]`) an agent bubble's OWN inline `ui-surface-host` children mount into.
   - name: annotation
@@ -133,7 +137,7 @@ aria:
   roleSource: none
   childModel: none — the thread is built entirely by this element's own connect-time logic and imperative API; the composer is a JS-created composed child (ui-conversation-composer, TKT-0056); nothing is ever author-composed or slotted
 
-contentModel: '[data-part=bubble] children carry a [data-role=user|agent|system] speaker kind (references/naming.md §6 registry, added in this change); a user/agent bubble also carries a [data-part=who] label ("You"/"Agent"), a [data-part=body] text cell (plain textContent by default; a registered setContentRenderer replaces its children instead, SPEC-R12 — never for the user bubble), and (agent only) [data-part=narration]/[data-part=mounts]/[data-part=annotation]/[data-part=disclosure] children — none of these are author-composed (SPEC-R4)'
+contentModel: 'GH #306/ADR-0160 amendment — [data-part=bubble] and (user/agent only) its owning [data-part=turn] wrapper both carry a [data-role=user|agent|system] speaker kind (references/naming.md §6 registry). A user/agent turn is [data-part=turn][data-role=…] > [data-part=who] ("You"/"Agent"), then (agent only) [data-part=narration], then [data-part=bubble][data-role=…] holding a [data-part=body] text cell (plain textContent by default; a registered setContentRenderer replaces its children instead, SPEC-R12 — never for the user bubble) and (agent only) [data-part=mounts]/[data-part=annotation]/[data-part=disclosure]/[data-part=actions] children. A system turn has neither [data-part=who] nor [data-part=narration] nor a [data-part=turn] wrapper — its [data-part=bubble][data-role=system] is a direct child of [data-part=log], holding only [data-part=body]. None of these are author-composed (SPEC-R4)'
 
 keyboard:
   - keys: Enter

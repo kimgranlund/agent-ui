@@ -357,13 +357,16 @@ describe('ui-conversation cross-engine smoke — the COMPOSED path renders with 
 // GH #241 (Kim's original ruling) — the chat path's chrome laws, proven on a realistic chat mount in
 // a REAL engine: the A2UI render surface is CHROMELESS — no checker/background, zero padding —
 // UNCHANGED below. GH #291/ADR-0160 (Kim's 2026-07-27 ruling) REVERSES the other half fleet-wide: the
-// agent turn RE-BUBBLES (a painted background, real padding, the base bubble's own width cap) instead
-// of #241's de-bubbled full-width bare text; the sender label above the content and outside the text
-// container stays unchanged (that was never #241's own doing). The user turn keeps its compact bubble,
-// unaffected either way. The STREAMING state is proven on the same container mid-turn (before
-// finalize()) — it already carries the SAME chrome the settled state does, never a bubble that
-// vanishes/appears across the streaming→settled transition.
-describe('ui-conversation cross-engine — chat-path chrome laws (GH #241 + GH #291/ADR-0160)', () => {
+// agent turn RE-BUBBLES (a painted background, real padding, the width cap now living on the owning
+// `[data-part="turn"]` wrapper) instead of #241's de-bubbled full-width bare text. GH #306/ADR-0160's
+// SAME-DAY amendment moves the sender label and the narration strip OUTSIDE the bubble entirely — free-
+// standing turn chrome, above the chromed bubble, on the page background — re-pinned below (never
+// weakened: the label/strip are still proven present, above the content, just no longer inside the
+// bubble's own text container). The user turn keeps its compact bubble, unaffected either way. The
+// STREAMING state is proven on the same container mid-turn (before finalize()) — it already carries the
+// SAME chrome the settled state does, never a bubble that vanishes/appears across the streaming→settled
+// transition.
+describe('ui-conversation cross-engine — chat-path chrome laws (GH #241 + GH #291/ADR-0160 + GH #306)', () => {
   /** The log's content-box width — the message column's available width (clientWidth excludes any
    *  scrollbar; subtracting the log's own padding leaves the box the bubbles lay out in). */
   const availableColumnWidth = (log: HTMLElement): number => {
@@ -429,14 +432,15 @@ describe('ui-conversation cross-engine — chat-path chrome laws (GH #241 + GH #
     ).toBeLessThan(availableColumnWidth(log) - 1)
   })
 
-  it('the agent turn RE-BUBBLES (GH #291/ADR-0160): a painted background, real padding, capped width; the sender label sits ABOVE the content, outside the text container', () => {
+  it('the agent turn RE-BUBBLES (GH #291/ADR-0160): a painted background, real padding, capped width; GH #306 — the sender label AND the narration strip sit ABOVE the bubble, OUTSIDE it entirely, on the page background', () => {
     const el = mountConversation()
     const handle = el.beginAgentTurn()
     handle.setNote('A bubbled agent reply')
     handle.finalize()
 
     const log = logOf(el)
-    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    const turn = el.querySelector('[data-part="turn"][data-role="agent"]') as HTMLElement
+    const bubble = turn.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
     const bubbleStyle = getComputedStyle(bubble)
     expect(alphaOf(bubbleStyle.backgroundColor), 'the agent turn lost its bubble background (ADR-0160 regressed)').toBeGreaterThan(0)
     expect(Number.parseFloat(bubbleStyle.paddingLeft), 'the agent turn lost its bubble padding (ADR-0160 regressed)').toBeGreaterThan(
@@ -444,16 +448,32 @@ describe('ui-conversation cross-engine — chat-path chrome laws (GH #241 + GH #
     )
     expect(
       bubble.getBoundingClientRect().width,
-      'the agent turn spans the full column (the ADR-0160 width cap regressed)',
+      'the agent turn spans the full column (the ADR-0160/GH #306 width cap regressed)',
     ).toBeLessThan(availableColumnWidth(log) - 1)
 
-    // The sender label: present, above the message text, and OUTSIDE the text container — unaffected
-    // by the re-bubble (this was never GH #241's own doing; #241 only ever touched background/padding/width).
-    const who = bubble.querySelector('[data-part="who"]') as HTMLElement
+    // GH #306 — the sender label AND the narration strip: present, above the message text, and OUTSIDE
+    // the bubble ENTIRELY (not merely outside the text container within it) — free-standing turn chrome
+    // painted on the page background, never the bubble's own background.
+    const who = turn.querySelector('[data-part="who"]') as HTMLElement
+    const narration = turn.querySelector('[data-part="narration"]') as HTMLElement
     const body = bubble.querySelector('[data-part="body"]') as HTMLElement
     expect(who).not.toBeNull()
     expect(who.textContent).toBe('Agent')
-    expect(body.contains(who), 'the label rendered INSIDE the text container').toBe(false)
+    expect(narration).not.toBeNull()
+    expect(bubble.contains(who), 'the label rendered INSIDE the bubble').toBe(false)
+    expect(bubble.contains(narration), 'the narration strip rendered INSIDE the bubble').toBe(false)
+    // The turn wrapper itself paints nothing of its own — the label/strip sit on whatever the page/log
+    // behind them paints, never the bubble's chrome.
+    const turnStyle = getComputedStyle(turn)
+    expect(alphaOf(turnStyle.backgroundColor), 'the turn wrapper painted its own background (should be transparent/page-level)').toBe(
+      0,
+    )
+    expect(who.getBoundingClientRect().bottom, 'the label is not above the narration strip').toBeLessThanOrEqual(
+      narration.getBoundingClientRect().top + 0.5,
+    )
+    expect(narration.getBoundingClientRect().bottom, 'the narration strip is not above the bubble').toBeLessThanOrEqual(
+      bubble.getBoundingClientRect().top + 0.5,
+    )
     expect(who.getBoundingClientRect().bottom, 'the label is not above the message text').toBeLessThanOrEqual(
       body.getBoundingClientRect().top + 0.5,
     )

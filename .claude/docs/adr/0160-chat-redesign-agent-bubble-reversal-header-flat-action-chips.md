@@ -156,6 +156,23 @@ without the primitive itself knowing what "helpful" means.
   specific collision was added to `conversation.browser.test.ts` (the reviewer's second finding — zero
   coverage of the chip mechanism itself — is repaired there instead, including a target-discrimination
   assertion covering the chip's own `event.target` contract this note documents).
+- **GH #306 (Kim's 2026-07-27 same-day revision) — the sender label AND the narration strip move
+  OUTSIDE the bubble entirely.** This record's clause 2 re-bubble left `[data-part='who']` and (agent
+  turns) `[data-part='narration']` as the bubble's OWN children — Kim's follow-up ruling on the
+  reference mockup: both render as free-standing turn chrome ABOVE the bubble, on the page background,
+  never painted by the bubble's own background. `conversation.ts` gains a new `[data-part='turn']`
+  wrapper (`#makeBubble`, `Role`-carrying `data-role`, the SAME allowlisted dynamic-role identifier
+  Gate-3 already covers) for `user`/`agent` turns only — `who` then (agent only) `narration` then the
+  bubble, in that order; a `system` turn carries neither `who` nor `narration` and so gets no wrapper
+  (the smaller diff, `outer === bubble`, unchanged from before this record). The wrapper takes over the
+  log-level `align-self` and the base bubble's own 92% width cap; the bubble itself no longer sets
+  either. `AgentTurnHandle.finalize()`'s action-chip row (clause 3, above) is UNAFFECTED — it still
+  renders inside the bubble, appended after the note/wire-disclosure, since Kim's reference shows the
+  chip row directly under the message content, not as free-standing chrome. Turn-resume
+  (`beginAgentTurn({intoSurface})`) locates the narration strip via the bubble's OWN parent element now
+  (`#resumableBubble`) rather than a bubble-scoped child query. `conversation.browser.test.ts`'s
+  chrome-law suite is RE-PINNED (never weakened) to assert the label/strip sit outside the bubble and
+  that the turn wrapper itself paints no background of its own.
 
 ## Alternatives considered
 
