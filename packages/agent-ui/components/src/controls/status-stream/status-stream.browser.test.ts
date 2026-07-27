@@ -514,6 +514,52 @@ describe('ui-status-stream — oneline/receipt collapse, real-engine visibility 
   })
 })
 
+// ── GH #308 — the sticky header must genuinely OCCLUDE scrolled-under entries, not just out-rank them in
+// z-order. GH #291/ADR-0160 removed the header's boxed background ("floats on the page background"), which
+// left it fully TRANSPARENT — a sticky, z-index:1 header painting nothing shows scrolled content straight
+// through it (Kim's screenshot: a step's "Source" disclosure summary read interleaved with "Agent
+// activity"). The fix repaints the header with an opaque canvas token (default = the page surface,
+// overridable per mount context — the SAME consumer-tuning pattern `--ui-status-stream-max-block-size`
+// already uses for the conversation bubble) rather than restoring the old boxed-surface look. ─────────────
+describe('ui-status-stream — the sticky header genuinely occludes scrolled-under entries (GH #308)', () => {
+  it('an errored, expanded, sources-on strip scrolled so a step sits under the header: the header paints an OPAQUE background, not transparent show-through', async () => {
+    const { stream } = mount(
+      '<ui-status-stream header label="Agent activity" style="--ui-status-stream-max-block-size:8rem"></ui-status-stream>',
+    )
+    for (let i = 0; i < 7; i++) {
+      stream.appendEntry({
+        key: `k${i}`,
+        status: i === 6 ? 'error' : 'done',
+        label: `Step ${i} — a long enough label to force the strip to overflow the bounded viewport`,
+        source: '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}',
+      })
+    }
+    stream.fail()
+    await raf2()
+
+    const header = stream.querySelector('[data-part="header"]') as HTMLElement
+    expect(stream.scrollHeight, 'the strip must genuinely overflow for a step to scroll under the header').toBeGreaterThan(
+      stream.clientHeight,
+    )
+
+    // open a step's Source disclosure — the exact anatomy in Kim's screenshot ("Source" overlapping the header)
+    const summary = stream.querySelector('ui-timeline-item [data-part="summary"]') as HTMLElement
+    summary.click()
+    await raf2()
+
+    // scroll so an entry (and its opened Source summary) sits directly under the pinned header
+    stream.scrollTop = stream.scrollHeight
+    stream.dispatchEvent(new Event('scroll'))
+    await raf2()
+
+    const bg = getComputedStyle(header).backgroundColor
+    expect(bg, 'the header must paint an OPAQUE background — a transparent sticky header lets scrolled-under text show through').not.toBe(
+      'rgba(0, 0, 0, 0)',
+    )
+    expect(bg, 'transparent (not just alpha-0) is the same show-through bug under a different serialization').not.toBe('transparent')
+  })
+})
+
 // ── GH #240/ADR-0159 wave B — the per-step SOURCE reveal, real-engine truth ────────────────────────────
 describe('ui-status-stream — the per-step source reveal renders, hides, and operates for real (GH #240/ADR-0159 wave B)', () => {
   const RAW = '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}'

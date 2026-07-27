@@ -163,6 +163,12 @@
      the turn wrapper's own `gap`, not a margin here. */
   [data-part='narration'] {
     --ui-status-stream-max-block-size: 9rem;
+    /* GH #308 — the strip's sticky header paints an opaque canvas so scrolled entries never show
+       through it (status-stream.css); this mount's canvas is the CONVERSATION's own surface
+       (surface-low) — post-GH #306 the strip is free-standing turn chrome on the log background,
+       no longer inside the agent bubble, so the bubble token would visibly mismatch. The SAME
+       per-mount override pattern `--ui-status-stream-max-block-size` above already uses. */
+    --ui-status-stream-header-canvas: var(--ui-conversation-surface);
     /* TKT-0078: the timeline family is deliberately type-agnostic (ADR-0122's ramp is geometry-only;
        content inherits ambient type) — so the compact register is THIS consumer's to set. Unpinned, the
        strip inherited the page-ambient 1rem and towered over the bubble's own 0.66–0.86rem ladder;
