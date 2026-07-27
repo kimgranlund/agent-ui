@@ -1,0 +1,212 @@
+/* form-popover.css — ui-form-popover, the single-file component stylesheet (ADR-0003 ·
+ * form-popover.lld.md LLD-C4). Two clearly-SECTIONED blocks, mirroring select.css / popover.css:
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-form-popover)` (specificity 0,0,0) DECLARES the
+ *       `--ui-form-popover-*` chain from the colour roles (`--md-sys-color-{family}-{role}`;
+ *       family = neutral for the trigger frame, neutral/outline for the panel surface) and the
+ *       dimensional ramp (`--md-sys-height-{size}` / `--md-sys-font-{size}` / `--md-sys-icon-{size}`).
+ *       The trigger is a Control-class surface, standard FOUR interaction states (default/hover/
+ *       active/focus — no disabled row, SPEC-R2: no `disabled` prop in v1); a caret = font inline
+ *       affordance, §4.1. The panel is a Container/surface (bg + outline + radius — NOT a control
+ *       height), spaced by the shared `[data-box]` box-model (ADR-0046), with a min/max
+ *       inline-size floor+clamp (SPEC-R8).
+ *   [2] STYLES BLOCK — `@scope (ui-form-popover)` CONSUMES only `--ui-form-popover-*` for its OWN
+ *       tokens. The host is `display: contents` — a logical disclosure wrapper that generates no
+ *       box (the popover precedent). The trigger is `display: inline-grid; grid-template-columns:
+ *       1fr auto` — a fixed [label | caret] anatomy (select's trigger shape). The panel uses the
+ *       overlay controller's position:fixed + inset (we do NOT fix position here); `[data-box]`
+ *       provides the inner spacing + z-scope (ADR-0046/0052) — this sheet adds no shell padding.
+ *       Forced-colors keeps the trigger frame, label, caret, and panel surface visible as system
+ *       colours.
+ *
+ * Standalone stylesheet — NOT injected from form-popover.ts (behaviour-only `.ts`, no runtime
+ * injection per plan §2). Linked via the component-styles barrel; the barrel @imports foundation
+ * roles FIRST. The panel's `popover` attribute (set by the overlay controller) gives it
+ * `display: none` in the UA stylesheet until `showPopover()` places it in the top layer.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-form-popover) declares --ui-form-popover-* ════════════════ */
+
+:where(ui-form-popover) {
+  /* ── Trigger frame — the standard FOUR-state control law (interaction-states.md): default/hover/
+     active/focus repoint `background` only (the geometry law untouched); no disabled row (SPEC-R2:
+     no `disabled` prop in v1). Focus draws the shared fleet ring (ADR-0009), not a background repoint. */
+  --ui-form-popover-bg: var(--md-sys-color-neutral-container-low);
+  --ui-form-popover-bg-hover: var(--md-sys-color-neutral-container);
+  --ui-form-popover-bg-active: var(--md-sys-color-neutral-container-high);
+  --ui-form-popover-border: var(--md-sys-color-neutral-outline-variant);
+  --ui-form-popover-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-form-popover-radius: var(--md-sys-shape-corner-base); /* the shared fleet radius (ADR-0015 cl.5) */
+
+  /* ── Trigger geometry (Control class, default size = md) — off the §1-row ramp (ADR-0038).
+     height/font/icon from the explicit per-[scale] table; gap = the density-bearing column-gap.
+     The caret (inline affordance) follows the §4.1 law: glyph size = font (RHYTHM family) →
+     centred in the icon cell by padding = ½(icon−glyph). */
+  --ui-form-popover-height: var(--md-sys-height-md);
+  --ui-form-popover-font: var(--md-sys-font-md);
+  --ui-form-popover-gap: var(--md-sys-gap-md);
+  --ui-form-popover-icon: var(--md-sys-icon-md);
+  --ui-form-popover-glyph: var(--ui-form-popover-font); /* caret GLYPH = font (§4.1 caret law) */
+
+  /* ── Sizing floor (ADR-0021 lesson) — an empty-label trigger needs a floor so it stays hittable
+     and the overlay positions against a real anchor rect (LLD §3 risk: `label=''` renders an
+     empty trigger). */
+  --ui-form-popover-min-inline-size: 10ch;
+
+  /* ── Panel — Container/surface geometry (NOT a control height; like modal/card/popover/select's
+     listbox). `[data-box]` supplies the inner spacing; this sheet only declares the surface paint
+     + the min/max inline-size floor+clamp (SPEC-R8). */
+  --ui-form-popover-panel-bg: var(--md-sys-color-neutral-surface);
+  --ui-form-popover-panel-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-form-popover-panel-outline: var(--md-sys-color-neutral-outline-variant);
+  --ui-form-popover-panel-radius: var(--md-sys-shape-corner-base);
+  --ui-form-popover-panel-min-inline-size: 20ch; /* the text-field 20ch-floor lesson — a panel of form fields needs a floor */
+  --ui-form-popover-panel-max-inline-size: min(90vw, 28rem); /* a panel of arbitrary form content must not run edge-to-edge */
+}
+
+/* ── size → dimensional ramp repoint ────────────────────────────────────────────────────────── */
+
+:where(ui-form-popover[size='sm']) {
+  --ui-form-popover-height: var(--md-sys-height-sm);
+  --ui-form-popover-font: var(--md-sys-font-sm);
+  --ui-form-popover-gap: var(--md-sys-gap-sm);
+  --ui-form-popover-icon: var(--md-sys-icon-sm);
+}
+
+:where(ui-form-popover[size='lg']) {
+  --ui-form-popover-height: var(--md-sys-height-lg);
+  --ui-form-popover-font: var(--md-sys-font-lg);
+  --ui-form-popover-gap: var(--md-sys-gap-lg);
+  --ui-form-popover-icon: var(--md-sys-icon-lg);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-form-popover) consumes ONLY --ui-form-popover-* ════════════════ */
+
+@scope (ui-form-popover) {
+  /* The host: a logical disclosure wrapper — generates no box (the popover precedent). Only the
+     trigger (in flow) and the panel (in the top layer when open) render as visible surfaces. */
+  :scope {
+    display: contents;
+  }
+
+  /* The trigger button (Control class): a [label | caret] inline-grid, always two columns (the
+     caret is always present — unlike button.css's presence-driven anatomy). block-size is the
+     Control-class ramp height. line-height: 1 (ADR-0036 single-line control standard). */
+  :scope > [data-part='trigger'] {
+    display: inline-grid;
+    grid-template-columns: 1fr auto;
+    column-gap: var(--ui-form-popover-gap);
+    align-items: center;
+    box-sizing: border-box;
+    min-inline-size: var(--ui-form-popover-min-inline-size);
+
+    block-size: var(--ui-form-popover-height);
+    padding-block: 0; /* NEVER block padding — geometry law */
+    padding-inline-start: calc(var(--ui-form-popover-height) / 2); /* h/2 label edge */
+    padding-inline-end: calc((var(--ui-form-popover-height) - var(--ui-form-popover-icon)) / 2); /* ½(h−icon) caret edge */
+
+    font-size: var(--ui-form-popover-font);
+    line-height: var(--md-sys-control-line-height); /* single-line control standard (ADR-0036) */
+    background: var(--ui-form-popover-bg);
+    color: var(--ui-form-popover-ink);
+    border: 1px solid var(--ui-form-popover-border);
+    border-radius: var(--ui-form-popover-radius);
+    cursor: pointer;
+    text-align: start;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* The label span: fills the 1fr column; clipped for overflow (a long summary-state string). */
+  :scope > [data-part='trigger'] > [data-part='label'] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* The caret span: an icon-sized CELL (box-sizing border-box). The glyph inside is font-sized and
+     centred by padding = ½(icon − glyph), the §4.1 caret law (same as select.css/button.css). */
+  :scope > [data-part='trigger'] > [data-part='caret'] {
+    inline-size: var(--ui-form-popover-icon);
+    block-size: var(--ui-form-popover-icon);
+    box-sizing: border-box;
+    padding: calc((var(--ui-form-popover-icon) - var(--ui-form-popover-glyph)) / 2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--ui-form-popover-glyph);
+    line-height: 1;
+  }
+
+  /* The injected Phosphor caret-down (setIcon, @agent-ui/icons): sized explicitly to the glyph
+     rhythm — not the icon cell — so the §4.1 law holds independent of the padding math above. */
+  :scope > [data-part='trigger'] > [data-part='caret'] svg {
+    display: block;
+    inline-size: var(--ui-form-popover-glyph);
+    block-size: var(--ui-form-popover-glyph);
+  }
+
+  /* Standard four interaction states (interaction-states.md, no deviation) — repoint background
+     only; the geometry law is untouched. No disabled row (SPEC-R2). */
+  :scope > [data-part='trigger']:hover {
+    background: var(--ui-form-popover-bg-hover);
+  }
+  :scope > [data-part='trigger']:active {
+    background: var(--ui-form-popover-bg-active);
+  }
+  :scope > [data-part='trigger']:focus-visible {
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+
+  /* ── The panel (Container/surface in the Popover API top layer) ───────────────────────────────
+     The UA `[popover]` rule hides this with display:none until showPopover(). The overlay
+     controller sets position:fixed + inset on open — we do NOT set position here. `margin: 0`
+     prevents UA-default centering from conflicting with the controller's explicit placement.
+     `[data-box]` (form-popover.ts) supplies the inner spacing + z-scope (ADR-0046/0052) — this
+     rule adds no shell padding of its own. */
+  :scope > [data-part='panel'] {
+    box-sizing: border-box;
+    margin: 0;
+    min-inline-size: var(--ui-form-popover-panel-min-inline-size);
+    max-inline-size: var(--ui-form-popover-panel-max-inline-size);
+
+    background-color: var(--ui-form-popover-panel-bg);
+    color: var(--ui-form-popover-panel-ink);
+    border: 1px solid var(--ui-form-popover-panel-outline);
+    border-radius: var(--ui-form-popover-panel-radius);
+    padding: 0; /* the box-model child margins provide the inset (container-box.css) */
+  }
+
+  /* ── Motion (state-PAINT only; geometry snaps — ADR-0008) ─────────────────────────────────── */
+
+  :scope > [data-part='trigger']:state(ready) {
+    transition:
+      background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      border-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :scope > [data-part='trigger']:state(ready) {
+      transition: none;
+    }
+  }
+
+  /* ── forced-colors (WHCM) ─────────────────────────────────────────────────────────────────── */
+
+  @media (forced-colors: active) {
+    :scope > [data-part='trigger'] {
+      color: ButtonText;
+      border-color: ButtonBorder;
+      background: ButtonFace;
+      forced-color-adjust: none;
+    }
+
+    :scope > [data-part='panel'] {
+      background-color: Canvas;
+      color: CanvasText;
+      border-color: CanvasText;
+      forced-color-adjust: none;
+    }
+  }
+}

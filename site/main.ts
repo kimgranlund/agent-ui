@@ -537,6 +537,23 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    // GH #294 F4 — the packaged ui-popover + form-spine recipe: a control-created trigger over a real
+    // form-content panel, edited live-apply. tier=pattern ⇒ {doc, demo}, mirroring the nav.
+    label: 'ui-form-popover',
+    cards: [
+      {
+        href: './form-popover-demo.html',
+        title: 'Demo',
+        blurb: 'The packaged popover + form-spine recipe — a control-created trigger carrying a consumer-authored summary label, opening a panel of real form content (check group, radio group, text field), with a close/toggle log.',
+      },
+      {
+        href: './form-popover-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-form-popover attributes (open/placement/label/size) and its trigger + panel parts, generated from its form-popover.md descriptor.',
+      },
+    ],
+  },
+  {
     label: 'ui-combo-box',
     cards: [
       {

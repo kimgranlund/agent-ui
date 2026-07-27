@@ -437,6 +437,46 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
     section.append(heading, body)
     return [sampleTrigger(), section]
   },
+  // ui-form-popover (GH #294 F4): UNLIKE ui-popover, the trigger is CONTROL-CREATED from the `label` prop —
+  // there is no author trigger to seed (sampleTrigger() does not apply here). ALL children move into the
+  // control-created panel, so the real job is real form content: a 6-item check group, a radio group, and a
+  // text field (the reference specimen the design intake names — form-popover.lld.md LLD-C7). The `label` knob
+  // seeds its own visible summary text via COMPONENT_INITIAL below.
+  'ui-form-popover': () => {
+    const checkbox = (value: string, label: string): HTMLElement => {
+      const c = document.createElement('ui-checkbox')
+      c.setAttribute('name', 'opt')
+      c.setAttribute('value', value)
+      c.textContent = label
+      return c
+    }
+    const checkGroup = document.createElement('fieldset')
+    checkGroup.setAttribute('role', 'group')
+    checkGroup.setAttribute('aria-label', 'Options')
+    checkGroup.append(
+      ...(['a', 'b', 'c', 'd', 'e', 'f'] as const).map((v, i) => checkbox(v, `Option ${String.fromCharCode(65 + i)}`)),
+    )
+    // A plain native radio group (form-popover.md's own example-markup idiom) — NOT `ui-radio-group`: its
+    // rovingFocus trait's connection wiring does not survive the #ensureParts() child-move-then-reconnect
+    // cycle (a real cross-control interaction gap; a fleet fix is out of scope here, tracked separately,
+    // GH #302 (GH #294 follow-up)).
+    const radioGroup = document.createElement('fieldset')
+    radioGroup.setAttribute('role', 'radiogroup')
+    radioGroup.setAttribute('aria-label', 'Sort by')
+    const radio = (value: string, label: string): HTMLElement => {
+      const wrapper = document.createElement('label')
+      const input = document.createElement('input')
+      input.type = 'radio'
+      input.name = 'sort'
+      input.value = value
+      wrapper.append(input, document.createTextNode(` ${label}`))
+      return wrapper
+    }
+    radioGroup.append(radio('newest', 'Newest'), radio('oldest', 'Oldest'), radio('relevant', 'Most relevant'))
+    const search = document.createElement('ui-text-field')
+    search.setAttribute('label', 'Search')
+    return [checkGroup, radioGroup, search]
+  },
   'ui-tooltip': () => {
     const text = document.createElement('span')
     text.textContent = 'Save your changes (Ctrl+S)'
@@ -583,6 +623,9 @@ const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
   'ui-stat': { label: 'Revenue', figure: '48200', delta: '12' },
   'ui-badge': { label: '3 failing', intent: 'danger' },
   'ui-disclosure': { summary: 'Full log' },
+  // ui-form-popover (GH #294 F4): `label` is a real string knob defaulting to '' — the same demonstrability
+  // gap as ui-disclosure's `summary` above (an unlabeled trigger reads as an empty button).
+  'ui-form-popover': { label: 'Filters · 0 selected' },
   'ui-swatch': { color: '--md-sys-color-primary', label: 'primary' },
   // ui-timeline-item (ADR-0122): `label`/`timestamp` are real string knobs defaulting to '' — the same
   // demonstrability gap as ui-disclosure's `summary` above; a bare specimen would render an unlabeled dot.
@@ -676,6 +719,7 @@ export const NO_SLOT_TEXT = new Set([
   'ui-combo-box', // #ensureParts(): a control-created editor + listbox
   'ui-command-modal', // #ensureParts(): a control-created search/list/status + a nested ui-modal (ADR-0125)
   'ui-field', // #ensureParts(): the label/description/error chrome (3 parts)
+  'ui-form-popover', // #ensureParts(): a CONTROL-CREATED trigger (label+caret) + panel — GH #294 F4, the ui-select/ui-popover precedent
   'ui-icon', // setIcon() injects a real <svg> child whenever `name` is non-empty (icon.ts:38-41) — a name-driven slot, not authored text
   'ui-menu', // #ensureParts(): trigger (COMPONENT_SAMPLE_CHILDREN) + panel
   'ui-modal', // #ensureDialog(): the control-owned <dialog> part

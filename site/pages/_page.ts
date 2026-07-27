@@ -258,6 +258,15 @@ export const NAV: readonly NavGroup[] = [
     ],
   },
   {
+    // GH #294 F4 — the packaged ui-popover + form-spine recipe: a control-created trigger over a real
+    // form-content panel. tier=pattern ⇒ {doc, demo}, the ui-popover/ui-select precedent.
+    label: 'ui-form-popover',
+    links: [
+      { href: './form-popover-demo.html', label: 'Demo' },
+      { href: './form-popover-doc.html', label: 'API' },
+    ],
+  },
+  {
     label: 'ui-combo-box',
     links: [
       { href: './combo-box-demo.html', label: 'Demo' },

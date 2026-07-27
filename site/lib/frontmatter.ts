@@ -39,6 +39,9 @@ import segmentedControlMd from '../../packages/agent-ui/components/src/controls/
 import sliderMd from '../../packages/agent-ui/components/src/controls/slider/slider.md?raw'
 import sliderMultiMd from '../../packages/agent-ui/components/src/controls/slider-multi/slider-multi.md?raw'
 import popoverMd from '../../packages/agent-ui/components/src/controls/popover/popover.md?raw'
+// GH #294 F4 — ui-form-popover, the packaged popover + form-spine composition recipe (form-popover.lld.md
+// LLD-C7): tier=pattern ⇒ {doc, demo}, the ui-popover/ui-select precedent.
+import formPopoverMd from '../../packages/agent-ui/components/src/controls/form-popover/form-popover.md?raw'
 import tooltipMd from '../../packages/agent-ui/components/src/controls/tooltip/tooltip.md?raw'
 import menuMd from '../../packages/agent-ui/components/src/controls/menu/menu.md?raw'
 import selectMd from '../../packages/agent-ui/components/src/controls/select/select.md?raw'
@@ -139,6 +142,8 @@ export const loadSliderDoc = (): ComponentDoc => parseDoc(sliderMd)
 export const loadSliderMultiDoc = (): ComponentDoc => parseDoc(sliderMultiMd)
 // The Wave 4 Overlay family (popover, tooltip, menu, select, combo-box — tier=pattern, ADR-0043).
 export const loadPopoverDoc = (): ComponentDoc => parseDoc(popoverMd)
+// GH #294 F4 — ui-form-popover (tier=pattern ⇒ {doc,demo}).
+export const loadFormPopoverDoc = (): ComponentDoc => parseDoc(formPopoverMd)
 export const loadTooltipDoc = (): ComponentDoc => parseDoc(tooltipMd)
 export const loadMenuDoc = (): ComponentDoc => parseDoc(menuMd)
 export const loadSelectDoc = (): ComponentDoc => parseDoc(selectMd)

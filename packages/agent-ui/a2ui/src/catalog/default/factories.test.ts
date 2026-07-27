@@ -19,6 +19,7 @@ import {
   menuFactory,
   menuItemFactory,
   popoverFactory,
+  formPopoverFactory,
   tooltipFactory,
   radioGroupFactory,
   radioFactory,
@@ -454,6 +455,23 @@ describe('default catalog factories — Popover (ADR-0087 Wave A, overlay-contro
     const target = el as unknown as Record<string, unknown>
     expect(target.open).toBe(true)
     expect(target.placement).toBe('left-start')
+  })
+})
+
+describe('default catalog factories — FormPopover (GH #294 F4, form-popover.lld.md)', () => {
+  it('FormPopover → ui-form-popover is two-way bound on open via the toggle event (the Menu/Popover/Tooltip overlay precedent); label/placement/size are 1:1 accessors', () => {
+    expect(formPopoverFactory.tag).toBe('ui-form-popover')
+    expect(formPopoverFactory.value).toEqual({ prop: 'open', event: 'toggle' })
+    const el = formPopoverFactory.create()
+    formPopoverFactory.applyProp(el, 'open', true)
+    formPopoverFactory.applyProp(el, 'label', 'Filters')
+    formPopoverFactory.applyProp(el, 'placement', 'bottom-end')
+    formPopoverFactory.applyProp(el, 'size', 'lg')
+    const target = el as unknown as Record<string, unknown>
+    expect(target.open).toBe(true)
+    expect(target.label).toBe('Filters')
+    expect(target.placement).toBe('bottom-end')
+    expect(target.size).toBe('lg')
   })
 })
 
