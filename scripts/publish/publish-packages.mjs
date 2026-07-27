@@ -25,20 +25,27 @@
 //   --dry-run   passes --dry-run to `npm publish` (packs + validates, never uploads) — the safety-net path
 //               for the workflow's manual workflow_dispatch trigger and for local testing.
 //
-// CONSUMER-PROFILE — a deliberate, Kim-ratified decision (not a silent default): `agent-ui-app` is
-// documented (see that package's own README) as targeting Vite/Rolldown-family bundlers only. The MECHANISM
-// that forced it was `app-shell.ts`'s Vite-only import-query specifiers (`?url` x2, `?raw` x1, e.g.
+// CONSUMER-PROFILE — HISTORICAL, and now RELAXED (GH #283, 2026-07-27). `@agent-ui-kit/app` used to be
+// documented as targeting Vite/Rolldown-family bundlers only. The MECHANISM that forced it was
+// `app-shell.ts`'s Vite-only import-query specifiers (`?url` x2, `?raw` x1, e.g.
 // `import ISOLATION_GRID_CSS from './app-shell-isolation.css?raw'`): tsc passes those through VERBATIM (it
 // doesn't understand the query suffix), so the compiled dist/ output only resolved under a Vite/Rolldown-
-// family bundler — plain Node ESM, webpack, and esbuild consumers failed on agent-ui-app's root barrel.
+// family bundler — webpack and esbuild consumers failed on the app package's root barrel. ADR-0156 removed
+// `ui-app-shell` (GH #249), taking that module with it; GH #278 then swept the repo and found no `?url`/
+// `?raw` specifier left in any publishable package source (the survivors are non-published test files and
+// `site/`), and deliberately left the profile documented pending a real install smoke.
 //
-// STATUS (GH #278, after ADR-0156 removed `ui-app-shell`): that file is gone, and a repo-wide sweep finds NO
-// `?url`/`?raw` import-query specifier in any publishable package source — the only remaining uses are in
-// non-published test files (`app/src/layering.test.ts`'s `import.meta.glob`, various `*.test.ts` fixtures)
-// and in `site/`. The stated Vite-family constraint is therefore no longer forced by this mechanism. It is
-// left AS DOCUMENTED on purpose: relaxing a published package's consumer profile is a deliberate,
-// verify-with-a-real-install decision (GH #71's install-from-registry smoke is the gate), not a side effect
-// of a comment sweep. Re-decide it deliberately, then update this header and `app/README.md` together.
+// That smoke ran (GH #283, transcript on the issue): this script's own build+prepare path packed to
+// tarballs, `npm install`ed into a scratch app OUTSIDE the repo/workspace, then bundled by BOTH esbuild and
+// webpack — neither Vite-family, both green on the app root barrel plus the whole CSS `@import` chain — and
+// the esbuild output driven in a real headless browser (`<ui-super-shell>` upgraded, `--md-sys-color-*`
+// resolved, zero console errors). `app/README.md`'s profile note was relaxed in the same change.
+//
+// Two things the smoke did NOT prove, kept honest in that README rather than quietly dropped: a plain Node
+// ESM import (no DOM) still fails — for every control package in the family, not this one specially — and
+// no CDN/esm.sh probe covers the app package (`verify-consumer-install.mjs`'s CDN leg is
+// shared/icons/components only). Growing that script a non-Vite app leg is the standing gate this
+// one-time smoke stands in for. NOTE releases through `0.0.5` still ship the old constrained artifact.
 
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'

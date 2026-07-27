@@ -99,12 +99,13 @@ never restate their internals here.
   `@import` silently breaks the documented recipe — GH #71 (install-from-registry smoke) is the gate
   that should catch it.
 - License: MIT (`LICENSE` at repo root) — Kim's decision, 2026-07-19.
-- `agent-ui-app` is DOCUMENTED as targeting Vite/Rolldown-family bundlers only (`app/README.md`) — an
-  accepted, deliberate consumer-profile constraint, not a defect to chase. Its forcing mechanism was
-  `?url`/`?raw` import-query specifiers in the now-removed `app-shell.ts` (ADR-0156); no publishable
-  package source carries such a specifier today. `publish-packages.mjs`'s own header is the authority on
-  the current status — read it there rather than restating it here, and treat relaxing the profile as a
-  deliberate decision gated on a real install smoke (GH #71), never a doc edit.
+- The app package's Vite-only consumer profile is HISTORY (relaxed GH #283, 2026-07-27, on a real
+  esbuild+webpack+browser install smoke): its forcing mechanism was `?url`/`?raw` import-query specifiers
+  in the now-removed `app-shell.ts` (ADR-0156), and no publishable package source carries such a specifier
+  today. Releases through `0.0.5` still ship the old constrained artifact. `publish-packages.mjs`'s own
+  header is the authority on the current status — read it there rather than restating it here. Two gaps
+  stay documented in `app/README.md`, not silently dropped: plain Node ESM (no DOM) works for no control
+  package in the family, and no CDN probe covers the app package yet.
 - npm version numbers are burned forever once published, even after unpublish — decide deliberately
   per step 1 above rather than tagging speculatively and fixing forward.
 
