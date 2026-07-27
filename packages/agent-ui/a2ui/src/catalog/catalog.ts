@@ -67,6 +67,27 @@ export class CatalogError extends Error {
   }
 }
 
+/**
+ * Render a `PropDef`'s declared type/enum as a compact, model-facing string (GH #288/#286): the system
+ * prompt's catalog inventory (`system-prompt.ts`'s `catalogInventory`) and `produce.ts`'s self-correct
+ * feedback (`messagesFor`) both need the SAME "what shape can this value take" description — a single
+ * source, so a future JSON-Schema keyword the minimal validator (`conformance.ts`'s `matchesSchemaType`)
+ * grows gets described consistently in both places rather than drifting between two hand-rolled copies.
+ * An `enum` narrows first (its declared members, `|`-joined, matching the wire's exact-literal check);
+ * otherwise the JSON-Schema `type` keyword (single or `anyOf`-style array, also `|`-joined); an
+ * unconstrained schema (`type` absent) or a bare `true` boolean schema is `'any'`; a bare `false` schema
+ * (accepts nothing) is `'never'` — both edge cases exist only in `JsonSchema`'s type, not in any shipped
+ * catalog row today.
+ */
+export function describePropType(pd: PropDef): string {
+  const schema = pd.type
+  if (typeof schema === 'boolean') return schema ? 'any' : 'never'
+  if (Array.isArray(schema.enum)) return schema.enum.map(String).join('|')
+  const t = schema.type
+  if (t === undefined) return 'any'
+  return (Array.isArray(t) ? t : [t]).map(String).join('|')
+}
+
 const CHILD_MODELS = new Set(['child', 'children', 'ChildList'])
 
 const isObject = (v: unknown): v is Record<string, unknown> =>

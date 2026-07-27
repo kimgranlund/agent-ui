@@ -348,6 +348,43 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
     const round2 = reqs()[1]!.messages
     expect(round2.some((m) => m.role === 'assistant' && m.content.includes('weekly'))).toBe(true)
     expect(round2.some((m) => m.role === 'user' && /CATALOG/.test(m.content) && /root\.mode/.test(m.content))).toBe(true)
+    // GH #288 (root-caused by #286) — the feedback now ALSO teaches the expected shape, not just
+    // "CATALOG at root.mode": resolved from `Calendar.mode`'s declared enum via the round's own parsed
+    // output, so a repeated identical wrong guess (the #286 live-repro symptom) has a constraint to act on.
+    expect(round2.some((m) => m.role === 'user' && /root\.mode \(expected: single\|range\)/.test(m.content))).toBe(true)
+  })
+
+  // GH #288 — the SAME self-correct plumbing, isolated to just the feedback-shape lever: a resolvable
+  // CATALOG failure (component + property both catalog-declared) appends "(expected: …)"; an
+  // UNRESOLVABLE one (unknown component type — SPEC-R9, no PropDef to describe) degrades to the
+  // pre-existing "CODE at path" wording, unchanged — the resolver's declared degrade path, not a guess.
+  it('GH #288: messagesFor resolves "(expected: …)" for a resolvable CATALOG failure, and degrades cleanly when unresolvable', async () => {
+    const INVALID_TEXT_EMPHASIS =
+      '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"root","component":"Text","text":"hi","emphasis":"bold"}]}}'
+    const VALID_TEXT_EMPHASIS =
+      '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"root","component":"Text","text":"hi","emphasis":true}]}}'
+    const { provider, calls, reqs } = stubProvider([INVALID_TEXT_EMPHASIS, VALID_TEXT_EMPHASIS])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+
+    expect(calls()).toBe(2)
+    expect(lines.join('\n')).not.toContain('"bold"') // the invalid string value never painted
+    const round2 = reqs()[1]!.messages
+    const feedback = round2.find((m) => m.role === 'user' && /INVALID/.test(m.content))!
+    expect(feedback.content).toMatch(/CATALOG at root\.emphasis \(expected: boolean\)/)
+
+    // Unresolvable case (unknown component — no PropDef exists to describe): the SAME "CODE at path"
+    // wording as before this fix, with no dangling/garbled "(expected: …)" tacked on.
+    const { provider: p2, reqs: reqs2 } = stubProvider([INVALID, VALID])
+    const deps2: ProduceDeps = { provider: p2, retrieve: () => [], catalog: defaultCatalog }
+    for await (const _line of produce(intent, deps2, { maxRounds: 3 })) void _line
+    const round2b = reqs2()[1]!.messages
+    const feedback2 = round2b.find((m) => m.role === 'user' && /INVALID/.test(m.content))!
+    expect(feedback2.content).toContain('CATALOG at root')
+    expect(feedback2.content).not.toContain('(expected:')
   })
 
   it('halts-and-reports at the bound when generation never validates (emits nothing invalid)', async () => {

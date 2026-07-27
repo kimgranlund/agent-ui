@@ -59,6 +59,7 @@
 
 import type { A2uiServerMessage, A2uiOutput } from '../protocol.ts'
 import type { Catalog } from '../catalog/catalog.ts'
+import { describePropType } from '../catalog/catalog.ts'
 import type { CorpusRecord } from '../corpus/record.ts'
 import type { RetrieveQuery } from '../corpus/retrieve.ts'
 import { heal } from '../corpus/heal.ts'
@@ -217,18 +218,65 @@ function queryOf(input: TurnInput, k: number): RetrieveQuery {
  * §1) is the user-visible chat reply — without an explicit instruction, a compliant model narrates its
  * compliance IN the note ("Re-emitting the corrected, validated JSONL…", observed live). The correction
  * loop is invisible plumbing: the note must keep addressing the USER, in persona, on every round.
+ *
+ * GH #288 (root-caused by #286): a `CATALOG` failure's `path` alone (`lbl_in.emphasis`) taught the model
+ * nothing about WHAT was wrong with the value — only WHERE. A live repro showed a model repeat the
+ * identical wrong guess across two whole self-correct rounds under that feedback. `expectedTypeNote`
+ * resolves the failing property's declared type/enum from `catalog` + the prior round's OWN parsed
+ * output (`lastOutput` — the component's `component` type names which `ComponentDef` to look the
+ * property up in) and appends `(expected: …)`, the SAME description `catalogInventory` renders
+ * (`describePropType`, catalog.ts) — one source, so the two teaching surfaces never disagree. Resolves to
+ * `''` (no change to the existing `CODE at path` wording) whenever the path isn't a resolvable
+ * `componentId.prop` shape, the component isn't in `lastOutput`, or the property isn't declared —
+ * unknown-component/unknown-property CATALOG failures (SPEC-R9) have no "expected type" to teach.
  */
-function messagesFor(input: TurnInput, failures: RoundFailure[] | undefined, lastRaw: string | undefined): Turn[] {
+function messagesFor(
+  input: TurnInput,
+  failures: RoundFailure[] | undefined,
+  lastRaw: string | undefined,
+  catalog: Catalog,
+  lastOutput: A2uiOutput | undefined,
+): Turn[] {
   const turns: Turn[] = [...input.session.turns, { role: 'user', content: userContent(input) }]
   if (failures && failures.length > 0 && lastRaw !== undefined) {
     turns.push({ role: 'assistant', content: lastRaw })
-    const summary = failures.map((f) => `${f.code}${f.path ? ` at ${f.path}` : ''}`).join('; ')
+    const summary = failures
+      .map((f) => `${f.code}${f.path ? ` at ${f.path}` : ''}${expectedTypeNote(f, catalog, lastOutput)}`)
+      .join('; ')
     turns.push({
       role: 'user',
       content: `That output was INVALID (${summary}). Re-emit the COMPLETE corrected A2UI JSONL — nothing else. Your leading meta-line "note" must still address the USER in persona — never mention this correction, the re-emission, validation, or JSONL.`,
     })
   }
   return turns
+}
+
+/** Find a component by `id` across every `updateComponents` message in one round's parsed output —
+ *  `createSurface` messages never carry components (protocol.ts), so only that arm is searched. */
+function findComponentById(id: string, output: A2uiOutput): A2uiComponent | undefined {
+  for (const msg of output) {
+    if ('updateComponents' in msg) {
+      const found = msg.updateComponents.components.find((c) => c.id === id)
+      if (found) return found
+    }
+  }
+  return undefined
+}
+
+/** GH #288 — resolve a `CATALOG` failure's expected type/enum, or `''` when unresolvable (see
+ *  `messagesFor`'s doc comment for every degrade case). Only `CATALOG` failures carry a catalog-declared
+ *  property to describe; every other failure code (`PARSE`/`SCHEMA`/`FEED_SCOPE`/…) degrades to `''`. */
+function expectedTypeNote(failure: RoundFailure, catalog: Catalog, lastOutput: A2uiOutput | undefined): string {
+  if (failure.code !== 'CATALOG' || lastOutput === undefined) return ''
+  const dot = failure.path.lastIndexOf('.')
+  if (dot === -1) return '' // no property segment (e.g. an unknown-component-type failure)
+  const componentId = failure.path.slice(0, dot)
+  const propName = failure.path.slice(dot + 1)
+  const component = findComponentById(componentId, lastOutput)
+  if (!component) return ''
+  const pd = catalog.components[component.component]?.properties[propName]
+  if (!pd) return '' // unknown property — nothing declared to describe
+  return ` (expected: ${describePropType(pd)})`
 }
 
 /** Strip a single wrapping markdown code fence (```json … ```), if the model added one despite the
@@ -500,6 +548,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
   const attachSource = emitProgress && progressDetail === 'source'
   let failures: RoundFailure[] | undefined
   let lastRaw: string | undefined
+  let lastOutput: A2uiOutput | undefined // GH #288 — the prior round's OWN parsed output, so a self-correct round's feedback can resolve "expected type" per failing path (messagesFor/expectedTypeNote)
   let lastCandidate: string | undefined // the previous round's peeled candidate wire text — the `retry` stage's source
   let genuiMultiplicityHit = false // genui-surface SPEC-R1: sticky across rounds — a factual "this happened at least once" tally, never reset
   for (let round = 0; round < opts.maxRounds; round++) {
@@ -551,7 +600,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
     for await (const frag of deps.provider.stream({
       model,
       system,
-      messages: messagesFor(input, failures, lastRaw),
+      messages: messagesFor(input, failures, lastRaw, deps.catalog, lastOutput),
       effort: opts.effort,
       onEvent,
       // GH #49 — relayed verbatim; the adapter owns the tool loop (its buffered rounds mean 'tool'
@@ -620,12 +669,14 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
 
     const assembled = assembleFromRaw(rest)
     if (assembled === undefined) {
+      lastOutput = undefined // GH #288 — no parsed output this round; nothing for the next round's feedback to resolve against
       // genui-surface SPEC-R1 — a genui structural failure MAY hitch a ride on the SAME retry an A2UI
       // parse failure already needs (never an EXTRA round manufactured purely for genui's sake — see the
       // `verdict.valid` branch below for the fuller reasoning).
       failures = genuiPeel.failure !== undefined ? [{ code: 'PARSE', path: '' }, genuiPeel.failure] : [{ code: 'PARSE', path: '' }]
       continue
     }
+    lastOutput = assembled.output // GH #288 — this round's parsed output, kept for the NEXT round's self-correct feedback (expectedTypeNote)
     // SPEC-N3 — the shared validator, no fork; TKT-0081 — seeded with the session's prior graphs so the
     // per-round judgment matches the MERGED state the renderer will hold (update-only follow-ups valid;
     // a cross-turn root-resend fails pre-wire as `sid:root`, a self-correct round).
