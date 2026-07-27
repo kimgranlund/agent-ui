@@ -435,6 +435,28 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
     expect(feedback2.content).not.toContain('(expected:')
   })
 
+  // GH #286/#288 follow-up (2): a numeric-spelled string enum (Card.elevation) rendered unquoted was
+  // indistinguishable from a number type, so the model kept guessing the bare number `1` instead of the
+  // required string `"1"` — the residual live miss behind #288's post-fix re-verification. The feedback
+  // must now teach the QUOTED members so the constraint is unambiguous.
+  it('GH #286/#288 follow-up: an elevation-style numeric-spelled enum miss teaches quoted members', async () => {
+    const INVALID_ELEVATION =
+      '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"root","component":"Card","elevation":1}]}}'
+    const VALID_ELEVATION =
+      '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"root","component":"Card","elevation":"1"}]}}'
+    const { provider, calls, reqs } = stubProvider([INVALID_ELEVATION, VALID_ELEVATION])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+
+    expect(calls()).toBe(2)
+    const round2 = reqs()[1]!.messages
+    const feedback = round2.find((m) => m.role === 'user' && /INVALID/.test(m.content))!
+    expect(feedback.content).toMatch(/CATALOG at root\.elevation \(expected: "-3"\|"-2"\|"-1"\|"0"\|"1"\|"2"\|"3"\)/)
+  })
+
   it('halts-and-reports at the bound when generation never validates (emits nothing invalid)', async () => {
     const { provider, calls } = stubProvider([INVALID])
     const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
