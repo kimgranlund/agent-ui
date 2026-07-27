@@ -356,7 +356,7 @@ describe('ui-form-popover — whole-shape assertion (T10, the Test-the-whole-sha
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
-//  SCRATCH REPRO — GH #302
+//  REGRESSION — GH #302
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-form-popover — GH #302 regression (rovingFocus survives the #ensureParts() child-move)', () => {

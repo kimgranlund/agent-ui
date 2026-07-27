@@ -112,6 +112,17 @@ export class UIElement extends HTMLElement {
   }
 
   connectedCallback(): void {
+    // Review finding (GH #302 follow-up, Q2(b)): a NESTED `connectedCallback` for this SAME instance
+    // landing while `#connectingDepth > 0` (a reentrant re-connect during an already-open window) would
+    // otherwise overwrite the still-live `#scope`/`#ac` below WITHOUT disposing them (a leak), and the
+    // stale `#deferredTeardown` flag left over from an earlier reentrant disconnect would then tear down
+    // THIS new, legitimate connection at the outermost `endConnecting()` — connected in the DOM but dead
+    // (no listeners, no effects). Apply any pending deferred teardown NOW, before minting anything new,
+    // so a fresh connect always starts from a genuinely clean slate.
+    if (this.#deferredTeardown) {
+      this.#deferredTeardown = false
+      this.#teardown()
+    }
     // FIRST: replay any pre-upgrade `.prop=` shadow into its signal — before the render effect installs
     // and before anything reads a prop, so first render sees the assigned value, not the default.
     this.upgradeProps()
