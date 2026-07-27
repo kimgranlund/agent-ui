@@ -43,8 +43,6 @@ const structuralTheme = EditorView.theme({
 const highlightStyle = HighlightStyle.define([
   { tag: [t.comment, t.lineComment, t.blockComment], class: 'tok-comment' },
   { tag: [t.heading, t.heading1, t.heading2, t.heading3, t.heading4, t.heading5, t.heading6], class: 'tok-heading' },
-  { tag: t.strong, class: 'tok-strong' },
-  { tag: t.emphasis, class: 'tok-emphasis' },
   { tag: [t.link, t.url], class: 'tok-link' },
   { tag: t.list, class: 'tok-list' },
   { tag: t.quote, class: 'tok-quote' },
