@@ -560,9 +560,16 @@ export class UIConversationElement extends UIElement {
       host.addEventListener('action', (e) => {
         // SPEC-R8's routing law: the ONE outward semantic channel. Framed as a genui-shaped client message
         // (structurally distinct from an `A2uiClientMessage` — a genui action is NOT one, SPEC-R8's own
-        // reasoning) and bubbled through the SAME `onClientMessage` callback `ui-surface-host` uses (LLD-C4)
-        // — the runner/consumer distinguishes the two shapes at its own boundary (`clientMessageSurfaceId`'s
-        // own `'genuiAction'` arm, agent-admin.ts).
+        // reasoning) and re-routed through the SAME `onClientMessage` callback `ui-surface-host` uses
+        // (LLD-C4) — the runner/consumer distinguishes the two shapes at its own boundary
+        // (`clientMessageSurfaceId`'s own `'genuiAction'` arm, agent-admin.ts).
+        // GH #291 review — `ui-sandbox-frame` emits this `action` CustomEvent bubbling+composed
+        // (`emit()`'s fleet default); once re-routed above there is no reason for the SAME event to also
+        // continue bubbling out through `ui-conversation` itself, where it collides with the chip row's OWN
+        // `action` event (ADR-0160 clause 3, `#buildActions`) — a consumer listening on `ui-conversation`
+        // for the chip commit would otherwise also catch every genui action click. Stopped here, at the
+        // frame that owns it, before it reaches `ui-conversation`'s host boundary.
+        e.stopPropagation()
         const detail = (e as CustomEvent<GenuiActionDetail>).detail
         // A genui action is NOT an `A2uiClientMessage` (SPEC-R8) — `ClientMessageListener`'s parameter
         // type is nonetheless pinned to that closed union (the renderer's own real client-message shape).

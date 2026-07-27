@@ -491,6 +491,84 @@ describe('ui-conversation cross-engine — chat-path chrome laws (GH #241 + GH #
   })
 })
 
+// GH #291/ADR-0160 clause 3 — the pre-hydrated action-chip row (`finalize(actions?)`). Zero prior
+// coverage of this mechanism (GH #291 review finding): pins the row's render/removal/event contract, the
+// omitted-`actions` no-op, and the `event.target` discriminant the `action` event entry + this same
+// review's Major-1 fix (`conversation.md`'s `action` entry, `a2ui-chat.ts`'s guard) both depend on.
+describe('ui-conversation cross-engine smoke — the pre-hydrated action-chip row (GH #291/ADR-0160 clause 3)', () => {
+  it('a non-empty actions list renders one chip per action in a [data-part="actions"] row', () => {
+    const el = mountConversation()
+    const handle = el.beginAgentTurn()
+    handle.setNote('Was this helpful?')
+    handle.finalize([
+      { id: 'helpful', label: 'Helpful' },
+      { id: 'not-helpful', label: 'Not helpful' },
+    ])
+
+    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    const row = bubble.querySelector('[data-part="actions"]') as HTMLElement
+    expect(row, 'the actions row did not render').not.toBeNull()
+    const chips = row.querySelectorAll('ui-button')
+    expect(chips).toHaveLength(2)
+    expect(chips[0]!.textContent).toBe('Helpful')
+    expect(chips[1]!.textContent).toBe('Not helpful')
+  })
+
+  it('clicking a chip removes the WHOLE row and fires exactly one action event on the host, with the clicked id', () => {
+    const el = mountConversation()
+    const handle = el.beginAgentTurn()
+    handle.setNote('Was this helpful?')
+    handle.finalize([
+      { id: 'helpful', label: 'Helpful' },
+      { id: 'not-helpful', label: 'Not helpful' },
+    ])
+
+    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    const row = bubble.querySelector('[data-part="actions"]') as HTMLElement
+    const firstChip = row.querySelector('ui-button') as HTMLElement
+
+    const received: Array<{ id: string }> = []
+    el.addEventListener('action', (e) => received.push((e as CustomEvent<{ id: string }>).detail))
+
+    firstChip.click()
+
+    // one-shot commit — the whole row is gone, not just the clicked chip.
+    expect(bubble.querySelector('[data-part="actions"]'), 'the row did not remove itself on commit').toBeNull()
+    // exactly one event, naming the clicked action — a second chip can never fire (it no longer exists).
+    expect(received).toHaveLength(1)
+    expect(received[0]).toEqual({ id: 'helpful' })
+  })
+
+  it('finalize() with no actions argument renders no [data-part="actions"] row at all', () => {
+    const el = mountConversation()
+    const handle = el.beginAgentTurn()
+    handle.setNote('A plain reply, no chips')
+    handle.finalize()
+
+    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    expect(bubble.querySelector('[data-part="actions"]'), 'a row rendered despite no actions argument').toBeNull()
+  })
+
+  it("the chip's action event fires with target === the ui-conversation host itself (the discriminant conversation.md's action entry and a2ui-chat.ts's guard both rely on)", () => {
+    const el = mountConversation()
+    const handle = el.beginAgentTurn()
+    handle.setNote('Was this helpful?')
+    handle.finalize([{ id: 'helpful', label: 'Helpful' }])
+
+    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    const chip = bubble.querySelector('[data-part="actions"] ui-button') as HTMLElement
+
+    let target: EventTarget | null = null
+    el.addEventListener('action', (e) => {
+      target = e.target
+    })
+    chip.click()
+
+    expect(target, 'the action event never reached the host').not.toBeNull()
+    expect(target === el, 'the action event target was not ui-conversation itself (never the button, never the bubble)').toBe(true)
+  })
+})
+
 describe('ui-conversation cross-engine smoke — scroll-follow guard (SPEC-R4 AC2)', () => {
   it('near the bottom, a new turn follows to the new bottom', async () => {
     const el = mountConversation()

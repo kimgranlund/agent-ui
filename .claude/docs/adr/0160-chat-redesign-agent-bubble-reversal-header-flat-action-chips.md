@@ -138,6 +138,24 @@ without the primitive itself knowing what "helpful" means.
 - The numbered "Task Step NN" labeling convention and `PROGRESS_LABEL`'s existing named-stage table
   are UNTOUCHED by this record — Kim's ruling named that fork resolved as "keep contextual labels,"
   a non-change, so no repair lands here for it.
+- **GH #291 review repair (2026-07-27) — the chip `action` event was colliding with a pre-existing
+  bubbling `action` shape.** `ui-sandbox-frame` already emitted its own `action` CustomEvent
+  (`{surfaceId, name, payload}`, SPEC-R8's genui game-loop channel) bubbling+composed; `conversation.ts`'s
+  `routeGenui` re-routes it through `onClientMessage` but was NOT stopping its propagation, so it
+  continued bubbling past `ui-conversation`'s own host boundary — colliding there with clause 3's own
+  `action` event (`{id}`, fired ON `ui-conversation` itself). A consumer's chip listener that read
+  `detail.id` blindly (`site/pages/a2ui-chat.ts`) misfired on a genui action click. Fixed two ways:
+  (1) `conversation.ts`'s `routeGenui` now calls `e.stopPropagation()` on the genui frame's `action`
+  listener — the root-cause fix, safe because every OTHER fleet consumer that listens for a genui
+  frame's `action` (`gen-ui-live.ts`, `sandbox-frame-demo.ts`) attaches its listener directly on the
+  `ui-sandbox-frame` instance it itself created, never on an ancestor of `ui-conversation`, so nothing
+  depends on the bubble reaching past the frame; (2) `a2ui-chat.ts`'s own chip listener additionally
+  guards on `event.target === conv` (belt-and-suspenders, and the only correct check for any consumer
+  attaching its listener above `ui-conversation` rather than relying on this build's `stopPropagation`).
+  `conversation.md`'s `action` event entry now names the discriminant. No new coverage of THIS
+  specific collision was added to `conversation.browser.test.ts` (the reviewer's second finding — zero
+  coverage of the chip mechanism itself — is repaired there instead, including a target-discrimination
+  assertion covering the chip's own `event.target` contract this note documents).
 
 ## Alternatives considered
 
