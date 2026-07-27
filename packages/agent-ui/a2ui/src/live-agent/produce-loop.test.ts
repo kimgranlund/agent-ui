@@ -457,6 +457,41 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
     expect(feedback.content).toMatch(/CATALOG at root\.elevation \(expected: "-3"\|"-2"\|"-1"\|"0"\|"1"\|"2"\|"3"\)/)
   })
 
+  // GH #307 investigation — a PARSE failure (assembleFromRaw's per-line split handed an unparseable
+  // fragment) carried NO diagnostic detail; live reproduction (the quiz persona's game loop) caught a
+  // real model repeating the SAME mistake — a single JSON message pretty-printed across several physical
+  // lines — round after round, because the feedback never named the constraint it violated. The
+  // self-correct message must now restate the "one message, one line, nothing after the JSONL" rule
+  // whenever a PARSE failure fires, and must NOT append it for a non-PARSE (e.g. CATALOG-only) failure.
+  it('GH #307: a PARSE failure appends the single-line-JSON reminder; a CATALOG-only failure does not', async () => {
+    // A message split across physical lines: assembleFromRaw's per-line split hands the healer an
+    // unparseable fragment on line 2 (the array's own continuation), exactly the live-reproduced shape.
+    const MULTILINE =
+      '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[\n' +
+      '{"id":"root","component":"Button","label":"Hi","action":{"action":"submit"}}\n' +
+      ']}}'
+    const { provider, calls, reqs } = stubProvider([MULTILINE, VALID])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+
+    expect(calls()).toBe(2) // round 1 (PARSE) → round 2 (corrected) streams
+    const round2 = reqs()[1]!.messages
+    const feedback = round2.find((m) => m.role === 'user' && /INVALID/.test(m.content))!
+    expect(feedback.content).toMatch(/PARSE/)
+    expect(feedback.content).toMatch(/SINGLE line/)
+    expect(feedback.content).toMatch(/never add any text after/)
+
+    // Negative control: a CATALOG-only failure (no PARSE among this round's failures) carries no hint.
+    const { provider: p2, reqs: reqs2 } = stubProvider([INVALID, VALID])
+    const deps2: ProduceDeps = { provider: p2, retrieve: () => [], catalog: defaultCatalog }
+    for await (const _line of produce(intent, deps2, { maxRounds: 3 })) void _line
+    const round2b = reqs2()[1]!.messages
+    const feedback2 = round2b.find((m) => m.role === 'user' && /INVALID/.test(m.content))!
+    expect(feedback2.content).not.toMatch(/SINGLE line/)
+  })
+
   it('halts-and-reports at the bound when generation never validates (emits nothing invalid)', async () => {
     const { provider, calls } = stubProvider([INVALID])
     const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
