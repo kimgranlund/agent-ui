@@ -16,13 +16,21 @@ import '@agent-ui-kit/app/agent-admin.css'
 // …or compose the parts: super-shell, master-detail, nav-rail, settings, conversation, surface-host.
 ```
 
-> **Consumer profile:** this package targets Vite/Rolldown-family bundlers — one internal module uses Vite import queries (`?raw`/`?url`), so plain Node ESM / webpack / esbuild consumers can't import the root barrel. The rest of the family has no such constraint.
+> **Consumer profile:** any modern bundler — no Vite-family constraint. This package's published output
+> contains no Vite-only import queries. Proven by a real install smoke (GH #283): the actual publish
+> build packed to tarballs, installed into a scratch app outside the repo, then bundled by **esbuild** and
+> by **webpack** (both non-Vite) and driven in a real headless browser — `<ui-super-shell>` upgraded and
+> rendered with the `--md-sys-color-*` token chain resolved and zero console errors. Like every
+> `@agent-ui-kit` control package these are BROWSER modules: they need a DOM, so a plain Node ESM import
+> (no DOM) is not a supported consumption mode for any of them. The old Vite-only constraint came from
+> `ui-app-shell`'s `?raw`/`?url` imports, removed by ADR-0156; it applied through `0.0.5` and earlier.
 
 ## CDN
 
-Not recommended: this package's Vite-family constraint (the `?raw`/`?url` import queries noted
-above) applies to CDN module rewriters too — use a Vite/Rolldown bundler for `@agent-ui-kit/app`.
-The rest of the family is CDN-friendly.
+Unverified for this package — use a bundler. Nothing rules CDN use out anymore (the Vite-family
+constraint above is gone), but no probe covers `@agent-ui-kit/app` yet: the release smoke's esm.sh leg
+(`scripts/verify-consumer-install.mjs`) covers `shared`/`icons`/`components` only. The rest of the family
+is CDN-friendly and verified as such on every release.
 
 ## The @agent-ui-kit family
 
