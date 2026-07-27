@@ -409,6 +409,18 @@ export const popoverFactory: WidgetFactory = accessorFactory('ui-popover', { pro
 // `focusin`/`focusout` all wire to it directly), remaining children move into the tooltip panel.
 export const tooltipFactory: WidgetFactory = accessorFactory('ui-tooltip', { prop: 'open', event: 'toggle' })
 
+// FormPopover → ui-form-popover (GH #294 F4 / form-popover.spec.md SPEC-R9 / form-popover.lld.md
+// LLD-C6). Two-way bindable on `open` via `toggle` (ADR-0019), same as Popover/Menu/Tooltip. `label`
+// is declared `bindable: true` in catalog.json — a ONE-WAY data-model binding (the Icon.label
+// precedent: no value event, just a live-updating reflected prop) — the agent-side summary-state
+// mechanism (SPEC-R1/§Trigger-label-state-mechanism); the shipped conformance validator rejects a
+// `{path}` binding on a non-bindable prop, so this mark is load-bearing, not decorative.
+// `placement`/`size` are plain non-bindable literal props (accessorFactory's default `setAttr` path).
+// `children` is a plain ChildList of PANEL content — UNLIKE Popover, the trigger is CONTROL-CREATED
+// (form-popover.ts `#ensureParts`), so there is no first-child-is-the-trigger convention to preserve;
+// every child is panel content (SPEC-R9's deliberate density win over Popover's shape).
+export const formPopoverFactory: WidgetFactory = accessorFactory('ui-form-popover', { prop: 'open', event: 'toggle' })
+
 // ── the ADR-0087 Wave B rows (RadioGroup+Radio / Slider / SliderMulti / Calendar / ComboBox) ───────
 //
 // RadioGroup → ui-radio-group (ADR-0053 deferral, closed; Fork B — CLOSED, follow-up to Wave B). ADR-0095
@@ -807,6 +819,7 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   MenuItem: menuItemFactory,
   Popover: popoverFactory,
   Tooltip: tooltipFactory,
+  FormPopover: formPopoverFactory,
   RadioGroup: radioGroupFactory,
   Radio: radioFactory,
   SegmentedControl: segmentedControlFactory,

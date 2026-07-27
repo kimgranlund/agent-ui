@@ -26,6 +26,7 @@
     "./controls/command-modal": "./src/controls/command-modal/command-modal.ts",
     "./controls/disclosure": "./src/controls/disclosure/disclosure.ts",
     "./controls/field": "./src/controls/field/field.ts",
+    "./controls/form-popover": "./src/controls/form-popover/form-popover.ts",
     "./controls/form-provider": "./src/controls/form-provider/form-provider.ts",
     "./controls/grid": "./src/controls/grid/grid.ts",
     "./controls/icon": "./src/controls/icon/icon.ts",

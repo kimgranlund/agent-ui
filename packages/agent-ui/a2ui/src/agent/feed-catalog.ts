@@ -81,16 +81,19 @@ export interface FeedExclusion {
 }
 
 /**
- * The 27 catalog types a feed ask MAY NEVER host (ADR-0097 §3's ratified 11 + the chart-family pair —
+ * The 29 catalog types a feed ask MAY NEVER host (ADR-0097 §3's ratified 11 + the chart-family pair —
  * the ADR-0097 Amendment / ADR-0107 Amendment 2 — + the report/content/feed catalog wave's five:
  * `Stat`/`Table` [ADR-0111], `Disclosure` [ADR-0113], `Progress`/`Attachment` [ADR-0112] — + the
  * token-surface family's three: `Swatch`/`Ramp`/`Ladder` [ADR-0118 cl.6] — + the M4 app-surfaces panes
  * wave's two: `Split`/`SplitPane` [ADR-0120 cl.5, app-surfaces-m4.spec.md SPEC-R6] — + the timeline-family
  * wave's two: `Timeline`/`TimelineItem` [ADR-0122 F5, timeline-family.spec.md] — + the swiper-family
- * wave's two: `Swiper`/`SwiperItem` [ADR-0124 F5, swiper-family.spec.md]). Composite-closure note: a
- * composite's children are excluded ALONGSIDE their parent for the SAME reason (Tab/TabPanel with Tabs;
- * MenuItem with Menu) — `feed-catalog.test.ts` asserts this closure holds, both here and for the IN
- * composites (RadioGroup/Radio, SegmentedControl/Segment, Card/its three sub-types, Select+ComboBox/Option).
+ * wave's two: `Swiper`/`SwiperItem` [ADR-0124 F5, swiper-family.spec.md] — + the color-picker wave's one:
+ * `ColorPicker` [ADR-0123 cl.6] — + the form-popover wave's one: `FormPopover` [GH #294 F4,
+ * form-popover.spec.md SPEC-R9 — the same disclosure-overlay reasoning as Popover/Menu/Tooltip]).
+ * Composite-closure note: a composite's children are excluded ALONGSIDE their parent for the SAME
+ * reason (Tab/TabPanel with Tabs; MenuItem with Menu) — `feed-catalog.test.ts` asserts this closure
+ * holds, both here and for the IN composites (RadioGroup/Radio, SegmentedControl/Segment, Card/its
+ * three sub-types, Select+ComboBox/Option).
  */
 export const FEED_EXCLUDED: readonly FeedExclusion[] = [
   {
@@ -110,6 +113,11 @@ export const FEED_EXCLUDED: readonly FeedExclusion[] = [
   { type: 'MenuItem', reason: 'a Menu child — excluded alongside its parent (composite closure).' },
   { type: 'Popover', reason: 'a disclosure overlay that escapes the bubble box — the same reason as Menu.' },
   { type: 'Tooltip', reason: 'a hover-disclosure overlay, not operable inline — unsuitable for a click-to-answer ask.' },
+  {
+    type: 'FormPopover',
+    reason:
+      'a disclosure overlay that escapes the bubble box — the same reason as Popover/Menu, and worse for an ask: it hides real form content behind a trigger, when an ask must be fully visible and operable inline.',
+  },
   {
     type: 'List',
     reason: 'homogeneous-collection semantics signal canvas-scale content; Column hosts stacked ask options instead.',

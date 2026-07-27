@@ -230,6 +230,17 @@
       "children": "ChildList"
     },
 
+    "FormPopover": {
+      "properties": {
+        "open": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "open" },
+        "placement": { "type": { "type": "string", "enum": ["bottom-start", "bottom-end", "top-start", "top-end", "left-start", "left-end", "right-start", "right-end"] }, "mapsTo": "placement" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "size": { "type": { "type": "string", "enum": ["sm", "md", "lg"] }, "mapsTo": "size" }
+      },
+      "value": { "prop": "open", "event": "toggle" },
+      "children": "ChildList"
+    },
+
     "RadioGroup": {
       "properties": {
         "value": { "type": { "type": "string" }, "bindable": true, "mapsTo": "value" },

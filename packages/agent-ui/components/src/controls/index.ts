@@ -73,6 +73,7 @@ export * from './tooltip/tooltip.ts'     // hover/focus overlay (popover=manual,
 export * from './menu/menu.ts'           // action overlay — rovingFocus over [role=menuitem], commit→select
 export * from './select/select.ts'       // form-associated single-select (overlay + roving + selectionCommit)
 export * from './combo-box/combo-box.ts' // form-associated filter combobox (overlay + active-descendant)
+export * from './form-popover/form-popover.ts' // GH #294 F4: a control-created trigger + [data-box] panel packaging the form-popover recipe (overlay, NOT form-associated — live-apply, no aggregate value)
 
 // Picker controls — Wave 5B (ADR-0048): standalone month-grid date picker; also the popup body
 // for ui-text-field type=date (lazily imported there in slice 5B-3).

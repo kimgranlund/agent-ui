@@ -66,6 +66,7 @@
 @import './controls/menu/menu.css';
 @import './controls/select/select.css';
 @import './controls/combo-box/combo-box.css';
+@import './controls/form-popover/form-popover.css'; /* GH #294 F4 — packages the overlay+form recipe as one pattern control */
 
 /* Picker controls — Wave 5B (ADR-0048): standalone month-grid date picker. */
 @import './controls/calendar/calendar.css';

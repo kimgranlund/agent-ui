@@ -101,7 +101,13 @@ const targets = [
   // source, non-tree-shakeable, duplicated into every consumer); token-bridge.ts now walks the REAL CSSOM
   // at runtime instead (zero extra bytes) — see that file's own banner. Measured 48295 B gz 2026-07-24
   // (up from 45141); ~7% headroom reserved.
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 47.3 * KB],
+  // 47.5 KB re-based at the ui-form-popover wave (GH #294 F4, the SAME Consequences-anticipated re-base
+  // precedent): one new control (a select-style trigger + [data-box] panel over the shared overlay
+  // controller — no new mechanism, own marginal a modest 200 B gz) crossed the prior 47.3 KB cap purely
+  // via the whole-barrel gzip-dictionary shift every new family member causes (the split/swiper/
+  // status-stream leave-one-out precedent above). Measured 48501 B gz 2026-07-27 (up from 48295);
+  // ~6% headroom reserved.
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 47.5 * KB],
 ]
 
 let over = false
