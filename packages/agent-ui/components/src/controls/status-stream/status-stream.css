@@ -29,6 +29,17 @@
      retired with it — nothing else in the fleet consumed that token (grep-confirmed). The border
      stays: a hairline separator (never a filled box) still legibly divides the pinned row from
      entries scrolling underneath it. */
+  /* GH #308 — "floats on the page background" turned out to mean "genuinely transparent," and a
+     `position: sticky` header with NO paint at all lets scrolled-under entries show straight through
+     it (Kim's screenshot: a step's "Source" summary read interleaved with "Agent activity", plus a
+     rail fragment bleeding through the header's left edge). The header is still z-index:1 above the
+     entries, so the stacking order was always right — the bug was that "above" painted nothing. This
+     restores an OPAQUE paint, but as the ambient CANVAS the header sits on (never the old boxed
+     surface): default matches the page surface a bare/gallery mount sits on, and a consumer whose
+     mount genuinely has a different background behind the strip (e.g. ui-conversation's agent bubble,
+     conversation.css) overrides it to match — the SAME per-mount consumer-tuning pattern
+     `--ui-status-stream-max-block-size` already uses. */
+  --ui-status-stream-header-canvas: var(--md-sys-color-neutral-surface);
   --ui-status-stream-header-border: var(--md-sys-color-neutral-outline-variant);
   --ui-status-stream-header-ink: var(--md-sys-color-neutral-on-surface);
   /* the overall-status ink — the SHAPE (glyph/dot/ring) is the primary ADR-0057 signifier; this is the
@@ -93,8 +104,10 @@
     align-items: center;
     gap: var(--ui-status-stream-header-gap);
     padding: var(--ui-status-stream-header-pad);
-    /* GH #291/ADR-0160 — no background: the header floats directly on the page background (Kim's
-       ruling), the hairline border below is its only separation from scrolled entries. */
+    /* GH #308 — an OPAQUE canvas paint (not the retired boxed surface): "floats on the page
+       background" (Kim's #291 ruling) means it PAINTS that background, so scrolled-under entries
+       never show through the pinned header; see the token comment above. */
+    background: var(--ui-status-stream-header-canvas);
     border-block-end: 1px solid var(--ui-status-stream-header-border); /* 1px hairline — the annotated exception */
     color: var(--ui-status-stream-header-ink);
     font-weight: 500;
