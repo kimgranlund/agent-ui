@@ -1,9 +1,16 @@
 /* conversation.css — ui-conversation, the M2 thread/composer/narration layout (LLD-C6 · SPEC-R4). Single
  * file, two sectioned blocks (ADR-0003): a `:where(ui-conversation)` TOKEN block declaring only
- * `--ui-conversation-*` custom properties (promoted/renamed from site/pages/a2ui-chat.css's equivalents;
- * GH #241 later DIVERGED the agent turn from that promoted design — de-bubbled, see the agent-role rule),
+ * `--ui-conversation-*` custom properties (promoted/renamed from site/pages/a2ui-chat.css's equivalents),
  * then an `@scope (ui-conversation)` STYLES block consuming ONLY that chain (role-purity, the
  * app-shell.css/card.css discipline).
+ *
+ * GH #241 de-bubbled the agent turn (no background, full width); GH #291/ADR-0160 (Kim's 2026-07-27
+ * ruling) REVERSES that fleet-wide — the agent turn re-bubbles (a subtle neutral container, the
+ * base bubble's own 92% width cap restored) — see the agent-role rule below. The A2UI/GenUI render
+ * surface itself (`ui-surface-host`'s `[bare]` mode) is UNCHANGED and stays chromeless (GH #241's
+ * "A2UI not affected" scoping, ADR-0160 §3) — it now simply sits inside a bubble again, exactly as
+ * it did before GH #241, no double padding introduced (the bubble contributes ONE padding layer,
+ * `[bare]` still contributes none of its own).
  *
  * Standalone sheet — linked via the package `./conversation.css` export; NEVER injected from
  * conversation.ts (behaviour-only `.ts`, no runtime style; plan §2).
@@ -17,8 +24,12 @@
   --ui-conversation-ink: var(--md-sys-color-neutral-on-surface, currentColor);
   --ui-conversation-ink-variant: var(--md-sys-color-neutral-on-surface-variant, currentColor);
   --ui-conversation-user-bubble: var(--md-sys-color-primary-container-low, currentColor);
-  /* GH #241 removed --ui-conversation-agent-bubble: the agent turn de-bubbled (no background — the
-     styles block below), so the mint would be dead weight nothing consumes. */
+  /* GH #291/ADR-0160 — restored (GH #241 had retired it as dead weight when the agent turn
+     de-bubbled). A neutral CONTAINER tone, deliberately NOT the user bubble's primary tone (Kim's
+     ruling: "a subtle light container", not a second accent bubble) — one step up from the shell's
+     own `--ui-conversation-surface` (surface-low), so the bubble still reads as a distinct shape
+     against the shell behind it, in both light and dark schemes (light-dark()-backed at the source). */
+  --ui-conversation-agent-bubble: var(--md-sys-color-neutral-surface-high, currentColor);
   /* TKT-0066: the shell/bubble radii were 12px/10px literals — now the shared fleet radius + a
      nested-radius derivation off it (ADR-0018's concentric-corner spirit; identical rendered values at
      the default base). Minted here (not read directly in @scope) so the pending dimensional-constants
@@ -31,6 +42,9 @@
   --ui-conversation-bubble-pad: var(--md-sys-space-sm) var(--md-sys-space-md);
   --ui-conversation-mounts-gap: var(--md-sys-space-sm);
   --ui-conversation-composer-inset: var(--md-sys-space-md);
+  /* GH #291/ADR-0160 clause 3 — the settled-turn action-chip row. */
+  --ui-conversation-actions-gap: var(--md-sys-space-xs);
+  --ui-conversation-actions-margin-block-start: var(--md-sys-space-xs);
 }
 
 /* ════════════════ [ui-conversation] STYLES — @scope (ui-conversation) consumes ONLY --ui-conversation-* ══ */
@@ -74,19 +88,18 @@
     align-self: flex-end;
     background: var(--ui-conversation-user-bubble);
   }
-  /* GH #241 (Kim's ruling) — the agent turn DE-BUBBLES: no background, no padding, no radius, FULL
-     message-column width (align-self: stretch against the log's flex column). The sender label
-     ([data-part='who'], still this container's first child) reads as a small name ABOVE the turn with
-     no chrome around anything; the streamed narration, the note text, and the mounted A2UI surfaces
-     all render bare — the SAME container carries the streaming and settled states, so the streaming
-     path is bare by construction. The user turn keeps its compact bubble (below, untouched). */
+  /* GH #291/ADR-0160 (Kim's 2026-07-27 ruling) — the agent turn RE-BUBBLES, reversing GH #241's
+     de-bubbling fleet-wide: a visible neutral container again (background/padding/radius all
+     restored to the shared `[data-part='bubble']` base rule above — this override no longer zeroes
+     any of them out), `align-self: flex-start` (not `stretch`) so the base rule's own 92% width cap
+     applies unmodified — the pre-#241 shape exactly. The A2UI/GenUI render surface mounted inside
+     (`[data-part='mounts']`, `ui-surface-host[bare]`) is UNCHANGED and untouched by this rule — it
+     still carries zero chrome of its own (GH #241's "A2UI not affected" scoping stands); it now
+     simply sits, chromeless, inside a chromed bubble again — the SAME single padding layer the
+     bubble always contributed, never a second one. */
   [data-part='bubble'][data-role='agent'] {
-    align-self: stretch;
-    background: none;
-    padding: 0;
-    border-radius: 0;
-    inline-size: auto;
-    max-inline-size: 100%; /* overrides the base bubble's 92% cap — the full-width law (GH #241) */
+    align-self: flex-start;
+    background: var(--ui-conversation-agent-bubble);
   }
   [data-part='bubble'][data-role='system'] {
     align-self: center;
@@ -182,6 +195,16 @@
     scrollbar-width: var(--ui-conversation-scrollbar-width, auto); /* consumer-inherited seam (split-pane.css's own note) — deliberately NOT self-declared */
     font-size: 0.72rem;
     white-space: pre-wrap;
+  }
+
+  /* GH #291/ADR-0160 clause 3 — the pre-hydrated action-chip row, appended at finalize() when the
+     caller supplies a non-empty `actions` list; ONE consumer-defined row per settled turn, never a
+     hardcoded pair (conversation.ts's `#buildActions`). */
+  [data-part='actions'] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ui-conversation-actions-gap);
+    margin-block-start: var(--ui-conversation-actions-margin-block-start);
   }
 
   /* ── the composed message-composition child (TKT-0056 · TKT-0058) ───────────────────────────────────── */

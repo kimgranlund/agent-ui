@@ -24,7 +24,11 @@
   --ui-status-stream-header-dot-size: 0.5em;
   --ui-status-stream-header-gap: var(--md-sys-space-sm);
   --ui-status-stream-header-pad: var(--md-sys-space-xs) var(--md-sys-space-sm);
-  --ui-status-stream-header-surface: var(--md-sys-color-neutral-surface);
+  /* GH #291/ADR-0160 — the header lost its boxed background (Kim's 2026-07-27 ruling: the activity
+     line floats directly on the page background, no box); `--ui-status-stream-header-surface`
+     retired with it — nothing else in the fleet consumed that token (grep-confirmed). The border
+     stays: a hairline separator (never a filled box) still legibly divides the pinned row from
+     entries scrolling underneath it. */
   --ui-status-stream-header-border: var(--md-sys-color-neutral-outline-variant);
   --ui-status-stream-header-ink: var(--md-sys-color-neutral-on-surface);
   /* the overall-status ink — the SHAPE (glyph/dot/ring) is the primary ADR-0057 signifier; this is the
@@ -89,7 +93,8 @@
     align-items: center;
     gap: var(--ui-status-stream-header-gap);
     padding: var(--ui-status-stream-header-pad);
-    background: var(--ui-status-stream-header-surface);
+    /* GH #291/ADR-0160 — no background: the header floats directly on the page background (Kim's
+       ruling), the hairline border below is its only separation from scrolled entries. */
     border-block-end: 1px solid var(--ui-status-stream-header-border); /* 1px hairline — the annotated exception */
     color: var(--ui-status-stream-header-ink);
     font-weight: 500;

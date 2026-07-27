@@ -171,7 +171,17 @@ async function runTurn(input: TurnInput): Promise<void> {
       handle.ingestLine(line) // routes by surfaceId to a fresh/known inline ui-surface-host, or narrates
     }
     if (note !== undefined) handle.setNote(note)
-    handle.finalize()
+    // GH #291/ADR-0160 clause 3 — the pre-hydrated action-chip mechanism's own proof-of-concept
+    // consumer wiring: a settled turn with real content gets a Helpful/Not-Helpful feedback pair (the
+    // reference's own illustrative example — this page's choice, not something the primitive hardcodes).
+    handle.finalize(
+      turnLines.length > 0
+        ? [
+            { id: 'helpful', label: 'Helpful 👍' },
+            { id: 'not-helpful', label: 'Not Helpful 👎' },
+          ]
+        : undefined,
+    )
   } catch (e) {
     failed = true
     handle.fail((e as Error).message) // SPEC-R6 AC3 — the primitive truncates narration + surfaces a system bubble
@@ -197,6 +207,14 @@ function handleClientMessage(message: A2uiClientMessage): void {
 // to register before OR after the element connects.
 conv.onSubmit((text) => void runTurn({ kind: 'intent', text, session }))
 conv.onClientMessage(handleClientMessage)
+
+// GH #291/ADR-0160 clause 3 — `action` IS a real CustomEvent (ADR-0153's seventh closed-vocabulary
+// member, reused, never an eighth): the feedback pair's own commit. This page just surfaces it as a
+// status line — a real product would send it to telemetry.
+conv.addEventListener('action', (e) => {
+  const id = (e as CustomEvent<{ id: string }>).detail.id
+  status(id === 'helpful' ? 'Thanks for the feedback!' : "Thanks — noted, we'll do better.")
+})
 
 // ════════════════ reset ════════════════
 resetBtn.addEventListener('click', () => {
