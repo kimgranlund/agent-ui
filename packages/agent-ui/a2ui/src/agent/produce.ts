@@ -294,6 +294,24 @@ function queryOf(input: TurnInput, k: number): RetrieveQuery {
  * `componentId.prop` shape, the component isn't in `lastOutput`, or the property isn't declared —
  * unknown-component/unknown-property CATALOG failures (SPEC-R9) have no "expected type" to teach.
  */
+/**
+ * GH #307 investigation — a PARSE failure (`RoundFailure.path === ''`, `assembleFromRaw` returned
+ * `undefined`) carries NO diagnostic detail today, unlike `CATALOG`'s `expectedTypeNote` (GH #288):
+ * the model sees only the bare code and has to guess what was wrong. Live reproduction (the quiz
+ * persona's game loop, 3 real turns/9 rounds) caught the two concrete ways a real model breaks the
+ * grammar's own "exactly one JSON object per line" rule (grammar.md) under a large/nested payload —
+ * pretty-printing ONE message's array across several physical lines, and appending trailing prose
+ * after the JSONL — both of which make `assembleFromRaw`'s per-line split hand the healer an
+ * unparseable FRAGMENT, and both round 2/3 in that repro repeated the identical mistake because the
+ * feedback never named it. A static reminder (not dynamically resolved — a PARSE failure carries no
+ * component/property to look up, unlike CATALOG) restates the ONE constraint that covers both
+ * observed failure shapes, appended once regardless of how many failures this round carries.
+ */
+const PARSE_HINT =
+  ' Reminder: every A2UI message must be COMPLETE, valid JSON on a SINGLE line — never split one ' +
+  'JSON object across multiple physical lines (no pretty-printing), and never add any text after ' +
+  'the JSONL (the note belongs ONLY on the leading meta-line).'
+
 function messagesFor(
   input: TurnInput,
   failures: RoundFailure[] | undefined,
@@ -307,9 +325,10 @@ function messagesFor(
     const summary = failures
       .map((f) => `${f.code}${f.path ? ` at ${f.path}` : ''}${expectedTypeNote(f, catalog, lastOutput)}`)
       .join('; ')
+    const hint = failures.some((f) => f.code === 'PARSE') ? PARSE_HINT : ''
     turns.push({
       role: 'user',
-      content: `That output was INVALID (${summary}). Re-emit the COMPLETE corrected A2UI JSONL — nothing else. Your leading meta-line "note" must still address the USER in persona — never mention this correction, the re-emission, validation, or JSONL.`,
+      content: `That output was INVALID (${summary}).${hint} Re-emit the COMPLETE corrected A2UI JSONL — nothing else. Your leading meta-line "note" must still address the USER in persona — never mention this correction, the re-emission, validation, or JSONL.`,
     })
   }
   return turns
