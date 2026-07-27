@@ -154,7 +154,10 @@ describe('ui-conversation — per-surface registry (SPEC-R7): persistent identit
     t1.setNote('table dealt')
     t1.finalize()
     const bubble1 = log(el).querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
-    const strip1 = bubble1.querySelector('[data-part="narration"]')
+    // GH #306/ADR-0160 amendment — the narration strip is the OWNING [data-part="turn"] wrapper's own
+    // child now, a sibling of the bubble (not the bubble's own child) — found via the wrapper.
+    const turn1 = bubble1.parentElement as HTMLElement
+    const strip1 = turn1.querySelector('[data-part="narration"]')
 
     const t2 = el.beginAgentTurn({ intoSurface: 'game' })
     t2.ingestLine(line({ version: 'v1.0', updateDataModel: { surfaceId: 'game', path: '/x', value: 1 } }))
@@ -165,7 +168,7 @@ describe('ui-conversation — per-surface registry (SPEC-R7): persistent identit
 
     expect(log(el).querySelectorAll('[data-part="bubble"][data-role="agent"]')).toHaveLength(1) // NO second card
     expect(bubble1.querySelector('[data-part="body"]')?.textContent).toBe('you drew a card') // note overwritten
-    const strips = bubble1.querySelectorAll('[data-part="narration"]')
+    const strips = turn1.querySelectorAll('[data-part="narration"]')
     expect(strips).toHaveLength(1) // exactly one strip — the fresh one REPLACED the finalized one
     expect(strips[0]).not.toBe(strip1)
     expect(bubble1.querySelectorAll('ui-surface-host')).toHaveLength(2) // side-pot mounted HERE, not a new bubble

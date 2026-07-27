@@ -192,7 +192,10 @@ const KNOWN_LABELS = new Set([
 ])
 
 function narrationLabels(bubble: HTMLElement): string[] {
-  return [...bubble.querySelectorAll('[data-part="narration"] [data-role="label"]')].map((n) => n.textContent ?? '')
+  // GH #306/ADR-0160 amendment — the narration strip is the OWNING `[data-part="turn"]` wrapper's own
+  // child now, a sibling of the bubble (not the bubble's own child) — scope through the parent instead.
+  const turn = bubble.parentElement ?? bubble
+  return [...turn.querySelectorAll('[data-part="narration"] [data-role="label"]')].map((n) => n.textContent ?? '')
 }
 
 describe('a2ui-chat narration on ui-conversation (SPEC-R6 AC1) — never a fabricated sentence', () => {
