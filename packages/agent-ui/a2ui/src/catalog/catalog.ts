@@ -78,11 +78,26 @@ export class CatalogError extends Error {
  * unconstrained schema (`type` absent) or a bare `true` boolean schema is `'any'`; a bare `false` schema
  * (accepts nothing) is `'never'` — both edge cases exist only in `JsonSchema`'s type, not in any shipped
  * catalog row today.
+ *
+ * Enum members whose spelling LOOKS numeric (e.g. `Card.elevation`'s `-3`..`3`, string-typed on the
+ * wire) are individually double-quoted (`"-3"|"-2"|…`) — GH #286/#288 follow-up (2): the wire's
+ * exact-literal check requires the STRING `"1"`, but an unquoted `-3|-2|-1|0|1|2|3` render is
+ * indistinguishable from a bare-number enum, so a model kept guessing the bare number and exhausted
+ * the self-correct budget. Non-numeric-spelled members (`h1|h2|body`) render unquoted, unchanged.
  */
+const LOOKS_NUMERIC = /^-?\d+(\.\d+)?$/
+
 export function describePropType(pd: PropDef): string {
   const schema = pd.type
   if (typeof schema === 'boolean') return schema ? 'any' : 'never'
-  if (Array.isArray(schema.enum)) return schema.enum.map(String).join('|')
+  if (Array.isArray(schema.enum)) {
+    return schema.enum
+      .map((m) => {
+        const s = String(m)
+        return LOOKS_NUMERIC.test(s) ? `"${s}"` : s
+      })
+      .join('|')
+  }
   const t = schema.type
   if (t === undefined) return 'any'
   return (Array.isArray(t) ? t : [t]).map(String).join('|')

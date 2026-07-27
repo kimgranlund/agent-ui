@@ -123,4 +123,17 @@ describe('describePropType (GH #288) — the compact model-facing type/enum desc
   it('enum takes priority over `type` when both are present', () => {
     expect(describePropType(pd({ type: 'string', enum: ['single', 'range'] }))).toBe('single|range')
   })
+
+  // GH #286/#288 follow-up (2): a numeric-spelled string enum (Card.elevation) rendered unquoted
+  // (`-3|-2|-1|0|1|2|3`) is indistinguishable from an actual number, so the model kept guessing the
+  // bare number instead of the required string literal.
+  it('numeric-spelled enum members are individually quoted to disambiguate from a number type', () => {
+    expect(describePropType(pd({ type: 'string', enum: ['-3', '-2', '-1', '0', '1', '2', '3'] }))).toBe(
+      '"-3"|"-2"|"-1"|"0"|"1"|"2"|"3"',
+    )
+  })
+
+  it('non-numeric-spelled enum members stay unquoted (h1|h2|body, unchanged)', () => {
+    expect(describePropType(pd({ type: 'string', enum: ['h1', 'h2', 'body'] }))).toBe('h1|h2|body')
+  })
 })
