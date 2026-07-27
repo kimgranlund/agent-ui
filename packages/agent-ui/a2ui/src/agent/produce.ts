@@ -174,6 +174,66 @@ function formatProgressLine(progress: TurnProgress): string {
   return JSON.stringify({ a2uiMeta: { progress } })
 }
 
+/** GH #290 — the channel an `onEvent` callback pushes onto (it cannot itself `yield` from this generator);
+ * `waitForPush` is what lets `interleaveProgress` below discover a push the INSTANT it happens, rather than
+ * only when the provider's `stream()` next yields text. */
+interface ProgressChannel {
+  pending: TurnProgress[]
+  push(ev: TurnProgress): void
+  /** Resolves as soon as `pending` is non-empty (immediately if it already is). */
+  waitForPush(): Promise<void>
+}
+
+function createProgressChannel(): ProgressChannel {
+  const pending: TurnProgress[] = []
+  let wake: (() => void) | undefined
+  return {
+    pending,
+    push(ev) {
+      pending.push(ev)
+      const w = wake
+      wake = undefined
+      w?.()
+    },
+    waitForPush() {
+      if (pending.length > 0) return Promise.resolve()
+      return new Promise((resolve) => {
+        wake = resolve
+      })
+    },
+  }
+}
+
+/**
+ * GH #290 fix: decouples progress-event DELIVERY from the provider's fragment-yield cadence. A provider
+ * may run an entire tool round (anthropic.ts's GH #49 loop) without yielding a single text fragment, while
+ * its `onEvent` callback still fires in real time (e.g. one 'tool' event per call, pushed onto `channel`
+ * synchronously) — draining `channel.pending` only between fragments (the pre-fix behavior) meant a whole
+ * tool round's worth of progress sat buffered until the round's text finally arrived. This drives the
+ * provider's async iterator manually and RACES its next `.next()` against `channel.waitForPush()` —
+ * whichever settles first wins — so a push surfaces immediately regardless of whether/when the provider
+ * yields text next. Any progress queued ahead of a fragment is always yielded before that fragment (the
+ * pre-existing "drain pending before handling this frag" ordering is preserved, just re-timed).
+ */
+async function* interleaveProgress(
+  stream: AsyncIterable<string>,
+  channel: ProgressChannel,
+): AsyncGenerator<{ kind: 'progress'; ev: TurnProgress } | { kind: 'frag'; text: string }> {
+  const iter = stream[Symbol.asyncIterator]()
+  let nextFrag = iter.next()
+  for (;;) {
+    const race = await Promise.race([
+      nextFrag.then((r): { tag: 'frag'; r: IteratorResult<string> } => ({ tag: 'frag', r })),
+      channel.waitForPush().then((): { tag: 'progress' } => ({ tag: 'progress' })),
+    ])
+    while (channel.pending.length > 0) yield { kind: 'progress', ev: channel.pending.shift()! }
+    if (race.tag === 'progress') continue
+    if (race.r.done) return
+    yield { kind: 'frag', text: race.r.value }
+    nextFrag = iter.next()
+  }
+}
+
 /**
  * A round's fed-back failure (ADR-0097 §3): either the shared validator's `Failure` (its `code` is the
  * protocol's closed `ErrorCode` union), OR a produce-layer-only literal — `'FEED_SCOPE'` — that never
@@ -518,11 +578,13 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
     if (emitProgress) yield formatProgressLine({ stage: 'sent' })
 
     let raw = ''
-    // Provider events are collected on a queue by the onEvent callback (it cannot yield from this generator
-    // itself) and drained into the stream between text fragments — `started` on the provider's first
-    // signal, `reasoning` on a thinking delta (text-free at 'stages', a bounded excerpt at 'full'). When
-    // progress is OFF, no callback is installed (byte-identical accumulation) and the queue stays empty.
-    const pending: TurnProgress[] = []
+    // Provider events are pushed onto a channel by the onEvent callback (it cannot yield from this
+    // generator itself). GH #290 fix: delivery is driven by `interleaveProgress` below, which races the
+    // channel's next push against the provider's next fragment — `started` on the provider's first
+    // signal, `reasoning` on a thinking delta (text-free at 'stages', a bounded excerpt at 'full'), and
+    // `tool` on each GH #49 tool call, ALL surfacing the instant they're pushed, tool-round or not. When
+    // progress is OFF, no callback is installed (byte-identical accumulation) and the plain for-await runs.
+    const channel = createProgressChannel()
     let sawStarted = false
     let sawReasoning = false
     let sawContent = false
@@ -530,46 +592,53 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
       ? (ev: ProviderEvent): void => {
           if (!sawStarted && (ev.kind === 'message_start' || ev.kind === 'block_start')) {
             sawStarted = true
-            pending.push({ stage: 'started' })
+            channel.push({ stage: 'started' })
           } else if (ev.kind === 'thinking') {
-            if (progressDetail === 'full') pending.push({ stage: 'reasoning', ...(ev.text ? { detail: ev.text.slice(0, REASONING_EXCERPT_CAP) } : {}) })
+            if (progressDetail === 'full') channel.push({ stage: 'reasoning', ...(ev.text ? { detail: ev.text.slice(0, REASONING_EXCERPT_CAP) } : {}) })
             else if (!sawReasoning) {
               sawReasoning = true
-              pending.push({ stage: 'reasoning' }) // transition only — NO thinking text on the wire (F3 default)
+              channel.push({ stage: 'reasoning' }) // transition only — NO thinking text on the wire (F3 default)
             }
           }
           else if (ev.kind === 'tool') {
             // GH #49 — the adapter is executing a registry tool: a factual process claim (the tool NAME
             // from the closed registry, never model prose — the F2 discipline the 'tool' stage's
             // TURN_PROGRESS_STAGES note records).
-            pending.push({ stage: 'tool', ...(ev.text ? { detail: ev.text } : {}) })
+            channel.push({ stage: 'tool', ...(ev.text ? { detail: ev.text } : {}) })
           }
           // block_stop/done provider events are NOT mapped to a stage — produce() is the pinned emitter of
           // `content`/`validating`/`done`, owning those transitions itself (F1).
         }
       : undefined
-    for await (const frag of deps.provider.stream({
+    const providerStream = deps.provider.stream({
       model,
       system,
       messages: messagesFor(input, failures, lastRaw),
       effort: opts.effort,
       onEvent,
-      // GH #49 — relayed verbatim; the adapter owns the tool loop (its buffered rounds mean 'tool'
-      // stages drain just before the final round's text under the queue design — a recorded latency
-      // limit, not a bug).
+      // GH #49 — relayed verbatim; the adapter owns the tool loop. Its TEXT stays buffered for the whole
+      // round (intentional — GH #290's fix is scoped to PROGRESS delivery only), but its onEvent 'tool'
+      // pushes now reach the client in real time via interleaveProgress below, not just at round-end.
       tools: opts.tools,
       executeTool: opts.executeTool,
       signal: opts.signal,
-    })) {
-      while (pending.length > 0) yield formatProgressLine(pending.shift()!)
-      // `content` is produce()'s ONE pinned emission on the round's OWN first text fragment (F1).
-      if (emitProgress && !sawContent && frag.length > 0) {
-        sawContent = true
-        yield formatProgressLine({ stage: 'content' })
+    })
+    if (emitProgress) {
+      for await (const item of interleaveProgress(providerStream, channel)) {
+        if (item.kind === 'progress') {
+          yield formatProgressLine(item.ev)
+          continue
+        }
+        // `content` is produce()'s ONE pinned emission on the round's OWN first text fragment (F1).
+        if (!sawContent && item.text.length > 0) {
+          sawContent = true
+          yield formatProgressLine({ stage: 'content' })
+        }
+        raw += item.text
       }
-      raw += frag
+    } else {
+      for await (const frag of providerStream) raw += frag
     }
-    while (pending.length > 0) yield formatProgressLine(pending.shift()!) // drain any trailing (text-less) events
     lastRaw = raw
 
     const { note, ask, rest: afterMeta } = peelMetaLine(raw) // ADR-0088 §1 / ADR-0097 §1 — peeled BEFORE heal/validate
