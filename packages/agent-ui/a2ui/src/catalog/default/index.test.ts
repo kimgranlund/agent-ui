@@ -1241,3 +1241,69 @@ describe('default catalog — ColorPicker via the shared validator (ADR-0123, co
     disposeSurface(surface)
   })
 })
+
+// ── the GH #294 F4 FormPopover row (form-popover.spec.md SPEC-R9 / form-popover.lld.md) ───────────────
+//
+// `label` is bindable (design review BLOCKER, correctly shipped) while `placement`/`size` stay
+// structural-only enums — the RadioGroup.orientation / ColorPicker.format precedent. This block pins
+// that distinction: a representative payload with BOTH bindable props bound validates 0 failures, and a
+// negative control proves the marks are load-bearing (binding a non-bindable prop fails CATALOG) — so a
+// future regression flipping `label`'s `bindable` to `false` (or `placement`'s to `true`) is caught here,
+// not silently.
+describe('default catalog — FormPopover via the shared validator (GH #294 F4, form-popover.spec.md)', () => {
+  it('a representative FormPopover payload with open (two-way) and label (one-way) both bound validates 0 failures via validateA2ui', () => {
+    const message = {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: 's1',
+        components: [
+          {
+            id: 'root', component: 'FormPopover', open: { path: '/menuOpen' }, label: { path: '/menuLabel' },
+            placement: 'bottom-start', size: 'md',
+          },
+        ],
+      },
+    }
+    expect(validateA2ui(message, defaultCatalog)).toEqual({ valid: true, failures: [] })
+  })
+
+  it('FormPopover is two-way bound on open via the toggle event (the Menu/Popover/Tooltip overlay precedent); label is bindable, one-way', () => {
+    const fp = defaultCatalog.components.FormPopover
+    expect(fp.value).toEqual({ prop: 'open', event: 'toggle' })
+    expect(fp.properties.open?.bindable).toBe(true)
+    expect(fp.properties.label?.bindable).toBe(true)
+  })
+
+  it('placement/size are structural, non-bindable enums (the RadioGroup.orientation / ColorPicker.format precedent)', () => {
+    expect(defaultCatalog.components.FormPopover.properties.placement?.bindable).toBeFalsy()
+    expect(defaultCatalog.components.FormPopover.properties.size?.bindable).toBeFalsy()
+  })
+
+  it('accepts a {path} binding for open/label (bindable props)', () => {
+    const byOpen: A2uiComponent = { id: 'fp1', component: 'FormPopover', open: { path: '/menuOpen' } }
+    const byLabel: A2uiComponent = { id: 'fp2', component: 'FormPopover', label: { path: '/menuLabel' } }
+    expect(validateCatalogConformance(byOpen, defaultCatalog)).toEqual([])
+    expect(validateCatalogConformance(byLabel, defaultCatalog)).toEqual([])
+  })
+
+  it("NEGATIVE: binding a non-bindable structural prop (placement) fails CATALOG — pins that the bindable marks are load-bearing, not decorative (if label's bindable regressed to false, this same pattern applied to label would catch it)", () => {
+    const byPlacement: A2uiComponent = { id: 'fp3', component: 'FormPopover', placement: { path: '/menuPlacement' } }
+    expect(validateCatalogConformance(byPlacement, defaultCatalog)).toContainEqual(expect.objectContaining({ code: 'CATALOG', path: 'fp3.placement' }))
+
+    const bySize: A2uiComponent = { id: 'fp4', component: 'FormPopover', size: { path: '/menuSize' } }
+    expect(validateCatalogConformance(bySize, defaultCatalog)).toContainEqual(expect.objectContaining({ code: 'CATALOG', path: 'fp4.size' }))
+  })
+
+  it('NEGATIVE: an unknown prop fails CATALOG', () => {
+    const fp: A2uiComponent = { id: 'fp5', component: 'FormPopover', bogus: 1 }
+    expect(validateCatalogConformance(fp, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 'fp5.bogus' })
+  })
+
+  it('NEGATIVE: a wrong-primitive literal fails CATALOG (open is a boolean prop, label is a string prop)', () => {
+    const wrongOpen: A2uiComponent = { id: 'fp6', component: 'FormPopover', open: 'yes' }
+    expect(validateCatalogConformance(wrongOpen, defaultCatalog)).toContainEqual(expect.objectContaining({ code: 'CATALOG', path: 'fp6.open' }))
+
+    const wrongLabel: A2uiComponent = { id: 'fp7', component: 'FormPopover', label: 42 }
+    expect(validateCatalogConformance(wrongLabel, defaultCatalog)).toContainEqual(expect.objectContaining({ code: 'CATALOG', path: 'fp7.label' }))
+  })
+})

@@ -39,7 +39,7 @@ const checkGroup = el('fieldset', { role: 'group', 'aria-label': 'Options' }, [
 // A plain native radio group (the form-popover.md example markup's own idiom) — NOT `ui-radio-group`: its
 // rovingFocus trait's connection wiring does not survive the #ensureParts() child-move-then-reconnect cycle
 // (a real cross-control interaction gap; a fleet fix is out of this docs-only slice's scope, tracked
-// separately, GH #294 follow-up).
+// separately, GH #302 (GH #294 follow-up)).
 const radio = (value: string, label: string): HTMLElement => {
   const wrapper = el('label', {})
   const input = el('input', { type: 'radio', name: 'sort', value })

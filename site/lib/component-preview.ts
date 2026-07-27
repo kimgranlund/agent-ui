@@ -459,7 +459,7 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
     // A plain native radio group (form-popover.md's own example-markup idiom) — NOT `ui-radio-group`: its
     // rovingFocus trait's connection wiring does not survive the #ensureParts() child-move-then-reconnect
     // cycle (a real cross-control interaction gap; a fleet fix is out of scope here, tracked separately,
-    // GH #294 follow-up).
+    // GH #302 (GH #294 follow-up)).
     const radioGroup = document.createElement('fieldset')
     radioGroup.setAttribute('role', 'radiogroup')
     radioGroup.setAttribute('aria-label', 'Sort by')
