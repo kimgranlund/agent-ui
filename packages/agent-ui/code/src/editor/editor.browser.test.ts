@@ -138,6 +138,32 @@ describe('ui-code-editor — markdown syntax highlighting renders (both engines)
     await expect.poll(() => cmContentOf(field)?.textContent?.includes('Heading'), { timeout: 2000 }).toBe(true)
     await expect.poll(() => field.querySelector('.tok-heading') !== null, { timeout: 2000 }).toBe(true)
   })
+
+  // GH #296 regression: the `tok-*` HighlightStyle layer is COLOUR-ONLY (editor.md's documented contract).
+  // The prior gap (`editor.browser.test.ts:480-483`, pre-fix) asserted only class ABSENCE, which stayed
+  // green even while `.tok-strong`/`.tok-emphasis` kept bolding/italicizing raw source underneath — a
+  // class-free span can still be bold. These assert the actual COMPUTED style, source mode where `tok-*`
+  // is the only decoration layer active.
+  it('source mode never applies weight/style from the tok-* layer — bold/italic markers render as plain, normal text', async () => {
+    const { field } = mount(`<ui-code-editor language="markdown" ${SIZED}></ui-code-editor>`)
+    await expect.poll(() => cmContentOf(field) !== null, { timeout: 5000 }).toBe(true)
+    field.value = '## Heading\n\n**bold** _em_\n\n> quote'
+    await expect.poll(() => cmContentOf(field)?.textContent?.includes('quote'), { timeout: 2000 }).toBe(true)
+
+    const content = cmContentOf(field) as HTMLElement
+    // walk every text-bearing span inside the CM content surface and assert normal weight/style throughout
+    // — the tok-* layer may still colour these runs, it must never touch typography.
+    const spans = Array.from(content.querySelectorAll('span')) as HTMLElement[]
+    expect(spans.length, 'lang-markdown should have decorated at least one span').toBeGreaterThan(0)
+    for (const span of spans) {
+      const style = getComputedStyle(span)
+      expect(style.fontWeight, `${span.className || '(unclassed span)'} must not be bold in source mode`).not.toBe('700')
+      expect(style.fontStyle, `${span.className || '(unclassed span)'} must not be italic in source mode`).not.toBe('italic')
+    }
+    // the heading + quote colour classes still exist — colour-only means colour SURVIVES, only typography drops.
+    expect(field.querySelector('.tok-heading'), 'tok-heading colour class must still apply').not.toBeNull()
+    expect(field.querySelector('.tok-quote'), 'tok-quote colour class must still apply').not.toBeNull()
+  })
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -481,6 +507,19 @@ describe('ui-code-editor — reveal-near-cursor (ADR-0147 n6, as amended 2026-07
     expect(field.querySelector('.rt-emphasis'), 'revealed emphasis must carry NO styling class').toBeNull()
     expect(field.querySelector('.rt-code'), 'revealed inline code must carry NO styling class').toBeNull()
     expect(field.querySelector('.rt-link'), 'revealed link must carry NO styling class').toBeNull()
+
+    // GH #296 regression: class-absence alone doesn't prove plain rendering — the tok-* layer sits BELOW
+    // rt-* and is unconditioned by reveal state, so a class-free span could still render bold/italic from
+    // `.tok-strong`/`.tok-emphasis`. Assert the actual computed style on the revealed **bold**/_em_ runs.
+    const revealedLine = cmContentOf(field)!.querySelectorAll('.cm-line')
+    const boldOrItalicSpans = Array.from(revealedLine).flatMap((line) =>
+      Array.from(line.querySelectorAll('span')).filter((span) => (span.textContent ?? '').match(/bold|em/)),
+    ) as HTMLElement[]
+    for (const span of boldOrItalicSpans) {
+      const style = getComputedStyle(span)
+      expect(style.fontWeight, 'a revealed strong run must render at normal weight, not bold').not.toBe('700')
+      expect(style.fontStyle, 'a revealed emphasis run must render normal, not italic').not.toBe('italic')
+    }
   })
 })
 

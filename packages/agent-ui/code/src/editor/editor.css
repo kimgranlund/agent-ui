@@ -166,14 +166,13 @@
     color: var(--ui-code-editor-placeholder);
   }
 
-  /* class-based highlight — the markdown constructs' colours (cm-editor.ts's HighlightStyle → tok-*). */
+  /* class-based highlight — the markdown constructs' colours ONLY, never weight/style (cm-editor.ts's
+     HighlightStyle → tok-*; colour-only contract, editor.md). */
   :scope .tok-comment { color: var(--ui-code-editor-token-comment); }
-  :scope .tok-heading { color: var(--ui-code-editor-token-heading); font-weight: 600; }
-  :scope .tok-strong { font-weight: 700; }
-  :scope .tok-emphasis { font-style: italic; }
+  :scope .tok-heading { color: var(--ui-code-editor-token-heading); }
   :scope .tok-link { color: var(--ui-code-editor-token-link); text-decoration: underline; }
   :scope .tok-list { color: var(--ui-code-editor-token-punctuation); }
-  :scope .tok-quote { color: var(--ui-code-editor-token-comment); font-style: italic; }
+  :scope .tok-quote { color: var(--ui-code-editor-token-comment); }
   :scope .tok-code { color: var(--ui-code-editor-token-string); font-family: var(--md-sys-typeface-mono); }
   :scope .tok-keyword { color: var(--ui-code-editor-token-keyword); }
   :scope .tok-string { color: var(--ui-code-editor-token-string); }
