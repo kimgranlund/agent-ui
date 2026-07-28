@@ -41,6 +41,21 @@ attributes:             # attributes-as-API — mirrors sandbox-frame.ts `static
                          # resolves this codec as `json`)
     reflect: false      # property-only (`attribute: false` in sandbox-frame.ts) — a security-relevant
                          # structured allow-list config is never HTML-attribute-fed
+  - name: assets
+    type: json
+    default: '{}'       # the LIVE default (SandboxFrameAssets, SPEC-R12 — both `css`/`js` absent, the
+                         # mode-off/"off = byte-identical" law) — the SAME non-enumerable toString
+                         # override precedent as `csp`'s DEFAULT_CSP just above (sandbox-frame.ts's
+                         # DEFAULT_ASSETS)
+    reflect: false      # property-only (`attribute: false` in sandbox-frame.ts) — the SAME codec shape
+                         # as `csp`. GH #316/ADR-0162 dogfood mode: mode-on, a consumer (the app layer,
+                         # never this control itself) sets `assets` to
+                         # `@agent-ui/components/dogfood-frame`'s `{ css: DOGFOOD_CSS, js: DOGFOOD_JS }`
+                         # pair so model-authored fleet markup upgrades into real components inside the
+                         # sandboxed frame; `buildSrcdoc` inserts the pair as an additional `<style>`/
+                         # `<script>` pair, ordered CSP meta -> token style -> asset style -> bootstrap ->
+                         # asset script -> the model document's own head (SPEC-R12). This control is
+                         # otherwise UNAWARE of dogfood mode — `assets` is a generic, opt-in prop.
 
 properties:             # IDL beyond attributes-as-API
   - name: droppedMessages
@@ -129,6 +144,17 @@ exfiltrate anything the frame did not already lack.
 `data:`/`blob:`; everything else needs an explicit, scheme-pinned `https://` entry. An invalid entry
 (`http:`, a bare host, an over-broad wildcard) rejects the WHOLE config — the control never renders a
 partial policy; it takes the never-paint path instead.
+
+## Dogfood assets (SPEC-R12, GH #316/ADR-0162)
+
+`assets` accepts a `SandboxFrameAssets` (`{ css?: string; js?: string }`) — an opt-in pair the HOST
+injects INLINE into the srcdoc (never a `url(...)`/network fetch, the unchanged CSP posture): the docs-
+like foundation+component CSS and a self-defining `ui-*` component-bundle script, so model-authored fleet
+markup upgrades into real, token-styled components inside the sandboxed frame. Absent (the default, both
+fields missing) composes a srcdoc byte-identical to today. This control is generic — it carries the pair
+verbatim; a consumer (the app layer, via `@agent-ui/components/dogfood-frame`, LLD-C1) decides whether and
+what to pass. Property-only (`attribute: false`, the `csp` precedent) — asset text is host-vetted
+structured content, never HTML-attribute-fed.
 
 ## The bridge (SPEC-R7/R8)
 

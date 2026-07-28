@@ -13,6 +13,10 @@ import '@agent-ui/components/foundation-styles.css'
 import './sandbox-frame.css'
 import './sandbox-frame.ts'
 import type { UISandboxFrameElement, GenuiActionDetail } from './sandbox-frame.ts'
+// GH #316/ADR-0162, LLD-C2 leaf 6 — the SPEC-R12 dogfood asset pair (LLD-C1, committed+generated). Direct
+// relative import (this file lives beside the `dogfood/` folder) — the SAME pre-barrel-subpath precedent
+// the file banner above already cites for `./sandbox-frame.ts` itself.
+import { DOGFOOD_CSS, DOGFOOD_JS } from './dogfood/dogfood-assets.ts'
 
 const mount = (): UISandboxFrameElement => {
   const el = document.createElement('ui-sandbox-frame') as UISandboxFrameElement
@@ -275,6 +279,102 @@ describe('ui-sandbox-frame — srcdoc lifecycle: replace is atomic, frame-intern
     await waitFor(() => actions.has('doc2-ready'))
 
     expect(actions.get('doc2-ready')?.payload).toMatchObject({ markerSurvived: false })
+    el.remove()
+  })
+})
+
+describe('ui-sandbox-frame — SPEC-R12 dogfood asset injection: the upgrade probe (AC1, real engine, GH #316/ADR-0162)', () => {
+  it('a model-authored <ui-button> upgrades into a REAL fleet component: [data-part] anatomy present, token-derived computed style', async () => {
+    const el = mount()
+    const actions = collectActions(el)
+    el.assets = { css: DOGFOOD_CSS, js: DOGFOOD_JS }
+
+    const doc = `<!DOCTYPE html><html><body>
+      <ui-button>Click me</ui-button>
+      <script>
+        function probe() {
+          var btn = document.querySelector('ui-button');
+          var ctor = window.customElements.get('ui-button');
+          var upgraded = !!(btn && ctor && btn instanceof ctor);
+          var dataPart = !!(btn && btn.querySelector('[data-part]'));
+          var cs = btn ? getComputedStyle(btn) : null;
+          window.genui.action('upgrade-probe', {
+            upgraded: upgraded,
+            dataPart: dataPart,
+            // A token-derived computed style: the fleet CSS reads --md-sys-color-* through the button's
+            // own [data-part] anatomy, so its border-radius (never the UA default '0px') is a cheap,
+            // engine-portable proof the component's OWN stylesheet actually applied.
+            borderRadius: cs ? cs.borderRadius : null,
+          });
+        }
+        // customElements.define ran as part of the asset <script> in <head>, BEFORE this <body> parsed —
+        // upgrade is synchronous-at-parse; a microtask tick is still given for the control's own
+        // connected()-time DOM build (a real effect flush, not a same-tick guarantee).
+        Promise.resolve().then(probe);
+      </` + `script></body></html>`
+
+    el.html = doc
+    await waitFor(() => actions.has('upgrade-probe'))
+    const payload = actions.get('upgrade-probe')?.payload as { upgraded?: boolean; dataPart?: boolean; borderRadius?: string } | undefined
+    expect(payload?.upgraded, JSON.stringify(payload)).toBe(true)
+    expect(payload?.dataPart, JSON.stringify(payload)).toBe(true)
+    expect(payload?.borderRadius, JSON.stringify(payload)).not.toBe('0px')
+
+    el.remove()
+  })
+})
+
+describe('ui-sandbox-frame — SPEC-R12 AC2 containment re-proof: a dogfood-asset frame is contained IDENTICALLY (real engine)', () => {
+  it('sandbox="allow-scripts" exactly, even with the asset pair injected', async () => {
+    const el = mount()
+    el.assets = { css: DOGFOOD_CSS, js: DOGFOOD_JS }
+    el.html = '<!DOCTYPE html><html><body>hi</body></html>'
+    await waitFor(() => el.querySelector('[data-part="frame"]') !== null)
+    const iframe = el.querySelector('[data-part="frame"]') as HTMLIFrameElement
+    expect(iframe.getAttribute('sandbox')).toBe('allow-scripts')
+    el.remove()
+  })
+
+  it('top-nav / parent-DOM / storage / popup / network attempts all fail EXACTLY as without assets; the HOST page is byte-unchanged', async () => {
+    const el = mount()
+    el.assets = { css: DOGFOOD_CSS, js: DOGFOOD_JS }
+    const actions = collectActions(el)
+    const hostUrlBefore = window.location.href
+    const hostTitleBefore = document.title
+
+    // The IDENTICAL SPEC-R3 AC1 probe script this file's own containment describe block runs above — the
+    // dogfood asset pair adds host-vetted script/CSS bytes to the SAME sandboxed context; containment is
+    // indifferent to whether the frame's script came from the model or the host's own asset pair (ADR-0162
+    // Context's own load-bearing finding).
+    const doc = `<!DOCTYPE html><html><body><script>
+      function report(name, ok, detail) { window.genui.action(name, { ok: !!ok, detail: String(detail || '') }); }
+      try { window.top.location.href = 'https://example.invalid/'; report('top-nav', true, 'no throw (silently blocked)'); }
+      catch (e) { report('top-nav', true, e && e.name); }
+      try { var d = window.parent.document; report('parent-dom', false, 'read succeeded — CONTAINMENT BREACH'); }
+      catch (e) { report('parent-dom', true, e && e.name); }
+      try { window.localStorage.setItem('x', '1'); report('storage', false, 'localStorage worked — CONTAINMENT BREACH'); }
+      catch (e) { report('storage', true, e && e.name); }
+      try {
+        var popup = window.open('https://example.invalid/');
+        report('popup', popup === null, popup === null ? 'blocked (null)' : 'OPENED — CONTAINMENT BREACH');
+      } catch (e) { report('popup', true, e && e.name); }
+      fetch('https://example.invalid/probe')
+        .then(function () { report('fetch', false, 'fetch resolved — CONTAINMENT BREACH'); })
+        .catch(function (e) { report('fetch', true, e && e.name); });
+    </` + `script></body></html>`
+
+    el.html = doc
+    await waitFor(() => actions.size >= 5)
+
+    for (const name of ['top-nav', 'parent-dom', 'storage', 'popup', 'fetch']) {
+      const payload = actions.get(name)?.payload as { ok?: boolean; detail?: string } | undefined
+      expect(payload?.ok, `${name}: ${JSON.stringify(payload)}`).toBe(true)
+    }
+
+    expect(window.location.href).toBe(hostUrlBefore)
+    expect(document.title).toBe(hostTitleBefore)
+    expect(window.localStorage.getItem('x')).toBeNull()
+
     el.remove()
   })
 })
