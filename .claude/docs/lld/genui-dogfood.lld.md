@@ -187,3 +187,17 @@
   grant (the platform's own nesting law, not a fleet mechanism) — a nested dogfood frame is exactly
   as contained as the outer one, no privilege escalation path exists. SPEC-R12-compliant as written;
   recorded here so a future reader doesn't mistake the recursion for an oversight.
+- **Bundle-vs-inventory tag gap (S5 leaf-14 finding, RULED #346 — a recorded, fail-closed exception,
+  not an oversight).** `DOGFOOD_TAGS` (S1's real bundle scan) and `dogfoodInventoryTags()` (S3's
+  purely descriptor-derived teaching set, SPEC-R13(b)'s own wording) are NOT set-equal today: five
+  real, bundle-defined tags (`ui-card-content`/`ui-card-footer`/`ui-card-header`/`ui-tab`/
+  `ui-tab-panel`) have no `tag:` row of their own — ADR-0004's descriptor format has no field for a
+  "compound family"'s sibling elements; `card.md`/`tabs.md`'s own frontmatter comments say outright
+  these are "documented in the prose body" only. Ruling #346 (recorded, not built here): the
+  RECOMMENDED end state extends the inventory's derivation to also scan for sibling `.define(` sites
+  (the SAME technique the bundle's own generation script already uses) — deliberately NOT done in S5,
+  because it would change what "descriptor-derived" means for `dogfoodInventoryTags()` the SAME night
+  #342 already has that exact property under review for an unrelated reason. S5 instead holds the gap
+  to a NAMED, fail-closed allowlist (`dogfood-tag-set-equality.test.ts`'s
+  `KNOWN_UNDOCUMENTED_FAMILY_TAGS`) — exact equality, not a ceiling: a sixth bundle-only tag, or the
+  gap shrinking without the allowlist being updated, both RED rather than silently absorbing drift.
