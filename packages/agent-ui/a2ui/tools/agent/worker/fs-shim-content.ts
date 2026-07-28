@@ -14,6 +14,8 @@ import negotiateBlueSky from '../../../src/agent/prompts/negotiate-blue-sky.md'
 import askArchetypesSpecific from '../../../src/agent/prompts/ask-archetypes-specific.md'
 import askArchetypesBlueSky from '../../../src/agent/prompts/ask-archetypes-blue-sky.md'
 import genuiTeaching from '../../../src/agent/prompts/genui-teaching.md'
+// genui-surface.spec.md SPEC-R13(a) — the dogfood segment's hand-authored teaching half (GH #316/ADR-0162).
+import genuiDogfoodTeaching from '../../../src/agent/prompts/genui-dogfood-teaching.md'
 
 import cardGameSheet from '../../../src/agent/prompts/mini-skills/card-game-sheet.md'
 import cardLayout from '../../../src/agent/prompts/mini-skills/card-layout.md'
@@ -45,6 +47,7 @@ export const FILES: Record<string, string> = {
   [`${PROMPTS_PATH}/ask-archetypes-specific.md`]: askArchetypesSpecific,
   [`${PROMPTS_PATH}/ask-archetypes-blue-sky.md`]: askArchetypesBlueSky,
   [`${PROMPTS_PATH}/genui-teaching.md`]: genuiTeaching,
+  [`${PROMPTS_PATH}/genui-dogfood-teaching.md`]: genuiDogfoodTeaching,
   [`${GENUI_PACKS_PATH}/data-viz-layouts.md`]: dataVizLayouts,
   [`${GENUI_PACKS_PATH}/interactive-widgets.md`]: interactiveWidgets,
   [`${GENUI_PACKS_PATH}/animated-explainers.md`]: animatedExplainers,

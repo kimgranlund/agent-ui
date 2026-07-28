@@ -40,6 +40,7 @@ import { MINI_SKILLS } from './mini-skills.ts'
 import type { MiniSkill } from './mini-skills.ts'
 import { FEED_SURFACE_TYPES } from './feed-catalog.ts'
 import type { GenuiSurfaceConfig } from './genui-surface-config.ts'
+import { dogfoodInventory } from './dogfood-inventory.ts'
 
 declare const process: { cwd(): string }
 
@@ -225,17 +226,29 @@ const GENUI_TEACHING = loadPrompt('genui-teaching.md')
  *  route this turn's ENTIRE output through genui rather than the catalog. */
 const GENUI_EXCLUSIVE_OVERRIDE = `This turn's caller has NO A2UI catalog renderer at all — it can ONLY display a genui surface. Any A2UI JSONL you emit (createSurface/updateComponents/updateDataModel) will validate but never be shown to the user; it is silently invisible here. For this turn, express the ENTIRE response as ONE genui HTML surface (or as a note-only reply with no surface, if nothing needs to render) — never as A2UI JSONL, even for shapes the catalog could otherwise express.`
 
+// ---- genui-surface SPEC-R13: the dogfood segment — GenuiSurfaceConfig.dogfood, GH #316/ADR-0162.
+// GENUI_DOGFOOD_TEACHING is the hand-authored, byte-pinned half (SPEC-R13(a), `prompt-equivalence.test.ts`'s
+// `genuiDogfoodTeaching` field); `dogfoodInventory()` (SPEC-R13(b)) is the DERIVED half — a fleet-descriptor
+// scan re-run on every call, never captured into any baseline (`prompt-drift.test.ts`'s inventory leg). ----
+
+const GENUI_DOGFOOD_TEACHING = loadPrompt('genui-dogfood-teaching.md')
+
 /** SPEC-R10 — composes ONE genui block when (and only when) the modality is enabled for this turn: the
- *  fixed wire/sandbox-reality teaching, plus the picked pattern-source's body when one is picked (D3 —
- *  never a lookup by id; the caller already resolved the picked library entry's own `content`, SPEC-R11),
- *  plus the `exclusive` override paragraph above when the caller has named itself a genui-only consumer.
- *  Undefined/`enabled:false` ⇒ `''` — the degradation law: the composed prompt is byte-identical to the
- *  pre-GenUI composition (AC1). `exclusive` absent/`false` ⇒ byte-identical to before that field existed. */
+ *  fixed wire/sandbox-reality teaching; the `exclusive` override paragraph when the caller has named itself
+ *  a genui-only consumer; the dogfood segment (teaching + the derived fleet inventory) when `dogfood` is
+ *  set (SPEC-R13); then the picked pattern-source's body when one is picked (D3 — never a lookup by id; the
+ *  caller already resolved the picked library entry's own `content`, SPEC-R11). Undefined/`enabled:false`
+ *  ⇒ `''` — the degradation law: the composed prompt is byte-identical to the pre-GenUI composition (AC1).
+ *  `exclusive`/`dogfood` absent/`false` ⇒ byte-identical to before that field existed. */
 function genuiBlock(genui: GenuiSurfaceConfig | undefined): string {
   if (genui === undefined || !genui.enabled) return ''
   const exclusive = genui.exclusive === true ? `\n\n${GENUI_EXCLUSIVE_OVERRIDE}` : ''
+  const dogfood =
+    genui.dogfood === true
+      ? `\n\n${GENUI_DOGFOOD_TEACHING}\n\n## agent-ui components available inside your GenUI document\n\n${dogfoodInventory()}`
+      : ''
   const source = genui.sourceBody !== undefined && genui.sourceBody.trim() !== '' ? `\n\n${genui.sourceBody.trim()}` : ''
-  return `\n\n${GENUI_TEACHING}${exclusive}${source}`
+  return `\n\n${GENUI_TEACHING}${exclusive}${dogfood}${source}`
 }
 
 // ADR-0091 §4 fix (independent-review defect): in `'blue-sky'` mode, `NEGOTIATE_BLUE_SKY` above already
