@@ -8,6 +8,8 @@
 //   node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus/import-seeds.ts
 //   node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus/import-seeds.ts --verdicts <path>
 //   node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus/import-seeds.ts --verdicts <path> --replace <name>
+//   node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus/import-seeds.ts --dry-run
+//   node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus/import-seeds.ts --help
 //
 // (`erasableSyntaxOnly` in the repo tsconfig guarantees this source strips cleanly — ADR-0062.)
 // Idempotent: a re-run's candidates collide (exact canonical hash) with their own prior record and are
@@ -31,6 +33,28 @@
 // score as a NORMAL, anticipated admission outcome ("Below-bar on admission → reject `E_QUALITY`",
 // `a2ui-corpus.md`); every other rejection code still hard-aborts (nothing written, even for candidates
 // that themselves passed) exactly as before — this is a realized-tool decision, not an ADR-0060/0068 edit.
+//
+// GH #335 defect 1 — the unjudged-run disposition guard: an `E_QUALITY` reject at ADMISSION time is
+// never written (`admit.ts` stage 10 — the LLD §6 asymmetry: "a candidate can be refused entry" leaves
+// no trace in the store or the dedup index), so a plain run with no `--verdicts` had nothing to remember
+// a prior rejection by and silently re-admitted it, reporting a clean "0 quality-rejected" result. The
+// durable home for that outcome already existed — `admission-coverage.test.ts`'s `DISPOSITION_ALLOWLIST`
+// — it was just siloed inside a test file this script never read. Moved to
+// `../../src/corpus/disposition-allowlist.ts` (a pure, zero-dep module both files import) and consulted
+// by `dispositionGuard` below: an UNJUDGED run whose candidate name carries a recorded disposition and
+// was never actually admitted HALTS loudly before `admit()` even runs, nothing written. A `--verdicts`
+// run needs no such guard — `createVerdictJudge` already fails closed on every not-yet-admitted
+// candidate absent from the verdicts file (ADR-0068 clause 2), disposition-allowlisted or not, so this
+// change touches ONLY the previously-unguarded unjudged path and does not alter ADR-0068's judge/
+// verdict/quarantine contract in any way.
+//
+// GH #335 defect 2 — an unrecognized flag used to be silently ignored and the tool proceeded to a real
+// mutating run (`import-seeds.ts --help` wrote to the corpus, discovered live). `parseArgs` now returns
+// a discriminated `ParsedArgs`: any unrecognized argument is a hard error (non-zero exit, nothing read
+// past arg-parsing, nothing written); `--help`/`-h` prints real usage and exits before any fs work.
+// `--dry-run` runs the full pipeline (dedup, judge, quality gate) and reports exactly what a real run
+// would do, without the final `saveStore()` — a safe way to preview any invocation, including one that
+// would otherwise be a typo away from mutating the corpus.
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -44,6 +68,7 @@ import type { CorpusStore } from '../../src/corpus/store.ts'
 import { createVerdictJudge, parseVerdictsFile, UnjudgedCandidateError } from '../../src/corpus/judge.ts'
 import { classifyRejections, shouldAbort } from '../../src/corpus/import-report.ts'
 import type { SeedRejection } from '../../src/corpus/import-report.ts'
+import { DISPOSITION_ALLOWLIST } from '../../src/corpus/disposition-allowlist.ts'
 import { loadCatalog } from '../../src/catalog/catalog.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
 import type { ExampleSeed } from '../../src/examples/types.ts'
@@ -98,18 +123,61 @@ function readRubricVersion(repoRoot: string): string {
   return match[1]!
 }
 
-interface CliArgs {
-  verdictsPath?: string
-  replaceName?: string
-}
+const HELP_TEXT = `import-seeds — the ADR-0055 seed-import script (corpus LLD-C14)
 
-function parseArgs(argv: string[]): CliArgs {
-  const args: CliArgs = {}
+Maps every seed on the example shelf (src/examples/) onto a candidate CorpusRecord and runs it
+through admit() — the corpus's single write path.
+
+Usage:
+  node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus/import-seeds.ts [options]
+
+Options:
+  --verdicts <path>   Wire a critic-authored VerdictsFile (ADR-0068) in as the tier-2 judge. With a
+                       judge wired, every not-yet-admitted candidate must be judged, or the run
+                       reports + halts with nothing written.
+  --replace <name>    The sanctioned re-admission of a quarantined record's improved seed
+                       (ADR-0068 clause 5c). Requires --verdicts.
+  --dry-run           Run the full pipeline (dedup, judge, quality gate) and report exactly what a
+                       real run would do, without writing the store.
+  --help, -h          Print this help and exit. Reads and writes nothing.
+
+An unrecognized argument is a hard error: non-zero exit, nothing written (GH #335).`
+
+export type ParsedArgs =
+  | { kind: 'help' }
+  | { kind: 'error'; message: string }
+  | { kind: 'run'; verdictsPath?: string; replaceName?: string; dryRun: boolean }
+
+/** GH #335 defect 2: an unrecognized argument used to be silently dropped and the tool proceeded to a
+ * real mutating run — `import-seeds.ts --help` wrote to the corpus. Every argument is now accounted
+ * for: known flags are consumed, anything else is `{ kind: 'error' }` (the caller hard-stops before any
+ * fs work), and `--help`/`-h` short-circuits to `{ kind: 'help' }` before either. */
+export function parseArgs(argv: string[]): ParsedArgs {
+  let verdictsPath: string | undefined
+  let replaceName: string | undefined
+  let dryRun = false
   for (let i = 0; i < argv.length; i++) {
-    if (argv[i] === '--verdicts') args.verdictsPath = argv[++i]
-    else if (argv[i] === '--replace') args.replaceName = argv[++i]
+    const arg = argv[i]!
+    if (arg === '--help' || arg === '-h') return { kind: 'help' }
+    if (arg === '--verdicts') {
+      const value = argv[++i]
+      if (value === undefined) return { kind: 'error', message: '--verdicts requires a <path> argument' }
+      verdictsPath = value
+      continue
+    }
+    if (arg === '--replace') {
+      const value = argv[++i]
+      if (value === undefined) return { kind: 'error', message: '--replace requires a <name> argument' }
+      replaceName = value
+      continue
+    }
+    if (arg === '--dry-run') {
+      dryRun = true
+      continue
+    }
+    return { kind: 'error', message: `unrecognized argument "${arg}"` }
   }
-  return args
+  return { kind: 'run', verdictsPath, replaceName, dryRun }
 }
 
 // `ExampleSeed` carries no "which file declared me" field (that's a static-authoring fact, not
@@ -209,6 +277,34 @@ async function warmDedupIndex(store: CorpusStore, dedupIndex: DedupIndex, exclud
   }
 }
 
+/**
+ * GH #335 defect 1: an unjudged run (`verdictsPath` absent) must never silently re-admit a candidate
+ * whose name carries a recorded prior `E_QUALITY` rejection (`DISPOSITION_ALLOWLIST` —
+ * `../../src/corpus/disposition-allowlist.ts`). Admission-time `E_QUALITY` rejects are never written
+ * to the store (`admit.ts` stage 10 — LLD §6's asymmetry: "a candidate can be refused entry" leaves no
+ * trace in the shard or the dedup index), so without this guard nothing remembers the refusal and a
+ * plain re-run silently reverses it.
+ *
+ * Applies ONLY when: (a) no judge is wired — a `--verdicts` run already fails closed on every
+ * not-yet-admitted candidate absent from the verdicts file via `createVerdictJudge`'s throw (ADR-0068
+ * clause 2), disposition-allowlisted or not, so it needs no separate guard here; (b) the candidate has
+ * never actually been admitted (`alreadyAdmitted`) — an idempotent re-run of a record that WAS admitted
+ * is untouched, exactly as before (the ordinary `E_DUP` path handles it).
+ *
+ * Returns the halt message to print (the caller reports it and exits non-zero, nothing written), or
+ * `undefined` when the run may proceed normally.
+ */
+export function dispositionGuard(seedName: string, verdictsPath: string | undefined, alreadyAdmitted: boolean): string | undefined {
+  if (verdictsPath !== undefined || alreadyAdmitted) return undefined
+  const disposition = DISPOSITION_ALLOWLIST.get(seedName)
+  if (disposition === undefined) return undefined
+  return (
+    `import-seeds: HALTED — "${seedName}" carries a recorded prior quality rejection (${disposition}). ` +
+    'An unjudged run cannot silently re-admit a dispositioned candidate; re-run with --verdicts to have ' +
+    'it judged fresh. Nothing was written.'
+  )
+}
+
 interface ImportReport {
   admitted: string[]
   alreadyPresent: string[]
@@ -243,9 +339,22 @@ function loadDefaultCatalog(repoRoot: string): Catalog {
 }
 
 async function main(): Promise<void> {
+  // Argument parsing happens BEFORE any other work (GH #335 defect 2) — `--help` and an unrecognized
+  // argument both exit here, before `checkGrouping()`/`loadStore()`/anything that touches the fs.
+  const parsed = parseArgs(process.argv.slice(2))
+  if (parsed.kind === 'help') {
+    console.log(HELP_TEXT)
+    return
+  }
+  if (parsed.kind === 'error') {
+    console.error(`import-seeds: ${parsed.message}. Nothing was written.\n`)
+    console.error(HELP_TEXT)
+    process.exit(1)
+  }
+
   checkGrouping()
 
-  const { verdictsPath, replaceName } = parseArgs(process.argv.slice(2))
+  const { verdictsPath, replaceName, dryRun } = parsed
   if (replaceName !== undefined && verdictsPath === undefined) {
     console.error('import-seeds: --replace requires --verdicts — a quarantine exit must be judged (ADR-0068 clause 5c). Nothing was written.')
     process.exit(1)
@@ -280,6 +389,12 @@ async function main(): Promise<void> {
       const existing = store.get(seed.name)
       if (seed.name === replaceName && existing !== undefined) {
         replaced = { name: seed.name, priorStatus: existing.meta.status, priorCanonicalHash: existing.meta.canonicalHash }
+      }
+
+      const haltMessage = dispositionGuard(seed.name, verdictsPath, existing !== undefined)
+      if (haltMessage !== undefined) {
+        console.error(haltMessage)
+        process.exit(1)
       }
 
       const candidate = seedToCandidate(seed, group.module)
@@ -357,12 +472,14 @@ async function main(): Promise<void> {
     process.exit(1)
   }
 
-  saveStore(repoRoot, store)
+  if (!dryRun) saveStore(repoRoot, store)
 
   // Three reporting lanes, clearly distinguished with counts (TKT-0022 cl.1): written / already-present
-  // (idempotent E_DUP re-run) / quality-rejected (judged below-bar this run, never written).
+  // (idempotent E_DUP re-run) / quality-rejected (judged below-bar this run, never written). `--dry-run`
+  // runs the identical pipeline above and reports the identical counts, just never reaches `saveStore`.
+  const prefix = dryRun ? 'import-seeds (--dry-run, nothing written): ' : 'import-seeds: '
   console.log(
-    `import-seeds: ${report.admitted.length} admitted, ${report.alreadyPresent.length} already present ` +
+    `${prefix}${report.admitted.length} admitted, ${report.alreadyPresent.length} already present ` +
       `(E_DUP, idempotent), ${qualityRejected.length} quality-rejected (E_QUALITY, not written).`,
   )
   if (report.admitted.length > 0) console.log(`  admitted: ${report.admitted.join(', ')}`)
@@ -377,7 +494,16 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((e: unknown) => {
-  console.error('import-seeds: unexpected failure', e)
-  process.exit(1)
-})
+// ── CLI entry — only runs when this file is executed directly (`node --experimental-strip-types
+// tools/corpus/import-seeds.ts`), never when a test imports `parseArgs`/`dispositionGuard` from it
+// (the `scripts/build-dogfood-assets.mjs` CLI-entry-guard precedent: checked against `process.argv[1]`'s
+// basename, not `import.meta.url`, since a jsdom-environment vitest import hands this module no real
+// `file://` URL — that file's own comment names the identical gap). Without this guard, a test file
+// merely IMPORTING this module for `parseArgs`/`dispositionGuard` would trigger a real, unguarded
+// `main()` run against the real corpus on disk — the exact stray-mutation shape GH #335 is about. ──
+if (process.argv[1]?.endsWith('import-seeds.ts')) {
+  main().catch((e: unknown) => {
+    console.error('import-seeds: unexpected failure', e)
+    process.exit(1)
+  })
+}

@@ -62,15 +62,18 @@ export default defineConfig({
           // GH #112 — the per-package `tools/` trees (Node-side CLIs, dev-proxy plugins, the Cloudflare
           // Worker) sit outside every OTHER project's `include` glob, same gap `tsconfig.tools.json` closes
           // for TYPES only (CLAUDE.md) — this is their first BEHAVIOR gate. `environment: 'node'`: these
-          // are server-side modules (Workers/Node), never meant to run under jsdom. Deliberately narrow to
-          // `worker/` for now (route-guards.ts, fs-shim.ts + fs-shim-content.ts's drift gate) — `index.ts`
-          // and `process-shim.ts` are NOT safe to import here (process-shim.ts globally overrides
+          // are server-side modules (Workers/Node), never meant to run under jsdom. Started narrow to
+          // `worker/` (route-guards.ts, fs-shim.ts + fs-shim-content.ts's drift gate) — `index.ts` and
+          // `process-shim.ts` are NOT safe to import here (process-shim.ts globally overrides
           // `process.cwd()`, a side effect that must never leak into a shared test process; see both
           // files' own header comments) — a future full-Worker integration test needs its own isolated
-          // runtime (e.g. `@cloudflare/vitest-pool-workers`), not this project.
+          // runtime (e.g. `@cloudflare/vitest-pool-workers`), not this project. GH #335 widened it to
+          // `corpus/` (`import-seeds.ts`'s `parseArgs`/`dispositionGuard`): both are pure and the module's
+          // own CLI-entry guard (`process.argv[1]?.endsWith('import-seeds.ts')`) keeps `main()` from
+          // firing on import, so it is exactly as safe to import here as `route-guards.ts`/`fs-shim.ts`.
           name: 'tools',
           environment: 'node',
-          include: ['packages/agent-ui/*/tools/agent/worker/*.test.ts'],
+          include: ['packages/agent-ui/*/tools/agent/worker/*.test.ts', 'packages/agent-ui/*/tools/corpus/*.test.ts'],
         },
       },
     ],
