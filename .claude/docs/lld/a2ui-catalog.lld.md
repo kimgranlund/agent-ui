@@ -83,7 +83,7 @@ directly (`el[prop] = value`) — no per-prop switch, unlike `Button.label`→`t
 the back-filled `TextField` declares `value:{prop:'value',event:'change'}` — all consumed by the renderer's generic
 input controller (LLD-C8 / renderer `input.ts`, decomp `s10`). `ui-list`/`ui-grid` joined the catalog in ADR-0087
 Wave C (below) — superseding this note's original G9-era exclusion (ADR-0016 cl.3's "non-catalog primitive"
-stance, superseded by ADR-0087 Fork A, Kim 2026-07-06). **REV 2026-07-28 — [ADR-0161](../adr/0161-catalog-multi-slot-two-way-value-marks.md) (proposed):** `accessorFactory`'s `value?` parameter widens to `ValueSlot | ValueSlot[]`; Calendar + SliderMulti take the array form at ratification+build.
+stance, superseded by ADR-0087 Fork A, Kim 2026-07-06). **REV 2026-07-28 — [ADR-0161](../adr/0161-catalog-multi-slot-two-way-value-marks.md) (built, GH #314):** `accessorFactory`'s `value?` parameter widened to `ValueSlot | readonly ValueSlot[]`; Calendar + SliderMulti now take the array form.
 
 **Coverage discipline (SPEC-N2):** a component type whose control has not shipped is either omitted from `catalog.json` or carries `"x-status":"experimental"`; `loadCatalog` warns on an experimental type so there are no silent dead types. **Edge:** `Image`/`Video` stay absent until media primitives land (Assumption A-2).
 

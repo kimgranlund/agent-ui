@@ -8,7 +8,7 @@
 // compile against one another's interface without importing a not-yet-built implementation. Pure
 // types: `import type` only, zero runtime.
 
-import type { Catalog } from './catalog.ts'
+import type { Catalog, ValueSlot } from './catalog.ts'
 
 /**
  * A factory that turns one A2UI component type into a live `ui-*` control (catalog LLD-C5, SPEC-R4).
@@ -24,10 +24,13 @@ export interface WidgetFactory {
   /** Map one A2UI property (per the catalog `PropDef.mapsTo`) onto the control as a prop/attribute. */
   applyProp: (el: HTMLElement, prop: string, value: unknown) => void
   /**
-   * Input widgets only: the DOM value property + change event the renderer's input controller
-   * (renderer LLD-C8) wires for two-way binding. Absent for non-input controls.
+   * Input widgets only: the DOM value property + commit event the renderer's input controller
+   * (renderer LLD-C8) wires for two-way binding. Absent for non-input controls. Widened by
+   * ADR-0161 from a single slot to one-or-more: a component whose commit gesture finalizes
+   * several props (Calendar range, SliderMulti) declares one slot per prop — the single-object
+   * form stays legal, unchanged, forever. `valueSlots` (catalog.ts) is the shared per-slot reader.
    */
-  value?: { prop: string; event: string }
+  value?: ValueSlot | readonly ValueSlot[]
   /**
    * Marks this factory's control as a submit-action GATE (ADR-0054). The renderer's `#wireAction`
    * resolves `el.closest(<the registry's derived selector>)` for a `submit:true`-flagged action and,

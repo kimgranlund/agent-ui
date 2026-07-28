@@ -23,7 +23,28 @@ export interface ComponentDef {
   name: string
   properties: Record<string, PropDef>
   children?: 'child' | 'children' | 'ChildList'
-  value?: { prop: string; event: string }
+  value?: ValueSlot | readonly ValueSlot[]
+}
+
+/**
+ * One two-way commit slot — a DOM value prop + the commit event that fires it (ADR-0161). A
+ * component whose commit gesture finalizes several props (Calendar range, SliderMulti) declares
+ * one slot per prop; a component with one committed value keeps the single-object form, unchanged
+ * forever (`ComponentDef.value` / `WidgetFactory.value` both widen to `ValueSlot | ValueSlot[]`).
+ */
+export interface ValueSlot {
+  prop: string
+  event: string
+}
+
+/**
+ * Normalize a `value` mark to a slot array (ADR-0161): the single-object form (today's shape,
+ * byte-unchanged) becomes a one-element array; the array form passes through untouched. The ONE
+ * shared reader `validateComponent` (below) and the renderer's input controller
+ * (`renderer/input.ts`, LLD-C8) both use, so per-slot iteration is defined exactly once.
+ */
+export function valueSlots(mark: ValueSlot | readonly ValueSlot[]): readonly ValueSlot[] {
+  return Array.isArray(mark) ? (mark as readonly ValueSlot[]) : [mark as ValueSlot]
 }
 
 export interface PropDef {
@@ -187,13 +208,33 @@ function validateComponent(key: string, raw: unknown): ComponentDef {
   }
 
   if (raw.value !== undefined) {
-    if (!isObject(raw.value) || typeof raw.value.prop !== 'string' || typeof raw.value.event !== 'string') {
-      bad(`component "${key}".value must be { prop: string; event: string }`)
-    }
-    def.value = { prop: raw.value.prop, event: raw.value.event }
+    def.value = validateValueMark(key, raw.value)
   }
 
   return def
+}
+
+const isValueSlot = (v: unknown): v is ValueSlot => isObject(v) && typeof v.prop === 'string' && typeof v.event === 'string'
+
+/**
+ * Validate a component's `value` mark (ADR-0161): the single-object form, unchanged, or a
+ * non-empty array of `{prop,event}` slots with DISTINCT `prop` names across slots (two slots
+ * writing back the same DOM prop is ambiguous — rejected at load). Events MAY repeat (a multi-prop
+ * commit gesture, e.g. Calendar's range pair, fires one shared `change`).
+ */
+function validateValueMark(key: string, raw: unknown): ValueSlot | readonly ValueSlot[] {
+  if (Array.isArray(raw)) {
+    if (raw.length === 0) bad(`component "${key}".value array must be non-empty`)
+    const slots = raw.map((entry) => {
+      if (!isValueSlot(entry)) bad(`component "${key}".value entries must each be { prop: string; event: string }`)
+      return { prop: entry.prop, event: entry.event }
+    })
+    const props = slots.map((s) => s.prop)
+    if (new Set(props).size !== props.length) bad(`component "${key}".value slot props must be distinct`)
+    return slots
+  }
+  if (!isValueSlot(raw)) bad(`component "${key}".value must be { prop: string; event: string } or a non-empty array of such`)
+  return { prop: raw.prop, event: raw.event }
 }
 
 function validatePropDef(key: string, prop: string, raw: unknown): PropDef {

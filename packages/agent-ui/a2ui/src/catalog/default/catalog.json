@@ -303,7 +303,11 @@
         "valueHi": { "type": { "type": "number" }, "bindable": true, "mapsTo": "valueHi" },
         "name": { "type": { "type": "string" }, "mapsTo": "name" },
         "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" }
-      }
+      },
+      "value": [
+        { "prop": "valueLo", "event": "change" },
+        { "prop": "valueHi", "event": "change" }
+      ]
     },
 
     "Calendar": {
@@ -318,7 +322,11 @@
         "valueStart": { "type": { "type": "string" }, "bindable": true, "mapsTo": "valueStart" },
         "valueEnd": { "type": { "type": "string" }, "bindable": true, "mapsTo": "valueEnd" }
       },
-      "value": { "prop": "value", "event": "change" }
+      "value": [
+        { "prop": "value", "event": "change" },
+        { "prop": "valueStart", "event": "change" },
+        { "prop": "valueEnd", "event": "change" }
+      ]
     },
 
     "ComboBox": {
