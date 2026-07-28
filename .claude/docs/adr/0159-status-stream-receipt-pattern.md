@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-23 |
 > | **Proposed by** | build seat ([GH #238](https://github.com/kimgranlund/agent-ui/issues/238) + [GH #239](https://github.com/kimgranlund/agent-ui/issues/239) — waves A of Kim's 2026-07-23 receipt-pattern ruling, "all three slices"; the screenshot report behind #238 is the agent-admin chat activity. [GH #240](https://github.com/kimgranlund/agent-ui/issues/240), per-step source reveal, is wave B — deliberately NOT covered by this record) |
 > | **Ratified by** | — |

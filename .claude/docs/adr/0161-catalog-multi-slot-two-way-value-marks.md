@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-28 |
 > | **Proposed by** | design-314-range-binding — the design pass GH #314's investigation escalated to ("either path is a SPEC/LLD-level decision"), on Kim's bug intake: the Hotel persona's booking form loses its date-range selection because range values bind one-way only. |
 > | **Ratified by** | *(pending — never self-ratified)* |
