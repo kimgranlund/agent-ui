@@ -34,6 +34,17 @@ const read = (p: string): string => readFileSync(p, 'utf8') as string
 // Mirrors docs-grammar.test.ts's walkMd, generalized to any extension set; `*.test.ts`/`*.browser.test.ts` are
 // the non-test cut the dispatch specifies (a control's OWN test fixtures/negative-control strings are not the
 // fleet's real emitted/rendered surface).
+//
+// GH #316/ADR-0162 (LLD-C1, genui-dogfood.lld.md — REV logged there) — ONE narrowly-scoped path exclusion,
+// following this SAME `.test.ts` precedent's own stated reasoning: the law is "a control emits only the
+// closed §4 vocabulary"; a COMMITTED GENERATED DATA ARTIFACT emits nothing — it carries opaque bytes (the
+// fleet's own already-compliant minified bundle, re-encoded as a string literal for inline delivery into
+// a sandboxed frame). `dogfood-assets.ts` is exactly that: `DOGFOOD_JS`'s string content contains
+// post-minification identifier names that happen to spell `emit(e)`/`new CustomEvent($e)` etc., which is a
+// scanner false positive on DATA, not a real violation of authored source — the same category the
+// `.test.ts` cut already carves out for a different reason. Deliberately ONE exact path, never a broad
+// glob, so a future AUTHORED file cannot silently ride this hole.
+const GENERATED_DATA_ARTIFACT_EXCLUSIONS = ['/sandbox-frame/dogfood/dogfood-assets.ts']
 
 function walk(dir: string, exts: readonly string[]): string[] {
   let entries: string[]
@@ -47,7 +58,12 @@ function walk(dir: string, exts: readonly string[]): string[] {
     const p = `${dir}/${name}`
     const st = statSync(p)
     if (st.isDirectory()) out.push(...walk(p, exts))
-    else if (exts.some((e) => name.endsWith(e)) && !name.endsWith('.test.ts') && !name.includes('.browser.test.'))
+    else if (
+      exts.some((e) => name.endsWith(e)) &&
+      !name.endsWith('.test.ts') &&
+      !name.includes('.browser.test.') &&
+      !GENERATED_DATA_ARTIFACT_EXCLUSIONS.some((excluded) => p.endsWith(excluded))
+    )
       out.push(p)
   }
   return out

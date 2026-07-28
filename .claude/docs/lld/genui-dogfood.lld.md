@@ -61,6 +61,18 @@
   gate's rebuild-and-compare IS the proof — if an environment delta ever breaks byte-determinism the
   gate reds and the comparison relaxes to structural (recorded fallback, not silently adopted).
 
+> **REV 2026-07-28 (S1 build, coordinator ruling — no ADR earned, no contract/law change):**
+> `dogfood-assets.ts`'s `DOGFOOD_JS` string literal embeds the fleet's OWN already-compliant minified
+> bundle as opaque text; post-minification identifier names inside that text happen to spell
+> `emit(e)`/`new CustomEvent($e)` etc., which `naming-gates.test.ts`'s Gate 1 (naming.md §4's emit-seam
+> scanner) flagged as violations — a scanner false positive on DATA, not a real violation of authored
+> source. Resolution: `naming-gates.test.ts`'s `walk()` gained ONE narrowly-scoped path exclusion for
+> this exact generated file (`GENERATED_DATA_ARTIFACT_EXCLUSIONS`, one literal path, never a broad
+> glob), following the SAME reasoning the walk already applies to `.test.ts` files ("not the fleet's
+> real emitted/rendered surface") — a committed generated data artifact emits nothing; it carries
+> bytes. naming.md §4's LAW is unchanged (a control still emits only the closed vocabulary); only the
+> scanner's file-selection predicate gained a cited, single-path carve-out. GH #316/ADR-0162.
+
 ## 3. LLD-C2 — frame injection
 
 - `props` gains `assets: { ...jsonType<SandboxFrameAssets>(), default: EMPTY_ASSETS, attribute: false }`
