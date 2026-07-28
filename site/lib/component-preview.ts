@@ -14,7 +14,7 @@
 // contract, no descriptor) — it composes controls for documentation, it is not itself part of the fleet.
 import '@agent-ui/components/components' // self-defining ui-* controls (a component-mode target is defined even standalone)
 import './component-preview.css'
-import { createRenderer, defaultCatalog } from '@agent-ui/a2ui'
+import { createRenderer, defaultCatalog, valueSlots } from '@agent-ui/a2ui'
 import type { RendererHost, ComponentDef, PropDef, JsonSchema } from '@agent-ui/a2ui'
 import { loadDescriptorByTag } from './frontmatter.ts'
 import type { ParsedAttribute } from '@agent-ui/components/descriptor'
@@ -1113,20 +1113,23 @@ class ComponentPreview extends HTMLElement {
   }
 
   /**
-   * Read the rendered root's live two-way-bindable value — the catalog `value` prop (a typed field, a toggled
-   * control, a dismissed modal's `open`) — back into #state, so the imminent rebuild PRESERVES it rather than
-   * reverting to the seed. Skips `changed`: the knob the user just set is their explicit intent and must win.
+   * Read the rendered root's live two-way-bindable value(s) — the catalog `value` mark, one-or-more slots
+   * per ADR-0161 (a typed field, a toggled control, a dismissed modal's `open`, or a multi-slot commit like
+   * Calendar's range pair) — back into #state, so the imminent rebuild PRESERVES them rather than reverting
+   * to the seed. Skips `changed`: the knob the user just set is their explicit intent and must win.
    * Residual limitation (documented): a rebuild recreates the root, so caret position / transient focus reset —
    * the VALUE survives, the cursor does not; and a container root's non-knob sample children reset on its own edit.
    */
   #readBackA2ui(changed: string): void {
     const def = defaultCatalog.components[this.#target]
-    const prop = def?.value?.prop
-    if (!prop || prop === changed) return
+    if (!def?.value) return
     const root = (this.#surface as HTMLElement).firstElementChild as HTMLElement | null
     if (!root) return
-    const mapsTo = def.properties[prop]?.mapsTo ?? prop
-    liveToState(this.#state, prop, (root as unknown as Record<string, unknown>)[mapsTo])
+    for (const slot of valueSlots(def.value)) {
+      if (slot.prop === changed) continue
+      const mapsTo = def.properties[slot.prop]?.mapsTo ?? slot.prop
+      liveToState(this.#state, slot.prop, (root as unknown as Record<string, unknown>)[mapsTo])
+    }
   }
 
   /** The two JSONL lines: createSurface, then updateComponents with the knob-driven root + its sample children. */

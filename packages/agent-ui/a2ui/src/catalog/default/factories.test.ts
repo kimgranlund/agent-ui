@@ -604,10 +604,13 @@ describe('default catalog factories — Slider (ADR-0087 Wave B, closes the ADR-
   })
 })
 
-describe('default catalog factories — SliderMulti (ADR-0087 Wave B, Fork C RESOLVED two-types)', () => {
-  it('SliderMulti → ui-slider-multi: valueLo/valueHi/min/max/step/name/disabled are 1:1 accessors; NO value mark (one two-way slot per component, ADR-0019 — the documented seam limitation)', () => {
+describe('default catalog factories — SliderMulti (ADR-0087 Wave B, Fork C RESOLVED two-types; ADR-0161 write-back)', () => {
+  it('SliderMulti → ui-slider-multi: valueLo/valueHi/min/max/step/name/disabled are 1:1 accessors; a two-slot value mark (ADR-0161) closes the prior one-slot-per-component seam limitation', () => {
     expect(sliderMultiFactory.tag).toBe('ui-slider-multi')
-    expect(sliderMultiFactory.value).toBeUndefined()
+    expect(sliderMultiFactory.value).toEqual([
+      { prop: 'valueLo', event: 'change' },
+      { prop: 'valueHi', event: 'change' },
+    ])
     const el = sliderMultiFactory.create()
     sliderMultiFactory.applyProp(el, 'valueLo', 20)
     sliderMultiFactory.applyProp(el, 'valueHi', 80)
@@ -624,14 +627,21 @@ describe('default catalog factories — SliderMulti (ADR-0087 Wave B, Fork C RES
     expect(target.step).toBe(10)
     expect(target.name).toBe('range')
     expect(target.disabled).toBe(true)
-    expect(defaultCatalog.components.SliderMulti.value).toBeUndefined()
+    expect(defaultCatalog.components.SliderMulti.value).toEqual([
+      { prop: 'valueLo', event: 'change' },
+      { prop: 'valueHi', event: 'change' },
+    ])
   })
 })
 
-describe('default catalog factories — Calendar (ADR-0087 Wave B, closes the ADR-0053 deferral)', () => {
-  it('Calendar → ui-calendar is two-way bound on value via the change event (calendar.md\'s own declared bind, confirmed against calendar.ts #commit); min/max/name/required/disabled are 1:1 accessors', () => {
+describe('default catalog factories — Calendar (ADR-0087 Wave B, closes the ADR-0053 deferral; ADR-0161 range write-back)', () => {
+  it('Calendar → ui-calendar is two-way bound on value/valueStart/valueEnd via the change event (calendar.md\'s own declared bind, confirmed against calendar.ts #commit; ADR-0161 widens the mark to the range pair); min/max/name/required/disabled are 1:1 accessors', () => {
     expect(calendarFactory.tag).toBe('ui-calendar')
-    expect(calendarFactory.value).toEqual({ prop: 'value', event: 'change' })
+    expect(calendarFactory.value).toEqual([
+      { prop: 'value', event: 'change' },
+      { prop: 'valueStart', event: 'change' },
+      { prop: 'valueEnd', event: 'change' },
+    ])
     const el = calendarFactory.create()
     calendarFactory.applyProp(el, 'value', '2026-07-06')
     calendarFactory.applyProp(el, 'min', '2026-01-01')
@@ -648,8 +658,12 @@ describe('default catalog factories — Calendar (ADR-0087 Wave B, closes the AD
     expect(target.disabled).toBe(true)
   })
 
-  it('Calendar → ui-calendar range mode (ADR-0093 clause 7 follow-up): mode/valueStart/valueEnd apply 1:1 through the SAME generic accessorFactory — no bespoke factory code needed', () => {
-    expect(calendarFactory.value).toEqual({ prop: 'value', event: 'change' }) // unchanged — inert-but-harmless in mode=range
+  it('Calendar → ui-calendar range mode (ADR-0093 clause 7 follow-up, ADR-0161 closes it): mode/valueStart/valueEnd apply 1:1 through the SAME generic accessorFactory — no bespoke factory code needed', () => {
+    expect(calendarFactory.value).toEqual([
+      { prop: 'value', event: 'change' },
+      { prop: 'valueStart', event: 'change' },
+      { prop: 'valueEnd', event: 'change' },
+    ]) // value stays inert-but-harmless in mode=range; valueStart/valueEnd are now real two-way slots
     const el = calendarFactory.create()
     calendarFactory.applyProp(el, 'mode', 'range')
     calendarFactory.applyProp(el, 'valueStart', '2026-07-05')

@@ -89,6 +89,7 @@
 
 import '@agent-ui/components/components' // self-defines ui-button + the G9 container family on import
 import type { WidgetFactory } from '../types.ts'
+import type { ValueSlot } from '../catalog.ts'
 
 // Generic attribute fallback for an A2UI prop with no dedicated mapping. `null`/`undefined`/`false`
 // clear the attribute; `true` sets the boolean-attribute form; everything else is string-coerced. For a
@@ -217,10 +218,12 @@ function setProp(el: HTMLElement, prop: string, value: unknown): void {
  * Build a factory for a control whose catalog properties all map 1:1 onto reflecting prop accessors
  * (the container family + text-field + the ADR-0053 `Field`/`FormProvider`/`Select` rows). `value`
  * (optional) declares the two-way commit contract the renderer's input controller (LLD-C8, SPEC-R7)
- * reads: the control's bindable prop + its commit event. `submitGate` (optional, ADR-0054) marks the
- * control as a submit-action gate — the registry aggregates it into its derived selector.
+ * reads: one slot (the single-object form) or several (ADR-0161 — a component whose commit gesture
+ * finalizes multiple props, e.g. Calendar's range pair or SliderMulti's lo/hi, declares one slot per
+ * prop). `submitGate` (optional, ADR-0054) marks the control as a submit-action gate — the registry
+ * aggregates it into its derived selector.
  */
-function accessorFactory(tag: string, value?: { prop: string; event: string }, submitGate?: true): WidgetFactory {
+function accessorFactory(tag: string, value?: ValueSlot | readonly ValueSlot[], submitGate?: true): WidgetFactory {
   const factory: WidgetFactory = {
     tag,
     create: () => document.createElement(tag),
@@ -504,13 +507,15 @@ export const sliderFactory: WidgetFactory = accessorFactory('ui-slider', { prop:
 
 // SliderMulti → ui-slider-multi (ADR-0053 deferral, closed; Fork C — dual value, RESOLVED two types).
 // `min`/`max`/`step`/`name`/`disabled` are 1:1 reflecting accessors; `valueLo`/`valueHi` are ALSO real
-// 1:1 reflecting accessor props (verified against slider-multi.ts's `sliderMultiProps` — NOT a missing
-// accessor like RadioGroup, just a missing TWO-WAY MARK) — but the ADR-0019 seam permits only ONE
-// `value:{prop,event}` mark per component, and this control commits TWO values. So: **no `value` mark**
-// — `valueLo`/`valueHi` are bindable ONE-WAY only (agent-set literals or `{path}` reads; the control's
-// own drag/keyboard commits do not write back through the current seam). The documented Fork C seam
-// limitation, not a bug.
-export const sliderMultiFactory: WidgetFactory = accessorFactory('ui-slider-multi')
+// 1:1 reflecting accessor props (verified against slider-multi.ts's `sliderMultiProps`) committing on
+// `change` (the control's own drag/keyboard commit path). ADR-0161 (GH #314) closes the prior seam
+// limitation ("the ADR-0019 seam permits only ONE `value:{prop,event}` mark per component, and this
+// control commits TWO values") by widening `value` to slots: `valueLo`/`valueHi` are now bindable
+// TWO-WAY, each slot installing its own commit listener (renderer/input.ts, per-slot opt-in).
+export const sliderMultiFactory: WidgetFactory = accessorFactory('ui-slider-multi', [
+  { prop: 'valueLo', event: 'change' },
+  { prop: 'valueHi', event: 'change' },
+])
 
 // Calendar → ui-calendar (ADR-0053 deferral, closed). `value`/`min`/`max`/`name`/`required`/`disabled`
 // are 1:1 reflecting accessor props (verified against calendar.ts). Two-way bindable on `value` via
@@ -520,12 +525,19 @@ export const sliderMultiFactory: WidgetFactory = accessorFactory('ui-slider-mult
 //
 // ADR-0093 (range mode, catalog follow-up per its clause 7) adds `mode` (`'single'|'range'`, NOT
 // bindable — a structural enum, the `orientation`/`placement` precedent) + `valueStart`/`valueEnd`
-// (bindable ONE-WAY only, 1:1 reflecting accessor props — the `SliderMulti` `valueLo`/`valueHi`
-// shape). The row's one two-way slot stays `value:{prop:'value',event:'change'}` — inert-but-harmless
-// in `mode="range"` (calendar.ts holds it live but contributing nothing) — because the catalog schema
-// supports only one two-way bind per component; a second two-way slot for the pair is future work.
-// No factory code change: `accessorFactory`/`setProp` already applies any catalog `mapsTo` 1:1.
-export const calendarFactory: WidgetFactory = accessorFactory('ui-calendar', { prop: 'value', event: 'change' })
+// (1:1 reflecting accessor props — the `SliderMulti` `valueLo`/`valueHi` shape). ADR-0161 (GH #314)
+// closes clause 7's own named follow-up ("range values bind one-way until the catalog schema grows a
+// second two-way slot"): the row's `value` mark widens to THREE slots — `value` stays live-but-inert
+// in `mode="range"` (calendar.ts holds it live but contributing nothing, unchanged from before), and
+// `valueStart`/`valueEnd` are now bindable TWO-WAY. `change` fires on range completion with BOTH props
+// already final (calendar.ts's `#commitRangeDate`), so the pair lands atomically-in-effect — a
+// half-open range never writes. No factory code change beyond the mark: `accessorFactory`/`setProp`
+// already applies any catalog `mapsTo` 1:1.
+export const calendarFactory: WidgetFactory = accessorFactory('ui-calendar', [
+  { prop: 'value', event: 'change' },
+  { prop: 'valueStart', event: 'change' },
+  { prop: 'valueEnd', event: 'change' },
+])
 
 /**
  * ComboBox → `ui-combo-box` (ADR-0053 deferral, closed; Fork D/combobox). `value`/`label`/`placeholder`/

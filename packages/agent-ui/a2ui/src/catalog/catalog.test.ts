@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { loadCatalog, CatalogError, CatalogLoadCode, describePropType } from './catalog.ts'
+import { loadCatalog, CatalogError, CatalogLoadCode, describePropType, valueSlots } from './catalog.ts'
 import type { PropDef } from './catalog.ts'
 import { demoCatalogDoc } from '../fixtures.ts'
 
@@ -80,6 +80,55 @@ describe('loadCatalog — structural validation (catalog LLD-C1, SPEC-R1/R4)', (
     },
     CatalogLoadCode.NAME_INVALID,
   )
+})
+
+// ADR-0161 — the `value` mark widens to one-or-more slots (Calendar range + SliderMulti write-back,
+// GH #314). The single-object form (demoCatalogDoc's TextField, above) stays legal, byte-unchanged.
+describe('loadCatalog — the value mark widens to one-or-more slots (ADR-0161)', () => {
+  const withValue = (value: unknown) => ({
+    catalogId: 'c',
+    protocolVersion: 'v1.0',
+    components: { A: { properties: { lo: { type: {}, mapsTo: 'lo' }, hi: { type: {}, mapsTo: 'hi' } }, value } },
+  })
+
+  it('accepts a non-empty array of {prop,event} slots with distinct props', () => {
+    const cat = loadCatalog(withValue([{ prop: 'lo', event: 'change' }, { prop: 'hi', event: 'change' }]))
+    expect(cat.components.A.value).toEqual([{ prop: 'lo', event: 'change' }, { prop: 'hi', event: 'change' }])
+  })
+
+  it('events MAY repeat across slots (a shared commit event, the Calendar range precedent)', () => {
+    const cat = loadCatalog(withValue([{ prop: 'lo', event: 'change' }, { prop: 'hi', event: 'change' }]))
+    const slots = cat.components.A.value!
+    expect(Array.isArray(slots) && slots.every((s) => s.event === 'change')).toBe(true)
+  })
+
+  const throwsValue = (label: string, value: unknown) =>
+    it(`rejects ${label}`, () => {
+      try {
+        loadCatalog(withValue(value))
+        expect.unreachable('expected loadCatalog to throw')
+      } catch (e) {
+        expect(e).toBeInstanceOf(CatalogError)
+        expect((e as CatalogError).code).toBe(CatalogLoadCode.MALFORMED)
+      }
+    })
+
+  throwsValue('an empty array', [])
+  throwsValue('an array entry missing `event`', [{ prop: 'lo' }])
+  throwsValue('an array entry missing `prop`', [{ event: 'change' }])
+  throwsValue('an array entry that is not an object', [{ prop: 'lo', event: 'change' }, 'nope'])
+  throwsValue('duplicate slot props across the array', [{ prop: 'lo', event: 'change' }, { prop: 'lo', event: 'input' }])
+})
+
+describe('valueSlots (ADR-0161) — the shared per-slot reader', () => {
+  it('normalizes the single-object form to a one-element array', () => {
+    expect(valueSlots({ prop: 'value', event: 'change' })).toEqual([{ prop: 'value', event: 'change' }])
+  })
+
+  it('passes the array form through untouched', () => {
+    const slots = [{ prop: 'lo', event: 'change' }, { prop: 'hi', event: 'change' }]
+    expect(valueSlots(slots)).toBe(slots) // same reference — no copy needed
+  })
 })
 
 // GH #288 (root-caused by #286) — describePropType is the single source both the system prompt's

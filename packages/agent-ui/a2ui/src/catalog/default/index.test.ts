@@ -470,8 +470,8 @@ describe('default catalog — RadioGroup/Radio, Slider, SliderMulti, Calendar, C
     // template). RadioGroup carries a data-bound `{path}` on BOTH `disabled` (its bindable prop) and
     // `value` (the follow-up fix — a real `value:{prop:'value',event:'change'}` mark, closing the
     // formerly-verified component-side gap); Slider/Calendar/ComboBox each carry a {path} bind on
-    // their real `value:{prop,event}` mark; SliderMulti binds `valueLo`/`valueHi` one-way (Fork C's
-    // documented seam limitation — literals here, {path} below).
+    // their real `value:{prop,event}` mark; SliderMulti binds `valueLo`/`valueHi` TWO-WAY (ADR-0161 —
+    // each its own commit slot on the same `change` event).
     const message = {
       version: 'v1.0',
       updateComponents: {
@@ -614,8 +614,11 @@ describe('default catalog — RadioGroup/Radio, Slider, SliderMulti, Calendar, C
     disposeSurface(surface)
   })
 
-  it('SliderMulti declares NO top-level value mark (Fork C — one two-way slot per component; valueLo/valueHi are bindable one-way)', () => {
-    expect(defaultCatalog.components.SliderMulti.value).toBeUndefined()
+  it('SliderMulti declares a two-slot value mark (ADR-0161 — valueLo/valueHi are now bindable TWO-WAY, each its own commit slot)', () => {
+    expect(defaultCatalog.components.SliderMulti.value).toEqual([
+      { prop: 'valueLo', event: 'change' },
+      { prop: 'valueHi', event: 'change' },
+    ])
     expect(defaultCatalog.components.SliderMulti.properties.valueLo?.bindable).toBe(true)
     expect(defaultCatalog.components.SliderMulti.properties.valueHi?.bindable).toBe(true)
   })
@@ -627,18 +630,22 @@ describe('default catalog — RadioGroup/Radio, Slider, SliderMulti, Calendar, C
 })
 
 describe('default catalog — Calendar range mode (ADR-0093 clause 7 follow-up): mode + valueStart/valueEnd', () => {
-  it('Calendar keeps ITS existing value:{prop:value,event:change} two-way mark (inert-but-harmless in mode=range, per ADR-0093 — the SliderMulti limitation: only one two-way slot per component)', () => {
-    expect(defaultCatalog.components.Calendar.value).toEqual({ prop: 'value', event: 'change' })
+  it('Calendar carries a three-slot value mark (ADR-0161): value stays inert-but-harmless in mode=range (unchanged from before), and valueStart/valueEnd are now bindable TWO-WAY', () => {
+    expect(defaultCatalog.components.Calendar.value).toEqual([
+      { prop: 'value', event: 'change' },
+      { prop: 'valueStart', event: 'change' },
+      { prop: 'valueEnd', event: 'change' },
+    ])
   })
 
-  it('Calendar declares a non-bindable `mode` enum (single/range) — a structural flag, the orientation/placement precedent, not a second value mark', () => {
+  it('Calendar declares a non-bindable `mode` enum (single/range) — a structural flag, the orientation/placement precedent, not a value mark', () => {
     expect(defaultCatalog.components.Calendar.properties.mode).toEqual({
       type: { type: 'string', enum: ['single', 'range'] },
       mapsTo: 'mode',
     })
   })
 
-  it('Calendar declares valueStart/valueEnd as bindable ONE-WAY 1:1 accessors (mirrors SliderMulti.valueLo/valueHi — no top-level value mark of their own)', () => {
+  it('Calendar declares valueStart/valueEnd as bindable 1:1 accessors (mirrors SliderMulti.valueLo/valueHi; ADR-0161 gives both their own two-way commit slot)', () => {
     expect(defaultCatalog.components.Calendar.properties.valueStart).toEqual({
       type: { type: 'string' },
       bindable: true,

@@ -238,6 +238,136 @@ describe('two-way input inside a list item (write-side itemScope, ADR-0024 amend
     // items array untouched — the absolute path bypassed itemScope.
     expect(resolve({ path: '/items/1/x' }, s)).toBe('b')
   })
+
+  it('a multi-slot factory (ADR-0161) resolves EACH slot through the same itemScope — both land item-scoped', () => {
+    const s = createSurface(init)
+    s.data.value = { items: [{ lo: 0, hi: 0 }, { lo: 0, hi: 0 }] }
+    const el = stubControl()
+    const factory: WidgetFactory = {
+      tag: 'ui-stub',
+      create: () => document.createElement('div'),
+      applyProp: () => {},
+      value: [
+        { prop: 'lo', event: 'change' },
+        { prop: 'hi', event: 'change' },
+      ],
+    }
+    // Both slots bind RELATIVE keys — without itemScope these would resolve garbage.
+    const node: A2uiComponent = { id: 'n1', component: 'SliderMulti', lo: { path: 'lo' }, hi: { path: 'hi' } }
+    const itemScope: ItemScope = { path: '/items', index: 1 }
+
+    installInputBinding(el, factory, node, s, itemScope)
+
+    ;(el as unknown as Record<string, unknown>).lo = 20
+    ;(el as unknown as Record<string, unknown>).hi = 80
+    el.dispatchEvent(new Event('change'))
+
+    // Headline: EACH slot's write went through scopedPointer to its OWN item-scoped path.
+    expect(resolve({ path: '/items/1/lo' }, s)).toBe(20)
+    expect(resolve({ path: '/items/1/hi' }, s)).toBe(80)
+    // Sibling item untouched; no raw top-level 'lo'/'hi' keys created.
+    expect(resolve({ path: '/items/0/lo' }, s)).toBe(0)
+    expect(resolve({ path: '/items/0/hi' }, s)).toBe(0)
+    expect((s.data.peek() as Record<string, unknown>).lo).toBeUndefined()
+    expect((s.data.peek() as Record<string, unknown>).hi).toBeUndefined()
+  })
+})
+
+describe('multi-slot commits (ADR-0161) — one listener per bound slot, sharing an event is fine', () => {
+  /** A two-slot input factory (the Calendar range / SliderMulti shape): both slots share ONE commit
+   *  event, mirroring the default catalog's realized rows. */
+  function multiSlotFactory(): WidgetFactory {
+    return {
+      tag: 'ui-stub',
+      create: () => document.createElement('div'),
+      applyProp: () => {},
+      value: [
+        { prop: 'lo', event: 'change' },
+        { prop: 'hi', event: 'change' },
+      ],
+    }
+  }
+
+  it('a two-slot factory with BOTH props bound installs two listeners; one commit event writes both paths', () => {
+    const s = createSurface(init)
+    s.data.value = { lo: 0, hi: 0 }
+    const el = stubControl()
+    const node: A2uiComponent = { id: 'n1', component: 'SliderMulti', lo: { path: '/lo' }, hi: { path: '/hi' } }
+
+    installInputBinding(el, multiSlotFactory(), node, s)
+
+    ;(el as unknown as Record<string, unknown>).lo = 20
+    ;(el as unknown as Record<string, unknown>).hi = 80
+    el.dispatchEvent(new Event('change')) // ONE shared commit event fires both slots' listeners
+
+    expect(resolve({ path: '/lo' }, s)).toBe(20)
+    expect(resolve({ path: '/hi' }, s)).toBe(80)
+  })
+
+  it('a bound/unbound slot mix installs only the bound slot\'s listener (per-slot opt-in)', () => {
+    const s = createSurface(init)
+    s.data.value = { lo: 0, hi: 0 }
+    const el = stubControl()
+    // Only `hi` carries a {path} bind; `lo` is a literal (agent-set) — no writeback target for it.
+    const node: A2uiComponent = { id: 'n1', component: 'SliderMulti', lo: 5, hi: { path: '/hi' } }
+
+    installInputBinding(el, multiSlotFactory(), node, s)
+
+    ;(el as unknown as Record<string, unknown>).lo = 999
+    ;(el as unknown as Record<string, unknown>).hi = 80
+    el.dispatchEvent(new Event('change'))
+
+    expect(resolve({ path: '/hi' }, s)).toBe(80) // the bound slot wrote back
+    expect((s.data.peek() as { lo: unknown }).lo).toBe(0) // the unbound slot's literal never wrote
+  })
+
+  it('a rootless range write lands both paths (the GH #314 Calendar shape: value stays inert, valueStart/valueEnd both write)', () => {
+    const s = createSurface(init)
+    s.data.value = { checkIn: '', checkOut: '' }
+    const el = stubControl()
+    const factory: WidgetFactory = {
+      tag: 'ui-calendar',
+      create: () => document.createElement('div'),
+      applyProp: () => {},
+      value: [
+        { prop: 'value', event: 'change' },
+        { prop: 'valueStart', event: 'change' },
+        { prop: 'valueEnd', event: 'change' },
+      ],
+    }
+    // `value` carries no {path} — off-mode, no listener installed for it (per-slot opt-in).
+    const node: A2uiComponent = {
+      id: 'cal',
+      component: 'Calendar',
+      mode: 'range',
+      valueStart: { path: '/checkIn' },
+      valueEnd: { path: '/checkOut' },
+    }
+
+    installInputBinding(el, factory, node, s)
+
+    ;(el as unknown as Record<string, unknown>).valueStart = '2026-08-01'
+    ;(el as unknown as Record<string, unknown>).valueEnd = '2026-08-05'
+    el.dispatchEvent(new Event('change')) // #commitRangeDate fires ONE change with both props already final
+
+    expect(resolve({ path: '/checkIn' }, s)).toBe('2026-08-01')
+    expect(resolve({ path: '/checkOut' }, s)).toBe('2026-08-05')
+  })
+
+  it('teardown (ac.abort) removes EVERY slot\'s listener, not just the first', () => {
+    const s = createSurface(init)
+    s.data.value = { lo: 0, hi: 0 }
+    const el = stubControl()
+    installInputBinding(el, multiSlotFactory(), { id: 'n1', component: 'SliderMulti', lo: { path: '/lo' }, hi: { path: '/hi' } }, s)
+
+    disposeSurface(s)
+    ;(el as unknown as Record<string, unknown>).lo = 20
+    ;(el as unknown as Record<string, unknown>).hi = 80
+    el.dispatchEvent(new Event('change'))
+
+    expect(resolve({ path: '/lo' }, s)).toBe(0) // unchanged — both listeners torn down with the surface
+    expect(resolve({ path: '/hi' }, s)).toBe(0)
+  })
 })
 
 describe('per-path memo stays leak-free with input writes (SPEC-N3)', () => {
