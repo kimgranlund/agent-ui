@@ -68,17 +68,23 @@ export default defineConfig({
           // `process.cwd()`, a side effect that must never leak into a shared test process; see both
           // files' own header comments) — a future full-Worker integration test needs its own isolated
           // runtime (e.g. `@cloudflare/vitest-pool-workers`), not this project. GH #335 widened it to
-          // `a2ui/tools/corpus/` ONLY (`import-seeds.ts`'s `parseArgs`/`dispositionGuard`): that module's
-          // own CLI-entry guard (`process.argv[1]?.endsWith('import-seeds.ts')`) keeps `main()` from
-          // firing on import, so it is exactly as safe to import here as `route-guards.ts`/`fs-shim.ts`.
-          // Deliberately scoped to the `a2ui` package by name, NOT a `*/tools/corpus/*.test.ts` wildcard —
-          // `packages/agent-ui/a2a/tools/corpus/import-seeds.ts` also exists and calls `main()`
-          // UNCONDITIONALLY at module top level (no entry guard, real `writeFileSync`s) — a wildcard here
-          // would silently arm the first sibling test anyone adds under `a2a/tools/corpus/` to fire a real
-          // mutating a2a-corpus import inside the test process the moment it's created (GH #335 review).
+          // `a2ui/tools/corpus/` and GH #343 to `a2a/tools/corpus/` — BOTH `import-seeds.ts` modules now
+          // carry the same CLI-entry guard (`process.argv[1]?.endsWith('import-seeds.ts')`) keeping
+          // `main()` from firing on import, so each is exactly as safe to import here as `route-guards.ts`/
+          // `fs-shim.ts`. (#335 originally scoped to `a2ui` ONLY because a2a's tool then called `main()`
+          // UNCONDITIONALLY with real `writeFileSync`s; #343 fixed that, which is what earns a2a its entry.)
+          // Both are scoped by package NAME — never a `*/tools/corpus/*.test.ts` wildcard. A wildcard would
+          // silently arm the FIRST test anyone adds under any future unguarded `tools/corpus/` tree to fire
+          // a real mutating import inside the test process the moment it's created (the hazard GH #335's
+          // review named, and GH #343's own root cause). A new package earns a line here once its tool is
+          // guarded — it never inherits one.
           name: 'tools',
           environment: 'node',
-          include: ['packages/agent-ui/*/tools/agent/worker/*.test.ts', 'packages/agent-ui/a2ui/tools/corpus/*.test.ts'],
+          include: [
+            'packages/agent-ui/*/tools/agent/worker/*.test.ts',
+            'packages/agent-ui/a2ui/tools/corpus/*.test.ts',
+            'packages/agent-ui/a2a/tools/corpus/*.test.ts',
+          ],
         },
       },
     ],

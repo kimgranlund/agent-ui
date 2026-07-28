@@ -18,7 +18,7 @@ import { PROTOCOL_VERSION } from '../../src/protocol/types.ts'
 import { LEDGER_PATH, isHvRowResolved } from './ledger-path.ts'
 import { conceptSeeds, demoSeeds } from './seeds.ts'
 
-declare const process: { cwd(): string; exit(code?: number): never }
+declare const process: { cwd(): string; argv: string[]; exit(code?: number): never }
 declare const console: { log(...args: unknown[]): void; error(...args: unknown[]): void }
 
 /** `resolveCitation`: hv -> read the SPEC §2 ledger once and check the row's resolution marker; repo ->
@@ -100,4 +100,19 @@ function main(): void {
   console.log(`import-seeds: ${admitted.length} admitted (${concepts.length} concept, ${demos.length} demo), 0 errors.`)
 }
 
-main()
+// ── CLI entry — only runs when this file is executed directly (`node --experimental-strip-types
+// tools/corpus/import-seeds.ts`), never when a test imports `readLedgerOrExit`/`writeShard`/etc from it
+// (the `scripts/build-dogfood-assets.mjs` CLI-entry-guard precedent, mirrored from the a2ui sibling fixed
+// under GH #335: checked against `process.argv[1]`'s basename, not `import.meta.url`, since a jsdom-
+// environment vitest import hands this module no real `file://` URL). Without this guard, a test file
+// merely IMPORTING this module would trigger a real, unguarded `main()` run against the real corpus on
+// disk — GH #343, the a2a-side twin of GH #335's stray-mutation shape. ──
+if (process.argv[1]?.endsWith('import-seeds.ts')) {
+  main()
+} else {
+  // GH #343 (mirroring GH #335 review item 4): a guard that does nothing and exits 0 is the wrong shape —
+  // invoked through a symlink named anything other than `import-seeds.ts` (a real, if unusual, way to
+  // reach this file), the CLI-entry check above silently fails and the process exits 0 having done
+  // nothing at all, including printing `--help`. One line, loudly, so that's never mistaken for success.
+  console.error(`import-seeds: loaded as "${process.argv[1] ?? '(unknown)'}" — not invoked as import-seeds.ts, so main() did not run. Invoke this file directly.`)
+}
