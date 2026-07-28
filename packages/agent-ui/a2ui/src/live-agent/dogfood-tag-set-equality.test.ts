@@ -11,48 +11,44 @@
 //
 // The INTERIM `KNOWN_UNDOCUMENTED_FAMILY_TAGS` allowlist this file carried between S5 and that ruling is
 // GONE, and this gate is restored to the exact three-way SET-EQUALITY SPEC-R13 AC2 asked for originally:
-// bundle-defined ≡ inventory-taught ≡ an independent re-scan of the committed tree. No allowlist, no
+// bundle-defined ≡ inventory-taught ≡ the tags the real barrel REGISTERS AT RUNTIME. No allowlist, no
 // subset-only leg, no named exceptions — a gap in EITHER direction reds this gate.
+//
+// **The third leg is a RUNTIME derivation, deliberately (GH #351 F3).** It used to be a source re-scan,
+// which — once the ruled derivation grew its own `.define(` leg — was a line-for-line TRANSCRIPTION of
+// `dogfood-inventory.ts`: same walk, same filters, same regex. A transcription cannot disagree with its
+// original, and review proved the cost empirically: a commented-out `.define('ui-x')` planted in a real
+// control flowed through BOTH source re-scans unchallenged, leaving a three-way gate that was two-way on
+// siblings. So this leg now asks the question by a genuinely different MECHANISM: intercept
+// `customElements.define` and import the real components barrel, recording what actually registers. It
+// reads no source text and no descriptor — it observes behavior. That also cross-checks the bundle
+// generator itself: `DOGFOOD_TAGS` is `extractTags`' STATIC scan of the MINIFIED bundle, so a minifier
+// change that defeated that regex would show up here as a disagreement rather than as a silent zero.
 
-import { describe, it, expect } from 'vitest'
-import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { describe, it, expect, beforeAll } from 'vitest'
 import { DOGFOOD_TAGS } from '@agent-ui/components/dogfood-frame'
 import { dogfoodInventoryTags } from '../agent/dogfood-inventory.ts'
 
-declare const process: { cwd(): string }
+/** Every `ui-*` tag the REAL components barrel registers when it loads — captured by wrapping
+ *  `customElements.define` before the import, so this is a behavioral observation, never a re-reading of
+ *  the same bytes `dogfood-inventory.ts` parses. Computed ONCE (`beforeAll`): the barrel self-defines on
+ *  first import, and a module-cached second import would register nothing. */
+let runtimeRegisteredTags: Set<string>
 
-/** The SAME independent re-scan `prompt-drift.test.ts`'s own inventory leg uses for the SDK-fence reason
- *  named there — a bare regex read over the committed tree, never importing `dogfood-inventory.ts`'s
- *  internals, so this is a genuine second derivation path for SPEC-R13 AC2's third leg, not a tautological
- *  re-check of the same code. Both halves of the ruled derivation are re-derived here independently: the
- *  descriptors' `tag:` scalars, and the family siblings each control folder self-defines (`.define('ui-x'`,
- *  minus every tag some descriptor already claims — the same fleet-wide exclusion, arrived at separately). */
-function independentlyScannedTaughtTags(): Set<string> {
-  const controlsDir = `${process.cwd()}/packages/agent-ui/components/src/controls`
-  const descriptorTags = new Set<string>()
-  const definedTags = new Set<string>()
-  for (const dirName of readdirSync(controlsDir)) {
-    const dirPath = `${controlsDir}/${dirName}`
-    if (!statSync(dirPath).isDirectory()) continue
-    const files = readdirSync(dirPath)
-    let hasDescriptor = false
-    for (const f of files) {
-      if (!f.endsWith('.md')) continue
-      const m = /^tag:\s*(\S+)/m.exec(readFileSync(`${dirPath}/${f}`, 'utf8'))
-      if (!m) continue
-      descriptorTags.add(m[1]!)
-      hasDescriptor = true
-    }
-    if (!hasDescriptor) continue
-    for (const fileName of files) {
-      if (!fileName.endsWith('.ts') || fileName.endsWith('.test.ts')) continue
-      const src = readFileSync(`${dirPath}/${fileName}`, 'utf8')
-      for (const m of src.matchAll(/\.define\((["'`])(ui-[a-z0-9-]+)\1/g)) definedTags.add(m[2]!)
-    }
+beforeAll(async () => {
+  const seen = new Set<string>()
+  const realDefine = customElements.define.bind(customElements)
+  customElements.define = (name: string, ctor: CustomElementConstructor, options?: ElementDefinitionOptions) => {
+    if (name.startsWith('ui-')) seen.add(name)
+    return realDefine(name, ctor, options)
   }
-  for (const t of definedTags) descriptorTags.add(t)
-  return descriptorTags
-}
+  try {
+    await import('@agent-ui/components/components')
+  } finally {
+    customElements.define = realDefine
+  }
+  runtimeRegisteredTags = seen
+})
 
 describe('DOGFOOD_TAGS ≡ dogfoodInventoryTags() — TRUE set equality, no allowlist (SPEC-R13 AC2)', () => {
   it('the bundle-defined tags and the inventory-taught tags are the SAME set, in both directions', () => {
@@ -93,17 +89,24 @@ describe('DOGFOOD_TAGS ≡ dogfoodInventoryTags() — TRUE set equality, no allo
   })
 })
 
-describe('dogfoodInventoryTags() ≡ an independent re-scan of the committed tree (SPEC-R13 AC2, the third leg)', () => {
-  it('the inventory-taught tags exactly match an independent regex re-derivation (descriptors + family defines)', () => {
-    expect(new Set(dogfoodInventoryTags())).toEqual(independentlyScannedTaughtTags())
+describe('dogfoodInventoryTags() ≡ what the real barrel REGISTERS at runtime (SPEC-R13 AC2, the third leg)', () => {
+  it('the inventory-taught tags exactly match the tags the components barrel actually self-defines', () => {
+    expect(new Set(dogfoodInventoryTags())).toEqual(runtimeRegisteredTags)
   })
 
-  // NEGATIVE CONTROL — a control missing from BOTH the inventory and the independent scan's expectation
-  // would go undetected by a tautological check; this proves the independent re-scan genuinely diverges
-  // from the inventory's own output when fed a different input, not merely a copy of it.
-  it('NEGATIVE CONTROL — a control absent from the inventory\'s own output fails the equality', () => {
-    const scanned = independentlyScannedTaughtTags()
-    scanned.add('ui-planted-phantom-control') // a control "the tree carries" that the inventory never taught
-    expect(new Set(dogfoodInventoryTags())).not.toEqual(scanned)
+  // The leg's own independence, asserted rather than claimed: a RUNTIME observation cannot be a
+  // transcription of a source scan, and this pins that it observed a real, non-trivial fleet (a broken
+  // interception that captured nothing would otherwise make the equality above vacuously interesting).
+  it('the runtime observation is real and non-trivial — the whole fleet registered, not an empty capture', () => {
+    expect(runtimeRegisteredTags.size).toBeGreaterThan(50)
+    expect(runtimeRegisteredTags.has('ui-card-header')).toBe(true) // a prose-only family sibling, registered for real
+  })
+
+  // NEGATIVE CONTROL — proves the equality bites: a tag the runtime registered that the inventory never
+  // taught fails. This is the leg the OLD source re-scan could not honestly provide, because a
+  // transcription of the inventory's own scan agreed with it by construction (GH #351 F3).
+  it('NEGATIVE CONTROL — a registered tag absent from the inventory\'s own output fails the equality', () => {
+    const registered = new Set([...runtimeRegisteredTags, 'ui-planted-phantom-control'])
+    expect(new Set(dogfoodInventoryTags())).not.toEqual(registered)
   })
 })

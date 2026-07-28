@@ -705,7 +705,13 @@ requirement itself, is UNCHANGED.
   extra tag on EITHER side fails (both directions proven by negative control: neutering the sibling scan
   reds with "shipped but not taught: ui-card-content, ui-card-footer, ui-card-header, ui-tab,
   ui-tab-panel"; a planted `.define` in a real control reds with "taught but not shipped") — `npm test`
-  green.
+  green. **The gate's three legs MUST be mechanism-distinct** (GH #351 F3): a static scan of the built
+  bundle, the derivation's own source read, and a RUNTIME observation of what the barrel registers
+  (`customElements.define` interception). A leg written as a second source scan of the same tree with the
+  same technique is a TRANSCRIPTION — it agrees with its original by construction and reduces the gate's
+  real width. Proven, not assumed: with comment-stripping disabled, a commented-out `.define('ui-x')`
+  planted in a real control passed BOTH source re-scans and was caught only by the bundle leg; under the
+  runtime leg it reds directly.
 - **AC4 (new — the parity gate is itself a requirement, not an implementation note).** *Given* the
   standing parity gate, *then* the local reader's `attributes[]` equal the real ADR-0004 parser's, file
   for file, over every committed descriptor, and the two readers' frontmatter-fence extraction agrees —

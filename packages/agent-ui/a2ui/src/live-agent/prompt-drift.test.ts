@@ -3,7 +3,6 @@
 // lacks, and a catalog row added without regeneration surfaces automatically. Deterministic, no model.
 
 import { describe, it, expect } from 'vitest'
-import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { buildSystemPrompt } from '../agent/system-prompt.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import type { Catalog } from '../catalog/catalog.ts'
@@ -116,44 +115,47 @@ describe('buildSystemPrompt drift gate (LLD-C4 / SPEC-R6)', () => {
 })
 
 // genui-surface.spec.md SPEC-R13(b) AC1 — the dogfood segment's DERIVED fleet inventory drift gate
-// (LLD-C3 leaf 10). `independentlyScannedTags` re-implements the "which tags does the fleet teach"
-// question from scratch (a bare regex read over the SAME committed tree, never importing
-// `dogfood-inventory.ts`'s own discovery function) so this test is a genuine second derivation path —
-// a real regression in `dogfoodInventoryTags()` (a missed directory, an over-eager filter) fails HERE
-// even though both paths read the same files, because the two implementations diverge independently.
+// (LLD-C3 leaf 10).
 //
-// Both halves of the ruled derivation are re-derived: each descriptor's `tag:` scalar, AND each
-// compound family's sibling `.define('ui-x'` call sites (GH #346's ruling, SPEC-R13(b) as amended in
-// SPEC v0.6 §12) — the five prose-only family tags (`ui-card-header`/`-content`/`-footer`, `ui-tab`,
-// `ui-tab-panel`) are TAUGHT, so a `tag:`-only re-scan here would be a stale second path, not a check.
-function independentlyScannedTags(): Set<string> {
-  const controlsDir = `${process.cwd()}/packages/agent-ui/components/src/controls`
+// **This file used to carry its own source re-scan, and no longer does (GH #351 F4).** Once the ruled
+// derivation grew the sibling `.define(` leg, that re-scan became a line-for-line TRANSCRIPTION of both
+// `dogfood-inventory.ts` and `dogfood-tag-set-equality.test.ts`'s copy — same walk, same filters, same
+// regex — so its "tags ≡ an independent re-scan" assertion asked the SAME question AC2's third leg
+// already asks, and answered it with the same code. Two identical questions are one question. The tag
+// set-equality leg lives at AC2 (`dogfood-tag-set-equality.test.ts`), which owns it against the real
+// BUILT BUNDLE — the only genuinely independent answer available.
+//
+// What AC1 owns instead is a question no other gate asks: does the RENDERED PROSE — the actual bytes
+// the model receives — carry exactly the tag set `dogfoodInventoryTags()` advertises? The two are
+// computed by different code paths off the same discovery (`dogfoodInventory` renders rows and family
+// clauses; `dogfoodInventoryTags` flat-maps tags), so a renderer that dropped a family clause, or a
+// tags accessor that counted a sibling the prose never names, is a REAL divergence this catches and
+// nothing else does.
+
+/** Re-parse the composed inventory PROSE back into the tag set it actually teaches — parent tags from
+ *  each row's `- <tag> — ` head, family tags from its trailing `(family: a, b)` clause. Deliberately
+ *  parsed from the rendered string, never from the module's internals: this is the model's-eye view. */
+function tagsNamedInRenderedProse(prose: string): Set<string> {
   const tags = new Set<string>()
-  for (const dirName of readdirSync(controlsDir)) {
-    const dirPath = `${controlsDir}/${dirName}`
-    if (!statSync(dirPath).isDirectory()) continue
-    const files = readdirSync(dirPath)
-    let hasDescriptor = false
-    for (const fileName of files) {
-      if (!fileName.endsWith('.md')) continue
-      const m = /^tag:\s*(\S+)/m.exec(readFileSync(`${dirPath}/${fileName}`, 'utf8'))
-      if (!m) continue
-      tags.add(m[1]!)
-      hasDescriptor = true
-    }
-    if (!hasDescriptor) continue // a folder with no descriptor teaches nothing, siblings included
-    for (const fileName of files) {
-      if (!fileName.endsWith('.ts') || fileName.endsWith('.test.ts')) continue
-      const src = readFileSync(`${dirPath}/${fileName}`, 'utf8')
-      for (const m of src.matchAll(/\.define\((["'`])(ui-[a-z0-9-]+)\1/g)) tags.add(m[2]!)
-    }
+  for (const line of prose.split('\n')) {
+    const head = /^- (ui-[a-z0-9-]+) — /.exec(line)
+    if (head) tags.add(head[1]!)
+    const family = /\(family: ([^)]*)\)\s*$/.exec(line)
+    if (family) for (const t of family[1]!.split(',')) tags.add(t.trim())
   }
   return tags
 }
 
 describe('dogfoodInventory drift gate (LLD-C3 leaf 10 / SPEC-R13(b) AC1)', () => {
-  it('the derived inventory names EXACTLY the tags the committed tree declares — set equality, an independent re-scan', () => {
-    expect(new Set(dogfoodInventoryTags())).toEqual(independentlyScannedTags())
+  it('the RENDERED prose names exactly the tags the accessor advertises — rows + family clauses, round-tripped', () => {
+    expect(tagsNamedInRenderedProse(dogfoodInventory())).toEqual(new Set(dogfoodInventoryTags()))
+  })
+
+  // NEGATIVE CONTROL — the round-trip must bite: a tag present in the accessor but absent from the prose
+  // (a dropped family clause, the exact regression the renderer could introduce) fails the equality.
+  it('NEGATIVE CONTROL — prose missing a family clause diverges from the advertised tag set', () => {
+    const mutilated = dogfoodInventory().replace(' (family: ui-tab, ui-tab-panel)', '')
+    expect(tagsNamedInRenderedProse(mutilated)).not.toEqual(new Set(dogfoodInventoryTags()))
   })
 
   // The GH #346 ruling's own leg: a family's prose-only sub-elements ride their PARENT descriptor's

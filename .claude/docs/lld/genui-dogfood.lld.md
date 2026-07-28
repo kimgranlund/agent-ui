@@ -188,8 +188,10 @@
 ## 6. LLD-C5 — cross-half gates
 
 - **Set-equality**: `DOGFOOD_TAGS` (committed, LLD-C1) ≡ the tags `dogfoodInventory()` teaches ≡
-  the descriptor-bearing controls of the components barrel — one test, three-way, planted-extra
-  negative control each direction (SPEC-R13 AC2).
+  the tags the components barrel REGISTERS at runtime — one test, three-way, planted-extra
+  negative control each direction (SPEC-R13 AC2). The three legs must stay MECHANISM-distinct: a
+  static scan of the minified bundle, a source-text derivation, and a runtime observation. A leg
+  re-implemented as a second source scan is a transcription, not a check (GH #351 F3).
 - **Mode-off zero-regression**: the four baseline compositions pass UNCHANGED (no recapture); the
   asset-less srcdoc byte-identity pin (LLD-C2); agent-admin default-off store state renders the row
   byte-identically.
@@ -229,7 +231,10 @@
   bundle generator's own `extractTags` regex, reused, because two derivations that disagreed IS this
   finding's root cause) and teaches the siblings on their parent descriptor's row. **The allowlist is
   DELETED and the gate is restored to TRUE three-way set equality** — bundle-defined ≡ inventory-taught
-  ≡ an independent re-scan of the committed tree, with no named exceptions, red in EITHER direction.
+  ≡ the tags the real barrel REGISTERS AT RUNTIME (a `customElements.define` interception over a real
+  barrel import — a behavioral observation, deliberately NOT a second source scan, which would be a
+  transcription of the derivation it is meant to check: GH #351 F3), with no named exceptions, red in
+  EITHER direction.
   Both directions are proven by negative control (neutering the sibling scan reds with "shipped but not
   taught: …"; a planted `.define` in a real control reds with "taught but not shipped: …"). The five
   tags cost 89 chars — 13 410 of the 16 000-char budget. The coupling this bullet used to flag is also

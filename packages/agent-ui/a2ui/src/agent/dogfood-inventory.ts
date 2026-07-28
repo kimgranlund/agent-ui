@@ -215,6 +215,21 @@ function renderAttrs(attributes: readonly LocalAttribute[]): string {
     .join(', ')
 }
 
+/** Blank out `/* … *\/` block comments and `// …` line comments so a COMMENTED-OUT `.define('ui-x')`
+ *  can never become a taught tag (review-caught defect, GH #351 F2: a `// TODO(probe): …
+ *  customElements.define('ui-swiper-planted', …)` line raised the taught set 64 → 65 — dead code
+ *  taught to the model as a real component). `//` preceded by `:` is left alone so a `https://` inside
+ *  a string literal is not mistaken for a comment. Exported for the parity/gate tests.
+ *
+ *  This is a heuristic, not a JS lexer: an unbalanced `/*` inside a string literal would over-strip.
+ *  That direction is GATED, not assumed — over-stripping DROPS a real define, which
+ *  `dogfood-tag-set-equality.test.ts` reds immediately as "shipped but not taught" against the real
+ *  built bundle. A lexer is the wrong weight for a scan whose errors are caught in one direction and
+ *  loudly in the other. */
+export function stripComments(src: string): string {
+  return src.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/[^\n]*/g, '$1')
+}
+
 /** Every `.define('ui-x'` call site in one control family's own source — the SAME method-call scan
  *  `scripts/build-dogfood-assets.mjs`'s `extractTags` runs over the BUILT bundle to derive
  *  `DOGFOOD_TAGS` (LLD-C1: the `.define(` method-call form, all three quote characters, deliberately
@@ -225,6 +240,13 @@ function renderAttrs(attributes: readonly LocalAttribute[]): string {
  *  REGEX is what travels; `dogfood-tag-set-equality.test.ts` is the standing gate that holds the two
  *  copies to the same answer over the real tree.
  *
+ *  **The one place the reused regex is NOT equivalent — its INPUT CLASS (GH #351 F2).** `extractTags`
+ *  runs over the MINIFIED bundle, where comments no longer exist; this runs over RAW COMMITTED SOURCE,
+ *  where they do. The identical regex therefore has a failure mode there that it cannot have in the
+ *  build script: a commented-out `.define('ui-x')` reads as a real registration. `stripComments` is
+ *  what closes that gap, and it is required precisely BECAUSE the regex is shared — the byte-identical
+ *  scan is only byte-equivalent once the two inputs are in the same class.
+ *
  *  Scanned over the family's own committed SOURCE (`*.ts`, non-test, one level deep — the same fence
  *  `discoverDogfoodControls` walks), never the built bundle: this module reads the source tree, and a
  *  nested `dogfood/` sibling (the generated asset module, whose `DOGFOOD_JS` string is full of real
@@ -234,7 +256,7 @@ function definedTagsIn(dirPath: string): Set<string> {
   const tags = new Set<string>()
   for (const fileName of readdirSync(dirPath)) {
     if (!fileName.endsWith('.ts') || fileName.endsWith('.test.ts')) continue
-    const src = readFileSync(`${dirPath}/${fileName}`, 'utf8')
+    const src = stripComments(readFileSync(`${dirPath}/${fileName}`, 'utf8'))
     for (const m of src.matchAll(tagRe)) tags.add(m[2]!)
   }
   return tags
@@ -280,10 +302,18 @@ function discoverDogfoodControls(): DogfoodControl[] {
   for (const { dirPath, descriptors } of dirs) {
     if (descriptors.length === 0) continue
     const siblings = [...definedTagsIn(dirPath)].filter((t) => !descriptorTags.has(t)).sort()
-    // A folder with two descriptors is not a compound family; its siblings (if any) would have no one
-    // unambiguous parent, so they ride the first descriptor by tag order — deterministic, and the
-    // fleet has no such folder today (the set-equality gate reds if one ever appears un-taught).
-    const [first, ...rest] = descriptors
+    // ATTRIBUTION, when a folder carries MORE THAN ONE descriptor — four do today: `radio` (2),
+    // `split` (2), `swiper` (5), `toast` (2). Siblings ride the descriptor whose tag sorts FIRST, and
+    // the sort is applied HERE rather than assumed: `descriptors` is filled in `readdirSync` order,
+    // which is not sorted and is not guaranteed stable across filesystems, so without this line
+    // attribution is genuinely non-deterministic (review-caught, GH #351 F1 — a `.define` planted in
+    // `swiper/swiper.ts` attached to `ui-swiper-item`, not `ui-swiper`). Tag order is also the RIGHT
+    // parent by construction in every real case: a family's root tag is a prefix of its siblings'
+    // (`ui-swiper` < `ui-swiper-item`, `ui-card` < `ui-card-header`), so the shortest — the root —
+    // always sorts first. Nothing beyond the set-equality gate checks WHICH parent a sibling landed
+    // on, so a wrong-but-taught attribution would ship silently; this keeps it right by ordering.
+    const byTag = [...descriptors].sort((a, b) => a.tag.localeCompare(b.tag))
+    const [first, ...rest] = byTag
     controls.push({ ...first!, family: siblings })
     for (const d of rest) controls.push({ ...d, family: [] })
   }
