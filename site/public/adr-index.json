@@ -1132,5 +1132,12 @@
     "description": "ui-table widens IN PLACE — selection + sort + filter/search + pagination land on the ratified display-only contract (Kim's 2026-07-28 ruling, held to the lette…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0164",
+    "url": "./adr-index.html#adr-0164",
+    "description": "The entry-list machinery re-homes as a shared @agent-ui/app control folder; the settings generator is already extracted, so its remaining gap closes at the pat…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
