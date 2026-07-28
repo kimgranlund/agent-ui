@@ -124,6 +124,17 @@
   [data-part='bubble'][data-role='agent'] {
     background: var(--ui-conversation-agent-bubble);
   }
+  /* GH #313/ADR-0160 amendment (Kim's 2026-07-28 ruling — "no bubble unless there is content for it") —
+   * post-GH #306 the bubble holds ONLY content (note/mounts/chips), so a fresh turn's bubble (created
+   * up-front, empty, `conversation.ts`'s `beginAgentTurn`) is hidden until `revealBubble()` clears
+   * `data-empty` on the FIRST real content. `:has()` over the note/mounts/actions children was NOT
+   * reachable here — the note's default render path writes a bare `textContent` string (no wrapper
+   * element `:has()` could select), so the reveal is a small state attribute instead of a pure CSS rule.
+   * A resumed bubble (TKT-0079) never carries this attribute — it can only resume because it already
+   * has content, so it stays visible throughout, unaffected by this rule. */
+  [data-part='bubble'][data-role='agent'][data-empty] {
+    display: none;
+  }
   [data-part='bubble'][data-role='system'] {
     align-self: center;
     max-inline-size: 100%;

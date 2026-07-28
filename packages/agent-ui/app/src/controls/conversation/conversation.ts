@@ -149,7 +149,10 @@ export interface AgentTurnHandle {
    *  registry, never a fork of it — a genui envelope carries no `createSurface`/`updateComponents`/etc
    *  key `surfaceIdOf` could route on. */
   mountGenui(surfaceId: string, html: string): void
-  /** Stashes this turn's own prose note (ADR-0088); rendered verbatim at `finalize()` — never a fabricated sentence. */
+  /** Stashes this turn's own prose note (ADR-0088) and paints it into the bubble immediately (never a
+   *  fabricated sentence) — a non-empty call reveals the bubble on its FIRST token (GH #313: "no bubble
+   *  unless there is content for it"), so a streaming caller may call this repeatedly as text accretes.
+   *  `finalize()` re-renders the same (or, if never called, a factual fallback tally) text unconditionally. */
   setNote(text: string): void
   /** ADR-0146 F1/F8 — routes one live-turn lifecycle event into the narration strip through a CLOSED,
    *  code-owned stage-label table (never model text, never a fabricated/speculative claim — the F2 honesty
@@ -166,7 +169,10 @@ export interface AgentTurnHandle {
    *  ui-status-stream's inline retry button already uses (ADR-0153), never an eighth. Omitted/empty
    *  ⇒ byte-identical to every existing caller. */
   finalize(actions?: readonly TurnAction[]): void
-  /** A thrown turn (SPEC-R6 AC3): narration truncates with an error entry, a system bubble surfaces `message`, still finalizes cleanly. */
+  /** A thrown turn (SPEC-R6 AC3): narration truncates with an error entry, a system bubble surfaces
+   *  `message`, still finalizes cleanly. Never touches this turn's OWN agent bubble — GH #313: if it
+   *  never received real content (no note/mount/chip), it stays hidden rather than lingering as an
+   *  empty pill beside the system bubble's error text. */
   fail(message: string): void
 }
 
@@ -437,6 +443,15 @@ export class UIConversationElement extends UIElement {
       bubble.append(note, mounts)
       bubble.before(narration)
       this.#log!.append(built.outer)
+      // GH #313/ADR-0160 amendment (Kim's 2026-07-28 ruling — "no bubble unless there is content for
+      // it") — a fresh agent bubble starts CONTENT-EMPTY (the note/mounts skeleton just appended holds
+      // no text/children yet) and the narration strip now lives OUTSIDE it (GH #306), so an all-empty
+      // bubble is a real, knowable pre-content state. `data-empty` marks it hidden (conversation.css);
+      // `#revealBubble` below clears it exactly once, on the FIRST real content of any kind. `:has()`
+      // can't reach this — `#renderBody`'s default path writes a bare `textContent` string into `note`,
+      // a text node CSS attribute-selectors cannot see — hence the small state-attribute route rather
+      // than a CSS-only one.
+      bubble.dataset.empty = ''
     }
     void this.#tailFollowLog(wasNear)
 
@@ -475,6 +490,17 @@ export class UIConversationElement extends UIElement {
     // progress `source` is dropped — the byte-identical default.
     const withSources = this.sources
     const catLines = new Map<Category, string[]>()
+    // GH #313 — reveals the bubble exactly once, on the first real content of any kind: a streamed note
+    // token, a fresh mount, the chip row, or finalize()'s own note/fallback text. A RESUMED bubble never
+    // carries `data-empty` in the first place (TKT-0079: it can only resume because it already mounted a
+    // surface on a prior turn, so it's already revealed) — `revealed` starts `true` for it, making every
+    // call below a no-op, matching state 1 (resumed turns stay visible throughout).
+    let revealed = bubble.dataset.empty === undefined
+    const revealBubble = (): void => {
+      if (revealed) return
+      revealed = true
+      delete bubble.dataset.empty
+    }
     /** Settle one narrated progress entry to done, stamping its done-form label (GH #238). */
     const settleProgress = (key: string): void => {
       const doneLabel = doneLabelByKey.get(key)
@@ -544,6 +570,7 @@ export class UIConversationElement extends UIElement {
       host.wrap = true // TKT-0084: a chat bubble hugs its rendered surface's content, never clips it to an arbitrary fixed height
       host.bare = true // GH #241 (Kim's ruling): on the chat path the render surface carries NO background, NO padding, and FULL message-column width — the payload's own components carry their chrome
       mounts.append(host)
+      revealBubble() // GH #313 — a fresh mount is real content
       host.onClientMessage((m) => this.#onClientMessageCb?.(m)) // bubble up (LLD-C4)
       this.#registry.set(id, { host, bubble, state: 'open' })
       host.ingest(line)
@@ -588,6 +615,7 @@ export class UIConversationElement extends UIElement {
         this.#onClientMessageCb?.({ genuiAction: detail } as unknown as A2uiClientMessage)
       })
       mounts.append(host)
+      revealBubble() // GH #313 — a fresh mount is real content
       this.#genuiRegistry.set(surfaceId, { host, bubble })
       host.html = html
     }
@@ -632,6 +660,16 @@ export class UIConversationElement extends UIElement {
       },
       setNote: (text: string) => {
         noteText = text
+        // GH #313 — writes the note into the DOM IMMEDIATELY (never buffered for finalize() alone): a
+        // streaming caller's first non-empty token both reveals the bubble and paints its own text right
+        // away, rather than the bubble popping up empty and waiting for finalize() to fill it in (that
+        // would just relocate the empty-pill symptom, not fix it). finalize() still re-renders the final
+        // text unconditionally below — a byte-identical result for the ordinary one-shot caller (a single
+        // setNote() right before finalize()).
+        if (text !== '') {
+          revealBubble()
+          this.#renderBody(note, text)
+        }
       },
       progress: (ev: TurnProgress) => routeProgress(ev),
       finalize: (actions?: readonly TurnAction[]) => {
@@ -644,11 +682,19 @@ export class UIConversationElement extends UIElement {
         for (const cat of categoriesSeen) narration.update(`t${seq}-${cat}`, { status: 'done', label: LABEL[cat].done })
         if (lastProgressKey !== undefined) settleProgress(lastProgressKey)
         narration.finalize()
-        this.#renderBody(note, noteText ?? summarize(turnLines))
-        if (this.disclosure && turnLines.length > 0) bubble.append(this.#buildDisclosure(turnLines))
+        const finalNote = noteText ?? summarize(turnLines)
+        if (finalNote !== '') revealBubble() // GH #313 — the fallback tally is real content too
+        this.#renderBody(note, finalNote)
+        if (this.disclosure && turnLines.length > 0) {
+          revealBubble() // GH #313 — the wire dump is real content even with no note/mounts
+          bubble.append(this.#buildDisclosure(turnLines))
+        }
         // GH #291/ADR-0160 clause 3 — the pre-hydrated action-chip row, LAST (after the wire disclosure,
         // when both are present): a settled turn's feedback/reply row reads as the final word on that turn.
-        if (actions && actions.length > 0) bubble.append(this.#buildActions(actions))
+        if (actions && actions.length > 0) {
+          revealBubble() // GH #313 — the chip row is real content
+          bubble.append(this.#buildActions(actions))
+        }
         this.#settleTouchedHosts(touchedIds)
         void this.#tailFollowLog(wasNear)
       },
