@@ -318,7 +318,9 @@ valid ──revalidate(newTarget)──▶ passes? ──yes──▶ valid (re-
 ```
 packages/agent-ui/a2ui/
   src/corpus/        record.ts canonical.ts dedup.ts heal.ts admit.ts store.ts retrieve.ts export.ts
-                     validate.ts (realized) index.ts corpus-data.test.ts (+ co-located *.test.ts)
+                     validate.ts judge.ts import-report.ts (realized) index.ts corpus-data.test.ts
+                     disposition-allowlist.ts (GH #335 — deliberately OUTSIDE the "./corpus" barrel:
+                     import/coverage-tooling bookkeeping, not a corpus API surface) (+ co-located *.test.ts)
   corpus/            exemplar/v1_0/agent-ui.jsonl index.json      # data — written ONLY by tools/corpus
   tools/corpus/      fs-store.ts import-seeds.ts                  # Node shell (later: contamination.ts repair.ts eval/)
 package.json         exports gains "./corpus": "./src/corpus/index.ts" (ADR-0062; root barrel untouched)

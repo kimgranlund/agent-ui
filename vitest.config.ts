@@ -62,15 +62,23 @@ export default defineConfig({
           // GH #112 — the per-package `tools/` trees (Node-side CLIs, dev-proxy plugins, the Cloudflare
           // Worker) sit outside every OTHER project's `include` glob, same gap `tsconfig.tools.json` closes
           // for TYPES only (CLAUDE.md) — this is their first BEHAVIOR gate. `environment: 'node'`: these
-          // are server-side modules (Workers/Node), never meant to run under jsdom. Deliberately narrow to
-          // `worker/` for now (route-guards.ts, fs-shim.ts + fs-shim-content.ts's drift gate) — `index.ts`
-          // and `process-shim.ts` are NOT safe to import here (process-shim.ts globally overrides
+          // are server-side modules (Workers/Node), never meant to run under jsdom. Started narrow to
+          // `worker/` (route-guards.ts, fs-shim.ts + fs-shim-content.ts's drift gate) — `index.ts` and
+          // `process-shim.ts` are NOT safe to import here (process-shim.ts globally overrides
           // `process.cwd()`, a side effect that must never leak into a shared test process; see both
           // files' own header comments) — a future full-Worker integration test needs its own isolated
-          // runtime (e.g. `@cloudflare/vitest-pool-workers`), not this project.
+          // runtime (e.g. `@cloudflare/vitest-pool-workers`), not this project. GH #335 widened it to
+          // `a2ui/tools/corpus/` ONLY (`import-seeds.ts`'s `parseArgs`/`dispositionGuard`): that module's
+          // own CLI-entry guard (`process.argv[1]?.endsWith('import-seeds.ts')`) keeps `main()` from
+          // firing on import, so it is exactly as safe to import here as `route-guards.ts`/`fs-shim.ts`.
+          // Deliberately scoped to the `a2ui` package by name, NOT a `*/tools/corpus/*.test.ts` wildcard —
+          // `packages/agent-ui/a2a/tools/corpus/import-seeds.ts` also exists and calls `main()`
+          // UNCONDITIONALLY at module top level (no entry guard, real `writeFileSync`s) — a wildcard here
+          // would silently arm the first sibling test anyone adds under `a2a/tools/corpus/` to fire a real
+          // mutating a2a-corpus import inside the test process the moment it's created (GH #335 review).
           name: 'tools',
           environment: 'node',
-          include: ['packages/agent-ui/*/tools/agent/worker/*.test.ts'],
+          include: ['packages/agent-ui/*/tools/agent/worker/*.test.ts', 'packages/agent-ui/a2ui/tools/corpus/*.test.ts'],
         },
       },
     ],
