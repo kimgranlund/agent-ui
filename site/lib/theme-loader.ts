@@ -84,9 +84,22 @@ export async function applyTheme(provider: { theme: string }, id: ThemeId): Prom
 }
 
 /** Apply a scheme to `provider` — `''` is the ADR-0117 unset-inherits value (tracks the OS / an
- *  ancestor), never re-mapped to `'light'`. */
+ *  ancestor), never re-mapped to `'light'`.
+ *
+ *  GH #317 — the scheme is ALSO mirrored onto the document root. The site's header control is a
+ *  DOCUMENT-level scheme choice, but the provider it drives lives inside `#app`, inside `<body>`: every
+ *  `light-dark()` above it (`body`'s own `color`/`background` in `_page.css` + `base.css`, the canvas
+ *  background body propagates to, the UA scrollbars) resolves at `:root`'s `color-scheme: light dark`,
+ *  i.e. at the OS preference. With an OS light preference and the toggle on Dark, that painted the whole
+ *  page ground with the LIGHT arm behind a dark app subtree — light-in-dark, with every ladder token
+ *  well-formed (measured both engines: body `neutral-125` vs the subtree's `neutral-875`). Writing the
+ *  same value inline on `<html>` puts the choice ABOVE `body` so the two resolve in step; `''` clears the
+ *  inline value, so Auto falls back to `tokens.css`'s `:root { color-scheme: light dark }` and tracks the
+ *  OS again. Site-side by construction — the packaged `ui-theme-provider` never reaches outside itself
+ *  (SPEC-R3/ADR-0117); knowing that THIS provider is the document-wide one is the app's knowledge. */
 export function applyScheme(provider: { scheme: string }, scheme: SchemeId): void {
   provider.scheme = scheme
+  document.documentElement.style.colorScheme = scheme
 }
 
 /** Persist a choice for the next page load. `localStorage` may be unavailable (privacy mode, SSR-ish
