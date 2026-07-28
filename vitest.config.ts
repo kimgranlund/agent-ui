@@ -83,6 +83,12 @@ export default defineConfig({
       // real control (e.g. the default catalog's ui-button factory).
       '@agent-ui/components/components': r('./packages/agent-ui/components/src/controls/index.ts'),
       '@agent-ui/components/descriptor': r('./packages/agent-ui/components/src/descriptor/index.ts'),
+      // genui-surface.spec.md v0.5 §11 (SPEC-R12, GH #316/ADR-0162) — `@agent-ui/app`'s `agent-admin.ts`
+      // is the dogfood asset pair's first consumer from OUTSIDE the components package: it imports
+      // `DOGFOOD_CSS`/`DOGFOOD_JS` (the generated, committed pair) to pass into a mounted `ui-sandbox-
+      // frame` when the dogfood toggle is on. Same more-specific-first ordering necessity as `/components`/
+      // `/descriptor` above.
+      '@agent-ui/components/dogfood-frame': r('./packages/agent-ui/components/src/controls/sandbox-frame/dogfood/dogfood-assets.ts'),
       // The catalog's static validator (content-family LLD-C13, ADR-0114 cl.3) is the first consumer of a
       // single-control `./controls/{name}` exports-map subpath from OUTSIDE the components package (every
       // prior cross-package import went through the whole `/components` barrel above) — mirrors the

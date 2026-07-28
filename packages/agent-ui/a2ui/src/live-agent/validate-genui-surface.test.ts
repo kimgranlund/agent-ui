@@ -46,4 +46,29 @@ describe('validateGenuiSurface (genui-surface SPEC-R10/R11 — the boundary shap
     expect(validateGenuiSurface(123)).toBeUndefined()
     expect(validateGenuiSurface([])).toBeUndefined()
   })
+
+  // genui-surface.spec.md v0.5 §11 (SPEC-R10 amended clause, GH #316/ADR-0162) — `dogfood` gets the
+  // IDENTICAL per-field degrade posture the `exclusive` cases above establish.
+  it('accepts a well-formed {enabled:true, dogfood:true} and returns it unchanged', () => {
+    expect(validateGenuiSurface({ enabled: true, dogfood: true })).toEqual({ enabled: true, dogfood: true })
+  })
+
+  it('drops a non-boolean dogfood but keeps enabled (a per-field degrade, never the whole object)', () => {
+    expect(validateGenuiSurface({ enabled: true, dogfood: 'true' })).toEqual({ enabled: true })
+    expect(validateGenuiSurface({ enabled: true, dogfood: 1 })).toEqual({ enabled: true })
+    expect(validateGenuiSurface({ enabled: true, dogfood: null })).toEqual({ enabled: true })
+  })
+
+  it('dogfood:false is accepted and preserved (not dropped as falsy)', () => {
+    expect(validateGenuiSurface({ enabled: true, dogfood: false })).toEqual({ enabled: true, dogfood: false })
+  })
+
+  it('composes with exclusive and sourceBody unaffected (every field validates independently)', () => {
+    expect(validateGenuiSurface({ enabled: true, exclusive: true, dogfood: true, sourceBody: 'x' })).toEqual({
+      enabled: true,
+      sourceBody: 'x',
+      exclusive: true,
+      dogfood: true,
+    })
+  })
 })

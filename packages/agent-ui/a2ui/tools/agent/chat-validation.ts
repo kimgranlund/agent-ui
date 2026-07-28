@@ -34,6 +34,10 @@ export function validateMode(mode: unknown): GenUiMode | undefined {
 // multi-megabyte blob; an over-cap value degrades the FIELD to absent (never the whole `genui` object).
 // `exclusive` (genui-surface-config.ts — the genui-only-consumer signal) is validated the SAME per-field
 // degrade way: a non-boolean value drops just that field, never the whole `genui` object.
+//
+// genui-surface.spec.md v0.5 §11 (SPEC-R10 amended clause, GH #316/ADR-0162) — `dogfood` gets the
+// IDENTICAL per-field degrade posture: a non-boolean value drops just that field, never the whole
+// `genui` object (the `exclusive` clause above, copied).
 const GENUI_SOURCE_BODY_CAP = 16_384
 
 export function validateGenuiSurface(genui: unknown): GenuiSurfaceConfig | undefined {
@@ -42,7 +46,13 @@ export function validateGenuiSurface(genui: unknown): GenuiSurfaceConfig | undef
   if (typeof g.enabled !== 'boolean') return undefined
   const sourceBody = typeof g.sourceBody === 'string' && g.sourceBody.length <= GENUI_SOURCE_BODY_CAP ? g.sourceBody : undefined
   const exclusive = typeof g.exclusive === 'boolean' ? g.exclusive : undefined
-  return { enabled: g.enabled, ...(sourceBody !== undefined ? { sourceBody } : {}), ...(exclusive !== undefined ? { exclusive } : {}) }
+  const dogfood = typeof g.dogfood === 'boolean' ? g.dogfood : undefined
+  return {
+    enabled: g.enabled,
+    ...(sourceBody !== undefined ? { sourceBody } : {}),
+    ...(exclusive !== undefined ? { exclusive } : {}),
+    ...(dogfood !== undefined ? { dogfood } : {}),
+  }
 }
 
 // produce()-route effort threading — the SAME fail-closed posture as `validateMode`/`validateGenuiSurface`
