@@ -1,10 +1,15 @@
 # LLD — GenUI agent-ui dogfood mode (GH #316)
 
-> Status: proposed · v0.1 · 2026-07-28 · Layer: LLD (implementation plan)
-> Refines: the genui-surface SPEC v0.5 §11 amendment (SPEC-R12/R13 + the SPEC-R10 `dogfood`
-> clause + the SPEC-R11 toggle note — drafted beside this file, applied at the commit slice) ·
-> [ADR-0162](../adr/0162-genui-agent-ui-dogfood-mode.md) (proposed — **the build is gated on Kim
-> ratifying it; nothing here dispatches before that flip**).
+> Status: proposed · v0.2 · 2026-07-28 · Layer: LLD (implementation plan)
+> **v0.2 (GH #342 + #346, Kim's 2026-07-28 rulings):** LLD-C3's S3 REV gains a second dated REV — the
+> local descriptor reader is now RULED (parity-gated by SPEC-R13(b) AC4, not a build-seat workaround),
+> and the derivation is extended to scan family `.define('ui-x'` sites. §7's bundle-vs-inventory gap
+> bullet is CLOSED: the interim allowlist is deleted and LLD-C5's set-equality gate is restored to the
+> true three-way equality §6 always described. No other component changes.
+> Refines: the genui-surface SPEC v0.6 §11 + §12 amendments (SPEC-R12/R13 + the SPEC-R10 `dogfood`
+> clause + the SPEC-R11 toggle note; §12 carries SPEC-R13(b)'s ruled derivation clause) ·
+> [ADR-0162](../adr/0162-genui-agent-ui-dogfood-mode.md) (accepted; its dated REV 2026-07-28 carries
+> the #342/#346 corrections).
 > Composes on: `sandbox-frame/{sandbox-frame.ts,bootstrap.ts,csp.ts}` (the shipped B1 containment
 > host this extends) · `system-prompt.ts`/`genui-surface-config.ts` (the shipped B2 prompt seam) ·
 > `site/lib/build-css.ts` (the real-build + single-flight-cache mechanics LLD-C1's gate reuses) ·
@@ -115,11 +120,35 @@
   > cited entry — the same "loads real files at call/load time" class `system-prompt.ts`/
   > `mini-skills.ts`/`prompts/genui-packs.ts` already are.
 
-  Emits one line per control: `- <tag> — <summary> (attrs: name: type|enum, …)`,
-  attributes truncated per control to the descriptor's declared set. Skips controls outside
-  `DOGFOOD_TAGS`? No — see LLD-C5: the inventory derives from the SAME control set the bundle
-  entry imports (the components barrel), and the set-equality gate holds the pair; the function
-  takes the tag list as an argument so the gate can probe both directions.
+  > **REV 2026-07-28 (GH #342 + #346, Kim's rulings — the S3 REV above is now RULED, not a
+  > workaround):** the local reader STAYS, and it is no longer a build-seat deviation from the
+  > contract — the contract moved to meet it. #342 established that the S3 REV above described a
+  > genuine, unresolvable conflict between two ratified rules, and Kim ruled fork (a): **amend the
+  > SPEC to require a reader PROVEN EQUIVALENT to the ADR-0004 parser by a standing parity gate**
+  > (`genui-surface.spec.md` §12, v0.6; ADR-0162's own dated REV carries the matching correction).
+  > ADR-0137's zero-dep fence is UNCHANGED and no exception was carved. What changes here is the
+  > local reader's STANDING: it is lawful **if and only if** `dogfood-inventory-parity.test.ts`
+  > stands and is green — the gate is now a SPEC requirement (SPEC-R13(b) AC4), not an
+  > implementation nicety. Deleting or skipping it makes the reader unlawful. Everything the S3 REV
+  > says about WHY the import cannot be restored still holds verbatim — do not "fix" the local
+  > reader back into a `@agent-ui/components` import.
+  >
+  > #346 additionally **extends what this component derives**: alongside each descriptor's `tag:`
+  > scalar, `dogfood-inventory.ts` now scans each control family's own folder for `.define('ui-x'`
+  > call sites (`definedTagsIn` — the SAME regex `scripts/build-dogfood-assets.mjs`'s `extractTags`
+  > uses for `DOGFOOD_TAGS`, reused rather than re-written) and teaches any tag NO descriptor in the
+  > fleet claims as a **family sibling on its parent's row**. ADR-0004's schema is UNCHANGED (the
+  > "add a machine-readable family field" fork was declined). Measured: five siblings
+  > (`ui-card-header`/`-content`/`-footer`, `ui-tab`, `ui-tab-panel`), +89 chars, 13 410 of the
+  > 16 000-char budget.
+
+  Emits one line per control: `- <tag> — <summary> (attrs: name: type|enum, …)`, closed by
+  ` (family: ui-a, ui-b)` when that descriptor's folder self-defines sibling elements of its own
+  (the #346 REV above) — attributes truncated per control to the descriptor's declared set,
+  siblings carrying neither summary nor attributes because they have no descriptor to read them
+  from. Skips controls outside `DOGFOOD_TAGS`? No — see LLD-C5: the inventory derives from the SAME
+  control set the bundle entry imports (the components barrel), and the set-equality gate holds the
+  pair; the function takes the tag list as an argument so the gate can probe both directions.
 - `system-prompt.ts` — `genuiBlock` gains the dogfood leg:
 
   ```ts
@@ -187,17 +216,22 @@
   grant (the platform's own nesting law, not a fleet mechanism) — a nested dogfood frame is exactly
   as contained as the outer one, no privilege escalation path exists. SPEC-R12-compliant as written;
   recorded here so a future reader doesn't mistake the recursion for an oversight.
-- **Bundle-vs-inventory tag gap (S5 leaf-14 finding, RULED #346 — a recorded, fail-closed exception,
-  not an oversight).** `DOGFOOD_TAGS` (S1's real bundle scan) and `dogfoodInventoryTags()` (S3's
-  purely descriptor-derived teaching set, SPEC-R13(b)'s own wording) are NOT set-equal today: five
-  real, bundle-defined tags (`ui-card-content`/`ui-card-footer`/`ui-card-header`/`ui-tab`/
-  `ui-tab-panel`) have no `tag:` row of their own — ADR-0004's descriptor format has no field for a
-  "compound family"'s sibling elements; `card.md`/`tabs.md`'s own frontmatter comments say outright
-  these are "documented in the prose body" only. Ruling #346 (recorded, not built here): the
-  RECOMMENDED end state extends the inventory's derivation to also scan for sibling `.define(` sites
-  (the SAME technique the bundle's own generation script already uses) — deliberately NOT done in S5,
-  because it would change what "descriptor-derived" means for `dogfoodInventoryTags()` the SAME night
-  #342 already has that exact property under review for an unrelated reason. S5 instead holds the gap
-  to a NAMED, fail-closed allowlist (`dogfood-tag-set-equality.test.ts`'s
-  `KNOWN_UNDOCUMENTED_FAMILY_TAGS`) — exact equality, not a ceiling: a sixth bundle-only tag, or the
-  gap shrinking without the allowlist being updated, both RED rather than silently absorbing drift.
+- **Bundle-vs-inventory tag gap (S5 leaf-14 finding — CLOSED 2026-07-28 by ruling #346; no longer a
+  risk, retained as the record of how it closed).** `DOGFOOD_TAGS` (S1's real bundle scan) and
+  `dogfoodInventoryTags()` (S3's teaching set) were NOT set-equal: five real, bundle-defined tags
+  (`ui-card-content`/`ui-card-footer`/`ui-card-header`/`ui-tab`/`ui-tab-panel`) have no `tag:` row of
+  their own — ADR-0004's descriptor format has no field for a "compound family"'s sibling elements;
+  `card.md`/`tabs.md`'s own frontmatter comments say outright these are "documented in the prose body"
+  only. S5 shipped an INTERIM, explicitly-temporary allowlist
+  (`dogfood-tag-set-equality.test.ts`'s `KNOWN_UNDOCUMENTED_FAMILY_TAGS`) pending the ruling.
+  **Kim ruled fork (1) on 2026-07-28: extend the derivation, leave ADR-0004's schema alone.** The
+  inventory now scans each family folder's own `.define('ui-x'` call sites (`definedTagsIn` — the
+  bundle generator's own `extractTags` regex, reused, because two derivations that disagreed IS this
+  finding's root cause) and teaches the siblings on their parent descriptor's row. **The allowlist is
+  DELETED and the gate is restored to TRUE three-way set equality** — bundle-defined ≡ inventory-taught
+  ≡ an independent re-scan of the committed tree, with no named exceptions, red in EITHER direction.
+  Both directions are proven by negative control (neutering the sibling scan reds with "shipped but not
+  taught: …"; a planted `.define` in a real control reds with "taught but not shipped: …"). The five
+  tags cost 89 chars — 13 410 of the 16 000-char budget. The coupling this bullet used to flag is also
+  resolved: #342 landed in the SAME slice, and `genui-surface.spec.md` §12 (v0.6) now states what
+  "descriptor-derived" means for both readings at once.

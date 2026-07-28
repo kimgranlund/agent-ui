@@ -116,30 +116,57 @@ describe('buildSystemPrompt drift gate (LLD-C4 / SPEC-R6)', () => {
 })
 
 // genui-surface.spec.md SPEC-R13(b) AC1 — the dogfood segment's DERIVED fleet inventory drift gate
-// (LLD-C3 leaf 10). `independentlyScannedTags` re-implements the "which controls have a `tag:` fence"
+// (LLD-C3 leaf 10). `independentlyScannedTags` re-implements the "which tags does the fleet teach"
 // question from scratch (a bare regex read over the SAME committed tree, never importing
 // `dogfood-inventory.ts`'s own discovery function) so this test is a genuine second derivation path —
 // a real regression in `dogfoodInventoryTags()` (a missed directory, an over-eager filter) fails HERE
 // even though both paths read the same files, because the two implementations diverge independently.
+//
+// Both halves of the ruled derivation are re-derived: each descriptor's `tag:` scalar, AND each
+// compound family's sibling `.define('ui-x'` call sites (GH #346's ruling, SPEC-R13(b) as amended in
+// SPEC v0.6 §12) — the five prose-only family tags (`ui-card-header`/`-content`/`-footer`, `ui-tab`,
+// `ui-tab-panel`) are TAUGHT, so a `tag:`-only re-scan here would be a stale second path, not a check.
 function independentlyScannedTags(): Set<string> {
   const controlsDir = `${process.cwd()}/packages/agent-ui/components/src/controls`
   const tags = new Set<string>()
   for (const dirName of readdirSync(controlsDir)) {
     const dirPath = `${controlsDir}/${dirName}`
     if (!statSync(dirPath).isDirectory()) continue
-    for (const fileName of readdirSync(dirPath)) {
+    const files = readdirSync(dirPath)
+    let hasDescriptor = false
+    for (const fileName of files) {
       if (!fileName.endsWith('.md')) continue
+      const m = /^tag:\s*(\S+)/m.exec(readFileSync(`${dirPath}/${fileName}`, 'utf8'))
+      if (!m) continue
+      tags.add(m[1]!)
+      hasDescriptor = true
+    }
+    if (!hasDescriptor) continue // a folder with no descriptor teaches nothing, siblings included
+    for (const fileName of files) {
+      if (!fileName.endsWith('.ts') || fileName.endsWith('.test.ts')) continue
       const src = readFileSync(`${dirPath}/${fileName}`, 'utf8')
-      const m = /^tag:\s*(\S+)/m.exec(src)
-      if (m) tags.add(m[1]!)
+      for (const m of src.matchAll(/\.define\((["'`])(ui-[a-z0-9-]+)\1/g)) tags.add(m[2]!)
     }
   }
   return tags
 }
 
 describe('dogfoodInventory drift gate (LLD-C3 leaf 10 / SPEC-R13(b) AC1)', () => {
-  it('the derived inventory names EXACTLY the descriptor-declared tags — set equality, an independent re-scan', () => {
+  it('the derived inventory names EXACTLY the tags the committed tree declares — set equality, an independent re-scan', () => {
     expect(new Set(dogfoodInventoryTags())).toEqual(independentlyScannedTags())
+  })
+
+  // The GH #346 ruling's own leg: a family's prose-only sub-elements ride their PARENT descriptor's
+  // row (never rows of their own — they have no descriptor, hence no summary and no attributes).
+  it('teaches a compound family\'s sibling tags on the parent\'s row, not as free-floating rows', () => {
+    const inv = dogfoodInventory()
+    const cardLine = inv.split('\n').find((l) => l.startsWith('- ui-card — '))
+    expect(cardLine).toContain('(family: ui-card-content, ui-card-footer, ui-card-header)')
+    const tabsLine = inv.split('\n').find((l) => l.startsWith('- ui-tabs — '))
+    expect(tabsLine).toContain('(family: ui-tab, ui-tab-panel)')
+    for (const sibling of ['ui-card-header', 'ui-card-content', 'ui-card-footer', 'ui-tab', 'ui-tab-panel']) {
+      expect(inv, `${sibling} must ride its parent's row, never open one`).not.toContain(`\n- ${sibling} — `)
+    }
   })
 
   it('every descriptor-declared attribute for a sampled control appears in the derived inventory line', () => {

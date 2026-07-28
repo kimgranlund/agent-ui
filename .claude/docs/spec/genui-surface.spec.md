@@ -1,6 +1,16 @@
 # SPEC — GenUI surface (sandboxed free-form generative UI): wire · frame · bridge · producer
 
-> Status: proposed · v0.5 · 2026-07-28 · Layer: SPEC (execution contract)
+> Status: proposed · v0.6 · 2026-07-28 · Layer: SPEC (execution contract)
+> **v0.6 amendment (docs-only, §12 below — GH #342 + GH #346, Kim's 2026-07-28 rulings):** SPEC-R13(b)'s
+> derivation clause is corrected on two counts, as ONE slice (the #346 code change is what makes the #342
+> wording true). #342: "via the ONE ADR-0004 parser" is UNSATISFIABLE — ADR-0137/ADR-0107's zero-dep fence
+> bars `src/agent/` from importing `@agent-ui/components/descriptor` at all — so the clause now requires a
+> reader PROVEN EQUIVALENT to that parser by a standing parity gate, naming
+> `dogfood-inventory-parity.test.ts` as that gate; the fence is UNCHANGED, no exception carved. #346:
+> "descriptor-derived" is EXTENDED to include a compound family's sibling tags, scanned from that family's
+> own `.define('ui-x'` call sites (the bundle generator's own technique, reused) and attached to the parent
+> descriptor's entry; ADR-0004's schema is UNCHANGED, and SPEC-R13 AC2's set-equality gate is restored to
+> TRUE three-way equality with the interim allowlist deleted. Append-only: no other clause changes.
 > **v0.5 amendment (docs-only, §11 below — ADR-0162, GH #316):** the agent-ui DOGFOOD mode, Kim's
 > 2026-07-28 ruling: `GenuiSurfaceConfig` gains an additive `dogfood?: boolean`; mode-on loads the
 > fleet's docs-like asset pair (flattened CSS + the self-defining component IIFE bundle) into the
@@ -634,3 +644,70 @@ pattern-source picker, persisting through the card's existing store discipline a
 next turn's prompt + frame assets reflect it, no reload); `gen-ui-live` surfaces the same toggle in
 its options strip. Persona config is NOT a home for the flag (the ADR-0138 voice/capability
 boundary). Every other word of SPEC-R11 is UNCHANGED.
+
+## 12 · Amendment (v0.6, GH #342 + #346 / ADR-0162) — SPEC-R13(b)'s derivation: a parity-proven reader, and family siblings inside "descriptor-derived"
+
+Grounding: two independent review findings against the shipped SPEC-R13(b) build, both routed as
+issues rather than patched in prose because both sit on ratified contract text, and both ruled by Kim
+on 2026-07-28 as ONE slice — the #346 code change is what makes the #342 wording true.
+
+**GH #342 — "the ONE ADR-0004 parser" is unsatisfiable as written.** `gates.test.ts`'s ADR-0137
+clause-8 SDK-FREE/ZERO-DEP leg bars EVERY bare package specifier under `src/agent/` (relative or
+`node:*` only, ADR-0107) — including `@agent-ui/components/descriptor`, the parser this clause names.
+Confirmed mechanically: planting that import into a non-allowlisted `src/agent/` file reds the gate.
+The shipped build therefore carries a LOCAL minimal frontmatter reader inside `dogfood-inventory.ts`,
+and the clause silently described something the build cannot legally do. Review also proved the
+deviation was not cosmetic: the local reader's first cut disagreed with the real parser on 4 real
+attributes across 2 real descriptors (a quoted empty-string enum member, ADR-0083's `landmark` edge
+case, left unquoted) — so the anti-drift guarantee the single-parser rule existed to deliver was
+genuinely false, exactly as predicted. **Kim's ruling: fork (a) — amend the SPEC to require a
+parity-proven reader. ADR-0137's zero-dep fence stays UNCHANGED; no exception is carved.**
+
+**GH #346 — a `tag:`-only derivation structurally cannot see five shipped tags.** ADR-0004's
+descriptor format has no machine-readable field for a compound family's sibling elements: `card.md`'s
+own frontmatter says the region sub-elements are "documented in the prose body", and `tabs.md` covers
+`ui-tab`/`ui-tab-panel` the same way. So `DOGFOOD_TAGS` (64, scanned from the real built bundle) and
+the descriptor-derived teaching set (59) were not set-equal on real, current, unmodified data, and
+SPEC-R13 AC2's exact set-equality gate could not be built as written — it shipped with an interim,
+explicitly-temporary allowlist naming those five. **Kim's ruling: fork (1) — extend the derivation to
+scan `.define()` sites. ADR-0004's schema stays UNCHANGED.**
+
+**SPEC-R13(b) (amended clause, supersedes the derivation sentence only):** "...(b) a DERIVED fleet
+inventory (`dogfoodInventory()`) composed at call time from the fleet's `{name}.md` descriptors — read
+by a reader PROVEN EQUIVALENT to the ADR-0004 parser (`@agent-ui/components/descriptor`) by a standing
+parity gate, `packages/agent-ui/a2ui/src/live-agent/dogfood-inventory-parity.test.ts`, which runs both
+readers over every committed descriptor and asserts attribute-for-attribute agreement; a local reader is
+LAWFUL under this clause if and only if that gate stands and is green, because the ADR-0137/ADR-0107
+zero-dep fence bars `src/agent/` from importing the parser directly — and EXTENDED, per GH #346, to
+also teach each compound family's SIBLING tags, derived by scanning that family's own folder for
+`.define('ui-x'` call sites (the SAME scan `scripts/build-dogfood-assets.mjs`'s `extractTags` uses for
+`DOGFOOD_TAGS` — one technique, never a second, disagreeing one), attached to their PARENT descriptor's
+entry under its summary and attributes, never as rows of their own (a sibling has no descriptor, hence
+no summary and no attributes to teach) — tag, one-line role, key attributes/enums, family siblings —
+drift-gated against the descriptors (the ADR-0071/`prompt-drift` discipline) and NEVER byte-captured..."
+Every other word of SPEC-R13, including budgets (≤ 8 000 / ≤ 16 000 chars) and the set-equality
+requirement itself, is UNCHANGED.
+
+**Two properties this amendment deliberately KEEPS, and one it retires:**
+
+- **Kept — the anti-drift guarantee.** "Descriptor-derived" still means the DATA is the real committed
+  `.md` text, never hand-transcribed; only the PARSER is local, and the parity gate is what makes that
+  distinction checkable rather than merely asserted. A reader without a standing parity gate does not
+  satisfy this clause.
+- **Kept — one derivation technique for sibling tags.** The `.define(` scan is the bundle generator's
+  own, reused; #346's root cause was two derivations disagreeing, and the set-equality gate is what
+  holds the two copies to the same answer over the real tree.
+- **Retired — the interim allowlist.** SPEC-R13 AC2's set-equality gate is restored to TRUE three-way
+  equality with no named exceptions; `KNOWN_UNDOCUMENTED_FAMILY_TAGS` is deleted.
+
+- **AC2 (restated, no longer caveated).** *Given* the set-equality gate, *then* bundle-defined tags ≡
+  inventory-taught tags EXACTLY — no allowlist, no subset-only leg, no named exceptions — and a planted
+  extra tag on EITHER side fails (both directions proven by negative control: neutering the sibling scan
+  reds with "shipped but not taught: ui-card-content, ui-card-footer, ui-card-header, ui-tab,
+  ui-tab-panel"; a planted `.define` in a real control reds with "taught but not shipped") — `npm test`
+  green.
+- **AC4 (new — the parity gate is itself a requirement, not an implementation note).** *Given* the
+  standing parity gate, *then* the local reader's `attributes[]` equal the real ADR-0004 parser's, file
+  for file, over every committed descriptor, and the two readers' frontmatter-fence extraction agrees —
+  `npm test` green, red on any divergence. Removing or skipping this gate makes the local reader
+  UNLAWFUL under SPEC-R13(b) as amended.

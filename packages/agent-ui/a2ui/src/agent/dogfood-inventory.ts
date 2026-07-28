@@ -1,6 +1,8 @@
 // dogfood-inventory.ts — genui-surface.spec.md SPEC-R13(b): the DERIVED fleet inventory the dogfood
 // prompt segment teaches (LLD-C3) — one line per `ui-*` control, read from the SAME `{name}.md`
-// descriptor frontmatter ADR-0004 already establishes as each component's public-surface contract.
+// descriptor frontmatter ADR-0004 already establishes as each component's public-surface contract,
+// plus each compound family's sibling tags scanned from its own `.define('ui-x'` call sites (GH #346's
+// ruling — `discoverDogfoodControls`'s own note carries the mechanics and the reason).
 //
 // LLD-C3's own text names "the ONE ADR-0004 parser (`@agent-ui/components/descriptor`)" — but that
 // import is a BARE package specifier, and `gates.test.ts`'s ADR-0137 clause-8 SDK-FREE/ZERO-DEP leg
@@ -128,12 +130,14 @@ export function readAttributes(fence: string): LocalAttribute[] {
 export const DOGFOOD_INVENTORY_CHAR_BUDGET = 16_000
 
 /** One discovered control: its tag, a one-line role summary (the descriptor's own prose body, first
- *  sentence — never hand-written, so it can never drift from what the component's own docs say), and
- *  the rendered attrs clause. */
+ *  sentence — never hand-written, so it can never drift from what the component's own docs say), the
+ *  rendered attrs clause, and its compound family's SIBLING tags (`familySiblings`, GH #346) — the
+ *  self-defined `ui-*` elements that ride this descriptor rather than carrying one of their own. */
 interface DogfoodControl {
   tag: string
   summary: string
   attrs: string
+  family: string[]
 }
 
 /** The per-control summary's hard character ceiling (word-boundary trimmed) — deliberately short: 59
@@ -211,49 +215,114 @@ function renderAttrs(attributes: readonly LocalAttribute[]): string {
     .join(', ')
 }
 
+/** Every `.define('ui-x'` call site in one control family's own source — the SAME method-call scan
+ *  `scripts/build-dogfood-assets.mjs`'s `extractTags` runs over the BUILT bundle to derive
+ *  `DOGFOOD_TAGS` (LLD-C1: the `.define(` method-call form, all three quote characters, deliberately
+ *  not the full `customElements.define(` literal a minifier may alias away). Reused verbatim rather
+ *  than re-invented — GH #346's own root cause is two derivations that disagreed, and a SECOND,
+ *  differently-written scanner would be exactly that bug again. That script is an `.mjs` tool outside
+ *  this package, and importing it from here would be a bare specifier the ADR-0137 fence bars, so the
+ *  REGEX is what travels; `dogfood-tag-set-equality.test.ts` is the standing gate that holds the two
+ *  copies to the same answer over the real tree.
+ *
+ *  Scanned over the family's own committed SOURCE (`*.ts`, non-test, one level deep — the same fence
+ *  `discoverDogfoodControls` walks), never the built bundle: this module reads the source tree, and a
+ *  nested `dogfood/` sibling (the generated asset module, whose `DOGFOOD_JS` string is full of real
+ *  `.define("ui-…")` bytes) is a DIRECTORY, so the one-level-deep `*.ts` filter never reads it. */
+function definedTagsIn(dirPath: string): Set<string> {
+  const tagRe = /\.define\((["'`])(ui-[a-z0-9-]+)\1/g
+  const tags = new Set<string>()
+  for (const fileName of readdirSync(dirPath)) {
+    if (!fileName.endsWith('.ts') || fileName.endsWith('.test.ts')) continue
+    const src = readFileSync(`${dirPath}/${fileName}`, 'utf8')
+    for (const m of src.matchAll(tagRe)) tags.add(m[2]!)
+  }
+  return tags
+}
+
 /** Discover every `{name}.md` descriptor under `controls/*` (one level deep — the ADR-0004 fence every
  *  real control carries; `_base`/`_surface`/`_token-surface` hold no `.md` and are naturally skipped) and
  *  parse each into a `DogfoodControl` row. A descriptor missing a `tag:` scalar (structurally invalid —
  *  `validateComponentDescriptor`'s own concern, not this function's) is skipped rather than surfaced as
- *  an untagged row. */
+ *  an untagged row.
+ *
+ *  **Family siblings (GH #346, Kim's 2026-07-28 ruling — "extend the derivation").** ADR-0004's schema
+ *  has no machine-readable field for a compound family's sub-elements (`card.md`'s own frontmatter says
+ *  it outright: "The region sub-elements (ui-card-header/-content/-footer) are documented in the prose
+ *  body"; `tabs.md` is the same shape for `ui-tab`/`ui-tab-panel`) — so a strictly `tag:`-derived
+ *  inventory STRUCTURALLY cannot see five real, shipped, model-facing tags the bundle self-defines.
+ *  The ruling extends the derivation rather than the schema: each family folder is also scanned for its
+ *  own `.define('ui-x'` call sites (`definedTagsIn`), and any tag that no descriptor ANYWHERE in the
+ *  fleet claims as its own becomes a sibling ON ITS PARENT'S ROW — never a free-floating row, because a
+ *  sibling has no descriptor, hence no summary and no attributes of its own to teach. The
+ *  fleet-wide-tag exclusion (not merely the folder's own tag) is what keeps a control that happens to
+ *  define a neighbour's element from being taught twice. */
 function discoverDogfoodControls(): DogfoodControl[] {
-  const controls: DogfoodControl[] = []
+  const dirs: { dirPath: string; descriptors: { tag: string; summary: string; attrs: string }[] }[] = []
+  const descriptorTags = new Set<string>()
   for (const dirName of readdirSync(CONTROLS_DIR)) {
     const dirPath = `${CONTROLS_DIR}/${dirName}`
     if (!statSync(dirPath).isDirectory()) continue
+    const descriptors: { tag: string; summary: string; attrs: string }[] = []
     for (const fileName of readdirSync(dirPath)) {
       if (!fileName.endsWith('.md')) continue
       const src = readFileSync(`${dirPath}/${fileName}`, 'utf8')
       const { fence, body } = splitFrontmatter(src)
       const tag = readTag(fence)
       if (tag === undefined) continue
-      controls.push({ tag, summary: firstSentence(body), attrs: renderAttrs(readAttributes(fence)) })
+      descriptors.push({ tag, summary: firstSentence(body), attrs: renderAttrs(readAttributes(fence)) })
+      descriptorTags.add(tag)
     }
+    dirs.push({ dirPath, descriptors })
+  }
+  // Second pass — siblings can only be recognised once EVERY descriptor tag in the fleet is known.
+  const controls: DogfoodControl[] = []
+  for (const { dirPath, descriptors } of dirs) {
+    if (descriptors.length === 0) continue
+    const siblings = [...definedTagsIn(dirPath)].filter((t) => !descriptorTags.has(t)).sort()
+    // A folder with two descriptors is not a compound family; its siblings (if any) would have no one
+    // unambiguous parent, so they ride the first descriptor by tag order — deterministic, and the
+    // fleet has no such folder today (the set-equality gate reds if one ever appears un-taught).
+    const [first, ...rest] = descriptors
+    controls.push({ ...first!, family: siblings })
+    for (const d of rest) controls.push({ ...d, family: [] })
   }
   return controls
 }
 
-/** The tags every discovered descriptor declares, tag-sorted — the "inventory-taught tags" half of
- *  SPEC-R13 AC2's set-equality gate (LLD-C5). Exposed standalone so that gate never has to re-parse the
- *  composed prose to recover the tag set. */
+/** Every tag the inventory TEACHES, tag-sorted — each descriptor's own `tag:` scalar PLUS the family
+ *  siblings that ride its row (GH #346). The "inventory-taught tags" half of SPEC-R13 AC2's set-equality
+ *  gate (LLD-C5), exposed standalone so that gate never has to re-parse the composed prose to recover
+ *  the tag set. */
 export function dogfoodInventoryTags(): readonly string[] {
   return discoverDogfoodControls()
-    .map((c) => c.tag)
+    .flatMap((c) => [c.tag, ...c.family])
     .sort()
 }
 
 /**
  * The derived fleet inventory (SPEC-R13(b)): one `- <tag> — <summary> (attrs: ...)` line per discovered
  * control, tag-sorted (deterministic — LLD-C3 leaf 8's unit test asserts stable, repeated-call-identical
- * output). `tags`, when given, restricts the rendered rows to that set — the shape LLD-C5's set-equality
- * gate needs to probe both directions (the full discovered set vs. `DOGFOOD_TAGS`, and `DOGFOOD_TAGS`
- * filtered back through this same function). The real composition call in `system-prompt.ts`'s
- * `genuiBlock` passes no argument, so a live turn always teaches every control the fleet documents.
+ * output). A compound family's sibling tags close the line as ` (family: ui-a, ui-b)` — attached to the
+ * PARENT descriptor's entry, under its own summary and attrs, because that is the only place the fleet
+ * documents them (GH #346); they are never rows of their own, having neither summary nor attributes.
+ * `tags`, when given, restricts the rendered rows to that set — the shape LLD-C5's set-equality gate
+ * needs to probe both directions (the full discovered set vs. `DOGFOOD_TAGS`, and `DOGFOOD_TAGS`
+ * filtered back through this same function); a restricted call filters family members by the SAME set,
+ * so the function can never teach a tag the caller did not ask for. The real composition call in
+ * `system-prompt.ts`'s `genuiBlock` passes no argument, so a live turn always teaches every control the
+ * fleet documents.
  */
 export function dogfoodInventory(tags?: readonly string[]): string {
   const allow = tags === undefined ? undefined : new Set(tags)
   const controls = discoverDogfoodControls()
     .filter((c) => allow === undefined || allow.has(c.tag))
     .sort((a, b) => a.tag.localeCompare(b.tag))
-  return controls.map((c) => `- ${c.tag} — ${c.summary} (attrs: ${c.attrs})`).join('\n')
+  return controls
+    .map((c) => {
+      const family = allow === undefined ? c.family : c.family.filter((t) => allow.has(t))
+      const familyClause = family.length === 0 ? '' : ` (family: ${family.join(', ')})`
+      return `- ${c.tag} — ${c.summary} (attrs: ${c.attrs})${familyClause}`
+    })
+    .join('\n')
 }
