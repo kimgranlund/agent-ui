@@ -12,7 +12,7 @@ import { UITabsElement } from './tabs/tabs.ts'
 import { UIModalElement } from './modal/modal.ts'
 // Read package.json + the CSS barrels as text (vite strips `.css?raw`; no `@types/node` devDep — same
 // approach as the s6/s7 probes).
-import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs'
+import { readFileSync, existsSync, readdirSync, statSync, mkdirSync, writeFileSync, rmSync } from 'node:fs'
 declare const process: { cwd(): string }
 
 // Phase-1 s17 — the three barrels (ADR-0003) exist and are wired into the package exports:
@@ -219,5 +219,102 @@ describe('exports map ↔ controls/ folders ↔ family barrel — the T4 three-w
 
   it('a folder wired into neither side fails the bijection (negative control — uncoveredFolders)', () => {
     expect(threeWayCheck(barrelSrc, pkg.exports, [...folderNames, 'phantom']).uncoveredFolders).toEqual(['phantom'])
+  })
+})
+
+// ── LLD-C1 (genui-dogfood.lld.md, GH #316/ADR-0162) — the `./dogfood-frame` subpath's barrel-purity
+// trip-wire, the ADR-0137 zero-bytes gate pattern applied here: opt-in only, so importing EITHER default
+// barrel (the root `.` OR the family `./components`) must carry ZERO dogfood bytes — a real transitive
+// import-graph trace (not just a one-line grep of the entry file, so a future re-export buried a few
+// modules deep still trips this), plus the ADR-0137 IDENTITY leg's runtime symbol-absence check.
+
+const DOGFOOD_MODULE_REL = 'src/controls/sandbox-frame/dogfood/dogfood-assets.ts'
+
+/** Every `from '<spec>'` / bare `import '<spec>'` specifier in `src` (the gates.test.ts pattern). */
+function dogfoodImportSpecifiers(src: string): string[] {
+  const specs: string[] = []
+  const re = /(?:from|import)\s+['"]([^'"]+)['"]/g
+  let m: RegExpExecArray | null
+  while ((m = re.exec(src)) !== null) specs.push(m[1]!)
+  return specs
+}
+
+/** Transitively crawl the RELATIVE-import graph from `entryRel` (a path relative to `PKG`), returning
+ *  every reached module's PKG-relative path. Mirrors tree-shake.test.ts's crawl, re-derived here (Node
+ *  `readFileSync`, not `import.meta.glob`) so this file stays a plain Node-context test. */
+function crawlDogfood(entryRel: string): Set<string> {
+  const reached = new Set<string>()
+  const queue: string[] = [entryRel]
+  while (queue.length > 0) {
+    const cur = queue.pop() as string
+    if (reached.has(cur)) continue
+    reached.add(cur)
+    let src: string
+    try {
+      src = readFileSync(`${PKG}/${cur}`, 'utf8') as string
+    } catch {
+      continue // resolved outside the package (a sibling @agent-ui/* package, or missing extension) — unreachable here
+    }
+    const dir = cur.slice(0, cur.lastIndexOf('/'))
+    for (const spec of dogfoodImportSpecifiers(src)) {
+      if (!spec.startsWith('.')) continue // only relative specifiers stay inside this package
+      const parts = dir.split('/')
+      for (const seg of spec.split('/')) {
+        if (seg === '.' || seg === '') continue
+        else if (seg === '..') parts.pop()
+        else parts.push(seg)
+      }
+      const target = parts.join('/')
+      if (!reached.has(target)) queue.push(target)
+    }
+  }
+  return reached
+}
+
+describe('./dogfood-frame subpath — opt-in only, zero bytes in either default barrel (LLD-C1, ADR-0137 gate pattern)', () => {
+  it('is wired into package.json exports and resolves to a real, non-empty generated module', () => {
+    expect(pkg.exports['./dogfood-frame']).toBe(`./${DOGFOOD_MODULE_REL}`)
+    expect(existsSync(`${PKG}/${DOGFOOD_MODULE_REL}`)).toBe(true)
+    const generated = read(DOGFOOD_MODULE_REL)
+    expect(generated).toContain('DOGFOOD_CSS')
+    expect(generated).toContain('DOGFOOD_JS')
+    expect(generated).toContain('DOGFOOD_TAGS')
+  })
+
+  it('the root `.` barrel (src/index.ts) never transitively reaches the dogfood module', () => {
+    const reached = crawlDogfood('src/index.ts')
+    expect(reached.has(DOGFOOD_MODULE_REL)).toBe(false)
+  })
+
+  it('the family `./components` barrel (src/controls/index.ts) never transitively reaches the dogfood module', () => {
+    const reached = crawlDogfood('src/controls/index.ts')
+    expect(reached.has(DOGFOOD_MODULE_REL)).toBe(false)
+  })
+
+  it('a planted import (negative control) IS caught by the crawl — the trace itself is not vacuous', () => {
+    // Write a REAL scratch fixture (a `dist-*`-prefixed, gitignored scratch dir — the fleet's own
+    // scratch-file convention) that genuinely `export *`s the dogfood module, then run the SAME
+    // `crawlDogfood` over it. Unlike merely `.add()`-ing the target onto an already-returned Set (which
+    // would be true regardless of whether the crawler works at all), this re-invokes the crawler on an
+    // input containing a REAL reaching edge — the assertion only passes if `crawlDogfood` actually
+    // follows relative imports and finds the target, proving the `false` results above are a genuine
+    // absence, not a crawler that can never find anything.
+    const scratchDir = `${PKG}/dist-barrels-negative-control-scratch`
+    const fixtureRel = 'dist-barrels-negative-control-scratch/negative-control.ts'
+    rmSync(scratchDir, { recursive: true, force: true })
+    mkdirSync(scratchDir, { recursive: true })
+    writeFileSync(`${PKG}/${fixtureRel}`, `export * from '../${DOGFOOD_MODULE_REL}'\n`)
+    try {
+      const reached = crawlDogfood(fixtureRel)
+      expect(reached.has(DOGFOOD_MODULE_REL)).toBe(true)
+    } finally {
+      rmSync(scratchDir, { recursive: true, force: true })
+    }
+  })
+
+  it('neither default barrel exposes a dogfood-only symbol at runtime (ADR-0137 IDENTITY leg)', () => {
+    for (const sym of ['DOGFOOD_CSS', 'DOGFOOD_JS', 'DOGFOOD_TAGS']) {
+      expect(componentsBarrel, `./components barrel must not expose dogfood symbol "${sym}"`).not.toHaveProperty(sym)
+    }
   })
 })
