@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-28 |
 > | **Proposed by** | design intake seat ([GH #316](https://github.com/kimgranlund/agent-ui/issues/316) — Kim's 2026-07-28 ruling: dogfooding is "a mode that can be enabled", dictating BOTH ends of the pipeline: a docs-like iframe asset setup AND dogfooding knowledge skills in the LLM payload; off = today's behavior byte-identical) |
 > | **Ratified by** | — |

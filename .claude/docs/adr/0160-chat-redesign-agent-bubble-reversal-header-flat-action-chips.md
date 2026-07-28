@@ -4,7 +4,7 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-27 |
 > | **Proposed by** | build seat ([GH #291](https://github.com/kimgranlund/agent-ui/issues/291) — Kim's reference screenshots + the 2026-07-27 rulings comment resolving all three open forks) |
 > | **Ratified by** | — |
