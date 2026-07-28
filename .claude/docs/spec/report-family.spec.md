@@ -1,8 +1,10 @@
 # SPEC — Report Family (`ui-table` + `ui-stat` + `ui-badge` + catalog surface)
 
-> Status: proposed · v0.1 · 2026-07-09 · Layer: SPEC (execution contract)
-> Refines: [`../prd/report-family.prd.md`](../prd/report-family.prd.md) — **PRD-G1, PRD-G2, PRD-G3** — under the ratified scope + contract directions of [ADR-0111](../adr/0111-report-family-v1-scope.md) (accepted; forks F1–F4 as recommended). Every clause of ADR-0111 is binding here; this SPEC adds the behavior contract, it re-litigates nothing.
-> Refined by: [`../lld/report-family.lld.md`](../lld/report-family.lld.md). Build plan: [`../decompositions/report-family-build.decomp.json`](../decompositions/report-family-build.decomp.json) (coverage-clean).
+> Status: proposed · v0.2 · 2026-07-28 · Layer: SPEC (execution contract)
+> Refines: [`../prd/report-family.prd.md`](../prd/report-family.prd.md) — **PRD-G1, PRD-G2, PRD-G3** — under the ratified scope + contract directions of [ADR-0111](../adr/0111-report-family-v1-scope.md) (accepted; forks F1–F4 as recommended) as amended by [ADR-0163](../adr/0163-ui-table-interactive-widening.md) (the `ui-table` interactive widening — proposed). Every clause of ADR-0111 is binding here; this SPEC adds the behavior contract, it re-litigates nothing.
+> Refined by: [`../lld/report-family.lld.md`](../lld/report-family.lld.md). Build plan: [`../decompositions/report-family-build.decomp.json`](../decompositions/report-family-build.decomp.json) (coverage-clean) · the widening wave: [`../decompositions/table-widening.decomp.md`](../decompositions/table-widening.decomp.md).
+>
+> **Changelog** — 2026-07-28 · v0.1 → v0.2: the ADR-0163 `ui-table` widening applied (§1 fence sentence, SPEC-R1, SPEC-R3, SPEC-R4 + new clause R4.5, SPEC-R18, §5, SPEC-N2/N4 amended; NEW SPEC-R21…R28 in §3.6).
 > Altitude: owns **what the three report controls do and how they behave at every boundary** + the report rows' catalog contract and feed dispositions. Implementation (stamp mechanics internals, CSS mechanics, file layout) is the LLD's. Filed in the charter home (`docs/spec/`, the chart-family precedent); the catalog surface (§5.2 of [`../spec/a2ui-catalog.spec.md`](../spec/a2ui-catalog.spec.md)) stays a first-class same-wave deliverable, cross-referenced.
 > Requirement IDs file-scoped (`SPEC-R1…`); cross-document references qualify by doc name.
 
@@ -19,6 +21,10 @@ and enter the default catalog (`Table`, `Stat`, `Badge`) in the same wave they s
 feed-partition dispositions recorded. The fence stands: everything in PRD §3's ruled-out list (sorting,
 selection, pagination, virtualization, column resizing, cell renderers, interactive chips, anchored
 count-dots, a stat child seam, delta valence coloring) is out of this SPEC's normative reach.
+*Amended by ADR-0163 (2026-07-28): sorting, row selection, filtering/search, and pagination
+re-entered by their own record and are normative here (SPEC-R21…R28); filter operators beyond
+the facet shape, an in-table query input, virtualization, column resizing, cell renderers,
+interactive chips remain out.*
 
 ## 2. Definitions
 
@@ -49,14 +55,27 @@ Normative per RFC 2119; each carries an ID, PRD trace, and acceptance criteria.
 
 ### 3.1 `ui-table`
 
-**SPEC-R1 — Component contract.** `ui-table` MUST be a Display-class, non-interactive,
-non-form-associated leaf (`UIElement`; no events, no keyboard contract, no author-slotted content model)
-with exactly three props: `columns` (`{ key: string; label: string; type?: 'string' | 'number' }[]`,
-default `[]`; attribute form = the JSON string), `rows` (`Record<string, string | number>[]`, default
-`[]`; attribute form = the JSON string), and `label` (`string`, default `''` — the rendered
-`<caption>` text). Malformed attribute JSON MUST NOT throw — the prop codecs fall back to `[]` (the
-chart-family safe-codec discipline; `from(null)` = `[]`, never `null`). *(→ PRD-G1; ADR-0111 cl.1/2,
-fork F1)*
+**SPEC-R1 — Component contract.** *(amended by ADR-0163, 2026-07-28 — the pre-widening wording read
+"exactly three props … no events, no keyboard contract")* `ui-table` remains a Display-class
+`UIElement` leaf, **display-only at defaults**: with `selectable=''`, no `sortable` column,
+`search=''`, `filter=[]`, and `page-size=0` it has no events, no keyboard contract, and no
+interactive anatomy (byte-identity per SPEC-R25). It is non-form-associated and takes no
+author-slotted content model. The prop set widens to: `columns`
+(`{ key: string; label: string; type?: 'string' | 'number' }[]`, default `[]`; attribute form = the
+JSON string — the item schema gains optional `sortable?: boolean` and `searchable?: boolean`, default
+`true`; an invalid/foreign value on either normalizes to its default, the SPEC-R3 row-4 posture),
+`rows` (`Record<string, string | number>[]`, default `[]`; attribute form = the JSON string), `label`
+(`string`, default `''` — the rendered `<caption>` text) — all three unchanged — plus `selectable`
+(`'' | 'single' | 'multi'`, default `''`, reflected), `row-key` (`string`, default `''`), `selected`
+(`string[]`, JSON codec, default `[]`, not reflected), `sort`
+(`{ key: string, direction: 'ascending' | 'descending' } | null`, JSON codec, default `null`, not
+reflected), `search` (`string`, default `''`), `filter`
+(`{ key: string, values: (string | number)[] }[]`, JSON codec, default `[]`, not reflected — entry
+hardening: a non-object entry, non-string `key`, or non-array `values` drops that entry;
+foreign-typed values inside `values` drop individually), `page` (`number`, 1-based, default `1`), and
+`page-size` (`number`, default `0` = off). All codecs stay safe: malformed attribute JSON MUST NOT
+throw — the codecs fall back to the default (the chart-family safe-codec discipline; `from(null)` =
+`[]`, never `null`). *(→ PRD-G1; ADR-0111 cl.1/2, fork F1; ADR-0163 cl.1/2/4/5/6/7)*
 - **AC1** *Given* the ADR-0111 cl.2 example (`columns` region/revenue, `rows` EMEA/APAC) set as
   properties or JSON attributes, *when* connected, *then* a two-row table renders and `el.columns` /
   `el.rows` are the typed arrays.
@@ -107,6 +126,9 @@ handling, per case — none may throw, and every non-empty rendered set still pa
 | 13 | ragged records (extra keys no column names) | ignored — columns select; rows never widen the table |
 | 14 | huge unbroken cell string | in a non-number column: wraps within its cell (`overflow-wrap`) rather than forcing unbounded column width. **In a `type:"number"` column** (doc-review F3): the column's `nowrap` rule takes precedence — numbers never wrap (LLD-C3) — so the string forces the SPEC-R5 scroll container instead. Either way the container scrolls if the table is still wide. |
 
+Rows 1–14 are unchanged by ADR-0163; one addition: the view pipeline (SPEC-R23) operates on the
+rendered set AFTER this hardening; degenerate cells sort last (SPEC-R22).
+
 *(→ PRD-G2; ADR-0111 cl.2 + Consequences "degenerate data … all hand-gated")*
 - **AC1** *Given* each row above (DOM-free unit + jsdom), *then* the stated rendering, no exception
   escapes.
@@ -130,6 +152,13 @@ lesson). Setting `columns`, `rows`, or `label` re-renders; the swap is whole-arr
 4. **Stated residual (accepted, recorded):** in-cell text selection across a rows update is NOT
    guaranteed (the replaced `<tbody>` drops it) — acceptable for a display-only v1 with no focusable
    cells; the day any interactive cell lands (a fenced re-entry), this clause re-opens.
+   ***Re-opened by ADR-0163 (2026-07-28)** — the promised residual is discharged by clause R4.5.*
+5. **R4.5 — focus restoration across a `<tbody>` rebuild (ADR-0163).** Across a rows-driven `<tbody>`
+   rebuild, if `document.activeElement` was a stamped interactive cell control (selection input;
+   header sort buttons excepted — `<thead>` is not rebuilt by a rows update), focus MUST be restored
+   to the control of the same row identity when that identity survives the update; when it does not,
+   focus falls to the scroll region (never dropped to `<body>`). Clauses 1–3 (container identity,
+   scroll survival, scoped rebuild) are unchanged and MUST hold with every capability enabled.
 
 *(→ PRD-G2; ADR-0111 Consequences "a bound `rows` update's re-render semantics are a mandatory
 SPEC/LLD design point")*
@@ -332,14 +361,18 @@ ADR-0111 cl.5)*
 
 **SPEC-R18 — Catalog rows, same wave.** The default catalog MUST declare `Table`, `Stat`, and `Badge`
 in the same wave the descriptors land (SPEC-N2's fleet-derived gate, ADR-0087; intra-wave
-seed-and-drain permitted; end-of-wave allowlist residue: none). All three rows are **display-only**:
-one-way props, no `value:{prop,event}` mark, no children (table/stat DOM is component-built from data;
-badge takes `label`). Row contracts (the `a2ui-catalog.spec.md` §5.2 table gains these rows in the
+seed-and-drain permitted; end-of-wave allowlist residue: none). **`Stat` and `Badge`** are
+**display-only** rows: one-way props, no `value:{prop,event}` mark, no children (stat DOM is
+component-built from data; badge takes `label`). *(Amended by ADR-0163, 2026-07-28 — the
+pre-widening wording read "All three rows are display-only"; the `Table` row now carries the
+ADR-0161 array-form multi-slot value mark, and a NEW `Pagination` row lands the same wave, SPEC-R24.)*
+Row contracts (the `a2ui-catalog.spec.md` §5.2 table gains these rows in the
 same change — that table stays the normative coverage home; this SPEC is their derivation):
 
 | A2UI type | `ui-*` widget | Properties |
 |---|---|---|
-| `Table` | `ui-table` | `columns` (array of `{key: string, label: string, type?: 'string'\|'number'}` objects, **bindable**, `mapsTo: columns`) · `rows` (array of objects — open records keyed by column key, **bindable**, `mapsTo: rows`) · `label` (string, bindable, `mapsTo: label`) |
+| `Table` | `ui-table` | `columns` (array of `{key: string, label: string, type?: 'string'\|'number', sortable?: boolean, searchable?: boolean}` objects, **bindable**, `mapsTo: columns`) · `rows` (array of objects — open records keyed by column key, **bindable**, `mapsTo: rows`) · `label` (string, bindable, `mapsTo: label`) · `selectable` (enum `''`/`single`/`multi`, bindable) · `rowKey` (string, bindable, `mapsTo: row-key`) · `selected` (array of strings, bindable) · `sort` (object `{key, direction}` or null, bindable) · `search` (string, bindable — **ONE-WAY IN**, no value slot: the table never commits it) · `filter` (array of `{key, values}` objects, bindable — likewise one-way in) · `page` (number, bindable) · `pageSize` (number, bindable, `mapsTo: page-size`). The row takes the ADR-0161 **array-form value mark** `[{prop:'selected',event:'select'}, {prop:'sort',event:'change'}, {prop:'page',event:'change'}]` (slot props distinct, events may repeat — the array-form contract) |
+| `Pagination` | `ui-pagination` | `page` (number, bindable) · `pages` (number, bindable) · `label` (string, bindable) — value slot `{prop:'page',event:'change'}` (SPEC-R24) |
 | `Stat` | `ui-stat` | `label` (string, bindable) · `value` (**union `["string","number"]`** — the conformance validator's `type`-array form, verified against `conformance.ts` `matchesSchemaType`; **bindable**, `mapsTo: value`) · `delta` (number, bindable) · `caption` (string, bindable) |
 | `Badge` | `ui-badge` | `label` (string, bindable) · `intent` (enum `neutral/info/success/warning/danger`, **bindable** — status data, ADR-0111 cl.2; literal membership validated per ADR-0098, bound values hardened at the component per SPEC-R11) |
 
@@ -380,23 +413,181 @@ re-base + exemplars land at M2. *(→ PRD-G3; ADR-0111 cl.6)*
   (browser-verified).
 - **AC3** *Given* the corpus/derived-prompt gates, *then* they run green over the widened catalog.
 
+### 3.6 `ui-table` interactive widening + `ui-pagination` (ADR-0163)
+
+Added 2026-07-28 by [ADR-0163](../adr/0163-ui-table-interactive-widening.md) — every capability
+defaults OFF (SPEC-R25's byte-identity law).
+
+**SPEC-R21 — Row selection.** With `selectable='multi'` the component MUST stamp a leading
+selection column: one real `<input type="checkbox">` per body row (accessible name = the
+`row-key` cell value when set, else the row's first-column cell text; fallback "Row N") and a
+header select-all checkbox (accessible name a fixed, descriptor-documented label;
+`indeterminate` when the selection is a non-empty proper subset of the select-all universe
+— the MATCHING SET, SPEC-R23). With
+`selectable='single'`, a radio column (one shared `name`, minted per instance). The
+committed selection is the `selected` prop — an array of row identities: the `row-key`
+column's cell value per selected row when `row-key` names a valid column, else the row's
+data-order index (in the post-hardening rendered set) as a string. User commits (pointer or
+keyboard on the native input) update `selected` and emit **`select`**; a programmatic
+`selected` write emits nothing (the fleet commit law). Select-all operates on the
+MATCHING SET (SPEC-R23's defined term) — "select all matching" — never just the visible
+page window (with no filter/search active that IS the whole rendered set). A `filter`/`search`/`sort` change
+never mutates `selected` (a filtered-out selected row stays selected — identity is
+view-independent, SPEC-R23). A `rows`/`columns` update reconciles `selected` by
+dropping identities no longer present — silently, never throwing, never emitting. Selected
+`<tr>`s carry `data-selected` (CSS hook only; no `aria-selected` — selection-widget
+vocabulary ATs do not convey on plain-table rows, ADR-0163 cl.3). *(→ ADR-0163 cl.3/4/7)*
+- **AC1** *Given* `selectable='multi'` + `row-key='region'` over the ADR-0111 cl.2 fixture,
+  *when* the EMEA row's checkbox is toggled by keyboard (Space), *then* `selected` equals
+  `['EMEA']`, one `select` event fired, and the row carries `data-selected`.
+- **AC2** *Given* all rows selected, *then* the header checkbox is checked, not indeterminate;
+  *given* a proper subset, *then* `indeterminate === true`; *given* select-all activated with
+  `page-size=1`, *then* every rendered-set row is selected, not just the visible one.
+- **AC3** *Given* `el.selected = ['EMEA']` set programmatically, *then* no `select` event.
+- **AC4** *Given* a `rows` swap that removes the selected row, *then* `selected` becomes `[]`
+  with no event and no throw.
+- **AC5** *Given* `selectable=''` (default), *then* zero `<input>` elements exist.
+
+**SPEC-R22 — Column sort.** A column with `sortable: true` MUST render its header label
+inside a real `<button>` in the `<th>` (the APG sortable-table shape — verified 2026-07-28);
+activation cycles ascending → descending on that column (switching columns starts at
+ascending) and commits the `sort` prop, emitting **`change`**. `aria-sort` MUST ride the
+currently-sorted `<th>` alone (removed from any other). Sorting is control-owned and
+client-side over the rendered set: `type:'number'` columns compare numerically (resolved
+cell values); string columns via `Intl.Collator` (default locale, `numeric: true`);
+degenerate cells (empty per SPEC-R3 rows 6/7/11, placeholder per row 8) sort LAST in both
+directions, order among themselves stable. Sort is a view transform: `rows` is never mutated;
+clearing (`sort = null`) restores data order. A programmatic `sort` write applies the view
+without emitting. A `sort` naming an unknown or non-sortable key applies no order and renders
+no `aria-sort` (held, not thrown — the safe-codec posture). *(→ ADR-0163 cl.5/7)*
+- **AC1** *Given* the fixture with `revenue` sortable, *when* its header button is clicked,
+  *then* rows render ascending by revenue, `aria-sort="ascending"` on that `<th>` only, one
+  `change` event, `el.sort` = `{key:'revenue',direction:'ascending'}`; a second click flips
+  both.
+- **AC2** *Given* cells `[42000, "n/a", NaN, null]` sorted ascending, *then* `42000` first
+  and the three degenerates last, no throw.
+- **AC3** *Given* no `sortable` column, *then* zero `<button>`s in `<thead>` and the header
+  DOM is byte-identical to the pre-widening shape.
+
+**SPEC-R23 — The view pipeline.** Rendering derives from: rendered set (SPEC-R3) → facet
+filter (SPEC-R28) → search (SPEC-R27) → sort (SPEC-R22, when `sort` valid) → page window
+(`page`/`page-size`, when `page-size > 0`) → stamped `<tbody>`. The ORDER is normative.
+**Definition — the MATCHING SET**: the rendered set after BOTH view-narrowing stages
+(facet filter, then search) — the pipeline's pre-sort residue; with `filter=[]` and
+`search=''` it IS the whole rendered set. Every clause that scopes an operation to "what
+currently matches" uses this one term (SPEC-R21's select-all universe, SPEC-R24's
+`pageCount`, SPEC-R28 AC3). Selection identity binds to the whole rendered set
+(view-independent); the select-all universe is the MATCHING SET. `page` clamps to
+`[1, pageCount]` where `pageCount` derives from the matching set's count; a
+`rows`/`filter`/`search`/`sort` change that empties the current page clamps `page`
+(without emitting). The pipeline is pure and DOM-free (`table-view.ts`), unit-testable
+alone. `page`/`page-size` accessors are `number | null` (the fleet `prop.number` codec —
+attribute removal surfaces `null`); `null` clamps as the default (`1` / `0`). *(→ ADR-0163
+cl.7)*
+- **AC1** *Given* 5 rows, `page-size=2`, `page=3`, *then* one row renders; *given* a `rows`
+  swap to 3 rows, *then* `page` clamps to 2 with no event.
+
+**SPEC-R24 — `ui-pagination` + table integration.** A NEW standalone control
+`ui-pagination` (`controls/pagination/`, `UIPaginationElement extends UIElement`,
+`tier: pattern`): props `page` (number, 1-based, default 1, clamped; `null` — the removed
+attribute — clamps as the default) and `pages` (number, default 0, same `null` law), `label`
+(string, default `''`, reflected). It renders nothing when `pages < 2`
+(honest empty state); otherwise previous/next + a windowed page list with ellipsis (fixed
+window: first · last · current ±1), every stop a composed **`ui-button`** (reuse — the
+ADR-0160 action-chip precedent for a component stamping `ui-button`), the current page's
+button carrying `aria-current="page"` and rendered non-disabled. Host role `navigation` via
+internals; `label` is its accessible name. User activation commits `page` and emits
+**`change`**; programmatic writes emit nothing; previous/next disable at the ends. No new
+geometry row — the composed buttons carry their own §1 geometry. **Table integration:** with
+`page-size > 0` and `pageCount > 1`, `ui-table` stamps one `ui-pagination` in a
+`data-part="footer"` region OUTSIDE the scroll container, wired both ways (footer pagination
+commit → table `page` + ONE table `change`, never doubled); with `page-size=0` no footer
+node exists. *(→ ADR-0163 cl.6)*
+- **AC1** *Given* `pages=10, page=5`, *then* the accessible tree shows a navigation (named by
+  `label`) whose current stop carries `aria-current="page"`; every stop is a normal
+  tab-order button (no roving focus).
+- **AC2** *Given* `page=1`, *then* previous is disabled; `pages=0` or `1` ⇒ no rendered
+  anatomy.
+- **AC3** *Given* a table with `page-size=2` over 5 rows, *when* the footer's "2" is
+  clicked, *then* `<tbody>` shows rows 3–4, `el.page === 2`, exactly one `change` from the
+  table, and the scroll container's node identity held (SPEC-R4.1).
+
+**SPEC-R25 — Migration byte-identity (the opt-in law, proven).** With every new prop at its
+default, the rendered DOM of the SPEC-R2/R3 fixtures MUST be byte-identical (serialized
+`outerHTML` of the host subtree) to a committed baseline captured from main BEFORE this
+diff, and zero events fire under the existing test suite's interactions. The existing
+SPEC-R1…R6 acceptance suite MUST pass unmodified except where this sheet names the edit.
+*(→ ADR-0163 cl.10)*
+
+**SPEC-R26 — A11y with capabilities on.** With any/all capabilities enabled: the stamped
+`<table>`'s computed role remains `table` and header cells `columnheader` (grid never
+minted); the host still mints no ARIA; every stamped interactive element is a native
+focusable control in the normal tab order with an accessible name (checkbox per-row names,
+sort button = the column label, pagination stops per SPEC-R24); forced-colors: native
+inputs/buttons survive as platform controls (verify against SPEC-R15's existing posture);
+RTL: the selection column sits at inline-start, the footer mirrors. *(→ ADR-0163 cl.3)*
+- **AC1** *Given* selectable+sortable+paginated all on WITH an active `search` and
+  `filter` (browser leg, both engines), *then* the computed-role assertions above hold and
+  an a11y-name probe over every focusable stamped control finds no empty name.
+
+**SPEC-R27 — Free-text search.** With `search` non-empty, a row survives when the folded
+needle is a substring of ANY searchable column's folded **rendered cell text** — the
+`resolveCell` output, so the user matches what they see (the Intl-formatted `42,000`
+matches `42,0`). Fold = `normalize('NFKD')` + strip combining marks (U+0300–U+036F) +
+`toLocaleLowerCase` — case- and diacritic-insensitive. A column with `searchable: false` is
+excluded from matching (its cells still render). `search` is a one-way bound view input:
+the component renders NO query UI of its own, never mutates `search`, and emits NO event
+for it (the composed query control owns the commit; in A2UI both bind the same data-model
+path — ADR-0163 cl.2). Zero surviving rows render the honest empty `<tbody>` (SPEC-R3 row
+2); no live results-count announcement in v1 (recorded residual, ADR-0163 Consequences).
+*(→ ADR-0163 cl.2/7)*
+- **AC1** *Given* rows containing `José` and a `search` of `jose`, *then* the row survives
+  (diacritic+case fold); *given* `search="42,0"` over a `type:"number"` cell `42000`
+  (en-US), *then* the row survives (rendered-text matching).
+- **AC2** *Given* the only matching column carries `searchable: false`, *then* the row is
+  dropped from the view; *given* `search=''`, *then* the pipeline stage is the identity.
+- **AC3** *Given* any `search` write, *then* zero events fire and no query UI node exists
+  in the component's DOM.
+
+**SPEC-R28 — Facet filter.** With `filter` non-empty (post-hardening), a row survives when
+for EVERY entry the row's raw cell value at `entry.key` equals one of `entry.values` under
+`String`-coerced strict equality (`String(cell) === String(v)`) — OR within a column, AND
+across columns. An entry whose `key` names no rendered column matches nothing (its AND arm
+drops all rows — honest, not thrown; the descriptor documents it). `filter` is one-way
+bound view state, exactly like `search`: never self-mutated, no event, no UI. No operator
+grammar exists (fenced, ADR-0163 cl.1). *(→ ADR-0163 cl.2/7)*
+- **AC1** *Given* `filter=[{key:'region',values:['EMEA','APAC']},{key:'tier',values:['gold']}]`,
+  *then* only rows matching (region ∈ set) AND (tier = gold) survive.
+- **AC2** *Given* a numeric cell `42000` and `values:[42000]` OR `values:["42000"]`, *then*
+  the row survives either way (String-coerced equality); *given* `filter=[]` or a fully
+  hardened-away value, *then* the stage is the identity.
+- **AC3** *Given* an active filter and `selectable='multi'`, *when* select-all is
+  activated, *then* exactly the matching set's identities are selected and previously
+  selected filtered-OUT identities remain in `selected` (SPEC-R21/R23) — probed BOTH with
+  a facet filter alone and with an active `search` narrowing further.
+
 ## 4. Non-functional requirements
 
 | ID | Requirement | Target |
 |---|---|---|
 | **SPEC-N1** | Zero runtime dependency, no new package | No table/formatting library, no vendored code; three ordinary `controls/{table,stat,badge}/` folders (ADR-0111 cl.8); shared formatting math = pure DOM-free in-folder modules (the `_chart` precedent); imports point inward only |
-| **SPEC-N2** | Cross-engine proof — mandatory browser legs | jsdom cannot prove table paint, scroll geometry, WHCM, RTL positions, or whole-shape boxes — browser legs (Chromium + WebKit) are mandatory per control: whole-shape, scroll-preservation (SPEC-R4 AC1), overflow-in-own-container (SPEC-R5 AC1), forced-colors, RTL |
+| **SPEC-N2** | Cross-engine proof — mandatory browser legs | jsdom cannot prove table paint, scroll geometry, WHCM, RTL positions, or whole-shape boxes — browser legs (Chromium + WebKit) are mandatory per control: whole-shape, scroll-preservation (SPEC-R4 AC1), overflow-in-own-container (SPEC-R5 AC1), forced-colors, RTL. *ADR-0163 adds legs:* sort/selection/pagination/filter interaction probes (incl. the SPEC-R23 filter→search→sort→page interplay and selection persistence across a filter), focus-restoration (SPEC-R4.5), byte-identity (SPEC-R25) — browser, both engines |
 | **SPEC-N3** | Fleet gates stay green | file-set, family-coherence, descriptor↔props trip-wires, site per-tier page set (`{name}-doc.html` for tier=display), `npm run check && npm test` at every slice boundary |
-| **SPEC-N4** | Size budget honesty | `npm run size` run at the build wave (manual, ADR-0040); the family ceiling is 26 KB gz (ADR-0107 Amendment) and likely re-bases — three controls, the table the heaviest; any re-base is recorded as its own note (never silently absorbed); the per-control ≤ ~2 KB gz marginal cap stays the real gate |
-| **SPEC-N5** | Data-size cost posture | Rendering is O(rows × columns) over the rendered set with **no row cap and no virtualization** in v1 (a 1 000-row table renders; responsiveness is the author's data-size judgment — virtualization is a fenced re-entry) |
+| **SPEC-N4** | Size budget honesty | `npm run size` run at the build wave (manual, ADR-0040); the family ceiling is 26 KB gz (ADR-0107 Amendment) and likely re-bases — three controls, the table the heaviest; any re-base is recorded as its own note (never silently absorbed); the per-control ≤ ~2 KB gz marginal cap stays the real gate. *ADR-0163:* family size re-measured; the interactive legs must fit the per-control ≤ ~2 KB gz marginal cap or the re-base is argued in its own note; `ui-pagination` is a new marginal-cap entry |
+| **SPEC-N5** | Data-size cost posture | Rendering is O(rows × columns) over the rendered set with **no row cap and no virtualization** in v1 (a 1 000-row table renders; responsiveness is the author's data-size judgment — virtualization is a fenced re-entry). *ADR-0163: this clause stands verbatim (no virtualization, no row cap) — pagination (SPEC-R24) is the scale answer this wave* |
 
 ## 5. Open items (non-normative)
 
 - Foreseen extensions, deliberately out of v1 (each re-enters only by its own record, per the PRD §3
-  fence): table sorting/selection/pagination/virtualization/column-resizing/cell-renderers · a
-  max-height/block-scroll axis · a number-format prop · interactive chips (`Chip` stays reserved) ·
-  anchored count-dot badges · a badge `size` axis · a stat trend slot (fork F2's foreseen extension) ·
-  delta valence/sentiment (owing its ADR-0057 co-signifier).
+  fence). *Amended by ADR-0163 (2026-07-28): table sorting, row selection, pagination, and
+  filtering/search LEFT this list — they are normative in §3.6 (SPEC-R21…R28); the items below are
+  the new fence line.* Table virtualization · column resizing · cell renderers ·
+  `sort-mode="manual"` (consumer-driven/server-side sort) · row-click selection · editable cells ·
+  filter operators (ranges, comparisons, per-cell expressions) · an in-table query input · a live
+  results-count `aria-live` region · a max-height/block-scroll axis · a number-format prop ·
+  interactive chips (`Chip` stays reserved) · anchored count-dot badges · a badge `size` axis · a
+  stat trend slot (fork F2's foreseen extension) · delta valence/sentiment (owing its ADR-0057
+  co-signifier).
 - The `geometry.md` badge dual-listing repair (ADR-0111 cl.5 Repairs) lands at the build wave in the
   same change as the badge descriptor.
 
@@ -411,4 +602,5 @@ re-base + exemplars land at M2. *(→ PRD-G3; ADR-0111 cl.6)*
 | SPEC-R18 | PRD-G1 (catalog-reachable), PRD-G3 (rows feed the teaching surface) |
 | SPEC-R19 | PRD-G3 (feed dispositions — the M1 gate) |
 | SPEC-R20 | PRD-G3 (guidance re-base + exemplars + corpus re-validation) |
+| SPEC-R21–R28 | PRD-G1 (the widened `Table` row + the new `Pagination` type are catalog-reachable), PRD-G2 (native table semantics with capabilities on, focus restoration, byte-identity migration, cross-engine proof) — added by ADR-0163; PRD §3's fence amended in the same wave |
 | SPEC-N1–N5 | PRD-G2 (zero-dep, cross-engine, gates, size, cost posture) |

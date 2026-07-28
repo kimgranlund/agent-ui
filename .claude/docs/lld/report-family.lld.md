@@ -5,6 +5,11 @@
 > [`../decompositions/report-family-build.decomp.json`](../decompositions/report-family-build.decomp.json)
 > (coverage-clean, plan mode). · proposed · 2026-07-09 · planner
 >
+> **2026-07-28 — the ADR-0163 widening applied:** [ADR-0163](../adr/0163-ui-table-interactive-widening.md)
+> (proposed) adds §11 (LLD-C17…C21 — the sheet's C11…C15, renumbered past the taken IDs) + failure-ledger
+> rows 20–28 (the sheet's 18–26, likewise renumbered); LLD-C1/C2/C3 are touched as §11 lists. Build plan:
+> [`../decompositions/table-widening.decomp.md`](../decompositions/table-widening.decomp.md).
+>
 > **Composes on:** `UIElement` (`dom/element.ts`) + the props/signal system (`dom/props.ts`). **No new
 > package** (ADR-0111 cl.8): three ordinary control folders — `controls/table/`, `controls/stat/`,
 > `controls/badge/`; pure formatting/resolution math is co-located per control (the in-folder pure-core
@@ -469,6 +474,18 @@ the widened catalog (the ADR-0087 consequence pattern); repair drift in the same
 | 17 | `kindOf` misclassifies stat's union/nullable codecs | build-verify in the descriptor trip-wire BEFORE writing descriptor cells; if a new `kindOf` branch is needed it is shared infra with fleet blast-radius named (the chart M1-b precedent) | LLD-C9 |
 | 18 | validator shallow on array items | conformant per SPEC-R18 (top-level depth); component hardening is the safety net | LLD-C12 |
 | 19 | partition gate red on catalog widening | by design (TOTAL partition); LLD-C13 lands in the same wave — never waved off | LLD-C13 (SPEC-R19) |
+| 20 | duplicate `row-key` cell values | identities collide — selection toggles all matching rows together; documented residual, `row-key` choice is the author's uniqueness contract | C17/C20 |
+| 21 | `selected` identities never present | reconcile drops them silently (no event) | C17/C18 |
+| 22 | sort on a column whose cells are all degenerate | stable no-op order, `aria-sort` still applied (the column IS sorted, trivially) | C17 |
+| 23 | footer pagination + programmatic `page` write race | render effect syncs pagination props; pagination's programmatic write emits nothing — no loop by the commit law | C18/C19 |
+| 24 | focused input's row removed by a `rows` swap | focus → `#scroll` (SPEC-R4.5), never `<body>` | C18 |
+| 25 | `ui-pagination` used before `ui-button` defined | side-effect import in pagination.ts guarantees definition order | C19 |
+| 26 | `filter` entry names an unknown column key | that AND arm matches nothing — zero rows, honest empty `<tbody>`, never a throw (SPEC-R28) | C17/C20 |
+| 27 | search over a huge unbroken cell string | fold + `includes` are O(cell length) — no regex, no catastrophic backtracking by construction | C17 |
+| 28 | zero-result filter is silent to SR users | recorded v1 residual (ADR-0163 Consequences); the recipe teaches a visible results count; `aria-live` region = named foreseen extension | C20 |
+
+*(Rows 20–28 added 2026-07-28 by ADR-0163 — the amendment sheet numbered them 18–26; renumbered on
+application because rows 18/19 were already taken by the M1 wave. See §11.)*
 
 ## 9 · Test plan (per slice) & gates
 
@@ -512,6 +529,158 @@ the widened catalog (the ADR-0087 consequence pattern); repair drift in the same
 5. **Wave M2:** LLD-C15 guidance re-base + exemplars, then LLD-C16 corpus/prompt re-validation.
    *Checkpoint:* SPEC-R20 ACs; exemplars render in the gallery.
 
+## 11 · The ADR-0163 `ui-table` interactive widening (LLD-C17…C21)
+
+Added 2026-07-28 by [ADR-0163](../adr/0163-ui-table-interactive-widening.md) (proposed) against
+SPEC-R21…R28 + SPEC-R4.5. **ID note:** the amendment sheet numbered these components C11…C15; they
+are applied as **C17…C21** because C11–C16 were already taken by the M1/M2 waves (`LLD-C#` IDs are
+per-doc-scoped, never reused). The mapping is C11→**C17**, C12→**C18**, C13→**C19**, C14→**C20**,
+C15→**C21**; LLD-C1/C2/C3 are touched as listed below.
+
+> **Frozen-interface note — two provenance classes, kept honest:**
+> **Verified against shipped source:** `this.effect`/`this.listen`/`this.emit(type, detail)`
+> (`dom/element.ts:262`) · `prop.string/number/boolean/enum/json<T>(def)` (`dom/props.ts:104–120`;
+> NOTE `prop.number(def)`'s accessor type is `number | null` — attribute removal surfaces `null`,
+> handled by the SPEC clamp law) · `this.internals.role` (`dom/element.ts:281` doctrine) · the tabs
+> `emit('select', {…})` commit shape (`controls/tabs/tabs.ts:184`) · the table skeleton fields +
+> three-effect split (`controls/table/table.ts:52–56`) ·
+> `cleanColumns`/`cleanRows`/`resolveCell`/`tableColumnsProp` (`controls/table/table-model.ts`) ·
+> `ui-button`'s `disabled` prop (`controls/button/button.ts`).
+> **Ratified contract, build pending (NOT yet in shipped source):** ADR-0161's
+> `ValueSlot | ValueSlot[]` union + the renderer input controller's per-slot loop — today
+> `a2ui/src/catalog/types.ts:30` is the singular `value?: {prop,event}` and
+> `a2ui/src/renderer/input.ts` binds one mark; the array form ships in M-B phase 1, which this build
+> depends on (the widening decomp's S5 ordering dependency).
+
+### LLD-C17 — the pure view pipeline (`controls/table/table-view.ts`, NEW, DOM-free)
+
+Pure functions over the SPEC-R3-hardened rendered set (imports only `table-model.ts` types):
+
+- `rowIdentity(cols, row, rowKey, dataIndex): string` — the `row-key` cell's resolved text
+  when `rowKey` names a valid column, else `String(dataIndex)` (SPEC-R21).
+- `compareCells(col, a, b): number` — numeric for `type:'number'` resolved values, else
+  `Intl.Collator(undefined, { numeric: true })`; degenerates (empty/placeholder) always last,
+  stable among themselves (SPEC-R22). One module-scoped collator (allocation once).
+- `applySort(cols, rows, sort): TableRow[]` — a copied, stably-sorted view (never mutates
+  `rows`); invalid/unknown `sort.key` or non-sortable column ⇒ the input order.
+- `foldText(s: string): string` — `normalize('NFKD')` + strip combining marks
+  (U+0300–U+036F) + `toLocaleLowerCase` (SPEC-R27's fold; one implementation, needle and
+  haystack both).
+- `applySearch(cols, rows, search): TableRow[]` — substring match of the folded needle
+  against each searchable column's folded `resolveCell` output ("search what you see");
+  `search=''` ⇒ the input array (identity, referentially — the byte-identity fast path).
+- `applyFilter(cols, rows, filter): TableRow[]` — AND across hardened entries, OR within an
+  entry's `values`, `String`-coerced strict equality on the RAW cell value (SPEC-R28);
+  `filter=[]` ⇒ identity, referentially.
+- `pageWindow(rows, page, pageSize): { rows, page, pageCount }` — clamped (SPEC-R23;
+  `pageCount` derives from the post-filter/search count by pipeline position).
+- `reconcileSelected(selected, identities): string[]` — set-intersect, input order kept
+  (SPEC-R21 AC4).
+- `sortProp` / `selectedProp` / `filterProp` — safe `prop.json<…>` codecs (the
+  `tableColumnsProp` pattern in `table-model.ts`: malformed JSON → default, never throw):
+  `sort` default `null` with shape hardening (non-object / missing key / direction ∉
+  {'ascending','descending'} ⇒ `null`); `selected` default `[]` (non-array ⇒ `[]`; entries
+  coerced via `String`); `filter` default `[]` with per-entry hardening (non-object entry /
+  non-string `key` / non-array `values` ⇒ entry dropped; foreign-typed members of `values`
+  dropped individually — SPEC-R1's entry-hardening clause). `search` is a plain
+  `prop.string('')`; `searchable` normalizes exactly like `sortable` in `cleanColumns`
+  (foreign value ⇒ default `true`, never a dropped column — the SPEC-R3 row-4 posture).
+
+Unit tests jsdom-free (the `table-model.test.ts` sibling shape).
+
+### LLD-C18 — `table.ts` widening (the stable skeleton grows two optional regions)
+
+`static props` gains: `selectable` (`prop.enum`-style literal union `'' | 'single' | 'multi'`,
+reflected), `rowKey` (`prop.string('')`, attribute `row-key`), `selected` (`selectedProp`),
+`sort` (`sortProp`), `search` (`prop.string('')`), `filter` (`filterProp`), `page`
+(`prop.number(1)`), `pageSize` (`prop.number(0)`, attribute `page-size`). Skeleton unchanged (`#scroll › #table › #thead + #tbody`, built once behind
+`#built`); one nullable addition: `#footer: HTMLDivElement | null` (`data-part="footer"`,
+minted/removed by the footer effect, a sibling AFTER `#scroll` — never inside it, SPEC-R24).
+
+Effect split (the fine-grained-waking discipline, extended):
+
+1. **COLUMNS effect** — now reads `columns` + `selectable` + `sort`. Rebuilds the header row:
+   optional leading selection `<th>` (select-all checkbox in multi; empty `<th>` in single),
+   per-column `<th>` whose label is plain text (non-sortable, byte-identical to today) or a
+   stamped `<button data-part="sort-button">` (sortable); sets/removes `aria-sort` on the
+   sorted `<th>`. Sort-button listener: computes the next `sort` value (cycle law SPEC-R22),
+   writes the prop, `this.emit('change', { sort })`.
+2. **BODY effect** — reads `columns`, `rows`, `selectable`, `rowKey`, `selected`, `sort`,
+   `search`, `filter`, `page`, `pageSize`. Pipeline (SPEC-R23's normative order):
+   `cleanColumns`/`cleanRows` → `applyFilter` → `applySearch` → `applySort` → `pageWindow`
+   → `#tbody.replaceChildren(...)`. `search`/`filter` are never written by any code path in
+   this file (one-way view inputs — no event, no commit, SPEC-R27/R28); the select-all
+   universe and the header checkbox's checked/indeterminate sync compute against the
+   MATCHING SET (SPEC-R23's defined term: post-filter AND post-search, pre-sort/window). Each `<tr>` gains the optional leading selection `<td>`
+   (native `<input>`; `checked` from `selected` membership; `data-selected` on the `<tr>`).
+   Input listener (per stamped input, rides the rebuild): computes next `selected` via
+   identity add/remove (single mode: replace), writes the prop,
+   `this.emit('select', { selected })`. **Focus restoration (SPEC-R4.5):** before
+   `replaceChildren`, if `document.activeElement` is inside `#tbody`, capture its row
+   identity; after the rebuild, `.focus()` the same identity's input if present, else
+   `#scroll.focus()`. Reconciliation: the effect computes `reconcileSelected` and, when it
+   shrinks, writes `selected` WITHOUT emitting (programmatic-write law) — guarded against
+   effect re-entry by value equality.
+3. **LABEL effect** — unchanged.
+4. **FOOTER effect (NEW)** — reads `rows`, `columns`, `filter`, `search`, `page`,
+   `pageSize` (`pageCount` = the MATCHING SET's count / `pageSize` — SPEC-R23's defined
+   term; the count depends on filter+search, so this effect must wake on them; sort never
+   changes the count and is deliberately not read). `pageCount > 1 && pageSize > 0` ⇒
+   mint-once `#footer` containing one `ui-pagination` (imported from
+   `../pagination/pagination.ts` — an intra-`controls/` sibling import, the composed-control
+   precedent), props synced (`page`, `pages`); listener on its `change` → write table `page`
+   + `this.emit('change', { page })` (the pagination's own event does not bubble as the
+   table's contract — re-emit once). Else remove `#footer`.
+
+Select-all: listener on the header checkbox → add-all/remove-all over the MATCHING SET's
+identities ("select all matching"; = the whole rendered set when no filter/search is
+active). BOTH arms operate on that same universe: select-all unions the matching set's
+identities into `selected`; clear-all subtracts exactly them — filtered-OUT selections are
+preserved by either arm (SPEC-R21/R23's view-independent identity law); `indeterminate` set imperatively in the columns/body effects' shared sync.
+
+`table.css` (LLD-C3 touch): selection column width token `--ui-table-select-col-inline-size`,
+`tr[data-selected]` row tint (`--ui-table-row-selected-surface`, a `--md-sys-color-*`
+consumer), sort-button reset (`font: inherit`, transparent, full-cell hit area) + a
+component-drawn direction glyph off `aria-sort` (CSS triangle/clip-path, no icon pack),
+footer rhythm. All new declarations inside the existing `:where()`/`@scope` posture.
+
+### LLD-C19 — `controls/pagination/` (NEW folder: `pagination.ts` / `pagination.css` / `pagination.md` + probes)
+
+`UIPaginationElement extends UIElement`; props `page` (`prop.number(1)`), `pages`
+(`prop.number(0)`), `label` (`prop.string('')`, reflected). `connected()`:
+`this.internals.role = 'navigation'`; label effect → `internals.ariaLabel`. One render
+effect stamps prev/next + windowed stops (first · last · current ±1 with `…` gap text nodes)
+as composed `<ui-button>` children (the ADR-0160 stamping precedent; import
+`../button/button.ts` for the side-effect definition); current stop sets
+`aria-current="page"`; ends disable prev/next via the button's `disabled` prop. Activation
+listener: clamp, write `page`, `this.emit('change', { page })` (user-commit only; the render
+effect never emits). `pages < 2` ⇒ `replaceChildren()` (empty). Tokens `--ui-pagination-*`
+(gap, ellipsis ink); geometry rides the composed buttons (no new row).
+
+### LLD-C20 — descriptors (`table.md` rewrite + NEW `pagination.md`)
+
+`table.md`: attributes block gains the eight new entries mirroring `static props` (the
+descriptor↔props trip-wire targets this); `events:` gains `select` + `change` with detail
+shapes; `keyboard:` documents the native-tab-order contract (still no roving/arrow contract —
+stated as a deliberate non-contract with the ADR-0163 cl.3 citation); `parts:` gains
+`sort-button` + `footer`; prose gains capability sections + the defaults-off migration note.
+`pagination.md`: full descriptor per the pattern-tier shape.
+
+### LLD-C21 — catalog + feed + site (the a2ui/site slices)
+
+`catalog.json`/`factories.ts`: `Table` row's eight new PropDefs (`selectable`/`rowKey`/
+`selected`/`sort`/`search`/`filter`/`page`/`pageSize` — `search`/`filter` bindable one-way
+in, carrying NO value slot: the table never commits them) + the array-form `value` mark
+(ADR-0161's `ValueSlot[]` — a RATIFIED contract whose build lands in M-B phase 1; per its
+text the controller binds per-slot only when that slot's node prop is a `{path}` bind); NEW
+`Pagination`
+row (`page`/`pages`/`label`, value slot `{prop:'page',event:'change'}`). `feed-catalog.ts`:
+`Pagination → FEED_EXCLUDED` (reason per ADR-0163 cl.9). Catalog SPEC §5.2 rows + the
+one-line guidance addition. Site: `pagination-{doc,demo}` pages + preview specimen;
+`table-doc`/demo gain capability examples; the byte-identity baseline fixture lands under
+`controls/table/__screenshots__`-adjacent test data (exact home = the build slice's call,
+named in the decomp).
+
 ## Component IDs (trace)
 
 `LLD-C1` table model ← SPEC-R1/R3 · `LLD-C2` UITableElement ← SPEC-R1/R2/R3/R4/R5/R6 · `LLD-C3`
@@ -521,4 +690,8 @@ SPEC-R11/R12 · `LLD-C8` badge.css ← SPEC-R12/R13/R14/R15/R16/R17 · `LLD-C9` 
 SPEC-R1/R7/R11/R13/R17 · `LLD-C10` integration ← SPEC-N3/N4 · `LLD-C11` site pages ← SPEC-N3 ·
 `LLD-C12` catalog rows/factories ← SPEC-R18 · `LLD-C13` feed dispositions ← SPEC-R19 · `LLD-C14`
 catalog-SPEC repair ← SPEC-R18 · `LLD-C15` exemplars + guidance ← SPEC-R20 · `LLD-C16` corpus
-re-validation ← SPEC-R20. (`LLD-C#` IDs per-doc-scoped — the house convention.)
+re-validation ← SPEC-R20 · `LLD-C17` table view pipeline ← SPEC-R21/R22/R23/R27/R28 · `LLD-C18`
+UITableElement widening ← SPEC-R1/R4.5/R21/R22/R23/R24/R25/R26 · `LLD-C19` UIPaginationElement ←
+SPEC-R24/R26 · `LLD-C20` widened descriptors ← SPEC-R1/R24 · `LLD-C21` widened catalog + feed + site
+← SPEC-R18/R19/N3 (C17–C21 added by ADR-0163). (`LLD-C#` IDs per-doc-scoped — the house
+convention.)
