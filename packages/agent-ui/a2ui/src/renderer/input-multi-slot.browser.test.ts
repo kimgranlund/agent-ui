@@ -91,27 +91,37 @@ describe('ADR-0161 / GH #314 — a real ui-calendar range pick writes valueStart
     mount.remove()
   })
 
-  it('the first pick alone (no completion) writes nothing — a half-open range never lands in the data model', () => {
+  it('the first pick alone (no completion) writes nothing — a half-open range never lands in the data model, DIRECTLY OBSERVED via a submit', () => {
     const mount = document.createElement('div')
     document.body.append(mount)
     const r = createRenderer()
     r.mount(mount)
-    r.ingestMessage({ version: 'v1.0', createSurface: { surfaceId: 's2', catalogId: 'agent-ui' } })
+
+    const sent: A2uiClientMessage[] = []
+    r.onClientMessage((m) => sent.push(m))
+
+    r.ingestMessage({ version: 'v1.0', createSurface: { surfaceId: 's2', catalogId: 'agent-ui', sendDataModel: true } })
     r.ingestMessage({
       version: 'v1.0',
       updateComponents: {
         surfaceId: 's2',
         components: [
+          { id: 'root', component: 'Column', children: ['cal', 'submit'] },
           {
-            id: 'root',
+            id: 'cal',
             component: 'Calendar',
             mode: 'range',
             valueStart: { path: '/checkIn' },
             valueEnd: { path: '/checkOut' },
           },
+          { id: 'submit', component: 'Button', label: 'Book', action: { action: 'book' } },
         ],
       },
     })
+    // Seed a DEFINED baseline data model (an unrelated marker key) — otherwise `surface.data` stays
+    // the pristine `undefined` a fresh surface starts with, and `action.dataModel` would be `undefined`
+    // regardless of whether the writeback ran, making the "writes nothing" claim unobservable this way.
+    r.ingestMessage({ version: 'v1.0', updateDataModel: { surfaceId: 's2', path: '/marker', value: 'baseline' } })
     r.finalize('s2')
 
     const cal = mount.querySelector('ui-calendar') as HTMLElement
@@ -124,10 +134,18 @@ describe('ADR-0161 / GH #314 — a real ui-calendar range pick writes valueStart
 
     start!.click() // anchor only — `change` never fires (ADR-0093 clause 2), so no listener runs at all
 
-    // Neither the writeback nor the surface's own bound-prop effect ran — the paths stay absent.
-    // (No `sendDataModel`/action needed here: absence-of-write is the claim, provable by checking the
-    // control's own accessor, which the writeback would have mirrored FROM, never independently set.)
+    // The control's own accessor confirms the anchor pick alone never completed a range.
     expect((cal as unknown as { valueEnd: string }).valueEnd).toBe('')
+
+    // DIRECTLY OBSERVED (not inferred from the accessor alone): submit and read the actual client
+    // message's dataModel — a hypothetical regression that wrote `/checkIn` on the anchor pick (while
+    // `valueEnd` stayed correctly empty) would surface HERE as a stray key, where the accessor check
+    // above could never catch it.
+    ;(mount.querySelector('ui-button') as HTMLElement).click()
+    const actions = sent.filter(isAction)
+    expect(actions).toHaveLength(1)
+    const dataModel = actions[0]!.action.dataModel as Record<string, unknown> | undefined
+    expect(dataModel).toEqual({ marker: 'baseline' }) // the seeded baseline, unchanged — no stray keys
 
     r.dispose()
     mount.remove()

@@ -238,6 +238,39 @@ describe('two-way input inside a list item (write-side itemScope, ADR-0024 amend
     // items array untouched — the absolute path bypassed itemScope.
     expect(resolve({ path: '/items/1/x' }, s)).toBe('b')
   })
+
+  it('a multi-slot factory (ADR-0161) resolves EACH slot through the same itemScope — both land item-scoped', () => {
+    const s = createSurface(init)
+    s.data.value = { items: [{ lo: 0, hi: 0 }, { lo: 0, hi: 0 }] }
+    const el = stubControl()
+    const factory: WidgetFactory = {
+      tag: 'ui-stub',
+      create: () => document.createElement('div'),
+      applyProp: () => {},
+      value: [
+        { prop: 'lo', event: 'change' },
+        { prop: 'hi', event: 'change' },
+      ],
+    }
+    // Both slots bind RELATIVE keys — without itemScope these would resolve garbage.
+    const node: A2uiComponent = { id: 'n1', component: 'SliderMulti', lo: { path: 'lo' }, hi: { path: 'hi' } }
+    const itemScope: ItemScope = { path: '/items', index: 1 }
+
+    installInputBinding(el, factory, node, s, itemScope)
+
+    ;(el as unknown as Record<string, unknown>).lo = 20
+    ;(el as unknown as Record<string, unknown>).hi = 80
+    el.dispatchEvent(new Event('change'))
+
+    // Headline: EACH slot's write went through scopedPointer to its OWN item-scoped path.
+    expect(resolve({ path: '/items/1/lo' }, s)).toBe(20)
+    expect(resolve({ path: '/items/1/hi' }, s)).toBe(80)
+    // Sibling item untouched; no raw top-level 'lo'/'hi' keys created.
+    expect(resolve({ path: '/items/0/lo' }, s)).toBe(0)
+    expect(resolve({ path: '/items/0/hi' }, s)).toBe(0)
+    expect((s.data.peek() as Record<string, unknown>).lo).toBeUndefined()
+    expect((s.data.peek() as Record<string, unknown>).hi).toBeUndefined()
+  })
 })
 
 describe('multi-slot commits (ADR-0161) — one listener per bound slot, sharing an event is fine', () => {
