@@ -1125,5 +1125,12 @@
     "description": "GH #316 GenUI agent-ui DOGFOOD mode (Kim's 2026-07-28 ruling): an opt-in per-turn GenuiSurfaceConfig.dogfood flag — mode-on loads the fleet's docs-like asset p…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0163",
+    "url": "./adr-index.html#adr-0163",
+    "description": "ui-table widens IN PLACE — selection + sort + filter/search + pagination land on the ratified display-only contract (Kim's 2026-07-28 ruling, held to the lette…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
