@@ -1240,8 +1240,10 @@ describe('UIAgentAdminElement — genui-surface.spec.md SPEC-R8/R10/R11 (B2): th
     await whenFlushed()
     await submit(el, 'draw a chart')
 
-    const req = seen[0] as { genui?: { enabled: boolean; sourceBody?: string } }
-    expect(req.genui).toEqual({ enabled: true, sourceBody: 'exemplar body here' })
+    const req = seen[0] as { genui?: { enabled: boolean; sourceBody?: string; dogfood?: boolean } }
+    // genui-surface.spec.md v0.5 §11 (GH #316/ADR-0162) — `dogfood` rides the SAME request, always-false
+    // here (the dogfood sub-toggle was never touched by this test).
+    expect(req.genui).toEqual({ enabled: true, sourceBody: 'exemplar body here', dogfood: false })
   })
 
   it('the request degrades to genui:{enabled:false, sourceBody:undefined} when the modality is off (the default)', async () => {
@@ -1261,8 +1263,8 @@ describe('UIAgentAdminElement — genui-surface.spec.md SPEC-R8/R10/R11 (B2): th
     await whenFlushed()
     await submit(el, 'draw a chart')
 
-    const req = seen[0] as { genui?: { enabled: boolean; sourceBody?: string } }
-    expect(req.genui).toEqual({ enabled: false, sourceBody: undefined })
+    const req = seen[0] as { genui?: { enabled: boolean; sourceBody?: string; dogfood?: boolean } }
+    expect(req.genui).toEqual({ enabled: false, sourceBody: undefined, dogfood: false })
   })
 
   it('D3 — with MULTIPLE pattern-source entries enabled, only the FIRST-by-order body rides sourceBody (never both)', async () => {
@@ -1650,6 +1652,115 @@ describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
     // both live-since-launch modalities ship ON
     expect((rows[0]!.querySelector('[data-part="surface-toggle"]') as HTMLElement & { checked: boolean }).checked).toBe(true)
     expect((rows[1]!.querySelector('[data-part="surface-toggle"]') as HTMLElement & { checked: boolean }).checked).toBe(true)
+  })
+
+  // genui-surface.spec.md v0.5 §11 (SPEC-R10 amended clause, GH #316/ADR-0162) — "Use agent-ui
+  // components", the dogfood sub-toggle beside the genui row's source picker.
+  it('the dogfood sub-toggle is present, unchecked, and DISABLED while the modality itself is off', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    const dogfoodToggle = el.querySelector('[data-part="surface-genui-dogfood-toggle"]') as HTMLElement & {
+      checked: boolean
+      disabled: boolean
+    }
+    expect(dogfoodToggle).not.toBeNull()
+    expect(dogfoodToggle.checked).toBe(false)
+    expect(dogfoodToggle.disabled, 'a sub-toggle of an off modality is inert (mirrors the a2ui.row catalog picker)').toBe(true)
+  })
+
+  it('the dogfood sub-toggle ENABLES the moment the genui modality itself turns on', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    const genuiToggle = el.querySelector('[data-surface="genui"] [data-part="surface-toggle"]') as HTMLElement & { checked: boolean }
+    const dogfoodToggle = el.querySelector('[data-part="surface-genui-dogfood-toggle"]') as HTMLElement & { disabled: boolean }
+    genuiToggle.checked = true
+    genuiToggle.dispatchEvent(new Event('change'))
+    expect(dogfoodToggle.disabled).toBe(false)
+  })
+
+  it('toggling the dogfood sub-toggle persists + live-applies (the SAME store-write pattern the modality row proves)', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    el.store!.set('surfaceGenui', true) // the modality must be on for the sub-toggle to be meaningful
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    const dogfoodToggle = el.querySelector('[data-part="surface-genui-dogfood-toggle"]') as HTMLElement & { checked: boolean }
+    dogfoodToggle.checked = true
+    dogfoodToggle.dispatchEvent(new Event('change'))
+    expect(el.store!.get('surfaceGenuiDogfood')).toBe(true)
+  })
+
+  it('a stale stored dogfood:true never composes while the modality itself is off — request degrades dogfood to false', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    el.store!.set('surfaceGenuiDogfood', true) // stale from a prior session
+    el.store!.set('surfaceGenui', false) // the modality itself is off (the default)
+    const seen: unknown[] = []
+    el.agentSurfaceTurn = async function* (req) {
+      seen.push(req)
+      yield { kind: 'note' as const, note: 'ok' }
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    composerSubmit(el, 'draw a chart')
+    await whenFlushed()
+    const req = seen[0] as { genui?: { enabled: boolean; dogfood?: boolean } }
+    expect(req.genui?.dogfood).toBe(false)
+  })
+
+  it('dogfood:true composes the request with dogfood:true and mounts the frame with the asset pair', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    el.store!.set('surfaceGenui', true)
+    el.store!.set('surfaceGenuiDogfood', true)
+    const seen: unknown[] = []
+    el.agentSurfaceTurn = async function* (req) {
+      seen.push(req)
+      yield { kind: 'genui' as const, surfaceId: 'dogfood-1', html: '<ui-button>Save</ui-button>' }
+      yield { kind: 'note' as const, note: 'ok' }
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    composerSubmit(el, 'make a form')
+    await whenFlushed()
+    await new Promise((r) => setTimeout(r, 0))
+    await whenFlushed()
+    const req = seen[0] as { genui?: { enabled: boolean; dogfood?: boolean } }
+    expect(req.genui?.dogfood).toBe(true)
+    const frame = el.querySelector('ui-sandbox-frame') as HTMLElement & { assets: { css?: string; js?: string } }
+    expect(frame).not.toBeNull()
+    expect(frame.assets.css, 'the dogfood CSS asset was passed through to the mounted frame').toBeTruthy()
+    expect(frame.assets.js, 'the dogfood JS asset was passed through to the mounted frame').toBeTruthy()
+  })
+
+  it('dogfood:false (the default) mounts the frame with NO assets — byte-identical to the pre-dogfood mount', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    el.store!.set('surfaceGenui', true)
+    el.agentSurfaceTurn = async function* () {
+      yield { kind: 'genui' as const, surfaceId: 'plain-1', html: '<p>plain</p>' }
+      yield { kind: 'note' as const, note: 'ok' }
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    composerSubmit(el, 'draw a chart')
+    await whenFlushed()
+    await new Promise((r) => setTimeout(r, 0))
+    await whenFlushed()
+    const frame = el.querySelector('ui-sandbox-frame') as HTMLElement & { assets: { css?: string; js?: string } }
+    expect(frame).not.toBeNull()
+    expect(frame.assets.css).toBeUndefined()
+    expect(frame.assets.js).toBeUndefined()
   })
 
   it('genui-surface B2 — toggling the GenUI row persists + live-applies (the SAME store-write pattern markdown/a2ui already prove)', async () => {

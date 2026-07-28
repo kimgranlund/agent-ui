@@ -64,7 +64,7 @@ import type { UISurfaceHostElement } from '../surface-host/surface-host.ts'
 // PARALLEL mount path (`#genuiRegistry`/`mountGenui`, not `ingestLine`'s A2UI-shaped registry) — a genui
 // line carries no `createSurface`/`updateComponents`/etc envelope key `surfaceIdOf` could ever parse.
 import '@agent-ui/components/controls/sandbox-frame'
-import type { UISandboxFrameElement, GenuiActionDetail } from '@agent-ui/components/components'
+import type { UISandboxFrameElement, GenuiActionDetail, SandboxFrameAssets } from '@agent-ui/components/components'
 import type { ClientMessageListener, A2uiClientMessage } from '@agent-ui/a2ui'
 // ADR-0146 F1: the live-turn progress vocabulary is produce-layer-owned (a2ui) — imported TYPE-ONLY (it
 // erases at build, so zero producer bytes cross the ADR-0137 identity gate) as the shared spine both the
@@ -147,8 +147,16 @@ export interface AgentTurnHandle {
    *  `.html` in place (SPEC-R5's atomic "replace" lifecycle — the control's own effect rebuilds the whole
    *  srcdoc, frame-internal state lost BY DESIGN). A PARALLEL mechanism from `ingestLine`'s A2UI-shaped
    *  registry, never a fork of it — a genui envelope carries no `createSurface`/`updateComponents`/etc
-   *  key `surfaceIdOf` could route on. */
-  mountGenui(surfaceId: string, html: string): void
+   *  key `surfaceIdOf` could route on.
+   *
+   *  genui-surface.spec.md v0.5 §11 (SPEC-R12, GH #316/ADR-0162) — `assets`, when given, sets the frame's
+   *  own `assets` prop (the docs-like CSS+JS pair) BEFORE `.html`, so the model document's first paint
+   *  already has the fleet runtime loaded (`buildSrcdoc`'s host-prelude-before-model-bytes ordering).
+   *  Omitted/`undefined` ⇒ the frame's own default (mode-off, byte-identical to today) — the SAME
+   *  degradation law every other genui field carries. LIVE-APPLY: a KNOWN id's rebuild ALSO re-applies
+   *  `assets` on every call (never sticky from a prior envelope) — the toggle's "next mounted/replaced
+   *  surface reflects it" law (LLD-C4), not a one-shot mount-time-only setting. */
+  mountGenui(surfaceId: string, html: string, assets?: SandboxFrameAssets): void
   /** Stashes this turn's own prose note (ADR-0088) and paints it into the bubble immediately (never a
    *  fabricated sentence) — a non-empty call reveals the bubble on its FIRST token (GH #313: "no bubble
    *  unless there is content for it"), so a streaming caller may call this repeatedly as text accretes.
@@ -584,15 +592,17 @@ export class UIConversationElement extends UIElement {
     // OWN effect owns the atomic srcdoc rebuild, SPEC-R5); a FRESH surfaceId mounts a NEW frame inline in
     // THIS turn's `mounts` (the `routeLine` fresh-host precedent, applied to a structurally different host
     // — never `ui-surface-host`, never routed through `surfaceIdOf`/`#registry`).
-    const routeGenui = (surfaceId: string, html: string): void => {
+    const routeGenui = (surfaceId: string, html: string, assets?: SandboxFrameAssets): void => {
       touchedIds.add(surfaceId) // #settleTouchedHosts only settles A2UI hosts (`state==='open'`) — a no-op for a genui id, harmless
       const known = this.#genuiRegistry.get(surfaceId)
       if (known !== undefined) {
+        known.host.assets = assets ?? {} // live-apply: re-applied on every rebuild, never sticky (LLD-C4)
         known.host.html = html // SPEC-R5 replace — the control's own effect rebuilds the whole srcdoc atomically
         return
       }
       const host = document.createElement('ui-sandbox-frame') as UISandboxFrameElement
       host.surfaceId = surfaceId
+      if (assets !== undefined) host.assets = assets
       host.addEventListener('action', (e) => {
         // SPEC-R8's routing law: the ONE outward semantic channel. Framed as a genui-shaped client message
         // (structurally distinct from an `A2uiClientMessage` — a genui action is NOT one, SPEC-R8's own
@@ -655,8 +665,8 @@ export class UIConversationElement extends UIElement {
         }
         routeLine(line)
       },
-      mountGenui: (surfaceId: string, html: string) => {
-        routeGenui(surfaceId, html)
+      mountGenui: (surfaceId: string, html: string, assets?: SandboxFrameAssets) => {
+        routeGenui(surfaceId, html, assets)
       },
       setNote: (text: string) => {
         noteText = text

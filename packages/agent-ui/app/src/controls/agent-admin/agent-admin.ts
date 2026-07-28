@@ -73,6 +73,11 @@ import type { UIChatShellElement } from '../chat-shell/chat-shell.ts'
 import '@agent-ui/code/markdown'
 import { UISettingsElement } from '../settings/settings.ts'
 import { UIConversationElement } from '../conversation/conversation.ts'
+// genui-surface.spec.md v0.5 §11 (SPEC-R12, GH #316/ADR-0162) — the dogfood frame asset pair, the
+// opt-in `@agent-ui/components` subpath (`app` already imports `components`; catalog-invisible by
+// construction — the a2ui catalog never maps `ui-sandbox-frame` either way).
+import { DOGFOOD_CSS, DOGFOOD_JS } from '@agent-ui/components/dogfood-frame'
+import type { SandboxFrameAssets } from '@agent-ui/components/components'
 import { createMemoryStore } from '../settings/memory-store.ts'
 import type { SettingsSchema } from '../settings/schema.ts'
 import type { SettingsStore } from '../settings/store.ts'
@@ -86,6 +91,8 @@ import {
   SURFACE_MARKDOWN_KEY,
   SURFACE_GENUI_KEY,
   isGenuiSurfaceEnabled,
+  SURFACE_GENUI_DOGFOOD_KEY,
+  isGenuiDogfoodEnabled,
   defaultAgentConfigSchema,
   isEnabledFlag,
   kindEnabledKey,
@@ -176,6 +183,11 @@ const TURN_LOG_CAP = 20
  *  user action) or a typed intent. See the onClientMessage wiring for the full root-cause note. */
 const ERROR_TURN_BUDGET = 3
 
+// genui-surface.spec.md v0.5 §11 (SPEC-R12, GH #316/ADR-0162) — the ONE committed asset pair, read once
+// at module load (the same "generated data, imported like any other module constant" shape the fleet
+// already uses); passed to a mounted `ui-sandbox-frame` only when the dogfood toggle is on (below).
+const DOGFOOD_ASSETS: SandboxFrameAssets = { css: DOGFOOD_CSS, js: DOGFOOD_JS }
+
 export interface UIAgentAdminElement extends ReactiveProps<typeof agentAdminProps> {}
 export class UIAgentAdminElement extends UIElement {
   static props = agentAdminProps
@@ -207,6 +219,8 @@ export class UIAgentAdminElement extends UIElement {
   #surfaceCatalogSelect: (HTMLElement & { value: string; disabled: boolean }) | null = null
   // genui-surface.spec.md SPEC-R11 — the GenUI modality's own row switch (live, B2).
   #surfaceGenuiSwitch: (HTMLElement & { checked: boolean }) | null = null
+  // genui-surface.spec.md v0.5 §11 (SPEC-R10 amended clause, GH #316/ADR-0162) — the dogfood sub-toggle.
+  #surfaceGenuiDogfoodSwitch: (HTMLElement & { checked: boolean; disabled: boolean }) | null = null
   #contextSystemHost: HTMLElement | null = null // Agent System — rebuilt wholesale per store change
   #contextTurnsHost: HTMLElement | null = null // Dialog Turns — rebuilt per logged turn
   /** The Context tabs' shared store subscription (both System and Dialog read off the same store) — its
@@ -539,6 +553,26 @@ export class UIAgentAdminElement extends UIElement {
       if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
     })
     this.#surfaceGenuiSwitch = genui.toggle
+
+    // genui-surface.spec.md v0.5 §11 (SPEC-R10 amended clause, GH #316/ADR-0162) — "Use agent-ui
+    // components" (Fisher-Price label; internal name `dogfood`), a sub-toggle beside the source picker
+    // (the a2ui.row catalogSelect precedent — trailing content appended after the row's own spacer).
+    // Disabled while the modality itself is off (the a2ui.row catalogSelect precedent, #applyMasterStates
+    // below); its OWN default is OFF regardless of the modality's state (a stale stored `true` never
+    // composes bytes or mounts assets while `SURFACE_GENUI_KEY` is off — the doc comment's own promise).
+    const genuiDogfoodLabel = document.createElement('span')
+    genuiDogfoodLabel.setAttribute('data-part', 'surface-genui-dogfood-label')
+    genuiDogfoodLabel.textContent = 'Use agent-ui components'
+    const genuiDogfoodSwitch = document.createElement('ui-switch') as HTMLElement & { checked: boolean; disabled: boolean }
+    genuiDogfoodSwitch.setAttribute('data-part', 'surface-genui-dogfood-toggle')
+    genuiDogfoodSwitch.setAttribute('aria-label', 'Use agent-ui components in the GenUI frame')
+    genuiDogfoodSwitch.checked = false
+    genuiDogfoodSwitch.addEventListener('change', () => {
+      this.store?.set(SURFACE_GENUI_DOGFOOD_KEY, genuiDogfoodSwitch.checked)
+      if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
+    })
+    this.#surfaceGenuiDogfoodSwitch = genuiDogfoodSwitch
+    genui.row.append(genuiDogfoodLabel, genuiDogfoodSwitch)
 
     surfaceOptions.append(markdown.row, a2ui.row, genui.row)
 
@@ -926,6 +960,10 @@ export class UIAgentAdminElement extends UIElement {
     if (!isEnabledFlag(store?.get(AGENT_ENABLED_KEY))) return
     const a2uiOn = isEnabledFlag(store?.get(SURFACE_A2UI_KEY))
     const genuiOn = isGenuiSurfaceEnabled(store?.get(SURFACE_GENUI_KEY))
+    // genui-surface.spec.md v0.5 §11 (GH #316/ADR-0162) — a FRESH store read (the live-apply law); a stale
+    // `true` left over from a prior session can never take effect while the modality itself is off (the
+    // schema doc comment's own promise — `SURFACE_GENUI_DOGFOOD_KEY`).
+    const dogfoodOn = genuiOn && isGenuiDogfoodEnabled(store?.get(SURFACE_GENUI_DOGFOOD_KEY))
     // genui-surface.spec.md SPEC-R10/R11 (independent-review MODERATE fix): a `client` message's OWN
     // modality gates it — a genui action click is inert while GenUI is off (even if A2UI is on), and
     // symmetrically an A2UI action click is inert while A2UI is off (even if GenUI is on). A lingering
@@ -963,7 +1001,13 @@ export class UIAgentAdminElement extends UIElement {
       // whether the runner composes the genui teaching block at all; `sourceBody`, when present, is the
       // D3-picked `pattern-source` entry's `content` VERBATIM (never a pack id — `pickedPatternSource`
       // already resolved the single pick from whichever entries are enabled, first-by-order).
-      genui: { enabled: genuiOn, sourceBody: genuiOn ? pickedPatternSource(readEntries(store, ENTRY_KINDS.patternSource))?.content : undefined },
+      genui: {
+        enabled: genuiOn,
+        sourceBody: genuiOn ? pickedPatternSource(readEntries(store, ENTRY_KINDS.patternSource))?.content : undefined,
+        // genui-surface.spec.md v0.5 §11 (SPEC-R10 amended clause, GH #316/ADR-0162) — threaded the SAME
+        // fresh-read way `sourceBody` is; `dogfoodOn` is already `false` whenever `genuiOn` is `false`.
+        dogfood: dogfoodOn,
+      },
     }
     // TKT-0079 — an action-click/error turn RESUMES the bubble owning its surface (the game loop stays in
     // one card); a typed intent stays a fresh bubble (its reply must not appear above the question).
@@ -982,7 +1026,9 @@ export class UIAgentAdminElement extends UIElement {
             // shaped; a genui line carries neither `createSurface` nor any envelope key `surfaceIdOf`
             // parses). `mountGenui` mirrors `ingestLine`'s own fresh/known bubble routing for a
             // structurally different host (`ui-sandbox-frame`, not `ui-surface-host`).
-            handle.mountGenui(event.surfaceId, event.html)
+            // genui-surface.spec.md v0.5 §11 (GH #316/ADR-0162) — `dogfoodOn` is THIS turn's fresh read
+            // (captured above, before the async stream started); the frame-mount asset pass-through.
+            handle.mountGenui(event.surfaceId, event.html, dogfoodOn ? DOGFOOD_ASSETS : undefined)
           } else {
             wireLines.push(event.line)
             handle.ingestLine(event.line)
@@ -1057,7 +1103,12 @@ export class UIAgentAdminElement extends UIElement {
       this.#surfaceCatalogSelect.value = sanitizeCatalog(store?.get(A2UI_CATALOG_KEY))
       this.#surfaceCatalogSelect.disabled = !a2uiOn
     }
-    if (this.#surfaceGenuiSwitch) this.#surfaceGenuiSwitch.checked = isGenuiSurfaceEnabled(store?.get(SURFACE_GENUI_KEY))
+    const genuiOn = isGenuiSurfaceEnabled(store?.get(SURFACE_GENUI_KEY))
+    if (this.#surfaceGenuiSwitch) this.#surfaceGenuiSwitch.checked = genuiOn
+    if (this.#surfaceGenuiDogfoodSwitch) {
+      this.#surfaceGenuiDogfoodSwitch.checked = isGenuiDogfoodEnabled(store?.get(SURFACE_GENUI_DOGFOOD_KEY))
+      this.#surfaceGenuiDogfoodSwitch.disabled = !genuiOn
+    }
   }
 
   /** Rebuild the Context: System view from the store's CURRENT contents: one `Agent` section (open by

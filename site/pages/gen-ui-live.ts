@@ -82,12 +82,54 @@ import { genuiTranscript } from '../lib/genui-transcript.ts'
 // this page uses INSTEAD of a2ui-live.ts's own two-step Provider→Model flow.
 import { PROVIDER_OPTIONS, EFFORT_LEVELS, groupedModelOptions, providerIdForModel, loadPersistedSelection, persistSelection } from '../lib/provider-mode-selection.ts'
 import type { EffortLevel } from '../lib/provider-mode-selection.ts'
+// genui-surface.spec.md v0.5 §11 (SPEC-R12, GH #316/ADR-0162) — the dogfood frame asset pair, the opt-in
+// `@agent-ui/components` subpath (`site` already imports `components`; catalog-invisible by construction).
+import { DOGFOOD_CSS, DOGFOOD_JS } from '@agent-ui/components/dogfood-frame'
+import type { SandboxFrameAssets } from '@agent-ui/components/components'
 
 // Computed ONCE at module scope — `PROVIDER_OPTIONS` is static (built from the committed `providers.json`
 // at import time), so the grouped reshape never needs to re-run per turn/reset (`#syncModelsPicker`'s own
 // reference-identity check, conversation-composer.ts, also wants a STABLE array reference across renders —
 // recomputing per call would defeat its "unchanged options ⇒ skip the rebuild" fast path).
 const MODEL_OPTIONS = groupedModelOptions(PROVIDER_OPTIONS)
+
+// genui-surface.spec.md v0.5 §11 (SPEC-R12, GH #316/ADR-0162) — the ONE committed asset pair, read once at
+// module load (the same "generated data, imported like any other module constant" shape the fleet already
+// uses); passed to a mounted `ui-sandbox-frame` only when the dogfood toggle is on (below).
+const DOGFOOD_ASSETS: SandboxFrameAssets = { css: DOGFOOD_CSS, js: DOGFOOD_JS }
+
+// genui-surface.spec.md v0.5 §11 — the "Use agent-ui components" toggle's own tiny persisted flag. A
+// page-local key (not `provider-mode-selection.ts`'s shared `StoredSelection`): this is a GenUI-only
+// concept with no counterpart on a2ui-live.ts, the OTHER consumer of that shared module — a dedicated key
+// keeps the dogfood toggle from becoming a third page's reason to touch a module two OTHER pages share.
+const DOGFOOD_LS_KEY = 'gen-ui-live-dogfood'
+function loadDogfoodPersisted(): boolean {
+  try {
+    return localStorage.getItem(DOGFOOD_LS_KEY) === 'true'
+  } catch {
+    return false // storage unavailable — the default OFF state (byte-identical to before this toggle existed)
+  }
+}
+function persistDogfood(on: boolean): void {
+  try {
+    localStorage.setItem(DOGFOOD_LS_KEY, on ? 'true' : 'false')
+  } catch {
+    /* storage unavailable — the in-memory toggle still works this session */
+  }
+}
+
+// The ONE shared, MUTABLE genui config object both `wireLiveOverlay()` (constructs the live transport) and
+// the toggle's own change handler read/write — `createLiveProxyTransport`'s `genui` param is captured by
+// REFERENCE in its returned transport's closure (live-proxy-transport.ts), and `JSON.stringify` reads an
+// object's CURRENT property values at each `turn()` call, not a value frozen at construction — so mutating
+// `.dogfood` here reaches the NEXT turn without reconstructing the transport (the live-apply law, LLD-C4).
+// `enabled`/`exclusive` are always `true` for this GenUI-only demo (the file banner's own "no off mode"
+// note) — only `dogfood` is a real per-page toggle.
+const genuiConfig: { enabled: true; exclusive: true; dogfood: boolean } = {
+  enabled: true,
+  exclusive: true,
+  dogfood: loadDogfoodPersisted(),
+}
 
 const { content } = mountFullBleedPage()
 
@@ -152,6 +194,25 @@ content.append(shell)
 
 // ── chat pane: log · composer ────────────────────────────────────────────────────────────────────────────
 chatPane.append(paneHead('Chat', 'Prompt the demo, then interact with the surface it renders.'))
+
+// genui-surface.spec.md v0.5 §11 (SPEC-R11 note, GH #316/ADR-0162) — the dogfood options-strip toggle
+// (the agent-admin Surface Options row's Fisher-Price label, "Use agent-ui components"). Live-apply: the
+// change handler mutates `genuiConfig.dogfood` in place (reaches the transport's NEXT turn, no
+// reconstruction) and `renderGenuiSurface` reads it fresh at every mount/rebuild — never sticky from a
+// prior envelope.
+const dogfoodStrip = el('div', 'options-strip')
+const dogfoodToggle = document.createElement('ui-switch') as HTMLElement & { checked: boolean }
+dogfoodToggle.setAttribute('aria-label', 'Use agent-ui components in the GenUI frame')
+dogfoodToggle.checked = genuiConfig.dogfood
+const dogfoodLabel = el('span', 'options-strip-label')
+dogfoodLabel.textContent = 'Use agent-ui components'
+dogfoodToggle.addEventListener('change', () => {
+  genuiConfig.dogfood = dogfoodToggle.checked
+  persistDogfood(dogfoodToggle.checked)
+})
+dogfoodStrip.append(dogfoodToggle, dogfoodLabel)
+chatPane.append(dogfoodStrip)
+
 const chatLog = el('div', 'chat-log')
 chatLog.setAttribute('aria-live', 'polite')
 chatPane.append(chatLog)
@@ -196,8 +257,12 @@ function titleFromSurfaceId(surfaceId: string): string {
  *  same-surface continuation) — rebuild the EXISTING instance's `html` in place, atomically, rather than
  *  minting a duplicate card. Every mounted frame gets its own `action` listener wired once, at creation. */
 function renderGenuiSurface(surfaceId: string, html: string): void {
+  // genui-surface.spec.md v0.5 §11 (GH #316/ADR-0162) — a FRESH read of the toggle's CURRENT state (the
+  // live-apply law): never sticky from a prior envelope, on a fresh mount OR a rebuild-in-place alike.
+  const assets = genuiConfig.dogfood ? DOGFOOD_ASSETS : undefined
   const existing = surfaces.get(surfaceId)
   if (existing) {
+    existing.host.assets = assets ?? {} // live-apply: re-applied on every rebuild, never sticky
     existing.host.html = html // SPEC-R5 replace: the control rebuilds the whole srcdoc atomically
     return
   }
@@ -215,6 +280,7 @@ function renderGenuiSurface(surfaceId: string, html: string): void {
     const detail = (e as CustomEvent<GenuiActionDetail>).detail
     handleGenuiAction(detail)
   })
+  if (assets !== undefined) host.assets = assets
   host.html = html
   card.append(cardHead, host)
   surfaceStack.append(card)
@@ -428,7 +494,9 @@ function wireLiveOverlay(): void {
         // rejects it by design, the SAME disjointness check that keeps a genui line out of the A2UI
         // validator). Root cause of the GH card-game repro: a real agent note rendered in chat, an empty
         // render pane, `genuiLines.length === 0` — the model chose A2UI, and this page silently dropped it.
-        transport = overlay.createLiveProxyTransport({ get: () => selection }, { enabled: true, exclusive: true })
+        // `genuiConfig` (module scope, above) — the SAME shared mutable object the dogfood toggle's own
+        // change handler mutates; passed by reference so a later toggle reaches the NEXT turn (live-apply).
+        transport = overlay.createLiveProxyTransport({ get: () => selection }, genuiConfig)
         setDemoBadge(undefined)
         addMessage('system', `Live agent connected (${status.providers} provider(s) available). Prompt it to render a real GenUI surface.`)
       } else if (import.meta.env.DEV) {

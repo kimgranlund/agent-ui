@@ -9,8 +9,9 @@
 //     import specifier is a relative path or a `node:*` builtin.
 //  3. NODE-FENCE — `node:*` imports under `src/agent/` appear ONLY in the clause-4 prompt-loading modules
 //     (`system-prompt.ts`/`mini-skills.ts`, plus `prompts/genui-packs.ts` — genui-surface SPEC-R9's own
-//     pack registry, the SAME ADR-0135 readFileSync/frontmatter mechanics); `vite` and `node:http` (the
-//     dev-proxy fence that stays behind in `tools/agent/`) never appear anywhere under `src/agent/`.
+//     pack registry, the SAME ADR-0135 readFileSync/frontmatter mechanics — and `dogfood-inventory.ts`,
+//     SPEC-R13(b)'s descriptor-scanning module, GH #316/ADR-0162); `vite` and `node:http` (the dev-proxy
+//     fence that stays behind in `tools/agent/`) never appear anywhere under `src/agent/`.
 //  4. PROMPT BYTE-IDENTITY — carried by the pre-existing `prompt-equivalence.test.ts` (ADR-0135 equivalence
 //     gate) + `prompt-drift.test.ts`, which now exercise the MOVED `src/agent/system-prompt.ts` and its
 //     `src/agent/prompts/*.md` at their new home; both stay green across the move (no assertion duplicated
@@ -96,8 +97,17 @@ describe('ADR-0137 clause 8 — the ./agent subpath gates', () => {
     }
   })
 
-  it('NODE-FENCE: node:* imports appear ONLY in the two prompt-loading modules; never vite/node:http', () => {
-    const NODE_ALLOWED = new Set(['src/agent/system-prompt.ts', 'src/agent/mini-skills.ts', 'src/agent/prompts/genui-packs.ts'])
+  it('NODE-FENCE: node:* imports appear ONLY in the prompt/asset-loading modules; never vite/node:http', () => {
+    // genui-surface.spec.md SPEC-R13(b) — `dogfood-inventory.ts` is the FOURTH Node-only readFileSync/
+    // readdirSync call site (GH #316/ADR-0162), the same "loads real files at call/load time" class the
+    // other three already are; it scans `@agent-ui/components/src/controls/*/*.md`, not `prompts/`, but
+    // the fence's rule is "which files may touch node:*", not "which directory they read".
+    const NODE_ALLOWED = new Set([
+      'src/agent/system-prompt.ts',
+      'src/agent/mini-skills.ts',
+      'src/agent/prompts/genui-packs.ts',
+      'src/agent/dogfood-inventory.ts',
+    ])
     for (const { rel, abs } of MODULES) {
       const specs = importSpecifiers(readFileSync(abs, 'utf8') as string)
       const nodeImports = specs.filter((s) => s.startsWith('node:'))
