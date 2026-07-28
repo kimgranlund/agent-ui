@@ -12,7 +12,7 @@ import { UITabsElement } from './tabs/tabs.ts'
 import { UIModalElement } from './modal/modal.ts'
 // Read package.json + the CSS barrels as text (vite strips `.css?raw`; no `@types/node` devDep — same
 // approach as the s6/s7 probes).
-import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs'
+import { readFileSync, existsSync, readdirSync, statSync, mkdirSync, writeFileSync, rmSync } from 'node:fs'
 declare const process: { cwd(): string }
 
 // Phase-1 s17 — the three barrels (ADR-0003) exist and are wired into the package exports:
@@ -292,13 +292,24 @@ describe('./dogfood-frame subpath — opt-in only, zero bytes in either default 
   })
 
   it('a planted import (negative control) IS caught by the crawl — the trace itself is not vacuous', () => {
-    // Same crawl, seeded straight from the dogfood module's own folder mate (sandbox-frame.ts) — proves
-    // an actual reaching edge shows up as `true`, so the two `false` results above are a real absence,
-    // not a crawler that can never find anything.
-    const reached = crawlDogfood('src/controls/sandbox-frame/sandbox-frame.ts')
-    const plantedReached = new Set(reached)
-    plantedReached.add(DOGFOOD_MODULE_REL) // simulate the regression this gate exists to catch
-    expect(plantedReached.has(DOGFOOD_MODULE_REL)).toBe(true)
+    // Write a REAL scratch fixture (a `dist-*`-prefixed, gitignored scratch dir — the fleet's own
+    // scratch-file convention) that genuinely `export *`s the dogfood module, then run the SAME
+    // `crawlDogfood` over it. Unlike merely `.add()`-ing the target onto an already-returned Set (which
+    // would be true regardless of whether the crawler works at all), this re-invokes the crawler on an
+    // input containing a REAL reaching edge — the assertion only passes if `crawlDogfood` actually
+    // follows relative imports and finds the target, proving the `false` results above are a genuine
+    // absence, not a crawler that can never find anything.
+    const scratchDir = `${PKG}/dist-barrels-negative-control-scratch`
+    const fixtureRel = 'dist-barrels-negative-control-scratch/negative-control.ts'
+    rmSync(scratchDir, { recursive: true, force: true })
+    mkdirSync(scratchDir, { recursive: true })
+    writeFileSync(`${PKG}/${fixtureRel}`, `export * from '../${DOGFOOD_MODULE_REL}'\n`)
+    try {
+      const reached = crawlDogfood(fixtureRel)
+      expect(reached.has(DOGFOOD_MODULE_REL)).toBe(true)
+    } finally {
+      rmSync(scratchDir, { recursive: true, force: true })
+    }
   })
 
   it('neither default barrel exposes a dogfood-only symbol at runtime (ADR-0137 IDENTITY leg)', () => {
