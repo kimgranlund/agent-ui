@@ -9,7 +9,7 @@
 > lives in GitHub Issues ([ADR-0145](adr/0145-ticket-tier-github-issues-backend.md)) or, on other
 > projects, Linear — **never here**. An issue may cite a section of this doc the same way it cites
 > an ADR/SPEC/LLD id; this doc never enumerates issues by number, because that list goes stale the
-> moment an issue closes and this doc isn't the place re-reading it. Last synthesis pass: 2026-07-25.
+> moment an issue closes and this doc isn't the place re-reading it. Last synthesis pass: 2026-07-28.
 
 ## 1 · Why a fourth doc
 
@@ -134,15 +134,69 @@ decision (dated line in §4).
 
 ## 3 · Next — concrete, near-term
 
+- **The 2026-07-28 intake ruled the next arc.** A six-system inventory wave (agent-admin · a2ui ·
+  GenUI · components · shells · SaaS patterns) fed a dependency-spine synthesis and three
+  candidate milestones; Kim ruled the order on 2026-07-28. The full wave record — six inventories
+  plus the spine/milestones/decision syntheses — lives at
+  [`reports/roadmap-wave-2026-07-28/`](reports/roadmap-wave-2026-07-28/). The ruled order:
+  **M-B → M-C, with M-A's two design forks intaken in parallel during M-B** so M-A starts
+  contract-frozen. One gate spans the arc: the **three-ADR ratification batch** —
+  [ADR-0161](adr/0161-catalog-multi-slot-two-way-value-marks.md) (M-B's first phase builds from
+  its ratified text), [ADR-0162](adr/0162-genui-agent-ui-dogfood-mode.md) (likewise M-C's build),
+  and [ADR-0160](adr/0160-chat-redesign-agent-bubble-reversal-header-flat-action-chips.md)
+  (record hygiene — the chat redesign is already merged, so a lingering `proposed` would misstate
+  reality). Ratification is Kim's owner-only Status flip; each milestone's build starts only from
+  the ratified text. The in-flight ADR-0161/0162 design slices fold into these milestones' first
+  phases; they are not separate arcs.
+- **M-B — "Personas that don't lie" (first).** The flagship live-agent loop made trustworthy.
+  Phase 1 is bug-anchored repairs: build ADR-0161 as specced — the `value` mark widens to one or
+  more slots, the root cause behind calendar-range/multi-thumb selections never reaching the
+  model (its Repairs cell already enumerates every file) — and root-cause the quiz/game personas'
+  round-budget exhaustion on the same-surface resume path via the live `produce()` method
+  *before* ruling the round-budget/recovery policy. Phase 2 is depth: a second real catalog plus
+  a threaded `catalogId` (the admin's catalog picker stops being one-catalog-by-construction),
+  and corpus growth past the one-exemplar floor. Phase 3 is the persona-library arc: persona
+  export/import in `ui-agent-admin`, documented as the first reusable preset-library pattern.
+  Acceptance is dogfooded: the Hotel Concierge persona books a real date range the model sees, a
+  full multi-round IDGRAPH quiz session survives resume, and an exported persona round-trips.
+- **M-C — "GenUI speaks fleet" (second).** Flip the dogfood toggle and the model authors GenUI
+  surfaces out of real, upgraded `ui-*` components with fleet tokens — visibly the fleet's own
+  design language instead of bare model HTML, provable live in one demo session. The build is
+  ADR-0162's S0–S5 decomposition as written
+  ([`decompositions/genui-dogfood.decomp.md`](decompositions/genui-dogfood.decomp.md)): the docs
+  pass → the committed, freshness-gated
+  CSS+IIFE asset pair under `sandbox-frame/dogfood/` → frame injection with browser probes → the
+  byte-pinned prompt segment with its drift-gated derived inventory → surfacing (the agent-admin
+  Surface-Options toggle, plus `gen-ui-live`) → the cross-half bundle-tags ≡ inventory-tags
+  set-equality gate. An optional third phase adds a live GenUI demo surface (today only
+  agent-admin shows GenUI live) and B3's fleet-idiom eval dimension. Acceptance is dogfooded: a
+  live session with dogfood ON produces a surface whose rendered DOM contains upgraded `ui-*`
+  elements — real anatomy, not unknown inline elements — with the set-equality gate green.
+- **M-A intakes — "SaaS Data Workbench", contract-frozen in parallel (during M-B).** M-A — a
+  site-hosted demo workspace where a sortable/selectable/paginated data table, a filter toolbar,
+  a record-edit form flow, and an agent-written summary card compose from published fleet
+  primitives inside `ui-workspace-shell` — is the largest bet and is gated on two genuine design
+  forks. Both run as design intakes during M-B so the build starts contract-frozen: **(1) the
+  `ui-table` widening ADR** — Kim ruled 2026-07-28 to widen the ratified display-only contract
+  itself (selection, sort, filter, pagination land on `ui-table`), deliberately against the
+  synthesis's separate-interactive-tier recommendation; the intake produces its own `proposed`
+  ADR amending the display-only contract — report-family SPEC-R1 under ADR-0111, realized in the
+  `table.md` descriptor rows + report-family LLD-C9 (ADR-0004's descriptor-as-contract
+  instrument) — a ruled contract change, never a drive-by edit; and
+  **(2) the extraction home** for the entry-list + settings-generator proto-patterns (today
+  agent-admin-local files) — which package and export surface. M-A's PRD comes out of these
+  intakes, not before; the build itself is scheduled when the lane frees.
+- **Per-control catalog intake — now.** Five newer controls (`ui-status-stream`, `ui-toast`,
+  `ui-command-modal`, `ui-textarea`, `ui-theme-provider`) landed after the A2UI catalog's 56
+  types with no recorded in-or-out decision. Kim ruled 2026-07-28: one small per-control pass,
+  now — each control ruled **in** (a catalog row) or **out** (the exclusion allowlist), with the
+  reason recorded either way, ending the silent drift.
 - **AC19's sheet set — widen deliberately, or not.** The spacing-drift gate covers the shell
   family today (every `@agent-ui/app` sheet + the shell-composing site sheets). Whether it extends
   further — components-package sheets, the remaining site sheets — is an open, per-sheet decision;
   the gate's own design makes each extension a one-line reviewed append, never automatic.
-- **Beyond that, the backlog is clear.** The `ui-app-shell` removal gate closed 2026-07-26 (§4's
-  dated line); nothing else is
-  outstanding — the next feature arc is Kim's call at the next intake. (The older proposed scope
-  intakes — content, feed, and report families, the a2ui expert system — remain parked intakes,
-  not scheduled work.)
+- (The older proposed scope intakes — content, feed, and report families, the a2ui expert system —
+  remain parked intakes, not scheduled work.)
 
 ## 4 · Later — deferred, revisit-triggered
 
@@ -189,6 +243,13 @@ decision (dated line in §4).
   (SPEC-R9 — its prompt-loading parenthetical corrected by the SPEC's docs-only v0.3 amendment),
   the admin Surface-Options GenUI row gone live, and the parallel mount path into agent-admin's
   real turn loop. The GenUI entry retires from §3 into §2's current state; B3 stays deferred (§4).
+- **2026-07-28** — **the next-arc intake ran and ruled** (closing §3's "the next feature arc is
+  Kim's call at the next intake"): the six-system inventory wave + three-milestone synthesis
+  ([`reports/roadmap-wave-2026-07-28/`](reports/roadmap-wave-2026-07-28/)); Kim ruled M-B
+  ("Personas that don't lie") → M-C ("GenUI speaks fleet") with M-A's ("SaaS Data Workbench")
+  two design forks intaken in parallel during M-B, `ui-table`'s display-only contract to be
+  widened by its own `proposed` ADR, and a per-control catalog intake for the five uncataloged
+  controls. §3 carries the arc; `goals.md` carries the M-B/M-C DoD entries.
 - **2026-07-26** — **the `ui-app-shell` removal gate closed** (§3's last named open item): the
   folder + exports retired (merge `9db4596`), ADR-0082/0083/0084 flipped `superseded` by Kim's
   own owner-reserved Status-cell edit (`8261636` — `adr_ratify.py` covers `proposed`→`accepted`

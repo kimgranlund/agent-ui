@@ -16,7 +16,9 @@
 > `ui-code`/`ui-disclosure`/`ui-text-hyperlink`, `ui-progress`/`ui-avatar`/`ui-attachment`/`ui-toast`(-region),
 > `ui-sparkline`/`ui-bar-chart`), and **`@agent-ui/router`** (ADR-0115). Each has its own PRD/SPEC/LLD under
 > `.claude/docs/{prd,spec,lld}/` (or `specs/` for A2UI) — this file's scope stays the FACE control
-> foundation (G0–G9) + Control Suite + icon adapter. The one still-deferred item is the multi-theme
+> foundation (G0–G9) + Control Suite + icon adapter, **plus the 2026-H2 M-series milestones**
+> (M-B/M-C, appended at the foot per the 2026-07-28 roadmap intake — ordering is stated per-entry,
+> not by the G-sequence rule). The one still-deferred item is the multi-theme
 > `theme` package-swapping system (the seam is wired; one `default` package ships).
 > Layout: npm-workspaces monorepo — `src/core/*` in milestone text now lives under `packages/agent-ui/components/src/*`.
 > Consumed by the A2UI effort (`@agent-ui/a2ui`; docs on the unified `.claude/docs/{spec,lld,prd}/` map), which tracks these milestones (its
@@ -573,3 +575,69 @@ test — a future wave touching `icon.css`/the adornment cells should re-verify)
 zero-runtime-Phosphor grep gates are static-import-only (a dynamic `import()` would slip past both,
 mirroring the same pre-existing blind spot in `components/layering.test.ts` — low risk, no dynamic
 imports exist today).
+
+---
+
+## M-B — "Personas that don't lie" (opened 2026-07-28, Kim's ruling — first of the 2026-H2 arc)
+
+> Minted by the 2026-07-28 roadmap intake (`roadmap.md` §3; wave record
+> `reports/roadmap-wave-2026-07-28/`). Ordered first; builds from ADR-0161's ratified text.
+
+**Goal.** The flagship live-agent product loop made trustworthy: the two flagship persona classes
+complete flawless live runs — Hotel Concierge books a real date range the model actually sees, and
+quiz/game personas survive full multi-round IDGRAPH sessions — and an admin-authored persona can be
+exported, shared, and re-imported.
+
+**Scope.** a2ui: ADR-0161 built as specced (the `value` mark widens to ≥1 slots; its Repairs cell is
+the build list — catalog.ts/types.ts/input.ts/factories.ts/catalog.json + tests); the quiz/game
+same-surface resume failure root-caused via the live `produce()` method *before* the
+round-budget/recovery policy is ruled; corpus growth past the one-exemplar floor. components: the
+ADR-0161 factory/row edits (near-zero blast radius) + the calendar range-band cosmetic fix riding the
+same attention. agent-admin: persona export/import; a second real catalog + threaded `catalogId` (the
+picker stops being one-catalog-by-construction). SaaS patterns: the persona-library "preset library"
+pattern documented as reusable beyond agent-admin. **Excludes:** the production (non-dev-proxy)
+live-turn path (a deployment arc of its own); GenUI entirely; any new SaaS component.
+
+**Definition of done (dogfooded acceptance).**
+- [ ] The Hotel Concierge live flow proves ADR-0161: the submit snapshot carries both range dates —
+      the ADR's own acceptance criterion.
+- [ ] A full multi-round IDGRAPH quiz session completes live, surviving the action-click resume path,
+      under the ruled round-budget/recovery policy.
+- [ ] An exported persona round-trips: export → re-import → identical live behaviour — the
+      persona-library pattern proven and documented.
+- [ ] The second catalog is pickable in agent-admin and `catalogId` threads end-to-end.
+- [ ] The standing DoD (top of this file) holds: `npm run check` + `npm test` green, probes cover the
+      new behaviour, descriptors/plan updated where a surface moved.
+
+---
+
+## M-C — "GenUI speaks fleet" (opened 2026-07-28, Kim's ruling — second of the 2026-H2 arc)
+
+> Minted by the same intake. Ordered after M-B; builds from ADR-0162's ratified text. Shares no
+> files with M-B — the two are independent by construction.
+
+**Goal.** Dogfood authoring end-to-end: flip the dogfood toggle in agent-admin (or `gen-ui-live`) and
+the model authors GenUI surfaces out of real, upgraded `ui-*` components with fleet tokens — visibly
+the fleet's own design language instead of bare model HTML, provable live in one demo session.
+
+**Scope.** ADR-0162's S0–S5 decomposition as written (`decompositions/genui-dogfood.decomp.md`):
+S0 docs → S1 the committed, freshness-gated
+CSS+IIFE asset pair under `sandbox-frame/dogfood/` → S2 frame injection + browser probes → S3 the
+byte-pinned prompt segment (teaching + drift-gated derived inventory, via the a2ui-prompt-author
+recapture flow — no ad hoc edits) → S4 surfacing (`GenuiSurfaceConfig.dogfood`, the agent-admin
+Surface-Options toggle, `gen-ui-live`'s toggle) → S5 the cross-half bundle-tags ≡ inventory-tags
+set-equality gate. Optional phase 3: a live-turn GenUI demo surface outside agent-admin + B3's judged
+pack-idiom eval gaining its fleet-idiom dimension. **Excludes:** any CSP/sandbox/bridge change (the
+ADR holds posture unchanged); router/code/app chrome in-frame; GenUI interactivity beyond the closed
+6-member bridge.
+
+**Definition of done (dogfooded acceptance).**
+- [ ] A live agent-admin session with dogfood ON produces a surface whose rendered DOM contains
+      upgraded `ui-*` elements — real anatomy, not unknown inline elements — the ADR's own
+      "docs-page rendering" bar.
+- [ ] The S5 set-equality gate (frame-half bundle tags ≡ prompt-half inventory tags) is green and
+      standing.
+- [ ] The S1 asset pair is committed with its freshness gate green (a stale regeneration fails the
+      gate, proven once by a deliberate red).
+- [ ] The standing DoD (top of this file) holds: `npm run check` + `npm test` green, probes cover the
+      new behaviour, descriptors/plan updated where a surface moved.
