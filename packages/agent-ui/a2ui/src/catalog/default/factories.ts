@@ -278,6 +278,14 @@ export const modalFactory: WidgetFactory = accessorFactory('ui-modal', { prop: '
 // `max`) are ALL 1:1 reflecting accessor props — zero factory code beyond the catalog.json PropDefs.
 export const textFieldFactory: WidgetFactory = accessorFactory('ui-text-field', { prop: 'value', event: 'change' })
 
+// Textarea (ADR-0134 fleet primitive; this catalog row drains that ADR's deferred "separate intake" —
+// the 2026-07-28 per-control catalog intake, ruled IN: a plain multi-line form control an agent
+// legitimately emits, same shape as TextField). `value` commits on the control's own `change` event
+// (blur-with-change, ADR-0134 — Enter inserts a newline and never commits) through the same LLD-C8
+// controller; every other prop is a 1:1 reflecting accessor — zero factory code beyond the catalog.json
+// PropDefs, same as textFieldFactory above.
+export const textareaFactory: WidgetFactory = accessorFactory('ui-textarea', { prop: 'value', event: 'change' })
+
 // ── the ADR-0053 form-family rows ───────────────────────────────────────────────
 
 // Field — the label/description/error wrapper (G7, ADR-0050/0051). `label`/`description` are 1:1
@@ -798,6 +806,7 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   Button: buttonFactory,
   Text: textFactory,
   TextField: textFieldFactory,
+  Textarea: textareaFactory,
   Field: fieldFactory,
   FormProvider: formProviderFactory,
   Checkbox: checkboxFactory,
