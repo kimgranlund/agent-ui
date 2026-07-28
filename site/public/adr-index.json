@@ -1139,5 +1139,12 @@
     "description": "The entry-list machinery re-homes as a shared @agent-ui/app control folder; the settings generator is already extracted, so its remaining gap closes at the pat…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0165",
+    "url": "./adr-index.html#adr-0165",
+    "description": "A judged import run ARCHIVES its verdicts file into the corpus data dir, and the admission-coverage gate reads judged-ness off the shard — an EQUALITY rejectio…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
