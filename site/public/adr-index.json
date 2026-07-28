@@ -1111,5 +1111,19 @@
     "description": "GH #291 chat redesign, three Kim-ruled slices (2026-07-27): (1) ui-status-stream's opt-in header loses its boxed background — --ui-status-stream-header-surface…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0161",
+    "url": "./adr-index.html#adr-0161",
+    "description": "The catalog two-way value mark widens to one-or-more {prop,event} slots (GH #314): ComponentDef.value/WidgetFactory.value become ValueSlot \\| ValueSlot[] (sing…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0162",
+    "url": "./adr-index.html#adr-0162",
+    "description": "GH #316 GenUI agent-ui DOGFOOD mode (Kim's 2026-07-28 ruling): an opt-in per-turn GenuiSurfaceConfig.dogfood flag — mode-on loads the fleet's docs-like asset p…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
