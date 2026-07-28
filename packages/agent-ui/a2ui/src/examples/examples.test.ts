@@ -27,6 +27,7 @@ import { generativeFormSeeds } from './generative-form.ts'
 import { patternSeeds } from './patterns.ts'
 import { catalogCoverageSeeds } from './catalog-coverage.ts'
 import { messageLifecycleSeeds } from './message-lifecycle.ts'
+import { corpusGrowthSeeds } from './corpus-growth.ts'
 import { validateA2ui } from '../renderer/validate.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import { createRenderer } from '../renderer/renderer.ts'
@@ -76,7 +77,8 @@ describe('the example seed shelf (ADR-0055) — shape', () => {
       generativeFormSeeds.length +
       patternSeeds.length +
       catalogCoverageSeeds.length +
-      messageLifecycleSeeds.length
+      messageLifecycleSeeds.length +
+      corpusGrowthSeeds.length
     expect(allSeeds).toHaveLength(expectedTotal)
   })
 
