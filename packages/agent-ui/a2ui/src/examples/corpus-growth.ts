@@ -1,29 +1,35 @@
 // corpus-growth.ts — the 2026-07-28 M-B exemplar-growth wave (`a2ui-corpus-curate`), authored to close
-// four DISTINCT gaps found by reading the committed 11-record shard + the current live-failure roster,
-// not to pad the count:
+// DISTINCT gaps found by reading the committed 11-record shard + the current live-failure roster, not
+// to pad the count. Judged against `a2ui-corpus.md` 2026-07-28 (`a2ui-reviewer`): `feedback-form` and
+// `elevation-scale` ADMIT (qualityScore 4 each); a third candidate, `retreat-reschedule`, was REJECTED
+// (qualityScore 2, failing D1/D5) and DROPPED from this shelf entirely — its claimed gap ("every
+// existing Calendar-range seed binds to empty paths") was FALSE: `booking-reservation`
+// (catalog-coverage.ts) already seeds real dates and binds `valueStart`/`valueEnd` to them, so the
+// claimed-first technique already existed; the seed also placed its Calendar outside any FormProvider
+// while its submit button carried `submit:true`, which silently no-ops with no `submitGate` ancestor
+// (renderer.ts). Not salvaged — a materially different Calendar exemplar needs its own evidenced gap.
 //
 // (1) FEEDBACK FORM — `Textarea` had ZERO shard coverage (the control entered the catalog the same day,
 //     GH #328/#329) — a plain multi-line form control an agent legitimately emits, same shape as
 //     `TextField`. Covers: Textarea.
-// (2) RETREAT RESCHEDULE — every existing Calendar-range seed (`booking-reservation`) binds
-//     `valueStart`/`valueEnd` to EMPTY paths a user fills in for the first time — a write-only demo. This
-//     one pre-populates the SAME two paths from the data model (a real existing booking) and binds the
-//     Calendar to them, so the exemplar teaches a genuine READ+WRITE round trip (ADR-0161 widened the
-//     mark to two-way; the prior seed's comment calling it "one-way" is now stale — fixed in the same
-//     commit, see catalog-coverage.ts). Covers: Calendar (range, round-trip).
-// (3) ELEVATION SCALE — every `Card` on the whole shelf (21 records, grep-verified) uses `elevation:"1"`
+// (2) ELEVATION SCALE — every `Card` on the whole shelf (21 records, grep-verified) uses `elevation:"1"`
 //     and NOTHING else; the corpus has literally never shown the model a differently-spelled member of
 //     `Card.elevation`'s numeric-looking string enum. That is exactly the shape GH #286/#305 fixed the
 //     PROMPT description for (a model that kept guessing the bare number `-2` instead of the string
 //     `"-2"`) — a few-shot exemplar using FOUR distinct, correctly-quoted values reinforces the fix at
 //     the conditioning layer, not just the prompt layer. Covers: Card.elevation (multi-value).
-// (4) TRIVIA ROUND RESUME — GH #307 (open): a multi-round game-loop RESUME repeatedly fails IDGRAPH; the
+// (3) TRIVIA ROUND RESUME — GH #307 (open): a multi-round game-loop RESUME repeatedly fails IDGRAPH; the
 //     shelf's only worked lifecycle exemplar (`kpi-panel-lifecycle`) shows exactly ONE restructure
 //     (a container growing by one appended child) — it never demonstrates the actual resume shape a
 //     multi-ROUND loop needs: the SAME mutable container id resent WHOLLY, with a completely different
 //     child set each round (not an append), while the root wrapper is delivered once and never resent.
-//     This seed is that missing worked arc — three rounds, each round's `q_area` a full resend, scoring
-//     via data-only reacts between rounds. Covers: the #307 resume discipline.
+//     This seed is that missing worked arc — three `q_area` resends, scoring via data-only reacts
+//     between rounds. Covers: the #307 resume discipline. NOT YET ADMITTED — the first judged pass
+//     (qualityScore 1, failing D1/D2) caught a real binding bug (a bare `${score}` outside any list-item
+//     scope, resolving to the empty-string sentinel per `binding.ts`'s `resolvePointer` guard — fixed
+//     below to `${/score}`) and a prompt/description mismatch (claimed 3 questions, only 2 fire — the
+//     third `q_area` resend is the summary screen; reframed honestly below as a 2-question round). Holds
+//     for re-judging before its next admission attempt (ADR-0068 clause 2/5c discipline).
 //
 // Each seed's `promptText`/`description` names its own gap so the corpus-quality rubric's D2 (prompt
 // realism) and D5 (dedup adjacency / genuine diversity) can be judged against a stated intent, not
@@ -75,49 +81,7 @@ export const feedbackFormSeed: ExampleSeed = {
   ],
 }
 
-// ── (2) Retreat reschedule — a genuinely round-tripping Calendar range ──────────────────────────────
-
-const RESCHEDULE_ID = 'retreat-reschedule'
-export const retreatRescheduleSeed: ExampleSeed = {
-  name: 'retreat-reschedule',
-  description:
-    'Rescheduling an already-booked multi-day retreat — a Calendar range PRE-POPULATED from the data model, with valueStart/valueEnd bound to the SAME two paths that seeded it, so a newly-picked range writes straight back (ADR-0161’s two-way widening, exercised as an actual round trip, not a first-time write).',
-  promptText: 'We already booked the team offsite for Sep 1–3; let me pick new dates on a calendar and confirm the change.',
-  surfaceId: RESCHEDULE_ID,
-  protocolVersion: 'v1.0',
-  catalogId: 'agent-ui',
-  messages: [
-    { version: 'v1.0', createSurface: { surfaceId: RESCHEDULE_ID, catalogId: 'agent-ui', sendDataModel: true } },
-    {
-      version: 'v1.0',
-      updateDataModel: { surfaceId: RESCHEDULE_ID, value: { retreat: { start: '2026-09-01', end: '2026-09-03' } } },
-    },
-    {
-      version: 'v1.0',
-      updateComponents: {
-        surfaceId: RESCHEDULE_ID,
-        components: [
-          { id: 'root', component: 'Card', elevation: '1', children: ['root_content'] },
-          { id: 'root_content', component: 'CardContent', children: ['col'] },
-          { id: 'col', component: 'Column', gap: 'md', children: ['title', 'f_dates', 'actions'] },
-          { id: 'title', component: 'Text', variant: 'h4', text: 'Reschedule team offsite' },
-          { id: 'f_dates', component: 'Field', label: 'New dates', child: 'cal_dates' },
-          // Both `valueStart` and `valueEnd` are bound to the paths ALREADY populated above — the
-          // Calendar opens showing the current booking (read) and a completed range pick writes the new
-          // dates straight back into `/retreat/start`–`/retreat/end` (write), the same two slots.
-          {
-            id: 'cal_dates', component: 'Calendar', mode: 'range', name: 'dates', min: '2026-07-07',
-            valueStart: { path: '/retreat/start' }, valueEnd: { path: '/retreat/end' },
-          },
-          { id: 'actions', component: 'Row', gap: 'md', justify: 'end', children: ['btn_confirm'] },
-          { id: 'btn_confirm', component: 'Button', variant: 'solid', label: 'Confirm new dates', action: { action: 'confirm_reschedule', submit: true } },
-        ],
-      },
-    },
-  ],
-}
-
-// ── (3) Elevation scale — four correctly-quoted, non-"1" Card.elevation members ─────────────────────
+// ── (2) Elevation scale — four correctly-quoted, non-"1" Card.elevation members ─────────────────────
 
 const ELEVATION_ID = 'elevation-scale'
 export const elevationScaleSeed: ExampleSeed = {
@@ -168,14 +132,16 @@ export const elevationScaleSeed: ExampleSeed = {
   ],
 }
 
-// ── (4) Trivia round resume — the GH #307 multi-round resume discipline ─────────────────────────────
+// ── (3) Trivia round resume — the GH #307 multi-round resume discipline ─────────────────────────────
+//
+// NOT YET ADMITTED (holds for re-judging after the fixes below — module-header note).
 
 const TRIVIA_ID = 'trivia-round-resume'
 export const triviaRoundResumeSeed: ExampleSeed = {
   name: 'trivia-round-resume',
   description:
-    'A three-round trivia loop — the mutable question-area container ("q_area") is resent WHOLE every round with a completely different child set (never an append), the root wrapper is delivered exactly once and never resent, and the score updates via data-only reacts between rounds (the GH #307 same-surface RESUME discipline the shelf’s only other lifecycle exemplar, kpi-panel-lifecycle, never exercises — that one only ever appends).',
-  promptText: 'Run a 3-question trivia round: show one question with answer buttons, update the score after each pick, and load the next question each time without breaking anything.',
+    'A two-question trivia round then a final score summary — the mutable question-area container ("q_area") is resent WHOLE three times (two questions, one summary) with a completely different child set each time (never an append), the root wrapper is delivered exactly once and never resent, and the score updates via data-only reacts between rounds (the GH #307 same-surface RESUME discipline the shelf’s only other lifecycle exemplar, kpi-panel-lifecycle, never exercises — that one only ever appends).',
+  promptText: 'Run a 2-question trivia round: show one question with answer buttons, update the score after each pick, load the next question, then show a final score summary — without breaking anything as it moves through each step.',
   surfaceId: TRIVIA_ID,
   protocolVersion: 'v1.0',
   catalogId: 'agent-ui',
@@ -238,8 +204,14 @@ export const triviaRoundResumeSeed: ExampleSeed = {
     { version: 'v1.0', updateDataModel: { surfaceId: TRIVIA_ID, path: '/score', value: 2 } },
     { version: 'v1.0', updateDataModel: { surfaceId: TRIVIA_ID, path: '/round', value: 3 } },
 
-    // Round 3 (final) — q_area resent WHOLE a third time, this time with a summary instead of choices,
-    // proving the discipline holds for an arbitrary number of rounds, not just a second one.
+    // Final summary — q_area resent WHOLE a third time, this time with a summary instead of choices,
+    // proving the discipline holds for an arbitrary number of resends, not just a second one. `${/score}`
+    // (an absolute path, per protocol.ts's `${…}` grammar) — NOT the bare `${score}` a first draft used:
+    // this Text sits outside any list-item scope (no ancestor children-template), so a relative name has
+    // no scope to resolve against and `resolvePointer` (binding.ts) coerces it to the empty-string
+    // sentinel, silently dropping the score. Every OTHER `${…}` template on this shelf sits INSIDE a
+    // list-item scope, where a bare relative name is the correct, idiomatic form — this is the shelf's
+    // first top-level (non-list) `${…}` use, so it is exactly the case with no prior example to imitate.
     {
       version: 'v1.0',
       updateComponents: {
@@ -249,7 +221,7 @@ export const triviaRoundResumeSeed: ExampleSeed = {
           { id: 'q_area_content', component: 'CardContent', children: ['q_area_col'] },
           { id: 'q_area_col', component: 'Column', gap: 'sm', children: ['game_over_text', 'final_score_text'] },
           { id: 'game_over_text', component: 'Text', variant: 'h5', text: 'Round complete!' },
-          { id: 'final_score_text', component: 'Text', variant: 'body', text: '${score}/2 correct' },
+          { id: 'final_score_text', component: 'Text', variant: 'body', text: '${/score}/2 correct' },
         ],
       },
     },
@@ -257,10 +229,6 @@ export const triviaRoundResumeSeed: ExampleSeed = {
 }
 
 /** Every seed this module defines — the barrel's family-array precedent (index.ts derives `allSeeds`
- *  length from these, never a hand-counted literal). */
-export const corpusGrowthSeeds: readonly ExampleSeed[] = [
-  feedbackFormSeed,
-  retreatRescheduleSeed,
-  elevationScaleSeed,
-  triviaRoundResumeSeed,
-]
+ *  length from these, never a hand-counted literal). `retreat-reschedule` was authored and REJECTED by
+ *  the judge (module-header note) and dropped entirely — never re-added here. */
+export const corpusGrowthSeeds: readonly ExampleSeed[] = [feedbackFormSeed, elevationScaleSeed, triviaRoundResumeSeed]

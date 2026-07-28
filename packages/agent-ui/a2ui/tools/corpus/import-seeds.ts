@@ -70,12 +70,7 @@ import {
   colorPickerFormSeed,
 } from '../../src/examples/catalog-coverage.ts'
 import { kpiPanelLifecycleSeed } from '../../src/examples/message-lifecycle.ts'
-import {
-  feedbackFormSeed,
-  retreatRescheduleSeed,
-  elevationScaleSeed,
-  triviaRoundResumeSeed,
-} from '../../src/examples/corpus-growth.ts'
+import { feedbackFormSeed, elevationScaleSeed, triviaRoundResumeSeed } from '../../src/examples/corpus-growth.ts'
 import { allSeeds } from '../../src/examples/index.ts'
 
 declare const process: { cwd(): string; argv: string[]; exit(code?: number): never }
@@ -147,7 +142,7 @@ const SEEDS_BY_MODULE: ReadonlyArray<{ module: string; seeds: readonly ExampleSe
   { module: 'message-lifecycle.ts', seeds: [kpiPanelLifecycleSeed] },
   {
     module: 'corpus-growth.ts',
-    seeds: [feedbackFormSeed, retreatRescheduleSeed, elevationScaleSeed, triviaRoundResumeSeed],
+    seeds: [feedbackFormSeed, elevationScaleSeed, triviaRoundResumeSeed],
   },
 ]
 
