@@ -383,7 +383,20 @@
      which paints over its near portion, CSS2.1 Appendix E step 2 — most-negative-first) — only the
      interior-facing half is ever visible. `:not([data-range-end])` / `:not([data-range-start])` on
      the OTHER endpoint attribute excludes a same-day range (a cell that is BOTH start and end) —
-     with no interior cell on either side, no half-wash is drawn (nothing to bridge to). */
+     with no interior cell on either side, no half-wash is drawn (nothing to bridge to).
+     The far inline inset is `calc(-1 * gap)`, not `0` (GH #315) — the button's own edge is NOT the
+     true neighbouring edge: `[data-part='grid']`'s `gap` (ADR-0105) carves a real, unpainted gutter
+     between every pair of adjacent tracks, and an interior cell's full-box background happens to
+     paint/rounds across that gutter (engine box-fill snapping), but two independently-clipped
+     half-washes meeting from opposite sides across the SAME gutter do not — confirmed live: adjacent
+     endpoints (no interior cell between them, e.g. day N → N+1) rendered as two disconnected washes
+     with the panel colour showing through the gutter between them. Extending each half-wash by
+     exactly one gap-width past its own box overlaps (same colour, harmless) or exactly meets the
+     true edge of whatever sits across the gutter — an interior cell's own edge, or the other
+     endpoint's own half-wash — closing the gutter deterministically instead of relying on paint
+     rounding. Nothing clips the overflow (no `overflow` on any ancestor up to the panel), so the
+     1-gap overshoot paints cleanly; at a row/column edge (no neighbouring cell) it bleeds into the
+     grid's own inset margin, well inside the panel. */
   :scope [data-part='grid'] [role='gridcell'][data-range-start]:not([data-range-end])::after,
   :scope [data-part='grid'] [role='gridcell'][data-range-end]:not([data-range-start])::after {
     content: '';
@@ -396,10 +409,10 @@
   }
   :scope [data-part='grid'] [role='gridcell'][data-range-start]:not([data-range-end])::after {
     inset-inline-start: calc(50% + var(--ui-calendar-cell-size, 2rem) / 2);
-    inset-inline-end: 0;
+    inset-inline-end: calc(-1 * var(--ui-calendar-gap, 0.125rem));
   }
   :scope [data-part='grid'] [role='gridcell'][data-range-end]:not([data-range-start])::after {
-    inset-inline-start: 0;
+    inset-inline-start: calc(-1 * var(--ui-calendar-gap, 0.125rem));
     inset-inline-end: calc(50% + var(--ui-calendar-cell-size, 2rem) / 2);
   }
 
