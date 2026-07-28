@@ -101,10 +101,12 @@ export const bookingReservationSeed: ExampleSeed = {
             checks: [{ call: 'required', args: { value: { path: '/booking/guest' } }, message: 'Guest name is required' }],
           },
           { id: 'f_dates', component: 'Field', label: 'Check-in — check-out', child: 'cal_dates' },
-          // mode:"range" (ADR-0093) — valueStart/valueEnd are ONE-WAY binds (agent-fed; factories.ts:411-413
-          // rules them bindable one-way only — the row's single two-way slot stays `value`, inert in range
-          // mode). Honest limit: a user-picked range does NOT write back to /booking/checkIn|checkOut, so
-          // sendDataModel submits the seeded dates; live range write-back awaits a second two-way slot.
+          // mode:"range" (ADR-0093) — valueStart/valueEnd are two-way binds (ADR-0161 widened the
+          // catalog value mark to one-or-more slots; factories.ts's calendarFactory carries all three).
+          // The data model above ALREADY seeds real dates (checkIn:'2026-08-14'/checkOut:'2026-08-17')
+          // and this Calendar binds valueStart/valueEnd to those SAME two paths — a genuine round trip,
+          // not a first-time write: the range opens showing the seeded dates (read) and a completed pick
+          // writes the new ones straight back (write).
           {
             id: 'cal_dates', component: 'Calendar', mode: 'range', name: 'dates', min: '2026-07-07',
             valueStart: { path: '/booking/checkIn' }, valueEnd: { path: '/booking/checkOut' },
