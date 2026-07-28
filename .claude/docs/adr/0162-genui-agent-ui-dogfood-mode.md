@@ -147,3 +147,51 @@ The load-bearing mechanical findings this record decides FROM:
   ride the closed CSP anyway.
 - B3's judged eval gaining a fleet-idiom dimension stays deferred with B3 (named in GH #316, not
   scheduled here).
+
+## Amendment — REV 2026-07-28: "the ONE ADR-0004 parser" is unsatisfiable, and the derivation now also scans `.define()` sites (GH #342 · GH #346)
+
+> Append-only; this corrects the phrase **"via the ONE ADR-0004 parser"** in the two places this record
+> carries it — the `Supersedes / Superseded by` field's "(the ONE descriptor parser the derived inventory
+> reads)" and §Decision clause 4(b)'s "from the fleet's `{name}.md` descriptors via the ONE ADR-0004
+> parser" — and widens what clause 4(b)'s "descriptor-derived" covers. The Status and `Ratified by` cells
+> are untouched; the rest of the Decision stands unedited above. Both corrections are Kim's 2026-07-28
+> rulings, taken as ONE slice: the #346 code change is what makes the #342 wording true.
+
+**The claim, as recorded, was false in both places.** `gates.test.ts`'s ADR-0137 clause-8 SDK-FREE/ZERO-DEP
+leg bars EVERY bare package specifier under `src/agent/` (relative or `node:*` only — ADR-0107), and
+`@agent-ui/components/descriptor` is a bare specifier. Confirmed mechanically during review: planting that
+import into a non-allowlisted `src/agent/` file reds the gate with *"the `./agent` pack is zero
+third-party-dep (relative or node:\* only, ADR-0107)"*. This record named an import a sibling ratified
+fence forbids, so the shipped build necessarily deviated — `dogfood-inventory.ts` carries a LOCAL minimal
+frontmatter reader. The deviation was not cosmetic: that reader's first cut disagreed with the real parser
+on 4 real attributes across 2 real descriptors (a quoted empty-string enum member, `''` — ADR-0083's
+`landmark` edge case — left unquoted), so the anti-drift property the single-parser phrasing existed to
+guarantee was genuinely false, in exactly the way it was meant to prevent.
+
+**[GH #342](https://github.com/kimgranlund/agent-ui/issues/342) — ruled (a): a parity-proven reader, and
+the fence stays.** No exception is carved in ADR-0137; ADR-0137 and ADR-0107 are UNCHANGED by this record.
+Read every occurrence of "the ONE ADR-0004 parser" above as **"a reader proven equivalent to the ADR-0004
+parser by a standing parity gate"** — that gate being
+`packages/agent-ui/a2ui/src/live-agent/dogfood-inventory-parity.test.ts`, which runs the local reader and
+the real `@agent-ui/components/descriptor` parser over every committed descriptor and asserts
+attribute-for-attribute agreement (a lawful import THERE, outside the `src/agent/` fence). The property
+clause 4(b) actually delivers is unchanged and is now checkable: only the PARSER is local, never the data.
+The governing SPEC clause is amended to match in `genui-surface.spec.md` §12 (v0.6).
+
+**[GH #346](https://github.com/kimgranlund/agent-ui/issues/346) — ruled (1): extend the derivation, not
+ADR-0004's schema.** Clause 4(b)'s strictly-`tag:`-derived inventory structurally could not see five real,
+shipped, model-facing tags the clause-2 bundle self-defines: `ui-card-header`/`-content`/`-footer` and
+`ui-tab`/`ui-tab-panel`, whose compound-family descriptors document them in PROSE only (`card.md`'s own
+frontmatter says so outright). Clause 5's set-equality gate was therefore red on real, unmodified data and
+shipped with an interim allowlist. The derivation now ALSO scans each control family's folder for its own
+`.define('ui-x'` call sites — the SAME `extractTags` scan `scripts/build-dogfood-assets.mjs` already uses
+to derive `DOGFOOD_TAGS`, reused rather than re-written, because two derivations that disagree is #346's
+own root cause — and attaches the siblings to their PARENT descriptor's entry, under its summary and
+attributes, never as rows of their own (a sibling has no descriptor, hence nothing of its own to teach).
+**ADR-0004's descriptor schema is UNCHANGED** (fork 3, the machine-readable family field, declined).
+
+**Consequences of this REV, recorded:** clause 5's set-equality gate is restored to TRUE three-way
+equality — the interim `KNOWN_UNDOCUMENTED_FAMILY_TAGS` allowlist is deleted, and a gap in EITHER
+direction now reds. Clause 6's ≤ 16 000-char inventory budget is UNCHANGED and still holds: the five
+sibling tags cost 89 characters, measured 13 410 of 16 000. Clause 4(b)'s "NEVER byte-captured" drift
+discipline is untouched.
