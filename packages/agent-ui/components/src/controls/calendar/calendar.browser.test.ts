@@ -978,17 +978,27 @@ describe('ui-calendar — ADR-0105 (a) floor: byte-identical to the pre-ADR-0105
     ).toBeLessThanOrEqual(1)
   })
 
-  it('at the track floor, the endpoint half-wash (::after) is 0px wide — no new rendering', async () => {
+  it('at the track floor, the endpoint half-wash (::after) is exactly one grid-gap wide — bridging the gutter, GH #315 (superseded the pre-fix "0px, no new rendering" claim)', async () => {
+    // Pre-#315 this asserted 0px ("no new rendering" at the floor — ADR-0105's byte-for-byte claim).
+    // That was the bug: `--ui-calendar-gap` (ADR-0105) is a REAL, constant CSS-grid gutter between
+    // every pair of adjacent tracks, present at the floor exactly as much as at any stretched width —
+    // it is not itself an artifact of stretching. A same-day-adjacent range (no interior cell) showed
+    // two disconnected washes at the floor too, confirmed live; the fix (calendar.css §half-wash)
+    // extends each half-wash by one gap-width unconditionally, so at the floor the wash is now
+    // `gap`px, not 0 — a small, deliberate, width-INDEPENDENT visual (ADR-0105's floor/wide split
+    // stays true for the circle and the interior square wash; only the endpoint half-wash gains this).
     const { el } = mount('<ui-calendar mode="range" value-start="2026-07-10" value-end="2026-07-15"></ui-calendar>')
     await el.updateComplete
 
+    const grid  = el.querySelector<HTMLElement>('[data-part="grid"]')!
+    const gapPx = parseFloat(getComputedStyle(grid).columnGap || getComputedStyle(grid).gap)
     const startCell = el.querySelector<HTMLElement>('[data-date="2026-07-10"]')!
     const endCell   = el.querySelector<HTMLElement>('[data-date="2026-07-15"]')!
     const afterStartW = parseFloat(getComputedStyle(startCell, '::after').width || '0')
     const afterEndW   = parseFloat(getComputedStyle(endCell, '::after').width || '0')
 
-    expect(afterStartW, `${server.browser}: half-wash must be 0px at the track floor, got ${afterStartW}`).toBeLessThanOrEqual(0.5)
-    expect(afterEndW,   `${server.browser}: half-wash must be 0px at the track floor, got ${afterEndW}`).toBeLessThanOrEqual(0.5)
+    expect(afterStartW, `${server.browser}: half-wash must be exactly one gap (${gapPx}px) at the track floor, got ${afterStartW}`).toBeCloseTo(gapPx, 0)
+    expect(afterEndW,   `${server.browser}: half-wash must be exactly one gap (${gapPx}px) at the track floor, got ${afterEndW}`).toBeCloseTo(gapPx, 0)
   })
 
   it('a same-day range (start === end) paints no half-wash on either side — nothing to bridge to', async () => {
@@ -1070,7 +1080,7 @@ describe('ui-calendar — ADR-0105 (b) wide: two-layer paint — circles stay ci
     expect(beforeCs.borderRadius, `${server.browser}: point layer must stay circular (50%)`).toBe('50%')
   })
 
-  it('the endpoint half-wash (::after) opens to exactly (track − circle) / 2 in a wide track — bridges circle to interior', async () => {
+  it('the endpoint half-wash (::after) opens to exactly (track − circle) / 2 + gap in a wide track — bridges circle to interior AND the grid gutter (GH #315)', async () => {
     const { el } = mountStretched('<ui-calendar mode="range" value-start="2026-07-10" value-end="2026-07-20"></ui-calendar>')
     await el.updateComplete
 
@@ -1078,10 +1088,53 @@ describe('ui-calendar — ADR-0105 (b) wide: two-layer paint — circles stay ci
     const bandRect  = startCell.getBoundingClientRect()
     const beforeW   = parseFloat(getComputedStyle(startCell, '::before').width)
     const afterW    = parseFloat(getComputedStyle(startCell, '::after').width)
-    const expected  = (bandRect.width - beforeW) / 2
+    // The wash's far edge overshoots the button's own box by one `--ui-calendar-gap` (GH #315 fix)
+    // so it deterministically bridges the real CSS-grid gutter to the neighbouring cell, rather than
+    // stopping at its own edge and relying on the neighbour's paint to (sometimes) cover the seam.
+    const gridEl = el.querySelector<HTMLElement>('[data-part="grid"]')!
+    const gapPx  = parseFloat(getComputedStyle(gridEl).columnGap || getComputedStyle(gridEl).gap)
+    const expected = (bandRect.width - beforeW) / 2 + gapPx
 
     expect(afterW, `${server.browser}: half-wash absent in a wide track (expected ~${expected}px)`).toBeGreaterThan(1)
-    expect(Math.abs(afterW - expected), `${server.browser}: half-wash width ${afterW} != (track − circle)/2 = ${expected}`).toBeLessThanOrEqual(1)
+    expect(Math.abs(afterW - expected), `${server.browser}: half-wash width ${afterW} != (track − circle)/2 + gap = ${expected}`).toBeLessThanOrEqual(1)
+  })
+
+  it('adjacent range endpoints (no interior cell between them) paint ONE continuous band — the half-washes bridge the real grid gutter (GH #315)', async () => {
+    // Aug 12→13-shaped repro: a range whose start/end are directly adjacent days. Before the fix,
+    // each endpoint's half-wash stopped at its OWN box edge, leaving the CSS-grid `gap` gutter
+    // between the two buttons unpainted — two disconnected washes with the panel colour showing
+    // through, confirmed live via a real screenshot pre-fix (see the fix commit for the repro shot).
+    const { el } = mountStretched('<ui-calendar mode="range" value-start="2026-07-12" value-end="2026-07-13"></ui-calendar>')
+    await el.updateComplete
+
+    const startCell = el.querySelector<HTMLElement>('[data-date="2026-07-12"]')!
+    const endCell   = el.querySelector<HTMLElement>('[data-date="2026-07-13"]')!
+    const startRect = startCell.getBoundingClientRect()
+    const endRect   = endCell.getBoundingClientRect()
+
+    // Real, physical CSS-grid gutter between the two adjacent buttons (not covered by either box).
+    const gutter = endRect.left - startRect.right
+    expect(gutter, `${server.browser}: test fixture assumption broke — cells are not adjacent columns`).toBeGreaterThan(0)
+
+    // The start cell's ::after (`right` is the computed inset from its OWN box's right edge — negative
+    // means it overshoots outward, past the button, into/across the gutter).
+    const startAfterRight = parseFloat(getComputedStyle(startCell, '::after').right)
+    const startWashRightEdge = startRect.right - startAfterRight // right:negative -> edge past bandRect.right
+
+    // The end cell's ::after mirrors it from the other side (`left` is its own inset).
+    const endAfterLeft = parseFloat(getComputedStyle(endCell, '::after').left)
+    const endWashLeftEdge = endRect.left + endAfterLeft // left:negative -> edge before endRect.left
+
+    // The two washes must meet or overlap SOMEWHERE inside the gutter — no uncovered sliver of the
+    // panel colour left between them (the exact bug the screenshot showed).
+    expect(
+      startWashRightEdge,
+      `${server.browser}: start endpoint's half-wash (right edge ${startWashRightEdge}) does not reach the end endpoint's box (left ${endRect.left}) — a gap remains`,
+    ).toBeGreaterThanOrEqual(endRect.left - 1)
+    expect(
+      endWashLeftEdge,
+      `${server.browser}: end endpoint's half-wash (left edge ${endWashLeftEdge}) does not reach the start endpoint's box (right ${startRect.right}) — a gap remains`,
+    ).toBeLessThanOrEqual(startRect.right + 1)
   })
 
   it('an interior [data-in-range] cell paints a full-track wash (no holes) in a wide track, staying square', async () => {

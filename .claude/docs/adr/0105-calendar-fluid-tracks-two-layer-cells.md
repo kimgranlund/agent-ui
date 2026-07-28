@@ -125,3 +125,33 @@ Fluid tracks with a **two-layer cell** — CSS-only, no DOM change (the cells st
 - **A `fill`/`fluid` prop (Lane B).** Rejected: there is no second intent to gate — a calendar given width
   should spend it (the floor case is automatic); a prop would be a repair knob, which ADR-0102's Lane B
   bar excludes.
+
+## Amendment — REV 2026-07-28: the endpoint half-wash overshoots its box by one `--ui-calendar-gap` (GH #315)
+
+> Append-only; this amends clause 3's half-wash geometry and the two floor-width claims that described it
+> ("at the track floor its width is 0 — today's rendering exactly", §Decision 3 · "at the floor width it is
+> invisible (0px)", §Consequences). The rest of the Decision stands unedited above.
+
+[GH #315](https://github.com/kimgranlund/agent-ui/issues/315) proved the floor-width-0 claim described a
+**bug**, not a preserved invariant. `--ui-calendar-gap` is a real, constant CSS-grid **gutter** between every
+pair of adjacent day-cell tracks — a fixed token value present at the shrink-wrapped floor exactly as much as
+at a stretched width, not a stretch artifact. An *interior* cell's full-box `background-color` happens to
+paint across that gutter (engine box-fill rounding at fractional track widths), which is why the band read as
+continuous; the *endpoint* half-wash, clipped at its own box edge (`inset-inline-end/start: 0`), never
+crossed it. Two adjacent endpoints with no interior cell between them are the one geometry where nothing on
+either side reaches into the gutter — the range band rendered as two separated washes with a sliver of the
+panel colour between them (confirmed live via Playwright screenshot; root cause confirmed via
+`document.elementFromPoint()` landing on the transparent grid container in the gap).
+
+**The fix (commit `f4d1c4c`, `calendar.css` ~:397-405):** each half-wash now **overshoots its own box by
+exactly one `--ui-calendar-gap`** on the far inline inset (`calc(-1 * var(--ui-calendar-gap))`), at ALL
+widths — deterministically bridging the gutter to an interior neighbour's own edge, or to the other
+endpoint's mirrored half-wash, instead of relying on paint-rounding luck. So the half-wash is never 0 wide,
+including at the track floor; the clause-2 aside "the band's cells abut except the existing `0.125rem` grid
+gap" now reads with the endpoint washes bridging that gap by construction. Acceptance leg (b)'s "abuts the
+neighbor within the grid gap" is superseded by regression legs asserting the two washes **meet/overlap
+across** the gutter, plus an updated floor-width assertion (the old test had encoded the gap as intentional).
+
+One recorded side-note: at the edge of the grid (a range endpoint in the first/last column), the overshoot
+bleeds one gap's width into the panel inset — visually inert (the wash is the same subtle range tint over
+the panel padding, no neighbour to collide with), accepted as-is.
