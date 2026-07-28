@@ -25,9 +25,55 @@ describe('ui-sandbox-frame — defaults', () => {
     el.remove()
   })
 
+  it('defaults assets to {} — mode-off, GH #316/ADR-0162', () => {
+    const el = mount()
+    expect(el.assets).toEqual({})
+    el.remove()
+  })
+
   it('droppedMessages starts at 0', () => {
     const el = mount()
     expect(el.droppedMessages).toBe(0)
+    el.remove()
+  })
+})
+
+describe('ui-sandbox-frame — `assets` (SPEC-R12, GH #316/ADR-0162): the property-only safe codec', () => {
+  it('setting assets injects its css/js into the composed srcdoc', async () => {
+    const el = mount()
+    el.assets = { css: '.dogfood{color:red}', js: 'window.__dogfood = 1;' }
+    el.html = SMALL_DOC
+    await whenFlushed()
+    const iframe = el.querySelector('[data-part="frame"]') as HTMLIFrameElement
+    expect(iframe.srcdoc).toContain('.dogfood{color:red}')
+    expect(iframe.srcdoc).toContain('window.__dogfood = 1;')
+    el.remove()
+  })
+
+  it('an empty/absent assets composes a srcdoc with no extra style/script beyond the token style + bootstrap', async () => {
+    const el = mount()
+    el.html = SMALL_DOC
+    await whenFlushed()
+    const iframe = el.querySelector('[data-part="frame"]') as HTMLIFrameElement
+    expect((iframe.srcdoc.match(/<style>/g) ?? []).length).toBe(1)
+    expect((iframe.srcdoc.match(/<script>/g) ?? []).length).toBe(1) // bootstrap only — SMALL_DOC has no head script
+    el.remove()
+  })
+
+  it('is NEVER attribute-fed (attribute: false, the csp precedent) — setting the attribute has no effect on the property', () => {
+    const el = mount()
+    el.setAttribute('assets', JSON.stringify({ css: 'ignored' }))
+    expect(el.assets).toEqual({})
+    el.remove()
+  })
+
+  it('malformed JSON on the attribute-set codec path never throws — falls back to {} (SPEC-N4)', () => {
+    const el = mount()
+    // Exercise the codec's `from` directly (the attribute is never wired, so this proves the codec itself
+    // — a future attribute-wiring change would still be safe).
+    const codec = (UISandboxFrameElement.props.assets as { type: { from(a: string | null): unknown } }).type
+    expect(() => codec.from('not json')).not.toThrow()
+    expect(codec.from('not json')).toEqual({})
     el.remove()
   })
 })

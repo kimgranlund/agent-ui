@@ -2655,6 +2655,17 @@ exfiltrate anything the frame did not already lack.
 (`http:`, a bare host, an over-broad wildcard) rejects the WHOLE config — the control never renders a
 partial policy; it takes the never-paint path instead.
 
+## Dogfood assets (SPEC-R12, GH #316/ADR-0162)
+
+`assets` accepts a `SandboxFrameAssets` (`{ css?: string; js?: string }`) — an opt-in pair the HOST
+injects INLINE into the srcdoc (never a `url(...)`/network fetch, the unchanged CSP posture): the docs-
+like foundation+component CSS and a self-defining `ui-*` component-bundle script, so model-authored fleet
+markup upgrades into real, token-styled components inside the sandboxed frame. Absent (the default, both
+fields missing) composes a srcdoc byte-identical to today. This control is generic — it carries the pair
+verbatim; a consumer (the app layer, via `@agent-ui/components/dogfood-frame`, LLD-C1) decides whether and
+what to pass. Property-only (`attribute: false`, the `csp` precedent) — asset text is host-vetted
+structured content, never HTML-attribute-fed.
+
 ## The bridge (SPEC-R7/R8)
 
 A CLOSED six-member vocabulary: `initialize · initialized · teardown · size-changed ·
