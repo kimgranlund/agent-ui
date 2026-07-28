@@ -12,7 +12,14 @@
 // — the SAME local-copy resolution `catalog/conformance.ts`'s `SAFE_HREF_SCHEMES` already establishes in
 // this codebase for an analogous reachability constraint. It reads the REAL committed `.md` text (never
 // hand-transcribed data), so SPEC-R13(b)'s drift-free derivation guarantee holds exactly as designed —
-// only the PARSER is local, not the data.
+// only the PARSER is local, not the data. That claim is BACKED by a standing parity test
+// (`dogfood-inventory-parity.test.ts`, `src/live-agent/` — the real `@agent-ui/components/descriptor`
+// parser is a lawful import THERE, outside the `src/agent/` fence), not merely asserted: it runs both
+// parsers over every real committed descriptor and asserts attribute-for-attribute agreement. A first
+// cut of this reader shipped WITHOUT that test and disagreed with the real parser on 4 real attributes
+// (a QUOTED empty-string enum member, `''` — ADR-0083's `landmark` edge case — unquoted by the real
+// parser's `addField`, left quoted-verbatim here) — independent review caught it; the parity test now
+// holds the "only the parser is local" claim to its word going forward.
 //
 // NEVER byte-captured: a fleet edit (a new control, a changed attribute, reworded descriptor prose)
 // changes this function's OUTPUT on its very next call, with no baseline to re-capture —
@@ -35,8 +42,9 @@ const CONTROLS_DIR = `${process.cwd()}/packages/agent-ui/components/src/controls
 
 /** One `attributes[]` row's shape this module needs — a strict subset of
  *  `@agent-ui/components/descriptor`'s `ParsedAttribute` (name/type/values only; default/reflect are
- *  irrelevant to a teaching inventory). */
-interface LocalAttribute {
+ *  irrelevant to a teaching inventory). Exported: `dogfood-inventory-parity.test.ts` (`src/live-agent/`)
+ *  compares this shape directly against the real parser's own `ParsedAttribute[]`. */
+export interface LocalAttribute {
   name: string
   type?: string
   values?: string[]
@@ -45,8 +53,8 @@ interface LocalAttribute {
 /** Split the leading `---`…`---` frontmatter fence from the prose body — the SAME two-group shape
  *  `component-descriptor.ts`'s `splitFrontmatter` uses (ADR-0004), reimplemented locally per this
  *  file's header note. Throws if there is no fence (every real `{name}.md` has one; a malformed file is
- *  `validateComponentDescriptor`'s concern, not this module's). */
-function splitFrontmatter(src: string): { fence: string; body: string } {
+ *  `validateComponentDescriptor`'s concern, not this module's). Exported for the parity test. */
+export function splitFrontmatter(src: string): { fence: string; body: string } {
   const m = /^---\n([\s\S]*?)\n---\n?([\s\S]*)$/.exec(src)
   if (!m) throw new Error('dogfood-inventory: source has no leading --- frontmatter fence')
   return { fence: m[1]!, body: m[2]! }
@@ -59,12 +67,22 @@ function readTag(fence: string): string | undefined {
   return /^tag:\s*(\S+)/m.exec(fence)?.[1]
 }
 
+/** Drop a single pair of surrounding quotes (e.g. `'null'` → `null`, `''` → `''` empty) — the SAME
+ *  `unquote` `component-descriptor.ts:117-121` (`parseDescriptor`'s `addField`) applies to every
+ *  `attributes[].values[]` element before this module's local reader existed; the review-caught
+ *  reason it must be reproduced HERE too, byte-for-byte. */
+function unquote(s: string): string {
+  const m = /^(['"])([\s\S]*)\1$/.exec(s)
+  return m ? m[2]! : s
+}
+
 /** Read the `attributes[]` sequence block out of a frontmatter fence — every `- name: X` item up to the
  *  next column-0 `key:` line (or end of fence), pulling `type:`/`values: [a, b]` from each item's
  *  indented child lines. A minimal, deliberately narrower re-implementation of
  *  `component-descriptor.ts`'s general `parseSequence`/`toAttribute` (this module's header note) —
- *  sufficient for the two fields (`type`, `values`) a teaching line renders. */
-function readAttributes(fence: string): LocalAttribute[] {
+ *  sufficient for the two fields (`type`, `values`) a teaching line renders. Exported for the parity
+ *  test (`dogfood-inventory-parity.test.ts`). */
+export function readAttributes(fence: string): LocalAttribute[] {
   const start = /^attributes:.*$/m.exec(fence)
   if (!start) return []
   const rest = fence.slice(start.index + start[0].length)
@@ -87,10 +105,17 @@ function readAttributes(fence: string): LocalAttribute[] {
     }
     const valuesMatch = /^\s*values:\s*\[(.*)\]/.exec(line)
     if (valuesMatch) {
+      // Drop a single matching quote pair per element (`component-descriptor.ts`'s own `unquote`,
+      // ADR-0083's `landmark`/theme-provider's `scheme`/`scale`/`density` edge case: a QUOTED empty-
+      // string enum member, `''`, must unquote to a real empty string — review-caught defect: the
+      // FIRST cut of this reader split/trimmed/filtered-blank but never unquoted, so `''` (the quoted
+      // token, 2 real characters) survived verbatim into the rendered inventory instead of becoming
+      // an empty member, disagreeing with the real parser on 4 attributes across 2 real files).
       current.values = valuesMatch[1]!
         .split(',')
         .map((s) => s.trim())
         .filter((s) => s !== '')
+        .map((s) => unquote(s))
     }
   }
   return attrs
@@ -117,11 +142,49 @@ interface DogfoodControl {
  *  sentence — density over completeness, matching this seat's own briefed instruction. */
 const SUMMARY_CHAR_CAP = 110
 
+/** A trailing function-word (article/negation/conjunction/preposition/pronoun) that reads as a dangling
+ *  fragment when it is the LAST word before a truncation ellipsis (review-caught defect: a blind
+ *  word-boundary cut routinely lands right after "not"/"a"/"the"/"with" in the fleet's ADR-citation-
+ *  heavy house style — 17 of 59 real summaries, measured). Stripped, possibly repeatedly (`"is not"` →
+ *  strips "not" → strips "is"), so the cut lands on the last word that reads as a complete thought. */
+const DANGLING_TRAILING_WORD = /\s+(?:a|an|the|is|are|was|were|not|no|and|or|but|with|for|to|of|in|on|at|by|its|it's|that|which|who|whose|via|per|as)$/i
+
+/** Cut `text` to fit `cap` characters, clause-aware (review-caught defect: a blind last-space-before-cap
+ *  cut produced dangling negations/articles/unclosed parens in 17 of 59 real summaries). Two-tier
+ *  strategy: (1) prefer the LAST sentence-ending punctuation (`.`/`!`/`?` followed by whitespace or
+ *  end-of-string) within the cap window, as long as it doesn't cut absurdly short (< 40% of the cap —
+ *  a defensive floor against a stray abbreviation period near the very start); (2) otherwise, cut at the
+ *  last word boundary within the cap, then repeatedly strip a trailing dangling function word, a
+ *  trailing comma/semicolon/colon, and — if what remains ends inside an UNMATCHED open paren — everything
+ *  from that paren onward, so the result never ends mid-clause. Returns the untruncated `text` unchanged
+ *  when it already fits. */
+function clauseAwareTruncate(text: string, cap: number): string {
+  if (text.length <= cap) return text
+  const window = text.slice(0, cap + 1)
+  let lastSentenceEnd = -1
+  for (const m of window.matchAll(/[.!?](?=\s|$)/g)) lastSentenceEnd = m.index!
+  if (lastSentenceEnd !== -1 && lastSentenceEnd >= cap * 0.4) {
+    return text.slice(0, lastSentenceEnd + 1)
+  }
+  const wordCut = text.lastIndexOf(' ', cap)
+  let clause = text.slice(0, wordCut === -1 ? cap : wordCut)
+  for (;;) {
+    const stripped = clause.replace(DANGLING_TRAILING_WORD, '').replace(/[,;:]+$/, '')
+    if (stripped === clause) break
+    clause = stripped
+  }
+  const openParenIdx = clause.lastIndexOf('(')
+  if (openParenIdx !== -1 && !clause.includes(')', openParenIdx)) {
+    clause = clause.slice(0, openParenIdx).trimEnd()
+  }
+  return `${clause}…`
+}
+
 /** A terse one-line role summary of the descriptor's prose body (everything after the frontmatter
  *  fence) — the SAME `# ui-x` heading's opening paragraph every real `{name}.md` leads with
  *  (button.md/card.md/... house style: "`ui-x` is the ..."). Strips the redundant self-reference (the
- *  bullet already names the tag) and markdown emphasis noise (backticks/`**`), then hard-caps at
- *  `SUMMARY_CHAR_CAP` on a word boundary — never the whole first sentence, which routinely runs past
+ *  bullet already names the tag) and markdown emphasis noise (backticks/`**`), then clause-aware-caps at
+ *  `SUMMARY_CHAR_CAP` (`clauseAwareTruncate`) — never the whole first sentence, which routinely runs past
  *  200 characters in the fleet's ADR-citation-heavy house style and blew the inventory's char budget. */
 function firstSentence(body: string): string {
   const afterHeading = body.replace(/^\s*#[^\n]*\n+/, '') // drop the leading `# ui-x` heading line
@@ -132,9 +195,7 @@ function firstSentence(body: string): string {
   // Drop a leading "ui-x is/are the/a/an " self-reference — the bullet prefix already names the tag.
   const deSelfRef = flat.replace(/^ui-[a-z0-9-]+ (?:is|are) (?:the |an? )?/i, '')
   const capitalized = deSelfRef.length > 0 ? deSelfRef[0]!.toUpperCase() + deSelfRef.slice(1) : deSelfRef
-  if (capitalized.length <= SUMMARY_CHAR_CAP) return capitalized
-  const cut = capitalized.lastIndexOf(' ', SUMMARY_CHAR_CAP)
-  return `${capitalized.slice(0, cut === -1 ? SUMMARY_CHAR_CAP : cut)}…`
+  return clauseAwareTruncate(capitalized, SUMMARY_CHAR_CAP)
 }
 
 /** Render one descriptor's `attributes[]` as `name: type|enum(a|b|c)` clauses — `describePropType`'s

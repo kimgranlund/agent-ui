@@ -74,4 +74,31 @@ describe('dogfoodInventory — deterministic, descriptor-derived (SPEC-R13(b))',
   it('NEGATIVE CONTROL — filtering to a phantom tag yields an empty inventory, never a fabricated row', () => {
     expect(dogfoodInventory(['ui-planted-phantom-control'])).toBe('')
   })
+
+  // TRUNCATION QUALITY (independent-review MEDIUM finding on the S3 build): the aggregate 16 000-char
+  // budget test above says nothing about whether any ONE summary's cut reads cleanly — 17 of the 59 real
+  // summaries, measured, used to cut on a dangling negation/article/conjunction or land inside an
+  // unmatched "(" (e.g. "...UIElement (not…", "...that walks a…"). This asserts clause-aware-cut QUALITY
+  // against every real, currently-shipped summary — the absence of exactly this check is why the defect
+  // shipped undetected the first time.
+  it('a truncated summary never ends on a dangling function word or inside an unmatched "("', () => {
+    const DANGLING_ENDING =
+      /(?:^|\s)(?:a|an|the|is|are|was|were|not|no|and|or|but|with|for|to|of|in|on|at|by|its|it's|that|which|who|whose|via|per|as)…$/i
+    const inv = dogfoodInventory()
+    const truncated: string[] = []
+    for (const line of inv.split('\n')) {
+      const m = /^- ui-[a-z0-9-]+ — (.+) \(attrs: /.exec(line)
+      const summary = m?.[1]
+      if (summary === undefined || !summary.endsWith('…')) continue // untruncated — nothing to check here
+      truncated.push(summary)
+      expect(summary, `dangling ending before the ellipsis: "${summary}"`).not.toMatch(DANGLING_ENDING)
+      const openCount = (summary.match(/\(/g) ?? []).length
+      const closeCount = (summary.match(/\)/g) ?? []).length
+      expect(openCount, `unmatched "(" in a truncated summary: "${summary}"`).toBeLessThanOrEqual(closeCount)
+    }
+    // A non-empty sample proves this test actually exercises the truncation path (the fleet's
+    // ADR-citation-heavy house style routinely exceeds SUMMARY_CHAR_CAP — a future prose trim that made
+    // every summary fit would be a legitimate reason for this to shrink to 0, not a silent no-op).
+    expect(truncated.length).toBeGreaterThan(0)
+  })
 })
