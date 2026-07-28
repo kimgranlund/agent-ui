@@ -222,10 +222,11 @@ function renderAttrs(attributes: readonly LocalAttribute[]): string {
  *  a string literal is not mistaken for a comment. Exported for the parity/gate tests.
  *
  *  This is a heuristic, not a JS lexer: an unbalanced `/*` inside a string literal would over-strip.
- *  That direction is GATED, not assumed — over-stripping DROPS a real define, which
- *  `dogfood-tag-set-equality.test.ts` reds immediately as "shipped but not taught" against the real
- *  built bundle. A lexer is the wrong weight for a scan whose errors are caught in one direction and
- *  loudly in the other. */
+ *  BOTH failure directions are GATED, not assumed, and `dogfood-tag-set-equality.test.ts` is what
+ *  gates them — over-stripping DROPS a real define and reds as "shipped but not taught"; under-
+ *  stripping ADDS a phantom and reds as "taught but not shipped", against the built bundle AND the
+ *  runtime-registration leg independently (measured, GH #351 re-review). A lexer is the wrong weight
+ *  for a scan whose every error is caught loudly, in either direction, by a standing gate. */
 export function stripComments(src: string): string {
   return src.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/[^\n]*/g, '$1')
 }
@@ -307,11 +308,17 @@ function discoverDogfoodControls(): DogfoodControl[] {
     // the sort is applied HERE rather than assumed: `descriptors` is filled in `readdirSync` order,
     // which is not sorted and is not guaranteed stable across filesystems, so without this line
     // attribution is genuinely non-deterministic (review-caught, GH #351 F1 — a `.define` planted in
-    // `swiper/swiper.ts` attached to `ui-swiper-item`, not `ui-swiper`). Tag order is also the RIGHT
-    // parent by construction in every real case: a family's root tag is a prefix of its siblings'
-    // (`ui-swiper` < `ui-swiper-item`, `ui-card` < `ui-card-header`), so the shortest — the root —
-    // always sorts first. Nothing beyond the set-equality gate checks WHICH parent a sibling landed
-    // on, so a wrong-but-taught attribution would ship silently; this keeps it right by ordering.
+    // `swiper/swiper.ts` attached to `ui-swiper-item`, not `ui-swiper`). What tag order buys is
+    // DETERMINISM, which is the property that matters here; it does NOT universally pick the family
+    // ROOT. The shortest tag sorts first, which IS the root for `split`/`swiper` (`ui-swiper` <
+    // `ui-swiper-item`) — but not for `radio`/`toast`, where the container is the LONGER tag by those
+    // descriptors' own words (`radio.md`: "`ui-radio` is the radio-button leaf" vs `radio-group.md`'s
+    // "container for the radio-button family"; `toast-region.md`: "the top-layer host `ui-toast`
+    // instances stack inside"). Latent only — neither folder carries siblings today, and the only two
+    // that do (`card`, `tabs`) hold a single descriptor each, so nothing is mis-attributed now. If a
+    // sibling ever appears in `radio`/`toast` it would ride the leaf rather than the container: the
+    // set-equality gate reds only on an UNTAUGHT tag, not on a wrongly-parented one, so that case
+    // needs an explicit parent rule here rather than more sorting.
     const byTag = [...descriptors].sort((a, b) => a.tag.localeCompare(b.tag))
     const [first, ...rest] = byTag
     controls.push({ ...first!, family: siblings })
