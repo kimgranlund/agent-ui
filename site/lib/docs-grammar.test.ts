@@ -13,7 +13,9 @@ import { describe, it, expect } from 'vitest'
 //      ∈ {proposed,accepted,superseded} (dialect-agnostic — three header dialects are legal, §1 of the
 //      standards skill; a MISSING keyword is the defect this catches).
 //   S3 dangling-link sweep: every relative markdown link in every ACTIVE doc resolves on disk
-//      (archive/ + reports/ excluded — historical records keep stale paths verbatim, by design).
+//      (archive/ + reports/ excluded — historical records keep stale paths verbatim, by design;
+//      fenced blocks + inline code spans excluded too, GH #321 — a link inside code is
+//      documentation OF a link, not a live cite).
 //   S4 hook liveness, both directions: every command registered under hooks in settings(.local).json
 //      points at an existing file, AND every file in .claude/hooks/ is registered somewhere — the
 //      orphaned-guard class (adr-status-guard sat unregistered for weeks) can never silently recur.
@@ -72,20 +74,65 @@ describe('STRUCTURAL — S2 SPEC/LLD/PRD status keyword present', () => {
   }
 })
 
+const LINK = /\]\((\.\.?\/[^)#\s]+)(#[^)\s]*)?\)/g
+
+// GH #321: a relative link inside a fenced block or an inline code span is documentation OF a link
+// (a quoted ADR-README index row, a sample snippet) — resolving it against the QUOTING file's own
+// directory reddened S3 twice and taught two slices to rewrite the quoted path instead. Blank out
+// code, keeping line structure, before the link sweep runs. An UNCLOSED fence swallows the rest of
+// the file (its links stop being checked) — that is a markdown defect in its own right, and erring
+// toward silence beats erring toward a false red on illustrative text.
+function stripCode(text: string): string {
+  const out: string[] = []
+  let fence: string | null = null
+  for (const line of text.split('\n')) {
+    const open = /^\s{0,3}(`{3,}|~{3,})/.exec(line)
+    if (fence !== null) {
+      if (open && line.trim().startsWith(fence)) fence = null
+      out.push('')
+      continue
+    }
+    if (open) {
+      fence = open[1]!
+      out.push('')
+      continue
+    }
+    // shortest run-delimited inline span: an N-backtick opener closes on the next N-backtick run
+    out.push(line.replace(/(`+)(?:(?!\1)[\s\S])*?\1/g, ''))
+  }
+  return out.join('\n')
+}
+function relativeLinks(text: string): string[] {
+  return [...stripCode(text).matchAll(LINK)].map((m) => m[1]!)
+}
+
 describe('STRUCTURAL — S3 zero dangling relative links in active docs', () => {
   it('every ](../…) / ](./…) target in every active doc resolves', () => {
     const files = walkMd(DOCS, (p: string) => p.includes('/archive/') || p.includes('/reports/'))
-    const LINK = /\]\((\.\.?\/[^)#\s]+)(#[^)\s]*)?\)/g
     const dangling: string[] = []
     for (const f of files) {
-      const text = readFileSync(f, 'utf8')
-      for (const m of text.matchAll(LINK)) {
-        const target = normalize(f, m[1]!)
-        if (!existsSync(target)) dangling.push(`${f.slice(ROOT.length + 1)} -> ${m[1]}`)
+      for (const rel of relativeLinks(readFileSync(f, 'utf8'))) {
+        const target = normalize(f, rel)
+        if (!existsSync(target)) dangling.push(`${f.slice(ROOT.length + 1)} -> ${rel}`)
       }
     }
     expect(dangling, dangling.join('\n')).toEqual([])
     expect(files.length, 'the sweep saw a real corpus').toBeGreaterThan(100)
+  })
+
+  // Negative controls — the sweep must still bite on real prose links (GH #321's fix must not
+  // hollow the gate out), and must stay quiet on quoted/illustrative ones.
+  it('still catches a genuinely dangling link in prose', () => {
+    expect(relativeLinks('See [x](./nope-does-not-exist.md) for detail.')).toEqual(['./nope-does-not-exist.md'])
+    expect(relativeLinks('`ui-table` ships — see [the ADR](../adr/0163-x.md).')).toEqual(['../adr/0163-x.md'])
+    expect(relativeLinks('Prose [a](./a.md)\n```\nfenced [b](./b.md)\n```\nmore [c](./c.md)')).toEqual(['./a.md', './c.md'])
+  })
+  it('skips links inside fenced blocks and inline code spans', () => {
+    expect(relativeLinks('Row draft: `| [0162](./0162-x.md) | … |`')).toEqual([])
+    expect(relativeLinks('```md\n| [0162](./0162-x.md) |\n```')).toEqual([])
+    expect(relativeLinks('~~~\n[a](./a.md)\n~~~')).toEqual([])
+    expect(relativeLinks('  ```\n  [a](./a.md)\n  ```')).toEqual([])
+    expect(relativeLinks('``a ` b [x](./x.md)``')).toEqual([])
   })
 })
 
