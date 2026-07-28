@@ -34,19 +34,31 @@
 // `a2ui-corpus.md`); every other rejection code still hard-aborts (nothing written, even for candidates
 // that themselves passed) exactly as before — this is a realized-tool decision, not an ADR-0060/0068 edit.
 //
-// GH #335 defect 1 — the unjudged-run disposition guard: an `E_QUALITY` reject at ADMISSION time is
-// never written (`admit.ts` stage 10 — the LLD §6 asymmetry: "a candidate can be refused entry" leaves
-// no trace in the store or the dedup index), so a plain run with no `--verdicts` had nothing to remember
-// a prior rejection by and silently re-admitted it, reporting a clean "0 quality-rejected" result. The
-// durable home for that outcome already existed — `admission-coverage.test.ts`'s `DISPOSITION_ALLOWLIST`
-// — it was just siloed inside a test file this script never read. Moved to
-// `../../src/corpus/disposition-allowlist.ts` (a pure, zero-dep module both files import) and consulted
-// by `dispositionGuard` below: an UNJUDGED run whose candidate name carries a recorded disposition and
-// was never actually admitted HALTS loudly before `admit()` even runs, nothing written. A `--verdicts`
-// run needs no such guard — `createVerdictJudge` already fails closed on every not-yet-admitted
-// candidate absent from the verdicts file (ADR-0068 clause 2), disposition-allowlisted or not, so this
-// change touches ONLY the previously-unguarded unjudged path and does not alter ADR-0068's judge/
-// verdict/quarantine contract in any way.
+// GH #335 defect 1 — the unjudged-run disposition guard, NARROWED not closed: an `E_QUALITY` reject at
+// ADMISSION time is never written (`admit.ts` stage 10 — the LLD §6 asymmetry: "a candidate can be
+// refused entry" leaves no trace in the store or the dedup index), so a plain run with no `--verdicts`
+// had nothing to remember a prior rejection by and silently re-admitted it, reporting a clean
+// "0 quality-rejected" result. The durable home for that outcome already existed —
+// `admission-coverage.test.ts`'s `DISPOSITION_ALLOWLIST` — it was just siloed inside a test file this
+// script never read. Moved to `../../src/corpus/disposition-allowlist.ts` (a pure, zero-dep module both
+// files import) and consulted by `dispositionGuard` below: an UNJUDGED run whose candidate name carries
+// a RECORDED disposition and was never actually admitted HALTS loudly before `admit()` even runs,
+// nothing written. A `--verdicts` run needs no such guard — `createVerdictJudge` already fails closed on
+// every not-yet-admitted candidate absent from the verdicts file (ADR-0068 clause 2), disposition-
+// allowlisted or not — so this change touches ONLY the previously-unguarded unjudged path and does not
+// alter ADR-0068's judge/verdict/quarantine contract in any way.
+//
+// STILL OPEN (review finding, not yet closed): this only protects a name ALREADY in the allowlist. A
+// judged run that rejects a NEW candidate Y tomorrow prints Y in the quality-rejected lane and exits 0
+// with Y recorded nowhere durable; the next unjudged run silently admits it — defect 1, verbatim, for
+// any name that hasn't been hand-transcribed yet. Worse, `admission-coverage.test.ts`'s own
+// `seedsMissingAdmission` gate only reds while Y is BOTH un-admitted and un-allowlisted — the moment the
+// unjudged run admits Y, that gate goes green again, so nothing catches the miss after the fact either.
+// The quality-rejected report below (search "GH #335 — the paste-ready" further down) removes the
+// hand-transcription STEP by emitting a ready-to-paste `DISPOSITION_ALLOWLIST` entry, but a human still
+// has to actually paste it before the next unjudged run — closing this for real needs a machine-enforced
+// link between a judged rejection and the next run's dedup/guard state, which is bigger than this fix and
+// not something to invent inline (ADR territory — filed for the host to route, not solved here).
 //
 // GH #335 defect 2 — an unrecognized flag used to be silently ignored and the tool proceeded to a real
 // mutating run (`import-seeds.ts --help` wrote to the corpus, discovered live). `parseArgs` now returns
@@ -311,6 +323,36 @@ interface ImportReport {
   /** Every non-`E_DUP` rejection collected this run — classified into the abort/non-abort lanes
    *  AFTER the loop completes (TKT-0022 cl.1, `../../src/corpus/import-report.ts`). */
   rejections: SeedRejection[]
+  /** `--dry-run` only (GH #335 review item 3): names `dispositionGuard` would have HALTED a real run on
+   *  — reported as a warning line instead, so a dry run finishes and still tells the truth about what a
+   *  real run would do (nothing admitted, nothing written, for exactly these names). */
+  dispositionWarnings: string[]
+}
+
+/** The critic-authored metadata a `--verdicts` run's judge carries (ADR-0068's `VerdictsFile`) — kept
+ * around past the parse step ONLY so the quality-rejected report (GH #335 review item 2) can emit a
+ * paste-ready `DISPOSITION_ALLOWLIST` entry citing the real rubric version/judge/date this run used,
+ * instead of a human re-typing them from the run's console output. */
+export interface VerdictMeta {
+  rubricVersion: string
+  judgedBy: string
+  date: string
+}
+
+/**
+ * GH #335 review item 2's "cheap half": a `DISPOSITION_ALLOWLIST` entry the run already has every fact
+ * for, formatted exactly as a `Map` literal entry so it can be pasted straight into
+ * `src/corpus/disposition-allowlist.ts`. This does NOT close the class the disposition guard only
+ * narrows (see the defect-1 header comment) — it removes the hand-transcription step, nothing more; a
+ * human still has to actually paste it before the next unjudged run.
+ */
+export function dispositionAllowlistSnippet(q: SeedRejection, meta: VerdictMeta): string {
+  const dims = q.failingDimensions !== undefined && q.failingDimensions.length > 0 ? q.failingDimensions.join(', ') : '(none reported)'
+  const reason =
+    `judged E_QUALITY ${meta.date} (VerdictsFile, rubric a2ui-corpus ${meta.rubricVersion} — ${meta.judgedBy}). ` +
+    `${q.message}. Failing dimensions: ${dims}. Record this before the next unjudged run (GH #335) — an ` +
+    'unjudged run will otherwise silently re-admit it.'
+  return `  ['${q.name}', ${JSON.stringify(reason)}],`
 }
 
 /** The `--replace <name>` sanctioned exit's audit trail (ADR-0068 clause 5c): the prior record's
@@ -366,20 +408,25 @@ async function main(): Promise<void> {
 
   const deps: AdmitDeps = { catalog: loadDefaultCatalog(repoRoot), store, dedupIndex }
 
+  // Kept past the parse step ONLY to feed the paste-ready disposition-allowlist snippet at report time
+  // (GH #335 review item 2) — the pipeline itself only ever needs `deps.judge`.
+  let verdictMeta: VerdictMeta | undefined
+
   if (verdictsPath !== undefined) {
     const rubricVersion = readRubricVersion(repoRoot)
     const verdictsText = readFileSync(verdictsPath, 'utf8') as string
-    const parsed = parseVerdictsFile(verdictsText, rubricVersion)
-    if (!parsed.ok) {
-      console.error(`import-seeds: the verdicts file is malformed (${parsed.issues.length} issue(s)):`)
-      for (const issue of parsed.issues) console.error(`  - ${issue.path || '(root)'}: ${issue.message}`)
+    const parsedVerdicts = parseVerdictsFile(verdictsText, rubricVersion)
+    if (!parsedVerdicts.ok) {
+      console.error(`import-seeds: the verdicts file is malformed (${parsedVerdicts.issues.length} issue(s)):`)
+      for (const issue of parsedVerdicts.issues) console.error(`  - ${issue.path || '(root)'}: ${issue.message}`)
       console.error('Nothing was written.')
       process.exit(1)
     }
-    deps.judge = createVerdictJudge(parsed.file)
+    deps.judge = createVerdictJudge(parsedVerdicts.file)
+    verdictMeta = { rubricVersion, judgedBy: parsedVerdicts.file.judgedBy, date: parsedVerdicts.file.date }
   }
 
-  const report: ImportReport = { admitted: [], alreadyPresent: [], rejections: [] }
+  const report: ImportReport = { admitted: [], alreadyPresent: [], rejections: [], dispositionWarnings: [] }
   let replaced: ReplacedInfo | undefined
 
   for (const group of SEEDS_BY_MODULE) {
@@ -393,6 +440,14 @@ async function main(): Promise<void> {
 
       const haltMessage = dispositionGuard(seed.name, verdictsPath, existing !== undefined)
       if (haltMessage !== undefined) {
+        // GH #335 review item 3: `--dry-run` writes nothing by construction — the disposition guard's
+        // whole purpose — so it must never hard-exit here. Report what a REAL run would do (HALT, admit
+        // nothing) as a warning line and move on to the next seed, so the dry run actually finishes.
+        if (dryRun) {
+          report.dispositionWarnings.push(seed.name)
+          console.log(`import-seeds (--dry-run): a real run would HALT here — ${haltMessage}`)
+          continue
+        }
         console.error(haltMessage)
         process.exit(1)
       }
@@ -488,6 +543,19 @@ async function main(): Promise<void> {
     for (const q of qualityRejected) {
       console.log(`  quality-rejected: "${q.name}" — ${q.message}${q.failingDimensions ? ` [failing: ${q.failingDimensions.join(', ')}]` : ''}`)
     }
+    // GH #335 — the paste-ready disposition-allowlist entry: this does NOT close the "narrowed, not
+    // closed" gap the defect-1 header comment names (a human still has to actually paste these before the
+    // next unjudged run) — it only removes the hand-transcription step that makes forgetting the default.
+    if (verdictMeta !== undefined) {
+      console.log(
+        '  record these in src/corpus/disposition-allowlist.ts before the next unjudged run, or it will ' +
+          'silently re-admit them (GH #335) — paste-ready entries:',
+      )
+      for (const q of qualityRejected) console.log(dispositionAllowlistSnippet(q, verdictMeta))
+    }
+  }
+  if (report.dispositionWarnings.length > 0) {
+    console.log(`  would HALT on a real run (--dry-run only, disposition-allowlisted): ${report.dispositionWarnings.join(', ')}`)
   }
   if (replaced !== undefined) {
     console.log(`  replaced: "${replaced.name}" (prior status: ${replaced.priorStatus}, prior canonicalHash: ${replaced.priorCanonicalHash ?? 'none'})`)
@@ -506,4 +574,10 @@ if (process.argv[1]?.endsWith('import-seeds.ts')) {
     console.error('import-seeds: unexpected failure', e)
     process.exit(1)
   })
+} else {
+  // GH #335 review item 4: a guard that does nothing and exits 0 is the wrong shape — invoked through a
+  // symlink named anything other than `import-seeds.ts` (a real, if unusual, way to reach this file),
+  // the CLI-entry check above silently fails and the process exits 0 having done nothing at all,
+  // including printing `--help`. One line, loudly, so that's never mistaken for success.
+  console.error(`import-seeds: loaded as "${process.argv[1] ?? '(unknown)'}" — not invoked as import-seeds.ts, so main() did not run. Invoke this file directly.`)
 }

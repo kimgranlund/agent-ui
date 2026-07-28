@@ -10,7 +10,12 @@
 // `process.exit` — so this file needs neither a scratch corpus dir nor a `process.exit` spy.
 
 import { describe, it, expect } from 'vitest'
-import { parseArgs, dispositionGuard } from './import-seeds.ts'
+import { spawnSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
+import { parseArgs, dispositionGuard, dispositionAllowlistSnippet } from './import-seeds.ts'
+import type { SeedRejection } from '../../src/corpus/import-report.ts'
+
+declare const process: { cwd(): string }
 
 describe('parseArgs — GH #335 defect 2 (unrecognized argv must hard-error, not silently mutate)', () => {
   it('an unrecognized argument is a structured error, never silently dropped', () => {
@@ -84,5 +89,74 @@ describe('dispositionGuard — GH #335 defect 1 (an unjudged run must not silent
     const halt = dispositionGuard('stats-grid-dashboard', undefined, false)
     expect(halt).toMatch(/--verdicts/)
     expect(halt).toMatch(/Nothing was written/)
+  })
+})
+
+describe('dispositionAllowlistSnippet — GH #335 review item 2 (a paste-ready DISPOSITION_ALLOWLIST entry, not a closed class)', () => {
+  const rejection: SeedRejection = {
+    name: 'some-new-candidate',
+    code: 'E_QUALITY',
+    message: 'below the corpus-quality rubric bar',
+    failingDimensions: ['D5', 'D2'],
+  }
+  const meta = { rubricVersion: '1.0', judgedBy: 'a2ui-reviewer', date: '2026-07-28' }
+
+  it('formats as a real JS array-literal entry — `[\'name\', "reason"],` — pasteable straight into DISPOSITION_ALLOWLIST\'s Map constructor', () => {
+    const snippet = dispositionAllowlistSnippet(rejection, meta)
+    expect(snippet).toMatch(/^ {2}\['some-new-candidate', ".*"\],$/)
+    // JSON.stringify (used to produce the reason string) always double-quotes and escapes correctly —
+    // parsing the substring between the two matching double quotes proves it is valid JS string syntax,
+    // not just "looks like" one.
+    const reasonMatch = snippet.match(/, (".*")\],$/)
+    expect(reasonMatch).not.toBeNull()
+    expect(() => JSON.parse(reasonMatch![1]!)).not.toThrow()
+  })
+
+  it('carries the real rubric version/judge/date/failing-dimensions this run used, not placeholders', () => {
+    const snippet = dispositionAllowlistSnippet(rejection, meta)
+    expect(snippet).toContain('2026-07-28')
+    expect(snippet).toContain('1.0')
+    expect(snippet).toContain('a2ui-reviewer')
+    expect(snippet).toContain('D5, D2')
+  })
+
+  it('names the "record this before the next unjudged run" reminder — the transcription step it removes, not the class it does not close', () => {
+    expect(dispositionAllowlistSnippet(rejection, meta)).toMatch(/before the next unjudged run/)
+  })
+
+  it('handles a rejection with no failingDimensions reported', () => {
+    const noFailingDims: SeedRejection = { name: 'x', code: 'E_QUALITY', message: 'below bar' }
+    expect(dispositionAllowlistSnippet(noFailingDims, meta)).toContain('(none reported)')
+  })
+})
+
+// ── end-to-end wiring smoke — the review finding that the unit tests above cover the two PURE
+// helpers, not that `main()` actually consults them: deleting either call site and every test above
+// still passes. This spawns the REAL script (a real subprocess, real `--experimental-strip-types`,
+// real fs) against the REAL committed shelf and proves the wiring itself, not just the helpers. Not a
+// mandated fix (coordinator's "not yours to fix" list) — added because it was flagged as the single
+// highest-value addition and is cheap. Coupled to the real corpus's current content (like
+// `admission-coverage.test.ts` already is) — if `stats-grid-dashboard` is ever legitimately re-admitted
+// via the sanctioned `--replace` path, this test needs a new never-admitted disposition-allowlisted
+// fixture name, same as that gate would. ──
+describe('import-seeds main() wiring — a real subprocess run proves the guard is actually consulted, not just unit-tested in isolation', () => {
+  it('a real unjudged run against the committed shelf HALTS on stats-grid-dashboard, exits non-zero, and leaves the corpus byte-identical', () => {
+    const repoRoot = process.cwd()
+    const shardPath = `${repoRoot}/packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl`
+    const indexPath = `${repoRoot}/packages/agent-ui/a2ui/corpus/index.json`
+    const beforeShard = readFileSync(shardPath, 'utf8')
+    const beforeIndex = readFileSync(indexPath, 'utf8')
+
+    const result = spawnSync(
+      'node',
+      ['--experimental-strip-types', 'packages/agent-ui/a2ui/tools/corpus/import-seeds.ts'],
+      { cwd: repoRoot, encoding: 'utf8' },
+    )
+
+    expect(result.status).toBe(1)
+    expect(result.stderr).toMatch(/HALTED/)
+    expect(result.stderr).toMatch(/stats-grid-dashboard/)
+    expect(readFileSync(shardPath, 'utf8')).toBe(beforeShard)
+    expect(readFileSync(indexPath, 'utf8')).toBe(beforeIndex)
   })
 })

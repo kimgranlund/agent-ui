@@ -68,12 +68,17 @@ export default defineConfig({
           // `process.cwd()`, a side effect that must never leak into a shared test process; see both
           // files' own header comments) — a future full-Worker integration test needs its own isolated
           // runtime (e.g. `@cloudflare/vitest-pool-workers`), not this project. GH #335 widened it to
-          // `corpus/` (`import-seeds.ts`'s `parseArgs`/`dispositionGuard`): both are pure and the module's
+          // `a2ui/tools/corpus/` ONLY (`import-seeds.ts`'s `parseArgs`/`dispositionGuard`): that module's
           // own CLI-entry guard (`process.argv[1]?.endsWith('import-seeds.ts')`) keeps `main()` from
           // firing on import, so it is exactly as safe to import here as `route-guards.ts`/`fs-shim.ts`.
+          // Deliberately scoped to the `a2ui` package by name, NOT a `*/tools/corpus/*.test.ts` wildcard —
+          // `packages/agent-ui/a2a/tools/corpus/import-seeds.ts` also exists and calls `main()`
+          // UNCONDITIONALLY at module top level (no entry guard, real `writeFileSync`s) — a wildcard here
+          // would silently arm the first sibling test anyone adds under `a2a/tools/corpus/` to fire a real
+          // mutating a2a-corpus import inside the test process the moment it's created (GH #335 review).
           name: 'tools',
           environment: 'node',
-          include: ['packages/agent-ui/*/tools/agent/worker/*.test.ts', 'packages/agent-ui/*/tools/corpus/*.test.ts'],
+          include: ['packages/agent-ui/*/tools/agent/worker/*.test.ts', 'packages/agent-ui/a2ui/tools/corpus/*.test.ts'],
         },
       },
     ],
