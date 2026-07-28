@@ -46,14 +46,28 @@ export const BOOTSTRAP_SCRIPT = `
 })();
 `.trim()
 
+/** SandboxFrameAssets (SPEC-R12, GH #316/ADR-0162 LLD-C2) — the opt-in docs-like asset pair the dogfood
+ *  mode injects: `css` the flattened foundation+component stylesheet text, `js` the self-defining
+ *  component-bundle IIFE text (both from `@agent-ui/components/dogfood-frame`, LLD-C1). Either field may
+ *  be absent independently — an absent/empty `assets` (or an assets object with neither field) composes
+ *  a srcdoc BYTE-IDENTICAL to the no-assets path (the regression pin below). */
+export interface SandboxFrameAssets {
+  css?: string
+  js?: string
+}
+
 /**
  * Compose the atomic srcdoc document (SPEC-R5 "build"): the SPEC-R4 CSP active before any model byte
- * evaluates, the SPEC-R6 token bridge available at first style resolution, and the bootstrap installed
- * before model script runs — insertion order in `<head>` is CSP meta, then the token `<style>`, then the
- * bootstrap `<script>` (each unshifted ahead of the last), so all three precede every original `<head>`
- * child (the model's own script/style/meta). Pure DOM string-in/string-out; `DOMParser` exists in both
- * jsdom and every real engine, so this is jsdom-testable (unlike the live iframe/postMessage legs, which
- * need a real browser gate).
+ * evaluates, the SPEC-R6 token bridge available at first style resolution, the bootstrap installed
+ * before model script runs, and — mode-on — the SPEC-R12 dogfood asset pair. Final `<head>` insertion
+ * order: CSP meta -> token `<style>` -> asset `<style>` (mode-on only) -> bootstrap `<script>` -> asset
+ * `<script>` (mode-on only) -> the model document's own original `<head>` children. Built as an ordered
+ * array of nodes, inserted ONCE ahead of the model's own original first `<head>` child (captured before
+ * any insertion) — a single mechanism for both the five-node (assets present) and three-node
+ * (assets absent) shapes, so the asset-less path is byte-identical to the pre-LLD-C2 three-insertBefore
+ * chain by construction, not by a second code path (the regression pin, bootstrap.test.ts). Pure DOM
+ * string-in/string-out; `DOMParser` exists in both jsdom and every real engine, so this is jsdom-testable
+ * (unlike the live iframe/postMessage legs, which need a real browser gate).
  *
  * HONEST SCOPE (component-review finding): `DOMParser`'s `'text/html'` mode is deliberately forgiving —
  * per the HTML5 parsing algorithm it NEVER throws and NEVER yields a `parsererror` document for a STRING
@@ -66,7 +80,13 @@ export const BOOTSTRAP_SCRIPT = `
  * trigger is not one this leg can demonstrate and is not claimed as proven; `undefined` here still routes
  * to the same fail-closed fallback should some future engine or input ever exercise it.
  */
-export function buildSrcdoc(html: string, cspPolicy: string, tokens: Record<string, string>, colorScheme: string): string | undefined {
+export function buildSrcdoc(
+  html: string,
+  cspPolicy: string,
+  tokens: Record<string, string>,
+  colorScheme: string,
+  assets?: SandboxFrameAssets,
+): string | undefined {
   let doc: Document
   try {
     doc = new DOMParser().parseFromString(html, 'text/html')
@@ -90,9 +110,28 @@ export function buildSrcdoc(html: string, cspPolicy: string, tokens: Record<stri
   const script = doc.createElement('script')
   script.textContent = BOOTSTRAP_SCRIPT
 
-  head.insertBefore(script, head.firstChild)
-  head.insertBefore(style, head.firstChild)
-  head.insertBefore(meta, head.firstChild)
+  // The ordered node list (SPEC-R12 head order). Asset nodes are OMITTED (not inserted-empty) when their
+  // field is absent — the byte-identity regression pin depends on this being a real omission, not a
+  // hidden empty <style>/<script>.
+  const nodes: Node[] = [meta, style]
+  if (assets?.css) {
+    const assetStyle = doc.createElement('style')
+    assetStyle.textContent = assets.css
+    nodes.push(assetStyle)
+  }
+  nodes.push(script)
+  if (assets?.js) {
+    const assetScript = doc.createElement('script')
+    assetScript.textContent = assets.js
+    nodes.push(assetScript)
+  }
+
+  // Insert the WHOLE ordered list once, each ahead of the model's own ORIGINAL first head child (captured
+  // BEFORE any insertion — `insertBefore(node, ref)` remains well-defined against that same `ref` across
+  // repeated calls, and `ref === null` degrades to `appendChild` semantics when the model head started
+  // empty, so both branches share this one insertion loop).
+  const modelFirstChild = head.firstChild
+  for (const node of nodes) head.insertBefore(node, modelFirstChild)
 
   return `<!DOCTYPE html>${doc.documentElement.outerHTML}`
 }

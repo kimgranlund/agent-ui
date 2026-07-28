@@ -27,7 +27,7 @@ const css = readFileSync(`${DIR}/sandbox-frame.css`, 'utf8') as string
 
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
-const ATTR_NAMES = ['surfaceId', 'html', 'csp']
+const ATTR_NAMES = ['surfaceId', 'html', 'csp', 'assets']
 
 describe('sandbox-frame.md descriptor — structural validity', () => {
   it('has a leading frontmatter fence and a prose body', () => {
