@@ -1,6 +1,15 @@
 # SPEC — GenUI surface (sandboxed free-form generative UI): wire · frame · bridge · producer
 
-> Status: proposed · v0.4 · 2026-07-25 · Layer: SPEC (execution contract)
+> Status: proposed · v0.5 · 2026-07-28 · Layer: SPEC (execution contract)
+> **v0.5 amendment (docs-only, §11 below — ADR-0162, GH #316):** the agent-ui DOGFOOD mode, Kim's
+> 2026-07-28 ruling: `GenuiSurfaceConfig` gains an additive `dogfood?: boolean`; mode-on loads the
+> fleet's docs-like asset pair (flattened CSS + the self-defining component IIFE bundle) into the
+> frame INLINE — under the UNCHANGED SPEC-R3 sandbox posture and SPEC-R4 CSP (inline style/script are
+> already the ruled floor; no directive widens) — and composes a dogfood prompt segment (hand-authored
+> teaching, byte-pinned + a descriptor-DERIVED fleet inventory, drift-gated) into SPEC-R10's genui
+> block. Absent/`false` is byte-identical on every surface (the `exclusive` degradation precedent).
+> New requirements: SPEC-R12 (frame assets) · SPEC-R13 (dogfood prompt modules); SPEC-R5's build
+> ordering and SPEC-R10's block composition gain dogfood clauses stated in §11, superseding nothing.
 > **v0.4 amendment (docs-only, §10 below):** `GenuiSurfaceConfig` (SPEC-R10) gains a new, additive
 > `exclusive?: boolean` field — the per-turn "this caller has no A2UI catalog renderer at all" signal a
 > real live defect (`gen-ui-live.ts`'s render pane staying empty despite a genuine agent note, on a real
@@ -529,3 +538,99 @@ unaffected). `gen-ui-live.ts` is the one call site that sets it.
   grammar-style test, `npm test` green, no live model
   (`packages/agent-ui/a2ui/src/live-agent/genui-exclusive.test.ts`). Every other word of SPEC-R10, and
   AC1 itself, is UNCHANGED.
+
+## 11 · Amendment (v0.5, GH #316 / ADR-0162) — the agent-ui dogfood mode: docs-like frame assets + derived dogfooding prompt modules
+
+Grounding: Kim's 2026-07-28 GH #316 ruling — agent-ui dogfooding is **a mode that can be enabled**,
+and when on it dictates BOTH ends of the pipeline: the GenUI iframe loads a docs-like asset set
+("just like our docs pages" — `site/pages/_page.ts`'s cascade: foundation tokens CSS → per-component
+CSS → the self-defining `ui-*` controls → the icon pack), and the LLM payload gains dogfooding
+knowledge modules teaching the model to prefer fleet components and tokens. Off = today's behavior
+byte-identical. The design intake's mechanical findings (recorded in ADR-0162's Context): inline
+`<style>`/`<script>` already ride SPEC-R4's ruled `'unsafe-inline'` floor, so the docs-like setup
+needs NO CSP or sandbox change; CSS alone cannot reproduce a docs page (light-DOM JS-built anatomy);
+a bundle executing inside the boundary adds zero capability the boundary doesn't already grant
+untrusted script.
+
+**SPEC-R10 (amended clause, additive — supersedes nothing):** `GenuiSurfaceConfig` gains one new
+optional field, **`dogfood?: boolean`** (`genui-surface-config.ts`) — the per-turn "this turn's GenUI
+frame carries the agent-ui runtime" fact. When set (and `enabled` is true), `genuiBlock`
+(`system-prompt.ts`) composes ONE additional dogfood segment, positioned AFTER the base
+wire/sandbox-reality teaching (a)/(b) — and after the `exclusive` override when both are set — and
+BEFORE a picked source's body (c). The segment is SPEC-R13's two-part module. `validateGenuiSurface`
+(`tools/agent/chat-validation.ts`, both HTTP transports) validates the field with the SAME
+per-field-degrade posture `sourceBody`/`exclusive` use: a non-boolean value drops just that field.
+**Degradation law, unchanged in kind:** `dogfood` absent or `false` composes ZERO additional bytes —
+byte-identical to the pre-`dogfood` prompt for every existing caller. The genui WIRE (SPEC-R1) is
+UNTOUCHED: the envelope never carries the flag — the consumer that enabled the mode owns the frame it
+mounts and supplies SPEC-R12's assets itself (recorded consequence: a mode-on transcript replayed by
+an asset-less consumer renders unstyled fleet markup — degraded fidelity, never a protocol break).
+- **AC3** *Given* the prompt composer with `genui.enabled:true, dogfood:true`, *then* the composed
+  block additionally carries the dogfood segment (teaching + derived inventory), positioned after the
+  base teaching (and after the `exclusive` paragraph when both are set) and before any picked
+  source's body; *given* `dogfood` absent or `false`, *then* the composed block is byte-identical to
+  the pre-`dogfood` composition case-for-case (including `exclusive`'s own AC2 cases) — a standing
+  grammar-style test, `npm test` green, no live model. Every other word of SPEC-R10, and AC1/AC2, is
+  UNCHANGED.
+
+**SPEC-R12 — Frame assets: the docs-like pair, inline-only, posture-neutral, lockstep-pinned.** The
+dogfood frame asset MUST be a committed, GENERATED pair — (a) the flattened foundation + component
+CSS text and (b) ONE self-contained IIFE bundle of the `ui-*` component barrel + the default icon
+pack (the `_page.ts` cascade's members [1][2][3][3b]; `router`/`code`/app-chrome excluded by
+construction — catalog-invisibility's cousins, and CodeMirror's lazy load cannot ride the closed
+CSP) — exported from an opt-in subpath of `@agent-ui/components` (never a default barrel: the
+ADR-0040/0049 budgets stand). `ui-sandbox-frame` MUST gain a property-only `assets` prop
+(`{ css?: string; js?: string }`; property-only for the same reason `csp` is), and `buildSrcdoc`
+MUST inject the pair so the head order is: CSP meta → token `<style>` → asset `<style>` → bootstrap
+`<script>` → asset `<script>` → the model document's own head children — assets AFTER the host
+prelude (CSP active first, tokens resolvable by asset CSS), BEFORE any model byte. Delivery is
+INLINE ONLY: `sandbox`/CSP rows stay EXACTLY SPEC-R3/R4's (a delivery needing `blob:`, a served
+origin, or any directive widening is REJECTED by this clause — reopening it is a SPEC amendment + a
+Kim ruling, the closed-table law). The SPEC-R2 cap stays measured on the WIRE `html` string only —
+host-side asset injection never counts against it. Pinning: the pair is generated from the installed
+source tree by a checked-in script; a standing freshness gate rebuilds and compares (the
+theme-provider committed-fixture precedent) so a fleet edit that changes built output is RED until
+the asset regenerates. The built pair MUST reference no external `url(...)`/import beyond `data:`
+(a standing grep gate — the closed-network posture proven, not assumed). *(→ PRD-G3; ADR-0162)*
+- **AC1 (upgrade probe — browser gate).** *Given* a mounted `ui-sandbox-frame` with the dogfood
+  assets and an `html` whose body is fleet markup (e.g. a `ui-button` + a `ui-card`), *then* inside
+  the frame `customElements.get('ui-button')` resolves, the button's `[data-part]` anatomy exists,
+  and its computed styles resolve fleet tokens (a `--md-sys-color-*`-derived value, not UA defaults);
+  *given* the same markup WITHOUT assets, *then* the elements stay unknown (today's behavior,
+  unchanged) — `npm run test:browser` green.
+- **AC2 (containment unchanged — browser gate).** *Given* a dogfood-asset frame, *then* the SPEC-R3
+  AC1 containment probes (top-nav, parent DOM, storage, form submit, `window.open`) and the SPEC-R4
+  AC2 network probe pass IDENTICALLY, and the iframe's `sandbox` attribute still equals
+  `allow-scripts` exactly — `npm run test:browser` green.
+- **AC3 (freshness + purity).** *Given* the standing gates, *then* the committed pair equals a fresh
+  build's output (rebuild-and-compare) and contains no non-`data:` external reference — `npm test`
+  green (build-shelling test project), red on any stale or impure asset.
+
+**SPEC-R13 — Dogfood prompt modules: hand prose byte-pinned, derived inventory drift-gated,
+set-equal with the frame.** The dogfood segment MUST compose two parts: (a)
+`prompts/genui-dogfood-teaching.md` — hand-authored, loaded via the ADR-0135 `process.cwd()`
+mechanics, byte-pinned by a NEW field in `prompt-equivalence.baseline.json` (the `genuiPacks`
+shape: edit ⇒ deliberate re-capture), budget ≤ 8 000 chars (the SPEC-R9 pack tier); (b) a DERIVED
+fleet inventory (`dogfoodInventory()`) composed at call time from the fleet's `{name}.md`
+descriptors via the ONE ADR-0004 parser — tag, one-line role, key attributes/enums — drift-gated
+against the descriptors (the ADR-0071/`prompt-drift` discipline) and NEVER byte-captured (a fleet
+edit updates the composed prompt without re-capturing any baseline), budget ≤ 16 000 chars
+(evidence-revisable per §8, enforced by a standing test). The tags the SPEC-R12 bundle self-defines
+and the tags the inventory teaches MUST be SET-EQUAL (one standing test; the derive-from-one-source
+law — the prompt can never teach a component the frame doesn't define, or vice versa). Existing
+byte-pinned compositions are UNTOUCHED: mode-off composes zero bytes, so the baseline's four
+composed prompts hold without re-capture. *(→ ADR-0162; the GH #316 ruling; ADR-0071/0135 —
+PRD gap recorded honestly: dogfooding enters at the issue/ADR tier; no PRD goal names it, and no
+PRD-G tag is stretched to pretend one does.)*
+- **AC1** *Given* the equivalence gate, *then* the teaching body is byte-identical to its captured
+  baseline field and ≤ budget; *given* the drift gate, *then* the derived inventory names exactly
+  the descriptor-declared tags/attributes (a planted phantom row fails — negative control) and is
+  ≤ budget — `npm test` green.
+- **AC2** *Given* the set-equality gate, *then* bundle-defined tags ≡ inventory-taught tags (a
+  planted extra tag on either side fails) — `npm test` green.
+
+**SPEC-R11 (note, additive):** the Surface Options GenUI row gains a dogfood toggle beside the
+pattern-source picker, persisting through the card's existing store discipline and LIVE-APPLY (the
+next turn's prompt + frame assets reflect it, no reload); `gen-ui-live` surfaces the same toggle in
+its options strip. Persona config is NOT a home for the flag (the ADR-0138 voice/capability
+boundary). Every other word of SPEC-R11 is UNCHANGED.
