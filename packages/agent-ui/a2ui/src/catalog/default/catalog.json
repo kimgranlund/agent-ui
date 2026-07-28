@@ -52,6 +52,21 @@
       "value": { "prop": "value", "event": "change" }
     },
 
+    "Textarea": {
+      "properties": {
+        "value": { "type": { "type": "string" }, "bindable": true, "mapsTo": "value" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "placeholder": { "type": { "type": "string" }, "bindable": true, "mapsTo": "placeholder" },
+        "rows": { "type": { "type": "number" }, "mapsTo": "rows" },
+        "size": { "type": { "type": "string", "enum": ["sm", "md", "lg"] }, "mapsTo": "size" },
+        "readonly": { "type": { "type": "boolean" }, "mapsTo": "readonly" },
+        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
+        "required": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "required" },
+        "name": { "type": { "type": "string" }, "mapsTo": "name" }
+      },
+      "value": { "prop": "value", "event": "change" }
+    },
+
     "Field": {
       "properties": {
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },

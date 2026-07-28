@@ -23,7 +23,7 @@
 // browser-side page, with no catalog-loading machinery riding along).
 
 /**
- * The 27 catalog types a feed ask MAY host (ADR-0097 §3): choice controls, value inputs, one commit
+ * The 28 catalog types a feed ask MAY host (ADR-0097 §3): choice controls, value inputs, one commit
  * affordance, and light structure — nothing that overlays, paginates, or dashboards. Widened by the
  * report/content/feed catalog wave (ADR-0111/0113/0112): `Badge` (light ask furniture, the `Text`/`Icon`
  * class), `Code` (verbatim inline content, no overlay/dashboard shape), `Avatar` (a non-interactive
@@ -38,7 +38,9 @@
  * `Tabs` "hides half the ask" reasoning, not the `Toolbar`/`Row` parity argument). NOT widened by the
  * color-picker wave (ADR-0123 cl.6) — `ColorPicker` lands in `FEED_EXCLUDED` below instead: it is an
  * INPUT (unlike `Swatch`/`Ramp`/`Ladder`'s display-only report content), but no ask affordance admits an
- * editor to the artifact feed.
+ * editor to the artifact feed. Widened by the 2026-07-28 per-control catalog intake: `Textarea` is the
+ * TextField parity argument — a plain multi-line value input, commit-gated (blur-with-change, ADR-0134),
+ * no overlay/dashboard shape — the same class as the choice/value inputs already IN.
  */
 export const FEED_SURFACE_TYPES = [
   'Text',
@@ -61,6 +63,7 @@ export const FEED_SURFACE_TYPES = [
   'Option',
   'ComboBox',
   'TextField',
+  'Textarea',
   'Calendar',
   'Slider',
   'SliderMulti',

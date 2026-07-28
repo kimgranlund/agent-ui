@@ -186,11 +186,6 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
     'ADR-0125 F8 / command-modal.lld.md LLD-C16 — PERMANENT exclusion: the CMD-K palette is app-owner ' +
     'launcher chrome (the Toast/ThemeProvider/StatusStream class, ADR-0112 cl.6 reasoning) — an agent ' +
     'emitting an app\'s command palette is the wrong trust shape; its items are the consumer\'s actions.'],
-  ['Textarea',
-    'ADR-0134 Consequences — TEMPORARY, "shipped ahead of its catalog row" (the chart-family/report-family/ ' +
-    'token-surface precedent): the ADR ratifies the fleet primitive only and explicitly defers "whether it ' +
-    'earns an A2UI catalog type" to a separate intake. Drain this entry (add the catalog + factory row) when ' +
-    'that intake lands — not a permanent exclusion like Toast/ThemeProvider above.'],
   ['SandboxFrame',
     'genui-surface.spec.md SPEC-N1 / PRD-G4 — PERMANENT exclusion, never catalogue-bound: the GenUI ' +
     'containment host is composed by @agent-ui/app into the conversation feed off the (B2) genui wire ' +
@@ -1238,6 +1233,95 @@ describe('default catalog — ColorPicker via the shared validator (ADR-0123, co
     expect((surface.data.peek() as { accent: unknown }).accent).toBe('#3b82f6') // LLD-C8 wrote it back (SPEC-R7)
 
     picker.remove()
+    disposeSurface(surface)
+  })
+})
+
+// ── Textarea (ADR-0134's deferred catalog intake, drained by the 2026-07-28 per-control catalog
+// intake — ruled IN: a plain multi-line form control an agent legitimately emits) ──────────────────────
+describe('default catalog — Textarea via the shared validator (2026-07-28 per-control catalog intake, ADR-0134)', () => {
+  it('a representative Textarea payload validates 0 failures via validateA2ui', () => {
+    const message = {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: 's1',
+        components: [
+          { id: 'root', component: 'Textarea', name: 'notes', label: 'Notes', placeholder: 'Write something…', rows: 6, required: true, value: { path: '/notes' } },
+        ],
+      },
+    }
+    expect(validateA2ui(message, defaultCatalog)).toEqual({ valid: true, failures: [] })
+  })
+
+  it('Textarea is two-way bound on value via the change event (blur-with-change, ADR-0134 — the TextField precedent)', () => {
+    const ta = defaultCatalog.components.Textarea
+    expect(ta.value).toEqual({ prop: 'value', event: 'change' })
+    expect(ta.properties.value?.bindable).toBe(true)
+  })
+
+  it('label/placeholder/disabled/required are bindable; rows/size/readonly/name stay structural-only (the TextField precedent)', () => {
+    expect(defaultCatalog.components.Textarea.properties.label?.bindable).toBe(true)
+    expect(defaultCatalog.components.Textarea.properties.placeholder?.bindable).toBe(true)
+    expect(defaultCatalog.components.Textarea.properties.disabled?.bindable).toBe(true)
+    expect(defaultCatalog.components.Textarea.properties.required?.bindable).toBe(true)
+    expect(defaultCatalog.components.Textarea.properties.rows?.bindable).toBeFalsy()
+    expect(defaultCatalog.components.Textarea.properties.size?.bindable).toBeFalsy()
+    expect(defaultCatalog.components.Textarea.properties.readonly?.bindable).toBeFalsy()
+    expect(defaultCatalog.components.Textarea.properties.name?.bindable).toBeFalsy()
+  })
+
+  it('Textarea declares no children (a leaf input, the TextField precedent)', () => {
+    expect(defaultCatalog.components.Textarea.children).toBeUndefined()
+  })
+
+  it('accepts a {path} binding for value/label/placeholder/disabled/required (bindable props)', () => {
+    const byValue: A2uiComponent = { id: 'ta1', component: 'Textarea', value: { path: '/notes' } }
+    const byLabel: A2uiComponent = { id: 'ta2', component: 'Textarea', label: { path: '/notesLabel' } }
+    const byPlaceholder: A2uiComponent = { id: 'ta3', component: 'Textarea', placeholder: { path: '/notesHint' } }
+    const byDisabled: A2uiComponent = { id: 'ta4', component: 'Textarea', disabled: { path: '/formDisabled' } }
+    const byRequired: A2uiComponent = { id: 'ta5', component: 'Textarea', required: { path: '/notesRequired' } }
+    expect(validateCatalogConformance(byValue, defaultCatalog)).toEqual([])
+    expect(validateCatalogConformance(byLabel, defaultCatalog)).toEqual([])
+    expect(validateCatalogConformance(byPlaceholder, defaultCatalog)).toEqual([])
+    expect(validateCatalogConformance(byDisabled, defaultCatalog)).toEqual([])
+    expect(validateCatalogConformance(byRequired, defaultCatalog)).toEqual([])
+  })
+
+  it('NEGATIVE: an unknown prop fails CATALOG', () => {
+    const ta: A2uiComponent = { id: 'ta6', component: 'Textarea', value: 'hi', bogus: 1 }
+    expect(validateCatalogConformance(ta, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 'ta6.bogus' })
+  })
+
+  it('NEGATIVE: a type-mismatch on value/rows fails CATALOG (security allowlist, SPEC-R9)', () => {
+    const wrongValue: A2uiComponent = { id: 'ta7', component: 'Textarea', value: 1 }
+    expect(validateCatalogConformance(wrongValue, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 'ta7.value' })
+
+    const wrongRows: A2uiComponent = { id: 'ta8', component: 'Textarea', rows: 'six' }
+    expect(validateCatalogConformance(wrongRows, defaultCatalog)).toContainEqual({ code: 'CATALOG', path: 'ta8.rows' })
+  })
+
+  it("a REAL ui-textarea's committed blur-with-change writes back into surface.data via the generic LLD-C8 controller (mirrors the TextField value:{prop,event} round trip)", () => {
+    const surface = createSurface({ id: 's5', catalogId: 'agent-ui', version: 'v1.0' })
+    surface.data.value = { notes: '' }
+
+    // The real ui-textarea (defaultFactories self-defines the whole family on import,
+    // catalog/default/factories.ts:1) — no mocks, no stub factory.
+    const textarea = defaultFactories.Textarea.create() as HTMLElement & { value: string }
+    document.body.append(textarea)
+
+    const node: A2uiComponent = { id: 'ta', component: 'Textarea', value: { path: '/notes' } }
+    installInputBinding(textarea, defaultFactories.Textarea, node, surface)
+
+    // The user gesture: a committed value write followed by the control's own `change` — blur-with-
+    // change is Enter-doesn't-commit (ADR-0134), so the round trip drives `change` directly, the same
+    // shape the TextField/ColorPicker round trips above use for their own commit events.
+    textarea.value = 'a note'
+    textarea.dispatchEvent(new Event('change'))
+
+    expect(textarea.value).toBe('a note')
+    expect((surface.data.peek() as { notes: unknown }).notes).toBe('a note') // LLD-C8 wrote it back (SPEC-R7)
+
+    textarea.remove()
     disposeSurface(surface)
   })
 })
