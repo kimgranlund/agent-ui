@@ -217,6 +217,18 @@ Each agent turn renders a fresh `ui-status-stream` narrating the turn's own mech
 elsewhere in the fleet) — this ships **unconditionally** (ADR-0088's honest-narration law). The raw JSONL
 `<details>` wire dump is an **opt-in** debugging affordance behind the `disclosure` prop (default `false`).
 
+## The agent bubble is hidden until it has real content (GH #313/ADR-0160 amendment, Kim's 2026-07-28 ruling)
+
+`beginAgentTurn()` creates the bubble up front, but a fresh one starts empty (no note, no mounts) and
+stays hidden — the narration strip beside it (above) is the only thing visible during the pre-content
+phase of a live turn. It reveals on the FIRST real content of any kind: a streamed `setNote()` token
+(painted into the DOM immediately, not buffered for `finalize()` alone — a consumer may call `setNote`
+repeatedly as text accretes), a fresh mounted surface (`ingestLine`/`mountGenui`), the settled-turn
+action-chip row, or `finalize()`'s own fallback tally. A turn that ends via `fail()` without ever
+producing content simply stays hidden — `fail()` never touches the agent bubble, it only adds a
+separate system bubble carrying the error text. A **resumed** turn (`intoSurface`, TKT-0079) is
+unaffected — it can only resume because its bubble already has content, so it stays visible throughout.
+
 ## Pre-hydrated action chips on a settled turn (GH #291/ADR-0160 clause 3, Kim's 2026-07-27 ruling)
 
 `AgentTurnHandle.finalize(actions?: readonly TurnAction[])` accepts an OPTIONAL row of

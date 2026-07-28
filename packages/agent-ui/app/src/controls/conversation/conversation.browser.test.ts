@@ -511,6 +511,130 @@ describe('ui-conversation cross-engine — chat-path chrome laws (GH #241 + GH #
   })
 })
 
+// GH #313/ADR-0160 amendment (Kim's 2026-07-28 ruling — "no bubble unless there is content for it") —
+// post-GH #306 the bubble holds ONLY content (note/mounts/chips), so a fresh turn's bubble is created
+// hidden and revealed on its first real content. Real-engine coverage (jsdom cannot paint `display`):
+// mid-turn (before ANY content) it computes hidden; the first setNote/mount/chip row reveals it; a
+// resumed turn's bubble (TKT-0079) stays visible throughout; a failed, never-revealed turn leaves no
+// orphan pill.
+describe('ui-conversation cross-engine — the empty-bubble hiding law (GH #313/ADR-0160 amendment)', () => {
+  const isHidden = (el: HTMLElement): boolean => getComputedStyle(el).display === 'none'
+
+  // A local copy of the "chat-path chrome laws" describe's own `driveSurfaceTurn` (that one is scoped to
+  // its own describe callback) — mints one createSurface + updateComponents line, mounting a fresh
+  // `ui-surface-host` inline, real content this suite's own probes need.
+  const mountSurfaceTurn = (el: UIConversationElement) => {
+    const handle = el.beginAgentTurn()
+    handle.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 'chrome-1', catalogId: 'agent-ui' } }))
+    handle.ingestLine(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'chrome-1',
+          components: [{ id: 'root', component: 'Button', variant: 'solid', label: 'Go', action: { action: 'go' } }],
+        },
+      }),
+    )
+    return handle
+  }
+
+  it('mid-turn, BEFORE any content lands, the bubble computes hidden — not an empty painted pill', () => {
+    const el = mountConversation()
+    const handle = el.beginAgentTurn()
+
+    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    expect(bubble, 'the bubble was not created up-front').not.toBeNull()
+    expect(isHidden(bubble), 'a content-free bubble painted visibly').toBe(true)
+    // The narration strip, OUTSIDE the bubble (GH #306), is unaffected — it stays visible from t=0
+    // (ADR-0146 F8) even while the bubble beside it is hidden.
+    const narration = el.querySelector('[data-part="narration"]') as HTMLElement
+    expect(isHidden(narration), 'the narration strip was hidden too — only the bubble should hide').toBe(false)
+
+    handle.finalize() // settle cleanly — no dangling turn leaks into the shared afterEach teardown
+  })
+
+  it('the first setNote() token reveals the bubble immediately — not only once finalize() runs', () => {
+    const el = mountConversation()
+    const handle = el.beginAgentTurn()
+    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    expect(isHidden(bubble), 'precondition: starts hidden').toBe(true)
+
+    handle.setNote('Working on it')
+    expect(isHidden(bubble), 'setNote() did not reveal the bubble before finalize()').toBe(false)
+    const body = bubble.querySelector('[data-part="body"]') as HTMLElement
+    expect(body.textContent, 'the streamed token was not painted into the DOM immediately').toBe('Working on it')
+
+    handle.finalize()
+    expect(isHidden(bubble), 'finalize() re-hid a bubble that already had content').toBe(false)
+  })
+
+  it('the first mounted A2UI surface reveals the bubble mid-turn', () => {
+    const el = mountConversation()
+    const handle = mountSurfaceTurn(el) // in flight — streaming, not settled
+    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    expect(isHidden(bubble), 'a mounted surface did not reveal the bubble').toBe(false)
+    handle.finalize()
+  })
+
+  it('a settled turn with NO note/mounts and no actions stays hidden — an empty turn never gets a visible pill', () => {
+    const el = mountConversation()
+    const handle = el.beginAgentTurn()
+    handle.finalize() // no ingestLine, no setNote, no actions — a genuinely content-free turn
+
+    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    expect(isHidden(bubble), 'an all-empty settled turn painted a visible pill').toBe(true)
+  })
+
+  it('the pre-hydrated action-chip row alone reveals an otherwise-empty bubble', () => {
+    const el = mountConversation()
+    const handle = el.beginAgentTurn()
+    handle.finalize([{ id: 'ok', label: 'OK' }])
+
+    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    expect(isHidden(bubble), 'a chip row did not reveal the bubble').toBe(false)
+  })
+
+  it('TKT-0079: a RESUMED turn\'s bubble stays visible throughout — it already has content, never re-hidden', () => {
+    const el = mountConversation()
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 'resume-1', catalogId: 'agent-ui' } }))
+    t1.finalize()
+
+    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    expect(isHidden(bubble), 'precondition: the first turn revealed its bubble').toBe(false)
+
+    const t2 = el.beginAgentTurn({ intoSurface: 'resume-1' }) // resumes the SAME bubble (TKT-0079)
+    // Mid-resumed-turn, before this second turn's own content lands — the bubble must NOT re-hide.
+    expect(isHidden(bubble), 'a resumed turn re-hid its already-content-bearing bubble').toBe(false)
+    t2.finalize()
+    expect(isHidden(bubble), 'the resumed bubble was hidden after its second finalize()').toBe(false)
+  })
+
+  it('the fail() path leaves no orphan empty pill — only the separate system bubble surfaces the error', () => {
+    const el = mountConversation()
+    const handle = el.beginAgentTurn() // no content ever lands on this turn
+    handle.fail('boom')
+
+    const bubbles = el.querySelectorAll('[data-part="bubble"][data-role="agent"]')
+    expect(bubbles).toHaveLength(1)
+    expect(isHidden(bubbles[0] as HTMLElement), 'the failed, content-free agent bubble stayed visible').toBe(true)
+    const system = el.querySelector('[data-part="bubble"][data-role="system"]') as HTMLElement
+    expect(system, 'fail() did not surface a system bubble').not.toBeNull()
+    expect(isHidden(system), 'the system error bubble was itself hidden').toBe(false)
+    expect(system.textContent).toContain('boom')
+  })
+
+  it('a turn that mounted content BEFORE failing keeps its bubble visible — fail() never hides real content', () => {
+    const el = mountConversation()
+    const handle = mountSurfaceTurn(el)
+    const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement
+    expect(isHidden(bubble), 'precondition: the mount revealed the bubble').toBe(false)
+
+    handle.fail('boom')
+    expect(isHidden(bubble), 'fail() hid a bubble that already had real content').toBe(false)
+  })
+})
+
 // GH #291/ADR-0160 clause 3 — the pre-hydrated action-chip row (`finalize(actions?)`). Zero prior
 // coverage of this mechanism (GH #291 review finding): pins the row's render/removal/event contract, the
 // omitted-`actions` no-op, and the `event.target` discriminant the `action` event entry + this same

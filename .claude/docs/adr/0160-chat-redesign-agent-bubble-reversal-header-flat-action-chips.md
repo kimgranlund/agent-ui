@@ -173,6 +173,17 @@ without the primitive itself knowing what "helpful" means.
   (`#resumableBubble`) rather than a bubble-scoped child query. `conversation.browser.test.ts`'s
   chrome-law suite is RE-PINNED (never weakened) to assert the label/strip sit outside the bubble and
   that the turn wrapper itself paints no background of its own.
+- **GH #313 (Kim's 2026-07-28 ruling — "no bubble unless there is content for it")** — the GH #306
+  amendment above left the bubble holding ONLY content (note/mounts/chips), so a fresh turn's
+  up-front-created, still-empty bubble painted as a visible chromed pill for the whole pre-content
+  phase of a live turn. `conversation.ts` now creates a fresh agent bubble with `data-empty` set
+  (`conversation.css` hides it while present) and clears it, exactly once, on the first real content
+  of any kind — a streamed `setNote()` token (now painted into the DOM immediately rather than
+  buffered for `finalize()` alone), a fresh mount, the settled-turn chip row, or `finalize()`'s own
+  fallback tally; a resumed bubble (TKT-0079) never carries the attribute, since it can only resume
+  because it already has content. `fail()` is untouched — an agent bubble that never received content
+  simply stays hidden beside the separate system-bubble error text. `conversation.browser.test.ts`
+  gains a dedicated "empty-bubble hiding law" suite (never weakening the existing chrome-law probes).
 
 ## Alternatives considered
 
