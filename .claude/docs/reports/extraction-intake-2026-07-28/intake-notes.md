@@ -1,6 +1,8 @@
-# M-A intake 2 — extraction home: intake notes (NOT for tree commit; the ADR is the commit artifact)
+# M-A intake 2 — extraction home: intake notes
 
-Companion to `0164-entry-list-extraction-home.md` (proposed ADR, commit-verbatim candidate).
+Companion record to [ADR-0164](../../adr/0164-entry-list-extraction-home.md) — the fork sheet,
+migration-cost analysis, and post-ratification slice briefs behind it. Committed 2026-07-28
+alongside the ADR so the builder inherits this reasoning rather than re-deriving it.
 Written 2026-07-28 by the design-intake seat. All evidence re-verified against shipped source.
 
 ## The one-paragraph answer
@@ -62,10 +64,8 @@ mount smoke test proving consumability (styled parts included) outside `ui-agent
 
 - **ADR: yes** — a package export-surface contract changes (three new public subpaths on
   `@agent-ui/app`) and ADR-0132's primitive re-homes (an Amends edge). Drafted as **ADR-0164**.
-  **Collision risk:** 0163 (`ui-table-interactive-widening`) is the committed ceiling as of this
-  writing, but other intakes run tonight (design-294, design-intake-form-fragment-menu,
-  intake-catalog-five) — the committing slice must re-verify 0164 is still free against
-  `adr/README.md` and renumber file + H1 + self-references if not.
+  **Collision risk (RESOLVED 2026-07-28):** several intakes ran the same night; the committing
+  slice re-verified 0163 as the ceiling and 0164 as free before landing. No renumber was needed.
 - **SPEC/LLD: no** — single-package move + split + one new sheet; no new component, no
   multi-component behavior contract. (The ADR's Repairs row carries the file-touch list — the
   ADR-0162/0163 Repairs-row shape; §Acceptance carries the exit criteria.)
