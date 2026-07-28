@@ -50,9 +50,10 @@ import { UIElement, prop, type PropConfig, type PropsSchema, type ReactiveProps 
 import { buildCsp, type SandboxFrameCspConfig } from './csp.ts'
 import { parseFrameMessage, utf8ByteLength, type HostToFrameMessage } from './bridge.ts'
 import { readTokenMap } from './token-bridge.ts'
-import { buildSrcdoc } from './bootstrap.ts'
+import { buildSrcdoc, type SandboxFrameAssets } from './bootstrap.ts'
 
 export type { SandboxFrameCspConfig } from './csp.ts'
+export type { SandboxFrameAssets } from './bootstrap.ts'
 
 /** SPEC-R2 — 512 KiB, UTF-8 byte length of `html`. Mirrored HERE as this control's OWN defense-in-depth
  *  never-paint check (SPEC-R5), independent of the (B2) wire's own structural gate — the wire's
@@ -117,6 +118,34 @@ const cspConfigProp: PropConfig<SandboxFrameCspConfig> = {
   attribute: false,
 }
 
+/** The live default for `assets` — both fields absent (mode-off, SPEC-R12/ADR-0162 decision 1's "off =
+ *  byte-identical to today" law). The SAME non-enumerable `toString` override as `DEFAULT_CSP` above, for
+ *  the identical reason: a bare `String({})` prints `'[object Object]'`, which the descriptor
+ *  frontmatter's inline `[a, b]` array detection would misparse; the override keeps `String(DEFAULT_ASSETS)
+ *  === '{}'` (the descriptor's declared default token) while every real property (`css`/`js`) stays
+ *  absent for `JSON.stringify`/`for…in`. */
+const DEFAULT_ASSETS: SandboxFrameAssets = Object.defineProperty({}, 'toString', { value: () => '{}', enumerable: false })
+
+/** SandboxFrameAssets (SPEC-R12) — the SAME safe-codec shape as `cspConfigProp` above (never throws,
+ *  property-only: asset text is host-vetted structured content, never HTML-attribute-fed). */
+const assetsProp: PropConfig<SandboxFrameAssets> = {
+  type: {
+    from(attr) {
+      if (attr === null) return null as unknown as SandboxFrameAssets
+      try {
+        return JSON.parse(attr) as SandboxFrameAssets
+      } catch {
+        return {} // malformed JSON — never throws (SPEC-N4)
+      }
+    },
+    to(value) {
+      return JSON.stringify(value)
+    },
+  },
+  default: DEFAULT_ASSETS,
+  attribute: false,
+}
+
 const props = {
   // The GenuiEnvelope.surfaceId passthrough (SPEC §5) — a future (B2) wire consumer sets this alongside
   // `html`; carried on the `action` event detail (SPEC-R8). Multi-word camelCase ⇒ an explicit kebab
@@ -127,6 +156,9 @@ const props = {
   html: prop.string(''),
   // SandboxFrameCspConfig (SPEC-R4) — the four-category allow-list; absent categories default-deny.
   csp: cspConfigProp,
+  // SandboxFrameAssets (SPEC-R12, GH #316/ADR-0162) — the opt-in dogfood-mode CSS+JS pair; both fields
+  // absent is mode-off, byte-identical to today.
+  assets: assetsProp,
 } satisfies PropsSchema
 
 export interface UISandboxFrameElement extends ReactiveProps<typeof props> {}
@@ -179,7 +211,8 @@ export class UISandboxFrameElement extends UIElement {
     this.effect(() => {
       const html = this.html
       const cspConfig = this.csp
-      this.#build(html, cspConfig)
+      const assets = this.assets
+      this.#build(html, cspConfig, assets)
     })
   }
 
@@ -191,7 +224,7 @@ export class UISandboxFrameElement extends UIElement {
 
   // ── build / replace / teardown (SPEC-R5) ──────────────────────────────────────────────────────────
 
-  #build(html: string, cspConfig: SandboxFrameCspConfig): void {
+  #build(html: string, cspConfig: SandboxFrameCspConfig, assets: SandboxFrameAssets): void {
     if (html === '') {
       this.#renderFallback()
       return
@@ -211,7 +244,7 @@ export class UISandboxFrameElement extends UIElement {
     }
     const tokens = readTokenMap(this)
     const colorScheme = getComputedStyle(this).colorScheme
-    const srcdoc = buildSrcdoc(html, policy, tokens, colorScheme)
+    const srcdoc = buildSrcdoc(html, policy, tokens, colorScheme, assets)
     if (srcdoc === undefined) {
       // Defense-in-depth only — bootstrap.ts's own HONEST SCOPE note: DOMParser's 'text/html' mode never
       // actually returns undefined for a string `html` (no proven-reachable "malformed markup" input);
@@ -328,7 +361,7 @@ export class UISandboxFrameElement extends UIElement {
     } else {
       // The no-bridge fallback (SPEC-R6): a full rebuild, themed correctly, frame-internal state lost —
       // the stated, accepted consequence (PRD §8 m2).
-      this.#build(this.html, this.csp)
+      this.#build(this.html, this.csp, this.assets)
     }
   }
 }

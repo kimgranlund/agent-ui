@@ -34,6 +34,11 @@ interface Baseline {
   // genui-surface.spec.md SPEC-R9 — the SAME byte-pinned equivalence discipline applied to the GenUI
   // pattern-source pack registry (edit a pack .md ⇒ re-capture this baseline, the ADR-0135 pattern).
   genuiPacks: { id: string; label: string; description: string; body: string }[]
+  // genui-surface.spec.md SPEC-R13(a) — the dogfood segment's hand-authored teaching half, byte-pinned
+  // the SAME way (edit `prompts/genui-dogfood-teaching.md` ⇒ re-capture this baseline). The derived
+  // fleet inventory (SPEC-R13(b)) is the OPPOSITE discipline — NEVER captured here; see
+  // `prompt-drift.test.ts`'s inventory leg.
+  genuiDogfoodTeaching: string
 }
 
 const here = (import.meta as { dirname?: string }).dirname ?? dirname(fileURLToPath(import.meta.url))
@@ -75,5 +80,13 @@ describe('ADR-0135 cl.15 — the file-loaded prompt is byte-identical to the pre
       expect(got!.description, `${base.id} description drift`).toBe(base.description)
       expect(got!.body, `${base.id} body drift`).toBe(base.body)
     }
+  })
+
+  // genui-surface.spec.md SPEC-R13(a) AC1 — the SAME byte-pinned equivalence discipline applied to the
+  // dogfood segment's hand-authored teaching half. Loaded independently of `system-prompt.ts` (which
+  // does not export the loaded constant) — a straight file read, the same source `loadPrompt` reads.
+  it('the loaded genui-dogfood-teaching.md is byte-identical to the captured baseline', () => {
+    const teaching = readFileSync(`${here}/../agent/prompts/genui-dogfood-teaching.md`, 'utf8').trim()
+    expect(teaching).toBe(baseline.genuiDogfoodTeaching)
   })
 })

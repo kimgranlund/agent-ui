@@ -70,3 +70,74 @@ describe('buildSystemPrompt genui block — degradation law (SPEC-R10 AC1)', () 
     expect(inventoryBody).not.toMatch(/GenUI/)
   })
 })
+
+// genui-surface.spec.md v0.5 §11 — SPEC-R10's amended clause (GH #316/ADR-0162): `dogfood` composes ONE
+// additional segment (SPEC-R13's teaching + derived inventory), positioned after the base teaching (and
+// after `exclusive` when both are set) and before a picked source's body. AC3.
+describe('buildSystemPrompt genui block — the dogfood segment (SPEC-R10 amended clause AC3)', () => {
+  it('dogfood absent or false composes byte-identically to the pre-dogfood composition, case-for-case', () => {
+    const cases: (import('../agent/genui-surface-config.ts').GenuiSurfaceConfig | undefined)[] = [
+      undefined,
+      { enabled: false },
+      { enabled: true },
+      { enabled: true, exclusive: true },
+      { enabled: true, sourceBody: 'A bespoke idiom.' },
+      { enabled: true, exclusive: true, sourceBody: 'A bespoke idiom.' },
+    ]
+    for (const genui of cases) {
+      const withoutField = buildSystemPrompt(defaultCatalog, [], undefined, undefined, undefined, genui)
+      const explicitFalse =
+        genui === undefined
+          ? withoutField
+          : buildSystemPrompt(defaultCatalog, [], undefined, undefined, undefined, { ...genui, dogfood: false })
+      expect(explicitFalse).toBe(withoutField)
+    }
+  })
+
+  it('dogfood:true composes the dogfood teaching AND the derived component inventory', () => {
+    const prompt = buildSystemPrompt(defaultCatalog, [], undefined, undefined, undefined, { enabled: true, dogfood: true })
+    expect(prompt).toContain('## Dogfood mode')
+    expect(prompt).toContain('## agent-ui components available inside your GenUI document')
+    expect(prompt).toContain('- ui-button — ')
+  })
+
+  it('is positioned AFTER the base teaching and BEFORE a picked source body', () => {
+    const sourceBody = 'A bespoke idiom: render a starfield background using only CSS radial-gradients.'
+    const prompt = buildSystemPrompt(defaultCatalog, [], undefined, undefined, undefined, {
+      enabled: true,
+      dogfood: true,
+      sourceBody,
+    })
+    const baseIdx = prompt.indexOf('## GenUI')
+    const dogfoodIdx = prompt.indexOf('## Dogfood mode')
+    const sourceIdx = prompt.indexOf(sourceBody)
+    expect(baseIdx).toBeGreaterThan(-1)
+    expect(dogfoodIdx).toBeGreaterThan(baseIdx)
+    expect(sourceIdx).toBeGreaterThan(dogfoodIdx)
+  })
+
+  it('is positioned AFTER the exclusive override paragraph when both are set', () => {
+    const prompt = buildSystemPrompt(defaultCatalog, [], undefined, undefined, undefined, {
+      enabled: true,
+      exclusive: true,
+      dogfood: true,
+    })
+    const exclusiveIdx = prompt.indexOf("This turn's caller has NO A2UI catalog renderer")
+    const dogfoodIdx = prompt.indexOf('## Dogfood mode')
+    expect(exclusiveIdx).toBeGreaterThan(-1)
+    expect(dogfoodIdx).toBeGreaterThan(exclusiveIdx)
+  })
+
+  it('dogfood:true with no source picked still composes (the modality/dogfood interplay stays additive)', () => {
+    const prompt = buildSystemPrompt(defaultCatalog, [], undefined, undefined, undefined, { enabled: true, dogfood: true })
+    expect(prompt).toContain('## Dogfood mode')
+    expect(prompt).not.toContain('starfield')
+  })
+
+  it('composes identically across every GenUiMode value — orthogonal to the mode axis (SPEC §4 N2)', () => {
+    for (const mode of MODES) {
+      const prompt = buildSystemPrompt(defaultCatalog, [], mode, undefined, undefined, { enabled: true, dogfood: true })
+      expect(prompt).toContain('## Dogfood mode')
+    }
+  })
+})

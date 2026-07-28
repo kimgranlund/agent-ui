@@ -7,7 +7,25 @@
 // under test. Real-engine containment / live theme-flip / the action-bridge round-trip's OWN cross-engine
 // proof live in gen-ui-live.browser.test.ts (sandbox-frame's real-engine-only law — jsdom cannot navigate a
 // sandboxed srcdoc iframe at all); this file only proves THIS page's own turn-advance + DOM wiring.
-import { describe, it, expect, beforeAll, beforeEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
+
+// jsdom reality (the agent-admin.test.ts precedent, GH #316/ADR-0162 — this page now composes a real
+// `ui-switch` FACE form control unconditionally at module load, the dogfood options-strip toggle): jsdom's
+// `ElementInternals` carries no real `setFormValue`/`setValidity`. Stubbed for this file's duration so the
+// switch can connect without an uncaught teardown exception, despite every assertion passing.
+let realAttachInternals: typeof HTMLElement.prototype.attachInternals
+beforeAll(() => {
+  realAttachInternals = HTMLElement.prototype.attachInternals
+  HTMLElement.prototype.attachInternals = function (this: HTMLElement): ElementInternals {
+    const internals = realAttachInternals.call(this) as unknown as Record<string, unknown>
+    if (typeof internals.setFormValue !== 'function') internals.setFormValue = () => {}
+    if (typeof internals.setValidity !== 'function') internals.setValidity = () => {}
+    return internals as unknown as ElementInternals
+  }
+})
+afterAll(() => {
+  HTMLElement.prototype.attachInternals = realAttachInternals
+})
 
 beforeAll(async () => {
   // A DEFERRED (dynamic) import — the a2ui-live.ask-lifecycle.test.ts precedent: `gen-ui-live.ts`'s own
@@ -174,5 +192,62 @@ describe('gen-ui-live — the recorded transcript is exhausted gracefully (no fu
     await waitUntil(() => chatMessages('system').length > systemCountBefore)
     expect(chatMessages('system').at(-1)!.textContent).toMatch(/no further turns/i)
     expect(surfaceCards().length).toBe(4) // no fifth surface — nothing new to render
+  })
+})
+
+// genui-surface.spec.md v0.5 §11 (SPEC-R12, GH #316/ADR-0162) — the dogfood options-strip toggle + the
+// frame-mount asset pass-through. Recorded-mode coverage (LLD-C4 leaf 13): this exercises the SAME
+// `renderGenuiSurface` path a live turn's genui event would, proving the toggle's effect is real DOM
+// wiring, not merely a stored flag.
+describe('gen-ui-live — the dogfood options-strip toggle (GH #316/ADR-0162)', () => {
+  function dogfoodToggle(): HTMLElement & { checked: boolean } {
+    return document.querySelector('.options-strip ui-switch') as HTMLElement & { checked: boolean }
+  }
+  function frameAssets(card: HTMLElement): { css?: string; js?: string } {
+    return (card.querySelector('ui-sandbox-frame') as HTMLElement & { assets: { css?: string; js?: string } }).assets
+  }
+
+  it('is present, unchecked by default (byte-identical to the pre-dogfood page — no toggle ever touched)', async () => {
+    expect(dogfoodToggle()).not.toBeNull()
+    expect(dogfoodToggle().checked).toBe(false)
+  })
+
+  it('default OFF: a rendered surface mounts with NO assets', async () => {
+    await sendMessage('draw a chart')
+    await waitUntil(() => surfaceCards().length === 1)
+    const assets = frameAssets(surfaceCards()[0]!)
+    expect(assets.css).toBeUndefined()
+    expect(assets.js).toBeUndefined()
+  })
+
+  it('toggling ON: the NEXT rendered surface mounts WITH the asset pair', async () => {
+    dogfoodToggle().checked = true
+    dogfoodToggle().dispatchEvent(new Event('change'))
+    await sendMessage('draw a chart')
+    await waitUntil(() => surfaceCards().length === 1)
+    const assets = frameAssets(surfaceCards()[0]!)
+    expect(assets.css, 'the dogfood CSS asset was passed through').toBeTruthy()
+    expect(assets.js, 'the dogfood JS asset was passed through').toBeTruthy()
+  })
+
+  it('toggling back OFF live-applies to the NEXT rendered surface — never sticky', async () => {
+    dogfoodToggle().checked = true
+    dogfoodToggle().dispatchEvent(new Event('change'))
+    dogfoodToggle().checked = false
+    dogfoodToggle().dispatchEvent(new Event('change'))
+    await sendMessage('draw a chart')
+    await waitUntil(() => surfaceCards().length === 1)
+    const assets = frameAssets(surfaceCards()[0]!)
+    expect(assets.css).toBeUndefined()
+    expect(assets.js).toBeUndefined()
+  })
+
+  it('toggling ON persists to localStorage (the provider-mode-selection.ts precedent — a reload restores it)', async () => {
+    dogfoodToggle().checked = true
+    dogfoodToggle().dispatchEvent(new Event('change'))
+    expect(localStorage.getItem('gen-ui-live-dogfood')).toBe('true')
+    dogfoodToggle().checked = false
+    dogfoodToggle().dispatchEvent(new Event('change'))
+    expect(localStorage.getItem('gen-ui-live-dogfood')).toBe('false')
   })
 })

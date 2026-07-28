@@ -67,17 +67,24 @@ export default defineConfig({
           // `process-shim.ts` are NOT safe to import here (process-shim.ts globally overrides
           // `process.cwd()`, a side effect that must never leak into a shared test process; see both
           // files' own header comments) — a future full-Worker integration test needs its own isolated
-          // runtime (e.g. `@cloudflare/vitest-pool-workers`), not this project. GH #343 widens it to
-          // `a2a/tools/corpus/` (`import-seeds.ts`'s CLI-entry guard, mirroring the a2ui sibling's own
-          // GH #335 precedent): that module's guard (`process.argv[1]?.endsWith('import-seeds.ts')`) keeps
-          // `main()` from firing on import, so it is exactly as safe to import here as `route-guards.ts`/
-          // `fs-shim.ts`. Deliberately scoped to the `a2a` package by NAME, not a `*/tools/corpus/*.test.ts`
-          // wildcard — a wildcard here would silently arm the FIRST test anyone adds under any future
-          // unguarded `tools/corpus/` tree to fire a real mutating import inside the test process the
-          // moment it's created (the exact hazard GH #335's review named, GH #343's own root cause).
+          // runtime (e.g. `@cloudflare/vitest-pool-workers`), not this project. GH #335 widened it to
+          // `a2ui/tools/corpus/` and GH #343 to `a2a/tools/corpus/` — BOTH `import-seeds.ts` modules now
+          // carry the same CLI-entry guard (`process.argv[1]?.endsWith('import-seeds.ts')`) keeping
+          // `main()` from firing on import, so each is exactly as safe to import here as `route-guards.ts`/
+          // `fs-shim.ts`. (#335 originally scoped to `a2ui` ONLY because a2a's tool then called `main()`
+          // UNCONDITIONALLY with real `writeFileSync`s; #343 fixed that, which is what earns a2a its entry.)
+          // Both are scoped by package NAME — never a `*/tools/corpus/*.test.ts` wildcard. A wildcard would
+          // silently arm the FIRST test anyone adds under any future unguarded `tools/corpus/` tree to fire
+          // a real mutating import inside the test process the moment it's created (the hazard GH #335's
+          // review named, and GH #343's own root cause). A new package earns a line here once its tool is
+          // guarded — it never inherits one.
           name: 'tools',
           environment: 'node',
-          include: ['packages/agent-ui/*/tools/agent/worker/*.test.ts', 'packages/agent-ui/a2a/tools/corpus/*.test.ts'],
+          include: [
+            'packages/agent-ui/*/tools/agent/worker/*.test.ts',
+            'packages/agent-ui/a2ui/tools/corpus/*.test.ts',
+            'packages/agent-ui/a2a/tools/corpus/*.test.ts',
+          ],
         },
       },
     ],
@@ -90,6 +97,12 @@ export default defineConfig({
       // real control (e.g. the default catalog's ui-button factory).
       '@agent-ui/components/components': r('./packages/agent-ui/components/src/controls/index.ts'),
       '@agent-ui/components/descriptor': r('./packages/agent-ui/components/src/descriptor/index.ts'),
+      // genui-surface.spec.md v0.5 §11 (SPEC-R12, GH #316/ADR-0162) — `@agent-ui/app`'s `agent-admin.ts`
+      // is the dogfood asset pair's first consumer from OUTSIDE the components package: it imports
+      // `DOGFOOD_CSS`/`DOGFOOD_JS` (the generated, committed pair) to pass into a mounted `ui-sandbox-
+      // frame` when the dogfood toggle is on. Same more-specific-first ordering necessity as `/components`/
+      // `/descriptor` above.
+      '@agent-ui/components/dogfood-frame': r('./packages/agent-ui/components/src/controls/sandbox-frame/dogfood/dogfood-assets.ts'),
       // The catalog's static validator (content-family LLD-C13, ADR-0114 cl.3) is the first consumer of a
       // single-control `./controls/{name}` exports-map subpath from OUTSIDE the components package (every
       // prior cross-package import went through the whole `/components` barrel above) — mirrors the

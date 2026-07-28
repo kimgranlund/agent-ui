@@ -79,6 +79,21 @@
   white-space: nowrap;
 }
 
+/* genui-surface.spec.md v0.5 §11 (GH #316/ADR-0162) — the dogfood options-strip, a compact switch+label
+ * row beneath the pane head (the agent-admin Surface Options row's own switch-then-label ordering). */
+.options-strip {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--md-sys-space-sm);
+  padding: 0.5rem var(--md-sys-space-lg);
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+}
+.options-strip-label {
+  font-size: 0.8rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
 /* ── chat pane: log · composer (identical shape to a2ui-live.css) ──────────────────────────────────────── */
 .chat-log {
   flex: 1 1 auto;

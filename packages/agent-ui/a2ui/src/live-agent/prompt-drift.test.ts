@@ -3,9 +3,11 @@
 // lacks, and a catalog row added without regeneration surfaces automatically. Deterministic, no model.
 
 import { describe, it, expect } from 'vitest'
+import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { buildSystemPrompt } from '../agent/system-prompt.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import type { Catalog } from '../catalog/catalog.ts'
+import { dogfoodInventory, dogfoodInventoryTags, DOGFOOD_INVENTORY_CHAR_BUDGET } from '../agent/dogfood-inventory.ts'
 
 // Extract the `- Id (…` inventory ids from ONE named `## <header>` section of the prompt (up to the next
 // `## ` or end). Reading each section independently means the components inventory is asserted as SET
@@ -110,5 +112,46 @@ describe('buildSystemPrompt drift gate (LLD-C4 / SPEC-R6)', () => {
     }
     const prompt = buildSystemPrompt(planted, [])
     expect(prompt).toContain('- PlantedTypeShapes (props: aString: string, aNumber: number, anyShape: any)')
+  })
+})
+
+// genui-surface.spec.md SPEC-R13(b) AC1 — the dogfood segment's DERIVED fleet inventory drift gate
+// (LLD-C3 leaf 10). `independentlyScannedTags` re-implements the "which controls have a `tag:` fence"
+// question from scratch (a bare regex read over the SAME committed tree, never importing
+// `dogfood-inventory.ts`'s own discovery function) so this test is a genuine second derivation path —
+// a real regression in `dogfoodInventoryTags()` (a missed directory, an over-eager filter) fails HERE
+// even though both paths read the same files, because the two implementations diverge independently.
+function independentlyScannedTags(): Set<string> {
+  const controlsDir = `${process.cwd()}/packages/agent-ui/components/src/controls`
+  const tags = new Set<string>()
+  for (const dirName of readdirSync(controlsDir)) {
+    const dirPath = `${controlsDir}/${dirName}`
+    if (!statSync(dirPath).isDirectory()) continue
+    for (const fileName of readdirSync(dirPath)) {
+      if (!fileName.endsWith('.md')) continue
+      const src = readFileSync(`${dirPath}/${fileName}`, 'utf8')
+      const m = /^tag:\s*(\S+)/m.exec(src)
+      if (m) tags.add(m[1]!)
+    }
+  }
+  return tags
+}
+
+describe('dogfoodInventory drift gate (LLD-C3 leaf 10 / SPEC-R13(b) AC1)', () => {
+  it('the derived inventory names EXACTLY the descriptor-declared tags — set equality, an independent re-scan', () => {
+    expect(new Set(dogfoodInventoryTags())).toEqual(independentlyScannedTags())
+  })
+
+  it('every descriptor-declared attribute for a sampled control appears in the derived inventory line', () => {
+    const inv = dogfoodInventory()
+    const buttonLine = inv.split('\n').find((l) => l.startsWith('- ui-button — '))
+    expect(buttonLine).toBeDefined()
+    for (const attr of ['variant', 'size', 'disabled', 'iconOnly']) {
+      expect(buttonLine).toContain(`${attr}:`)
+    }
+  })
+
+  it('stays within the SPEC-R13(b) budget (≤ 16 000 chars)', () => {
+    expect(dogfoodInventory().length).toBeLessThanOrEqual(DOGFOOD_INVENTORY_CHAR_BUDGET)
   })
 })

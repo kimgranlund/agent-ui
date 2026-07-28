@@ -17,7 +17,25 @@
 // `/status` probe resolves "available" in jsdom, then its picker registrations + `createLiveProxyTransport`
 // construction run for real; the POST stub returns an immediately-closed ndjson stream (gen-ui-live.ts's
 // own `runTurn` already handles a zero-line turn gracefully).
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
+
+// jsdom reality (the agent-admin.test.ts precedent, GH #316/ADR-0162 — this page now composes a real
+// `ui-switch` FACE form control unconditionally at module load, the dogfood options-strip toggle): jsdom's
+// `ElementInternals` carries no real `setFormValue`/`setValidity`. Stubbed for this file's duration so the
+// switch can connect without an uncaught teardown exception, despite every assertion passing.
+let realAttachInternals: typeof HTMLElement.prototype.attachInternals
+beforeAll(() => {
+  realAttachInternals = HTMLElement.prototype.attachInternals
+  HTMLElement.prototype.attachInternals = function (this: HTMLElement): ElementInternals {
+    const internals = realAttachInternals.call(this) as unknown as Record<string, unknown>
+    if (typeof internals.setFormValue !== 'function') internals.setFormValue = () => {}
+    if (typeof internals.setValidity !== 'function') internals.setValidity = () => {}
+    return internals as unknown as ElementInternals
+  }
+})
+afterAll(() => {
+  HTMLElement.prototype.attachInternals = realAttachInternals
+})
 
 let capturedPostBody: Record<string, unknown> | undefined
 
@@ -95,7 +113,9 @@ describe('gen-ui-live.ts — Effort picker reaches the real live-proxy POST body
     sendMessage('hello')
     await waitUntil(() => capturedPostBody !== undefined)
     expect(capturedPostBody?.effort).toBe('high')
-    expect(capturedPostBody?.genui).toEqual({ enabled: true, exclusive: true }) // this page's own always-on GenUI bit, untouched by the Effort wiring
+    // this page's own always-on GenUI bit, untouched by the Effort wiring; `dogfood` rides the SAME
+    // request, default-off (GH #316/ADR-0162 — the toggle was never touched by this test).
+    expect(capturedPostBody?.genui).toEqual({ enabled: true, exclusive: true, dogfood: false })
     // Drain the turn fully (busy → false, TKT-0034's in-flight guard) before the next describe block's own
     // `sendMessage` call — otherwise a still-in-flight turn's `if (this.busy) return` would silently no-op it.
     await waitUntil(() => !composerEl().hasAttribute('busy'))

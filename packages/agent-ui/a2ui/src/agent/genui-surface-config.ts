@@ -29,9 +29,22 @@
  *  silently discards it, never an error). `genuiBlock` (`system-prompt.ts`) appends an explicit override
  *  paragraph naming this fact when `exclusive` is set. Absent/`false` ⇒ byte-identical to before this field
  *  existed (the `sourceBody`-absent precedent) — every existing coexistence caller (agent-admin) is
- *  unaffected. */
+ *  unaffected.
+ *
+ *  `dogfood`, when `true`, names a per-turn CONSUMER FACT (genui-surface.spec.md v0.5 §11, SPEC-R10
+ *  amended clause, GH #316/ADR-0162): this turn's caller ALSO loads the fleet's own agent-ui runtime
+ *  (SPEC-R12's docs-like asset pair) into the genui iframe, so the model may compose real `ui-*` fleet
+ *  components and `--md-sys-*`/`--ui-*` tokens inside the HTML it authors, not just hand-rolled markup.
+ *  `genuiBlock` composes one additional dogfood segment (SPEC-R13: hand-authored teaching + a
+ *  descriptor-derived fleet inventory) AFTER the base wire/sandbox-reality teaching and the `exclusive`
+ *  override (when both are set), and BEFORE a picked source's body — the SAME trailing-composition-order
+ *  precedent `sourceBody`/`exclusive` already establish. Absent/`false` ⇒ byte-identical to before this
+ *  field existed (the `exclusive`-absent precedent) — the wire (SPEC-R1) is UNTOUCHED either way: the
+ *  genui envelope never carries this flag, so a mode-on transcript replayed by an asset-less consumer
+ *  renders unstyled fleet markup (degraded fidelity, never a protocol break). */
 export interface GenuiSurfaceConfig {
   enabled: boolean
   sourceBody?: string
   exclusive?: boolean
+  dogfood?: boolean
 }

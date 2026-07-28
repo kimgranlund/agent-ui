@@ -16,6 +16,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { allSeeds } from '../examples/index.ts'
 import type { CorpusRecord } from './record.ts'
+import { DISPOSITION_ALLOWLIST } from './disposition-allowlist.ts'
 
 declare const process: { cwd(): string }
 
@@ -59,21 +60,9 @@ function admittedNames(): Set<string> {
   return names
 }
 
-/** Every example seed explicitly excused from corpus admission, with the reason it teaches nothing the
- *  corpus needs (the `EXCLUSION_ALLOWLIST` precedent, `catalog/default/index.test.ts`) — a future
- *  deliberately-minimal smoke seed is dispositioned HERE, with a citation, not in a chat log. */
-const DISPOSITION_ALLOWLIST = new Map<string, string>([
-  [
-    'stats-grid-dashboard',
-    'judged E_QUALITY 2026-07-11 (VerdictsFile, rubric a2ui-corpus 1.0, D5=3 — strict-subset duplicate ' +
-      'of the admitted pattern-dashboard-tiles, container-swap-only: same Card>CardContent>Column ' +
-      'anatomy, same relative binds, same "${value}${unit}" interpolation, only Row swapped for Grid). ' +
-      'Grid coverage survives via kpi-panel-lifecycle (PASS). Repair path (not this wave, tkt-0022 ' +
-      'Findings): differentiate the tile beyond the subset, or teach a Grid-specific behavior Row ' +
-      'cannot express — then re-admit via the judged pipeline (a fresh import, not `--replace`, since ' +
-      'this record was never written).',
-  ],
-])
+// `DISPOSITION_ALLOWLIST` now lives in `./disposition-allowlist.ts` (GH #335) — it is no longer this
+// test's private fixture: `tools/corpus/import-seeds.ts` reads the SAME map to refuse a silent unjudged
+// re-admission of a previously judged-and-rejected candidate. Imported above.
 
 /** The seed names covered by neither the corpus nor the disposition allowlist — the drift this gate
  *  exists to catch. A pure predicate (the `typesMissingCatalog` precedent) so the negative controls below

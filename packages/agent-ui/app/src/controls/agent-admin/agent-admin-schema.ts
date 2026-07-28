@@ -187,6 +187,21 @@ export function isGenuiSurfaceEnabled(value: unknown): boolean {
   return value === true
 }
 
+/** genui-surface.spec.md v0.5 §11 (SPEC-R10 amended clause, GH #316/ADR-0162) — "Use agent-ui
+ *  components", the dogfood toggle: ON loads the fleet's own docs-like asset pair into the genui frame
+ *  and composes the SPEC-R13 dogfood prompt segment; OFF (the default — the SAME inverse-default law
+ *  `SURFACE_GENUI_KEY` uses) is the row's byte-identical-to-today state. A per-agent sub-setting of the
+ *  GenUI modality, never independently meaningful while `SURFACE_GENUI_KEY` itself is off (the runner
+ *  reads both — `genuiOn && dogfoodOn` — so a stale `true` here left over from a prior session can never
+ *  compose bytes or mount assets while the modality itself is off). */
+export const SURFACE_GENUI_DOGFOOD_KEY = 'surfaceGenuiDogfood'
+
+/** Fail-closed read for the dogfood toggle's OWN inverse-default: absent/malformed ⇒ OFF (the SAME
+ *  `isGenuiSurfaceEnabled` shape). An explicit stored `true` is the only way this sub-setting turns on. */
+export function isGenuiDogfoodEnabled(value: unknown): boolean {
+  return value === true
+}
+
 /** The A2UI catalog picker's persisted selection (an id from `A2UI_CATALOG_OPTIONS`). */
 export const A2UI_CATALOG_KEY = 'a2uiCatalog'
 
@@ -306,8 +321,11 @@ export interface AdminSurfaceTurnRequest {
    *  `enabled` gates whether the runner's `ProduceOptions.genuiSurface` composes the teaching block at
    *  all; `sourceBody`, when present, is the D3-picked `pattern-source` entry's `content` VERBATIM (never
    *  a pack id the runner looks up itself — `pickedPatternSource`'s own projection already resolved it).
-   *  Absent/`enabled:false` ⇒ the runner must compose zero genui bytes (SPEC-R10's degradation law). */
-  genui?: { enabled: boolean; sourceBody?: string }
+   *  Absent/`enabled:false` ⇒ the runner must compose zero genui bytes (SPEC-R10's degradation law).
+   *  `dogfood` (v0.5 §11, GH #316/ADR-0162) — the SAME per-field live-apply signal, already `false`
+   *  whenever `enabled` is `false` (the component's own read); gates whether the runner's
+   *  `ProduceOptions.genuiSurface.dogfood` composes SPEC-R13's dogfood segment. */
+  genui?: { enabled: boolean; sourceBody?: string; dogfood?: boolean }
 }
 
 /** The injected surface runner (DEV-only, the `agentTurn` pattern): one turn in, an ordered stream of

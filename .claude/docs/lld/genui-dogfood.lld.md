@@ -95,10 +95,27 @@
 
 - `genui-surface-config.ts`: `dogfood?: boolean` + doc comment (the `exclusive` shape).
 - `dogfood-inventory.ts` (Node-side, `src/agent/`): reads
-  `packages/agent-ui/components/src/controls/*/{name}.md` via the ONE ADR-0004 parser
-  (`@agent-ui/components/descriptor` — a2ui already depends on components; import direction is
-  lawful), `process.cwd()`-relative paths (the ADR-0135/TKT-0044 mechanics — never
-  `import.meta.url`). Emits one line per control: `- <tag> — <summary> (attrs: name: type|enum, …)`,
+  `packages/agent-ui/components/src/controls/*/{name}.md`, `process.cwd()`-relative paths (the
+  ADR-0135/TKT-0044 mechanics — never `import.meta.url`).
+
+  > **REV (S3 build, measured):** this component ORIGINALLY named "the ONE ADR-0004 parser
+  > (`@agent-ui/components/descriptor`)" as the reader — layering-wise a lawful import (a2ui already
+  > depends on components), but `gates.test.ts`'s ADR-0137 clause-8 SDK-FREE/ZERO-DEP leg holds
+  > `src/agent/` to relative-or-`node:*` specifiers ONLY, no exception — a DIFFERENT, narrower fence
+  > the LLD's plan didn't anticipate; measured RED against the real import while building this
+  > component. **What actually shipped:** `dogfood-inventory.ts` carries a LOCAL, MINIMAL fence
+  > reader for exactly the two fields it needs (a `tag:` scalar + `attributes[].{name,type,values}`)
+  > — never the full descriptor schema/validator/drift-trip-wire machinery — reading the SAME real
+  > committed `.md` text the real parser would (SPEC-R13(b)'s drift-free-derivation guarantee holds
+  > unchanged; only the PARSER is local, not the data). This is the SAME local-copy resolution
+  > `catalog/conformance.ts`'s `SAFE_HREF_SCHEMES` already established in this codebase for an
+  > analogous reachability constraint — do not "fix" this local reader back into a
+  > `@agent-ui/components` import; it will re-red the SAME gate. `gates.test.ts`'s `NODE_ALLOWED` set
+  > (the clause-4 prompt-loading modules) also gained `src/agent/dogfood-inventory.ts` as a fourth,
+  > cited entry — the same "loads real files at call/load time" class `system-prompt.ts`/
+  > `mini-skills.ts`/`prompts/genui-packs.ts` already are.
+
+  Emits one line per control: `- <tag> — <summary> (attrs: name: type|enum, …)`,
   attributes truncated per control to the descriptor's declared set. Skips controls outside
   `DOGFOOD_TAGS`? No — see LLD-C5: the inventory derives from the SAME control set the bundle
   entry imports (the components barrel), and the set-equality gate holds the pair; the function
@@ -160,3 +177,27 @@
   containment probes are browser-shard only (the standing split).
 - **Recorded-transcript replay** without assets renders unstyled fleet markup — accepted, recorded
   in ADR-0162/SPEC-R10.
+- **Recursive self-hosting (S2 independent review finding, CONTAINED — not a deviation).**
+  `ui-sandbox-frame` is itself part of the default components barrel the dogfood bundle embeds, so a
+  model document running inside a dogfood frame CAN instantiate a nested `<ui-sandbox-frame>` — the
+  bundle recursively includes the very control class that hosts it. Traced and judged safe by
+  construction: a nested frame inherits `sandbox="allow-scripts"` only (never `allow-same-origin`/
+  `allow-top-navigation`/`allow-popups` — SPEC-R3/R4's closed table, untouched by this mode), and a
+  sandboxed iframe's children can never gain more privilege than the parent's own sandbox tokens
+  grant (the platform's own nesting law, not a fleet mechanism) — a nested dogfood frame is exactly
+  as contained as the outer one, no privilege escalation path exists. SPEC-R12-compliant as written;
+  recorded here so a future reader doesn't mistake the recursion for an oversight.
+- **Bundle-vs-inventory tag gap (S5 leaf-14 finding, RULED #346 — a recorded, fail-closed exception,
+  not an oversight).** `DOGFOOD_TAGS` (S1's real bundle scan) and `dogfoodInventoryTags()` (S3's
+  purely descriptor-derived teaching set, SPEC-R13(b)'s own wording) are NOT set-equal today: five
+  real, bundle-defined tags (`ui-card-content`/`ui-card-footer`/`ui-card-header`/`ui-tab`/
+  `ui-tab-panel`) have no `tag:` row of their own — ADR-0004's descriptor format has no field for a
+  "compound family"'s sibling elements; `card.md`/`tabs.md`'s own frontmatter comments say outright
+  these are "documented in the prose body" only. Ruling #346 (recorded, not built here): the
+  RECOMMENDED end state extends the inventory's derivation to also scan for sibling `.define(` sites
+  (the SAME technique the bundle's own generation script already uses) — deliberately NOT done in S5,
+  because it would change what "descriptor-derived" means for `dogfoodInventoryTags()` the SAME night
+  #342 already has that exact property under review for an unrelated reason. S5 instead holds the gap
+  to a NAMED, fail-closed allowlist (`dogfood-tag-set-equality.test.ts`'s
+  `KNOWN_UNDOCUMENTED_FAMILY_TAGS`) — exact equality, not a ceiling: a sixth bundle-only tag, or the
+  gap shrinking without the allowlist being updated, both RED rather than silently absorbing drift.
