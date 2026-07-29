@@ -42,14 +42,15 @@ interface SettleOpts {
   stableFrames?: number
   /** Real wall-clock time that streak must also span, so a not-yet-started scroll can't read as finished. */
   minStableMs?: number
-  /** Total wall-clock budget; exhausting it THROWS. */
-  budgetMs?: number
+  /** Total wall-clock budget; exhausting it THROWS. Named `timeoutMs` to match every other poll helper
+   *  in the browser suites (`waitUntil`/`waitFor`/`waitScrollTopStable`), not a new house word. */
+  timeoutMs?: number
   /** What is being read, for the exhaustion diagnostic. */
   label?: string
 }
 
 /** Wait until `read()` reports the SAME value on `stableFrames` consecutive PAINTED frames spanning at
- *  least `minStableMs` of real wall-clock time, then return it. Exhausting `budgetMs` THROWS.
+ *  least `minStableMs` of real wall-clock time, then return it. Exhausting `timeoutMs` THROWS.
  *
  *  GH #359 — the two ways the previous `setTimeout(50)` × "4 identical reads" heuristic lied:
  *
@@ -65,34 +66,43 @@ interface SettleOpts {
  *  2. SILENT EXHAUSTION. The old body `return prev`-ed when it ran out of checks, so a timed-out wait was
  *     indistinguishable from a settled one and the caller's next assertion failed as a plausible-looking
  *     component regression ("the stream did not follow to the bottom"). Exhaustion now throws with the
- *     observed trace — including the frame count, which names a starved/throttled page for what it is
- *     instead of dressing it up as a scroll-following defect. */
+ *     observed trace — including the frame count, which names a THROTTLED page (few frames, long gaps) or
+ *     a SUSPENDED one (zero frames) for what it is instead of dressing it up as a scroll-following
+ *     defect. Both are only reportable because the frame wait is raced against the remaining budget: a
+ *     bare `await requestAnimationFrame` never resolves on a hidden/occluded page, which would strand the
+ *     timeout check below and hand the failure back as a bare vitest per-test timeout — silent again, in
+ *     a new way. */
 async function waitUntilSettled(read: () => number, opts: SettleOpts = {}): Promise<number> {
-  const { stableFrames = 4, minStableMs = 150, budgetMs = 4000, label = 'value' } = opts
-  const frame = (): Promise<number> => new Promise((r) => requestAnimationFrame(() => r(performance.now())))
+  const { stableFrames = 4, minStableMs = 150, timeoutMs = 4000, label = 'value' } = opts
+  const nextFrame = (): Promise<'frame'> => new Promise((r) => requestAnimationFrame(() => r('frame')))
+  const afterRemaining = (ms: number): Promise<'timeout'> =>
+    new Promise((r) => setTimeout(() => r('timeout'), Math.max(0, ms)))
   const start = performance.now()
-  let prev = read()
+  let prev = read() // always the most recent reading — reassigned only when the value actually changes
   let streak = 0
   let streakStart = start
   let frames = 0
   for (;;) {
-    const now = await frame()
-    frames += 1
-    const next = read()
-    if (next === prev) {
-      streak += 1
-      if (streak >= stableFrames && now - streakStart >= minStableMs) return next
-    } else {
-      streak = 0
-      streakStart = now
-      prev = next
+    const outcome = await Promise.race([nextFrame(), afterRemaining(timeoutMs - (performance.now() - start))])
+    const now = performance.now()
+    if (outcome === 'frame') {
+      frames += 1
+      const next = read()
+      if (next === prev) {
+        streak += 1
+        if (streak >= stableFrames && now - streakStart >= minStableMs) return next
+      } else {
+        streak = 0
+        streakStart = now
+        prev = next
+      }
     }
-    if (now - start > budgetMs) {
+    if (outcome === 'timeout' || now - start > timeoutMs) {
       throw new Error(
-        `waitUntilSettled: ${label} never settled — ${Math.round(now - start)}ms budget spent over ` +
-          `${frames} painted frames, last read ${next}, stable for ${streak}/${stableFrames} frames ` +
-          `(${Math.round(now - streakStart)}/${minStableMs}ms). This is a TIMED-OUT wait, not a settled ` +
-          `one — do not read it as a component regression (GH #359).`,
+        `waitUntilSettled: ${label} never settled — ${Math.round(now - start)}ms of a ${timeoutMs}ms budget ` +
+          `spent over ${frames} painted frames, last read ${prev}, stable for ${streak}/${stableFrames} ` +
+          `frames (${Math.round(now - streakStart)}/${minStableMs}ms). This is a TIMED-OUT wait, not a ` +
+          `settled one — do not read it as a component regression (GH #359).`,
       )
     }
   }
@@ -124,21 +134,34 @@ describe("waitUntilSettled — the settle helper's own honesty guarantees (GH #3
     }
 
     // the defect: silent exhaustion. No throw — just a plausible-looking number the caller can't tell
-    // apart from a genuine settle, which is then asserted against as if the wait had succeeded.
+    // apart from a genuine settle, which is then asserted against as if the wait had succeeded. 5 is the
+    // reading it hands back: one read before the loop, then one per check for `maxChecks = 4`.
     const stale = await preFixSettle(forever(), 4, 4)
-    expect(typeof stale, 'the pre-fix helper returned a stale reading instead of failing').toBe('number')
+    expect(stale, 'the pre-fix helper returned its last stale reading instead of failing').toBe(5)
 
     // the fix: an exhausted wait is a FAILURE, and says so
-    await expect(waitUntilSettled(forever(), { budgetMs: 250, label: 'a value that never settles' })).rejects.toThrow(
+    await expect(waitUntilSettled(forever(), { timeoutMs: 250, label: 'a value that never settles' })).rejects.toThrow(
       /never settled/,
     )
-    await expect(waitUntilSettled(forever(), { budgetMs: 250 })).rejects.toThrow(/TIMED-OUT wait, not a settled one/)
+    await expect(waitUntilSettled(forever(), { timeoutMs: 250 })).rejects.toThrow(/TIMED-OUT wait, not a settled one/)
+  })
+
+  it('sub-path 2, suspended-page leg: a rAF that never fires still reports, instead of hanging to the vitest bound', async () => {
+    // A hidden/occluded page stops delivering animation frames ENTIRELY. A bare `await requestAnimationFrame`
+    // then never resolves, so a timeout check placed after it is unreachable and the failure degrades into a
+    // bare "Test timed out in 15000ms" — carrying no frame count and no pointer back here. Stubbing rAF to
+    // never call back is that page, exactly.
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 0)
+    await expect(
+      waitUntilSettled(() => 1, { timeoutMs: 200, label: 'a value on a suspended page' }),
+    ).rejects.toThrow(/spent over 0 painted frames/)
   })
 
   it('sub-path 1: a value that reads identical before it starts moving no longer settles early', async () => {
-    // The false-settle shape, driven off SAMPLE COUNT rather than wall-clock so it reproduces identically
-    // under any load: the first handful of reads are identical (0 — nothing has moved yet), then the value
-    // climbs for a while, then genuinely rests at 999. Only 999 is a settled reading.
+    // The false-settle shape: the first handful of reads are identical (0 — nothing has moved yet), then
+    // the value climbs for a while, then genuinely rests at 999. Only 999 is a settled reading. The READER
+    // is driven off sample count, but the gate it has to defeat is wall-clock, so this control is not
+    // load-independent — see `minStableMs` below.
     const climbing = (): (() => number) => {
       let n = 0
       return () => {
@@ -150,9 +173,17 @@ describe("waitUntilSettled — the settle helper's own honesty guarantees (GH #3
     // the defect: four identical reads is all it takes, so it concludes on the PRE-movement value
     expect(await preFixSettle(climbing()), 'the pre-fix heuristic settled on a value that was still to move').toBe(0)
 
-    // the fix: the streak must also span real wall-clock time across PAINTED frames, so the pre-movement
-    // run is rejected, the climb resets the streak, and the true resting value is what comes back
-    expect(await waitUntilSettled(climbing(), { label: 'a climbing value' })).toBe(999)
+    // The fix: the streak must ALSO span real wall-clock time across PAINTED frames, so the pre-movement
+    // run is rejected, the climb resets the streak, and the true resting value is what comes back.
+    //
+    // `minStableMs: 600` rather than the 4000ms-budget default of 150 — the control needs MORE headroom
+    // than the live call sites, not less, and at 150 it had far less. The plateau is 6 reads, so the
+    // streak only ever reaches 5 (measured at 72ms chromium / 68ms webkit under the real shard): a 150ms
+    // floor is cleared by the plateau alone at a sustained ~35ms frame interval (~29fps), and this test
+    // would then fail `expected 0 to be 999` — a load artifact wearing the exact costume of a helper
+    // regression, which is the thing GH #359 exists to abolish. 600ms moves that cliff to ~10fps while a
+    // genuine settle still lands ~950ms inside the 4000ms budget.
+    expect(await waitUntilSettled(climbing(), { minStableMs: 600, label: 'a climbing value' })).toBe(999)
   })
 })
 
