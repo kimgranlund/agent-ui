@@ -312,6 +312,80 @@ const PARSE_HINT =
   'JSON object across multiple physical lines (no pretty-printing), and never add any text after ' +
   'the JSONL (the note belongs ONLY on the leading meta-line).'
 
+/**
+ * GH #307 (second pass, static root-cause) — the SAME teaching gap PARSE_HINT above and `expectedTypeNote`
+ * (GH #288) close, for the code that actually kills a game-loop turn: `IDGRAPH`. Its `path` names WHERE
+ * (`main:root`, `main:root-missing`, `card->expl`, `main:cycle`) but never WHAT to do, and the surrounding
+ * fixed instruction — "Re-emit the COMPLETE corrected A2UI JSONL" — reads, on a RESUMED surface, as "send
+ * the whole tree again", which re-delivers `id:"root"` and is exactly the `sid:root` failure being
+ * corrected. Each member is reproduced individually against the real loop (`produce-loop.test.ts`), and so
+ * is the SEQUENCE that makes the feedback self-defeating rather than merely uninformative: a resumed quiz
+ * surface driven `main:root` → `main:root-missing` → `main:root`, each round a REASONABLE reading of the
+ * prior feedback, dying on the round bound — the reported symptom. The seeding itself
+ * (`sessionSurfaceSeeds`, TKT-0081) is intact and correct; what was missing is the repair instruction, so
+ * a per-member static sentence is appended (deduped, once per member that actually fired this round — the
+ * PARSE_HINT shape, not a dynamic catalog lookup: an id-graph failure carries no catalog property to
+ * resolve).
+ *
+ * A long-lived game surface CAN force this (never must — it is contingent on the tree SHAPE the model
+ * chose): appending a node under a container patches that container harmlessly, and only a node appended
+ * under `root` itself forces the resend. That is exactly the prophylaxis grammar.md:86-88 already teaches
+ * ("give root one stable wrapper child up front"), which is why a model that ignores it can strand a whole
+ * turn — and why the escape hatch below has to be taught somewhere the model actually reads.
+ */
+const IDGRAPH_HINTS = {
+  // Review F1: the re-create branch leads. `sid:root` fires only because the payload CONTAINED `id:"root"`
+  // — the model was trying to change root — so opening with "send only what changed, without root" invites
+  // a compliant round that ships the new node UNPARENTED. `checkIdGraph` has no orphan/reachability check
+  // (validate.ts: root count, dangling refs, cycle — nothing else), so an unreferenced component VALIDATES,
+  // streams, and is buffered by tree.ts without ever mounting: a loud halt traded for a silent
+  // under-render. The conditional arm is stated second, with the orphan trap named explicitly.
+  duplicateRoot:
+    ' The surface already received its ONE `id:"root"` in an EARLIER turn, and re-sending it is rejected ' +
+    "(the old root is kept, your change is dropped). If the root's OWN children must change — you are " +
+    'adding or removing a node directly under `root` — you CANNOT patch root: re-create the surface ' +
+    '(`createSurface` with the SAME surfaceId) and send the COMPLETE tree, `root` included, in that same ' +
+    "turn. If root's children did NOT need to change, instead send only the components that actually " +
+    'changed, WITHOUT `id:"root"` — but every component you send must be reachable from `root` through ' +
+    'some parent\'s "children"/"child", or it will silently never render.',
+  rootMissing:
+    ' This surface\'s component set has NO `id:"root"`. A payload that creates or re-creates a surface ' +
+    'starts it EMPTY, so it must deliver `root` AND every component the tree references in that same ' +
+    'turn. If instead you meant to update a surface that already exists, drop the `createSurface` line ' +
+    'and send only the changed components.',
+  dangling:
+    ' A `parent->child` id-graph path means that `parent` lists a child id that NO component defines — ' +
+    'neither in this payload nor in any earlier turn of this conversation. Deliver a component with ' +
+    'that exact id in this same payload, or remove the reference from the parent\'s children.',
+  cycle: ' The child/children references form a CYCLE — a component cannot be its own ancestor.',
+} as const
+
+/**
+ * GH #307 — which `IDGRAPH` member(s) fired this round, read off the failure `path` the validator produced
+ * (`checkIdGraph`, renderer/validate.ts). Dangling is decided FIRST, on the `->` that only IT carries
+ * (`parent->child`): both halves of that path are MODEL-authored ids, so a child id ending in `:cycle` or
+ * `:root-missing` would be misread by a suffix-first order (review F5). The three surface-level suffixes
+ * are then matched only on a `->`-free path. One ambiguity is inherent to the path ENCODING and left
+ * unresolved: a surfaceId that itself contains `->` reads as dangling. Both misreads degrade to unhelpful
+ * prose in a model-facing sentence, never to a wrong verdict — the verdict is the validator's.
+ * Returns `''` when no IDGRAPH failure fired.
+ */
+function idgraphHint(failures: RoundFailure[]): string {
+  const members = new Set<keyof typeof IDGRAPH_HINTS>()
+  for (const f of failures) {
+    if (f.code !== 'IDGRAPH') continue
+    if (f.path.includes('->')) members.add('dangling')
+    else if (f.path.endsWith(':root-missing')) members.add('rootMissing')
+    else if (f.path.endsWith(':cycle')) members.add('cycle')
+    else if (f.path.endsWith(':root')) members.add('duplicateRoot')
+  }
+  // A stable order (declaration order), so the same round always composes the same sentence.
+  return (Object.keys(IDGRAPH_HINTS) as (keyof typeof IDGRAPH_HINTS)[])
+    .filter((m) => members.has(m))
+    .map((m) => IDGRAPH_HINTS[m])
+    .join('')
+}
+
 function messagesFor(
   input: TurnInput,
   failures: RoundFailure[] | undefined,
@@ -325,7 +399,7 @@ function messagesFor(
     const summary = failures
       .map((f) => `${f.code}${f.path ? ` at ${f.path}` : ''}${expectedTypeNote(f, catalog, lastOutput)}`)
       .join('; ')
-    const hint = failures.some((f) => f.code === 'PARSE') ? PARSE_HINT : ''
+    const hint = (failures.some((f) => f.code === 'PARSE') ? PARSE_HINT : '') + idgraphHint(failures)
     turns.push({
       role: 'user',
       content: `That output was INVALID (${summary}).${hint} Re-emit the COMPLETE corrected A2UI JSONL — nothing else. Your leading meta-line "note" must still address the USER in persona — never mention this correction, the re-emission, validation, or JSONL.`,
@@ -559,7 +633,19 @@ function feedScopeFailures(ask: AskDeclaration, output: A2uiOutput): RoundFailur
  * resolved the trap by shipping full trees and eating a client-error round per move (the Croupier game
  * loop, measured). Seeded, the validator judges the MERGED graph the renderer will actually hold:
  * update-only follow-ups validate; a root-resend fails HERE (`sid:root`) as a pre-wire self-correct
- * round. A prior `deleteSurface` drops that surface's seed (a later re-create starts fresh).
+ * round. A prior `deleteSurface` drops that surface's seed (a later re-create starts fresh), and so does a
+ * prior `createSurface` — see below.
+ *
+ * GH #307 review F2 — a prior-turn `createSurface` RESETS that surfaceId's seed, exactly as `deleteSurface`
+ * does. The renderer's re-create is a teardown-and-rebuild, not a merge (`renderer.ts` drops the prior
+ * root's DOM, mints a FRESH surface in the store and a FRESH `SurfaceTree`), so every component delivered
+ * before the re-create is gone from the live surface. Replaying those into the seed anyway left GHOST ids
+ * that resolve dangling refs the renderer would then render as nothing — the seed claiming a richer graph
+ * than the renderer holds, which is precisely the drift this seed exists to prevent, only in the permissive
+ * direction. The reset is order-sensitive within a turn: the SAME turn's later `updateComponents` rebuild
+ * the seed on top of the cleared surface, which is what a legitimate re-create + full-tree resend does —
+ * and that resend is the escape hatch `IDGRAPH_HINTS.duplicateRoot` now teaches, so this path went from
+ * rare to routine.
  */
 function sessionSurfaceSeeds(session: Session): Map<string, SurfaceSeed> {
   const seeds = new Map<string, { components: A2uiComponent[]; byId: Map<string, A2uiComponent>; rootDelivered: boolean }>()
@@ -576,6 +662,10 @@ function sessionSurfaceSeeds(session: Session): Map<string, SurfaceSeed> {
         }
         if (msg.deleteSurface?.surfaceId !== undefined) {
           seeds.delete(msg.deleteSurface.surfaceId)
+          continue
+        }
+        if (msg.createSurface?.surfaceId !== undefined) {
+          seeds.delete(msg.createSurface.surfaceId) // teardown-and-rebuild, not a merge (F2)
           continue
         }
         const body = msg.updateComponents
