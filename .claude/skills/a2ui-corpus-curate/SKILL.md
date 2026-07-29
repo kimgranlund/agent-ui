@@ -42,7 +42,7 @@ contract:
   (commit it — step 7); every rule about it is the tool's.
 - **Healer contract** (the closed repair list) → `ADR-0061`.
 
-## Procedure — seed → admit → judge → back-score
+## Procedure — seed → admit → judge → back-score → commit the archive
 
 1. **Author the seed** in the `src/examples/` shape — an `ExampleSeed` (`ADR-0055`;
    `packages/agent-ui/a2ui/src/examples/types.ts`) is package SOURCE and a pre-aligned authored admission
@@ -59,10 +59,11 @@ contract:
    node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus/import-seeds.ts --verdicts <verdicts.json>
    ```
 
-   That run also **writes**: it copies the verdicts file verbatim into
-   `packages/agent-ui/a2ui/corpus/verdicts/<date>--<slug>.json` (`ADR-0165` cl.1/2). The file is a
-   COMMITTED artifact, not scratch — step 7 is where it lands in the tree. Name each wave's file
-   distinctly; two waves resolving to one archive path halt the run rather than overwrite.
+   That run also **writes**: it archives the verdicts file under
+   `packages/agent-ui/a2ui/corpus/verdicts/` — a COMMITTED artifact, not scratch, and step 7 is where it
+   lands in the tree. The curator's action is to give each wave's `--verdicts` file a distinct name; the
+   archive's own filename, collision, and precedence rules belong to `ADR-0165` cl.1/2 +
+   `corpus/verdicts/README.md` (fenced above), never restated here.
 
 3. **Clear the gates** — the standing shard gate (`src/corpus/corpus-data.test.ts`), **amended for
    quarantine per `ADR-0068` cl.6 (the amendment lands with the judge wiring, slice h11)**, backs the
@@ -103,10 +104,13 @@ A halt is a **stop-and-resolve**, never a bypass. The pipeline fails closed; act
    QUARANTINED record HALTS with nothing written (`ADR-0068` cl.5); identical content instead hits `E_DUP`
    (warming enumerates quarantined records). Resolve through the sanctioned `--replace <name>` re-admission
    — a routine import may never overwrite a quarantined line.
-4. **A recorded disposition on an unjudged run** — a plain run (no `--verdicts`) whose candidate carries an
-   archived `passed:false` verdict, or a curated `DISPOSITION_ALLOWLIST` entry, HALTS with nothing written
-   (`ADR-0165` cl.4; guard inputs in that order). Resolve by re-running with `--verdicts` so the name is
-   judged FRESH — never by deleting the archived file, which is the record itself.
+4. **A recorded disposition on an unjudged run** — a plain run (no `--verdicts`) whose candidate **was
+   never admitted** and carries an archived `passed:false` verdict, or a curated `DISPOSITION_ALLOWLIST`
+   entry, HALTS with nothing written (`ADR-0165` cl.4; guard inputs in that order). A name ALREADY in the
+   store does not halt — the guard returns early on it, and a later wave scoring a stored record below bar
+   is `ADR-0068` cl.4's rescore/quarantine path instead (`ADR-0165` cl.5's scope note). Resolve by
+   re-running with `--verdicts` so the name is judged FRESH — and on the archived-verdict arm, never by
+   deleting the archived file, which is the record itself.
 
 ## Validation loop — the pipeline is the check
 

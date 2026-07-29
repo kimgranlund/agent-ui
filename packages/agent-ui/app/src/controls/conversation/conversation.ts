@@ -1001,12 +1001,28 @@ export class UIConversationElement extends UIElement {
     return log.scrollHeight - log.scrollTop - log.clientHeight <= LOG_STICK_THRESHOLD_PX
   }
 
-  /** Scroll to the log's newest content IFF `wasNear` held — never re-samples reactively. Resolves once the
-   *  log's OWN scroll position has genuinely stopped moving (or a ~1s ceiling is hit); promoted unchanged
-   *  from a2ui-chat.ts's `tailFollowLog` (the biting negative control this guard exists to survive). */
-  #tailFollowLog(wasNear: boolean): Promise<void> {
+  /** Scroll to the log's newest content IFF `wasNear` held — never re-samples reactively. Promoted from
+   *  a2ui-chat.ts's `tailFollowLog` (the biting negative control this guard exists to survive).
+   *
+   *  Resolves `'skipped'` when the stick-to-bottom guard said don't follow, `'settled'` once the log's own
+   *  scroll extent has held still for TAIL_FOLLOW_STABLE_CHECKS consecutive checks, or `'exhausted'` when
+   *  the ~1s ceiling is hit first. GH #365 — all three used to resolve one indistinguishable `void`, so a
+   *  caller could not tell a followed-and-settled wait from a timed-out one from a wait that never
+   *  scrolled at all. It resolves either way and NEVER rejects: every call site is fire-and-forget
+   *  (`void`), and a rejection on a discarded promise is an unhandled rejection in production, not a
+   *  signal anyone reads.
+   *
+   *  Timer-paced ON PURPOSE — do NOT port GH #364's per-`requestAnimationFrame` sampling here. That fix is
+   *  for an OBSERVER of a smooth `scrollIntoView`, whose position only reaches `scrollTop` when the browser
+   *  paints. This loop is a WRITER: the log declares no `scroll-behavior`, so the assignment below is an
+   *  instant scroll and the read-back is its synchronously-clamped result — what it samples is really
+   *  `scrollHeight - clientHeight`, layout-derived, current at any sampling instant, unrelated to paint.
+   *  Frame pacing would also shrink the stability window from 120ms to ~50ms, making it worse at its actual
+   *  job (waiting out content that is still growing), and would stall the loop outright on a hidden tab,
+   *  where rAF does not fire but the log should still stay pinned. */
+  #tailFollowLog(wasNear: boolean): Promise<'skipped' | 'settled' | 'exhausted'> {
     const log = this.#log!
-    if (!wasNear) return Promise.resolve()
+    if (!wasNear) return Promise.resolve('skipped')
     return new Promise((resolve) => {
       let prevTop = -1
       let stableStreak = 0
@@ -1017,8 +1033,12 @@ export class UIConversationElement extends UIElement {
         stableStreak = top === prevTop ? stableStreak + 1 : 0
         prevTop = top
         checks += 1
-        if (stableStreak >= TAIL_FOLLOW_STABLE_CHECKS || checks >= TAIL_FOLLOW_MAX_CHECKS) {
-          resolve()
+        if (stableStreak >= TAIL_FOLLOW_STABLE_CHECKS) {
+          resolve('settled')
+          return
+        }
+        if (checks >= TAIL_FOLLOW_MAX_CHECKS) {
+          resolve('exhausted')
           return
         }
         setTimeout(tick, TAIL_FOLLOW_CHECK_MS)
