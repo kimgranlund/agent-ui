@@ -110,10 +110,12 @@ const targets = [
   // ~6% headroom reserved.
   //
   // KNOWN OVER by 55 B gz as of 2026-07-29 (GH #354): this row measures 48695 B gz against the 48640 B cap.
-  // Attributed by CHECKING OUT each commit in range and re-measuring this same barrel in place — the ladder
-  // reconciles to the byte, which the 48501 B figure above does NOT (that number was recorded at the
-  // ui-form-popover wave, not at the parent of the first mover; using it as the baseline left a 25 B gap in
-  // an earlier draft of this note):
+  // Attributed by CHECKING OUT each commit in range and re-measuring this same barrel in place. The ladder
+  // below reconciles to the byte; the 48501 B figure above does NOT sit on it — it was recorded at the
+  // ui-form-popover wave rather than at the parent of the first mover, and why it differs from a re-measure
+  // of that same tree is unclear (likely a toolchain difference at recording time; two independent
+  // re-measurements today, one in place and one over `git archive` trees, agree with each other rung for
+  // rung). Treat the dated ladder, not the older single figure, as the baseline:
   //   12932a0 (= 59def42^)  48529 B gz   ← the true baseline; 111 B of headroom left under the 48640 cap
   //   59def42               48609 (+80)  `fix(dom): survive a nested disconnectedCallback mid-connected()`
   //                                      (GH #302) — a `src/dom/` lifecycle fix, so EVERY control here
@@ -450,8 +452,8 @@ const appCssQuerySuffixPlugin = {
 // budget: `agent-admin.ts` STATICALLY imported `@agent-ui/components/dogfood-frame`, a 450 675 B generated
 // fixture, so 449 007 of the entry chunk's 747 986 B min rode the PUBLIC barrel — ~78 KB gz paid by every
 // consumer whether or not it ever opened agent-admin. That import is now dynamic (Kim's ruling; ADR-0139's
-// lazy precedent), which moves the pair into the informational lazy line below: entry 78961 B gz, marginal
-// 71519 B gz measured 2026-07-29. The budget deliberately STAYS at 74 KB (~5.6% headroom now) — re-basing a
+// lazy precedent), which moves the pair into the informational lazy line below: entry 79063 B gz, marginal
+// 71621 B gz measured 2026-07-29. The budget deliberately STAYS at 74 KB (~5.5% headroom now) — re-basing a
 // budget DOWN onto a freshly-shrunk figure would just force the next legitimate app-tier control to re-base
 // it again; this file's convention re-bases on real growth, measured.
 const APP_MARGINAL_BUDGET = 74 * KB

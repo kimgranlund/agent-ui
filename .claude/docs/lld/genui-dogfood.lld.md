@@ -3,7 +3,7 @@
 > Status: proposed · v0.3 · 2026-07-29 · Layer: LLD (implementation plan)
 > **v0.3 (GH #354, Kim's 2026-07-29 ruling):** LLD-C4's app-layer asset pass-through is now a LAZY
 > dynamic import (§5's dated realization amendment: memoized, dogfood-ON only, awaited at turn start,
-> degrading assets-less on failure), and §7's "bundle size unmeasured" risk is CLOSED with the measured
+> degrading BOTH the assets and the prompt on failure), and §7's "bundle size unmeasured" risk is CLOSED with the measured
 > figures — it materialized as `@agent-ui/app`'s public barrel at 2.08× its budget, one package above the
 > barrels this LLD's own gates cover. No behavior change to the dogfood mode itself; no other component.
 > **v0.2 (GH #342 + #346, Kim's 2026-07-28 rulings):** LLD-C3's S3 REV gains a second dated REV — the
@@ -192,12 +192,17 @@
     time, dogfood-ON only — the ADR-0139 cl.5 lazy-dependency seam, in mechanism AND in outcome:
     - the await is HOISTED to turn start, ahead of the first consumed event, so the `mountGenui`
       pass-through stays synchronous inside the stream loop and no cross-turn mount can invert;
-    - a failed or timed-out load (10 s ceiling) DEGRADES — the frame mounts assets-less and the reason
-      rides out with the turn's note — it never fails the turn (ADR-0139 cl.5's own law; failing would
-      be worse here, since the load precedes the agent request itself);
+    - a failed or timed-out load (10 s ceiling) DEGRADES — it never fails the turn (ADR-0139 cl.5's own
+      law; failing would be worse here, since the load precedes the agent request itself). The degrade
+      covers BOTH halves of this component: `assets` goes undefined AND the not-yet-issued request's
+      `genui.dogfood` is cleared, so the prompt drops the teaching + inventory too. Degrading only the
+      assets would leave the model authoring `<ui-*>` into a frame with no definitions — JS-built
+      controls (`ui-calendar`/`ui-slider`/`ui-select`) render NOTHING, strictly worse than the plain
+      HTML a dogfood-OFF turn asks for. The reason rides out with the turn's note (`⚠ …`) and into the
+      Dialog Turns log, which therefore records `dogfood: false` for a turn that ran without the pair;
     - a conversation reset while the chunk is in flight abandons that turn, so nothing mounts into a
       torn-down bubble.
-    Post-fix: entry 78 961 B gz, marginal 71 519 B gz — within budget, with the pair in a lazy chunk no
+    Post-fix: entry 79 063 B gz, marginal 71 621 B gz — within budget, with the pair in a lazy chunk no
     main bundle contains. `gen-ui-live.ts` below keeps its plain import: the site is not a published
     package and carries no budget row.
 - `gen-ui-live.ts`: an options-strip toggle; `renderGenuiSurface` sets `host.assets` when on;
@@ -231,7 +236,7 @@
     dogfood bytes, and they do — it was `@agent-ui/app`'s public barrel that inherited the fixture
     through `ui-agent-admin`'s static import, at 153 969 B gz against a 75 776 B budget (2.08×) and
     silently, because `npm run size` is manual (ADR-0040 §3). Resolved by the LLD-C4 lazy-import
-    amendment above: app entry 71 519 B gz marginal, within budget, the pair in a lazy chunk. Standing
+    amendment above: app entry 71 621 B gz marginal, within budget, the pair in a lazy chunk. Standing
     lesson recorded rather than the risk simply ticked off: a zero-bytes gate proves only the barrels it
     names — the next package up needs its own row, which `measure-size.mjs`'s `@agent-ui/app` leg and
     `app/src/controls/agent-admin/dogfood-lazy.bundle.test.ts` now both are.

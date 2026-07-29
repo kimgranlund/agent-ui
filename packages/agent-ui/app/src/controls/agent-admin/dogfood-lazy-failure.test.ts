@@ -87,7 +87,10 @@ const mountDogfoodAdmin = async (): Promise<UIAgentAdminElement> => {
   const seen: unknown[] = []
   seenByEl.set(el, seen)
   el.agentSurfaceTurn = async function* (req) {
-    seen.push(req)
+    // A DEEP SNAPSHOT, not the live object: the request is mutated before it is issued (the degrade clears
+    // `genui.dogfood`), so asserting on the live reference could be satisfied by aliasing after the fact.
+    // This pins what the runner — and therefore the system prompt — actually SAW.
+    seen.push(JSON.parse(JSON.stringify(req)) as unknown)
     yield { kind: 'genui' as const, surfaceId: 'degrade-1', html: '<ui-button>Save</ui-button>' }
     yield { kind: 'note' as const, note: 'here is your form' }
   }
@@ -107,6 +110,11 @@ describe('lazy dogfood assets — a failed load DEGRADES (GH #354)', () => {
     await waitFor('the degraded turn mounted its frame', () => el.querySelector('ui-sandbox-frame') !== null)
     expect(dogfood.loads, 'the ON path reached the import').toBe(1)
     expect(seen.length, 'the turn ran').toBe(1)
+    // The PROMPT degrades with the assets — the whole point of the degrade. Left true, the runner would
+    // compose the dogfood teaching + inventory and the model would author `<ui-*>` into a frame that has no
+    // component definitions: JS-built controls (calendar/slider/select) would render NOTHING, strictly
+    // worse than the plain-HTML turn a dogfood-OFF request asks for.
+    expect((seen[0] as { genui?: { dogfood?: boolean } }).genui?.dogfood, 'the request the runner SAW carries dogfood:false').toBe(false)
     const frame = el.querySelector('ui-sandbox-frame') as Frame
     expect(frame.assets.css, 'no half-applied assets').toBeUndefined()
     expect(frame.assets.js).toBeUndefined()
@@ -124,6 +132,10 @@ describe('lazy dogfood assets — a failed load DEGRADES (GH #354)', () => {
     const frame = el.querySelector('ui-sandbox-frame') as Frame
     expect(frame.assets.css).toBe(dogfood.css)
     expect(frame.assets.js).toBe(dogfood.js)
+    expect(
+      (seenByEl.get(el)![0] as { genui?: { dogfood?: boolean } }).genui?.dogfood,
+      'a HEALTHY turn keeps dogfood:true — the degrade clears it only on the failing turn, never permanently',
+    ).toBe(true)
     expect(logText(el), 'a healthy turn carries no warning').not.toContain('⚠')
   })
 })

@@ -1075,15 +1075,27 @@ export class UIAgentAdminElement extends UIElement {
         //
         // DEGRADE, never fail (Kim's 2026-07-29 ruling; ADR-0139 cl.5's own outcome law — see
         // `loadDogfoodAssets`): a failed or timed-out load leaves `assets` undefined, the turn runs exactly
-        // as a dogfood-OFF turn would, and the reason rides out with this turn's note so the user is told
-        // rather than left wondering why the toggle did nothing. The catch is scoped to the LOAD alone — a
-        // fault in the turn itself still takes the outer `handle.fail` path, unchanged.
+        // as a dogfood-OFF turn would — PROMPT AND RENDER BOTH — and the reason rides out with this turn's
+        // note so the user is told rather than left wondering why the toggle did nothing. The catch is
+        // scoped to the LOAD alone: a fault in the turn itself still takes the outer `handle.fail` path,
+        // unchanged (that path deliberately omits `assetWarning` — a turn that failed outright has a more
+        // important thing to say than why its frame would have been unstyled).
+        //
+        // The PROMPT degrades with the assets (review finding, 2026-07-29 — the first cut degraded only
+        // half of it): `request` has not been issued yet at this point, so clearing `dogfood` here is what
+        // makes this a real degrade. Left true, `system-prompt.ts` would still inject the dogfood teaching
+        // + inventory and the model would author `<ui-*>` fleet markup into a frame with no component
+        // definitions and no fleet CSS — text-bearing controls would fall back to bare unstyled text, but
+        // anything that builds its content in JS (ui-calendar/ui-slider/ui-select) would render NOTHING.
+        // That is strictly WORSE than a dogfood-OFF turn, which asks for plain HTML and gets it. Clearing
+        // it also keeps `#logTurn` honest: a turn that ran without the pair records `dogfood: false`.
         let assets: SandboxFrameAssets | undefined
         let assetWarning: string | undefined
         if (dogfoodOn) {
           try {
             assets = await loadDogfoodAssets()
           } catch (cause) {
+            request.genui.dogfood = false
             assetWarning = `⚠ agent-ui components could not be loaded for this frame — rendering it without them (${cause instanceof Error ? cause.message : String(cause)})`
           }
         }

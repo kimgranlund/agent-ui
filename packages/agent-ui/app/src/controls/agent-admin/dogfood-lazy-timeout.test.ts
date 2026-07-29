@@ -59,7 +59,9 @@ describe('lazy dogfood assets — the load ceiling (GH #354)', () => {
       el.store.set('surfaceGenuiDogfood', true)
       const seen: unknown[] = []
       el.agentSurfaceTurn = async function* (req) {
-        seen.push(req)
+        // Deep snapshot — the request is mutated (degraded) before it is issued; see the sibling
+        // dogfood-lazy-failure.test.ts for why a live reference would make the assertion aliasable.
+        seen.push(JSON.parse(JSON.stringify(req)) as unknown)
         yield { kind: 'genui' as const, surfaceId: 'ceiling-1', html: '<ui-button>Save</ui-button>' }
         yield { kind: 'note' as const, note: 'here is your form' }
       }
@@ -86,6 +88,9 @@ describe('lazy dogfood assets — the load ceiling (GH #354)', () => {
       // Past it: the load is abandoned and the turn runs.
       await vi.advanceTimersByTimeAsync(1_500)
       expect(seen.length, 'at the ceiling the turn PROCEEDS — not failed, not hung').toBe(1)
+      // …and it proceeds as a REAL dogfood-OFF turn: the prompt degrades with the assets, so the model is
+      // never taught `<ui-*>` markup for a frame that has no component definitions to render it.
+      expect((seen[0] as { genui?: { dogfood?: boolean } }).genui?.dogfood, 'the timed-out turn requests dogfood:false').toBe(false)
       const frame = el.querySelector('ui-sandbox-frame') as Frame
       expect(frame, 'the frame still mounted').not.toBeNull()
       expect(frame.assets.css, 'assets-less, exactly like a dogfood-OFF mount').toBeUndefined()
