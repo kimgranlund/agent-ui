@@ -4,10 +4,11 @@ description: >-
   Curate the A2UI training corpus when adding an authored exemplar or back-scoring records: author a
   seed (the `src/examples` shape), admit it through the REALIZED store pipeline, and judge/rescore it —
   a thin procedure over the SHIPPED mechanism, never a re-implementation of it. Use for importing seeds
-  (`import-seeds --verdicts`), back-scoring phase-1 records (`rescore`), resolving an admission HALT
-  (near-duplicate between distinct seeds · unjudged candidate under a wired judge · quarantined-name
-  collision), or the judged quarantine exit (`--replace`). It POINTS at the owning docs (corpus LLD §6 ·
-  harness LLD §7 · ADR-0055/0060–0064/0068); it never restates the record schema (`record.ts` owns it),
+  (`import-seeds --verdicts`, whose archived verdicts file is COMMITTED with the shard), back-scoring
+  phase-1 records (`rescore`), resolving an admission HALT (near-duplicate between distinct seeds ·
+  unjudged candidate under a wired judge · quarantined-name collision · a recorded disposition on an
+  unjudged run), or the judged quarantine exit (`--replace`). It POINTS at the owning docs (corpus LLD §6 ·
+  harness LLD §7 · ADR-0055/0060–0064/0068/0165); it never restates the record schema (`record.ts` owns it),
   the dedup math, or the pipeline internals. NOT for composing an A2UI payload from the catalog — that is
   `a2ui-compose`; NOT for writing the pipeline / renderer / validator / catalog code — that is the
   `a2ui-builder` agent. This skill only DRIVES the realized pipeline, as a curator.
@@ -36,6 +37,9 @@ contract:
 - **Dedup / MinHash math** (`θ_dup`, shingles, permutations) → corpus LLD §5. Cite the value, not the code.
 - **Judge activation** (verdict adapter · parse logic · rescore · `--replace`) →
   `.claude/docs/lld/a2ui-harness-wiring.lld.md` §7 + `ADR-0068`.
+- **Verdict archive** (what a judged run writes · filename · precedence · no-expiry) → `ADR-0165` +
+  `packages/agent-ui/a2ui/corpus/verdicts/README.md`. The curator's ONE obligation over it is procedural
+  (commit it — step 7); every rule about it is the tool's.
 - **Healer contract** (the closed repair list) → `ADR-0061`.
 
 ## Procedure — seed → admit → judge → back-score
@@ -55,6 +59,11 @@ contract:
    node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus/import-seeds.ts --verdicts <verdicts.json>
    ```
 
+   That run also **writes**: it copies the verdicts file verbatim into
+   `packages/agent-ui/a2ui/corpus/verdicts/<date>--<slug>.json` (`ADR-0165` cl.1/2). The file is a
+   COMMITTED artifact, not scratch — step 7 is where it lands in the tree. Name each wave's file
+   distinctly; two waves resolving to one archive path halt the run rather than overwrite.
+
 3. **Clear the gates** — the standing shard gate (`src/corpus/corpus-data.test.ts`), **amended for
    quarantine per `ADR-0068` cl.6 (the amendment lands with the judge wiring, slice h11)**, backs the
    shard: quarantined lines are legal (parse + `validateRecord`
@@ -72,8 +81,14 @@ contract:
 6. **Exit quarantine only through the judged path** — `import-seeds --replace <name>` (`ADR-0068` cl.5) is
    the sanctioned re-admission of an improved seed through the FULL judged pipeline; it recomputes status
    honestly and logs the prior status + hash. Rescore never un-quarantines.
+7. **Commit the archive WITH the shard — one change, one wave.** A judged run's diff is the shard *and*
+   `corpus/verdicts/<date>--<slug>.json`; `git status` after the import shows both. This is not tidiness:
+   the archived `passed:false` entries ARE the durable `E_QUALITY` record (`ADR-0165` cl.1/3) — the outcome
+   `admit()` writes nowhere. Leave the archive uncommitted and the next unjudged run re-admits the refused
+   seed silently, exactly as before the archive existed, until `npm test` reds on it (cl.4/cl.5). A wave
+   that admitted NOTHING still has an archive to commit — zero admissions is not zero record.
 
-## The three halts — recognize, then resolve at the owner (corpus/harness LLD §8)
+## The halts — recognize, then resolve at the owner (corpus/harness LLD §8; `ADR-0165` cl.2/4)
 
 A halt is a **stop-and-resolve**, never a bypass. The pipeline fails closed; act on the cause:
 
@@ -88,15 +103,22 @@ A halt is a **stop-and-resolve**, never a bypass. The pipeline fails closed; act
    QUARANTINED record HALTS with nothing written (`ADR-0068` cl.5); identical content instead hits `E_DUP`
    (warming enumerates quarantined records). Resolve through the sanctioned `--replace <name>` re-admission
    — a routine import may never overwrite a quarantined line.
+4. **A recorded disposition on an unjudged run** — a plain run (no `--verdicts`) whose candidate carries an
+   archived `passed:false` verdict, or a curated `DISPOSITION_ALLOWLIST` entry, HALTS with nothing written
+   (`ADR-0165` cl.4; guard inputs in that order). Resolve by re-running with `--verdicts` so the name is
+   judged FRESH — never by deleting the archived file, which is the record itself.
 
 ## Validation loop — the pipeline is the check
 
 Finalize only when the pipeline runs clean end-to-end:
 
-1. `import-seeds` **exits clean** — a HALT (any of the three above) is resolved at its owner and the import
+1. `import-seeds` **exits clean** — a HALT (any of those above) is resolved at its owner and the import
    re-run, never worked around.
 2. `npm test` is green — the amended standing gate accepts the shard (including any new quarantine legs).
+   Its coverage leg also reds on a seed admitted with no judgment (`ADR-0165` cl.5), so a missing archive
+   surfaces here rather than in the next wave.
 3. A back-score's shard diff touches only `qualityScore` / `status`; a second identical run is a no-op.
+4. The judged run's diff carries the archive — no untracked `corpus/verdicts/*.json` is left behind.
 
 Never edit a gate or the pipeline code to make a halt disappear — that is `a2ui-builder`'s surface and a
 contract change, not curation. Re-run after every resolution.
@@ -119,5 +141,6 @@ Cite these; reproducing them here forks the frozen contract and rots on the next
 | `ADR-0055` | The seed shelf (`src/examples/` shape) an authored candidate is written in |
 | `ADR-0060` … `ADR-0064` | The corpus store: injected judge seam · shared healer · packaging · record schema |
 | `ADR-0068` | The verdict adapter, back-score/quarantine semantics, and the standing-gate amendment |
+| `ADR-0165` + `packages/agent-ui/a2ui/corpus/verdicts/README.md` | The verdict archive — the committed record a judged run writes, its filename/precedence/no-expiry rules, and the unjudged-run guard that reads it |
 | `.claude/docs/rubrics/a2ui-corpus.md` | The standard the `a2ui-reviewer` critic judges verdicts against |
 | `[[a2ui-compose]]` | The task is composing an A2UI PAYLOAD from the catalog, not curating the corpus |

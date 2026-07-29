@@ -11,6 +11,9 @@
 import { describe, it, expect } from 'vitest'
 import { mergeVerdictArchive, parseArchivedVerdicts, verdictArchiveFileName } from './verdict-archive.ts'
 import type { ArchivedVerdictsSource } from './verdict-archive.ts'
+// The RUN-TIME parser, imported for clause 7's negative control only — the two readers are compared on
+// the same bytes there, which is the whole reason clause 7 needs a second one.
+import { parseVerdictsFile } from './judge.ts'
 import type { VerdictsFile } from './judge.ts'
 
 const file = (over: Partial<VerdictsFile> & { verdicts: VerdictsFile['verdicts'] }): VerdictsFile => ({
@@ -134,14 +137,16 @@ describe('parseArchivedVerdicts — clause 7: an archived refusal does not expir
     if (parsed.ok) expect(parsed.file.rubricVersion).toBe('0.9')
   })
 
-  it('the negative control — the RUN-TIME parser rejects that same file against the current rubric version, which is why clause 7 needs its own reader', () => {
+  it('the negative control — the RUN-TIME parser REJECTS that same file against the current rubric version, which is why clause 7 needs its own reader', () => {
     // `parseVerdictsFile(text, '1.0')` is exactly right for the file `--verdicts` is handed (that verdict
-    // must be current) and exactly wrong for a historical record. If this ever stops failing, the two
-    // parsers have collapsed into one and clause 7's mechanism has been lost.
-    const runTime = parseArchivedVerdicts(archived)
-    expect(runTime.ok).toBe(true)
-    const asCurrent = JSON.parse(archived) as { rubricVersion: string }
-    expect(asCurrent.rubricVersion).not.toBe('1.0')
+    // must be current) and exactly wrong for a historical record. Both parsers run on the SAME bytes here:
+    // if this ever stops failing, the two have collapsed into one and clause 7's mechanism is lost.
+    const runTime = parseVerdictsFile(archived, '1.0')
+    expect(runTime.ok, 'the run-time parser must still enforce version equality').toBe(false)
+    if (runTime.ok) return
+    expect(runTime.issues.some((i) => i.path === 'rubricVersion')).toBe(true)
+
+    expect(parseArchivedVerdicts(archived).ok, 'the archive reader accepts the very file the run-time parser refuses').toBe(true)
   })
 
   it('every OTHER validation still applies — a malformed archived file is an error, not a silently empty archive', () => {

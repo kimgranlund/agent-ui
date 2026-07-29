@@ -53,8 +53,9 @@
 // validates it, and before `saveStore` in the same all-or-nothing step, `archiveVerdicts()` copies it
 // VERBATIM into `corpus/verdicts/<date>--<slug>.json` (clause 1/2 — `<date>` from the file's own `date`
 // field, never the wall clock; `<slug>` from the `--verdicts` basename; an existing path with DIFFERENT
-// bytes HALTS rather than overwriting). Nothing new is authored: the artifact ADR-0068 clause 1 already
-// requires to exist at run time merely stops being discarded.
+// bytes HALTS rather than overwriting — under `--dry-run` that collision is a WARNING, since a dry run
+// writes nothing to collide with and still owes its summary). Nothing new is authored: the artifact
+// ADR-0068 clause 1 already requires to exist at run time merely stops being discarded.
 //
 // **The archive trigger is reaching `saveStore`, NOT admitting anything** (clause 1). `shouldAbort` is
 // `hardErrors`-ONLY, so a judged wave in which EVERY candidate is rejected `E_QUALITY` still reaches
@@ -160,7 +161,8 @@ Options:
                        WRITES: any run that reaches the store write also ARCHIVES this file verbatim to
                        packages/agent-ui/a2ui/corpus/verdicts/<date>--<slug>.json (ADR-0165) — including
                        a wave in which every candidate is rejected. An existing archive path holding
-                       DIFFERENT bytes halts the run; pass a distinct --verdicts filename.
+                       DIFFERENT bytes halts the run; pass a distinct --verdicts filename. Under
+                       --dry-run that collision is a warning, not a halt — the run finishes and reports.
   --replace <name>    The sanctioned re-admission of a quarantined record's improved seed
                        (ADR-0068 clause 5c). Requires --verdicts.
   --dry-run           Run the full pipeline (dedup, judge, quality gate) and report exactly what a
@@ -600,13 +602,21 @@ async function main(): Promise<void> {
   if (verdictsPath !== undefined && verdictsText !== undefined && verdictMeta !== undefined) {
     archived = archiveVerdicts(repoRoot, verdictsPath, verdictsText, verdictMeta.date, { dryRun })
     if (archived.kind === 'conflict') {
-      console.error(
-        `import-seeds: HALTED — the verdict archive path "${archived.path}" already exists with DIFFERENT ` +
-          `content (existing sha256 ${archived.existingHash}, incoming sha256 ${archived.incomingHash}). ` +
-          'An archived verdict is never overwritten (ADR-0165 clause 2) — re-run with a distinct --verdicts ' +
-          'filename so both waves keep their own record. Nothing was written (no archive, no store).',
-      )
-      process.exit(1)
+      const collision =
+        `the verdict archive path "${archived.path}" already exists with DIFFERENT ` +
+        `content (existing sha256 ${archived.existingHash}, incoming sha256 ${archived.incomingHash}). ` +
+        'An archived verdict is never overwritten (ADR-0165 clause 2) — re-run with a distinct --verdicts ' +
+        'filename so both waves keep their own record.'
+      // GH #360 review item 3 — the disposition guard's rule ninety lines above, applied here: a dry run
+      // writes nothing by construction (`archiveVerdicts` was handed `dryRun` and returned before any
+      // write), so it must never hard-exit either. Report what a REAL run would do and carry on, so the
+      // run summary `--dry-run` promises actually gets printed. A real run still halts before `saveStore`.
+      if (dryRun) {
+        console.log(`import-seeds (--dry-run): a real run would HALT here — ${collision}`)
+      } else {
+        console.error(`import-seeds: HALTED — ${collision} Nothing was written (no archive, no store).`)
+        process.exit(1)
+      }
     }
   }
 
@@ -631,16 +641,31 @@ async function main(): Promise<void> {
     // remember anything for the next unjudged run to refuse them. A curated `DISPOSITION_ALLOWLIST` entry
     // is now OPTIONAL prose, for the cases a verdict cannot state (a coverage argument, a repair path).
     if (verdictMeta !== undefined) {
+      // A `conflict` archive (dry-run only — a real run exited) must not claim these are recorded
+      // anywhere: that path holds a DIFFERENT wave's file and nothing was written over it.
       console.log(
-        `  recorded durably in ${archived?.path ?? '(archive not written)'} — the next unjudged run refuses ` +
-          'them from that file alone. An optional curated src/corpus/disposition-allowlist.ts entry adds ' +
-          'prose a verdict cannot state (a coverage argument, a repair path):',
+        archived !== undefined && archived.kind === 'conflict'
+          ? `  NOT recorded durably — the archive path ${archived.path} collides (above); resolve it first. An ` +
+              'optional curated src/corpus/disposition-allowlist.ts entry adds prose a verdict cannot state ' +
+              '(a coverage argument, a repair path):'
+          : `  recorded durably in ${archived?.path ?? '(archive not written)'} — the next unjudged run refuses ` +
+              'them from that file alone. An optional curated src/corpus/disposition-allowlist.ts entry adds ' +
+              'prose a verdict cannot state (a coverage argument, a repair path):',
       )
       for (const q of qualityRejected) console.log(dispositionAllowlistSnippet(q, verdictMeta))
     }
   }
   if (archived !== undefined) {
-    const verb = dryRun ? 'would archive verdicts to' : archived.kind === 'unchanged' ? 'verdicts already archived at' : 'verdicts archived to'
+    // `conflict` only reaches this line under `--dry-run` — a real run exited above. It is reported in the
+    // dispositionWarnings voice rather than the archive one: a real run would write nothing here at all.
+    const verb =
+      archived.kind === 'conflict'
+        ? 'would HALT on a real run (--dry-run only, archive path already holds DIFFERENT content)'
+        : dryRun
+          ? 'would archive verdicts to'
+          : archived.kind === 'unchanged'
+            ? 'verdicts already archived at'
+            : 'verdicts archived to'
     console.log(`  ${verb}: ${archived.path}`)
   }
   if (report.dispositionWarnings.length > 0) {
