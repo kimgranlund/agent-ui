@@ -48,17 +48,25 @@
 // allowlisted or not — so this change touches ONLY the previously-unguarded unjudged path and does not
 // alter ADR-0068's judge/verdict/quarantine contract in any way.
 //
-// STILL OPEN (review finding, not yet closed): this only protects a name ALREADY in the allowlist. A
-// judged run that rejects a NEW candidate Y tomorrow prints Y in the quality-rejected lane and exits 0
-// with Y recorded nowhere durable; the next unjudged run silently admits it — defect 1, verbatim, for
-// any name that hasn't been hand-transcribed yet. Worse, `admission-coverage.test.ts`'s own
-// `seedsMissingAdmission` gate only reds while Y is BOTH un-admitted and un-allowlisted — the moment the
-// unjudged run admits Y, that gate goes green again, so nothing catches the miss after the fact either.
-// The quality-rejected report below (search "GH #335 — the paste-ready" further down) removes the
-// hand-transcription STEP by emitting a ready-to-paste `DISPOSITION_ALLOWLIST` entry, but a human still
-// has to actually paste it before the next unjudged run — closing this for real needs a machine-enforced
-// link between a judged rejection and the next run's dedup/guard state, which is bigger than this fix and
-// not something to invent inline (ADR territory — filed for the host to route, not solved here).
+// GH #340 / ADR-0165 — the transcription REQUIREMENT removed, not relocated (this closes what the
+// allowlist only narrowed). A judged run now ARCHIVES its own verdicts file: after `parseVerdictsFile`
+// validates it, and before `saveStore` in the same all-or-nothing step, `archiveVerdicts()` copies it
+// VERBATIM into `corpus/verdicts/<date>--<slug>.json` (clause 1/2 — `<date>` from the file's own `date`
+// field, never the wall clock; `<slug>` from the `--verdicts` basename; an existing path with DIFFERENT
+// bytes HALTS rather than overwriting). Nothing new is authored: the artifact ADR-0068 clause 1 already
+// requires to exist at run time merely stops being discarded.
+//
+// **The archive trigger is reaching `saveStore`, NOT admitting anything** (clause 1). `shouldAbort` is
+// `hardErrors`-ONLY, so a judged wave in which EVERY candidate is rejected `E_QUALITY` still reaches
+// `saveStore` — and that is the single highest-value archive in the design. Zero admissions is not zero
+// record. A run that aborts on `hardErrors` archives nothing, matching the store's own posture.
+//
+// `dispositionGuard` below now takes the archive as its FIRST input (clause 4): an unjudged run whose
+// candidate carries an archived `passed:false` verdict and was never admitted HALTS with nothing
+// written — the identical posture the allowlist already gave hand-transcribed names. Guard inputs, in
+// order: archived verdict -> `DISPOSITION_ALLOWLIST` -> proceed. `DISPOSITION_ALLOWLIST` is DEMOTED,
+// never retired (clause 6): it keeps the cases a machine cannot state, and the paste-ready snippet below
+// is now optional curated prose rather than a record a human must remember to write.
 //
 // GH #335 defect 2 — an unrecognized flag used to be silently ignored and the tool proceeded to a real
 // mutating run (`import-seeds.ts --help` wrote to the corpus, discovered live). `parseArgs` now returns
@@ -70,7 +78,8 @@
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { loadStore, saveStore } from './fs-store.ts'
+import { loadStore, saveStore, loadVerdictArchive, archiveVerdicts } from './fs-store.ts'
+import type { VerdictArchiveOutcome } from './fs-store.ts'
 import { createDedupIndex, minHashSignature } from '../../src/corpus/dedup.ts'
 import type { DedupIndex } from '../../src/corpus/dedup.ts'
 import { canonicalize } from '../../src/corpus/canonical.ts'
@@ -81,6 +90,7 @@ import { createVerdictJudge, parseVerdictsFile, UnjudgedCandidateError } from '.
 import { classifyRejections, shouldAbort } from '../../src/corpus/import-report.ts'
 import type { SeedRejection } from '../../src/corpus/import-report.ts'
 import { DISPOSITION_ALLOWLIST } from '../../src/corpus/disposition-allowlist.ts'
+import type { ArchivedVerdict } from '../../src/corpus/verdict-archive.ts'
 import { loadCatalog } from '../../src/catalog/catalog.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
 import type { ExampleSeed } from '../../src/examples/types.ts'
@@ -147,6 +157,10 @@ Options:
   --verdicts <path>   Wire a critic-authored VerdictsFile (ADR-0068) in as the tier-2 judge. With a
                        judge wired, every not-yet-admitted candidate must be judged, or the run
                        reports + halts with nothing written.
+                       WRITES: any run that reaches the store write also ARCHIVES this file verbatim to
+                       packages/agent-ui/a2ui/corpus/verdicts/<date>--<slug>.json (ADR-0165) — including
+                       a wave in which every candidate is rejected. An existing archive path holding
+                       DIFFERENT bytes halts the run; pass a distinct --verdicts filename.
   --replace <name>    The sanctioned re-admission of a quarantined record's improved seed
                        (ADR-0068 clause 5c). Requires --verdicts.
   --dry-run           Run the full pipeline (dedup, judge, quality gate) and report exactly what a
@@ -290,24 +304,52 @@ async function warmDedupIndex(store: CorpusStore, dedupIndex: DedupIndex, exclud
 }
 
 /**
- * GH #335 defect 1: an unjudged run (`verdictsPath` absent) must never silently re-admit a candidate
- * whose name carries a recorded prior `E_QUALITY` rejection (`DISPOSITION_ALLOWLIST` —
- * `../../src/corpus/disposition-allowlist.ts`). Admission-time `E_QUALITY` rejects are never written
- * to the store (`admit.ts` stage 10 — LLD §6's asymmetry: "a candidate can be refused entry" leaves no
- * trace in the shard or the dedup index), so without this guard nothing remembers the refusal and a
- * plain re-run silently reverses it.
+ * GH #335 defect 1 + GH #340/ADR-0165 clause 4: an unjudged run (`verdictsPath` absent) must never
+ * silently re-admit a candidate whose name carries a recorded prior `E_QUALITY` rejection.
+ * Admission-time `E_QUALITY` rejects are never written to the store (`admit.ts` stage 10 — LLD §6's
+ * asymmetry: "a candidate can be refused entry" leaves no trace in the shard or the dedup index), so
+ * without this guard nothing remembers the refusal and a plain re-run silently reverses it.
+ *
+ * **Two inputs, in order (ADR-0165 clause 4):** the archived verdict (`corpus/verdicts/` — the machine-
+ * written record, checked FIRST because it is the primary one) then `DISPOSITION_ALLOWLIST` (demoted to
+ * curated prose for the cases a machine cannot state, clause 6). An archived `passed:false` for a
+ * never-admitted name halts with the verdict's own facts quoted; an archived `passed:true` is not a
+ * disposition at all and falls through to the allowlist.
  *
  * Applies ONLY when: (a) no judge is wired — a `--verdicts` run already fails closed on every
  * not-yet-admitted candidate absent from the verdicts file via `createVerdictJudge`'s throw (ADR-0068
- * clause 2), disposition-allowlisted or not, so it needs no separate guard here; (b) the candidate has
+ * clause 2), dispositioned or not, so it needs no separate guard here; (b) the candidate has
  * never actually been admitted (`alreadyAdmitted`) — an idempotent re-run of a record that WAS admitted
- * is untouched, exactly as before (the ordinary `E_DUP` path handles it).
+ * is untouched, exactly as before (the ordinary `E_DUP` path handles it). An archived `passed:false` for
+ * a name that IS already admitted is ADR-0068 clause 4's rescore/quarantine path, not this guard's
+ * business (ADR-0165 clause 5's scope note).
  *
  * Returns the halt message to print (the caller reports it and exits non-zero, nothing written), or
  * `undefined` when the run may proceed normally.
  */
-export function dispositionGuard(seedName: string, verdictsPath: string | undefined, alreadyAdmitted: boolean): string | undefined {
+export function dispositionGuard(
+  seedName: string,
+  verdictsPath: string | undefined,
+  alreadyAdmitted: boolean,
+  archive: ReadonlyMap<string, ArchivedVerdict>,
+): string | undefined {
   if (verdictsPath !== undefined || alreadyAdmitted) return undefined
+
+  const archived = archive.get(seedName)
+  if (archived !== undefined && !archived.passed) {
+    const dims =
+      archived.failingDimensions !== undefined && archived.failingDimensions.length > 0
+        ? archived.failingDimensions.join(', ')
+        : '(none reported)'
+    return (
+      `import-seeds: HALTED — "${seedName}" carries an ARCHIVED quality rejection: qualityScore ` +
+      `${String(archived.qualityScore)}, failing dimensions: ${dims} (rubric a2ui-corpus ` +
+      `${archived.rubricVersion}, judged by ${archived.judgedBy} on ${archived.date}; ` +
+      `${archived.sourceFile}). An unjudged run cannot silently re-admit a dispositioned candidate; ` +
+      're-run with --verdicts to have it judged fresh. Nothing was written.'
+    )
+  }
+
   const disposition = DISPOSITION_ALLOWLIST.get(seedName)
   if (disposition === undefined) return undefined
   return (
@@ -324,8 +366,9 @@ interface ImportReport {
    *  AFTER the loop completes (TKT-0022 cl.1, `../../src/corpus/import-report.ts`). */
   rejections: SeedRejection[]
   /** `--dry-run` only (GH #335 review item 3): names `dispositionGuard` would have HALTED a real run on
-   *  — reported as a warning line instead, so a dry run finishes and still tells the truth about what a
-   *  real run would do (nothing admitted, nothing written, for exactly these names). */
+   *  — for EITHER reason, an archived `passed:false` verdict or a curated allowlist entry (ADR-0165
+   *  clause 4) — reported as a warning line instead, so a dry run finishes and still tells the truth
+   *  about what a real run would do (nothing admitted, nothing written, for exactly these names). */
   dispositionWarnings: string[]
 }
 
@@ -340,18 +383,22 @@ export interface VerdictMeta {
 }
 
 /**
- * GH #335 review item 2's "cheap half": a `DISPOSITION_ALLOWLIST` entry the run already has every fact
- * for, formatted exactly as a `Map` literal entry so it can be pasted straight into
- * `src/corpus/disposition-allowlist.ts`. This does NOT close the class the disposition guard only
- * narrows (see the defect-1 header comment) — it removes the hand-transcription step, nothing more; a
- * human still has to actually paste it before the next unjudged run.
+ * A `DISPOSITION_ALLOWLIST` entry the run already has every fact for, formatted exactly as a `Map`
+ * literal entry so it can be pasted straight into `src/corpus/disposition-allowlist.ts`.
+ *
+ * **DEMOTED by ADR-0165 clause 6** — this used to be the transcription step a human had to remember, and
+ * the entry it produced was the only durable trace of the refusal. It is neither now: the archived
+ * verdicts file (clause 1) IS the machine-readable record, and the next unjudged run refuses the name
+ * from that file alone (clause 4). Pasting an entry is OPTIONAL curated prose, worth it only when a
+ * human has something a verdict cannot state — a coverage argument, a repair path.
  */
 export function dispositionAllowlistSnippet(q: SeedRejection, meta: VerdictMeta): string {
   const dims = q.failingDimensions !== undefined && q.failingDimensions.length > 0 ? q.failingDimensions.join(', ') : '(none reported)'
   const reason =
     `judged E_QUALITY ${meta.date} (VerdictsFile, rubric a2ui-corpus ${meta.rubricVersion} — ${meta.judgedBy}). ` +
-    `${q.message}. Failing dimensions: ${dims}. Record this before the next unjudged run (GH #335) — an ` +
-    'unjudged run will otherwise silently re-admit it.'
+    `${q.message}. Failing dimensions: ${dims}. The machine-readable record is the archived verdicts file ` +
+    '(ADR-0165 clause 1); this entry is optional curated prose — add the coverage argument and repair path a ' +
+    'verdict cannot state.'
   return `  ['${q.name}', ${JSON.stringify(reason)}],`
 }
 
@@ -403,18 +450,34 @@ async function main(): Promise<void> {
   }
   const repoRoot = process.cwd()
   const store = loadStore(repoRoot)
+
+  // ADR-0165 clause 4: the archive is a guard input on EVERY run, judged or not — an unjudged run needs
+  // it to refuse a silent re-admission, and a malformed/self-conflicting archive halts before any work
+  // (the disposition record is the thing this tool must not be wrong about).
+  const loadedArchive = loadVerdictArchive(repoRoot)
+  if (!loadedArchive.ok) {
+    console.error(`import-seeds: HALTED — the verdict archive (corpus/verdicts/) could not be read (${loadedArchive.issues.length} issue(s)):`)
+    for (const issue of loadedArchive.issues) console.error(`  - ${issue}`)
+    console.error('Nothing was written.')
+    process.exit(1)
+  }
+  const archive = loadedArchive.archive
+
   const dedupIndex = createDedupIndex()
   await warmDedupIndex(store, dedupIndex, replaceName)
 
   const deps: AdmitDeps = { catalog: loadDefaultCatalog(repoRoot), store, dedupIndex }
 
-  // Kept past the parse step ONLY to feed the paste-ready disposition-allowlist snippet at report time
+  // Kept past the parse step to feed the paste-ready disposition-allowlist snippet at report time
   // (GH #335 review item 2) — the pipeline itself only ever needs `deps.judge`.
   let verdictMeta: VerdictMeta | undefined
+  // ADR-0165 clause 1: the VALIDATED bytes, held for the archive write below. Verbatim — the archived
+  // file is byte-identical to the operator's input, nothing is re-serialized.
+  let verdictsText: string | undefined
 
   if (verdictsPath !== undefined) {
     const rubricVersion = readRubricVersion(repoRoot)
-    const verdictsText = readFileSync(verdictsPath, 'utf8') as string
+    verdictsText = readFileSync(verdictsPath, 'utf8') as string
     const parsedVerdicts = parseVerdictsFile(verdictsText, rubricVersion)
     if (!parsedVerdicts.ok) {
       console.error(`import-seeds: the verdicts file is malformed (${parsedVerdicts.issues.length} issue(s)):`)
@@ -438,7 +501,7 @@ async function main(): Promise<void> {
         replaced = { name: seed.name, priorStatus: existing.meta.status, priorCanonicalHash: existing.meta.canonicalHash }
       }
 
-      const haltMessage = dispositionGuard(seed.name, verdictsPath, existing !== undefined)
+      const haltMessage = dispositionGuard(seed.name, verdictsPath, existing !== undefined, archive)
       if (haltMessage !== undefined) {
         // GH #335 review item 3: `--dry-run` writes nothing by construction — the disposition guard's
         // whole purpose — so it must never hard-exit here. Report what a REAL run would do (HALT, admit
@@ -527,6 +590,26 @@ async function main(): Promise<void> {
     process.exit(1)
   }
 
+  // ADR-0165 clause 1/2 — the archive rides the SAME all-or-nothing step as `saveStore`, and it is
+  // reached by every judged run that gets this far. The trigger is REACHING THIS POINT, not admitting
+  // anything: `shouldAbort` above is `hardErrors`-only, so a wave in which every candidate was rejected
+  // `E_QUALITY` lands here with zero admissions and still archives. Zero admissions is not zero record.
+  // A conflicting existing archive path halts BEFORE `saveStore`, so neither the archive nor the store
+  // is written (an overwrite would destroy one of the two records this ADR exists to preserve).
+  let archived: VerdictArchiveOutcome | undefined
+  if (verdictsPath !== undefined && verdictsText !== undefined && verdictMeta !== undefined) {
+    archived = archiveVerdicts(repoRoot, verdictsPath, verdictsText, verdictMeta.date, { dryRun })
+    if (archived.kind === 'conflict') {
+      console.error(
+        `import-seeds: HALTED — the verdict archive path "${archived.path}" already exists with DIFFERENT ` +
+          `content (existing sha256 ${archived.existingHash}, incoming sha256 ${archived.incomingHash}). ` +
+          'An archived verdict is never overwritten (ADR-0165 clause 2) — re-run with a distinct --verdicts ' +
+          'filename so both waves keep their own record. Nothing was written (no archive, no store).',
+      )
+      process.exit(1)
+    }
+  }
+
   if (!dryRun) saveStore(repoRoot, store)
 
   // Three reporting lanes, clearly distinguished with counts (TKT-0022 cl.1): written / already-present
@@ -543,19 +626,27 @@ async function main(): Promise<void> {
     for (const q of qualityRejected) {
       console.log(`  quality-rejected: "${q.name}" — ${q.message}${q.failingDimensions ? ` [failing: ${q.failingDimensions.join(', ')}]` : ''}`)
     }
-    // GH #335 — the paste-ready disposition-allowlist entry: this does NOT close the "narrowed, not
-    // closed" gap the defect-1 header comment names (a human still has to actually paste these before the
-    // next unjudged run) — it only removes the hand-transcription step that makes forgetting the default.
+    // ADR-0165 clause 6 — the snippet is DEMOTED to the allowlist-only path: the durable, machine-
+    // readable record of these rejections is the archived verdicts file written above, so no human has to
+    // remember anything for the next unjudged run to refuse them. A curated `DISPOSITION_ALLOWLIST` entry
+    // is now OPTIONAL prose, for the cases a verdict cannot state (a coverage argument, a repair path).
     if (verdictMeta !== undefined) {
       console.log(
-        '  record these in src/corpus/disposition-allowlist.ts before the next unjudged run, or it will ' +
-          'silently re-admit them (GH #335) — paste-ready entries:',
+        `  recorded durably in ${archived?.path ?? '(archive not written)'} — the next unjudged run refuses ` +
+          'them from that file alone. An optional curated src/corpus/disposition-allowlist.ts entry adds ' +
+          'prose a verdict cannot state (a coverage argument, a repair path):',
       )
       for (const q of qualityRejected) console.log(dispositionAllowlistSnippet(q, verdictMeta))
     }
   }
+  if (archived !== undefined) {
+    const verb = dryRun ? 'would archive verdicts to' : archived.kind === 'unchanged' ? 'verdicts already archived at' : 'verdicts archived to'
+    console.log(`  ${verb}: ${archived.path}`)
+  }
   if (report.dispositionWarnings.length > 0) {
-    console.log(`  would HALT on a real run (--dry-run only, disposition-allowlisted): ${report.dispositionWarnings.join(', ')}`)
+    // "dispositioned" covers BOTH guard inputs since ADR-0165 clause 4 — an archived `passed:false`
+    // verdict or a curated allowlist entry. The halt line printed above names which one fired.
+    console.log(`  would HALT on a real run (--dry-run only, dispositioned): ${report.dispositionWarnings.join(', ')}`)
   }
   if (replaced !== undefined) {
     console.log(`  replaced: "${replaced.name}" (prior status: ${replaced.priorStatus}, prior canonicalHash: ${replaced.priorCanonicalHash ?? 'none'})`)
