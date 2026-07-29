@@ -38,18 +38,67 @@ const logOf = (el: UIConversationElement): HTMLElement => el.querySelector('[dat
 
 const wait = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms))
 
-/** Poll until the log's scrollTop stops moving (mirrors tailFollowLog's own settle discipline) — a fixed
- *  frame count would undershoot, per that function's own banner. */
-async function waitSettled(log: HTMLElement, maxMs = 1500): Promise<void> {
-  let prev = -1
-  let stable = 0
-  const start = Date.now()
-  while (Date.now() - start < maxMs) {
-    const top = log.scrollTop
-    stable = top === prev ? stable + 1 : 0
-    prev = top
-    if (stable >= 3) return
-    await wait(40)
+interface SettleOpts {
+  /** Consecutive RENDERED frames that must read the same `scrollTop`. */
+  stableFrames?: number
+  /** Real wall-clock time that streak must also span, so a not-yet-started scroll can't read as finished. */
+  minStableMs?: number
+  /** Total wall-clock budget; exhausting it THROWS. */
+  budgetMs?: number
+}
+
+/** Wait until the log's `scrollTop` reads the SAME value on `stableFrames` consecutive PAINTED frames
+ *  spanning at least `minStableMs` of real wall-clock time, then return it. Exhausting `budgetMs` THROWS.
+ *
+ *  GH #359/#365 — this is that audit's one true sibling of `status-stream.browser.test.ts`'s
+ *  `waitUntilSettled`, and it lied the same two ways:
+ *
+ *  1. FALSE SETTLE. `setTimeout` sampling has no tie to painting, so several samples can land inside one
+ *     frame interval — or inside a window where nothing was painted at all — and read the identical,
+ *     still-moving offset of a smooth scroll. This outer log genuinely gets animated from elsewhere: a
+ *     turn's narration strip calls `item.scrollIntoView({behavior:'smooth'})` (status-stream.ts's
+ *     `#tailFollow`), and `scrollIntoView` scrolls every scrollable ANCESTOR, this log included. Sampling
+ *     once per `requestAnimationFrame` closes that by construction — a running animation advances on every
+ *     painted frame, so N identical PAINTED frames is direct evidence it is not advancing. `minStableMs`
+ *     covers the other end: a scroll requested but not yet started also reads identical.
+ *  2. SILENT EXHAUSTION. The old body fell out of its `while` loop returning `void`, so a timed-out wait
+ *     was indistinguishable from a settled one and the caller's next assertion failed as a plausible-
+ *     looking component regression ("did not follow to the new bottom"). Exhaustion now throws with the
+ *     observed trace. The budget went 1500 → 4000ms with that change: silent exhaustion made a tight
+ *     budget harmless, a throwing one makes it a flake source. Measured on all three live waits, both
+ *     engines: each settles in 151–165ms over 10–11 painted frames, ~25× headroom.
+ *
+ *  NOT closed here, deliberately: a STILL-TICKING `#tailFollowLog` re-asserts the SAME `scrollTop` every
+ *  40ms, so a stable read never proves no sibling loop is live. No sampling discipline can see that — the
+ *  flat `wait(1100)` at the call sites below is what actually drains them. */
+async function waitSettled(log: HTMLElement, opts: SettleOpts = {}): Promise<number> {
+  const { stableFrames = 4, minStableMs = 150, budgetMs = 4000 } = opts
+  const frame = (): Promise<number> => new Promise((r) => requestAnimationFrame(() => r(performance.now())))
+  const start = performance.now()
+  let prev = log.scrollTop
+  let streak = 0
+  let streakStart = start
+  let frames = 0
+  for (;;) {
+    const now = await frame()
+    frames += 1
+    const next = log.scrollTop
+    if (next === prev) {
+      streak += 1
+      if (streak >= stableFrames && now - streakStart >= minStableMs) return next
+    } else {
+      streak = 0
+      streakStart = now
+      prev = next
+    }
+    if (now - start > budgetMs) {
+      throw new Error(
+        `waitSettled: log.scrollTop never settled — ${Math.round(now - start)}ms budget spent over ${frames} ` +
+          `painted frames, last read ${next}, stable for ${streak}/${stableFrames} frames ` +
+          `(${Math.round(now - streakStart)}/${minStableMs}ms). This is a TIMED-OUT wait, not a settled one ` +
+          `— do not read it as a component regression (GH #359/#365).`,
+      )
+    }
   }
 }
 
@@ -720,8 +769,9 @@ describe('ui-conversation cross-engine smoke — scroll-follow guard (SPEC-R4 AC
     for (let i = 0; i < 30; i++) el.addUserMessage(`message ${i}`)
     // Each addUserMessage spawns its OWN up-to-~1s tail-follow settle loop (TAIL_FOLLOW_MAX_CHECKS ×
     // TAIL_FOLLOW_CHECK_MS); firing 30 back-to-back overlaps 30 of them. A flat wait past the worst-case
-    // window (never just "3 stable reads", which a STILL-ticking sibling loop can satisfy coincidentally
-    // while continuing to re-assert scrollTop afterward) is what actually drains every one of them.
+    // window (never just a stable-read streak — a STILL-ticking sibling loop re-asserts the SAME scrollTop
+    // every tick, so it satisfies any stability test while continuing to write afterward) is what actually
+    // drains every one of them.
     await wait(1100)
     await waitSettled(log)
     expect(log.scrollHeight - log.scrollTop - log.clientHeight).toBeLessThanOrEqual(24) // already near bottom
