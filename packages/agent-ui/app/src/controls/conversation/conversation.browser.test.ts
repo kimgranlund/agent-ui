@@ -43,12 +43,13 @@ interface SettleOpts {
   stableFrames?: number
   /** Real wall-clock time that streak must also span, so a not-yet-started scroll can't read as finished. */
   minStableMs?: number
-  /** Total wall-clock budget; exhausting it THROWS. */
-  budgetMs?: number
+  /** Total wall-clock budget; exhausting it THROWS. Named `timeoutMs` to match every other poll helper
+   *  in the browser suites, and to match the sibling this is a port of. */
+  timeoutMs?: number
 }
 
 /** Wait until the log's `scrollTop` reads the SAME value on `stableFrames` consecutive PAINTED frames
- *  spanning at least `minStableMs` of real wall-clock time, then return it. Exhausting `budgetMs` THROWS.
+ *  spanning at least `minStableMs` of real wall-clock time, then return it. Exhausting `timeoutMs` THROWS.
  *
  *  GH #359/#365 — this is that audit's one true sibling of `status-stream.browser.test.ts`'s
  *  `waitUntilSettled`, and it lied the same two ways:
@@ -64,39 +65,51 @@ interface SettleOpts {
  *  2. SILENT EXHAUSTION. The old body fell out of its `while` loop returning `void`, so a timed-out wait
  *     was indistinguishable from a settled one and the caller's next assertion failed as a plausible-
  *     looking component regression ("did not follow to the new bottom"). Exhaustion now throws with the
- *     observed trace. The budget went 1500 → 4000ms with that change: silent exhaustion made a tight
- *     budget harmless, a throwing one makes it a flake source. Measured on all three live waits, both
- *     engines: each settles in 151–165ms over 10–11 painted frames, ~25× headroom.
+ *     observed trace — including the frame count, which names a THROTTLED page (few frames, long gaps) or
+ *     a SUSPENDED one (zero frames) for what it is rather than dressing it up as a scroll-following
+ *     defect. Both are only reportable because the frame wait is RACED against the remaining budget: a
+ *     bare `await requestAnimationFrame` never resolves on a hidden/occluded page, which would strand the
+ *     timeout check below and hand the failure back as a bare vitest per-test timeout — silent again, in
+ *     a new way. That is the same hazard `conversation.ts`'s `#tailFollowLog` banner cites as a reason NOT
+ *     to frame-pace a WRITER; here the port is deliberate, so the race is what pays for it.
+ *     The budget went 1500 → 4000ms with the throw: silent exhaustion made a tight budget harmless, a
+ *     throwing one makes it a flake source. Measured on all three live waits, both engines: each settles
+ *     in 151–165ms over 10–11 painted frames, ~25× headroom.
  *
  *  NOT closed here, deliberately: a STILL-TICKING `#tailFollowLog` re-asserts the SAME `scrollTop` every
  *  40ms, so a stable read never proves no sibling loop is live. No sampling discipline can see that — the
  *  flat `wait(1100)` at the call sites below is what actually drains them. */
 async function waitSettled(log: HTMLElement, opts: SettleOpts = {}): Promise<number> {
-  const { stableFrames = 4, minStableMs = 150, budgetMs = 4000 } = opts
-  const frame = (): Promise<number> => new Promise((r) => requestAnimationFrame(() => r(performance.now())))
+  const { stableFrames = 4, minStableMs = 150, timeoutMs = 4000 } = opts
+  const nextFrame = (): Promise<'frame'> => new Promise((r) => requestAnimationFrame(() => r('frame')))
+  const afterRemaining = (ms: number): Promise<'timeout'> =>
+    new Promise((r) => setTimeout(() => r('timeout'), Math.max(0, ms)))
   const start = performance.now()
-  let prev = log.scrollTop
+  let prev = log.scrollTop // always the most recent reading — reassigned only when the value actually changes
   let streak = 0
   let streakStart = start
   let frames = 0
   for (;;) {
-    const now = await frame()
-    frames += 1
-    const next = log.scrollTop
-    if (next === prev) {
-      streak += 1
-      if (streak >= stableFrames && now - streakStart >= minStableMs) return next
-    } else {
-      streak = 0
-      streakStart = now
-      prev = next
+    const outcome = await Promise.race([nextFrame(), afterRemaining(timeoutMs - (performance.now() - start))])
+    const now = performance.now()
+    if (outcome === 'frame') {
+      frames += 1
+      const next = log.scrollTop
+      if (next === prev) {
+        streak += 1
+        if (streak >= stableFrames && now - streakStart >= minStableMs) return next
+      } else {
+        streak = 0
+        streakStart = now
+        prev = next
+      }
     }
-    if (now - start > budgetMs) {
+    if (outcome === 'timeout' || now - start > timeoutMs) {
       throw new Error(
-        `waitSettled: log.scrollTop never settled — ${Math.round(now - start)}ms budget spent over ${frames} ` +
-          `painted frames, last read ${next}, stable for ${streak}/${stableFrames} frames ` +
-          `(${Math.round(now - streakStart)}/${minStableMs}ms). This is a TIMED-OUT wait, not a settled one ` +
-          `— do not read it as a component regression (GH #359/#365).`,
+        `waitSettled: log.scrollTop never settled — ${Math.round(now - start)}ms of a ${timeoutMs}ms budget ` +
+          `spent over ${frames} painted frames, last read ${prev}, stable for ${streak}/${stableFrames} ` +
+          `frames (${Math.round(now - streakStart)}/${minStableMs}ms). This is a TIMED-OUT wait, not a ` +
+          `settled one — do not read it as a component regression (GH #359/#365).`,
       )
     }
   }
