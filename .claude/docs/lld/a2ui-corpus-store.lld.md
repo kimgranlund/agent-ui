@@ -1,6 +1,6 @@
 # LLD — A2UI Corpus Store
 
-> Status: proposed · v0.5 · 2026-07-03 (v0.1 2026-06-26) · Layer: LLD (implementation plan)
+> Status: proposed · v0.6 · 2026-07-29 (v0.1 2026-06-26) · Layer: LLD (implementation plan)
 > Implements: [`../spec/a2ui-training-corpus.spec.md`](../spec/a2ui-training-corpus.spec.md) (SPEC-R1..R16, SPEC-N1..N6). Closes **PRD-D4** (storage substrate); PRD-D5 (MCP delivery) is now served through the streaming-pipeline LLD (see LLD-C13 note, §1).
 > Altitude: this document adds the **how**. It does not re-derive corpus behavior — that is the SPEC's; it cites `SPEC-R*` for the what and specifies data structures, algorithms, files, failures, and build order.
 > **v0.2 reconciliation (2026-07-03):** realized/unrealized state added (§0); LLD-C6 marked REALIZED; the healer (LLD-C7) is now **the ONE shared healer** for the whole system (the streaming LLD v0.2 re-pointed all healing here — the renderer deliberately does not heal) and its contract is ADR-0061; the phase-1 scope + tier-2 judge seam is ADR-0060; the pure-core/Node-shell split, the `"./corpus"` subpath, and the data home are ADR-0062; the dangling `a2ui-mcp.lld.md` reference repaired (LLD-C13 re-pointed to the streaming LLD-C6); the seed-import slice (ADR-0055's booked handshake) added as LLD-C14.
@@ -18,6 +18,19 @@
 > eval record — the harness ships none, ADR-0067 clause 6), and that wave must first host-verify the
 > upstream `eval/a2ui_eval/scorers.py` + `dataset.py` interfaces (unverified C1 facts). §0/§1/§11 rows
 > updated this change. (no blocker/major; every accept + ADR clause checked in code, incl. the pointer mirror read against `renderer/{tree,list,binding}.ts` and all 11 shard records parsed against their seeds; check + test re-run green 2254/2254) — its two LATENT minors (both safe-direction, no shard hits) + two gate-completeness notes are booked in §12 and caveated at §6.
+> **v0.6 (2026-07-29, ADR-0165 built — the verdict archive; realization note):** the §6 asymmetry
+> ("a candidate can be refused entry" leaves no trace) is UNCHANGED and now deliberate — ADR-0165 clause 9
+> leaves `admit()` alone and moves the record NEXT TO the store. §6's tier-2 stage line gains the
+> ARCHIVE SIDE-EFFECT and §12's file plan gains `src/corpus/verdict-archive.ts` + the `corpus/verdicts/`
+> data class. Realized this change: a judged `import-seeds --verdicts` run copies its own already-validated
+> verdicts file verbatim into `corpus/verdicts/<date>--<slug>.json` in the same all-or-nothing step as
+> `saveStore` — **triggered by REACHING `saveStore`, not by admitting anything**, so a wave in which every
+> candidate is rejected `E_QUALITY` (`shouldAbort` is `hardErrors`-only) still archives; a write never
+> overwrites (differing bytes at the target path halt before `saveStore`, both hashes named); and the
+> standing coverage gate gains an `unjudgedAdmissions` leg so a refused seed is red on BOTH branches of its
+> future. `DISPOSITION_ALLOWLIST` is demoted to curated prose, never retired (clause 6). Closes GH #340,
+> and makes ADR-0068's "all three outcomes are queryable" true for the admission-reject arm for the first
+> time. (check + test green; corpus data byte-unchanged apart from the new, empty `verdicts/` dir.)
 
 ---
 
@@ -216,6 +229,27 @@ admit(candidate, deps: AdmitDeps) =        // AdmitDeps = { catalog: Catalog; st
   write          (LLD-C1)   → store.put() + index update
 ```
 
+**The archive side-effect (v0.6, ADR-0165 — outside `admit()`, in the import shell).** An admission-time
+`E_QUALITY` reject still writes NOTHING to the store: the asymmetry above is deliberate and ADR-0165
+clause 9 leaves it intact (`Status` gains no fourth member; `store.all()`/`retrieve`/`export`/the leak gate
+are untouched). The durable record lives NEXT TO the store — `tools/corpus/import-seeds.ts`, in the same
+all-or-nothing step as `saveStore`, copies its own already-validated `VerdictsFile` verbatim into
+`corpus/verdicts/<date>--<slug>.json` (`archiveVerdicts()`, `fs-store.ts` — the only sanctioned data-dir
+writer, ADR-0062). Three facts an implementer must not lose:
+- **The trigger is REACHING `saveStore`, not admitting anything.** `shouldAbort` is `hardErrors`-only
+  (`import-report.ts:48-49`), so a judged wave in which EVERY candidate is rejected `E_QUALITY` still lands
+  here — zero admissions is not zero record, and it is the highest-value archive in the design. A run that
+  aborts on `hardErrors` archives nothing, matching the store's own posture. `--dry-run` writes neither.
+- **A write never overwrites.** `<date>` is the verdicts file's OWN `date` (never the wall clock, so a
+  re-run of the same file is a byte-level no-op); `<slug>` is the `--verdicts` basename. A target path
+  holding DIFFERENT bytes halts before `saveStore`, naming both hashes — an overwrite would destroy one of
+  the two records, leaving no two files for any read-time check to find the conflict in.
+- **One pure merge, two readers with their own fs discipline** (`src/corpus/verdict-archive.ts`, off the
+  `"./corpus"` barrel like its `disposition-allowlist.ts` sibling): `fs-store.ts`'s `loadVerdictArchive()`
+  serves the import tool's guard, and `admission-coverage.test.ts` extends its OWN `readFileSync` walk —
+  a src test never imports tool-shell code. Precedence is latest `date`; a same-date disagreement halts.
+  An archived refusal does not expire, so archived files parse against their own `rubricVersion`.
+
 **The tier-1 → admission code mapping** (shared-validator `Failure.code`, `protocol.ts:16-24`, → SPEC §5.3 `E_*`):
 
 | Validator code | Admission code | Note |
@@ -319,12 +353,27 @@ valid ──revalidate(newTarget)──▶ passes? ──yes──▶ valid (re-
 packages/agent-ui/a2ui/
   src/corpus/        record.ts canonical.ts dedup.ts heal.ts admit.ts store.ts retrieve.ts export.ts
                      validate.ts judge.ts import-report.ts (realized) index.ts corpus-data.test.ts
-                     disposition-allowlist.ts (GH #335 — deliberately OUTSIDE the "./corpus" barrel:
-                     import/coverage-tooling bookkeeping, not a corpus API surface) (+ co-located *.test.ts)
+                     disposition-allowlist.ts verdict-archive.ts (GH #335 / GH #340 — both deliberately
+                     OUTSIDE the "./corpus" barrel: import/coverage-tooling bookkeeping, not a corpus API
+                     surface) (+ co-located *.test.ts)
   corpus/            exemplar/v1_0/agent-ui.jsonl index.json      # data — written ONLY by tools/corpus
-  tools/corpus/      fs-store.ts import-seeds.ts                  # Node shell (later: contamination.ts repair.ts eval/)
+                     verdicts/<date>--<slug>.json                 # ADR-0165 — one file per judged wave,
+                     verdicts/README.md                           #   archived verbatim; starts EMPTY
+  tools/corpus/      fs-store.ts import-seeds.ts rescore.ts       # Node shell (later: contamination.ts repair.ts eval/)
 package.json         exports gains "./corpus": "./src/corpus/index.ts" (ADR-0062; root barrel untouched)
 ```
+
+**The `corpus/verdicts/` data class (v0.6, ADR-0165).** One archived `VerdictsFile` per judged wave,
+forever — bounded by wave count, reviewable in diffs, read by exactly two callers. Reader hygiene holds by
+construction with NO change to any existing reader: `loadStore` filters to `.jsonl`/`.jsonl.enc`
+(`fs-store.ts`), `corpus-data.test.ts` pins a fixed `SHARD_PATH`, `admission-coverage.test.ts`'s shard
+walker filters `.jsonl`, and both `dev-proxy-plugin.ts` copies pin the shard path — verified by grep at
+build. The archive starts EMPTY and stays so until the next judged wave: the M-B wave's verdicts files were
+never committed, and fabricating one would be the manufactured judgment ADR-0068's Alternatives ban.
+**Named weak spot** (ADR-0165 Consequences, carried here so the next builder meets it): the coverage gate's
+`qualityScore`-presence test is a PROXY for judged-ness, sound only because `admit.ts`'s stage-10 write is
+the sole record-minting path (`rescore.ts` only UPDATES extant names). A future wave that reintroduces
+legitimately-unjudged admissions owes an explicit marker, not a weakened gate.
 
 **Integration points:** `validate.ts` is owned by the renderer LLD and re-exported here (single validator, N1 — realized). `heal.ts` is imported by the future streaming codec (`stream/codec.ts`, streaming LLD-C1) — the one healer, §7. `export.ts`/`retrieve.ts` are consumed by the streaming pipeline's driver + MCP server (streaming LLD-C2/C6) and the harness loop (harness LLD-C6). The tier-2 judge seam is filled by the harness corpus-quality rubric when it lands (harness LLD-C3). `import-seeds.ts` consumes `@agent-ui/a2ui/examples` (the ADR-0055 shelf) and is the only sanctioned seeder. The `"./corpus"` subpath is the read surface for every out-of-package consumer; the root barrel (`src/index.ts:3-5`) does not re-export corpus (no corpus bytes in a renderer consumer's bundle — proven by a WHOLE-TREE grep at s10, stronger than the `./examples` precedent).
 

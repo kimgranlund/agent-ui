@@ -11,18 +11,42 @@
 //
 // Two TIERS live here, and the split is the point (GH #341): the `describe` blocks below exercise the
 // pure helpers in isolation, which proves their SHAPE and nothing about whether `main()` consults them.
-// The last block spawns the REAL script in a REAL subprocess against the REAL committed corpus, which
-// is the only tier that can catch a deleted call site. Both defects GH #335 fixed now have a
-// subprocess leg: the disposition guard (an unjudged run) and `parseArgs` (`--bogus-flag` / `--help`).
-// A new pure helper here needs its own subprocess leg too, or it is only half-covered.
+// The last two blocks spawn the REAL script in REAL subprocesses, which is the only tier that can catch
+// a deleted call site. Both defects GH #335 fixed have a subprocess leg (the disposition guard on an
+// unjudged run; `parseArgs` via `--bogus-flag`/`--help`), and so does every ADR-0165 clause. A new pure
+// helper here needs its own subprocess leg too, or it is only half-covered.
+//
+// The ADR-0165 block runs against a THROWAWAY SANDBOX repo root rather than the committed corpus: those
+// clauses are about runs that reach `saveStore` and WRITE, and the live corpus is not a fixture. The
+// sandbox holds only what `main()` reads off `process.cwd()` — the rubric doc, `catalog.json`, and the
+// corpus data dir — while the script itself, the seed shelf and every `src/corpus` module resolve
+// relative to the real file, so the code under test is the shipped code.
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, afterEach } from 'vitest'
 import { spawnSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, rmSync, existsSync, readdirSync, cpSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { parseArgs, dispositionGuard, dispositionAllowlistSnippet } from './import-seeds.ts'
 import type { SeedRejection } from '../../src/corpus/import-report.ts'
+import type { ArchivedVerdict } from '../../src/corpus/verdict-archive.ts'
+import { allSeeds } from '../../src/examples/index.ts'
 
 declare const process: { cwd(): string }
+
+/** No archived verdicts — the guard input every pre-ADR-0165 case implicitly had. */
+const NO_ARCHIVE = new Map<string, ArchivedVerdict>()
+
+const archivedVerdict = (over: Partial<ArchivedVerdict> = {}): ArchivedVerdict => ({
+  passed: false,
+  qualityScore: 2,
+  failingDimensions: ['D1', 'D5'],
+  rubricVersion: '1.0',
+  judgedBy: 'a2ui-reviewer',
+  date: '2026-07-28',
+  sourceFile: 'packages/agent-ui/a2ui/corpus/verdicts/2026-07-28--wave-b.json',
+  ...over,
+})
 
 describe('parseArgs — GH #335 defect 2 (unrecognized argv must hard-error, not silently mutate)', () => {
   it('an unrecognized argument is a structured error, never silently dropped', () => {
@@ -74,32 +98,81 @@ describe('parseArgs — GH #335 defect 2 (unrecognized argv must hard-error, not
 
 describe('dispositionGuard — GH #335 defect 1 (an unjudged run must not silently re-admit a disposition-allowlisted candidate)', () => {
   it('the exact repro: an unjudged run (no --verdicts) HALTS on stats-grid-dashboard, the real disposition-allowlisted name, when it was never admitted', () => {
-    const halt = dispositionGuard('stats-grid-dashboard', undefined, false)
+    const halt = dispositionGuard('stats-grid-dashboard', undefined, false, NO_ARCHIVE)
     expect(halt).toBeDefined()
     expect(halt).toMatch(/HALTED/)
     expect(halt).toMatch(/stats-grid-dashboard/)
   })
 
   it('a --verdicts run (judge wired) is NEVER halted by this guard — createVerdictJudge already fails closed on its own (ADR-0068 clause 2)', () => {
-    expect(dispositionGuard('stats-grid-dashboard', 'some-verdicts-path.json', false)).toBeUndefined()
+    expect(dispositionGuard('stats-grid-dashboard', 'some-verdicts-path.json', false, NO_ARCHIVE)).toBeUndefined()
   })
 
   it('a name with no recorded disposition is never halted', () => {
-    expect(dispositionGuard('some-ordinary-seed-name', undefined, false)).toBeUndefined()
+    expect(dispositionGuard('some-ordinary-seed-name', undefined, false, NO_ARCHIVE)).toBeUndefined()
   })
 
   it('a disposition-allowlisted name that IS already admitted (alreadyAdmitted:true) is untouched — the ordinary E_DUP idempotent-rerun path, not this guard', () => {
-    expect(dispositionGuard('stats-grid-dashboard', undefined, true)).toBeUndefined()
+    expect(dispositionGuard('stats-grid-dashboard', undefined, true, NO_ARCHIVE)).toBeUndefined()
   })
 
   it('the halt message names the guard-exit path (--verdicts) so an operator knows how to proceed', () => {
-    const halt = dispositionGuard('stats-grid-dashboard', undefined, false)
+    const halt = dispositionGuard('stats-grid-dashboard', undefined, false, NO_ARCHIVE)
     expect(halt).toMatch(/--verdicts/)
     expect(halt).toMatch(/Nothing was written/)
   })
 })
 
-describe('dispositionAllowlistSnippet — GH #335 review item 2 (a paste-ready DISPOSITION_ALLOWLIST entry, not a closed class)', () => {
+describe('dispositionGuard — ADR-0165 clause 4 (the ARCHIVE is the third guard input, and the primary one)', () => {
+  const archive = new Map([['some-new-candidate', archivedVerdict()]])
+
+  it('an unjudged run HALTS on a name carrying an ARCHIVED passed:false verdict — the name no human ever transcribed', () => {
+    const halt = dispositionGuard('some-new-candidate', undefined, false, archive)
+    expect(halt).toBeDefined()
+    expect(halt).toMatch(/HALTED/)
+    expect(halt).toMatch(/some-new-candidate/)
+    expect(halt).toMatch(/ARCHIVED/)
+  })
+
+  it('the halt quotes the verdict\'s own facts — qualityScore, failing dimensions, rubric version, judge, date — so an operator need not go find the file', () => {
+    const halt = dispositionGuard('some-new-candidate', undefined, false, archive)
+    expect(halt).toContain('qualityScore 2')
+    expect(halt).toContain('D1, D5')
+    expect(halt).toContain('a2ui-corpus 1.0')
+    expect(halt).toContain('a2ui-reviewer')
+    expect(halt).toContain('2026-07-28')
+    expect(halt).toContain('2026-07-28--wave-b.json')
+    expect(halt).toMatch(/Nothing was written/)
+  })
+
+  it('an archived PASSING verdict is not a disposition — it falls through and the run proceeds', () => {
+    const passing = new Map([['some-new-candidate', archivedVerdict({ passed: true, qualityScore: 5 })]])
+    expect(dispositionGuard('some-new-candidate', undefined, false, passing)).toBeUndefined()
+  })
+
+  it('a --verdicts run is never halted by the archive either — a fresh judgment supersedes an archived one (clause 4)', () => {
+    expect(dispositionGuard('some-new-candidate', 'v.json', false, archive)).toBeUndefined()
+  })
+
+  it('an archived refusal for an ALREADY-ADMITTED name is not this guard\'s business — that is ADR-0068 clause 4\'s rescore path (clause 5\'s scope note)', () => {
+    expect(dispositionGuard('some-new-candidate', undefined, true, archive)).toBeUndefined()
+  })
+
+  it('the archive is checked BEFORE the allowlist — a name in both halts with the machine-written verdict, not the curated prose', () => {
+    const both = new Map([['stats-grid-dashboard', archivedVerdict({ qualityScore: 3 })]])
+    const halt = dispositionGuard('stats-grid-dashboard', undefined, false, both)
+    expect(halt).toMatch(/ARCHIVED/)
+    expect(halt).toContain('qualityScore 3')
+    expect(halt, 'the allowlist prose must not be what an operator sees when a real verdict exists').not.toContain('strict-subset duplicate')
+  })
+
+  it('a failing verdict with no failingDimensions still halts, reporting them as none', () => {
+    const noDims = new Map([['x', archivedVerdict({ failingDimensions: undefined })]])
+    expect(dispositionGuard('x', undefined, false, noDims)).toContain('(none reported)')
+  })
+})
+
+describe('dispositionAllowlistSnippet — a paste-ready DISPOSITION_ALLOWLIST entry, DEMOTED to optional curated prose (ADR-0165 clause 6)', () => {
   const rejection: SeedRejection = {
     name: 'some-new-candidate',
     code: 'E_QUALITY',
@@ -127,8 +200,11 @@ describe('dispositionAllowlistSnippet — GH #335 review item 2 (a paste-ready D
     expect(snippet).toContain('D5, D2')
   })
 
-  it('names the "record this before the next unjudged run" reminder — the transcription step it removes, not the class it does not close', () => {
-    expect(dispositionAllowlistSnippet(rejection, meta)).toMatch(/before the next unjudged run/)
+  it('points at the ARCHIVE as the machine-readable record and frames itself as optional — the ADR-0165 clause 6 demotion, not the old "paste this or it gets re-admitted" obligation', () => {
+    const snippet = dispositionAllowlistSnippet(rejection, meta)
+    expect(snippet).toMatch(/archived verdicts file/)
+    expect(snippet).toMatch(/optional/)
+    expect(snippet, 'the transcription REQUIREMENT is gone, so the reminder that assumed it must be too').not.toMatch(/before the next unjudged run/)
   })
 
   it('handles a rejection with no failingDimensions reported', () => {
@@ -210,5 +286,283 @@ describe('import-seeds main() wiring — a real subprocess run proves the guard 
     expect(result.stderr, '--help must not reach the seed loop').not.toMatch(/HALTED/)
     expect(result.stdout, '--help must not reach the admission report').not.toMatch(/admitted \(/)
     expect(result.corpusUntouched, '--help must leave the corpus byte-identical').toBe(true)
+  })
+})
+
+// ── ADR-0165 / GH #340 — the verdict archive, proven through REAL subprocess runs. Every clause here is
+// about a run that WRITES, so these run against a throwaway sandbox repo root (see the header note): the
+// committed corpus is live data, not a fixture. The `runScript` block above stays the leg that proves
+// behaviour against the real tree; this block proves the write behaviour the real tree must never
+// exercise in a test. ──
+describe('import-seeds main() — the verdict archive (ADR-0165), real subprocess runs against a sandbox repo root', () => {
+  const REAL_ROOT = process.cwd()
+  const SCRIPT = join(REAL_ROOT, 'packages/agent-ui/a2ui/tools/corpus/import-seeds.ts')
+  const RUBRIC = '.claude/docs/rubrics/a2ui-corpus.md'
+  const CATALOG = 'packages/agent-ui/a2ui/src/catalog/default/catalog.json'
+  const SHARD = 'packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl'
+  const ARCHIVE_DIR = 'packages/agent-ui/a2ui/corpus/verdicts'
+
+  let sandbox: string
+
+  /** A sandbox repo root holding exactly what `main()` reads off `process.cwd()`. `withShard` decides
+   *  whether the 24 committed records are already admitted (so every seed is an idempotent `E_DUP`) or
+   *  the corpus is empty (so every seed is a fresh candidate the judge must rule on). */
+  const makeSandbox = (opts: { withShard: boolean }): void => {
+    sandbox = mkdtempSync(join(tmpdir(), 'a2ui-import-seeds-'))
+    for (const rel of [RUBRIC, CATALOG]) {
+      mkdirSync(join(sandbox, rel.slice(0, rel.lastIndexOf('/'))), { recursive: true })
+      cpSync(join(REAL_ROOT, rel), join(sandbox, rel))
+    }
+    if (opts.withShard) {
+      mkdirSync(join(sandbox, SHARD.slice(0, SHARD.lastIndexOf('/'))), { recursive: true })
+      cpSync(join(REAL_ROOT, SHARD), join(sandbox, SHARD))
+    }
+  }
+
+  const writeVerdicts = (name: string, body: { date: string; verdicts: Record<string, unknown> }): string => {
+    const path = join(sandbox, name)
+    writeFileSync(
+      path,
+      `${JSON.stringify({ rubric: 'a2ui-corpus', rubricVersion: '1.0', judgedBy: 'a2ui-reviewer', ...body }, null, 2)}\n`,
+    )
+    return path
+  }
+
+  const plantArchive = (fileName: string, text: string): string => {
+    mkdirSync(join(sandbox, ARCHIVE_DIR), { recursive: true })
+    const path = join(sandbox, ARCHIVE_DIR, fileName)
+    writeFileSync(path, text)
+    return path
+  }
+
+  const run = (args: string[]): { status: number | null; stdout: string; stderr: string } => {
+    const r = spawnSync('node', ['--experimental-strip-types', SCRIPT, ...args], { cwd: sandbox, encoding: 'utf8' })
+    return { status: r.status, stdout: r.stdout, stderr: r.stderr }
+  }
+
+  const archivedFiles = (): string[] => {
+    try {
+      return readdirSync(join(sandbox, ARCHIVE_DIR)).sort()
+    } catch {
+      return []
+    }
+  }
+
+  afterEach(() => {
+    rmSync(sandbox, { recursive: true, force: true })
+  })
+
+  /** With the committed shard loaded, the 23 admitted seeds short-circuit at dedup (`E_DUP`) and never
+   *  reach the judge; `stats-grid-dashboard` is the ONE shelf seed absent from it, so a wired judge
+   *  fails closed unless the file rules on it (ADR-0068 clause 2). Refusing it keeps the run at zero
+   *  admissions while still reaching `saveStore` — the archive's actual trigger. */
+  const SHARD_LOADED_VERDICTS = { 'stats-grid-dashboard': { passed: false, qualityScore: 2 } }
+
+  it('clause 1 — a judged run that reaches saveStore archives its verdicts file BYTE-IDENTICALLY at <date>--<slug>.json, and a second identical run is a no-op', () => {
+    makeSandbox({ withShard: true })
+    const verdictsPath = writeVerdicts('wave-b.json', { date: '2026-07-28', verdicts: SHARD_LOADED_VERDICTS })
+    const input = readFileSync(verdictsPath, 'utf8')
+
+    const first = run(['--verdicts', verdictsPath])
+    expect(first.status, first.stderr).toBe(0)
+    expect(archivedFiles()).toEqual(['2026-07-28--wave-b.json'])
+    expect(readFileSync(join(sandbox, ARCHIVE_DIR, '2026-07-28--wave-b.json'), 'utf8')).toBe(input)
+    expect(first.stdout).toContain(`verdicts archived to: ${ARCHIVE_DIR}/2026-07-28--wave-b.json`)
+
+    const second = run(['--verdicts', verdictsPath])
+    expect(second.status, second.stderr).toBe(0)
+    expect(second.stdout).toContain('verdicts already archived at')
+    expect(archivedFiles(), 'idempotence — a re-run resolves to the same path and writes nothing new').toEqual([
+      '2026-07-28--wave-b.json',
+    ])
+    expect(readFileSync(join(sandbox, ARCHIVE_DIR, '2026-07-28--wave-b.json'), 'utf8')).toBe(input)
+  })
+
+  it('THE ALL-REJECTED WAVE (clause 1) — every candidate rejected E_QUALITY, ZERO admissions, and the archive STILL lands carrying every passed:false verdict', () => {
+    makeSandbox({ withShard: false })
+    const verdicts: Record<string, unknown> = {}
+    for (const seed of allSeeds) verdicts[seed.name] = { passed: false, qualityScore: 2, failingDimensions: ['D1'] }
+    const verdictsPath = writeVerdicts('all-rejected.json', { date: '2026-07-29', verdicts })
+    const input = readFileSync(verdictsPath, 'utf8')
+
+    const result = run(['--verdicts', verdictsPath])
+
+    expect(result.status, result.stderr).toBe(0)
+    expect(result.stdout, 'zero admissions — this is the whole point of the case').toMatch(/0 admitted/)
+    expect(result.stdout).toMatch(new RegExp(`${allSeeds.length} quality-rejected`))
+    expect(existsSync(join(sandbox, SHARD)), 'nothing was admitted, so no shard exists').toBe(false)
+    expect(archivedFiles(), 'zero admissions is NOT zero record').toEqual(['2026-07-29--all-rejected.json'])
+    expect(readFileSync(join(sandbox, ARCHIVE_DIR, '2026-07-29--all-rejected.json'), 'utf8')).toBe(input)
+
+    // The archived file is the durable E_QUALITY record: every refused name is IN it, machine-readable.
+    const archived = JSON.parse(readFileSync(join(sandbox, ARCHIVE_DIR, '2026-07-29--all-rejected.json'), 'utf8')) as {
+      verdicts: Record<string, { passed: boolean }>
+    }
+    expect(Object.keys(archived.verdicts).sort()).toEqual(allSeeds.map((s) => s.name).sort())
+    expect(Object.values(archived.verdicts).every((v) => v.passed === false)).toBe(true)
+  })
+
+  it('clause 1 — --dry-run --verdicts writes NEITHER store nor archive, while reporting the path a real run would use', () => {
+    makeSandbox({ withShard: true })
+    const verdictsPath = writeVerdicts('wave-b.json', { date: '2026-07-28', verdicts: SHARD_LOADED_VERDICTS })
+
+    const result = run(['--verdicts', verdictsPath, '--dry-run'])
+
+    expect(result.status, result.stderr).toBe(0)
+    expect(result.stdout).toContain(`would archive verdicts to: ${ARCHIVE_DIR}/2026-07-28--wave-b.json`)
+    expect(archivedFiles(), 'a dry run writes nothing here either').toEqual([])
+  })
+
+  it('clause 1 — a run that ABORTS on hardErrors before saveStore writes NO archive (the one direction the trigger distinction cuts)', () => {
+    makeSandbox({ withShard: false })
+    // A real hardErrors abort, not a parse failure: strip `Text` out of the sandbox catalog so every seed
+    // that uses it fails admission with E_CATALOG — a code `classifyRejections` routes to `hardErrors`,
+    // which `shouldAbort` turns into "nothing written, even for candidates that themselves passed".
+    const catalog = JSON.parse(readFileSync(join(sandbox, CATALOG), 'utf8')) as { components: Record<string, unknown> }
+    delete catalog.components.Text
+    writeFileSync(join(sandbox, CATALOG), JSON.stringify(catalog))
+
+    const verdicts: Record<string, unknown> = {}
+    for (const seed of allSeeds) verdicts[seed.name] = { passed: true, qualityScore: 5 }
+    const verdictsPath = writeVerdicts('wave-b.json', { date: '2026-07-28', verdicts })
+
+    const result = run(['--verdicts', verdictsPath])
+
+    expect(result.status).toBe(1)
+    expect(result.stderr).toMatch(/failed admission for a non-duplicate, non-quality reason/)
+    expect(result.stderr).toMatch(/E_CATALOG/)
+    expect(archivedFiles(), 'a run that aborts before saveStore archives nothing — the store\'s own posture').toEqual([])
+    expect(existsSync(join(sandbox, SHARD))).toBe(false)
+  })
+
+  it('the hardErrors abort and the all-rejected wave are DIFFERENT — E_QUALITY alone never aborts, so it still archives (the distinction clause 1 calls load-bearing)', () => {
+    // The pairing that makes the case above meaningful: identical shape, one rejection code apart, and
+    // the archive outcome inverts. Without this, "aborts => no archive" could be read as "rejections =>
+    // no archive", which is exactly the skip the ADR warns an implementer is most likely to make.
+    makeSandbox({ withShard: false })
+    const verdicts: Record<string, unknown> = {}
+    for (const seed of allSeeds) verdicts[seed.name] = { passed: false, qualityScore: 2 }
+    const verdictsPath = writeVerdicts('wave-b.json', { date: '2026-07-28', verdicts })
+
+    const result = run(['--verdicts', verdictsPath])
+
+    expect(result.status, result.stderr).toBe(0)
+    expect(archivedFiles()).toEqual(['2026-07-28--wave-b.json'])
+  })
+
+  it('clause 2 — a DIFFERING existing archive at the target path HALTS: non-zero, both hashes named, and NEITHER the archive nor the store is written', () => {
+    makeSandbox({ withShard: false })
+    // All-passing verdicts: without the collision this run would admit every seed and write a shard.
+    const verdicts: Record<string, unknown> = {}
+    for (const seed of allSeeds) verdicts[seed.name] = { passed: true, qualityScore: 5 }
+    const verdictsPath = writeVerdicts('wave-b.json', { date: '2026-07-28', verdicts })
+
+    const planted = plantArchive(
+      '2026-07-28--wave-b.json',
+      `${JSON.stringify({ rubric: 'a2ui-corpus', rubricVersion: '1.0', judgedBy: 'someone-else', date: '2026-07-28', verdicts: {} })}\n`,
+    )
+    const before = readFileSync(planted, 'utf8')
+
+    const result = run(['--verdicts', verdictsPath])
+
+    expect(result.status).toBe(1)
+    expect(result.stderr).toMatch(/HALTED/)
+    expect(result.stderr).toContain(`${ARCHIVE_DIR}/2026-07-28--wave-b.json`)
+    expect(result.stderr, 'both contents\' hashes are named so an operator can tell the two waves apart').toMatch(
+      /existing sha256 [0-9a-f]{64}.*incoming sha256 [0-9a-f]{64}/s,
+    )
+    expect(result.stderr).toMatch(/distinct --verdicts filename/)
+    expect(readFileSync(planted, 'utf8'), 'the existing archived record is byte-unchanged').toBe(before)
+    expect(
+      existsSync(join(sandbox, SHARD)),
+      'the store must not be written either — the archive halt precedes saveStore (clause 1\'s all-or-nothing posture)',
+    ).toBe(false)
+  })
+
+  it('clause 4 — a plain UNJUDGED run HALTS on a name carrying an archived passed:false verdict, quoting the verdict, with nothing written', () => {
+    makeSandbox({ withShard: true })
+    // `stats-grid-dashboard` is the one shelf seed absent from the committed shard — exactly the ADR's
+    // "X absent from the store" case. Its archived refusal must halt the run BEFORE the allowlist prose.
+    plantArchive(
+      '2026-07-11--m-b-wave.json',
+      `${JSON.stringify({
+        rubric: 'a2ui-corpus',
+        rubricVersion: '1.0',
+        judgedBy: 'a2ui-reviewer',
+        date: '2026-07-11',
+        verdicts: { 'stats-grid-dashboard': { passed: false, qualityScore: 3, failingDimensions: ['D5'] } },
+      })}\n`,
+    )
+
+    const result = run([])
+
+    expect(result.status).toBe(1)
+    expect(result.stderr).toMatch(/HALTED/)
+    expect(result.stderr).toMatch(/ARCHIVED quality rejection/)
+    expect(result.stderr).toContain('stats-grid-dashboard')
+    expect(result.stderr).toContain('qualityScore 3')
+    expect(result.stderr).toContain('D5')
+    expect(result.stderr).toContain('2026-07-11--m-b-wave.json')
+    expect(archivedFiles(), 'the halted run touched nothing').toEqual(['2026-07-11--m-b-wave.json'])
+  })
+
+  it('clause 4 — the same run WITH --verdicts supplying a fresh PASSING verdict admits the name and archives the newer file', () => {
+    makeSandbox({ withShard: true })
+    plantArchive(
+      '2026-07-11--m-b-wave.json',
+      `${JSON.stringify({
+        rubric: 'a2ui-corpus',
+        rubricVersion: '1.0',
+        judgedBy: 'a2ui-reviewer',
+        date: '2026-07-11',
+        verdicts: { 'stats-grid-dashboard': { passed: false, qualityScore: 3, failingDimensions: ['D5'] } },
+      })}\n`,
+    )
+    const verdictsPath = writeVerdicts('re-judged.json', {
+      date: '2026-07-29',
+      verdicts: { 'stats-grid-dashboard': { passed: true, qualityScore: 5 } },
+    })
+
+    const result = run(['--verdicts', verdictsPath])
+
+    expect(result.status, result.stderr).toBe(0)
+    expect(result.stdout).toMatch(/1 admitted/)
+    expect(result.stdout).toContain('stats-grid-dashboard')
+    expect(archivedFiles()).toEqual(['2026-07-11--m-b-wave.json', '2026-07-29--re-judged.json'])
+    expect(readFileSync(join(sandbox, SHARD), 'utf8'), 'the re-admitted record landed in the shard').toContain('stats-grid-dashboard')
+  })
+
+  it('clause 3 — a SELF-CONFLICTING archive (two same-date files disagreeing) halts every run before any work', () => {
+    makeSandbox({ withShard: true })
+    const body = (passed: boolean): string =>
+      `${JSON.stringify({
+        rubric: 'a2ui-corpus',
+        rubricVersion: '1.0',
+        judgedBy: 'a2ui-reviewer',
+        date: '2026-07-28',
+        verdicts: { 'stats-grid-dashboard': { passed, qualityScore: passed ? 5 : 2 } },
+      })}\n`
+    plantArchive('2026-07-28--a.json', body(false))
+    plantArchive('2026-07-28--b.json', body(true))
+
+    const result = run([])
+
+    expect(result.status).toBe(1)
+    expect(result.stderr).toMatch(/HALTED/)
+    expect(result.stderr).toMatch(/verdict archive/)
+    expect(result.stderr).toContain('2026-07-28--a.json')
+    expect(result.stderr).toContain('2026-07-28--b.json')
+    expect(result.stderr).toMatch(/Nothing was written/)
+  })
+
+  it('the sandbox itself is honest — an unjudged run against the shard-loaded sandbox with an EMPTY archive still halts on the allowlist, exactly as the real tree does', () => {
+    // The negative control for every case above: if the sandbox were subtly wrong (a missing rubric, a
+    // catalog that would not load), these runs would fail for a reason unrelated to the clause under test.
+    makeSandbox({ withShard: true })
+    const result = run([])
+    expect(result.status).toBe(1)
+    expect(result.stderr).toMatch(/HALTED/)
+    expect(result.stderr).toContain('stats-grid-dashboard')
+    expect(result.stderr, 'with no archive planted, the fallback is the curated allowlist prose').toContain('strict-subset duplicate')
   })
 })

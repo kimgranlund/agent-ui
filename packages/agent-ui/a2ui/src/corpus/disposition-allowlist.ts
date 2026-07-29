@@ -1,25 +1,34 @@
-// disposition-allowlist.ts — the durable home for a seed's recorded admission disposition (GH #335
-// root cause, ADR-0068's own gap: an admission-time `E_QUALITY` reject is never written to the store —
-// LLD §6, "the stage still runs but nothing lands on disk" — so a rejection's only trace used to be a
-// hand-transcribed comment inside `admission-coverage.test.ts`. That comment was correct but SILOED:
-// the standing gate read it, `tools/corpus/import-seeds.ts` never did, so a plain unjudged run had zero
-// way to know `stats-grid-dashboard` had already been judged and turned away — it silently re-admitted
-// it, and the run reported "0 quality-rejected" as if nothing had been bypassed.
+// disposition-allowlist.ts — the CURATED-PROSE layer of a seed's recorded admission disposition.
 //
-// Extracted here (pure, zero-dep, platform-neutral — SPEC-N5/ADR-0062) so BOTH readers share the one
-// map: the standing coverage gate (`admission-coverage.test.ts`, unchanged behavior) and the import
-// tool's unjudged-run guard (`tools/corpus/import-seeds.ts`'s `dispositionGuard`). This does not touch
-// ADR-0068's verdicts/judge/quarantine contract — quarantine still means "was admitted, later scored
-// below bar" (SPEC-R13, one-way, lives IN the shard); a disposition-allowlist entry means "was judged
-// at admission time and refused entry, never written" (the OTHER, previously unrecorded, outcome
-// ADR-0068's own consequences section calls "queryable" without ever wiring up how). Deliberately not
-// re-exported from `./index.ts`'s public "./corpus" barrel — this is import/coverage-tooling
-// bookkeeping, not a corpus API surface a renderer consumer would ever want in its bundle.
+// **DEMOTED by ADR-0165 clause 6 — read this before adding an entry.** This module used to be described
+// as "the durable home" for an admission-time `E_QUALITY` refusal, and it was, for as long as the only
+// trace of one was something a human typed. It is not that any more: the durable, machine-readable
+// record is the ARCHIVED VERDICTS FILE (`corpus/verdicts/`, ADR-0165 clause 1) — written verbatim by the
+// judged run that made the decision, in the same all-or-nothing step as the store write, with zero
+// marginal human effort. Both consumers below check that archive FIRST and this map second.
+//
+// What survives here is exactly what a machine cannot state (clause 6 — demoted, never retired):
+//   1. a deliberately-minimal smoke seed that teaches the corpus nothing (no verdict was ever sought);
+//   2. a refusal whose verdicts file PREDATES the archive — today, `stats-grid-dashboard`. ADR-0165
+//      clause 8 rules out retro-archiving it: the M-B wave's verdicts files were never committed, and
+//      fabricating one would be the manufactured judgment ADR-0068's Alternatives ban.
+// A NEW refusal from here on needs no entry at all. Adding one is optional prose, worth it only to carry
+// what a verdict cannot — a coverage argument, a repair path (the shipped entry below carries both).
+//
+// Pure, zero-dep, platform-neutral (SPEC-N5/ADR-0062) so both readers share the one map: the standing
+// coverage gate (`admission-coverage.test.ts`) and the import tool's unjudged-run guard
+// (`tools/corpus/import-seeds.ts`'s `dispositionGuard`). This does not touch ADR-0068's
+// verdicts/judge/quarantine contract — quarantine still means "was admitted, later scored below bar"
+// (SPEC-R13, one-way, lives IN the shard); a disposition entry means "was judged at admission time and
+// refused entry, never written" (the OTHER outcome ADR-0068's Consequences called "queryable" without
+// wiring up how — ADR-0165 is that wiring). Deliberately not re-exported from `./index.ts`'s public
+// "./corpus" barrel — import/coverage-tooling bookkeeping, not a corpus API surface a renderer consumer
+// would ever want in its bundle; `verdict-archive.ts` follows the same ruling.
 
 /** Every example seed explicitly excused from corpus admission, with the reason it teaches nothing the
- *  corpus needs (the `EXCLUSION_ALLOWLIST` precedent, `catalog/default/index.test.ts`) — a future
- *  deliberately-minimal smoke seed, or a judged `E_QUALITY` rejection, is dispositioned HERE, with a
- *  citation, not in a chat log. */
+ *  corpus needs (the `EXCLUSION_ALLOWLIST` precedent, `catalog/default/index.test.ts`). The SECOND guard
+ *  input and the SECOND gate input, not the primary record (ADR-0165 clause 6) — the archived verdicts
+ *  file is the primary one. */
 export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   [
     'stats-grid-dashboard',
