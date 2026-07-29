@@ -1,7 +1,7 @@
 # LLD — A2UI Expert Harness Wiring
 
-> Status: proposed · v0.2 · 2026-07-03 (v0.1 2026-06-26) · Layer: LLD (implementation plan)
-> Implements: [`../spec/a2ui-expert-harness.spec.md`](../spec/a2ui-expert-harness.spec.md) (SPEC-R1..R8, SPEC-N1..N4) at **v0.2**.
+> Status: proposed · v0.2.2 · 2026-07-29 (v0.2 2026-07-03, v0.1 2026-06-26) · Layer: LLD (implementation plan)
+> Implements: [`../spec/a2ui-expert-harness.spec.md`](../spec/a2ui-expert-harness.spec.md) (SPEC-R1..R8, SPEC-N1..N4) at **v0.2** — the SPEC's v0.3 amendment is §5.3-only and adds no requirement, so this reconciliation still holds.
 > **v0.2 reconciliation (2026-07-03):** the v0.1 wiring predated the corpus store; §0 rules every
 > v0.1 component against the realized tree. Headlines: LLD-C4's gate scripts are **REALIZED
 > elsewhere** (the shared validator + admission + the standing shard gate — the planned
@@ -24,6 +24,12 @@
 > (`a2ui-streaming-pipeline.lld.md` §1/§3, ADR-0067 Repairs); the payload rubric's [gate] evidence is
 > the `validate-payload` CLI (not the shard-scoped corpus-data gate); `a2ui-corpus.md` carries an
 > explicit `version:` the VerdictsFile must cite.
+> **v0.2.2 (2026-07-29, ADR-0165 built — §2 count correction):** the `a2ui-corpus-curate` body-shape row
+> said "the three halt escalations"; the shipped skill now states FOUR — the fourth is a recorded
+> disposition (an archived `passed:false` verdict or a `DISPOSITION_ALLOWLIST` entry) meeting an unjudged
+> run, whose exit is a fresh judged run (ADR-0165 cl.4). The row also gains the archive-commit step the
+> same ADR books into the curator's procedure. Descriptive correction only: no component, wiring, or
+> requirement changes.
 > Altitude: adds the **how** — concrete files, frontmatter, and wiring; cites `SPEC-R*` for behavior. The shared validator is the renderer LLD's (`validate.ts`); the corpus pipeline is `a2ui-corpus-store.lld.md`'s (v0.5.1).
 
 ---
@@ -61,7 +67,7 @@
 | Skill dir | Covers | Body shape |
 |---|---|---|
 | `a2ui-compose/` | idiomatic node shapes per catalog type + adjacency trees, `ChildList` templating, bindings, actions/checks, and the SPEC-R6 bounded loop | procedure + `references/` idiom cards DERIVED from the realized catalog (`src/catalog/default/`) and the 11-seed shelf (`src/examples/`) — file cites, never restated `protocol.ts` facts |
-| `a2ui-corpus-curate/` | seed authoring → `import-seeds --verdicts` → gates → judge verdicts → `rescore` | THIN pointer at corpus LLD §6 + ADR-0055/0060..0064/0068; states the three halt escalations (θ_dup between distinct seeds; unjudged candidate under a wired judge; quarantined-name collision — ADR-0068 cl.5, `--replace` is the exit) |
+| `a2ui-corpus-curate/` | seed authoring → `import-seeds --verdicts` → gates → judge verdicts → `rescore` → committing the archive | THIN pointer at corpus LLD §6 + ADR-0055/0060..0064/0068/0165; states the four halt escalations (θ_dup between distinct seeds; unjudged candidate under a wired judge; quarantined-name collision — ADR-0068 cl.5, `--replace` is the exit; a recorded disposition on an unjudged run — ADR-0165 cl.4, re-judge is the exit) |
 
 **Invariant:** each passes `harness_checks.py skill`; descriptions fence siblings (each other, `component-author`, `docs-author`, `a2ui-builder` dispatch phrasings). Bodies/`references/` load on demand (SPEC-N1).
 

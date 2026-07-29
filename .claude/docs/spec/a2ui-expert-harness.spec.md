@@ -1,6 +1,15 @@
 # SPEC — A2UI Expert Harness (agents · skills · rubrics · gates)
 
-> Status: proposed · v0.2 · 2026-07-03 (v0.1 2026-06-26) · Layer: SPEC (execution contract)
+> Status: proposed · v0.3 · 2026-07-29 (v0.2 2026-07-03, v0.1 2026-06-26) · Layer: SPEC (execution contract)
+> **v0.3 amendment (2026-07-29, §5.3 only — ADR-0165, built at GH #360):** the `VerdictsFile`'s LIFETIME
+> changes, and nothing else. It goes from an ephemeral `--verdicts <path>` input to a **COMMITTED
+> artifact**: a judged `import-seeds` run archives it verbatim under
+> `packages/agent-ui/a2ui/corpus/verdicts/`, where a `passed:false` entry is the durable admission-time
+> `E_QUALITY` record — the outcome `admit()` writes nowhere — read back by two consumers (the
+> unjudged-run disposition guard, and the standing coverage gate's judged-ness leg). The §5.3 SHAPE is
+> unchanged, no requirement is added or superseded, and ADR-0165's clauses own every rule about the
+> archive (filename derivation, never-overwrite, merge precedence, no-expiry) — §5.3 cites them rather
+> than restating them. Append-only: no other clause in this document changes.
 > **v0.2 reconciliation (2026-07-03, the expert-harness intake):** the v0.1 draft predated the corpus
 > store (ADRs 0060–0064, all shipped `23e2494`), the `a2ui-builder` seat, the seed shelf (ADR-0055),
 > and the form-family catalog rows (ADR-0053/0054); every requirement is re-ruled against that tree.
@@ -144,6 +153,19 @@ interface VerdictsFile {
 // rule); the standing shard gate is amended in the same change (quarantined lines legal,
 // consumption-excluded). Rescore leaves records not named in the file untouched, reported still-unjudged.
 ```
+
+**The verdicts file is a COMMITTED artifact, not an ephemeral input (v0.3, ADR-0165).** The shape above is
+unchanged; its LIFETIME is what this amendment settles. A judged `import-seeds --verdicts <path>` run that
+reaches the store write archives that same file VERBATIM into
+`packages/agent-ui/a2ui/corpus/verdicts/<date>--<slug>.json`, in the store write's own all-or-nothing step,
+and the curator commits it **with** the shard (the `a2ui-corpus-curate` procedure owns that step). So a
+`passed:false` entry IS the durable record of an admission-time `E_QUALITY` — the one outcome `admit()`
+writes nowhere — and it has two readers over one shared merge: `import-seeds`' unjudged-run disposition
+guard, and `admission-coverage.test.ts`'s judged-ness leg, which reds when a seat re-admits a refused seed
+unjudged. Filename derivation, the never-overwrite rule, merge precedence, and the no-expiry rule are
+ADR-0165 clauses 1/2/3/7 — cited, never restated here. No requirement above changes: a wired judge still
+fails closed on every unjudged candidate (ADR-0068 cl.2), and `rubricVersion` equality still governs the
+file handed to `--verdicts` at run time.
 
 ## 6. Open items (non-normative)
 
