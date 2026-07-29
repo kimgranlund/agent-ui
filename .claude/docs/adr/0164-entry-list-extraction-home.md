@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-28 |
 > | **Proposed by** | design intake (M-A intake 2 — the "extraction home" fork for the entry-list + settings-generator proto-patterns, [roadmap §3](../roadmap.md); the gap inventoried by [inv-6](../reports/roadmap-wave-2026-07-28/inv-6-saas.md) §4/§5 and [inv-1](../reports/roadmap-wave-2026-07-28/inv-1-agent-admin.md) §5) |
-> | **Ratified by** | *(awaiting Kim)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-07-29, via the [`ratify ADR-0164` utterance](https://github.com/kimgranlund/agent-ui/issues/316#issuecomment-5113168358) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | none owed backward — an intake ADR resolving a home, not a defect. **On ratification+build** (the ADR-0162/0163 Repairs-row shape): `app/src/controls/entry-list/**` (new — `entry-list.ts` moved verbatim · `entry-data.ts`, the generic core split out of `entries.ts` · `entry-data.test.ts`, the core half of `entries.test.ts` moved with it · new `entry-list.css` · a standalone mount smoke test) · `app/src/controls/agent-admin/{agent-admin.ts, agent-admin.css, entries.ts, entries.test.ts, genui-pack-library.test.ts}` (imports re-pointed; `entries.ts` keeps its name, loses its generic half; `entries.test.ts` keeps the domain-half assertions; the entry-list style block moves out and its tokens repoint) · `app/package.json` (+`./entry-list`, `./entry-list.css`, `./entry-data`) · `app/src/index.ts` (re-pointed, names byte-identical) · the AC19 sheet-set one-line append · two `agent-ui-composition-patterns` rows (cl.5) |
 > | **Supersedes / Superseded by** | **Amends [ADR-0132](./0132-agent-admin-instructions-capabilities-architecture.md)** — its generic ordered-entry-list primitive (`n1`/`n1b`/`n1c`) keeps its whole shipped contract but moves out of the agent-admin folder to a shared home; its "lives with agent-admin" placement was construction scaffolding, never a ruled clause. Relates [ADR-0139](./0139-codemirror-editor-first-runtime-dependency.md) (the `@agent-ui/code/editor` dependency that pins the tier), [ADR-0158](./0158-disclosure-summary-slot.md) (the fold/summary-switch idiom the pattern rows document), [ADR-0087](./0087-a2ui-whole-fleet-catalog-scope-policy.md) (the catalog-or-allowlist gate applied in cl.6), [ADR-0120](./0120-app-surfaces-m4-panes-settings.md) (the settings surface whose generator half this ADR finds already extracted) |
 

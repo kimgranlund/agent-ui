@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-28 *(authored)* |
 > | **Proposed by** | design seat (the M-A `ui-table` widening intake, roadmap §3 — the number 0163 is claimed against a live concurrent-intake field; 0162 is taken, sibling intakes running this session may race the number, collision resolved at index time) |
-> | **Ratified by** | — *(pending Kim; proposed→accepted is Kim's, never the author's)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-07-29, via the [`ratify ADR-0163` utterance](https://github.com/kimgranlund/agent-ui/issues/316#issuecomment-5113166676) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification+build: [`../spec/report-family.spec.md`](../spec/report-family.spec.md) (§1/SPEC-R1/R3/R4/R18/§5 amended + SPEC-R21…R28 added — the amendment sheet accompanies this intake) · [`../lld/report-family.lld.md`](../lld/report-family.lld.md) (LLD-C17…C21 — the sheet's C11…C15, renumbered past the IDs the M1/M2 waves already hold) · [ADR-0111](./0111-report-family-v1-scope.md) gains a forward pointer (its cl.1 fence is amended HERE, per its own "any interactive re-entry is a new intake" clause — this is that intake) · `report-family.prd.md` §3 ruled-out list (four items move from fenced to admitted) · `controls/table/{table.ts,table.css,table.md,table-model.ts}` + NEW `controls/table/table-view.ts` · NEW `controls/pagination/**` · a2ui `catalog.json`/`factories.ts` (`Table` row marks + NEW `Pagination` row) + `feed-catalog.ts` disposition · catalog SPEC §5.2 · site pages |
 > | **Supersedes / Superseded by** | (none) — **amends** [ADR-0111](./0111-report-family-v1-scope.md) cl.1 (the interactivity fence, by its own fenced-re-entry rule) · relates [ADR-0161](./0161-catalog-multi-slot-two-way-value-marks.md) (the multi-slot value mark the widened `Table` row is the third consumer of) · [ADR-0019](./0019-pull-renderer-lld-c8-two-way-binding.md) (the bindable state-prop + commit-event pattern) · [ADR-0042](./0042-face-widget-value-control-bases.md) (base-class ladder — deliberately NOT taken, cl.3) · [ADR-0087](./0087-a2ui-whole-fleet-catalog-scope-policy.md) (catalog-or-allowlist forces the `Pagination` decision) · [ADR-0097](./0097-a2ui-feed-embedded-asks.md) (partition bookkeeping) · [ADR-0102](./0102-css-less-consumer-contract-law.md) (every capability routed through the three-lane chooser) · [ADR-0111](./0111-report-family-v1-scope.md) (the amended record) |
 
