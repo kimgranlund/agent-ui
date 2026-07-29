@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, vi } from 'vitest'
 import { server, cdp, page } from 'vitest/browser'
 
 // gallery.browser.test.ts — the CROSS-ENGINE smoke for <component-gallery> (LLD-C6, component-gallery.lld.md §8
@@ -19,6 +19,11 @@ import './lib/component-gallery.ts'
 import { galleryMembers } from './lib/component-gallery.ts'
 import { whenFlushed } from '@agent-ui/components'
 import type { UISelectElement } from '@agent-ui/components/components'
+
+// GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles),
+// so its duration is set by the browser's scheduling, which stretches under concurrent host load.
+// Class definition + why this is not a global raise: vitest.browser.config.ts, REAL-TIMING HEADROOM.
+vi.setConfig({ testTimeout: 30_000 })
 
 // A custom element's connectedCallback builds synchronously, but the reactive grid loop + each specimen's own
 // first render settle across a frame — double-rAF before asserting (component-preview.browser.test.ts precedent).

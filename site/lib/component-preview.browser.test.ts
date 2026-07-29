@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, beforeEach } from 'vitest'
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
 import { userEvent } from 'vitest/browser'
 
 // component-preview.browser.test.ts — the CROSS-ENGINE VISUAL smoke for the docs-site <component-preview> element
@@ -16,6 +16,11 @@ import { userEvent } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css' // foundation tokens + dimensional ramp (FIRST — geometry source)
 import '@agent-ui/components/component-styles.css' // per-control CSS (so the specimen has real geometry, not 0×0)
 import './component-preview.ts' // registers <component-preview> + the self-defining ui-* controls
+
+// GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles + real-input
+// driver round trips), so its duration is set by the browser's scheduling, which stretches under load.
+// Class definition + why this is not a global raise: vitest.browser.config.ts, REAL-TIMING HEADROOM.
+vi.setConfig({ testTimeout: 30_000 })
 
 // ── mount/cleanup ──────────────────────────────────────────────────────────────────────────────────────────────
 let root: HTMLElement

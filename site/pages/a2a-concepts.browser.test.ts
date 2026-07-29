@@ -2,10 +2,15 @@
 // (corpus LLD-C11, SPEC-R15 AC1). jsdom (../lib/a2a-concepts.test.ts) proves the derivation is correct
 // (card count/text/verdicts); this proves the PAGE actually mounts and renders real geometry — both
 // Chromium and WebKit (vitest.browser.config.ts's `site` project).
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 // Side-effect import: builds the whole page into #app (mountPage), same precedent as
 // a2a-tic-tac-toe.browser.test.ts / a2ui-catalog.browser.test.ts.
 import './a2a-concepts.ts'
+
+// GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles),
+// so its duration is set by the browser's scheduling, which stretches under concurrent host load.
+// Class definition + why this is not a global raise: vitest.browser.config.ts, REAL-TIMING HEADROOM.
+vi.setConfig({ testTimeout: 30_000 })
 
 const raf = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
 

@@ -5,13 +5,18 @@
 // covers the pure routing helpers + the DOM-mutation contract (dataset/state bookkeeping); this file is
 // the real-engine complement for the one thing that needs a real engine.
 
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, vi } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/component-styles.css'
 import '@agent-ui/components/components'
 import { AskRegistry } from './ask-registry.ts'
 import type { A2uiClientMessage } from '@agent-ui/a2ui'
+
+// GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (real-input driver round trips),
+// so its duration is set by the browser's scheduling, which stretches under concurrent host load.
+// Class definition + why this is not a global raise: vitest.browser.config.ts, REAL-TIMING HEADROOM.
+vi.setConfig({ testTimeout: 30_000 })
 
 const mounted: HTMLElement[] = []
 afterEach(() => {

@@ -5,8 +5,13 @@
 // its turns), so this genuinely proves a2ui-chat's OWN handleClientMessage routing: a REAL click on the
 // rendered canvas Button (the shipped canvas-button seed — `wantResponse` absent) drives a full visible
 // turn, with NO synthetic user echo row (the TKT-0094 contract this issue's sweep was about).
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import './a2ui-chat.ts' // side-effect import — mounts the real chat page
+
+// GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles),
+// so its duration is set by the browser's scheduling, which stretches under concurrent host load.
+// Class definition + why this is not a global raise: vitest.browser.config.ts, REAL-TIMING HEADROOM.
+vi.setConfig({ testTimeout: 30_000 })
 
 const raf = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
 

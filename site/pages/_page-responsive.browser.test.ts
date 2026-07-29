@@ -6,8 +6,13 @@
 //
 // Band control: the composed ui-super-shell's container query resolves against ITS OWN inline-size, which
 // fills the `#app` box — so sizing `#app` moves the shell across bands (16px root ⇒ 40rem=640, 52.5rem=840).
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, vi } from 'vitest'
 import { mountPage, SITE_NAV_ENTRIES } from './_page.ts'
+
+// GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles),
+// so its duration is set by the browser's scheduling, which stretches under concurrent host load.
+// Class definition + why this is not a global raise: vitest.browser.config.ts, REAL-TIMING HEADROOM.
+vi.setConfig({ testTimeout: 30_000 })
 
 const raf = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
 

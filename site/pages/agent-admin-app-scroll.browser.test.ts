@@ -23,8 +23,16 @@
 // `overflow: hidden` genuinely blocks a real user's wheel/touch/keyboard scroll is bedrock, universally-
 // implemented CSS behavior; asserting the computed value IS the reliable, deterministic proof that this
 // fix's own rule is actually in effect.
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { page } from 'vitest/browser'
+
+// GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles, a
+// `page.viewport()` driver round trip, and a mid-test page-module `import()` that pulls a whole page's
+// graph through the dev server), so its duration is set by the browser's scheduling, which stretches
+// under concurrent host load. This is the file #347's investigation captured failing under concurrent
+// shard load, at exactly the 15000ms default; it passed solo immediately after.
+// Class definition + why this is not a global raise: vitest.browser.config.ts, REAL-TIMING HEADROOM.
+vi.setConfig({ testTimeout: 30_000 })
 
 const raf = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
 

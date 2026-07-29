@@ -1,9 +1,14 @@
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, vi } from 'vitest'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/component-styles.css'
 import '@agent-ui/icons/phosphor'
 import './component-preview.ts'
 import { NO_SLOT_TEXT, SLOT_TEXT_OK, STRUCTURAL } from './component-preview.ts'
+
+// GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles),
+// so its duration is set by the browser's scheduling, which stretches under concurrent host load.
+// Class definition + why this is not a global raise: vitest.browser.config.ts, REAL-TIMING HEADROOM.
+vi.setConfig({ testTimeout: 30_000 })
 
 // component-preview-fleet.browser.test.ts — the DIRECT component-preview regression probe for the SLOT_TEXT
 // hardening (component-preview.ts's "SLOT_TEXT gating" section). Where gallery.browser.test.ts proves the

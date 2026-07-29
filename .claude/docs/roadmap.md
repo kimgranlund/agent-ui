@@ -47,11 +47,12 @@ decision (dated line in §4).
 > round-budget policy can be ruled. §3 carries the per-milestone detail; `goals.md` carries the
 > box-by-box evidence.
 >
-> Three open issues, all deliberate: **#307** (blocked, above), **#340** (ADR-0165's build slice —
-> ratified, queued), **#347** (the `site` shard's contention flake — characterized as an OPEN set, so
-> GH #56's named-set remedy cannot fix it; the lever slows a standing gate for everyone, which is Kim's
-> tradeoff to make). Repo is otherwise clear: zero open PRs at last sweep, one remote branch, `main`
-> green.
+> Three open issues, all deliberate: **#307** (blocked, above), **#359** (Mode-B flake — a test's own
+> bounded wait false-settles or exhausts silently under load, so no timeout raise can reach it; split out
+> of #347 once #347's own timeout remedy proved it covers only the other mode), **#361** (ADR-0165
+> contradicts itself on whether an archived refusal still needs an allowlist entry — a doc-coherence
+> repair). **#340** closed with #360, and **#347** closes with the real-timing-headroom PR that carries
+> this line. Two open PRs at this sweep (#358, #362); `main` green.
 
 - **Component foundation — complete.** G0–G9 + the Control Suite + the icon adapter: the reactive
   kernel, FACE element layer, templating/directives, and ~50 `ui-*` controls across the

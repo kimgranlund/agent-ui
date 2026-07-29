@@ -1,7 +1,12 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 // Side-effect import: the demo page mounts the app shell + BOTH live ui-modal specimens into document.body
 // (mountPage appends to `#app ?? document.body`; the adr-index.browser.test.ts precedent).
 import './modal-demo.ts'
+
+// GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles),
+// so its duration is set by the browser's scheduling, which stretches under concurrent host load.
+// Class definition + why this is not a global raise: vitest.browser.config.ts, REAL-TIMING HEADROOM.
+vi.setConfig({ testTimeout: 30_000 })
 
 // modal-demo.browser.test.ts — the PAGE-LEVEL regression guard for the real bug Kim filed by screenshot
 // (2026-07-07): both the "Dismissable modal" and "Blocking modal" demos rendered visibly OPEN and STACKED on

@@ -4,10 +4,15 @@
 // assertion and still render as a collapsed single column (the "test the whole shape" lesson: ui-slider
 // once shipped box✓+thumb✓ with no host width, collapsing to a dot). This asserts the ACTUAL rendered
 // bounding boxes form a genuine 3×3 grid — real computed geometry, both Chromium and WebKit.
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 // Side-effect import: builds the whole page into #app/document.body (mountPage), same precedent as
 // a2ui-catalog.browser.test.ts.
 import './a2a-tic-tac-toe.ts'
+
+// GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles),
+// so its duration is set by the browser's scheduling, which stretches under concurrent host load.
+// Class definition + why this is not a global raise: vitest.browser.config.ts, REAL-TIMING HEADROOM.
+vi.setConfig({ testTimeout: 30_000 })
 
 const raf = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
 

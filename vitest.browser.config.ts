@@ -106,6 +106,67 @@ const FOCUS_TIMING_FILES = [
   'site/pages/gen-ui-live.browser.test.ts',
 ]
 
+// ─── REAL-TIMING HEADROOM (GH #347) ────────────────────────────────────────────────────────────────
+// NO CODE LIVES HERE ON PURPOSE. This is the canonical rationale for a per-FILE timeout raise that each
+// member declares in its own source (`vi.setConfig({ testTimeout: 30_000 })` at module scope, tagged
+// `GH #347`). `grep -rn 'GH #347' site packages` lists the class's exact current membership; adding a
+// member is that one line in the new file, with NO edit to this config.
+// SCOPE NOTE: this covers the per-TEST bound only. HOOKS are untouched, deliberately — browser mode
+// already resolves `hookTimeout` to 30000ms by default (vitest's own `resolved.hookTimeout ??=
+// resolved.browser.enabled ? 3e4 : 1e4`, and this repo sets no override), so declaring it here would be
+// a no-op dressed as a remedy. A hook that needs MORE than 30s must say so itself, above that number.
+//
+// THE DEFECT. GH #347: `test:browser:site` fails a DIFFERENT, non-overlapping set of files on each
+// full-sweep run, and every failing file passes solo. Its investigation comment (2026-07-28) ran three
+// independent trials with zero file overlap between any pair, reproduced it only under genuinely
+// concurrent shard execution (three plain sequential replays came back clean), and captured one real
+// failure: `Test timed out in 15000ms` in `site/pages/agent-admin-app-scroll.browser.test.ts`. It also
+// observed an unrelated worktree's vitest workers running on the same machine at that moment — load this
+// repo's own shard sequencing can neither see nor control.
+//
+// WHY NOT GH #56's REMEDY. That list above is a CLOSED set with one identified mechanism (OS-level
+// document focus, which only one page can hold). #347's set is OPEN: the failing identity keeps moving,
+// so naming today's observed files would just surface an unnamed one next time. The cause is a resource
+// budget, not an interaction between specific files.
+//
+// THE CLASS, BY MECHANISM (not by observed failure). A file belongs if any of its tests AWAIT something
+// whose completion time is set by the browser's own scheduling rather than by a synchronous read: an
+// awaited rAF/frame settle · a real-duration `setTimeout` wait · a retry poll (`waitFor`/`expect.poll`) ·
+// observer delivery · animation/transition completion · a real-input or viewport driver round trip to the
+// Playwright server · a mid-test dynamic `import()` of a page module. Each of those stretches with host
+// load; a test built out of them can therefore cross a fixed bound while asserting nothing different.
+// DELIBERATELY EXCLUDED: synchronous layout reads (`getBoundingClientRect`, `getComputedStyle`, a
+// `scrollTop` write). They force a reflow but do not wait on the scheduler, so they do not stretch — and
+// including them would have swept ~90 of the 112 browser files in, i.e. a global raise wearing a costume.
+// Six `site` files carry no such await and deliberately KEEP the 15s bound (theme-pack-apply,
+// theme-provider-build, _page-scheme, a2ui-live — it awaits only `updateComplete`, a microtask —
+// text-field-permutations, tokens); they are the standing proof that this raise stayed scoped.
+// OUT OF SCOPE BY PROJECT, not by mechanism: four `site` files qualify but live in `focus-timing`
+// (a2ui-chat, adr-index, command-palette, gen-ui-live) and two in `visual` (`*.visual.browser.test.ts`).
+// Both projects already carry their own remedy — zero file parallelism above, and the visual block's own
+// raised `toMatchScreenshot` timeout below — so they were left alone rather than given a second one.
+//
+// WHY NOT A GLOBAL RAISE (Kim's ruling, 2026-07-29). A blanket raise makes every genuine hang take twice
+// as long to surface in suites with no timing dependency at all. Kim accepted that cost for this class
+// only. Kim also explicitly REJECTED the investigation's other candidate — capping `site`'s
+// `fileParallelism` — because it slows a standing gate everyone runs.
+//
+// WHAT WAS MEASURED HERE, not assumed (2026-07-29, both engines):
+//   · vitest browser mode's default per-test bound is 15000ms — a 20s stall with no headroom failed with
+//     exactly `Test timed out in 15000ms`, the captured #347 signature.
+//   · `vi.setConfig` at module scope does raise it: the same 20s stall passed at 30_000ms.
+//   · The raise is genuinely per-file: both ran in the SAME `site` project in the SAME run, and the file
+//     without the call still failed at 15000ms.
+// WHY 30_000 (2× the default), derived rather than picked: `agent-admin-app-scroll`'s single test was
+// measured at 485-712ms solo, 1728-1751ms inside a full `site` shard here, and 2458ms in-shard on a
+// reviewer's machine — that 5× spread across idle runs IS the load sensitivity this raise exists for.
+// #347 saw it cross 15000ms, which against the SLOWEST of those baselines still implies a ~6× slowdown;
+// 30_000 tolerates ~12×. (A timeout only proves the test exceeded the bound, never by how much — the
+// multiplier comes from the baseline, not from the failure.)
+// A genuine hang in a member file still surfaces in 30s. Before "cleaning up" a 30s timeout here: it is
+// load-tolerance for a reproduced, open-set contention defect, not a slow test.
+// ───────────────────────────────────────────────────────────────────────────────────────────────────
+
 // GH #204 — update-mode's own gap: `toMatchScreenshot`'s stability loop (inside `@vitest/browser`) seeds
 // its "is the page done rendering" comparison with the STALE reference as the first baseline, using this
 // SAME `comparatorOptions`. When a fresh capture already falls within `allowedMismatchedPixelRatio` of
