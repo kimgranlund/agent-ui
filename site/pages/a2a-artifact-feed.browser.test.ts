@@ -3,10 +3,15 @@
 // artifact host (a real `ui-grid` of metric tiles, not a collapsed stack — the "test the whole shape"
 // lesson) plus the capped disclosure panes and the compose-don't-send interaction, in real engines
 // (Chromium + WebKit).
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 // Side-effect import: builds the whole page into #app/document.body (mountPage), the a2a-tic-tac-toe
 // browser-test precedent.
 import './a2a-artifact-feed.ts'
+
+// GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles + a real-timer wait),
+// so its duration is set by the browser's scheduling, which stretches under concurrent host load.
+// Class definition + why this is not a global raise: vitest.browser.config.ts, REAL-TIMING HEADROOM.
+vi.setConfig({ testTimeout: 30_000 })
 
 const raf = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
 

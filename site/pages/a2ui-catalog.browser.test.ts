@@ -1,7 +1,12 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 // Side-effect import: the page module builds the whole A2UI Catalog page into document.body (mountPage appends
 // to `#app ?? document.body`) and self-imports the foundation cascade + self-defining ui-* controls (_page.ts).
 import './a2ui-catalog.ts'
+
+// GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles),
+// so its duration is set by the browser's scheduling, which stretches under concurrent host load.
+// Class definition + why this is not a global raise: vitest.browser.config.ts, REAL-TIMING HEADROOM.
+vi.setConfig({ testTimeout: 30_000 })
 
 // a2ui-catalog.browser.test.ts — the field→filter smoke for the dogfooded search box (ADR-0077 dogfooding wave).
 // The catalog page's filter is now a `ui-text-field type=search` (was a native <input>), so this proves — in a

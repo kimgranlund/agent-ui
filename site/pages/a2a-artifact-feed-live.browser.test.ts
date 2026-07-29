@@ -4,11 +4,16 @@
 // `sendTurn` — the composer, progressive part-by-part paint, the completed-turn verdict recompute, the
 // fail-closed fault path, and Reset's "restores the recorded fixture exactly" all exercised for real, in
 // a real engine, with zero network.
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import type { A2aMessage, A2aPart } from '@agent-ui/a2a'
 // Importing the page ALSO runs its top-level `mountPage()` side effect (the a2a-artifact-feed.browser.test.ts
 // precedent — builds the whole page into #app/document.body); this file additionally needs its test-only seam.
 import { __setLiveApiForTest } from './a2a-artifact-feed.ts'
+
+// GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles),
+// so its duration is set by the browser's scheduling, which stretches under concurrent host load.
+// Class definition + why this is not a global raise: vitest.browser.config.ts, REAL-TIMING HEADROOM.
+vi.setConfig({ testTimeout: 30_000 })
 
 const raf = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
 

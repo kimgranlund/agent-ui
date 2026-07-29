@@ -9,10 +9,15 @@
 // the SAME document ahead of those wrappers, shifting their block-flow `y` offsets and breaking those exact-
 // pixel assertions. Vitest's browser mode isolates each `*.browser.test.ts` file in its own page/document by
 // default, so a separate file is the zero-blast-radius way to drive the real page end to end.
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import './a2ui-live.ts' // side-effect import — mounts the real live-agent page into document.body
 import { shouldRunTurn } from '../lib/agent-runtime.ts'
 import type { A2uiActionMessage } from '@agent-ui/a2ui'
+
+// GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles),
+// so its duration is set by the browser's scheduling, which stretches under concurrent host load.
+// Class definition + why this is not a global raise: vitest.browser.config.ts, REAL-TIMING HEADROOM.
+vi.setConfig({ testTimeout: 30_000 })
 
 const raf = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
 

@@ -1,8 +1,14 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 // Side-effect import: the page module mounts the ui-super-shell composition guide into document.body
 // (mountPage appends to `#app ?? document.body`; the adr-index.browser.test.ts/modal-demo.browser.test.ts
 // precedent), self-importing the foundation cascade + ui-* controls + this page's own super-shell.css.
 import './super-shell.ts'
+
+// GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles + real-timer
+// waits that exist to let a ResizeObserver deliver), so its duration is set by the browser's
+// scheduling, which stretches under concurrent host load.
+// Class definition + why this is not a global raise: vitest.browser.config.ts, REAL-TIMING HEADROOM.
+vi.setConfig({ testTimeout: 30_000 })
 
 // super-shell.browser.test.ts — min-size-floors census (GH #185 follow-up) → GH #205 auto-collapse.
 // ui-super-shell's canvas gained a live-layout floor (SPEC-R13a), which meant a dual-sided demo on this

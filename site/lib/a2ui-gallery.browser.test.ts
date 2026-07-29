@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, beforeEach } from 'vitest'
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest'
 import { userEvent } from 'vitest/browser'
 
 // a2ui-gallery.browser.test.ts — the SCOPED cross-engine layout smoke for the A2UI composition gallery
@@ -33,6 +33,11 @@ import '@agent-ui/components/component-styles.css' // per-control CSS (so a surf
 import '@agent-ui/components/components' // self-defining ui-* controls (the renderer mounts these by tag)
 import { buildSeedGallery, buildSeedCard } from './a2ui-gallery.ts'
 import { documentRowToolbarSeed, bookingReservationSeed, patternSettingsSeed } from '@agent-ui/a2ui/examples'
+
+// GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles + real-input
+// driver round trips), so its duration is set by the browser's scheduling, which stretches under load.
+// Class definition + why this is not a global raise: vitest.browser.config.ts, REAL-TIMING HEADROOM.
+vi.setConfig({ testTimeout: 30_000 })
 
 // The renderer's mount + each ui-* control's first render settle across frames — await a few rAFs so
 // computed geometry (and any lazily-imported control, e.g. the Calendar) is available before asserting.

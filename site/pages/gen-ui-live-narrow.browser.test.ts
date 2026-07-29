@@ -31,8 +31,19 @@
 // exceeds any floor value, so a test at 414×896 would pass identically whether or not GH #260 was
 // ever fixed (measured, both engines: canvas ≈240px pre-fix at 896 tall vs ≈44px at 700 tall, same
 // turn content). 414×700 is the geometry that actually reproduces Kim's report.
-import { describe, it, expect, beforeAll } from 'vitest'
+import { describe, it, expect, beforeAll, vi } from 'vitest'
 import { page } from 'vitest/browser'
+
+// GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles, real-timer
+// waits, the `waitFor` retry poll below, a `page.viewport()` driver round trip, and a mid-test
+// page-module `import()`), so its duration is set by the browser's scheduling, which stretches under
+// concurrent host load.
+// Class definition + why this is not a global raise: vitest.browser.config.ts, REAL-TIMING HEADROOM.
+// Covers the TESTS only. The `beforeAll` below waits on the scheduler too, but no hook headroom would
+// help it: its `waitFor` THROWS at its own 10s budget (see the helper's `throw` on the next lines), well
+// inside browser mode's 30000ms default hook bound, so the hook's own budget is the lever there, not the
+// bound. That early-give-up-under-load mode is #359's subject, not this file's to fix.
+vi.setConfig({ testTimeout: 30_000 })
 
 const raf = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
 const waitFor = async (predicate: () => boolean, timeoutMs = 4000): Promise<void> => {
