@@ -14,6 +14,9 @@ import type { UICalendarElement } from './calendar.ts'
 //   [4] forced-colors — selected fill (Highlight/HighlightText) + today ring (ButtonText INSET border)
 //       survive WHCM (Chromium via CDP; WebKit baseline). Three-state distinctness is proven:
 //       focus=Highlight outline (offset-outside), selected=Highlight fill, today=ButtonText inset ring.
+//       A second leg (GH #353) proves ADR-0093 clause 4's FOUR-state claim in the mode that has a
+//       band at all: mode=range, band=Highlight (interior + endpoint half-wash), today=ButtonText,
+//       disabled=GrayText, all three read as RESOLVED system colours and mutually distinct.
 //   [5] Prev/Next nav buttons visually trigger a month change + DOM focus moves to the new cell
 //   [6] C10 zero-residue — disconnect releases all listeners (click + key handlers gone)
 //   [7] Form round-trip — value round-trips through a <form> (FormData)
@@ -458,6 +461,136 @@ describe('ui-calendar — forced-colors (Chromium via CDP; WebKit asserts the ba
         'ButtonText resolved to the same colour as Highlight — three-state distinctness broken ' +
         '(forced-colors theme puts ButtonText=Highlight; revisit the token strategy)',
       ).not.toBe(fcSelectedBg)
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] })
+    }
+  })
+
+  /**
+   * GH #353 — the same distinctness proof in RANGE mode, the mode ADR-0093 clause 4's own
+   * four-state claim ("forced-colors keeps focus/band/today/disabled distinct", ADR-0093:183) is
+   * about and the leg above cannot reach: with `mode="single"` no cell ever carries
+   * `[data-in-range]`, so the band's Highlight, the endpoint half-wash's Highlight
+   * (calendar.css:485-487) and disabled's GrayText are all unentered there.
+   *
+   * Asserted against the RESOLVED system colours, not merely "some opaque paint": a band drawn
+   * with a token background instead of a system colour still computes an opaque `background-color`
+   * under WHCM (the `[data-in-range]` rule carries `forced-color-adjust:none`, calendar.css:373),
+   * so an alpha-only check would pass on exactly the regression this gate exists to catch.
+   *
+   * The dates are DERIVED from the real current date, never pinned: `[data-today]` only exists
+   * when today's own month is the displayed one, and the displayed month is seeded from
+   * `value-start` in range mode (calendar.ts:423-432). A pinned month would make this leg
+   * time-bombed rather than green-forever.
+   */
+  it('range mode: band (Highlight), today ring (ButtonText) and disabled (GrayText) are three DIFFERENT system colours', async () => {
+    const pad = (n: number): string => String(n).padStart(2, '0')
+    const now = new Date()
+    const isoOf = (day: number): string => `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(day)}`
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+    // A COMPLETE range over all but the last two days of the current month: guarantees a wide
+    // interior band (≥24 interior cells even in a 28-day February), and — via `max` pinned to the
+    // band's own end — at least two out-of-range cells that are NOT part of the band.
+    const bandEnd = lastDay - 2
+    const { el } = mount(
+      `<ui-calendar mode="range" value-start="${isoOf(1)}" value-end="${isoOf(bandEnd)}" max="${isoOf(bandEnd)}"></ui-calendar>`,
+    )
+    await el.updateComplete
+
+    // `data-in-range` is interior-ONLY (calendar.ts:190 computes it mutually exclusive with the
+    // endpoint marks), so this is never an endpoint cell; `:not([data-today])` keeps the three
+    // colour probes on three DIFFERENT cells.
+    const bandCell     = el.querySelector<HTMLElement>('[role="gridcell"][data-in-range]:not([data-today])')
+    const startCell    = el.querySelector<HTMLElement>('[role="gridcell"][data-range-start]:not([data-range-end])')
+    const todayCell    = el.querySelector<HTMLElement>('[role="gridcell"][data-today]')
+    const disabledCell = el.querySelector<HTMLElement>('[role="gridcell"][aria-disabled="true"]:not([data-today])')
+
+    expect(bandCell, `${server.browser}: no interior [data-in-range] cell — the range mount produced no band`).not.toBeNull()
+    expect(startCell, `${server.browser}: no [data-range-start] cell — the range mount produced no endpoint`).not.toBeNull()
+    expect(todayCell, `${server.browser}: no [data-today] cell — the displayed month is not today's month`).not.toBeNull()
+    expect(disabledCell, `${server.browser}: no aria-disabled cell — the max= bound produced no out-of-range cells`).not.toBeNull()
+
+    // Baseline (BOTH engines, normal mode): the band interior paints an opaque wash on the BAND
+    // layer (the button itself, ADR-0105 decision 2) and the today ring is present — without these
+    // the forced-colors reads below would be vacuous.
+    expect(
+      alphaOf(getComputedStyle(bandCell!).backgroundColor),
+      `${server.browser}: interior band cell has no background in normal mode (forced-colors check would be vacuous)`,
+    ).toBeGreaterThan(0)
+    const normalRing = getComputedStyle(todayCell!, '::before').boxShadow
+    expect(
+      normalRing !== 'none' && normalRing.length > 0,
+      `${server.browser}: today ring is absent in normal mode`,
+    ).toBe(true)
+
+    if (server.browser !== 'chromium') {
+      // WebKit: no CDP forced-colors emulation — assert the baseline only
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(false)
+      return
+    }
+
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', {
+      features: [{ name: 'forced-colors', value: 'active' }],
+    })
+    try {
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(true)
+
+      /** Resolve a system colour keyword to its concrete rgb() under the emulated WHCM theme. */
+      const resolveSystem = (keyword: string, property: 'color' | 'background-color'): string => {
+        const probe = document.createElement('span')
+        probe.style.setProperty(property, keyword)
+        probe.style.setProperty('forced-color-adjust', 'none')
+        document.body.append(probe)
+        const resolved = property === 'color'
+          ? getComputedStyle(probe).color
+          : getComputedStyle(probe).backgroundColor
+        probe.remove()
+        return resolved
+      }
+      const highlight  = resolveSystem('Highlight', 'background-color')
+      const buttonText = resolveSystem('ButtonText', 'color')
+      const grayText   = resolveSystem('GrayText', 'color')
+
+      // ── STATE 1: the band interior — Highlight, on the BAND layer (calendar.css:479-482) ──
+      const bandBg = getComputedStyle(bandCell!).backgroundColor
+      expect(
+        bandBg,
+        'the range band interior must paint the system Highlight under forced-colors — a token ' +
+        'background survives WHCM here (forced-color-adjust:none) and would silently read as a ' +
+        'non-system colour the OS never chose',
+      ).toBe(highlight)
+
+      // The endpoint half-wash (calendar.css:485-487) carries the SAME Highlight, so a bridged
+      // band reads as ONE contiguous run under WHCM instead of circle-gap-square-gap-circle.
+      expect(
+        getComputedStyle(startCell!, '::after').backgroundColor,
+        'the endpoint half-wash must carry the same Highlight as the band (calendar.css:485-487) — ' +
+        'otherwise the band breaks into disconnected runs under forced-colors',
+      ).toBe(highlight)
+
+      // ── STATE 2: today — ButtonText inset ring on the POINT layer (calendar.css:493-495) ──
+      const todayRing = shadowColor(getComputedStyle(todayCell!, '::before').boxShadow)
+      expect(
+        todayRing,
+        'could not extract colour from the today cell box-shadow under forced-colors',
+      ).not.toBe('')
+      expect(
+        todayRing,
+        'the today ring must be ButtonText in range mode too — Highlight would merge it into the band',
+      ).toBe(buttonText)
+
+      // ── STATE 3: disabled — GrayText ink (calendar.css:498-500) ──
+      const disabledInk = getComputedStyle(disabledCell!).color
+      expect(
+        disabledInk,
+        'an out-of-range cell must ink GrayText under forced-colors (calendar.css:498-500)',
+      ).toBe(grayText)
+
+      // ── The clause-4 claim itself: the three are MUTUALLY distinct ──
+      expect(todayRing, 'band and today ring collapsed to one colour under forced-colors').not.toBe(bandBg)
+      expect(disabledInk, 'band and disabled ink collapsed to one colour under forced-colors').not.toBe(bandBg)
+      expect(disabledInk, 'today ring and disabled ink collapsed to one colour under forced-colors').not.toBe(todayRing)
     } finally {
       await session.send('Emulation.setEmulatedMedia', { features: [] })
     }
