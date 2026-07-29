@@ -138,6 +138,27 @@ const shadowColor = (s: string): string => {
   return m ? m[1] : ''
 }
 
+/**
+ * Today's date as an ISO day string, from the REAL clock — the seed for every test that reads a
+ * `[data-today]` cell.
+ *
+ * Why this exists at all: the grid is ALWAYS 6 rows × 7 days starting from the Sunday before the
+ * displayed month's 1st (calendar.ts:706-750), so a mount pinned to one month only contains today
+ * for the ~6 weeks that window spans — after which `[data-today]` is simply absent and a
+ * `querySelector(...)!` read becomes `getComputedStyle(null, …)`, a TypeError, not a clean failure.
+ * The `[data-today] is present` test above already rotted this way once (pinned 2026-07-01, broke
+ * on 2026-07-02) and was converted; its two siblings kept the pinned mount and were due to break
+ * on 2026-08-09. Seeding `value` with this makes the displayed month the current one by
+ * construction, so today's cell is always in the grid.
+ *
+ * Same local-date arithmetic as the control's own today-detection: explicit Y/M/D, never
+ * `new Date('YYYY-MM-DD')` (which parses as UTC and can land a day off).
+ */
+const todayIso = (): string => {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+}
+
 interface CdpSession {
   send(method: string, params?: Record<string, unknown>): Promise<unknown>
 }
@@ -317,13 +338,15 @@ describe('ui-calendar — today / selected / disabled render (both engines)', ()
   })
 
   it('today cell has a box-shadow ring (today-ring token applied)', async () => {
-    const { el } = mount('<ui-calendar value="2026-07-01"></ui-calendar>')
+    // Clock-derived seed (see `todayIso`) — a pinned month stops containing today after ~6 weeks.
+    const { el } = mount(`<ui-calendar value="${todayIso()}"></ui-calendar>`)
     await el.updateComplete
 
-    const todayCell = el.querySelector<HTMLElement>('[data-today]')!
+    const todayCell = el.querySelector<HTMLElement>('[data-today]')
+    expect(todayCell, `${server.browser}: no [data-today] cell in the displayed month`).not.toBeNull()
     // ADR-0105 — the today ring paints on the POINT layer (::before, the fixed circle), so it
     // stays a true ring rather than stretching with the (possibly fluid) band.
-    const shadow    = getComputedStyle(todayCell, '::before').boxShadow
+    const shadow    = getComputedStyle(todayCell!, '::before').boxShadow
     // The today ring is inset box-shadow: "none" means the token wasn't applied
     expect(
       shadow,
@@ -382,12 +405,23 @@ describe('ui-calendar — forced-colors (Chromium via CDP; WebKit asserts the ba
    * We prove this by asserting selectedBg !== todayRingColor under forced-colors.
    */
   it('selected fill (Highlight) and today ring (ButtonText) are both present AND visually distinct', async () => {
-    // value="2026-07-01" and today is 2026-07-01 → same cell = hardest case for distinctness
-    const { el } = mount('<ui-calendar value="2026-07-01"></ui-calendar>')
+    // value = TODAY → selected cell and today cell are the SAME cell, the hardest case for
+    // distinctness (one pseudo carrying both the Highlight fill and the ButtonText ring). Clock-
+    // derived, not pinned (see `todayIso`): the mount used to pin 2026-07-01, which made this the
+    // hardest case only while the wall clock sat inside that grid's ~6-week window — and made
+    // `todayCell` null (a TypeError, not a failed assertion) after it.
+    const iso = todayIso()
+    const { el } = mount(`<ui-calendar value="${iso}"></ui-calendar>`)
     await el.updateComplete
 
-    const selectedCell = el.querySelector<HTMLElement>('[data-date="2026-07-01"]')!
-    const todayCell    = el.querySelector<HTMLElement>('[data-today]')! // same cell in this case
+    const selectedCell = el.querySelector<HTMLElement>(`[data-date="${iso}"]`)!
+    const todayCell    = el.querySelector<HTMLElement>('[data-today]')!
+    expect(selectedCell, `${server.browser}: no cell for today's date in the displayed month`).not.toBeNull()
+    expect(todayCell, `${server.browser}: no [data-today] cell in the displayed month`).not.toBeNull()
+    expect(
+      todayCell,
+      `${server.browser}: selected and today must resolve to the SAME cell — that is this test's hardest case`,
+    ).toBe(selectedCell)
 
     // Baseline (BOTH engines, normal mode): selected cell has an opaque background fill.
     // ADR-0105 — both the selected fill and the today ring paint on the POINT layer (::before).
