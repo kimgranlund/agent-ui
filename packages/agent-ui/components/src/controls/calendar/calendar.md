@@ -11,7 +11,14 @@ tag: ui-calendar
 description: A month-grid date picker form control that selects a single date or a start/end date range.
 tier: pattern           # a composite picker: nav + 2D grid + form-associated selection
 extends: UIFormElement  # form-associated: formValue() = ISO string (or FormData pair in mode=range); formValidity() = valueMissing + range
-# marginal: tracked at the wave-5 integration slice (s12 barrel pass) + the ADR-0093 range-mode re-base; ≤ ~3 kB tier budget (plan §10)
+# marginal: tracked at the wave-5 integration slice (s12 barrel pass); ≤ ~3 kB tier budget (plan §10).
+# GH #352 — this line previously claimed "+ the ADR-0093 range-mode re-base"; that re-base was never run
+# (the only dated figure predated range mode by three days). Re-measured 2026-07-29, post-range: calendar's
+# leave-one-out marginal is 3 B gz, well inside the 2048 B default — no override needed. It reads near-ZERO
+# for a structural reason, not because range mode is free: text-field imports calendar, and color-picker
+# (ADR-0123) statically imports text-field, so dropping the `./controls/calendar` entry leaves calendar's
+# bytes in the bundle anyway. The tier budget above is therefore carried by the family-barrel ceiling and
+# text-field's own override row (scripts/measure-size.mjs), not by this control's marginal row.
 
 attributes:             # attributes-as-API — mirrors UICalendarElement.props (formProps spread first, then own)
   - name: name
