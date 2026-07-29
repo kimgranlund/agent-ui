@@ -1,23 +1,35 @@
-// dogfood-lazy-failure.test.ts — GH #354: the failure half of the lazy dogfood seam. A static import cannot
-// fail; a dynamic one can (an evicted/unreachable chunk, an offline reload). Two claims made in
-// `loadDogfoodAssets()`'s own comment are proven here rather than asserted:
+// dogfood-lazy-failure.test.ts — GH #354: the DEGRADE half of the lazy dogfood seam. A static import cannot
+// fail; a dynamic one can (a stale hashed chunk after a deploy, an offline reload, a dead network).
 //
-//   1. a failed load FAILS THE TURN VISIBLY through the existing `handle.fail` path — never a silently
-//      assets-less mount (which would look like the dogfood toggle quietly doing nothing) and never a turn
-//      that hangs with a live bubble;
-//   2. the failure is NOT memoized — the next turn retries. A memoized rejected promise would leave dogfood
-//      permanently broken for the rest of the page's life after one transient chunk error.
+// Kim ruled 2026-07-29 — and ADR-0139 cl.5 already rules the same for the lazy CodeMirror precedent this
+// seam copies ("load failure … leaves a fully functional plain editor, only the highlighting is lost") —
+// that such a failure DEGRADES: the frame mounts assets-less, the turn runs, and the user is told. Failing
+// the turn instead would be far worse here than for CM, because the load sits AHEAD of the agent request:
+// one bad chunk would stop every genui turn from being ISSUED for anyone with dogfood on.
 //
-// Own file because the mock must reject on the FIRST load, which is the load every other lazy-dogfood test
-// needs to succeed (the memo is module-scoped, one per page).
+// Two claims, neither assertable by reading the code:
+//   1. REJECTION — a load that throws degrades: the frame mounts assets-less, the turn completes, and the
+//      reason reaches the user.
+//   2. RETRY — the failure is not memoized, so a later turn loads for real and gets the pair. A memoized
+//      rejection would leave dogfood dead for the rest of the page's life after one transient chunk error.
+//
+// Both run in ONE file, in this order, on purpose: the memo is module-scoped (one per page) and is cleared
+// only by a FAILED load, so leg 1 hands leg 2 a fresh slate and leg 2 proves it. The third failure mode —
+// a load that never settles at all — needs its own file (dogfood-lazy-timeout.test.ts) because a pending
+// factory parks the module in vitest's registry where no later leg can reload it.
 import { describe, it, expect, vi, afterEach, beforeAll, afterAll } from 'vitest'
 import { whenFlushed } from '@agent-ui/components'
 
-const dogfood = vi.hoisted(() => ({ loads: 0, failNext: true, css: '/* stub css */', js: '/* stub js */' }))
+const dogfood = vi.hoisted(() => ({
+  loads: 0,
+  mode: 'throw' as 'throw' | 'resolve',
+  css: '/* stub css */',
+  js: '/* stub js */',
+}))
 
 vi.mock('@agent-ui/components/dogfood-frame', async () => {
   dogfood.loads += 1
-  if (dogfood.failNext) throw new Error('simulated dogfood chunk load failure')
+  if (dogfood.mode === 'throw') throw new Error('simulated dogfood chunk load failure')
   return { DOGFOOD_CSS: dogfood.css, DOGFOOD_JS: dogfood.js, DOGFOOD_TAGS: [] as string[] }
 })
 
@@ -61,41 +73,57 @@ const composerSubmit = (el: UIAgentAdminElement, text: string): void => {
   editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
 }
 
-describe('lazy dogfood assets — load failure (GH #354)', () => {
-  it('a failed chunk load fails the turn VISIBLY, and the next turn retries (no poisoned memo)', async () => {
-    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
-    el.store = createMemoryStore({})
-    el.store.set('surfaceGenui', true)
-    el.store.set('surfaceGenuiDogfood', true)
-    const seen: unknown[] = []
-    el.agentSurfaceTurn = async function* (req) {
-      seen.push(req)
-      yield { kind: 'genui' as const, surfaceId: 'fail-1', html: '<ui-button>Save</ui-button>' }
-      yield { kind: 'note' as const, note: 'ok' }
-    }
-    document.body.append(el)
-    mounted.push(el)
-    await whenFlushed()
+interface Frame extends HTMLElement {
+  assets: { css?: string; js?: string }
+}
 
-    // Turn 1 — the load rejects. The visible shape is `handle.fail`'s own: a "Turn failed — …" narration
-    // entry plus a "⚠ …" system bubble (conversation.ts). Asserted on that SHAPE rather than on the thrown
-    // message, because vitest replaces a mock-factory error's text with its own module-mocking advice — the
-    // reason string is the runtime's, the visibility is the contract.
-    const logText = (): string => el.querySelector('[data-part="log"]')?.textContent ?? ''
+const seenByEl = new WeakMap<UIAgentAdminElement, unknown[]>()
+
+const mountDogfoodAdmin = async (): Promise<UIAgentAdminElement> => {
+  const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+  el.store = createMemoryStore({})
+  el.store.set('surfaceGenui', true)
+  el.store.set('surfaceGenuiDogfood', true)
+  const seen: unknown[] = []
+  seenByEl.set(el, seen)
+  el.agentSurfaceTurn = async function* (req) {
+    seen.push(req)
+    yield { kind: 'genui' as const, surfaceId: 'degrade-1', html: '<ui-button>Save</ui-button>' }
+    yield { kind: 'note' as const, note: 'here is your form' }
+  }
+  document.body.append(el)
+  mounted.push(el)
+  await whenFlushed()
+  return el
+}
+
+const logText = (el: Element): string => el.querySelector('[data-part="log"]')?.textContent ?? ''
+
+describe('lazy dogfood assets — a failed load DEGRADES (GH #354)', () => {
+  it('a load that REJECTS degrades — the frame mounts assets-less, the turn completes, the reason surfaces', async () => {
+    const el = await mountDogfoodAdmin()
+    const seen = seenByEl.get(el)!
     composerSubmit(el, 'make a form')
-    await waitFor('the failed turn surfaced', () => logText().includes('Turn failed'))
-    expect(dogfood.loads, 'the ON path attempted the load').toBe(1)
-    expect(seen.length, 'the stream never started — the turn failed before its first event').toBe(0)
-    expect(el.querySelector('ui-sandbox-frame'), 'no half-built, silently assets-less frame').toBeNull()
-    expect(logText(), 'the failure reaches the user as a system bubble too, not only the narration strip').toContain('⚠')
+    await waitFor('the degraded turn mounted its frame', () => el.querySelector('ui-sandbox-frame') !== null)
+    expect(dogfood.loads, 'the ON path reached the import').toBe(1)
+    expect(seen.length, 'the turn ran').toBe(1)
+    const frame = el.querySelector('ui-sandbox-frame') as Frame
+    expect(frame.assets.css, 'no half-applied assets').toBeUndefined()
+    expect(frame.assets.js).toBeUndefined()
+    expect(logText(el)).toContain('here is your form')
+    expect(logText(el), 'the failure is user-visible, not swallowed').toContain('⚠')
+    expect(logText(el)).toContain('could not be loaded')
+  })
 
-    // Turn 2 — a transient failure must not be sticky: the loader retries and this time succeeds.
-    dogfood.failNext = false
-    composerSubmit(el, 'try again')
+  it('a later turn RETRIES and gets the real pair (no poisoned memo)', async () => {
+    dogfood.mode = 'resolve'
+    const el = await mountDogfoodAdmin()
+    composerSubmit(el, 'make a form')
     await waitFor('the retried turn mounted its frame', () => el.querySelector('ui-sandbox-frame') !== null)
-    expect(dogfood.loads, 'the rejected promise was dropped from the memo — turn 2 really re-imported').toBe(2)
-    const frame = el.querySelector('ui-sandbox-frame') as HTMLElement & { assets: { css?: string; js?: string } }
+    expect(dogfood.loads, 'the rejected promise was dropped from the memo — this turn re-imported').toBe(2)
+    const frame = el.querySelector('ui-sandbox-frame') as Frame
     expect(frame.assets.css).toBe(dogfood.css)
     expect(frame.assets.js).toBe(dogfood.js)
+    expect(logText(el), 'a healthy turn carries no warning').not.toContain('⚠')
   })
 })

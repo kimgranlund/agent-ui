@@ -110,15 +110,23 @@ const targets = [
   // ~6% headroom reserved.
   //
   // KNOWN OVER by 55 B gz as of 2026-07-29 (GH #354): this row measures 48695 B gz against the 48640 B cap.
-  // Attributed by re-measuring this same barrel at each commit since the 48501 B baseline (the only two that
-  // move a JS byte — the other three in that range are CSS-only and measure +0, and the dogfood pair itself
-  // measures +0 here, so ADR-0162's zero-bytes-in-the-default-barrel gate is intact):
-  //   • 59def42 `fix(dom): survive a nested disconnectedCallback mid-connected()` (GH #302) — +83 B gz. A
-  //     `src/dom/` lifecycle fix, so every control in this barrel carries it.
-  //   • d51fa06 `feat(components): ui-sandbox-frame gains the SPEC-R12 assets prop` (#338) — +86 B gz
-  //     (visible per-control too: sandbox-frame's own marginal moved 2124 → 2215 B gz).
-  // Both are real, wanted code landing against the 139 B gz of headroom this cap had left — NOT a gzip
-  // dictionary shift, and nothing to shave. Raising the cap is a DESIGN call and is Kim's to make (the
+  // Attributed by CHECKING OUT each commit in range and re-measuring this same barrel in place — the ladder
+  // reconciles to the byte, which the 48501 B figure above does NOT (that number was recorded at the
+  // ui-form-popover wave, not at the parent of the first mover; using it as the baseline left a 25 B gap in
+  // an earlier draft of this note):
+  //   12932a0 (= 59def42^)  48529 B gz   ← the true baseline; 111 B of headroom left under the 48640 cap
+  //   59def42               48609 (+80)  `fix(dom): survive a nested disconnectedCallback mid-connected()`
+  //                                      (GH #302) — a `src/dom/` lifecycle fix, so EVERY control here
+  //                                      carries it.
+  //   4fa3137 · a241c35     48609 (+0)   CSS-only (sticky-header canvas, calendar range band) — no JS byte.
+  //   60af7f7               48609 (+0)   the dogfood asset pair itself (ADR-0162 LLD-C1): ZERO bytes in this
+  //                                      default barrel, exactly as its own gate promises.
+  //   d51fa06               48695 (+86)  `feat(components): ui-sandbox-frame gains the SPEC-R12 assets prop`
+  //                                      (#338) — visible per-control too: sandbox-frame's own marginal moved
+  //                                      2124 → 2215 B gz.
+  //   (nothing since d51fa06 touches components/src)
+  // 48529 + 80 + 86 = 48695. Both movers are real, wanted code landing against 111 B of headroom — NOT a
+  // gzip-dictionary shift, and nothing to shave. Raising the cap is a DESIGN call and is Kim's to make (the
   // measured figure to re-base onto is 48695 B gz); this comment records the cause rather than absorbing it,
   // so `npm run size` stays red on this ONE row until it is ruled on.
   ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 47.5 * KB],
@@ -228,6 +236,13 @@ const MARGINAL_OVERRIDES = {
 // Membership is DERIVED from the real import graph on every run (below) and cross-checked against the
 // pinned set. If a future edge changes the cluster — ADR-0123's import removed, or a new cycle formed — this
 // script FAILS and says so, rather than silently re-opening the hole it was written to close.
+//
+// SCOPE, so nobody mis-reads a green row: like every other row in this file, it measures REACHABLE bytes
+// after minification. Adding an unreferenced `export const` to a member moves it by ~0 because Rolldown
+// tree-shakes it — correct (an unreachable byte costs a consumer nothing) but not what a casual reader
+// assumes "the cluster grew" means. To exercise this row deliberately, grow something the members actually
+// reference (an independent review's first probe learned this the hard way; its second, a referenced 12 KB
+// addition, reded the row while the member's OWN marginal still read 0 — the masking this row exists for).
 
 /** Every `from '<spec>'` / bare `import '<spec>'` / `import('<spec>')` RELATIVE specifier in `src`, with
  *  type-only statements stripped first (an `import type` moves no bytes, so it must not create a masking

@@ -195,10 +195,17 @@ const ERROR_TURN_BUDGET = 3
 // Rolldown bundle; `npm run size`'s app row is the same figure measured through the gate).
 //
 // SHAPE follows ADR-0139 cl.5's lazy-CodeMirror seam — the fleet's ruled precedent for a heavy lazy
-// dependency — including its two hard-won details: a load CEILING (an unreachable chunk fails the turn
-// visibly through the existing `handle.fail` path instead of hanging it with a live bubble), and NO
-// memoized failure (a rejected promise is dropped from the memo, so the next turn retries rather than
-// inheriting a permanently poisoned one; a resolved one is reused for the element's whole page lifetime).
+// dependency — in both its mechanism AND its OUTCOME law, which is DEGRADE, never fail: "load failure — or
+// any environment where CM cannot mount — leaves a fully functional plain editor, only the highlighting is
+// lost" (ADR-0139 cl.5). Kim ruled the same for this pair on 2026-07-29: a failed load mounts the frame
+// WITHOUT assets and tells the user; it never fails the turn. That matters more here than for CM, because
+// this await sits AHEAD of `surfaceTurn(request)` — failing on it would mean a stale hashed chunk after a
+// deploy stops the agent request from being issued at ALL, so every genui turn dies over a cosmetic asset
+// pair until someone thinks to toggle dogfood off. The two hard-won details carried over verbatim:
+//   • a load CEILING — an unreachable chunk must not hang the turn behind a live bubble; at the ceiling the
+//     turn proceeds assets-less (see `#runSurfaceTurn`), so this bounds a DELAY, never a failure;
+//   • NO memoized failure — a rejected promise is dropped from the memo, so the next turn retries rather
+//     than inheriting a permanently poisoned one (a RESOLVED one is reused for the whole page lifetime).
 const DOGFOOD_LOAD_TIMEOUT_MS = 10_000 // the ADR-0139 cl.5 ceiling, reused verbatim
 let dogfoodAssetsMemo: Promise<SandboxFrameAssets> | undefined
 function loadDogfoodAssets(): Promise<SandboxFrameAssets> {
@@ -1065,7 +1072,21 @@ export class UIAgentAdminElement extends UIElement {
         // by this turn's older html when it resolved — a stale-asset/stale-html inversion that cannot arise
         // when the pair is in hand before any event is read. Dogfood-OFF awaits NOTHING (the `import()` is
         // never reached and no extra microtask is introduced — the OFF path is timing-identical to before).
-        const assets = dogfoodOn ? await loadDogfoodAssets() : undefined
+        //
+        // DEGRADE, never fail (Kim's 2026-07-29 ruling; ADR-0139 cl.5's own outcome law — see
+        // `loadDogfoodAssets`): a failed or timed-out load leaves `assets` undefined, the turn runs exactly
+        // as a dogfood-OFF turn would, and the reason rides out with this turn's note so the user is told
+        // rather than left wondering why the toggle did nothing. The catch is scoped to the LOAD alone — a
+        // fault in the turn itself still takes the outer `handle.fail` path, unchanged.
+        let assets: SandboxFrameAssets | undefined
+        let assetWarning: string | undefined
+        if (dogfoodOn) {
+          try {
+            assets = await loadDogfoodAssets()
+          } catch (cause) {
+            assetWarning = `⚠ agent-ui components could not be loaded for this frame — rendering it without them (${cause instanceof Error ? cause.message : String(cause)})`
+          }
+        }
         // A persona switch (a real `store` reassignment) resets the thread — the bubble this handle points
         // at is gone. Abandon rather than mount a frame into a conversation that no longer exists (the
         // ADR-0139 cl.5 `#mountGen` precedent). Deliberately NOT gated on `isConnected`: a disconnect here
@@ -1091,9 +1112,19 @@ export class UIAgentAdminElement extends UIElement {
             handle.ingestLine(event.line)
           }
         }
-        if (note !== undefined) handle.setNote(note)
+        // GH #354 — the degraded-assets reason rides out WITH this turn's own note rather than replacing
+        // it (`setNote` is last-write-wins and `finalize` re-renders whatever it holds, so a bare
+        // `setNote(warning)` would be overwritten by, or overwrite, the agent's prose). Same `⚠ ` marker
+        // `handle.fail`'s system bubble uses. It is also logged, so the Dialog Turns inspector shows why a
+        // dogfood-ON turn rendered a bare frame.
+        const outgoing = [note, assetWarning].filter((text) => text !== undefined).join('\n\n')
+        if (outgoing !== '') handle.setNote(outgoing)
         handle.finalize()
-        this.#logTurn('surface', request, { note, lines: wireLines })
+        this.#logTurn('surface', request, {
+          note,
+          lines: wireLines,
+          ...(assetWarning === undefined ? {} : { assetWarning }),
+        })
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err)
         handle.fail(message)
