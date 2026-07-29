@@ -37,12 +37,72 @@ const raf2 = (): Promise<void> => new Promise((r) => requestAnimationFrame(() =>
 const nearBottom = (el: HTMLElement): boolean => el.scrollHeight - el.scrollTop - el.clientHeight <= 24
 const wait = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms))
 
-/** Wait until `read()` reports the SAME value on `stableFor` consecutive checks (a bounded wall-clock
- *  poll, not a fixed delay) — `scrollIntoView({behavior:'smooth'})` animates over a browser-determined
- *  duration, and rapid re-targeting (12 appendEntry calls in one tick, each retargeting the in-flight
- *  animation) can produce a MOMENTARY same-value read mid-animation; requiring several consecutive stable
- *  reads (not just one) avoids concluding "settled" too early. */
-async function waitUntilSettled(read: () => number, stableFor = 4, maxChecks = 60): Promise<number> {
+interface SettleOpts {
+  /** Consecutive RENDERED frames that must read the same value. */
+  stableFrames?: number
+  /** Real wall-clock time that streak must also span, so a not-yet-started scroll can't read as finished. */
+  minStableMs?: number
+  /** Total wall-clock budget; exhausting it THROWS. */
+  budgetMs?: number
+  /** What is being read, for the exhaustion diagnostic. */
+  label?: string
+}
+
+/** Wait until `read()` reports the SAME value on `stableFrames` consecutive PAINTED frames spanning at
+ *  least `minStableMs` of real wall-clock time, then return it. Exhausting `budgetMs` THROWS.
+ *
+ *  GH #359 — the two ways the previous `setTimeout(50)` × "4 identical reads" heuristic lied:
+ *
+ *  1. FALSE SETTLE. `scrollIntoView({behavior:'smooth'})` is a time-based animation whose position is
+ *     only committed to `scrollTop` when the browser actually PAINTS a frame. Timer sampling has no tie
+ *     to painting at all: under main-thread starvation several samples can land inside one frame
+ *     interval — or inside a window where nothing was painted — and read the identical, still-moving
+ *     mid-animation offset. Sampling once per `requestAnimationFrame` removes the gap by construction:
+ *     if the animation were still running, every painted frame would advance it, so N identical PAINTED
+ *     frames is direct evidence it is not advancing. `minStableMs` covers the other end — a scroll that
+ *     has been REQUESTED but has not started yet also reads identical, and a run of fast frames could
+ *     otherwise clear the streak before the first advance.
+ *  2. SILENT EXHAUSTION. The old body `return prev`-ed when it ran out of checks, so a timed-out wait was
+ *     indistinguishable from a settled one and the caller's next assertion failed as a plausible-looking
+ *     component regression ("the stream did not follow to the bottom"). Exhaustion now throws with the
+ *     observed trace — including the frame count, which names a starved/throttled page for what it is
+ *     instead of dressing it up as a scroll-following defect. */
+async function waitUntilSettled(read: () => number, opts: SettleOpts = {}): Promise<number> {
+  const { stableFrames = 4, minStableMs = 150, budgetMs = 4000, label = 'value' } = opts
+  const frame = (): Promise<number> => new Promise((r) => requestAnimationFrame(() => r(performance.now())))
+  const start = performance.now()
+  let prev = read()
+  let streak = 0
+  let streakStart = start
+  let frames = 0
+  for (;;) {
+    const now = await frame()
+    frames += 1
+    const next = read()
+    if (next === prev) {
+      streak += 1
+      if (streak >= stableFrames && now - streakStart >= minStableMs) return next
+    } else {
+      streak = 0
+      streakStart = now
+      prev = next
+    }
+    if (now - start > budgetMs) {
+      throw new Error(
+        `waitUntilSettled: ${label} never settled — ${Math.round(now - start)}ms budget spent over ` +
+          `${frames} painted frames, last read ${next}, stable for ${streak}/${stableFrames} frames ` +
+          `(${Math.round(now - streakStart)}/${minStableMs}ms). This is a TIMED-OUT wait, not a settled ` +
+          `one — do not read it as a component regression (GH #359).`,
+      )
+    }
+  }
+}
+
+/** The GH #359 defect itself, kept as a NEGATIVE CONTROL: the pre-fix heuristic, byte-for-byte. The two
+ *  guarantee tests below are only meaningful if the shape they close is still in front of them — asserting
+ *  "the fixed helper is correct" in isolation would pass just as happily against a helper that never had
+ *  the bug. Not used by any component test. */
+async function preFixSettle(read: () => number, stableFor = 4, maxChecks = 60): Promise<number> {
   let prev = read()
   let stableStreak = 0
   for (let i = 0; i < maxChecks; i++) {
@@ -54,6 +114,47 @@ async function waitUntilSettled(read: () => number, stableFor = 4, maxChecks = 6
   }
   return prev
 }
+
+describe("waitUntilSettled — the settle helper's own honesty guarantees (GH #359)", () => {
+  it('sub-path 2: exhausting the budget THROWS a diagnostic — where the pre-fix heuristic handed back a stale reading', async () => {
+    // a value that never repeats ⇒ never settles, by construction
+    const forever = (): (() => number) => {
+      let n = 0
+      return () => (n += 1)
+    }
+
+    // the defect: silent exhaustion. No throw — just a plausible-looking number the caller can't tell
+    // apart from a genuine settle, which is then asserted against as if the wait had succeeded.
+    const stale = await preFixSettle(forever(), 4, 4)
+    expect(typeof stale, 'the pre-fix helper returned a stale reading instead of failing').toBe('number')
+
+    // the fix: an exhausted wait is a FAILURE, and says so
+    await expect(waitUntilSettled(forever(), { budgetMs: 250, label: 'a value that never settles' })).rejects.toThrow(
+      /never settled/,
+    )
+    await expect(waitUntilSettled(forever(), { budgetMs: 250 })).rejects.toThrow(/TIMED-OUT wait, not a settled one/)
+  })
+
+  it('sub-path 1: a value that reads identical before it starts moving no longer settles early', async () => {
+    // The false-settle shape, driven off SAMPLE COUNT rather than wall-clock so it reproduces identically
+    // under any load: the first handful of reads are identical (0 — nothing has moved yet), then the value
+    // climbs for a while, then genuinely rests at 999. Only 999 is a settled reading.
+    const climbing = (): (() => number) => {
+      let n = 0
+      return () => {
+        n += 1
+        return n <= 6 ? 0 : n < 20 ? n : 999
+      }
+    }
+
+    // the defect: four identical reads is all it takes, so it concludes on the PRE-movement value
+    expect(await preFixSettle(climbing()), 'the pre-fix heuristic settled on a value that was still to move').toBe(0)
+
+    // the fix: the streak must also span real wall-clock time across PAINTED frames, so the pre-movement
+    // run is rejected, the climb resets the streak, and the true resting value is what comes back
+    expect(await waitUntilSettled(climbing(), { label: 'a climbing value' })).toBe(999)
+  })
+})
 
 describe('ui-status-stream — the opt-in streaming header stays PINNED while entries overflow (ADR-0146 F8)', () => {
   it('the sticky header does not scroll away as the strip overflows and scrolls to the bottom', async () => {
@@ -89,7 +190,8 @@ describe('ui-status-stream — tail-follow + the stick-to-bottom guard (SPEC-R10
     for (let i = 0; i < 12; i++) stream.appendEntry({ key: `k${i}`, status: 'active', label: `Step ${i}`, description: 'a line of description text' })
     await raf2()
     expect(stream.scrollHeight, 'the strip should have overflowed its bounded max-block-size').toBeGreaterThan(stream.clientHeight)
-    await waitUntilSettled(() => stream.scrollTop) // let the smooth-scroll animation finish, not just the #tailFollow CALL
+    // let the smooth-scroll animation finish, not just the #tailFollow CALL
+    await waitUntilSettled(() => stream.scrollTop, { label: 'stream.scrollTop after appendEntry' })
     expect(nearBottom(stream), 'the stream did not follow to the bottom on appendEntry').toBe(true)
   })
 
@@ -122,7 +224,8 @@ describe('ui-status-stream — tail-follow + the stick-to-bottom guard (SPEC-R10
     stream.dispatchEvent(new Event('scroll'))
     stream.appendEntry({ key: 'resumed', status: 'active', label: 'Follow resumes' })
     await raf2()
-    await waitUntilSettled(() => stream.scrollTop) // let the smooth-scroll animation finish
+    // let the smooth-scroll animation finish
+    await waitUntilSettled(() => stream.scrollTop, { label: 'stream.scrollTop after follow resumed' })
     expect(nearBottom(stream), 'follow did not resume after returning to the bottom').toBe(true)
   })
 
