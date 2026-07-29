@@ -1,6 +1,11 @@
 # LLD — GenUI agent-ui dogfood mode (GH #316)
 
-> Status: proposed · v0.2 · 2026-07-28 · Layer: LLD (implementation plan)
+> Status: proposed · v0.3 · 2026-07-29 · Layer: LLD (implementation plan)
+> **v0.3 (GH #354, Kim's 2026-07-29 ruling):** LLD-C4's app-layer asset pass-through is now a LAZY
+> dynamic import (§5's dated realization amendment: memoized, dogfood-ON only, awaited at turn start,
+> degrading BOTH the assets and the prompt on failure), and §7's "bundle size unmeasured" risk is CLOSED with the measured
+> figures — it materialized as `@agent-ui/app`'s public barrel at 2.08× its budget, one package above the
+> barrels this LLD's own gates cover. No behavior change to the dogfood mode itself; no other component.
 > **v0.2 (GH #342 + #346, Kim's 2026-07-28 rulings):** LLD-C3's S3 REV gains a second dated REV — the
 > local descriptor reader is now RULED (parity-gated by SPEC-R13(b) AC4, not a build-seat workaround),
 > and the derivation is extended to scan family `.define('ui-x'` sites. §7's bundle-vs-inventory gap
@@ -179,6 +184,27 @@
   card's existing store discipline; the live runner passes it into `genui`; the conversation feed's
   frame mount passes the asset pair (imported from `@agent-ui/components/dogfood-frame` at the APP
   layer — `app` already imports `components`) when the toggle is on.
+  - **Realization amendment, 2026-07-29 (GH #354, Kim's ruling — the import is LAZY).** As built, that
+    import was STATIC, which put the 450 675 B fixture into `@agent-ui/app`'s public barrel: the entry
+    measured 153 969 B gz against its 75 776 B budget (2.08×), paid by every consumer of the barrel
+    whether or not it ever opened agent-admin (§7's own bundle-size risk, materialized one package up
+    from where that risk was written). It is now a memoized dynamic `import()` taken at frame-mount
+    time, dogfood-ON only — the ADR-0139 cl.5 lazy-dependency seam, in mechanism AND in outcome:
+    - the await is HOISTED to turn start, ahead of the first consumed event, so the `mountGenui`
+      pass-through stays synchronous inside the stream loop and no cross-turn mount can invert;
+    - a failed or timed-out load (10 s ceiling) DEGRADES — it never fails the turn (ADR-0139 cl.5's own
+      law; failing would be worse here, since the load precedes the agent request itself). The degrade
+      covers BOTH halves of this component: `assets` goes undefined AND the not-yet-issued request's
+      `genui.dogfood` is cleared, so the prompt drops the teaching + inventory too. Degrading only the
+      assets would leave the model authoring `<ui-*>` into a frame with no definitions — JS-built
+      controls (`ui-calendar`/`ui-slider`/`ui-select`) render NOTHING, strictly worse than the plain
+      HTML a dogfood-OFF turn asks for. The reason rides out with the turn's note (`⚠ …`) and into the
+      Dialog Turns log, which therefore records `dogfood: false` for a turn that ran without the pair;
+    - a conversation reset while the chunk is in flight abandons that turn, so nothing mounts into a
+      torn-down bubble.
+    Post-fix: entry 79 063 B gz, marginal 71 621 B gz — within budget, with the pair in a lazy chunk no
+    main bundle contains. `gen-ui-live.ts` below keeps its plain import: the site is not a published
+    package and carries no budget row.
 - `gen-ui-live.ts`: an options-strip toggle; `renderGenuiSurface` sets `host.assets` when on;
   the `/status`-gated request body carries `genui: { enabled: true, exclusive: true, dogfood }`.
 - Live-apply law: next turn's prompt + next mounted/replaced surface reflect the toggle — no reload
@@ -204,6 +230,16 @@
   module's generated header records the real numbers; if the pair lands implausibly heavy (> ~1 MiB
   JS), the fallback is a curated SUBSET entry (still set-equal by gate) — a build-time decision the
   decomposition flags back to design, not a silent trim.
+  - **CLOSED 2026-07-29 (GH #354).** Measured: the committed pair is 450 675 B on disk / 448 617 B
+    minified — well under the ~1 MiB trigger, so no curated subset was needed. But the risk landed one
+    package UP from where it was written: this LLD's own gates prove the COMPONENTS barrels carry zero
+    dogfood bytes, and they do — it was `@agent-ui/app`'s public barrel that inherited the fixture
+    through `ui-agent-admin`'s static import, at 153 969 B gz against a 75 776 B budget (2.08×) and
+    silently, because `npm run size` is manual (ADR-0040 §3). Resolved by the LLD-C4 lazy-import
+    amendment above: app entry 71 621 B gz marginal, within budget, the pair in a lazy chunk. Standing
+    lesson recorded rather than the risk simply ticked off: a zero-bytes gate proves only the barrels it
+    names — the next package up needs its own row, which `measure-size.mjs`'s `@agent-ui/app` leg and
+    `app/src/controls/agent-admin/dogfood-lazy.bundle.test.ts` now both are.
 - **jsdom vs real-engine split**: srcdoc composition/ordering is jsdom-testable; upgrade/paint/
   containment probes are browser-shard only (the standing split).
 - **Recorded-transcript replay** without assets renders unstyled fleet markup — accepted, recorded

@@ -20,7 +20,8 @@
 // "what does adding this control cost an app already using others" semantics the ≤2048 B cap means (ADR-0080
 // clause 3, rejecting the pairwise-delta alternative). Each entry's SOLO absolute (foundation-inclusive, the
 // ~5 KB figure) is also reported, informationally only (clause 3 — regressions in a control's own code would
-// hide inside the dominant foundation figure if solo were gated).
+// hide inside the dominant foundation figure if solo were gated). GH #354 added a CLUSTER row beside it, for
+// the one place a leave-one-out is structurally blind — see the cluster leg's own banner below.
 //
 // A fourth leg — `@agent-ui/app` (LLD-C8, SPEC-R7 AC4): a package ABOVE components on the DAG, so its cost
 // to a consumer is what the app-tier barrel adds ON TOP OF the components foundation a consumer already pays for
@@ -107,6 +108,29 @@ const targets = [
   // via the whole-barrel gzip-dictionary shift every new family member causes (the split/swiper/
   // status-stream leave-one-out precedent above). Measured 48501 B gz 2026-07-27 (up from 48295);
   // ~6% headroom reserved.
+  //
+  // KNOWN OVER by 55 B gz as of 2026-07-29 (GH #354): this row measures 48695 B gz against the 48640 B cap.
+  // Attributed by CHECKING OUT each commit in range and re-measuring this same barrel in place. The ladder
+  // below reconciles to the byte; the 48501 B figure above does NOT sit on it — it was recorded at the
+  // ui-form-popover wave rather than at the parent of the first mover, and why it differs from a re-measure
+  // of that same tree is unclear (likely a toolchain difference at recording time; two independent
+  // re-measurements today, one in place and one over `git archive` trees, agree with each other rung for
+  // rung). Treat the dated ladder, not the older single figure, as the baseline:
+  //   12932a0 (= 59def42^)  48529 B gz   ← the true baseline; 111 B of headroom left under the 48640 cap
+  //   59def42               48609 (+80)  `fix(dom): survive a nested disconnectedCallback mid-connected()`
+  //                                      (GH #302) — a `src/dom/` lifecycle fix, so EVERY control here
+  //                                      carries it.
+  //   4fa3137 · a241c35     48609 (+0)   CSS-only (sticky-header canvas, calendar range band) — no JS byte.
+  //   60af7f7               48609 (+0)   the dogfood asset pair itself (ADR-0162 LLD-C1): ZERO bytes in this
+  //                                      default barrel, exactly as its own gate promises.
+  //   d51fa06               48695 (+86)  `feat(components): ui-sandbox-frame gains the SPEC-R12 assets prop`
+  //                                      (#338) — visible per-control too: sandbox-frame's own marginal moved
+  //                                      2124 → 2215 B gz.
+  //   (nothing since d51fa06 touches components/src)
+  // 48529 + 80 + 86 = 48695. Both movers are real, wanted code landing against 111 B of headroom — NOT a
+  // gzip-dictionary shift, and nothing to shave. Raising the cap is a DESIGN call and is Kim's to make (the
+  // measured figure to re-base onto is 48695 B gz); this comment records the cause rather than absorbing it,
+  // so `npm run size` stays red on this ONE row until it is ruled on.
   ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 47.5 * KB],
 ]
 
@@ -167,29 +191,134 @@ const gzOfEntries = async (paths) => {
 }
 
 // Default per-control marginal budget (ADR-0080 clause 4). Override rows carry a cited reason and are
-// measured FIRST, then pinned — not guessed ahead of the measurement. `calendar` was measured too (ADR-0080
-// flagged it as a candidate) but needs NO override: text-field's `import('../calendar/calendar.ts')` is
-// static-in-practice here (rolldown's INEFFECTIVE_DYNAMIC_IMPORT warning — calendar is ALSO a top-level entry
-// in the same bundle), so calendar's bytes land inside text-field's marginal, not its own; calendar's solo
-// leave-one-out measures only ~60 B gz, well inside the default.
+// measured FIRST, then pinned — not guessed ahead of the measurement.
 //
-// GH #352, re-measured 2026-07-29 (the FIRST measurement taken after ADR-0093's range mode landed — the
-// re-base ADR-0093's Repairs cell booked was never run): calendar 3 B gz, text-field 0 B gz. Both rows
-// stay within budget; NO override moved. The paragraph above is now only half true, and the half that
-// changed matters when reading these two rows: since ADR-0123, `color-picker` STATICALLY imports
-// text-field, so leaving text-field out no longer removes it from the bundle (color-picker still drags it,
-// and text-field still drags calendar). Both rows therefore read ~0 structurally — they are no longer a
-// gate on either control's own growth. The real ceiling for these three is the family-barrel figure at the
-// top of this file; a future attempt to size calendar or text-field must bundle them in isolation rather
-// than trust a leave-one-out row that a sibling entry pins to zero.
+// GH #354 — `text-field`'s own override (4352 B gz, "the 12-type value-codec family (ADR-0044/0047), which
+// absorbs the calendar picker bytes") and `calendar`'s "needs no override, its bytes land inside
+// text-field's marginal" note BOTH retired here: neither row measures its control any more (both read ~0),
+// so neither could carry a budget honestly. Their bytes are gated by the CLUSTER row below instead — see
+// its banner for the full derivation.
+//
+// GH #352 (ed3c093) recorded this SAME structural finding one commit earlier and, having no instrument to
+// replace the rows with, closed by telling a future reader to "bundle them in isolation rather than trust a
+// leave-one-out row". That note is deleted here rather than kept: the cluster row IS that isolated
+// measurement, run on every `npm run size`, so leaving both instructions in one file would leave a reader
+// choosing between them. #352's measured figures (calendar 3 B gz, text-field 0 B gz, 2026-07-29) are the
+// same ones the cluster banner cites.
 const MARGINAL_BUDGET_DEFAULT = 2048 // B gz
 const MARGINAL_OVERRIDES = {
   // name: [budget in B gz, reason]
-  'text-field': [4352, 'the 12-type value-codec family (ADR-0044/0047), which absorbs the calendar picker bytes above — measured 4021 B gz 2026-07-05, ~8% headroom; re-measured 2026-07-29 post-range-mode (GH #352): 0 B gz, override UNCHANGED — the row reads zero because color-picker now statically imports text-field (see the note above), not because the bytes went away'],
   'split': [2176, 'gzip measurement-frame drift as the family bundle crossed 33 KB (leave-one-out deltas shift with the shared dictionary; toolbar added similar roving/flex/enum code) — split source byte-identical that wave; measured 2082 B gz 2026-07-10'],
   'swiper': [3072, 'a five-tag family behind one entry (the per-control 2048 cap is sized for one component; measured 2913 B gz 2026-07-10 pre-split, 2406 B gz post-split — host + item + three chrome tags, each carrying its own barrel line + package.json subpath per family-coherence.test.ts C1; the four leaf lines each measure ~0 B gz since swiper.ts already imports them transitively)'],
   'sandbox-frame': [2304, 'genui-surface.spec.md SPEC §3.2/§3.3 (D9, B1): the CSP builder, the closed bridge message-guard, the host-owned bootstrap script TEXT, and the build/replace/teardown + live-theme control logic — measured 2124 B gz 2026-07-24, ~8% headroom'],
   'status-stream': [2176, 'gzip measurement-frame drift from the SAME genui-surface B1 wave adding a new family member (the split-wave precedent above — leave-one-out deltas shift with the shared dictionary once the family bundle grows); status-stream source is byte-identical that wave — measured 2107 B gz 2026-07-24 (was within budget pre-wave)'],
+}
+
+// ── The CLUSTER leg (GH #354, Kim's 2026-07-29 ruling) — the one shape a leave-one-out cannot measure ────
+//
+// `marginal(c) = gz(ALL) − gz(ALL ∖ {c})` only attributes bytes to `c` if removing `c`'s ENTRY actually
+// removes `c`'s module. Whenever a sibling entry's graph still reaches it — statically, or DYNAMICALLY,
+// since this script joins every chunk of the output — the row reads ~0. That is usually the RIGHT answer and
+// stays a pass: `ui-button` costs an app that already ships `ui-toast` nothing, which is exactly what the
+// ≤2048 B cap is asking (ADR-0080 clause 3).
+//
+// It stops being an answer at a CYCLE. ADR-0123 made `color-picker.ts` statically import
+// `../text-field/text-field.ts` (the type=color leg) while `text-field.ts` dynamically imports
+// `color-picker.ts` — mutually reachable, so NO per-entry leave-one-out can remove either one. Measured
+// 2026-07-29: `text-field` 0 B gz, `calendar` 3 B gz. A 4352 B override budget written to gate "the 12-type
+// value-codec family" had therefore been passing at any size since ADR-0123 landed, and calendar's "its
+// bytes land inside text-field's marginal" note had been false just as long (GH #354's own finding).
+//
+// The honest instrument for a cycle is ONE row over the smallest independently-removable unit: the cycle
+// plus every entry the cycle EXCLUSIVELY reaches. `gz(ALL) − gz(ALL ∖ cluster)` rises if ANY member grows,
+// so the codecs, the calendar picker, the OKLCH/canvas math, the composed slider channels and the swatch
+// preview are all gated again — by one real figure instead of five fictional zeros. The cluster's own
+// members are then reported WITHOUT a budget: a row that cannot measure its control must not print a pass.
+//
+// Membership is DERIVED from the real import graph on every run (below) and cross-checked against the
+// pinned set. If a future edge changes the cluster — ADR-0123's import removed, or a new cycle formed — this
+// script FAILS and says so, rather than silently re-opening the hole it was written to close.
+//
+// SCOPE, so nobody mis-reads a green row: like every other row in this file, it measures REACHABLE bytes
+// after minification. Adding an unreferenced `export const` to a member moves it by ~0 because Rolldown
+// tree-shakes it — correct (an unreachable byte costs a consumer nothing) but not what a casual reader
+// assumes "the cluster grew" means. To exercise this row deliberately, grow something the members actually
+// reference (an independent review's first probe learned this the hard way; its second, a referenced 12 KB
+// addition, reded the row while the member's OWN marginal still read 0 — the masking this row exists for).
+
+/** Every `from '<spec>'` / bare `import '<spec>'` / `import('<spec>')` RELATIVE specifier in `src`, with
+ *  type-only statements stripped first (an `import type` moves no bytes, so it must not create a masking
+ *  edge). Mirrors barrels.test.ts's own crawl — a plain regex over source text, no bundler needed. */
+const relativeSpecifiers = (src) => {
+  const code = src.replace(/^\s*(?:import|export)\s+type\s[^\n]*$/gm, '')
+  const specs = []
+  const re = /(?:from|import)\s*\(?\s*['"](\.[^'"]+)['"]/g
+  let m
+  while ((m = re.exec(code)) !== null) specs.push(m[1])
+  return specs
+}
+
+/** Transitively crawl the relative-import graph from `startAbs`, returning every reached absolute path.
+ *  A specifier resolving outside the package (a bare `@agent-ui/*`) is not followed — this leg only asks
+ *  which of the package's OWN modules an entry reaches. */
+const crawlFrom = (startAbs) => {
+  const reached = new Set()
+  const queue = [startAbs]
+  while (queue.length > 0) {
+    const cur = queue.pop()
+    if (reached.has(cur)) continue
+    reached.add(cur)
+    let src
+    try {
+      src = readFileSync(cur, 'utf8')
+    } catch {
+      continue // a stylesheet/asset or a missing extension — nothing to crawl
+    }
+    for (const spec of relativeSpecifiers(src)) {
+      const target = resolvePath(dirname(cur), spec)
+      if (!reached.has(target)) queue.push(target)
+    }
+  }
+  return reached
+}
+
+const reachOf = new Map(CONTROL_ENTRIES.map(([name, path]) => [name, crawlFrom(path)]))
+const pathOf = new Map(CONTROL_ENTRIES.map(([name, path]) => [name, path]))
+/** The OTHER entries whose graph reaches `name` — i.e. the entries that make its own leave-one-out read ~0. */
+const maskersOf = (name) =>
+  CONTROL_ENTRIES.map(([other]) => other).filter((other) => other !== name && reachOf.get(other).has(pathOf.get(name)))
+
+// Mutually-reachable entries (a cycle), then everything ONLY those reach — the closure that must move as one.
+const cluster = new Set(
+  CONTROL_ENTRIES.map(([name]) => name).filter((name) =>
+    maskersOf(name).some((other) => reachOf.get(name).has(pathOf.get(other))),
+  ),
+)
+for (let grew = true; grew; ) {
+  grew = false
+  for (const [name] of CONTROL_ENTRIES) {
+    if (cluster.has(name)) continue
+    const maskers = maskersOf(name)
+    if (maskers.length > 0 && maskers.every((m) => cluster.has(m))) {
+      cluster.add(name)
+      grew = true
+    }
+  }
+}
+// Pinned membership + the measured budget (the file's own "measure first, then pin" convention).
+// Measured 10931 B gz 2026-07-29 for exactly this five-entry closure; 11.5 KB pinned, ~7% headroom — the
+// same margin the sandbox-frame/status-stream overrides above reserve.
+const CLUSTER_EXPECTED = ['calendar', 'color-picker', 'slider', 'swatch', 'text-field']
+const CLUSTER_BUDGET = 11.5 * KB
+const CLUSTER_WHY =
+  'ADR-0123 text-field ⇄ color-picker is a CYCLE (color-picker statically imports text-field; text-field dynamically imports color-picker), plus the three entries only they reach (calendar, slider, swatch) — no per-entry leave-one-out can remove any of them, so the group is gated as one'
+const clusterDerived = [...cluster].sort()
+let clusterMembershipDrift = false
+if (clusterDerived.join(',') !== CLUSTER_EXPECTED.join(',')) {
+  clusterMembershipDrift = true
+  console.error(
+    `size: the derived import-cycle cluster [${clusterDerived.join(', ')}] no longer matches the pinned set [${CLUSTER_EXPECTED.join(', ')}] — re-derive the cluster row's membership and budget (GH #354), never paper over it`,
+  )
 }
 
 console.log('\nper-control marginal (leave-one-out through the public `./controls/{name}` entries, ADR-0080):')
@@ -200,6 +329,13 @@ for (const [name, path] of CONTROL_ENTRIES) {
   const gzWithout = await gzOfEntries(allPaths.filter((p) => p !== path))
   const marginal = gzAll - gzWithout
   const solo = await gzOfEntries([path])
+  if (cluster.has(name)) {
+    // No budget, no pass/fail: this row cannot measure its own control (see the cluster banner).
+    console.log(
+      `  ${name.padEnd(14)} marginal ${String(marginal).padStart(5)} B gz — NOT GATED (import-cycle cluster member; gated by the cluster row below)   solo ${solo} B gz (informational)`,
+    )
+    continue
+  }
   const [budget, reason] = MARGINAL_OVERRIDES[name] ?? [MARGINAL_BUDGET_DEFAULT, undefined]
   const status = marginal <= budget ? 'within' : 'OVER'
   if (marginal > budget) marginalOver = true
@@ -208,6 +344,15 @@ for (const [name, path] of CONTROL_ENTRIES) {
     `  ${name.padEnd(14)} marginal ${String(marginal).padStart(5)} B gz — ${status.padEnd(6)} budget ${budget} B${reasonNote}   solo ${solo} B gz (informational)`,
   )
 }
+
+// The cluster's own gated row: what an app already shipping every OTHER control pays to add this group.
+const clusterPaths = new Set(CLUSTER_EXPECTED.map((name) => pathOf.get(name)).filter((p) => p !== undefined))
+const gzWithoutCluster = await gzOfEntries(allPaths.filter((p) => !clusterPaths.has(p)))
+const clusterMarginal = gzAll - gzWithoutCluster
+const clusterOverBudget = clusterMarginal > CLUSTER_BUDGET
+console.log(
+  `  cluster [${CLUSTER_EXPECTED.join(' + ')}]: marginal ${clusterMarginal} B gz — ${clusterOverBudget ? 'OVER' : 'within'} budget ${CLUSTER_BUDGET} B (${CLUSTER_WHY})`,
+)
 
 // ── @agent-ui/app (LLD-C8, SPEC-R7 AC4) — the whole app-tier barrel (ui-super-shell + ui-master-detail,
 // LLD-C9/C16 · ADR-0151), one package UP the DAG from components.
@@ -302,6 +447,15 @@ const appCssQuerySuffixPlugin = {
 // re-base smaller than a full KB step would leave near-zero room for the next change (the GH #170/ADR-0155
 // re-base precedent: cite the exact before/after, following the same convention). Measured 74111 B gz
 // 2026-07-24 (up from 73712); ~2.25% headroom reserved.
+//
+// GH #354 (2026-07-29) — between the M-C wave landing and this fix, this row measured 153969 B gz, 2.08× the
+// budget: `agent-admin.ts` STATICALLY imported `@agent-ui/components/dogfood-frame`, a 450 675 B generated
+// fixture, so 449 007 of the entry chunk's 747 986 B min rode the PUBLIC barrel — ~78 KB gz paid by every
+// consumer whether or not it ever opened agent-admin. That import is now dynamic (Kim's ruling; ADR-0139's
+// lazy precedent), which moves the pair into the informational lazy line below: entry 79063 B gz, marginal
+// 71621 B gz measured 2026-07-29. The budget deliberately STAYS at 74 KB (~5.5% headroom now) — re-basing a
+// budget DOWN onto a freshly-shrunk figure would just force the next legitimate app-tier control to re-base
+// it again; this file's convention re-bases on real growth, measured.
 const APP_MARGINAL_BUDGET = 74 * KB
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
@@ -322,7 +476,7 @@ console.log(
 )
 if (appLazyGz > 0) {
   console.log(
-    `@agent-ui/app — lazy chunk(s) reachable via a dynamic import (e.g. ui-agent-admin's CodeMirror editor, ADR-0139 cl.8c/8d), never in the main bundle: ${appLazyGz} B gz (informational, non-gating)`,
+    `@agent-ui/app — lazy chunk(s) reachable via a dynamic import (ui-agent-admin's CodeMirror editor per ADR-0139 cl.8c/8d, and its dogfood asset pair per GH #354), never in the main bundle: ${appLazyGz} B gz (informational, non-gating)`,
   )
 }
 
@@ -448,9 +602,22 @@ console.log(
   `@agent-ui/code/editor — the lazy CodeMirror chunk(s) (dynamic import('./cm-editor.ts'), never in any main bundle): ${editorLazyGz} B gz (informational, non-gating — ADR-0139 cl.8c/8d)`,
 )
 
-if (over || marginalOver || appOver || routerOver || codeCoreOver || codeHighlightOver || codeMarkdownOver || codeEditorOver) {
+if (
+  over ||
+  marginalOver ||
+  clusterOverBudget ||
+  clusterMembershipDrift ||
+  appOver ||
+  routerOver ||
+  codeCoreOver ||
+  codeHighlightOver ||
+  codeMarkdownOver ||
+  codeEditorOver
+) {
   if (over) console.error('size: a barrel exceeds its budget')
   if (marginalOver) console.error('size: a control exceeds its per-control marginal budget')
+  if (clusterOverBudget) console.error('size: the import-cycle control cluster exceeds its marginal budget')
+  if (clusterMembershipDrift) console.error('size: the import-cycle cluster membership drifted from its pinned set')
   if (appOver) console.error('size: @agent-ui/app exceeds its marginal budget')
   if (routerOver) console.error('size: @agent-ui/router exceeds its marginal budget')
   if (codeCoreOver) console.error('size: @agent-ui/code . (core) exceeds its budget')

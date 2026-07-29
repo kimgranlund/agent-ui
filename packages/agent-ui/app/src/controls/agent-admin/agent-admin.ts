@@ -73,10 +73,11 @@ import type { UIChatShellElement } from '../chat-shell/chat-shell.ts'
 import '@agent-ui/code/markdown'
 import { UISettingsElement } from '../settings/settings.ts'
 import { UIConversationElement } from '../conversation/conversation.ts'
-// genui-surface.spec.md v0.5 §11 (SPEC-R12, GH #316/ADR-0162) — the dogfood frame asset pair, the
-// opt-in `@agent-ui/components` subpath (`app` already imports `components`; catalog-invisible by
-// construction — the a2ui catalog never maps `ui-sandbox-frame` either way).
-import { DOGFOOD_CSS, DOGFOOD_JS } from '@agent-ui/components/dogfood-frame'
+// genui-surface.spec.md v0.5 §11 (SPEC-R12, GH #316/ADR-0162) — the dogfood frame asset pair rides the
+// opt-in `@agent-ui/components/dogfood-frame` subpath (`app` already imports `components`;
+// catalog-invisible by construction — the a2ui catalog never maps `ui-sandbox-frame` either way). GH #354
+// (Kim's 2026-07-29 ruling) — reached ONLY through the dynamic `import()` in `loadDogfoodAssets()` below;
+// the sole STATIC dogfood reference left in this file is the type-only import on the next line (zero bytes).
 import type { SandboxFrameAssets } from '@agent-ui/components/components'
 import { createMemoryStore } from '../settings/memory-store.ts'
 import type { SettingsSchema } from '../settings/schema.ts'
@@ -183,10 +184,46 @@ const TURN_LOG_CAP = 20
  *  user action) or a typed intent. See the onClientMessage wiring for the full root-cause note. */
 const ERROR_TURN_BUDGET = 3
 
-// genui-surface.spec.md v0.5 §11 (SPEC-R12, GH #316/ADR-0162) — the ONE committed asset pair, read once
-// at module load (the same "generated data, imported like any other module constant" shape the fleet
-// already uses); passed to a mounted `ui-sandbox-frame` only when the dogfood toggle is on (below).
-const DOGFOOD_ASSETS: SandboxFrameAssets = { css: DOGFOOD_CSS, js: DOGFOOD_JS }
+// genui-surface.spec.md v0.5 §11 (SPEC-R12, GH #316/ADR-0162) — the ONE committed asset pair, now fetched
+// LAZILY: at most ONCE per page, and ONLY on a dogfood-ON frame mount (GH #354, Kim's 2026-07-29 ruling).
+//
+// WHY (the bug this closes): the pair is a 450 675 B generated fixture. Imported statically it contributed
+// 449 007 of the app entry chunk's 747 986 B min — `@agent-ui/app`'s PUBLIC barrel measured 153 969 B gz
+// against a 75 776 B budget (2.08×), so every consumer of the barrel paid ~78 KB gz whether or not it ever
+// opened agent-admin. Behind this dynamic `import()` the barrel carries ZERO dogfood bytes and the pair
+// lands in a lazy chunk that no main bundle contains (`dogfood-lazy.bundle.test.ts` pins that in a REAL
+// Rolldown bundle; `npm run size`'s app row is the same figure measured through the gate).
+//
+// SHAPE follows ADR-0139 cl.5's lazy-CodeMirror seam — the fleet's ruled precedent for a heavy lazy
+// dependency — in both its mechanism AND its OUTCOME law, which is DEGRADE, never fail: "load failure — or
+// any environment where CM cannot mount — leaves a fully functional plain editor, only the highlighting is
+// lost" (ADR-0139 cl.5). Kim ruled the same for this pair on 2026-07-29: a failed load mounts the frame
+// WITHOUT assets and tells the user; it never fails the turn. That matters more here than for CM, because
+// this await sits AHEAD of `surfaceTurn(request)` — failing on it would mean a stale hashed chunk after a
+// deploy stops the agent request from being issued at ALL, so every genui turn dies over a cosmetic asset
+// pair until someone thinks to toggle dogfood off. The two hard-won details carried over verbatim:
+//   • a load CEILING — an unreachable chunk must not hang the turn behind a live bubble; at the ceiling the
+//     turn proceeds assets-less (see `#runSurfaceTurn`), so this bounds a DELAY, never a failure;
+//   • NO memoized failure — a rejected promise is dropped from the memo, so the next turn retries rather
+//     than inheriting a permanently poisoned one (a RESOLVED one is reused for the whole page lifetime).
+const DOGFOOD_LOAD_TIMEOUT_MS = 10_000 // the ADR-0139 cl.5 ceiling, reused verbatim
+let dogfoodAssetsMemo: Promise<SandboxFrameAssets> | undefined
+function loadDogfoodAssets(): Promise<SandboxFrameAssets> {
+  if (dogfoodAssetsMemo === undefined) {
+    let timer: ReturnType<typeof setTimeout>
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error('ui-agent-admin: dogfood asset load timed out')), DOGFOOD_LOAD_TIMEOUT_MS)
+    })
+    const load = import('@agent-ui/components/dogfood-frame')
+      .then(({ DOGFOOD_CSS, DOGFOOD_JS }): SandboxFrameAssets => ({ css: DOGFOOD_CSS, js: DOGFOOD_JS }))
+      .finally(() => clearTimeout(timer))
+    dogfoodAssetsMemo = Promise.race([load, timeout]).catch((err: unknown) => {
+      dogfoodAssetsMemo = undefined
+      throw err
+    })
+  }
+  return dogfoodAssetsMemo
+}
 
 export interface UIAgentAdminElement extends ReactiveProps<typeof agentAdminProps> {}
 export class UIAgentAdminElement extends UIElement {
@@ -264,6 +301,12 @@ export class UIAgentAdminElement extends UIElement {
   // GH #63 — the client-turn error-loop budget state (see the onClientMessage wiring + ERROR_TURN_BUDGET).
   #consecutiveErrorTurns = 0
   #errorLoopHalted = false
+  /** GH #354 — a monotonic conversation generation, bumped by `#resetConversationState()` (a persona
+   *  switch). A surface turn captures it before the lazy dogfood-asset await and abandons itself if the
+   *  thread was reset while the chunk was in flight, so no frame is ever mounted into a torn-down bubble
+   *  (the ADR-0139 cl.5 `#mountGen` precedent). Abandoning an un-finalized handle cannot wedge the
+   *  composer: `ui-conversation.reset()` zeroes its own in-flight counter and re-reflects busy. */
+  #conversationEpoch = 0
 
   protected connected(): void {
     this.#compose() // idempotent — builds ONLY the shell + the composed children, once ever
@@ -1014,10 +1057,54 @@ export class UIAgentAdminElement extends UIElement {
     const handle = conversation.beginAgentTurn(
       turn.kind === 'client' ? { intoSurface: clientMessageSurfaceId(turn.message) } : undefined,
     )
+    // GH #354 — the conversation generation this turn belongs to, captured BEFORE the (dogfood-only) asset
+    // await below; see `#conversationEpoch`.
+    const epoch = this.#conversationEpoch
     void (async () => {
       const wireLines: string[] = []
       let note: string | undefined
       try {
+        // GH #354 — the ONE await the lazy asset pair introduces is HOISTED HERE, ahead of the first
+        // consumed event, so `mountGenui` below stays SYNCHRONOUS inside the stream loop exactly as it was
+        // when the pair was a static module constant. That is what keeps the mount ordering intact: were
+        // the await inside the loop, a concurrent turn (a deferred client turn, see onClientMessage) could
+        // mount into the SAME surfaceId while this turn's chunk was still in flight and then be overwritten
+        // by this turn's older html when it resolved — a stale-asset/stale-html inversion that cannot arise
+        // when the pair is in hand before any event is read. Dogfood-OFF awaits NOTHING (the `import()` is
+        // never reached and no extra microtask is introduced — the OFF path is timing-identical to before).
+        //
+        // DEGRADE, never fail (Kim's 2026-07-29 ruling; ADR-0139 cl.5's own outcome law — see
+        // `loadDogfoodAssets`): a failed or timed-out load leaves `assets` undefined, the turn runs exactly
+        // as a dogfood-OFF turn would — PROMPT AND RENDER BOTH — and the reason rides out with this turn's
+        // note so the user is told rather than left wondering why the toggle did nothing. The catch is
+        // scoped to the LOAD alone: a fault in the turn itself still takes the outer `handle.fail` path,
+        // unchanged (that path deliberately omits `assetWarning` — a turn that failed outright has a more
+        // important thing to say than why its frame would have been unstyled).
+        //
+        // The PROMPT degrades with the assets (review finding, 2026-07-29 — the first cut degraded only
+        // half of it): `request` has not been issued yet at this point, so clearing `dogfood` here is what
+        // makes this a real degrade. Left true, `system-prompt.ts` would still inject the dogfood teaching
+        // + inventory and the model would author `<ui-*>` fleet markup into a frame with no component
+        // definitions and no fleet CSS — text-bearing controls would fall back to bare unstyled text, but
+        // anything that builds its content in JS (ui-calendar/ui-slider/ui-select) would render NOTHING.
+        // That is strictly WORSE than a dogfood-OFF turn, which asks for plain HTML and gets it. Clearing
+        // it also keeps `#logTurn` honest: a turn that ran without the pair records `dogfood: false`.
+        let assets: SandboxFrameAssets | undefined
+        let assetWarning: string | undefined
+        if (dogfoodOn) {
+          try {
+            assets = await loadDogfoodAssets()
+          } catch (cause) {
+            request.genui.dogfood = false
+            assetWarning = `⚠ agent-ui components could not be loaded for this frame — rendering it without them (${cause instanceof Error ? cause.message : String(cause)})`
+          }
+        }
+        // A persona switch (a real `store` reassignment) resets the thread — the bubble this handle points
+        // at is gone. Abandon rather than mount a frame into a conversation that no longer exists (the
+        // ADR-0139 cl.5 `#mountGen` precedent). Deliberately NOT gated on `isConnected`: a disconnect here
+        // is an ordinary layout crossing (TKT-0085) that the composed shell and log SURVIVE, so bailing on
+        // it would drop output that reaches the user today.
+        if (epoch !== this.#conversationEpoch) return
         for await (const event of surfaceTurn(request)) {
           if (event.kind === 'note') note = event.note
           else if (event.kind === 'progress') handle.progress(event.progress) // ADR-0146 F1 — live narration
@@ -1026,17 +1113,30 @@ export class UIAgentAdminElement extends UIElement {
             // shaped; a genui line carries neither `createSurface` nor any envelope key `surfaceIdOf`
             // parses). `mountGenui` mirrors `ingestLine`'s own fresh/known bubble routing for a
             // structurally different host (`ui-sandbox-frame`, not `ui-surface-host`).
-            // genui-surface.spec.md v0.5 §11 (GH #316/ADR-0162) — `dogfoodOn` is THIS turn's fresh read
-            // (captured above, before the async stream started); the frame-mount asset pass-through.
-            handle.mountGenui(event.surfaceId, event.html, dogfoodOn ? DOGFOOD_ASSETS : undefined)
+            // genui-surface.spec.md v0.5 §11 (GH #316/ADR-0162) — the frame-mount asset pass-through, on
+            // BOTH arms of `routeGenui` (a fresh mount and a rebuild-in-place of a known surfaceId).
+            // `assets` is resolved from THIS turn's fresh `dogfoodOn` read (captured before the stream
+            // started, GH #354's hoisted await) — a toggle flipped mid-turn can no more change this turn's
+            // decision than it could when the pair was a module constant; it applies to the NEXT turn.
+            handle.mountGenui(event.surfaceId, event.html, assets)
           } else {
             wireLines.push(event.line)
             handle.ingestLine(event.line)
           }
         }
-        if (note !== undefined) handle.setNote(note)
+        // GH #354 — the degraded-assets reason rides out WITH this turn's own note rather than replacing
+        // it (`setNote` is last-write-wins and `finalize` re-renders whatever it holds, so a bare
+        // `setNote(warning)` would be overwritten by, or overwrite, the agent's prose). Same `⚠ ` marker
+        // `handle.fail`'s system bubble uses. It is also logged, so the Dialog Turns inspector shows why a
+        // dogfood-ON turn rendered a bare frame.
+        const outgoing = [note, assetWarning].filter((text) => text !== undefined).join('\n\n')
+        if (outgoing !== '') handle.setNote(outgoing)
         handle.finalize()
-        this.#logTurn('surface', request, { note, lines: wireLines })
+        this.#logTurn('surface', request, {
+          note,
+          lines: wireLines,
+          ...(assetWarning === undefined ? {} : { assetWarning }),
+        })
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err)
         handle.fail(message)
@@ -1219,6 +1319,7 @@ export class UIAgentAdminElement extends UIElement {
     this.#history = []
     this.#turnLog = []
     this.#turnCounter = 0
+    this.#conversationEpoch += 1 // GH #354 — invalidate any surface turn waiting on its lazy dogfood chunk
   }
 }
 
