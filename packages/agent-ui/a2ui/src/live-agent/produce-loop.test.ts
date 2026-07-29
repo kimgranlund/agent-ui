@@ -500,8 +500,15 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
   // silently drops the change). The seeding is correct; the FEEDBACK was not: `IDGRAPH at main:root`
   // names a location and nothing else, while the fixed instruction that follows it — "Re-emit the
   // COMPLETE corrected A2UI JSONL" — reads on a resumed surface as "send the whole tree again", which
-  // re-delivers `root` and reproduces the very failure. These three cases pin the mechanism (a real
-  // 3-round IDGRAPH halt), the oscillation it induces, and the hint that now teaches the way out.
+  // re-delivers `root` and reproduces the very failure. These cases pin the mechanism (a real 3-round
+  // IDGRAPH halt), the two-member SEQUENCE that makes the un-hinted feedback self-defeating rather than
+  // merely uninformative, the per-member hints that now teach the way out, and (review F2) the seed reset
+  // the escape hatch those hints recommend depends on.
+  //
+  // Only a node appended under `root` ITSELF forces the resend — a node under any other container patches
+  // that container harmlessly. The preset prescribes components, never a tree shape, so this is a shape a
+  // long-lived surface CAN force, not one it must (grammar.md:86-88 teaches the wrapper-child prophylaxis
+  // that avoids it).
   const QUIZ_TURN1 =
     '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}\n' +
     '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[' +
@@ -527,6 +534,13 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
     '{"id":"root","component":"Column","children":["q","go","expl"]},' +
     '{"id":"expl","component":"Text","text":"Paris has been the capital since 987."}' +
     ']}}'
+  // The OTHER member: re-creating the surface (which starts it EMPTY — validate.ts's `createdHere`) while
+  // sending only a partial tree. This is the shape a model reaches for once it has been told not to resend
+  // `root` — half-following the re-create advice without the "COMPLETE tree" half.
+  const RECREATE_PARTIAL =
+    '{"a2uiMeta":{"note":"Round two!"}}\n' +
+    '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}\n' +
+    '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"q","component":"Text","text":"Q2?"}]}}'
 
   it('GH #307: re-delivering root on a RESUMED surface halts on IDGRAPH main:root (the game-loop failure)', async () => {
     const { provider, calls } = stubProvider([ROOT_RESEND])
@@ -558,6 +572,37 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
     expect(okLines).toHaveLength(2) // the meta-line + the one updateComponents message
   })
 
+  // Review F3 — the SEQUENCE, not just each member alone. This is the load-bearing half of the story: it
+  // is what makes the un-hinted feedback SELF-DEFEATING rather than merely uninformative. Round 1 resends
+  // root (`main:root`); told only "IDGRAPH at main:root", the model re-creates the surface but sends a
+  // partial tree (`main:root-missing`); told only "IDGRAPH at main:root-missing", it puts `root` back and
+  // drops the `createSurface` — round 1 again. Three rounds, two members chasing each other, turn dead.
+  // (`stubProvider` repeats its LAST output once exhausted, so this needs all three scripted explicitly.)
+  it('GH #307: the two IDGRAPH members CHAIN across rounds — main:root → main:root-missing → main:root → halt', async () => {
+    const { provider, calls, reqs } = stubProvider([ROOT_RESEND, RECREATE_PARTIAL, ROOT_RESEND])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    let halted: unknown
+    const lines: string[] = []
+    try {
+      for await (const line of produce(resumedClick, deps, { maxRounds: 3 })) lines.push(line)
+    } catch (e) {
+      halted = e
+    }
+    expect(calls()).toBe(3)
+    expect(lines).toHaveLength(0)
+    expect((halted as ProduceHalt).failures).toEqual([{ code: 'IDGRAPH', path: 'main:root' }])
+
+    // Round 2 was fed round 1's DUPLICATE-root failure; round 3 was fed round 2's ROOT-MISSING failure.
+    // `\)` pins the end of the summary — `main:root-missing` also starts with `main:root`.
+    const fed = (i: number) => reqs()[i]!.messages.find((m) => m.role === 'user' && /INVALID/.test(m.content))!.content
+    expect(fed(1)).toMatch(/INVALID \(IDGRAPH at main:root\)/)
+    expect(fed(2)).toMatch(/INVALID \(IDGRAPH at main:root-missing\)/)
+    // …and each round's feedback now carries the repair for the member THAT round actually hit — the
+    // chain is still a chain, but no longer an unlit one.
+    expect(fed(1)).toMatch(/re-create the surface/)
+    expect(fed(2)).toMatch(/send only the changed components/)
+  })
+
   it('GH #307: the IDGRAPH feedback names the REPAIR per member (duplicate root / root-missing), not just the path', async () => {
     const { provider, reqs } = stubProvider([ROOT_RESEND])
     const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
@@ -570,12 +615,21 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
     expect(feedback.content).toMatch(/re-create the surface/)
     expect(feedback.content).not.toMatch(/has NO `id:"root"`/) // the other member's hint must NOT ride along
 
-    // The root-missing member: a payload that RE-creates the surface (which starts it empty —
-    // validate.ts's `createdHere`) but only sends a partial tree gets the OTHER repair instruction.
-    const RECREATE_PARTIAL =
-      '{"a2uiMeta":{"note":"Round two!"}}\n' +
-      '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}\n' +
-      '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"q","component":"Text","text":"Q2?"}]}}'
+    // Review F1 — the ORDER is load-bearing, not cosmetic. `sid:root` fires only because the payload
+    // CONTAINED `id:"root"`, i.e. the model was trying to change root; leading with "send only what
+    // changed, without root" invites a compliant round that ships the new node UNPARENTED, and
+    // `checkIdGraph` has no orphan/reachability check — that round VALIDATES and streams, trading a loud
+    // halt for a silent under-render. So the re-create branch must come FIRST, and the conditional
+    // "send only what changed" arm must carry the reachability warning.
+    const recreateAt = feedback.content.indexOf('re-create the surface')
+    const partialAt = feedback.content.indexOf('send only the components that actually changed')
+    expect(recreateAt).toBeGreaterThan(-1)
+    expect(partialAt).toBeGreaterThan(-1)
+    expect(recreateAt).toBeLessThan(partialAt)
+    expect(feedback.content).toMatch(/must be reachable from `root`/)
+    expect(feedback.content).toMatch(/silently never render/)
+
+    // The root-missing member gets the OTHER repair instruction.
     const { provider: p2, reqs: reqs2 } = stubProvider([RECREATE_PARTIAL])
     const deps2: ProduceDeps = { provider: p2, retrieve: () => [], catalog: defaultCatalog }
     await expect(async () => {
@@ -624,6 +678,70 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
     const feedback2 = reqs2()[1]!.messages.find((m) => m.role === 'user' && /INVALID/.test(m.content))!
     expect(feedback2.content).toMatch(/IDGRAPH at main:cycle/)
     expect(feedback2.content).toMatch(/form a CYCLE/)
+  })
+
+  // Review F2 — the seed hole the escape hatch above walks onto. `sessionSurfaceSeeds` used to reset a
+  // surface's seed on `deleteSurface` ONLY, so a prior-turn `createSurface` accumulated on top of the
+  // components it actually TORE DOWN (renderer.ts re-creates the store surface and the SurfaceTree from
+  // scratch). The seed then claimed a richer graph than the renderer holds: a later payload referencing a
+  // pre-re-create GHOST id validated, streamed, and rendered nothing. Pre-existing, but `duplicateRoot`'s
+  // "re-create the surface" advice turns this path from rare into routine, so it is closed here.
+  it('GH #307 (F2): a prior-turn createSurface RESETS that surface\'s seed — ghost ids no longer resolve', async () => {
+    // Turn 1 builds `old_q`; turn 2 RE-creates the same surface, so the live surface holds only `new_q`.
+    const TURN1 =
+      '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[' +
+      '{"id":"root","component":"Column","children":["old_q"]},{"id":"old_q","component":"Text","text":"Q1?"}]}}'
+    const TURN2 =
+      '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[' +
+      '{"id":"root","component":"Column","children":["new_q"]},{"id":"new_q","component":"Text","text":"Q2?"}]}}'
+    const afterRecreate: TurnInput = {
+      kind: 'client',
+      session: {
+        turns: [
+          { role: 'user', content: 'start' },
+          { role: 'assistant', content: TURN1 },
+          { role: 'user', content: 'next' },
+          { role: 'assistant', content: TURN2 },
+        ],
+      },
+      message: {
+        version: 'v1.0',
+        action: { surfaceId: 'main', actionId: 'a2', name: 'next', sourceComponentId: 'new_q', timestamp: '0', context: {} },
+      },
+    }
+
+    // Referencing a GHOST id (delivered before the re-create, gone from the live surface) must FAIL as
+    // dangling — not validate on a stale seed and silently render nothing.
+    const REFERENCES_GHOST =
+      '{"a2uiMeta":{"note":"Round three!"}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[' +
+      '{"id":"new_q","component":"Column","children":["old_q"]}]}}'
+    const { provider, reqs } = stubProvider([REFERENCES_GHOST])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    let halted: unknown
+    try {
+      for await (const _l of produce(afterRecreate, deps, { maxRounds: 2 })) void _l
+    } catch (e) {
+      halted = e
+    }
+    expect(halted).toBeInstanceOf(ProduceHalt)
+    expect((halted as ProduceHalt).failures).toEqual([{ code: 'IDGRAPH', path: 'new_q->old_q' }])
+    expect(reqs()[1]!.messages.at(-1)!.content).toMatch(/lists a child id that NO component defines/)
+
+    // …and the reset is ORDER-sensitive WITHIN a turn: turn 2's own updateComponents rebuilt the seed on
+    // top of the cleared surface, so a payload touching only POST-re-create ids still validates round 1.
+    // (Without this arm, a reset that simply nuked the seed would pass the assertion above.)
+    const TOUCHES_LIVE_ID =
+      '{"a2uiMeta":{"note":"Round three!"}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"new_q","component":"Text","text":"Q3?"}]}}'
+    const { provider: p2, calls: calls2 } = stubProvider([TOUCHES_LIVE_ID])
+    const deps2: ProduceDeps = { provider: p2, retrieve: () => [], catalog: defaultCatalog }
+    const okLines: string[] = []
+    for await (const line of produce(afterRecreate, deps2, { maxRounds: 2 })) okLines.push(line)
+    expect(calls2()).toBe(1) // the seed still carries turn 2's root — no root-missing, no self-correct
+    expect(okLines).toHaveLength(2)
   })
 
   it('halts-and-reports at the bound when generation never validates (emits nothing invalid)', async () => {
