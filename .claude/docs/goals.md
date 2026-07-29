@@ -609,6 +609,23 @@ live-turn path (a deployment arc of its own); GenUI entirely; any new SaaS compo
 - [ ] The standing DoD (top of this file) holds: `npm run check` + `npm test` green, probes cover the
       new behaviour, descriptors/plan updated where a surface moved.
 
+**Progress note — 2026-07-29.** Groundwork landed; **no DoD box is met yet**, because every one of them
+is a *live-run* proof and none has been run. What exists underneath them:
+- **ADR-0161 built** (GH #314 → PR #318): the catalog `value` mark widened to `ValueSlot | readonly
+  ValueSlot[]`, so a range picker can bind `value`+`valueStart`+`valueEnd`. Box 1 needs the live Hotel
+  Concierge flow to actually exercise it.
+- **Corpus grown** past the one-exemplar floor: shard at **24 judged records** (PR #337). Two pipeline
+  defects surfaced and were fixed en route (GH #335 → PR #339, GH #343 → PR #348), plus
+  [ADR-0165](adr/0165-verdict-archive-durable-admission-disposition.md) ratified to close the
+  silent-re-admission class for real ([GH #340](https://github.com/kimgranlund/agent-ui/issues/340)
+  remains open as its build slice).
+- **Box 2 is blocked, not merely undone:** [GH #307](https://github.com/kimgranlund/agent-ui/issues/307)
+  (IDGRAPH round-bound exhaustion) needs Kim's live error text to distinguish an IDGRAPH failure from a
+  PARSE failure. The round-budget/recovery policy the box names cannot be ruled before that root cause
+  is known — deliberately not guessed at.
+- The calendar range-band cosmetic fix rode ADR-0105/GH #315; ADR-0093's long-pending ratification was
+  closed 2026-07-29 after its owed independent doc-reviewer pass finally ran.
+
 ---
 
 ## M-C — "GenUI speaks fleet" (opened 2026-07-28, Kim's ruling — second of the 2026-H2 arc)
@@ -631,13 +648,38 @@ pack-idiom eval gaining its fleet-idiom dimension. **Excludes:** any CSP/sandbox
 ADR holds posture unchanged); router/code/app chrome in-frame; GenUI interactivity beyond the closed
 6-member bridge.
 
-**Definition of done (dogfooded acceptance).**
-- [ ] A live agent-admin session with dogfood ON produces a surface whose rendered DOM contains
-      upgraded `ui-*` elements — real anatomy, not unknown inline elements — the ADR's own
-      "docs-page rendering" bar.
-- [ ] The S5 set-equality gate (frame-half bundle tags ≡ prompt-half inventory tags) is green and
-      standing.
-- [ ] The S1 asset pair is committed with its freshness gate green (a stale regeneration fails the
-      gate, proven once by a deliberate red).
-- [ ] The standing DoD (top of this file) holds: `npm run check` + `npm test` green, probes cover the
-      new behaviour, descriptors/plan updated where a surface moved.
+**Definition of done (dogfooded acceptance).** — **MET 2026-07-29.**
+- [x] A live session with dogfood ON produces a surface whose rendered DOM contains upgraded `ui-*`
+      elements — real anatomy, not unknown inline elements — the ADR's own "docs-page rendering" bar.
+      **Proof-of-mode run by Kim 2026-07-29** (Claude Haiku 4.5, same "card game" prompt both ways):
+      OFF gave flat generic markup with default borders and plain boxed labels; ON gave theme-tinted
+      surfaces picking up the page's active Ocean scheme, pill badges with dot/check glyphs, and fleet
+      radii. Recorded on [GH #316](https://github.com/kimgranlund/agent-ui/issues/316).
+      *Deviation, recorded not papered over:* the run was on `gen-ui-live`, not agent-admin. Both
+      surfaces carry the S4 toggle and the same asset pass-through; agent-admin's own path is covered
+      by its store/live-apply/frame-mount tests plus the real 450 KB fixture end to end
+      (`agent-admin.test.ts`), but no live agent-admin session was run.
+- [x] The S5 set-equality gate (frame-half bundle tags ≡ prompt-half inventory tags) is green and
+      standing — `dogfood-tag-set-equality.test.ts`, **64 ≡ 64** at true three-way equality after
+      [#351](https://github.com/kimgranlund/agent-ui/pull/351) closed the family-tag gap; the interim
+      allowlist is deleted. Three legs, and #351's review proved they must be **mechanism-distinct**
+      (static bundle scan · source derivation · runtime `customElements.define` observation) — a leg
+      written as a second source scan is a transcription that agrees by construction. SPEC §12 AC2
+      now requires that distinctness.
+- [x] The S1 asset pair is committed with its freshness gate green (a stale regeneration fails the
+      gate, proven once by a deliberate red) — `dogfood-assets-freshness.test.ts`; the pair is
+      255,513 B CSS / 192,832 B JS / 64 tags, byte-identical to a fresh regen (re-verified
+      independently at S2 review).
+- [x] The standing DoD (top of this file) holds: `npm run check` + `npm test` green (**393 files /
+      7,139 tests**), all six browser shards green, probes cover the new behaviour, descriptors and
+      the LLD updated where a surface moved.
+
+**Post-acceptance repairs (all landed).** Two ratified-contract conflicts the build exposed, both
+ruled by Kim 2026-07-29 and shipped in [#351](https://github.com/kimgranlund/agent-ui/pull/351):
+SPEC-R13(b) required "the ONE ADR-0004 parser", which ADR-0137's zero-dep fence forbids → amended to
+require **a reader proven equivalent by a standing parity gate** (SPEC v0.6), fence unchanged; and
+five shipped tags (`ui-card-header`/`-content`/`-footer`, `ui-tab`, `ui-tab-panel`) were renderable
+but untaught because the descriptor format has no compound-family field → the derivation now scans
+`.define()` sites. Separately, [#354](https://github.com/kimgranlund/agent-ui/issues/354): the S4
+wave left `@agent-ui/app`'s public entry at **2.08× its size budget** (a static import of the 450 KB
+asset pair); lazy-loaded per Kim's ruling, 153,969 → 71,519 B gz.

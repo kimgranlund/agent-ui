@@ -38,7 +38,20 @@ append-only going forward, **never backfilled**, and this roadmap's §2 is the o
 "current state." The gap is therefore the ruled shape of the doc set, not a defect awaiting a
 decision (dated line in §4).
 
-## 2 · Now — current state (as of 2026-07-26)
+## 2 · Now — current state (as of 2026-07-29)
+
+> **Arc status, 2026-07-29.** **M-C is DONE** (dogfood mode shipped and dogfood-accepted live).
+> **M-A's two forks are frozen** — ADR-0163 and ADR-0164 both ratified, so that build is unblocked and
+> its PRD is the next step. **M-B is in flight with no DoD box met**, and its phase 1 is blocked on Kim:
+> [#307](https://github.com/kimgranlund/agent-ui/issues/307) needs live error text before the
+> round-budget policy can be ruled. §3 carries the per-milestone detail; `goals.md` carries the
+> box-by-box evidence.
+>
+> Three open issues, all deliberate: **#307** (blocked, above), **#340** (ADR-0165's build slice —
+> ratified, queued), **#347** (the `site` shard's contention flake — characterized as an OPEN set, so
+> GH #56's named-set remedy cannot fix it; the lever slows a standing gate for everyone, which is Kim's
+> tradeoff to make). Repo is otherwise clear: zero open PRs at last sweep, one remote branch, `main`
+> green.
 
 - **Component foundation — complete.** G0–G9 + the Control Suite + the icon adapter: the reactive
   kernel, FACE element layer, templating/directives, and ~50 `ui-*` controls across the
@@ -148,7 +161,13 @@ decision (dated line in §4).
   reality). Ratification is Kim's owner-only Status flip; each milestone's build starts only from
   the ratified text. The in-flight ADR-0161/0162 design slices fold into these milestones' first
   phases; they are not separate arcs.
-- **M-B — "Personas that don't lie" (first).** The flagship live-agent loop made trustworthy.
+- **M-B — "Personas that don't lie" (first). 🟡 IN FLIGHT** — groundwork landed (ADR-0161 built via
+  #318; corpus at 24 judged records via #337; two pipeline defects fixed, ADR-0165 ratified), but
+  **no DoD box is met** — all four are live-run proofs and none has been run. Phase 1 is **blocked on
+  Kim**: [#307](https://github.com/kimgranlund/agent-ui/issues/307) needs the live error text to tell
+  an IDGRAPH failure from a PARSE one, and the round-budget/recovery policy cannot be ruled before
+  that root cause is known. Per-box status in [`goals.md`](goals.md). Scope:
+  The flagship live-agent loop made trustworthy.
   Phase 1 is bug-anchored repairs: build ADR-0161 as specced — the `value` mark widens to one or
   more slots, the root cause behind calendar-range/multi-thumb selections never reaching the
   model (its Repairs cell already enumerates every file) — and root-cause the quiz/game personas'
@@ -159,7 +178,13 @@ decision (dated line in §4).
   export/import in `ui-agent-admin`, documented as the first reusable preset-library pattern.
   Acceptance is dogfooded: the Hotel Concierge persona books a real date range the model sees, a
   full multi-round IDGRAPH quiz session survives resume, and an exported persona round-trips.
-- **M-C — "GenUI speaks fleet" (second).** Flip the dogfood toggle and the model authors GenUI
+- **M-C — "GenUI speaks fleet" (second). 🟢 DONE 2026-07-29** — S1–S5 all merged (#336/#338/#345),
+  Proof-of-mode run live by Kim, DoD met; see [`goals.md`](goals.md) for the evidence and the one
+  recorded deviation (the live run was on `gen-ui-live`, not agent-admin). Two ratified-contract
+  conflicts the build exposed were ruled and repaired in #351 (SPEC-R13(b)'s unsatisfiable
+  single-parser requirement → a parity-proven reader; the descriptor format's missing compound-family
+  field → `.define()`-site derivation, closing a 64-vs-59 taught-tag gap), and the wave's app-barrel
+  size breach in #356. Original scope, for the record:
   surfaces out of real, upgraded `ui-*` components with fleet tokens — visibly the fleet's own
   design language instead of bare model HTML, provable live in one demo session. The build is
   ADR-0162's S0–S5 decomposition as written
@@ -172,7 +197,14 @@ decision (dated line in §4).
   agent-admin shows GenUI live) and B3's fleet-idiom eval dimension. Acceptance is dogfooded: a
   live session with dogfood ON produces a surface whose rendered DOM contains upgraded `ui-*`
   elements — real anatomy, not unknown inline elements — with the set-equality gate green.
-- **M-A intakes — "SaaS Data Workbench", contract-frozen in parallel (during M-B).** M-A — a
+- **M-A intakes — "SaaS Data Workbench". 🟢 BOTH FORKS FROZEN 2026-07-29 — the build is unblocked.**
+  Both design intakes finished and both ADRs are now **ratified**:
+  [ADR-0163](adr/0163-ui-table-interactive-widening.md) (the `ui-table` widening) and
+  [ADR-0164](adr/0164-entry-list-extraction-home.md) (the extraction home). Neither build has started.
+  **Next step is M-A's PRD**, which the intakes were run to make possible — it comes out of them, and
+  the build follows the PRD. Scheduling is Kim's: the lane is free now that M-C is done, but M-B still
+  holds an unmet DoD. Original framing:
+  M-A — a
   site-hosted demo workspace where a sortable/selectable/paginated data table, a filter toolbar,
   a record-edit form flow, and an agent-written summary card compose from published fleet
   primitives inside `ui-workspace-shell` — is the largest bet and is gated on two genuine design
