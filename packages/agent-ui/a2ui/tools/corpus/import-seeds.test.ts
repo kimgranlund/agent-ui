@@ -479,6 +479,31 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
     ).toBe(false)
   })
 
+  it('the SAME collision under --dry-run is a WARNING, not a halt — exit 0, the run summary still prints (GH #360 review item 3)', () => {
+    // The dry-run softening the disposition guard already carries, applied to the archive collision: a
+    // dry run writes nothing to collide with, so hard-exiting suppressed the very summary --dry-run
+    // exists to produce. Identical setup to the case above, one flag apart, and the outcome inverts.
+    makeSandbox({ withShard: true })
+    const verdictsPath = writeVerdicts('wave-b.json', { date: '2026-07-28', verdicts: SHARD_LOADED_VERDICTS })
+    const planted = plantArchive(
+      '2026-07-28--wave-b.json',
+      `${JSON.stringify({ rubric: 'a2ui-corpus', rubricVersion: '1.0', judgedBy: 'someone-else', date: '2026-07-28', verdicts: {} })}\n`,
+    )
+    const before = readFileSync(planted, 'utf8')
+
+    const result = run(['--verdicts', verdictsPath, '--dry-run'])
+
+    expect(result.status, result.stderr).toBe(0)
+    expect(result.stdout, 'the collision is still reported, in the dry-run voice').toMatch(/a real run would HALT here/)
+    expect(result.stdout).toContain(`${ARCHIVE_DIR}/2026-07-28--wave-b.json`)
+    expect(result.stdout).toMatch(/existing sha256 [0-9a-f]{64}.*incoming sha256 [0-9a-f]{64}/s)
+    expect(result.stdout, 'the summary the hard exit used to suppress').toMatch(/--dry-run, nothing written.*quality-rejected/s)
+    expect(result.stdout).toMatch(/would HALT on a real run \(--dry-run only, archive path already holds DIFFERENT content\)/)
+    expect(result.stdout, 'a dry run never claims it would archive over a collision').not.toMatch(/would archive verdicts to/)
+    expect(result.stdout, 'nor that the refusals are recorded in a file it did not write').toMatch(/NOT recorded durably/)
+    expect(readFileSync(planted, 'utf8'), 'still byte-unchanged — a dry run writes nothing, warning or not').toBe(before)
+  })
+
   it('clause 4 — a plain UNJUDGED run HALTS on a name carrying an archived passed:false verdict, quoting the verdict, with nothing written', () => {
     makeSandbox({ withShard: true })
     // `stats-grid-dashboard` is the one shelf seed absent from the committed shard — exactly the ADR's
