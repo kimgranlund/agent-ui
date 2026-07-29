@@ -312,6 +312,59 @@ const PARSE_HINT =
   'JSON object across multiple physical lines (no pretty-printing), and never add any text after ' +
   'the JSONL (the note belongs ONLY on the leading meta-line).'
 
+/**
+ * GH #307 (second pass, static root-cause) — the SAME teaching gap PARSE_HINT above and `expectedTypeNote`
+ * (GH #288) close, for the code that actually kills a game-loop turn: `IDGRAPH`. Its `path` names WHERE
+ * (`main:root`, `main:root-missing`, `card->expl`, `main:cycle`) but never WHAT to do, and the surrounding
+ * fixed instruction — "Re-emit the COMPLETE corrected A2UI JSONL" — reads, on a RESUMED surface, as "send
+ * the whole tree again", which re-delivers `id:"root"` and is exactly the `sid:root` failure being
+ * corrected. Reproduced deterministically against the real loop (`produce-loop.test.ts`): a resumed
+ * quiz surface oscillates `main:root` → `main:root-missing` → `main:root` across all three rounds, each
+ * round a REASONABLE reading of the prior feedback, and the turn dies on the round bound — the reported
+ * symptom. The seeding itself (`sessionSurfaceSeeds`, TKT-0081) is intact and correct; what was missing
+ * is the repair instruction, so a per-member static sentence is appended (deduped, once per member that
+ * actually fired this round — the PARSE_HINT shape, not a dynamic catalog lookup: an id-graph failure
+ * carries no catalog property to resolve).
+ */
+const IDGRAPH_HINTS = {
+  duplicateRoot:
+    ' The surface already received its ONE `id:"root"` in an EARLIER turn, and re-sending it is rejected ' +
+    '(the old root is kept, your change is dropped). Send ONLY the components that actually changed, ' +
+    'WITHOUT `id:"root"`. If the root\'s OWN children must change, you cannot patch it — re-create the ' +
+    'surface (`createSurface` with the SAME surfaceId) and send the COMPLETE tree, `root` included, in ' +
+    'that same turn.',
+  rootMissing:
+    ' This surface\'s component set has NO `id:"root"`. A payload that creates or re-creates a surface ' +
+    'starts it EMPTY, so it must deliver `root` AND every component the tree references in that same ' +
+    'turn. If instead you meant to update a surface that already exists, drop the `createSurface` line ' +
+    'and send only the changed components.',
+  dangling:
+    ' A `parent->child` id-graph path means that `parent` lists a child id that NO component defines — ' +
+    'neither in this payload nor in any earlier turn of this conversation. Deliver a component with ' +
+    'that exact id in this same payload, or remove the reference from the parent\'s children.',
+  cycle: ' The child/children references form a CYCLE — a component cannot be its own ancestor.',
+} as const
+
+/** GH #307 — which `IDGRAPH` member(s) fired this round, read off the failure `path` the validator
+ *  produced (`checkIdGraph`, renderer/validate.ts): `sid:root-missing`, `sid:cycle`, `parent->child`,
+ *  else `sid:root`. Checked in that order so a surfaceId that itself contains `->` or ends in `:root`
+ *  can't shadow the more specific suffixes. Returns `''` when no IDGRAPH failure fired. */
+function idgraphHint(failures: RoundFailure[]): string {
+  const members = new Set<keyof typeof IDGRAPH_HINTS>()
+  for (const f of failures) {
+    if (f.code !== 'IDGRAPH') continue
+    if (f.path.endsWith(':root-missing')) members.add('rootMissing')
+    else if (f.path.endsWith(':cycle')) members.add('cycle')
+    else if (f.path.includes('->')) members.add('dangling')
+    else if (f.path.endsWith(':root')) members.add('duplicateRoot')
+  }
+  // A stable order (declaration order), so the same round always composes the same sentence.
+  return (Object.keys(IDGRAPH_HINTS) as (keyof typeof IDGRAPH_HINTS)[])
+    .filter((m) => members.has(m))
+    .map((m) => IDGRAPH_HINTS[m])
+    .join('')
+}
+
 function messagesFor(
   input: TurnInput,
   failures: RoundFailure[] | undefined,
@@ -325,7 +378,7 @@ function messagesFor(
     const summary = failures
       .map((f) => `${f.code}${f.path ? ` at ${f.path}` : ''}${expectedTypeNote(f, catalog, lastOutput)}`)
       .join('; ')
-    const hint = failures.some((f) => f.code === 'PARSE') ? PARSE_HINT : ''
+    const hint = (failures.some((f) => f.code === 'PARSE') ? PARSE_HINT : '') + idgraphHint(failures)
     turns.push({
       role: 'user',
       content: `That output was INVALID (${summary}).${hint} Re-emit the COMPLETE corrected A2UI JSONL — nothing else. Your leading meta-line "note" must still address the USER in persona — never mention this correction, the re-emission, validation, or JSONL.`,

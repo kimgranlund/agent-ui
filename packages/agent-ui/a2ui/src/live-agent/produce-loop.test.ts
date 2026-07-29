@@ -492,6 +492,140 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
     expect(feedback2.content).not.toMatch(/SINGLE line/)
   })
 
+  // GH #307 (second pass — static root-cause of the IDGRAPH class the first pass could not reproduce
+  // live). A RESUMED surface (the TKT-0079/ADR-0129 action-click path, and the quizmaster preset's
+  // declared "one quiz = one surface, updated round by round") is seeded by `sessionSurfaceSeeds`
+  // (TKT-0081) with the prior turn's graph, so re-delivering `id:"root"` fails HERE as `sid:root` —
+  // exactly the renderer's own cross-turn guard (tree.ts's SPEC-R3 AC2, which keeps the OLD root and
+  // silently drops the change). The seeding is correct; the FEEDBACK was not: `IDGRAPH at main:root`
+  // names a location and nothing else, while the fixed instruction that follows it — "Re-emit the
+  // COMPLETE corrected A2UI JSONL" — reads on a resumed surface as "send the whole tree again", which
+  // re-delivers `root` and reproduces the very failure. These three cases pin the mechanism (a real
+  // 3-round IDGRAPH halt), the oscillation it induces, and the hint that now teaches the way out.
+  const QUIZ_TURN1 =
+    '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}\n' +
+    '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[' +
+    '{"id":"root","component":"Column","children":["q","go"]},' +
+    '{"id":"q","component":"Text","text":"Q1: capital of France?"},' +
+    '{"id":"go","component":"Button","label":"Answer","action":{"action":"answer"}}' +
+    ']}}'
+  // The turn a click produces: the SAME session the browser holds (admin-live-runner.ts appends the
+  // validated JSONL verbatim as the assistant turn), resumed by `nextTurn` with the action message.
+  const resumedClick: TurnInput = {
+    kind: 'client',
+    session: { turns: [{ role: 'user', content: 'start a quiz' }, { role: 'assistant', content: QUIZ_TURN1 }] },
+    message: {
+      version: 'v1.0',
+      action: { surfaceId: 'main', actionId: 'a1', name: 'answer', sourceComponentId: 'go', timestamp: '0', context: {} },
+    },
+  }
+  // Appending a node under `root` forces root's OWN children to change — the one shape that cannot be
+  // patched, and the shape a "re-render the whole surface" habit produces every round.
+  const ROOT_RESEND =
+    '{"a2uiMeta":{"note":"Correct! Here is why."}}\n' +
+    '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[' +
+    '{"id":"root","component":"Column","children":["q","go","expl"]},' +
+    '{"id":"expl","component":"Text","text":"Paris has been the capital since 987."}' +
+    ']}}'
+
+  it('GH #307: re-delivering root on a RESUMED surface halts on IDGRAPH main:root (the game-loop failure)', async () => {
+    const { provider, calls } = stubProvider([ROOT_RESEND])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    let halted: unknown
+    try {
+      for await (const line of produce(resumedClick, deps, { maxRounds: 3 })) lines.push(line)
+    } catch (e) {
+      halted = e
+    }
+    expect(halted).toBeInstanceOf(ProduceHalt)
+    // The MEMBER, not just the code — `sid:root` (a duplicate root), never `root-missing`.
+    expect((halted as ProduceHalt).failures).toEqual([{ code: 'IDGRAPH', path: 'main:root' }])
+    expect((halted as ProduceHalt).message).toContain('(IDGRAPH)') // the user-visible text in the report
+    expect(calls()).toBe(3) // every round of the bound burned on the same id-graph defect
+    expect(lines).toHaveLength(0)
+
+    // The update-only counterpart of the SAME turn is valid — proof the seed covers this resume path and
+    // that the halt above is the root-resend specifically, not a seeding gap.
+    const UPDATE_ONLY =
+      '{"a2uiMeta":{"note":"Correct!"}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"q","component":"Text","text":"Q2?"}]}}'
+    const { provider: p2, calls: calls2 } = stubProvider([UPDATE_ONLY])
+    const deps2: ProduceDeps = { provider: p2, retrieve: () => [], catalog: defaultCatalog }
+    const okLines: string[] = []
+    for await (const line of produce(resumedClick, deps2, { maxRounds: 3 })) okLines.push(line)
+    expect(calls2()).toBe(1) // first round validates — no self-correct needed
+    expect(okLines).toHaveLength(2) // the meta-line + the one updateComponents message
+  })
+
+  it('GH #307: the IDGRAPH feedback names the REPAIR per member (duplicate root / root-missing), not just the path', async () => {
+    const { provider, reqs } = stubProvider([ROOT_RESEND])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    await expect(async () => {
+      for await (const _l of produce(resumedClick, deps, { maxRounds: 2 })) void _l
+    }).rejects.toBeInstanceOf(ProduceHalt)
+    const feedback = reqs()[1]!.messages.find((m) => m.role === 'user' && /INVALID/.test(m.content))!
+    expect(feedback.content).toMatch(/IDGRAPH at main:root/)
+    expect(feedback.content).toMatch(/already received its ONE `id:"root"` in an EARLIER turn/)
+    expect(feedback.content).toMatch(/re-create the surface/)
+    expect(feedback.content).not.toMatch(/has NO `id:"root"`/) // the other member's hint must NOT ride along
+
+    // The root-missing member: a payload that RE-creates the surface (which starts it empty —
+    // validate.ts's `createdHere`) but only sends a partial tree gets the OTHER repair instruction.
+    const RECREATE_PARTIAL =
+      '{"a2uiMeta":{"note":"Round two!"}}\n' +
+      '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"q","component":"Text","text":"Q2?"}]}}'
+    const { provider: p2, reqs: reqs2 } = stubProvider([RECREATE_PARTIAL])
+    const deps2: ProduceDeps = { provider: p2, retrieve: () => [], catalog: defaultCatalog }
+    await expect(async () => {
+      for await (const _l of produce(resumedClick, deps2, { maxRounds: 2 })) void _l
+    }).rejects.toBeInstanceOf(ProduceHalt)
+    const feedback2 = reqs2()[1]!.messages.find((m) => m.role === 'user' && /INVALID/.test(m.content))!
+    expect(feedback2.content).toMatch(/IDGRAPH at main:root-missing/)
+    expect(feedback2.content).toMatch(/has NO `id:"root"`/)
+    expect(feedback2.content).toMatch(/drop the `createSurface` line/)
+    expect(feedback2.content).not.toMatch(/already received its ONE/)
+
+    // Negative control: a CATALOG-only failure carries no id-graph hint at all.
+    const { provider: p3, reqs: reqs3 } = stubProvider([INVALID, VALID])
+    const deps3: ProduceDeps = { provider: p3, retrieve: () => [], catalog: defaultCatalog }
+    for await (const _l of produce(intent, deps3, { maxRounds: 3 })) void _l
+    const feedback3 = reqs3()[1]!.messages.find((m) => m.role === 'user' && /INVALID/.test(m.content))!
+    expect(feedback3.content).not.toMatch(/id-graph|EARLIER turn|has NO `id:"root"`/)
+  })
+
+  it('GH #307: a dangling child ref and a cycle each get their own repair sentence', async () => {
+    const DANGLING =
+      '{"a2uiMeta":{"note":"Round two!"}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[' +
+      '{"id":"q","component":"Text","text":"Q2?"},' +
+      '{"id":"go","component":"Button","label":"Answer","action":{"action":"answer"},"child":"never_sent"}' +
+      ']}}'
+    const { provider, reqs } = stubProvider([DANGLING])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    await expect(async () => {
+      for await (const _l of produce(resumedClick, deps, { maxRounds: 2 })) void _l
+    }).rejects.toBeInstanceOf(ProduceHalt)
+    const feedback = reqs()[1]!.messages.find((m) => m.role === 'user' && /INVALID/.test(m.content))!
+    expect(feedback.content).toMatch(/IDGRAPH at go->never_sent/)
+    expect(feedback.content).toMatch(/lists a child id that NO component defines/)
+
+    const CYCLIC =
+      '{"a2uiMeta":{"note":"Round two!"}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[' +
+      '{"id":"a","component":"Column","children":["b"]},{"id":"b","component":"Column","children":["a"]}' +
+      ']}}'
+    const { provider: p2, reqs: reqs2 } = stubProvider([CYCLIC])
+    const deps2: ProduceDeps = { provider: p2, retrieve: () => [], catalog: defaultCatalog }
+    await expect(async () => {
+      for await (const _l of produce(resumedClick, deps2, { maxRounds: 2 })) void _l
+    }).rejects.toBeInstanceOf(ProduceHalt)
+    const feedback2 = reqs2()[1]!.messages.find((m) => m.role === 'user' && /INVALID/.test(m.content))!
+    expect(feedback2.content).toMatch(/IDGRAPH at main:cycle/)
+    expect(feedback2.content).toMatch(/form a CYCLE/)
+  })
+
   it('halts-and-reports at the bound when generation never validates (emits nothing invalid)', async () => {
     const { provider, calls } = stubProvider([INVALID])
     const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
