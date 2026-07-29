@@ -1716,7 +1716,12 @@ describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
     expect(req.genui?.dogfood).toBe(false)
   })
 
-  it('dogfood:true composes the request with dogfood:true and mounts the frame with the asset pair', async () => {
+  // GH #354 — this is the INTEGRATION leg of the lazy asset pair: it drives the REAL 450 KB committed
+  // fixture through the dynamic `import()` (dogfood-lazy.test.ts mocks the module to count loads and to hold
+  // one in flight; nothing there proves the real pair still arrives). The turn therefore settles across an
+  // unspecified number of ticks — a real module load, not a fixed microtask chain — so the wait is a
+  // CONDITION, never a tick count.
+  it('dogfood:true composes the request with dogfood:true and mounts the frame with the REAL asset pair (through the lazy import)', async () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
     el.store = createMemoryStore({})
     el.store!.set('surfaceGenui', true)
@@ -1731,15 +1736,19 @@ describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
     mounted.push(el)
     await whenFlushed()
     composerSubmit(el, 'make a form')
-    await whenFlushed()
-    await new Promise((r) => setTimeout(r, 0))
-    await whenFlushed()
+    for (let i = 0; i < 200 && el.querySelector('ui-sandbox-frame') === null; i += 1) {
+      await new Promise((r) => setTimeout(r, 5))
+      await whenFlushed()
+    }
     const req = seen[0] as { genui?: { enabled: boolean; dogfood?: boolean } }
     expect(req.genui?.dogfood).toBe(true)
     const frame = el.querySelector('ui-sandbox-frame') as HTMLElement & { assets: { css?: string; js?: string } }
-    expect(frame).not.toBeNull()
+    expect(frame, 'the lazy dogfood chunk resolved and the frame mounted').not.toBeNull()
     expect(frame.assets.css, 'the dogfood CSS asset was passed through to the mounted frame').toBeTruthy()
     expect(frame.assets.js, 'the dogfood JS asset was passed through to the mounted frame').toBeTruthy()
+    // The REAL fixture, not a stub — the committed pair is hundreds of KB of flattened CSS/JS.
+    expect(frame.assets.css!.length).toBeGreaterThan(10_000)
+    expect(frame.assets.js!.length).toBeGreaterThan(10_000)
   })
 
   it('dogfood:false (the default) mounts the frame with NO assets — byte-identical to the pre-dogfood mount', async () => {
