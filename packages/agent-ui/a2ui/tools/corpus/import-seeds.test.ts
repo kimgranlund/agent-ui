@@ -482,7 +482,10 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
   it('the SAME collision under --dry-run is a WARNING, not a halt — exit 0, the run summary still prints (GH #360 review item 3)', () => {
     // The dry-run softening the disposition guard already carries, applied to the archive collision: a
     // dry run writes nothing to collide with, so hard-exiting suppressed the very summary --dry-run
-    // exists to produce. Identical setup to the case above, one flag apart, and the outcome inverts.
+    // exists to produce. The COLLISION is what this shares with the case above; the rest of the setup
+    // deliberately differs — that case runs an EMPTY sandbox with all-passing verdicts, while this one
+    // needs a pre-loaded shard AND a `passed:false` verdict so the run actually reaches the
+    // `quality-rejected` / `NOT recorded durably` summary lines the hard exit used to suppress.
     makeSandbox({ withShard: true })
     const verdictsPath = writeVerdicts('wave-b.json', { date: '2026-07-28', verdicts: SHARD_LOADED_VERDICTS })
     const planted = plantArchive(
