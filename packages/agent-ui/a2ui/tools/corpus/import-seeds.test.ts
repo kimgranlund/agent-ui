@@ -8,6 +8,13 @@
 // directly by Node, never when a test imports `parseArgs`/`dispositionGuard` from it (vitest's own
 // `process.argv[1]` never ends with that filename). Both functions under test are pure — no fs, no
 // `process.exit` — so this file needs neither a scratch corpus dir nor a `process.exit` spy.
+//
+// Two TIERS live here, and the split is the point (GH #341): the `describe` blocks below exercise the
+// pure helpers in isolation, which proves their SHAPE and nothing about whether `main()` consults them.
+// The last block spawns the REAL script in a REAL subprocess against the REAL committed corpus, which
+// is the only tier that can catch a deleted call site. Both defects GH #335 fixed now have a
+// subprocess leg: the disposition guard (an unjudged run) and `parseArgs` (`--bogus-flag` / `--help`).
+// A new pure helper here needs its own subprocess leg too, or it is only half-covered.
 
 import { describe, it, expect } from 'vitest'
 import { spawnSync } from 'node:child_process'
@@ -140,23 +147,68 @@ describe('dispositionAllowlistSnippet — GH #335 review item 2 (a paste-ready D
 // via the sanctioned `--replace` path, this test needs a new never-admitted disposition-allowlisted
 // fixture name, same as that gate would. ──
 describe('import-seeds main() wiring — a real subprocess run proves the guard is actually consulted, not just unit-tested in isolation', () => {
-  it('a real unjudged run against the committed shelf HALTS on stats-grid-dashboard, exits non-zero, and leaves the corpus byte-identical', () => {
-    const repoRoot = process.cwd()
-    const shardPath = `${repoRoot}/packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl`
-    const indexPath = `${repoRoot}/packages/agent-ui/a2ui/corpus/index.json`
+  const repoRoot = process.cwd()
+  const shardPath = `${repoRoot}/packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl`
+  const indexPath = `${repoRoot}/packages/agent-ui/a2ui/corpus/index.json`
+  const scriptPath = 'packages/agent-ui/a2ui/tools/corpus/import-seeds.ts'
+
+  /** Run the REAL script in a real subprocess, with the corpus read before and after. */
+  const runScript = (args: string[]): { status: number | null; stdout: string; stderr: string; corpusUntouched: boolean } => {
     const beforeShard = readFileSync(shardPath, 'utf8')
     const beforeIndex = readFileSync(indexPath, 'utf8')
+    const result = spawnSync('node', ['--experimental-strip-types', scriptPath, ...args], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    })
+    const corpusUntouched =
+      readFileSync(shardPath, 'utf8') === beforeShard && readFileSync(indexPath, 'utf8') === beforeIndex
+    return { status: result.status, stdout: result.stdout, stderr: result.stderr, corpusUntouched }
+  }
 
-    const result = spawnSync(
-      'node',
-      ['--experimental-strip-types', 'packages/agent-ui/a2ui/tools/corpus/import-seeds.ts'],
-      { cwd: repoRoot, encoding: 'utf8' },
-    )
+  it('a real unjudged run against the committed shelf HALTS on stats-grid-dashboard, exits non-zero, and leaves the corpus byte-identical', () => {
+    const result = runScript([])
 
     expect(result.status).toBe(1)
     expect(result.stderr).toMatch(/HALTED/)
     expect(result.stderr).toMatch(/stats-grid-dashboard/)
-    expect(readFileSync(shardPath, 'utf8')).toBe(beforeShard)
-    expect(readFileSync(indexPath, 'utf8')).toBe(beforeIndex)
+    expect(result.corpusUntouched, 'the halted run must leave both corpus files byte-identical').toBe(true)
+  })
+
+  // GH #341's remaining half. The issue's repro ("delete the dispositionGuard call site and all tests
+  // still pass") does NOT reproduce — the leg above already reds on that, since it shipped in the same
+  // PR the issue reviewed. What the issue is right about applies to the OTHER defect: `parseArgs` was
+  // only ever unit-tested, so nothing proved `main()` consults it BEFORE touching the fs. The two legs
+  // below close that — the exact `--bogus-flag` / `--help` probes #341 records as run by hand.
+  //
+  // Note on why exit code alone is NOT enough here: with the arg-error branch deleted, a `--bogus-flag`
+  // run falls through into the real pipeline, hits the disposition guard and STILL exits 1 with the
+  // corpus untouched. So the discriminating assertion is that the run stopped AT arg-parsing — the bad
+  // flag is named, help is printed, and no HALT line (which only the seed loop can emit) appears.
+  it('--bogus-flag hard-errors AT ARG-PARSING (names the flag, prints help, never reaches the seed loop) and leaves the corpus byte-identical', () => {
+    const result = runScript(['--bogus-flag'])
+
+    expect(result.status).toBe(1)
+    expect(result.stderr).toMatch(/unrecognized argument "--bogus-flag"/)
+    expect(result.stderr).toMatch(/Nothing was written/)
+    // Help is printed on the error path so an operator sees the real flag set (GH #335 defect 2).
+    expect(result.stderr).toMatch(/--experimental-strip-types/)
+    // The proof it stopped BEFORE any fs work: the seed loop's HALT line cannot have fired, and the
+    // run summary cannot have printed. Exit 1 alone would also hold if parsing were skipped entirely.
+    expect(result.stderr, 'a bogus flag must never reach the seed loop — arg-parsing runs first').not.toMatch(/HALTED/)
+    expect(result.stdout, 'a bogus flag must never reach the admission report').not.toMatch(/admitted/)
+    expect(result.corpusUntouched, 'a bogus flag must never mutate the corpus (the live GH #335 defect)').toBe(true)
+  })
+
+  it('--help exits 0 with real usage on stdout, reads and writes nothing', () => {
+    const result = runScript(['--help'])
+
+    expect(result.status).toBe(0)
+    expect(result.stdout).toMatch(/import-seeds — the ADR-0055 seed-import script/)
+    expect(result.stdout).toMatch(/--verdicts <path>/)
+    // Same discrimination as above: --help must short-circuit before the pipeline, so neither the
+    // seed loop's HALT nor the admission report can appear.
+    expect(result.stderr, '--help must not reach the seed loop').not.toMatch(/HALTED/)
+    expect(result.stdout, '--help must not reach the admission report').not.toMatch(/admitted \(/)
+    expect(result.corpusUntouched, '--help must leave the corpus byte-identical').toBe(true)
   })
 })

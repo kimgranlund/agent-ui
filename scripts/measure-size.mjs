@@ -172,10 +172,20 @@ const gzOfEntries = async (paths) => {
 // static-in-practice here (rolldown's INEFFECTIVE_DYNAMIC_IMPORT warning — calendar is ALSO a top-level entry
 // in the same bundle), so calendar's bytes land inside text-field's marginal, not its own; calendar's solo
 // leave-one-out measures only ~60 B gz, well inside the default.
+//
+// GH #352, re-measured 2026-07-29 (the FIRST measurement taken after ADR-0093's range mode landed — the
+// re-base ADR-0093's Repairs cell booked was never run): calendar 3 B gz, text-field 0 B gz. Both rows
+// stay within budget; NO override moved. The paragraph above is now only half true, and the half that
+// changed matters when reading these two rows: since ADR-0123, `color-picker` STATICALLY imports
+// text-field, so leaving text-field out no longer removes it from the bundle (color-picker still drags it,
+// and text-field still drags calendar). Both rows therefore read ~0 structurally — they are no longer a
+// gate on either control's own growth. The real ceiling for these three is the family-barrel figure at the
+// top of this file; a future attempt to size calendar or text-field must bundle them in isolation rather
+// than trust a leave-one-out row that a sibling entry pins to zero.
 const MARGINAL_BUDGET_DEFAULT = 2048 // B gz
 const MARGINAL_OVERRIDES = {
   // name: [budget in B gz, reason]
-  'text-field': [4352, 'the 12-type value-codec family (ADR-0044/0047), which absorbs the calendar picker bytes above — measured 4021 B gz 2026-07-05, ~8% headroom'],
+  'text-field': [4352, 'the 12-type value-codec family (ADR-0044/0047), which absorbs the calendar picker bytes above — measured 4021 B gz 2026-07-05, ~8% headroom; re-measured 2026-07-29 post-range-mode (GH #352): 0 B gz, override UNCHANGED — the row reads zero because color-picker now statically imports text-field (see the note above), not because the bytes went away'],
   'split': [2176, 'gzip measurement-frame drift as the family bundle crossed 33 KB (leave-one-out deltas shift with the shared dictionary; toolbar added similar roving/flex/enum code) — split source byte-identical that wave; measured 2082 B gz 2026-07-10'],
   'swiper': [3072, 'a five-tag family behind one entry (the per-control 2048 cap is sized for one component; measured 2913 B gz 2026-07-10 pre-split, 2406 B gz post-split — host + item + three chrome tags, each carrying its own barrel line + package.json subpath per family-coherence.test.ts C1; the four leaf lines each measure ~0 B gz since swiper.ts already imports them transitively)'],
   'sandbox-frame': [2304, 'genui-surface.spec.md SPEC §3.2/§3.3 (D9, B1): the CSP builder, the closed bridge message-guard, the host-owned bootstrap script TEXT, and the build/replace/teardown + live-theme control logic — measured 2124 B gz 2026-07-24, ~8% headroom'],
