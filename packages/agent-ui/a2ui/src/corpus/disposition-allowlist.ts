@@ -12,8 +12,13 @@
 //   2. a refusal whose verdicts file PREDATES the archive — today, `stats-grid-dashboard`. ADR-0165
 //      clause 8 rules out retro-archiving it: the M-B wave's verdicts files were never committed, and
 //      fabricating one would be the manufactured judgment ADR-0068's Alternatives ban.
-// A NEW refusal from here on needs no entry at all. Adding one is optional prose, worth it only to carry
-// what a verdict cannot — a coverage argument, a repair path (the shipped entry below carries both).
+// A NEW refusal needs no entry — because the refused SEED LEAVES THE SHELF. ADR-0165's REV 2026-07-30
+// (GH #361, reading (b) — the `retreat-reschedule` precedent) rules that dropping the seed from
+// `src/examples/` entirely is a refusal's expected disposition, so its name is no longer in `allSeeds` and
+// `seedsMissingAdmission` can never see it. The gate did NOT stop requiring an entry for a candidate: a
+// refusal KEPT on the shelf is still un-admitted and un-allowlisted, so it still reds until an entry lands
+// here. Beyond that, an entry is optional prose, worth it only to carry what a verdict cannot — a coverage
+// argument, a repair path (the shipped entry below carries both).
 //
 // Pure, zero-dep, platform-neutral (SPEC-N5/ADR-0062) so both readers share the one map: the standing
 // coverage gate (`admission-coverage.test.ts`) and the import tool's unjudged-run guard

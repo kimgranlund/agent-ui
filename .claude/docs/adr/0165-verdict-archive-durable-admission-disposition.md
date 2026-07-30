@@ -285,3 +285,59 @@ being defeasible:
   NORMAL admission outcome with its own reporting lane (TKT-0022 cl.1, `import-report.ts`); aborting the
   batch would punish the three good seeds for the fourth and push curators toward unjudged runs — the
   exact behaviour this ADR is trying to make impossible.
+
+## Amendment — REV 2026-07-30: a refused seed is DROPPED from the shelf — that, not a demoted allowlist, is why no transcription is owed (GH #361)
+
+> Append-only; this rules the contradiction [GH #361](https://github.com/kimgranlund/agent-ui/issues/361)
+> found between §Decision clause 6 and the §Acceptance row, and **supersedes ONE §Consequences sentence** —
+> "*The transcription requirement is removed, not relocated.*" — which is true, but not for the reason a
+> reader of it would infer. The Status and `Ratified by` cells are untouched; the Decision, Acceptance, and
+> Consequences bodies stand unedited above. **No code changes are owed: the shipped build was already
+> correct**, and this REV is what makes that legible. Kim's 2026-07-30 ruling, reading (b).
+
+**The contradiction, named on both sides.** §Decision clause 6 demotes `DISPOSITION_ALLOWLIST` to "*exactly
+the cases a machine cannot state: a deliberately-minimal smoke seed that teaches the corpus nothing, and a
+refusal whose verdicts file predates this archive*" — from which a reader concludes that a refusal recorded
+AFTER the archive exists owes no entry. But the §Acceptance row requires "*Both existing legs
+(`seedsMissingAdmission`, `allowlistResidue`) keep their current assertions and their current negative
+controls verbatim*", and `seedsMissingAdmission` takes no archive parameter — it is
+`seedNames.filter((n) => !admitted.has(n) && !allowlist.has(n))` (`admission-coverage.test.ts`). So a seed
+refused today, archived, and *still on `allSeeds`* is un-admitted and un-allowlisted → reported → RED, and
+the only thing that greens it is a hand-written allowlist entry. Verified by direct evaluation during
+[#360](https://github.com/kimgranlund/agent-ui/pull/360)'s independent review, which declined to pick a side
+and escalated — the right call, since the code is faithful under either reading. Nothing here was a safety
+hole: the gate reds loudly, which is the safe direction.
+
+**Ruled (b): a refused seed leaves the shelf.** The expected disposition of an admission-time `E_QUALITY`
+refusal is that the seed is **DROPPED from `src/examples/` entirely** — its module, its `index.ts` export and
+family array, and its `SEEDS_BY_MODULE` registration all go — leaving the archived `passed:false` verdict
+(cl.1) as the record. No `DISPOSITION_ALLOWLIST` entry is owed, **and the reason matters**: not because the
+gate stopped requiring an entry for a candidate, but because a dropped seed is *no longer a candidate* —
+`seedsMissingAdmission` iterates `allSeeds` and can never see a name that is not in it. Reading (a) — giving
+`seedsMissingAdmission` the archive as a third input and relaxing the Acceptance row's "verbatim" — is
+**declined**.
+
+**The precedent is already in this record.** The M-B wave (PR #337) refused `retreat-reschedule`
+`qualityScore 2`, failing D1/D5, and dropped it: `corpus-growth.ts`'s own family array says "*was authored
+and REJECTED by the judge … and dropped entirely — never re-added here*". §Consequences' "Named residual"
+bullet recorded that state and already called it "*correct rather than a gap — a seed that does not exist
+cannot be re-admitted, so there is nothing to guard*". What was missing was the general statement: dropping
+is the EXPECTED disposition of every refusal, not one wave's ad-hoc choice. **And clause 4 is what makes (b)
+safe**: `dispositionGuard` reads the archive for any candidate on a plain unjudged run, so the moment a
+dropped seed is ever re-added it becomes a candidate again and its archived `passed:false` HALTS the run with
+nothing written. The archive does not guard a dropped seed — it *re-arms* the guard if the seed comes back.
+
+**The implementation was already correct — read this before touching a leg.** Under (b) the two existing
+coverage legs need no change, `seedsMissingAdmission` correctly takes no archive parameter, and every
+§Acceptance criterion stands as written and as built. A reader must not conclude the #360 build deviated: it
+followed Acceptance, which was the more specific instruction, and Acceptance was right.
+
+**The false prose, corrected.** Three artifacts promised the transcription requirement was *removed*, which
+reads as "the gate stopped needing an entry" — the inference (b) does not license. Two are repaired in the
+same change as this REV: `src/corpus/disposition-allowlist.ts`'s header ("*A NEW refusal from here on needs
+no entry at all*") and `tools/corpus/import-seeds.test.ts`'s assertion message ("*the transcription
+REQUIREMENT is gone*"). Both now say the true thing — a refusal needs no entry **because the seed leaves the
+shelf**, and a refusal *kept* on the shelf still owes one. The third is the §Consequences sentence above,
+which is ratified body text and therefore **not edited**; this REV supersedes it and is the reading to
+apply. The `a2ui-corpus-curate` skill's step 7 and validation loop are corrected against this ruling in the
+same change (GH #363 items 1–2).
