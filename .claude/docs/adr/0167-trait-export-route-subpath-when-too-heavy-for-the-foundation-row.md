@@ -8,8 +8,8 @@
 > | **Date** | 2026-07-30 |
 > | **Proposed by** | planner (design seat — the GH [#377](https://github.com/kimgranlund/agent-ui/issues/377) §1 intake; the record PR [#375](https://github.com/kimgranlund/agent-ui/pull/375)'s component review judged MISSING while judging the shape RIGHT) |
 > | **Ratified by** | *(awaiting Kim — ADR-0149: an in-tree Status hand-edit, or a `ratify ADR-0167` GitHub utterance executed by `scripts/adr_ratify.py`)* |
-> | **Repairs** | **On ratification (courtesy pointer, not a repair of amended text):** a dated REV forward pointer on [ADR-0154](./0154-shell-grammar-resizable-pane-tab-collapse.md) — its Consequences left the `paneResize` export CONDITIONAL ("if the LLD's recommended fork lands", `:90-92`), so a reader arriving there deserves the onward link to where the route question was finally answered (the ADR-0156 cl.5 / ADR-0165 pointer shape). **On ratification+build:** `packages/agent-ui/components/src/index.ts` (the standing note at `:7` gains the subpath route + this ADR's ID; the shipped `./traits/overlay` bytes are UNCHANGED — PR #375 already built them) |
-> | **Supersedes / Superseded by** | **Amends no ADR** — the amended text is not in one. What this record opens is the standing note at `components/src/index.ts:7` ("the rest of `traits/` stays internal until another consumer earns it the same way"), a **code comment with no document owner**: it cites LLD-C6 (`../lld/agent-admin-shell-rehost.lld.md` §7) as its authority, but that row is an OPEN FORK — "needs a ruling with, or after, ADR-0154", disposition column empty (`:22`) — and ADR-0154 itself only ever spoke of the export conditionally (`:90-92`). Its default-internal posture stands verbatim; only the closed phrase *"the same way"* opens. That a fleet-reach export law lives in a comment no doc owns is precisely why this record exists. **Relates** [ADR-0154](./0154-shell-grammar-resizable-pane-tab-collapse.md) (the wave the note was authored under) · [ADR-0155](./0155-shell-responsive-band-ladder-toggle-law-scrollbar-seam.md) cl.3 (its "never a silent deep-import" characterization is GENERALIZED here — see cl.5) · the export-surface chain [ADR-0055](./0055-a2ui-example-seeds-package-home.md) → [ADR-0062](./0062-corpus-packaging-pure-core-subpath-data-home.md) → [ADR-0066](./0066-phosphor-default-pack-buildtime-vendoring.md) → [ADR-0137](./0137-a2ui-agent-producer-toolkit-export.md) → [ADR-0119](./0119-code-prose-family-v1-scope.md)/[ADR-0139](./0139-codemirror-editor-first-runtime-dependency.md)/[ADR-0162](./0162-genui-agent-ui-dogfood-mode.md)/[ADR-0164](./0164-entry-list-extraction-home.md), and [ADR-0023](./0023-components-mount-directive-host-public-seam.md) (the `mount()` public-API-widening precedent both prior trait widenings rode) · **Resolves** GH #377 §1 |
+> | **Repairs** | **On ratification (courtesy pointer, not a repair of amended text):** a dated REV forward pointer on [ADR-0154](./0154-shell-grammar-resizable-pane-tab-collapse.md) — its Consequences left the `paneResize` export CONDITIONAL ("if the LLD's recommended fork lands", `:91-93`), so a reader arriving there deserves the onward link to where the route question was finally answered (the ADR-0156 cl.5 / ADR-0165 pointer shape). **On ratification+build:** `packages/agent-ui/components/src/index.ts` (the standing note at `:7` gains the subpath route + this ADR's ID; the shipped `./traits/overlay` bytes are UNCHANGED — PR #375 already built them) |
+> | **Supersedes / Superseded by** | **Amends no ADR** — the amended text is not in one. What this record opens is the standing note at `components/src/index.ts:7` ("the rest of `traits/` stays internal until another consumer earns it the same way"), a **code comment with no document owner**: it cites LLD-C6 (`../lld/agent-admin-shell-rehost.lld.md` §7) as its authority, but that row is an OPEN FORK — its Component cell says the fork "needs a ruling with, or after, ADR-0154" and its Files cell still reads `components/src/index.ts` **OR** super-shell-local, an unresolved either/or (`:22`); the LLD's own build sequence presumes the ruling was still to come ("1. LLD-C6 ruling lands with ADR-0154's ratification → 2. …", `:136`) — and ADR-0154 itself only ever spoke of the export conditionally (`:91-93`). Its default-internal posture stands verbatim; only the closed phrase *"the same way"* opens. That a fleet-reach export law lives in a comment no doc owns is precisely why this record exists. **Relates** [ADR-0154](./0154-shell-grammar-resizable-pane-tab-collapse.md) (the wave the note was authored under) · [ADR-0155](./0155-shell-responsive-band-ladder-toggle-law-scrollbar-seam.md) cl.3 (its "never a silent deep-import" characterization is GENERALIZED here — see cl.5) · the export-surface chain [ADR-0055](./0055-a2ui-example-seeds-package-home.md) → [ADR-0062](./0062-corpus-packaging-pure-core-subpath-data-home.md) → [ADR-0066](./0066-phosphor-default-pack-buildtime-vendoring.md) → [ADR-0137](./0137-a2ui-agent-producer-toolkit-export.md) → [ADR-0119](./0119-code-prose-family-v1-scope.md)/[ADR-0139](./0139-codemirror-editor-first-runtime-dependency.md)/[ADR-0162](./0162-genui-agent-ui-dogfood-mode.md)/[ADR-0164](./0164-entry-list-extraction-home.md), and [ADR-0023](./0023-components-mount-directive-host-public-seam.md) (the `mount()` public-API-widening precedent both prior trait widenings rode) · **Resolves** GH #377 §1 |
 
 ## Context
 
@@ -32,12 +32,15 @@ Three facts make that gap load-bearing rather than cosmetic.
    Tracing "the same way" to its sources:
 
    - **`paneResize`** — the note cites LLD-C6 (`../lld/agent-admin-shell-rehost.lld.md` §7). That row
-     is an **open fork**, not a ruling: "The drag-mechanism fork (§7 — needs a ruling with, or after,
-     ADR-0154) | `components/src/index.ts` OR super-shell-local | —", disposition column empty
-     (`:22`). ADR-0154 in turn speaks of the export only **conditionally**, in Consequences: "The
-     fleet gets ONE drag-resize mechanism **if the LLD's recommended fork lands** … a public-API
-     widening needing its own gate check; the alternative is an independent re-derivation, the LLD's
-     named fork" (`:90-92`). The export shipped; **no document records the ruling that shipped it.**
+     is an **open fork**, not a ruling, and says so three ways: its Component cell reads "The
+     drag-mechanism fork (§7 — **needs a ruling with, or after, ADR-0154**)"; its Files cell is an
+     unresolved either/or, "`components/src/index.ts` **OR** super-shell-local" (`:22`); and the
+     LLD's own build sequence presumes the ruling was still ahead of it — "1. LLD-C6 ruling lands
+     with ADR-0154's ratification → 2. …" (`:136`). ADR-0154 in turn speaks of the export only
+     **conditionally**, in Consequences: "The fleet gets ONE drag-resize mechanism **if the LLD's
+     recommended fork lands** … a public-API widening needing its own gate check; the alternative is
+     an independent re-derivation, the LLD's named fork" (`:91-93`). The export shipped; **no
+     document records the ruling that shipped it.**
    - **`scrollFade`** — genuinely ratified, and the stronger of the two: ADR-0155 cl.3, realizing
      SPEC-R10b (`../spec/shell-archetypes-m5.spec.md:275`).
 
@@ -134,6 +137,10 @@ routing, not omission.
   `paneResize` export conditional on a fork whose ruling was never recorded, so a reader landing there
   should be pointed at where the route question finally got answered. ADR-0155 needs no pointer —
   cl.5 generalizes its phrase rather than altering its clause.
+- **This record rules the route forward; it does not retro-authorize the `paneResize` export.** That
+  gap — an export shipped against an unruled fork — became visible only while tracing this rule's
+  provenance, and closing it would mean minting a ratification after the fact, which is not a design
+  seat's to mint. Whether it earns its own closing record is Kim's call, not this record's.
 - **`src/index.ts`'s standing note gains this ADR's ID at build.** The note today states the *case*
   (+945 B, this trait); it will state the *rule* and cite where the rule lives. Same one-fact-one-home
   discipline the note already follows.
@@ -153,7 +160,7 @@ routing, not omission.
   concern. Filing a components-package export law under that title buries a fleet-reach rule where
   nobody searching for it will look, and would grow an accepted ADR sideways off its own subject.
   Same objection to ADR-0154, plus a disqualifying one: it never ratified its trait export at all
-  (`:90-92` is conditional), so amending it would attach a route law to a record that never ruled on
+  (`:91-93` is conditional), so amending it would attach a route law to a record that never ruled on
   a route.
 - **A dated REV on either LLD in play.** Two exist and both were weighed. `lld/shell-responsive.lld.md`
   (the build doc for `shell-archetypes-m5.spec.md`'s SPEC-R10b) is ADR-0155's, and
