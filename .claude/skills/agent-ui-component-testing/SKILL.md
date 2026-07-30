@@ -82,6 +82,30 @@ exemplars ARE the standard — read them, don't re-derive.
   a 44-file false census where the comment-stripped truth was 9 (TKT-0066 item 5's sweep).
   Pattern: `stripComments` in `controls/styling-gates.test.ts`.
 
+## Settle helpers — writer vs observer
+
+One question decides every pacing choice in a settle helper: does it WRITE the value it reads
+back, or OBSERVE an animation it does not drive? (GH #359/#364/#365/#366.)
+
+- **Writer** — e.g. `scrollTop = scrollHeight` with no `scroll-behavior`. The read-back is
+  synchronous and layout-derived, so TIMER pacing is correct and frame pacing is wrong: rAF
+  shrinks the stability window, and it stalls outright on a hidden tab where the log must stay
+  pinned. Pattern: `#tailFollowLog` in
+  `packages/agent-ui/app/src/controls/conversation/conversation.ts` (discriminated resolve).
+- **Observer** — e.g. a smooth `scrollIntoView`. Positions commit only at PAINT, so it must
+  sample once per painted frame (N identical painted frames is evidence; N identical timer
+  reads is not — queued timers drain back-to-back under starvation) PLUS a wall-clock floor.
+  Pattern: `waitUntilSettled` in
+  `packages/agent-ui/components/src/controls/status-stream/status-stream.browser.test.ts`.
+- An observer's own guarantee-tests need MORE timeout headroom than the live call sites — the
+  #359 guard measured 5× more fragile than the code it guarded.
+- **Exhaustion always reports**: throw with a diagnostic naming elapsed ms, painted frames, and
+  the last read. Race the frame wait against the remaining budget so a suspended page (zero
+  rAF) reports "0 painted frames" instead of stranding into the runner's bound.
+- Before porting a fix between helpers: re-read the CURRENT upstream (one port faithfully
+  copied a pre-fix snapshot), and check every call site discards or consumes the return — a
+  throw is only safe where the value is discarded.
+
 ## The gates (before a control-wave commit)
 
 1. `npm run check` (tsc + site) and `npm test` — both green, read separately.
