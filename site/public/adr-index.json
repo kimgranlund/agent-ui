@@ -1146,5 +1146,12 @@
     "description": "A judged import run ARCHIVES its verdicts file into the corpus data dir, and the admission-coverage gate reads judged-ness off the shard — an EQUALITY rejectio…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0166",
+    "url": "./adr-index.html#adr-0166",
+    "description": "ui-super-shell bars OWN their seam — the frame's block-axis gap is deleted, each bar draws a 1px hairline inside its own border box, and a card's bar-facing co…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
