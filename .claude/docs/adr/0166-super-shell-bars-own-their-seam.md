@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-07-30 *(authored)* |
 > | **Proposed by** | design seat (the GH #371 bar-seam intake; 0166 claimed against a verified directory ceiling of 0165 — the README index lags by construction, so the claim was checked against files, not the index) |
-> | **Ratified by** | *(pending — Kim only, ADR-0149: an in-tree hand-edit or a `ratify ADR-0166` utterance on GitHub executed by `scripts/adr_ratify.py`)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-07-30, via the [`ratify ADR-0166` utterance](https://github.com/kimgranlund/agent-ui/issues/371#issuecomment-5130233093) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification+build: [`../spec/shell-archetypes-m5.spec.md`](../spec/shell-archetypes-m5.spec.md) §10 SPEC-R11a (the frame-geometry enumeration + the floating-cards reading, per §Amendment sheet below) · `app/src/controls/super-shell/super-shell.css` (the `[data-part='frame']` · `[data-part='bar']` · `rail`/`pane`/`pane-resizer` · six overlay arms · narrow-stack · narrow-tabs rules) · `app/src/controls/super-shell/super-shell.browser.test.ts` (the GH #253 regression `it` at `:125`, rewritten) · `site/pages/_page.css` (`:110-113` header, `:158-163` footer — the duplicate hairlines) · `site/pages/_page.visual.browser.test.ts` baseline · [`../decompositions/bar-seam-371.decomp.json`](../decompositions/bar-seam-371.decomp.json) |
 > | **Supersedes / Superseded by** | **Amends** [ADR-0151](./0151-named-shell-archetypes-m5.md) (the shell frame's composed geometry) · **narrows** GH #253's edge-to-edge bar ruling on the BLOCK axis only (its no-radius-on-a-bar clause is untouched and re-affirmed at cl.2) · Relates [ADR-0154](./0154-shell-grammar-resizable-pane-tab-collapse.md) (the resizer/pane grammar whose GH #214 seam arithmetic this record proves unaffected) · [ADR-0155](./0155-shell-responsive-band-ladder-toggle-law-scrollbar-seam.md) (the band ladder + overlay anatomy the posture exceptions at cl.6/cl.7 key off) · Relates [ADR-0102](./0102-css-less-consumer-contract-law.md) (a consumer with no CSS must still get a correct seam — the argument that kills the consumer-owned-hairline option) · Resolves GH #371 |
 
