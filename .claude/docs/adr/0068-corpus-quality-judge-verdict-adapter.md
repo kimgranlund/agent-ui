@@ -119,7 +119,18 @@ make quarantine survivable end-to-end:
   conflicting re-verdicts halt.
 - **Asymmetry: admission rejects (`E_QUALITY`), back-scoring quarantines, replacement re-admits** —
   a candidate can be refused entry; a stored record is never erased by a grade; leaving quarantine
-  is a deliberate, judged, logged act. All three outcomes are queryable.
+  is a deliberate, judged, logged act. All three outcomes are queryable. **That last sentence was
+  never true of the admission-reject arm as written — see
+  [ADR-0165](./0165-verdict-archive-durable-admission-disposition.md)** *(an `E_QUALITY` refusal
+  returns from `admit.ts` before any store write, so the refusal was recorded nowhere and that arm
+  had no reader at all; the quarantine and re-admit arms were queryable as claimed. ADR-0165
+  cl.1–cl.3 give the reject arm a durable home — a judged import run archives its `VerdictsFile`
+  into `corpus/verdicts/`, merged by `verdict-archive.ts` — and with that build shipped the sentence
+  now holds for all three. This record's store asymmetry is deliberately left INTACT: the refusal
+  lands NEXT TO the store, not in it (ADR-0165 cl.9). · REV 2026-07-31 — the forward pointer
+  ADR-0165's Repairs cell booked at its ratification, executed here as a REV-annotated mechanical
+  pointer repair, doc-standards §2's named append-only exception, following the ADR-0156 clause-5
+  precedent (`f0debd6`); this record's Status stays `accepted` and its Decision is unedited.)*
 - **Stale → re-verify on the build gate:** corpus LLD §6's judge-stage note (now "adapter-filled") ·
   `corpus-data.test.ts`'s invariant-ii comment + quarantine legs · `import-seeds.ts` usage text
   (`--verdicts`/`--replace` + the quarantined-name halt) · the seed shard's post-rescore lines ·
