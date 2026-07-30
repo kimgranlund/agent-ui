@@ -1,0 +1,333 @@
+// super-shell-bar-seam.browser.test.ts — ADR-0166 (GH #371) cross-engine browser truth for the
+// bar-seam / per-side-corner redesign: the frame's block-axis `gap` is deleted, each bar draws a 1px
+// hairline INSIDE its own border box, and a card's bar-facing corners square PER SIDE off a token pair
+// that frame-level `:has()` rules zero. jsdom cannot settle any of it (computed borders, real rects,
+// container queries, `:has()` matching against a nested subtree) — the source-presence half lives in
+// super-shell.test.ts, this is the measurement half.
+//
+// TWO standing rules for this file, both from ADR-0166 cl.8:
+//   1. NEVER read the `borderRadius` SHORTHAND. `0px 0px 18px 18px` is a string that satisfies
+//      `not.toBe('0px')` VACUOUSLY, which would let the header-only and footer-only rows of cl.5's
+//      matrix pass while testing nothing. Every corner assertion reads the four logical LONGHANDS.
+//   2. A negative control on a BOTH-BARS fixture is unsatisfiable by construction — both pairs zero, so
+//      all four longhands compute `0` and nothing survives for a mutation to take away. The corner NCs
+//      run on a HEADER-ONLY fixture, whose block-END pair stays 18px.
+import { describe, it, expect, afterEach } from 'vitest'
+import '@agent-ui/components/foundation-styles.css'
+import '@agent-ui/components/component-styles.css'
+import './super-shell.css'
+import { UISuperShellElement } from './super-shell.ts'
+
+const mounted: HTMLElement[] = []
+afterEach(() => { for (const el of mounted.splice(0)) el.remove() })
+
+/** The four LOGICAL corner longhands of one box, each PAIRED WITH ITS PROPERTY NAME. The name is not
+ *  decoration: every negative control in this file is required to red *naming the longhand it broke*
+ *  (the decomposition's n12/n22 predicates), and an array-shaped `toEqual` red prints only values — it
+ *  cannot tell `border-start-start-radius` from `border-end-end-radius`. So each corner is asserted on
+ *  its own, with its property name in the assertion message. */
+const CORNERS = [
+  ['border-start-start-radius', 'borderStartStartRadius', 'start'],
+  ['border-start-end-radius', 'borderStartEndRadius', 'start'],
+  ['border-end-start-radius', 'borderEndStartRadius', 'end'],
+  ['border-end-end-radius', 'borderEndEndRadius', 'end'],
+] as const
+
+/** Asserts a box's block-start pair reads `start` and its block-end pair reads `end`, one named longhand
+ *  at a time. NEVER reads the `borderRadius` shorthand (ADR-0166 cl.8's vacuous-pass trap). */
+function expectCorners(box: HTMLElement, want: { start: string; end: string }, label: string): void {
+  const cs = getComputedStyle(box)
+  for (const [name, key, axis] of CORNERS) {
+    expect(cs[key], `${label} · ${name}`).toBe(axis === 'start' ? want.start : want.end)
+  }
+}
+
+type Slot = 'header' | 'global-nav' | 'nav-pane' | 'content' | 'options-pane' | 'footer'
+
+/** A fixed-size shell authoring exactly the named slots. `resizableStart` composes the pane-resizer
+ *  (the third carded part) whenever a start pane exists. */
+function mount(slots: readonly Slot[], opts: { width?: number; resizableStart?: boolean; attrs?: Record<string, string> } = {}): UISuperShellElement {
+  const el = document.createElement('ui-super-shell') as UISuperShellElement
+  el.style.position = 'fixed'
+  el.style.insetBlockStart = '0px'
+  el.style.insetInlineStart = '0px'
+  el.style.inlineSize = `${opts.width ?? 900}px`
+  el.style.blockSize = '400px'
+  if (opts.resizableStart) el.resizableStart = true
+  for (const [k, v] of Object.entries(opts.attrs ?? {})) el.setAttribute(k, v)
+  for (const slot of slots) {
+    const child = document.createElement('div')
+    child.setAttribute('data-slot', slot)
+    child.textContent = slot
+    el.append(child)
+  }
+  document.body.append(el)
+  mounted.push(el)
+  return el
+}
+
+const q = (el: HTMLElement, sel: string): HTMLElement => {
+  const found = el.querySelector(sel) as HTMLElement | null
+  expect(found, `missing ${sel}`).not.toBeNull()
+  return found!
+}
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────────
+// n18 — the flush-seam measurement suite (cl.1 · cl.2 · cl.5's row posture)
+// ─────────────────────────────────────────────────────────────────────────────────────────────────
+describe('ADR-0166 cl.1/cl.2 — the frame inserts no space and each bar OWNS its seam', () => {
+  it('cl.1 — the frame computes NO row gap (its only gap axis WAS the bar↔body seam)', () => {
+    const el = mount(['header', 'nav-pane', 'content', 'footer'])
+    const frame = q(el, '[data-part="frame"]')
+    // an unset `gap` on a flex container computes to `normal` in both engines; `0px` is accepted too,
+    // since a consumer repointing the token to zero is a lawful (if pointless) end state.
+    expect(['normal', '0px']).toContain(getComputedStyle(frame).rowGap)
+  })
+
+  it('cl.2 — the header draws a 1px block-END hairline and sits FLUSH against middle', () => {
+    const el = mount(['header', 'nav-pane', 'content'])
+    const header = q(el, '[data-part="bar"][data-bar="header"]')
+    const middle = q(el, '[data-part="middle"]')
+    expect(getComputedStyle(header).borderBlockEndWidth).toBe('1px')
+    expect(Math.abs(header.getBoundingClientRect().bottom - middle.getBoundingClientRect().top)).toBeLessThanOrEqual(1)
+  })
+
+  it('cl.2 — the footer draws a 1px block-START hairline and sits FLUSH against middle', () => {
+    const el = mount(['nav-pane', 'content', 'footer'])
+    const footer = q(el, '[data-part="bar"][data-bar="footer"]')
+    const middle = q(el, '[data-part="middle"]')
+    expect(getComputedStyle(footer).borderBlockStartWidth).toBe('1px')
+    expect(Math.abs(middle.getBoundingClientRect().bottom - footer.getBoundingClientRect().top)).toBeLessThanOrEqual(1)
+  })
+
+  it('cl.2 — the seam is drawn on the BAR-FACING edge only (a header has no top hairline, a footer no bottom)', () => {
+    const el = mount(['header', 'content', 'footer'])
+    expect(getComputedStyle(q(el, '[data-bar="header"]')).borderBlockStartWidth).toBe('0px')
+    expect(getComputedStyle(q(el, '[data-bar="footer"]')).borderBlockEndWidth).toBe('0px')
+  })
+
+  it('cl.2 (n6) — the seam is ABSORBED inside the 54px: the bar\'s OUTER height is unchanged at 54', () => {
+    // The load-bearing consequence of the bar's existing `box-sizing: border-box` + `min-block-size:
+    // var(--ui-super-shell-bar-size)`. Its content box becomes 53px; the outer box does not move.
+    // Negative control (run by hand, ADR-0166 cl.2): flip that declaration to `content-box` and this
+    // must read 55.
+    const el = mount(['header', 'content', 'footer'])
+    expect(Math.round(q(el, '[data-bar="header"]').getBoundingClientRect().height)).toBe(54)
+    expect(Math.round(q(el, '[data-bar="footer"]').getBoundingClientRect().height)).toBe(54)
+  })
+
+  it('cl.2 (n5) — a consumer REPOINTS the token, never a host property (the TKT-0062 law, proven live)', () => {
+    const el = mount(['header', 'content', 'footer'])
+    el.style.setProperty('--ui-super-shell-bar-seam', '3px solid red')
+    expect(getComputedStyle(q(el, '[data-bar="header"]')).borderBlockEndWidth).toBe('3px')
+    expect(getComputedStyle(q(el, '[data-bar="footer"]')).borderBlockStartWidth).toBe('3px')
+    // and the ADR's named escape hatch for a consumer that wants the old, seamless look
+    el.style.setProperty('--ui-super-shell-bar-seam', '0 solid transparent')
+    expect(getComputedStyle(q(el, '[data-bar="header"]')).borderBlockEndWidth).toBe('0px')
+  })
+
+  it('cl.1 — middle RECLAIMS the deleted band: header + middle + footer fill the frame with no leftover', () => {
+    const el = mount(['header', 'nav-pane', 'content', 'footer'])
+    const frame = q(el, '[data-part="frame"]').getBoundingClientRect()
+    const header = q(el, '[data-bar="header"]').getBoundingClientRect()
+    const middle = q(el, '[data-part="middle"]').getBoundingClientRect()
+    const footer = q(el, '[data-bar="footer"]').getBoundingClientRect()
+    expect(Math.abs(header.height + middle.height + footer.height - frame.height)).toBeLessThanOrEqual(1)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────────
+// n19 — the corner matrix: cl.5's four bar configurations × the three carded parts
+// ─────────────────────────────────────────────────────────────────────────────────────────────────
+describe('ADR-0166 cl.5 — the per-side corner matrix, row posture (four bar configurations × three carded parts)', () => {
+  const CARDS = ['[data-part="rail"]', '[data-part="pane"]', '[data-part="pane-resizer"]'] as const
+  const body: readonly Slot[] = ['global-nav', 'nav-pane', 'content']
+
+  const rows: ReadonlyArray<{ label: string; slots: readonly Slot[]; start: string; end: string }> = [
+    { label: 'none (the INERT arm)', slots: body, start: '18px', end: '18px' },
+    { label: 'header only', slots: ['header', ...body], start: '0px', end: '18px' },
+    { label: 'footer only', slots: [...body, 'footer'], start: '18px', end: '0px' },
+    { label: 'header + footer', slots: ['header', ...body, 'footer'], start: '0px', end: '0px' },
+  ]
+
+  for (const row of rows) {
+    it(`bars authored: ${row.label} ⇒ block-start pair ${row.start}, block-end pair ${row.end} — on ALL THREE carded parts`, () => {
+      const el = mount(row.slots, { resizableStart: true })
+      for (const sel of CARDS) {
+        const card = q(el, sel)
+        // FOUR longhands, asserted individually — never the shorthand (cl.8's vacuous-pass trap).
+        expectCorners(card, { start: row.start, end: row.end }, `${row.label} · ${sel}`)
+      }
+    })
+  }
+
+  it('canvas and scrim carry no radius in any configuration (nothing to square — canvas paints no background)', () => {
+    const el = mount(['header', 'global-nav', 'nav-pane', 'content', 'footer'], { resizableStart: true })
+    for (const sel of ['[data-part="canvas"]', '[data-part="scrim"]']) {
+      const box = q(el, sel)
+      expectCorners(box, { start: '0px', end: '0px' }, sel)
+    }
+  })
+
+  it('the INLINE axis is untouched: middle keeps its 18px inter-card gaps and the resizer its net-one-gap footprint', () => {
+    const el = mount(['header', 'global-nav', 'nav-pane', 'content', 'footer'], { resizableStart: true })
+    expect(getComputedStyle(q(el, '[data-part="middle"]')).columnGap).toBe('18px')
+    const rail = q(el, '[data-part="rail"]').getBoundingClientRect()
+    const pane = q(el, '[data-part="pane"]').getBoundingClientRect()
+    expect(Math.round(pane.left - rail.right)).toBe(18)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────────
+// n20 — the inert arm, byte-stable; and the `:has()`-argument leak the child combinator prevents
+// ─────────────────────────────────────────────────────────────────────────────────────────────────
+describe('ADR-0166 cl.5 — the INERT arm (a bars-free shell) is untouched by the whole mechanism', () => {
+  // The two shipped bars-free slot sets: `ui-agent-admin` composes content + options-pane
+  // (agent-admin.ts:405/515/669); `gen-ui-live` composes nav-pane + content (gen-ui-live.ts:186/190).
+  const SHAPES: ReadonlyArray<{ label: string; slots: readonly Slot[] }> = [
+    { label: "agent-admin's set (content + options-pane)", slots: ['content', 'options-pane'] },
+    { label: "gen-ui-live's set (nav-pane + content)", slots: ['nav-pane', 'content'] },
+  ]
+
+  for (const shape of SHAPES) {
+    it(`${shape.label}: every carded part keeps all FOUR corners at 18px, and middle fills the frame exactly`, () => {
+      const el = mount(shape.slots)
+      for (const card of el.querySelectorAll<HTMLElement>('[data-part="pane"], [data-part="rail"]')) {
+        expectCorners(card, { start: '18px', end: '18px' }, `${shape.label} · ${card.getAttribute('data-part')}`)
+      }
+      const frame = q(el, '[data-part="frame"]').getBoundingClientRect()
+      const middle = q(el, '[data-part="middle"]').getBoundingClientRect()
+      const pane = q(el, '[data-part="pane"]').getBoundingClientRect()
+      // no bar ⇒ middle IS the frame's whole block extent, and the pane starts where middle starts
+      expect(Math.round(pane.top)).toBe(Math.round(middle.top))
+      expect(Math.round(frame.height)).toBe(Math.round(middle.height))
+    })
+  }
+
+  it("cl.3 — a bars-free shell NESTED inside a bar-bearing one keeps its cards ROUND (the `:has()`-argument leak the `> ` combinator prevents)", () => {
+    // THE fixture that bites. `@scope (…) to (ui-super-shell)`'s lower limit constrains what a selector
+    // may MATCH, NOT what a `:has()` argument can SEE — so a DESCENDANT-form rule makes the OUTER frame
+    // match on the INNER shell's bar. Here the direction is the one that matters for the inert arm: the
+    // INNER shell authors no bar, so its OWN frame must not match either rule, and its cards stay round.
+    // A flat, un-nested fixture cannot exhibit the leak and reads as a false green.
+    const outer = mount(['header', 'content', 'footer'])
+    const inner = document.createElement('ui-super-shell') as UISuperShellElement
+    inner.style.blockSize = '200px'
+    for (const slot of ['nav-pane', 'content'] as const) {
+      const child = document.createElement('div')
+      child.setAttribute('data-slot', slot)
+      child.textContent = slot
+      inner.append(child)
+    }
+    q(outer, '[data-part="canvas"]').append(inner)
+
+    const innerPane = q(inner, '[data-part="pane"]')
+    expectCorners(innerPane, { start: '18px', end: '18px' }, 'the NESTED bars-free shell\'s pane')
+    // and the OUTER shell's own cards are unaffected by the nesting (it authored both bars itself)
+    const outerCanvas = q(outer, '[data-part="canvas"]')
+    expect(outerCanvas.contains(inner)).toBe(true)
+  })
+
+  it('cl.3 — the converse direction: a bar-bearing shell nested inside a BARS-FREE one leaves the OUTER cards round', () => {
+    // The mutation-sensitive direction named in the decomposition's n20: with the descendant form, the
+    // outer (bars-free) frame matches on the inner shell's bars and squares its OWN cards against
+    // nothing. With the child form it cannot see them.
+    const outer = mount(['nav-pane', 'content'])
+    const inner = document.createElement('ui-super-shell') as UISuperShellElement
+    inner.style.blockSize = '200px'
+    for (const slot of ['header', 'content', 'footer'] as const) {
+      const child = document.createElement('div')
+      child.setAttribute('data-slot', slot)
+      child.textContent = slot
+      inner.append(child)
+    }
+    q(outer, '[data-part="canvas"]').append(inner)
+
+    const outerPane = q(outer, '[data-part="pane"]')
+    expectCorners(outerPane, { start: '18px', end: '18px' }, "the OUTER bars-free shell's pane")
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────────
+// n12 / n13 — the posture exceptions that must NOT square
+// ─────────────────────────────────────────────────────────────────────────────────────────────────
+describe('ADR-0166 cl.6 — posture exception A: a floating overlay is INSET, not flush, and stays fully round', () => {
+  it('a collapse side, overlay-open at 360px on a header+footer shell, keeps ALL FOUR corners at 18px', async () => {
+    const el = mount(['header', 'nav-pane', 'content', 'footer'], { width: 360, attrs: { 'narrow-start': 'collapse' } })
+    await el.updateComplete
+    const toggle = q(el, '[data-part="side-toggle"][data-side="start"]')
+    toggle.click()
+    await el.updateComplete
+    const pane = q(el, '[data-part="pane"][data-side="start"]')
+    // the overlay arm is live (out of flow, inset inside middle) — the precondition for the assertion
+    expect(getComputedStyle(pane).position).toBe('absolute')
+    // NC (ADR-0166 cl.6): delete the token restore from this narrow overlay arm and this must red
+    // naming `border-start-start-radius`.
+    expectCorners(pane, { start: '18px', end: '18px' }, 'the overlay-open collapse side')
+  })
+})
+
+describe('ADR-0166 cl.7 — posture exception B (fork F2): in a COLUMN, a card\'s canvas-facing corners stay round', () => {
+  it("narrow-start='stack' on a header+footer shell: block-START squared (faces the header), block-END round (faces canvas)", async () => {
+    const el = mount(['header', 'nav-pane', 'content', 'footer'], { width: 360, attrs: { 'narrow-start': 'stack' } })
+    await el.updateComplete
+    const middle = q(el, '[data-part="middle"]')
+    expect(getComputedStyle(middle).flexDirection).toBe('column') // the column posture is live
+    const stacked = q(el, '[data-part="pane"][data-side="start"]')
+    expectCorners(stacked, { start: '0px', end: '18px' }, "the narrow-start='stack' side")
+  })
+
+  it("narrow-end='stack' on a header+footer shell: the pairing INVERTS (block-start round, block-end squared)", async () => {
+    const el = mount(['header', 'content', 'options-pane', 'footer'], { width: 360, attrs: { 'narrow-end': 'stack' } })
+    await el.updateComplete
+    expect(getComputedStyle(q(el, '[data-part="middle"]')).flexDirection).toBe('column')
+    const stacked = q(el, '[data-part="pane"][data-side="end"]')
+    expectCorners(stacked, { start: '18px', end: '0px' }, "the narrow-end='stack' side")
+  })
+
+  it('BOTH sides stacked: each side restores only its OWN canvas-facing pair', async () => {
+    const el = mount(['header', 'nav-pane', 'content', 'options-pane', 'footer'], {
+      width: 360,
+      attrs: { 'narrow-start': 'stack', 'narrow-end': 'stack' },
+    })
+    await el.updateComplete
+    const start = q(el, '[data-part="pane"][data-side="start"]')
+    const end = q(el, '[data-part="pane"][data-side="end"]')
+    expectCorners(start, { start: '0px', end: '18px' }, 'the start side (header above, canvas below)')
+    expectCorners(end, { start: '18px', end: '0px' }, 'the end side (canvas above, footer below)')
+  })
+})
+
+describe('ADR-0166 cl.7 — posture exception C: the narrow-tabs strip owns its own block-start seam', () => {
+  it('the strip is spaced from the box ABOVE it by exactly one module third (6px), not 0 and not 18', async () => {
+    const el = mount(['header', 'content', 'options-pane', 'footer'], { width: 360, attrs: { 'narrow-end': 'tabs' } })
+    await el.updateComplete
+    const strip = q(el, 'ui-tabs[data-part="narrow-tabs"]')
+    expect(getComputedStyle(strip).display).not.toBe('none') // the strip is live at narrow
+    expect(getComputedStyle(strip).marginBlockStart).toBe('6px')
+    const header = q(el, '[data-bar="header"]').getBoundingClientRect()
+    // MEASURED frame order is `header | narrow-tabs | middle | footer` (super-shell.ts's
+    // `middle.before(strip)`), NOT the "between middle and the footer" ADR-0166 Context fact 3 and cl.7
+    // assert. So the strip's own seam sits under the HEADER, and it is the pane's block-START (not its
+    // block-END) that faces the strip. The clause's pane-restore half is therefore NOT built — see the
+    // escalation note in super-shell.css and the order pin in super-shell.test.ts.
+    expect(Math.round(strip.getBoundingClientRect().top - header.bottom)).toBe(6)
+  })
+
+  it("SCOPE FENCE — a MIXED posture (narrow-start='stack' + narrow-end='tabs') is ruled OUT OF SCOPE; this records what it DOES, and asserts nothing about what it should", async () => {
+    // ADR-0166 cl.7: reachable from shipped API (chat-shell.ts:35's FORWARD_ATTRS carries both), no
+    // shipped instance authors it, and "the first consumer to author a mixed posture files an issue and
+    // this clause gains a row". So: no expectation on the corner outcome — only proof that it renders
+    // without throwing and that BOTH arms are simultaneously live, which is the hazard itself.
+    const el = mount(['header', 'nav-pane', 'content', 'options-pane', 'footer'], {
+      width: 360,
+      attrs: { 'narrow-start': 'stack', 'narrow-end': 'tabs' },
+    })
+    await el.updateComplete
+    expect(getComputedStyle(q(el, '[data-part="middle"]')).flexDirection).toBe('column')
+    expect(getComputedStyle(q(el, 'ui-tabs[data-part="narrow-tabs"]')).display).not.toBe('none')
+    const stacked = q(el, '[data-part="pane"][data-side="start"]')
+    // Recorded, not ruled: the stacked start side behaves exactly as the pure-stack posture does.
+    expectCorners(stacked, { start: '0px', end: '18px' }, 'MIXED posture — the stacked start side (recorded, not ruled)')
+  })
+})
