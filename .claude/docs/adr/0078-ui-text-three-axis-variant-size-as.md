@@ -123,8 +123,8 @@ typescale properties and live in `text.css`'s variant blocks (cl.3):
 
 | Extension role | Type rows (per size lg/md/sm) | Derivation + treatment |
 |---|---|---|
-| **kicker** | label sizes/line-heights · weight **700** · tracking **0.08** | the headline eyebrow: label metrics emboldened + `text-transform: uppercase` (text.css). Ink stays the one neutral on-surface role — an accent-colored kicker was REJECTED (color must not be the load-bearing signifier, ADR-0057 spirit; authors/themes may still color the host). |
-| **overline** | label sizes/line-heights · weight 500 · tracking **0.15** | M2's overline heritage (10px/1.5px ≡ 0.15em), which M3 dropped and maps to label-small; + `text-transform: uppercase` (text.css). Distinct from kicker by weight (500 vs 700) and tracking. |
+| **kicker** | label sizes/line-heights · weight **700** · tracking **0.08** — **RE-RULED, see [REV 2026-07-30](#amendment--rev-2026-07-30-the-cl2b-kicker-row-is-re-ruled-to-weight-400--tracking-02em-all-three-sizes-gh-370): weight **400** · tracking **0.2**, all three sizes** | the headline eyebrow: label metrics emboldened + `text-transform: uppercase` (text.css). Ink stays the one neutral on-surface role — an accent-colored kicker was REJECTED (color must not be the load-bearing signifier, ADR-0057 spirit; authors/themes may still color the host). |
+| **overline** | label sizes/line-heights · weight 500 · tracking **0.15** | M2's overline heritage (10px/1.5px ≡ 0.15em), which M3 dropped and maps to label-small; + `text-transform: uppercase` (text.css). Distinct from kicker by weight (500 vs 700) and tracking — **the weight half of that contrast INVERTED at [REV 2026-07-30](#amendment--rev-2026-07-30-the-cl2b-kicker-row-is-re-ruled-to-weight-400--tracking-02em-all-three-sizes-gh-370): overline's 500 is now the heavier of the pair (kicker is 400); overline's OWN rows are unchanged.** |
 | **lead** | lg **22**/1.455 · md **18**/1.444 · sm **16**/1.5 · weight 400 · tracking 0 (sm: 0.031) | the enlarged opening paragraph: body at title-class sizes with body's weight — lg borrows title-large's 22px at weight 400; sm ≡ body-large; md the midpoint. |
 | **quote** | ≡ lead rows (own tokens, changeable independently) | block quotation: lead metrics + `font-style: italic` + an inline-start rule `3px solid var(--md-sys-color-neutral-outline-variant)` + `padding-inline-start` from the `--ui-space-*` rhythm family (builder picks the ≈12px step; rhythm, so density-responsive is correct) — all in text.css. Pairs naturally with `as="blockquote"` (not enforced — axes stay orthogonal). |
 
@@ -365,3 +365,80 @@ delete `--ui-type-*` refs from living docs (cl.6 list) · `text-doc` page prose.
   enumerated, same-build-swept consumer base, the hard break + zero-survivor grep is cheaper and honest.
 - **Accent-colored kicker ink** — rejected (cl.2b): color as the distinguishing signifier violates the
   ADR-0057 non-color-signifier rule; weight + tracking + case carry the distinction.
+
+## Amendment — REV 2026-07-30: the cl.2b `kicker` row is re-ruled to weight 400 · tracking 0.2em, all three sizes ([GH #370](https://github.com/kimgranlund/agent-ui/issues/370))
+
+> Append-only; this corrects the **`kicker` row of the cl.2b extension table** (§cl.2b, the row reading
+> "weight **700** · tracking **0.08**" and "label metrics emboldened"), the **`overline` row's** comparison
+> clause ("Distinct from kicker by weight (500 vs 700) and tracking"), and the §Alternatives-considered line
+> immediately above ("weight + tracking + case carry the distinction"). The Status and `Ratified by` cells are
+> untouched; every other clause — the three axes, the 15 M3-verbatim rows, the `*`-ramp/`:root` split, the
+> lg/md/sm ↔ large/medium/small mapping, the uppercase-lives-in-`text.css` rule — stands unedited above.
+> Kim's ruling, 2026-07-30, on GH #370.
+
+**The report, and the ruling.** Kim reported `ui-nav-rail-group`'s `context-label` — which correctly consumes
+this role rather than hard-coding values — as wrong: it "should read **like a kicker** — all caps, 20%
+letter-spaced, 400 weight", and the shipped role was **none of those three things** (700 weight, 0.08em
+tracking, no casing). Presented with the fork — (a) the role is wrong, or (b) the one consumer should diverge
+— **Kim ruled (a): the role itself changes.** Read the cl.2b table's kicker row as:
+
+| Extension role | Type rows (per size lg/md/sm) | Derivation + treatment |
+|---|---|---|
+| **kicker** | label sizes/line-heights · weight **400** · tracking **0.2** | the headline eyebrow: label metrics at REGULAR weight, widely tracked + `text-transform: uppercase` (text.css). Ink unchanged — the neutral on-surface role stands, and the accent-ink rejection below stands with it. |
+
+**All three sizes moved together, not the two the issue's blast-radius census counted.** `kicker-large` is a
+real, shipped, rendered cell (`ui-text[variant='kicker'][size='lg']`, on the docs site's own typography
+specimen strip beside its siblings). A role whose sizes disagree on weight is not a role — the ruling's own
+criterion, applied to the row it did not enumerate.
+
+**Casing stays a CONSUMER treatment; cl.2b's "non-scale treatments live in `text.css`" rule is UNCHANGED.**
+No `text-transform` axis was minted in the typescale family. The settled shape was already in the tree:
+`ui-text[variant='kicker']` applies `text-transform: uppercase` in its own `@scope` while reading the role's
+four dimension tokens (cl.3). `nav-rail.css`'s `[data-part='context-label']` now does exactly the same thing,
+which is what makes Kim's "all caps" true at the reported surface. That file's prior comment justified the
+opposite ("case is left AS-AUTHORED … these labels are proper names") — repaired in the same change.
+
+**Consequences of this REV, recorded, including the unflattering one:**
+
+- **`overline` (500/0.15em) is now the HEAVIER of the editorial pair, and the two are near-indistinguishable
+  on the specimen strip.** cl.2b built the kicker/overline distinction on "weight (500 vs 700) and tracking";
+  after this ruling it is weight 500 vs **400** and tracking 0.15em vs 0.2em — a half-step of weight in the
+  opposite direction plus 0.05em of tracking. Verified visually, not inferred: on `text-doc.html` at 1400px
+  the kicker and overline rows, previously obvious at a glance (bold vs medium), now read as the same
+  treatment. This is recorded as an observed consequence of the ruling, NOT smoothed over and NOT
+  independently repaired — whether `overline` should move to restore the contrast is a separate design
+  question, unasked and unruled.
+- **The Alternatives-considered line above ("weight + tracking + case carry the distinction") is weakened to
+  tracking + case.** The accent-ink rejection itself STANDS — this REV changes which non-color signifiers do
+  the work, not the rule that color must not.
+- **`[emphasis]` (ADR-0109) stops being a no-op on kicker.** It was documented as honestly no-op'ing there
+  because kicker was itself 700; `kicker` + `emphasis` is now a real 400 → 700 step, and **no role in the
+  27-row scale is 700 by default anymore**. ADR-0109's DECISION needs no amendment (its one-line
+  `--ui-text-weight: 700` repoint is unchanged), but its RATIONALE reads counterfactual in four places
+  (`:38-39` "700 (kicker)" · `:62` "distinguished BY weight (700 vs 500)" · `:95`/`:119` the no-op claims) —
+  a dated forward-pointer REV was appended there to the same effect.
+  **Census correction (this bullet's first draft was wrong, and the error is recorded rather than
+  overwritten):** it claimed the stale claim "lived in `text.css`'s comment and `text.browser.test.ts`'s
+  no-op leg, both repaired in the same change" — an assertion of COMPLETENESS that was false. The same claim
+  also lived in the SHIPPED DESCRIPTOR, `text.md` (the `emphasis` prop comment and the *Emphasis* section's
+  "no knob for a heavier kicker") — which renders at `/text-doc.html` and is baked verbatim into the
+  agent-facing `llms-full.txt`. No gate could catch it: `llms.test.ts` checks byte-FRESHNESS only, so source
+  and artifact carried the identical falsehood in agreement. Found in review (PR #373), repaired, and the
+  artifact regenerated. The lesson this REV now carries: a "both repaired" claim about a typescale role must
+  enumerate the DESCRIPTOR and the generated agent-facing artifacts, not just the CSS and its tests.
+- **Measured, not assumed: the trailing-letter-spacing artifact grows but stays sub-perceptual.** CSS
+  `letter-spacing` adds its space AFTER the last glyph, so a CENTERED kicker's ink sits `tracking / 2` left of
+  the box centre. A raw-pixel ink-column scan of a centered specimen measured the shift at −0.50px under the
+  old 0.08em and **−1.00px (sm) / −1.50px (md)** under 0.2em. Those are MEASURED, deliberately-not-idealized
+  numbers and should not be read as exact: theory predicts tracking/2 = 1.10px (sm) and 1.20px (md), so the
+  md figure runs ~0.3px loose. The scan quantizes to whole device pixels and thresholds antialiased glyph
+  edges, which is enough to explain the gap — the DIRECTION and the ~2-3× growth are the findings here, not
+  the third decimal. Box/`Range` geometry cannot see this at all
+  (both report 0.00 — they include the trailing space), so a future report of "the centered kicker looks
+  off" must be settled with pixels. No shipped surface centers a kicker today, so nothing was compensated;
+  the remedy if one ever ships is one `margin-inline-start` on THAT consumer, never a role change.
+- **Trip-wires that pinned the old values moved with the law** (not to make a check pass):
+  `dimensions.test.ts`'s cl.2b `EXTENSIONS` table · `nav-rail.browser.test.ts` (weight, `textTransform`, and
+  a tracking assertion tightened from `> 0.5` to `toBeCloseTo(2.2, 1)` so a slide back to 0.08em reds) ·
+  `text.browser.test.ts`'s emphasis leg. The two generated artifacts carrying built `dimensions.css` bytes
+  were regenerated (`dogfood-assets.ts`, `theme-provider-built.css`).

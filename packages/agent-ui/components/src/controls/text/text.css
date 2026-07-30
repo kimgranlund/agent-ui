@@ -225,7 +225,9 @@
 /* ── [emphasis] (ADR-0109, the fifth orthogonal axis) — declared LAST: :where() keeps every repoint at
    specificity 0, so source order is what lets this one beat every role/size-override block above on a tie.
    700 is the platform's bold register (the CSS `bold` keyword) — a platform constant, not a new fleet
-   token and not a typescale-row edit; no-ops honestly on kicker (already 700). ── */
+   token and not a typescale-row edit. (It used to no-op on kicker, which was itself 700; since GH #370
+   re-ruled the kicker role to 400/0.2em, [emphasis] is a REAL 400 → 700 step there like everywhere else,
+   and no role in the scale is 700 by default anymore.) ── */
 :where(ui-text[emphasis]) {
   --ui-text-weight: 700;
 }
