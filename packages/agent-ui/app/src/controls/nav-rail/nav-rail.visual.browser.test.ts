@@ -21,6 +21,23 @@ import './nav-rail.ts'
 // list, and `it.skipIf(server.browser !== 'chromium')` is the ADR's named belt-and-braces fallback. WebKit
 // keeps the computed-style/whole-shape legs in nav-rail.browser.test.ts as its sanctioned proof.
 //
+// WHAT THESE BASELINES DO AND DO NOT POLICE — measured, not assumed (four controls run on this fixture,
+// GH #368). The comparator is pixelmatch at `includeAA: false`, per-pixel `threshold: 0.1`, and
+// `allowedMismatchedPixelRatio: 0.01` of the WHOLE shot:
+//   · CARD GESTALT — police STRONGLY. Repointing the card's `background` reddened both legs at
+//     "20578 pixels (ratio 0.61) differ", 61× the tolerance. Border, fill, radius, shadow, size and the
+//     anchor offset are all in this class, and that is exactly the claim n22 exists to hold: the GH #368
+//     defect was a full-bleed band reading as the shell's edge instead of the menu's own outline.
+//   · SMALL-TEXT TYPOGRAPHY — does NOT police. When main's GH #370 landed mid-build and re-ruled the kicker
+//     role (mixed-case bold -> uppercase, weight 400, 0.2em tracking), BOTH context-label headings visibly
+//     changed and check mode still passed — at a 300×320 frame AND at this tighter one. `includeAA: false`
+//     discards the antialiased edges that are most of small-text ink, and the residue lands under the 1%
+//     whole-shot ratio. A 10%-alpha tint is likewise absorbed, by the per-pixel `threshold` instead.
+//     Typography here is policed by nav-rail.browser.test.ts's computed-style assertions (font-size,
+//     weight, tracking, text-transform), which is where GH #370's own gate lives.
+// Recorded so nobody reads a green here as "the card is pixel-perfect in every respect" — it means the
+// card's SHAPE is unchanged. Both legs also carry non-pixel anti-vacuity assertions for that reason.
+//
 // DETERMINISM. Three things are pinned deliberately:
 //   1. No clock, no random, no network — the fixture is a literal item list.
 //   2. The stage is mounted at the TOP of the viewport and is tall enough to contain the panel, so
@@ -67,21 +84,50 @@ async function settle(): Promise<void> {
 }
 
 /**
- * A fixed 300px × `blockSize` stage pinned to the TOP-LEFT of the viewport. Absolute placement is what
- * makes the framing reproducible: the trigger always lands at a known y, so the panel always resolves
+ * A fixed `STAGE_INLINE` × `blockSize` stage pinned to the TOP-LEFT of the viewport. Absolute placement is
+ * what makes the framing reproducible: the trigger always lands at a known y, so the panel always resolves
  * `bottom-start` and always falls inside the stage's own rect — which is the box the screenshot clips to.
+ *
+ * The stage is sized TIGHTLY around the trigger + card on purpose, and `assertFramedTightly` below turns
+ * that into a checked property. Measured reason (GH #368, caught when main's GH #370 landed mid-build): the
+ * comparator's `allowedMismatchedPixelRatio` is a fraction of the WHOLE shot, so dead space in the frame
+ * dilutes it. At a 300×320 stage the kicker re-ruling (mixed-case bold -> uppercase, weight 400, 0.2em
+ * tracking) rewrote both context-label headings and the check STILL passed — a real, plainly visible
+ * typographic change absorbed by the tolerance. A baseline that cannot bite is worse than no baseline.
  */
+const STAGE_INLINE = 210 // > the card's 192px min-inline-size floor, so "narrower than the rail" still holds
 function stage(blockSize: string, extra?: (el: HTMLElement) => void): HTMLElement {
   const el = document.createElement('div')
   el.style.position = 'fixed'
   el.style.inset = '0 auto auto 0'
-  el.style.inlineSize = '300px'
+  el.style.inlineSize = `${STAGE_INLINE}px`
   el.style.blockSize = blockSize
   el.style.background = 'var(--md-sys-color-neutral-surface-lowest)'
   extra?.(el)
   document.body.append(el)
   mounted.push(el)
   return el
+}
+
+/**
+ * The sensitivity guard: the trigger + card must together fill most of the captured frame, or the
+ * comparator's whole-shot pixel ratio is too dilute to notice a real change. Asserted rather than trusted,
+ * because the failure mode is a SILENT always-green baseline.
+ */
+function assertFramedTightly(host: HTMLElement, trigger: HTMLElement, list: HTMLElement): void {
+  const h = host.getBoundingClientRect()
+  const t = trigger.getBoundingClientRect()
+  const l = list.getBoundingClientRect()
+  const frame = h.width * h.height
+  const content = t.width * t.height + l.width * l.height
+  expect(
+    content / frame,
+    `${server.browser}: the shot is mostly dead space (${Math.round((content / frame) * 100)}% content) — ` +
+      'the comparator ratio would absorb a real visual change',
+  ).toBeGreaterThan(0.6)
+  // And the card must actually be INSIDE the frame, or the baseline pins empty background.
+  expect(l.bottom, `${server.browser}: the card overflows the captured frame`).toBeLessThanOrEqual(h.bottom + 1)
+  expect(l.right, `${server.browser}: the card overflows the captured frame`).toBeLessThanOrEqual(h.right + 1)
 }
 
 /** The grouped, link-shaped menu rail both baselines frame — SPEC-R6 anatomy, no tag on the selected row. */
@@ -118,7 +164,7 @@ describe('ui-nav-rail collapse="menu" — the open flyout card, pinned (GH #368,
   it.skipIf(server.browser !== 'chromium')(
     '(a) card: the open panel is a content-sized, four-side-bordered card offset below its trigger',
     async () => {
-      const host = stage('320px')
+      const host = stage('252px')
       const rail = menuRail()
       host.append(rail)
       await settle()
@@ -138,6 +184,7 @@ describe('ui-nav-rail collapse="menu" — the open flyout card, pinned (GH #368,
         list.getBoundingClientRect().width,
         `${server.browser}: the card is full-bleed against the rail — the GH #368 defect`,
       ).toBeLessThan(rail.getBoundingClientRect().width)
+      assertFramedTightly(host, trigger, list)
 
       await expect.element(page.elementLocator(host)).toMatchScreenshot('nav-rail-menu-flyout-card')
     },
@@ -148,9 +195,9 @@ describe('ui-nav-rail collapse="menu" — the open flyout card, pinned (GH #368,
     async () => {
       // The stage is the SHOT frame; the clipper inside it is the 44px box that would slice a
       // position:absolute panel off at its own bottom edge.
-      const host = stage('320px')
+      const host = stage('252px')
       const clipper = document.createElement('div')
-      clipper.style.inlineSize = '300px'
+      clipper.style.inlineSize = `${STAGE_INLINE}px`
       clipper.style.blockSize = '44px'
       clipper.style.overflow = 'hidden'
       // A FIXTURE marker, not a component style: a literal-colour dashed outline draws on the clipper's own
@@ -174,6 +221,7 @@ describe('ui-nav-rail collapse="menu" — the open flyout card, pinned (GH #368,
         list.getBoundingClientRect().bottom,
         `${server.browser}: the panel does not extend past the clipper, so this baseline would be vacuous`,
       ).toBeGreaterThan(clipper.getBoundingClientRect().bottom + 4)
+      assertFramedTightly(host, trigger, list)
 
       await expect.element(page.elementLocator(host)).toMatchScreenshot('nav-rail-menu-flyout-unclipped')
     },
