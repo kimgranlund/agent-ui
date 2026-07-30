@@ -60,9 +60,17 @@
   row-gap: 0.4rem;
 }
 
+/* GH #369 — `align-items: flex-start` is load-bearing, not cosmetic: a column flex's DEFAULT cross-axis
+   alignment is `stretch`, so the `code` chip below inflated to the width of its widest sibling — the
+   uppercase `.api-field-label` above it (measured: chip 50.73px === label 50.73px for `false` under
+   "DEFAULT", where the text itself is only 36.78px). The chip must hug its own text wherever it appears,
+   so the constraint belongs HERE, on the flex container, not on the shared global `code` rule
+   (_page.css) — that rule stays `display: inline` so `box-decoration-break: clone` keeps working for
+   backtick spans wrapping across lines in running text. */
 .api-field {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 0.2rem;
   min-inline-size: 0;
 }
