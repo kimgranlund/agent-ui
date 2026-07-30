@@ -171,10 +171,10 @@
      together: a role whose sizes disagree on weight is not a role. Casing stays at the CONSUMER
      (text.css's `[variant='kicker']` uppercase treatment; nav-rail.css's context-label now matches it) —
      these are dimension tokens, so no transform axis was minted.
-     STALE RECORD, deliberately NOT edited from a build seat: ADR-0078 cl.2b's own table still reads
-     kicker "weight 700 · tracking 0.08" + "label metrics emboldened", and its overline row still says
-     "distinct from kicker by weight (500 vs 700)". Both need a design-seat amendment + Kim's
-     ratification; reported with this change. */
+     THE RECORD: cl.2b's own table (and its overline row's "distinct from kicker by weight (500 vs 700)")
+     described the pre-ruling values, and is corrected by an append-only amendment — see **ADR-0078
+     REV 2026-07-30**, which restates the kicker row, records that overline is now the HEAVIER of the
+     editorial pair, and carries the rest of this ruling's consequences. */
   /* extension — not MD3 (cl.2b): the headline eyebrow — label metrics at REGULAR weight, WIDELY tracked,
      + uppercase (text.css). Ink stays the one neutral on-surface role (ADR-0057 — color is not the
      load-bearing signifier). */

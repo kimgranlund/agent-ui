@@ -160,3 +160,32 @@ NAME carries `emphasis`+`truncate` composed, the "names, labels, key values" tea
 (b) the `a2ui-catalog.spec.md` §5.2 usage note. A per-prop hint lane in the prompt grammar remains a
 possible future extension; it is NOT owed by this record. (Surfaced by the catalog-row review's D6/minor-2
 findings; the exemplar was the review's one promotion blocker, landed same wave.)
+
+## Amendment — REV 2026-07-30: the `kicker` premise this record reasons from is retired ([GH #370](https://github.com/kimgranlund/agent-ui/issues/370))
+
+> Append-only, and a FORWARD POINTER only (the `f0debd6` precedent): **this record's DECISION is unchanged**
+> — `[emphasis]` is still one `:where(ui-text[emphasis]) { --ui-text-weight: 700 }` repoint, declared last,
+> with no stamp leg and no semantic stamping. What changed is a premise it reasons FROM, in another record.
+> Status and `Ratified by` cells are untouched; no clause is edited.
+
+**Kim ruled on 2026-07-30 (GH #370) that the `kicker` typescale role is weight 400 / tracking 0.2em, at all
+three sizes — see [ADR-0078](./0078-ui-text-three-axis-variant-size-as.md)'s own `## Amendment — REV
+2026-07-30`, which owns that change and its consequences.** Four passages here read counterfactual against
+the shipped scale as a result, and are to be read as follows:
+
+| Here | As authored | Read as |
+|---|---|---|
+| §Context `:38-39` | the three registers "400 (…), 500 (…), 700 (kicker)" | **two** registers — 400 (display/headline/title-lg/body/lead/quote **and kicker**) and 500 (title-md/sm, label, overline). No typescale row is 700 anymore; 700 is now reachable ONLY through `[emphasis]`. |
+| §Context `:62` | "kicker vs overline are distinguished BY weight (700 vs 500)" | distinguished by weight in the OPPOSITE direction (400 vs overline's 500 — overline is now the heavier) and by tracking (0.2em vs 0.15em). ADR-0078's REV records that the pair is now near-indistinguishable on the specimen strip, as an observed consequence. |
+| §Decision cl.2 `:95` | "no-ops honestly on kicker (already 700)" | a REAL 400 → 700 step on kicker, like every other variant. |
+| §Acceptance `:119` + §Consequences | "the **no-op leg** — kicker + `emphasis` stays 700" · "**No-op on kicker** (already 700) — stated, honest" | that leg is now a live differential leg (400 unemphasized → 700 emphasized) and has been rewritten in `text.browser.test.ts` accordingly. The "no knob for a *heavier* kicker" note still holds for weights ABOVE 700. |
+
+**Consequences of this REV, recorded:** this record's §Context argument *against* a graded `weight` enum is
+**strengthened, not weakened** — the substrate is now register-POORER (two rows, not three), so an absolute
+weight enum would collapse even more role distinctions than the original reasoning claimed. The
+sole-signifier guidance (§Decision cl.4 / the ADR-0057 extension) is untouched and, if anything, more
+load-bearing: with kicker at 400 the fleet has one fewer non-color signifier doing structural work. The
+stale claims that shipped in CODE rather than in prose (`text.css`'s comment, `text.md`'s prop comment and
+*Emphasis* section, `text.browser.test.ts`'s no-op leg, and the regenerated `llms-full.txt`) are repaired in
+the GH #370 wave; the `text.md`/`llms-full.txt` pair was missed by that wave's first census and caught in
+review (PR #373) — ADR-0078's REV carries that correction.
