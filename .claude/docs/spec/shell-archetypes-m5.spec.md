@@ -1,6 +1,11 @@
 # SPEC — Shell archetypes M5: `ui-super-shell` (the two-level recursive shell grammar)
 
-> Status: accepted · v0.7 · 2026-07-25 · Layer: app chrome (`@agent-ui/app`)
+> Status: accepted · v0.8 · 2026-07-30 · Layer: app chrome (`@agent-ui/app`)
+> v0.8 (2026-07-30) — [ADR-0166](../adr/0166-super-shell-bars-own-their-seam.md)'s amendment sheet
+> applied at the build gate (GH #371): R11a's frame-geometry enumeration gains its block-axis
+> carve-out, R11c gains a THIRD disposition (a border WIDTH is outside the literal law's scope),
+> AC19 gains a scope note (no predicate or allowlist change), and the new **R11d** carries the
+> bar-seam contract + the per-side corner matrix as a table.
 > Refines: [ADR-0151](../adr/0151-named-shell-archetypes-m5.md) (accepted — ratified by Kim
 > 2026-07-19) · the agent-app-surfaces PRD's M5 (PRD-G9).
 > Follows the established PATTERNS of: [ADR-0082](../adr/0082-app-shell-per-instance-isolation.md) /
@@ -310,7 +315,12 @@ mechanism — R13 states the requirement that build must clear, not its mechanis
   `super-shell.css`'s token block) via its shipped multiples (×3 bars/rails, ×9 floors, ×14 panes)
   and fractions (`/3`, `×2/3`); the corner radius is the ONE frame dimension chained the other way
   — `var(--md-sys-shape-corner-lg, var(--ui-super-shell-module))`, fleet shape role first, module
-  only as FALLBACK. CONTENT-tier spacing — inside panes and segments, chrome rows, page content —
+  only as FALLBACK. *REV 2026-07-30 (ADR-0166, GH #371) — the enumeration gains a BLOCK-AXIS
+  carve-out: the frame declares **no gap at all**, so `gap` names the INLINE seam inside
+  `[data-part='middle']` (and inside a bar's own item row) only, and the bar↔body seam is a
+  bar-owned 1px hairline off `--ui-super-shell-bar-seam` — the **second** frame dimension not on the
+  module ladder, alongside the corner radius this clause already excepts. The one-junction rule and
+  the two-ladder boundary are otherwise untouched. See R11d for the seam and the corner matrix.* CONTENT-tier spacing — inside panes and segments, chrome rows, page content —
   uses the fleet's `--md-sys-space-*` ladder (4/8/12/16/24/32px, density-multiplied;
   `dimensions.css`, ADR-0015 cl.4). The two ladders meet at exactly ONE value: `--md-sys-space-md` (12px = 0.75rem)
   = module × 2/3 — a deliberately NESTED pair, not drift. That 0.75rem rung is the sanctioned
@@ -344,6 +354,69 @@ mechanism — R13 states the requirement that build must clear, not its mechanis
   `[data-part='pane-resizer']` rule, `inline-size: 0.25rem`) — a control dimension that coincides
   with `--md-sys-space-xs` numerically, not semantically; it is AC19's one allowlist entry at
   landing.
+  *REV 2026-07-30 (ADR-0166, GH #371) — a THIRD disposition, because the clause as written sorted
+  every literal into exactly two bins and a border width fits neither.* Until now a raw length was
+  either **drift** (equals a ladder value ⇒ convert it) or a named **OUTLIER** (no ladder rung,
+  sanctioned as-is because there is nothing lawful to convert it to — a closed five-entry list whose
+  growth is a reviewed act). The `1px` in `--ui-super-shell-bar-seam` is neither: it equals no rung,
+  so it is not drift, and it is not on the closed list — and it escapes AC19 twice over (border
+  properties are absent from the property families, and the composite value's `solid` arm
+  disqualifies the minting check), so it would land **governed by nothing at all**, precisely the
+  state this clause exists to forbid. **Therefore: a border WIDTH is outside the literal law's scope,
+  categorically.** R11c's ladders measure space *between and inside* boxes; a border width is a paint
+  dimension with no ladder to sit on — a hairline's only sensible value is a device-pixel hairline,
+  which is why `1px` recurs unremarked at `_page.css`'s `[data-site-nav]` and elsewhere. TWO
+  narrowings keep this from becoming a laundering route: it covers border **width** only, and a
+  border used as *spacing* (a transparent border standing in for padding) stays fully in scope as
+  drift. Chosen over a sixth OUTLIER entry deliberately — that list is a list of individual
+  sanctioned pixels, and putting hairlines on it would oblige every future 1px border in the family
+  to earn its own reviewed row, growing a closed list without bound for a class question one clause
+  answers once.
+
+- **R11d — the block-axis seam and the per-side corner matrix** *(new 2026-07-30, ADR-0166, GH
+  #371 — Kim's ruling; lands as a table rather than prose so a future band or posture has something
+  to extend).* The frame declares no block-axis gap. Each bar draws a 1px hairline on its
+  BAR-FACING edge, inside its own border box, off `--ui-super-shell-bar-seam` (one composite,
+  consumer-repointable value — the TKT-0062 repoint law); the bar's `box-sizing: border-box` plus
+  its `min-block-size` absorb that 1px, so a bar's OUTER height does not change. A carded part
+  (`rail`/`pane`/`pane-resizer`) consumes a block-axis radius token PAIR as its four LOGICAL
+  longhands; frame-level `:has(> [data-bar='header'])` / `:has(> [data-bar='footer'])` rules zero
+  one or both. The `> ` child combinator is MANDATORY — `@scope`'s lower limit constrains what a
+  selector may MATCH, not what a `:has()` argument can SEE, so the descendant form matches an outer
+  frame on a NESTED shell's bar (confirmed cross-engine). `canvas` and `scrim` carry no radius and
+  are untouched.
+  **Row posture** (wide · compact · narrow without `stack`) — `middle` is a row, so the outcome is
+  uniform across all three carded parts:
+
+  | bars authored | block-start pair | block-end pair |
+  |---|---|---|
+  | none | round | round |
+  | header only | **0** | round |
+  | footer only | round | **0** |
+  | header + footer | **0** | **0** |
+
+  A bars-free shell is byte-stable by construction, not by carve-out: neither rule matches, both
+  tokens hold their default, and the mechanism simply does not fire.
+  **Three postures restore a pair**, and each is a place a future posture must remember to look:
+  (A) a floating OVERLAY is inset, not flush — it touches no bar, so all six overlay arms restore
+  BOTH pairs on the overlaid card, by re-declaring the custom property on the card itself (an
+  own-element declaration beats an inherited value with no specificity arms-race). (B) in a COLUMN
+  (`narrow-*='stack'`), a card's canvas-facing block edge faces a SIBLING, so the restore is keyed
+  PER SIDE off the stack arm's own restore selector — `narrow-start='stack'` keeps block-start
+  squared and restores block-end, `narrow-end='stack'` inverts. `:first-child`/`:last-child` cannot
+  express this (`scrim` is unconditionally `middle`'s first child, and a collapsed sibling keeps its
+  child index while `display: none`). (C) the narrow-tabs STRIP owns its own block-start seam at
+  `calc(var(--ui-super-shell-module) / 3)`, one of R11a's named shipped fractions.
+  **Axis qualification, and it is load-bearing:** the reading that `rail`/`pane`/`pane-resizer` are
+  separate floating cards with gaps between them (stated in `super-shell.css`'s own GH #253
+  rationale, not previously in this SPEC) holds on the INLINE axis within `middle`, verbatim — gaps
+  and the GH #214 resizer footprint are untouched. On the BLOCK axis a card is FLUSH against an
+  adjacent bar with its bar-facing corners squared, except in the three postures above. There is no
+  such thing as a card's "inline radii": a corner belongs to both axes at once, so squaring the
+  block-start pair removes the top-left and top-right corners outright.
+  **OUT OF SCOPE, declared rather than left silent:** a MIXED posture (`narrow-start='stack'` +
+  `narrow-end='tabs'`) is reachable from shipped API and no shipped instance authors it. The first
+  consumer to author one files an issue and this clause gains a row.
 
 ### SPEC-R12 — the scope-proximity display-override law (consumer overrides × dual-role ownership)
 
@@ -438,6 +511,23 @@ the entry (GH #213 appends a second: `--ui-super-shell-module`'s own root defini
 literal — the head of the token block has no var() to chain to) · (d) **baseline** — born ZERO: the
 gate lands with (or after) the mop-up wave's conversions, never with a red or grandfathered count ·
 (e) the test's header cites SPEC-R11c/AC19, so a future red reads as law, not lint noise.
+
+*NOTE 2026-07-30 (ADR-0166, GH #371) — no predicate change, no allowlist change, recorded because
+"the gate stayed green" is otherwise indistinguishable from "the gate was never in scope."* The
+bar-seam wave is out of AC19's scope **by construction**: `border-block-start`/`border-block-end`
+are not in (b)'s property families; `--ui-super-shell-bar-seam`'s value carries a non-dimension-shaped
+arm (`solid`), so the minting check's shape gate returns false — the same path this clause's own
+`box-shadow`/`rgb()` reasoning already names; and `1px` matches no rung either way. The radius pair's
+`var(...)`-valued defaults are skipped as var() arms. ONE step is worth spelling out, because it is
+the place the argument nearly goes the other way: the presence rules' `--ui-super-shell-radius-block-*: 0`
+declarations ARE in minting scope (a bare `0` is dimension-shaped), and they pass only because a
+literal requires a `px`/`rem` unit — in scope and clean, not out of scope, a distinction that matters
+the moment someone writes `0px` there instead. The gate's born-ZERO baseline and its two-entry
+allowlist are therefore unchanged by this wave, and `shell-spacing-gate.test.ts` is not edited.
+Corollary for anyone writing a control here: **never anchor an AC19 negative control on `1px`** — it
+occurs in `_page.css` comments and in R11c's sanctioned `-1px` outlier, so a mutation there proves
+nothing (verified: a `1px`-valued probe token leaves the gate GREEN). Use a united literal that
+occurs nowhere else.
 
 AC20 (extends §6) — **floors hold under passive resize, cross-engine.** With both sides authored
 full (a dual-resizable configuration is the sweep vehicle; a rails+panes `FORWARD_ATTRS`-shaped
