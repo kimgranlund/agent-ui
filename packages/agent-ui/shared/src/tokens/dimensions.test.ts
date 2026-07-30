@@ -375,9 +375,11 @@ describe('dimensions.css — the --md-sys-typescale-* fleet typographic scale (A
   // the 12 editorial-extension rows (cl.2b) — kicker/overline/quote/lead, each `/* extension — not
   // MD3 */`-marked in dimensions.css.
   const EXTENSIONS: Array<[string, number, number, string, string]> = [
-    ['kicker-large', 14, 700, '1.429', '0.08em'],
-    ['kicker-medium', 12, 700, '1.333', '0.08em'],
-    ['kicker-small', 11, 700, '1.455', '0.08em'],
+    // GH #370 (Kim's ruling 2026-07-30, option (a)) — the kicker role is 400 weight / 0.2em tracking at
+    // every size ("all caps, 20% letter-spaced, 400 weight"); casing stays a consumer treatment.
+    ['kicker-large', 14, 400, '1.429', '0.2em'],
+    ['kicker-medium', 12, 400, '1.333', '0.2em'],
+    ['kicker-small', 11, 400, '1.455', '0.2em'],
     ['overline-large', 14, 500, '1.429', '0.15em'],
     ['overline-medium', 12, 500, '1.333', '0.15em'],
     ['overline-small', 11, 500, '1.455', '0.15em'],
