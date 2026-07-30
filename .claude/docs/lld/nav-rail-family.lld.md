@@ -6,7 +6,7 @@
 > 2026-07-12 — the seven ratifying clauses this LLD builds to).
 > **REV 2026-07-30 (v1.1, GH #368):** LLD-C4's mechanism is rewritten — the `collapse="menu"` arm composes
 > the fleet's `overlay()` controller directly (top layer, anchored, platform light-dismiss) instead of a
-> ported UA disclosure wrapper, with host-owned trigger ARIA and an explicit CSS→JS threshold bridge; and
+> ported UA summary wrapper, with host-owned trigger ARIA and an explicit CSS→JS threshold bridge; and
 > LLD-C7's parts list drops the retired wrapper part. Behaviour is SPEC-R5/AC3's; this doc states only HOW.
 > Decomposition: [`../decompositions/nav-rail-family.decomp.json`](../decompositions/nav-rail-family.decomp.json)
 > (coverage-clean; nodes ≈ the components below). Build-order edges are the decomposition's.
