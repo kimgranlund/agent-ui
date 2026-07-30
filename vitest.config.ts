@@ -97,6 +97,13 @@ export default defineConfig({
       // real control (e.g. the default catalog's ui-button factory).
       '@agent-ui/components/components': r('./packages/agent-ui/components/src/controls/index.ts'),
       '@agent-ui/components/descriptor': r('./packages/agent-ui/components/src/descriptor/index.ts'),
+      // GH #368 — the Overlay controller's own declared subpath (`exports["./traits/overlay"]`). It is NOT
+      // on the root barrel on purpose: re-exporting it there measured +945 B gz on that barrel's budgeted
+      // reactive+dom row (7442 → 8387 against a 7680 B gz budget), a cost every consumer would pay so that
+      // `@agent-ui/app`'s ui-nav-rail could reach one trait. Same more-specific-first ordering necessity as
+      // `/components` + `/descriptor` above. (vitest.browser.config.ts needs no entry — it carries no
+      // aliases at all and resolves this through the package `exports` map directly.)
+      '@agent-ui/components/traits/overlay': r('./packages/agent-ui/components/src/traits/overlay.ts'),
       // genui-surface.spec.md v0.5 §11 (SPEC-R12, GH #316/ADR-0162) — `@agent-ui/app`'s `agent-admin.ts`
       // is the dogfood asset pair's first consumer from OUTSIDE the components package: it imports
       // `DOGFOOD_CSS`/`DOGFOOD_JS` (the generated, committed pair) to pass into a mounted `ui-sandbox-

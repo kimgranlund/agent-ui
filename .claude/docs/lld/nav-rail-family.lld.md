@@ -1,9 +1,13 @@
 # LLD — the unified nav-rail family (`ui-nav-rail`)
 
-> Status: shipped · v1.0 · 2026-07-13 · Layer: LLD (implementation plan)
-> Refines: [`../spec/nav-rail-family.spec.md`](../spec/nav-rail-family.spec.md) (`SPEC-R1…R10`) +
-> [`../adr/0130-nav-rail-family-unification.md`](../adr/0130-nav-rail-family-unification.md) (proposed — the
-> seven ratifying clauses this LLD builds to).
+> Status: shipped · v1.1 · 2026-07-30 · Layer: LLD (implementation plan)
+> Refines: [`../spec/nav-rail-family.spec.md`](../spec/nav-rail-family.spec.md) (`SPEC-R1…R10`, v1.1) +
+> [`../adr/0130-nav-rail-family-unification.md`](../adr/0130-nav-rail-family-unification.md) (accepted
+> 2026-07-12 — the seven ratifying clauses this LLD builds to).
+> **REV 2026-07-30 (v1.1, GH #368):** LLD-C4's mechanism is rewritten — the `collapse="menu"` arm composes
+> the fleet's `overlay()` controller directly (top layer, anchored, platform light-dismiss) instead of a
+> ported UA summary wrapper, with host-owned trigger ARIA and an explicit CSS→JS threshold bridge; and
+> LLD-C7's parts list drops the retired wrapper part. Behaviour is SPEC-R5/AC3's; this doc states only HOW.
 > Decomposition: [`../decompositions/nav-rail-family.decomp.json`](../decompositions/nav-rail-family.decomp.json)
 > (coverage-clean; nodes ≈ the components below). Build-order edges are the decomposition's.
 > Composes on: `app/src/controls/app-shell/app-shell.ts` (the generic sub-element + `collapse`-enum grammar,
@@ -11,9 +15,9 @@
 > composition pattern; the drill-in/back mechanism this family composes, never re-derives) ·
 > `app/src/controls/settings/{settings.ts,settings.css}` (the rail-item anatomy + active-bar CSS being
 > promoted here, and the mode-2 migration target) · `components/src/controls/menu/menu.ts` (the
-> `overlay()`+`rovingFocus()` composition mode 3 reuses wholesale) · `site/pages/_page.{ts,css}` (the
-> `<details>`-disclosure narrow-collapse mechanism being promoted for mode 1, and the mode-1 migration
-> target) · `components/src/controls/tabs/` (the `role=tab`/`aria-selected` precedent SPEC-R3 AC2 mirrors).
+> `overlay()`+`rovingFocus()` composition mode 3 reuses wholesale — since GH #368 mode 1 composes the SAME
+> `overlay()` trait directly) · `site/pages/_page.{ts,css}` (the narrow-collapse mechanism whose ANATOMY was
+> promoted for mode 1, and the mode-1 migration target) · `components/src/controls/tabs/` (the `role=tab`/`aria-selected` precedent SPEC-R3 AC2 mirrors).
 > Altitude: owns **how** the family is built — file map, concrete interfaces, per-component failure/edge
 > handling, build sequence, and the two consumer migrations. Behavior is the SPEC's; this doc never
 > re-derives it. Open forks needing Kim are recorded in [ADR-0130](../adr/0130-nav-rail-family-unification.md)
@@ -26,7 +30,7 @@
 | **LLD-C1** | `ui-nav-rail` element (container, `collapse` enum, active-item coordination) | `packages/agent-ui/app/src/controls/nav-rail/nav-rail.ts` | SPEC-R1, R2, R3 | n1a |
 | **LLD-C2** | `ui-nav-rail-group` element | `.../nav-rail/nav-rail-group.ts` | SPEC-R2, R6, R8 | n1b |
 | **LLD-C3** | `ui-nav-rail-item` element | `.../nav-rail/nav-rail-item.ts` | SPEC-R2, R3, R6 | n1c |
-| **LLD-C4** | `collapse="menu"` narrow disclosure | `nav-rail.ts` (menu-mode path) + `nav-rail.css` | SPEC-R5 | n2a |
+| **LLD-C4** | `collapse="menu"` narrow overlay flyout | `nav-rail.ts` (menu-mode path) + `nav-rail.css` | SPEC-R5 | n2a |
 | **LLD-C5** | `collapse="icon-popover"` group-menu composition + one-open coordination | `nav-rail.ts`/`nav-rail-group.ts` (icon-popover path) | SPEC-R8 | n2b |
 | **LLD-C6** | `nav-rail.css` (shared anatomy, active indicator, tag trailing slot, forced-colors) | `.../nav-rail/nav-rail.css` | SPEC-R3, R4, R6 | n2c |
 | **LLD-C7** | descriptors + contract↔props | `.../nav-rail/{nav-rail.md, nav-rail-group.md, nav-rail-item.md}` | SPEC-R1 | n2d |
@@ -179,16 +183,51 @@ AC2, the single-line-row law). `forced-colors: active` repoints the active-item 
 `collapse="icon-popover"` icon-only item sizing are `[collapse=…]` attribute-selector branches in the SAME
 file (the `ui-app-shell-region` `[collapse=…]` selector precedent) — never a second stylesheet.
 
-### 3.2 LLD-C4 — `collapse="menu"` narrow disclosure (→ SPEC-R5)
+### 3.2 LLD-C4 — `collapse="menu"` narrow overlay flyout (→ SPEC-R5, AC3)
 
-Ported from `_page.css`'s zero-JS `<details>`/`<summary>` mechanism (SPEC-R5's own AC — "the site's existing
-mechanism is the realized precedent"), now owned by `ui-nav-rail` itself: at connect, when `collapse="menu"`,
-the element wraps its rendered group/item tree in a `<details data-part="disclosure">` + `<summary
-data-part="trigger">` (the current item's label, a CSS chevron) — the SAME structure `buildNav()` builds
-today, promoted into the component. The narrow `@container` query (the rail establishes its OWN query
-container, the `ui-app-shell` SPEC-R5 precedent — width, not viewport) hides the `<ul>`-equivalent list and
-reveals the `<summary>` trigger below the threshold; at/above it, the disclosure is inert chrome (summary
-hidden, list always shown) — byte-for-byte the existing `_page.css` rule set, relocated.
+**Mechanism (REV 2026-07-30, GH #368 — the fleet's ONE overlay controller).** At connect, when
+`collapse="menu"`, the element builds two parts ONCE and moves its authored group/item tree into the second:
+a `<button type="button" data-part="trigger">` (the current item's label + a CSS chevron) and a
+`<div data-part="list">`. It then calls `overlay(this, { popup: list, anchor: trigger, auto: true,
+focusOnOpen: true })` — the trait DIRECTLY, on its own panel part, which is the `ui-popover` precedent
+(`popover.ts`) rather than a `ui-menu` composition: the two arms of this family diverge in CONTENT MODEL
+only, and this one carries the whole grouped rail (SPEC-R6 context-label headings + name|tag rows), which
+`ui-menu`'s `menuitem` content model cannot express without losing both. From `overlay()` the arm inherits,
+never re-derives: top-layer rendering via the Popover API (SPEC-R5 AC3 — no clipping or stacking ancestor can
+trap the panel), JS measure-and-place anchoring with flip + shift at viewport edges (`computePosition`),
+platform light-dismiss on Escape and outside-click, the focus round-trip (into the panel on open, back to the
+trigger on close), and the ADR-0101 announce contract. A real `<button>` — not a UA summary element — is
+what delivers pointer click, Enter AND Space through one `click` listener, SPEC-R5 AC2's keyboard half.
+
+**ARIA.** `overlay()` writes ZERO ARIA, and the retired UA summary used to receive `aria-expanded` for free,
+so `nav-rail.ts` owns both affordances on the created trigger part: `aria-controls` once at part creation
+(pointing at the panel's module-counter id) and `aria-expanded` on every transition — flipped synchronously
+by the trigger's own click handler, and re-derived from the panel's native `ToggleEvent` so a platform
+light-dismiss or a bare `showPopover()`/`hidePopover()` cannot desync it. Writing ARIA with `setAttribute` on
+a control-CREATED part is settled fleet law (`menu.ts:48-51`: "a created part, not the host — the FACE rule
+`internals.role`, never host attributes, applies to the HOST element"), realized in `popover.ts:130`/`:182`.
+
+**The CSS→JS threshold bridge.** The narrow `@container` query still decides the TRIGGER's visibility in pure
+CSS, but the panel must additionally be ARMED as a popover only below the line, because `overlay()` has no
+disarm path: it sets the `popover` attribute once (`overlay.ts:165`) with no un-set path, and `cleanup()`
+(`overlay.ts:334-350`) clears neither that attribute nor the six inline styles `position()` writes
+(`overlay.ts:189-194`). A stranded `popover` alone would make the UA hide the wide arm's in-flow list. So
+`nav-rail.ts` owns `arm`/`disarm` explicitly, driven by a `ResizeObserver` on **the same box the
+`@container ui-nav-rail-collapse` query resolves against** — resolved by walking self-then-ancestors and
+taking the FIRST element whose computed `container-type` is not `normal` AND whose computed `container-name`
+includes `ui-nav-rail-collapse` (both properties are readable and identical in Chromium and WebKit,
+probe-verified for GH #368). Under `collapse-container="self"` that walk terminates on the rail; under
+`"ancestor"` the rail's own `container-type` is `normal`, so it continues upward — which is exactly why an
+observer on `this` would be wrong for every `"ancestor"` rail. The threshold itself is
+`SHELL_NARROW_BREAKPOINT_REM` × the live root font-size (`shell-breakpoint.ts`, the family's one named source,
+drift-gated by `shell-breakpoint.test.ts`); a zero-width box stays on the WIDE arm, which is what keeps jsdom
+deterministic. Wide, the panel carries no `popover` attribute and no inline-style residue at all.
+
+**Geometry.** The open panel is a CONTENT-SIZED card between a `min-inline-size` floor and a
+`max-inline-size` ceiling, plus a `max-block-size` cap with `overflow-y: auto` so a long rail scrolls instead
+of escaping the viewport. It is deliberately NOT stretched to the rail's own width: `inset-inline: 0` made the
+panel full-bleed, which is the GH #368 defect — its side borders sat exactly on the rail's own edges and read
+as the shell's edge rather than the menu's own card outline.
 
 **Extended, TKT-0035** (a narrow-sidebar consumer, e.g. the docs-nav column, is always below the threshold
 against its own box): the query container is NAMED (`@container ui-nav-rail-collapse`, was unnamed) and a
@@ -210,7 +249,8 @@ own `label`-prop pattern, `visually-hidden` clip, not `display:none`/`aria-hidde
 ### 3.4 LLD-C7 — descriptors (→ SPEC-R1)
 
 Three `.md` descriptors (ADR-0004 frontmatter): `nav-rail.md` (`tier: pattern`, `extends: UIElement`,
-`attributes: [collapse]`, `parts: [disclosure, trigger, context-label, items]`, `customStates: []` — the
+`attributes: [collapse]`, `parts: [trigger, list]` (the wrapper part retired with the UA summary element,
+GH #368; `context-label`/`items` belong to `ui-nav-rail-group`'s own descriptor), `customStates: []` — the
 rail itself carries no interaction state of its own, mirroring `ui-app-shell.md`'s "shared-file, states
 live on the child" precedent), `nav-rail-group.md` (`attributes: [label]`), `nav-rail-item.md`
 (`attributes: [href, selected]`, `customStates: [selected]`, `aria.role: tab | none` — conditional per
@@ -268,8 +308,8 @@ own `section` field, TKT-0029's "exactly the sitemap's sections" default taxonom
 re-grouping at v1) instead of the hand `NAV` array; each entry becomes a `<ui-nav-rail-item href="…">`
 carrying `slot="trailing" data-role="tag"` = the entry's `tag` field (SPEC-R6's name|tag row). The
 `currentNavLabel()`/`activeGroup()`/`isCurrent()` helpers are ported into `ui-nav-rail`'s own
-`collapse="menu"` disclosure-trigger derivation (LLD-C4) rather than duplicated in `_page.ts`. `_page.css`'s
-`nav[data-site-nav]` rule block (the rail anatomy, the disclosure chrome, the narrow media query) is
+`collapse="menu"` trigger-label derivation (LLD-C4) rather than duplicated in `_page.ts`. `_page.css`'s
+`nav[data-site-nav]` rule block (the rail anatomy, the narrow-trigger chrome, the narrow media query) is
 DELETED — that CSS now lives in `nav-rail.css`. The hand `NAV` array's ordering residue (if any survives
 after the sitemap-derivation inversion) stays a small, separately-owned curation list `_page.ts` still
 holds and passes through to the sitemap-driven build — TKT-0029's own acceptance criterion, not reopened

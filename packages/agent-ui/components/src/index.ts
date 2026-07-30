@@ -10,3 +10,10 @@ export { paneResize, type PaneResizeHandle, type PaneResizeOptions } from './tra
 // paneResize precedent one line above) so ui-super-shell's hidden-scrollbar seam has the fleet's ONE
 // fade trait as the replacement scroll signal, never a silent deep-import into @agent-ui/app.
 export { scrollFade, type ScrollFadeOptions } from './traits/scroll-fade.ts'
+// GH #368 — the non-modal Overlay controller (ADR-0043/0045) is deliberately NOT re-exported here, even
+// though `ui-nav-rail`'s `collapse="menu"` arm needs it. Adding it MEASURED +945 B gz on this barrel's own
+// budgeted row (7442 → 8387 against a 7680 B gz budget), because `overlay.ts` carries the whole
+// measure-and-place positioning controller and this row is the reactive+dom foundation every consumer pays
+// for. It ships instead as its OWN declared subpath, `@agent-ui/components/traits/overlay` (package.json
+// exports, the `./descriptor` shape) — a real public surface, not the silent deep-import the scrollFade
+// note above rules out, and not a cost on the foundation row.

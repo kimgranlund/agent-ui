@@ -9,9 +9,9 @@
  *       height", a fixed default size at v1, no `[size]` prop yet, SPEC §7 non-goal).
  *   [2] STYLES BLOCK — `@scope (ui-nav-rail)` consumes ONLY `--ui-nav-rail-*` (+ the shared focus-ring
  *       tokens, the button.css exception) for all three elements' anatomy. `[collapse=…]` attribute-
- *       selector branches (menu narrow disclosure; icon-popover icon-only sizing) live in this ONE file
- *       (the precedent set by the retired `ui-app-shell-region`'s own `[collapse=…]` branches, ADR-0156)
- *       — never a second stylesheet.
+ *       selector branches (the menu arm's narrow flyout; icon-popover icon-only sizing) live in this ONE
+ *       file (the precedent set by the retired `ui-app-shell-region`'s own `[collapse=…]` branches,
+ *       ADR-0156) — never a second stylesheet.
  *
  * `collapse="menu"`'s narrow threshold (TKT-0035) is a NAMED `@container ui-nav-rail-collapse (…)` query.
  * `:scope` establishes that named container itself by default (`collapse-container="self"`, the fallback
@@ -63,7 +63,18 @@
   --ui-nav-rail-context-pad-block-end: var(--md-sys-space-xs);
   --ui-nav-rail-flyout-pad: var(--md-sys-space-xs);
   --ui-nav-rail-flyout-radius: var(--md-sys-shape-corner-base);
-  --ui-nav-rail-chevron-size: var(--md-sys-space-sm); /* SPEC-R11c/AC19 — the disclosure chevron glyph */
+  --ui-nav-rail-chevron-size: var(--md-sys-space-sm); /* SPEC-R11c/AC19 — the trigger's own chevron glyph */
+
+  /* GH #368 — the open `collapse="menu"` flyout's own sizing dials. The panel is a shrink-to-fit
+     position:fixed box in the top layer, so this floor/ceiling pair is the ONLY thing that sizes it: it is
+     CONTENT-sized between the two (the ui-menu/ui-popover precedent), never stretched to the rail's width —
+     stretching is exactly the full-bleed band GH #368 reported. Floor 12rem so a one-word rail still reads
+     as a card; ceiling `min(90vw, 20rem)` so it never outgrows a phone viewport (the --ui-menu-max-inline-
+     size idiom). The block ceiling is `min(50vh, …)`: a 40-item rail scrolls inside the card rather than
+     escaping the viewport, and overlay()'s shift clamp then keeps top >= 0 and bottom <= innerHeight. */
+  --ui-nav-rail-flyout-min-inline-size: 12rem;
+  --ui-nav-rail-flyout-max-inline-size: min(90vw, 20rem);
+  --ui-nav-rail-flyout-max-block-size: min(50vh, 24rem);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-nav-rail) consumes ONLY --ui-nav-rail-* ════════════════ */
@@ -188,45 +199,53 @@
     min-inline-size: 0;
   }
 
-  /* ── collapse="menu" — the narrow disclosure (SPEC-R5, LLD-C4) ─────────────────────────────────────── */
+  /* ── collapse="menu" — the narrow flyout (SPEC-R5/AC3, LLD-C4; GH #368) ────────────────────────────── */
 
-  [data-part='disclosure'] > [data-part='trigger'] {
-    display: none; /* wide: the disclosure is inert chrome */
+  /* The `popover` ATTRIBUTE is the single state variable these rules read, and nav-rail.ts owns it: it is
+     present only while the overlay is ARMED (below the collapse line) and absent otherwise. So:
+       · unarmed        → the in-flow vertical list (wide), or nothing at all (narrow, below)
+       · armed + closed → no author `display` at all, so the UA `[popover]:not(:popover-open)` rule hides it
+       · armed + open   → the floating card, below
+     A top-layer popover's open state is `:popover-open` — never an `[open]` attribute. */
+  :scope > [data-part='trigger'] {
+    display: none; /* wide: the trigger is inert chrome */
   }
-  [data-part='disclosure']::details-content {
-    content-visibility: visible; /* force a CLOSED <details> to still reveal `list` wide (Chromium 120+ mechanism) */
-  }
-  [data-part='list'] {
+  :scope > [data-part='list']:not([popover]) {
     display: flex;
-    flex-direction: column; /* always visible wide — overrides the UA closed-<details> child-hiding rule */
+    flex-direction: column;
   }
 
   /* NAMED (TKT-0035) — resolves against whichever ancestor establishes `container-name: ui-nav-rail-collapse`
      nearest the queried element: `:scope` itself under the default `collapse-container="self"` (unchanged
      40rem-against-own-box behaviour, LLD-C7/GH #99's `shell-breakpoint.ts` — the shell family's one named
      source of truth for this literal, mechanically checked by `shell-breakpoint.test.ts`), or a consumer-
-     opted ancestor under `collapse-container="ancestor"`. */
+     opted ancestor under `collapse-container="ancestor"`. nav-rail.ts's band observer watches THIS SAME box
+     (it resolves the name above over computed containment), so CSS and JS cannot disagree about the band. */
   @container ui-nav-rail-collapse (inline-size < 40rem) {
-    [data-part='disclosure'] {
-      position: relative;
-    }
-    [data-part='disclosure'] > [data-part='trigger'] {
+    :scope > [data-part='trigger'] {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: var(--ui-nav-rail-gap);
       box-sizing: border-box;
+      inline-size: 100%;
       block-size: var(--ui-nav-rail-height);
       padding-inline: calc(var(--ui-nav-rail-height) / 2);
       color: var(--ui-nav-rail-ink);
+      font: inherit;
+      font-size: var(--ui-nav-rail-font);
+      text-align: start;
+      background: transparent;
+      border: none;
       cursor: pointer;
-      list-style: none;
     }
-    [data-part='disclosure'] > [data-part='trigger']::-webkit-details-marker {
-      display: none;
+    :scope > [data-part='trigger']:focus-visible {
+      outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+      outline-offset: calc(-1 * var(--md-sys-state-focus-ring-width)); /* inset — the row sits at the rail's own edge */
     }
-    [data-part='disclosure'] > [data-part='trigger']::after {
+    :scope > [data-part='trigger']::after {
       content: '';
+      flex: none;
       inline-size: var(--ui-nav-rail-chevron-size);
       block-size: var(--ui-nav-rail-chevron-size);
       border-inline-end: 1.5px solid currentColor;
@@ -234,30 +253,51 @@
       transform: rotate(45deg);
       transition: transform var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
     }
-    [data-part='disclosure'][open] > [data-part='trigger']::after {
+    /* Re-keyed off the trigger's OWN expanded state (nav-rail.ts keeps `aria-expanded` truthful on every
+       path) — the UA `[open]` state it used to read no longer exists. */
+    :scope > [data-part='trigger'][aria-expanded='true']::after {
       transform: rotate(-135deg);
     }
-    [data-part='list'] {
-      display: none; /* closed: hidden */
-    }
-    [data-part='disclosure'][open] > [data-part='list'] {
-      display: flex;
-      position: absolute;
-      inset-inline: 0;
-      inset-block-start: 100%;
-      z-index: 5;
-      padding: var(--ui-nav-rail-flyout-pad);
-      border: 1px solid var(--ui-nav-rail-outline);
-      border-radius: var(--ui-nav-rail-flyout-radius);
-      background: var(--ui-nav-rail-surface);
-      box-shadow: 0 0.5rem 1.5rem var(--ui-nav-rail-scrim);
+    /* Narrow + not yet armed (the frame between first paint and the band observer's first callback):
+       nothing in flow, so the full list never flashes under the trigger. */
+    :scope > [data-part='list']:not([popover]) {
+      display: none;
     }
   }
 
-  /* §4c (interaction-states.md) — non-negotiable: reduced motion zeroes the chevron transition
-     (TKT-0065 lateral review: this file declared the transition with no reduced-motion leg at all). */
+  /* The open flyout: a CONTENT-SIZED floating card, bordered on all four sides, in the TOP LAYER.
+     `position: fixed` + the inset are written by overlay()'s JS positioning controller on open — never
+     declared here (the menu.css contract). What IS declared here is the sizing the controller does not
+     touch: a min/max inline-size clamp (the panel is a shrink-to-fit fixed-position box, so this pair is
+     the ONLY sizing lever) and a max-block-size + scroller so a long rail's panel stays on-screen.
+     `inset-inline: 0` is deliberately GONE: full-bleed was the GH #368 defect — the side borders sat
+     exactly on the rail's own edges and read as the shell's edge instead of the menu's own outline. */
+  :scope > [data-part='list']:popover-open {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box; /* max-block-size is then the OUTER height (the menu.css border-box lesson) */
+    margin: 0;
+    min-inline-size: var(--ui-nav-rail-flyout-min-inline-size);
+    max-inline-size: var(--ui-nav-rail-flyout-max-inline-size);
+    max-block-size: var(--ui-nav-rail-flyout-max-block-size);
+    overflow-y: auto;
+    padding: var(--ui-nav-rail-flyout-pad);
+    border: 1px solid var(--ui-nav-rail-outline);
+    border-radius: var(--ui-nav-rail-flyout-radius);
+    background: var(--ui-nav-rail-surface);
+    box-shadow: 0 0.5rem 1.5rem var(--ui-nav-rail-scrim);
+  }
+  :scope > [data-part='list']:popover-open:focus-visible {
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: calc(-1 * var(--md-sys-state-focus-ring-width));
+  }
+
+  /* §4c (interaction-states.md) — non-negotiable: reduced motion zeroes the chevron transition. TKT-0065's
+     lateral review added this leg; GH #368 repoints it at the selector that actually declares the
+     transition (it targeted a `[data-part='group-chevron']` that exists nowhere in the family, so it zeroed
+     nothing — a check that could never bite). */
   @media (prefers-reduced-motion: reduce) {
-    [data-part='group-chevron'] {
+    :scope > [data-part='trigger']::after {
       transition: none;
     }
   }
@@ -269,7 +309,7 @@
   }
   :scope[collapse='icon-popover'] [data-part='activator'] > [data-part='label'] {
     /* visually-hidden (clip), NOT display:none/aria-hidden — the label stays the accessible name
-       (anatomy.md's disclosure boundary; the `ui-icon` `label`-prop precedent). */
+       (anatomy.md's visually-hidden-label boundary; the `ui-icon` `label`-prop precedent). */
     position: absolute;
     inline-size: 1px;
     block-size: 1px;

@@ -1,0 +1,304 @@
+{
+  "domain": "components",
+  "plan": true,
+  "_meta": {
+    "title": "GH #368 — ui-nav-rail collapse=\"menu\" adopts the fleet Overlay controller (top-layer, anchored, bordered card)",
+    "issue": "https://github.com/kimgranlund/agent-ui/issues/368",
+    "manifest_version": "v2.1",
+    "v2_1_diff": "Delta pass on v2 (doc-checker, 2026-07-30) — three mechanical fixes, no structural change (node/action/edge counts unchanged at 25/34/24). N1 (MAJOR): five negated greps in n2/n5/n18 used literal `...` ellipsis paths; `grep -q pattern <missing path>` exits 2 and `!` inverts that to SUCCESS (verified empirically in this worktree), so those checks — INCLUDING the two enforcing Kim's <details> ruling — would have greened while examining nothing. Every path is now spelled in full AND guarded `test -f <path> && ! grep -q …`; the guard is applied to n9/n10b/n11/n15/n19 too, since a RENAME defeats a full path just as a typo does. An audit script now confirms zero unguarded negated greps and zero ellipsis paths remain. N2: `open_fork_panel_width` renamed `ruling_panel_width` (it advertised an open fork over settled FIRM content) and its trigger-width residual lifted into a top-level `deferred` list so a fresh context scanning for blockers cannot misread it. N3: the container-introspection precondition was PROBED rather than assumed — see _meta.container_introspection_finding — and n4a now carries the resolution algorithm as a stated implementation fact. Also folded: n9 gains `summary` + `zero-JS` greps and n19 gains a `disclosure` grep (the sites with no 'details' substring, previously unforced); the ARIA note now cites menu.ts:48-51, which states the host-vs-parts rule verbatim.",
+    "v2_diff_original": "(v2, superseded by v2.1 above — kept for reconstructability)",
+    "v2_diff": "Revision after the FIX-FIRST doc-checker pass. Both headline conclusions upheld (no-ADR; the full-bleed reframing). Folded in: Kim's two rulings (<details> is retired for a plain button + overlay panel; ui-nav-rail earns a full site doc page + a visual test), the four blockers F1-F4, and F5-F14. Nodes 16 -> 25. Both negative controls were INERT and are replaced with biting ones (F1). The threshold bridge had no mechanism and is now split into a mechanism leaf + an outcome leaf (F2). collapse-container=\"ancestor\" is now in scope (F3). The a11y regression <details> was hiding has its own leaf (F4).",
+    "verdict": "BUG FIX inside the existing contract — NO ADR.",
+    "why_no_adr": [
+      "The fleet already owns exactly one mechanism for 'a floating panel anchored to a trigger': the Overlay controller (traits/overlay.ts) + platform-owned dismissal — agent-ui-component-patterns' own row, ADR-0043 + ADR-0045. Adopting a row that already exists is not a fork.",
+      "SPEC-R5 AC2 ALREADY requires the panel to open 'overlaying the page (not reflowing it)' and be 'keyboard-dismissable (Escape or outside-click)'. position:absolute under-satisfies an accepted AC; satisfying it fully is a repair, not a new contract.",
+      "ADR-0130 cl.6 already routes the sibling icon-popover arm through the same shipped overlay primitives, citing ADR-0043/0045. The menu arm joining them REDUCES the family's overlay mechanisms from two to one.",
+      "ADR-0130 contains NO clause requiring position:absolute or a zero-JS disclosure. LLD-C4's '<details> ported from _page.css' is a PORTING-FIDELITY note about provenance, not a ruled constraint — and the component already deliberately broke zero-JS by adding its own Escape/outside-click listeners (nav-rail.ts #wireDisclosure, self-documented as 'a deliberate upgrade the componentization earns').",
+      "The overlay CONTRACT is unchanged: same trait, same popover=auto light-dismiss, same ADR-0101 announce contract, same focus round-trip. Only this one arm's WIRING changes."
+    ],
+    "kim_rulings_2026_07_30": [
+      "RULING 1 — <details> GOES. The menu arm becomes a plain <button data-part=\"trigger\"> + a [data-part=\"list\"] overlay panel, the ui-popover shape. This de-hedges n2/n9/n15 (no 'if the wrapper goes' conditionals survive) and forces the chevron/marker CSS retirement (n18) plus the SPEC/LLD/descriptor records leaves (n9, n10b, n19, n11).",
+      "RULING 2 — ui-nav-rail earns a full site doc page matching its four app-tier siblings (super-shell.html, chat-shell.html, master-detail.html, settings.html) — page + site-manifest row + regenerated sitemap (n20, n21) — AND a nav-rail.visual.browser.test.ts pinning the open menu card (n22)."
+    ],
+    "menu_vs_icon_popover_divergence": "The two arms diverge in CONTENT MODEL, never in overlay mechanism. icon-popover flattens one group's items into a composed ui-menu (menuitem semantics). collapse=\"menu\" collapses the WHOLE grouped rail — context-label headings (SPEC-R6) + name|tag two-column rows (ADR-0130 cl.7) — which ui-menu's menuitem content model cannot carry without losing both. So the menu arm calls overlay() DIRECTLY on its own panel, the ui-popover precedent (a generic disclosure overlay over arbitrary content), rather than composing ui-menu. Same trait, different content model.",
+    "anchor_positioning_finding": "Do NOT bet the fix on CSS anchor positioning. Measured in this repo's own gate: both engines report CSS.supports true for anchor-name / position-anchor / position-area / position-try-fallbacks — but Playwright's bundled WebKit is NOT Safari-release, so a green gate would NOT prove real-world support. traits/overlay.ts already ruled this: 'CSS anchor-positioning is a PROGRESSIVE ENHANCEMENT ... NOT a v1 dual-path requirement; the JS controller is the reliable path.' The JS measure-and-place controller (computePosition: flip + shift) needs no support bet and is already cross-engine-proven by menu/select/tooltip/popover.",
+    "per_side_border_finding": "Measured, both engines, panel open: borderTop/Right/Bottom/Left all compute to 1px in the correct outline color. The border is NOT missing — nav-rail.css:247's shorthand applies on all four sides. The real defect is that inset-inline:0 (nav-rail.css:243) makes the panel FULL-BLEED (measured listW=300 == railW=300, listLeft=0 == railLeft=0), so its side borders sit exactly on the rail's own edges and read as the shell's edge rather than the menu's own card outline. Kim's 'border on all sides' is the perceptual report of a full-bleed band. Both halves of the report share ONE root cause, and one mechanism change fixes both — do NOT 'add' borders.",
+    "clipping_reproduced": "Measured, both engines: rail inside a single overflow:hidden ancestor 44px tall, panel opened — listTop=28 listBottom=122 vs clipperBottom=44, fullyInsideClipper=false, overflowBy=78px. 78 of the panel's 94px are clipped: ~83% of the menu invisible. The GH #260 class, reproduced cross-engine.",
+    "negative_control_law": "Both NCs in v1 were INERT (F1). Recorded so no build re-derives them: (a) restoring `position: absolute` does NOT defeat the clipping probe — a [popover] promoted by showPopover() paints in the top layer regardless of its `position` value, so top-layer MEMBERSHIP is the biting variable; the NC must remove the popover attribute / skip showPopover(). `list.matches(':popover-open')` can never bite in that NC because it is exactly what the NC removes. (b) restoring the stylesheet `inset-inline: 0` does NOT defeat the card-geometry probe — overlay.ts:189-194 writes INLINE position/top/left/bottom/right/margin, which beat any stylesheet inset; the biting variable is the width clamp, so the NC must remove min/max-inline-size (overlay.ts never writes width).",
+    "ruling_panel_width": {
+      "status": "SETTLED — FIRM, not an open fork. Reviewed and conceded by the doc-checker delta pass (2026-07-30).",
+      "question": "Is the open panel content-sized (ui-menu/ui-popover precedent) or stretched to at least its trigger's width (the select-dropdown idiom)?",
+      "ruling": "CONTENT-SIZED, with a min-inline-size floor and a max-inline-size ceiling — the ui-menu/ui-popover precedent.",
+      "why": "A raw `list.width < rail.width` assertion over-constrains and is content-accidental, so the review's F6 was right to challenge it. But its proposed replacement — an ANCHOR-WIDTH clamp — cannot be the target here: the narrow trigger is a full-width flex box (nav-rail.css:190-219), so 'floor >= trigger width' is identically the full-bleed band that IS the defect Kim reported; the idiom inverts on this control. Content-sized is therefore the only option that satisfies the report. n6's predicate is where this is decided: a CONTROLLED fixture (deliberately short labels in a 300px rail) makes the assertion fixture-determined rather than content-accidental, and the biting NC is the clamp removal, not a width comparison. The delta review verified the trigger geometry at source and withdrew F6."
+    },
+    "aria_law_note": "n17 puts aria-expanded/aria-controls on a control-CREATED part (the button trigger), not on the host. This is settled fleet law, stated in as many words at menu.ts:48-51 — 'a created part, not the host — the FACE rule \"internals.role, never host attributes\" applies to the HOST element; direct parts use setAttribute' — and realized in ui-popover (popover.ts:130 for aria-expanded in an effect off `open`, popover.ts:182 for aria-controls at part creation). Recorded with the citation so the objection is foreclosed rather than re-litigated.",
+    "blast_radius": "SMALLER than the report assumes, and the risk is on the DEFAULT path instead. No shipped consumer rides collapse=\"menu\": site/pages/_page.ts:618 sets collapse=\"none\" (GH #170/ADR-0155 moved the site's narrow story to ui-super-shell) and settings.ts:164 sets collapse=\"drill-in\". BUT 'menu' is the enum's index-0 DEFAULT (nav-rail.ts:64), so every <ui-nav-rail> that omits collapse gets the broken arm — the defect is on the default, which is why it still matters. Kim's ruling 2 also closes the surface gap: ui-nav-rail currently has NO site doc page, NO gallery specimen and NO sitemap row, so nothing demonstrates or visually guards the arm being repaired.",
+    "shell_spec_check": "Neither shell-archetypes-m5 clause constrains this. SPEC-R12 is a `display`-override/scope-proximity law (relevant only as a caution if a consumer ever overrides the panel's scoped display — it must tag-qualify). SPEC-R14/AC21's mid-window overlay is the SHELL's own pane-sized float, deliberately 'absolute over the canvas, inset within the middle row' so AC20's zero-overflow sweep holds — a different concept from a trigger-anchored flyout. SPEC-R14a's 'the toggle stays visible, aria-truthful' is however RULED LAW for the sibling shell and is the precedent n17 (F4) answers to. Risk to verify at build: AC20's zero-overflow sweep must stay green now that a nav-rail panel opened inside the shell can escape to the top layer.",
+    "first_in_package": "packages/agent-ui/app has NO *.visual.browser.test.ts today (visual coverage exists only in components/{calendar,text} and site/pages). n22 is therefore the FIRST visual baseline in @agent-ui/app; its baselines land in packages/agent-ui/app/src/controls/nav-rail/__baselines__/nav-rail.visual.browser.test.ts/ (tracked — __screenshots__/ is gitignored failure output, .gitignore:44, not baselines).",
+    "container_introspection_finding": "N3, PROBED not assumed (both engines, throwaway probe run 2026-07-30 then deleted): `getComputedStyle(el).containerName` and `.containerType` are readable and IDENTICAL in Chromium and WebKit — a container returns its own name ('ui-nav-rail-collapse') and type ('inline-size'), a non-container returns the clean sentinels 'none' and 'normal'; `getPropertyValue('container-name')` works equivalently and `'containerName' in decl` is true. So n4a IS buildable, and the downstream stall risk (n4b/n4c/n8/n16) is closed. STATED IMPLEMENTATION FACT for n4a's resolution algorithm: from the rail, walk self-then-ancestors and take the FIRST element whose computed `containerType !== 'normal'` AND whose computed `containerName` includes 'ui-nav-rail-collapse'; that element is the box the `@container ui-nav-rail-collapse` query resolves against, and it is the box the ResizeObserver must watch. Under collapse-container='self' the walk terminates on the rail itself; under 'ancestor' the rail's own containerType is 'normal' (nav-rail.css:84-86) so the walk continues upward — which is exactly why n4c discriminates a wrong-box observer.",
+    "deferred": [
+      "Whether the narrow TRIGGER should also stop spanning the full rail width (nav-rail.css:190-219) is a separate visual decision this wave does NOT settle. The n22 visual baseline pins whatever it renders, so any later change is a deliberate baseline update rather than a silent drift. Not a blocker on this wave."
+    ],
+    "unanticipated": [
+      "STALE DOC (live docs page): site/pages/super-shell.ts:232-235 still teaches 'the docs site's own nav pane uses this so ui-nav-rail's collapse=\"menu\" dropdown takes over instead of the shell's hide/overlay arm (see it live in this very page's nav rail, narrow)'. False since GH #170/ADR-0155 — _page.ts sets collapse=\"none\". Node n11.",
+      "FREE RIDER: nav-rail-family.spec.md's header calls ADR-0130 '(proposed — the six ratifying clauses this SPEC realizes)'. ADR-0130 is accepted (2026-07-12, ratified by Kim) with SEVEN clauses. Both wrong; repaired by n10b while that header is already open.",
+      "Kim's screenshot cannot be sourced to any current repo surface (the only in-repo rail runs collapse=\"none\"). Worth confirming which surface it came from before the build freezes its reproduction case.",
+      "The a11y regression is silent and easy to ship: <summary> inside <details> got aria-expanded FREE from the UA, and overlay() manages ZERO ARIA (verified: no aria writes anywhere in traits/overlay.ts). Retiring <details> without n17 would trade a clipping bug for an accessibility bug."
+    ]
+  },
+  "nodes": [
+    {
+      "id": "n1",
+      "label": "GH #368 — collapse=\"menu\" becomes a top-layer, anchored, bordered-card popover",
+      "leaf": false,
+      "justify": "grouping — the wave root"
+    },
+    {
+      "id": "n2",
+      "label": "mechanism: retire <details>/<summary> for a button trigger + panel (nav-rail.ts)",
+      "leaf": true,
+      "accept": "`npm test` exits 0 AND `test -f packages/agent-ui/app/src/controls/nav-rail/nav-rail.ts && ! grep -q \"createElement('details')\" packages/agent-ui/app/src/controls/nav-rail/nav-rail.ts` AND `test -f packages/agent-ui/app/src/controls/nav-rail/nav-rail.ts && ! grep -q \"createElement('summary')\" packages/agent-ui/app/src/controls/nav-rail/nav-rail.ts`, with a jsdom assertion that a collapse=\"menu\" rail exposes exactly one `[data-part=\"trigger\"]` whose tagName is BUTTON and exactly one `[data-part=\"list\"]`, the list containing every authored `ui-nav-rail-group`/`ui-nav-rail-item` in authored order with its `[data-part=\"context-label\"]` and `[data-role=\"tag\"]` cells intact (SPEC-R6 anatomy survives the swap)."
+    },
+    {
+      "id": "n3",
+      "label": "mechanism: wire overlay() on the menu arm (popup = list, anchor = trigger)",
+      "leaf": true,
+      "accept": "`npm run test:browser:packages:app` exits 0 with a BOTH-ENGINE assertion that, with the panel open, `list.matches(':popover-open')` is true, `getComputedStyle(list).position === 'fixed'`, and `list.getAttribute('data-placement')` is a member of OverlayPlacement's closed set {bottom-start, bottom-end, top-start, top-end, left-start, left-end, right-start, right-end} (traits/overlay.ts) — the host passes one of those eight, never a free string; and exactly one `toggle` fires per open and exactly one `close` + one `toggle` per close (the ADR-0101 announce contract, inherited not re-derived)."
+    },
+    {
+      "id": "n4a",
+      "label": "mechanism: the CSS->JS threshold bridge — width observation that arms/disarms the overlay",
+      "leaf": true,
+      "accept": "`npm run check` and `npm test` exit 0, and nav-rail.ts implements the STATED resolution algorithm (see _meta.container_introspection_finding, probed in both engines — the readability precondition is DISCHARGED, not assumed): from the rail, walk self-then-ancestors and take the FIRST element whose computed `containerType !== 'normal'` AND whose computed `containerName` includes 'ui-nav-rail-collapse'; observe THAT box with a ResizeObserver. The threshold comes from its single named source — `test -f packages/agent-ui/app/src/controls/nav-rail/nav-rail.ts && grep -q 'SHELL_NARROW_BREAKPOINT_REM' packages/agent-ui/app/src/controls/nav-rail/nav-rail.ts` succeeds and no bare `40` literal is introduced (shell-breakpoint.ts:13 is the literal's one owner; shell-breakpoint.test.ts is the drift gate). Rationale this leaf must record: overlay.ts:165 sets the popover attribute ONCE with no un-set path, and cleanup() (overlay.ts:334-350) clears nothing, so nothing in the trait can disarm across the band."
+    },
+    {
+      "id": "n4b",
+      "label": "mechanism: the arming outcome — wide is inline, narrow is an overlay",
+      "leaf": true,
+      "accept": "BOTH-ENGINE: at a 900px wrapper `[data-part=\"list\"]` is visible in flow, has NO `popover` attribute, `:popover-open` is false, computed `position` !== 'fixed', and the trigger computes `display: none`; at a 300px wrapper the trigger is visible and the list is not rendered until activated. Crossing the threshold live (resize the wrapper 900px -> 300px -> 900px) lands in the correct state each time with no stranded popover attribute."
+    },
+    {
+      "id": "n4c",
+      "label": "mechanism: collapse-container=\"ancestor\" keeps working in both bands (F3)",
+      "leaf": true,
+      "accept": "BOTH-ENGINE, reusing the existing `mountRailInNamedAncestor` fixture (nav-rail.browser.test.ts:82): with `collapse-container=\"ancestor\"` and a WIDE named ancestor around a narrow column, the rail renders its inline vertical list and arms NO overlay; with a NARROW named ancestor, the trigger is visible and activation opens the top-layer panel. Non-vacuous: an observer watching the rail's OWN box (`this`) instead of the resolved container box makes the wide-ancestor case FAIL. `npm test` also exits 0 including the descriptor gate at nav-rail.test.ts:594 which pins this prop."
+    },
+    {
+      "id": "n5",
+      "label": "mechanism: retire BOTH hand-rolled dismissal listeners (superseded by platform light-dismiss)",
+      "leaf": true,
+      "accept": "`test -f packages/agent-ui/app/src/controls/nav-rail/nav-rail.ts && ! grep -q \"this.listen(document, 'click'\" packages/agent-ui/app/src/controls/nav-rail/nav-rail.ts` (the outside-click listener, nav-rail.ts:165) AND `test -f packages/agent-ui/app/src/controls/nav-rail/nav-rail.ts && ! grep -q \"key === 'Escape'\" packages/agent-ui/app/src/controls/nav-rail/nav-rail.ts` (the bespoke Escape handler, nav-rail.ts:170 — the v1 grep caught only the click one, F11) AND the both-engine Escape and outside-click dismissal assertions still pass — dismissal is now platform-owned (popover=auto), with no bespoke duplicate."
+    },
+    {
+      "id": "n17",
+      "label": "a11y: the trigger's aria-expanded + aria-controls move into host code (F4)",
+      "leaf": true,
+      "accept": "BOTH-ENGINE: `[data-part=\"trigger\"]`'s `aria-expanded` reads 'false' when closed and 'true' when open across EVERY path — pointer click, Enter, Space, Escape, outside-click, and a programmatic open/close — and `aria-controls` resolves to the panel's real id (`document.getElementById(trigger.getAttribute('aria-controls')) === list`). Non-vacuous: <summary> got aria-expanded FREE from the UA and overlay() writes zero ARIA, so omitting the host wiring makes every one of these assertions fail. The ui-popover precedent is the shape (popover.ts:130 in an effect off `open`; aria-controls once at part creation, popover.ts:182); SPEC-R14a's 'aria-truthful' is the sibling shell's ruled law."
+    },
+    {
+      "id": "n6",
+      "label": "geometry: the panel becomes a content-sized floating card (nav-rail.css)",
+      "leaf": true,
+      "accept": "BOTH-ENGINE, with the panel open on a CONTROLLED fixture (deliberately short item labels in a 300px rail): all four of borderTopWidth/RightWidth/BottomWidth/LeftWidth compute to 1px in the `--ui-nav-rail-outline` color; computed `min-inline-size` and `max-inline-size` each parse as a resolved LENGTH matching /^[0-9.]+px$/ (asserting `!== 'none'` is vacuous — min-inline-size's initial computed value is `auto`, F5); and the panel is strictly narrower than the rail on that fixture (content-driven; `inset-inline: 0` gone). BITING NC (F1b): removing `min/max-inline-size` must make this FAIL. Restoring the stylesheet `inset-inline: 0` must NOT be used as the NC — overlay.ts:189-194's inline left/right/position beat it."
+    },
+    {
+      "id": "n7",
+      "label": "geometry: panel block-size cap + stays fully on-screen",
+      "leaf": true,
+      "accept": "BOTH-ENGINE: a 40-item rail's open panel satisfies `rect.bottom <= window.innerHeight` AND `rect.top >= 0` (F7 — v1's `height <= innerHeight` permitted a panel that fits but sits off-screen) AND `list.scrollHeight > list.clientHeight` — a long rail's panel scrolls rather than escaping the viewport (the menu.css `--ui-menu-max-block-size` precedent, including its border-box +2px lesson)."
+    },
+    {
+      "id": "n8",
+      "label": "geometry: wide-arm inline integrity — no overlay residue, no stranded popover attribute",
+      "leaf": true,
+      "accept": "BOTH-ENGINE: after an open -> close -> resize-to-wide cycle, `list.style.position === ''`, `list.style.top === ''`, `list.style.left === ''`, `list.style.right === ''`, `list.style.margin === ''` AND `list.hasAttribute('popover') === false`; the list's rect top equals the rail's content-box top (inline, in flow). This leaf must record WHY it exists (F13): overlay() has NO reset path — it writes those six inline styles on every position() (overlay.ts:189-194), clears none of them in cleanup() (overlay.ts:334-350), and never un-sets the popover attribute it sets at :165."
+    },
+    {
+      "id": "n18",
+      "label": "geometry: retire the <details>-only CSS (chevron ::after, marker, ::details-content)",
+      "leaf": true,
+      "accept": "With `NRCSS=packages/agent-ui/app/src/controls/nav-rail/nav-rail.css`: `test -f \"$NRCSS\" && ! grep -q 'details-marker' \"$NRCSS\"` AND `test -f \"$NRCSS\" && ! grep -q 'details-content' \"$NRCSS\"` AND `test -f \"$NRCSS\" && ! grep -q 'disclosure' \"$NRCSS\"` — nav-rail.css:193-195 (`::details-content`), :222-224 (`-webkit-details-marker`), :225-236 (the chevron `::after` + its `[open]` rotation) and :240 (`[data-part=disclosure][open] >`) are all keyed to <details> semantics that no longer exist. The open/closed chevron rotation is re-keyed off the button's own expanded state, and the reduced-motion leg (nav-rail.css:256-259) still zeroes that transition. `npm run check` and `npm test` exit 0."
+    },
+    {
+      "id": "n9",
+      "label": "records: nav-rail.md descriptor — parts, part DESCRIPTIONS, keyboard block, prose",
+      "leaf": true,
+      "accept": "`npm test` exits 0 including the nav-rail contract<->props trip-wire, AND with `NRMD=packages/agent-ui/app/src/controls/nav-rail/nav-rail.md`: `test -f \"$NRMD\" && ! grep -q 'details' \"$NRMD\"` AND `test -f \"$NRMD\" && ! grep -q 'summary' \"$NRMD\"` AND `test -f \"$NRMD\" && ! grep -q 'zero-JS' \"$NRMD\"`. The three greps together force all six stale sites (F9): the part DESCRIPTIONS at :37-38 (`disclosure` as a created `<details>`), :39-40 (`trigger` as a `<summary>` — caught ONLY by the 'summary' grep, no 'details' substring), :42 (`list` 'absolutely positioned to overlay'); the `keyboard:` block at :53-56 (Escape/outside-click as 'a small JS enhancement over the site's zero-JS markup', now platform-owned popover=auto — caught ONLY by the 'zero-JS' grep); and the prose at :95 and :103."
+    },
+    {
+      "id": "n10a",
+      "label": "records: SPEC-R5 AC3 — top-layer rendering + clipping-ancestor immunity as a checkable AC",
+      "leaf": true,
+      "accept": "`npm test` exits 0 (docs-grammar + adr gates) AND `grep -q 'AC3' .claude/docs/spec/nav-rail-family.spec.md` with the new AC naming top-layer rendering and clipping-ancestor immunity in BOTH engines, phrased as a predicate the n12 probe can cite by ID."
+    },
+    {
+      "id": "n10b",
+      "label": "records: SPEC-R5 body + header repair (the <details> 'realized precedent' line; the ADR-0130 status/clause free rider)",
+      "leaf": true,
+      "accept": "With `NRSPEC=.claude/docs/spec/nav-rail-family.spec.md`: `test -f \"$NRSPEC\" && ! grep -q 'details' \"$NRSPEC\"` (retires 'the site's existing `<details>`-based zero-JS mechanism is the realized precedent' at :100-102) AND `test -f \"$NRSPEC\" && ! grep -q 'proposed' \"$NRSPEC\"` (the header calls ADR-0130 '(proposed — the six ratifying clauses …)'; it is accepted, 2026-07-12, with SEVEN) AND the version-history row is bumped, checked mechanically rather than asserted: `test -f \"$NRSPEC\" && grep -q 'v1.1' \"$NRSPEC\"` (v1's 'bumped per agent-ui-doc-standards' was an unmechanized claim, F14)."
+    },
+    {
+      "id": "n19",
+      "label": "records: LLD-C4 mechanism rewrite + LLD-C7 parts list",
+      "leaf": true,
+      "accept": "With `NRLLD=.claude/docs/lld/nav-rail-family.lld.md`: `test -f \"$NRLLD\" && ! grep -q 'details' \"$NRLLD\"` AND `test -f \"$NRLLD\" && ! grep -q 'disclosure' \"$NRLLD\"` — LLD-C4 (:182-189) describes the ported zero-JS `<details>`/`<summary>` structure as the mechanism, and LLD-C7 (:199) lists `disclosure` among the descriptor parts with NO 'details' substring, so the second grep is what actually forces it (the n18 idiom). Both are rewritten to the button-trigger + overlay()-panel mechanism, with n4a's container-resolution algorithm named as an implementation fact. `npm test` exits 0."
+    },
+    {
+      "id": "n11",
+      "label": "records: repair the stale super-shell.ts teaching claim + its LLD-C4 cite",
+      "leaf": true,
+      "accept": "With `SS=site/pages/super-shell.ts`: `test -f \"$SS\" && ! grep -q 'collapse=\"menu\" dropdown takes over' \"$SS\"` AND `test -f \"$SS\" && ! grep -q 'LLD-C4' \"$SS\"` (the cite at :235 pointed at the pre-rewrite clause) — the replacement prose names ADR-0155's actual arrangement (the site nav runs `collapse=\"none\"`; the shell owns narrow, so the page must stop claiming 'see it live in this very page's nav rail'), and `npm run check` exits 0."
+    },
+    {
+      "id": "n20",
+      "label": "site: a ui-nav-rail doc page matching its four app-tier siblings (Kim ruling 2)",
+      "leaf": true,
+      "accept": "`site/nav-rail.html` + `site/pages/nav-rail.ts` exist and follow the sibling shape (super-shell.html / chat-shell.html / master-detail.html / settings.html), demonstrating all four collapse arms with `menu` shown narrow AND open; `npm run check` (incl. check:site) and `npm run build` both exit 0."
+    },
+    {
+      "id": "n21",
+      "label": "site: site-manifest row + regenerated sitemap (the drift gate)",
+      "leaf": true,
+      "accept": "A row is added to `site/lib/site-manifest.json` (the single owner — scripts/generate-sitemap.mjs:149 maps it through unchanged), `node scripts/generate-sitemap.mjs` is re-run, and `npm test` exits 0 with site/lib/sitemap.test.ts green: the committed `site/public/sitemap.json` matches the generator byte-for-byte AND `site/sitemap.json` is byte-identical to it (both copies, one generation)."
+    },
+    {
+      "id": "n22",
+      "label": "site: nav-rail.visual.browser.test.ts pinning the open menu card (Kim ruling 2)",
+      "leaf": true,
+      "accept": "`npm run test:visual` exits 0 with a new `packages/agent-ui/app/src/controls/nav-rail/nav-rail.visual.browser.test.ts` whose baseline pins the narrow menu arm OPEN — the card's four borders, its content-driven width, and its offset from the trigger all visible in the shot. Baselines are committed under `packages/agent-ui/app/src/controls/nav-rail/__baselines__/nav-rail.visual.browser.test.ts/` (NOT `__screenshots__/`, which .gitignore:44 excludes as failure output). FIRST visual test in @agent-ui/app: the `visual` project already globs `**/*.visual.browser.test.ts`, so no config change is needed — confirm the file is actually COLLECTED (a non-zero test count) rather than silently unmatched."
+    },
+    {
+      "id": "n12",
+      "label": "gate: real-engine clipping-ancestor probe + a BITING negative control (the GH #260 class)",
+      "leaf": true,
+      "accept": "A new BOTH-ENGINE test mounts the rail inside a single `overflow: hidden` ancestor 44px tall, opens the panel, and asserts the panel is painted and hittable BELOW the clipper's bottom edge (`document.elementFromPoint` at a point inside the panel but past `clipper.getBoundingClientRect().bottom` returns a node the panel contains). BITING NC (F1a): the control that must FAIL is removing the popover attribute / skipping showPopover() — dropping top-layer MEMBERSHIP, the variable that actually defeats clipping. Restoring `position: absolute` must NOT be the NC (a top-layer popover paints unclipped regardless of `position`), and `list.matches(':popover-open')` must NOT be the assertion under test (it is exactly what the NC removes, so it could never bite). Cites SPEC-R5 AC3 by ID."
+    },
+    {
+      "id": "n13",
+      "label": "gate: the card-geometry assertion lands in the suite with its clamp NC",
+      "leaf": true,
+      "accept": "The n6 geometry assertion lives in `nav-rail.browser.test.ts` and `npm run test:browser:packages:app` exits 0; the recorded NC run removes `min-inline-size`/`max-inline-size` and the assertion FAILS, with the observed widths written into the build's findings. The NC must NOT be a stylesheet `inset-inline: 0` restoration — overlay.ts:189-194's inline styles win over it, so that control is inert (F1b)."
+    },
+    {
+      "id": "n14",
+      "label": "gate: real-engine open-by-keyboard + dismissal + focus round-trip, both engines",
+      "leaf": true,
+      "accept": "`npm run test:browser:packages:app` exits 0 with BOTH-ENGINE assertions: the trigger opens the panel on pointer click AND on Enter AND on Space (SPEC-R5 AC2's own keyboard-open half — the one clause this wave exists to satisfy, F12, and an affordance <summary> used to provide natively); Escape closes and focus returns to `[data-part=\"trigger\"]`; an outside click closes; on open, focus lands on the panel's first focusable descendant."
+    },
+    {
+      "id": "n15",
+      "label": "gate: jsdom suite updated for the button-trigger structure",
+      "leaf": true,
+      "accept": "`npm test` exits 0 AND `test -f packages/agent-ui/app/src/controls/nav-rail/nav-rail.test.ts && ! grep -q 'HTMLDetailsElement' packages/agent-ui/app/src/controls/nav-rail/nav-rail.test.ts` AND `test -f packages/agent-ui/app/src/controls/nav-rail/nav-rail.browser.test.ts && ! grep -q 'HTMLDetailsElement' packages/agent-ui/app/src/controls/nav-rail/nav-rail.browser.test.ts` — every assertion keyed to `<details>.open` semantics is re-expressed against the button/panel parts (unconditional under Kim's ruling 1; v1 hedged this with 'if the wrapper goes')."
+    },
+    {
+      "id": "n16",
+      "label": "gate: the @agent-ui/app size budget holds at exactly one red row",
+      "leaf": true,
+      "accept": "`npm run size` prints exactly ONE red row — `@agent-ui/components/components`, the unchanged pre-existing baseline measured at intake (48695 B gz vs 48640 B gz budget, +55 B) — judged by READING the printed table, never a grep count (the house exit-code law). @agent-ui/app must stay within its 75776 B gz budget (71642 B gz at intake) with the threshold-bridge observer and the a11y wiring added."
+    }
+  ],
+  "actions": [
+    { "id": "a1", "label": "open the panel from its trigger" },
+    { "id": "a2", "label": "escape every clipping and stacking ancestor (render in #top-layer)" },
+    { "id": "a3", "label": "anchor the panel to its trigger, flipping and shifting at viewport edges" },
+    { "id": "a4", "label": "dismiss on Escape" },
+    { "id": "a5", "label": "dismiss on an outside click" },
+    { "id": "a6", "label": "return focus to the trigger on close" },
+    { "id": "a7", "label": "move focus into the panel on open" },
+    { "id": "a8", "label": "announce every open-state transition (toggle/close, ADR-0101)" },
+    { "id": "a9", "label": "read as a card bordered on all four sides" },
+    { "id": "a10", "label": "size the panel from its content, floored and ceilinged" },
+    { "id": "a11", "label": "bound the panel's height, keep it on-screen, and scroll the overflow" },
+    { "id": "a12", "label": "render the grouped list inline, in flow, at wide widths" },
+    { "id": "a13", "label": "keep the trigger inert chrome at wide widths" },
+    { "id": "a14", "label": "arm the overlay only below the collapse threshold" },
+    { "id": "a15", "label": "preserve the grouped anatomy (context labels + name|tag rows) inside the panel" },
+    { "id": "a16", "label": "prove the repair in Chromium AND WebKit" },
+    { "id": "a17", "label": "prove a clipping ancestor no longer traps the panel" },
+    { "id": "a18", "label": "keep the descriptor truthful to the shipped parts and keyboard contract" },
+    { "id": "a19", "label": "state top-layer rendering as a checkable acceptance criterion" },
+    { "id": "a20", "label": "correct the stale narrow-story teaching claim on a live docs page" },
+    { "id": "a21", "label": "keep the jsdom legs green against the new part structure" },
+    { "id": "a22", "label": "hold the @agent-ui/app size budget" },
+    { "id": "a23", "label": "observe the rail's width and arm or disarm the overlay as the band changes" },
+    { "id": "a24", "label": "read the 40rem threshold from one named source, drift-gated" },
+    { "id": "a25", "label": "keep collapse-container=\"ancestor\" correct in both bands" },
+    { "id": "a26", "label": "expose the trigger's expanded state and its panel association to assistive tech" },
+    { "id": "a27", "label": "retire the CSS that only <details> semantics could drive" },
+    { "id": "a28", "label": "open the panel from the keyboard (Enter and Space)" },
+    { "id": "a29", "label": "give ui-nav-rail a site doc page matching its app-tier siblings" },
+    { "id": "a30", "label": "keep the sitemap and its two copies in sync with the new page" },
+    { "id": "a31", "label": "pin the open menu card in a visual baseline" },
+    { "id": "a32", "label": "retire the <details> mechanism claims from the SPEC and LLD" },
+    { "id": "a33", "label": "correct the SPEC header's ADR-0130 status and clause count" },
+    { "id": "a34", "label": "leave no stranded popover attribute or inline style residue" }
+  ],
+  "hosts": [
+    { "action": "a1", "node": "n2" },
+    { "action": "a1", "node": "n3" },
+    { "action": "a2", "node": "n3" },
+    { "action": "a3", "node": "n3" },
+    { "action": "a4", "node": "n5" },
+    { "action": "a5", "node": "n5" },
+    { "action": "a6", "node": "n3" },
+    { "action": "a7", "node": "n3" },
+    { "action": "a8", "node": "n3" },
+    { "action": "a9", "node": "n6" },
+    { "action": "a10", "node": "n6" },
+    { "action": "a11", "node": "n7" },
+    { "action": "a12", "node": "n8" },
+    { "action": "a13", "node": "n4b" },
+    { "action": "a13", "node": "n8" },
+    { "action": "a14", "node": "n4b" },
+    { "action": "a15", "node": "n2" },
+    { "action": "a16", "node": "n12" },
+    { "action": "a16", "node": "n13" },
+    { "action": "a16", "node": "n14" },
+    { "action": "a17", "node": "n12" },
+    { "action": "a18", "node": "n9" },
+    { "action": "a19", "node": "n10a" },
+    { "action": "a20", "node": "n11" },
+    { "action": "a21", "node": "n15" },
+    { "action": "a22", "node": "n16" },
+    { "action": "a23", "node": "n4a" },
+    { "action": "a24", "node": "n4a" },
+    { "action": "a25", "node": "n4c" },
+    { "action": "a26", "node": "n17" },
+    { "action": "a27", "node": "n18" },
+    { "action": "a28", "node": "n14" },
+    { "action": "a29", "node": "n20" },
+    { "action": "a30", "node": "n21" },
+    { "action": "a31", "node": "n22" },
+    { "action": "a32", "node": "n10b" },
+    { "action": "a32", "node": "n19" },
+    { "action": "a33", "node": "n10b" },
+    { "action": "a34", "node": "n8" }
+  ],
+  "edges": [
+    { "from": "n2", "to": "n3", "why": "overlay() takes concrete popup + anchor element references — the button trigger and panel parts must exist before the trait can be wired to them" },
+    { "from": "n2", "to": "n18", "why": "the chevron/marker/::details-content rules can only be retired once the parts they styled are gone, or the narrow arm renders unstyled in between" },
+    { "from": "n3", "to": "n4a", "why": "the threshold bridge arms and disarms the wiring n3 establishes; there is nothing to arm before it exists" },
+    { "from": "n4a", "to": "n4b", "why": "the arming OUTCOME is observable only once the observer mechanism that produces it is in place (the F2 split)" },
+    { "from": "n4a", "to": "n4c", "why": "the ancestor arm's correctness is a property of WHICH box the observer watches — the mechanism decision n4a makes" },
+    { "from": "n3", "to": "n5", "why": "platform light-dismiss must be live before the two hand-rolled listeners are deleted, or dismissal regresses between commits" },
+    { "from": "n2", "to": "n17", "why": "aria-expanded/aria-controls are written onto the button trigger and reference the panel's id — both parts must exist first" },
+    { "from": "n3", "to": "n17", "why": "aria-expanded tracks the open state the overlay handle owns, so the wiring must exist to track" },
+    { "from": "n3", "to": "n6", "why": "the card geometry is authored against overlay()'s position:fixed top-layer panel — the width clamp only becomes the sizing lever once the panel is no longer stretched by its containing block" },
+    { "from": "n6", "to": "n7", "why": "the block-size cap is computed against the card's own padding + border box, which n6 establishes (the menu.css border-box +2px lesson)" },
+    { "from": "n4b", "to": "n8", "why": "wide-arm integrity depends on exactly how the arming seam leaves the popover attribute and overlay()'s inline style residue" },
+    { "from": "n2", "to": "n9", "why": "the descriptor's parts and their descriptions mirror what the shipped source creates, so the parts must be settled first" },
+    { "from": "n2", "to": "n19", "why": "LLD-C4's mechanism prose and LLD-C7's parts list describe the structure n2 replaces" },
+    { "from": "n19", "to": "n11", "why": "super-shell.ts:235 cites LLD-C4; the cite can only be repointed once the clause it points at has been rewritten" },
+    { "from": "n3", "to": "n12", "why": "the clipping probe measures the top-layer escape the overlay wiring provides" },
+    { "from": "n10a", "to": "n12", "why": "the probe cites the AC by ID, so the AC text lands first" },
+    { "from": "n6", "to": "n13", "why": "the card assertion and its clamp negative control measure the geometry n6 authors" },
+    { "from": "n5", "to": "n14", "why": "the dismissal and focus-round-trip assertions target the inherited overlay contract that n5 leaves as the sole owner" },
+    { "from": "n17", "to": "n14", "why": "the keyboard-open leg asserts aria-expanded flips on Enter/Space, which only holds once the ARIA wiring exists" },
+    { "from": "n2", "to": "n15", "why": "the jsdom part assertions target the button/panel structure the swap produces" },
+    { "from": "n20", "to": "n21", "why": "the site-manifest row and the regenerated sitemap point at a page that must exist, or the build and the drift gate break" },
+    { "from": "n6", "to": "n22", "why": "the visual baseline pins the card geometry; capturing it before the card exists would bake the full-bleed band in as the reference" },
+    { "from": "n3", "to": "n16", "why": "the size row measures the shipped bytes, so the mechanism must land before the budget is judged" },
+    { "from": "n4a", "to": "n16", "why": "the threshold-bridge observer is the wave's main byte addition to @agent-ui/app, so the budget reading is only meaningful after it lands" }
+  ]
+}
