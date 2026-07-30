@@ -393,14 +393,24 @@ export interface VerdictMeta {
  * verdicts file (clause 1) IS the machine-readable record, and the next unjudged run refuses the name
  * from that file alone (clause 4). Pasting an entry is OPTIONAL curated prose, worth it only when a
  * human has something a verdict cannot state — a coverage argument, a repair path.
+ *
+ * **Optional ON A CONDITION** (ADR-0165's REV 2026-07-30, GH #361 reading (b) — this is why the reason
+ * string below spells the condition out rather than saying "optional" flat). An entry is unowed because
+ * the EXPECTED disposition of an admission-time `E_QUALITY` refusal is that the seed is dropped from
+ * `src/examples/` entirely, and `seedsMissingAdmission` iterates `allSeeds` — a dropped seed is simply
+ * not a candidate any more. A refusal KEPT on the shelf pending repair is still a candidate, still
+ * un-admitted, and still un-allowlisted, so the coverage gate reds until an entry exists. "Optional"
+ * without that condition is the false inference GH #361 ruled on; this is its fourth repaired instance.
  */
 export function dispositionAllowlistSnippet(q: SeedRejection, meta: VerdictMeta): string {
   const dims = q.failingDimensions !== undefined && q.failingDimensions.length > 0 ? q.failingDimensions.join(', ') : '(none reported)'
   const reason =
     `judged E_QUALITY ${meta.date} (VerdictsFile, rubric a2ui-corpus ${meta.rubricVersion} — ${meta.judgedBy}). ` +
     `${q.message}. Failing dimensions: ${dims}. The machine-readable record is the archived verdicts file ` +
-    '(ADR-0165 clause 1); this entry is optional curated prose — add the coverage argument and repair path a ' +
-    'verdict cannot state.'
+    '(ADR-0165 clause 1); this entry is optional BECAUSE the expected disposition of this refusal is dropping ' +
+    'the seed from src/examples/ entirely (ADR-0165 REV 2026-07-30) — a dropped seed is no longer an ' +
+    'admission-coverage candidate. A seed KEPT on the shelf pending repair still owes this entry, or the ' +
+    'coverage gate reds. Add the coverage argument and repair path a verdict cannot state.'
   return `  ['${q.name}', ${JSON.stringify(reason)}],`
 }
 
