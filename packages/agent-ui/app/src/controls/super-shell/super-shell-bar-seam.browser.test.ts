@@ -5,6 +5,12 @@
 // container queries, `:has()` matching against a nested subtree) — the source-presence half lives in
 // super-shell.test.ts, this is the measurement half.
 //
+// GH #381 appends the CARD-EDGE half of the same contract: a floating overlay card's four-sided outline.
+// It lands here rather than in super-shell-responsive.browser.test.ts for two reasons — this file already
+// owns the overlay-card fixture (cl.6's posture exception A measures corners on the very same box), and
+// the responsive file is a named FOCUS_TIMING_FILES member (zero file parallelism, its own shard), which
+// is the wrong home for a suite that measures computed paint and races nothing.
+//
 // TWO standing rules for this file, both from ADR-0166 cl.8:
 //   1. NEVER read the `borderRadius` SHORTHAND. `0px 0px 18px 18px` is a string that satisfies
 //      `not.toBe('0px')` VACUOUSLY, which would let the header-only and footer-only rows of cl.5's
@@ -295,6 +301,142 @@ describe('ADR-0166 cl.6 — posture exception A: a floating overlay is INSET, no
     // NC (ADR-0166 cl.6): delete the token restore from this narrow overlay arm and this must red
     // naming `border-start-start-radius`.
     expectCorners(pane, { start: '18px', end: '18px' }, 'the overlay-open collapse side')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────────
+// GH #381 — the floating overlay card's four-sided outline. Cross-engine because this is the ONE bug
+// class jsdom cannot see at all (computed border widths/colors, container queries, a real color role
+// resolving through the token chain) AND that a light-scheme screenshot cannot see either: the defect
+// was `neutral-surface` on `neutral-surface` in the DARK scheme, where the card had no edge to read.
+// ─────────────────────────────────────────────────────────────────────────────────────────────────
+describe('GH #381 — a floating overlay card is bordered on ALL FOUR sides, off --ui-super-shell-overlay-outline', () => {
+  const SIDES = [
+    ['border-block-start-width', 'borderBlockStartWidth'],
+    ['border-block-end-width', 'borderBlockEndWidth'],
+    ['border-inline-start-width', 'borderInlineStartWidth'],
+    ['border-inline-end-width', 'borderInlineEndWidth'],
+  ] as const
+  const COLOR_SIDES = ['borderBlockStartColor', 'borderBlockEndColor', 'borderInlineStartColor', 'borderInlineEndColor'] as const
+
+  /** Every side named individually — an `toEqual`-shaped array assertion prints values but cannot say
+   *  WHICH edge lost its border, and "all four sides" is the whole claim of the issue. */
+  function expectFourBorders(box: HTMLElement, want: string, label: string): void {
+    const cs = getComputedStyle(box)
+    for (const [name, key] of SIDES) expect(cs[key], `${label} · ${name}`).toBe(want)
+  }
+
+  /** The one honest way to compare a computed border color against a color ROLE: paint a probe with the
+   *  role and let the engine normalize both to the same computed-color format. Comparing the raw custom
+   *  property text (`#…`) against `rgb(…)` would pass or fail for the wrong reason. */
+  function resolvedRole(host: HTMLElement, role: string): string {
+    const probe = document.createElement('div')
+    probe.style.color = `var(${role})`
+    host.append(probe)
+    const value = getComputedStyle(probe).color
+    probe.remove()
+    expect(value, `${role} must resolve to a real color (an empty/invalid role would make every assertion vacuous)`).toMatch(/^(rgb|color|oklch|lab)/)
+    return value
+  }
+
+  /** Opens the narrow (<40rem) overlay on a header+footer collapse shell and hands back the overlaid card. */
+  async function openNarrowOverlay(slots: readonly Slot[] = ['header', 'nav-pane', 'content', 'footer'], card = '[data-part="pane"][data-side="start"]'): Promise<{ el: UISuperShellElement; pane: HTMLElement }> {
+    const el = mount(slots, { width: 360, attrs: { 'narrow-start': 'collapse' } })
+    await el.updateComplete
+    q(el, '[data-part="side-toggle"][data-side="start"]').click()
+    await el.updateComplete
+    const pane = q(el, card)
+    expect(getComputedStyle(pane).position, 'the overlay arm must be LIVE or every border assertion below is about an in-flow card').toBe('absolute')
+    return { el, pane }
+  }
+
+  it('the narrow overlay (arms 3+4) carries a 1px border on all four sides, in the fleet floating-card outline ROLE', async () => {
+    const { el, pane } = await openNarrowOverlay()
+    // NC (run by hand, both engines): delete `border: var(--ui-super-shell-overlay-outline)` from the
+    // narrow overlay arm in super-shell.css and all four assertions below read `0px`.
+    expectFourBorders(pane, '1px', 'the narrow overlay pane')
+    const role = resolvedRole(el, '--md-sys-color-neutral-outline-variant')
+    const cs = getComputedStyle(pane)
+    for (const key of COLOR_SIDES) expect(cs[key], `the narrow overlay pane · ${key}`).toBe(role)
+  })
+
+  it('the border is drawn off the TOKEN, not a hardcoded value — a consumer repoint moves all four sides (the TKT-0062 law)', async () => {
+    const { el, pane } = await openNarrowOverlay()
+    // The discriminator the bar seam's own n5 probe uses: a hardcoded `1px solid …` in the arm would pass
+    // the width/color assertions above and be COMPLETELY INERT here.
+    el.style.setProperty('--ui-super-shell-overlay-outline', '3px solid rgb(1, 2, 3)')
+    expectFourBorders(pane, '3px', 'the repointed overlay pane')
+    const cs = getComputedStyle(pane)
+    for (const key of COLOR_SIDES) expect(cs[key], `the repointed overlay pane · ${key}`).toBe('rgb(1, 2, 3)')
+    // and the named escape hatch, identical in shape to the bar seam's
+    el.style.setProperty('--ui-super-shell-overlay-outline', '0 solid transparent')
+    expectFourBorders(pane, '0px', 'the outline-suppressed overlay pane')
+  })
+
+  it('the compact-band overlay (arms 5+6 — the arm the DOCS SITE renders) carries the same four borders', async () => {
+    // 700px sits ABOVE the 40rem/640px narrow line and BELOW the 52.5rem/840px compact line, so ONLY the
+    // compact block can be responsible for what this measures — the narrow block is out of the question.
+    const el = mount(['header', 'nav-pane', 'content', 'footer'], { width: 700, attrs: { 'narrow-start': 'collapse', 'collapse-band': 'compact' } })
+    await el.updateComplete
+    q(el, '[data-part="side-toggle"][data-side="start"]').click()
+    await el.updateComplete
+    const pane = q(el, '[data-part="pane"][data-side="start"]')
+    expect(getComputedStyle(pane).position).toBe('absolute')
+    expectFourBorders(pane, '1px', 'the compact-band overlay pane')
+  })
+
+  it('the mid-window overlay (SPEC-R14, arms 1+2) carries the same four borders', async () => {
+    // The JS-owned `data-auto-collapsed-*` is set directly here: this probe is about the CSS ARM, and
+    // reproducing #syncFitCollapse's measurement window would make the test about the measurement instead.
+    // 900px is above BOTH container lines, so neither band block can account for the result.
+    const el = mount(['header', 'nav-pane', 'content', 'footer'], { width: 900 })
+    await el.updateComplete
+    el.setAttribute('data-auto-collapsed-start', '')
+    el.setAttribute('data-narrow-open', 'start')
+    const pane = q(el, '[data-part="pane"][data-side="start"]')
+    expect(getComputedStyle(pane).position, 'the mid-window overlay arm must be live').toBe('absolute')
+    expectFourBorders(pane, '1px', 'the mid-window overlay pane')
+  })
+
+  it('cl.6 SURVIVES the border: the overlay keeps all four corners round, so the border follows the rounded corner', async () => {
+    // The `border` shorthand resets `border-image`, NOT `border-radius` — but a future "tidy-up" to a
+    // longhand set or an added `border-radius: 0` would square the card and leave a boxy hairline on a
+    // rounded surface. Pinned here, on the same box, in the same run.
+    const { pane } = await openNarrowOverlay()
+    expectCorners(pane, { start: '18px', end: '18px' }, 'the bordered overlay pane')
+  })
+
+  it('the hairline is ABSORBED, not added: an overlaid pane AND an overlaid rail keep their exact outer footprint', async () => {
+    // The pane already declared `box-sizing: border-box`; a RAIL did not, and off its 54px `inline-size`
+    // would have rendered 56px wide — silently breaking R9d's "the far-edge canvas gap stays exactly one
+    // bar wide" cap. NC: delete `box-sizing: border-box` from the narrow overlay arm and the rail reads 56.
+    const { pane } = await openNarrowOverlay()
+    expect(Math.round(pane.getBoundingClientRect().width), 'the overlaid pane keeps its 252px outer width').toBe(252)
+
+    const railShell = mount(['header', 'global-nav', 'content', 'footer'], { width: 360, attrs: { 'narrow-start': 'collapse' } })
+    await railShell.updateComplete
+    q(railShell, '[data-part="side-toggle"][data-side="start"]').click()
+    await railShell.updateComplete
+    const rail = q(railShell, '[data-part="rail"][data-side="start"]')
+    expect(getComputedStyle(rail).position).toBe('absolute')
+    expectFourBorders(rail, '1px', 'the overlaid rail')
+    expect(Math.round(rail.getBoundingClientRect().width), 'the overlaid rail keeps its 54px outer width — the seam is absorbed').toBe(54)
+  })
+
+  it('the border rides ONLY the floating arms: a wide in-flow pane/rail and a narrow-STACK card have NO border', async () => {
+    // The decision half of #381, measured rather than asserted in prose. A stacked card is flush against a
+    // bar that already draws --ui-super-shell-bar-seam on that same edge, so a second hairline there would
+    // DOUBLE the seam to 2px — a different defect, not this one.
+    const wide = mount(['header', 'global-nav', 'nav-pane', 'content', 'footer'], { width: 900 })
+    await wide.updateComplete
+    expectFourBorders(q(wide, '[data-part="pane"]'), '0px', 'the WIDE in-flow pane')
+    expectFourBorders(q(wide, '[data-part="rail"]'), '0px', 'the WIDE in-flow rail')
+
+    const stacked = mount(['header', 'nav-pane', 'content', 'footer'], { width: 360, attrs: { 'narrow-start': 'stack' } })
+    await stacked.updateComplete
+    const card = q(stacked, '[data-part="pane"][data-side="start"]')
+    expect(getComputedStyle(q(stacked, '[data-part="middle"]')).flexDirection).toBe('column') // the stack posture is live
+    expectFourBorders(card, '0px', "the narrow-start='stack' card")
   })
 })
 
