@@ -106,10 +106,16 @@ ui-theme-provider.app-shell [data-site-nav] {
  * "one shell's rule never reaches a nested shell's own part" — via DOM-position specificity instead of
  * `@scope...to()`. The component's own `[data-part='bar']` background already matches
  * (`--ui-super-shell-surface` == `--md-sys-color-neutral-surface`) — restated here so the one
- * declaration reads as the band's true source, not a same-color coincidence between two rules. */
+ * declaration reads as the band's true source, not a same-color coincidence between two rules.
+ *
+ * ADR-0166 (GH #371) — the `border-block-end` this rule used to carry is GONE: the COMPONENT now draws
+ * that hairline itself, on this very box, off `--ui-super-shell-bar-seam`. Keeping it here would paint two
+ * nearly-coincident 1px lines (the site's on the bar box, the footer's mirror 6px inset inside
+ * `bar-content`) the moment the frame's 18px gap stopped hiding how they meet. The `background` stays —
+ * it is a deliberate restatement, per the paragraph just above, not a duplicate mechanism. A consumer
+ * wanting a different seam repoints the token; it does not re-declare the border. */
 ui-theme-provider.app-shell > .site-shell > [data-part='frame'] > [data-part='bar'][data-bar='header'] {
   background: var(--md-sys-color-neutral-surface);
-  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
 }
 
 /* The app top-bar — right column, row 1, fixed (non-scrolling). */
@@ -154,12 +160,24 @@ ui-theme-provider.app-shell > .site-shell > [data-part='frame'] > [data-part='ba
   gap: var(--md-sys-space-xs);
 }
 
-/* The app footer — right column, row 3, fixed. The bar spans the column edge-to-edge (background + top divider). */
+/* The app footer — right column, row 3, fixed. The bar spans the column edge-to-edge.
+ *
+ * ADR-0166 (GH #371) — the `border-block-start` this rule used to carry is GONE, for the same reason as
+ * the header rule above, plus one this box made worse: `.app-context-footer` is the footer's CONTENT, which
+ * the shell nests inside `[data-part='bar-content']`, so its border started 6px in from the bar's own edge
+ * (the bar's `padding-inline: calc(module / 3)`) — a hairline at a DIFFERENT inset from the component's
+ * own. Two independent, inconsistent derivations of one separator; the component owns it now.
+ *
+ * KNOWN, PRE-EXISTING, and deliberately NOT repaired here (ADR-0166's Consequences flags it so a baseline
+ * diff cannot be mistaken for a component regression): this box paints `neutral-surface-low` while the
+ * footer BAR it sits in paints `--ui-super-shell-surface` (= `neutral-surface`), and the bar's 6px
+ * `padding-inline` leaves that lighter surface showing as a sliver at each inline extreme. An 18px band of
+ * page background above the footer used to hide how the two surfaces meet; flush, the sliver reads as a
+ * seam artifact. It is the consumer's own palette, and ADR-0166 does not own `_page.css`'s palette. */
 .app-context-footer {
   /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
   /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
   background: var(--md-sys-color-neutral-surface-low);
-  border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
 }
 
 /* Inner gutter — the footer's CONTENT is constrained to the SAME reading column as `.page-header-inner`,

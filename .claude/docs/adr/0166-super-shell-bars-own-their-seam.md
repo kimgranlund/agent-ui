@@ -425,3 +425,124 @@ confirm the mutation applied, confirm the red names `1.125rem`, revert.
   question that one clause answers once.
 - **Corner matrix.** cl.5's table + cl.6/cl.7's exceptions land as a new normative sub-clause under
   R11a rather than as prose, so a future posture has a table to extend.
+
+## Amendment — REV 2026-07-30: the build MEASURED cl.7's DOM order and cl.5's inert arm, and both were wrong (GH #371)
+
+> Append-only. The Status and `Ratified by` cells are untouched, and every clause above stands unedited —
+> this REV records what the build's measurements falsified, what was therefore NOT built, and what shipped
+> as an observed consequence the ratified text said would not happen. Written at the build gate
+> (`build-371-bar-seam`), from real-engine measurement on the real pages, not from re-reading the source.
+>
+> **The lesson line, because it generalizes past this record: a ratified clause is still a CLAIM about the
+> tree.** cl.7 and cl.5 were reasoned from the intake's *reading* of `super-shell.ts`, and both read
+> plausibly — one of them even cites the call site by line number. Measurement is what falsified them. This
+> is the same class as the two other confidently-wrong citations this wave found (below), and the
+> difference here is that these ones had already been ratified: the plausibility of the prose is not
+> evidence, and a clause that names a mechanism owes a measurement, not a reading.
+
+**1 — cl.7's posture exception C names the wrong pair, because the strip is composed ABOVE `middle`.**
+Context fact 3 and cl.7 both state that `#buildNarrowTabs` appends the strip "as a frame child **between
+`middle` and the footer**" (citing `super-shell.ts:365`, which is the CALL site). The method itself calls
+`frame.querySelector('[data-part="middle"]')!.before(strip)` (`super-shell.ts:870`), so the strip is
+`middle`'s PREVIOUS sibling. Measured frame order on a header+footer+tabs shell:
+`bar/header | narrow-tabs | middle | bar/footer`. The real four-seam set is therefore header↔strip,
+strip↔middle, middle↔footer, header↔middle — not the set Context fact 3 enumerates.
+
+The consequence is that cl.7's ruled restore is inverted: it is a pane's **block-START** that faces the
+strip, and its block-END still faces the footer. **The ruled block-end restore was therefore NOT built.**
+Building it as written would round a corner that IS flush against the footer bar while leaving the
+strip-facing pair squared — two defects instead of one, and the round-corner-against-a-flush-bar defect is
+the exact family GH #253 was opened to fix. The mirrored (correct-under-the-true-order) form was ALSO not
+built: a deviation may be right and is still a breach, so this returns to the design seat rather than being
+silently repaired at the build. **What WAS built is the other half of exception C** — the strip's own
+`margin-block-start: calc(var(--ui-super-shell-module) / 3)` — which is the ruled declaration verbatim and
+is correct under the true order too (the strip did lose a block-start seam; it lost it to the header rather
+than to `middle`).
+
+**Live blast radius today: ZERO.** The only shipped `narrow-*='tabs'` author is `ui-agent-admin`
+(`agent-admin.ts:402`), which composes no bar at all (`content` + `options-pane`,
+`agent-admin.ts:405/515/669`), so neither frame `:has()` rule ever fires on the one instance the strip
+ships in, and nothing is squared for the missing restore to correct. The measured order is pinned in
+`super-shell.test.ts` (a frame-child-order assertion plus a source pin on `.before(strip)`) so the
+discrepancy cannot drift out of view before this clause is repaired, and the reason for the omission is
+recorded in `super-shell.css` at the declaration itself.
+
+**2 — cl.5's inert arm does not include `ui-agent-admin`, and cl.5 contradicts this record's own Context
+fact 3.** cl.5's table lists `ui-agent-admin` under "bars authored: **none** — the inert arm", and calls
+that arm "byte-stable **by construction**, not by carve-out", satisfying Kim's constraint 1. Context fact 3
+already contains the refutation: the narrow-tabs strip is a FRAME CHILD. Because agent-admin sets
+`narrow-end='tabs'`, below the 40rem line its frame has **two visible children** — the strip and `middle` —
+and the deleted `gap` was **live between them, with no bar anywhere in the shell**. The gap's inertness
+argument holds for a frame with ONE visible child; it was never a property of having no bars.
+
+Measured on the real `agent-admin-app.html` at the fleet-default 414×896 viewport, same harness both sides:
+
+| | frame | rowGap | children |
+|---|---|---|---|
+| main | h=**241** | 18px | `narrow-tabs h=37 top=41 mbs=0px` · `middle h=186 top=96` |
+| this wave | h=**229** | normal | `narrow-tabs h=37 top=47 mbs=6px` · `middle h=186 top=84` |
+
+**−12px** = −18 (the deleted gap) + 6 (cl.7's new strip seam), deterministic in both engines and confirmed
+against a capture-harness noise floor (the same harness run twice at identical CSS was pixel-identical on
+15 of 17 fixtures). **This is a visible UI change on a shipped surface that the ratified text said would not
+move**, and it is recorded here as an observed consequence rather than smoothed over. Kim's byte-stability
+constraint DOES hold, unchanged, for the two genuinely single-visible-child cases: `gen-ui-live`'s
+bars-free shell (frame == middle before and after: 752==752, then 788==788) and `a2ui-live` (see 5). It also
+holds for agent-admin at WIDE, where the strip is `display: none`.
+**If the old spacing is wanted on agent-admin, the remedy is a consumer override and no component code** —
+but note it is NOT a repoint of `--ui-super-shell-bar-seam`: that token is the bar seam, and this surface
+has no bar. The old geometry put its 18px BELOW the strip (measured: strip bottom 78, `middle` top 96); the
+new 6px sits ABOVE it. So the faithful restore is
+`ui-tabs[data-part='narrow-tabs'] { margin-block-start: 0; margin-block-end: var(--ui-super-shell-gap) }`
+on the consumer's own sheet — setting `margin-block-start` to a full gap would put the space on the wrong
+side and push the content DOWN 18px instead of restoring it. Alternatively this clause gains a strip-seam
+token of its own, which is the shape the rest of this record uses for every consumer-adjustable dimension.
+**Not ruled here** — Kim's ruling did not reach the strip, and cl.7's own text offers the strip's
+`padding-block-end` as an explicitly un-ruled build-time option for the same reason.
+The measured numbers are pinned as a contract in `super-shell-bar-seam.browser.test.ts`.
+
+**3 — the Amendment sheet's floating-cards item targets a sentence that is not in the SPEC.** The sheet's
+second bullet amends *"SPEC-R11a, the floating-cards reading"*, quoting "rail/pane/pane-resizer … are
+separate floating cards with gaps between them". `grep` over the whole of
+`shell-archetypes-m5.spec.md` finds **no "floating card" language at all** — the sentence lives in
+`super-shell.css`'s own GH #253 rationale comment, which cl.1's table row 4 also mis-attributes to
+SPEC-R11a. Applied where it actually lives: the CSS comment is axis-qualified in place, and the normative
+reading lands in the new **SPEC-R11d** with its true source named, instead of editing a SPEC sentence that
+does not exist. R11d also carries cl.5's matrix and cl.6/cl.7's exceptions as the sheet's last bullet asks.
+
+**4 — two census nits, and a second red-by-design test this record does not name.** cl.5's table lists
+"`workspace-shell`'s header-only arm" under *shipped instances*: no live `ui-workspace-shell` exists
+anywhere outside tests (`grep` for `createElement('ui-workspace-shell')`/`<ui-workspace-shell` outside
+`*.test.*`: zero hits), so the header-only row is reachable from the public API but has no shipped witness
+— R11d's table therefore omits the "shipped instances" column rather than repeat the claim. cl.7's "both
+`ui-chat-shell` instances" are one each on `chat-shell.html` and `a2ui-chat.html`, not two on one page:
+`chat-shell.ts`'s other `createElement('ui-chat-shell')` sits inside a CODE-SAMPLE string. Both witnesses
+do author a header and a footer and do default to `narrow-start='stack'`, so cl.7's substance is unaffected.
+Separately, cl.8 names `super-shell.browser.test.ts:125` as the one test that reds by design; there is a
+**second**. `_page-responsive.browser.test.ts`'s S1 leak regression asserted `borderBottomWidth === 0` on a
+nested demo shell's bar — sound only while a bar had no border of its own. Under cl.2 every bar draws 1px,
+so `0` is the wrong expectation AND `1px` proves nothing, because the site-CSS leak and the legitimate
+component seam are now the SAME VALUE. Re-pointed to the seam token (repoint the nested shell to `3px`,
+assert `3px`), which preserves the original guarantee with a probe that still bites.
+
+**5 — a third bars-free instance the census misses, and this one really is inert.** `a2ui-live` composes a
+`ui-super-shell` with `nav-pane` + `content` only (`a2ui-live.ts:96/100`) — no bar — plus
+`narrow-start='stack'`. Its frame has one visible child at every width, so the gap deletion is inert; and
+because no bar exists, cl.7's F2 restore re-declares a value the frame never zeroed, so the column-posture
+arm is inert too. It belongs in cl.5's inert row alongside `gen-ui-live`'s bars-free shell.
+
+**Consequences of this REV, recorded.** cl.7's exception C ships HALF-BUILT by design, and that is a known
+open fence, not an oversight: the strip owns its seam, the active narrow-tab pane's radius restore awaits a
+coordinated repair of this clause (correct form: restore the **block-START** pair under
+`:scope:has([data-part='narrow-tabs'])`, leaving the block-END squaring against the footer intact). cl.5's
+inert row should read "a frame with ONE visible child", not "no bars authored" — the two are not the same
+predicate once the narrow-tabs strip exists. Everything else in this record built as ruled and is proven
+cross-engine: the frame's `gap` is gone (row-gap `normal`), each bar draws a 1px hairline absorbed inside
+its unchanged 54px (the `content-box` control reads 55), the corner pair squares per side across all four
+rows of cl.5's matrix on all three carded parts, the six overlay arms and both narrow-stack sides restore
+as ruled, `middle` gains exactly 18px per authored bar (measured 752 → 788 on a two-bar shell), the
+mandatory `> ` child combinator is proven load-bearing in both engines, GH #214's inline arithmetic and the
+846px natural-fit number are untouched, and **AC19 held at its born-zero baseline with the allowlist at
+exactly 2 and `shell-spacing-gate.test.ts` unedited** — verified with a biting control
+(`--ui-super-shell-bar-seam-probe: 1.125rem` reds naming the literal) and with cl.8's own warning
+confirmed: the same probe valued `1px` leaves the gate GREEN.
