@@ -5,6 +5,11 @@ export * from './dom/index.ts'
 // widened onto the public surface (the ADR-0023 mount() precedent) so @agent-ui/app's ui-super-shell
 // reuses ONE hardened drag implementation fleet-wide rather than re-deriving a second one. Named
 // export only — the rest of traits/ stays internal until another consumer earns it the same way.
+// ADR-0167 defines "the same way": a four-outcome route keyed on the trait's consumer set and its
+// MEASURED cost on this barrel's own budgeted row — internal by default (still most of traits/) ·
+// this root barrel when the row absorbs it (paneResize, scrollFade) · an own ./traits/* subpath when
+// it does not (traits/overlay — the note below) · re-examine the trait when it is heavy AND its
+// runtime import closure is non-empty. The route is chosen from a measurement, never an argument.
 export { paneResize, type PaneResizeHandle, type PaneResizeOptions } from './traits/pane-resize.ts'
 // SPEC-R10b (ADR-0155): the edge-aware scroll-fade affordance, widened onto the public surface (the
 // paneResize precedent one line above) so ui-super-shell's hidden-scrollbar seam has the fleet's ONE
