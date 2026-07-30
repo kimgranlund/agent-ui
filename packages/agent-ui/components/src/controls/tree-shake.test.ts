@@ -309,3 +309,39 @@ describe('ui-form-provider tree-shake — dom + form-registry trait, NOT ui-fiel
     expect([...formProvider.external]).toEqual([])
   })
 })
+
+// ── GH #377 finding 3 — the `./traits/overlay` subpath's tree-shake half ─────────────────────────────
+//
+// `traits/overlay` is the package's FIRST `./traits/*` export subpath, and it exists for a byte reason: the
+// review measured +945 B gz on the foundation row every consumer pays when the trait was re-exported from
+// the root barrel instead (GH #368). `scripts/measure-size.mjs` gates its ABSOLUTE size (1173 B gz against a
+// 2 KB cap) rather than a marginal-over-foundation figure, and that framing is only honest while the trait
+// pulls NO kernel at runtime. This is the assertion that keeps it honest.
+//
+// It deliberately does NOT use `crawl()`, and the reason is a real limitation rather than a preference:
+// `specifiersOf` cannot see `import type` — it matches the statement either way — so a crawl would report
+// `dom/index.ts` as reached and state the exact opposite of the truth. The property that matters is
+// ERASURE, so the scan is for VALUE imports specifically: any `import`/`export … from` that is not
+// `import type`/`export type`, plus every bare side-effect import.
+const OVERLAY_ENTRY = 'traits/overlay.ts'
+describe('traits/overlay tree-shake — the opt-in subpath is a type-only LEAF (GH #377)', () => {
+  it('the glob reached the trait source (anti-vacuous — a missing key makes the scan below trivially empty)', () => {
+    expect(sources.has(OVERLAY_ENTRY), `${OVERLAY_ENTRY} is not in the crawled source map`).toBe(true)
+    expect((sources.get(OVERLAY_ENTRY) ?? '').length, 'the trait source is empty').toBeGreaterThan(500)
+  })
+
+  it('carries ZERO value imports — every import is erased, so its runtime graph is empty', () => {
+    const src = sources.get(OVERLAY_ENTRY) as string
+    const valueFrom = [...src.matchAll(/(?:^|\n)\s*(?:import|export)(?!\s+type\b)[^;'"]*?\bfrom\s*['"]([^'"]+)['"]/g)].map((m) => m[1])
+    const bare = [...src.matchAll(/(?:^|\n)\s*import\s*['"]([^'"]+)['"]/g)].map((m) => m[1])
+    expect(
+      [...valueFrom, ...bare],
+      "traits/overlay gained a RUNTIME import — the subpath now drags real modules, and measure-size.mjs's absolute framing (plus its 2 KB cap) no longer holds",
+    ).toEqual([])
+    // and the type-only import it DOES carry is still there, so the emptiness above is erasure rather than
+    // an empty file or a regex that quietly stopped matching anything at all
+    expect(src, 'the type-only dom import vanished — this suite would then be asserting nothing').toMatch(
+      /import type \{[^}]*\} from '\.\.\/dom\/index\.ts'/,
+    )
+  })
+})

@@ -411,9 +411,55 @@ describe('ui-super-shell — the bar-seam contract, source-pinned (ADR-0166, GH 
       // shorthand reorder cannot quietly drop it)
       expect(body, anchor).toMatch(/--ui-super-shell-radius-block-start:\s*var\(--ui-super-shell-radius\);/)
     }
-    // A census: exactly three consumption sites, so a FOURTH floating posture cannot be added without
-    // reading this decision — and the count is what reds if one arm is deleted while the others stand.
-    expect(stylesBlock.match(/border:\s*var\(--ui-super-shell-overlay-outline\);/g) ?? []).toHaveLength(3)
+  })
+
+  // GH #383 finding 1 — THE COUPLING, replacing the census pin (`toHaveLength(3)`) that stood here.
+  //
+  // That census was proven DECORATIVE by counterfactual: a planted fourth floating arm carrying the
+  // shadow but NO border passed the whole suite (38/38 jsdom, 62/62 browser, both engines), because a
+  // count of three is exactly what an un-bordered fourth arm leaves behind. It caught DELETION, not
+  // OMISSION — and omission is the failure class that put #368 on the wrong arm and produced #381. It did
+  // not even carry the deletion class alone: the `it` directly above loops the three named anchors and
+  // asserts each one's border, so deleting any single arm's border still reds there, with a better
+  // message. Dropping the count therefore costs nothing.
+  //
+  // What replaces it is a rule that grows with the file instead of freezing a number: the overlay SHADOW
+  // is what makes a card float, and a floating card is exactly the thing that owes an edge — so every
+  // `@scope` rule body that casts `--ui-super-shell-overlay-shadow` must also draw
+  // `--ui-super-shell-overlay-outline`. A future fourth floating posture is red on arrival, with no
+  // census to remember to bump.
+  it('#383 — every arm that casts the overlay SHADOW also draws the overlay BORDER (the coupling, not a census)', () => {
+    // Comments are stripped first: this walks BRACES to find each shadow's enclosing rule, and the file's
+    // prose comments quote selector syntax with braces in it (`@scope (ui-super-shell) { … }`), which would
+    // otherwise throw the depth count off.
+    const bare = stylesBlock.replace(/\/\*[\s\S]*?\*\//g, '')
+    const SHADOW = 'box-shadow: var(--ui-super-shell-overlay-shadow);'
+    const arms: { selector: string; body: string }[] = []
+    for (let at = bare.indexOf(SHADOW); at !== -1; at = bare.indexOf(SHADOW, at + 1)) {
+      let depth = 0
+      let open = -1
+      for (let i = at; i >= 0; i--) {
+        if (bare[i] === '}') depth++
+        else if (bare[i] === '{') { if (depth === 0) { open = i; break } depth-- }
+      }
+      expect(open, 'every shadow declaration sits inside a rule').toBeGreaterThan(-1)
+      let d = 0
+      let close = -1
+      for (let i = open; i < bare.length; i++) {
+        if (bare[i] === '{') d++
+        else if (bare[i] === '}') { d--; if (d === 0) { close = i; break } }
+      }
+      const selStart = Math.max(bare.lastIndexOf('}', open), bare.lastIndexOf('{', open - 1)) + 1
+      arms.push({ selector: bare.slice(selStart, open).trim().replace(/\s+/g, ' '), body: bare.slice(open + 1, close) })
+    }
+    // ANTI-VACUOUS, and it names its own blind spot: a renamed/deleted shadow token would leave this sweep
+    // with zero arms and every `for` below would pass on an empty list. The floor is stated as a floor, not
+    // a count — the whole point of the replacement is that the number is free to grow.
+    expect(arms.length, 'the sweep must actually find the floating arms it couples').toBeGreaterThanOrEqual(3)
+    for (const arm of arms) {
+      expect(arm.body, `floating arm casts the shadow without the outline: ${arm.selector}`)
+        .toMatch(/border:\s*var\(--ui-super-shell-overlay-outline\);/)
+    }
   })
 
   it('#381 — the border rides ONLY the floating-overlay arms: no in-flow card and no inert posture gains one', () => {

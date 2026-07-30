@@ -208,6 +208,13 @@ describe('dispositionAllowlistSnippet — a paste-ready DISPOSITION_ALLOWLIST en
       snippet,
       'a refused seed LEAVES THE SHELF (ADR-0165 REV 2026-07-30, GH #361 reading (b)), so the deadline the old reminder implied went with it',
     ).not.toMatch(/before the next unjudged run/)
+    // GH #372 — and "optional" must never stand ALONE again. Bare, it licenses the false inference the REV
+    // ruled on: an entry is unowed only because the expected disposition is DROPPING the seed, and a seed
+    // kept on the shelf is still a coverage candidate that owes one. Both halves of that condition are
+    // pinned, because the sentence is only true with both — a snippet stating the drop while omitting the
+    // kept-seed obligation is the same misreading in a friendlier costume.
+    expect(snippet, 'the reason must say WHY the entry is optional — the seed is dropped from the shelf').toMatch(/dropping the seed/)
+    expect(snippet, 'the reason must say a seed KEPT on the shelf still owes the entry').toMatch(/KEPT on the shelf[^.]*owes this entry/)
   })
 
   it('handles a rejection with no failingDimensions reported', () => {

@@ -145,6 +145,46 @@ describe('docs-site chrome — site-chrome polish (S1 header hairline, S3a foote
     ).toBe('3px')
   })
 
+  it('GH #382 follow-up — the overlaid nav card carries ONE right edge: the pane box\'s, never the rail\'s too', async () => {
+    // Kim's compounding-border report: with the overlay open, a second hairline sat just inside the card's
+    // right edge. The card's own `border` is #381/#382's `--ui-super-shell-overlay-outline` on the PANE
+    // BOX; the inner one was `_page.css`'s wide-posture nav↔content divider on `[data-site-nav]`, still
+    // drawing in a posture that has no content beside it to divide.
+    //
+    // The discriminator names its biting variable explicitly: the card edge and the divider are BOTH 1px,
+    // so a width read on either box alone cannot tell them apart (the GH #371 lesson two tests up). This
+    // reads the PAIR — the pane box must keep its edge, the rail must have dropped its own — and pins the
+    // rail's value exactly (`'0px'`), never `not.toBe('1px')`, which a `2px` regression would satisfy.
+    const { shell } = mountAt(360)
+    await raf()
+    startToggle(shell).click(); await raf()
+    expect(shell.getAttribute('data-narrow-open'), 'the overlay is open — the posture under test').toBe('start')
+    const pane = navPane(shell)
+    const rail = pane.querySelector('[data-site-nav]') as HTMLElement
+    expect(rail, 'the site rail is the pane box\'s child — the doubling geometry').not.toBeNull()
+    expect(
+      getComputedStyle(pane).borderInlineEndWidth,
+      "the overlay CARD keeps its own four-sided outline (#382) — this fix must not have removed the real edge",
+    ).toBe('1px')
+    expect(
+      getComputedStyle(rail).borderInlineEndWidth,
+      'the rail\'s wide-posture divider retracts inside the card — no doubled edge',
+    ).toBe('0px')
+  })
+
+  it('GH #382 follow-up — the wide-posture nav↔content divider is INTACT at 1200px', async () => {
+    // The other half of the pair: the retraction is postural, not a deletion. At wide the pane box draws
+    // nothing (no overlay arm matches) and the rail's divider is the ONLY thing separating nav from
+    // content — so this reads the same two boxes with the expectations swapped.
+    const { shell } = mountAt(1200)
+    await raf()
+    expect(shell.hasAttribute('data-narrow-open'), 'no overlay state at wide').toBe(false)
+    const pane = navPane(shell)
+    const rail = pane.querySelector('[data-site-nav]') as HTMLElement
+    expect(getComputedStyle(pane).borderInlineEndWidth, 'the in-flow pane box draws no edge of its own').toBe('0px')
+    expect(getComputedStyle(rail).borderInlineEndWidth, 'the wide divider still draws').toBe('1px')
+  })
+
   it('S3a — .app-page fills the canvas region on a short page (no dead gap below the sticky footer)', async () => {
     const { shell } = mountAt(1200)
     await raf()

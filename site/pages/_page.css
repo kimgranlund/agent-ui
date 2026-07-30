@@ -70,7 +70,35 @@ ui-theme-provider.app-shell [data-site-nav] {
   scrollbar-width: none; /* hide the scrollbar — scroll stays functional (Firefox/standards) */
   min-block-size: 0; /* allow the rail to scroll inside the 100dvh grid rather than grow it */
   background: var(--md-sys-color-neutral-surface-low);
+  /* The site's nav↔content DIVIDER — correct only in the WIDE, in-flow posture, where the pane box the
+     rail sits in draws nothing of its own. The overlay posture retracts it; see the rule below. */
   border-inline-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+}
+
+/* GH #382 follow-up (Kim's compounding-border report, light scheme, overlay open) — the divider above
+ * DOUBLES the overlay card's edge. Mechanism: below the compact line the shell floats the nav pane as a
+ * card and gives that pane box a four-sided `border: var(--ui-super-shell-overlay-outline)` (#381/#382,
+ * super-shell.css's six overlay arms). The rail is a CHILD of that box, so its own `border-inline-end`
+ * lands ~1px inside the card's right edge — two hairlines, one gap, visibly doubled. The divider's whole
+ * job is separating the rail from the CONTENT beside it; an overlaid card has no content beside it, so
+ * the divider has nothing left to divide and must retract.
+ *
+ * The gate is the shell's OWN overlay state, `data-narrow-open`, not a re-minted width line — deliberately,
+ * for three reasons. (1) It is the exact conjunct all SIX overlay arms share (narrow <40rem, compact
+ * <52.5rem under `collapse-band='compact'`, and the GH #229/SPEC-R14 auto-collapsed MID-WINDOW arm) — a
+ * `@container`/`@media` gate at 52.5rem would miss that third arm entirely, which fires ABOVE the line when
+ * the shell measures a natural-fit overflow, i.e. exactly the case a width test cannot see. (2) It is
+ * actively maintained, not merely set: `#openOverlay`/`#closeOverlay` own it and `#onBandChange` clears a
+ * stale one on leaving the open side's band (super-shell.ts), so it can never linger into the wide posture.
+ * (3) It mints NO length literal, so SPEC-R11c's ladder law and AC19 are untouched by construction (and
+ * `border-*` is outside AC19's property families regardless — ADR-0166 cl.8 / R11c's 2026-07-30 REV).
+ *
+ * The CHILD chain to `.site-shell` is the same boundary discipline the header rule below documents at
+ * length: it pins the state read to the OUTER shell, so a demo page's nested `<ui-super-shell>` opening
+ * its own overlay can never retract the site rail's divider. (`[data-site-nav]` stays a descendant — the
+ * site mounts exactly one, in `buildNav`; a nested demo shell has none.) */
+ui-theme-provider.app-shell > .site-shell[data-narrow-open='start'] [data-site-nav] {
+  border-inline-end: none;
 }
 
 /* GH #183 follow-up (S1) — the header hairline + surface, spanning the OUTER bar box edge-to-edge, not

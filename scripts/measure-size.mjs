@@ -132,6 +132,23 @@ const targets = [
   // measured figure to re-base onto is 48695 B gz); this comment records the cause rather than absorbing it,
   // so `npm run size` stays red on this ONE row until it is ruled on.
   ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 47.5 * KB],
+  // GH #377 finding 3 — the package's FIRST `./traits/*` subpath (`traits/overlay`, package.json:74) gets
+  // its own budgeted row, so the opt-in surface every other pack carries one for (`code/highlight`,
+  // `./markdown`, `./editor`) is not the one exception.
+  //
+  // Measured ABSOLUTELY, not marginal-over-foundation, and the reason is the whole point of the subpath:
+  // `overlay.ts`'s ONLY import is `import type { UIElement } from '../dom/index.ts'` — type-only, fully
+  // erased — so this entry drags NO kernel at all. Solo 1173 B gz against a 7442 B foundation makes the
+  // marginal frame arithmetic nonsense (it computes -6269); the absolute figure IS the tree-shake proof
+  // here, exactly the reasoning `@agent-ui/code`'s core/highlight rows are measured under (see their
+  // banner below). The tree-shake half is asserted structurally in controls/tree-shake.test.ts.
+  //
+  // 2 KB pinned over a measured 1173 B gz 2026-07-30 (ADR-0080's measure-first-then-pin discipline). What
+  // this row actually guards is the ~945 B gz the review measured on the FOUNDATION row when this trait was
+  // re-exported from the root barrel instead (GH #368) — the bytes every consumer would have paid. A future
+  // edit that reaches back into `dom`/`reactive` at RUNTIME would blow past this cap immediately, since the
+  // kernel it would pull dwarfs the budget.
+  ['@agent-ui/components/traits/overlay (opt-in subpath)', '../packages/agent-ui/components/src/traits/overlay.ts', 2 * KB],
 ]
 
 let over = false

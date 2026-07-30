@@ -446,6 +446,33 @@ describe('ui-nav-rail collapse="menu" — keyboard open + focus round-trip (SPEC
     expect(popoverOpen(list), `${server.browser}: the panel reopened after settling — the race is real`).toBe(false)
     expect(trigger.getAttribute('aria-expanded'), `${server.browser}: aria-expanded stuck true after the re-click`).toBe('false')
   })
+
+  it('GH #378 — a LATE item reaches the panel while the overlay is armed and OPEN, and the arm/disarm seam is undisturbed', async () => {
+    // The jsdom leg proves the relocation; this proves the thing jsdom cannot see — that doing it against
+    // a LIVE, armed, top-layer popover disturbs none of the state `arm`/`disarm` own. The issue asked for
+    // exactly this check ("relocation interacts with the observer's arm/disarm").
+    const el = narrowMenuRail()
+    await settle()
+    const { list, trigger } = menuParts(el)
+    await userEvent.click(trigger)
+    await settle()
+    expect(popoverOpen(list), `${server.browser}: the fixture never opened — the rest would be vacuous`).toBe(true)
+
+    el.append(makeItem('/c', 'Gamma'))
+    await settle()
+
+    const late = [...list.querySelectorAll('ui-nav-rail-item')].at(-1) as HTMLElement
+    expect(late?.textContent?.trim(), `${server.browser}: the late item is not in the panel`).toBe('Gamma')
+    // The seam, read on its three owned facts — the panel is still a popover, still open, and the trigger
+    // still says so. A relocation that closed or unarmed it would break exactly here.
+    expect(list.getAttribute('popover'), `${server.browser}: the relocation stripped the popover arm`).toBe('auto')
+    expect(popoverOpen(list), `${server.browser}: the relocation dismissed the open panel`).toBe(true)
+    expect(trigger.getAttribute('aria-expanded'), `${server.browser}: aria-expanded desynced across the relocation`).toBe('true')
+    // and the panel still light-dismisses afterwards — the handle is live, not merely still-open
+    await userEvent.click(trigger)
+    await settle()
+    expect(popoverOpen(list), `${server.browser}: the overlay handle stopped responding after a relocation`).toBe(false)
+  })
 })
 
 describe('ui-nav-rail collapse="menu" — aria-expanded is truthful on EVERY path (n17)', () => {
