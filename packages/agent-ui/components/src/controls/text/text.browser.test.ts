@@ -70,7 +70,7 @@ describe('ui-text browser-truth harness — the role×size matrix resolves to re
     }
     // Two groups collapse by DESIGN (cl.2b): quote ≡ lead (18px, "own tokens, changeable independently")
     // and label/kicker/overline all borrow the M3 label-medium size (12px — kicker/overline are label
-    // metrics emboldened/tracked, not resized). So 9 variants land on exactly 6 distinct sizes: display
+    // metrics re-weighted/tracked, not resized). So 9 variants land on exactly 6 distinct sizes: display
     // 45 · headline 28 · title 16 · body 14 · {label,kicker,overline} 12 · {quote,lead} 18.
     expect(sizes.size).toBe(6)
   })
@@ -490,15 +490,19 @@ describe('ui-text emphasis — computes font-weight: 700, the platform bold regi
     el.remove()
   })
 
-  it('the no-op leg: kicker + emphasis stays 700 (kicker is already the bold register)', () => {
+  // GH #370 — this WAS "the no-op leg" (kicker was itself 700, so [emphasis] changed nothing). Kim's
+  // 2026-07-30 ruling re-tuned the kicker role to 400 weight / 0.2em tracking, so the axis now does real
+  // work on kicker too: the leg keeps its place in this describe as the proof that the LAST-declared
+  // :where([emphasis]) row beats a [variant] role block, and gains a live differential it never had.
+  it('kicker + emphasis is now a REAL 400 → 700 step (the role dropped to 400, GH #370)', () => {
     const el = document.createElement('ui-text') as UITextElement
     el.setAttribute('variant', 'kicker')
     el.textContent = 'KICKER'
     document.body.append(el)
-    expect(getComputedStyle(el).fontWeight).toBe('700') // kicker's own weight, unemphasized
+    expect(getComputedStyle(el).fontWeight).toBe('400') // kicker-medium's own re-ruled weight, unemphasized
 
     el.emphasis = true
-    expect(getComputedStyle(el).fontWeight).toBe('700') // unchanged — an honest no-op
+    expect(getComputedStyle(el).fontWeight).toBe('700') // emphasis beats the [variant] role block
     el.remove()
   })
 

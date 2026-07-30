@@ -10,7 +10,7 @@
 // Scope is deliberately narrow — the frame's own containment/network/theme probes are
 // sandbox-frame.browser.test.ts's job (components shard), and the toggle/store/request wiring is
 // agent-admin.test.ts's. This adds the two facts only a real engine can supply.
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect, afterEach, vi } from 'vitest'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/component-styles.css'
 import '@agent-ui/code/editor.css'
@@ -26,6 +26,16 @@ import './agent-admin.css'
 import './agent-admin.ts'
 import type { UIAgentAdminElement } from './agent-admin.ts'
 import type { AdminSurfaceTurnEvent, AdminSurfaceTurnRequest } from './agent-admin-schema.ts'
+
+// GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time twice over: a mid-test dynamic
+// `import()` of the dogfood chunk (network-fetched here, see the banner) and an rAF poll loop
+// (`waitUntil` below) for the composed srcdoc to land — both set by the browser's own scheduling, which
+// stretches under concurrent host load. MEASURED evidence for this append (2026-07-30, GH #369/370/371
+// gate run): the ON-path test failed with exactly `Test timed out in 15000ms` on WEBKIT inside a full
+// `test:browser:packages:app` shard (22.7s, with the tell-tale `Failed to take a screenshot` timeout
+// alongside it), then passed 4/4 both engines solo at 9.63s — the class signature, not a defect.
+// Class definition + why this is not a global raise: vitest.browser.config.ts, REAL-TIMING HEADROOM.
+vi.setConfig({ testTimeout: 30_000 })
 
 const mounted: HTMLElement[] = []
 afterEach(() => {

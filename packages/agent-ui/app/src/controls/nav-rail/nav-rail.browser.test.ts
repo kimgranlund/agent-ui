@@ -143,7 +143,7 @@ describe('ui-nav-rail — ARIA role derives from item shape, via internals (both
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-nav-rail-group — context-label uses the kicker-small typescale role (both engines)', () => {
-  it('font-size/font-weight/letter-spacing resolve to the kicker-small register, case left as-authored', async () => {
+  it('font-size/font-weight/letter-spacing resolve to the kicker-small register, uppercased at the consumer', async () => {
     const rail = document.createElement('ui-nav-rail')
     const group = new UINavRailGroupElement()
     group.label = 'Components'
@@ -155,16 +155,19 @@ describe('ui-nav-rail-group — context-label uses the kicker-small typescale ro
 
     const label = group.querySelector('[data-part="context-label"]') as HTMLElement
     expect(label, `${server.browser}: the context-label span never rendered`).not.toBeNull()
-    expect(label.textContent, 'case stays as-authored — no text-transform: uppercase').toBe('Components')
+    // GH #370 — `text-transform` is PRESENTATIONAL, so the authored text is still what the DOM carries
+    // (a11y/copy stay as-typed); only the computed style + the rendered glyphs change.
+    expect(label.textContent, 'the DOM text stays as-authored — uppercase is a transform, not a rewrite').toBe('Components')
 
     const cs = getComputedStyle(label)
-    // kicker-small @ scale 1 (dimensions.css): size 11px, weight 700, tracking 0.08em.
+    // kicker-small @ scale 1 (dimensions.css, GH #370's re-ruled role): size 11px, weight 400, tracking 0.2em.
     expect(Number.parseFloat(cs.fontSize), `${server.browser}: expected the kicker-small 11px register`).toBeCloseTo(11, 0)
-    expect(cs.fontWeight, `${server.browser}: expected the kicker bold register`).toBe('700')
-    // letter-spacing resolves to px (0.08em of the 11px kicker-small font ≈ 0.88px) — a real, non-zero
-    // tracking value, the thing a bare font-size read could never produce.
-    expect(Number.parseFloat(cs.letterSpacing), `${server.browser}: expected non-zero kicker tracking`).toBeGreaterThan(0.5)
-    expect(cs.textTransform, 'no uppercase — the labels are proper names, kept as-typed').toBe('none')
+    expect(cs.fontWeight, `${server.browser}: expected the kicker REGULAR register (GH #370)`).toBe('400')
+    // letter-spacing resolves to px (0.2em of the 11px kicker-small font = 2.2px) — a real, non-zero
+    // tracking value, the thing a bare font-size read could never produce. Pinned tightly enough to fail
+    // if the role ever slid back to the pre-#370 0.08em (0.88px).
+    expect(Number.parseFloat(cs.letterSpacing), `${server.browser}: expected the 0.2em kicker tracking`).toBeCloseTo(2.2, 1)
+    expect(cs.textTransform, 'GH #370 — casing lives at the consumer, as text.css does it').toBe('uppercase')
   })
 })
 

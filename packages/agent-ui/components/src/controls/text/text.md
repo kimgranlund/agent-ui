@@ -52,7 +52,8 @@ attributes:            # attributes-as-API — mirrors text.ts `static props`, S
     reflect: true      # the `[emphasis]` CSS hook (ADR-0109) — one token-block repoint, no stamp leg
     # Weight INTENT (ADR-0109, the fifth orthogonal axis): CSS-only, repoints --ui-text-weight to 700 (the
     # platform bold register — the CSS `bold` keyword). Purely visual — never stamps `<strong>`/`<b>`; `as`
-    # remains the ONLY semantics axis. No-ops honestly on kicker (already 700). See "Emphasis" below for the
+    # remains the ONLY semantics axis. Real on EVERY variant since GH #370 re-ruled the kicker role to 400
+    # (ADR-0078 REV 2026-07-30) — no variant is 700 by default anymore. See "Emphasis" below for the
     # sole-signifier guidance.
 
 properties: []         # no manual accessors — the displayed text is light-DOM children (textContent), NOT a prop (ADR-0025 cl.2 / Fork 1, the Button.label precedent)
@@ -240,8 +241,10 @@ nor `<strong>`/`<b>` by default, so a semantic stamp would buy nothing. Reach fo
 child when *phrase-level* semantic emphasis is the actual need — that already flows through the stamp
 untouched.
 
-`emphasis` lifts 400 → 700 and 500 → 700, and no-ops honestly on `kicker` (already 700) — there is no knob
-for a *heavier* kicker (900 is not a fleet register).
+`emphasis` lifts 400 → 700 and 500 → 700, on **every** variant — including `kicker`, which is itself 400
+since GH #370 re-ruled that role to 400 weight / 0.2em tracking (ADR-0078 REV 2026-07-30). No variant in the
+scale is 700 by default anymore, so the axis never silently no-ops. There is still no knob for a weight
+*above* 700 (900 is not a fleet register).
 
 **Sole-signifier guidance (the ADR-0057 spirit, extended to weight):** never let `emphasis` be the **only**
 carrier of a distinction — the same hazard color-only intent has (ADR-0057's non-color-signifier rule).

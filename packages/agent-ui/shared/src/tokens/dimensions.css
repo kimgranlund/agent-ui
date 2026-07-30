@@ -165,20 +165,32 @@
   --md-sys-typescale-label-small-line-height: 1.455;
   --md-sys-typescale-label-small-tracking: 0.045em;
 
-  /* extension — not MD3 (cl.2b): the headline eyebrow — label metrics emboldened + uppercase (text.css).
-     Ink stays the one neutral on-surface role (ADR-0057 — color is not the load-bearing signifier). */
-  --md-sys-typescale-kicker-large-weight: 700;
+  /* GH #370, Kim's ruling 2026-07-30 (option (a) — "the role itself changes"): the kicker role's weight
+     700 → 400 and tracking 0.08em → 0.2em ("all caps, 20% letter-spaced, 400 weight" — a kicker that is
+     tightly tracked and BOLDER than the rows it eyebrows was never a kicker). All THREE sizes move
+     together: a role whose sizes disagree on weight is not a role. Casing stays at the CONSUMER
+     (text.css's `[variant='kicker']` uppercase treatment; nav-rail.css's context-label now matches it) —
+     these are dimension tokens, so no transform axis was minted.
+     THE RECORD: cl.2b's own table (and its overline row's "distinct from kicker by weight (500 vs 700)")
+     described the pre-ruling values, and is corrected by an append-only amendment — see **ADR-0078
+     REV 2026-07-30**, which restates the kicker row, records that overline is now the HEAVIER of the
+     editorial pair, and carries the rest of this ruling's consequences. */
+  /* extension — not MD3 (cl.2b): the headline eyebrow — label metrics at REGULAR weight, WIDELY tracked,
+     + uppercase (text.css). Ink stays the one neutral on-surface role (ADR-0057 — color is not the
+     load-bearing signifier). */
+  --md-sys-typescale-kicker-large-weight: 400;
   --md-sys-typescale-kicker-large-line-height: 1.429;
-  --md-sys-typescale-kicker-large-tracking: 0.08em;
-  --md-sys-typescale-kicker-medium-weight: 700;
+  --md-sys-typescale-kicker-large-tracking: 0.2em;
+  --md-sys-typescale-kicker-medium-weight: 400;
   --md-sys-typescale-kicker-medium-line-height: 1.333;
-  --md-sys-typescale-kicker-medium-tracking: 0.08em;
-  --md-sys-typescale-kicker-small-weight: 700;
+  --md-sys-typescale-kicker-medium-tracking: 0.2em;
+  --md-sys-typescale-kicker-small-weight: 400;
   --md-sys-typescale-kicker-small-line-height: 1.455;
-  --md-sys-typescale-kicker-small-tracking: 0.08em;
+  --md-sys-typescale-kicker-small-tracking: 0.2em;
 
   /* extension — not MD3 (cl.2b): M2's overline heritage (10px/1.5px ≡ 0.15em, which M3 dropped) mapped
-     onto label metrics + uppercase (text.css); distinct from kicker by weight (500 vs 700) + tracking. */
+     onto label metrics + uppercase (text.css); distinct from kicker by weight (500 vs 400 since GH #370)
+     + tracking (0.15em vs kicker's wider 0.2em). */
   --md-sys-typescale-overline-large-weight: 500;
   --md-sys-typescale-overline-large-line-height: 1.429;
   --md-sys-typescale-overline-large-tracking: 0.15em;

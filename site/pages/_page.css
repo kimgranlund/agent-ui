@@ -504,6 +504,13 @@ ui-theme-provider.app-shell [data-site-nav]::-webkit-scrollbar,
 code {
   font-family: var(--md-sys-typeface-mono);
   font-size: 0.85em;
+  /* GH #369 (Kim's ruling: "mono font weight should be 400") — the chip's weight is its OWN, never
+     inherited from a bolded ancestor: inside `<strong>` prose a backtick span rendered 700 (measured on
+     button-doc.html: three `strong > code` spans at 700). NOTHING overrides this today: the fleet's one
+     more-specific consumer, doc-page.css's `.api-row-name code`, carries 400 as well (Kim's same ruling —
+     it used to be 650) and stays specific only to insulate the name rail from a future change to THIS
+     declaration; that file's own comment at the rule explains why it is spelled out rather than deleted. */
+  font-weight: 400;
   padding: 0.1em 0.35em;
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
   border-radius: 0.3rem;
