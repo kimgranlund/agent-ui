@@ -54,9 +54,9 @@
     {"id":"t20","label":"TASK — mint the S9 skill-exemplar-path gate (the gate PRD-G5's acceptance depends on)","leaf":true,"justify":null,
      "accept":"`site/lib/docs-grammar.test.ts` carries S9 — walking `.claude/skills/*/SKILL.md`, extracting backticked repo-relative paths from each table's last cell, existsSync-ing each — proven RED on a planted bogus exemplar path and GREEN on revert, with the pre-existing exemplar corpus (20 paths) passing"},
     {"id":"t16","label":"TASK — the data-table-toolbar + record-CRUD recipe rows","leaf":true,"justify":null,
-     "accept":"both rows exist in `agent-ui-composition-patterns`, each naming an owner ADR id plus an in-repo exemplar path, and S9 is green over them"},
+     "accept":"both rows exist in `agent-ui-composition-patterns`, each naming an owner ADR id plus a REPO-RELATIVE exemplar path (so S9 actually sweeps it — a bare filename or package-relative shorthand falls outside the gate's scope and would pass unswept), and S9 is green over them"},
     {"id":"t17","label":"TASK — the ADR-0164 cl.5 settings-page + resource-list-manager rows","leaf":true,"justify":null,
-     "accept":"both rows exist naming ADR-0120/0158 and ADR-0132/0164 as owners with exemplar paths, and S9 is green over them"},
+     "accept":"both rows exist naming ADR-0120/0158 and ADR-0132/0164 as owners with REPO-RELATIVE exemplar paths (ADR-0164 cl.5 words these two as bare filenames — `agent-admin.ts`'s `settingsItem` / `#makeSection` — which S9 cannot sweep; expand to a full path and keep the member name as prose), and S9 is green over them"},
 
     {"id":"t18","label":"TASK — the wave's standing gates + size budget line-items","leaf":true,"justify":null,
      "accept":"`npm run check && npm test` exit 0, the six browser shards exit 0, and `npm run size` shows every touched package within budget or a recorded, argued re-base"},
