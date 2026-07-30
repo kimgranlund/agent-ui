@@ -26,6 +26,15 @@ import { describe, it, expect } from 'vitest'
 //   S7 skill invocation-dial completeness — promoted from hygiene at M8 (backlog cleared Phase 3).
 //   S8 ADR numbering contiguity against a KNOWN_GAPS allowlist ([108] — history, never renumbered);
 //      a NEW gap fails (manifest M9).
+//   S9 skill exemplar paths resolve: every backticked REPO-RELATIVE path in a skill table row's
+//      last cell (the "Owner · exemplar" column) exists on disk. Minted 2026-07-30 for the M-A PRD
+//      (PRD-G5) after review found that PRD citing S3 as this gate — S3 cannot fire here twice over:
+//      it walks .claude/docs only (skills live in .claude/skills), and it matches ](…) markdown link
+//      syntax, while exemplars are BACKTICKED bare paths that stripCode blanks by construction
+//      (GH #321). "Repo-relative" is the deliberate scope: several skills cite package-relative
+//      shorthand (`controls/select/`, resolved against that skill's own stated package root) which
+//      was never claiming to be repo-relative — the filter below excludes it rather than reding a
+//      convention this gate did not come to change.
 //
 // HYGIENE tier — REPORTED, never failing (promotion pending its backlog):
 //   H1 LLD `Layer:` spelling uniformity + the three header dialects (unification is update-in-place
@@ -106,6 +115,32 @@ function relativeLinks(text: string): string[] {
   return [...stripCode(text).matchAll(LINK)].map((m) => m[1]!)
 }
 
+// S9 — the skill-table exemplar extractor. A skill's routing tables end in an "Owner · exemplar"
+// column whose exemplars are BACKTICKED bare paths (not markdown links — which is precisely why S3
+// never saw them). Only repo-relative paths are swept: a token must start with a real top-level
+// repo directory, so package-relative shorthand (`controls/select/`) is skipped rather than reded.
+// Elided (`…`), glob (`*`), brace-expansion (`{a,b}`) and package-specifier (`@scope/pkg`) tokens
+// name a CLASS of files, not one file, and are likewise out of scope for an existsSync gate.
+const REPO_ROOTS = ['packages/', 'site/', 'scripts/', 'tools/', '.claude/', '.github/']
+function skillExemplarPaths(text: string): string[] {
+  const out: string[] = []
+  for (const raw of text.split('\n')) {
+    const line = raw.trim()
+    if (!line.startsWith('|') || !line.endsWith('|')) continue
+    const cells = line.slice(1, -1).split('|').map((c: string) => c.trim())
+    if (cells.length < 3) continue // no Owner·exemplar column to read
+    const last = cells[cells.length - 1]!
+    if (/^[-: ]*$/.test(last)) continue // the header separator row
+    for (const m of last.matchAll(/`([^`]+)`/g)) {
+      const tok = m[1]!
+      if (!REPO_ROOTS.some((r) => tok.startsWith(r))) continue
+      if (/[…*{} ]/.test(tok)) continue
+      out.push(tok)
+    }
+  }
+  return out
+}
+
 describe('STRUCTURAL — S3 zero dangling relative links in active docs', () => {
   it('every ](../…) / ](./…) target in every active doc resolves', () => {
     const files = walkMd(DOCS, (p: string) => p.includes('/archive/') || p.includes('/reports/'))
@@ -159,7 +194,7 @@ describe('STRUCTURAL — S4 hook liveness, both directions', () => {
   })
 })
 
-describe('STRUCTURAL — S5-S8 (promoted at Phase 5, manifest M7-M10)', () => {
+describe('STRUCTURAL — S5-S9 (S5-S8 promoted at Phase 5, manifest M7-M10; S9 minted 2026-07-30)', () => {
   const activeDocs = () => walkMd(DOCS, (p: string) => p.includes('/archive/') || p.includes('/reports/'))
   it('S5: every archive/ cite in an active doc sits on a line that names it archived', () => {
     const bad: string[] = []
@@ -201,6 +236,36 @@ describe('STRUCTURAL — S5-S8 (promoted at Phase 5, manifest M7-M10)', () => {
     for (let n = nums[0]!; n <= nums[nums.length - 1]!; n++)
       if (!nums.includes(n) && !KNOWN_GAPS.has(n)) newGaps.push(n)
     expect(newGaps, `NEW ADR numbering gaps: ${newGaps.join(', ')}`).toEqual([])
+  })
+
+  it('S9: every repo-relative exemplar path cited in a skill table resolves', () => {
+    const dangling: string[] = []
+    let checked = 0
+    for (const name of readdirSync(`${ROOT}/.claude/skills`)) {
+      const p = `${ROOT}/.claude/skills/${name}/SKILL.md`
+      if (!existsSync(p)) continue
+      for (const rel of skillExemplarPaths(readFileSync(p, 'utf8'))) {
+        checked++
+        if (!existsSync(`${ROOT}/${rel}`)) dangling.push(`${name}: ${rel}`)
+      }
+    }
+    expect(dangling, dangling.join('\n')).toEqual([])
+    expect(checked, 'the sweep saw a real corpus of cited exemplars').toBeGreaterThan(15)
+  })
+
+  // Negative controls — the extractor must BITE on a real exemplar row and stay quiet on the
+  // shorthands the corpus legitimately uses (a gate that matches nothing passes forever).
+  it('S9 extractor: catches a real exemplar path, skips the non-repo-relative shorthands', () => {
+    expect(skillExemplarPaths('| a | b | ADR-0050 · `site/pages/forms.ts` (one live form) |')).toEqual(['site/pages/forms.ts'])
+    expect(skillExemplarPaths('| a | b | ADR-0115 · `packages/agent-ui/router/` |')).toEqual(['packages/agent-ui/router/'])
+    // package-relative shorthand · elided · glob · brace-expansion · package specifier · separator row
+    expect(skillExemplarPaths('| a | b | `controls/select/` and `…/controls/menu/` |')).toEqual([])
+    expect(skillExemplarPaths('| a | b | `site/pages/*.css` |')).toEqual([])
+    expect(skillExemplarPaths('| a | b | `packages/agent-ui/x/{a,b}.test.ts` |')).toEqual([])
+    expect(skillExemplarPaths('| a | b | `@agent-ui/shared` tokens.css |')).toEqual([])
+    expect(skillExemplarPaths('|---|---|---|')).toEqual([])
+    // two-column tables carry no Owner·exemplar column — nothing to sweep
+    expect(skillExemplarPaths('| a | `site/pages/forms.ts` |')).toEqual([])
   })
 })
 

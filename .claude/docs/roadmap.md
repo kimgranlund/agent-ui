@@ -202,9 +202,10 @@ decision (dated line in §4).
   Both design intakes finished and both ADRs are now **ratified**:
   [ADR-0163](adr/0163-ui-table-interactive-widening.md) (the `ui-table` widening) and
   [ADR-0164](adr/0164-entry-list-extraction-home.md) (the extraction home). Neither build has started.
-  **Next step is M-A's PRD**, which the intakes were run to make possible — it comes out of them, and
-  the build follows the PRD. Scheduling is Kim's: the lane is free now that M-C is done, but M-B still
-  holds an unmet DoD. Original framing:
+  **The PRD is written**: [`prd/saas-data-workbench.prd.md`](prd/saas-data-workbench.prd.md)
+  (`proposed` v0.1, 2026-07-30) — PRD-G1–G6, the MA-1…MA-4 sequencing, and three decisions awaiting
+  Kim's pass (PRD-D1–D3); the build follows it. Scheduling is Kim's: the lane is free now that M-C is
+  done, but M-B still holds an unmet DoD. Original framing:
   M-A — a
   site-hosted demo workspace where a sortable/selectable/paginated data table, a filter toolbar,
   a record-edit form flow, and an agent-written summary card compose from published fleet

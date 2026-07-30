@@ -1,0 +1,159 @@
+{
+  "domain": "goals",
+  "plan": true,
+  "nodes": [
+    {"id":"mission","label":"MISSION — M-A: the fleet's SaaS data-workbench layer, proven end to end","leaf":false,"justify":null},
+
+    {"id":"g1","label":"OUTCOME PRD-G1 — an interactive data table exists in the fleet","leaf":false,"justify":null},
+    {"id":"g2","label":"OUTCOME PRD-G2 — the admin-pattern machinery is reusable outside ui-agent-admin","leaf":false,"justify":null},
+    {"id":"g3","label":"OUTCOME PRD-G3 — the four workbench parts compose with zero bespoke chrome","leaf":false,"justify":null},
+    {"id":"g4","label":"OUTCOME PRD-G4 — an agent-written summary lands in the workbench","leaf":false,"justify":null},
+    {"id":"g5","label":"OUTCOME PRD-G5 — the assembly is reusable as documented recipes, not one page","leaf":false,"justify":null},
+    {"id":"g6","label":"OUTCOME PRD-G6 — fleet DoD, layering law and budgets hold across the wave","leaf":false,"justify":null},
+
+    {"id":"ma1","label":"MILESTONE MA-1 — the ui-table widening build (ADR-0163)","leaf":false,"justify":null},
+    {"id":"ma2","label":"MILESTONE MA-2 — the entry-list extraction build (ADR-0164)","leaf":false,"justify":null},
+    {"id":"ma3","label":"MILESTONE MA-3 — the workbench surface","leaf":false,"justify":null},
+    {"id":"ma4","label":"MILESTONE MA-4 — the pattern tier","leaf":false,"justify":null},
+
+    {"id":"t6","label":"TASK — byte-identity baseline probe + focus restoration (ADR-0163 cl.10)","leaf":true,"justify":null,
+     "accept":"the committed probe asserts serialized-DOM equality of the SPEC fixtures against the pre-diff baseline (exit 0), and a focus-restoration probe passes in Chromium AND WebKit"},
+    {"id":"t1","label":"TASK — the table view pipeline + search/filter state (ADR-0163 cl.2/cl.7)","leaf":true,"justify":null,
+     "accept":"a test asserts the normative order filter -> search -> sort -> page over a fixture set, and that empty search/filter are identity (zero stamped anatomy); `npm run check` exits 0"},
+    {"id":"t2","label":"TASK — row selection incl. select-all over the matching set (ADR-0163 cl.4)","leaf":true,"justify":null,
+     "accept":"browser probe: select-all under an active filter checks exactly the matching set, header checkbox reads indeterminate when partial, `select` fires once per user commit and never on a programmatic `selected` write"},
+    {"id":"t3","label":"TASK — per-column sort with APG header-button semantics (ADR-0163 cl.5)","leaf":true,"justify":null,
+     "accept":"browser probe: activating a sortable header button cycles ascending->descending and reorders rows; `aria-sort` is present on exactly one `<th>`; the computed role of the host table is still `table`"},
+    {"id":"t4","label":"TASK — mint the standalone ui-pagination control (ADR-0163 cl.6)","leaf":true,"justify":null,
+     "accept":"`pagination.md` descriptor<->props trip-wire green; probe: `pages<2` renders nothing, the active stop carries `aria-current=\"page\"`, the host announces as a labelled navigation"},
+    {"id":"t4b","label":"TASK — table page-size windowing + footer region consuming ui-pagination (ADR-0163 cl.6)","leaf":true,"justify":null,
+     "accept":"probe: `page-size=10` over 25 rows renders 10 `<tr>` plus a footer `ui-pagination` with `pages=3` outside the scroll container; pageCount derives from the matching set"},
+    {"id":"t5","label":"TASK — catalog Table widening + Pagination row + feed disposition (ADR-0163 cl.9)","leaf":true,"justify":null,
+     "accept":"catalog gates exit 0: the three-slot multi-slot value mark validates on `Table`, the `Pagination` row exists with `FEED_EXCLUDED`, and the feed partition gate is total"},
+    {"id":"t7","label":"TASK — owning-doc repairs: report-family SPEC/LLD, PRD §3 fence, table.md, AND the agent-ui-component-patterns selection row (ADR-0163 Repairs + its Consequences stale-list)","leaf":true,"justify":null,
+     "accept":"`site/lib/docs-grammar.test.ts` and `site/lib/adr.test.ts` exit 0; `table.md` frontmatter mirrors `table.ts` static props (descriptor trip-wire green); and the `agent-ui-component-patterns` selection-pattern row states the shipped selection mechanism (ADR-0163 Consequences names it in the stale-list this task discharges)"},
+
+    {"id":"t8","label":"TASK — entry-data split + the three @agent-ui/app subpaths (ADR-0164 cl.1/cl.2)","leaf":true,"justify":null,
+     "accept":"`npm run check` exits 0 with `./entry-list`, `./entry-list.css`, `./entry-data` resolving, every pre-existing `@agent-ui/app` import site compiling unchanged, and no root-barrel name renamed"},
+    {"id":"t9","label":"TASK — entry-list.css re-scope + token repoint + AC19 append (ADR-0164 cl.4)","leaf":true,"justify":null,
+     "accept":"the agent-admin visual + computed-style suites pass unchanged (the @scope proximity risk), and the AC19 spacing-drift gate is green with `entry-list.css` in its sheet set"},
+    {"id":"t10","label":"TASK — agent-admin consumes the extraction + standalone mount smoke (ADR-0164 cl.7)","leaf":true,"justify":null,
+     "accept":"a new smoke test mounts a styled, working entry section with stub handlers + `createMemoryStore` and zero `ui-agent-admin` in the tree; `entries.test.ts` splits with no assertion lost"},
+
+    {"id":"t11","label":"TASK — the seeded workbench dataset fixture (the demo's data source)","leaf":true,"justify":null,
+     "accept":"the fixture is an in-repo module that type-checks, and a page probe asserts the workbench renders its rows with zero network requests"},
+    {"id":"t12","label":"TASK — the workbench page composed inside ui-workspace-shell","leaf":true,"justify":null,
+     "accept":"the page renders in `ui-workspace-shell` and its own sheet declares no shell/layout frame rules (0 bespoke shell CSS, asserted by review + the AC19 gate green on the sheet)"},
+    {"id":"t13","label":"TASK — the filter toolbar driving the table's own search/filter props","leaf":true,"justify":null,
+     "accept":"probe: typing in the toolbar search narrows the rendered rows and a facet commit narrows further, with the page never reassigning the table's `rows` prop"},
+    {"id":"t14","label":"TASK — the record-edit form flow (list -> edit -> validate -> save)","leaf":true,"justify":null,
+     "accept":"probe: opening a record, entering an invalid value blocks save with a field-level error, and a valid save updates the corresponding table row in place"},
+    {"id":"t15","label":"TASK — the agent-written summary card over the current view","leaf":true,"justify":null,
+     "accept":"probe: the card renders agent-authored content describing the current view, and the page contains no bespoke renderer/transport wiring beyond the published seam"},
+
+    {"id":"t20","label":"TASK — mint the S9 skill-exemplar-path gate (the gate PRD-G5's acceptance depends on)","leaf":true,"justify":null,
+     "accept":"`site/lib/docs-grammar.test.ts` carries S9 — walking `.claude/skills/*/SKILL.md`, extracting backticked repo-relative paths from each table's last cell, existsSync-ing each — proven RED on a planted bogus exemplar path and GREEN on revert, with the pre-existing exemplar corpus (20 paths) passing"},
+    {"id":"t16","label":"TASK — the data-table-toolbar + record-CRUD recipe rows","leaf":true,"justify":null,
+     "accept":"both rows exist in `agent-ui-composition-patterns`, each naming an owner ADR id plus a REPO-RELATIVE exemplar path (so S9 actually sweeps it — a bare filename or package-relative shorthand falls outside the gate's scope and would pass unswept), and S9 is green over them"},
+    {"id":"t17","label":"TASK — the ADR-0164 cl.5 settings-page + resource-list-manager rows","leaf":true,"justify":null,
+     "accept":"both rows exist naming ADR-0120/0158 and ADR-0132/0164 as owners with REPO-RELATIVE exemplar paths (ADR-0164 cl.5 words these two as bare filenames — `agent-admin.ts`'s `settingsItem` / `#makeSection` — which S9 cannot sweep; expand to a full path and keep the member name as prose), and S9 is green over them"},
+
+    {"id":"t18","label":"TASK — the wave's standing gates + size budget line-items","leaf":true,"justify":null,
+     "accept":"`npm run check && npm test` exit 0, the six browser shards exit 0, and `npm run size` shows every touched package within budget or a recorded, argued re-base"},
+    {"id":"t19","label":"TASK — the workbench SPEC (this PRD's named follow-on)","leaf":true,"justify":null,
+     "accept":"a SPEC exists whose SPEC-R ids each trace to a PRD-G id and which passes `site/lib/docs-grammar.test.ts` (exit 0)"}
+  ],
+
+  "actions": [
+    {"id":"a1","label":"sort a column and see the order change, announced to a screen reader"},
+    {"id":"a2","label":"select rows, including select-all across a narrowed set, and read the selection out"},
+    {"id":"a3","label":"narrow the visible rows by free text and by column facets"},
+    {"id":"a4","label":"page through more rows than fit, using a navigator reusable beyond tables"},
+    {"id":"a5","label":"leave every existing ui-table consumer byte-identical at defaults"},
+    {"id":"a19","label":"keep focus on the same row's control across a rows-driven rebuild"},
+    {"id":"a6","label":"drive table state from an agent payload with no consumer glue code"},
+    {"id":"a20","label":"stop the owning contract docs from contradicting the shipped table"},
+
+    {"id":"a9","label":"import the entry-list machinery from a public, stable subpath"},
+    {"id":"a7","label":"get a STYLED entry-list section outside ui-agent-admin"},
+    {"id":"a21","label":"prove consumability standalone, with no agent-admin involvement"},
+    {"id":"a8","label":"keep agent-admin rendering byte-equivalently after the move"},
+
+    {"id":"a10","label":"supply the workbench's rows from a seeded in-repo source, with no fetch layer"},
+    {"id":"a11","label":"assemble the workbench inside ui-workspace-shell with zero bespoke shell CSS"},
+    {"id":"a12","label":"compose a query surface that drives the table's own filter state"},
+    {"id":"a13","label":"open a record, edit it, be stopped when invalid, save it, and see the table update"},
+    {"id":"a14","label":"have an agent write a summary of the current view into a display card"},
+
+    {"id":"a22","label":"catch a recipe row that cites an exemplar path which no longer exists"},
+    {"id":"a15","label":"rebuild this workbench elsewhere from documented recipes, not by copying the page"},
+    {"id":"a16","label":"follow the settings + resource-list idioms without reading agent-admin's source"},
+
+    {"id":"a17","label":"hold the fleet DoD, the layering law and the size budget across the whole wave"},
+    {"id":"a18","label":"fix the workbench's behaviour contract before its build is dispatched"}
+  ],
+
+  "hosts": [
+    {"action":"a1","node":"t3"},
+    {"action":"a2","node":"t2"},
+    {"action":"a3","node":"t1"},
+    {"action":"a4","node":"t4"},
+    {"action":"a4","node":"t4b"},
+    {"action":"a5","node":"t6"},
+    {"action":"a19","node":"t6"},
+    {"action":"a6","node":"t5"},
+    {"action":"a20","node":"t7"},
+
+    {"action":"a9","node":"t8"},
+    {"action":"a7","node":"t9"},
+    {"action":"a21","node":"t10"},
+    {"action":"a8","node":"t10"},
+
+    {"action":"a10","node":"t11"},
+    {"action":"a11","node":"t12"},
+    {"action":"a12","node":"t13"},
+    {"action":"a13","node":"t14"},
+    {"action":"a14","node":"t15"},
+
+    {"action":"a22","node":"t20"},
+    {"action":"a15","node":"t16"},
+    {"action":"a16","node":"t17"},
+
+    {"action":"a17","node":"t18"},
+    {"action":"a18","node":"t19"}
+  ],
+
+  "edges": [
+    {"from":"t6","to":"t1","why":"the byte-identity baseline must be captured from the pre-widening DOM, so it lands before the first widening diff"},
+    {"from":"t1","to":"t2","why":"select-all and the header checkbox state are computed over the matching set, which only the view pipeline defines"},
+    {"from":"t1","to":"t3","why":"sort is a stage of the normative pipeline; it cannot be positioned before the pipeline exists"},
+    {"from":"t1","to":"t4b","why":"the page window always sees the post-filter/search/sort order, so windowing lands on the finished pipeline"},
+    {"from":"t4","to":"t4b","why":"the table stamps a ui-pagination in its footer, so the control must exist before the table consumes it"},
+    {"from":"t2","to":"t5","why":"the Table row's multi-slot value mark names selected/select, which must exist before the catalog row can validate"},
+    {"from":"t3","to":"t5","why":"the same mark names sort/change"},
+    {"from":"t4b","to":"t5","why":"the same mark names page/change, and pageSize/search/filter join as bindable props"},
+    {"from":"t4","to":"t5","why":"the new Pagination catalog row and its feed disposition need the shipped control's props"},
+    {"from":"t5","to":"t7","why":"the descriptor/SPEC/LLD text states the final shipped surface, so the doc repairs land after that surface stops moving"},
+
+    {"from":"t8","to":"t9","why":"the sheet is authored against the new folder and its token family, which the split creates"},
+    {"from":"t8","to":"t10","why":"agent-admin re-points its imports at the moved modules"},
+    {"from":"t9","to":"t10","why":"the standalone smoke asserts a STYLED section, which only the re-scoped sheet provides"},
+
+    {"from":"t19","to":"t12","why":"the composition build is dispatched from a fixed behaviour contract, not from the PRD"},
+    {"from":"t11","to":"t12","why":"the page renders the fixture's rows"},
+    {"from":"t2","to":"t12","why":"the workbench table is selectable"},
+    {"from":"t3","to":"t12","why":"the workbench table is sortable"},
+    {"from":"t4b","to":"t12","why":"the workbench table is paginated"},
+    {"from":"t1","to":"t13","why":"the toolbar drives the table's own search/filter props rather than hand-filtering rows"},
+    {"from":"t12","to":"t13","why":"the toolbar docks into the page's content region"},
+    {"from":"t10","to":"t14","why":"the record flow reuses the extracted, consumable entry-list machinery"},
+    {"from":"t12","to":"t14","why":"the edit flow opens from the page's own record list"},
+    {"from":"t12","to":"t15","why":"the summary card occupies a region of the assembled page"},
+
+    {"from":"t13","to":"t16","why":"the toolbar recipe row documents what the toolbar slice actually built"},
+    {"from":"t14","to":"t16","why":"the record-CRUD recipe row documents what the edit slice actually built"},
+    {"from":"t8","to":"t17","why":"the resource-list row cites the subpath names the split mints"},
+    {"from":"t20","to":"t16","why":"the rows' acceptance predicate IS S9, so the gate must exist before a row can be accepted against it"},
+    {"from":"t20","to":"t17","why":"same — S9 is what proves these rows' exemplar paths resolve"}
+  ]
+}
