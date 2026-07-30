@@ -204,7 +204,10 @@ describe('dispositionAllowlistSnippet — a paste-ready DISPOSITION_ALLOWLIST en
     const snippet = dispositionAllowlistSnippet(rejection, meta)
     expect(snippet).toMatch(/archived verdicts file/)
     expect(snippet).toMatch(/optional/)
-    expect(snippet, 'the transcription REQUIREMENT is gone, so the reminder that assumed it must be too').not.toMatch(/before the next unjudged run/)
+    expect(
+      snippet,
+      'a refused seed LEAVES THE SHELF (ADR-0165 REV 2026-07-30, GH #361 reading (b)), so the deadline the old reminder implied went with it',
+    ).not.toMatch(/before the next unjudged run/)
   })
 
   it('handles a rejection with no failingDimensions reported', () => {

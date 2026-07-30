@@ -85,9 +85,18 @@ contract:
 7. **Commit the archive WITH the shard — one change, one wave.** A judged run's diff is the shard *and*
    `corpus/verdicts/<date>--<slug>.json`; `git status` after the import shows both. This is not tidiness:
    the archived `passed:false` entries ARE the durable `E_QUALITY` record (`ADR-0165` cl.1/3) — the outcome
-   `admit()` writes nowhere. Leave the archive uncommitted and the next unjudged run re-admits the refused
-   seed silently, exactly as before the archive existed, until `npm test` reds on it (cl.4/cl.5). A wave
-   that admitted NOTHING still has an archive to commit — zero admissions is not zero record.
+   `admit()` writes nowhere. Leave it uncommitted and YOUR tree still guards — `loadVerdictArchive` walks the
+   filesystem, not git, so an untracked-but-present archive fires cl.4 locally and the warning will look
+   wrong if you test it here. The exposure is **every other checkout** — CI, a fresh clone, the next agent's
+   worktree — where the archive does not exist and a later unjudged run naming that seed re-admits it
+   silently, exactly as before the archive existed. A wave that admitted NOTHING still has an archive to
+   commit — zero admissions is not zero record.
+   **Then drop the refused seed.** A refusal's expected disposition is that the seed leaves `src/examples/`
+   entirely — module, `index.ts` export + family array, `SEEDS_BY_MODULE` row (`ADR-0165` REV 2026-07-30, GH
+   #361 reading (b); the `retreat-reschedule` precedent). It needs no `DISPOSITION_ALLOWLIST` entry because
+   it is no longer a candidate any coverage leg iterates; the archive re-arms cl.4's halt if it is ever
+   re-added. Keep it on the shelf instead (a repair pending) and it DOES owe an allowlist entry, or the
+   coverage gate reds.
 
 ## The halts — recognize, then resolve at the owner (corpus/harness LLD §8; `ADR-0165` cl.2/4)
 
@@ -119,8 +128,12 @@ Finalize only when the pipeline runs clean end-to-end:
 1. `import-seeds` **exits clean** — a HALT (any of those above) is resolved at its owner and the import
    re-run, never worked around.
 2. `npm test` is green — the amended standing gate accepts the shard (including any new quarantine legs).
-   Its coverage leg also reds on a seed admitted with no judgment (`ADR-0165` cl.5), so a missing archive
-   surfaces here rather than in the next wave.
+   Its coverage leg reds on an **unjudged admission** (`ADR-0165` cl.5) — the shape a missing archive
+   eventually produces, never the archive's own absence: after a judged wave every admitted record carries
+   `meta.qualityScore` (`ADR-0068` cl.3), so this leg is GREEN with the archive missing and only reds once a
+   later unjudged run has already re-admitted the refused seed. The archive's absence is caught by item 4
+   below, not by any gate. And a refused seed is expected to leave the shelf (`ADR-0165` REV 2026-07-30,
+   step 7), so no coverage leg iterates it at all.
 3. A back-score's shard diff touches only `qualityScore` / `status`; a second identical run is a no-op.
 4. The judged run's diff carries the archive — no untracked `corpus/verdicts/*.json` is left behind.
 
