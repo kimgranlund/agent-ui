@@ -39,8 +39,15 @@
 .api-row-name {
   padding-block-start: 0.15rem; /* nudge the name to optically align with the first field's baseline */
 }
+/* GH #369, Kim's ruling 2026-07-30 — "mono font weight should be 400", reported with a screenshot of
+   THESE chips (`variant`/`size`/`disabled`). This rule used to carry `font-weight: 650` ("the index —
+   visually the most prominent chip on the row"): that prominence choice is OVERTURNED, not forgotten.
+   The name rail keeps its prominence through SIZE (0.9rem against the 0.85em siblings) and its position
+   in the left rail, not through weight. The declaration stays spelled out rather than deleted — it
+   documents the overturn at the exact selector a reader will check, and it keeps this rule from silently
+   inheriting a future change to the global `code` chip's weight (_page.css). */
 .api-row-name code {
-  font-weight: 650; /* the index — visually the most prominent chip on the row */
+  font-weight: 400;
   font-size: 0.9rem;
 }
 
