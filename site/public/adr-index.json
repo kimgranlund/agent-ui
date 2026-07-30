@@ -1157,7 +1157,7 @@
   {
     "name": "ADR-0167",
     "url": "./adr-index.html#adr-0167",
-    "description": "**A trait too heavy for the foundation row rides its own declared ./traits/* subpath** (proposed — the GH #377 §1 intake; PR #375's component review judged the…",
+    "description": "**A trait too heavy for the foundation row rides its own declared ./traits/* subpath** (the GH #377 §1 intake; PR #375's component review judged the shape RIGH…",
     "level": "L3",
     "section": "Records"
   }
