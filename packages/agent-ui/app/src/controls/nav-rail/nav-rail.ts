@@ -50,7 +50,11 @@
 // nav-rail.css; since GH #368 the same seam also picks WHICH box the JS band observer watches, so the two
 // halves can never disagree (`#resolveCollapseContainer`).
 
-import { UIElement, overlay, prop, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
+import { UIElement, prop, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
+// The Overlay controller rides its OWN declared subpath, not the root barrel: re-exporting it there
+// measured +945 B gz on the reactive+dom foundation row every consumer pays for (7442 → 8387 against a
+// 7680 B gz budget, GH #368). Same shape as the `controls/menu` import below.
+import { overlay } from '@agent-ui/components/traits/overlay'
 import type { UIMenuElement } from '@agent-ui/components/controls/menu'
 import { SHELL_NARROW_BREAKPOINT_REM } from '../../shell-breakpoint.ts'
 import './nav-rail-group.ts'
