@@ -30,8 +30,8 @@
      "accept":"probe: `page-size=10` over 25 rows renders 10 `<tr>` plus a footer `ui-pagination` with `pages=3` outside the scroll container; pageCount derives from the matching set"},
     {"id":"t5","label":"TASK — catalog Table widening + Pagination row + feed disposition (ADR-0163 cl.9)","leaf":true,"justify":null,
      "accept":"catalog gates exit 0: the three-slot multi-slot value mark validates on `Table`, the `Pagination` row exists with `FEED_EXCLUDED`, and the feed partition gate is total"},
-    {"id":"t7","label":"TASK — owning-doc repairs: report-family SPEC/LLD, PRD §3 fence, table.md (ADR-0163 Repairs)","leaf":true,"justify":null,
-     "accept":"`site/lib/docs-grammar.test.ts` and `site/lib/adr.test.ts` exit 0, and `table.md` frontmatter mirrors `table.ts` static props (descriptor trip-wire green)"},
+    {"id":"t7","label":"TASK — owning-doc repairs: report-family SPEC/LLD, PRD §3 fence, table.md, AND the agent-ui-component-patterns selection row (ADR-0163 Repairs + its Consequences stale-list)","leaf":true,"justify":null,
+     "accept":"`site/lib/docs-grammar.test.ts` and `site/lib/adr.test.ts` exit 0; `table.md` frontmatter mirrors `table.ts` static props (descriptor trip-wire green); and the `agent-ui-component-patterns` selection-pattern row states the shipped selection mechanism (ADR-0163 Consequences names it in the stale-list this task discharges)"},
 
     {"id":"t8","label":"TASK — entry-data split + the three @agent-ui/app subpaths (ADR-0164 cl.1/cl.2)","leaf":true,"justify":null,
      "accept":"`npm run check` exits 0 with `./entry-list`, `./entry-list.css`, `./entry-data` resolving, every pre-existing `@agent-ui/app` import site compiling unchanged, and no root-barrel name renamed"},
@@ -51,10 +51,12 @@
     {"id":"t15","label":"TASK — the agent-written summary card over the current view","leaf":true,"justify":null,
      "accept":"probe: the card renders agent-authored content describing the current view, and the page contains no bespoke renderer/transport wiring beyond the published seam"},
 
+    {"id":"t20","label":"TASK — mint the S9 skill-exemplar-path gate (the gate PRD-G5's acceptance depends on)","leaf":true,"justify":null,
+     "accept":"`site/lib/docs-grammar.test.ts` carries S9 — walking `.claude/skills/*/SKILL.md`, extracting backticked repo-relative paths from each table's last cell, existsSync-ing each — proven RED on a planted bogus exemplar path and GREEN on revert, with the pre-existing exemplar corpus (20 paths) passing"},
     {"id":"t16","label":"TASK — the data-table-toolbar + record-CRUD recipe rows","leaf":true,"justify":null,
-     "accept":"both rows exist in `agent-ui-composition-patterns` and each names an owner ADR id plus an in-repo exemplar path that resolves (dangling-link sweep green)"},
+     "accept":"both rows exist in `agent-ui-composition-patterns`, each naming an owner ADR id plus an in-repo exemplar path, and S9 is green over them"},
     {"id":"t17","label":"TASK — the ADR-0164 cl.5 settings-page + resource-list-manager rows","leaf":true,"justify":null,
-     "accept":"both rows exist naming ADR-0120/0158 and ADR-0132/0164 as owners with resolving exemplar paths; the dangling-link sweep is green"},
+     "accept":"both rows exist naming ADR-0120/0158 and ADR-0132/0164 as owners with exemplar paths, and S9 is green over them"},
 
     {"id":"t18","label":"TASK — the wave's standing gates + size budget line-items","leaf":true,"justify":null,
      "accept":"`npm run check && npm test` exit 0, the six browser shards exit 0, and `npm run size` shows every touched package within budget or a recorded, argued re-base"},
@@ -83,6 +85,7 @@
     {"id":"a13","label":"open a record, edit it, be stopped when invalid, save it, and see the table update"},
     {"id":"a14","label":"have an agent write a summary of the current view into a display card"},
 
+    {"id":"a22","label":"catch a recipe row that cites an exemplar path which no longer exists"},
     {"id":"a15","label":"rebuild this workbench elsewhere from documented recipes, not by copying the page"},
     {"id":"a16","label":"follow the settings + resource-list idioms without reading agent-admin's source"},
 
@@ -112,6 +115,7 @@
     {"action":"a13","node":"t14"},
     {"action":"a14","node":"t15"},
 
+    {"action":"a22","node":"t20"},
     {"action":"a15","node":"t16"},
     {"action":"a16","node":"t17"},
 
@@ -148,6 +152,8 @@
 
     {"from":"t13","to":"t16","why":"the toolbar recipe row documents what the toolbar slice actually built"},
     {"from":"t14","to":"t16","why":"the record-CRUD recipe row documents what the edit slice actually built"},
-    {"from":"t8","to":"t17","why":"the resource-list row cites the subpath names the split mints"}
+    {"from":"t8","to":"t17","why":"the resource-list row cites the subpath names the split mints"},
+    {"from":"t20","to":"t16","why":"the rows' acceptance predicate IS S9, so the gate must exist before a row can be accepted against it"},
+    {"from":"t20","to":"t17","why":"same — S9 is what proves these rows' exemplar paths resolve"}
   ]
 }
