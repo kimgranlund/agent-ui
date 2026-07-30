@@ -110,14 +110,25 @@ describe('docs-site chrome — site-chrome polish (S1 header hairline, S3a foote
     expect(headerRect.right, 'the border-carrying box ends at the shell\'s right edge').toBeCloseTo(shellRect.right, 0)
   })
 
-  it('S1 regression — the site-scoped header hairline never leaks onto a NESTED ui-super-shell mounted as page content', async () => {
+  it('S1 regression — no site-scoped declaration leaks onto a NESTED ui-super-shell mounted as page content', async () => {
     // the reviewer's probe shape: a demo/guide page (super-shell.html, chat-shell.html, …) composes its
     // OWN <ui-super-shell> several DOM levels inside [data-page-content] — a descendant selector would
     // reach it; the child-combinator chain in _page.css must not.
+    //
+    // ADR-0166 (GH #371) REPAIRED THIS TEST'S DISCRIMINATOR, and the repair is the whole point. It used
+    // to read `borderBottomWidth === 0` on the nested bar, which worked only because a bar had NO border
+    // of its own: any 1px there could only have come from the site's rule. Now every bar draws its own
+    // 1px seam, so `0` is simply the wrong expectation and `1px` proves nothing either way — the leak and
+    // the legitimate seam are the SAME VALUE, and a test that cannot tell them apart certifies nothing.
+    // The discriminator is now the seam TOKEN: repoint it on the nested shell to a value nothing else
+    // uses. If the site's rule reached in with its own `border-block-end: 1px`, the nested bar would read
+    // 1px (the site declaration out-specifying the component's token-driven one); with no leak it reads
+    // the repointed 3px. Same guarantee, a probe that still bites.
     const { shell } = mountAt(1200)
     await raf()
     const content = shell.querySelector('[data-page-content]') as HTMLElement
     const nested = document.createElement('ui-super-shell')
+    nested.style.setProperty('--ui-super-shell-bar-seam', '3px solid red')
     const nestedHeader = document.createElement('div')
     nestedHeader.setAttribute('data-slot', 'header')
     nestedHeader.textContent = 'Nested demo header'
@@ -128,7 +139,10 @@ describe('docs-site chrome — site-chrome polish (S1 header hairline, S3a foote
     await raf()
     const nestedHeaderBar = nested.querySelector('[data-part="bar"][data-bar="header"]') as HTMLElement
     expect(nestedHeaderBar, 'the nested shell composes its own header bar').not.toBeNull()
-    expect(parseFloat(getComputedStyle(nestedHeaderBar).borderBottomWidth), 'the site-only hairline must never reach a nested demo shell\'s own header bar').toBe(0)
+    expect(
+      getComputedStyle(nestedHeaderBar).borderBlockEndWidth,
+      "the nested bar's seam is its OWN component-drawn, consumer-repointed one — no site-scoped declaration reached it",
+    ).toBe('3px')
   })
 
   it('S3a — .app-page fills the canvas region on a short page (no dead gap below the sticky footer)', async () => {
@@ -240,5 +254,89 @@ describe('docs-site chrome — S4 description clamp (2 lines by default, a prove
     await raf()
     const toggle = document.querySelector('.page-description-toggle') as HTMLButtonElement
     expect(toggle.hidden, 'no permanently-visible toggle on a description that already fits').toBe(true)
+  })
+})
+
+// ADR-0166 (GH #371) — the consumer-hairline repair, counted rather than asserted-by-absence. The docs
+// site independently derived the bar↔body separator TWICE before the component owned it: once as
+// `border-block-end` on the header BAR box (GH #183-S1 / #210) and once as `border-block-start` on
+// `.app-context-footer`, which is the footer's CONTENT and therefore sat 6px inside the bar's own edge
+// (the bar's `padding-inline`). Now that the component draws the seam on the bar box itself, both site
+// declarations are gone — and the way to prove that is to COUNT block-axis hairlines down each bar's box
+// chain, not to grep the sheet: a `1px` re-introduced by any other selector would still pass a grep.
+describe('docs-site chrome — the bar seam is drawn ONCE, by the component (ADR-0166 cl.2, GH #371)', () => {
+  /** Every block-axis border on the SEAM CHAIN of one bar: the bar box, its `bar-content` wrapper, and the
+   *  authored site box inside that wrapper. Deliberately NOT the whole subtree — controls nested in a bar
+   *  (ui-button, the theme ui-menu's trigger and panel) carry their own 1px borders for their own reasons,
+   *  and sweeping those in makes the count a measure of the header's contents rather than of the seam. The
+   *  three boxes below are exactly where the two removed duplicates lived. */
+  const hairlines = (box: HTMLElement): string[] => {
+    const chain = [box]
+    const barContent = box.querySelector<HTMLElement>(':scope > [data-part="bar-content"]')
+    if (barContent) {
+      chain.push(barContent)
+      const authored = barContent.querySelector<HTMLElement>(':scope > .app-context-header, :scope > .app-context-footer')
+      if (authored) chain.push(authored)
+    }
+    const hits: string[] = []
+    for (const el of chain) {
+      const cs = getComputedStyle(el)
+      for (const prop of ['borderBlockStartWidth', 'borderBlockEndWidth'] as const) {
+        const name = el.getAttribute('data-part') ?? (el.className || el.tagName)
+        if (cs[prop] !== '0px' && cs[prop] !== '') hits.push(`${name} → ${prop}=${cs[prop]}`)
+      }
+    }
+    return hits
+  }
+
+  it('the header bar box and everything inside it carry EXACTLY ONE block-axis hairline — the component\'s', async () => {
+    const { shell } = mountAt(1200)
+    await raf()
+    const header = shell.querySelector('[data-part="bar"][data-bar="header"]') as HTMLElement
+    expect(header, 'the docs shell composes a header bar').not.toBeNull()
+    // the ONE survivor is the component's own, on the bar box, block-END
+    expect(getComputedStyle(header).borderBlockEndWidth, "the component's seam").toBe('1px')
+    const found = hairlines(header)
+    expect(found, found.join(' | ')).toHaveLength(1)
+  })
+
+  it('the footer bar box and everything inside it carry EXACTLY ONE block-axis hairline — the component\'s', async () => {
+    const { shell } = mountAt(1200)
+    await raf()
+    const footer = shell.querySelector('[data-part="bar"][data-bar="footer"]') as HTMLElement
+    expect(footer, 'the docs shell composes a footer bar').not.toBeNull()
+    expect(getComputedStyle(footer).borderBlockStartWidth, "the component's seam").toBe('1px')
+    const found = hairlines(footer)
+    expect(found, found.join(' | ')).toHaveLength(1)
+  })
+
+  it('the site declares NO seam of its own on either bar — proven by repointing the token, since a count cannot see a same-box duplicate', async () => {
+    // The counting probe above catches the FOOTER duplicate (it lived on `.app-context-footer`, a
+    // different box from the bar) but is structurally blind to the HEADER one, which lived on the very
+    // box and the very property the component now uses — one box, one property, count of 1 either way.
+    // This is that gap closed. The site's own selector
+    // (`ui-theme-provider.app-shell > .site-shell > [data-part='frame'] > [data-part='bar'][data-bar='header']`)
+    // is specificity 0,5,1 against the component's 0,2,0, and specificity is compared BEFORE scope
+    // proximity — so a re-declared `border-block-end: 1px` there WINS and pins the seam at 1px, ignoring
+    // the token. Repointing the token to 3px therefore reads 3px only if the site declares nothing.
+    const { shell } = mountAt(1200)
+    await raf()
+    shell.style.setProperty('--ui-super-shell-bar-seam', '3px solid red')
+    const header = shell.querySelector('[data-bar="header"]') as HTMLElement
+    const footer = shell.querySelector('[data-bar="footer"]') as HTMLElement
+    expect(getComputedStyle(header).borderBlockEndWidth, 'the header seam obeys the token — no site declaration overrides it').toBe('3px')
+    expect(getComputedStyle(footer).borderBlockStartWidth, 'the footer seam obeys the token — no site declaration overrides it').toBe('3px')
+  })
+
+  it('cl.1 — the docs shell frame inserts no block-axis space, so each bar sits flush against middle', async () => {
+    const { shell } = mountAt(1200)
+    await raf()
+    const frame = shell.querySelector('[data-part="frame"]') as HTMLElement
+    const middle = shell.querySelector('[data-part="middle"]') as HTMLElement
+    const header = shell.querySelector('[data-bar="header"]') as HTMLElement
+    const footer = shell.querySelector('[data-bar="footer"]') as HTMLElement
+    expect(['normal', '0px']).toContain(getComputedStyle(frame).rowGap)
+    expect(Math.abs(header.getBoundingClientRect().bottom - middle.getBoundingClientRect().top)).toBeLessThanOrEqual(1)
+    expect(Math.abs(middle.getBoundingClientRect().bottom - footer.getBoundingClientRect().top)).toBeLessThanOrEqual(1)
   })
 })
