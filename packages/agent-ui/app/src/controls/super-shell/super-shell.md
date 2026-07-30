@@ -112,7 +112,7 @@ geometry:
   blockSize: consumer-supplied
   paddingBlock: 0
 
-forcedColors: Bars/rails/panes are token-surfaced boxes; the toggles are real ui-buttons with their own forced-colors handling. The narrow overlay's shadow degrades to the pane's own box.
+forcedColors: Bars/rails/panes are token-surfaced boxes; the toggles are real ui-buttons with their own forced-colors handling. A floating overlay card loses its shadow, but keeps the `--ui-super-shell-overlay-outline` border it has drawn since GH #381 — a real border is the one edge cue forced-colors preserves, so the card stays bounded rather than bleeding into the canvas.
 ---
 
 # ui-super-shell
