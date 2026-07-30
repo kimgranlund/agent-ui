@@ -1,8 +1,8 @@
 # SPEC — the unified nav-rail family (`ui-nav-rail`)
 
-> Status: shipped · v1.0 · 2026-07-13 · Layer: SPEC (execution contract)
+> Status: shipped · v1.1 · 2026-07-30 · Layer: SPEC (execution contract)
 > Traces: TKT-0030 (nav-pattern reconcile — the design ruling) · TKT-0029 (site-nav v2 — SUBSUMED, its
-> requirements are this SPEC's mode-1 consumer acceptance) · [`../adr/0130-nav-rail-family-unification.md`](../adr/0130-nav-rail-family-unification.md) (proposed — the six ratifying clauses this SPEC realizes).
+> requirements are this SPEC's mode-1 consumer acceptance) · [`../adr/0130-nav-rail-family-unification.md`](../adr/0130-nav-rail-family-unification.md) (accepted 2026-07-12 — the seven ratifying clauses this SPEC realizes).
 > Refined by: [`../lld/nav-rail-family.lld.md`](../lld/nav-rail-family.lld.md) (implementation). Decomposition:
 > [`../decompositions/nav-rail-family.decomp.json`](../decompositions/nav-rail-family.decomp.json) (coverage-clean).
 > Relates: [`../adr/0084-app-shell-narrow-reflow-collapse.md`](../adr/0084-app-shell-narrow-reflow-collapse.md) (the `collapse`-enum grammar precedent this family extends) · [`../adr/0043-overlay-selection-primitives.md`](../adr/0043-overlay-selection-primitives.md)/[`../adr/0045-overlay-dismissal-semantics.md`](../adr/0045-overlay-dismissal-semantics.md) (mode 3's composed `ui-menu`) · [`../adr/0120-app-surfaces-m4-panes-settings.md`](../adr/0120-app-surfaces-m4-panes-settings.md) (the `ui-settings`/`ui-master-detail` embryo mode 2 unifies onto).
@@ -20,7 +20,7 @@ each hand-rolling its own rail markup/CSS/active-indicator/narrow-collapse behav
 `collapse` prop (`'menu' | 'drill-in' | 'icon-popover'`) selects which of the three narrow-width
 dispositions Kim's reconcile ruling names applies; the family's anatomy, active indication, and a11y
 derivation are shared across all three. This SPEC realizes the seven ratifying clauses of
-[ADR-0130](../adr/0130-nav-rail-family-unification.md) (proposed).
+[ADR-0130](../adr/0130-nav-rail-family-unification.md) (accepted 2026-07-12).
 
 ## 2. Definitions
 
@@ -95,22 +95,53 @@ ADR-0130 cl.4's non-color-alone indication requirement)*
 
 ### 3.4 `collapse="menu"` — the site-nav mode-1 disposition
 
-**SPEC-R5 — Wide: a flat/grouped list; narrow: a disclosure dropdown.** At or above a defined container-
+**SPEC-R5 — Wide: a flat/grouped list; narrow: a trigger-anchored flyout.** At or above a defined container-
 width threshold, `collapse="menu"` renders the full list (`ui-nav-rail-group` context-labels visible).
-Below the threshold, the rail collapses into a single trigger (naming the current item) that discloses the
-list as a dropdown panel on activation — the site's existing `<details>`-based zero-JS mechanism is the
-realized precedent, ported into the component (not left as page-level markup). *(→ TKT-0029's site-nav-v2
-folded requirements; ADR-0130 cl.1)*
+Below the threshold, the rail collapses into a single trigger (naming the current item) that opens the
+list as an anchored flyout panel on activation. The realized mechanism is the fleet's ONE overlay
+controller — `overlay()` + platform-owned dismissal, ADR-0043/0045 — called directly on the rail's own
+panel part, the `ui-popover` precedent (the arms diverge in content model, never in overlay mechanism:
+this one carries the whole grouped rail, which `ui-menu`'s menuitem model cannot express). *(→ TKT-0029's
+site-nav-v2 folded requirements; ADR-0130 cl.1; GH #368)*
 - **AC1** *Given* a `collapse="menu"` rail inside a resizable wrapper, *when* narrowed below the threshold,
   *then* the list is not directly visible and a single trigger control is, proven in **Chromium AND
   WebKit**; the assertion bites on a non-collapsing fixed layout (negative control).
-- **AC2** *Given* the narrow trigger activated (click or Enter/Space), *when* observed, *then* the dropdown
+- **AC2** *Given* the narrow trigger activated (click or Enter/Space), *when* observed, *then* the flyout
   panel opens overlaying the page (not reflowing it) and is keyboard-dismissable (Escape or outside-click).
+- **AC3** *Given* a `collapse="menu"` rail below the threshold nested inside a clipping ancestor (a single
+  `overflow: hidden` box shorter than the open panel), *when* the panel is opened, *then* the panel is
+  rendered in the **top layer** and is painted and hit-testable BEYOND that ancestor's clipping edge —
+  `document.elementFromPoint` at a point inside the panel but past the clipper's bottom returns a node the
+  panel contains — proven in **Chromium AND WebKit**. The assertion bites when top-layer MEMBERSHIP is
+  removed (no `popover` attribute / no `showPopover()`); it must NOT be stated as `:popover-open`, which is
+  precisely what that control removes, and restoring `position: absolute` is NOT a valid control (a
+  promoted popover paints unclipped regardless of its `position`). *(→ GH #368, the GH #260 clipping class)*
 
 *(Extended, TKT-0035: the container-width threshold is measured against a NAMED `@container
 ui-nav-rail-collapse` query. `collapseContainer="self"` [default] is this AC's own box, unchanged; `="ancestor"`
 relinquishes the rail's own containment so a narrow-sidebar consumer opts an ancestor into the same named
 container instead — see nav-rail.md.)*
+
+> **REV 2026-07-30 (v1.1) — GH #368, a repair inside this contract, NO new ADR.** AC2 already required the
+> panel to open "overlaying the page (not reflowing it)" and be keyboard-dismissable; the shipped
+> `position: absolute` panel **under-satisfied** its own accepted AC, so satisfying it fully is a repair.
+> Three things changed here. **(a)** The mechanism sentence above now names `overlay()` — the fleet already
+> owns exactly one row for "a floating panel anchored to a trigger" (ADR-0043 + ADR-0045), and ADR-0130 cl.6
+> already routes the sibling `icon-popover` arm through it, so the menu arm joining REDUCES the family's
+> overlay mechanisms from two to one. Nothing was superseded: ADR-0130 carries no clause requiring
+> `position: absolute` or a zero-JS disclosure, and LLD-C4's native-disclosure note was a porting-fidelity
+> remark about provenance. **(b)** The UA disclosure wrapper and its `<summary>` are retired for a plain
+> `<button>` trigger + an overlay panel (Kim's ruling, 2026-07-30) — so `aria-expanded`, which `<summary>`
+> received free from the UA and which `overlay()` does not write, is host-managed on the trigger part (fleet
+> law: `menu.ts:48-51`, realized in `popover.ts:130`/`:182`). **(c)** AC3 is NEW: top-layer rendering and
+> clipping-ancestor immunity, previously implied by "overlaying" but never checkable. The clipping failure
+> was reproduced cross-engine at intake — a 44px `overflow: hidden` ancestor clipped 78 of the panel's 94px,
+> ~83% of the menu invisible. **A correction to the reporting issue's own premise:** all four borders already
+> computed to 1px in the correct colour; the real defect was `inset-inline: 0` making the panel FULL-BLEED
+> (measured `listW == railW`, `listLeft == railLeft`), so its side borders sat on the rail's own edges and
+> read as the shell's edge rather than the menu's card outline. Both halves of that report share ONE root
+> cause and one fix — the panel is content-sized between a `min-inline-size` floor and a `max-inline-size`
+> ceiling — **not** "add borders", which would have added declarations that already existed and fixed nothing.
 
 **SPEC-R6 — Group context labels + the wide name|tag row.** A `ui-nav-rail-group` with a `label` MUST
 render it as a context heading above its items (replacing the site's current bare-tag group headers, the

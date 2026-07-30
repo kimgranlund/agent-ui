@@ -34,12 +34,10 @@ events:
 slots: []                # authored light-DOM ChildList of ui-nav-rail-group / ui-nav-rail-item — component-native children (the ui-tabs precedent), not attribute-slotting; both shipped consumers construct these programmatically (SPEC-R2, ADR-0130 cl.3)
 
 parts:                   # control-created, `collapse="menu"` mode only (LLD-C4) — NOT shadow-DOM ::part()
-  - name: disclosure
-    description: A control-created `<details data-part="disclosure">` wrapping the whole rendered tree, built once when `collapse="menu"` (LLD-C4) — ported from the docs site's own zero-JS `<details>`/`<summary>` mechanism, now owned by the component.
   - name: trigger
-    description: The `<summary data-part="trigger">` inside the disclosure — hidden wide (inert chrome); narrow, it names the current/selected item and discloses `list` as a dropdown on activation.
+    description: A control-created `<button type="button" data-part="trigger">`, built once when `collapse="menu"` (LLD-C4, GH #368). Hidden wide (inert chrome); narrow, it names the current/selected item, carries `aria-expanded` + `aria-controls`, and opens `list` on activation — pointer click, Enter and Space alike, since it is a real button.
   - name: list
-    description: A `<div data-part="list">` wrapping the original group/item tree — always visible wide (overriding the UA closed-`<details>` hiding rule); narrow, shown only while the disclosure is open, absolutely positioned to overlay rather than reflow the page.
+    description: A control-created `<div data-part="list">` wrapping the original group/item tree. Wide, it is the in-flow vertical list. Narrow, `ui-nav-rail` arms it as a `popover="auto"` panel and `overlay()` renders it in the TOP LAYER, anchor-positioned to `trigger` (flip + shift at viewport edges) — so no clipping or stacking ancestor can trap it (GH #368; the GH #260 class) — as a content-sized card between a `min-inline-size` floor and a `max-inline-size` ceiling, never stretched to the rail's own width.
 
 customStates: []          # the rail itself carries no interaction state of its own — states live on the item child (the family-folder law first recorded by the retired ui-app-shell.md — ADR-0156; the pattern is now the family descriptors' own convention); ui-nav-rail-item carries none either (a plain reflected `selected` attribute already drives its CSS, no :state() needed)
 
@@ -51,9 +49,11 @@ aria:
   roleSource: internals        # set via ElementInternals, never a host role attribute; re-derived on every subtree mutation (a MutationObserver, so later-added children re-derive too, SPEC-R2 AC2)
 
 keyboard:
+  - keys: Enter or Space
+    action: 'collapse="menu" only — with the narrow `trigger` focused, opens the flyout panel and moves focus to its first focusable row (SPEC-R5 AC2). Both keys come free from the real `<button>` trigger, which delivers each as one `click`.'
   - keys: Escape
-    action: 'collapse="menu" only — closes the open narrow disclosure and returns focus to the trigger (SPEC-R5 AC2, a small JS enhancement over the site''s current zero-JS markup, which has no built-in Escape/outside-click close).'
-  - note: Outside-click also closes the open `collapse="menu"` narrow disclosure (SPEC-R5 AC2). Every other keyboard contract (item activation, `ui-menu`'s roving focus in `collapse="icon-popover"`) is each composed part's OWN, inherited unchanged.
+    action: 'collapse="menu" only — closes the open narrow flyout and returns focus to the trigger (SPEC-R5 AC2). PLATFORM-owned via `popover="auto"` light-dismiss (GH #368), not a hand-rolled key handler; the focus return is `overlay()`''s own contract.'
+  - note: Outside-click also closes the open `collapse="menu"` narrow flyout, by the same platform light-dismiss (SPEC-R5 AC2). Every other keyboard contract (item activation, `ui-menu`'s roving focus in `collapse="icon-popover"`) is each composed part's OWN, inherited unchanged.
 
 geometry:
   sizeClass: pattern
@@ -91,16 +91,17 @@ role-derivation `MutationObserver` (SPEC-R2 AC2).
 
 ## `collapse` — the four dispositions
 
-- **`menu`** (default) — wide: the full grouped list. Narrow (below the rail's own `40rem` container-width
-  threshold): collapses into a `<details>` disclosure naming the current item, opening a dropdown overlay on
-  activation (Escape/outside-click dismissible).
+- **`menu`** (default) — wide: the full grouped list, in flow. Narrow (below the rail's own `40rem`
+  container-width threshold): collapses into a single button naming the current item, which opens the list as
+  a **top-layer flyout card** anchored to that button (GH #368) — Escape/outside-click dismissible via the
+  platform's own `popover="auto"` light-dismiss, and immune to clipping or stacking ancestors.
 - **`drill-in`** — the rail renders identically at every width; it contributes anatomy ONLY. The CONSUMER
   composes it as the `list`-pane content inside its own `ui-master-detail`, whose shipped narrow drill-in/
   back mechanism is unchanged and untouched by this family (ADR-0130 cl.5).
 - **`icon-popover`** — items render icon-only; a `ui-nav-rail-group` with 2+ items discloses them via an
   internally-composed `ui-menu` (roving focus, commit-and-close, dismissal — inherited wholesale). At most
   one group's menu is open at a time (ADR-0130 cl.6).
-- **`none`** (GH #170/ADR-0155) — the plain grouped vertical list at EVERY band: no `<details>` disclosure,
+- **`none`** (GH #170/ADR-0155) — the plain grouped vertical list at EVERY band: no trigger, no flyout,
   no icon-popover, no drill-in anatomy. For a consumer whose OWN container owns the narrow behavior — e.g.
   the docs site, where `ui-super-shell` (`collapse-band="compact"` + `narrow-start="collapse"`) hides the
   whole nav pane below the compact line and toggle-restores it as an overlay; the rail just renders its

@@ -229,10 +229,12 @@ content.append(
     ' (', code('"collapse" | "stack"'),
     '): ',
     code('stack'),
-    ' keeps the side IN FLOW, full width, letting its own content own its narrow anatomy — the docs ' +
-      'site’s own nav pane uses this so ui-nav-rail’s collapse="menu" dropdown takes over instead ' +
-      'of the shell’s hide/overlay arm (see it live in this very page’s nav rail, narrow — logically ' +
-      'the start side, LLD-C4/GH #95).',
+    ' keeps the side IN FLOW, full width, letting its own content own its narrow anatomy. The docs ' +
+      'site’s own nav pane does NOT use that arm: since ADR-0155 its rail runs ' +
+      'collapse="none" and this shell owns the narrow story for it — collapse-band="compact" plus ' +
+      'narrow-start="collapse" hides the whole nav pane below the compact line and toggle-restores it ' +
+      'as an overlay, so the rail only ever renders its plain vertical anatomy inside that pane. Reach ' +
+      'for stack when a side’s own content genuinely has a narrow anatomy of its own to run.',
   ),
 )
 
