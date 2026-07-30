@@ -17,7 +17,7 @@ declare const process: { cwd(): string }
 // nav-rail.test.ts — jsdom probes for ui-nav-rail + ui-nav-rail-group + ui-nav-rail-item (ADR-0130; SPEC
 // nav-rail-family.spec.md SPEC-R1..R8; LLD nav-rail-family.lld.md LLD-C8). jsdom cannot resolve CSS Grid/
 // @container layout or the Popover API's real top-layer behaviour — the ACTUAL whole-shape geometry, the
-// collapse="menu" narrow disclosure's real overlay, and collapse="icon-popover"'s real anchored-popover
+// collapse="menu" narrow flyout's real top-layer overlay, and collapse="icon-popover"'s anchored-popover
 // interaction are nav-rail.browser.test.ts's job (Chromium + WebKit). This file proves: prop→DOM mapping,
 // `collapse` enum coercion + index-0 fallback, role derivation (all-href/all-bare/mixed/empty, incl.
 // later-added children via the MutationObserver), selection-commit emitting select/change exactly once per
@@ -95,12 +95,13 @@ describe('UINavRailElement — upgrade + defaults', () => {
     expect(el.getAttribute('collapse-container')).toBe('ancestor')
   })
 
-  it('collapse="none" (GH #170/ADR-0155) builds NO disclosure — the plain never-collapsing vertical rail', () => {
+  it('collapse="none" (GH #170/ADR-0155) builds NO menu parts — the plain never-collapsing vertical rail', () => {
     const el = document.createElement('ui-nav-rail') as UINavRailElement
     el.setAttribute('collapse', 'none')
     mount(el)
     expect(el.collapse).toBe('none') // a real enum member now, not coerced to "menu"
-    expect(el.querySelector('[data-part="disclosure"]'), 'none mode never creates the <details> disclosure').toBeNull()
+    expect(el.querySelector(':scope > [data-part="trigger"]'), 'none mode never creates the menu trigger').toBeNull()
+    expect(el.querySelector(':scope > [data-part="list"]'), 'none mode never creates the menu panel').toBeNull()
   })
 
   it('no children ⇒ an empty rail, never throws (SPEC-R2 AC1)', () => {
@@ -406,17 +407,64 @@ describe('UINavRailGroupElement — context label + composition (SPEC-R2/R6/R8)'
   })
 })
 
-describe('UINavRailElement — collapse="menu" narrow disclosure structure (LLD-C4; geometry itself is the browser suite\'s job)', () => {
-  it('builds a <details data-part=disclosure> wrapping a <summary data-part=trigger> + <div data-part=list>', async () => {
+// GH #368 — the menu arm's STRUCTURE, re-expressed against the button-trigger + overlay-panel parts.
+// Dismissal (Escape / outside-click) is no longer testable here and no longer OURS to test: it is the
+// platform's, via `popover=auto` (nav-rail.ts retired both hand-rolled listeners), and jsdom implements
+// neither light-dismiss nor the top layer. Those legs live in nav-rail.browser.test.ts, both engines.
+//
+// The band observer deliberately stays on the WIDE arm here: `#resolveCollapseContainer` reads COMPUTED
+// containment, which jsdom does not implement, so it resolves no container and the overlay is never armed
+// (the same `width > 0`-style jsdom guard super-shell.ts's `#belowBandLine` makes). That is what keeps this
+// file about structure and reactivity, with geometry and top-layer behaviour left to the real engines.
+describe('UINavRailElement — collapse="menu" part structure (LLD-C4/GH #368; geometry is the browser suite\'s job)', () => {
+  it('builds a <button data-part=trigger> + a <div data-part=list> holding the authored tree, in authored order', async () => {
     const el = new UINavRailElement()
     el.append(item('/a', 'Current', true), item('/b', 'B'))
     mount(el)
     await whenFlushed()
-    const disclosure = el.querySelector('[data-part="disclosure"]')
-    expect(disclosure?.tagName).toBe('DETAILS')
-    expect(disclosure?.querySelector('[data-part="trigger"]')?.tagName).toBe('SUMMARY')
-    expect(disclosure?.querySelector('[data-part="list"]')).not.toBeNull()
-    expect(disclosure?.querySelector('[data-part="list"]')?.textContent).toContain('Current')
+
+    const triggers = el.querySelectorAll(':scope > [data-part="trigger"]')
+    const lists = el.querySelectorAll(':scope > [data-part="list"]')
+    expect(triggers, 'exactly one trigger part').toHaveLength(1)
+    expect(lists, 'exactly one list part').toHaveLength(1)
+    const trigger = triggers[0] as HTMLElement
+    const list = lists[0] as HTMLElement
+    expect(trigger.tagName, 'the trigger is a real <button> — Enter AND Space both arrive as one click').toBe('BUTTON')
+    expect(trigger.getAttribute('type')).toBe('button')
+    expect(list.tagName).toBe('DIV')
+    // The trigger precedes the panel (the ui-popover anatomy, and the anchor overlay() positions against).
+    expect(trigger.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    // Every authored item survived the swap, in authored order (SPEC-R6 anatomy).
+    const labels = [...list.querySelectorAll('ui-nav-rail-item')].map((i) => i.textContent?.trim())
+    expect(labels).toEqual(['Current', 'B'])
+  })
+
+  it('the grouped anatomy survives the swap: context-label + name|tag cells intact inside the panel (SPEC-R6)', async () => {
+    const el = new UINavRailElement()
+    const group = new UINavRailGroupElement()
+    group.label = 'Components'
+    const withTag = item('/x', 'Button')
+    const tag = document.createElement('span')
+    tag.slot = 'trailing'
+    tag.setAttribute('data-role', 'tag')
+    tag.textContent = 'new'
+    withTag.append(tag)
+    group.append(withTag, item('/y', 'Select'))
+    el.append(group)
+    mount(el)
+    await whenFlushed()
+
+    const list = el.querySelector(':scope > [data-part="list"]') as HTMLElement
+    expect(list.querySelector('ui-nav-rail-group'), 'the group element itself moved into the panel').not.toBeNull()
+    expect(
+      list.querySelector('[data-part="context-label"]')?.textContent,
+      'the group context-label heading did not survive into the panel',
+    ).toBe('Components')
+    expect(
+      list.querySelector('[data-role="tag"]')?.textContent,
+      'the trailing name|tag cell did not survive into the panel',
+    ).toBe('new')
+    expect([...list.querySelectorAll('ui-nav-rail-item')]).toHaveLength(2)
   })
 
   it('the trigger names the currently-selected item, reactively', async () => {
@@ -426,7 +474,7 @@ describe('UINavRailElement — collapse="menu" narrow disclosure structure (LLD-
     el.append(a, b)
     mount(el)
     await whenFlushed()
-    const trigger = el.querySelector('[data-part="trigger"]') as HTMLElement
+    const trigger = el.querySelector(':scope > [data-part="trigger"]') as HTMLElement
     expect(trigger.textContent).toBe('First')
 
     a.selected = false
@@ -435,34 +483,54 @@ describe('UINavRailElement — collapse="menu" narrow disclosure structure (LLD-
     expect(trigger.textContent).toBe('Second')
   })
 
-  it('Escape closes the open disclosure and returns focus to the trigger (SPEC-R5 AC2)', async () => {
+  it('the trigger is ARIA-wired from first paint: aria-expanded="false" + an aria-controls that resolves (n17)', async () => {
     const el = mount(new UINavRailElement())
+    el.append(item('/a', 'Alpha'))
     await whenFlushed()
-    const disclosure = el.querySelector('[data-part="disclosure"]') as HTMLDetailsElement
-    disclosure.open = true
-    disclosure.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
-    expect(disclosure.open).toBe(false)
+    const trigger = el.querySelector(':scope > [data-part="trigger"]') as HTMLElement
+    const list = el.querySelector(':scope > [data-part="list"]') as HTMLElement
+    // <summary> got aria-expanded FREE from the UA and overlay() writes zero ARIA — omitting the host
+    // wiring would make this silently fail, which is exactly the regression the swap risked.
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
+    const controls = trigger.getAttribute('aria-controls')
+    expect(controls, 'the trigger carries no aria-controls').toBeTruthy()
+    expect(document.getElementById(controls as string), 'aria-controls does not resolve to the panel').toBe(list)
   })
 
-  it('an outside click closes the open disclosure; a click INSIDE it does not', async () => {
-    const el = mount(new UINavRailElement())
+  it('two rails on one page get DISTINCT panel ids (aria-controls cannot cross-resolve)', async () => {
+    const a = mount(new UINavRailElement())
+    const b = mount(new UINavRailElement())
     await whenFlushed()
-    const disclosure = el.querySelector('[data-part="disclosure"]') as HTMLDetailsElement
-    disclosure.open = true
-    document.body.click()
-    expect(disclosure.open).toBe(false)
-
-    disclosure.open = true
-    disclosure.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    expect(disclosure.open).toBe(true)
+    const idA = (a.querySelector(':scope > [data-part="list"]') as HTMLElement).id
+    const idB = (b.querySelector(':scope > [data-part="list"]') as HTMLElement).id
+    expect(idA).toBeTruthy()
+    expect(idA).not.toBe(idB)
   })
 
-  it('collapse="drill-in" builds NO disclosure at all', async () => {
+  it('the WIDE arm is byte-clean: no popover attribute, no overlay inline-style residue (n8)', async () => {
+    // jsdom resolves no `@container` container, so the band observer never arms — the wide arm. overlay()
+    // stamps `popover=auto` at call time (overlay.ts:165) and clears nothing in cleanup(), so this asserts
+    // nav-rail.ts's OWN disarm path, not the trait's.
+    const el = mount(new UINavRailElement())
+    el.append(item('/a', 'Alpha'))
+    await whenFlushed()
+    const list = el.querySelector(':scope > [data-part="list"]') as HTMLElement
+    expect(list.hasAttribute('popover'), 'a stranded popover attribute makes the UA hide the in-flow list').toBe(false)
+    expect(list.style.position).toBe('')
+    expect(list.style.top).toBe('')
+    expect(list.style.left).toBe('')
+    expect(list.style.right).toBe('')
+    expect(list.style.margin).toBe('')
+    expect(list.hasAttribute('data-placement')).toBe(false)
+  })
+
+  it('collapse="drill-in" builds NO menu parts at all', async () => {
     const el = new UINavRailElement()
     el.collapse = 'drill-in'
     mount(el)
     await whenFlushed()
-    expect(el.querySelector('[data-part="disclosure"]')).toBeNull()
+    expect(el.querySelector(':scope > [data-part="trigger"]')).toBeNull()
+    expect(el.querySelector(':scope > [data-part="list"]')).toBeNull()
   })
 })
 
@@ -472,9 +540,14 @@ describe('UINavRailElement — collapse="menu" narrow disclosure structure (LLD-
 // `shadow.append(...this.children)`, ADR-0082, superseded) permanently killed live behavior: `this.listen`/
 // `this.effect` ride the CURRENT connection's AbortController/scope (element.ts) and die at disconnect,
 // so re-arming must happen on EVERY `connected()`, never be gated behind a persistent field alongside the
-// one-time DOM construction. Both instances (nav-rail.ts's disclosure dismissal, nav-rail-group.ts's menu-
+// one-time DOM construction. Both instances (nav-rail.ts's menu-arm wiring, nav-rail-group.ts's menu-
 // select forwarding) are proven here via a REAL re-parent (a genuine disconnect+reconnect, the master-
 // detail.test.ts/settings.test.ts "reconnect" precedent), not a simulated event.
+//
+// GH #368 — the menu arm's dismissal leg is GONE from this file because the behaviour is gone from the
+// component: `popover=auto` means the PLATFORM dismisses, so there is no re-armable listener of ours left
+// to prove. What still must survive a reconnect is everything nav-rail.ts owns per connection: the
+// label-sync effect, the overlay wiring, and the disarm that keeps the wide arm byte-clean.
 describe('component-reviewer Finding 1 — listener/effect wiring survives a REAL reconnect', () => {
   function reconnect(el: Element): void {
     const newParent = document.createElement('div')
@@ -483,7 +556,7 @@ describe('component-reviewer Finding 1 — listener/effect wiring survives a REA
     mounted.push(newParent)
   }
 
-  it('collapse="menu": Escape + outside-click dismissal still fire after a reconnect', async () => {
+  it('collapse="menu": the parts are built ONCE and the wide arm stays byte-clean across a reconnect', async () => {
     const el = mount(new UINavRailElement())
     el.append(item('/a', 'Alpha'), item('/b', 'Beta'))
     await whenFlushed()
@@ -491,17 +564,16 @@ describe('component-reviewer Finding 1 — listener/effect wiring survives a REA
     reconnect(el)
     await whenFlushed()
 
-    const disclosure = el.querySelector('[data-part="disclosure"]') as HTMLDetailsElement
-    // Only ONE disclosure survives the reconnect (idempotent DOM construction, not a duplicate).
-    expect(el.querySelectorAll('[data-part="disclosure"]')).toHaveLength(1)
-
-    disclosure.open = true
-    disclosure.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
-    expect(disclosure.open, 'Escape was dead after reconnect — the listener was not re-armed').toBe(false)
-
-    disclosure.open = true
-    document.body.click()
-    expect(disclosure.open, 'outside-click was dead after reconnect — the listener was not re-armed').toBe(false)
+    // Idempotent DOM construction — one trigger, one panel, no duplicates from the second connect.
+    expect(el.querySelectorAll(':scope > [data-part="trigger"]')).toHaveLength(1)
+    expect(el.querySelectorAll(':scope > [data-part="list"]')).toHaveLength(1)
+    // The reconnect calls overlay() AGAIN (fresh AbortController), which re-stamps `popover=auto` — so the
+    // disarm path must run again too, or the second connect strands the attribute the first one cleared.
+    const list = el.querySelector(':scope > [data-part="list"]') as HTMLElement
+    expect(list.hasAttribute('popover'), 'the reconnect stranded a popover attribute on the wide arm').toBe(false)
+    expect(list.style.position, 'the reconnect stranded overlay inline-style residue').toBe('')
+    const trigger = el.querySelector(':scope > [data-part="trigger"]') as HTMLElement
+    expect(trigger.getAttribute('aria-expanded'), 'aria-expanded was not re-established on reconnect').toBe('false')
   })
 
   it('collapse="menu": the trigger label-sync effect still tracks `selected` after a reconnect', async () => {
@@ -514,7 +586,7 @@ describe('component-reviewer Finding 1 — listener/effect wiring survives a REA
     reconnect(el)
     await whenFlushed()
 
-    const trigger = el.querySelector('[data-part="trigger"]') as HTMLElement
+    const trigger = el.querySelector(':scope > [data-part="trigger"]') as HTMLElement
     expect(trigger.textContent).toBe('First')
     a.selected = false
     b.selected = true
