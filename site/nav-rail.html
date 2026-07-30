@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · Composing a ui-nav-rail</title>
+  </head>
+  <body>
+    <!-- The ui-nav-rail composition guide: the family's three elements, the four `collapse` dispositions
+         (with `menu` shown narrow AND open, its top-layer flyout live — GH #368), and the
+         `collapse-container` WHICH-BOX seam (@agent-ui/app, ADR-0130; nav-rail-family.lld.md LLD-C4). An
+         MPA entry auto-discovered by vite.config.ts's site/**/*.html glob — no config edit. The page module
+         imports pages/_page.ts FIRST for the foundation CSS cascade + self-defining ui-* controls, then the
+         nav-rail CSS/modules and its own demo chrome. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/nav-rail.ts"></script>
+  </body>
+</html>

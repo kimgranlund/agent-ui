@@ -566,6 +566,13 @@
       "section": "Guides"
     },
     {
+      "name": "Nav Rail",
+      "url": "./nav-rail.html",
+      "description": "ui-nav-rail is ONE navigation-rail primitive whose closed collapse enum picks its own narrow disposition: a top-layer flyout, a plain list, icon-only popovers, or anatomy-only drill-in.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
       "name": "Router",
       "url": "./router-doc.html",
       "description": "@agent-ui/router: a memory-first SPA router whose route state lives in a kernel signal.",

@@ -1,0 +1,63 @@
+/* nav-rail.css — PAGE-LOCAL demo chrome for the ui-nav-rail composition guide (the master-detail.ts /
+ * settings.ts page precedent, ported). It frames the demos and labels the bands; it never restyles
+ * ui-nav-rail / ui-nav-rail-group / ui-nav-rail-item's own internals. Every colour is a --md-sys-color-*
+ * role (imported first via _page.ts), so the demos track light/dark. */
+
+/* A resizable frame the reader drags across the 40rem line to watch collapse="menu" flip bands. */
+.nr-resize {
+  inline-size: min(48rem, 100%);
+  min-inline-size: 14rem;
+  max-inline-size: 100%;
+  resize: horizontal;
+  overflow: hidden;
+  padding: 0.5rem;
+  border: 1px dashed var(--md-sys-color-neutral-outline);
+  border-radius: 14px;
+}
+
+/* A FIXED-width narrow frame — the band the flyout actually lives in, so the open card is demonstrable
+ * without the reader having to drag anything. Deliberately below 40rem. */
+.nr-narrow {
+  inline-size: 18rem;
+  max-inline-size: 100%;
+  padding: 0.5rem;
+  border: 1px dashed var(--md-sys-color-neutral-outline);
+  border-radius: 14px;
+}
+
+/* The demo rail's own frame — a surface so the rail reads as chrome inside a page, not floating text. */
+.nr-demo {
+  inline-size: 100%;
+  margin: 0;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 12px;
+  background: var(--md-sys-color-neutral-surface-lowest);
+}
+
+/* The clipping-ancestor demo: a deliberately short overflow:hidden box. The whole point is that the
+ * open flyout is NOT trapped by it (GH #368 / the GH #260 class), so this must really clip. */
+.nr-clipper {
+  inline-size: 18rem;
+  max-inline-size: 100%;
+  block-size: 3.5rem;
+  overflow: hidden;
+  border: 1px solid var(--md-sys-color-danger-outline, var(--md-sys-color-neutral-outline));
+  border-radius: 12px;
+  background: var(--md-sys-color-neutral-surface-lowest);
+}
+
+/* The ancestor-seam demo: an OUTER box that opts into the named container, holding a narrow column. */
+.nr-named-ancestor {
+  container-type: inline-size;
+  container-name: ui-nav-rail-collapse;
+  inline-size: min(48rem, 100%);
+  resize: horizontal;
+  overflow: hidden;
+  padding: 0.5rem;
+  border: 1px dashed var(--md-sys-color-primary-outline, var(--md-sys-color-neutral-outline));
+  border-radius: 14px;
+}
+.nr-column {
+  inline-size: 15rem;
+  max-inline-size: 100%;
+}

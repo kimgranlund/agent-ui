@@ -460,6 +460,12 @@ export const NAV: readonly NavGroup[] = [
     links: [{ href: './settings.html', label: 'Settings' }],
   },
   {
+    // ui-nav-rail (@agent-ui/app, ADR-0130; nav-rail-family.lld.md LLD-C4) — the SAME
+    // ungrouped-site-level-link posture as Master Detail/Settings just above. Added by GH #368: the family
+    // had NO site surface at all, so nothing demonstrated `collapse="menu"` or visually guarded it.
+    links: [{ href: './nav-rail.html', label: 'Nav Rail' }],
+  },
+  {
     // @agent-ui/router (LLD-C10b, SPEC-R8) — another package above components on the DAG, same posture as
     // Super Shell just above: a GUIDE page for a package, not a fleet component in components/src, so it is an
     // ungrouped site-level link — site-coverage/site-toc/site-canon (all components/src-scoped) never expect a
