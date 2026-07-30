@@ -128,3 +128,27 @@ untouched arms (store-swap reset, turn arms, entry sections).
 - **A new sibling archetype (`ui-admin-shell` / a resizable-split shell).** Rejected: ADR-0151
   already names extraction the default gate for NEW archetypes, and agent-admin's shape is the
   chat archetype (conversation + tools pane) — a fourth tag would fork the family over two props.
+
+## Amendment — REV 2026-07-31 (courtesy forward pointer, booked by [ADR-0167](./0167-trait-export-route-subpath-when-too-heavy-for-the-foundation-row.md) at its ratification): where the trait-export fork was finally answered
+
+**Nothing in this record's body changes.** This section is a pointer, not a repair of amended text —
+ADR-0167 amends no ADR, and says so in its own header cell.
+
+This ADR's Consequences left the `paneResize` export **conditional**: "The fleet gets ONE
+drag-resize mechanism *if the LLD's recommended fork lands* … a public-API widening needing its own
+gate check; the alternative is an independent re-derivation, the LLD's named fork" (`:91-93`). The
+fork itself is LLD-C6 in [`../lld/agent-admin-shell-rehost.lld.md`](../lld/agent-admin-shell-rehost.lld.md)
+§7, whose ledger row was still unresolved when this ADR was ratified — its Files cell reads
+`components/src/index.ts` **OR** super-shell-local (`:22`), and that LLD's build sequence presumes the
+ruling was still ahead of it (`:136`).
+
+The export shipped. **The general question — by what rule does a trait reach a consumer outside
+`@agent-ui/components`? — was answered on 2026-07-30 by ADR-0167**, which records a four-outcome
+route procedure (stay internal · root barrel · own `./traits/*` subpath · re-examine) keyed on the
+trait's consumer set and its measured cost on the foundation-row budget. A reader arriving at the
+conditional clause above should continue there.
+
+**What this pointer does NOT do:** ADR-0167 rules the route *forward* and explicitly declines to
+retro-authorize the `paneResize` export — minting a ratification after the fact is not a design
+seat's to mint. Whether that gap earns its own closing record is Kim's call. This ADR's Status stays
+`accepted`, byte-unchanged.
