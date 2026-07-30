@@ -204,6 +204,37 @@ describe('ADR-0166 cl.5 — the INERT arm (a bars-free shell) is untouched by th
     })
   }
 
+  it('MEASURED EXCEPTION to cl.5 — a bars-free shell that authors `narrow-*=\'tabs\'` is NOT inert below 40rem, and moves by exactly -12px', () => {
+    // ADR-0166 cl.5 lists `ui-agent-admin` under "bars authored: none — the INERT arm" and calls that arm
+    // "byte-stable by construction", which Kim's constraint 1 requires. It is not, and the ADR's own
+    // Context fact 3 is what contradicts cl.5: the narrow-tabs strip is a FRAME CHILD. `ui-agent-admin`
+    // sets `narrow-end='tabs'` (agent-admin.ts:402), so below the 40rem line its frame has TWO visible
+    // children — the strip and middle — and the frame's deleted `gap` was LIVE between them, with no bar
+    // anywhere in sight. Measured on the real page at the fleet-default 414px viewport:
+    //   main:  frame h=241, rowGap=18px, [narrow-tabs h=37 top=41 mbs=0px][middle h=186 top=96]
+    //   here:  frame h=229, rowGap=normal, [narrow-tabs h=37 top=47 mbs=6px][middle h=186 top=84]
+    // = -18px (the gap) + 6px (cl.7's new strip seam) = -12px, deterministic in both engines.
+    // Pinned rather than left to a future baseline diff: the shell's own mechanism, not a consumer bug.
+    // The gap-deletion inertness claim holds only for a frame with ONE visible child — which agent-admin
+    // is at WIDE (the strip is display:none there), and which gen-ui-live's bars-free shell is at every
+    // width. Escalated on GH #371 together with cl.7's DOM-order error.
+    const el = mount(['content', 'options-pane'], { width: 360, attrs: { 'narrow-end': 'tabs' } })
+    const frame = q(el, '[data-part="frame"]')
+    const strip = q(el, 'ui-tabs[data-part="narrow-tabs"]')
+    const middle = q(el, '[data-part="middle"]')
+    // no bar anywhere — this really is a bars-free shell
+    expect(el.querySelector('[data-part="bar"]')).toBeNull()
+    // ...yet the frame has TWO visible children, which is why the deleted gap was not inert here
+    expect([...frame.children].filter((c) => getComputedStyle(c as HTMLElement).display !== 'none')).toHaveLength(2)
+    expect(['normal', '0px']).toContain(getComputedStyle(frame).rowGap)
+    expect(getComputedStyle(strip).marginBlockStart).toBe('6px')
+    // the strip now sits 6px below the frame's content edge, and middle is flush under the strip
+    expect(Math.round(strip.getBoundingClientRect().top - frame.getBoundingClientRect().top)).toBe(6)
+    expect(Math.round(middle.getBoundingClientRect().top - strip.getBoundingClientRect().bottom)).toBe(0)
+    // and the corner mechanism IS inert here, which is the half of cl.5 that does hold
+    expectCorners(q(el, '[data-part="pane"]'), { start: '18px', end: '18px' }, 'the bars-free tabs shell\'s pane')
+  })
+
   it("cl.3 — a bars-free shell NESTED inside a bar-bearing one keeps its cards ROUND (the `:has()`-argument leak the `> ` combinator prevents)", () => {
     // THE fixture that bites. `@scope (…) to (ui-super-shell)`'s lower limit constrains what a selector
     // may MATCH, NOT what a `:has()` argument can SEE — so a DESCENDANT-form rule makes the OUTER frame
