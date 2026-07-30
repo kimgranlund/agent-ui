@@ -483,6 +483,32 @@ describe('UINavRailElement — collapse="menu" part structure (LLD-C4/GH #368; g
     expect(trigger.textContent).toBe('Second')
   })
 
+  it('GH #378 — an item appended AFTER first build reaches the panel, not the host (SPEC-R2 AC2)', async () => {
+    const el = new UINavRailElement()
+    el.append(item('/a', 'Alpha'))
+    mount(el)
+    await whenFlushed()
+    const list = el.querySelector(':scope > [data-part="list"]') as HTMLElement
+    expect([...list.querySelectorAll('ui-nav-rail-item')], 'the first-build relocation still works').toHaveLength(1)
+
+    const late = item('/b', 'Beta')
+    el.append(late)
+    await whenFlushed()
+
+    // The defect was PARENTAGE, so parentage is what this reads — not merely "the panel contains it",
+    // which `contains()` would satisfy for a node that never moved if the panel were an ancestor.
+    expect(late.parentElement, 'the late item stayed a direct child of the HOST, outside the panel').toBe(list)
+    expect(
+      [...list.querySelectorAll('ui-nav-rail-item')].map((i) => i.textContent?.trim()),
+      'order is preserved: a late append lands where the consumer put it, at the end',
+    ).toEqual(['Alpha', 'Beta'])
+    // and the host keeps ONLY its parts — no stray item left behind beside them
+    expect([...el.children].map((c) => c.getAttribute('data-part')), 'the host carries the two parts and nothing else').toEqual([
+      'trigger',
+      'list',
+    ])
+  })
+
   it('GH #376 — the trigger names a tagged item by its NAME cell alone: "Button", never "Buttonnew"', async () => {
     // The defect, exactly as filed: `#currentLabel()` read the whole row's `textContent`, and SPEC-R6's
     // row is `name|tag`. Neither cell is a block box, so the two ran together with no separator.

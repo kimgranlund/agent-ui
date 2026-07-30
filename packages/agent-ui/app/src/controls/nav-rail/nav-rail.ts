@@ -159,7 +159,7 @@ export class UINavRailElement extends UIElement {
   }
 
   /** Idempotent DOM construction ONLY (persists across reconnect) — never re-run once the parts are set.
-   *  Content-relocation (`list.append(...this.childNodes)`) happens exactly once, at first build.
+   *  Content-relocation is SEEDED here and kept live by `#relocateContent`'s observer (GH #378).
    *
    *  A plain `<button>` trigger + a sibling panel, the `ui-popover` anatomy (popover.ts:19-21) — NOT a
    *  `<details>`/`<summary>` pair: the panel is a top-layer `popover`, so the UA disclosure's own
@@ -194,6 +194,34 @@ export class UINavRailElement extends UIElement {
   #wireMenu(trigger: HTMLButtonElement, list: HTMLElement): void {
     this.effect(() => {
       trigger.textContent = this.#currentLabel()
+    })
+
+    // GH #378 — the menu arm's content model is LIVE, not frozen at first build. `#ensureMenuParts` moves
+    // `this.childNodes` into the panel exactly once, so an item appended to the rail afterwards stayed a
+    // direct child of the HOST, outside the panel, and never appeared in the flyout. SPEC-R2 AC2 supports
+    // later-added children — the wide arm's role derivation honours it (its own observer, `connected()`),
+    // and this arm silently did not. Pre-existing, verified at 98d91f3.
+    //
+    // MUTATION OBSERVATION, not a re-run on open — the issue named both. Observation states the invariant
+    // once ("every non-part child of the rail lives in the panel") and holds it at EVERY band, including
+    // wide, where the panel is the in-flow list and a stray child would otherwise render outside the
+    // anatomy the CSS scopes to. A re-run-on-open hook would fix only the narrow flyout, and only the one
+    // path that opens through the trigger. The remaining argument for ALSO topping up at open is a
+    // microtask race — `rail.append(item); trigger.click()` runs the callback after the click — and it is
+    // not a real one: MutationObserver callbacks are microtasks, which drain before the next paint, so the
+    // panel is never RENDERED without the item. A second mechanism for a gap nobody can see would be two
+    // sources of truth for one invariant, so there is exactly one.
+    //
+    // It does not touch the arm/disarm seam. Relocation writes childList only: no `popover` attribute, no
+    // inline position styles, no `handle` state — the three things `arm`/`disarm` own below. It is safe
+    // against the panel being open (appending into a top-layer popover is ordinary DOM), and it stays
+    // armed if `collapse` later moves off 'menu', which is correct rather than incidental: the parts and
+    // their content persist by design, so the invariant must persist with them.
+    this.effect(() => {
+      const observer = new MutationObserver(() => this.#relocateContent())
+      observer.observe(this, { childList: true }) // direct children only — the panel's own subtree is not our business
+      this.#relocateContent() // anything appended between the parts' build and this arming
+      return () => observer.disconnect()
     })
 
     // The fleet's ONE overlay mechanism (ADR-0043/0045), called directly on this control's own panel —
@@ -328,6 +356,25 @@ export class UINavRailElement extends UIElement {
       if (seam === 'self') return null // self mode: the rail's own box, or no container at all
     }
     return null
+  }
+
+  /**
+   * GH #378 — restores the menu arm's one content invariant: every direct child of the rail that is not
+   * a PART lives inside the panel. Idempotent and re-entrancy-safe, which it has to be, since the move
+   * itself is a childList mutation on the observed node: the second callback finds no strays and mutates
+   * nothing, so it converges after exactly one extra pass. Order is preserved (one `append` of the
+   * collected run, not a node at a time), so a late `append` lands at the end of the list, where the
+   * consumer put it.
+   */
+  #relocateContent(): void {
+    const list = this.#list
+    if (!list) return
+    const strays: ChildNode[] = []
+    for (const node of this.childNodes) {
+      if (node === this.#trigger || node === list) continue
+      strays.push(node)
+    }
+    if (strays.length > 0) list.append(...strays)
   }
 
   /** The menu trigger's label — the selected item's NAME, else the first item's, else a fallback. */
