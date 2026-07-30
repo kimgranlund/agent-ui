@@ -18,8 +18,28 @@
   --ui-super-shell-module: 1.125rem; /* 18px — the ONE module every dimension derives from (SPEC-R1c) */
   --ui-super-shell-bar-size: calc(var(--ui-super-shell-module) * 3); /* 54px bars + rails */
   --ui-super-shell-pane-size: calc(var(--ui-super-shell-module) * 14); /* 252px panes */
+  /* ADR-0166 cl.1 — INLINE-axis only now: the frame declares no gap at all, so this token spaces
+     middle's inter-card seams (and a bar's own item row) and nothing else. Deliberately NOT renamed
+     (the ADR's own Rejected list) — a rename forks every consumer override for zero gain. */
   --ui-super-shell-gap: var(--ui-super-shell-module);
+  /* ADR-0166 cl.2 — the bar↔body seam, drawn by the BAR inside its own border box now that the frame
+     inserts no space. ONE composite value, not a width/style/color trio: the TKT-0062 law is "repoint
+     the token, not the host property", so a consumer wanting a 2px seam, a dashed seam, or none at all
+     (`0 solid transparent`) has exactly one repoint site. The `1px` is a device-pixel hairline — a paint
+     dimension with no module rung to sit on (SPEC-R11c's third disposition, the ADR's amendment sheet),
+     and out of AC19's scope twice over (border properties are not a SPACING_PROPERTIES family, and the
+     `solid` arm is not dimension-shaped, so isMintedDimensionValue returns false). */
+  --ui-super-shell-bar-seam: 1px solid var(--md-sys-color-neutral-outline-variant);
   --ui-super-shell-radius: var(--md-sys-shape-corner-lg, var(--ui-super-shell-module));
+  /* ADR-0166 cl.4 — the block-axis corner pair every carded part (rail/pane/pane-resizer) consumes as
+     its four LOGICAL radius longhands. The frame zeroes one or both per bar presence (cl.3's `:has()`
+     rules); three postures where a card's block edge faces something other than a bar restore them by
+     re-declaring the property ON THE CARD — an own-element custom-property declaration beats an
+     inherited value regardless of selector specificity, which is why this is a token pair and not six
+     specificity-matched `border-radius: 0` arms. Both are `var(...)`-valued, so AC19's mintedArmLiterals
+     skips them; the frame rules' bare `0` IS in that scope and passes because LITERAL_RE needs a unit. */
+  --ui-super-shell-radius-block-start: var(--ui-super-shell-radius);
+  --ui-super-shell-radius-block-end: var(--ui-super-shell-radius);
   --ui-super-shell-surface: var(--md-sys-color-neutral-surface);
   --ui-super-shell-overlay-shadow: 0 0.25rem 1.5rem rgb(0 0 0 / 0.25);
   /* the floating overlay pane's margin from the viewport/container edges (Kim's shell-polish S2 ask):
@@ -82,20 +102,53 @@
     user-select: none;
   }
 
+  /* ADR-0166 cl.1 — NO `gap` here. The frame is `flex-direction: column`, so its only gap axis is
+     block, and that one declaration WAS the bar↔body seam with no second job: it inserted an 18px band
+     of page background between an edge-to-edge bar and the content below it, contradicting what
+     edge-to-edge means (GH #371, measured live at `rowGap: 18px` on every bar-bearing shell). The seam
+     moved INTO the bar's own border box (cl.2). GH #214's negative-margin arithmetic is untouched: a
+     column flex container's `gap` is a ROW gap, and the resizer's neighbours are inline siblings inside
+     `middle`, reading `middle`'s own gap — the 846px natural-fit number does not move. */
   [data-part='frame'] {
     display: flex;
     flex-direction: column;
-    gap: var(--ui-super-shell-gap);
     flex: 1 1 auto;
     min-block-size: 0;
   }
 
+  /* ADR-0166 cl.3 — bar adjacency is a STATIC structural fact (`#compose` builds a bar iff a consumer
+     authored children for that slot, and bars are never hidden at any band), so it is read with `:has()`
+     off the DOM, never re-derived into a host attribute that would owe SPEC-R2d's no-clobber law a story
+     it does not need. A sibling combinator would express the header (`[data-bar='header'] ~ …`) and have
+     NO symmetric spelling for the footer — CSS has no previous-sibling combinator; `:has()` on the frame
+     is symmetric.
+     The `> ` CHILD combinator is MANDATORY in both rules, and for a mechanism reason, not an analogy:
+     `@scope (…) to (ui-super-shell)`'s lower limit (SPEC-R1b's depth-2 recursion) constrains which
+     elements a selector may MATCH — it does NOT constrain what a `:has()` argument can SEE. In the
+     descendant form, an OUTER frame that authored no bar at all matches purely because a NESTED shell
+     several levels down authored one, and the outer shell's cards then square against nothing (confirmed
+     cross-engine: child form leaves the outer cards ROUND, descendant form squares them). This compiles
+     clean and reds nothing without the nested probe in super-shell-bar-seam.browser.test.ts. */
+  [data-part='frame']:has(> [data-bar='header']) {
+    --ui-super-shell-radius-block-start: 0;
+  }
+  [data-part='frame']:has(> [data-bar='footer']) {
+    --ui-super-shell-radius-block-end: 0;
+  }
+
   /* GH #253 — a bar (header/footer, the ONLY consumers of `[data-part='bar']`, super-shell.ts) sits
      EDGE-TO-EDGE across the full frame width (the #210 fix already made its border edge-to-edge) —
-     unlike rail/pane/pane-resizer below, which are separate floating cards with gaps between them
-     and each carry their OWN `border-radius: var(--ui-super-shell-radius)` on their own selector.
+     unlike rail/pane/pane-resizer below, which are separate floating cards. ADR-0166 axis-qualifies that
+     reading: they float with gaps between them on the INLINE axis inside `middle`, verbatim; on the BLOCK
+     axis a card is now FLUSH against an adjacent bar with its bar-facing corners squared (cl.4/cl.5).
      A rounded corner on an edge-to-edge bar reads as a visible defect (Kim's DevTools screenshot);
-     bars get no radius at all — this rule intentionally omits `border-radius`. */
+     bars get no radius at all — this rule intentionally omits `border-radius`, and ADR-0166 cl.2
+     re-affirms that clause of #253 untouched (`super-shell.browser.test.ts`'s bar-radius assertion
+     stays green unedited).
+     `box-sizing: border-box` below is now doubly load-bearing: with `min-block-size:
+     var(--ui-super-shell-bar-size)`, it is what ABSORBS the seam's 1px inside the 54px (the bar's outer
+     height does not change; its content box becomes 53px). Flipping it to `content-box` makes the bar
+     read 55px — the negative control the seam suite runs. */
   [data-part='bar'] {
     display: flex;
     align-items: center;
@@ -105,6 +158,13 @@
     background: var(--ui-super-shell-surface);
     padding-inline: calc(var(--ui-super-shell-module) / 3);
   }
+
+  /* ADR-0166 cl.2 — each bar draws the seam on its OWN bar-facing edge. Per-side selectors, not a
+     blanket `[data-part='bar']` rule: `header` and `footer` are the part's only two consumers
+     (super-shell.ts:280/385), they face opposite directions, and the discriminator they already carry
+     (`data-bar`) makes the intent readable without minting a new attribute. */
+  [data-part='bar'][data-bar='header'] { border-block-end: var(--ui-super-shell-bar-seam); }
+  [data-part='bar'][data-bar='footer'] { border-block-start: var(--ui-super-shell-bar-seam); }
 
   /* The authored header/footer content fills the space between the toggles by construction (a row-flex
      child defaults to flex:0 0 auto — content-width, never expanding — so without this the bar's OWN
@@ -124,10 +184,25 @@
     position: relative; /* the narrow overlay's containing block (SPEC-R4) */
   }
 
+  /* ADR-0166 cl.4/cl.5 — the ONE corner contract for every carded part. `middle` is a row, so every
+     in-flow card's block-start edge faces the frame's top seam and its block-end edge faces the bottom
+     seam: the outcome is uniform across rail/pane/pane-resizer, which is why one grouped rule states it
+     once instead of three copies. LOGICAL longhands, per LLD-C4's standing discipline in this file — and
+     the block pair is `dir`-invariant, since the RTL mirror is inline-axis only.
+     `canvas` and `scrim` are absent deliberately: neither carries a radius (canvas paints no background
+     at all), so there is nothing to square. */
+  [data-part='rail'],
+  [data-part='pane'],
+  [data-part='pane-resizer'] {
+    border-start-start-radius: var(--ui-super-shell-radius-block-start);
+    border-start-end-radius: var(--ui-super-shell-radius-block-start);
+    border-end-start-radius: var(--ui-super-shell-radius-block-end);
+    border-end-end-radius: var(--ui-super-shell-radius-block-end);
+  }
+
   [data-part='rail'] {
     inline-size: var(--ui-super-shell-bar-size);
     flex: 0 0 auto;
-    border-radius: var(--ui-super-shell-radius);
     background: var(--ui-super-shell-surface);
     min-block-size: 0;
     overflow: hidden;
@@ -136,7 +211,6 @@
   [data-part='pane'] {
     inline-size: var(--ui-super-shell-pane-size);
     flex: 0 0 auto;
-    border-radius: var(--ui-super-shell-radius);
     background: var(--ui-super-shell-surface);
     min-block-size: 0;
     overflow-y: auto;
@@ -171,7 +245,6 @@
     padding-inline: calc((var(--ui-super-shell-gap) - 0.25rem) / 2); /* the 4px ink (AC19's allowlisted literal, relocated to this property) */
     cursor: col-resize;
     touch-action: none;
-    border-radius: var(--ui-super-shell-radius);
     background: var(--ui-super-shell-resizer-ink);
     background-clip: content-box; /* the ink paints ONLY the padded-in content box, never the full hit-box */
   }
@@ -264,9 +337,30 @@
      scroller intent chains through --ui-tabs-strip-scrollbar-width (the same seam as pane-tabs above).
      The `ui-tabs` type prefix out-specifies tabs.css's `:scope { display: block }` (0,1,1 beats 0,1,0
      — scope proximity would otherwise un-hide the strip at wide). */
+  /* ADR-0166 cl.7 (posture exception C, the strip's half) — the strip lost the frame gap that used to
+     space it, so the strip OWNS its own block-start seam. `/3` is one of R11a's named shipped fractions
+     and is the one this file already uses for shell-tier breathing room that is not a full inter-card
+     gap (the bar's `padding-inline`, `pane-tabs`'s `padding-block-end`): a full `--ui-super-shell-gap`
+     would read as an inter-card gap the strip is not (it is chrome spanning the frame, like a bar), and
+     `0` would butt the strip's first tab against the box above it. Declared on the base (wide) rule
+     rather than inside the narrow query because it is a static property of the strip; the strip is
+     `display: none` at wide, so it has no box for the margin to act on there.
+     NOTE — the other half of cl.7's exception C (an active narrow-tab pane restoring a radius pair) is
+     deliberately NOT BUILT, and the reason is a MEASURED contradiction in the clause's own premise, not
+     an omission. ADR-0166's Context fact 3 and cl.7 both state the strip is a frame child "between
+     `middle` and the footer"; `#buildNarrowTabs` actually calls `middle.before(strip)`
+     (super-shell.ts:870), so the real frame order is `header | narrow-tabs | middle | footer` (measured:
+     the strip sits ABOVE middle). The clause therefore names the wrong pair — it is a pane's
+     block-START that faces the strip, and its block-END still faces the footer — and building the
+     ruled block-END restore would round a corner that IS flush against the footer bar while leaving the
+     strip-facing pair squared: two defects instead of one. Live blast radius today is ZERO: the only
+     shipped `narrow-*='tabs'` author is `ui-agent-admin`, which composes no bar at all
+     (`content` + `options-pane`, agent-admin.ts:405/515/669), so neither frame `:has()` rule ever fires
+     on the one instance the strip ships in. Returned to the design seat for a coordinated repair (GH #371). */
   ui-tabs[data-part='narrow-tabs'] {
     display: none;
     flex: 0 0 auto;
+    margin-block-start: calc(var(--ui-super-shell-module) / 3);
     --ui-tabs-strip-scrollbar-width: var(--ui-super-shell-scrollbar-width); /* SPEC-R10a — the strip's tablist viewport */
   }
 
@@ -338,6 +432,12 @@
     z-index: 2;
     max-inline-size: calc(100cqi - var(--ui-super-shell-bar-size) - var(--ui-super-shell-overlay-inset));
     box-shadow: var(--ui-super-shell-overlay-shadow);
+    /* ADR-0166 cl.6 (mid-window overlay arms 1+2 of six) — an overlaid card is INSET, not flush: its
+       `inset-block` holds it 0.75rem inside middle's own edges, so it touches no bar and stays FULLY
+       round. Declared on the CARD, which beats the frame's inherited value with no specificity
+       arms-race against three container-query blocks. */
+    --ui-super-shell-radius-block-start: var(--ui-super-shell-radius);
+    --ui-super-shell-radius-block-end: var(--ui-super-shell-radius);
   }
   :scope[data-auto-collapsed-start][data-narrow-open='start'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']) { inset-inline-start: var(--ui-super-shell-overlay-inset); }
   :scope[data-auto-collapsed-end][data-narrow-open='end'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) { inset-inline-end: var(--ui-super-shell-overlay-inset); }
@@ -405,6 +505,25 @@
       flex: 0 0 auto;
       overflow-y: visible;
     }
+    /* ADR-0166 cl.7 (posture exception B — Kim's ruled fork F2) — in a COLUMN, only the FIRST in-flow
+       card faces the header and only the LAST faces the footer; every other block edge faces a SIBLING,
+       and under the blanket row-posture rule the stacked side's canvas-facing corners would square
+       against `canvas`, a visible defect. `:first-child`/`:last-child` cannot express it — `scrim` is
+       unconditionally middle's first child (super-shell.ts), and a collapsed sibling keeps its child
+       index while `display: none`. So the rule keys off the SIDE, reusing the restore selector the stack
+       arm above already owns: `narrow-start='stack'` puts the stacked card at the column TOP (DOM order
+       places `start` before `canvas`), so it KEEPS its block-start squaring against the header and
+       RESTORES block-end; `narrow-end='stack'` puts it at the BOTTOM, so the pairing inverts. With BOTH
+       sides stacked, each side restores only its own canvas-facing pair — correct by the same reading.
+       The two shipped witnesses are both `ui-chat-shell` instances and ONLY those (chat-shell.ts:58's
+       `narrow-start='stack'` default, both authoring a header AND a footer); the docs shell and
+       `ui-workspace-shell` are `narrow-start='collapse'` and cannot stack at all. */
+    :scope[narrow-start='stack'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']) {
+      --ui-super-shell-radius-block-end: var(--ui-super-shell-radius);
+    }
+    :scope[narrow-end='stack'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) {
+      --ui-super-shell-radius-block-start: var(--ui-super-shell-radius);
+    }
 
     /* SPEC-R15b (GH #260) — the narrow-stack canvas floor. Canvas's base `min-block-size: 0` (needed
        at WIDE so cross-axis stretch isn't fighting a floor) becomes a LIVE hazard once middle is a
@@ -433,6 +552,9 @@
          unchanged by the new margin). */
       max-inline-size: calc(100cqi - var(--ui-super-shell-bar-size) - var(--ui-super-shell-overlay-inset));
       box-shadow: var(--ui-super-shell-overlay-shadow);
+      /* ADR-0166 cl.6 (narrow overlay arms 3+4 of six) — see the mid-window block's rationale. */
+      --ui-super-shell-radius-block-start: var(--ui-super-shell-radius);
+      --ui-super-shell-radius-block-end: var(--ui-super-shell-radius);
     }
     :scope[data-narrow-open='start'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']) { inset-inline-start: var(--ui-super-shell-overlay-inset); }
     :scope[data-narrow-open='end'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) { inset-inline-end: var(--ui-super-shell-overlay-inset); }
@@ -536,6 +658,9 @@
       z-index: 2;
       max-inline-size: calc(100cqi - var(--ui-super-shell-bar-size) - var(--ui-super-shell-overlay-inset));
       box-shadow: var(--ui-super-shell-overlay-shadow);
+      /* ADR-0166 cl.6 (compact overlay arms 5+6 of six) — see the mid-window block's rationale. */
+      --ui-super-shell-radius-block-start: var(--ui-super-shell-radius);
+      --ui-super-shell-radius-block-end: var(--ui-super-shell-radius);
     }
     :scope[collapse-band='compact']:not([narrow-start='stack']):not([narrow-start='tabs'])[data-narrow-open='start'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']) { inset-inline-start: var(--ui-super-shell-overlay-inset); }
     :scope[collapse-band='compact']:not([narrow-end='stack']):not([narrow-end='tabs'])[data-narrow-open='end'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) { inset-inline-end: var(--ui-super-shell-overlay-inset); }

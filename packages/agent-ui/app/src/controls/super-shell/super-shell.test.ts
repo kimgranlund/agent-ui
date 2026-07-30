@@ -250,3 +250,140 @@ describe('ui-super-shell — pane-resizer forced-colors annotation (GH #185 pari
     expect(rule).toMatch(/forced-color-adjust:\s*none/)
   })
 })
+
+// ADR-0166 (GH #371) — the bar-seam / per-side-corner CSS contract, source-presence pinned (the
+// forced-colors precedent just above: pin the CSS TEXT of a rule jsdom cannot render). These pins exist
+// so DELETING a rule reds without a browser — the cross-engine measurement leg lives in
+// super-shell-bar-seam.browser.test.ts. Each pin names the clause it holds.
+describe('ui-super-shell — the bar-seam contract, source-pinned (ADR-0166, GH #371)', () => {
+  const css = readFileSync(`${process.cwd()}/packages/agent-ui/app/src/controls/super-shell/super-shell.css`, 'utf8') as string
+  // The token block is everything before the @scope rule; the styles block is everything after. Pinning
+  // against the right half is what makes "declared in :where()" vs "consumed in @scope" a real assertion
+  // rather than a substring search over the whole file (the styling-gates law). The split anchors on a
+  // LINE-INITIAL `@scope (` — the file's own header comment names `@scope (ui-super-shell)` in prose, and
+  // a bare indexOf on that string lands in the comment, silently making tokenBlock the header alone and
+  // stylesBlock the whole file (which passes every positive pin and every count vacuously).
+  const scopeAt = css.indexOf('\n@scope (')
+  expect(scopeAt, 'the line-initial @scope at-rule').toBeGreaterThan(-1)
+  const tokenBlock = css.slice(0, scopeAt)
+  const stylesBlock = css.slice(scopeAt)
+  /** The declaration body of a rule whose selector text contains `needle` (brace-matched). `which:'last'`
+   *  is for a selector that also appears as one arm of an EARLIER grouped rule — the per-side narrow-stack
+   *  restores, whose selectors are re-used verbatim from the stack arm they key off. */
+  const ruleBody = (needle: string, which: 'first' | 'last' = 'first'): string => {
+    const at = which === 'last' ? stylesBlock.lastIndexOf(needle) : stylesBlock.indexOf(needle)
+    expect(at, `selector not found in the @scope block: ${needle}`).toBeGreaterThan(-1)
+    const open = stylesBlock.indexOf('{', at)
+    let depth = 0
+    for (let i = open; i < stylesBlock.length; i++) {
+      if (stylesBlock[i] === '{') depth++
+      else if (stylesBlock[i] === '}') {
+        depth--
+        if (depth === 0) return stylesBlock.slice(open + 1, i)
+      }
+    }
+    throw new Error(`unbalanced rule for ${needle}`)
+  }
+
+  it('cl.2 — the seam token is declared in the :where() token block as ONE composite value (the TKT-0062 repoint law)', () => {
+    expect(tokenBlock).toMatch(/--ui-super-shell-bar-seam:\s*1px solid var\(--md-sys-color-neutral-outline-variant\);/)
+  })
+
+  it('cl.4 — BOTH block-axis radius tokens are declared in the token block, each chained to --ui-super-shell-radius', () => {
+    expect(tokenBlock).toMatch(/--ui-super-shell-radius-block-start:\s*var\(--ui-super-shell-radius\);/)
+    expect(tokenBlock).toMatch(/--ui-super-shell-radius-block-end:\s*var\(--ui-super-shell-radius\);/)
+  })
+
+  it('cl.1 — [data-part="frame"] declares NO gap, and the three inline-axis gap owners are untouched', () => {
+    expect(ruleBody("[data-part='frame'] {")).not.toMatch(/\bgap:/)
+    expect(tokenBlock).toMatch(/--ui-super-shell-gap:\s*var\(--ui-super-shell-module\);/)
+    expect(ruleBody("[data-part='bar'] {")).toMatch(/gap:\s*var\(--ui-super-shell-gap\);/)
+    expect(ruleBody("[data-part='middle'] {")).toMatch(/gap:\s*var\(--ui-super-shell-gap\);/)
+  })
+
+  it('cl.2 — each bar draws the seam on its OWN bar-facing edge, per-side, off the token', () => {
+    expect(ruleBody("[data-part='bar'][data-bar='header']")).toMatch(/border-block-end:\s*var\(--ui-super-shell-bar-seam\);/)
+    expect(ruleBody("[data-part='bar'][data-bar='footer']")).toMatch(/border-block-start:\s*var\(--ui-super-shell-bar-seam\);/)
+    // #253's no-radius-on-a-bar clause, re-affirmed: no bar rule declares any radius
+    expect(ruleBody("[data-part='bar'] {")).not.toMatch(/radius/)
+  })
+
+  it('cl.2 — the bar keeps box-sizing: border-box (what ABSORBS the seam inside the 54px instead of growing the bar)', () => {
+    expect(ruleBody("[data-part='bar'] {")).toMatch(/box-sizing:\s*border-box;/)
+    expect(ruleBody("[data-part='bar'] {")).toMatch(/min-block-size:\s*var\(--ui-super-shell-bar-size\);/)
+  })
+
+  it('cl.3 — BOTH frame bar-presence rules exist AND use the mandatory `> ` CHILD combinator', () => {
+    // The child combinator IS the mechanism: a `:has()` argument is not constrained by @scope's lower
+    // limit, so the descendant form matches an outer frame on a NESTED shell's bar. An edit "simplifying"
+    // it away compiles clean — this pin plus the nested browser probe are what red.
+    expect(stylesBlock).toMatch(/\[data-part='frame'\]:has\(>\s*\[data-bar='header'\]\)/)
+    expect(stylesBlock).toMatch(/\[data-part='frame'\]:has\(>\s*\[data-bar='footer'\]\)/)
+    expect(ruleBody("[data-part='frame']:has(> [data-bar='header'])")).toMatch(/--ui-super-shell-radius-block-start:\s*0;/)
+    expect(ruleBody("[data-part='frame']:has(> [data-bar='footer'])")).toMatch(/--ui-super-shell-radius-block-end:\s*0;/)
+    // no DESCENDANT-form variant of either rule may exist anywhere (the leak shape)
+    expect(stylesBlock).not.toMatch(/\[data-part='frame'\]:has\(\s*\[data-bar=/)
+  })
+
+  it('cl.4 — the carded parts consume the pair as the four LOGICAL longhands and declare no radius shorthand', () => {
+    const grouped = ruleBody("[data-part='rail'],")
+    expect(grouped).toMatch(/border-start-start-radius:\s*var\(--ui-super-shell-radius-block-start\);/)
+    expect(grouped).toMatch(/border-start-end-radius:\s*var\(--ui-super-shell-radius-block-start\);/)
+    expect(grouped).toMatch(/border-end-start-radius:\s*var\(--ui-super-shell-radius-block-end\);/)
+    expect(grouped).toMatch(/border-end-end-radius:\s*var\(--ui-super-shell-radius-block-end\);/)
+    // the three shorthands at rail/pane/pane-resizer are GONE (n10's negative half)
+    expect(stylesBlock).not.toMatch(/^\s+border-radius:\s*var\(--ui-super-shell-radius\)/m)
+  })
+
+  it('cl.6 — ALL SIX overlay arms restore BOTH pairs on the overlaid card (three blocks × two arms)', () => {
+    for (const anchor of [
+      "[data-auto-collapsed-start][data-narrow-open='start'] [data-part='middle']",
+      ":scope[data-narrow-open='start'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']),",
+      "[collapse-band='compact']:not([narrow-start='stack']):not([narrow-start='tabs'])[data-narrow-open='start']",
+    ]) {
+      const body = ruleBody(anchor)
+      expect(body, anchor).toMatch(/--ui-super-shell-radius-block-start:\s*var\(--ui-super-shell-radius\);/)
+      expect(body, anchor).toMatch(/--ui-super-shell-radius-block-end:\s*var\(--ui-super-shell-radius\);/)
+    }
+    // A census, so a FOURTH posture cannot be added without reading cl.6/cl.7: three overlay blocks plus
+    // one narrow-end='stack' arm restore block-start; three overlay blocks plus one narrow-start='stack'
+    // arm restore block-end.
+    expect(stylesBlock.match(/--ui-super-shell-radius-block-start:\s*var\(--ui-super-shell-radius\);/g) ?? []).toHaveLength(4)
+    expect(stylesBlock.match(/--ui-super-shell-radius-block-end:\s*var\(--ui-super-shell-radius\);/g) ?? []).toHaveLength(4)
+  })
+
+  it('cl.7 fork F2 — the narrow-stack restores are keyed PER SIDE and restore OPPOSITE pairs', () => {
+    // start-stacked ⇒ card at the column TOP ⇒ keeps block-start squared, restores block-END.
+    const startArm = ruleBody(":scope[narrow-start='stack'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']) {", 'last')
+    expect(startArm).toMatch(/--ui-super-shell-radius-block-end:\s*var\(--ui-super-shell-radius\);/)
+    expect(startArm).not.toMatch(/--ui-super-shell-radius-block-start:/)
+    // end-stacked ⇒ card at the column BOTTOM ⇒ the pairing inverts.
+    const endArm = ruleBody(":scope[narrow-end='stack'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) {", 'last')
+    expect(endArm).toMatch(/--ui-super-shell-radius-block-start:\s*var\(--ui-super-shell-radius\);/)
+    expect(endArm).not.toMatch(/--ui-super-shell-radius-block-end:/)
+  })
+
+  it('cl.7 exception C — the narrow-tabs strip owns its own block-start seam at one module THIRD', () => {
+    expect(ruleBody("ui-tabs[data-part='narrow-tabs'] {")).toMatch(/margin-block-start:\s*calc\(var\(--ui-super-shell-module\) \/ 3\);/)
+  })
+
+  it("cl.7 exception C — the strip composes ABOVE middle, which is why the clause's own pane-restore half is NOT built", () => {
+    // ADR-0166 Context fact 3 / cl.7 state the strip is a frame child "between middle and the footer".
+    // It is not: #buildNarrowTabs calls middle.before(strip). This pin holds the MEASURED order so the
+    // discrepancy cannot drift out of view before the record is repaired (escalated on GH #371).
+    const ts = readFileSync(`${process.cwd()}/packages/agent-ui/app/src/controls/super-shell/super-shell.ts`, 'utf8') as string
+    expect(ts).toMatch(/\.before\(strip\)/)
+    const el = document.createElement('ui-super-shell') as UISuperShellElement
+    el.setAttribute('narrow-end', 'tabs') // set BEFORE connect — #buildNarrowTabs runs once, in #compose
+    for (const slot of ['header', 'content', 'options-pane', 'footer']) {
+      const child = document.createElement('div')
+      child.setAttribute('data-slot', slot)
+      child.textContent = slot
+      el.append(child)
+    }
+    document.body.append(el)
+    mounted.push(el)
+    const frame = el.querySelector('[data-part="frame"]')!
+    expect([...frame.children].map((c) => c.getAttribute('data-part'))).toEqual(['bar', 'narrow-tabs', 'middle', 'bar'])
+  })
+})
