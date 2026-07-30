@@ -67,7 +67,9 @@
 // written — the identical posture the allowlist already gave hand-transcribed names. Guard inputs, in
 // order: archived verdict -> `DISPOSITION_ALLOWLIST` -> proceed. `DISPOSITION_ALLOWLIST` is DEMOTED,
 // never retired (clause 6): it keeps the cases a machine cannot state, and the paste-ready snippet below
-// is now optional curated prose rather than a record a human must remember to write.
+// is optional curated prose ON A CONDITION (ADR-0165's REV 2026-07-30, GH #361 reading (b)) — owed only
+// when the refused seed is DROPPED from `src/examples/` entirely; a seed KEPT on the shelf pending
+// repair still owes this entry, or the coverage gate reds.
 //
 // GH #335 defect 2 — an unrecognized flag used to be silently ignored and the tool proceeded to a real
 // mutating run (`import-seeds.ts --help` wrote to the corpus, discovered live). `parseArgs` now returns
