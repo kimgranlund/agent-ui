@@ -47,10 +47,14 @@ import './nav-rail.ts'
 //   3. The trigger's chevron carries a `transform` transition, so every leg settles past its duration
 //      before capture; a mid-rotation chevron is sub-tolerance churn on every run.
 //
-// The trailing `data-role="tag"` cell is deliberately ABSENT from the selected row: the trigger's label
-// derives from the selected item's whole `textContent`, which today concatenates label + tag ("Buttonnew").
-// That is a pre-existing defect in that derivation, reported rather than fixed in this wave — and a
-// baseline must not freeze it in as the reference.
+// The trailing `data-role="tag"` cell is ABSENT from the selected row, and that is now a HISTORICAL
+// constraint rather than a live one: the trigger's label used to derive from the selected item's whole
+// `textContent`, concatenating label + tag ("Buttonnew"), so a baseline framing a tagged selected row would
+// have frozen that defect in as the reference. GH #376 fixed the derivation — `#currentLabel()` reads the
+// item's `[data-part=label]` name cell now — so the fixture COULD carry a tag on the selected row today.
+// It deliberately still does not: changing it would re-base both baselines for no gain to the card-gestalt
+// claim these two legs exist to hold, and the label derivation is gated by nav-rail.test.ts's own #376
+// equality assertion, where it belongs.
 //
 // Side-effect imports — CSS load order (ADR-0003): foundation roles + dimensional ramp FIRST, then the
 // components barrel, then this family's CSS.

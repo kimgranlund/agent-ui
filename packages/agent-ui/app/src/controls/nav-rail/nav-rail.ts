@@ -330,11 +330,37 @@ export class UINavRailElement extends UIElement {
     return null
   }
 
-  /** The menu trigger's label — the selected item's text, else the first item's, else a fallback. */
+  /** The menu trigger's label — the selected item's NAME, else the first item's, else a fallback. */
   #currentLabel(): string {
     const items = [...this.querySelectorAll('ui-nav-rail-item')] as UINavRailItemElement[]
     const active = items.find((item) => item.selected)
-    return active?.textContent?.trim() || items[0]?.textContent?.trim() || 'Menu'
+    return this.#itemName(active) || this.#itemName(items[0]) || 'Menu'
+  }
+
+  /**
+   * ONE item's NAME cell, never its whole row (GH #376). The row is SPEC-R6's `name|tag` pair, so an
+   * item carrying a `[slot=trailing][data-role=tag]` adornment made `textContent` read "Buttonnew" —
+   * the label and the tag concatenated with nothing between them, since neither is a block box.
+   *
+   * TWO reads, because the item has two legitimate DOM shapes and the trigger's label effect can run
+   * in either. After upgrade, `#ensureActivator` (nav-rail-item.ts) has partitioned the row into
+   * leading / label / trailing and re-wrapped the label RUN in one synthetic `[data-part=label]` span —
+   * that span is the name cell, exactly. Before upgrade there is no such span: a rail connects before
+   * its children do (custom elements upgrade in tree order), so the first run of the label effect
+   * genuinely sees raw light DOM. The fallback applies the SAME partition rule the activator will —
+   * every direct child that is not slotted, plus the bare text nodes — rather than falling back to
+   * `textContent`, which would simply reinstate the defect on that path.
+   */
+  #itemName(item: UINavRailItemElement | undefined): string {
+    if (!item) return ''
+    const label = item.querySelector('[data-part="label"]')
+    if (label) return label.textContent?.trim() ?? ''
+    let text = ''
+    for (const node of item.childNodes) {
+      if (node instanceof Element && node.hasAttribute('slot')) continue
+      text += node.textContent ?? ''
+    }
+    return text.trim()
   }
 }
 
