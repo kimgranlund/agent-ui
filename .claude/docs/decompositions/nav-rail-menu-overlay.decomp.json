@@ -1,0 +1,192 @@
+{
+  "domain": "components",
+  "plan": true,
+  "_meta": {
+    "title": "GH #368 — ui-nav-rail collapse=\"menu\" adopts the fleet Overlay controller (top-layer, anchored, bordered card)",
+    "issue": "https://github.com/kimgranlund/agent-ui/issues/368",
+    "verdict": "BUG FIX inside the existing contract — NO ADR.",
+    "why_no_adr": [
+      "The fleet already owns exactly one mechanism for 'a floating panel anchored to a trigger': the Overlay controller (traits/overlay.ts) + platform-owned dismissal — agent-ui-component-patterns row 'A floating panel anchored to a trigger', ADR-0043 + ADR-0045. Adopting a row that already exists is not a fork.",
+      "SPEC-R5 AC2 ALREADY requires the panel to open 'overlaying the page (not reflowing it)' and be 'keyboard-dismissable (Escape or outside-click)'. position:absolute under-satisfies an accepted AC; satisfying it fully is a repair, not a new contract.",
+      "ADR-0130 cl.6 already routes the sibling arm (icon-popover) through the same shipped overlay primitives and cites ADR-0043/0045. The menu arm joining them REDUCES the number of overlay mechanisms in the family from two to one.",
+      "ADR-0130 contains NO clause requiring position:absolute or a zero-JS disclosure. LLD-C4's '<details> ported from _page.css' is a PORTING-FIDELITY note about the structure's provenance, not a ruled constraint — and the component already deliberately broke zero-JS by adding its own Escape/outside-click listeners (nav-rail.ts #wireDisclosure, documented as 'a deliberate upgrade the componentization earns').",
+      "The overlay CONTRACT is unchanged: same trait, same popover=auto light-dismiss, same ADR-0101 announce contract, same focus round-trip. Only this one arm's WIRING changes."
+    ],
+    "menu_vs_icon_popover_divergence": "The two arms diverge in CONTENT MODEL, never in overlay mechanism. icon-popover flattens one group's items into a composed ui-menu (menuitem semantics). collapse=\"menu\" collapses the WHOLE grouped rail — context-label headings (SPEC-R6) + name|tag two-column rows (ADR-0130 cl.7) — which ui-menu's menuitem content model cannot carry without losing both. So the menu arm calls overlay() DIRECTLY on its own panel, the ui-popover precedent (a generic disclosure overlay over arbitrary content), rather than composing ui-menu. Same trait, different content model.",
+    "anchor_positioning_finding": "Do NOT bet the fix on CSS anchor positioning. Measured in this repo's own gate: both engines report CSS.supports true for anchor-name / position-anchor / position-area / position-try-fallbacks — but Playwright's bundled WebKit is NOT Safari-release, so a green gate would NOT prove real-world support. traits/overlay.ts already ruled this: 'CSS anchor-positioning is a PROGRESSIVE ENHANCEMENT ... NOT a v1 dual-path requirement; the JS controller is the reliable path.' The JS measure-and-place controller (computePosition: flip + shift) needs no support bet and is already cross-engine-proven by menu/select/tooltip/popover.",
+    "per_side_border_finding": "Measured, both engines, panel open: borderTop/Right/Bottom/Left all compute to 1px in the correct outline color. The border is NOT missing — nav-rail.css:247's shorthand applies on all four sides. The real defect is that inset-inline:0 makes the panel FULL-BLEED (measured listW=300 == railW=300, listLeft=0 == railLeft=0), so its side borders sit exactly on the rail's own edges and read as the shell's edge rather than the menu's own card outline. Kim's 'border on all sides' is the perceptual report of a full-bleed band. Both halves of the report share ONE root cause, and one mechanism change fixes both — do NOT 'add' borders.",
+    "clipping_reproduced": "Measured, both engines: rail inside a single overflow:hidden ancestor 44px tall, panel opened — listTop=28 listBottom=122 vs clipperBottom=44, fullyInsideClipper=false, overflowBy=78px. 78 of the panel's 94px are clipped: ~83% of the menu invisible. The GH #260 class, reproduced cross-engine.",
+    "blast_radius": "SMALLER than the report assumes, and the risk is on the DEFAULT path instead. No shipped consumer rides collapse=\"menu\": site/pages/_page.ts:618 sets collapse=\"none\" (GH #170/ADR-0155 moved the site's narrow story to ui-super-shell) and settings.ts:164 sets collapse=\"drill-in\". ui-nav-rail has no site doc page, no gallery specimen, no sitemap entry. BUT 'menu' is the enum's index-0 DEFAULT (nav-rail.ts:64), so every <ui-nav-rail> that omits collapse gets the broken arm — the defect is on the default, which is why it still matters.",
+    "shell_spec_check": "Neither shell-archetypes-m5 clause constrains this. SPEC-R12 is a `display`-override/scope-proximity law (relevant only as a caution if a consumer ever overrides the panel's scoped display — it must tag-qualify). SPEC-R14/AC21's mid-window overlay is the SHELL's own pane-sized float, deliberately 'absolute over the canvas, inset within the middle row' so AC20's zero-overflow sweep holds — a different concept from a trigger-anchored flyout. Risk to verify at build: AC20's zero-overflow sweep must stay green now that a nav-rail panel opened inside the shell can escape to the top layer.",
+    "unanticipated": [
+      "STALE DOC (live docs page): site/pages/super-shell.ts:232-235 still teaches 'the docs site's own nav pane uses this so ui-nav-rail's collapse=\"menu\" dropdown takes over instead of the shell's hide/overlay arm (see it live in this very page's nav rail, narrow)'. False since GH #170/ADR-0155 — _page.ts sets collapse=\"none\". Repaired by node n11 in the same wave (stale context is a defect).",
+      "The menu arm has NO site surface at all — no doc page, no gallery specimen. Nothing demonstrates or visually regression-guards the arm being repaired. Flagged as an open question for Kim rather than silently scoped in.",
+      "Kim's screenshot cannot be sourced to any current repo surface (the only in-repo rail runs collapse=\"none\"). Worth confirming which surface it came from before the build freezes its reproduction case."
+    ]
+  },
+  "nodes": [
+    {
+      "id": "n1",
+      "label": "GH #368 — collapse=\"menu\" becomes a top-layer, anchored, bordered-card popover",
+      "leaf": false,
+      "justify": "grouping — the wave root"
+    },
+    {
+      "id": "n2",
+      "label": "mechanism: the menu arm's trigger + panel parts (nav-rail.ts)",
+      "leaf": true,
+      "accept": "`npm test` exits 0 with a jsdom assertion that a collapse=\"menu\" rail exposes exactly one `[data-part=\"trigger\"]` and one `[data-part=\"list\"]`, and that the list contains every authored `ui-nav-rail-group`/`ui-nav-rail-item` in authored order with its `[data-part=\"context-label\"]` and `[data-role=\"tag\"]` cells intact (SPEC-R6 anatomy survives the mechanism swap)."
+    },
+    {
+      "id": "n3",
+      "label": "mechanism: wire overlay() on the menu arm (popup = list, anchor = trigger)",
+      "leaf": true,
+      "accept": "`npm run test:browser:packages:app` exits 0 with a BOTH-ENGINE assertion that, with the panel open, `list.matches(':popover-open')` is true, `getComputedStyle(list).position === 'fixed'`, and `list.getAttribute('data-placement')` is a resolved placement; and that exactly one `toggle` fires per open and exactly one `close` + one `toggle` per close (the ADR-0101 announce contract, inherited not re-derived)."
+    },
+    {
+      "id": "n4",
+      "label": "mechanism: the narrow/wide arming seam (popover attribute vs the 40rem @container threshold)",
+      "leaf": true,
+      "accept": "BOTH-ENGINE: at a 900px wrapper the list is visible in flow with `:popover-open` false and computed `position` !== 'fixed' and the trigger `display: none`; at a 300px wrapper the trigger is visible and the list is not rendered until activated. Non-vacuous negative control: the 900px case must FAIL if the arming seam wires the overlay unconditionally."
+    },
+    {
+      "id": "n5",
+      "label": "mechanism: retire the hand-rolled Escape/outside-click listeners (superseded by platform light-dismiss)",
+      "leaf": true,
+      "accept": "`grep -c \"this.listen(document, 'click'\" packages/agent-ui/app/src/controls/nav-rail/nav-rail.ts` returns 0 AND the both-engine Escape and outside-click dismissal assertions still pass — dismissal is now platform-owned (popover=auto) with no bespoke duplicate."
+    },
+    {
+      "id": "n6",
+      "label": "geometry: the panel becomes a content-sized floating card (nav-rail.css)",
+      "leaf": true,
+      "accept": "BOTH-ENGINE with the panel open: all four of borderTopWidth/RightWidth/BottomWidth/LeftWidth compute to 1px in the `--ui-nav-rail-outline` color, AND `list.getBoundingClientRect().width < rail.getBoundingClientRect().width` (content-sized, no longer full-bleed — `inset-inline: 0` gone), AND computed `min-inline-size` and `max-inline-size` are both non-`none` (the menu.css floor/ceiling precedent, ADR-0021 collapse trap)."
+    },
+    {
+      "id": "n7",
+      "label": "geometry: panel block-size cap + scrolled overflow",
+      "leaf": true,
+      "accept": "BOTH-ENGINE: a 40-item rail's open panel satisfies `rect.height <= window.innerHeight` AND `list.scrollHeight > list.clientHeight` — a long rail's panel scrolls rather than escaping the viewport (the menu.css `--ui-menu-max-block-size` precedent, including its border-box +2px lesson)."
+    },
+    {
+      "id": "n8",
+      "label": "geometry: wide-arm inline integrity — no leftover overlay inline styles",
+      "leaf": true,
+      "accept": "BOTH-ENGINE: after an open → close → resize-to-wide cycle, `list.style.position === ''` and `list.style.top === ''` and `list.style.left === ''` (overlay()'s inline `position: fixed` residue is cleared), and the list's rect top equals the rail's content-box top (it renders inline, in flow)."
+    },
+    {
+      "id": "n9",
+      "label": "records: nav-rail.md descriptor refresh",
+      "leaf": true,
+      "accept": "`npm test` exits 0 including the nav-rail contract↔props trip-wire, with `nav-rail.md`'s `parts:` list exactly equal to the parts the shipped source creates (no stale `disclosure` entry if the `<details>` wrapper goes)."
+    },
+    {
+      "id": "n10",
+      "label": "records: SPEC-R5 AC3 — top-layer rendering + clipping-ancestor immunity as a checkable AC",
+      "leaf": true,
+      "accept": "`npm test` exits 0 (docs-grammar + adr gates) and `.claude/docs/spec/nav-rail-family.spec.md` carries a new SPEC-R5 AC3 naming top-layer rendering and clipping-ancestor immunity in both engines, with the doc's version-history row bumped per agent-ui-doc-standards."
+    },
+    {
+      "id": "n11",
+      "label": "records: repair the stale super-shell.ts collapse=\"menu\" teaching claim",
+      "leaf": true,
+      "accept": "`grep -c 'collapse=\"menu\" dropdown takes over' site/pages/super-shell.ts` returns 0, the replacement prose names ADR-0155's actual arrangement (the site nav runs `collapse=\"none\"`; the shell owns narrow), and `npm run check` exits 0."
+    },
+    {
+      "id": "n12",
+      "label": "gate: real-engine clipping-ancestor probe + negative control (the GH #260 class)",
+      "leaf": true,
+      "accept": "A new BOTH-ENGINE test mounts the rail inside a single `overflow: hidden` ancestor 44px tall, opens the panel, and asserts `list.matches(':popover-open')` is true AND the panel's own rect extends past the clipper's bottom while `document.elementFromPoint` at the panel's lowest row still returns a node inside the panel (i.e. it is painted and hittable, not clipped). Negative control: the same assertion must FAIL when `position: absolute` is restored in a scratch run — recorded in the build's findings."
+    },
+    {
+      "id": "n13",
+      "label": "gate: real-engine floating-card + per-side border assertion lands in the suite",
+      "leaf": true,
+      "accept": "The n6 geometry assertion lives in `nav-rail.browser.test.ts` and `npm run test:browser:packages:app` exits 0; the assertion is non-vacuous — restoring `inset-inline: 0` in a scratch run makes it FAIL (recorded)."
+    },
+    {
+      "id": "n14",
+      "label": "gate: real-engine dismissal + focus round-trip, both engines",
+      "leaf": true,
+      "accept": "`npm run test:browser:packages:app` exits 0 with BOTH-ENGINE assertions: Escape closes the panel and focus returns to `[data-part=\"trigger\"]`; an outside click closes it; on open, focus lands on the panel's first focusable descendant."
+    },
+    {
+      "id": "n15",
+      "label": "gate: jsdom suite updated for the new part structure",
+      "leaf": true,
+      "accept": "`npm test` exits 0 and the nav-rail jsdom suite contains no assertion depending on `<details>`/`HTMLDetailsElement.open` semantics that the mechanism swap removed (`grep -c 'HTMLDetailsElement' packages/agent-ui/app/src/controls/nav-rail/nav-rail.test.ts` returns 0 if the wrapper goes)."
+    },
+    {
+      "id": "n16",
+      "label": "gate: the @agent-ui/app size budget holds at exactly one red row",
+      "leaf": true,
+      "accept": "`npm run size` prints exactly ONE red row — the same single red row as the pre-change baseline captured in the same session; judged by the printed table, not a grep count."
+    }
+  ],
+  "actions": [
+    { "id": "a1", "label": "open the panel from its trigger" },
+    { "id": "a2", "label": "escape every clipping and stacking ancestor (render in #top-layer)" },
+    { "id": "a3", "label": "anchor the panel to its trigger, flipping and shifting at viewport edges" },
+    { "id": "a4", "label": "dismiss on Escape" },
+    { "id": "a5", "label": "dismiss on an outside click" },
+    { "id": "a6", "label": "return focus to the trigger on close" },
+    { "id": "a7", "label": "move focus into the panel on open" },
+    { "id": "a8", "label": "announce every open-state transition (toggle/close, ADR-0101)" },
+    { "id": "a9", "label": "read as a card bordered on all four sides" },
+    { "id": "a10", "label": "bound the panel's width with a floor and a ceiling" },
+    { "id": "a11", "label": "bound the panel's height and scroll the overflow" },
+    { "id": "a12", "label": "render the grouped list inline, in flow, at wide widths" },
+    { "id": "a13", "label": "keep the trigger inert chrome at wide widths" },
+    { "id": "a14", "label": "arm the overlay only below the collapse threshold" },
+    { "id": "a15", "label": "preserve the grouped anatomy (context labels + name|tag rows) inside the panel" },
+    { "id": "a16", "label": "prove the repair in Chromium AND WebKit" },
+    { "id": "a17", "label": "prove a clipping ancestor no longer traps the panel" },
+    { "id": "a18", "label": "keep the descriptor truthful to the shipped parts" },
+    { "id": "a19", "label": "state top-layer rendering as a checkable acceptance criterion" },
+    { "id": "a20", "label": "correct the stale narrow-story teaching claim on a live docs page" },
+    { "id": "a21", "label": "keep the jsdom legs green against the new part structure" },
+    { "id": "a22", "label": "hold the @agent-ui/app size budget" }
+  ],
+  "hosts": [
+    { "action": "a1", "node": "n2" },
+    { "action": "a1", "node": "n3" },
+    { "action": "a2", "node": "n3" },
+    { "action": "a3", "node": "n3" },
+    { "action": "a4", "node": "n5" },
+    { "action": "a5", "node": "n5" },
+    { "action": "a6", "node": "n3" },
+    { "action": "a7", "node": "n3" },
+    { "action": "a8", "node": "n3" },
+    { "action": "a9", "node": "n6" },
+    { "action": "a10", "node": "n6" },
+    { "action": "a11", "node": "n7" },
+    { "action": "a12", "node": "n8" },
+    { "action": "a13", "node": "n4" },
+    { "action": "a13", "node": "n8" },
+    { "action": "a14", "node": "n4" },
+    { "action": "a15", "node": "n2" },
+    { "action": "a16", "node": "n12" },
+    { "action": "a16", "node": "n13" },
+    { "action": "a16", "node": "n14" },
+    { "action": "a17", "node": "n12" },
+    { "action": "a18", "node": "n9" },
+    { "action": "a19", "node": "n10" },
+    { "action": "a20", "node": "n11" },
+    { "action": "a21", "node": "n15" },
+    { "action": "a22", "node": "n16" }
+  ],
+  "edges": [
+    { "from": "n2", "to": "n3", "why": "overlay() takes concrete popup + anchor element references — the trigger and panel parts must exist before the trait can be wired to them" },
+    { "from": "n3", "to": "n4", "why": "the arming seam toggles the popover attribute and the wiring the n3 leaf owns; it cannot be authored against a wiring that does not exist yet" },
+    { "from": "n3", "to": "n5", "why": "platform light-dismiss must be live before the hand-rolled Escape/outside-click listeners are deleted, or dismissal regresses between commits" },
+    { "from": "n3", "to": "n6", "why": "the card geometry is authored against overlay()'s position:fixed top-layer panel, not the old absolute in-flow box — the width floor/ceiling only makes sense once the panel is no longer inset-inline:0 by the containing block" },
+    { "from": "n6", "to": "n7", "why": "the block-size cap is computed against the card's own padding + border box, which n6 establishes (the menu.css border-box +2px lesson)" },
+    { "from": "n4", "to": "n8", "why": "wide-arm integrity depends on exactly how the arming seam leaves the popover attribute and overlay()'s inline style residue" },
+    { "from": "n2", "to": "n9", "why": "the descriptor's parts: list mirrors the parts the shipped source creates, so the parts must be settled first" },
+    { "from": "n3", "to": "n12", "why": "the clipping probe measures the top-layer escape the overlay wiring provides" },
+    { "from": "n10", "to": "n12", "why": "the probe asserts the AC's predicate, so the AC text lands first and the test cites it" },
+    { "from": "n6", "to": "n13", "why": "the border/card assertion measures the geometry n6 authors" },
+    { "from": "n5", "to": "n14", "why": "the dismissal and focus-round-trip assertions target the inherited overlay contract that n5 leaves as the sole owner" },
+    { "from": "n3", "to": "n15", "why": "the jsdom part assertions target the structure the mechanism swap produces" },
+    { "from": "n3", "to": "n16", "why": "the size row measures the shipped bytes, so the code must land before the budget is judged" }
+  ]
+}
