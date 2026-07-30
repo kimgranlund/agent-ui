@@ -386,4 +386,45 @@ describe('ui-super-shell — the bar-seam contract, source-pinned (ADR-0166, GH 
     const frame = el.querySelector('[data-part="frame"]')!
     expect([...frame.children].map((c) => c.getAttribute('data-part'))).toEqual(['bar', 'narrow-tabs', 'middle', 'bar'])
   })
+
+  // GH #381 — the overlay outline, source-pinned on the SAME split as the seam pins above (declared in
+  // :where(), consumed in @scope). The measurement leg is super-shell-bar-seam.browser.test.ts's #381
+  // suite; these exist so DELETING an arm reds under plain `npm test`.
+  it('#381 — the overlay-outline token is declared in the :where() token block as ONE composite value, on the fleet floating-card outline role', () => {
+    expect(tokenBlock).toMatch(/--ui-super-shell-overlay-outline:\s*1px solid var\(--md-sys-color-neutral-outline-variant\);/)
+    // and it is never re-declared inside @scope (the styling-gates law: declare in :where(), consume in @scope)
+    expect(stylesBlock).not.toMatch(/--ui-super-shell-overlay-outline:/)
+  })
+
+  it('#381 — ALL THREE overlay blocks draw the border off the token AND absorb it with box-sizing: border-box', () => {
+    for (const anchor of [
+      "[data-auto-collapsed-start][data-narrow-open='start'] [data-part='middle']",
+      ":scope[data-narrow-open='start'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']),",
+      "[collapse-band='compact']:not([narrow-start='stack']):not([narrow-start='tabs'])[data-narrow-open='start']",
+    ]) {
+      const body = ruleBody(anchor)
+      expect(body, anchor).toMatch(/border:\s*var\(--ui-super-shell-overlay-outline\);/)
+      // the absorb — without it a [data-part='rail'] overlay renders 2px wider than its 54px inline-size
+      expect(body, anchor).toMatch(/box-sizing:\s*border-box;/)
+      // cl.6's radius restore must SURVIVE alongside the border (the `border` shorthand resets
+      // border-image, not border-radius — pinned here so a "tidy-up" to a `border-*` longhand set or a
+      // shorthand reorder cannot quietly drop it)
+      expect(body, anchor).toMatch(/--ui-super-shell-radius-block-start:\s*var\(--ui-super-shell-radius\);/)
+    }
+    // A census: exactly three consumption sites, so a FOURTH floating posture cannot be added without
+    // reading this decision — and the count is what reds if one arm is deleted while the others stand.
+    expect(stylesBlock.match(/border:\s*var\(--ui-super-shell-overlay-outline\);/g) ?? []).toHaveLength(3)
+  })
+
+  it('#381 — the border rides ONLY the floating-overlay arms: no in-flow card and no inert posture gains one', () => {
+    // The narrow-STACK restore is flush against a bar that already draws --ui-super-shell-bar-seam on that
+    // same edge; a second hairline there doubles the seam to 2px. Recorded as a decision, not an omission.
+    for (const [label, anchor] of [
+      ['narrow-start stack restore', ":scope[narrow-start='stack'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']),"],
+      ['the base rail', "[data-part='rail'] {"],
+      ['the base pane', "[data-part='pane'] {"],
+    ] as const) {
+      expect(ruleBody(anchor), label).not.toMatch(/border:\s*var\(--ui-super-shell-overlay-outline\)/)
+    }
+  })
 })

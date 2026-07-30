@@ -42,6 +42,26 @@
   --ui-super-shell-radius-block-end: var(--ui-super-shell-radius);
   --ui-super-shell-surface: var(--md-sys-color-neutral-surface);
   --ui-super-shell-overlay-shadow: 0 0.25rem 1.5rem rgb(0 0 0 / 0.25);
+  /* GH #381 — the floating overlay card's OUTLINE, cast in the `--ui-super-shell-bar-seam` mold above:
+     ONE composite value, not a width/style/color trio, so the TKT-0062 repoint law gives a consumer
+     exactly one site to retune it (`0 solid transparent` for none, `2px dashed …` for a louder edge).
+     Kim's report, filed TWICE (GH #368's fix landed on ui-nav-rail's SIBLING `collapse="menu"` flyout —
+     the docs site runs `collapse="none"`, so its narrow story was always this shell arm): an overlay card
+     was distinguished by SURFACE COLOR + radius + shadow alone, and in the DARK scheme
+     `neutral-surface`-on-`neutral-surface` under a 0.25-alpha shadow is near-invisible — the card read as
+     an unbounded bleed at its top-left corner. Invisible to a light-scheme screenshot and to jsdom, which
+     is why this bug survived a sibling fix.
+     The ROLE is not a fresh choice: `--md-sys-color-neutral-outline-variant` is what every floating card
+     in the fleet already outlines with (`--ui-menu-outline`, `--ui-popover-outline`, and #368's own
+     `--ui-nav-rail-outline`), and what this file's `--ui-super-shell-bar-seam` and
+     `--ui-super-shell-resizer-ink` already chain to — a fourth spelling of the same edge would be drift.
+     The `1px` is a device-pixel hairline: SPEC-R11d/R11c's THIRD disposition rules a border WIDTH outside
+     the literal law categorically (no ladder rung to convert to), and it is out of AC19's scope twice over
+     exactly as the bar seam is — `border` is not one of AC19(b)'s property families, and the `solid` arm is
+     not dimension-shaped, so the minting check's shape gate returns false before any literal is scanned.
+     Deliberately NOT applied to the narrow-STACK arm or to the wide in-flow cards — see the note on the
+     stack restore rule below. */
+  --ui-super-shell-overlay-outline: 1px solid var(--md-sys-color-neutral-outline-variant);
   /* the floating overlay pane's margin from the viewport/container edges (Kim's shell-polish S2 ask):
      it read as a docked, corner-clipped card flush to inset-block/inline edges — floats as a popover-
      style panel instead. SPEC-R11a — overlay insets are FRAME-tier geometry, so this spells off the
@@ -432,6 +452,16 @@
     z-index: 2;
     max-inline-size: calc(100cqi - var(--ui-super-shell-bar-size) - var(--ui-super-shell-overlay-inset));
     box-shadow: var(--ui-super-shell-overlay-shadow);
+    /* GH #381 (mid-window overlay arms 1+2 of six) — the four-sided hairline. `border`, not four
+       longhands: an inset floating card faces nothing on any side, so all four edges are the same edge.
+       It rides INSIDE the card's existing footprint via the `box-sizing` below — the same absorb ADR-0166
+       cl.2 uses for the bar seam — so the R9d/R14 `max-inline-size` cap keeps meaning the OUTER width and
+       the far-edge canvas gap stays exactly one bar wide. A `[data-part='pane']` already declares
+       `border-box`; a `[data-part='rail']` overlay (the `global-nav` slot) does not, and would otherwise
+       render 56px wide off its 54px `inline-size`. The `border` shorthand resets `border-image`, NOT
+       `border-radius` — cl.6's restore below is untouched, and the browser suite pins that. */
+    border: var(--ui-super-shell-overlay-outline);
+    box-sizing: border-box;
     /* ADR-0166 cl.6 (mid-window overlay arms 1+2 of six) — an overlaid card is INSET, not flush: its
        `inset-block` holds it 0.75rem inside middle's own edges, so it touches no bar and stays FULLY
        round. Declared on the CARD, which beats the frame's inherited value with no specificity
@@ -498,6 +528,14 @@
       flex-direction: column;
       overflow-y: auto;
     }
+    /* GH #381 — this arm gets NO overlay outline, and the reason is mechanical, not an oversight. A
+       stacked side is IN FLOW and FLUSH: its bar-facing block edge butts against a bar that already draws
+       `--ui-super-shell-bar-seam` on that very edge, so a second hairline there would DOUBLE the seam to
+       2px — the exact "doubling an edge" failure the issue names, just in the opposite scheme. And its
+       canvas-facing edge is why cl.7's exception B exists at all: it faces a SIBLING, not the shell's
+       boundary. A stacked card is a full-bleed region, not a floating card; giving it a floating card's
+       outline is a design question for the design seat (both witnesses are `ui-chat-shell`), not the same
+       defect. Reported on #381 rather than fixed here. */
     :scope[narrow-start='stack'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']),
     :scope[narrow-end='stack'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) {
       display: block;
@@ -552,6 +590,9 @@
          unchanged by the new margin). */
       max-inline-size: calc(100cqi - var(--ui-super-shell-bar-size) - var(--ui-super-shell-overlay-inset));
       box-shadow: var(--ui-super-shell-overlay-shadow);
+      /* GH #381 (narrow overlay arms 3+4 of six) — see the mid-window block's rationale. */
+      border: var(--ui-super-shell-overlay-outline);
+      box-sizing: border-box;
       /* ADR-0166 cl.6 (narrow overlay arms 3+4 of six) — see the mid-window block's rationale. */
       --ui-super-shell-radius-block-start: var(--ui-super-shell-radius);
       --ui-super-shell-radius-block-end: var(--ui-super-shell-radius);
@@ -658,6 +699,11 @@
       z-index: 2;
       max-inline-size: calc(100cqi - var(--ui-super-shell-bar-size) - var(--ui-super-shell-overlay-inset));
       box-shadow: var(--ui-super-shell-overlay-shadow);
+      /* GH #381 (compact overlay arms 5+6 of six) — see the mid-window block's rationale. This is the arm
+         the DOCS SITE actually renders (`collapse-band='compact'` + `narrow-start='collapse'`, _page.ts),
+         i.e. the surface behind Kim's twice-filed report. */
+      border: var(--ui-super-shell-overlay-outline);
+      box-sizing: border-box;
       /* ADR-0166 cl.6 (compact overlay arms 5+6 of six) — see the mid-window block's rationale. */
       --ui-super-shell-radius-block-start: var(--ui-super-shell-radius);
       --ui-super-shell-radius-block-end: var(--ui-super-shell-radius);
