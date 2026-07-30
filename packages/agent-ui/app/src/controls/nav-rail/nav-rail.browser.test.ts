@@ -635,6 +635,38 @@ describe('ui-nav-rail collapse="menu" — crossing the threshold live (n4b) and 
     expect(getComputedStyle(list).display, `${server.browser}: the list did not return to flow`).not.toBe('none')
   })
 
+  it('ZERO RESIDUE: the band ResizeObserver is disconnected on host disconnect (C10)', async () => {
+    // The band observer is this wave's one NEW long-lived subscriber, and it can watch an ANCESTOR of the
+    // rail (under collapse-container="ancestor") — an observer that outlived its host would keep a foreign
+    // element alive and keep arming a detached panel. It rides a scope-owned effect whose disposer calls
+    // disconnect(); this proves that disposer actually fires. Counted by patching the prototype rather than
+    // replacing the class, so the real observer still does its real work in this same test.
+    const real = ResizeObserver.prototype.disconnect
+    let disconnects = 0
+    ResizeObserver.prototype.disconnect = function patched(this: ResizeObserver): void {
+      disconnects++
+      real.call(this)
+    }
+    try {
+      const el = document.createElement('ui-nav-rail')
+      el.append(makeItem('/a', 'Alpha'), makeItem('/b', 'Beta'))
+      const { wrapper } = mountRail(el, '300px')
+      await settle()
+      // Anti-vacuous: the observer must genuinely have been created and armed the band, or a passing
+      // disconnect count would prove nothing at all.
+      const { list } = menuParts(el)
+      expect(list.getAttribute('popover'), `${server.browser}: the band observer never armed — nothing to leak`).toBe('auto')
+      expect(disconnects, `${server.browser}: disconnected before the host even left the document`).toBe(0)
+
+      el.remove()
+      await settle()
+      expect(disconnects, `${server.browser}: the band ResizeObserver outlived its host`).toBeGreaterThan(0)
+      wrapper.remove()
+    } finally {
+      ResizeObserver.prototype.disconnect = real
+    }
+  })
+
   it('after open → close → resize-to-wide, every overlay inline style is cleared and the list is back in flow (n8)', async () => {
     // This leg exists because overlay() has NO reset path: it writes six inline styles on every position()
     // (overlay.ts:189-194), clears none of them in cleanup() (overlay.ts:334-350), and never un-sets the
