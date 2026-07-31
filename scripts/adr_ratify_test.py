@@ -30,6 +30,32 @@ ADR_0167_CELL = (
     "+ this ADR's ID; the shipped `./traits/overlay` bytes are UNCHANGED — PR #375 already built them)"
 )
 
+# ADR-0164's real Repairs cell (the nested-separator case: the single booking's parenthetical file
+# list carries its own ` · `s, which must NOT end the item). Copied verbatim 2026-07-31.
+ADR_0164_CELL = (
+    'none owed backward — an intake ADR resolving a home, not a defect. **On ratification+build**'
+    ' (the ADR-0162/0163 Repairs-row shape): `app/src/controls/entry-list/**` (new — `entry-'
+    'list.ts` moved verbatim · `entry-data.ts`, the generic core split out of `entries.ts` · '
+    '`entry-data.test.ts`, the core half of `entries.test.ts` moved with it · new `entry-'
+    'list.css` · a standalone mount smoke test) · `app/src/controls/agent-admin/{agent-admin.ts, '
+    'agent-admin.css, entries.ts, entries.test.ts, genui-pack-library.test.ts}` (imports re-'
+    'pointed; `entries.ts` keeps its name, loses its generic half; `entries.test.ts` keeps the '
+    'domain-half assertions; the entry-list style block moves out and its tokens repoint) · '
+    '`app/package.json` (+`./entry-list`, `./entry-list.css`, `./entry-data`) · '
+    '`app/src/index.ts` (re-pointed, names byte-identical) · the AC19 sheet-set one-line append ·'
+    ' two `agent-ui-composition-patterns` rows (cl.5)'
+)
+
+# ADR-0028's real cell — no booking at all, but three code-span `(` glyphs leave its raw paren
+# count +3. Proof that paren balancing must read code spans as opaque atoms.
+ADR_0028_CELL = (
+    "`a2ui-runtime SPEC-R10` (the `${…}` clause gains the function-expression form — the `(`-"
+    "bearing expression resolves, no longer renders literally) · `a2ui-renderer LLD-C10 §7` (the "
+    "`${…}` interpolator's classifier `(`-branch parses → `FunctionCall` → `evaluate`; the "
+    'function-expression arm moves from "deferred" to "delivered") · **NEW** `a2ui/renderer/fn-'
+    "expr.ts` (the function-expression tokenizer/parser)"
+)
+
 # ADR-0087's real cell — a books-nothing record.
 ADR_0087_CELL = (
     "*(none — sequencing/routing decision; edits no owning doc. Consistent with `PRD-A2`, runtime "
@@ -71,8 +97,29 @@ class BookedRepairs(unittest.TestCase):
     def test_cell_booking_nothing_yields_nothing(self) -> None:
         self.assertEqual(booked_repairs(cell_to_adr(ADR_0087_CELL)), [])
 
+    def test_0164_real_cell_keeps_its_nested_file_list_whole(self) -> None:
+        items = booked_repairs(cell_to_adr(ADR_0164_CELL))
+        self.assertEqual(len(items), 1, items)
+        item = items[0]
+        self.assertTrue(item.startswith("**On ratification+build**"), item)
+        # the ` · `s inside the `(new — …)` file list are nested, so the item runs to its close
+        self.assertTrue(item.endswith("a standalone mount smoke test)"), item)
+        self.assertIn("`entry-data.ts`, the generic core split out of `entries.ts`", item)
+        self.assertIn(item, ADR_0164_CELL)  # verbatim
+
+    def test_0028_real_cell_survives_its_unbalanced_code_span_parens(self) -> None:
+        # Books nothing, so the OUTPUT is [] either way — the point is that the three code-span
+        # `(` glyphs must not open a parenthetical that swallows the rest of the cell.
+        self.assertEqual(booked_repairs(cell_to_adr(ADR_0028_CELL)), [])
+
+    def test_a_code_span_paren_does_not_swallow_the_next_segment(self) -> None:
+        cell = "`foo.ts` (the `(`-branch, gated on ratification) · `bar.ts` (gated on ratification)"
+        items = booked_repairs(cell_to_adr(cell))
+        self.assertEqual(len(items), 2, items)
+        self.assertTrue(items[1].startswith("`bar.ts`"), items)
+
     def test_prefix_before_a_bold_booking_label_is_dropped(self) -> None:
-        # ADR-0164's shape: prose that books nothing, then a bold booking label mid-segment.
+        # The minimal shape behind ADR-0164: prose that books nothing, then a bold label mid-segment.
         cell = (
             "none owed backward — an intake ADR resolving a home, not a defect. "
             "**On ratification+build** (the ADR-0162/0163 Repairs-row shape): "

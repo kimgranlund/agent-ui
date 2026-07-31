@@ -62,11 +62,45 @@ def run(cmd: list[str]) -> str:
     return res.stdout
 
 
+def split_segments(cell: str) -> list[str]:
+    """Split a Repairs cell on ` · `, but only where the separator is not nested (GH #394).
+
+    A cell's segments are ` · `-delimited, EXCEPT that an author's parenthetical may carry its own
+    ` · ` list (ADR-0164's `(new — a.ts moved verbatim · b.ts split out · …)`): splitting there
+    truncates the booking mid-parenthetical. So the scan tracks paren depth and cuts only at depth 0.
+
+    Backtick code spans are opaque — no depth change, no cut inside one. ADR-0028's cell names three
+    `(` glyphs in code spans, which would otherwise open parentheticals that never close and swallow
+    the rest of the cell. A stray `)` at depth 0 clamps rather than going negative, so no cell shape
+    can make this raise.
+    """
+    pieces: list[str] = []
+    depth = start = i = 0
+    while i < len(cell):
+        ch = cell[i]
+        if ch == "`":
+            close = cell.find("`", i + 1)
+            i = len(cell) if close == -1 else close + 1
+            continue
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth = max(0, depth - 1)
+        elif depth == 0 and cell.startswith(SEGMENT_SEP, i):
+            pieces.append(cell[start:i])
+            i = start = i + len(SEGMENT_SEP)
+            continue
+        i += 1
+    pieces.append(cell[start:])
+    return pieces
+
+
 def booked_repairs(adr_text: str) -> list[str]:
     """The ADR's Repairs-cell items booked "on ratification", verbatim and in cell order.
 
     Pure: text in, strings out — no gh, no filesystem, no writes. The slice rule, derived from the
-    corpus of real cells: the cell splits on ` · `, each segment splits again ahead of any bold
+    corpus of real cells: the cell splits on ` · ` at paren depth 0 (`split_segments`), each segment
+    splits again ahead of any bold
     `**On ratification…**` label, and a piece survives only if it mentions "on ratification"
     (covering every attested phrasing — `gated on ratification`, `applied on ratification`,
     `on ratification+build:`). A cell with no such piece, a malformed row, or no Repairs row at all
@@ -76,7 +110,7 @@ def booked_repairs(adr_text: str) -> list[str]:
     if not m:
         return []
     items: list[str] = []
-    for segment in m.group(1).split(SEGMENT_SEP):
+    for segment in split_segments(m.group(1)):
         for piece in BOOKING_LABEL_RE.split(segment):
             piece = piece.strip()
             if piece and BOOKED_RE.search(piece):
