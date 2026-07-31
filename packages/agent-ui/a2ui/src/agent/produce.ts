@@ -253,11 +253,22 @@ interface RoundFailure {
 }
 
 /** Thrown when the loop exhausts `maxRounds` without a valid payload — the page shows a "could not
- * compose a valid surface" error, NOT a broken render (SPEC-R5). Carries the last round's failures. */
+ * compose a valid surface" error, NOT a broken render (SPEC-R5). Carries the last round's failures.
+ *
+ * GH #307 — the message used to join `f.code` only ("… (IDGRAPH)"), which cannot say WHICH of
+ * IDGRAPH's four members fired (`sid:root`, `sid:root-missing`, `comp->ref`, `sid:cycle` —
+ * `renderer/validate.ts:232-243`) or where. A live report naming only the code was undiagnosable
+ * without re-instrumenting the loop (exactly what happened investigating #307 itself). Each failure
+ * now renders as `CODE at path` (path omitted only when empty, e.g. a whole-payload PARSE failure),
+ * matching the wording already used in the self-correct feedback (`messagesFor`, same file) — one
+ * format, two audiences. `f.code` alone remains safe to surface to an end user (dev-proxy-plugin.ts /
+ * worker/index.ts's `GENERIC_FAILURE_MESSAGE` comment): `f.path` is likewise never raw upstream text,
+ * only A2UI ids the model itself emitted. */
 export class ProduceHalt extends Error {
   readonly failures: RoundFailure[]
   constructor(failures: RoundFailure[]) {
-    super(`produce: no valid surface within the round bound (${failures.map((f) => f.code).join(', ') || 'unknown'})`)
+    const rendered = failures.map((f) => `${f.code}${f.path ? ` at ${f.path}` : ''}`).join(', ') || 'unknown'
+    super(`produce: no valid surface within the round bound (${rendered})`)
     this.name = 'ProduceHalt'
     this.failures = failures
   }
