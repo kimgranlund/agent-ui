@@ -556,3 +556,18 @@ already measures (item 2 above) is the proof. Every inert-arm claim elsewhere in
 at every width, `a2ui-live` (item 5 above), and `ui-agent-admin` at WIDE only (the strip is `display: none`
 there) — is a frame-with-one-visible-child instance, so no other row of cl.5's matrix changes; only the
 STATED predicate does.
+
+**Addendum 2026-07-31 (GH #380, exception C's coordinated repair landed).** Two statements above are now
+false and this record's word on them is corrected here, in place, rather than left for a reader to trip
+over. Item 1's line 534-536 called exception C "HALF-BUILT by design" and said the active narrow-tab
+pane's radius restore "awaits a coordinated repair of this clause" — **that repair landed**: the pane
+restores its block-START pair under `:scope:has([data-part='narrow-tabs'])`, leaving block-END squared
+against the footer, exactly the form this REV already specified as correct. Item 1's line 457-460 also
+called the strip's `margin-block-start` "the ruled declaration verbatim" — it no longer is. **The seam
+moved INSIDE the strip's own border box**, consumed as `padding-block-start` off a new
+`--ui-super-shell-narrow-tabs-seam` token, per this REV's own "Not ruled here" alternative (line 498-499):
+composition-check.py's law is "a piece must not set its own outer margin," and the strip's old
+`margin-block-start` was the one seam in this whole record living outside its owner's border box. Kim
+accepted the −12px this REV measures (item 2 above) in the GH #380 Findings comment, 2026-07-31 — this
+repair holds that acceptance exactly: the strip's box footprint (`padding(6) + box-height` vs. the old
+`margin(6) + box-height`) is unchanged, so agent-admin's rendered geometry does not move a second time.

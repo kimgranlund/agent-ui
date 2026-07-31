@@ -103,8 +103,9 @@
      here and consumed as `padding-block-start` (absorbed INSIDE the strip's box, the same mold cl.2's
      `--ui-super-shell-bar-seam` uses for the bar) so the strip's own border-box sits flush against
      the box above it — no outer margin — while the visible tab row still starts the same 6px lower.
-     Same `/3` value, so agent-admin's rendered spacing (the accepted −12px, REV 2026-07-30) is
-     unchanged: `margin(6) + box(37)` and `box(37 + padding 6)` are the same 43px footprint. */
+     Same `/3` value, so agent-admin's rendered spacing (the −12px, MEASURED by the REV 2026-07-30 and
+     ACCEPTED by Kim in the GH #380 Findings comment, 2026-07-31) is unchanged: `margin(6) + box(37)`
+     and `box(37 + padding 6)` are the same 43px footprint. */
   --ui-super-shell-narrow-tabs-seam: calc(var(--ui-super-shell-module) / 3);
 }
 

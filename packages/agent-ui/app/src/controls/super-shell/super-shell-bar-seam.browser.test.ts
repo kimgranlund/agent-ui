@@ -228,8 +228,8 @@ describe('ADR-0166 cl.5 — the INERT arm (a bars-free shell) is untouched by th
     // `padding-block-start` inside its box (composition-check.py's law: "a piece must not set its own
     // outer margin"). Same footprint (`padding(6) + box-height` == the old `margin(6) + box-height`),
     // so the strip's OWN box is now flush against the frame's content edge (0px, not 6) while middle
-    // stays flush under the strip exactly as before — Kim's accepted −12px (REV 2026-07-30) is
-    // unmoved by this refactor.
+    // stays flush under the strip exactly as before — the −12px Kim accepted (GH #380 Findings
+    // comment, 2026-07-31; the REV 2026-07-30 only measured it) is unmoved by this refactor.
     const el = mount(['content', 'options-pane'], { width: 360, attrs: { 'narrow-end': 'tabs' } })
     const frame = q(el, '[data-part="frame"]')
     const strip = q(el, 'ui-tabs[data-part="narrow-tabs"]')
