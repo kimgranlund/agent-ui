@@ -526,7 +526,7 @@ the moment someone writes `0px` there instead. The gate's born-ZERO baseline and
 allowlist are therefore unchanged by this wave, and `shell-spacing-gate.test.ts` is not edited.
 Corollary for anyone writing a control here: **never anchor an AC19 negative control on `1px`** — it
 occurs in `_page.css` comments and in R11c's sanctioned `-1px` outlier, so a mutation there proves
-nothing (verified: a `1px`-valued probe token leaves the gate GREEN). Use a united literal that
+nothing (verified: a `1px`-valued probe token leaves the gate GREEN). Use a unique literal that
 occurs nowhere else.
 
 AC20 (extends §6) — **floors hold under passive resize, cross-engine.** With both sides authored

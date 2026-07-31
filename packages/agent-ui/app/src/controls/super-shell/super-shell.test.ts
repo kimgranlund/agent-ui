@@ -345,10 +345,11 @@ describe('ui-super-shell — the bar-seam contract, source-pinned (ADR-0166, GH 
       expect(body, anchor).toMatch(/--ui-super-shell-radius-block-start:\s*var\(--ui-super-shell-radius\);/)
       expect(body, anchor).toMatch(/--ui-super-shell-radius-block-end:\s*var\(--ui-super-shell-radius\);/)
     }
-    // A census, so a FOURTH posture cannot be added without reading cl.6/cl.7: three overlay blocks plus
-    // one narrow-end='stack' arm restore block-start; three overlay blocks plus one narrow-start='stack'
-    // arm restore block-end.
-    expect(stylesBlock.match(/--ui-super-shell-radius-block-start:\s*var\(--ui-super-shell-radius\);/g) ?? []).toHaveLength(4)
+    // A census, so a further posture cannot be added without reading cl.6/cl.7: three overlay blocks plus
+    // one narrow-end='stack' arm plus the GH #380 narrow-tab active-pane restore (exception C's other
+    // half) restore block-start (5); three overlay blocks plus one narrow-start='stack' arm restore
+    // block-end (4, unchanged — exception C's restore never touches block-end).
+    expect(stylesBlock.match(/--ui-super-shell-radius-block-start:\s*var\(--ui-super-shell-radius\);/g) ?? []).toHaveLength(5)
     expect(stylesBlock.match(/--ui-super-shell-radius-block-end:\s*var\(--ui-super-shell-radius\);/g) ?? []).toHaveLength(4)
   })
 
@@ -363,14 +364,17 @@ describe('ui-super-shell — the bar-seam contract, source-pinned (ADR-0166, GH 
     expect(endArm).not.toMatch(/--ui-super-shell-radius-block-end:/)
   })
 
-  it('cl.7 exception C — the narrow-tabs strip owns its own block-start seam at one module THIRD', () => {
-    expect(ruleBody("ui-tabs[data-part='narrow-tabs'] {")).toMatch(/margin-block-start:\s*calc\(var\(--ui-super-shell-module\) \/ 3\);/)
+  it('cl.7 exception C — the narrow-tabs strip owns its own block-start seam at one module THIRD, absorbed INSIDE its box (GH #380 — no self-owned outer margin)', () => {
+    const body = ruleBody("ui-tabs[data-part='narrow-tabs'] {")
+    expect(body).toMatch(/padding-block-start:\s*var\(--ui-super-shell-narrow-tabs-seam\);/)
+    expect(body).not.toMatch(/margin-block-start:/)
+    expect(tokenBlock).toMatch(/--ui-super-shell-narrow-tabs-seam:\s*calc\(var\(--ui-super-shell-module\) \/ 3\);/)
   })
 
-  it("cl.7 exception C — the strip composes ABOVE middle, which is why the clause's own pane-restore half is NOT built", () => {
-    // ADR-0166 Context fact 3 / cl.7 state the strip is a frame child "between middle and the footer".
-    // It is not: #buildNarrowTabs calls middle.before(strip). This pin holds the MEASURED order so the
-    // discrepancy cannot drift out of view before the record is repaired (escalated on GH #371).
+  it("cl.7 exception C — the strip composes ABOVE middle, and the active narrow-tab pane restores its block-START pair (GH #380's coordinated repair)", () => {
+    // ADR-0166 Context fact 3 / cl.7 originally state the strip is a frame child "between middle and the
+    // footer". It is not: #buildNarrowTabs calls middle.before(strip). This pin holds the MEASURED order
+    // so the discrepancy cannot drift out of view (escalated on GH #371, repaired on GH #380).
     const ts = readFileSync(`${process.cwd()}/packages/agent-ui/app/src/controls/super-shell/super-shell.ts`, 'utf8') as string
     expect(ts).toMatch(/\.before\(strip\)/)
     const el = document.createElement('ui-super-shell') as UISuperShellElement
@@ -385,6 +389,9 @@ describe('ui-super-shell — the bar-seam contract, source-pinned (ADR-0166, GH 
     mounted.push(el)
     const frame = el.querySelector('[data-part="frame"]')!
     expect([...frame.children].map((c) => c.getAttribute('data-part'))).toEqual(['bar', 'narrow-tabs', 'middle', 'bar'])
+    // the pane-restore half of exception C, source-pinned (measured cross-engine in the browser suite)
+    const narrowBody = ruleBody(":scope:has([data-part='narrow-tabs']) [data-part='pane'][data-narrow-tab-target][data-narrow-active] {")
+    expect(narrowBody).toMatch(/--ui-super-shell-radius-block-start:\s*var\(--ui-super-shell-radius\);/)
   })
 
   // GH #381 — the overlay outline, source-pinned on the SAME split as the seam pins above (declared in

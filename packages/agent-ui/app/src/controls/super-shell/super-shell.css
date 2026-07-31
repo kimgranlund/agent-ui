@@ -96,6 +96,17 @@
      NEVER also a fill. */
   --ui-super-shell-resizer-ink: var(--md-sys-color-neutral-outline-variant);
   --ui-super-shell-resizer-ink-hover: var(--md-sys-color-primary);
+  /* GH #380 (coordinated repair, the A5 drift) — ADR-0166 cl.7's strip seam was an OUTER
+     `margin-block-start` on `ui-tabs[data-part='narrow-tabs']` below, the one seam in this record
+     living outside its owner's border box: composition-check.py's own selftest law is "a piece must
+     not set its own outer margin; spacing BETWEEN pieces is the parent's gap / region grid." Minted
+     here and consumed as `padding-block-start` (absorbed INSIDE the strip's box, the same mold cl.2's
+     `--ui-super-shell-bar-seam` uses for the bar) so the strip's own border-box sits flush against
+     the box above it — no outer margin — while the visible tab row still starts the same 6px lower.
+     Same `/3` value, so agent-admin's rendered spacing (the −12px, MEASURED by the REV 2026-07-30 and
+     ACCEPTED by Kim in the GH #380 Findings comment, 2026-07-31) is unchanged: `margin(6) + box(37)`
+     and `box(37 + padding 6)` are the same 43px footprint. */
+  --ui-super-shell-narrow-tabs-seam: calc(var(--ui-super-shell-module) / 3);
 }
 
 /* `to (ui-super-shell)` sets the scope's LOWER boundary at any NESTED ui-super-shell (SPEC-R1b depth-2
@@ -364,23 +375,31 @@
      would read as an inter-card gap the strip is not (it is chrome spanning the frame, like a bar), and
      `0` would butt the strip's first tab against the box above it. Declared on the base (wide) rule
      rather than inside the narrow query because it is a static property of the strip; the strip is
-     `display: none` at wide, so it has no box for the margin to act on there.
-     NOTE — the other half of cl.7's exception C (an active narrow-tab pane restoring a radius pair) is
-     deliberately NOT BUILT, and the reason is a MEASURED contradiction in the clause's own premise, not
-     an omission. ADR-0166's Context fact 3 and cl.7 both state the strip is a frame child "between
-     `middle` and the footer"; `#buildNarrowTabs` actually calls `middle.before(strip)`
-     (super-shell.ts:870), so the real frame order is `header | narrow-tabs | middle | footer` (measured:
-     the strip sits ABOVE middle). The clause therefore names the wrong pair — it is a pane's
-     block-START that faces the strip, and its block-END still faces the footer — and building the
-     ruled block-END restore would round a corner that IS flush against the footer bar while leaving the
-     strip-facing pair squared: two defects instead of one. Live blast radius today is ZERO: the only
-     shipped `narrow-*='tabs'` author is `ui-agent-admin`, which composes no bar at all
-     (`content` + `options-pane`, agent-admin.ts:405/515/669), so neither frame `:has()` rule ever fires
-     on the one instance the strip ships in. Returned to the design seat for a coordinated repair (GH #371). */
+     `display: none` at wide, so it has no box for the padding to act on there.
+     GH #380 (coordinated repair, the A5 drift) — `padding-block-start`, not `margin-block-start`: see
+     `--ui-super-shell-narrow-tabs-seam`'s own declaration above for why (composition-check.py's "a
+     piece must not set its own outer margin" law) and the equal-footprint arithmetic that keeps
+     agent-admin's accepted −12px unchanged. `super-shell-bar-seam.browser.test.ts` pins both the
+     strip's own margin-block-start at 0 and the unchanged visible offset.
+     GH #380 (coordinated repair) — the other half of cl.7's exception C: an active narrow-tab PANE
+     restores its block-START corner pair. ADR-0166's Context fact 3 and cl.7 both stated the strip is a
+     frame child "between `middle` and the footer"; `#buildNarrowTabs` actually calls
+     `middle.before(strip)` (super-shell.ts:870), so the MEASURED frame order is
+     `header | narrow-tabs | middle | footer` (the strip sits ABOVE middle). The clause therefore named
+     the wrong pair — it is a pane's block-START that faces the strip, not its block-END, and its
+     block-END still faces the footer squared (`[data-part='frame']:has(> [data-bar='footer'])` above,
+     untouched). The restore below targets the pane specifically (not `canvas`, cl.4/cl.5's "canvas
+     paints no background — nothing to square"), and is unconditional (matching exception B's pattern,
+     line ~560): on a bars-free shell `--ui-super-shell-radius-block-start` is already the rounded value,
+     so re-declaring it there is a no-op, not a second defect. Live blast radius before this repair was
+     ZERO: the only shipped `narrow-*='tabs'` author is `ui-agent-admin`, which composes no bar at all
+     (`content` + `options-pane`, agent-admin.ts:405/515/669), so the frame `:has(header)` rule never
+     fired on the one instance the strip ships in — GH #380's browser test authors a header AND
+     `narrow-*='tabs'` together to create the exposure this prevents (the GH #253 wedge family). */
   ui-tabs[data-part='narrow-tabs'] {
     display: none;
     flex: 0 0 auto;
-    margin-block-start: calc(var(--ui-super-shell-module) / 3);
+    padding-block-start: var(--ui-super-shell-narrow-tabs-seam);
     --ui-tabs-strip-scrollbar-width: var(--ui-super-shell-scrollbar-width); /* SPEC-R10a — the strip's tablist viewport */
   }
 
@@ -653,6 +672,11 @@
       inline-size: auto;
       flex: 1 1 auto;
       overflow-y: auto;
+      /* ADR-0166 cl.7 exception C, GH #380 — this pane's block-start now faces the strip (see the
+         DOM-order note above the strip's own rule), not the header the frame-level `:has()` rule
+         squared it against. Restore is unconditional — see that same note for why a bars-free shell
+         re-declaring the already-round value is a no-op, not a second defect. */
+      --ui-super-shell-radius-block-start: var(--ui-super-shell-radius);
     }
     :scope:has([data-part='narrow-tabs']) [data-part='pane'][data-segmented][data-narrow-tab-target][data-narrow-active] {
       display: flex;
