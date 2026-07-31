@@ -96,6 +96,16 @@
      NEVER also a fill. */
   --ui-super-shell-resizer-ink: var(--md-sys-color-neutral-outline-variant);
   --ui-super-shell-resizer-ink-hover: var(--md-sys-color-primary);
+  /* GH #380 (coordinated repair, the A5 drift) — ADR-0166 cl.7's strip seam was an OUTER
+     `margin-block-start` on `ui-tabs[data-part='narrow-tabs']` below, the one seam in this record
+     living outside its owner's border box: composition-check.py's own selftest law is "a piece must
+     not set its own outer margin; spacing BETWEEN pieces is the parent's gap / region grid." Minted
+     here and consumed as `padding-block-start` (absorbed INSIDE the strip's box, the same mold cl.2's
+     `--ui-super-shell-bar-seam` uses for the bar) so the strip's own border-box sits flush against
+     the box above it — no outer margin — while the visible tab row still starts the same 6px lower.
+     Same `/3` value, so agent-admin's rendered spacing (the accepted −12px, REV 2026-07-30) is
+     unchanged: `margin(6) + box(37)` and `box(37 + padding 6)` are the same 43px footprint. */
+  --ui-super-shell-narrow-tabs-seam: calc(var(--ui-super-shell-module) / 3);
 }
 
 /* `to (ui-super-shell)` sets the scope's LOWER boundary at any NESTED ui-super-shell (SPEC-R1b depth-2
@@ -364,7 +374,12 @@
      would read as an inter-card gap the strip is not (it is chrome spanning the frame, like a bar), and
      `0` would butt the strip's first tab against the box above it. Declared on the base (wide) rule
      rather than inside the narrow query because it is a static property of the strip; the strip is
-     `display: none` at wide, so it has no box for the margin to act on there.
+     `display: none` at wide, so it has no box for the padding to act on there.
+     GH #380 (coordinated repair, the A5 drift) — `padding-block-start`, not `margin-block-start`: see
+     `--ui-super-shell-narrow-tabs-seam`'s own declaration above for why (composition-check.py's "a
+     piece must not set its own outer margin" law) and the equal-footprint arithmetic that keeps
+     agent-admin's accepted −12px unchanged. `super-shell-bar-seam.browser.test.ts` pins both the
+     strip's own margin-block-start at 0 and the unchanged visible offset.
      GH #380 (coordinated repair) — the other half of cl.7's exception C: an active narrow-tab PANE
      restores its block-START corner pair. ADR-0166's Context fact 3 and cl.7 both stated the strip is a
      frame child "between `middle` and the footer"; `#buildNarrowTabs` actually calls
@@ -383,7 +398,7 @@
   ui-tabs[data-part='narrow-tabs'] {
     display: none;
     flex: 0 0 auto;
-    margin-block-start: calc(var(--ui-super-shell-module) / 3);
+    padding-block-start: var(--ui-super-shell-narrow-tabs-seam);
     --ui-tabs-strip-scrollbar-width: var(--ui-super-shell-scrollbar-width); /* SPEC-R10a — the strip's tablist viewport */
   }
 

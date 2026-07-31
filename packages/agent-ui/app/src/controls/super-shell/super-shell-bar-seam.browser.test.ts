@@ -224,6 +224,12 @@ describe('ADR-0166 cl.5 — the INERT arm (a bars-free shell) is untouched by th
     // The gap-deletion inertness claim holds only for a frame with ONE visible child — which agent-admin
     // is at WIDE (the strip is display:none there), and which gen-ui-live's bars-free shell is at every
     // width. Escalated on GH #371 together with cl.7's DOM-order error.
+    // GH #380 (coordinated repair, the A5 drift) — the 6px moved from the strip's OWN outer margin to
+    // `padding-block-start` inside its box (composition-check.py's law: "a piece must not set its own
+    // outer margin"). Same footprint (`padding(6) + box-height` == the old `margin(6) + box-height`),
+    // so the strip's OWN box is now flush against the frame's content edge (0px, not 6) while middle
+    // stays flush under the strip exactly as before — Kim's accepted −12px (REV 2026-07-30) is
+    // unmoved by this refactor.
     const el = mount(['content', 'options-pane'], { width: 360, attrs: { 'narrow-end': 'tabs' } })
     const frame = q(el, '[data-part="frame"]')
     const strip = q(el, 'ui-tabs[data-part="narrow-tabs"]')
@@ -233,9 +239,10 @@ describe('ADR-0166 cl.5 — the INERT arm (a bars-free shell) is untouched by th
     // ...yet the frame has TWO visible children, which is why the deleted gap was not inert here
     expect([...frame.children].filter((c) => getComputedStyle(c as HTMLElement).display !== 'none')).toHaveLength(2)
     expect(['normal', '0px']).toContain(getComputedStyle(frame).rowGap)
-    expect(getComputedStyle(strip).marginBlockStart).toBe('6px')
-    // the strip now sits 6px below the frame's content edge, and middle is flush under the strip
-    expect(Math.round(strip.getBoundingClientRect().top - frame.getBoundingClientRect().top)).toBe(6)
+    expect(getComputedStyle(strip).marginBlockStart).toBe('0px') // no self-owned outer margin
+    expect(getComputedStyle(strip).paddingBlockStart).toBe('6px') // the seam, absorbed inside the box
+    // the strip's own box is now FLUSH against the frame's content edge, and middle is flush under the strip
+    expect(Math.round(strip.getBoundingClientRect().top - frame.getBoundingClientRect().top)).toBe(0)
     expect(Math.round(middle.getBoundingClientRect().top - strip.getBoundingClientRect().bottom)).toBe(0)
     // and the corner mechanism IS inert here, which is the half of cl.5 that does hold
     expectCorners(q(el, '[data-part="pane"]'), { start: '18px', end: '18px' }, 'the bars-free tabs shell\'s pane')
@@ -472,19 +479,33 @@ describe('ADR-0166 cl.7 — posture exception B (fork F2): in a COLUMN, a card\'
 })
 
 describe('ADR-0166 cl.7 — posture exception C: the narrow-tabs strip owns its own block-start seam', () => {
-  it('the strip is spaced from the box ABOVE it by exactly one module third (6px), not 0 and not 18', async () => {
+  it("GH #380 (the A5 drift repair) — the strip's OWN box sets no outer margin (composition law); the seam is INSIDE its border box as padding", async () => {
     const el = mount(['header', 'content', 'options-pane', 'footer'], { width: 360, attrs: { 'narrow-end': 'tabs' } })
     await el.updateComplete
     const strip = q(el, 'ui-tabs[data-part="narrow-tabs"]')
     expect(getComputedStyle(strip).display).not.toBe('none') // the strip is live at narrow
-    expect(getComputedStyle(strip).marginBlockStart).toBe('6px')
+    // No self-owned outer margin (composition-check.py's law: "a piece must not set its own outer margin").
+    expect(getComputedStyle(strip).marginBlockStart).toBe('0px')
+    // The seam itself moved INSIDE the box, absorbed as padding — same value, same mechanism cl.2's bar
+    // seam already uses (border, not margin, inside a border-box).
+    expect(getComputedStyle(strip).paddingBlockStart).toBe('6px')
     const header = q(el, '[data-bar="header"]').getBoundingClientRect()
+    // The strip's own border-box is now FLUSH against the header (0px gap) — the direct, measured proof
+    // the outer margin is gone, not just the property name.
+    expect(Math.round(strip.getBoundingClientRect().top - header.bottom)).toBe(0)
+  })
+
+  it("GH #380 — the strip's VISIBLE content (the tablist row) still starts 6px below the header, the same effective offset the old outer margin produced (agent-admin's accepted −12px is unchanged by this refactor)", async () => {
+    const el = mount(['header', 'content', 'options-pane', 'footer'], { width: 360, attrs: { 'narrow-end': 'tabs' } })
+    await el.updateComplete
+    const header = q(el, '[data-bar="header"]').getBoundingClientRect()
+    const tablist = q(el, 'ui-tabs[data-part="narrow-tabs"] [data-part="tablist"]')
     // MEASURED frame order is `header | narrow-tabs | middle | footer` (super-shell.ts's
     // `middle.before(strip)`), NOT the "between middle and the footer" ADR-0166 Context fact 3 and cl.7
     // originally asserted. So the strip's own seam sits under the HEADER, and it is the pane's
-    // block-START (not its block-END) that faces the strip — the coordinated repair's restore (below)
-    // targets that pair; see the order pin in super-shell.test.ts.
-    expect(Math.round(strip.getBoundingClientRect().top - header.bottom)).toBe(6)
+    // block-START (not its block-END) that faces the strip — the coordinated repair's corner restore
+    // (below) targets that pair; see the order pin in super-shell.test.ts.
+    expect(Math.round(tablist.getBoundingClientRect().top - header.bottom)).toBe(6)
   })
 
   it("the ACTIVE narrow-tab pane restores its block-START corner pair (it faces the strip, not the header) while block-END stays squared against the footer", async () => {
