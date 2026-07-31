@@ -457,6 +457,31 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
     expect(feedback.content).toMatch(/CATALOG at root\.elevation \(expected: "-3"\|"-2"\|"-1"\|"0"\|"1"\|"2"\|"3"\)/)
   })
 
+  // GH #397 — a live CATALOG halt: the model emitted `gap` on `CardContent` (a property `Row`/`Column`
+  // declare but `CardContent` does not — its interior child rhythm is a component-owned fixed default,
+  // ADR-0102 Lane A, card.css's `--ui-card-content-gap`). Before this fix, an UNKNOWN-PROPERTY CATALOG
+  // failure (component found, but `propName` has no PropDef) degraded to the bare "CATALOG at path"
+  // wording — same "WHERE but not WHAT" gap #288 closed for type-mismatch misses, just the sibling
+  // degrade branch. The feedback now names the component's actual valid property set, so a repeated
+  // wrong guess (the #286/#288/#307 live-repro pattern) has a concrete alternative to act on.
+  it('GH #397: an unknown-property CATALOG miss teaches the component\'s actual valid properties', async () => {
+    const INVALID_CARDCONTENT_GAP =
+      '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"root","component":"CardContent","gap":"sm"}]}}'
+    const VALID_CARDCONTENT =
+      '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"root","component":"CardContent","scrollable":true}]}}'
+    const { provider, calls, reqs } = stubProvider([INVALID_CARDCONTENT_GAP, VALID_CARDCONTENT])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+
+    expect(calls()).toBe(2)
+    const round2 = reqs()[1]!.messages
+    const feedback = round2.find((m) => m.role === 'user' && /INVALID/.test(m.content))!
+    expect(feedback.content).toMatch(/CATALOG at root\.gap \(CardContent has no "gap" property; valid properties: scrollable\)/)
+  })
+
   // GH #307 investigation — a PARSE failure (assembleFromRaw's per-line split handed an unparseable
   // fragment) carried NO diagnostic detail; live reproduction (the quiz persona's game loop) caught a
   // real model repeating the SAME mistake — a single JSON message pretty-printed across several physical

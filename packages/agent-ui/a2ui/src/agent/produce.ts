@@ -300,10 +300,13 @@ function queryOf(input: TurnInput, k: number): RetrieveQuery {
  * resolves the failing property's declared type/enum from `catalog` + the prior round's OWN parsed
  * output (`lastOutput` — the component's `component` type names which `ComponentDef` to look the
  * property up in) and appends `(expected: …)`, the SAME description `catalogInventory` renders
- * (`describePropType`, catalog.ts) — one source, so the two teaching surfaces never disagree. Resolves to
- * `''` (no change to the existing `CODE at path` wording) whenever the path isn't a resolvable
- * `componentId.prop` shape, the component isn't in `lastOutput`, or the property isn't declared —
- * unknown-component/unknown-property CATALOG failures (SPEC-R9) have no "expected type" to teach.
+ * (`describePropType`, catalog.ts) — one source, so the two teaching surfaces never disagree. GH #397
+ * extends the SAME resolver to the sibling unknown-property case (component known, property not declared
+ * on it — e.g. a `gap` guessed off a sibling component's shape): it appends the component's actual
+ * declared property set instead of degrading silently. Resolves to `''` (no change to the existing
+ * `CODE at path` wording) only when the path isn't a resolvable `componentId.prop` shape or the
+ * component type itself isn't in `lastOutput`/`catalog` — a genuinely unknown-component-type CATALOG
+ * failure (SPEC-R9) has no declared shape to teach at all.
  */
 /**
  * GH #307 investigation — a PARSE failure (`RoundFailure.path === ''`, `assembleFromRaw` returned
@@ -433,7 +436,15 @@ function findComponentById(id: string, output: A2uiOutput): A2uiComponent | unde
 
 /** GH #288 — resolve a `CATALOG` failure's expected type/enum, or `''` when unresolvable (see
  *  `messagesFor`'s doc comment for every degrade case). Only `CATALOG` failures carry a catalog-declared
- *  property to describe; every other failure code (`PARSE`/`SCHEMA`/`FEED_SCOPE`/…) degrades to `''`. */
+ *  property to describe; every other failure code (`PARSE`/`SCHEMA`/`FEED_SCOPE`/…) degrades to `''`.
+ *
+ * GH #397 — a sibling degrade branch to #288's own: a `component.propName` path where the COMPONENT is
+ * known but the PROPERTY is not (the model guessed a prop the catalog never declared on that type — e.g.
+ * `gap` on `CardContent`, a property `Row`/`Column` DO declare, ADR-0102 Lane A/B asymmetry) used to
+ * degrade to the same bare "CATALOG at path" wording as the genuinely-unresolvable unknown-component-type
+ * case, teaching nothing about what IS valid there. It now names the component's actual declared property
+ * set, so a repeated wrong guess off a sibling component's shape has a concrete alternative to act on.
+ */
 function expectedTypeNote(failure: RoundFailure, catalog: Catalog, lastOutput: A2uiOutput | undefined): string {
   if (failure.code !== 'CATALOG' || lastOutput === undefined) return ''
   const dot = failure.path.lastIndexOf('.')
@@ -442,9 +453,16 @@ function expectedTypeNote(failure: RoundFailure, catalog: Catalog, lastOutput: A
   const propName = failure.path.slice(dot + 1)
   const component = findComponentById(componentId, lastOutput)
   if (!component) return ''
-  const pd = catalog.components[component.component]?.properties[propName]
-  if (!pd) return '' // unknown property — nothing declared to describe
-  return ` (expected: ${describePropType(pd)})`
+  const def = catalog.components[component.component]
+  if (!def) return '' // component type itself unresolvable — nothing declared to describe
+  const pd = def.properties[propName]
+  if (pd) return ` (expected: ${describePropType(pd)})`
+  // Unknown property: the component type IS known, so its actual declared property set is a real,
+  // resolvable constraint — name it instead of degrading silently (GH #397).
+  const validProps = Object.keys(def.properties)
+  return validProps.length > 0
+    ? ` (${component.component} has no "${propName}" property; valid properties: ${validProps.join(', ')})`
+    : ` (${component.component} has no declared properties)`
 }
 
 /** Strip a single wrapping markdown code fence (```json … ```), if the model added one despite the
