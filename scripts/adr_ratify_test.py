@@ -16,7 +16,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from adr_ratify import booked_repairs  # noqa: E402
+from adr_ratify import REPAIRS_ROW_RE, booked_repairs  # noqa: E402
 
 # ADR-0167's real Repairs cell (the hard case: two bold-labelled bookings in ONE ` · `-free cell,
 # one plain "On ratification", one "On ratification+build"). Copied verbatim 2026-07-31.
@@ -46,18 +46,23 @@ ADR_0164_CELL = (
     ' two `agent-ui-composition-patterns` rows (cl.5)'
 )
 
-# ADR-0028's real cell — no booking at all, but three code-span `(` glyphs leave its raw paren
-# count +3. Proof that paren balancing must read code spans as opaque atoms.
+# ADR-0028's real cell, WHOLE (720 chars) — no booking at all, but three code-span `(` glyphs
+# leave its raw paren count +3, the corpus's only unbalanced cell. Proof that paren balancing must
+# read code spans as opaque atoms. Copied verbatim 2026-07-31.
 ADR_0028_CELL = (
-    "`a2ui-runtime SPEC-R10` (the `${…}` clause gains the function-expression form — the `(`-"
-    "bearing expression resolves, no longer renders literally) · `a2ui-renderer LLD-C10 §7` (the "
-    "`${…}` interpolator's classifier `(`-branch parses → `FunctionCall` → `evaluate`; the "
+    '`a2ui-runtime SPEC-R10` (the `${…}` clause gains the function-expression form — the '
+    '`(`-bearing expression resolves, no longer renders literally) · `a2ui-renderer LLD-C10 §7` '
+    "(the `${…}` interpolator's classifier `(`-branch parses → `FunctionCall` → `evaluate`; the "
     'function-expression arm moves from "deferred" to "delivered") · **NEW** `a2ui/renderer/fn-'
-    "expr.ts` (the function-expression tokenizer/parser)"
+    'expr.ts` (the function-expression tokenizer/parser) · `a2ui/renderer/interpolate.ts` (the '
+    "`body.includes('(')` classifier branch swaps verbatim-render → parse+evaluate; `interpolate` "
+    'signature gains `emitError`+`registry` to reach `evaluate`) · `a2ui/renderer/functions.ts` '
+    '(`resolveValue` threads `emitError`+`registry` into `interpolate` — both already in scope)'
 )
 
-# ADR-0087's real cell — a books-nothing record.
-ADR_0087_CELL = (
+# ADR-0001's real cell — a books-nothing record. (Carried the label ADR_0087 until 2026-07-31; the
+# text was always ADR-0001's, so the FIXTURE moved to its true owner rather than the text changing.)
+ADR_0001_CELL = (
     "*(none — sequencing/routing decision; edits no owning doc. Consistent with `PRD-A2`, runtime "
     "`SPEC-R11`/`SPEC-N6`, renderer `LLD-C11`, catalog `SPEC-R1`/`R2`/`R7`.)*"
 )
@@ -95,7 +100,7 @@ class BookedRepairs(unittest.TestCase):
         self.assertTrue(items[1].startswith("NEW `packages/agent-ui/icons/` workspace"))
 
     def test_cell_booking_nothing_yields_nothing(self) -> None:
-        self.assertEqual(booked_repairs(cell_to_adr(ADR_0087_CELL)), [])
+        self.assertEqual(booked_repairs(cell_to_adr(ADR_0001_CELL)), [])
 
     def test_0164_real_cell_keeps_its_nested_file_list_whole(self) -> None:
         items = booked_repairs(cell_to_adr(ADR_0164_CELL))
@@ -135,6 +140,31 @@ class BookedRepairs(unittest.TestCase):
         self.assertEqual(booked_repairs(cell_to_adr("")), [])
         self.assertEqual(booked_repairs(cell_to_adr(" · · ")), [])
         self.assertEqual(booked_repairs("> | **Repairs** | unterminated row"), [])
+
+
+class FixturesMatchTheRealCells(unittest.TestCase):
+    """Every fixture above claims to be some ADR's REAL cell — so prove it against the file.
+
+    Both fixture defects found in review were this drift: one cell carried a neighbour's ID, one was
+    a silent truncation whose comment then described the WHOLE cell's paren count. A fixture that
+    only claims to be real is worth nothing; this reads the ADR and compares. Skips (never fails)
+    when the corpus is absent, so the parser test stays runnable outside a checkout.
+    """
+
+    def test_each_fixture_is_its_named_adr_cell_verbatim(self) -> None:
+        adr_dir = Path(__file__).resolve().parent.parent / ".claude" / "docs" / "adr"
+        if not adr_dir.is_dir():
+            self.skipTest(f"no ADR corpus at {adr_dir}")
+        for adr_id, fixture in (
+            ("0001", ADR_0001_CELL), ("0028", ADR_0028_CELL), ("0065", ADR_0065_CELL),
+            ("0164", ADR_0164_CELL), ("0167", ADR_0167_CELL),
+        ):
+            with self.subTest(adr=adr_id):
+                files = sorted(adr_dir.glob(f"{adr_id}-*.md"))
+                self.assertEqual(len(files), 1, f"{len(files)} files match {adr_id}-*.md")
+                row = REPAIRS_ROW_RE.search(files[0].read_text(encoding="utf-8"))
+                self.assertIsNotNone(row, f"{files[0].name} has no Repairs row")
+                self.assertEqual(fixture, row.group(1), f"fixture drifted from {files[0].name}")
 
 
 if __name__ == "__main__":
