@@ -1,7 +1,5 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 `agent-ui` is a zero-dependency, signals-based web-component library (one ruled exception: the opt-in
 `@agent-ui/code/editor` surface adopts CodeMirror 6, lazy-loaded — ADR-0139; every default barrel stays
 dependency-free) authored in strict, modern
@@ -12,16 +10,11 @@ Plan `.claude/docs/plan.md` · Goals + per-milestone DoD `.claude/docs/goals.md`
 
 ## Commands
 
-- `npm run check` — the standing gate, four steps: three `noEmit` type steps — `tsc` (packages) `&& check:site` (the docs site's own tsconfig) `&& check:tools` (`tsconfig.tools.json` — scripts + a2ui tools) — then `check:scripts` (`python3 scripts/adr_ratify_test.py`, the stdlib-only unit test for `adr_ratify.py`'s pure Repairs-cell parser; GH #394)
+- `npm run check` — the standing gate: `tsc` (packages) `&& check:site && check:tools && check:scripts`
+  (four `noEmit`/test steps; see `package.json`)
 - `npm test` — Vitest (jsdom), once · `npm run test:watch` — watch mode
-- `npm run test:browser` — the real-engine gate, SIX SEQUENTIAL shards (packages:components →
-  packages:app → packages:rest → site → focus-timing → visual; GH #41 — never re-monolith it or add a
-  heap bump; a single shard nearing the default ceiling splits further — the packages project split
-  2026-07-19 (measured red on main pre-diff), and :rest split again the same day when it flipped 134
-  under load). `focus-timing` (GH #56, 2026-07-19) is a NAMED, CLOSED set of focus/keyboard/scroll-
-  timing files pulled out of `packages`/`site` and run with zero file parallelism — they flake under
-  concurrent-page focus contention, not component defects (each passes solo); a future addition to
-  that class is a one-line append to `vitest.browser.config.ts`'s `FOCUS_TIMING_FILES`, not a new shard.
+- `npm run test:browser` — the real-engine gate, six sequential shards (never re-monolith it or add
+  a heap bump — shard-splitting history + the `focus-timing` extension rule: `agent-ui-component-testing`)
 - `npm run dev` / `npm run build` — the docs site (`site/`) is the app entry; build live since the
   ADR-0077 wave, incl. the G8 `<component-gallery>` (`gallery.html`)
 
@@ -36,8 +29,9 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
   - `dom/` — `UIElement`/`UIFormElement`, props, template, directives; imports only `../reactive`
   - `traits/` — `(host, opts) => cleanup` traits + controllers, invoked directly from `connected()` (no `host.use()`)
   - `controls/` — `ui-*` FACE controls; one folder per component; self-define on import
-- `packages/agent-ui/shared/` — `@agent-ui/shared`, cross-cutting tokens/styles/utility types. Color
-  `tokens.css` adopted (`src/tokens/`, exported as `@agent-ui/shared/tokens.css`); dimensional/runtime tokens land G5
+- `packages/agent-ui/shared/` — `@agent-ui/shared`, cross-cutting tokens/styles/utility types.
+  Color `tokens.css` + dimensional/runtime `dimensions.css` both live in `src/tokens/`, exported
+  as `@agent-ui/shared/tokens.css` (G5, done)
 - `packages/agent-ui/a2ui/` — `@agent-ui/a2ui`, the A2UI layer (team-led; docs on the unified map — `.claude/docs/{spec,lld,prd}/`); depends on `@agent-ui/components`. Export surfaces: `.` (renderer/validator/catalog) · `./examples` (seed shelf) · `./corpus` (pure store) · `./agent` (the NODE-FIRST producer toolkit — `buildSystemPrompt`/`produce`/the `AgentTransport`+`Session` seam/mini-skills; ADR-0137/TKT-0072, portable core in `src/agent/`, the key/dev-proxy/registry shell stays site-internal in `tools/agent/`; the root `.` barrel carries zero producer bytes)
 - `packages/agent-ui/a2a/` — `@agent-ui/a2a`, the A2A (Agent2Agent) protocol layer: wire types + validation pinned to spec v0.3.0, the tic-tac-toe arena (isolation-proven agent-vs-agent matches), and its own concept/demo corpus shards; zero deps
 - `packages/agent-ui/icons/` — `@agent-ui/icons`, swappable icon-pack adapter (pure core + `./phosphor` subpath; ADR-0065/0066); zero deps
@@ -81,10 +75,4 @@ npm-workspaces monorepo; source lives under `packages/agent-ui/*`.
 
 - Run `npm run check && npm test` green before treating a change as done — judge gates by EXIT CODES,
   never by grepping output (a piped grep-count masked a red `check` and an OOM'd browser run, 2026-07-19).
-- A fresh worktree WITHOUT its own `npm install` resolves `@agent-ui/*` through the MAIN checkout's
-  node_modules (import-resolving tests/builds silently exercise main's sources, and Vite's fs-allow
-  denies `?raw` modules) — install in the worktree and `readlink node_modules/@agent-ui/shared` before
-  trusting any import-resolving gate.
-
-<!-- Coherence gates (naming/layering/contract-drift/size/zero-native) are scripts + a planned Stop/pre-commit hook, NOT prose rules — see .claude/docs/process.md §1. Enforcement lives there, not in this file. -->
-<!-- Architecture detail lives in .claude/docs/plan.md; the buildout sequence + DoD in .claude/docs/goals.md — referenced as paths, not @-inlined, to keep standing context thin. -->
+- Worktree gate trap: `agent-ui-component-testing`'s Traps section.

@@ -81,6 +81,10 @@ exemplars ARE the standard — read them, don't re-derive.
   a banner comment quoting `@scope (ui-x)` or `var(--token)` matches a naive regex and produced
   a 44-file false census where the comment-stripped truth was 9 (TKT-0066 item 5's sweep).
   Pattern: `stripComments` in `controls/styling-gates.test.ts`.
+- A fresh worktree WITHOUT its own `npm install` resolves `@agent-ui/*` through the MAIN
+  checkout's node_modules — import-resolving tests/builds silently exercise main's sources, and
+  Vite's fs-allow denies `?raw` modules. Install in the worktree and `readlink
+  node_modules/@agent-ui/shared` before trusting any import-resolving gate.
 
 ## Settle helpers — writer vs observer
 
@@ -105,6 +109,18 @@ back, or OBSERVE an animation it does not drive? (GH #359/#364/#365/#366.)
 - Before porting a fix between helpers: re-read the CURRENT upstream (one port faithfully
   copied a pre-fix snapshot), and check every call site discards or consumes the return — a
   throw is only safe where the value is discarded.
+
+## Browser-shard discipline
+
+`npm run test:browser` runs SIX SEQUENTIAL shards (packages:components → packages:app →
+packages:rest → site → focus-timing → visual; GH #41) — never re-monolith it or add a heap
+bump. A single shard nearing the default ceiling splits further: the `packages` project split
+2026-07-19 (measured red on `main` pre-diff), and `:rest` split again the same day when it
+flipped 134 under load. `focus-timing` (GH #56, 2026-07-19) is a NAMED, CLOSED set of
+focus/keyboard/scroll-timing files pulled out of `packages`/`site` and run with zero file
+parallelism — they flake under concurrent-page focus contention, not component defects (each
+passes solo); a future addition to that class is a one-line append to
+`vitest.browser.config.ts`'s `FOCUS_TIMING_FILES`, not a new shard.
 
 ## The gates (before a control-wave commit)
 
