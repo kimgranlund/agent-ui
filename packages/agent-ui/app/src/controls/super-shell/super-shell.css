@@ -365,18 +365,21 @@
      `0` would butt the strip's first tab against the box above it. Declared on the base (wide) rule
      rather than inside the narrow query because it is a static property of the strip; the strip is
      `display: none` at wide, so it has no box for the margin to act on there.
-     NOTE — the other half of cl.7's exception C (an active narrow-tab pane restoring a radius pair) is
-     deliberately NOT BUILT, and the reason is a MEASURED contradiction in the clause's own premise, not
-     an omission. ADR-0166's Context fact 3 and cl.7 both state the strip is a frame child "between
-     `middle` and the footer"; `#buildNarrowTabs` actually calls `middle.before(strip)`
-     (super-shell.ts:870), so the real frame order is `header | narrow-tabs | middle | footer` (measured:
-     the strip sits ABOVE middle). The clause therefore names the wrong pair — it is a pane's
-     block-START that faces the strip, and its block-END still faces the footer — and building the
-     ruled block-END restore would round a corner that IS flush against the footer bar while leaving the
-     strip-facing pair squared: two defects instead of one. Live blast radius today is ZERO: the only
-     shipped `narrow-*='tabs'` author is `ui-agent-admin`, which composes no bar at all
-     (`content` + `options-pane`, agent-admin.ts:405/515/669), so neither frame `:has()` rule ever fires
-     on the one instance the strip ships in. Returned to the design seat for a coordinated repair (GH #371). */
+     GH #380 (coordinated repair) — the other half of cl.7's exception C: an active narrow-tab PANE
+     restores its block-START corner pair. ADR-0166's Context fact 3 and cl.7 both stated the strip is a
+     frame child "between `middle` and the footer"; `#buildNarrowTabs` actually calls
+     `middle.before(strip)` (super-shell.ts:870), so the MEASURED frame order is
+     `header | narrow-tabs | middle | footer` (the strip sits ABOVE middle). The clause therefore named
+     the wrong pair — it is a pane's block-START that faces the strip, not its block-END, and its
+     block-END still faces the footer squared (`[data-part='frame']:has(> [data-bar='footer'])` above,
+     untouched). The restore below targets the pane specifically (not `canvas`, cl.4/cl.5's "canvas
+     paints no background — nothing to square"), and is unconditional (matching exception B's pattern,
+     line ~560): on a bars-free shell `--ui-super-shell-radius-block-start` is already the rounded value,
+     so re-declaring it there is a no-op, not a second defect. Live blast radius before this repair was
+     ZERO: the only shipped `narrow-*='tabs'` author is `ui-agent-admin`, which composes no bar at all
+     (`content` + `options-pane`, agent-admin.ts:405/515/669), so the frame `:has(header)` rule never
+     fired on the one instance the strip ships in — GH #380's browser test authors a header AND
+     `narrow-*='tabs'` together to create the exposure this prevents (the GH #253 wedge family). */
   ui-tabs[data-part='narrow-tabs'] {
     display: none;
     flex: 0 0 auto;
@@ -653,6 +656,11 @@
       inline-size: auto;
       flex: 1 1 auto;
       overflow-y: auto;
+      /* ADR-0166 cl.7 exception C, GH #380 — this pane's block-start now faces the strip (see the
+         DOM-order note above the strip's own rule), not the header the frame-level `:has()` rule
+         squared it against. Restore is unconditional — see that same note for why a bars-free shell
+         re-declaring the already-round value is a no-op, not a second defect. */
+      --ui-super-shell-radius-block-start: var(--ui-super-shell-radius);
     }
     :scope:has([data-part='narrow-tabs']) [data-part='pane'][data-segmented][data-narrow-tab-target][data-narrow-active] {
       display: flex;

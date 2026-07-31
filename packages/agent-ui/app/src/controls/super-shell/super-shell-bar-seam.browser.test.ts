@@ -481,10 +481,30 @@ describe('ADR-0166 cl.7 — posture exception C: the narrow-tabs strip owns its 
     const header = q(el, '[data-bar="header"]').getBoundingClientRect()
     // MEASURED frame order is `header | narrow-tabs | middle | footer` (super-shell.ts's
     // `middle.before(strip)`), NOT the "between middle and the footer" ADR-0166 Context fact 3 and cl.7
-    // assert. So the strip's own seam sits under the HEADER, and it is the pane's block-START (not its
-    // block-END) that faces the strip. The clause's pane-restore half is therefore NOT built — see the
-    // escalation note in super-shell.css and the order pin in super-shell.test.ts.
+    // originally asserted. So the strip's own seam sits under the HEADER, and it is the pane's
+    // block-START (not its block-END) that faces the strip — the coordinated repair's restore (below)
+    // targets that pair; see the order pin in super-shell.test.ts.
     expect(Math.round(strip.getBoundingClientRect().top - header.bottom)).toBe(6)
+  })
+
+  it("the ACTIVE narrow-tab pane restores its block-START corner pair (it faces the strip, not the header) while block-END stays squared against the footer", async () => {
+    // GH #380 (coordinated repair, exception C's missing half). A consumer authoring a header AND
+    // `narrow-*='tabs'` is the exposure this prevents (the GH #253 wedge family) — census: today's one
+    // shipped tabs author, `ui-agent-admin`, composes no bar at all, so nothing live exhibits this without
+    // this fixture deliberately authoring both.
+    const el = mount(['header', 'content', 'options-pane', 'footer'], { width: 360, attrs: { 'narrow-end': 'tabs' } })
+    await el.updateComplete
+    // Baseline: the always-legal default selection (`content`, the canvas) carries no radius at all
+    // (cl.4/cl.5 — canvas paints no background), so the exposure is invisible until a PANE tab is active.
+    const narrowTabs = [...el.querySelectorAll('[data-part="narrow-tab"]')] as HTMLElement[]
+    const paneTab = narrowTabs.find((t) => t.textContent === 'options-pane')
+    expect(paneTab, 'the options-pane narrow tab exists').not.toBeUndefined()
+    paneTab!.click()
+    await el.updateComplete
+    const pane = q(el, '[data-part="pane"][data-narrow-tab-target][data-narrow-active]')
+    // block-END stays squared (0px) against the footer, unchanged by this repair — only block-START
+    // (facing the strip, not the header) restores to round.
+    expectCorners(pane, { start: '18px', end: '0px' }, 'the active narrow-tab pane, header+footer shell')
   })
 
   it("SCOPE FENCE — a MIXED posture (narrow-start='stack' + narrow-end='tabs') is ruled OUT OF SCOPE; this records what it DOES, and asserts nothing about what it should", async () => {
