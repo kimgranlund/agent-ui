@@ -73,6 +73,16 @@ pointer repairs excepted).
   Relates · Resolves`); LLD headers use `Refines:` (→ SPEC+ADR) and `Composes on:`; ADRs use
   `Repairs:` (→ the owning PRD-G/SPEC-R/LLD-C IDs). There is no `Implements:`/`Refined-by:` row —
   don't invent one.
+- **Re-derive a cited authority at its source; never transcribe a peer's citation.** A citation
+  error propagates through a review chain exactly as easily as it originates in one — ADR-0167's
+  3-round ratification review caught this in both directions: the author's own "disposition
+  column empty" claim about `agent-admin-shell-rehost.lld.md`'s LLD table was a misread of a
+  4-column table with no such column (the `—` cell meant "no dependencies", proven by a
+  plainly-shipped sibling row carrying the same `—`); the reviewer's own "table header at `:16`"
+  was itself off by one (`:15`), caught only because the author re-ran `grep -n` instead of
+  trusting the reviewer's line number. Each error survived exactly as long as the next reader
+  took the citation on faith. Grep/Read the actual line before it enters a Decision, a Findings
+  comment, or a review verdict — every time, regardless of whose claim it corrects.
 
 ## 4 · Ticket section contracts (split by kind — both legal; the shape survives the ADR-0145 backend move, only the container changed from a markdown file to an Issue body)
 

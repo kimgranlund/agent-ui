@@ -85,6 +85,14 @@ exemplars ARE the standard — read them, don't re-derive.
   checkout's node_modules — import-resolving tests/builds silently exercise main's sources, and
   Vite's fs-allow denies `?raw` modules. Install in the worktree and `readlink
   node_modules/@agent-ui/shared` before trusting any import-resolving gate.
+- **Thin ink does not police at the fleet's default visual tolerance — measure before pinning a
+  hairline.** A 1px border baseline measured 1 changed pixel at `includeAA:false, threshold:0.1`
+  (the harness default) — AA-edge classification and a sub-threshold colour delta both absorb it,
+  independently. The same pixel diff read 7 at `includeAA:true, threshold:0.1` and 997 at
+  `includeAA:true, threshold:0.02` (GH #382/#383's overlay-divider pin). Any new hairline/thin-line
+  baseline needs the SAME measurement pass (plant the defect, measure the diff count at each
+  candidate setting, pick the one that separates present-from-absent) or its "green" proves
+  nothing — small text isn't the only thing default settings fail to see.
 
 ## Settle helpers — writer vs observer
 
