@@ -12,7 +12,7 @@ Plan `.claude/docs/plan.md` · Goals + per-milestone DoD `.claude/docs/goals.md`
 
 ## Commands
 
-- `npm run check` — the standing type gate, three steps: `tsc` (packages) `&& check:site` (the docs site's own tsconfig) `&& check:tools` (`tsconfig.tools.json` — scripts + a2ui tools); all `noEmit`
+- `npm run check` — the standing gate, four steps: three `noEmit` type steps — `tsc` (packages) `&& check:site` (the docs site's own tsconfig) `&& check:tools` (`tsconfig.tools.json` — scripts + a2ui tools) — then `check:scripts` (`python3 scripts/adr_ratify_test.py`, the stdlib-only unit test for `adr_ratify.py`'s pure Repairs-cell parser; GH #394)
 - `npm test` — Vitest (jsdom), once · `npm run test:watch` — watch mode
 - `npm run test:browser` — the real-engine gate, SIX SEQUENTIAL shards (packages:components →
   packages:app → packages:rest → site → focus-timing → visual; GH #41 — never re-monolith it or add a
