@@ -546,3 +546,13 @@ mandatory `> ` child combinator is proven load-bearing in both engines, GH #214'
 exactly 2 and `shell-spacing-gate.test.ts` unedited** — verified with a biting control
 (`--ui-super-shell-bar-seam-probe: 1.125rem` reds naming the literal) and with cl.8's own warning
 confirmed: the same probe valued `1px` leaves the gate GREEN.
+
+**Addendum 2026-07-31 (GH #380, cl.5's predicate correction).** This REV's own "Consequences" paragraph
+above already states the corrected reading in passing; this addendum makes it the normative one. **cl.5's
+inertness predicate is "a frame with ONE visible child," not "no bars authored."** The two coincide for
+`gen-ui-live`'s bars-free shell and hold apart for `ui-agent-admin`: no bars, but the narrow-tabs strip is a
+second frame child below 40rem (Context fact 3), so agent-admin was never inert — the −12px this record
+already measures (item 2 above) is the proof. Every inert-arm claim elsewhere in this record — `gen-ui-live`
+at every width, `a2ui-live` (item 5 above), and `ui-agent-admin` at WIDE only (the strip is `display: none`
+there) — is a frame-with-one-visible-child instance, so no other row of cl.5's matrix changes; only the
+STATED predicate does.
