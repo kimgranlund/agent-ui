@@ -128,10 +128,11 @@ const targets = [
   //                                      2124 → 2215 B gz.
   //   (nothing since d51fa06 touches components/src)
   // 48529 + 80 + 86 = 48695. Both movers are real, wanted code landing against 111 B of headroom — NOT a
-  // gzip-dictionary shift, and nothing to shave. Raising the cap is a DESIGN call and is Kim's to make (the
-  // measured figure to re-base onto is 48695 B gz); this comment records the cause rather than absorbing it,
-  // so `npm run size` stays red on this ONE row until it is ruled on.
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 47.5 * KB],
+  // gzip-dictionary shift, and nothing to shave.
+  // RULED 2026-07-31 (GH #354, Kim): re-based 47.5 KB → 47.625 KB (48768 B gz) — the measured 48695 plus
+  // 73 B of headroom, accepting both movers as real weight. The deliberate red this block previously held
+  // open is closed by that ruling.
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 47.625 * KB],
   // GH #377 finding 3 — the package's FIRST `./traits/*` subpath (`traits/overlay`, package.json:74) gets
   // its own budgeted row, so the opt-in surface every other pack carries one for (`code/highlight`,
   // `./markdown`, `./editor`) is not the one exception.
