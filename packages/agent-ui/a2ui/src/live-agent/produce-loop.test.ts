@@ -555,7 +555,9 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
     expect(halted).toBeInstanceOf(ProduceHalt)
     // The MEMBER, not just the code — `sid:root` (a duplicate root), never `root-missing`.
     expect((halted as ProduceHalt).failures).toEqual([{ code: 'IDGRAPH', path: 'main:root' }])
-    expect((halted as ProduceHalt).message).toContain('(IDGRAPH)') // the user-visible text in the report
+    // GH #307 (f.path surfacing): the halt text now names the MEMBER, not just the bare code — the
+    // whole point being a future report can self-diagnose without re-instrumenting the loop.
+    expect((halted as ProduceHalt).message).toContain('(IDGRAPH at main:root)')
     expect(calls()).toBe(3) // every round of the bound burned on the same id-graph defect
     expect(lines).toHaveLength(0)
 
