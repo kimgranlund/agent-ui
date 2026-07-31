@@ -10,11 +10,18 @@ live against GitHub and, only if every check passes, performs the whole flip mec
     Ratified-by cell <- owner login + utterance date + URL
     README index row status column `proposed -> accepted`
     derived indexes regenerated (node scripts/generate-sitemap.mjs)
+    booked-repairs checklist comment posted on the ratifying PR/issue (GH #392)
 
-No LLM composes ratification language at any point (ADR-0149 F2). Fail-closed (F3): any check
-failing, `gh` unavailable, URL ambiguous, zero or multiple matching ADR files -> exit non-zero,
-ZERO writes. The adr-status-guard hook's unconditional Edit/Write deny is untouched (F4) — this
-script writes via plain file I/O and is itself the verified path the guard's threat model lacked.
+No LLM composes ratification language at any point (ADR-0149 F2). The checklist comment holds that
+line too: its items are the ADR's own Repairs-cell segments, sliced mechanically and quoted
+verbatim under a fixed template — never paraphrased, never summarized.
+
+Fail-closed (F3): any check failing, `gh` unavailable, URL ambiguous, zero or multiple matching ADR
+files -> exit non-zero, ZERO writes. The ONE fail-open exception is the checklist comment (GH #392):
+it is a post-flip courtesy, so a failure to post warns and still exits 0 rather than leaving the ADR
+half-flipped. Every pre-flip verification stays fail-closed. The adr-status-guard hook's
+unconditional Edit/Write deny is untouched (F4) — this script writes via plain file I/O and is
+itself the verified path the guard's threat model lacked.
 
 Usage:
     python3 scripts/adr_ratify.py ADR-0149 https://github.com/OWNER/REPO/pull/38#issuecomment-NNN
@@ -40,12 +47,70 @@ RATIFIED_BY_ROW_RE = re.compile(r"^> \| \*\*Ratified by\*\* \| .* \|$", re.MULTI
 ISSUECOMMENT_RE = re.compile(r"^https://github\.com/([^/]+)/([^/]+)/(?:pull|issues)/(\d+)#issuecomment-(\d+)$")
 REVIEW_RE = re.compile(r"^https://github\.com/([^/]+)/([^/]+)/pull/(\d+)#pullrequestreview-(\d+)$")
 
+REPAIRS_ROW_RE = re.compile(r"^> \| \*\*Repairs\*\* \| (.*) \|$", re.MULTILINE)
+SEGMENT_SEP = " · "
+# A bold `**On ratification…**` label opens a new booking mid-segment (ADR-0167 stacks two of them
+# in one separator-free cell; ADR-0164 puts non-booked prose ahead of one).
+BOOKING_LABEL_RE = re.compile(r"(?=\*\*[Oo]n [Rr]atification)")
+BOOKED_RE = re.compile(r"on ratification", re.IGNORECASE)
+
 
 def run(cmd: list[str]) -> str:
     res = subprocess.run(cmd, capture_output=True, text=True)
     if res.returncode != 0:
         raise SystemExit(f"FAIL-CLOSED: `{' '.join(cmd)}` exited {res.returncode}: {res.stderr.strip()}")
     return res.stdout
+
+
+def booked_repairs(adr_text: str) -> list[str]:
+    """The ADR's Repairs-cell items booked "on ratification", verbatim and in cell order.
+
+    Pure: text in, strings out — no gh, no filesystem, no writes. The slice rule, derived from the
+    corpus of real cells: the cell splits on ` · `, each segment splits again ahead of any bold
+    `**On ratification…**` label, and a piece survives only if it mentions "on ratification"
+    (covering every attested phrasing — `gated on ratification`, `applied on ratification`,
+    `on ratification+build:`). A cell with no such piece, a malformed row, or no Repairs row at all
+    yields [] rather than raising.
+    """
+    m = REPAIRS_ROW_RE.search(adr_text)
+    if not m:
+        return []
+    items: list[str] = []
+    for segment in m.group(1).split(SEGMENT_SEP):
+        for piece in BOOKING_LABEL_RE.split(segment):
+            piece = piece.strip()
+            if piece and BOOKED_RE.search(piece):
+                items.append(piece)
+    return items
+
+
+def post_repairs_checklist(api_repo: str, number: str, adr_id: str, adr_rel: str, items: list[str]) -> None:
+    """Post the booked repairs as a checklist comment on the ratifying PR/issue (GH #392).
+
+    Fail-OPEN by contract: the flip is the primary act and has already landed, so any failure here
+    warns on stderr and returns — the caller still exits 0.
+    """
+    body = (
+        f"**Booked repairs — ADR-{adr_id}**, flipped `proposed` → `accepted` by "
+        f"`scripts/adr_ratify.py` (ADR-0149). Each item is quoted verbatim from that ADR's own "
+        f"**Repairs** cell:\n\n"
+        + "\n".join(f"- [ ] {item}" for item in items)
+        + f"\n\nSource: `{adr_rel}`"
+    )
+    payload = json.dumps({"body": body})
+    res = subprocess.run(
+        ["gh", "api", f"repos/{api_repo}/issues/{number}/comments", "--input", "-"],
+        input=payload, capture_output=True, text=True,
+    )
+    if res.returncode != 0:
+        print(
+            f"WARNING: the flip landed, but posting the booked-repairs checklist to "
+            f"{api_repo}#{number} failed ({res.returncode}): {res.stderr.strip()}\n"
+            f"         Post these {len(items)} item(s) by hand.",
+            file=sys.stderr,
+        )
+        return
+    print(f"  posted: booked-repairs checklist ({len(items)} item(s)) on {api_repo}#{number}")
 
 
 def main() -> int:
@@ -126,8 +191,16 @@ def main() -> int:
         f"  token:  ratify ADR-{adr_id} (of {sorted(named)})\n"
         f"  target: {adr_path.relative_to(root)} (Status: proposed)"
     )
+    # ── the booked repairs this flip owes forward (GH #392) ─────────────────────────────────────
+    repairs = booked_repairs(adr_text)
+    utterance_number = um.group(3)
+    booked = (
+        "\n  booked: " + "\n          ".join(f"[ ] {item}" for item in repairs)
+        if repairs
+        else "\n  booked: (no `on ratification` items in the Repairs cell — nothing to post)"
+    )
     if dry_run:
-        print(f"DRY-RUN — all checks pass, no writes.\n{evidence}")
+        print(f"DRY-RUN — all checks pass, no writes.\n{evidence}{booked}")
         return 0
 
     # ── writes: all-or-nothing from here (verifications complete) ───────────────────────────────
@@ -145,6 +218,16 @@ def main() -> int:
 
     run(["node", str(root / "scripts" / "generate-sitemap.mjs")])
     print(f"RATIFIED ADR-{adr_id}\n{evidence}\n  wrote:  Status cell · Ratified-by cell · README row · derived indexes")
+
+    # The flip is done. Everything below is fail-OPEN — it must never turn a landed flip non-zero.
+    if repairs:
+        try:
+            post_repairs_checklist(
+                f"{origin_owner}/{origin_repo}", utterance_number, adr_id,
+                str(adr_path.relative_to(root)), repairs,
+            )
+        except Exception as exc:  # noqa: BLE001 — a courtesy comment may not fail the flip
+            print(f"WARNING: booked-repairs checklist not posted: {exc}", file=sys.stderr)
     return 0
 
 
