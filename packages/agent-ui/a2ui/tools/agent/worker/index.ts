@@ -43,7 +43,8 @@ const MAX_BODY = 1 << 20 // 1 MiB — matches dev-proxy-plugin.ts's cap
 // upstream fault, e.g. anthropicProvider's own error message, which embeds up to 500 raw chars of the
 // provider's API response body — an internal detail that must never reach an end user's chat log).
 // ProduceHalt's own message is safe to show verbatim: it names only closed failure CODES (SCHEMA/PARSE/
-// FEED_SCOPE/…), never raw upstream text.
+// FEED_SCOPE/…) plus model-authored A2UI id paths (GH #307 — e.g. "IDGRAPH at main:root"), never raw
+// upstream text.
 const GENERIC_FAILURE_MESSAGE = "I couldn't put together a valid response for that — could you try rephrasing, or try again?"
 
 // GH #101 (review finding): dev-proxy-plugin.ts never needed a CSRF guard — it's a Vite dev middleware,
@@ -245,8 +246,9 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
       // that's gone (a disconnect, not a produce() failure) — nothing left to read it, stays silent.
       //
       // The message shown is deliberately NOT the raw caught error in every case: a `ProduceHalt`'s own
-      // text names only closed failure CODES (safe, internal identifiers — SCHEMA/PARSE/FEED_SCOPE/…),
-      // so it crosses verbatim; anything else (e.g. `anthropicProvider`'s upstream-fault message, which
+      // text names only closed failure CODES (safe, internal identifiers — SCHEMA/PARSE/FEED_SCOPE/…)
+      // plus model-authored A2UI id paths (GH #307), so it crosses verbatim; anything else (e.g.
+      // `anthropicProvider`'s upstream-fault message, which
       // embeds up to 500 raw chars of the provider's own API response body) degrades to a generic,
       // safe fallback instead — that raw text is exactly the kind of internal detail that must never
       // reach an end user's chat log.

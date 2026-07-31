@@ -50,7 +50,8 @@ const MAX_BODY = 1 << 20 // 1 MiB — a dev-only intent/turn body is tiny; cap i
 // upstream fault, e.g. anthropicProvider's own error message, which embeds up to 500 raw chars of the
 // provider's API response body — an internal detail that must never reach an end user's chat log).
 // ProduceHalt's own message is safe to show verbatim: it names only closed failure CODES (SCHEMA/PARSE/
-// FEED_SCOPE/…), never raw upstream text. Shared verbatim with worker/index.ts's production twin.
+// FEED_SCOPE/…) plus model-authored A2UI id paths (GH #307 — e.g. "IDGRAPH at main:root"), never raw
+// upstream text. Shared verbatim with worker/index.ts's production twin.
 const GENERIC_FAILURE_MESSAGE = "I couldn't put together a valid response for that — could you try rephrasing, or try again?"
 
 function readBody(req: IncomingMessage): Promise<string> {
@@ -253,7 +254,8 @@ export function a2uiDevProxyPlugin(): Plugin {
                 // visible fail() path a non-2xx response already uses, instead of a stream that just stops
                 // and reads as an empty "success" client-side. The message is deliberately NOT the raw
                 // caught error in every case: a `ProduceHalt`'s own text names only closed failure CODES
-                // (safe, internal identifiers), so it crosses verbatim; anything else (e.g.
+                // (safe, internal identifiers) plus model-authored A2UI id paths (GH #307), so it crosses
+                // verbatim; anything else (e.g.
                 // `anthropicProvider`'s upstream-fault message, up to 500 raw chars of the provider's own
                 // API response body) degrades to a generic, safe fallback instead — this is EXACTLY the
                 // "report without leaking a key" discipline the outer catch below already applies to a
