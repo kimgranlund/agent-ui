@@ -694,8 +694,16 @@ export function resetPreset(preset: AgentPreset): void {
 // ── the imported-persona library (GH #406) ────────────────────────────────────────────────────────────
 // Imported personas are ROSTER data, so they persist as one localStorage record (metadata + seed), NOT
 // as a store: their store is minted from that seed by `personaStore` exactly like a preset's, which is
-// what makes an imported persona survive a reload with its own per-persona edits intact (the edits land
-// in its own `agent-admin-app.<id>.*` keys and win over the seed, the standing store law).
+// what makes an imported persona survive a reload — the roster record restores WHAT the persona is, and
+// its own `agent-admin-app.<id>.*` keys restore the edits made since.
+//
+// The rehydration law, stated exactly (memory-store.ts): a persisted value wins over the seed for every
+// key the SEED CARRIES — the rehydration loop iterates the seed's own keys, so a persisted value under a
+// key the seed never had is written but never read back. An imported persona's seed is the exported
+// state, so every key that existed at export time rehydrates; a key first written AFTER the import (say
+// a master switch the source persona had never touched) persists without rehydrating. That is a
+// pre-existing property of the store mechanism, shared verbatim with the shipped presets (whose seeds
+// carry no master/surface keys either) — this slice neither introduces nor fixes it.
 
 export const IMPORTED_PERSONAS_KEY = `${PERSIST_PREFIX}.importedPersonas`
 

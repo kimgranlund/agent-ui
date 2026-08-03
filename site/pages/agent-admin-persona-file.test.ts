@@ -16,7 +16,16 @@ import '@agent-ui/app/agent-admin'
 import type { UIAgentAdminElement } from '@agent-ui/app/agent-admin'
 import { ENTRY_KINDS, entriesStoreKey, createMemoryStore } from '@agent-ui/app'
 import type { Entry, SettingsStore } from '@agent-ui/app'
-import { kindEnabledKey, SURFACE_GENUI_KEY } from '@agent-ui/app/agent-admin-schema'
+import {
+  A2UI_CATALOG_KEY,
+  AGENT_ENABLED_KEY,
+  MODELS_INCLUDED_KEY,
+  SURFACE_A2UI_KEY,
+  SURFACE_GENUI_DOGFOOD_KEY,
+  SURFACE_GENUI_KEY,
+  SURFACE_MARKDOWN_KEY,
+  kindEnabledKey,
+} from '@agent-ui/app/agent-admin-schema'
 import type { AdminAgentTurn, AdminTurnRequest } from '@agent-ui/app/agent-admin-schema'
 import {
   AGENT_PRESETS,
@@ -196,6 +205,29 @@ describe('the persona file — export → import round trip (GH #406, M-B DoD bo
     expect(Object.keys(parsed.file.state)).not.toContain('agentEnabled')
   })
 
+  it('PERSONA_STATE_KEYS covers every key the surface actually stores — independent of the round trip itself', () => {
+    // The deep-equal above compares two snapshots BOTH filtered through PERSONA_STATE_KEYS, so a key
+    // silently dropped from the set vanishes from both sides and the comparison still passes. This
+    // assertion is the independent gate: the set must cover every key a persona store really holds —
+    // the seed's own keys plus every schema-declared master/surface key.
+    const required = [
+      ...Object.keys(presetSeed(SOURCE_PRESET)),
+      MODELS_INCLUDED_KEY,
+      AGENT_ENABLED_KEY,
+      ...Object.values(ENTRY_KINDS).map((kind) => kindEnabledKey(kind)),
+      ...Object.values(ENTRY_KINDS).map((kind) => entriesStoreKey(kind)),
+      SURFACE_MARKDOWN_KEY,
+      SURFACE_A2UI_KEY,
+      SURFACE_GENUI_KEY,
+      SURFACE_GENUI_DOGFOOD_KEY,
+      A2UI_CATALOG_KEY,
+    ]
+    for (const key of required) {
+      expect(PERSONA_STATE_KEYS, `${key} must be carried by the persona file`).toContain(key)
+    }
+    expect(new Set(PERSONA_STATE_KEYS).size, 'no duplicate keys (tool’s master switch IS toolsEnabled)').toBe(PERSONA_STATE_KEYS.length)
+  })
+
   it('the envelope is the versioned contract: kind + version + persona metadata + state', () => {
     const file = exportPersonaFile(personaFromPreset(SOURCE_PRESET), authoredStore(), new Date('2026-08-04T10:00:00.000Z'))
     expect(file.kind).toBe(PERSONA_FILE_KIND)
@@ -241,6 +273,55 @@ describe('readPersonaFile — fail-closed validation', () => {
     expect(readPersonaFile(JSON.stringify(bad)).ok).toBe(false)
     const badSkills = { ...parsed, state: { ...(parsed.state as Record<string, unknown>), [entriesStoreKey(ENTRY_KINDS.skill)]: {} } }
     expect(readPersonaFile(JSON.stringify(badSkills)).ok).toBe(false)
+  })
+
+  // The deep check: an entry LIST that is an array of junk. Nothing downstream re-validates — `readEntries`
+  // blind-casts (`raw as Entry[]`) and `composeSystemPrompt` dereferences `.enabled`/`.content` — and the
+  // page PERSISTS an import before anything renders it, so a malformed item accepted here would wedge the
+  // surface on every reload until localStorage was cleared by hand. Rejected whole, never sanitize-dropped:
+  // a silently shortened persona is a persona that behaves differently than the one exported.
+  it('rejects an entry list holding a non-entry item — null, a number, a bare string', () => {
+    const parsed = JSON.parse(good()) as Record<string, unknown>
+    const sectionsKey = entriesStoreKey(ENTRY_KINDS.promptSection)
+    const withSections = (list: unknown): string =>
+      JSON.stringify({ ...parsed, state: { ...(parsed.state as Record<string, unknown>), [sectionsKey]: list } })
+
+    for (const junk of [[null], [42], ['a section'], [[]]]) {
+      const result = readPersonaFile(withSections(junk))
+      expect(result.ok, `${JSON.stringify(junk)} must be rejected`).toBe(false)
+      if (!result.ok) expect(result.error).toContain('entry 0')
+    }
+    // A well-formed section FOLLOWED by a junk one is still rejected, and the message names the index.
+    const sections = (parsed.state as Record<string, unknown>)[sectionsKey] as unknown[]
+    const trailing = readPersonaFile(withSections([...sections, null]))
+    expect(trailing.ok).toBe(false)
+    if (!trailing.ok) expect(trailing.error).toContain(`entry ${sections.length}`)
+  })
+
+  it('rejects an entry item missing any Entry field — the whole shape, not just its presence', () => {
+    const parsed = JSON.parse(good()) as Record<string, unknown>
+    const skillsKey = entriesStoreKey(ENTRY_KINDS.skill)
+    const [sample] = (parsed.state as Record<string, unknown>)[skillsKey] as Array<Record<string, unknown>>
+    expect(sample, 'the fixture really carries a seeded skill to mangle').toBeDefined()
+    const mangled = (patch: Record<string, unknown>): string =>
+      JSON.stringify({ ...parsed, state: { ...(parsed.state as Record<string, unknown>), [skillsKey]: [{ ...sample, ...patch }] } })
+
+    for (const patch of [
+      { id: 7 },
+      { kind: null },
+      { label: undefined },
+      { description: 3 },
+      { content: {} },
+      { order: 'first' },
+      { order: Number.NaN },
+      { enabled: 'yes' },
+      { builtin: 1 },
+    ]) {
+      const result = readPersonaFile(mangled(patch))
+      expect(result.ok, `${JSON.stringify(patch)} must be rejected`).toBe(false)
+    }
+    // the control: the unmangled sample passes, so the loop above is testing the FIELDS, not the fixture
+    expect(readPersonaFile(mangled({})).ok).toBe(true)
   })
 
   it('drops unknown state keys rather than importing them (only PERSONA_STATE_KEYS may reach a store)', () => {

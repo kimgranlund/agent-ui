@@ -257,7 +257,11 @@ function importPersonaText(text: string): void {
     notify(`Import failed — ${parsed.error}`, true)
     return
   }
-  const persona = importedPersonaFrom(parsed.file, roster)
+  // Mint against a FRESH roster read, not this page's boot-time snapshot: a second tab that imported
+  // since boot already wrote its persona into the shared library record, and an id minted blind to it
+  // would silently SHARE that persona's persisted store (`saveImportedPersona` re-reads before it
+  // appends, so the record itself survives — only the id needs the fresh view).
+  const persona = importedPersonaFrom(parsed.file, [...personaRoster(), ...roster])
   saveImportedPersona(persona) // survives reload: personaRoster() reads this record at boot
   roster.push(persona)
   addPersonaRow(persona)
@@ -265,6 +269,12 @@ function importPersonaText(text: string): void {
   notify(`Imported “${persona.label}”.`)
 }
 
+// The ONE native form element on this page, and a deliberate exception to the fleet's "no native form
+// elements" law (CLAUDE.md): opening the OS file picker is a privileged gesture only a real
+// `<input type="file">` click can make — there is no `ui-*` file control in the fleet (ui-attachment is
+// a display-tier card for an already-chosen file, never a picker), and the modern alternative
+// (`showOpenFilePicker`) is Chromium-only. It stays hidden and unstyled: the visible affordance is the
+// overflow menu row, so the exception buys a capability without putting a native control on screen.
 const fileInput = document.createElement('input')
 fileInput.type = 'file'
 fileInput.accept = 'application/json,.json'

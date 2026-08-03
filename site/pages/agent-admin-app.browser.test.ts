@@ -229,11 +229,21 @@ describe('agent-admin-app — the persona library (GH #406)', () => {
     expect(library[0]!.seed, 'the imported seed is the exported state').toEqual((readPersonaFile(exported) as { ok: true; file: { state: unknown } }).file.state)
   })
 
-  it('a file that is not a persona file is rejected visibly, and mints nothing', async () => {
+  /** Feed one file's bytes through the picker and wait for the failure announcement.
+   *
+   *  The region is CLEARED first: a toast lives 6s and these tests run in about one, so an earlier
+   *  leg's "Import failed…" is still on screen when the next one starts — waiting for "a toast that
+   *  says Import failed" would be satisfied by the STALE one and the assertions below would then run
+   *  before the (async) import had done anything at all. Measured, not theorized: with the file's
+   *  entry-item validation removed this probe passed 20/20 until the clear was added. */
+  async function expectRejected(bytes: string, name: string): Promise<void> {
+    for (const stale of document.querySelectorAll('ui-toast-region ui-toast')) stale.remove()
     const before = [...document.querySelectorAll<HTMLElement>('.agent-menu [role="menuitemradio"]')].length
+    const activeBefore = localStorage.getItem(ACTIVE_PRESET_KEY)
+    const libraryBefore = JSON.stringify(loadImportedPersonas())
     const input = document.querySelector('input[type="file"]') as HTMLInputElement
     const transfer = new DataTransfer()
-    transfer.items.add(new File(['{"kind":"something-else"}'], 'nope.json', { type: 'application/json' }))
+    transfer.items.add(new File([bytes], name, { type: 'application/json' }))
     input.files = transfer.files
     input.dispatchEvent(new Event('change', { bubbles: true }))
     const lastToast = (): string => {
@@ -244,7 +254,22 @@ describe('agent-admin-app — the persona library (GH #406)', () => {
       if (lastToast().includes('Import failed')) break
       await raf()
     }
-    expect(lastToast(), 'the failure is announced, never silent').toContain('Import failed')
-    expect(document.querySelectorAll('.agent-menu [role="menuitemradio"]'), 'nothing was minted').toHaveLength(before)
+    expect(lastToast(), `${name}: the failure is announced, never silent`).toContain('Import failed')
+    expect(document.querySelectorAll('.agent-menu [role="menuitemradio"]'), `${name}: nothing was minted`).toHaveLength(before)
+    expect(localStorage.getItem(ACTIVE_PRESET_KEY), `${name}: the active persona is untouched`).toBe(activeBefore)
+    expect(JSON.stringify(loadImportedPersonas()), `${name}: nothing was persisted`).toBe(libraryBefore)
+  }
+
+  it('a file that is not a persona file is rejected visibly, and mints nothing', async () => {
+    await expectRejected('{"kind":"something-else"}', 'nope.json')
+  })
+
+  it('a hand-edited persona file with a malformed entry is rejected BEFORE it is persisted or activated', async () => {
+    // The hazard the format's own hand-editability creates: valid JSON, right kind, right version, but a
+    // junk item inside an entry list. Import persists AND activates before anything renders, so accepting
+    // this would wedge the page on every reload — the import must die at the door instead.
+    const file = JSON.parse(exported) as { state: Record<string, unknown> }
+    file.state['entries:prompt-section'] = [...(file.state['entries:prompt-section'] as unknown[]), null]
+    await expectRejected(JSON.stringify(file), 'mangled.json')
   })
 })

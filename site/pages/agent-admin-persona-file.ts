@@ -139,13 +139,42 @@ export type ReadPersonaFileResult = { ok: true; file: PersonaFile } | { ok: fals
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
+/** One entry list's ITEM-level check — the `Entry` shape, field for field. Returns an error message, or
+ *  `undefined` when every item is well-formed.
+ *
+ *  REJECT, never sanitize-drop (the fork, ruled here): a dropped malformed entry would import a persona
+ *  that LOOKS fine and behaves differently from the one exported — the exact silent-divergence class this
+ *  whole feature exists to close. A rejection names the list and the index, so a hand-edited file (the
+ *  format is deliberately hand-editable) can be repaired; a silent drop leaves nothing to repair.
+ *
+ *  This is also the only guard downstream of the file: `entries.ts`'s `readEntries` blind-casts whatever
+ *  the store answers (`raw as Entry[]`), so a malformed item that got past here would reach render/compose
+ *  code as a real `Entry` — and, because an import PERSISTS before it is ever rendered, would wedge the
+ *  page on every subsequent reload until someone cleared localStorage by hand. */
+function entryListError(key: string, list: readonly unknown[]): string | undefined {
+  for (const [index, item] of list.entries()) {
+    const at = `"${key}" entry ${index}`
+    if (!isPlainObject(item)) return `The persona file's ${at} is not an entry.`
+    for (const field of ['id', 'kind', 'label', 'description', 'content'] as const) {
+      if (typeof item[field] !== 'string') return `The persona file's ${at} has no ${field}.`
+    }
+    if (typeof item.order !== 'number' || !Number.isFinite(item.order)) return `The persona file's ${at} has no order.`
+    for (const flag of ['enabled', 'builtin'] as const) {
+      if (typeof item[flag] !== 'boolean') return `The persona file's ${at} has no ${flag} flag.`
+    }
+  }
+  return undefined
+}
+
 /**
  * Parse + validate a persona file's TEXT, fail-closed with a message a human can act on. Rejects (in
  * order): unparseable JSON · a non-object body · a wrong/absent `kind` · a version this build cannot
  * read · a missing/blank persona label · a non-object `state` · a state whose prompt sections are absent
  * or not an array (a persona with no sections would compose the generic fallback prompt — accepting it
- * would silently import a different agent than the one exported). Unknown state keys are DROPPED rather
- * than rejected: a hand-edited file may carry notes, and only `PERSONA_STATE_KEYS` may reach a store.
+ * would silently import a different agent than the one exported) · any entry list holding an item that
+ * is not a well-formed `Entry` (`entryListError` — the deep check, since nothing downstream re-validates).
+ * Unknown state keys are DROPPED rather than rejected: a hand-edited file may carry notes, and only
+ * `PERSONA_STATE_KEYS` may reach a store.
  */
 export function readPersonaFile(text: string): ReadPersonaFileResult {
   let parsed: unknown
@@ -174,9 +203,11 @@ export function readPersonaFile(text: string): ReadPersonaFileResult {
   const sections = rawState[entriesStoreKey(ENTRY_KINDS.promptSection)]
   if (!Array.isArray(sections)) return { ok: false, error: 'The persona file carries no prompt sections.' }
   for (const key of ENTRY_LIST_KEYS) {
-    if (key in rawState && !Array.isArray(rawState[key])) {
-      return { ok: false, error: `The persona file's "${key}" is not a list.` }
-    }
+    if (!(key in rawState)) continue
+    const list = rawState[key]
+    if (!Array.isArray(list)) return { ok: false, error: `The persona file's "${key}" is not a list.` }
+    const error = entryListError(key, list as readonly unknown[])
+    if (error !== undefined) return { ok: false, error }
   }
 
   const state: Record<string, unknown> = {}
