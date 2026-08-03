@@ -27,6 +27,7 @@
 - [Markdown](./markdown-doc.html): `ui-markdown` — a zero-dependency, hand-rolled markdown-subset renderer replacing its own children with real fleet DOM (`ui-text`, `ui-code`, `ui-table`, native lists), sanitized by construction (no raw-HTML node kind exists in its parser).
 - [Highlight](./highlight-doc.html): `@agent-ui/code/highlight` — a swappable, pack-independent syntax-highlighter registry plus seven bundled zero-dependency tokenizers (ts/js, json, html, css, python, shell, markdown/md), self-registering on import.
 - [Agent Admin](./agent-admin.html): composing `ui-agent-admin` — a three-pane `ui-split` (chat canvas · prompts · settings) over `ui-conversation` and `ui-settings`, one shared `SettingsStore`, and a live-apply stub turn loop with no external model dependency.
+- [The persona-library pattern](./persona-library-pattern.html): export a whole authored configuration as a shareable file, re-import it as a NEW library entry (never an overwrite), prove identical live behaviour — agent-admin's persona export/import (GH #406), documented as a shape reusable beyond agent-admin.
 - [Changelog](./changelog.html): the shipping history, newest-first, rendered from the repo's CHANGELOG.md.
 
 ## Components — actions & entry
