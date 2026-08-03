@@ -4,9 +4,14 @@
 // ui-menu switcher end to end: open → commit a different preset → the title, the persisted active id,
 // and the admin store all follow. This is the page-wiring proof GH #42 notes the admin page lacked; the
 // store-swap MECHANISM itself stays unit-proven in agent-admin-app.test.ts (jsdom).
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterAll } from 'vitest'
 import './agent-admin-app.ts' // side-effect import — mounts the real header + ui-agent-admin
-import { AGENT_PRESETS, ACTIVE_PRESET_KEY } from './agent-admin-presets.ts'
+import { AGENT_PRESETS, ACTIVE_PRESET_KEY, IMPORTED_PERSONAS_KEY, loadImportedPersonas } from './agent-admin-presets.ts'
+import { readPersonaFile } from './agent-admin-persona-file.ts'
+
+/** The bytes the Export row handed the browser — captured by the first GH #406 leg, replayed by the
+ *  second (the import must consume EXACTLY what the export produced, not a hand-built lookalike). */
+let exported = ''
 
 // GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles),
 // so its duration is set by the browser's scheduling, which stretches under concurrent host load.
@@ -138,5 +143,108 @@ describe('agent-admin-app — the canvas-header (GH #51)', () => {
     reset.click() // commit — must not throw; the admin store re-seeds (mechanism unit-proven elsewhere)
     await raf()
     expect(document.querySelector('.canvas-header-name')).not.toBeNull()
+  })
+})
+
+// ── GH #406 — the persona library on the REAL page ─────────────────────────────────────────────────────
+// The FORMAT's own round trip (byte-equal composed prompt, deep-equal store snapshot) is proven
+// deterministically in agent-admin-persona-file.test.ts; this leg proves the PAGE WIRING those pure
+// functions hang off: the overflow rows exist, Export really produces a persona file's bytes (captured
+// off the Blob the download hands the browser), and feeding those exact bytes back through the hidden
+// file input mints a NEW roster row that becomes the active persona and persists.
+
+describe('agent-admin-app — the persona library (GH #406)', () => {
+  afterAll(() => {
+    // Leave no roster residue: the page reads the imported library at MODULE LOAD, so a leftover record
+    // would add a row at the next run's boot and redden this file's own per-preset row counts.
+    for (const persona of loadImportedPersonas()) {
+      for (const key of Object.keys(localStorage).filter((k) => k.startsWith(`agent-admin-app.${persona.id}.`))) {
+        localStorage.removeItem(key)
+      }
+    }
+    localStorage.removeItem(IMPORTED_PERSONAS_KEY)
+    localStorage.setItem(ACTIVE_PRESET_KEY, AGENT_PRESETS[0]!.id)
+  })
+
+  async function openOverflow(): Promise<HTMLElement> {
+    const overflow = document.querySelector('.overflow-menu') as HTMLElement
+    ;(overflow.querySelector('[data-part="trigger"]') as HTMLElement).click()
+    await raf()
+    return overflow
+  }
+
+  it('the overflow carries Export persona + Import persona…, and Export hands the browser a real persona file', async () => {
+    const overflow = await openOverflow()
+    expect(overflow.querySelector('[data-value="export-persona"]'), 'Export persona row').not.toBeNull()
+    expect(overflow.querySelector('[data-value="import-persona"]'), 'Import persona… row').not.toBeNull()
+
+    // Capture the downloaded bytes: the page hands the anchor an object URL for the Blob it built.
+    const realCreate = URL.createObjectURL.bind(URL)
+    const blobs: Blob[] = []
+    URL.createObjectURL = (obj: Blob | MediaSource): string => {
+      if (obj instanceof Blob) blobs.push(obj)
+      return realCreate(obj)
+    }
+    try {
+      ;(overflow.querySelector('[data-value="export-persona"]') as HTMLElement).click()
+      await raf()
+    } finally {
+      URL.createObjectURL = realCreate
+    }
+    expect(blobs, 'Export produced exactly one download blob').toHaveLength(1)
+    expect(blobs[0]!.type).toBe('application/json')
+    exported = await blobs[0]!.text()
+    const parsed = readPersonaFile(exported)
+    expect(parsed.ok, parsed.ok ? '' : parsed.error).toBe(true)
+    if (!parsed.ok) return
+    expect(parsed.file.persona.label, 'the file names the ACTIVE persona').toBe(resolvedActive().label)
+  })
+
+  it('feeding those exact bytes back through the file input mints a NEW persona, makes it active, and persists it', async () => {
+    expect(exported, 'the export leg above must have run first').not.toBe('')
+    const before = [...document.querySelectorAll<HTMLElement>('.agent-menu [role="menuitemradio"]')].length
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement
+    const transfer = new DataTransfer()
+    transfer.items.add(new File([exported], 'persona.json', { type: 'application/json' }))
+    input.files = transfer.files
+    input.dispatchEvent(new Event('change', { bubbles: true }))
+
+    // The handler reads the File asynchronously — poll rather than assume one frame is enough.
+    for (let i = 0; i < 50; i += 1) {
+      if (document.querySelectorAll('.agent-menu [role="menuitemradio"]').length > before) break
+      await raf()
+    }
+    const rows = [...document.querySelectorAll<HTMLElement>('.agent-menu [role="menuitemradio"]')]
+    expect(rows, 'one NEW roster row — an import never overwrites a preset').toHaveLength(before + 1)
+
+    const minted = rows[rows.length - 1]!
+    expect(minted.textContent).toContain('(imported)')
+    expect(minted.getAttribute('aria-checked'), 'the imported persona becomes the active one').toBe('true')
+    expect((document.querySelector('.canvas-header-name') as HTMLElement).textContent).toBe(minted.textContent)
+    expect(localStorage.getItem(ACTIVE_PRESET_KEY)).toBe(minted.dataset.value)
+
+    // Registered in the PERSISTED library — this is what makes it survive a reload.
+    const library = loadImportedPersonas()
+    expect(library.map((p) => p.id)).toEqual([minted.dataset.value])
+    expect(library[0]!.seed, 'the imported seed is the exported state').toEqual((readPersonaFile(exported) as { ok: true; file: { state: unknown } }).file.state)
+  })
+
+  it('a file that is not a persona file is rejected visibly, and mints nothing', async () => {
+    const before = [...document.querySelectorAll<HTMLElement>('.agent-menu [role="menuitemradio"]')].length
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement
+    const transfer = new DataTransfer()
+    transfer.items.add(new File(['{"kind":"something-else"}'], 'nope.json', { type: 'application/json' }))
+    input.files = transfer.files
+    input.dispatchEvent(new Event('change', { bubbles: true }))
+    const lastToast = (): string => {
+      const toasts = [...document.querySelectorAll('ui-toast-region ui-toast')]
+      return toasts[toasts.length - 1]?.textContent ?? ''
+    }
+    for (let i = 0; i < 50; i += 1) {
+      if (lastToast().includes('Import failed')) break
+      await raf()
+    }
+    expect(lastToast(), 'the failure is announced, never silent').toContain('Import failed')
+    expect(document.querySelectorAll('.agent-menu [role="menuitemradio"]'), 'nothing was minted').toHaveLength(before)
   })
 })

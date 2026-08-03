@@ -1,0 +1,249 @@
+// site/pages/agent-admin-persona-file.ts — the PERSONA FILE: the portable, versioned envelope an
+// admin-authored persona exports to and imports from (GH #406, M-B DoD box 3 — "the persona-library
+// pattern"). PURE data + serialization: no DOM, no localStorage, no store construction — everything here
+// is a plain function over a `SettingsStore`-shaped reader and plain JSON, so the whole round trip is
+// deterministically testable (agent-admin-persona-file.test.ts) without a page.
+//
+// WHAT A PERSONA IS, on the wire: exactly the persona-scoped STORE state the live turn reads — the agent
+// config (name/model/temperature), every master switch, the Surface Options, and all six entry lists
+// (prompt sections — Foundation + Surface style + whatever the admin authored — plus the four capability
+// kinds and the pattern-source pick). That set IS what `composeLiveSystemPrompt` consumes at turn time
+// (agent-admin.ts's `#capabilityGroups`), so a byte-identical state means a byte-identical composed
+// persona prompt: identical live behaviour by construction, not by hopeful reconstruction. Deliberately
+// NOT exported: conversation history, the Dialog Turns ring, and the composer's ephemeral Effort dial —
+// none of them persona state (the component owns them per element lifetime).
+//
+// The KEY SET is enumerated (`PERSONA_STATE_KEYS`), never "whatever localStorage holds under the prefix":
+// the persisted layer only carries keys the admin has WRITTEN (a fresh preset store has none of them),
+// while the store itself answers seed ∪ persisted. Reading through the store is the only way to capture a
+// persona that was never edited, and enumerating the keys is what keeps a foreign/hand-edited file from
+// smuggling unknown keys into a minted persona (`readPersonaState` filters on the way IN as well as OUT).
+//
+// LIBRARY SEMANTICS (GH #406 fork 2): importing MINTS A NEW persona — a collision-safe id, its own
+// persisted store — and never overwrites a shipped preset in place. The imported STATE is carried
+// verbatim (including the `name` config key): only the ROSTER LABEL is uniquified, so the library shows
+// two distinguishable rows while the agent itself behaves byte-identically to the one that was exported.
+import { ENTRY_KINDS, entriesStoreKey } from '@agent-ui/app'
+import {
+  A2UI_CATALOG_KEY,
+  AGENT_ENABLED_KEY,
+  MODELS_INCLUDED_KEY,
+  SURFACE_A2UI_KEY,
+  SURFACE_GENUI_DOGFOOD_KEY,
+  SURFACE_GENUI_KEY,
+  SURFACE_MARKDOWN_KEY,
+  kindEnabledKey,
+} from '@agent-ui/app/agent-admin-schema'
+import type { Persona } from './agent-admin-presets.ts'
+import type { PresetCategory } from './agent-admin-libraries.ts'
+
+/** The envelope's discriminator — a file whose `kind` is anything else is rejected outright. */
+export const PERSONA_FILE_KIND = 'agent-ui-persona'
+
+/** The format version this build WRITES, and the highest it reads. */
+export const PERSONA_FILE_VERSION = 1
+
+const ENTRY_LIST_KEYS: readonly string[] = Object.values(ENTRY_KINDS).map((kind) => entriesStoreKey(kind))
+
+/** Every persona-scoped store key the file carries, in a stable order (a Set: `kindEnabledKey('tool')`
+ *  IS the pre-existing `toolsEnabled` config key — one key, two readers). Order is the JSON key order of
+ *  an exported file, so two exports of the same state are byte-identical strings. */
+export const PERSONA_STATE_KEYS: readonly string[] = [
+  ...new Set([
+    // the agent config (the settings pane's own fields + the Model grid's selection/inclusion record)
+    'name',
+    'model',
+    'temperature',
+    MODELS_INCLUDED_KEY,
+    // the master switches — the Agent card's own, plus one per capability kind
+    AGENT_ENABLED_KEY,
+    ...Object.values(ENTRY_KINDS).map((kind) => kindEnabledKey(kind)),
+    // Surface Options (the output-modality contract)
+    SURFACE_MARKDOWN_KEY,
+    SURFACE_A2UI_KEY,
+    SURFACE_GENUI_KEY,
+    SURFACE_GENUI_DOGFOOD_KEY,
+    A2UI_CATALOG_KEY,
+    // the six entry lists
+    ...ENTRY_LIST_KEYS,
+  ]),
+]
+
+/** The minimum a store must offer to be exported — `SettingsStore`'s `get`, nothing else. */
+export interface PersonaStateReader {
+  get(key: string): unknown
+}
+
+/** The persona's own roster metadata, as it travels in the file (the store state carries no label). */
+export interface PersonaFileMeta {
+  label: string
+  tagline: string
+  category?: PresetCategory
+  /** The id of the persona this file was exported FROM — provenance only; the import mints its own. */
+  sourceId: string
+}
+
+export interface PersonaFile {
+  kind: typeof PERSONA_FILE_KIND
+  version: number
+  /** ISO timestamp, provenance only — never read back into state (so it can differ between two files
+   *  carrying the same persona without changing a single byte of behaviour). */
+  exportedAt: string
+  persona: PersonaFileMeta
+  state: Record<string, unknown>
+}
+
+/** The persona-scoped state a store currently answers, restricted to `PERSONA_STATE_KEYS` and to keys the
+ *  store actually holds (an unset key is OMITTED, never written as `undefined` — the component's own
+ *  fail-closed reads supply every default, and an omitted key must stay omitted for a round trip to be
+ *  deep-equal). */
+export function readPersonaState(store: PersonaStateReader | undefined): Record<string, unknown> {
+  const state: Record<string, unknown> = {}
+  for (const key of PERSONA_STATE_KEYS) {
+    const value = store?.get(key)
+    if (value !== undefined) state[key] = value
+  }
+  return state
+}
+
+/** Build the file for `persona` from the state its store currently holds. */
+export function exportPersonaFile(persona: Persona, store: PersonaStateReader | undefined, now: Date = new Date()): PersonaFile {
+  return {
+    kind: PERSONA_FILE_KIND,
+    version: PERSONA_FILE_VERSION,
+    exportedAt: now.toISOString(),
+    persona: {
+      label: persona.label,
+      tagline: persona.tagline,
+      ...(persona.category === undefined ? {} : { category: persona.category }),
+      sourceId: persona.id,
+    },
+    state: readPersonaState(store),
+  }
+}
+
+/** The file's text form — pretty-printed, so an exported persona is a readable, hand-editable artifact
+ *  (that is the whole point of a shareable preset file) rather than one minified line. */
+export function personaFileText(file: PersonaFile): string {
+  return `${JSON.stringify(file, null, 2)}\n`
+}
+
+/** `the-hotel-concierge-persona.json` — a download name derived from the label, never from the id (the
+ *  file is for a human to recognize; `slug` falls back to `persona` for an all-punctuation label). */
+export function personaFileName(persona: Persona): string {
+  return `${slug(persona.label)}-persona.json`
+}
+
+export type ReadPersonaFileResult = { ok: true; file: PersonaFile } | { ok: false; error: string }
+
+const isPlainObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value)
+
+/**
+ * Parse + validate a persona file's TEXT, fail-closed with a message a human can act on. Rejects (in
+ * order): unparseable JSON · a non-object body · a wrong/absent `kind` · a version this build cannot
+ * read · a missing/blank persona label · a non-object `state` · a state whose prompt sections are absent
+ * or not an array (a persona with no sections would compose the generic fallback prompt — accepting it
+ * would silently import a different agent than the one exported). Unknown state keys are DROPPED rather
+ * than rejected: a hand-edited file may carry notes, and only `PERSONA_STATE_KEYS` may reach a store.
+ */
+export function readPersonaFile(text: string): ReadPersonaFileResult {
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(text) as unknown
+  } catch {
+    return { ok: false, error: 'Not a valid JSON file.' }
+  }
+  if (!isPlainObject(parsed)) return { ok: false, error: 'Not a persona file — the top level is not an object.' }
+  if (parsed.kind !== PERSONA_FILE_KIND) {
+    return { ok: false, error: `Not an agent-ui persona file (expected kind "${PERSONA_FILE_KIND}").` }
+  }
+  const { version } = parsed
+  if (typeof version !== 'number' || !Number.isInteger(version) || version < 1) {
+    return { ok: false, error: 'The persona file declares no usable version.' }
+  }
+  if (version > PERSONA_FILE_VERSION) {
+    return { ok: false, error: `Persona file version ${version} is newer than this build reads (version ${PERSONA_FILE_VERSION}).` }
+  }
+  const meta = parsed.persona
+  if (!isPlainObject(meta) || typeof meta.label !== 'string' || meta.label.trim().length === 0) {
+    return { ok: false, error: 'The persona file carries no name.' }
+  }
+  const rawState = parsed.state
+  if (!isPlainObject(rawState)) return { ok: false, error: 'The persona file carries no state.' }
+  const sections = rawState[entriesStoreKey(ENTRY_KINDS.promptSection)]
+  if (!Array.isArray(sections)) return { ok: false, error: 'The persona file carries no prompt sections.' }
+  for (const key of ENTRY_LIST_KEYS) {
+    if (key in rawState && !Array.isArray(rawState[key])) {
+      return { ok: false, error: `The persona file's "${key}" is not a list.` }
+    }
+  }
+
+  const state: Record<string, unknown> = {}
+  for (const key of PERSONA_STATE_KEYS) {
+    if (key in rawState) state[key] = rawState[key]
+  }
+  return {
+    ok: true,
+    file: {
+      kind: PERSONA_FILE_KIND,
+      version,
+      exportedAt: typeof parsed.exportedAt === 'string' ? parsed.exportedAt : '',
+      persona: {
+        label: meta.label.trim(),
+        tagline: typeof meta.tagline === 'string' ? meta.tagline : '',
+        ...(meta.category === 'hospitality' || meta.category === 'games' ? { category: meta.category } : {}),
+        sourceId: typeof meta.sourceId === 'string' ? meta.sourceId : '',
+      },
+      state,
+    },
+  }
+}
+
+/** A kebab id from a label — the `validateNewEntry` slug law (entries.ts), reused so persona ids read
+ *  like every other minted id in this surface. */
+function slug(label: string): string {
+  const out = label
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return out.length > 0 ? out : 'persona'
+}
+
+/** A collision-safe id/label pair against ids/labels already on the roster — the suffix counter that
+ *  `validateNewEntry` uses for entries, applied to personas (a colliding id would silently SHARE the
+ *  other persona's persisted store, which is the one failure mode library semantics must not have). */
+function mintIdentity(label: string, taken: ReadonlySet<string>, takenLabels: ReadonlySet<string>): { id: string; label: string } {
+  const base = slug(label)
+  let id = `${base}-imported`
+  let display = `${label} (imported)`
+  let suffix = 2
+  while (taken.has(id) || takenLabels.has(display)) {
+    id = `${base}-imported-${suffix}`
+    display = `${label} (imported ${suffix})`
+    suffix += 1
+  }
+  return { id, label: display }
+}
+
+/**
+ * Mint the roster entry a parsed file imports to: a NEW persona (never an overwrite) whose SEED is the
+ * file's state verbatim, and whose id/label are made unique against the current roster. The state is
+ * copied, never aliased — the caller's file object stays untouched.
+ */
+export function importedPersonaFrom(file: PersonaFile, roster: readonly Persona[]): Persona {
+  const { id, label } = mintIdentity(
+    file.persona.label,
+    new Set(roster.map((p) => p.id)),
+    new Set(roster.map((p) => p.label)),
+  )
+  return {
+    id,
+    label,
+    tagline: file.persona.tagline.length > 0 ? file.persona.tagline : `Imported persona (from ${file.persona.sourceId || 'a persona file'})`,
+    ...(file.persona.category === undefined ? {} : { category: file.persona.category }),
+    seed: { ...file.state },
+    imported: true,
+  }
+}
