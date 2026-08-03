@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { UICalendarElement } from './calendar.ts'
 import type { FormValue, ValidityResult } from '../../dom/index.ts'
 import {
@@ -10,6 +10,17 @@ import {
 } from '../../descriptor/component-descriptor.ts'
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
+
+// The displayed month seeds from the live value surface OR TODAY (calendar.ts's connected seed), and
+// the range-mode probes mount with no values — their hardcoded 2026-07-xx cells only exist while the
+// real clock sits in July 2026 (they went red at the Aug 1 month rollover). Pin Date — and ONLY Date;
+// timers stay real — to the month every probe in this file addresses.
+beforeAll(() => {
+  vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-07-15T12:00:00') })
+})
+afterAll(() => {
+  vi.useRealTimers()
+})
 
 // Wave-5B jsdom probes — ui-calendar (decomp 5B-1 · ADR-0048).
 //
