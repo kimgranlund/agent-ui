@@ -21,8 +21,9 @@
 //
 // LIBRARY SEMANTICS (GH #406 fork 2): importing MINTS A NEW persona — a collision-safe id, its own
 // persisted store — and never overwrites a shipped preset in place. The imported STATE is carried
-// verbatim (including the `name` config key): only the ROSTER LABEL is uniquified, so the library shows
-// two distinguishable rows while the agent itself behaves byte-identically to the one that was exported.
+// verbatim (including the `name` config key): only the roster IDENTITY (id + label) is uniquified —
+// mintIdentity below mints both — so the library shows two distinguishable rows while the agent itself
+// behaves byte-identically to the one that was exported.
 import { ENTRY_KINDS, entriesStoreKey } from '@agent-ui/app'
 import {
   A2UI_CATALOG_KEY,
