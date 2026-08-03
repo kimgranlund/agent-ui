@@ -38,7 +38,8 @@ the feeding layer the defect surface now.
 
 4. **The enablement wire is second-class and asymmetric.** `agent-config-schema.ts` describes
    mode/model/k/maxRounds/miniSkillCap but not `integrations`; and the prose-chat arm never
-   forwards the list at all (`admin-live-runner.ts:41-54` vs the surface arm at `:104-118`) — an
+   forwards the list at all (`admin-live-runner.ts:55`, the `/chat` POST body, vs the surface
+   arm's `integrations: req.integrations` at `:110`) — an
    enabled tool is silently inert unless an A2UI/GenUI surface is also on. That is GH #402, a
    user-facing toggle that does nothing, with no error and no disclosure.
 

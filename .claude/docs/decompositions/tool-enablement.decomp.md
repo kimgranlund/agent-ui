@@ -76,5 +76,6 @@ hotel/PMS integration) are named non-goals in ADR-0168, not silent gaps.
 - **S7** — keyed-auth groundwork (`ExecuteContext.apiKey`, worker `envVars` widening, fake keyed
   manifest in tests; NO real hotel/PMS integration ships here).
 
-Dependencies: S1 → S2 → S3 → {S4, S5, S6 parallel-safe — disjoint files} → S7 (needs S3's dispatch
-seam). Every edge above is a real file/type dependency, not a convention.
+Dependencies: S1 → S2 → S3 → S4 → S5 (SERIAL — LLD-C6 and LLD-C7 both write the app-side
+`agent-admin.ts`; the one-writer freeze), with S6 parallel-safe beside S4/S5 (disjoint files) →
+S7 (needs S3's dispatch seam). Every edge above is a real file/type dependency, not a convention.

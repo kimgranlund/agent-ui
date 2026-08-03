@@ -40,7 +40,7 @@
   exists only inside the host process for the duration of the dispatch — never in a tool_result,
   a log line, or any browser-bound byte.
 
-## §C — new requirements (append to §3, after SPEC-R15)
+## §C — new requirements (append as §3.6, after §3.5 — SPEC-R15 itself sits inside §3.2a, so "after R15" would be positionally ambiguous)
 
 ### 3.6 Tool/integration enablement (ADR-0168)
 
@@ -142,3 +142,12 @@ The named tools-scoped shell list gains the registry's new home: `tools/agent/in
 `tools/agent/worker/` · `chat-validation.ts` · `providers.json`/`providers-config.ts`/
 `providers/*` · `agent-config-schema.ts` in the enumeration. The clause's law is unchanged —
 "never enters the portable `src/` producer core" still holds; only the enumeration grows.
+
+## §F — §7 Traceability (append four rows to the table)
+
+| Requirement | PRD goal(s) / upstream |
+|---|---|
+| SPEC-R16 | PRD-G7 (transport interop — the manifest registry + id-keyed, fail-closed enablement resolution; ADR-0137/0168) |
+| SPEC-R17 | PRD-G4/G6 (provable validity before dispatch + no silent drift — the declared `input_schema` enforced at ONE seam; ADR-0168 §3) |
+| SPEC-R18 | Constraint C2 (the secret-free invariant — integration keys resolve server-side in both hosts, never in a build/browser/tool_result; ADR-0073 cl.5, ADR-0152, ADR-0168 §4) |
+| SPEC-R19 | PRD-G7 (transport interop — enablement reaches every live arm via one shared dispatch; GH #402 branch (a); ADR-0136/0152/0168 §5) |

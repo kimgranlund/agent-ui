@@ -16,7 +16,8 @@
 > (`agent-config-schema.ts`). The ADR-0137 shell law fences every new file into `tools/agent/`.
 >
 > **Freeze discipline.** §2 is the fan-out contract; one writer per file per slice. A builder who
-> finds a seam unworkable STOPS and escalates — never a local workaround (ADR-0102's routing law).
+> finds a seam unworkable STOPS and escalates — a coordinated LLD/ADR repair, never a local
+> workaround.
 
 ## 1 · Intent
 
@@ -86,10 +87,12 @@ worth pinning here:
 4. **S3** = LLD-C4 (shared dispatch; both hosts' produce route adopts it; delete the duplicated
    blocks) → green.
 5. **S4** = LLD-C6 (+ the `/chat` arms of C4) — closes GH #402 with a dated Findings comment
-   naming branch (a) + the ADR. Parallel-safe with S5/S6 (disjoint files).
-6. **S5** = LLD-C7 (labels/trios/parity). **S6** = LLD-C8 (config schema).
+   naming branch (a) + the ADR. Parallel-safe with S6 ONLY — not S5: LLD-C6 and LLD-C7 both
+   write the app-side `agent-admin.ts` (the one-writer freeze).
+6. **S5** = LLD-C7 (labels/trios/parity) — SERIAL after S4, same-file writer. **S6** = LLD-C8
+   (config schema; disjoint files, parallel-safe beside S4/S5).
 7. **S7** = LLD-C5 + C9 (env projection widening + keyed groundwork fixtures) → full
    `npm run check && npm test` green; `test:browser` where admin page tests are touched (S4/S5).
 
-Every slice: one writer per file, foreground gates, exit codes only. Ratifier of this doc set:
+Every slice: one writer per file, foreground gates, exit codes only. Reviewer of this doc set:
 the doc-checker seat; ratifier of the ADR: Kim alone.
