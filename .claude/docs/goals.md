@@ -599,10 +599,10 @@ pattern documented as reusable beyond agent-admin. **Excludes:** the production 
 live-turn path (a deployment arc of its own); GenUI entirely; any new SaaS component.
 
 **Definition of done (dogfooded acceptance).**
-- [ ] The Hotel Concierge live flow proves ADR-0161: the submit snapshot carries both range dates —
-      the ADR's own acceptance criterion.
-- [ ] A full multi-round IDGRAPH quiz session completes live, surviving the action-click resume path,
-      under the ruled round-budget/recovery policy.
+- [x] The Hotel Concierge live flow proves ADR-0161: the submit snapshot carries both range dates —
+      the ADR's own acceptance criterion. *(2026-08-04 live run — see the progress note below.)*
+- [x] A full multi-round IDGRAPH quiz session completes live, surviving the action-click resume path,
+      under the ruled round-budget/recovery policy. *(2026-08-04 live runs — see the progress note below.)*
 - [ ] An exported persona round-trips: export → re-import → identical live behaviour — the
       persona-library pattern proven and documented.
 - [ ] The second catalog is pickable in agent-admin and `catalogId` threads end-to-end.
@@ -625,6 +625,34 @@ is a *live-run* proof and none has been run. What exists underneath them:
   is known — deliberately not guessed at.
 - The calendar range-band cosmetic fix rode ADR-0105/GH #315; ADR-0093's long-pending ratification was
   closed 2026-07-29 after its owed independent doc-reviewer pass finally ran.
+
+**Progress note — 2026-08-04. Boxes 1 + 2 PROVEN LIVE** (run on Kim's explicit "run M-B's live proofs"
+instruction; evidence + the reusable harness at `.claude/ops/mb-live-proof/`). The rig: the REAL
+`ui-agent-admin` element on the REAL persona preset stores with the REAL site live runner
+(`createAdminSurfaceTurn` → dev proxy → `produce()` → live Anthropic models), driven in jsdom. **One
+recorded deviation** (the M-C precedent): no live browser was attached to the session, so input commits
+were programmatic — each control's props set then its own commit event dispatched, the exact seam
+`input.ts`'s two-way binding listens on; everything downstream (binding write → dataModel → action
+snapshot → `frameClientMessage`/`nextTurn` → the wire → the model) ran real.
+- **Box 1** (`claude-sonnet-5`, Hotel Concierge): the model rendered the booking-form idiom with a
+  `mode="range"` Calendar bound `valueStart→/booking/checkIn`, `valueEnd→/booking/checkOut`; the
+  user-picked range **2026-08-12 → 2026-08-15** landed in the submit snapshot's dataModel — *overriding*
+  the model's own prefill (08-14→17), so the client-side ADR-0161 path did the work — and the model
+  consumed it and rendered "Reservation confirmed" with the submitted details. The submit gate held
+  correctly twice along the way (refusing while required fields were empty/invalid).
+- **Box 2** (`claude-haiku-4-5` @ temp 0.9, Quizmaster): a full 5-question session — 7 turns, 6
+  action-click same-surface resumes, **zero halts, zero faults**, with **2 in-turn validation retries
+  that self-corrected live** (the recovery arm exercised, not merely avoided); a second consecutive
+  clean full session behind it. One separate session halted budget-correctly on the opening turn —
+  a PARSE-class flake (the model appended a stray `</parameter>` line; 3 rounds, halt) — with the
+  #307-shipped `CODE at path` text making it self-diagnosing. That is the ruled round-budget/recovery
+  policy working end to end: retry-with-hints when correctable, loud bounded halt when not.
+- **Box 5 status:** `npm run check` exit 0 · `npm test` exit 0 (396 files / 7232 tests) — after
+  repairing a pre-existing month-rollover date-dependence the proof gates surfaced (calendar.test.ts's
+  range probes went red at the Aug-1 boundary; Date-only pin to 2026-07-15, its own PR).
+- **Boxes 3 + 4 remain build-gated, not proof-gated:** persona export/import has no surface in
+  `ui-agent-admin` yet, and the catalog picker is one-option-by-construction (no second catalog in the
+  package) — their phase-2/3 builds precede any live proof.
 
 ---
 
