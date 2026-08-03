@@ -3,11 +3,11 @@
 // agent-admin"). NOT a doc of the agent-admin PAGE — this documents the REUSABLE SHAPE: let a user
 // export a whole authored configuration as a shareable file, and re-import it as a NEW library entry,
 // never overwriting, with a proof that re-import reproduces identical live behaviour. The concrete,
-// shipped instance is agent-admin's persona export/import (agent-admin-persona-file.ts); every artifact
-// on this page — the constants, the exported JSON, the fail-closed rejection message, the minted
-// id/label — is produced by CALLING that module's real functions live, on a real shipped preset, never a
-// hand-typed literal. If the envelope shape, the validation order, or the mint/collision rule ever
-// changes, this page's own output changes with it (derived), and `persona-library-pattern.test.ts`
+// shipped instance is agent-admin's persona export/import (agent-admin-persona-file.ts); every JSON/
+// message/id ARTIFACT on this page — the exported envelope, the fail-closed rejection message, the
+// minted id/label — is produced by CALLING that module's real functions live, on a real shipped preset,
+// never a hand-typed literal. If the envelope shape, the validation order, or the mint/collision rule
+// ever changes, this page's own output changes with it (derived), and `persona-library-pattern.test.ts`
 // re-derives the same values independently and asserts DOM-shown ≡ freshly-computed — the drift gate a
 // cross-cutting, no-descriptor pattern page can still carry (T9 "recipe/pattern" per docs-author's
 // content-types.md: a real, live, minimal composition where shown source == running source — here the
@@ -16,9 +16,10 @@
 import { mountPage } from './_page.ts' // FIRST import — foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import { codeBlock } from '../lib/code-block.ts'
 import { el, exampleSection } from '../lib/specimens.ts'
-import { tableHead, tableRow, textCell, codeCell } from '../lib/doc-page.ts'
+import { tableHead, tableRow, textCell, codeCell, renderChangelogTable } from '../lib/doc-page.ts'
 import { ENTRY_KINDS, entriesStoreKey, createMemoryStore } from '@agent-ui/app'
 import { AGENT_PRESETS, personaFromPreset } from './agent-admin-presets.ts'
+import type { Persona } from './agent-admin-presets.ts'
 import {
   PERSONA_FILE_KIND,
   PERSONA_FILE_VERSION,
@@ -27,15 +28,18 @@ import {
   readPersonaFile,
   importedPersonaFrom,
 } from './agent-admin-persona-file.ts'
+import type { PersonaStateReader } from './agent-admin-persona-file.ts'
 
 const { content } = mountPage({
   title: 'The persona-library pattern',
   intro:
     'Export a whole authored configuration as a shareable file; re-import it as a NEW library entry, ' +
     'never an overwrite; prove the re-import behaves identically to the original. Shipped once, on ' +
-    'agent-admin’s personas (GH #406) — documented here as a shape any surface with user-authored, ' +
-    'store-backed config can reuse. Every artifact below is produced by calling the real ' +
-    'agent-admin-persona-file.ts functions live, not typed by hand.',
+    'agent-admin’s personas — documented here as a shape any surface with user-authored, store-backed ' +
+    'config can reuse. The JSON, the rejection message, and the minted id/label shown below are each ' +
+    'produced by calling the real agent-admin-persona-file.ts functions live, not typed by hand; the ' +
+    'four-part pattern description and the “where this generalizes” notes below are authored ' +
+    'commentary, not derived output.',
 })
 
 // ── the demo persona — a REAL shipped preset, not a fixture invented for this page ─────────────────────
@@ -45,6 +49,24 @@ const DEMO_PRESET = AGENT_PRESETS.find((p) => p.id === 'quant')
 if (!DEMO_PRESET) throw new Error('persona-library-pattern demo: the shipped "quant" preset is gone — pick another demo persona')
 const demoPersona = personaFromPreset(DEMO_PRESET)
 const demoStore = createMemoryStore({ initial: demoPersona.seed }) // no persistKey — pure ephemeral, no localStorage
+
+/**
+ * composePersonaLibraryDemo — the whole composition every artifact on this page is derived from: export
+ * the persona's live state to a file, re-parse that file fail-closed, and mint the roster entry it
+ * imports to. This is the literal function the page calls below to produce its outputs; its source is
+ * captured via `.toString()` and shown verbatim in "The composition, run live" (T9 — the shown code is
+ * the code that runs, never a hand-typed paraphrase that could drift from it).
+ */
+export function composePersonaLibraryDemo(persona: Persona, store: PersonaStateReader, roster: readonly Persona[]) {
+  const file = exportPersonaFile(persona, store)
+  const text = personaFileText(file)
+  const accepted = readPersonaFile(text)
+  const minted = accepted.ok ? importedPersonaFrom(accepted.file, roster) : undefined
+  return { file, text, accepted, minted }
+}
+
+const roster = AGENT_PRESETS.map(personaFromPreset) // the real shipped roster, no import history required
+const { text: exportedText, accepted, minted } = composePersonaLibraryDemo(demoPersona, demoStore, roster)
 
 // ── the four elements, hand-authored (no canonical index to derive the SHAPE description from — flagged) ──
 content.append(
@@ -61,7 +83,7 @@ content.append(
       ),
       olItem(
         'Import validates fail-closed and MINTS a new entry with a collision-safe id.',
-        'Reject the whole file on any malformed shape (never sanitize-drop a bad item and import a persona that silently behaves differently); never overwrite an existing entry in place — this is what makes it LIBRARY semantics, not overwrite semantics.',
+        'Reject the whole file on any malformed shape (never sanitize-drop a bad item and import a persona that silently behaves differently); never overwrite an existing entry in place — this is what makes it LIBRARY semantics, not overwrite semantics. The two failure modes are opposite by design: a malformed item inside a known list rejects the WHOLE file, but an unrecognized top-level state key is silently DROPPED, never rejected — a hand-edited file may carry notes outside the enumerated key set, and only that enumerated set may ever reach a store.',
       ),
       olItem(
         'The proof is a round-trip test that drives the real composing logic on both sides.',
@@ -71,9 +93,26 @@ content.append(
   ),
 )
 
+// ── the composition itself — the real function above, shown verbatim via .toString() ────────────────────
+const compositionSource = composePersonaLibraryDemo.toString()
+const compositionBlock = codeBlock(compositionSource, 'ts')
+compositionBlock.id = 'persona-composition-code'
+
+content.append(
+  exampleSection(
+    'The composition, run live',
+    el('p', {}, [
+      document.createTextNode(
+        'Every artifact below comes from calling this one function — export → serialize → re-parse → mint. ' +
+          'The block is not typed onto this page: it is composePersonaLibraryDemo’s own source, read via ' +
+          'toString() on the function this page actually calls, so it cannot drift from what runs.',
+      ),
+    ]),
+    compositionBlock,
+  ),
+)
+
 // ── 1 & 2 — the envelope + export, run live ───────────────────────────────────────────────────────────
-const exportedFile = exportPersonaFile(demoPersona, demoStore)
-const exportedText = personaFileText(exportedFile)
 const exportBlock = codeBlock(exportedText, 'json')
 exportBlock.id = 'persona-export-json'
 
@@ -122,10 +161,6 @@ content.append(
 )
 
 // ── 4 — library semantics: re-import the UNCORRUPTED export, mint a new persona ─────────────────────────
-const accepted = readPersonaFile(exportedText)
-const roster = AGENT_PRESETS.map(personaFromPreset) // the real shipped roster, no import history required
-const minted = accepted.ok ? importedPersonaFrom(accepted.file, roster) : undefined
-
 const mintTable = document.createElement('table')
 const mintTbody = document.createElement('tbody')
 mintTbody.append(
@@ -144,12 +179,14 @@ content.append(
           'against the real shipped preset roster (which already carries a "quant" id). The table is that call’s ' +
           'actual return: a collision-safe id/label pair, never a second "quant" silently sharing the first one’s ' +
           'persisted store — the one failure mode library semantics must not have. The imported STATE carries over ' +
-          'verbatim; only the roster LABEL is uniquified, so the agent behaves byte-identically to the one exported.',
+          'verbatim; only the roster IDENTITY (id + label) is uniquified — nothing in the state changes — so the ' +
+          'agent behaves byte-identically to the one exported.',
       ),
     ]),
     mintTable,
   ),
 )
+if (!accepted.ok) throw new Error('persona-library-pattern demo: the uncorrupted export was rejected — something upstream is broken')
 
 // ── where this generalizes (hand-authored; flagged as such — no canonical index of "reusable patterns") ──
 content.append(
@@ -177,11 +214,31 @@ content.append(
       codeChip('site/pages/agent-admin-persona-file.test.ts'),
       document.createTextNode(
         ' (the round-trip proof — export → import → byte-identical composed system prompt + deep-equal ' +
-          'store snapshot, driven through the real ui-agent-admin component, GH #406).',
+          'store snapshot, driven through the real ui-agent-admin component).',
       ),
     ]),
   ),
 )
+
+// ── page-end Changelog (TKT-0053 convention — site/lib/doc-page.ts's renderChangelogTable, same call
+// shape as agent-admin.ts) — a page's own provenance citations never belong woven into descriptive prose;
+// they land here instead. Hand-authored (no canonical index of GH issues to derive from) — flagged as such,
+// same discipline as any other underivable fact.
+const changelog = renderChangelogTable([
+  {
+    date: '2026-08-04',
+    type: 'Feature',
+    id: 'GH #406',
+    summary: 'Shipped agent-admin persona export/import: a versioned envelope, fail-closed validator, and collision-safe mint (agent-admin-persona-file.ts).',
+  },
+  {
+    date: '2026-08-04',
+    type: 'Change',
+    id: 'GH #406',
+    summary: 'Documented the shape here as a reusable persona-library pattern, independent of the agent-admin page.',
+  },
+])
+if (changelog) content.append(changelog)
 
 // ── small local DOM helpers (page-local scaffold only; no per-fact data lives here) ──────────────────────
 

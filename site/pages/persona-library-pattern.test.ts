@@ -55,17 +55,21 @@ let shownText: string
 let shownFile: PersonaFile
 let shownRejection: string
 let mintRows: Element[]
+let shownCompositionSource: string
+let composeFn: (...args: never[]) => unknown
 
 beforeAll(async () => {
   // A DEFERRED import (never a static one at file top) — the a2ui-chat.test.ts / a2ui-live.ask-lifecycle
   // .test.ts precedent: a static import is hoisted and would mount the real page before this file's own
   // setup runs. This page mounts no form-associated custom element (no ui-text-field/ui-button in a
   // form), so — unlike those two — no ElementInternals stub is needed first.
-  await import('./persona-library-pattern.ts')
+  const mod = await import('./persona-library-pattern.ts')
   shownText = document.getElementById('persona-export-json')?.textContent ?? ''
   shownFile = JSON.parse(shownText) as PersonaFile
   shownRejection = document.getElementById('persona-import-rejection')?.textContent ?? ''
   mintRows = [...(document.getElementById('persona-import-mint')?.querySelectorAll('tbody tr') ?? [])]
+  shownCompositionSource = document.getElementById('persona-composition-code')?.textContent ?? ''
+  composeFn = mod.composePersonaLibraryDemo as (...args: never[]) => unknown
 })
 
 describe('persona-library-pattern.html — the shown export JSON is genuinely derived, not a stale literal', () => {
@@ -87,6 +91,23 @@ describe('persona-library-pattern.html — the shown export JSON is genuinely de
     const fresh = freshExport()
     const diverged: PersonaFile = { ...fresh.file, persona: { ...fresh.file.persona, label: 'Someone Else' } }
     expect(stateFingerprint(shownFile)).not.toEqual(stateFingerprint(diverged))
+  })
+})
+
+describe('persona-library-pattern.html — the shown composition code block is the real function source, not a hand-typed paraphrase (MAJOR 2)', () => {
+  it('anti-vacuous: the page actually rendered a non-empty composition block naming all four functions it composes', () => {
+    expect(shownCompositionSource.length).toBeGreaterThan(20)
+    for (const fnName of ['exportPersonaFile', 'personaFileText', 'readPersonaFile', 'importedPersonaFrom']) {
+      expect(shownCompositionSource).toContain(fnName)
+    }
+  })
+
+  it('the shown block is exactly composePersonaLibraryDemo.toString() — the literal source of the function the page calls to produce every artifact above', () => {
+    expect(shownCompositionSource).toBe(composeFn.toString())
+  })
+
+  it('negative control: the shown block does NOT equal a different function’s source (the equality check genuinely distinguishes, the gate bites)', () => {
+    expect(shownCompositionSource).not.toBe(readPersonaFile.toString())
   })
 })
 
