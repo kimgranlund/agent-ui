@@ -45,10 +45,19 @@ export interface WidgetFactory {
 /**
  * A registered catalog paired with its factory table — the registry's component-resolution result
  * (catalog LLD-C3). The renderer resolves a node's control via `registry.get(catalogId)?.factories[type]`.
+ *
+ * `functions` (ADR-0169 cl.8, amends ADR-0034's shared-table seam): a PER-CATALOG override of the
+ * function-call implementation table. `renderer/functions.ts`'s `evaluateCatalog` prefers
+ * `entry.functions?.[name]` over the shared `catalogFunctions` (`catalog/functions.ts`) — landed
+ * per-catalog rather than as a global mutation so two dialects (the default catalog's `{valid,message}`
+ * vs. a Basic-dialect catalog's plain booleans) can share function NAMES without colliding. Absent ⇒
+ * every lookup falls through to the shared table, byte-identical to before this clause (the default
+ * catalog registers none).
  */
 export interface CatalogEntry {
   catalog: Catalog
   factories: Record<string, WidgetFactory>
+  functions?: Record<string, (args: Record<string, unknown>) => unknown>
 }
 
 /**
@@ -57,8 +66,10 @@ export interface CatalogEntry {
  * (capabilities, LLD-C12). Two-tier: a project registers its own catalog with zero package edits (N1).
  */
 export interface CatalogRegistry {
-  /** Register a catalog + its factory table (throws `CATALOG_FACTORY_MISSING` on a gap; last-wins on a dup id). */
-  register(catalog: unknown, factories: Record<string, WidgetFactory>): void
+  /** Register a catalog + its factory table (throws `CATALOG_FACTORY_MISSING` on a gap; last-wins on a dup
+   *  id). `functions` (ADR-0169 cl.8) is an optional per-catalog function-impl override table — absent ⇒
+   *  every declared function falls through to the shared `catalogFunctions` table, unchanged. */
+  register(catalog: unknown, factories: Record<string, WidgetFactory>, functions?: Record<string, (args: Record<string, unknown>) => unknown>): void
   /** Resolve a registered catalog by id, or `undefined` if unregistered (the renderer's `CATALOG_UNKNOWN` allowlist). */
   get(id: string): CatalogEntry | undefined
   /** Every registered catalog id — feeds renderer capabilities (renderer LLD-C12). */

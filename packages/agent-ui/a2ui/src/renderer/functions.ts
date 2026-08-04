@@ -167,10 +167,11 @@ function evaluateCatalog(
     return undefined
   }
 
-  // Step 2: look up the pure implementation in the shared table from catalog/functions.ts.
-  // For the default catalog this is the `required`/`email`/`regex` trio; a project-catalog function
-  // absent from this table emits FUNCTION (a future plugin seam would extend `catalogFunctions`).
-  const impl = catalogFunctions[name]
+  // Step 2: look up the pure implementation. ADR-0169 cl.8 — a catalog carrying its OWN `functions`
+  // override table (e.g. a2ui-basic's boolean dialect) is preferred; absent, this falls through to the
+  // shared table from catalog/functions.ts (the default catalog's `required`/`email`/`regex` trio, and
+  // the fallback for any other catalog with no override table of its own).
+  const impl = entry.functions?.[name] ?? catalogFunctions[name]
   if (impl === undefined) {
     emitError({
       code: 'FUNCTION',

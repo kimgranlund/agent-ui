@@ -18,7 +18,9 @@ import { readFileSync } from 'node:fs'
 import type { AgentTransport, TurnInput } from '../lib/agent-runtime.ts'
 declare const process: { cwd(): string }
 
-let __setTransportForTest: (next: AgentTransport) => void
+// The page's test-only injection seam. The optional second arg (GH #415) declares which backbone the
+// injected stub STANDS FOR; every call below that omits it gets the recorded default, exactly as before.
+let __setTransportForTest: (next: AgentTransport, live?: boolean) => void
 
 beforeAll(async () => {
   // jsdom reality (the `a2ui-live.ask-lifecycle.test.ts` precedent): `ElementInternals.setFormValue`/
@@ -247,6 +249,80 @@ describe('a2ui-chat on ui-conversation — a thrown transport is surfaced + the 
     // a subsequent turn must proceed normally — proves the turn loop recovered on the throw path too
     await sendIntent('continue')
     await waitUntil(() => agentBubbles().some((b) => b.textContent?.includes('fine') ?? false))
+  })
+})
+
+// ── GH #415 — the terminal error meta-line + the transport-honest empty turn ───────────────────────────
+// A proxy whose stream headers already committed 200 reports a `ProduceHalt`/upstream fault as ONE terminal
+// `{"a2uiMeta":{"error":…}}` line (`formatErrorLine`, meta-line.ts). It PARSES cleanly — it is a valid
+// meta-line, never a malformed one — so this page's own `if (meta) … continue` used to drop it with zero
+// telemetry: the async generator then completed NORMALLY (nothing throws client-side, so the catch block
+// never ran), the turn held zero lines, and the page printed the RECORDED transcript's exhaustion notice
+// over a live failure. These assertions pin both halves of the fix: the error becomes visible (the page's
+// own `handle.fail()` idiom + the status line), and the exhaustion wording is reserved for the transport
+// that actually has a transcript. Same coverage PR #414 landed for the sibling pages (GH #408).
+/** The wire shape a transport composes — `formatErrorLine`'s exact bytes for the `error` case. Hand-built
+ *  rather than imported (the a2ui-live.ask-lifecycle.test.ts precedent): the envelope is tiny and public. */
+function metaLine(fields: { note?: string; error?: string }): string {
+  return JSON.stringify({ a2uiMeta: fields })
+}
+
+/** `beforeEach`'s `resetPage()` kicks a REAL async `wireLiveOverlay()` probe, and its own fallback status
+ *  write (no live key in jsdom) lands at an arbitrary later tick — latest-wins on a single status line. Wait
+ *  it out BEFORE injecting a transport, so no assertion below races the probe's own notice. The probe never
+ *  reassigns `transport`/`isLive` here (that branch needs `available: true`), only the status text. */
+async function waitForLiveProbeSettled(): Promise<void> {
+  await waitUntil(() => /Recorded transcript/.test(statusText()))
+}
+
+function lastNarration(): HTMLElement | null {
+  const strips = document.querySelectorAll<HTMLElement>('ui-conversation [data-part="narration"]')
+  return strips.length > 0 ? strips[strips.length - 1]! : null
+}
+
+const EXHAUSTED = 'The agent has no further turns in this recorded transcript. Reset to start over.'
+
+describe('a2ui-chat — a terminal transport error is VISIBLE, and the exhaustion notice is transport-honest (GH #415)', () => {
+  const HALT = 'Live agent failed: exhausted 3 self-correct rounds without a valid surface.'
+
+  it("a terminal error meta-line surfaces as a ⚠ system bubble + a failed narration + an error status — never the recorded transcript's exhaustion notice", async () => {
+    await waitForLiveProbeSettled()
+    __setTransportForTest(scriptedTransport(() => [metaLine({ error: HALT })]), true)
+
+    await sendIntent('build me a blackjack table')
+    await waitUntil(() => systemBubbles().some((b) => b.textContent?.includes(HALT) ?? false))
+
+    // SPEC-R6 AC3's own face: the primitive truncates narration, stamps an error entry, and forces the
+    // strip header to `error` (ADR-0146 F8) — the SAME visible pair a client-thrown turn gets, never a
+    // green-reading strip over a turn that genuinely failed.
+    await waitUntil(() => lastNarration()?.querySelector('[data-part="header"]')?.getAttribute('data-status') === 'error')
+    expect(lastNarration()!.querySelector('ui-timeline-item[status="error"] [data-role="label"]')?.textContent).toContain('Turn failed')
+
+    expect(statusText(), "the transport's own reason, on the page's own aria-live notice line").toContain(HALT)
+    expect(statusText(), 'the misdiagnosis this issue is about').not.toMatch(/no further turns|recorded transcript/i)
+    await waitUntilIdle()
+  })
+
+  it('a LIVE turn that produced nothing at all (no error line) says exactly that — never "no further turns in this recorded transcript"', async () => {
+    await waitForLiveProbeSettled()
+    __setTransportForTest(scriptedTransport(() => []), true)
+
+    await sendIntent('anything')
+    await waitUntil(() => /produced no renderable output/.test(statusText()))
+
+    expect(statusText(), 'a live transport has no transcript to exhaust — and no Reset to rewind it to').not.toMatch(/recorded transcript/i)
+    await waitUntilIdle()
+  })
+
+  it('negative control: the RECORDED backbone keeps the exhaustion notice byte-identical', async () => {
+    await waitForLiveProbeSettled()
+    __setTransportForTest(scriptedTransport(() => [])) // `live` omitted ⇒ recorded, the pre-#415 default
+
+    await sendIntent('anything')
+    await waitUntil(() => statusText() === EXHAUSTED)
+
+    expect(statusText(), 'the live wording never reaches the recorded backbone').not.toMatch(/produced no renderable output/)
+    await waitUntilIdle()
   })
 })
 

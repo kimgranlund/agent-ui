@@ -78,7 +78,6 @@ import { isGenuiCandidate, readGenuiLine, utf8ByteLength, GENUI_MAX_HTML_BYTES }
 import type { GenuiSurfaceConfig } from './genui-surface-config.ts'
 
 const PROTOCOL_VERSION = 'v1.0'
-const CATALOG_ID = 'agent-ui'
 const DEFAULT_MODEL = 'claude-sonnet-5' // the registry's defaultModel (providers.json)
 
 /** The loop's injected surfaces (SPEC §5). `provider` is the model seam (stub|real); `retrieve` runs
@@ -147,6 +146,16 @@ export interface ProduceOptions {
    *  below (SPEC-R1) runs UNCONDITIONALLY regardless of this flag: a genui line is a reserved kind on the
    *  stream itself, handled the same way whether or not the model was invited to use it. */
   genuiSurface?: GenuiSurfaceConfig
+  /** GH #418 — the caller's OWN A2UI Surface Option, threaded to `buildSystemPrompt`'s 7th parameter.
+   *  Absent/`true` ⇒ byte-identical to before this field existed (the `genuiSurface`-absent precedent):
+   *  the full A2UI grammar/catalog/examples/mini-skills composition, unconditionally. `false` ⇒ the caller
+   *  has no A2UI renderer this turn — `buildSystemPrompt` composes zero A2UI-grammar bytes, and (when
+   *  `genuiSurface.enabled` is also set) folds an explicit no-A2UI-renderer framing into the genui block
+   *  instead. Never consulted by the peel/heal/validate loop below (SPEC-N3 — a produce-layer composition
+   *  knob only, the SAME posture `mode`/`genuiSurface` already hold): a stray A2UI-shaped line the model
+   *  emits anyway still runs the ordinary validate/self-correct path, exactly as an `exclusive` genui-only
+   *  turn's stray A2UI already does today. */
+  a2uiEnabled?: boolean
 }
 
 /** The bounded raw-reasoning excerpt cap (ADR-0146 F3, `progressDetail:'full'`) — a `thinking` delta can be
@@ -278,8 +287,26 @@ function userContent(input: TurnInput): string {
   return input.kind === 'intent' ? input.text : frameClientMessage(input.message)
 }
 
-function queryOf(input: TurnInput, k: number): RetrieveQuery {
-  return { intent: userContent(input), k, catalogId: CATALOG_ID, protocolVersion: PROTOCOL_VERSION }
+/** ADR-0169 cl.4 — `queryOf` is now catalog-aware: the retrieval query's `catalogId` names the
+ *  REQUEST's catalog (`deps.catalog.catalogId`), not a pinned literal. `corpus/retrieve.ts` filters
+ *  strictly on `meta.catalogId`, so a Basic turn retrieves zero exemplars (no `a2ui-basic` shard yet —
+ *  a named follow-up) and `fewShot` degrades to its designed empty arm; no exemplars beats
+ *  wrong-dialect exemplars. */
+function queryOf(input: TurnInput, k: number, catalogId: string): RetrieveQuery {
+  return { intent: userContent(input), k, catalogId, protocolVersion: PROTOCOL_VERSION }
+}
+
+/** ADR-0169 cl.4 clause 2 — the createSurface authority stamp: the SERVER-selected catalog is
+ *  authoritative over the model-authored `catalogId` (the exact SPEC-R12 posture `opts.model` already
+ *  takes over `input.model`). Runs AFTER `heal()` (on the already-parsed `output`) and BEFORE
+ *  `validateA2ui` — an unconditional, idempotent overwrite, never a heal arm (ADR-0061's closed,
+ *  form-only repair list is untouched; this is a producer-layer authority step). Keeps the byte-pinned
+ *  `grammar.md` example (`"catalogId":"agent-ui"`) harmless on a non-default-catalog turn — the wire
+ *  the client renders always carries the id whose catalog validated it. */
+function stampCreateSurfaceCatalogId(output: A2uiOutput, catalogId: string): void {
+  for (const msg of output) {
+    if ('createSurface' in msg) msg.createSurface.catalogId = catalogId
+  }
 }
 
 /**
@@ -320,11 +347,24 @@ function queryOf(input: TurnInput, k: number): RetrieveQuery {
  * feedback never named it. A static reminder (not dynamically resolved — a PARSE failure carries no
  * component/property to look up, unlike CATALOG) restates the ONE constraint that covers both
  * observed failure shapes, appended once regardless of how many failures this round carries.
+ *
+ * GH #404 (live observation, `.claude/ops/mb-live-proof/box2-quizmaster-FAIL.json`) — a THIRD concrete
+ * way a real model breaks the "one JSON object per line" rule: `claude-haiku-4-5-20251001` at temp 0.9
+ * appended a literal trailing `</parameter>` line — tool-call/XML closing-tag bleed-through — after an
+ * otherwise-valid single-round payload, and repeated the identical mistake across all 3 retry rounds
+ * (the round budget then halted loudly, fail-closed, exactly as designed). The original PARSE_HINT's
+ * "never add any text after the JSONL" already COVERED this shape in principle, but never named it
+ * concretely, so the model never connected the dots under retry. This ADDS the concrete instruction
+ * (ADR-0102 lane 3 — a hint-lane fix only; the validator/peel logic/round budget are untouched): a
+ * PARSE retry now explicitly names the output-shape contract — NDJSON payload lines ONLY, never a
+ * tool/XML closing tag, never a code fence, never prose outside the leading meta-line.
  */
 const PARSE_HINT =
   ' Reminder: every A2UI message must be COMPLETE, valid JSON on a SINGLE line — never split one ' +
   'JSON object across multiple physical lines (no pretty-printing), and never add any text after ' +
-  'the JSONL (the note belongs ONLY on the leading meta-line).'
+  'the JSONL (the note belongs ONLY on the leading meta-line). Your reply is NDJSON payload lines ' +
+  'ONLY: never emit an XML or tool-call closing tag (e.g. `</parameter>`), never wrap the JSONL in a ' +
+  'code fence (```), and never add conversational prose anywhere outside that leading meta-line.'
 
 /**
  * GH #307 (second pass, static root-cause) — the SAME teaching gap PARSE_HINT above and `expectedTypeNote`
@@ -719,10 +759,10 @@ function sessionSurfaceSeeds(session: Session): Map<string, SurfaceSeed> {
 
 export async function* produce(input: TurnInput, deps: ProduceDeps, opts: ProduceOptions): AsyncIterable<string> {
   const k = opts.k ?? 3
-  const query = queryOf(input, k)
+  const query = queryOf(input, k, deps.catalog.catalogId) // ADR-0169 cl.4 — catalog-aware, not the old pinned literal
   const exemplars = deps.retrieve(query) // SPEC-R7 — top-k over the judged shard
   const miniSkills = selectMiniSkills(query.intent, MINI_SKILLS, opts.miniSkillCap ?? DEFAULT_MINI_SKILL_CAP) // ADR-0091 §2 — once per turn, beside retrieve(); ADR-0135 cl.7 — cap now tunable, absent ⇒ default
-  const system = buildSystemPrompt(deps.catalog, exemplars, opts.mode, miniSkills, opts.personaSystem, opts.genuiSurface) // SPEC-R6 — catalog-derived; ADR-0090 mode + ADR-0091 mini-skills + ADR-0138 persona + genui-surface SPEC-R10
+  const system = buildSystemPrompt(deps.catalog, exemplars, opts.mode, miniSkills, opts.personaSystem, opts.genuiSurface, opts.a2uiEnabled) // SPEC-R6 — catalog-derived; ADR-0090 mode + ADR-0091 mini-skills + ADR-0138 persona + genui-surface SPEC-R10 + GH #418 a2uiEnabled
   const model = opts.model ?? input.model ?? DEFAULT_MODEL // opts.model = the proxy's allowlist-validated model (SPEC-R12); it WINS over a client-supplied input.model
   // ADR-0088 §2 — data ALREADY flowing above, captured once for the eventual TurnTrace (no new collection).
   // NOTE: this is a `session.turns` MESSAGE index (the alternating Messages-API array, user+assistant per
@@ -888,6 +928,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
       continue
     }
     lastOutput = assembled.output // GH #288 — this round's parsed output, kept for the NEXT round's self-correct feedback (expectedTypeNote)
+    stampCreateSurfaceCatalogId(assembled.output, deps.catalog.catalogId) // ADR-0169 cl.4 — the server-selected catalog is authoritative, unconditional + idempotent, BEFORE validateA2ui runs
     // SPEC-N3 — the shared validator, no fork; TKT-0081 — seeded with the session's prior graphs so the
     // per-round judgment matches the MERGED state the renderer will hold (update-only follow-ups valid;
     // a cross-turn root-resend fails pre-wire as `sid:root`, a self-correct round).

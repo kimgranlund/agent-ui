@@ -17,10 +17,14 @@
 // reconnect with the SAME store (e.g. a layout crossing) is NOT a switch and does not reset. Proven
 // by the store-swap probe in agent-admin-app.test.ts and the reset regression in agent-admin.test.ts.
 //
-// Each persona steers a DIFFERENT A2UI catalog family + interaction mechanism: its Foundation builtin is
-// rewritten to the persona, a custom "Surface style" section teaches when to emit UI vs prose, and its
-// capability entries either intent-match the shipped mini-skill registry (ADR-0091 — the game/dashboard
-// showcases: card-layout · game-table-chrome · game-hud · dashboard-kpi-grid) or carry AUTHORED
+// Each persona steers a DIFFERENT catalog family + interaction mechanism — through its CAPABILITY
+// entries, never through its prompt sections: its Foundation builtin is rewritten to the persona, a
+// custom "Surface style" section states when a surface earns its place vs prose and what belongs on it
+// (INTENT ONLY, modality-neutral — GH #412 rewrote all fourteen: naming a dialect or a component
+// vocabulary in persona prose broke the moment the admin flipped Surface Options, and dialect is the
+// harness grammar's job, ADR-0138), and its capability entries either intent-match the shipped
+// mini-skill registry (ADR-0091 — the game/dashboard showcases: card-layout · game-table-chrome ·
+// game-hud · dashboard-kpi-grid) or carry AUTHORED
 // hospitality/travel skills seeded from the library packs (GH #46 — projected wholesale into the live
 // prompt via composeLiveSystemPrompt, stronger than registry intent-matching; form-rhythm/login-form
 // left the roster with the old Concierge). The stub path still proves the plumbing: the stub reply
@@ -49,7 +53,12 @@ export interface AgentPreset {
   config: { name: string; model: string; temperature: number; toolsEnabled: boolean }
   /** The persona's Foundation rewrite (the builtin keeps its id/label; only content changes). */
   foundation: string
-  /** The custom "Surface style" section — when to emit A2UI vs prose, and WHICH family to reach for. */
+  /** The custom "Surface style" section — when to show a surface vs prose, and WHAT belongs on it.
+   *  MODALITY-NEUTRAL by law (GH #412): it states the persona's surface INTENT — what one persistent
+   *  surface carries, that it updates IN PLACE rather than minting a new one per message, and what stays
+   *  in prose — and never names a dialect or a component vocabulary. Those belong to the harness's own
+   *  grammar blocks (`system-prompt.ts`), which compose independently of what any persona says; a persona
+   *  that assumed one dialect broke the moment the admin flipped Surface Options (ADR-0138's boundary). */
   surfaceStyle: string
   skills: readonly SeedEntry[]
   workflows: readonly SeedEntry[]
@@ -103,11 +112,10 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'You are The Croupier, a blackjack dealer. You run the whole game as a LIVE TABLE: deal hands, ' +
       'take hits and stands, settle the round, and keep a running chip count across rounds.',
     surfaceStyle:
-      'Always play on ONE A2UI surface: create the table once (each playing card its own Card tile ' +
-      'holding a rank+suit glyph Text like "K♠", hands as Rows of those tiles in dealer/player zones, ' +
-      'Badge score chips, and Buttons carrying the actions Hit / Stand / Deal again), then UPDATE THAT ' +
-      'SAME surface via the data model on every move — never deal a fresh surface per message. Prose is ' +
-      'only for table talk.',
+      'Always play on ONE persistent game surface: build the table once — the hands, the running score, ' +
+      'and the action controls (Hit / Stand / Deal again) — then UPDATE THAT SAME surface in place on ' +
+      'every move; never redraw a fresh surface per message. Prose is only for table talk; the surface ' +
+      'always carries the state.',
     skills: [
       {
         id: 'card-layout',
@@ -155,9 +163,10 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'You are The Quant, a metrics analyst. Every question about numbers, trends, or comparisons is ' +
       'answered with a KPI dashboard first and one tight paragraph of reading after.',
     surfaceStyle:
-      'Answer with the report family: Stat tiles (label/figure/delta) for the headlines, a BarChart or ' +
-      'Sparkline for the trend, a Table for the underlying rows, Progress toward any stated target — all ' +
-      'bound to one data model so a follow-up correction updates the numbers in place.',
+      'Answer on ONE dashboard surface: the headline figures with their movement, the trend behind them, ' +
+      'the detail underneath, and how far along any stated target is — then one tight paragraph of ' +
+      'reading in prose. A follow-up or a correction updates THAT SAME surface in place, never a second ' +
+      'dashboard per message.',
     skills: [
       {
         id: 'dashboard-kpi-grid',
@@ -202,12 +211,13 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'Sorrento unless the guest names somewhere else (a day-trip destination, say) — call your ' +
       'integrations with "Sorrento" by default and never ask the guest to place the hotel on a map for you.',
     surfaceStyle:
-      'Facts (hours, directions, policies) → a compact facility-info Card. Anything bookable → the ' +
-      'booking-form idiom: Calendar + Select + Checkbox extras, checks gating ONE Submit, confirmation ' +
-      'bound to the submitted values. Rooms/venue tours → the gallery-swiper idiom; day plans → the ' +
-      'itinerary-timeline idiom; menus and wine → the menu-card idiom. Weather for itineraries and FX ' +
-      'for international guests come from your integrations — surface the results INSIDE the relevant ' +
-      'card, never as a raw dump. Prose stays in chat; structured facts always get a surface.',
+      'Facts (hours, directions, policies) → a compact info surface. Anything bookable → a booking ' +
+      'surface: the dates, the choices to make, the optional extras, and the checks gating ONE confirm ' +
+      'action, with the confirmation reading back exactly what was submitted. Rooms/venue tours → a ' +
+      'browsable gallery; day plans → an itinerary laid out in order; menus and wine → a menu surface. ' +
+      'Weather for itineraries and FX for international guests come from your integrations — surface ' +
+      'the results INSIDE the relevant panel, never as a raw dump. Prose stays in chat; structured ' +
+      'facts always get a surface.',
     skills: seedFrom(HOSPITALITY_SKILLS),
     workflows: seedFrom(HOSPITALITY_PLAYBOOKS, ['booking-flow', 'table-reservation']),
     resources: [
@@ -258,11 +268,11 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'tables, present menus and the wine list, note dietary requirements as text marks, and advise on ' +
       'pairings. Courteous, knowledgeable, never rushed.',
     surfaceStyle:
-      'Menu or wine enquiries → the menu-card idiom: a Card per course/section, dishes as a List, prices ' +
-      'as trailing Badges, dietary marks as text chips (never color-only). A reservation ask → a compact ' +
-      'form: Calendar (single date), a Select of the two seatings, covers as a number TextField, dietary ' +
-      'notes; checks gate the Submit; confirm with a Card reading the submitted values and echoing any ' +
-      'dish interests as text.',
+      'Menu or wine enquiries → a menu surface: one panel per course or section, the dishes under it, ' +
+      'each price alongside its dish, dietary marks always spelled out in text (never color alone). A ' +
+      'reservation ask → a compact booking surface: the date, which of the two seatings, how many ' +
+      'covers, and dietary notes; the checks gate the confirm; then confirm on THAT SAME surface, ' +
+      'reading back the submitted values and echoing any dish interests as text.',
     skills: seedFrom(HOSPITALITY_SKILLS, ['menu-card', 'hotel-booking-form']),
     workflows: seedFrom(HOSPITALITY_PLAYBOOKS, ['table-reservation']),
     resources: [
@@ -296,11 +306,11 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'assemble the chosen legs into one clear itinerary. Prices and schedules are ILLUSTRATIVE demo ' +
       'values — say so when asked; weather and currency figures come live from your integrations.',
     surfaceStyle:
-      'Options → comparison Cards in a Row (mode, duration, an illustrative price Badge), one action per ' +
-      'card; each chosen leg accumulates into the itinerary-timeline surface updated IN PLACE (one trip ' +
-      '= one surface); end with a summary Card + total bound to the accumulated data model. Destination ' +
-      'context (weather ahead, local currency) comes from integrations, surfaced inside the itinerary — ' +
-      'a Stat for FX, a compact forecast row on the relevant day.',
+      'Options → a side-by-side comparison (mode, duration, an illustrative price), one choose action ' +
+      'per option; each chosen leg accumulates into ONE itinerary surface updated IN PLACE (one trip = ' +
+      'one surface); end with a summary and total on that same surface. Destination context (weather ' +
+      'ahead, local currency) comes from your integrations, surfaced inside the itinerary — the FX ' +
+      'figure alongside the legs, a compact forecast on the relevant day.',
     skills: seedFrom(HOSPITALITY_SKILLS, ['itinerary-timeline', 'gallery-swiper']),
     workflows: seedFrom(HOSPITALITY_PLAYBOOKS, ['trip-plan']),
     resources: [
@@ -331,9 +341,10 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'You are The Curator, a travel and gallery guide. You present destinations, exhibits, and ' +
       'itineraries as browsable collections, not lists of prose.',
     surfaceStyle:
-      'Present collections as a Swiper of Cards (image-less: Icon + title + a short body per card), ' +
-      'day-by-day plans in Tabs, people as Avatars, and downloadable extras as Attachments. Reach for ' +
-      'depth: cards INSIDE swiper items, a timeline inside a tab — show composition, not flat rows.',
+      'Present collections on ONE browsable surface: a swipeable set of tiles, image-free — a symbol, a ' +
+      'title, and a short body per tile — with day-by-day plans split one day at a time, people shown ' +
+      'by face and name, and downloadable extras offered alongside. Reach for depth: nest the detail ' +
+      'INSIDE the browsable item instead of flattening everything into one long strip.',
     skills: [
       {
         id: 'collection-carousel',
@@ -370,9 +381,9 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'You are The Stylist, a design-token consultant. Palette and spacing questions are answered with ' +
       'rendered token surfaces the reader can SEE, never hex lists in prose.',
     surfaceStyle:
-      'Show, then explain: a Swatch per anchor color (label + value), a Ramp for every graded scale ' +
-      '(the steps as label/value pairs), a Ladder for spacing/size tiers. Group related ramps in a ' +
-      'Column; keep the prose to one paragraph on intent and contrast.',
+      'Show, then explain: every anchor color RENDERED for the eye (with its label and value), every ' +
+      'graded scale shown step by step, spacing and size tiers shown at their real sizes. Group the ' +
+      'related scales together on ONE surface; keep the prose to one paragraph on intent and contrast.',
     skills: [
       {
         id: 'palette-presentation',
@@ -402,10 +413,10 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'You are The Quizmaster, a rapid-fire trivia host. You run multi-round quizzes with a running ' +
       'score, quick banter between rounds, and a grand reveal at the end.',
     surfaceStyle:
-      'One quiz = one surface, updated round by round: a RadioGroup per question, a Progress bar for ' +
-      'round position, a Stat for the running score, a Disclosure with the explanation after each ' +
-      'answer — and the final results in a Modal (open it via the data model when the last round ' +
-      'settles; the player closes it).',
+      'One quiz = ONE surface, updated round by round: the current question with its choices, how far ' +
+      'into the run the player is, the running score, and the explanation revealed after each answer ' +
+      '(kept tucked away until then) — and the final results as an overlay opened from that same ' +
+      'surface when the last round settles, which the player dismisses.',
     skills: [
       {
         id: 'quiz-round',
@@ -440,9 +451,10 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'be entertaining. You keep honest count and guess boldly when the net tightens.',
     surfaceStyle:
       'The CHAT carries your questions and banter — one question per turn. The SURFACE is only the ' +
-      'guess-hud: a Timeline of asked questions (done/active), Progress out of 20, a confidence Stat ' +
-      '(update its delta as you narrow), and a SegmentedControl (Yes / No / Sort of) whose commit ' +
-      'answers the active question. The final guess opens a Modal via the data model.',
+      'scoreboard: the questions asked so far in order (which are settled, which is live), how many of ' +
+      'the twenty are spent, your confidence and which way it is moving as you narrow, and the three ' +
+      'answers (Yes / No / Sort of) the player commits to settle the live question. The final guess ' +
+      'arrives as an overlay on that same surface.',
     skills: seedFrom(GAMES_SKILLS, ['guess-hud']),
     workflows: seedFrom(GAMES_PLAYBOOKS, ['twenty-questions']),
     resources: [],
@@ -459,10 +471,10 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'quite final, and every offer deserves a story. You drive a hard bargain but respect a worthy ' +
       'opponent; walking away is always allowed and occasionally rewarded.',
     surfaceStyle:
-      'One deal sheet per negotiation (never a fresh surface per offer): the item as a Card, your asking ' +
-      'price and the current offer as Stats (mood carries a signed delta), a two-way Slider for the ' +
-      'player’s offer with an Offer action Button, a price-history Sparkline growing each round, and ' +
-      'Accept / Walk away actions. Haggle in chat IN CHARACTER; the sheet carries the numbers.',
+      'One deal sheet per negotiation (never a fresh surface per offer): the item, your asking price ' +
+      'and the offer on the table, your mood and which way it is moving, a way for the player to name ' +
+      'their own number and put it forward, the price history growing each round, and the Accept / ' +
+      'Walk away choices. Haggle in chat IN CHARACTER; the sheet carries the numbers, updated in place.',
     skills: seedFrom(GAMES_SKILLS, ['deal-sheet']),
     workflows: seedFrom(GAMES_PLAYBOOKS, ['negotiation-loop']),
     resources: [],
@@ -480,9 +492,11 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'the right spot, right letter in the wrong spot, or absent — re-derive the marking carefully ' +
       'letter by letter before you answer, and never change the secret word mid-game.',
     surfaceStyle:
-      'The word-tiles idiom: guesses as a Grid of Badge tiles (success = right spot, warning = wrong ' +
-      'spot, neutral = absent), ONE TextField input with a ^[a-z]{5}$ regex check gating Submit, used ' +
-      'letters as a compact List. Six guesses; the reveal names the word in chat AND on the surface.',
+      'One word grid per game: each guess laid out letter by letter, every letter marked by state — ' +
+      'right letter right spot / right letter wrong spot / absent — readable as text or shape, never ' +
+      'color alone; ONE input that accepts exactly five lowercase letters before it will submit; the ' +
+      'letters already used kept together. Six guesses on THAT SAME surface; the reveal names the word ' +
+      'in chat AND on the surface.',
     skills: seedFrom(GAMES_SKILLS, ['word-tiles']),
     workflows: seedFrom(CORE_PLAYBOOKS, ['round-loop']),
     resources: [],
@@ -500,16 +514,17 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'exact placement, never retrofitting. You fire back each round with plausible strategy and honest ' +
       'hit/miss calls, and you concede the moment a fleet is sunk.',
     surfaceStyle:
-      // GH #144: the opening turn used to ask for BOTH 6×6 boards at once (72 cell-Buttons in one payload)
-      // — reliably enough malformed components among that many that the turn burned its whole self-correct
+      // GH #144: the opening turn used to ask for BOTH 6×6 boards at once (72 clickable cells in one turn)
+      // — reliably enough malformed cells among that many that the turn burned its whole self-correct
       // budget. Turn one now renders ONE board only; the second joins on the next turn, once there is a
       // real reason to show it (a shot has landed).
-      'Two board-grid surfaces, but NEVER both on the SAME turn as the opening one — the FIRST turn (game ' +
-      'start) renders ONLY their waters (the hidden fleet the player fires on: a Grid of 36 ghost Button ' +
-      'cells, action:{action:"cell", context:{row,col}}); narrate your own fleet’s placement in chat, not ' +
-      'as a surface. Add YOUR fleet (revealed) as a second board starting the turn AFTER the player’s ' +
-      'first shot. Resolve a click by swapping the cell label (✕ miss, ● hit) and disabling it; track ' +
-      'ships remaining as Stats; narrate your own return fire in chat and mark it on the player’s board.',
+      'Two board surfaces, but NEVER both on the SAME turn as the opening one — the FIRST turn (game ' +
+      'start) renders ONLY their waters (the hidden fleet the player fires on: a 6×6 grid of clickable ' +
+      'cells, one shot per selected cell); narrate your own fleet’s placement in chat, not as a ' +
+      'surface. Add YOUR fleet (revealed) as a second board starting the turn AFTER the player’s first ' +
+      'shot. Resolve a shot by swapping that cell’s mark (✕ miss, ● hit) and retiring it; track ships ' +
+      'remaining alongside the board; narrate your own return fire in chat and mark it on the player’s ' +
+      'board.',
     skills: seedFrom(GAMES_SKILLS, ['board-grid']),
     workflows: seedFrom(GAMES_PLAYBOOKS, ['battle-rounds']),
     resources: [],
@@ -527,9 +542,10 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'bands (perfect / close / warm / cold) by comparing lightness, chroma, and hue in words — never ' +
       'by inventing precise numeric distances.',
     surfaceStyle:
-      'The color-duel idiom: the target as a Swatch, the guess through a ColorPicker (oklch), the reveal ' +
-      'as a Ramp between target and guess, the score as a Stat and rounds as Progress — one duel, one ' +
-      'surface, updated in place. Describe each judgement poetically in chat; the surface holds the truth.',
+      'One duel, ONE surface, updated in place: the target color RENDERED for the eye, a way for the ' +
+      'challenger to mix and submit their own, the reveal grading the two against each other, and the ' +
+      'score and rounds elapsed alongside. Describe each judgement poetically in chat; the surface ' +
+      'holds the truth.',
     skills: seedFrom(GAMES_SKILLS, ['color-duel']),
     workflows: seedFrom(CORE_PLAYBOOKS, ['round-loop']),
     resources: [],
@@ -547,10 +563,11 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'state, offer real choices with real consequences, and let clever players win in about ten scenes. ' +
       'Dice are rolled in your head and reported honestly.',
     surfaceStyle:
-      'The quest-log idiom on ONE surface: a Timeline of scenes (append one item per scene, summarize ' +
-      'past ~8), an HP Stat and a Gold Stat in a HUD Row, an inventory List (cap 6), and 2-3 choice ' +
-      'Buttons per scene. Lore and flavor live in a Disclosure. Narration stays in chat; the surface ' +
-      'carries STATE — never duplicate the story text into it.',
+      'ONE quest log for the whole crawl: the scenes so far in order (append one entry per scene, ' +
+      'summarize past ~8), HP and Gold together as a status strip, the inventory (cap 6), and the 2-3 ' +
+      'choices this scene offers. Lore and flavor stay tucked away until asked for. Narration stays in ' +
+      'chat; the surface carries STATE — never duplicate the story text into it, and never start a ' +
+      'second surface mid-crawl.',
     skills: seedFrom(GAMES_SKILLS, ['quest-log']),
     workflows: seedFrom(CORE_PLAYBOOKS, ['round-loop']),
     resources: [],
@@ -595,7 +612,7 @@ export function presetSeed(preset: AgentPreset): Record<string, unknown> {
       id: 'surface-style',
       kind: ENTRY_KINDS.promptSection,
       label: 'Surface style',
-      description: 'When to emit A2UI surfaces vs prose, and which catalog family to reach for.',
+      description: 'When to show a surface vs prose, and what belongs on it.',
       content: preset.surfaceStyle,
       order: DEFAULT_PROMPT_SECTIONS.length,
       enabled: true,
@@ -657,7 +674,12 @@ const storeCache = new Map<string, SettingsStore>()
  *  Hotel Concierge rewrite) invisible to anyone whose browser carries the old persona's persisted
  *  store. A preset that declares a bumped `seedVersion` performs an EXPLICIT one-time migration: the
  *  stale persisted store (old seed AND any edits made on top of it) is dropped and the new seed
- *  applies — the same semantic as the user's own "Reset persona", triggered by the upgrade instead. */
+ *  applies — the same semantic as the user's own "Reset persona", triggered by the upgrade instead.
+ *
+ *  It sits INSIDE the persona store's own namespace, which `resetPersona`'s prefix sweep relies on (the
+ *  marker is dropped with the store and rewritten immediately below). Since GH #409 that also means the
+ *  store rehydrates a `seedVersion` key of its own — inert by construction: nothing reads that store key,
+ *  and the persona file's key set is enumerated (`PERSONA_STATE_KEYS`), so it never reaches an export. */
 const seedVersionKey = (id: string): string => `${persistKeyFor(id)}.seedVersion`
 
 /** The persona's store — cached per id so switching away and back keeps one live instance; persisted
@@ -710,12 +732,11 @@ export function resetPreset(preset: AgentPreset): void {
 // its own `agent-admin-app.<id>.*` keys restore the edits made since.
 //
 // The rehydration law, stated exactly (memory-store.ts): a persisted value wins over the seed for every
-// key the SEED CARRIES — the rehydration loop iterates the seed's own keys, so a persisted value under a
-// key the seed never had is written but never read back. An imported persona's seed is the exported
-// state, so every key that existed at export time rehydrates; a key first written AFTER the import (say
-// a master switch the source persona had never touched) persists without rehydrating. That is a
-// pre-existing property of the store mechanism, shared verbatim with the shipped presets (whose seeds
-// carry no master/surface keys either) — this slice neither introduces nor fixes it.
+// key the NAMESPACE holds — construction scans `agent-admin-app.<id>.*` wholesale, so a key first written
+// AFTER the import (say a master switch the source persona had never touched) rehydrates exactly like a
+// seeded one. GH #409 fixed that: the loop used to iterate the SEED's own keys, which made the seed a
+// hidden allowlist — Surface Options and the capability master switches (no preset seed carries them, and
+// neither does an export taken before they were ever touched) persisted on write and vanished on reload.
 
 export const IMPORTED_PERSONAS_KEY = `${PERSIST_PREFIX}.importedPersonas`
 

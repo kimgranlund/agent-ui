@@ -55,6 +55,14 @@ export function validateGenuiSurface(genui: unknown): GenuiSurfaceConfig | undef
   }
 }
 
+// GH #418 — `a2ui` is client-supplied, the SAME trust-boundary posture as `mode`/`genui` above: a
+// crafted/malformed value must never reach `buildSystemPrompt` raw, and must never fail the request —
+// fail-closed to `undefined` (⇒ `buildSystemPrompt`'s own `a2uiEnabled !== false` default, i.e. A2UI ON,
+// the byte-identical-to-before-this-field-existed degradation law every sibling field here already uses).
+export function validateA2uiEnabled(a2ui: unknown): boolean | undefined {
+  return typeof a2ui === 'boolean' ? a2ui : undefined
+}
+
 // produce()-route effort threading — the SAME fail-closed posture as `validateMode`/`validateGenuiSurface`
 // (this file's shared trust-boundary spine), not the `/chat` route's `isChatBody` 400-on-malformed check
 // below: `effort` is a closed 4-member enum (`EFFORT_VALUES`, defined below and reused here rather than
@@ -62,6 +70,14 @@ export function validateGenuiSurface(genui: unknown): GenuiSurfaceConfig | undef
 // applies (the `validateMode` precedent) — never a 400. The request itself must never fail on a bad effort.
 export function validateEffort(effort: unknown): Effort | undefined {
   return typeof effort === 'string' && (EFFORT_VALUES as readonly string[]).includes(effort) ? (effort as Effort) : undefined
+}
+
+/** ADR-0169 cl.3 — fail-closed catalog selection: a non-string/unknown id degrades to the fallback,
+ *  never a 400/500 and never a mixed catalog+prompt (the `sanitizeCatalog` discipline, server-side).
+ *  Generic so no `Catalog` import is needed here (both `dev-proxy-plugin.ts` and `worker/index.ts`
+ *  import this shared, zero-dep module). */
+export function selectCatalog<C>(catalogs: ReadonlyMap<string, C>, value: unknown, fallback: C): C {
+  return (typeof value === 'string' ? catalogs.get(value) : undefined) ?? fallback
 }
 
 /**

@@ -397,3 +397,73 @@ describe('the imported library — persisted roster registration (survives reloa
     expect(loadImportedPersonas()).toEqual([])
   })
 })
+
+// ── GH #409: the persona-scoped half of the rehydration fix ────────────────────────────────────────────
+// memory-store now rehydrates a store's WHOLE `${persistKey}.` namespace instead of just the seed's own
+// keys. These are the three edges that decided that shape was safe HERE: a flipped Surface Option must
+// come back on reload AND reach an export taken afterwards; one persona's namespace must never answer
+// another's keys; and a freshly-minted import (whose id is the previous mint's id plus a suffix — the
+// worst-case prefix overlap this surface actually produces) must start empty.
+
+describe('a persona’s Surface Options / master toggles survive a reload, per persona (GH #409)', () => {
+  const CONCIERGE = personaFromPreset(SOURCE_PRESET)
+  const TRAVEL = personaFromPreset(AGENT_PRESETS.find((p) => p.id === 'travel')!)
+
+  /** A FRESH store over the same persisted namespace — what a real page RELOAD builds. `personaStore`
+   *  caches one live instance per id for the page's lifetime, so a reload cannot be observed through it. */
+  const reloaded = (persona: Persona): SettingsStore =>
+    createMemoryStore({ initial: persona.seed, persistKey: `agent-admin-app.${persona.id}` })
+
+  const touched: Persona[] = []
+  const live = (persona: Persona): SettingsStore => {
+    touched.push(persona)
+    return personaStore(persona)
+  }
+  afterEach(() => {
+    for (const persona of touched.splice(0)) resetPersona(persona) // leave no residue for sibling tests
+  })
+
+  it('a flipped Surface Option + master switch rehydrate, and reach an export taken AFTER the reload', () => {
+    const store = live(CONCIERGE)
+    store.set(SURFACE_A2UI_KEY, false) // no preset seed carries either key — that WAS the bug
+    store.set(AGENT_ENABLED_KEY, false)
+
+    const afterReload = reloaded(CONCIERGE)
+    expect(afterReload.get(SURFACE_A2UI_KEY)).toBe(false)
+    expect(afterReload.get(AGENT_ENABLED_KEY)).toBe(false)
+    expect(afterReload.get('name')).toBe(CONCIERGE.seed.name) // the seed still supplies the untouched keys
+
+    // Export fidelity is the same bug's other face: `readPersonaState` reads THROUGH the store, so before
+    // the fix a persona exported after a reload silently lost every surface/master flip it had been given.
+    const state = readPersonaState(afterReload)
+    expect(state[SURFACE_A2UI_KEY]).toBe(false)
+    expect(state[AGENT_ENABLED_KEY]).toBe(false)
+    // …and nothing NEW joins the file: the page parks its own per-persona `seedVersion` marker inside this
+    // namespace, so the store now answers it as a key — but the file's key set is enumerated, never scanned.
+    expect(afterReload.get('seedVersion')).toBe(SOURCE_PRESET.seedVersion)
+    expect(Object.keys(state)).not.toContain('seedVersion')
+    for (const key of Object.keys(state)) expect(PERSONA_STATE_KEYS).toContain(key)
+  })
+
+  it('one persona’s toggles never leak into another’s store', () => {
+    live(CONCIERGE).set(SURFACE_A2UI_KEY, false)
+    expect(reloaded(TRAVEL).get(SURFACE_A2UI_KEY), 'an untouched persona keeps its default-ON read').toBeUndefined()
+    expect(reloaded(CONCIERGE).get(SURFACE_A2UI_KEY)).toBe(false)
+  })
+
+  it('a freshly MINTED import starts empty, even though its id extends the previous mint’s id', () => {
+    const parsed = readPersonaFile(personaFileText(exportPersonaFile(CONCIERGE, authoredStore())))
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) return
+    const firstImport = importedPersonaFrom(parsed.file, [CONCIERGE])
+    const secondImport = importedPersonaFrom(parsed.file, [CONCIERGE, firstImport])
+    // `…-imported` vs `…-imported-2`: the first id is a leading substring of the second, which is exactly
+    // the case a prefix scan gets wrong if it forgets the delimiting dot.
+    expect(secondImport.id.startsWith(firstImport.id)).toBe(true)
+
+    live(firstImport).set(SURFACE_A2UI_KEY, false)
+    expect(reloaded(secondImport).get(SURFACE_A2UI_KEY)).toBeUndefined()
+    expect(reloaded(firstImport).get(SURFACE_A2UI_KEY)).toBe(false)
+    touched.push(secondImport)
+  })
+})

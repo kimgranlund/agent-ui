@@ -20,8 +20,10 @@ import type { A2uiActionMessage } from '@agent-ui/a2ui'
 import type { TurnProgress } from '@agent-ui/a2ui/agent/meta-line'
 
 // `a2ui-live.ts`'s test-only injection seam — bound in `beforeAll` below via a DEFERRED (dynamic) import,
-// never a static one; see the comment there for why ordering is load-bearing here.
-let __setTransportForTest: (next: AgentTransport) => void
+// never a static one; see the comment there for why ordering is load-bearing here. The optional second arg
+// (GH #408) declares which backbone the injected stub STANDS FOR; every call below that omits it gets the
+// recorded default, exactly as before.
+let __setTransportForTest: (next: AgentTransport, live?: boolean) => void
 
 beforeAll(async () => {
   // jsdom reality (the `a2ui-gallery.test.ts`/`provider-switcher.test.ts` precedent): `ElementInternals.
@@ -51,8 +53,9 @@ beforeAll(async () => {
  * importing `formatMetaLine` (a `src/agent/produce.ts`-private helper) since the wire shape is tiny and
  * public (`readMetaLine`'s own contract, re-exported by `agent-runtime.ts`). `progress` is an ADDITIVE
  * optional field (this modernization, ADR-0146 F1) — every existing call site above omits it and is
- * byte-unaffected. */
-function metaLine(fields: { note?: string; ask?: { surfaceId: string }; progress?: TurnProgress }): string {
+ * byte-unaffected. `error` (GH #144/#408) is the transport-composed TERMINAL failure field, the same shape
+ * `formatErrorLine` composes on the wire. */
+function metaLine(fields: { note?: string; ask?: { surfaceId: string }; progress?: TurnProgress; error?: string }): string {
   return JSON.stringify({ a2uiMeta: fields })
 }
 
@@ -401,5 +404,52 @@ describe('a2ui-live narration — the receipt pattern (GH #239/ADR-0159) on the 
     const header = () => lastNarrationStrip()!.querySelector('[data-part="header"]')
     await waitUntil(() => header()?.getAttribute('aria-expanded') === 'false')
     expect(header()?.getAttribute('data-status'), 'finalized with zero entries reads the neutral escalation, never a fabricated status').toBe('')
+  })
+})
+
+// ── GH #408 — the terminal error meta-line + the transport-honest empty turn ─────────────────────────────
+// A proxy whose stream headers already committed 200 reports a `ProduceHalt`/upstream fault as ONE terminal
+// `{"a2uiMeta":{"error":…}}` line (`formatErrorLine`, meta-line.ts). It PARSES cleanly — it is a valid
+// meta-line, never a malformed one — so the consume loop's own `if (meta) … continue` used to drop it with
+// zero telemetry: the async generator then completed NORMALLY (nothing throws client-side, so the catch
+// block never ran), the turn held zero lines, and the page printed the RECORDED transcript's exhaustion
+// message over a live failure. These assertions pin both halves of the fix: the error becomes visible, and
+// the exhaustion wording is reserved for the transport that actually has a transcript.
+// The `.some(...)` predicates below are deliberate (never `.at(-1)`): `resetPage()` in `beforeEach` kicks a
+// real async `wireLiveOverlay()` probe whose own fallback system message can land at any moment.
+describe('a2ui-live — a terminal transport error is VISIBLE, and the exhaustion message is transport-honest (GH #408)', () => {
+  const HALT = 'Live agent failed: exhausted 3 self-correct rounds without a valid surface.'
+
+  it("a terminal error meta-line surfaces as a ⚠ system message + a failed narration — never the recorded transcript's exhaustion message", async () => {
+    __setTransportForTest(scriptedTransport(() => [metaLine({ error: HALT })]), true)
+
+    await sendIntent('build me a blackjack table')
+    await waitUntil(() => chatMessages('system').some((m) => m.textContent?.includes('⚠')))
+
+    expect(chatMessages('system').some((m) => m.textContent?.includes(HALT)), "the transport's own reason, shown verbatim").toBe(true)
+    await waitUntil(() => (lastNarrationStrip()?.querySelector('[data-part="header"]')?.getAttribute('data-status') ?? '') === 'error')
+    expect(
+      lastNarrationStrip()!.querySelector('[data-key="progress-error"] [data-role="label"]')?.textContent,
+      'the same visible error entry a client-thrown turn gets — never a green-reading strip over a failed turn',
+    ).toContain('Turn failed')
+    expect(chatMessages('system').some((m) => /no further turns|recorded transcript/i.test(m.textContent ?? '')), 'the misdiagnosis this issue is about').toBe(false)
+  })
+
+  it('a LIVE turn that produced nothing at all (no error line) says exactly that — never "no further turns in this recorded transcript"', async () => {
+    __setTransportForTest(scriptedTransport(() => []), true)
+
+    await sendIntent('anything')
+    await waitUntil(() => chatMessages('system').some((m) => /produced no renderable output/i.test(m.textContent ?? '')))
+
+    expect(chatMessages('system').some((m) => /recorded transcript/i.test(m.textContent ?? '')), 'a live transport has no transcript to exhaust').toBe(false)
+  })
+
+  it('negative control: the RECORDED backbone keeps the exhaustion message byte-identical', async () => {
+    __setTransportForTest(scriptedTransport(() => [])) // `live` omitted ⇒ recorded, the pre-#408 default
+
+    await sendIntent('anything')
+    await waitUntil(() => chatMessages('system').some((m) => m.textContent?.includes('The agent has no further turns in this recorded transcript. Reset to start over.')))
+
+    expect(chatMessages('system').some((m) => /produced no renderable output/i.test(m.textContent ?? '')), 'the live wording never reaches the recorded backbone').toBe(false)
   })
 })

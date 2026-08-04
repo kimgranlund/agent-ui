@@ -32,9 +32,18 @@ import { buildToolDispatch, resolveIntegrations } from './integrations/index.ts'
 // the Cloudflare Worker port can import it directly too, which it couldn't do from THIS file — importing
 // anything from here would drag `loadEnv`/`vite` into the Workers bundle). Re-exported unchanged so this
 // file's own tests (validate-mode.test.ts, chat-route.test.ts) needed no changes for the extraction.
-import { validateMode, validateGenuiSurface, validateEffort, isChatBody, resolveChatDispatch } from './chat-validation.ts'
+import {
+  validateMode,
+  validateGenuiSurface,
+  validateA2uiEnabled,
+  validateEffort,
+  isChatBody,
+  resolveChatDispatch,
+  selectCatalog,
+} from './chat-validation.ts'
 import type { ChatDispatch } from './chat-validation.ts'
-export { validateMode, validateGenuiSurface, validateEffort, isChatBody, resolveChatDispatch }
+import type { Catalog } from '../../src/catalog/catalog.ts'
+export { validateMode, validateGenuiSurface, validateA2uiEnabled, validateEffort, isChatBody, resolveChatDispatch }
 export type { ChatDispatch }
 
 declare const process: { cwd(): string; env: Record<string, string | undefined> }
@@ -42,6 +51,10 @@ declare const process: { cwd(): string; env: Record<string, string | undefined> 
 const ROOT = process.cwd()
 const CONFIG_PATH = `${ROOT}/packages/agent-ui/a2ui/tools/agent/providers.json`
 const CATALOG_PATH = `${ROOT}/packages/agent-ui/a2ui/src/catalog/default/catalog.json`
+// ADR-0169 cl.3 — the second registered catalog (the upstream A2UI Basic Catalog), loaded alongside the
+// default so a request's `catalogId` can select either. Keyed by SHORT id only (the canonical-URI alias
+// is renderer-inbound only, never server-selected — cl.13's closing note).
+const BASIC_CATALOG_PATH = `${ROOT}/packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json`
 const SHARD_PATH = `${ROOT}/packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl`
 
 const MOUNT = '/__a2ui/agent'
@@ -93,6 +106,13 @@ export function a2uiDevProxyPlugin(): Plugin {
       // The catalog + judged shard are STATIC build inputs — load once at server start (readFileSync — the
       // tools/harness precedent; Node's ESM loader rejects an attribute-less JSON import).
       const catalog = loadCatalog(JSON.parse(readFileSync(CATALOG_PATH, 'utf8')))
+      // ADR-0169 cl.3 — the second catalog, loaded the SAME way; both live in a short-id-keyed map the
+      // produce POST branch selects from via the request's `catalogId` (fail-closed to the default).
+      const basicCatalog = loadCatalog(JSON.parse(readFileSync(BASIC_CATALOG_PATH, 'utf8')))
+      const catalogs = new Map<string, Catalog>([
+        [catalog.catalogId, catalog],
+        [basicCatalog.catalogId, basicCatalog],
+      ])
       const shard: CorpusRecord[] = (readFileSync(SHARD_PATH, 'utf8') as string)
         .split('\n')
         .filter((l) => l.trim().length > 0)
@@ -179,7 +199,7 @@ export function a2uiDevProxyPlugin(): Plugin {
 
             // POST — run one turn and stream validated A2UI JSONL back.
             if (req.method === 'POST') {
-              const { input, provider, model, mode, personaSystem, integrations, progressDetail, genui, effort } = JSON.parse(await readBody(req)) as {
+              const { input, provider, model, mode, personaSystem, integrations, progressDetail, genui, a2ui, effort, catalogId } = JSON.parse(await readBody(req)) as {
                 input: TurnInput
                 provider: string
                 model: string
@@ -188,7 +208,9 @@ export function a2uiDevProxyPlugin(): Plugin {
                 integrations?: unknown
                 progressDetail?: unknown
                 genui?: unknown
+                a2ui?: unknown
                 effort?: unknown
+                catalogId?: unknown
               }
               const pair = resolvePair(config, provider, model) // SPEC-R12 PAIR-allowlist — the trust boundary
               if (!pair.ok) {
@@ -209,10 +231,13 @@ export function a2uiDevProxyPlugin(): Plugin {
               }
               res.statusCode = 200
               res.setHeader('content-type', 'application/x-ndjson')
+              // ADR-0169 cl.3 — select the request's catalog (fail-closed to the default on a non-string/
+              // unknown id, never a 400/mixed catalog+prompt); reaches both the prompt and the validator
+              // through the ONE existing `deps.catalog` seam (produce.ts) — no second threading path.
               const deps: ProduceDeps = {
                 provider: dispatch.provider,
                 retrieve: (q) => retrieve(shard, q),
-                catalog,
+                catalog: selectCatalog(catalogs, catalogId, catalog),
               }
               // produce() yields ONLY a fully validated payload's lines (SPEC-R5) — stream them line by line.
               // `model` is the allowlist-VALIDATED value (resolvePair) passed as the AUTHORITATIVE opts.model:
@@ -247,12 +272,15 @@ export function a2uiDevProxyPlugin(): Plugin {
               // genui-surface.spec.md SPEC-R10/R11 — the SAME fail-closed validation both transports share
               // (chat-validation.ts); a crafted/malformed value degrades to modality-off, never a 400.
               const genuiSurface = validateGenuiSurface(genui)
+              // GH #418 — the SAME fail-closed validation both transports share (chat-validation.ts): a
+              // crafted/malformed value degrades to `undefined` ⇒ `buildSystemPrompt`'s own A2UI-ON default.
+              const a2uiEnabled = validateA2uiEnabled(a2ui)
               // The reasoning-effort dial (the SAME fail-closed posture as mode/genuiSurface above,
               // chat-validation.ts): a crafted/malformed value degrades to `undefined` (the adapter's own
               // default), never a 400.
               const validatedEffort = validateEffort(effort)
               try {
-                for await (const line of produce(input, deps, { maxRounds: 3, model, mode: validateMode(mode), personaSystem: persona, progress: true, ...(detail !== undefined ? { progressDetail: detail } : {}), ...(genuiSurface !== undefined ? { genuiSurface } : {}), ...(validatedEffort !== undefined ? { effort: validatedEffort } : {}), ...toolOpts })) {
+                for await (const line of produce(input, deps, { maxRounds: 3, model, mode: validateMode(mode), personaSystem: persona, progress: true, ...(detail !== undefined ? { progressDetail: detail } : {}), ...(genuiSurface !== undefined ? { genuiSurface } : {}), ...(a2uiEnabled !== undefined ? { a2uiEnabled } : {}), ...(validatedEffort !== undefined ? { effort: validatedEffort } : {}), ...toolOpts })) {
                   res.write(line + '\n')
                 }
               } catch (err) {

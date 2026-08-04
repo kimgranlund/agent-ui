@@ -123,6 +123,15 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
         // side, Node-first — the pack registry itself never crosses the wire, only the ALREADY-RESOLVED
         // picked source's body does, per `pickedPatternSource`'s own projection).
         genui: req.genui,
+        // ADR-0169 cl.5 — the Surface Options catalog picker's sanitized selection, forwarded onto the
+        // produce POST body (the `effort` absent-⇒-omit-key precedent above): absent ⇒ the body carries
+        // no `catalogId` key at all, and the server degrades to the default catalog either way.
+        ...(req.catalogId !== undefined ? { catalogId: req.catalogId } : {}),
+        // GH #418 — the A2UI Surface Option's OWN fresh per-turn read; the dev proxy / worker thread this
+        // straight into `ProduceOptions.a2uiEnabled`. Absent ⇒ the POST body carries no `a2ui` key at all
+        // (byte-identical to before this field existed, the `effort`-absent precedent above); both
+        // transports' `validateA2uiEnabled` degrades an absent/malformed value to `undefined` either way.
+        ...(req.a2uiEnabled !== undefined ? { a2ui: req.a2uiEnabled } : {}),
       }),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     })

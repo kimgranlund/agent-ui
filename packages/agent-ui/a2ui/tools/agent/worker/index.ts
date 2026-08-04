@@ -27,10 +27,22 @@ import { projectEnv } from './env-projection.ts'
 // security-adjacent PAIR-allowlist logic could silently fork between dev and prod with nothing to catch
 // it. Both transports now import the SAME zero-dep module (see its header for why that couldn't be
 // dev-proxy-plugin.ts directly).
-import { validateMode, validateGenuiSurface, validateEffort, isChatBody, resolveChatDispatch } from '../chat-validation.ts'
+import {
+  validateMode,
+  validateGenuiSurface,
+  validateA2uiEnabled,
+  validateEffort,
+  isChatBody,
+  resolveChatDispatch,
+  selectCatalog,
+} from '../chat-validation.ts'
 
 import providersConfigRaw from '../providers.json'
 import catalogRaw from '../../../src/catalog/default/catalog.json'
+// ADR-0169 cl.3 — the second registered catalog (the upstream A2UI Basic Catalog), loaded the SAME
+// static-import way as the default; keyed by SHORT id only (the canonical-URI alias is
+// renderer-inbound only, never server-selected — cl.13's closing note).
+import basicCatalogRaw from '../../../src/catalog/a2ui-basic/catalog.json'
 import corpusShardRaw from '../../../corpus/exemplar/v1_0/agent-ui.jsonl'
 
 interface Env {
@@ -62,6 +74,13 @@ const config = providersConfigRaw as ProvidersConfig
 validateProvidersConfig(config) // fail fast at cold start, same as loadConfig()'s boot check in dev
 
 const catalog: Catalog = loadCatalog(catalogRaw)
+// ADR-0169 cl.3 — both live in a short-id-keyed map `handleProduce` selects from via the request's
+// `catalogId` (fail-closed to the default).
+const basicCatalog: Catalog = loadCatalog(basicCatalogRaw)
+const catalogs = new Map<string, Catalog>([
+  [catalog.catalogId, catalog],
+  [basicCatalog.catalogId, basicCatalog],
+])
 const shard: CorpusRecord[] = corpusShardRaw
   .split('\n')
   .filter((l) => l.trim().length > 0)
@@ -185,7 +204,7 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
 // lazy-headersSent equivalent), so this must run BEFORE the Response is constructed, not inside the
 // detached write-loop's catch.
 async function handleProduce(request: Request, env: Env): Promise<Response> {
-  const { input, provider, model, mode, personaSystem, integrations, progressDetail, genui, effort } = JSON.parse(await readBody(request)) as {
+  const { input, provider, model, mode, personaSystem, integrations, progressDetail, genui, a2ui, effort, catalogId } = JSON.parse(await readBody(request)) as {
     input: unknown
     provider: string
     model: string
@@ -194,7 +213,9 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
     integrations?: unknown
     progressDetail?: unknown
     genui?: unknown
+    a2ui?: unknown
     effort?: unknown
+    catalogId?: unknown
   }
   if (!isValidTurnInput(input)) return json(400, { error: 'bad-request' })
   const validInput = input as TurnInput
@@ -215,6 +236,9 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
   // genui-surface.spec.md SPEC-R10/R11 — the SAME fail-closed validation the dev proxy uses (chat-
   // validation.ts, shared): a crafted/malformed value degrades to modality-off, never a 400.
   const genuiSurface = validateGenuiSurface(genui)
+  // GH #418 — the SAME fail-closed validation both transports share (chat-validation.ts): a crafted/
+  // malformed value degrades to `undefined` ⇒ `buildSystemPrompt`'s own A2UI-ON default.
+  const a2uiEnabled = validateA2uiEnabled(a2ui)
   // The reasoning-effort dial — the SAME fail-closed validation the dev proxy uses (chat-validation.ts,
   // shared): a crafted/malformed value degrades to `undefined` (the adapter's own default), never a 400.
   const validatedEffort = validateEffort(effort)
@@ -228,7 +252,10 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
   const active = resolveIntegrations(integrations, hostEnv)
   const toolOpts = buildToolDispatch(active, hostEnv, request.signal)
 
-  const deps: ProduceDeps = { provider: dispatch.provider, retrieve: (q) => retrieve(shard, q), catalog }
+  // ADR-0169 cl.3 — select the request's catalog (fail-closed to the default on a non-string/unknown
+  // id, never a mixed catalog+prompt); reaches both the prompt and the validator through the ONE
+  // existing `deps.catalog` seam (produce.ts) — no second threading path.
+  const deps: ProduceDeps = { provider: dispatch.provider, retrieve: (q) => retrieve(shard, q), catalog: selectCatalog(catalogs, catalogId, catalog) }
 
   const { readable, writable } = new TransformStream()
   const writer = writable.getWriter()
@@ -243,6 +270,7 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
         progress: true,
         ...(detail !== undefined ? { progressDetail: detail } : {}), // GH #240 — the validated 'source' opt-in only
         ...(genuiSurface !== undefined ? { genuiSurface } : {}), // genui-surface SPEC-R10 — the validated per-turn signal
+        ...(a2uiEnabled !== undefined ? { a2uiEnabled } : {}), // GH #418 — the validated A2UI Surface Option signal
         ...(validatedEffort !== undefined ? { effort: validatedEffort } : {}), // the validated reasoning-effort dial
         signal: request.signal, // GH #106 — cancel the paid upstream call if the client disconnects
         ...toolOpts,
