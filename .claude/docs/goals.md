@@ -606,9 +606,12 @@ live-turn path (a deployment arc of its own); GenUI entirely; any new SaaS compo
 - [x] An exported persona round-trips: export → re-import → identical live behaviour — the
       persona-library pattern proven and documented. *(2026-08-04 build + live round-trip leg — see
       the progress-note addendum below.)*
-- [ ] The second catalog is pickable in agent-admin and `catalogId` threads end-to-end.
-- [ ] The standing DoD (top of this file) holds: `npm run check` + `npm test` green, probes cover the
-      new behaviour, descriptors/plan updated where a surface moved.
+- [x] The second catalog is pickable in agent-admin and `catalogId` threads end-to-end. *(2026-08-04
+      build + live catalog-switch leg — see the box-4 addendum below.)*
+- [x] The standing DoD (top of this file) holds: `npm run check` + `npm test` green, probes cover the
+      new behaviour, descriptors/plan updated where a surface moved. *(Held at every box's ship;
+      final state in the box-4 addendum. M-B's DoD is COMPLETE pending ADR-0169's ratification +
+      this branch's merge.)*
 
 **Progress note — 2026-07-29.** Groundwork landed; **no DoD box is met yet**, because every one of them
 is a *live-run* proof and none has been run. What exists underneath them:
@@ -669,6 +672,24 @@ completed clean; evidence `.claude/ops/mb-live-proof/box3-roundtrip.json`. Deter
 round-trip, key coverage, fail-closed rejection incl. a de-vacuoused browser leg) ride the standing
 suite. Out-of-slice finding filed: GH #409 (Surface-Options/master toggles never rehydrate on reload,
 persona-wide, pre-existing).
+
+**Progress-note addendum — 2026-08-04 (later still). Box 4 BUILT + PROVEN — M-B's last box** (GH #413;
+ADR-0169 `proposed`, awaiting Kim's ratification at the PR). The second catalog IS upstream A2UI Basic
+(Kim's ruling): `a2ui-basic` registers beside the default on every renderer (+ the canonical upstream
+URI as an inbound alias), 14/18 upstream types included via factories onto existing fleet controls,
+exclusions E1–E7 recorded and gate-encoded (E7 render-time only — its validate-time gate is GH #429),
+13/14 upstream functions, and the three pinned upstream example payloads validate AND render
+byte-identical to source (`upstream-fixtures.test.ts`). Both independent reviews passed (code-checker:
+clean, one stale-branch blocker → merged + hand-reconciled with #418's `a2uiEnabled` axis, its
+regression suite back green, no prompt-baseline re-capture needed; a2ui-reviewer: PROMOTABLE, all six
+rubric dimensions ≥4, its four adversarial exclusion probes shipped as suite coverage). **The live
+catalog-switch leg:** picked `a2ui-basic` in the real admin store → one real live turn
+(`claude-sonnet-5`) → the request carried `catalogId:"a2ui-basic"`, the streamed `createSurface` came
+back stamped `a2ui-basic` (the cl.4 authority stamp), and the surface rendered 18 real DOM nodes
+through the basic factories — evidence `.claude/ops/mb-live-proof/box4-catalog-switch.json`. Gates at
+head: `npm run check` exit 0 · `npm test` exit 0 (403 files / 7347 tests). One soft ratification note
+rides ADR-0169 cl.13 for Kim: the outbound catalogId stamp (short id, the recommended default) vs the
+canonical URI is a one-constant switch.
 
 ---
 

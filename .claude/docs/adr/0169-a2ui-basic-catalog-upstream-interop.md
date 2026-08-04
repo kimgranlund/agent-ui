@@ -474,7 +474,7 @@ named follow-up.
 | E4 | `Modal` | type | DEFER | Wire schema now KNOWN (`trigger`® + `content`®, BOTH ComponentId references — upstream-basic-catalog.json:447-456; the named-pair concern is confirmed, not speculative). Two architectural gaps: our children grammar is a SINGLE structural key (`catalog.ts:25/127` — `child \| children \| ChildList`), with no named-slot pair; and `ui-modal` is `open`-prop-driven with no trigger-entry-point mechanism (`modal.ts` props: `open`/`persistent` only). | a named-slot children-grammar widening + a trigger-entry mechanism ruling (`ui-popover`'s positional trigger is the nearest in-fleet analogue) — its own intake. |
 | E5 | `Icon.name` `{svgPath}` arm | prop-arm | EXCLUDE v1 | Our `PropDef` type grammar cannot express a string-or-object union, and `ui-icon` renders REGISTERED glyphs — it has no arbitrary-path-data API. An emitted `{svgPath}` fails the declared string/enum type check ⇒ CATALOG failure, loud. | a `ui-icon` path-data arm (or a registry-side ephemeral glyph) — follow-up if upstream corpora actually use it. |
 | E6 | `ChoicePicker.variant: multipleSelection` | variant (host-ruled 2026-08-04: partial-include permitted, multi-select excluded) | EXCLUDE v1 | No honest existing-control mapping for a multi-select commit (`ui-select`/`ui-combo-box` are single-`value`; M-B excludes new components), and silently rendering a multi-select as single-select would corrupt the `value` array contract. GATE-ENCODED by declaring the `variant` enum as `['mutuallyExclusive']` only (cl.9b row 16): an upstream payload declaring `multipleSelection` fails the enum conformance check — recorded, loud, never wrong-rendered. | a multi-select control or commit shape — its own intake; draining E6 = widening the declared enum + the factory. |
-| E7 | `Action` `{functionCall}` arm | prop-arm | EXCLUDE v1 | No client-side action-execution surface exists (actions route to the producer, ADR-0011/0031); the arm is upstream's vehicle for `openUrl` (cl.11 row 11) — one coherent exclusion family. Fails the declared `event`-arm object schema at conformance: loud. | the client action-function seam (shared with openUrl). |
+| E7 | `Action` `{functionCall}` arm | prop-arm | EXCLUDE v1 | No client-side action-execution surface exists (actions route to the producer, ADR-0011/0031); the arm is upstream's vehicle for `openUrl` (cl.11 row 11) — one coherent exclusion family. **Excluded at RENDER time, not validate time** (build-verified 2026-08-04): `matchesSchemaType` checks only a PropDef's top-level `type` — deliberately, fleet-wide, so ADR-0011's Postel tolerance arms pass un-narrowed — so a `{functionCall}` action VALIDATES but `readActionSpec` has no arm for it and the click dispatches nothing. Gate-encoding E7 at conformance (a narrow rule keyed on `mapsTo:'action'`, scoped off the other catalogs' Postel arms) is a named follow-up: GH #429. | the client action-function seam (shared with openUrl) + the E7 conformance gate (GH #429). |
 
 ### 13 · `catalogId` — local short id, canonical-URI alias inbound
 
@@ -549,8 +549,10 @@ validate and render.
   dialect degradation with a named follow-up, none silent.
 - Required-ness (cl.9a global note): v1 is permissive-in / unenforced-out — a `PropDef.required`
   conformance mechanism is a named follow-up.
-- The four DEFER/EXCLUDE types and the E5/E6/E7 arms fail validation loudly (`CATALOG`/enum/schema at
-  the emitting node) — upstream streams using them do not render silently wrong, they report.
+- The four DEFER/EXCLUDE types and the E5/E6 arms fail validation loudly (`CATALOG`/enum at the
+  emitting node) — upstream streams using them do not render silently wrong, they report. E7 is the
+  one exception: excluded at render time only (see its table row — validate-time gate is GH #429),
+  so a `{functionCall}` action renders its Button but the click dispatches nothing.
 - Non-goals: no Basic corpus shard (follow-up); no markdown in `Text` (ADR-0119 stands); no client
   action-function seam (`openUrl`/`Action.functionCall`, one family, one follow-up); no `theme` support
   (the schema's surface-level `$defs.theme` is a createSurface-adjacent concern outside this catalog
