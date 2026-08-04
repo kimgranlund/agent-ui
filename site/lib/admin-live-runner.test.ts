@@ -50,6 +50,31 @@ describe('createAdminAgentTurn', () => {
     const turn = createAdminAgentTurn()
     await expect(turn(REQUEST)).rejects.toThrow(/malformed response body/)
   })
+
+  // ADR-0168 cl.5 / SPEC-R19 AC2 (GH #402) — the prose arm's enablement reaches the `/chat` POST body,
+  // the same additive-optional-field discipline `effort` already proves on this exact call.
+  it('forwards the enabled tool ids into the /chat POST body', async () => {
+    const fetchSpy = vi.fn(async () => new Response(JSON.stringify({ text: 'ok' }), { status: 200 }))
+    vi.stubGlobal('fetch', fetchSpy)
+    const turn = createAdminAgentTurn()
+    await turn({ ...REQUEST, integrations: ['weather', 'currency'] })
+    const init = (fetchSpy.mock.calls[0] as unknown[])[1] as { body: string }
+    const body = JSON.parse(init.body) as Record<string, unknown>
+    expect(body['integrations']).toEqual(['weather', 'currency'])
+  })
+
+  it('omits the key entirely when the request carries no integrations (byte-identical to the pre-amendment body)', async () => {
+    const fetchSpy = vi.fn(async () => new Response(JSON.stringify({ text: 'ok' }), { status: 200 }))
+    vi.stubGlobal('fetch', fetchSpy)
+    const turn = createAdminAgentTurn()
+    await turn(REQUEST)
+    const init = (fetchSpy.mock.calls[0] as unknown[])[1] as { body: string }
+    const body = JSON.parse(init.body) as Record<string, unknown>
+    expect('integrations' in body).toBe(false)
+    // The WHOLE body, not just the absent key: `effort` is undefined here too, so this is exactly the
+    // shape the route saw before SPEC-R19 existed.
+    expect(Object.keys(body).sort()).toEqual(['messages', 'model', 'system'])
+  })
 })
 
 // GH #144: the SURFACE-turn runner's fetch-boundary legs — a 200/ndjson response whose stream carries a

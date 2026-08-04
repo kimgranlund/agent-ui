@@ -913,6 +913,50 @@ describe('UIAgentAdminElement — the DEV-only live-turn fork (TKT-0052/ADR-0136
     expect(runner.calls[1]!.system).not.toContain('## Skills available to you')
   })
 
+  // ADR-0168 cl.5 / SPEC-R19 AC2 (GH #402) — the reported repro, inverted: tools enabled, NO structured
+  // surface on, a PROSE turn dispatches. The toggle was a silent no-op on this arm — enablement reached
+  // only the surface arm's request. Both runners are armed here so the assertion also proves WHICH arm ran.
+  it('a prose turn carries the enabled tool ids (GH #402: the toggle was a silent no-op on this arm)', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.store!.set(SURFACE_A2UI_KEY, false) // no structured surface — the prose arm answers (GenUI defaults OFF)
+    addEntry(el, ENTRY_KINDS.tool, 'weather')
+    addEntry(el, ENTRY_KINDS.tool, 'currency')
+    const surfaceCalls: unknown[] = []
+    el.agentSurfaceTurn = async function* () {
+      surfaceCalls.push(1)
+    }
+    const runner = recordingRunner('ok')
+    el.agentTurn = runner.fn
+
+    submit(el, 'weather in Oslo?')
+    await waitFor(() => runner.calls.length === 1, 'prose runner called')
+    expect(surfaceCalls, 'the surface arm must NOT run with both structured modalities off').toHaveLength(0)
+    expect(runner.calls[0]!.integrations).toEqual(['weather', 'currency'])
+
+    // The kind's MASTER switch gates it exactly as it gates the prompt projection — off ⇒ no ids at all
+    // (not merely an unmentioned tool section), so the host route can never dispatch a disabled tool.
+    el.store!.set('toolsEnabled', false)
+    submit(el, 'and now?')
+    await waitFor(() => runner.calls.length === 2, 'second prose turn')
+    expect(runner.calls[1]!.integrations).toEqual([])
+  })
+
+  it('a per-entry toggle OFF drops that id from the request (the fresh-read law, same as the prompt projection)', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.store!.set(SURFACE_A2UI_KEY, false)
+    addEntry(el, ENTRY_KINDS.tool, 'weather')
+    addEntry(el, ENTRY_KINDS.tool, 'currency')
+    const runner = recordingRunner('ok')
+    el.agentTurn = runner.fn
+
+    const toggle = toggleOf(entryEl(el, ENTRY_KINDS.tool, 'weather')) // the slug id of the 'weather' label
+    toggle.checked = false
+    toggle.dispatchEvent(new Event('change', { bubbles: true }))
+    submit(el, 'ping')
+    await waitFor(() => runner.calls.length === 1, 'runner called')
+    expect(runner.calls[0]!.integrations).toEqual(['currency'])
+  })
+
   it('Dialog Turns (vision rev.5): every turn logs request/response JSON, newest first, failures included', async () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const runner = recordingRunner('first reply')

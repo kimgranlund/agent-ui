@@ -198,29 +198,99 @@ describe('ADMIN_LIBRARIES — data integrity (GH #47/#48)', () => {
 // ── GH #49 — the Integrations pack ↔ dev-proxy registry parity (the a2ui-idioms drift-gate discipline) ──
 
 describe('Integrations pack ↔ registry parity (GH #49)', () => {
-  it('every registry integration has a pack entry whose LABEL is its id, and vice versa', async () => {
+  // SPEC-R16 AC2 / ADR-0168 cl.2 (LLD-C7) — widened from "every pack entry's LABEL is a registry id" to
+  // the full `{id, label, description}` TRIO. The old assertion could only ever hold while the three
+  // facts were one string; now a registry edit that renames a label, retitles a description, or re-keys
+  // an id and forgets this pack goes red on the exact field that drifted.
+  const trio = (e: { id?: string; label: string; description: string }) => ({ id: e.id, label: e.label, description: e.description })
+
+  it('every pack entry matches its registry manifest on the FULL {id, label, description} trio', async () => {
     const { ADMIN_LIBRARIES } = await import('./agent-admin-libraries.ts')
     const { ENTRY_KINDS } = await import('@agent-ui/app')
-    const { INTEGRATIONS } = await import('../../packages/agent-ui/a2ui/tools/agent/integrations.ts')
+    const { listIntegrations } = await import('../../packages/agent-ui/a2ui/tools/agent/integrations/index.ts')
+    const INTEGRATIONS = listIntegrations()
     const pack = ADMIN_LIBRARIES[ENTRY_KINDS.tool]!.find((p) => p.id === 'integrations')!
-    expect(pack.entries.map((e) => e.label).sort()).toEqual(INTEGRATIONS.map((i) => i.id).sort())
-    // the tool wire name === the id — the whole enablement chain keys on this one string
+
+    const byId = (a: { id?: string }, b: { id?: string }) => (a.id ?? '').localeCompare(b.id ?? '')
+    expect([...pack.entries].map(trio).sort(byId)).toEqual([...INTEGRATIONS].map(trio).sort(byId))
+
+    // Both directions, named per-entry so a failure says WHICH integration drifted.
+    for (const integration of INTEGRATIONS) {
+      const entry = pack.entries.find((e) => e.id === integration.id)
+      expect(entry, `registry integration "${integration.id}" has no pack entry`).toBeDefined()
+      expect(entry!.label, `"${integration.id}" label parity`).toBe(integration.label)
+      expect(entry!.description, `"${integration.id}" description parity`).toBe(integration.description)
+    }
+
+    // The decoupling itself: every pack entry carries an EXPLICIT id (never left to slugify(label)) and
+    // the label is genuinely HUMAN text, no longer the id in disguise — the bug ADR-0168 cl.2 retires.
+    for (const entry of pack.entries) {
+      expect(entry.id, 'a pack entry keying an external registry declares its id explicitly').toBeTruthy()
+      expect(entry.label, `"${entry.id}" label is human text, not the id`).not.toBe(entry.id)
+    }
+
+    // the tool wire name === the id for the v1 three (an LLD §4 non-decision: decoupling is a capability
+    // this arc buys, not a rename it performs) — nothing on the wire changed for the shipped tools
     for (const integration of INTEGRATIONS) expect(integration.tool.name).toBe(integration.id)
   })
 
+  it('a library add mints a store entry keyed to the REGISTRY id, not to the human label', async () => {
+    const { INTEGRATION_TOOLS } = await import('./agent-admin-libraries.ts')
+    const { validateNewEntry, ENTRY_KINDS } = await import('@agent-ui/app')
+    const { resolveIntegrations } = await import('../../packages/agent-ui/a2ui/tools/agent/integrations/index.ts')
+
+    // The REAL add-from-library path (entry-list.ts hands the pack entry to validateNewEntry verbatim).
+    const minted = INTEGRATION_TOOLS.map((input) => {
+      const result = validateNewEntry([], ENTRY_KINDS.tool, input)
+      expect(result.ok, `"${input.label}" must commit`).toBe(true)
+      return (result as { ok: true; entry: { id: string; label: string } }).entry
+    })
+
+    // The whole point: what the wire carries (entry.id) survives the intersection. Slugifying the human
+    // label would have produced 'weather-open-meteo' & co — dropped fail-closed, the tool silently inert.
+    expect(minted.map((e) => e.id)).toEqual(['weather', 'wikipedia-search', 'currency'])
+    expect(minted.map((e) => e.label)).not.toEqual(minted.map((e) => e.id))
+    expect(resolveIntegrations(minted.map((e) => e.id), {}).map((i) => i.id)).toEqual(['weather', 'wikipedia-search', 'currency'])
+  })
+
+  it('presets seed integration entries on the registry id too (the SECOND pack→entry projection)', async () => {
+    const { AGENT_PRESETS, presetSeed } = await import('./agent-admin-presets.ts')
+    const { ENTRY_KINDS, entriesStoreKey } = await import('@agent-ui/app')
+    const { resolveIntegrations } = await import('../../packages/agent-ui/a2ui/tools/agent/integrations/index.ts')
+
+    // The Travel Agent (`travel`) seeds a NAMED SUBSET via `pick`, the Hotel Concierge (`concierge`)
+    // seeds the whole pack — both project ids, and the `pick` leg is the one that ALSO proves `pick`
+    // matches on the id rather than the label. Expected ids are spelled out per preset: a bare
+    // "seeds ≥1 tool" check would stay green if `pick` silently matched nothing.
+    const expected: ReadonlyArray<readonly [string, readonly string[]]> = [
+      ['concierge', ['weather', 'wikipedia-search', 'currency']],
+      ['travel', ['weather', 'currency']],
+    ]
+    for (const [id, ids] of expected) {
+      const preset = AGENT_PRESETS.find((p) => p.id === id)
+      // Fail LOUD on a missing fixture — a silent `continue` here made this leg vacuous once already.
+      expect(preset, `${id} preset exists`).toBeDefined()
+      const seeded = presetSeed(preset!)[entriesStoreKey(ENTRY_KINDS.tool)] as Array<{ id: string }>
+      expect(seeded.map((e) => e.id), `${id} seeds exactly these registry ids`).toEqual(ids)
+      // Every seeded id survives the registry intersection — none is a human label in an id's place.
+      expect(resolveIntegrations(seeded.map((e) => e.id), {}).map((i) => i.id)).toEqual(ids)
+    }
+  })
+
   it('resolveIntegrations validates + intersects, and malformed input degrades to empty (never throws)', async () => {
-    const { resolveIntegrations, INTEGRATIONS } = await import('../../packages/agent-ui/a2ui/tools/agent/integrations.ts')
-    expect(resolveIntegrations(['weather', 'nope', 42, 'currency']).map((i) => i.id)).toEqual(['weather', 'currency'])
-    expect(resolveIntegrations('weather')).toEqual([])
-    expect(resolveIntegrations(undefined)).toEqual([])
-    expect(resolveIntegrations(INTEGRATIONS.map((i) => i.id))).toHaveLength(INTEGRATIONS.length)
+    const { resolveIntegrations, listIntegrations } = await import('../../packages/agent-ui/a2ui/tools/agent/integrations/index.ts')
+    const INTEGRATIONS = listIntegrations()
+    expect(resolveIntegrations(['weather', 'nope', 42, 'currency'], {}).map((i) => i.id)).toEqual(['weather', 'currency'])
+    expect(resolveIntegrations('weather', {})).toEqual([])
+    expect(resolveIntegrations(undefined, {})).toEqual([])
+    expect(resolveIntegrations(INTEGRATIONS.map((i) => i.id), {})).toHaveLength(INTEGRATIONS.length)
   })
 
   it('an integration validates its input BEFORE any network call (the currency guard)', async () => {
-    const { INTEGRATIONS } = await import('../../packages/agent-ui/a2ui/tools/agent/integrations.ts')
-    const currency = INTEGRATIONS.find((i) => i.id === 'currency')!
-    await expect(currency.execute({ amount: 'ten', from: 'EUR', to: 'USD' })).rejects.toThrow('currency: needs numeric')
-    await expect(currency.execute({ amount: 5, from: 'EURO', to: 'USD' })).rejects.toThrow()
+    const { listIntegrations } = await import('../../packages/agent-ui/a2ui/tools/agent/integrations/index.ts')
+    const currency = listIntegrations().find((i) => i.id === 'currency')!
+    await expect(currency.execute({ amount: 'ten', from: 'EUR', to: 'USD' }, {})).rejects.toThrow('currency: needs numeric')
+    await expect(currency.execute({ amount: 5, from: 'EURO', to: 'USD' }, {})).rejects.toThrow()
   })
 })
 

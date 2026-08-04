@@ -52,7 +52,12 @@ export function createAdminAgentTurn(): AdminAgentTurn {
     const res = await fetch(ENDPOINT, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ system: req.system, model: req.model, messages, effort: req.effort }),
+      // ADR-0168 cl.5 (GH #402) — `integrations` rides the SAME unconditional-key shape `effort` already
+      // proves: JSON.stringify DROPS an `undefined` value, so a request carrying no enablement leaves this
+      // body byte-identical to the pre-amendment one (SPEC-R19's absent-field requirement) with no
+      // conditional spread. The host route intersects the labels with its own registry; nothing here knows
+      // which ones are real.
+      body: JSON.stringify({ system: req.system, model: req.model, messages, effort: req.effort, integrations: req.integrations }),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     })
     if (!res.ok) {

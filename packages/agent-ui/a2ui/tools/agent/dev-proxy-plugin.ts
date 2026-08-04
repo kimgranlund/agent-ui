@@ -27,7 +27,7 @@ import { retrieve } from '../../src/corpus/retrieve.ts'
 import type { CorpusRecord } from '../../src/corpus/record.ts'
 import { loadCatalog } from '../../src/catalog/catalog.ts'
 import type { TurnInput, Effort } from '../../src/agent/agent-transport.ts'
-import { resolveIntegrations } from './integrations.ts'
+import { buildToolDispatch, resolveIntegrations } from './integrations/index.ts'
 // GH #108 — the PAIR-allowlist validation spine now lives in chat-validation.ts (zero vite/node deps, so
 // the Cloudflare Worker port can import it directly too, which it couldn't do from THIS file — importing
 // anything from here would drag `loadEnv`/`vite` into the Workers bundle). Re-exported unchanged so this
@@ -157,7 +157,12 @@ export function a2uiDevProxyPlugin(): Plugin {
                 model?: unknown
                 messages?: unknown
                 effort?: unknown
+                integrations?: unknown
               }
+              // ADR-0168 cl.5 (GH #402) — read BEFORE the guard: `isChatBody`'s predicate deliberately does
+              // not mention `integrations` (the field is optional and fail-closed downstream, so it is no
+              // part of the 400 contract), and narrowing to that predicate type drops the key.
+              const chatIntegrations = body.integrations
               if (!isChatBody(body)) {
                 sendJson(res, 400, { error: 'bad-request' }) // a malformed body is a deterministic failure — never let it fall through to provider.stream()
                 return
@@ -175,8 +180,17 @@ export function a2uiDevProxyPlugin(): Plugin {
                 sendJson(res, 503, { error: providerDispatch.reason })
                 return
               }
+              // ADR-0168 cl.5 (GH #402) — the prose arm's enablement, resolved + dispatched through the
+              // SAME shared pair the produce branch below uses: `resolveIntegrations` intersects with the
+              // registry (non-array/unknown ids ⇒ [], capped, fail-closed — never a 400), then
+              // `buildToolDispatch` builds the validate→key→execute pair. Zero active manifests ⇒ `{}`, so
+              // the spread adds NOTHING and the stream request stays byte-identical for every caller that
+              // enables nothing. No turn-level AbortSignal exists on this Node route (the Worker's
+              // `request.signal` twin has one) — the adapter's own per-call signal reaches ctx.signal.
+              const active = resolveIntegrations(chatIntegrations, env)
+              const toolOpts = buildToolDispatch(active, env)
               let text = ''
-              for await (const fragment of providerDispatch.provider.stream({ model, system, messages, effort: effort as Effort | undefined })) {
+              for await (const fragment of providerDispatch.provider.stream({ model, system, messages, effort: effort as Effort | undefined, ...toolOpts })) {
                 text += fragment // buffered server-side — single-shot (LLD Q3); one full reply, no mid-stream truncation
               }
               sendJson(res, 200, { text })
@@ -236,18 +250,14 @@ export function a2uiDevProxyPlugin(): Plugin {
               // GH #49 — the browser forwards ENABLED tool-entry labels; only registry matches survive
               // (resolveIntegrations validates + intersects, malformed ⇒ empty). Execution stays HERE in
               // the proxy's node process (the ADR-0137 shell law; produce's ExecuteTool cannot cross HTTP).
-              const active = resolveIntegrations(integrations)
-              const toolOpts =
-                active.length > 0
-                  ? {
-                      tools: active.map((integration) => integration.tool),
-                      executeTool: async (name: string, toolInput: Record<string, unknown>, signal?: AbortSignal): Promise<string> => {
-                        const match = active.find((integration) => integration.tool.name === name)
-                        if (!match) throw new Error(`unknown tool ${name}`)
-                        return match.execute(toolInput, signal)
-                      },
-                    }
-                  : {}
+              // ADR-0168 cl.3 / LLD-C4 — the tools/executeTool pair itself is built by the SHARED
+              // buildToolDispatch (schema-validated dispatch, key resolution, the `{}`-when-empty shape),
+              // identical to the Worker's: this route no longer carries its own copy of that logic. No
+              // turn-level AbortSignal exists on this Node route (unlike the Worker's `request.signal`,
+              // and `produce()` below is called without one), so none is passed — the adapter's own
+              // per-call signal is the only one there is, and it reaches ctx.signal unchanged.
+              const active = resolveIntegrations(integrations, env)
+              const toolOpts = buildToolDispatch(active, env)
               // ADR-0146 F1 — opt IN to the live-turn progress channel: produce() interleaves
               // {"a2uiMeta":{"progress":…}} meta-lines that flush through the SAME per-line res.write below
               // (NO structural proxy change — a progress line is an ordinary NDJSON line; the browser's

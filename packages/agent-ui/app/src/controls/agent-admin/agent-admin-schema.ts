@@ -269,6 +269,13 @@ export interface AdminTurnRequest {
    *  shown/committed). A runner that ignores it (or the value maps to no real dial) degrades the DIAL,
    *  never the request. */
   effort?: EffortLevel
+  /** ADR-0168 cl.5 (GH #402) — the ENABLED tool-entry labels (the `tool` kind, gated on the config's
+   *  `toolsEnabled` master switch), forwarded raw: the SAME field, read the SAME way, that the surface
+   *  arm's `AdminSurfaceTurnRequest.integrations` below already carries — the host's `/chat` route
+   *  intersects them with ITS integration registry and ignores everything else, so the component still
+   *  knows entry labels and never the registry. Absent/empty ⇒ no tools on the turn. The prose arm was
+   *  the one live arm enablement never reached (the silent no-op #402 reported); now it does. */
+  integrations?: readonly string[]
   /** Prior completed turns only — NOT including `text` (the runner appends the user message itself). */
   history: readonly AdminTurn[]
 }

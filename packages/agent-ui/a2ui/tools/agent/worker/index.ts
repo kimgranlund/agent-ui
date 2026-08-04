@@ -19,8 +19,9 @@ import type { CorpusRecord } from '../../../src/corpus/record.ts'
 import { loadCatalog } from '../../../src/catalog/catalog.ts'
 import type { Catalog } from '../../../src/catalog/catalog.ts'
 import type { TurnInput, Effort } from '../../../src/agent/agent-transport.ts'
-import { resolveIntegrations } from '../integrations.ts'
+import { buildToolDispatch, listIntegrations, resolveIntegrations } from '../integrations/index.ts'
 import { isSameOriginRequest, isMountedPath, isValidTurnInput } from './route-guards.ts'
+import { projectEnv } from './env-projection.ts'
 // GH #108 (review finding): validateMode/isChatBody/EFFORT_VALUES/resolveChatDispatch used to be
 // hand-duplicated here, byte-for-byte, from dev-proxy-plugin.ts's already-exported versions — this
 // security-adjacent PAIR-allowlist logic could silently fork between dev and prod with nothing to catch
@@ -92,13 +93,16 @@ const shard: CorpusRecord[] = corpusShardRaw
 // is a plain object at runtime too, so it can do the exact same dynamic lookup — providers.json (already
 // loaded + validated into `config` above) is the single source of truth for which keys exist, in both
 // environments. Adding a provider needs no matching edit here anymore.
+//
+// LLD-C5 (ADR-0168 cl.4 / SPEC-R18 AC2) applies that SAME rule to the second key registry: a `serverKey`
+// integration manifest declares its own `envKey`, so this projection derives from providers.json's entries
+// PLUS `listIntegrations()`. Registering a keyed integration is enough — no hand edit here follows it. (The
+// narrowing this function performs is the whole reason it needed widening; the dev proxy has no twin step —
+// it hands its full `loadEnv`-merged env straight to resolveIntegrations/buildToolDispatch.) The projection
+// itself lives in the pure, unit-testable `env-projection.ts` (route-guards.ts's precedent — this module is
+// never importable under vitest), so its behavior is gated against the real registry, not read as source.
 function envVars(env: Env): Record<string, string | undefined> {
-  const result: Record<string, string | undefined> = {}
-  for (const entry of Object.values(config.providers)) {
-    const value = env[entry.envKey]
-    if (typeof value === 'string') result[entry.envKey] = value
-  }
-  return result
+  return projectEnv(env, Object.values(config.providers), listIntegrations())
 }
 
 function json(status: number, body: unknown): Response {
@@ -150,7 +154,11 @@ async function handleStatus(env: Env): Promise<Response> {
 }
 
 async function handleChat(request: Request, env: Env): Promise<Response> {
-  const body = JSON.parse(await readBody(request)) as { system?: unknown; model?: unknown; messages?: unknown; effort?: unknown }
+  const body = JSON.parse(await readBody(request)) as { system?: unknown; model?: unknown; messages?: unknown; effort?: unknown; integrations?: unknown }
+  // ADR-0168 cl.5 (GH #402) — read BEFORE the guard: `isChatBody`'s predicate deliberately does not mention
+  // `integrations` (optional + fail-closed downstream, never part of the 400 contract), and narrowing to
+  // that predicate type drops the key. Same line, same reason, as dev-proxy-plugin.ts's `/chat` twin.
+  const chatIntegrations = body.integrations
   if (!isChatBody(body)) return json(400, { error: 'bad-request' })
   const { system, model, messages, effort } = body
 
@@ -160,6 +168,16 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
   const dispatch = providerFor(chatDispatch.provider, { apiKey: chatDispatch.apiKey, endpoint: chatDispatch.endpoint })
   if (!dispatch.ok) return json(503, { error: dispatch.reason })
 
+  // ADR-0168 cl.5 (GH #402) — the prose arm's enablement, resolved + dispatched through the SAME shared
+  // pair `handleProduce` below uses: `resolveIntegrations` intersects with the registry (non-array/unknown
+  // ids ⇒ [], capped, fail-closed — never a 400), then `buildToolDispatch` builds the validate→key→execute
+  // pair. Zero active manifests ⇒ `{}`, so the spread adds NOTHING and the stream request stays
+  // byte-identical for every caller that enables nothing. `request.signal` is this route's turn-level abort
+  // signal — sourced exactly as `handleProduce` sources its own, so the two routes in this file never grow
+  // two different cancellation conventions.
+  const hostEnv = envVars(env)
+  const active = resolveIntegrations(chatIntegrations, hostEnv)
+  const toolOpts = buildToolDispatch(active, hostEnv, request.signal)
   let text = ''
   // GH #106 (review finding): request.signal was never forwarded, so a client disconnect never cancelled
   // the in-flight, paid upstream call — it ran to completion regardless. Threading it through is the whole
@@ -170,6 +188,7 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
     messages,
     effort: effort as Effort | undefined,
     signal: request.signal,
+    ...toolOpts,
   })) {
     text += fragment
   }
@@ -223,18 +242,15 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
   // The reasoning-effort dial — the SAME fail-closed validation the dev proxy uses (chat-validation.ts,
   // shared): a crafted/malformed value degrades to `undefined` (the adapter's own default), never a 400.
   const validatedEffort = validateEffort(effort)
-  const active = resolveIntegrations(integrations)
-  const toolOpts =
-    active.length > 0
-      ? {
-          tools: active.map((integration) => integration.tool),
-          executeTool: async (name: string, toolInput: Record<string, unknown>, signal?: AbortSignal): Promise<string> => {
-            const match = active.find((integration) => integration.tool.name === name)
-            if (!match) throw new Error(`unknown tool ${name}`)
-            return match.execute(toolInput, signal)
-          },
-        }
-      : {}
+  // ADR-0168 cl.3 / LLD-C4 — enablement resolves, then the SHARED buildToolDispatch turns the surviving
+  // manifests into the tools/executeTool pair (schema-validated dispatch, key resolution, the `{}`-when-
+  // empty shape). Byte-for-byte the same builder the dev proxy uses, so the two hosts cannot drift.
+  // `request.signal` is this route's turn-level abort signal — already threaded into produce() below, and
+  // passed here too so an aborted turn cancels in-flight TOOL work, not just the upstream model call
+  // (GH #106's fix, extended to the integration fetches).
+  const hostEnv = envVars(env)
+  const active = resolveIntegrations(integrations, hostEnv)
+  const toolOpts = buildToolDispatch(active, hostEnv, request.signal)
 
   // ADR-0169 cl.3 — select the request's catalog (fail-closed to the default on a non-string/unknown
   // id, never a mixed catalog+prompt); reaches both the prompt and the validator through the ONE

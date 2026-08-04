@@ -208,6 +208,13 @@ export interface NewEntryInput {
   label: string
   description: string
   content: string
+  /** ADR-0168 cl.2 / LLD-C7 — an OPTIONAL stable id that wins over the `slugify(label)` default. A pack
+   *  whose entries key an EXTERNAL vocabulary (the Integrations pack: its entries ARE the dev proxy's
+   *  registry ids) supplies it, so the id survives a label edit and the display label is free to be human
+   *  text — the three-facts law (id ≠ tool.name ≠ label) reaching the admin store. Every hand-authored
+   *  entry and every pack that omits it keeps slugify-from-label EXACTLY as before; collision dedup (the
+   *  suffix counter below) applies to an explicit id the same as a slugged one. */
+  id?: string
 }
 
 // ── Entry libraries (GH #47/#48) — packs of ready-to-add entries ────────────────────────────────────────
@@ -230,19 +237,23 @@ export interface EntryLibraryPack {
 
 export type ValidateNewEntryResult = { ok: true; entry: Entry } | { ok: false; error: string }
 
-/** Fail-closed validation for a new custom entry (ADR-0132 cl.4): a required, non-empty `label`, and a
- *  generated id that doesn't collide with an existing entry of the SAME kind (a suffix counter resolves
- *  a slug collision rather than rejecting it outright — a friendlier failure mode than forcing the
- *  author to rename). Never mutates `existing`. */
+/** Fail-closed validation for a new custom entry (ADR-0132 cl.4): a required, non-empty `label`, and an
+ *  id that doesn't collide with an existing entry of the SAME kind (a suffix counter resolves a
+ *  collision rather than rejecting it outright — a friendlier failure mode than forcing the author to
+ *  rename). The id is `input.id` when the caller supplies one (LLD-C7: a pack keying an external
+ *  vocabulary), else `slugify(label)` exactly as before. Never mutates `existing`. */
 export function validateNewEntry(existing: readonly Entry[], kind: string, input: NewEntryInput): ValidateNewEntryResult {
   const label = input.label.trim()
   if (label.length === 0) return { ok: false, error: 'A name is required.' }
 
+  // An explicit id is trimmed but NEVER slugged — it is a foreign key (a registry id), so mangling it
+  // would be the very coupling this widening exists to break. An empty/blank one falls back to the slug.
+  const base = input.id?.trim() ? input.id.trim() : slugify(label)
   const usedIds = new Set(existing.map((e) => e.id))
-  let id = slugify(label)
+  let id = base
   let suffix = 2
   while (usedIds.has(id)) {
-    id = `${slugify(label)}-${suffix}`
+    id = `${base}-${suffix}`
     suffix += 1
   }
 

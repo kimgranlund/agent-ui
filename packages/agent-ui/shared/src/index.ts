@@ -3,4 +3,4 @@
 // ADR-0135 Piece A: the pure `SettingsSchema` vocabulary + its fail-closed guards, the first TypeScript
 // export from the '.' surface — types via `export type *`, the guard FUNCTIONS as a value re-export.
 export type * from './settings-schema.ts'
-export { findField, initialValuesFor, sanitizeNumber, sanitizeSelect } from './settings-schema.ts'
+export { findField, initialValuesFor, sanitizeBoolean, sanitizeNumber, sanitizeSelect } from './settings-schema.ts'
