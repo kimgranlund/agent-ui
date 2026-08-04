@@ -19,7 +19,7 @@ import type { CorpusRecord } from '../../../src/corpus/record.ts'
 import { loadCatalog } from '../../../src/catalog/catalog.ts'
 import type { Catalog } from '../../../src/catalog/catalog.ts'
 import type { TurnInput, Effort } from '../../../src/agent/agent-transport.ts'
-import { resolveIntegrations } from '../integrations.ts'
+import { resolveIntegrations } from '../integrations/index.ts'
 import { isSameOriginRequest, isMountedPath, isValidTurnInput } from './route-guards.ts'
 // GH #108 (review finding): validateMode/isChatBody/EFFORT_VALUES/resolveChatDispatch used to be
 // hand-duplicated here, byte-for-byte, from dev-proxy-plugin.ts's already-exported versions — this
@@ -199,7 +199,7 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
   // The reasoning-effort dial — the SAME fail-closed validation the dev proxy uses (chat-validation.ts,
   // shared): a crafted/malformed value degrades to `undefined` (the adapter's own default), never a 400.
   const validatedEffort = validateEffort(effort)
-  const active = resolveIntegrations(integrations)
+  const active = resolveIntegrations(integrations, envVars(env))
   const toolOpts =
     active.length > 0
       ? {
@@ -207,7 +207,7 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
           executeTool: async (name: string, toolInput: Record<string, unknown>, signal?: AbortSignal): Promise<string> => {
             const match = active.find((integration) => integration.tool.name === name)
             if (!match) throw new Error(`unknown tool ${name}`)
-            return match.execute(toolInput, signal)
+            return match.execute(toolInput, { signal })
           },
         }
       : {}

@@ -27,7 +27,7 @@ import { retrieve } from '../../src/corpus/retrieve.ts'
 import type { CorpusRecord } from '../../src/corpus/record.ts'
 import { loadCatalog } from '../../src/catalog/catalog.ts'
 import type { TurnInput, Effort } from '../../src/agent/agent-transport.ts'
-import { resolveIntegrations } from './integrations.ts'
+import { resolveIntegrations } from './integrations/index.ts'
 // GH #108 — the PAIR-allowlist validation spine now lives in chat-validation.ts (zero vite/node deps, so
 // the Cloudflare Worker port can import it directly too, which it couldn't do from THIS file — importing
 // anything from here would drag `loadEnv`/`vite` into the Workers bundle). Re-exported unchanged so this
@@ -211,7 +211,7 @@ export function a2uiDevProxyPlugin(): Plugin {
               // GH #49 — the browser forwards ENABLED tool-entry labels; only registry matches survive
               // (resolveIntegrations validates + intersects, malformed ⇒ empty). Execution stays HERE in
               // the proxy's node process (the ADR-0137 shell law; produce's ExecuteTool cannot cross HTTP).
-              const active = resolveIntegrations(integrations)
+              const active = resolveIntegrations(integrations, env)
               const toolOpts =
                 active.length > 0
                   ? {
@@ -219,7 +219,7 @@ export function a2uiDevProxyPlugin(): Plugin {
                       executeTool: async (name: string, toolInput: Record<string, unknown>, signal?: AbortSignal): Promise<string> => {
                         const match = active.find((integration) => integration.tool.name === name)
                         if (!match) throw new Error(`unknown tool ${name}`)
-                        return match.execute(toolInput, signal)
+                        return match.execute(toolInput, { signal })
                       },
                     }
                   : {}

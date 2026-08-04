@@ -201,7 +201,8 @@ describe('Integrations pack ↔ registry parity (GH #49)', () => {
   it('every registry integration has a pack entry whose LABEL is its id, and vice versa', async () => {
     const { ADMIN_LIBRARIES } = await import('./agent-admin-libraries.ts')
     const { ENTRY_KINDS } = await import('@agent-ui/app')
-    const { INTEGRATIONS } = await import('../../packages/agent-ui/a2ui/tools/agent/integrations.ts')
+    const { listIntegrations } = await import('../../packages/agent-ui/a2ui/tools/agent/integrations/index.ts')
+    const INTEGRATIONS = listIntegrations()
     const pack = ADMIN_LIBRARIES[ENTRY_KINDS.tool]!.find((p) => p.id === 'integrations')!
     expect(pack.entries.map((e) => e.label).sort()).toEqual(INTEGRATIONS.map((i) => i.id).sort())
     // the tool wire name === the id — the whole enablement chain keys on this one string
@@ -209,18 +210,19 @@ describe('Integrations pack ↔ registry parity (GH #49)', () => {
   })
 
   it('resolveIntegrations validates + intersects, and malformed input degrades to empty (never throws)', async () => {
-    const { resolveIntegrations, INTEGRATIONS } = await import('../../packages/agent-ui/a2ui/tools/agent/integrations.ts')
-    expect(resolveIntegrations(['weather', 'nope', 42, 'currency']).map((i) => i.id)).toEqual(['weather', 'currency'])
-    expect(resolveIntegrations('weather')).toEqual([])
-    expect(resolveIntegrations(undefined)).toEqual([])
-    expect(resolveIntegrations(INTEGRATIONS.map((i) => i.id))).toHaveLength(INTEGRATIONS.length)
+    const { resolveIntegrations, listIntegrations } = await import('../../packages/agent-ui/a2ui/tools/agent/integrations/index.ts')
+    const INTEGRATIONS = listIntegrations()
+    expect(resolveIntegrations(['weather', 'nope', 42, 'currency'], {}).map((i) => i.id)).toEqual(['weather', 'currency'])
+    expect(resolveIntegrations('weather', {})).toEqual([])
+    expect(resolveIntegrations(undefined, {})).toEqual([])
+    expect(resolveIntegrations(INTEGRATIONS.map((i) => i.id), {})).toHaveLength(INTEGRATIONS.length)
   })
 
   it('an integration validates its input BEFORE any network call (the currency guard)', async () => {
-    const { INTEGRATIONS } = await import('../../packages/agent-ui/a2ui/tools/agent/integrations.ts')
-    const currency = INTEGRATIONS.find((i) => i.id === 'currency')!
-    await expect(currency.execute({ amount: 'ten', from: 'EUR', to: 'USD' })).rejects.toThrow('currency: needs numeric')
-    await expect(currency.execute({ amount: 5, from: 'EURO', to: 'USD' })).rejects.toThrow()
+    const { listIntegrations } = await import('../../packages/agent-ui/a2ui/tools/agent/integrations/index.ts')
+    const currency = listIntegrations().find((i) => i.id === 'currency')!
+    await expect(currency.execute({ amount: 'ten', from: 'EUR', to: 'USD' }, {})).rejects.toThrow('currency: needs numeric')
+    await expect(currency.execute({ amount: 5, from: 'EURO', to: 'USD' }, {})).rejects.toThrow()
   })
 })
 

@@ -113,8 +113,11 @@ describe('resolveIntegrations — fail-closed enablement (SPEC-R16/R18)', () => 
   })
 
   it('never leaks the key value into the resolved manifest (envKey stays a NAME)', () => {
-    const active = resolveIntegrations(['resolve-keyed'], { FAKE_INTEGRATION_KEY: 'not-a-real-key' })
-    expect(active[0]?.envKey).toBe('FAKE_INTEGRATION_KEY')
+    // Registers its OWN fixture (not the previous case's) — this file's ids are unique per case exactly so
+    // no test depends on another having run first (`.only`/shuffled order stays green).
+    registerIntegration(manifest({ id: 'resolve-keyed-leak', auth: 'serverKey', envKey: 'FAKE_LEAK_KEY' }))
+    const active = resolveIntegrations(['resolve-keyed-leak'], { FAKE_LEAK_KEY: 'not-a-real-key' })
+    expect(active[0]?.envKey).toBe('FAKE_LEAK_KEY')
     expect(JSON.stringify(active)).not.toContain('not-a-real-key')
   })
 })
