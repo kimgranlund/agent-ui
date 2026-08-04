@@ -16,6 +16,17 @@ export const ICON_NAMES = [
   'dots-three', // GH #168 — the fleet's one horizontal overflow/more-actions glyph (the agent-admin canvas-header's page-actions ui-menu trigger, replacing a glued "…" text node — the TKT-0048 anti-pattern). Phosphor's catalog has no `dots-three-horizontal`; `dots-three` IS the horizontal one, and its regular-weight dots match the pack's line weight where `dots-three-outline`'s donut dots would read heavier than every neighbor glyph.
   'circle-half', // GH #170/ADR-0155 narrow-header rework — the scheme-cycle icon-only chip
   'palette', // GH #170/ADR-0155 narrow-header rework — the theme-picker icon-only chip
+  // ADR-0169 cl.9b (a2ui-basic's Icon row, `ICON_NAME_TABLE`) — the upstream A2UI v0.9.1 Basic
+  // Catalog's 59-identifier closed `Icon.name` enum, mapped onto Phosphor glyphs. 44 new members;
+  // the pre-existing 13 the upstream table itself reuses are marked `(have)` in that table and are
+  // NOT repeated here.
+  'user-circle', 'arrow-left', 'paperclip', 'phone', 'camera', 'trash', 'download-simple',
+  'pencil-simple', 'calendar-check', 'fast-forward', 'heart', 'heart-break', 'folder', 'question',
+  'house', 'info', 'map-pin', 'lock-simple', 'lock-simple-open', 'envelope-simple',
+  'dots-three-vertical', 'bell-slash', 'bell', 'pause', 'credit-card', 'image', 'play', 'printer',
+  'arrow-clockwise', 'rewind', 'paper-plane-right', 'gear', 'share-network', 'shopping-cart',
+  'skip-forward', 'skip-back', 'star', 'star-half', 'stop', 'upload-simple', 'speaker-low',
+  'speaker-slash', 'speaker-none', 'speaker-high',
 ] as const
 export type IconName = (typeof ICON_NAMES)[number]
 
