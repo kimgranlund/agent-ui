@@ -1,6 +1,21 @@
 # SPEC — A2UI Live-Agent Example (a real LLM emitting A2UI over the wire)
 
-> Status: accepted · v0.8 · 2026-07-24 (v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> Status: accepted · v0.9 · 2026-08-04 (v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> v0.9 changelog (ADR-0168 — the tool/integration ENABLEMENT arc): the hardcoded `INTEGRATIONS`
+> array becomes a manifest REGISTRY (`IntegrationManifest {id, version, label, description, tool,
+> auth, envKey?, execute}` + `registerIntegration`, boot-fail-fast on id/wire-name collision) — the
+> registry `id`, the wire `tool.name`, and the admin `label` become three separate facts (NEW
+> **SPEC-R16**); the declared `input_schema` stops being advisory — a shared minimal-subset
+> validator gates every dispatch, malformed input ⇒ a structured `is_error` tool_result, never a
+> reached executor and never a thrown turn (NEW **SPEC-R17**); manifests gain
+> `auth: 'none'|'serverKey'` with the env-var NAME (`envKey`) resolved server-side in BOTH hosts
+> (dev `loadEnv` / Worker env binding, ADR-0152), the key riding an `ExecuteContext` and an
+> unprovisioned keyed integration never offered (NEW **SPEC-R18**); enablement reaches BOTH live
+> arms — the `/chat` route accepts optional `integrations: string[]` and both hosts build the SAME
+> shared tool dispatch for chat and produce routes (GH #402 branch (a), NEW **SPEC-R19**);
+> `agent-config-schema.ts` first-classes the knob as registry-PROJECTED boolean fields + a
+> fail-closed resolver (ADR-0135 Fork-1 law). SPEC-R5 and the v0.6 tool-round buffering are
+> byte-untouched; `AgentProvider.stream`'s `tools?`/`executeTool?` seam is unchanged.
 > v0.7 changelog (ADR-0152, proposed — a production Cloudflare Worker port of the live-agent proxy):
 > SPEC-R9/R10's build-time "dev-only dynamic import + `vite build` tree-shake" enforcement mechanism is
 > REPLACED, not merely extended, by a runtime `GET /status` probe + same-origin (CSRF) check — the docs
@@ -209,6 +224,17 @@ isolated behind one interface (ADR-0069).
   next slices); each module is its provider's single upstream-format (SSE → text) boundary.
 - **Provider registry** — the committed `providers.json` (ADR-0073): the single source of truth for the
   in-chat switcher menu AND the proxy allowlist; env-var NAMES + public endpoints/model-ids, no secrets.
+- **Integration manifest / registry** (ADR-0168 §1/§2) — one callable integration's complete
+  server-side declaration: `{id, version, label, description, tool: ToolDef, auth, envKey?,
+  execute}`, registered via `registerIntegration()` into the node-side registry
+  (`tools/agent/integrations/` — the ADR-0137 shell law; the portable `src/agent/` core carries
+  only `ToolDef`/`ExecuteTool`). `id` keys enablement on the wire; `tool.name` is what the model
+  sees; `label` is human display text — three facts, never one string. Registration fail-fasts at
+  boot on a duplicate `id` or wire name.
+- **ExecuteContext** (ADR-0168 §4) — the executor's second parameter, `{signal?, apiKey?}`:
+  the turn's abort signal plus, iff `auth === 'serverKey'`, the host-resolved key value. The key
+  exists only inside the host process for the duration of the dispatch — never in a tool_result,
+  a log line, or any browser-bound byte.
 
 ---
 
@@ -661,13 +687,80 @@ parallel check — it rides the SPEC-R2/R6 standing gates the way `a2ui-stream` 
   module and switcher DO ship (ADR-0152), and a hardcoded live ENDPOINT (the relative `/__a2ui/agent`
   mount path — never a key or a third-party URL) is expected, not a defect.
 
+### 3.6 Tool/integration enablement (ADR-0168)
+
+**SPEC-R16 — Manifest registry + fail-closed enablement resolution.** Integrations MUST live in a
+manifest registry (`registerIntegration`/`listIntegrations`), never a hardcoded array; `id`,
+`tool.name`, and `label` MUST be independently changeable facts. The browser MUST forward
+enablement as registry `id`s; `resolveIntegrations(ids, env)` MUST intersect with the registry
+(unknown/malformed ⇒ dropped, list capped, anything non-array ⇒ empty — the shipped fail-closed
+posture preserved) and MUST additionally exclude any `serverKey` manifest whose `envKey` is
+unprovisioned. Registration MUST fail-fast at boot on a duplicate `id` OR duplicate wire
+`tool.name`. *(→ PRD-G7; ADR-0137/0168)*
+- **AC1** *Given* the registry unit tests, *when* a duplicate `id` or wire name registers, *then*
+  it throws at registration (boot-fail-fast); *given* `resolveIntegrations` fed a non-array, an
+  unknown id, an over-cap list, and a keyed-but-unprovisioned id, *then* each degrades exactly
+  (empty / dropped / capped / excluded) — deterministic, `npm test` green, no key, no network.
+- **AC2** *Given* the admin Integrations pack, *when* the parity test runs, *then* every pack
+  entry's `{id, label, description}` trio matches the registry (a registry edit that forgets the
+  pack goes red — the existing parity gate, widened from bare labels to trios).
+
+**SPEC-R17 — Dispatch-time input validation (the schema stops being advisory).** Every tool
+dispatch MUST validate the model-authored input against the manifest's declared `input_schema`
+BEFORE the executor runs, via ONE shared minimal-subset checker (`type:'object'` + `required` +
+primitive property types; hand-rolled, no dependency). On failure the executor MUST NOT be
+invoked; the dispatch MUST surface a structured error naming the tool + failing fields through
+the EXISTING rejection path (the adapter converts it to an `is_error` tool_result — GH #49's
+degrade-the-answer-never-the-turn contract, unchanged). A manifest declaring schema constructs
+beyond the subset MUST fail-fast at registration, never silently half-validate. *(→ PRD-G4/G6;
+ADR-0168 §3)*
+- **AC1** *Given* `validateToolInput`, *when* fed a missing required field, a wrong-typed field,
+  and a conforming input, *then* it returns structured failures for the first two (naming each
+  field) and ok for the third — deterministic unit test, `npm test` green.
+- **AC2** *Given* the shared dispatch with a stub executor, *when* a malformed input arrives,
+  *then* the executor is never called and the rejection message names the tool + fields; *given*
+  the Anthropic adapter's existing rejection handling, *then* that rejection lands as an
+  `is_error` tool_result (the shipped conversion, re-asserted) — no live model.
+
+**SPEC-R18 — Server-side keyed integrations.** A manifest MUST declare
+`auth: 'none' | 'serverKey'`; iff `'serverKey'` it MUST carry `envKey` (an env-var NAME, never a
+value — the `providers.json` discipline). The HOST MUST resolve the value at dispatch time — the
+dev proxy from its `loadEnv`-merged env, the production Worker from its env binding (whose
+`envVars()` projection MUST include registry `envKey`s, the GH #115 single-source lesson) — and
+pass it via `ExecuteContext.apiKey`. No key value MAY reach the browser, a tool_result, or
+committed source (SPEC-N2's grep gate covers integration keys identically). *(→ Constraint C2;
+ADR-0073 cl.5, ADR-0152, ADR-0168 §4)*
+- **AC1** *Given* a fake `serverKey` manifest + a stubbed env, *when* its var is set, *then*
+  dispatch hands `execute` the value via ctx and the tool is offered; *when* unset, *then* the
+  manifest is excluded from `resolveIntegrations`' result (never declared to the model) —
+  deterministic unit test, no real key.
+- **AC2** *Given* the repo, *when* the SPEC-N2 grep gate runs, *then* no integration key literal
+  exists in committed source; *given* the Worker's env projection, *when* unit-read, *then* it
+  derives from `providers.json` entries PLUS registered manifests' `envKey`s — one source of
+  truth, no hand-listed key names.
+
+**SPEC-R19 — Enablement reaches BOTH live arms (GH #402, branch (a)).** The `/chat` route's body
+MUST accept optional `integrations: string[]`, resolved and dispatched via the SAME shared tool
+dispatch the produce route uses, in BOTH hosts; the admin prose-chat arm (`AdminTurnRequest` →
+`admin-live-runner.ts`) MUST forward the same enablement read the surface arm does. An absent
+field MUST keep the request byte-identical to the pre-amendment shape (the `effort` additive
+precedent). The adapter's internal tool loop yields text only, so the chat route's buffered
+`{text}` contract is unchanged. *(→ PRD-G7; ADR-0136/0152/0168 §5)*
+- **AC1** *Given* the chat route with a stub provider, *when* the body carries enabled ids,
+  *then* `provider.stream` receives the matching `tools` + `executeTool`; *when* the field is
+  absent or malformed, *then* it receives neither (byte-identical request) — deterministic unit
+  test over both hosts' shared dispatch path, no key.
+- **AC2** *Given* agent-admin with tools enabled and NO structured surface on, *when* a prose
+  turn dispatches, *then* the POST body carries the enabled ids (the GH #402 repro inverted) — a
+  deterministic projection/runner test, no live model.
+
 ---
 
 ## 4. Non-functional requirements
 
 | ID | Requirement | Target |
 |---|---|---|
-| **SPEC-N1** | Zero-dep package preserved | `@agent-ui/a2ui/package.json` deps unchanged (`@agent-ui/components` + `@agent-ui/shared` only); the package surface is `.`/`./examples`/`./corpus`/`./agent` (the `./agent` producer toolkit exported per **ADR-0137**, TKT-0072 — the portable core in `src/agent/`); no LLM SDK anywhere (plain `fetch`); the KEY-HOLDING, DEV-PROXY, and PROVIDER-REGISTRY infra (`tools/agent/dev-proxy-plugin.ts` · `tools/agent/worker/` · `tools/agent/chat-validation.ts` · `providers.json`/`providers-config.ts`/`providers/{index,openai,gemini}.ts` · `agent-config-schema.ts`) stays tools-scoped WITHIN the a2ui package — as of ADR-0152, `tools/agent/worker/` is ALSO the production Cloudflare Worker's own runtime entry (`wrangler.jsonc`'s `main`), so "tools-scoped" no longer implies "never reaches production," only "never enters the portable `src/` producer core" (which remains true — `system-prompt.ts`/`mini-skills.ts` ship into the Worker bundle unmodified, per ADR-0152). Exporting `./agent` does NOT compromise the zero-dep core: the pack is hand-rolled, SDK-free, opt-in, and identity-gated (the ROOT `.` barrel carries zero producer bytes — the `./examples`/`./corpus` precedent), the ADR-0119 opt-in-pack law (Constraint C2 / ADR-0062/0069/0119/0137). |
+| **SPEC-N1** | Zero-dep package preserved | `@agent-ui/a2ui/package.json` deps unchanged (`@agent-ui/components` + `@agent-ui/shared` only); the package surface is `.`/`./examples`/`./corpus`/`./agent` (the `./agent` producer toolkit exported per **ADR-0137**, TKT-0072 — the portable core in `src/agent/`); no LLM SDK anywhere (plain `fetch`); the KEY-HOLDING, DEV-PROXY, and PROVIDER-REGISTRY infra (`tools/agent/dev-proxy-plugin.ts` · `tools/agent/worker/` · `tools/agent/chat-validation.ts` · `tools/agent/integrations/` (registry + manifests + `validate-input.ts` + `tool-dispatch.ts`) · `providers.json`/`providers-config.ts`/`providers/{index,openai,gemini}.ts` · `agent-config-schema.ts`) stays tools-scoped WITHIN the a2ui package — as of ADR-0152, `tools/agent/worker/` is ALSO the production Cloudflare Worker's own runtime entry (`wrangler.jsonc`'s `main`), so "tools-scoped" no longer implies "never reaches production," only "never enters the portable `src/` producer core" (which remains true — `system-prompt.ts`/`mini-skills.ts` ship into the Worker bundle unmodified, per ADR-0152). Exporting `./agent` does NOT compromise the zero-dep core: the pack is hand-rolled, SDK-free, opt-in, and identity-gated (the ROOT `.` barrel carries zero producer bytes — the `./examples`/`./corpus` precedent), the ADR-0119 opt-in-pack law (Constraint C2 / ADR-0062/0069/0119/0137). |
 | **SPEC-N2** | No secret committed / none baked into a build (the `VITE_` footgun) | A gitignored `.env` (untracked, dev) / a Workers Secret (production, ADR-0152) provisions the keys; no key literal appears in committed source (grep gate) and no key VALUE ever reaches the browser in either environment. The dev proxy resolves the non-prefixed `ANTHROPIC_API_KEY` SERVER-side via Vite's `loadEnv(mode, <repoRoot>, '')` merged over `process.env` — Vite does NOT auto-load `.env` into `process.env`, so a bare `process.env` read would miss a `.env`-only key; `loadEnv` runs in Node under `apply: 'serve'` only. The production Worker resolves the same key from `env.ANTHROPIC_API_KEY` (a Workers Secret, injected by the runtime, never in source). Both environments answer `/status` with a boolean only. Vite INLINES `VITE_*` at build time, so every `import.meta.env.VITE_*` reference MUST still live only inside a dynamically-imported overlay module — a standing source-level gate asserts it — but as of ADR-0152 that module DOES ship in `dist/` (it is reachable in production now); the manual `vite build` + grep of `dist/` (ADR-0069) checks for a KEY VALUE, not for the module's absence. |
 | **SPEC-N3** | Validator parity | The runtime loop's validation is the shared `heal`+`validateA2ui` — identical verdict to the renderer and corpus admission; no fork (streaming SPEC-N3). |
 | **SPEC-N4** | Progressive paint | The validated payload streams line-by-line (root-early → first paint before finalize), preserving the `a2ui-stream` aesthetic (streaming SPEC-N1). A turn's optional leading `note` meta-line (ADR-0088 §1) is filtered out BEFORE `host.ingest`/the JSON tab — it never enters the render path and never delays or blocks the progressive paint of the validated lines that follow it. |
@@ -777,6 +870,28 @@ interface FeedExclusion { readonly type: string; readonly reason: string }
 const FEED_SURFACE_TYPES: readonly string[];        // the 23 IN types
 const FEED_EXCLUDED: readonly FeedExclusion[];       // the 11 OUT types, each with a recorded reason
 function isFeedSurfaceType(type: string): boolean;
+
+// The integration manifest registry (SPEC-R16/R17/R18 / ADR-0168) — node-side, tools/agent/
+// (the ADR-0137 shell law); the portable core keeps only ToolDef/ExecuteTool.
+interface ExecuteContext { signal?: AbortSignal; apiKey?: string }
+interface IntegrationManifest {
+  id: string;             // registry key + the wire enablement vocabulary
+  version: string;         // manifest semver — admin-displayable, never sent to the model
+  label: string;            // human display text (admin UI)
+  description: string;
+  tool: ToolDef;              // tool.name is the model-visible wire name (MAY equal id)
+  auth: 'none' | 'serverKey';
+  envKey?: string;            // REQUIRED iff auth === 'serverKey'; a NAME, never a value
+  execute(input: Record<string, unknown>, ctx: ExecuteContext): Promise<string>;
+}
+function registerIntegration(m: IntegrationManifest): void;   // boot-fail-fast on collisions
+function listIntegrations(): readonly IntegrationManifest[];
+function resolveIntegrations(ids: unknown, env: Record<string, string | undefined>): IntegrationManifest[];
+function validateToolInput(schema: Record<string, unknown>, input: Record<string, unknown>):
+  { ok: true } | { ok: false; errors: string[] };
+// ONE dispatch builder, both hosts, both routes (the chat-validation.ts anti-fork precedent).
+function buildToolDispatch(active: readonly IntegrationManifest[], env: Record<string, string | undefined>, signal?: AbortSignal):
+  { tools: readonly ToolDef[]; executeTool: ExecuteTool } | Record<string, never>;
 ```
 
 ## 6. Open items (non-normative)
@@ -865,5 +980,9 @@ function isFeedSurfaceType(type: string): boolean;
 | SPEC-R6 AC3, R12 AC2, R2 AC2 | PRD-G6 (the Gen-UI `mode` axis — directive `specific` ↔ exploratory `blue-sky`, a mode-invariant honesty floor, threaded via `ProduceOptions.mode` through the proxy + the dev-only switcher selector; and Structural named as the already-shipped recorded transport via a doc + a second worked example; ADR-0090) |
 | SPEC-R6 AC4, R13 | PRD-G6 (the mini-skill registry — a `fewShot`-twin composed segment, hand-curated + selected once per turn beside `retrieve()` by a shared TF-IDF/cosine ranking, capped so the prompt grows by at most `cap × budget` regardless of registry size; mode-filtered at the composition site per ADR-0091 §4; ADR-0091) |
 | SPEC-R14, R15, R6 AC5, R8 AC5, R5 | PRD-G1/G6 (feed-embedded interactive asks — an additive `ask` meta-envelope field whose payload rides the SAME validated stream; a page-level per-message `pending → frozen(answered\|bypassed)` lifecycle; a gate-encoded feed sub-catalog partition (the ADR-0087 lesson, reapplied); ask mechanics + mode-scaled archetype vocabulary in the derived prompt; the structured answer is the existing action arm — zero round-trip extension; every failure path degrades to the ADR-0088 prose note; ADR-0097) |
+| SPEC-R16 | PRD-G7 (transport interop — the manifest registry + id-keyed, fail-closed enablement resolution; ADR-0137/0168) |
+| SPEC-R17 | PRD-G4/G6 (provable validity before dispatch + no silent drift — the declared `input_schema` enforced at ONE seam; ADR-0168 §3) |
+| SPEC-R18 | Constraint C2 (the secret-free invariant — integration keys resolve server-side in both hosts, never in a build/browser/tool_result; ADR-0073 cl.5, ADR-0152, ADR-0168 §4) |
+| SPEC-R19 | PRD-G7 (transport interop — enablement reaches every live arm via one shared dispatch; GH #402 branch (a); ADR-0136/0152/0168 §5) |
 
 _Realizes streaming SPEC-R2 and harness SPEC-R6 in running code, co-serving PRD-G1 and PRD-G7. Status: each doc's own header (the tree wins); the original charter table is archived (frozen 2026-07-08)._
