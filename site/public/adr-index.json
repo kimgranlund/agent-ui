@@ -1174,5 +1174,12 @@
     "description": "The second catalog IS upstream A2UI Basic — a2ui-basic registers beside the default on every renderer, schema-derived fleet-factory mappings with a recorded 18…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0170",
+    "url": "./adr-index.html#adr-0170",
+    "description": "The A2UI catalog picker becomes a library-pack entry kind with SINGLE-select semantics — the persisted key stays the one selection truth, switches derive from…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

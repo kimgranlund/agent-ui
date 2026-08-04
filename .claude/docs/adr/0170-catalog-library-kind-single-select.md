@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-04 |
 > | **Proposed by** | planner (design seat — the "Catalog library pack" intake; Kim's 2026-08-04 AskUserQuestion ruling scopes this campaign to the PICK-from-library half of the 2026-07-19 pick/create ruling; CREATE is a named non-goal) |
-> | **Ratified by** | — |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-04, via the [`ratify ADR-0170` utterance](https://github.com/kimgranlund/agent-ui/pull/440#issuecomment-5184770765) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | **On ratification+build:** `packages/agent-ui/app/src/controls/agent-admin/agent-admin-schema.ts:211-213` (the `A2UI_CATALOG_OPTIONS` doc comment's "create/pick-from-library affordances … still land separately" — pick-from-library lands HERE; the comment narrows to the create half) · `agent-admin.ts:577`'s "one option today" picker-build comment (the select it annotates retires, cl.6) · [ADR-0169](./0169-a2ui-basic-catalog-upstream-interop.md) cl.6's picker-build sentence (the VEHICLE changes — the options table, sanitize law, and threading it names are byte-untouched; a dated REV forward pointer at ratification, the ADR-0156 cl.5 shape) |
 > | **Supersedes / Superseded by** | **Amends** [ADR-0132](./0132-agent-admin-instructions-capabilities-architecture.md) (the entry-kind roster gains `catalog` — the family's first SINGLE-select kind, whose selection truth lives OUTSIDE the entries store) · [ADR-0169](./0169-a2ui-basic-catalog-upstream-interop.md) cl.6 (the picker's UI vehicle: library section, not bare select) · [ADR-0164](./0164-entry-list-extraction-home.md) cl.3 (ADDITIVE only: `EntryListOptions` gains two optional booleans; `mountEntryList`'s signature is unchanged) · **Relates** [ADR-0168](./0168-integration-manifest-registry-validated-dispatch-server-keys.md) (cl.2's trio law — the catalog entry's `id` is the registry/wire key, its `label` free display text, carried via `NewEntryInput.id`, LLD-C7's widening) · genui-surface.spec.md SPEC-R11/D3 (the pattern-source single-pick precedent this record deliberately DIVERGES from — Context §1) |
 
