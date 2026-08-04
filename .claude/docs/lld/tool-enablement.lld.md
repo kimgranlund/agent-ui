@@ -28,6 +28,14 @@ so the admin toggle is never a silent no-op (GH #402, ADR-0168 cl.5 branch (a)).
 outside `tools/agent/` + the named admin/site/app seam files changes; the portable core and the
 adapter change zero bytes.
 
+ONE authorized exception to that fence, recorded at build time: LLD-C8's projected `boolean` fields need
+a `boolean` guard, and `boolean` was the one `SettingsFieldType` member without one. Rather than invent a
+second validation idiom inside `agent-config-schema.ts`, `sanitizeBoolean` hoists to the shared
+guard home beside `sanitizeNumber`/`sanitizeSelect` — ADR-0135 Fork 2's own hoist law (a2ui cannot import
+`@agent-ui/app`, so the DAG bottom is the only place both consumers can share one implementation). So
+`packages/agent-ui/shared/src/settings-schema.ts` (+ its new test) is in bounds for C8; the extension is
+purely additive and every existing caller is untouched.
+
 ## 2 · Components (build slices)
 
 | ID | Component | File(s) | Traces |
@@ -39,7 +47,7 @@ adapter change zero bytes.
 | LLD-C5 | worker env projection widening — `envVars(env)` derives from `providers.json` entries PLUS registered manifests' `envKey`s (the GH #115 one-source rule; a keyed integration needs no hand edit here) | `packages/agent-ui/a2ui/tools/agent/worker/index.ts` (`envVars`) | SPEC-R18 |
 | LLD-C6 | chat-arm enablement (GH #402 (a)) — `AdminTurnRequest` gains `integrations?: string[]`; `#handleSubmit` projects the SAME fresh enablement read the surface arm has (`agent-admin.ts:1038-1042`'s idiom); `createAdminAgentTurn` forwards it in the `/chat` POST body; both hosts' `/chat` route resolves + `buildToolDispatch` + passes `tools`/`executeTool` into `provider.stream`; absent ⇒ byte-identical body (the `effort` spread precedent); `isChatBody` unchanged (the field is optional and fail-closed downstream) | `packages/agent-ui/app/src/controls/agent-admin/agent-admin-schema.ts` + `agent-admin.ts` (`#handleSubmit`) · `site/lib/admin-live-runner.ts` · `dev-proxy-plugin.ts` `/chat` branch · `worker/index.ts` `handleChat` | SPEC-R19 |
 | LLD-C7 | admin label decoupling — `INTEGRATION_TOOLS` entries display the manifest's human `label`; a page-local `{id, label, description}` trio table backs a label→id projection at the wire site; the parity test (`agent-admin-app.test.ts`) widens from bare labels to trios against the real registry (node-importable, as today) | `site/pages/agent-admin-libraries.ts` · the projection site in `packages/agent-ui/app/src/controls/agent-admin/agent-admin.ts` · `site/pages/agent-admin-app.test.ts` | SPEC-R16 AC2 |
-| LLD-C8 | config first-classing — `liveAgentConfigSchema(providers, integrations?)` gains an `integrations` section of PROJECTED `boolean` fields (`integration:<id>`, label/description from each manifest; default `false`) + `resolveIntegrationIds(read, schema): string[]` (fail-closed via the shared guards, ADR-0135 Piece A) | `packages/agent-ui/a2ui/tools/agent/agent-config-schema.ts` + its test | ADR-0168 cl.6 |
+| LLD-C8 | config first-classing — `liveAgentConfigSchema(providers, integrations?)` gains an `integrations` section of PROJECTED `boolean` fields (`integration:<id>`, label/description from each manifest; default `false`) + `resolveIntegrationIds(read, schema): string[]` (fail-closed via the shared guards, ADR-0135 Piece A) | `packages/agent-ui/a2ui/tools/agent/agent-config-schema.ts` + its test · `packages/agent-ui/shared/src/settings-schema.ts` + `settings-schema.test.ts` (the Piece-A `sanitizeBoolean` hoist — §1's recorded exception) | ADR-0168 cl.6 |
 | LLD-C9 | keyed groundwork proof — a test-only fake `serverKey` manifest exercising C1's exclusion, C4's ctx key hand-off, and C5's projection end-to-end; NO real hotel/PMS integration (ADR-0168 non-goal) | `integrations/registry.test.ts` + `tool-dispatch.test.ts` (fixtures) | SPEC-R18 |
 
 ## 3 · Data & contracts

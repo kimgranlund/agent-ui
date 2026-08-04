@@ -72,12 +72,24 @@ interface SeedEntry {
   enabled?: boolean
 }
 
-/** GH #46 — pack entries → seed entries (id = label, the pack law), optionally filtered to a named
- *  subset. Presets seed from the SAME texts the library menu offers — one source, zero drift. */
+/** GH #46 — pack entries → seed entries, optionally filtered to a named subset. Presets seed from the
+ *  SAME texts the library menu offers — one source, zero drift.
+ *
+ *  ADR-0168 cl.2 / LLD-C7 — the id is the pack entry's EXPLICIT `id` when it has one (the Integrations
+ *  pack, whose ids are the dev proxy's registry keys), else the label, the original pack law. This is the
+ *  SECOND projection from a pack into store entries (the first is the library-add path through
+ *  `validateNewEntry`), and it has to honor the same three-facts law or a preset would seed integration
+ *  entries keyed to human labels that the registry intersection drops — an armed tool, silently inert.
+ *  `pick` matches on that same id for the same reason. Every pack WITHOUT explicit ids (skills,
+ *  playbooks) is byte-identical to before: `e.id ?? e.label` is exactly `e.label` there. */
+function seedId(entry: NewEntryInput): string {
+  return entry.id ?? entry.label
+}
+
 function seedFrom(entries: readonly NewEntryInput[], pick?: readonly string[]): SeedEntry[] {
   return entries
-    .filter((e) => !pick || pick.includes(e.label))
-    .map((e) => ({ id: e.label, label: e.label, description: e.description, content: e.content }))
+    .filter((e) => !pick || pick.includes(seedId(e)))
+    .map((e) => ({ id: seedId(e), label: e.label, description: e.description, content: e.content }))
 }
 
 export const AGENT_PRESETS: readonly AgentPreset[] = [

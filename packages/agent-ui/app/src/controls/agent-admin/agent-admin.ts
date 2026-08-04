@@ -966,11 +966,11 @@ export class UIAgentAdminElement extends UIElement {
       model: config.model,
       effort: this.#effort,
       // ADR-0168 cl.5 / GH #402 — the prose arm forwards enablement too (it was the one live arm the
-      // tool toggle never reached: a silent no-op). `config.tools` IS the fresh, master-gated read
-      // (`enabledLabels(ENTRY_KINDS.tool)` above returns [] whenever the tool kind's switch is off) the
-      // surface arm computes for its own `integrations` — reused here rather than recomputed, so the two
-      // arms can never drift into two different answers for "what is enabled right now".
-      integrations: config.tools,
+      // tool toggle never reached: a silent no-op). LLD-C7: the wire carries entry IDS, not labels —
+      // `#enabledToolIds` is the SAME master-gated fresh read the surface arm uses, so the two arms can
+      // never drift. NOT `config.tools`: that stays the enabled LABELS (its own doc comment's contract),
+      // which the stub arm and the turn logger want for human display.
+      integrations: this.#enabledToolIds(store),
       history: [...this.#history],
     }
     void (async () => {
@@ -1028,7 +1028,6 @@ export class UIAgentAdminElement extends UIElement {
       return
     }
     const sections = readEntries(store, ENTRY_KINDS.promptSection)
-    const toolsEnabled = isEnabledFlag(store?.get(kindEnabledKey(ENTRY_KINDS.tool)))
     const request = {
       turn,
       personaSystem: composeLiveSystemPrompt(sections, this.#capabilityGroups(store)),
@@ -1038,14 +1037,10 @@ export class UIAgentAdminElement extends UIElement {
       effort: this.#effort,
       // Vision rev.6 — the catalog picker's sanitized selection (see AdminSurfaceTurnRequest.catalogId).
       catalogId: sanitizeCatalog(store?.get(A2UI_CATALOG_KEY)),
-      // GH #49 — the ENABLED tool entries' labels, master-gated on toolsEnabled (the SAME switch that
-      // gates the tool kind's prompt projection): the proxy intersects with its registry; non-registry
-      // labels are inert. A FRESH store read (the live-apply law).
-      integrations: toolsEnabled
-        ? readEntries(store, ENTRY_KINDS.tool)
-            .filter((entry) => entry.enabled)
-            .map((entry) => entry.label)
-        : [],
+      // GH #49 / ADR-0168 cl.2 — the ENABLED tool entries' IDS (never their labels: LLD-C7 decoupled the
+      // two), master-gated on the tool kind's switch: the proxy intersects with its registry; a
+      // non-registry id is inert. A FRESH store read (the live-apply law), shared with the prose arm.
+      integrations: this.#enabledToolIds(store),
       // genui-surface.spec.md SPEC-R10/R11 — a FRESH store read (the live-apply law): `enabled` gates
       // whether the runner composes the genui teaching block at all; `sourceBody`, when present, is the
       // D3-picked `pattern-source` entry's `content` VERBATIM (never a pack id — `pickedPatternSource`
@@ -1164,6 +1159,25 @@ export class UIAgentAdminElement extends UIElement {
       entries: readEntries(store, kind),
       enabled: isEnabledFlag(store?.get(kindEnabledKey(kind))),
     }))
+  }
+
+  /** ADR-0168 cl.2 / LLD-C7 — the ENABLEMENT WIRE projection, shared by BOTH live arms (`#handleSubmit`'s
+   *  prose request and `#runSurfaceTurn`'s surface request) so they can never drift into two different
+   *  answers for "what is enabled right now". A FRESH store read (the live-apply law), master-gated on the
+   *  tool kind's switch (the SAME switch that gates the kind's prompt projection).
+   *
+   *  It forwards each enabled entry's `id`, NEVER its `label`. The id is the stable wire vocabulary the
+   *  host's `resolveIntegrations` intersects against its registry; the label is human display text that a
+   *  user may freely edit. They were the same string until this slice — forwarding the label worked only
+   *  by that coincidence, so a prettier label silently disarmed the tool. The component stays entirely
+   *  generic here: it knows nothing of registries or integration ids, it just forwards the stable key
+   *  instead of the display name. A non-registry id is inert downstream (the fail-closed intersection). */
+  #enabledToolIds(store: SettingsStore | undefined): string[] {
+    if (!isEnabledFlag(store?.get(kindEnabledKey(ENTRY_KINDS.tool)))) return []
+    return readEntries(store, ENTRY_KINDS.tool)
+      .filter((e) => e.enabled)
+      .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
+      .map((e) => e.id)
   }
 
   // ── vision rev.5: master-state application + the Context tabs' renderers ────────────────────────────
