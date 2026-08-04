@@ -243,22 +243,41 @@ const GENUI_EXCLUSIVE_OVERRIDE = `This turn's caller has NO A2UI catalog rendere
 
 const GENUI_DOGFOOD_TEACHING = loadPrompt('genui-dogfood-teaching.md')
 
+// GH #418 — the note-line convention (`{"a2uiMeta":{"note":…}}`, always-first, ADR-0088) normally rides
+// GRAMMAR/INTRO_AND_NOTE into every mode. When `a2uiEnabled` is `false` (below), GRAMMAR composes ZERO
+// bytes — so a genui-only turn would otherwise lose the ONE piece of GRAMMAR that genui itself still
+// depends on (the client's shared `readMetaLine` peel, `admin-live-runner.ts`, applies identically
+// regardless of modality). A2UI_OFF_NOTE_LINE re-teaches JUST that convention, written genui-only (never
+// referencing "the A2UI JSONL below", which does not exist this turn) — never a copy of GRAMMAR's own
+// A2UI-specific note-line paragraph (that one says "you do NOT reply in prose or HTML", the opposite of
+// what a genui turn does).
+const A2UI_OFF_NOTE_LINE = loadPrompt('a2ui-off-note-line.md')
+
 /** SPEC-R10 — composes ONE genui block when (and only when) the modality is enabled for this turn: the
  *  fixed wire/sandbox-reality teaching; the `exclusive` override paragraph when the caller has named itself
  *  a genui-only consumer; the dogfood segment (teaching + the derived fleet inventory) when `dogfood` is
  *  set (SPEC-R13); then the picked pattern-source's body when one is picked (D3 — never a lookup by id; the
  *  caller already resolved the picked library entry's own `content`, SPEC-R11). Undefined/`enabled:false`
  *  ⇒ `''` — the degradation law: the composed prompt is byte-identical to the pre-GenUI composition (AC1).
- *  `exclusive`/`dogfood` absent/`false` ⇒ byte-identical to before that field existed. */
-function genuiBlock(genui: GenuiSurfaceConfig | undefined): string {
+ *  `exclusive`/`dogfood` absent/`false` ⇒ byte-identical to before that field existed.
+ *
+ *  GH #418 — `a2uiEnabled` (the buildSystemPrompt-level axis, threaded from the caller's OWN A2UI Surface
+ *  Option) is folded in HERE, not left to the caller: when it's `false`, this turn's caller has no A2UI
+ *  renderer available AT ALL (`buildSystemPrompt` composed zero A2UI grammar/catalog bytes above,
+ *  regardless of `genui.exclusive`) — the EXACT consumer fact `GenuiSurfaceConfig.exclusive` already
+ *  names (genui-surface-config.ts). Most-restrictive-wins (ADR-0034's convention, applied to this axis):
+ *  the override composes whenever EITHER `genui.exclusive` OR `!a2uiEnabled` says so, and the note-line
+ *  convention (above) is re-taught whenever `!a2uiEnabled`, since GRAMMAR never ran this turn. */
+function genuiBlock(genui: GenuiSurfaceConfig | undefined, a2uiEnabled: boolean): string {
   if (genui === undefined || !genui.enabled) return ''
-  const exclusive = genui.exclusive === true ? `\n\n${GENUI_EXCLUSIVE_OVERRIDE}` : ''
+  const noteLine = a2uiEnabled ? '' : `\n\n${A2UI_OFF_NOTE_LINE}`
+  const exclusive = genui.exclusive === true || !a2uiEnabled ? `\n\n${GENUI_EXCLUSIVE_OVERRIDE}` : ''
   const dogfood =
     genui.dogfood === true
       ? `\n\n${GENUI_DOGFOOD_TEACHING}\n\n## agent-ui components available inside your GenUI document\n\n${dogfoodInventory()}`
       : ''
   const source = genui.sourceBody !== undefined && genui.sourceBody.trim() !== '' ? `\n\n${genui.sourceBody.trim()}` : ''
-  return `\n\n${GENUI_TEACHING}${exclusive}${dogfood}${source}`
+  return `\n\n${GENUI_TEACHING}${noteLine}${exclusive}${dogfood}${source}`
 }
 
 // ADR-0091 §4 fix (independent-review defect): in `'blue-sky'` mode, `NEGOTIATE_BLUE_SKY` above already
@@ -294,6 +313,18 @@ function miniSkillsFor(mode: GenUiMode | undefined, selected: readonly MiniSkill
  * `selectMiniSkills`) already bounded it to. In `'blue-sky'` mode ONLY, `miniSkillsFor` first drops any
  * selected entry whose id is already inlined verbatim in `NEGOTIATE_BLUE_SKY` (§4 fix) — everywhere else
  * the selection composes unfiltered.
+ *
+ * GH #418 — `a2uiEnabled` is the 7th, additive parameter: absent/`true` reproduces every byte of the
+ * pre-existing composition (`grammarFor` + the catalog/functions inventory + `fewShot` + the mini-skills
+ * block), exactly as before this parameter existed — every existing caller (`produce.ts`, every test in
+ * this package) passes at most 6 arguments and is byte-unaffected. `false` composes ZERO bytes from that
+ * whole A2UI-grammar/catalog/examples/mini-skills pipeline (mini-skills are catalog-composition idioms —
+ * `prompts/mini-skills/*.md` name concrete A2UI component types — so they are A2UI catalog teaching too,
+ * not exempt): the caller has no A2UI renderer this turn, so teaching its dialect would only mislead the
+ * model (the exact defect this fixes — a GenUI-only agent-admin turn composed the FULL A2UI catalog wall
+ * regardless of the toggle). `genuiBlock` folds this same signal into its own composition (see its own
+ * doc comment) so a genui-enabled turn still gets a working note-line convention and an explicit
+ * no-A2UI-renderer framing even with zero GRAMMAR bytes above it.
  */
 export function buildSystemPrompt(
   catalog: Catalog,
@@ -302,17 +333,21 @@ export function buildSystemPrompt(
   miniSkills?: readonly MiniSkill[],
   personaSystem?: string,
   genui?: GenuiSurfaceConfig,
+  a2uiEnabled?: boolean,
 ): string {
+  const a2uiOn = a2uiEnabled !== false // absent ⇒ on — the zero-regression default (Decision precedent)
   return (
-    grammarFor(mode) +
-    `\n\n## Available components (catalog "${catalog.catalogId}", protocol ${catalog.protocolVersion})\n\n` +
-    catalogIdTeaching(catalog) +
-    catalogInventory(catalog) +
-    `\n\n## Available functions\n\n` +
-    functionsInventory(catalog) +
-    fewShot(exemplars) +
-    miniSkillsBlock(miniSkillsFor(mode, miniSkills ?? [])) +
-    genuiBlock(genui) +
+    (a2uiOn
+      ? grammarFor(mode) +
+        `\n\n## Available components (catalog "${catalog.catalogId}", protocol ${catalog.protocolVersion})\n\n` +
+        catalogIdTeaching(catalog) +
+        catalogInventory(catalog) +
+        `\n\n## Available functions\n\n` +
+        functionsInventory(catalog) +
+        fewShot(exemplars) +
+        miniSkillsBlock(miniSkillsFor(mode, miniSkills ?? []))
+      : '') +
+    genuiBlock(genui, a2uiOn) +
     personaBlock(personaSystem)
   )
 }

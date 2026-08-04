@@ -184,6 +184,15 @@ const TURN_LOG_CAP = 20
  *  user action) or a typed intent. See the onClientMessage wiring for the full root-cause note. */
 const ERROR_TURN_BUDGET = 3
 
+// GH #418 — the two visible-refusal notices for "A2UI is off but something A2UI-shaped still reached this
+// client" (a lingering surface's action click, or a model that emitted A2UI JSONL anyway despite the
+// composed prompt no longer teaching it). Chosen client-plane policy: NEVER render/act on A2UI content
+// while the toggle is off — either don't render it at all (with a visible one-line notice), or refuse the
+// action outright — never a silent no-op (the exact reported defect: a surface renders, looks alive, then
+// goes dead on the first click, with no error anywhere).
+const A2UI_OFF_ACTION_REFUSAL = 'A2UI is off in Surface Options — this action was not sent.'
+const A2UI_OFF_INGEST_NOTICE = '⚠ A2UI is off in Surface Options — a surface the agent tried to render was not shown.'
+
 // genui-surface.spec.md v0.5 §11 (SPEC-R12, GH #316/ADR-0162) — the ONE committed asset pair, now fetched
 // LAZILY: at most ONCE per page, and ONLY on a dogfood-ON frame mount (GH #354, Kim's 2026-07-29 ruling).
 //
@@ -1009,15 +1018,24 @@ export class UIAgentAdminElement extends UIElement {
     const dogfoodOn = genuiOn && isGenuiDogfoodEnabled(store?.get(SURFACE_GENUI_DOGFOOD_KEY))
     // genui-surface.spec.md SPEC-R10/R11 (independent-review MODERATE fix): a `client` message's OWN
     // modality gates it — a genui action click is inert while GenUI is off (even if A2UI is on), and
-    // symmetrically an A2UI action click is inert while A2UI is off (even if GenUI is on). A lingering
-    // frame/host from a NOW-disabled modality must never spawn a hidden turn — the exact contradiction
-    // `SURFACE_GENUI_KEY`'s own doc comment already promised and this gate previously broke (an OR
-    // across both switches let a disabled modality's stale click still run). A typed `intent` targets NO
-    // specific modality — it needs at least ONE structured modality on (unchanged, vision rev.6/B2).
+    // symmetrically an A2UI action click is REFUSED while A2UI is off (even if GenUI is on). A lingering
+    // frame/host from a NOW-disabled modality must never spawn a hidden NETWORK turn — the exact
+    // contradiction `SURFACE_GENUI_KEY`'s own doc comment already promised and this gate previously broke
+    // (an OR across both switches let a disabled modality's stale click still run). A typed `intent`
+    // targets NO specific modality — it needs at least ONE structured modality on (unchanged, vision
+    // rev.6/B2).
     if (turn.kind === 'client') {
       const wantsGenui = isGenuiActionClientMessage(turn.message)
       if (wantsGenui && !genuiOn) return
-      if (!wantsGenui && !a2uiOn) return
+      if (!wantsGenui && !a2uiOn) {
+        // GH #418 — the reported defect: this click used to no-op SILENTLY (no error, no signal anywhere)
+        // because the surface it targets should never have rendered as interactive in the first place
+        // while A2UI is off. Never spawn a real network turn (the modality really is off, unchanged), but
+        // DO surface a one-line visible refusal on the clicked surface's own bubble — `fail()` only
+        // narrates (conversation.ts), it starts no work — so this stays a client-only, zero-network path.
+        conversation.beginAgentTurn({ intoSurface: clientMessageSurfaceId(turn.message) }).fail(A2UI_OFF_ACTION_REFUSAL)
+        return
+      }
     } else if (!a2uiOn && !genuiOn) {
       return
     }
@@ -1051,6 +1069,11 @@ export class UIAgentAdminElement extends UIElement {
         // fresh-read way `sourceBody` is; `dogfoodOn` is already `false` whenever `genuiOn` is `false`.
         dogfood: dogfoodOn,
       },
+      // GH #418 — the A2UI Surface Option's OWN fresh store read, threaded so the runner's
+      // `ProduceOptions.a2uiEnabled` can compose ZERO A2UI-grammar/catalog bytes when this client has no
+      // A2UI renderer available this turn. Before this field existed, the composed prompt ignored the
+      // toggle entirely (the reported defect: a GenUI-only turn taught the model the FULL A2UI catalog).
+      a2uiEnabled: a2uiOn,
     }
     // TKT-0079 — an action-click/error turn RESUMES the bubble owning its surface (the game loop stays in
     // one card); a typed intent stays a fresh bubble (its reply must not appear above the question).
@@ -1063,6 +1086,12 @@ export class UIAgentAdminElement extends UIElement {
     void (async () => {
       const wireLines: string[] = []
       let note: string | undefined
+      // GH #418 — set when the stream carries an A2UI wire line while `a2uiOn` is false: the composed
+      // prompt no longer teaches A2UI grammar in this state (system-prompt.ts), so this should be rare
+      // (model non-compliance only) — but if it happens, this client must never render it (it would only
+      // grow into ANOTHER silently-inert surface, the click-gate above's whole point) — never-render is
+      // the chosen client-plane policy, paired with ONE visible notice rather than a silent drop.
+      let a2uiRefused = false
       try {
         // GH #354 — the ONE await the lazy asset pair introduces is HOISTED HERE, ahead of the first
         // consumed event, so `mountGenui` below stays SYNCHRONOUS inside the stream loop exactly as it was
@@ -1121,7 +1150,13 @@ export class UIAgentAdminElement extends UIElement {
             handle.mountGenui(event.surfaceId, event.html, assets)
           } else {
             wireLines.push(event.line)
-            handle.ingestLine(event.line)
+            // GH #418 — an A2UI wire line only renders (`ingestLine`) while A2UI is actually on this
+            // turn; the toggle's OFF state must never render a surface whose actions the click-gate above
+            // would then refuse (the reported "renders, looks alive, dies on click" defect). The raw line
+            // still rides into `wireLines`/`#logTurn` below — visible in the Dialog Turns inspector for
+            // debugging a non-compliant model reply — it just never reaches the live surface host.
+            if (a2uiOn) handle.ingestLine(event.line)
+            else a2uiRefused = true
           }
         }
         // GH #354 — the degraded-assets reason rides out WITH this turn's own note rather than replacing
@@ -1129,7 +1164,10 @@ export class UIAgentAdminElement extends UIElement {
         // `setNote(warning)` would be overwritten by, or overwrite, the agent's prose). Same `⚠ ` marker
         // `handle.fail`'s system bubble uses. It is also logged, so the Dialog Turns inspector shows why a
         // dogfood-ON turn rendered a bare frame.
-        const outgoing = [note, assetWarning].filter((text) => text !== undefined).join('\n\n')
+        // GH #418 — the a2ui-refused notice rides the SAME "append, never replace" composition: the
+        // agent's own note (if any) stays intact, with the refusal appended so the never-silent law holds
+        // even when the model DID say something narratable alongside the line this client refused.
+        const outgoing = [note, assetWarning, a2uiRefused ? A2UI_OFF_INGEST_NOTICE : undefined].filter((text) => text !== undefined).join('\n\n')
         if (outgoing !== '') handle.setNote(outgoing)
         handle.finalize()
         this.#logTurn('surface', request, {
