@@ -32,7 +32,8 @@ byte-untouched, a non-goal fence, not a part.
 4. **The select retires; the row keeps a mirror** (`agent-admin.ts` + `agent-admin.css`) — the
    Surface Options row's `ui-select` (`agent-admin.ts:577-594`) is removed; a read-only label
    mirror re-derives in `#applyMasterStates` (cl.6). The Catalogs section becomes the ONE writer.
-5. **The library pack** (`site/pages/agent-admin-libraries.ts` + the `@agent-ui/app` barrel) — a
+5. **The library pack** (`site/pages/agent-admin-libraries.ts` + the `@agent-ui/app` barrel +
+   `agent-admin-schema.ts`'s optional `description` widening on the options rows) — a
    "Registered catalogs" `EntryLibraryPack` mapped LIVE from an import of `A2UI_CATALOG_OPTIONS`
    (browser-importable — no hand-copied trio table, no parity test); generic, never flavored
    (cl.7); the trio law rides `NewEntryInput.id` (ADR-0168 cl.2 / LLD-C7, already shipped).
@@ -71,11 +72,13 @@ threading changes, pattern-source D3 changes) are ADR-0170's named Non-goals, no
 - **S1** — Part 1 + Part 2 (`entries.ts` + `entry-list.ts` + their tests; no consumer change).
 - **S2** — Part 3 (`agent-admin.ts`: the row, handlers, masters/dim, prompt exclusion + tests).
 - **S3** — Part 4 (`agent-admin.ts` + css: select retirement + label mirror + tests).
-- **S4** — Part 5 (barrel export + the site pack + site tests).
+- **S4** — Part 5 (barrel export + `agent-admin-schema.ts`'s optional `description` widening +
+  the site pack + site tests).
 - **S5** — integration sweep: the produce-POST-body byte-identical pin, the browser shard, the
   `agent-admin.md` doc row.
 
 Dependencies: S1 → S2 → S3 (SERIAL — S2 and S3 both write `agent-admin.ts`; the one-writer freeze,
 the tool-enablement S4/S5 lesson) → S5. S4 needs S1 (imports `ENTRY_KINDS.catalog`) and is
-parallel-safe beside S2/S3 (disjoint files: site page + barrel only). Every edge is a real
-file/type dependency, not a convention.
+parallel-safe beside S2/S3 (disjoint files: the site page, the barrel `index.ts`, and
+`agent-admin-schema.ts` — which S2/S3 never write; S-DOCS's own schema-comment edit is serial-first
+by construction). Every edge is a real file/type dependency, not a convention.

@@ -25,7 +25,8 @@ facts make this a decision record rather than a config edit.
 
 1. **A new entry kind with semantics the family has never carried.** Every existing capability
    kind is multi-enable: N entries, each independently on/off, all enabled ones compose.
-   `pattern-source` (genui SPEC-R11/D3) bent this once — single PICK, but expressed as "first
+   `pattern-source` (genui SPEC-R11/D3 as shipped — the arbitration lives in
+   `pickedPatternSource`, `entries.ts`) bent this once — single PICK, but expressed as "first
    enabled by `order` wins, extra enabled entries are a silent no-op, zero enabled degrades to
    none picked". A catalog cannot reuse that shape honestly: the wire stamps EXACTLY ONE
    `catalogId` on every surface (ADR-0169 cl.4's authority stamp), there is no "none" state
