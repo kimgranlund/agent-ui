@@ -1160,5 +1160,19 @@
     "description": "**A trait too heavy for the foundation row rides its own declared ./traits/* subpath** (the GH #377 §1 intake; PR #375's component review judged the shape RIGH…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0168",
+    "url": "./adr-index.html#adr-0168",
+    "description": "Integrations become a manifest REGISTRY — validated dispatch, server-resolved keys, and tools on BOTH live arms (proposed — the tool/integration ENABLEMENT int…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0169",
+    "url": "./adr-index.html#adr-0169",
+    "description": "The second catalog IS upstream A2UI Basic — a2ui-basic registers beside the default on every renderer, schema-derived fleet-factory mappings with a recorded 18…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
