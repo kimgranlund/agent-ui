@@ -258,14 +258,22 @@ describe('Integrations pack ↔ registry parity (GH #49)', () => {
     const { ENTRY_KINDS, entriesStoreKey } = await import('@agent-ui/app')
     const { resolveIntegrations } = await import('../../packages/agent-ui/a2ui/tools/agent/integrations/index.ts')
 
-    // The Voyager seeds a NAMED SUBSET (`pick`), the Concierge seeds the whole pack — both project ids.
-    for (const id of ['concierge', 'voyager']) {
+    // The Travel Agent (`travel`) seeds a NAMED SUBSET via `pick`, the Hotel Concierge (`concierge`)
+    // seeds the whole pack — both project ids, and the `pick` leg is the one that ALSO proves `pick`
+    // matches on the id rather than the label. Expected ids are spelled out per preset: a bare
+    // "seeds ≥1 tool" check would stay green if `pick` silently matched nothing.
+    const expected: ReadonlyArray<readonly [string, readonly string[]]> = [
+      ['concierge', ['weather', 'wikipedia-search', 'currency']],
+      ['travel', ['weather', 'currency']],
+    ]
+    for (const [id, ids] of expected) {
       const preset = AGENT_PRESETS.find((p) => p.id === id)
-      if (!preset) continue
-      const seeded = presetSeed(preset)[entriesStoreKey(ENTRY_KINDS.tool)] as Array<{ id: string }>
-      expect(seeded.length, `${id} seeds at least one tool`).toBeGreaterThan(0)
+      // Fail LOUD on a missing fixture — a silent `continue` here made this leg vacuous once already.
+      expect(preset, `${id} preset exists`).toBeDefined()
+      const seeded = presetSeed(preset!)[entriesStoreKey(ENTRY_KINDS.tool)] as Array<{ id: string }>
+      expect(seeded.map((e) => e.id), `${id} seeds exactly these registry ids`).toEqual(ids)
       // Every seeded id survives the registry intersection — none is a human label in an id's place.
-      expect(resolveIntegrations(seeded.map((e) => e.id), {}).map((i) => i.id)).toEqual(seeded.map((e) => e.id))
+      expect(resolveIntegrations(seeded.map((e) => e.id), {}).map((i) => i.id)).toEqual(ids)
     }
   })
 
