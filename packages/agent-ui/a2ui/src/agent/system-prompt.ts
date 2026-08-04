@@ -224,7 +224,7 @@ const GENUI_TEACHING = loadPrompt('genui-teaching.md')
  *  for a coexistence caller like agent-admin, the SAME `sourceBody` composition-order precedent). Names the
  *  consumer fact plainly — never "prefer style X" vaguely — so a compliant model has a concrete reason to
  *  route this turn's ENTIRE output through genui rather than the catalog. */
-const GENUI_EXCLUSIVE_OVERRIDE = `This turn's caller has NO A2UI catalog renderer at all — it can ONLY display a genui surface. Any A2UI JSONL you emit (createSurface/updateComponents/updateDataModel) will validate but never be shown to the user; it is silently invisible here. For this turn, express the ENTIRE response as ONE genui HTML surface (or as a note-only reply with no surface, if nothing needs to render) — never as A2UI JSONL, even for shapes the catalog could otherwise express.`
+const GENUI_EXCLUSIVE_OVERRIDE = `This turn's caller has NO A2UI catalog renderer at all — it can ONLY display a genui surface. Any A2UI JSONL you emit (createSurface/updateComponents/updateDataModel) will validate but never render as a UI here — the client refuses it with a visible notice, not silently. For this turn, express the ENTIRE response as ONE genui HTML surface (or as a note-only reply with no surface, if nothing needs to render) — never as A2UI JSONL, even for shapes the catalog could otherwise express.`
 
 // ---- genui-surface SPEC-R13: the dogfood segment — GenuiSurfaceConfig.dogfood, GH #316/ADR-0162.
 // GENUI_DOGFOOD_TEACHING is the hand-authored, byte-pinned half (SPEC-R13(a), `prompt-equivalence.test.ts`'s

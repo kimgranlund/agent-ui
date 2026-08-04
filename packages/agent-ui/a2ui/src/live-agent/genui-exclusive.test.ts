@@ -103,7 +103,8 @@ describe('the fix: GenuiSurfaceConfig.exclusive steers the PROMPT (system-prompt
     const explicitFalse = buildSystemPrompt(defaultCatalog, [], undefined, undefined, undefined, { enabled: true, exclusive: false })
 
     expect(withExclusive).toContain('NO A2UI catalog renderer at all')
-    expect(withExclusive).toContain('silently invisible')
+    // GH #425 — post-#424 the client refuses with a visible notice, not silence; wording stays truthful.
+    expect(withExclusive).toContain('refuses it with a visible notice')
     expect(withoutExclusive).not.toContain('NO A2UI catalog renderer at all')
     // The degradation law (the `sourceBody`-absent precedent): exclusive:false is byte-identical to absent.
     expect(explicitFalse).toBe(withoutExclusive)
