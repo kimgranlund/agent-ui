@@ -5,7 +5,8 @@ import type { UITextFieldElement } from '@agent-ui/components/controls/text-fiel
 import { UISettingsElement } from '../settings/settings.ts'
 import { UIConversationElement } from '../conversation/conversation.ts'
 import { defaultAgentConfigSchema, SUPPORTED_MODELS, DEFAULT_MODEL_ID, SURFACE_MARKDOWN_KEY, SURFACE_A2UI_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID, sanitizeCatalog } from './agent-admin-schema.ts'
-import { ENTRY_KINDS, entriesStoreKey, initialEntryValues, readEntries, composeSystemPrompt, DEFAULT_SYSTEM_PROMPT_FALLBACK, type Entry } from './entries.ts'
+import { ENTRY_KINDS, entriesStoreKey, initialEntryValues, readEntries, composeSystemPrompt, DEFAULT_SYSTEM_PROMPT_FALLBACK, type Entry, type EntryLibraryPack } from './entries.ts'
+import { mountEntryList, showAddError, type EntryListHandlers } from './entry-list.ts'
 import { createMemoryStore } from '../settings/memory-store.ts'
 import type { SettingsStore } from '../settings/store.ts'
 import {
@@ -80,6 +81,71 @@ function contentFieldOf(row: HTMLElement): HTMLTextAreaElement {
 // the real container query (super-shell.browser.test.ts's own precedent), but the segment/narrow-tab
 // SWITCHING is pure JS/DOM behavior, independent of which band is actually painted — this file proves
 // that DOM behavior; agent-admin.browser.test.ts proves the real cross-engine geometry/survival.
+// ── ADR-0170 cl.8 (LLD-C2) — the entry-list's per-kind PRESENTATION vocabulary ─────────────────────────
+// `mountEntryList` is driven DIRECTLY here (not through the composed element) so both halves are proven
+// on the primitive itself: the suppression a registry-keyed kind needs, and — the load-bearing half — the
+// default-true backward compat every pre-existing call site depends on.
+
+describe('mountEntryList — customAdd/contentField (ADR-0170 cl.8)', () => {
+  const sink: EntryListHandlers = { onToggle: () => {}, onContentChange: () => {}, onDelete: () => {}, onAdd: () => true }
+  const ROW: Entry = { id: 'a', kind: 'catalog', label: 'A', description: 'about A', content: 'body', order: 0, enabled: true, builtin: false }
+  const PACK: EntryLibraryPack = { id: 'p', label: 'Pack', description: 'a pack', entries: [{ label: 'From pack', description: '', content: '' }] }
+
+  it('ABSENT options ⇒ byte-identical render: add-toggle, add-form and the per-entry content editor all mount', () => {
+    const section = mountEntryList('skill', 'Add skill', sink)
+    section.render([ROW])
+    expect(section.host.querySelector('[data-part="entry-add-toggle"]')).not.toBeNull()
+    expect(section.host.querySelector('[data-part="entry-add-form"]')).not.toBeNull()
+    expect(section.host.querySelector('[data-part="entry-content"]')).not.toBeNull()
+  })
+
+  it('explicit `true` is the same as absent (the option is a suppression switch, not a feature flag)', () => {
+    const section = mountEntryList('skill', 'Add skill', sink, { customAdd: true, contentField: true })
+    section.render([ROW])
+    expect(section.host.querySelector('[data-part="entry-add-toggle"]')).not.toBeNull()
+    expect(section.host.querySelector('[data-part="entry-add-form"]')).not.toBeNull()
+    expect(section.host.querySelector('[data-part="entry-content"]')).not.toBeNull()
+  })
+
+  it('customAdd:false suppresses BOTH authoring affordances — and leaves the library menu untouched', () => {
+    const section = mountEntryList('catalog', 'Add catalog', sink, { customAdd: false, libraries: [PACK] })
+    section.render([ROW])
+    expect(section.host.querySelector('[data-part="entry-add-toggle"]'), 'no add-toggle button').toBeNull()
+    expect(section.host.querySelector('[data-part="entry-add-form"]'), 'no authoring form').toBeNull()
+    expect(section.host.querySelector('[data-part="entry-library-menu"]'), 'the library menu is the ONLY add path').not.toBeNull()
+  })
+
+  it('contentField:false renders label + description + switch, and nothing else', () => {
+    const section = mountEntryList('catalog', 'Add catalog', sink, { contentField: false })
+    section.render([ROW])
+    const row = section.host.querySelector('[data-part="entry"]') as HTMLElement
+    expect(row.querySelector('[data-part="entry-content"]'), 'no per-entry content editor').toBeNull()
+    expect(row.querySelector('[data-part="entry-toggle"]')).not.toBeNull()
+    expect(row.querySelector('[data-part="entry-label"]')!.textContent).toBe('A')
+    expect(row.querySelector('[data-part="entry-description"]')!.textContent).toBe('about A')
+  })
+
+  it('updateLibraries still swaps the menu in place when the add-form anchor is suppressed (and keeps it LAST)', () => {
+    const section = mountEntryList('catalog', 'Add catalog', sink, { customAdd: false, contentField: false, libraries: [PACK] })
+    section.render([ROW])
+    const other: EntryLibraryPack = { ...PACK, id: 'q', label: 'Other' }
+    expect(() => section.updateLibraries([other])).not.toThrow()
+    const menus = section.host.querySelectorAll('[data-part="entry-library-menu"]')
+    expect(menus, 'one menu, swapped — never two').toHaveLength(1)
+    expect(section.host.lastElementChild).toBe(menus[0])
+    expect(menus[0]!.textContent).toContain('Other')
+    // …and removing every pack removes the affordance entirely, same as any other kind.
+    section.updateLibraries([])
+    expect(section.host.querySelector('[data-part="entry-library-menu"]')).toBeNull()
+  })
+
+  it('showAddError on a customAdd:false section is a silent no-op, never a null-deref throw', () => {
+    const section = mountEntryList('catalog', 'Add catalog', sink, { customAdd: false })
+    section.render([ROW])
+    expect(() => showAddError(section, 'A name is required.')).not.toThrow()
+  })
+})
+
 describe('UIAgentAdminElement — shell composition (GH #52/ADR-0154): segments + narrow-tabs', () => {
   it('composes ONE ui-chat-shell: content=conversation, options-pane segmented into Settings/Context: System/Context: Dialog', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)

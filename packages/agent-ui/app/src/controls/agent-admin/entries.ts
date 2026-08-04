@@ -13,6 +13,8 @@
 // uniform across every kind. A kind-specific schema (e.g. a Tool's parameter list) is an explicitly
 // deferred, separately-scoped future extension — not built here.
 
+import { A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID, sanitizeCatalog } from './agent-admin-schema.ts'
+
 /** The known kinds this build seeds/instantiates. Not a closed enum — `Entry.kind` is a plain `string`
  *  (ADR-0132 Fork 2: extensible without a code change); these are the five known constants, not an
  *  exhaustive union type. */
@@ -29,6 +31,13 @@ export const ENTRY_KINDS = {
   // enabled `pattern-source` entry (by `order`) as the turn's picked source — enabling more than one is
   // never an error, just a no-op past the first (a defensive degrade, never a UI-level constraint).
   patternSource: 'pattern-source',
+  // ADR-0170 cl.1 — the A2UI catalog LIBRARY: the family's first SINGLE-select kind, and the first whose
+  // selection truth lives OUTSIDE this store. The entries record MEMBERSHIP (which registered catalogs
+  // this persona has on its shelf); the ONE selection is `A2UI_CATALOG_KEY`, and every switch's checked
+  // state DERIVES from it at read time (`readCatalogEntries` below) — the per-entry `enabled` flag is
+  // never the selection truth for this kind, so no store state can make the section disagree with the
+  // `catalogId` the runner actually threads (cl.2's second-writer defect, closed by construction).
+  catalog: 'catalog',
 } as const
 
 export interface Entry {
@@ -100,6 +109,10 @@ export function initialEntryValues(): Record<string, unknown> {
     [entriesStoreKey(ENTRY_KINDS.resource)]: [],
     [entriesStoreKey(ENTRY_KINDS.tool)]: [],
     [entriesStoreKey(ENTRY_KINDS.patternSource)]: [],
+    // ADR-0170 cl.1 — an empty ROSTER seed, like every other capability kind. The Default catalog row is
+    // NOT seeded here: it is guaranteed at READ time (`readCatalogEntries`), which covers a fresh store
+    // and a pre-existing persona whose localStorage never carried this key alike — no migration write.
+    [entriesStoreKey(ENTRY_KINDS.catalog)]: [],
   }
 }
 
@@ -119,6 +132,55 @@ export function pickedPatternSource(entries: readonly Entry[]): Entry | undefine
 export function readEntries(store: { get(key: string): unknown } | undefined, kind: string): Entry[] {
   const raw = store?.get(entriesStoreKey(kind))
   return Array.isArray(raw) ? (raw as Entry[]) : []
+}
+
+// ── the catalog roster projection (ADR-0170 cl.2/cl.4) ─────────────────────────────────────────────────
+
+/** The ensured Default roster row — `builtin: true` (toggleable, never deletable, ADR-0132 Fork 4), its
+ *  label read from the registry (`A2UI_CATALOG_OPTIONS`), never hardcoded. `order: -1` sorts it FIRST:
+ *  every stored row's order comes from `validateNewEntry`'s `maxOrder + 1` over the RAW store, which
+ *  starts at 0 and never contains this projection-only row. */
+function defaultCatalogEntry(): Entry {
+  const option = A2UI_CATALOG_OPTIONS.find((o) => o.id === DEFAULT_A2UI_CATALOG_ID)
+  return {
+    id: DEFAULT_A2UI_CATALOG_ID,
+    kind: ENTRY_KINDS.catalog,
+    label: option?.label ?? DEFAULT_A2UI_CATALOG_ID,
+    description: '',
+    content: '',
+    order: -1,
+    enabled: false, // overridden by the derivation below — stated only to satisfy the Entry shape
+    builtin: true,
+  }
+}
+
+/**
+ * The catalog kind's read-time projection (ADR-0170 cl.2/cl.4) — PURE: it reads, it never writes.
+ *
+ * Two guarantees, both derived rather than stored:
+ *  1. **The Default row is always present.** A store whose `entries:catalog` roster lacks it (a fresh
+ *     store, or a persona whose localStorage predates this kind) gets it prepended as a builtin — a
+ *     read-time guarantee, never a migration write. A roster that already carries a real `agent-ui` row
+ *     (added from the library pack) keeps that row exactly as stored, dedup-free.
+ *  2. **Exactly one entry is enabled.** Every row's `enabled` is REPLACED by
+ *     `id === sanitizeCatalog(store.get(A2UI_CATALOG_KEY))` — the same fail-closed read expression every
+ *     wire site uses. The stored per-entry flags are dead weight for this kind (cl.2): drift between the
+ *     roster and the threaded `catalogId` is structurally impossible, and an unregistered row (a
+ *     dedup-suffixed duplicate) can never derive to ON, since `sanitizeCatalog` never returns its id.
+ */
+export function readCatalogEntries(store: { get(key: string): unknown } | undefined): Entry[] {
+  const roster = readEntries(store, ENTRY_KINDS.catalog)
+  const withDefault = roster.some((e) => e.id === DEFAULT_A2UI_CATALOG_ID) ? roster : [defaultCatalogEntry(), ...roster]
+  const active = sanitizeCatalog(store?.get(A2UI_CATALOG_KEY))
+  return withDefault.map((entry) => ({ ...entry, enabled: entry.id === active }))
+}
+
+/** ADR-0170 cl.3 — `true` iff `id` names a catalog the registry actually carries. The ONE membership
+ *  expression the section's handlers share (never a second registry): an unregistered id is refusable
+ *  VISIBLY (no write, the re-render snaps the switch back) instead of being silently coerced to the
+ *  default by `sanitizeCatalog` on the next read. */
+export function isRegisteredCatalog(id: string): boolean {
+  return A2UI_CATALOG_OPTIONS.some((option) => option.id === id)
 }
 
 /** Compose the ONE final system-prompt string from the ENABLED prompt-section entries, in `order`

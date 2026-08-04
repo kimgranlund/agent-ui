@@ -595,9 +595,10 @@ function expand(kind: string, seeds: readonly SeedEntry[]): Entry[] {
   }))
 }
 
-/** The full store seed for a persona: the four config keys + all SIX entry-list keys (genui-surface
- *  SPEC-R11/B2 added `pattern-source`, seeded EMPTY — no shipped persona scripts a picked source; the
- *  admin picks one per agent, same as any hand-authored entry). The prompt sections are the three
+/** The full store seed for a persona: the four config keys + EVERY entry-list key (genui-surface
+ *  SPEC-R11/B2 added `pattern-source` and ADR-0170 added `catalog`, both seeded EMPTY — no shipped persona
+ *  scripts a picked source or curates a catalog shelf; the admin picks per agent, same as any
+ *  hand-authored entry). The prompt sections are the three
  *  shipped builtins with Foundation's CONTENT rewritten to the persona (ids, labels, and non-deletability
  *  untouched — ADR-0132 cl.2) + the persona's "Surface style" custom section appended; `disabledBuiltins`
  *  seeds those builtins toggled off (never removed, Fork 4). */
@@ -629,6 +630,11 @@ export function presetSeed(preset: AgentPreset): Record<string, unknown> {
     // genui-surface.spec.md SPEC-R11/B2 — no shipped persona scripts a picked pattern source (D3's
     // single-pick is an admin choice, not a persona-authored default); seeded empty like a fresh store.
     [entriesStoreKey(ENTRY_KINDS.patternSource)]: [],
+    // ADR-0170 cl.1/cl.4 — the catalog ROSTER, seeded empty on the SAME rationale: no shipped persona
+    // curates a catalog shelf, and the Default row is guaranteed at READ time (`readCatalogEntries`), so
+    // an empty seed and an absent key render identically. The persona's SELECTION is `A2UI_CATALOG_KEY`,
+    // which no preset seeds either — every persona starts on the default catalog, fail-closed.
+    [entriesStoreKey(ENTRY_KINDS.catalog)]: [],
   }
 }
 

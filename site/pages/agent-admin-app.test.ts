@@ -67,7 +67,7 @@ describe('AGENT_PRESETS — data integrity (TKT-0074)', () => {
     expect(AGENT_PRESETS.some((p) => p.config.temperature >= 0.8)).toBe(true)
   })
 
-  it('every seed carries the four config keys + ALL FIVE entry-list keys, sections ordered and Foundation rewritten', () => {
+  it('every seed carries the four config keys + EVERY entry-list key (ENTRY_KINDS-derived — a new kind reddens this), sections ordered and Foundation rewritten', () => {
     for (const p of AGENT_PRESETS) {
       const seed = presetSeed(p)
       for (const key of ['name', 'model', 'temperature', 'toolsEnabled', ...ALL_ENTRY_KEYS]) {
