@@ -93,7 +93,7 @@ Verified in-tree facts the design stands on:
   (`name` synonym; bare string). Upstream's `{event:{name, context}}` arm is NOT accepted today.
 - **The icon pack is a 32-glyph vendored subset.** `icons/src/phosphor/icons.gen.ts` (ADR-0066
   build-time vendoring) currently carries 32 kebab-case Phosphor glyphs — upstream's Icon `name` is a
-  CLOSED 58-identifier enum, so an honest mapping needs the subset regenerated (cl.9 Icon row).
+  CLOSED 59-identifier enum, so an honest mapping needs the subset regenerated (cl.9 Icon row).
 
 ### Non-collision with ADR-0097
 
@@ -336,7 +336,7 @@ own producer may under-emit required props without a validator failure (an inter
 |---|---|---|---|---|---|---|---|
 | 1 | `Text` | INCLUDE | `ui-text` | `text`® (DynamicString), `variant` (`h1\|h2\|h3\|h4\|h5\|caption\|body`, default `body`) | — | — | REUSE `textFactory` (the wire enum is byte-identical to the default catalog's; `TEXT_VARIANT_TABLE` fan-out applies as-is). Markdown is NOT parsed: `ui-markdown` lives in `@agent-ui/code`, catalog-invisible by construction (ADR-0119) — raw text is the guide's own sanctioned fallback, and the schema's `text` description itself steers toward dedicated components over markdown. |
 | 2 | `Image` | INCLUDE | `<img>` (sanctioned non-`ui-*` primitive — the `Option`/`MenuItem` SPEC-R3 AC1 precedent) | `url`® (DynamicString, `format: 'safe-href'` — the `Text.href` validator arm), `description` (DynamicString — a11y alt text), `fit` (`contain\|cover\|fill\|none\|scaleDown`, default `fill`), `variant` (`icon\|avatar\|smallFeature\|mediumFeature\|largeFeature\|header`, default `mediumFeature`) | — | — | bespoke: `url`→`src` attribute; `description`→`alt` attribute; `fit`→`el.style.objectFit` through the literal map `{scaleDown→'scale-down', else pass-through}`; `variant`→ the inline-style dims table below. No `ui-image` control exists (verified: `default/index.ts:17`); a future `ui-image` control retires this primitive by a follow-up row edit. |
-| 3 | `Icon` | INCLUDE (string + binding arms) | `ui-icon` | `name`® — schema `oneOf`: CLOSED 58-identifier enum \| `{svgPath}` object \| DataBinding. Declared as a bindable string with the 58-value enum; the `{svgPath}` arm is EXCLUDED (exclusion table E5) | — | — | bespoke: `name` → `ICON_NAME_TABLE[name]` → `el.glyph` (the literal 58-row table below); an unmapped/unknown value degrades to `ui-icon`'s own missing-glyph behavior. Requires the ADR-0066 vendored phosphor subset REGENERATED to carry the table's glyphs (`icons.gen.ts` holds 32 today); `factories.test.ts` gates every table value against the registered pack at build — an entry the pipeline cannot supply falls back to the row's recorded fallback and joins `ICON_NAME_GAPS`. |
+| 3 | `Icon` | INCLUDE (string + binding arms) | `ui-icon` | `name`® — schema `oneOf`: CLOSED 59-identifier enum \| `{svgPath}` object \| DataBinding. Declared as a bindable string with the 59-value enum; the `{svgPath}` arm is EXCLUDED (exclusion table E5) | — | — | bespoke: `name` → `ICON_NAME_TABLE[name]` → `el.glyph` (the literal 59-row table below); an unmapped/unknown value degrades to `ui-icon`'s own missing-glyph behavior. Requires the ADR-0066 vendored phosphor subset REGENERATED to carry the table's glyphs (`icons.gen.ts` holds 32 today); `factories.test.ts` gates every table value against the registered pack at build — an entry the pipeline cannot supply falls back to the row's recorded fallback and joins `ICON_NAME_GAPS`. |
 | 4 | `Video` | **EXCLUDE** | — | (schema: `url`®) | — | — | exclusion table E1 |
 | 5 | `AudioPlayer` | **EXCLUDE** | — | (schema: `url`®, `description`) | — | — | exclusion table E2 |
 | 6 | `Row` | INCLUDE | `ui-row` | `justify` (`start\|center\|end\|spaceBetween\|spaceAround\|spaceEvenly\|stretch`, default `start`), `align` (`start\|center\|end\|stretch`, default `stretch`) | `ChildList`® (upstream `ChildList` = static id array OR `{componentId, path}` template — structurally our ADR-0024 shape, handled by the generic tree walk) | — | bespoke: `justify` through the literal map `{spaceBetween→between, spaceAround→around, spaceEvenly→evenly, stretch→start, else 1:1}` (fleet tokens verified `container.ts:52`; `justify-content: stretch` behaves as `flex-start` in flexbox, so `stretch→start` is behavior-identical, not a guess); `align` 1:1 (fleet union `container.ts:50` covers all four). |
@@ -368,7 +368,7 @@ wins over a variant's `objectFit` — apply-order-independent, both arms re-asse
 | `largeFeature` | `inlineSize:'100%'; maxBlockSize:'400px'` |
 | `header` | `inlineSize:'100%'; blockSize:'200px'; objectFit:'cover'` |
 
-`Icon` — `ICON_NAME_TABLE` (all 58 schema-enum identifiers → phosphor glyph names; `(have)` = already in
+`Icon` — `ICON_NAME_TABLE` (all 59 schema-enum identifiers → phosphor glyph names; `(have)` = already in
 `icons.gen.ts`'s 32, everything else joins the ADR-0066 regeneration; `(verify)` = the pipeline confirms
 the glyph exists in Phosphor or applies the stated fallback and records the gap):
 
