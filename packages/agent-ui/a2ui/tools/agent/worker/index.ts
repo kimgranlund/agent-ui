@@ -131,7 +131,11 @@ async function handleStatus(env: Env): Promise<Response> {
 }
 
 async function handleChat(request: Request, env: Env): Promise<Response> {
-  const body = JSON.parse(await readBody(request)) as { system?: unknown; model?: unknown; messages?: unknown; effort?: unknown }
+  const body = JSON.parse(await readBody(request)) as { system?: unknown; model?: unknown; messages?: unknown; effort?: unknown; integrations?: unknown }
+  // ADR-0168 cl.5 (GH #402) — read BEFORE the guard: `isChatBody`'s predicate deliberately does not mention
+  // `integrations` (optional + fail-closed downstream, never part of the 400 contract), and narrowing to
+  // that predicate type drops the key. Same line, same reason, as dev-proxy-plugin.ts's `/chat` twin.
+  const chatIntegrations = body.integrations
   if (!isChatBody(body)) return json(400, { error: 'bad-request' })
   const { system, model, messages, effort } = body
 
@@ -141,6 +145,16 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
   const dispatch = providerFor(chatDispatch.provider, { apiKey: chatDispatch.apiKey, endpoint: chatDispatch.endpoint })
   if (!dispatch.ok) return json(503, { error: dispatch.reason })
 
+  // ADR-0168 cl.5 (GH #402) — the prose arm's enablement, resolved + dispatched through the SAME shared
+  // pair `handleProduce` below uses: `resolveIntegrations` intersects with the registry (non-array/unknown
+  // ids ⇒ [], capped, fail-closed — never a 400), then `buildToolDispatch` builds the validate→key→execute
+  // pair. Zero active manifests ⇒ `{}`, so the spread adds NOTHING and the stream request stays
+  // byte-identical for every caller that enables nothing. `request.signal` is this route's turn-level abort
+  // signal — sourced exactly as `handleProduce` sources its own, so the two routes in this file never grow
+  // two different cancellation conventions.
+  const hostEnv = envVars(env)
+  const active = resolveIntegrations(chatIntegrations, hostEnv)
+  const toolOpts = buildToolDispatch(active, hostEnv, request.signal)
   let text = ''
   // GH #106 (review finding): request.signal was never forwarded, so a client disconnect never cancelled
   // the in-flight, paid upstream call — it ran to completion regardless. Threading it through is the whole
@@ -151,6 +165,7 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
     messages,
     effort: effort as Effort | undefined,
     signal: request.signal,
+    ...toolOpts,
   })) {
     text += fragment
   }

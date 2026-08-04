@@ -965,6 +965,12 @@ export class UIAgentAdminElement extends UIElement {
       system: composeLiveSystemPrompt(sections, this.#capabilityGroups(store)),
       model: config.model,
       effort: this.#effort,
+      // ADR-0168 cl.5 / GH #402 — the prose arm forwards enablement too (it was the one live arm the
+      // tool toggle never reached: a silent no-op). `config.tools` IS the fresh, master-gated read
+      // (`enabledLabels(ENTRY_KINDS.tool)` above returns [] whenever the tool kind's switch is off) the
+      // surface arm computes for its own `integrations` — reused here rather than recomputed, so the two
+      // arms can never drift into two different answers for "what is enabled right now".
+      integrations: config.tools,
       history: [...this.#history],
     }
     void (async () => {

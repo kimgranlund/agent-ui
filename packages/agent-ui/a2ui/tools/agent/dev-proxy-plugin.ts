@@ -137,7 +137,12 @@ export function a2uiDevProxyPlugin(): Plugin {
                 model?: unknown
                 messages?: unknown
                 effort?: unknown
+                integrations?: unknown
               }
+              // ADR-0168 cl.5 (GH #402) — read BEFORE the guard: `isChatBody`'s predicate deliberately does
+              // not mention `integrations` (the field is optional and fail-closed downstream, so it is no
+              // part of the 400 contract), and narrowing to that predicate type drops the key.
+              const chatIntegrations = body.integrations
               if (!isChatBody(body)) {
                 sendJson(res, 400, { error: 'bad-request' }) // a malformed body is a deterministic failure — never let it fall through to provider.stream()
                 return
@@ -155,8 +160,17 @@ export function a2uiDevProxyPlugin(): Plugin {
                 sendJson(res, 503, { error: providerDispatch.reason })
                 return
               }
+              // ADR-0168 cl.5 (GH #402) — the prose arm's enablement, resolved + dispatched through the
+              // SAME shared pair the produce branch below uses: `resolveIntegrations` intersects with the
+              // registry (non-array/unknown ids ⇒ [], capped, fail-closed — never a 400), then
+              // `buildToolDispatch` builds the validate→key→execute pair. Zero active manifests ⇒ `{}`, so
+              // the spread adds NOTHING and the stream request stays byte-identical for every caller that
+              // enables nothing. No turn-level AbortSignal exists on this Node route (the Worker's
+              // `request.signal` twin has one) — the adapter's own per-call signal reaches ctx.signal.
+              const active = resolveIntegrations(chatIntegrations, env)
+              const toolOpts = buildToolDispatch(active, env)
               let text = ''
-              for await (const fragment of providerDispatch.provider.stream({ model, system, messages, effort: effort as Effort | undefined })) {
+              for await (const fragment of providerDispatch.provider.stream({ model, system, messages, effort: effort as Effort | undefined, ...toolOpts })) {
                 text += fragment // buffered server-side — single-shot (LLD Q3); one full reply, no mid-stream truncation
               }
               sendJson(res, 200, { text })
