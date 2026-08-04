@@ -42,11 +42,12 @@ decision (dated line in §4).
 
 > **Arc status, 2026-08-04.** **M-B is DONE** (all five DoD boxes proven by live runs 2026-08-03/04;
 > ADR-0169 ratified and merged via PR #430 — §4's dated line) and **M-C is DONE** (2026-07-29). That
-> closes both ruled milestones of the 2026-07-28 intake. **M-A is the open lane**: both forks frozen
-> (ADR-0163/0164 ratified), the PRD written and review-PASSed
-> ([`prd/saas-data-workbench.prd.md`](prd/saas-data-workbench.prd.md), `proposed`) — its PRD-D1–D3+D7
-> decisions await Kim, and scheduling is Kim's. §3 carries the per-milestone detail; `goals.md`
-> carries the box-by-box evidence.
+> closes both ruled milestones of the 2026-07-28 intake. **M-A is the open lane and fully unblocked**:
+> both forks frozen (ADR-0163/0164 ratified), the PRD **accepted** — v0.2, ratified by Kim 2026-07-31
+> ([`prd/saas-data-workbench.prd.md`](prd/saas-data-workbench.prd.md)): PRD-D1–D3+D7 ruled as
+> recommended, PRD-D4–D6 deliberately delegated to the SPEC. The next artifact is therefore the
+> **M-A SPEC** (it owns D4–D6), then the MA-1…MA-4 build. §3 carries the per-milestone detail;
+> `goals.md` carries the box-by-box evidence.
 >
 > Open issues at this sweep are follow-up-sized, none blocking: #429 (E7 validate-time gate),
 > #427 (calendar browser-shard date rot), #425/#421/#419 (agent-admin prompt/catalog refinements),
@@ -193,10 +194,11 @@ decision (dated line in §4).
   Both design intakes finished and both ADRs are now **ratified**:
   [ADR-0163](adr/0163-ui-table-interactive-widening.md) (the `ui-table` widening) and
   [ADR-0164](adr/0164-entry-list-extraction-home.md) (the extraction home). Neither build has started.
-  **The PRD is written**: [`prd/saas-data-workbench.prd.md`](prd/saas-data-workbench.prd.md)
-  (`proposed` v0.1, 2026-07-30) — PRD-G1–G6, the MA-1…MA-4 sequencing, and three decisions awaiting
-  Kim's pass (PRD-D1–D3); the build follows it. Scheduling is Kim's: the lane is free now that M-C is
-  done, but M-B still holds an unmet DoD. Original framing:
+  **The PRD is accepted**: [`prd/saas-data-workbench.prd.md`](prd/saas-data-workbench.prd.md)
+  (v0.2, ratified by Kim 2026-07-31) — PRD-G1–G6, the MA-1…MA-4 sequencing, PRD-D1–D3+D7 ruled as
+  recommended, PRD-D4–D6 delegated to the SPEC (the next artifact — no SPEC exists yet); the build
+  follows it. Scheduling is Kim's; the lane is fully free now that M-B and M-C are both done.
+  Original framing:
   M-A — a
   site-hosted demo workspace where a sortable/selectable/paginated data table, a filter toolbar,
   a record-edit form flow, and an agent-written summary card compose from published fleet
