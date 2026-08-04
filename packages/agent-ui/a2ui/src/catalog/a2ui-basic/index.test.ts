@@ -12,6 +12,8 @@ import { a2uiBasicFunctions } from './functions.ts'
 import { Registry } from '../registry.ts'
 import { buildSystemPrompt } from '../../agent/system-prompt.ts'
 import { defaultCatalog } from '../default/index.ts'
+import { validateA2ui } from '../../renderer/validate.ts'
+import type { A2uiComponent, A2uiServerMessage } from '../../protocol.ts'
 
 // The 18 upstream A2UI v0.9.1 Basic Catalog `components` (ADR-0169 cl.14, machine-schema-pinned).
 const UPSTREAM_BASIC_TYPES = [
@@ -118,4 +120,53 @@ describe('a2ui-basic — the cl.4 conditioned teaching line (only when catalog.c
     const prompt = buildSystemPrompt(defaultCatalog, [])
     expect(prompt).not.toContain('MUST carry "catalogId"')
   })
+})
+
+// a2ui-reviewer's adversarial pass (fix-413 reconciliation) proved three of the four exclusion arms
+// are actually gate-encoded by `validateA2ui` and found the assertion missing from the suite; this
+// closes that gap. `surface()` builds the minimal two-message envelope (createSurface + one
+// updateComponents carrying a single `root`) each case needs.
+function surface(components: readonly A2uiComponent[]): A2uiServerMessage[] {
+  return [
+    { version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'a2ui-basic' } },
+    { version: 'v1.0', updateComponents: { surfaceId: 's1', components } },
+  ] as A2uiServerMessage[]
+}
+
+describe('a2ui-basic — the exclusion-gate coverage (E1/E5/E6), each a CATALOG rejection', () => {
+  it('(E1) a Video component — no fleet media control, not a catalog key at all — rejects', () => {
+    const msgs = surface([{ id: 'root', component: 'Video', url: 'https://example.com/clip.mp4' }])
+    expect(validateA2ui(msgs, a2uiBasicCatalog)).toEqual({ valid: false, failures: [{ code: 'CATALOG', path: 'root' }] })
+  })
+
+  it("(E6) ChoicePicker.variant:'multipleSelection' — the narrowed ['mutuallyExclusive'] enum rejects it — rejects", () => {
+    const msgs = surface([{ id: 'root', component: 'ChoicePicker', variant: 'multipleSelection', options: [] }])
+    expect(validateA2ui(msgs, a2uiBasicCatalog)).toEqual({ valid: false, failures: [{ code: 'CATALOG', path: 'root.variant' }] })
+  })
+
+  it('(E5) Icon.name:{svgPath} — the closed string enum has no object arm — rejects', () => {
+    const msgs = surface([{ id: 'root', component: 'Icon', name: { svgPath: 'M0 0L1 1' } }])
+    expect(validateA2ui(msgs, a2uiBasicCatalog)).toEqual({ valid: false, failures: [{ code: 'CATALOG', path: 'root.name' }] })
+  })
+
+  it('positive control — the SAME shapes with the included variant pass (mutuallyExclusive / a plain string Icon name)', () => {
+    const choice = surface([{ id: 'root', component: 'ChoicePicker', variant: 'mutuallyExclusive', options: [] }])
+    expect(validateA2ui(choice, a2uiBasicCatalog)).toEqual({ valid: true, failures: [] })
+
+    const icon = surface([{ id: 'root', component: 'Icon', name: 'star' }])
+    expect(validateA2ui(icon, a2uiBasicCatalog)).toEqual({ valid: true, failures: [] })
+  })
+
+  // (E7) `Button.action:{functionCall:{...}}` is DELIBERATELY NOT asserted here as a `valid:false` case
+  // — a fix-413 reconciliation finding, not an oversight. `conformance.ts`'s `matchesSchemaType` checks
+  // only a PropDef's top-level `type` keyword (here `'object'`); it never descends into a nested
+  // `properties`/`required` (the `action` PropDef's `required: ['event']`) — by design, fleet-wide: every
+  // Action-typed prop is deliberately loosely typed at the STATIC validator so ADR-0011's Postel
+  // tolerance arms (the `name` synonym, the bare-string arm) can pass through un-narrowed, with the
+  // actual shape read (and normalized) at RENDER time by `readActionSpec` (renderer.ts), never here.
+  // Empirically: `validateA2ui` returns `{valid:true, failures:[]}` for a `{functionCall:{...}}` Button
+  // action against `a2uiBasicCatalog` today — `readActionSpec` has no `functionCall` arm, so the button
+  // mounts but a real click silently fires no action (never a validator-time rejection, unlike E1/E5/E6's
+  // genuine enum/type closures). Filed back to the reconciliation report rather than asserted as fact
+  // here, since asserting `valid:false` would be a false test against the shipped mechanics.
 })
