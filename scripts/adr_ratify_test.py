@@ -46,6 +46,21 @@ ADR_0164_CELL = (
     ' two `agent-ui-composition-patterns` rows (cl.5)'
 )
 
+# ADR-0137's real Repairs cell (the LABEL-SCOPE case: one cell-leading `on ratification+build:`
+# heading over a four-item ` · ` list, where only the FIRST item repeats the phrase — the third says
+# "repaired at build" and used to drop for it). Copied verbatim 2026-08-04.
+ADR_0137_CELL = (
+    'on ratification+build: '
+    '[TKT-0072](../tickets/tkt-0072-exportable-a2ui-agent-producer-toolkit.md) (the owning '
+    'ticket) · [`a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md) **SPEC-N1** (a v0.5 '
+    'versioned amendment — the surface list gains `./agent`, the "site/tools-scoped only" fence '
+    "narrows to the key/proxy/registry shell; gated on ratification, the SPEC's own v0.2–v0.4 "
+    'changelog mechanism) · [`a2ui-live-agent.lld.md`](../lld/a2ui-live-agent.lld.md) §0 '
+    'placement law + §2 file map (repaired at build) · `packages/agent-ui/a2ui/package.json` '
+    '(gains `"./agent"` at build time, gated on ratification — the '
+    '[ADR-0062](./0062-corpus-packaging-pure-core-subpath-data-home.md) wording precedent)'
+)
+
 # ADR-0028's real cell, WHOLE (720 chars) — no booking at all, but three code-span `(` glyphs
 # leave its raw paren count +3, the corpus's only unbalanced cell. Proof that paren balancing must
 # read code spans as opaque atoms. Copied verbatim 2026-07-31.
@@ -104,13 +119,44 @@ class BookedRepairs(unittest.TestCase):
 
     def test_0164_real_cell_keeps_its_nested_file_list_whole(self) -> None:
         items = booked_repairs(cell_to_adr(ADR_0164_CELL))
-        self.assertEqual(len(items), 1, items)
-        item = items[0]
-        self.assertTrue(item.startswith("**On ratification+build**"), item)
+        self.assertEqual(len(items), 6, items)
+        self.assertTrue(items[0].startswith("**On ratification+build**"), items[0])
         # the ` · `s inside the `(new — …)` file list are nested, so the item runs to its close
-        self.assertTrue(item.endswith("a standalone mount smoke test)"), item)
-        self.assertIn("`entry-data.ts`, the generic core split out of `entries.ts`", item)
-        self.assertIn(item, ADR_0164_CELL)  # verbatim
+        self.assertTrue(items[0].endswith("a standalone mount smoke test)"), items[0])
+        self.assertIn("`entry-data.ts`, the generic core split out of `entries.ts`", items[0])
+        # …and the label's scope carries its five depth-0 tail segments (GH #394 residual 2)
+        self.assertTrue(items[1].startswith("`app/src/controls/agent-admin/{agent-admin.ts"), items[1])
+        self.assertTrue(items[2].startswith("`app/package.json`"), items[2])
+        self.assertTrue(items[3].startswith("`app/src/index.ts`"), items[3])
+        self.assertEqual(items[4], "the AC19 sheet-set one-line append")
+        self.assertEqual(items[5], "two `agent-ui-composition-patterns` rows (cl.5)")
+        # the cell's leading non-booked prose still precedes the label, so it is still no item
+        for item in items:
+            self.assertNotIn("none owed backward", item)
+            self.assertIn(item, ADR_0164_CELL)  # verbatim
+
+    def test_0137_real_cell_books_every_item_under_its_leading_label(self) -> None:
+        # The label-scope case: `on ratification+build:` heads the list, so item 3 is booked despite
+        # saying "repaired at build" instead of repeating the phrase (GH #394 residual 1).
+        items = booked_repairs(cell_to_adr(ADR_0137_CELL))
+        self.assertEqual(len(items), 4, items)
+        self.assertTrue(items[0].startswith("on ratification+build: [TKT-0072]"), items[0])
+        self.assertTrue(items[1].startswith("[`a2ui-live-agent.spec.md`]"), items[1])
+        self.assertEqual(
+            items[2],
+            "[`a2ui-live-agent.lld.md`](../lld/a2ui-live-agent.lld.md) §0 placement law + §2 file "
+            "map (repaired at build)",
+        )
+        self.assertTrue(items[3].startswith("`packages/agent-ui/a2ui/package.json`"), items[3])
+        for item in items:
+            self.assertIn(item, ADR_0137_CELL)  # verbatim
+
+    def test_a_parenthesised_mention_is_a_note_not_a_label(self) -> None:
+        # The discriminator that keeps label scope from swallowing whole cells: `(… on ratification)`
+        # books its OWN segment only. ADR-0065's real cell is the corpus witness (test above).
+        cell = "`x.ts` (gated on ratification) · `y.ts` (cosmetic only, already landed)"
+        items = booked_repairs(cell_to_adr(cell))
+        self.assertEqual(items, ["`x.ts` (gated on ratification)"])
 
     def test_0028_real_cell_survives_its_unbalanced_code_span_parens(self) -> None:
         # Books nothing, so the OUTPUT is [] either way — the point is that the three code-span
@@ -157,7 +203,7 @@ class FixturesMatchTheRealCells(unittest.TestCase):
             self.skipTest(f"no ADR corpus at {adr_dir}")
         for adr_id, fixture in (
             ("0001", ADR_0001_CELL), ("0028", ADR_0028_CELL), ("0065", ADR_0065_CELL),
-            ("0164", ADR_0164_CELL), ("0167", ADR_0167_CELL),
+            ("0137", ADR_0137_CELL), ("0164", ADR_0164_CELL), ("0167", ADR_0167_CELL),
         ):
             with self.subTest(adr=adr_id):
                 files = sorted(adr_dir.glob(f"{adr_id}-*.md"))
@@ -165,6 +211,32 @@ class FixturesMatchTheRealCells(unittest.TestCase):
                 row = REPAIRS_ROW_RE.search(files[0].read_text(encoding="utf-8"))
                 self.assertIsNotNone(row, f"{files[0].name} has no Repairs row")
                 self.assertEqual(fixture, row.group(1), f"fixture drifted from {files[0].name}")
+
+
+class TheWholeCorpusParses(unittest.TestCase):
+    """Six fixtures prove six shapes; this reads every real cell in the repo (168 at 2026-08-04).
+
+    The parser's whole promise is that a posted checklist item is the ADR's own text, quoted verbatim
+    and never paraphrased (ADR-0149 F2) — so assert exactly that over the real corpus, which is also
+    the population the label-scope rule was derived from. Skips (never fails) outside a checkout.
+    """
+
+    def test_every_cell_yields_verbatim_non_empty_items(self) -> None:
+        adr_dir = Path(__file__).resolve().parent.parent / ".claude" / "docs" / "adr"
+        if not adr_dir.is_dir():
+            self.skipTest(f"no ADR corpus at {adr_dir}")
+        cells = 0
+        for path in sorted(adr_dir.glob("0*.md")):
+            text = path.read_text(encoding="utf-8")
+            row = REPAIRS_ROW_RE.search(text)
+            if not row:
+                continue
+            cells += 1
+            for item in booked_repairs(text):
+                with self.subTest(adr=path.name):
+                    self.assertEqual(item, item.strip())
+                    self.assertIn(item, row.group(1))  # verbatim, never composed
+        self.assertGreater(cells, 150, "the ADR corpus got smaller — is the glob still right?")
 
 
 if __name__ == "__main__":

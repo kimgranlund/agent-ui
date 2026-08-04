@@ -53,6 +53,10 @@ SEGMENT_SEP = " · "
 # in one separator-free cell; ADR-0164 puts non-booked prose ahead of one).
 BOOKING_LABEL_RE = re.compile(r"(?=\*\*[Oo]n [Rr]atification)")
 BOOKED_RE = re.compile(r"on ratification", re.IGNORECASE)
+# A booking phrase that reaches a `:` while still OUTSIDE any parenthetical is a label governing the
+# list that follows, not a note about its own segment (GH #394). Every real label reaches its colon
+# within 9 characters of the phrase; the bound just keeps a rambling sentence from posing as a label.
+SCOPE_LABEL_RE = re.compile(r"on ratification[^:]{0,40}:", re.IGNORECASE)
 
 
 def run(cmd: list[str]) -> str:
@@ -62,20 +66,17 @@ def run(cmd: list[str]) -> str:
     return res.stdout
 
 
-def split_segments(cell: str) -> list[str]:
-    """Split a Repairs cell on ` · `, but only where the separator is not nested (GH #394).
+def scan(cell: str):
+    """Walk a Repairs cell outside its code spans, yielding `(index, char, paren_depth)`.
 
-    A cell's segments are ` · `-delimited, EXCEPT that an author's parenthetical may carry its own
-    ` · ` list (ADR-0164's `(new — a.ts moved verbatim · b.ts split out · …)`): splitting there
-    truncates the booking mid-parenthetical. So the scan tracks paren depth and cuts only at depth 0.
-
-    Backtick code spans are opaque — no depth change, no cut inside one. ADR-0028's cell names three
-    `(` glyphs in code spans, which would otherwise open parentheticals that never close and swallow
-    the rest of the cell. A stray `)` at depth 0 clamps rather than going negative, so no cell shape
-    can make this raise.
+    The one place that knows how a cell's brackets read, so its two callers cannot drift apart.
+    Backtick code spans are opaque atoms — nothing inside one is yielded and no `(` in one changes
+    depth. ADR-0028's cell names three `(` glyphs in code spans, which would otherwise open
+    parentheticals that never close and swallow the rest of the cell. A stray `)` at depth 0 clamps
+    rather than going negative, so no cell shape can make this raise. Paren glyphs themselves are not
+    yielded (neither caller needs them); the depth reported with a char is the depth it sits at.
     """
-    pieces: list[str] = []
-    depth = start = i = 0
+    depth = i = 0
     while i < len(cell):
         ch = cell[i]
         if ch == "`":
@@ -86,13 +87,39 @@ def split_segments(cell: str) -> list[str]:
             depth += 1
         elif ch == ")":
             depth = max(0, depth - 1)
-        elif depth == 0 and cell.startswith(SEGMENT_SEP, i):
-            pieces.append(cell[start:i])
-            i = start = i + len(SEGMENT_SEP)
-            continue
+        else:
+            yield i, ch, depth
         i += 1
+
+
+def split_segments(cell: str) -> list[str]:
+    """Split a Repairs cell on ` · `, but only where the separator is not nested (GH #394).
+
+    A cell's segments are ` · `-delimited, EXCEPT that an author's parenthetical may carry its own
+    ` · ` list (ADR-0164's `(new — a.ts moved verbatim · b.ts split out · …)`): splitting there
+    truncates the booking mid-parenthetical. So the scan tracks paren depth and cuts only at depth 0.
+
+    The `i >= start` guard keeps a cut separator's own trailing space from being read as the start of
+    a second separator (` ·  · ` stays two pieces, not three).
+    """
+    pieces: list[str] = []
+    start = 0
+    for i, ch, depth in scan(cell):
+        if i >= start and depth == 0 and ch == SEGMENT_SEP[0] and cell.startswith(SEGMENT_SEP, i):
+            pieces.append(cell[start:i])
+            start = i + len(SEGMENT_SEP)
     pieces.append(cell[start:])
     return pieces
+
+
+def outer_text(piece: str) -> str:
+    """The piece's text that sits outside every parenthetical and code span (GH #394).
+
+    What a booking LABEL is read from. `(… gated on ratification)` is a note about its own segment,
+    while `on ratification+build:` standing at depth 0 is a heading over the list that follows — the
+    two are indistinguishable until the nested text is stripped away.
+    """
+    return "".join(ch for _, ch, depth in scan(piece) if depth == 0)
 
 
 def booked_repairs(adr_text: str) -> list[str]:
@@ -100,21 +127,37 @@ def booked_repairs(adr_text: str) -> list[str]:
 
     Pure: text in, strings out — no gh, no filesystem, no writes. The slice rule, derived from the
     corpus of real cells: the cell splits on ` · ` at paren depth 0 (`split_segments`), each segment
-    splits again ahead of any bold
-    `**On ratification…**` label, and a piece survives only if it mentions "on ratification"
-    (covering every attested phrasing — `gated on ratification`, `applied on ratification`,
-    `on ratification+build:`). A cell with no such piece, a malformed row, or no Repairs row at all
-    yields [] rather than raising.
+    splits again ahead of any bold `**On ratification…**` label, and a piece survives if EITHER
+
+      * it mentions "on ratification" itself (every attested phrasing — `gated on ratification`,
+        `applied on ratification`, `on ratification+build:`), or
+      * an open booking LABEL already covers it (GH #394).
+
+    A label is a booking phrase reaching a `:` at depth 0 (`SCOPE_LABEL_RE` over `outer_text`), and
+    it covers every later piece in the cell. Authors write one booking as a heading over a ` · `
+    list — `on ratification+build: A · B · C`, 52 of the 168 corpus cells (measured 2026-08-04) —
+    where only A repeats the phrase, so a phrase-only rule posted A and silently dropped B and C
+    (ADR-0088/0090/0137/0164). A phrase inside a parenthetical is a note on its own segment, rather
+    than a label over what follows, so ADR-0065's
+    `(… gated on ratification)` opens no scope. The rule is purely additive: it can only keep pieces
+    the phrase test alone dropped, never drop one it kept.
+
+    A cell with no surviving piece, a malformed row, or no Repairs row at all yields [] not a raise.
     """
     m = REPAIRS_ROW_RE.search(adr_text)
     if not m:
         return []
     items: list[str] = []
+    labelled = False
     for segment in split_segments(m.group(1)):
         for piece in BOOKING_LABEL_RE.split(segment):
             piece = piece.strip()
-            if piece and BOOKED_RE.search(piece):
+            if not piece:
+                continue
+            if labelled or BOOKED_RE.search(piece):
                 items.append(piece)
+            if SCOPE_LABEL_RE.search(outer_text(piece)):
+                labelled = True
     return items
 
 
