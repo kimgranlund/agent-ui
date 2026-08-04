@@ -603,10 +603,43 @@ export function presetSeed(preset: AgentPreset): Record<string, unknown> {
   }
 }
 
+// ── the PERSONA roster (GH #406) ──────────────────────────────────────────────────────────────────────
+// A `Persona` is what the PAGE switches between: an id + roster metadata + the store SEED. A shipped
+// preset becomes one via `personaFromPreset` (its seed = `presetSeed`); an IMPORTED persona (the
+// persona-library pattern — agent-admin-persona-file.ts) carries the imported store state as its seed
+// directly. That is the whole reason this indirection exists: an imported persona's state is a full
+// store snapshot (edited builtins, admin-authored sections, master switches), which the `AgentPreset`
+// shape — foundation + surfaceStyle + four seed lists — cannot express without losing bytes, and losing
+// bytes is exactly what "identical live behaviour" forbids. Everything below (the store cache, the
+// seedVersion migration, reset) keys on the persona id, so both kinds share one mechanism.
+
+export interface Persona {
+  id: string
+  label: string
+  tagline: string
+  category?: PresetCategory
+  /** The store's `initial` values — a preset's computed seed, or an imported file's state verbatim. */
+  seed: Readonly<Record<string, unknown>>
+  /** Only a shipped preset declares one (an imported persona's seed is never rewritten in place). */
+  seedVersion?: number
+  /** True for a persona minted by an import — a library entry, not a shipped preset. */
+  imported?: boolean
+}
+
+/** A shipped preset as a roster persona. */
+export function personaFromPreset(preset: AgentPreset): Persona {
+  return {
+    id: preset.id,
+    label: preset.label,
+    tagline: preset.tagline,
+    ...(preset.category === undefined ? {} : { category: preset.category }),
+    seed: presetSeed(preset),
+    ...(preset.seedVersion === undefined ? {} : { seedVersion: preset.seedVersion }),
+  }
+}
+
 const storeCache = new Map<string, SettingsStore>()
 
-/** The persona's store — cached per id so switching away and back keeps one live instance; persisted
- *  values (this persona's OWN prior edits) win over the seed, memory-store.ts's parity law. */
 /** The persisted seed-version marker key (GH #46 / PR #60 review). Persisted-wins-over-seed is the
  *  store law — correct for USER edits, but it also makes an in-place PRESET UPGRADE (the Concierge →
  *  Hotel Concierge rewrite) invisible to anyone whose browser carries the old persona's persisted
@@ -615,26 +648,30 @@ const storeCache = new Map<string, SettingsStore>()
  *  applies — the same semantic as the user's own "Reset persona", triggered by the upgrade instead. */
 const seedVersionKey = (id: string): string => `${persistKeyFor(id)}.seedVersion`
 
-export function presetStore(preset: AgentPreset): SettingsStore {
-  let store = storeCache.get(preset.id)
+/** The persona's store — cached per id so switching away and back keeps one live instance; persisted
+ *  values (this persona's OWN prior edits) win over the seed, memory-store.ts's parity law. */
+export function personaStore(persona: Persona): SettingsStore {
+  let store = storeCache.get(persona.id)
   if (!store) {
-    const wanted = preset.seedVersion ?? 1
+    const wanted = persona.seedVersion ?? 1
     if (typeof localStorage !== 'undefined') {
-      const persisted = Number(localStorage.getItem(seedVersionKey(preset.id)) ?? '1')
-      if (persisted < wanted) resetPreset(preset) // the one-time migration — drops the stale persisted store
-      localStorage.setItem(seedVersionKey(preset.id), String(wanted))
+      const persisted = Number(localStorage.getItem(seedVersionKey(persona.id)) ?? '1')
+      if (persisted < wanted) resetPersona(persona) // the one-time migration — drops the stale persisted store
+      localStorage.setItem(seedVersionKey(persona.id), String(wanted))
     }
-    store = createMemoryStore({ initial: presetSeed(preset), persistKey: persistKeyFor(preset.id) })
-    storeCache.set(preset.id, store)
+    store = createMemoryStore({ initial: persona.seed, persistKey: persistKeyFor(persona.id) })
+    storeCache.set(persona.id, store)
   }
   return store
 }
 
 /** Reset a persona to its seed: drop every localStorage key under its persistKey (including keys the
- *  user's own edits minted) + the cached store, so the next `presetStore` rebuilds from the pure seed. */
-export function resetPreset(preset: AgentPreset): void {
+ *  user's own edits minted) + the cached store, so the next `personaStore` rebuilds from the pure seed.
+ *  For an IMPORTED persona the seed IS the imported file's state — reset returns it to exactly what was
+ *  imported, the same "back to how it shipped" semantic a preset gets. */
+export function resetPersona(persona: Persona): void {
   if (typeof localStorage !== 'undefined') {
-    const prefix = `${persistKeyFor(preset.id)}.`
+    const prefix = `${persistKeyFor(persona.id)}.`
     // Collect first — removing while iterating by index skips entries (live key list).
     const doomed: string[] = []
     for (let i = 0; i < localStorage.length; i += 1) {
@@ -643,5 +680,66 @@ export function resetPreset(preset: AgentPreset): void {
     }
     for (const key of doomed) localStorage.removeItem(key)
   }
-  storeCache.delete(preset.id)
+  storeCache.delete(persona.id)
+}
+
+export function presetStore(preset: AgentPreset): SettingsStore {
+  return personaStore(personaFromPreset(preset))
+}
+
+export function resetPreset(preset: AgentPreset): void {
+  resetPersona(personaFromPreset(preset))
+}
+
+// ── the imported-persona library (GH #406) ────────────────────────────────────────────────────────────
+// Imported personas are ROSTER data, so they persist as one localStorage record (metadata + seed), NOT
+// as a store: their store is minted from that seed by `personaStore` exactly like a preset's, which is
+// what makes an imported persona survive a reload — the roster record restores WHAT the persona is, and
+// its own `agent-admin-app.<id>.*` keys restore the edits made since.
+//
+// The rehydration law, stated exactly (memory-store.ts): a persisted value wins over the seed for every
+// key the SEED CARRIES — the rehydration loop iterates the seed's own keys, so a persisted value under a
+// key the seed never had is written but never read back. An imported persona's seed is the exported
+// state, so every key that existed at export time rehydrates; a key first written AFTER the import (say
+// a master switch the source persona had never touched) persists without rehydrating. That is a
+// pre-existing property of the store mechanism, shared verbatim with the shipped presets (whose seeds
+// carry no master/surface keys either) — this slice neither introduces nor fixes it.
+
+export const IMPORTED_PERSONAS_KEY = `${PERSIST_PREFIX}.importedPersonas`
+
+/** The persisted imported personas, fail-closed: a corrupt/foreign record reads as an EMPTY library
+ *  (never a throw at page boot — a broken record must not take the whole admin page down with it). */
+export function loadImportedPersonas(): Persona[] {
+  if (typeof localStorage === 'undefined') return []
+  const raw = localStorage.getItem(IMPORTED_PERSONAS_KEY)
+  if (raw === null) return []
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter(
+      (p): p is Persona =>
+        typeof p === 'object' &&
+        p !== null &&
+        typeof (p as Persona).id === 'string' &&
+        typeof (p as Persona).label === 'string' &&
+        typeof (p as Persona).seed === 'object' &&
+        (p as Persona).seed !== null,
+    )
+  } catch {
+    return []
+  }
+}
+
+/** Append one imported persona to the persisted library (last-write-wins on a same-id record — ids are
+ *  minted collision-safe against the live roster, so this is a defensive dedupe, not a merge policy). */
+export function saveImportedPersona(persona: Persona): void {
+  if (typeof localStorage === 'undefined') return
+  const next = [...loadImportedPersonas().filter((p) => p.id !== persona.id), { ...persona, imported: true }]
+  localStorage.setItem(IMPORTED_PERSONAS_KEY, JSON.stringify(next))
+}
+
+/** The full roster the page offers: the shipped presets first, then the imported library in import
+ *  order. Read FRESH (never cached) — the page rebuilds nothing else when an import lands. */
+export function personaRoster(): Persona[] {
+  return [...AGENT_PRESETS.map(personaFromPreset), ...loadImportedPersonas()]
 }

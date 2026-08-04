@@ -603,8 +603,9 @@ live-turn path (a deployment arc of its own); GenUI entirely; any new SaaS compo
       the ADR's own acceptance criterion. *(2026-08-04 live run — see the progress note below.)*
 - [x] A full multi-round IDGRAPH quiz session completes live, surviving the action-click resume path,
       under the ruled round-budget/recovery policy. *(2026-08-04 live runs — see the progress note below.)*
-- [ ] An exported persona round-trips: export → re-import → identical live behaviour — the
-      persona-library pattern proven and documented.
+- [x] An exported persona round-trips: export → re-import → identical live behaviour — the
+      persona-library pattern proven and documented. *(2026-08-04 build + live round-trip leg — see
+      the progress-note addendum below.)*
 - [ ] The second catalog is pickable in agent-admin and `catalogId` threads end-to-end.
 - [ ] The standing DoD (top of this file) holds: `npm run check` + `npm test` green, probes cover the
       new behaviour, descriptors/plan updated where a surface moved.
@@ -653,6 +654,21 @@ snapshot → `frameClientMessage`/`nextTurn` → the wire → the model) ran rea
 - **Boxes 3 + 4 remain build-gated, not proof-gated:** persona export/import has no surface in
   `ui-agent-admin` yet, and the catalog picker is one-option-by-construction (no second catalog in the
   package) — their phase-2/3 builds precede any live proof.
+
+**Progress-note addendum — 2026-08-04 (same day, later). Box 3 BUILT + PROVEN** (GH #406, the
+persona-library arc; three-commit campaign: build → independent-review fixes → docs). The feature:
+`site/pages/agent-admin-persona-file.ts` (versioned `{kind:'agent-ui-persona', version:1}` envelope
+over the persona-scoped store state; whole-file fail-closed rejection of ANY malformed entry — never
+sanitize-drop, the silent-divergence class this box exists to close; collision-safe import minting
+against a fresh roster read) + the standalone page's Export/Import overflow actions + the
+`persona-library-pattern` docs page (every shown artifact derived from live calls into the real
+functions, drift-gated). **The live round-trip leg:** the Quizmaster exported → re-imported (minted
+`the-quizmaster-imported`) → one real live turn on EACH via the real runner — the wire requests are
+**byte-equal** (`personaSystem` 1218 B identical, model + integrations identical) and both turns
+completed clean; evidence `.claude/ops/mb-live-proof/box3-roundtrip.json`. Deterministic legs (store
+round-trip, key coverage, fail-closed rejection incl. a de-vacuoused browser leg) ride the standing
+suite. Out-of-slice finding filed: GH #409 (Surface-Options/master toggles never rehydrate on reload,
+persona-wide, pre-existing).
 
 ---
 

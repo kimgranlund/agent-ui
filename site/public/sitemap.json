@@ -601,6 +601,13 @@
       "section": "Guides"
     },
     {
+      "name": "Persona Library Pattern",
+      "url": "./persona-library-pattern.html",
+      "description": "Export a whole authored configuration as a shareable file, re-import it as a NEW library entry, never an overwrite — the reusable pattern behind agent-admin's persona export/import (GH #406).",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
       "name": "Layout Primitives",
       "url": "./layout-overview.html",
       "description": "The structural layout family — ui-row, ui-column, ui-list, ui-grid — sharing the UIContainerElement base and gap/align/justify props.",

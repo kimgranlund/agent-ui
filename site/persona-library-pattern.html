@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · The persona-library pattern</title>
+  </head>
+  <body>
+    <!-- The PERSONA-LIBRARY PATTERN guide (GH #406, M-B DoD box 3): export a whole authored configuration
+         as a shareable file, re-import it as a NEW library entry (never an overwrite), prove identical
+         live behaviour on re-import. The concrete shipped instance is agent-admin's persona export/import;
+         this page documents the shape as reusable beyond agent-admin. An MPA entry auto-discovered by
+         vite.config.ts's site/**/*.html glob (matches the nav link ./persona-library-pattern.html) — no
+         config edit needed. The page module imports pages/_page.ts FIRST for the foundation CSS cascade +
+         self-defining ui-* controls (ADR-0003). -->
+    <div id="app"></div>
+    <script type="module" src="./pages/persona-library-pattern.ts"></script>
+  </body>
+</html>

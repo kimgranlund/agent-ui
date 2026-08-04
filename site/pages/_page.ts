@@ -495,10 +495,13 @@ export const NAV: readonly NavGroup[] = [
     // too (Kim's 2026-07-25 overturn of the 2026-07-19 standalone opt-out): the full composition at real
     // viewport scale, now discoverable from this rail/the landing grid — but still rendered shell-less
     // (agent-admin-app.ts imports no `_page.ts`), since its whole point is the real production surface,
-    // not a docs-wrapped preview of it (agent-admin.html already owns that teaching job).
+    // not a docs-wrapped preview of it (agent-admin.html already owns that teaching job). The Persona
+    // Library Pattern joins here too (GH #406, M-B DoD box 3) — a conceptual guide over agent-admin's
+    // persona export/import, the SAME card-less GUIDE posture as Agent Admin itself.
     links: [
       { href: './agent-admin.html', label: 'Agent Admin' },
       { href: './agent-admin-app.html', label: 'Agent Admin App' },
+      { href: './persona-library-pattern.html', label: 'Persona Library Pattern' },
     ],
   },
   {

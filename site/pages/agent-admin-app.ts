@@ -48,13 +48,15 @@ import '@agent-ui/app/agent-admin' // self-defines ui-agent-admin
 import './agent-admin-app.css' // page-local: full-viewport layout + the preset strip chrome
 import type { UIAgentAdminElement } from '@agent-ui/app/agent-admin'
 import type { UIButtonElement } from '@agent-ui/components/controls/button'
-import { AGENT_PRESETS, ACTIVE_PRESET_KEY, presetStore, resetPreset, type AgentPreset } from './agent-admin-presets.ts'
+import type { UIToastRegionElement } from '@agent-ui/components/controls/toast-region'
+import { ACTIVE_PRESET_KEY, personaRoster, personaStore, resetPersona, saveImportedPersona, type Persona } from './agent-admin-presets.ts'
+import { exportPersonaFile, importedPersonaFrom, personaFileName, personaFileText, readPersonaFile } from './agent-admin-persona-file.ts'
 import { librariesForCategory } from './agent-admin-libraries.ts'
 
 const root = document.querySelector('#app') ?? document.body
 
-// ── the six A2UI-showcase personas (TKT-0074) ─────────────────────────────────────────────────────────────
-// Each preset is a persona-scoped store (its own persistKey; edits persist per persona). Switching swaps
+// ── the persona roster (TKT-0074 presets + the GH #406 imported library) ────────────────────────────────
+// Each persona is a persona-scoped store (its own persistKey; edits persist per persona). Switching swaps
 // `admin.store` — the component's reactive store effect re-pushes it into the settings pane, rewires every
 // entry section, and — GH #145 fix — genuinely resets the conversation (chat log, open surfaces, the
 // live-request history, and the Dialog Turns log) for a real store reassignment; the store-swap probe
@@ -65,8 +67,9 @@ const admin = document.createElement('ui-agent-admin') as UIAgentAdminElement
 // GH #143 — which persona is active must be known BEFORE the first `admin.libraries` assignment (the
 // add-from-library menu is scoped to the ACTIVE preset's category from the very first paint, not just on
 // a later switch) — computed here, ahead of the header/menu wiring below that also reads it.
-const initialPreset: AgentPreset =
-  AGENT_PRESETS.find((p) => p.id === localStorage.getItem(ACTIVE_PRESET_KEY)) ?? AGENT_PRESETS[0]!
+const roster: Persona[] = personaRoster()
+const initialPreset: Persona =
+  roster.find((p) => p.id === localStorage.getItem(ACTIVE_PRESET_KEY)) ?? roster[0]!
 // GH #47/#48/#143 — the library packs, scoped to the active preset's category and set BEFORE the element
 // ever connects (the compose-time capture law the `libraries` prop documents for the section SHELL;
 // `applyPreset` below reassigns this — a fresh, re-filtered object — on every persona switch, which the
@@ -89,7 +92,7 @@ const titleTagline = document.createElement('span')
 titleTagline.className = 'canvas-header-tagline'
 title.append(titleName, titleTagline)
 
-let active: AgentPreset = initialPreset
+let active: Persona = initialPreset
 
 // Armed by the DEV overlay below once a live key probes available; re-invoked per persona switch so each
 // persona's SURFACE session (TKT-0076 — the runner closure owns the a2ui transcript) starts clean.
@@ -111,23 +114,32 @@ agentTrigger.variant = 'soft'
 agentTrigger.size = 'sm'
 agentMenu.append(agentTrigger)
 const agentItems = new Map<string, HTMLElement>()
-for (const preset of AGENT_PRESETS) {
+/** Stage one persona row. Pre-connect (page boot) the row goes on the HOST — ui-menu moves every
+ *  non-trigger child into its panel at connect. AFTER connect (GH #406 — an import mints a persona while
+ *  the page is live) the panel already exists, so the row must be appended THERE (a host child added late
+ *  is never moved in) and must carry its own `tabindex="-1"`: the auto-stamp that gives connect-time
+ *  children their roving-focus base state has already run. `#itemsIn` reads the panel live, so a row added
+ *  this way joins roving focus/type-ahead/commit exactly like a boot-time one. */
+function addPersonaRow(persona: Persona): void {
   const item = document.createElement('div')
-  item.dataset.value = preset.id
+  item.dataset.value = persona.id
   item.setAttribute('role', 'menuitemradio')
-  item.setAttribute('aria-checked', String(preset.id === active.id))
-  item.textContent = preset.label
-  item.title = preset.tagline
-  agentItems.set(preset.id, item)
-  agentMenu.append(item)
+  item.setAttribute('aria-checked', String(persona.id === active.id))
+  item.setAttribute('tabindex', '-1')
+  item.textContent = persona.label
+  item.title = persona.tagline
+  agentItems.set(persona.id, item)
+  ;(agentMenu.querySelector('[data-part="panel"]') ?? agentMenu).append(item)
 }
+for (const persona of roster) addPersonaRow(persona)
 agentMenu.addEventListener('select', (event) => {
   const { value } = (event as CustomEvent<{ value: string; index: number }>).detail
-  const preset = AGENT_PRESETS.find((p) => p.id === value)
-  if (preset) applyPreset(preset)
+  const persona = roster.find((p) => p.id === value)
+  if (persona) applyPersona(persona)
 })
 
-// The "…" overflow — page actions; Reset persona is its one row today (future actions join it here).
+// The "…" overflow — page actions: Reset persona (TKT-0074) + the GH #406 persona-library pair,
+// Export/Import (future actions join them here).
 const overflowMenu = document.createElement('ui-menu')
 overflowMenu.className = 'overflow-menu'
 overflowMenu.setAttribute('placement', 'bottom-end')
@@ -147,37 +159,49 @@ overflowTrigger.title = 'Page actions'
 // The icon-only trigger needs a REAL accessible name — title never reaches the accessible name
 // (PR #54 review finding; the button.ts glyph-trigger convention).
 overflowTrigger.setAttribute('aria-label', 'Page actions')
-const resetItem = document.createElement('div')
-resetItem.dataset.value = 'reset-persona'
-resetItem.textContent = 'Reset persona'
-resetItem.title = 'Discard this persona’s edits and reseed it from the preset'
-overflowMenu.append(overflowTrigger, resetItem)
+function overflowItem(value: string, label: string, title: string): HTMLElement {
+  const item = document.createElement('div')
+  item.dataset.value = value
+  item.textContent = label
+  item.title = title
+  return item
+}
+const resetItem = overflowItem('reset-persona', 'Reset persona', 'Discard this persona’s edits and reseed it from the preset')
+// GH #406 — the persona-library pair. Export writes the persona's whole store state as a versioned JSON
+// file; import mints a NEW persona from one (never an overwrite — library semantics).
+const exportItem = overflowItem('export-persona', 'Export persona', 'Download this persona as a shareable JSON file')
+const importItem = overflowItem('import-persona', 'Import persona…', 'Add a persona from a persona JSON file')
+overflowMenu.append(overflowTrigger, resetItem, exportItem, importItem)
 overflowMenu.addEventListener('select', (event) => {
   const { value } = (event as CustomEvent<{ value: string; index: number }>).detail
   if (value === 'reset-persona') {
-    resetPreset(active)
-    applyPreset(active)
+    resetPersona(active)
+    applyPersona(active)
+  } else if (value === 'export-persona') {
+    exportActivePersona()
+  } else if (value === 'import-persona') {
+    fileInput.click()
   }
 })
 
-function applyPreset(preset: AgentPreset): void {
-  active = preset
-  localStorage.setItem(ACTIVE_PRESET_KEY, preset.id)
-  admin.store = presetStore(preset)
-  // GH #143 — re-scope the add-from-library menu to the NEW preset's category. A fresh object every call
+function applyPersona(persona: Persona): void {
+  active = persona
+  localStorage.setItem(ACTIVE_PRESET_KEY, persona.id)
+  admin.store = personaStore(persona)
+  // GH #143 — re-scope the add-from-library menu to the NEW persona's category. A fresh object every call
   // (never a reused reference) is load-bearing: `libraries`' reactive effect (agent-admin.ts) rebuilds the
   // menu on an identity change, the same law `store`'s reassignment above relies on — handing back a
   // reference-equal object would be a silent no-op.
-  admin.libraries = librariesForCategory(preset.category)
+  admin.libraries = librariesForCategory(persona.category)
   armSurfaceTurn?.()
-  titleName.textContent = preset.label
-  titleTagline.textContent = preset.tagline
+  titleName.textContent = persona.label
+  titleTagline.textContent = persona.tagline
   // GH #168 — the visible label stays plain text; the dropdown affordance is a real trailing
   // <ui-icon> caret, not a glued '▾' character (the TKT-0048 anti-pattern). The composer's
   // #appendCaret (conversation-composer.ts) is the precedent, including its re-append law: the
   // `textContent =` write wipes ALL children (any prior caret included), so the caret is appended
   // fresh on every label rewrite.
-  agentTrigger.textContent = preset.label
+  agentTrigger.textContent = persona.label
   const caret = document.createElement('ui-icon')
   caret.setAttribute('slot', 'trailing')
   caret.setAttribute('data-role', 'caret')
@@ -185,20 +209,92 @@ function applyPreset(preset: AgentPreset): void {
   agentTrigger.append(caret)
   agentTrigger.title = 'Switch agent'
   // ui-menu's own commit path (menu.ts's #commitRadio, GH #55) already sets aria-checked correctly
-  // for a row the user CLICKED — but applyPreset() also runs on paths that never go through a menu
-  // commit (initial load from a persisted localStorage id, the "Reset persona" overflow action):
-  // this loop is the single source of truth for those, simplified to just WRITING the real
+  // for a row the user CLICKED — but applyPersona() also runs on paths that never go through a menu
+  // commit (initial load from a persisted localStorage id, the "Reset persona" overflow action, an
+  // import): this loop is the single source of truth for those, simplified to just WRITING the real
   // aria-checked state per id (no more hand-rolled ✓-text prefix or a parallel data-active
   // attribute — the control's own checkmark indicator + real ARIA state carry the "current choice"
   // signal now; agent-admin-app.css reads [aria-checked='true'] directly for the font-weight).
   for (const [id, item] of agentItems) {
-    item.setAttribute('aria-checked', String(id === preset.id))
+    item.setAttribute('aria-checked', String(id === persona.id))
   }
 }
 
+// ── the persona library: export / import (GH #406, M-B DoD box 3) ──────────────────────────────────────
+// The FORMAT and every decision about it live in agent-admin-persona-file.ts (pure, tested); this page
+// owns only the browser I/O around it — a Blob download out, a file picker in — plus the roster
+// registration an import needs to survive a reload.
+
+/** Transient feedback for both actions (fleet-native — the standalone page has no prose chrome to write
+ *  a status line into, and a silent import is indistinguishable from a broken one). */
+const toasts = document.createElement('ui-toast-region') as UIToastRegionElement
+function notify(message: string, urgent = false): void {
+  if (toasts.isConnected) toasts.show({ message, urgent })
+  else console.info(`[agent-admin-app] ${message}`)
+}
+
+function exportActivePersona(): void {
+  const text = personaFileText(exportPersonaFile(active, personaStore(active)))
+  const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }))
+  const link = document.createElement('a')
+  link.href = url
+  link.download = personaFileName(active)
+  // In the document for the click: a detached anchor's download is ignored by some engines.
+  document.body.append(link)
+  link.click()
+  link.remove()
+  // Revoke on the next task — revoking synchronously can cancel the download the click just started.
+  setTimeout(() => URL.revokeObjectURL(url), 0)
+  notify(`Exported “${active.label}” as ${link.download}.`)
+}
+
+/** Import one persona file's TEXT: validate → mint a NEW persona (collision-safe id) → register it in
+ *  the persisted library → stage its roster row → make it active. Every rejection is a visible message,
+ *  never a silent no-op. */
+function importPersonaText(text: string): void {
+  const parsed = readPersonaFile(text)
+  if (!parsed.ok) {
+    notify(`Import failed — ${parsed.error}`, true)
+    return
+  }
+  // Mint against a FRESH roster read, not this page's boot-time snapshot: a second tab that imported
+  // since boot already wrote its persona into the shared library record, and an id minted blind to it
+  // would silently SHARE that persona's persisted store (`saveImportedPersona` re-reads before it
+  // appends, so the record itself survives — only the id needs the fresh view).
+  const persona = importedPersonaFrom(parsed.file, [...personaRoster(), ...roster])
+  saveImportedPersona(persona) // survives reload: personaRoster() reads this record at boot
+  roster.push(persona)
+  addPersonaRow(persona)
+  applyPersona(persona)
+  notify(`Imported “${persona.label}”.`)
+}
+
+// The ONE native form element on this page, and a deliberate exception to the fleet's "no native form
+// elements" law (CLAUDE.md): opening the OS file picker is a privileged gesture only a real
+// `<input type="file">` click can make — there is no `ui-*` file control in the fleet (ui-attachment is
+// a display-tier card for an already-chosen file, never a picker), and the modern alternative
+// (`showOpenFilePicker`) is Chromium-only. It stays hidden and unstyled: the visible affordance is the
+// overflow menu row, so the exception buys a capability without putting a native control on screen.
+const fileInput = document.createElement('input')
+fileInput.type = 'file'
+fileInput.accept = 'application/json,.json'
+fileInput.hidden = true
+fileInput.addEventListener('change', () => {
+  const picked = fileInput.files?.[0]
+  if (!picked) return
+  void picked
+    .text()
+    .then((text) => importPersonaText(text))
+    .catch(() => notify('Import failed — that file could not be read.', true))
+    // Clearing the input is what lets the SAME file be picked again (no `change` fires otherwise).
+    .finally(() => {
+      fileInput.value = ''
+    })
+})
+
 header.append(title, overflowMenu, agentMenu)
-applyPreset(active)
-root.append(header, admin)
+applyPersona(active)
+root.append(header, admin, toasts, fileInput)
 
 // GH #114 (review finding): this page uses the SAME site/lib/admin-live-runner.ts backend as
 // agent-admin.ts (identical /__a2ui/agent/chat + /__a2ui/agent endpoints), but was missed when that
