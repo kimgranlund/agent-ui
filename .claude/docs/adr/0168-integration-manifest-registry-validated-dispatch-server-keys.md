@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-04 |
 > | **Proposed by** | planner (design seat — the tool/integration ENABLEMENT intake; GH [#402](https://github.com/kimgranlund/agent-ui/issues/402) is the fork this record must decide) |
-> | **Ratified by** | *(pending — only Kim ratifies; ADR-0149's utterance or in-tree hand-edit)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-04, via the [`ratify ADR-0168` utterance](https://github.com/kimgranlund/agent-ui/pull/407#issuecomment-5174686542) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | **On ratification+build:** [`../spec/a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md) v0.8 → v0.9 (the amendment sheet [`../decompositions/tool-enablement.spec-amendment.md`](../decompositions/tool-enablement.spec-amendment.md) — SPEC-R16…R19 added, Definitions/§5/SPEC-N1 amended) · `packages/agent-ui/a2ui/tools/agent/integrations.ts` (the `Integration` interface's own header comment "the whole enablement chain keys on this one string" — the fact this record retires) · `site/pages/agent-admin-libraries.ts` `INTEGRATION_TOOLS` (labels become human labels; the id rides separately) · GH #402 (closed `completed` on branch (a), cl.5) · [`../lld/tool-enablement.lld.md`](../lld/tool-enablement.lld.md) + [`../decompositions/tool-enablement.decomp.md`](../decompositions/tool-enablement.decomp.md) (this arc's build plan) |
 > | **Supersedes / Superseded by** | **Extends** [ADR-0137](./0137-a2ui-agent-producer-toolkit-export.md) (the shell law this record keeps: registry/keys/proxy stay `tools/agent/`-side; the portable `src/agent/` core still carries types only) · [ADR-0152](./0152-live-agent-production-worker-proxy.md) (the registry ships in the production Worker — secret resolution here must work in BOTH hosts) · [ADR-0073](./0073-a2ui-live-model-provider-seam.md) cl.5 (the trust boundary: the browser never holds a key — extended verbatim to integration keys) · [ADR-0135](./0135-agent-harness-config-schema-and-prompt-files.md) (the config-schema surface `integrations` joins, via its own Fork-1 projection precedent) · **Relates** [ADR-0136](./0136-agent-admin-dev-only-live-model-overlay.md) (the prose-chat arm cl.5 wires) · [ADR-0091](./0091-a2ui-gen-ui-mini-skill-registry.md) (fence re-affirmed, §Non-goals: mini-skills are prompt fragments with NO tool dispatch — same word, unrelated mechanism) · **Resolves** GH #402 |
 
