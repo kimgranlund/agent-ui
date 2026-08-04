@@ -70,6 +70,8 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
     description: An entry's remove affordance — a `<ui-button data-part="entry-delete">`, present ONLY for a non-built-in (custom) entry (TKT-0048).
   - name: entry-description
     description: An entry's optional one-line description, when non-empty.
+  - name: entry-notice
+    description: GH #419 — a NON-BLOCKING per-entry notice (`<p data-part="entry-notice" role="status">`), directly under the entry header, above the content it is about. Used today by the modality lint (`prompt-lint.ts`): an ENABLED prompt section whose content names a modality that is switched OFF in Surface Options ("A2UI"/"GenUI", the wire vocabulary, or a compound catalog type name) shows one here, and it clears when the toggle re-enables or the text is reworded. Composition and turns are byte-identical whether it shows or not — this never gates anything. Absent on a clean entry.
   - name: entry-content
     description: An entry's `<ui-code-editor language="markdown" data-part="entry-content">` — the editable-first markdown source editor (ADR-0139, CodeMirror lazy-loaded), replacing the plain ui-textarea these blocks used before; the content is markdown by construction (composeSystemPrompt's `##`/`###` blocks).
   - name: entry-add-toggle
@@ -157,7 +159,10 @@ toggleable entry in a typed list, with a shared custom-entry authoring form:
 
 - **Prompts pane** — `kind: "prompt-section"`, seeded with three built-in sections (Foundation,
   Personality, Critical Items), each independently toggleable and editable. A composer concatenates the
-  ENABLED sections, in order, into the one final system prompt.
+  ENABLED sections, in order, into the one final system prompt. GH #419: an enabled section whose text
+  NAMES a modality that Surface Options has switched off gets a non-blocking `entry-notice` warning on its
+  own card (dialect belongs to the harness's grammar block, not to persona prose — ADR-0138's boundary,
+  GH #412) — it clears on a re-enable or a reword, and gates nothing.
 - **Settings pane** — the unchanged "Agent" config (name/model/temperature/toolsEnabled, via the composed
   `ui-settings`) PLUS four capability kinds — Skills, Workflows, Resources, Tools — each an unseeded,
   purely custom-authorable instance of the same primitive.

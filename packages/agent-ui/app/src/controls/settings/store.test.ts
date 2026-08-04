@@ -61,6 +61,39 @@ describe('createMemoryStore — persistKey (localStorage-backed round trip, SPEC
     const store = createMemoryStore({ persistKey: 'ui-settings-test-2', initial: { volume: 5 } })
     expect(store.get('volume')).toBe(5)
   })
+
+  // GH #409 — the seed used to double as a hidden ALLOWLIST: rehydration walked the seed's own keys, so a
+  // key the store genuinely wrote but the seed never carried round-tripped inside one live instance and
+  // vanished on the next construction (a reload). That is the whole agent-admin Surface-Options /
+  // master-toggle bug, at the mechanism level.
+  it('a key the SEED never carried still rehydrates into a second instance (the reload case)', () => {
+    localStorage.clear()
+    const first = createMemoryStore({ persistKey: 'ui-settings-test-3', initial: { volume: 5 } })
+    first.set('surfaceA2ui', false) // an unseeded key — written, so it belongs to this namespace
+    first.set('agentEnabled', false)
+
+    const second = createMemoryStore({ persistKey: 'ui-settings-test-3', initial: { volume: 5 } })
+    expect(second.get('surfaceA2ui')).toBe(false)
+    expect(second.get('agentEnabled')).toBe(false)
+    expect(second.get('volume')).toBe(5) // the seed still supplies what the namespace does not hold
+  })
+
+  it('the namespace is delimited by the trailing dot — a persistKey that PREFIXES another never reads its keys', () => {
+    localStorage.clear()
+    const travel = createMemoryStore({ persistKey: 'agent-admin-app.travel' })
+    const imported = createMemoryStore({ persistKey: 'agent-admin-app.travel-imported' })
+    travel.set('surfaceA2ui', false)
+    imported.set('surfaceA2ui', true)
+
+    // Fresh instances of BOTH — neither namespace may leak into the other (the persona-switching case:
+    // an imported persona's id is its source's slug plus a suffix, so the prefixes genuinely overlap).
+    expect(createMemoryStore({ persistKey: 'agent-admin-app.travel' }).get('surfaceA2ui')).toBe(false)
+    expect(createMemoryStore({ persistKey: 'agent-admin-app.travel-imported' }).get('surfaceA2ui')).toBe(true)
+    // And a SIBLING key outside both namespaces (the page's own `agent-admin-app.activePreset`) is not a
+    // store key of either.
+    localStorage.setItem('agent-admin-app.activePreset', JSON.stringify('travel'))
+    expect(createMemoryStore({ persistKey: 'agent-admin-app.travel' }).get('activePreset')).toBeUndefined()
+  })
 })
 
 // ── the SPEC-R12 AC3 seam guard: ui-settings imports ONLY store.ts's interface, never a concrete store ──

@@ -38,3 +38,9 @@ export type { AgentConfigSnapshot } from './controls/agent-admin/agent-admin-sch
 // Items) + Skills/Workflows/Resources/Tools, five instantiations of one shape.
 export { ENTRY_KINDS, DEFAULT_PROMPT_SECTIONS, DEFAULT_SYSTEM_PROMPT_FALLBACK, composeSystemPrompt, validateNewEntry, entriesStoreKey, initialEntryValues } from './controls/agent-admin/entries.ts'
 export type { Entry, EntryLibraryPack, NewEntryInput } from './controls/agent-admin/entries.ts'
+// GH #419 — the prompt-section modality LINT (pure, non-blocking): the vocabulary that says an enabled
+// prompt section names a modality whose Surface Option is off. Exported because the persona TEXTS that
+// feed it are authored outside this package (site/pages/agent-admin-presets.ts), so their own
+// modality-neutrality gate reads the same vocabulary the admin UI warns from — one source, no drift.
+export { lintPromptSections, lintSectionContent, MODALITY_VOCABULARY } from './controls/agent-admin/prompt-lint.ts'
+export type { ModalityStates, ModalityVocabulary } from './controls/agent-admin/prompt-lint.ts'

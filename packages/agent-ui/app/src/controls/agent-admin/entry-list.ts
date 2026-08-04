@@ -45,6 +45,12 @@ export interface EntryListSection {
    *  the `mountEntryList` build-once contract — a caller (`agent-admin.ts`) may call this again whenever
    *  the packs on offer change (e.g. a persona/preset switch re-scoping which packs apply). */
   updateLibraries(libraries: readonly EntryLibraryPack[]): void
+  /** GH #419 — show a NON-BLOCKING per-entry notice (`entryId → message`), stamped onto each named
+   *  entry's own card and removed from every entry the map omits. Purely presentational: this module
+   *  never computes a notice, and nothing about the entries themselves changes. The last map handed in
+   *  is remembered and re-applied after any `render`, so a list rebuild (a sibling toggle, an external
+   *  store write) cannot silently drop a live notice. */
+  showNotices(notices: ReadonlyMap<string, string>): void
 }
 
 /** Build one kind's section shell (list + collapsible add-form), once — HEADLESS since GH #225: the
@@ -318,6 +324,41 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
         void contentField.updateComplete.then(() => contentField.selectToEnd())
       }
     }
+    applyNotices() // GH #419 — a rebuild must not drop a live notice (the map outlives any one render)
+  }
+
+  // GH #419 — the non-blocking per-entry notice. Kept OUT of the row-building loop above so it can also
+  // land (and clear) without a rebuild: a Surface Options toggle changes no entry, so re-rendering the
+  // whole list to show a hint would throw away every uncommitted mid-edit content field for nothing.
+  let notices: ReadonlyMap<string, string> = new Map()
+
+  function applyNotices(): void {
+    for (const row of list.querySelectorAll<HTMLElement>('[data-part="entry"]')) {
+      const message = notices.get(row.getAttribute('data-entry-id') ?? '')
+      const existing = row.querySelector('[data-part="entry-notice"]')
+      if (message === undefined) {
+        existing?.remove()
+        continue
+      }
+      if (existing !== null) {
+        existing.textContent = message
+        continue
+      }
+      const note = document.createElement('p')
+      note.setAttribute('data-part', 'entry-notice')
+      // `role="status"` (not `alert`): a hint about text the author is looking at, announced politely —
+      // never an interruption, matching the non-blocking law this notice ships under.
+      note.setAttribute('role', 'status')
+      note.textContent = message
+      // Directly under the header, ABOVE the content it is about — the author reads the warning before
+      // the text it names (the `entry-description` position, which the notice sits beside).
+      row.querySelector('[data-part="entry-header"]')?.after(note)
+    }
+  }
+
+  function showNotices(next: ReadonlyMap<string, string>): void {
+    notices = next
+    applyNotices()
   }
 
   /** GH #143 — swap the library menu for one built from `libraries`, in place. `addForm` (always present,
@@ -330,7 +371,7 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
     if (libraryMenu) section.insertBefore(libraryMenu, addForm)
   }
 
-  return { host: section, render, updateLibraries }
+  return { host: section, render, updateLibraries, showNotices }
 }
 
 /** Show `message` in the add-form's own error note (fail-closed validation feedback, ADR-0132 cl.4) —

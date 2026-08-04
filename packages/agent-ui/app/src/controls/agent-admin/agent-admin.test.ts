@@ -456,6 +456,92 @@ describe('UIAgentAdminElement — seeded prompt sections (ADR-0132 cl.2/Fork 4)'
   })
 })
 
+// GH #419 — the non-blocking modality lint, end to end on a real element (prompt-lint.test.ts owns the
+// vocabulary's own probes). The whole point is the WIRING: does the warning appear on the offending
+// section's own card when the modality goes dark, and does it clear the moment the toggle comes back?
+describe('UIAgentAdminElement — the prompt-section modality lint (GH #419)', () => {
+  function noticeOf(el: UIAgentAdminElement, id: string): HTMLElement | null {
+    return entryEl(el, ENTRY_KINDS.promptSection, id).querySelector('[data-part="entry-notice"]')
+  }
+
+  async function withDialectSection(): Promise<UIAgentAdminElement> {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    await whenFlushed()
+    // Author the conflict the way an admin (or an imported persona) would: dialect in a section's content.
+    const field = contentFieldOf(entryEl(el, ENTRY_KINDS.promptSection, 'foundation'))
+    field.value = 'Always play on ONE A2UI surface: build the table once, then updateDataModel per move.'
+    field.dispatchEvent(new Event('change', { bubbles: true }))
+    await whenFlushed()
+    return el
+  }
+
+  it('no warning while the named modality is ON (A2UI ships on) — the text and the toggle agree', async () => {
+    const el = await withDialectSection()
+    expect(noticeOf(el, 'foundation')).toBeNull()
+  })
+
+  it('the warning APPEARS on that section’s card when A2UI is toggled off, and CLEARS when it is toggled back on', async () => {
+    const el = await withDialectSection()
+    const a2uiToggle = el.querySelector('[data-surface="a2ui"] [data-part="surface-toggle"]') as HTMLElement & { checked: boolean }
+
+    a2uiToggle.checked = false
+    a2uiToggle.dispatchEvent(new Event('change'))
+    const notice = noticeOf(el, 'foundation')
+    expect(notice, 'the offending section must carry the notice').not.toBeNull()
+    expect(notice!.textContent).toContain('A2UI')
+    expect(notice!.getAttribute('role')).toBe('status') // polite, never an alert — it blocks nothing
+    // …and only that section: its clean siblings stay unmarked.
+    expect(noticeOf(el, 'personality')).toBeNull()
+    expect(noticeOf(el, 'critical-items')).toBeNull()
+
+    a2uiToggle.checked = true
+    a2uiToggle.dispatchEvent(new Event('change'))
+    expect(noticeOf(el, 'foundation'), 're-enabling the modality clears the warning').toBeNull()
+  })
+
+  it('the warning also clears when the TEXT is fixed, with the modality still off', async () => {
+    const el = await withDialectSection()
+    const a2uiToggle = el.querySelector('[data-surface="a2ui"] [data-part="surface-toggle"]') as HTMLElement & { checked: boolean }
+    a2uiToggle.checked = false
+    a2uiToggle.dispatchEvent(new Event('change'))
+    expect(noticeOf(el, 'foundation')).not.toBeNull()
+
+    const field = contentFieldOf(entryEl(el, ENTRY_KINDS.promptSection, 'foundation'))
+    field.value = 'Always play on ONE persistent game surface, updated in place on every move.'
+    field.dispatchEvent(new Event('change', { bubbles: true }))
+    await whenFlushed()
+    expect(noticeOf(el, 'foundation'), 'modality-neutral prose is clean even with the modality off').toBeNull()
+  })
+
+  it('is NON-BLOCKING: the composed prompt a turn sends is byte-identical with the warning showing', async () => {
+    const el = await withDialectSection()
+    const requests: import('./agent-admin-schema.ts').AdminTurnRequest[] = []
+    el.agentTurn = async (req) => {
+      requests.push(req)
+      return 'ok'
+    }
+    const composer = el.querySelector('[data-part="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
+    async function turn(): Promise<void> {
+      const before = requests.length
+      composer.value = 'deal'
+      ;(composer.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+      for (let i = 0; i < 100 && requests.length === before; i += 1) await Promise.resolve()
+      await whenFlushed() // let the finished turn re-enable the composer before the next send
+    }
+
+    await turn()
+    const a2uiToggle = el.querySelector('[data-surface="a2ui"] [data-part="surface-toggle"]') as HTMLElement & { checked: boolean }
+    a2uiToggle.checked = false
+    a2uiToggle.dispatchEvent(new Event('change'))
+    expect(noticeOf(el, 'foundation')).not.toBeNull()
+    await turn()
+
+    expect(requests).toHaveLength(2)
+    expect(requests[1]!.system, 'the lint changes no composed byte').toBe(requests[0]!.system)
+    expect(requests[1]!.system, 'and the flagged text itself still reaches the model verbatim').toContain('ONE A2UI surface')
+  })
+})
+
 describe('UIAgentAdminElement — custom entry authoring (ADR-0132 cl.4, fail-closed)', () => {
   it('the add-form starts hidden and reveals on the add-toggle click', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
@@ -571,6 +657,45 @@ describe('UIAgentAdminElement — the default store persists across a reload (AD
     const second = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     expect(contentFieldOf(entryEl(second, ENTRY_KINDS.promptSection, 'foundation')).value).toBe('Survives a reload.')
     expect(readEntries(second.store, ENTRY_KINDS.skill).map((e) => e.label)).toEqual(['Persisted skill'])
+  })
+
+  // GH #409 — the reload leg the entries test above never covered: NO seed carries the Surface Options or
+  // the master switches (the schema declares the KEYS, not seed values), and the store's rehydration used
+  // to walk the seed's own keys only — so every one of these flips persisted on write and came back ON.
+  it('a SECOND real element instance reads back a flipped Surface Option AND both flavours of master switch', async () => {
+    const first = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    await whenFlushed()
+
+    const a2uiToggle = first.querySelector('[data-surface="a2ui"] [data-part="surface-toggle"]') as HTMLElement & { checked: boolean }
+    a2uiToggle.checked = false
+    a2uiToggle.dispatchEvent(new Event('change'))
+    const agentSwitch = first.querySelector('[data-part="agent-enabled"]') as HTMLElement & { checked: boolean }
+    agentSwitch.checked = false
+    agentSwitch.dispatchEvent(new Event('change'))
+    const skillSwitch = first.querySelector('[data-part="settings-item"][data-item="skill"] [data-part="kind-enabled"]') as HTMLElement & {
+      checked: boolean
+    }
+    skillSwitch.checked = false
+    skillSwitch.dispatchEvent(new Event('change'))
+
+    first.remove()
+    mounted.length = 0
+
+    const second = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    await whenFlushed()
+    // The STORE answers the persisted value (the mechanism) …
+    expect(second.store!.get(SURFACE_A2UI_KEY)).toBe(false)
+    expect(second.store!.get('agentEnabled')).toBe(false)
+    expect(second.store!.get('skillsEnabled')).toBe(false)
+    // … and the rendered switches agree (the whole shape a person actually sees on reload).
+    expect((second.querySelector('[data-surface="a2ui"] [data-part="surface-toggle"]') as HTMLElement & { checked: boolean }).checked).toBe(false)
+    expect((second.querySelector('[data-part="agent-enabled"]') as HTMLElement & { checked: boolean }).checked).toBe(false)
+    expect(
+      (second.querySelector('[data-part="settings-item"][data-item="skill"] [data-part="kind-enabled"]') as HTMLElement & { checked: boolean })
+        .checked,
+    ).toBe(false)
+    // The A2UI catalog picker rides the same flag — an off modality's picker stays inert after a reload.
+    expect((second.querySelector('[data-part="surface-catalog"]') as HTMLElement & { disabled: boolean }).disabled).toBe(true)
   })
 })
 
