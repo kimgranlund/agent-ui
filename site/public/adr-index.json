@@ -1164,7 +1164,7 @@
   {
     "name": "ADR-0168",
     "url": "./adr-index.html#adr-0168",
-    "description": "Integrations become a manifest REGISTRY — validated dispatch, server-resolved keys, and tools on BOTH live arms (proposed — the tool/integration ENABLEMENT int…",
+    "description": "Integrations become a manifest REGISTRY — validated dispatch, server-resolved keys, and tools on BOTH live arms (the tool/integration ENABLEMENT intake; GH #40…",
     "level": "L3",
     "section": "Records"
   },
