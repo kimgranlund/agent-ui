@@ -17,7 +17,10 @@
 // primitive (SPEC-R6). Meta notices that are NOT conversation turns (reset, transcript-exhausted, the
 // dev-overlay's connection status) render as a page-level status line OUTSIDE the thread — the primitive
 // exposes no `addSystemMessage`, and these are page chrome, not agent turns (genuine turn FAILURES still
-// surface as the primitive's own system bubble via `AgentTurnHandle.fail()`).
+// surface as the primitive's own system bubble via `AgentTurnHandle.fail()`). GH #415: a TRANSPORT-composed
+// terminal failure (`a2uiMeta.error`) takes that same `fail()` path AND echoes on the status line — it is
+// the notice that REPLACES the transcript-exhausted one this line already owned, so the aria-live channel
+// must announce it rather than leave a stale "Live agent connected" sitting under a failed turn.
 //
 // Recorded-default (`createRecordedTransport`, ADR-0073); the live arm reuses the identical runtime-probed
 // dynamic-import pattern `a2ui-live.ts` ships (SPEC-R8, superseded by ADR-0152 — the probe now resolves in
@@ -127,11 +130,20 @@ content.append(shell) // LAST — every child is present before this element eve
 // ════════════════ the transport + the turn loop ════════════════
 
 let transport: AgentTransport = createRecordedTransport(recordedTranscript)
+// GH #415 (the sibling pages' GH #408 fix, ported) — WHICH backbone `transport` currently is, tracked at
+// every one of the three sites that assign it (this initializer, Reset's fail-closed restart,
+// `wireLiveOverlay()`'s live swap). The empty-turn notice below used to be transport-BLIND: a LIVE turn that
+// produced nothing printed the recorded backbone's own "no further turns in this recorded transcript"
+// wording — a claim about a transcript that isn't running, with the wrong remedy attached.
+let isLive = false
 
 /** Test-only injection seam (the `a2ui-live.ts` `__setTransportForTest` precedent) — otherwise reassigned
- *  ONLY by `wireLiveOverlay()`'s real live-key probe. Never called by any other page-code path. */
-export function __setTransportForTest(next: AgentTransport): void {
+ *  ONLY by `wireLiveOverlay()`'s real live-key probe. Never called by any other page-code path. `live`
+ *  (GH #415) declares which backbone the injected stub STANDS FOR, so a test can drive the live-only
+ *  empty-turn wording; omitted ⇒ recorded, leaving every pre-#415 call site byte-unaffected. */
+export function __setTransportForTest(next: AgentTransport, live = false): void {
   transport = next
+  isLive = live
 }
 
 let session: Session = { turns: [] }
@@ -152,6 +164,7 @@ async function runTurn(input: TurnInput): Promise<void> {
   let note: string | undefined
   const turnLines: string[] = []
   let failed = false
+  let transportError: string | undefined
 
   try {
     for await (const line of transport.turn(input)) {
@@ -165,10 +178,28 @@ async function runTurn(input: TurnInput): Promise<void> {
       if (meta) {
         if (meta.a2uiMeta.progress) handle.progress(meta.a2uiMeta.progress)
         if (meta.a2uiMeta.note !== undefined) note = meta.a2uiMeta.note
+        // GH #144/#415 — the transport-composed TERMINAL error line (`formatErrorLine`, meta-line.ts): the
+        // ONLY way a proxy whose headers already committed 200 can report a `ProduceHalt`/upstream fault
+        // instead of ending as a silently-empty "success". It parses cleanly and matched NEITHER arm above,
+        // so pre-#415 it was `continue`d into silence — and the turn, now holding zero lines, fell through
+        // to the empty-turn branch below and blamed a recorded transcript for a live failure.
+        if (meta.a2uiMeta.error !== undefined) transportError = meta.a2uiMeta.error
         continue
       }
       turnLines.push(line)
       handle.ingestLine(line) // routes by surfaceId to a fresh/known inline ui-surface-host, or narrates
+    }
+    // GH #415 — an error-terminated turn is a FAILED turn, treated exactly like one that THREW: the same
+    // `handle.fail()` the catch block below calls (SPEC-R6 AC3 — the primitive truncates narration, forces
+    // the strip header to `error`, and surfaces the ⚠ system bubble), plus the page-level status notice this
+    // failure now owns. Like a thrown turn it reaches NONE of the completion work below: no `setNote`, no
+    // `finalize` (which would settle the strip green over a turn that genuinely failed), no feedback chips,
+    // no session append, and never the empty-turn branch that would misname the cause. The `finally` still
+    // runs on this `return`, so `busy` is released exactly as on every other exit.
+    if (transportError !== undefined) {
+      handle.fail(transportError)
+      status(`⚠ ${transportError}`)
+      return
     }
     if (note !== undefined) handle.setNote(note)
     // GH #291/ADR-0160 clause 3 — the pre-hydrated action-chip mechanism's own proof-of-concept
@@ -195,7 +226,14 @@ async function runTurn(input: TurnInput): Promise<void> {
 
   if (failed) return
   if (turnLines.length === 0 && note === undefined) {
-    status('The agent has no further turns in this recorded transcript. Reset to start over.')
+    // GH #415 — transport-honest: only the RECORDED backbone has a finite transcript to exhaust, so only it
+    // may say so (and only it can be Reset back to turn 1). A live turn that emitted nothing renderable (and
+    // no error line — that path returned above) states just that fact.
+    status(
+      isLive
+        ? "The agent's turn produced no renderable output."
+        : 'The agent has no further turns in this recorded transcript. Reset to start over.',
+    )
     return
   }
   session = appendUserTurn(session, input.kind === 'intent' ? input.text : frameClientMessage(input.message))
@@ -232,6 +270,7 @@ resetBtn.addEventListener('click', () => {
   conv.reset() // disposes every open surface host + clears the thread (SPEC-R7)
   session = { turns: [] }
   transport = createRecordedTransport(recordedTranscript)
+  isLive = false // GH #415 — reset alongside the transport it describes; the re-probe below sets it true again only if the live swap actually lands
   status('New conversation. Send a prompt to begin.')
   wireLiveOverlay() // re-probe
 })
@@ -287,6 +326,7 @@ function wireLiveOverlay(): void {
           persistSelection(selection)
         })
         transport = overlay.createLiveProxyTransport({ get: () => selection })
+        isLive = true // GH #415 — the ONE place a live backbone is adopted; set adjacent to the assignment it describes so the two can never drift
         status(`Live agent connected (${probe.providers} provider(s) available). Prompt it to generate a real A2UI surface.`)
       } else if (import.meta.env.DEV) {
         status('Recorded transcript (no live API key found). Set a provider key in .env and restart `npm run dev` for a live agent.')
