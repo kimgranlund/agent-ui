@@ -1,0 +1,110 @@
+{
+  "skill": "a2ui-multi-catalog",
+  "cases": [
+    {
+      "id": "t01",
+      "expect": "trigger",
+      "prompt": "How do I add another catalog beside the default in @agent-ui/a2ui?"
+    },
+    {
+      "id": "t02",
+      "expect": "trigger",
+      "prompt": "Register a second catalog on the renderer \u2014 what's the pattern?"
+    },
+    {
+      "id": "t03",
+      "expect": "trigger",
+      "prompt": "We need upstream A2UI interop \u2014 render Google's Basic Catalog payloads on our renderer."
+    },
+    {
+      "id": "t04",
+      "expect": "trigger",
+      "prompt": "What is a2ui-basic and how does it map onto the fleet?"
+    },
+    {
+      "id": "t05",
+      "expect": "trigger",
+      "prompt": "Register a catalog for a third-party component set \u2014 where do the factories and functions go?"
+    },
+    {
+      "id": "t06",
+      "expect": "trigger",
+      "prompt": "The prose implementation guide and the catalog JSON schema disagree on a prop name \u2014 which is the catalog schema ground truth?"
+    },
+    {
+      "id": "t07",
+      "expect": "trigger",
+      "prompt": "An upstream CheckBox binds a boolean value but our control commits a string \u2014 how do we widen the two-way seam without forking input.ts?"
+    },
+    {
+      "id": "t08",
+      "expect": "trigger",
+      "prompt": "Upstream buttons send action as {event:{name,context}} \u2014 should readActionSpec get another tolerance arm?"
+    },
+    {
+      "id": "t09",
+      "expect": "trigger",
+      "prompt": "Basic's validators return booleans but our shared catalogFunctions table returns {valid,message} \u2014 same names, different dialects. How do we avoid a collision?"
+    },
+    {
+      "id": "t10",
+      "expect": "trigger",
+      "prompt": "How does the request's catalogId get from the admin picker through the proxy and worker into the producer?"
+    },
+    {
+      "id": "t11",
+      "expect": "trigger",
+      "prompt": "The model stamped createSurface with the wrong catalogId on a Basic turn \u2014 who is authoritative?"
+    },
+    {
+      "id": "t12",
+      "expect": "trigger",
+      "prompt": "Should our new catalog's id be the upstream canonical URI or a short local id?"
+    },
+    {
+      "id": "n01",
+      "expect": "no-trigger",
+      "prompt": "Compose an A2UI payload for a login form against the default catalog."
+    },
+    {
+      "id": "n02",
+      "expect": "no-trigger",
+      "prompt": "Which ui-* control do I use for picking a date?"
+    },
+    {
+      "id": "n03",
+      "expect": "no-trigger",
+      "prompt": "The renderer won't paint this updateComponents message \u2014 debug the payload."
+    },
+    {
+      "id": "n04",
+      "expect": "no-trigger",
+      "prompt": "Add a chart control to the fleet \u2014 does one exist already?"
+    },
+    {
+      "id": "n05",
+      "expect": "no-trigger",
+      "prompt": "Curate the corpus seeds for the a2ui exemplar shelf."
+    },
+    {
+      "id": "n06",
+      "expect": "no-trigger",
+      "prompt": "What does a binding look like on the A2UI wire?"
+    },
+    {
+      "id": "n07",
+      "expect": "no-trigger",
+      "prompt": "Add a catalog entry (a new row) for ui-badge to the default catalog."
+    },
+    {
+      "id": "n08",
+      "expect": "no-trigger",
+      "prompt": "Build the docs page for the component catalog gallery."
+    },
+    {
+      "id": "n09",
+      "expect": "no-trigger",
+      "prompt": "Is there an upstream npm update for CodeMirror we should take?"
+    }
+  ]
+}
