@@ -13,3 +13,6 @@ import './currency.ts'
 
 export { registerIntegration, listIntegrations, resolveIntegrations } from './registry.ts'
 export type { IntegrationManifest, ExecuteContext } from './registry.ts'
+// LLD-C4 — the shared dispatch builder rides the SAME barrel, so a host has exactly one import site for
+// "resolve what's enabled, then build the tool pair" and no second path can grow beside it.
+export { buildToolDispatch } from './tool-dispatch.ts'

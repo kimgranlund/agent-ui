@@ -19,7 +19,7 @@ import type { CorpusRecord } from '../../../src/corpus/record.ts'
 import { loadCatalog } from '../../../src/catalog/catalog.ts'
 import type { Catalog } from '../../../src/catalog/catalog.ts'
 import type { TurnInput, Effort } from '../../../src/agent/agent-transport.ts'
-import { resolveIntegrations } from '../integrations/index.ts'
+import { buildToolDispatch, resolveIntegrations } from '../integrations/index.ts'
 import { isSameOriginRequest, isMountedPath, isValidTurnInput } from './route-guards.ts'
 // GH #108 (review finding): validateMode/isChatBody/EFFORT_VALUES/resolveChatDispatch used to be
 // hand-duplicated here, byte-for-byte, from dev-proxy-plugin.ts's already-exported versions — this
@@ -199,18 +199,15 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
   // The reasoning-effort dial — the SAME fail-closed validation the dev proxy uses (chat-validation.ts,
   // shared): a crafted/malformed value degrades to `undefined` (the adapter's own default), never a 400.
   const validatedEffort = validateEffort(effort)
-  const active = resolveIntegrations(integrations, envVars(env))
-  const toolOpts =
-    active.length > 0
-      ? {
-          tools: active.map((integration) => integration.tool),
-          executeTool: async (name: string, toolInput: Record<string, unknown>, signal?: AbortSignal): Promise<string> => {
-            const match = active.find((integration) => integration.tool.name === name)
-            if (!match) throw new Error(`unknown tool ${name}`)
-            return match.execute(toolInput, { signal })
-          },
-        }
-      : {}
+  // ADR-0168 cl.3 / LLD-C4 — enablement resolves, then the SHARED buildToolDispatch turns the surviving
+  // manifests into the tools/executeTool pair (schema-validated dispatch, key resolution, the `{}`-when-
+  // empty shape). Byte-for-byte the same builder the dev proxy uses, so the two hosts cannot drift.
+  // `request.signal` is this route's turn-level abort signal — already threaded into produce() below, and
+  // passed here too so an aborted turn cancels in-flight TOOL work, not just the upstream model call
+  // (GH #106's fix, extended to the integration fetches).
+  const hostEnv = envVars(env)
+  const active = resolveIntegrations(integrations, hostEnv)
+  const toolOpts = buildToolDispatch(active, hostEnv, request.signal)
 
   const deps: ProduceDeps = { provider: dispatch.provider, retrieve: (q) => retrieve(shard, q), catalog }
 
