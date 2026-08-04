@@ -208,9 +208,11 @@ export const A2UI_CATALOG_KEY = 'a2uiCatalog'
 /** The pickable catalogs (ADR-0169 cl.6 — the second entry, the upstream A2UI v0.9.1 Basic Catalog): the
  *  picker offers the SHORT id only, never the canonical URI alias (cl.13) — `sanitizeCatalog`, the
  *  picker build (`agent-admin.ts`), and the live-runner threading (`site/lib/admin-live-runner.ts`) all
- *  pick a new entry up with zero further edits, the seam was built for exactly this. The
- *  create/pick-from-library affordances (Kim's 2026-07-19 ruling) still land separately, when the GenUI
- *  PRD's source registry exists. */
+ *  pick a new entry up with zero further edits, the seam was built for exactly this. ADR-0170 (booked
+ *  Repair, narrowing this comment): the PICK-FROM-LIBRARY half of Kim's 2026-07-19 ruling lands with that
+ *  record — this array IS the "Registered catalogs" library pack's source (cl.7), projected live. Only
+ *  the CREATE/authoring affordance still lands separately, when a source registry that can mint a new
+ *  catalog exists; its seam is the catalog kind's suppressed custom-add form (ADR-0170 cl.8). */
 export const A2UI_CATALOG_OPTIONS: ReadonlyArray<{ id: string; label: string }> = [
   { id: 'agent-ui', label: 'Default (agent-ui)' },
   { id: 'a2ui-basic', label: 'A2UI Basic (upstream v0.9.1)' },
