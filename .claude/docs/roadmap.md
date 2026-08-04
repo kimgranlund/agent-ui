@@ -9,7 +9,7 @@
 > lives in GitHub Issues ([ADR-0145](adr/0145-ticket-tier-github-issues-backend.md)) or, on other
 > projects, Linear — **never here**. An issue may cite a section of this doc the same way it cites
 > an ADR/SPEC/LLD id; this doc never enumerates issues by number, because that list goes stale the
-> moment an issue closes and this doc isn't the place re-reading it. Last synthesis pass: 2026-07-28.
+> moment an issue closes and this doc isn't the place re-reading it. Last synthesis pass: 2026-08-04 (M-B close).
 
 ## 1 · Why a fourth doc
 
@@ -38,21 +38,20 @@ append-only going forward, **never backfilled**, and this roadmap's §2 is the o
 "current state." The gap is therefore the ruled shape of the doc set, not a defect awaiting a
 decision (dated line in §4).
 
-## 2 · Now — current state (as of 2026-07-29)
+## 2 · Now — current state (as of 2026-08-04)
 
-> **Arc status, 2026-07-29.** **M-C is DONE** (dogfood mode shipped and dogfood-accepted live).
-> **M-A's two forks are frozen** — ADR-0163 and ADR-0164 both ratified, so that build is unblocked and
-> its PRD is the next step. **M-B is in flight with no DoD box met**, and its phase 1 is blocked on Kim:
-> [#307](https://github.com/kimgranlund/agent-ui/issues/307) needs live error text before the
-> round-budget policy can be ruled. §3 carries the per-milestone detail; `goals.md` carries the
-> box-by-box evidence.
+> **Arc status, 2026-08-04.** **M-B is DONE** (all five DoD boxes proven by live runs 2026-08-03/04;
+> ADR-0169 ratified and merged via PR #430 — §4's dated line) and **M-C is DONE** (2026-07-29). That
+> closes both ruled milestones of the 2026-07-28 intake. **M-A is the open lane**: both forks frozen
+> (ADR-0163/0164 ratified), the PRD written and review-PASSed
+> ([`prd/saas-data-workbench.prd.md`](prd/saas-data-workbench.prd.md), `proposed`) — its PRD-D1–D3+D7
+> decisions await Kim, and scheduling is Kim's. §3 carries the per-milestone detail; `goals.md`
+> carries the box-by-box evidence.
 >
-> Three open issues, all deliberate: **#307** (blocked, above), **#359** (Mode-B flake — a test's own
-> bounded wait false-settles or exhausts silently under load, so no timeout raise can reach it; split out
-> of #347 once #347's own timeout remedy proved it covers only the other mode), **#361** (ADR-0165
-> contradicts itself on whether an archived refusal still needs an allowlist entry — a doc-coherence
-> repair). **#340** closed with #360, and **#347** closes with the real-timing-headroom PR that carries
-> this line. Two open PRs at this sweep (#358, #362); `main` green.
+> Open issues at this sweep are follow-up-sized, none blocking: #429 (E7 validate-time gate),
+> #427 (calendar browser-shard date rot), #425/#421/#419 (agent-admin prompt/catalog refinements),
+> #409 (persona-wide toggle rehydration), #404 (live PARSE-flake record), #394 (adr_ratify parser
+> nit). Zero open PRs; `main` green.
 
 - **Component foundation — complete.** G0–G9 + the Control Suite + the icon adapter: the reactive
   kernel, FACE element layer, templating/directives, and ~50 `ui-*` controls across the
@@ -162,23 +161,15 @@ decision (dated line in §4).
   reality). Ratification is Kim's owner-only Status flip; each milestone's build starts only from
   the ratified text. The in-flight ADR-0161/0162 design slices fold into these milestones' first
   phases; they are not separate arcs.
-- **M-B — "Personas that don't lie" (first). 🟡 IN FLIGHT** — groundwork landed (ADR-0161 built via
-  #318; corpus at 24 judged records via #337; two pipeline defects fixed, ADR-0165 ratified), but
-  **no DoD box is met** — all four are live-run proofs and none has been run. Phase 1 is **blocked on
-  Kim**: [#307](https://github.com/kimgranlund/agent-ui/issues/307) needs the live error text to tell
-  an IDGRAPH failure from a PARSE one, and the round-budget/recovery policy cannot be ruled before
-  that root cause is known. Per-box status in [`goals.md`](goals.md). Scope:
-  The flagship live-agent loop made trustworthy.
-  Phase 1 is bug-anchored repairs: build ADR-0161 as specced — the `value` mark widens to one or
-  more slots, the root cause behind calendar-range/multi-thumb selections never reaching the
-  model (its Repairs cell already enumerates every file) — and root-cause the quiz/game personas'
-  round-budget exhaustion on the same-surface resume path via the live `produce()` method
-  *before* ruling the round-budget/recovery policy. Phase 2 is depth: a second real catalog plus
-  a threaded `catalogId` (the admin's catalog picker stops being one-catalog-by-construction),
-  and corpus growth past the one-exemplar floor. Phase 3 is the persona-library arc: persona
-  export/import in `ui-agent-admin`, documented as the first reusable preset-library pattern.
-  Acceptance is dogfooded: the Hotel Concierge persona books a real date range the model sees, a
-  full multi-round IDGRAPH quiz session survives resume, and an exported persona round-trips.
+- **M-B — "Personas that don't lie". 🟢 DONE 2026-08-04** — all five DoD boxes proven by live runs
+  (goals.md carries the dated evidence addenda): the Hotel Concierge submit snapshot carried a real
+  user-picked date range (ADR-0161's criterion, PR #405's evidence note); a full multi-round quiz
+  survived the action-click resume path with the round-budget/recovery policy exercised live (#307
+  closed on 34 cumulative clean turns); persona export/import round-trips byte-equal (PR #410, the
+  persona-library pattern page); and the second catalog — **upstream A2UI Basic, `a2ui-basic`**
+  (ADR-0169, ratified) — is pickable with `catalogId` threaded end-to-end (PR #430, live
+  catalog-switch proof). Follow-ups spawned, none blocking: #429 (E7 validate-time gate), #409
+  (toggle rehydration), #404 (PARSE-flake record). See §4's dated line.
 - **M-C — "GenUI speaks fleet" (second). 🟢 DONE 2026-07-29** — S1–S5 all merged (#336/#338/#345),
   Proof-of-mode run live by Kim, DoD met; see [`goals.md`](goals.md) for the evidence and the one
   recorded deviation (the live run was on `gen-ui-live`, not agent-admin). Two ratified-contract
@@ -250,6 +241,13 @@ decision (dated line in §4).
 ---
 
 *Closed items move here, one dated line each, rather than being deleted from §3 silently:*
+
+- **2026-08-04** — **M-B "Personas that don't lie" closed** (the 2026-07-28 intake's first milestone):
+  all five DoD boxes proven by live runs — ADR-0161's range-submit criterion, the multi-round quiz
+  resume under the ruled recovery policy, the persona-library round-trip (PR #410 / ADR-less pattern
+  page), and the second catalog `a2ui-basic` = upstream A2UI Basic v0.9.1 ([ADR-0169](adr/0169-a2ui-basic-catalog-upstream-interop.md),
+  ratified) with `catalogId` threaded end-to-end (PR #430). En route: the calendar month-rollover
+  date-pin (#403/PR #405) and the ADR-0168/0169 README-row repair.
 
 - **2026-07-18** — [ADR-0143](adr/0143-timeline-item-recursive-nesting-accordion.md) shipped:
   `ui-timeline-item` recursive nesting + shared accordion (TKT-0091, commits `a726a8b`/`fe6fe00`).
