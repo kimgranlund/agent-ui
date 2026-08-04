@@ -5,8 +5,8 @@
 // two copies. The DOM/`@agent-ui/components`-coupled control registry stays in app; only the types +
 // the pure guards live here.
 //
-// The guards (`findField`/`initialValuesFor`/`sanitizeNumber`/`sanitizeSelect`) hoist alongside the
-// types (ADR-0135 Fork 2 = hoist): the fail-closed idiom has exactly ONE implementation, shared by
+// The guards (`findField`/`initialValuesFor`/`sanitizeNumber`/`sanitizeSelect`/`sanitizeBoolean`) hoist
+// alongside the types (ADR-0135 Fork 2 = hoist): the fail-closed idiom has exactly ONE implementation, shared by
 // app's `agent-admin-schema.ts` and a2ui's `agent-config-schema.ts` — `a2ui` cannot import `@agent-ui/
 // app` (app is downstream in the DAG), so hoisting is the only way both honor "don't invent a second
 // validation idiom". Zero-dep, zero-DOM — belongs at the DAG bottom exactly like the types.
@@ -97,6 +97,17 @@ export function sanitizeNumber(schema: SettingsSchema, key: string, raw: unknown
   if (typeof raw === 'number' && Number.isFinite(raw) && raw >= min && raw <= max) return raw
   const def = field?.default
   return typeof def === 'number' ? def : fallback
+}
+
+/** The `boolean` member's own guard, the `sanitizeNumber` shape (ADR-0168 cl.6's projected per-entry
+ *  enablement toggles are the first consumer): `raw` wins only if it IS a boolean; anything else — an absent
+ *  value, the STRING `'true'`, a `1`, a `null` — degrades to the field's own schema `default`. Deliberately
+ *  no truthiness coercion: a stored non-boolean must never turn a toggle ON by accident (fail-closed for a
+ *  `default: false` field, and honestly default-valued for any other). */
+export function sanitizeBoolean(schema: SettingsSchema, key: string, raw: unknown, fallback: boolean): boolean {
+  if (typeof raw === 'boolean') return raw
+  const def = findField(schema, key)?.default
+  return typeof def === 'boolean' ? def : fallback
 }
 
 export function sanitizeSelect(schema: SettingsSchema, key: string, raw: unknown, fallback: string): string {

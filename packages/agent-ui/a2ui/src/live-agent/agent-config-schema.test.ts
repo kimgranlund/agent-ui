@@ -1,11 +1,21 @@
 // agent-config-schema.test.ts — ADR-0135 Piece B: `liveAgentConfigSchema` (the SettingsSchema builder,
 // model options PROJECTED from the passed ProvidersConfig — Fork 1) + `resolveProduceOptions` (the
-// fail-closed reader into ProduceOptions, via the Piece-A shared guards). Deterministic, no live model.
+// fail-closed reader into ProduceOptions, via the Piece-A shared guards). ADR-0168 cl.6 / LLD-C8 widens
+// both halves: the builder's optional `integrations` argument projects one `boolean` field per manifest,
+// and `resolveIntegrationIds` reads the enabled ids back fail-closed. Deterministic, no live model — the
+// integration fixtures below are minimal fakes, deliberately NOT the real weather/wikipedia/currency
+// manifests, so this suite never couples to that pack's own contents.
 
 import { describe, it, expect } from 'vitest'
-import { liveAgentConfigSchema, resolveProduceOptions } from '../../tools/agent/agent-config-schema.ts'
+import {
+  liveAgentConfigSchema,
+  resolveProduceOptions,
+  resolveIntegrationIds,
+  integrationFieldKey,
+} from '../../tools/agent/agent-config-schema.ts'
 import type { SettingsRead } from '../../tools/agent/agent-config-schema.ts'
 import type { ProvidersConfig } from '../../tools/agent/providers-config.ts'
+import type { IntegrationManifest } from '../../tools/agent/integrations/registry.ts'
 import { DEFAULT_GEN_UI_MODE, GEN_UI_MODES } from '../agent/gen-ui-mode.ts'
 import { DEFAULT_MINI_SKILL_CAP } from '../agent/mini-skills.ts'
 
@@ -37,6 +47,24 @@ const PROVIDERS: ProvidersConfig = {
 function fieldOf(schema: ReturnType<typeof liveAgentConfigSchema>, key: string) {
   return schema.sections.flatMap((s) => s.fields).find((f) => f.key === key)!
 }
+
+/** A minimal fake manifest — the builder reads only `id`/`label`/`description`, so the tool/auth/execute
+ *  members exist to satisfy the type, not the behavior under test. */
+function fakeManifest(id: string, label: string, description: string): IntegrationManifest {
+  return {
+    id,
+    version: '1.0.0',
+    label,
+    description,
+    tool: { name: id, description, input_schema: { type: 'object', properties: {} } },
+    auth: 'none',
+    execute: async () => '',
+  }
+}
+
+const WEATHER = fakeManifest('weather', 'Weather', 'Current conditions for a place.')
+const CURRENCY = fakeManifest('currency', 'Currency conversion', 'Convert an amount between currencies.')
+const WIKIPEDIA = fakeManifest('wikipedia-search', 'Wikipedia search', 'Look an article up on Wikipedia.')
 
 describe('liveAgentConfigSchema — the SettingsSchema builder (ADR-0135 cl.4)', () => {
   const schema = liveAgentConfigSchema(PROVIDERS)
@@ -118,5 +146,112 @@ describe('resolveProduceOptions — fail-closed read into ProduceOptions (ADR-01
     expect(opts.k).toBe(3)
     expect(opts.maxRounds).toBe(3)
     expect(opts.miniSkillCap).toBe(DEFAULT_MINI_SKILL_CAP)
+  })
+})
+
+describe('liveAgentConfigSchema — the PROJECTED integrations section (ADR-0168 cl.6 / LLD-C8)', () => {
+  it('is byte-identical to the pre-widening schema with no manifests passed (or an empty list)', () => {
+    const bare = liveAgentConfigSchema(PROVIDERS)
+    expect(bare.sections.map((s) => s.id)).toEqual(['live-agent'])
+    expect(bare.sections.flatMap((s) => s.fields).some((f) => f.key.startsWith('integration:'))).toBe(false)
+    // An explicitly empty list resolves to the SAME schema — the widening is opt-in, never a section
+    // that exists-but-empty.
+    expect(liveAgentConfigSchema(PROVIDERS, [])).toEqual(bare)
+  })
+
+  it('projects exactly one boolean field per manifest, keyed integration:<id>, default OFF', () => {
+    const schema = liveAgentConfigSchema(PROVIDERS, [WEATHER, CURRENCY])
+    expect(schema.sections.map((s) => s.id)).toEqual(['live-agent', 'integrations'])
+    const section = schema.sections[1]!
+    expect(section.fields).toEqual([
+      {
+        key: 'integration:weather',
+        type: 'boolean',
+        label: 'Weather',
+        description: 'Current conditions for a place.',
+        default: false,
+      },
+      {
+        key: 'integration:currency',
+        type: 'boolean',
+        label: 'Currency conversion',
+        description: 'Convert an amount between currencies.',
+        default: false,
+      },
+    ])
+  })
+
+  it('leaves the live-agent section untouched — the widening adds, never edits', () => {
+    const bare = liveAgentConfigSchema(PROVIDERS)
+    const widened = liveAgentConfigSchema(PROVIDERS, [WEATHER])
+    expect(widened.version).toBe(1)
+    expect(widened.sections[0]).toEqual(bare.sections[0])
+  })
+
+  it('takes label + description from the MANIFEST, never re-derived from the id', () => {
+    const field = fieldOf(liveAgentConfigSchema(PROVIDERS, [WIKIPEDIA]), 'integration:wikipedia-search')
+    expect(field.label).toBe('Wikipedia search')
+    expect(field.description).toBe('Look an article up on Wikipedia.')
+  })
+
+  it('integrationFieldKey is the ONE naming home the builder itself uses', () => {
+    expect(integrationFieldKey('weather')).toBe('integration:weather')
+    const keys = liveAgentConfigSchema(PROVIDERS, [WEATHER, WIKIPEDIA])
+      .sections[1]!.fields.map((f) => f.key)
+    expect(keys).toEqual([integrationFieldKey('weather'), integrationFieldKey('wikipedia-search')])
+  })
+})
+
+describe('resolveIntegrationIds — the fail-closed enablement read (ADR-0168 cl.6)', () => {
+  const schema = liveAgentConfigSchema(PROVIDERS, [WEATHER, CURRENCY, WIKIPEDIA])
+  const store = (values: Record<string, unknown>): SettingsRead => ({ get: (k) => values[k] })
+
+  it('returns only the ids whose field is stored EXACTLY true (false + unset excluded)', () => {
+    const ids = resolveIntegrationIds(
+      store({ 'integration:weather': true, 'integration:currency': false }),
+      schema,
+    )
+    expect(ids).toEqual(['weather'])
+  })
+
+  it('excludes every truthy-but-not-boolean stored value — no coercion, ever', () => {
+    for (const raw of ['true', 1, 'yes', [], {}, new Date()]) {
+      expect(resolveIntegrationIds(store({ 'integration:weather': raw }), schema)).toEqual([])
+    }
+  })
+
+  it('excludes null/undefined/malformed values without throwing', () => {
+    for (const raw of [null, undefined, NaN, 0, '']) {
+      expect(() => resolveIntegrationIds(store({ 'integration:currency': raw }), schema)).not.toThrow()
+      expect(resolveIntegrationIds(store({ 'integration:currency': raw }), schema)).toEqual([])
+    }
+  })
+
+  it('returns every enabled id in schema (registration) order', () => {
+    const ids = resolveIntegrationIds(
+      store({
+        'integration:wikipedia-search': true,
+        'integration:currency': true,
+        'integration:weather': true,
+      }),
+      schema,
+    )
+    expect(ids).toEqual(['weather', 'currency', 'wikipedia-search'])
+  })
+
+  it('is empty for an empty store, and for a schema built without integrations', () => {
+    expect(resolveIntegrationIds(store({}), schema)).toEqual([])
+    // The SCHEMA is the candidate list: a stored flag for a field this schema never projected can never
+    // enable a tool (the "never a hardcoded second list" law, read side).
+    const bare = liveAgentConfigSchema(PROVIDERS)
+    expect(resolveIntegrationIds(store({ 'integration:weather': true }), bare)).toEqual([])
+  })
+
+  it('ignores the live-agent knobs — only integration:<id> boolean fields are candidates', () => {
+    const ids = resolveIntegrationIds(
+      store({ mode: 'blue-sky', model: 'claude-opus-4-8', k: 5, 'integration:currency': true }),
+      schema,
+    )
+    expect(ids).toEqual(['currency'])
   })
 })
