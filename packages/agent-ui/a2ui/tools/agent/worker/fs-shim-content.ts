@@ -7,6 +7,9 @@
 
 import grammar from '../../../src/agent/prompts/grammar.md'
 import honestyFloor from '../../../src/agent/prompts/honesty-floor.md'
+// GH #418 — the re-taught note-line convention `genuiBlock` composes when `a2uiEnabled` is `false`
+// (GRAMMAR itself composed zero bytes, so this file's own note-line paragraph doesn't ride along).
+import a2uiOffNoteLine from '../../../src/agent/prompts/a2ui-off-note-line.md'
 import clarifySpecific from '../../../src/agent/prompts/clarify-specific.md'
 import negotiateSpecific from '../../../src/agent/prompts/negotiate-specific.md'
 import clarifyBlueSky from '../../../src/agent/prompts/clarify-blue-sky.md'
@@ -40,6 +43,7 @@ const GENUI_PACKS_PATH = `${PROMPTS_PATH}/genui-packs`
 export const FILES: Record<string, string> = {
   [`${PROMPTS_PATH}/grammar.md`]: grammar,
   [`${PROMPTS_PATH}/honesty-floor.md`]: honestyFloor,
+  [`${PROMPTS_PATH}/a2ui-off-note-line.md`]: a2uiOffNoteLine,
   [`${PROMPTS_PATH}/clarify-specific.md`]: clarifySpecific,
   [`${PROMPTS_PATH}/negotiate-specific.md`]: negotiateSpecific,
   [`${PROMPTS_PATH}/clarify-blue-sky.md`]: clarifyBlueSky,

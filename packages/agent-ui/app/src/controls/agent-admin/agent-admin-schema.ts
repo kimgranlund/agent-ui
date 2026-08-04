@@ -326,6 +326,14 @@ export interface AdminSurfaceTurnRequest {
    *  whenever `enabled` is `false` (the component's own read); gates whether the runner's
    *  `ProduceOptions.genuiSurface.dogfood` composes SPEC-R13's dogfood segment. */
   genui?: { enabled: boolean; sourceBody?: string; dogfood?: boolean }
+  /** GH #418 — the A2UI modality's OWN live-apply signal (`SURFACE_A2UI_KEY`, a FRESH store read every
+   *  turn, the SAME law `genui` above follows). Gates whether the runner's `ProduceOptions.a2uiEnabled`
+   *  composes the A2UI grammar/catalog/examples/mini-skills block at all (`buildSystemPrompt`'s 7th
+   *  parameter). Absent/`true` ⇒ byte-identical to before this field existed — the full A2UI teaching,
+   *  unconditionally (every runner written before this field existed already behaves this way). `false` ⇒
+   *  the runner must compose zero A2UI-grammar bytes: this client has no A2UI renderer available this
+   *  turn (the toggle is off), so teaching the model to emit A2UI JSONL here would only mislead it. */
+  a2uiEnabled?: boolean
 }
 
 /** The injected surface runner (DEV-only, the `agentTurn` pattern): one turn in, an ordered stream of
