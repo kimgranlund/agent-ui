@@ -572,6 +572,45 @@ describe('UIAgentAdminElement — the default store persists across a reload (AD
     expect(contentFieldOf(entryEl(second, ENTRY_KINDS.promptSection, 'foundation')).value).toBe('Survives a reload.')
     expect(readEntries(second.store, ENTRY_KINDS.skill).map((e) => e.label)).toEqual(['Persisted skill'])
   })
+
+  // GH #409 — the reload leg the entries test above never covered: NO seed carries the Surface Options or
+  // the master switches (the schema declares the KEYS, not seed values), and the store's rehydration used
+  // to walk the seed's own keys only — so every one of these flips persisted on write and came back ON.
+  it('a SECOND real element instance reads back a flipped Surface Option AND both flavours of master switch', async () => {
+    const first = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    await whenFlushed()
+
+    const a2uiToggle = first.querySelector('[data-surface="a2ui"] [data-part="surface-toggle"]') as HTMLElement & { checked: boolean }
+    a2uiToggle.checked = false
+    a2uiToggle.dispatchEvent(new Event('change'))
+    const agentSwitch = first.querySelector('[data-part="agent-enabled"]') as HTMLElement & { checked: boolean }
+    agentSwitch.checked = false
+    agentSwitch.dispatchEvent(new Event('change'))
+    const skillSwitch = first.querySelector('[data-part="settings-item"][data-item="skill"] [data-part="kind-enabled"]') as HTMLElement & {
+      checked: boolean
+    }
+    skillSwitch.checked = false
+    skillSwitch.dispatchEvent(new Event('change'))
+
+    first.remove()
+    mounted.length = 0
+
+    const second = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    await whenFlushed()
+    // The STORE answers the persisted value (the mechanism) …
+    expect(second.store!.get(SURFACE_A2UI_KEY)).toBe(false)
+    expect(second.store!.get('agentEnabled')).toBe(false)
+    expect(second.store!.get('skillsEnabled')).toBe(false)
+    // … and the rendered switches agree (the whole shape a person actually sees on reload).
+    expect((second.querySelector('[data-surface="a2ui"] [data-part="surface-toggle"]') as HTMLElement & { checked: boolean }).checked).toBe(false)
+    expect((second.querySelector('[data-part="agent-enabled"]') as HTMLElement & { checked: boolean }).checked).toBe(false)
+    expect(
+      (second.querySelector('[data-part="settings-item"][data-item="skill"] [data-part="kind-enabled"]') as HTMLElement & { checked: boolean })
+        .checked,
+    ).toBe(false)
+    // The A2UI catalog picker rides the same flag — an off modality's picker stays inert after a reload.
+    expect((second.querySelector('[data-part="surface-catalog"]') as HTMLElement & { disabled: boolean }).disabled).toBe(true)
+  })
 })
 
 describe('UIAgentAdminElement — composeSystemPrompt (ADR-0132 cl.2)', () => {

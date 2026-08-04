@@ -662,7 +662,12 @@ const storeCache = new Map<string, SettingsStore>()
  *  Hotel Concierge rewrite) invisible to anyone whose browser carries the old persona's persisted
  *  store. A preset that declares a bumped `seedVersion` performs an EXPLICIT one-time migration: the
  *  stale persisted store (old seed AND any edits made on top of it) is dropped and the new seed
- *  applies — the same semantic as the user's own "Reset persona", triggered by the upgrade instead. */
+ *  applies — the same semantic as the user's own "Reset persona", triggered by the upgrade instead.
+ *
+ *  It sits INSIDE the persona store's own namespace, which `resetPersona`'s prefix sweep relies on (the
+ *  marker is dropped with the store and rewritten immediately below). Since GH #409 that also means the
+ *  store rehydrates a `seedVersion` key of its own — inert by construction: nothing reads that store key,
+ *  and the persona file's key set is enumerated (`PERSONA_STATE_KEYS`), so it never reaches an export. */
 const seedVersionKey = (id: string): string => `${persistKeyFor(id)}.seedVersion`
 
 /** The persona's store — cached per id so switching away and back keeps one live instance; persisted
@@ -715,12 +720,11 @@ export function resetPreset(preset: AgentPreset): void {
 // its own `agent-admin-app.<id>.*` keys restore the edits made since.
 //
 // The rehydration law, stated exactly (memory-store.ts): a persisted value wins over the seed for every
-// key the SEED CARRIES — the rehydration loop iterates the seed's own keys, so a persisted value under a
-// key the seed never had is written but never read back. An imported persona's seed is the exported
-// state, so every key that existed at export time rehydrates; a key first written AFTER the import (say
-// a master switch the source persona had never touched) persists without rehydrating. That is a
-// pre-existing property of the store mechanism, shared verbatim with the shipped presets (whose seeds
-// carry no master/surface keys either) — this slice neither introduces nor fixes it.
+// key the NAMESPACE holds — construction scans `agent-admin-app.<id>.*` wholesale, so a key first written
+// AFTER the import (say a master switch the source persona had never touched) rehydrates exactly like a
+// seeded one. GH #409 fixed that: the loop used to iterate the SEED's own keys, which made the seed a
+// hidden allowlist — Surface Options and the capability master switches (no preset seed carries them, and
+// neither does an export taken before they were ever touched) persisted on write and vanished on reload.
 
 export const IMPORTED_PERSONAS_KEY = `${PERSIST_PREFIX}.importedPersonas`
 
