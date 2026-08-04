@@ -242,6 +242,10 @@ decision (dated line in §4).
   PRD §8 m3 (judge-scored pack-idiom use) realized as a judged corpus-rubric shard plus its docs
   page (PRD-G6) — a named manual live-model run, never part of the deterministic gates (SPEC-N3).
   Revisit when the producer's output quality needs a measured floor.
+- **Bespoke per-persona A2UI catalogs (GH #421).** Each preset composes its own effective catalog —
+  `shared primitives + shared system + local patterns` (Maître-d' ≠ Croupier) — the A2UI-side
+  analogue of GenUI's per-agent pattern sources (PRD-G2/SPEC-R11). Rides on, or co-designs with,
+  GH #413's `catalogId` threading; design intake owns the local-pattern home and the docs it earns.
 
 ---
 

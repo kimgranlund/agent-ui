@@ -147,6 +147,16 @@ export interface ProduceOptions {
    *  below (SPEC-R1) runs UNCONDITIONALLY regardless of this flag: a genui line is a reserved kind on the
    *  stream itself, handled the same way whether or not the model was invited to use it. */
   genuiSurface?: GenuiSurfaceConfig
+  /** GH #418 — the caller's OWN A2UI Surface Option, threaded to `buildSystemPrompt`'s 7th parameter.
+   *  Absent/`true` ⇒ byte-identical to before this field existed (the `genuiSurface`-absent precedent):
+   *  the full A2UI grammar/catalog/examples/mini-skills composition, unconditionally. `false` ⇒ the caller
+   *  has no A2UI renderer this turn — `buildSystemPrompt` composes zero A2UI-grammar bytes, and (when
+   *  `genuiSurface.enabled` is also set) folds an explicit no-A2UI-renderer framing into the genui block
+   *  instead. Never consulted by the peel/heal/validate loop below (SPEC-N3 — a produce-layer composition
+   *  knob only, the SAME posture `mode`/`genuiSurface` already hold): a stray A2UI-shaped line the model
+   *  emits anyway still runs the ordinary validate/self-correct path, exactly as an `exclusive` genui-only
+   *  turn's stray A2UI already does today. */
+  a2uiEnabled?: boolean
 }
 
 /** The bounded raw-reasoning excerpt cap (ADR-0146 F3, `progressDetail:'full'`) — a `thinking` delta can be
@@ -722,7 +732,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
   const query = queryOf(input, k)
   const exemplars = deps.retrieve(query) // SPEC-R7 — top-k over the judged shard
   const miniSkills = selectMiniSkills(query.intent, MINI_SKILLS, opts.miniSkillCap ?? DEFAULT_MINI_SKILL_CAP) // ADR-0091 §2 — once per turn, beside retrieve(); ADR-0135 cl.7 — cap now tunable, absent ⇒ default
-  const system = buildSystemPrompt(deps.catalog, exemplars, opts.mode, miniSkills, opts.personaSystem, opts.genuiSurface) // SPEC-R6 — catalog-derived; ADR-0090 mode + ADR-0091 mini-skills + ADR-0138 persona + genui-surface SPEC-R10
+  const system = buildSystemPrompt(deps.catalog, exemplars, opts.mode, miniSkills, opts.personaSystem, opts.genuiSurface, opts.a2uiEnabled) // SPEC-R6 — catalog-derived; ADR-0090 mode + ADR-0091 mini-skills + ADR-0138 persona + genui-surface SPEC-R10 + GH #418 a2uiEnabled
   const model = opts.model ?? input.model ?? DEFAULT_MODEL // opts.model = the proxy's allowlist-validated model (SPEC-R12); it WINS over a client-supplied input.model
   // ADR-0088 §2 — data ALREADY flowing above, captured once for the eventual TurnTrace (no new collection).
   // NOTE: this is a `session.turns` MESSAGE index (the alternating Messages-API array, user+assistant per

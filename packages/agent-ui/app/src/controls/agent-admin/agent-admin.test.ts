@@ -1405,6 +1405,124 @@ describe('UIAgentAdminElement — genui-surface.spec.md SPEC-R8/R10/R11 (B2): th
   })
 })
 
+// ── GH #418 — the A2UI Surface Option is honored end to end: the runner request carries the LIVE toggle,
+// and the client never renders/acts on A2UI content while the toggle is off — render+interactive, or a
+// VISIBLE refusal, never a silently-dead surface. ─────────────────────────────────────────────────────
+
+/** The manual REAL-composer submit `describe('...agentSurfaceTurn arm')` above uses inline, factored so
+ *  this file's LATER `composerSubmit`/`submit` helpers (each scoped to their OWN describe closure) don't
+ *  need duplicating — a plain module-level function, usable from any describe below. */
+async function gh418Submit(el: UIAgentAdminElement, text: string): Promise<void> {
+  const composer = el.querySelector('ui-conversation-composer') as HTMLElement & { value: string }
+  composer.value = text
+  const editor = composer.querySelector('[data-part="editor"]') as HTMLElement
+  editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+  await whenFlushed()
+  await new Promise((r) => setTimeout(r, 0)) // the async iterator drains on a microtask+task boundary
+  await whenFlushed()
+}
+
+describe('UIAgentAdminElement — GH #418: the A2UI Surface Option reaches the runner request', () => {
+  it('the request carries a2uiEnabled:true reflecting the LIVE store toggle (the default)', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    el.store!.set('surfaceGenui', true)
+    const seen: Array<{ a2uiEnabled?: boolean }> = []
+    el.agentSurfaceTurn = async function* (req) {
+      seen.push(req as { a2uiEnabled?: boolean })
+      yield { kind: 'note' as const, note: 'ok' }
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    await gh418Submit(el, 'draw')
+    expect(seen[0]!.a2uiEnabled).toBe(true)
+  })
+
+  it('the request carries a2uiEnabled:false when the A2UI toggle is off (GenUI-only)', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({ initial: { [SURFACE_A2UI_KEY]: false } })
+    el.store!.set('surfaceGenui', true)
+    const seen: Array<{ a2uiEnabled?: boolean }> = []
+    el.agentSurfaceTurn = async function* (req) {
+      seen.push(req as { a2uiEnabled?: boolean })
+      yield { kind: 'note' as const, note: 'ok' }
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    await gh418Submit(el, 'draw')
+    expect(seen[0]!.a2uiEnabled).toBe(false)
+  })
+})
+
+describe('UIAgentAdminElement — GH #418: the client-plane never-silent law (A2UI off, GenUI on)', () => {
+  it('A2UI OFF + GenUI ON: a model that emits an A2UI wire line anyway is never rendered — a visible notice appears instead of a silently-dead surface', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({ initial: { [SURFACE_A2UI_KEY]: false } })
+    el.store!.set('surfaceGenui', true)
+    el.agentSurfaceTurn = async function* () {
+      yield { kind: 'note' as const, note: 'Here you go.' }
+      yield { kind: 'line' as const, line: JSON.stringify({ version: 'v1.0', createSurface: { surfaceId: 'blackjack', catalogId: 'agent-ui' } }) }
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    await gh418Submit(el, 'card game')
+
+    expect(el.querySelector('ui-surface-host'), 'the A2UI line must never mount a live surface while A2UI is off').toBeNull()
+    const agentBody = el.querySelector('[data-part="bubble"][data-role="agent"] > [data-part="body"]')
+    expect(agentBody?.textContent).toContain('Here you go.')
+    expect(agentBody?.textContent).toContain('A2UI is off in Surface Options')
+  })
+
+  it('A2UI OFF + GenUI ON: a REAL A2UI action click on a lingering (already-rendered) surface gets a VISIBLE refusal, never a silent no-op (the reported defect)', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    el.store!.set('surfaceGenui', true) // A2UI stays default ON while the surface mounts
+    let turnCount = 0
+    el.agentSurfaceTurn = async function* (req) {
+      turnCount++
+      if (req.turn.kind === 'intent') {
+        yield { kind: 'note' as const, note: 'Table set.' }
+        yield { kind: 'line' as const, line: JSON.stringify({ version: 'v1.0', createSurface: { surfaceId: 'table-1', catalogId: 'agent-ui' } }) }
+        yield {
+          kind: 'line' as const,
+          line: JSON.stringify({
+            version: 'v1.0',
+            updateComponents: {
+              surfaceId: 'table-1',
+              components: [{ id: 'root', component: 'Button', variant: 'solid', label: 'Hit', action: { action: 'submit' } }],
+            },
+          }),
+        }
+      } else {
+        yield { kind: 'note' as const, note: 'should never run' }
+      }
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    await gh418Submit(el, 'blackjack')
+    expect(turnCount).toBe(1)
+    const button = el.querySelector('ui-surface-host ui-button') as HTMLElement | null
+    expect(button, 'a real rendered A2UI action control must exist to click').not.toBeNull()
+
+    // Flip A2UI OFF mid-conversation — the ALREADY-MOUNTED surface is now a lingering host, exactly the
+    // "renders, looks alive" defect state the reported bug described.
+    el.store!.set(SURFACE_A2UI_KEY, false)
+    await whenFlushed()
+    button!.click()
+    await whenFlushed()
+    await new Promise((r) => setTimeout(r, 0)) // GH #63 — the client turn is DEFERRED to a fresh macrotask
+    await whenFlushed()
+
+    expect(turnCount, 'A2UI is off — the click must never spawn a hidden network turn').toBe(1)
+    const system = el.querySelector('[data-part="bubble"][data-role="system"]')
+    expect(system?.textContent, 'the click must surface a VISIBLE refusal, never a silent no-op').toContain('A2UI is off in Surface Options')
+  })
+})
+
 
 // ── GH #47/#48 — the add-from-library seam ──────────────────────────────────────────────────────────────
 
