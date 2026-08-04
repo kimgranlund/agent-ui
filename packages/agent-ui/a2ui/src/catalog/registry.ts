@@ -36,7 +36,11 @@ export class RegistryError extends Error {
 export class Registry implements CatalogRegistry {
   readonly #catalogs = new Map<string, CatalogEntry>()
 
-  register(catalog: unknown, factories: Record<string, WidgetFactory>): void {
+  register(
+    catalog: unknown,
+    factories: Record<string, WidgetFactory>,
+    functions?: Record<string, (args: Record<string, unknown>) => unknown>,
+  ): void {
     // Defensive re-assert + narrow `unknown` → a structurally-valid `Catalog`. The loader is the single
     // shape gate (LLD-C1 invariant); storing its normalized result keeps the stored entry valid downstream.
     const loaded: Catalog = loadCatalog(catalog)
@@ -58,7 +62,9 @@ export class Registry implements CatalogRegistry {
     if (this.#catalogs.has(loaded.catalogId)) {
       console.warn(`[a2ui] catalog "${loaded.catalogId}" re-registered — last registration wins`)
     }
-    this.#catalogs.set(loaded.catalogId, { catalog: loaded, factories })
+    // ADR-0169 cl.8: the optional per-catalog function-impl override, stored only when provided (a plain
+    // `functions` key of `undefined` would still satisfy the optional-field type but pollutes intent).
+    this.#catalogs.set(loaded.catalogId, functions !== undefined ? { catalog: loaded, factories, functions } : { catalog: loaded, factories })
   }
 
   get(id: string): CatalogEntry | undefined {

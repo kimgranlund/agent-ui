@@ -31,10 +31,25 @@ export interface ComponentDef {
  * component whose commit gesture finalizes several props (Calendar range, SliderMulti) declares
  * one slot per prop; a component with one committed value keeps the single-object form, unchanged
  * forever (`ComponentDef.value` / `WidgetFactory.value` both widen to `ValueSlot | ValueSlot[]`).
+ *
+ * ADR-0169 cl.7 (amends ADR-0019/ADR-0161): `readProp`/`marshal` are OPTIONAL, additive widenings for
+ * interop with a wire dialect whose commit shape the DOM value prop alone cannot express — every
+ * existing slot omits both, so every existing catalog/factory behaves byte-identically. `prop` keeps
+ * naming the WIRE side of the round-trip (the `{path}` writeback target); `readProp` (absent ⇒ `prop`)
+ * names the DOM property the renderer's input controller actually READS off the control on commit —
+ * the first consumer is `CheckBox` (wire `value` is a boolean, but `ui-checkbox.value` is the
+ * submitted STRING; the boolean lives on `ui-checkbox.checked`). `marshal` (absent ⇒ raw) is a CLOSED
+ * commit-value transform applied AFTER the read — the first (and only) member,
+ * `'singletonStringList'`, wraps a single committed string into a one-element array (or `[]` for
+ * empty/`null`), the first consumer is `ChoicePicker` (wire `value` is a string LIST; the control
+ * commits one string). A closed literal enum keeps `catalog.json` plain JSON — never a function;
+ * widening it is a future amendment to this clause, not an ad-hoc addition.
  */
 export interface ValueSlot {
   prop: string
   event: string
+  readProp?: string
+  marshal?: 'singletonStringList'
 }
 
 /**
@@ -214,27 +229,46 @@ function validateComponent(key: string, raw: unknown): ComponentDef {
   return def
 }
 
-const isValueSlot = (v: unknown): v is ValueSlot => isObject(v) && typeof v.prop === 'string' && typeof v.event === 'string'
+const MARSHAL_VALUES = new Set(['singletonStringList'])
+
+const isValueSlot = (v: unknown): v is ValueSlot =>
+  isObject(v) &&
+  typeof v.prop === 'string' &&
+  typeof v.event === 'string' &&
+  (v.readProp === undefined || typeof v.readProp === 'string') &&
+  (v.marshal === undefined || MARSHAL_VALUES.has(v.marshal as string))
+
+/** Build a normalized `ValueSlot`, carrying `readProp`/`marshal` only when the raw entry declared them
+ *  (ADR-0169 cl.7) — omitting both reproduces the pre-cl.7 slot shape byte-for-byte. */
+function toSlot(entry: { prop: string; event: string; readProp?: string; marshal?: string }): ValueSlot {
+  const slot: ValueSlot = { prop: entry.prop, event: entry.event }
+  if (entry.readProp !== undefined) slot.readProp = entry.readProp
+  if (entry.marshal !== undefined) slot.marshal = entry.marshal as ValueSlot['marshal']
+  return slot
+}
 
 /**
- * Validate a component's `value` mark (ADR-0161): the single-object form, unchanged, or a
- * non-empty array of `{prop,event}` slots with DISTINCT `prop` names across slots (two slots
- * writing back the same DOM prop is ambiguous — rejected at load). Events MAY repeat (a multi-prop
- * commit gesture, e.g. Calendar's range pair, fires one shared `change`).
+ * Validate a component's `value` mark (ADR-0161, widened by ADR-0169 cl.7): the single-object form,
+ * unchanged, or a non-empty array of `{prop,event,readProp?,marshal?}` slots with DISTINCT `prop`
+ * names across slots (two slots writing back the same DOM prop is ambiguous — rejected at load).
+ * Events MAY repeat (a multi-prop commit gesture, e.g. Calendar's range pair, fires one shared
+ * `change`). `readProp`/`marshal`, when present, are validated by `isValueSlot` above (a non-string
+ * `readProp` or a `marshal` outside the closed enum fails load).
  */
 function validateValueMark(key: string, raw: unknown): ValueSlot | readonly ValueSlot[] {
   if (Array.isArray(raw)) {
     if (raw.length === 0) bad(`component "${key}".value array must be non-empty`)
     const slots = raw.map((entry) => {
-      if (!isValueSlot(entry)) bad(`component "${key}".value entries must each be { prop: string; event: string }`)
-      return { prop: entry.prop, event: entry.event }
+      if (!isValueSlot(entry)) bad(`component "${key}".value entries must each be { prop: string; event: string; readProp?: string; marshal?: 'singletonStringList' }`)
+      return toSlot(entry)
     })
     const props = slots.map((s) => s.prop)
     if (new Set(props).size !== props.length) bad(`component "${key}".value slot props must be distinct`)
     return slots
   }
-  if (!isValueSlot(raw)) bad(`component "${key}".value must be { prop: string; event: string } or a non-empty array of such`)
-  return { prop: raw.prop, event: raw.event }
+  if (!isValueSlot(raw))
+    bad(`component "${key}".value must be { prop: string; event: string; readProp?: string; marshal?: 'singletonStringList' } or a non-empty array of such`)
+  return toSlot(raw)
 }
 
 function validatePropDef(key: string, prop: string, raw: unknown): PropDef {

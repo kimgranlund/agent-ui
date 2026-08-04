@@ -98,7 +98,11 @@ export function installInputBinding(
     el.addEventListener(
       slot.event,
       () => {
-        const committed = (el as unknown as Record<string, unknown>)[slot.prop]
+        // ADR-0169 cl.7: read `slot.readProp` when declared (absent ⇒ `slot.prop`, byte-identical to
+        // before), then apply the closed `marshal` transform. `CheckBox` (readProp: 'checked') and
+        // `ChoicePicker` (marshal: 'singletonStringList') are the first two consumers.
+        const raw = (el as unknown as Record<string, unknown>)[slot.readProp ?? slot.prop]
+        const committed = slot.marshal === 'singletonStringList' ? (raw === '' || raw == null ? [] : [String(raw)]) : raw
         // Optimistic, structural-sharing write (binding LLD-C5): copies only the path, so unrelated
         // bindings stay Object.is-equal and asleep (SPEC-N2). peek() base ⇒ the handler stays untracked.
         surface.data.value = setPointer(surface.data.peek(), valuePath, committed)

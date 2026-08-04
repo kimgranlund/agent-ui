@@ -1167,5 +1167,12 @@
     "description": "Integrations become a manifest REGISTRY — validated dispatch, server-resolved keys, and tools on BOTH live arms (the tool/integration ENABLEMENT intake; GH #40…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0169",
+    "url": "./adr-index.html#adr-0169",
+    "description": "The second catalog IS upstream A2UI Basic — a2ui-basic registers beside the default on every renderer, schema-derived fleet-factory mappings with a recorded 18…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

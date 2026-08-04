@@ -205,12 +205,15 @@ export function isGenuiDogfoodEnabled(value: unknown): boolean {
 /** The A2UI catalog picker's persisted selection (an id from `A2UI_CATALOG_OPTIONS`). */
 export const A2UI_CATALOG_KEY = 'a2uiCatalog'
 
-/** The pickable catalogs — ONE today (the id the producer's own `produce.ts` pins), so the picker and
- *  the producer agree by construction; the choice is a real config value from day one, and the
- *  create/pick-from-library affordances (Kim's 2026-07-19 ruling) land when a second catalog or the
- *  GenUI PRD's source registry exists. */
+/** The pickable catalogs (ADR-0169 cl.6 — the second entry, the upstream A2UI v0.9.1 Basic Catalog): the
+ *  picker offers the SHORT id only, never the canonical URI alias (cl.13) — `sanitizeCatalog`, the
+ *  picker build (`agent-admin.ts`), and the live-runner threading (`site/lib/admin-live-runner.ts`) all
+ *  pick a new entry up with zero further edits, the seam was built for exactly this. The
+ *  create/pick-from-library affordances (Kim's 2026-07-19 ruling) still land separately, when the GenUI
+ *  PRD's source registry exists. */
 export const A2UI_CATALOG_OPTIONS: ReadonlyArray<{ id: string; label: string }> = [
   { id: 'agent-ui', label: 'Default (agent-ui)' },
+  { id: 'a2ui-basic', label: 'A2UI Basic (upstream v0.9.1)' },
 ]
 
 export const DEFAULT_A2UI_CATALOG_ID: string = 'agent-ui'
@@ -312,9 +315,9 @@ export interface AdminSurfaceTurnRequest {
    *  ignores everything else — the component knows entry labels, never the registry. Absent/empty ⇒
    *  no tools on the turn. */
   integrations?: readonly string[]
-  /** Vision rev.6 — the Surface Options catalog picker's SANITIZED selection. Today always the default
-   *  id (one option exists, and the producer pins the same id), so runner and picker agree by
-   *  construction; a future multi-catalog runner threads it into the producer's catalog choice. */
+  /** Vision rev.6 — the Surface Options catalog picker's SANITIZED selection (`A2UI_CATALOG_OPTIONS`).
+   *  ADR-0169 cl.5/cl.6 — the runner (`site/lib/admin-live-runner.ts`) forwards this onto the produce
+   *  POST body (absent ⇒ omit the key), where the server selects the matching registered catalog. */
   catalogId?: string
   /** genui-surface.spec.md SPEC-R10/R11 — the GenUI modality's live-apply signal, a FRESH store read every
    *  turn (the same live-apply law every other Surface Options/capability field already follows).

@@ -54,6 +54,9 @@ import { Registry } from '../catalog/registry.ts'
 import type { WidgetFactory } from '../catalog/types.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import { defaultFactories } from '../catalog/default/factories.ts'
+import { a2uiBasicCatalog, a2uiBasicCatalogCanonical } from '../catalog/a2ui-basic/index.ts'
+import { a2uiBasicFactories } from '../catalog/a2ui-basic/factories.ts'
+import { a2uiBasicFunctions } from '../catalog/a2ui-basic/functions.ts'
 import type {
   A2uiCreateSurface,
   A2uiUpdateComponents,
@@ -104,8 +107,9 @@ export interface RendererOptions {
  * transport hands lines straight through). The wave-4 canvas consumes exactly this.
  */
 export interface RendererHost {
-  /** Register an additional catalog + its factory table (two-tier, SPEC-R6/N1; delegates to the registry). */
-  register(catalog: unknown, factories: Record<string, WidgetFactory>): void
+  /** Register an additional catalog + its factory table (two-tier, SPEC-R6/N1; delegates to the registry).
+   *  `functions` (ADR-0169 cl.8) is an optional per-catalog function-impl override table, forwarded verbatim. */
+  register(catalog: unknown, factories: Record<string, WidgetFactory>, functions?: Record<string, (args: Record<string, unknown>) => unknown>): void
   /** Set the element rendered surface roots attach under; re-attaches any already-mounted roots. */
   mount(rootEl: HTMLElement): void
   /** Ingest one raw JSONL line: skip-blank → parse → dispatch (PARSE on a malformed line, N4). */
@@ -147,6 +151,13 @@ class Renderer implements RendererHost {
     // Per-runtime registry, default catalog pre-registered so `catalogId:'agent-ui'` resolves out of the
     // box (two-tier: a project registers more via `register`, SPEC-R6/N1).
     this.#registry.register(defaultCatalog, defaultFactories)
+    // ADR-0169 cl.2 — the upstream A2UI v0.9.1 Basic Catalog registers beside the default on EVERY
+    // renderer host: interop is a property of the PACKAGE, not a demo of one page. `a2uiBasicCatalog`
+    // (the local short id `a2ui-basic`) and `a2uiBasicCatalogCanonical` (the same components/factories/
+    // functions bytes, keyed by the upstream canonical URI — an INBOUND-ONLY alias, cl.13) share ONE
+    // factory table and ONE function-impl table.
+    this.#registry.register(a2uiBasicCatalog, a2uiBasicFactories, a2uiBasicFunctions)
+    this.#registry.register(a2uiBasicCatalogCanonical, a2uiBasicFactories, a2uiBasicFunctions)
 
     let seq = 0
     this.#actions = new ActionDispatcher({
@@ -191,8 +202,8 @@ class Renderer implements RendererHost {
 
   // ── public surface ────────────────────────────────────────────────────────────
 
-  register(catalog: unknown, factories: Record<string, WidgetFactory>): void {
-    this.#registry.register(catalog, factories)
+  register(catalog: unknown, factories: Record<string, WidgetFactory>, functions?: Record<string, (args: Record<string, unknown>) => unknown>): void {
+    this.#registry.register(catalog, factories, functions)
   }
 
   mount(rootEl: HTMLElement): void {
@@ -493,6 +504,12 @@ function versionOf(message: A2uiServerMessage, fallback: string): string {
  * RETAINED as documented Postel's-law tolerance — not silent guesses: `name` is accepted as a synonym
  * for the name key, and a bare string is taken as the action name (carrying no
  * `context`/`wantResponse`/`submit`). Canonical `action` wins when both keys are present.
+ *
+ * A THIRD tolerance arm (ADR-0169 cl.10, amends this ADR): upstream A2UI Basic Catalog's `Action` is
+ * `{event:{name, context?}}` — normalized to `{name: event.name, context: event.context}`, with
+ * `wantResponse`/`submit` staying `undefined` (upstream has neither; ADR-0088 §3's undefined-vs-false
+ * distinction is preserved). The `{functionCall}` Action arm is NOT accepted here — excluded v1
+ * (ADR-0169 E7): our renderer has no client-side action-execution path.
  */
 function readActionSpec(
   spec: unknown,
@@ -500,6 +517,15 @@ function readActionSpec(
   // Tolerance: a bare string is the action name (no context/wantResponse/submit to surface).
   if (typeof spec === 'string') return { name: spec }
   if (isObject(spec)) {
+    // ADR-0169 cl.10: the upstream `{event:{name,context?}}` Action shape. Checked before the canonical
+    // `action`/`name` arms — the two shapes are mutually exclusive on the wire, so order is immaterial.
+    if (isObject(spec.event) && typeof spec.event.name === 'string') {
+      const out: { name: string; wantResponse?: boolean; context?: Record<string, unknown>; submit?: boolean } = {
+        name: spec.event.name,
+      }
+      if (isObject(spec.event.context)) out.context = spec.event.context
+      return out
+    }
     // Canonical `action` (ADR-0011); `name` is the tolerated synonym, taken only when `action` is absent.
     const name = typeof spec.action === 'string' ? spec.action : typeof spec.name === 'string' ? spec.name : ''
     const out: { name: string; wantResponse?: boolean; context?: Record<string, unknown>; submit?: boolean } = { name }

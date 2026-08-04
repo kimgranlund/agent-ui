@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest'
 import { ICON_NAMES, type IconName, type IconPack } from './types.ts'
 
 describe('ICON_NAMES', () => {
-  it('has exactly thirty-two names', () => {
-    expect(ICON_NAMES.length).toBe(32)
+  it('has exactly seventy-six names (32 pre-ADR-0169 + the 44 new ADR-0169 cl.9b Icon-table members)', () => {
+    expect(ICON_NAMES.length).toBe(76)
   })
 
   it('is all distinct strings', () => {
@@ -14,7 +14,7 @@ describe('ICON_NAMES', () => {
     for (const name of ICON_NAMES) expect(typeof name).toBe('string')
   })
 
-  it('contains the curated audit set (ADR-0066 clause 2 + the feed-family LLD-C9 addition + the TKT-0048 plus glyph + the Figma chat-input refactor\'s arrow-up/microphone + the TKT-0083/ADR-0146 F7 warning glyph + the Claude Code Gateway reasoning-chain card\'s circle-notch/check-circle/x-circle group markers + ui-super-shell\'s list/hamburger glyph, M5 GH #83/#90 + the GH #147/ADR-0153 clock "Planned"/all-pending group marker + the GH #168 dots-three overflow/more-actions glyph + the GH #170/ADR-0155 narrow-header rework\'s circle-half/palette glyphs)', () => {
+  it('contains the curated audit set (ADR-0066 clause 2 + the feed-family LLD-C9 addition + the TKT-0048 plus glyph + the Figma chat-input refactor\'s arrow-up/microphone + the TKT-0083/ADR-0146 F7 warning glyph + the Claude Code Gateway reasoning-chain card\'s circle-notch/check-circle/x-circle group markers + ui-super-shell\'s list/hamburger glyph, M5 GH #83/#90 + the GH #147/ADR-0153 clock "Planned"/all-pending group marker + the GH #168 dots-three overflow/more-actions glyph + the GH #170/ADR-0155 narrow-header rework\'s circle-half/palette glyphs + ADR-0169 cl.9b\'s a2ui-basic Icon-table regeneration, 44 new glyphs)', () => {
     expect([...ICON_NAMES].sort()).toEqual(
       [
         'caret-down', 'caret-up', 'caret-left', 'caret-right',
@@ -25,6 +25,14 @@ describe('ICON_NAMES', () => {
         'plus', 'arrow-up', 'microphone', 'warning',
         'circle-notch', 'check-circle', 'x-circle', 'list', 'clock',
         'dots-three', 'circle-half', 'palette',
+        // ADR-0169 cl.9b — the a2ui-basic Icon row's `ICON_NAME_TABLE` regeneration (44 new members).
+        'user-circle', 'arrow-left', 'paperclip', 'phone', 'camera', 'trash', 'download-simple',
+        'pencil-simple', 'calendar-check', 'fast-forward', 'heart', 'heart-break', 'folder', 'question',
+        'house', 'info', 'map-pin', 'lock-simple', 'lock-simple-open', 'envelope-simple',
+        'dots-three-vertical', 'bell-slash', 'bell', 'pause', 'credit-card', 'image', 'play', 'printer',
+        'arrow-clockwise', 'rewind', 'paper-plane-right', 'gear', 'share-network', 'shopping-cart',
+        'skip-forward', 'skip-back', 'star', 'star-half', 'stop', 'upload-simple', 'speaker-low',
+        'speaker-slash', 'speaker-none', 'speaker-high',
       ].sort(),
     )
   })
