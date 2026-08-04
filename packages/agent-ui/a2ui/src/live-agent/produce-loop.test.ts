@@ -517,6 +517,28 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
     expect(feedback2.content).not.toMatch(/SINGLE line/)
   })
 
+  // GH #404 (live observation, `.claude/ops/mb-live-proof/box2-quizmaster-FAIL.json`) — a real quizmaster
+  // session (haiku-4.5 @ 0.9) appended a literal trailing `</parameter>` line after an otherwise-valid
+  // payload — tool-call/XML closing-tag bleed-through — and repeated the SAME mistake across all 3 retry
+  // rounds, halting on PARSE. The fix stays in the hint lane (ADR-0102 lane 3): the PARSE retry now names
+  // the concrete output-shape contract — NDJSON payload lines ONLY, no XML/tool closing tags, no prose,
+  // no code fences — never touching the validator, the peel logic, or the round budget.
+  it('GH #404: a PARSE failure from a trailing tool/XML closing tag carries the NDJSON-lines-only instruction', async () => {
+    const TRAILING_CLOSING_TAG = `${VALID}\n</parameter>`
+    const { provider, calls, reqs } = stubProvider([TRAILING_CLOSING_TAG, VALID])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+
+    expect(calls()).toBe(2) // round 1 (PARSE) → round 2 (corrected) streams
+    const round2 = reqs()[1]!.messages
+    const feedback = round2.find((m) => m.role === 'user' && /INVALID/.test(m.content))!
+    expect(feedback.content).toMatch(/PARSE/)
+    expect(feedback.content).toMatch(/NDJSON payload lines/)
+    expect(feedback.content).toMatch(/tool-call closing tag/)
+    expect(feedback.content).toMatch(/code fence/)
+  })
+
   // GH #307 (second pass — static root-cause of the IDGRAPH class the first pass could not reproduce
   // live). A RESUMED surface (the TKT-0079/ADR-0129 action-click path, and the quizmaster preset's
   // declared "one quiz = one surface, updated round by round") is seeded by `sessionSurfaceSeeds`
