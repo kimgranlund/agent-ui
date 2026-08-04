@@ -1,4 +1,4 @@
-# ADR-0169 — The second catalog IS upstream A2UI Basic: `a2ui-basic` registers beside the default on every renderer, fleet-factory mappings with a recorded 18-type partition, per-catalog function implementations, and catalog selection threaded end-to-end
+# ADR-0169 — The second catalog IS upstream A2UI Basic: `a2ui-basic` registers beside the default on every renderer, schema-derived fleet-factory mappings with a recorded 18-type partition, per-catalog function implementations, and catalog selection threaded end-to-end
 
 > Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-08-04
 >
@@ -6,10 +6,10 @@
 > |---|---|
 > | **Status** | proposed |
 > | **Date** | 2026-08-04 |
-> | **Proposed by** | planner (design seat — the GH [#413](https://github.com/kimgranlund/agent-ui/issues/413) intake; Kim's 2026-08-04 ruling quoted in Context) |
+> | **Proposed by** | planner (design seat — the GH [#413](https://github.com/kimgranlund/agent-ui/issues/413) intake; Kim's 2026-08-04 ruling quoted in Context; rev.2 re-derived against the fetched upstream machine schema after doc-checker review) |
 > | **Ratified by** | *(pending — Kim, at the record PR; `ratify ADR-0169` per ADR-0149)* |
-> | **Repairs** | **On ratification+build:** `a2ui-catalog.spec.md` — the two-tier registration section (SPEC-R6 gains a second FIRST-PARTY catalog registered by the package itself, not only the project seam) · the `value`-mark schema (the ADR-0161 slots section gains the optional `readProp` field, Decision cl.7) · a NEW section for the `a2ui-basic` partition + its coverage gate (the ADR-0087 SPEC-N2 pattern applied to an UPSTREAM-pinned set). `a2ui-live-agent.spec.md`/`.lld.md` — the produce/proxy/worker contracts gain the request-`catalogId` selection + the createSurface authority stamp (Decision cl.3/4). `agent-admin.md` §surface-catalog — the picker's "ONE option today" wording retires (Decision cl.6). `catalog/default/factories.ts:4`'s "no Basic-catalog adapter (SPEC-R8)" header note stays TRUE and gains this ADR's pointer: the default catalog still binds directly; Basic is a SECOND catalog, never an adapter layer inside the default. |
-> | **Supersedes / Superseded by** | **Amends** [ADR-0019](./0019-pull-renderer-lld-c8-two-way-binding.md)/[ADR-0161](./0161-catalog-multi-slot-two-way-value-marks.md) — the `ValueSlot` contract gains an optional `readProp` (cl.7): `prop` keeps naming the WIRE side of the round-trip, `readProp` (absent ⇒ `prop`, byte-identical to today) names the DOM property read on commit — exactly the widening input.ts's own closing law calls for ("repair `a2ui-catalog` and re-derive, do not improvise"). **Extends** [ADR-0087](./0087-a2ui-whole-fleet-catalog-scope-policy.md) — the gate-encoded include-or-recorded-exclusion discipline, reapplied to the 18-type UPSTREAM Basic set (cl.9); the default catalog's whole-fleet scope is untouched. **Relates** [ADR-0097](./0097-a2ui-feed-embedded-asks.md) — its rejection of a second catalog id as a subset/policy VIEW of the default STANDS and is NOT contradicted here (see Context §Non-collision). · [ADR-0053](./0053-a2ui-form-family-catalog-rows.md) (the `ChoicePicker`→`Select` rename + the F2 control-prop naming law this ADR's `readProp` finally reconciles with Basic's wire naming) · [ADR-0061](./0061-corpus-shared-healer-contract.md) (heal's closed form-only repair list is UNTOUCHED — the cl.4 authority stamp is a producer-layer step, not a heal arm) · [ADR-0034](./0034-a2ui-server-initiated-function-invocation.md) (the shared impl table gains a per-catalog override seam, cl.8) · [ADR-0027](./0027-a2ui-v1-dynamicstring-interpolation.md)/[ADR-0028](./0028-a2ui-v1-function-expression-grammar.md) (the engine that makes `formatString` a one-line impl) · [ADR-0119](./0119-code-prose-family-v1-scope.md) (catalog-invisible `@agent-ui/code` — why Basic `Text` does NOT render markdown) · [ADR-0137](./0137-a2ui-agent-producer-toolkit-export.md) (the shell law the proxy/worker threading respects) · **Resolves GH #413** (M-B goals.md box 4). |
+> | **Repairs** | **On ratification+build:** `a2ui-catalog.spec.md` — the two-tier registration section (SPEC-R6 gains a second FIRST-PARTY catalog registered by the package itself, not only the project seam) · the `value`-mark schema (the ADR-0161 slots section gains the optional `readProp` + closed `marshal` fields, Decision cl.7) · a NEW section for the `a2ui-basic` partition + its coverage gate (the ADR-0087 SPEC-N2 pattern applied to an UPSTREAM-pinned set). `a2ui-live-agent.spec.md`/`.lld.md` — the produce/proxy/worker contracts gain the request-`catalogId` selection + the createSurface authority stamp (Decision cl.3/4). `agent-admin.md` §surface-catalog — the picker's "ONE option today" wording retires (Decision cl.6). `catalog/default/factories.ts:4`'s "no Basic-catalog adapter (SPEC-R8)" header note stays TRUE and gains this ADR's pointer: the default catalog still binds directly; Basic is a SECOND catalog, never an adapter layer inside the default. `icons/src/phosphor/icons.gen.ts` — the ADR-0066 vendored subset regenerates to carry the cl.9 Icon table's glyphs. |
+> | **Supersedes / Superseded by** | **Amends** [ADR-0019](./0019-pull-renderer-lld-c8-two-way-binding.md)/[ADR-0161](./0161-catalog-multi-slot-two-way-value-marks.md) — the `ValueSlot` contract gains optional `readProp` + closed `marshal` (cl.7): `prop` keeps naming the WIRE side of the round-trip; the additions (absent ⇒ byte-identical to today) name the DOM property read on commit and a closed commit-value marshal — exactly the widening input.ts's own closing law calls for ("repair `a2ui-catalog` and re-derive, do not improvise"). **Amends** [ADR-0011](./0011-canonical-action-prop-shape.md) — `readActionSpec` (renderer.ts:497) gains a THIRD documented Postel arm, upstream's `{event:{name,context}}` Action shape (cl.10); the canonical outbound `A2uiAction` wire is untouched. **Extends** [ADR-0087](./0087-a2ui-whole-fleet-catalog-scope-policy.md) — the gate-encoded include-or-recorded-exclusion discipline, reapplied to the 18-type UPSTREAM Basic set (cl.9), now down to VARIANT/prop-arm granularity (cl.12). **Relates** [ADR-0097](./0097-a2ui-feed-embedded-asks.md) — its rejection of a second catalog id as a subset/policy VIEW of the default STANDS and is NOT contradicted here (see Context §Non-collision) · [ADR-0029](./0029-a2ui-v1-checks-inline-validation.md) (upstream's `Checkable`/`CheckRule` mixin rides the SHIPPED checks controller unchanged — cl.11a) · [ADR-0053](./0053-a2ui-form-family-catalog-rows.md) (the `ChoicePicker`→`Select` rename history + the F2 control-prop naming law this ADR's `readProp` finally reconciles with Basic's wire naming) · [ADR-0061](./0061-corpus-shared-healer-contract.md) (heal's closed form-only repair list is UNTOUCHED — the cl.4 authority stamp is a producer-layer step, not a heal arm) · [ADR-0034](./0034-a2ui-server-initiated-function-invocation.md) (the shared impl table gains a per-catalog override seam, cl.8) · [ADR-0027](./0027-a2ui-v1-dynamicstring-interpolation.md)/[ADR-0028](./0028-a2ui-v1-function-expression-grammar.md) (the engine that makes `formatString` a one-line impl — the schema's own formatString text describes the SAME `${…}`/named-arg/`\${` grammar) · [ADR-0066](./0066-phosphor-default-pack-buildtime-vendoring.md) (the vendored-subset pipeline the Icon table regenerates through) · [ADR-0119](./0119-code-prose-family-v1-scope.md) (catalog-invisible `@agent-ui/code` — why Basic `Text` does NOT render markdown) · [ADR-0137](./0137-a2ui-agent-producer-toolkit-export.md) (the shell law the proxy/worker threading respects) · **Resolves GH #413** (M-B goals.md box 4). |
 
 ## Context
 
@@ -18,12 +18,27 @@ Google's spec's own core component set (v0.9.1 guide, 18 components + client-sid
 as a real registered catalog (`a2ui-basic`) whose factories map onto existing fleet `ui-*` controls.
 Interop-anchored... NOT a subset/policy view of the default (ADR-0097's rejection stands)."*
 
-The upstream authority for this record is the fetched v0.9.1 Basic Catalog implementation guide
-(§1 Components — Text, Image, Icon, Video, AudioPlayer, Row, Column, List, Card, Tabs, Divider, Modal,
-Button, TextField, CheckBox, ChoicePicker, Slider, DateTimeInput; §2 Client-Side Functions —
-formatString, required, regex, length, numeric, email, formatNumber, formatCurrency, formatDate,
-pluralize, openUrl, and, or, not; §3 leaf-margin spacing; §4 color/contrast guidance). Facts not in that
-guide are NOT invented here (the ADR-0063 lesson) — they are flagged `⚑` and gated (see §Open forks).
+**Upstream authority (pinned).** Ground truth for every wire property name, enum, required-ness, and
+children shape is the fetched MACHINE schema — it supersedes the prose implementation guide wherever the
+two differ:
+
+- `/Users/kimba/.claude/jobs/f3d6d8ad/tmp/upstream-basic-catalog.json` — the literal JSON Schema,
+  `$id: https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json` (fetched 2026-08-04): 18
+  `components`, 14 `functions`, `$defs` `CatalogComponentCommon` (`weight`), `theme`, `anyComponent`/
+  `anyFunction`.
+- `/Users/kimba/.claude/jobs/f3d6d8ad/tmp/upstream-common-types.json` — the referenced `$defs`:
+  `ComponentCommon` (`id` required + optional `accessibility {label, description}`), `ChildList`
+  (static id array OR `{componentId, path}` template — structurally OUR ADR-0024 shape), `DataBinding`,
+  the `Dynamic*` unions, `FunctionCall` (`{call, args?, returnType?}`), `CheckRule`
+  (`{condition: DynamicBoolean, message}`), `Checkable` (`{checks?: CheckRule[]}`), `Action`
+  (oneOf `{event:{name, context?}}` | `{functionCall}`).
+- `/Users/kimba/.claude/jobs/f3d6d8ad/tmp/upstream-example-{00_interactive-button,00_simple-login-form,05_product-card}.json`
+  — three canonical upstream payloads (flat adjacency lists byte-compatible with our protocol's tree
+  shape; `version: "v0.9"` envelopes; `createSurface.catalogId` = the canonical URI; Button.action in
+  the `{event:{…}}` form) — the cl.1 conformance fixtures.
+
+The prose guide (`upstream-basic-catalog-v0.9.1.md`, same job dir) remains authority for RENDERING
+guidance only (§3 leaf-margin spacing, §4 color/contrast).
 
 Verified in-tree facts the design stands on:
 
@@ -60,12 +75,25 @@ Verified in-tree facts the design stands on:
   catalog SPEC gap — repair `a2ui-catalog` and re-derive, do not improvise here."* Basic's `CheckBox`
   binds a boolean **`value`**; `ui-checkbox.value` is already the submitted STRING and the boolean is
   `checked` (the very collision ADR-0053 F2 dodged by renaming in the DEFAULT catalog — a dodge
-  unavailable here, because Basic's wire names are the interop contract).
+  unavailable here, because Basic's wire names are the interop contract). Basic's `ChoicePicker` commits
+  a STRING-LIST where the control commits a string — the same seam, one marshal further.
 - **Function impl lookup is global, not per-catalog.** `renderer/functions.ts:170-181` resolves a
   declared catalog function through the ONE shared `catalogFunctions` table (`catalog/functions.ts:87`,
   the `{valid, message?}` dialect) — its own comment names "a future plugin seam" as the extension path.
-  Basic's validators return BOOLEANS (so they compose under `and`/`or`/`not`); the shared table cannot
-  serve both dialects under the same names.
+  Basic's functions return BOOLEANS (`returnType: const "boolean"` in the schema, so they compose under
+  `and`/`or`/`not`); the shared table cannot serve both dialects under the same names.
+- **The checks seam already exists and matches upstream's mixin byte-for-byte.** `renderer/checks.ts`
+  (ADR-0029) evaluates per-component `checks` arrays and its CONDITION wire shape —
+  `{condition: {call, args}, message}` — is exactly upstream `CheckRule`'s FunctionCall arm; dispatch
+  drives `setCustomValidity` on `UIFormElement`s and `disabled`-gating on Button. And
+  `catalog/conformance.ts:34` already RESERVES `checks` ("any node may legally carry `checks` without a
+  CATALOG unknown-property failure").
+- **The action reader is a single Postel chokepoint.** `renderer/renderer.ts:497` `readActionSpec` —
+  canonical `{action, context?, wantResponse?, submit?}` (ADR-0011) plus two documented tolerance arms
+  (`name` synonym; bare string). Upstream's `{event:{name, context}}` arm is NOT accepted today.
+- **The icon pack is a 32-glyph vendored subset.** `icons/src/phosphor/icons.gen.ts` (ADR-0066
+  build-time vendoring) currently carries 32 kebab-case Phosphor glyphs — upstream's Icon `name` is a
+  CLOSED 58-identifier enum, so an honest mapping needs the subset regenerated (cl.9 Icon row).
 
 ### Non-collision with ADR-0097
 
@@ -74,12 +102,12 @@ default catalog** (the feed sub-catalog): one component authority, one prompt, o
 there would fragment all three for nothing, so the partition was gate-encoded instead. That rejection
 **stands and is not touched**. `a2ui-basic` is the opposite case: a **genuinely distinct component set
 with its own upstream-specified semantics, props, and wire dialect** (Google's Basic Catalog, pinned to
-the v0.9.1 guide) — `Button.variant` is `default|primary|borderless` (not `solid|soft|ghost`),
-`CheckBox` binds `value` (not `checked`), `TextField.variant` is `shortText|longText|number|obscured`
-(not the fleet `type` enum). No filter over the default catalog can express that dialect; a second
-catalog document is the ONLY faithful shape, and interop with upstream-conformant producers/streams is
-the whole point. A future reader seeing "second catalog id" should read THIS section, not flag a
-contradiction.
+the fetched machine schema) — `Button.variant` is `default|primary|borderless` (not `solid|soft|ghost`),
+`CheckBox` binds a required boolean `value` (not `checked`), `Button.action` is
+`{event:{name,context}}` (not ADR-0011's `{action,…}`). No filter over the default catalog can express
+that dialect; a second catalog document is the ONLY faithful shape, and interop with upstream-conformant
+producers/streams is the whole point. A future reader seeing "second catalog id" should read THIS
+section, not flag a contradiction.
 
 ## Decision
 
@@ -89,15 +117,16 @@ New files under `packages/agent-ui/a2ui/src/catalog/a2ui-basic/`:
 
 | File | Contract |
 |---|---|
-| `catalog.json` | `{ "catalogId": "a2ui-basic", "protocolVersion": "v1.0", "components": { …13 included types, cl.9… }, "functions": { …13 included functions, cl.11, all `"callableFrom": "clientOnly"`… } }` — validated by the same `loadCatalog` gate at import |
-| `index.ts` | `export const a2uiBasicCatalog: Catalog = loadCatalog(catalogDoc)` (the `default/index.ts` twin) |
-| `factories.ts` | `export const a2uiBasicFactories: Record<string, WidgetFactory>` — one factory per declared type (cl.9); REUSED default factories are imported from `../default/factories.ts` (their `@agent-ui/components` barrel import already self-defines every tag) |
+| `catalog.json` | `{ "catalogId": "a2ui-basic", "protocolVersion": "v1.0", "components": { …14 included types, cl.9… }, "functions": { …13 included functions, cl.11, all `"callableFrom": "clientOnly"`… } }` — validated by the same `loadCatalog` gate at import. Every included type ALSO declares the two schema-wide common props (cl.9a): `weight` (number) and `accessibility` (object). |
+| `index.ts` | `export const a2uiBasicCatalog: Catalog = loadCatalog(catalogDoc)` (the `default/index.ts` twin) + `export const A2UI_BASIC_CANONICAL_URI = 'https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json'` and `export const a2uiBasicCatalogCanonical: Catalog = loadCatalog({...catalogDoc, catalogId: A2UI_BASIC_CANONICAL_URI})` (cl.13 — the inbound alias entry; same components/functions bytes, only the id differs). Header comment records source URI + fetch date + this ADR (cl.13 provenance). |
+| `factories.ts` | `export const a2uiBasicFactories: Record<string, WidgetFactory>` — one factory per declared type (cl.9); REUSED default factories are imported from `../default/factories.ts` and wrapped by `withBasicCommon` (cl.9a); the `@agent-ui/components` barrel import already self-defines every tag |
 | `functions.ts` | `export const a2uiBasicFunctions: Record<string, (args: Record<string, unknown>) => unknown>` — the Basic-dialect pure impls (cl.11); zero imports beyond platform globals (`Intl` is a platform global, not a dependency) |
-| `index.test.ts` | the 18-type partition coverage gate (cl.12) |
-| `factories.test.ts` | per-factory mapping tests (the `default/factories.test.ts` pattern) |
+| `index.test.ts` | the 18-type partition coverage gate (cl.14) |
+| `factories.test.ts` | per-factory mapping tests (the `default/factories.test.ts` pattern), incl. the Icon-table resolution gate (cl.9 Icon row) |
+| `upstream-fixtures.test.ts` | the three pinned upstream examples validated (`validateA2ui` against `a2uiBasicCatalog`) and rendered — the "interop-anchored" claim made TESTABLE, not asserted. The fixture harness rewrites each message's `version: "v0.9"` envelope field to our pinned `v1.0` (a FRAMING translation, recorded here; every component-tree byte stays verbatim) and exercises `createSurface.catalogId` in BOTH the short-id and canonical-URI forms (cl.13). |
 
 Barrel: `src/catalog/index.ts` adds
-`export { a2uiBasicCatalog } from './a2ui-basic/index.ts'` ·
+`export { a2uiBasicCatalog, a2uiBasicCatalogCanonical, A2UI_BASIC_CANONICAL_URI } from './a2ui-basic/index.ts'` ·
 `export { a2uiBasicFactories } from './a2ui-basic/factories.ts'` ·
 `export { a2uiBasicFunctions } from './a2ui-basic/functions.ts'`.
 
@@ -107,13 +136,14 @@ Barrel: `src/catalog/index.ts` adds
 
 ```ts
 this.#registry.register(defaultCatalog, defaultFactories)
-this.#registry.register(a2uiBasicCatalog, a2uiBasicFactories, a2uiBasicFunctions) // ADR-0169
+this.#registry.register(a2uiBasicCatalog, a2uiBasicFactories, a2uiBasicFunctions)          // ADR-0169
+this.#registry.register(a2uiBasicCatalogCanonical, a2uiBasicFactories, a2uiBasicFunctions) // cl.13 inbound alias
 ```
 
 Every `createRenderer()` host — `surface-host.ts:68`, `a2ui-live`, `ask-registry`, `component-preview`,
 the gallery pages — becomes Basic-capable with ZERO call-site edits, and `supportedCatalogIds()`
-advertises `['agent-ui', 'a2ui-basic']` everywhere. This is the "always both available" requirement made
-structural: a wire line stamped `catalogId:"a2ui-basic"` resolves on ANY renderer in the fleet, never
+advertises the short id + the canonical URI everywhere. This is the "always both available" requirement
+made structural: a wire line stamped with either Basic id resolves on ANY renderer in the fleet, never
 only on a specially-bootstrapped one. Rebuild-the-renderer-per-catalogId is REJECTED (it would serialize
 catalog switching through renderer teardown and break mixed-catalog sessions); registering only in the
 admin-surface bootstrap is REJECTED (interop is a property of the PACKAGE, not a demo of one page — a
@@ -149,7 +179,9 @@ the body and builds `deps` with `catalog: selectCatalog(catalogs, catalogId, cat
 
 The selected catalog reaches BOTH the prompt (`buildSystemPrompt(deps.catalog, …)`) and the validator
 (`produce()`'s internal `validateA2ui(messages, deps.catalog)`) through the one existing `deps.catalog`
-seam — no second threading path. The `/chat` prose branch is untouched (no catalog involved).
+seam — no second threading path. The `/chat` prose branch is untouched (no catalog involved). The
+producer path always keys the SHORT id (`a2ui-basic` — cl.13); the canonical-URI alias is a
+renderer-inbound affordance only.
 
 ### 4 · The `produce.ts` fixes — delete the pinned literal, stamp the authoritative id
 
@@ -195,9 +227,10 @@ export const A2UI_CATALOG_OPTIONS: ReadonlyArray<{ id: string; label: string }> 
 ```
 
 `sanitizeCatalog`, the picker build (`agent-admin.ts:567-580`), and persistence all pick the new entry up
-with zero further edits — the seam was built for exactly this.
+with zero further edits — the seam was built for exactly this. The picker offers the SHORT id only (the
+canonical-URI alias is never a picker option — cl.13).
 
-### 7 · The `ValueSlot` widening — `readProp` splits the DOM-read side (amends ADR-0019/0161)
+### 7 · The `ValueSlot` widening — `readProp` + closed `marshal` (amends ADR-0019/0161)
 
 `catalog/catalog.ts`:
 
@@ -206,16 +239,25 @@ export interface ValueSlot {
   prop: string      // the WIRE side: the A2UI node prop carrying the {path} bind (writeback target) — unchanged
   event: string     // the commit event — unchanged
   readProp?: string // ADR-0169: the DOM property read off the control on commit; absent ⇒ prop (byte-identical)
+  marshal?: 'singletonStringList' // ADR-0169: closed commit-value marshal; absent ⇒ raw (byte-identical)
 }
 ```
 
-`renderer/input.ts` — the single change: the commit read becomes
-`el[slot.readProp ?? slot.prop]` (the binding lookup, `scopedPointer` writeback, per-slot listeners, and
-teardown are all untouched — they key off `slot.prop`, the wire side, as before).
-`catalog.ts`'s `isValueSlot`/`validateValueMark` additionally accept an optional string `readProp`
-(reject a non-string). Every existing slot omits the field ⇒ every existing catalog and factory behaves
-byte-identically. Exactly one consumer this wave: Basic `CheckBox` (cl.9 table). Data→control direction
-needs no widening — it already routes through the factory's bespoke `applyProp`.
+`renderer/input.ts` — the commit read becomes:
+
+```ts
+const raw = (el as Record<string, unknown>)[slot.readProp ?? slot.prop]
+const committed = slot.marshal === 'singletonStringList' ? (raw === '' || raw == null ? [] : [String(raw)]) : raw
+```
+
+(the binding lookup, `scopedPointer` writeback, per-slot listeners, and teardown are all untouched —
+they key off `slot.prop`, the wire side, as before). `marshal` is a CLOSED literal enum so
+`catalog.json` stays plain JSON — never a function; widening the enum is a future amendment to this
+clause, not an ad-hoc addition. `catalog.ts`'s `isValueSlot`/`validateValueMark` additionally accept the
+two optional fields (reject a non-string `readProp` / a value outside the `marshal` enum). Every
+existing slot omits both ⇒ every existing catalog and factory behaves byte-identically. Consumers this
+wave: `CheckBox` (`readProp`) and `ChoicePicker` (`marshal`) — cl.9b table. Data→control direction needs
+no widening — it already routes through each bespoke factory's `applyProp`.
 
 ### 8 · Per-catalog function implementations (amends the ADR-0034 shared-table seam)
 
@@ -233,38 +275,89 @@ existing existence gate). The renderer passthrough `register()` forwards the thi
 `functions` ⇒ byte-identical behavior (the default catalog registers none and keeps riding the shared
 table — ADR-0034's fork-2 contract stands). This is the "future plugin seam" `evaluateCatalog`'s own
 comment reserved, landed as per-catalog rather than global-mutation so the two dialects (`{valid,message}`
-vs Basic's booleans) can share names without colliding. `renderer/call-function.ts` is unaffected: every
-Basic function is `clientOnly`, so the server-invoke path never reaches them.
+vs Basic's schema-pinned booleans) can share names without colliding. Upstream `FunctionCall` carries an
+extra `returnType` field — `evaluate()` reads only `call`/`args`, so it is tolerated by construction
+(recorded, not accidental). `renderer/call-function.ts` is unaffected: every Basic function is
+`clientOnly`, so the server-invoke path never reaches them.
 
-### 9 · The 18-type partition (the ADR-0087 discipline, upstream-pinned)
+### 9 · The 18-type partition (the ADR-0087 discipline, machine-schema-derived)
 
-**Mapping table — the literal content `catalog.json`/`factories.ts` are built from.** "REUSE x" means
-import that exported factory from `../default/factories.ts` verbatim; "bespoke" means a new factory in
-`a2ui-basic/factories.ts` per the shape note. `⚑` marks a guide-inferred wire name (see §Open forks —
-confirm before `catalog.json` lands; everything else in the row is ruled now).
+**Provenance:** every wire name, enum, and required-ness cell below is read from the pinned
+`upstream-basic-catalog.json` / `upstream-common-types.json` (2026-08-04) — the rev.1 `⚑` inferred-name
+markers are CLOSED, all five confirmed verbatim (`Text.text`, `Image.url`, `TextField.label`,
+`CheckBox.label`, `Button.child`/`Card.child`).
 
-| # | Upstream type | Verdict | Target | Declared props (Basic wire) | Children | Two-way `value` mark | Factory shape |
+#### 9a · Schema-wide common props — the `withBasicCommon` factory decorator
+
+Upstream composes EVERY component from `ComponentCommon` (+ `CatalogComponentCommon`): optional
+`accessibility {label?, description?}` and optional `weight` (flex-grow, meaningful only under
+Row/Column). Neither is a RESERVED key in our conformance, so every included type DECLARES both in
+`catalog.json` (`weight`: number; `accessibility`: object), and one shared decorator in
+`a2ui-basic/factories.ts` applies them uniformly:
+
+```ts
+function withBasicCommon(base: WidgetFactory): WidgetFactory {
+  return {
+    ...base,
+    applyProp: (el, prop, value) => {
+      if (prop === 'weight') { el.style.flexGrow = value == null ? '' : String(value); return }
+      if (prop === 'accessibility') {
+        const a = (value ?? {}) as { label?: unknown; description?: unknown }
+        if (typeof a.label === 'string') el.setAttribute('aria-label', a.label)
+        if (typeof a.description === 'string') el.setAttribute('aria-description', a.description)
+        return
+      }
+      base.applyProp(el, prop, value)
+    },
+  }
+}
+```
+
+Every factory in `a2uiBasicFactories` (reused or bespoke) is wrapped. The host `aria-label`/
+`aria-description` attributes are CONSUMER-side platform usage — the fleet's "ARIA via
+`ElementInternals`, never host attributes" law governs what a COMPONENT sets on itself, and AOM
+precedence (content attribute wins over internals default) is the correct authority order for an
+agent-authored explicit label. Recorded degrade: a `DataBinding`/function nested INSIDE the
+`accessibility` object is not resolved v1 (our binding resolution operates on top-level prop values);
+literal strings only — risk row R7.
+
+**Required-ness (global note):** the schema marks per-type required props (® in the table below). Our
+`PropDef` grammar and conformance have NO required-prop mechanism — v1 is deliberately PERMISSIVE-IN (a
+non-conformant inbound tree missing a required prop renders with defaults rather than erroring), and our
+own producer may under-emit required props without a validator failure (an interop-OUT gap). A
+`PropDef.required` marker + conformance enforcement is a named follow-up, not this wave.
+
+#### 9b · The mapping table
+
+"REUSE x" = import that default factory and wrap with `withBasicCommon`; "bespoke" = new factory in
+`a2ui-basic/factories.ts` per the shape note (also wrapped).
+
+| # | Upstream type | Verdict | Target | Declared props (schema-verified; ® = upstream-required) | Children | Two-way `value` mark | Factory shape |
 |---|---|---|---|---|---|---|---|
-| 1 | `Text` | INCLUDE | `ui-text` | `text`⚑ (string, bindable), `variant` (`h1\|h2\|h3\|h4\|h5\|caption\|body`) | — | — | REUSE `textFactory` (the wire enum is byte-identical to the default catalog's; `TEXT_VARIANT_TABLE` fan-out applies as-is). Markdown is NOT parsed: `ui-markdown` lives in `@agent-ui/code`, catalog-invisible by construction (ADR-0119) — the guide's own sanctioned fallback ("gracefully fallback to rendering the raw text") is the ruled v1 behavior. |
-| 2 | `Image` | INCLUDE | `<img>` (sanctioned non-`ui-*` primitive — the `Option`/`MenuItem` SPEC-R3 AC1 precedent) | `url`⚑ (string, bindable, `format: 'safe-href'` — the `Text.href` validator arm), `fit` (string), `variant` (`icon\|avatar\|smallFeature\|mediumFeature\|largeFeature\|header`) | — | — | bespoke: `url`→`src` attribute; `fit`→`el.style.objectFit`; `variant`→ the literal inline-style table below. No `ui-image` control exists (verified: `default/index.ts:17` — "no ui-image/ui-video descriptor exists"); a future `ui-image` control supersedes this primitive by a follow-up row edit. |
-| 3 | `Icon` | INCLUDE | `ui-icon` | `name` (string, bindable) | — | — | bespoke: camelCase→kebab-case normalization (`accountCircle`→`account-circle`) then `el.glyph = normalized` (the default `iconFactory`'s `name`→`glyph` mapping plus the normalization step). Unresolvable names degrade per `ui-icon`'s own missing-glyph behavior — risk row R2. |
-| 4 | `Video` | **EXCLUDE** | — | — | — | — | exclusion table row E1 |
-| 5 | `AudioPlayer` | **EXCLUDE** | — | — | — | — | exclusion table row E2 |
-| 6 | `Row` | INCLUDE | `ui-row` | `justify` (`start\|center\|end\|spaceBetween`), `align` (`start\|center\|end`) | `ChildList` | — | bespoke: `justify` through the literal map `{start→start, center→center, end→end, spaceBetween→between}` (fleet token verified: `catalog.json:128`); `align` passes 1:1 (fleet union includes all three, `container.ts:50`). |
-| 7 | `Column` | INCLUDE | `ui-column` | same as Row | `ChildList` | — | same bespoke shape as Row (one shared helper). |
-| 8 | `List` | INCLUDE | `ui-list` | `direction` (`vertical\|horizontal`) | `ChildList` | — | bespoke: `direction:'horizontal'` ⇒ `el.style.flexDirection='row'; el.style.overflowX='auto'`; `'vertical'`/absent ⇒ clear both (the control's own column CSS governs). `role=list` semantics ride the control (ADR-0016 cl.3). Risk row R3. |
-| 9 | `Card` | INCLUDE | `ui-card` | *(none v1)* | `child`⚑ (single — the guide: "accepts exactly **one** child") | — | REUSE `cardFactory`. |
-| 10 | `Tabs` | **DEFER** | — | — | — | — | exclusion table row E3 |
-| 11 | `Divider` | INCLUDE | `div[role=separator]` (sanctioned primitive) | `axis` (`horizontal\|vertical`) | — | — | bespoke: `create()` builds `div` + `role=separator`; `axis`→`aria-orientation` attribute + inline hairline styles — horizontal: `blockSize:'1px'; inlineSize:'100%'`; vertical: `inlineSize:'1px'; alignSelf:'stretch'`; both: `backgroundColor:'var(--md-sys-color-outline-variant)'`. |
-| 12 | `Modal` | **DEFER** | — | — | — | — | exclusion table row E4 |
-| 13 | `Button` | INCLUDE | `ui-button` | `variant` (`default\|primary\|borderless`), `action` (the default catalog `Button.action` PropDef copied VERBATIM — same object schema, handled by the action controller, never `applyProp`'d) | `child`⚑ (single — the guide: "must render its `child` component inside the button") | — | bespoke: `variant` through the literal map `{primary→solid, default→soft, borderless→ghost}` set on `el.variant`; no `label` prop (the child IS the content, appended by the generic tree walk into the host-as-grid light DOM, button ADR-0006). |
-| 14 | `TextField` | INCLUDE | `ui-text-field` | `value` (string, bindable), `label`⚑ (string, bindable), `variant` (`shortText\|longText\|number\|obscured`) | — | `{ prop: 'value', event: 'change' }` | bespoke: `variant` through the literal map `{shortText→'text', number→'number', obscured→'password', longText→'text'}` set on `el.type` (fleet enum verified, `catalog.json:45`); `longText` DEGRADES to single-line — risk row R4 (one factory maps one tag; `ui-textarea` cannot be conditionally created). `value`/`label` are 1:1 accessors. |
-| 15 | `CheckBox` | INCLUDE | `ui-checkbox` | `value` (boolean, bindable), `label`⚑ (string) | — | `{ prop: 'value', event: 'change', readProp: 'checked' }` — the FIRST `readProp` consumer (cl.7) | bespoke: `label`→`textContent` (the `indicatorFactory` non-identity shape); `value`→`el.checked` (`mapsTo: 'checked'`); every other prop `setProp`. Commit: input.ts reads `el.checked` and writes it back to the `value` bind's path — Basic's boolean round-trip, honest. |
-| 16 | `ChoicePicker` | **DEFER** | — | — | — | — | exclusion table row E5 |
-| 17 | `Slider` | INCLUDE | `ui-slider` | `value` (number, bindable), `min` (number), `max` (number) | — | `{ prop: 'value', event: 'change' }` | REUSE `sliderFactory` (all three are 1:1 reflecting accessors; the verified blur/commit `change` contract stands). |
-| 18 | `DateTimeInput` | INCLUDE | `ui-text-field` | `value` (string, ISO 8601, bindable), `enableDate` (boolean), `enableTime` (boolean) | — | `{ prop: 'value', event: 'change' }` | bespoke: the two flags land as `data-enable-date`/`data-enable-time` attributes on apply (order-independent), and each apply recomputes `el.type` from the pair via the literal table `{(T,F)→'date', (F,T)→'time', (T,T)→'date', (F,F)→'date'}` (fleet `type` enum has `date`/`time`, no combined form — the `(T,T)` arm DEGRADES to date-only, risk row R5). |
+| 1 | `Text` | INCLUDE | `ui-text` | `text`® (DynamicString), `variant` (`h1\|h2\|h3\|h4\|h5\|caption\|body`, default `body`) | — | — | REUSE `textFactory` (the wire enum is byte-identical to the default catalog's; `TEXT_VARIANT_TABLE` fan-out applies as-is). Markdown is NOT parsed: `ui-markdown` lives in `@agent-ui/code`, catalog-invisible by construction (ADR-0119) — raw text is the guide's own sanctioned fallback, and the schema's `text` description itself steers toward dedicated components over markdown. |
+| 2 | `Image` | INCLUDE | `<img>` (sanctioned non-`ui-*` primitive — the `Option`/`MenuItem` SPEC-R3 AC1 precedent) | `url`® (DynamicString, `format: 'safe-href'` — the `Text.href` validator arm), `description` (DynamicString — a11y alt text), `fit` (`contain\|cover\|fill\|none\|scaleDown`, default `fill`), `variant` (`icon\|avatar\|smallFeature\|mediumFeature\|largeFeature\|header`, default `mediumFeature`) | — | — | bespoke: `url`→`src` attribute; `description`→`alt` attribute; `fit`→`el.style.objectFit` through the literal map `{scaleDown→'scale-down', else pass-through}`; `variant`→ the inline-style dims table below. No `ui-image` control exists (verified: `default/index.ts:17`); a future `ui-image` control retires this primitive by a follow-up row edit. |
+| 3 | `Icon` | INCLUDE (string + binding arms) | `ui-icon` | `name`® — schema `oneOf`: CLOSED 58-identifier enum \| `{svgPath}` object \| DataBinding. Declared as a bindable string with the 58-value enum; the `{svgPath}` arm is EXCLUDED (exclusion table E5) | — | — | bespoke: `name` → `ICON_NAME_TABLE[name]` → `el.glyph` (the literal 58-row table below); an unmapped/unknown value degrades to `ui-icon`'s own missing-glyph behavior. Requires the ADR-0066 vendored phosphor subset REGENERATED to carry the table's glyphs (`icons.gen.ts` holds 32 today); `factories.test.ts` gates every table value against the registered pack at build — an entry the pipeline cannot supply falls back to the row's recorded fallback and joins `ICON_NAME_GAPS`. |
+| 4 | `Video` | **EXCLUDE** | — | (schema: `url`®) | — | — | exclusion table E1 |
+| 5 | `AudioPlayer` | **EXCLUDE** | — | (schema: `url`®, `description`) | — | — | exclusion table E2 |
+| 6 | `Row` | INCLUDE | `ui-row` | `justify` (`start\|center\|end\|spaceBetween\|spaceAround\|spaceEvenly\|stretch`, default `start`), `align` (`start\|center\|end\|stretch`, default `stretch`) | `ChildList`® (upstream `ChildList` = static id array OR `{componentId, path}` template — structurally our ADR-0024 shape, handled by the generic tree walk) | — | bespoke: `justify` through the literal map `{spaceBetween→between, spaceAround→around, spaceEvenly→evenly, stretch→start, else 1:1}` (fleet tokens verified `container.ts:52`; `justify-content: stretch` behaves as `flex-start` in flexbox, so `stretch→start` is behavior-identical, not a guess); `align` 1:1 (fleet union `container.ts:50` covers all four). |
+| 7 | `Column` | INCLUDE | `ui-column` | same as Row (schema enums identical) | `ChildList`® | — | same bespoke shape as Row (one shared helper). |
+| 8 | `List` | INCLUDE | `ui-list` | `direction` (`vertical\|horizontal`, default `vertical`), `align` (`start\|center\|end\|stretch`, default `stretch`) | `ChildList`® | — | bespoke: `direction:'horizontal'` ⇒ `el.style.flexDirection='row'; el.style.overflowX='auto'`; `'vertical'`/absent ⇒ clear both (the control's own column CSS governs); `align` is a 1:1 accessor (`ui-list` flexProps). `role=list` semantics ride the control (ADR-0016 cl.3). Risk row R3. |
+| 9 | `Card` | INCLUDE | `ui-card` | *(none beyond common)* | `child`® (single ComponentId — confirmed by schema `required: [component, child]`) | — | REUSE `cardFactory` (wrapped). |
+| 10 | `Tabs` | **DEFER** | — | (schema, now KNOWN: `tabs`® — array of `{title®: DynamicString, child®: ComponentId}`, `minItems: 1`) | — | — | exclusion table E3 |
+| 11 | `Divider` | INCLUDE | `div[role=separator]` (sanctioned primitive) | `axis` (`horizontal\|vertical`, default `horizontal`) | — | — | bespoke: `create()` builds `div` + `role=separator`; `axis`→`aria-orientation` attribute + inline hairline styles — horizontal: `blockSize:'1px'; inlineSize:'100%'`; vertical: `inlineSize:'1px'; alignSelf:'stretch'`; both: `backgroundColor:'var(--md-sys-color-outline-variant)'`. |
+| 12 | `Modal` | **DEFER** | — | (schema, now KNOWN: `trigger`® + `content`® — BOTH ComponentId references, `required: [component, trigger, content]`) | — | — | exclusion table E4 |
+| 13 | `Button` | INCLUDE | `ui-button` | `variant` (`default\|primary\|borderless`, default `default`), `action`® (upstream `Action` — cl.10) | `child`® (single ComponentId — schema `required: [component, child, action]`; the schema's own prose: label rides a `Text` child) | — | bespoke: `variant` through the literal map `{primary→solid, default→soft, borderless→ghost}` set on `el.variant`; `action` never routes through `applyProp` (the action controller owns it, cl.10); no `label` prop (the child IS the content, appended by the generic tree walk into the host-as-grid light DOM, button ADR-0006). Carries `Checkable` (cl.11a — ADR-0029's Button `disabled`-gating arm applies as shipped). |
+| 14 | `TextField` | INCLUDE | `ui-text-field` | `label`® (DynamicString), `value` (DynamicString — NOT upstream-required), `variant` (`shortText\|longText\|number\|obscured`, default `shortText`), `validationRegexp` (string — DECLARED but v1-inert, recorded: no fleet pattern-validation prop; folding it into the ADR-0029 checks controller as a synthesized regex rule is the named follow-up, the `Attachment.href` declared-then-lands precedent) | — | `{ prop: 'value', event: 'change' }` | bespoke: `label`→`el.label` (real visible-label accessor); `variant` through the literal map `{shortText→'text', number→'number', obscured→'password', longText→'text'}` set on `el.type` (fleet enum verified `catalog.json:45`); `longText` DEGRADES to single-line — risk row R4. Carries `Checkable` (setCustomValidity arm). |
+| 15 | `CheckBox` | INCLUDE | `ui-checkbox` | `label`® (DynamicString), `value`® (DynamicBoolean) | — | `{ prop: 'value', event: 'change', readProp: 'checked' }` — the first `readProp` consumer (cl.7) | bespoke: `label`→`textContent` (the `indicatorFactory` non-identity shape); `value`→`el.checked` (`mapsTo: 'checked'`); every other prop `setProp`. Commit: input.ts reads `el.checked` and writes it back to the `value` bind's path — Basic's boolean round-trip, honest. Carries `Checkable`. |
+| 16 | `ChoicePicker` | **PARTIAL INCLUDE** (host-ruled 2026-08-04) | `ui-select` | `label` (DynamicString → `aria-label`, the Slider discipline), `variant` — declared with the NARROWED enum `['mutuallyExclusive']` (the schema's default; the gate encoding of the excluded `multipleSelection` variant, exclusion table E6), `options`® (array of `{label®, value®}`), `value`® (DynamicStringList), `displayStyle` (`checkbox\|chips`, default `checkbox` — BOTH render as the dropdown, the guide's own "dropdown wrapper preferred"; `chips` presentation degrades, recorded), `filterable` (boolean — declared, v1-inert, recorded) | — (options are a PROP, not children — no catalog children key, so factory-synthesized rows never meet the reconciler) | `{ prop: 'value', event: 'select', marshal: 'singletonStringList' }` — the first `marshal` consumer (cl.7) | bespoke: `options` apply reconciles control-owned `div[role=option]` children (value attr + label text — the `Option` primitive shape; `ui-select` adopts them via its TKT-0026 MutationObserver); `value` apply marshals array→string (`el.value = arr[0] ?? ''`); commit marshals string→singleton array (cl.7). |
+| 17 | `Slider` | INCLUDE | `ui-slider` | `label` (DynamicString → `aria-label` host attribute — `ui-slider` has NO label accessor; a11y name preserved, VISIBLE label degrades, recorded R6), `min` (number, default 0), `max`® (number — upstream-required, no default), `value`® (DynamicNumber) | — | `{ prop: 'value', event: 'change' }` | bespoke thin wrapper over the default `sliderFactory` mapping (`value`/`min`/`max` are 1:1 reflecting accessors; the verified blur/commit `change` contract stands) + the `label`→`aria-label` arm. Carries `Checkable`. |
+| 18 | `DateTimeInput` | INCLUDE | `ui-text-field` | `value`® (DynamicString, ISO 8601), `enableDate` (boolean, default false), `enableTime` (boolean, default false), `min`/`max` (DynamicString, ISO 8601 — map 1:1 onto `ui-text-field`'s string `min`/`max` accessors, `catalog.json:49-50`), `label` (DynamicString → `el.label`) | — | `{ prop: 'value', event: 'change' }` | bespoke: the two flags land as `data-enable-date`/`data-enable-time` attributes on apply (order-independent), each apply recomputing `el.type` from the pair via the literal table `{(T,F)→'date', (F,T)→'time', (T,T)→'date', (F,F)→'date'}` (fleet `type` enum has `date`/`time`, no combined form — the `(T,T)` arm DEGRADES to date-only, risk row R5). Carries `Checkable`. |
 
-`Image` variant → inline-style literal table (dims are the guide's own suggestions, §1 Image):
+Score: **14 of 18 types INCLUDE** (one at variant granularity) · 4 types + 1 variant + 2 prop-arms
+recorded EXCLUDE/DEFER (cl.12) — every row reasoned, none silent.
+
+`Image` variant → inline-style literal table (dims are the guide's §1 suggestions; an explicit `fit`
+wins over a variant's `objectFit` — apply-order-independent, both arms re-assert, the `Text.href` precedent):
 
 | variant | inline styles set by `applyProp` |
 |---|---|
@@ -275,102 +368,203 @@ confirm before `catalog.json` lands; everything else in the row is ruled now).
 | `largeFeature` | `inlineSize:'100%'; maxBlockSize:'400px'` |
 | `header` | `inlineSize:'100%'; blockSize:'200px'; objectFit:'cover'` |
 
-(an explicit `fit` prop wins over a variant's `objectFit` — both arms read/write `el.style.objectFit`,
-last-writer-wins is acceptable because `fit` is the specific instruction; the factory applies `variant`
-before `fit` when both are present in one apply pass is NOT guaranteed by the renderer, so the `fit` arm
-re-asserts on every apply — the `Text.href`/`variant` order-independence precedent.)
+`Icon` — `ICON_NAME_TABLE` (all 58 schema-enum identifiers → phosphor glyph names; `(have)` = already in
+`icons.gen.ts`'s 32, everything else joins the ADR-0066 regeneration; `(verify)` = the pipeline confirms
+the glyph exists in Phosphor or applies the stated fallback and records the gap):
+
+| upstream → glyph | upstream → glyph | upstream → glyph | upstream → glyph |
+|---|---|---|---|
+| accountCircle → user-circle | add → plus (have) | arrowBack → arrow-left | arrowForward → arrow-right (have) |
+| attachFile → paperclip | calendarToday → calendar-blank (have) | call → phone | camera → camera |
+| check → check (have) | close → x (have) | delete → trash | download → download-simple |
+| edit → pencil-simple | event → calendar-check | error → x-circle (have) | fastForward → fast-forward |
+| favorite → heart | favoriteOff → heart-break (verify; fallback heart) | folder → folder | help → question |
+| home → house | info → info | locationOn → map-pin | lock → lock-simple |
+| lockOpen → lock-simple-open | mail → envelope-simple | menu → list (have) | moreVert → dots-three-vertical |
+| moreHoriz → dots-three (have) | notificationsOff → bell-slash | notifications → bell | pause → pause |
+| payment → credit-card | person → user (have) | phone → phone | photo → image |
+| play → play | print → printer | refresh → arrow-clockwise | rewind → rewind |
+| search → magnifying-glass (have) | send → paper-plane-right | settings → gear | share → share-network |
+| shoppingCart → shopping-cart | skipNext → skip-forward | skipPrevious → skip-back | star → star |
+| starHalf → star-half | starOff → star (approximation, recorded — no slashed star in Phosphor core; verify) | stop → stop | upload → upload-simple |
+| visibility → eye (have) | visibilityOff → eye-slash (have) | volumeDown → speaker-low | volumeMute → speaker-slash |
+| volumeOff → speaker-none (verify; fallback speaker-slash) | volumeUp → speaker-high | warning → warning (have) | |
 
 No factory in `a2ui-basic` carries `submitGate` — upstream Basic has no FormProvider concept; the
 `Button.action` dispatch is the commit vehicle (`collectContext` reads committed two-way binds off the
 data model as today).
 
-### 10 · The exclusion table (recorded, never silent — the ADR-0087 two-arm law)
+### 10 · The upstream `Action` shape — a third Postel arm at the one chokepoint (amends ADR-0011)
 
-| # | Upstream type | Ruling | Reason (verified) | Named follow-up |
-|---|---|---|---|---|
-| E1 | `Video` | EXCLUDE v1 | No fleet control (`controls/` has no video folder; `default/index.ts:17` records the same absence for the default catalog). A bare `<video controls>` primitive was considered and REJECTED: media playback (codec/poster/a11y/captions surface) is a real component contract, not a two-line primitive — Kim's own named exclusion candidate in #413. | a `ui-video` control earns the row; until then an emitted `Video` fails `CATALOG` at validate (the allowlist working as designed). |
-| E2 | `AudioPlayer` | EXCLUDE v1 | Same shape as E1 (no `ui-audio*` control; Kim's named candidate). | same as E1. |
-| E3 | `Tabs` | DEFER | Two verified gaps: (a) `ui-tabs` pairs `UITabElement` strip children with `UITabPanelElement` siblings by DOM order (`tabs.ts:72-89`) — Basic's dialect delivers `titles` + ARBITRARY content children, which the generic tree walk appends unwrapped, so they never enter the panel pairing (all panels render stacked, tab switching inert); a factory cannot wrap children (it only `create`s + `applyProp`s) and factory-side reparenting collides with the reconciler's relocated-survivor handling (the TKT-0031 class). (b) The exact upstream wire schema (is it `titles` + index-aligned `children`, or per-tab objects?) is not in the fetched guide. | EITHER a `ui-tabs` widening (adopt a non-`UITab`/`UITabPanel` child as a panel) OR a renderer child-transform seam — its own intake; plus the upstream-schema confirmation (§Open forks F2). |
-| E4 | `Modal` | DEFER | Three verified gaps: (a) our children grammar is a SINGLE structural key (`catalog.ts:25/127` — `child \| children \| ChildList`); Basic Modal needs a named trigger/content PAIR. (b) `ui-modal` is `open`-prop-driven with no trigger-entry-point mechanism (`modal.ts` props: `open`/`persistent` only). (c) The upstream wire keys for the pair are not in the fetched guide. | a children-grammar widening (named child slots) + upstream-schema confirmation (F2); `ui-popover`'s positional trigger convention is the nearest in-fleet analogue if Kim prefers a pragmatic mapping — a fork for the follow-up intake, not silently chosen here. |
-| E5 | `ChoicePicker` | DEFER | Three verified gaps: (a) Basic binds an ARRAY of selected strings — no fleet control commits a string-array selection (`ui-select`/`ui-combo-box` are single-`value`; ADR-0053 deliberately renamed the planned ChoicePicker to single-select `Select`); the `ValueSlot` seam has no value-transform to marshal array↔string honestly, and silently dropping multi-select is exactly the dishonest coverage this table exists to prevent. (b) Options arrive as a PROP (the guide filters "option labels"), not as `Option` children — synthesis-from-prop has the same factory-cannot-build-children gap as E3. (c) Exact upstream wire schema (options key/shape, `value` key) not in the fetched guide. | the follow-up intake owns: a multi-select commit shape (control or seam), options-from-prop synthesis, and the schema confirmation (F2). |
+Upstream `Action` (common_types.json) is `oneOf`:
+`{event: {name®, context?}}` (server dispatch) | `{functionCall: FunctionCall}` (client-side execution).
+Our canonical ADR-0011 shape is `{action, context?, wantResponse?, submit?}` — so rev.1's "PropDef
+copied verbatim" was WRONG and is retracted. Ruling:
 
-Score: 13 of 18 INCLUDE, 5 recorded EXCLUDE/DEFER — every row reasoned, none silent.
+- `a2ui-basic/catalog.json` declares `Button.action` with the UPSTREAM object schema (the `event` arm).
+- `readActionSpec` (`renderer/renderer.ts:497`) — the single wire-read chokepoint — gains a THIRD
+  documented tolerance arm: an object with `event` normalizes as
+  `{name: event.name, context: event.context}` (no `wantResponse`/`submit` — upstream has neither; both
+  stay `undefined`, preserving the ADR-0088 §3 distinction). The canonical `{action,…}` shape and the
+  two existing arms are byte-untouched; the outbound `A2uiAction` wire message is unchanged. Verified
+  live in the pinned `upstream-example-00_interactive-button.json` (`action: {event: {name:
+  "button_clicked", context: {}}}`).
+- The `{functionCall}` arm is EXCLUDED v1 (exclusion table E7) — it is the same missing surface as
+  `openUrl` (cl.11's one excluded function, which upstream invokes precisely through this arm): our
+  renderer has NO client-side action-execution path (actions route to the producer, ADR-0011/0031), and
+  a side-effecting call has no safe home in the reactive binding-eval layer. One coherent exclusion
+  family — "client-executed actions" — with one named follow-up seam. A payload using the arm fails the
+  declared `event`-arm object schema at conformance: loud, never silently inert.
 
-### 11 · The client-side functions table (14 upstream functions across 13 rows, guide §2)
+### 11 · The client-side functions table (14 upstream functions across 13 rows, schema `functions` block)
 
 All included functions are declared `clientOnly` in `a2ui-basic/catalog.json` and implemented in
-`a2ui-basic/functions.ts`, registered per-catalog (cl.8) so their BOOLEAN dialect never collides with the
-shared table's `{valid, message?}` dialect under the same names.
+`a2ui-basic/functions.ts`, registered per-catalog (cl.8) so their BOOLEAN dialect (schema-pinned:
+`returnType: const "boolean"` on every validator) never collides with the shared table's
+`{valid, message?}` dialect under the same names.
 
-| # | Function | Ruling | Implementation note |
+| # | Function | Ruling | Implementation note (args per schema) |
 |---|---|---|---|
-| 1 | `formatString` | needs-a-small-addition | The impl is literally `(args) => args.value` — the heavy lifting ALREADY EXISTS: `renderer/functions.ts` `evaluate()` resolves every arg through `resolveValue` (`:104-108`), which routes a template string through `interpolate` (`:79-80`, ADR-0027) whose `${…}` / `fn(argName: value)` grammar (`fn-expr.ts`, ADR-0028) matches upstream's own `formatString` syntax including escaped `\${` — so by the time the impl runs, `args.value` is the fully interpolated string. Builder verifies the escape ride-through with a test. |
-| 2 | `required` | needs-a-small-addition | Basic-dialect BOOLEAN: `true` iff not `null`/`undefined`/`''`/empty array (the empty-array arm is NEW vs `catalog/functions.ts:35`, whose `{valid}` impl otherwise carries the logic to adapt). |
-| 3 | `regex` | needs-a-small-addition | boolean dialect of `catalog/functions.ts:60` (`new RegExp(args.pattern).test(args.value)`; malformed pattern ⇒ `false`, never a throw). |
-| 4 | `length` | needs-a-small-addition | NEW: string length `>= args.min` (if present) and `<= args.max` (if present) ⇒ boolean. |
-| 5 | `numeric` | needs-a-small-addition | NEW: `Number(args.value)`; NaN ⇒ `false`; else range check as `length`. |
-| 6 | `email` | needs-a-small-addition | boolean dialect; upstream's suggested regex is byte-identical to `catalog/functions.ts:50`'s (`/^[^\s@]+@[^\s@]+\.[^\s@]+$/`). |
-| 7 | `formatNumber` | needs-a-small-addition | `Intl.NumberFormat` (platform global, zero-dep): `decimals` ⇒ both min/max fraction digits; `useGrouping: args.grouping !== false`. |
-| 8 | `formatCurrency` | needs-a-small-addition | `Intl.NumberFormat` with `{style:'currency', currency: args.currency}`; invalid code ⇒ return `String(args.value)` (never a throw — the evaluator's fault-isolation posture). |
-| 9 | `formatDate` | needs-a-small-addition | zero-dep closed TR35 token SUBSET (no date library — the package law): the literal token table `yyyy · yy · MM · M · dd · d · HH · H · mm · m · ss · s`; any other character passes through verbatim. A pattern outside the subset degrades gracefully (unknown tokens emit as-is). The subset is CLOSED — widening it is a follow-up edit to this table, not an ad-hoc addition. |
-| 10 | `pluralize` | needs-a-small-addition | `Intl.PluralRules` (platform global): resolve the category for `args.value`, return `args[category] ?? args.other ?? ''`. |
-| 11 | `openUrl` | **EXCLUDE v1** | Side-effecting: our catalog functions run inside reactive binding-eval effects (`widget.ts` bound-prop effects) — a side effect there re-fires on every re-evaluation (an open-URL storm), and the renderer has NO client-side action-invocation surface (actions route to the producer, ADR-0011/0031). Declaring it and letting calls emit `FUNCTION` errors is worse than not declaring it (the registry's absence gate reports it cleanly). Follow-up: a client action-function seam; any future impl MUST carry upstream's mandatory security constraints verbatim (resolve-then-allowlist `https:`/`http:` only, `noopener,noreferrer`). |
-| 12 | `and` | needs-a-small-addition | `(args) => Array.isArray(args.values) && args.values.every((v) => v === true)`. |
-| 13 | `or` / `not` | needs-a-small-addition | `or`: `.some((v) => v === true)` over `args.values`; `not`: `args.value !== true` — strict boolean dialect, matching upstream's "strict boolean negation". |
+| 1 | `formatString` | needs-a-small-addition | The impl is literally `(args) => args.value` — the heavy lifting ALREADY EXISTS: `renderer/functions.ts` `evaluate()` resolves every arg through `resolveValue` (`:104-108`), which routes a template string through `interpolate` (`:79-80`, ADR-0027) whose `${…}` / named-arg `fn(argName: value)` / escaped `\${` grammar (`fn-expr.ts`, ADR-0028) matches the schema's own formatString description verbatim (upstream-basic-catalog.json:965). Builder verifies the escape ride-through with a test. |
+| 2 | `required` | needs-a-small-addition | args `{value®}`. Basic-dialect BOOLEAN: `true` iff not `null`/`undefined`/`''`/empty array (the empty-array arm is NEW vs `catalog/functions.ts:35`, whose `{valid}` impl otherwise carries the logic to adapt). |
+| 3 | `regex` | needs-a-small-addition | args `{value®, pattern®}`. boolean dialect of `catalog/functions.ts:60` (`new RegExp(pattern).test(value)`; malformed pattern ⇒ `false`, never a throw). |
+| 4 | `length` | needs-a-small-addition | args `{value®, min?, max?}` (schema: at least one of min/max). String length range check ⇒ boolean. |
+| 5 | `numeric` | needs-a-small-addition | args `{value®, min?, max?}` (at least one bound). `Number(value)`; NaN ⇒ `false`; else range check. |
+| 6 | `email` | needs-a-small-addition | args `{value®}`. boolean dialect; the regex is byte-identical to `catalog/functions.ts:50`'s (`/^[^\s@]+@[^\s@]+\.[^\s@]+$/`). |
+| 7 | `formatNumber` | needs-a-small-addition | args `{value®, decimals?, grouping?}`. `Intl.NumberFormat` (platform global, zero-dep): `decimals` ⇒ both min/max fraction digits; `useGrouping: grouping !== false`. |
+| 8 | `formatCurrency` | needs-a-small-addition | args `{value®, currency®, decimals?, grouping?}`. `Intl.NumberFormat` `{style:'currency', currency}`; invalid code ⇒ `String(value)` (never a throw — the evaluator's fault-isolation posture). |
+| 9 | `formatDate` | needs-a-small-addition | args `{value®, format®}`. Zero-dep implementation of the schema's OWN closed token reference (upstream-basic-catalog.json:1073): `yy yyyy · M MM MMM MMMM · d dd E EEEE · h hh (12h, with a) · H HH · mm · ss · a` — numeric tokens by field math, name tokens (`MMM`/`MMMM`/`E`/`EEEE`) and `a` via `Intl.DateTimeFormat` part lookup (platform global); characters outside the token list pass through verbatim. The list is CLOSED — widening it amends this row. |
+| 10 | `pluralize` | needs-a-small-addition | args `{value®, other®, zero?, one?, two?, few?, many?}`. `Intl.PluralRules`: resolve the category, return `args[category] ?? args.other`. |
+| 11 | `openUrl` | **EXCLUDE v1** | args `{url®}`, `returnType: void`. Side-effecting: our catalog functions run inside reactive binding-eval effects — a side effect there re-fires on every re-evaluation (an open-URL storm) — and upstream invokes it through `Action.functionCall`, the arm cl.10/E7 excludes; one coherent "client-executed actions" family, one named follow-up seam. Any future impl MUST carry upstream's mandatory security constraints verbatim (resolve-then-allowlist `https:`/`http:` only, `noopener,noreferrer`). |
+| 12 | `and` | needs-a-small-addition | args `{values®}` (`minItems: 2` per schema). `Array.isArray(values) && values.length >= 2 && values.every((v) => v === true)`. |
+| 13 | `or` / `not` | needs-a-small-addition | `or`: args `{values®}` (`minItems: 2`) — `.some((v) => v === true)`; `not`: args `{value®}` — `value !== true` (strict boolean dialect). |
 
 (14 upstream names; row 13 carries the final two — 13 implemented, 1 excluded.)
 
-### 12 · The partition coverage gate (`a2ui-basic/index.test.ts`)
+#### 11a · The `Checkable` mixin — covered BY CONSTRUCTION (ADR-0029, zero new code)
 
-The ADR-0087 discipline, upstream-pinned instead of fleet-derived:
+The schema mixes `Checkable {checks?: CheckRule[]}` into Button, TextField, CheckBox, ChoicePicker,
+Slider, and DateTimeInput; `CheckRule` is `{condition: DynamicBoolean, message®}`. This maps onto the
+SHIPPED ADR-0029 checks controller with **zero new code**:
+
+- `checks` is already a RESERVED renderer-layer key on ANY node (`catalog/conformance.ts:34`) — no
+  `catalog.json` declaration needed, no CATALOG failure possible.
+- Upstream's `CheckRule` with a FunctionCall condition is BYTE-SHAPED as ADR-0029's CONDITION wire arm
+  (`checks.ts:6-9`: `{condition: {call, args}, message}`) — the normalised `Check` type consumes it
+  directly; the extra `returnType` key inside the call is tolerated (cl.8).
+- Target dispatch covers all six carriers as shipped: TextField/CheckBox/ChoicePicker(→`ui-select`)/
+  Slider/DateTimeInput(→`ui-text-field`) are `UIFormElement`s (`setCustomValidity` arm); Button is the
+  `disabled`-gating arm (`checks.ts` target-dispatch doc).
+- Recorded degrade: a `CheckRule.condition` that is a LITERAL boolean or bare `{path}` (the two
+  non-FunctionCall arms of `DynamicBoolean`) is skipped by `readCheck`'s tolerant reader (returns
+  `null`, non-fatal). Named follow-up: a small `readCheck` widening normalizing those two arms; not
+  this wave.
+
+`TextField.validationRegexp` (the schema's second validation mechanism) is DECLARED but v1-inert (cl.9b
+row 14) — its enforcement folds into this same checks controller as a synthesized `regex` rule in the
+named follow-up.
+
+### 12 · The exclusion table (recorded, never silent — the ADR-0087 two-arm law, down to variant/prop-arm granularity)
+
+| # | Excluded thing | Granularity | Ruling | Reason (verified) | Named follow-up |
+|---|---|---|---|---|---|
+| E1 | `Video` | type | EXCLUDE v1 | No fleet control (`controls/` has no video folder; `default/index.ts:17` records the same absence for the default catalog). A bare `<video controls>` primitive was considered and REJECTED: media playback (codec/poster/a11y/captions surface) is a real component contract, not a two-line primitive — Kim's own named exclusion candidate in #413, and M-B excludes new components. | a `ui-video` control earns the row; until then an emitted `Video` fails `CATALOG` at validate (the allowlist working as designed). |
+| E2 | `AudioPlayer` | type | EXCLUDE v1 | Same shape as E1 (no `ui-audio*` control; Kim's named candidate). | same as E1. |
+| E3 | `Tabs` | type | DEFER | Wire schema now KNOWN (`tabs`®: array of `{title®: DynamicString, child®: ComponentId}`, `minItems: 1` — upstream-basic-catalog.json:406-428). The blocker is ARCHITECTURAL, not schema uncertainty: the items carry COMPONENT REFERENCES inside a prop value — our tree walk resolves references only through the structural `child`/`children` keys, so the referenced panels would never mount, and `ui-tabs` pairs `UITabElement` strip children with `UITabPanelElement` siblings by DOM order (`tabs.ts:72-89`) with no arm for foreign children; a factory can neither mount references nor wrap children (it only `create`s + `applyProp`s). | a reference-typed-prop mount seam (or a `ui-tabs` foreign-child adoption widening) — its own intake. |
+| E4 | `Modal` | type | DEFER | Wire schema now KNOWN (`trigger`® + `content`®, BOTH ComponentId references — upstream-basic-catalog.json:447-456; the named-pair concern is confirmed, not speculative). Two architectural gaps: our children grammar is a SINGLE structural key (`catalog.ts:25/127` — `child \| children \| ChildList`), with no named-slot pair; and `ui-modal` is `open`-prop-driven with no trigger-entry-point mechanism (`modal.ts` props: `open`/`persistent` only). | a named-slot children-grammar widening + a trigger-entry mechanism ruling (`ui-popover`'s positional trigger is the nearest in-fleet analogue) — its own intake. |
+| E5 | `Icon.name` `{svgPath}` arm | prop-arm | EXCLUDE v1 | Our `PropDef` type grammar cannot express a string-or-object union, and `ui-icon` renders REGISTERED glyphs — it has no arbitrary-path-data API. An emitted `{svgPath}` fails the declared string/enum type check ⇒ CATALOG failure, loud. | a `ui-icon` path-data arm (or a registry-side ephemeral glyph) — follow-up if upstream corpora actually use it. |
+| E6 | `ChoicePicker.variant: multipleSelection` | variant (host-ruled 2026-08-04: partial-include permitted, multi-select excluded) | EXCLUDE v1 | No honest existing-control mapping for a multi-select commit (`ui-select`/`ui-combo-box` are single-`value`; M-B excludes new components), and silently rendering a multi-select as single-select would corrupt the `value` array contract. GATE-ENCODED by declaring the `variant` enum as `['mutuallyExclusive']` only (cl.9b row 16): an upstream payload declaring `multipleSelection` fails the enum conformance check — recorded, loud, never wrong-rendered. | a multi-select control or commit shape — its own intake; draining E6 = widening the declared enum + the factory. |
+| E7 | `Action` `{functionCall}` arm | prop-arm | EXCLUDE v1 | No client-side action-execution surface exists (actions route to the producer, ADR-0011/0031); the arm is upstream's vehicle for `openUrl` (cl.11 row 11) — one coherent exclusion family. Fails the declared `event`-arm object schema at conformance: loud. | the client action-function seam (shared with openUrl). |
+
+### 13 · `catalogId` — local short id, canonical-URI alias inbound
+
+The upstream document's canonical id IS a URI:
+`https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json` (schema `catalogId`, line 6; the
+pinned interactive-button example stamps exactly this in `createSurface`). Our registry/picker/corpus
+keys want a short stable id. Ruling — both, honestly partitioned:
+
+- **`a2ui-basic`** is the LOCAL id: our `catalog.json`'s `catalogId`, the registry's primary key, the
+  picker option id, the corpus/retrieval key, and the cl.4 outbound authority stamp on OUR produced
+  streams.
+- **The canonical URI registers as an INBOUND ALIAS** (cl.1/cl.2 — `a2uiBasicCatalogCanonical`, same
+  components/factories/functions bytes, only the id differs): an upstream-authored stream whose
+  `createSurface.catalogId` is the canonical URI resolves and renders on any fleet renderer with zero
+  translation. The alias is never a picker option and never an outbound stamp.
+- The relationship is RECORDED in `a2ui-basic/index.ts`'s header comment (source URI + fetch date +
+  this ADR), so nobody reads our document as byte-claiming to BE the upstream file.
+- **Ratification note for Kim (a one-constant switch, not a fork):** if OUR produced Basic streams
+  should stamp the canonical URI instead of `a2ui-basic` for consumption by non-fleet upstream clients,
+  the cl.4 stamp + picker-to-producer threading flips to the URI in one place. The short id is the
+  recommended default (internal consumers, corpus keys, and the picker all prefer a stable short key);
+  flipping it later is additive, not breaking, because the renderer resolves both ids either way.
+
+### 14 · The partition coverage gate (`a2ui-basic/index.test.ts`)
+
+The ADR-0087 discipline, machine-schema-pinned:
 
 ```ts
 const UPSTREAM_BASIC_TYPES = ['Text','Image','Icon','Video','AudioPlayer','Row','Column','List','Card',
-  'Tabs','Divider','Modal','Button','TextField','CheckBox','ChoicePicker','Slider','DateTimeInput'] as const // 18, v0.9.1 §1
-const BASIC_EXCLUSIONS: Record<string, string> = {
+  'Tabs','Divider','Modal','Button','TextField','CheckBox','ChoicePicker','Slider','DateTimeInput'] as const // 18, schema `components`
+const BASIC_TYPE_EXCLUSIONS: Record<string, string> = {
   Video: 'ADR-0169 E1 — no fleet media control', AudioPlayer: 'ADR-0169 E2 — no fleet media control',
-  Tabs: 'ADR-0169 E3 — panel-pairing gap + unverified wire schema',
-  Modal: 'ADR-0169 E4 — named-slot children grammar gap + unverified wire schema',
-  ChoicePicker: 'ADR-0169 E5 — array-valued selection gap + unverified wire schema',
+  Tabs: 'ADR-0169 E3 — reference-typed prop items; no mount seam',
+  Modal: 'ADR-0169 E4 — named-slot children pair; no grammar/mechanism',
 }
 ```
 
 Assertions: (1) every one of the 18 is EITHER a `a2uiBasicCatalog.components` key OR a
-`BASIC_EXCLUSIONS` key, never both, never neither; (2) the catalog declares NO type outside the 18
+`BASIC_TYPE_EXCLUSIONS` key, never both, never neither; (2) the catalog declares NO type outside the 18
 (interop purity — `a2ui-basic` never grows fleet-only types; those belong to `agent-ui`); (3) the 13
-included function names are declared and the excluded `openUrl` is not; (4) `register(a2uiBasicCatalog,
-a2uiBasicFactories, a2uiBasicFunctions)` succeeds (the registry's own FACTORY_MISSING gate then enforces factory coverage
-forever). Draining an exclusion row = a follow-up ADR/row edit, exactly the ADR-0087 allowlist law.
+included function names are declared, the excluded `openUrl` is not, and every declared function is
+`clientOnly`; (4) the sub-type-granularity gates hold: `ChoicePicker.variant`'s declared enum is exactly
+`['mutuallyExclusive']` (E6) and `Icon.name`'s declared type is the string enum (E5); (5)
+`register(a2uiBasicCatalog, a2uiBasicFactories, a2uiBasicFunctions)` succeeds (the registry's own
+FACTORY_MISSING gate then enforces factory coverage forever), and the canonical alias registers beside
+it. Draining any exclusion row = a follow-up ADR/row edit, exactly the ADR-0087 allowlist law.
+`upstream-fixtures.test.ts` (cl.1) is the companion conformance gate: the three pinned upstream payloads
+validate and render.
 
 ## Consequences
 
-- Every renderer in the fleet resolves both catalogs; `supportedCatalogIds()` reads
-  `['agent-ui','a2ui-basic']` — tests pinning the singleton list update in this wave.
+- Every renderer in the fleet resolves the default catalog + both Basic ids;
+  `supportedCatalogIds()` grows accordingly — tests pinning the singleton list update in this wave.
 - A Basic turn composes its inventory/prompt from `a2uiBasicCatalog`, validates against it, and ships
   wire lines stamped `catalogId:"a2ui-basic"` (the cl.4 authority stamp) — an invalid/unknown request
   `catalogId` silently degrades to the default catalog end-to-end (`sanitizeCatalog` client-side,
   `selectCatalog` server-side), never a 500, never a mixed catalog+prompt.
 - Basic turns retrieve zero corpus exemplars until a Basic shard is seeded (named follow-up) — accepted:
   no exemplars beats wrong-dialect exemplars.
+- The ADR-0066 phosphor vendored subset regenerates (32 → ~85 glyphs, the cl.9 Icon table) — a
+  build-time pipeline run, no new runtime dependency; bundle grows by the added path data only.
 - Risks, recorded: **R1** `Image`/`Divider` put presentation in factory inline styles (a first — the
-  primitives have no control CSS to lean on; a future `ui-image` control retires R1). **R2** upstream
-  Material icon names may not exist in the installed pack — degrade is `ui-icon`'s own missing-glyph
-  behavior; an alias table is a follow-up. **R3** `List` horizontal mode leans on inline flex overrides
-  of `ui-list`'s column CSS. **R4** `TextField.variant:'longText'` degrades to single-line. **R5**
-  `DateTimeInput` with both flags degrades to date-only. Each is a stated dialect degradation, none
-  silent.
-- The five DEFER/EXCLUDE rows fail validation loudly (`CATALOG` at the emitting node) — upstream streams
-  using them do not render silently wrong, they report.
-- Non-goals: no Basic corpus shard (follow-up); no markdown in `Text` (ADR-0119 stands); no
-  `openUrl`/action-function seam; no change to the default catalog, its factories, or the shared
-  function table's dialect; no per-catalog picker UI beyond the second option (the create/pick-from-library
-  affordances stay parked per Kim's 2026-07-19 ruling).
+  primitives have no control CSS to lean on; a future `ui-image` control retires R1). **R2** three Icon
+  table entries are marked `(verify)` — the regeneration pipeline confirms or applies the recorded
+  fallback + gap entry; `starOff` is a recorded approximation either way. **R3** `List` horizontal mode
+  leans on inline flex overrides of `ui-list`'s column CSS. **R4** `TextField.variant:'longText'`
+  degrades to single-line. **R5** `DateTimeInput` with both flags degrades to date-only. **R6**
+  `Slider.label`/`ChoicePicker.label` are a11y-only (`aria-label`) — no visible label control-side.
+  **R7** `accessibility` objects honor LITERAL strings only v1 (nested bindings unresolved);
+  `validationRegexp`, `filterable`, and `displayStyle:'chips'` are declared-but-degraded v1;
+  `CheckRule` literal/`{path}` condition arms are skipped by the tolerant reader. Each is a stated
+  dialect degradation with a named follow-up, none silent.
+- Required-ness (cl.9a global note): v1 is permissive-in / unenforced-out — a `PropDef.required`
+  conformance mechanism is a named follow-up.
+- The four DEFER/EXCLUDE types and the E5/E6/E7 arms fail validation loudly (`CATALOG`/enum/schema at
+  the emitting node) — upstream streams using them do not render silently wrong, they report.
+- Non-goals: no Basic corpus shard (follow-up); no markdown in `Text` (ADR-0119 stands); no client
+  action-function seam (`openUrl`/`Action.functionCall`, one family, one follow-up); no `theme` support
+  (the schema's surface-level `$defs.theme` is a createSurface-adjacent concern outside this catalog
+  wave); no change to the default catalog, its factories, or the shared function table's dialect; no
+  per-catalog picker UI beyond the second option (the create/pick-from-library affordances stay parked
+  per Kim's 2026-07-19 ruling).
 
-## Open forks (gate the named rows only — everything else builds now)
+## Open forks
 
-- **F1 (`⚑` names):** five wire identifiers are guide-INFERRED, not guide-stated: `Text.text`,
-  `Image.url`, `TextField.label`, `CheckBox.label`, and the single-child key for `Button`/`Card`
-  (`child`). Confirm against the upstream machine schema (or Kim rules the inferred defaults) before
-  `catalog.json` lands — ADR-0063's law: never invent an external contract.
-- **F2 (deferred trio):** the exact upstream wire schemas for `Tabs`/`Modal`/`ChoicePicker` are needed
-  before any of E3/E4/E5 can be drained — fetch-and-pin, own intake.
+- **F1 — CLOSED (rev.2).** The five rev.1 guide-inferred wire names are all CONFIRMED verbatim against
+  the pinned machine schema (`upstream-basic-catalog.json`, fetched 2026-08-04): `Text.text`,
+  `Image.url`, `TextField.label`, `CheckBox.label`, `Button.child`/`Card.child`.
+- **F2 — CLOSED (rev.2).** The Tabs/Modal/ChoicePicker wire schemas are fetched and pinned; Tabs/Modal
+  remain DEFERRED on the now-precisely-stated ARCHITECTURAL gaps (E3/E4), and ChoicePicker resolved to
+  the host-ruled partial include (cl.9b row 16 / E6).
+- **No hard forks remain open.** One soft ratification note rides cl.13 (outbound stamp: short id vs
+  canonical URI — recommended default encoded, one-constant switch if Kim prefers the URI).
