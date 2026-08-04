@@ -19,8 +19,9 @@ import type { CorpusRecord } from '../../../src/corpus/record.ts'
 import { loadCatalog } from '../../../src/catalog/catalog.ts'
 import type { Catalog } from '../../../src/catalog/catalog.ts'
 import type { TurnInput, Effort } from '../../../src/agent/agent-transport.ts'
-import { buildToolDispatch, resolveIntegrations } from '../integrations/index.ts'
+import { buildToolDispatch, listIntegrations, resolveIntegrations } from '../integrations/index.ts'
 import { isSameOriginRequest, isMountedPath, isValidTurnInput } from './route-guards.ts'
+import { projectEnv } from './env-projection.ts'
 // GH #108 (review finding): validateMode/isChatBody/EFFORT_VALUES/resolveChatDispatch used to be
 // hand-duplicated here, byte-for-byte, from dev-proxy-plugin.ts's already-exported versions — this
 // security-adjacent PAIR-allowlist logic could silently fork between dev and prod with nothing to catch
@@ -73,13 +74,16 @@ const shard: CorpusRecord[] = corpusShardRaw
 // is a plain object at runtime too, so it can do the exact same dynamic lookup — providers.json (already
 // loaded + validated into `config` above) is the single source of truth for which keys exist, in both
 // environments. Adding a provider needs no matching edit here anymore.
+//
+// LLD-C5 (ADR-0168 cl.4 / SPEC-R18 AC2) applies that SAME rule to the second key registry: a `serverKey`
+// integration manifest declares its own `envKey`, so this projection derives from providers.json's entries
+// PLUS `listIntegrations()`. Registering a keyed integration is enough — no hand edit here follows it. (The
+// narrowing this function performs is the whole reason it needed widening; the dev proxy has no twin step —
+// it hands its full `loadEnv`-merged env straight to resolveIntegrations/buildToolDispatch.) The projection
+// itself lives in the pure, unit-testable `env-projection.ts` (route-guards.ts's precedent — this module is
+// never importable under vitest), so its behavior is gated against the real registry, not read as source.
 function envVars(env: Env): Record<string, string | undefined> {
-  const result: Record<string, string | undefined> = {}
-  for (const entry of Object.values(config.providers)) {
-    const value = env[entry.envKey]
-    if (typeof value === 'string') result[entry.envKey] = value
-  }
-  return result
+  return projectEnv(env, Object.values(config.providers), listIntegrations())
 }
 
 function json(status: number, body: unknown): Response {
