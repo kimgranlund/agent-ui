@@ -82,6 +82,7 @@ export default defineConfig({
           environment: 'node',
           include: [
             'packages/agent-ui/*/tools/agent/worker/*.test.ts',
+            'packages/agent-ui/a2ui/tools/agent/integrations/*.test.ts',
             'packages/agent-ui/a2ui/tools/corpus/*.test.ts',
             'packages/agent-ui/a2a/tools/corpus/*.test.ts',
           ],
