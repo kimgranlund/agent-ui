@@ -118,6 +118,10 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
         // side, Node-first — the pack registry itself never crosses the wire, only the ALREADY-RESOLVED
         // picked source's body does, per `pickedPatternSource`'s own projection).
         genui: req.genui,
+        // ADR-0169 cl.5 — the Surface Options catalog picker's sanitized selection, forwarded onto the
+        // produce POST body (the `effort` absent-⇒-omit-key precedent above): absent ⇒ the body carries
+        // no `catalogId` key at all, and the server degrades to the default catalog either way.
+        ...(req.catalogId !== undefined ? { catalogId: req.catalogId } : {}),
       }),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     })
