@@ -67,7 +67,9 @@ catalog-invisible by construction, since `a2ui` never imports `code`
    whole API is `ingest(jsonlLine)`/`finalize()`/`dispose()` + `onClientMessage`, standalone-usable
    with "no conditional behaviour keyed on ancestry" (its descriptor's SPEC-R3 note), and
    structurally incapable of bespoke transport wiring — "there is no transport/provider-shaped prop
-   anywhere on this element's public surface" ([ADR-0129](../adr/0129-app-surfaces-m2-composition-and-transport-boundary.md) cl.1).
+   anywhere on this element's public surface" (its descriptor's SPEC-R8 note, `surface-host.md`);
+   the ruling behind it is [ADR-0129](../adr/0129-app-surfaces-m2-composition-and-transport-boundary.md)
+   cl.1, which fixes that the element "exposes no transport/provider-shaped type".
    The page's summary wiring reduces to: look up the current view key's payload, `ingest` its lines,
    `finalize`.
 2. **Catalog reachability is load-bearing, not decorative.** The PRD's C3 constraint is the
@@ -121,7 +123,8 @@ Rationale, from mechanics:
    assertion holds against the live response's key, unchanged in shape. The published
    `@agent-ui/a2ui/agent` replay backbone documents this parity as its own contract:
    `createRecordedTransport` "implements the same `AgentTransport` seam the live overlay does, so
-   the page is identical either way" ([ADR-0137](../adr/0137-a2ui-agent-producer-toolkit-export.md)).
+   the page is identical either way" (`recorded-transport.ts`'s own module-header contract, in the
+   pack [ADR-0137](../adr/0137-a2ui-agent-producer-toolkit-export.md) exports).
    Recording now forecloses nothing; a later live overlay is a transport swap, not a redesign.
 
 **Alternative on record — live:** proves the producer seam end-to-end on this surface and makes the
@@ -353,7 +356,7 @@ The PRD §4 fences, carried into contract form. The six load-bearing ones are qu
 
 | SPEC id | Serves | ADR clauses load-bearing |
 |---|---|---|
-| SPEC-R1 | PRD-G1 | ADR-0163 cl.2, cl.3, cl.4, cl.5, cl.7 |
+| SPEC-R1 | PRD-G1 | ADR-0163 cl.2, cl.3, cl.4, cl.5, cl.6, cl.7 |
 | SPEC-R2 | PRD-G1 | ADR-0163 cl.10 |
 | SPEC-R3 | PRD-G1, PRD-G6 | ADR-0163 cl.6 |
 | SPEC-R4 | PRD-G1, PRD-G4 (consumer) | ADR-0163 cl.9 |
