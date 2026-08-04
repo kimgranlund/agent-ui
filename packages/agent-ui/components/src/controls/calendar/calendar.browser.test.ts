@@ -147,9 +147,10 @@ const shadowColor = (s: string): string => {
  * for the ~6 weeks that window spans — after which `[data-today]` is simply absent and a
  * `querySelector(...)!` read becomes `getComputedStyle(null, …)`, a TypeError, not a clean failure.
  * The `[data-today] is present` test above already rotted this way once (pinned 2026-07-01, broke
- * on 2026-07-02) and was converted; its two siblings kept the pinned mount and were due to break
- * on 2026-08-09. Seeding `value` with this makes the displayed month the current one by
- * construction, so today's cell is always in the grid.
+ * on 2026-07-02) and was converted; the form-round-trip pair below (§[7]) rotted the SAME way on
+ * the 2026-07→08 rollover (GH #427) and was converted too — every date-dependent probe in this file
+ * now derives its target from the real clock, none are pinned. Seeding `value` with this makes the
+ * displayed month the current one by construction, so today's cell is always in the grid.
  *
  * Same local-date arithmetic as the control's own today-detection: explicit Y/M/D, never
  * `new Date('YYYY-MM-DD')` (which parses as UTC and can land a day off).
@@ -157,6 +158,19 @@ const shadowColor = (s: string): string => {
 const todayIso = (): string => {
   const now = new Date()
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+}
+
+/**
+ * ISO date for the given day-of-month in the CURRENT real month (day ≤ 28 is valid in every
+ * calendar month, so callers pass 10/15/etc). For tests that must mount with NO `value` (an
+ * "unselected" assertion needs to stay meaningful) yet still click a real, in-grid cell: an empty
+ * `value` seeds the displayed month from the real clock (calendar.ts:426-432 — `parseDateStr('')`
+ * is null, so it falls through to `#today()`), so this always lands inside the mounted grid without
+ * seeding `value` itself. GH #427 — same rot class as `todayIso`, one level removed.
+ */
+const isoOfCurrentMonthDay = (day: number): string => {
+  const now = new Date()
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
 interface CdpSession {
@@ -725,13 +739,17 @@ describe('ui-calendar — form round-trip (both engines)', () => {
     // Nothing selected → no form entry
     expect(new FormData(form).get('dob'), 'unselected calendar should not submit a value').toBeNull()
 
-    // Click July 15 to select it
-    const c15 = el.querySelector<HTMLElement>('[data-date="2026-07-15"]')!
+    // Click the 15th of the currently-displayed month to select it. No `value` was seeded, so the
+    // grid shows the CURRENT real month by construction (calendar.ts:426-432) — GH #427: a hardcoded
+    // absolute date rots the day the wall clock crosses into the next month; deriving the target
+    // from the real clock (day 15 exists in every month) never can.
+    const iso15 = isoOfCurrentMonthDay(15)
+    const c15 = el.querySelector<HTMLElement>(`[data-date="${iso15}"]`)!
     await userEvent.click(c15)
     await el.updateComplete
 
-    expect(el.value, 'value should be 2026-07-15 after click').toBe('2026-07-15')
-    expect(new FormData(form).get('dob'), 'form should contain the selected value').toBe('2026-07-15')
+    expect(el.value, `value should be ${iso15} after click`).toBe(iso15)
+    expect(new FormData(form).get('dob'), 'form should contain the selected value').toBe(iso15)
   })
 
   it('required + no selection → valueMissing; validity clears after selection', async () => {
@@ -746,9 +764,11 @@ describe('ui-calendar — form round-trip (both engines)', () => {
     expect(el.validity.valueMissing, 'required calendar with no selection → valueMissing').toBe(true)
     expect(el.validity.valid).toBe(false)
 
-    // Navigate to July 2026 (the default month for today = 2026-07-01) and click July 10
-    // The calendar shows July 2026 because today is 2026-07-01
-    const c10 = el.querySelector<HTMLElement>('[data-date="2026-07-10"]')!
+    // Click the 10th of the currently-displayed month. No `value` was seeded, so the grid shows the
+    // CURRENT real month by construction (calendar.ts:426-432) — GH #427, same fix as the sibling
+    // test above: derive the target from the real clock, never hardcode an absolute date.
+    const iso10 = isoOfCurrentMonthDay(10)
+    const c10 = el.querySelector<HTMLElement>(`[data-date="${iso10}"]`)!
     await userEvent.click(c10)
     await el.updateComplete
 
