@@ -122,6 +122,16 @@ describe('buildSystemPrompt — GH #418: a2uiEnabled:false still composes a WORK
     expect(prompt).toContain("This turn's caller has NO A2UI catalog renderer at all")
   })
 
+  // GH #425 — the dogfood segment (genui-dogfood-teaching.md) used to reference "the A2UI section above",
+  // which composes to ZERO bytes here (a2uiEnabled:false drops the whole GRAMMAR/catalog pipeline above).
+  // The fixed segment is self-contained: it composes, and never dangles a reference to an absent section.
+  it('the dogfood segment composes self-sufficiently under a2ui-off — present, with no dangling "above" reference', () => {
+    const prompt = buildSystemPrompt(defaultCatalog, [], undefined, undefined, undefined, { enabled: true, dogfood: true }, false)
+    expect(prompt).toContain('## Dogfood mode')
+    expect(prompt).toContain('## agent-ui components available inside your GenUI document')
+    expect(prompt).not.toContain('the A2UI section above')
+  })
+
   it('composes zero genui bytes when genui itself is also off (both modalities off degrades to the empty prompt)', () => {
     const prompt = buildSystemPrompt(defaultCatalog, [], undefined, undefined, undefined, { enabled: false }, false)
     expect(prompt).toBe('')

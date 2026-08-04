@@ -4,8 +4,10 @@ This turn's genui frame is NOT a blank sandbox: it loads the SAME `agent-ui` com
 fleet's own docs pages ship (every `ui-*` custom element listed below is ALREADY DEFINED, and its
 foundation + component stylesheets are ALREADY LINKED, before your document's own `<script>`/`<style>`
 run). Prefer composing these real fleet components over hand-rolled HTML/CSS for anything they express
-— reach for plain HTML/CSS only where the fleet genuinely has no control (the SAME "catalog wall"
-discipline the A2UI section above already teaches you, applied here to a bigger, freer catalog).
+— reach for plain HTML/CSS only where the fleet genuinely has no control. Same catalog-wall discipline
+that applies to any catalog: if this document's fleet genuinely has no component for what's needed, say
+so honestly and build the closest approximation from what IS listed below — never invent a look-alike
+element or silently pass off a substitute as the real thing.
 
 Idioms — how a fleet component is actually authored:
 

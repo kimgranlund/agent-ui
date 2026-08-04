@@ -347,11 +347,24 @@ function stampCreateSurfaceCatalogId(output: A2uiOutput, catalogId: string): voi
  * feedback never named it. A static reminder (not dynamically resolved — a PARSE failure carries no
  * component/property to look up, unlike CATALOG) restates the ONE constraint that covers both
  * observed failure shapes, appended once regardless of how many failures this round carries.
+ *
+ * GH #404 (live observation, `.claude/ops/mb-live-proof/box2-quizmaster-FAIL.json`) — a THIRD concrete
+ * way a real model breaks the "one JSON object per line" rule: `claude-haiku-4-5-20251001` at temp 0.9
+ * appended a literal trailing `</parameter>` line — tool-call/XML closing-tag bleed-through — after an
+ * otherwise-valid single-round payload, and repeated the identical mistake across all 3 retry rounds
+ * (the round budget then halted loudly, fail-closed, exactly as designed). The original PARSE_HINT's
+ * "never add any text after the JSONL" already COVERED this shape in principle, but never named it
+ * concretely, so the model never connected the dots under retry. This ADDS the concrete instruction
+ * (ADR-0102 lane 3 — a hint-lane fix only; the validator/peel logic/round budget are untouched): a
+ * PARSE retry now explicitly names the output-shape contract — NDJSON payload lines ONLY, never a
+ * tool/XML closing tag, never a code fence, never prose outside the leading meta-line.
  */
 const PARSE_HINT =
   ' Reminder: every A2UI message must be COMPLETE, valid JSON on a SINGLE line — never split one ' +
   'JSON object across multiple physical lines (no pretty-printing), and never add any text after ' +
-  'the JSONL (the note belongs ONLY on the leading meta-line).'
+  'the JSONL (the note belongs ONLY on the leading meta-line). Your reply is NDJSON payload lines ' +
+  'ONLY: never emit an XML or tool-call closing tag (e.g. `</parameter>`), never wrap the JSONL in a ' +
+  'code fence (```), and never add conversational prose anywhere outside that leading meta-line.'
 
 /**
  * GH #307 (second pass, static root-cause) — the SAME teaching gap PARSE_HINT above and `expectedTypeNote`
