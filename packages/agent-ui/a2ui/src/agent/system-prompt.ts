@@ -185,6 +185,16 @@ function catalogInventory(catalog: Catalog): string {
   return lines.join('\n')
 }
 
+// ADR-0169 cl.4 clause 3 — a ONE-LINE conditioned teaching addition to the DERIVED inventory half
+// (never the byte-pinned GRAMMAR text): the byte-pinned grammar example teaches `"catalogId":"agent-ui"`
+// verbatim, which a compliant model would otherwise copy onto a non-default-catalog turn. Composed ONLY
+// when `catalog.catalogId !== 'agent-ui'` — the default-catalog composition therefore stays BYTE-
+// IDENTICAL (the `prompt-equivalence`/`prompt-drift` baselines never move for the default catalog).
+function catalogIdTeaching(catalog: Catalog): string {
+  if (catalog.catalogId === 'agent-ui') return ''
+  return `Every createSurface this turn MUST carry "catalogId":"${catalog.catalogId}" — the grammar example's "agent-ui" is a different catalog's id.\n\n`
+}
+
 function functionsInventory(catalog: Catalog): string {
   const ids = Object.keys(catalog.functions)
   if (ids.length === 0) return '(none)'
@@ -296,6 +306,7 @@ export function buildSystemPrompt(
   return (
     grammarFor(mode) +
     `\n\n## Available components (catalog "${catalog.catalogId}", protocol ${catalog.protocolVersion})\n\n` +
+    catalogIdTeaching(catalog) +
     catalogInventory(catalog) +
     `\n\n## Available functions\n\n` +
     functionsInventory(catalog) +

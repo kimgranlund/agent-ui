@@ -78,7 +78,6 @@ import { isGenuiCandidate, readGenuiLine, utf8ByteLength, GENUI_MAX_HTML_BYTES }
 import type { GenuiSurfaceConfig } from './genui-surface-config.ts'
 
 const PROTOCOL_VERSION = 'v1.0'
-const CATALOG_ID = 'agent-ui'
 const DEFAULT_MODEL = 'claude-sonnet-5' // the registry's defaultModel (providers.json)
 
 /** The loop's injected surfaces (SPEC §5). `provider` is the model seam (stub|real); `retrieve` runs
@@ -278,8 +277,26 @@ function userContent(input: TurnInput): string {
   return input.kind === 'intent' ? input.text : frameClientMessage(input.message)
 }
 
-function queryOf(input: TurnInput, k: number): RetrieveQuery {
-  return { intent: userContent(input), k, catalogId: CATALOG_ID, protocolVersion: PROTOCOL_VERSION }
+/** ADR-0169 cl.4 — `queryOf` is now catalog-aware: the retrieval query's `catalogId` names the
+ *  REQUEST's catalog (`deps.catalog.catalogId`), not a pinned literal. `corpus/retrieve.ts` filters
+ *  strictly on `meta.catalogId`, so a Basic turn retrieves zero exemplars (no `a2ui-basic` shard yet —
+ *  a named follow-up) and `fewShot` degrades to its designed empty arm; no exemplars beats
+ *  wrong-dialect exemplars. */
+function queryOf(input: TurnInput, k: number, catalogId: string): RetrieveQuery {
+  return { intent: userContent(input), k, catalogId, protocolVersion: PROTOCOL_VERSION }
+}
+
+/** ADR-0169 cl.4 clause 2 — the createSurface authority stamp: the SERVER-selected catalog is
+ *  authoritative over the model-authored `catalogId` (the exact SPEC-R12 posture `opts.model` already
+ *  takes over `input.model`). Runs AFTER `heal()` (on the already-parsed `output`) and BEFORE
+ *  `validateA2ui` — an unconditional, idempotent overwrite, never a heal arm (ADR-0061's closed,
+ *  form-only repair list is untouched; this is a producer-layer authority step). Keeps the byte-pinned
+ *  `grammar.md` example (`"catalogId":"agent-ui"`) harmless on a non-default-catalog turn — the wire
+ *  the client renders always carries the id whose catalog validated it. */
+function stampCreateSurfaceCatalogId(output: A2uiOutput, catalogId: string): void {
+  for (const msg of output) {
+    if ('createSurface' in msg) msg.createSurface.catalogId = catalogId
+  }
 }
 
 /**
@@ -719,7 +736,7 @@ function sessionSurfaceSeeds(session: Session): Map<string, SurfaceSeed> {
 
 export async function* produce(input: TurnInput, deps: ProduceDeps, opts: ProduceOptions): AsyncIterable<string> {
   const k = opts.k ?? 3
-  const query = queryOf(input, k)
+  const query = queryOf(input, k, deps.catalog.catalogId) // ADR-0169 cl.4 — catalog-aware, not the old pinned literal
   const exemplars = deps.retrieve(query) // SPEC-R7 — top-k over the judged shard
   const miniSkills = selectMiniSkills(query.intent, MINI_SKILLS, opts.miniSkillCap ?? DEFAULT_MINI_SKILL_CAP) // ADR-0091 §2 — once per turn, beside retrieve(); ADR-0135 cl.7 — cap now tunable, absent ⇒ default
   const system = buildSystemPrompt(deps.catalog, exemplars, opts.mode, miniSkills, opts.personaSystem, opts.genuiSurface) // SPEC-R6 — catalog-derived; ADR-0090 mode + ADR-0091 mini-skills + ADR-0138 persona + genui-surface SPEC-R10
@@ -888,6 +905,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
       continue
     }
     lastOutput = assembled.output // GH #288 — this round's parsed output, kept for the NEXT round's self-correct feedback (expectedTypeNote)
+    stampCreateSurfaceCatalogId(assembled.output, deps.catalog.catalogId) // ADR-0169 cl.4 — the server-selected catalog is authoritative, unconditional + idempotent, BEFORE validateA2ui runs
     // SPEC-N3 — the shared validator, no fork; TKT-0081 — seeded with the session's prior graphs so the
     // per-round judgment matches the MERGED state the renderer will hold (update-only follow-ups valid;
     // a cross-turn root-resend fails pre-wire as `sid:root`, a self-correct round).

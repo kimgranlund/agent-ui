@@ -64,6 +64,14 @@ export function validateEffort(effort: unknown): Effort | undefined {
   return typeof effort === 'string' && (EFFORT_VALUES as readonly string[]).includes(effort) ? (effort as Effort) : undefined
 }
 
+/** ADR-0169 cl.3 — fail-closed catalog selection: a non-string/unknown id degrades to the fallback,
+ *  never a 400/500 and never a mixed catalog+prompt (the `sanitizeCatalog` discipline, server-side).
+ *  Generic so no `Catalog` import is needed here (both `dev-proxy-plugin.ts` and `worker/index.ts`
+ *  import this shared, zero-dep module). */
+export function selectCatalog<C>(catalogs: ReadonlyMap<string, C>, value: unknown, fallback: C): C {
+  return (typeof value === 'string' ? catalogs.get(value) : undefined) ?? fallback
+}
+
 /**
  * ALM-C6 (TKT-0052/ADR-0136) — the `/chat` route's pure validation spine, extracted so its 400/503 arms
  * are deterministically testable without a live key or a real fetch (the impure `provider.stream` path
