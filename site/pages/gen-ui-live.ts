@@ -293,6 +293,11 @@ function renderGenuiSurface(surfaceId: string, html: string): void {
 // `wireLiveOverlay()` (see the file banner + the bottom of this file) whenever `/status` confirms a real
 // provider key; also reassigned by Reset, which restarts recorded first, then re-probes.
 let transport: AgentTransport = createRecordedTransport(genuiTranscript)
+// GH #408 — WHICH backbone `transport` currently is, tracked at every one of the three sites that assign it
+// (this initializer, Reset's fail-closed restart, `wireLiveOverlay()`'s live swap). `runTurn`'s empty-turn
+// branch used to be transport-BLIND: a LIVE turn that rendered nothing printed the recorded backbone's own
+// "no further turns in this recorded transcript" wording — a claim about a transcript that isn't running.
+let isLive = false
 
 let session: Session = { turns: [] }
 let busy = false
@@ -376,14 +381,21 @@ async function runTurn(input: TurnInput): Promise<void> {
   try {
     const genuiLines: string[] = []
     let note: string | undefined
+    let transportError: string | undefined
     for await (const line of transport.turn(input)) {
       // The SAME reserved-meta-line filter a2ui-live.ts uses (readMetaLine, meta-line.ts) — GenUI's
-      // `progress`/`note` ride the identical envelope; only the CONTENT line kind differs (genui, not
+      // `progress`/`note`/`error` ride the identical envelope; only the CONTENT line kind differs (genui, not
       // A2UI JSONL).
       const meta = readMetaLine(line)
       if (meta) {
         if (meta.a2uiMeta.progress !== undefined) routeProgress(meta.a2uiMeta.progress)
         if (meta.a2uiMeta.note !== undefined) note = meta.a2uiMeta.note
+        // GH #144/#408 — the transport-composed TERMINAL error line (`formatErrorLine`, meta-line.ts): the
+        // ONLY way a proxy whose headers already committed 200 can report a `ProduceHalt`/upstream fault
+        // instead of ending as a silently-empty "success". It parses cleanly and matched NEITHER arm above,
+        // so pre-#408 it was `continue`d into silence — and the turn, now holding zero genui lines, fell
+        // through to the empty-turn branch below and blamed a recorded transcript for a live failure.
+        if (meta.a2uiMeta.error !== undefined) transportError = meta.a2uiMeta.error
         continue
       }
       // SPEC-R1: structural whole-line rejection — a line that is neither a meta-line nor a valid genui
@@ -393,11 +405,30 @@ async function runTurn(input: TurnInput): Promise<void> {
       genuiLines.push(line)
       renderGenuiSurface(envelope.genui.surfaceId, envelope.genui.html)
     }
+    // GH #408 — an error-terminated turn is a FAILED turn, treated exactly like one that threw: the SAME
+    // visible pair the catch block below composes (an error entry + `narration.fail()`, which truncates
+    // whatever stage was still active + forces the header to `error`, ADR-0146 F8) plus the ⚠ system
+    // message — never `narration.finalize()`, which would settle the strip green over a turn that genuinely
+    // failed, and never the empty-turn branch below, which would misname the cause.
+    if (transportError !== undefined) {
+      narration.appendEntry({ key: 'progress-error', status: 'error', label: `Turn failed — ${transportError}` })
+      narration.fail()
+      addMessage('system', `⚠ ${transportError}`)
+      return
+    }
     if (lastProgressKey !== undefined) settleProgress(lastProgressKey)
     narration.finalize()
 
     if (genuiLines.length === 0 && note === undefined) {
-      addMessage('system', 'The agent has no further turns in this recorded transcript. Reset to start over.')
+      // GH #408 — transport-honest: only the RECORDED backbone has a finite transcript to exhaust, so only it
+      // may say so. A live turn that emitted nothing renderable (and no error line — that path returned
+      // above) states just that fact.
+      addMessage(
+        'system',
+        isLive
+          ? "The agent's turn produced no renderable output."
+          : 'The agent has no further turns in this recorded transcript. Reset to start over.',
+      )
       return
     }
     session = appendUserTurn(session, input.kind === 'intent' ? input.text : '')
@@ -442,6 +473,7 @@ resetBtn.addEventListener('click', () => {
   surfaces.clear()
   session = { turns: [] }
   transport = createRecordedTransport(genuiTranscript) // fail-closed default — wireLiveOverlay() below re-probes + swaps back in if a live key is still available
+  isLive = false // GH #408 — reset alongside the transport it describes; the re-probe below sets it true again only if the live swap actually lands
   chatLog.replaceChildren()
   setDemoBadge('Recorded demo') // reset to the fail-closed default; wireLiveOverlay() removes it again if the re-probe still finds a live key
   addMessage('system', 'New conversation. Send a message to begin.')
@@ -497,6 +529,7 @@ function wireLiveOverlay(): void {
         // `genuiConfig` (module scope, above) — the SAME shared mutable object the dogfood toggle's own
         // change handler mutates; passed by reference so a later toggle reaches the NEXT turn (live-apply).
         transport = overlay.createLiveProxyTransport({ get: () => selection }, genuiConfig)
+        isLive = true // GH #408 — the ONE place a live backbone is adopted; set adjacent to the assignment it describes so the two can never drift
         setDemoBadge(undefined)
         addMessage('system', `Live agent connected (${status.providers} provider(s) available). Prompt it to render a real GenUI surface.`)
       } else if (import.meta.env.DEV) {

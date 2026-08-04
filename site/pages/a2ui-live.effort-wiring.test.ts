@@ -10,7 +10,8 @@
 // `wireLiveOverlay()`'s real `/status` probe resolves "available" in jsdom, then its `onEffortChange`
 // registration + `createLiveProxyTransport` construction run for real; the POST stub returns an
 // immediately-closed ndjson stream (a2ui-live.ts's own `runTurn` already handles a zero-line turn
-// gracefully — the "no further turns" system message — so this never needs a real produced surface).
+// gracefully — since GH #408, with the LIVE transport's own "produced no renderable output" system message
+// rather than the recorded transcript's — so this never needs a real produced surface).
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 
 let capturedPostBody: Record<string, unknown> | undefined
