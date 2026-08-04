@@ -38,6 +38,7 @@
   --ui-agent-admin-border: var(--md-sys-color-neutral-outline-variant, currentColor);
   --ui-agent-admin-label-ink: var(--md-sys-color-neutral-on-surface-variant, var(--ui-agent-admin-ink));
   --ui-agent-admin-error-ink: var(--md-sys-color-danger-on-surface-variant, var(--ui-agent-admin-ink)); /* TKT-0065: was --md-sys-color-error-on-surface — an ERROR family has never existed in tokens.css (the fleet family is danger), so the fallback ALWAYS won and validation errors rendered in plain neutral ink; danger-on-surface-variant is the AA-gated danger TEXT ink (the text-field message precedent) */
+  --ui-agent-admin-warning-ink: var(--md-sys-color-warning-on-surface-variant, var(--ui-agent-admin-ink)); /* GH #419: the AA-gated warning TEXT ink — the same shape as --ui-agent-admin-error-ink one line up, one family over (a NON-BLOCKING notice is not an error) */
   --ui-agent-admin-entry-radius: var(--md-sys-shape-corner-base, 0.25rem); /* TKT-0066 item 5 ruling: dimensional constants route through the own chain */
   --ui-agent-admin-scrollbar-width: none; /* the app-chrome look: NO visible scrollbars in this surface's panes (scrolling stays live) */
   --ui-agent-admin-code-surface: var(--md-sys-color-neutral-container-low, var(--md-sys-color-neutral-surface)); /* vision rev.5 — the Context tabs' mono JSON preview plane (the frame's containerLow tint) */
@@ -411,6 +412,14 @@
     margin: 0;
     font-size: 0.8125rem;
     color: var(--ui-agent-admin-label-ink);
+  }
+
+  /* GH #419 — the non-blocking modality warning, on the same plane as `entry-description` (same margin +
+     size, warning ink instead of label ink): a hint about the text below it, never a bordered alert box. */
+  [data-part='entry-notice'] {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--ui-agent-admin-warning-ink);
   }
 
   /* TKT-0050: `[data-part='entry-content']`'s rule block used to declare box-sizing/resize/font/color/

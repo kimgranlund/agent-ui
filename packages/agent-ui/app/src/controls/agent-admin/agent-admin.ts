@@ -125,6 +125,7 @@ import {
   type LiveCapabilityGroup,
 } from './entries.ts'
 import { mountEntryList, showAddError, type EntryListSection } from './entry-list.ts'
+import { lintPromptSections } from './prompt-lint.ts'
 
 const agentAdminProps = {
   // Non-reflected properties — too structured for an attribute (the `ui-split` `sizes` / `ui-settings`
@@ -752,6 +753,9 @@ export class UIAgentAdminElement extends UIElement {
     store?.set(entriesStoreKey(kind), updater(current))
     if (store !== undefined && store.subscribe === undefined) {
       this.#renders.get(kind)?.()
+      // GH #419 — and re-derive the modality lint against the NEW content (a fixed section's warning must
+      // clear on the edit that fixed it). A subscribing store gets this through its own notification.
+      this.#applyMasterStates(store)
     }
   }
 
@@ -1247,6 +1251,21 @@ export class UIAgentAdminElement extends UIElement {
       this.#surfaceGenuiDogfoodSwitch.checked = isGenuiDogfoodEnabled(store?.get(SURFACE_GENUI_DOGFOOD_KEY))
       this.#surfaceGenuiDogfoodSwitch.disabled = !genuiOn
     }
+    // GH #419 — the prompt-section lint is derived from the SAME two stored modality flags this method
+    // just reflected, so it re-derives here: every path that can flip a Surface Option ends in a call to
+    // this method (the row's own change listener, the store subscription, a rewire), which is exactly when
+    // a warning must appear or clear.
+    this.#applyPromptLint(store, { a2ui: a2uiOn, genui: genuiOn })
+  }
+
+  /** GH #419 — stamp the non-blocking modality warning onto whichever ENABLED prompt sections name a
+   *  modality that is OFF (`prompt-lint.ts` owns the vocabulary + the decision). NOTHING else changes:
+   *  the composed prompt, the request, and the turn are byte-identical whether a warning shows or not —
+   *  this is authoring feedback, never a gate. */
+  #applyPromptLint(store: SettingsStore | undefined, modalities: { a2ui: boolean; genui: boolean }): void {
+    const section = this.#capabilitySections.get(ENTRY_KINDS.promptSection)
+    if (!section) return
+    section.showNotices(lintPromptSections(readEntries(store, ENTRY_KINDS.promptSection), modalities))
   }
 
   /** Rebuild the Context: System view from the store's CURRENT contents: one `Agent` section (open by
