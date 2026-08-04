@@ -9,7 +9,7 @@
 > | **Proposed by** | planner (design seat — the GH [#413](https://github.com/kimgranlund/agent-ui/issues/413) intake; Kim's 2026-08-04 ruling quoted in Context) |
 > | **Ratified by** | *(pending — Kim, at the record PR; `ratify ADR-0169` per ADR-0149)* |
 > | **Repairs** | **On ratification+build:** `a2ui-catalog.spec.md` — the two-tier registration section (SPEC-R6 gains a second FIRST-PARTY catalog registered by the package itself, not only the project seam) · the `value`-mark schema (the ADR-0161 slots section gains the optional `readProp` field, Decision cl.7) · a NEW section for the `a2ui-basic` partition + its coverage gate (the ADR-0087 SPEC-N2 pattern applied to an UPSTREAM-pinned set). `a2ui-live-agent.spec.md`/`.lld.md` — the produce/proxy/worker contracts gain the request-`catalogId` selection + the createSurface authority stamp (Decision cl.3/4). `agent-admin.md` §surface-catalog — the picker's "ONE option today" wording retires (Decision cl.6). `catalog/default/factories.ts:4`'s "no Basic-catalog adapter (SPEC-R8)" header note stays TRUE and gains this ADR's pointer: the default catalog still binds directly; Basic is a SECOND catalog, never an adapter layer inside the default. |
-> | **Supersedes / Superseded by** | **Amends** [ADR-0019](./0019-catalog-two-way-value-slot.md)/[ADR-0161](./0161-catalog-multi-slot-two-way-value-marks.md) — the `ValueSlot` contract gains an optional `readProp` (cl.7): `prop` keeps naming the WIRE side of the round-trip, `readProp` (absent ⇒ `prop`, byte-identical to today) names the DOM property read on commit — exactly the widening input.ts's own closing law calls for ("repair `a2ui-catalog` and re-derive, do not improvise"). **Extends** [ADR-0087](./0087-whole-fleet-catalog-gate-encoded-exclusions.md) — the gate-encoded include-or-recorded-exclusion discipline, reapplied to the 18-type UPSTREAM Basic set (cl.9); the default catalog's whole-fleet scope is untouched. **Relates** [ADR-0097](./0097-feed-embedded-asks-frozen-history-feed-subcatalog.md) — its rejection of a second catalog id as a subset/policy VIEW of the default STANDS and is NOT contradicted here (see Context §Non-collision). · [ADR-0053](./0053-form-family-catalog-rows.md) (the `ChoicePicker`→`Select` rename + the F2 control-prop naming law this ADR's `readProp` finally reconciles with Basic's wire naming) · [ADR-0061](./0061-single-shared-healer.md) (heal's closed form-only repair list is UNTOUCHED — the cl.4 authority stamp is a producer-layer step, not a heal arm) · [ADR-0034](./0034-catalog-functions-shared-table.md) (the shared impl table gains a per-catalog override seam, cl.8) · [ADR-0027](./0027-dynamic-string-interpolation.md)/[ADR-0028](./0028-fn-expr-grammar.md) (the engine that makes `formatString` a one-line impl) · [ADR-0119](./0119-code-prose-family-v1-scope.md) (catalog-invisible `@agent-ui/code` — why Basic `Text` does NOT render markdown) · [ADR-0137](./0137-a2ui-agent-producer-toolkit-export.md) (the shell law the proxy/worker threading respects) · **Resolves GH #413** (M-B goals.md box 4). |
+> | **Supersedes / Superseded by** | **Amends** [ADR-0019](./0019-pull-renderer-lld-c8-two-way-binding.md)/[ADR-0161](./0161-catalog-multi-slot-two-way-value-marks.md) — the `ValueSlot` contract gains an optional `readProp` (cl.7): `prop` keeps naming the WIRE side of the round-trip, `readProp` (absent ⇒ `prop`, byte-identical to today) names the DOM property read on commit — exactly the widening input.ts's own closing law calls for ("repair `a2ui-catalog` and re-derive, do not improvise"). **Extends** [ADR-0087](./0087-a2ui-whole-fleet-catalog-scope-policy.md) — the gate-encoded include-or-recorded-exclusion discipline, reapplied to the 18-type UPSTREAM Basic set (cl.9); the default catalog's whole-fleet scope is untouched. **Relates** [ADR-0097](./0097-a2ui-feed-embedded-asks.md) — its rejection of a second catalog id as a subset/policy VIEW of the default STANDS and is NOT contradicted here (see Context §Non-collision). · [ADR-0053](./0053-a2ui-form-family-catalog-rows.md) (the `ChoicePicker`→`Select` rename + the F2 control-prop naming law this ADR's `readProp` finally reconciles with Basic's wire naming) · [ADR-0061](./0061-corpus-shared-healer-contract.md) (heal's closed form-only repair list is UNTOUCHED — the cl.4 authority stamp is a producer-layer step, not a heal arm) · [ADR-0034](./0034-a2ui-server-initiated-function-invocation.md) (the shared impl table gains a per-catalog override seam, cl.8) · [ADR-0027](./0027-a2ui-v1-dynamicstring-interpolation.md)/[ADR-0028](./0028-a2ui-v1-function-expression-grammar.md) (the engine that makes `formatString` a one-line impl) · [ADR-0119](./0119-code-prose-family-v1-scope.md) (catalog-invisible `@agent-ui/code` — why Basic `Text` does NOT render markdown) · [ADR-0137](./0137-a2ui-agent-producer-toolkit-export.md) (the shell law the proxy/worker threading respects) · **Resolves GH #413** (M-B goals.md box 4). |
 
 ## Context
 
@@ -89,11 +89,11 @@ New files under `packages/agent-ui/a2ui/src/catalog/a2ui-basic/`:
 
 | File | Contract |
 |---|---|
-| `catalog.json` | `{ "catalogId": "a2ui-basic", "protocolVersion": "v1.0", "components": { …13 included types, §2… }, "functions": { …12 included functions, §5, all `"callableFrom": "clientOnly"`… } }` — validated by the same `loadCatalog` gate at import |
+| `catalog.json` | `{ "catalogId": "a2ui-basic", "protocolVersion": "v1.0", "components": { …13 included types, cl.9… }, "functions": { …13 included functions, cl.11, all `"callableFrom": "clientOnly"`… } }` — validated by the same `loadCatalog` gate at import |
 | `index.ts` | `export const a2uiBasicCatalog: Catalog = loadCatalog(catalogDoc)` (the `default/index.ts` twin) |
-| `factories.ts` | `export const a2uiBasicFactories: Record<string, WidgetFactory>` — one factory per declared type (§2); REUSED default factories are imported from `../default/factories.ts` (their `@agent-ui/components` barrel import already self-defines every tag) |
-| `functions.ts` | `export const a2uiBasicFunctions: Record<string, (args: Record<string, unknown>) => unknown>` — the Basic-dialect pure impls (§5); zero imports beyond platform globals (`Intl` is a platform global, not a dependency) |
-| `index.test.ts` | the 18-type partition coverage gate (§6) |
+| `factories.ts` | `export const a2uiBasicFactories: Record<string, WidgetFactory>` — one factory per declared type (cl.9); REUSED default factories are imported from `../default/factories.ts` (their `@agent-ui/components` barrel import already self-defines every tag) |
+| `functions.ts` | `export const a2uiBasicFunctions: Record<string, (args: Record<string, unknown>) => unknown>` — the Basic-dialect pure impls (cl.11); zero imports beyond platform globals (`Intl` is a platform global, not a dependency) |
+| `index.test.ts` | the 18-type partition coverage gate (cl.12) |
 | `factories.test.ts` | per-factory mapping tests (the `default/factories.test.ts` pattern) |
 
 Barrel: `src/catalog/index.ts` adds
@@ -214,7 +214,7 @@ export interface ValueSlot {
 teardown are all untouched — they key off `slot.prop`, the wire side, as before).
 `catalog.ts`'s `isValueSlot`/`validateValueMark` additionally accept an optional string `readProp`
 (reject a non-string). Every existing slot omits the field ⇒ every existing catalog and factory behaves
-byte-identically. Exactly one consumer this wave: Basic `CheckBox` (§2 table). Data→control direction
+byte-identically. Exactly one consumer this wave: Basic `CheckBox` (cl.9 table). Data→control direction
 needs no widening — it already routes through the factory's bespoke `applyProp`.
 
 ### 8 · Per-catalog function implementations (amends the ADR-0034 shared-table seam)
@@ -253,7 +253,7 @@ confirm before `catalog.json` lands; everything else in the row is ruled now).
 | 6 | `Row` | INCLUDE | `ui-row` | `justify` (`start\|center\|end\|spaceBetween`), `align` (`start\|center\|end`) | `ChildList` | — | bespoke: `justify` through the literal map `{start→start, center→center, end→end, spaceBetween→between}` (fleet token verified: `catalog.json:128`); `align` passes 1:1 (fleet union includes all three, `container.ts:50`). |
 | 7 | `Column` | INCLUDE | `ui-column` | same as Row | `ChildList` | — | same bespoke shape as Row (one shared helper). |
 | 8 | `List` | INCLUDE | `ui-list` | `direction` (`vertical\|horizontal`) | `ChildList` | — | bespoke: `direction:'horizontal'` ⇒ `el.style.flexDirection='row'; el.style.overflowX='auto'`; `'vertical'`/absent ⇒ clear both (the control's own column CSS governs). `role=list` semantics ride the control (ADR-0016 cl.3). Risk row R3. |
-| 9 | `Card` | INCLUDE | `ui-card` | *(none v1)* | `child` (single — the guide: "accepts exactly **one** child") | — | REUSE `cardFactory`. |
+| 9 | `Card` | INCLUDE | `ui-card` | *(none v1)* | `child`⚑ (single — the guide: "accepts exactly **one** child") | — | REUSE `cardFactory`. |
 | 10 | `Tabs` | **DEFER** | — | — | — | — | exclusion table row E3 |
 | 11 | `Divider` | INCLUDE | `div[role=separator]` (sanctioned primitive) | `axis` (`horizontal\|vertical`) | — | — | bespoke: `create()` builds `div` + `role=separator`; `axis`→`aria-orientation` attribute + inline hairline styles — horizontal: `blockSize:'1px'; inlineSize:'100%'`; vertical: `inlineSize:'1px'; alignSelf:'stretch'`; both: `backgroundColor:'var(--md-sys-color-outline-variant)'`. |
 | 12 | `Modal` | **DEFER** | — | — | — | — | exclusion table row E4 |
@@ -296,7 +296,7 @@ data model as today).
 
 Score: 13 of 18 INCLUDE, 5 recorded EXCLUDE/DEFER — every row reasoned, none silent.
 
-### 11 · The client-side functions table (13 rows, upstream §2)
+### 11 · The client-side functions table (14 upstream functions across 13 rows, guide §2)
 
 All included functions are declared `clientOnly` in `a2ui-basic/catalog.json` and implemented in
 `a2ui-basic/functions.ts`, registered per-catalog (cl.8) so their BOOLEAN dialect never collides with the
@@ -318,7 +318,7 @@ shared table's `{valid, message?}` dialect under the same names.
 | 12 | `and` | needs-a-small-addition | `(args) => Array.isArray(args.values) && args.values.every((v) => v === true)`. |
 | 13 | `or` / `not` | needs-a-small-addition | `or`: `.some((v) => v === true)` over `args.values`; `not`: `args.value !== true` — strict boolean dialect, matching upstream's "strict boolean negation". |
 
-(13 upstream names; row 13 carries the final two — 12 implemented, 1 excluded.)
+(14 upstream names; row 13 carries the final two — 13 implemented, 1 excluded.)
 
 ### 12 · The partition coverage gate (`a2ui-basic/index.test.ts`)
 
@@ -337,9 +337,9 @@ const BASIC_EXCLUSIONS: Record<string, string> = {
 
 Assertions: (1) every one of the 18 is EITHER a `a2uiBasicCatalog.components` key OR a
 `BASIC_EXCLUSIONS` key, never both, never neither; (2) the catalog declares NO type outside the 18
-(interop purity — `a2ui-basic` never grows fleet-only types; those belong to `agent-ui`); (3) the 12
+(interop purity — `a2ui-basic` never grows fleet-only types; those belong to `agent-ui`); (3) the 13
 included function names are declared and the excluded `openUrl` is not; (4) `register(a2uiBasicCatalog,
-a2uiBasicFactories)` succeeds (the registry's own FACTORY_MISSING gate then enforces factory coverage
+a2uiBasicFactories, a2uiBasicFunctions)` succeeds (the registry's own FACTORY_MISSING gate then enforces factory coverage
 forever). Draining an exclusion row = a follow-up ADR/row edit, exactly the ADR-0087 allowlist law.
 
 ## Consequences
