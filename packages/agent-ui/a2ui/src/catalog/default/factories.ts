@@ -650,7 +650,14 @@ export const badgeFactory: WidgetFactory = accessorFactory('ui-badge')
 // `page`/`pages`/`label` are ALL 1:1 reflecting accessor props — verified against pagination.ts `static
 // props` — so plain `accessorFactory` suffices, the same shape as `sliderFactory`/`comboBoxFactory`.
 // Two-way bindable on `page` via the control's own `change` commit event (the Slider/ComboBox `value`
-// precedent) — one slot, the standard single-object `value` mark shape most rows carry.
+// precedent) — one slot, the standard single-object `value` mark shape most rows carry. `pages`/`label`
+// stay NON-bindable (catalog.json carries no `bindable: true` on either), UNLIKE the Toolbar/Table/
+// Sparkline `label` precedent — deliberately: ADR-0163 cl.6 gives `label` as a static "accessible nav
+// name" (the navigation landmark's own name, set once by the composing author, never a live view-state
+// value the control itself commits or a series a data feed streams), and `pages` is a derived COUNT the
+// composing author computes from their own page-size math, not a value `ui-pagination` itself produces —
+// only `page` is the round-trippable state a user's click actually moves. A future consumer that wants
+// either bound live is a real, separate need (e.g. a streamed result count), not an oversight here.
 export const paginationFactory: WidgetFactory = accessorFactory('ui-pagination', { prop: 'page', event: 'change' })
 
 // ── the ADR-0113 content family (Code / Disclosure / Text.href, catalog LLD-C13, content-family.lld.md §5) ──
