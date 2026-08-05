@@ -1,0 +1,25 @@
+{
+  "skill": "agent-admin-library-kinds",
+  "cases": [
+    { "id": "t01", "expect": "trigger", "prompt": "How do I add an entry kind to agent-admin?" },
+    { "id": "t02", "expect": "trigger", "prompt": "We need a new library section in agent-admin's settings pane — what are all the places to touch?" },
+    { "id": "t03", "expect": "trigger", "prompt": "I'm building a single-select kind — the user picks exactly one entry. How should the toggles behave?" },
+    { "id": "t04", "expect": "trigger", "prompt": "Where does selection truth live for a pick-exactly-one capability section?" },
+    { "id": "t05", "expect": "trigger", "prompt": "Add a library pack for a new capability kind — what's the shape?" },
+    { "id": "t06", "expect": "trigger", "prompt": "What's in the capability kind roster, and how does a new kind join it?" },
+    { "id": "t07", "expect": "trigger", "prompt": "Can I add a parameter to mountEntryList for my new kind?" },
+    { "id": "t08", "expect": "trigger", "prompt": "Why does toggling the active catalog row off snap the selection to Default instead of leaving nothing selected?" },
+    { "id": "t09", "expect": "trigger", "prompt": "My new kind's switch flips back visually after I toggle it — is that the unregistered-id no-op?" },
+    { "id": "t10", "expect": "trigger", "prompt": "Should my kind be multi-enable like Skills or single-select like Catalogs?" },
+    { "id": "t11", "expect": "trigger", "prompt": "Do presets need to seed my new entry kind, or can I skip the seed map?" },
+    { "id": "t12", "expect": "trigger", "prompt": "When a library pack's entries key an external registry, what carries the stable id through the add path?" },
+    { "id": "t13", "expect": "trigger", "prompt": "Toggling the Default catalog row off doesn't re-render the section — why doesn't the store notify?" },
+    { "id": "t14", "expect": "trigger", "prompt": "Delete of the active row: which key do we write first, the selection key or the roster?" },
+    { "id": "t15", "expect": "trigger", "prompt": "How did pattern-source do single-pick, and can my new kind reuse that shape?" },
+    { "id": "n01", "expect": "no-trigger", "prompt": "Register a second A2UI catalog on the renderer — where do the factories go?" },
+    { "id": "n02", "expect": "no-trigger", "prompt": "Add a new integration tool to the dev proxy's registry with a server-side key." },
+    { "id": "n03", "expect": "no-trigger", "prompt": "How do dynamic lists render in an A2UI payload?" },
+    { "id": "n04", "expect": "no-trigger", "prompt": "Build a ui-select control variant with grouped options." },
+    { "id": "n05", "expect": "no-trigger", "prompt": "What sections does a bug ticket carry in this repo?" }
+  ]
+}
