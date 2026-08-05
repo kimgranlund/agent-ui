@@ -33,6 +33,13 @@ export type { AgentTurnHandle, TurnAction } from './controls/conversation/conver
 // app-tier surface. No new primitive family, no new protocol dependency.
 export { UIAgentAdminElement } from './controls/agent-admin/agent-admin.ts'
 export { defaultAgentConfigSchema, agentConfigSchema, runStubAgentTurn } from './controls/agent-admin/agent-admin-schema.ts'
+// ADR-0170 cl.7 — the registered-catalog REGISTRY, exported so a consumer's library pack can be MAPPED
+// from it rather than hand-copying a trio table (site/pages/agent-admin-libraries.ts's "Registered
+// catalogs" pack is that consumer). Browser-importable by construction, unlike the node-fenced
+// integrations registry — so a third catalog is one row here and zero pack edits, with no parity test to
+// forget. `sanitizeCatalog`/`A2UI_CATALOG_KEY` stay component-internal: a consumer offers catalogs, it
+// never re-implements the fail-closed read.
+export { A2UI_CATALOG_OPTIONS } from './controls/agent-admin/agent-admin-schema.ts'
 export type { AgentConfigSnapshot } from './controls/agent-admin/agent-admin-schema.ts'
 // ADR-0132 — the generic ordered-entry-list primitive: prompt sections (Foundation/Personality/Critical
 // Items) + Skills/Workflows/Resources/Tools, five instantiations of one shape.

@@ -230,6 +230,16 @@ export const A2UI_CATALOG_OPTIONS: ReadonlyArray<{ id: string; label: string }> 
 with zero further edits — the seam was built for exactly this. The picker offers the SHORT id only (the
 canonical-URI alias is never a picker option — cl.13).
 
+> **REV 2026-08-05 — forward pointer only** (a mechanical pointer repair per [ADR-0156](./0156-deprecate-app-shell-for-super-shell-family.md)
+> clause 5, booked by [ADR-0170](./0170-catalog-library-kind-single-select.md)'s Repairs row at its
+> 2026-08-04 ratification; this clause's own substance is unedited). The picker's UI **vehicle** changed:
+> the bare `ui-select` this clause names retires in favor of a "Catalogs" library section — the same
+> `mountEntryList` machinery every other capability kind uses, whose per-entry switches DERIVE from this
+> same persisted `A2UI_CATALOG_KEY` — plus a read-only label mirror on the a2ui Surface Options row
+> (ADR-0170 cl.1/cl.2/cl.6). Everything this clause actually rules is byte-untouched by that change: the
+> `A2UI_CATALOG_OPTIONS` table above, `sanitizeCatalog`'s fail-closed contract, the short-id-only policy
+> (cl.13), and the cl.5 threading onto the produce POST body.
+
 ### 7 · The `ValueSlot` widening — `readProp` + closed `marshal` (amends ADR-0019/0161)
 
 `catalog/catalog.ts`:
