@@ -11,12 +11,15 @@
 // shell posture above: registering a page in the site's nav/landing only makes it a normal link target
 // (a plain `<a href>`, a real MPA navigation) — it says nothing about what THIS page renders once you
 // land on it. Every other listed page still imports `_page.ts` (even the "full-bleed" ones,
-// `mountFullBleedPage`) and keeps at least the nav rail + context header/footer; this page is the one
+// `mountFullBleedPage`) and keeps at least the nav rail + context header/footer; this page is a
 // deliberate exception, because its whole reason to exist is showing ui-agent-admin exactly as it would
 // ship in production, not a docs-wrapped preview of it (agent-admin.html already owns that job) — the
 // gallery.ts "ungrouped nav entry" precedent this file's header used to cite is about NAV grouping, not
 // about the shell; gallery.ts itself uses `mountPage` and keeps the full docs shell. Forcing `_page.ts`
-// onto this page would defeat the demo's own point, so it does not get one.
+// onto this page would defeat the demo's own point, so it does not get one. GH #461/MA-3's workbench.ts
+// is the SECOND instance of this same shell-less posture (its own header makes the identical case for
+// ui-workspace-shell) — this is no longer a lone exception, it is the standing pattern for a page whose
+// entire point is showing a real composition, not a docs-wrapped preview of one.
 import '@agent-ui/components/foundation-styles.css' // [1] foundation: tokens.css → dimensions.css (FIRST)
 import '@agent-ui/components/base-styles.css' // [1b] the DOCUMENT BASE layer: typeface/leading/ink/rendering (shell-less pages need this or they render in the UA serif)
 import '@agent-ui/components/component-styles.css' // [2] per-control CSS, after the foundation
