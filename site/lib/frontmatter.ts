@@ -60,10 +60,13 @@ import themeProviderMd from '../../packages/agent-ui/components/src/controls/the
 // The Wave M1 chart family (ADR-0107, chart-family.lld.md): the two Display-class axis-free charts.
 import sparklineMd from '../../packages/agent-ui/components/src/controls/sparkline/sparkline.md?raw'
 import barChartMd from '../../packages/agent-ui/components/src/controls/bar-chart/bar-chart.md?raw'
-// The Wave M1 report family (ADR-0111, report-family.lld.md): table/stat/badge — all tier=display.
+// The Wave M1 report family (ADR-0111, report-family.lld.md): table/stat/badge — all tier=display. `ui-table`
+// widened in place by ADR-0163 (selection/sort/filter/pagination, all default off).
 import tableMd from '../../packages/agent-ui/components/src/controls/table/table.md?raw'
 import statMd from '../../packages/agent-ui/components/src/controls/stat/stat.md?raw'
 import badgeMd from '../../packages/agent-ui/components/src/controls/badge/badge.md?raw'
+// ADR-0163 cl.6 — ui-pagination, the fleet's first standalone page navigator (tier=pattern).
+import paginationMd from '../../packages/agent-ui/components/src/controls/pagination/pagination.md?raw'
 // The Wave M1 content family (ADR-0113, content-family.lld.md): the code leaf + the disclosure fold.
 import codeMd from '../../packages/agent-ui/components/src/controls/code/code.md?raw'
 import disclosureMd from '../../packages/agent-ui/components/src/controls/disclosure/disclosure.md?raw'
@@ -165,6 +168,7 @@ export const loadBarChartDoc  = (): ComponentDoc => parseDoc(barChartMd)
 export const loadTableDoc = (): ComponentDoc => parseDoc(tableMd)
 export const loadStatDoc  = (): ComponentDoc => parseDoc(statMd)
 export const loadBadgeDoc = (): ComponentDoc => parseDoc(badgeMd)
+export const loadPaginationDoc = (): ComponentDoc => parseDoc(paginationMd)
 // The Wave M1 content family (ADR-0113 — code tier=display ⇒ {doc}; disclosure tier=pattern ⇒ {doc, demo}).
 export const loadCodeDoc       = (): ComponentDoc => parseDoc(codeMd)
 export const loadDisclosureDoc = (): ComponentDoc => parseDoc(disclosureMd)

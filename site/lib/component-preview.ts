@@ -656,6 +656,10 @@ const COMPONENT_SAMPLE_ATTRS: Record<string, Record<string, string>> = {
     columns: '[{"key":"region","label":"Region"},{"key":"revenue","label":"Revenue","type":"number"}]',
     rows: '[{"region":"EMEA","revenue":42000},{"region":"APAC","revenue":31000}]',
   },
+  // ADR-0163 cl.6 — ui-pagination's LIVE descriptor default (`pages="0"`) renders NOTHING at all (an honest
+  // empty state per SPEC-R3, but an uninstructive bare gallery specimen, the ui-table/ui-sparkline precedent
+  // exactly). Seeded mid-range so both ellipsis markers + the active stop paint.
+  'ui-pagination': { page: '5', pages: '12' },
   'ui-ramp': {
     steps:
       '[{"label":"100","value":"--md-sys-color-primary-100"},{"label":"300","value":"--md-sys-color-primary-300"},' +
@@ -760,6 +764,10 @@ export const NO_SLOT_TEXT = new Set([
   // fallback affordance) entirely imperatively from props (html/csp) — no light-DOM content model at all
   // (slots: [] — sandbox-frame.md), the ui-stat/ui-swatch precedent exactly.
   'ui-sandbox-frame',
+  // ADR-0163 cl.6 — ui-pagination builds its ENTIRE visible content imperatively (#rebuild(), replaceChildren)
+  // from page/pages/label PROPS alone — no light-DOM content model at all (slots: [] — pagination.md), the
+  // ui-stat/ui-swatch precedent exactly.
+  'ui-pagination',
 ])
 
 // STRUCTURAL (batch B) — the default slot IS the real content model (children ARE the grid cells / flex items /

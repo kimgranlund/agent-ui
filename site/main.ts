@@ -712,6 +712,22 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // ADR-0163 cl.6 — ui-pagination, the fleet's first standalone page navigator (tier=pattern).
+  {
+    label: 'ui-pagination',
+    cards: [
+      {
+        href: './pagination-demo.html',
+        title: 'Demo',
+        blurb: 'A standalone page navigator, live — a mid-range page (both ellipsis markers), the honest pages<2 empty state, and composing with ui-table\'s own page-size capability.',
+      },
+      {
+        href: './pagination-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-pagination attributes (page/pages/label) and the fixed page-window algorithm, generated from pagination.md.',
+      },
+    ],
+  },
   // The Wave M1 content family (ADR-0113): the zero-machinery code leaf + the native-<details> disclosure.
   {
     label: 'ui-code',

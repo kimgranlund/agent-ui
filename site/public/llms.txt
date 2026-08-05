@@ -79,7 +79,7 @@
 
 ## Components — report
 
-- [ui-table](./table-doc.html): the static data table — a real native `<table>` from `columns` + record `rows`, number columns end-aligned and Intl-formatted, scroll-preserving updates.
+- [ui-table](./table-doc.html): the data table — a real native `<table>` from `columns` + record `rows`, number columns end-aligned and Intl-formatted, scroll-preserving updates; widened in place (ADR-0163) with opt-in row selection, per-column sort, control-owned filter/search, and pagination — all default off, byte-identical to the display-only baseline at defaults.
 - [ui-stat](./stat-doc.html): the label/value/delta/caption metric tile — delta direction carried as glyph + sign + text, never color alone.
 - [ui-badge](./badge-doc.html): the compact status/tag pill — bindable `intent` enum with a component-drawn per-intent glyph.
 - [ui-sparkline](./sparkline-doc.html): the inline trend line over a bound numeric series.
@@ -111,6 +111,7 @@
 - [ui-card](./card-doc.html): the header/content/footer surface container with the shared box model; [demo](./card-demo.html).
 - [ui-tabs](./tabs-doc.html): the tablist pattern — roving focus, panel switching; [demo](./tabs-demo.html).
 - [ui-toolbar](./toolbar-doc.html): the Pattern-class action bar — role=toolbar + roving focus decoupled from selection, posture via elevation/brightness (no posture prop); [demo](./toolbar-demo.html).
+- [ui-pagination](./pagination-doc.html): the standalone page navigator — previous/next + a fixed-window page-number list with ellipsis, composing ui-button for every stop; `pages < 2` renders nothing; consumed internally by ui-table's `page-size`; [demo](./pagination-demo.html).
 - [Layout primitives overview](./layout-overview.html): row, column, list, grid — gap-driven, no control heights; individual pages: [row](./row-doc.html), [column](./column-doc.html), [list](./list-doc.html), [grid](./grid-doc.html).
 - [Surface × layout matrix](./layout-permutations.html): every container surface crossed with every layout primitive.
 
