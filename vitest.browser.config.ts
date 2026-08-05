@@ -104,6 +104,16 @@ const FOCUS_TIMING_FILES = [
   // theme-flip leg reads the surface card the file's earlier containment leg mounts (shared module
   // state), so the whole file — not one describe block — takes the isolation.
   'site/pages/gen-ui-live.browser.test.ts',
+  // 2026-08-05 append (GH #461, MA-3) — the SAME click-to-focus-a-top-layer-panel shape as
+  // command-palette.browser.test.ts/adr-index.browser.test.ts just above: `clickStatusFacet` opens a
+  // `ui-form-popover` trigger (Popover API, a JS positioning controller settle) before clicking a facet
+  // checkbox inside its panel. Passes 20/20 solo both engines; reproduced failing ONLY under full
+  // `test:browser:site` shard concurrency — a Chromium trigger-click timeout in
+  // `workbench — SPEC-R7`'s `clickStatusFacet` call, cascading into a WebKit whole-test timeout and a
+  // stale-state SPEC-R9 assertion (the SAME test's own cleanup never running past its timeout). The class
+  // signature exactly — a real page working correctly, flaking under concurrent-page focus/render
+  // contention, not a defect.
+  'site/pages/workbench.browser.test.ts',
 ]
 
 // ─── REAL-TIMING HEADROOM (GH #347) ────────────────────────────────────────────────────────────────
