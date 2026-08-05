@@ -338,6 +338,18 @@ cells (the one quantity that rides `--md-sys-density`; the frame stays density-i
 is **layout only** — express any popup/disclosure meaning as ARIA on the host (`aria-haspopup` /
 `aria-expanded` via `ElementInternals`), never on the glyph.
 
+**Label alignment is per-structure** (ADR-0171, GH #442) — a single adornment start-aligns the label
+so the adornment and label read as one visual cluster; bare and double-adorned labels stay centered
+(GH #293's original rule). This is presence-derived, never author-opted — there is no alignment prop:
+
+| Structure | Label alignment |
+|---|---|
+| `[label]` (bare) | centered |
+| `[leading \| label]` | **start** — hugs the leading adornment |
+| `[label \| trailing]` | **start** — flush at the leading edge; the adornment sits at the end |
+| `[leading \| label \| trailing]` | centered between the two adornment cells |
+| `[icon-only]` (no label) | n/a — no label to align |
+
 ### Icon-only (no label)
 
 A real slotted adornment with **no label content at all** needs the `icon-only` attribute. CSS alone
@@ -353,6 +365,12 @@ Because there is no label text, the accessible name must come from `aria-label` 
 trailing) — the fifth structure is one column, so both slots present together is undefined layout (the
 second silently wraps/overflows rather than erroring); no current consumer needs two icons on an
 icon-only button, so this is documented rather than fenced.
+
+`icon-only` names the **structure** ("adornment-only, no label"), not the adornment's role — it is
+role-agnostic by construction. A **caret-only** button (a lone `data-role="caret"` glyph, no icon, no
+label) is already legal today via `<ui-button icon-only aria-label="…">` plus a `data-role="caret"`
+adornment: the attribute selects the single-column square, the cell stays icon-sized, and the role
+sizes the glyph exactly as it does everywhere else (ADR-0171).
 
 ### Overflow (ADR-0133)
 
