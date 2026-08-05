@@ -9,12 +9,12 @@
     {
       "id": "t02",
       "expect": "trigger",
-      "prompt": "Register a second catalog on the renderer \u2014 what's the pattern?"
+      "prompt": "Register a second catalog on the renderer — what's the pattern?"
     },
     {
       "id": "t03",
       "expect": "trigger",
-      "prompt": "We need upstream A2UI interop \u2014 render Google's Basic Catalog payloads on our renderer."
+      "prompt": "We need upstream A2UI interop — render Google's Basic Catalog payloads on our renderer."
     },
     {
       "id": "t04",
@@ -24,27 +24,27 @@
     {
       "id": "t05",
       "expect": "trigger",
-      "prompt": "Register a catalog for a third-party component set \u2014 where do the factories and functions go?"
+      "prompt": "Register a catalog for a third-party component set — where do the factories and functions go?"
     },
     {
       "id": "t06",
       "expect": "trigger",
-      "prompt": "The prose implementation guide and the catalog JSON schema disagree on a prop name \u2014 which is the catalog schema ground truth?"
+      "prompt": "The prose implementation guide and the catalog JSON schema disagree on a prop name — which is the catalog schema ground truth?"
     },
     {
       "id": "t07",
       "expect": "trigger",
-      "prompt": "An upstream CheckBox binds a boolean value but our control commits a string \u2014 how do we widen the two-way seam without forking input.ts?"
+      "prompt": "An upstream CheckBox binds a boolean value but our control commits a string — how do we widen the two-way seam without forking input.ts?"
     },
     {
       "id": "t08",
       "expect": "trigger",
-      "prompt": "Upstream buttons send action as {event:{name,context}} \u2014 should readActionSpec get another tolerance arm?"
+      "prompt": "Upstream buttons send action as {event:{name,context}} — should readActionSpec get another tolerance arm?"
     },
     {
       "id": "t09",
       "expect": "trigger",
-      "prompt": "Basic's validators return booleans but our shared catalogFunctions table returns {valid,message} \u2014 same names, different dialects. How do we avoid a collision?"
+      "prompt": "Basic's validators return booleans but our shared catalogFunctions table returns {valid,message} — same names, different dialects. How do we avoid a collision?"
     },
     {
       "id": "t10",
@@ -54,7 +54,7 @@
     {
       "id": "t11",
       "expect": "trigger",
-      "prompt": "The model stamped createSurface with the wrong catalogId on a Basic turn \u2014 who is authoritative?"
+      "prompt": "The model stamped createSurface with the wrong catalogId on a Basic turn — who is authoritative?"
     },
     {
       "id": "t12",
@@ -74,12 +74,12 @@
     {
       "id": "n03",
       "expect": "no-trigger",
-      "prompt": "The renderer won't paint this updateComponents message \u2014 debug the payload."
+      "prompt": "The renderer won't paint this updateComponents message — debug the payload."
     },
     {
       "id": "n04",
       "expect": "no-trigger",
-      "prompt": "Add a chart control to the fleet \u2014 does one exist already?"
+      "prompt": "Add a chart control to the fleet — does one exist already?"
     },
     {
       "id": "n05",
@@ -105,6 +105,16 @@
       "id": "n09",
       "expect": "no-trigger",
       "prompt": "Is there an upstream npm update for CodeMirror we should take?"
+    },
+    {
+      "id": "x-libkinds-1",
+      "expect": "no-trigger",
+      "prompt": "Add an entry kind — a new library section in the agent-admin settings pane."
+    },
+    {
+      "id": "x-libkinds-2",
+      "expect": "no-trigger",
+      "prompt": "Add a catalog to the persona's shelf in agent-admin — the Catalogs library section."
     }
   ]
 }
