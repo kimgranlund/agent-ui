@@ -161,7 +161,7 @@ skill already follows for `a2ui-basic`).
   register-beside-default pattern (they are mechanically different: §1 has no merge primitive,
   ADR-0172 cl.2's own Context finding).
 - **AC2** the file continues to pass `site/lib/docs-grammar.test.ts`'s S9 exemplar-path sweep and
-  the dangling-relative-link check (SPEC-N4 in agent-ui-doc-standards' own gate table).
+  the dangling-relative-link check (agent-ui-doc-standards SKILL.md §5's structural gate).
 
 **SPEC-R5 — The persona's local-pattern-set SELECTION, never its definitions, is exportable state**
 *(ADR-0172 cl.1 · Repairs item 5)*. `agent-admin-schema.ts` MUST gain a new persisted key —
@@ -295,9 +295,9 @@ the identical fix once chosen.
    fills SPEC-R2/R3 in. A minimal fixture local-pattern-set (empty `components`/`functions`, or a
    single non-colliding demo type) is sufficient to prove SPEC-R1's shape and SPEC-R5's round-trip
    without waiting on OF1.
-3. **SPEC-R2 (compose + register) lands once OF1 rules** — the identity case (AC1) and the
-   non-colliding union case (AC2) are buildable and testable immediately once a fixture exists;
-   the collision arm (AC3) fills in with whichever of (a)/(b)/(c) Kim picks.
+3. **SPEC-R2's AC1/AC2 land fork-independent; AC3 lands once OF1 rules** — the identity case (AC1)
+   and the non-colliding union case (AC2) are buildable and testable immediately once a fixture
+   exists; the collision arm (AC3) fills in with whichever of (a)/(b)/(c) Kim picks.
 4. **SPEC-R3 (selection recognizes derived ids) follows SPEC-R2** — it needs a real registered
    derived catalog to assert non-regression against.
 5. **SPEC-R4 (the skill's fifth pattern) lands last in this slice** — it documents the shipped
