@@ -2336,6 +2336,53 @@ describe('UIAgentAdminElement — the Catalogs section (ADR-0170)', () => {
     expect(checkedIds(el), 'a persona always has a catalog').toEqual([DEFAULT_A2UI_CATALOG_ID])
   })
 
+  // The same-value arm of the rule above, split out because it is the one that cannot lean on a store
+  // notification: toggling the ACTIVE row off when the active row IS the Default writes the default id
+  // OVER ITSELF. `SettingsStore` promises no notification on a same-value `set`, so a section that relied
+  // on one would leave the switch the user just flipped visually OFF while the selection never moved —
+  // exactly the "no catalog selected" state cl.3 says must not exist.
+  it('toggling the DEFAULT row off while it is ALREADY active snaps it back — never a "none" state', async () => {
+    // The key is EXPLICITLY the default here (not merely absent) — that is what makes the fail-closed
+    // write a same-value one. With the key absent, `set` moves undefined→'agent-ui', a real change.
+    const el = mountWithRoster([], { [A2UI_CATALOG_KEY]: DEFAULT_A2UI_CATALOG_ID })
+    await whenFlushed()
+    expect(checkedIds(el)).toEqual([DEFAULT_A2UI_CATALOG_ID])
+
+    flip(el, DEFAULT_A2UI_CATALOG_ID, false)
+    expect(el.store!.get(A2UI_CATALOG_KEY), 'the fail-closed write still lands').toBe(DEFAULT_A2UI_CATALOG_ID)
+    expect(checkedIds(el), 'the switch snapped back — a persona always has a catalog').toEqual([DEFAULT_A2UI_CATALOG_ID])
+  })
+
+  it('the same snap-back holds on a store that does NOT notify on a same-value set (the promise, not the implementation)', async () => {
+    // `SettingsStore` does not promise a notification for a `set` that changes nothing — `createMemoryStore`
+    // happens to send one. This store takes the other permitted option, so the section may not lean on it.
+    const values = new Map<string, unknown>([
+      [entriesStoreKey(ENTRY_KINDS.catalog), []],
+      [A2UI_CATALOG_KEY, DEFAULT_A2UI_CATALOG_ID], // explicitly stored ⇒ the write below really is same-value
+    ])
+    const listeners = new Set<(key: string, value: unknown) => void>()
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = {
+      get: (key) => values.get(key),
+      set: (key, value) => {
+        const changed = values.get(key) !== value
+        values.set(key, value)
+        if (changed) for (const listener of listeners) listener(key, value)
+      },
+      subscribe: (listener) => {
+        listeners.add(listener)
+        return () => listeners.delete(listener)
+      },
+    }
+    mount(el)
+    await whenFlushed()
+    expect(checkedIds(el)).toEqual([DEFAULT_A2UI_CATALOG_ID])
+
+    flip(el, DEFAULT_A2UI_CATALOG_ID, false)
+    expect(values.get(A2UI_CATALOG_KEY)).toBe(DEFAULT_A2UI_CATALOG_ID)
+    expect(checkedIds(el), 'the direct re-render carried it, not a notification that never came').toEqual([DEFAULT_A2UI_CATALOG_ID])
+  })
+
   it('deleting the ACTIVE row drops it from the roster AND moves the selection to Default (cl.4)', async () => {
     const el = mountWithRoster([rosterRow(SECOND.id, 0, SECOND.label)], { [A2UI_CATALOG_KEY]: SECOND.id })
     await whenFlushed()

@@ -805,19 +805,20 @@ export class UIAgentAdminElement extends UIElement {
   #selectCatalog(id: string, checked: boolean): void {
     const store = this.store
     const active = sanitizeCatalog(store?.get(A2UI_CATALOG_KEY))
-    let wrote = false
-    if (checked && isRegisteredCatalog(id)) {
-      store?.set(A2UI_CATALOG_KEY, id)
-      wrote = true
-    } else if (!checked && id === active) {
-      store?.set(A2UI_CATALOG_KEY, DEFAULT_A2UI_CATALOG_ID)
-      wrote = true
-    }
-    // A refused/no-op toggle writes NOTHING, so no store subscription fires — the switch the user just
-    // flipped would stay visually ON while the selection never moved (the UI lying about the one fact
-    // this section exists to state). Re-render directly in that case, and in the no-subscribe-store case
-    // (`#updateEntries`' own fallback discipline).
-    if (!wrote || store?.subscribe === undefined) this.#refreshCatalogSection()
+    let next: string | undefined
+    if (checked && isRegisteredCatalog(id)) next = id
+    else if (!checked && id === active) next = DEFAULT_A2UI_CATALOG_ID
+    if (next !== undefined) store?.set(A2UI_CATALOG_KEY, next)
+    // Re-render DIRECTLY unless a real selection change is guaranteed to notify. Three cases need it, and
+    // all three leave the flipped switch visually wrong otherwise — the UI lying about the one fact this
+    // section exists to state:
+    //  · nothing was written (a refused unregistered ON, or an already-OFF row) — no subscriber fires;
+    //  · the written value EQUALS the previous one (toggling the ACTIVE row off when the active row IS
+    //    the Default: the fail-closed law writes the default over itself) — `SettingsStore` promises no
+    //    notification on a same-value `set`, so treat that arm as unwritten rather than depending on one
+    //    implementation's behaviour;
+    //  · the store has no `subscribe` at all (`#updateEntries`' own fallback discipline).
+    if (next === undefined || next === active || store?.subscribe === undefined) this.#refreshCatalogSection()
   }
 
   /** Deleting a catalog row (ADR-0170 cl.4) — the ordinary roster delete, plus the default-id write when
