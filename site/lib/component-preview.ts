@@ -626,6 +626,15 @@ const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
   // ui-timeline-item (ADR-0122): `label`/`timestamp` are real string knobs defaulting to '' — the same
   // demonstrability gap as ui-disclosure's `summary` above; a bare specimen would render an unlabeled dot.
   'ui-timeline-item': { status: 'done', label: 'Deployed', timestamp: 'Apr 15, 2:30 PM' },
+  // GH #458 — ui-pagination (ADR-0163 cl.6): `page`/`pages` are REAL editable number knobs (unlike ui-table/
+  // ui-sparkline's JSON-string `kind: 'skip'` attrs below), so #buildComponent()'s knob-apply loop runs for
+  // both after any host-attribute seed and reads them straight from #state — a COMPONENT_SAMPLE_ATTRS seed
+  // (which writes only the host attribute, never #state) would be silently undone the instant that loop ran
+  // (`raw === undefined` ⇒ `el.removeAttribute`), collapsing the specimen back to the descriptor's honest-
+  // empty default (`pages="0"`, SPEC-R3) and rendering nothing. Seeded here instead (mid-range, so both
+  // ellipsis markers + the active stop paint) — the ui-icon/ui-stat precedent exactly, since #seedState()
+  // reads COMPONENT_INITIAL straight into #state, so the knob-apply loop reflects the seed rather than erasing it.
+  'ui-pagination': { page: '5', pages: '12' },
 }
 
 // A per-tag static HOST ATTRIBUTE seed (batch C) — distinct from COMPONENT_INITIAL (which seeds a KNOB's
@@ -656,10 +665,6 @@ const COMPONENT_SAMPLE_ATTRS: Record<string, Record<string, string>> = {
     columns: '[{"key":"region","label":"Region"},{"key":"revenue","label":"Revenue","type":"number"}]',
     rows: '[{"region":"EMEA","revenue":42000},{"region":"APAC","revenue":31000}]',
   },
-  // ADR-0163 cl.6 — ui-pagination's LIVE descriptor default (`pages="0"`) renders NOTHING at all (an honest
-  // empty state per SPEC-R3, but an uninstructive bare gallery specimen, the ui-table/ui-sparkline precedent
-  // exactly). Seeded mid-range so both ellipsis markers + the active stop paint.
-  'ui-pagination': { page: '5', pages: '12' },
   'ui-ramp': {
     steps:
       '[{"label":"100","value":"--md-sys-color-primary-100"},{"label":"300","value":"--md-sys-color-primary-300"},' +
