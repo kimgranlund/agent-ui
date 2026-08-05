@@ -1188,5 +1188,12 @@
     "description": "ui-button label alignment: CENTER only bare and double-adorned; a SINGLE adornment (icon or caret, leading OR trailing) start-aligns the label in its track (Ki…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0172",
+    "url": "./adr-index.html#adr-0172",
+    "description": "M-D design intake (GH #472/#421, Kim's 2026-08-05 reopen ruling): freezes the three architectural questions for per-persona A2UI catalogs — Q1 the local-patter…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
