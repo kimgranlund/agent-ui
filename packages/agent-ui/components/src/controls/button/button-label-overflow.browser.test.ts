@@ -82,24 +82,29 @@ describe('ui-button label centering when stretched wider than its content (GH #2
     )
   })
 
-  it('leading+label stretched wide: the label centers within ITS OWN track (not the whole button)', () => {
+  it('leading+label stretched wide: the label START-aligns within ITS OWN track — hugging the icon, leftover space at the end (ADR-0171, GH #442)', () => {
     const { btn } = mount('<ui-button><svg slot="leading" data-role="icon"><rect width="18" height="18"/></svg>Download</ui-button>')
     btn.style.inlineSize = '400px'
 
     const iconRect = (btn.querySelector('[slot="leading"]') as HTMLElement).getBoundingClientRect()
     const btnRect = btn.getBoundingClientRect()
     const labelRect = label(btn).getBoundingClientRect()
-    // the label's OWN track runs from just after the icon+gap to the button's trailing h/2 edge — center
-    // within THAT span, not the whole button (which would ignore the leading icon's real estate).
+    // the label's OWN track runs from just after the icon+gap to the button's trailing h/2 edge — ADR-0171
+    // start-aligns the label WITHIN that span (hugging the icon), not the whole button.
     const trackStart = iconRect.right + Number.parseFloat(getComputedStyle(btn).columnGap)
     const trackEnd = btnRect.right - Number.parseFloat(getComputedStyle(btn).paddingInlineEnd)
     const insetStart = labelRect.left - trackStart
     const insetEnd = trackEnd - labelRect.right
-    // ≤2px slack — cross-engine sub-pixel layout rounding (webkit vs. chromium), not a centering defect.
+    // start edge lands flush at the track start (≤2px cross-engine slack, not a centering defect).
     expect(
-      Math.abs(insetStart - insetEnd),
-      `the label did not center within its own [leading | label] track (GH #293): start=${insetStart} end=${insetEnd}`,
+      insetStart,
+      `the label did not start-align within its own [leading | label] track (ADR-0171, GH #442): start=${insetStart} end=${insetEnd}`,
     ).toBeLessThanOrEqual(2)
+    // anti-vacuous: there IS leftover space, and it all sits at the END (the label shrink-wrapped, not stretched).
+    expect(
+      insetEnd,
+      `no leftover space landed at the end — the label may have stretched instead of start-aligning: start=${insetStart} end=${insetEnd}`,
+    ).toBeGreaterThan(insetStart + 20)
   })
 
   it('a too-long label in a stretched-but-narrow-for-its-text button still clips at the OLD (stretch) width — centering never widens the clip box', () => {
@@ -121,6 +126,105 @@ describe('ui-button label centering when stretched wider than its content (GH #2
       0,
     )
     expect(el.scrollWidth, 'the long label must still genuinely overflow its (clamped) wrapper box').toBeGreaterThan(el.clientWidth)
+    expect(getComputedStyle(el).textOverflow).toBe('ellipsis')
+  })
+})
+
+describe('ui-button per-structure alignment matrix (ADR-0171, GH #442) — Kim\'s ruled table, all four labeled structures stretched to 400px', () => {
+  it('[label] (bare, no adornment): CENTERS (row 7 — unchanged base law)', () => {
+    const { btn } = mount('<ui-button>Save</ui-button>')
+    btn.style.inlineSize = '400px'
+    const btnRect = btn.getBoundingClientRect()
+    const labelRect = label(btn).getBoundingClientRect()
+    const insetStart = labelRect.left - btnRect.left
+    const insetEnd = btnRect.right - labelRect.right
+    // ≤2px slack — cross-engine sub-pixel layout rounding (webkit vs. chromium), the same idiom the two
+    // start-aligned legs above use; toBeCloseTo(…, 0) is ±0.5px, too tight cross-engine.
+    expect(
+      Math.abs(insetStart - insetEnd),
+      `[label] must center: start=${insetStart} end=${insetEnd}`,
+    ).toBeLessThanOrEqual(2)
+  })
+
+  it('[leading | label]: START-aligned — label hugs the leading adornment (row 1/3)', () => {
+    const { btn } = mount(
+      '<ui-button><svg slot="leading" data-role="icon"><rect width="18" height="18"/></svg>Download</ui-button>',
+    )
+    btn.style.inlineSize = '400px'
+    const iconRect = (btn.querySelector('[slot="leading"]') as HTMLElement).getBoundingClientRect()
+    const btnRect = btn.getBoundingClientRect()
+    const labelRect = label(btn).getBoundingClientRect()
+    const trackStart = iconRect.right + Number.parseFloat(getComputedStyle(btn).columnGap)
+    const trackEnd = btnRect.right - Number.parseFloat(getComputedStyle(btn).paddingInlineEnd)
+    const insetStart = labelRect.left - trackStart
+    const insetEnd = trackEnd - labelRect.right
+    expect(insetStart, `[leading | label] must start-align: start=${insetStart} end=${insetEnd}`).toBeLessThanOrEqual(2)
+    expect(insetEnd, 'leftover space must land at the end, not vanish (anti-vacuous)').toBeGreaterThan(insetStart + 20)
+  })
+
+  it('[label | trailing]: START-aligned — label flush at the leading (h/2) edge, adornment stays at the end (row 2/4)', () => {
+    const { btn } = mount(
+      '<ui-button>Next<svg slot="trailing" data-role="icon"><rect width="18" height="18"/></svg></ui-button>',
+    )
+    btn.style.inlineSize = '400px'
+    const trailingRect = (btn.querySelector('[slot="trailing"]') as HTMLElement).getBoundingClientRect()
+    const btnRect = btn.getBoundingClientRect()
+    const labelRect = label(btn).getBoundingClientRect()
+    const trackStart = btnRect.left + Number.parseFloat(getComputedStyle(btn).paddingInlineStart)
+    const trackEnd = trailingRect.left - Number.parseFloat(getComputedStyle(btn).columnGap)
+    const insetStart = labelRect.left - trackStart
+    const insetEnd = trackEnd - labelRect.right
+    expect(insetStart, `[label | trailing] must start-align: start=${insetStart} end=${insetEnd}`).toBeLessThanOrEqual(2)
+    expect(insetEnd, 'leftover space must land at the end, not vanish (anti-vacuous)').toBeGreaterThan(insetStart + 20)
+  })
+
+  it('[leading | label | trailing]: CENTERS between the two adornment cells (row 5/6 — unchanged base law)', () => {
+    const { btn } = mount(
+      '<ui-button><svg slot="leading" data-role="icon"><rect width="18" height="18"/></svg>Save<svg slot="trailing" data-role="icon"><rect width="18" height="18"/></svg></ui-button>',
+    )
+    btn.style.inlineSize = '400px'
+    const leadingRect = (btn.querySelector('[slot="leading"]') as HTMLElement).getBoundingClientRect()
+    const trailingRect = (btn.querySelector('[slot="trailing"]') as HTMLElement).getBoundingClientRect()
+    const labelRect = label(btn).getBoundingClientRect()
+    const gap = Number.parseFloat(getComputedStyle(btn).columnGap)
+    const trackStart = leadingRect.right + gap
+    const trackEnd = trailingRect.left - gap
+    const insetStart = labelRect.left - trackStart
+    const insetEnd = trackEnd - labelRect.right
+    // ≤2px slack — cross-engine sub-pixel layout rounding (webkit vs. chromium), the same idiom the two
+    // start-aligned legs above use; toBeCloseTo(…, 0) is ±0.5px, too tight cross-engine.
+    expect(
+      Math.abs(insetStart - insetEnd),
+      `[leading | label | trailing] must center: start=${insetStart} end=${insetEnd}`,
+    ).toBeLessThanOrEqual(2)
+  })
+})
+
+describe('ui-button single-adorned overflow clamp + ellipsis under justify-self: start (ADR-0171 cl.2, GH #442)', () => {
+  it('[leading | label] at a narrow 80px width: the label clamps to its track width and genuinely ellipsizes — GH #293\'s mechanics survive under `start`', () => {
+    const { btn } = mount(
+      '<ui-button><svg slot="leading" data-role="icon"><rect width="18" height="18"/></svg>This label is far too long to fit</ui-button>',
+    )
+    btn.style.inlineSize = '80px'
+    const el = label(btn)
+    const iconRect = (btn.querySelector('[slot="leading"]') as HTMLElement).getBoundingClientRect()
+    const btnCs = getComputedStyle(btn)
+    const trackWidth =
+      btn.getBoundingClientRect().right -
+      Number.parseFloat(btnCs.paddingInlineEnd) -
+      (iconRect.right + Number.parseFloat(btnCs.columnGap))
+    const labelRect = el.getBoundingClientRect()
+    // clamp holds under `start` exactly as under `center` — the wrapper's box is still capped at the track width.
+    // ≤2px slack — cross-engine sub-pixel layout rounding (webkit vs. chromium), the same idiom the
+    // per-structure alignment matrix above uses; not a clamp defect.
+    expect(
+      Math.abs(labelRect.width - trackWidth),
+      `the single-adorned overflowing label must still clamp to its track width under justify-self: start: width=${labelRect.width} track=${trackWidth}`,
+    ).toBeLessThanOrEqual(2)
+    // genuine overflow — not just a declared-but-inert clip.
+    expect(el.scrollWidth, 'the long single-adorned label must genuinely overflow its (clamped) wrapper box').toBeGreaterThan(
+      el.clientWidth,
+    )
     expect(getComputedStyle(el).textOverflow).toBe('ellipsis')
   })
 })
