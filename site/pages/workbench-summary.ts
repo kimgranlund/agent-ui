@@ -29,8 +29,12 @@ const SUMMARY_MESSAGES: Record<SummaryViewKey, readonly A2uiServerMessage[]> = {
           { id: 'root', component: 'Card', elevation: '1', children: ['content'] },
           { id: 'content', component: 'CardContent', children: ['title', 'stat', 'caption'] },
           { id: 'title', component: 'Text', variant: 'h4', text: 'All accounts' },
-          { id: 'stat', component: 'Stat', label: 'Accounts shown', value: 25, caption: 'No filter or search is active' },
-          { id: 'caption', component: 'Text', variant: 'body', text: 'Showing the full account list — 25 of 25.' },
+          // `value` is a VIEW-STATE LABEL, never a row count — layout-checker B5: a recorded stat cannot
+          // safely echo a number the live toolbar's own results count already reports (SPEC-R7), so this
+          // Stat answers a question the toolbar doesn't ("is the view narrowed at all?"), never the SAME
+          // question with a possibly-stale number.
+          { id: 'stat', component: 'Stat', label: 'View', value: 'All', caption: 'No filter or search is active' },
+          { id: 'caption', component: 'Text', variant: 'body', text: 'Showing the full account list — every seeded record.' },
         ],
       },
     },
@@ -45,7 +49,7 @@ const SUMMARY_MESSAGES: Record<SummaryViewKey, readonly A2uiServerMessage[]> = {
           { id: 'root', component: 'Card', elevation: '1', children: ['content'] },
           { id: 'content', component: 'CardContent', children: ['title', 'stat', 'caption'] },
           { id: 'title', component: 'Text', variant: 'h4', text: 'Filtered view' },
-          { id: 'stat', component: 'Stat', label: 'Accounts matching', value: '—', caption: 'A search or status filter is narrowing the table' },
+          { id: 'stat', component: 'Stat', label: 'View', value: 'Filtered', caption: 'A search or status filter is narrowing the table' },
           {
             id: 'caption',
             component: 'Text',
@@ -72,7 +76,15 @@ export function summaryLines(key: SummaryViewKey): string[] {
 
 /** SPEC-R9's view-key derivation: `'all'` only when NEITHER a facet filter NOR a search term is active;
  *  `'filtered'` otherwise. Binary and total — every workbench view state maps to exactly one committed
- *  summary key. */
+ *  summary key.
+ *
+ *  §2's full "view key" tuple is `filter + search + sort + page (+ selection count)` — this function
+ *  narrows to filter/search only, deliberately: sort/page/selection change WHICH rows are visible or in
+ *  what order, never WHETHER the set is narrowed — "all 25 accounts" vs "a narrowed subset" is the one
+ *  fact a two-key recorded fixture can honestly distinguish. A future wave adding sort/page/selection-
+ *  keyed summaries (e.g. "sorted by MRR descending") is a fixture-cardinality growth, not a reshape of
+ *  this function's contract — SPEC-R9's own acceptance line ("≥2 keys… the rendered summary matches the
+ *  CURRENT key") holds unchanged either way. */
 export function summaryViewKey(state: { readonly filterActive: boolean; readonly searchActive: boolean }): SummaryViewKey {
   return state.filterActive || state.searchActive ? 'filtered' : 'all'
 }
