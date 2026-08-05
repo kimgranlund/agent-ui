@@ -1181,5 +1181,12 @@
     "description": "The A2UI catalog picker becomes a library-pack entry kind with SINGLE-select semantics — the persisted key stays the one selection truth, switches derive from…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0171",
+    "url": "./adr-index.html#adr-0171",
+    "description": "ui-button label alignment: CENTER only bare and double-adorned; a SINGLE adornment (icon or caret, leading OR trailing) start-aligns the label in its track (Ki…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

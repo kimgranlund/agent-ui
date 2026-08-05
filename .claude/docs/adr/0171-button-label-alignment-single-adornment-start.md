@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-05 |
 > | **Proposed by** | design intake seat (agent-ui-component-design, GH #442 — the LAW itself is Kim's explicit ruling, 2026-08-05 agent-admin review; this record carries it plus the two sub-decisions the ruling left open) |
-> | **Ratified by** | *(awaiting Kim — never self-flipped)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-05, via the [`ratify ADR-0171` utterance](https://github.com/kimgranlund/agent-ui/pull/443#issuecomment-5187454117) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | `packages/agent-ui/components/src/controls/button/button.css:118-137` (the GH #293 unconditional `justify-self: center` on `[data-part='label']` — becomes structure-conditional, cl.1; the ellipsis mechanics of that comment stay in force, cl.2) · `button.md` "Slots & roles" + the icon-only section (alignment column + the row-8 clarification, cl.3) · probes: `button-css.test.ts:75-83` · `button-label-overflow.browser.test.ts:85-103` (the flip list is frozen in the LLD §4) · **on ratification:** reciprocal `Amended by ADR-0171` housekeeping rows in [ADR-0006](./0006-button-anatomy-optional-icon-slot-density-acceptance.md), [ADR-0012](./0012-button-anatomy-trailing-adornment-slot.md), and [ADR-0133](./0133-button-label-ellipsis-anatomy.md)'s Supersedes cells (the ADR-0101/0170 two-way-link precedent) |
 > | **Supersedes / Superseded by** | **Amends** [ADR-0006](./0006-button-anatomy-optional-icon-slot-density-acceptance.md) + [ADR-0012](./0012-button-anatomy-trailing-adornment-slot.md) (the five-structure roster — ADR-0006's structure bullets, ADR-0012's prose, and the `button.css:141-144` comment; there is no literal table in those records — gains a per-structure LABEL-ALIGNMENT property; the grid templates, cells, pads, and the position×role split are byte-untouched) · **Amends** [ADR-0133](./0133-button-label-ellipsis-anatomy.md) (the label wrapper's alignment rule forks by structure; the wrapper, heal observer, and clip mechanics are untouched) · **Relates** GH #442 (the ruling record) · GH #293 (the centering this record narrows — its text-align rejection and clamp law stand) |
 
