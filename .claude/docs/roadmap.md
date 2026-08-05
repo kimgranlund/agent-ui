@@ -9,7 +9,7 @@
 > lives in GitHub Issues ([ADR-0145](adr/0145-ticket-tier-github-issues-backend.md)) or, on other
 > projects, Linear — **never here**. An issue may cite a section of this doc the same way it cites
 > an ADR/SPEC/LLD id; this doc never enumerates issues by number, because that list goes stale the
-> moment an issue closes and this doc isn't the place re-reading it. Last synthesis pass: 2026-08-04 (M-B close).
+> moment an issue closes and this doc isn't the place re-reading it. Last synthesis pass: 2026-08-05 (M-A close — the 2026-07-28 arc complete).
 
 ## 1 · Why a fourth doc
 
@@ -38,21 +38,19 @@ append-only going forward, **never backfilled**, and this roadmap's §2 is the o
 "current state." The gap is therefore the ruled shape of the doc set, not a defect awaiting a
 decision (dated line in §4).
 
-## 2 · Now — current state (as of 2026-08-04)
+## 2 · Now — current state (as of 2026-08-05)
 
-> **Arc status, 2026-08-04.** **M-B is DONE** (all five DoD boxes proven by live runs 2026-08-03/04;
-> ADR-0169 ratified and merged via PR #430 — §4's dated line) and **M-C is DONE** (2026-07-29). That
-> closes both ruled milestones of the 2026-07-28 intake. **M-A is the open lane and fully unblocked**:
-> both forks frozen (ADR-0163/0164 ratified), the PRD **accepted** — v0.2, ratified by Kim 2026-07-31
-> ([`prd/saas-data-workbench.prd.md`](prd/saas-data-workbench.prd.md)): PRD-D1–D3+D7 ruled as
-> recommended, PRD-D4–D6 deliberately delegated to the SPEC. The next artifact is therefore the
-> **M-A SPEC** (it owns D4–D6), then the MA-1…MA-4 build. §3 carries the per-milestone detail;
-> `goals.md` carries the box-by-box evidence.
+> **Arc status, 2026-08-05: the whole 2026-07-28 three-milestone arc is CLOSED.** **M-A is DONE**
+> (SPEC accepted 2026-08-05 → MA-1 #456 → MA-2 #459 → MA-3 #463 → MA-4 #464, all merged — §4's
+> dated line), joining **M-B** (2026-08-04) and **M-C** (2026-07-29). No next milestone is ruled:
+> the lane is open for the next intake, which is Kim's call — the parked scope intakes (§3 foot)
+> and the deferred items (§4) are the standing candidates.
 >
-> Open issues at this sweep are follow-up-sized, none blocking: #429 (E7 validate-time gate),
-> #427 (calendar browser-shard date rot), #425/#421/#419 (agent-admin prompt/catalog refinements),
-> #409 (persona-wide toggle rehydration), #404 (live PARSE-flake record), #394 (adr_ratify parser
-> nit). Zero open PRs; `main` green.
+> Open issues at this sweep are follow-up-sized, none blocking: #465 (ADR-0164 cl.3 citation
+> re-home, incl. one ratified-prose spot awaiting Kim's sanction), #457 (SPEC-R1 sortable-default
+> prose), #455 (ui-table size diet checkpoint), #454 (app budget breach, pre-existing/growing),
+> #438 (MCP client, deferred by ADR-0168), #421 (per-persona catalogs idea). One open PR (#453,
+> the a2ui-ecosystem survey intake, awaiting Kim); `main` green incl. the browser gate (#458→#460).
 
 - **Component foundation — complete.** G0–G9 + the Control Suite + the icon adapter: the reactive
   kernel, FACE element layer, templating/directives, and ~50 `ui-*` controls across the
@@ -190,29 +188,14 @@ decision (dated line in §4).
   agent-admin shows GenUI live) and B3's fleet-idiom eval dimension. Acceptance is dogfooded: a
   live session with dogfood ON produces a surface whose rendered DOM contains upgraded `ui-*`
   elements — real anatomy, not unknown inline elements — with the set-equality gate green.
-- **M-A intakes — "SaaS Data Workbench". 🟢 BOTH FORKS FROZEN 2026-07-29 — the build is unblocked.**
-  Both design intakes finished and both ADRs are now **ratified**:
-  [ADR-0163](adr/0163-ui-table-interactive-widening.md) (the `ui-table` widening) and
-  [ADR-0164](adr/0164-entry-list-extraction-home.md) (the extraction home). Neither build has started.
-  **The PRD is accepted**: [`prd/saas-data-workbench.prd.md`](prd/saas-data-workbench.prd.md)
-  (v0.2, ratified by Kim 2026-07-31) — PRD-G1–G6, the MA-1…MA-4 sequencing, PRD-D1–D3+D7 ruled as
-  recommended, PRD-D4–D6 delegated to the SPEC (the next artifact — no SPEC exists yet); the build
-  follows it. Scheduling is Kim's; the lane is fully free now that M-B and M-C are both done.
-  Original framing:
-  M-A — a
-  site-hosted demo workspace where a sortable/selectable/paginated data table, a filter toolbar,
-  a record-edit form flow, and an agent-written summary card compose from published fleet
-  primitives inside `ui-workspace-shell` — is the largest bet and is gated on two genuine design
-  forks. Both run as design intakes during M-B so the build starts contract-frozen: **(1) the
-  `ui-table` widening ADR** — Kim ruled 2026-07-28 to widen the ratified display-only contract
-  itself (selection, sort, filter, pagination land on `ui-table`), deliberately against the
-  synthesis's separate-interactive-tier recommendation; the intake produces its own `proposed`
-  ADR amending the display-only contract — report-family SPEC-R1 under ADR-0111, realized in the
-  `table.md` descriptor rows + report-family LLD-C9 (ADR-0004's descriptor-as-contract
-  instrument) — a ruled contract change, never a drive-by edit; and
-  **(2) the extraction home** for the entry-list + settings-generator proto-patterns (today
-  agent-admin-local files) — which package and export surface. M-A's PRD comes out of these
-  intakes, not before; the build itself is scheduled when the lane frees.
+- **M-A — "SaaS Data Workbench". 🟢 DONE 2026-08-05** — the full contract chain closed in order:
+  intakes frozen (ADR-0163/0164, ratified) → PRD accepted (v0.2, Kim 2026-07-31) → SPEC accepted
+  (v0.1, Kim 2026-08-05 — ruling D4 A2UI-via-`ui-surface-host` · D5 recorded · D6 `ui-modal`) →
+  MA-1 `ui-table` widened in place + `ui-pagination` minted + the catalog expression (PR #456,
+  size re-based per Kim's "checkpoint not ratchet" ruling, #455 the shrink follow-up) → MA-2
+  entry-list extraction (PR #459) → MA-3 the workbench page, every PRD fence probe-proven (PR
+  #463) → MA-4 the exemplar-cited pattern rows (PR #464). Follow-ups spawned, none blocking:
+  #465 (citation re-home incl. one ratified-prose spot), #457, #455, #454. See §4's dated line.
 - **Per-control catalog intake — now.** Five newer controls (`ui-status-stream`, `ui-toast`,
   `ui-command-modal`, `ui-textarea`, `ui-theme-provider`) landed after the A2UI catalog's 56
   types with no recorded in-or-out decision. Kim ruled 2026-07-28: one small per-control pass,
@@ -243,6 +226,16 @@ decision (dated line in §4).
 ---
 
 *Closed items move here, one dated line each, rather than being deleted from §3 silently:*
+
+- **2026-08-05** — **M-A "SaaS Data Workbench" closed — and with it the whole 2026-07-28
+  three-milestone arc** (M-C 07-29 · M-B 08-04 · M-A 08-05). One day intake-to-done for the build:
+  SPEC accepted (D4/D5/D6 ruled) → MA-1 (#456, `ui-table` interactive widening + `ui-pagination` +
+  catalog rows, argued size re-base) → MA-2 (#459, entry-list extraction — a parallel session's
+  lane) → MA-3 (#463, the workbench page: form-popover facets, modal record-edit, recorded
+  `ui-surface-host` summary, zero-network probe, AC19 join) → MA-4 (#464, pattern rows S9-proven
+  against the page). En route: a duplicate MA-1 lane detected and wound down (the
+  check-main-before-dispatch lesson), #458's preview red fixed (#460), and the two-session
+  collision + follow-up set (#454/#455/#457/#465) all recorded.
 
 - **2026-08-04** — **M-B "Personas that don't lie" closed** (the 2026-07-28 intake's first milestone):
   all five DoD boxes proven by live runs — ADR-0161's range-submit criterion, the multi-round quiz
