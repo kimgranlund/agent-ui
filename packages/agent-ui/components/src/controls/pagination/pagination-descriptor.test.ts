@@ -105,6 +105,23 @@ describe('pagination.md descriptor — contract↔props trip-wire', () => {
   })
 })
 
+describe('pagination.ts — event DELEGATION, never a per-stop listener (component-checker retained-listener finding)', () => {
+  it('#stopButton attaches NO listener of its own — #rebuild() discards every stop on every page/pages change', () => {
+    // the DEFINITION only (`\n  #stopButton(`) — NOT a `this.#stopButton(…)` CALL site, which appears
+    // earlier in the file (`#rebuild()` calls it repeatedly, defined before `#stopButton` itself) and would
+    // otherwise be found first by a bare `#stopButton(` search.
+    const start = ts.indexOf('\n  #stopButton(')
+    expect(start, '#stopButton definition not found in pagination.ts').toBeGreaterThan(-1)
+    const nextMethodStart = ts.indexOf('\n  #', start + 1)
+    const body = ts.slice(start, nextMethodStart === -1 ? ts.length : nextMethodStart)
+    expect(body, '#stopButton regressed to a per-node this.listen(').not.toMatch(/this\.listen\(/)
+  })
+
+  it('connected() registers exactly ONE delegated click listener, on the host itself', () => {
+    expect([...ts.matchAll(/this\.listen\(this,/g)]).toHaveLength(1)
+  })
+})
+
 describe('pagination.md descriptor — contract↔source trip-wire', () => {
   it('customStates/slots tell the truth — no :state()/[slot=…] anywhere in source (0 drift)', () => {
     expect([...collectUsedStates(ts, css)]).toEqual([])

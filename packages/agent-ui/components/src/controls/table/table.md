@@ -163,7 +163,7 @@ geometry:
   cellPadBlock: var(--ui-table-cell-pad-block)
   note: The stamped selection inputs/sort buttons/footer pagination each carry their OWN geometry (native input sizing; the composed `ui-pagination`'s own §1 control-height buttons) — this control mints no new geometry row of its own for them (ADR-0163 cl.6's "the novelty is zero", applied fleet-wide to every stamped interactive part here).
 
-forcedColors: No dedicated `@media (forced-colors: active)` block — every row/header separator is a real `border` (repainted in system inks, never removed under `forced-colors: active`, unlike a background-drawn mark); all content is real text; every stamped native input/button carries its own platform/forced-colors treatment (a `<button>`) or native UA forced-colors styling (a native `<input>`), and survives untouched (SPEC-R15).
+forcedColors: No dedicated `@media (forced-colors: active)` block — every row/header separator is a real `border` (repainted in system inks, never removed under `forced-colors: active`, unlike a background-drawn mark); all content is real text. The stamped native `<input>` selection cells carry their own UA forced-colors treatment, unstyled by this file. The stamped sort `<button>` is styled DIFFERENTLY (verified, not merely intended): `table.css`'s `all: unset` reset strips its native UA button chrome, so under forced-colors it has no background/border of its own to lose — it survives as real, inherited (`color: inherit`) header text plus a real `:focus-visible` outline on the shared focus-ring token (which itself already maps to `Highlight` under forced-colors).
 ---
 
 # ui-table
@@ -319,4 +319,8 @@ alignment to the physical left.
 
 No dedicated override block: every row/header separator is a real `border`, which forced-colors repaints in
 system inks and never removes (unlike a background-drawn mark); all cell/caption content is real text and
-survives untouched.
+survives untouched. The stamped native `<input>` selection cells carry their own UA forced-colors treatment.
+The stamped sort `<button>` is reset (`all: unset`, `table.css`) to read as part of the header rather than a
+raw UA control — under forced-colors it has no background/border of its own to lose, surviving as real,
+inherited header text plus a real `:focus-visible` outline on the shared focus-ring token (itself already
+`Highlight` under forced-colors).

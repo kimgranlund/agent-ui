@@ -22,10 +22,17 @@
  *
  * WHCM (SPEC-R15): NO dedicated `forced-colors` block — every row/header separator is a REAL `border`
  * (system-ink-repainted, never removed under `forced-colors: active`, unlike a background); all content is
- * real text; every stamped native input/button carries its own UA/forced-colors treatment. The bar-chart/
- * badge fill lesson (a background-drawn mark vanishing under WHCM) does not apply here — nothing in this
- * file draws a background-only mark (`data-selected`'s row tint is a non-color-alone signifier — the
- * checkbox/radio's OWN checked state is the real signifier, ADR-0057 satisfied structurally, ADR-0163 cl.4).
+ * real text; the stamped native `<input>` selection cells carry their OWN UA/forced-colors treatment
+ * (unstyled by this file). The stamped sort `<button>` is DIFFERENT (verified, not merely intended): its
+ * `all: unset` reset (below) deliberately strips native UA button chrome, so under `forced-colors: active`
+ * it carries no background/border of its own to lose — it is real, inherited (`color: inherit`) header text
+ * (repainted CanvasText like any other cell, the SAME survival path as every other real-text node in this
+ * file) plus a real `:focus-visible` outline reading the shared `--md-sys-color-focus-ring` token, which
+ * ITSELF already maps to `Highlight` under forced-colors (tokens.css's own forced-colors block) — nothing
+ * additional needed here. The bar-chart/badge fill lesson (a background-drawn mark vanishing under WHCM)
+ * does not apply anywhere in this file — nothing here ever paints a background-only mark (`data-selected`'s
+ * row tint is a non-color-alone signifier — the checkbox/radio's OWN checked state is the real signifier,
+ * ADR-0057 satisfied structurally, ADR-0163 cl.4).
  *
  * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected
  * from table.ts (behaviour-only `.ts`, no runtime style injection — plan §2).

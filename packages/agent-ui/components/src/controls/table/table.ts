@@ -18,6 +18,18 @@
 // (cl.6's `data-part="footer"`, OUTSIDE the scroll container) holding a composed `ui-pagination` when
 // `pageSize > 0`. No code path ever writes `#scroll.scrollLeft`/`.scrollTop`.
 //
+// EVENT DELEGATION, not a per-stamped-node listener (component-checker retained-listener finding): the
+// sort-button click, the select-all checkbox toggle, and every row's selection checkbox/radio toggle are
+// each handled by exactly ONE listener — on `#thead` (the first two) and `#tbody` (the third) — registered
+// ONCE in `connected()` (re-armed on reconnect, the `#scroll` scroll-listener's own precedent), never per
+// stamped node. `#thead`/`#tbody` themselves are the STABLE skeleton nodes (never replaced); a stamped
+// button/input dispatches by carrying a `data-key`/`data-row-id` attribute the delegated handler reads off
+// `event.target`. Without this, a PER-NODE `this.listen` (the original shape) would strand a fresh
+// closure+listener — riding the connection-lifetime AbortSignal, never released until disconnect — on every
+// discarded rebuild; VIEW alone reruns on every search keystroke, every page turn, every selection toggle,
+// so that shape grows UNBOUNDED on a long-lived, frequently-updating table. Delegation keeps the listener
+// count fixed at three regardless of rebuild count.
+//
 // Five independent effects, split by which signal(s) each reads (unchanged fine-grained-waking discipline,
 // widened):
 //   • HEADER-BUILD (reads `columns` + `selectable` ONLY — `sort` is read via `untracked()`, see below)
@@ -35,15 +47,24 @@
 //     focus on the button that was just clicked (HEADER-BUILD is not a dependent of `sort` at all, per the
 //     `untracked` fix above).
 //   • VIEW (reads `columns` + `rows` + `selectable` + `rowKey` + `selected` + `filter` + `search` + `sort` +
-//     `pageSize` + `page`) — runs the cl.7 pipeline (`computeTableView`) and rebuilds ONLY `#tbody`'s content
-//     (whole-array swap, unchanged from the display-only contract) plus the select-all header checkbox's
-//     checked/indeterminate state (computed against the MATCHING SET) and the `#footer`/`ui-pagination`
-//     attach/detach + prop sync. Captures/restores focus across the rebuild when it was on a stamped
-//     selection input (cl.10/SPEC-R4.5 — the tbody-rebuild-loses-focus mitigation).
+//     `pageSize` + `page` — NEVER `label`, see below) — runs the cl.7 pipeline (`computeTableView`) and
+//     rebuilds ONLY `#tbody`'s content (whole-array swap, unchanged from the display-only contract) plus
+//     the select-all header checkbox's checked/indeterminate state (computed against the MATCHING SET) and
+//     the `#footer`/`ui-pagination` attach/detach + prop sync. When it CREATES the footer's `ui-pagination`
+//     for the first time, it seeds that composed control's OWN `label` via `untracked(() => this.label)` —
+//     a ONE-TIME creation-time read (the text-field.ts `swatchPreview.color = untracked(() => this.value)`
+//     precedent) — component-checker finding: a bare `this.label` read there would silently make VIEW ALSO
+//     a dependent of `label`, contradicting this very banner and rebuilding the whole `<tbody>` on a label-
+//     only change. Every SUBSEQUENT `label` change is the LABEL effect's job, below — `footerLabel()` is the
+//     one derivation both share, so the seed and the ongoing update can never drift apart. Captures/restores
+//     focus across the rebuild when it was on a stamped selection input (cl.10/SPEC-R4.5 — the tbody-
+//     rebuild-loses-focus mitigation).
 //   • RECONCILE-SELECTED (reads `rows` + `rowKey` + `selected`) — drops `selected` identities that no
 //     longer exist in the CURRENT `rows` (cl.7's "a rows swap reconciles `selected` by dropping identities
 //     that no longer exist, never throws"); never fires `select` (not a user commit).
-//   • LABEL (reads `label` only) — UNCHANGED from the display-only contract.
+//   • LABEL (reads `label` — the ONLY effect that tracks it) — the `<caption>`/`aria-labelledby` pair
+//     (SPEC-R2 AC3, unchanged from the display-only contract) PLUS, when a footer `ui-pagination` currently
+//     exists, its `label`'s ongoing upkeep (`footerLabel()`, the SAME derivation VIEW seeds it with).
 // `render()` stays the inherited no-op.
 //
 // Imports inward only (controls → dom): UIElement + prop + the typed-schema helpers from the dom barrel;
@@ -152,6 +173,37 @@ export class UITableElement extends UIElement {
       this.#lastScrollTop = this.#scroll.scrollTop
     })
 
+    // ONE delegated listener PER STABLE SKELETON NODE (component-checker retained-listener finding): HEADER-
+    // BUILD replaces the whole `<thead>` row on every columns/selectable change, and VIEW replaces the whole
+    // `<tbody>` content on every state-prop change (every search keystroke, every page turn, every selection
+    // toggle) — a PER-STAMPED-NODE `this.listen` (the original shape) strands a fresh closure+listener,
+    // riding the connection-lifetime AbortSignal, on every discarded rebuild: unbounded retention on a long-
+    // lived, frequently-updating table. `#thead`/`#tbody` themselves are the STABLE nodes (never replaced,
+    // SPEC-R4.1) — delegating to them, re-armed once per connect exactly like the `#scroll` listener above,
+    // keeps the listener COUNT at a fixed three regardless of rebuild count.
+    this.listen(this.#thead, 'click', (event) => {
+      const button = (event.target as HTMLElement).closest<HTMLElement>('[data-part="sort-button"]')
+      const key = button?.getAttribute('data-key')
+      if (key) this.#commitSort(key)
+    })
+    this.listen(this.#thead, 'change', (event) => {
+      const target = event.target as HTMLElement
+      if (!target.matches('[data-part="select-all"]')) return
+      // stopPropagation: a native <input> `change` bubbles unstopped by default, and this host's OWN
+      // `change` event is the sort/page commit channel (cl.5/cl.6) — without this, a selection toggle would
+      // ALSO arrive at any table-level `change` listener, giving the same event name two unrelated meanings
+      // on the same host (component-checker finding). Selection's own contract event stays `select` only.
+      event.stopPropagation()
+      this.#toggleSelectAll((target as HTMLInputElement).checked)
+    })
+    this.listen(this.#tbody, 'change', (event) => {
+      const target = event.target as HTMLElement
+      if (!target.matches('[data-part="select"]')) return
+      event.stopPropagation() // the SAME reason as the select-all handler above
+      const id = target.getAttribute('data-row-id')
+      if (id !== null) this.#toggleRowSelection(id, this.selectable, (target as HTMLInputElement).checked)
+    })
+
     // HEADER-BUILD (SPEC-R4.3 identity clause, widened) — reads `columns` + `selectable`. A `rows`-only (or
     // `sort`/`selected`/`filter`/`search`/`page`) update never re-runs this, so `#table`/`#thead` node
     // identity holds across it.
@@ -251,11 +303,18 @@ export class UITableElement extends UIElement {
           this.listen(pagination, 'change', () => {
             this.page = pagination.page
           })
+          // untracked: a ONE-TIME creation-time seed (the text-field.ts `swatchPreview.color =
+          // untracked(() => this.value)` precedent, banner-quoted there) — a plain read here would make
+          // VIEW a dependent of `label` too (this call runs synchronously inside VIEW's own scope). ALL
+          // SUBSEQUENT `label` changes are the LABEL effect's job (below) — it already owns every other
+          // `label` consequence (the caption, `aria-labelledby`) and now owns this seed's upkeep too, so
+          // there is exactly ONE effect genuinely tracking `label`, matching the file banner and table.md.
+          // `footerLabel()` is the ONE derivation both this seed and LABEL's ongoing update share.
+          pagination.label = footerLabel(untracked(() => this.label))
           this.#footer.replaceChildren(pagination)
         }
         this.#pagination.pages = view.pageCount
         this.#pagination.page = Math.min(Math.max(1, page), Math.max(1, view.pageCount))
-        this.#pagination.label = this.label !== '' ? `${this.label} pagination` : 'Table pagination'
       } else if (this.#footer.parentNode === this) {
         this.#footer.remove()
       }
@@ -270,28 +329,37 @@ export class UITableElement extends UIElement {
       if (kept.length !== current.length) this.selected = kept
     })
 
-    // LABEL — UNCHANGED from the display-only contract (SPEC-R2 AC3).
+    // LABEL — the ONE effect genuinely tracking `label` (component-checker finding: VIEW's footer-label
+    // derivation used to read `this.label` live, silently making VIEW ALSO a dependent of `label` — the
+    // SAME bug class as the sort-tracking fix, fixed by seeding the footer's pagination `label` ONCE at
+    // creation time, `untracked`, in VIEW, and giving LABEL the ongoing-update half here). Owns every
+    // consequence of a `label` change: the `<caption>`/`aria-labelledby` pair (SPEC-R2 AC3, unchanged from
+    // the display-only contract) AND, when a `page-size > 0` footer currently exists, the SAME derived
+    // string VIEW seeds it with at creation — kept in exactly ONE place (`#footerLabel`) so the two paths
+    // (seed vs. ongoing update) can never drift apart.
     this.effect(() => {
       const label = this.label
       if (label === '') {
         this.#caption?.remove()
         this.#caption = null
         this.#scroll.removeAttribute('aria-labelledby')
-        return
+      } else {
+        if (!this.#caption) {
+          this.#caption = document.createElement('caption')
+          this.#caption.id = nextCaptionId()
+          this.#table.insertBefore(this.#caption, this.#table.firstChild)
+        }
+        this.#caption.textContent = label
+        this.#scroll.setAttribute('aria-labelledby', this.#caption.id)
       }
-      if (!this.#caption) {
-        this.#caption = document.createElement('caption')
-        this.#caption.id = nextCaptionId()
-        this.#table.insertBefore(this.#caption, this.#table.firstChild)
-      }
-      this.#caption.textContent = label
-      this.#scroll.setAttribute('aria-labelledby', this.#caption.id)
+      if (this.#pagination) this.#pagination.label = footerLabel(label)
     })
   }
 
   /** The leading `<th scope="col">` for `selectable='multi'` — a real, stamped select-all checkbox
    *  (ADR-0163 cl.4). Its checked/indeterminate state is maintained by the VIEW effect (computed against
-   *  the matching set); the click handler here only toggles. */
+   *  the matching set); the click/toggle itself is handled by the ONE delegated `#thead` `change` listener
+   *  (`connected()`, the retained-listener fix) — this method only builds markup, no per-node listener. */
   #selectAllHeaderCell(): HTMLTableCellElement {
     const th = document.createElement('th')
     th.setAttribute('scope', 'col')
@@ -300,14 +368,6 @@ export class UITableElement extends UIElement {
     input.type = 'checkbox'
     input.setAttribute('data-part', 'select-all')
     input.setAttribute('aria-label', 'Select all rows')
-    // stopPropagation: a native <input> `change` bubbles unstopped by default, and this host's OWN `change`
-    // event is the sort/page commit channel (cl.5/cl.6) — without this, a selection toggle would ALSO
-    // arrive at any table-level `change` listener, giving the same event name two unrelated meanings on
-    // the same host (component-checker finding). Selection's own contract event stays `select` only.
-    this.listen(input, 'change', (event) => {
-      event.stopPropagation()
-      this.#toggleSelectAll(input.checked)
-    })
     th.append(input)
     return th
   }
@@ -315,7 +375,9 @@ export class UITableElement extends UIElement {
   /** One `<th scope="col">` — `data-type='number'` set from the column's type (SPEC-R2/R3 row 9,
    *  unchanged). ADR-0163 cl.5: a `sortable` column wraps its label in a real, stamped `<button>` (the APG
    *  sortable-table shape) instead of plain text — the ONLY structural difference; a non-sortable column's
-   *  `<th>` is byte-for-byte identical to the pre-widening baseline (SPEC-R2/cl.10). */
+   *  `<th>` is byte-for-byte identical to the pre-widening baseline (SPEC-R2/cl.10). `data-key` carries the
+   *  column's `key` — read by the ONE delegated `#thead` `click` listener (`connected()`, the retained-
+   *  listener fix); no per-button listener here. */
   #headerCell(col: TableColumn): HTMLTableCellElement {
     const th = document.createElement('th')
     th.setAttribute('scope', 'col')
@@ -324,8 +386,8 @@ export class UITableElement extends UIElement {
       const button = document.createElement('button')
       button.type = 'button'
       button.setAttribute('data-part', 'sort-button')
+      button.setAttribute('data-key', col.key)
       button.textContent = col.label
-      this.listen(button, 'click', () => this.#commitSort(col.key))
       th.append(button)
     } else {
       th.textContent = col.label
@@ -354,7 +416,10 @@ export class UITableElement extends UIElement {
   /** One `<tr>` of `<td>`s for `row` (SPEC-R3 row 9, unchanged cell resolution). ADR-0163 cl.4: a leading
    *  selection `<td>` with a real, stamped `<input type=checkbox|radio>` when `selectable` is active — the
    *  ONLY structural difference; at `selectable=''` this is byte-for-byte identical to the pre-widening
-   *  baseline (SPEC-R2/cl.10). `data-selected` rides the `<tr>` for CSS (cl.4). */
+   *  baseline (SPEC-R2/cl.10). `data-selected` rides the `<tr>` for CSS (cl.4). The toggle itself is handled
+   *  by the ONE delegated `#tbody` `change` listener (`connected()`, the retained-listener fix) — this
+   *  method only builds markup, no per-node listener (this is the MOST frequently-rebuilt anatomy in the
+   *  control, VIEW reruns on every search keystroke/page turn/selection toggle — the fix that mattered most). */
   #bodyRow(cols: TableColumn[], selectable: string, row: TableRow, id: string, selectedSet: Set<string>): HTMLTableRowElement {
     const tr = document.createElement('tr')
     if (selectable === 'multi' || selectable === 'single') {
@@ -368,12 +433,6 @@ export class UITableElement extends UIElement {
       input.checked = selectedSet.has(id)
       const firstCellText = cols.length > 0 ? resolveCell(cols[0], row) : ''
       input.setAttribute('aria-label', firstCellText !== '' ? `Select row: ${firstCellText}` : 'Select row')
-      // stopPropagation — the SAME reason as the select-all checkbox above: keep this host's `change` event
-      // exclusively the sort/page commit channel, never double-meaning with a selection toggle.
-      this.listen(input, 'change', (event) => {
-        event.stopPropagation()
-        this.#toggleRowSelection(id, selectable, input.checked)
-      })
       td.append(input)
       tr.append(td)
     }
@@ -444,6 +503,14 @@ export class UITableElement extends UIElement {
     this.sort = { key, direction }
     this.emit('change')
   }
+}
+
+// ADR-0163 cl.6 — the footer's composed `ui-pagination` accessible name, derived from the table's own
+// `label` (empty ⇒ a generic fallback). ONE pure, single-sourced derivation — the VIEW effect's creation-
+// time seed (`untracked`) and the LABEL effect's ongoing update both call this, so the two paths can never
+// drift apart into two different label strings for the same table state.
+function footerLabel(label: string): string {
+  return label !== '' ? `${label} pagination` : 'Table pagination'
 }
 
 // The caption `id` mint — a module-scoped counter suffix, collision-free in light DOM (no crypto/uuid dep).

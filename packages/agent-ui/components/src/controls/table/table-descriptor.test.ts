@@ -179,6 +179,34 @@ describe('table.md descriptor — ADR-0163 events/parts', () => {
   })
 })
 
+describe('table.ts — event DELEGATION, never a per-stamped-node listener (component-checker retained-listener finding)', () => {
+  it('the per-node builder methods (#bodyRow/#headerCell/#selectAllHeaderCell) attach NO listener of their own', () => {
+    // A structural pin against regressing back to a per-node `this.listen(input, …)`/`this.listen(button, …)`
+    // inside the methods that run on EVERY rebuild (VIEW reruns on every search keystroke/page turn/
+    // selection toggle) — the exact shape that stranded a fresh closure+listener on every discarded
+    // rebuild. Scoped to the #bodyRow/#headerCell/#selectAllHeaderCell method bodies specifically (not the
+    // whole file — `connected()`'s three DELEGATED listeners legitimately call `this.listen` once each).
+    const methodBody = (name: string): string => {
+      // the DEFINITION only (`\n  #name(`, class-method indent) — NOT a `this.#name(…)` CALL site, which
+      // can appear earlier in the file (e.g. VIEW calls `this.#bodyRow(…)` well before `#bodyRow`'s own
+      // definition) and would otherwise be found first by a bare `#name(` search.
+      const start = ts.indexOf(`\n  #${name}(`)
+      expect(start, `#${name} definition not found in table.ts`).toBeGreaterThan(-1)
+      const nextMethodStart = ts.indexOf('\n  #', start + 1) // the next `  #method(` at the SAME indent level
+      return ts.slice(start, nextMethodStart === -1 ? ts.length : nextMethodStart)
+    }
+    for (const name of ['bodyRow', 'headerCell', 'selectAllHeaderCell']) {
+      const body = methodBody(name)
+      expect(body, `#${name} regressed to a per-node this.listen(`).not.toMatch(/this\.listen\(/)
+    }
+  })
+
+  it('connected() registers exactly the three delegated listeners (#thead click + #thead change + #tbody change), each exactly once', () => {
+    expect([...ts.matchAll(/this\.listen\(this\.#thead,/g)]).toHaveLength(2) // sort-button click + select-all change
+    expect([...ts.matchAll(/this\.listen\(this\.#tbody,/g)]).toHaveLength(1) // row selection change
+  })
+})
+
 describe('table.md descriptor — contract↔source trip-wire', () => {
   it('customStates/slots tell the truth about table.ts + table.css (0 source-drift)', () => {
     // ui-table has NO custom states (no :state() — a Display leaf has nothing to transition) and NO

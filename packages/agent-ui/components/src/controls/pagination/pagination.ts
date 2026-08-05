@@ -50,6 +50,20 @@ export class UIPaginationElement extends UIElement {
     this.effect(() => {
       this.#rebuild()
     })
+
+    // ONE delegated click listener on the HOST (component-checker retained-listener finding): `#rebuild()`
+    // fully replaces every stop on every `page`/`pages` change, so a PER-BUTTON `this.listen(button, 'click',
+    // …)` would strand a fresh closure+listener (riding the connection-lifetime AbortSignal, never released
+    // until disconnect) on every discarded rebuild — unbounded retention on a long-lived, frequently-paged
+    // control. Registered ONCE here instead; dispatches by reading the clicked stop's OWN `data-target-page`
+    // (set on every stop, incl. disabled/active ones — the guard below reproduces exactly the disabled/active
+    // no-op the old per-button conditional attach used to encode structurally).
+    this.listen(this, 'click', (event) => {
+      const target = event.target as HTMLElement
+      const stop = target.closest<HTMLElement>('[data-target-page]')
+      if (!stop || stop.hasAttribute('disabled') || stop.hasAttribute('aria-current')) return
+      this.#commit(Number(stop.getAttribute('data-target-page')))
+    })
   }
 
   /** Clamp an arbitrary `page` into the valid `[1, pages]` range (never trusts the raw prop — a bindable
@@ -109,21 +123,21 @@ export class UIPaginationElement extends UIElement {
   }
 
   /** One composed `ui-button` stop — `data-part` identifies prev/next/page (pagination.md); `aria-current`
-   *  on the current page's button ONLY (SPEC-R3); `disabled` on an out-of-range prev/next. Click commits
-   *  `target` via `#commit` unless already disabled or already the current page (a no-op click on the
-   *  active page button neither writes `page` nor emits — nothing changed). */
+   *  on the current page's button ONLY (SPEC-R3); `disabled` on an out-of-range prev/next. `data-target-page`
+   *  carries the page a click on THIS stop would commit — read by the ONE delegated host-level click
+   *  listener (`connected()`), never a per-button listener (the retained-listener fix). A click is a no-op
+   *  when the stop is disabled or already the active page (the delegated handler's own guard) — nothing
+   *  written, nothing emitted. */
   #stopButton(part: 'prev' | 'next' | 'page', text: string, target: number, disabled: boolean, active: boolean): UIButtonElement {
     const button = document.createElement('ui-button') as UIButtonElement
     button.setAttribute('data-part', part)
+    button.setAttribute('data-target-page', String(target))
     button.setAttribute('size', 'sm')
     button.setAttribute('variant', active ? 'soft' : 'ghost')
     button.textContent = text
     if (disabled) button.setAttribute('disabled', '')
     if (part === 'prev' || part === 'next') button.setAttribute('aria-label', `${text} page`)
     if (active) button.setAttribute('aria-current', 'page')
-    if (!disabled && !active) {
-      this.listen(button, 'click', () => this.#commit(target))
-    }
     return button
   }
 

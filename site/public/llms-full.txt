@@ -3924,7 +3924,11 @@ alignment to the physical left.
 
 No dedicated override block: every row/header separator is a real `border`, which forced-colors repaints in
 system inks and never removes (unlike a background-drawn mark); all cell/caption content is real text and
-survives untouched.
+survives untouched. The stamped native `<input>` selection cells carry their own UA forced-colors treatment.
+The stamped sort `<button>` is reset (`all: unset`, `table.css`) to read as part of the header rather than a
+raw UA control — under forced-colors it has no background/border of its own to lose, surviving as real,
+inherited header text plus a real `:focus-visible` outline on the shared focus-ring token (itself already
+`Highlight` under forced-colors).
 
 ---
 
