@@ -28,6 +28,7 @@
 - [Highlight](./highlight-doc.html): `@agent-ui/code/highlight` — a swappable, pack-independent syntax-highlighter registry plus seven bundled zero-dependency tokenizers (ts/js, json, html, css, python, shell, markdown/md), self-registering on import.
 - [Agent Admin](./agent-admin.html): composing `ui-agent-admin` — a three-pane `ui-split` (chat canvas · prompts · settings) over `ui-conversation` and `ui-settings`, one shared `SettingsStore`, and a live-apply stub turn loop with no external model dependency.
 - [The persona-library pattern](./persona-library-pattern.html): export a whole authored configuration as a shareable file, re-import it as a NEW library entry (never an overwrite), prove identical live behaviour — agent-admin's persona export/import (GH #406), documented as a shape reusable beyond agent-admin.
+- [SaaS Data Workbench](./workbench.html): a data table + filter toolbar + record-edit modal + agent-summary card composed entirely from published fleet primitives inside `ui-workspace-shell` — sort/select/filter/paginate, edit a record through the form spine, and read an agent-written summary of the current view (M-A flagship composition, GH #461).
 - [Changelog](./changelog.html): the shipping history, newest-first, rendered from the repo's CHANGELOG.md.
 
 ## Components — actions & entry
