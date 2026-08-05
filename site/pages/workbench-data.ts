@@ -3,8 +3,9 @@
 // SCALAR (SPEC-N4 — no arrays/objects as field values), which is what makes SPEC-N3's "no new
 // multi-select control" coherent (no workbench record ever needs a to-many field).
 //
-// Persistence is IN-SESSION ONLY (PRD-D2/SPEC-N2): `createMemoryStore` (the `@agent-ui/app` extraction's
-// own persistence precedent, ADR-0164) holds the mutable working copy under ONE key, with NO `persistKey`
+// Persistence is IN-SESSION ONLY (PRD-D2/SPEC-N2): `createMemoryStore` (ADR-0120/ADR-0158's store
+// family — NOT ADR-0164, whose cl.3 names the `mountEntryList` interface this page never uses; GH
+// #465) holds the mutable working copy under ONE key, with NO `persistKey`
 // — a plain in-process Map that dies with the page, exactly the "gone on reload" contract PRD-D2 requires.
 // `FIXTURE_RECORDS` itself is the immutable SEED; the store's copy is what the page reads/writes.
 
