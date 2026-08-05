@@ -1,8 +1,27 @@
 import { describe, it, expect } from 'vitest'
-import { cleanColumns, cleanRows, resolveCell, formatNumber, tableColumnsProp, tableRowsProp, type TableColumn } from './table-model.ts'
+import {
+  cleanColumns,
+  cleanRows,
+  resolveCell,
+  formatNumber,
+  tableColumnsProp,
+  tableRowsProp,
+  type TableColumn,
+} from './table-model.ts'
 
-// table-model.test.ts — the pure-math unit probes (LLD-C1, report-family.lld.md §2/§8/§9). DOM-free: every
-// SPEC-R3 row (1-14) as a table-driven case, plus the safe-codec round-trips.
+// table-model.test.ts — the pure-math unit probes (LLD-C1, report-family.lld.md §2/§8/§9; ADR-0163). DOM-
+// free: every SPEC-R3 row (1-14) as a table-driven case, the safe-codec round-trips, and the ADR-0163
+// widening's own pure math (identity/filter/search/sort/the view pipeline) further down this file.
+
+/** A post-`cleanColumns` column at the sortable/searchable DEFAULTS (false/true) — the repeated shape every
+ *  pre-existing hardening assertion below now carries (ADR-0163 cl.5/cl.2's schema widening). */
+const col = (key: string, label: string, type: 'string' | 'number' = 'string'): TableColumn => ({
+  key,
+  label,
+  type,
+  sortable: false,
+  searchable: true,
+})
 
 describe('cleanColumns — input hardening (SPEC-R3 rows 1/3/4)', () => {
   it('a non-array input (object, string, number, null, undefined) → []', () => {
@@ -31,21 +50,18 @@ describe('cleanColumns — input hardening (SPEC-R3 rows 1/3/4)', () => {
       ['array-entry'],
       { key: 'ok2', label: 'OK 2' },
     ]
-    expect(cleanColumns(input)).toEqual([
-      { key: 'region', label: 'Region', type: 'string' },
-      { key: 'ok2', label: 'OK 2', type: 'string' },
-    ])
+    expect(cleanColumns(input)).toEqual([col('region', 'Region'), col('ok2', 'OK 2')])
   })
 
   it('an unknown/absent `type` normalizes to "string", never dropping the column (row 4)', () => {
-    expect(cleanColumns([{ key: 'a', label: 'A' }])).toEqual([{ key: 'a', label: 'A', type: 'string' }])
-    expect(cleanColumns([{ key: 'a', label: 'A', type: 'bogus' }])).toEqual([{ key: 'a', label: 'A', type: 'string' }])
-    expect(cleanColumns([{ key: 'a', label: 'A', type: 42 }])).toEqual([{ key: 'a', label: 'A', type: 'string' }])
+    expect(cleanColumns([{ key: 'a', label: 'A' }])).toEqual([col('a', 'A')])
+    expect(cleanColumns([{ key: 'a', label: 'A', type: 'bogus' }])).toEqual([col('a', 'A')])
+    expect(cleanColumns([{ key: 'a', label: 'A', type: 42 }])).toEqual([col('a', 'A')])
   })
 
   it('`type: "number"` is kept as-is', () => {
     expect(cleanColumns([{ key: 'revenue', label: 'Revenue', type: 'number' }])).toEqual([
-      { key: 'revenue', label: 'Revenue', type: 'number' },
+      col('revenue', 'Revenue', 'number'),
     ])
   })
 
@@ -54,10 +70,15 @@ describe('cleanColumns — input hardening (SPEC-R3 rows 1/3/4)', () => {
       { key: 'x', label: 'First X' },
       { key: 'x', label: 'Second X' },
     ]
-    expect(cleanColumns(input)).toEqual([
-      { key: 'x', label: 'First X', type: 'string' },
-      { key: 'x', label: 'Second X', type: 'string' },
-    ])
+    expect(cleanColumns(input)).toEqual([col('x', 'First X'), col('x', 'Second X')])
+  })
+
+  it('`sortable`/`searchable` normalize to real booleans (ADR-0163 cl.5/cl.2) — sortable opts IN (default false), searchable opts OUT (default true)', () => {
+    expect(cleanColumns([{ key: 'a', label: 'A' }])[0]).toMatchObject({ sortable: false, searchable: true })
+    expect(cleanColumns([{ key: 'a', label: 'A', sortable: true }])[0]).toMatchObject({ sortable: true })
+    expect(cleanColumns([{ key: 'a', label: 'A', sortable: 'yes' }])[0]).toMatchObject({ sortable: false }) // truthy-but-not-literal-true never coerces
+    expect(cleanColumns([{ key: 'a', label: 'A', searchable: false }])[0]).toMatchObject({ searchable: false })
+    expect(cleanColumns([{ key: 'a', label: 'A', searchable: 0 }])[0]).toMatchObject({ searchable: true }) // falsy-but-not-literal-false never coerces
   })
 
   it('preserves order', () => {
@@ -204,10 +225,7 @@ describe('tableColumnsProp / tableRowsProp — the safe attribute codec (SPEC-R1
 
   it('well-formed JSON round-trips through the matching clean function (garbage entries dropped)', () => {
     const columnsJson = JSON.stringify([{ key: 'region', label: 'Region' }, { key: 'bad' }, { key: 'revenue', label: 'Revenue', type: 'number' }])
-    expect(tableColumnsProp.type.from(columnsJson)).toEqual([
-      { key: 'region', label: 'Region', type: 'string' },
-      { key: 'revenue', label: 'Revenue', type: 'number' },
-    ])
+    expect(tableColumnsProp.type.from(columnsJson)).toEqual([col('region', 'Region'), col('revenue', 'Revenue', 'number')])
     const rowsJson = JSON.stringify([{ region: 'EMEA' }, null, { region: 'APAC' }])
     expect(tableRowsProp.type.from(rowsJson)).toEqual([{ region: 'EMEA' }, { region: 'APAC' }])
   })

@@ -23,7 +23,9 @@ const css = readFileSync(`${DIR}/table.css`, 'utf8') as string
 
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
-const ATTR_NAMES = ['columns', 'rows', 'label']
+const ATTR_NAMES = [
+  'columns', 'rows', 'label', 'selectable', 'rowKey', 'selected', 'sort', 'search', 'filter', 'pageSize', 'page',
+]
 
 describe('table.md descriptor — structural validity', () => {
   it('has a leading frontmatter fence and a prose body', () => {
@@ -89,6 +91,51 @@ describe('table.md descriptor — contract↔props trip-wire', () => {
     )
   })
 
+  it('ADR-0163 — selectable is an enum [\'\', single, multi] default \'\', reflect true', () => {
+    const selectable = parsed.attributes.find((a) => a.name === 'selectable')
+    expect(selectable?.type).toBe('enum')
+    expect(selectable?.values).toEqual(['', 'single', 'multi'])
+    expect(selectable?.default).toBe('')
+    expect(selectable?.reflect).toBe(true)
+  })
+
+  it('ADR-0163 — selected/filter are "json" (array-hardened), default \'\' (String([])===\'\')', () => {
+    for (const name of ['selected', 'filter']) {
+      const attr = parsed.attributes.find((a) => a.name === name)
+      expect(attr?.type, name).toBe('json')
+      expect(attr?.default, name).toBe('')
+      expect(attr?.reflect, name).toBe(false)
+    }
+  })
+
+  it('ADR-0163 — sort classifies as "json" too (the sandbox-frame cspConfigProp shape), default null', () => {
+    const sort = parsed.attributes.find((a) => a.name === 'sort')
+    expect(sort?.type).toBe('json')
+    expect(sort?.default).toBe('null')
+    expect(sort?.reflect).toBe(false)
+  })
+
+  it('ADR-0163 — search is a string default \'\'; pageSize/page are numbers default 0/1, neither reflected', () => {
+    const search = parsed.attributes.find((a) => a.name === 'search')
+    const pageSize = parsed.attributes.find((a) => a.name === 'pageSize')
+    const page = parsed.attributes.find((a) => a.name === 'page')
+    expect(search?.type).toBe('string')
+    expect(search?.default).toBe('')
+    expect(pageSize?.type).toBe('number')
+    expect(pageSize?.default).toBe('0')
+    expect(pageSize?.reflect).toBe(false)
+    expect(page?.type).toBe('number')
+    expect(page?.default).toBe('1')
+    expect(page?.reflect).toBe(false)
+  })
+
+  it('ADR-0163 — rowKey is a string default \'\', NOT reflected', () => {
+    const rowKey = parsed.attributes.find((a) => a.name === 'rowKey')
+    expect(rowKey?.type).toBe('string')
+    expect(rowKey?.default).toBe('')
+    expect(rowKey?.reflect).toBe(false)
+  })
+
   it('a drifted attribute FAILS the trip-wire (negative control — reflect + default, isolated on `label`)', () => {
     const labelOnly = parsed.attributes.filter((a) => a.name === 'label')
     const labelOnlyProps = { label: UITableElement.props.label }
@@ -112,6 +159,23 @@ describe('table.md descriptor — contract↔props trip-wire', () => {
     expect(compareDescriptorToProps(addBogus, labelOnlyProps)).toContainEqual(
       expect.objectContaining({ code: 'DRIFT_EXTRA', path: 'attributes.bogus' }),
     )
+  })
+})
+
+describe('table.md descriptor — ADR-0163 events/parts', () => {
+  it('events declares exactly select + change, both from the §4 vocabulary', () => {
+    const names = (parsed.sequences.get('events') ?? []).map((e) => e.get('name'))
+    expect(names).toEqual(['select', 'change'])
+  })
+
+  it('parts declares the widened anatomy (selection/sort/footer/pagination) alongside the original scroll/table/caption/thead/tbody', () => {
+    const names = new Set((parsed.sequences.get('parts') ?? []).map((p) => p.get('name')))
+    for (const part of [
+      'scroll', 'table', 'caption', 'thead', 'tbody',
+      'select-header', 'select-all', 'sort-button', 'select-cell', 'select', 'footer', 'pagination',
+    ]) {
+      expect(names.has(part), `missing part: ${part}`).toBe(true)
+    }
   })
 })
 

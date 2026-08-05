@@ -1,15 +1,20 @@
-/* table.css — ui-table, the Display-class static data table (LLD-C3, report-family.lld.md §2;
- * report-family.spec.md SPEC-R2/R3/R5/R14/R15/R16/R17). Two clearly-SECTIONED blocks (ADR-0003):
+/* table.css — ui-table, the Display-class data table (LLD-C3, report-family.lld.md §2;
+ * report-family.spec.md SPEC-R2/R3/R5/R14/R15/R16/R17; ADR-0163 the interactive widening). Two clearly-
+ * SECTIONED blocks (ADR-0003):
  *
  *   [1] TOKEN BLOCK  — `:where(ui-table)` (specificity 0,0,0) DECLARES every `--ui-table-*` component
  *       token from the fleet `--md-sys-color-*` roles + the `--md-sys-space-*` rhythm ladder. No `[size]`/
  *       `[scale]` repoint matrix — `ui-table` is Display-class (SPEC-R17): no control height, no
- *       `--md-sys-height-*` lever, the type matrix + the space ladder are the whole lever.
+ *       `--md-sys-height-*` lever, the type matrix + the space ladder are the whole lever. ADR-0163's
+ *       stamped interactive parts (selection inputs, sort buttons, the footer's composed `ui-pagination`)
+ *       carry their OWN geometry (cl.6's "the novelty is zero") — this file adds only the SELECTED-row
+ *       color pair + the footer's own rhythm token, never a control-height lever.
  *   [2] STYLES BLOCK — `@scope (ui-table)` CONSUMES only `--ui-table-*` (∪ the shared `--md-sys-*`/
- *       `--md-sys-space-*` namespaces). Owns the UA-default + page-cascade reset a stamped native `<table>`
- *       needs (border-collapse, cell padding, caption alignment — SPEC-R2 AC2, the ADR-0078 cl.4
- *       `font: inherit`-reset precedent scaled up) and the overflow-in-own-container law (SPEC-R5): the
- *       component's OWN `[data-part='scroll']` container scrolls, never the page.
+ *       `--md-sys-space-*` namespaces, PLUS the fleet's sanctioned direct-read constants — focus-ring/
+ *       motion — the checkbox.css/tokens.md precedent). Owns the UA-default + page-cascade reset a stamped
+ *       native `<table>` needs (border-collapse, cell padding, caption alignment — SPEC-R2 AC2, the
+ *       ADR-0078 cl.4 `font: inherit`-reset precedent scaled up) and the overflow-in-own-container law
+ *       (SPEC-R5): the component's OWN `[data-part='scroll']` container scrolls, never the page.
  *
  * RTL (SPEC-R16): logical properties throughout (`text-align: start/end`, `border-block-end`, block/inline
  * padding pairs); the native `<table>` handles column order under `dir="rtl"` for free; `text-align: end`
@@ -17,8 +22,10 @@
  *
  * WHCM (SPEC-R15): NO dedicated `forced-colors` block — every row/header separator is a REAL `border`
  * (system-ink-repainted, never removed under `forced-colors: active`, unlike a background); all content is
- * real text. The bar-chart/badge fill lesson (a background-drawn mark vanishing under WHCM) does not apply
- * here — nothing in this file draws a background-only mark.
+ * real text; every stamped native input/button carries its own UA/forced-colors treatment. The bar-chart/
+ * badge fill lesson (a background-drawn mark vanishing under WHCM) does not apply here — nothing in this
+ * file draws a background-only mark (`data-selected`'s row tint is a non-color-alone signifier — the
+ * checkbox/radio's OWN checked state is the real signifier, ADR-0057 satisfied structurally, ADR-0163 cl.4).
  *
  * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected
  * from table.ts (behaviour-only `.ts`, no runtime style injection — plan §2).

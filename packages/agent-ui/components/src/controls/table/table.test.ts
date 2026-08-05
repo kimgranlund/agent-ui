@@ -48,8 +48,8 @@ describe('UITableElement — upgrade + typed props', () => {
     el.setAttribute('rows', JSON.stringify([{ region: 'EMEA', revenue: 42000 }, { region: 'APAC', revenue: 31000 }]))
     mount(el)
     expect(el.columns).toEqual([
-      { key: 'region', label: 'Region', type: 'string' },
-      { key: 'revenue', label: 'Revenue', type: 'number' },
+      { key: 'region', label: 'Region', type: 'string', sortable: false, searchable: true },
+      { key: 'revenue', label: 'Revenue', type: 'number', sortable: false, searchable: true },
     ])
     expect(el.rows).toEqual([
       { region: 'EMEA', revenue: 42000 },
