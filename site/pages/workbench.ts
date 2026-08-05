@@ -201,6 +201,25 @@ function renderRecordPickerOptions(records: readonly WorkbenchRecord[]): void {
 }
 renderRecordPickerOptions(readWorkbenchRecords(store))
 
+/** The picker → table row visual echo (layout-checker B3): scroll the picked record's row into view and
+ *  flash-highlight it (workbench.css's `.wb-row-flash`, a TRANSIENT class, never a persistent attribute on
+ *  the table's own stamped `<tr>` — see that sheet's own comment for why durability there is the wrong
+ *  layer). A no-op when the row isn't currently rendered (filtered/paginated out) — nothing to echo to. */
+function highlightPickedRow(): void {
+  const input = table.querySelector(`[data-part="select"][data-row-id="${recordPicker.value}"]`)
+  const row = input?.closest('tr')
+  if (!row) return
+  row.scrollIntoView({ block: 'nearest' })
+  row.classList.remove('wb-row-flash')
+  void row.offsetWidth // force a reflow so re-adding the class re-triggers the animation on a repeat pick
+  row.classList.add('wb-row-flash')
+  row.addEventListener('animationend', () => row.classList.remove('wb-row-flash'), { once: true })
+}
+recordPicker.addEventListener('select', highlightPickedRow)
+// NOT called here yet — `table` isn't connected to the document until the tree mounts below (its own
+// tbody hasn't rendered a single row to find), so the initial echo runs once mounting completes (this
+// file's own tail, alongside refreshDerivedView()).
+
 // SPEC-N8 / SPEC-R8(a) — a REAL, persistent, keyboard-focusable control OUTSIDE the table's stamped
 // anatomy: never a fenced interactive cell, never selection-contextual (it reads no `table.selected` at
 // all — the picker above, not the table's own selection state, names WHICH record this opens).
@@ -332,6 +351,7 @@ saveButton.addEventListener('click', () => {
   renderRecordPickerOptions(nextRecords)
   refreshDerivedView()
   modal.open = false // focus restores to the opener (editButton) — modal.md's ADR-0017 cl.4 contract
+  highlightPickedRow() // re-echo the just-saved row — table.rows just rebuilt the tbody above
 })
 
 // ════════════════ the agent summary card (SPEC-R9 · PRD-D4 ruled (a) · PRD-D5 ruled "recorded") ═════════
@@ -371,3 +391,4 @@ wbContent.append(toolbarRow, recordActions, tableWrap, summarySection)
 document.body.append(modal) // top-layer element — DOM position doesn't affect rendering; kept out of the scroll region
 
 refreshDerivedView() // the initial results count + the 'all' summary key, before any interaction
+highlightPickedRow() // the initial default pick's echo, now that `table` is connected and has rendered rows

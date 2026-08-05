@@ -56,6 +56,21 @@ ui-workspace-shell {
   overflow-y: auto;
 }
 
+/* Each of the four content blocks below (toolbar / record-actions / table / summary) carries its OWN
+ * bordered/padded card frame — the gen-ui-live.css `.chat-pane`/`.render-pane` precedent — so three
+ * functionally distinct rows (narrow-the-table / target-a-record-for-edit / the-table itself) read as
+ * three separated groups, not one undifferentiated stack of same-weight flex rows (layout-checker A3/A4). */
+.wb-toolbar-row,
+.wb-record-actions,
+.wb-table-wrap,
+.wb-summary {
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 12px;
+  background: var(--md-sys-color-neutral-surface-low);
+  padding: var(--md-sys-space-md);
+  box-sizing: border-box;
+}
+
 .wb-toolbar-row {
   display: flex;
   flex-direction: column;
@@ -83,6 +98,24 @@ ui-workspace-shell {
   display: flex;
   flex-direction: column;
   gap: var(--md-sys-space-xs);
+}
+
+/* The record-picker → table-row visual echo (layout-checker B3): a page-owned TRANSIENT flash, never a
+ * persistent attribute — ui-table rebuilds its own <tbody> wholesale on nearly every state change
+ * (table.md's own re-render contract), so a lasting external mark on its stamped <tr> would be silently
+ * wiped by the control's next rebuild. A momentary highlight (removed on animationend, re-triggered on
+ * every picker commit) needs no such durability. background-color/animation are outside AC19's
+ * SPACING_PROPERTIES family — no ladder-rung literal concern here. */
+@keyframes wb-row-flash {
+  from {
+    background-color: var(--md-sys-color-primary-container-low);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+.wb-table-wrap tr.wb-row-flash {
+  animation: wb-row-flash 1.2s ease-out;
 }
 .wb-summary-title {
   margin: 0;
