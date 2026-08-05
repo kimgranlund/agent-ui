@@ -100,9 +100,14 @@ export * from './bar-chart/bar-chart.ts'   // magnitude-comparison bar list (LLD
 
 // Report family — Wave M1 (ADR-0111, report-family.lld.md): the real native <table>, the metric tile, and
 // the compact-realm intent badge. All Display-class, non-interactive, non-form-associated leaves.
-export * from './table/table.ts'   // scroll-preserving static data table (LLD-C1/C2/C3)
+export * from './table/table.ts'   // scroll-preserving re-render + ADR-0163 interactive widening (selection/sort/filter/page)
 export * from './stat/stat.ts'     // metric tile, direction-as-text delta (LLD-C4/C5/C6)
 export * from './badge/badge.ts'   // compact-realm intent badge (LLD-C7/C8)
+
+// ADR-0163 cl.6 — ui-pagination, the fleet's first standalone page navigator (SPEC-R3): a Pattern-class
+// UIElement composing ui-button for every stop. Consumed internally by ui-table's page-size capability, and
+// reusable standalone (lists, feeds).
+export * from './pagination/pagination.ts'
 
 // Content family — Wave M1 (ADR-0113, content-family.lld.md): the zero-machinery code leaf and the native
 // <details>/<summary> disclosure. (The ui-text hyperlink extension lives in ./text/text.ts, exported above.)

@@ -201,6 +201,14 @@
       "section": "Components"
     },
     {
+      "name": "Pagination",
+      "tag": "ui-pagination",
+      "url": "./pagination-doc.html",
+      "description": "A standalone page navigator — previous/next plus a windowed page-number list with ellipsis, composing ui-button for every stop.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Popover",
       "tag": "ui-popover",
       "url": "./popover-doc.html",
@@ -396,7 +404,7 @@
       "name": "Table",
       "tag": "ui-table",
       "url": "./table-doc.html",
-      "description": "A static data table with typed columns and record rows, rendered as a real native HTML table.",
+      "description": "A data table with typed columns and record rows, rendered as a real native HTML table — with opt-in row selection, per-column sort, filter/search state, and pagination (all default OFF).",
       "level": "L1",
       "section": "Components"
     },

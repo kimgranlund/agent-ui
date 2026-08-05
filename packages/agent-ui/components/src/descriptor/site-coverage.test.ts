@@ -221,12 +221,14 @@ describe('site coverage — every shipped component has its required per-tier pa
     // renderInto/fill seam (ui-swiper-pagination, ui-swiper-paddles) + ui-color-picker (ADR-0123, the
     // OKLCH-internal 2-axis color-input composite — pad + channel sliders + readout, no new geometry row) +
     // ui-form-popover (GH #294 F4, form-popover.lld.md — the packaged popover + form-spine recipe: a
-    // control-created trigger over a real-form-content panel) — each requires its {doc, demo} pages.
+    // control-created trigger over a real-form-content panel) + ui-pagination (ADR-0163 cl.6 — the fleet's
+    // first standalone page navigator, composing ui-button for every stop, no new geometry row) — each
+    // requires its {doc, demo} pages.
     expect(COMPONENTS.filter((c) => c.tier === 'pattern').map((c) => c.name).sort()).toEqual(
       [
         'calendar', 'color-picker', 'combo-box', 'command-modal', 'disclosure', 'form-popover', 'menu', 'modal',
-        'popover', 'segmented-control', 'select', 'status-stream', 'swiper', 'swiper-paddles', 'swiper-pagination',
-        'tabs', 'timeline', 'timeline-item', 'toast', 'toolbar', 'tooltip',
+        'pagination', 'popover', 'segmented-control', 'select', 'status-stream', 'swiper', 'swiper-paddles',
+        'swiper-pagination', 'tabs', 'timeline', 'timeline-item', 'toast', 'toolbar', 'tooltip',
       ],
     )
   })

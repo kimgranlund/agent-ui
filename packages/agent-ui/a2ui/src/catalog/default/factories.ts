@@ -612,13 +612,27 @@ export const sparklineFactory: WidgetFactory = accessorFactory('ui-sparkline')
 export const barChartFactory: WidgetFactory = accessorFactory('ui-bar-chart')
 
 // ── the ADR-0111 report family (Table / Stat / Badge, catalog LLD-C12, report-family.lld.md §6) ───────
+// ── widened by ADR-0163 cl.9 (selection/sort/filter/search/pagination; `Pagination` newly minted) ──────
 //
-// Table → ui-table (SPEC-R1..R6). `columns`/`rows` (safe-JSON-codec array props) + `label` are ALL 1:1
-// reflecting accessor props — verified against table.ts `static props`; the control's OWN `cleanColumns`/
-// `cleanRows` hardening runs again inside its render effects (LLD-C2), not only inside the attribute
-// codec, so a literal array or a `{path}` bind's resolved array both reach a hardened render. Display-only
-// leaf: no `value` mark, no children, no submitGate.
-export const tableFactory: WidgetFactory = accessorFactory('ui-table')
+// Table → ui-table (SPEC-R1..R6, widened ADR-0163 cl.4/5/6/9 / saas-data-workbench.spec.md SPEC-R4).
+// `columns`/`rows` (safe-JSON-codec array props) + `label` + the widened set (`selectable`/`rowKey`/
+// `selected`/`sort`/`page`/`pageSize`/`search`/`filter`) are ALL 1:1 reflecting accessor props —
+// verified against table.ts `static props`, whose wire names ARE its JS prop names (no renamed prop,
+// unlike `Stat.value→figure`), so plain `accessorFactory`'s generic `setProp` (`el[prop] = value`)
+// still suffices with zero bespoke mapping; the control's OWN `cleanColumns`/`cleanRows`/`cleanSelected`/
+// `cleanSort`/`cleanFilter` hardening (table-model.ts) runs again inside its render effects (LLD-C2), not
+// only inside the attribute codec, so a literal value or a `{path}` bind's resolved value both reach a
+// hardened render regardless of which path delivered them. Three-slot `value` mark (ADR-0161's third
+// array-form consumer after Calendar/SliderMulti): `selected` commits on `select`, `sort` and `page`
+// both commit on the shared `change` event (ADR-0161 already sanctions repeated events across distinct
+// slot props). `search`/`filter` are declared `bindable` but carry NO slot — the table never mutates
+// either from inside its own commit surface (ADR-0163 cl.9), so they bind one-way in only, wired by the
+// composing query UI via the shared-path idiom.
+export const tableFactory: WidgetFactory = accessorFactory('ui-table', [
+  { prop: 'selected', event: 'select' },
+  { prop: 'sort', event: 'change' },
+  { prop: 'page', event: 'change' },
+])
 
 // Stat → ui-stat (SPEC-R7..R10). Wire `value` → prop `figure` (TKT-0069 item 1); `label`/`delta`/
 // `caption` stay 1:1 (`figure`'s string|number union + `delta`'s null-defaulting numeric codec are real
@@ -630,6 +644,21 @@ export const statFactory: WidgetFactory = mappedAccessorFactory('ui-stat', { val
 // 'neutral' (SPEC-R11 AC2), so `setProp`'s plain property write is safe even for a `{path}`-bound value the
 // static validator's `enum` check never sees. Display-only leaf: no `value` mark, no children.
 export const badgeFactory: WidgetFactory = accessorFactory('ui-badge')
+
+// Pagination → ui-pagination (ADR-0163 cl.6/cl.9, newly minted standalone page navigator; catalog SPEC
+// §5.2's four-way rule's `Table` arm now also answers "…and when the user must pick rows from it").
+// `page`/`pages`/`label` are ALL 1:1 reflecting accessor props — verified against pagination.ts `static
+// props` — so plain `accessorFactory` suffices, the same shape as `sliderFactory`/`comboBoxFactory`.
+// Two-way bindable on `page` via the control's own `change` commit event (the Slider/ComboBox `value`
+// precedent) — one slot, the standard single-object `value` mark shape most rows carry. `pages`/`label`
+// stay NON-bindable (catalog.json carries no `bindable: true` on either), UNLIKE the Toolbar/Table/
+// Sparkline `label` precedent — deliberately: ADR-0163 cl.6 gives `label` as a static "accessible nav
+// name" (the navigation landmark's own name, set once by the composing author, never a live view-state
+// value the control itself commits or a series a data feed streams), and `pages` is a derived COUNT the
+// composing author computes from their own page-size math, not a value `ui-pagination` itself produces —
+// only `page` is the round-trippable state a user's click actually moves. A future consumer that wants
+// either bound live is a real, separate need (e.g. a streamed result count), not an oversight here.
+export const paginationFactory: WidgetFactory = accessorFactory('ui-pagination', { prop: 'page', event: 'change' })
 
 // ── the ADR-0113 content family (Code / Disclosure / Text.href, catalog LLD-C13, content-family.lld.md §5) ──
 //
@@ -856,6 +885,7 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   Sparkline: sparklineFactory,
   BarChart: barChartFactory,
   Table: tableFactory,
+  Pagination: paginationFactory,
   Stat: statFactory,
   Badge: badgeFactory,
   Code: codeFactory,

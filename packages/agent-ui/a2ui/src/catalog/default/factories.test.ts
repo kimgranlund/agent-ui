@@ -33,6 +33,8 @@ import {
   gridFactory,
   sparklineFactory,
   barChartFactory,
+  tableFactory,
+  paginationFactory,
   defaultFactories,
 } from './factories.ts'
 import { defaultCatalog } from './index.ts'
@@ -767,5 +769,62 @@ describe('default catalog factories — Sparkline / BarChart (ADR-0107, chart-fa
     const target = el as unknown as Record<string, unknown>
     expect(target.data).toEqual(data)
     expect(target.label).toBe('Revenue by region')
+  })
+})
+
+describe('default catalog factories — Table / Pagination (ADR-0163 cl.9, report-family.lld.md §6 widened)', () => {
+  it('Table → ui-table carries the three-slot value mark (selected/select, sort/change, page/change); columns/rows/label + the widened set are 1:1 accessors, incl. the safe-JSON-codec props', () => {
+    expect(tableFactory.tag).toBe('ui-table')
+    expect(tableFactory.value).toEqual([
+      { prop: 'selected', event: 'select' },
+      { prop: 'sort', event: 'change' },
+      { prop: 'page', event: 'change' },
+    ])
+    const el = tableFactory.create()
+    const columns = [
+      { key: 'region', label: 'Region' },
+      { key: 'revenue', label: 'Revenue', type: 'number' },
+    ]
+    const rows = [{ region: 'EMEA', revenue: 42000 }]
+    // columns/rows/selected/sort/filter are ALL safe-JSON-codec props on the control (table-model.ts) —
+    // `accessorFactory`'s generic `setProp` (`el[prop] = value`) writes the JS array/object DIRECTLY, the
+    // SAME shape `sparklineFactory.values`/`barChartFactory.data` already prove above; the codec's
+    // `from`/`to` pair only governs ATTRIBUTE string round-tripping, never a live property write.
+    tableFactory.applyProp(el, 'columns', columns)
+    tableFactory.applyProp(el, 'rows', rows)
+    tableFactory.applyProp(el, 'label', 'Regions')
+    tableFactory.applyProp(el, 'selectable', 'multi')
+    tableFactory.applyProp(el, 'rowKey', 'region')
+    tableFactory.applyProp(el, 'selected', ['EMEA'])
+    tableFactory.applyProp(el, 'sort', { key: 'revenue', direction: 'ascending' })
+    tableFactory.applyProp(el, 'search', 'EMEA')
+    tableFactory.applyProp(el, 'filter', [{ key: 'region', values: ['EMEA'] }])
+    tableFactory.applyProp(el, 'pageSize', 10)
+    tableFactory.applyProp(el, 'page', 2)
+    const target = el as unknown as Record<string, unknown>
+    expect(target.columns).toEqual(columns)
+    expect(target.rows).toEqual(rows)
+    expect(target.label).toBe('Regions')
+    expect(target.selectable).toBe('multi')
+    expect(target.rowKey).toBe('region')
+    expect(target.selected).toEqual(['EMEA'])
+    expect(target.sort).toEqual({ key: 'revenue', direction: 'ascending' })
+    expect(target.search).toBe('EMEA')
+    expect(target.filter).toEqual([{ key: 'region', values: ['EMEA'] }])
+    expect(target.pageSize).toBe(10)
+    expect(target.page).toBe(2)
+  })
+
+  it('Pagination → ui-pagination carries a single-slot value mark on page/change; pages/label are 1:1 accessors', () => {
+    expect(paginationFactory.tag).toBe('ui-pagination')
+    expect(paginationFactory.value).toEqual({ prop: 'page', event: 'change' })
+    const el = paginationFactory.create()
+    paginationFactory.applyProp(el, 'page', 3)
+    paginationFactory.applyProp(el, 'pages', 10)
+    paginationFactory.applyProp(el, 'label', 'Results pagination')
+    const target = el as unknown as Record<string, unknown>
+    expect(target.page).toBe(3)
+    expect(target.pages).toBe(10)
+    expect(target.label).toBe('Results pagination')
   })
 })

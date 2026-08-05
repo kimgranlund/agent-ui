@@ -34,6 +34,7 @@
     "./controls/list": "./src/controls/list/list.ts",
     "./controls/menu": "./src/controls/menu/menu.ts",
     "./controls/modal": "./src/controls/modal/modal.ts",
+    "./controls/pagination": "./src/controls/pagination/pagination.ts",
     "./controls/popover": "./src/controls/popover/popover.ts",
     "./controls/progress": "./src/controls/progress/progress.ts",
     "./controls/radio": "./src/controls/radio/radio.ts",

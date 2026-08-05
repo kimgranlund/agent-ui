@@ -348,6 +348,14 @@ export const NAV: readonly NavGroup[] = [
     label: 'ui-badge',
     links: [{ href: './badge-doc.html', label: 'API' }],
   },
+  // ADR-0163 cl.6 — ui-pagination, the fleet's first standalone page navigator (tier=pattern ⇒ {doc, demo}).
+  {
+    label: 'ui-pagination',
+    links: [
+      { href: './pagination-demo.html', label: 'Demo' },
+      { href: './pagination-doc.html', label: 'API' },
+    ],
+  },
   // The Wave M1 content family (ADR-0113) — ui-code (tier=display ⇒ {doc} only) + ui-disclosure (tier=pattern
   // ⇒ {doc, demo}, the tooltip/popover precedent).
   {
