@@ -1,7 +1,9 @@
 // entry-list.ts — the generic ordered-entry-list UI (ADR-0132 `n1b`/`n1c`): renders one kind's entries in
 // order with a per-entry toggle + content editor, plus a shared custom-entry authoring form. Reused
-// verbatim by all FIVE instantiations (prompt sections + skill/workflow/resource/tool) — no kind gets
-// its own bespoke list/toggle/author code (ADR-0132 cl.1).
+// verbatim by every instantiation (prompt sections + skill/workflow/resource/tool/pattern-source, and
+// since ADR-0170 the `catalog` library) — no kind gets its own bespoke list/toggle/author code
+// (ADR-0132 cl.1). The ONE per-kind knob is presentational: `EntryListOptions`' `customAdd`/`contentField`
+// (ADR-0170 cl.8), both default-true, so every pre-existing call site renders byte-identically.
 //
 // The per-entry content editor is `<ui-code-editor language="markdown">` (ADR-0139) — the fleet's
 // editable-first markdown source editor (CodeMirror 6, lazy-loaded on the opt-in @agent-ui/code/editor
@@ -66,9 +68,24 @@ export interface EntryListOptions {
   /** GH #47/#48 — packs offered by the add-from-library menu. Absent/empty ⇒ the affordance does not
    *  render at all (byte-identical section shell to before the option existed). */
   libraries?: readonly EntryLibraryPack[]
+  /** ADR-0170 cl.8 — render the custom-entry AUTHORING affordances (the add-toggle button + its form).
+   *  Default `true`: absent ⇒ byte-identical to before this option existed. `false` suppresses BOTH; the
+   *  library menu is unaffected (it commits through `handlers.onAdd` directly, never through the form).
+   *  Suppressed for a kind whose entries key an EXTERNAL registry — there is nothing meaningful to
+   *  author, and a form that looks like "create one" would mint an id the registry does not know. This
+   *  is the named seam a future create-a-catalog affordance re-opens. */
+  customAdd?: boolean
+  /** ADR-0170 cl.8 — render the per-entry CONTENT editor on each row. Default `true`: absent ⇒
+   *  byte-identical. `false` renders rows as label + description + switch; the mid-edit preservation path
+   *  below is then inert by construction (there is no content field to preserve). */
+  contentField?: boolean
 }
 
 export function mountEntryList(kind: string, addLabel: string, handlers: EntryListHandlers, options?: EntryListOptions): EntryListSection {
+  // ADR-0170 cl.8 — both default TRUE: an options bag that omits them renders exactly as before.
+  const withCustomAdd = options?.customAdd !== false
+  const withContentField = options?.contentField !== false
+
   const section = document.createElement('div')
   section.setAttribute('data-part', 'entry-section')
   section.setAttribute('data-kind', kind)
@@ -90,7 +107,7 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
   addIcon.setAttribute('data-role', 'icon')
   addIcon.setAttribute('glyph', 'plus')
   addToggle.append(addIcon, addLabel)
-  section.append(addToggle)
+  if (withCustomAdd) section.append(addToggle) // ADR-0170 cl.8 — suppressed ⇒ no authoring affordance mounts
 
   // GH #47/#48 — the add-from-library affordance: a ui-menu of pack entries, committed through the SAME
   // validated `onAdd` path as the hand-authoring form below (a library add IS a custom add with the
@@ -197,7 +214,7 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
   errorNote.hidden = true
 
   addForm.append(labelFieldWrap, descriptionFieldWrap, contentField, submitBtn, errorNote)
-  section.append(addForm)
+  if (withCustomAdd) section.append(addForm)
 
   addToggle.addEventListener('click', () => {
     addForm.hidden = !addForm.hidden
@@ -297,16 +314,21 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
         row.append(desc)
       }
 
-      const contentField = document.createElement('ui-code-editor') as UICodeEditorElement
-      contentField.language = 'markdown' // ADR-0139 — markdown-highlighted source editing (CM lazy-loaded)
-      contentField.rows = 4 // TKT-0049: the saved, potentially longer per-entry content — bigger than the add-form's draft field
-      contentField.setAttribute('data-part', 'entry-content')
-      contentField.setAttribute('aria-label', `${entry.label} content`)
-      // Restore an in-progress, uncommitted edit for THIS entry (captured above) rather than the
-      // possibly-stale `entry.content` from the store — the whole point of the preservation above.
-      contentField.value = entry.id === activeId && preservedValue !== undefined ? preservedValue : entry.content
-      contentField.addEventListener('change', () => handlers.onContentChange(entry.id, contentField.value))
-      row.append(contentField)
+      // ADR-0170 cl.8 — a kind whose entries key an EXTERNAL registry renders label + description +
+      // switch only: there is no per-entry body to edit, so no editor mounts (and the preservation dance
+      // above is inert by construction — `activeField` can never match a field that does not exist).
+      const contentField = withContentField ? (document.createElement('ui-code-editor') as UICodeEditorElement) : null
+      if (contentField) {
+        contentField.language = 'markdown' // ADR-0139 — markdown-highlighted source editing (CM lazy-loaded)
+        contentField.rows = 4 // TKT-0049: the saved, potentially longer per-entry content — bigger than the add-form's draft field
+        contentField.setAttribute('data-part', 'entry-content')
+        contentField.setAttribute('aria-label', `${entry.label} content`)
+        // Restore an in-progress, uncommitted edit for THIS entry (captured above) rather than the
+        // possibly-stale `entry.content` from the store — the whole point of the preservation above.
+        contentField.value = entry.id === activeId && preservedValue !== undefined ? preservedValue : entry.content
+        contentField.addEventListener('change', () => handlers.onContentChange(entry.id, contentField.value))
+        row.append(contentField)
+      }
       list.append(row)
 
       // Focusing only works once `contentField` is actually connected to the document — calling
@@ -320,7 +342,7 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
       // collapse the range against a not-yet-populated editor (`selectNodeContents` on an empty node
       // caret-collapses to 0, not the end) — focus alone still lands (verified in the cross-engine
       // suite), but the caret position wouldn't. Await the flush first.
-      if (entry.id === activeId && preservedValue !== undefined) {
+      if (contentField && entry.id === activeId && preservedValue !== undefined) {
         void contentField.updateComplete.then(() => contentField.selectToEnd())
       }
     }
@@ -361,14 +383,18 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
     applyNotices()
   }
 
-  /** GH #143 — swap the library menu for one built from `libraries`, in place. `addForm` (always present,
-   *  appended after wherever a library menu lands) is the stable insertion anchor — a library menu, when
-   *  present, always sits immediately before it, so re-inserting there preserves the section's visual
-   *  order (heading → list → add-toggle → [library menu] → add-form) on every call, first build included. */
+  /** GH #143 — swap the library menu for one built from `libraries`, in place. `addForm` (mounted after
+   *  wherever a library menu lands) is the stable insertion anchor — a library menu, when present, always
+   *  sits immediately before it, so re-inserting there preserves the section's visual order
+   *  (heading → list → add-toggle → [library menu] → add-form) on every call, first build included.
+   *  ADR-0170 cl.8: with `customAdd: false` that anchor is not mounted at all and the menu is the LAST
+   *  child, so a plain append reproduces the same order. */
   function updateLibraries(libraries: readonly EntryLibraryPack[]): void {
     libraryMenu?.remove()
     libraryMenu = libraries.length > 0 ? buildLibraryMenu(libraries) : null
-    if (libraryMenu) section.insertBefore(libraryMenu, addForm)
+    if (!libraryMenu) return
+    if (addForm.parentNode === section) section.insertBefore(libraryMenu, addForm)
+    else section.append(libraryMenu)
   }
 
   return { host: section, render, updateLibraries, showNotices }
@@ -376,10 +402,14 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
 
 /** Show `message` in the add-form's own error note (fail-closed validation feedback, ADR-0132 cl.4) —
  *  exported so `agent-admin.ts` can surface `validateNewEntry`'s rejection without this module owning
- *  the validation call itself (the caller decides WHEN to validate; this module only renders the result). */
+ *  the validation call itself (the caller decides WHEN to validate; this module only renders the result).
+ *  ADR-0170 cl.8: a section built with `customAdd: false` mounts no form to show it in — a rejected
+ *  LIBRARY add there is a silent no-op rather than a thrown null-deref (the add path itself already
+ *  fail-closes; this is the display half having nowhere to land). */
 export function showAddError(section: EntryListSection, message: string): void {
-  const note = section.host.querySelector('[data-part="entry-add-error"]') as HTMLElement
-  const form = section.host.querySelector('[data-part="entry-add-form"]') as HTMLElement
+  const note = section.host.querySelector('[data-part="entry-add-error"]') as HTMLElement | null
+  const form = section.host.querySelector('[data-part="entry-add-form"]') as HTMLElement | null
+  if (note === null || form === null) return
   note.textContent = message
   note.hidden = false
   form.hidden = false

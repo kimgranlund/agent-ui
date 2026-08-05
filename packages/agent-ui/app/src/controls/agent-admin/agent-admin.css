@@ -284,6 +284,21 @@
     min-inline-size: var(--ui-agent-admin-spacer-min-size);
   }
 
+  /* ADR-0170 cl.6 — the a2ui row's READ-ONLY catalog mirror, replacing the retired `ui-select` picker
+     (the Catalogs section is the one writer now). Trailing muted text in the row's existing register —
+     the `entry-description` plane (same size + label ink), so it reads as CONTEXT beside the toggle
+     rather than as another control. `[data-disabled]` mirrors the surface-row dim: context for a
+     modality that can't run is noise. */
+  [data-part='surface-catalog'] {
+    flex: 0 0 auto;
+    font-size: 0.8125rem;
+    color: var(--ui-agent-admin-label-ink);
+  }
+
+  [data-part='surface-catalog'][data-disabled] {
+    opacity: 0.45;
+  }
+
   /* A gated-off surface row (e.g. a modality whose switch is genuinely disabled) reads as inert — the
      dim is the visual. genui-surface B2 no longer uses this (its row is live); kept for a future
      modality that needs the same posture. */

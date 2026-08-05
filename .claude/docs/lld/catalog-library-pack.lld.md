@@ -61,7 +61,19 @@ cl.8's suppressed `customAdd`.
   than silently diverging until the next `sanitizeCatalog` coercion.
 - **Store writes per interaction: at most one** (`A2UI_CATALOG_KEY` alone on select/deselect;
   `entries:catalog` alone on add; both ONLY on delete-active — the one two-key interaction,
-  ordered roster-then-key so a subscriber never observes an active id absent from the roster).
+  ordered **key-then-roster** so a subscriber never observes an active id absent from the roster.
+  *(Corrected at build, reviewer-confirmed: this line first said "roster-then-key", which defeats its
+  own stated invariant — between the two writes the key would still name the just-deleted row, so the
+  projection derives ZERO switches ON, a visible flash of the broken invariant. Key-first keeps every
+  intermediate state consistent, because `readCatalogEntries` guarantees the Default row is present to
+  receive the selection at the instant the key moves. The invariant is the contract; the ordering label
+  was the error. Shipped in `#deleteCatalog`.)*)
+- **Same-value writes do not re-render themselves** (build hardening): toggling the ACTIVE row off while
+  the active row IS the Default writes `DEFAULT_A2UI_CATALOG_ID` over itself, and `SettingsStore` promises
+  no notification for a `set` that changes nothing. That arm is therefore treated as UNWRITTEN — the
+  handler re-renders the section directly — alongside the two other paths no subscription can cover (a
+  refused unregistered toggle, and a store with no `subscribe`). Leaning on one store implementation's
+  same-value notification would leave the flipped switch OFF with no selection shown.
 
 ## 4 · Risks & non-decisions
 
