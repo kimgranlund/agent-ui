@@ -62,8 +62,11 @@ Normative per RFC 2119; each carries an ID, PRD trace, and acceptance criteria.
 interactive anatomy (byte-identity per SPEC-R25). It is non-form-associated and takes no
 author-slotted content model. The prop set widens to: `columns`
 (`{ key: string; label: string; type?: 'string' | 'number' }[]`, default `[]`; attribute form = the
-JSON string — the item schema gains optional `sortable?: boolean` and `searchable?: boolean`, default
-`true`; an invalid/foreign value on either normalizes to its default, the SPEC-R3 row-4 posture),
+JSON string — the item schema gains optional `sortable?: boolean` (default `false`, opt-in —
+ADR-0163 cl.5's own text, `sortable === true`) and `searchable?: boolean` (default `true`, opt-out,
+`searchable !== false`); an invalid/foreign value on either normalizes to its default, the SPEC-R3
+row-4 posture — wording repaired 2026-08-05, GH #457: the prior sentence read as both defaulting
+`true`, contradicting the shipped code and ADR-0163 cl.5),
 `rows` (`Record<string, string | number>[]`, default `[]`; attribute form = the JSON string), `label`
 (`string`, default `''` — the rendered `<caption>` text) — all three unchanged — plus `selectable`
 (`'' | 'single' | 'multi'`, default `''`, reflected), `row-key` (`string`, default `''`), `selected`
@@ -555,7 +558,9 @@ for EVERY entry the row's raw cell value at `entry.key` equals one of `entry.val
 across columns. An entry whose `key` names no rendered column matches nothing (its AND arm
 drops all rows — honest, not thrown; the descriptor documents it). `filter` is one-way
 bound view state, exactly like `search`: never self-mutated, no event, no UI. No operator
-grammar exists (fenced, ADR-0163 cl.1). *(→ ADR-0163 cl.2/7)*
+grammar exists (fenced, ADR-0163 cl.1). An entry with an EMPTY `values` array likewise matches
+nothing — its AND arm drops all rows (`cell ∈ ∅` is false; the shipped `.some()` semantics, made
+explicit 2026-08-05 per GH #457's sibling check). *(→ ADR-0163 cl.2/7)*
 - **AC1** *Given* `filter=[{key:'region',values:['EMEA','APAC']},{key:'tier',values:['gold']}]`,
   *then* only rows matching (region ∈ set) AND (tier = gold) survive.
 - **AC2** *Given* a numeric cell `42000` and `values:[42000]` OR `values:["42000"]`, *then*

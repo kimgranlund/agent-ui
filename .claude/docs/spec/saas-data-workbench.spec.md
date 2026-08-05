@@ -243,7 +243,9 @@ output (the PRD §3 law, repo-standing).
   modal closes, focus restores to the opener (`modal.md`'s ADR-0017 cl.4 contract), and the
   corresponding visible table row shows the new value; (d) dismissal without save (Escape/backdrop)
   mutates nothing. The flow's store/validation machinery is imported from the extracted public
-  subpaths (ADR-0164 cl.3's frozen contract / the `createMemoryStore` precedent), never re-typed —
+  subpaths (the `createMemoryStore` precedent — ADR-0120/ADR-0158's store family; citation re-homed
+  2026-08-05 per GH #465: ADR-0164 cl.3 names the frozen `mountEntryList` interface, a mechanism
+  this flow never uses), never re-typed —
   the manifest's t10→t14 edge.
 - **SPEC-R9 — The agent summary is keyed to view state, provably** *(serves PRD-G4 · PRD-D4/D5
   rulings §3)*. The summary card is a `ui-surface-host` region rendering committed, validator-passing
