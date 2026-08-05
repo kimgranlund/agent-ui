@@ -72,7 +72,7 @@ describe('button.css — structure + token hygiene (s7)', () => {
     expect(stylesBlock).toMatch(/@media \(forced-colors: active\)/)
   })
 
-  it('GH #293 base + ADR-0171 law: the label wrapper CENTERS within its (flexible, 1fr) track by default — justify-self, clamped by max-inline-size so an overflowing label still clips at the SAME width as before (stretch) — and the two single-adornment structures OVERRIDE to start (GH #442)', () => {
+  it('GH #293 base + ADR-0171 law (amended GH #450): the label wrapper CENTERS within its (flexible, 1fr) track by default — justify-self, clamped by max-inline-size so an overflowing label still clips at the SAME width as before (stretch) — and the two single-adornment structures SPREAD to opposite edges: leading-only OVERRIDES to end, trailing-only OVERRIDES to start', () => {
     const m = stylesBlock.match(/:scope > \[data-part='label'\]\s*\{([^}]*)\}/)
     expect(m, "[data-part='label'] rule missing").not.toBeNull()
     const rule = (m as RegExpMatchArray)[1]
@@ -81,20 +81,22 @@ describe('button.css — structure + token hygiene (s7)', () => {
     // NOT text-align: center — that pitfall breaks end-anchored text-overflow: ellipsis once both edges overflow.
     expect(rule).not.toMatch(/text-align/)
 
-    // ADR-0171 (GH #442): the single-adornment override — BOTH :has() arms present, reused verbatim from the
+    // ADR-0171 amended (GH #450): the shared two-arm rule SPLITS — the selectors are reused verbatim from the
     // auto 1fr / 1fr auto template selectors, each :not([icon-only])-excluded so the fifth structure can never
-    // catch a stray label rule, each setting justify-self: start on > [data-part='label'].
-    const leadingOnlyArm =
-      /:scope:has\(>\s*\[slot='leading'\]\):not\(:has\(>\s*\[slot='trailing'\]\)\):not\(\[icon-only\]\)\s*>\s*\[data-part='label'\]/
-    const trailingOnlyArm =
-      /:scope:has\(>\s*\[slot='trailing'\]\):not\(:has\(>\s*\[slot='leading'\]\)\):not\(\[icon-only\]\)\s*>\s*\[data-part='label'\]/
-    expect(stylesBlock).toMatch(leadingOnlyArm)
-    expect(stylesBlock).toMatch(trailingOnlyArm)
-    const overrideMatch = stylesBlock.match(
-      /:scope:has\(>\s*\[slot='leading'\]\):not\(:has\(>\s*\[slot='trailing'\]\)\):not\(\[icon-only\]\)\s*>\s*\[data-part='label'\],\s*\n\s*:scope:has\(>\s*\[slot='trailing'\]\):not\(:has\(>\s*\[slot='leading'\]\)\):not\(\[icon-only\]\)\s*>\s*\[data-part='label'\]\s*\{([^}]*)\}/,
+    // catch a stray label rule, but each arm now carries its OWN declaration: leading-only spreads to `end`
+    // (icon at start edge, label at end edge), trailing-only stays `start` (label at start edge, adornment at
+    // end — shipped bytes unchanged).
+    const leadingOnlyMatch = stylesBlock.match(
+      /:scope:has\(>\s*\[slot='leading'\]\):not\(:has\(>\s*\[slot='trailing'\]\)\):not\(\[icon-only\]\)\s*>\s*\[data-part='label'\]\s*\{([^}]*)\}/,
     )
-    expect(overrideMatch, 'single-adornment justify-self: start override rule missing').not.toBeNull()
-    expect((overrideMatch as RegExpMatchArray)[1]).toMatch(/justify-self:\s*start/)
+    expect(leadingOnlyMatch, 'leading-only label override rule missing').not.toBeNull()
+    expect((leadingOnlyMatch as RegExpMatchArray)[1]).toMatch(/justify-self:\s*end/)
+
+    const trailingOnlyMatch = stylesBlock.match(
+      /:scope:has\(>\s*\[slot='trailing'\]\):not\(:has\(>\s*\[slot='leading'\]\)\):not\(\[icon-only\]\)\s*>\s*\[data-part='label'\]\s*\{([^}]*)\}/,
+    )
+    expect(trailingOnlyMatch, 'trailing-only label override rule missing').not.toBeNull()
+    expect((trailingOnlyMatch as RegExpMatchArray)[1]).toMatch(/justify-self:\s*start/)
   })
 })
 

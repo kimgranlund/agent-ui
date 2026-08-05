@@ -82,29 +82,30 @@ describe('ui-button label centering when stretched wider than its content (GH #2
     )
   })
 
-  it('leading+label stretched wide: the label START-aligns within ITS OWN track — hugging the icon, leftover space at the end (ADR-0171, GH #442)', () => {
+  it('leading+label stretched wide: the label END-pins within ITS OWN track — icon at the start edge, label at the end edge, leftover BETWEEN them (ADR-0171 Amendment, GH #450)', () => {
     const { btn } = mount('<ui-button><svg slot="leading" data-role="icon"><rect width="18" height="18"/></svg>Download</ui-button>')
     btn.style.inlineSize = '400px'
 
     const iconRect = (btn.querySelector('[slot="leading"]') as HTMLElement).getBoundingClientRect()
     const btnRect = btn.getBoundingClientRect()
     const labelRect = label(btn).getBoundingClientRect()
-    // the label's OWN track runs from just after the icon+gap to the button's trailing h/2 edge — ADR-0171
-    // start-aligns the label WITHIN that span (hugging the icon), not the whole button.
+    // the label's OWN track runs from just after the icon+gap to the button's trailing h/2 edge — the amended
+    // law END-pins the label WITHIN that span (spread from the icon), not the whole button.
     const trackStart = iconRect.right + Number.parseFloat(getComputedStyle(btn).columnGap)
     const trackEnd = btnRect.right - Number.parseFloat(getComputedStyle(btn).paddingInlineEnd)
     const insetStart = labelRect.left - trackStart
     const insetEnd = trackEnd - labelRect.right
-    // start edge lands flush at the track start (≤2px cross-engine slack, not a centering defect).
-    expect(
-      insetStart,
-      `the label did not start-align within its own [leading | label] track (ADR-0171, GH #442): start=${insetStart} end=${insetEnd}`,
-    ).toBeLessThanOrEqual(2)
-    // anti-vacuous: there IS leftover space, and it all sits at the END (the label shrink-wrapped, not stretched).
+    // end edge lands flush at the track end (≤2px cross-engine slack, not a centering defect).
     expect(
       insetEnd,
-      `no leftover space landed at the end — the label may have stretched instead of start-aligning: start=${insetStart} end=${insetEnd}`,
-    ).toBeGreaterThan(insetStart + 20)
+      `the label did not end-pin within its own [leading | label] track (ADR-0171 Amendment, GH #450): start=${insetStart} end=${insetEnd}`,
+    ).toBeLessThanOrEqual(2)
+    // anti-vacuous: there IS leftover space, and it all sits BETWEEN the icon and the label (at the start of
+    // the label's track) — the label shrink-wrapped and pinned to the end, not stretched.
+    expect(
+      insetStart,
+      `no leftover space landed between the icon and the label — the label may have stretched instead of end-pinning: start=${insetStart} end=${insetEnd}`,
+    ).toBeGreaterThan(insetEnd + 20)
   })
 
   it('a too-long label in a stretched-but-narrow-for-its-text button still clips at the OLD (stretch) width — centering never widens the clip box', () => {
@@ -130,7 +131,7 @@ describe('ui-button label centering when stretched wider than its content (GH #2
   })
 })
 
-describe('ui-button per-structure alignment matrix (ADR-0171, GH #442) — Kim\'s ruled table, all four labeled structures stretched to 400px', () => {
+describe('ui-button per-structure alignment matrix (ADR-0171, GH #442, amended GH #450) — Kim\'s ruled table, all four labeled structures stretched to 400px', () => {
   it('[label] (bare, no adornment): CENTERS (row 7 — unchanged base law)', () => {
     const { btn } = mount('<ui-button>Save</ui-button>')
     btn.style.inlineSize = '400px'
@@ -146,7 +147,7 @@ describe('ui-button per-structure alignment matrix (ADR-0171, GH #442) — Kim\'
     ).toBeLessThanOrEqual(2)
   })
 
-  it('[leading | label]: START-aligned — label hugs the leading adornment (row 1/3)', () => {
+  it('[leading | label]: END-pinned — icon at the start edge, label at the end edge (row 1/3, spread)', () => {
     const { btn } = mount(
       '<ui-button><svg slot="leading" data-role="icon"><rect width="18" height="18"/></svg>Download</ui-button>',
     )
@@ -158,8 +159,8 @@ describe('ui-button per-structure alignment matrix (ADR-0171, GH #442) — Kim\'
     const trackEnd = btnRect.right - Number.parseFloat(getComputedStyle(btn).paddingInlineEnd)
     const insetStart = labelRect.left - trackStart
     const insetEnd = trackEnd - labelRect.right
-    expect(insetStart, `[leading | label] must start-align: start=${insetStart} end=${insetEnd}`).toBeLessThanOrEqual(2)
-    expect(insetEnd, 'leftover space must land at the end, not vanish (anti-vacuous)').toBeGreaterThan(insetStart + 20)
+    expect(insetEnd, `[leading | label] must end-pin: start=${insetStart} end=${insetEnd}`).toBeLessThanOrEqual(2)
+    expect(insetStart, 'leftover space must land between the icon and the label, not vanish (anti-vacuous)').toBeGreaterThan(insetEnd + 20)
   })
 
   it('[label | trailing]: START-aligned — label flush at the leading (h/2) edge, adornment stays at the end (row 2/4)', () => {
@@ -200,8 +201,36 @@ describe('ui-button per-structure alignment matrix (ADR-0171, GH #442) — Kim\'
   })
 })
 
-describe('ui-button single-adorned overflow clamp + ellipsis under justify-self: start (ADR-0171 cl.2, GH #442)', () => {
-  it('[leading | label] at a narrow 80px width: the label clamps to its track width and genuinely ellipsizes — GH #293\'s mechanics survive under `start`', () => {
+describe('ui-button hug-width equivalence (ADR-0171 Amendment §A1, GH #450) — the amendment\'s normative clause', () => {
+  it('[leading | label] at CONTENT (hug) width: icon⟷label separation is exactly --ui-button-gap — start/end/center are pixel-indistinguishable, so the spread manifests ONLY when stretched', () => {
+    const { btn } = mount(
+      '<ui-button><svg slot="leading" data-role="icon"><rect width="18" height="18"/></svg>Download</ui-button>',
+    )
+    // no explicit inline-size — the button hugs its content, exactly the pre-amendment cluster's rendering.
+    const iconRect = (btn.querySelector('[slot="leading"]') as HTMLElement).getBoundingClientRect()
+    const btnRect = btn.getBoundingClientRect()
+    const labelRect = label(btn).getBoundingClientRect()
+    const gap = Number.parseFloat(getComputedStyle(btn).columnGap)
+
+    // the button's own inline-size must equal its content's — no leftover exists in the 1fr track to spread
+    // across, so this leg only holds if the button genuinely hugged (anti-vacuous for the equivalence claim).
+    const trackStart = iconRect.right + gap
+    const trackEnd = btnRect.right - Number.parseFloat(getComputedStyle(btn).paddingInlineEnd)
+    expect(
+      trackEnd - trackStart,
+      'the label track must be content-sized (hug width) for this leg to be meaningful, not stretched',
+    ).toBeLessThanOrEqual(labelRect.width + 2)
+
+    const separation = labelRect.left - iconRect.right
+    expect(
+      separation,
+      `icon⟷label separation must equal --ui-button-gap at hug width: separation=${separation} gap=${gap}`,
+    ).toBeCloseTo(gap, 0)
+  })
+})
+
+describe('ui-button single-adorned overflow clamp + ellipsis under justify-self: end (ADR-0171 Amendment §A1, GH #450)', () => {
+  it('[leading | label] at a narrow 80px width: the label clamps to its track width and genuinely ellipsizes — GH #293\'s mechanics survive under `end`', () => {
     const { btn } = mount(
       '<ui-button><svg slot="leading" data-role="icon"><rect width="18" height="18"/></svg>This label is far too long to fit</ui-button>',
     )
@@ -214,12 +243,12 @@ describe('ui-button single-adorned overflow clamp + ellipsis under justify-self:
       Number.parseFloat(btnCs.paddingInlineEnd) -
       (iconRect.right + Number.parseFloat(btnCs.columnGap))
     const labelRect = el.getBoundingClientRect()
-    // clamp holds under `start` exactly as under `center` — the wrapper's box is still capped at the track width.
+    // clamp holds under `end` exactly as under `center` — the wrapper's box is still capped at the track width.
     // ≤2px slack — cross-engine sub-pixel layout rounding (webkit vs. chromium), the same idiom the
     // per-structure alignment matrix above uses; not a clamp defect.
     expect(
       Math.abs(labelRect.width - trackWidth),
-      `the single-adorned overflowing label must still clamp to its track width under justify-self: start: width=${labelRect.width} track=${trackWidth}`,
+      `the single-adorned overflowing label must still clamp to its track width under justify-self: end: width=${labelRect.width} track=${trackWidth}`,
     ).toBeLessThanOrEqual(2)
     // genuine overflow — not just a declared-but-inert clip.
     expect(el.scrollWidth, 'the long single-adorned label must genuinely overflow its (clamped) wrapper box').toBeGreaterThan(
