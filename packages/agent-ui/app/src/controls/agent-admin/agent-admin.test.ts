@@ -5,8 +5,9 @@ import type { UITextFieldElement } from '@agent-ui/components/controls/text-fiel
 import { UISettingsElement } from '../settings/settings.ts'
 import { UIConversationElement } from '../conversation/conversation.ts'
 import { defaultAgentConfigSchema, SUPPORTED_MODELS, DEFAULT_MODEL_ID, SURFACE_MARKDOWN_KEY, SURFACE_A2UI_KEY, A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID, sanitizeCatalog } from './agent-admin-schema.ts'
-import { ENTRY_KINDS, entriesStoreKey, initialEntryValues, readEntries, composeSystemPrompt, DEFAULT_SYSTEM_PROMPT_FALLBACK, type Entry, type EntryLibraryPack } from './entries.ts'
-import { mountEntryList, showAddError, type EntryListHandlers } from './entry-list.ts'
+import { ENTRY_KINDS, initialEntryValues, composeSystemPrompt, DEFAULT_SYSTEM_PROMPT_FALLBACK } from './entries.ts'
+import { entriesStoreKey, readEntries, type Entry, type EntryLibraryPack } from '../entry-list/entry-data.ts'
+import { mountEntryList, showAddError, type EntryListHandlers } from '../entry-list/entry-list.ts'
 import { createMemoryStore } from '../settings/memory-store.ts'
 import type { SettingsStore } from '../settings/store.ts'
 import {

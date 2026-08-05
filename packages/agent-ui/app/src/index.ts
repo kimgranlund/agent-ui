@@ -42,9 +42,12 @@ export { defaultAgentConfigSchema, agentConfigSchema, runStubAgentTurn } from '.
 export { A2UI_CATALOG_OPTIONS } from './controls/agent-admin/agent-admin-schema.ts'
 export type { AgentConfigSnapshot } from './controls/agent-admin/agent-admin-schema.ts'
 // ADR-0132 — the generic ordered-entry-list primitive: prompt sections (Foundation/Personality/Critical
-// Items) + Skills/Workflows/Resources/Tools, five instantiations of one shape.
-export { ENTRY_KINDS, DEFAULT_PROMPT_SECTIONS, DEFAULT_SYSTEM_PROMPT_FALLBACK, composeSystemPrompt, validateNewEntry, entriesStoreKey, initialEntryValues } from './controls/agent-admin/entries.ts'
-export type { Entry, EntryLibraryPack, NewEntryInput } from './controls/agent-admin/entries.ts'
+// Items) + Skills/Workflows/Resources/Tools, five instantiations of one shape. ADR-0164 cl.2 split the
+// generic data core out to `entry-list/entry-data.ts` — every name below stays byte-identical, re-pointed
+// to its new home rather than renamed.
+export { ENTRY_KINDS, DEFAULT_PROMPT_SECTIONS, DEFAULT_SYSTEM_PROMPT_FALLBACK, composeSystemPrompt, initialEntryValues } from './controls/agent-admin/entries.ts'
+export { validateNewEntry, entriesStoreKey } from './controls/entry-list/entry-data.ts'
+export type { Entry, EntryLibraryPack, NewEntryInput } from './controls/entry-list/entry-data.ts'
 // GH #419 — the prompt-section modality LINT (pure, non-blocking): the vocabulary that says an enabled
 // prompt section names a modality whose Surface Option is off. Exported because the persona TEXTS that
 // feed it are authored outside this package (site/pages/agent-admin-presets.ts), so their own

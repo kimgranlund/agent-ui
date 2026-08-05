@@ -115,20 +115,19 @@ import {
 import { EFFORT_LEVELS, type EffortLevel } from '../conversation/composer-options.ts'
 import {
   ENTRY_KINDS,
-  entriesStoreKey,
   initialEntryValues,
-  readEntries,
   readCatalogEntries,
   isRegisteredCatalog,
   composeSystemPrompt,
   composeLiveSystemPrompt,
-  validateNewEntry,
   pickedPatternSource,
-  type Entry,
-  type EntryLibraryPack,
   type LiveCapabilityGroup,
 } from './entries.ts'
-import { mountEntryList, showAddError, type EntryListSection } from './entry-list.ts'
+// ADR-0164 cl.2/cl.7 — the generic data core + the section-shell mount function both moved to the shared
+// `entry-list/` folder (a `settings/` sibling, public `./entry-data`/`./entry-list` subpaths); this
+// element is that extraction's first CONSUMER now, not its owner.
+import { entriesStoreKey, readEntries, validateNewEntry, type Entry, type EntryLibraryPack } from '../entry-list/entry-data.ts'
+import { mountEntryList, showAddError, type EntryListSection } from '../entry-list/entry-list.ts'
 import { lintPromptSections } from './prompt-lint.ts'
 
 const agentAdminProps = {

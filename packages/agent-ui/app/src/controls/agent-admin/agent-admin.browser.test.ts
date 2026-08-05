@@ -30,7 +30,8 @@ import type { UITextFieldElement } from '@agent-ui/components/controls/text-fiel
 // typo'd `name` would silently ship past a suite that only checks the cell's box. `iconRenders()` below
 // asserts a real `<path>` landed, not just a correctly-sized empty slot.
 import '@agent-ui/icons/phosphor'
-import { ENTRY_KINDS, entriesStoreKey } from './entries.ts'
+import { ENTRY_KINDS } from './entries.ts'
+import { entriesStoreKey } from '../entry-list/entry-data.ts'
 import { kindEnabledKey, A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID } from './agent-admin-schema.ts'
 
 const mounted: HTMLElement[] = []
