@@ -201,9 +201,14 @@ describe('table.ts — event DELEGATION, never a per-stamped-node listener (comp
     }
   })
 
-  it('connected() registers exactly the three delegated listeners (#thead click + #thead change + #tbody change), each exactly once', () => {
-    expect([...ts.matchAll(/this\.listen\(this\.#thead,/g)]).toHaveLength(2) // sort-button click + select-all change
-    expect([...ts.matchAll(/this\.listen\(this\.#tbody,/g)]).toHaveLength(1) // row selection change
+  it('connected() registers exactly the two delegated listeners (#thead click + #table change), each exactly once', () => {
+    // GH #455 (size diet): the select-all change (was on #thead) and the row-selection change (was on
+    // #tbody) merged into ONE `change` listener on `#table` — a stable skeleton node itself that wraps
+    // BOTH #thead and #tbody, so either input's `change` bubbles to it identically to the two-listener
+    // shape this test used to pin. Behavior unchanged (table-interactive.browser.test.ts), listener count
+    // one fewer.
+    expect([...ts.matchAll(/this\.listen\(this\.#thead,/g)]).toHaveLength(1) // sort-button click
+    expect([...ts.matchAll(/this\.listen\(this\.#table,/g)]).toHaveLength(1) // select-all + row-selection change
   })
 })
 

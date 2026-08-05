@@ -19,16 +19,17 @@
 // `pageSize > 0`. No code path ever writes `#scroll.scrollLeft`/`.scrollTop`.
 //
 // EVENT DELEGATION, not a per-stamped-node listener (component-checker retained-listener finding): the
-// sort-button click, the select-all checkbox toggle, and every row's selection checkbox/radio toggle are
-// each handled by exactly ONE listener — on `#thead` (the first two) and `#tbody` (the third) — registered
-// ONCE in `connected()` (re-armed on reconnect, the `#scroll` scroll-listener's own precedent), never per
-// stamped node. `#thead`/`#tbody` themselves are the STABLE skeleton nodes (never replaced); a stamped
-// button/input dispatches by carrying a `data-key`/`data-row-id` attribute the delegated handler reads off
-// `event.target`. Without this, a PER-NODE `this.listen` (the original shape) would strand a fresh
-// closure+listener — riding the connection-lifetime AbortSignal, never released until disconnect — on every
-// discarded rebuild; VIEW alone reruns on every search keystroke, every page turn, every selection toggle,
-// so that shape grows UNBOUNDED on a long-lived, frequently-updating table. Delegation keeps the listener
-// count fixed at three regardless of rebuild count.
+// sort-button click is handled by ONE listener on `#thead`; the select-all checkbox toggle AND every row's
+// selection checkbox/radio toggle are handled by ONE `change` listener on `#table` (GH #455 size diet — a
+// stable skeleton node itself, wrapping BOTH `#thead` and `#tbody`, so either input's `change` bubbles to it
+// identically to delegating on each separately). Both registered ONCE in `connected()` (re-armed on
+// reconnect, the `#scroll` scroll-listener's own precedent), never per stamped node. A stamped button/input
+// dispatches by carrying a `data-key`/`data-row-id` attribute the delegated handler reads off `event.target`.
+// Without this, a PER-NODE `this.listen` (the original shape) would strand a fresh closure+listener — riding
+// the connection-lifetime AbortSignal, never released until disconnect — on every discarded rebuild; VIEW
+// alone reruns on every search keystroke, every page turn, every selection toggle, so that shape grows
+// UNBOUNDED on a long-lived, frequently-updating table. Delegation keeps the listener count fixed at two
+// regardless of rebuild count.
 //
 // Five independent effects, split by which signal(s) each reads (unchanged fine-grained-waking discipline,
 // widened):
@@ -173,33 +174,34 @@ export class UITableElement extends UIElement {
       this.#lastScrollTop = this.#scroll.scrollTop
     })
 
-    // ONE delegated listener PER STABLE SKELETON NODE (component-checker retained-listener finding): HEADER-
-    // BUILD replaces the whole `<thead>` row on every columns/selectable change, and VIEW replaces the whole
-    // `<tbody>` content on every state-prop change (every search keystroke, every page turn, every selection
-    // toggle) — a PER-STAMPED-NODE `this.listen` (the original shape) strands a fresh closure+listener,
-    // riding the connection-lifetime AbortSignal, on every discarded rebuild: unbounded retention on a long-
-    // lived, frequently-updating table. `#thead`/`#tbody` themselves are the STABLE nodes (never replaced,
-    // SPEC-R4.1) — delegating to them, re-armed once per connect exactly like the `#scroll` listener above,
-    // keeps the listener COUNT at a fixed three regardless of rebuild count.
+    // ONE delegated listener PER EVENT TYPE, on `#table` — a STABLE skeleton node itself (SPEC-R4.1, never
+    // replaced) that wraps BOTH `#thead` and `#tbody`, so a `change` on either bubbles to it identically to
+    // delegating on each separately (component-checker retained-listener finding, kept, one node fewer than
+    // the original two-listener shape): HEADER-BUILD replaces the whole `<thead>` row on every columns/
+    // selectable change, and VIEW replaces the whole `<tbody>` content on every state-prop change (every
+    // search keystroke, every page turn, every selection toggle) — a PER-STAMPED-NODE `this.listen` (the
+    // original shape) strands a fresh closure+listener, riding the connection-lifetime AbortSignal, on every
+    // discarded rebuild: unbounded retention on a long-lived, frequently-updating table. Re-armed once per
+    // connect exactly like the `#scroll` listener above, this keeps the listener COUNT at a fixed two
+    // regardless of rebuild count.
     this.listen(this.#thead, 'click', (event) => {
       const button = (event.target as HTMLElement).closest<HTMLElement>('[data-part="sort-button"]')
       const key = button?.getAttribute('data-key')
       if (key) this.#commitSort(key)
     })
-    this.listen(this.#thead, 'change', (event) => {
+    this.listen(this.#table, 'change', (event) => {
       const target = event.target as HTMLElement
-      if (!target.matches('[data-part="select-all"]')) return
+      const isSelectAll = target.matches('[data-part="select-all"]')
+      if (!isSelectAll && !target.matches('[data-part="select"]')) return
       // stopPropagation: a native <input> `change` bubbles unstopped by default, and this host's OWN
       // `change` event is the sort/page commit channel (cl.5/cl.6) — without this, a selection toggle would
       // ALSO arrive at any table-level `change` listener, giving the same event name two unrelated meanings
       // on the same host (component-checker finding). Selection's own contract event stays `select` only.
       event.stopPropagation()
-      this.#toggleSelectAll((target as HTMLInputElement).checked)
-    })
-    this.listen(this.#tbody, 'change', (event) => {
-      const target = event.target as HTMLElement
-      if (!target.matches('[data-part="select"]')) return
-      event.stopPropagation() // the SAME reason as the select-all handler above
+      if (isSelectAll) {
+        this.#toggleSelectAll((target as HTMLInputElement).checked)
+        return
+      }
       const id = target.getAttribute('data-row-id')
       if (id !== null) this.#toggleRowSelection(id, this.selectable, (target as HTMLInputElement).checked)
     })
@@ -219,10 +221,7 @@ export class UITableElement extends UIElement {
       if (selectable === 'multi') {
         headerRow.append(this.#selectAllHeaderCell())
       } else if (selectable === 'single') {
-        const th = document.createElement('th')
-        th.setAttribute('scope', 'col')
-        th.setAttribute('data-part', 'select-header')
-        headerRow.append(th)
+        headerRow.append(this.#selectHeaderCell())
       }
       for (const col of cols) headerRow.append(this.#headerCell(col))
       this.#thead.replaceChildren(headerRow)
@@ -252,10 +251,8 @@ export class UITableElement extends UIElement {
       const filter = cleanFilter(this.filter)
       const search = this.search
       const sort = cleanSort(this.sort)
-      const rawPageSize = this.pageSize
-      const pageSize = rawPageSize !== null && Number.isFinite(rawPageSize) ? Math.trunc(rawPageSize) : 0
-      const rawPage = this.page
-      const page = rawPage !== null && Number.isFinite(rawPage) ? Math.trunc(rawPage) : 1
+      const pageSize = finiteInt(this.pageSize, 0)
+      const page = finiteInt(this.page, 1)
 
       const view = computeTableView({ rows, columns: cols, rowKey, filter, search, sort, pageSize, page })
 
@@ -356,14 +353,29 @@ export class UITableElement extends UIElement {
     })
   }
 
+  /** The shared `<th scope="col">` base every header cell starts from (`#selectHeaderCell`/`#headerCell`
+   *  below) — a plain-object-loop-style dedup of the one line all three header-cell shapes repeated. */
+  #thCol(): HTMLTableCellElement {
+    const th = document.createElement('th')
+    th.setAttribute('scope', 'col')
+    return th
+  }
+
+  /** The leading `<th scope="col" data-part="select-header">` shared by `selectable='single'` (bare) and
+   *  `selectable='multi'` (`#selectAllHeaderCell`, which adds the checkbox) — the two select-header shapes
+   *  differ ONLY in whether an `<input>` is appended. */
+  #selectHeaderCell(): HTMLTableCellElement {
+    const th = this.#thCol()
+    th.setAttribute('data-part', 'select-header')
+    return th
+  }
+
   /** The leading `<th scope="col">` for `selectable='multi'` — a real, stamped select-all checkbox
    *  (ADR-0163 cl.4). Its checked/indeterminate state is maintained by the VIEW effect (computed against
    *  the matching set); the click/toggle itself is handled by the ONE delegated `#thead` `change` listener
    *  (`connected()`, the retained-listener fix) — this method only builds markup, no per-node listener. */
   #selectAllHeaderCell(): HTMLTableCellElement {
-    const th = document.createElement('th')
-    th.setAttribute('scope', 'col')
-    th.setAttribute('data-part', 'select-header')
+    const th = this.#selectHeaderCell()
     const input = document.createElement('input')
     input.type = 'checkbox'
     input.setAttribute('data-part', 'select-all')
@@ -379,8 +391,7 @@ export class UITableElement extends UIElement {
    *  column's `key` — read by the ONE delegated `#thead` `click` listener (`connected()`, the retained-
    *  listener fix); no per-button listener here. */
   #headerCell(col: TableColumn): HTMLTableCellElement {
-    const th = document.createElement('th')
-    th.setAttribute('scope', 'col')
+    const th = this.#thCol()
     if (col.type === 'number') th.setAttribute('data-type', 'number')
     if (col.sortable) {
       const button = document.createElement('button')
@@ -478,8 +489,7 @@ export class UITableElement extends UIElement {
             ? current
             : [...current, id]
           : current.filter((x) => x !== id)
-    this.selected = next
-    this.emit('select')
+    this.#commitSelected(next)
   }
 
   /** ADR-0163 cl.4/cl.7 commit — the header select-all checkbox. Operates on the MATCHING SET only:
@@ -491,6 +501,12 @@ export class UITableElement extends UIElement {
     const next = checked
       ? [...current, ...matchingIds.filter((id) => !current.includes(id))]
       : current.filter((id) => !matchingIds.includes(id))
+    this.#commitSelected(next)
+  }
+
+  /** The `selected` write + `select` commit both toggle methods above share (never fired by a
+   *  programmatic `selected` write — only from a real `change` listener, per the fleet commit law). */
+  #commitSelected(next: string[]): void {
     this.selected = next
     this.emit('select')
   }
@@ -503,6 +519,12 @@ export class UITableElement extends UIElement {
     this.sort = { key, direction }
     this.emit('change')
   }
+}
+
+// A bindable number prop's hardened read (the VIEW effect's `pageSize`/`page` shared shape) — `null`/non-
+// finite falls back to `fallback`, else truncated to an integer.
+function finiteInt(raw: number | null, fallback: number): number {
+  return raw !== null && Number.isFinite(raw) ? Math.trunc(raw) : fallback
 }
 
 // ADR-0163 cl.6 — the footer's composed `ui-pagination` accessible name, derived from the table's own

@@ -85,6 +85,21 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
   return v !== null && typeof v === 'object' && !Array.isArray(v)
 }
 
+/** The array-hardening loop `cleanColumns`/`cleanRows`/`cleanFilter` all share (a non-array input yields
+ *  `[]`; a non-plain-object entry is dropped; `harden` decides per-entry survival, returning `null` to
+ *  drop — never coerced, order preserved). Extracted once so the three SPEC-R3 hardening functions state
+ *  only their OWN per-entry shape, not the loop around it. */
+function hardenArray<T>(input: unknown, harden: (entry: Record<string, unknown>) => T | null): T[] {
+  if (!Array.isArray(input)) return []
+  const out: T[] = []
+  for (const entry of input) {
+    if (!isPlainObject(entry)) continue
+    const hardened = harden(entry)
+    if (hardened !== null) out.push(hardened)
+  }
+  return out
+}
+
 /**
  * Harden an arbitrary input into the rendered column set (SPEC-R3 rows 1/3/4; ADR-0163 cl.5/cl.2's schema
  * widening): a non-array input yields `[]`; each entry survives only as a plain object with a `string` `key`
@@ -97,22 +112,18 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
  * SPEC-R3 row 12).
  */
 export function cleanColumns(input: unknown): TableColumn[] {
-  if (!Array.isArray(input)) return []
-  const out: TableColumn[] = []
-  for (const entry of input) {
-    if (!isPlainObject(entry)) continue
+  return hardenArray(input, (entry) => {
     const key = entry.key
     const label = entry.label
-    if (typeof key !== 'string' || typeof label !== 'string') continue
-    out.push({
+    if (typeof key !== 'string' || typeof label !== 'string') return null
+    return {
       key,
       label,
       type: entry.type === 'number' ? 'number' : 'string',
       sortable: entry.sortable === true,
       searchable: entry.searchable !== false,
-    })
-  }
-  return out
+    }
+  })
 }
 
 /**
@@ -122,12 +133,7 @@ export function cleanColumns(input: unknown): TableColumn[] {
  * Order preserved (positional).
  */
 export function cleanRows(input: unknown): TableRow[] {
-  if (!Array.isArray(input)) return []
-  const out: TableRow[] = []
-  for (const entry of input) {
-    if (isPlainObject(entry)) out.push(entry)
-  }
-  return out
+  return hardenArray(input, (entry) => entry)
 }
 
 /** Module-memoized default-locale formatter — the exact text every finite-number cell prints (SPEC-R3 row 10). */
@@ -205,17 +211,13 @@ export function cleanSelected(input: unknown): string[] {
  * facet shape is bounded by construction, cl.1/cl.2). Order preserved.
  */
 export function cleanFilter(input: unknown): TableFilterEntry[] {
-  if (!Array.isArray(input)) return []
-  const out: TableFilterEntry[] = []
-  for (const entry of input) {
-    if (!isPlainObject(entry)) continue
+  return hardenArray(input, (entry) => {
     const key = entry.key
     const values = entry.values
-    if (typeof key !== 'string' || !Array.isArray(values)) continue
-    if (!values.every((v) => typeof v === 'string' || typeof v === 'number')) continue
-    out.push({ key, values: values as (string | number)[] })
-  }
-  return out
+    if (typeof key !== 'string' || !Array.isArray(values)) return null
+    if (!values.every((v) => typeof v === 'string' || typeof v === 'number')) return null
+    return { key, values: values as (string | number)[] }
+  })
 }
 
 /** A row survives a facet `filter` when, for EVERY entry, its raw cell value for `entry.key` String-coerced-
