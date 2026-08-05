@@ -48,8 +48,8 @@ describe('UITableElement — upgrade + typed props', () => {
     el.setAttribute('rows', JSON.stringify([{ region: 'EMEA', revenue: 42000 }, { region: 'APAC', revenue: 31000 }]))
     mount(el)
     expect(el.columns).toEqual([
-      { key: 'region', label: 'Region', type: 'string' },
-      { key: 'revenue', label: 'Revenue', type: 'number' },
+      { key: 'region', label: 'Region', type: 'string', sortable: false, searchable: true },
+      { key: 'revenue', label: 'Revenue', type: 'number', sortable: false, searchable: true },
     ])
     expect(el.rows).toEqual([
       { region: 'EMEA', revenue: 42000 },
@@ -238,6 +238,37 @@ describe('UITableElement — the re-render contract: node identity (SPEC-R4.3)',
     expect(el.querySelector('tbody')).toBe(tbody)
     expect(el.querySelector('thead tr')).toBe(headerRow)
     expect(el.querySelector('tbody tr')).toBe(bodyRow)
+  })
+
+  it('component-checker regression: a label-only change never rebuilds <tbody> even with a footer present, AND the footer pagination label still updates', async () => {
+    // The bug this pins: VIEW's footer-label derivation used to read `this.label` LIVE, silently making
+    // VIEW ALSO a dependent of `label` (the same tracking bug the sort-tracking fix addressed) — a label
+    // change would have rebuilt the WHOLE <tbody> unnecessarily. The fix moved the ONGOING update into the
+    // dedicated LABEL effect and left VIEW only a one-time `untracked` creation-time seed — this test proves
+    // BOTH halves: no spurious tbody rebuild, AND the footer's own label still tracks `label` correctly
+    // (moving the read, not simply deleting it, would have silently broken the label going stale forever).
+    const el = new UITableElement()
+    el.columns = [{ key: 'a', label: 'A' }]
+    el.rows = [{ a: 1 }]
+    el.pageSize = 10
+    el.label = 'First'
+    mount(el)
+    await el.updateComplete
+    const tbody = el.querySelector('tbody')
+    const bodyRow = el.querySelector('tbody tr')
+    const pagination = el.querySelector('[data-part="footer"] ui-pagination') as HTMLElement & { label: string }
+    expect(pagination.label, 'anti-vacuous: the footer pagination must be seeded with the INITIAL label').toBe('First pagination')
+
+    el.label = 'Second'
+    await el.updateComplete
+
+    expect(el.querySelector('tbody'), 'a label-only change rebuilt <tbody> — VIEW must not track `label`').toBe(tbody)
+    expect(el.querySelector('tbody tr'), 'a label-only change rebuilt the body row — VIEW must not track `label`').toBe(bodyRow)
+    expect(pagination.label, 'the footer pagination label must still track `label` going forward (LABEL effect\'s job now)').toBe('Second pagination')
+
+    el.label = ''
+    await el.updateComplete
+    expect(pagination.label, 'an emptied label falls back to the generic footer label').toBe('Table pagination')
   })
 
   it('clearing the label removes the caption and the scroll region aria-labelledby', async () => {

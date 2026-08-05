@@ -431,8 +431,36 @@
                                      "type": { "type": "string", "enum": ["string", "number"] } },
                      "required": ["key", "label"] } }, "bindable": true, "mapsTo": "columns" },
         "rows": { "type": { "type": "array", "items": { "type": "object" } }, "bindable": true, "mapsTo": "rows" },
-        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" }
-      }
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "selectable": { "type": { "type": "string", "enum": ["", "single", "multi"] }, "bindable": true, "mapsTo": "selectable" },
+        "rowKey": { "type": { "type": "string" }, "bindable": true, "mapsTo": "rowKey" },
+        "selected": { "type": { "type": "array", "items": { "type": "string" } }, "bindable": true, "mapsTo": "selected" },
+        "sort": { "type": { "type": ["object", "null"],
+                   "properties": { "key": { "type": "string" },
+                                    "direction": { "type": "string", "enum": ["ascending", "descending"] } },
+                   "required": ["key", "direction"] }, "bindable": true, "mapsTo": "sort" },
+        "page": { "type": { "type": "number" }, "bindable": true, "mapsTo": "page" },
+        "pageSize": { "type": { "type": "number" }, "bindable": true, "mapsTo": "pageSize" },
+        "search": { "type": { "type": "string" }, "bindable": true, "mapsTo": "search" },
+        "filter": { "type": { "type": "array", "items": { "type": "object",
+                    "properties": { "key": { "type": "string" },
+                                    "values": { "type": "array", "items": { "type": ["string", "number"] } } },
+                    "required": ["key", "values"] } }, "bindable": true, "mapsTo": "filter" }
+      },
+      "value": [
+        { "prop": "selected", "event": "select" },
+        { "prop": "sort", "event": "change" },
+        { "prop": "page", "event": "change" }
+      ]
+    },
+
+    "Pagination": {
+      "properties": {
+        "page": { "type": { "type": "number" }, "bindable": true, "mapsTo": "page" },
+        "pages": { "type": { "type": "number" }, "mapsTo": "pages" },
+        "label": { "type": { "type": "string" }, "mapsTo": "label" }
+      },
+      "value": { "prop": "page", "event": "change" }
     },
 
     "Stat": {

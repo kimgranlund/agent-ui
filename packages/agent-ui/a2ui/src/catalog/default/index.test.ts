@@ -629,6 +629,78 @@ describe('default catalog — RadioGroup/Radio, Slider, SliderMulti, Calendar, C
   })
 })
 
+// ── the ADR-0163 cl.9 Table-widening live round trips (report-family.lld.md §6) — mirrors the RadioGroup/
+// SegmentedControl live round-trip pair above: mount a REAL control (defaultFactories self-defines the
+// whole family on import), fire its own native commit event via a real user gesture, and assert the
+// renderer's generic LLD-C8 controller (installInputBinding) writes the committed value back into
+// surface.data at the bound path. Table carries a THREE-slot value mark (selected/select, sort/change,
+// page/change) — `selected` is the richest slot (a real stamped selection checkbox commit, ADR-0163
+// cl.4) so it is the one proven live here; Pagination carries the standard single-slot `page`/`change`
+// shape (the Slider/ComboBox precedent).
+describe('default catalog — Table.selected / Pagination.page live round trips (ADR-0163 cl.9, report-family.lld.md §6)', () => {
+  it("Table.selected is a LIVE two-way bind: a real click on a stamped row-selection checkbox commits `selected`, and the renderer's generic LLD-C8 controller writes it back into surface.data at the bound path (the richest of Table's three commit slots)", () => {
+    const surface = createSurface({ id: 'tbl-s', catalogId: 'agent-ui', version: 'v1.0' })
+    surface.data.value = { sel: [] }
+
+    // The real ui-table control (defaultFactories self-defines the whole family on import,
+    // catalog/default/factories.ts:1) — no mocks, no stub factory.
+    const table = defaultFactories.Table.create() as HTMLElement & {
+      columns: unknown
+      rows: unknown
+      selectable: string
+      rowKey: string
+      selected: unknown
+    }
+    table.columns = [{ key: 'region', label: 'Region' }]
+    table.rows = [{ region: 'EMEA' }, { region: 'APAC' }]
+    table.selectable = 'multi'
+    table.rowKey = 'region'
+    document.body.append(table)
+
+    const node: A2uiComponent = { id: 'tbl', component: 'Table', selected: { path: '/sel' } }
+    installInputBinding(table, defaultFactories.Table, node, surface)
+
+    // The user gesture: a real click on the stamped `<input type=checkbox>` selection cell for the
+    // 'EMEA' row (`#toggleRowSelection` — table.ts). This sets `this.selected` and emits `select`
+    // directly on the table host, which `installInputBinding`'s listener (installed on `el` itself,
+    // not delegated) catches regardless of the internal `change` listener's `stopPropagation`.
+    const checkbox = table.querySelector('[data-part="select"][data-row-id="EMEA"]') as HTMLInputElement
+    expect(checkbox).toBeTruthy()
+    checkbox.click()
+
+    expect(table.selected).toEqual(['EMEA']) // the control's own accessor reflects the committed selection
+    expect((surface.data.peek() as { sel: unknown }).sel).toEqual(['EMEA']) // LLD-C8 wrote it back (SPEC-R7)
+
+    table.remove()
+    disposeSurface(surface)
+  })
+
+  it("Pagination.page is a LIVE two-way bind: a real click on the composed Next ui-button commits `page`, and the renderer's generic LLD-C8 controller writes it back into surface.data at the bound path (mirrors the Slider/Calendar value:{prop,event} round trip)", () => {
+    const surface = createSurface({ id: 'pg-s', catalogId: 'agent-ui', version: 'v1.0' })
+    surface.data.value = { page: 1 }
+
+    // The real ui-pagination control — no mocks, no stub factory.
+    const pagination = defaultFactories.Pagination.create() as HTMLElement & { page: number; pages: number }
+    pagination.pages = 3
+    pagination.page = 1
+    document.body.append(pagination)
+
+    const node: A2uiComponent = { id: 'pg', component: 'Pagination', page: { path: '/page' } }
+    installInputBinding(pagination, defaultFactories.Pagination, node, surface)
+
+    // The user gesture: a real click on the composed `ui-button` "Next" stop (pagination.ts `#commit`).
+    const next = pagination.querySelector('[data-part="next"]') as HTMLElement
+    expect(next).toBeTruthy()
+    next.click()
+
+    expect(pagination.page).toBe(2) // the control's own accessor reflects the committed page
+    expect((surface.data.peek() as { page: unknown }).page).toBe(2) // LLD-C8 wrote it back (SPEC-R7)
+
+    pagination.remove()
+    disposeSurface(surface)
+  })
+})
+
 describe('default catalog — Calendar range mode (ADR-0093 clause 7 follow-up): mode + valueStart/valueEnd', () => {
   it('Calendar carries a three-slot value mark (ADR-0161): value stays inert-but-harmless in mode=range (unchanged from before), and valueStart/valueEnd are now bindable TWO-WAY', () => {
     expect(defaultCatalog.components.Calendar.value).toEqual([

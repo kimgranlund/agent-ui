@@ -132,7 +132,12 @@ const targets = [
   // RULED 2026-07-31 (GH #354, Kim): re-based 47.5 KB → 47.625 KB (48768 B gz) — the measured 48695 plus
   // 73 B of headroom, accepting both movers as real weight. The deliberate red this block previously held
   // open is closed by that ruling.
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 47.625 * KB],
+  // RULED 2026-08-05 (GH #445, Kim — "re-base + shrink follow-up"): re-based 47.625 KB → 50 KB (51200 B
+  // gz) — measured 51134 at MA-1's final commit; the movers are the ADR-0163 widening (selection + sort +
+  // filter/search + pagination landing on ui-table in place) plus the new ui-pagination control, all real,
+  // twice-reviewed weight. Per Kim's ruling this re-base is a CHECKPOINT, not a ratchet: GH #455 is the
+  // standing shrink follow-up that hunts the marginal back down.
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 50 * KB],
   // GH #377 finding 3 — the package's FIRST `./traits/*` subpath (`traits/overlay`, package.json:74) gets
   // its own budgeted row, so the opt-in surface every other pack carries one for (`code/highlight`,
   // `./markdown`, `./editor`) is not the one exception.
@@ -229,7 +234,8 @@ const MARGINAL_OVERRIDES = {
   'split': [2176, 'gzip measurement-frame drift as the family bundle crossed 33 KB (leave-one-out deltas shift with the shared dictionary; toolbar added similar roving/flex/enum code) — split source byte-identical that wave; measured 2082 B gz 2026-07-10'],
   'swiper': [3072, 'a five-tag family behind one entry (the per-control 2048 cap is sized for one component; measured 2913 B gz 2026-07-10 pre-split, 2406 B gz post-split — host + item + three chrome tags, each carrying its own barrel line + package.json subpath per family-coherence.test.ts C1; the four leaf lines each measure ~0 B gz since swiper.ts already imports them transitively)'],
   'sandbox-frame': [2304, 'genui-surface.spec.md SPEC §3.2/§3.3 (D9, B1): the CSP builder, the closed bridge message-guard, the host-owned bootstrap script TEXT, and the build/replace/teardown + live-theme control logic — measured 2124 B gz 2026-07-24, ~8% headroom'],
-  'status-stream': [2176, 'gzip measurement-frame drift from the SAME genui-surface B1 wave adding a new family member (the split-wave precedent above — leave-one-out deltas shift with the shared dictionary once the family bundle grows); status-stream source is byte-identical that wave — measured 2107 B gz 2026-07-24 (was within budget pre-wave)'],
+  'status-stream': [2192, 'gzip measurement-frame drift from the SAME genui-surface B1 wave adding a new family member (the split-wave precedent above — leave-one-out deltas shift with the shared dictionary once the family bundle grows); status-stream source is byte-identical that wave — measured 2107 B gz 2026-07-24 (was within budget pre-wave); re-bumped 2176 → 2192 for the SAME drift class when MA-1 grew the family bundle (measured 2182 B gz 2026-08-05, source untouched by that diff — GH #445, Kim ruling)'],
+  'table': [2624, 'RULED 2026-08-05 (GH #445, Kim — "re-base + shrink follow-up"): ADR-0163 widens the ratified display-only contract IN PLACE (Kim\'s 2026-07-28 direction, deliberately against a separate interactive tier), so one control carries selection + sort + filter/search + pagination composition + their a11y and delegation machinery — measured 2558 B gz 2026-08-05 after three review rounds already trimmed it; GH #455 is the standing shrink follow-up (the cap is a checkpoint, not a ratchet)'],
 }
 
 // ── The CLUSTER leg (GH #354, Kim's 2026-07-29 ruling) — the one shape a leave-one-out cannot measure ────

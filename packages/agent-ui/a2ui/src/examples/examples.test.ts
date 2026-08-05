@@ -287,3 +287,93 @@ describe('the gate bites — a deliberately-broken fixture (negative control, NO
     expect(allSeeds.some((s) => s.name === 'broken-fixture')).toBe(false)
   })
 })
+
+// ── ADR-0163 cl.9 coverage fixture — the widened Table + standalone Pagination shape ──────────────────
+//
+// Deliberately NOT exported from `./index.ts`/`allSeeds` (the `broken-fixture` precedent above, same
+// file, same reasoning): `ops-report`/`rental-filter-panel` are ALREADY-ADMITTED corpus records
+// (`corpus/exemplar/v1_0/agent-ui.jsonl`, `meta.canonicalHash` pinned). Editing either's payload in
+// place — the natural first instinct for "extend the existing Table example" — changes its canonical
+// hash, which `tools/corpus/import-seeds.ts` (ADR-0165) treats as a genuinely NEW, unjudged candidate
+// under an old name: the sanctioned path for that is a DELIBERATE `--replace <name>` re-admission
+// carrying a REAL judged verdict (`import-seeds.test.ts`'s own header: "an improved seed is near-
+// identical to its predecessor BY CONSTRUCTION" — the `--replace` re-admission, not a silent in-place
+// edit). A builder seat closing a rubric gap has no standing to author that verdict — that is the
+// a2ui-reviewer's call, exercised through the real corpus-growth workflow, not a side effect of a test-
+// coverage patch. So this fixture proves the SAME two things `broken-fixture` proves for its own shape
+// (0-failure conformance + a clean real-host render) for the widened `Table` props (`selectable`,
+// `selected`, a `sortable` column, `pageSize`/`page`) and the standalone `Pagination` row (bound `page`,
+// static `pages`/`label`) WITHOUT touching corpus-admitted content or `allSeeds`. A real corpus-teaching
+// exemplar for this shape is a follow-up corpus-growth wave, run through the real judged pipeline.
+describe('ADR-0163 cl.9 coverage fixture — widened Table (selectable/selected/sort/page) + standalone Pagination (not exported, not corpus-admitted)', () => {
+  const interactiveTableFixture: ExampleSeed = {
+    name: 'interactive-table-pagination-fixture',
+    description: 'Coverage-only fixture (not a corpus seed): a selectable+sortable+paginated Table alongside a standalone Pagination bound to a list.',
+    promptText: 'n/a — coverage fixture only',
+    surfaceId: 'itp',
+    protocolVersion: 'v1.0',
+    catalogId: 'agent-ui',
+    messages: [
+      { version: 'v1.0', createSurface: { surfaceId: 'itp', catalogId: 'agent-ui' } },
+      {
+        version: 'v1.0',
+        updateDataModel: {
+          surfaceId: 'itp',
+          value: {
+            checks: [
+              { name: 'api-gateway', env: 'prod', latency: 812 },
+              { name: 'auth-service', env: 'prod', latency: 640 },
+              { name: 'billing-worker', env: 'prod', latency: 205 },
+            ],
+            selectedChecks: [],
+            checksPage: 1,
+            results: [{ label: 'A' }, { label: 'B' }, { label: 'C' }],
+            resultsPage: 1,
+          },
+        },
+      },
+      {
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'itp',
+          components: [
+            { id: 'root', component: 'Column', gap: 'md', children: ['table', 'list', 'pagination'] },
+            // The widened Table (ADR-0163 cl.9): `selectable="multi"` + `selected` bound (the richest of
+            // Table's three commit slots), a `sortable` column, and `pageSize`/`page` windowing — the
+            // table stamps its OWN internal `ui-pagination` footer for this shape (cl.6).
+            {
+              id: 'table', component: 'Table', label: 'Failing checks',
+              selectable: 'multi', rowKey: 'name', selected: { path: '/selectedChecks' },
+              pageSize: 2, page: { path: '/checksPage' },
+              columns: [
+                { key: 'name', label: 'Check', type: 'string' },
+                { key: 'env', label: 'Environment', type: 'string' },
+                { key: 'latency', label: 'Latency (ms)', type: 'number', sortable: true },
+              ],
+              rows: { path: '/checks' },
+            },
+            { id: 'list', component: 'List', gap: 'sm', children: { path: '/results', componentId: 'result_text' } },
+            { id: 'result_text', component: 'Text', text: '${label}' },
+            // The standalone-over-a-list shape (ADR-0163 cl.6 — Pagination "reusable beyond tables"): a
+            // page navigator over `/results`, two-way bound on `page` only (`pages`/`label` stay static,
+            // `factories.ts`'s `paginationFactory` doc comment explains why).
+            { id: 'pagination', component: 'Pagination', label: 'Results pages', page: { path: '/resultsPage' }, pages: 2 },
+          ],
+        },
+      },
+    ],
+  }
+
+  it('validates 0-failure via validateA2ui (SPEC-N3/N6 parity, the standing shelf gate\'s own leg a)', () => {
+    expect(validateA2ui(interactiveTableFixture.messages, defaultCatalog)).toEqual({ valid: true, failures: [] })
+  })
+
+  it('renders through the real host with an empty error channel (leg b) — a real ui-table selection checkbox and a real ui-pagination both mount', () => {
+    const sent = renderSmoke(interactiveTableFixture)
+    expect(sent.filter(isError)).toEqual([])
+  })
+
+  it('is NOT exported from the shelf — allSeeds carries no seed named "interactive-table-pagination-fixture" (never becomes a corpus candidate by accident)', () => {
+    expect(allSeeds.some((s) => s.name === 'interactive-table-pagination-fixture')).toBe(false)
+  })
+})

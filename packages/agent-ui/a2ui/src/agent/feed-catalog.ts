@@ -155,6 +155,11 @@ export const FEED_EXCLUDED: readonly FeedExclusion[] = [
       'dashboard/canvas-scale content (ADR-0111 LLD-C13) — the recorded List/Grid exclusion reasoning applies a fortiori to a data table.',
   },
   {
+    type: 'Pagination',
+    reason:
+      'pagination-natured furniture is the class ADR-0111 cl.7 already names as out (ADR-0163 cl.9) — a page navigator is dashboard/canvas-scale chrome bound to a report-scale collection, not a single-purpose ask affordance; it carries a value:{prop,event} mark (the ColorPicker precedent: two-way-bindable is not itself an ask ticket) but has no standalone ask shape.',
+  },
+  {
     type: 'Disclosure',
     reason:
       'folding hides ask content (ADR-0113 LLD-C13) — the Tabs "hides half the ask" reasoning verbatim: an ask must be fully visible and operable inline.',
