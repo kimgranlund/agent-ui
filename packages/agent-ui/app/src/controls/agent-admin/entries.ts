@@ -137,16 +137,17 @@ export function readEntries(store: { get(key: string): unknown } | undefined, ki
 // ── the catalog roster projection (ADR-0170 cl.2/cl.4) ─────────────────────────────────────────────────
 
 /** The ensured Default roster row — `builtin: true` (toggleable, never deletable, ADR-0132 Fork 4), its
- *  label read from the registry (`A2UI_CATALOG_OPTIONS`), never hardcoded. `order: -1` sorts it FIRST:
- *  every stored row's order comes from `validateNewEntry`'s `maxOrder + 1` over the RAW store, which
- *  starts at 0 and never contains this projection-only row. */
+ *  label AND description read from the registry (`A2UI_CATALOG_OPTIONS`), never hardcoded: the ensured row
+ *  and the same catalog added from the library pack therefore read identically. `order: -1` sorts it
+ *  FIRST: every stored row's order comes from `validateNewEntry`'s `maxOrder + 1` over the RAW store,
+ *  which starts at 0 and never contains this projection-only row. */
 function defaultCatalogEntry(): Entry {
   const option = A2UI_CATALOG_OPTIONS.find((o) => o.id === DEFAULT_A2UI_CATALOG_ID)
   return {
     id: DEFAULT_A2UI_CATALOG_ID,
     kind: ENTRY_KINDS.catalog,
     label: option?.label ?? DEFAULT_A2UI_CATALOG_ID,
-    description: '',
+    description: option?.description ?? '',
     content: '',
     order: -1,
     enabled: false, // overridden by the derivation below — stated only to satisfy the Entry shape

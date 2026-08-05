@@ -195,6 +195,93 @@ describe('ADMIN_LIBRARIES — data integrity (GH #47/#48)', () => {
   })
 })
 
+// ── ADR-0170 cl.7 — the "Registered catalogs" pack IS the registry (no parity test needed, by design) ───
+// The integrations pack below needs a parity gate because its registry is node-fenced and hand-copied
+// here. This pack has no table to drift: it is `A2UI_CATALOG_OPTIONS.map(...)` over a browser-importable
+// import. What IS worth gating is exactly that — that it stayed a projection, and that an added row keys
+// the store to the registry id the wire will match.
+
+describe('the Registered catalogs pack (ADR-0170 cl.7)', () => {
+  it('IS the registry, mapped: one entry per A2UI_CATALOG_OPTIONS row, id-for-id and label-for-label', async () => {
+    const { ADMIN_LIBRARIES } = await import('./agent-admin-libraries.ts')
+    const { ENTRY_KINDS, A2UI_CATALOG_OPTIONS } = await import('@agent-ui/app')
+    const packs = ADMIN_LIBRARIES[ENTRY_KINDS.catalog]!
+    expect(packs).toHaveLength(1)
+    expect(packs[0]!.id).toBe('registered-catalogs')
+    expect(packs[0]!.entries.map((e) => ({ id: e.id, label: e.label, description: e.description }))).toEqual(
+      A2UI_CATALOG_OPTIONS.map((o) => ({ id: o.id, label: o.label, description: o.description ?? '' })),
+    )
+    // A catalog entry keys an EXTERNAL registry: no body to author, so no content (cl.8's row shape).
+    for (const entry of packs[0]!.entries) {
+      expect(entry.id, 'the registry/wire key rides explicitly — never left to slugify(label)').toBeTruthy()
+      expect(entry.content).toBe('')
+    }
+  })
+
+  it('a library add mints a store entry keyed to the REGISTRY id — so sanitizeCatalog can actually match it', async () => {
+    const { ADMIN_LIBRARIES } = await import('./agent-admin-libraries.ts')
+    const { validateNewEntry, ENTRY_KINDS, A2UI_CATALOG_OPTIONS } = await import('@agent-ui/app')
+    const { sanitizeCatalog } = await import('@agent-ui/app/agent-admin-schema')
+    const pack = ADMIN_LIBRARIES[ENTRY_KINDS.catalog]![0]!
+
+    // The REAL add-from-library path (entry-list.ts hands the pack entry to validateNewEntry verbatim).
+    const minted = pack.entries.map((input) => {
+      const result = validateNewEntry([], ENTRY_KINDS.catalog, input)
+      expect(result.ok, `"${input.label}" must commit`).toBe(true)
+      return (result as { ok: true; entry: { id: string; label: string } }).entry
+    })
+    expect(minted.map((e) => e.id)).toEqual(A2UI_CATALOG_OPTIONS.map((o) => o.id))
+    // The decoupling that matters: 'A2UI Basic (upstream v0.9.1)' would slugify to something the registry
+    // has never heard of — an unregistered row, permanently unselectable (ADR-0170 cl.3's visible no-op).
+    for (const entry of minted) expect(sanitizeCatalog(entry.id), `${entry.id} survives the fail-closed read`).toBe(entry.id)
+  })
+
+  // The RENDERED shape, not just the data: the pack has to reach the Catalogs section as the section's
+  // ONLY add path, and a pick has to land a roster row the selection can actually key to.
+  it('renders as the Catalogs section\'s only add path, and a pick lands a roster row keyed to the registry id', async () => {
+    const { librariesForCategory } = await import('./agent-admin-libraries.ts')
+    const { ENTRY_KINDS, entriesStoreKey, A2UI_CATALOG_OPTIONS } = await import('@agent-ui/app')
+    const { createMemoryStore } = await import('@agent-ui/app/settings-memory-store')
+    const second = A2UI_CATALOG_OPTIONS[1]!
+
+    const admin = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    admin.libraries = librariesForCategory(undefined)
+    admin.store = createMemoryStore({})
+    document.body.append(admin)
+    mounted.push(admin)
+    await whenFlushed()
+
+    const section = admin.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.catalog}"]`) as HTMLElement
+    const menu = section.querySelector('[data-part="entry-library-menu"]') as HTMLElement
+    expect(menu, 'the pack reached the section').not.toBeNull()
+    expect([...menu.querySelectorAll('[data-value]')].map((r) => r.textContent)).toEqual(
+      A2UI_CATALOG_OPTIONS.map((o) => `${o.label} — Registered catalogs`),
+    )
+    expect(section.querySelector('[data-part="entry-add-toggle"]'), 'the menu is the ONLY add path (cl.8)').toBeNull()
+
+    // The real commit path: ui-menu's `select` event, exactly as entry-list.ts listens for it.
+    menu.dispatchEvent(new CustomEvent('select', { detail: { value: 'registered-catalogs:1', index: 1 } }))
+    await whenFlushed()
+
+    const roster = admin.store!.get(entriesStoreKey(ENTRY_KINDS.catalog)) as Array<{ id: string; label: string }>
+    expect(roster.map((e) => e.id), 'keyed to the registry id, not slugify(label)').toEqual([second.id])
+    const rows = [...section.querySelectorAll('[data-part="entry"]')].map((r) => r.getAttribute('data-entry-id'))
+    expect(rows, 'the ensured Default row plus the freshly added one').toEqual(['agent-ui', second.id])
+    expect(section.querySelector(`[data-part="entry"][data-entry-id="${second.id}"] [data-part="entry-description"]`)?.textContent).toBe(
+      second.description,
+    )
+  })
+
+  it('is GENERIC — every preset category sees it (never a persona-flavored pack)', async () => {
+    const { librariesForCategory } = await import('./agent-admin-libraries.ts')
+    const { ENTRY_KINDS } = await import('@agent-ui/app')
+    for (const category of ['hospitality', 'games', undefined] as const) {
+      const packs = librariesForCategory(category)[ENTRY_KINDS.catalog]!
+      expect(packs.map((p) => p.id), `category ${String(category)}`).toEqual(['registered-catalogs'])
+    }
+  })
+})
+
 // ── GH #49 — the Integrations pack ↔ dev-proxy registry parity (the a2ui-idioms drift-gate discipline) ──
 
 describe('Integrations pack ↔ registry parity (GH #49)', () => {

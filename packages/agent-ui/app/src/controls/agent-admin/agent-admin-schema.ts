@@ -212,10 +212,25 @@ export const A2UI_CATALOG_KEY = 'a2uiCatalog'
  *  Repair, narrowing this comment): the PICK-FROM-LIBRARY half of Kim's 2026-07-19 ruling lands with that
  *  record — this array IS the "Registered catalogs" library pack's source (cl.7), projected live. Only
  *  the CREATE/authoring affordance still lands separately, when a source registry that can mint a new
- *  catalog exists; its seam is the catalog kind's suppressed custom-add form (ADR-0170 cl.8). */
-export const A2UI_CATALOG_OPTIONS: ReadonlyArray<{ id: string; label: string }> = [
-  { id: 'agent-ui', label: 'Default (agent-ui)' },
-  { id: 'a2ui-basic', label: 'A2UI Basic (upstream v0.9.1)' },
+ *  catalog exists; its seam is the catalog kind's suppressed custom-add form (ADR-0170 cl.8).
+ *
+ *  `description` (ADR-0170 cl.7, OPTIONAL) is PRESENTATION copy for the library pack/menu row and the
+ *  roster row only — `sanitizeCatalog` reads `id` alone, and the wire never sees it; omitting it degrades
+ *  to an empty description line, which `entry-list.ts` already skips. A THIRD registered catalog is ONE
+ *  row here: sanitize, the runner threading, AND the "Registered catalogs" pack all pick it up with zero
+ *  further edits (the pack IS this array, mapped — no hand-copied trio table, so no parity test to
+ *  forget). */
+export const A2UI_CATALOG_OPTIONS: ReadonlyArray<{ id: string; label: string; description?: string }> = [
+  {
+    id: 'agent-ui',
+    label: 'Default (agent-ui)',
+    description: "The fleet's own catalog — every ui-* control the renderer paints, mapped 1:1.",
+  },
+  {
+    id: 'a2ui-basic',
+    label: 'A2UI Basic (upstream v0.9.1)',
+    description: "Upstream A2UI's own core component set, rendered onto fleet controls (ADR-0169).",
+  },
 ]
 
 export const DEFAULT_A2UI_CATALOG_ID: string = 'agent-ui'
