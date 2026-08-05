@@ -25,6 +25,19 @@ upstream itself has not closed — so the alignment work becomes routed, checkab
 instead of dying as chat-session findings. Each SPEC-R names the statement, a checkable acceptance,
 and the route: which existing spec, surface, or harness record the work lands on.
 
+**The conceptual split (owner's framing, 2026-08-05)** — the definition pair SPEC-R1 and SPEC-R8
+are argued from:
+
+- **AG-UI** (Agent–User Interaction) is **HOW** the backend agent and the frontend application
+  talk — a real-time runtime communication protocol (CopilotKit-backed) managing the event
+  stream, session history, and state synchronization.
+- **A2UI** (Agent-to-User Interface) is **WHAT** visual elements render — an open, declarative
+  specification (Google-originated) letting a model output flat JSON blueprints for rich UI
+  components (map, chart, form) instead of raw code or plain text.
+
+The two are complementary layers, not competitors — and `@agent-ui/a2ui`'s transport seam (the
+streaming SPEC's pluggable-adapter contract) is exactly where the HOW layer plugs in.
+
 ## 2 · The survey (2026-08-05)
 
 Source: a live two-scout web survey, 2026-08-05, adjudicated by the coordinating session.
@@ -102,11 +115,13 @@ new dated record, never by silently rewriting these claims (SPEC-N2).
 ## 3 · Requirements (SPEC-R) — all FUTURE work
 
 **SPEC-R1 — AG-UI transport binding, priority raised** *(→ PRD-G7 · route: amends
-[`./a2ui-streaming-pipeline.spec.md`](./a2ui-streaming-pipeline.spec.md))*. The parked streaming
-SPEC's AG-UI adapter (its SPEC-R4) SHOULD be the first transport built after the stdio default —
-its §6 "transport priority beyond stdio" open item is hereby answered by the ecosystem: AG-UI is
-the convergence stack's transport layer, and A2UI-as-payload-inside-AG-UI is the shipped pattern
-(§2.1). The binding MUST rule, on record, how AG-UI's state-sync events (`STATE_SNAPSHOT`,
+[`./a2ui-streaming-pipeline.spec.md`](./a2ui-streaming-pipeline.spec.md))*. Premise: the §1
+conceptual split — AG-UI owns HOW agent and application talk, A2UI owns WHAT renders;
+complementary layers, not competitors, so binding one to the other is composition, not
+allegiance-switching. The parked streaming SPEC's AG-UI adapter (its SPEC-R4) SHOULD be the
+first transport built after the stdio default — its §6 "transport priority beyond stdio" open
+item is hereby answered by the ecosystem: AG-UI is the convergence stack's HOW layer, and
+A2UI-as-payload-inside-AG-UI is the shipped pattern (§2.1). The binding MUST rule, on record, how AG-UI's state-sync events (`STATE_SNAPSHOT`,
 `STATE_DELTA` JSON-Patch) relate to A2UI's own `updateDataModel` — mapped, or explicitly declined
 with the reason.
 - **AC1** *Given* the AG-UI adapter, *when* a stream is produced, *then* the streaming SPEC's own
@@ -183,9 +198,11 @@ from the protocol entirely, §2.1), and re-point the canonical repo URL to
 
 **SPEC-R8 — MCP Apps posture: considered non-goal as a delivery vehicle** *(→ PRD-G7 · route:
 this SPEC is the record; the MCP lane remains the streaming SPEC's serving surface)*. MCP Apps
-(§2.1) delivers UI as sandboxed iframes over a JSON-RPC bridge — architecturally disjoint from
-this system's premise: catalog-governed payloads rendered as native fleet DOM, provably valid
-before ship (PRD-G4), zero-dep by law. Shipping surfaces through an iframe bridge would bypass
+(§2.1) delivers UI as sandboxed iframes over a JSON-RPC bridge — it conflates the §1 split's two
+layers (the HOW transport and the WHAT payload) into one opaque iframe, where this system keeps
+them separate by construction. That makes it architecturally disjoint from the premise here:
+catalog-governed payloads rendered as native fleet DOM, provably valid before ship (PRD-G4),
+zero-dep by law. Shipping surfaces through an iframe bridge would bypass
 the catalog, the validator, and the fleet's token layer at once. **Ruled: non-goal as a
 rendering/delivery vehicle.** The MCP interop this system DOES owe stays exactly what the
 streaming SPEC's R6 already fixes — an MCP serving surface (serve-catalog / validate / retrieve
