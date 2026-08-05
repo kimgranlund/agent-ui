@@ -3,12 +3,16 @@
 // agent-admin-presets.ts scope law: the page owns which packs exist; the packages own only the generic
 // library seam this file feeds — `EntryLibraryPack` + entry-list's add-from-library menu).
 //
+// Three of the packs derive LIVE from a registry rather than being authored here: #1 + the GenUI packs
+// from the shipped `.md` registries (raw-globbed below), and "Registered catalogs" from the
+// `A2UI_CATALOG_OPTIONS` import (ADR-0170 cl.7 — the bottom of ADMIN_LIBRARIES).
+//
 // Pack #1 derives LIVE from the shipped mini-skill registry: the SAME `prompts/mini-skills/*.md` files
 // `@agent-ui/a2ui`'s `MINI_SKILLS` loads node-side are raw-globbed here by Vite (the registry's own
 // loader is `node:fs`-based, ADR-0135 cl.11 — unimportable in the browser), so a registry edit flows into
 // the pack with zero hand-copying. The frontmatter split below mirrors `prompts/frontmatter.ts` (not an
 // exported subpath; the format is three trivial lines — id/triggers + body).
-import { ENTRY_KINDS, type EntryLibraryPack, type NewEntryInput } from '@agent-ui/app'
+import { ENTRY_KINDS, A2UI_CATALOG_OPTIONS, type EntryLibraryPack, type NewEntryInput } from '@agent-ui/app'
 
 // ── pack #1: the shipped A2UI composition idioms, derived from the registry's own .md files ─────────────
 
@@ -392,4 +396,29 @@ export const ADMIN_LIBRARIES: Record<string, EntryLibraryPack[]> = {
   // genui-surface.spec.md SPEC-R9/R11 (B2) — the shipped GenUI pattern-source packs (data-viz layouts,
   // interactive widgets, animated explainers), live-derived from the registry's own .md files above.
   [ENTRY_KINDS.patternSource]: GENUI_PACK_LIBRARY,
+  // ADR-0170 cl.7 — the "Registered catalogs" pack: mapped LIVE from the `A2UI_CATALOG_OPTIONS` IMPORT,
+  // not a hand-copied trio table. The registry is browser-importable (unlike the node-fenced integrations
+  // registry, whose pack above therefore needs a parity TEST), so this pack simply IS the registry —
+  // a third registered catalog is ONE row in `agent-admin-schema.ts` and zero edits here.
+  //
+  // The trio law (ADR-0168 cl.2) rides `NewEntryInput.id`: `id` is the registry/wire key an added entry
+  // stays keyed to (and the only thing `sanitizeCatalog` will ever match), `label` is free display text,
+  // `description` is the menu-row copy. `content` is deliberately empty — a catalog entry keys an
+  // external registry, it has no body (the section renders no content editor, ADR-0170 cl.8).
+  //
+  // GENERIC by construction: absent from FLAVORED_PACK_CATEGORY above, so every persona sees it —
+  // catalogs have no persona affinity the way Hospitality/Games idioms do.
+  [ENTRY_KINDS.catalog]: [
+    {
+      id: 'registered-catalogs',
+      label: 'Registered catalogs',
+      description: 'The catalogs this build registers — add one to a persona, then pick it in Catalogs.',
+      entries: A2UI_CATALOG_OPTIONS.map((option) => ({
+        id: option.id,
+        label: option.label,
+        description: option.description ?? '',
+        content: '',
+      })),
+    },
+  ],
 }

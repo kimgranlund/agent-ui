@@ -49,7 +49,8 @@ import { UIElement, prop, untracked, type PropsSchema, type ReactiveProps } from
 // future tree-shaking change could sever. `field` (TKT-0073) registers the `<ui-field>` wrapper entry-list.ts
 // now hosts those two text-fields in, so their required-validation message renders outside their own box.
 import '@agent-ui/components/controls/switch'
-import '@agent-ui/components/controls/select' // vision rev.6 — the Surface Options catalog picker
+// (`controls/select` used to register here for the Surface Options catalog picker — ADR-0170 cl.6 retired
+// that `ui-select`, and this element creates no other one, so the registration went with it.)
 import '@agent-ui/components/controls/button'
 import '@agent-ui/components/controls/icon'
 import '@agent-ui/code/editor'
@@ -86,6 +87,7 @@ import {
   AGENT_ENABLED_KEY,
   A2UI_CATALOG_KEY,
   A2UI_CATALOG_OPTIONS,
+  DEFAULT_A2UI_CATALOG_ID,
   DEFAULT_MODEL_ID,
   MODELS_INCLUDED_KEY,
   SURFACE_A2UI_KEY,
@@ -116,6 +118,8 @@ import {
   entriesStoreKey,
   initialEntryValues,
   readEntries,
+  readCatalogEntries,
+  isRegisteredCatalog,
   composeSystemPrompt,
   composeLiveSystemPrompt,
   validateNewEntry,
@@ -173,6 +177,15 @@ const CAPABILITY_KINDS: ReadonlyArray<{ kind: string; label: string; addLabel: s
   // (its picked entry's body composes through the DEDICATED genui prompt block instead, SPEC-R10 — never
   // BOTH, which would double-inject the identical prose, the exact ADR-0091 §4 defect class).
   { kind: ENTRY_KINDS.patternSource, label: 'Pattern sources', addLabel: 'Add pattern source', liveHeading: 'Pattern sources available to you' },
+  // ADR-0170 cl.1 — the A2UI catalog LIBRARY, appended LAST (array order is DOM order). It rides this
+  // SAME machinery with three single-line row exceptions, each named at its own site below: (a) NO master
+  // switch is minted for it — the A2UI surface toggle is the gate (cl.5, `#compose`); (b) its section
+  // suppresses the authoring form and the per-entry editor (cl.8, `#makeSection`); (c) its toggle/delete
+  // write the ONE persisted selection key instead of per-entry flags (cl.3, `#selectCatalog`/
+  // `#deleteCatalog`). `addLabel` is dead text under (b) — supplied for the row shape; `liveHeading` is
+  // unused in practice, like pattern-source's: `#capabilityGroups` excludes this kind (cl.5), because a
+  // catalog selection threads as `catalogId` on the wire and never as prompt prose.
+  { kind: ENTRY_KINDS.catalog, label: 'Catalogs', addLabel: 'Add catalog', liveHeading: 'Catalogs available to you' },
 ]
 
 /** Dialog Turns retention cap (vision rev.5) — a bounded ring; the oldest records fall off. Session-
@@ -263,7 +276,9 @@ export class UIAgentAdminElement extends UIElement {
   // ── vision rev.6: the Surface Options controls (built once; state re-applied per store change) ───────
   #surfaceMarkdownSwitch: (HTMLElement & { checked: boolean }) | null = null
   #surfaceA2uiSwitch: (HTMLElement & { checked: boolean }) | null = null
-  #surfaceCatalogSelect: (HTMLElement & { value: string; disabled: boolean }) | null = null
+  // ADR-0170 cl.6 — the a2ui row's READ-ONLY catalog mirror (the retired `ui-select`'s replacement): its
+  // text is re-derived from the one persisted selection in `#applyMasterStates`; it never writes.
+  #surfaceCatalogMirror: HTMLElement | null = null
   // genui-surface.spec.md SPEC-R11 — the GenUI modality's own row switch (live, B2).
   #surfaceGenuiSwitch: (HTMLElement & { checked: boolean }) | null = null
   // genui-surface.spec.md v0.5 §11 (SPEC-R10 amended clause, GH #316/ADR-0162) — the dogfood sub-toggle.
@@ -574,24 +589,18 @@ export class UIAgentAdminElement extends UIElement {
       if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
     })
     this.#surfaceA2uiSwitch = a2ui.toggle
-    // The catalog picker (one option today — agent-admin-schema.ts's A2UI_CATALOG_OPTIONS doc owns why).
-    const catalogSelect = document.createElement('ui-select') as HTMLElement & { value: string; disabled: boolean }
-    catalogSelect.setAttribute('data-part', 'surface-catalog')
-    catalogSelect.setAttribute('aria-label', 'A2UI catalog')
-    for (const option of A2UI_CATALOG_OPTIONS) {
-      const optionEl = document.createElement('div')
-      optionEl.setAttribute('role', 'option')
-      optionEl.setAttribute('value', option.id)
-      optionEl.textContent = option.label
-      catalogSelect.append(optionEl)
-    }
-    // ui-select's ONLY commit event is `select` (select.md; the settings generator's own COMMIT_EVENT law).
-    catalogSelect.addEventListener('select', () => {
-      this.store?.set(A2UI_CATALOG_KEY, sanitizeCatalog(catalogSelect.value))
-      if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
-    })
-    this.#surfaceCatalogSelect = catalogSelect
-    a2ui.row.append(catalogSelect)
+    // ADR-0170 cl.6 — the bare `ui-select` picker that used to live here is RETIRED: the Catalogs library
+    // section (CAPABILITY_KINDS, below) is now the ONE writer of `A2UI_CATALOG_KEY`, and two write paths
+    // into one key — each obliged to reconcile the other's surface — is exactly the second-writer defect
+    // that record closes. What survives is the at-a-glance CONTEXT beside the toggle: a READ-ONLY mirror
+    // of the active catalog's label, re-derived in `#applyMasterStates` (where the select's own
+    // value-reflection lived). It commits nothing and listens to nothing.
+    const catalogMirror = document.createElement('span')
+    catalogMirror.setAttribute('data-part', 'surface-catalog')
+    // No `aria-label`/role: this is plain trailing TEXT in the row that already names the modality, not a
+    // control — the row's own label + this value read as one phrase to a screen reader.
+    this.#surfaceCatalogMirror = catalogMirror
+    a2ui.row.append(catalogMirror)
 
     // genui-surface.spec.md SPEC-R11/B2 — LIVE: the row's own "visible-but-disabled, PRD pending" state
     // (PRD §3) stood until this slice shipped; the modality's own inverse-default (OFF until an admin
@@ -643,23 +652,29 @@ export class UIAgentAdminElement extends UIElement {
       settingsItem('surface', 'Surface Options', surfaceOptions),
     )
     for (const { kind, label, addLabel } of CAPABILITY_KINDS) {
-      // The kind's MASTER switch (vision rev.5) — rendered on the kind's fold heading row (GH #225;
-      // declaratively slotted per GH #226/ADR-0158, like the Agent switch above); `false` gates the
-      // whole kind out of the composed prompt + the live roster (isEnabledFlag: default ON).
-      const kindSwitch = document.createElement('ui-switch') as HTMLElement & { checked: boolean }
-      kindSwitch.setAttribute('data-part', 'kind-enabled')
-      kindSwitch.setAttribute('slot', 'summary')
-      kindSwitch.setAttribute('aria-label', `${label} enabled`)
-      kindSwitch.checked = true
-      kindSwitch.addEventListener('change', () => {
-        this.store?.set(kindEnabledKey(kind), kindSwitch.checked)
-        this.#applyMasterStates(this.store)
-        if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
-      })
-      this.#kindSwitches.set(kind, kindSwitch)
       const section = this.#makeSection(kind, addLabel)
       const item = settingsItem(kind, label, section.host)
-      item.append(kindSwitch)
+      // ADR-0170 cl.5 — the ONE kind with no master switch: a catalog is always exactly-one-active, so a
+      // master-OFF "no catalogs" state has no wire meaning, and the modality gate already exists
+      // (`SURFACE_A2UI_KEY`, applied as this section's dim in `#applyMasterStates`). Minting a switch here
+      // would persist a `catalogsEnabled` key nothing reads.
+      if (kind !== ENTRY_KINDS.catalog) {
+        // The kind's MASTER switch (vision rev.5) — rendered on the kind's fold heading row (GH #225;
+        // declaratively slotted per GH #226/ADR-0158, like the Agent switch above); `false` gates the
+        // whole kind out of the composed prompt + the live roster (isEnabledFlag: default ON).
+        const kindSwitch = document.createElement('ui-switch') as HTMLElement & { checked: boolean }
+        kindSwitch.setAttribute('data-part', 'kind-enabled')
+        kindSwitch.setAttribute('slot', 'summary')
+        kindSwitch.setAttribute('aria-label', `${label} enabled`)
+        kindSwitch.checked = true
+        kindSwitch.addEventListener('change', () => {
+          this.store?.set(kindEnabledKey(kind), kindSwitch.checked)
+          this.#applyMasterStates(this.store)
+          if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
+        })
+        this.#kindSwitches.set(kind, kindSwitch)
+        item.append(kindSwitch)
+      }
       settingsContent.append(item)
     }
 
@@ -708,16 +723,26 @@ export class UIAgentAdminElement extends UIElement {
    *  result in `#capabilitySections` (keyed by `kind`, prompt sections included) so
    *  `#rewireAllSections`/`#handleSubmit` can iterate uniformly. */
   #makeSection(kind: string, addLabel: string): EntryListSection {
+    // ADR-0170 cl.3 — the catalog kind's toggle and delete are SELECTION writes against the one persisted
+    // key, never per-entry flag writes (the entries store holds the roster; `A2UI_CATALOG_KEY` holds the
+    // selection). Its add path stays the generic `validateNewEntry` one, unchanged.
+    const isCatalog = kind === ENTRY_KINDS.catalog
     const section = mountEntryList(
       kind,
       addLabel,
       {
-      onToggle: (id, enabled) => this.#updateEntries(kind, (entries) => entries.map((e) => (e.id === id ? { ...e, enabled } : e))),
+      onToggle: (id, enabled) =>
+        isCatalog
+          ? this.#selectCatalog(id, enabled)
+          : this.#updateEntries(kind, (entries) => entries.map((e) => (e.id === id ? { ...e, enabled } : e))),
       onContentChange: (id, content) => this.#updateEntries(kind, (entries) => entries.map((e) => (e.id === id ? { ...e, content } : e))),
       // The `|| e.builtin` guard is defensive, mirroring entry-list.ts's own choice not to render a
       // delete affordance for a builtin entry in the first place (ADR-0132 Fork 4: toggle off, never
       // delete) — a stray call still cannot remove one.
-      onDelete: (id) => this.#updateEntries(kind, (entries) => entries.filter((e) => e.id !== id || e.builtin)),
+      onDelete: (id) =>
+        isCatalog
+          ? this.#deleteCatalog(id)
+          : this.#updateEntries(kind, (entries) => entries.filter((e) => e.id !== id || e.builtin)),
       onAdd: (input) => {
         const existing = readEntries(this.store, kind)
         const result = validateNewEntry(existing, kind, input)
@@ -734,7 +759,12 @@ export class UIAgentAdminElement extends UIElement {
       // longer routes through here — it rides the kind's FOLD heading row instead (GH #225, slotted
       // `slot="summary"` per GH #226/ADR-0158); the section shell itself is headless (its fold summary
       // labels it).
-      { libraries: this.libraries?.[kind] },
+      //
+      // ADR-0170 cl.8 — the catalog kind alone suppresses BOTH authoring affordances: its entries key an
+      // EXTERNAL registry (`A2UI_CATALOG_OPTIONS`), so there is nothing to author or edit — adds come
+      // from the library menu, rows render as label + description + switch. Every other kind passes
+      // `true`, which is exactly the absent-option default (byte-identical render).
+      { libraries: this.libraries?.[kind], customAdd: !isCatalog, contentField: !isCatalog },
     )
     this.#capabilitySections.set(kind, section)
     return section
@@ -759,6 +789,64 @@ export class UIAgentAdminElement extends UIElement {
     }
   }
 
+  // ── the catalog kind's SELECTION writes (ADR-0170 cl.3/cl.4) ─────────────────────────────────────────
+  // The switch doubles as a radio here — the interaction-vocabulary stretch Kim ruled ON at ratification.
+  // Every arm below writes AT MOST ONE key, and no arm ever writes a per-entry `enabled` flag: the roster
+  // records membership, `A2UI_CATALOG_KEY` records the selection, and `readCatalogEntries` derives every
+  // switch from the latter (so the section cannot disagree with the `catalogId` the runner threads).
+
+  /** Toggling a catalog row (ADR-0170 cl.3). Four arms:
+   *  · ON + registered ⇒ the selection MOVES (one write).
+   *  · ON + unregistered (a dedup-suffixed duplicate row) ⇒ NO write — a VISIBLE no-op: the re-render
+   *    snaps the switch back and the selection is unchanged. Never a silent write of the default.
+   *  · OFF on the ACTIVE row ⇒ the DEFAULT id is written: the fail-closed law surfacing in the UI, so the
+   *    selection visibly moves to the Default row rather than pretending a "none" state exists.
+   *  · OFF on an already-inactive row ⇒ nothing to do (the row derives OFF already). */
+  #selectCatalog(id: string, checked: boolean): void {
+    const store = this.store
+    const active = sanitizeCatalog(store?.get(A2UI_CATALOG_KEY))
+    let next: string | undefined
+    if (checked && isRegisteredCatalog(id)) next = id
+    else if (!checked && id === active) next = DEFAULT_A2UI_CATALOG_ID
+    if (next !== undefined) store?.set(A2UI_CATALOG_KEY, next)
+    // Re-render DIRECTLY unless a real selection change is guaranteed to notify. Three cases need it, and
+    // all three leave the flipped switch visually wrong otherwise — the UI lying about the one fact this
+    // section exists to state:
+    //  · nothing was written (a refused unregistered ON, or an already-OFF row) — no subscriber fires;
+    //  · the written value EQUALS the previous one (toggling the ACTIVE row off when the active row IS
+    //    the Default: the fail-closed law writes the default over itself) — `SettingsStore` promises no
+    //    notification on a same-value `set`, so treat that arm as unwritten rather than depending on one
+    //    implementation's behaviour;
+    //  · the store has no `subscribe` at all (`#updateEntries`' own fallback discipline).
+    if (next === undefined || next === active || store?.subscribe === undefined) this.#refreshCatalogSection()
+  }
+
+  /** Deleting a catalog row (ADR-0170 cl.4) — the ordinary roster delete, plus the default-id write when
+   *  the deleted row was the ACTIVE one (the same fail-closed surfacing as an OFF toggle). Builtin rows
+   *  keep the no-delete-affordance law (the `|| e.builtin` guard, as every other kind).
+   *
+   *  ORDER — key first, then roster: the LLD's §3 invariant is that "a subscriber never observes an active
+   *  id absent from the roster". Writing the roster first would violate exactly that (between the two
+   *  writes the key still names the just-deleted row, so the projection would derive ZERO switches ON —
+   *  a visible flash of the broken invariant). Key-first keeps every intermediate state consistent: the
+   *  Default row is guaranteed present by `readCatalogEntries`, so it is selectable at the instant the key
+   *  moves. (This is the one place this build reads the LLD's stated INVARIANT over its ordering label.) */
+  #deleteCatalog(id: string): void {
+    const store = this.store
+    if (id === sanitizeCatalog(store?.get(A2UI_CATALOG_KEY))) store?.set(A2UI_CATALOG_KEY, DEFAULT_A2UI_CATALOG_ID)
+    this.#updateEntries(ENTRY_KINDS.catalog, (entries) => entries.filter((e) => e.id !== id || e.builtin))
+    if (store?.subscribe === undefined) this.#refreshCatalogSection()
+  }
+
+  /** The catalog section's direct re-render + master/mirror re-derivation — for the two paths a store
+   *  subscription cannot cover: a REFUSED toggle (nothing was written, so nothing notifies) and a store
+   *  with no `subscribe` at all. Idempotent; safe to call on top of a subscription-driven render. */
+  #refreshCatalogSection(): void {
+    this.#renders.get(ENTRY_KINDS.catalog)?.()
+    this.#applyMasterStates(this.store)
+    if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
+  }
+
   /** (Re-)render every section from `store`'s CURRENT contents + (re-)arm each kind's subscription — the
    *  `settings.ts`/TKT-0021 field-subscription precedent, generalized to five keys: a subscription dies
    *  with every disconnect and must be re-armed on every connect. Always renders (never skipped on a
@@ -773,11 +861,15 @@ export class UIAgentAdminElement extends UIElement {
     for (const kind of allKinds) {
       const section = this.#capabilitySections.get(kind)
       if (!section) continue
-      const render = (): void => section.render(readEntries(store, kind))
+      // ADR-0170 cl.2 — the catalog kind renders from the PROJECTION (the ensured Default row + every
+      // switch derived from the persisted selection), never the bare roster; and it re-renders on EITHER
+      // of its two inputs, since the selection lives outside the entries store.
+      const isCatalog = kind === ENTRY_KINDS.catalog
+      const render = (): void => section.render(isCatalog ? readCatalogEntries(store) : readEntries(store, kind))
       this.#renders.set(kind, render)
       render()
       const unsubscribe = store?.subscribe?.((key) => {
-        if (key === entriesStoreKey(kind)) render()
+        if (key === entriesStoreKey(kind) || (isCatalog && key === A2UI_CATALOG_KEY)) render()
       })
       if (unsubscribe) this.#unsubscribes.set(kind, unsubscribe)
     }
@@ -1193,9 +1285,12 @@ export class UIAgentAdminElement extends UIElement {
    *  EXCLUDES `pattern-source` (genui-surface SPEC-R10/R11): that kind's picked entry composes through
    *  the DEDICATED genui prompt block (`#runSurfaceTurn`'s own `pickedPatternSource` read) instead of the
    *  generic `## Pattern sources available to you` capability projection — including it here too would
-   *  double-inject the identical body in one prompt (the exact ADR-0091 §4 defect class). */
+   *  double-inject the identical body in one prompt (the exact ADR-0091 §4 defect class).
+   *  EXCLUDES `catalog` too (ADR-0170 cl.5): the catalog selection threads as `catalogId` on the wire (the
+   *  server picks the registered catalog and the producer stamps it, ADR-0169 cl.3/4) — never as prompt
+   *  prose. Projecting the roster here would teach the model about catalogs it cannot choose between. */
   #capabilityGroups(store: SettingsStore | undefined): LiveCapabilityGroup[] {
-    return CAPABILITY_KINDS.filter(({ kind }) => kind !== ENTRY_KINDS.patternSource).map(({ kind, liveHeading }) => ({
+    return CAPABILITY_KINDS.filter(({ kind }) => kind !== ENTRY_KINDS.patternSource && kind !== ENTRY_KINDS.catalog).map(({ kind, liveHeading }) => ({
       kind,
       heading: liveHeading,
       entries: readEntries(store, kind),
@@ -1249,21 +1344,29 @@ export class UIAgentAdminElement extends UIElement {
     const agentOn = isEnabledFlag(store?.get(AGENT_ENABLED_KEY))
     if (this.#agentSwitch) this.#agentSwitch.checked = agentOn
     if (this.#conversation) this.#conversation.disabled = !agentOn
+    const a2uiOn = isEnabledFlag(store?.get(SURFACE_A2UI_KEY))
     for (const { kind } of CAPABILITY_KINDS) {
-      const on = isEnabledFlag(store?.get(kindEnabledKey(kind)))
-      const kindSwitch = this.#kindSwitches.get(kind)
+      // ADR-0170 cl.5 — the catalog kind has NO master switch, so its dim derives from the A2UI MODALITY
+      // instead (inheriting the retired select's own rationale: choosing a catalog for a surface that
+      // can't run is noise, not configuration). Reading `kindEnabledKey('catalog')` here would answer a
+      // phantom always-ON master for a key nothing ever writes.
+      const on = kind === ENTRY_KINDS.catalog ? a2uiOn : isEnabledFlag(store?.get(kindEnabledKey(kind)))
+      const kindSwitch = this.#kindSwitches.get(kind) // undefined for the catalog kind — nothing to reflect
       if (kindSwitch) kindSwitch.checked = on
       this.#capabilitySections.get(kind)?.host.toggleAttribute('data-kind-disabled', !on)
     }
     // Vision rev.6 — the Surface Options rows reflect their stored state the same way; the catalog
-    // picker disables while its modality is off (choosing a catalog for a surface that can't run is
-    // noise, not configuration).
+    // mirror dims while its modality is off (context for a surface that can't run is noise, not
+    // configuration — the retired select's own rationale, inherited).
     if (this.#surfaceMarkdownSwitch) this.#surfaceMarkdownSwitch.checked = isEnabledFlag(store?.get(SURFACE_MARKDOWN_KEY))
-    const a2uiOn = isEnabledFlag(store?.get(SURFACE_A2UI_KEY))
     if (this.#surfaceA2uiSwitch) this.#surfaceA2uiSwitch.checked = a2uiOn
-    if (this.#surfaceCatalogSelect) {
-      this.#surfaceCatalogSelect.value = sanitizeCatalog(store?.get(A2UI_CATALOG_KEY))
-      this.#surfaceCatalogSelect.disabled = !a2uiOn
+    if (this.#surfaceCatalogMirror) {
+      // ADR-0170 cl.6 — the SAME fail-closed read the wire uses (`:1061`/`:1321`), feeding a label lookup
+      // instead of a select's value: an unknown/absent stored id shows the Default catalog's label, which
+      // is exactly the id a turn would thread. Falls back to the raw id if the registry ever lacks it.
+      const active = sanitizeCatalog(store?.get(A2UI_CATALOG_KEY))
+      this.#surfaceCatalogMirror.textContent = A2UI_CATALOG_OPTIONS.find((option) => option.id === active)?.label ?? active
+      this.#surfaceCatalogMirror.toggleAttribute('data-disabled', !a2uiOn)
     }
     const genuiOn = isGenuiSurfaceEnabled(store?.get(SURFACE_GENUI_KEY))
     if (this.#surfaceGenuiSwitch) this.#surfaceGenuiSwitch.checked = genuiOn
@@ -1330,13 +1433,22 @@ export class UIAgentAdminElement extends UIElement {
       ),
     )
     for (const { kind, label } of CAPABILITY_KINDS) {
+      // ADR-0170 cl.5 — the catalog kind has no master switch: its `enabled` cell is the SAME
+      // `SURFACE_A2UI_KEY` read that dims its section (an unwritten `kindEnabledKey('catalog')` would read
+      // as a phantom always-ON master here). Its entries come from the PROJECTION, so this introspection
+      // view shows exactly what the section shows — the ensured Default row and the one derived selection.
+      const isCatalog = kind === ENTRY_KINDS.catalog
       items.push(
         contextItem(
           kind,
           label,
           {
-            enabled: isEnabledFlag(store?.get(kindEnabledKey(kind))),
-            entries: readEntries(store, kind).map((e) => ({ label: e.label, enabled: e.enabled, description: e.description })),
+            enabled: isCatalog ? isEnabledFlag(store?.get(SURFACE_A2UI_KEY)) : isEnabledFlag(store?.get(kindEnabledKey(kind))),
+            entries: (isCatalog ? readCatalogEntries(store) : readEntries(store, kind)).map((e) => ({
+              label: e.label,
+              enabled: e.enabled,
+              description: e.description,
+            })),
           },
           openStates.get(kind) ?? false,
         ),

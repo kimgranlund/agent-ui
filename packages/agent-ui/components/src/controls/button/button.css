@@ -127,13 +127,31 @@
      max-content, so fit-content alone would size the item to the label's FULL width even past the track,
      never overflowing itself and defeating the clip. Clamped to 100%, an overflowing label's box is capped
      at exactly the track's width — byte-identical to the old `stretch` box — so `overflow: hidden` +
-     `text-overflow: ellipsis` fire exactly as before, still anchored at the end. */
+     `text-overflow: ellipsis` fire exactly as before, still anchored at the end. `justify-self: center`
+     here is the BASE (bare + double-adorned structures, rows 5/6/7) — the single-adornment structures
+     override to `end`/`start` below (ADR-0171, GH #442, amended GH #450). */
   :scope > [data-part='label'] {
     overflow: hidden;
     text-overflow: ellipsis;
     min-inline-size: 0;
     max-inline-size: 100%;
     justify-self: center;
+  }
+
+  /* Alignment law (ADR-0171, GH #442, amended GH #450) — a SINGLE adornment and its label pin to
+     OPPOSITE edges of the inner row (spread), not a start-aligned cluster; center remains the base
+     for bare and double-adorned. Selectors reused verbatim from the auto 1fr / 1fr auto template
+     rules below, so alignment can never disagree with the structure that placed the track.
+     fit-content sizing + the max-inline-size clamp (GH #293) hold under `start`/`end` exactly as
+     under `center` — any non-stretch justify-self shrink-wraps the item. At CONTENT (hug) width the
+     `1fr` track resolves to the label's fit-content width, so start/end/center are
+     pixel-indistinguishable and the adornment⟷label separation is exactly `--ui-button-gap` — the
+     spread only manifests once the button's inline-size exceeds its content (ADR-0171 Amendment §A1). */
+  :scope:has(> [slot='leading']):not(:has(> [slot='trailing'])):not([icon-only]) > [data-part='label'] {
+    justify-self: end; /* spread: icon at start edge, label at end edge (ADR-0171 Amendment, GH #450) */
+  }
+  :scope:has(> [slot='trailing']):not(:has(> [slot='leading'])):not([icon-only]) > [data-part='label'] {
+    justify-self: start; /* spread, mirrored: label at start edge, adornment at end (unchanged bytes) */
   }
 
   /* Anatomy (ADR-0006, extended by ADR-0012): host-as-grid with three POSITION regions — an OPTIONAL leading

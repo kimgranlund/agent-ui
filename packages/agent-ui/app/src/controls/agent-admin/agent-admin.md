@@ -53,7 +53,9 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
   - name: kind-enabled
     description: One capability kind's MASTER switch (vision rev.5), riding its kind fold's heading row (GH #225). OFF gates the WHOLE kind out of the composed live prompt, the stub's roster, and the surface arm's integrations — winning over per-entry toggles — and dims the section (`data-kind-disabled` on the section host; the switch itself sits outside the dimmed section, full-strength by construction). Backed by `${kind}sEnabled` store keys — the `tool` kind resolves to the PRE-EXISTING `toolsEnabled` key (the old Agent-card boolean field, retired from the schema in the same change; persisted values carry over).
   - name: entry-section
-    description: One kind's whole section — `<div data-part="entry-section" data-kind="...">` — the ONE shape all six instantiations share (ADR-0132 `n1`; genui-surface B2 added `pattern-source`). HEADLESS since GH #225 (its fold's summary labels it) — carries the entry list and the add-form.
+    description: One kind's whole section — `<div data-part="entry-section" data-kind="...">` — the ONE shape all seven instantiations share (ADR-0132 `n1`; genui-surface B2 added `pattern-source`, ADR-0170 added `catalog`). HEADLESS since GH #225 (its fold's summary labels it) — carries the entry list and (unless suppressed) the add-form. `[data-kind-disabled]` when the kind is gated off — by its own master switch, or for the `catalog` kind by the A2UI surface toggle (ADR-0170 cl.5).
+  - name: entry-section (kind="catalog")
+    description: The Catalogs LIBRARY section (ADR-0170) — the same primitive with three row exceptions, no new list/toggle/author code. (1) SINGLE-select, derived - every switch's checked state is `entry.id === sanitizeCatalog(store.get('a2uiCatalog'))`, so exactly one row is ON by construction and the stored per-entry `enabled` flags are never the selection truth (cl.2). Toggling a REGISTERED row ON writes the key; an UNREGISTERED row (a dedup-suffixed duplicate) is a VISIBLE no-op that snaps back; toggling the ACTIVE row OFF, or deleting it, writes the DEFAULT id - a persona always has a catalog (cl.3/cl.4). (2) NO master switch - the A2UI surface toggle is the gate, and the kind is excluded from the composed prompt (`catalogId` is wire, never prose - cl.5). (3) No authoring form and no per-entry editor (`customAdd`/`contentField` both false, cl.8) - rows are label + description + switch, and adds come from the "Registered catalogs" library pack alone, which maps LIVE from `A2UI_CATALOG_OPTIONS` (cl.7). The Default row is guaranteed at READ time (never a migration write), `builtin` and so undeletable.
   - name: model-grid
     description: The Model management card (2026-07-19 rev.2) — provider-grouped rows, one per roster model, each `[ model-row-label | model-include ui-switch | model-default ui-radio ]` — one logical radio system across the provider groups (rev.3). Checking a row writes `model`; a standalone-radio untoggle restores via re-render (a roster always has a default) and the default row's include switch locks on (`model`'s row is always offered). Re-rendered wholesale on `model`/`modelsIncluded` store changes.
   - name: entry-list
@@ -89,15 +91,15 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
   - name: entry-add-error
     description: The add-form's fail-closed validation message (ADR-0132 cl.4) — hidden until a rejected submission names why.
   - name: surface-options
-    description: The Surface Options card (vision rev.6 — the frame's node 34:1312), after the prompt sections — the agent's OUTPUT-MODALITY contract, three `surface-row`s (`data-surface="markdown|a2ui|genui"`), each `[ surface-label | surface-toggle (| surface-catalog) ]`.
+    description: The Surface Options card (vision rev.6 — the frame's node 34:1312), after the prompt sections — the agent's OUTPUT-MODALITY contract, three `surface-row`s (`data-surface="markdown|a2ui|genui"`), each `[ surface-label | surface-toggle (| trailing content) ]` — the a2ui row's trailing content is the read-only `surface-catalog` mirror (ADR-0170 cl.6), the genui row's is its dogfood sub-toggle.
   - name: surface-toggle
     description: One modality's `<ui-switch data-part="surface-toggle">`. Markdown ON (`surfaceMarkdown`, default) ⇒ agent notes/system bubbles render through `<ui-markdown>` via ui-conversation's SPEC-R12 content-render seam (store read FRESH per render — live-apply); OFF ⇒ plain text, the frame's own fallback. A2UI ON (`surfaceA2ui`, default) ⇒ an armed `agentSurfaceTurn` runs surface turns; OFF ⇒ even an armed runner is bypassed (the prose arm answers; surface action clicks no-op — no hidden turns). GenUI (`surfaceGenui`, genui-surface.spec.md SPEC-R10/R11, B2) defaults OFF — the INVERSE of the other two: an admin opts in per agent; ON ⇒ the system prompt gains the genui teaching block (+ the picked "Pattern sources" entry's body, if one is enabled) and a genui action click can drive the next turn.
   - name: surface-catalog
-    description: The A2UI catalog picker (`<ui-select data-part="surface-catalog">`, commit event `select`) — persisted to `a2uiCatalog`, sanitized fail-closed to the default id, disabled while the A2UI modality is off. ONE option today (the id the producer's own produce.ts pins, so picker and producer agree by construction); the create/pick-from-library affordances land with a second catalog or the GenUI pack library. The sanitized selection rides every surface request as `catalogId`.
+    description: The a2ui row's READ-ONLY catalog mirror (`<span data-part="surface-catalog">`) — the ACTIVE catalog's label, re-derived from the one persisted selection (`a2uiCatalog`, read fail-closed to the default id) whenever master states re-apply; `[data-disabled]` while the A2UI modality is off. It commits NOTHING (ADR-0170 cl.6 retired the `<ui-select>` picker that lived here: the Catalogs section is the one writer of that key, and two write paths into one key is the second-writer defect that record closes). The sanitized selection still rides every surface request as `catalogId`, byte-unchanged.
   - name: context-system
     description: The Context: System render slot, a DIRECT child of its segment container (GH #222 dropped the old outer "Agent System" wrapper card — the segment strip already labels the context) — rebuilt wholesale on ANY store write (the compiled view reads nearly every key; writes are commit-time, never per-keystroke). Carries one context-item per subject.
   - name: context-item
-    description: One Context: System section — `<ui-disclosure data-part="context-item" data-item="agent|skill|workflow|resource|tool|pattern-source">` rendered as the shared fold pattern (GH #222; the Settings tab's own settings-item folds joined it in GH #225): a CHROME-FREE fold host whose summary reads as a plain section heading (the shared heading register, chevron kept on the heading row) over exactly ONE card of content (the context-json body) — never a card-in-card. The `agent` item (open by default) carries the COMPILED config — name/model/temperature/effort/active + the EXACT `composeLiveSystemPrompt` output a turn would send; each kind item (closed by default — the frame's caret-right rows) carries `{ enabled, entries: [{label, enabled, description}] }`. Open/closed state survives rebuilds (`data-item`-keyed capture).
+    description: One Context: System section — `<ui-disclosure data-part="context-item" data-item="agent|skill|workflow|resource|tool|pattern-source|catalog">` rendered as the shared fold pattern (GH #222; the Settings tab's own settings-item folds joined it in GH #225): a CHROME-FREE fold host whose summary reads as a plain section heading (the shared heading register, chevron kept on the heading row) over exactly ONE card of content (the context-json body) — never a card-in-card. The `agent` item (open by default) carries the COMPILED config — name/model/temperature/effort/active + the EXACT `composeLiveSystemPrompt` output a turn would send; each kind item (closed by default — the frame's caret-right rows) carries `{ enabled, entries: [{label, enabled, description}] }`. Open/closed state survives rebuilds (`data-item`-keyed capture).
   - name: context-turns
     description: The Context: Dialog render slot, a DIRECT child of its segment container (GH #222 — the old outer "Dialog Turns" wrapper card is gone) — the per-turn payload log, NEWEST FIRST with zero-padded descending numbers (the frame's 04→01), bounded at 20 (the oldest fall off; numbering stays monotonic). Session-ephemeral — never persisted.
   - name: context-turn
@@ -141,9 +143,10 @@ three-pane order): `[ chat canvas | {Settings ⇄ Context: System ⇄ Context: D
 tab carries the WHOLE config column — since GH #225 every section a heading-row FOLD (`settings-item`,
 all open by default): Agent (`ui-settings`, the ACTIVE master switch on the fold's heading row) + the
 Model grid + the prompt sections (the old prompts pane, merged in) + the Surface Options card (rev.6 —
-the output-modality contract: Markdown · A2UI + catalog picker · GenUI, live since genui-surface B2) + the
-five capability sections (Skills/Workflows/Resources/Tools/Pattern sources, each kind's master switch on
-ITS fold heading row). The Context tabs are the read-only
+the output-modality contract: Markdown · A2UI + a read-only catalog mirror · GenUI, live since
+genui-surface B2) + the six capability sections (Skills/Workflows/Resources/Tools/Pattern sources, each
+kind's master switch on ITS fold heading row, plus Catalogs — the one kind with no master switch, gated by
+the A2UI toggle instead, ADR-0170 cl.5). The Context tabs are the read-only
 introspection surface, split in two (GH #161, superseding the old single combined "Context" tab) and
 carrying the SAME fold pattern (GH #222 — heading-row chevrons + one JSON card each, no outer wrapper
 card): **Context: System** (the compiled agent-system JSON, incl. the `surface` block) and
@@ -152,7 +155,7 @@ card): **Context: System** (the compiled agent-system JSON, incl. the `surface` 
 sub-tab-set (TKT-0085's mechanism, two bands instead of three; every tab is one content unit moved
 whole between its wide tab-panel and its narrow tab-panel, Context included).
 
-## One primitive, six instantiations (ADR-0132; genui-surface SPEC-R11 added pattern-source)
+## One primitive, seven instantiations (ADR-0132; genui-surface SPEC-R11 added pattern-source, ADR-0170 added catalog)
 
 The prompts pane and four of the settings pane's sections are the SAME shape — a named, ordered,
 toggleable entry in a typed list, with a shared custom-entry authoring form:
@@ -166,9 +169,14 @@ toggleable entry in a typed list, with a shared custom-entry authoring form:
 - **Settings pane** — the unchanged "Agent" config (name/model/temperature/toolsEnabled, via the composed
   `ui-settings`) PLUS four capability kinds — Skills, Workflows, Resources, Tools — each an unseeded,
   purely custom-authorable instance of the same primitive.
+- **Catalogs** (ADR-0170) — `kind: "catalog"`, the family's first SINGLE-select kind, and the first whose
+  selection truth lives OUTSIDE the entries store: the roster records which registered catalogs are on
+  this persona's shelf, while `a2uiCatalog` records the one selection every switch DERIVES from. See the
+  `entry-section (kind="catalog")` part above for the three row exceptions it carries.
 
 No kind gets its own bespoke list/toggle/author code — a future kind is a seed-data change, not a code
-change (ADR-0132 Fork 2).
+change (ADR-0132 Fork 2). The one per-kind knob is presentational: `EntryListOptions`'
+`customAdd`/`contentField` (ADR-0170 cl.8), both default-true, so every other kind renders unchanged.
 
 ## One shared store, five slices
 

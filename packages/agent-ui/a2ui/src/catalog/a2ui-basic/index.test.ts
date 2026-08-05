@@ -157,16 +157,29 @@ describe('a2ui-basic — the exclusion-gate coverage (E1/E5/E6), each a CATALOG 
     expect(validateA2ui(icon, a2uiBasicCatalog)).toEqual({ valid: true, failures: [] })
   })
 
-  // (E7) `Button.action:{functionCall:{...}}` is DELIBERATELY NOT asserted here as a `valid:false` case
-  // — a fix-413 reconciliation finding, not an oversight. `conformance.ts`'s `matchesSchemaType` checks
-  // only a PropDef's top-level `type` keyword (here `'object'`); it never descends into a nested
-  // `properties`/`required` (the `action` PropDef's `required: ['event']`) — by design, fleet-wide: every
-  // Action-typed prop is deliberately loosely typed at the STATIC validator so ADR-0011's Postel
-  // tolerance arms (the `name` synonym, the bare-string arm) can pass through un-narrowed, with the
-  // actual shape read (and normalized) at RENDER time by `readActionSpec` (renderer.ts), never here.
-  // Empirically: `validateA2ui` returns `{valid:true, failures:[]}` for a `{functionCall:{...}}` Button
-  // action against `a2uiBasicCatalog` today — `readActionSpec` has no `functionCall` arm, so the button
-  // mounts but a real click silently fires no action (never a validator-time rejection, unlike E1/E5/E6's
-  // genuine enum/type closures). Filed back to the reconciliation report rather than asserted as fact
-  // here, since asserting `valid:false` would be a false test against the shipped mechanics.
+  // (E7) `Button.action:{functionCall:{...}}` — GH #429: gate-encoded at conformance via the narrow
+  // `PropDef.rejectFunctionCall` extension (declared only on `a2ui-basic/catalog.json`'s `Button.action`,
+  // conformance.ts's `matchesType`). Unlike E1/E5/E6's type/enum closures this is NOT a general
+  // `matchesSchemaType` descent into nested `properties`/`required` — that stays deliberately shallow,
+  // fleet-wide, so ADR-0011's Postel tolerance arms (the `name` synonym, the bare-string arm, the cl.10
+  // `{event}` arm) keep passing un-narrowed. It is one named key, checked only when the declaring PropDef
+  // opts in — so it is CATALOG-scoped, not catalog-wide.
+  it('(E7) Button.action:{functionCall:{...}} — the upstream client-side-execution Action arm — rejects loudly, not silently-dead', () => {
+    const msgs = surface([{ id: 'root', component: 'Button', action: { functionCall: { name: 'openUrl', args: {} } } }])
+    expect(validateA2ui(msgs, a2uiBasicCatalog)).toEqual({ valid: false, failures: [{ code: 'CATALOG', path: 'root.action' }] })
+  })
+
+  it('(E7 negative control) the SAME {functionCall} shape still VALIDATES on the default catalog — its Postel tolerance stays byte-identical (no `rejectFunctionCall` declared on `agent-ui`\'s Button.action)', () => {
+    const msgs: A2uiServerMessage[] = [
+      { version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'agent-ui' } },
+      {
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 's1',
+          components: [{ id: 'root', component: 'Button', action: { functionCall: { name: 'openUrl', args: {} } } }],
+        },
+      },
+    ] as A2uiServerMessage[]
+    expect(validateA2ui(msgs, defaultCatalog)).toEqual({ valid: true, failures: [] })
+  })
 })

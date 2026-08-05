@@ -84,6 +84,28 @@ The four are **position** structures — orthogonal to role, so each cell may ho
 sizes. A trailing **content icon** (`slot="trailing" data-role="icon"`) is a supported role, distinct from the
 caret affordance (ADR-0012).
 
+### 3a · Label alignment is per-structure (ADR-0171)
+
+Kim's 2026-08-05 ruling (GH #442): the label **CENTERS** only when bare or double-adorned; a **SINGLE**
+adornment — leading *or* trailing — **start-aligns** the label so adornment + label read as one cluster.
+Alignment follows adornment **count, not side** (`0171-button-label-alignment-single-adornment-start.md:50-66`).
+The per-structure table is the ADR's Context table and `button.md` §"Slots & roles" — cite, don't copy.
+
+- **Mechanism**: the base rule keeps `justify-self: center`; ONE additive `justify-self: start` override
+  is keyed to the SAME presence-driven `:has()` selectors as the `auto 1fr` / `1fr auto` grid templates
+  above, reused verbatim — so alignment can never disagree with the structure that placed the track
+  (`button.css:146-149`). No alignment prop; presence-derived, never author-opted.
+- **Ellipsis survives by construction** (the GH #293 proof): any non-`stretch` `justify-self` shrink-wraps
+  the item, and the `max-inline-size: 100%` clamp + `overflow: hidden; text-overflow: ellipsis` are
+  untouched — the ellipsis stays end-anchored under `start` exactly as under `center`. `text-align` stays
+  banned (ADR-0171 cl.2, `:68-75`; probes must include a single-adorned overflow leg).
+- **`icon-only` names the STRUCTURE, not the role** inside it — "adornment-only / no label". A caret-only
+  button is legal TODAY: `<ui-button icon-only aria-label="…">` + a `data-role="caret"` child; the cell
+  stays icon-sized, the role sizes the glyph (ADR-0171 cl.3, `:77-85`).
+- **`| icon | caret |` with no label is REJECTED** as a structure — zero consumers, semantically a
+  different control, real geometry cost. Revisit trigger: the FIRST real consumer files an issue; the
+  additive seam is named in ADR-0171 cl.4 (`:87-97`).
+
 ## 4 · Position places, role sizes (the split)
 
 The two axes map onto the sizing law's **frame/rhythm split** (`geometry-sizing-spec.md` §1.4) — placement is
@@ -135,6 +157,9 @@ alternatives, and open questions:
 - [**ADR-0012**](../adr/0012-button-anatomy-trailing-adornment-slot.md) — position slots × `data-role` roles as
   the **family** adornment standard: `leading`/`label`/`trailing`; `icon`/`caret` active + `tag`/`badge` reserved;
   position-for-placement / role-for-sizing; the disclosure boundary deferred to G7 on the host.
+- [**ADR-0171**](../adr/0171-button-label-alignment-single-adornment-start.md) — the per-structure label-alignment
+  law (§3a): single adornment → `start`, bare/double → `center`; amends ADR-0006/0012/0133, grid geometry
+  byte-untouched.
 
 Sizing law this doc must not perturb: [`geometry-sizing-spec.md`](./geometry-sizing-spec.md) (the authority),
 distilled in [`geometry.md`](./geometry.md). State styling of the same controls: [`interaction-states.md`](./interaction-states.md).

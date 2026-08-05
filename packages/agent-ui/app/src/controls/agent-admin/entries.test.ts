@@ -5,6 +5,9 @@
 // composed prompt (the live path degrades exactly to the stub's own prompt, never a trailing empty header).
 // It also gates `validateNewEntry`'s LLD-C7 widening (an OPTIONAL explicit `id` on `NewEntryInput`), whose
 // load-bearing property is symmetrical: a caller that supplies no id slugs from the label exactly as before.
+// ADR-0170 adds the catalog kind's whole invariant (`readCatalogEntries`/`isRegisteredCatalog`): the Default
+// row guaranteed at READ time (no migration write) and EXACTLY ONE row enabled, derived from
+// `A2UI_CATALOG_KEY` alone — never from the stored per-entry flags.
 
 import { describe, it, expect } from 'vitest'
 import {
@@ -12,6 +15,8 @@ import {
   composeSystemPrompt,
   composeLiveSystemPrompt,
   pickedPatternSource,
+  readCatalogEntries,
+  isRegisteredCatalog,
   initialEntryValues,
   entriesStoreKey,
   validateNewEntry,
@@ -19,6 +24,7 @@ import {
   type LiveCapabilityGroup,
   type NewEntryInput,
 } from './entries.ts'
+import { A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID } from './agent-admin-schema.ts'
 
 function entry(over: Partial<Entry> & Pick<Entry, 'id'>): Entry {
   return {
@@ -144,6 +150,129 @@ describe('pickedPatternSource — the D3 single-pick projection (genui-surface S
       entry({ id: 'alpha', kind: ENTRY_KINDS.patternSource, label: 'Alpha', enabled: true, order: 0 }),
     ]
     expect(pickedPatternSource(entries)?.id).toBe('alpha')
+  })
+})
+
+// ── ADR-0170 cl.2/cl.4 — readCatalogEntries, the catalog roster projection ─────────────────────────────
+// The kind's whole invariant lives in this ONE pure function: the Default row is guaranteed at read time
+// (never a migration write) and EXACTLY ONE row derives to enabled — from `A2UI_CATALOG_KEY` alone, never
+// from the stored per-entry flags. Every "the section can't lie about what the runner threads" claim in
+// the ADR reduces to the legs below.
+
+describe('readCatalogEntries — the roster projection (ADR-0170 cl.2/cl.4)', () => {
+  const SECOND = A2UI_CATALOG_OPTIONS.find((o) => o.id !== DEFAULT_A2UI_CATALOG_ID)!
+
+  /** A minimal read-only store stand-in — the `{get}` shape `readEntries` itself takes. */
+  function storeOf(values: Record<string, unknown>): { get(key: string): unknown } {
+    return { get: (key) => values[key] }
+  }
+
+  function catalogEntry(over: Partial<Entry> & Pick<Entry, 'id'>): Entry {
+    return entry({ kind: ENTRY_KINDS.catalog, ...over })
+  }
+
+  it('an EMPTY store still yields the Default row — builtin, first, enabled (the fresh-store leg)', () => {
+    const rows = readCatalogEntries(undefined)
+    expect(rows).toHaveLength(1)
+    expect(rows[0]!.id).toBe(DEFAULT_A2UI_CATALOG_ID)
+    expect(rows[0]!.builtin, 'toggleable, never deletable — ADR-0132 Fork 4').toBe(true)
+    expect(rows[0]!.enabled, 'sanitizeCatalog fail-closes an unset key to the default id').toBe(true)
+    expect(rows[0]!.label, 'the label is READ from the registry, never hardcoded').toBe(
+      A2UI_CATALOG_OPTIONS.find((o) => o.id === DEFAULT_A2UI_CATALOG_ID)!.label,
+    )
+  })
+
+  it('the ensure is READ-time only: nothing is written back to the store', () => {
+    const writes: string[] = []
+    const store = { get: (): unknown => undefined, set: (key: string): void => void writes.push(key) }
+    readCatalogEntries(store)
+    expect(writes, 'a pure projection — no migration write, ever').toEqual([])
+  })
+
+  it('a roster that ALREADY carries the default id keeps its own stored row (no duplicate, no re-mint)', () => {
+    const stored = catalogEntry({ id: DEFAULT_A2UI_CATALOG_ID, label: 'Renamed by the admin', order: 0, builtin: false })
+    const rows = readCatalogEntries(storeOf({ [entriesStoreKey(ENTRY_KINDS.catalog)]: [stored] }))
+    expect(rows).toHaveLength(1)
+    expect(rows[0]!.label).toBe('Renamed by the admin')
+    expect(rows[0]!.builtin, "the stored row's own flags survive — only `enabled` is overridden").toBe(false)
+  })
+
+  it('the Default row sorts FIRST against rows minted by validateNewEntry (order 0, 1, …)', () => {
+    const added = validateNewEntry([], ENTRY_KINDS.catalog, { id: SECOND.id, label: SECOND.label, description: '', content: '' })
+    expect(added.ok).toBe(true)
+    if (!added.ok) return
+    const rows = readCatalogEntries(storeOf({ [entriesStoreKey(ENTRY_KINDS.catalog)]: [added.entry] }))
+    const sorted = [...rows].sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
+    expect(sorted.map((r) => r.id)).toEqual([DEFAULT_A2UI_CATALOG_ID, SECOND.id])
+  })
+
+  it('EXACTLY ONE enabled: the persisted key alone decides, and FOREIGN stored flags are ignored wholesale', () => {
+    // Every stored flag is deliberately wrong: the default says enabled:false, the second says true.
+    const rows = readCatalogEntries(
+      storeOf({
+        [entriesStoreKey(ENTRY_KINDS.catalog)]: [
+          catalogEntry({ id: DEFAULT_A2UI_CATALOG_ID, order: 0, enabled: false }),
+          catalogEntry({ id: SECOND.id, order: 1, enabled: true }),
+        ],
+        [A2UI_CATALOG_KEY]: DEFAULT_A2UI_CATALOG_ID,
+      }),
+    )
+    expect(rows.filter((r) => r.enabled).map((r) => r.id)).toEqual([DEFAULT_A2UI_CATALOG_ID])
+  })
+
+  it('the selection follows the KEY: pointing it at the second catalog moves the one ON switch', () => {
+    const rows = readCatalogEntries(
+      storeOf({
+        [entriesStoreKey(ENTRY_KINDS.catalog)]: [catalogEntry({ id: SECOND.id, order: 0 })],
+        [A2UI_CATALOG_KEY]: SECOND.id,
+      }),
+    )
+    expect(rows.filter((r) => r.enabled).map((r) => r.id)).toEqual([SECOND.id])
+  })
+
+  it('a STALE/unknown stored key derives to the Default row (the fail-closed read, surfaced in the UI)', () => {
+    for (const bogus of ['a-catalog-that-was-removed', 42, null, { id: 'agent-ui' }]) {
+      const rows = readCatalogEntries(
+        storeOf({
+          [entriesStoreKey(ENTRY_KINDS.catalog)]: [catalogEntry({ id: SECOND.id, order: 0 })],
+          [A2UI_CATALOG_KEY]: bogus,
+        }),
+      )
+      expect(rows.filter((r) => r.enabled).map((r) => r.id), `stored key ${JSON.stringify(bogus)}`).toEqual([DEFAULT_A2UI_CATALOG_ID])
+    }
+  })
+
+  it('an UNREGISTERED row (a dedup-suffixed duplicate) can never derive to ON — exactly one is still enabled', () => {
+    const rows = readCatalogEntries(
+      storeOf({
+        [entriesStoreKey(ENTRY_KINDS.catalog)]: [
+          catalogEntry({ id: `${SECOND.id}-2`, order: 0, enabled: true }),
+          catalogEntry({ id: SECOND.id, order: 1 }),
+        ],
+        [A2UI_CATALOG_KEY]: SECOND.id,
+      }),
+    )
+    expect(rows.filter((r) => r.enabled).map((r) => r.id)).toEqual([SECOND.id])
+  })
+
+  it('a corrupt/foreign roster value degrades to the Default row alone (readEntries own defensive law)', () => {
+    for (const junk of ['not-an-array', 7, { entries: [] }]) {
+      const rows = readCatalogEntries(storeOf({ [entriesStoreKey(ENTRY_KINDS.catalog)]: junk }))
+      expect(rows.map((r) => r.id)).toEqual([DEFAULT_A2UI_CATALOG_ID])
+    }
+  })
+
+  it('seeds an empty catalog roster (initialEntryValues) — the Default row is a projection, never a seed', () => {
+    expect(initialEntryValues()[entriesStoreKey(ENTRY_KINDS.catalog)]).toEqual([])
+  })
+})
+
+describe('isRegisteredCatalog — the ONE membership expression (ADR-0170 cl.3)', () => {
+  it('true for every registered id, false for anything else', () => {
+    for (const option of A2UI_CATALOG_OPTIONS) expect(isRegisteredCatalog(option.id)).toBe(true)
+    expect(isRegisteredCatalog(`${DEFAULT_A2UI_CATALOG_ID}-2`), 'a dedup-suffixed duplicate is NOT registered').toBe(false)
+    expect(isRegisteredCatalog('')).toBe(false)
+    expect(isRegisteredCatalog('https://a2ui.org/catalogs/basic'), 'the canonical URI alias is never a picker id (ADR-0169 cl.13)').toBe(false)
   })
 })
 

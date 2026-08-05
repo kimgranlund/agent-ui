@@ -30,8 +30,8 @@ import type { UITextFieldElement } from '@agent-ui/components/controls/text-fiel
 // typo'd `name` would silently ship past a suite that only checks the cell's box. `iconRenders()` below
 // asserts a real `<path>` landed, not just a correctly-sized empty slot.
 import '@agent-ui/icons/phosphor'
-import { ENTRY_KINDS } from './entries.ts'
-import { kindEnabledKey } from './agent-admin-schema.ts'
+import { ENTRY_KINDS, entriesStoreKey } from './entries.ts'
+import { kindEnabledKey, A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID } from './agent-admin-schema.ts'
 
 const mounted: HTMLElement[] = []
 afterEach(() => {
@@ -315,7 +315,7 @@ describe('ui-agent-admin cross-engine smoke — chat + options-pane render side 
     expect(box.height).toBeGreaterThan(0)
   })
 
-  it('all SIX sections (Instructions + Skills/Workflows/Resources/Tools/Pattern sources) render in the Settings tab, each a real non-zero box', () => {
+  it('all SEVEN sections (Instructions + Skills/Workflows/Resources/Tools/Pattern sources/Catalogs) render in the Settings tab, each a real non-zero box', () => {
     const { el } = mountAgentAdmin()
     const settings = el.querySelector('[data-role="settings-content"]') as HTMLElement
     const sections = [...settings.querySelectorAll('[data-part="entry-section"]')]
@@ -326,12 +326,97 @@ describe('ui-agent-admin cross-engine smoke — chat + options-pane render side 
       ENTRY_KINDS.resource,
       ENTRY_KINDS.tool,
       ENTRY_KINDS.patternSource,
+      ENTRY_KINDS.catalog,
     ])
     for (const section of sections) {
       const box = section.getBoundingClientRect()
       expect(box.width).toBeGreaterThan(0)
       expect(box.height).toBeGreaterThan(0)
     }
+  })
+})
+
+// ── ADR-0170 (LLD-C7f) — the Catalogs section in a REAL engine ─────────────────────────────────────────
+// jsdom proves the write semantics; only a real engine proves the section is a legible, non-collapsed row
+// with a real switch, and that the mirror that replaced the `<ui-select>` actually PAINTS beside the A2UI
+// toggle (a zero-box or invisible mirror would pass every jsdom probe while showing the user nothing).
+
+describe('ui-agent-admin cross-engine smoke — the Catalogs library section (ADR-0170)', () => {
+  it('renders the ensured Default row as a real, non-zero row: a visible switch, a legible label, and NO content editor', () => {
+    const { el } = mountAgentAdmin()
+    const section = el.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.catalog}"]`) as HTMLElement
+    const rows = [...section.querySelectorAll('[data-part="entry"]')]
+    expect(rows).toHaveLength(1)
+
+    const row = rows[0] as HTMLElement
+    const rowBox = row.getBoundingClientRect()
+    expect(rowBox.width).toBeGreaterThan(0)
+    expect(rowBox.height).toBeGreaterThan(0)
+
+    const toggle = row.querySelector('[data-part="entry-toggle"]') as HTMLElement & { checked: boolean }
+    const toggleBox = toggle.getBoundingClientRect()
+    expect(toggleBox.width, 'a real painted switch, not a collapsed stub').toBeGreaterThan(0)
+    expect(toggleBox.height).toBeGreaterThan(0)
+    expect(toggle.checked, 'the default catalog is the selection on a fresh store').toBe(true)
+
+    const label = row.querySelector('[data-part="entry-label"]') as HTMLElement
+    expect(label.getBoundingClientRect().width).toBeGreaterThan(0)
+    expect(getComputedStyle(label).visibility).toBe('visible')
+
+    // ADR-0170 cl.8 — the suppressions, measured rather than assumed: no editor, no authoring form.
+    expect(row.querySelector('[data-part="entry-content"]')).toBeNull()
+    expect(section.querySelector('[data-part="entry-add-form"]')).toBeNull()
+    expect(section.querySelector('[data-part="entry-add-toggle"]')).toBeNull()
+  })
+
+  it('the a2ui row\'s catalog MIRROR paints as visible trailing text beside the toggle, and dims with the modality', async () => {
+    const { el } = mountAgentAdmin()
+    const a2uiRow = el.querySelector('[data-part="surface-row"][data-surface="a2ui"]') as HTMLElement
+    const mirror = a2uiRow.querySelector('[data-part="surface-catalog"]') as HTMLElement
+    const rowBox = a2uiRow.getBoundingClientRect()
+    const mirrorBox = mirror.getBoundingClientRect()
+
+    expect(mirror.textContent!.length, 'the active catalog label is really there').toBeGreaterThan(0)
+    expect(mirrorBox.width, 'real painted text, not a zero box').toBeGreaterThan(0)
+    expect(mirrorBox.height).toBeGreaterThan(0)
+    expect(getComputedStyle(mirror).visibility).toBe('visible')
+    // TRAILING: past the row's flexible spacer, inside the row's own box (the GH #138 row pattern).
+    const spacer = a2uiRow.querySelector('[data-part="surface-spacer"]') as HTMLElement
+    expect(mirrorBox.left).toBeGreaterThanOrEqual(spacer.getBoundingClientRect().left)
+    expect(Math.round(mirrorBox.right)).toBeLessThanOrEqual(Math.round(rowBox.right))
+
+    // …and the modality dim is a REAL computed opacity change, not just an attribute.
+    const before = Number(getComputedStyle(mirror).opacity)
+    const a2uiToggle = a2uiRow.querySelector('[data-part="surface-toggle"]') as HTMLElement & { checked: boolean }
+    a2uiToggle.checked = false
+    a2uiToggle.dispatchEvent(new Event('change'))
+    await el.updateComplete
+    expect(mirror.hasAttribute('data-disabled')).toBe(true)
+    expect(Number(getComputedStyle(mirror).opacity), 'dimmed in real paint').toBeLessThan(before)
+  })
+
+  it('flipping a catalog switch in a real engine moves the selection AND the mirror text together', async () => {
+    const { el } = mountAgentAdmin()
+    const second = A2UI_CATALOG_OPTIONS.find((o) => o.id !== DEFAULT_A2UI_CATALOG_ID)!
+    el.store!.set(entriesStoreKey(ENTRY_KINDS.catalog), [
+      { id: second.id, kind: ENTRY_KINDS.catalog, label: second.label, description: '', content: '', order: 0, enabled: false, builtin: false },
+    ])
+    await el.updateComplete
+
+    const section = el.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.catalog}"]`) as HTMLElement
+    const toggleFor = (id: string): HTMLElement & { checked: boolean } =>
+      section.querySelector(`[data-part="entry"][data-entry-id="${id}"] [data-part="entry-toggle"]`) as HTMLElement & { checked: boolean }
+    const mirror = el.querySelector('[data-part="surface-catalog"]') as HTMLElement
+
+    expect(toggleFor(DEFAULT_A2UI_CATALOG_ID).checked).toBe(true)
+    toggleFor(second.id).checked = true
+    toggleFor(second.id).dispatchEvent(new Event('change'))
+    await el.updateComplete
+
+    expect(el.store!.get(A2UI_CATALOG_KEY)).toBe(second.id)
+    expect(toggleFor(second.id).checked, 'the picked row').toBe(true)
+    expect(toggleFor(DEFAULT_A2UI_CATALOG_ID).checked, 'and the sibling switched itself off — radio semantics in real paint').toBe(false)
+    expect(mirror.textContent).toBe(second.label)
   })
 })
 
@@ -942,7 +1027,7 @@ describe('ui-agent-admin — GH #225: the Settings sections fold like the Contex
     const items = [...settings.querySelectorAll(':scope > [data-part="settings-item"]')] as (HTMLElement & { open: boolean })[]
     expect(items.map((i) => i.getAttribute('data-item'))).toEqual([
       'agent', 'model', ENTRY_KINDS.promptSection, 'surface',
-      ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource,
+      ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource, ENTRY_KINDS.catalog,
     ])
     for (const item of items) {
       expect(item.open, `${item.getAttribute('data-item')} defaults open (config is an editing surface)`).toBe(true)

@@ -7,7 +7,8 @@ description: >-
   upstream dialect (foreign commit/action shapes) without forking the renderer, per-catalog
   function implementations, or threading catalogId end-to-end (picker → proxy/worker →
   producer → authority stamp). NOT for composing payloads against a catalog (a2ui-compose);
-  NOT for the ui-* fleet map — which control does which job (agent-ui-catalog).
+  NOT for the ui-* fleet map (agent-ui-catalog); NOT for agent-admin's Catalogs shelf/section
+  or entry kinds (agent-admin-library-kinds).
 user-invocable: false
 disable-model-invocation: false
 ---
