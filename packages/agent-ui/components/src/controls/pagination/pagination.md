@@ -53,6 +53,7 @@ aria:
 
 keyboard:
   - note: "Every stop is a real, independently-focusable ui-button in the NORMAL tab order — no roving tabindex, no composite-widget keyboard contract (this control is N independent buttons, not one widget with N states; the ADR-0163 cl.3 'no role=grid, no roving focus' posture, though ui-pagination itself is not a table). Each button's own Space/Enter activation (ui-button's pressActivation trait) is the whole keyboard story."
+  - note: "A commit rebuilds every stop (a full replaceChildren) and restores focus to the NEW active-page button when the commit originated from a focused stop inside this host — a documented IMPRECISION, not a bug: the restore target is always the active page, never necessarily the exact stop that was focused (e.g. clicking 'Next' restores focus to the new active-page NUMBER button, not back onto 'Next' itself). Reasonable for the common case; a user repeatedly hitting 'Next' must re-locate it each time."
 
 geometry:
   sizeClass: pattern

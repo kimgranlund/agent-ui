@@ -92,6 +92,11 @@ attributes:            # attributes-as-API — mirrors table.ts `static props`, 
     reflect: false
     # Bindable; commits via `change` — forwarded from the internal `ui-pagination`'s own `change` event
     # (never fired by a programmatic write). `pageCount` derives from the MATCHING SET's count (cl.7).
+    # RESIDUAL: `page` itself is never clamped by the table when the matching set shrinks below it (e.g. a
+    # narrowing `filter`/`search` drops `pageCount` under the current `page`) — the RENDERED window clamps
+    # (an out-of-range `page` windows the LAST valid page), but the `page` prop keeps its stale, now-out-
+    # of-range value until the consumer or a real pagination click corrects it. A future wave could clamp
+    # `page` itself on a matching-set shrink; not built here.
 
 properties: []         # no manual accessors beyond the eleven typed props
 

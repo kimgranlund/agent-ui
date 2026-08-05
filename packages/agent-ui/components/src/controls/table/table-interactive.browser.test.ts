@@ -68,6 +68,43 @@ describe('ui-table — sort click cycles aria-sort + reorders rows (SPEC-R1, ADR
     expect(table.getAttribute('role'), 'the correctness crux — role=grid REJECTED').toBeNull()
     expect(table.querySelector('table')?.tagName.toLowerCase()).toBe('table')
   })
+
+  it('component-checker regression: a sort commit NEVER rebuilds <thead> — the header <tr> AND the just-activated button keep their node identity, and FOCUS survives', async () => {
+    const table = mount(
+      `<ui-table label="Revenue" columns='${SORTABLE_COLUMNS}' rows='${THREE_ROWS}'></ui-table>`,
+    ) as UITableElement
+    const headerRowBefore = table.querySelector('thead tr') as HTMLElement
+    const sortButtons = [...table.querySelectorAll('thead button[data-part="sort-button"]')] as HTMLElement[]
+    const revenueButtonBefore = sortButtons[1]
+
+    // KEYBOARD activation (Tab-focus + Space), not a mouse click: a real `<button>`'s native keyboard
+    // activation never blurs the element it fires on, in EITHER engine — the platform-neutral way to prove
+    // "focus survives the commit". (A mouse click is NOT a safe proxy here: real Safari/WebKit does not
+    // move focus to a plain `<button>` on click at all — a WebKit/Chromium DIVERGENCE in the click→focus
+    // step itself, not in anything this control does — so a click-driven version of this probe would be
+    // testing the wrong thing on WebKit. Space/Enter activation on an ALREADY-focused button sidesteps that
+    // divergence entirely and is the more realistic proof anyway: the ADR's own concern is a KEYBOARD user
+    // tabbing to the sort button, not a mouse user.)
+    revenueButtonBefore.focus()
+    expect(document.activeElement, 'anti-vacuous: the button must accept real focus before activation').toBe(revenueButtonBefore)
+
+    await userEvent.keyboard(' ')
+    await settle()
+
+    expect(table.querySelector('thead tr'), 'HEADER-BUILD must NOT have a live dependency on `sort` — the <tr> node identity must survive a sort commit').toBe(headerRowBefore)
+    const revenueButtonAfter = [...table.querySelectorAll('thead button[data-part="sort-button"]')][1]
+    expect(revenueButtonAfter, 'the sort <button> node identity must survive a sort commit').toBe(revenueButtonBefore)
+    expect(document.activeElement, 'focus must survive a sort commit — the button was never destroyed/rebuilt').toBe(revenueButtonBefore)
+    expect(table.querySelector('[aria-sort]')?.getAttribute('aria-sort')).toBe('ascending')
+
+    // A SECOND commit (still the same, still-focused button) — proves this holds across more than one sort
+    // cycle, not just the first.
+    await userEvent.keyboard(' ')
+    await settle()
+    expect(table.querySelector('thead tr')).toBe(headerRowBefore)
+    expect(document.activeElement).toBe(revenueButtonBefore)
+    expect(table.querySelector('[aria-sort]')?.getAttribute('aria-sort')).toBe('descending')
+  })
 })
 
 describe('ui-table — selection commit via KEYBOARD, select-all over the MATCHING SET (SPEC-R1, cl.4/cl.7)', () => {
@@ -116,6 +153,69 @@ describe('ui-table — selection commit via KEYBOARD, select-all over the MATCHI
     expect(selectAll.indeterminate).toBe(false)
     expect(new Set(table.selected)).toEqual(new Set(['EMEA', 'APAC']))
   })
+
+  it("a REAL click-COMMIT on select-all, under an active filter, checks exactly the MATCHING SET and leaves an out-of-view selected row untouched (the ADR's own Acceptance-section scenario)", async () => {
+    const columns = JSON.stringify([{ key: 'region', label: 'Region' }])
+    const rows = JSON.stringify([{ region: 'EMEA' }, { region: 'APAC' }, { region: 'AMER' }])
+    const table = mount(
+      `<ui-table label="Regions" selectable="multi" row-key="region" columns='${columns}' rows='${rows}'></ui-table>`,
+    ) as UITableElement
+    // AMER is selected up front and then immediately filtered OUT OF VIEW — held selected, invisible.
+    table.selected = ['AMER']
+    table.filter = [{ key: 'region', values: ['EMEA', 'APAC'] }]
+    await settle()
+    expect(table.querySelectorAll('tbody tr')).toHaveLength(2) // AMER is not rendered
+    const selectAll = table.querySelector('[data-part="select-all"]') as HTMLInputElement
+    expect(selectAll.indeterminate, 'AMER is selected but not in the matching set — 0 of 2 matching ⇒ not indeterminate').toBe(false)
+    expect(selectAll.checked).toBe(false)
+
+    let selectFired = 0
+    table.addEventListener('select', () => (selectFired += 1))
+    await userEvent.click(selectAll) // the real commit under test — a genuine pointer click, not a prop write
+    await settle()
+
+    expect(selectFired, 'a real select-all commit fires `select`').toBe(1)
+    expect(new Set(table.selected), 'the matching set unions in, AMER (out of view) is preserved').toEqual(new Set(['AMER', 'EMEA', 'APAC']))
+    for (const input of [...table.querySelectorAll('tbody input[type="checkbox"]')] as HTMLInputElement[]) {
+      expect(input.checked, `${input.closest('tr')?.textContent} should be checked`).toBe(true)
+    }
+
+    // Un-commit: click select-all again — only the MATCHING set (EMEA/APAC) unchecks; AMER stays selected.
+    await userEvent.click(selectAll)
+    await settle()
+    expect(table.selected).toEqual(['AMER'])
+
+    // Clear the filter — AMER reappears, still checked, proving it was never touched by either commit.
+    table.filter = []
+    await settle()
+    const amerCheckbox = [...table.querySelectorAll('tbody input[type="checkbox"]')].find(
+      (i) => i.closest('tr')?.textContent === 'AMER',
+    ) as HTMLInputElement
+    expect(amerCheckbox.checked).toBe(true)
+  })
+
+  it("component-checker regression: a selection toggle's native <input> change never reaches a table-level `change` listener (the sort/page commit channel stays exclusive)", async () => {
+    const columns = JSON.stringify([{ key: 'region', label: 'Region' }])
+    const rows = JSON.stringify([{ region: 'EMEA' }])
+    const table = mount(
+      `<ui-table label="Regions" selectable="multi" row-key="region" columns='${columns}' rows='${rows}'></ui-table>`,
+    ) as UITableElement
+    let changeFired = 0
+    let selectFired = 0
+    table.addEventListener('change', () => (changeFired += 1))
+    table.addEventListener('select', () => (selectFired += 1))
+    const checkbox = table.querySelector('tbody input[type="checkbox"]') as HTMLInputElement
+    await userEvent.click(checkbox)
+    await settle()
+    expect(selectFired, 'the selection commit event fires').toBe(1)
+    expect(changeFired, 'a selection toggle must NEVER double-fire the sort/page commit channel').toBe(0)
+
+    // The header select-all checkbox — same law.
+    const selectAll = table.querySelector('[data-part="select-all"]') as HTMLInputElement
+    await userEvent.click(selectAll)
+    await settle()
+    expect(changeFired, 'select-all must ALSO never fire `change`').toBe(0)
+  })
 })
 
 describe('ui-table — filter → search → sort → page interplay; selection survives a filter change (SPEC-R1, cl.7)', () => {
@@ -145,7 +245,7 @@ describe('ui-table — filter → search → sort → page interplay; selection 
     expect((emeaRow?.querySelector('input') as HTMLInputElement).checked).toBe(true)
   })
 
-  it('page-size windows the sorted, filtered, searched set — the full pipeline order', async () => {
+  it('page-size windows the sorted, filtered, SEARCHED set — the full pipeline order, in a real engine', async () => {
     const columns = JSON.stringify([{ key: 'n', label: 'N', type: 'number', sortable: true }])
     const rows = JSON.stringify(Array.from({ length: 25 }, (_, i) => ({ n: i + 1 })))
     const table = mount(
@@ -164,6 +264,20 @@ describe('ui-table — filter → search → sort → page interplay; selection 
     await settle()
     const firstCellAfterSort = table.querySelector('tbody tr td')?.textContent
     expect(firstCellAfterSort).toBe('25') // descending ⇒ page 1 shows the highest values first
+
+    // SEARCH, in a real engine (the ADR Acceptance section names this explicitly — previously only jsdom/
+    // unit covered it). The table has no in-table query UI (cl.2) — a bound `search` prop write IS the
+    // real-consumer mechanism (a composed ui-text-field would drive the SAME prop). Narrows the already-
+    // sorted, already-paginated set: only "25" itself renders "25" as a substring.
+    table.search = '25'
+    await settle()
+    expect(table.querySelectorAll('tbody tr')).toHaveLength(1)
+    expect(table.querySelector('tbody tr td')?.textContent).toBe('25')
+    expect(pagination.getAttribute('pages')).toBe('1') // pageCount re-derives from the narrowed matching set
+
+    table.search = ''
+    await settle()
+    expect(table.querySelectorAll('tbody tr')).toHaveLength(10) // the full sorted/paginated set returns
   })
 })
 

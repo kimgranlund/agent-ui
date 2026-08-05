@@ -6,7 +6,11 @@ import {
   formatNumber,
   tableColumnsProp,
   tableRowsProp,
+  computeRowIdentities,
+  makeRowComparator,
+  computeTableView,
   type TableColumn,
+  type TableRow,
 } from './table-model.ts'
 
 // table-model.test.ts — the pure-math unit probes (LLD-C1, report-family.lld.md §2/§8/§9; ADR-0163). DOM-
@@ -239,5 +243,103 @@ describe('tableColumnsProp / tableRowsProp — the safe attribute codec (SPEC-R1
   it('default is [] for both', () => {
     expect(tableColumnsProp.default).toEqual([])
     expect(tableRowsProp.default).toEqual([])
+  })
+})
+
+describe('computeRowIdentities — selection identity (ADR-0163 cl.4)', () => {
+  it('rowKey non-empty and present on the row → the String-coerced cell value', () => {
+    const rows: TableRow[] = [{ region: 'EMEA' }, { region: 'APAC' }]
+    expect(computeRowIdentities(rows, 'region')).toEqual([
+      { row: rows[0], id: 'EMEA' },
+      { row: rows[1], id: 'APAC' },
+    ])
+  })
+
+  it('rowKey empty, OR present but missing on a given row → the namespaced data-order-index fallback', () => {
+    const rows: TableRow[] = [{ region: 'EMEA' }, { other: 'x' }]
+    expect(computeRowIdentities(rows, '').map((ir) => ir.id)).toEqual(['#0', '#1'])
+    expect(computeRowIdentities(rows, 'region').map((ir) => ir.id)).toEqual(['EMEA', '#1']) // row 1 lacks `region`
+  })
+
+  it('the "#"-namespaced fallback never collides with an explicitly-keyed row sharing the bare digits (component-checker finding)', () => {
+    // A keyed row whose row-key value is the LITERAL string "1" vs. an unkeyed row that would have landed
+    // at bare index "1" — both must resolve to DISTINCT ids.
+    const rows: TableRow[] = [{ id: '0' }, { id: '1' }, { other: 'unkeyed' }]
+    const ids = computeRowIdentities(rows, 'id').map((ir) => ir.id)
+    expect(ids).toEqual(['0', '1', '#2'])
+    expect(new Set(ids).size).toBe(3) // anti-vacuous: all three genuinely distinct
+  })
+
+  it('numeric/other primitive row-key values are String-coerced', () => {
+    const rows: TableRow[] = [{ n: 42 }, { n: true }]
+    expect(computeRowIdentities(rows, 'n').map((ir) => ir.id)).toEqual(['42', 'true'])
+  })
+})
+
+describe('makeRowComparator — the sort comparator (ADR-0163 cl.5)', () => {
+  const numberCol: TableColumn = { key: 'n', label: 'N', type: 'number', sortable: true }
+  const nonSortableCol: TableColumn = { key: 'n', label: 'N', type: 'number', sortable: false }
+
+  it('null sort → no comparator', () => {
+    expect(makeRowComparator(null, [numberCol])).toBeNull()
+  })
+
+  it('a sort naming a column absent from `columns` → no comparator', () => {
+    expect(makeRowComparator({ key: 'missing', direction: 'ascending' }, [numberCol])).toBeNull()
+  })
+
+  it('component-checker regression: a sort naming a column whose sortable is NOT true → no comparator (never silently reorders past its own affordance)', () => {
+    expect(makeRowComparator({ key: 'n', direction: 'ascending' }, [nonSortableCol])).toBeNull()
+    // the absent-`sortable` (post-cleanColumns default false) case too, not just an explicit false
+    const absentSortable: TableColumn = { key: 'n', label: 'N', type: 'number' }
+    expect(makeRowComparator({ key: 'n', direction: 'ascending' }, [absentSortable])).toBeNull()
+  })
+
+  it('a sort naming a real sortable column DOES produce a working comparator, ascending and descending', () => {
+    const rows: TableRow[] = [{ n: 3 }, { n: 1 }, { n: 2 }]
+    const identified = computeRowIdentities(rows, '')
+    const asc = makeRowComparator({ key: 'n', direction: 'ascending' }, [numberCol])
+    expect(asc).not.toBeNull()
+    expect([...identified].sort(asc!).map((ir) => ir.row.n)).toEqual([1, 2, 3])
+    const desc = makeRowComparator({ key: 'n', direction: 'descending' }, [numberCol])
+    expect([...identified].sort(desc!).map((ir) => ir.row.n)).toEqual([3, 2, 1])
+  })
+
+  it('degenerate cells sort last in BOTH directions', () => {
+    const rows: TableRow[] = [{ n: 2 }, { n: null }, { n: 1 }]
+    const identified = computeRowIdentities(rows, '')
+    const asc = makeRowComparator({ key: 'n', direction: 'ascending' }, [numberCol])
+    expect([...identified].sort(asc!).map((ir) => ir.row.n)).toEqual([1, 2, null])
+    const desc = makeRowComparator({ key: 'n', direction: 'descending' }, [numberCol])
+    expect([...identified].sort(desc!).map((ir) => ir.row.n)).toEqual([2, 1, null])
+  })
+})
+
+describe('computeTableView — the cl.7 view pipeline', () => {
+  const columns: TableColumn[] = [{ key: 'n', label: 'N', type: 'number', sortable: true }]
+
+  it('every stage is the identity function at its OFF default — SPEC-R2/cl.10 composes from this', () => {
+    const rows: TableRow[] = [{ n: 3 }, { n: 1 }, { n: 2 }]
+    const view = computeTableView({ rows, columns, rowKey: '', filter: [], search: '', sort: null, pageSize: 0, page: 1 })
+    expect(view.matching.map((ir) => ir.row.n)).toEqual([3, 1, 2])
+    expect(view.sorted).toBe(view.matching) // unchanged reference — no comparator ran
+    expect(view.paged).toBe(view.sorted) // unchanged reference — no windowing ran
+    expect(view.pageCount).toBe(0)
+  })
+
+  it('a non-sortable-column sort is a pipeline no-op too (the makeRowComparator fix, end to end)', () => {
+    const rows: TableRow[] = [{ n: 3 }, { n: 1 }, { n: 2 }]
+    const nonSortable: TableColumn[] = [{ key: 'n', label: 'N', type: 'number', sortable: false }]
+    const view = computeTableView({ rows, columns: nonSortable, rowKey: '', filter: [], search: '', sort: { key: 'n', direction: 'ascending' }, pageSize: 0, page: 1 })
+    expect(view.sorted.map((ir) => ir.row.n)).toEqual([3, 1, 2]) // unreordered
+  })
+
+  it('pageCount + paged window derive from the MATCHING SET (after filter/search, before sort)', () => {
+    const rows: TableRow[] = Array.from({ length: 25 }, (_, i) => ({ n: i + 1 }))
+    const view = computeTableView({ rows, columns, rowKey: '', filter: [], search: '', sort: null, pageSize: 10, page: 1 })
+    expect(view.matching).toHaveLength(25)
+    expect(view.pageCount).toBe(3)
+    expect(view.paged).toHaveLength(10)
+    expect(view.paged[0].row.n).toBe(1)
   })
 })

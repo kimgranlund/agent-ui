@@ -20,14 +20,20 @@
 //
 // Five independent effects, split by which signal(s) each reads (unchanged fine-grained-waking discipline,
 // widened):
-//   • HEADER-BUILD (reads `columns` + `selectable`) — rebuilds `#thead`'s one header row, incl. the leading
-//     selection column (multi ⇒ a select-all checkbox; single ⇒ a bare header cell) and a real `<button>`
-//     inside every `sortable` column's `<th>`. Calls `#applyAriaSort()` SYNCHRONOUSLY at the end of its own
-//     body (never as a separate reactive dependency) so a structure rebuild never races the aria-sort effect
-//     below — correctness by construction, not by relying on effect-scheduling order.
-//   • SORT-STATE (reads `sort` + `columns` + `selectable`, via `#applyAriaSort()`) — sets/clears `aria-sort`
-//     on the ONE currently-sorted `<th>` ONLY. Never rebuilds a node — a sort click never loses focus on the
-//     button that was just clicked (HEADER-BUILD is not a dependent of `sort` at all).
+//   • HEADER-BUILD (reads `columns` + `selectable` ONLY — `sort` is read via `untracked()`, see below)
+//     rebuilds `#thead`'s one header row, incl. the leading selection column (multi ⇒ a select-all checkbox;
+//     single ⇒ a bare header cell) and a real `<button>` inside every `sortable` column's `<th>`. It applies
+//     the CURRENT `aria-sort` state to the freshly-built nodes immediately, via `this.#applyAriaSort(untracked(() =>
+//     this.sort))` — `untracked` (component-checker finding, verified: the reactive kernel tracks EVERY signal
+//     read during an effect body regardless of how deep the call stack, so a bare `this.sort` read here — even
+//     buried inside a helper call — silently made HEADER-BUILD a dependent of `sort`, rebuilding the WHOLE
+//     `<thead>` on every sort commit and stranding the just-clicked button's focus; a `<tr>`/button node-
+//     identity probe proved it) makes this ONE read genuinely untracked, so a sort-only change never re-runs
+//     this effect — correctness by construction, not by relying on effect-scheduling order.
+//   • SORT-STATE (reads `sort` — TRACKED — plus `columns`/`selectable` for the offset math) — sets/clears
+//     `aria-sort` on the ONE currently-sorted `<th>` ONLY. Never rebuilds a node — a sort click never loses
+//     focus on the button that was just clicked (HEADER-BUILD is not a dependent of `sort` at all, per the
+//     `untracked` fix above).
 //   • VIEW (reads `columns` + `rows` + `selectable` + `rowKey` + `selected` + `filter` + `search` + `sort` +
 //     `pageSize` + `page`) — runs the cl.7 pipeline (`computeTableView`) and rebuilds ONLY `#tbody`'s content
 //     (whole-array swap, unchanged from the display-only contract) plus the select-all header checkbox's
@@ -46,6 +52,10 @@
 // `UIButtonElement` import, the identical shape).
 
 import { UIElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
+// `untracked` — the ONE reactive-kernel import this control needs (controls MAY import `reactive` directly,
+// the layering law's layer-0; `text-field.ts`'s `untracked(() => this.value)` one-time-seed read is the
+// exact same-shape precedent). Load-bearing for the HEADER-BUILD/`#applyAriaSort` split above.
+import { untracked } from '../../reactive/index.ts'
 import {
   cleanColumns,
   cleanFilter,
@@ -164,13 +174,17 @@ export class UITableElement extends UIElement {
       }
       for (const col of cols) headerRow.append(this.#headerCell(col))
       this.#thead.replaceChildren(headerRow)
-      this.#applyAriaSort() // synchronous — never races the SORT-STATE effect below (see the file banner)
+      // untracked — see the file banner: a bare `this.sort` read here would silently make HEADER-BUILD a
+      // dependent of `sort`, rebuilding this whole effect (and every node it owns) on every sort commit.
+      this.#applyAriaSort(untracked(() => this.sort))
     })
 
-    // SORT-STATE — sets/clears `aria-sort` on the sorted `<th>` ONLY (never rebuilds a node). Redundant
-    // (harmless, idempotent) on a structure-changing run — HEADER-BUILD already applied it directly.
+    // SORT-STATE — the ONE effect that TRACKS `sort` (plus `columns`/`selectable`, needed for the offset
+    // math — redundant-but-harmless extra reruns on those, since this body only ever sets/clears an
+    // attribute, never rebuilds a node). Never touches node identity — a sort click never loses focus on
+    // the button that was just clicked.
     this.effect(() => {
-      this.#applyAriaSort()
+      this.#applyAriaSort(this.sort)
     })
 
     // VIEW (SPEC-R4.3, cl.7's pipeline) — reads every state prop; rebuilds ONLY `#tbody`'s content (whole-
@@ -286,7 +300,14 @@ export class UITableElement extends UIElement {
     input.type = 'checkbox'
     input.setAttribute('data-part', 'select-all')
     input.setAttribute('aria-label', 'Select all rows')
-    this.listen(input, 'change', () => this.#toggleSelectAll(input.checked))
+    // stopPropagation: a native <input> `change` bubbles unstopped by default, and this host's OWN `change`
+    // event is the sort/page commit channel (cl.5/cl.6) — without this, a selection toggle would ALSO
+    // arrive at any table-level `change` listener, giving the same event name two unrelated meanings on
+    // the same host (component-checker finding). Selection's own contract event stays `select` only.
+    this.listen(input, 'change', (event) => {
+      event.stopPropagation()
+      this.#toggleSelectAll(input.checked)
+    })
     th.append(input)
     return th
   }
@@ -313,10 +334,13 @@ export class UITableElement extends UIElement {
   }
 
   /** Set/clear `aria-sort` on the currently-sorted `<th>` ONLY — never touches node identity. The header's
-   *  `<th>` order is [selection column?] + one per `columns` entry (in order); `offset` decodes which. */
-  #applyAriaSort(): void {
+   *  `<th>` order is [selection column?] + one per `columns` entry (in order); `offset` decodes which.
+   *  `rawSort` is the CALLER-supplied value (hardened here via `cleanSort`) — passed in rather than read
+   *  live so each call site controls whether that read is tracked (HEADER-BUILD passes an `untracked()`
+   *  read; SORT-STATE passes a tracked one — see the file banner). */
+  #applyAriaSort(rawSort: unknown): void {
     const cols = cleanColumns(this.columns)
-    const sort = cleanSort(this.sort)
+    const sort = cleanSort(rawSort)
     const offset = this.selectable === '' ? 0 : 1
     const ths = [...this.#thead.querySelectorAll('tr > th')]
     cols.forEach((col, i) => {
@@ -344,7 +368,12 @@ export class UITableElement extends UIElement {
       input.checked = selectedSet.has(id)
       const firstCellText = cols.length > 0 ? resolveCell(cols[0], row) : ''
       input.setAttribute('aria-label', firstCellText !== '' ? `Select row: ${firstCellText}` : 'Select row')
-      this.listen(input, 'change', () => this.#toggleRowSelection(id, selectable, input.checked))
+      // stopPropagation — the SAME reason as the select-all checkbox above: keep this host's `change` event
+      // exclusively the sort/page commit channel, never double-meaning with a selection toggle.
+      this.listen(input, 'change', (event) => {
+        event.stopPropagation()
+        this.#toggleRowSelection(id, selectable, input.checked)
+      })
       td.append(input)
       tr.append(td)
     }

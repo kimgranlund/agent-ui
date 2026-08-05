@@ -40,6 +40,18 @@
   --ui-table-rule-ink: var(--md-sys-color-neutral-outline-variant); /* row-separator hairline */
   --ui-table-header-rule-ink: var(--md-sys-color-neutral-outline); /* thead underline, stronger */
   --ui-table-caption-ink: var(--md-sys-color-neutral-on-surface-variant);
+
+  /* ADR-0163 cl.4 — the selected-row color PAIR (a secondary cue; the checkbox/radio's own checked state
+     is the real, non-color signifier, ADR-0057 satisfied structurally). The select.css option-row precedent
+     ("the fleet's one selected-row-ink role"). */
+  --ui-table-row-selected-bg: var(--md-sys-color-primary-container-low);
+  --ui-table-row-selected-ink: var(--md-sys-color-primary-high);
+
+  /* ADR-0163 cl.6 — the footer's own rhythm (the `[data-part='footer']` region, outside the scroll
+     container). Reuses --ui-table-header-rule-ink for its separator — the SAME visual weight as the
+     thead underline, no second rule-ink role needed. */
+  --ui-table-footer-pad-block: var(--md-sys-space-sm);
+  --ui-table-footer-gap: var(--md-sys-space-sm);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-table) consumes ONLY --ui-table-* ════════════════ */
@@ -93,5 +105,46 @@
     text-align: end;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
+  }
+
+  /* ADR-0163 cl.4 — the selected-row tint. A background wash + ink pair; the checkbox/radio's OWN checked
+     state remains the real signifier (ADR-0057) — this is a secondary visual cue, never the only one. */
+  :scope tbody tr[data-selected] {
+    background-color: var(--ui-table-row-selected-bg);
+  }
+  :scope tbody tr[data-selected] td {
+    color: var(--ui-table-row-selected-ink);
+  }
+
+  /* ADR-0163 cl.5 — the sort-button reset (component-checker finding: an unstyled native <button> renders
+     full UA chrome — font/padding/border/background — visually discontinuous with a plain-text header
+     label right next to it). `all: unset` clears the UA button chrome; every property AFTER it in this same
+     rule re-applies exactly what a sortable header needs, so it reads as PART of the header, not a foreign
+     control dropped into it. */
+  :scope [data-part='sort-button'] {
+    all: unset;
+    display: inline-flex;
+    align-items: center;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+  :scope [data-part='sort-button']:focus-visible {
+    /* the fleet's shared focus-ring constants — a sanctioned DIRECT read (tokens.md's own allowlist, the
+       checkbox.css precedent), never a per-control repoint. */
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+
+  /* ADR-0163 cl.6 — the footer region: a SIBLING of [data-part='scroll'] (outside the scroll container),
+     holding the composed ui-pagination. A real separator (a border, WHCM-safe — SPEC-R15's own reasoning)
+     + the footer's own rhythm tokens; the composed ui-pagination carries its own geometry (cl.6 — "the
+     novelty is zero"), this rule only places it. */
+  :scope [data-part='footer'] {
+    display: flex;
+    justify-content: flex-end;
+    padding-block-start: var(--ui-table-footer-pad-block);
+    gap: var(--ui-table-footer-gap);
+    border-block-start: 1px solid var(--ui-table-header-rule-ink);
   }
 }

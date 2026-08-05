@@ -160,17 +160,27 @@ export function resolveCell(column: TableColumn, row: TableRow): string {
 
 // ── ADR-0163 cl.4 — selection identity ─────────────────────────────────────────────────────────────────
 
+/** The data-order-index fallback identity's namespace prefix (component-checker low-priority finding): a
+ *  BARE `String(i)` risks colliding with an explicitly-keyed row's own string value (e.g. a keyed row-key
+ *  `"3"` vs. an unrelated unkeyed row that happens to sit at index 3) — both would carry the identity `"3"`
+ *  and become indistinguishable in `selected`. `#` can never be the START of a real `row[rowKey]` cell value
+ *  once `String()`-coerced from JSON's own primitive set (numbers/strings/booleans never begin with `#`),
+ *  so this namesplits the two identity SOURCES without touching the `row-key` posture the ADR documents
+ *  (still fallback-to-index, just spelled unambiguously). */
+const INDEX_ID_PREFIX = '#'
+
 /**
  * Pair every row in `rows` (the WHOLE, unfiltered array — identity is computed against data order, never
  * the view-transformed order) with its selection identity (cl.4): the `rowKey` column's String-coerced cell
  * value when `rowKey` is non-empty AND the row actually carries that key (own or inherited property look-up,
- * matching `resolveCell`'s plain `row[key]` read), else the row's own array INDEX, String-coerced. Never
- * throws — `String()` on any value succeeds.
+ * matching `resolveCell`'s plain `row[key]` read), else the row's own array INDEX, String-coerced and
+ * `INDEX_ID_PREFIX`-namespaced (never colliding with a real keyed value). Never throws — `String()` on any
+ * value succeeds.
  */
 export function computeRowIdentities(rows: TableRow[], rowKey: string): IdentifiedRow[] {
   return rows.map((row, i) => {
     const keyed = rowKey !== '' ? row[rowKey] : undefined
-    const id = keyed !== undefined && keyed !== null ? String(keyed) : String(i)
+    const id = keyed !== undefined && keyed !== null ? String(keyed) : `${INDEX_ID_PREFIX}${i}`
     return { row, id }
   })
 }
@@ -261,17 +271,20 @@ function isDegenerateForSort(column: TableColumn, row: TableRow): boolean {
 }
 
 /**
- * Build the row comparator for the current `sort` state (ADR-0163 cl.5), or `null` when `sort` is absent or
- * names a column not in `columns` (no sort applied — the identity order). Number columns compare
- * numerically; every other column compares via a numeric-aware `Intl.Collator` (default locale). Degenerate
- * cells (see `isDegenerateForSort`) sort LAST in BOTH directions (a fixed post-direction tie-break, not
- * flipped by `direction`). `Array.prototype.sort` is STABLE (ES2019+) — ties among non-degenerate cells with
- * equal comparator output preserve relative input order.
+ * Build the row comparator for the current `sort` state (ADR-0163 cl.5), or `null` when `sort` is absent,
+ * names a column not in `columns`, OR names a column whose `sortable` is NOT `true` (component-checker
+ * finding: a programmatically-bound `sort` naming a non-sortable column previously still reordered rows
+ * while `#applyAriaSort` correctly refused to announce it — a silent, unannounced reorder; the affordance
+ * and the effect must gate on the SAME condition, `sortable`). Number columns compare numerically; every
+ * other column compares via a numeric-aware `Intl.Collator` (default locale). Degenerate cells (see
+ * `isDegenerateForSort`) sort LAST in BOTH directions (a fixed post-direction tie-break, not flipped by
+ * `direction`). `Array.prototype.sort` is STABLE (ES2019+) — ties among non-degenerate cells with equal
+ * comparator output preserve relative input order.
  */
 export function makeRowComparator(sort: TableSort | null, columns: TableColumn[]): ((a: IdentifiedRow, b: IdentifiedRow) => number) | null {
   if (sort === null) return null
   const column = columns.find((c) => c.key === sort.key)
-  if (!column) return null
+  if (!column || !column.sortable) return null
   const dir = sort.direction === 'descending' ? -1 : 1
   const collator = new Intl.Collator(undefined, { numeric: true })
   return (a, b) => {

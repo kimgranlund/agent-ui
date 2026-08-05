@@ -69,7 +69,12 @@ export class UIPaginationElement extends UIElement {
    * rebuild when the click that triggered it originated inside this host: the new "active page" button is
    * the natural post-click focus target (SPEC-R4.5's focus-restoration spirit, applied to the one control
    * here that could plausibly need it — a small UX completeness the ADR does not mandate but the same
-   * rebuild-loses-focus mechanics call for).
+   * rebuild-loses-focus mechanics call for). KNOWN IMPRECISION (component-checker finding, documented rather
+   * than fixed): the restore target is always the ACTIVE-PAGE button, never necessarily the exact stop the
+   * user had focus on — e.g. clicking "Next" restores focus to the NEW active-page number button, not back
+   * onto "Next" itself. Reasonable for the common case (the active page is almost always what the user's
+   * attention follows), imprecise for a user who wants to keep hitting "Next" repeatedly without Tab-hunting
+   * for it again.
    */
   #rebuild(): void {
     const rawPages = this.pages
