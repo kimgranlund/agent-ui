@@ -40,7 +40,7 @@ reopen is the live instruction, per Kim's own explicit "supersedes" framing.
 
 **The wave's own hedge, and why Kim's ruling overrides it.** `synthesis-decision.md` Q2 (fetched
 2026-08-05 from `origin/docs-intake-wave-2026-08-05`, not yet on `main`) frames M-D's design intake
-as needing *"a Kim-only read"* and explicitly declines to choose: *"This synthesis does not choose;
+as needing a Kim-only read and explicitly declines to choose: *"This synthesis does not choose;
 choosing M-D would be Kim reopening his own ruling, not this wave overriding it."* Kim's #421
 comment above is exactly that Kim-only read — it names the wave's synthesis by section number,
 names M-D's own sequencing (M-D → M-E → M-F, diverging from the wave's own recommended M-E-first
@@ -102,7 +102,7 @@ cl.3 both examine and distinguish from below.
 - **A prompt-layer "catalog-composition idiom" mechanism already exists — and it already teaches
   the exact GH #421 casino example, hard-coded to one catalog's vocabulary, with zero
   catalog-scoping.** `mini-skills.ts` (ADR-0091) is a registry of prose idiom modules; its own
-  code comment (`system-prompt.ts:321-322`) names them explicitly: *"mini-skills are
+  code comment (`system-prompt.ts:320-323`) names them explicitly: *"mini-skills are
   catalog-composition idioms — `prompts/mini-skills/*.md` name concrete A2UI component types — so
   they are A2UI catalog teaching too."* `prompts/mini-skills/card-game-sheet.md` (verbatim body):
   *"A card-game component sheet. Parts: hand, discard/deck pile, score readout, action bar. Map:
@@ -153,7 +153,7 @@ catalog-vocabulary-hardcoded prose), not a real catalog-schema tier.
 This is the shape GH #421's own "an admin-authored entry kind... a package-level per-persona catalog
 module?" open question gestures at on the authoring-UI side. It is already a standing, explicit park:
 ADR-0170 cl.8 suppresses catalog-creation UI specifically because "a source registry that can mint a
-new catalog" doesn't exist, and ADR-0169's own Non-goals (`0169:571`) name the "create/pick-from-
+new catalog" doesn't exist, and ADR-0169's own Non-goals (`0169:570-571`) name the "create/pick-from-
 library affordances stay parked per Kim's 2026-07-19 ruling." This ADR does not reopen that park —
 the local-pattern layer's AUTHORING remains build-time/code-authored (a developer adds a persona
 catalog package the same way `a2ui-basic` was added), while the persona's SELECTION of which
@@ -228,7 +228,7 @@ should be named, cited, and left alone — not conflated with the new tier.
 **Candidates checked, by reading source:**
 
 - **Mini-skills (ADR-0091) — real, load-bearing, but the wrong LAYER.** As Context documents in
-  detail: `system-prompt.ts:321-322`'s own comment calls mini-skills "catalog-composition idioms,"
+  detail: `system-prompt.ts:320-323`'s own comment calls mini-skills "catalog-composition idioms,"
   and `card-game-sheet.md` already teaches almost verbatim the GH #421 casino example. This is
   strong, genuine functional overlap. But GH #421's formula — `catalog = shared primitives + shared
   system + local patterns` — names parts of a CATALOG (schema-validatable component/pattern
@@ -310,9 +310,21 @@ mini-skill FILE/mechanism itself is not repurposed or renamed by this ruling.
   component name already present in the shared base (e.g. a persona-local `Card` variant with
   different props), should the merge (a) let local silently override base, (b) reject the fragment
   at compose time (loud, name-collision error), or (c) require local names to be structurally
-  disjoint from base (a namespacing convention)? No in-tree precedent settles this — the registry's
-  own "duplicate `catalogId` ⇒ last-wins" rule (`registry.ts`) operates at the CATALOG level, never
-  the component-name level, so it does not transfer. This has real producer-honesty implications
+  disjoint from base (a namespacing convention)? No in-tree precedent settles this at the
+  component-DEFINITION level — the registry's own "duplicate `catalogId` ⇒ last-wins" rule
+  (`registry.ts`) operates at the CATALOG level, never the component-name level, so it does not
+  transfer. A related but distinct precedent DOES exist one axis over: `a2ui-catalog.spec.md:49`
+  (SPEC-R5) and ADR-0034's 2026-06-30 Amendment (`0034:92-102`) already rule a cross-catalog
+  collision policy for FUNCTION-name collisions — "most-restrictive-wins... `clientOnly` is a HARD
+  FLOOR... independent of registration order" — when the same function name is declared in more
+  than one active catalog, the tightest `callableFrom` governs, a sibling may only tighten a
+  security gate, never loosen it. That rule is a runtime PERMISSION-FLOOR dispatch decision (which
+  catalog's declared authority wins when a server invokes a shared function name), not a compose-time
+  CONTENT-authority decision (which catalog's `ComponentDef`/`PropDef` bytes win when two documents
+  are merged into one before any request exists) — the two axes do not obviously transfer, and
+  applying "most-restrictive-wins" to component shape has no clear reading (a component definition
+  has no permissiveness ordering the way a security enum does). Named and distinguished here rather
+  than asserted absent; still genuinely open. This has real producer-honesty implications
   (`grammar.md`'s "Be honest at the catalog wall" line, and ADR-0011/ADR-0034's Postel-tolerance
   rulings, were both explicit Kim calls on adjacent honesty-vs-silent-substitution questions) —
   genuinely Kim's to decide, not derivable from the cited sources. Flagged for M-D's SPEC.
