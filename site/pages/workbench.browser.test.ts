@@ -273,7 +273,7 @@ describe('workbench — SPEC-R8: the record-edit flow (list → open → validat
     expect(nameCellOf(rowByRecordId(EDIT_ID)), 'the visible table row must show the new value').toBe(NEW_NAME)
   })
 
-  it('dismissal without save (Escape) mutates nothing', async () => {
+  it('dismissal without save via Escape mutates nothing', async () => {
     const OTHER_ID = FIXTURE_RECORDS[9]!.id // 'acc-10', untouched by the save above
     const otherOriginalName = FIXTURE_RECORDS[9]!.name
     recordPicker().value = OTHER_ID
@@ -288,6 +288,34 @@ describe('workbench — SPEC-R8: the record-edit flow (list → open → validat
 
     expect(modal().open, 'Escape must dismiss the modal').toBe(false)
     expect(nameCellOf(rowByRecordId(OTHER_ID)), 'Escape dismissal must mutate nothing').toBe(otherOriginalName)
+  })
+
+  it('dismissal without save via a backdrop click mutates nothing', async () => {
+    const THIRD_ID = FIXTURE_RECORDS[7]!.id // 'acc-08', untouched by either leg above, still on page 1 (rows 0-9)
+    const thirdOriginalName = FIXTURE_RECORDS[7]!.name
+    recordPicker().value = THIRD_ID
+    await userEvent.click(editButton())
+    await raf()
+    expect(modal().open).toBe(true)
+
+    const nameField = modalField('name') as UITextFieldElement
+    await clearAndType(nameField, 'Should never be saved either')
+
+    // modal.md's own contract: "a click whose target is the dialog box but lands OUTSIDE its content
+    // rect is the ::backdrop" (modal.ts's rect-wise detection, `e.target === dialog` + a bounding-rect
+    // check). A real automated mouse click has no reliable way to land OUTSIDE a top-layer <dialog>'s own
+    // box while still targeting it across both engines (the backdrop covers the whole viewport natively,
+    // but drivers differ on whether an "obscured" body counts as clickable) — dispatching a real
+    // bubbling, cancelable MouseEvent AT the dialog element, with clientX/Y outside its own
+    // getBoundingClientRect(), exercises the EXACT code path the control's own listener runs, the
+    // deterministic equivalent of a real backdrop click.
+    const dialog = modal().querySelector('[data-part="dialog"]') as HTMLElement
+    const r = dialog.getBoundingClientRect()
+    dialog.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: r.left - 10, clientY: r.top - 10 }))
+    await raf()
+
+    expect(modal().open, 'a backdrop click must dismiss the modal').toBe(false)
+    expect(nameCellOf(rowByRecordId(THIRD_ID)), 'a backdrop-click dismissal must mutate nothing').toBe(thirdOriginalName)
   })
 })
 
