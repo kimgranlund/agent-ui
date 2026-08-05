@@ -168,15 +168,18 @@ cells (the one quantity that rides `--md-sys-density`; the frame stays density-i
 is **layout only** — express any popup/disclosure meaning as ARIA on the host (`aria-haspopup` /
 `aria-expanded` via `ElementInternals`), never on the glyph.
 
-**Label alignment is per-structure** (ADR-0171, GH #442) — a single adornment start-aligns the label
-so the adornment and label read as one visual cluster; bare and double-adorned labels stay centered
-(GH #293's original rule). This is presence-derived, never author-opted — there is no alignment prop:
+**Label alignment is per-structure** (ADR-0171, GH #442, amended GH #450) — a single adornment and
+its label pin to OPPOSITE edges of the inner row (spread), not a start-aligned cluster; bare and
+double-adorned labels stay centered (GH #293's original rule). This is presence-derived, never
+author-opted — there is no alignment prop. At CONTENT (hug) width the spread is
+pixel-indistinguishable from a cluster — the adornment⟷label separation is exactly
+`--ui-button-gap` — and only manifests once the button's inline-size exceeds its content:
 
 | Structure | Label alignment |
 |---|---|
 | `[label]` (bare) | centered |
-| `[leading \| label]` | **start** — hugs the leading adornment |
-| `[label \| trailing]` | **start** — flush at the leading edge; the adornment sits at the end |
+| `[leading \| label]` | **end** — adornment at the start edge, label at the end edge (spread) |
+| `[label \| trailing]` | **start** — label at the start edge, adornment at the end edge (spread) |
 | `[leading \| label \| trailing]` | centered between the two adornment cells |
 | `[icon-only]` (no label) | n/a — no label to align |
 
