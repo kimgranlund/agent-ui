@@ -9,7 +9,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import './workbench.ts'
-import type { UITableElement, UIModalElement, UITextFieldElement, UICheckboxElement, UIButtonElement, UISelectElement } from '@agent-ui/components/components'
+import type { UITableElement, UIModalElement, UIFormPopoverElement, UITextFieldElement, UICheckboxElement, UIButtonElement, UISelectElement } from '@agent-ui/components/components'
 import { FIXTURE_RECORDS, computeMatchingCount } from './workbench-data.ts'
 
 const raf = (): Promise<void> => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())))
@@ -24,8 +24,22 @@ function rowByRecordId(id: string): HTMLTableRowElement {
 function nameCellOf(row: HTMLTableRowElement): string {
   return (row.querySelectorAll('td')[1]?.textContent ?? '').trim() // index 0 = select-cell (selectable='multi')
 }
+function statusPopover(): UIFormPopoverElement {
+  return document.querySelector('.wb-toolbar-row ui-form-popover') as UIFormPopoverElement
+}
 function statusCheckbox(status: 'Active' | 'Trial' | 'Churned'): UICheckboxElement {
   return document.querySelector(`ui-checkbox[value="${status}"]`) as UICheckboxElement
+}
+/** The status facet's `ui-checkbox` group lives inside `ui-form-popover`'s panel — a Popover-API top-layer
+ *  surface, `display:none` (and un-clickable) until the trigger opens it (form-popover.md). Real
+ *  interaction always opens it first, exactly as a user would. */
+async function clickStatusFacet(status: 'Active' | 'Trial' | 'Churned'): Promise<void> {
+  const popover = statusPopover()
+  if (!popover.open) {
+    await userEvent.click(popover.querySelector('[data-part="trigger"]') as HTMLElement)
+    await raf()
+  }
+  await userEvent.click(statusCheckbox(status))
 }
 function searchField(): UITextFieldElement {
   return document.querySelector('.wb-toolbar-row ui-text-field') as UITextFieldElement
@@ -47,11 +61,11 @@ function modalField(name: string): UITextFieldElement | UISelectElement {
 }
 async function clearAndType(field: UITextFieldElement, next: string): Promise<void> {
   const editor = field.querySelector('[data-part="editor"]') as HTMLElement
-  const before = field.value
-  await userEvent.click(editor)
-  await userEvent.keyboard('{End}')
-  if (before.length > 0) await userEvent.keyboard('{Backspace}'.repeat(before.length))
-  if (next.length > 0) await userEvent.keyboard(next)
+  editor.focus() // the command-palette.browser.test.ts precedent — a direct .focus() on the contenteditable
+  // editor part, not userEvent.click (an empty/placeholder-only contenteditable can report a zero-area hit
+  // box, making a click land nowhere) — userEvent.clear/.type both support [contenteditable] directly.
+  await userEvent.clear(editor)
+  if (next.length > 0) await userEvent.type(editor, next)
 }
 
 // ════════════════ SPEC-R10 — zero network requests (spy installed for the WHOLE file; asserted last, over
@@ -94,14 +108,14 @@ describe('workbench — SPEC-R7: the toolbar drives table STATE, never table DAT
     await raf()
     expect(t.rows, 'the toolbar reassigned table.rows clearing SEARCH').toBe(rowsRef)
 
-    await userEvent.click(statusCheckbox('Trial'))
+    await clickStatusFacet('Trial')
     await raf()
     expect(t.rows, 'the toolbar reassigned table.rows on a FACET-FILTER interaction').toBe(rowsRef)
     const filterOnlyExpected = computeMatchingCount(FIXTURE_RECORDS, [{ key: 'status', values: ['Trial'] }], '')
     expect(resultsCount().textContent).toBe(`Showing ${filterOnlyExpected} of ${FIXTURE_RECORDS.length} accounts`)
 
     // reset
-    await userEvent.click(statusCheckbox('Trial'))
+    await clickStatusFacet('Trial')
     await raf()
     expect(t.rows).toBe(rowsRef)
     expect(resultsCount().textContent).toBe(`Showing ${FIXTURE_RECORDS.length} of ${FIXTURE_RECORDS.length} accounts`)
@@ -145,7 +159,7 @@ describe('workbench — SPEC-R1: the widened table over the workbench fixture (a
     const trialRecords = FIXTURE_RECORDS.filter((r) => r.status === 'Trial')
     expect(trialRecords.length, 'fixture sanity — the Trial facet must be a genuine sub-page').toBeGreaterThan(0)
 
-    await userEvent.click(statusCheckbox('Trial'))
+    await clickStatusFacet('Trial')
     await raf()
 
     const rowCheckboxes = [...t.querySelectorAll('[data-part="select"]')] as HTMLInputElement[]
@@ -165,7 +179,7 @@ describe('workbench — SPEC-R1: the widened table over the workbench fixture (a
     expect(selectedIds).toEqual(new Set(trialRecords.map((r) => r.id)))
 
     // clear the filter — selection is held against the WHOLE rendered set (ADR-0163 cl.7)
-    await userEvent.click(statusCheckbox('Trial'))
+    await clickStatusFacet('Trial')
     await raf()
     const selectedAfterClear = new Set(t.selected as unknown as string[])
     expect(selectedAfterClear, 'selection must SURVIVE the filter change').toEqual(new Set(trialRecords.map((r) => r.id)))
@@ -199,12 +213,12 @@ describe('workbench — SPEC-R9: the agent summary is keyed to view state, prova
     expect(summaryText()).toContain('All accounts')
     expect(summaryText()).not.toContain('Filtered view')
 
-    await userEvent.click(statusCheckbox('Churned'))
+    await clickStatusFacet('Churned')
     await raf()
     expect(summaryText(), 'a filter must swap the rendered summary to the "filtered" key').toContain('Filtered view')
     expect(summaryText()).not.toContain('All accounts')
 
-    await userEvent.click(statusCheckbox('Churned')) // reset
+    await clickStatusFacet('Churned') // reset
     await raf()
     expect(summaryText()).toContain('All accounts')
   })
