@@ -4,7 +4,7 @@ import { UIAgentAdminElement } from './agent-admin.ts'
 import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 import { UISettingsElement } from '../settings/settings.ts'
 import { UIConversationElement } from '../conversation/conversation.ts'
-import { defaultAgentConfigSchema, SUPPORTED_MODELS, DEFAULT_MODEL_ID, SURFACE_MARKDOWN_KEY, SURFACE_A2UI_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID, sanitizeCatalog } from './agent-admin-schema.ts'
+import { defaultAgentConfigSchema, SUPPORTED_MODELS, DEFAULT_MODEL_ID, SURFACE_MARKDOWN_KEY, SURFACE_A2UI_KEY, A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID, sanitizeCatalog } from './agent-admin-schema.ts'
 import { ENTRY_KINDS, entriesStoreKey, initialEntryValues, readEntries, composeSystemPrompt, DEFAULT_SYSTEM_PROMPT_FALLBACK, type Entry, type EntryLibraryPack } from './entries.ts'
 import { mountEntryList, showAddError, type EntryListHandlers } from './entry-list.ts'
 import { createMemoryStore } from '../settings/memory-store.ts'
@@ -243,16 +243,16 @@ describe('UIAgentAdminElement — shell composition (GH #52/ADR-0154): segments 
   // ── GH #225 — the Settings sections are heading-row folds (the GH #222 Context pattern applied to
   // the config column). jsdom pins the STRUCTURE; agent-admin.browser.test.ts proves the real
   // fold/register/toggle-vs-fold geometry cross-engine. ──────────────────────────────────────────────
-  it('GH #225: every Settings section is a settings-item fold — nine sections (genui-surface B2 adds Pattern sources), in order, ALL open by default (config is an editing surface)', () => {
+  it('GH #225: every Settings section is a settings-item fold — TEN sections (genui-surface B2 added Pattern sources; ADR-0170 adds Catalogs LAST), in order, ALL open by default (config is an editing surface)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const settings = el.querySelector('[data-segment="Settings"]') as HTMLElement
     const items = [...settings.querySelectorAll(':scope > [data-part="settings-item"]')]
     expect(items.map((i) => i.getAttribute('data-item'))).toEqual([
       'agent', 'model', ENTRY_KINDS.promptSection, 'surface',
-      ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource,
+      ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource, ENTRY_KINDS.catalog,
     ])
     expect(items.map((i) => i.getAttribute('summary'))).toEqual([
-      'Agent', 'Model', 'Instructions', 'Surface Options', 'Skills', 'Workflows', 'Resources', 'Tools', 'Pattern sources',
+      'Agent', 'Model', 'Instructions', 'Surface Options', 'Skills', 'Workflows', 'Resources', 'Tools', 'Pattern sources', 'Catalogs',
     ])
     for (const item of items) expect(item.hasAttribute('open'), `${item.getAttribute('data-item')} defaults open`).toBe(true)
     // The section content is the fold's BODY (the disclosure adopted it — SPEC-R16 children=body).
@@ -273,6 +273,10 @@ describe('UIAgentAdminElement — shell composition (GH #52/ADR-0154): segments 
     }
     // The Instructions/Model/Surface folds carry NO switch — their summaries hold only chevron + text.
     expect(el.querySelector(`[data-part="settings-item"][data-item="${ENTRY_KINDS.promptSection}"] [data-part="summary"] ui-switch`)).toBeNull()
+    // ADR-0170 cl.5 — and neither does Catalogs: the ONE capability kind with no master switch (the A2UI
+    // surface toggle is its gate), so nothing here can persist a `catalogsEnabled` key nothing reads.
+    expect(el.querySelector(`[data-part="settings-item"][data-item="${ENTRY_KINDS.catalog}"] [data-part="summary"] ui-switch`)).toBeNull()
+    expect(el.querySelector(`[data-part="settings-item"][data-item="${ENTRY_KINDS.catalog}"] [data-part="kind-enabled"]`)).toBeNull()
   })
 })
 
@@ -401,7 +405,7 @@ describe('UIAgentAdminElement — composition (GH #52/ADR-0154: chat + {Settings
     expect(conversation.sources, 'the developer surface\'s standing opt-in — every other consumer stays default-off').toBe(true)
   })
 
-  it('the Settings content composes the Agent config (real ui-settings, wired to schema/store) PLUS all SIX entry-sections (prompts merged in, vision rev.5; genui-surface B2 adds Pattern sources)', () => {
+  it('the Settings content composes the Agent config (real ui-settings, wired to schema/store) PLUS all SEVEN entry-sections (prompts merged in, vision rev.5; genui-surface B2 added Pattern sources, ADR-0170 adds Catalogs LAST)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const settingsContent = el.querySelector('[data-role="settings-content"]') as HTMLElement
     const settingsEl = settingsContent.querySelector('ui-settings') as UISettingsElement
@@ -417,6 +421,7 @@ describe('UIAgentAdminElement — composition (GH #52/ADR-0154: chat + {Settings
       ENTRY_KINDS.resource,
       ENTRY_KINDS.tool,
       ENTRY_KINDS.patternSource,
+      ENTRY_KINDS.catalog,
     ])
   })
 
@@ -431,7 +436,7 @@ describe('UIAgentAdminElement — composition (GH #52/ADR-0154: chat + {Settings
     // The Agent section (open, with the compiled JSON) + one section per capability kind.
     const items = [...systemContent.querySelectorAll('[data-part="context-system"] [data-part="context-item"]')]
     expect(items.map((i) => i.getAttribute('data-item'))).toEqual([
-      'agent', ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource,
+      'agent', ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource, ENTRY_KINDS.catalog,
     ])
     const agentJson = JSON.parse(items[0]!.querySelector('[data-part="context-json"]')!.textContent ?? '{}') as Record<string, unknown>
     expect(agentJson['model']).toBe(DEFAULT_MODEL_ID)
@@ -2215,5 +2220,201 @@ describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
     expect(sanitizeCatalog('not-a-catalog')).toBe(DEFAULT_A2UI_CATALOG_ID)
     expect(sanitizeCatalog(42)).toBe(DEFAULT_A2UI_CATALOG_ID)
     expect(sanitizeCatalog(undefined)).toBe(DEFAULT_A2UI_CATALOG_ID)
+  })
+})
+
+// ── the Catalogs section (ADR-0170) ────────────────────────────────────────────────────────────────────
+// The section is the ONE writer of `A2UI_CATALOG_KEY`, and every switch DERIVES from that key — so these
+// legs are all about one property: what the section SHOWS and what the runner would THREAD can never
+// disagree. The pure projection is gated in entries.test.ts; this file drives the real composed element.
+
+describe('UIAgentAdminElement — the Catalogs section (ADR-0170)', () => {
+  const SECOND = A2UI_CATALOG_OPTIONS.find((o) => o.id !== DEFAULT_A2UI_CATALOG_ID)!
+
+  /** A stored ROSTER row (membership only — its `enabled` is dead weight, overridden at read time). */
+  function rosterRow(id: string, order: number, label = id): Entry {
+    return { id, kind: ENTRY_KINDS.catalog, label, description: '', content: '', order, enabled: false, builtin: false }
+  }
+
+  function mountWithRoster(roster: Entry[], extra: Record<string, unknown> = {}): UIAgentAdminElement {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({ initial: { [entriesStoreKey(ENTRY_KINDS.catalog)]: roster, ...extra } })
+    return mount(el)
+  }
+
+  function catalogSection(el: UIAgentAdminElement): HTMLElement {
+    return el.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.catalog}"]`) as HTMLElement
+  }
+
+  /** The rendered row ids, in DOM order (the list sorts by order then id). */
+  function rowIds(el: UIAgentAdminElement): string[] {
+    return [...catalogSection(el).querySelectorAll('[data-part="entry"]')].map((r) => r.getAttribute('data-entry-id') ?? '')
+  }
+
+  /** The ids whose switch is currently ON — the whole invariant reduces to this being length 1. */
+  function checkedIds(el: UIAgentAdminElement): string[] {
+    return [...catalogSection(el).querySelectorAll('[data-part="entry"]')]
+      .filter((r) => (r.querySelector('[data-part="entry-toggle"]') as HTMLElement & { checked: boolean }).checked)
+      .map((r) => r.getAttribute('data-entry-id') ?? '')
+  }
+
+  function flip(el: UIAgentAdminElement, id: string, checked: boolean): void {
+    const row = catalogSection(el).querySelector(`[data-part="entry"][data-entry-id="${id}"]`) as HTMLElement
+    const toggle = row.querySelector('[data-part="entry-toggle"]') as HTMLElement & { checked: boolean }
+    toggle.checked = checked
+    toggle.dispatchEvent(new Event('change'))
+  }
+
+  function remove(el: UIAgentAdminElement, id: string): void {
+    const row = catalogSection(el).querySelector(`[data-part="entry"][data-entry-id="${id}"]`) as HTMLElement
+    ;(row.querySelector('[data-part="entry-delete"]') as HTMLElement).click()
+  }
+
+  it('a FRESH store renders exactly one row — the ensured Default builtin, ON, with no delete affordance (cl.4)', async () => {
+    const el = mountWithRoster([])
+    await whenFlushed()
+    expect(rowIds(el)).toEqual([DEFAULT_A2UI_CATALOG_ID])
+    expect(checkedIds(el)).toEqual([DEFAULT_A2UI_CATALOG_ID])
+    const row = catalogSection(el).querySelector('[data-part="entry"]') as HTMLElement
+    expect(row.hasAttribute('data-builtin')).toBe(true)
+    expect(row.querySelector('[data-part="entry-delete"]'), 'a builtin row is never deletable').toBeNull()
+    // …and the ensure wrote NOTHING: the roster is still the empty array it was seeded with.
+    expect(el.store!.get(entriesStoreKey(ENTRY_KINDS.catalog))).toEqual([])
+  })
+
+  it('rows are label + switch only — no authoring form, no add-toggle, no per-entry editor (cl.8)', async () => {
+    const el = mountWithRoster([])
+    await whenFlushed()
+    const section = catalogSection(el)
+    expect(section.querySelector('[data-part="entry-add-toggle"]')).toBeNull()
+    expect(section.querySelector('[data-part="entry-add-form"]')).toBeNull()
+    expect(section.querySelector('[data-part="entry-content"]')).toBeNull()
+    expect(section.querySelector('[data-part="entry-toggle"]')).not.toBeNull()
+    expect(section.querySelector('[data-part="entry-label"]')!.textContent).toBe(
+      A2UI_CATALOG_OPTIONS.find((o) => o.id === DEFAULT_A2UI_CATALOG_ID)!.label,
+    )
+  })
+
+  it('toggling a REGISTERED inactive row ON writes the key and MOVES the one ON switch (radio semantics, cl.3)', async () => {
+    const el = mountWithRoster([rosterRow(SECOND.id, 0, SECOND.label)])
+    await whenFlushed()
+    expect(checkedIds(el)).toEqual([DEFAULT_A2UI_CATALOG_ID])
+
+    flip(el, SECOND.id, true)
+    expect(el.store!.get(A2UI_CATALOG_KEY)).toBe(SECOND.id)
+    expect(checkedIds(el), 'exactly one ON — the sibling switched itself off by DERIVATION, not by a write').toEqual([SECOND.id])
+    // the roster's own stored flags were never touched (the second-writer defect, closed)
+    const stored = el.store!.get(entriesStoreKey(ENTRY_KINDS.catalog)) as Entry[]
+    expect(stored.map((e) => e.enabled)).toEqual([false])
+  })
+
+  it('toggling an UNREGISTERED row ON writes NOTHING and the switch SNAPS BACK (the visible no-op, cl.3)', async () => {
+    const bogus = `${SECOND.id}-2` // exactly what a duplicate library add mints (validateNewEntry dedup)
+    const el = mountWithRoster([rosterRow(bogus, 0, 'A duplicate')])
+    await whenFlushed()
+    const writes: string[] = []
+    el.store!.subscribe?.((key) => void writes.push(key))
+
+    flip(el, bogus, true)
+    expect(writes, 'never a silent write of the default — no write at all').toEqual([])
+    expect(el.store!.get(A2UI_CATALOG_KEY), 'the selection is unchanged').toBeUndefined()
+    expect(checkedIds(el), 'the re-render snapped the refused switch back to the Default row').toEqual([DEFAULT_A2UI_CATALOG_ID])
+  })
+
+  it('toggling the ACTIVE row OFF writes the DEFAULT id — the selection moves to Default, never a "none" state (cl.3)', async () => {
+    const el = mountWithRoster([rosterRow(SECOND.id, 0, SECOND.label)], { [A2UI_CATALOG_KEY]: SECOND.id })
+    await whenFlushed()
+    expect(checkedIds(el)).toEqual([SECOND.id])
+
+    flip(el, SECOND.id, false)
+    expect(el.store!.get(A2UI_CATALOG_KEY)).toBe(DEFAULT_A2UI_CATALOG_ID)
+    expect(checkedIds(el), 'a persona always has a catalog').toEqual([DEFAULT_A2UI_CATALOG_ID])
+  })
+
+  it('deleting the ACTIVE row drops it from the roster AND moves the selection to Default (cl.4)', async () => {
+    const el = mountWithRoster([rosterRow(SECOND.id, 0, SECOND.label)], { [A2UI_CATALOG_KEY]: SECOND.id })
+    await whenFlushed()
+
+    remove(el, SECOND.id)
+    expect(el.store!.get(entriesStoreKey(ENTRY_KINDS.catalog))).toEqual([])
+    expect(el.store!.get(A2UI_CATALOG_KEY)).toBe(DEFAULT_A2UI_CATALOG_ID)
+    expect(rowIds(el)).toEqual([DEFAULT_A2UI_CATALOG_ID])
+    expect(checkedIds(el)).toEqual([DEFAULT_A2UI_CATALOG_ID])
+  })
+
+  it('deleting an INACTIVE row is the ordinary delete — the selection is untouched', async () => {
+    const el = mountWithRoster([rosterRow(SECOND.id, 0, SECOND.label), rosterRow(`${SECOND.id}-2`, 1, 'A duplicate')], {
+      [A2UI_CATALOG_KEY]: SECOND.id,
+    })
+    await whenFlushed()
+
+    remove(el, `${SECOND.id}-2`)
+    expect((el.store!.get(entriesStoreKey(ENTRY_KINDS.catalog)) as Entry[]).map((e) => e.id)).toEqual([SECOND.id])
+    expect(el.store!.get(A2UI_CATALOG_KEY), 'an inactive delete writes only the roster').toBe(SECOND.id)
+    expect(checkedIds(el)).toEqual([SECOND.id])
+  })
+
+  it('the section dims with the A2UI MODALITY, never a per-kind master (cl.5)', async () => {
+    const el = mountWithRoster([])
+    await whenFlushed()
+    const section = catalogSection(el)
+    expect(section.hasAttribute('data-kind-disabled')).toBe(false)
+
+    el.store!.set(SURFACE_A2UI_KEY, false)
+    expect(section.hasAttribute('data-kind-disabled'), 'a catalog for a surface that cannot run is noise').toBe(true)
+    // …and the phantom master key is neither read nor written: setting it changes nothing.
+    el.store!.set('catalogsEnabled', true)
+    expect(section.hasAttribute('data-kind-disabled')).toBe(true)
+    el.store!.set(SURFACE_A2UI_KEY, true)
+    expect(section.hasAttribute('data-kind-disabled')).toBe(false)
+  })
+
+  it('the kind is EXCLUDED from the composed system prompt — catalogId is WIRE, never prose (cl.5)', async () => {
+    const el = mountWithRoster([rosterRow(SECOND.id, 0, SECOND.label)])
+    // an ordinary capability entry, to prove the projection itself is alive (anti-vacuous)
+    el.store!.set(entriesStoreKey(ENTRY_KINDS.skill), [
+      { id: 'a-skill', kind: ENTRY_KINDS.skill, label: 'A skill', description: '', content: 'body', order: 0, enabled: true, builtin: false },
+    ])
+    await whenFlushed()
+    const prompt = (
+      JSON.parse(el.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]')!.textContent ?? '{}') as {
+        systemPrompt: string
+      }
+    ).systemPrompt
+    expect(prompt, 'the generic capability projection is alive').toContain('## Skills available to you')
+    expect(prompt).not.toContain('Catalogs available to you')
+    expect(prompt, "the selected catalog's own label never reaches the prompt").not.toContain(SECOND.label)
+  })
+
+  it('the Context: System catalog item shows the PROJECTION and derives `enabled` from the A2UI toggle (cl.5)', async () => {
+    const el = mountWithRoster([rosterRow(SECOND.id, 0, SECOND.label)], { [A2UI_CATALOG_KEY]: SECOND.id })
+    await whenFlushed()
+    const read = (): { enabled: boolean; entries: Array<{ label: string; enabled: boolean }> } =>
+      JSON.parse(
+        el.querySelector(`[data-part="context-item"][data-item="${ENTRY_KINDS.catalog}"] [data-part="context-json"]`)!.textContent ?? '{}',
+      ) as { enabled: boolean; entries: Array<{ label: string; enabled: boolean }> }
+
+    const before = read()
+    expect(before.enabled).toBe(true)
+    expect(before.entries.map((e) => e.enabled), 'the ensured Default row is in the view, and exactly one entry is on').toEqual([false, true])
+
+    el.store!.set(SURFACE_A2UI_KEY, false)
+    expect(read().enabled, 'the section reports the modality gate, not a phantom master').toBe(false)
+  })
+
+  it('a store with NO subscribe still snaps back and still re-renders (the #updateEntries fallback discipline)', async () => {
+    const values = new Map<string, unknown>([[entriesStoreKey(ENTRY_KINDS.catalog), [rosterRow(SECOND.id, 0, SECOND.label)]]])
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = { get: (key) => values.get(key), set: (key, value) => void values.set(key, value) }
+    mount(el)
+    await whenFlushed()
+
+    flip(el, SECOND.id, true)
+    expect(values.get(A2UI_CATALOG_KEY)).toBe(SECOND.id)
+    expect(checkedIds(el), 'no subscription to notify — the handler re-rendered directly').toEqual([SECOND.id])
+
+    flip(el, SECOND.id, false)
+    expect(values.get(A2UI_CATALOG_KEY)).toBe(DEFAULT_A2UI_CATALOG_ID)
+    expect(checkedIds(el)).toEqual([DEFAULT_A2UI_CATALOG_ID])
   })
 })
