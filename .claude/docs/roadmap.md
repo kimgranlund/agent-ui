@@ -9,7 +9,7 @@
 > lives in GitHub Issues ([ADR-0145](adr/0145-ticket-tier-github-issues-backend.md)) or, on other
 > projects, Linear — **never here**. An issue may cite a section of this doc the same way it cites
 > an ADR/SPEC/LLD id; this doc never enumerates issues by number, because that list goes stale the
-> moment an issue closes and this doc isn't the place re-reading it. Last synthesis pass: 2026-08-05 (M-A close — the 2026-07-28 arc complete).
+> moment an issue closes and this doc isn't the place re-reading it. Last synthesis pass: 2026-08-05 evening (the M-D → M-E → M-F arc ruled).
 
 ## 1 · Why a fourth doc
 
@@ -40,17 +40,19 @@ decision (dated line in §4).
 
 ## 2 · Now — current state (as of 2026-08-05)
 
-> **Arc status, 2026-08-05: the whole 2026-07-28 three-milestone arc is CLOSED.** **M-A is DONE**
-> (SPEC accepted 2026-08-05 → MA-1 #456 → MA-2 #459 → MA-3 #463 → MA-4 #464, all merged — §4's
-> dated line), joining **M-B** (2026-08-04) and **M-C** (2026-07-29). No next milestone is ruled:
-> the lane is open for the next intake, which is Kim's call — the parked scope intakes (§3 foot)
-> and the deferred items (§4) are the standing candidates.
->
-> Open issues at this sweep are follow-up-sized, none blocking: #465 (ADR-0164 cl.3 citation
-> re-home, incl. one ratified-prose spot awaiting Kim's sanction), #457 (SPEC-R1 sortable-default
-> prose), #455 (ui-table size diet checkpoint), #454 (app budget breach, pre-existing/growing),
-> #438 (MCP client, deferred by ADR-0168), #421 (per-persona catalogs idea). One open PR (#453,
-> the a2ui-ecosystem survey intake, awaiting Kim); `main` green incl. the browser gate (#458→#460).
+> **Arc status, 2026-08-05 (evening): the NEXT ARC IS RULED — M-D → M-E → M-F** (the same-day
+> intake wave [`reports/roadmap-wave-2026-08-05/`](reports/roadmap-wave-2026-08-05/) + Kim's
+> in-session decision round; the sheet's Q1–Q4 all answered). The prior arc (M-C 07-29 · M-B 08-04
+> · M-A 08-05) is fully closed — §4's dated lines. The ruled order and standing decisions:
+> **M-D** per-persona A2UI catalogs — GH #421 REOPENED by Kim's own ruling; its design intake
+> (GH #472) is in flight and its ADR gates the build. **M-E** upstream-drift correctness — with
+> Q3 pre-ruled: `protocol.ts`'s `surfaceProperties` DROPS (upstream v1.0-RC removed it; GH #477
+> carries the ruling). **M-F** the second SaaS composition + the association/multi-select intake.
+> The ecosystem SPEC ([`spec/a2ui-ecosystem-alignment.spec.md`](spec/a2ui-ecosystem-alignment.spec.md))
+> was ratified the same round (Q4) and its action rows filed (GH #473–#477); its R7 pack re-sync
+> is a user-scope harness action, R1 waits on its own streaming-SPEC revision.
+> `main` green across every gate incl. size (post #469/#470); the standing checkpoints (#455/#468)
+> and the ADR-0168 MCP deferral (#438) remain deliberate.
 
 - **Component foundation — complete.** G0–G9 + the Control Suite + the icon adapter: the reactive
   kernel, FACE element layer, templating/directives, and ~50 `ui-*` controls across the
@@ -196,11 +198,10 @@ decision (dated line in §4).
   entry-list extraction (PR #459) → MA-3 the workbench page, every PRD fence probe-proven (PR
   #463) → MA-4 the exemplar-cited pattern rows (PR #464). Follow-ups spawned, none blocking:
   #465 (citation re-home incl. one ratified-prose spot), #457, #455, #454. See §4's dated line.
-- **Per-control catalog intake — now.** Five newer controls (`ui-status-stream`, `ui-toast`,
-  `ui-command-modal`, `ui-textarea`, `ui-theme-provider`) landed after the A2UI catalog's 56
-  types with no recorded in-or-out decision. Kim ruled 2026-07-28: one small per-control pass,
-  now — each control ruled **in** (a catalog row) or **out** (the exclusion allowlist), with the
-  reason recorded either way, ending the silent drift.
+- **Per-control catalog intake — RESOLVED in-tree** (stale-line repair 2026-08-05, per the intake
+  wave's inv-2 §3 verification): the five once-uncataloged controls are all dispositioned — four
+  PERMANENT allowlist exclusions with cited ADRs, one catalog row. No open work; the 2026-07-28
+  ruling was executed and this line simply lagged it.
 - **AC19's sheet set — widen deliberately, or not.** The spacing-drift gate covers the shell
   family today (every `@agent-ui/app` sheet + the shell-composing site sheets). Whether it extends
   further — components-package sheets, the remaining site sheets — is an open, per-sheet decision;
