@@ -1,11 +1,12 @@
 # LLD — ui-button label-alignment law (single adornment ⇒ start-aligned label; GH #442)
 
+> Status: proposed · v0.1 · 2026-08-05 · design intake seat · Layer: LLD (implementation plan)
+>
 > Refines: [ADR-0171](../adr/0171-button-label-alignment-single-adornment-start.md) (proposed —
 > the build starts only from the ratified text; the LAW itself is Kim's 2026-08-05 ruling and is
 > not up for redesign, the ADR's two sub-decisions — row 8 clarify / row 10 reject — await the
 > flip). Decomposition:
 > [`../decompositions/button-label-alignment.decomp.md`](../decompositions/button-label-alignment.decomp.md).
-> · proposed · 2026-08-05 · design intake seat · Layer: LLD (implementation plan)
 >
 > **Composes on:** the SHIPPED ui-button anatomy — host-as-grid five structures (ADR-0006/0012,
 > `button.css:139-221`), the label wrapper + heal observer (ADR-0133, `button.ts` +
@@ -81,14 +82,25 @@ other CSS changes. `button.ts` is byte-untouched.
 
 **Holds (must stay green, re-verified, zero edits):**
 
+- `button-label-overflow.browser.test.ts:54-66` — the leading-icon+label wrapper-geometry leg:
+  pads only (½(h−icon) start, h/2 end), alignment-blind — untouched by the law.
 - `button-label-overflow.browser.test.ts:70-83` — bare slotless stretched button still CENTERS
   (rows 7 law unchanged).
 - `button-label-overflow.browser.test.ts:105-125` — bare overflowing label still clamps to track
   width + ellipsizes (the clamp law).
 - `button-label-overflow.browser.test.ts:128-174` — ellipsis + heal-observer legs (ADR-0133).
 - `button-geometry.browser.test.ts` — all pads/frames incl. `:330-338`'s `[leading|label]`
-  regression guard (pads only, alignment-blind) and the BTN-CARET legs (`:202-226`).
-- `button-states.browser.test.ts` — BTN-CARET glyph sizing (`:222+`), states, ring.
+  regression guard (pads only, alignment-blind) and the BTN-CARET legs (`:202-233`).
+- `button-states.browser.test.ts` — the BTN-CARET describe (`:236`), states, ring.
+- `button-geometry.test.ts:104-122` — the per-edge asymmetry + trailing-anatomy assertions HOLD,
+  but note the anchor: both tests slice `stylesBlock` from
+  `indexOf(":scope:has(> [slot='leading']):not")` / `indexOf(":scope:has(> [slot='trailing']):not")`,
+  and with §3's placement (right after the `[data-part='label']` rule, ABOVE the template rules)
+  the NEW override rule becomes the first `indexOf` match. The assertions still pass — the slice
+  from the earlier match still contains the template rules below — but the anchor no longer
+  points at the rule the comment names; the builder must not "fix" the anchor reflexively, and
+  must not move §3's rule below the templates to dodge it (either is an out-of-list probe edit —
+  escalate if the slice idiom needs a decision).
 - `button-geometry.test.ts:132-140` — icon-only `justify-content: center` (a DIFFERENT property
   on a different structure; untouched).
 
