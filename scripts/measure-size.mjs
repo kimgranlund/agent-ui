@@ -477,10 +477,15 @@ const appCssQuerySuffixPlugin = {
 // fixture, so 449 007 of the entry chunk's 747 986 B min rode the PUBLIC barrel — ~78 KB gz paid by every
 // consumer whether or not it ever opened agent-admin. That import is now dynamic (Kim's ruling; ADR-0139's
 // lazy precedent), which moves the pair into the informational lazy line below: entry 79063 B gz, marginal
-// 71621 B gz measured 2026-07-29. The budget deliberately STAYS at 74 KB (~5.5% headroom now) — re-basing a
-// budget DOWN onto a freshly-shrunk figure would just force the next legitimate app-tier control to re-base
-// it again; this file's convention re-bases on real growth, measured.
-const APP_MARGINAL_BUDGET = 74 * KB
+// 71621 B gz measured 2026-07-29. The budget deliberately STAYED at 74 KB then — this file's convention
+// re-bases on real growth, measured.
+// RULED 2026-08-05 (GH #454, Kim — "argued re-base + diet follow-up", the MA-1 table precedent): re-based
+// 74 KB → 79 KB (80896 B gz) — measured 80337 B gz on main at 55ca0f7, a breach that predates MA-1 and
+// grew across real merged feature waves (the ADR-0168 tool-enablement build, the ADR-0164 entry-list
+// extraction, the ADR-0151 shell family), every mover reviewed weight, none of it accidental. Per the
+// ruling this is a CHECKPOINT, not a ratchet: GH #468 is the standing app-diet follow-up that hunts the
+// marginal back down (lazy-split candidates named there).
+const APP_MARGINAL_BUDGET = 79 * KB
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })
