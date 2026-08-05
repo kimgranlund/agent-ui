@@ -1,6 +1,6 @@
 # SPEC — A2UI Ecosystem Alignment (2026-08-05 survey intake)
 
-> Status: proposed · v0.1 · 2026-08-05 · Layer: SPEC (execution contract)
+> Status: accepted · v0.1 · 2026-08-05 · Layer: SPEC (execution contract)
 > Refines: [`../prd/a2ui-expert-system.prd.md`](../prd/a2ui-expert-system.prd.md) — primarily
 > **PRD-G6** (coherence over time: divergence surfaces mechanically, not as silent rot — here
 > extended to divergence from the UPSTREAM ecosystem, not just internal drift) and **PRD-G7**
