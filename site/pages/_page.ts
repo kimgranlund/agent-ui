@@ -534,6 +534,14 @@ export const NAV: readonly NavGroup[] = [
     links: [{ href: './gen-ui-live.html', label: 'GenUI Chat Demo' }],
   },
   {
+    // The SaaS Data Workbench (GH #461, M-A MA-3) — the SAME standalone/ungrouped posture as Agent Admin
+    // App/GenUI Chat Demo just above: a real, listed destination (an entry in site-manifest.json/
+    // sitemap.json, an ungrouped nav link here, a landing card in main.ts) that still renders shell-less
+    // on load (workbench.ts imports no `_page.ts` — its own reason to exist is the composition itself, not
+    // a docs-wrapped preview of it).
+    links: [{ href: './workbench.html', label: 'SaaS Data Workbench' }],
+  },
+  {
     // The A2A cluster — ungrouped site-level links, same posture as the A2UI cluster above (independent
     // destinations, not a fleet component's page-type set). The arena (LLD-C11, a2a-tic-tac-toe.lld.md), the
     // corpus-derived concepts/demos section (corpus LLD-C12, a2a-corpus-docs.lld.md), and the A2UI-over-A2A

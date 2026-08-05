@@ -1001,6 +1001,19 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    // The SaaS Data Workbench (GH #461, M-A MA-3) — an ungrouped site-level card (no `label:`), mirroring
+    // its ungrouped nav link in _page.ts — the M-A flagship: the four ruled parts composed with zero
+    // bespoke chrome inside ui-workspace-shell, proving the layers fit together outside their own demos.
+    cards: [
+      {
+        href: './workbench.html',
+        title: 'SaaS Data Workbench',
+        blurb:
+          'A data table + filter toolbar + record-edit modal + agent-summary card composed entirely from published fleet primitives inside ui-workspace-shell — sort, select, filter, paginate, edit a record through the form spine, and read an agent-written summary of the current view.',
+      },
+    ],
+  },
+  {
     // The A2A cluster — ungrouped site-level cards, mirroring the ungrouped nav links in _page.ts (same
     // posture as the A2UI cluster above: independent destinations, not a fleet component). The arena
     // (LLD-C11), the corpus-derived concepts/demos section (corpus LLD-C12), and the A2UI-over-A2A

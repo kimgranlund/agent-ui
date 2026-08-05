@@ -1,0 +1,137 @@
+/* workbench.css — PAGE-LOCAL, CONTENT-REGION-ONLY layout for the SaaS Data Workbench (site/workbench.html,
+ * GH #461). PRD-G3/SPEC-N6 fence, verbatim: "its own stylesheet declares no shell/layout frame rules (no
+ * frame grid/flex, no rail or pane sizing)". Held to that literally: the `ui-workspace-shell` host below
+ * gets exactly ONE rule, a plain BLOCK-SIZE dimension (never `display:flex`/`grid`, never a
+ * `--ui-super-shell-*` pane-size override) — it already sets its own `display:flex; flex-direction:column`
+ * on itself (composed from `ui-super-shell`), so a definite block-size on a definite-height ancestor is all
+ * it needs to fill the viewport, no frame declaration required. Every rule past that point is `.wb-*`
+ * content-region layout — this page's OWN toolbar/table/record-editor/summary arrangement, never the
+ * shell's frame. Joins the AC19 spacing-drift gate's sheet set (SPEC-R14 · PRD-D7 ratified). */
+
+html,
+body {
+  block-size: 100%;
+  overflow: hidden; /* the agent-admin-app.css GH #130 precedent — the shell's own box scrolls, never the document */
+}
+
+#app {
+  block-size: 100dvh;
+  overflow: hidden;
+  background: var(--md-sys-color-neutral-surface);
+}
+
+/* A plain dimension, not a frame rule (SPEC-N6) — see the file banner. */
+ui-workspace-shell {
+  block-size: 100%;
+}
+
+/* ── content-region CSS only, past this point ─────────────────────────────────────────────────────────── */
+
+.wb-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--md-sys-space-xs);
+  padding: var(--md-sys-space-md) var(--md-sys-space-lg);
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+}
+.wb-title {
+  margin: 0;
+  font-size: var(--md-sys-typescale-title-large-size);
+  font-weight: var(--md-sys-typescale-title-large-weight);
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.wb-persistence-note {
+  margin: 0;
+  font-size: var(--md-sys-typescale-body-small-size);
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.wb-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--md-sys-space-md);
+  padding: var(--md-sys-space-lg);
+  box-sizing: border-box;
+  block-size: 100%;
+  overflow-y: auto;
+}
+
+/* Each of the four content blocks below (toolbar / record-actions / table / summary) carries its OWN
+ * bordered/padded card frame — the gen-ui-live.css `.chat-pane`/`.render-pane` precedent — so three
+ * functionally distinct rows (narrow-the-table / target-a-record-for-edit / the-table itself) read as
+ * three separated groups, not one undifferentiated stack of same-weight flex rows (layout-checker A3/A4). */
+.wb-toolbar-row,
+.wb-record-actions,
+.wb-table-wrap,
+.wb-summary {
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 12px;
+  background: var(--md-sys-color-neutral-surface-low);
+  padding: var(--md-sys-space-md);
+  box-sizing: border-box;
+}
+
+.wb-toolbar-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--md-sys-space-xs);
+}
+
+.wb-results-count {
+  margin: 0;
+  font-size: var(--md-sys-typescale-body-small-size);
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.wb-record-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--md-sys-space-sm);
+  flex-wrap: wrap;
+}
+
+.wb-table-wrap {
+  display: flex;
+}
+
+.wb-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--md-sys-space-xs);
+}
+
+/* The record-picker → table-row visual echo (layout-checker B3): a page-owned TRANSIENT flash, never a
+ * persistent attribute — ui-table rebuilds its own <tbody> wholesale on nearly every state change
+ * (table.md's own re-render contract), so a lasting external mark on its stamped <tr> would be silently
+ * wiped by the control's next rebuild. A momentary highlight (removed on animationend, re-triggered on
+ * every picker commit) needs no such durability. background-color/animation are outside AC19's
+ * SPACING_PROPERTIES family — no ladder-rung literal concern here. */
+@keyframes wb-row-flash {
+  from {
+    background-color: var(--md-sys-color-primary-container-low);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+.wb-table-wrap tr.wb-row-flash {
+  animation: wb-row-flash 1.2s ease-out;
+}
+.wb-summary-title {
+  margin: 0;
+  font-size: var(--md-sys-typescale-title-small-size);
+  font-weight: var(--md-sys-typescale-title-small-weight);
+  color: var(--md-sys-color-neutral-on-surface);
+}
+
+.wb-modal-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--md-sys-space-md);
+}
+.wb-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--md-sys-space-sm);
+  margin-block-start: var(--md-sys-space-md);
+}

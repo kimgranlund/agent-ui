@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · SaaS Data Workbench</title>
+  </head>
+  <body>
+    <!-- The STANDALONE SaaS Data Workbench (GH #461, M-A MA-3) — a data table + toolbar + record-edit
+         modal + agent-summary card composed entirely from published fleet primitives inside
+         ui-workspace-shell, with NO docs container shell (no nav, no prose, no resize frame) — the
+         agent-admin-app.html precedent: this page's whole reason to exist is showing the composition
+         exactly as it would ship, not a docs-wrapped preview of it. MPA entry auto-discovered by the
+         Vite site/**/*.html glob → dist/workbench.html. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/workbench.ts"></script>
+  </body>
+</html>

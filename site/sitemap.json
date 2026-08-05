@@ -700,6 +700,13 @@
       "section": "GenUI"
     },
     {
+      "name": "SaaS Data Workbench",
+      "url": "./workbench.html",
+      "description": "A data table + filter toolbar + record-edit modal + agent-summary card composed entirely from published fleet primitives inside ui-workspace-shell — the M-A flagship composition proof (GH #461).",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
       "name": "A2A Tic-Tac-Toe Arena",
       "url": "./a2a-tic-tac-toe.html",
       "description": "Two agents play tic-tac-toe through a deterministic referee, an isolation-proven Agent2Agent match.",
