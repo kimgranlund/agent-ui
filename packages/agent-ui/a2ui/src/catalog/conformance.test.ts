@@ -145,6 +145,40 @@ describe('validateCatalogConformance — enum membership (ADR-0098)', () => {
   })
 })
 
+// ── rejectFunctionCall — the GH #429 / ADR-0169 E7 narrow gate ──────────────────────────────────────────
+describe('validateCatalogConformance — PropDef.rejectFunctionCall (ADR-0169 E7 / GH #429)', () => {
+  // A stub catalog with a `functionCall`-rejecting action prop AND a plain, un-opted-in object prop —
+  // proving the clause is scoped to the declaring PropDef, not object-typed props in general.
+  const actionCatalog = loadCatalog({
+    catalogId: 'action-demo',
+    protocolVersion: 'v1.0',
+    components: {
+      Widget: {
+        properties: {
+          action: { type: { type: 'object' }, mapsTo: 'action', rejectFunctionCall: true },
+          payload: { type: { type: 'object' }, mapsTo: 'payload' }, // no opt-in
+        },
+      },
+    },
+    functions: {},
+  })
+
+  it('rejects an object carrying an own functionCall key on an opted-in prop', () => {
+    const f = validateCatalogConformance(comp({ id: 'w', component: 'Widget', action: { functionCall: { name: 'x' } } }), actionCatalog)
+    expect(f).toEqual([{ code: 'CATALOG', path: 'w.action' }])
+  })
+
+  it('accepts an object WITHOUT functionCall on the same opted-in prop (non-vacuous — not a blanket object reject)', () => {
+    const f = validateCatalogConformance(comp({ id: 'w', component: 'Widget', action: { event: { name: 'x' } } }), actionCatalog)
+    expect(f).toEqual([])
+  })
+
+  it('does NOT reject the same {functionCall} shape on a prop that never opted in (scoped to the declaring PropDef, not object-typed props in general)', () => {
+    const f = validateCatalogConformance(comp({ id: 'w', component: 'Widget', payload: { functionCall: { name: 'x' } } }), actionCatalog)
+    expect(f).toEqual([])
+  })
+})
+
 // ── SAFE_HREF_SCHEMES sync — the two-literal duplication stays honest ────────────────────────────────────
 //
 // conformance.ts keeps a LOCAL copy of this constant rather than importing `@agent-ui/components`'s real

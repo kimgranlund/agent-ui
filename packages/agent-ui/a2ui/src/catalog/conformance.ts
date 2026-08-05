@@ -70,8 +70,18 @@ function matchesType(value: unknown, pd: PropDef): boolean {
   if (pd.bindable && isBinding(value)) return true // deferred resolution at render (LLD-C5/LLD-C10)
   if (!matchesSchemaType(value, pd.type)) return false
   if (pd.format === 'safe-href' && typeof value === 'string') return matchesSafeHref(value)
+  if (pd.rejectFunctionCall && isFunctionCallAction(value)) return false
   return true
 }
+
+/**
+ * GH #429 (ADR-0169 E7 row): the ONE narrow shape `PropDef.rejectFunctionCall` screens for — an
+ * object VALUE carrying an own `functionCall` key, upstream's client-side-execution `Action` arm.
+ * Not a general object-shape descent (that stays out of scope by design, per `matchesSchemaType`'s
+ * own comment) — only this one named key, only when the declaring PropDef opts in.
+ */
+const isFunctionCallAction = (v: unknown): v is { functionCall: unknown } =>
+  typeof v === 'object' && v !== null && !Array.isArray(v) && 'functionCall' in v
 
 /**
  * The `format: 'safe-href'` validator's FIRST line (ADR-0114 cl.3, content-family LLD-C13 / SPEC-R12):

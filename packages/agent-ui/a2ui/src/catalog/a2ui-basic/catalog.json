@@ -107,7 +107,8 @@
             },
             "required": ["event"]
           },
-          "mapsTo": "action"
+          "mapsTo": "action",
+          "rejectFunctionCall": true
         },
         "weight": { "type": { "type": "number" }, "mapsTo": "weight" },
         "accessibility": { "type": { "type": "object" }, "mapsTo": "accessibility" }
