@@ -138,7 +138,12 @@ describe('ui-button per-structure alignment matrix (ADR-0171, GH #442) — Kim\'
     const labelRect = label(btn).getBoundingClientRect()
     const insetStart = labelRect.left - btnRect.left
     const insetEnd = btnRect.right - labelRect.right
-    expect(insetStart, `[label] must center: start=${insetStart} end=${insetEnd}`).toBeCloseTo(insetEnd, 0)
+    // ≤2px slack — cross-engine sub-pixel layout rounding (webkit vs. chromium), the same idiom the two
+    // start-aligned legs above use; toBeCloseTo(…, 0) is ±0.5px, too tight cross-engine.
+    expect(
+      Math.abs(insetStart - insetEnd),
+      `[label] must center: start=${insetStart} end=${insetEnd}`,
+    ).toBeLessThanOrEqual(2)
   })
 
   it('[leading | label]: START-aligned — label hugs the leading adornment (row 1/3)', () => {
@@ -186,7 +191,12 @@ describe('ui-button per-structure alignment matrix (ADR-0171, GH #442) — Kim\'
     const trackEnd = trailingRect.left - gap
     const insetStart = labelRect.left - trackStart
     const insetEnd = trackEnd - labelRect.right
-    expect(insetStart, `[leading | label | trailing] must center: start=${insetStart} end=${insetEnd}`).toBeCloseTo(insetEnd, 0)
+    // ≤2px slack — cross-engine sub-pixel layout rounding (webkit vs. chromium), the same idiom the two
+    // start-aligned legs above use; toBeCloseTo(…, 0) is ±0.5px, too tight cross-engine.
+    expect(
+      Math.abs(insetStart - insetEnd),
+      `[leading | label | trailing] must center: start=${insetStart} end=${insetEnd}`,
+    ).toBeLessThanOrEqual(2)
   })
 })
 

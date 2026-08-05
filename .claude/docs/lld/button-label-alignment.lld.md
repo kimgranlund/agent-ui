@@ -71,6 +71,14 @@ Plus: the GH #293 comment block (`button.css:118-130`) gains a dated pointer sen
 the BASE; single-adorned structures override to start — ADR-0171") rather than a rewrite. No
 other CSS changes. `button.ts` is byte-untouched.
 
+> **REV 2026-08-05 (stale-record repair, `screens:component-checker` review of the fix-442-button-alignment
+> build — MINOR-1):** the code comment above says the `auto 1fr` / `1fr auto` template rules are reused
+> verbatim from "above" — that was this record's own error. §3 places the new override rule right after the
+> base `[data-part='label']` rule, which sits ABOVE the template rules in `button.css`'s real ordering — so
+> the rules being reused verbatim are BELOW, not above. The landed `button.css` comment correctly reads
+> "below"; this note repairs the frozen text to match, rather than the build silently drifting from its own
+> design record. No CSS/behaviour change — comment wording only, in both files.
+
 ## 4 · Probe-flip contract (frozen — the build touches NO probe outside this list)
 
 **Flips (existing assertions that invert or extend):**
