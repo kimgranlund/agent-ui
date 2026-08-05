@@ -1,0 +1,38 @@
+/* pagination.css — ui-pagination, the Pattern-class page navigator (ADR-0163 cl.6, SPEC-R3). Two clearly-
+ * SECTIONED blocks (ADR-0003):
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-pagination)` (specificity 0,0,0) declares every `--ui-pagination-*`
+ *       component token: the inter-stop gap (off the `--md-sys-space` ladder) and the ellipsis ink (a
+ *       neutral role — the ellipsis is a passive marker, never an intent signal). NO control-height /
+ *       `[size]`/`[scale]` row of its own (cl.6 — "the buttons carry their own geometry; the novelty is
+ *       zero"): the composed `ui-button` stops own their own §1 geometry entirely.
+ *   [2] STYLES BLOCK — `@scope (ui-pagination)` CONSUMES only `--ui-pagination-*`. The host lays its stops
+ *       out as a simple inline-flex row; the `[data-part='ellipsis']` marker is inert (no interactive
+ *       affordance, `aria-hidden` on the element itself carries the a11y half).
+ *
+ * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from pagination.ts
+ * (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-pagination) declares --ui-pagination-* ════════════════ */
+
+:where(ui-pagination) {
+  --ui-pagination-gap: var(--md-sys-space-xs); /* the inter-stop rhythm — rides [density] free (ADR-0103) */
+  --ui-pagination-ellipsis-ink: var(--md-sys-color-neutral-on-surface-variant); /* a passive marker, not an intent */
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-pagination) consumes ONLY --ui-pagination-* ════════════════ */
+
+@scope (ui-pagination) {
+  :scope {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ui-pagination-gap);
+    flex-wrap: wrap; /* a narrow host wraps rather than clipping a stop (no horizontal scroll machinery here) */
+  }
+
+  :scope [data-part='ellipsis'] {
+    color: var(--ui-pagination-ellipsis-ink);
+    user-select: none;
+  }
+}

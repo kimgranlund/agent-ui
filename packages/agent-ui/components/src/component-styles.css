@@ -90,6 +90,10 @@
 @import './controls/stat/stat.css';
 @import './controls/badge/badge.css';
 
+/* ADR-0163 cl.6 — ui-pagination, the fleet's first standalone page navigator (SPEC-R3): Pattern-class,
+ * composes ui-button for every stop; no [size]/[scale] geometry row of its own. */
+@import './controls/pagination/pagination.css';
+
 /* Content family — Wave M1 (ADR-0113, content-family.lld.md LLD-C11): the zero-machinery code leaf and
  * the native details/summary disclosure. (The ui-text hyperlink extension lives in text/text.css, above.) */
 @import './controls/code/code.css';
