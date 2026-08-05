@@ -1,6 +1,6 @@
 # SPEC — SaaS Data Workbench (M-A)
 
-> Status: proposed · v0.1 · 2026-08-04 · Layer: SPEC (execution contract)
+> Status: accepted · v0.1 · 2026-08-05 · Layer: SPEC (execution contract)
 > Refines: [`saas-data-workbench.prd.md`](../prd/saas-data-workbench.prd.md) (v0.2, ratified by Kim
 > 2026-07-31) — this document turns PRD-G1–G6 and the §7 MA-1…MA-4 sequencing into testable clauses,
 > and rules the three forks the PRD delegated (**PRD-D4/D5/D6**, §3 below). PRD-D1–D3 and PRD-D7 are
