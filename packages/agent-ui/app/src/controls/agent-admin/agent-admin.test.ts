@@ -765,8 +765,9 @@ describe('UIAgentAdminElement — the default store persists across a reload (AD
       (second.querySelector('[data-part="settings-item"][data-item="skill"] [data-part="kind-enabled"]') as HTMLElement & { checked: boolean })
         .checked,
     ).toBe(false)
-    // The A2UI catalog picker rides the same flag — an off modality's picker stays inert after a reload.
-    expect((second.querySelector('[data-part="surface-catalog"]') as HTMLElement & { disabled: boolean }).disabled).toBe(true)
+    // The A2UI catalog MIRROR rides the same flag (ADR-0170 cl.6 — the select it replaced dimmed the
+    // same way): an off modality's trailing context stays dimmed after a reload.
+    expect((second.querySelector('[data-part="surface-catalog"]') as HTMLElement).hasAttribute('data-disabled')).toBe(true)
   })
 })
 
@@ -1991,7 +1992,7 @@ describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
     return bodies[bodies.length - 1] as HTMLElement
   }
 
-  it('composes the card: markdown/a2ui/genui rows in order; genui-surface B2 — GenUI is LIVE (its own inverse-default OFF switch, never PRD-disabled); the catalog picker carries the roster', async () => {
+  it('composes the card: markdown/a2ui/genui rows in order; genui-surface B2 — GenUI is LIVE (its own inverse-default OFF switch, never PRD-disabled); the a2ui row carries the read-only catalog mirror (ADR-0170 cl.6)', async () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
     el.store = createMemoryStore({})
     document.body.append(el)
@@ -2004,9 +2005,13 @@ describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
     const genuiToggle = genui.querySelector('[data-part="surface-toggle"]') as HTMLElement & { disabled: boolean; checked: boolean }
     expect(genuiToggle.disabled).toBe(false)
     expect(genuiToggle.checked, 'GenUI defaults OFF (the inverse of the two live-since-launch modalities)').toBe(false)
+    // ADR-0170 cl.6 — the bare `<ui-select>` is GONE (one writer into the key); what rides the a2ui row
+    // is a read-only <span> mirroring the ACTIVE catalog's label.
     const catalog = el.querySelector('[data-part="surface-catalog"]') as HTMLElement
-    const options = [...catalog.querySelectorAll('[role="option"]')]
-    expect(options.map((o) => o.getAttribute('value'))).toEqual(A2UI_CATALOG_OPTIONS.map((o) => o.id))
+    expect(catalog.tagName.toLowerCase(), 'a plain span, not a control').toBe('span')
+    expect(el.querySelector('[data-part="surface-catalog"] [role="option"]'), 'no options: nothing to pick here anymore').toBeNull()
+    expect(el.querySelector('ui-select'), 'the element composes no ui-select at all now').toBeNull()
+    expect(catalog.textContent).toBe(A2UI_CATALOG_OPTIONS.find((o) => o.id === DEFAULT_A2UI_CATALOG_ID)!.label)
     // both live-since-launch modalities ship ON
     expect((rows[0]!.querySelector('[data-part="surface-toggle"]') as HTMLElement & { checked: boolean }).checked).toBe(true)
     expect((rows[1]!.querySelector('[data-part="surface-toggle"]') as HTMLElement & { checked: boolean }).checked).toBe(true)
@@ -2183,12 +2188,12 @@ describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
     expect(seen, 'the armed runner must be bypassed while the modality is off').toHaveLength(0)
     expect(lastAgentBody(el).textContent, 'the prose stub answered instead').toContain('stub')
 
-    // the catalog picker disables with the modality (choosing a catalog for a dead surface is noise)
-    expect((el.querySelector('[data-part="surface-catalog"]') as HTMLElement & { disabled: boolean }).disabled).toBe(true)
+    // the catalog mirror dims with the modality (context for a dead surface is noise, ADR-0170 cl.6)
+    expect((el.querySelector('[data-part="surface-catalog"]') as HTMLElement).hasAttribute('data-disabled')).toBe(true)
 
     el.store!.set(SURFACE_A2UI_KEY, true)
     await whenFlushed()
-    expect((el.querySelector('[data-part="surface-catalog"]') as HTMLElement & { disabled: boolean }).disabled).toBe(false)
+    expect((el.querySelector('[data-part="surface-catalog"]') as HTMLElement).hasAttribute('data-disabled')).toBe(false)
     composerSubmit(el, 'draw again')
     await whenFlushed()
     await new Promise((r) => setTimeout(r, 0))
@@ -2400,6 +2405,35 @@ describe('UIAgentAdminElement — the Catalogs section (ADR-0170)', () => {
 
     el.store!.set(SURFACE_A2UI_KEY, false)
     expect(read().enabled, 'the section reports the modality gate, not a phantom master').toBe(false)
+  })
+
+  // ── cl.6 — the retired select + the read-only mirror ────────────────────────────────────────────────
+
+  it('the a2ui row mirrors the ACTIVE catalog LABEL, and the mirror TRACKS a selection made in the section', async () => {
+    const el = mountWithRoster([rosterRow(SECOND.id, 0, SECOND.label)])
+    await whenFlushed()
+    const mirror = (): HTMLElement => el.querySelector('[data-part="surface-catalog"]') as HTMLElement
+    expect(mirror().textContent).toBe(A2UI_CATALOG_OPTIONS.find((o) => o.id === DEFAULT_A2UI_CATALOG_ID)!.label)
+
+    flip(el, SECOND.id, true)
+    expect(mirror().textContent, 'the section wrote the key; the mirror re-derived from it').toBe(SECOND.label)
+    flip(el, SECOND.id, false)
+    expect(mirror().textContent, 'and back to Default when the active row is switched off').toBe(
+      A2UI_CATALOG_OPTIONS.find((o) => o.id === DEFAULT_A2UI_CATALOG_ID)!.label,
+    )
+  })
+
+  it('the mirror is READ-ONLY: it carries no control, and an EXTERNAL key write still reaches it (fail-closed on junk)', async () => {
+    const el = mountWithRoster([])
+    await whenFlushed()
+    const mirror = el.querySelector('[data-part="surface-catalog"]') as HTMLElement
+    expect(mirror.querySelector('*'), 'plain text — no nested control to commit from').toBeNull()
+
+    el.store!.set(A2UI_CATALOG_KEY, SECOND.id)
+    expect(mirror.textContent).toBe(SECOND.label)
+    // a stale/foreign stored id shows the DEFAULT label — the same coercion the wire read applies
+    el.store!.set(A2UI_CATALOG_KEY, 'a-catalog-that-was-removed')
+    expect(mirror.textContent).toBe(A2UI_CATALOG_OPTIONS.find((o) => o.id === DEFAULT_A2UI_CATALOG_ID)!.label)
   })
 
   it('a store with NO subscribe still snaps back and still re-renders (the #updateEntries fallback discipline)', async () => {

@@ -49,7 +49,8 @@ import { UIElement, prop, untracked, type PropsSchema, type ReactiveProps } from
 // future tree-shaking change could sever. `field` (TKT-0073) registers the `<ui-field>` wrapper entry-list.ts
 // now hosts those two text-fields in, so their required-validation message renders outside their own box.
 import '@agent-ui/components/controls/switch'
-import '@agent-ui/components/controls/select' // vision rev.6 — the Surface Options catalog picker
+// (`controls/select` used to register here for the Surface Options catalog picker — ADR-0170 cl.6 retired
+// that `ui-select`, and this element creates no other one, so the registration went with it.)
 import '@agent-ui/components/controls/button'
 import '@agent-ui/components/controls/icon'
 import '@agent-ui/code/editor'
@@ -275,7 +276,9 @@ export class UIAgentAdminElement extends UIElement {
   // ── vision rev.6: the Surface Options controls (built once; state re-applied per store change) ───────
   #surfaceMarkdownSwitch: (HTMLElement & { checked: boolean }) | null = null
   #surfaceA2uiSwitch: (HTMLElement & { checked: boolean }) | null = null
-  #surfaceCatalogSelect: (HTMLElement & { value: string; disabled: boolean }) | null = null
+  // ADR-0170 cl.6 — the a2ui row's READ-ONLY catalog mirror (the retired `ui-select`'s replacement): its
+  // text is re-derived from the one persisted selection in `#applyMasterStates`; it never writes.
+  #surfaceCatalogMirror: HTMLElement | null = null
   // genui-surface.spec.md SPEC-R11 — the GenUI modality's own row switch (live, B2).
   #surfaceGenuiSwitch: (HTMLElement & { checked: boolean }) | null = null
   // genui-surface.spec.md v0.5 §11 (SPEC-R10 amended clause, GH #316/ADR-0162) — the dogfood sub-toggle.
@@ -586,24 +589,18 @@ export class UIAgentAdminElement extends UIElement {
       if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
     })
     this.#surfaceA2uiSwitch = a2ui.toggle
-    // The catalog picker (one option today — agent-admin-schema.ts's A2UI_CATALOG_OPTIONS doc owns why).
-    const catalogSelect = document.createElement('ui-select') as HTMLElement & { value: string; disabled: boolean }
-    catalogSelect.setAttribute('data-part', 'surface-catalog')
-    catalogSelect.setAttribute('aria-label', 'A2UI catalog')
-    for (const option of A2UI_CATALOG_OPTIONS) {
-      const optionEl = document.createElement('div')
-      optionEl.setAttribute('role', 'option')
-      optionEl.setAttribute('value', option.id)
-      optionEl.textContent = option.label
-      catalogSelect.append(optionEl)
-    }
-    // ui-select's ONLY commit event is `select` (select.md; the settings generator's own COMMIT_EVENT law).
-    catalogSelect.addEventListener('select', () => {
-      this.store?.set(A2UI_CATALOG_KEY, sanitizeCatalog(catalogSelect.value))
-      if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
-    })
-    this.#surfaceCatalogSelect = catalogSelect
-    a2ui.row.append(catalogSelect)
+    // ADR-0170 cl.6 — the bare `ui-select` picker that used to live here is RETIRED: the Catalogs library
+    // section (CAPABILITY_KINDS, below) is now the ONE writer of `A2UI_CATALOG_KEY`, and two write paths
+    // into one key — each obliged to reconcile the other's surface — is exactly the second-writer defect
+    // that record closes. What survives is the at-a-glance CONTEXT beside the toggle: a READ-ONLY mirror
+    // of the active catalog's label, re-derived in `#applyMasterStates` (where the select's own
+    // value-reflection lived). It commits nothing and listens to nothing.
+    const catalogMirror = document.createElement('span')
+    catalogMirror.setAttribute('data-part', 'surface-catalog')
+    // No `aria-label`/role: this is plain trailing TEXT in the row that already names the modality, not a
+    // control — the row's own label + this value read as one phrase to a screen reader.
+    this.#surfaceCatalogMirror = catalogMirror
+    a2ui.row.append(catalogMirror)
 
     // genui-surface.spec.md SPEC-R11/B2 — LIVE: the row's own "visible-but-disabled, PRD pending" state
     // (PRD §3) stood until this slice shipped; the modality's own inverse-default (OFF until an admin
@@ -1358,13 +1355,17 @@ export class UIAgentAdminElement extends UIElement {
       this.#capabilitySections.get(kind)?.host.toggleAttribute('data-kind-disabled', !on)
     }
     // Vision rev.6 — the Surface Options rows reflect their stored state the same way; the catalog
-    // picker disables while its modality is off (choosing a catalog for a surface that can't run is
-    // noise, not configuration).
+    // mirror dims while its modality is off (context for a surface that can't run is noise, not
+    // configuration — the retired select's own rationale, inherited).
     if (this.#surfaceMarkdownSwitch) this.#surfaceMarkdownSwitch.checked = isEnabledFlag(store?.get(SURFACE_MARKDOWN_KEY))
     if (this.#surfaceA2uiSwitch) this.#surfaceA2uiSwitch.checked = a2uiOn
-    if (this.#surfaceCatalogSelect) {
-      this.#surfaceCatalogSelect.value = sanitizeCatalog(store?.get(A2UI_CATALOG_KEY))
-      this.#surfaceCatalogSelect.disabled = !a2uiOn
+    if (this.#surfaceCatalogMirror) {
+      // ADR-0170 cl.6 — the SAME fail-closed read the wire uses (`:1061`/`:1321`), feeding a label lookup
+      // instead of a select's value: an unknown/absent stored id shows the Default catalog's label, which
+      // is exactly the id a turn would thread. Falls back to the raw id if the registry ever lacks it.
+      const active = sanitizeCatalog(store?.get(A2UI_CATALOG_KEY))
+      this.#surfaceCatalogMirror.textContent = A2UI_CATALOG_OPTIONS.find((option) => option.id === active)?.label ?? active
+      this.#surfaceCatalogMirror.toggleAttribute('data-disabled', !a2uiOn)
     }
     const genuiOn = isGenuiSurfaceEnabled(store?.get(SURFACE_GENUI_KEY))
     if (this.#surfaceGenuiSwitch) this.#surfaceGenuiSwitch.checked = genuiOn
