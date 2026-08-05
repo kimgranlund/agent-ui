@@ -5,7 +5,7 @@
 // entry lists from the new store (agent-admin.ts's reactive store effect), measured on real rendered DOM,
 // never assumed. jsdom needs the attachInternals stub (agent-admin.test.ts's exact pattern — composed FACE
 // form controls call setFormValue/setValidity, absent in jsdom).
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest'
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (sitemap.test.ts precedent)
 import { readdirSync } from 'node:fs'
 import { whenFlushed } from '@agent-ui/components'
@@ -35,6 +35,7 @@ afterAll(() => {
 const mounted: Element[] = []
 afterEach(() => {
   for (const el of mounted.splice(0)) el.remove()
+  vi.unstubAllGlobals() // the ADR-0170 POST-body pins stub `fetch` (admin-live-runner.test.ts's precedent)
 })
 
 const SUPPORTED_MODEL_IDS = new Set(['claude-sonnet-5', 'claude-haiku-4-5-20251001']) // rev.4: the roster pair presets may seed
@@ -279,6 +280,138 @@ describe('the Registered catalogs pack (ADR-0170 cl.7)', () => {
       const packs = librariesForCategory(category)[ENTRY_KINDS.catalog]!
       expect(packs.map((p) => p.id), `category ${String(category)}`).toEqual(['registered-catalogs'])
     }
+  })
+})
+
+// ── ADR-0170 acceptance (LLD-C7a) — the produce POST body is BYTE-IDENTICAL across the refactor ─────────
+// This is the pin the whole campaign is judged on: the catalog picker changed shape completely (a bare
+// `<ui-select>` became a library section whose switches derive from the persisted key), and the WIRE must
+// not have noticed. Driven end-to-end on purpose — the real `ui-agent-admin` element, the real
+// `createAdminSurfaceTurn` runner, one stubbed `fetch` — because each half alone would prove nothing
+// about the seam between them (the picker-wiring lesson: a UI that updates its own state is not evidence
+// the value reached the network call).
+
+describe('the produce POST body across the catalog refactor (ADR-0170 acceptance)', () => {
+  /** The EXACT key set a component-driven surface turn puts on the wire — spelled out, so an added or
+   *  dropped field is a red test rather than a silent contract change. */
+  const EXPECTED_KEYS = ['a2ui', 'catalogId', 'effort', 'genui', 'input', 'integrations', 'model', 'personaSystem', 'progressDetail', 'provider']
+
+  function ndjsonResponse(lines: readonly string[]): Response {
+    const encoder = new TextEncoder()
+    let i = 0
+    const stream = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        if (i < lines.length) {
+          controller.enqueue(encoder.encode(`${lines[i]!}\n`))
+          i += 1
+        } else controller.close()
+      },
+    })
+    return new Response(stream, { status: 200, headers: { 'content-type': 'application/x-ndjson' } })
+  }
+
+  function submit(admin: UIAgentAdminElement, text: string): void {
+    const composer = admin.querySelector('ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = text
+    ;(composer.querySelector('[data-part="editor"]') as HTMLElement).dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
+    )
+  }
+
+  async function settle(): Promise<void> {
+    for (let i = 0; i < 20; i += 1) {
+      await whenFlushed()
+      await new Promise((r) => setTimeout(r, 0))
+    }
+  }
+
+  it('the body keys are unchanged and catalogId still carries the sanitized selection — now written by the SECTION', async () => {
+    const { createAdminSurfaceTurn } = await import('../lib/admin-live-runner.ts')
+    const { ENTRY_KINDS, entriesStoreKey, A2UI_CATALOG_OPTIONS } = await import('@agent-ui/app')
+    const { createMemoryStore } = await import('@agent-ui/app/settings-memory-store')
+    const second = A2UI_CATALOG_OPTIONS[1]!
+
+    const bodies: Array<Record<string, unknown>> = []
+    const fetchSpy = vi.fn((_url: string, init: { body: string }) => {
+      bodies.push(JSON.parse(init.body) as Record<string, unknown>)
+      return Promise.resolve(ndjsonResponse(['{"a2uiMeta":{"note":"ok"}}']))
+    })
+    vi.stubGlobal('fetch', fetchSpy)
+
+    const admin = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    // The second catalog is on this persona's shelf, but NOT selected — the default still is.
+    admin.store = createMemoryStore({
+      initial: {
+        [entriesStoreKey(ENTRY_KINDS.catalog)]: [
+          { id: second.id, kind: ENTRY_KINDS.catalog, label: second.label, description: '', content: '', order: 0, enabled: false, builtin: false },
+        ],
+      },
+    })
+    admin.agentSurfaceTurn = createAdminSurfaceTurn()
+    document.body.append(admin)
+    mounted.push(admin)
+    await whenFlushed()
+
+    submit(admin, 'draw me a table')
+    await settle()
+    expect(bodies, 'the turn reached the produce endpoint').toHaveLength(1)
+    expect(Object.keys(bodies[0]!).sort(), 'the wire shape is byte-identical to the pre-refactor body').toEqual(EXPECTED_KEYS)
+    expect(bodies[0]!['catalogId'], 'fail-closed: an unset key threads the default id, exactly as the select era did').toBe('agent-ui')
+
+    // Now move the selection THROUGH THE NEW UI — the switch in the Catalogs section, nothing else.
+    const row = admin.querySelector(
+      `[data-part="entry-section"][data-kind="${ENTRY_KINDS.catalog}"] [data-part="entry"][data-entry-id="${second.id}"]`,
+    ) as HTMLElement
+    const toggle = row.querySelector('[data-part="entry-toggle"]') as HTMLElement & { checked: boolean }
+    toggle.checked = true
+    toggle.dispatchEvent(new Event('change'))
+    await whenFlushed()
+
+    submit(admin, 'again')
+    await settle()
+    expect(bodies).toHaveLength(2)
+    expect(Object.keys(bodies[1]!).sort(), 'still the same wire shape').toEqual(EXPECTED_KEYS)
+    expect(bodies[1]!['catalogId'], 'the section is the writer now, and the wire followed it').toBe(second.id)
+  })
+
+  it('a REFUSED selection never reaches the wire (an unregistered row stays unselectable end-to-end)', async () => {
+    const { createAdminSurfaceTurn } = await import('../lib/admin-live-runner.ts')
+    const { ENTRY_KINDS, entriesStoreKey } = await import('@agent-ui/app')
+    const { createMemoryStore } = await import('@agent-ui/app/settings-memory-store')
+
+    const bodies: Array<Record<string, unknown>> = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((_url: string, init: { body: string }) => {
+        bodies.push(JSON.parse(init.body) as Record<string, unknown>)
+        return Promise.resolve(ndjsonResponse(['{"a2uiMeta":{"note":"ok"}}']))
+      }),
+    )
+
+    const admin = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    admin.store = createMemoryStore({
+      initial: {
+        [entriesStoreKey(ENTRY_KINDS.catalog)]: [
+          // the dedup-suffixed duplicate a second library add of the same catalog would mint
+          { id: 'a2ui-basic-2', kind: ENTRY_KINDS.catalog, label: 'A duplicate', description: '', content: '', order: 0, enabled: false, builtin: false },
+        ],
+      },
+    })
+    admin.agentSurfaceTurn = createAdminSurfaceTurn()
+    document.body.append(admin)
+    mounted.push(admin)
+    await whenFlushed()
+
+    const toggle = admin.querySelector(
+      `[data-part="entry-section"][data-kind="${ENTRY_KINDS.catalog}"] [data-part="entry"][data-entry-id="a2ui-basic-2"] [data-part="entry-toggle"]`,
+    ) as HTMLElement & { checked: boolean }
+    toggle.checked = true
+    toggle.dispatchEvent(new Event('change'))
+    await whenFlushed()
+
+    submit(admin, 'draw')
+    await settle()
+    expect(bodies[0]!['catalogId'], 'the refused id never became a threaded catalogId').toBe('agent-ui')
   })
 })
 
