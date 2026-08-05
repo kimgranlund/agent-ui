@@ -71,6 +71,20 @@ export interface PropDef {
    *  ADR-0114 scheme allowlist over an ABSOLUTE static string literal; a relative/unparseable-without-base
    *  literal defers to the component gate (`safeHref`, `controls/text/href.ts`), which resolves at render. */
   format?: string
+  /**
+   * A catalog-declared extension (ADR-0169 E7 row / GH #429), absent everywhere but
+   * `a2ui-basic/catalog.json`'s `Button.action`: gate-encodes the ONE Action arm
+   * `matchesSchemaType`'s deliberate shallow type check cannot see (it checks only the PropDef's
+   * top-level `type` keyword, never descending into nested `properties`/`required`, so ADR-0011's
+   * Postel tolerance arms keep passing un-narrowed — cl.10). When `true`, an object VALUE carrying an
+   * own `functionCall` key fails `CATALOG` at validate — upstream's client-side-execution `Action` arm
+   * (`{event}|{functionCall}` oneOf), which `readActionSpec` (renderer.ts) has no arm for and would
+   * otherwise render a Button whose click silently dispatches nothing. Declared only where the wire
+   * dialect actually offers the arm; absent ⇒ today's behavior, byte-identical (the default catalog's
+   * `Button.action` never declares it, so its own Postel tolerance for an unrecognized action shape is
+   * untouched).
+   */
+  rejectFunctionCall?: boolean
 }
 
 /**
@@ -277,10 +291,13 @@ function validatePropDef(key: string, prop: string, raw: unknown): PropDef {
   if (typeof raw.mapsTo !== 'string') bad(`property "${key}.${prop}".mapsTo must be a string`)
   if (raw.bindable !== undefined && typeof raw.bindable !== 'boolean') bad(`property "${key}.${prop}".bindable must be a boolean`)
   if (raw.format !== undefined && typeof raw.format !== 'string') bad(`property "${key}.${prop}".format must be a string`)
+  if (raw.rejectFunctionCall !== undefined && typeof raw.rejectFunctionCall !== 'boolean')
+    bad(`property "${key}.${prop}".rejectFunctionCall must be a boolean`)
 
   const pd: PropDef = { type: raw.type as JsonSchema, mapsTo: raw.mapsTo }
   if (raw.bindable !== undefined) pd.bindable = raw.bindable
   if (raw.format !== undefined) pd.format = raw.format
+  if (raw.rejectFunctionCall !== undefined) pd.rejectFunctionCall = raw.rejectFunctionCall
   return pd
 }
 
