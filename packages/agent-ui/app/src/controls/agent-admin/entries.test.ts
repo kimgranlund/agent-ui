@@ -1,13 +1,15 @@
-// entries.test.ts — the pure entry-list logic gate. `composeSystemPrompt` is already covered end-to-end
-// in agent-admin.test.ts; this file adds ALM-C1's `composeLiveSystemPrompt` (TKT-0052/ADR-0136 Fork 3):
-// the capability projection's block shape, the enabled/disabled + `toolsEnabled` gating, and — the
-// load-bearing property — that with no enabled capabilities the live prompt is BYTE-IDENTICAL to today's
-// composed prompt (the live path degrades exactly to the stub's own prompt, never a trailing empty header).
-// It also gates `validateNewEntry`'s LLD-C7 widening (an OPTIONAL explicit `id` on `NewEntryInput`), whose
-// load-bearing property is symmetrical: a caller that supplies no id slugs from the label exactly as before.
-// ADR-0170 adds the catalog kind's whole invariant (`readCatalogEntries`/`isRegisteredCatalog`): the Default
-// row guaranteed at READ time (no migration write) and EXACTLY ONE row enabled, derived from
-// `A2UI_CATALOG_KEY` alone — never from the stored per-entry flags.
+// entries.test.ts — the agent-admin DOMAIN-layer entry-list logic gate. `composeSystemPrompt` is already
+// covered end-to-end in agent-admin.test.ts; this file adds ALM-C1's `composeLiveSystemPrompt`
+// (TKT-0052/ADR-0136 Fork 3): the capability projection's block shape, the enabled/disabled + `toolsEnabled`
+// gating, and — the load-bearing property — that with no enabled capabilities the live prompt is
+// BYTE-IDENTICAL to today's composed prompt (the live path degrades exactly to the stub's own prompt, never
+// a trailing empty header). ADR-0170 adds the catalog kind's whole invariant
+// (`readCatalogEntries`/`isRegisteredCatalog`): the Default row guaranteed at READ time (no migration write)
+// and EXACTLY ONE row enabled, derived from `A2UI_CATALOG_KEY` alone — never from the stored per-entry flags.
+//
+// ADR-0164 cl.2 split this file along the generic/domain line: `validateNewEntry`'s own LLD-C7 suite
+// (an OPTIONAL explicit `id` on `NewEntryInput`) is CORE — it moved to
+// `../entry-list/entry-data.test.ts` alongside the function it gates. No assertion was lost in the split.
 
 import { describe, it, expect } from 'vitest'
 import {
@@ -18,12 +20,9 @@ import {
   readCatalogEntries,
   isRegisteredCatalog,
   initialEntryValues,
-  entriesStoreKey,
-  validateNewEntry,
-  type Entry,
   type LiveCapabilityGroup,
-  type NewEntryInput,
 } from './entries.ts'
+import { entriesStoreKey, validateNewEntry, type Entry } from '../entry-list/entry-data.ts'
 import { A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID } from './agent-admin-schema.ts'
 
 function entry(over: Partial<Entry> & Pick<Entry, 'id'>): Entry {
@@ -273,75 +272,5 @@ describe('isRegisteredCatalog — the ONE membership expression (ADR-0170 cl.3)'
     expect(isRegisteredCatalog(`${DEFAULT_A2UI_CATALOG_ID}-2`), 'a dedup-suffixed duplicate is NOT registered').toBe(false)
     expect(isRegisteredCatalog('')).toBe(false)
     expect(isRegisteredCatalog('https://a2ui.org/catalogs/basic'), 'the canonical URI alias is never a picker id (ADR-0169 cl.13)').toBe(false)
-  })
-})
-
-// ── ADR-0168 cl.2 / LLD-C7 — NewEntryInput's optional explicit `id` ────────────────────────────────────
-// The widening exists so a pack whose entries key an EXTERNAL vocabulary (the Integrations pack: its ids
-// ARE the dev proxy's registry keys) can mint a store entry whose id SURVIVES a label edit. The load-
-// bearing property tested here is the other half: every caller that does NOT supply an id — every
-// hand-authored entry and every other pack (skills/workflows/resources/prompt-sections) — keeps
-// slugify-from-label EXACTLY as before, byte for byte.
-
-describe('validateNewEntry — the optional explicit id (LLD-C7)', () => {
-  const input = (over: Partial<NewEntryInput> & Pick<NewEntryInput, 'label'>): NewEntryInput => ({
-    description: '',
-    content: '',
-    ...over,
-  })
-
-  it('BACKWARD COMPAT: no `id` supplied ⇒ slugify(label), unchanged for every other pack', () => {
-    // The exact slug law: lowercase, non-alphanumeric runs → one hyphen, trimmed.
-    const cases: ReadonlyArray<readonly [string, string]> = [
-      ['booking-flow', 'booking-flow'], // an existing pack label (already kebab) — identical before/after
-      ['Property Knowledge Base', 'property-knowledge-base'],
-      ['Data Viz  Layouts!', 'data-viz-layouts'],
-      ['  Trimmed  ', 'trimmed'],
-      ['✦✦✦', 'entry'], // the all-non-alphanumeric fallback
-    ]
-    for (const [label, expected] of cases) {
-      const result = validateNewEntry([], ENTRY_KINDS.skill, input({ label }))
-      expect(result.ok, `"${label}" must commit`).toBe(true)
-      if (result.ok) expect(result.entry.id, `"${label}" slugs unchanged`).toBe(expected)
-    }
-  })
-
-  it('an explicit `id` WINS over the slug, and is never itself slugged (it is a foreign key)', () => {
-    const result = validateNewEntry([], ENTRY_KINDS.tool, input({ id: 'wikipedia-search', label: 'Wikipedia search' }))
-    expect(result.ok).toBe(true)
-    if (result.ok) {
-      expect(result.entry.id).toBe('wikipedia-search') // NOT 'wikipedia-search' by luck: 'Wikipedia search' slugs the same...
-      expect(result.entry.label).toBe('Wikipedia search')
-    }
-    // ...so prove it on a label whose slug genuinely DIFFERS from the id — the real regression this guards.
-    const decoupled = validateNewEntry([], ENTRY_KINDS.tool, input({ id: 'weather', label: 'Weather (Open-Meteo)' }))
-    expect(decoupled.ok).toBe(true)
-    if (decoupled.ok) {
-      expect(decoupled.entry.id, 'the registry id rides through untouched').toBe('weather')
-      expect(decoupled.entry.label, 'the human label is preserved for display').toBe('Weather (Open-Meteo)')
-    }
-  })
-
-  it('a blank/whitespace `id` falls back to the slug (fail-closed: never an empty entry id)', () => {
-    for (const id of ['', '   ']) {
-      const result = validateNewEntry([], ENTRY_KINDS.tool, input({ id, label: 'Weather (Open-Meteo)' }))
-      expect(result.ok).toBe(true)
-      if (result.ok) expect(result.entry.id).toBe('weather-open-meteo')
-    }
-  })
-
-  it('an explicit id gets the SAME suffix dedup a slugged one does (never a silent shared id)', () => {
-    const first = validateNewEntry([], ENTRY_KINDS.tool, input({ id: 'weather', label: 'Weather (Open-Meteo)' }))
-    expect(first.ok).toBe(true)
-    if (!first.ok) return
-    const second = validateNewEntry([first.entry], ENTRY_KINDS.tool, input({ id: 'weather', label: 'Weather (Open-Meteo)' }))
-    expect(second.ok, 'a second add is deduped, never rejected').toBe(true)
-    if (second.ok) expect(second.entry.id).toBe('weather-2')
-  })
-
-  it('the label is still the ONE required field — an explicit id cannot smuggle in a nameless entry', () => {
-    const result = validateNewEntry([], ENTRY_KINDS.tool, input({ id: 'weather', label: '   ' }))
-    expect(result.ok).toBe(false)
-    if (!result.ok) expect(result.error).toBe('A name is required.')
   })
 })

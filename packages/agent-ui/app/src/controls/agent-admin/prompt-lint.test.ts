@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { lintPromptSections, lintSectionContent, MODALITY_VOCABULARY } from './prompt-lint.ts'
-import { ENTRY_KINDS, type Entry } from './entries.ts'
+import { ENTRY_KINDS } from './entries.ts'
+import type { Entry } from '../entry-list/entry-data.ts'
 
 // GH #419 — the vocabulary's own probes. The load-bearing half is NOT "it catches A2UI" (one substring
 // match); it is that it stays SILENT on ordinary authored prose, because a lint that cries wolf on correct

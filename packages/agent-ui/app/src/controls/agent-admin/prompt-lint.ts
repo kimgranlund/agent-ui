@@ -21,7 +21,7 @@
 //     catalog ships (Card · Row · Text · List · Select · Progress · Stat · Grid · Table · Swatch · Ramp …)
 //     is also a plain English word a persona may legitimately use, so NONE of them is a term here.
 
-import type { Entry } from './entries.ts'
+import type { Entry } from '../entry-list/entry-data.ts'
 
 /** One modality's vocabulary: the Surface Option it belongs to, the label a warning names, and the terms
  *  that betray it in authored prose. */

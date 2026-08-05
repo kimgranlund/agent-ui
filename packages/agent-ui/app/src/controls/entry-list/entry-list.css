@@ -1,0 +1,151 @@
+/* entry-list.css — the generic ordered-entry-list primitive's OWN stylesheet (ADR-0132 `n1`/`n1b`/`n1c`,
+ * extracted from `agent-admin.css` by ADR-0164 cl.4 — the ADR's real un-extracted remainder: `entry-list.ts`
+ * was already generic TypeScript, but its CSS lived inside `agent-admin.css`'s `@scope (ui-agent-admin)` on
+ * `--ui-agent-admin-*` tokens, so a consumer outside `ui-agent-admin` got working but UNSTYLED sections.
+ * Two sectioned blocks, the `agent-admin.css` shape:
+ *
+ *   [1] TOKEN BLOCK — `:where([data-part='entry-section'])` declares ONLY `--ui-entry-list-*`: the
+ *       mechanism's own ink/surface/border roles + the dimensional constants (entry-radius/row-gap/
+ *       list-gap/card-pad/compact-gap/spacer-min-size) — a self-sufficient default so a bare
+ *       `mountEntryList` section renders fully styled with ZERO ancestor (no `ui-agent-admin`, no
+ *       `ui-super-shell`) required.
+ *   [2] STYLES BLOCK — `@scope ([data-part='entry-section'])` styles the list/entry/toggle/add-form shape
+ *       reused across every instantiation (five ADR-0132 kinds + `pattern-source`/`catalog`, genui-surface
+ *       SPEC-R11/ADR-0170) — the ONE bespoke surface this mechanism owns.
+ *
+ * `agent-admin.css` REPOINTS its own `--ui-agent-admin-{entry-radius,row-gap,list-gap,card-pad,
+ * spacer-min-size}` onto this file's family at the `ui-agent-admin` token-block root (the TKT-0062
+ * "repoint the token, not the host property" law) — those five names are ALSO agent-admin's own shared
+ * card-chrome constants (model-grid/surface-row/ui-settings-panel/context-json reuse the identical
+ * recipe, "matched computed-for-computed" per that file's own entry-card-parity comment), so this file is
+ * now their one value source; agent-admin's ink/surface/border/label-ink stay independently defined
+ * there (general element-wide roles, not entry-list-private) — `--ui-entry-list-*`'s own copies of those
+ * four are this file's OWN self-sufficiency default, not a repoint target.
+ *
+ * ADR-0164 cl.6 — app-owner chrome, catalog-invisible by construction: `mountEntryList` is not a custom
+ * element, so this sheet scopes off a `data-part` attribute selector, never a tag name.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where([data-part='entry-section']) declares --ui-entry-list-* ════ */
+
+:where([data-part='entry-section']) {
+  --ui-entry-list-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-entry-list-surface: var(--md-sys-color-neutral-surface);
+  --ui-entry-list-border: var(--md-sys-color-neutral-outline-variant, currentColor);
+  --ui-entry-list-label-ink: var(--md-sys-color-neutral-on-surface-variant, var(--ui-entry-list-ink));
+  --ui-entry-list-error-ink: var(--md-sys-color-danger-on-surface-variant, var(--ui-entry-list-ink)); /* the AA-gated danger TEXT ink (agent-admin.css's TKT-0065 note carries the fleet-family history) */
+  --ui-entry-list-warning-ink: var(--md-sys-color-warning-on-surface-variant, var(--ui-entry-list-ink)); /* GH #419 — the AA-gated warning TEXT ink, one family over from error-ink (a NON-BLOCKING notice is not an error) */
+  --ui-entry-list-entry-radius: var(--md-sys-shape-corner-base, 0.25rem); /* TKT-0066 item 5 ruling: dimensional constants route through the own chain */
+  --ui-entry-list-row-gap: var(--md-sys-space-sm); /* a tight gap between adjacent inline parts within ONE row (entry-header) */
+  --ui-entry-list-list-gap: var(--md-sys-space-sm); /* vertical rhythm between stacked rows (entry-section/entry-list) */
+  --ui-entry-list-card-pad: var(--md-sys-space-sm) var(--md-sys-space-md); /* the shared card chrome padding (entry/entry-add-form) */
+  /* No `--ui-super-shell-module` concept exists in this standalone mechanism (unlike agent-admin.css's
+     compact-gap, chained off the composed ui-super-shell instance) — derived from this file's OWN
+     row-gap instead, at the same rendered value (8px × 0.75 = 6px = today's module/3 value, verbatim). */
+  --ui-entry-list-compact-gap: calc(var(--ui-entry-list-row-gap) * 0.75);
+  --ui-entry-list-spacer-min-size: var(--md-sys-space-sm); /* SPEC-R11c/AC19 — the entry-spacer flex-spacer floor */
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope ([data-part='entry-section']) consumes ONLY --ui-entry-list-* ═══ */
+
+@scope ([data-part='entry-section']) {
+  :scope {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-entry-list-list-gap);
+  }
+
+  /* Vision rev.5 — a kind whose MASTER switch is off dims its list + add affordances (the switch itself
+     stays full-strength: it is the way back — since GH #225 it lives OUTSIDE this section entirely, on
+     the consumer's own fold summary row). State only — never display:none; the entries stay
+     inspectable/editable, they just visibly read as inert. The consumer toggles this attribute on the
+     section's own `host` (the `EntryListSection.host` this module returns) — this module never sets it
+     itself. */
+  :scope[data-kind-disabled] {
+    opacity: 0.45;
+  }
+
+  [data-part='entry-list'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-entry-list-list-gap);
+  }
+
+  [data-part='entry'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-entry-list-compact-gap);
+    box-sizing: border-box;
+    padding: var(--ui-entry-list-card-pad);
+    border: 1px solid var(--ui-entry-list-border);
+    border-radius: var(--ui-entry-list-entry-radius);
+    background: var(--ui-entry-list-surface);
+  }
+
+  /* The entry editors ride the ROW's width (column-flex cross-axis stretch guarantees a full-row typing
+     target), so ui-code-editor's free-standing 20ch floor (--ui-code-editor-min-inline-size, ADR-0021)
+     is redundant here — and once CodeMirror's source mode is MONOSPACE, 20ch(mono) can overflow a narrow
+     host. Repoint the published token (never the host property) — the floor keeps protecting
+     free-standing editors; composed rows own their width. */
+  [data-part='entry-content'],
+  [data-part='entry-add-content'] {
+    --ui-code-editor-min-inline-size: 0;
+  }
+
+  /* GH #138 (Kim's option-A ruling): [switch|label|spacer|action] — switch leads, label next, a
+     flexible spacer, then trailing action content (the Remove button) pinned to the right edge. */
+  [data-part='entry-header'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-entry-list-row-gap);
+  }
+
+  [data-part='entry-label'] {
+    flex: 0 0 auto;
+    font-weight: 600;
+    color: var(--ui-entry-list-ink);
+  }
+
+  [data-part='entry-spacer'] {
+    flex: 1 1 auto;
+    min-inline-size: var(--ui-entry-list-spacer-min-size);
+  }
+
+  [data-part='entry-description'] {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--ui-entry-list-label-ink);
+  }
+
+  /* GH #419 — the non-blocking modality warning, on the same plane as `entry-description` (same margin +
+     size, warning ink instead of label ink): a hint about the text below it, never a bordered alert box. */
+  [data-part='entry-notice'] {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--ui-entry-list-warning-ink);
+  }
+
+  /* :not([hidden]) — component-reviewer CRITICAL fix: an author `display` declaration beats the UA
+     `[hidden] { display: none }` rule (the combo-box.css precedent for the identical pitfall); without
+     this guard the add-form renders permanently visible in a real browser regardless of its `.hidden`
+     JS property. */
+  [data-part='entry-add-form']:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-entry-list-compact-gap);
+    box-sizing: border-box;
+    padding: var(--ui-entry-list-card-pad);
+    border: 1px dashed var(--ui-entry-list-border);
+    border-radius: var(--ui-entry-list-entry-radius);
+  }
+
+  [data-part='entry-add-error'] {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--ui-entry-list-error-ink);
+  }
+
+  /* forced-colors: active — every bordered surface above uses a real 1px border (not a shadow/tint),
+     already legible under forced-colors; ui-switch carries its own forced-colors handling, inherited
+     unchanged (agent-admin.css's own composed-child precedent). */
+}

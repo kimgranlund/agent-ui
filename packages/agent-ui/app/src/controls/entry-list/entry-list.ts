@@ -24,7 +24,7 @@ import type { UIIconElement } from '@agent-ui/components/controls/icon'
 import type { UICodeEditorElement } from '@agent-ui/code/editor'
 import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 import type { UIFieldElement } from '@agent-ui/components/controls/field'
-import type { Entry, EntryLibraryPack, NewEntryInput } from './entries.ts'
+import type { Entry, EntryLibraryPack, NewEntryInput } from './entry-data.ts'
 
 export interface EntryListHandlers {
   onToggle(id: string, enabled: boolean): void

@@ -5,7 +5,8 @@
 
 import { describe, it, expect } from 'vitest'
 import { GENUI_PACKS, genuiPackLibrary } from '@agent-ui/a2ui/agent'
-import { validateNewEntry, ENTRY_KINDS } from './entries.ts'
+import { validateNewEntry } from '../entry-list/entry-data.ts'
+import { ENTRY_KINDS } from './entries.ts'
 
 describe('genuiPackLibrary(GENUI_PACKS) → validateNewEntry — the D4 round trip (SPEC-R11 AC1)', () => {
   it('every projected pack yields one EntryLibraryPack whose entries commit through validateNewEntry unchanged', () => {

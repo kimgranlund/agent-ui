@@ -1,11 +1,13 @@
-// entries.ts — the generic ordered-entry-list PRIMITIVE (ADR-0132 `n1`): a named, ordered, toggleable
-// entry within a typed list, parameterized by `kind`. Types + pure data/logic only (the schema.ts
-// precedent) — `entry-list.ts` owns the rendering, `agent-admin.ts` owns the composition.
+// entries.ts — the agent-admin DOMAIN layer over the generic ordered-entry-list primitive (ADR-0132 `n1`):
+// the kind taxonomy, seeded defaults, and the system-prompt projection. The generic data CORE (`Entry`,
+// `NewEntryInput`, `EntryLibraryPack`, `ValidateNewEntryResult`, `validateNewEntry`, `entriesStoreKey`,
+// `readEntries`) moved to `../entry-list/entry-data.ts` (ADR-0164 cl.2) — `entry-list.ts` owns the
+// rendering, this module owns the composition this consumer's kinds need.
 //
-// Five instantiations share this ONE shape (ADR-0132 cl.1): prompt sections (kind='prompt-section',
+// Five instantiations share the core's ONE shape (ADR-0132 cl.1): prompt sections (kind='prompt-section',
 // seeded with three built-in entries — Foundation/Personality/Critical Items) and four capability kinds
 // (skill/workflow/resource/tool — their STORES start empty; entries arrive hand-authored, or since
-// GH #47/#48 from an opt-in-per-add library pack (`EntryLibraryPack` below) — still never an automatic
+// GH #47/#48 from an opt-in-per-add library pack (`EntryLibraryPack`) — still never an automatic
 // initial seed). A future kind is a new `ENTRY_KINDS` member + optional seed data — never new
 // list/toggle/author code (ADR-0132 cl.1/Fork 2: the taxonomy is extensible, not a hardcoded enum).
 //
@@ -14,6 +16,7 @@
 // deferred, separately-scoped future extension — not built here.
 
 import { A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID, sanitizeCatalog } from './agent-admin-schema.ts'
+import { entriesStoreKey, readEntries, type Entry } from '../entry-list/entry-data.ts'
 
 /** The known kinds this build seeds/instantiates. Not a closed enum — `Entry.kind` is a plain `string`
  *  (ADR-0132 Fork 2: extensible without a code change); these are the five known constants, not an
@@ -39,28 +42,6 @@ export const ENTRY_KINDS = {
   // `catalogId` the runner actually threads (cl.2's second-writer defect, closed by construction).
   catalog: 'catalog',
 } as const
-
-export interface Entry {
-  id: string
-  kind: string
-  label: string
-  description: string
-  content: string
-  /** Ascending sort order within its kind — ties broken by `id` (stable, deterministic). */
-  order: number
-  /** Toggle state — a disabled entry is skipped by `composeSystemPrompt` and by any future capability
-   *  consumer, but is NEVER removed from the list (ADR-0132 Fork 4). */
-  enabled: boolean
-  /** A built-in entry can be toggled but never deleted (ADR-0132 Fork 4) — enforced by the UI
-   *  (`entry-list.ts` renders no delete affordance for `builtin: true`), not by this module. */
-  builtin: boolean
-}
-
-/** The store key one kind's entry list lives under — `entries:${kind}`, one array value per kind (the
- *  `SettingsStore` `get`/`set` contract already handles arbitrary JSON-serializable `unknown` values). */
-export function entriesStoreKey(kind: string): string {
-  return `entries:${kind}`
-}
 
 /** The three built-in, non-deletable, toggle-on-by-default prompt sections (ADR-0132 cl.2). Order is the
  *  composition order `composeSystemPrompt` reads. */
@@ -125,13 +106,6 @@ export function pickedPatternSource(entries: readonly Entry[]): Entry | undefine
   return [...entries]
     .filter((e) => e.enabled)
     .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))[0]
-}
-
-/** Read one kind's entry list from a store, defensively: a bring-your-own store, a corrupt/foreign
- *  localStorage value, or a store that never seeded this key all degrade to an empty list, never throw. */
-export function readEntries(store: { get(key: string): unknown } | undefined, kind: string): Entry[] {
-  const raw = store?.get(entriesStoreKey(kind))
-  return Array.isArray(raw) ? (raw as Entry[]) : []
 }
 
 // ── the catalog roster projection (ADR-0170 cl.2/cl.4) ─────────────────────────────────────────────────
@@ -253,85 +227,4 @@ export function composeLiveSystemPrompt(
     groups.push(`## ${group.heading}\n${blocks.join('\n\n')}`)
   }
   return groups.length > 0 ? `${base}\n\n${groups.join('\n\n')}` : base
-}
-
-/** A slug id from a label — lowercase, non-alphanumeric runs collapsed to one hyphen, trimmed. Falls
- *  back to `entry` if the label is entirely non-alphanumeric (e.g. all emoji/punctuation) — never an
- *  empty id. */
-function slugify(label: string): string {
-  const slug = label
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-  return slug.length > 0 ? slug : 'entry'
-}
-
-export interface NewEntryInput {
-  label: string
-  description: string
-  content: string
-  /** ADR-0168 cl.2 / LLD-C7 — an OPTIONAL stable id that wins over the `slugify(label)` default. A pack
-   *  whose entries key an EXTERNAL vocabulary (the Integrations pack: its entries ARE the dev proxy's
-   *  registry ids) supplies it, so the id survives a label edit and the display label is free to be human
-   *  text — the three-facts law (id ≠ tool.name ≠ label) reaching the admin store. Every hand-authored
-   *  entry and every pack that omits it keeps slugify-from-label EXACTLY as before; collision dedup (the
-   *  suffix counter below) applies to an explicit id the same as a slugged one. */
-  id?: string
-}
-
-// ── Entry libraries (GH #47/#48) — packs of ready-to-add entries ────────────────────────────────────────
-// A library pack is pure DATA (the ADR-0132 cl.1 law: a capability surface grows by data, never by new
-// list/toggle/author code): a named collection of `NewEntryInput`s for ONE kind, offered by the entry
-// list's add-from-library affordance and committed through the SAME `validateNewEntry` path as a
-// hand-authored entry (slug-dedup, order, enabled, deletable — a library add IS a custom add with the
-// typing done). Packs live with their consumer (page-local, the presets precedent); the component only
-// renders whatever packs it is handed.
-export interface EntryLibraryPack {
-  /** Stable kebab id — unique within the kind's pack list. */
-  id: string
-  /** Display name ("A2UI composition idioms", "Hospitality"). */
-  label: string
-  /** One-line pack description (menu row tooltip). */
-  description: string
-  /** Ready-to-add entry inputs, in menu order. */
-  entries: readonly NewEntryInput[]
-}
-
-export type ValidateNewEntryResult = { ok: true; entry: Entry } | { ok: false; error: string }
-
-/** Fail-closed validation for a new custom entry (ADR-0132 cl.4): a required, non-empty `label`, and an
- *  id that doesn't collide with an existing entry of the SAME kind (a suffix counter resolves a
- *  collision rather than rejecting it outright — a friendlier failure mode than forcing the author to
- *  rename). The id is `input.id` when the caller supplies one (LLD-C7: a pack keying an external
- *  vocabulary), else `slugify(label)` exactly as before. Never mutates `existing`. */
-export function validateNewEntry(existing: readonly Entry[], kind: string, input: NewEntryInput): ValidateNewEntryResult {
-  const label = input.label.trim()
-  if (label.length === 0) return { ok: false, error: 'A name is required.' }
-
-  // An explicit id is trimmed but NEVER slugged — it is a foreign key (a registry id), so mangling it
-  // would be the very coupling this widening exists to break. An empty/blank one falls back to the slug.
-  const base = input.id?.trim() ? input.id.trim() : slugify(label)
-  const usedIds = new Set(existing.map((e) => e.id))
-  let id = base
-  let suffix = 2
-  while (usedIds.has(id)) {
-    id = `${base}-${suffix}`
-    suffix += 1
-  }
-
-  const maxOrder = existing.reduce((max, e) => Math.max(max, e.order), -1)
-  return {
-    ok: true,
-    entry: {
-      id,
-      kind,
-      label,
-      description: input.description.trim(),
-      content: input.content,
-      order: maxOrder + 1,
-      enabled: true,
-      builtin: false,
-    },
-  }
 }

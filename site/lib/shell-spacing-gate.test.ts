@@ -40,6 +40,7 @@ const SHELL_FAMILY_SHEETS = [
   'packages/agent-ui/app/src/controls/chat-shell/chat-shell.css',
   'packages/agent-ui/app/src/controls/conversation/conversation.css',
   'packages/agent-ui/app/src/controls/conversation/conversation-composer.css',
+  'packages/agent-ui/app/src/controls/entry-list/entry-list.css',
   'packages/agent-ui/app/src/controls/master-detail/master-detail.css',
   'packages/agent-ui/app/src/controls/master-detail/master-detail-pane.css',
   'packages/agent-ui/app/src/controls/nav-rail/nav-rail.css',

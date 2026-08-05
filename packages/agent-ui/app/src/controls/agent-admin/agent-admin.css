@@ -1,22 +1,33 @@
 /* agent-admin.css — ui-agent-admin, the single-file component stylesheet (ADR-0003). Two sectioned
  * blocks:
  *
- *   [1] TOKEN BLOCK — `:where(ui-agent-admin)` declares ONLY `--ui-agent-admin-*`: the entry-list
- *       primitive's ink/surface/border roles (ADR-0132) — the ONE piece of this element's own visual
- *       surface; the composed `ui-chat-shell`/`ui-settings`/`ui-conversation`/`ui-switch` children keep
- *       their OWN shipped CSS untouched (the `master-detail.css` precedent).
+ *   [1] TOKEN BLOCK — `:where(ui-agent-admin)` declares ONLY `--ui-agent-admin-*`: this element's own
+ *       card-chrome ink/surface/border roles, shared across every card-shaped surface it composes
+ *       (model-grid/surface-row/ui-settings-panel/context-json) — the ONE piece of this element's own
+ *       visual surface; the composed `ui-chat-shell`/`ui-settings`/`ui-conversation`/`ui-switch` children
+ *       keep their OWN shipped CSS untouched (the `master-detail.css` precedent). ADR-0164 cl.4 — the
+ *       generic entry-list primitive's OWN style block (heading/list/entry/toggle/add-form) EXTRACTED to
+ *       `../entry-list/entry-list.css` (its own `--ui-entry-list-*` family): the five dimensional
+ *       constants entry cards share with this element's OTHER card surfaces
+ *       (`entry-radius`/`row-gap`/`list-gap`/`card-pad`/`spacer-min-size`) stay declared here too, at the
+ *       SAME `--md-sys-*` expression as that file's own defaults — parity BY CONSTRUCTION, not a
+ *       cross-scope `var(--ui-entry-list-*)` reference (that file's token block lives on
+ *       `[data-part='entry-section']`, a DESCENDANT that doesn't exist until `mountEntryList` appends it;
+ *       custom properties inherit only downward, so this ANCESTOR-level block structurally cannot read
+ *       it — the [1] TOKEN BLOCK's own comment on these five names has the full mechanics + the live
+ *       regression that proved it).
  *   [2] STYLES BLOCK — `@scope (ui-agent-admin)` fills the host, sizes the composed `ui-chat-shell` to
- *       the available space, and styles the generic entry-list primitive (heading/list/entry/toggle/
- *       add-form) — the ONE bespoke surface this element owns, reused across all five instantiations
- *       (no shipped FACE control renders long-form multi-line text, ADR-0131/ADR-0132). THREE deliberate
- *       exceptions, all on the SAME `ui-super-shell { ... }` rule: (a)+(b) `--ui-agent-admin-shell-gutter`
- *       and `--ui-agent-admin-compact-gap` mint a PAIR of `--ui-agent-admin-*` tokens by chaining
- *       off `--ui-super-shell-module` — neither can live in the [1] TOKEN BLOCK instead (CSS custom
- *       properties inherit strictly downward; that module token is declared only on `ui-super-shell`
- *       itself, a DESCENDANT of `ui-agent-admin` — see that rule's own comment for the full mechanics +
- *       the regression that proved it), and this is SPEC-R11b's cited boundary-alias precedent: a
+ *       the available space, and styles this element's OWN remaining card surfaces (Model grid/Agent
+ *       config panel/Surface Options/Context tabs) — `ui-agent-admin` is the extraction's first CONSUMER
+ *       now (ADR-0164 cl.7), composing `../entry-list/entry-list.ts`'s section shell rather than owning
+ *       its markup or CSS. TWO deliberate exceptions, both on the SAME `ui-super-shell { ... }` rule:
+ *       (a) `--ui-agent-admin-shell-gutter` mints a `--ui-agent-admin-*` token by chaining off
+ *       `--ui-super-shell-module` — it can't live in the [1] TOKEN BLOCK instead (CSS custom properties
+ *       inherit strictly downward; that module token is declared only on `ui-super-shell` itself, a
+ *       DESCENDANT of `ui-agent-admin` — see that rule's own comment for the full mechanics + the
+ *       regression that proved it), and this is SPEC-R11b's cited boundary-alias precedent: a
  *       cross-family length mints ONE named alias per role on the composed shell element, never a raw
- *       `--ui-super-shell-module` read at the consuming selector; (c) the R6c floor-token repoint
+ *       `--ui-super-shell-module` read at the consuming selector; (b) the R6c floor-token repoint
  *       (`--ui-super-shell-canvas-min-size`/`-pane-min-size`) moved down here from the [1] TOKEN
  *       BLOCK for the SIBLING reason — `:where(ui-super-shell)` unconditionally re-declares its OWN
  *       default for those same two names, and a directly-matching declaration on an element always beats
@@ -30,6 +41,16 @@
  * `ui-super-shell` (light-DOM descendants, no shadow boundary) to style their generated parts directly.
  */
 
+/* ADR-0164 cl.4/cl.7 — unlike `ui-chat-shell`/`ui-settings`/`ui-conversation` (composed CUSTOM ELEMENTS a
+ * consuming page creates by tag and therefore already imports its own CSS sheet for, matching every other
+ * `@agent-ui/app/*.css` sheet a page lists explicitly), `../entry-list/entry-list.ts`'s `mountEntryList` is
+ * a plain JS mount function — invisible glue INSIDE this file, never a tag a page's own markup names. A
+ * page has nothing to remember to import a second sheet FOR, so this sheet pulls its composed primitive's
+ * CSS in itself (the `component-styles.css` barrel `@import` precedent, applied at control scope instead of
+ * package scope) — every existing `@agent-ui/app/agent-admin.css` import site keeps rendering agent-admin's
+ * entry sections styled with ZERO changes of its own. */
+@import '../entry-list/entry-list.css';
+
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-agent-admin) declares --ui-agent-admin-* ════════════════ */
 
 :where(ui-agent-admin) {
@@ -37,9 +58,10 @@
   --ui-agent-admin-surface: var(--md-sys-color-neutral-surface);
   --ui-agent-admin-border: var(--md-sys-color-neutral-outline-variant, currentColor);
   --ui-agent-admin-label-ink: var(--md-sys-color-neutral-on-surface-variant, var(--ui-agent-admin-ink));
-  --ui-agent-admin-error-ink: var(--md-sys-color-danger-on-surface-variant, var(--ui-agent-admin-ink)); /* TKT-0065: was --md-sys-color-error-on-surface — an ERROR family has never existed in tokens.css (the fleet family is danger), so the fallback ALWAYS won and validation errors rendered in plain neutral ink; danger-on-surface-variant is the AA-gated danger TEXT ink (the text-field message precedent) */
-  --ui-agent-admin-warning-ink: var(--md-sys-color-warning-on-surface-variant, var(--ui-agent-admin-ink)); /* GH #419: the AA-gated warning TEXT ink — the same shape as --ui-agent-admin-error-ink one line up, one family over (a NON-BLOCKING notice is not an error) */
-  --ui-agent-admin-entry-radius: var(--md-sys-shape-corner-base, 0.25rem); /* TKT-0066 item 5 ruling: dimensional constants route through the own chain */
+  /* ADR-0164 cl.4 — error-ink/warning-ink retired from here: their only consumers (entry-add-error/
+     entry-notice) moved to ../entry-list/entry-list.css, which mints its own --ui-entry-list-{error,
+     warning}-ink at the identical default expression (removed rather than left as dead, unconsumed CSS —
+     the file's own established convention, TKT-0050/TKT-0060's dead-CSS removals). */
   --ui-agent-admin-scrollbar-width: none; /* the app-chrome look: NO visible scrollbars in this surface's panes (scrolling stays live) */
   --ui-agent-admin-code-surface: var(--md-sys-color-neutral-container-low, var(--md-sys-color-neutral-surface)); /* vision rev.5 — the Context tabs' mono JSON preview plane (the frame's containerLow tint) */
   /* TKT-0066 item 5 ruling: dimensional constants route through the own chain — the STYLES block below
@@ -48,11 +70,24 @@
      comment, the "card chrome recipe" GH #191/design-mode comment) rather than by fleet-scale step, so a
      future scale-ladder change never forces a rename here. */
   --ui-agent-admin-section-gap: var(--md-sys-space-lg); /* the pane's top-level section gap (Settings/Context content) */
-  --ui-agent-admin-row-gap: var(--md-sys-space-sm); /* a tight gap between adjacent inline parts within ONE row (header/model-row/entry-header/surface-row) */
-  --ui-agent-admin-list-gap: var(--md-sys-space-sm); /* vertical rhythm between stacked rows in a list (model-grid/entry-section/entry-list/surface-options/context tree) */
-  --ui-agent-admin-card-pad: var(--md-sys-space-sm) var(--md-sys-space-md); /* the shared card chrome padding (model-grid/settings-panel/surface-row/context-json/entry/entry-add-form) */
+  /* ADR-0164 cl.4 — the five names below are ALSO ../entry-list/entry-list.css's own dimensional
+     constants (entry cards share this element's OTHER card-chrome recipe, "matched computed-for-computed"
+     per the ui-settings-panel rule's own comment below). NOT a `var(--ui-entry-list-*)` cross-reference,
+     deliberately: `--ui-entry-list-*` is declared on `:where([data-part='entry-section'])`, a DESCENDANT
+     of `ui-agent-admin` that exists only once `mountEntryList` appends it — custom properties inherit
+     strictly downward, so a declaration here at the ANCESTOR `ui-agent-admin` root can never resolve a
+     var() naming a token that lives only on a descendant (the identical mechanism the `ui-super-shell {
+     ... }` rule's own shell-gutter comment below already proves with a real regression; repointing THESE
+     five here reproduced that same invalid-var()-cascades-to-initial-value bug live, caught by the
+     computed-style browser suite). Both families instead independently mirror the SAME underlying
+     `--md-sys-*` primitives at their own scope root — parity BY CONSTRUCTION, same numbers, zero
+     cross-scope reference. */
+  --ui-agent-admin-row-gap: var(--md-sys-space-sm); /* a tight gap between adjacent inline parts within ONE row (model-row/surface-row) */
+  --ui-agent-admin-list-gap: var(--md-sys-space-sm); /* vertical rhythm between stacked rows in a list (model-grid/surface-options/context tree) */
+  --ui-agent-admin-card-pad: var(--md-sys-space-sm) var(--md-sys-space-md); /* the shared card chrome padding (model-grid/settings-panel/surface-row/context-json) */
+  --ui-agent-admin-entry-radius: var(--md-sys-shape-corner-base, 0.25rem); /* the shared card chrome corner radius (model-grid/settings-panel/surface-row/context-json) */
   --ui-agent-admin-provider-gap: var(--md-sys-space-xs); /* the gap above each subsequent provider-group heading in the Model grid ([data-part='model-provider']) */
-  --ui-agent-admin-spacer-min-size: var(--md-sys-space-sm); /* SPEC-R11c/AC19 — the shared flex-spacer floor (surface-spacer, entry-spacer) */
+  --ui-agent-admin-spacer-min-size: var(--md-sys-space-sm); /* SPEC-R11c/AC19 — the shared flex-spacer floor (surface-spacer) */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-agent-admin) consumes ONLY --ui-agent-admin-* ════════════════ */
@@ -84,25 +119,23 @@
      gutter this consumer wants on BOTH of the shell's content-holding siblings, `[data-part='canvas']`
      and `[data-part='pane']` below. `* 2 / 3` reproduces the old 0.75rem literal unchanged, so this is a
      law fix, not a visual change.
-     THIS rule is the file banner's TWO deliberate exceptions to "styles block consumes ONLY
-     --ui-agent-admin-*" — and NEITHER can move to the [1] TOKEN BLOCK: `--ui-super-shell-module` is
+     THIS rule is the file banner's ONE remaining deliberate exception to "styles block consumes ONLY
+     --ui-agent-admin-*" — and it can't move to the [1] TOKEN BLOCK: `--ui-super-shell-module` is
      declared only on `:where(ui-super-shell)` (super-shell.css), a DESCENDANT of `ui-agent-admin`.
      Custom properties inherit strictly downward — a var() reference resolves using whatever is
-     inherited AT ITS OWN DECLARING ELEMENT, not at wherever it's later consumed. Minting either alias in
+     inherited AT ITS OWN DECLARING ELEMENT, not at wherever it's later consumed. Minting this alias in
      the ancestor-scoped token block (`:where(ui-agent-admin)`) computes it BEFORE `--ui-super-shell-module`
      exists anywhere in the inherited chain, so the calc() is invalid there and that guaranteed-invalid
-     value is what inherits down — proven by a real cross-engine 0px regression when tried. Declaring both
+     value is what inherits down — proven by a real cross-engine 0px regression when tried. Declaring it
      here, on the composed `ui-super-shell` instance itself (the SAME element super-shell.css's own
-     `--ui-super-shell-module` lives on), lets each resolve correctly once and then inherit normally to
-     every consuming part below — ONE definition per alias, DRY, instead of duplicating a calc() at each
-     call site (SPEC-R11b — the boundary-alias pattern; this rule IS R11b's cited precedent). */
+     `--ui-super-shell-module` lives on), lets it resolve correctly once and then inherit normally to
+     every consuming part below — ONE definition, DRY, instead of duplicating a calc() at each
+     call site (SPEC-R11b — the boundary-alias pattern; this rule IS R11b's cited precedent). ADR-0164
+     cl.4 retired this rule's SECOND former alias, `--ui-agent-admin-compact-gap`: its only consumers
+     (entry/entry-add-form's internal gap) moved to `../entry-list/entry-list.css`, which mints its own
+     standalone `--ui-entry-list-compact-gap` (no `--ui-super-shell-module` dependency needed there). */
   ui-super-shell {
     --ui-agent-admin-shell-gutter: calc(var(--ui-super-shell-module) * 2 / 3);
-    /* SPEC-R11b — the fourth-module tight-rhythm unit the card-internal gaps below share
-       (entry/entry-add-form's own internal header/description/content gap; GH #222 removed its two
-       Context-tab consumers — context-item's padding and context-json's top margin — along with the
-       card-in-card nesting itself), never raw-read at the consuming selector. */
-    --ui-agent-admin-compact-gap: calc(var(--ui-super-shell-module) / 3);
     /* min-size-floors census (GH #185 follow-up) — moved down from the [1] TOKEN BLOCK's
        `:where(ui-agent-admin)`, where it silently never won: `--ui-super-shell-canvas-min-size`/
        `-pane-min-size` ALSO have a default declared directly on `:where(ui-super-shell)`
@@ -230,28 +263,10 @@
     padding: var(--ui-agent-admin-card-pad);
   }
 
-  /* ── the generic entry-list primitive (ADR-0132 n1) — one shared shape, five instantiations ────── */
-
-  [data-part='entry-section'] {
-    display: flex;
-    flex-direction: column;
-    gap: var(--ui-agent-admin-list-gap);
-  }
-
-  [data-part='entry-list'] {
-    display: flex;
-    flex-direction: column;
-    gap: var(--ui-agent-admin-list-gap);
-  }
-
-  /* Vision rev.5 — a kind whose MASTER switch is off dims its list + add affordances (the switch itself
-     stays full-strength: it is the way back — since GH #225 it lives OUTSIDE this section entirely, on
-     the fold's summary row, so the whole headless section dims and the switch is exempt by
-     construction; the old `:not(entry-section-header)` exemption retired with the header row). State
-     only — never display:none; the entries stay inspectable/editable, they just visibly read as inert. */
-  [data-part='entry-section'][data-kind-disabled] {
-    opacity: 0.45;
-  }
+  /* ADR-0164 cl.4 — the generic entry-list primitive's OWN style block (entry-section/entry-list/entry/
+     add-form, ADR-0132 n1) EXTRACTED to `../entry-list/entry-list.css`; `ui-agent-admin` composes
+     `../entry-list/entry-list.ts`'s section shell now instead of owning its markup or CSS (ADR-0164 cl.7
+     — the extraction's first consumer, the dogfooding proof). */
 
   /* ── GH #138 (Kim's option-A ruling): the Surface Options card — [switch|label|spacer|action|
      selection] rows — switch leads, label next, a flexible spacer, trailing content (catalog
@@ -380,104 +395,6 @@
     max-block-size: 20rem;
     overflow-y: auto;
     white-space: pre;
-  }
-
-  [data-part='entry'] {
-    display: flex;
-    flex-direction: column;
-    gap: var(--ui-agent-admin-compact-gap);
-    box-sizing: border-box;
-    padding: var(--ui-agent-admin-card-pad);
-    border: 1px solid var(--ui-agent-admin-border);
-    border-radius: var(--ui-agent-admin-entry-radius);
-    background: var(--ui-agent-admin-surface);
-  }
-
-  /* The entry editors ride the ROW's width (column-flex cross-axis stretch guarantees a full-row typing
-     target), so ui-code-editor's free-standing 20ch floor (--ui-code-editor-min-inline-size, ADR-0021)
-     is redundant here — and since 0c50d9c made source mode MONOSPACE, 20ch(mono) ≈ 171px overflows the
-     TKT-0045 768px-frame prompts pane (190px) by 8px, the exact regression the pane-overflow browser leg
-     caught once the full gate ran. Repoint the published token (never the host property) — the floor
-     keeps protecting free-standing editors; composed rows own their width. */
-  [data-part='entry-content'],
-  [data-part='entry-add-content'] {
-    --ui-code-editor-min-inline-size: 0;
-  }
-
-  /* GH #138 (Kim's option-A ruling): [switch|label|spacer|action] — switch leads, label next, a
-     flexible spacer, then trailing action content (the Remove button) pinned to the right edge. */
-  [data-part='entry-header'] {
-    display: flex;
-    align-items: center;
-    gap: var(--ui-agent-admin-row-gap);
-  }
-
-  [data-part='entry-label'] {
-    flex: 0 0 auto;
-    font-weight: 600;
-    color: var(--ui-agent-admin-ink);
-  }
-
-  [data-part='entry-spacer'] {
-    flex: 1 1 auto;
-    min-inline-size: var(--ui-agent-admin-spacer-min-size);
-  }
-
-  [data-part='entry-description'] {
-    margin: 0;
-    font-size: 0.8125rem;
-    color: var(--ui-agent-admin-label-ink);
-  }
-
-  /* GH #419 — the non-blocking modality warning, on the same plane as `entry-description` (same margin +
-     size, warning ink instead of label ink): a hint about the text below it, never a bordered alert box. */
-  [data-part='entry-notice'] {
-    margin: 0;
-    font-size: 0.8125rem;
-    color: var(--ui-agent-admin-warning-ink);
-  }
-
-  /* TKT-0050: `[data-part='entry-content']`'s rule block used to declare box-sizing/resize/font/color/
-     background/border/border-radius/padding here — every one of them was DEAD (real Chromium+WebKit
-     computed-style evidence, TKT-0050's Findings), losing to `ui-textarea`'s own `@scope`-scoped
-     `:scope { ... }` rule via the same scoping-proximity cascade tiebreak TKT-0049 already proved for
-     `min-block-size`. Removed rather than left as misleading no-op CSS; `ui-textarea` renders entirely off
-     its own `--ui-textarea-*` token chain, which TKT-0059 confirmed already matches `ui-text-field`'s. */
-
-  /* TKT-0060: entry-add-submit is now a real <ui-button> (button.css owns its anatomy/state-styling) and
-     entry-add-label/entry-add-description are real <ui-text-field>s (text-field.css owns theirs, including
-     their own :focus-within outline ring) — the bespoke `:focus-visible` rule that used to live here for the
-     native `<input>`s is gone the same way TKT-0050 already removed it for entry-content/entry-add-content
-     (focus lands on the internal editor part, not the host — the identical dead mechanism). */
-
-  /* :not([hidden]) — component-reviewer CRITICAL fix: an author `display` declaration beats the UA
-     `[hidden] { display: none }` rule (the combo-box.css precedent for the identical pitfall); without
-     this guard the add-form renders permanently visible in a real browser regardless of its `.hidden`
-     JS property. */
-  [data-part='entry-add-form']:not([hidden]) {
-    display: flex;
-    flex-direction: column;
-    gap: var(--ui-agent-admin-compact-gap);
-    box-sizing: border-box;
-    padding: var(--ui-agent-admin-card-pad);
-    border: 1px dashed var(--ui-agent-admin-border);
-    border-radius: var(--ui-agent-admin-entry-radius);
-  }
-
-  /* TKT-0060: `[data-part='entry-add-label'], [data-part='entry-add-description']`'s rule block (box-sizing/
-     font/color/background/border/border-radius/padding) was fully dead by the same `@scope`-proximity
-     mechanism TKT-0050 already proved for entry-add-content — `ui-text-field`'s own `@scope (ui-text-field)
-     { :scope { ... } }` rule wins the cascade over this plain attribute selector regardless of specificity.
-     Removed rather than left as misleading no-op CSS. */
-
-  /* TKT-0050: `[data-part='entry-add-content']`'s rule block (box-sizing/resize/font/color/background/
-     border/border-radius/padding) was ALSO fully dead by the same mechanism as `entry-content` above —
-     removed rather than left as misleading no-op CSS. */
-
-  [data-part='entry-add-error'] {
-    margin: 0;
-    font-size: 0.8125rem;
-    color: var(--ui-agent-admin-error-ink);
   }
 
   /* forced-colors: active — every bordered surface above uses a real 1px border (not a shadow/tint),
