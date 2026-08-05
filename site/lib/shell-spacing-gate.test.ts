@@ -55,6 +55,10 @@ const SHELL_FAMILY_SHEETS = [
   'site/pages/super-shell.css',
   'site/pages/chat-shell.css',
   'site/pages/agent-admin-app.css',
+  // GH #461 / M-A MA-3 (SPEC-R14 · PRD-D7 ratified) — the workbench sheet lays content into
+  // ui-workspace-shell (a shell-composing site sheet, the agent-admin-app.css precedent), so it joins
+  // the set as its own reviewed one-line append, per this gate's own extension law above.
+  'site/pages/workbench.css',
 ]
 
 // AC19(b) — the property families in scope: padding*/margin*, gap/row-gap/column-gap, the inset*
