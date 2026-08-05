@@ -2,14 +2,14 @@
 name: agent-ui-component-standards
 description: >-
   Route to the normative LAW layer for designing or judging a ui-* component: anatomy
-  (position slots × content roles), the geometry & sizing law (the §1 ramp, the
-  (scale × size) → row lookup, the centering law), the four interaction states + focus ring,
-  and the color-token role system. Use for any design-time question — "what slots does this
-  control get", "what height/font at this scale", "how do hover/active/focus style", "which
-  color role do I consume" — BEFORE writing component code. Routing only: the law itself
-  lives in .claude/docs/references/ (cite, never copy). NOT for disk layout/exports
-  (agent-ui-component-packaging), the test bar (agent-ui-component-testing), or "has the
-  fleet solved this before" (agent-ui-component-patterns).
+  (position slots × content roles, per-structure label alignment), geometry & sizing
+  (§1 ramp, (scale×size)→row lookup, centering), the four interaction states + focus ring,
+  and the color-token roles. For design-time questions — "which way does a button label
+  align", "what height/font at this scale", "how do hover/active/focus style", "which
+  color role do I consume" — BEFORE component code. Routing only: law lives in
+  .claude/docs/references/ (cite, never copy). NOT for disk layout/exports
+  (agent-ui-component-packaging), the test bar (agent-ui-component-testing), or fleet
+  prior art (agent-ui-component-patterns).
 user-invocable: false
 disable-model-invocation: false
 ---
@@ -32,7 +32,7 @@ and this map gets repaired).
 
 | Question | Owner (read this) | Decision authority behind it |
 |---|---|---|
-| Parts, slots, content model (host-as-grid vs rendered cell), adornments | `.claude/docs/references/anatomy.md` | ADR-0006 (optional leading slot, presence-driven `:has()`) · ADR-0012 (position slots × `data-role` roles) |
+| Parts, slots, content model (host-as-grid vs rendered cell), adornments; per-structure label alignment | `.claude/docs/references/anatomy.md` | ADR-0006 (optional leading slot, presence-driven `:has()`) · ADR-0012 (position slots × `data-role` roles) · ADR-0171 (label CENTERS only bare/double-adorned; a single adornment start-aligns — §3a) |
 | Height / font / icon / padding at a given `[scale]`×`[size]`; the centering law; size-classes | `.claude/docs/references/geometry.md` (the resolved law) → `geometry-sizing-spec.md` (the §1 master ramp + rationale; **§5 wins on conflict**) | ADR-0038 (the explicit (scale × size) → §1-row LOOKUP — **no multipliers on the control path**) · ADR-0036 (single-line Control text `line-height: 1`) · ADR-0041 (the widget-box ramp for Indicator/Range classes) · ADR-0032 (the `ui-sm…content-lg` tier vocabulary — `density` keeps its own vocabulary; they are different axes) |
 | hover · active · focus · disabled styling; the focus-ring; first-paint motion; the ENTRY-control five-state law (§1b — text-field/textarea/select/combo-box/composer + command-modal's search, degenerately); part-level disabled focusability (`removeAttribute('tabindex')`, §3 note) | `.claude/docs/references/interaction-states.md` | ADR-0008 (per-variant states) · ADR-0009 (shared focus-ring token) · ADR-0010 (`tabbable` trait + `aria-disabled`) · TKT-0062 (§1b, ticket-ratified) · TKT-0068 (§1b census + §3 dialect rulings) |
 | Which color role to consume; token naming; `@scope` token hygiene (own-chain routing — incl. dimensional `:root` constants, TKT-0066 item 5; the sanctioned direct-read list) | `.claude/docs/references/tokens.md` (the role SYSTEM; values live in `@agent-ui/shared/src/tokens/tokens.css`) §Consumption invariants | ADR-0057 (intent never travels by color alone — every intent needs a non-color signifier) · TKT-0066 item 5 (constants route through the own chain; `controls/styling-gates.test.ts` enforces) |
