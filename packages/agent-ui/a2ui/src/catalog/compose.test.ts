@@ -6,13 +6,14 @@ import { describe, it, expect } from 'vitest'
 import {
   composeCatalog,
   composePersonaCatalogs,
+  composePersonaCatalogDocs,
   loadCatalogFragment,
   derivedCatalogId,
   derivedCatalogIdsFor,
   CatalogComposeError,
   CatalogComposeErrorCode,
 } from './compose.ts'
-import type { CatalogFragment, PersonaCatalogPackage } from './compose.ts'
+import type { CatalogFragment, PersonaCatalogPackage, PersonaCatalogManifest } from './compose.ts'
 import { Registry } from './registry.ts'
 import type { WidgetFactory } from './types.ts'
 import type { Catalog } from './catalog.ts'
@@ -263,5 +264,81 @@ describe('composePersonaCatalogs — SPEC-R2 constructor-time derive-then-regist
     const entry = registry.get('agent-ui--p')!
     expect(entry.functions?.email?.({})).toBe(true)
     expect(entry.functions?.greet?.({})).toBe('hi')
+  })
+})
+
+describe('composePersonaCatalogDocs — GH #516, the server-host (DOM-less) twin of composePersonaCatalogs', () => {
+  function basesMap(): Map<string, Catalog> {
+    return new Map([
+      ['agent-ui', baseCatalog('agent-ui', ['Card'])],
+      ['a2ui-basic', baseCatalog('a2ui-basic', ['Text'])],
+    ])
+  }
+
+  it('composes one derived Catalog DOCUMENT per (fragment, targeted base) pairing — no factories/registry needed', () => {
+    const manifest: PersonaCatalogManifest = {
+      personaId: 'croupier',
+      fragment: { components: { PlayingCard: comp('PlayingCard') }, functions: {} },
+      targetCatalogs: ['agent-ui', 'a2ui-basic'],
+    }
+    const derived = composePersonaCatalogDocs(basesMap(), [manifest])
+    expect(derived.size).toBe(2)
+    const agentUiDerived = derived.get('agent-ui--croupier')!
+    const basicDerived = derived.get('a2ui-basic--croupier')!
+    expect(agentUiDerived).toBeDefined()
+    expect(basicDerived).toBeDefined()
+    // the persona's own local pattern's inventory is REALLY present in the derived catalog document —
+    // the exact thing GH #516's server hosts must resolve to for BOTH prompt teaching and validation.
+    expect(Object.keys(agentUiDerived.components).sort()).toEqual(['Card', 'PlayingCard'])
+    expect(Object.keys(basicDerived.components).sort()).toEqual(['PlayingCard', 'Text'])
+  })
+
+  it('absent targetCatalogs defaults to [\'agent-ui\'] alone (SPEC-R1\'s own widening note, unchanged for the manifest twin)', () => {
+    const manifest: PersonaCatalogManifest = { personaId: 'p', fragment: { components: {}, functions: {} } }
+    const derived = composePersonaCatalogDocs(basesMap(), [manifest])
+    expect(derived.has('agent-ui--p')).toBe(true)
+    expect(derived.has('a2ui-basic--p')).toBe(false)
+  })
+
+  it('AC3 — the collision case reject-loud posture holds identically for the DOM-less doc-only path', () => {
+    const manifest: PersonaCatalogManifest = {
+      personaId: 'p',
+      fragment: { components: { Card: comp('Card') }, functions: {} },
+      targetCatalogs: ['agent-ui'],
+    }
+    expect(() => composePersonaCatalogDocs(basesMap(), [manifest])).toThrow(CatalogComposeError)
+  })
+
+  it('AC6 — an unregistered target-base id fails loud, never a silent skip', () => {
+    const manifest: PersonaCatalogManifest = {
+      personaId: 'p',
+      fragment: { components: {}, functions: {} },
+      targetCatalogs: ['not-a-real-base'],
+    }
+    let error: unknown
+    try {
+      composePersonaCatalogDocs(basesMap(), [manifest])
+    } catch (e) {
+      error = e
+    }
+    expect(error).toBeInstanceOf(CatalogComposeError)
+    expect((error as CatalogComposeError).code).toBe(CatalogComposeErrorCode.UNKNOWN_TARGET)
+  })
+
+  it('a base id that is legal but simply absent from the caller-supplied `bases` map also fails loud (never falls through undefined)', () => {
+    const onlyDefault = new Map([['agent-ui', baseCatalog('agent-ui', ['Card'])]])
+    const manifest: PersonaCatalogManifest = {
+      personaId: 'p',
+      fragment: { components: {}, functions: {} },
+      targetCatalogs: ['a2ui-basic'],
+    }
+    let error: unknown
+    try {
+      composePersonaCatalogDocs(onlyDefault, [manifest])
+    } catch (e) {
+      error = e
+    }
+    expect(error).toBeInstanceOf(CatalogComposeError)
+    expect((error as CatalogComposeError).code).toBe(CatalogComposeErrorCode.UNKNOWN_TARGET)
   })
 })

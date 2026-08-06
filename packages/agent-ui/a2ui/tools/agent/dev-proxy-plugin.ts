@@ -40,9 +40,9 @@ import {
   isChatBody,
   resolveChatDispatch,
   selectCatalog,
+  buildCatalogMap,
 } from './chat-validation.ts'
 import type { ChatDispatch } from './chat-validation.ts'
-import type { Catalog } from '../../src/catalog/catalog.ts'
 export { validateMode, validateGenuiSurface, validateA2uiEnabled, validateEffort, isChatBody, resolveChatDispatch }
 export type { ChatDispatch }
 
@@ -109,10 +109,11 @@ export function a2uiDevProxyPlugin(): Plugin {
       // ADR-0169 cl.3 — the second catalog, loaded the SAME way; both live in a short-id-keyed map the
       // produce POST branch selects from via the request's `catalogId` (fail-closed to the default).
       const basicCatalog = loadCatalog(JSON.parse(readFileSync(BASIC_CATALOG_PATH, 'utf8')))
-      const catalogs = new Map<string, Catalog>([
-        [catalog.catalogId, catalog],
-        [basicCatalog.catalogId, basicCatalog],
-      ])
+      // GH #516 — the two base catalogs PLUS every shipped persona's derived `<base>--<persona>`
+      // catalog (`buildCatalogMap`, chat-validation.ts), so a live turn's derived `catalogId` (e.g.
+      // `agent-ui--croupier`) resolves to its REAL composed catalog instead of silently degrading to
+      // the default via `selectCatalog`'s fail-closed fallback.
+      const catalogs = buildCatalogMap(catalog, basicCatalog)
       const shard: CorpusRecord[] = (readFileSync(SHARD_PATH, 'utf8') as string)
         .split('\n')
         .filter((l) => l.trim().length > 0)

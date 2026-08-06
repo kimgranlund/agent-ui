@@ -16,6 +16,13 @@ import { GEN_UI_MODES } from '../../src/agent/gen-ui-mode.ts'
 import type { GenUiMode } from '../../src/agent/gen-ui-mode.ts'
 import type { GenuiSurfaceConfig } from '../../src/agent/genui-surface-config.ts'
 import { selectCatalog as selectCatalogShared } from '../../src/renderer/wire-tolerances.ts'
+// GH #516 (persona-catalog-composition SPEC-R3) — the pure, DOM-less compose step + the shipped
+// persona manifests, imported by LEAF PATH (never `catalog/index.ts`/`catalog/personas/index.ts`,
+// both of which pull in `@agent-ui/components`'s DOM self-define via `factories.ts` — a hard crash in
+// this Node/Workers module). See `buildCatalogMap`'s own doc comment below.
+import { composePersonaCatalogDocs } from '../../src/catalog/compose.ts'
+import type { Catalog } from '../../src/catalog/catalog.ts'
+import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from '../../src/catalog/personas/manifests.ts'
 
 // ADR-0090 §4 — `mode` is trusted input at a security-adjacent boundary (Consequences): a crafted/stale
 // `mode` string must NEVER reach `buildSystemPrompt` raw. Unlike `{provider,model}` (a registry lookup via
@@ -78,6 +85,35 @@ export function validateEffort(effort: unknown): Effort | undefined {
  *  plugin.ts`/`worker/index.ts`'s existing `import { selectCatalog } from './chat-validation.ts'`
  *  needed no call-site change. */
 export const selectCatalog = selectCatalogShared
+
+/**
+ * GH #516 / persona-catalog-composition SPEC-R3 — the server-host twin of `renderer.ts`'s constructor
+ * step (`composePersonaCatalogs(this.#registry, SHIPPED_PERSONA_CATALOGS)`): builds the FULL
+ * `catalogId → Catalog` map both `selectCatalog` callers (`dev-proxy-plugin.ts`'s produce POST branch,
+ * `worker/index.ts`'s `handleProduce`) pass to `selectCatalog` — the two base catalogs PLUS every
+ * derived `<base>--<persona>` catalog `SHIPPED_PERSONA_CATALOG_MANIFESTS` composes (ADR-0169 cl.3's
+ * "both hosts hold BOTH catalogs" law, widened to derived ids). Before this, a live turn's derived
+ * catalogId (e.g. `agent-ui--croupier`) was NEVER a key either host's map held, so
+ * `selectCatalog`'s own fail-closed fallback (ADR-0169 cl.3, SPEC-N4 — kept byte-identical, #487's
+ * tests unchanged) silently degraded every derived-catalog turn to the default, masking the persona's
+ * local pattern set from both the composed prompt's catalog teaching AND per-turn validation.
+ *
+ * ONE helper, not two host-side copies (the ADR-0168 both-arms precedent) — `dev-proxy-plugin.ts`/
+ * `worker/index.ts` each already load `catalog`/`basicCatalog` their OWN way (`readFileSync` vs. a
+ * static Vite/Wrangler JSON import), so this takes the two ALREADY-LOADED `Catalog` documents rather
+ * than loading them itself, and does the ONE thing both hosts need identically after that: compose +
+ * merge. Reject-loud on a malformed shipped persona (`CatalogComposeError`, SPEC-R2 AC3/AC6) — the
+ * SAME fail-loud-at-boot posture `loadCatalog`'s own gates already have for a malformed base catalog,
+ * never a half-composed production surface.
+ */
+export function buildCatalogMap(catalog: Catalog, basicCatalog: Catalog): Map<string, Catalog> {
+  const bases = new Map<string, Catalog>([
+    [catalog.catalogId, catalog],
+    [basicCatalog.catalogId, basicCatalog],
+  ])
+  const derived = composePersonaCatalogDocs(bases, SHIPPED_PERSONA_CATALOG_MANIFESTS)
+  return new Map<string, Catalog>([...bases, ...derived])
+}
 
 /**
  * ALM-C6 (TKT-0052/ADR-0136) — the `/chat` route's pure validation spine, extracted so its 400/503 arms

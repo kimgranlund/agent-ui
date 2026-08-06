@@ -35,6 +35,7 @@ import {
   isChatBody,
   resolveChatDispatch,
   selectCatalog,
+  buildCatalogMap,
 } from '../chat-validation.ts'
 
 import providersConfigRaw from '../providers.json'
@@ -77,10 +78,11 @@ const catalog: Catalog = loadCatalog(catalogRaw)
 // ADR-0169 cl.3 — both live in a short-id-keyed map `handleProduce` selects from via the request's
 // `catalogId` (fail-closed to the default).
 const basicCatalog: Catalog = loadCatalog(basicCatalogRaw)
-const catalogs = new Map<string, Catalog>([
-  [catalog.catalogId, catalog],
-  [basicCatalog.catalogId, basicCatalog],
-])
+// GH #516 — the two base catalogs PLUS every shipped persona's derived `<base>--<persona>` catalog
+// (`buildCatalogMap`, chat-validation.ts), so a live turn's derived `catalogId` (e.g.
+// `agent-ui--croupier`) resolves to its REAL composed catalog instead of silently degrading to the
+// default via `selectCatalog`'s fail-closed fallback.
+const catalogs = buildCatalogMap(catalog, basicCatalog)
 const shard: CorpusRecord[] = corpusShardRaw
   .split('\n')
   .filter((l) => l.trim().length > 0)

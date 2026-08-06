@@ -154,10 +154,20 @@ export interface PersonaCatalogPackage {
 
 const DEFAULT_TARGET_CATALOGS: readonly string[] = ['agent-ui']
 
-/** The resolved `targetCatalogs` for one persona package — absent/empty defaults to `['agent-ui']`
- *  alone (SPEC-R1's own widening note). The ONE place this default lives — `composePersonaCatalogs`
- *  and `derivedCatalogIdsFor` both read through here, so the two never drift. */
-function targetsFor(persona: PersonaCatalogPackage): readonly string[] {
+/** The structural slice of `PersonaCatalogPackage`/`PersonaCatalogManifest` `targetsFor`/
+ *  `assertLegalTarget` actually need — just `personaId`/`targetCatalogs`, never `factories`. Lets both
+ *  the full (browser, factory-bearing) package shape and the manifest (server, factory-free) shape
+ *  share the SAME default-resolution + legality logic below, with zero drift between the two. */
+interface TargetedPersona {
+  personaId: string
+  targetCatalogs?: readonly string[]
+}
+
+/** The resolved `targetCatalogs` for one persona package/manifest — absent/empty defaults to
+ *  `['agent-ui']` alone (SPEC-R1's own widening note). The ONE place this default lives —
+ *  `composePersonaCatalogs`, `composePersonaCatalogDocs`, and `derivedCatalogIdsFor` all read through
+ *  here, so none of the three ever drift. */
+function targetsFor(persona: TargetedPersona): readonly string[] {
   return persona.targetCatalogs !== undefined && persona.targetCatalogs.length > 0 ? persona.targetCatalogs : DEFAULT_TARGET_CATALOGS
 }
 
@@ -213,6 +223,56 @@ export function composePersonaCatalogs(registry: CatalogRegistry, personas: read
       registry.register(derived, factories, functions)
     }
   }
+}
+
+/**
+ * GH #516 / persona-catalog-composition SPEC-R3's server-side leg — the Node/Workers-safe TWIN of
+ * `PersonaCatalogPackage` (SPEC-R1's `personaId`/`fragment`/`targetCatalogs` triple), deliberately
+ * WITHOUT `factories`: a `WidgetFactory` table imports `@agent-ui/components` for its `create()`
+ * closures, which self-defines real `ui-*` custom elements on import — a hard crash in a DOM-less
+ * server process (`HTMLElement is not defined`), never something either HTTP transport
+ * (`dev-proxy-plugin.ts`/`worker/index.ts`) may import. Neither the composed prompt's catalog
+ * teaching (`buildSystemPrompt`) nor the shared validator ever reads a `WidgetFactory` — only the
+ * browser-side `Renderer`'s widget creation does (SPEC-R2 AC4's own point, restated here as the reason
+ * a factory-free manifest is enough to satisfy BOTH server-side consumers) — so this shape is the
+ * exhaustive server-side need.
+ */
+export interface PersonaCatalogManifest {
+  /** Stable kebab persona id (SPEC-R1) — matches the same id `PersonaCatalogPackage.personaId` uses. */
+  personaId: string
+  fragment: CatalogFragment
+  /** Which registered base(s) this fragment composes onto — `agent-ui` and/or `a2ui-basic` (SPEC-N5). */
+  targetCatalogs?: readonly string[]
+}
+
+/**
+ * The server-host derive step (GH #516): the SAME per-(fragment, targeted base) composition
+ * `composePersonaCatalogs` runs against a live `CatalogRegistry` (registering as a side effect), run
+ * here against a PLAIN `catalogId → Catalog` base map instead, returning every derived `Catalog`
+ * document keyed by its own derived id — no `CatalogRegistry`/`WidgetFactory` needed, so this is safe
+ * to call from `dev-proxy-plugin.ts`'s Node process or `worker/index.ts`'s Workers runtime, neither of
+ * which has a DOM. Reuses `composeCatalog`/`targetsFor`/`assertLegalTarget` UNCHANGED — the SAME
+ * reject-loud collision (SPEC-R2 AC3) and unknown-target-base (SPEC-R2 AC6) posture as the client:  a
+ * malformed shipped persona breaks BOTH server hosts' boot exactly as it breaks the renderer's
+ * construction, never a half-composed production surface.
+ */
+export function composePersonaCatalogDocs(bases: ReadonlyMap<string, Catalog>, personas: readonly PersonaCatalogManifest[]): Map<string, Catalog> {
+  const out = new Map<string, Catalog>()
+  for (const persona of personas) {
+    for (const baseId of targetsFor(persona)) {
+      assertLegalTarget(baseId, persona.personaId)
+      const base = bases.get(baseId)
+      if (base === undefined) {
+        throw new CatalogComposeError(
+          CatalogComposeErrorCode.UNKNOWN_TARGET,
+          `CATALOG_COMPOSE_UNKNOWN_TARGET: persona "${persona.personaId}" targets unregistered base catalog "${baseId}"`,
+        )
+      }
+      const derived = composeCatalog(base, persona.fragment, persona.personaId)
+      out.set(derived.catalogId, derived)
+    }
+  }
+  return out
 }
 
 /**

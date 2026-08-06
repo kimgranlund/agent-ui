@@ -13,21 +13,17 @@
 // rows are never referenced) — so there is no dialect-fit question to begin with, only the ORDINARY
 // reject-loud name-collision check (SPEC-R2), which trivially passes (`BookingForm`/`BookingConfirmation`
 // are new names on both bases). `renderer-persona-catalogs.test.ts` proves this with a real fixture.
+//
+// The browser-only, factory-bearing PersonaCatalogPackage (`renderer.ts`'s constructor consumes this
+// directly). `manifest.ts` carries the SAME `personaId`/`fragment`/`targetCatalogs` data, factory-free
+// and DOM-less, so a server host can compose derived catalog DOCUMENTS without ever importing this
+// file (GH #516 — see `manifest.ts`'s own header for why that import boundary is load-bearing).
 
-import { loadCatalogFragment } from '../../compose.ts'
-import type { CatalogFragment, PersonaCatalogPackage } from '../../compose.ts'
-import fragmentDoc from './catalog.json'
+import type { PersonaCatalogPackage } from '../../compose.ts'
+import { CONCIERGE_PERSONA_ID, conciergeFragment, conciergeTargetCatalogs } from './manifest.ts'
 import { conciergeFactories } from './factories.ts'
 
-export const CONCIERGE_PERSONA_ID = 'concierge'
-
-/** The loaded, structurally-validated concierge fragment (SPEC-R1 AC2). */
-export const conciergeFragment: CatalogFragment = loadCatalogFragment(fragmentDoc)
-
-/** Targets BOTH shipped bases (SPEC-N5's widening) — see the module header for why this is safe. */
-export const conciergeTargetCatalogs: readonly string[] = ['agent-ui', 'a2ui-basic']
-
-export { conciergeFactories }
+export { CONCIERGE_PERSONA_ID, conciergeFragment, conciergeTargetCatalogs, conciergeFactories }
 
 /** The derive-then-register input `composePersonaCatalogs` (SPEC-R2) consumes directly. */
 export const conciergePersona: PersonaCatalogPackage = {
