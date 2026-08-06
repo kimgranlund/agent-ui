@@ -7,11 +7,15 @@
 > (ADR-0097 §1) — shallow-validated the same way `readMetaLine`'s existing per-field-independent guard
 > treats `note`/`ask`/`trace`/`progress`/`error` (a malformed `plan` drops only itself, never the whole
 > envelope), the envelope stays versionless and provably disjoint from `A2uiServerMessage` (unchanged),
-> and `AgentTransport.turn`'s signature stays byte-identical (NEW **SPEC-R20**, §3.2b). This requirement
-> governs the WIRE REPRESENTATION ONLY — the host-side plan→execute→synthesize loop (ADR-0174
-> cl.1/cl.3/cl.4) and any `plan`-analogue of the `ask` field's surfaceId-integrity check (ADR-0174 Open
-> fork OF1, genuinely undecided) are OUT OF SCOPE here and unbuilt. SPEC-R5/R14 and every existing
-> meta-line field (`note`/`ask`/`trace`/`progress`/`error`) are byte-untouched.
+> `produce()`'s outgoing meta-line passes a declared `plan` through unchanged (mirroring `note`/`ask`'s
+> existing passthrough), and `AgentTransport.turn`'s signature stays byte-identical (NEW **SPEC-R20**,
+> §3.2b). SPEC-R6 gains the plan-arm's GRAMMAR-half mechanics teaching (NEW **AC6**), mode-invariant,
+> folded in the SAME place the `ask`-mechanics block (AC5) already lives — ADR-0174 cl.6 rules this
+> teaching host-owned/GRAMMAR-internal, never persona-editable. This requirement governs the WIRE
+> REPRESENTATION (both directions) plus that GRAMMAR teaching — the host-side plan→execute→synthesize
+> loop (ADR-0174 cl.1/cl.3/cl.4) and any `plan`-analogue of the `ask` field's surfaceId-integrity check
+> (ADR-0174 Open fork OF1, genuinely undecided) are OUT OF SCOPE here and unbuilt. SPEC-R5/R14 and every
+> existing meta-line field (`note`/`ask`/`trace`/`progress`/`error`) are byte-untouched.
 > v0.9 changelog (ADR-0168 — the tool/integration ENABLEMENT arc): the hardcoded `INTEGRATIONS`
 > array becomes a manifest REGISTRY (`IntegrationManifest {id, version, label, description, tool,
 > auth, envKey?, execute}` + `registerIntegration`, boot-fail-fast on id/wire-name collision) — the
@@ -406,6 +410,21 @@ honesty floor (above) applies identically to a feed ask's payload.
   full per-mode teaching; *given* `'specific'`/`'blue-sky'`, *then* each carries its OWN dialed disposition
   plus all five archetype recipes — `system-prompt-grammar.test.ts`, `npm test` green, no live model.
 
+**The GRAMMAR half additionally carries plan-arm mechanics teaching, mode-INVARIANT (ADR-0174 cl.2/cl.6,
+SPEC-R20).** Beside the note-line and feed-ask-mechanics instructions, the GRAMMAR half MUST teach how to
+declare a plan turn: the meta `plan` field's exact shape (`{steps: [{id, description}]}`), that `plan`
+rides the SAME leading meta-line as `note`/`ask`, and that this is a HOST-OWNED mechanics fact the model
+must reproduce exactly. Like the `ask`-mechanics block above, this teaching MUST be present,
+verbatim-identical, in EVERY mode — the ADR-0090 mode axis conditions WHETHER/HOW MUCH the agent asks or
+approximates, never the wire mechanics it must reproduce exactly. Per ADR-0174 cl.6, this teaching joins
+`GRAMMAR` (host-owned, byte-pinned, drift-gated), NEVER a persona-editable `kind: "prompt-section"`
+entry — the SAME wire-integrity reasoning that keeps the `ask`-mechanics block above GRAMMAR-owned, not
+persona-editable.
+- **AC6** *Given* `buildSystemPrompt(catalog, [])` (any mode), *when* read, *then* the plan-arm mechanics
+  teaching (the `plan` field's shape, its leading-meta-line placement) is present, byte-identical, in
+  `undefined`/`'default'`/`'specific'`/`'blue-sky'`, and none of it leaks into the derived `## Available
+  components` section — `system-prompt-grammar.test.ts`, `npm test` green, no live model.
+
 **A mini-skill block composes as an orthogonal segment, mode-FILTERED at the composition site (ADR-0091
 §2/§3, ADR-0091 §4 fix).** `buildSystemPrompt` MUST accept an OPTIONAL fourth parameter, a per-turn
 selection of `MiniSkill` modules (`readonly MiniSkill[]`, SPEC-R13), and append it as ONE new composed
@@ -557,19 +576,29 @@ precedent EXACTLY (SPEC-R14; ADR-0097 §1, ADR-0174 cl.2):
   disjointness proof (no `version` key) is UNCHANGED by this addition.
 - `AgentTransport.turn(input): AsyncIterable<string>`'s signature MUST stay BYTE-IDENTICAL — `plan` is
   additive framing INSIDE the string stream the interface already returns, never a new interface member
-  (the SAME precedent ADR-0097/ADR-0146/GH#144 each already extended this envelope by once). *(→
-  ADR-0174 cl.2)*
+  (the SAME precedent ADR-0097/ADR-0146/GH#144 each already extended this envelope by once).
+- `produce()`'s OUTGOING meta-line MUST carry the model's declared `plan` value THROUGH when the model's
+  own leading meta-line carried one — passed through UNCHANGED from the model's declaration (no runtime
+  rewriting; no integrity check performed here, per Scope below) — the SAME passthrough treatment `note`
+  already receives, and the SAME conditional-key-omission `ask` already receives (`JSON.stringify` omits
+  `plan` entirely on a plan-less turn, so the wire shape stays byte-identical to before this field
+  existed). *(→ PRD-G1/G6; ADR-0174 cl.2)*
 
-**Scope.** This requirement governs the WIRE REPRESENTATION ONLY. OUT OF SCOPE, and unbuilt: the
-host-side plan→execute→synthesize loop that reads a declared `plan` and drives sequential `produce()`
-calls (ADR-0174 cl.1/cl.3/cl.4 — a future SPEC/LLD's job, not this requirement's); any status-stream
-live-rendering projection of a plan's steps (ADR-0174 cl.2's "separate mechanism" ruling); and any
-`plan`-analogue of the `ask` field's surfaceId-correlation integrity check (ADR-0174 Open fork OF1 —
-genuinely undecided, NOT resolved by this field's addition — a `plan` MAY be displayed as declared,
-host-trusted, until a future requirement rules otherwise). A `plan` field with no corresponding
-host-side consumer degrades harmlessly today: an unrecognizing consumer drops the unknown field (the
-ADR-0088 degrade discipline every meta-line field already relies on) and the turn's `note`/A2UI lines
-render exactly as they do without it.
+**Scope.** This requirement governs the WIRE REPRESENTATION in BOTH directions — the model's declared
+`plan` parsed IN by `readMetaLine` (above) and passed OUT through `produce()`'s outgoing meta-line
+(above, AC3) — plus the GRAMMAR-half teaching the model needs to declare one correctly, which is folded
+into **SPEC-R6** below the SAME way SPEC-R14 AC5 folds the `ask`-arm's mechanics teaching there: ADR-0174
+cl.6 RULES this teaching INTERNAL and GRAMMAR-owned, not persona-editable, so it is not left absent or
+silently missing — it belongs beside the ask-mechanics block it follows the precedent of. OUT OF SCOPE,
+and unbuilt: the host-side plan→execute→synthesize loop that reads a declared `plan` and drives
+sequential `produce()` calls (ADR-0174 cl.1/cl.3/cl.4 — a future SPEC/LLD's job, not this requirement's);
+any status-stream live-rendering projection of a plan's steps (ADR-0174 cl.2's "separate mechanism"
+ruling); and any `plan`-analogue of the `ask` field's surfaceId-correlation integrity check (ADR-0174
+Open fork OF1 — genuinely undecided, NOT resolved by this field's addition — a `plan` MAY be
+displayed/passed-through as declared, host-trusted, until a future requirement rules otherwise). A
+`plan` field with no corresponding host-side executor loop still degrades harmlessly: an unrecognizing
+consumer drops the unknown field (the ADR-0088 degrade discipline every meta-line field already relies
+on) and the turn's `note`/A2UI lines render exactly as they do without it.
 - **AC1** *Given* `readMetaLine`, *when* fed `{note, plan:{steps:[{id,description}]}}`, *then* it
   round-trips `plan` intact alongside `note`/`trace`/`ask`/`progress`/`error`; *given* a malformed `plan`
   (non-object, a missing/non-array `steps`, or a step missing a string `id` or `description`), *then* the
@@ -578,6 +607,12 @@ render exactly as they do without it.
 - **AC2** *Given* the repo's `AgentTransport.turn` interface, *when* diffed before/after this field's
   addition, *then* its signature is BYTE-IDENTICAL — no new interface member, no request/response shape
   change (the ADR-0088/ADR-0097/ADR-0146/GH#144 additive-framing precedent, re-verified for `plan`).
+- **AC3** *Given* a stub `produce()` run emitting a leading meta-line carrying `{note, plan:{steps:
+  [{id,description}]}}` and a payload with zero A2UI lines, *when* it completes, *then* the OUTGOING
+  meta-line ships with `plan` intact, passed through unchanged from the model's own declaration; *given*
+  a stub run emitting no `plan`, *then* the outgoing meta-line omits the key entirely (byte-identical to
+  the pre-this-field wire shape) — mirroring SPEC-R14 AC2's stub-`produce()`-run shape,
+  `produce-loop.test.ts`, `npm test` green, no live model.
 
 ### 3.3 The round-trip
 
@@ -1046,5 +1081,6 @@ function buildToolDispatch(active: readonly IntegrationManifest[], env: Record<s
 | SPEC-R17 | PRD-G4/G6 (provable validity before dispatch + no silent drift — the declared `input_schema` enforced at ONE seam; ADR-0168 §3) |
 | SPEC-R18 | Constraint C2 (the secret-free invariant — integration keys resolve server-side in both hosts, never in a build/browser/tool_result; ADR-0073 cl.5, ADR-0152, ADR-0168 §4) |
 | SPEC-R19 | PRD-G7 (transport interop — enablement reaches every live arm via one shared dispatch; GH #402 branch (a); ADR-0136/0152/0168 §5) |
+| SPEC-R20, R6 AC6 | PRD-G1/G6 (the `plan` meta-line arm — a model-authored, additive, shallow-validated field on the ADR-0088 envelope, following the `ask`-arm precedent exactly; parsed by `readMetaLine` and passed through `produce()`'s outgoing meta-line unchanged; its GRAMMAR-half mechanics teaching folded into SPEC-R6 per ADR-0174 cl.6; the host-side plan→execute→synthesize loop and any `plan`-analogue of the `ask` integrity check are OUT OF SCOPE — ADR-0174 cl.2) |
 
 _Realizes streaming SPEC-R2 and harness SPEC-R6 in running code, co-serving PRD-G1 and PRD-G7. Status: each doc's own header (the tree wins); the original charter table is archived (frozen 2026-07-08)._
