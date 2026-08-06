@@ -6,10 +6,10 @@
 > |---|---|
 > | **Status** | proposed |
 > | **Date** | 2026-08-06 |
-> | **Proposed by** | planner (design seat — GH [#485](https://github.com/kimgranlund/agent-ui/issues/485), a design-intake candidate filed 2026-08-06 on the same host P>E>S assessment that named it) |
+> | **Proposed by** | planner (design seat — GH [#485](https://github.com/kimgranlund/agent-ui/issues/485), a design-intake candidate filed 2026-08-06 on the same host P>E>S assessment that named it; cl.6 folds in GH [#489](https://github.com/kimgranlund/agent-ui/issues/489), Kim's own 2026-08-06 follow-on question — verified author `kimgranlund` at the GitHub API, relayed live into this same intake per its own "the ANSWER belongs to ADR-0174's intake" framing) |
 > | **Ratified by** | — |
-> | **Repairs** | **On ratification:** `roadmap.md` gains a Now/Next/Later entry naming this pilot's actual sequencing (§5 below), not GH #485's own "depends on AG-UI + SPEC-R4" framing — that framing is corrected by cl.5. **On ratification+build (a future SPEC/LLD this ADR does not author — GH #485 itself is a design-intake candidate, not yet scheduled):** `packages/agent-ui/a2ui/src/agent/meta-line.ts` (`A2uiMetaEnvelope` gains an additive `plan` field, the `ask`-arm precedent) · `packages/agent-ui/a2ui/src/agent/produce.ts` (`formatMetaLine`/`readMetaLine` widen to carry/parse `plan`; `ProduceOptions` is UNCHANGED otherwise — the executor loop lives host-side) · a new host-side plan-runner module (site/app layer — sequential `produce()` calls over one growing `Session`) · `agent-admin-schema.ts` (a new `SURFACE_PLANNER_KEY`-shaped modality-gate constant, the `SURFACE_A2UI_KEY`/`SURFACE_GENUI_KEY` precedent) · `status-stream.ts` consumer wiring (per-step `StatusEntry.parent` grouping, zero component change) · [a2ui-live-agent.spec.md](../spec/a2ui-live-agent.spec.md) (new SPEC-R requirements for the plan arm + host loop, not written here). |
-> | **Supersedes / Superseded by** | **Extends** [ADR-0088](./0088-a2ui-live-conversational-channel.md) (the `a2uiMeta` envelope gains a fifth field, `plan` — note/trace/ask/progress/error stand unchanged) · **Extends** [ADR-0097](./0097-a2ui-feed-embedded-asks.md) (the `plan` field follows the EXACT additive, model-authored, shallow-validated `ask`-arm precedent cl.2 below argues from directly) · **Extends** [ADR-0146](./0146-live-turn-lifecycle-progress-channel.md) and [ADR-0159](./0159-status-stream-receipt-pattern.md) (a plan's steps render live by REUSING F5's grouping + the receipt pattern — zero new component) · **Relates** [ADR-0168](./0168-integration-manifest-registry-validated-dispatch-server-keys.md) (tool dispatch is per-`produce()`-call already; unchanged, cl.3) · **Relates** [ADR-0137](./0137-a2ui-agent-producer-toolkit-export.md) (the `./agent` toolkit shell this design's host loop is built against) · **Relates** [`a2ui-ecosystem-alignment.spec.md`](../spec/a2ui-ecosystem-alignment.spec.md) SPEC-R1/SPEC-R4 and [`a2ui-streaming-pipeline.spec.md`](../spec/a2ui-streaming-pipeline.spec.md) (both cited, neither treated as a blocking prerequisite for THIS pilot's sequential shape — cl.5's correction) · **Relates** [`persona-catalog-composition.spec.md`](../spec/persona-catalog-composition.spec.md) (a genuinely orthogonal axis, not a dependency — cl.3's finding) · **Resolves** the design-intake half of GH [#485](https://github.com/kimgranlund/agent-ui/issues/485) (the issue itself stays open, tracking the pilot's own future build). |
+> | **Repairs** | **On ratification:** `roadmap.md` gains a Now/Next/Later entry naming this pilot's actual sequencing (§5 below), not GH #485's own "depends on AG-UI + SPEC-R4" framing — that framing is corrected by cl.5. **On ratification+build (a future SPEC/LLD this ADR does not author — GH #485 itself is a design-intake candidate, not yet scheduled):** `packages/agent-ui/a2ui/src/agent/meta-line.ts` (`A2uiMetaEnvelope` gains an additive `plan` field, the `ask`-arm precedent) · `packages/agent-ui/a2ui/src/agent/produce.ts` (`formatMetaLine`/`readMetaLine` widen to carry/parse `plan`; `ProduceOptions` is UNCHANGED otherwise — the executor loop lives host-side) · a new host-side plan-runner module (site/app layer — sequential `produce()` calls over one growing `Session`) · `agent-admin-schema.ts` (a new `SURFACE_PLANNER_KEY`-shaped modality-gate constant, the `SURFACE_A2UI_KEY`/`SURFACE_GENUI_KEY` precedent) · `status-stream.ts` consumer wiring (per-step `StatusEntry.parent` grouping, zero component change) · `system-prompt.ts`'s `GRAMMAR` constant (gains the `plan`-arm + synthesis mechanics teaching, the ADR-0097 §4 ask-mechanics-block precedent — cl.6) · [a2ui-live-agent.spec.md](../spec/a2ui-live-agent.spec.md) (new SPEC-R requirements for the plan arm + host loop, not written here). |
+> | **Supersedes / Superseded by** | **Extends** [ADR-0088](./0088-a2ui-live-conversational-channel.md) (the `a2uiMeta` envelope gains a fifth field, `plan` — note/trace/ask/progress/error stand unchanged) · **Extends** [ADR-0097](./0097-a2ui-feed-embedded-asks.md) (the `plan` field follows the EXACT additive, model-authored, shallow-validated `ask`-arm precedent cl.2 below argues from directly) · **Extends** [ADR-0146](./0146-live-turn-lifecycle-progress-channel.md) and [ADR-0159](./0159-status-stream-receipt-pattern.md) (a plan's steps render live by REUSING F5's grouping + the receipt pattern — zero new component) · **Relates** [ADR-0168](./0168-integration-manifest-registry-validated-dispatch-server-keys.md) (tool dispatch is per-`produce()`-call already; unchanged, cl.3) · **Relates** [ADR-0137](./0137-a2ui-agent-producer-toolkit-export.md) (the `./agent` toolkit shell this design's host loop is built against) · **Relates** [`a2ui-ecosystem-alignment.spec.md`](../spec/a2ui-ecosystem-alignment.spec.md) SPEC-R1/SPEC-R4 and [`a2ui-streaming-pipeline.spec.md`](../spec/a2ui-streaming-pipeline.spec.md) (both cited, neither treated as a blocking prerequisite for THIS pilot's sequential shape — cl.5's correction) · **Relates** [`persona-catalog-composition.spec.md`](../spec/persona-catalog-composition.spec.md) (a genuinely orthogonal axis, not a dependency — cl.3's finding) · **Relates** [ADR-0132](./0132-agent-admin-instructions-capabilities-architecture.md) (the `kind: "prompt-section"` entry-list primitive cl.6 rules against — untouched, its "no kind gets its own bespoke code" law is exactly why a future planning-style entry, if ever built, costs nothing new) · **Relates** [ADR-0170](./0170-catalog-library-kind-single-select.md) (the most recent worked example of a new entry kind joining the roster with per-kind presentation booleans — the shape cl.6's named future seam would follow) · **Resolves** the design-intake half of GH [#485](https://github.com/kimgranlund/agent-ui/issues/485) and GH [#489](https://github.com/kimgranlund/agent-ui/issues/489) (both issues stay open, tracking the pilot's own future build). |
 
 ## Context
 
@@ -337,6 +337,80 @@ transport swap."
   pre-build a second, larger design (concurrent producer-identity coordination, a genuinely
   different, harder problem) riding on a prerequisite (#475) that hasn't landed.
 
+### 6 · Stage exposure (GH #489) — all three stages stay INTERNAL, GRAMMAR-style, host-owned; Executing isn't even its own prompt segment; a future persona-voice layer is a named, additive, not-built-here seam, gated on cl.1's flag
+
+**Ruling — argued from the SAME wire-integrity law that already splits this system's ONE composed
+system prompt into a persona-editable half and a host-owned half.** `ProduceOptions.personaSystem`
+(ADR-0138, cited in `produce.ts`'s own doc comment) is appended AFTER the catalog/grammar law, with
+an explicit precedence rule: persona voice/content, never wire authority. `GRAMMAR`
+(`system-prompt.ts`, `a2ui-live-agent.spec.md` AC2/AC3) is the host-owned pole this precedence rule
+protects — byte-pinned, drift-gated by `system-prompt-grammar.test.ts`, and it is where the LAST
+new model-facing mechanics block landed: ADR-0097 §4 added the `ask`-arm's mechanics teaching to
+`GRAMMAR`, not to a persona-editable `kind: "prompt-section"` entry (ADR-0132 cl.2's Instructions
+primitive). The `plan` arm (cl.2 above) is structurally the SAME kind of fact `ask` is — a new
+piece of wire syntax the model must reproduce exactly for `readMetaLine` to parse it — so it follows
+the identical precedent: **the `plan`-arm mechanics teaching (how to declare a plan, and the
+synthesis-turn's own procedural framing) lands in `GRAMMAR`, host-owned, never persona-editable.**
+A persona author editing worded teaching prose that shapes an exact JSON field risks silently
+breaking the model's adherence to a shape `readMetaLine` shallow-validates but cannot RECOVER from
+if the teaching itself was garbled — there is no validator gate for a broken TEACHING the way
+`validateA2ui` gates a broken PAYLOAD (the same class of risk ADR-0146 F2's honesty-law guard
+already treats as load-bearing for stage vocabulary).
+
+Ruled per stage, from the mechanics cl.1-4 already froze:
+
+- **Planning — INTERNAL.** The `plan` arm's JSON shape (cl.2) is exactly `ask`-shaped wire syntax;
+  its teaching joins `GRAMMAR`'s existing mechanics blocks, never a `kind: "prompt-section"` entry.
+- **Executing — INTERNAL, and not even its own prompt segment.** cl.3 already rules each step is an
+  ORDINARY `produce()` turn riding the EXISTING composed prompt (Instructions + `GRAMMAR`)
+  completely unchanged — no new host-owned OR persona-editable segment is introduced for this
+  stage at all. The step's own instruction text is DATA (the plan turn's own `plan.steps[i]`
+  output, cl.2), not admin-authored teaching prose. GH #489's own "stay internal" pole already
+  correctly anticipates this outcome for Executing; this ADR confirms it mechanically rather than
+  merely asserting it.
+- **Synthesizing — INTERNAL, same reasoning as Planning.** The closing turn's procedural framing
+  ("compose the final surface set from what the session already shows," cl.4) is mechanics
+  teaching about what synthesis MEANS, not persona voice — it joins `GRAMMAR` for the identical
+  wire-integrity reason Planning's does.
+
+**All three rule the SAME way, and must — this ADR finds no principled asymmetry between them
+that would justify exposing one stage's mechanics while keeping another's internal (Considered
+alternatives, below, examines Kim's own "Planning only" middle shape directly and rejects it on
+exactly this ground).** Persona authors keep their EXISTING levers — Foundation/Personality/
+Critical-Items (ADR-0132 cl.2) — which already condition every turn a persona runs, planner-mode
+or not; nothing about cl.1-4's design removes or bypasses them for a plan's steps.
+
+**Where a FUTURE editable entry would live, if one is ever built (GH #489's own "where" question,
+answered without building it now).** The seam is ADR-0132 cl.1's generic `kind: "prompt-section"`
+primitive: a fourth built-in-seeded entry (alongside Foundation/Personality/Critical-Items),
+ADDITIVE to — never a replacement for — the internal `GRAMMAR` mechanics block, riding "no kind
+gets its own bespoke list/toggle/author code" (ADR-0132 cl.1) with zero new UI. Its enablement
+would need the SAME modality-gate discipline cl.1 above already establishes and ADR-0170 cl.5
+already precedents (`SURFACE_A2UI_KEY`'s "the section dims while [the modality] is off... noise,
+not configuration"): a planning-style entry authored for a persona that never runs planner mode is
+exactly that noise, so it would need to dim/exclude under `SURFACE_PLANNER_KEY` (cl.1). This is
+named as a possible future extension, not designed or built here (Non-goals).
+
+**Considered alternatives.**
+- **Expose all three as editable settings groups — rejected.** Wire mechanics (the `plan` arm's
+  exact JSON shape, the synthesis turn's procedural framing) is precisely the class of content
+  `GRAMMAR` already protects as byte-pinned/host-owned, on the SAME precedent `ask` set (ADR-0097
+  §4) — editable teaching prose here risks silently breaking model compliance with an unrecoverable
+  failure mode (above).
+- **Expose only Planning, per Kim's own suggested middle shape in GH #489 — considered directly,
+  rejected as a REPLACEMENT for internal mechanics (an ADDITIVE version survives, above).**
+  Planning's WIRE MECHANICS half needs to stay internal for the identical reason Synthesizing's
+  does — there is no mechanical property that makes Planning's JSON-shape teaching safer to edit
+  than Synthesizing's. If a persona-voice "planning STYLE" lever (not mechanics) is wanted later,
+  it is a genuinely separate, additive question — and nothing in the mechanics singles out Planning
+  as uniquely deserving it over Executing or Synthesizing; this ADR declines to invent an asymmetry
+  the sources don't support (Open forks names this as Kim's call, not derived here).
+- **Rule the future seam closed entirely (no `kind: "prompt-section"` extension point named) —
+  rejected.** GH #489 itself floats middle shapes as legitimate; foreclosing even the POSSIBILITY
+  of a future additive persona-voice entry costs nothing to leave open (ADR-0132's primitive is
+  already zero-bespoke-code per new kind) and would needlessly re-litigate a question GH #489 asks
+  to be answered, not pre-emptively closed.
+
 ## Non-goals
 
 - **Concurrent/parallel step execution.** This ADR rules a SEQUENTIAL executor loop only (cl.3).
@@ -359,6 +433,10 @@ transport swap."
 - **The exact `plan` arm JSON shape, `SURFACE_PLANNER_KEY`'s exact name, and the plan-integrity
   check `produce()` would need (the `ask`-arm's own surfaceId-correlation check, ADR-0097 §1, has
   no obvious `plan` analogue yet)** — LLD-level decisions, named as follow-up, not settled here.
+- **A future persona-editable "planning style" (or synthesis-style) prompt-section entry.** cl.6
+  names the seam (`kind: "prompt-section"`, gated on `SURFACE_PLANNER_KEY`) as a possible future
+  extension, additive to the internal `GRAMMAR` mechanics block — it is not designed, scoped, or
+  committed to being built here; whether it is ever warranted is Open fork OF4.
 
 ## Consequences
 
@@ -382,6 +460,14 @@ transport swap."
 - The plan-integrity check (Non-goals: no obvious `ask`-style correlation analogue yet) is a real
   open design question for the future SPEC/LLD, not resolved by reusing the `ask` precedent
   wholesale — flagged, not silently assumed solved.
+- GH #489 gains its own ruled answer (cl.6): none of Planning/Executing/Synthesizing gets a new
+  user-facing settings group in this pilot; Executing in particular introduces no new prompt
+  segment at all (it rides the existing composed prompt unchanged, per cl.3). Persona authors keep
+  Foundation/Personality/Critical-Items untouched as their voice/behavior levers over every turn a
+  plan runs, exactly as over an ordinary single-stage turn.
+- The `plan`/synthesis mechanics teaching joins `GRAMMAR` alongside the `ask`-arm block it follows
+  the precedent of — `system-prompt-grammar.test.ts`'s byte-pinning discipline extends to cover it,
+  the same drift protection every other GRAMMAR addition already has.
 
 ## Open forks
 
@@ -398,6 +484,11 @@ transport swap."
 - **OF3 — The exact persona-schema store-key name and admin-UI presentation for planner mode**
   (cl.1 names the SHAPE — a `SURFACE_PLANNER_KEY`-style modality gate — not the LLD's exact
   constant name or admin section).
+- **OF4 — Whether a future persona-voice "planning style" (or synthesis-style) `kind:
+  "prompt-section"` entry is ever actually built.** cl.6 names the seam and rules it would sit
+  ADDITIVE to the internal `GRAMMAR` mechanics block, gated on `SURFACE_PLANNER_KEY` — but whether
+  it is warranted at all is not derivable from the mechanics (no persona has asked for it yet); a
+  real product call, Kim's, once the pilot's first personas exist to want it or not.
 
 ## Alternatives considered
 
@@ -418,3 +509,9 @@ transport swap."
 - **Projecting the plan itself onto the closed `TURN_PROGRESS_STAGES` vocabulary instead of a new
   meta-line arm** — rejected; cl.2, conflates a round-scoped closed table with task-scoped
   structure.
+- **Exposing Planning/Executing/Synthesizing as editable settings groups** — rejected; cl.6, wire
+  mechanics belongs in `GRAMMAR` on the `ask`-arm precedent, not persona-editable prose.
+- **Exposing Planning only, per Kim's own suggested middle shape in GH #489** — rejected as a
+  replacement for internal mechanics teaching; cl.6 finds no mechanical asymmetry that makes
+  Planning's wire syntax safer to edit than Synthesizing's (an additive future style layer survives
+  as OF4, not this).
