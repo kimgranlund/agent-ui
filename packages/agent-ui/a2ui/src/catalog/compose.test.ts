@@ -8,6 +8,7 @@ import {
   composePersonaCatalogs,
   loadCatalogFragment,
   derivedCatalogId,
+  derivedCatalogIdsFor,
   CatalogComposeError,
   CatalogComposeErrorCode,
 } from './compose.ts'
@@ -174,6 +175,50 @@ describe('composePersonaCatalogs — SPEC-R2 constructor-time derive-then-regist
     let error: unknown
     try {
       composePersonaCatalogs(registry, [persona])
+    } catch (e) {
+      error = e
+    }
+    expect(error).toBeInstanceOf(CatalogComposeError)
+    expect((error as CatalogComposeError).code).toBe(CatalogComposeErrorCode.UNKNOWN_TARGET)
+  })
+
+  it('a REGISTERED-but-illegitimate target (the a2ui-basic canonical-URI alias) fails loud too — an existence check alone is not enough', () => {
+    // Simulate ADR-0169 cl.13's own registration: the SAME bytes registered a SECOND time under the
+    // upstream canonical URI, exactly as renderer.ts's own a2uiBasicCatalogCanonical does beside
+    // a2uiBasicCatalog. That second registration IS real (registry.get resolves it) — SPEC-R2's own
+    // prose is explicit it is never a legal composition target regardless.
+    const CANONICAL_URI = 'https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json'
+    const registry = registryWithBases()
+    registry.register(baseCatalog(CANONICAL_URI, ['Text']), { Text: fakeFactory('ui-text') })
+    expect(registry.get(CANONICAL_URI)).toBeDefined() // anti-vacuous: the alias really did register
+
+    const persona: PersonaCatalogPackage = {
+      personaId: 'p',
+      fragment: { components: {}, functions: {} },
+      factories: {},
+      targetCatalogs: [CANONICAL_URI],
+    }
+    let error: unknown
+    try {
+      composePersonaCatalogs(registry, [persona])
+    } catch (e) {
+      error = e
+    }
+    expect(error).toBeInstanceOf(CatalogComposeError)
+    expect((error as CatalogComposeError).code).toBe(CatalogComposeErrorCode.UNKNOWN_TARGET)
+    expect(registry.get(`${CANONICAL_URI}--p`)).toBeUndefined() // never silently composed+registered
+  })
+
+  it('derivedCatalogIdsFor mirrors the SAME legal-target allowlist — throws on an illegitimate target even though it is registered', () => {
+    const persona: PersonaCatalogPackage = {
+      personaId: 'p',
+      fragment: { components: {}, functions: {} },
+      factories: {},
+      targetCatalogs: ['https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json'],
+    }
+    let error: unknown
+    try {
+      derivedCatalogIdsFor([persona])
     } catch (e) {
       error = e
     }

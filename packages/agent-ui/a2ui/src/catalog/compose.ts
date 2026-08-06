@@ -66,7 +66,10 @@ export function loadCatalogFragment(json: unknown): CatalogFragment {
 export const CatalogComposeErrorCode = {
   /** A fragment's declared component OR function name already exists in the targeted base (OF1, reject-loud). */
   COLLISION: 'CATALOG_COMPOSE_COLLISION',
-  /** A fragment's `targetCatalogs` names an id that is not one of the two currently-registered bases (SPEC-R2 AC6). */
+  /** A fragment's `targetCatalogs` names an id that is not one of the two currently-registered bases
+   *  (SPEC-R2 AC6) — including a REGISTERED-but-illegitimate id, e.g. the `a2ui-basic` canonical-URI
+   *  alias (`A2UI_BASIC_CANONICAL_URI`, ADR-0169 cl.13), which resolves via `registry.get` but is
+   *  inbound-only and never a legal composition target (SPEC-R2's own prose). */
   UNKNOWN_TARGET: 'CATALOG_COMPOSE_UNKNOWN_TARGET',
 } as const
 export type CatalogComposeErrorCode = (typeof CatalogComposeErrorCode)[keyof typeof CatalogComposeErrorCode]
@@ -158,6 +161,28 @@ function targetsFor(persona: PersonaCatalogPackage): readonly string[] {
   return persona.targetCatalogs !== undefined && persona.targetCatalogs.length > 0 ? persona.targetCatalogs : DEFAULT_TARGET_CATALOGS
 }
 
+/** SPEC-N5 — the EXHAUSTIVE set of ids a `targetCatalogs` entry may legally name this wave: the two
+ *  currently-registered SHORT base ids. Deliberately NOT "whatever `registry.get` resolves" — the
+ *  `a2ui-basic` canonical-URI alias (`A2UI_BASIC_CANONICAL_URI`) is ALSO a real registry entry
+ *  (ADR-0169 cl.13, `renderer.ts`'s third registration), but SPEC-R2's own prose is explicit that base
+ *  "= the ALREADY-registered entry for B (`agent-ui` or `a2ui-basic` — never the canonical-URI alias,
+ *  which is inbound-only and never a composition target)". A hypothetical future third base is
+ *  likewise illegal here — SPEC-N5 names the boundary as "no THIRD base," not "no `a2ui-basic`." */
+const LEGAL_TARGET_CATALOGS: ReadonlySet<string> = new Set(['agent-ui', 'a2ui-basic'])
+
+/** SPEC-R2 AC6 / SPEC-R1 AC4 — reject-loud, the SAME posture a genuinely-unregistered id has, on ANY
+ *  `targetCatalogs` entry outside `LEGAL_TARGET_CATALOGS`: a typo, a not-yet-shipped third base, OR a
+ *  registered-but-illegitimate id (the `a2ui-basic` canonical-URI alias) — checked BEFORE `registry.get`
+ *  is ever consulted, so a registered alias can never silently pass the existence check alone. */
+function assertLegalTarget(baseId: string, personaId: string): void {
+  if (!LEGAL_TARGET_CATALOGS.has(baseId)) {
+    throw new CatalogComposeError(
+      CatalogComposeErrorCode.UNKNOWN_TARGET,
+      `CATALOG_COMPOSE_UNKNOWN_TARGET: persona "${personaId}" targets "${baseId}", which is not one of the two composable bases {agent-ui, a2ui-basic}`,
+    )
+  }
+}
+
 /**
  * SPEC-R2's constructor-time derive-then-register step: for every shipped persona package and every
  * base its `targetCatalogs` names, `composeCatalog` runs once against the ALREADY-registered entry for
@@ -173,6 +198,7 @@ function targetsFor(persona: PersonaCatalogPackage): readonly string[] {
 export function composePersonaCatalogs(registry: CatalogRegistry, personas: readonly PersonaCatalogPackage[]): void {
   for (const persona of personas) {
     for (const baseId of targetsFor(persona)) {
+      assertLegalTarget(baseId, persona.personaId)
       const entry: CatalogEntry | undefined = registry.get(baseId)
       if (entry === undefined) {
         throw new CatalogComposeError(
@@ -200,7 +226,10 @@ export function composePersonaCatalogs(registry: CatalogRegistry, personas: read
 export function derivedCatalogIdsFor(personas: readonly PersonaCatalogPackage[]): readonly string[] {
   const out: string[] = []
   for (const persona of personas) {
-    for (const baseId of targetsFor(persona)) out.push(derivedCatalogId(baseId, persona.personaId))
+    for (const baseId of targetsFor(persona)) {
+      assertLegalTarget(baseId, persona.personaId)
+      out.push(derivedCatalogId(baseId, persona.personaId))
+    }
   }
   return out
 }
