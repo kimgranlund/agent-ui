@@ -1,6 +1,6 @@
 # SPEC — Persona Catalog Composition (M-D)
 
-> Status: proposed · v0.2 · 2026-08-06 · Layer: SPEC (execution contract)
+> Status: accepted · v0.2 · 2026-08-06 · Layer: SPEC (execution contract)
 > **v0.2 (2026-08-06):** Kim's acceptance-round rulings fold in (§5, citing
 > [PR #482#issuecomment-5199254913](https://github.com/kimgranlund/agent-ui/pull/482#issuecomment-5199254913)
 > as their provisional record) — OF1 (reject-loud collision policy), OF1b (`<base>--<persona>`
