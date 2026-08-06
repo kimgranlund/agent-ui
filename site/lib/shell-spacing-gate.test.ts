@@ -59,6 +59,10 @@ const SHELL_FAMILY_SHEETS = [
   // ui-workspace-shell (a shell-composing site sheet, the agent-admin-app.css precedent), so it joins
   // the set as its own reviewed one-line append, per this gate's own extension law above.
   'site/pages/workbench.css',
+  // GH #499 (M-F, the fleet's second SaaS composition) — the dashboard sheet lays content into
+  // ui-workspace-shell exactly the same way workbench.css does, so it joins the set on the SAME
+  // reasoning, its own reviewed one-line append.
+  'site/pages/dashboard.css',
 ]
 
 // AC19(b) — the property families in scope: padding*/margin*, gap/row-gap/column-gap, the inset*

@@ -1014,6 +1014,20 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    // The Support Dashboard (GH #499, M-F) — the fleet's SECOND SaaS composition, an ungrouped
+    // site-level card (no `label:`) mirroring its ungrouped nav link in _page.ts — proving the SAME
+    // ui-workspace-shell frame + recorded agent-summary seam generalize to a materially different content
+    // shape (stat tiles + a chart + a read-only table, not a data-table + toolbar + edit-modal).
+    cards: [
+      {
+        href: './dashboard.html',
+        title: 'Support Dashboard',
+        blurb:
+          'Stat cards + a bar chart + a read-only table + an agent-summary card composed entirely from published fleet primitives inside ui-workspace-shell — filter by priority tier with a segmented control and read an agent-written summary of the current queue view.',
+      },
+    ],
+  },
+  {
     // The A2A cluster — ungrouped site-level cards, mirroring the ungrouped nav links in _page.ts (same
     // posture as the A2UI cluster above: independent destinations, not a fleet component). The arena
     // (LLD-C11), the corpus-derived concepts/demos section (corpus LLD-C12), and the A2UI-over-A2A
