@@ -27,7 +27,9 @@ export {
   loadCatalogFragment,
   composePersonaCatalogs,
   derivedCatalogId,
+  derivedCatalogIdsFor,
   CatalogComposeError,
   CatalogComposeErrorCode,
 } from './compose.ts'
 export type { CatalogFragment, PersonaCatalogPackage } from './compose.ts'
+export { SHIPPED_PERSONA_CATALOGS } from './personas/index.ts'

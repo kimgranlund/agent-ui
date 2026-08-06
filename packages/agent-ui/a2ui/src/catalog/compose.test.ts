@@ -22,10 +22,12 @@ const fakeFactory = (tag: string): WidgetFactory => ({
   applyProp: () => {},
 })
 
+const comp = (name: string) => ({ name, properties: {} })
+
 const baseCatalog = (catalogId: string, types: string[], fns: string[] = []): Catalog => ({
   catalogId,
   protocolVersion: 'v1.0',
-  components: Object.fromEntries(types.map((t) => [t, { properties: {} }])),
+  components: Object.fromEntries(types.map((t) => [t, comp(t)])),
   functions: Object.fromEntries(fns.map((f) => [f, { args: {}, returns: { type: 'boolean' }, callableFrom: 'clientOnly' as const }])),
 })
 
@@ -52,7 +54,7 @@ describe('composeCatalog — AC2 non-colliding union', () => {
   it('the derived components/functions maps are exactly {...base, ...local}', () => {
     const base = baseCatalog('agent-ui', ['Card', 'Button'], ['email'])
     const local: CatalogFragment = {
-      components: { Widget: { properties: {} } },
+      components: { Widget: comp('Widget') },
       functions: { greet: { args: {}, returns: { type: 'string' }, callableFrom: 'clientOnly' } },
     }
     const derived = composeCatalog(base, local, 'p1')
@@ -66,7 +68,7 @@ describe('composeCatalog — AC2 non-colliding union', () => {
 describe('composeCatalog — AC3 collision case (OF1, ruled reject-loud)', () => {
   it('throws CatalogComposeError naming the persona, base catalogId, and colliding component name', () => {
     const base = baseCatalog('agent-ui', ['Card'])
-    const local: CatalogFragment = { components: { Card: { properties: {} } }, functions: {} }
+    const local: CatalogFragment = { components: { Card: comp('Card') }, functions: {} }
     let error: unknown
     try {
       composeCatalog(base, local, 'concierge')
@@ -89,7 +91,7 @@ describe('composeCatalog — AC3 collision case (OF1, ruled reject-loud)', () =>
   it('a collision against one targeted base never blocks a different (non-colliding) base\'s pairing for the same fragment', () => {
     const collidingBase = baseCatalog('agent-ui', ['Card'])
     const cleanBase = baseCatalog('a2ui-basic', ['Text'])
-    const local: CatalogFragment = { components: { Card: { properties: {} } }, functions: {} }
+    const local: CatalogFragment = { components: { Card: comp('Card') }, functions: {} }
     expect(() => composeCatalog(collidingBase, local, 'p')).toThrow(CatalogComposeError)
     expect(() => composeCatalog(cleanBase, local, 'p')).not.toThrow()
     const derived = composeCatalog(cleanBase, local, 'p')
@@ -138,7 +140,7 @@ describe('composePersonaCatalogs — SPEC-R2 constructor-time derive-then-regist
     const registry = registryWithBases()
     const persona: PersonaCatalogPackage = {
       personaId: 'concierge',
-      fragment: { components: { Widget: { properties: {} } }, functions: {} },
+      fragment: { components: { Widget: comp('Widget') }, functions: {} },
       factories: { Widget: fakeFactory('div') },
       targetCatalogs: ['agent-ui', 'a2ui-basic'],
     }
@@ -183,7 +185,7 @@ describe('composePersonaCatalogs — SPEC-R2 constructor-time derive-then-regist
     const registry = registryWithBases()
     const persona: PersonaCatalogPackage = {
       personaId: 'p',
-      fragment: { components: { Card: { properties: {} } }, functions: {} },
+      fragment: { components: { Card: comp('Card') }, functions: {} },
       factories: { Card: fakeFactory('div') },
       targetCatalogs: ['agent-ui'],
     }
@@ -195,7 +197,7 @@ describe('composePersonaCatalogs — SPEC-R2 constructor-time derive-then-regist
     const registry = registryWithBases()
     const persona: PersonaCatalogPackage = {
       personaId: 'ok',
-      fragment: { components: { Widget: { properties: {} } }, functions: {} },
+      fragment: { components: { Widget: comp('Widget') }, functions: {} },
       factories: { Widget: fakeFactory('div') },
       targetCatalogs: ['agent-ui'],
     }

@@ -151,6 +151,13 @@ export interface PersonaCatalogPackage {
 
 const DEFAULT_TARGET_CATALOGS: readonly string[] = ['agent-ui']
 
+/** The resolved `targetCatalogs` for one persona package — absent/empty defaults to `['agent-ui']`
+ *  alone (SPEC-R1's own widening note). The ONE place this default lives — `composePersonaCatalogs`
+ *  and `derivedCatalogIdsFor` both read through here, so the two never drift. */
+function targetsFor(persona: PersonaCatalogPackage): readonly string[] {
+  return persona.targetCatalogs !== undefined && persona.targetCatalogs.length > 0 ? persona.targetCatalogs : DEFAULT_TARGET_CATALOGS
+}
+
 /**
  * SPEC-R2's constructor-time derive-then-register step: for every shipped persona package and every
  * base its `targetCatalogs` names, `composeCatalog` runs once against the ALREADY-registered entry for
@@ -165,8 +172,7 @@ const DEFAULT_TARGET_CATALOGS: readonly string[] = ['agent-ui']
  */
 export function composePersonaCatalogs(registry: CatalogRegistry, personas: readonly PersonaCatalogPackage[]): void {
   for (const persona of personas) {
-    const targets = persona.targetCatalogs !== undefined && persona.targetCatalogs.length > 0 ? persona.targetCatalogs : DEFAULT_TARGET_CATALOGS
-    for (const baseId of targets) {
+    for (const baseId of targetsFor(persona)) {
       const entry: CatalogEntry | undefined = registry.get(baseId)
       if (entry === undefined) {
         throw new CatalogComposeError(
@@ -181,4 +187,20 @@ export function composePersonaCatalogs(registry: CatalogRegistry, personas: read
       registry.register(derived, factories, functions)
     }
   }
+}
+
+/**
+ * Every derived `catalogId` `composePersonaCatalogs` will register for `personas` — the SAME
+ * (fragment, targeted base) pairing enumeration (`targetsFor`'s default included), computed WITHOUT a
+ * live registry instance. SPEC-R3's `sanitizeCatalog` widening reads this: `agent-admin-schema.ts` is
+ * pure data, with no renderer/registry instance around it, so recognizing a derived id there is a
+ * static projection of the same persona/`targetCatalogs` metadata the constructor step reads — not a
+ * live registry-backed lookup (SPEC-R3's own "implementation choice, not fixed by this SPEC" clause).
+ */
+export function derivedCatalogIdsFor(personas: readonly PersonaCatalogPackage[]): readonly string[] {
+  const out: string[] = []
+  for (const persona of personas) {
+    for (const baseId of targetsFor(persona)) out.push(derivedCatalogId(baseId, persona.personaId))
+  }
+  return out
 }
