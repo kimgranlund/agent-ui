@@ -13,9 +13,10 @@
 // skipped exactly as cl.5 names. Any REMAINING disagreement is either a deliberate, cited divergence (a
 // recorded AGREEMENT_EXCEPTIONS entry — the ADR-0087 include-or-recorded-exclusion shape, one level down)
 // or a real fleet defect this build is not authorized to fix (catalog content is untouched) — the first
-// fleet-wide run of this gate found three such rows; each is recorded below with its own citation, two of
-// which read as genuine pre-existing catalog staleness rather than deliberate curation (flagged as such,
-// not silently swept — see each entry's own reason string).
+// fleet-wide run of this gate found three such rows; two (TextField.type missing ADR-0123's 'color',
+// TimelineItem.status missing ADR-0146 F7's 'warning') were genuine pre-existing catalog staleness, fixed
+// by GH #502 (the catalog rows now carry those members, so the gate passes them without an exception). The
+// remaining row is recorded below with its own citation.
 
 import { describe, it, expect } from 'vitest'
 import { defaultCatalog } from './index.ts'
@@ -131,10 +132,10 @@ interface AgreementException {
  *  their own descriptor comments as accepting either a key/index string or a raw number) — that permissiveness
  *  is why those do NOT need an exception entry. It is EXACT on enum member sets (no subset/superset
  *  tolerance) — a narrower OR wider catalog enum is always a visible disagreement, recorded here or fixed,
- *  never silently passed. ONE exception below is a bespoke-factory value TRANSLATION the mapsTo-name
- *  heuristic cannot itself tell apart from a literal passthrough; TWO (marked PRE-EXISTING DRIFT) read as
- *  genuine catalog staleness this gate is right to have caught, flagged here for a follow-up fix rather than
- *  silently made green by omission. */
+ *  never silently passed. The one exception below is a bespoke-factory value TRANSLATION the mapsTo-name
+ *  heuristic cannot itself tell apart from a literal passthrough. The other two rows this gate's first
+ *  fleet-wide run caught were genuine pre-existing catalog staleness (TextField.type, TimelineItem.status) —
+ *  fixed by GH #502, not carried here as exceptions. */
 const AGREEMENT_EXCEPTIONS: readonly AgreementException[] = [
   {
     component: 'Text',
@@ -144,22 +145,6 @@ const AGREEMENT_EXCEPTIONS: readonly AgreementException[] = [
       "textFactory (factories.ts) fans the catalog's h1..h5/caption/body wire vocabulary through TEXT_VARIANT_TABLE " +
       "onto the control's as/variant/size triple. The catalog vocabulary and the descriptor's own variant enum " +
       '(display/headline/title/body/label/kicker/overline/quote/lead) are two intentionally different value spaces.',
-  },
-  {
-    component: 'TextField',
-    prop: 'type',
-    reason:
-      "PRE-EXISTING DRIFT — text-field.md's own attribute comment records ADR-0123 LLD-C9 adding 'color' as the " +
-      "13th type; the catalog row's enum was never updated to include it. Not fixed here (catalog row content " +
-      'is out of this build\'s scope, cl.5) — flagged for a follow-up catalog-row fix.',
-  },
-  {
-    component: 'TimelineItem',
-    prop: 'status',
-    reason:
-      "PRE-EXISTING DRIFT — timeline-item.ts's own STATUS tuple is ['', 'pending', 'active', 'done', 'error', " +
-      "'warning'] (ADR-0146 F7 added 'warning'); the catalog row's enum was never updated to include it. Not " +
-      "fixed here (catalog row content is out of this build's scope, cl.5) — flagged for a follow-up catalog-row fix.",
   },
 ]
 const EXCEPTION_KEYS = new Set(AGREEMENT_EXCEPTIONS.map((e) => `${e.component}.${e.prop}`))
