@@ -532,7 +532,11 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
     const migrated = presetStore(concierge)
     const skills = migrated.get('entries:skill') as Array<{ id: string }>
     expect(skills.some((s) => s.id === 'form-rhythm'), 'the stale persisted store was dropped').toBe(false)
-    expect(skills.some((s) => s.id === 'hotel-booking-form'), 'the NEW seed applied').toBe(true)
+    expect(skills.some((s) => s.id === 'gallery-swiper'), 'the NEW seed applied').toBe(true)
+    // GH #497 — 'hotel-booking-form' retired from the concierge's OWN seed: BookingForm/BookingConfirmation
+    // (the `concierge` local pattern set) now close that idiom structurally; a fresh/migrated concierge
+    // session must never carry BOTH the structural type and the stale hand-authored duplicate.
+    expect(skills.some((s) => s.id === 'hotel-booking-form'), 'the retired duplicate never re-seeds').toBe(false)
     expect(localStorage.getItem('agent-admin-app.concierge.seedVersion')).toBe('5')
 
     // Same-version edits SURVIVE a rebuild (persisted-wins is untouched at the current version).

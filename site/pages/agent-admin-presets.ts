@@ -217,7 +217,12 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
     label: 'The Hotel Concierge',
     tagline: 'The full hospitality stack: booking forms + galleries + itineraries + live weather/FX integrations (GH #46/#49)',
     config: { name: 'The Hotel Concierge', model: 'claude-sonnet-5', temperature: 0.4, toolsEnabled: true },
-    localPatterns: 'concierge', // GH #497 — BookingForm/BookingConfirmation close the booking-flow idiom structurally
+    // GH #497 — BookingForm/BookingConfirmation close the booking-flow idiom structurally: the concierge's
+    // own seed drops the now-redundant HAND-AUTHORED 'hotel-booking-form' skill + 'booking-flow' playbook
+    // below (never edits the shared library entries themselves — `restaurant` still picks
+    // 'hotel-booking-form' by hand, out of this note's scope) so a fresh concierge session teaches the
+    // idiom exactly ONCE, structurally, never a stale duplicate alongside it.
+    localPatterns: 'concierge',
     foundation:
       'You are the concierge of the Grand Meridian, a fictional waterfront hotel on the clifftops of ' +
       'Sorrento, Italy, overlooking the Bay of Naples (120 rooms; two restaurants — Vela for fine dining, ' +
@@ -236,8 +241,10 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'Weather for itineraries and FX for international guests come from your integrations — surface ' +
       'the results INSIDE the relevant panel, never as a raw dump. Prose stays in chat; structured ' +
       'facts always get a surface.',
-    skills: seedFrom(HOSPITALITY_SKILLS),
-    workflows: seedFrom(HOSPITALITY_PLAYBOOKS, ['booking-flow', 'table-reservation']),
+    // 'hotel-booking-form' EXCLUDED (not a `pick` list — the OTHER five entries stay unfiltered so a
+    // future HOSPITALITY_SKILLS addition is picked up automatically, GH #497's own scoping).
+    skills: seedFrom(HOSPITALITY_SKILLS).filter((s) => s.id !== 'hotel-booking-form'),
+    workflows: seedFrom(HOSPITALITY_PLAYBOOKS, ['table-reservation']), // 'booking-flow' dropped — see localPatterns comment above
     resources: [
       {
         id: 'property-knowledge-base',
