@@ -24,30 +24,17 @@
 // is the disabled AX state (`ariaDisabled`) — a control-level effect because `internals` is protected and a
 // trait cannot reach it. `controls → dom + traits` is the allowed import direction.
 
-import { UIElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
+import { UIElement, type ReactiveProps } from '../../dom/index.ts'
 import { pressActivation } from '../../traits/press-activation.ts'
 import { tabbable } from '../../traits/tabbable.ts'
+// Generated from button.md's `attributes[]` (ADR-0173) — `node scripts/generate-props.mjs button` to
+// regenerate; never hand-edit button.props.gen.ts. The fleet drift gate
+// (descriptor/props-gen-driftwire.test.ts) keeps the two byte-identical.
+import { props } from './button.props.gen.ts'
 
 /** An adornment child sits in a POSITION slot (ADR-0006/ADR-0012) — everything else is label content. */
 const isAdornment = (node: ChildNode): boolean =>
   node instanceof Element && (node.getAttribute('slot') === 'leading' || node.getAttribute('slot') === 'trailing')
-
-const props = {
-  // variant/size REFLECT so the attribute-selector styling (`[variant]`/`[size]` in button.css repointing
-  // the colour roles + dimensional ramp) applies to JS-set values too, not only author-set attributes.
-  variant: { ...prop.enum(['solid', 'soft', 'ghost'] as const, 'solid'), reflect: true },
-  size: { ...prop.enum(['sm', 'md', 'lg'] as const, 'md'), reflect: true },
-  // `disabled` reflects to a `disabled` attribute so CSS can render the host pointer-inert (s7); the
-  // trait already guards keyboard activation off `() => this.disabled`.
-  disabled: { ...prop.boolean(false), reflect: true },
-  // icon-only ⇒ the geometry law's fifth structure (references/geometry.md "icon-only (no label) →
-  // square"): a real slotted adornment (leading/trailing) with NO label content at all. CSS alone
-  // cannot detect an empty/text-node label — `:has()` only matches ELEMENTS, so a bare text-node label
-  // (the common `<svg slot=leading>…Download</ui-button>` pattern) is invisible to it — so this is an
-  // explicit author opt-in (button.css's `:scope[icon-only]` structure). The accessible name must then
-  // come from `aria-label` (there is no label text to read), the toast.ts close-button precedent.
-  iconOnly: { ...prop.boolean(false), reflect: true, attribute: 'icon-only' },
-} satisfies PropsSchema
 
 export interface UIButtonElement extends ReactiveProps<typeof props> {}
 export class UIButtonElement extends UIElement {
