@@ -1,0 +1,112 @@
+/* dashboard.css — PAGE-LOCAL, CONTENT-REGION-ONLY layout for the Support Dashboard (site/dashboard.html,
+ * GH #499). Follows workbench.css's own fence verbatim: this sheet declares no shell/layout frame rules (no
+ * frame grid/flex, no rail or pane sizing). The `ui-workspace-shell` host below gets exactly ONE rule, a
+ * plain BLOCK-SIZE dimension (never `display:flex`/`grid`, never a `--ui-super-shell-*` pane-size override)
+ * — it already sets its own `display:flex; flex-direction:column` on itself (composed from ui-super-shell),
+ * so a definite block-size on a definite-height ancestor is all it needs. Every rule past that point is
+ * `.dc-*` content-region layout — this page's OWN stat-row/chart/table/summary arrangement, never the
+ * shell's frame. Joins the AC19 spacing-drift gate's sheet set (the workbench.css precedent, GH #461's
+ * PRD-D7 ratified append) — this sheet lays content into ui-workspace-shell exactly the same way. */
+
+html,
+body {
+  block-size: 100%;
+  overflow: hidden; /* the agent-admin-app.css / workbench.css GH #130 precedent — the shell's own box scrolls, never the document */
+}
+
+#app {
+  block-size: 100dvh;
+  overflow: hidden;
+  background: var(--md-sys-color-neutral-surface);
+}
+
+/* A plain dimension, not a frame rule (workbench.css's own fence). */
+ui-workspace-shell {
+  block-size: 100%;
+}
+
+/* ── content-region CSS only, past this point ─────────────────────────────────────────────────────────── */
+
+.dc-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--md-sys-space-xs);
+  padding: var(--md-sys-space-md) var(--md-sys-space-lg);
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+}
+.dc-title {
+  margin: 0;
+  font-size: var(--md-sys-typescale-title-large-size);
+  font-weight: var(--md-sys-typescale-title-large-weight);
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.dc-note {
+  margin: 0;
+  font-size: var(--md-sys-typescale-body-small-size);
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.dc-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--md-sys-space-md);
+  padding: var(--md-sys-space-lg);
+  box-sizing: border-box;
+  block-size: 100%;
+  overflow-y: auto;
+}
+
+/* Each of the four content blocks below (stats / chart / table / summary) carries its OWN bordered/padded
+ * card frame — the workbench.css precedent (itself following the gen-ui-live.css `.chat-pane`/`.render-pane`
+ * precedent) — so four functionally distinct blocks read as four separated groups, not one undifferentiated
+ * stack of same-weight flex rows (layout-checker A3/A4). */
+.dc-stats,
+.dc-chart,
+.dc-table-section,
+.dc-summary {
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 12px;
+  background: var(--md-sys-color-neutral-surface-low);
+  padding: var(--md-sys-space-md);
+  box-sizing: border-box;
+}
+
+.dc-section-title {
+  margin: 0 0 var(--md-sys-space-sm);
+  font-size: var(--md-sys-typescale-title-small-size);
+  font-weight: var(--md-sys-typescale-title-small-weight);
+  color: var(--md-sys-color-neutral-on-surface);
+}
+
+/* The board-wide-vs-filtered on-screen signal (the .dc-note precedent in the header) — states, rather than
+ * leaves the user to infer, that the stats/chart cards don't react to the priority filter below them. */
+.dc-caption {
+  margin: 0 0 var(--md-sys-space-sm);
+  font-size: var(--md-sys-typescale-body-small-size);
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.dc-stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--md-sys-space-lg);
+}
+
+.dc-chart ui-bar-chart {
+  max-inline-size: 32rem;
+}
+
+.dc-table-section ui-field {
+  margin-block-end: var(--md-sys-space-sm);
+  max-inline-size: 20rem;
+}
+
+.dc-table-wrap {
+  display: flex;
+}
+
+.dc-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--md-sys-space-xs);
+}

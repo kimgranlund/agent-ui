@@ -114,6 +114,17 @@ const FOCUS_TIMING_FILES = [
   // signature exactly — a real page working correctly, flaking under concurrent-page focus/render
   // contention, not a defect.
   'site/pages/workbench.browser.test.ts',
+  // 2026-08-06 append (GH #499, M-F) — the SAME class as the workbench.browser.test.ts append just above,
+  // reproduced the identical way: passes 12/12 solo both engines every time (verified via `git stash` +
+  // a solo run to rule out this being caused by the new page's own content), fails ONLY under full
+  // `test:browser:site` shard concurrency — a real `userEvent.click` on the `ui-segmented-control`
+  // priority filter (`Urgent narrows...` test) either times out or resolves late enough that its effect
+  // bleeds into the NEXT test's read (a stale-filter `tbody` row count in the sortable-header test right
+  // after it, the SAME "cleanup never running past its timeout" shape workbench's own append names).
+  // Raising the per-test timeout (GH #347's REAL-TIMING HEADROOM class) was tried first and did NOT fix
+  // it — confirming this is the concurrent-page focus/render contention class, not raw slowness, so it
+  // takes THIS remedy (isolation) rather than that one.
+  'site/pages/dashboard.browser.test.ts',
 ]
 
 // ─── REAL-TIMING HEADROOM (GH #347) ────────────────────────────────────────────────────────────────

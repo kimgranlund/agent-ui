@@ -542,6 +542,12 @@ export const NAV: readonly NavGroup[] = [
     links: [{ href: './workbench.html', label: 'SaaS Data Workbench' }],
   },
   {
+    // The Support Dashboard (GH #499, M-F) — the fleet's SECOND SaaS composition, the SAME standalone/
+    // ungrouped posture as the SaaS Data Workbench just above (a real, listed destination that still
+    // renders shell-less on load — dashboard.ts imports no `_page.ts`).
+    links: [{ href: './dashboard.html', label: 'Support Dashboard' }],
+  },
+  {
     // The A2A cluster — ungrouped site-level links, same posture as the A2UI cluster above (independent
     // destinations, not a fleet component's page-type set). The arena (LLD-C11, a2a-tic-tac-toe.lld.md), the
     // corpus-derived concepts/demos section (corpus LLD-C12, a2a-corpus-docs.lld.md), and the A2UI-over-A2A

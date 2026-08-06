@@ -707,6 +707,13 @@
       "section": "Guides"
     },
     {
+      "name": "Support Dashboard",
+      "url": "./dashboard.html",
+      "description": "Stat cards + a bar chart + a read-only table + an agent-summary card composed entirely from published fleet primitives inside ui-workspace-shell — the fleet's second SaaS composition, proving the data-app posture generalizes (GH #499).",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
       "name": "A2A Tic-Tac-Toe Arena",
       "url": "./a2a-tic-tac-toe.html",
       "description": "Two agents play tic-tac-toe through a deterministic referee, an isolation-proven Agent2Agent match.",
