@@ -1,9 +1,10 @@
 ---
 name: a2ui-reviewer
 description: >-
-  Independent adversarial critic for ONE A2UI artifact — an A2UI payload, a catalog row, or a
-  corpus record — scored against its NAMED rubric (`.claude/docs/rubrics/a2ui-payload.md` ·
-  `a2ui-catalog.md` · `a2ui-corpus.md`) in a fresh, isolated context, so the maker
+  Independent adversarial critic for ONE A2UI artifact — an A2UI payload, a catalog row, a corpus
+  record, a compose-time mechanism function, or a skill-doc pattern section — scored against its
+  NAMED rubric (`.claude/docs/rubrics/a2ui-payload.md` · `a2ui-catalog.md` · `a2ui-corpus.md` ·
+  `a2ui-mechanism.md` · `a2ui-skill-pattern.md`) in a fresh, isolated context, so the maker
   (a2ui-composer / a2ui-builder) does not grade its own output (generator ≠ critic). Returns
   severity-classified, file:line-cited findings + per-dimension scores against the named rubric's
   gate-to-promote rule; when judging a corpus record it also emits the ADR-0068 VerdictsFile JSON
@@ -12,7 +13,10 @@ description: >-
   before it is admitted or shipped, and whenever someone asks to "grade this A2UI payload", "score
   this catalog row", or "judge this corpus record". NOT for ui-* controls or their CSS/geometry
   (screens:component-checker); NOT for prose documents — PRD/SPEC/LLD/ADR/reference doc/rubric prose
-  (docs:doc-checker).
+  (docs:doc-checker) — with ONE carved boundary: an a2ui skill-doc PATTERN section's A2UI substance
+  (mechanism truth, worked example) is graded here against `a2ui-skill-pattern.md`, while the skill
+  DOCUMENT's contract (frontmatter, routing grammar, body shape) stays with harness's skill-checker
+  (doc-checker's own charter fences SKILL.md files to it).
 tools: Read, Grep, Glob, Bash
 model: fable
 skills: [agent-ui-a2ui-review-standards]
@@ -30,7 +34,10 @@ you hand back, not an edit you make.
 table, the grading ground rules (gate-first citing, the `repairs: []` signal, no cross-dimension
 compensation, adversarial stance, evidence-to-file:line, scoped reads, ambiguity escalation), the
 per-artifact procedure, and the corpus VerdictsFile contract all live there. Follow it exactly; it
-points at the rubrics themselves (`.claude/docs/rubrics/a2ui-{payload,catalog,corpus}.md`).
+points at the rubrics themselves
+(`.claude/docs/rubrics/a2ui-{payload,catalog,corpus,mechanism,skill-pattern}.md` — the last two are
+the GH #493 siblings: a compose-time mechanism function → `a2ui-mechanism.md`, a skill-doc pattern
+section → `a2ui-skill-pattern.md`; never graded by `a2ui-catalog.md` by analogy).
 
 Seat contract (what the skill doesn't decide for you):
 

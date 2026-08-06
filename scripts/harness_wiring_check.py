@@ -29,7 +29,8 @@ THE ENUMERATED HARNESS ARTIFACT SET (SPEC §5.1) — the exact files this script
 
   skills : a2ui-compose · a2ui-corpus-curate
   agents : a2ui-composer (maker) · a2ui-reviewer (critic)
-  rubrics: a2ui-payload · a2ui-catalog · a2ui-corpus
+  rubrics: a2ui-payload · a2ui-catalog · a2ui-corpus · a2ui-mechanism · a2ui-skill-pattern
+           (the last two: the SPEC-R3 v0.4/GH #493 siblings)
 
 `a2ui-builder.md` is DELIBERATELY OUT of the maker->graded-by enumeration (LLD §9). It is a
 package/renderer/catalog BUILD seat graded by the SPEC/LLD acceptance rows + the wave reviewer
@@ -64,6 +65,9 @@ RUBRICS = [
     ".claude/docs/rubrics/a2ui-payload.md",
     ".claude/docs/rubrics/a2ui-catalog.md",
     ".claude/docs/rubrics/a2ui-corpus.md",
+    # the SPEC-R3 v0.4 siblings (GH #493) — same mode + no-orphan coverage as the original three
+    ".claude/docs/rubrics/a2ui-mechanism.md",
+    ".claude/docs/rubrics/a2ui-skill-pattern.md",
 ]
 
 

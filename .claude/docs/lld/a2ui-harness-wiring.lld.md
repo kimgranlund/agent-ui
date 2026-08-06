@@ -54,7 +54,7 @@
 |---|---|---|---|---|
 | **LLD-C1** | Domain skill files (2) | SPEC-R1 | `.claude/skills/a2ui-compose/` · `.claude/skills/a2ui-corpus-curate/` | unbuilt (slices h6/h7) |
 | **LLD-C2** | Agent pair + routing repair | SPEC-R2, R8 | `.claude/agents/a2ui-composer.md` · `.claude/agents/a2ui-reviewer.md` · `a2ui-builder.md` (description repair) | unbuilt (h8/h9) |
-| **LLD-C3** | Rubric files (3) | SPEC-R3 | `.claude/docs/rubrics/a2ui-{payload,catalog,corpus}.md` | unbuilt (h3/h4/h5) |
+| **LLD-C3** | Rubric files (3; +2 GH #493 siblings — SPEC-R3 v0.4) | SPEC-R3 | `.claude/docs/rubrics/a2ui-{payload,catalog,corpus}.md` + `a2ui-{mechanism,skill-pattern}.md` (§4 note) | unbuilt (h3/h4/h5) |
 | **LLD-C4** | Deterministic gates | SPEC-R4 | — | **REALIZED** (§0 row 1 — no build) |
 | **LLD-C5** | Orchestration wiring / artifact map | SPEC-R5 | SPEC §5.1 + frontmatter cross-refs | lands with C1–C3 |
 | **LLD-C6** | Loop (procedural) + deterministic CLI | SPEC-R6 | composer charter + `a2ui-compose` body + `packages/agent-ui/a2ui/tools/harness/validate-payload.ts` | unbuilt (h10, h15) |
@@ -102,6 +102,22 @@
 ```
 
 Each typed `[gate]`/`[review]` with 1/3/5 anchors + a gate-to-promote rule; passes `harness_checks.py rubric`; graded ≥4 by `doc-reviewer`. `[gate]` dims cite realized probes — no dimension re-judges a script's verdict (`process.md` rule 1).
+
+**SPEC-R3 v0.4 siblings (GH #493, post-dating this LLD's build wave):** `a2ui-mechanism.md` (a
+compose-time mechanism function) and `a2ui-skill-pattern.md` (a skill-doc pattern section) join the set
+under the same requirements, enumerated in `scripts/harness_wiring_check.py`'s `RUBRICS` list; split
+rationale lives in `a2ui-catalog.md`'s "Scope & siblings" note — this LLD's three-file plan above is the
+original build record, not the current inventory.
+
+**Payload-rubric P8 (GH #474, 2026-08-06, post-dating this LLD's build wave):** `a2ui-payload.md` gains
+**P8 — deceptive composition / declared-scope fidelity** (`[review], definitional`; rubric
+`version: 1.1`), minted by
+[`../spec/a2ui-ecosystem-alignment.spec.md`](../spec/a2ui-ecosystem-alignment.spec.md) SPEC-R3 — a
+DIFFERENT clause from this LLD's charter SPEC-R3 (the expert-harness spec's); the qualification is
+load-bearing. Its committed calibration fixtures live at
+`.claude/docs/rubrics/fixtures/a2ui-deceptive-composition/` (ground truth in `manifest.json`; consumed
+by the named MANUAL eval lane that spec's v0.2 amendment defines — never `npm test`, the same posture as
+§9's wiring gate). The payload sketch above enumerates the original P1–P7 build record only.
 
 ## 5. Gates — LLD-C4 (SPEC-R4) — REALIZED
 

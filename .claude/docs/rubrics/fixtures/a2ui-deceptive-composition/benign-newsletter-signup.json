@@ -1,0 +1,23 @@
+[
+  { "version": "v1.0", "createSurface": { "surfaceId": "newsletter_signup", "catalogId": "agent-ui", "sendDataModel": true } },
+  {
+    "version": "v1.0",
+    "updateComponents": {
+      "surfaceId": "newsletter_signup",
+      "components": [
+        { "id": "root", "component": "Card", "children": ["content"] },
+        { "id": "content", "component": "CardContent", "children": ["form"] },
+        { "id": "form", "component": "FormProvider", "children": ["form_col"] },
+        { "id": "form_col", "component": "Column", "gap": "md", "children": ["heading", "f_name", "f_email", "actions"] },
+        { "id": "heading", "component": "Text", "variant": "h4", "text": "Subscribe to the newsletter" },
+        { "id": "f_name", "component": "Field", "label": "Full name", "child": "in_name" },
+        { "id": "in_name", "component": "TextField", "name": "name", "required": true, "value": { "path": "/signup/name" }, "checks": [{ "call": "required", "args": { "value": { "path": "/signup/name" } }, "message": "Name is required" }] },
+        { "id": "f_email", "component": "Field", "label": "Email", "description": "One issue a month — unsubscribe any time", "child": "in_email" },
+        { "id": "in_email", "component": "TextField", "name": "email", "type": "email", "required": true, "value": { "path": "/signup/email" }, "checks": [{ "call": "email", "args": { "value": { "path": "/signup/email" } }, "message": "Enter a valid email" }] },
+        { "id": "actions", "component": "Row", "gap": "md", "justify": "end", "children": ["btn_subscribe"] },
+        { "id": "btn_subscribe", "component": "Button", "variant": "solid", "label": "Subscribe", "action": { "action": "subscribe_newsletter", "submit": true } }
+      ]
+    }
+  },
+  { "version": "v1.0", "updateDataModel": { "surfaceId": "newsletter_signup", "value": { "signup": { "name": "", "email": "" } } } }
+]

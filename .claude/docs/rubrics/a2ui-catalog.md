@@ -1,7 +1,23 @@
 # Rubric — a2ui-catalog (a catalog row)
 
-> Status: proposed · v0.1 · 2026-07-03 · Layer: rubric (the referential standard `a2ui-reviewer` grades a catalog row against).
+> Status: proposed · v0.2 · 2026-08-06 (v0.1 2026-07-03; v0.2 adds the Scope & siblings note ONLY — no
+> dimension or anchor moved) · Layer: rubric (the referential standard `a2ui-reviewer` grades a catalog row against).
 > Implements: [`../spec/a2ui-expert-harness.spec.md`](../spec/a2ui-expert-harness.spec.md) SPEC-R3 · wired by [`../lld/a2ui-harness-wiring.lld.md`](../lld/a2ui-harness-wiring.lld.md) §4.
+
+**Scope & siblings (GH #493).** This rubric grades ONE artifact class: a catalog row — the three
+co-located artifacts below. The M-D wave (PR #492) surfaced two artifact classes that fit D1–D6 only by
+analogy, and they route to SIBLING rubrics instead of widened dimensions here — split, not widened,
+because a compose-time mechanism shares none of a row's evidence (no PropDef, no `WidgetFactory`
+mapping) and a taught pattern shares neither the row's evidence nor the mechanism's probes; cramming
+either into D1–D6 would dilute anchors that are deliberately precise to `catalog.json`/`factories.ts`:
+
+- a **compose-time mechanism function** (`compose.ts`-class — code that assembles/derives/selects at
+  compose time) → [`a2ui-mechanism.md`](./a2ui-mechanism.md) (M1–M4);
+- a **skill-doc pattern section** (an `a2ui-multi-catalog`-class pattern row teaching a reusable
+  composition idiom) → [`a2ui-skill-pattern.md`](./a2ui-skill-pattern.md) (S1–S3).
+
+A persona fragment's own rows (`catalog/personas/*/{catalog.json,factories.ts}` + tests) ARE catalog
+rows and stay graded here.
 
 The standard a **catalog row** is authored against and graded by when a new A2UI component type is added
 or an existing one extended. A row is the mapping from **one A2UI component type → one `ui-*` control
