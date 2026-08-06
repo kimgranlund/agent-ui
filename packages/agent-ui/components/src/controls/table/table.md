@@ -1,9 +1,13 @@
 ---
-# table.md frontmatter — the attributes-as-API descriptor for ui-table (ADR-0004; LLD-C9,
-# report-family.lld.md §5; ADR-0163 the interactive widening). The machine-checkable public surface lives
-# HERE (frontmatter); the prose below the fence is the /site doc. The `attributes[]` block MUST mirror
-# table.ts `static props` (columns/rows/label/selectable/rowKey/selected/sort/search/filter/pageSize/page) —
-# the contract<->props trip-wire (table-descriptor.test.ts) targets this fence.
+# table.md frontmatter — the GENERATION SOURCE for ui-table's `static props` block (ADR-0173, converting
+# ADR-0004's mirror to a source; LLD-C9, report-family.lld.md §5; ADR-0163 the interactive widening). The
+# machine-checkable public surface lives HERE (frontmatter); the prose below the fence is the /site doc.
+# `table.props.gen.ts` is GENERATED from `attributes[]` below (`node scripts/generate-props.mjs table`);
+# table.ts imports it — never hand-edit the generated file. Five attributes (columns/rows/selected/sort/
+# filter) are ADR-0173 OF1 `codec:` references — table is ONE of the 7 bespoke-codec controls (table-model.ts's
+# `safeJsonCodec`-backed PropConfigs), proving the codec field for real. `rowKey`/`pageSize` are the ADR's own
+# named `attribute:` override specimens. The fleet drift gate (descriptor/props-gen-driftwire.test.ts) keeps
+# the descriptor and the generated file byte-identical.
 tag: ui-table
 description: A data table with typed columns and record rows, rendered as a real native HTML table — with opt-in row selection, per-column sort, filter/search state, and pagination (all default OFF).
 tier: display          # geometry size-class (Display band — NO control frame/height/[size]/[scale]; SPEC-R17) — UNCHANGED by the widening: the four capabilities stamp native controls inside the existing anatomy, they do not add a control-height row of their own
@@ -11,33 +15,31 @@ extends: UIElement     # NOT form-associated (ADR-0163 cl.8/F5 — a table's sel
 # marginal: re-measured at the ADR-0163 build wave (`npm run size`) against the 26 KB (26624 B gz) family
 # ceiling (ADR-0107 Amendment) — the widening's Consequences section pre-records the likely re-base.
 
-attributes:            # attributes-as-API — mirrors table.ts `static props`, in declaration order
+attributes:            # attributes-as-API — the GENERATION SOURCE for table.ts's `static props` (ADR-0173), in declaration order
   - name: columns
     type: json          # {key:string, label:string, type?:'string'|'number', sortable?:boolean, searchable?:boolean}[], JSON-string attribute form (SPEC-R1; ADR-0163 cl.5/cl.2 widen the per-column schema)
-    default: ''         # the LIVE default is `[]` — `String([])===''` is what the contract<->props trip-wire
-                         # (compareDescriptorToProps) actually compares against (reads `String(config.default)`)
+    default: ''         # the LIVE default is `[]` — `String([])===''` is what the (retired) contract<->props
+                         # trip-wire used to compare against; the codec: reference below owns the real default now
     reflect: false      # NOT reflected — a JSON-string attribute round-trips through the codec, not setAttribute
-    # the live codec is the SPEC-R1 safe codec — `from(null) = []` (never `null`); malformed JSON also falls
-    # back to `[]` — no throw ever reaches the render path. `cleanColumns` (table-model.ts) hardens every
-    # entry: a non-string key/label drops the column; an unknown/absent `type` normalizes to 'string', never
-    # dropping the column (SPEC-R3 rows 1/3/4). `sortable` (default `false`, opt-IN) and `searchable`
-    # (default `true`, opt-OUT) normalize the SAME never-dropping way.
+    codec: { import: './table-model.ts', name: 'tableColumnsProp' }  # ADR-0173 OF1 — the SPEC-R1 safe codec (from(null)=[], malformed JSON also falls back to [], never throws); cleanColumns hardens every entry (a non-string key/label drops the column; an unknown/absent type normalizes to 'string', never dropping the column, SPEC-R3 rows 1/3/4)
+    description: Typed column definitions — sortable/searchable opt columns into the per-column capabilities.
   - name: rows
     type: json          # Record<string, string|number>[] — open records keyed by column key (fork F1), JSON-string form
     default: ''         # the LIVE default is `[]` — same String([])==='' bijection as `columns`
     reflect: false      # NOT reflected — a JSON-string attribute round-trips through the codec, not setAttribute
-    # `cleanRows` (table-model.ts) hardens structurally (a non-object/null/array entry drops the row); cell
-    # VALUES are judged per-cell by `resolveCell` at render time, never here (SPEC-R3 rows 5-11). ADR-0163
-    # cl.7: a `rows` swap reconciles `selected` by DROPPING identities that no longer exist, never throwing.
+    codec: { import: './table-model.ts', name: 'tableRowsProp' }  # ADR-0173 OF1 — cleanRows hardens structurally (a non-object/null/array entry drops the row); cell VALUES are judged per-cell by resolveCell at render time (SPEC-R3 rows 5-11). ADR-0163 cl.7: a rows swap reconciles selected by DROPPING identities that no longer exist, never throwing.
+    description: The record rows, open objects keyed by each column's key.
   - name: label
     type: string
     default: ''
     reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
+    description: The rendered caption text — the table's accessible name (SPEC-R2/R6).
   - name: selectable
     type: enum
     values: ['', single, multi]
     default: ''          # off — the ''-first inherit/off canon (ADR-0163 cl.4)
     reflect: true         # CSS repoints the selection column via `[selectable]`
+    description: Off by default (no selection column); multi adds a checkbox column + select-all; single adds a radio column.
     # '' = no selection column. 'multi' stamps a leading `<input type=checkbox>` column + a header select-all
     # checkbox (indeterminate when the MATCHING SET is partially selected, cl.7). 'single' stamps a leading
     # `<input type=radio>` column, one shared `name` per table instance. These are the fleet's ONE sanctioned
@@ -47,51 +49,53 @@ attributes:            # attributes-as-API — mirrors table.ts `static props`, 
     type: string
     default: ''
     reflect: false
-    # attribute: row-key (kebab). Names the column whose cell values identify rows for `selected` (cl.4).
+    attribute: row-key  # ADR-0173's own named attribute: override specimen (kebab HTML attribute)
+    description: Names the column whose cell values identify rows for selected (cl.4); absent ⇒ the row's data-order index.
     # Absent ⇒ the row's DATA-ORDER index (String-coerced) — stable across a view transform (filter/search/
     # sort/page) but fragile across a `rows` swap; `row-key` is the recommended posture for live data.
   - name: selected
     type: json           # string[] — row identities (cl.4), JSON-string attribute form
     default: ''          # the LIVE default is `[]` — same String([])==='' bijection as columns/rows
     reflect: false        # NOT reflected — bindable selection state, not an authored dimension
-    # Bindable, commits via `select` — NEVER fired by a programmatic write (the fleet commit law). Identity
-    # is held against the WHOLE rendered set (cl.7) — a filtered-out selected row STAYS selected, just not
-    # visible. A `rows` swap reconciles this by dropping stale identities (never throws, never emits).
+    codec: { import: './table-model.ts', name: 'tableSelectedProp' }  # ADR-0173 OF1 — the SAME safeJsonCodec shape as columns/rows (from(null)=[], never throws)
+    description: Bindable row identities — commits via select, never by a programmatic write (the fleet commit law).
+    # Identity is held against the WHOLE rendered set (cl.7) — a filtered-out selected row STAYS selected,
+    # just not visible. A `rows` swap reconciles this by dropping stale identities (never throws, never emits).
   - name: sort
     type: json            # {key:string, direction:'ascending'|'descending'} | null (ADR-0163 cl.5), JSON-string form
     default: null         # String(null) = 'null' — the LIVE default; no sort applied
     reflect: false         # NOT reflected — bindable sort state
-    # One sorted column at a time. Commits via `change` — cycling ascending→descending on the SAME column's
-    # sort-button activation; a different column starts fresh at ascending. Client-side comparator
-    # (table-model.ts's `makeRowComparator`): number columns compare numerically, others via a numeric-aware
-    # `Intl.Collator`; degenerate/empty cells sort last in BOTH directions.
+    codec: { import: './table-model.ts', name: 'tableSortProp' }  # ADR-0173 OF1 — the sandbox-frame cspConfigProp shape: from(null)=null, a well-formed value of ANY shape passes through unhardened (load-bearing for kindOf's json classification); cleanSort hardens downstream, at point of use
+    description: The current sort column/direction, or null; commits via change (cycles ascending → descending).
+    # Client-side comparator (table-model.ts's `makeRowComparator`): number columns compare numerically,
+    # others via a numeric-aware `Intl.Collator`; degenerate/empty cells sort last in BOTH directions.
   - name: search
     type: string
     default: ''
     reflect: false        # NOT reflected — dynamic view state, control-owned (cl.2)
-    # Free-text filter over the RENDERED cell text (`resolveCell` output — "search what you see"), case- and
-    # diacritic-insensitive (NFKD fold). A column opts OUT via `columns[].searchable: false` (default `true`).
-    # The table renders NO query UI of its own — the search surface COMPOSES (a bound `ui-text-field`, the
-    # shared-path idiom). Not user-mutable from inside the table: no event, no value-mark slot (cl.9).
+    description: A free-text filter over the rendered cell text of every searchable column ("search what you see").
+    # Case- and diacritic-insensitive (NFKD fold). A column opts OUT via `columns[].searchable: false`
+    # (default `true`). The table renders NO query UI of its own — the search surface COMPOSES (a bound
+    # `ui-text-field`, the shared-path idiom). Not user-mutable from inside the table: no event, no value-mark slot (cl.9).
   - name: filter
     type: json             # {key:string, values:(string|number)[]}[] (cl.2's bounded FACET shape), JSON-string form
     default: ''            # the LIVE default is `[]` — same String([])==='' bijection as columns/rows/selected
     reflect: false          # NOT reflected — dynamic view state, control-owned (cl.2)
-    # A row survives when, for EVERY entry, its raw cell value for `key` String-coerced-equals one of
-    # `values` (AND across entries, OR within one entry). No operator grammar — ranges/comparisons stay
-    # fenced (cl.1). Not user-mutable from inside the table: no event, no value-mark slot (cl.9).
+    codec: { import: './table-model.ts', name: 'tableFilterProp' }  # ADR-0173 OF1 — the SAME safeJsonCodec shape as columns/rows/selected
+    description: The bounded facet filter — a row survives when every entry's raw cell value matches one of its values.
+    # (AND across entries, OR within one entry). No operator grammar — ranges/comparisons stay fenced (cl.1).
+    # Not user-mutable from inside the table: no event, no value-mark slot (cl.9).
   - name: pageSize
     type: number
     default: 0             # 0 (off, default) ⇒ no footer, no windowing — the honest off state (ADR-0163 cl.6)
     reflect: false
-    # attribute: page-size (kebab). `pageSize > 0` stamps a `ui-pagination` in the table's OWN
-    # `data-part="footer"` region (outside the scroll container) and windows the rendered set.
+    attribute: page-size  # ADR-0173's own named attribute: override specimen (kebab HTML attribute)
+    description: pageSize > 0 stamps a composed ui-pagination footer and windows the rendered set; 0 (default) is off.
   - name: page
     type: number
     default: 1              # 1-based
     reflect: false
-    # Bindable; commits via `change` — forwarded from the internal `ui-pagination`'s own `change` event
-    # (never fired by a programmatic write). `pageCount` derives from the MATCHING SET's count (cl.7).
+    description: The 1-based current page; bindable, commits via change (forwarded from the internal ui-pagination).
     # RESIDUAL: `page` itself is never clamped by the table when the matching set shrinks below it (e.g. a
     # narrowing `filter`/`search` drops `pageCount` under the current `page`) — the RENDERED window clamps
     # (an out-of-range `page` windows the LAST valid page), but the `page` prop keeps its stale, now-out-
