@@ -31,6 +31,7 @@ import type { CatalogRegistry } from '../catalog/types.ts'
 import type { Surface } from './surface.ts'
 import type { ItemScope } from './types.ts'
 import { evaluate } from './functions.ts'
+import { readCheck as readCheckShared } from './wire-tolerances.ts' // GH #484 move phase — C1 (was local to this file)
 
 // ── internal normalised check shape ───────────────────────────────────────────
 
@@ -43,45 +44,14 @@ interface Check {
   message: string
 }
 
-/**
- * Tolerant reader for one raw `checks` entry (ADR-0029 §1 — Postel's law, mirrors the action reader).
- * Accepts either the flat `{call,args?,message}` shape or the `condition`-wrapped `{condition:{call,args},message}`
- * shape. Any other shape returns `null` (skipped, non-fatal — `checks` is not user-submitted data).
- */
+// C1 (ADR-0029 §1 — Postel's law, mirrors the A1/A3 action reader) — the tolerant reader for one raw
+// `checks` entry (flat `{call,args?,message}` OR `condition`-wrapped `{condition:{call,args},message}`)
+// moved to `./wire-tolerances.ts` (GH #484 move phase). This local wrapper adapts its file-agnostic
+// `ReadCheckResult` (`{call,args,message}`) onto this module's own `Check` shape (`{fn:FunctionCall,
+// message}`) — a pure reshape, no behavior change; `null` (unrecognised shape — skip) passes through.
 function readCheck(raw: unknown): Check | null {
-  if (typeof raw !== 'object' || raw === null) return null
-  const r = raw as Record<string, unknown>
-
-  // CONDITION wrapper: `{ condition: { call, args? }, message }`
-  if (typeof r.condition === 'object' && r.condition !== null && typeof (r.condition as Record<string, unknown>).call === 'string') {
-    const c = r.condition as Record<string, unknown>
-    if (typeof r.message !== 'string') return null
-    return {
-      fn: {
-        call: c.call as string,
-        args: isArgsObject(c.args) ? c.args : undefined,
-      },
-      message: r.message,
-    }
-  }
-
-  // FLAT: `{ call, args?, message }` (canonical)
-  if (typeof r.call === 'string' && typeof r.message === 'string') {
-    return {
-      fn: {
-        call: r.call,
-        args: isArgsObject(r.args) ? r.args : undefined,
-      },
-      message: r.message,
-    }
-  }
-
-  return null // unrecognised shape — skip
-}
-
-/** Args must be a plain object (not array, not null) to be valid. */
-function isArgsObject(v: unknown): v is Record<string, unknown> {
-  return typeof v === 'object' && v !== null && !Array.isArray(v)
+  const r = readCheckShared(raw)
+  return r === null ? null : { fn: { call: r.call, args: r.args }, message: r.message }
 }
 
 // ── check result interpreter ───────────────────────────────────────────────────
