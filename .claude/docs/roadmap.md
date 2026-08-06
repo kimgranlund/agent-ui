@@ -220,6 +220,12 @@ decision (dated line in §4).
 
 ## 4 · Later — deferred, revisit-triggered
 
+- **Identity & account flow family** ([GH #490](https://github.com/kimgranlund/agent-ui/issues/490),
+  size:big) — Registration · Authentication (Magic Link / Codes / Social / Email+Password) ·
+  Onboarding · Account Management (Preferences + Settings patterns). The flow/pattern tier over the
+  existing FACE form primitives; design intake runs the decomposition toolchain (flow/layout
+  break-downs + critics) before any build. Queued behind the live M-D lane; revisit when a
+  milestone slot opens.
 - **Linear, for this repo specifically.** ADR-0145 chose GitHub Issues as the work-item backend
   here. If Linear becomes the standard elsewhere in the user's work, the open question is whether
   this repo follows (and how the ID-spine convention — ADR/SPEC/LLD citing an issue — survives a
