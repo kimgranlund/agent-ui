@@ -26,16 +26,46 @@
 /** The three top-level value shapes a descriptor field can take. */
 export type DescriptorShape = 'scalar' | 'sequence' | 'map'
 
-/** A single `- ` mapping inside a sequence block (its field values; an inline `[a, b]` becomes a string[]). */
-export type SequenceItem = Map<string, string | string[]>
+/** A single `- ` mapping inside a sequence block (its field values; an inline `[a, b]` becomes a string[]; an
+ *  inline `{a: b, c: d}` flow map — the `codec:` field's own shape, ADR-0173 OF1 — becomes a nested Map). */
+export type SequenceItem = Map<string, string | string[] | Map<string, string>>
 
-/** A typed view of one `attributes[]` entry (the attributes-as-API row). */
+/** A `codec:` reference (ADR-0173 cl.2/OF1): an attribute whose whole `PropConfig` is a hand-rolled, already-
+ *  assembled export (a bespoke-codec control, e.g. `table-model.ts`'s `tableColumnsProp`) rather than a bare
+ *  `prop.*()` factory call. `import`/`name` are read leniently (either may be absent from a malformed fence) —
+ *  the GENERATOR (not this schema) is what turns an incomplete reference into a coded failure (GEN_CODEC_UNRESOLVED). */
+export interface CodecRef {
+  import?: string
+  name?: string
+}
+
+/** A typed view of one `attributes[]` entry (the attributes-as-API row). ADR-0173 cl.2/OF1/OF2 widen this
+ *  with five generation-facing fields (`attribute`/`tsType`/`const`/`codec`/`description`) beyond the original
+ *  five (`name`/`type`/`values`/`default`/`reflect`) — every new field is OPTIONAL; a descriptor that never
+ *  sets any of them parses byte-identically to before this widening. */
 export interface ParsedAttribute {
   name?: string
   type?: string
   values?: string[]
   default?: string
   reflect?: boolean
+  /** The DOM attribute name override (ADR-0173 cl.2): a string names the attribute explicitly (kebab-case,
+   *  e.g. `icon-only`); the literal `false` means property-only (no observed attribute); absent ⇒ derived
+   *  from the prop name (props.ts's own `attrNameOf` default). */
+  attribute?: string | false
+  /** A TS type expression (ADR-0173 cl.2) — legal, and required for generation, only when `type: json` and
+   *  the attribute carries no `codec:` (a codec's own type is already fully expressed by its import). */
+  tsType?: string
+  /** The exported tuple-constant NAME (ADR-0173 cl.2) — legal only when `type: enum`. When present, the
+   *  generator emits `export const {const} = [...] as const` in the generated sibling module (the values[]
+   *  literal) instead of an inline array literal, and the control's own source imports the tuple FROM it. */
+  const?: string
+  /** ADR-0173 OF1 — a bespoke-codec attribute's whole `PropConfig` reference (see CodecRef). Present whenever
+   *  the fence declares a `codec:` key for this row, regardless of whether both sub-fields resolved. */
+  codec?: CodecRef
+  /** ADR-0173 OF2 — one-line, provenance-stamped teaching content, emitted as a leading comment above the
+   *  attribute's field in the generated props module. Optional; absent ⇒ a bare provenance stamp only. */
+  description?: string
 }
 
 /** The structured frontmatter: the bucket each top-level field parsed into, plus a typed attributes view. */
@@ -119,9 +149,30 @@ function addField(item: SequenceItem, text: string): void {
       m[1],
       value.replace(/^\[|\]$/g, '').split(',').map((s) => s.trim()).filter((s) => s !== '').map((s) => unquote(s)),
     )
+  } else if (m[1] === 'codec' && /^\{.*\}$/.test(value)) {
+    // Inline flow-map (ADR-0173 OF1 — the `codec:` field's own shape ONLY, e.g. `{ import: './x.ts', name: 'y' }`):
+    // the SAME artifact-filter-then-unquote order the array branch above uses, one level deeper (per pair).
+    // Scoped to the `codec` key specifically (not a generic brace sniff) — an unrelated field's value that
+    // happens to look brace-wrapped (e.g. a `tsType: '{key:string} | null'` object-shaped TS type) must stay
+    // a plain string, never get misread as a flow map.
+    item.set(m[1], parseFlowMap(value))
   } else {
     item.set(m[1], value)
   }
+}
+
+/** Parse an inline `{ key: value, key: value }` flow map into a key→scalar Map (the `codec:` field's shape,
+ *  ADR-0173 OF1). A naive comma split is sufficient — every real value this grammar carries (an import path,
+ *  an identifier) contains neither a literal comma nor a nested brace. */
+function parseFlowMap(value: string): Map<string, string> {
+  const map = new Map<string, string>()
+  const inner = value.replace(/^\{|\}$/g, '').trim()
+  if (inner === '') return map
+  for (const pair of inner.split(',')) {
+    const pm = /^\s*([A-Za-z][\w]*):\s*([\s\S]*)$/.exec(pair)
+    if (pm) map.set(pm[1], unquote(pm[2].trim()))
+  }
+  return map
 }
 
 /** Parse an indented `- ` sequence block into a list of field mappings. */
@@ -151,19 +202,41 @@ function parseMap(lines: string[]): Map<string, string> {
   return map
 }
 
-/** Shape one raw `attributes[]` item into a typed ParsedAttribute. */
+/** Shape one raw `attributes[]` item into a typed ParsedAttribute. ADR-0173 cl.2/OF1/OF2 widen this to also
+ *  recover `attribute`/`tsType`/`const`/`codec`/`description` — all optional, so an attribute row that never
+ *  sets any of them shapes byte-identically to before this widening. */
 function toAttribute(item: SequenceItem): ParsedAttribute {
   const name = item.get('name')
   const type = item.get('type')
   const values = item.get('values')
   const def = item.get('default')
   const reflect = item.get('reflect')
+  const attribute = item.get('attribute')
+  const tsType = item.get('tsType')
+  const constName = item.get('const')
+  const description = item.get('description')
+  const codecRaw = item.get('codec')
   return {
     name: typeof name === 'string' ? name : undefined,
     type: typeof type === 'string' ? type : undefined,
     values: Array.isArray(values) ? values : typeof values === 'string' ? [values] : undefined,
     default: typeof def === 'string' ? def : undefined,
     reflect: reflect === 'true' ? true : reflect === 'false' ? false : undefined,
+    // `attribute: false` (the literal token) ⇒ property-only; any other non-empty string ⇒ the override
+    // name; absent/empty ⇒ undefined (derive from the prop name, props.ts's own default).
+    attribute: attribute === 'false' ? false : typeof attribute === 'string' && attribute !== '' ? attribute : undefined,
+    tsType: typeof tsType === 'string' ? tsType : undefined,
+    const: typeof constName === 'string' ? constName : undefined,
+    description: typeof description === 'string' ? description : undefined,
+    // Present whenever the fence declares a `codec:` key at all, even if a sub-field is missing — the
+    // GENERATOR (not this schema) turns an incomplete reference into a coded GEN_CODEC_UNRESOLVED failure.
+    codec:
+      codecRaw instanceof Map
+        ? {
+            import: typeof codecRaw.get('import') === 'string' ? (codecRaw.get('import') as string) : undefined,
+            name: typeof codecRaw.get('name') === 'string' ? (codecRaw.get('name') as string) : undefined,
+          }
+        : undefined,
   }
 }
 
