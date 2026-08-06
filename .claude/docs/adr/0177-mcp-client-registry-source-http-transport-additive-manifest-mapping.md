@@ -76,9 +76,10 @@ after this ADR (Non-goals) rather than by re-litigating GH #438's own trigger te
   for cl.2 below.
 - **The config-allowlist precedent this ADR's cl.4 fence copies.** `providers.json`'s `ProviderEntry`
   (`providers-config.ts:22-29`: `{label, envKey, endpoint, defaultModel, models, implemented}`) is a
-  committed, admin-curated registry; `resolvePair` (`providers-config.ts:96-108`) is *"the ONLY place a
-  client-supplied `{provider, model}` pair is validated before a key is ever read"* — an unknown provider
-  is rejected, never trusted. No browser-supplied URL is ever dialed.
+  committed, admin-curated registry; `resolvePair` (`providers-config.ts:96-108`) is the allowlist check
+  the module's own header comment names as *"the ONLY place a client-supplied `{provider, model}` is
+  validated before a key is ever read"* (`providers-config.ts:11-13`) — an unknown provider is rejected,
+  never trusted. No browser-supplied URL is ever dialed.
 
 **The two adjacent, differently-scoped MCP questions this record is NOT about — sharpened, not conflated
 (Non-goals restates this precisely).** (1) **MCP Apps as a delivery/rendering vehicle** for A2UI —
@@ -120,8 +121,12 @@ ever sees the `IntegrationManifest` shape. A connector module (housed at
 (cl.2's HTTP/SSE transport) and, for each discovered tool, constructs one `IntegrationManifest`
 (cl.3's mapping) and calls `registerIntegration()` — mirroring the shipped pattern where each of
 `weather.ts`/`currency.ts`/`wikipedia-search.ts`/`fetch-json.ts` is a self-registering module imported by
-`integrations/index.ts` for its side effect, generalized from "one module registers exactly one manifest"
-to "one module registers N manifests, one per tool the connector discovers." Both hosts' existing
+`integrations/index.ts` for its side effect, generalized along TWO axes, not one: "one module registers
+exactly one manifest" becomes "one module registers N manifests, one per tool the connector discovers,"
+AND the shipped pattern's synchronous, zero-I/O registration (`registry.ts:65`'s `registerIntegration`
+call does no I/O) becomes an AWAITED ASYNC bootstrap step, because MCP discovery requires a real
+`tools/list` network round-trip before a single manifest can be built — a genuine difference from the
+shipped pattern, not full parity with it; cl.4 names the sequencing law this requires. Both hosts' existing
 `buildToolDispatch`/`resolveIntegrations` calls need zero changes — they already operate over
 `listIntegrations()`'s full array regardless of how each entry got there.
 
@@ -137,9 +142,11 @@ fs-shim.ts:8-9`'s "Workers has no real filesystem" names the same platform const
 
 **What never crosses to the browser:** the MCP server's URL/endpoint, any auth token or header the server
 requires, and the raw MCP JSON-RPC protocol frames (`tools/list`/`tools/call` requests and responses) all
-stay host-side, in the SAME class as a `serverKey` manifest's `envKey` value today — "no key value ever
-reaches the browser, appears in a `tool_result`, or lands in a log line" (`registry.ts:23-26`'s
-`ExecuteContext` comment). The browser's enablement wire is unchanged: `integrations: string[]` of registry
+stay host-side, in the SAME class as a `serverKey` manifest's `envKey` value today — ADR-0168 states the
+law this extends: *"No key value ever crosses to the browser, appears in a tool_result, or lands in a log
+line"* (`0168:83-84`; the registry's own `ExecuteContext` comment, `registry.ts:23-26`, states the same rule
+more tersely: *"no key value ever reaches the browser, a tool_result, or a log line"*). The browser's
+enablement wire is unchanged: `integrations: string[]` of registry
 `id`s (ADR-0168 cl.5, `0168:86-97`) — it never carries an MCP server URL, discovered tool name, or MCP
 credential in either direction.
 
@@ -164,22 +171,36 @@ collapsed to two.**
   `assertSupportedSchema` gate every hand-authored manifest already passes (`registry.ts:75-79`,
   `validate-input.ts:97`) — **no MCP carve-out of the validator.**
 - **`id`** = a connector-derived, server-namespaced key (e.g. `mcp:<server-id>:<mcp-tool-name>`), NEVER the
-  bare MCP tool name. This is load-bearing, not cosmetic: `registerIntegration` boot-fail-fasts on a
-  duplicate `id` OR a duplicate `tool.name` (`registry.ts:66-71`) — two different MCP servers may legally
-  expose tools with the same bare name (nothing in MCP's spec prevents it), and an `id = tool.name` mapping
-  would turn that ordinary occurrence into a crash. Namespacing by server keeps `id` collision-free by
-  construction, exactly as cl.2's "three facts, three fields" already requires for hand-authored manifests.
+  bare MCP tool name. This is load-bearing, not cosmetic, but it is only HALF the fix:
+  `registerIntegration` boot-fail-fasts on a duplicate `id` OR a duplicate `tool.name`, as two INDEPENDENT
+  checks (`registry.ts:66-71` — either `if` throws on its own; passing one does not exempt the other).
+  Namespacing `id` closes the `id`-collision half only. Two different MCP servers may legally expose tools
+  with the same bare name (nothing in MCP's spec prevents it); since `tool.name` stays UNnamespaced (the
+  bullet above), that exact scenario still hits `registerIntegration`'s duplicate-`tool.name` throw even
+  with a fully namespaced `id` — namespacing `id` does NOT make the pair collision-free by construction.
+  The per-tool fail-fast bullet below is EXTENDED to also catch this throw, not only the schema-rejection
+  case, and names the resulting, disclosed behavior.
 - **`label`** = an independently composed human string (e.g. `"<server label>: <tool name/title>"`), never
   re-derived from `id` or `tool.name` at runtime — free to change (a relabel in the connector's mapping
   logic) without touching either of the other two facts, exactly cl.2's existing guarantee.
-- **Per-tool, not per-server, fail-fast.** `registerIntegration`'s boot-fail-fast posture (`registry.ts:65`)
-  is correct for a hand-authored module registering ONE manifest — a bad schema there IS a startup defect.
-  It is WRONG applied naively to a discovery loop registering N tools from one server: one MCP tool
-  declaring an `inputSchema` construct beyond the validator's supported subset (`oneOf`/`anyOf`/nested
-  objects — real constructs in MCP tool schemas the minimal checker does not cover, ADR-0168 cl.3
-  `0168:67-75`) must skip and log that ONE tool, not abort registration of the server's other N−1 tools.
-  This is an additive discipline the connector owns (a per-tool try/catch around each
-  `registerIntegration()` call in the discovery loop) — `registerIntegration` itself is untouched.
+- **Per-tool, not per-server, fail-fast — covers BOTH throw paths `registerIntegration` can raise, not only
+  the schema one.** `registerIntegration`'s boot-fail-fast posture (`registry.ts:65`) is correct for a
+  hand-authored module registering ONE manifest — a bad schema, or a name collision, there IS a startup
+  defect. It is WRONG applied naively to a discovery loop registering N tools from one server, on EITHER
+  throw path it can hit: (1) one MCP tool declaring an `inputSchema` construct beyond the validator's
+  supported subset (`oneOf`/`anyOf`/nested objects — real constructs in MCP tool schemas the minimal
+  checker does not cover, ADR-0168 cl.3 `0168:67-75`), or (2) one MCP tool's unnamespaced `tool.name`
+  colliding with an already-registered tool from a DIFFERENT MCP server (the `id` bullet above —
+  namespacing `id` does not prevent this). Either must skip and log that ONE tool, not abort registration
+  of the server's other N−1 tools. This is an additive discipline the connector owns: a per-tool try/catch
+  around each `registerIntegration()` call in the discovery loop, catching whichever of `registerIntegration`'s
+  checks threw (`registry.ts:66-73`) — `registerIntegration` itself is untouched. **Stated consequence, not
+  a silent gap:** when two config-registered MCP servers both expose a tool with the same bare name, the
+  SECOND one discovered loses — its `registerIntegration()` call throws on the duplicate-`tool.name` check,
+  the connector's try/catch logs it, and that server's same-named tool is never registered (dropped, not
+  crashed, not silently ignored — a real, disclosed v1 limitation of leaving `tool.name` unnamespaced,
+  traded for the model-facing name continuity the `tool.name` bullet above names as the reason not to
+  namespace it).
 - **Dispatch: `execute` calls MCP `tools/call`, v1 result-mapping is TEXT-only.** Input arrives already
   validated (`tool-dispatch.ts:63`'s existing `validateToolInput` call, unchanged) before `execute` runs;
   `execute` issues the MCP `tools/call` request and maps the `CallToolResult` back onto the existing
@@ -204,19 +225,32 @@ dialed.**
   fetch-count/CPU-time-billed, same-origin-gated, rate-limited surface (ADR-0152's mitigations, the same
   posture ADR-0168's own registry widening reasoned from). Production rollout is additive once the
   connector is proven — a later work item, named in Non-goals, not a redesign.
-- **Discovery timing: on-demand at registration, never per-request.** The connector queries `tools/list`
-  once per dev-proxy process lifetime (the same "boot, self-registering module" posture every hand-authored
-  `integrations/*.ts` module already has) — not on every turn. Automatic periodic refresh or an
-  admin-triggered manual re-discovery affordance are real, useful features but are NOT this ADR's build —
-  named in Non-goals. A stale discovered-tool-list (the MCP server added a tool since the last discovery) is
-  an acceptable v1 gap: the same class of gap `providers.json` already has for provider config changes
-  (requires a redeploy/restart, not a live surface).
+- **Discovery timing: on-demand at registration, never per-request — an AWAITED ASYNC bootstrap step, not
+  the shipped pattern's synchronous import-time side effect.** Every hand-authored `integrations/*.ts`
+  module self-registers synchronously at import time, zero I/O (`registry.ts:65`'s `registerIntegration`
+  call). The MCP connector cannot mirror that exactly: discovery needs a real `tools/list` network
+  round-trip before a single manifest can be built. The named sequencing law: the dev proxy AWAITS the
+  connector's discovery call, for every allowlisted MCP server, as a distinct startup step BEFORE it starts
+  serving `/chat`/produce-route requests — never a blocking top-level `await` spliced into the otherwise-
+  synchronous `integrations/index.ts` import (which would stall every hand-authored module's registration
+  behind it too), and never a fire-and-forget promise a request could race against unfinished discovery.
+  Consequence: proxy startup gains a real, new latency cost proportional to the allowlisted servers'
+  `tools/list` round-trip time — a class of startup cost the shipped hand-authored modules never had, since
+  they do no I/O (Consequences names this explicitly). The exact code location of this await inside the
+  dev proxy's boot sequence is future SPEC/LLD work, not designed here; what this clause fixes is the LAW
+  that discovery is awaited-and-blocking-at-boot, never per-request and never silently racy. Once discovery
+  completes: the connector queries `tools/list` once per dev-proxy process lifetime — not on every turn.
+  Automatic periodic refresh or an admin-triggered manual re-discovery affordance are real, useful features
+  but are NOT this ADR's build — named in Non-goals. A stale discovered-tool-list (the MCP server added a
+  tool since the last discovery) is an acceptable v1 gap: the same class of gap `providers.json` already
+  has for provider config changes (requires a redeploy/restart, not a live surface).
 - **The allowlist fence, stated as its own clause, not an aside.** MCP servers are named in a committed,
   admin-curated config — the SAME discipline `providers.json`'s `ProviderEntry` roster already enforces
-  (`providers-config.ts:22-29`, `resolvePair`'s "ONLY place a client-supplied pair is validated before a key
-  is ever read," `providers-config.ts:90-95`) — never a runtime-addable, user-supplied, or model-supplied
-  URL. The enablement wire the browser drives stays `integrations: string[]` of registry `id`s exactly as
-  today (ADR-0168 cl.5); it can select AMONG config-registered MCP-sourced manifests, but it can never name
+  (`providers-config.ts:22-29`; the module header names `resolvePair` as *"the ONLY place a client-supplied
+  `{provider, model}` is validated before a key is ever read"*, `providers-config.ts:11-13`) — never a
+  runtime-addable, user-supplied, or model-supplied URL. The enablement wire the browser drives stays
+  `integrations: string[]` of registry `id`s exactly as today (ADR-0168 cl.5); it can select AMONG
+  config-registered MCP-sourced manifests, but it can never name
   a server the config doesn't already list. This is the same shape as a keyed integration's env var being
   config-named, never client-supplied — extended to the server identity itself, not just its credential.
 
@@ -259,9 +293,16 @@ dialed.**
   route wiring — every downstream law (id≠tool.name≠label, validated dispatch, server-side keys, both live
   arms share one dispatcher) applies to MCP-sourced tools for free, by construction.
 - A genuinely new discipline enters the codebase: per-tool fail-soft registration inside a discovery loop
-  (cl.3), distinct from every existing manifest module's per-module boot-fail-fast. This is additive to
-  `registerIntegration`'s contract, not a change to it — the connector, not the registry, owns the
-  try/catch.
+  (cl.3), covering BOTH throw paths `registerIntegration` can raise (unsupported-schema, and
+  duplicate-`tool.name` across two MCP servers) — distinct from every existing manifest module's
+  per-module boot-fail-fast. This is additive to `registerIntegration`'s contract, not a change to it — the
+  connector, not the registry, owns the try/catch. A named, disclosed limitation follows: two MCP servers
+  exposing a same-named tool do NOT both register — the second is dropped and logged, not a crash (cl.3).
+- Proxy startup gains a new cost class the shipped hand-authored modules never had: an AWAITED ASYNC
+  discovery round-trip (`tools/list`, per allowlisted MCP server) the dev proxy blocks on before serving
+  its first request — unlike every existing `integrations/*.ts` module's synchronous, zero-I/O
+  self-registration (cl.4). This is a real, disclosed startup-latency tradeoff, named here rather than
+  glossed as full parity with the shipped pattern.
 - A new config surface is needed (the MCP-server allowlist, cl.4) — a committed file naming which servers
   exist, their endpoint, and their auth env-var name, mirroring `providers.json`'s shape and discipline. Its
   exact schema is future SPEC/LLD work, not designed here.
@@ -285,9 +326,12 @@ dialed.**
   (b))** — rejected: defeats ADR-0168 cl.3's per-tool schema-validated dispatch; the model would see one
   opaque tool instead of N validated ones.
 - **`id = tool.name` (bare MCP tool name as the registry key)** — rejected (cl.3): two MCP servers may
-  legally expose same-named tools; `registerIntegration`'s duplicate-`id`-OR-duplicate-`tool.name` boot-
-  fail-fast (`registry.ts:66-71`) would turn that ordinary occurrence into a startup crash instead of two
-  coexisting integrations.
+  legally expose same-named tools; with `id = tool.name`, `registerIntegration`'s duplicate-`id` check
+  (`registry.ts:66-68`) would throw on that collision TOO, on top of the duplicate-`tool.name` check
+  (`registry.ts:69-71`) that already throws either way (cl.3's stated consequence: the chosen,
+  namespaced-`id` design still drops the second server's same-named tool via that same check — it does not
+  make the pair collision-free). Collapsing `id` into `tool.name` is strictly worse, not better: it also
+  discards cl.2's three-independent-facts law for free, with no compensating benefit.
 - **A new `auth: 'mcp'` enum member / a bespoke MCP credential shape** — rejected (cl.2): the existing
   `'serverKey'` + `envKey` vocabulary already expresses "a named env var resolved host-side," and MCP
   servers' auth needs (bearer token / API key) are the same shape; a new enum member would widen a closed
@@ -307,6 +351,6 @@ dialed.**
   discovery with a later opt-in refresh affordance (named in Non-goals) is the honest v1 cut.
 - **An arbitrary, browser- or model-supplied MCP server URL (no allowlist)** — rejected outright (cl.4): no
   precedent anywhere in this codebase trusts a client-supplied endpoint before validating it against a
-  server-held registry (`resolvePair`'s exact law, `providers-config.ts:90-95`); an unfenced MCP URL would
+  server-held registry (`resolvePair`'s exact law, `providers-config.ts:11-13`); an unfenced MCP URL would
   let a compromised or malicious client instruct the server to dial an arbitrary host, a materially
   different and strictly worse trust posture than every existing integration.
