@@ -2004,6 +2004,18 @@ describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
     const bodies = el.querySelectorAll('[data-part="bubble"][data-role="agent"] [data-part="body"]')
     return bodies[bodies.length - 1] as HTMLElement
   }
+  /** GH #468 — `<ui-markdown>` is now behind a LAZY `import()` (agent-admin.ts's `loadMarkdownRenderer`);
+   *  a dynamic import's resolution isn't a reactive-effect write, so `whenFlushed()` alone doesn't wait for
+   *  it (the dogfood-lazy.test.ts precedent's own `waitFor`, condition-polled rather than a fixed tick
+   *  count — a dynamic import takes an unspecified number of module-runner ticks the first time). */
+  async function waitFor(predicate: () => boolean, label: string): Promise<void> {
+    for (let i = 0; i < 200; i += 1) {
+      if (predicate()) return
+      await new Promise((r) => setTimeout(r, 5))
+      await whenFlushed()
+    }
+    throw new Error(`waitFor timed out: ${label}`)
+  }
 
   it('composes the card: markdown/a2ui/genui rows in order; genui-surface B2 — GenUI is LIVE (its own inverse-default OFF switch, never PRD-disabled); the a2ui row carries the read-only catalog mirror (ADR-0170 cl.6)', async () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
@@ -2164,12 +2176,19 @@ describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
     expect(agentJson.surface.genui).toBe(true)
   })
 
-  it('Markdown ON by default: an agent note renders through <ui-markdown>; an explicit OFF falls back to a plain text node (live-apply, next bubble)', async () => {
+  it('Markdown ON by default: an agent note renders through <ui-markdown> once the lazy renderer resolves; an explicit OFF falls back to a plain text node (live-apply, next bubble)', async () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
     el.store = createMemoryStore({})
     document.body.append(el)
     mounted.push(el)
     await whenFlushed()
+    // GH #468 — markdown ON by default fires `preloadMarkdownRenderer()` right at connect
+    // (`#applyMasterStates`); wait for the REAL dynamic import to resolve — the way a real page's own
+    // model-turn latency already would, long before a reply lands — before the first submit. The
+    // OFF-never-loads / falls-back-while-loading / failure-retry legs live in their own dedicated
+    // markdown-lazy*.test.ts files (the dogfood-lazy*.test.ts precedent); this test keeps proving the
+    // STEADY-STATE shape end to end through the REAL module, not a mock.
+    await waitFor(() => customElements.get('ui-markdown') !== undefined, 'the lazy markdown renderer resolved')
     composerSubmit(el, 'hello')
     await whenFlushed()
     const rendered = lastAgentBody(el).querySelector('ui-markdown') as (HTMLElement & { markdown: string }) | null

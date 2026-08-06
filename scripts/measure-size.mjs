@@ -490,6 +490,17 @@ const appCssQuerySuffixPlugin = {
 // checkpoint is the persona-catalog-composition SPEC's own required wiring (compose.ts + the
 // fixture persona package riding surface-host's existing static a2ui-barrel pull), twice-reviewed,
 // structural rather than elective. GH #468 remains the standing app-diet follow-up unchanged.
+//
+// GH #468's first shrink pass (2026-08-06, same day as the M-D/#488 merges this measured against):
+// `agent-admin.ts`'s static `import '@agent-ui/code/markdown'` moved LAZY (the dogfood-lazy/ADR-0139
+// precedent — a memoized, preloaded-ahead-of-need dynamic import, degrading to the modality's existing
+// plain-text fallback whenever the chunk hasn't resolved yet; markdown-lazy*.test.ts pins the runtime
+// shape, markdown-lazy.bundle.test.ts pins the bundle shape). Measured 82866 → 77472 B gz (−5394 B gz,
+// the whole-bundle gzip-dictionary shift included — the module itself is ~2 KB gz standalone, per
+// `@agent-ui/code/markdown`'s own row below; a leave-one-out across a barrel this size is never purely
+// additive, the split/status-stream precedents above say the same). The budget stays 80 KB (the
+// checkpoint) — this is headroom regained, not a re-base; GH #468 stays open for the NEXT marginal
+// (entry-list/settings shared-chunk audit, shell preset dedup — named, not yet measured).
 const APP_MARGINAL_BUDGET = 80 * KB
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
