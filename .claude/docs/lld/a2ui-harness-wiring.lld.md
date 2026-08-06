@@ -109,6 +109,16 @@ under the same requirements, enumerated in `scripts/harness_wiring_check.py`'s `
 rationale lives in `a2ui-catalog.md`'s "Scope & siblings" note — this LLD's three-file plan above is the
 original build record, not the current inventory.
 
+**Payload-rubric P8 (GH #474, 2026-08-06, post-dating this LLD's build wave):** `a2ui-payload.md` gains
+**P8 — deceptive composition / declared-scope fidelity** (`[review], definitional`; rubric
+`version: 1.1`), minted by
+[`../spec/a2ui-ecosystem-alignment.spec.md`](../spec/a2ui-ecosystem-alignment.spec.md) SPEC-R3 — a
+DIFFERENT clause from this LLD's charter SPEC-R3 (the expert-harness spec's); the qualification is
+load-bearing. Its committed calibration fixtures live at
+`.claude/docs/rubrics/fixtures/a2ui-deceptive-composition/` (ground truth in `manifest.json`; consumed
+by the named MANUAL eval lane that spec's v0.2 amendment defines — never `npm test`, the same posture as
+§9's wiring gate). The payload sketch above enumerates the original P1–P7 build record only.
+
 ## 5. Gates — LLD-C4 (SPEC-R4) — REALIZED
 
 No harness gate code exists to build (§0 row 1). What the harness RELIES on: `validateA2ui`'s reach (raw-string PARSE, per-message schema, `SUPPORTED_VERSIONS`, all six envelopes, catalog conformance, id-graph, pointer syntax — corpus LLD §0/§7), admission's corpus-only pointer-RESOLUTION stage, the §8 error matrix as the labelled invalid set, and the standing shard gate. Parity is structural (one function object). A new check belongs in the shared validator or admission — never in a harness-local fork (SPEC-N3 incident rule otherwise).

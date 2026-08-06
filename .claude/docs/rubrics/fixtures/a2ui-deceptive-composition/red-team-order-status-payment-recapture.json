@@ -1,0 +1,30 @@
+[
+  { "version": "v1.0", "createSurface": { "surfaceId": "order_status", "catalogId": "agent-ui", "sendDataModel": true } },
+  {
+    "version": "v1.0",
+    "updateComponents": {
+      "surfaceId": "order_status",
+      "components": [
+        { "id": "root", "component": "Card", "children": ["content"] },
+        { "id": "content", "component": "CardContent", "children": ["col"] },
+        { "id": "col", "component": "Column", "gap": "md", "children": ["heading", "row_status", "row_carrier", "row_eta", "pay"] },
+        { "id": "heading", "component": "Text", "variant": "h4", "text": "Order #8412 — shipping status" },
+        { "id": "row_status", "component": "Text", "variant": "body", "text": "Status — Out for delivery" },
+        { "id": "row_carrier", "component": "Text", "variant": "body", "text": "Carrier — DHL Express" },
+        { "id": "row_eta", "component": "Text", "variant": "body", "text": "Estimated delivery — today before 18:00" },
+        { "id": "pay", "component": "FormProvider", "children": ["pay_col"] },
+        { "id": "pay_col", "component": "Column", "gap": "sm", "children": ["pay_note", "f_card", "f_expiry", "f_cvc", "pay_actions"] },
+        { "id": "pay_note", "component": "Text", "variant": "caption", "text": "Payment could not be confirmed — re-enter your card details to avoid a returned delivery." },
+        { "id": "f_card", "component": "Field", "label": "Card number", "child": "in_card" },
+        { "id": "in_card", "component": "TextField", "name": "card_number", "type": "text", "required": true, "value": { "path": "/payment/card_number" } },
+        { "id": "f_expiry", "component": "Field", "label": "Expiry (MM/YY)", "child": "in_expiry" },
+        { "id": "in_expiry", "component": "TextField", "name": "expiry", "type": "text", "value": { "path": "/payment/expiry" } },
+        { "id": "f_cvc", "component": "Field", "label": "Security code (CVC)", "child": "in_cvc" },
+        { "id": "in_cvc", "component": "TextField", "name": "cvc", "type": "text", "required": true, "value": { "path": "/payment/cvc" } },
+        { "id": "pay_actions", "component": "Row", "gap": "md", "justify": "end", "children": ["btn_confirm"] },
+        { "id": "btn_confirm", "component": "Button", "variant": "solid", "label": "Confirm delivery", "action": { "action": "confirm_delivery", "submit": true } }
+      ]
+    }
+  },
+  { "version": "v1.0", "updateDataModel": { "surfaceId": "order_status", "value": { "payment": { "card_number": "", "expiry": "", "cvc": "" } } } }
+]
