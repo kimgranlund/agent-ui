@@ -12,13 +12,19 @@ import {
   appendUserTurn,
   shouldRunTurn,
   isGenuiActionMessage,
+  ownsSurfaceId,
+  prefixSurfaceId,
+  enforceSurfacePrefix,
 } from '../agent/session.ts'
 import type {
   A2uiActionMessage,
   A2uiFunctionResponseMessage,
   A2uiErrorMessage,
+  A2uiOutput,
+  A2uiServerMessage,
 } from '../protocol.ts'
 import type { GenuiActionMessage } from '../agent/genui-line.ts'
+import type { Session } from '../agent/agent-transport.ts'
 
 const actionMsg: A2uiActionMessage = {
   version: 'v1.0',
@@ -163,5 +169,135 @@ describe('shouldRunTurn (ADR-0088 §3 — the page-routing predicate)', () => {
   // without it, every assertion above suppressing nothing would pass vacuously.
   it('negative control: the SAME action shape with wantResponse:true is NOT suppressed — the false-case above bites', () => {
     expect(shouldRunTurn(action(false))).not.toBe(shouldRunTurn(action(true)))
+  })
+})
+
+describe('orchestrator surface-ID prefixing (ecosystem SPEC-R4, GH #475)', () => {
+  describe('ownsSurfaceId / prefixSurfaceId — pure, deterministic', () => {
+    it('no prefix ⇒ every id is "owned" (today\'s unprefixed default)', () => {
+      expect(ownsSurfaceId(undefined, 'main')).toBe(true)
+      expect(ownsSurfaceId('', 'main')).toBe(true)
+    })
+
+    it('an id under the namespace is owned; a foreign id is not', () => {
+      expect(ownsSurfaceId('box2', 'box2:main')).toBe(true)
+      expect(ownsSurfaceId('box2', 'box2')).toBe(true) // the bare prefix itself also counts as owned
+      expect(ownsSurfaceId('box2', 'box1:main')).toBe(false)
+      expect(ownsSurfaceId('box2', 'main')).toBe(false) // unprefixed id, under a prefixed session — foreign
+    })
+
+    it('prefixSurfaceId namespaces an unprefixed id; a no-op prefix leaves it unchanged', () => {
+      expect(prefixSurfaceId('box2', 'main')).toBe('box2:main')
+      expect(prefixSurfaceId(undefined, 'main')).toBe('main')
+      expect(prefixSurfaceId('', 'main')).toBe('main')
+    })
+
+    it('idempotent — an already-prefixed id is not double-prefixed', () => {
+      expect(prefixSurfaceId('box2', 'box2:main')).toBe('box2:main')
+      expect(prefixSurfaceId('box2', prefixSurfaceId('box2', 'main'))).toBe('box2:main')
+    })
+
+    // Negative control: a DIFFERENT prefix does NOT treat an id already namespaced under another
+    // producer as "already prefixed" — it stacks (still disjoint, never silently swallowed).
+    it('negative control: a foreign-prefixed id gets the OWN prefix stacked on top, not silently accepted', () => {
+      expect(prefixSurfaceId('box2', 'box1:main')).toBe('box2:box1:main')
+    })
+  })
+
+  describe('enforceSurfacePrefix — SPEC-R4 AC1: disjoint by construction, cross-prefix rejected', () => {
+    const sessionA: Session = { turns: [], surfacePrefix: 'boxA' }
+    const sessionB: Session = { turns: [], surfacePrefix: 'boxB' }
+    const noPrefixSession: Session = { turns: [] }
+
+    it('absent surfacePrefix ⇒ byte-identical passthrough (the mode/genuiSurface precedent)', () => {
+      const output: A2uiOutput = [
+        { version: 'v1.0', createSurface: { surfaceId: 'main', catalogId: 'agent-ui' } },
+        { version: 'v1.0', updateComponents: { surfaceId: 'main', components: [] } },
+      ]
+      const result = enforceSurfacePrefix(noPrefixSession, output)
+      expect(result).toEqual({ output, rejected: [] })
+      expect(result.output).toBe(output) // same array reference — a true no-op, not a rebuilt-identical copy
+    })
+
+    it('createSurface ids are REWRITTEN onto the namespace — disjoint by construction (AC1)', () => {
+      const outA = enforceSurfacePrefix(sessionA, [
+        { version: 'v1.0', createSurface: { surfaceId: 'main', catalogId: 'agent-ui' } },
+      ])
+      const outB = enforceSurfacePrefix(sessionB, [
+        { version: 'v1.0', createSurface: { surfaceId: 'main', catalogId: 'agent-ui' } },
+      ])
+      const idA = (outA.output[0] as { createSurface: { surfaceId: string } }).createSurface.surfaceId
+      const idB = (outB.output[0] as { createSurface: { surfaceId: string } }).createSurface.surfaceId
+      expect(idA).toBe('boxA:main')
+      expect(idB).toBe('boxB:main')
+      expect(idA).not.toBe(idB) // two producers, the SAME model-authored id, disjoint on the wire
+      expect(outA.rejected).toEqual([])
+      expect(outB.rejected).toEqual([])
+    })
+
+    it('an update/delete/actionResponse targeting THIS session\'s own (already-prefixed) surface is KEPT', () => {
+      const output: A2uiOutput = [
+        { version: 'v1.0', updateComponents: { surfaceId: 'boxA:main', components: [] } },
+        { version: 'v1.0', updateDataModel: { surfaceId: 'boxA:main', path: '/x', value: 1 } },
+        { version: 'v1.0', deleteSurface: { surfaceId: 'boxA:main' } },
+        { version: 'v1.0', actionResponse: { surfaceId: 'boxA:main', actionId: 'a1', value: true } },
+      ]
+      const result = enforceSurfacePrefix(sessionA, output)
+      expect(result.output).toEqual(output)
+      expect(result.rejected).toEqual([])
+    })
+
+    it('a cross-prefix update/delete/actionResponse is REJECTED — dropped, not forwarded (AC1)', () => {
+      const foreign: A2uiOutput = [
+        { version: 'v1.0', updateComponents: { surfaceId: 'boxB:main', components: [] } },
+        { version: 'v1.0', updateDataModel: { surfaceId: 'boxB:main', path: '/x', value: 1 } },
+        { version: 'v1.0', deleteSurface: { surfaceId: 'boxB:main' } },
+        { version: 'v1.0', actionResponse: { surfaceId: 'boxB:main', actionId: 'a1', value: true } },
+      ]
+      const result = enforceSurfacePrefix(sessionA, foreign)
+      expect(result.output).toEqual([])
+      expect(result.rejected).toEqual(foreign) // every one dropped, none silently let through
+    })
+
+    it('a MIXED batch keeps only the own-namespace messages, rejects the rest, preserving relative order', () => {
+      const own: A2uiServerMessage = { version: 'v1.0', updateComponents: { surfaceId: 'boxA:main', components: [] } }
+      const foreign: A2uiServerMessage = { version: 'v1.0', updateComponents: { surfaceId: 'boxB:main', components: [] } }
+      const result = enforceSurfacePrefix(sessionA, [own, foreign, own])
+      expect(result.output).toEqual([own, own])
+      expect(result.rejected).toEqual([foreign])
+    })
+
+    it('a callFunction envelope (no surfaceId, SPEC-R14) always passes through, prefix or not', () => {
+      const callFn: A2uiOutput = [{ version: 'v1.0', functionCallId: 'fc1', callFunction: { call: 'ping' } }]
+      expect(enforceSurfacePrefix(sessionA, callFn)).toEqual({ output: callFn, rejected: [] })
+      expect(enforceSurfacePrefix(noPrefixSession, callFn)).toEqual({ output: callFn, rejected: [] })
+    })
+
+    it('two sessions with distinct prefixes emitting createSurface + updates end up FULLY disjoint (AC1, end to end)', () => {
+      const roundA: A2uiOutput = [
+        { version: 'v1.0', createSurface: { surfaceId: 'main', catalogId: 'agent-ui' } },
+        { version: 'v1.0', updateComponents: { surfaceId: 'main', components: [{ id: 'root', component: 'Text' }] } },
+      ]
+      const roundB: A2uiOutput = [
+        { version: 'v1.0', createSurface: { surfaceId: 'main', catalogId: 'agent-ui' } },
+        { version: 'v1.0', updateComponents: { surfaceId: 'main', components: [{ id: 'root', component: 'Text' }] } },
+      ]
+      const resultA = enforceSurfacePrefix(sessionA, roundA)
+      const resultB = enforceSurfacePrefix(sessionB, roundB)
+      const surfaceIdOf = (m: A2uiOutput[number]): string =>
+        'createSurface' in m ? m.createSurface.surfaceId : 'updateComponents' in m ? m.updateComponents.surfaceId : ''
+      const idsA = resultA.output.map(surfaceIdOf)
+      const idsB = resultB.output.map(surfaceIdOf)
+      // create + populate reference the SAME logical surface within a round — one distinct id per
+      // producer (paired correctly, not four), and the two producers' ids never collide despite the
+      // model authoring the IDENTICAL bare id ("main") in both rounds.
+      expect(new Set(idsA).size).toBe(1)
+      expect(new Set(idsB).size).toBe(1)
+      expect(idsA[0]).toBe('boxA:main')
+      expect(idsB[0]).toBe('boxB:main')
+      expect(idsA[0]).not.toBe(idsB[0])
+      expect(resultA.rejected).toEqual([])
+      expect(resultB.rejected).toEqual([])
+    })
   })
 })

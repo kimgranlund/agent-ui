@@ -32,9 +32,18 @@ export interface Turn {
   content: string
 }
 
-/** The ordered turn history the BROWSER holds (SPEC-R8: the proxy is stateless). */
+/** The ordered turn history the BROWSER holds (SPEC-R8: the proxy is stateless).
+ *
+ * `surfacePrefix` (ecosystem SPEC-R4, GH #475) — OPTIONAL, absent by default (the `mode`/`genuiSurface`
+ * additive precedent: every caller that predates this field is byte-unchanged). The v1.0 spec source
+ * itself advises orchestrators to prefix subagent surface IDs to prevent conflicts; when an orchestrator
+ * assigns one producer's session a namespace (e.g. `"box2"`), `session.ts`'s `prefixSurfaceId`/
+ * `ownsSurfaceId`/`enforceSurfacePrefix` offer that convention first-class on this seam — so two
+ * subagent producers sharing one orchestrator can never mint colliding surfaceIds, nor address each
+ * other's surfaces, by construction. See `session.ts` for the pure functions that consume this field. */
 export interface Session {
   turns: Turn[]
+  surfacePrefix?: string
 }
 
 /**

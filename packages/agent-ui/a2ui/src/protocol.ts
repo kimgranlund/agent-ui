@@ -7,11 +7,13 @@
 // import cycle while keeping one definition of the wire types.
 
 /**
- * Internal error codes — the rich 8-code diagnostic taxonomy used by the renderer, validator, and
+ * Internal error codes — the rich 9-code diagnostic taxonomy used by the renderer, validator, and
  * corpus subsystems (SPEC-N6 parity). NOT the wire codes: these are mapped to `WireErrorCode` at the
  * single client→server boundary (`renderer.ts #emitInternalError → toWireError`, ADR-0031 clause 2).
  * The internal codes are kept for the validator's fine-grained `Failure` (corpus admission distinguishes
  * SCHEMA vs IDGRAPH; collapsing to two codes would gut that diagnostic — see ADR-0031 Alternatives A).
+ * `DEPTH_EXCEEDED` (SPEC-R2/GH #473, a2ui-runtime SPEC-R15) joined the 8-code set this wave — a
+ * graph-shape rejection, mapped to the `E_IDGRAPH` corpus family alongside `IDGRAPH` (`corpus/admit.ts`).
  */
 export type ErrorCode =
   | 'PARSE'
@@ -22,10 +24,19 @@ export type ErrorCode =
   | 'POINTER'
   | 'VERSION_UNSUPPORTED'
   | 'FUNCTION'
+  | 'DEPTH_EXCEEDED'
+
+/**
+ * The render-depth cap (a2ui-runtime SPEC-R15, GH #473, ecosystem SPEC-R2): the maximum root-reachable
+ * `child`/`children` nesting depth a component tree may reach (root counts as level 1). Shared by
+ * `renderer/tree.ts` (in-stream guard, degrades gracefully) and `renderer/validate.ts` (admission-time
+ * guard, rejects outright) so the two can never drift on the cap value (SPEC-N6 parity).
+ */
+export const MAX_RENDER_DEPTH = 64
 
 /**
  * A structured INTERNAL error (renderer / validator / corpus — NOT the wire shape). `code` is the
- * 8-code internal taxonomy; `path` is the offending location (folded into the wire `message` by
+ * 9-code internal taxonomy; `path` is the offending location (folded into the wire `message` by
  * `toWireError`, ADR-0031 clause 4 — the v1.0 wire shape has no `path` field). Kept intact so the
  * validator + corpus admission retain full precision after the mapping at the wire boundary.
  */
@@ -56,20 +67,23 @@ export type A2uiWireError =
 
 /**
  * Map one internal `A2uiError` to the v1.0 wire shape (`A2uiWireError`, ADR-0031 clause 2/3/4).
- * ALL 8 internal codes → `VALIDATION_FAILED` + `surfaceId` this wave (the flow-grounded resolution,
+ * ALL 9 internal codes → `VALIDATION_FAILED` + `surfaceId` this wave (the flow-grounded resolution,
  * ADR-0031 clause 2): every error we emit is a message-validation failure — `FUNCTION` included (our
  * `FUNCTION` emits are render-time binding-evaluation failures, exactly parallel to `CATALOG`, not the
- * spec's server-initiated function-call rejections). A present `path` is FOLDED into `message`
- * ("… (at <path>)") so the locus survives for the server — then dropped (v1.0 wire: no `path`).
- * `INVALID_FUNCTION_CALL` is modeled by `A2uiWireError` (forward-ready for #23) but NOT emitted this
- * wave — it requires a `functionCallId` tied to a server-initiated call path the repo does not have.
+ * spec's server-initiated function-call rejections); `DEPTH_EXCEEDED` (SPEC-R2/GH #473) is the newest
+ * member, a graph-shape rejection exactly parallel to `IDGRAPH`. A present `path` is FOLDED into
+ * `message` ("… (at <path>)") so the locus survives for the server — then dropped (v1.0 wire: no
+ * `path`). `INVALID_FUNCTION_CALL` is modeled by `A2uiWireError` (forward-ready for #23) but NOT
+ * emitted this wave — it requires a `functionCallId` tied to a server-initiated call path the repo
+ * does not have.
  */
 export function toWireError(e: A2uiError): A2uiWireError {
   // Fold the internal path locus into the free-form message (ADR-0031 clause 4: no path on the wire).
   const message = e.path !== undefined ? `${e.message} (at ${e.path})` : e.message
-  // All 8 internal codes → VALIDATION_FAILED + surfaceId. FUNCTION included: our render-time
+  // All 9 internal codes → VALIDATION_FAILED + surfaceId. FUNCTION included: our render-time
   // binding-eval errors are message-validation failures (CATALOG parallel), not server-initiated calls.
-  // VERSION_UNSUPPORTED / CATALOG_UNKNOWN also map here — the two-code enum offers no third bucket.
+  // VERSION_UNSUPPORTED / CATALOG_UNKNOWN / DEPTH_EXCEEDED also map here — the two-code enum offers no
+  // third bucket.
   return { code: 'VALIDATION_FAILED', surfaceId: e.surfaceId ?? '', message }
 }
 
@@ -113,11 +127,18 @@ export interface A2uiComponent {
   [prop: string]: unknown
 }
 
-/** Inbound server→client envelopes (runtime SPEC §5.1). */
+/**
+ * Inbound server→client envelopes (runtime SPEC §5.1). `theme` is the v0.9.x-only field (SPEC-R13
+ * "theme accepted for v0.9.x"); v1.0 carries NO surface-theming field at all — "Decoupled Branding"
+ * removed it from the protocol entirely (upstream v1.0-RC spec source, verified). `surfaceProperties`
+ * dropped 2026-08-06 (SPEC-R6(b) ecosystem drift audit, GH #477): this repo's own wire type carried a
+ * field from a stale theme→surfaceProperties RENAME claim that never matched the real v1.0 spec source
+ * (no field of that name exists there); nothing in-tree consumed it (LLD-C8's theming applier was never
+ * built), so the drop has zero runtime blast radius.
+ */
 export interface A2uiCreateSurface {
   surfaceId: string
   catalogId: string
-  surfaceProperties?: object
   theme?: object
   sendDataModel?: boolean
 }
@@ -235,7 +256,7 @@ export interface A2uiFunctionResponseMessage {
 /**
  * An `error` client→server envelope (runtime SPEC §5.2, ADR-0031) — one of the `A2uiClientMessage`
  * arms. `error` carries the WIRE shape (`A2uiWireError`: the v1.0 two-code discriminated union);
- * the internal `A2uiError` (8 codes) is mapped to `A2uiWireError` by `toWireError` at the renderer's
+ * the internal `A2uiError` (9 codes) is mapped to `A2uiWireError` by `toWireError` at the renderer's
  * `#emitInternalError` — the single outbound error chokepoint. The `INVALID_FUNCTION_CALL` arm is
  * emitted directly (bypassing `toWireError`) by the `callFunction` RPC handler (ADR-0034 clause 5)
  * because it carries `functionCallId`, not `surfaceId`.

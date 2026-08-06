@@ -13,6 +13,7 @@
 //   version not in the pinned set .... VERSION_UNSUPPORTED
 //   unknown component type / prop / type mismatch ... CATALOG (via catalog conformance)
 //   missing `root`, second `root`, cycle, dangling ref ... IDGRAPH
+//   root-reachable nesting past the cap (SPEC-R2/GH #473) ... DEPTH_EXCEEDED
 //   malformed JSON-Pointer in a binding / data path ... POINTER
 //
 // Granularity (renderer LLD §8 "Id-graph granularity"): the id-graph stage judges a COMPLETE
@@ -21,7 +22,7 @@
 // `updateComponents`. A 2nd `root` and a cycle are always invalid. The corpus passes a complete
 // `a2uiOutput`, so both callers judge the same set → identical verdict (N6).
 
-import { SUPPORTED_VERSIONS } from '../protocol.ts'
+import { SUPPORTED_VERSIONS, MAX_RENDER_DEPTH } from '../protocol.ts'
 import type { A2uiComponent, Failure } from '../protocol.ts'
 import type { Catalog } from '../catalog/catalog.ts'
 import { validateCatalogConformance } from '../catalog/conformance.ts'
@@ -239,6 +240,13 @@ function checkIdGraph(sid: string, g: SurfaceGraph, failures: Failure[]): void {
     }
   }
 
+  // Render-depth guard (a2ui-runtime SPEC-R15, GH #473, SPEC-N6 parity with tree.ts's identically-
+  // shaped in-stream guard) — checked BEFORE `hasCycle` for the same reason tree.ts orders it first:
+  // `hasCycle` is native-recursive with no depth bound, so a pathologically deep payload must never
+  // reach it. Corpus admission REJECTS a too-deep payload outright (this is the strict admission
+  // gate); the renderer instead degrades gracefully (truncates, survives) — same guard, two postures.
+  if (exceedsMaxDepth(g.byId, MAX_RENDER_DEPTH)) push(failures, 'DEPTH_EXCEEDED', `${sid}:depth`)
+
   // acyclic: a back-edge in the child/children graph is a cycle.
   if (hasCycle(g.byId)) push(failures, 'IDGRAPH', `${sid}:cycle`)
 }
@@ -248,6 +256,38 @@ function refsOf(comp: A2uiComponent): string[] {
   if (typeof comp.child === 'string') out.push(comp.child)
   if (Array.isArray(comp.children)) for (const c of comp.children) if (typeof c === 'string') out.push(c)
   return out
+}
+
+/**
+ * Render-depth guard (a2ui-runtime SPEC-R15, GH #473) — mirrors tree.ts's identically-shaped guard
+ * exactly (SPEC-N6 parity: both import the SAME `MAX_RENDER_DEPTH` constant so the two can't drift on
+ * the cap value, even though — like `hasCycle` below, an existing established pattern in this file —
+ * the traversal body itself is duplicated per-caller rather than shared). Deliberately ITERATIVE (a
+ * BFS over explicit array frontiers, no native recursion): this check itself can never stack-overflow
+ * regardless of how deep or cyclic the input is, and it MUST run before `hasCycle`, which has no depth
+ * bound of its own.
+ */
+function exceedsMaxDepth(byId: Map<string, A2uiComponent>, cap: number): boolean {
+  if (!byId.has('root')) return false
+  const visited = new Set<string>(['root'])
+  let frontier = ['root']
+  let depth = 1
+  while (frontier.length > 0) {
+    if (depth > cap) return true
+    const next: string[] = []
+    for (const id of frontier) {
+      const node = byId.get(id)
+      if (node === undefined) continue
+      for (const ref of refsOf(node)) {
+        if (!byId.has(ref) || visited.has(ref)) continue
+        visited.add(ref)
+        next.push(ref)
+      }
+    }
+    frontier = next
+    depth++
+  }
+  return false
 }
 
 function hasCycle(byId: Map<string, A2uiComponent>): boolean {

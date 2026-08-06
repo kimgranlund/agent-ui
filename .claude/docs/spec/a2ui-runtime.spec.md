@@ -35,7 +35,16 @@ Normative per RFC 2119. Each carries a stable ID, a PRD trace, and acceptance cr
 
 ### 3.2 Surface lifecycle
 
-**SPEC-R2 — Surface create/delete.** On `createSurface` the renderer MUST create a surface keyed by `surfaceId`, bind its `catalogId`, register `surfaceProperties` (v1.0; `theme` accepted for v0.9.x) and `sendDataModel`, and prepare empty component + data state. On `deleteSurface` it MUST release the surface and all its components, data, widgets, and listeners. *(→ PRD-G1)*
+**SPEC-R2 — Surface create/delete.** On `createSurface` the renderer MUST create a surface keyed by `surfaceId`, bind its `catalogId`, register `sendDataModel`, and prepare empty component + data state. On `deleteSurface` it MUST release the surface and all its components, data, widgets, and listeners. *(→ PRD-G1)*
+
+> **REV 2026-08-06 (SPEC-R6(b), `a2ui-ecosystem-alignment.spec.md`; GH #477) — field drop, not a
+> reinterpretation.** This clause previously read "…register `surfaceProperties` (v1.0; `theme`
+> accepted for v0.9.x)…". The upstream v1.0-RC spec source removes ALL surface-theming fields from
+> the protocol ("Decoupled Branding") — v1.0 never had a `surfaceProperties` field; this repo's own
+> `protocol.ts` carried one from a stale theme→`surfaceProperties` RENAME claim. Ruled: drop it
+> (Kim, 2026-08-05 decision round Q3 — ecosystem SPEC §2.2/§3 SPEC-R6(b)). `theme` remains a
+> v0.9.x-only wire field (SPEC-R13 AC1, unchanged) but is not carried onto the surface model — no
+> theming applier (LLD-C8) consumes it. Zero blast radius: nothing in-tree read `surfaceProperties`.
 - **AC1** *Given* a `createSurface{surfaceId,catalogId}`, *when* applied, *then* a surface exists bound to that catalog with empty component/data state.
 - **AC2** *Given* a `deleteSurface`, *when* applied, *then* the surface's widgets are disconnected and its memory released (no retained signals/listeners — provable per SPEC-N3).
 - **AC3** *Given* a `createSurface` whose `catalogId` is unknown, *when* applied, *then* the renderer emits `error{code:"CATALOG_UNKNOWN"}` and does not create the surface.
@@ -61,6 +70,25 @@ Normative per RFC 2119. Each carries a stable ID, a PRD trace, and acceptance cr
 > a resent, already-mounted id now reconciles (id-keyed children diff + whole-record prop rewire onto the
 > SAME element, survivor identity preserved); a resent `"root"` stays governed by SPEC-R3 AC2's IDGRAPH
 > guard, unaffected. Cite that SPEC for resend behavior; this SPEC's own text is unchanged.
+
+**SPEC-R15 — Render-depth guard.** *(REV 2026-08-06 — new, `a2ui-ecosystem-alignment.spec.md`
+SPEC-R2, GH #473.)* The renderer MUST enforce a maximum root-reachable component-tree depth of
+**64 levels** (`root` counts as level 1; `MAX_RENDER_DEPTH`, `protocol.ts`). A payload whose
+`child`/`children` graph nests past the cap MUST NOT be mounted and MUST NOT crash the renderer —
+the depth check itself MUST be iterative (no native recursion), because it runs BEFORE the cycle
+DFS (SPEC-R3 AC2) and that DFS has no depth bound of its own; ordering the depth guard first is
+load-bearing, not incidental. Exceeding the cap MUST emit a structured error
+(`error{code:"DEPTH_EXCEEDED"}`, §5.2) once per surface and MUST leave that surface's
+already-rendered content standing; the stream and every other surface continue unaffected
+(SPEC-N4). The identical guard runs in corpus admission (SPEC-R11/N6 validator parity) as a
+strict admission-time REJECT rather than a graceful degrade. *(→ PRD-G1, PRD-G4)*
+- **AC1** *Given* a payload nesting exactly 64 levels deep, *when* rendered, *then* it mounts with
+  no error.
+- **AC2** *Given* a payload nesting 65 or more levels deep, *when* rendered, *then* the renderer
+  emits `error{code:"DEPTH_EXCEEDED"}`, does not mount the tree, and neither the surface nor the
+  stream tears down.
+- **AC3** *Given* an already-mounted surface, *when* a later batch's root-reachable graph would
+  exceed the cap, *then* the previously rendered content remains standing, untouched.
 
 ### 3.4 Data model & binding
 
@@ -118,7 +146,7 @@ Additionally, the renderer MUST support **DynamicString `${…}` interpolation**
 - **AC1** *Given* a capabilities request (or A2A handshake), *when* the renderer responds, *then* the declared object lists its supported `protocolVersion`(s) including `v1.0`.
 
 **SPEC-R13 — Version handling.** The renderer MUST honor each message's `version`, support the pinned set (default `v1.0`; `v0.9.1` supported), and reject an unsupported version with `error{code:"VERSION_UNSUPPORTED"}`. *(→ PRD-G6)*
-- **AC1** *Given* a message with a supported `version`, *when* dispatched, *then* it is handled by that version's semantics (e.g. `surfaceProperties` for v1.0, `theme` for v0.9.x).
+- **AC1** *Given* a message with a supported `version`, *when* dispatched, *then* it is handled by that version's semantics (e.g. the v0.9.x-only `theme` field; v1.0 carries no surface-theming field at all, SPEC-R6(b) REV 2026-08-06).
 - **AC2** *Given* an unsupported `version`, *when* dispatched, *then* the renderer emits `VERSION_UNSUPPORTED` and skips the message.
 
 ---
@@ -141,7 +169,7 @@ Additionally, the renderer MUST support **DynamicString `${…}` interpolation**
 ```ts
 type A2uiServerMessage =
   | { version: string; createSurface:   { surfaceId: string; catalogId: string;
-                                          surfaceProperties?: object; theme?: object; sendDataModel?: boolean } }
+                                          theme?: object; sendDataModel?: boolean } }  // theme: v0.9.x-only (SPEC-R6(b) REV 2026-08-06)
   | { version: string; updateComponents:{ surfaceId: string; components: A2uiComponent[] } }
   | { version: string; updateDataModel: { surfaceId: string; path?: string; value?: unknown } }
   | { version: string; deleteSurface:   { surfaceId: string } }
@@ -183,7 +211,7 @@ type WireErrorCode = "INVALID_FUNCTION_CALL" | "VALIDATION_FAILED";
 interface A2uiError { code: ErrorCode; surfaceId?: string; path?: string; message: string }
 type ErrorCode =
   | "PARSE" | "SCHEMA" | "CATALOG" | "CATALOG_UNKNOWN" | "IDGRAPH"
-  | "POINTER" | "VERSION_UNSUPPORTED" | "FUNCTION";
+  | "POINTER" | "VERSION_UNSUPPORTED" | "FUNCTION" | "DEPTH_EXCEEDED"; // DEPTH_EXCEEDED: SPEC-R15, GH #473
 ```
 
 ### 5.3 Renderer surface (behavioral; signatures illustrative — internals are the LLD)
@@ -212,6 +240,8 @@ interface A2uiRenderer {
 | SPEC-R11, N6 | PRD-G4 (provable validity) + PRD-G1 |
 | SPEC-R12 | PRD-G1, PRD-G7 (transport interop) |
 | SPEC-R13 | PRD-G6 (version coherence) |
+| SPEC-R14 | PRD-G1, PRD-G7 (server-initiated `callFunction` RPC) |
+| SPEC-R15 | PRD-G1, PRD-G4 (render-depth guard, fault isolation) |
 | SPEC-N3, N5 | PRD-G1 + Constraint C2 (zero-dep, leak-free) |
 
 _Covers PRD-G1 fully; PRD-G2/G4/G6/G7 are co-served with sibling SPECs (catalog, harness, streaming-pipeline). Status: each doc's own header (the tree wins); the original charter table is archived (frozen 2026-07-08)._

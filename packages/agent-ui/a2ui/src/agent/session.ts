@@ -20,6 +20,7 @@
 // it (agent-admin.ts's own surface-turn arm dispatches genui actions directly, never through this gate).
 
 import type { A2uiClientMessage } from '../renderer/index.ts'
+import type { A2uiOutput, A2uiServerMessage } from '../protocol.ts'
 import type { Session, TurnInput } from './agent-transport.ts'
 import type { GenuiActionMessage } from './genui-line.ts'
 
@@ -104,4 +105,104 @@ export function appendAssistantTurn(session: Session, jsonl: string): Session {
 /** Append a `user` turn (a framed intent or client message) — pure (returns a new Session). */
 export function appendUserTurn(session: Session, content: string): Session {
   return { turns: [...session.turns, { role: 'user', content }] }
+}
+
+// ── Orchestrator surface-ID prefixing (ecosystem SPEC-R4, GH #475) ─────────────────────────────────
+//
+// The v1.0 spec source itself advises orchestrators to prefix subagent surface IDs to prevent
+// conflicts (a2ui-ecosystem-alignment.spec.md §2.1/§3 SPEC-R4). Offered first-class on the Session
+// seam (`session.surfacePrefix?: string`, `agent-transport.ts`) rather than baked into `produce()`'s
+// default emit path: `produce()` already threads a same-shape "silent unless a model-authored `ask`
+// happens to reference it" surfaceId comparison for ADR-0097's feed-ask integrity check
+// (`askIntegrityHolds`), and rewriting `assembled.output`'s surfaceIds ahead of that check would need
+// `ask.surfaceId` remapped identically or the ask feature silently breaks for any prefixed session — an
+// interaction the ecosystem SPEC's R4 text does not address. Wiring this into `produce()`'s live emit
+// path is a real follow-up, not guessed past here (SPEC-R4's route names only "the Session seam").
+//
+// `prefixSurfaceId`/`ownsSurfaceId` are pure and deterministic; `enforceSurfacePrefix` is the batch
+// operator over one round's `A2uiOutput` (SPEC-R4 AC1). Every surfaceId-bearing message — `createSurface`
+// INCLUDED — is classified THREE ways, never just "create rewrites, everything else only checks":
+//   - OWN (bare `prefix`, or `` `${prefix}:...` ``)              → kept, surfaceId unchanged (idempotent)
+//   - UNPREFIXED (no `:` at all — the model's own naming, un-namespaced) → REWRITTEN onto the namespace
+//   - FOREIGN (carries `:` but under a DIFFERENT prefix)          → REJECTED, dropped, never forwarded
+// The UNPREFIXED arm is load-bearing for `createSurface` AND `updateComponents` alike: a single round
+// routinely BOTH creates a fresh surface and populates it in the same batch, both referencing the SAME
+// model-authored, still-unprefixed id ("main") — rewriting only `createSurface` would silently strand
+// that round's `updateComponents` as a "foreign" reject (it never got rewritten to match). Because
+// `prefixSurfaceId` is pure and deterministic, the SAME unprefixed id maps to the SAME namespaced id
+// everywhere it appears in the batch, so create + populate stay correctly paired. Two producers with
+// distinct prefixes therefore mint DISJOINT ids BY CONSTRUCTION (AC1), and a message that already
+// addresses a KNOWN-foreign namespace is rejected outright — a producer must never patch, delete, or
+// read back a sibling producer's surface.
+
+const PREFIX_SEPARATOR = ':'
+
+/** SPEC-R4 — `true` iff `surfaceId` belongs to `prefix`'s namespace (`prefix` itself, or
+ *  `` `${prefix}:...` ``). A session with NO prefix owns every id (today's unprefixed behavior). */
+export function ownsSurfaceId(prefix: string | undefined, surfaceId: string): boolean {
+  if (prefix === undefined || prefix === '') return true
+  return surfaceId === prefix || surfaceId.startsWith(`${prefix}${PREFIX_SEPARATOR}`)
+}
+
+/** SPEC-R4 — deterministically namespaces `surfaceId` under `prefix`. Idempotent: an id that already
+ *  carries the prefix is returned UNCHANGED (never double-prefixed), so re-applying across rounds/turns
+ *  is safe. A FOREIGN id (already namespaced under a DIFFERENT prefix) gets `prefix` stacked in front —
+ *  this raw utility never silently swallows one; `enforceSurfacePrefix` below instead REJECTS a foreign
+ *  id outright rather than calling this on it. `prefix` absent/empty ⇒ `surfaceId` unchanged (the
+ *  byte-identical default). */
+export function prefixSurfaceId(prefix: string | undefined, surfaceId: string): string {
+  if (prefix === undefined || prefix === '') return surfaceId
+  return ownsSurfaceId(prefix, surfaceId) ? surfaceId : `${prefix}${PREFIX_SEPARATOR}${surfaceId}`
+}
+
+/** SPEC-R4 — is `surfaceId` namespaced under some OTHER prefix (carries the separator, but isn't OWN)?
+ *  Used only to distinguish the unprefixed-rewrite case from the foreign-reject case inside
+ *  `enforceSurfacePrefix`; `ownsSurfaceId`/`prefixSurfaceId` above stay the two general-purpose exports. */
+function isForeignSurfaceId(prefix: string, surfaceId: string): boolean {
+  return !ownsSurfaceId(prefix, surfaceId) && surfaceId.includes(PREFIX_SEPARATOR)
+}
+
+/** SPEC-R4 AC1 — one round's prefix-enforcement result: `output` is the KEPT messages (in original
+ *  order, every unprefixed surfaceId rewritten onto the namespace); `rejected` is every message whose
+ *  surfaceId addressed a FOREIGN namespace, dropped rather than forwarded. */
+export interface PrefixEnforcement {
+  output: A2uiOutput
+  rejected: A2uiServerMessage[]
+}
+
+/** SPEC-R4 AC1 — enforce `session.surfacePrefix` over one round's emitted `A2uiOutput`, "applied on
+ *  emit": absent/empty `surfacePrefix` ⇒ `{output, rejected: []}` UNCHANGED (byte-identical to every
+ *  caller that predates this — the `mode`/`genuiSurface` precedent). A `callFunction` envelope (no
+ *  `surfaceId` field, SPEC-R14) always passes through untouched — it has no surface to own or reject. */
+export function enforceSurfacePrefix(session: Session, output: A2uiOutput): PrefixEnforcement {
+  const prefix = session.surfacePrefix
+  if (prefix === undefined || prefix === '') return { output, rejected: [] }
+  const kept: A2uiServerMessage[] = []
+  const rejected: A2uiServerMessage[] = []
+  for (const msg of output) {
+    if ('createSurface' in msg) {
+      const id = msg.createSurface.surfaceId
+      if (isForeignSurfaceId(prefix, id)) rejected.push(msg)
+      else kept.push({ ...msg, createSurface: { ...msg.createSurface, surfaceId: prefixSurfaceId(prefix, id) } })
+    } else if ('updateComponents' in msg) {
+      const id = msg.updateComponents.surfaceId
+      if (isForeignSurfaceId(prefix, id)) rejected.push(msg)
+      else kept.push({ ...msg, updateComponents: { ...msg.updateComponents, surfaceId: prefixSurfaceId(prefix, id) } })
+    } else if ('updateDataModel' in msg) {
+      const id = msg.updateDataModel.surfaceId
+      if (isForeignSurfaceId(prefix, id)) rejected.push(msg)
+      else kept.push({ ...msg, updateDataModel: { ...msg.updateDataModel, surfaceId: prefixSurfaceId(prefix, id) } })
+    } else if ('deleteSurface' in msg) {
+      const id = msg.deleteSurface.surfaceId
+      if (isForeignSurfaceId(prefix, id)) rejected.push(msg)
+      else kept.push({ ...msg, deleteSurface: { ...msg.deleteSurface, surfaceId: prefixSurfaceId(prefix, id) } })
+    } else if ('actionResponse' in msg) {
+      const id = msg.actionResponse.surfaceId
+      if (isForeignSurfaceId(prefix, id)) rejected.push(msg)
+      else kept.push({ ...msg, actionResponse: { ...msg.actionResponse, surfaceId: prefixSurfaceId(prefix, id) } })
+    } else {
+      kept.push(msg) // the callFunction envelope (SPEC-R14) — no surfaceId field, nothing to own/reject
+    }
+  }
+  return { output: kept, rejected }
 }

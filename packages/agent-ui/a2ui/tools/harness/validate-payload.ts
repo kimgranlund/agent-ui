@@ -83,6 +83,7 @@ const FAILURE_DESCRIPTIONS: Record<Failure['code'], string> = {
   IDGRAPH: 'the component graph is invalid — a missing/duplicate root, a dangling child reference, or a cycle',
   POINTER: 'a bound path is not a syntactically valid JSON Pointer',
   FUNCTION: 'a render-time function-binding failure (never emitted by the static validator)',
+  DEPTH_EXCEEDED: 'the root-reachable component tree nests past the render-depth cap (SPEC-R15, GH #473)',
 }
 
 function toPrintable(f: Failure): { code: Failure['code']; path: string; message: string } {

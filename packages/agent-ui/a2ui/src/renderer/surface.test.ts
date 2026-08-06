@@ -17,10 +17,10 @@ describe('surface model (renderer LLD-C3, SPEC-R2)', () => {
     expect(s.data.peek()).toBeUndefined()
   })
 
-  it('carries sendDataModel + surfaceProperties when provided', () => {
-    const s = createSurface({ ...init, sendDataModel: true, surfaceProperties: { density: 'compact' } })
+  it('carries sendDataModel when provided (surfaceProperties dropped, SPEC-R6(b) GH #477)', () => {
+    const s = createSurface({ ...init, sendDataModel: true })
     expect(s.sendDataModel).toBe(true)
-    expect(s.surfaceProperties).toEqual({ density: 'compact' })
+    expect('surfaceProperties' in s).toBe(false)
   })
 
   it('data is one signal: a computed over it re-resolves when the model changes (SPEC-R5/N2)', () => {

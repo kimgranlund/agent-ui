@@ -48,6 +48,7 @@ import { ActionDispatcher } from './action.ts'
 import { validateA2ui } from './validate.ts'
 import { resolveValue as dispatchValue } from './functions.ts'
 import { setPointer } from './binding.ts'
+import { readActionSpec } from './wire-tolerances.ts' // GH #484 move phase — A1/A2/A3 (was local to this file)
 import type { CreateWidget, ItemScope } from './types.ts'
 import type { Scope } from '@agent-ui/components'
 import { Registry } from '../catalog/registry.ts'
@@ -177,7 +178,7 @@ class Renderer implements RendererHost {
 
     // The internal error sink: applies toWireError at the single client→server chokepoint (ADR-0031
     // clause 1/2) so every outbound error carries the v1.0 two-code wire shape. Internal callers
-    // (functions.ts / checks.ts) still receive and emit `A2uiError` (the 8-code internal taxonomy)
+    // (functions.ts / checks.ts) still receive and emit `A2uiError` (the 9-code internal taxonomy)
     // unchanged — the map is applied HERE, not at the emit sites.
     this.#emitError = (error) => this.#emitInternalError(this.#versionFor(error.surfaceId), error)
     this.#widgetDeps = {
@@ -276,12 +277,13 @@ class Renderer implements RendererHost {
     // disposes the prior surface's scope/listeners, but DOM detach is the host's).
     this.#teardownSurfaceDom(body.surfaceId)
 
+    // `body.theme` (v0.9.x-only, SPEC-R13) is not carried onto the surface model: no theming applier
+    // (LLD-C8) consumes it yet, and v1.0 has no surface-theming field at all (SPEC-R6(b), GH #477 —
+    // `surfaceProperties` dropped from the wire type; see protocol.ts's `A2uiCreateSurface` doc comment).
     const surface = this.#store.create({
       id: body.surfaceId,
       catalogId: body.catalogId,
       version,
-      // v0.9.x carries `theme` where v1.0 carries `surfaceProperties` (SPEC-R13 AC1); prefer the v1.0 field.
-      surfaceProperties: body.surfaceProperties ?? body.theme,
       sendDataModel: body.sendDataModel,
     })
     this.#trees.set(
@@ -469,7 +471,7 @@ class Renderer implements RendererHost {
 
   /**
    * The single outbound client→server error chokepoint (ADR-0031 clause 1). Applies `toWireError`
-   * to map the 8-code internal `A2uiError` to the v1.0 two-code `A2uiWireError` before emitting.
+   * to map the 9-code internal `A2uiError` to the v1.0 two-code `A2uiWireError` before emitting.
    * Internal callers (emitError, #onCreateSurface, #onTreeError, #finalizeSurface, ingest) all
    * route here — keeping the mapping in one place so no emit site produces a raw internal code on
    * the wire. The `#emit` method below is the pure mechanical broadcaster (actions use it directly).
@@ -493,61 +495,14 @@ class Renderer implements RendererHost {
 
 // ── module helpers ──────────────────────────────────────────────────────────────────
 
-const isObject = (v: unknown): v is Record<string, unknown> =>
-  typeof v === 'object' && v !== null && !Array.isArray(v)
-
 /** Read the `version` off a parsed server message, falling back when a malformed-but-parsed line lacks it. */
 function versionOf(message: A2uiServerMessage, fallback: string): string {
   const v = (message as { version?: unknown }).version
   return typeof v === 'string' ? v : fallback
 }
 
-/**
- * Interpret a Button's `action` prop value into the action-emission inputs. The CANONICAL inbound
- * shape is `{ action, context?, wantResponse?, submit? }` (ADR-0011 + the ADR-0054 `submit` extension,
- * pinned in the catalog SPEC §5.1/§5.2 + `catalog/default/catalog.json`): `action` is the action NAME,
- * `context`/`wantResponse` are surfaced straight off the canonical object, and `submit:true` is a
- * CLIENT-consumed flag `#wireAction` reads to gate the click — it is NEVER part of the emitted wire
- * message (ADR-0054 clause 1; the outbound `A2uiAction` shape is untouched). Two fallbacks are
- * RETAINED as documented Postel's-law tolerance — not silent guesses: `name` is accepted as a synonym
- * for the name key, and a bare string is taken as the action name (carrying no
- * `context`/`wantResponse`/`submit`). Canonical `action` wins when both keys are present.
- *
- * A THIRD tolerance arm (ADR-0169 cl.10, amends this ADR): upstream A2UI Basic Catalog's `Action` is
- * `{event:{name, context?}}` — normalized to `{name: event.name, context: event.context}`, with
- * `wantResponse`/`submit` staying `undefined` (upstream has neither; ADR-0088 §3's undefined-vs-false
- * distinction is preserved). The `{functionCall}` Action arm is NOT accepted here — excluded v1
- * (ADR-0169 E7): our renderer has no client-side action-execution path.
- */
-function readActionSpec(
-  spec: unknown,
-): { name: string; wantResponse?: boolean; context?: Record<string, unknown>; submit?: boolean } {
-  // Tolerance: a bare string is the action name (no context/wantResponse/submit to surface).
-  if (typeof spec === 'string') return { name: spec }
-  if (isObject(spec)) {
-    // ADR-0169 cl.10: the upstream `{event:{name,context?}}` Action shape. Checked before the canonical
-    // `action`/`name` arms — the two shapes are mutually exclusive on the wire, so order is immaterial.
-    if (isObject(spec.event) && typeof spec.event.name === 'string') {
-      const out: { name: string; wantResponse?: boolean; context?: Record<string, unknown>; submit?: boolean } = {
-        name: spec.event.name,
-      }
-      if (isObject(spec.event.context)) out.context = spec.event.context
-      return out
-    }
-    // Canonical `action` (ADR-0011); `name` is the tolerated synonym, taken only when `action` is absent.
-    const name = typeof spec.action === 'string' ? spec.action : typeof spec.name === 'string' ? spec.name : ''
-    const out: { name: string; wantResponse?: boolean; context?: Record<string, unknown>; submit?: boolean } = { name }
-    // `context`/`wantResponse`/`submit` surface from the canonical object (also honored on the `name`-synonym shape).
-    // `wantResponse` is captured whenever the author wrote it as a real boolean — `true` OR `false` — never
-    // just `=== true`: ADR-0088 §3 routes on the DISTINCTION between "explicitly false" (opt-out) and "never
-    // authored" (stays `undefined` here, through `emitAction`'s own preserving assignment, to the wire).
-    if (typeof spec.wantResponse === 'boolean') out.wantResponse = spec.wantResponse
-    if (isObject(spec.context)) out.context = spec.context
-    if (spec.submit === true) out.submit = true
-    return out
-  }
-  return { name: '' }
-}
+// `readActionSpec` (A1/A2/A3 — the Button action-prop Postel reader) moved to `./wire-tolerances.ts`
+// (GH #484 move phase — the wire-tolerance registry `wire-tolerances.md`'s INDEX anticipated).
 
 /** A shallow copy of `node` with the given prop names removed (the action-typed props the host re-wires). */
 function withoutProps(node: A2uiComponent, props: Map<string, unknown>): A2uiComponent {

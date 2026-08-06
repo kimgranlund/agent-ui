@@ -18,7 +18,6 @@ export interface Surface {
   id: string
   catalogId: string
   version: string
-  surfaceProperties?: object
   sendDataModel: boolean
   components: Map<string, A2uiComponent> // raw, buffered by id (SPEC-R3); populated by tree.ts
   data: Signal<unknown> // the one surface data model (SPEC-R5); all bindings are computeds over it (N2)
@@ -32,7 +31,6 @@ export interface SurfaceInit {
   id: string
   catalogId: string
   version: string
-  surfaceProperties?: object
   sendDataModel?: boolean
 }
 
@@ -49,7 +47,6 @@ export function createSurface(init: SurfaceInit): Surface {
     ac: new AbortController(),
     widgets: new Map(),
   }
-  if (init.surfaceProperties !== undefined) surface.surfaceProperties = init.surfaceProperties
   return surface
 }
 

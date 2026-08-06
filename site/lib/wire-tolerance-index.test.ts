@@ -10,18 +10,26 @@
 //   2. the row COUNT in this file's `ROWS` census matches the row count in the doc's own table
 //      (keeps the two representations from drifting apart);
 //   3. a MARKER sweep over the files that use the fleet's "Postel" term-of-art for this arm class
-//      (renderer.ts / checks.ts / catalog.ts) pins today's occurrence count per file — a NEW
-//      Postel-tagged comment added to any of those files without a matching INDEX-doc update
-//      changes the count and reddens this gate.
+//      (renderer.ts / checks.ts / catalog.ts / wire-tolerances.ts) pins today's occurrence count per
+//      file — a NEW Postel-tagged comment added to any of those files without a matching INDEX-doc
+//      update changes the count and reddens this gate.
+//
+// GH #484 move phase (REV 2026-08-06, GH #477): A1/A2/A3 (`readActionSpec`), C1 (`readCheck`), and S1
+// (`selectCatalog`) moved out of `renderer.ts`/`checks.ts`/`chat-validation.ts` into ONE consolidated
+// registry, `src/renderer/wire-tolerances.ts` — the shape this doc's own "Deferred — the module-move
+// phase" section anticipated. `renderer.ts`/`checks.ts` keep thin call sites (+ a one-line "moved to"
+// stub comment); `chat-validation.ts` re-exports `selectCatalog` UNCHANGED so its callers
+// (`dev-proxy-plugin.ts`/`worker/index.ts`) needed no edit. V1 (test-harness-only) and E7 (a
+// declarative catalog.json flag, not a parsing function) stay put — never candidates for the move.
 //
 // Calibration note (why "Postel" and not a stronger convention): the codebase does not (yet) have
 // a single reserved keyword every tolerance arm is required to carry — `selectCatalog` (S1) says
 // "fail-closed", the version-envelope translation (V1) says "FRAMING", and the E7 narrowing says
 // neither. Those three rows are pinned by their OWN unique anchor text (test #1 above) instead of
 // the marker sweep. "Postel" is the term the three arms that DO share vocabulary (A1/A2/A3, C1, E7)
-// already use, so a marker-count drift on those three files is a real, if partial, tripwire — not a
+// already use, so a marker-count drift on those files is a real, if partial, tripwire — not a
 // complete one. Widening this coverage (a lint rule / reserved comment tag every NEW arm must carry)
-// is exactly the module-move phase this build defers to GH #477.
+// is a further follow-up, not required by GH #484's own scope.
 
 import { describe, it, expect } from 'vitest'
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime
@@ -42,31 +50,32 @@ interface Row {
 
 // Census-pin (S8 precedent): the SAME seven rows as wire-tolerances.md's "The arms" table. Keep in
 // sync BY HAND — a row added/removed here without touching the doc (or vice versa) is caught by the
-// count assertion below.
+// count assertion below. A1/A2/A3/C1/S1 point at `wire-tolerances.ts` post-move (GH #484); V1/E7 were
+// never candidates for the move (V1 test-harness-only, E7 a declarative catalog.json flag).
 const ROWS: Row[] = [
   {
     id: 'A1',
-    file: 'packages/agent-ui/a2ui/src/renderer/renderer.ts',
+    file: 'packages/agent-ui/a2ui/src/renderer/wire-tolerances.ts',
     anchor: 'Tolerance: a bare string is the action name',
   },
   {
     id: 'A2',
-    file: 'packages/agent-ui/a2ui/src/renderer/renderer.ts',
+    file: 'packages/agent-ui/a2ui/src/renderer/wire-tolerances.ts',
     anchor: "isObject(spec.event) && typeof spec.event.name === 'string'",
   },
   {
     id: 'A3',
-    file: 'packages/agent-ui/a2ui/src/renderer/renderer.ts',
+    file: 'packages/agent-ui/a2ui/src/renderer/wire-tolerances.ts',
     anchor: 'Canonical `action` (ADR-0011); `name` is the tolerated synonym',
   },
   {
     id: 'C1',
-    file: 'packages/agent-ui/a2ui/src/renderer/checks.ts',
+    file: 'packages/agent-ui/a2ui/src/renderer/wire-tolerances.ts',
     anchor: 'CONDITION wrapper:',
   },
   {
     id: 'S1',
-    file: 'packages/agent-ui/a2ui/tools/agent/chat-validation.ts',
+    file: 'packages/agent-ui/a2ui/src/renderer/wire-tolerances.ts',
     anchor: 'ADR-0169 cl.3',
   },
   {
@@ -133,12 +142,16 @@ function countPostelMarkers(text: string): number {
   return (text.match(/\bPostel\b/g) ?? []).length
 }
 
-// Today's real counts (2026-08-06) — a Postel-tagged comment added to any of these three files
-// without updating BOTH this expectation and wire-tolerances.md turns this describe block red.
+// Today's real counts (2026-08-06, re-pinned post GH #484 move) — a Postel-tagged comment added to
+// any of these four files without updating BOTH this expectation and wire-tolerances.md turns this
+// describe block red. `renderer.ts`/`checks.ts` keep one "moved to wire-tolerances.ts" stub mention
+// each (coincidentally the SAME counts as before the move); `wire-tolerances.ts` is the new home for
+// the A1/A2/A3/C1 bodies and their doc comments, newly added to the sweep.
 const POSTEL_MARKER_COUNTS: Record<string, number> = {
   'packages/agent-ui/a2ui/src/renderer/renderer.ts': 1,
   'packages/agent-ui/a2ui/src/renderer/checks.ts': 3,
   'packages/agent-ui/a2ui/src/catalog/catalog.ts': 2,
+  'packages/agent-ui/a2ui/src/renderer/wire-tolerances.ts': 3,
 }
 
 describe('wire-tolerance INDEX — Postel marker census (the widening tripwire)', () => {

@@ -15,6 +15,7 @@ import type { Turn, Effort } from '../../src/agent/agent-transport.ts'
 import { GEN_UI_MODES } from '../../src/agent/gen-ui-mode.ts'
 import type { GenUiMode } from '../../src/agent/gen-ui-mode.ts'
 import type { GenuiSurfaceConfig } from '../../src/agent/genui-surface-config.ts'
+import { selectCatalog as selectCatalogShared } from '../../src/renderer/wire-tolerances.ts'
 
 // ADR-0090 §4 — `mode` is trusted input at a security-adjacent boundary (Consequences): a crafted/stale
 // `mode` string must NEVER reach `buildSystemPrompt` raw. Unlike `{provider,model}` (a registry lookup via
@@ -72,13 +73,11 @@ export function validateEffort(effort: unknown): Effort | undefined {
   return typeof effort === 'string' && (EFFORT_VALUES as readonly string[]).includes(effort) ? (effort as Effort) : undefined
 }
 
-/** ADR-0169 cl.3 — fail-closed catalog selection: a non-string/unknown id degrades to the fallback,
- *  never a 400/500 and never a mixed catalog+prompt (the `sanitizeCatalog` discipline, server-side).
- *  Generic so no `Catalog` import is needed here (both `dev-proxy-plugin.ts` and `worker/index.ts`
- *  import this shared, zero-dep module). */
-export function selectCatalog<C>(catalogs: ReadonlyMap<string, C>, value: unknown, fallback: C): C {
-  return (typeof value === 'string' ? catalogs.get(value) : undefined) ?? fallback
-}
+/** S1 (ADR-0169 cl.3) — fail-closed catalog selection, moved to `src/renderer/wire-tolerances.ts`
+ *  (GH #484 move phase — the wire-tolerance registry). Re-exported here UNCHANGED so `dev-proxy-
+ *  plugin.ts`/`worker/index.ts`'s existing `import { selectCatalog } from './chat-validation.ts'`
+ *  needed no call-site change. */
+export const selectCatalog = selectCatalogShared
 
 /**
  * ALM-C6 (TKT-0052/ADR-0136) — the `/chat` route's pure validation spine, extracted so its 400/503 arms
