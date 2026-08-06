@@ -148,6 +148,15 @@ decision (dated line in §4).
 
 ## 3 · Next — concrete, near-term
 
+- **M-D — "Personas with their own catalogs" (first of the 2026-08-05 arc). 🟡 IN FLIGHT** — built
+  from the RATIFIED [ADR-0172](adr/0172-persona-catalog-composition-intake.md) (GH #421's reopened
+  intake, frozen 2026-08-05): each persona composes `shared primitives + the shared system-patterns
+  tier + its own package-level local-pattern catalog-schema` — realized as a compose-time OVERLAY
+  over ADR-0169's two-catalog registry (no third wire-visible catalog id), the persona carrying only
+  its catalog SELECTION on the ADR-0170 seam. Next artifact per the ADR's own Repairs cell: **M-D's
+  SPEC** (then the build — GH #480). After M-D: **M-E** (upstream-drift correctness; Q3 pre-ruled,
+  GH #477 drops `surfaceProperties`) then **M-F** (the second SaaS composition + the
+  association/multi-select intake) — the 2026-08-05 wave's ruled order (§2).
 - **The 2026-07-28 intake ruled the next arc.** A six-system inventory wave (agent-admin · a2ui ·
   GenUI · components · shells · SaaS patterns) fed a dependency-spine synthesis and three
   candidate milestones; Kim ruled the order on 2026-07-28. The full wave record — six inventories
@@ -219,10 +228,11 @@ decision (dated line in §4).
   PRD §8 m3 (judge-scored pack-idiom use) realized as a judged corpus-rubric shard plus its docs
   page (PRD-G6) — a named manual live-model run, never part of the deterministic gates (SPEC-N3).
   Revisit when the producer's output quality needs a measured floor.
-- **Bespoke per-persona A2UI catalogs (GH #421).** Each preset composes its own effective catalog —
-  `shared primitives + shared system + local patterns` (Maître-d' ≠ Croupier) — the A2UI-side
-  analogue of GenUI's per-agent pattern sources (PRD-G2/SPEC-R11). Rides on, or co-designs with,
-  GH #413's `catalogId` threading; design intake owns the local-pattern home and the docs it earns.
+- *(The GH #421 per-persona-catalogs deferral that lived here moved to §3's M-D milestone on
+  ADR-0172's ratification — its three questions are FROZEN answers now, not open framing:
+  package-level per-persona catalog-schema homes · a compose-time overlay over ADR-0169's registry
+  (no third wire-visible id) · a new named system-patterns tier. The ADR-0172 Repairs-cell move,
+  2026-08-05.)*
 
 ---
 
