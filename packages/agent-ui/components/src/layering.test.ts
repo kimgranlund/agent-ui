@@ -32,10 +32,19 @@ const resolveRel = (fromDir: string, spec: string): string => {
   return parts.join('/')
 }
 
+// `(?<![`'"])` (a real import/export keyword is never itself the CONTENT of a string/template literal —
+// only a data value like `codecRaw.get('import')` or generated-text like `` `import { x } from '${spec}'` ``
+// puts the word "import" directly after an opening quote/backtick) and `(?!\s*:)` (an object-literal
+// property KEY named `import`/`export`, e.g. `{ import: './x.ts' }`, is never a module statement either)
+// both close real false-positive classes ADR-0173's descriptor/generator work surfaced —
+// component-descriptor.ts's `CodecRef` reads a genuine `'import'`-keyed Map entry, and generate-props.ts
+// builds import-statement TEXT as generated output. Neither guard weakens real detection: a genuine
+// `import … from '…'`/`import '…'` statement is never itself inside a string/template literal and never
+// has `:` immediately after the keyword.
 const specifiersOf = (src: string): string[] => {
   const out: string[] = []
-  const fromRe = /\b(?:import|export)\b[^\n;]*?\bfrom\s*['"]([^'"]+)['"]/g
-  const bareRe = /\bimport\s*['"]([^'"]+)['"]/g
+  const fromRe = /(?<![`'"])\b(?:import|export)\b(?!\s*:)[^\n;]*?\bfrom\s*['"]([^'"]+)['"]/g
+  const bareRe = /(?<![`'"])\bimport\b(?!\s*:)\s*['"]([^'"]+)['"]/g
   let m: RegExpExecArray | null
   while ((m = fromRe.exec(src))) out.push(m[1])
   while ((m = bareRe.exec(src))) out.push(m[1])
@@ -67,5 +76,18 @@ describe('import layering', () => {
       }
     }
     expect(violations).toEqual([])
+  })
+
+  it('specifiersOf still finds every real import/export shape, and no longer misfires on a string-literal VALUE or an object-literal KEY that happens to spell "import"/"export" (ADR-0173 false-positive classes)', () => {
+    expect(specifiersOf(`import { x } from './y.ts'`)).toEqual(['./y.ts']) // real named import
+    expect(specifiersOf(`export { x } from './y.ts'`)).toEqual(['./y.ts']) // real re-export
+    expect(specifiersOf(`import './y.ts'`)).toEqual(['./y.ts']) // real side-effect import
+    // a Map read keyed by the literal string 'import' (component-descriptor.ts's real CodecRef shape)
+    expect(specifiersOf(`const v = m.get('import')`)).toEqual([])
+    // an object-literal property KEY named `import` (the codec: { import, name } grammar shape)
+    expect(specifiersOf(`const c = { import: './x.ts', name: 'y' }`)).toEqual([])
+    // generated-text TEMPLATE LITERAL content that spells out an import statement as a STRING VALUE
+    // (generate-props.ts building `{name}.props.gen.ts` source text, not a real import of its own)
+    expect(specifiersOf("const line = `import { x } from '${spec}'`")).toEqual([])
   })
 })

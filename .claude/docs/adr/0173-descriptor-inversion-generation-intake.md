@@ -158,3 +158,61 @@ Conversion is incremental, never big-bang: `ui-button` converts first (the fleet
 - **Ship all three of the issue's named artifacts simultaneously in one build** — rejected: the three targets have genuinely different readiness (site needs nothing; props needs one grammar widening; catalog is now ruled out entirely) — bundling would have either stalled the tractable props target behind a question the mechanics resolve on their own, or rushed that resolution to avoid blocking it.
 - **Big-bang rewrite of all 60 descriptors' generation status in one wave** — rejected in cl.6: real coverage-gap risk across 60 heterogeneous files; the `icons.gen.ts`/llms-full.txt precedents prove the safer per-control ratchet already works at comparable scale.
 - **Do nothing — keep the trip-wires** — rejected with respect: the gates demonstrably work (six drift codes, fleet-proven across ~60 `*-descriptor.test.ts` files), but they fire AFTER the fact, and the ADR-0161/0163/0169 arc shows the mirror tax is recurring, not incidental. GH #483's premise is confirmed by the record.
+
+## Amendment (2026-08-06) — the four Open Forks resolved: a `codec:` field lands now, a structured `description:` field lands, the cl.5 agreement gate lands WITH wave 1 (fleet-wide), s10 retires per-control in the same commit as that control's generator-gate landing (Kim's ruling, [PR #494's comment thread](https://github.com/kimgranlund/agent-ui/pull/494))
+
+> Append-only. The Status cell, its vocabulary, and every accepted section above stay byte-untouched — agents
+> never flip status; this section records four follow-through rulings Kim made on this ADR's own Open Forks
+> (above), via [PR #494's comment thread](https://github.com/kimgranlund/agent-ui/pull/494) — the same PR
+> whose owner utterance ratified this ADR to `accepted` (the header's own `Ratified by` citation). Each of
+> the four was an Open Fork this ADR's own Decision explicitly left for a future build wave to resolve
+> (OF1–OF4 above) — this section records the resolution, not a reversal; Decision cl.1–6 stand untouched.
+
+**OF1 resolved — a `codec:` field lands NOW, closing the 7-control bespoke-codec allowlist as a generatable
+population rather than ruling it a permanent escape hatch.** Shape (the minimal workable design, Kim's
+smallest-reasonable-call): `codec: { import: '<sibling-relative path>', name: '<exported identifier> }` on an
+`attributes[]` row. The named export is the control's own already-assembled `PropConfig` (type + default +
+reflect, e.g. `table-model.ts`'s `tableColumnsProp`) — the generator imports it BY NAME from the named
+sibling module and splices the identifier straight into the generated props object, in place of synthesizing
+a `prop.*()` factory call for that attribute. The row's own `type`/`default`/`reflect`/`values` fields stay
+present (s9 structural validity + human documentation), but the generator does not reparse them for a
+codec-declared attribute — the imported `PropConfig` is the runtime ground truth, same as it is today.
+
+**OF2 resolved — a structured `description:` field lands**, one per `attributes[]` row: a plain scalar,
+parsed exactly like `default`/`type` (no grammar-shape change beyond one more recognized field name).
+Emitted into the generated `{name}.props.gen.ts` as a provenance-stamped comment directly above the field it
+documents, so props-block teaching that lived only in hand-authored `.ts` comments before now has a
+machine-carried home that survives generation.
+
+**OF3 resolved — the cl.5 catalog↔descriptor agreement gate lands WITH the first (`ui-button`) conversion,
+not deferred to a later wave**, and — because the gate's domain (a catalog `PropDef` vs. a descriptor
+attribute) is independent of props-generation status (OF3's own text: "both of which exist today,
+unconditionally") — it runs FLEET-WIDE from day one, not scoped to only the wave's converted controls. New
+file: `a2ui/src/catalog/default/descriptor-agreement.test.ts`, landed in the same commit as `ui-button`'s
+generator conversion. A handful of pre-existing real divergences the gate's first fleet-wide run surfaced
+(some deliberate wire-curation, at least two read as genuine pre-existing catalog staleness — e.g. a type
+addition that landed in a control's descriptor without a matching catalog-row update) are recorded in that
+file's own per-prop exception table with a cited reason each, the ADR-0087 include-or-recorded-exclusion
+shape applied one level down (cl.5's own words) — catalog row CONTENT is not touched by this build (cl.5
+rules that out categorically); the exception table is the build's own paper trail for a follow-up.
+
+**OF4 resolved — no "keep both forever" option, ever, per control.** `compareDescriptorToProps`'s s10
+assertions in a control's own `*-descriptor.test.ts` retire in the SAME COMMIT that lands its
+generator-drift-gate coverage — never a commit where both exist for that control, never one where neither
+does (cl.4c's own law, now enforced as a literal commit-sequencing discipline for the build).
+
+Build landed under GH #483, branch `fix-483-generator-build`: the cl.2 grammar widening (`attribute`/
+`tsType`/`const`/`codec`/`description`) in `component-descriptor.ts` · the generator
+(`descriptor/generate-props.ts` + `scripts/generate-props.mjs`, the `icons.gen.ts`/`generate-llms-full.mjs`
+vehicle reused) · the fleet drift gate (`descriptor/props-gen-driftwire.test.ts`) · the new catalog agreement
+gate · a first wave of 5 conversions — `ui-button` (gold-first, no bespoke codec, one `attribute:` override),
+`ui-table` (both the `attribute:`-override AND bespoke-`codec:` exemplar), `ui-badge` (the shared-tuple
+`const:` exemplar), `ui-avatar` and `ui-progress` (the plain bare-`prop.*()` majority case). No descriptor
+`.md` prose, catalog row content, or A2UI renderer code changed. The build also hardened
+`components/src/layering.test.ts`'s import-scanner regex, a pre-existing fleet-wide trip-wire this same work
+surfaced two genuine false-positive classes in: a `codec:` sub-field's own Map key literally spelled
+`'import'` (`component-descriptor.ts`'s `CodecRef` reads), and generated-text template-literal CONTENT that
+spells out a real `import … from '…'` statement as a string VALUE (`generate-props.ts` building
+`{name}.props.gen.ts` source) — both were misread as this repo's own external imports; closed with a
+scoped exclusion (never weakening real-import detection), verified against the real fleet plus a new
+regression test.

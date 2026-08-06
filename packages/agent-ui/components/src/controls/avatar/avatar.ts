@@ -20,16 +20,13 @@
 // (the descriptor states it explicitly).
 
 import { signal } from '../../reactive/index.ts'
-import { UIElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
+import { UIElement, type ReactiveProps } from '../../dom/index.ts'
 import { initialsFrom } from './avatar-initials.ts'
 import { UIIconElement } from '../icon/icon.ts' // sanctioned sibling-control import — self-defines ui-icon
-
-const props = {
-  src: prop.string(''), // image URL; a load error falls back without ever painting a broken-image box
-  identity: prop.string(''), // the identity the initials derive from; NOT announced by default (SPEC-R6). Renamed from `name` (TKT-0069 item 1 ruling: `name` = the FORM name, reserved; the A2UI catalog keeps wire `name`, mapped in its bespoke factory)
-  label: { ...prop.string(''), reflect: true }, // the a11y escape hatch — non-empty makes the avatar itself the accessible name
-  size: { ...prop.enum(['sm', 'md', 'lg'] as const, 'md'), reflect: true }, // reflected — the CSS [size] hook
-} satisfies PropsSchema
+// Generated from avatar.md's `attributes[]` (ADR-0173) — `node scripts/generate-props.mjs avatar` to
+// regenerate; never hand-edit avatar.props.gen.ts. `identity` was renamed from `name` (TKT-0069 item 1
+// ruling: `name` = the FORM name, reserved; the A2UI catalog keeps wire `name`, mapped in its bespoke factory).
+import { props } from './avatar.props.gen.ts'
 
 export interface UIAvatarElement extends ReactiveProps<typeof props> {}
 export class UIAvatarElement extends UIElement {

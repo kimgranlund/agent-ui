@@ -1,39 +1,42 @@
 ---
-# button.md frontmatter — the attributes-as-API descriptor for ui-button (ADR-0004). The machine-checkable
-# public surface lives HERE (frontmatter); the prose below the fence is the /site doc (Phase 3). The
-# `attributes[]` block MUST mirror button.ts `static props` (variant/size/disabled/iconOnly) — the contract↔props
-# trip-wire (s10) and the frontmatter schema (s9) target this fence; s8 ships a minimal "parses + matches
-# static props" probe. Field set per .claude/docs/plan.md §10 / ADR-0004.
+# button.md frontmatter — the GENERATION SOURCE for ui-button's `static props` block (ADR-0173, converting
+# ADR-0004's mirror to a source — the fleet's gold-first control, cl.6). The machine-checkable public
+# surface lives HERE (frontmatter); the prose below the fence is the /site doc (Phase 3). `button.props.gen.ts`
+# is GENERATED from the `attributes[]` block below (`node scripts/generate-props.mjs button`); button.ts
+# imports it — never hand-edit the generated file. The fleet drift gate
+# (descriptor/props-gen-driftwire.test.ts) keeps the two byte-identical. Field set per .claude/docs/plan.md
+# §10 / ADR-0004, widened by ADR-0173 cl.2/OF1/OF2 (`attribute`/`tsType`/`const`/`codec`/`description`).
 tag: ui-button
 tier: control          # geometry size-class (Control band — full control height; geometry.md §"five size-classes")
 extends: UIElement     # reactive display control, NOT form-associated (face below)
 # bundle: the self-defining ui-* family is 4435 B gz (11660 B min) — within the 8192 B gz budget; enforced each run by `npm run size` (scripts/measure-size.mjs)
 
-attributes:            # attributes-as-API — mirrors button.ts `static props`
+attributes:            # attributes-as-API — the GENERATION SOURCE for button.ts's `static props` (ADR-0173)
   - name: variant
     type: enum
     values: [solid, soft, ghost]
     default: solid
     reflect: true      # reflects so the [variant] colour-role repoint in button.css applies to JS-set values
+    description: The colour channel — solid (filled, default), soft (tonal), ghost (text-only).
   - name: size
     type: enum
     values: [sm, md, lg]
     default: md
     reflect: true      # reflects so the [size] dimensional-ramp repoint applies to JS-set values
+    description: A step on the dimensional ramp (sm, md default, lg); an ancestor [scale]/[density] also apply.
   - name: disabled
     type: boolean
     default: false
     reflect: true      # reflects to a `disabled` attribute → CSS pointer-inert hook + the trait's inert guard
+    description: Fully inert — no activation, no key handling, removed from the tab order.
   - name: iconOnly
     type: boolean
     default: false
     reflect: true      # reflects to icon-only → the CSS fifth structure (geometry.md "icon-only (no label) → square")
-                         # HTML attribute is `icon-only` (an explicit `attribute:` override in button.ts — same
-                         # load-bearing reason as attachment.md's mimeType: a literal camelCase observed-attribute
-                         # name never matches the always-lowercase real DOM attribute in an HTML document).
-                         # Explicit author opt-in — CSS alone cannot detect an empty/text-node label (:has() only
-                         # matches elements). Set it when composing a real slotted adornment with NO label text;
-                         # the accessible name must then come from `aria-label` (there is nothing in textContent).
+    attribute: icon-only  # kebab HTML attribute — a literal camelCase observed-attribute name never matches the always-lowercase real DOM attribute in an HTML document (the attachment.md mimeType precedent)
+    description: Explicit opt-in for a real slotted adornment with NO label content; the accessible name must then come from aria-label (see Slots & roles below).
+                         # CSS alone cannot detect an empty/text-node label (:has() only matches elements) —
+                         # that is why this is an explicit author opt-in, not CSS-derived.
 
 properties: []         # no manual accessors beyond the attributes-as-API (no value-taking property)
 

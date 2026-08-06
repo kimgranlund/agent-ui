@@ -1,10 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { UITableElement } from './table.ts'
 import {
   splitFrontmatter,
   parseDescriptor,
   validateComponentDescriptor,
-  compareDescriptorToProps,
   compareDescriptorToSource,
   collectUsedStates,
   collectStyledSlots,
@@ -13,8 +11,13 @@ import {
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 
-// table.md descriptor — the bar-chart/text three-layer pattern: structural, contract<->props,
-// contract<->source. LLD-C9 (report-family.lld.md §5).
+// table.md descriptor — structural + contract<->source (LLD-C9, report-family.lld.md §5). The
+// contract<->props layer (the former "bar-chart/text three-layer pattern"'s middle leg) RETIRED here
+// (ADR-0173 cl.4c/OF4): table.ts's `static props` now IMPORTS `table.props.gen.ts`, itself GENERATED from
+// this same table.md (including its 5 `codec:`-referenced bespoke props — columns/rows/selected/sort/filter,
+// OF1) — the bijection is structurally true by construction. The replacement drift gate — regenerating
+// in-memory and diffing against the committed generated file — lives fleet-wide in
+// `descriptor/props-gen-driftwire.test.ts` (table's entry lands in the SAME commit as this retirement).
 
 const DIR = `${process.cwd()}/packages/agent-ui/components/src/controls/table`
 const md = readFileSync(`${DIR}/table.md`, 'utf8') as string
@@ -68,97 +71,6 @@ describe('table.md descriptor — structural validity', () => {
   it('no --md-sys-height-* declaration/consumption anywhere (Display class has no control-height lever)', () => {
     const bare = css.replace(/\/\*[\s\S]*?\*\//g, '')
     expect(bare).not.toMatch(/--md-sys-height-/)
-  })
-})
-
-describe('table.md descriptor — contract↔props trip-wire', () => {
-  it('the `label` attribute is a faithful, zero-drift match against UITableElement.props', () => {
-    const labelOnly = parsed.attributes.filter((a) => a.name === 'label')
-    const labelOnlyProps = { label: UITableElement.props.label }
-    expect(compareDescriptorToProps(labelOnly, labelOnlyProps)).toEqual([])
-  })
-
-  it('the full bijection is CLEAN — zero drift (columns/rows classify as "json" via kindOf\'s ' +
-    'array-hardened-codec branch — the chart-family from(null)=[] construction)', () => {
-    const result = compareDescriptorToProps(parsed.attributes, UITableElement.props)
-    expect(result).toEqual([])
-  })
-
-  it('negative control: a `columns` descriptor mis-declared as "string" still FAILS the trip-wire', () => {
-    const flipType = parsed.attributes.map((a) => (a.name === 'columns' ? { ...a, type: 'string' } : { ...a }))
-    expect(compareDescriptorToProps(flipType, UITableElement.props)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_TYPE', path: 'attributes.columns.type' }),
-    )
-  })
-
-  it('ADR-0163 — selectable is an enum [\'\', single, multi] default \'\', reflect true', () => {
-    const selectable = parsed.attributes.find((a) => a.name === 'selectable')
-    expect(selectable?.type).toBe('enum')
-    expect(selectable?.values).toEqual(['', 'single', 'multi'])
-    expect(selectable?.default).toBe('')
-    expect(selectable?.reflect).toBe(true)
-  })
-
-  it('ADR-0163 — selected/filter are "json" (array-hardened), default \'\' (String([])===\'\')', () => {
-    for (const name of ['selected', 'filter']) {
-      const attr = parsed.attributes.find((a) => a.name === name)
-      expect(attr?.type, name).toBe('json')
-      expect(attr?.default, name).toBe('')
-      expect(attr?.reflect, name).toBe(false)
-    }
-  })
-
-  it('ADR-0163 — sort classifies as "json" too (the sandbox-frame cspConfigProp shape), default null', () => {
-    const sort = parsed.attributes.find((a) => a.name === 'sort')
-    expect(sort?.type).toBe('json')
-    expect(sort?.default).toBe('null')
-    expect(sort?.reflect).toBe(false)
-  })
-
-  it('ADR-0163 — search is a string default \'\'; pageSize/page are numbers default 0/1, neither reflected', () => {
-    const search = parsed.attributes.find((a) => a.name === 'search')
-    const pageSize = parsed.attributes.find((a) => a.name === 'pageSize')
-    const page = parsed.attributes.find((a) => a.name === 'page')
-    expect(search?.type).toBe('string')
-    expect(search?.default).toBe('')
-    expect(pageSize?.type).toBe('number')
-    expect(pageSize?.default).toBe('0')
-    expect(pageSize?.reflect).toBe(false)
-    expect(page?.type).toBe('number')
-    expect(page?.default).toBe('1')
-    expect(page?.reflect).toBe(false)
-  })
-
-  it('ADR-0163 — rowKey is a string default \'\', NOT reflected', () => {
-    const rowKey = parsed.attributes.find((a) => a.name === 'rowKey')
-    expect(rowKey?.type).toBe('string')
-    expect(rowKey?.default).toBe('')
-    expect(rowKey?.reflect).toBe(false)
-  })
-
-  it('a drifted attribute FAILS the trip-wire (negative control — reflect + default, isolated on `label`)', () => {
-    const labelOnly = parsed.attributes.filter((a) => a.name === 'label')
-    const labelOnlyProps = { label: UITableElement.props.label }
-    // label reflects TRUE since the TKT-0069 item 2 ruling — the synthetic drift flips the other way.
-    const flipReflect = labelOnly.map((a) => ({ ...a, reflect: false }))
-    expect(compareDescriptorToProps(flipReflect, labelOnlyProps)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_REFLECT', path: 'attributes.label.reflect' }),
-    )
-    const flipDefault = labelOnly.map((a) => ({ ...a, default: 'x' }))
-    expect(compareDescriptorToProps(flipDefault, labelOnlyProps)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_DEFAULT', path: 'attributes.label.default' }),
-    )
-  })
-
-  it('a removed or added attribute FAILS the trip-wire (negative control — bijection both ways, isolated on `label`)', () => {
-    const labelOnlyProps = { label: UITableElement.props.label }
-    expect(compareDescriptorToProps([], labelOnlyProps)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_MISSING', path: 'attributes.label' }),
-    )
-    const addBogus = [{ name: 'bogus', type: 'string', default: '', reflect: false }]
-    expect(compareDescriptorToProps(addBogus, labelOnlyProps)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_EXTRA', path: 'attributes.bogus' }),
-    )
   })
 })
 

@@ -73,7 +73,7 @@
 // controls-family import (controls → controls is the established composition pattern — swiper-paddles.ts's
 // `UIButtonElement` import, the identical shape).
 
-import { UIElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
+import { UIElement, type ReactiveProps } from '../../dom/index.ts'
 // `untracked` — the ONE reactive-kernel import this control needs (controls MAY import `reactive` directly,
 // the layering law's layer-0; `text-field.ts`'s `untracked(() => this.value)` one-time-seed read is the
 // exact same-shape precedent). Load-bearing for the HEADER-BUILD/`#applyAriaSort` split above.
@@ -87,42 +87,21 @@ import {
   computeRowIdentities,
   computeTableView,
   resolveCell,
-  tableColumnsProp,
-  tableFilterProp,
-  tableRowsProp,
-  tableSelectedProp,
-  tableSortProp,
   type TableColumn,
   type TableRow,
 } from './table-model.ts'
+// Generated from table.md's `attributes[]` (ADR-0173) — `node scripts/generate-props.mjs table` to
+// regenerate; never hand-edit table.props.gen.ts. Five of the eleven props (columns/rows/selected/sort/
+// filter) are `codec:` references to table-model.ts's own safeJsonCodec-backed PropConfigs (OF1) — this
+// file imports the ASSEMBLED props object, not the individual codec exports, which now live only in the
+// generated sibling + table-model.ts itself.
+import { props } from './table.props.gen.ts'
 // Runtime side-effect import (NOT `import type`) — table.ts creates `<ui-pagination>` elements imperatively
 // (cl.6's footer), so the tag must be REGISTERED (self-defines on import, the fleet's standing rule) before
 // `document.createElement('ui-pagination')` can upgrade — the exact reason swiper-paddles.ts's `UIButtonElement`
 // import pulls in `../button/button.ts` at the family-barrel level rather than relying on a type-only import.
 import '../pagination/pagination.ts'
 import type { UIPaginationElement } from '../pagination/pagination.ts'
-
-const props = {
-  columns: tableColumnsProp, // TableColumn[] · safe JSON codec (table-model.ts) · default []
-  rows: tableRowsProp, // TableRow[] · safe JSON codec (table-model.ts) · default []
-  label: { ...prop.string(''), reflect: true }, // the rendered <caption> text — the table's accessible name (SPEC-R2/R6)
-
-  // ADR-0163 cl.4 — selection. '' (default, off) — the ''-first inherit/off canon.
-  selectable: { ...prop.enum(['', 'single', 'multi'] as const, ''), reflect: true },
-  rowKey: { ...prop.string(''), attribute: 'row-key' }, // names the identity column; absent ⇒ data-order index
-  selected: tableSelectedProp, // string[] · JSON codec · bindable, NOT reflected · commits via `select`
-
-  // ADR-0163 cl.5 — sort. State prop only; the comparator lives in table-model.ts.
-  sort: tableSortProp, // {key,direction} | null · JSON codec · bindable, NOT reflected · commits via `change`
-
-  // ADR-0163 cl.2 — filter/search. Both control-owned, applied client-side; no query UI of their own.
-  search: prop.string(''), // free-text filter over rendered cell text; NOT reflected (dynamic view state)
-  filter: tableFilterProp, // {key,values}[] · JSON codec · bounded facet shape; NOT reflected
-
-  // ADR-0163 cl.6 — pagination consumption.
-  pageSize: { ...prop.number(0), attribute: 'page-size' }, // 0 (default, off) ⇒ no footer, no windowing
-  page: prop.number(1), // 1-based, bindable; commits via `change` (forwarded from the internal ui-pagination)
-} satisfies PropsSchema
 
 export interface UITableElement extends ReactiveProps<typeof props> {}
 export class UITableElement extends UIElement {

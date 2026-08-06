@@ -1,10 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { UIProgressElement } from './progress.ts'
 import {
   splitFrontmatter,
   parseDescriptor,
   validateComponentDescriptor,
-  compareDescriptorToProps,
   compareDescriptorToSource,
   collectUsedStates,
   collectStyledSlots,
@@ -13,11 +11,13 @@ import {
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 
-// progress-descriptor.test.ts — the stat.md/button.md three-layer pattern: structural, contract↔props,
-// contract↔source. `current` and `max` both ride the fleet's `prop.number` codec — kindOf classifies BOTH
-// as "number" purely from the codec's `type.from` BEHAVIOUR (probed on null/''/5 inputs), never from the
-// schema default (null vs 100); the dedicated describe block below pins that verdict before trusting the
-// descriptor cells that depend on it (the stat.md LLD-C9 build-verify precedent).
+// progress-descriptor.test.ts — structural (s8) + contract↔source (s11); the stat.md/button.md pattern.
+// The contract↔props leg (s10) — INCLUDING the kindOf build-verify block that used to pin `current`/`max`'s
+// shared "number" classification against differing defaults — RETIRED here (ADR-0173 cl.4c/OF4):
+// progress.ts's `static props` now IMPORTS `progress.props.gen.ts`, GENERATED from this same progress.md —
+// the bijection (and the kindOf verdict it depended on) is structurally true by construction. The
+// replacement drift gate lives fleet-wide in `descriptor/props-gen-driftwire.test.ts` (progress's entry
+// lands in the SAME commit as this retirement).
 
 const DIR = `${process.cwd()}/packages/agent-ui/components/src/controls/progress`
 const md = readFileSync(`${DIR}/progress.md`, 'utf8') as string
@@ -27,38 +27,6 @@ const css = readFileSync(`${DIR}/progress.css`, 'utf8') as string
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 const ATTR_NAMES = ['current', 'max', 'label']
-
-describe('kindOf build-verify — current AND max both classify "number" despite differing defaults', () => {
-  it('current: a null-defaulting numeric codec classifies as "number"', () => {
-    const drift = compareDescriptorToProps(
-      parsed.attributes.map((a) => (a.name === 'current' ? { ...a, type: 'number' } : a)),
-      UIProgressElement.props,
-    )
-    expect(drift.filter((d) => d.path.startsWith('attributes.current'))).toEqual([])
-  })
-
-  it('max: a 100-defaulting numeric codec ALSO classifies as "number" (kindOf probes behaviour, not the default)', () => {
-    const drift = compareDescriptorToProps(
-      parsed.attributes.map((a) => (a.name === 'max' ? { ...a, type: 'number' } : a)),
-      UIProgressElement.props,
-    )
-    expect(drift.filter((d) => d.path.startsWith('attributes.max'))).toEqual([])
-  })
-
-  it('NEGATIVE: current mis-declared as "string" fails DRIFT_TYPE (kindOf does not blindly green everything)', () => {
-    const flip = parsed.attributes.map((a) => (a.name === 'current' ? { ...a, type: 'string' } : a))
-    expect(compareDescriptorToProps(flip, UIProgressElement.props)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_TYPE', path: 'attributes.current.type' }),
-    )
-  })
-
-  it('NEGATIVE: max mis-declared as "boolean" fails DRIFT_TYPE', () => {
-    const flip = parsed.attributes.map((a) => (a.name === 'max' ? { ...a, type: 'boolean' } : a))
-    expect(compareDescriptorToProps(flip, UIProgressElement.props)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_TYPE', path: 'attributes.max.type' }),
-    )
-  })
-})
 
 describe('progress.md descriptor — structural validity', () => {
   it('has a leading frontmatter fence and a prose body', () => {
@@ -89,30 +57,6 @@ describe('progress.md descriptor — structural validity', () => {
 
   it('events: [] — SPEC-R1 AC3, a display leaf emits nothing', () => {
     expect(parsed.sequences.get('events')).toEqual([])
-  })
-})
-
-describe('progress.md descriptor — contract↔props trip-wire', () => {
-  it('attributes[] is a faithful bijection with UIProgressElement.props by NAME', () => {
-    expect(parsed.attributes.map((a) => a.name)).toEqual(ATTR_NAMES)
-    const drift = compareDescriptorToProps(parsed.attributes, UIProgressElement.props)
-    expect(drift.filter((d) => d.code === 'DRIFT_MISSING' || d.code === 'DRIFT_EXTRA')).toEqual([])
-  })
-
-  it('all three attributes are CLEAN — zero drift (type/default/reflect all agree with the live props)', () => {
-    const drift = compareDescriptorToProps(parsed.attributes, UIProgressElement.props)
-    expect(drift).toEqual([])
-  })
-
-  it('negative control: a genuinely drifted attribute still FAILS the trip-wire', () => {
-    const flipDefault = parsed.attributes.map((a) => (a.name === 'max' ? { ...a, default: '50' } : { ...a }))
-    expect(compareDescriptorToProps(flipDefault, UIProgressElement.props)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_DEFAULT', path: 'attributes.max.default' }),
-    )
-    const dropLabel = parsed.attributes.filter((a) => a.name !== 'label')
-    expect(compareDescriptorToProps(dropLabel, UIProgressElement.props)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_MISSING', path: 'attributes.label' }),
-    )
   })
 })
 

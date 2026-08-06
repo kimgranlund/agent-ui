@@ -10,13 +10,12 @@
 // an absent/non-finite `value` to `null` (indeterminate) and clamps a real value into [0, effectiveMax].
 // No case throws — every input, however malformed, resolves to a paintable, announced state.
 
-import { UIElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
-
-const props = {
-  current: prop.number(null), // null ⇒ indeterminate (the native <progress> semantic — no boolean to desync). Renamed from `value` (TKT-0069 item 1 ruling: `value` = the FACE form value, reserved — this rename spends real native-<progress> parity deliberately; the A2UI catalog keeps wire `value`, mapped in its bespoke factory)
-  max: prop.number(100), // the ARIA progressbar default — percent-natural for {value:42} with zero extra props
-  label: { ...prop.string(''), reflect: true }, // the accessible name (SPEC-R3); empty ⇒ no internals.ariaLabel
-} satisfies PropsSchema
+import { UIElement, type ReactiveProps } from '../../dom/index.ts'
+// Generated from progress.md's `attributes[]` (ADR-0173) — `node scripts/generate-props.mjs progress` to
+// regenerate; never hand-edit progress.props.gen.ts. `current` was renamed from `value` (TKT-0069 item 1
+// ruling: `value` = the FACE form value, reserved — this rename spends real native-<progress> parity
+// deliberately; the A2UI catalog keeps wire `value`, mapped in its bespoke factory).
+import { props } from './progress.props.gen.ts'
 
 /** SPEC-R1: non-finite / ≤0 / malformed `max` floors to the ARIA progressbar default. */
 function effectiveMax(max: number | null): number {
