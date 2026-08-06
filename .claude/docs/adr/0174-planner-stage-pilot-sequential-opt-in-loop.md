@@ -31,7 +31,7 @@ not need, not the pilot itself (cl.5).
 - **The `Session` reducers are pure, turn-index-agnostic, and already used at every turn — not
   just turn 1.** `session.ts` exports `nextTurn`/`appendUserTurn`/`appendAssistantTurn` (lines
   75/105/100) as pure `Session → Session` functions with no turn-count special-casing.
-  `agent-transport.ts:57-59`'s own doc comment reads "*Turn 1 is a raw user `intent`; every later
+  `agent-transport.ts:51-54`'s own doc comment reads "*Turn 1 is a raw user `intent`; every later
   turn is a `client` message*" — but that is a documented CONVENTION for human-typed chat, not a
   runtime rule: every shipped chat consumer (`a2ui-chat.ts:250`, `a2ui-live.ts:590`,
   `gen-ui-live.ts:458/463`) fires `{kind:'intent', text, session}` on EVERY submit, at every turn
@@ -63,7 +63,8 @@ not need, not the pilot itself (cl.5).
   `ask` (ADR-0097 §1), not `progress`/`trace`/`error` (all runtime-composed).** `meta-line.ts:13-20`
   documents the `ask` field precisely: the model declares it on its own leading meta-line, alongside
   `note`; `produce()` peels it and re-composes it on the outgoing line only when it verifies clean
-  (`meta-line.ts:145-152`); a malformed `ask` drops only itself, never the whole envelope. `progress`
+  (`meta-line.ts:87-88`); a malformed `ask` drops only itself, never the whole envelope
+  (`readMetaLine`'s ask-specific shallow-validation body, `meta-line.ts:145-152`). `progress`
   (ADR-0146 F1) and `trace`/`error` are the OPPOSITE shape — runtime-assembled, never model-authored
   (`meta-line.ts:85-101`).
 - **`TURN_PROGRESS_STAGES` is a CLOSED, produce-layer-owned vocabulary describing ONE round's
