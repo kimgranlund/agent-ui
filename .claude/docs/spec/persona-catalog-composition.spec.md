@@ -100,8 +100,8 @@ runtime envelope or as an `Entry` (ADR-0172 cl.1's rejection of both — the per
 carries only a SELECTION, SPEC-R5).
 - **AC1** *Given* a new persona-scoped local pattern set, *when* added, *then* it lands entirely
   under its own `catalog/personas/<persona-id>/` folder with zero edits to `catalog/default/` or
-  `catalog/a2ui-basic/` (the two-tier zero-edit law, SPEC-R6's AC1 in the catalog SPEC, reused
-  for a third tier).
+  `catalog/a2ui-basic/` (the two-tier zero-edit law, catalog SPEC-R6's AC1, reused for a third
+  tier).
 - **AC2** *Given* a fragment's `components`/`functions` declarations, *when* loaded, *then* they
   pass the SAME structural + UAX-31 naming gates `loadCatalog`'s internal `validateComponent`/
   `validatePropDef`/`validateFunctions` already run on a whole catalog (`catalog.ts:210-330`) —
@@ -265,17 +265,19 @@ export/import (they are package-shipped code, SPEC-R1).
 *(ADR-0172 cl.3 · Repairs item 6 · OF2, ruled 2026-08-06 — absorbed into this build, §5)*.
 `MiniSkill` (`mini-skills.ts:55-62`) MUST gain a `catalogId: string` field naming the catalog whose
 vocabulary its `body` prose hardcodes (component/function names named in the instruction text —
-e.g. `card-game-sheet.md`'s `Row`/`Card`/`Grid`/`Button`); every one of the six shipped modules
-today is `agent-ui`-vocabulary-hardcoded (ADR-0172 Context, confirmed live), so each module's
+e.g. `card-game-sheet.md`'s `Row`/`Card`/`Grid`/`Button`); every one of the nine shipped modules
+today is `agent-ui`-vocabulary-hardcoded (confirmed live — `mini-skills.test.ts`'s
+`expect(MINI_SKILLS).toHaveLength(9)` plus the nine-file `prompts/mini-skills/` directory listing;
+ADR-0172 Context names one specimen module, not a count), so each module's
 frontmatter gains an explicit `catalogId: agent-ui` line. `selectMiniSkills` (`mini-skills.ts:103-105`)
 MUST gain a `catalogId: string` parameter and filter `registry` to `m.catalogId === catalogId`
 BEFORE ranking — the exact hard-equality pattern `corpus/retrieve.ts:41,55`'s `meta.catalogId`
 filter already uses, reused rather than re-invented. `produce.ts`'s one call site (`:764`) MUST
 pass `deps.catalog.catalogId` — the SAME value line `:762`'s `queryOf` already threads into
 `retrieve`'s own query, zero new catalog-resolution logic.
-- **AC1** *Given* the six shipped `MINI_SKILLS` entries post-fix, *when* loaded, *then* every
+- **AC1** *Given* the nine shipped `MINI_SKILLS` entries post-fix, *when* loaded, *then* every
   entry carries `catalogId: 'agent-ui'` and `mini-skills.test.ts`'s existing per-module assertions
-  extend to check the field is present and equals `'agent-ui'` for all six.
+  extend to check the field is present and equals `'agent-ui'` for all nine.
 - **AC2** *Given* a turn whose `deps.catalog.catalogId` is `'a2ui-basic'` (or any derived id,
   SPEC-R2), *when* `selectMiniSkills` runs, *then* it returns `[]` — the SAME accepted
   zero-content degrade `retrieve.ts`'s own catalogId-scoped filter already has for a Basic turn
@@ -283,7 +285,7 @@ pass `deps.catalog.catalogId` — the SAME value line `:762`'s `queryOf` already
   yet"), never wrong-dialect `agent-ui` vocabulary teaching on a non-`agent-ui` turn — the exact
   defect ADR-0172 cl.3 names, closed.
 - **AC3** *Given* a turn whose `deps.catalog.catalogId` is `'agent-ui'` (the default, unchanged),
-  *when* `selectMiniSkills` runs, *then* its selection is BYTE-IDENTICAL to today's (all six
+  *when* `selectMiniSkills` runs, *then* its selection is BYTE-IDENTICAL to today's (all nine
   modules eligible, ranked the same way) — this clause is additive scoping, not a ranking-behavior
   change for the one catalog every module already targets.
 
