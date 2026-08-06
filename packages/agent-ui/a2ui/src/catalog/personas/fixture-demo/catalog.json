@@ -1,0 +1,10 @@
+{
+  "components": {
+    "FixtureBanner": {
+      "properties": {
+        "text": { "type": { "type": "string" }, "bindable": true, "mapsTo": "textContent" }
+      }
+    }
+  },
+  "functions": {}
+}

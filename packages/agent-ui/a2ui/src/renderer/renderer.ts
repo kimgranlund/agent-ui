@@ -57,6 +57,8 @@ import { defaultFactories } from '../catalog/default/factories.ts'
 import { a2uiBasicCatalog, a2uiBasicCatalogCanonical } from '../catalog/a2ui-basic/index.ts'
 import { a2uiBasicFactories } from '../catalog/a2ui-basic/factories.ts'
 import { a2uiBasicFunctions } from '../catalog/a2ui-basic/functions.ts'
+import { composePersonaCatalogs } from '../catalog/compose.ts'
+import { SHIPPED_PERSONA_CATALOGS } from '../catalog/personas/index.ts'
 import type {
   A2uiCreateSurface,
   A2uiUpdateComponents,
@@ -158,6 +160,12 @@ class Renderer implements RendererHost {
     // factory table and ONE function-impl table.
     this.#registry.register(a2uiBasicCatalog, a2uiBasicFactories, a2uiBasicFunctions)
     this.#registry.register(a2uiBasicCatalogCanonical, a2uiBasicFactories, a2uiBasicFunctions)
+    // M-D (`persona-catalog-composition.spec.md` SPEC-R2, ADR-0172 cl.2) — the derive-then-register step:
+    // every shipped `catalog/personas/<persona-id>/` package composes over every base its own
+    // `targetCatalogs` names and registers under its derived `<base>--<persona>` id (OF1b). Strictly
+    // upstream of `register()` (SPEC-N4) — reject-loud (`CatalogComposeError`) on a name collision or an
+    // unregistered target-base id, synchronously, right here at construction time.
+    composePersonaCatalogs(this.#registry, SHIPPED_PERSONA_CATALOGS)
 
     let seq = 0
     this.#actions = new ActionDispatcher({

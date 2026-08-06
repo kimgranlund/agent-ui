@@ -207,7 +207,12 @@ function parseJson(s: string): unknown {
   }
 }
 
-function validateComponent(key: string, raw: unknown): ComponentDef {
+// `validateComponent`/`validateFunctions` are exported (M-D, SPEC-R1 AC2, `persona-catalog-composition.spec.md`)
+// so `catalog/compose.ts`'s `loadCatalogFragment` reuses the SAME structural + UAX-31 naming gates a whole
+// catalog document runs, without inheriting `loadCatalog`'s whole-DOCUMENT-only invariants (the
+// `catalog.components must declare ≥1 component` guard above, catalog SPEC-R1 AC1) — a fragment's `{}` is a
+// legal identity-case input (SPEC-R2 AC1) a whole `Catalog` document's own load gate must still reject.
+export function validateComponent(key: string, raw: unknown): ComponentDef {
   if (!isObject(raw)) bad(`component "${key}" must be an object`)
 
   // `name` is optional in the document; it defaults to the declaring key (the type identity
@@ -303,7 +308,7 @@ function validatePropDef(key: string, prop: string, raw: unknown): PropDef {
 
 const CALLABLE_FROM_VALUES = new Set(['clientOnly', 'remoteOnly', 'clientOrRemote'])
 
-function validateFunctions(raw: unknown): Record<string, FunctionDef> {
+export function validateFunctions(raw: unknown): Record<string, FunctionDef> {
   if (raw === undefined) return {}
   if (!isObject(raw)) bad('catalog.functions must be an object')
   const out: Record<string, FunctionDef> = {}

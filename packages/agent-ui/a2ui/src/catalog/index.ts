@@ -18,3 +18,16 @@ export { defaultFactories, buttonFactory } from './default/factories.ts'
 export { a2uiBasicCatalog, a2uiBasicCatalogCanonical, A2UI_BASIC_CANONICAL_URI } from './a2ui-basic/index.ts'
 export { a2uiBasicFactories } from './a2ui-basic/factories.ts'
 export { a2uiBasicFunctions } from './a2ui-basic/functions.ts'
+
+// M-D — the persona catalog compose-time overlay (ADR-0172 cl.2, `persona-catalog-composition.spec.md`
+// SPEC-R1/R2): the pure merge (`composeCatalog`), the fragment loader, the derived-id naming convention,
+// the compose-time error, and the constructor-time derive-then-register step `renderer.ts` calls.
+export {
+  composeCatalog,
+  loadCatalogFragment,
+  composePersonaCatalogs,
+  derivedCatalogId,
+  CatalogComposeError,
+  CatalogComposeErrorCode,
+} from './compose.ts'
+export type { CatalogFragment, PersonaCatalogPackage } from './compose.ts'
