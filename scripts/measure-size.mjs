@@ -485,7 +485,12 @@ const appCssQuerySuffixPlugin = {
 // extraction, the ADR-0151 shell family), every mover reviewed weight, none of it accidental. Per the
 // ruling this is a CHECKPOINT, not a ratchet: GH #468 is the standing app-diet follow-up that hunts the
 // marginal back down (lazy-split candidates named there).
-const APP_MARGINAL_BUDGET = 79 * KB
+// RULED 2026-08-06 (GH #480, Kim — the same "checkpoint, not a ratchet" convention): re-based
+// 79 KB → 80 KB (81920 B gz) — measured 81222 at M-D's final commit; the +326 B over the day-old
+// checkpoint is the persona-catalog-composition SPEC's own required wiring (compose.ts + the
+// fixture persona package riding surface-host's existing static a2ui-barrel pull), twice-reviewed,
+// structural rather than elective. GH #468 remains the standing app-diet follow-up unchanged.
+const APP_MARGINAL_BUDGET = 80 * KB
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })
