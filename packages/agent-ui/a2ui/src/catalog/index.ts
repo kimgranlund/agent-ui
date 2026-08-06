@@ -26,10 +26,16 @@ export {
   composeCatalog,
   loadCatalogFragment,
   composePersonaCatalogs,
+  composePersonaCatalogDocs,
   derivedCatalogId,
   derivedCatalogIdsFor,
   CatalogComposeError,
   CatalogComposeErrorCode,
 } from './compose.ts'
-export type { CatalogFragment, PersonaCatalogPackage } from './compose.ts'
+export type { CatalogFragment, PersonaCatalogPackage, PersonaCatalogManifest } from './compose.ts'
 export { SHIPPED_PERSONA_CATALOGS } from './personas/index.ts'
+// GH #516 — the Node/Workers-safe manifest twin (`compose.ts`'s `PersonaCatalogManifest` header): this
+// line ALONE does not make the whole `catalog/index.ts` barrel server-safe (the `SHIPPED_PERSONA_CATALOGS`
+// export above still pulls in `personas/index.ts`'s DOM-bearing factories), so `dev-proxy-plugin.ts`/
+// `worker/index.ts` import `personas/manifests.ts` directly, never through this barrel.
+export { SHIPPED_PERSONA_CATALOG_MANIFESTS } from './personas/manifests.ts'

@@ -8,22 +8,17 @@
 // register step has a real, package-shipped (fragment, base) pairing to compose against BOTH shipped
 // bases (`targetCatalogs`, SPEC-N5's widening) — proving one fragment can target more than one base at
 // once, the exact shape SPEC-R3 AC3's cross-base recognition test needs a real registered pair for.
+//
+// The browser-only, factory-bearing PersonaCatalogPackage (`renderer.ts`'s constructor consumes this
+// directly). `manifest.ts` carries the SAME `personaId`/`fragment`/`targetCatalogs` data, factory-free
+// and DOM-less, so a server host can compose derived catalog DOCUMENTS without ever importing this
+// file (GH #516 — see `manifest.ts`'s own header for why that import boundary is load-bearing).
 
-import { loadCatalogFragment } from '../../compose.ts'
-import type { CatalogFragment, PersonaCatalogPackage } from '../../compose.ts'
-import fragmentDoc from './catalog.json'
+import type { PersonaCatalogPackage } from '../../compose.ts'
+import { FIXTURE_DEMO_PERSONA_ID, fixtureDemoFragment, fixtureDemoTargetCatalogs } from './manifest.ts'
 import { fixtureDemoFactories } from './factories.ts'
 
-export const FIXTURE_DEMO_PERSONA_ID = 'fixture-demo'
-
-/** The loaded, structurally-validated fixture fragment (SPEC-R1 AC2). */
-export const fixtureDemoFragment: CatalogFragment = loadCatalogFragment(fragmentDoc)
-
-/** Targets BOTH shipped bases (SPEC-N5's widening) — the fixture's own proof that a single fragment
- *  composes independently over more than one base. */
-export const fixtureDemoTargetCatalogs: readonly string[] = ['agent-ui', 'a2ui-basic']
-
-export { fixtureDemoFactories }
+export { FIXTURE_DEMO_PERSONA_ID, fixtureDemoFragment, fixtureDemoTargetCatalogs, fixtureDemoFactories }
 
 /** The derive-then-register input `composePersonaCatalogs` (SPEC-R2) consumes directly. */
 export const fixtureDemoPersona: PersonaCatalogPackage = {
