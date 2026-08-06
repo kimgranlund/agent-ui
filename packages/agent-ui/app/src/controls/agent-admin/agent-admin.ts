@@ -7,9 +7,10 @@
 // ONE composed `ui-chat-shell` (GH #52/ADR-0154 — superseding vision rev.5's hand-rolled `ui-split`
 // composition, which itself superseded ADR-0131 cl.2's three-pane order): `[ chat canvas | resizable
 // options-pane with {Settings ⇄ Context: System ⇄ Context: Dialog} segments ]` (SPEC-R6/R7). The
-// Settings segment carries the WHOLE config column (Agent + ui-settings, the Model grid, the prompt
-// sections — the old prompts pane merged in — Surface Options, and the capability sections; since
-// GH #225 each is a heading-row FOLD, the GH #222 Context pattern); the Context segments are the
+// Settings segment carries the WHOLE config column (Agent + ui-settings, the Model grid, Surface
+// Options, the prompt sections — the old prompts pane merged in, GH #488 moved it below Surface
+// Options — and the capability sections; since GH #225 each is a heading-row FOLD, the GH #222 Context
+// pattern); the Context segments are the
 // read-only introspection surface, split in two (GH #161, superseding the single combined "Context"
 // tab): "Context: System" (the compiled Agent System JSON) and "Context: Dialog" (the Dialog Turns
 // payload log). Composition is idempotent — the `master-detail.ts`/`settings.ts` `#compose()`
@@ -178,14 +179,21 @@ const CAPABILITY_KINDS: ReadonlyArray<{ kind: string; label: string; addLabel: s
   // (its picked entry's body composes through the DEDICATED genui prompt block instead, SPEC-R10 — never
   // BOTH, which would double-inject the identical prose, the exact ADR-0091 §4 defect class).
   { kind: ENTRY_KINDS.patternSource, label: 'Pattern sources', addLabel: 'Add pattern source', liveHeading: 'Pattern sources available to you' },
-  // ADR-0170 cl.1 — the A2UI catalog LIBRARY, appended LAST (array order is DOM order). It rides this
-  // SAME machinery with three single-line row exceptions, each named at its own site below: (a) NO master
-  // switch is minted for it — the A2UI surface toggle is the gate (cl.5, `#compose`); (b) its section
-  // suppresses the authoring form and the per-entry editor (cl.8, `#makeSection`); (c) its toggle/delete
-  // write the ONE persisted selection key instead of per-entry flags (cl.3, `#selectCatalog`/
-  // `#deleteCatalog`). `addLabel` is dead text under (b) — supplied for the row shape; `liveHeading` is
-  // unused in practice, like pattern-source's: `#capabilityGroups` excludes this kind (cl.5), because a
-  // catalog selection threads as `catalogId` on the wire and never as prompt prose.
+  // ADR-0170 cl.1 — the A2UI catalog LIBRARY. It rides this SAME machinery with three single-line row
+  // exceptions, each named at its own site below: (a) NO master switch is minted for it — the A2UI
+  // surface toggle is the gate (cl.5, `#compose`); (b) its section suppresses the authoring form and the
+  // per-entry editor (cl.8, `#makeSection`); (c) its toggle/delete write the ONE persisted selection key
+  // instead of per-entry flags (cl.3, `#selectCatalog`/`#deleteCatalog`). `addLabel` is dead text under
+  // (b) — supplied for the row shape; `liveHeading` is unused in practice, like pattern-source's:
+  // `#capabilityGroups` excludes this kind (cl.5), because a catalog selection threads as `catalogId` on
+  // the wire and never as prompt prose.
+  //
+  // GH #488 — this array's ORDER no longer decides this kind's DOM placement: `#compose`'s capability
+  // loop special-cases `kind === ENTRY_KINDS.catalog` and mounts its section directly adjacent to the
+  // Surface Options A2UI row instead of a top-level `settingsItem` fold (one visual cluster — the toggle
+  // + its own catalog choice, replacing the earlier placement in a separate "Catalogs" section far below
+  // the modality it configures). `label` still names this kind's Context: System item
+  // (`#renderContextSystem`); it just no longer labels a top-level Settings fold.
   { kind: ENTRY_KINDS.catalog, label: 'Catalogs', addLabel: 'Add catalog', liveHeading: 'Catalogs available to you' },
 ]
 
@@ -508,9 +516,10 @@ export class UIAgentAdminElement extends UIElement {
     // GH #225 (Kim's ruling, the follow-on to GH #222: the Context tabs' chevron/accordion pattern
     // applied back to the Settings column): one `settingsItem` ui-disclosure per section — Agent (the
     // ACTIVE master switch ON its heading row, Kim's ruling: "the agent master toggle is just if the
-    // agent is active/available or not"), Model, Instructions (the old prompts pane, merged in),
-    // Surface Options, and the four capability kinds (each kind's master switch on ITS heading row) —
-    // ONE reparent-able node (the TKT-0085 wrapper discipline). The old plain `<h3>` heading parts
+    // agent is active/available or not"), Model, Surface Options (GH #488 moved it above Instructions —
+    // the modality choices read before the prose they gate), Instructions (the old prompts pane, merged
+    // in), and the four capability kinds (each kind's master switch on ITS heading row) — ONE
+    // reparent-able node (the TKT-0085 wrapper discipline). The old plain `<h3>` heading parts
     // (agent-header/agent-heading/model-grid-heading/surface-options-heading/entry-section-heading)
     // retired with the fold summaries that replaced them.
     const agentSwitch = document.createElement('ui-switch') as HTMLElement & { checked: boolean }
@@ -548,9 +557,14 @@ export class UIAgentAdminElement extends UIElement {
     this.#modelGrid = modelGrid
     const promptSections = this.#makeSection(ENTRY_KINDS.promptSection, 'Add section')
 
-    // ── Surface Options (vision rev.6 — the frame's node 34:1312): the agent's output-modality card,
-    // after the prompt sections (the frame's own Agent-card order), before the capability sections.
-    // Rows build ONCE; their state is (re)applied by #applyMasterStates (the master-switch discipline).
+    // ── Surface Options (vision rev.6 — the frame's node 34:1312): the agent's output-modality card.
+    // Originally placed after the prompt sections (the frame's own Agent-card order); GH #488 moved its
+    // PANE POSITION above Instructions (the settingsContent.append order below) — the modality choices
+    // now read before the prose they gate. This build-order comment still matters here: the section
+    // itself is still BUILT here, before the capability sections, because the A2UI row it defines
+    // (`a2ui`, below) is where the catalog picker mounts (GH #488's other move, in the CAPABILITY_KINDS
+    // loop). Rows build ONCE; their state is (re)applied by #applyMasterStates (the master-switch
+    // discipline).
     const surfaceOptions = document.createElement('div')
     surfaceOptions.setAttribute('data-part', 'surface-options')
 
@@ -595,7 +609,9 @@ export class UIAgentAdminElement extends UIElement {
     // into one key — each obliged to reconcile the other's surface — is exactly the second-writer defect
     // that record closes. What survives is the at-a-glance CONTEXT beside the toggle: a READ-ONLY mirror
     // of the active catalog's label, re-derived in `#applyMasterStates` (where the select's own
-    // value-reflection lived). It commits nothing and listens to nothing.
+    // value-reflection lived). It commits nothing and listens to nothing. GH #488 — the REAL picker (the
+    // Catalogs section) now mounts directly below this row (the CAPABILITY_KINDS loop's
+    // `kind === ENTRY_KINDS.catalog` branch, further down) — one visual cluster with this mirror + toggle.
     const catalogMirror = document.createElement('span')
     catalogMirror.setAttribute('data-part', 'surface-catalog')
     // No `aria-label`/role: this is plain trailing TEXT in the row that already names the modality, not a
@@ -646,36 +662,49 @@ export class UIAgentAdminElement extends UIElement {
     // connect-order placement dance required.
     const agentItem = settingsItem('agent', 'Agent', settingsEl)
     agentItem.append(agentSwitch)
+    // GH #488 — Surface Options renders ABOVE Instructions now (the modality choices read before the
+    // prose they gate): a pure reorder of this append call's argument list, nothing else.
     settingsContent.append(
       agentItem,
       settingsItem('model', 'Model', modelGrid),
-      settingsItem(ENTRY_KINDS.promptSection, 'Instructions', promptSections.host),
       settingsItem('surface', 'Surface Options', surfaceOptions),
+      settingsItem(ENTRY_KINDS.promptSection, 'Instructions', promptSections.host),
     )
     for (const { kind, label, addLabel } of CAPABILITY_KINDS) {
       const section = this.#makeSection(kind, addLabel)
-      const item = settingsItem(kind, label, section.host)
-      // ADR-0170 cl.5 — the ONE kind with no master switch: a catalog is always exactly-one-active, so a
-      // master-OFF "no catalogs" state has no wire meaning, and the modality gate already exists
-      // (`SURFACE_A2UI_KEY`, applied as this section's dim in `#applyMasterStates`). Minting a switch here
-      // would persist a `catalogsEnabled` key nothing reads.
-      if (kind !== ENTRY_KINDS.catalog) {
-        // The kind's MASTER switch (vision rev.5) — rendered on the kind's fold heading row (GH #225;
-        // declaratively slotted per GH #226/ADR-0158, like the Agent switch above); `false` gates the
-        // whole kind out of the composed prompt + the live roster (isEnabledFlag: default ON).
-        const kindSwitch = document.createElement('ui-switch') as HTMLElement & { checked: boolean }
-        kindSwitch.setAttribute('data-part', 'kind-enabled')
-        kindSwitch.setAttribute('slot', 'summary')
-        kindSwitch.setAttribute('aria-label', `${label} enabled`)
-        kindSwitch.checked = true
-        kindSwitch.addEventListener('change', () => {
-          this.store?.set(kindEnabledKey(kind), kindSwitch.checked)
-          this.#applyMasterStates(this.store)
-          if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
-        })
-        this.#kindSwitches.set(kind, kindSwitch)
-        item.append(kindSwitch)
+      // GH #488 — the catalog picker is no longer a separate top-level Settings fold: it mounts directly
+      // adjacent to the Surface Options A2UI row instead (one visual cluster — the toggle + its own
+      // catalog choice), replacing the earlier placement in a "Catalogs" section far below the modality
+      // it configures. Still built/registered through the SAME `#makeSection` call as every other kind,
+      // and still wired through `#rewireAllSections`/`#applyMasterStates` by `kind`, never by DOM
+      // position (`#capabilitySections`/`#renders` are keyed maps) — only where the host LANDS changes.
+      // ADR-0170 cl.5's no-master-switch rationale is unchanged by the move (see below) — a catalog is
+      // always exactly-one-active, so there is still no top-level fold, and thus no heading row, for it
+      // to ride.
+      if (kind === ENTRY_KINDS.catalog) {
+        a2ui.row.insertAdjacentElement('afterend', section.host)
+        continue
       }
+      const item = settingsItem(kind, label, section.host)
+      // The kind's MASTER switch (vision rev.5) — rendered on the kind's fold heading row (GH #225;
+      // declaratively slotted per GH #226/ADR-0158, like the Agent switch above); `false` gates the
+      // whole kind out of the composed prompt + the live roster (isEnabledFlag: default ON). (The catalog
+      // kind, handled above, never reaches here: ADR-0170 cl.5 — a master-OFF "no catalogs" state has no
+      // wire meaning, and the modality gate already exists, `SURFACE_A2UI_KEY`, applied as this section's
+      // dim in `#applyMasterStates`. Minting a switch here would persist a `catalogsEnabled` key nothing
+      // reads.)
+      const kindSwitch = document.createElement('ui-switch') as HTMLElement & { checked: boolean }
+      kindSwitch.setAttribute('data-part', 'kind-enabled')
+      kindSwitch.setAttribute('slot', 'summary')
+      kindSwitch.setAttribute('aria-label', `${label} enabled`)
+      kindSwitch.checked = true
+      kindSwitch.addEventListener('change', () => {
+        this.store?.set(kindEnabledKey(kind), kindSwitch.checked)
+        this.#applyMasterStates(this.store)
+        if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
+      })
+      this.#kindSwitches.set(kind, kindSwitch)
+      item.append(kindSwitch)
       settingsContent.append(item)
     }
 

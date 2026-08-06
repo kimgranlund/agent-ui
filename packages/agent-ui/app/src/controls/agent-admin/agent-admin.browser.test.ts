@@ -316,18 +316,18 @@ describe('ui-agent-admin cross-engine smoke — chat + options-pane render side 
     expect(box.height).toBeGreaterThan(0)
   })
 
-  it('all SEVEN sections (Instructions + Skills/Workflows/Resources/Tools/Pattern sources/Catalogs) render in the Settings tab, each a real non-zero box', () => {
+  it('all SEVEN sections (Catalogs + Instructions + Skills/Workflows/Resources/Tools/Pattern sources) render in the Settings tab, each a real non-zero box — GH #488: Catalogs is FIRST in document order now, folded into Surface Options ahead of Instructions', () => {
     const { el } = mountAgentAdmin()
     const settings = el.querySelector('[data-role="settings-content"]') as HTMLElement
     const sections = [...settings.querySelectorAll('[data-part="entry-section"]')]
     expect(sections.map((s) => s.getAttribute('data-kind'))).toEqual([
+      ENTRY_KINDS.catalog,
       ENTRY_KINDS.promptSection,
       ENTRY_KINDS.skill,
       ENTRY_KINDS.workflow,
       ENTRY_KINDS.resource,
       ENTRY_KINDS.tool,
       ENTRY_KINDS.patternSource,
-      ENTRY_KINDS.catalog,
     ])
     for (const section of sections) {
       const box = section.getBoundingClientRect()
@@ -368,6 +368,27 @@ describe('ui-agent-admin cross-engine smoke — the Catalogs library section (AD
     expect(row.querySelector('[data-part="entry-content"]')).toBeNull()
     expect(section.querySelector('[data-part="entry-add-form"]')).toBeNull()
     expect(section.querySelector('[data-part="entry-add-toggle"]')).toBeNull()
+  })
+
+  // GH #488 — the picker moves INTO Surface Options, directly adjacent to the A2UI row (one visual
+  // cluster: the toggle + its own catalog choice). Measured, not just structural: the section's real
+  // painted top sits between the A2UI row's bottom and the GenUI row's top, inside the SAME Surface
+  // Options card, never floated off to a separate later section.
+  it('the catalog section paints directly BELOW the A2UI row and ABOVE the GenUI row, inside the Surface Options card', () => {
+    const { el } = mountAgentAdmin()
+    const surfaceOptions = el.querySelector('[data-part="surface-options"]') as HTMLElement
+    const a2uiRow = el.querySelector('[data-part="surface-row"][data-surface="a2ui"]') as HTMLElement
+    const genuiRow = el.querySelector('[data-part="surface-row"][data-surface="genui"]') as HTMLElement
+    const section = el.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.catalog}"]`) as HTMLElement
+
+    expect(surfaceOptions.contains(section), 'the picker is a descendant of the Surface Options card').toBe(true)
+
+    const a2uiBox = a2uiRow.getBoundingClientRect()
+    const genuiBox = genuiRow.getBoundingClientRect()
+    const sectionBox = section.getBoundingClientRect()
+    expect(sectionBox.height, 'a real, non-zero painted box').toBeGreaterThan(0)
+    expect(sectionBox.top, 'below the A2UI row it configures').toBeGreaterThanOrEqual(Math.round(a2uiBox.bottom) - 1)
+    expect(sectionBox.bottom, 'above the GenUI row — never past it').toBeLessThanOrEqual(Math.round(genuiBox.top) + 1)
   })
 
   it('the a2ui row\'s catalog MIRROR paints as visible trailing text beside the toggle, and dims with the modality', async () => {
@@ -978,8 +999,9 @@ describe('ui-agent-admin — segment content wins its OWN display:flex, not supe
 
     // Real, measured gaps (not just computed style — `row-gap` still reports its declared value even
     // when display:block makes it inert) between EVERY adjacent pair of top-level children: Agent header
-    // → ui-settings → Model heading → model-grid → prompt section → Surface Options heading → Surface
-    // Options card → each capability entry-section.
+    // → ui-settings → Model heading → model-grid → Surface Options heading (GH #488: now BEFORE
+    // Instructions, carrying the catalog picker inside it too) → Surface Options card → prompt section →
+    // each remaining capability entry-section.
     const children = [...settingsContent.querySelectorAll(':scope > *')] as HTMLElement[]
     expect(children.length, 'the Settings segment composes many top-level sections').toBeGreaterThan(5)
     const expectedGapPx = Number.parseFloat(cs.rowGap)
@@ -1026,9 +1048,11 @@ describe('ui-agent-admin — GH #225: the Settings sections fold like the Contex
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
     const settings = el.querySelector('[data-role="settings-content"]') as HTMLElement
     const items = [...settings.querySelectorAll(':scope > [data-part="settings-item"]')] as (HTMLElement & { open: boolean })[]
+    // GH #488 — Surface Options sits above Instructions now, and Catalogs is no longer a top-level fold
+    // at all (it mounts inside the Surface Options fold, adjacent to the A2UI row) — NINE items, not TEN.
     expect(items.map((i) => i.getAttribute('data-item'))).toEqual([
-      'agent', 'model', ENTRY_KINDS.promptSection, 'surface',
-      ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource, ENTRY_KINDS.catalog,
+      'agent', 'model', 'surface', ENTRY_KINDS.promptSection,
+      ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource,
     ])
     for (const item of items) {
       expect(item.open, `${item.getAttribute('data-item')} defaults open (config is an editing surface)`).toBe(true)
