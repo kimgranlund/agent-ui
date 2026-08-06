@@ -72,7 +72,13 @@ import type { UIChatShellElement } from '../chat-shell/chat-shell.ts'
 // Vision rev.6 (Surface Options): the Markdown modality renders agent notes through <ui-markdown> —
 // sanitized by construction. App → code is the ADR-0139-ruled edge this file already takes for
 // `@agent-ui/code/editor`; ui-conversation itself stays code-free (the SPEC-R12 renderer seam carries it).
-import '@agent-ui/code/markdown'
+// GH #468 (the app-diet hunt) — `@agent-ui/code/markdown` moved LAZY: no other app-tier control renders
+// markdown (ui-conversation's own banner says it stays code-free), and the modality is OPT-IN, OFF by
+// default (`isEnabledFlag`'s own inverse-default law), so a static import here cost every consumer of the
+// app barrel the same bytes whether or not Markdown mode was ever switched on. No static reference to
+// `@agent-ui/code/markdown` remains anywhere in this file — the `loadMarkdownRenderer`/
+// `preloadMarkdownRenderer` pair below (near the dogfood loader, the SAME GH #354 shape) replaces it;
+// search "GH #468" for the loader + the render-path fallback.
 import { UISettingsElement } from '../settings/settings.ts'
 import { UIConversationElement } from '../conversation/conversation.ts'
 // genui-surface.spec.md v0.5 §11 (SPEC-R12, GH #316/ADR-0162) — the dogfood frame asset pair rides the
@@ -255,6 +261,46 @@ function loadDogfoodAssets(): Promise<SandboxFrameAssets> {
     })
   }
   return dogfoodAssetsMemo
+}
+
+// GH #468 (the app-diet hunt) — `@agent-ui/code/markdown` LAZY, the SAME shape as the dogfood loader just
+// above (a memoized promise, a load ceiling, a dropped-on-failure memo so the next attempt retries) with
+// ONE necessary difference: the dogfood await sits ahead of an ASYNC turn (a natural `await` point), but
+// `#renderBody`'s content-renderer callback (conversation.ts) is SYNCHRONOUS — it must return a Node right
+// now, with no await available. So this loader is fired ahead of need (`preloadMarkdownRenderer`, called
+// from `#applyMasterStates` on connect/every rewire whenever the Markdown modality is already on, and from
+// the Markdown toggle's own `change` handler the instant it flips on) rather than awaited at render time.
+// The render path (search "GH #468" in `#compose`) checks `customElements.get('ui-markdown')` and falls
+// back to the SAME plain-text node the modality's OFF state already returns — degrade, never fail, exactly
+// the dogfood ruling's law, extended to cover "still loading" as a third legitimate fallback reason beside
+// "off" and "unsanitizable". A resolved load is reused for the page's whole lifetime; a failed OR timed-out
+// one is dropped from the memo so the very next preload call (any later rewire or toggle) retries rather
+// than leaving Markdown mode permanently degraded after one transient chunk error.
+const MARKDOWN_LOAD_TIMEOUT_MS = 10_000 // the ADR-0139 cl.5 / dogfood ceiling, reused verbatim
+let markdownReadyMemo: Promise<void> | undefined
+function loadMarkdownRenderer(): Promise<void> {
+  if (markdownReadyMemo === undefined) {
+    let timer: ReturnType<typeof setTimeout>
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error('ui-agent-admin: markdown renderer load timed out')), MARKDOWN_LOAD_TIMEOUT_MS)
+    })
+    const load = import('@agent-ui/code/markdown')
+      .then((): void => undefined) // this dynamic import self-defines <ui-markdown> as its own side effect (code/markdown barrel banner)
+      .finally(() => clearTimeout(timer))
+    markdownReadyMemo = Promise.race([load, timeout]).catch((err: unknown) => {
+      markdownReadyMemo = undefined
+      throw err
+    })
+  }
+  return markdownReadyMemo
+}
+/** Fire-and-forget: every call site here runs OUTSIDE an async turn (a connect-time effect, a toggle's
+ *  `change` listener), so there is no caller to hand a rejection to. A failed/timed-out attempt is silent
+ *  by design — the render path's own synchronous fallback (plain text) is exactly what a user sees either
+ *  way, and `loadMarkdownRenderer` already drops a failed attempt from its memo so the NEXT preload call
+ *  (the next rewire, the next toggle flip) retries for real rather than inheriting a poisoned promise. */
+function preloadMarkdownRenderer(): void {
+  loadMarkdownRenderer().catch(() => {})
 }
 
 export interface UIAgentAdminElement extends ReactiveProps<typeof agentAdminProps> {}
@@ -502,8 +548,18 @@ export class UIAgentAdminElement extends UIElement {
     // notes/system bubbles render through <ui-markdown> (sanitized by construction) while the switch is
     // ON, and fall back to a plain text node (the frame's own "simple text is fallback") when OFF. The
     // store is read FRESH per render — the live-apply law; flipping the switch changes the NEXT bubble.
+    // GH #468 — `<ui-markdown>` is now LAZY (search "GH #468" above for the loader): this callback is
+    // SYNCHRONOUS (`#renderBody` needs a Node back right now, no await available), so a THIRD fallback
+    // reason joins "off" here — "on, but the lazy chunk hasn't resolved yet" — same plain-text node either
+    // way. `preloadMarkdownRenderer()` below fires the load in case nothing already did (defensive; the
+    // real trigger is `#applyMasterStates`, which fires on connect and on every toggle, well ahead of any
+    // turn reply) — memoized, so a call here after one already succeeded/is in flight is a no-op.
     conversation.setContentRenderer((text) => {
       if (!isEnabledFlag(this.store?.get(SURFACE_MARKDOWN_KEY))) return document.createTextNode(text)
+      if (customElements.get('ui-markdown') === undefined) {
+        preloadMarkdownRenderer()
+        return document.createTextNode(text)
+      }
       const node = document.createElement('ui-markdown') as HTMLElement & { markdown: string }
       node.markdown = text
       return node
@@ -1392,7 +1448,13 @@ export class UIAgentAdminElement extends UIElement {
     // Vision rev.6 — the Surface Options rows reflect their stored state the same way; the catalog
     // mirror dims while its modality is off (context for a surface that can't run is noise, not
     // configuration — the retired select's own rationale, inherited).
-    if (this.#surfaceMarkdownSwitch) this.#surfaceMarkdownSwitch.checked = isEnabledFlag(store?.get(SURFACE_MARKDOWN_KEY))
+    const markdownOn = isEnabledFlag(store?.get(SURFACE_MARKDOWN_KEY))
+    if (this.#surfaceMarkdownSwitch) this.#surfaceMarkdownSwitch.checked = markdownOn
+    // GH #468 — every path that can make Markdown mode ON runs through this method (connect, a rewire, the
+    // toggle's own change listener, an external store write), so firing the lazy preload HERE — rather than
+    // scattering a call at each individual call site — covers all of them in one place, ahead of any reply
+    // that would actually need `<ui-markdown>`. A no-op (memoized) once loaded/in flight; OFF fires nothing.
+    if (markdownOn) preloadMarkdownRenderer()
     if (this.#surfaceA2uiSwitch) this.#surfaceA2uiSwitch.checked = a2uiOn
     if (this.#surfaceCatalogMirror) {
       // ADR-0170 cl.6 — the SAME fail-closed read the wire uses (`:1061`/`:1321`), feeding a label lookup
