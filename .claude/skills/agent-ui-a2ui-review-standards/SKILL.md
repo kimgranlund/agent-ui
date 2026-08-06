@@ -2,8 +2,9 @@
 name: agent-ui-a2ui-review-standards
 description: >-
   The a2ui-reviewer seat's artifact-to-rubric routing table, grading ground rules, per-artifact
-  procedure, and the ADR-0068 corpus VerdictsFile contract — for A2UI payloads, catalog rows, and
-  corpus records. Model-only knowledge preloaded by the a2ui-reviewer seat; not a user-facing action.
+  procedure, and the ADR-0068 corpus VerdictsFile contract — for A2UI payloads, catalog rows, corpus
+  records, compose-time mechanism functions, and skill-doc pattern sections. Model-only knowledge
+  preloaded by the a2ui-reviewer seat; not a user-facing action.
 user-invocable: false
 disable-model-invocation: true
 ---
@@ -19,6 +20,12 @@ Route by artifact type; score against that rubric's dimensions ONLY. Do not mix 
 | An A2UI payload (`A2uiOutput` stream / message batch) | `.claude/docs/rubrics/a2ui-payload.md` (P1–P7) | the `validate-payload` CLI verdict |
 | A catalog row (one `catalog.json` type ↔ `ui-*` factory, its tests/example/doc) | `.claude/docs/rubrics/a2ui-catalog.md` (D1–D6) | `naming.ts`/`conformance.ts`/`registry` probes via `npm test` |
 | A corpus record (one `CorpusRecord` line) | `.claude/docs/rubrics/a2ui-corpus.md` (D1–D5) | `a2ui-payload.md` (folded), `validateRecord`'s enum, the θ_dup index |
+| A compose-time mechanism function (`compose.ts`-class — code that assembles/derives/selects at compose time) | `.claude/docs/rubrics/a2ui-mechanism.md` (M1–M4) | M1: the co-located `*.test.ts` via `npm test` · M2's cited floor: `layering.test.ts` + the biting test (M2 itself is [review], definitional) |
+| A skill-doc pattern section (an `a2ui-multi-catalog`-class pattern row) | `.claude/docs/rubrics/a2ui-skill-pattern.md` (S1–S3) | none — S1 is [review], definitional (fixed open-and-diff method against every cited source; no realized script) |
+
+The last two rows are the GH #493 siblings — before them, mechanism functions and pattern sections were
+graded against `a2ui-catalog.md` by analogy (PR #492's escalation); never do that again. A persona
+fragment's own rows (`catalog/personas/*/`) are catalog rows and take the catalog-row route.
 
 ## Ground rules (the judgment layer)
 
@@ -64,6 +71,18 @@ Route by artifact type; score against that rubric's dimensions ONLY. Do not mix 
   `target ?? description` ADR-0063 consumer rule — grade the *effective* target, never `target` raw;
   the closed `source` enum + a resolvable `origin`; the θ_dup neighbour), then judge above that floor.
   Then emit the VerdictsFile below.
+- **Mechanism function → `a2ui-mechanism.md`.** Run the mechanism's co-located suite via `npm test`
+  (exit code, never grep) for M1 [gate] (contract tests incl. anti-vacuous negative controls); score
+  M2 ([review], definitional — hard-gated like a gate) by READING the imports/call sites for
+  called-not-copied, citing its deterministic floor (layering trip-wire + the biting test) without
+  re-judging it; then judge M3–M4 (fail-loud policy fidelity against the cited SPEC/ADR clauses —
+  verify each citation at its source · purity + single-sourcing) against the function's `file:line`.
+- **Skill pattern section → `a2ui-skill-pattern.md`.** For S1 ([review], definitional — hard-gated
+  like a gate) open EVERY cited symbol/clause and diff the claim verbatim (record the claim-by-claim
+  result — a fabricated citation is a drift tell), then judge S2–S3 (routing & boundary · worked
+  example + policy teaching). Lane note: you grade the section's A2UI substance ONLY — the skill
+  document's contract (frontmatter, routing grammar, body shape) is harness `skill-checker`'s lane
+  (doc-checker's own charter fences SKILL.md files to it), not yours.
 
 ## The VerdictsFile (corpus records only)
 
