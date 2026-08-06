@@ -1,6 +1,6 @@
 # LLD — A2UI Expert Harness Wiring
 
-> Status: proposed · v0.2.2 · 2026-07-29 (v0.2 2026-07-03, v0.1 2026-06-26) · Layer: LLD (implementation plan)
+> Status: proposed · v0.2.3 · 2026-08-06 (v0.2.2 2026-07-29, v0.2 2026-07-03, v0.1 2026-06-26) · Layer: LLD (implementation plan)
 > Implements: [`../spec/a2ui-expert-harness.spec.md`](../spec/a2ui-expert-harness.spec.md) (SPEC-R1..R8, SPEC-N1..N4) at **v0.2** — the SPEC's v0.3 amendment is §5.3-only and adds no requirement, so this reconciliation still holds.
 > **v0.2 reconciliation (2026-07-03):** the v0.1 wiring predated the corpus store; §0 rules every
 > v0.1 component against the realized tree. Headlines: LLD-C4's gate scripts are **REALIZED
@@ -30,6 +30,14 @@
 > run, whose exit is a fresh judged run (ADR-0165 cl.4). The row also gains the archive-commit step the
 > same ADR books into the curator's procedure. Descriptive correction only: no component, wiring, or
 > requirement changes.
+> **v0.2.3 (2026-08-06, GH #501 — the §1 State column refreshed):** every §1 State cell still read its
+> pre-build "unbuilt (h#)" value — stale since the whole wave shipped in one commit on 2026-07-03
+> (`b2ed941`). Each row is re-verified against the tree this pass (file-exists checks + a live
+> `harness_wiring_check.py` run, 25/25 green — up from the build-wave's 19/19 now that the GH #493
+> rubric siblings are enumerated) and flipped to **REALIZED** with its evidence inline; LLD-C8 also
+> confirms the back-score completed (24/24 shard records carry `meta.qualityScore`, 0 quarantined).
+> Descriptive correction only: no component, wiring, or requirement changes. The two most recent
+> dated notes (v0.2.2 above, and §4's GH #493/#474 notes) are unchanged.
 > Altitude: adds the **how** — concrete files, frontmatter, and wiring; cites `SPEC-R*` for behavior. The shared validator is the renderer LLD's (`validate.ts`); the corpus pipeline is `a2ui-corpus-store.lld.md`'s (v0.5.1).
 
 ---
@@ -52,15 +60,15 @@
 
 | ID | Component | Implements | Location | State |
 |---|---|---|---|---|
-| **LLD-C1** | Domain skill files (2) | SPEC-R1 | `.claude/skills/a2ui-compose/` · `.claude/skills/a2ui-corpus-curate/` | unbuilt (slices h6/h7) |
-| **LLD-C2** | Agent pair + routing repair | SPEC-R2, R8 | `.claude/agents/a2ui-composer.md` · `.claude/agents/a2ui-reviewer.md` · `a2ui-builder.md` (description repair) | unbuilt (h8/h9) |
-| **LLD-C3** | Rubric files (3; +2 GH #493 siblings — SPEC-R3 v0.4) | SPEC-R3 | `.claude/docs/rubrics/a2ui-{payload,catalog,corpus}.md` + `a2ui-{mechanism,skill-pattern}.md` (§4 note) | unbuilt (h3/h4/h5) |
+| **LLD-C1** | Domain skill files (2) | SPEC-R1 | `.claude/skills/a2ui-compose/` · `.claude/skills/a2ui-corpus-curate/` | **REALIZED** (h6/h7, 2026-07-03 — both `SKILL.md` on disk; `harness_wiring_check.py` skill-mode PASS) |
+| **LLD-C2** | Agent pair + routing repair | SPEC-R2, R8 | `.claude/agents/a2ui-composer.md` · `.claude/agents/a2ui-reviewer.md` · `a2ui-builder.md` (description repair) | **REALIZED** (h8/h9, 2026-07-03 — all three files on disk, `a2ui-builder.md` fence repaired; agent-mode PASS) |
+| **LLD-C3** | Rubric files (3; +2 GH #493 siblings — SPEC-R3 v0.4) | SPEC-R3 | `.claude/docs/rubrics/a2ui-{payload,catalog,corpus}.md` + `a2ui-{mechanism,skill-pattern}.md` (§4 note) | **REALIZED** (h3/h4/h5, 2026-07-03; the 2 siblings land per §4's dated note) — 5/5 files on disk; rubric-mode PASS |
 | **LLD-C4** | Deterministic gates | SPEC-R4 | — | **REALIZED** (§0 row 1 — no build) |
-| **LLD-C5** | Orchestration wiring / artifact map | SPEC-R5 | SPEC §5.1 + frontmatter cross-refs | lands with C1–C3 |
-| **LLD-C6** | Loop (procedural) + deterministic CLI | SPEC-R6 | composer charter + `a2ui-compose` body + `packages/agent-ui/a2ui/tools/harness/validate-payload.ts` | unbuilt (h10, h15) |
-| **LLD-C7** | Governance + reachability check | SPEC-R5, R7 | `scripts/harness_wiring_check.py` | unbuilt (h14) |
-| **LLD-C8** | Judge activation (corpus ADR-0060 seam) | SPEC-R3 (corpus SPEC-R8) | `packages/agent-ui/a2ui/src/corpus/judge.ts` (pure) · `store.ts` (`includeQuarantined` flag) · `corpus-data.test.ts` (quarantine legs — the B1 gate amendment) · `tools/corpus/rescore.ts` (shell) · `import-seeds --verdicts`/`--replace` + the quarantined-name halt | unbuilt (h11/h12; ADR-0068) |
-| **LLD-C9** | Routing-trigger corpora | SPEC-N2 | `<skill>/scripts/routing-corpus.json` ×2 | unbuilt (h13) |
+| **LLD-C5** | Orchestration wiring / artifact map | SPEC-R5 | SPEC §5.1 + frontmatter cross-refs | **REALIZED** — lands with C1–C3 (reachability checks 2a–2d PASS) |
+| **LLD-C6** | Loop (procedural) + deterministic CLI | SPEC-R6 | composer charter + `a2ui-compose` body + `packages/agent-ui/a2ui/tools/harness/validate-payload.ts` | **REALIZED** (h10, 2026-07-03 — CLI on disk; the h15 reference-payload proof cleared the full loop in round 1, per the build-wave commit) |
+| **LLD-C7** | Governance + reachability check | SPEC-R5, R7 | `scripts/harness_wiring_check.py` | **REALIZED** (h14, 2026-07-03 — on disk; 25/25 wiring checks PASS as of this pass, up from the build-wave's 19/19 with the #493 rubric siblings added) |
+| **LLD-C8** | Judge activation (corpus ADR-0060 seam) | SPEC-R3 (corpus SPEC-R8) | `packages/agent-ui/a2ui/src/corpus/judge.ts` (pure) · `store.ts` (`includeQuarantined` flag) · `corpus-data.test.ts` (quarantine legs — the B1 gate amendment) · `tools/corpus/rescore.ts` (shell) · `import-seeds --verdicts`/`--replace` + the quarantined-name halt | **REALIZED** (h11/h12, 2026-07-03; ADR-0068) — every listed file on disk; the back-score completed — all 24 shard records carry `meta.qualityScore`, 0 quarantined |
+| **LLD-C9** | Routing-trigger corpora | SPEC-N2 | `<skill>/scripts/routing-corpus.json` ×2 | **REALIZED** (h13, 2026-07-03 — both `routing-corpus.json` files on disk, one per skill dir) |
 
 ## 2. Skills — LLD-C1 (SPEC-R1)
 
