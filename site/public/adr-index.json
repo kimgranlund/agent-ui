@@ -1197,6 +1197,13 @@
     "section": "Records"
   },
   {
+    "name": "ADR-0173",
+    "url": "./adr-index.html#adr-0173",
+    "description": "Descriptor inversion (GH #483 design intake, merging two independently-authored drafts): {name}.md becomes the generation SOURCE for the props layer via a comm…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
     "name": "ADR-0174",
     "url": "./adr-index.html#adr-0174",
     "description": "Planner-stage pilot (GH #485 design intake): an opt-in, sequential plan→execute→synthesize loop composed entirely from shipped Session/produce()/meta-line/stat…",
