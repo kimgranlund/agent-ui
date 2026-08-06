@@ -1,6 +1,17 @@
 # SPEC — A2UI Live-Agent Example (a real LLM emitting A2UI over the wire)
 
-> Status: accepted · v0.9 · 2026-08-04 (v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> Status: proposed · v0.10 · 2026-08-06 (v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> v0.10 changelog (ADR-0174 cl.2, PROPOSED pending Kim's review — the planner-stage pilot's plan-turn
+> wire representation): the ADR-0088 meta-line envelope gains a SIXTH, additive, MODEL-authored field,
+> `plan: { steps: [{ id: string; description: string }] }`, following the `ask`-arm precedent EXACTLY
+> (ADR-0097 §1) — shallow-validated the same way `readMetaLine`'s existing per-field-independent guard
+> treats `note`/`ask`/`trace`/`progress`/`error` (a malformed `plan` drops only itself, never the whole
+> envelope), the envelope stays versionless and provably disjoint from `A2uiServerMessage` (unchanged),
+> and `AgentTransport.turn`'s signature stays byte-identical (NEW **SPEC-R20**, §3.2b). This requirement
+> governs the WIRE REPRESENTATION ONLY — the host-side plan→execute→synthesize loop (ADR-0174
+> cl.1/cl.3/cl.4) and any `plan`-analogue of the `ask` field's surfaceId-integrity check (ADR-0174 Open
+> fork OF1, genuinely undecided) are OUT OF SCOPE here and unbuilt. SPEC-R5/R14 and every existing
+> meta-line field (`note`/`ask`/`trace`/`progress`/`error`) are byte-untouched.
 > v0.9 changelog (ADR-0168 — the tool/integration ENABLEMENT arc): the hardcoded `INTEGRATIONS`
 > array becomes a manifest REGISTRY (`IntegrationManifest {id, version, label, description, tool,
 > auth, envKey?, execute}` + `registerIntegration`, boot-fail-fast on id/wire-name collision) — the
@@ -528,6 +539,46 @@ failure code, carried on `TurnTrace.failureCodes: string[]` — NEVER joining th
   the offending type and succeeds on a corrected retry — `produce-loop.test.ts`, `npm test` green, no live
   model; the shared `validateA2ui` call sites are UNCHANGED in the diff (SPEC-N3 parity).
 
+### 3.2b The `plan` meta-line arm (ADR-0174 cl.2 — pilot wire contract)
+
+**SPEC-R20 — Additive, model-authored, shallow-validated `plan` field on the meta-line envelope.** The
+system MUST let a plan-turn's model output declare its step list as a NEW, additive field on the SAME
+leading meta-line `note`/`ask`/`trace`/`progress`/`error` already ride (SPEC-R5's meta-line convention;
+ADR-0088 §1) — `plan: { steps: [{ id: string; description: string }] }`. Following the `ask`-arm
+precedent EXACTLY (SPEC-R14; ADR-0097 §1, ADR-0174 cl.2):
+- `plan` MUST be MODEL-authored — the model declares it, like `note`/`ask`, NEVER runtime-composed like
+  `progress`/`trace`/`error`.
+- `plan` MUST be shallow-validated the SAME way `readMetaLine`'s existing per-field-independent guard
+  treats `note`/`ask`/`trace`/`progress`/`error`: a malformed `plan` (non-object, a missing or non-array
+  `steps`, or any step missing a string `id` or a string `description`) MUST drop ONLY the `plan` field —
+  NEVER the whole envelope (`note`/`ask`/`trace`/`progress`/`error` on the SAME line still parse
+  normally).
+- The envelope MUST stay versionless and provably disjoint from `A2uiServerMessage` — the SPEC-R5
+  disjointness proof (no `version` key) is UNCHANGED by this addition.
+- `AgentTransport.turn(input): AsyncIterable<string>`'s signature MUST stay BYTE-IDENTICAL — `plan` is
+  additive framing INSIDE the string stream the interface already returns, never a new interface member
+  (the SAME precedent ADR-0097/ADR-0146/GH#144 each already extended this envelope by once). *(→
+  ADR-0174 cl.2)*
+
+**Scope.** This requirement governs the WIRE REPRESENTATION ONLY. OUT OF SCOPE, and unbuilt: the
+host-side plan→execute→synthesize loop that reads a declared `plan` and drives sequential `produce()`
+calls (ADR-0174 cl.1/cl.3/cl.4 — a future SPEC/LLD's job, not this requirement's); any status-stream
+live-rendering projection of a plan's steps (ADR-0174 cl.2's "separate mechanism" ruling); and any
+`plan`-analogue of the `ask` field's surfaceId-correlation integrity check (ADR-0174 Open fork OF1 —
+genuinely undecided, NOT resolved by this field's addition — a `plan` MAY be displayed as declared,
+host-trusted, until a future requirement rules otherwise). A `plan` field with no corresponding
+host-side consumer degrades harmlessly today: an unrecognizing consumer drops the unknown field (the
+ADR-0088 degrade discipline every meta-line field already relies on) and the turn's `note`/A2UI lines
+render exactly as they do without it.
+- **AC1** *Given* `readMetaLine`, *when* fed `{note, plan:{steps:[{id,description}]}}`, *then* it
+  round-trips `plan` intact alongside `note`/`trace`/`ask`/`progress`/`error`; *given* a malformed `plan`
+  (non-object, a missing/non-array `steps`, or a step missing a string `id` or `description`), *then* the
+  envelope returns WITHOUT `plan` (every other field still parses) — `meta-line.test.ts`, `npm test`
+  green.
+- **AC2** *Given* the repo's `AgentTransport.turn` interface, *when* diffed before/after this field's
+  addition, *then* its signature is BYTE-IDENTICAL — no new interface member, no request/response shape
+  change (the ADR-0088/ADR-0097/ADR-0146/GH#144 additive-framing precedent, re-verified for `plan`).
+
 ### 3.3 The round-trip
 
 **SPEC-R8 — Multi-turn client round-trip ("the agent continues").** A client message from
@@ -857,8 +908,19 @@ interface TurnTrace {
 interface AskDeclaration {
   surfaceId: string;
 }
+// PlanStep / PlanDeclaration (SPEC-R20 / ADR-0174 cl.2) — a model-authored step list; wire representation
+// ONLY. The host-side plan→execute→synthesize loop that reads it (ADR-0174 cl.1/cl.3/cl.4), and any
+// `plan`-analogue of AskDeclaration's surfaceId-correlation check (ADR-0174 Open fork OF1), are a future
+// SPEC/LLD's job, not this contract's.
+interface PlanStep {
+  id: string;
+  description: string;
+}
+interface PlanDeclaration {
+  steps: PlanStep[];
+}
 interface A2uiMetaEnvelope {
-  a2uiMeta: { note?: string; ask?: AskDeclaration; trace?: TurnTrace };   // note: model prose; ask: SPEC-R14 routing; trace: runtime-assembled, never model-authored
+  a2uiMeta: { note?: string; ask?: AskDeclaration; plan?: PlanDeclaration; trace?: TurnTrace };   // note: model prose; ask: SPEC-R14 routing; plan: SPEC-R20 step list; trace: runtime-assembled, never model-authored
 }
 // Provably disjoint from A2uiServerMessage (which always carries `version`); never throws.
 function readMetaLine(line: string): A2uiMetaEnvelope | undefined;
