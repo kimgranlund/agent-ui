@@ -1,8 +1,12 @@
 ---
-# badge.md frontmatter — the attributes-as-API descriptor for ui-badge (ADR-0004; report-family.lld.md
-# LLD-C9; SPEC-R11…R13/R17). The machine-checkable public surface lives HERE (frontmatter); the prose
-# below the fence is the /site doc. The `attributes[]` block MUST mirror UIBadgeElement.props
-# (label/intent) — the contract↔props trip-wire in badge.test.ts targets this fence.
+# badge.md frontmatter — the GENERATION SOURCE for ui-badge's `static props` block (ADR-0173, converting
+# ADR-0004's mirror to a source; report-family.lld.md LLD-C9; SPEC-R11…R13/R17). The machine-checkable
+# public surface lives HERE (frontmatter); the prose below the fence is the /site doc. `badge.props.gen.ts`
+# is GENERATED from `attributes[]` below (`node scripts/generate-props.mjs badge`) — including the exported
+# `INTENTS` tuple (the ADR-0173 cl.2 shared-tuple `const:` specimen: badge.ts's own runtime hardening effect
+# imports INTENTS from the generated file too, not just the props line). badge.ts imports the generated
+# module — never hand-edit it. The fleet drift gate (descriptor/props-gen-driftwire.test.ts) keeps the two
+# byte-identical.
 tag: ui-badge
 description: A non-interactive status tag with an intent-keyed color and a matching non-color glyph.
 tier: display           # SPEC-R11 AC3 + LLD-C9: a non-interactive display leaf (site-tier classification,
@@ -18,11 +22,12 @@ extends: UIElement      # a non-interactive, non-form-associated display LEAF (S
 # explicitly out of this folder-only build's fence). `npm run size` through the family barrel is owed at
 # LLD-C10 alongside ui-table/ui-stat, per the family's ≤ ~2 KB gz per-control budget (plan §10).
 
-attributes:             # attributes-as-API — mirrors UIBadgeElement.props (label, intent)
+attributes:             # attributes-as-API — the GENERATION SOURCE for UIBadgeElement.props (ADR-0173)
   - name: label
     type: string
     default: ''
     reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
+    description: The rendered text — mirrors into the label span; the host's accessible name.
   - name: intent
     type: enum
     values: [neutral, info, success, warning, danger]
@@ -32,6 +37,8 @@ attributes:             # attributes-as-API — mirrors UIBadgeElement.props (la
                          # fork F3), unlike Sparkline's structural `variant`. An out-of-enum runtime write
                          # (a bound-garbage simulation) is hardened back to 'neutral' by a connected()
                          # effect (SPEC-R11 AC2) — the enum codec's own snap covers only the ATTRIBUTE path.
+    const: INTENTS      # ADR-0173 cl.2 shared-tuple specimen — badge.ts's own hardening effect imports this SAME exported tuple
+    description: Bindable status data — an out-of-enum runtime write is hardened back to neutral (SPEC-R11 AC2).
 
 properties: []          # no manual accessors beyond the two typed props
 

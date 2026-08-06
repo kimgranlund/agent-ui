@@ -21,18 +21,12 @@
 // difference (shape, color, visibility) is CSS keyed off the reflected `[intent]` host attribute, so an
 // intent change (a bound update) is a zero-DOM-churn attribute flip, never a re-render.
 
-import { UIElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
-
-/** The closed intent set (SPEC-R11) — shared between the enum prop and the runtime hardening guard below. */
-const INTENTS = ['neutral', 'info', 'success', 'warning', 'danger'] as const
-
-const props = {
-  label: { ...prop.string(''), reflect: true },
-  // Bindable status data (fork F3): `prop.enum`'s codec snaps an unknown ATTRIBUTE string to 'neutral'
-  // for free; the property-write path is hardened separately (see the connected() effect). REFLECTS so
-  // `[intent]` CSS keys on JS-set/bound values (the ui-text `variant`/`size` precedent).
-  intent: { ...prop.enum(INTENTS, 'neutral'), reflect: true },
-} satisfies PropsSchema
+import { UIElement, type ReactiveProps } from '../../dom/index.ts'
+// Generated from badge.md's `attributes[]` (ADR-0173) — `node scripts/generate-props.mjs badge` to
+// regenerate; never hand-edit badge.props.gen.ts. `INTENTS` is the ADR-0173 cl.2 shared-tuple `const:`
+// specimen — the SAME exported tuple backs both the `intent` prop's enum codec AND this file's own
+// runtime hardening guard below (the closed intent set is now single-sourced in the generated file).
+import { INTENTS, props } from './badge.props.gen.ts'
 
 export interface UIBadgeElement extends ReactiveProps<typeof props> {}
 export class UIBadgeElement extends UIElement {

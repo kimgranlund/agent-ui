@@ -4,7 +4,6 @@ import {
   splitFrontmatter,
   parseDescriptor,
   validateComponentDescriptor,
-  compareDescriptorToProps,
   compareDescriptorToSource,
   collectUsedStates,
   collectStyledSlots,
@@ -16,8 +15,12 @@ declare const process: { cwd(): string }
 // badge.test.ts — jsdom probes for ui-badge (report-family.lld.md LLD-C7; SPEC-R11…R13; ADR-0111 cl.1-5,
 // fork F3; ADR-0057). Non-interactive display leaf: no focus/keyboard/events, no internals ARIA at all —
 // so this suite covers DOM shape, the label mirror, intent reflection + BOTH hardening paths (attribute
-// codec snap vs. the property-write self-correcting effect), zero residue, and the three-layer descriptor
-// trip-wire (structural / contract↔props / contract↔source — the stat.md/sparkline.md pattern).
+// codec snap vs. the property-write self-correcting effect), zero residue, and the descriptor trip-wire
+// (structural / contract↔source — the stat.md/sparkline.md pattern). The contract↔props leg RETIRED
+// (ADR-0173 cl.4c/OF4): badge.ts's `static props` now IMPORTS `badge.props.gen.ts` (GENERATED from this
+// same badge.md, including the exported `INTENTS` shared-tuple `const:` specimen) — the bijection is
+// structurally true by construction. The replacement drift gate lives fleet-wide in
+// `descriptor/props-gen-driftwire.test.ts` (badge's entry lands in the SAME commit as this retirement).
 // Geometry/AA/WHCM/RTL are proven in badge.browser.test.ts (SPEC-N2 — jsdom cannot paint).
 
 function make(): UIBadgeElement {
@@ -240,44 +243,6 @@ describe('badge.md descriptor — structural validity', () => {
   it('validateComponentDescriptor reports ZERO structural failures (schema-valid)', () => {
     expect(parsed.attributes.map((a) => a.name)).toEqual(ATTR_NAMES) // anti-vacuous
     expect(validateComponentDescriptor(parsed)).toEqual([])
-  })
-})
-
-describe('badge.md descriptor — contract↔props trip-wire', () => {
-  it('attributes[] is a faithful bijection with UIBadgeElement.props (0 drift)', () => {
-    expect(parsed.attributes.map((a) => a.name)).toEqual(ATTR_NAMES)
-    expect(compareDescriptorToProps(parsed.attributes, UIBadgeElement.props)).toEqual([])
-  })
-
-  it('negative control: a drifted reflect/default is caught', () => {
-    const flipReflect = parsed.attributes.map((a) => (a.name === 'intent' ? { ...a, reflect: false } : { ...a }))
-    expect(compareDescriptorToProps(flipReflect, UIBadgeElement.props)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_REFLECT', path: 'attributes.intent.reflect' }),
-    )
-    const flipDefault = parsed.attributes.map((a) => (a.name === 'label' ? { ...a, default: 'x' } : { ...a }))
-    expect(compareDescriptorToProps(flipDefault, UIBadgeElement.props)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_DEFAULT', path: 'attributes.label.default' }),
-    )
-  })
-
-  it('negative control: a removed/extra attribute fails the bijection both ways', () => {
-    const dropIntent = parsed.attributes.filter((a) => a.name !== 'intent')
-    expect(compareDescriptorToProps(dropIntent, UIBadgeElement.props)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_MISSING', path: 'attributes.intent' }),
-    )
-    const addBogus = [...parsed.attributes, { name: 'bogus', type: 'string', default: '', reflect: false }]
-    expect(compareDescriptorToProps(addBogus, UIBadgeElement.props)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_EXTRA', path: 'attributes.bogus' }),
-    )
-  })
-
-  it('negative control: an enum values list containing a NON-member fails DRIFT_VALUES (a dropped-suffix list is the one documented asymmetry an opaque codec cannot see — a wrong member is what this probe catches)', () => {
-    const flipValues = parsed.attributes.map((a) =>
-      a.name === 'intent' ? { ...a, values: ['neutral', 'info', 'success', 'warning', 'critical'] } : a,
-    )
-    expect(compareDescriptorToProps(flipValues, UIBadgeElement.props)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_VALUES', path: 'attributes.intent.values' }),
-    )
   })
 })
 
