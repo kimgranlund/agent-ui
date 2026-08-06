@@ -10,9 +10,9 @@
 //
 // The handler surface is injected (`DispatchHandlers`) so this slice ships without the host: the host
 // supplies handlers that close over the `SurfaceStore` and apply version-specific semantics (the
-// `version` is threaded through to each — e.g. v1.0 `surfaceProperties` vs v0.9.x `theme`, SPEC-R13
-// AC1). Errors are returned, not emitted: dispatch stays side-effect-free; the host emits the
-// returned `A2uiError` to the server and skips the message (LLD §9).
+// `version` is threaded through to each — e.g. v0.9.x-only `theme`, SPEC-R13 AC1; v1.0 carries no
+// surface-theming field at all, SPEC-R6(b)/GH #477). Errors are returned, not emitted: dispatch stays
+// side-effect-free; the host emits the returned `A2uiError` to the server and skips the message (LLD §9).
 
 import { SUPPORTED_VERSIONS } from '../protocol.ts'
 import type {
@@ -45,8 +45,8 @@ export const DISPATCHED_ENVELOPE_KEYS = [
 /**
  * The handler per server message kind, injected by the renderer host (LLD-C13). Each receives the
  * typed envelope body plus the message `version`, so a handler can apply version-specific semantics
- * (e.g. map v0.9.x `theme`→`surfaceProperties` when standing up a surface, SPEC-R13 AC1). Handlers
- * mutate surface state and return nothing; routing/version errors are dispatch's concern, not theirs.
+ * (e.g. the v0.9.x-only `theme` field when standing up a surface, SPEC-R13 AC1). Handlers mutate
+ * surface state and return nothing; routing/version errors are dispatch's concern, not theirs.
  */
 export interface DispatchHandlers {
   createSurface(body: A2uiCreateSurface, version: string): void

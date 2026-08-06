@@ -73,7 +73,7 @@ describe('dispatch — version-aware envelope routing (renderer LLD-C2, SPEC-R1/
     const err = dispatch({ version: 'v0.9.1', createSurface: body }, h)
 
     expect(err).toBeUndefined()
-    // version is passed so the host can apply v0.9.x semantics (theme→surfaceProperties, SPEC-R13 AC1).
+    // version is passed so the host can apply v0.9.x-only semantics (the `theme` field, SPEC-R13 AC1).
     expect(h.createSurface).toHaveBeenCalledWith(body, 'v0.9.1')
   })
 
