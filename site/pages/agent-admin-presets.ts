@@ -37,6 +37,10 @@ import type { Entry, NewEntryInput } from '@agent-ui/app'
 // (agent-admin-libraries.ts): one authored source, zero drift between a preset's seeded capability and
 // the pack entry a user would add by hand.
 import { HOSPITALITY_SKILLS, HOSPITALITY_PLAYBOOKS, INTEGRATION_TOOLS, GAMES_SKILLS, GAMES_PLAYBOOKS, CORE_PLAYBOOKS, type PresetCategory } from './agent-admin-libraries.ts'
+// GH #497 — the concierge/croupier content personas seed their OWN local pattern set selection (the
+// `SHIPPED_PERSONA_CATALOGS` `personaId`, SPEC-R5) the same way every other persona-scoped config key
+// seeds: through `presetSeed`'s returned record, keyed by the schema's own storage key.
+import { A2UI_LOCAL_PATTERNS_KEY } from '@agent-ui/app/agent-admin-schema'
 
 export interface AgentPreset {
   id: string
@@ -70,6 +74,12 @@ export interface AgentPreset {
    *  older persisted store for this id gets a one-time reset-to-new-seed (see `presetStore`). Absent = 1.
    *  User edits on the CURRENT version always survive — only a version bump migrates. */
   seedVersion?: number
+  /** GH #497 — this persona's `SHIPPED_PERSONA_CATALOGS` `personaId` (`concierge`/`croupier`), seeded as
+   *  its `A2UI_LOCAL_PATTERNS_KEY` selection. Absent (every OTHER preset) ⇒ no local set seeded — the
+   *  SAME fail-closed default `A2UI_CATALOG_KEY` already has (no preset seeds that either, `presetSeed`'s
+   *  own comment). Not validated against `SHIPPED_PERSONA_CATALOGS` here — `sanitizeLocalPatterns`
+   *  (agent-admin-schema.ts) is the one fail-closed read gate; a typo here would just read as "none". */
+  localPatterns?: string
 }
 
 /** A seed capability entry — expanded to a full `Entry` (order = array index) by `presetSeed`. */
@@ -105,9 +115,11 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'croupier',
     category: 'games', // GH #143 — a blackjack table, thematically a game even though it predates the games-roster wave
+    seedVersion: 2, // GH #497 — added the `croupier` local pattern set (PlayingCard); migrates pre-#497 stores
     label: 'The Croupier',
     tagline: 'Card game on ONE live surface — actions + updateDataModel in place (ADR-0129 routing)',
     config: { name: 'The Croupier', model: 'claude-sonnet-5', temperature: 0.6, toolsEnabled: true }, // rev.4: fable retired from the roster
+    localPatterns: 'croupier', // GH #497 — PlayingCard closes the glyph-formatting idiom structurally
     foundation:
       'You are The Croupier, a blackjack dealer. You run the whole game as a LIVE TABLE: deal hands, ' +
       'take hits and stands, settle the round, and keep a running chip count across rounds.',
@@ -118,10 +130,15 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'always carries the state.',
     skills: [
       {
+        // GH #497 — the glyph-formatting/face-down half retired: `PlayingCard` (the croupier local
+        // pattern set, seeded via `localPatterns` above) now closes that idiom structurally (rank/suit
+        // enums, a `faceDown` boolean) rather than by prose — mirrors the SAME trim in the byte-pinned
+        // `card-layout.md` mini-skill (`a2ui-prompt-author`'s recapture flow). The hand-arrangement half
+        // stays prose (§1's table: a pure `Row` arrangement, no new schema surface).
         id: 'card-layout',
         label: 'card-layout',
-        description: 'Playing cards as tiles — one Card per card, rank+suit glyph Text, hands as Rows.',
-        content: 'Every card is its own Card tile with "K♠"-style glyph text; face-down = darker tile with 🂠; a hand is a Row of tiles, never loose text lines.',
+        description: 'Playing cards arranged as a hand — a Row of tiles, never loose text lines.',
+        content: 'A hand is a Row of tiles, never loose text lines.',
       },
       {
         id: 'game-table-chrome',
@@ -196,10 +213,11 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'concierge', // GH #46 — upgraded IN PLACE to the Hotel Concierge (same id: persisted stores key on it)
     category: 'hospitality', // GH #143
-    seedVersion: 4, // GH #181 — real location replaces #148's deliberately-unnamed clause; migrates pre-#181 stores
+    seedVersion: 5, // GH #497 — added the `concierge` local pattern set (BookingForm/BookingConfirmation); migrates pre-#497 stores
     label: 'The Hotel Concierge',
     tagline: 'The full hospitality stack: booking forms + galleries + itineraries + live weather/FX integrations (GH #46/#49)',
     config: { name: 'The Hotel Concierge', model: 'claude-sonnet-5', temperature: 0.4, toolsEnabled: true },
+    localPatterns: 'concierge', // GH #497 — BookingForm/BookingConfirmation close the booking-flow idiom structurally
     foundation:
       'You are the concierge of the Grand Meridian, a fictional waterfront hotel on the clifftops of ' +
       'Sorrento, Italy, overlooking the Bay of Naples (120 rooms; two restaurants — Vela for fine dining, ' +
@@ -622,6 +640,9 @@ export function presetSeed(preset: AgentPreset): Record<string, unknown> {
   ]
   return {
     ...preset.config,
+    // GH #497 — absent ⇒ key omitted entirely (not seeded `undefined`), matching every other
+    // never-seeded persona-scoped key's byte-identical "absent" shape.
+    ...(preset.localPatterns === undefined ? {} : { [A2UI_LOCAL_PATTERNS_KEY]: preset.localPatterns }),
     [entriesStoreKey(ENTRY_KINDS.promptSection)]: sections,
     [entriesStoreKey(ENTRY_KINDS.skill)]: expand(ENTRY_KINDS.skill, preset.skills),
     [entriesStoreKey(ENTRY_KINDS.workflow)]: expand(ENTRY_KINDS.workflow, preset.workflows),

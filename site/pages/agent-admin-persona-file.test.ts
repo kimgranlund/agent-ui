@@ -281,7 +281,13 @@ describe('the persona file carries the local-pattern-set SELECTION, never its de
   })
 
   it('an unselected persona omits the key entirely (unset stays unset, never a written undefined/default)', () => {
-    const file = exportPersonaFile(personaFromPreset(SOURCE_PRESET), authoredStore())
+    // GH #497 — `SOURCE_PRESET` (concierge) now SEEDS its own selection by design, so it is no longer a
+    // valid "unselected" fixture for this probe; `quant` (no `localPatterns`) is the genuine unselected
+    // case — the SAME "no preset seeds A2UI_CATALOG_KEY either" fail-closed default `presetSeed`'s own
+    // header documents.
+    const unselected = AGENT_PRESETS.find((p) => p.id === 'quant')!
+    expect(unselected.localPatterns, 'quant must stay a genuine unselected fixture').toBeUndefined()
+    const file = exportPersonaFile(personaFromPreset(unselected), createMemoryStore({ initial: presetSeed(unselected) }))
     expect(Object.keys(file.state)).not.toContain(A2UI_LOCAL_PATTERNS_KEY)
   })
 })

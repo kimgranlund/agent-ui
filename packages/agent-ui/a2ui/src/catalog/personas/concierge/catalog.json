@@ -1,0 +1,54 @@
+{
+  "components": {
+    "BookingForm": {
+      "properties": {
+        "title": { "type": { "type": "string" }, "bindable": true, "mapsTo": "title" },
+        "fields": {
+          "type": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": { "type": "string", "enum": ["dateSingle", "select", "checkbox"] },
+                "path": { "type": "string" },
+                "label": { "type": "string" },
+                "required": { "type": "boolean" },
+                "options": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": { "value": { "type": "string" }, "label": { "type": "string" } },
+                    "required": ["value", "label"]
+                  }
+                }
+              },
+              "required": ["kind", "path", "label"]
+            }
+          },
+          "mapsTo": "fields"
+        },
+        "value": { "type": { "type": "object" }, "bindable": true, "mapsTo": "value" }
+      },
+      "children": "child",
+      "value": { "prop": "value", "event": "change", "readProp": "a2uiFormValue" }
+    },
+    "BookingConfirmation": {
+      "properties": {
+        "title": { "type": { "type": "string" }, "bindable": true, "mapsTo": "title" },
+        "rows": {
+          "type": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": { "label": { "type": "string" }, "path": { "type": "string" } },
+              "required": ["label", "path"]
+            }
+          },
+          "mapsTo": "rows"
+        },
+        "data": { "type": { "type": "object" }, "bindable": true, "mapsTo": "data" }
+      }
+    }
+  },
+  "functions": {}
+}
