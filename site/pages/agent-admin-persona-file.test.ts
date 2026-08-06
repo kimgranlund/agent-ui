@@ -18,6 +18,7 @@ import { ENTRY_KINDS, entriesStoreKey, createMemoryStore } from '@agent-ui/app'
 import type { Entry, SettingsStore } from '@agent-ui/app'
 import {
   A2UI_CATALOG_KEY,
+  A2UI_LOCAL_PATTERNS_KEY,
   AGENT_ENABLED_KEY,
   MODELS_INCLUDED_KEY,
   SURFACE_A2UI_KEY,
@@ -221,6 +222,7 @@ describe('the persona file — export → import round trip (GH #406, M-B DoD bo
       SURFACE_GENUI_KEY,
       SURFACE_GENUI_DOGFOOD_KEY,
       A2UI_CATALOG_KEY,
+      A2UI_LOCAL_PATTERNS_KEY,
     ]
     for (const key of required) {
       expect(PERSONA_STATE_KEYS, `${key} must be carried by the persona file`).toContain(key)
@@ -236,6 +238,51 @@ describe('the persona file — export → import round trip (GH #406, M-B DoD bo
     expect(file.persona).toEqual({ label: SOURCE_PRESET.label, tagline: SOURCE_PRESET.tagline, category: 'hospitality', sourceId: 'concierge' })
     expect(personaFileName(personaFromPreset(SOURCE_PRESET))).toBe('the-hotel-concierge-persona.json')
     expect(personaFileText(file).endsWith('\n')).toBe(true) // a real text file, newline-terminated
+  })
+})
+
+// SPEC-R5 (`persona-catalog-composition.spec.md`, M-D) — the persona's local-pattern-set SELECTION
+// (A2UI_LOCAL_PATTERNS_KEY) is exportable persona-file state, symmetrical to A2UI_CATALOG_KEY: only the
+// SELECTION travels, never the pattern DEFINITIONS (package-shipped code, SPEC-R1 — no
+// components/functions/ComponentDef bytes anywhere in the exported JSON).
+describe('the persona file carries the local-pattern-set SELECTION, never its definitions (SPEC-R5 AC1)', () => {
+  it('a non-default selection round-trips byte-identically through export -> import', () => {
+    const storeA = authoredStore()
+    storeA.set(A2UI_LOCAL_PATTERNS_KEY, 'fixture-demo')
+    const file = exportPersonaFile(personaFromPreset(SOURCE_PRESET), storeA)
+    const text = personaFileText(file)
+    const parsed = readPersonaFile(text)
+    expect(parsed.ok, parsed.ok ? '' : parsed.error).toBe(true)
+    if (!parsed.ok) return
+    expect(parsed.file.state[A2UI_LOCAL_PATTERNS_KEY]).toBe('fixture-demo')
+
+    const imported = importedPersonaFrom(parsed.file, [personaFromPreset(SOURCE_PRESET)])
+    expect(imported.seed[A2UI_LOCAL_PATTERNS_KEY]).toBe('fixture-demo')
+    const storeB = createMemoryStore({ initial: imported.seed })
+    expect(storeB.get(A2UI_LOCAL_PATTERNS_KEY)).toBe(storeA.get(A2UI_LOCAL_PATTERNS_KEY))
+  })
+
+  it('PERSONA_STATE_KEYS carries the selection key, symmetrical to A2UI_CATALOG_KEY', () => {
+    expect(PERSONA_STATE_KEYS).toContain(A2UI_LOCAL_PATTERNS_KEY)
+    expect(PERSONA_STATE_KEYS).toContain(A2UI_CATALOG_KEY)
+  })
+
+  it('the exported JSON never carries components/functions/ComponentDef bytes — a grep-level assertion the envelope stayed selection-only', () => {
+    const storeA = authoredStore()
+    storeA.set(A2UI_LOCAL_PATTERNS_KEY, 'fixture-demo')
+    const text = personaFileText(exportPersonaFile(personaFromPreset(SOURCE_PRESET), storeA))
+    // The selection is a bare persona-id STRING (`"fixture-demo"`), never an object carrying schema
+    // content — these tokens would only ever appear if a fragment's own components/functions leaked in.
+    expect(text).not.toContain('"components"')
+    expect(text).not.toContain('"functions"')
+    expect(text).not.toContain('ComponentDef')
+    expect(text).not.toContain('mapsTo')
+    expect(text).not.toContain('FixtureBanner') // the fixture's own component name — content, never selection
+  })
+
+  it('an unselected persona omits the key entirely (unset stays unset, never a written undefined/default)', () => {
+    const file = exportPersonaFile(personaFromPreset(SOURCE_PRESET), authoredStore())
+    expect(Object.keys(file.state)).not.toContain(A2UI_LOCAL_PATTERNS_KEY)
   })
 })
 

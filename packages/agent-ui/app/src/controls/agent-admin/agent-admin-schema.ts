@@ -14,6 +14,9 @@
 import type { SettingsSchema } from '../settings/schema.ts'
 import type { EffortLevel } from '../conversation/composer-options.ts'
 import type { TurnProgress } from '@agent-ui/a2ui/agent/meta-line' // ADR-0146 F1 — the live-turn progress vocabulary (type-only, from the PURE meta-line module, never the node-first ./agent barrel); a cross-package specifier stays extensionless (the repo's own local-.ts-only convention) — a2ui/package.json exports this as its own subpath
+// M-D (SPEC-R3/R5) — the persona catalog compose-time overlay's static id-recognition inputs (the root
+// `@agent-ui/a2ui` barrel, catalog/index.ts's own re-export of `catalog/compose.ts` + `catalog/personas/index.ts`).
+import { derivedCatalogId, derivedCatalogIdsFor, SHIPPED_PERSONA_CATALOGS } from '@agent-ui/a2ui'
 // ADR-0135 Piece A / Fork 2: the fail-closed guards + seed helper hoisted to `@agent-ui/shared` so app
 // and a2ui share ONE implementation. Re-exported here so `agent-admin.ts` keeps its current
 // `'./agent-admin-schema.ts'` import path unchanged.
@@ -235,9 +238,55 @@ export const A2UI_CATALOG_OPTIONS: ReadonlyArray<{ id: string; label: string; de
 
 export const DEFAULT_A2UI_CATALOG_ID: string = 'agent-ui'
 
-/** Fail-closed catalog read — an unknown/malformed stored value coerces to the default id. */
+/** M-D (`persona-catalog-composition.spec.md` SPEC-R3, ADR-0172 cl.2) — every DERIVED catalogId
+ *  `composePersonaCatalogs` (`@agent-ui/a2ui`'s `renderer.ts` constructor, SPEC-R2) registers, for
+ *  every shipped persona package and every base its own `targetCatalogs` names. `derivedCatalogIdsFor`
+ *  is the SAME persona/`targetCatalogs` metadata projection the constructor's derive-then-register
+ *  step reads — a static computation, not a live registry lookup (this module is pure data; no
+ *  renderer/registry instance exists here to ask). A persona whose fragment targets BOTH bases
+ *  contributes TWO recognized ids, one per base (SPEC-R3 AC3's own widening requirement). */
+const DERIVED_A2UI_CATALOG_IDS: ReadonlySet<string> = new Set(derivedCatalogIdsFor(SHIPPED_PERSONA_CATALOGS))
+
+/** Fail-closed catalog read — an unknown/malformed stored value coerces to the default id. Recognizes
+ *  BOTH a registered base id (`A2UI_CATALOG_OPTIONS`, unchanged — SPEC-R3 AC2) and any registered
+ *  DERIVED catalog id (`DERIVED_A2UI_CATALOG_IDS`, SPEC-R3 AC1/AC3) — the widening is additive: the
+ *  original 2-entry allowlist's own behavior for `agent-ui`/`a2ui-basic` is untouched. */
 export function sanitizeCatalog(value: unknown): string {
-  return A2UI_CATALOG_OPTIONS.some((option) => option.id === value) ? (value as string) : DEFAULT_A2UI_CATALOG_ID
+  if (typeof value !== 'string') return DEFAULT_A2UI_CATALOG_ID
+  if (A2UI_CATALOG_OPTIONS.some((option) => option.id === value)) return value
+  if (DERIVED_A2UI_CATALOG_IDS.has(value)) return value
+  return DEFAULT_A2UI_CATALOG_ID
+}
+
+// ── the persona's local-pattern-set SELECTION (M-D SPEC-R5, ADR-0172 cl.1) ─────────────────────────────
+// The persona's runtime state carries only WHICH `catalog/personas/<persona-id>/` local set (or none) it
+// composes onto its base catalog — never the pattern DEFINITIONS themselves (those are package-shipped
+// code, SPEC-R1). Symmetrical in storage shape to `A2UI_CATALOG_KEY`: a single persisted string, the
+// SAME fail-closed-sanitized law.
+
+/** The persisted selection key — a `SHIPPED_PERSONA_CATALOGS` `personaId`, or unset (no local set). */
+export const A2UI_LOCAL_PATTERNS_KEY = 'a2uiLocalPatterns'
+
+/** Fail-closed local-pattern-set read: an unset/malformed/unknown value coerces to "none selected"
+ *  (`undefined`) — the SAME fail-closed law `sanitizeCatalog` uses for its own unknown-id case. */
+export function sanitizeLocalPatterns(value: unknown): string | undefined {
+  return typeof value === 'string' && SHIPPED_PERSONA_CATALOGS.some((p) => p.personaId === value) ? value : undefined
+}
+
+/**
+ * SPEC-R5 AC3 — the effective catalogId a persona's turn actually resolves to: the selected local
+ * set's DERIVED catalog for `baseId`, when a selection exists AND its fragment actually targets
+ * `baseId` (checked against `derivedCatalogIdsFor`'s own registered-pairing enumeration — the SAME
+ * projection `sanitizeCatalog` reads, so this can never name a derived id `composePersonaCatalogs`
+ * never actually registered); else `baseId` alone — the SAME fail-closed degrade `selectCatalog`'s own
+ * unknown-id case already has (ADR-0169 cl.3), never a hard error and never the WRONG derived id when
+ * the selection's own base doesn't match the persona's CURRENT `A2UI_CATALOG_KEY` base.
+ */
+export function resolveEffectiveCatalogId(baseId: string, localPatternsSelection: unknown): string {
+  const personaId = sanitizeLocalPatterns(localPatternsSelection)
+  if (personaId === undefined) return baseId
+  const candidate = derivedCatalogId(baseId, personaId)
+  return DERIVED_A2UI_CATALOG_IDS.has(candidate) ? candidate : baseId
 }
 
 /** The agent-config values the stub turn loop reads at turn time — always the CURRENT store contents,

@@ -25,7 +25,10 @@ catalog / registry code → the `a2ui-builder` agent · payload authoring → `a
 fleet inventory → `agent-ui-catalog`. A "second catalog id" objection citing ADR-0097 is
 answered by ADR-0169's own Non-collision section (`0169:98-110`): 0097 rejected a policy VIEW
 of the default catalog; a genuinely distinct component set with its own wire dialect earns a
-real second catalog.
+real second catalog. A "compose a persona's local patterns onto a base catalog" ask routes to
+§5 below, NOT to §1 — §1 registers a whole, independently-authored catalog beside the default;
+§5's compose-time overlay MERGES a persona-scoped fragment onto an ALREADY-registered base. The
+two have no merge primitive in common (`persona-catalog-composition.spec.md` §1's own framing).
 
 ## 1 · Registering a catalog beside the default
 
@@ -98,8 +101,54 @@ anti-pattern these seams exist to make unnecessary:
   the upstream canonical URI registers as an inbound-only alias — same bytes, second id;
   the picker and the outbound stamp use the short id alone (`0169:479-499`, cl.13).
 
+## 5 · Composed/derived catalogs
+
+A persona's own local pattern set (a booking flow's calendar+confirm idiom, a card-table's
+hand/score layout) is package-authored `catalog.json`-shaped CONTENT, never a whole standalone
+`Catalog` — `composeCatalog(base: Catalog, local: CatalogFragment, personaId: string): Catalog`
+(`catalog/compose.ts`) merges it onto an ALREADY-registered base at `Renderer` construction time
+(`persona-catalog-composition.spec.md` SPEC-R2, ADR-0172 cl.2), producing a NEW, independently-
+registered `Catalog` document — never a fork of `Registry.register` itself (SPEC-N4): the
+derive-then-register step is strictly upstream, calling the SAME `register()` seam §1's whole-
+catalog pattern already uses, so `CATALOG_FACTORY_MISSING` and `loadCatalog`'s re-validation both
+apply unmodified.
+
+**Collision policy: reject-loud (ruled, not a design choice left to a caller).** A local
+fragment's component OR function name that already exists in the targeted base's own map FAILS
+that (fragment, base) pairing's composition with a `CatalogComposeError` — synchronously, at
+`Renderer` construction time, never a silent override and never a namespacing tax on every
+fragment author. A collision against ONE targeted base never blocks a different, non-colliding
+base's pairing for the SAME fragment.
+
+**Naming: `<base>--<persona>`.** `agent-ui--concierge`, `a2ui-basic--croupier` — the base id is
+always the FIRST segment, so a reader (or `sanitizeCatalog`) can tell which base a derived id
+came from without a lookup. A fragment MAY target more than one base (its own `targetCatalogs`
+field) — a fragment naming both `agent-ui` and `a2ui-basic` produces TWO independently-composed,
+independently-registered derived catalogs, one per base, never one three-way merged document.
+Worked pattern (both shipped bases):
+
+```
+targetCatalogs: ['agent-ui', 'a2ui-basic']
+  → composeCatalog(agentUiCatalog, fragment, 'concierge')   registers as agent-ui--concierge
+  → composeCatalog(a2uiBasicCatalog, fragment, 'concierge') registers as a2ui-basic--concierge
+```
+
+An unregistered `targetCatalogs` entry (a typo, or a not-yet-shipped third base) fails loud the
+SAME way a collision does — never a silently-skipped pairing.
+
+**Threading.** The effective catalogId a turn resolves to is either the base alone (no local set
+selected — the identity case) or the derived id (a local set selected AND targeting the
+persona's CURRENT base) — a selection whose base doesn't match degrades to the base alone,
+never a hard error and never the wrong derived id (SPEC-R5 AC3). `sanitizeCatalog`
+(`agent-admin-schema.ts`) recognizes any registered derived id, across either base, the SAME
+fail-closed-to-default posture it already has for an unrecognized id.
+
 ## Citation key
 
 `0169:N` = `.claude/docs/adr/0169-a2ui-basic-catalog-upstream-interop.md` line N (the file as
 ratified 2026-08-04). On any suspicion of drift — the ADR is append-only once accepted, so
 line numbers move only via a superseding ADR — re-open the cited lines before relying on them.
+`persona-catalog-composition.spec.md` = `.claude/docs/spec/persona-catalog-composition.spec.md`
+(accepted); its `SPEC-R#`/`SPEC-N#` ids and ADR-0172 (`.claude/docs/adr/0172-persona-catalog-
+composition-intake.md`, accepted) are §5's own citation pair, the same "cite, don't restate the
+table" discipline the `0169:N` citations above already follow.

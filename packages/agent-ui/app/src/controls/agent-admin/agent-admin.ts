@@ -100,6 +100,8 @@ import {
   isEnabledFlag,
   kindEnabledKey,
   sanitizeCatalog,
+  A2UI_LOCAL_PATTERNS_KEY,
+  resolveEffectiveCatalogId,
   initialValuesFor,
   isModelIncluded,
   modelRoster,
@@ -1149,7 +1151,11 @@ export class UIAgentAdminElement extends UIElement {
       // plain-chat arm (`#handleSubmit`'s `AdminTurnRequest`) already threads.
       effort: this.#effort,
       // Vision rev.6 — the catalog picker's sanitized selection (see AdminSurfaceTurnRequest.catalogId).
-      catalogId: sanitizeCatalog(store?.get(A2UI_CATALOG_KEY)),
+      // M-D SPEC-R5 — widened to the EFFECTIVE catalogId: the persona's local-pattern-set selection
+      // (A2UI_LOCAL_PATTERNS_KEY), composed onto the base ONLY when its fragment actually targets that
+      // base; a selection targeting some other base fails closed to the base alone (AC3), never a
+      // hard error and never the wrong derived id.
+      catalogId: resolveEffectiveCatalogId(sanitizeCatalog(store?.get(A2UI_CATALOG_KEY)), store?.get(A2UI_LOCAL_PATTERNS_KEY)),
       // GH #49 / ADR-0168 cl.2 — the ENABLED tool entries' IDS (never their labels: LLD-C7 decoupled the
       // two), master-gated on the tool kind's switch: the proxy intersects with its registry; a
       // non-registry id is inert. A FRESH store read (the live-apply law), shared with the prose arm.

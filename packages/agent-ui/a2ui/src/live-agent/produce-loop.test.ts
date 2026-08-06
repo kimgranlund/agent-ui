@@ -964,7 +964,7 @@ describe('produce() threads opts.mode to buildSystemPrompt (ADR-0090 §1/§4)', 
   // (ADR-0091 §2 selects mini-skills for every produce() call, mode-independent), so the expected
   // comparison below must include that same selection to stay an exact `Object.is` match — proving
   // `mode` and `miniSkills` compose together correctly, not just that mode alone still threads through.
-  const expectedMiniSkills = selectMiniSkills(intent.text, MINI_SKILLS, DEFAULT_MINI_SKILL_CAP)
+  const expectedMiniSkills = selectMiniSkills(intent.text, MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, defaultCatalog.catalogId)
 
   it("opts.mode='specific' feeds the specific grammar to the provider", async () => {
     const { provider, systems } = mkSystemCapturingProvider([VALID])
@@ -1043,7 +1043,7 @@ describe('produce() selects mini-skills once per turn (ADR-0091 §2, produce.ts:
     const settingsSkill = MINI_SKILLS.find((m) => m.id === 'settings-screen')!
     expect(systems()[0]).toContain(settingsSkill.body)
     // Exact match against the same selection+compose path this test independently re-derives.
-    const expectedSelection = selectMiniSkills(settingsIntent.text, MINI_SKILLS, DEFAULT_MINI_SKILL_CAP)
+    const expectedSelection = selectMiniSkills(settingsIntent.text, MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, defaultCatalog.catalogId)
     expect(systems()[0]).toBe(buildSystemPrompt(defaultCatalog, [], undefined, expectedSelection))
   })
 
@@ -1052,7 +1052,7 @@ describe('produce() selects mini-skills once per turn (ADR-0091 §2, produce.ts:
     // login-form's triggers, so it would (correctly) select a mini-skill; this negative control needs a
     // turn sharing ZERO vocabulary with every MINI_SKILLS entry's triggers.
     const unrelatedIntent: TurnInput = { kind: 'intent', text: 'show me the weather forecast for tomorrow', session: { turns: [] } }
-    expect(selectMiniSkills(unrelatedIntent.text, MINI_SKILLS, DEFAULT_MINI_SKILL_CAP)).toEqual([]) // sanity: genuinely zero overlap
+    expect(selectMiniSkills(unrelatedIntent.text, MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, defaultCatalog.catalogId)).toEqual([]) // sanity: genuinely zero overlap
 
     const { provider, systems } = mkSystemCapturingProvider([VALID])
     const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }

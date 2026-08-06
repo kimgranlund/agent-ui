@@ -27,6 +27,7 @@
 import { ENTRY_KINDS, entriesStoreKey } from '@agent-ui/app'
 import {
   A2UI_CATALOG_KEY,
+  A2UI_LOCAL_PATTERNS_KEY,
   AGENT_ENABLED_KEY,
   MODELS_INCLUDED_KEY,
   SURFACE_A2UI_KEY,
@@ -65,6 +66,9 @@ export const PERSONA_STATE_KEYS: readonly string[] = [
     SURFACE_GENUI_KEY,
     SURFACE_GENUI_DOGFOOD_KEY,
     A2UI_CATALOG_KEY,
+    // M-D SPEC-R5 — the persona's local-pattern-set SELECTION (never its definitions, which are
+    // package-shipped code, SPEC-R1): symmetrical in storage shape to A2UI_CATALOG_KEY above.
+    A2UI_LOCAL_PATTERNS_KEY,
     // the six entry lists
     ...ENTRY_LIST_KEYS,
   ]),
