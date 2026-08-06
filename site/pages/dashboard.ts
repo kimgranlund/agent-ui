@@ -99,6 +99,12 @@ const statsTitle = document.createElement('h2')
 statsTitle.id = 'dc-stats-title'
 statsTitle.className = 'dc-section-title'
 statsTitle.textContent = 'Overview'
+// layout-checker finding (GH #499 follow-up): the board-wide-vs-filtered fork above (COMPOSITION DECISION)
+// had zero on-screen signal — a narrowed table with frozen tiles above it reads as a bug, not a design
+// choice, without this line stating it out loud.
+const statsCaption = document.createElement('p')
+statsCaption.className = 'dc-caption'
+statsCaption.textContent = 'Board-wide across every ticket — unaffected by the priority filter below.'
 
 const stats = computeDashboardStats(FIXTURE_RECORDS)
 const statsRow = el('div', 'dc-stats-row')
@@ -117,7 +123,7 @@ statsRow.append(
   statTile('Avg. CSAT', stats.ratedCount > 0 ? String(stats.avgCsat) : '—', `${stats.ratedCount} rated`),
   statTile('Active agents', String(stats.activeAgentCount), 'assigned this queue'),
 )
-statsSection.append(statsTitle, statsRow)
+statsSection.append(statsTitle, statsCaption, statsRow)
 
 // ════════════════ the chart (ui-bar-chart, ADR-0107 v1 scope — board-wide, same posture as the stats) ═════
 const chartSection = document.createElement('section')
@@ -127,11 +133,16 @@ const chartTitle = document.createElement('h2')
 chartTitle.id = 'dc-chart-title'
 chartTitle.className = 'dc-section-title'
 chartTitle.textContent = 'Tickets by category'
+// Same on-screen signal as statsCaption above, and for the same reason — this card is the OTHER board-wide
+// one the priority filter leaves untouched.
+const chartCaption = document.createElement('p')
+chartCaption.className = 'dc-caption'
+chartCaption.textContent = 'Board-wide across every ticket — unaffected by the priority filter below.'
 
 const chart = document.createElement('ui-bar-chart') as UIBarChartElement
 chart.label = 'Tickets by category'
 chart.data = computeCategoryBreakdown(FIXTURE_RECORDS)
-chartSection.append(chartTitle, chart)
+chartSection.append(chartTitle, chartCaption, chart)
 
 // ════════════════ the table + the priority filter (ui-segmented-control — a single-select vehicle, never
 // the workbench's multi-checkbox facet aggregation; SPEC-N3's residual doesn't apply here — a
