@@ -1195,5 +1195,12 @@
     "description": "M-D design intake (GH #472/#421, Kim's 2026-08-05 reopen ruling): freezes the three architectural questions for per-persona A2UI catalogs — Q1 the local-patter…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0174",
+    "url": "./adr-index.html#adr-0174",
+    "description": "Planner-stage pilot (GH #485 design intake): an opt-in, sequential plan→execute→synthesize loop composed entirely from shipped Session/produce()/meta-line/stat…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

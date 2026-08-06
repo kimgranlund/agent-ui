@@ -230,7 +230,11 @@ describe('STRUCTURAL — S5-S9 (S5-S8 promoted at Phase 5, manifest M7-M10; S9 m
     // in-worktree and was renumbered to 0152 on discovering the collision, leaving this gap until #45 merges.
     // 155: reserved by PR #183's ADR-0155 (shell responsive band ladder, in-flight 2026-07-20) —
     // ADR-0156 (app-shell deprecation) skipped it to avoid the merge collision, leaving this gap until #183 merges.
-    const KNOWN_GAPS = new Set([108, 151, 155])
+    // 173: reserved by the concurrent docs-483-descriptor-inversion branch's ADR-0173 (in-flight
+    // 2026-08-06, a parallel docs lane not present in this worktree) — this branch's ADR-0174 is
+    // pinned by the dispatching orchestrator to avoid colliding with it, leaving this gap until
+    // that branch merges.
+    const KNOWN_GAPS = new Set([108, 151, 155, 173])
     const nums = readdirSync(`${DOCS}/adr`).map((f: string) => /^(\d{4})-/.exec(f)?.[1]).filter(Boolean).map(Number).sort((a: number, b: number) => a - b) as number[]
     const newGaps: number[] = []
     for (let n = nums[0]!; n <= nums[nums.length - 1]!; n++)
