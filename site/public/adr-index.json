@@ -1209,5 +1209,19 @@
     "description": "Planner-stage pilot (GH #485 design intake): an opt-in, sequential plan→execute→synthesize loop composed entirely from shipped Session/produce()/meta-line/stat…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0175",
+    "url": "./adr-index.html#adr-0175",
+    "description": "M-F design intake (GH #498, the fleet's most-cited recurring gap — four independent citations across two roadmap inventory waves): a multi-select FIELD primiti…",
+    "level": "L3",
+    "section": "Records"
+  },
+  {
+    "name": "ADR-0176",
+    "url": "./adr-index.html#adr-0176",
+    "description": "Identity & account flow family design intake (GH #490): a mixed cut over the FACE fleet — Registration + Magic Link + Social Auth + Email+Password compose EXIS…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
