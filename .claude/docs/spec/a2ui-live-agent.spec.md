@@ -1,6 +1,6 @@
 # SPEC — A2UI Live-Agent Example (a real LLM emitting A2UI over the wire)
 
-> Status: proposed · v0.10 · 2026-08-06 (v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> Status: accepted · v0.10 · 2026-08-06 (v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
 > v0.10 changelog (ADR-0174 cl.2, PROPOSED pending Kim's review — the planner-stage pilot's plan-turn
 > wire representation): the ADR-0088 meta-line envelope gains a SIXTH, additive, MODEL-authored field,
 > `plan: { steps: [{ id: string; description: string }] }`, following the `ask`-arm precedent EXACTLY
