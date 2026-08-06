@@ -157,6 +157,71 @@ describe('eager id-graph guard (LLD-C4 / SPEC-R3 AC2)', () => {
   })
 })
 
+// A linear `root -> n0 -> n1 -> ... -> n(depth-2)` chain: `depth` levels deep total (root counts as 1).
+function chain(depth: number): A2uiComponent[] {
+  const ids = Array.from({ length: depth - 1 }, (_, i) => `n${i}`)
+  const nodes: A2uiComponent[] = [{ id: 'root', component: 'Column', child: ids[0] }]
+  for (let i = 0; i < ids.length; i++) {
+    const next = ids[i + 1]
+    nodes.push({ id: ids[i]!, component: 'Column', ...(next !== undefined ? { child: next } : {}) })
+  }
+  return nodes
+}
+
+describe('render-depth guard (a2ui-runtime SPEC-R15, GH #473)', () => {
+  it('mounts a chain exactly AT the 64-level cap with no error', () => {
+    const { calls, errors, tree } = harness()
+    tree.apply(msg(chain(64)))
+    expect(errors).toEqual([])
+    expect(tree.isMounted).toBe(true)
+    expect(calls).toHaveLength(64)
+  })
+
+  it('a chain one level PAST the cap emits DEPTH_EXCEEDED and never mounts (no stack overflow, no crash)', () => {
+    const { calls, errors, tree } = harness()
+    expect(() => tree.apply(msg(chain(65)))).not.toThrow()
+    expect(errors).toHaveLength(1)
+    expect(errors[0].code).toBe('DEPTH_EXCEEDED')
+    expect(errors[0].surfaceId).toBe('s1')
+    expect(tree.isMounted).toBe(false)
+    expect(calls).toEqual([]) // refused to mount into the over-cap graph at all
+  })
+
+  it('a WAY over-cap chain (1000 levels) still does not crash — proves the guard is iterative, not recursive', () => {
+    const { errors, tree } = harness()
+    expect(() => tree.apply(msg(chain(1000)))).not.toThrow()
+    expect(errors).toHaveLength(1)
+    expect(errors[0].code).toBe('DEPTH_EXCEEDED')
+  })
+
+  it('leaves already-rendered content standing: a later over-cap resend does not touch the live surface', () => {
+    const { calls, errors, surface, tree } = harness()
+    tree.apply(msg([{ id: 'root', component: 'Column', children: ['a'] }, { id: 'a', component: 'Text' }]))
+    expect(tree.isMounted).toBe(true)
+    const rootBefore = tree.rootElement
+    const aWidgetBefore = surface.widgets.get('a')
+    calls.length = 0 // reset the call log so the second apply's (non-)effect is isolated
+
+    // Resend 'a' as the head of a too-deep chain — the WHOLE batch is refused, not just the deep tail.
+    const deepTail = chain(65).slice(1) // drop the synthetic 'root' entry — 'a' takes its role below
+    tree.apply(msg([{ id: 'a', component: 'Column', child: 'n0' }, ...deepTail]))
+
+    expect(errors).toHaveLength(1)
+    expect(errors[0].code).toBe('DEPTH_EXCEEDED')
+    expect(tree.rootElement).toBe(rootBefore) // unchanged, still the original mounted root
+    expect(surface.widgets.get('a')).toBe(aWidgetBefore) // 'a's live widget never reconciled/replaced
+    expect(calls).toEqual([]) // no new widget minted for the refused batch
+  })
+
+  it('a not-yet-mounted root (no root delivered yet) is never depth-checked — nothing to overflow yet', () => {
+    const { errors, tree } = harness()
+    // A deep chain rooted at a non-'root' id: irrelevant until 'root' itself arrives (SPEC-R4).
+    tree.apply(msg(chain(65).map((c) => (c.id === 'root' ? { ...c, id: 'not-root' } : c))))
+    expect(errors).toEqual([])
+    expect(tree.isMounted).toBe(false)
+  })
+})
+
 describe('out-of-order child held + patched (SPEC-R4 AC1)', () => {
   it('holds a missing child in a slot and patches it in when it arrives — no root re-render', () => {
     const { calls, tree } = harness()

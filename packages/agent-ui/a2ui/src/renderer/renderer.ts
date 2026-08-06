@@ -177,7 +177,7 @@ class Renderer implements RendererHost {
 
     // The internal error sink: applies toWireError at the single client→server chokepoint (ADR-0031
     // clause 1/2) so every outbound error carries the v1.0 two-code wire shape. Internal callers
-    // (functions.ts / checks.ts) still receive and emit `A2uiError` (the 8-code internal taxonomy)
+    // (functions.ts / checks.ts) still receive and emit `A2uiError` (the 9-code internal taxonomy)
     // unchanged — the map is applied HERE, not at the emit sites.
     this.#emitError = (error) => this.#emitInternalError(this.#versionFor(error.surfaceId), error)
     this.#widgetDeps = {
@@ -276,12 +276,13 @@ class Renderer implements RendererHost {
     // disposes the prior surface's scope/listeners, but DOM detach is the host's).
     this.#teardownSurfaceDom(body.surfaceId)
 
+    // `body.theme` (v0.9.x-only, SPEC-R13) is not carried onto the surface model: no theming applier
+    // (LLD-C8) consumes it yet, and v1.0 has no surface-theming field at all (SPEC-R6(b), GH #477 —
+    // `surfaceProperties` dropped from the wire type; see protocol.ts's `A2uiCreateSurface` doc comment).
     const surface = this.#store.create({
       id: body.surfaceId,
       catalogId: body.catalogId,
       version,
-      // v0.9.x carries `theme` where v1.0 carries `surfaceProperties` (SPEC-R13 AC1); prefer the v1.0 field.
-      surfaceProperties: body.surfaceProperties ?? body.theme,
       sendDataModel: body.sendDataModel,
     })
     this.#trees.set(
@@ -469,7 +470,7 @@ class Renderer implements RendererHost {
 
   /**
    * The single outbound client→server error chokepoint (ADR-0031 clause 1). Applies `toWireError`
-   * to map the 8-code internal `A2uiError` to the v1.0 two-code `A2uiWireError` before emitting.
+   * to map the 9-code internal `A2uiError` to the v1.0 two-code `A2uiWireError` before emitting.
    * Internal callers (emitError, #onCreateSurface, #onTreeError, #finalizeSurface, ingest) all
    * route here — keeping the mapping in one place so no emit site produces a raw internal code on
    * the wire. The `#emit` method below is the pure mechanical broadcaster (actions use it directly).

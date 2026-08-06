@@ -139,6 +139,41 @@ describe('validateA2ui (renderer LLD-C11, SPEC-R11)', () => {
     expect(v.failures).toContainEqual({ code: 'IDGRAPH', path: 's:cycle' })
   })
 
+  // — DEPTH_EXCEEDED (a2ui-runtime SPEC-R15, GH #473) —
+  it('accepts a chain exactly AT the 64-level cap', () => {
+    const components = Array.from({ length: 64 }, (_, i) => ({
+      id: i === 0 ? 'root' : `n${i}`,
+      component: 'Card',
+      ...(i < 63 ? { child: `n${i + 1}` } : {}),
+    }))
+    const v = validateA2ui([{ version: 'v1.0', updateComponents: { surfaceId: 's', components } }], demoCatalog)
+    expect(v).toEqual({ valid: true, failures: [] })
+  })
+
+  it('DEPTH_EXCEEDED: a chain one level past the 64-level cap — rejected at admission (never silently truncated)', () => {
+    const components = Array.from({ length: 65 }, (_, i) => ({
+      id: i === 0 ? 'root' : `n${i}`,
+      component: 'Card',
+      ...(i < 64 ? { child: `n${i + 1}` } : {}),
+    }))
+    const v = validateA2ui([{ version: 'v1.0', updateComponents: { surfaceId: 's', components } }], demoCatalog)
+    expect(v.valid).toBe(false)
+    expect(v.failures).toContainEqual({ code: 'DEPTH_EXCEEDED', path: 's:depth' })
+  })
+
+  it('DEPTH_EXCEEDED: a WAY over-cap chain (1000 levels) does not crash — proves the guard is iterative', () => {
+    const components = Array.from({ length: 1000 }, (_, i) => ({
+      id: i === 0 ? 'root' : `n${i}`,
+      component: 'Card',
+      ...(i < 999 ? { child: `n${i + 1}` } : {}),
+    }))
+    let v: ValidationVerdict | undefined
+    expect(() => {
+      v = validateA2ui([{ version: 'v1.0', updateComponents: { surfaceId: 's', components } }], demoCatalog)
+    }).not.toThrow()
+    expect(v!.failures).toContainEqual({ code: 'DEPTH_EXCEEDED', path: 's:depth' })
+  })
+
   // — POINTER —
   it('POINTER: a malformed ~ escape in a binding', () => {
     const v = validateA2ui(

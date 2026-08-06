@@ -170,7 +170,7 @@ describe('renderer host — stream faults + lifecycle (renderer LLD §9, SPEC-N3
   it('ADR-0031: FUNCTION (checks unknown fn) → VALIDATION_FAILED on the wire + surfaceId (corrected mapping)', async () => {
     // The FUNCTION wire-emit proof (corrected flow grounding, ADR-0031 clause 2): a Button node with a
     // `checks` entry calling an unknown catalog function causes the checks controller to emit a FUNCTION
-    // INTERNAL error. toWireError maps ALL 8 codes → VALIDATION_FAILED + surfaceId this wave — our
+    // INTERNAL error. toWireError maps ALL 9 codes → VALIDATION_FAILED + surfaceId this wave — our
     // FUNCTION emits are render-time binding-eval failures (unknown/throwing fn in a binding), not
     // server-initiated calls. Button is used (not TextField) because UIFormElement.setFormValue is
     // not in jsdom; Button has `disabled` as the checks controller's auto-disable target (ADR-0029 §7).
@@ -584,7 +584,7 @@ describe('renderer host — callFunction RPC (SPEC-R14 / ADR-0034 + amendment / 
     await whenFlushed()
     expect(btn.disabled).toBe(false) // required({ value: 'Ada' }) → valid
 
-    // Binding-eval path never emits INVALID_FUNCTION_CALL (ADR-0031 maps all 8 internal codes
+    // Binding-eval path never emits INVALID_FUNCTION_CALL (ADR-0031 maps all 9 internal codes
     // through toWireError → VALIDATION_FAILED; INVALID_FUNCTION_CALL is the server-invoke path only)
     expect(sent.filter(isError).filter(e => e.error.code === 'INVALID_FUNCTION_CALL')).toHaveLength(0)
 

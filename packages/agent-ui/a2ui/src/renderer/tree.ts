@@ -18,12 +18,24 @@
 // SPEC-R3 AC2: a 2nd `id:'root'` keeps the existing root and emits `IDGRAPH`; a cycle in
 // `child`/`children` emits `IDGRAPH` and refuses to mount the invalid graph.
 //
+// Render-depth guard (a2ui-runtime SPEC-R15, GH #473, ecosystem SPEC-R2). `exceedsMaxDepth` runs
+// BEFORE `hasCycle` — and before either has any chance to be invoked — for a load-bearing reason:
+// `hasCycle` (below) is itself a native-recursive DFS with NO depth bound of its own, so a
+// pathologically deep (even acyclic) payload would crash INSIDE `hasCycle` before this guard's own
+// intent (never a stack overflow) could take effect, if the ordering were reversed. `exceedsMaxDepth`
+// is therefore deliberately ITERATIVE (a BFS with an explicit queue, no native recursion) — it cannot
+// itself overflow regardless of how deep or cyclic the input is. Exceeding the cap freezes the
+// surface exactly like a reported cycle (`#depthExceeded`, mirroring `#cycleReported`): the already-
+// rendered content stays up, no further batches mount for THIS surface, but the stream and every
+// OTHER surface continue (SPEC-N4).
+//
 // Decoupling. The widget factory (renderer LLD-C7, a sibling slice) is consumed through the
 // B0-pinned `CreateWidget` signature (`./types.ts`); this module is proven against a stub. The host
 // (LLD-C13) owns one `SurfaceTree` per surface, wires `createWidget` + the client-error `onError`
 // callback, and reads `surface.widgets.get('root')` to attach the rendered root into the document.
 
 import type { A2uiChildTemplate, A2uiComponent, A2uiError, A2uiServerMessage } from '../protocol.ts'
+import { MAX_RENDER_DEPTH } from '../protocol.ts'
 import type { Surface } from './surface.ts'
 import type { CreateWidget, ItemScope, CreateOnly, RewireNode, ResetProp, ComponentDefOf } from './types.ts'
 import type { Scope } from '@agent-ui/components'
@@ -82,6 +94,7 @@ export class SurfaceTree {
   #rootDelivered = false // a first `id:'root'` was accepted; a later one is an IDGRAPH (SPEC-R3 AC2).
   #rootMounted = false // the tree has been mounted from `root` (mount-once gate).
   #cycleReported = false // a cycle was found; the graph is invalid, so further batches are inert.
+  #depthExceeded = false // the render-depth cap was exceeded; further batches are inert (SPEC-R2/GH #473).
 
   constructor(surface: Surface, deps: TreeDeps) {
     this.#surface = surface
@@ -136,6 +149,22 @@ export class SurfaceTree {
       if (previous !== undefined && this.#surface.widgets.has(comp.id)) resent.set(comp.id, previous)
       this.#surface.components.set(comp.id, comp) // buffer (upsert) by id (SPEC-R3)
       delivered.push(comp.id)
+    }
+
+    // Render-depth guard (SPEC-R2/GH #473) — checked FIRST, before `hasCycle`, and via an iterative
+    // (non-recursive) BFS: `hasCycle` below is native-recursive with no depth bound of its own, so a
+    // pathologically deep payload must never reach it. Root-reachable only (a dangling/unreached deep
+    // chain can never mount, so it poses no stack risk yet — SPEC-R4).
+    if (this.#depthExceeded) return
+    if (exceedsMaxDepth(this.#surface.components, MAX_RENDER_DEPTH)) {
+      this.#depthExceeded = true
+      this.#deps.onError({
+        code: 'DEPTH_EXCEEDED',
+        surfaceId: this.#surface.id,
+        path: `${this.#surface.id}:depth`,
+        message: `render-depth guard: the component tree exceeds the ${MAX_RENDER_DEPTH}-level cap (SPEC-R2)`,
+      })
+      return // refuse to mount; already-rendered content stands, the stream continues (SPEC-N4)
     }
 
     // Eager id-graph guard (in-stream): a cycle in `child`/`children` is always invalid (LLD-C4 §8).
@@ -483,6 +512,38 @@ function childRefs(node: A2uiComponent): string[] {
   if (typeof node.child === 'string') out.push(node.child)
   if (Array.isArray(node.children)) for (const c of node.children) if (typeof c === 'string') out.push(c)
   return out
+}
+
+/**
+ * Render-depth guard (a2ui-runtime SPEC-R15, GH #473): does the `root`-reachable `child`/`children`
+ * graph nest past `cap` levels? Deliberately ITERATIVE — a BFS over explicit array frontiers, no
+ * native recursion — so this check itself can never stack-overflow regardless of how deep (or even
+ * cyclic) the input is; it MUST run before `hasCycle` (below), which is native-recursive and has no
+ * depth bound of its own (mirrors validate.ts's identically-shaped guard, SPEC-N6 parity). A cycle
+ * cannot cause non-termination here: each id is visited at most once (`visited`), so a back-edge is
+ * simply skipped rather than infinitely re-walked — cycle detection itself stays `hasCycle`'s job.
+ */
+function exceedsMaxDepth(byId: Map<string, A2uiComponent>, cap: number): boolean {
+  if (!byId.has('root')) return false
+  const visited = new Set<string>(['root'])
+  let frontier = ['root']
+  let depth = 1
+  while (frontier.length > 0) {
+    if (depth > cap) return true
+    const next: string[] = []
+    for (const id of frontier) {
+      const node = byId.get(id)
+      if (node === undefined) continue
+      for (const ref of childRefs(node)) {
+        if (!byId.has(ref) || visited.has(ref)) continue // dangling hold (SPEC-R4) or already-reached
+        visited.add(ref)
+        next.push(ref)
+      }
+    }
+    frontier = next
+    depth++
+  }
+  return false
 }
 
 /**

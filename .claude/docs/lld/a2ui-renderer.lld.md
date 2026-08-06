@@ -1,7 +1,7 @@
 # LLD — A2UI Renderer
 
 > Status: proposed · v0.1 · 2026-06-26 · Layer: LLD (implementation plan)
-> Implements: [`../spec/a2ui-runtime.spec.md`](../spec/a2ui-runtime.spec.md) (SPEC-R1..R13, SPEC-N1..N6), targeting A2UI **v1.0**.
+> Implements: [`../spec/a2ui-runtime.spec.md`](../spec/a2ui-runtime.spec.md) (SPEC-R1..R15, SPEC-N1..N6), targeting A2UI **v1.0**.
 > Owns the shared **`validate.ts`** that the corpus LLD imports (validator parity, runtime SPEC-N6 / corpus SPEC-N1).
 > Altitude: adds the **how** on the `@agent-ui/components` signals kernel; cites `SPEC-R*` for behavior, never re-derives it.
 
@@ -14,14 +14,14 @@
 | **LLD-C1** | Stream parser (JSONL) | SPEC-R1 | `parser.ts` |
 | **LLD-C2** | Message dispatcher (version-aware) | SPEC-R1, R13 | `dispatch.ts` |
 | **LLD-C3** | Surface model (signals state) | SPEC-R2, N3 | `surface.ts` |
-| **LLD-C4** | Component buffer + tree reconstructor | SPEC-R3, R4 | `tree.ts` |
+| **LLD-C4** | Component buffer + tree reconstructor + render-depth guard | SPEC-R3, R4, R15 | `tree.ts` |
 | **LLD-C5** | Binding resolver (JSON-Pointer→signal) | SPEC-R5, N2 | `binding.ts` |
 | **LLD-C6** | Dynamic list renderer | SPEC-R6 | `list.ts` |
 | **LLD-C7** | Widget factory / catalog resolver | SPEC-R9 | `widget.ts` |
 | **LLD-C8** | Input binding controller (two-way) | SPEC-R7 | `input.ts` |
 | **LLD-C9** | Action dispatcher (+ actionResponse) | SPEC-R8 | `action.ts` |
 | **LLD-C10** | Client-side function evaluator + `${…}` interpolator + `checks` validation | SPEC-R10 | `functions.ts` · `interpolate.ts` (ADR-0027) · `fn-expr.ts` (ADR-0028) · `checks.ts` (ADR-0029 client-side checks) |
-| **LLD-C11** | Validator (shared) | SPEC-R11, N6 | `validate.ts` |
+| **LLD-C11** | Validator (shared) | SPEC-R11, N6, R15 | `validate.ts` |
 | **LLD-C12** | Capabilities | SPEC-R12 | `capabilities.ts` |
 | **LLD-C13** | Renderer host / orchestrator | SPEC-R1, N3, N4 | `renderer.ts` |
 | **LLD-C14** | Server-initiated `callFunction` RPC handler | SPEC-R14 | `call-function.ts` (ADR-0034) |
@@ -35,7 +35,7 @@ One surface = one ownership **scope** (kernel `createScope()`) + an `AbortContro
 ```ts
 interface Surface {
   id: string; catalogId: string; version: string;
-  surfaceProperties?: object; sendDataModel: boolean;
+  sendDataModel: boolean;                           // surfaceProperties dropped (SPEC-R6(b) REV 2026-08-06, GH #477)
   components: Map<string, A2uiComponent>;          // raw, buffered by id (SPEC-R3)
   data: Signal<unknown>;                            // the surface data model (SPEC-R5)
   scope: Scope;                                     // owns every binding effect; dispose() on deleteSurface
@@ -52,9 +52,9 @@ interface Surface {
 
 **LLD-C1** `parseLine(line) → A2uiServerMessage | ParseError`: trim, `JSON.parse`, on throw return a `ParseError` (→ `error{code:"PARSE"}`, stream continues — SPEC-R1 AC2 / N4). The host never lets a parser throw escape.
 
-**LLD-C2** `dispatch(msg, surfaces)`: read `msg.version`; if unsupported → `VERSION_UNSUPPORTED`, skip (SPEC-R13). Else select the version adapter (v1.0 default; v0.9.x maps `theme`→`surfaceProperties`, lacks `actionResponse`) and route the single envelope key to its handler. Dispatch is a pure switch over the five server message kinds; `default` (unknown key) → `error{code:"SCHEMA"}`.
+**LLD-C2** `dispatch(msg, surfaces)`: read `msg.version`; if unsupported → `VERSION_UNSUPPORTED`, skip (SPEC-R13). Else select the version adapter (v1.0 default, no surface-theming field at all; v0.9.x carries a `theme` field, lacks `actionResponse` — SPEC-R6(b) REV 2026-08-06, GH #477: the prior `theme`→`surfaceProperties` mapping is gone, `surfaceProperties` dropped from the wire type) and route the single envelope key to its handler. Dispatch is a pure switch over the five server message kinds; `default` (unknown key) → `error{code:"SCHEMA"}`.
 
-## 4. Tree reconstruction & progressive render — LLD-C4 (SPEC-R3, R4)
+## 4. Tree reconstruction & progressive render — LLD-C4 (SPEC-R3, R4, R15)
 
 **Buffering + render-on-root.** `updateComponents` merges each component into `surface.components` by `id`. After each batch: if `root` is present and not yet mounted, mount the tree; else patch.
 
@@ -66,6 +66,8 @@ interface Surface {
 **Patch-in (SPEC-R4 AC1).** When a later `updateComponents` delivers a previously-missing id, look it up in `pendingParents`, mount it under each waiting parent, and clear the entry — **no re-render of unaffected subtrees** (only the patched node mounts).
 
 **Edges:** second `root` → `IDGRAPH`, existing root kept (SPEC-R3 AC2); cycle in `child`/`children` → detected by DFS colouring → `IDGRAPH` on the back-edge; unreachable buffered components are inert until referenced.
+
+**Render-depth guard (SPEC-R15, GH #473).** Before the cycle-DFS runs, an ITERATIVE (non-recursive) BFS from `root` checks whether the tree nests past `MAX_RENDER_DEPTH` (`protocol.ts`, 64). This ordering is load-bearing: the cycle-DFS above is native-recursive with no depth bound of its own, so it must never see a payload deep enough to overflow it. Exceeding the cap emits `error{code:"DEPTH_EXCEEDED"}` and freezes further mounting for that surface only (mirrors the cycle guard's `#cycleReported` freeze) — already-rendered content stays up, the stream and other surfaces continue (SPEC-N4). `validate.ts` (LLD-C11) runs the identical BFS, importing the SAME `MAX_RENDER_DEPTH` constant, and REJECTS (rather than degrades) a too-deep payload at admission time.
 
 ## 5. Binding resolver & dynamic lists — LLD-C5, LLD-C6
 

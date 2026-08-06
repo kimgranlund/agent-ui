@@ -222,6 +222,7 @@ function mapTier1Code(code: ErrorCode): AdmitCode {
     case 'CATALOG_UNKNOWN':
       return 'E_CATALOG'
     case 'IDGRAPH':
+    case 'DEPTH_EXCEEDED': // SPEC-R2/GH #473 — a graph-shape rejection, the E_IDGRAPH family (not E_SCHEMA)
       return 'E_IDGRAPH'
     case 'POINTER':
       return 'E_POINTER'
