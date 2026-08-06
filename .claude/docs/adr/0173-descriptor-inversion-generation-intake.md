@@ -208,4 +208,11 @@ vehicle reused) · the fleet drift gate (`descriptor/props-gen-driftwire.test.ts
 gate · a first wave of 5 conversions — `ui-button` (gold-first, no bespoke codec, one `attribute:` override),
 `ui-table` (both the `attribute:`-override AND bespoke-`codec:` exemplar), `ui-badge` (the shared-tuple
 `const:` exemplar), `ui-avatar` and `ui-progress` (the plain bare-`prop.*()` majority case). No descriptor
-`.md` prose, catalog row content, or A2UI renderer code changed.
+`.md` prose, catalog row content, or A2UI renderer code changed. The build also hardened
+`components/src/layering.test.ts`'s import-scanner regex, a pre-existing fleet-wide trip-wire this same work
+surfaced two genuine false-positive classes in: a `codec:` sub-field's own Map key literally spelled
+`'import'` (`component-descriptor.ts`'s `CodecRef` reads), and generated-text template-literal CONTENT that
+spells out a real `import … from '…'` statement as a string VALUE (`generate-props.ts` building
+`{name}.props.gen.ts` source) — both were misread as this repo's own external imports; closed with a
+scoped exclusion (never weakening real-import detection), verified against the real fleet plus a new
+regression test.
