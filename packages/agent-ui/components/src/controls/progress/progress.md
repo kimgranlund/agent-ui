@@ -1,12 +1,10 @@
 ---
-# progress.md frontmatter — the attributes-as-API descriptor for ui-progress (ADR-0004; LLD-C10,
-# feed-family.lld.md §6). The machine-checkable public surface lives HERE (frontmatter); the prose below
-# the fence is the /site doc. `attributes[]` MUST mirror progress.ts `static props` (value/max/label) —
-# the contract<->props trip-wire (progress-descriptor.test.ts) targets this fence. `value` and `max` both
-# ride the fleet's `prop.number` codec, so `kindOf` (component-descriptor.ts) classifies BOTH as "number"
-# regardless of their differing defaults (null vs 100) — the codec's `type.from` behaviour is what kindOf
-# probes, never the schema default (verified in progress-descriptor.test.ts, the stat.md kindOf
-# build-verify precedent).
+# progress.md frontmatter — the GENERATION SOURCE for ui-progress's `static props` block (ADR-0173,
+# converting ADR-0004's mirror to a source; LLD-C10, feed-family.lld.md §6). The machine-checkable public
+# surface lives HERE (frontmatter); the prose below the fence is the /site doc. `progress.props.gen.ts` is
+# GENERATED from `attributes[]` below (`node scripts/generate-props.mjs progress`) — the plain bare-
+# `prop.*()` majority case, no enum at all. progress.ts imports the generated module — never hand-edit it.
+# The fleet drift gate (descriptor/props-gen-driftwire.test.ts) keeps the two byte-identical.
 tag: ui-progress
 tier: display          # geometry size-class (Display band — a bar is a rail, not a widget box; SPEC-R20)
 extends: UIElement     # a non-interactive, non-form-associated display LEAF (SPEC-R1)
@@ -14,19 +12,22 @@ extends: UIElement     # a non-interactive, non-form-associated display LEAF (SP
 # integration slice (barrel export, component-styles.css import, package.json exports entry); the real
 # `npm run size` figure lands with that slice, per feed-family.lld.md §6 (measured, never guessed).
 
-attributes:            # attributes-as-API — mirrors progress.ts `static props` (value, max, label)
+attributes:            # attributes-as-API — the GENERATION SOURCE for progress.ts `static props` (ADR-0173)
   - name: current
-    type: number        # kindOf's behavioural verdict (see the header note) — the TS type is number|null
+    type: number        # kindOf's behavioural verdict — the TS type is number|null
     default: null        # String(null) = 'null' — the LIVE default; null/absent/non-finite ⇒ indeterminate
     reflect: false        # NOT reflected — property-only render input
+    description: null (default) ⇒ indeterminate — the native progress semantic, no separate boolean to desync.
   - name: max
     type: number
     default: 100          # the ARIA progressbar default (SPEC-R1); non-finite/≤0/malformed ⇒ floors to 100
     reflect: false
+    description: The ARIA progressbar default (100) — percent-natural for {current:42} with zero extra props.
   - name: label
     type: string
     default: ''
     reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
+    description: The accessible name (SPEC-R3); empty ⇒ no internals.ariaLabel.
 
 properties: []         # no manual accessors beyond the three typed props
 

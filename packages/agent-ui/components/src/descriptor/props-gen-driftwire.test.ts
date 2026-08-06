@@ -17,7 +17,7 @@ const CONTROLS = `${ROOT}/packages/agent-ui/components/src/controls`
 const read = (p: string): string => readFileSync(p, 'utf8') as string
 
 /** The converted-fleet allowlist (ADR-0173 cl.6) — grows wave-by-wave. */
-const CONVERTED = ['button', 'table', 'badge', 'avatar'] as const
+const CONVERTED = ['button', 'table', 'badge', 'avatar', 'progress'] as const
 
 describe('props-gen-driftwire — anti-vacuous fleet coverage', () => {
   it('CONVERTED is non-empty and every entry has a committed {name}.props.gen.ts file', () => {
