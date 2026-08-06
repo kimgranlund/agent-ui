@@ -1,8 +1,10 @@
 ---
-# avatar.md frontmatter — the attributes-as-API descriptor for ui-avatar (ADR-0004; LLD-C10,
-# feed-family.lld.md §6). The machine-checkable public surface lives HERE (frontmatter); the prose below
-# the fence is the /site doc. The `attributes[]` block MUST mirror avatar.ts `static props`
-# (src/identity/label/size) — the contract<->props trip-wire (avatar-descriptor.test.ts) targets this fence.
+# avatar.md frontmatter — the GENERATION SOURCE for ui-avatar's `static props` block (ADR-0173, converting
+# ADR-0004's mirror to a source; LLD-C10, feed-family.lld.md §6). The machine-checkable public surface lives
+# HERE (frontmatter); the prose below the fence is the /site doc. `avatar.props.gen.ts` is GENERATED from
+# `attributes[]` below (`node scripts/generate-props.mjs avatar`) — the plain bare-`prop.*()` majority case
+# (no bespoke codec, no shared-tuple const:). avatar.ts imports the generated module — never hand-edit it.
+# The fleet drift gate (descriptor/props-gen-driftwire.test.ts) keeps the two byte-identical.
 tag: ui-avatar
 description: A compact circular identity mark that shows a photo, initials, or a fallback glyph for one person.
 tier: indicator        # geometry size-class — the F3 widget-box class (ADR-0041; SPEC-R20), NOT display:
@@ -13,28 +15,32 @@ extends: UIElement     # a non-interactive, non-form-associated display LEAF (SP
 # integration slice (barrel export, component-styles.css import, package.json exports entry); the real
 # `npm run size` figure lands with that slice, per feed-family.lld.md §6 (measured, never guessed).
 
-attributes:            # attributes-as-API — mirrors avatar.ts `static props` (src, identity, label, size)
+attributes:            # attributes-as-API — the GENERATION SOURCE for avatar.ts `static props` (ADR-0173)
   - name: src
     type: string
     default: ''
     reflect: false      # NOT reflected — property-only render input; a load error falls back without ever
                          # exposing the failed URL as a host attribute
+    description: An image URL for the fallback chain's first link; a load error falls back without ever painting a broken-image box.
   - name: identity
     type: string
     default: ''
     reflect: false      # NOT reflected — the identity the initials derive from; NOT announced by default
                          # (SPEC-R6 — announcing it would duplicate the visible name the avatar sits beside)
+    description: The identity the initials derive from; NOT announced by default (SPEC-R6).
   - name: label
     type: string
     default: ''
     reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
                          # itself the accessible name (role=img)
+    description: The a11y escape hatch — non-empty makes the avatar itself the accessible name (role=img).
   - name: size
     type: enum
     values: [sm, md, lg]
     default: md
     reflect: true       # REFLECTED — the CSS `[size]` hook that repoints the widget-box ramp tier
                          # (the checkbox/badge precedent)
+    description: A step on the compact-realm widget-box ramp (sm, md default, lg).
 
 properties: []         # no manual accessors beyond the four typed props
 

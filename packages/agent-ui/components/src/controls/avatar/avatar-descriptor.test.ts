@@ -1,21 +1,21 @@
 import { describe, it, expect } from 'vitest'
-import { UIAvatarElement } from './avatar.ts'
 import {
   splitFrontmatter,
   parseDescriptor,
   validateComponentDescriptor,
-  compareDescriptorToProps,
   compareDescriptorToSource,
   collectUsedStates,
   collectStyledSlots,
   scalarSeq,
 } from '../../descriptor/component-descriptor.ts'
-import type { ParsedAttribute } from '../../descriptor/component-descriptor.ts'
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 
-// avatar-descriptor.test.ts — the text.md/stat.md three-layer pattern (LLD-C10, feed-family.lld.md §6):
-// structural (s8), contract↔props (s10), contract↔source (s11).
+// avatar-descriptor.test.ts — structural (s8) + contract↔source (s11); the text.md/stat.md pattern. The
+// contract↔props leg (s10) RETIRED here (ADR-0173 cl.4c/OF4): avatar.ts's `static props` now IMPORTS
+// `avatar.props.gen.ts`, GENERATED from this same avatar.md — the bijection is structurally true by
+// construction. The replacement drift gate lives fleet-wide in `descriptor/props-gen-driftwire.test.ts`
+// (avatar's entry lands in the SAME commit as this retirement).
 
 const DIR = `${process.cwd()}/packages/agent-ui/components/src/controls/avatar`
 const md = readFileSync(`${DIR}/avatar.md`, 'utf8') as string
@@ -51,49 +51,6 @@ describe('avatar.md descriptor — structural validity', () => {
   it('validateComponentDescriptor reports ZERO structural failures (schema-valid)', () => {
     expect(parsed.attributes.map((a) => a.name)).toEqual(ATTR_NAMES)
     expect(validateComponentDescriptor(parsed)).toEqual([])
-  })
-})
-
-describe('avatar.md descriptor — contract↔props trip-wire', () => {
-  it('attributes[] is a faithful bijection with UIAvatarElement.props by NAME, in order', () => {
-    expect(parsed.attributes.map((a) => a.name)).toEqual(ATTR_NAMES)
-    const drift = compareDescriptorToProps(parsed.attributes, UIAvatarElement.props)
-    expect(drift.filter((d) => d.code === 'DRIFT_MISSING' || d.code === 'DRIFT_EXTRA')).toEqual([])
-  })
-
-  it('all four attributes are CLEAN — zero drift (type/default/reflect/values all agree with the live props)', () => {
-    const drift = compareDescriptorToProps(parsed.attributes, UIAvatarElement.props)
-    expect(drift).toEqual([])
-  })
-
-  it('src/name are string, reflect=false; label reflects (TKT-0069 item 2 ruling); all default \'\'', () => {
-    for (const name of ['src', 'identity', 'label']) {
-      const a = parsed.attributes.find((x) => x.name === name)
-      expect(a?.type, name).toBe('string')
-      expect(a?.default, name).toBe('')
-      expect(a?.reflect, name).toBe(name === 'label')
-    }
-  })
-
-  it('size is enum sm/md/lg, default=md, REFLECTED (the CSS [size] hook)', () => {
-    const s = parsed.attributes.find((x) => x.name === 'size')
-    expect(s?.type).toBe('enum')
-    expect(s?.default).toBe('md')
-    expect(s?.reflect).toBe(true)
-    expect(s?.values).toEqual(['sm', 'md', 'lg'])
-  })
-
-  it('negative control: a genuinely drifted attribute still FAILS the trip-wire', () => {
-    const flipReflect: ParsedAttribute[] = parsed.attributes.map((a) =>
-      a.name === 'size' ? { ...a, reflect: false } : { ...a },
-    )
-    expect(compareDescriptorToProps(flipReflect, UIAvatarElement.props)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_REFLECT', path: 'attributes.size.reflect' }),
-    )
-    const dropName = parsed.attributes.filter((a) => a.name !== 'identity')
-    expect(compareDescriptorToProps(dropName, UIAvatarElement.props)).toContainEqual(
-      expect.objectContaining({ code: 'DRIFT_MISSING', path: 'attributes.identity' }),
-    )
   })
 })
 
