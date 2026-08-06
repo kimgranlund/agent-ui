@@ -114,7 +114,7 @@ cell's `roadmap.md` line names the resulting stale-prose repair.
   "generalized beyond agent-admin's bespoke surface" is a missing WORKED EXEMPLAR (a docs-site page
   + a generic account-settings schema), not new component work.
 - **No discrete step-progress control exists; the two nearest primitives are shape-mismatched.**
-  `progress.md:15-27` — `ui-progress` is a continuous `value`/`max` bar (no discrete-segment
+  `progress.md:15-27` — `ui-progress` is a continuous `current`/`max` bar (no discrete-segment
   attribute). `pagination.md` — `ui-pagination`'s attributes are page-number navigation for
   data tables, a different domain (jump-to-page) than a linear first-run step readout. Neither is
   a clean fit for a stepper's "step 2 of 4" semantics without at least a prop widening — named as
@@ -164,7 +164,7 @@ shipped controls, recorded as a new row in `agent-ui-composition-patterns`.
   step SHELL — next/back navigation + conditional step-panel display — composes cleanly from
   `ui-button` (next/back/skip) and page-level signal-driven panel switching, the same shape any
   multi-view page already uses; no new interactive control is required for that part. The step
-  PROGRESS READOUT is the one soft spot Context names: `ui-progress`'s continuous `value`/`max` can
+  PROGRESS READOUT is the one soft spot Context names: `ui-progress`'s continuous `current`/`max` can
   approximate a "step N of M" readout today (a graceful, cosmetic approximation, never a
   destructive failure — ADR-0102's own chooser step (ii) puts this squarely in Lane C/Lane-B
   territory, not Lane A), but a literal discrete numbered/dotted stepper would need a small additive
@@ -184,10 +184,6 @@ never `@agent-ui/app` (no A2UI import, no cycle risk). The one Lane-A control (c
 components-tier leaf control for the same reason `ui-slider-multi` is. Account Management's worked
 exemplar composes an `@agent-ui/app` primitive (`ui-settings` already lives there) — it stays at
 that layer, matching where its primitive already sits; nothing here proposes moving `ui-settings`.
-
-**Repairs.** *On ratification:* the forward-pointer note on `agent-ui-composition-patterns`
-(Repairs cell, header). *On ratification+build:* the new code-entry control, the five pattern rows,
-the Account Management worked exemplar (Repairs cell, header).
 
 ### 2 · The security fence — DEMO/pattern surface only, forced by mechanism
 
@@ -211,11 +207,6 @@ that the docs-site demo wires to an in-memory fake, and a real consuming app wir
 backend. The exact interface name, shape, and demo-fake implementation are each slice's own future
 SPEC/LLD to build — not specified here, per this ADR's own charter (freeze the architecture, do not
 pre-build the mechanism).
-
-**Repairs.** *On ratification:* the `agent-app-surfaces.prd.md` §3 forward-pointer (Repairs cell,
-header) — the "route to new intakes" sentence it already carries gets an explicit pointer to this
-answer. *On ratification+build:* the per-slice documented seam contract, home/shape decided at each
-flow's own SPEC/LLD (Repairs cell, header).
 
 ### 3 · A2UI/catalog angle — identity/auth stays host-page-only; onboarding/account left open
 
@@ -245,10 +236,8 @@ ADR-0172 precedent's own Open-forks discipline, not decided here): (a) M-D's com
 concrete need surfaces for an agent to drive onboarding/preference-collection conversationally — at
 that point a future, separately-scoped design intake (not a rider on this one) would rule whether
 Onboarding/Account Management's content steps become catalog-expressible, the same way this
-intake's own trigger (#480 closing) unblocked it.
-
-**Repairs.** None on ratification or ratification+build for this clause — it is a non-build ruling
-for this wave; a future reopening intake, if one ever lands, would carry its own Repairs.
+intake's own trigger (#480 closing) unblocked it. *(No Repairs for this clause — a non-build ruling
+for this wave; a future reopening intake, if one ever lands, would carry its own Repairs.)*
 
 ### 4 · Scope cut + sequencing — five slices, ruled
 
@@ -278,10 +267,6 @@ a graded `*.flow.json` card (`flow-checker`) and layout grades (`layout-checker`
 Acceptance criterion 1; `npm run check && npm test` (+ `test:browser` for any new control) green;
 the security fence (cl.2) holds — no slice's demo wiring makes a real network call to an identity
 provider.
-
-**Repairs.** *On ratification:* the `roadmap.md` §4 line, restated to name this five-slice order
-(Repairs cell, header). *On ratification+build:* per-slice GH sub-issues (ADR-0145 routing), the
-graded flow/layout cards, docs-site pages (Repairs cell, header).
 
 ## Non-goals (recorded, not silent)
 
@@ -324,7 +309,7 @@ graded flow/layout cards, docs-site pages (Repairs cell, header).
 
 - **OQ1 — `ui-progress` segmented/discrete-steps prop widening.** Whether Onboarding's step
   readout needs a literal discrete step indicator (a new additive `segments`-shaped prop on
-  `ui-progress`, Lane B) or the continuous `value`/`max` approximation is good enough, is a real
+  `ui-progress`, Lane B) or the continuous `current`/`max` approximation is good enough, is a real
   design call with no in-tree precedent settling it either way (cl.1). Flagged for the Onboarding
   slice's own SPEC — Kim's or the build team's call, not derivable from the cited sources alone.
 - **OQ2 — provider brand marks in `@agent-ui/icons`.** Whether the Social Auth provider-button row
