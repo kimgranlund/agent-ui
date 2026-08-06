@@ -4,7 +4,7 @@
 // anticipated ("Deferred — the module-move phase"). This is a PURE, mechanical relocation — every
 // function below is byte-identical in BEHAVIOR to its pre-move original (proven by the SAME pinning
 // tests the INDEX doc already names: `renderer.test.ts:261-275` for A1/A3, `upstream-fixtures.test.ts:
-// 101-120` for A2, `checks.test.ts:132-145` for C1, `select-catalog.test.ts` for S1 — GH #487's own
+// 101-120` for A2, `checks.test.ts:132-145` for C1, `chat-validation.test.ts` for S1 — GH #487's own
 // coverage rider, added the same wave). Each arm keeps its INDEX-doc id in its own doc comment so the
 // mapping stays traceable.
 //
