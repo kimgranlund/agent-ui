@@ -78,12 +78,18 @@ export default defineConfig({
           // a real mutating import inside the test process the moment it's created (the hazard GH #335's
           // review named, and GH #343's own root cause). A new package earns a line here once its tool is
           // guarded — it never inherits one.
+          //
+          // GH #476 (SPEC-R5) adds `a2ui/tools/conformance/` — `run.ts` carries the identical CLI-entry
+          // guard (`process.argv[1]?.endsWith('run.ts')`), so importing its pure `runSuite`/`readFixtures`
+          // exports here is exactly as safe as the corpus entries above; its own test also spawns the real
+          // script as a subprocess (the AC1 exit-code proof), the same tier-2 shape as `import-seeds.test.ts`.
           name: 'tools',
           environment: 'node',
           include: [
             'packages/agent-ui/*/tools/agent/worker/*.test.ts',
             'packages/agent-ui/a2ui/tools/agent/integrations/*.test.ts',
             'packages/agent-ui/a2ui/tools/corpus/*.test.ts',
+            'packages/agent-ui/a2ui/tools/conformance/*.test.ts',
             'packages/agent-ui/a2a/tools/corpus/*.test.ts',
           ],
         },

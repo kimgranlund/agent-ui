@@ -1,0 +1,16 @@
+{
+  "suiteId": "a2ui-conformance",
+  "specSource": ".claude/docs/spec/a2ui-ecosystem-alignment.spec.md SPEC-R5 (GH #476)",
+  "upstreamIssue": "https://github.com/a2ui-project/a2ui/issues/2150",
+  "fixturesFile": "fixtures.jsonl",
+  "fixtureCount": 16,
+  "protocolVersion": "v1.0",
+  "seed": "The three upstream-interactive-button/simple-login-form/product-card fixtures (ADR-0169 cl.1's pinned a2ui.org Basic Catalog examples, packages/agent-ui/a2ui/src/catalog/a2ui-basic/fixtures/) are the interop seed named by GH #476 — every other fixture is protocol/catalog-conformance coverage (SCHEMA, VERSION_UNSUPPORTED, CATALOG, IDGRAPH, POINTER, PARSE) authored for this suite.",
+  "catalogs": {
+    "agent-ui": "../src/catalog/default/catalog.json",
+    "a2ui-basic": "../src/catalog/a2ui-basic/catalog.json"
+  },
+  "catalogsNote": "A fixture's `catalogId` field selects WHICH catalog document (this map) to validate its `payload` against — a runner-side choice, distinct from the wire-level `catalogId` a payload's own createSurface message carries (the upstream fixtures pin the real a2ui.org canonical URI verbatim inside the payload, per ADR-0169 cl.1/cl.13, while this suite's `catalogId` field names 'a2ui-basic' — the catalog document to load).",
+  "verdictShape": "Each fixture's `expectedVerdict` is the shared ValidationVerdict shape ({valid: boolean, failures: {code, path}[]} — packages/agent-ui/a2ui/src/renderer/validate.ts). A run PASSES a fixture iff `expectedVerdict.valid === actual.valid` AND `expectedVerdict.failures` equals `actual.failures` as a SET of (code, path) pairs (order-independent — a different validator may walk components in a different order than this repo's ADR-0024 positional walk).",
+  "failureCodes": "PARSE | SCHEMA | VERSION_UNSUPPORTED | CATALOG | IDGRAPH | POINTER — the runtime SPEC's stage-to-code table (packages/agent-ui/a2ui/src/renderer/validate.ts's own header comment is the canonical transcription)."
+}
