@@ -195,8 +195,9 @@ wave as the default-catalog primitive or as its own follow-up is Open fork OF4.
 ### 3 · Association-editing scope fence
 
 **Ruling: "plain multi-pick from a fixed, already-loaded option list" and "to-many
-relationship/association editing" are NOT the same primitive, despite the PRD's own "seen from two
-angles, not a second hole" framing (`saas-data-workbench.prd.md:124`). That framing is TRUE as a
+relationship/association editing" are NOT the same primitive, despite the PRD's own "seen from the
+edit side rather than the filter side — not a second hole" framing (`saas-data-workbench.prd.md:124`).
+That framing is TRUE as a
 necessary-prerequisite claim — both are blocked by the fleet's missing multi-value bindable field —
 and FALSE as a sufficiency claim. Cl.1's minted primitive closes the multi-pick case completely; it
 closes only the first, smaller layer of the relationship-editing case, which needs strictly more
