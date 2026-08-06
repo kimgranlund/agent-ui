@@ -221,7 +221,10 @@ describe('UIAgentAdminElement — shell composition (GH #52/ADR-0154): segments 
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const conversation = el.querySelector('ui-conversation')
     const agentItem = el.querySelector('[data-part="settings-item"][data-item="agent"]')
-    const instructionsSection = el.querySelector('[data-part="entry-section"]')
+    // The FIRST entry-section in document order (GH #488: the catalog picker, folded into Surface
+    // Options, which now sits before Instructions — not the Instructions section itself; this probe only
+    // cares about node identity surviving a tab switch, not which kind is first).
+    const firstEntrySection = el.querySelector('[data-part="entry-section"]')
 
     const tabs = [...el.querySelectorAll('[data-part="narrow-tab"]')] as HTMLElement[]
     tabs.find((t) => t.textContent === 'Settings')!.click()
@@ -230,7 +233,7 @@ describe('UIAgentAdminElement — shell composition (GH #52/ADR-0154): segments 
 
     expect(el.querySelector('ui-conversation')).toBe(conversation)
     expect(el.querySelector('[data-part="settings-item"][data-item="agent"]')).toBe(agentItem)
-    expect(el.querySelector('[data-part="entry-section"]')).toBe(instructionsSection)
+    expect(el.querySelector('[data-part="entry-section"]')).toBe(firstEntrySection)
   })
 
   it('capability sections (Skills/Workflows/Resources/Tools) live in the Settings segment', () => {
@@ -244,16 +247,16 @@ describe('UIAgentAdminElement — shell composition (GH #52/ADR-0154): segments 
   // ── GH #225 — the Settings sections are heading-row folds (the GH #222 Context pattern applied to
   // the config column). jsdom pins the STRUCTURE; agent-admin.browser.test.ts proves the real
   // fold/register/toggle-vs-fold geometry cross-engine. ──────────────────────────────────────────────
-  it('GH #225: every Settings section is a settings-item fold — TEN sections (genui-surface B2 added Pattern sources; ADR-0170 adds Catalogs LAST), in order, ALL open by default (config is an editing surface)', () => {
+  it('GH #225/#488: every Settings section is a settings-item fold — NINE top-level folds (genui-surface B2 added Pattern sources; GH #488 folded Catalogs INTO Surface Options, so it is no longer a TENTH top-level fold), Surface Options above Instructions, ALL open by default (config is an editing surface)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const settings = el.querySelector('[data-segment="Settings"]') as HTMLElement
     const items = [...settings.querySelectorAll(':scope > [data-part="settings-item"]')]
     expect(items.map((i) => i.getAttribute('data-item'))).toEqual([
-      'agent', 'model', ENTRY_KINDS.promptSection, 'surface',
-      ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource, ENTRY_KINDS.catalog,
+      'agent', 'model', 'surface', ENTRY_KINDS.promptSection,
+      ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource,
     ])
     expect(items.map((i) => i.getAttribute('summary'))).toEqual([
-      'Agent', 'Model', 'Instructions', 'Surface Options', 'Skills', 'Workflows', 'Resources', 'Tools', 'Pattern sources', 'Catalogs',
+      'Agent', 'Model', 'Surface Options', 'Instructions', 'Skills', 'Workflows', 'Resources', 'Tools', 'Pattern sources',
     ])
     for (const item of items) expect(item.hasAttribute('open'), `${item.getAttribute('data-item')} defaults open`).toBe(true)
     // The section content is the fold's BODY (the disclosure adopted it — SPEC-R16 children=body).
@@ -261,6 +264,14 @@ describe('UIAgentAdminElement — shell composition (GH #52/ADR-0154): segments 
     expect(settings.querySelector('[data-item="model"] [data-part="body"] [data-part="model-grid"]')).not.toBeNull()
     expect(settings.querySelector('[data-item="surface"] [data-part="body"] [data-part="surface-options"]')).not.toBeNull()
     expect(settings.querySelector(`[data-item="${ENTRY_KINDS.skill}"] [data-part="body"] [data-part="entry-section"][data-kind="${ENTRY_KINDS.skill}"]`)).not.toBeNull()
+    // GH #488 — the catalog picker is no longer a top-level settings-item fold at all: its entry-section
+    // lives directly adjacent to the Surface Options A2UI row instead (one visual cluster).
+    expect(settings.querySelector(`[data-part="settings-item"][data-item="${ENTRY_KINDS.catalog}"]`)).toBeNull()
+    const a2uiRow = settings.querySelector('[data-item="surface"] [data-part="surface-row"][data-surface="a2ui"]') as HTMLElement
+    expect(a2uiRow).not.toBeNull()
+    const catalogSection = settings.querySelector(`[data-item="surface"] [data-part="entry-section"][data-kind="${ENTRY_KINDS.catalog}"]`)
+    expect(catalogSection, 'the catalog picker mounts INSIDE the Surface Options fold').not.toBeNull()
+    expect(a2uiRow.nextElementSibling, 'directly adjacent to the A2UI row — the very next sibling').toBe(catalogSection)
   })
 
   it('GH #225: the master switches sit ON their fold heading rows — the Agent switch in the agent summary, one kind switch per capability summary', () => {
@@ -274,10 +285,11 @@ describe('UIAgentAdminElement — shell composition (GH #52/ADR-0154): segments 
     }
     // The Instructions/Model/Surface folds carry NO switch — their summaries hold only chevron + text.
     expect(el.querySelector(`[data-part="settings-item"][data-item="${ENTRY_KINDS.promptSection}"] [data-part="summary"] ui-switch`)).toBeNull()
-    // ADR-0170 cl.5 — and neither does Catalogs: the ONE capability kind with no master switch (the A2UI
-    // surface toggle is its gate), so nothing here can persist a `catalogsEnabled` key nothing reads.
-    expect(el.querySelector(`[data-part="settings-item"][data-item="${ENTRY_KINDS.catalog}"] [data-part="summary"] ui-switch`)).toBeNull()
-    expect(el.querySelector(`[data-part="settings-item"][data-item="${ENTRY_KINDS.catalog}"] [data-part="kind-enabled"]`)).toBeNull()
+    // ADR-0170 cl.5 — and neither does the catalog picker: the ONE capability kind with no master switch
+    // (the A2UI surface toggle is its gate), so nothing here can persist a `catalogsEnabled` key nothing
+    // reads. GH #488 — it has no fold heading row of its own to carry one on anyway (it mounts inside
+    // Surface Options now, not as its own top-level settings-item — the test above pins that placement).
+    expect(el.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.catalog}"] [data-part="kind-enabled"]`)).toBeNull()
   })
 })
 
@@ -406,7 +418,7 @@ describe('UIAgentAdminElement — composition (GH #52/ADR-0154: chat + {Settings
     expect(conversation.sources, 'the developer surface\'s standing opt-in — every other consumer stays default-off').toBe(true)
   })
 
-  it('the Settings content composes the Agent config (real ui-settings, wired to schema/store) PLUS all SEVEN entry-sections (prompts merged in, vision rev.5; genui-surface B2 added Pattern sources, ADR-0170 adds Catalogs LAST)', () => {
+  it('the Settings content composes the Agent config (real ui-settings, wired to schema/store) PLUS all SEVEN entry-sections (prompts merged in, vision rev.5; genui-surface B2 added Pattern sources; GH #488 moved Catalogs INTO Surface Options, which now sits before Instructions — so Catalogs\' entry-section is now FIRST in document order, not last)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const settingsContent = el.querySelector('[data-role="settings-content"]') as HTMLElement
     const settingsEl = settingsContent.querySelector('ui-settings') as UISettingsElement
@@ -416,13 +428,13 @@ describe('UIAgentAdminElement — composition (GH #52/ADR-0154: chat + {Settings
 
     const sections = [...settingsContent.querySelectorAll('[data-part="entry-section"]')]
     expect(sections.map((s) => s.getAttribute('data-kind'))).toEqual([
+      ENTRY_KINDS.catalog,
       ENTRY_KINDS.promptSection,
       ENTRY_KINDS.skill,
       ENTRY_KINDS.workflow,
       ENTRY_KINDS.resource,
       ENTRY_KINDS.tool,
       ENTRY_KINDS.patternSource,
-      ENTRY_KINDS.catalog,
     ])
   })
 
