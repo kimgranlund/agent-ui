@@ -20,7 +20,7 @@ const intent: TurnInput = { kind: 'intent', text: 'make a card game', session: {
 // ADR-0091 §2 — produce() selects mini-skills for every call, mode/toggle-independent; "make a card
 // game" matches card-game-sheet's own triggers, so the byte-equality comparisons below must include that
 // SAME selection (the produce-loop.test.ts precedent) to stay an exact `Object.is` match.
-const expectedMiniSkills = selectMiniSkills(intent.text, MINI_SKILLS, DEFAULT_MINI_SKILL_CAP)
+const expectedMiniSkills = selectMiniSkills(intent.text, MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, defaultCatalog.catalogId)
 
 function stubProvider(output: string): AgentProvider {
   return {
@@ -77,9 +77,9 @@ describe('buildSystemPrompt — GH #418: a2uiEnabled:false composes ZERO A2UI gr
 
   it('drops mini-skills (they name concrete A2UI catalog component types — catalog teaching too)', () => {
     const withA2ui = buildSystemPrompt(defaultCatalog, [], undefined, [
-      { id: 'card-game-sheet', triggers: 'card game', body: 'Map: hand = Row(gap) of Cards' },
+      { id: 'card-game-sheet', triggers: 'card game', body: 'Map: hand = Row(gap) of Cards', catalogId: 'agent-ui' },
     ])
-    const withoutA2ui = buildSystemPrompt(defaultCatalog, [], undefined, [{ id: 'card-game-sheet', triggers: 'card game', body: 'Map: hand = Row(gap) of Cards' }], undefined, undefined, false)
+    const withoutA2ui = buildSystemPrompt(defaultCatalog, [], undefined, [{ id: 'card-game-sheet', triggers: 'card game', body: 'Map: hand = Row(gap) of Cards', catalogId: 'agent-ui' }], undefined, undefined, false)
     expect(withA2ui).toContain('Map: hand = Row(gap) of Cards')
     expect(withoutA2ui).not.toContain('Map: hand = Row(gap) of Cards')
   })

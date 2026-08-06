@@ -59,6 +59,12 @@ export interface MiniSkill {
   triggers: string
   /** The idiom instruction: anatomy → catalog mapping → wall, ≤ the per-module token budget (§3). */
   body: string
+  /** M-D SPEC-R6 (`persona-catalog-composition.spec.md`, ADR-0172 cl.3) — the catalog whose vocabulary
+   *  `body` hardcodes (component/function names named in the instruction text, e.g. `card-game-sheet.md`'s
+   *  `Row`/`Card`/`Grid`/`Button`). `selectMiniSkills` hard-filters on this BEFORE ranking, mirroring
+   *  `corpus/retrieve.ts`'s own `meta.catalogId` filter — closing the pre-existing gap ADR-0172 cl.3 named:
+   *  a mini-skill selected on a non-`agent-ui` turn used to inject wrong-dialect teaching with no guard. */
+  catalogId: string
 }
 
 /** ADR-0091 §3: the indicative per-module token budget (~200 tokens), enforced by `mini-skills.test.ts`
@@ -84,7 +90,8 @@ function loadMiniSkills(): MiniSkill[] {
   return files.map((name) => {
     const { data, body } = parseFrontmatter(readFileSync(`${MINI_SKILLS_DIR}/${name}`, 'utf8'))
     if (!data.id || !data.triggers) throw new Error(`mini-skills: ${name} is missing id/triggers frontmatter`)
-    return { id: data.id, triggers: data.triggers, body }
+    if (!data.catalogId) throw new Error(`mini-skills: ${name} is missing catalogId frontmatter (SPEC-R6)`)
+    return { id: data.id, triggers: data.triggers, body, catalogId: data.catalogId }
   })
 }
 
@@ -94,12 +101,18 @@ export const MINI_SKILLS: MiniSkill[] = loadMiniSkills()
  * Select up to `cap` mini-skills from `registry` whose `triggers` best match `intent` (ADR-0091 §2), via
  * TF-IDF top-`cap` cosine ranking (`topKByCosine`, the SAME math `retrieve()` uses).
  *
+ * M-D SPEC-R6 — `registry` is hard-filtered to `m.catalogId === catalogId` BEFORE ranking, mirroring
+ * `corpus/retrieve.ts:41,55`'s own `meta.catalogId` filter (the SAME accepted zero-content degrade a
+ * Basic-catalog turn's retrieval already has, `produce.ts:292`'s own comment) — a mini-skill whose body
+ * hardcodes a DIFFERENT catalog's vocabulary can never surface on this turn, closing the ADR-0172 cl.3 gap.
+ *
  * Degrades to `[]` — mirroring `retrieve.ts`'s zero-vocabulary rule and `fewShot`'s empty return
- * (`system-prompt.ts:93`) — when `intent` shares no idiom vocabulary with any registry entry, OR `cap`
- * or `registry.length` is `<= 0`. Unlike `retrieve()`, a genuinely UNRELATED (zero-score) entry is never
- * used to pad the result out to `cap` — the `floor: 0` passed to `topKByCosine` (a per-turn prompt
- * injection should never carry a module that scored no relevance at all).
+ * (`system-prompt.ts:93`) — when `intent` shares no idiom vocabulary with any IN-SCOPE registry entry, OR
+ * `cap` or the in-scope registry's length is `<= 0`. Unlike `retrieve()`, a genuinely UNRELATED
+ * (zero-score) entry is never used to pad the result out to `cap` — the `floor: 0` passed to
+ * `topKByCosine` (a per-turn prompt injection should never carry a module that scored no relevance at all).
  */
-export function selectMiniSkills(intent: string, registry: readonly MiniSkill[], cap: number): MiniSkill[] {
-  return topKByCosine(registry, (m) => m.triggers, intent, cap, (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0), 0)
+export function selectMiniSkills(intent: string, registry: readonly MiniSkill[], cap: number, catalogId: string): MiniSkill[] {
+  const inScope = registry.filter((m) => m.catalogId === catalogId)
+  return topKByCosine(inScope, (m) => m.triggers, intent, cap, (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0), 0)
 }
