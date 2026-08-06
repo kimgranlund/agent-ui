@@ -269,6 +269,74 @@ export const GAMES_PLAYBOOKS: readonly NewEntryInput[] = [
   },
 ]
 
+// ── the Game-rules pack — HOW each table game is played (deal, actions, settlement), as Resources ───────
+// Rules are reference facts the dealer cites and plays by (the Quant's `metric-definitions` shape), not
+// surface idioms — GAMES_SKILLS above stays about HOW a game RENDERS; this pack is about how it RUNS.
+// The Croupier seeds every entry and picks AT RANDOM among the ENABLED ones when the player names no
+// game — toggling a rules entry off takes that game off the table.
+
+export const GAMES_RULES: readonly NewEntryInput[] = [
+  {
+    label: 'blackjack',
+    description: 'blackjack, 21, hit, stand, double, split — the classic house game',
+    content:
+      'Two cards each; dealer shows one, hole card face-down. Values: pips as printed, faces 10, Ace 1 or ' +
+      '11. Player acts first — hit, stand, double (one card, doubled stake), split pairs; over 21 busts ' +
+      'immediately. Dealer then reveals and draws to 17, standing on all 17s. Blackjack (Ace + ten-card) ' +
+      'pays 3:2, a win pays 1:1, equal totals push.',
+  },
+  {
+    label: 'spanish-21',
+    description: 'spanish 21, no-tens deck, bonus 21s, late surrender',
+    content:
+      'Blackjack on a 48-card Spanish deck — every 10-spot removed, faces stay. A player 21 ALWAYS wins, ' +
+      'and player blackjack beats dealer blackjack. Bonus payouts for a five-plus-card 21 and for 6-7-8 or ' +
+      '7-7-7; double-after-split and late surrender allowed. Deal and settle as blackjack otherwise.',
+  },
+  {
+    label: 'pontoon',
+    description: 'pontoon, twist, stick, buy, five-card trick — British blackjack',
+    content:
+      'British blackjack: BOTH dealer cards stay face-down and the dealer wins all ties. Twist = hit, ' +
+      'stick = stand (only on 15 or better), buy = double the stake for a face-down card (repeatable). ' +
+      'Pontoon (Ace + ten-card) pays 2:1; a five-card trick (five cards, 21 or under) beats everything ' +
+      'but pontoon.',
+  },
+  {
+    label: 'texas-holdem',
+    description: "texas hold'em, hole cards, flop, turn, river, community cards",
+    content:
+      "Heads-up hold'em against the dealer: two hole cards each, then a shared flop (three cards), turn, " +
+      'and river, with a betting round before each street — check, bet, call, raise, or fold, staked from ' +
+      'the running chip count. Best five-card hand from the seven wins the pot, standard rankings (high ' +
+      'card up to royal flush). Reveal both hands honestly at showdown.',
+  },
+  {
+    label: 'omaha',
+    description: "omaha hold'em, four hole cards, exactly two plus three, pot limit",
+    content:
+      "Hold'em variant: FOUR hole cards each, same streets and betting rounds. A hand must use exactly " +
+      'two hole cards plus exactly three board cards — no more, no fewer. Traditionally pot-limit; ' +
+      "otherwise settle as hold'em.",
+  },
+  {
+    label: 'five-card-draw',
+    description: 'five-card draw, discard and draw, classic poker',
+    content:
+      'Classic draw poker: five cards each, face-down, then a betting round; each side may discard up to ' +
+      'three cards (four when keeping an Ace) and draw replacements; one final betting round, then ' +
+      'showdown. Standard rankings; tied hands split the pot.',
+  },
+  {
+    label: 'seven-card-stud',
+    description: 'seven-card stud, up cards, no community board',
+    content:
+      'No shared board: two down cards and one up card each, betting, then three more up cards and a ' +
+      'final down card, betting after every street. Up cards are dealt face-up on the table so the player ' +
+      'can read them. Best five of the seven wins; standard rankings.',
+  },
+]
+
 // ── the Integrations pack (GH #49/#402) — the `{id, label, description}` TRIO table (ADR-0168 cl.2) ─────
 // The registry itself (tools/agent/integrations/registry.ts, fed by the self-registering manifest modules
 // beside it) is the node-side shell (ADR-0137's law) — this page hardcodes the trio and a data-integrity
@@ -323,6 +391,7 @@ const FLAVORED_PACK_CATEGORY: Record<string, PresetCategory> = {
   'playbooks-hospitality': 'hospitality',
   games: 'games',
   'playbooks-games': 'games',
+  'game-rules': 'games',
 }
 
 /** GH #143 — `ADMIN_LIBRARIES` filtered to the packs relevant to `category`: every GENERIC pack (not in
@@ -383,6 +452,14 @@ export const ADMIN_LIBRARIES: Record<string, EntryLibraryPack[]> = {
       label: 'Game playbooks',
       description: 'Turn-loop playbooks for the game roster.',
       entries: GAMES_PLAYBOOKS,
+    },
+  ],
+  [ENTRY_KINDS.resource]: [
+    {
+      id: 'game-rules',
+      label: 'Game rules',
+      description: 'How each table game is played — deal, actions, settlement — the dealer cites and plays by.',
+      entries: GAMES_RULES,
     },
   ],
   [ENTRY_KINDS.tool]: [

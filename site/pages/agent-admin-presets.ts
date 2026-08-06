@@ -36,7 +36,7 @@ import type { Entry, NewEntryInput } from '@agent-ui/app'
 // GH #46 — the hospitality/travel trio seeds from the SAME pack texts the add-from-library menu offers
 // (agent-admin-libraries.ts): one authored source, zero drift between a preset's seeded capability and
 // the pack entry a user would add by hand.
-import { HOSPITALITY_SKILLS, HOSPITALITY_PLAYBOOKS, INTEGRATION_TOOLS, GAMES_SKILLS, GAMES_PLAYBOOKS, CORE_PLAYBOOKS, type PresetCategory } from './agent-admin-libraries.ts'
+import { HOSPITALITY_SKILLS, HOSPITALITY_PLAYBOOKS, INTEGRATION_TOOLS, GAMES_SKILLS, GAMES_PLAYBOOKS, GAMES_RULES, CORE_PLAYBOOKS, type PresetCategory } from './agent-admin-libraries.ts'
 // GH #497 — the concierge/croupier content personas seed their OWN local pattern set selection (the
 // `SHIPPED_PERSONA_CATALOGS` `personaId`, SPEC-R5) the same way every other persona-scoped config key
 // seeds: through `presetSeed`'s returned record, keyed by the schema's own storage key.
@@ -114,18 +114,23 @@ function seedFrom(entries: readonly NewEntryInput[], pick?: readonly string[]): 
 export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'croupier',
-    category: 'games', // GH #143 — a blackjack table, thematically a game even though it predates the games-roster wave
-    seedVersion: 2, // GH #497 — added the `croupier` local pattern set (PlayingCard); migrates pre-#497 stores
+    category: 'games', // GH #143 — a card table, thematically a game even though it predates the games-roster wave
+    seedVersion: 3, // multi-game table: GAMES_RULES resources seeded + random-game-pick foundation; migrates pre-rules stores
     label: 'The Croupier',
-    tagline: 'Card game on ONE live surface — actions + updateDataModel in place (ADR-0129 routing)',
+    tagline: 'Card games — Blackjack, Poker, and their variants — on ONE live surface (ADR-0129 routing)',
     config: { name: 'The Croupier', model: 'claude-sonnet-5', temperature: 0.6, toolsEnabled: true }, // rev.4: fable retired from the roster
     localPatterns: 'croupier', // GH #497 — PlayingCard closes the glyph-formatting idiom structurally
     foundation:
-      'You are The Croupier, a blackjack dealer. You run the whole game as a LIVE TABLE: deal hands, ' +
-      'take hits and stands, settle the round, and keep a running chip count across rounds.',
+      'You are The Croupier, a card-table dealer. You deal whatever game the table calls for — Blackjack ' +
+      'and its variants, Hold’em, draw and stud Poker — as a LIVE TABLE: deal hands, take the player’s ' +
+      'actions, settle each round, and keep a running chip count across rounds. When the player names a ' +
+      'game, deal that game; when they do not, pick one AT RANDOM from your enabled game-rules resources, ' +
+      'announce the pick, and recap its table rules in one breath before the first deal. Play strictly by ' +
+      'the chosen game’s rules resource.',
     surfaceStyle:
       'Always play on ONE persistent game surface: build the table once — the hands, the running score, ' +
-      'and the action controls (Hit / Stand / Deal again) — then UPDATE THAT SAME surface in place on ' +
+      'and the current game’s action controls (Hit / Stand for blackjack, Check / Bet / Fold for poker, ' +
+      'Deal again between rounds) — then UPDATE THAT SAME surface in place on ' +
       'every move; never redraw a fresh surface per message. Prose is only for table talk; the surface ' +
       'always carries the state.',
     skills: [
@@ -161,7 +166,10 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
         content: 'One surfaceId for the session; each move is an updateDataModel, settlement updates the chip Stat.',
       },
     ],
-    resources: [],
+    // Every GAMES_RULES entry seeds enabled — the random pick draws from the ENABLED rules resources,
+    // so toggling one off takes that game off the table (unfiltered: a future rules addition joins the
+    // rotation automatically, the GH #497 scoping precedent).
+    resources: seedFrom(GAMES_RULES),
     tools: [
       {
         id: 'shuffle',
