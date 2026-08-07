@@ -228,6 +228,26 @@ decision (dated line in §4).
   leaf/tier map and dependency edges; recommended first slice **S1 (Registration +
   Email+Password)**, startable now — three open forks (OQ1 progress-segments prop · OQ2 provider
   brand marks · OQ3 interactive vs static demos) await Kim and gate later slices only.
+- **Planner-stage pilot — the wire half is IN, the loop half is unscheduled. 🟡**
+  ([ADR-0174](adr/0174-planner-stage-pilot-sequential-opt-in-loop.md), ratified 2026-08-06.) An
+  opt-in, SEQUENTIAL plan→execute→synthesize loop composed entirely from already-shipped
+  `Session`/`produce()`/meta-line/status-stream mechanics — no new component, no new transport.
+  Its sequencing is the ADR's cl.5 ruling, **not** the filing issue's "depends on AG-UI +
+  SPEC-R4" framing: `AgentTransport` already isolates transports (an AG-UI arrival is an
+  implementation swap behind an interface built for swaps), and orchestrator surface-ID prefixing
+  is load-bearing only for a future CONCURRENT-step upgrade this ADR explicitly declines to
+  design. What that leaves, in order: **(1) the `plan` meta-line arm — DONE**
+  ([`spec/a2ui-live-agent.spec.md`](spec/a2ui-live-agent.spec.md) SPEC-R20, PR #537): a
+  model-authored, additive, shallow-validated `plan` field on the ADR-0088 envelope (a malformed
+  `plan` drops only `plan`), passed through by `produce()` with no integrity check and no retry
+  arm, `AgentTransport.turn` byte-identical. **(2) recorded/live parity — DONE** (PR #551):
+  `RecordedTurn`/`createRecordedTransport` carry the same `{note, plan}` shape the `ask` arm
+  already rides. **(3) the host-side half — designed, buildable today, NOT scheduled:** the
+  persona-scoped opt-in gate, the plan-runner module (N sequential `produce()` calls over one
+  growing `Session`), the step projection onto the existing status-stream grouping, and the
+  closing synthesis turn. It waits on a scheduling decision only — the ruled arc is M-D → M-E →
+  M-F — not on any missing mechanism. **(4) the concurrent/parallel-step upgrade** stays an
+  unwritten design (its surface-ID-prefixing precondition has since landed; the design has not).
 - **AC19's sheet set — widen deliberately, or not.** The spacing-drift gate covers the shell
   family today (every `@agent-ui/app` sheet + the shell-composing site sheets). Whether it extends
   further — components-package sheets, the remaining site sheets — is an open, per-sheet decision;
