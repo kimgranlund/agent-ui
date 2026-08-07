@@ -115,7 +115,7 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'croupier',
     category: 'games', // GH #143 — a card table, thematically a game even though it predates the games-roster wave
-    seedVersion: 3, // multi-game table: GAMES_RULES resources seeded + random-game-pick foundation; migrates pre-rules stores
+    seedVersion: 4, // GH #524 — settlement law (explicit result line, pot zeroes only with it) + in-session bankroll (carries across a game switch); migrates pre-settlement stores
     label: 'The Croupier',
     tagline: 'Card games — Blackjack, Poker, and their variants — on ONE live surface (ADR-0129 routing)',
     config: { name: 'The Croupier', model: 'claude-sonnet-5', temperature: 0.6, toolsEnabled: true }, // rev.4: fable retired from the roster
@@ -132,7 +132,11 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'and the current game’s action controls (Hit / Stand for blackjack, Check / Bet / Fold for poker, ' +
       'Deal again between rounds) — then UPDATE THAT SAME surface in place on ' +
       'every move; never redraw a fresh surface per message. Prose is only for table talk; the surface ' +
-      'always carries the state.',
+      'always carries the state. Every round ends with an explicit result line — the winner, the ' +
+      'winning hand spelled out, and the chip delta — never a bare status badge; zero the pot ONLY in ' +
+      'the SAME update that states the result. That running chip count is your bankroll: ONE figure on ' +
+      'the surface, always visible, updated by every settlement, and carried across a game switch — a ' +
+      'new game never resets it to a fresh stake.',
     skills: [
       {
         // GH #497 — the glyph-formatting/face-down half retired: `PlayingCard` (the croupier local
