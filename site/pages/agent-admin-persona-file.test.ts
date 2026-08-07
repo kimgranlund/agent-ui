@@ -20,6 +20,8 @@ import {
   A2UI_CATALOG_KEY,
   A2UI_LOCAL_PATTERNS_KEY,
   AGENT_ENABLED_KEY,
+  BANKROLL_CAPABLE_KEY,
+  BANKROLL_KEY,
   MODELS_INCLUDED_KEY,
   SURFACE_A2UI_KEY,
   SURFACE_GENUI_DOGFOOD_KEY,
@@ -289,6 +291,68 @@ describe('the persona file carries the local-pattern-set SELECTION, never its de
     expect(unselected.localPatterns, 'quant must stay a genuine unselected fixture').toBeUndefined()
     const file = exportPersonaFile(personaFromPreset(unselected), createMemoryStore({ initial: presetSeed(unselected) }))
     expect(Object.keys(file.state)).not.toContain(A2UI_LOCAL_PATTERNS_KEY)
+  })
+})
+
+// GH #525 (independent review MAJOR 2, 2026-08-07) — the persistent-bankroll capability flag + its own
+// persisted figure are BOTH persona-scoped store keys `PERSONA_STATE_KEYS` now carries (agent-admin-
+// persona-file.ts): an exported croupier persona must carry them, or a re-import would silently resume a
+// fresh stake — exactly the defect this file's own header comment (byte-identical composed prompt) rules
+// out for every OTHER persona-scoped key.
+describe('the persona file carries the persistent-bankroll capability + figure (GH #525)', () => {
+  it('PERSONA_STATE_KEYS carries both bankroll keys', () => {
+    expect(PERSONA_STATE_KEYS).toContain(BANKROLL_CAPABLE_KEY)
+    expect(PERSONA_STATE_KEYS).toContain(BANKROLL_KEY)
+  })
+
+  it('a capable persona with a stored figure round-trips BOTH keys byte-identically through export -> import', () => {
+    const storeA = authoredStore()
+    storeA.set(BANKROLL_CAPABLE_KEY, true)
+    storeA.set(BANKROLL_KEY, 725)
+    const file = exportPersonaFile(personaFromPreset(SOURCE_PRESET), storeA)
+    const text = personaFileText(file)
+    const parsed = readPersonaFile(text)
+    expect(parsed.ok, parsed.ok ? '' : parsed.error).toBe(true)
+    if (!parsed.ok) return
+    expect(parsed.file.state[BANKROLL_CAPABLE_KEY]).toBe(true)
+    expect(parsed.file.state[BANKROLL_KEY]).toBe(725)
+
+    const imported = importedPersonaFrom(parsed.file, [personaFromPreset(SOURCE_PRESET)])
+    expect(imported.seed[BANKROLL_CAPABLE_KEY]).toBe(true)
+    expect(imported.seed[BANKROLL_KEY]).toBe(725)
+    const storeB = createMemoryStore({ initial: imported.seed })
+    expect(storeB.get(BANKROLL_CAPABLE_KEY)).toBe(storeA.get(BANKROLL_CAPABLE_KEY))
+    expect(storeB.get(BANKROLL_KEY)).toBe(storeA.get(BANKROLL_KEY))
+  })
+
+  it('a persona that never opted in, and never stored a figure, omits BOTH keys entirely (unset stays unset)', () => {
+    const file = exportPersonaFile(personaFromPreset(SOURCE_PRESET), authoredStore())
+    expect(Object.keys(file.state)).not.toContain(BANKROLL_CAPABLE_KEY)
+    expect(Object.keys(file.state)).not.toContain(BANKROLL_KEY)
+  })
+
+  it("mintIdentity's uniquify pass (id/label only) leaves the bankroll keys untouched", () => {
+    const storeA = authoredStore()
+    storeA.set(BANKROLL_CAPABLE_KEY, true)
+    storeA.set(BANKROLL_KEY, 340)
+    const file = exportPersonaFile(personaFromPreset(SOURCE_PRESET), storeA)
+    const result = readPersonaFile(personaFileText(file))
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+
+    const roster: Persona[] = AGENT_PRESETS.map(personaFromPreset)
+    const first = importedPersonaFrom(result.file, roster)
+    const second = importedPersonaFrom(result.file, [...roster, first])
+    // the ROSTER identity is uniquified (the SAME collision-safe minting the `importedPersonaFrom —
+    // collision-safe minting` suite below already proves for id/label)...
+    expect(first.id).not.toBe(second.id)
+    expect(first.label).not.toBe(second.label)
+    // ...but the STATE — including both bankroll keys — is byte-identical across both mints.
+    expect(second.seed).toEqual(first.seed)
+    expect(first.seed[BANKROLL_CAPABLE_KEY]).toBe(true)
+    expect(first.seed[BANKROLL_KEY]).toBe(340)
+    expect(second.seed[BANKROLL_CAPABLE_KEY]).toBe(true)
+    expect(second.seed[BANKROLL_KEY]).toBe(340)
   })
 })
 

@@ -29,6 +29,8 @@ import {
   A2UI_CATALOG_KEY,
   A2UI_LOCAL_PATTERNS_KEY,
   AGENT_ENABLED_KEY,
+  BANKROLL_CAPABLE_KEY,
+  BANKROLL_KEY,
   MODELS_INCLUDED_KEY,
   SURFACE_A2UI_KEY,
   SURFACE_GENUI_DOGFOOD_KEY,
@@ -69,6 +71,11 @@ export const PERSONA_STATE_KEYS: readonly string[] = [
     // M-D SPEC-R5 — the persona's local-pattern-set SELECTION (never its definitions, which are
     // package-shipped code, SPEC-R1): symmetrical in storage shape to A2UI_CATALOG_KEY above.
     A2UI_LOCAL_PATTERNS_KEY,
+    // GH #525 — the persistent-bankroll capability opt-in + its own persisted figure: both persona-scoped
+    // store keys `composeLiveSystemPrompt` now reads (this file's own header comment), so an exported
+    // croupier persona must carry them or a re-import would silently resume a fresh stake.
+    BANKROLL_CAPABLE_KEY,
+    BANKROLL_KEY,
     // the six entry lists
     ...ENTRY_LIST_KEYS,
   ]),

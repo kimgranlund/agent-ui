@@ -112,6 +112,34 @@ describe('composeLiveSystemPrompt (ALM-C1 / ADR-0136 Fork 3) — the capability 
   })
 })
 
+describe('composeLiveSystemPrompt — the GH #525 bankroll line (design call 1, 2026-08-07)', () => {
+  it('omitted bankroll ⇒ byte-identical to the pre-#525 two-argument call (GATED EQUIVALENCE)', () => {
+    const skills = group(ENTRY_KINDS.skill, 'Skills available to you', [entry({ id: 's', label: 'S', content: 'x' })])
+    expect(composeLiveSystemPrompt(SECTIONS, [skills])).toBe(composeLiveSystemPrompt(SECTIONS, [skills], undefined))
+  })
+
+  it('a given bankroll appends ONE terse line stating the figure and the seed-from-it instruction, right after the base prompt', () => {
+    const out = composeLiveSystemPrompt(SECTIONS, [], 340)
+    expect(out).toBe(
+      '## Foundation\nYou are helpful.\n\n' +
+        'Your current bankroll is 340. Any game you deal MUST seed /bankroll from this figure, never a fresh stake.',
+    )
+  })
+
+  it('the bankroll line lands BEFORE the capability groups', () => {
+    const skills = group(ENTRY_KINDS.skill, 'Skills available to you', [entry({ id: 's', label: 'S', content: 'x' })])
+    const out = composeLiveSystemPrompt(SECTIONS, [skills], 50)
+    const bankrollIndex = out.indexOf('Your current bankroll is 50.')
+    const skillsIndex = out.indexOf('## Skills available to you')
+    expect(bankrollIndex).toBeGreaterThan(-1)
+    expect(skillsIndex).toBeGreaterThan(bankrollIndex)
+  })
+
+  it('a zero bankroll still composes the line (0 is a valid, sanitized figure, not "absent")', () => {
+    expect(composeLiveSystemPrompt(SECTIONS, [], 0)).toContain('Your current bankroll is 0.')
+  })
+})
+
 describe('pickedPatternSource — the D3 single-pick projection (genui-surface SPEC-R11)', () => {
   it('seeds an empty pattern-source list (initialEntryValues)', () => {
     expect(initialEntryValues()[entriesStoreKey(ENTRY_KINDS.patternSource)]).toEqual([])

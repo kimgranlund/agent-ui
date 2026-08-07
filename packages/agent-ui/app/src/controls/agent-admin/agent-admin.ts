@@ -87,6 +87,9 @@ import { UIConversationElement } from '../conversation/conversation.ts'
 // (Kim's 2026-07-29 ruling) — reached ONLY through the dynamic `import()` in `loadDogfoodAssets()` below;
 // the sole STATIC dogfood reference left in this file is the type-only import on the next line (zero bytes).
 import type { SandboxFrameAssets } from '@agent-ui/components/components'
+// GH #525 — the bankroll RESET row's own trailing `<ui-button>` (TKT-0048's real-button precedent,
+// entry-list.ts's `deleteBtn`); `ui-button` is already registered above (`controls/button`).
+import type { UIButtonElement } from '@agent-ui/components/controls/button'
 import { createMemoryStore } from '../settings/memory-store.ts'
 import type { SettingsSchema } from '../settings/schema.ts'
 import type { SettingsStore } from '../settings/store.ts'
@@ -109,6 +112,10 @@ import {
   sanitizeCatalog,
   A2UI_LOCAL_PATTERNS_KEY,
   resolveEffectiveCatalogId,
+  BANKROLL_CAPABLE_KEY,
+  BANKROLL_KEY,
+  isBankrollCapable,
+  sanitizeBankroll,
   initialValuesFor,
   isModelIncluded,
   modelRoster,
@@ -338,6 +345,10 @@ export class UIAgentAdminElement extends UIElement {
   #surfaceGenuiSwitch: (HTMLElement & { checked: boolean }) | null = null
   // genui-surface.spec.md v0.5 §11 (SPEC-R10 amended clause, GH #316/ADR-0162) — the dogfood sub-toggle.
   #surfaceGenuiDogfoodSwitch: (HTMLElement & { checked: boolean; disabled: boolean }) | null = null
+  // GH #525 — the bankroll RESET row (design call 3, 2026-08-07): built once, alongside the other Surface
+  // Options rows; `hidden` reflects the persona's OWN opt-in (`BANKROLL_CAPABLE_KEY`), applied in
+  // `#applyMasterStates` like every other row's state — never a DOM add/remove per persona switch.
+  #bankrollResetRow: (HTMLElement & { hidden: boolean }) | null = null
   #contextSystemHost: HTMLElement | null = null // Agent System — rebuilt wholesale per store change
   #contextTurnsHost: HTMLElement | null = null // Dialog Turns — rebuilt per logged turn
   /** The Context tabs' shared store subscription (both System and Dialog read off the same store) — its
@@ -364,6 +375,14 @@ export class UIAgentAdminElement extends UIElement {
   // conversation model/prompt/capability switch applies to the NEXT turn only and prior turns are never
   // rewritten (the acceptance criterion falls out by construction).
   #history: AdminTurn[] = []
+  // GH #525 (review MAJOR 1b) — the surfaceIds this admin has actually forwarded a `createSurface` for
+  // (via `handle.ingestLine`, so ONLY while A2UI is on — the SAME gate that decides whether the real
+  // renderer's own `SurfaceStore` would know it), minus any it has forwarded a `deleteSurface` for.
+  // Mirrors the real renderer's own bookkeeping (renderer.ts's `SurfaceStore`) without importing it — the
+  // bankroll mirror's OWN "is this surfaceId real" check (`#runSurfaceTurn`) reads this set rather than
+  // trusting an `updateDataModel` envelope's `surfaceId` at face value. Element-lifetime, cleared on a
+  // real persona switch (`#resetConversationState`) exactly like `#history`/`#turnLog` above.
+  #knownSurfaceIds: Set<string> = new Set()
   // The composer's Effort picker selection (the Figma chat-input refactor) — ephemeral, element-lifetime
   // state, deliberately NOT persisted to `store` (unlike `model`): reasoning effort is a per-conversation
   // dial, not a saved agent-profile setting, and Figma's own composer design carries no Effort field in
@@ -709,7 +728,35 @@ export class UIAgentAdminElement extends UIElement {
     this.#surfaceGenuiDogfoodSwitch = genuiDogfoodSwitch
     genui.row.append(genuiDogfoodLabel, genuiDogfoodSwitch)
 
-    surfaceOptions.append(markdown.row, a2ui.row, genui.row)
+    // GH #525 — the bankroll RESET row (design call 3, 2026-08-07: a settings-pane affordance beside the
+    // persona's other rows, never a chat command). The SAME `surface-row` shape as markdown/a2ui/genui
+    // above, minus a modality toggle (there is no on/off here, only a stored figure to clear) — a plain
+    // label + spacer + trailing `<ui-button>` (the entry-list.ts `deleteBtn` precedent). Hidden entirely
+    // for a persona that never opted in (`#applyMasterStates` reflects `BANKROLL_CAPABLE_KEY`) — never
+    // just dimmed, since a persona with no `/bankroll` pointer has nothing here to configure at all.
+    const bankrollRow = document.createElement('div')
+    bankrollRow.setAttribute('data-part', 'surface-row')
+    bankrollRow.setAttribute('data-surface', 'bankroll')
+    const bankrollLabel = document.createElement('span')
+    bankrollLabel.setAttribute('data-part', 'surface-label')
+    bankrollLabel.textContent = 'Bankroll'
+    const bankrollSpacer = document.createElement('span')
+    bankrollSpacer.setAttribute('data-part', 'surface-spacer')
+    const bankrollReset = document.createElement('ui-button') as UIButtonElement
+    bankrollReset.setAttribute('variant', 'soft')
+    bankrollReset.setAttribute('data-part', 'bankroll-reset')
+    bankrollReset.textContent = 'Reset'
+    bankrollReset.addEventListener('click', () => {
+      // `null` (not `undefined`) — a real JSON-round-trippable "cleared" value (memory-store.ts persists
+      // via `JSON.stringify`); `sanitizeBankroll(null)` reads it back as `undefined` ("no stored
+      // bankroll") exactly like a store that never held the key at all.
+      this.store?.set(BANKROLL_KEY, null)
+      if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
+    })
+    bankrollRow.append(bankrollLabel, bankrollSpacer, bankrollReset)
+    this.#bankrollResetRow = bankrollRow as HTMLElement & { hidden: boolean }
+
+    surfaceOptions.append(markdown.row, a2ui.row, genui.row, bankrollRow)
 
     // GH #225/#226 — each Settings section is a heading-row fold (the GH #222 Context pattern applied to
     // the config column). The master switches (Agent + one per kind) ride their fold's heading row
@@ -1153,7 +1200,7 @@ export class UIAgentAdminElement extends UIElement {
     // (TKT-0034, auto-tracked off beginAgentTurn) disables the composer until finalize()/fail() runs.
     const request: AdminTurnRequest = {
       text,
-      system: composeLiveSystemPrompt(sections, this.#capabilityGroups(store)),
+      system: composeLiveSystemPrompt(sections, this.#capabilityGroups(store), this.#bankrollForPrompt(store)),
       model: config.model,
       effort: this.#effort,
       // ADR-0168 cl.5 / GH #402 — the prose arm forwards enablement too (it was the one live arm the
@@ -1230,7 +1277,7 @@ export class UIAgentAdminElement extends UIElement {
     const sections = readEntries(store, ENTRY_KINDS.promptSection)
     const request = {
       turn,
-      personaSystem: composeLiveSystemPrompt(sections, this.#capabilityGroups(store)),
+      personaSystem: composeLiveSystemPrompt(sections, this.#capabilityGroups(store), this.#bankrollForPrompt(store)),
       model: sanitizeModel(store?.get('model'), modelRoster()),
       // The composer's Effort picker selection (see AdminSurfaceTurnRequest.effort) — the same dial the
       // plain-chat arm (`#handleSubmit`'s `AdminTurnRequest`) already threads.
@@ -1342,8 +1389,16 @@ export class UIAgentAdminElement extends UIElement {
             // would then refuse (the reported "renders, looks alive, dies on click" defect). The raw line
             // still rides into `wireLines`/`#logTurn` below — visible in the Dialog Turns inspector for
             // debugging a non-compliant model reply — it just never reaches the live surface host.
-            if (a2uiOn) handle.ingestLine(event.line)
-            else a2uiRefused = true
+            if (a2uiOn) {
+              handle.ingestLine(event.line)
+              // GH #525 (review MAJOR 1b) — kept in lockstep with the SAME lines that just reached the
+              // real renderer: a createSurface it actually rendered is now "known" (the bankroll mirror
+              // may trust an updateDataModel naming it); a deleteSurface retires it, mirroring the real
+              // renderer's own SurfaceStore teardown (`#onDeleteSurface`).
+              const lifecycle = surfaceLifecycleOf(event.line)
+              if (lifecycle?.kind === 'create') this.#knownSurfaceIds.add(lifecycle.surfaceId)
+              else if (lifecycle?.kind === 'delete') this.#knownSurfaceIds.delete(lifecycle.surfaceId)
+            } else a2uiRefused = true
           }
         }
         // GH #354 — the degraded-assets reason rides out WITH this turn's own note rather than replacing
@@ -1357,6 +1412,22 @@ export class UIAgentAdminElement extends UIElement {
         const outgoing = [note, assetWarning, a2uiRefused ? A2UI_OFF_INGEST_NOTICE : undefined].filter((text) => text !== undefined).join('\n\n')
         if (outgoing !== '') handle.setNote(outgoing)
         handle.finalize()
+        // GH #525 (design call 1, 2026-08-07) — "NO new tool — zero API surface, rides the existing turn
+        // wiring": the mirror reads the SAME raw wire lines this turn already captured for narration/
+        // disclosure (`wireLines`), never a new a2ui read (SPEC-N1's own discipline — this file declares
+        // its OWN seams rather than importing the renderer's internal surface store, exactly like
+        // `clientMessageSurfaceId`/`categoryOf` already inspect wire envelopes structurally). A turn that
+        // never touched `/bankroll`, or whose figure fails to sanitize, writes nothing — fail-closed,
+        // never a stale-but-wrong overwrite of whatever the store already holds.
+        //
+        // GH #525 (review MAJOR 1a) — gated on `a2uiOn` too, the SAME condition `handle.ingestLine` above
+        // is gated on: `wireLines` collects every raw line REGARDLESS of the toggle (GH #418's own
+        // debugging-visibility law), but a line the toggle refused was never rendered — persisting a
+        // figure nothing rendered would silently disagree with what the player actually saw.
+        if (a2uiOn && isBankrollCapable(store?.get(BANKROLL_CAPABLE_KEY))) {
+          const bankroll = bankrollFromWireLines(wireLines, this.#knownSurfaceIds)
+          if (bankroll !== undefined) store?.set(BANKROLL_KEY, bankroll)
+        }
         this.#logTurn('surface', request, {
           note,
           lines: wireLines,
@@ -1386,6 +1457,14 @@ export class UIAgentAdminElement extends UIElement {
       entries: readEntries(store, kind),
       enabled: isEnabledFlag(store?.get(kindEnabledKey(kind))),
     }))
+  }
+
+  /** GH #525 (design call 1, 2026-08-07) — the bankroll figure to inject into the composed prompt at turn
+   *  start: `undefined` unless the persona opted in AND a value actually sanitizes, applied at EVERY
+   *  `composeLiveSystemPrompt` call site (the prose arm, the surface arm, the Context: System snapshot)
+   *  so the three can never read three different answers to "what is the stored bankroll right now". */
+  #bankrollForPrompt(store: SettingsStore | undefined): number | undefined {
+    return isBankrollCapable(store?.get(BANKROLL_CAPABLE_KEY)) ? sanitizeBankroll(store?.get(BANKROLL_KEY)) : undefined
   }
 
   /** ADR-0168 cl.2 / LLD-C7 — the ENABLEMENT WIRE projection, shared by BOTH live arms (`#handleSubmit`'s
@@ -1470,6 +1549,10 @@ export class UIAgentAdminElement extends UIElement {
       this.#surfaceGenuiDogfoodSwitch.checked = isGenuiDogfoodEnabled(store?.get(SURFACE_GENUI_DOGFOOD_KEY))
       this.#surfaceGenuiDogfoodSwitch.disabled = !genuiOn
     }
+    // GH #525 — the bankroll reset row is entirely HIDDEN for a persona that never opted in
+    // (`BANKROLL_CAPABLE_KEY`) — there is no in-between "visible but nothing to do" state the way an OFF
+    // modality still has, so this is `hidden`, never a `data-disabled` dim.
+    if (this.#bankrollResetRow) this.#bankrollResetRow.hidden = !isBankrollCapable(store?.get(BANKROLL_CAPABLE_KEY))
     // GH #419 — the prompt-section lint is derived from the SAME two stored modality flags this method
     // just reflected, so it re-derives here: every path that can flip a Surface Option ends in a call to
     // this method (the row's own change listener, the store subscription, a rewire), which is exactly when
@@ -1523,7 +1606,7 @@ export class UIAgentAdminElement extends UIElement {
             genui: isGenuiSurfaceEnabled(store?.get(SURFACE_GENUI_KEY)),
             genuiSource: pickedPatternSource(readEntries(store, ENTRY_KINDS.patternSource))?.label,
           },
-          systemPrompt: composeLiveSystemPrompt(sections, this.#capabilityGroups(store)),
+          systemPrompt: composeLiveSystemPrompt(sections, this.#capabilityGroups(store), this.#bankrollForPrompt(store)),
         },
         openStates.get('agent') ?? true,
       ),
@@ -1604,6 +1687,7 @@ export class UIAgentAdminElement extends UIElement {
     this.#history = []
     this.#turnLog = []
     this.#turnCounter = 0
+    this.#knownSurfaceIds.clear() // GH #525 — a new persona's surfaces are unrelated to the old ones
     this.#conversationEpoch += 1 // GH #354 — invalidate any surface turn waiting on its lazy dogfood chunk
   }
 }
@@ -1674,6 +1758,65 @@ function clientMessageSurfaceId(message: unknown): string | undefined {
  *  exactly this: "no hidden turns from a disabled modality"). */
 function isGenuiActionClientMessage(message: unknown): boolean {
   return typeof message === 'object' && message !== null && 'genuiAction' in message
+}
+
+/** GH #525 (review MAJOR 1b) — `{kind:'create'|'delete', surfaceId}` for a createSurface/deleteSurface
+ *  envelope, `undefined` for anything else/unparseable — the SAME structural inspection technique
+ *  `categoryOf`/`surfaceIdOf` (conversation.ts) already use, narrowed to the two lifecycle edges the
+ *  bankroll mirror's own known-surfaceId bookkeeping needs (`#knownSurfaceIds`, above). */
+function surfaceLifecycleOf(line: string): { kind: 'create' | 'delete'; surfaceId: string } | undefined {
+  let msg: unknown
+  try {
+    msg = JSON.parse(line)
+  } catch {
+    return undefined
+  }
+  if (typeof msg !== 'object' || msg === null) return undefined
+  const m = msg as Record<string, { surfaceId?: unknown } | undefined>
+  if (m.createSurface && typeof m.createSurface.surfaceId === 'string') return { kind: 'create', surfaceId: m.createSurface.surfaceId }
+  if (m.deleteSurface && typeof m.deleteSurface.surfaceId === 'string') return { kind: 'delete', surfaceId: m.deleteSurface.surfaceId }
+  return undefined
+}
+
+/** GH #525 (design call 1, 2026-08-07; review MAJOR 1b) — the `/bankroll` pointer's value at the END of
+ *  this turn's own raw wire-line stream, read the SAME structural way `categoryOf`/`surfaceIdOf`
+ *  (conversation.ts) and `clientMessageSurfaceId` (above) already inspect A2UI envelopes — never a new
+ *  a2ui read. Two shapes of `updateDataModel` can touch the pointer: a direct `path:'/bankroll'` set, or
+ *  a whole-document replace (`path` absent/`''`/`'/'`, the SAME root alias `#onUpdateDataModel` resolves,
+ *  renderer.ts) whose `value.bankroll` carries it — EITHER shape is counted only when its OWN `surfaceId`
+ *  is a member of `knownSurfaceIds` (the real renderer's own `#onUpdateDataModel` no-ops for a surfaceId
+ *  its `SurfaceStore` never created, renderer.ts:318-319 — an envelope naming an unknown/hallucinated id
+ *  must degrade the SAME way here, not mirror a figure nothing actually holds). The LAST touch across the
+ *  whole turn wins (a later line supersedes an earlier one, matching the real renderer's own
+ *  last-write-wins merge); a turn that never touches the pointer on a known surface, or whose final
+ *  figure fails `sanitizeBankroll`, returns `undefined` — "no mirror write this turn", never a throw and
+ *  never a stale-but-wrong figure. */
+function bankrollFromWireLines(lines: readonly string[], knownSurfaceIds: ReadonlySet<string>): number | undefined {
+  let last: unknown
+  let touched = false
+  for (const line of lines) {
+    let msg: unknown
+    try {
+      msg = JSON.parse(line)
+    } catch {
+      continue
+    }
+    if (typeof msg !== 'object' || msg === null) continue
+    const body = (msg as Record<string, unknown>).updateDataModel
+    if (typeof body !== 'object' || body === null) continue
+    const { surfaceId, path, value } = body as { surfaceId?: unknown; path?: unknown; value?: unknown }
+    if (typeof surfaceId !== 'string' || !knownSurfaceIds.has(surfaceId)) continue
+    if (path === '/bankroll') {
+      last = value
+      touched = true
+    } else if (path === undefined || path === '' || path === '/') {
+      if (typeof value === 'object' && value !== null) {
+        last = (value as Record<string, unknown>).bankroll
+        touched = true
+      }
+    }
+  }
+  return touched ? sanitizeBankroll(last) : undefined
 }
 
 if (!customElements.get('ui-agent-admin')) customElements.define('ui-agent-admin', UIAgentAdminElement)

@@ -2024,7 +2024,10 @@ describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
     mounted.push(el)
     await whenFlushed()
     const rows = [...el.querySelectorAll('[data-part="surface-row"]')]
-    expect(rows.map((r) => r.getAttribute('data-surface'))).toEqual(['markdown', 'a2ui', 'genui'])
+    // GH #525 — the bankroll RESET row is a FOURTH `surface-row`, always built (HIDDEN by default: no
+    // persona opted in via a bare `createMemoryStore({})`) — see agent-admin-bankroll.test.ts for its own
+    // presence/absence/reset coverage.
+    expect(rows.map((r) => r.getAttribute('data-surface'))).toEqual(['markdown', 'a2ui', 'genui', 'bankroll'])
     const genui = rows[2] as HTMLElement
     expect(genui.hasAttribute('data-disabled')).toBe(false)
     const genuiToggle = genui.querySelector('[data-part="surface-toggle"]') as HTMLElement & { disabled: boolean; checked: boolean }

@@ -40,7 +40,9 @@ import { HOSPITALITY_SKILLS, HOSPITALITY_PLAYBOOKS, INTEGRATION_TOOLS, GAMES_SKI
 // GH #497 — the concierge/croupier content personas seed their OWN local pattern set selection (the
 // `SHIPPED_PERSONA_CATALOGS` `personaId`, SPEC-R5) the same way every other persona-scoped config key
 // seeds: through `presetSeed`'s returned record, keyed by the schema's own storage key.
-import { A2UI_LOCAL_PATTERNS_KEY } from '@agent-ui/app/agent-admin-schema'
+// GH #525 — the persistent-bankroll capability opt-in seeds the SAME way (design call 2, 2026-08-07: a
+// games-category capability, presets opt in).
+import { A2UI_LOCAL_PATTERNS_KEY, BANKROLL_CAPABLE_KEY } from '@agent-ui/app/agent-admin-schema'
 
 export interface AgentPreset {
   id: string
@@ -80,6 +82,13 @@ export interface AgentPreset {
    *  own comment). Not validated against `SHIPPED_PERSONA_CATALOGS` here — `sanitizeLocalPatterns`
    *  (agent-admin-schema.ts) is the one fail-closed read gate; a typo here would just read as "none". */
   localPatterns?: string
+  /** GH #525 (design call 2, 2026-08-07) — opts this persona into the persistent-bankroll capability:
+   *  its games keep a running score at the FIXED data-model path `/bankroll`, so the app may mirror that
+   *  pointer into the persona store after every surface turn and state the stored figure back at turn
+   *  start. Absent (every OTHER preset) ⇒ `BANKROLL_CAPABLE_KEY` is never seeded — the SAME "key omitted
+   *  entirely" default `localPatterns` above already has; a persona whose games track something ELSE
+   *  (the Quizmaster's round score, say) must never have its turns scanned for a pointer it never writes. */
+  bankroll?: boolean
 }
 
 /** A seed capability entry — expanded to a full `Entry` (order = array index) by `presetSeed`. */
@@ -115,11 +124,12 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
   {
     id: 'croupier',
     category: 'games', // GH #143 — a card table, thematically a game even though it predates the games-roster wave
-    seedVersion: 4, // GH #524 — settlement law (explicit result line, pot zeroes only with it) + in-session bankroll (carries across a game switch); migrates pre-settlement stores
+    seedVersion: 5, // GH #525 — the persistent-bankroll capability opt-in + the surfaceStyle amendment stating cross-session resume; migrates pre-#525 stores
     label: 'The Croupier',
     tagline: 'Card games — Blackjack, Poker, and their variants — on ONE live surface (ADR-0129 routing)',
     config: { name: 'The Croupier', model: 'claude-sonnet-5', temperature: 0.6, toolsEnabled: true }, // rev.4: fable retired from the roster
     localPatterns: 'croupier', // GH #497 — PlayingCard closes the glyph-formatting idiom structurally
+    bankroll: true, // GH #525 — opts into the persistent cross-session bankroll capability, croupier enabled first
     foundation:
       'You are The Croupier, a card-table dealer. You deal whatever game the table calls for — Blackjack ' +
       'and its variants, Hold’em, draw and stud Poker — as a LIVE TABLE: deal hands, take the player’s ' +
@@ -136,7 +146,9 @@ export const AGENT_PRESETS: readonly AgentPreset[] = [
       'winning hand spelled out, and the chip delta — never a bare status badge; zero the pot ONLY in ' +
       'the SAME update that states the result. That running chip count is your bankroll: ONE figure on ' +
       'the surface, always visible, updated by every settlement, and carried across a game switch — a ' +
-      'new game never resets it to a fresh stake.',
+      'new game never resets it to a fresh stake. If you are told a current bankroll at the start of ' +
+      'this conversation, seed that SAME figure as your very first surface state — the running count ' +
+      'carries across a whole session exactly like it carries across a game switch.',
     skills: [
       {
         // GH #497 — the glyph-formatting/face-down half retired: `PlayingCard` (the croupier local
@@ -662,6 +674,10 @@ export function presetSeed(preset: AgentPreset): Record<string, unknown> {
     // GH #497 — absent ⇒ key omitted entirely (not seeded `undefined`), matching every other
     // never-seeded persona-scoped key's byte-identical "absent" shape.
     ...(preset.localPatterns === undefined ? {} : { [A2UI_LOCAL_PATTERNS_KEY]: preset.localPatterns }),
+    // GH #525 — the SAME "absent ⇒ key omitted entirely" shape: only a preset that opts in seeds the
+    // capability flag at all; every other persona's store never carries `BANKROLL_CAPABLE_KEY`, so
+    // `isBankrollCapable`'s fail-closed read answers "not capable" exactly as if this key never existed.
+    ...(preset.bankroll === true ? { [BANKROLL_CAPABLE_KEY]: true } : {}),
     [entriesStoreKey(ENTRY_KINDS.promptSection)]: sections,
     [entriesStoreKey(ENTRY_KINDS.skill)]: expand(ENTRY_KINDS.skill, preset.skills),
     [entriesStoreKey(ENTRY_KINDS.workflow)]: expand(ENTRY_KINDS.workflow, preset.workflows),

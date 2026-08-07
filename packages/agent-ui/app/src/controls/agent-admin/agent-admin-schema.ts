@@ -289,6 +289,36 @@ export function resolveEffectiveCatalogId(baseId: string, localPatternsSelection
   return DERIVED_A2UI_CATALOG_IDS.has(candidate) ? candidate : baseId
 }
 
+// ── the persona's persisted BANKROLL (GH #525) ────────────────────────────────────────────────────────
+// A games-category capability, not every games persona's: a persona whose games keep a running score at
+// a FIXED data-model path (`/bankroll`) may opt in (design call 2, 2026-08-07) so `agent-admin.ts`
+// mirrors that pointer into the persona store after every surface turn and states the stored figure back
+// at turn start (`composeLiveSystemPrompt`) — a fresh session resumes the running total instead of a
+// fresh seed stake. Croupier opts in first (`agent-admin-presets.ts`); the mechanism itself is generic —
+// any future games persona whose surface carries the SAME `/bankroll` pointer convention can opt in too.
+
+/** The persona-scoped capability opt-in — the SAME inverse-default law `isGenuiSurfaceEnabled` uses
+ *  (absent/malformed ⇒ OFF): a persona whose games do not keep a `/bankroll` pointer must never have its
+ *  turns scanned for one, so this stays an explicit `true` a preset seeds, never an ambient default. */
+export const BANKROLL_CAPABLE_KEY = 'bankrollCapable'
+
+/** Fail-closed capability read — an unset/non-boolean/`false` value all read as "not capable". */
+export function isBankrollCapable(value: unknown): boolean {
+  return value === true
+}
+
+/** The persisted bankroll figure itself — a plain non-negative finite number (the surface's own chip-
+ *  count widget formats it for display; this key holds the raw figure the prompt cites and the next
+ *  session's game seeds from). */
+export const BANKROLL_KEY = 'bankroll'
+
+/** Fail-closed bankroll read — the SAME fail-closed law `sanitizeLocalPatterns`/`sanitizeCatalog` use for
+ *  their own unset/malformed case: non-finite, negative, or absent all coerce to `undefined` ("no stored
+ *  bankroll" — the 2026-08-07 design ruling's own words; the seed default applies). */
+export function sanitizeBankroll(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : undefined
+}
+
 /** The agent-config values the stub turn loop reads at turn time — always the CURRENT store contents,
  *  never cached (this IS the live-apply mechanism: a store read at turn time trivially reflects whatever
  *  the settings/prompts panes most recently wrote, no separate propagation channel needed).
