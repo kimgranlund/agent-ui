@@ -1,6 +1,28 @@
 # SPEC — A2UI Live-Agent Example (a real LLM emitting A2UI over the wire)
 
-> Status: accepted · v0.11 · 2026-08-07 (v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> Status: accepted · v0.12 · 2026-08-07 (v0.11 2026-08-07; v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> v0.12 changelog (ADR-0177, PROPOSED pending doc-checker/Kim — MCP servers as a manifest-registry
+> SOURCE; GH #567 S-SPEC): NEW §3.7, **SPEC-R23–R28** — an MCP connector
+> (`tools/agent/integrations/mcp/`) turns each allowlisted server's `tools/list` into N ordinary
+> `IntegrationManifest`s via the EXISTING `registerIntegration()`; every consumer surface
+> (`registry.ts`/`validate-input.ts`/`tool-dispatch.ts`, the `auth` vocabulary, `ExecuteContext`,
+> the `integrations: string[]` enablement wire) stays byte-untouched (NEW **SPEC-R23**); the wire
+> client is server-side-only, hand-rolled `fetch`, **Streamable HTTP ONLY, protocol pinned
+> `2025-06-18`** — the F2 freeze, reasoned in §3.7 from the MCP spec's own deprecation of the
+> dual-endpoint HTTP+SSE transport (and F3's hand-rolled-no-SDK posture, DERIVED from SPEC-N1 +
+> Worker-fetchability, recorded there too) (NEW **SPEC-R24**); the three-fact additive mapping
+> (`mcp:<server-id>:<tool-name>` id · verbatim wire name · independent label), schema passthrough
+> into the SAME `assertSupportedSchema` gate, per-server `auth`/`envKey` inheritance under
+> SPEC-R18's law unchanged, TEXT-only `tools/call` execute throwing into the existing `is_error`
+> path (NEW **SPEC-R25**); per-tool fail-soft discovery with the disclosed second-server-loses
+> consequence + an injectable registration sink (NEW **SPEC-R26**); the committed-roster allowlist
+> fence, dev-proxy boot-await, once-per-process-lifetime discovery, empty-roster byte-identity
+> (NEW **SPEC-R27**); and admin surfacing of the registered trios over a host GET with the ONE
+> sanctioned reshape of the SPEC-R16 AC2 parity test (Kim's F1 ruling, GH #567 comment,
+> 2026-08-07) (NEW **SPEC-R28**). SPEC-R16–R19's text is byte-untouched (additive beside them, the
+> ADR-0177 posture); §5 gains NO contracts — exact connector interfaces are the connector LLD's
+> (S-LLD, the #567 decomposition). v0.11 (SPEC-R21/R22) is untouched and orthogonal — its own
+> PROPOSED marker awaits Kim independently; each flips on its own utterance.
 > v0.11 changelog (ADR-0174 cl.1/cl.3/cl.4/cl.6, PROPOSED pending Kim's review — the planner-stage
 > pilot's HOST-SIDE loop, the half SPEC-R20 scoped out): NEW **SPEC-R21** (§3.2c) — the opt-in sequential
 > plan-runner: entirely HOST-side of the `AgentTransport` seam (each dispatched turn is an ordinary
@@ -287,6 +309,18 @@ isolated behind one interface (ADR-0069).
   the turn's abort signal plus, iff `auth === 'serverKey'`, the host-resolved key value. The key
   exists only inside the host process for the duration of the dispatch — never in a tool_result,
   a log line, or any browser-bound byte.
+- **MCP connector / MCP-sourced manifest** (ADR-0177 cl.1) — the second manifest PRODUCER
+  (`tools/agent/integrations/mcp/` — the same ADR-0137 shell law): at dev-proxy boot it turns each
+  allowlisted MCP server's `tools/list` into N ordinary `IntegrationManifest`s via the existing
+  `registerIntegration()`. A registry SOURCE, never a per-server registry entry and never a
+  consumer-side mechanism — downstream of registration, NOTHING distinguishes an MCP-sourced
+  manifest from a hand-authored one (SPEC-R23).
+- **MCP server roster (the allowlist)** (ADR-0177 cl.4) — the committed, admin-curated list of the
+  ONLY MCP servers the host may dial, a sibling file to `providers.json` (per entry: stable
+  server-id · human label · endpoint URL · `auth: 'none' | 'serverKey'` · `envKey?` — an env-var
+  NAME, never a value, the SPEC-R18 discipline). The fence: no browser- or model-supplied URL is
+  ever dialed (the `resolvePair` posture). Ships EMPTY/example-only in v1 — which real server
+  first enters it is Kim's later call (ADR-0177 Non-goals).
 
 ---
 
@@ -1041,13 +1075,172 @@ precedent). The adapter's internal tool loop yields text only, so the chat route
   turn dispatches, *then* the POST body carries the enabled ids (the GH #402 repro inverted) — a
   deterministic projection/runner test, no live model.
 
+### 3.7 MCP-sourced manifests (ADR-0177)
+
+Additive beside §3.6 — SPEC-R16–R19's text is byte-untouched, and every requirement below lands
+INTO their laws rather than beside them: the connector is a second manifest PRODUCER, never a
+second registry, validator, or dispatch. Build tracker: GH #567; slice→AC ownership lives in the
+[#567 decomposition](../decompositions/mcp-manifest-registry.decomp.md) and the connector LLD.
+
+**SPEC-R23 — MCP as a registry SOURCE, never a consumer-side mechanism (ADR-0177 cl.1).** The MCP
+connector (`tools/agent/integrations/mcp/` — the ADR-0137 shell law; the portable `src/agent/`
+core stays types-only, no key and no MCP byte enters it) MUST turn each allowlisted server's
+`tools/list` result into N ordinary `IntegrationManifest`s registered through the EXISTING
+`registerIntegration()`. An MCP-sourced manifest MUST be indistinguishable from a hand-authored
+one to every consumer: `registerIntegration`/`listIntegrations`/`resolveIntegrations`,
+`validateToolInput`/`assertSupportedSchema`, and `buildToolDispatch` stay byte-untouched by this
+whole arc; the `auth` vocabulary stays `'none' | 'serverKey'` (no `'mcp'` member, no new
+`ExecuteContext` field); the enablement wire stays `integrations: string[]` of registry `id`s.
+*(→ PRD-G7; ADR-0137/0177 cl.1)*
+- **AC1** *Given* the arc's diffs, *when* reviewed at each slice, *then* `registry.ts`,
+  `validate-input.ts`, `tool-dispatch.ts`, `integrations/index.ts`, and `src/agent/` carry ZERO
+  changes (the frozen-file fence — checkable as an empty `git diff` over those paths per PR;
+  `integrations/index.ts` in the list is what makes SPEC-R27's never-top-level-`await` law
+  mechanical rather than review-enforced) and the shipped SPEC-R16–R19 suites pass
+  byte-unmodified — `npm test` green by exit code.
+- **AC2** *Given* a fake discovered tool registered through the connector, *when* read back via
+  `listIntegrations()`, *then* it is a complete ordinary manifest (`id`/`label`/`description`/
+  `tool`/`auth`/`execute`) with no MCP-marked field on the consumer surface — deterministic unit
+  test, no network.
+
+**SPEC-R24 — Server-side-only Streamable-HTTP wire client, transport + protocol PINNED (ADR-0177
+cl.2 — the F2 freeze; F3 recorded).** The wire client MUST speak **Streamable HTTP only** — the
+single-endpoint transport of MCP revision 2025-03-26 and later. The deprecated dual-endpoint
+HTTP+SSE transport (protocol `2024-11-05`) MUST NOT be implemented. WHY (the F2 reasoning, frozen
+here): (a) the MCP spec itself REPLACED HTTP+SSE with Streamable HTTP at revision 2025-03-26 and
+retains the old flavor only as a backwards-compatibility measure for legacy servers — and a v1
+whose roster ships EMPTY (SPEC-R27) has no legacy estate to be compatible with, so a second
+handshake/connection path would be untested dead weight; (b) the legacy transport's long-lived
+GET stream is hostile to the deferred production-Worker rollout (ADR-0177 cl.4's
+additive-rollout posture), while Streamable HTTP is plain-`fetch`-able in both hosts. Within
+Streamable HTTP the client MUST send `Accept: application/json, text/event-stream` and handle
+BOTH sanctioned framings of a POST response (a single JSON body OR an SSE-framed body) — that
+duality is part of the pinned transport, not a fallback. The `initialize` handshake MUST send
+`protocolVersion: "2025-06-18"` (the pin); the client MUST proceed with a server iff the
+negotiated version ∈ {`"2025-06-18"`, `"2025-03-26"`} (the Streamable-HTTP-capable revisions) and
+otherwise skip-and-log that SERVER (SPEC-R26's fail-soft grain, applied at server scope); every
+post-initialize request MUST carry the `MCP-Protocol-Version` header (the 2025-06-18
+requirement); and the client MUST honor a server-assigned `Mcp-Session-Id` — captured from the
+`initialize` response headers, echoed on every subsequent request to that server (the
+Streamable-HTTP session law; a server assigning none ⇒ the header is simply never sent). F3,
+recorded: the client is HAND-ROLLED over plain `fetch` — DERIVED, not chosen
+fresh: SPEC-N1 pins `@agent-ui/a2ui` deps unchanged + no-SDK/plain-`fetch`, and Worker
+portability requires fetch-only I/O; adopting `@modelcontextprotocol/sdk` would be a
+repo-identity dependency change (the ADR-0139 class) needing its own Kim-ruled record — a
+blocked handback, never a quiet install. Raw JSON-RPC frames MUST NEVER leave the host process in
+either direction (ADR-0177 cl.2); the auth header is injected from a host-resolved key passed IN
+by the caller (the client never reads env); every response rides a size cap + abort/timeout (the
+registry TRUST-NOTE parity). *(→ Constraint C2, PRD-G7; ADR-0177 cl.2, SPEC-N1)*
+- **AC1** *Given* the client under an injected fake transport/server (no external network),
+  *when* the handshake runs, *then* `initialize` carries `protocolVersion: "2025-06-18"` and
+  post-initialize requests carry the `MCP-Protocol-Version` header; *when* a fake server
+  negotiates `"2024-11-05"`, *then* that server is skipped-and-logged and `tools/list` is never
+  dialed; *when* the same `tools/list` result arrives once JSON-framed and once SSE-framed,
+  *then* both parse to the same typed result — deterministic, `npm test` green by exit code.
+- **AC2** *Given* browser-shipped code, *when* the SPEC-N2-class source gates run, *then* no MCP
+  endpoint URL, JSON-RPC frame construction, or client import exists outside
+  `tools/agent/integrations/mcp/` + the dev-proxy/Worker shell — the client is node-side only.
+
+**SPEC-R25 — The additive three-fact mapping, per-server auth inheritance, TEXT-only execute
+(ADR-0177 cl.3; SPEC-R18's law unchanged).** Each discovered tool `{name, description,
+inputSchema}` plus its server's roster entry MUST map onto exactly ONE manifest under the
+three-fact law: `id` = the NAMESPACED `mcp:<server-id>:<tool-name>` · `tool.name` = the MCP tool
+name VERBATIM (unnamespaced — the disclosed cross-server-collision trade SPEC-R26 governs) ·
+`label` = independently composed (`"<server label>: <tool name/title>"`), never re-derived from
+the other two facts. The discovered `inputSchema` MUST pass through UNTOUCHED into the same
+`assertSupportedSchema` gate every hand-authored manifest faces — no MCP carve-out of the
+validator. `auth`/`envKey` MUST be inherited ONCE per server from the roster entry, under
+SPEC-R18's law byte-unchanged: `envKey` a NAME never a value, an unprovisioned `serverKey`
+manifest excluded by the existing `resolveIntegrations`, the host-resolved key riding
+`ExecuteContext.apiKey` into `execute`, which forwards it to the client's auth header. `execute`
+MUST be the client's `tools/call` plus a TEXT-only result mapping (v1: text parts compacted for
+the model; non-text parts dropped with a stated placeholder, never silently) and MUST THROW on
+upstream failure (an `isError` result or a transport error) so the adapter's existing `is_error`
+conversion applies — GH #49's degrade-the-answer-never-the-turn contract, unchanged.
+*(→ PRD-G4/G6; ADR-0177 cl.3, ADR-0168 §3/§4)*
+- **AC1** *Given* the mapping unit tests, *when* a server is relabeled, *then* neither `id` nor
+  `tool.name` changes (three facts held independent); *when* the manifest's `input_schema` is
+  compared to the discovered `inputSchema`, *then* they are deep-equal (passthrough, byte-true);
+  *when* a `serverKey` server's tools map, *then* every manifest inherits that ONE
+  `auth`/`envKey` pair and a dispatch's `ctx.apiKey` reaches the client's auth header —
+  deterministic, no key value, no network.
+- **AC2** *Given* a fake `tools/call` returning mixed text+non-text parts, *then* the executor
+  yields TEXT only with the placeholder for the dropped parts; *given* a fake `isError: true`
+  result, *then* `execute` throws and — through the shipped dispatch — lands as an `is_error`
+  tool_result (the SPEC-R17 AC2 re-assertion pattern), never a thrown turn.
+
+**SPEC-R26 — Per-tool fail-soft discovery, the disclosed second-server-loses consequence
+(ADR-0177 cl.3/cl.4).** Discovery MUST wrap each individual `registerIntegration()` call in a
+per-tool guard covering BOTH boot-fail-fast throw paths — an unsupported schema construct AND a
+duplicate wire `tool.name` — skipping-and-logging the ONE tool while registering the server's
+other N−1; `registerIntegration` itself stays untouched (it remains fail-fast for hand-authored
+callers, SPEC-R16). Across two servers exposing the same tool name, the SECOND registration
+loses: dropped, logged with its reason — disclosed, never a crash, never silent. Discovery MUST
+return a structured report `{registered, skipped: [{server, tool, reason}]}` for boot logging
+(SPEC-R27). The registration sink MUST be injectable (defaulting to `registerIntegration`) so no
+test mutates the module-level `REGISTRY` — which keeps the SPEC-R16 AC2 trio-parity gate green by
+construction: discovery runs only at dev-proxy boot (SPEC-R27), never at `integrations/index.ts`
+import, so test-time `listIntegrations()` stays hand-authored-only until SPEC-R28's ONE sanctioned
+reshape. *(→ PRD-G6; ADR-0177 cl.3/cl.4)*
+- **AC1** *Given* the discovery unit tests with an injected sink, *when* one tool of N is
+  unsupported or wire-name-colliding, *then* exactly N−1 register and the report names the
+  skipped tool + reason; *when* two fake servers expose the same tool name, *then* the second is
+  dropped with a logged reason and the first stays registered; *when* the roster is empty, *then*
+  the report is empty — deterministic, module `REGISTRY` untouched, the SPEC-R16 AC2 parity gate
+  green at head, `npm test` green by exit code.
+
+**SPEC-R27 — Allowlist fence, boot-await, once-per-lifetime discovery (ADR-0177 cl.4).** MCP
+servers MUST come only from the committed roster (§2 — a NEW file sibling to `providers.json`;
+exact name/schema are the connector LLD's), loaded by a fail-fast loader with the
+`providers-config.ts` posture: a malformed entry or `serverKey`-without-`envKey` THROWS at load.
+No browser- or model-supplied URL is EVER dialed. The v1 roster ships EMPTY/example-only. The dev
+proxy MUST AWAIT the whole discovery pass — every allowlisted server — as a distinct startup step
+BEFORE serving `/chat`/produce requests: never a top-level `await` spliced into
+`integrations/index.ts` (it would stall hand-authored registration), never fire-and-forget a
+request could race. Discovery-time key resolution uses the same `loadEnv`-merged env the proxy
+already holds (SPEC-N2); discovery runs ONCE per process lifetime — a stale tool list is the
+accepted `providers.json`-class v1 gap, no refresh mechanism. An EMPTY roster MUST keep
+hand-authored registration and both routes byte-identical to today (a zero-cost no-op).
+Production-Worker discovery stays OUT of this contract (`worker/` frozen — the deferred, additive
+rollout; a stated temporary asymmetry, not a silent gap). *(→ Constraint C2, PRD-G7; ADR-0177
+cl.4)*
+- **AC1** *Given* the loader unit tests, *when* fed a valid, a malformed, a
+  `serverKey`-without-`envKey`, and an empty roster, *then* the middle two throw at load and the
+  others parse — deterministic, no I/O.
+- **AC2** *Given* the dev-proxy ready-gate tests, *when* a request races boot, *then* it is not
+  served ahead of completed discovery; *when* the roster is empty, *then* proxy behavior is
+  byte-identical to pre-arc (hand-authored manifests register exactly as before) and the
+  SPEC-R26 discovery report logs empty — `npm run check && npm test` green by exit code;
+  `npm run test:browser` unaffected.
+
+**SPEC-R28 — Admin surfacing over a host GET (the F1 ruling — Kim, 2026-08-07, [GH #567
+comment](https://github.com/kimgranlund/agent-ui/issues/567#issuecomment-5221201991)).** The dev
+proxy MUST serve the registered trios — `{id, label, description}`, the SPEC-R16 AC2 vocabulary —
+over a host GET route, post-discovery, so `mcp:*` entries appear; the admin integrations pack
+MUST read that route LIVE instead of hand-mirroring the registry; and the both-directions
+trio-parity test (`agent-admin-app.test.ts:435`) MUST reshape exactly ONCE to grade the
+pack-projection against the SERVED trios — still both-directions-honest (either side forgetting
+an entry goes red). The GET body MUST carry trios ONLY: no endpoint URL, no `envKey` name, no key
+value, no raw MCP frame (the cl.2 boundary — trios are admin-display facts, not secrets). The
+enablement wire itself stays `integrations: string[]` of registry `id`s, browser→host,
+unchanged. The GET reflects the boot-time registry (SPEC-R27's accepted staleness — no refresh
+endpoint); Worker parity for the route rides the deferred rollout (`worker/` frozen).
+*(→ PRD-G7; Kim's F1 ruling GH #567; ADR-0177 cl.2/cl.4, ADR-0168 §2)*
+- **AC1** *Given* the GET route test, *when* discovery has registered `mcp:*` manifests, *then*
+  the served trios equal the `listIntegrations()` `{id, label, description}` projection including
+  the `mcp:*` entries, and the response body contains no URL, `envKey`, key value, or JSON-RPC
+  fact — deterministic route test, no external network.
+- **AC2** *Given* the reshaped parity test, *when* it runs at head, *then* it is green; *when*
+  either the pack or the served set drops an entry (mutation probe), *then* it goes red —
+  both-directions honesty re-proven, `npm test` green by exit code.
+
 ---
 
 ## 4. Non-functional requirements
 
 | ID | Requirement | Target |
 |---|---|---|
-| **SPEC-N1** | Zero-dep package preserved | `@agent-ui/a2ui/package.json` deps unchanged (`@agent-ui/components` + `@agent-ui/shared` only); the package surface is `.`/`./examples`/`./corpus`/`./agent` (the `./agent` producer toolkit exported per **ADR-0137**, TKT-0072 — the portable core in `src/agent/`); no LLM SDK anywhere (plain `fetch`); the KEY-HOLDING, DEV-PROXY, and PROVIDER-REGISTRY infra (`tools/agent/dev-proxy-plugin.ts` · `tools/agent/worker/` · `tools/agent/chat-validation.ts` · `tools/agent/integrations/` (registry + manifests + `validate-input.ts` + `tool-dispatch.ts`) · `providers.json`/`providers-config.ts`/`providers/{index,openai,gemini}.ts` · `agent-config-schema.ts`) stays tools-scoped WITHIN the a2ui package — as of ADR-0152, `tools/agent/worker/` is ALSO the production Cloudflare Worker's own runtime entry (`wrangler.jsonc`'s `main`), so "tools-scoped" no longer implies "never reaches production," only "never enters the portable `src/` producer core" (which remains true — `system-prompt.ts`/`mini-skills.ts` ship into the Worker bundle unmodified, per ADR-0152). Exporting `./agent` does NOT compromise the zero-dep core: the pack is hand-rolled, SDK-free, opt-in, and identity-gated (the ROOT `.` barrel carries zero producer bytes — the `./examples`/`./corpus` precedent), the ADR-0119 opt-in-pack law (Constraint C2 / ADR-0062/0069/0119/0137). |
+| **SPEC-N1** | Zero-dep package preserved | `@agent-ui/a2ui/package.json` deps unchanged (`@agent-ui/components` + `@agent-ui/shared` only); the package surface is `.`/`./examples`/`./corpus`/`./agent` (the `./agent` producer toolkit exported per **ADR-0137**, TKT-0072 — the portable core in `src/agent/`); no LLM SDK anywhere (plain `fetch`); the KEY-HOLDING, DEV-PROXY, and PROVIDER-REGISTRY infra (`tools/agent/dev-proxy-plugin.ts` · `tools/agent/worker/` · `tools/agent/chat-validation.ts` · `tools/agent/integrations/` (registry + manifests + `validate-input.ts` + `tool-dispatch.ts` + the `mcp/` connector, ADR-0177/SPEC-R23–R27) · `providers.json`/`providers-config.ts`/`providers/{index,openai,gemini}.ts` · the committed MCP server roster beside `providers.json` (SPEC-R27) · `agent-config-schema.ts`) stays tools-scoped WITHIN the a2ui package — as of ADR-0152, `tools/agent/worker/` is ALSO the production Cloudflare Worker's own runtime entry (`wrangler.jsonc`'s `main`), so "tools-scoped" no longer implies "never reaches production," only "never enters the portable `src/` producer core" (which remains true — `system-prompt.ts`/`mini-skills.ts` ship into the Worker bundle unmodified, per ADR-0152). Exporting `./agent` does NOT compromise the zero-dep core: the pack is hand-rolled, SDK-free, opt-in, and identity-gated (the ROOT `.` barrel carries zero producer bytes — the `./examples`/`./corpus` precedent), the ADR-0119 opt-in-pack law (Constraint C2 / ADR-0062/0069/0119/0137). |
 | **SPEC-N2** | No secret committed / none baked into a build (the `VITE_` footgun) | A gitignored `.env` (untracked, dev) / a Workers Secret (production, ADR-0152) provisions the keys; no key literal appears in committed source (grep gate) and no key VALUE ever reaches the browser in either environment. The dev proxy resolves the non-prefixed `ANTHROPIC_API_KEY` SERVER-side via Vite's `loadEnv(mode, <repoRoot>, '')` merged over `process.env` — Vite does NOT auto-load `.env` into `process.env`, so a bare `process.env` read would miss a `.env`-only key; `loadEnv` runs in Node under `apply: 'serve'` only. The production Worker resolves the same key from `env.ANTHROPIC_API_KEY` (a Workers Secret, injected by the runtime, never in source). Both environments answer `/status` with a boolean only. Vite INLINES `VITE_*` at build time, so every `import.meta.env.VITE_*` reference MUST still live only inside a dynamically-imported overlay module — a standing source-level gate asserts it — but as of ADR-0152 that module DOES ship in `dist/` (it is reachable in production now); the manual `vite build` + grep of `dist/` (ADR-0069) checks for a KEY VALUE, not for the module's absence. |
 | **SPEC-N3** | Validator parity | The runtime loop's validation is the shared `heal`+`validateA2ui` — identical verdict to the renderer and corpus admission; no fork (streaming SPEC-N3). |
 | **SPEC-N4** | Progressive paint | The validated payload streams line-by-line (root-early → first paint before finalize), preserving the `a2ui-stream` aesthetic (streaming SPEC-N1). A turn's optional leading `note` meta-line (ADR-0088 §1) is filtered out BEFORE `host.ingest`/the JSON tab — it never enters the render path and never delays or blocks the progressive paint of the validated lines that follow it. |
@@ -1301,5 +1494,11 @@ function buildToolDispatch(active: readonly IntegrationManifest[], env: Record<s
 | SPEC-R19 | PRD-G7 (transport interop — enablement reaches every live arm via one shared dispatch; GH #402 branch (a); ADR-0136/0152/0168 §5) |
 | SPEC-R20, R6 AC6 | PRD-G1/G6 (the `plan` meta-line arm — a model-authored, additive, shallow-validated field on the ADR-0088 envelope, following the `ask`-arm precedent exactly; parsed by `readMetaLine` and passed through `produce()`'s outgoing meta-line unchanged; its GRAMMAR-half mechanics teaching folded into SPEC-R6 per ADR-0174 cl.6; the host-side plan→execute→synthesize loop and any `plan`-analogue of the `ask` integrity check are OUT OF SCOPE — ADR-0174 cl.2) |
 | SPEC-R21, R22 | PRD-G1/G6 (the host-side sequential plan-runner — persona-gated opt-in, one ordinary `{kind:'intent'}` dispatch per declared step over one growing `Session`, closing-turn synthesis under SPEC-R5's validate-then-stream law, step lifecycle projected onto the existing status-stream grouping with `TURN_PROGRESS_STAGES` unwidened, a step cap + one `AbortSignal` bounding the run at `(K+2) × maxRounds`, tiered failure grain with fold-in acknowledgment, and the OF1 advisory law — no declaration-vs-output check; ADR-0174 cl.1/cl.3/cl.4/cl.6) |
+| SPEC-R23 | PRD-G7 (MCP as a second manifest PRODUCER — a registry source through the existing `registerIntegration()`, every consumer surface byte-untouched; ADR-0137/0177 cl.1) |
+| SPEC-R24 | Constraint C2 + PRD-G7 (the server-side-only wire client — Streamable HTTP ONLY, protocol pinned `2025-06-18`, hand-rolled plain `fetch` per SPEC-N1's no-SDK law; raw frames never leave the host; the F2/F3 freeze; ADR-0177 cl.2) |
+| SPEC-R25 | PRD-G4/G6 (the three-fact additive mapping + schema passthrough into the SAME `assertSupportedSchema` gate + TEXT-only execute through the existing `is_error` path; per-server key inheritance under SPEC-R18's law unchanged; ADR-0177 cl.3, ADR-0168 §3/§4) |
+| SPEC-R26 | PRD-G6 (per-tool fail-soft discovery — one bad tool costs one tool, the disclosed second-server-loses consequence, an injectable sink guarding the SPEC-R16 AC2 parity gate; ADR-0177 cl.3/cl.4) |
+| SPEC-R27 | Constraint C2 + PRD-G7 (the committed-roster allowlist fence + dev-proxy boot-await + once-per-lifetime discovery + empty-roster byte-identity; ADR-0177 cl.4) |
+| SPEC-R28 | PRD-G7 (admin surfacing — the host GET trio route, the live-read integrations pack, the ONE sanctioned parity-test reshape; Kim's F1 ruling, GH #567 2026-08-07; ADR-0177 cl.2/cl.4) |
 
 _Realizes streaming SPEC-R2 and harness SPEC-R6 in running code, co-serving PRD-G1 and PRD-G7. Status: each doc's own header (the tree wins); the original charter table is archived (frozen 2026-07-08)._
