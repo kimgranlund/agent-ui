@@ -343,7 +343,7 @@
      `[data-segmented] > [data-segment]` that matched active segments too, relying on the active rule
      below to out-specificity it back to visible with an explicit `display: block`. That `display: block`
      then always beat a CONSUMER's own display declaration on the same node (e.g. agent-admin's
-     `[data-role='settings-content'] { display: flex; gap: 1rem }`, one attribute selector, 0,1,0):
+     `[data-role='agent-content'] { display: flex; gap: 1rem }`, one attribute selector, 0,1,0):
      `[data-segmented] > [data-segment][data-active]` at 0,3,0 clobbered it, silently zeroing agent-admin's
      flex `gap` (inert on a block container) between every top-level pane section. Scoping the hide rule to
      `:not([data-active])` means an ACTIVE segment is no longer touched by any `display` declaration here

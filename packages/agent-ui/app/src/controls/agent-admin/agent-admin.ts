@@ -6,11 +6,12 @@
 //
 // ONE composed `ui-chat-shell` (GH #52/ADR-0154 — superseding vision rev.5's hand-rolled `ui-split`
 // composition, which itself superseded ADR-0131 cl.2's three-pane order): `[ chat canvas | resizable
-// options-pane with {Settings ⇄ Context: System ⇄ Context: Dialog} segments ]` (SPEC-R6/R7). The
-// Settings segment carries the WHOLE config column (Agent + ui-settings, the Model grid, Surface
-// Options, the prompt sections — the old prompts pane merged in, GH #488 moved it below Surface
-// Options — and the capability sections; since GH #225 each is a heading-row FOLD, the GH #222 Context
-// pattern); the Context segments are the
+// options-pane with {Agent ⇄ Capabilities ⇄ Surface ⇄ Context: System ⇄ Context: Dialog} segments ]`
+// (SPEC-R6/R7). GH #574 split the old single flat "Settings" segment (ten folds, three ranks flattened
+// into one scroll) into three ranked ones, Kim's ruling: Agent — who it is (Agent/Model/Bankroll);
+// Capabilities — what it can do (Instructions/Skills/Workflows/Resources/Tools); Surface — how it
+// renders (Surface Options/Pattern sources). Since GH #225 each fold is a heading-row FOLD (the GH #222
+// Context pattern); the Context segments are the
 // read-only introspection surface, split in two (GH #161, superseding the single combined "Context"
 // tab): "Context: System" (the compiled Agent System JSON) and "Context: Dialog" (the Dialog Turns
 // payload log). Composition is idempotent — the `master-detail.ts`/`settings.ts` `#compose()`
@@ -19,7 +20,7 @@
 // ADR-0132 replaced the single free-text prompt + flat-only settings with FIVE instantiations of one
 // generic entry-list primitive: prompt sections (Foundation/Personality/Critical Items, seeded,
 // toggle-off-only); Skills/Workflows/Resources/Tools (unseeded, purely custom-authored) alongside the
-// "Agent" flat config — all in the Settings tab. All five share ONE shared `SettingsStore` instance
+// "Agent" flat config — spread across the Agent/Capabilities tabs since GH #574. All five share ONE shared `SettingsStore` instance
 // (settings/store.ts) — one persisted config, five slices of it. Vision rev.5 adds the MASTER switches:
 // the Agent ACTIVE toggle (`agentEnabled` — OFF disables the composer, no turns run) and one per
 // capability kind (`${kind}sEnabled` — OFF gates the whole kind out, winning over per-entry toggles;
@@ -64,9 +65,10 @@ import '@agent-ui/components/controls/text-field'
 import '@agent-ui/components/controls/radio'
 import '@agent-ui/components/controls/disclosure' // vision rev.5 — the Context tabs' accordion primitive
 // GH #52 (ADR-0154, agent-admin-shell-rehost.lld.md LLD-C4) — the re-host onto the shell-archetype
-// grammar: content=chat, options-pane segments=Settings/Context:System/Context:Dialog (SPEC-R7a),
-// narrow-end="tabs" flattens them structurally (SPEC-R7b) — replacing the hand-rolled ui-split +
-// narrow ui-tabs dual-shell + the ResizeObserver-driven #applyLayout reparenting entirely.
+// grammar: content=chat, options-pane segments=Agent/Capabilities/Surface/Context:System/Context:Dialog
+// (SPEC-R7a, GH #574 split the old single Settings segment into three), narrow-end="tabs" flattens them
+// structurally (SPEC-R7b) — replacing the hand-rolled ui-split + narrow ui-tabs dual-shell + the
+// ResizeObserver-driven #applyLayout reparenting entirely.
 import '../chat-shell/chat-shell.ts'
 import type { UIChatShellElement } from '../chat-shell/chat-shell.ts'
 // Vision rev.6 (Surface Options): the Markdown modality renders agent notes through <ui-markdown> —
@@ -327,10 +329,11 @@ export class UIAgentAdminElement extends UIElement {
   // ONE registry `#rewireAllSections`/`#compose` both iterate uniformly.
   #capabilitySections: Map<string, EntryListSection> = new Map()
 
-  // GH #52/ADR-0154: the three `options-pane` segment content units (`#settingsContent` — the whole
-  // config column; `#contextSystemContent`/`#contextDialogContent` — the two Context halves, GH #161)
-  // are built ONCE in `#compose()` and authored directly into the shell — never moved again, so no
-  // field holds them past construction (the shell's own tab/segment strips drive visibility in place,
+  // GH #52/ADR-0154 (extended GH #574): the five `options-pane` segment content units (`agentContent`/
+  // `capabilitiesContent`/`surfaceContent` — the three ranked config units GH #574 split the old single
+  // Settings unit into; `#contextSystemContent`/`#contextDialogContent` — the two Context halves,
+  // GH #161) are built ONCE in `#compose()` and authored directly into the shell — never moved again, so
+  // no field holds them past construction (the shell's own tab/segment strips drive visibility in place,
   // SPEC-R7c; TKT-0085's reparenting machinery, and the field slots that tracked its targets, are gone).
   // ── vision rev.5: the master switches + the Context tabs' render slots ──────────────────────────────
   #agentSwitch: (HTMLElement & { checked: boolean }) | null = null
@@ -580,20 +583,24 @@ export class UIAgentAdminElement extends UIElement {
       node.markdown = text
       return node
     })
-    // GH #52/ADR-0154 (SPEC-R7a) — Settings ⇄ Context: System ⇄ Context: Dialog are now THREE
-    // `data-segment` siblings sharing ONE `options-pane` slot (GH #161's three-way split, unchanged) —
-    // the shell composes its own pane-local tab strip; no `ui-tabs`/panels of this element's own.
+    // GH #52/ADR-0154 (SPEC-R7a) — Agent ⇄ Capabilities ⇄ Surface ⇄ Context: System ⇄ Context: Dialog
+    // are now FIVE `data-segment` siblings sharing ONE `options-pane` slot (GH #574 split the old single
+    // Settings segment into three ranked ones — identity/runtime, capability content, rendering surface
+    // — the SAME tripling GH #161 already did once for the old single Context segment) — the shell
+    // composes its own pane-local tab strip; no `ui-tabs`/panels of this element's own.
 
-    // The Settings segment's content unit — the config column, every section a heading-row FOLD since
-    // GH #225 (Kim's ruling, the follow-on to GH #222: the Context tabs' chevron/accordion pattern
-    // applied back to the Settings column): one `settingsItem` ui-disclosure per section — Agent (the
-    // ACTIVE master switch ON its heading row, Kim's ruling: "the agent master toggle is just if the
-    // agent is active/available or not"), Model, Surface Options (GH #488 moved it above Instructions —
-    // the modality choices read before the prose they gate), Instructions (the old prompts pane, merged
-    // in), and the four capability kinds (each kind's master switch on ITS heading row) — ONE
-    // reparent-able node (the TKT-0085 wrapper discipline). The old plain `<h3>` heading parts
-    // (agent-header/agent-heading/model-grid-heading/surface-options-heading/entry-section-heading)
-    // retired with the fold summaries that replaced them.
+    // GH #574 (Kim's ruling, in-session 2026-08-07) — the old flat Settings tab's ten folds, ranked into
+    // three tabs: Agent (who it is — Agent/Model/Bankroll), Capabilities (what it can do — Instructions/
+    // Skills/Workflows/Resources/Tools), Surface (how it renders — Surface Options/Pattern sources).
+    // Every section stays a heading-row FOLD since GH #225 (Kim's ruling, the follow-on to GH #222: the
+    // Context tabs' chevron/accordion pattern applied back to the config column): one `settingsItem`
+    // ui-disclosure per section — Agent (the ACTIVE master switch ON its heading row, Kim's ruling: "the
+    // agent master toggle is just if the agent is active/available or not"), Model, Surface Options
+    // (GH #488 moved it above Instructions — the modality choices read before the prose they gate),
+    // Instructions (the old prompts pane, merged in), and the four capability kinds (each kind's master
+    // switch on ITS heading row) — ONE reparent-able node (the TKT-0085 wrapper discipline) apiece. The
+    // old plain `<h3>` heading parts (agent-header/agent-heading/model-grid-heading/surface-options-
+    // heading/entry-section-heading) retired with the fold summaries that replaced them.
     const agentSwitch = document.createElement('ui-switch') as HTMLElement & { checked: boolean }
     agentSwitch.setAttribute('data-part', 'agent-enabled')
     // GH #226/ADR-0158 — the heading-row placement is DECLARATIVE now: `slot="summary"` marks the switch
@@ -617,10 +624,22 @@ export class UIAgentAdminElement extends UIElement {
     // a listener on THIS element, which owns no event vocabulary of its own (descriptor `events: []`).
     settingsEl.addEventListener('select', (event) => event.stopPropagation())
     settingsEl.addEventListener('change', (event) => event.stopPropagation())
-    const settingsContent = document.createElement('div')
-    settingsContent.setAttribute('data-role', 'settings-content')
-    settingsContent.setAttribute('data-slot', 'options-pane')
-    settingsContent.setAttribute('data-segment', 'Settings')
+    // GH #574 — the three ranked content units the old single `settingsContent` div split into. Each is
+    // its OWN reparent-able node (the TKT-0085 wrapper discipline, tripled again like GH #161's Context
+    // split): `data-role` names the unit for CSS/tests (the `settings-content` precedent), `data-segment`
+    // is the tab label the shell's own strip renders verbatim.
+    const agentContent = document.createElement('div')
+    agentContent.setAttribute('data-role', 'agent-content')
+    agentContent.setAttribute('data-slot', 'options-pane')
+    agentContent.setAttribute('data-segment', 'Agent')
+    const capabilitiesContent = document.createElement('div')
+    capabilitiesContent.setAttribute('data-role', 'capabilities-content')
+    capabilitiesContent.setAttribute('data-slot', 'options-pane')
+    capabilitiesContent.setAttribute('data-segment', 'Capabilities')
+    const surfaceContent = document.createElement('div')
+    surfaceContent.setAttribute('data-role', 'surface-content')
+    surfaceContent.setAttribute('data-slot', 'options-pane')
+    surfaceContent.setAttribute('data-segment', 'Surface')
     // The Model GRID (Kim, 2026-07-19 rev.2): its own card host, sitting between the Agent form card
     // and the prompt/capability sections (its fold's summary carries the "Model" heading, GH #225).
     // Content renders/rerenders from the store.
@@ -631,8 +650,9 @@ export class UIAgentAdminElement extends UIElement {
 
     // ── Surface Options (vision rev.6 — the frame's node 34:1312): the agent's output-modality card.
     // Originally placed after the prompt sections (the frame's own Agent-card order); GH #488 moved its
-    // PANE POSITION above Instructions (the settingsContent.append order below) — the modality choices
-    // now read before the prose they gate. This build-order comment still matters here: the section
+    // PANE POSITION above Instructions (the settingsContent.append order below — GH #574 renamed that
+    // unit `surfaceContent`, now its own tab entirely) — the modality choices now read before the prose
+    // they gate. This build-order comment still matters here: the section
     // itself is still BUILT here, before the capability sections, because the A2UI row it defines
     // (`a2ui`, below) is where the catalog picker mounts (GH #488's other move, in the CAPABILITY_KINDS
     // loop). Rows build ONCE; their state is (re)applied by #applyMasterStates (the master-switch
@@ -779,17 +799,22 @@ export class UIAgentAdminElement extends UIElement {
     // connect-order placement dance required.
     const agentItem = settingsItem('agent', 'Agent', settingsEl)
     agentItem.append(agentSwitch)
-    // GH #488 — Surface Options renders ABOVE Instructions now (the modality choices read before the
-    // prose they gate): a pure reorder of this append call's argument list, nothing else.
-    settingsContent.append(
+    // GH #574 — Agent tab: who it is (Agent · Model · Bankroll — persona state lives with the persona).
+    agentContent.append(
       agentItem,
       settingsItem('model', 'Model', modelGrid),
-      settingsItem('surface', 'Surface Options', surfaceOptions),
       // GH #541 — Bankroll sits adjacent to Surface Options (the modality choices it reads alongside),
-      // as its own group rather than a row inside them.
+      // as its own group rather than a row inside them; GH #574 moved the WHOLE Surface Options fold to
+      // its own tab, so Bankroll now closes out the Agent tab instead.
       bankrollItem,
-      settingsItem(ENTRY_KINDS.promptSection, 'Instructions', promptSections.host),
     )
+    // GH #574 — Capabilities tab: what it can do (Instructions leads, then the four generic capability
+    // kinds below — Skills/Workflows/Resources/Tools). Pattern sources rides the Surface tab instead
+    // (see the CAPABILITY_KINDS loop below) — it configures HOW the GenUI modality renders, not a
+    // capability the agent has.
+    capabilitiesContent.append(settingsItem(ENTRY_KINDS.promptSection, 'Instructions', promptSections.host))
+    // GH #574 — Surface tab: how it renders (Surface Options · Pattern sources).
+    surfaceContent.append(settingsItem('surface', 'Surface Options', surfaceOptions))
     for (const { kind, label, addLabel } of CAPABILITY_KINDS) {
       const section = this.#makeSection(kind, addLabel)
       // GH #488 — the catalog picker is no longer a separate top-level Settings fold: it mounts directly
@@ -828,7 +853,10 @@ export class UIAgentAdminElement extends UIElement {
       })
       this.#kindSwitches.set(kind, kindSwitch)
       item.append(kindSwitch)
-      settingsContent.append(item)
+      // GH #574 — Pattern sources rides the Surface tab (how it renders, alongside Surface Options —
+      // the modality it conditions); every other capability kind rides Capabilities (what it can do).
+      if (kind === ENTRY_KINDS.patternSource) surfaceContent.append(item)
+      else capabilitiesContent.append(item)
     }
 
     // GH #161 — the old single Context tab's ONE content unit split into TWO content units:
@@ -863,7 +891,10 @@ export class UIAgentAdminElement extends UIElement {
     // GH #52/ADR-0154 — every content unit authors DIRECTLY into the shell, once, never moved again:
     // the shell's own pane-tabs strip (wide) and narrow-tabs strip (narrow-end="tabs") drive visibility
     // in place (SPEC-R7c) — the TKT-0085 guarded-move dance this replaced no longer has anything to do.
-    shell.append(conversation, settingsContent, contextSystemContent, contextDialogContent)
+    // GH #574 — DOM order fixes the tab-strip order (both #applySegments and the narrow-tabs mechanism
+    // read `data-segment` children in append order): Agent · Capabilities · Surface · Context: System ·
+    // Context: Dialog, exactly the ruled strip.
+    shell.append(conversation, agentContent, capabilitiesContent, surfaceContent, contextSystemContent, contextDialogContent)
     this.append(shell)
 
     this.#shell = shell
