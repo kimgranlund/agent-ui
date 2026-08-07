@@ -63,9 +63,12 @@ default-only, SPEC-N5) are all encoded directly in §2/§3/§4 below.
 - **Compose-time overlay / `composeCatalog`** — the pure function `composeCatalog(base: Catalog,
   local: CatalogFragment): Catalog` (ADR-0172 cl.2) that merges `local`'s `components`/`functions`
   maps over `base`'s, producing a new `Catalog` document with its own derived `catalogId` (OF1b's
-  `<base>--<persona>` convention, §5; `base.protocolVersion`/`surfaceProperties` carried through
-  unchanged — neither is named as overlay-composable by ADR-0172, and no Repairs-cell item asks
-  for it). ONE derivation per (fragment, targeted base) pairing (SPEC-R1's `targetCatalogs`,
+  `<base>--<persona>` convention, §5; `base.protocolVersion` carried through unchanged — it is not
+  named as overlay-composable by ADR-0172, and no Repairs-cell item asks for it. **2026-08-07:**
+  `surfaceProperties` no longer exists on `Catalog` to carry through — catalog-level theming is
+  retired, GH #531's ruling comment
+  [kimgranlund/agent-ui#531#issuecomment-5219435112](https://github.com/kimgranlund/agent-ui/issues/531#issuecomment-5219435112)).
+  ONE derivation per (fragment, targeted base) pairing (SPEC-R1's `targetCatalogs`,
   SPEC-R2) — a fragment targeting both bases composes twice, independently, never producing one
   merged three-way document.
 - **Derived catalog** — a `composeCatalog` output, once registered, is a normal `Catalog` document
@@ -179,10 +182,15 @@ production.
   `catalog.catalogId !== 'agent-ui'` gate already composes its teaching line for ANY non-default
   id, derived or not) — satisfying GH #421 AC2/AC3 for EITHER base a persona's effective catalog
   derives from, as a consequence of SPEC-R2/R3's threading, not a separate build item.
-- **AC5** *Given* `protocolVersion`/`surfaceProperties` on a targeted base, *when* composed,
-  *then* the derived catalog carries THAT base's values through unchanged (never a different
-  targeted base's, when a fragment targets more than one — each derivation is independent) —
-  neither field is named as composable by ADR-0172, and no Repairs-cell item requests it.
+- **AC5** *Given* `protocolVersion` on a targeted base, *when* composed, *then* the derived
+  catalog carries THAT base's value through unchanged (never a different targeted base's, when a
+  fragment targets more than one — each derivation is independent) — it is not named as
+  overlay-composable by ADR-0172, and no Repairs-cell item requests it. **(2026-08-07 — the
+  `surfaceProperties` half of this AC is retired: `Catalog` carries no surface-theming field at
+  all, GH #531's ruling comment
+  [kimgranlund/agent-ui#531#issuecomment-5219435112](https://github.com/kimgranlund/agent-ui/issues/531#issuecomment-5219435112)
+  — theming is a consumer/CSS concern, not a catalog-level mechanism, so there is nothing left for
+  a compose-time overlay to carry through.)**
 - **AC6 (the widening's own edge case)** *Given* a fragment's `targetCatalogs` naming an id that
   is NOT one of the two currently-registered bases (a typo, or a not-yet-shipped third base),
   *when* the constructor's derive-then-register step runs, *then* it fails loud — the SAME
