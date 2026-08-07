@@ -249,12 +249,18 @@ function wireMagicLink(transport: IdentityMockTransport): void {
   resendButton.addEventListener('click', () => {
     void (async () => {
       checkEmailStatus.textContent = ''
+      // The SAME setPending treatment requestSubmit/confirmButton already use (code-checker P4) — disables
+      // synchronously before the await, so a fast double-click can never issue two overlapping requests.
+      // On SUCCESS, no restore call here: startResendCooldown() immediately takes over the disabled state
+      // with its own countdown label, so re-enabling first would just be undone a line later.
+      setPending(resendButton, true, 'Resending…', 'Resend link')
       try {
         await sendRequest()
         checkEmailStatus.textContent = 'A new link was sent.'
         startResendCooldown()
       } catch {
         checkEmailStatus.textContent = 'Something went wrong — try again.'
+        setPending(resendButton, false, 'Resending…', 'Resend link')
       }
     })()
   })

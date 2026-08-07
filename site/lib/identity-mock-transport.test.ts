@@ -161,6 +161,15 @@ describe('SPEC-R2 — requestOneTimeCode / verifyOneTimeCode', () => {
     expect(transport.getSession()).toEqual(session)
   })
 
+  it('a code-provisioned (passwordless) account can NEVER sign in via signInWithPassword — an empty stored password never matches, even against an empty submitted password (transport guarantee, not a page-level assumption; code-checker P3)', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0 })
+    const { requestId } = await transport.requestOneTimeCode({ email: 'passwordless@example.com' })
+    await transport.verifyOneTimeCode({ requestId, code: '424242' })
+    await expect(
+      transport.signInWithPassword({ email: 'passwordless@example.com', password: '' }),
+    ).rejects.toMatchObject({ code: 'invalid-credentials' })
+  })
+
   it('an overridden `code` option reflects in verifyOneTimeCode (SPEC-R6 AC3)', async () => {
     const transport = createIdentityMockTransport({ latencyMs: 0, code: '000111' })
     const { requestId } = await transport.requestOneTimeCode({ email: 'a@example.com' })

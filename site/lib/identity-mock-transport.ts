@@ -191,8 +191,11 @@ export function createIdentityMockTransport(options: IdentityMockTransportOption
       await delay(latencyMs)
       const account = findAccount(email)
       // SPEC-R1 AC4 — an unknown email and a wrong password are NEVER distinguished, in the code or the
-      // message: one vocabulary member, one generic message, for both branches.
-      if (account === undefined || account.password !== password) {
+      // message: one vocabulary member, one generic message, for both branches. An EMPTY stored password
+      // (findOrCreateAccount's passwordless auto-provision, S2) never matches — a real password can never
+      // BE empty (the field is native-required, page-level), but that is a page-level assumption, not a
+      // transport guarantee; the code-checker review's own P3 finding — this line is the actual guarantee.
+      if (account === undefined || account.password === '' || account.password !== password) {
         throw new IdentityMockError('invalid-credentials', 'Incorrect email or password.')
       }
       const next: IdentitySession = { accountId: account.accountId, email: account.email, method: 'password' }
