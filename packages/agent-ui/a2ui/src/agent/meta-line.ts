@@ -19,6 +19,13 @@
 // `surfaceId`) yields the envelope WITHOUT `ask` (never the whole envelope dropped) — the note/trace
 // still parse normally, so a broken `ask` never breaks the conversational channel it rides on.
 //
+// ADR-0174 cl.2 / SPEC-R20 adds a second additive field, `plan`: the model declares a step list by
+// carrying `{steps: [{id, description}]}` on the SAME leading meta-line as `note`/`ask`, following the
+// `ask`-arm precedent EXACTLY — MODEL-authored, shallow-validated the same per-field-independent way (a
+// malformed `plan` drops only itself, never the whole envelope). The host-side plan→execute→synthesize
+// loop that reads a declared `plan`, and any `plan`-analogue of `ask`'s surfaceId-correlation integrity
+// check, are a future SPEC/LLD's job — this file carries the wire representation ONLY.
+//
 // Zero-dep, pure (SPEC-N5): no imports.
 
 /**
@@ -49,6 +56,27 @@ export interface TurnTrace {
  */
 export interface AskDeclaration {
   surfaceId: string
+}
+
+/**
+ * One step of a model-declared plan (ADR-0174 cl.2 / SPEC-R20) — `id` names the step, `description` is
+ * the model's own prose for what that step does. Wire representation ONLY: the host-side executor loop
+ * that reads a declared plan and drives it is a future SPEC/LLD's job, not this envelope's.
+ */
+export interface PlanStep {
+  id: string
+  description: string
+}
+
+/**
+ * A plan declaration (ADR-0174 cl.2 / SPEC-R20): the model's own step list, following the `ask`-arm
+ * precedent EXACTLY — MODEL-authored (never runtime-composed), shallow-validated the same
+ * per-field-independent way (`readMetaLine` below), and carrying NO integrity check here (ADR-0174 Open
+ * fork OF1 — a `plan` is displayed/passed-through as declared, host-trusted, until a future requirement
+ * rules otherwise).
+ */
+export interface PlanDeclaration {
+  steps: PlanStep[]
 }
 
 /**
@@ -103,6 +131,10 @@ export interface A2uiMetaEnvelope {
   a2uiMeta: {
     note?: string
     ask?: AskDeclaration
+    /** ADR-0174 cl.2 / SPEC-R20: the model's own declared step list, additive alongside `note`/`ask` on
+     *  the SAME leading meta-line. MODEL-authored, shallow-validated the same per-field-independent way
+     *  `ask` is — a malformed `plan` drops only itself, never the whole envelope. */
+    plan?: PlanDeclaration
     trace?: TurnTrace
     /** ADR-0146 F1: a runtime-composed live-turn lifecycle event, INTERLEAVED during the turn (not just a
      *  single leading line). Shallow-validated the same way `ask` is — a malformed `progress` drops only
@@ -151,6 +183,29 @@ export function readMetaLine(line: string): A2uiMetaEnvelope | undefined {
     if (typeof surfaceId === 'string') ask = { surfaceId }
   }
 
+  // ADR-0174 cl.2 / SPEC-R20: `plan` is shallow-validated the SAME per-field-independent way as `ask` — a
+  // malformed `plan` (non-object, a missing/non-array `steps`, or any step missing a string `id` or a
+  // string `description`) drops ONLY `plan`, never the whole envelope (note/ask/trace/progress/error on
+  // the same line still parse normally). MODEL-authored, never runtime-composed — never throws, never
+  // invents a step.
+  let plan: PlanDeclaration | undefined
+  if (m.plan !== undefined && typeof m.plan === 'object' && m.plan !== null && !Array.isArray(m.plan)) {
+    const steps = (m.plan as Record<string, unknown>).steps
+    if (
+      Array.isArray(steps) &&
+      steps.every(
+        (s) =>
+          typeof s === 'object' &&
+          s !== null &&
+          !Array.isArray(s) &&
+          typeof (s as Record<string, unknown>).id === 'string' &&
+          typeof (s as Record<string, unknown>).description === 'string',
+      )
+    ) {
+      plan = { steps: steps as PlanStep[] }
+    }
+  }
+
   // ADR-0146 F1: `progress` is shallow-validated the SAME way — a malformed `progress` (non-object, or a
   // `stage` outside the closed vocabulary, or a non-number `round` / non-string `detail`/`source`) drops
   // only itself, never the whole envelope. The closed `stage` union is the honesty-law guard (F2): an
@@ -176,6 +231,7 @@ export function readMetaLine(line: string): A2uiMetaEnvelope | undefined {
     a2uiMeta: {
       note: m.note as string | undefined,
       ask,
+      plan,
       trace: m.trace as TurnTrace | undefined,
       progress,
       error,

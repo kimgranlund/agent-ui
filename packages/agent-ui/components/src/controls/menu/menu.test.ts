@@ -29,8 +29,9 @@ declare const process: { cwd(): string }
 //   menu-commit-closes · menu-trigger-click (ADR-0101 erratum: mouse-click open must set the
 //   `open` prop, not bypass it via a raw `handle.toggle()`; includes the ticket #28 click-open→
 //   commit regression) · menu-commit-disabled · menu-click-commit · menu-c10-residue ·
-//   menu-c10-stacking · menu-c10-cleanup · menu-descriptor-schema · menu-descriptor-bijection ·
-//   menu-descriptor-negative
+//   menu-c10-stacking · menu-c10-cleanup · menu-a11y-label-default · menu-a11y-label-override ·
+//   menu-a11y-label-cleared · menu-a11y-trigger-id-preserved · menu-descriptor-schema ·
+//   menu-descriptor-bijection · menu-descriptor-negative
 
 // ── Popover API stub (jsdom lacks it — mirrors popover.test.ts setup) ───────────────────────────
 
@@ -139,14 +140,15 @@ function makeProbe(markup = DEFAULT_MARKUP): { el: ProbeMenu; trigger: HTMLEleme
 // ── Upgrade + typed prop surface ──────────────────────────────────────────────────────────────
 
 describe('ui-menu — upgrade + typed prop surface (menu-upgrade)', () => {
-  it('menu-upgrade: upgrades to UIMenuElement with open=false + placement=bottom-start at defaults', () => {
+  it('menu-upgrade: upgrades to UIMenuElement with open=false + placement=bottom-start + label empty at defaults', () => {
     const el = document.createElement('ui-menu') as UIMenuElement
     expect(el).toBeInstanceOf(UIMenuElement)
     expect(el.open).toBe(false)
     expect(el.placement).toBe('bottom-start')
+    expect(el.label).toBe('')
   })
 
-  it('menu-typed: open is boolean and placement is the OverlayPlacement literal union (compile-time NCs)', () => {
+  it('menu-typed: open is boolean, placement is the OverlayPlacement literal union, label is string (compile-time NCs)', () => {
     const fn = (): void => {
       const el = new UIMenuElement()
       el.open = true
@@ -159,6 +161,8 @@ describe('ui-menu — upgrade + typed prop surface (menu-upgrade)', () => {
       el.placement = 'invalid'
       // @ts-expect-error — 'bottom' alone (no alignment) is not valid
       el.placement = 'bottom'
+      el.label = 'Actions'
+      el.label = ''
     }
     expect(typeof fn).toBe('function') // never invoked — @ts-expect-error lines are the assertion
   })
@@ -350,6 +354,62 @@ describe('ui-menu — aria-expanded stays in sync with open (menu-aria-expanded)
     simulateLightDismiss(panel)
     await whenFlushed()
     expect(trigger.getAttribute('aria-expanded')).toBe('false')
+    el.remove()
+  })
+})
+
+// ── Panel accessible name (GH #535) ──────────────────────────────────────────────────────────
+
+describe('ui-menu — panel accessible name (menu-a11y-label-default · menu-a11y-label-override · menu-a11y-label-cleared · menu-a11y-trigger-id-preserved)', () => {
+  it('menu-a11y-label-default: at default, the panel\'s aria-labelledby resolves to the trigger\'s (minted) id', async () => {
+    const { trigger, panel, el } = makeMenu()
+    await whenFlushed()
+    expect(trigger.id, 'the trigger gets a minted id').toBeTruthy()
+    expect(panel.getAttribute('aria-labelledby')).toBe(trigger.id)
+    expect(panel.hasAttribute('aria-label')).toBe(false)
+    el.remove()
+  })
+
+  it('menu-a11y-label-override: setting the label prop switches the panel to aria-label, dropping aria-labelledby', async () => {
+    const { panel, el } = makeMenu()
+    await whenFlushed()
+
+    el.label = 'Actions'
+    await whenFlushed()
+    expect(panel.getAttribute('aria-label')).toBe('Actions')
+    expect(panel.hasAttribute('aria-labelledby')).toBe(false)
+    el.remove()
+  })
+
+  it('menu-a11y-label-cleared: clearing the label prop reverts the panel to the default labelledby chain', async () => {
+    const { trigger, panel, el } = makeMenu()
+    await whenFlushed()
+
+    el.label = 'Actions'
+    await whenFlushed()
+    expect(panel.getAttribute('aria-label')).toBe('Actions')
+
+    el.label = ''
+    await whenFlushed()
+    expect(panel.hasAttribute('aria-label')).toBe(false)
+    expect(panel.getAttribute('aria-labelledby')).toBe(trigger.id)
+    el.remove()
+  })
+
+  it('menu-a11y-trigger-id-preserved: a trigger with an author-given id is not re-minted, and the panel labels itself off it', async () => {
+    const el = document.createElement('ui-menu') as UIMenuElement
+    el.innerHTML = `
+      <button id="my-trigger">Open menu</button>
+      <div data-value="a">Item A</div>
+    `
+    document.body.append(el)
+    const trigger = el.querySelector<HTMLElement>('[data-part="trigger"]')!
+    const panel = el.querySelector<HTMLElement>('[data-part="panel"]')!
+    stubRects(trigger, panel)
+    await whenFlushed()
+
+    expect(trigger.id).toBe('my-trigger')
+    expect(panel.getAttribute('aria-labelledby')).toBe('my-trigger')
     el.remove()
   })
 })
@@ -1052,7 +1112,7 @@ const md = readFileSync(`${MENU_DIR}/menu.md`, 'utf8') as string
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 
-const ATTR_NAMES = ['open', 'placement']
+const ATTR_NAMES = ['open', 'placement', 'label']
 
 describe('menu.md descriptor — frontmatter parses + schema-valid (menu-descriptor-schema)', () => {
   it('menu-descriptor-schema: has a leading frontmatter fence and a prose body', () => {

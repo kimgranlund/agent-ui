@@ -27,9 +27,10 @@
 //
 // Anatomy (light-DOM, created once — idempotent across reconnect):
 //   <ui-menu>
-//     <button data-part="trigger" aria-expanded="…" aria-controls="ui-menu-panel-N"
-//             aria-haspopup="menu">…</button>
-//     <div data-part="panel" role="menu" popover="auto" id="ui-menu-panel-N" tabindex="-1">
+//     <button data-part="trigger" id="ui-menu-trigger-N" aria-expanded="…"
+//             aria-controls="ui-menu-panel-N" aria-haspopup="menu">…</button>
+//     <div data-part="panel" role="menu" popover="auto" id="ui-menu-panel-N" tabindex="-1"
+//          aria-labelledby="ui-menu-trigger-N">
 //       <!-- author-provided item children moved in at connect; auto-get role=menuitem if absent -->
 //       <div role="menuitem" tabindex="-1">Item 1</div>
 //       <div role="menuitem" tabindex="-1">Item 2</div>
@@ -52,6 +53,14 @@
 // item that already carries a role (author pre-marked `menuitemradio`/`menuitemcheckbox`) is left
 // alone. `aria-checked` remains invalid on plain `menuitem` (action semantics, no selected state);
 // it is valid — and control-managed on commit — on the two selectable roles only (GH #55).
+//
+// PANEL ACCESSIBLE NAME (GH #535): the panel is always named. Default — `aria-labelledby` points at
+// the trigger's id, minted in `#ensureParts()` if the author gave none (an author-pre-set id is left
+// untouched). Opt-in override — the `label` prop: when set, the panel gets `aria-label` instead and
+// the labelledby default is removed (accname resolution prefers aria-labelledby over aria-label, so
+// the default reference must actually be dropped, not left to be shadowed); clearing `label` reverts
+// to the labelledby default. A scope-owned effect (connected(), alongside the aria-expanded effect)
+// is the sole writer of both attributes.
 //
 // `controls → dom → traits` is the one allowed import direction.
 
@@ -84,11 +93,18 @@ const props = {
   // `placement` — the preferred panel placement relative to the trigger (captured once per
   // connection; changing it after connect takes effect on the next reconnect).
   placement: { ...prop.enum(PLACEMENTS, 'bottom-start'), reflect: true },
+  // `label` — opt-in accessible-name override for the panel (GH #535). '' (default) = the panel is
+  // named via aria-labelledby → the trigger's id (minted in #ensureParts if the trigger has none).
+  // Set = the panel gets aria-label instead and the labelledby default is dropped (accname
+  // precedence — aria-labelledby beats aria-label, so the default reference must actually be
+  // removed, not just shadowed). Reflected — the select.ts/disclosure.ts string-label precedent.
+  label: { ...prop.string(''), reflect: true },
 } satisfies PropsSchema
 
-// ── Module-level stable-id counter (one per panel, never reused) ─────────────────────────────────
+// ── Module-level stable-id counters (one per panel/trigger, never reused) ────────────────────────
 
 let _nextPanelId = 0
+let _nextTriggerId = 0
 
 // ── Element ──────────────────────────────────────────────────────────────────────────────────────
 
@@ -149,6 +165,23 @@ export class UIMenuElement extends UIElement {
       if (isOpen) handle.open()
       else handle.close()
       trigger.setAttribute('aria-expanded', String(isOpen))
+    })
+
+    // Panel accessible name (GH #535) — a scope-owned effect, the sole writer of aria-label/
+    // aria-labelledby on the panel (single-writer discipline, the select.ts ADR-0085 precedent).
+    // Default: aria-labelledby → the trigger's id (minted in #ensureParts if absent). Opt-in: the
+    // `label` prop → aria-label, with the labelledby default removed (not merely shadowed —
+    // aria-labelledby wins accname resolution over aria-label when both are present). Re-runs
+    // whenever `label` changes; clearing it reverts to the labelledby default.
+    this.effect(() => {
+      const lbl = this.label
+      if (lbl) {
+        panel.setAttribute('aria-label', lbl)
+        panel.removeAttribute('aria-labelledby')
+      } else {
+        panel.removeAttribute('aria-label')
+        panel.setAttribute('aria-labelledby', trigger.id)
+      }
     })
 
     // Delegated click on the panel → commit the clicked menuitem. Handles mouse clicks AND
@@ -226,6 +259,10 @@ export class UIMenuElement extends UIElement {
       )
     }
     trigger.setAttribute('data-part', 'trigger')
+    // Mint a stable id on the trigger if the author gave none (GH #535) — the panel's default
+    // accessible-name effect (connected(), below) points aria-labelledby at this id. An
+    // author-pre-set id is left untouched (not re-minted).
+    if (!trigger.id) trigger.id = `ui-menu-trigger-${++_nextTriggerId}`
 
     // Create the menu panel. The overlay controller sets popover="auto" via setAttribute
     // (single-ownership, ADR-0017 pattern — we do NOT set it here).

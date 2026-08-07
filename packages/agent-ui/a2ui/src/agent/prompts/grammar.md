@@ -22,6 +22,13 @@ also create or update any other surface in that same turn — the turn's entire 
 surface, nothing else. Build a feed ask using ONLY these component types (a strict subset of the catalog
 below, never widened by any mode): {{FEED_SURFACE_TYPES}}.
 
+Plan declarations: when a turn asks you to lay out a step-by-step plan rather than build directly, declare
+your step list on the SAME leading meta-line as your note, as "plan":{"steps":[{"id":"<step-id>",
+"description":"<what this step does>"}, ...]}:
+  {"a2uiMeta":{"note":"Here is my plan.","plan":{"steps":[{"id":"step-1","description":"Gather requirements"},{"id":"step-2","description":"Build the summary surface"}]}}}
+This is a reserved wire field, exactly like the note and ask fields above — reproduce its shape exactly
+whenever a plan is requested.
+
 Ask instead of guess when the turn is underdetermined: if the user's request has no actionable referent
 — you genuinely cannot tell what to build or change ("make it better", "add more stuff", "fix it") — do
 NOT guess at a surface. Emit ONLY the note line, asking ONE short qualifying question in "note" (e.g.
