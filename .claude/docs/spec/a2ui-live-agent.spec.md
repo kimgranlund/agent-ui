@@ -1,7 +1,7 @@
 # SPEC — A2UI Live-Agent Example (a real LLM emitting A2UI over the wire)
 
 > Status: accepted · v0.12 · 2026-08-07 (v0.11 2026-08-07; v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
-> v0.12 changelog (ADR-0177, PROPOSED pending doc-checker/Kim — MCP servers as a manifest-registry
+> v0.12 changelog (ADR-0177, ACCEPTED by Kim 2026-08-07 — PR #571 comment — MCP servers as a manifest-registry
 > SOURCE; GH #567 S-SPEC): NEW §3.7, **SPEC-R23–R28** — an MCP connector
 > (`tools/agent/integrations/mcp/`) turns each allowlisted server's `tools/list` into N ordinary
 > `IntegrationManifest`s via the EXISTING `registerIntegration()`; every consumer surface
