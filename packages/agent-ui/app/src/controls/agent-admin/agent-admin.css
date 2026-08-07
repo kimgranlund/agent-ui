@@ -88,6 +88,7 @@
   --ui-agent-admin-entry-radius: var(--md-sys-shape-corner-base, 0.25rem); /* the shared card chrome corner radius (model-grid/settings-panel/surface-row/context-json) */
   --ui-agent-admin-provider-gap: var(--md-sys-space-xs); /* the gap above each subsequent provider-group heading in the Model grid ([data-part='model-provider']) */
   --ui-agent-admin-spacer-min-size: var(--md-sys-space-sm); /* SPEC-R11c/AC19 — the shared flex-spacer floor (surface-spacer) */
+  --ui-agent-admin-detail-indent: var(--md-sys-space-md); /* GH #541 — the nested detail zone's own indent under a surface row (surface-detail) */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-agent-admin) consumes ONLY --ui-agent-admin-* ════════════════ */
@@ -299,19 +300,51 @@
     min-inline-size: var(--ui-agent-admin-spacer-min-size);
   }
 
-  /* ADR-0170 cl.6 — the a2ui row's READ-ONLY catalog mirror, replacing the retired `ui-select` picker
-     (the Catalogs section is the one writer now). Trailing muted text in the row's existing register —
-     the `entry-description` plane (same size + label ink), so it reads as CONTEXT beside the toggle
-     rather than as another control. `[data-disabled]` mirrors the surface-row dim: context for a
-     modality that can't run is noise. */
-  [data-part='surface-catalog'] {
-    flex: 0 0 auto;
-    font-size: 0.8125rem;
-    color: var(--ui-agent-admin-label-ink);
+  /* GH #541 — a modality with CHILDREN (A2UI's catalog roster + its "+ From library" add-row; GenUI's
+     "Use agent-ui components" sub-option) renders as a GROUP: the modality row on top, its detail zone
+     indented directly beneath, sharing one card so the children read as OWNED rather than as siblings of
+     the toggle that gates them. The group carries the card chrome; the row inside it drops its own (a
+     card-in-card is exactly the nesting GH #222 ruled against). */
+  [data-part='surface-group'] {
+    box-sizing: border-box;
+    padding: var(--ui-agent-admin-card-pad);
+    border: 1px solid var(--ui-agent-admin-border);
+    border-radius: var(--ui-agent-admin-entry-radius);
+    background: var(--ui-agent-admin-surface);
   }
 
-  [data-part='surface-catalog'][data-disabled] {
-    opacity: 0.45;
+  [data-part='surface-group'] > [data-part='surface-row'] {
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  /* The indent is the hierarchy: the detail zone starts past the modality row's own switch, so a child
+     never begins on the parent's left edge. Empty for a modality with no children to show — no gap, no
+     rule, nothing painted. */
+  [data-part='surface-detail'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-agent-admin-list-gap);
+    margin-inline-start: var(--ui-agent-admin-detail-indent);
+    border-inline-start: 1px solid var(--ui-agent-admin-border);
+    padding-inline-start: var(--ui-agent-admin-row-gap);
+  }
+
+  [data-part='surface-detail']:empty {
+    display: none;
+  }
+
+  [data-part='surface-detail'] > :first-child {
+    margin-block-start: var(--ui-agent-admin-list-gap);
+  }
+
+  /* A nested detail ROW (GenUI's sub-option) — the same [switch | label] grammar as a modality row, on
+     the group's shared inner surface rather than a card of its own. */
+  [data-part='surface-detail-row'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-agent-admin-row-gap);
   }
 
   /* A gated-off surface row (e.g. a modality whose switch is genuinely disabled) reads as inert — the
@@ -374,6 +407,32 @@
      items carry. */
   [data-part='settings-item'] > [data-part='details'] > [data-part='body'] {
     margin-block-start: var(--ui-agent-admin-list-gap);
+  }
+
+  /* GH #525/#541 — a settings fold with nothing to configure for this persona (Bankroll, for one that
+     never opted in) hides ENTIRELY. Needed explicitly: ui-disclosure's own `:scope { display: block }`
+     outranks the UA's `[hidden] { display: none }`. */
+  [data-part='settings-item'][hidden] {
+    display: none;
+  }
+
+  /* GH #525/#541 — the Bankroll group's one row: the shared card chrome (model-grid/surface-row/entry),
+     a label + flexible spacer + trailing Reset button. Its own part names, not surface-row's, since it
+     no longer lives among the modality rows. */
+  [data-part='bankroll-row'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-agent-admin-row-gap);
+    box-sizing: border-box;
+    padding: var(--ui-agent-admin-card-pad);
+    border: 1px solid var(--ui-agent-admin-border);
+    border-radius: var(--ui-agent-admin-entry-radius);
+    background: var(--ui-agent-admin-surface);
+  }
+
+  [data-part='bankroll-label'] {
+    flex: 0 0 auto;
+    font-weight: 600;
   }
 
   /* The mono JSON preview — GH #222: the section's ONE card of content (the shared card chrome recipe —
