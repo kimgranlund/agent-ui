@@ -1,6 +1,6 @@
 # SPEC — A2UI Catalog (default catalog + two-tier extensibility)
 
-> Status: proposed · v0.2 · 2026-08-07 (v0.1 2026-06-26) · Layer: SPEC (execution contract)
+> Status: proposed · v0.3 · 2026-08-07 (v0.2 2026-08-07, v0.1 2026-06-26) · Layer: SPEC (execution contract)
 > Refines: [`../a2ui-expert-system.prd.md`](../prd/a2ui-expert-system.prd.md) — primarily **PRD-G1, PRD-G2**; closes **PRD-D3**; supports PRD-G4, PRD-G6. Target protocol: **A2UI v1.0** (Constraint C1).
 > Refined by: [`../lld/a2ui-catalog.lld.md`](../lld/a2ui-catalog.lld.md). Consumed by the renderer ([`./a2ui-runtime.spec.md`](./a2ui-runtime.spec.md) SPEC-R9) for widget resolution.
 > Altitude: owns the **catalog contract + default-catalog coverage**. Renderer mechanics are the runtime SPEC's; storage/wiring is the LLD's.
@@ -62,6 +62,12 @@ Normative per RFC 2119; each carries an ID, PRD trace, and acceptance criteria.
 - **AC4** *Given* a bare `createRenderer()` with no project registration, *when* `capabilities()` is read, *then* `supportedCatalogIds` contains `agent-ui`, `a2ui-basic`, **and** the canonical URI `https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json`; *and given* a `createSurface` naming any of the three, *then* that surface resolves against the named catalog with no `CATALOG_UNKNOWN`.
 - **AC5** *Given* a function name declared with an implementation in a catalog's own function table, *when* a payload of that catalog calls it, *then* the catalog's implementation runs (not the shared default-table one); *given* a name with no per-catalog implementation, *then* the shared table answers.
 
+**SPEC-R11 — Variant dispatch: one catalog type, several concrete factories (GH #545).** A `CatalogRegistry.register()` factory-table slot MAY carry a `VariantDispatch` (§5.1) in place of a plain `WidgetFactory` — occupying the SAME `CatalogEntry.factories`/registry-table slot a plain factory would (never a second table, never a parallel lookup). The renderer's widget-resolution lookup sites — `renderer/widget.ts`'s `create`/`wireProps` and `renderer/renderer.ts`'s structural-resend `resetProp` branch — replace a raw `entry.factories[node.component]` index with the shared `resolveFactory(slot, node)` seam (`catalog/variant.ts`, re-exported from the package's `.` barrel), never a per-site re-derivation. Resolution runs ONCE per node, at mint/rewire time, from the node's OWN STATIC prop value named by `variantProp`: a string literal matching a declared `variants` key wins; anything else — absent, a `{path}` binding, a non-string literal, or an unmatched string — resolves to `fallback` (every dispatch table MUST declare one, so resolution never comes back empty). A variant's tag choice does NOT re-dispatch when a bound `variantProp` value changes later — the same fixed-at-mint-time rule every catalog type's tag already follows. A plain `WidgetFactory` slot is untouched: `resolveFactory` passes it through unconditionally, byte-identical to the pre-#545 direct index for every non-variant type — the mechanism adds a capability without moving any existing catalog's behavior. *(→ PRD-G2, PRD-G6)*
+- **AC1** *Given* a factory-table slot, *when* `isVariantDispatch` inspects it (the `variants` field is the marker), *then* a `VariantDispatch` is recognized as a dispatch table and a plain `WidgetFactory` is never mistaken for one (`variant.test.ts`'s `isVariantDispatch` cases).
+- **AC2** *Given* a plain `WidgetFactory` slot, *when* `resolveFactory` runs, *then* it returns the slot unconditionally regardless of the node's props (`variant.test.ts`'s "the pass-through leg" — byte-compatible with a direct table index).
+- **AC3** *Given* a `VariantDispatch` slot and a node whose `variantProp` names a STATIC string matching a declared `variants` key, *when* `resolveFactory` runs, *then* it resolves to that arm; *given* an absent, `{path}`-bound, non-string, or unmatched value, *then* it resolves to `fallback` (`variant.test.ts`'s "the VariantDispatch leg").
+- **AC4** *Given* the `a2ui-basic` `ChoicePicker` row (§3.4, SPEC-R10 AC4's drain — `choicePickerVariants`, `catalog/a2ui-basic/factories.ts`), *then* `variantProp:'variant'` routes `mutuallyExclusive` to `ui-select` (byte-identical to pre-drain) and `multipleSelection` to `ui-multi-select`, `fallback` is `mutuallyExclusive` — the worked example a drain follows, verified end-to-end by `a2ui-basic/index.test.ts`'s E6 assertions.
+
 **SPEC-R7 — Catalog conformance validation.** The system MUST validate (a) a catalog document (well-formed, UAX-31 names, no reserved `@`, every component has a registered factory) and (b) a payload against its catalog (every `component` type and property exists and is typed-correct, including membership in a declared `enum` for a literal value — ADR-0098). Payload validation MUST be the same shared validator used by the renderer (a2ui-runtime §3.7) and corpus admission (corpus SPEC-N1). *(→ PRD-G4, PRD-G2)*
 - **AC1** *Given* a catalog whose component lacks a registered factory, *when* registered, *then* registration fails with `CATALOG_FACTORY_MISSING`.
 - **AC2** *Given* a payload referencing a property absent from the catalog component, *when* validated, *then* it fails with `CATALOG` (identical verdict in renderer and corpus gate).
@@ -111,9 +117,14 @@ interface ComponentDef {
   name: string;                                            // UAX-31, no leading '@' (SPEC-R2)
   properties: Record<string, PropDef>;
   children?: "child" | "children" | "ChildList";          // child model (SPEC-R4)
-  value?: ValueSlot | readonly ValueSlot[];               // input two-way binding (SPEC-R4); ADR-0161 (built) — one-or-more {prop,event} slots
+  value?: ValueSlot | readonly ValueSlot[];               // input two-way binding (SPEC-R4); ADR-0161 (built) — one-or-more ValueSlot slots (shape below)
 }
-interface ValueSlot { prop: string; event: string }        // one two-way commit slot (ADR-0161)
+interface ValueSlot {                                     // one two-way commit slot (ADR-0161; readProp/marshal ADR-0169 cl.7)
+  prop: string;                                            // the WIRE side of the round-trip — the {path} writeback target
+  event: string;                                           // the control event that commits the value
+  readProp?: string;                                       // absent ⇒ prop — the DOM prop the input controller actually READS on commit (CheckBox: wire value is boolean, DOM read is `checked`)
+  marshal?: 'singletonStringList';                         // absent ⇒ raw — a CLOSED post-read transform (ChoicePicker: wraps one committed string into a one-element array, `[]` if empty/null)
+}
 interface PropDef { type: JSONSchema; bindable?: boolean; mapsTo: string }   // A2UI prop → ui-* prop/attr
 interface FunctionDef { args: Record<string, JSONSchema>; returns: JSONSchema;   // NAMED args (A2UI v1.0 call shape; ADR-0026)
   callableFrom?: "clientOnly" | "remoteOnly" | "clientOrRemote" }                 // SPEC-R14/ADR-0034: server-invoke gate; default clientOnly
@@ -132,10 +143,15 @@ interface WidgetFactory {                                  // consumed by render
   tag: string;                                             // e.g. "ui-button"
   create(): HTMLElement;
   applyProp(el: HTMLElement, prop: string, value: unknown): void;
-  value?: ValueSlot | readonly ValueSlot[];                // input two-way commit (renderer LLD-C8); ADR-0161 (built) — one-or-more {prop,event} slots
+  value?: ValueSlot | readonly ValueSlot[];                // input two-way commit (renderer LLD-C8); ADR-0161 (built) — one-or-more ValueSlot slots (shape above)
   submitGate?: true;          // ADR-0054: marks this factory's control a submit-action gate. The
                                // control MUST expose a public `submit(): boolean` (structural contract) —
                                // FormProvider (→ ui-form-provider) is the default catalog's one gate.
+}
+interface VariantDispatch {                                // one catalog type → several factory arms (GH #545, §3.3 SPEC-R11)
+  readonly variantProp: string;                             // the node prop whose STATIC value selects the arm
+  readonly variants: Record<string, WidgetFactory>;         // arm value → concrete WidgetFactory
+  readonly fallback: WidgetFactory;                         // absent / dynamic-binding / unmatched variantProp value
 }
 interface CatalogRegistry {                                // the two-tier extension point (SPEC-R6)
   register(catalog: Catalog, factories: Record<string, WidgetFactory | VariantDispatch>,
@@ -331,6 +347,7 @@ set to begin with.
 |---|---|
 | SPEC-R1, R3, R4, R5 | PRD-G1 (default-catalog generation) |
 | SPEC-R6, N1 | PRD-G2 (two-tier extensibility — incl. the second FIRST-PARTY catalog, ADR-0169) |
+| SPEC-R11 | PRD-G2 + PRD-G6 (variant dispatch — the mechanism that drained the a2ui-basic E6 exclusion, GH #545) |
 | SPEC-R10, N5 | PRD-G2 + PRD-G4/G6 (upstream Basic interop: a recorded, gate-encoded partition) |
 | SPEC-R7, R9, N3 | PRD-G4 (validity/security) |
 | SPEC-R2 | PRD-G6 (naming/version coherence) |
