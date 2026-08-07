@@ -17,7 +17,7 @@
 | **LLD-C5** | Widget factories (ui-* bindings) | SPEC-R4, R3 | `default/factories.ts` |
 | **LLD-C6** | Catalog-conformance validator | SPEC-R7, R9, N3 | `conformance.ts` (consumed by renderer `validate.ts`) |
 | **LLD-C7** | Client function library | SPEC-R5 | `functions.ts` |
-| **LLD-C8** | Theme / surfaceProperties applier | SPEC-R5 | `theme.ts` |
+| **LLD-C8** | ~~Theme / surfaceProperties applier~~ — RETIRED (GH #531) | — | — |
 
 **Dependencies.** Factories (LLD-C5) import `ui-*` controls from `@agent-ui/components`. Conformance (LLD-C6) is called by the renderer's `validate.ts` and (transitively) by corpus admission — one implementation, three callers (SPEC-N3). Zero third-party deps (SPEC-N4).
 
@@ -177,13 +177,11 @@ function validateCatalogConformance(component: A2uiComponent, catalog: Catalog):
 
 **`matchesType`** accepts a literal matching `pd.type`, or — when `pd.bindable` — a `{path}` binding object (deferred resolution at render). **Security (SPEC-R9):** unknown component or property ⇒ `CATALOG` ⇒ not rendered (renderer placeholder); text props are passed to the control as text/attribute, never to an unsafe sink (no `innerHTML` from agent strings — the renderer's `unsafeHTML` directive is never wired to catalog text).
 
-## 7. Functions & theming — LLD-C7, LLD-C8 (SPEC-R5)
+## 7. Functions — LLD-C7 (SPEC-R5)
 
 **LLD-C7 functions (ADR-0026):** pure implementations keyed by name — `required(args)→{valid:!isEmpty(args.value), message?}`, `email(args)`, `regex(args)`. Each takes a **named-args object** (`Record<string, unknown>`), **not** positional params — A2UI v1.0 function-call args are a named object (`{ call, args: {…} }`), so `FunctionDef.args` is `Record<string, JsonSchema>` (corrected from the positional `JsonSchema[]`; see catalog SPEC-R5 / `catalog.ts`). The renderer's function evaluator (renderer LLD-C10) looks them up from the bound catalog's `functions` and resolves each arg recursively (a literal | a `{path}` | a nested `{call}`). Unknown name → `FUNCTION` (renderer surfaces, render-time). **`formatString` is dropped** — v1.0 composes strings via the **DynamicString `${…}` interpolation** feature (`${/path}` / `${fn(args)}`), a renderer-side string-resolution mechanism (a **scoped follow-up**, ADR-0026), not a catalog function; a project catalog MAY still register its own `formatString` (the registry is open). Validation **`checks`** (a component `checks:[{call,args,message}]` array) run through this same evaluator; the field-error display channel that *surfaces* a failed check (SPEC-R10 AC1) is a dependent follow-up.
 
-**LLD-C8 theming:** `applySurfaceProperties(host, props, catalog)` validates `props` against `catalog.surfaceProperties` then sets CSS custom properties (`--ui-*` / `--md-sys-color-{family}-{role}`) on the surface host — **pure CSS-variable repoint, no JS restyle** (SPEC-R5 AC2), consistent with the dimensional token system. v0.9.x `theme` is normalized to `surfaceProperties` by the version adapter (renderer LLD-C2).
-
-> **Drift marker (GH #531):** this paragraph asserts a `theme`→`surfaceProperties` normalization that contradicts `a2ui-renderer.lld.md`'s LLD-C2 (which states the mapping is gone, `surfaceProperties` dropped from the wire type as of GH #477). Not reconciled — pending the #531 ruling.
+**LLD-C8 — RETIRED (GH #531).** The planned theme/`surfaceProperties` applier (`theme.ts`) was never built, and the concept it would have consumed is retired: `Catalog` carries no surface-theming field (`catalog.ts`), following upstream A2UI v1.0's "Decoupled Branding" — the wire `createSurface.surfaceProperties`/`theme` fields were already dropped (SPEC-R6(b), GH #477; `a2ui-renderer.lld.md` LLD-C2). Theming is a consumer/CSS concern (the design system's own `--ui-*`/`--md-sys-color-{family}-{role}` token roles, set by whatever mounts the surface) — no catalog-level or renderer-level replacement mechanism.
 
 ## 8. Error & edge-case handling
 
@@ -202,11 +200,11 @@ function validateCatalogConformance(component: A2uiComponent, catalog: Catalog):
 
 ```
 packages/agent-ui/a2ui/src/catalog/
-  catalog.ts naming.ts registry.ts conformance.ts functions.ts theme.ts index.ts
+  catalog.ts naming.ts registry.ts conformance.ts functions.ts index.ts
   default/  catalog.json  factories.ts  index.ts
 ```
 
-**Integration:** `conformance.ts` is imported by renderer `validate.ts` (renderer LLD-C11) → also reached by corpus admission. `registry.ts` + `WidgetFactory` are consumed by renderer widget resolution (renderer LLD-C7). `theme.ts` is called by the renderer surface on `createSurface` (renderer LLD-C3). `default/factories.ts` imports `ui-*` controls from `@agent-ui/components`. `supportedCatalogIds()` feeds renderer capabilities (renderer LLD-C12).
+**Integration:** `conformance.ts` is imported by renderer `validate.ts` (renderer LLD-C11) → also reached by corpus admission. `registry.ts` + `WidgetFactory` are consumed by renderer widget resolution (renderer LLD-C7). `default/factories.ts` imports `ui-*` controls from `@agent-ui/components`. `supportedCatalogIds()` feeds renderer capabilities (renderer LLD-C12). No `theme.ts` — LLD-C8 is retired (GH #531; §7 above).
 
 ## 10. Build sequence (dependency-ordered; each step verifiable)
 
@@ -216,7 +214,6 @@ packages/agent-ui/a2ui/src/catalog/
 4. **LLD-C6 conformance** — unknown-type / unknown-prop / type-mismatch → `CATALOG`; bindable accepts `{path}`. *(checkpoint: same verdict when called from renderer `validate.ts` and corpus admission — N3 parity)*
 5. **LLD-C5 factories + LLD-C4 default catalog** — Button/TextField/Checkbox/Switch/Select/Field factories; `catalog.json` reflecting them. *(checkpoint: a default-catalog payload renders 0 `CATALOG` errors — SPEC-R3 AC2 / PRD-G1)* — **G9 (decomp `s11`)** extended this with the container family (`Row`/`Column`/`Card`+regions/`Tabs`+tab/panel/`Modal`, the shared `accessorFactory`), the two-way `value` binds (Tabs `select`, Modal `toggle`, the TextField `change` back-fill — ADR-0019), and the SPEC §5.2 experimental→shipped flip.
 6. **LLD-C7 functions** — required/email/regex (pure, named-args; `formatString` dropped → DynamicString `${…}`, ADR-0026).
-7. **LLD-C8 theming** — surfaceProperties → token-role repoint; v0.9.x `theme` normalized.
-8. **Integration** — wire conformance into renderer `validate.ts`; factories into renderer widget resolution; the renderer's step-5 stub catalog is replaced by the real default catalog.
+7. **Integration** — wire conformance into renderer `validate.ts`; factories into renderer widget resolution; the renderer's step-5 stub catalog is replaced by the real default catalog. (LLD-C8 theming retired, GH #531 — never built.)
 
 **Discovered-reality note:** if a `ui-*` control's prop surface cannot express an A2UI component property cleanly (e.g. `ChoicePicker.multipleSelection` with no `ui-select` analogue), that is a catalog SPEC gap — fix `a2ui-catalog.spec.md` §5.2 (and possibly request a control change against the component plan), do not hand-jam a mapping in `factories.ts`.
