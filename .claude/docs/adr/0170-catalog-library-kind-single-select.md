@@ -147,3 +147,54 @@ byte-untouched — this record changes only how the admin PRESENTS and WRITES th
   an interaction-vocabulary stretch flagged to Kim at ratification; if ruled against, the
   fallback is a per-kind selection marker in `entry-list`, a larger cl.8-style widening.
 - Build plan: [`../lld/catalog-library-pack.lld.md`](../lld/catalog-library-pack.lld.md).
+
+## Amendment (2026-08-07, **proposed** — Kim ratifies) — cl.6's read-only catalog mirror RETIRES: the GH [#541](https://github.com/kimgranlund/agent-ui/issues/541) Surface Options nesting supplies the at-a-glance context structurally
+
+> Append-only, and **proposed**: the Status cell reads `accepted` for the record as a whole and stays
+> byte-untouched — agents never flip status (`.claude/hooks/adr-status-guard.py`), and this amendment
+> carries no ratification of its own until Kim gives one. Every accepted section above is unedited.
+> What this amendment re-rules is exactly **one sentence of cl.6** — "In its place the row shows the
+> active catalog's LABEL as read-only trailing text, re-derived in `#applyMasterStates` … so the
+> at-a-glance context beside the A2UI toggle survives". cl.6's OTHER two sentences — the bare
+> `ui-select` retires, and keeping it as a second writer is REJECTED — **stand unchanged**, as does
+> the one-writer rule they exist to protect and every other clause (cl.1–5, cl.7, cl.8). The build
+> that carries this amendment is GH [#541](https://github.com/kimgranlund/agent-ui/issues/541) /
+> PR [#550](https://github.com/kimgranlund/agent-ui/pull/550).
+
+**Why the mirror goes.** cl.6 minted the mirror in a layout where it was the ONLY catalog context on
+the A2UI row: at ratification the picker still lived in a separate "Catalogs" fold far below the
+modality it configures, so a trailing label was the one thing that answered "which catalog is this
+surface running?" without scrolling. GH [#488](https://github.com/kimgranlund/agent-ui/issues/488)
+then moved the picker directly beneath the A2UI row, and GH #541 nests it INSIDE that row's own
+detail zone. The active catalog's card now sits one line below the toggle, carrying that identical
+label — so the mirror projects a fact the surface already states, adjacently. A `break-down-layout`
+decomposition of the shipped panel (logged on GH #541) scored this **B5=3, "Default (agent-ui)"
+projected twice adjacently**, and named the removal as part of the corrective.
+
+**The amended reading of cl.6.** The bare `<select>` retires (unchanged). In its place the row shows
+**nothing** in its trailing slot: the at-a-glance context beside the A2UI toggle is supplied
+STRUCTURALLY, by the Catalogs section nested directly under the row, rather than by a text mirror of
+it. cl.6's rationale is therefore satisfied, not abandoned — the same requirement, met by
+containment instead of duplication.
+
+**What changes in the tree** (GH #541's build, `packages/agent-ui/app/src/controls/agent-admin/`):
+the `surface-catalog` span, the `#surfaceCatalogMirror` field, and its `#applyMasterStates`
+re-derivation block are removed; `agent-admin.md` drops the `surface-catalog` part. Nothing else
+cl.6 governs moves — `sanitizeCatalog`, `A2UI_CATALOG_KEY`'s vocabulary, the Catalogs section's
+sole-writer status, and the produce POST body's `catalogId` are byte-identical across this change
+(the Non-goals' standing promise holds).
+
+**The dim goes with it, deliberately.** cl.5's `data-kind-disabled` dim on the Catalogs section
+already expresses "this modality can't run" on the very element the mirror's own `[data-disabled]`
+was shadowing — one signal, on the thing being configured, instead of two. The probes that asserted
+the mirror's dim now assert the section's, unchanged in intent.
+
+**Alternative considered and rejected: keep the slot, empty it.** Leaving `surface-catalog` in place
+with no text preserves the part name for a future consumer, but it ships a permanently blank
+trailing span whose only remaining behavior is a dim no one can see — dead anatomy the descriptor
+would still have to document truthfully. If a future layout un-nests the picker, re-minting the
+mirror is a smaller change than carrying an empty one until then.
+
+**If Kim rules against this**, the fallback is exact and cheap: restore the span, the field, and the
+`#applyMasterStates` block (one commit's revert), and the nesting from GH #541 stands without it —
+the two changes are independent, and only the duplication argument ties them together.

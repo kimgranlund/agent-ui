@@ -694,9 +694,10 @@ export class UIAgentAdminElement extends UIElement {
     // section (CAPABILITY_KINDS, below) is the ONE writer of `A2UI_CATALOG_KEY`, and two write paths into
     // one key — each obliged to reconcile the other's surface — is exactly the second-writer defect that
     // record closes. GH #488 mounted the REAL picker directly below this row; the read-only catalog-label
-    // MIRROR that clause left behind in the trailing slot is now RETIRED too (GH #541): with the picker
-    // nested under this row, the active catalog's own card carries that identical label one line below —
-    // the same string projected twice, adjacently. The picker's card is the single projection now.
+    // MIRROR that clause left behind in the trailing slot is RETIRED by ADR-0170's 2026-08-07 Amendment
+    // (proposed, GH #541): with the picker nested under this row, the active catalog's own card carries
+    // that identical label one line below — the same string projected twice, adjacently. cl.6's rationale
+    // is met structurally now (containment, not duplication); its one-writer rule is untouched.
     const a2uiGroup = surfaceGroup('a2ui', a2ui.row)
 
     // genui-surface.spec.md SPEC-R11/B2 — LIVE: the row's own "visible-but-disabled, PRD pending" state
