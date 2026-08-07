@@ -2,8 +2,9 @@
 // order with a per-entry toggle + content editor, plus a shared custom-entry authoring form. Reused
 // verbatim by every instantiation (prompt sections + skill/workflow/resource/tool/pattern-source, and
 // since ADR-0170 the `catalog` library) — no kind gets its own bespoke list/toggle/author code
-// (ADR-0132 cl.1). The ONE per-kind knob is presentational: `EntryListOptions`' `customAdd`/`contentField`
-// (ADR-0170 cl.8), both default-true, so every pre-existing call site renders byte-identically.
+// (ADR-0132 cl.1). The per-kind knobs are `EntryListOptions`' `customAdd`/`contentField` (ADR-0170 cl.8,
+// both default-true) and `rejectOnCollision` (GH #564, default-false) — every existing call site omits the
+// new one and renders byte-identically.
 //
 // The per-entry content editor is `<ui-code-editor language="markdown">` (ADR-0139) — the fleet's
 // editable-first markdown source editor (CodeMirror 6, lazy-loaded on the opt-in @agent-ui/code/editor
@@ -24,6 +25,7 @@ import type { UIIconElement } from '@agent-ui/components/controls/icon'
 import type { UICodeEditorElement } from '@agent-ui/code/editor'
 import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 import type { UIFieldElement } from '@agent-ui/components/controls/field'
+import { slugify } from './entry-data.ts'
 import type { Entry, EntryLibraryPack, NewEntryInput } from './entry-data.ts'
 
 export interface EntryListHandlers {
@@ -79,12 +81,22 @@ export interface EntryListOptions {
    *  byte-identical. `false` renders rows as label + description + switch; the mid-edit preservation path
    *  below is then inert by construction (there is no content field to preserve). */
   contentField?: boolean
+  /** GH #564 — `true` for a kind whose entry id is a FOREIGN KEY into an external registry (the catalog
+   *  kind), matching the SAME flag the caller hands `validateNewEntry` (entry-data.ts's own
+   *  `ValidateNewEntryOptions`). Default `false`/absent ⇒ byte-identical: the add-from-library picker never
+   *  disables a row. `true` ALSO disables (never hides — the user can see WHY) any pack row whose id
+   *  already sits in the current list — a collision there is a genuine duplicate the caller's `onAdd`
+   *  rejects outright, so the row is unreachable from the picker too, not just refused on commit. */
+  rejectOnCollision?: boolean
 }
 
 export function mountEntryList(kind: string, addLabel: string, handlers: EntryListHandlers, options?: EntryListOptions): EntryListSection {
   // ADR-0170 cl.8 — both default TRUE: an options bag that omits them renders exactly as before.
   const withCustomAdd = options?.customAdd !== false
   const withContentField = options?.contentField !== false
+  // GH #564 — opt-in, unlike the two above: an options bag that omits it renders exactly as before for
+  // every kind except the one that flags it.
+  const rejectOnCollision = options?.rejectOnCollision === true
 
   const section = document.createElement('div')
   section.setAttribute('data-part', 'entry-section')
@@ -140,8 +152,17 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
       for (const [index, entry] of pack.entries.entries()) {
         const row = document.createElement('div')
         row.dataset.value = `${pack.id}:${index}`
-        row.textContent = `${entry.label} — ${pack.label}`
+        // GH #564 — a `rejectOnCollision` kind (the catalog's foreign-key id) can never actually commit a
+        // pack entry whose id already sits in the list; predict the id the SAME way `validateNewEntry`
+        // would (`slugify` is the fallback when the pack omits an explicit `id`) and DISABLE the row —
+        // never hide it (ui-menu's own `aria-disabled` precedent, the conversation-composer.ts "coming
+        // soon" idiom) — so the author sees WHY a click would do nothing instead of a click that just does
+        // nothing.
+        const wouldBeId = entry.id?.trim() ? entry.id.trim() : slugify(entry.label)
+        const alreadyPresent = rejectOnCollision && currentEntries.some((e) => e.id === wouldBeId)
+        row.textContent = alreadyPresent ? `${entry.label} — ${pack.label} (already added)` : `${entry.label} — ${pack.label}`
         row.title = entry.description
+        if (alreadyPresent) row.setAttribute('aria-disabled', 'true')
         libraryMenu.append(row)
       }
     }
@@ -164,10 +185,26 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
   }
 
   let libraryMenu: HTMLElement | null = null
-  const initialLibraries = options?.libraries ?? []
-  if (initialLibraries.length > 0) {
-    libraryMenu = buildLibraryMenu(initialLibraries)
-    section.append(libraryMenu)
+  let currentLibraries: readonly EntryLibraryPack[] = options?.libraries ?? []
+  // GH #564 — the picker's own live view of "what's already in the list", kept fresh by `render` below so
+  // `buildLibraryMenu`'s per-row disabled check (a `rejectOnCollision` kind only) never goes stale after
+  // an add/delete.
+  let currentEntries: readonly Entry[] = []
+
+  /** GH #143/#564 — rebuild the library menu from `currentLibraries`, in place: the ONE mechanism both
+   *  `updateLibraries` (a caller-driven pack-list change) and `render` (GH #564 — an entries change, for a
+   *  `rejectOnCollision` kind's disabled-row refresh) drive, and the initial build below. `addForm`
+   *  (mounted after wherever a library menu lands) is the stable insertion anchor — a library menu, when
+   *  present, always sits immediately before it, so re-inserting there preserves the section's visual
+   *  order (heading → list → add-toggle → [library menu] → add-form) on every call, first build included.
+   *  ADR-0170 cl.8: with `customAdd: false` that anchor is not mounted at all and the menu is the LAST
+   *  child, so a plain append reproduces the same order. */
+  function refreshLibraryMenu(): void {
+    libraryMenu?.remove()
+    libraryMenu = currentLibraries.length > 0 ? buildLibraryMenu(currentLibraries) : null
+    if (!libraryMenu) return
+    if (addForm.parentNode === section) section.insertBefore(libraryMenu, addForm)
+    else section.append(libraryMenu)
   }
 
   // TKT-0060: a plain container, not a native `<form>` — a `<ui-button>` submit control cannot become a
@@ -216,6 +253,8 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
   addForm.append(labelFieldWrap, descriptionFieldWrap, contentField, submitBtn, errorNote)
   if (withCustomAdd) section.append(addForm)
 
+  refreshLibraryMenu() // the initial build — see `refreshLibraryMenu`'s own doc comment below
+
   addToggle.addEventListener('click', () => {
     addForm.hidden = !addForm.hidden
     if (!addForm.hidden) labelField.focus()
@@ -247,6 +286,9 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
   })
 
   function render(entries: readonly Entry[]): void {
+    // GH #564 — refresh the picker's live "already in the list" view BEFORE anything below reads it (a
+    // `rejectOnCollision` kind's disabled-row refresh, at the end of this function).
+    currentEntries = entries
     // Component-reviewer MAJOR fix: a SIBLING entry's action (toggle/delete/add on a DIFFERENT entry in
     // this same list) re-renders the whole list via the store's subscribe notification — a full
     // `replaceChildren()` would otherwise silently discard whatever uncommitted (not-yet-`change`d) text
@@ -347,6 +389,10 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
       }
     }
     applyNotices() // GH #419 — a rebuild must not drop a live notice (the map outlives any one render)
+    // GH #564 — a `rejectOnCollision` kind's add/delete just changed what's "already in the list"; rebuild
+    // the picker so a newly-collided row disables (or a deleted one re-enables), never a stale menu. Gated
+    // on the flag so every other kind's render stays exactly as before (no picker rebuild at all).
+    if (rejectOnCollision) refreshLibraryMenu()
   }
 
   // GH #419 — the non-blocking per-entry notice. Kept OUT of the row-building loop above so it can also
@@ -383,18 +429,11 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
     applyNotices()
   }
 
-  /** GH #143 — swap the library menu for one built from `libraries`, in place. `addForm` (mounted after
-   *  wherever a library menu lands) is the stable insertion anchor — a library menu, when present, always
-   *  sits immediately before it, so re-inserting there preserves the section's visual order
-   *  (heading → list → add-toggle → [library menu] → add-form) on every call, first build included.
-   *  ADR-0170 cl.8: with `customAdd: false` that anchor is not mounted at all and the menu is the LAST
-   *  child, so a plain append reproduces the same order. */
+  /** GH #143 — swap the library menu for one built from `libraries`, in place — see `refreshLibraryMenu`'s
+   *  own doc comment above for the mechanics; this just points it at a new pack list. */
   function updateLibraries(libraries: readonly EntryLibraryPack[]): void {
-    libraryMenu?.remove()
-    libraryMenu = libraries.length > 0 ? buildLibraryMenu(libraries) : null
-    if (!libraryMenu) return
-    if (addForm.parentNode === section) section.insertBefore(libraryMenu, addForm)
-    else section.append(libraryMenu)
+    currentLibraries = libraries
+    refreshLibraryMenu()
   }
 
   return { host: section, render, updateLibraries, showNotices }

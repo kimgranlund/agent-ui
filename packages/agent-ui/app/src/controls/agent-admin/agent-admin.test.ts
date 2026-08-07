@@ -2535,3 +2535,109 @@ describe('UIAgentAdminElement — the Catalogs section (ADR-0170)', () => {
     expect(checkedIds(el)).toEqual([DEFAULT_A2UI_CATALOG_ID])
   })
 })
+
+// ── GH #564 — reject-on-collision + the picker's disabled-row UX (both halves of the same fix) ───────────
+// Root cause (the Findings comment): the catalog kind's entry id is a FOREIGN KEY into
+// `A2UI_CATALOG_OPTIONS`, but `validateNewEntry`'s collision branch auto-uniquified it (`agent-ui-2`) —
+// re-adding an already-registered catalog minted a second, identically-labeled roster row. The fix pairs a
+// data-level reject (`validateNewEntry`'s `rejectOnCollision`) with a picker-level disable (`buildLibraryMenu`)
+// so the duplicate is unreachable from the UI, not just refused on commit.
+
+describe('UIAgentAdminElement — the Catalogs picker (GH #564): reject-on-collision + disabled-row UX', () => {
+  const SECOND = A2UI_CATALOG_OPTIONS.find((o) => o.id !== DEFAULT_A2UI_CATALOG_ID)!
+  const SECOND_INDEX = A2UI_CATALOG_OPTIONS.findIndex((o) => o.id === SECOND.id)
+  const CATALOG_PACK = {
+    [ENTRY_KINDS.catalog]: [
+      {
+        id: 'registered-catalogs',
+        label: 'Registered catalogs',
+        description: 'fixture',
+        entries: A2UI_CATALOG_OPTIONS.map((o) => ({ id: o.id, label: o.label, description: o.description ?? '', content: '' })),
+      },
+    ],
+  }
+
+  function mountWithCatalogLibrary(roster: Entry[] = []): UIAgentAdminElement {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({ initial: { [entriesStoreKey(ENTRY_KINDS.catalog)]: roster } })
+    el.libraries = CATALOG_PACK
+    return mount(el)
+  }
+
+  function catalogSection(el: UIAgentAdminElement): HTMLElement {
+    return el.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.catalog}"]`) as HTMLElement
+  }
+
+  function secondLibraryRow(el: UIAgentAdminElement): HTMLElement {
+    return catalogSection(el).querySelector(`[data-value="registered-catalogs:${SECOND_INDEX}"]`) as HTMLElement
+  }
+
+  it('a NOT-yet-added catalog\'s picker row is enabled; clicking it commits a real roster row', async () => {
+    const el = mountWithCatalogLibrary([])
+    await whenFlushed()
+    const row = secondLibraryRow(el)
+    expect(row.getAttribute('aria-disabled'), 'nothing collides yet').toBeNull()
+
+    row.click()
+    await whenFlushed()
+    const roster = el.store!.get(entriesStoreKey(ENTRY_KINDS.catalog)) as Entry[]
+    expect(roster.map((e) => e.id)).toEqual([SECOND.id])
+  })
+
+  it('an ALREADY-added catalog\'s picker row is disabled (never hidden) and unreachable — a click commits nothing (GH #564)', async () => {
+    const el = mountWithCatalogLibrary([
+      { id: SECOND.id, kind: ENTRY_KINDS.catalog, label: SECOND.label, description: '', content: '', order: 0, enabled: false, builtin: false },
+    ])
+    await whenFlushed()
+    const row = secondLibraryRow(el)
+    expect(row.getAttribute('aria-disabled'), 'GH #564 — disabled, the visible-not-hidden UX').toBe('true')
+    expect(row.textContent, 'the label states WHY, mirroring the "coming soon" idiom').toContain('already added')
+
+    row.click() // ui-menu's own disabled-item skip (menu.ts) — the SAME guard the picker fix relies on
+    await whenFlushed()
+    const roster = el.store!.get(entriesStoreKey(ENTRY_KINDS.catalog)) as Entry[]
+    expect(roster, 'a catalog re-add is rejected: no duplicate row ever lands').toHaveLength(1)
+    expect(roster.map((e) => e.id)).toEqual([SECOND.id])
+  })
+
+  it('deleting the added catalog RE-ENABLES its picker row (the refresh-on-render seam), and it can be re-added', async () => {
+    const el = mountWithCatalogLibrary([
+      { id: SECOND.id, kind: ENTRY_KINDS.catalog, label: SECOND.label, description: '', content: '', order: 0, enabled: false, builtin: false },
+    ])
+    await whenFlushed()
+    expect(secondLibraryRow(el).getAttribute('aria-disabled')).toBe('true')
+
+    const row = entryEl(el, ENTRY_KINDS.catalog, SECOND.id)
+    ;(row.querySelector('[data-part="entry-delete"]') as HTMLElement).click()
+    await whenFlushed()
+    expect(el.store!.get(entriesStoreKey(ENTRY_KINDS.catalog))).toEqual([])
+    expect(secondLibraryRow(el).getAttribute('aria-disabled'), 'the delete refreshed the picker — no longer stale').toBeNull()
+
+    secondLibraryRow(el).click()
+    await whenFlushed()
+    const roster = el.store!.get(entriesStoreKey(ENTRY_KINDS.catalog)) as Entry[]
+    expect(roster.map((e) => e.id), 're-adding after a delete commits normally').toEqual([SECOND.id])
+  })
+
+  it('a NON-catalog kind (skill) never disables a picker row on collision — the suffix-dedup UX is untouched', async () => {
+    const PACK = {
+      [ENTRY_KINDS.skill]: [{ id: 'test-pack', label: 'Test pack', description: 'fixture', entries: [{ label: 'grid-idiom', description: '', content: '' }] }],
+    }
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore()
+    el.libraries = PACK
+    mount(el)
+    await whenFlushed()
+    const row = el.querySelector('[data-value="test-pack:0"]') as HTMLElement
+    row.click()
+    await whenFlushed()
+    expect(readEntries(el.store, ENTRY_KINDS.skill)).toHaveLength(1)
+    expect(row.getAttribute('aria-disabled'), 'a hand-authored kind never opts into rejectOnCollision').toBeNull()
+
+    row.click() // a second commit still slug-dedups instead of colliding — unchanged by GH #564
+    await whenFlushed()
+    const entries = readEntries(el.store, ENTRY_KINDS.skill)
+    expect(entries).toHaveLength(2)
+    expect(entries[1]!.id).toBe('grid-idiom-2')
+  })
+})
