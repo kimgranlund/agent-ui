@@ -47,7 +47,7 @@ slots: []                 # content model is NOT author-composed — the split/p
 
 parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-DOM markers this element's own JS creates; documented for completeness (compareDescriptorToSource does not mechanically check `parts:`, the split.md/master-detail.md precedent)
   - name: settings-item
-    description: One Settings-tab section's FOLD (GH #225 — Kim's ruling, the GH #222 Context pattern applied back to the config column) — `<ui-disclosure data-part="settings-item" data-item="agent|model|surface|bankroll|prompt-section|skill|workflow|resource|tool|pattern-source">`, a chrome-free fold host whose summary IS the section heading (the shared heading register, chevron on the heading row) over the section's content card(s) as its body. ALL default OPEN (config is an editing surface — Context's newest-open logic is a log-reading choice, not a config one); built once, fold state lives in the live DOM, session-ephemeral. The Agent/kind folds carry their master switch ON the summary row via ui-disclosure's `slot="summary"` position slot (GH #226/ADR-0158 — a switch click never folds; the component owns the activation guard and the switch survives any fold rebuild). Replaces the old plain heading parts (agent-header/agent-heading/model-grid-heading/surface-options-heading/entry-section-header/-heading), all retired.
+    description: One config-column section's FOLD, now spread across the Agent/Capabilities/Surface tabs (GH #574 — Kim's ruling, splitting the old single flat Settings tab; GH #225's Kim ruling, the GH #222 Context pattern applied back to the config column, is unchanged) — `<ui-disclosure data-part="settings-item" data-item="agent|model|surface|bankroll|prompt-section|skill|workflow|resource|tool|pattern-source">`, a chrome-free fold host whose summary IS the section heading (the shared heading register, chevron on the heading row) over the section's content card(s) as its body. ALL default OPEN (config is an editing surface — Context's newest-open logic is a log-reading choice, not a config one); built once, fold state lives in the live DOM, session-ephemeral. The Agent/kind folds carry their master switch ON the summary row via ui-disclosure's `slot="summary"` position slot (GH #226/ADR-0158 — a switch click never folds; the component owns the activation guard and the switch survives any fold rebuild). Replaces the old plain heading parts (agent-header/agent-heading/model-grid-heading/surface-options-heading/entry-section-header/-heading), all retired.
   - name: agent-enabled
     description: The Agent ACTIVE master switch (vision rev.5, Kim's ruling — "is the agent active/available"), riding the Agent fold's heading row (GH #225). OFF sets `conversation.disabled` (composer busy-disabled, no turns run, both prose and surface arms guarded); everything stays editable, and the switch stays visible even with its fold collapsed (the way back never folds away). Backed by the `agentEnabled` store key (default ON — only an explicit stored `false` disables).
   - name: kind-enabled
@@ -91,7 +91,7 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
   - name: entry-add-error
     description: The add-form's fail-closed validation message (ADR-0132 cl.4) — hidden until a rejected submission names why.
   - name: surface-options
-    description: The Surface Options card (vision rev.6 — the frame's node 34:1312) — the agent's OUTPUT-MODALITY contract, three `surface-row`s (`data-surface="markdown|a2ui|genui"`), each `[ surface-toggle | surface-label | surface-spacer ]`. GH #541 — a modality with CHILDREN is wrapped in a `surface-group` (`data-surface="a2ui|genui"`) carrying the card chrome, its children in an indented `surface-detail` zone under the row: A2UI's catalog picker section, GenUI's dogfood sub-option. Markdown has no children, so it stays a bare row. Bankroll left this card in the same wave — it is its own Settings fold now (`data-item="bankroll"`).
+    description: The Surface Options card (vision rev.6 — the frame's node 34:1312), in the Surface tab (GH #574) — the agent's OUTPUT-MODALITY contract, three `surface-row`s (`data-surface="markdown|a2ui|genui"`), each `[ surface-toggle | surface-label | surface-spacer ]`. GH #541 — a modality with CHILDREN is wrapped in a `surface-group` (`data-surface="a2ui|genui"`) carrying the card chrome, its children in an indented `surface-detail` zone under the row: A2UI's catalog picker section, GenUI's dogfood sub-option. Markdown has no children, so it stays a bare row. Bankroll left this card in the same wave — it is its own fold now (`data-item="bankroll"`), riding the Agent tab since GH #574.
   - name: surface-group
     description: GH #541 — one modality plus its children as ONE card (`<div data-part="surface-group" data-surface="a2ui|genui">`): the `surface-row` on top (chrome-free inside the group — never a card-in-card), a `surface-detail` zone beneath it. The nesting is what says a catalog card or a sub-option BELONGS to the toggle above it; before this the three hierarchy levels rendered as one flat sibling stack, ranked only by reading order.
   - name: surface-detail
@@ -99,7 +99,7 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
   - name: surface-detail-row
     description: GH #541 — a nested sub-option row inside a `surface-detail` (`data-detail="genui-dogfood"` today): the same `[ switch | label ]` grammar as a modality row, on the group's shared inner surface rather than a card of its own. Exists so a modality row carries exactly ONE toggle scope — GenUI's "Use agent-ui components" used to ride the modality's own row as a second switch.
   - name: bankroll-row
-    description: GH #525/#541 — the Bankroll fold's one card (`<div data-part="bankroll-row">`): `[ bankroll-label | surface-spacer | bankroll-reset ]`, no toggle (there is no on/off here, only a stored figure to clear). Its own Settings group since GH #541 — a persona's stored figure is not an output modality, and the shared `surface-row` chrome made it read as one. (The a2ui row's `surface-catalog` mirror retired in the same wave: with the picker nested under the row, the active catalog's own card carries that identical label one line below — the same string projected twice, adjacently.)
+    description: GH #525/#541 — the Bankroll fold's one card (`<div data-part="bankroll-row">`): `[ bankroll-label | surface-spacer | bankroll-reset ]`, no toggle (there is no on/off here, only a stored figure to clear). Its own group since GH #541 — a persona's stored figure is not an output modality, and the shared `surface-row` chrome made it read as one; it rides the Agent tab since GH #574 (persona state lives with the persona). (The a2ui row's `surface-catalog` mirror retired in the same wave: with the picker nested under the row, the active catalog's own card carries that identical label one line below — the same string projected twice, adjacently.)
   - name: bankroll-reset
     description: GH #525 (design call 3, 2026-08-07) — the bankroll row's `<ui-button data-part="bankroll-reset">` ("Reset"), clearing the persisted `bankroll` store key (written `null`, the SAME JSON-round-trippable "cleared" shape `sanitizeBankroll` reads back as "no stored bankroll"). The whole FOLD is entirely `hidden` unless the active persona opted into the capability (`bankrollCapable`, preset-seeded) — never just dimmed, since a persona whose games track no `/bankroll` pointer has nothing here to configure.
   - name: context-system
@@ -145,21 +145,24 @@ protocol dependency.
 ```
 
 A two-pane `ui-split` (vision rev.5, Kim's Figma frame 33:1693 — superseding ADR-0131 cl.2's
-three-pane order): `[ chat canvas | {Settings ⇄ Context: System ⇄ Context: Dialog} tabs ]`. The Settings
-tab carries the WHOLE config column — since GH #225 every section a heading-row FOLD (`settings-item`,
-all open by default): Agent (`ui-settings`, the ACTIVE master switch on the fold's heading row) + the
-Model grid + the prompt sections (the old prompts pane, merged in) + the Surface Options card (rev.6 —
-the output-modality contract: Markdown · A2UI + a read-only catalog mirror · GenUI, live since
-genui-surface B2) + the six capability sections (Skills/Workflows/Resources/Tools/Pattern sources, each
-kind's master switch on ITS fold heading row, plus Catalogs — the one kind with no master switch, gated by
-the A2UI toggle instead, ADR-0170 cl.5). The Context tabs are the read-only
+three-pane order): `[ chat canvas | {Agent ⇄ Capabilities ⇄ Surface ⇄ Context: System ⇄ Context: Dialog}
+tabs ]`. GH #574 (Kim's ruling, 2026-08-07) split the old single flat Settings tab's ten folds — three
+distinct ranks flattened into one scroll — into three tabs, each still a heading-row FOLD since GH #225
+(`settings-item`, all open by default): **Agent** — who it is: Agent (`ui-settings`, the ACTIVE master
+switch on the fold's heading row) + the Model grid + Bankroll (a persona's opt-in stored figure, hidden
+entirely for one that never opted in). **Capabilities** — what it can do: the prompt sections (the old
+prompts pane, merged in) + four capability kinds (Skills/Workflows/Resources/Tools, each kind's master
+switch on ITS fold heading row). **Surface** — how it renders: the Surface Options card (rev.6 — the
+output-modality contract: Markdown · A2UI + its nested catalog picker · GenUI, live since genui-surface
+B2) + Pattern sources (the one remaining capability kind, riding this tab since it configures the GenUI
+modality's rendering rather than a capability the agent has). The Context tabs are the read-only
 introspection surface, split in two (GH #161, superseding the old single combined "Context" tab) and
 carrying the SAME fold pattern (GH #222 — heading-row chevrons + one JSON card each, no outer wrapper
 card): **Context: System** (the compiled agent-system JSON, incl. the `surface` block) and
 **Context: Dialog** (the per-turn payload log). Below 640px the shell collapses to
-{Chat, Settings, Context: System, Context: Dialog} tabs — a flat FOURTH top-level tab, not a nested
-sub-tab-set (TKT-0085's mechanism, two bands instead of three; every tab is one content unit moved
-whole between its wide tab-panel and its narrow tab-panel, Context included).
+{Chat, Agent, Capabilities, Surface, Context: System, Context: Dialog} tabs — a flat top-level strip, not
+a nested sub-tab-set (TKT-0085's mechanism, two bands instead of three; every tab is one content unit
+moved whole between its wide tab-panel and its narrow tab-panel, Context included).
 
 ## One primitive, seven instantiations (ADR-0132; genui-surface SPEC-R11 added pattern-source, ADR-0170 added catalog)
 
@@ -172,9 +175,10 @@ toggleable entry in a typed list, with a shared custom-entry authoring form:
   NAMES a modality that Surface Options has switched off gets a non-blocking `entry-notice` warning on its
   own card (dialect belongs to the harness's grammar block, not to persona prose — ADR-0138's boundary,
   GH #412) — it clears on a re-enable or a reword, and gates nothing.
-- **Settings pane** — the unchanged "Agent" config (name/model/temperature/toolsEnabled, via the composed
-  `ui-settings`) PLUS four capability kinds — Skills, Workflows, Resources, Tools — each an unseeded,
-  purely custom-authorable instance of the same primitive.
+- **Agent/Capabilities tabs** — the unchanged "Agent" config (name/model/temperature/toolsEnabled, via the
+  composed `ui-settings`, in the Agent tab) PLUS four capability kinds — Skills, Workflows, Resources,
+  Tools, in the Capabilities tab — each an unseeded, purely custom-authorable instance of the same
+  primitive.
 - **Catalogs** (ADR-0170) — `kind: "catalog"`, the family's first SINGLE-select kind, and the first whose
   selection truth lives OUTSIDE the entries store: the roster records which registered catalogs are on
   this persona's shelf, while `a2uiCatalog` records the one selection every switch DERIVES from. See the

@@ -45,7 +45,33 @@ afterEach(() => {
   localStorage.clear()
 })
 
-function mountAgentAdmin(): { wrapper: HTMLElement; el: UIAgentAdminElement } {
+/** GH #574 — Agent is the default active `options-pane` segment; a caller reaching into the Capabilities
+ *  or Surface tab's own content passes it here to activate it (synchronously — clicking a real `ui-tabs`
+ *  pane-tab flips `data-active` immediately, the agent-admin.test.ts jsdom precedent). An inactive segment
+ *  computes `display:none` in a real engine, so ITS content's own geometry (getBoundingClientRect,
+ *  .focus()) reads zero/no-ops until its tab is selected — style-only reads (getComputedStyle of a
+ *  cascade value like border-width/font-size) are unaffected either way and need no activation. */
+function activateTab(el: HTMLElement, tab: 'Agent' | 'Capabilities' | 'Surface'): void {
+  const paneTab = [...el.querySelectorAll('[data-part="pane-tab"]')].find((t) => t.textContent === tab) as HTMLElement
+  paneTab.click()
+}
+
+/** GH #225 — the shared chrome every `settings-item` fold carries, regardless of which of the three
+ *  ranked tabs (GH #574) hosts it: open by default (config is an editing surface), a real visibly-sized
+ *  chevron on the heading row, and the ONE shared heading register (0.875rem/600 at the fleet's 16px
+ *  root) the #222 Context probe pins the SAME live values against. */
+function assertFoldChrome(item: HTMLElement & { open: boolean }): void {
+  expect(item.open, `${item.getAttribute('data-item')} defaults open (config is an editing surface)`).toBe(true)
+  const chevron = item.querySelector(':scope > [data-part="details"] > [data-part="summary"] > [data-part="chevron"]') as HTMLElement
+  const box = chevron.getBoundingClientRect()
+  expect(box.width, `${item.getAttribute('data-item')} chevron width`).toBeGreaterThan(0)
+  expect(box.height, `${item.getAttribute('data-item')} chevron height`).toBeGreaterThan(0)
+  const s = getComputedStyle(item.querySelector(':scope > [data-part="details"] > [data-part="summary"]') as HTMLElement)
+  expect(s.fontSize, `${item.getAttribute('data-item')} register font`).toBe('14px')
+  expect(s.fontWeight, `${item.getAttribute('data-item')} register weight`).toBe('600')
+}
+
+function mountAgentAdmin(tab?: 'Capabilities' | 'Surface'): { wrapper: HTMLElement; el: UIAgentAdminElement } {
   const wrapper = document.createElement('div')
   wrapper.style.width = '1200px'
   wrapper.style.height = '600px'
@@ -55,6 +81,7 @@ function mountAgentAdmin(): { wrapper: HTMLElement; el: UIAgentAdminElement } {
   wrapper.append(el)
   document.body.append(wrapper)
   mounted.push(wrapper)
+  if (tab) activateTab(el, tab)
   return { wrapper, el }
 }
 
@@ -94,10 +121,10 @@ describe('ui-agent-admin cross-engine smoke — the shell grammar (GH #52/ADR-01
     expect(pane.getBoundingClientRect().width).toBeGreaterThan(0)
     expect(canvas.getBoundingClientRect().right).toBeLessThanOrEqual(pane.getBoundingClientRect().left + 1)
     const tabs = [...pane.querySelectorAll('[data-part="pane-tab"]')]
-    expect(tabs.map((t) => t.textContent)).toEqual(['Settings', 'Context: System', 'Context: Dialog'])
+    expect(tabs.map((t) => t.textContent)).toEqual(['Agent', 'Capabilities', 'Surface', 'Context: System', 'Context: Dialog'])
     for (const tab of tabs) expect(tab.getBoundingClientRect().width).toBeGreaterThan(0)
-    // Settings is the default active segment — the Agent fold's heading row renders visibly (GH #225:
-    // the old agent-heading h3 is the fold summary now).
+    // Agent is the default active segment (GH #574) — the Agent fold's heading row renders visibly
+    // (GH #225: the old agent-heading h3 is the fold summary now).
     const agentHeading = el.querySelector('[data-part="settings-item"][data-item="agent"] [data-part="summary"]') as HTMLElement
     expect(agentHeading.getBoundingClientRect().width).toBeGreaterThan(0)
 
@@ -184,7 +211,7 @@ describe('ui-agent-admin cross-engine smoke — the shell grammar (GH #52/ADR-01
     }
   })
 
-  it('narrow (<640px): {Chat, Settings, Context: System, Context: Dialog} narrow-tabs fill the shell; the wide pane-tabs strip computes display:none (GH #161: a flat 4th tab, not a nested sub-tab-set)', async () => {
+  it('narrow (<640px): {Chat, Agent, Capabilities, Surface, Context: System, Context: Dialog} narrow-tabs fill the shell; the wide pane-tabs strip computes display:none (GH #161/#574: a flat top-level strip, not a nested sub-tab-set)', async () => {
     const { el } = mountAgentAdminAt(500)
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
     const paneTabs = el.querySelector('[data-part="pane-tabs"]') as HTMLElement
@@ -192,7 +219,7 @@ describe('ui-agent-admin cross-engine smoke — the shell grammar (GH #52/ADR-01
     expect(getComputedStyle(paneTabs).display).toBe('none') // the same [hidden]-specificity pin, the other direction
     expect(getComputedStyle(narrowTabs).display).not.toBe('none')
     const tabs = [...narrowTabs.querySelectorAll('[data-part="narrow-tab"]')]
-    expect(tabs.map((t) => t.textContent)).toEqual(['Chat', 'Settings', 'Context: System', 'Context: Dialog'])
+    expect(tabs.map((t) => t.textContent)).toEqual(['Chat', 'Agent', 'Capabilities', 'Surface', 'Context: System', 'Context: Dialog'])
     for (const tab of tabs) expect(tab.getBoundingClientRect().width).toBeGreaterThan(0)
     // The composer is reachable and has real, non-zero geometry inside the Chat participant (the default selection).
     const composer = el.querySelector('ui-conversation-composer') as HTMLElement
@@ -270,9 +297,9 @@ describe('ui-agent-admin cross-engine smoke — the shell grammar (GH #52/ADR-01
     expect(conversation.querySelector('[data-state="closed"]'), 'the surface should NOT have closed — R7c is visibility-only').toBeNull()
     expect(conversation.querySelector('ui-surface-host ui-button'), 'the rendered surface content survives the crossing').not.toBeNull()
 
-    // A narrow tab round-trip (Chat → Settings → Chat) leaves it exactly as un-cycled.
+    // A narrow tab round-trip (Chat → Agent → Chat) leaves it exactly as un-cycled.
     const tabs = [...el.querySelectorAll('[data-part="narrow-tab"]')] as HTMLElement[]
-    tabs.find((t) => t.textContent === 'Settings')!.click()
+    tabs.find((t) => t.textContent === 'Agent')!.click()
     await new Promise((r) => requestAnimationFrame(r))
     tabs.find((t) => t.textContent === 'Chat')!.click()
     await new Promise((r) => requestAnimationFrame(r))
@@ -296,7 +323,7 @@ describe('ui-agent-admin cross-engine smoke — chat + options-pane render side 
   })
 
   it('a seeded prompt-section entry\'s content field is visibly focusable and legible (a real element, not display:none)', () => {
-    const { el } = mountAgentAdmin()
+    const { el } = mountAgentAdmin('Capabilities') // GH #574 — Instructions rides the Capabilities tab now
     const field = el.querySelector('[data-entry-id="foundation"] [data-part="entry-content"]') as HTMLElement
     field.focus()
     // ui-textarea forwards .focus() to its internal contenteditable editor part (the text-field precedent) —
@@ -308,7 +335,7 @@ describe('ui-agent-admin cross-engine smoke — chat + options-pane render side 
   })
 
   it('the toggle switch on a seeded entry is a real, visibly rendered ui-switch (whole-shape, not a collapsed stub)', () => {
-    const { el } = mountAgentAdmin()
+    const { el } = mountAgentAdmin('Capabilities') // GH #574 — Instructions rides the Capabilities tab now
     const toggle = el.querySelector('[data-entry-id="foundation"] [data-part="entry-toggle"]') as HTMLElement
     expect(toggle.tagName.toLowerCase()).toBe('ui-switch')
     const box = toggle.getBoundingClientRect()
@@ -316,20 +343,34 @@ describe('ui-agent-admin cross-engine smoke — chat + options-pane render side 
     expect(box.height).toBeGreaterThan(0)
   })
 
-  it('all SEVEN sections (Catalogs + Instructions + Skills/Workflows/Resources/Tools/Pattern sources) render in the Settings tab, each a real non-zero box — GH #488: Catalogs is FIRST in document order now, folded into Surface Options ahead of Instructions', () => {
+  it('GH #574: the Capabilities and Surface tabs together render all SEVEN sections (Catalogs + Instructions + Skills/Workflows/Resources/Tools/Pattern sources), each a real non-zero box once its own tab is active — GH #488 nests Catalogs inside Surface Options, still leading the Surface tab', async () => {
     const { el } = mountAgentAdmin()
-    const settings = el.querySelector('[data-role="settings-content"]') as HTMLElement
-    const sections = [...settings.querySelectorAll('[data-part="entry-section"]')]
-    expect(sections.map((s) => s.getAttribute('data-kind'))).toEqual([
-      ENTRY_KINDS.catalog,
+    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    const tabs = [...pane.querySelectorAll('[data-part="pane-tab"]')] as HTMLElement[]
+
+    tabs.find((t) => t.textContent === 'Capabilities')!.click()
+    await new Promise((r) => requestAnimationFrame(r))
+    const capabilities = el.querySelector('[data-role="capabilities-content"]') as HTMLElement
+    const capabilitiesSections = [...capabilities.querySelectorAll('[data-part="entry-section"]')]
+    expect(capabilitiesSections.map((s) => s.getAttribute('data-kind'))).toEqual([
       ENTRY_KINDS.promptSection,
       ENTRY_KINDS.skill,
       ENTRY_KINDS.workflow,
       ENTRY_KINDS.resource,
       ENTRY_KINDS.tool,
-      ENTRY_KINDS.patternSource,
     ])
-    for (const section of sections) {
+    for (const section of capabilitiesSections) {
+      const box = section.getBoundingClientRect()
+      expect(box.width).toBeGreaterThan(0)
+      expect(box.height).toBeGreaterThan(0)
+    }
+
+    tabs.find((t) => t.textContent === 'Surface')!.click()
+    await new Promise((r) => requestAnimationFrame(r))
+    const surface = el.querySelector('[data-role="surface-content"]') as HTMLElement
+    const surfaceSections = [...surface.querySelectorAll('[data-part="entry-section"]')]
+    expect(surfaceSections.map((s) => s.getAttribute('data-kind'))).toEqual([ENTRY_KINDS.catalog, ENTRY_KINDS.patternSource])
+    for (const section of surfaceSections) {
       const box = section.getBoundingClientRect()
       expect(box.width).toBeGreaterThan(0)
       expect(box.height).toBeGreaterThan(0)
@@ -344,7 +385,7 @@ describe('ui-agent-admin cross-engine smoke — chat + options-pane render side 
 
 describe('ui-agent-admin cross-engine smoke — the Catalogs library section (ADR-0170)', () => {
   it('renders the ensured Default row as a real, non-zero row: a visible switch, a legible label, and NO content editor', () => {
-    const { el } = mountAgentAdmin()
+    const { el } = mountAgentAdmin('Surface') // GH #574 — Catalogs (nested in Surface Options) rides the Surface tab
     const section = el.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.catalog}"]`) as HTMLElement
     const rows = [...section.querySelectorAll('[data-part="entry"]')]
     expect(rows).toHaveLength(1)
@@ -375,7 +416,7 @@ describe('ui-agent-admin cross-engine smoke — the Catalogs library section (AD
   // painted top sits between the A2UI row's bottom and the GenUI row's top, inside the SAME Surface
   // Options card, never floated off to a separate later section.
   it('the catalog section paints directly BELOW the A2UI row and ABOVE the GenUI row, inside the Surface Options card', () => {
-    const { el } = mountAgentAdmin()
+    const { el } = mountAgentAdmin('Surface') // GH #574 — Surface Options rides its own tab now
     const surfaceOptions = el.querySelector('[data-part="surface-options"]') as HTMLElement
     const a2uiRow = el.querySelector('[data-part="surface-row"][data-surface="a2ui"]') as HTMLElement
     const genuiRow = el.querySelector('[data-part="surface-row"][data-surface="genui"]') as HTMLElement
@@ -394,7 +435,7 @@ describe('ui-agent-admin cross-engine smoke — the Catalogs library section (AD
   // GH #541 — the nesting must be REAL INK, not just DOM ancestry: a first-time reader tells a child
   // from a sibling by the indent, so the detail zone's left edge is measured against the row's own.
   it('the A2UI detail zone paints INDENTED under its modality row, inside one shared group card', () => {
-    const { el } = mountAgentAdmin()
+    const { el } = mountAgentAdmin('Surface') // GH #574 — Surface Options rides its own tab now
     const group = el.querySelector('[data-part="surface-group"][data-surface="a2ui"]') as HTMLElement
     const a2uiRow = el.querySelector('[data-part="surface-row"][data-surface="a2ui"]') as HTMLElement
     const detail = group.querySelector('[data-part="surface-detail"]') as HTMLElement
@@ -414,7 +455,7 @@ describe('ui-agent-admin cross-engine smoke — the Catalogs library section (AD
 
   // GH #541 — the GenUI sub-option left the modality row: one toggle scope per row.
   it('the GenUI dogfood sub-option paints as a nested detail row, not a second toggle in the GenUI row', () => {
-    const { el } = mountAgentAdmin()
+    const { el } = mountAgentAdmin('Surface') // GH #574 — Surface Options rides its own tab now
     const genuiRow = el.querySelector('[data-part="surface-row"][data-surface="genui"]') as HTMLElement
     const dogfoodRow = el.querySelector('[data-part="surface-detail-row"][data-detail="genui-dogfood"]') as HTMLElement
 
@@ -465,7 +506,7 @@ describe('ui-agent-admin cross-engine smoke — canvas/pane gutter is module-der
 
 describe('ui-agent-admin cross-engine smoke — the add-form is GENUINELY collapsed when hidden (component-reviewer CRITICAL fix)', () => {
   it('a hidden add-form computes display:none; toggling reveals it as a real, visible box', () => {
-    const { el } = mountAgentAdmin()
+    const { el } = mountAgentAdmin('Capabilities') // GH #574 — Tools rides the Capabilities tab now
     const section = el.querySelector(`[data-kind="${ENTRY_KINDS.tool}"]`) as HTMLElement
     const form = section.querySelector('[data-part="entry-add-form"]') as HTMLElement
 
@@ -482,7 +523,7 @@ describe('ui-agent-admin cross-engine smoke — the add-form is GENUINELY collap
 
 describe('ui-agent-admin cross-engine smoke — an uncommitted edit survives a sibling toggle (component-reviewer MAJOR fix)', () => {
   it('a mid-edit content field keeps its live value AND its focus after a sibling entry re-renders the list', async () => {
-    const { el } = mountAgentAdmin()
+    const { el } = mountAgentAdmin('Capabilities') // GH #574 — Instructions rides the Capabilities tab now
     const foundationField = el.querySelector(
       '[data-entry-id="foundation"] [data-part="entry-content"]',
     ) as UICodeEditorElement
@@ -514,7 +555,7 @@ describe('ui-agent-admin cross-engine smoke — an uncommitted edit survives a s
 
 describe('ui-agent-admin cross-engine smoke — adding a custom capability actually renders (ADR-0132)', () => {
   it('submitting the add-form for a Skill renders a new, real, toggleable entry row', () => {
-    const { el } = mountAgentAdmin()
+    const { el } = mountAgentAdmin('Capabilities') // GH #574 — Skills rides the Capabilities tab now
     const section = el.querySelector(`[data-kind="${ENTRY_KINDS.skill}"]`) as HTMLElement
     ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
     const labelField = section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement
@@ -533,7 +574,7 @@ describe('ui-agent-admin cross-engine smoke — adding a custom capability actua
 
 describe('ui-agent-admin cross-engine smoke — TKT-0048: entry-list action buttons are real ui-button instances', () => {
   it('entry-add-toggle is a <ui-button> with a leading plus-icon adornment spaced from its label by a real, non-zero gap', () => {
-    const { el } = mountAgentAdmin()
+    const { el } = mountAgentAdmin('Capabilities') // GH #574 — Skills rides the Capabilities tab now
     const section = el.querySelector(`[data-kind="${ENTRY_KINDS.skill}"]`) as HTMLElement
     const toggle = section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement
     expect(toggle.tagName.toLowerCase()).toBe('ui-button')
@@ -574,6 +615,7 @@ describe('ui-agent-admin cross-engine smoke — TKT-0048: entry-list action butt
     wrapper.append(el)
     document.body.append(wrapper)
     mounted.push(wrapper)
+    activateTab(el, 'Capabilities') // GH #574 — Skills rides the Capabilities tab now
 
     // Custom entries (not built-ins) render a delete affordance — add one via the real add-form flow.
     const section = el.querySelector(`[data-kind="${ENTRY_KINDS.skill}"]`) as HTMLElement
@@ -769,13 +811,13 @@ describe('ui-agent-admin cross-engine smoke — TKT-0050/TKT-0059/ADR-0139: entr
     const { el } = mountAgentAdmin()
     const entryContent = el.querySelector('[data-entry-id="foundation"] [data-part="entry-content"]') as HTMLElement
 
-    const uiSettings = el.querySelector('[data-role="settings-content"] ui-settings') as HTMLElement & { updateComplete: Promise<void> }
+    const uiSettings = el.querySelector('[data-role="agent-content"] ui-settings') as HTMLElement & { updateComplete: Promise<void> }
     await uiSettings.updateComplete
     // drill-in default: the panel is empty until a rail item is activated (the settings.browser.test.ts
     // precedent) — the "Agent" section is the first/only rail item at this schema's version.
     ;(uiSettings.querySelector('ui-nav-rail-item') as HTMLElement).click()
     await uiSettings.updateComplete
-    const nameField = el.querySelector('[data-role="settings-content"] ui-text-field[name="name"]') as HTMLElement
+    const nameField = el.querySelector('[data-role="agent-content"] ui-text-field[name="name"]') as HTMLElement
     expect(nameField).not.toBeNull()
 
     const editorStyle = getComputedStyle(entryContent)
@@ -786,7 +828,7 @@ describe('ui-agent-admin cross-engine smoke — TKT-0050/TKT-0059/ADR-0139: entr
   })
 
   it('the entry-content/entry-add-content :focus-visible rule never matches (focus lands on ui-textarea\'s internal editor, not the host) — dead by a DIFFERENT mechanism than the cascade-proximity loss above', () => {
-    const { el } = mountAgentAdmin()
+    const { el } = mountAgentAdmin('Capabilities') // GH #574 — Instructions rides the Capabilities tab now; .focus() needs a real, non-display:none ancestor
     const entryContent = el.querySelector('[data-entry-id="foundation"] [data-part="entry-content"]') as HTMLElement
     entryContent.focus()
     expect(entryContent.matches(':focus-within')).toBe(true) // focus genuinely landed inside
@@ -794,7 +836,7 @@ describe('ui-agent-admin cross-engine smoke — TKT-0050/TKT-0059/ADR-0139: entr
   })
 
   it('TKT-0060: entry-add-label/entry-add-description are now real <ui-text-field>s — the agent-admin.css bespoke rule is gone, and focus draws the CONTROL\'S OWN :focus-within outline ring instead (the same dead-by-different-mechanism story TKT-0050 already proved for entry-content)', () => {
-    const { el } = mountAgentAdmin()
+    const { el } = mountAgentAdmin('Capabilities') // GH #574 — Tools rides the Capabilities tab now; .focus() needs a real, non-display:none ancestor
     const section = el.querySelector(`[data-kind="${ENTRY_KINDS.tool}"]`) as HTMLElement
     ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
     const addLabel = section.querySelector('[data-part="entry-add-label"]') as HTMLElement
@@ -829,7 +871,7 @@ describe('ui-agent-admin cross-engine smoke — TKT-0060: entry-add-form drops i
   })
 
   it('a REAL keyboard Enter keydown in entry-add-label submits the form and adds the entry (not .requestSubmit() — the actual keyboard path a user drives)', () => {
-    const { el } = mountAgentAdmin()
+    const { el } = mountAgentAdmin('Capabilities') // GH #574 — Skills rides the Capabilities tab now; .focus() needs a real, non-display:none ancestor
     const section = el.querySelector(`[data-kind="${ENTRY_KINDS.skill}"]`) as HTMLElement
     ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
     const labelField = section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement
@@ -852,7 +894,7 @@ describe('ui-agent-admin cross-engine smoke — TKT-0060: entry-add-form drops i
   })
 
   it('Enter in entry-add-description does NOT submit (only the required single-line label field gets Enter-to-submit, matching what a native single-line required <input> would have done)', () => {
-    const { el } = mountAgentAdmin()
+    const { el } = mountAgentAdmin('Capabilities') // GH #574 — Skills rides the Capabilities tab now; .focus() needs a real, non-display:none ancestor
     const section = el.querySelector(`[data-kind="${ENTRY_KINDS.skill}"]`) as HTMLElement
     ;(section.querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
     const labelField = section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement
@@ -915,6 +957,7 @@ describe('ui-agent-admin — entry libraries commit through the real menu (GH #4
     document.body.append(wrap2)
     mounted.push(wrap2)
     await el2.updateComplete
+    activateTab(el2, 'Capabilities') // GH #574 — Skills rides the Capabilities tab now; the trigger's real position needs a painted ancestor
 
     const section = el2.querySelector('[data-part="entry-section"][data-kind="skill"]') as HTMLElement
     const menu = section.querySelector('[data-part="entry-library-menu"]') as HTMLElement
@@ -992,42 +1035,55 @@ describe('ui-agent-admin — list-row vertical rhythm stays consistent across th
 })
 
 describe('ui-agent-admin — segment content wins its OWN display:flex, not super-shell\'s active-segment display:block (GH #197)', () => {
-  it('the Settings segment (data-role="settings-content") computes display:flex and shows a REAL, non-zero measured gap between every pair of adjacent top-level sections', async () => {
+  it('GH #574: each of the three ranked segments (Agent/Capabilities/Surface) computes display:flex and shows a REAL, non-zero measured gap between every pair of ITS OWN adjacent top-level sections', async () => {
     const { el } = mountAgentAdmin()
     await el.updateComplete
-    const settingsContent = el.querySelector('[data-role="settings-content"]') as HTMLElement
-    expect(settingsContent).not.toBeNull()
-    // The double-duty element: agent-admin's own `[data-role='settings-content']` (specificity 0,1,0)
-    // declares `display:flex; gap:1rem`, but the SAME node is also super-shell's `[data-segment]
-    // [data-active]` (specificity 0,3,0, super-shell.css) — before the fix, super-shell's `display:block`
-    // won on raw specificity and silently zeroed the flex `gap` (gap has no effect on a block container).
-    const cs = getComputedStyle(settingsContent)
-    expect(cs.display, 'wins the specificity fight against super-shell\'s segment-visibility rule').toBe('flex')
-    expect(cs.flexDirection).toBe('column')
+    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    const tabs = [...pane.querySelectorAll('[data-part="pane-tab"]')] as HTMLElement[]
 
-    // Real, measured gaps (not just computed style — `row-gap` still reports its declared value even
-    // when display:block makes it inert) between EVERY adjacent pair of top-level children: Agent header
-    // → ui-settings → Model heading → model-grid → Surface Options heading (GH #488: now BEFORE
-    // Instructions, carrying the catalog picker inside it too) → Surface Options card → prompt section →
-    // each remaining capability entry-section.
-    // GH #541 — only the sections that actually PAINT: the Bankroll fold is `hidden` for a persona that
-    // never opted in, and a display:none flex item takes no `gap` at all, so measuring against its
-    // zero-box would assert a gap the layout never had.
-    const children = ([...settingsContent.querySelectorAll(':scope > *')] as HTMLElement[]).filter(
-      (c) => c.getBoundingClientRect().height > 0,
-    )
-    expect(children.length, 'the Settings segment composes many top-level sections').toBeGreaterThan(5)
-    const expectedGapPx = Number.parseFloat(cs.rowGap)
-    expect(expectedGapPx, 'a real, non-zero declared gap to measure against').toBeGreaterThan(0)
-    for (let i = 1; i < children.length; i++) {
-      const prev = children[i - 1]
-      const next = children[i]
-      const gapPx = next.getBoundingClientRect().top - prev.getBoundingClientRect().bottom
-      expect(
-        gapPx,
-        `measured gap between child ${i - 1} (${prev.getAttribute('data-part') ?? prev.tagName}) and child ${i} (${next.getAttribute('data-part') ?? next.tagName})`,
-      ).toBeCloseTo(expectedGapPx, 0)
+    function assertSegmentFlexAndGaps(role: string, minChildren: number): void {
+      const content = el.querySelector(`[data-role="${role}"]`) as HTMLElement
+      expect(content).not.toBeNull()
+      // The double-duty element: agent-admin's own `[data-role='...']` (specificity 0,1,0) declares
+      // `display:flex; gap:1rem`, but the SAME node is also super-shell's `[data-segment][data-active]`
+      // (specificity 0,3,0, super-shell.css) — before the fix, super-shell's `display:block` won on raw
+      // specificity and silently zeroed the flex `gap` (gap has no effect on a block container); the fix
+      // keeps every one of the three ranked segments winning that fight, not just the old single one.
+      const cs = getComputedStyle(content)
+      expect(cs.display, `${role} wins the specificity fight against super-shell's segment-visibility rule`).toBe('flex')
+      expect(cs.flexDirection).toBe('column')
+
+      // Real, measured gaps (not just computed style — `row-gap` still reports its declared value even
+      // when display:block makes it inert) between EVERY adjacent pair of top-level children that
+      // actually PAINT. GH #541 — the Bankroll fold is `hidden` for a persona that never opted in, and a
+      // display:none flex item takes no `gap` at all, so measuring against its zero-box would assert a
+      // gap the layout never had.
+      const children = ([...content.querySelectorAll(':scope > *')] as HTMLElement[]).filter((c) => c.getBoundingClientRect().height > 0)
+      expect(children.length, `${role} composes multiple top-level sections`).toBeGreaterThanOrEqual(minChildren)
+      const expectedGapPx = Number.parseFloat(cs.rowGap)
+      expect(expectedGapPx, 'a real, non-zero declared gap to measure against').toBeGreaterThan(0)
+      for (let i = 1; i < children.length; i++) {
+        const prev = children[i - 1]
+        const next = children[i]
+        const gapPx = next.getBoundingClientRect().top - prev.getBoundingClientRect().bottom
+        expect(
+          gapPx,
+          `${role}: measured gap between child ${i - 1} (${prev.getAttribute('data-part') ?? prev.tagName}) and child ${i} (${next.getAttribute('data-part') ?? next.tagName})`,
+        ).toBeCloseTo(expectedGapPx, 0)
+      }
     }
+
+    // Agent (the default active segment, no click needed) — Agent + Model; Bankroll stays hidden (no
+    // opted-in persona on a fresh store).
+    assertSegmentFlexAndGaps('agent-content', 2)
+
+    tabs.find((t) => t.textContent === 'Capabilities')!.click()
+    await new Promise((r) => requestAnimationFrame(r))
+    assertSegmentFlexAndGaps('capabilities-content', 5) // Instructions, Skills, Workflows, Resources, Tools
+
+    tabs.find((t) => t.textContent === 'Surface')!.click()
+    await new Promise((r) => requestAnimationFrame(r))
+    assertSegmentFlexAndGaps('surface-content', 2) // Surface Options, Pattern sources
   })
 
   it('the Context: System and Context: Dialog segments ALSO win display:flex once activated (same super-shell specificity collision, same fix)', async () => {
@@ -1056,45 +1112,61 @@ describe('ui-agent-admin — segment content wins its OWN display:flex, not supe
 // the config column): chevron on the heading row, one shared heading register, fold toggles content,
 // and the master switches ride their fold summaries WITHOUT the summary swallowing their clicks. ──────
 describe('ui-agent-admin — GH #225: the Settings sections fold like the Context sections', () => {
-  it('each Settings section renders a real chevron fold in the shared heading register; clicking a summary folds ONLY that section\'s content', async () => {
+  it('GH #574: each of the three ranked tabs (Agent/Capabilities/Surface) renders a real chevron fold in the shared heading register — a CENSUS across tabs matches the old flat ten; clicking a summary folds ONLY that section\'s content', async () => {
     const { el } = mountAgentAdmin()
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
-    const settings = el.querySelector('[data-role="settings-content"]') as HTMLElement
-    const allItems = [...settings.querySelectorAll(':scope > [data-part="settings-item"]')] as (HTMLElement & { open: boolean; hidden: boolean })[]
-    // GH #488 — Catalogs is no longer a top-level fold at all (it mounts inside the Surface Options fold).
-    // GH #541 — Bankroll became one, lifted out of the Surface Options card into its own group.
-    expect(allItems.map((i) => i.getAttribute('data-item'))).toEqual([
-      'agent', 'model', 'surface', 'bankroll', ENTRY_KINDS.promptSection,
-      ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource,
-    ])
+    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    const tabs = [...pane.querySelectorAll('[data-part="pane-tab"]')] as HTMLElement[]
+    const clickTab = async (label: string): Promise<void> => {
+      tabs.find((t) => t.textContent === label)!.click()
+      await new Promise((r) => requestAnimationFrame(r))
+    }
+    const itemsOf = (role: string): (HTMLElement & { open: boolean; hidden: boolean })[] =>
+      [...(el.querySelector(`[data-role="${role}"]`) as HTMLElement).querySelectorAll(':scope > [data-part="settings-item"]')] as (HTMLElement & {
+        open: boolean
+        hidden: boolean
+      })[]
+
+    // Agent is the default active tab — GH #488 folded Catalogs INTO Surface Options; GH #541 lifted
+    // Bankroll into its own group; GH #574 ranked the old flat ten folds into three tabs.
+    const agentItems = itemsOf('agent-content')
+    expect(agentItems.map((i) => i.getAttribute('data-item'))).toEqual(['agent', 'model', 'bankroll'])
     // …and `hidden` on a fold really removes it from layout here (ui-disclosure's own `display:block`
     // outranks the UA's `[hidden]` rule, so agent-admin.css restates it — this is the cross-engine proof).
-    const bankroll = allItems.find((i) => i.getAttribute('data-item') === 'bankroll')!
+    const bankroll = agentItems.find((i) => i.getAttribute('data-item') === 'bankroll')!
     expect(bankroll.hidden, 'no persona opted into the bankroll capability here').toBe(true)
     expect(getComputedStyle(bankroll).display).toBe('none')
     expect(bankroll.getBoundingClientRect().height).toBe(0)
+    for (const item of agentItems.filter((i) => !i.hidden)) assertFoldChrome(item)
 
-    const items = allItems.filter((i) => !i.hidden)
-    for (const item of items) {
-      expect(item.open, `${item.getAttribute('data-item')} defaults open (config is an editing surface)`).toBe(true)
-      // A real, visibly-sized chevron on the heading row — the fold affordance itself.
-      const chevron = item.querySelector(':scope > [data-part="details"] > [data-part="summary"] > [data-part="chevron"]') as HTMLElement
-      const box = chevron.getBoundingClientRect()
-      expect(box.width, `${item.getAttribute('data-item')} chevron width`).toBeGreaterThan(0)
-      expect(box.height, `${item.getAttribute('data-item')} chevron height`).toBeGreaterThan(0)
-      // The shared heading register — anchored ABSOLUTELY (0.875rem/600 at the fleet's 16px root), so
-      // this cannot go vacuously green by every summary drifting together; the #222 probe above pins
-      // the Context flavors against this same live register.
-      const s = getComputedStyle(item.querySelector(':scope > [data-part="details"] > [data-part="summary"]') as HTMLElement)
-      expect(s.fontSize, `${item.getAttribute('data-item')} register font`).toBe('14px')
-      expect(s.fontWeight, `${item.getAttribute('data-item')} register weight`).toBe('600')
-    }
+    await clickTab('Capabilities')
+    const capabilitiesItems = itemsOf('capabilities-content')
+    expect(capabilitiesItems.map((i) => i.getAttribute('data-item'))).toEqual([
+      ENTRY_KINDS.promptSection, ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool,
+    ])
+    for (const item of capabilitiesItems) assertFoldChrome(item)
 
-    // Folding the Model section collapses it to its heading row — and ONLY it (the sibling folds stay
-    // open). Geometry, not paint-API, on purpose: modern engines hide closed-details content via
-    // `content-visibility` on the ::details-content pseudo, so the skipped content can still REPORT
-    // client rects — the honest cross-engine claim is the fold host's own collapse.
-    const modelItem = items.find((i) => i.getAttribute('data-item') === 'model')!
+    await clickTab('Surface')
+    const surfaceItems = itemsOf('surface-content')
+    expect(surfaceItems.map((i) => i.getAttribute('data-item'))).toEqual(['surface', ENTRY_KINDS.patternSource])
+    for (const item of surfaceItems) assertFoldChrome(item)
+
+    // Census: the union of the three tabs' top-level folds is EXACTLY the old flat ten-item set —
+    // nothing lost, nothing duplicated (the acceptance's own wording, proven mechanically).
+    const OLD_FLAT_SET = [
+      'agent', 'model', 'surface', 'bankroll', ENTRY_KINDS.promptSection,
+      ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource,
+    ]
+    const union = [...agentItems, ...capabilitiesItems, ...surfaceItems].map((i) => i.getAttribute('data-item'))
+    expect([...union].sort()).toEqual([...OLD_FLAT_SET].sort())
+    expect(new Set(union).size, 'no fold duplicated across tabs').toBe(union.length)
+
+    // Folding the Model section (back in the Agent tab) collapses it to its heading row — and ONLY it
+    // (the sibling folds stay open). Geometry, not paint-API, on purpose: modern engines hide closed-
+    // details content via `content-visibility` on the ::details-content pseudo, so the skipped content
+    // can still REPORT client rects — the honest cross-engine claim is the fold host's own collapse.
+    await clickTab('Agent')
+    const modelItem = agentItems.find((i) => i.getAttribute('data-item') === 'model')!
     const modelGrid = el.querySelector('[data-part="model-grid"]') as HTMLElement
     expect(modelGrid.getBoundingClientRect().height).toBeGreaterThan(0)
     const modelSummary = modelItem.querySelector(':scope > [data-part="details"] > [data-part="summary"]') as HTMLElement
@@ -1172,7 +1244,7 @@ describe('ui-agent-admin — GH #225: the Settings sections fold like the Contex
   })
 
   it('GH #226: a destructive fold-content clobber rebuilds the disclosure and the master switch SURVIVES on the fresh heading row (ui-disclosure\'s slot rescue, ADR-0158)', async () => {
-    const { el } = mountAgentAdmin()
+    const { el } = mountAgentAdmin('Capabilities') // GH #574 — Skills rides the Capabilities tab now
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
     const skillsItem = el.querySelector(`[data-part="settings-item"][data-item="${ENTRY_KINDS.skill}"]`) as HTMLElement & { open: boolean }
     const toggle = skillsItem.querySelector('[data-part="kind-enabled"]') as HTMLElement & { checked: boolean }
