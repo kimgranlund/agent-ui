@@ -96,7 +96,6 @@ import type { SettingsStore } from '../settings/store.ts'
 import {
   AGENT_ENABLED_KEY,
   A2UI_CATALOG_KEY,
-  A2UI_CATALOG_OPTIONS,
   DEFAULT_A2UI_CATALOG_ID,
   DEFAULT_MODEL_ID,
   MODELS_INCLUDED_KEY,
@@ -339,17 +338,14 @@ export class UIAgentAdminElement extends UIElement {
   // ── vision rev.6: the Surface Options controls (built once; state re-applied per store change) ───────
   #surfaceMarkdownSwitch: (HTMLElement & { checked: boolean }) | null = null
   #surfaceA2uiSwitch: (HTMLElement & { checked: boolean }) | null = null
-  // ADR-0170 cl.6 — the a2ui row's READ-ONLY catalog mirror (the retired `ui-select`'s replacement): its
-  // text is re-derived from the one persisted selection in `#applyMasterStates`; it never writes.
-  #surfaceCatalogMirror: HTMLElement | null = null
   // genui-surface.spec.md SPEC-R11 — the GenUI modality's own row switch (live, B2).
   #surfaceGenuiSwitch: (HTMLElement & { checked: boolean }) | null = null
   // genui-surface.spec.md v0.5 §11 (SPEC-R10 amended clause, GH #316/ADR-0162) — the dogfood sub-toggle.
   #surfaceGenuiDogfoodSwitch: (HTMLElement & { checked: boolean; disabled: boolean }) | null = null
-  // GH #525 — the bankroll RESET row (design call 3, 2026-08-07): built once, alongside the other Surface
-  // Options rows; `hidden` reflects the persona's OWN opt-in (`BANKROLL_CAPABLE_KEY`), applied in
-  // `#applyMasterStates` like every other row's state — never a DOM add/remove per persona switch.
-  #bankrollResetRow: (HTMLElement & { hidden: boolean }) | null = null
+  // GH #525/#541 — the bankroll Settings FOLD (its own group since #541): built once; `hidden` reflects
+  // the persona's OWN opt-in (`BANKROLL_CAPABLE_KEY`), applied in `#applyMasterStates` like every other
+  // row's state — never a DOM add/remove per persona switch.
+  #bankrollItem: (HTMLElement & { hidden: boolean }) | null = null
   #contextSystemHost: HTMLElement | null = null // Agent System — rebuilt wholesale per store change
   #contextTurnsHost: HTMLElement | null = null // Dialog Turns — rebuilt per logged turn
   /** The Context tabs' shared store subscription (both System and Dialog read off the same store) — its
@@ -665,6 +661,20 @@ export class UIAgentAdminElement extends UIElement {
       return { row, toggle }
     }
 
+    // GH #541 — a modality whose configuration has CHILDREN (A2UI's catalogs, GenUI's sub-option) renders
+    // as a GROUP: the modality row on top, its children in an indented detail zone directly beneath, both
+    // on one shared inner surface. The flat sibling stack this replaces encoded rank only in reading
+    // order, so a catalog card and the surface toggle that owns it read as peers.
+    const surfaceGroup = (surface: string, row: HTMLElement): { group: HTMLElement; detail: HTMLElement } => {
+      const group = document.createElement('div')
+      group.setAttribute('data-part', 'surface-group')
+      group.setAttribute('data-surface', surface)
+      const detail = document.createElement('div')
+      detail.setAttribute('data-part', 'surface-detail')
+      group.append(row, detail)
+      return { group, detail }
+    }
+
     const markdown = surfaceRow('markdown', 'Markdown', 'Rendered as rich text — simple text is the fallback')
     markdown.toggle.addEventListener('change', () => {
       this.store?.set(SURFACE_MARKDOWN_KEY, markdown.toggle.checked)
@@ -681,19 +691,13 @@ export class UIAgentAdminElement extends UIElement {
     })
     this.#surfaceA2uiSwitch = a2ui.toggle
     // ADR-0170 cl.6 — the bare `ui-select` picker that used to live here is RETIRED: the Catalogs library
-    // section (CAPABILITY_KINDS, below) is now the ONE writer of `A2UI_CATALOG_KEY`, and two write paths
-    // into one key — each obliged to reconcile the other's surface — is exactly the second-writer defect
-    // that record closes. What survives is the at-a-glance CONTEXT beside the toggle: a READ-ONLY mirror
-    // of the active catalog's label, re-derived in `#applyMasterStates` (where the select's own
-    // value-reflection lived). It commits nothing and listens to nothing. GH #488 — the REAL picker (the
-    // Catalogs section) now mounts directly below this row (the CAPABILITY_KINDS loop's
-    // `kind === ENTRY_KINDS.catalog` branch, further down) — one visual cluster with this mirror + toggle.
-    const catalogMirror = document.createElement('span')
-    catalogMirror.setAttribute('data-part', 'surface-catalog')
-    // No `aria-label`/role: this is plain trailing TEXT in the row that already names the modality, not a
-    // control — the row's own label + this value read as one phrase to a screen reader.
-    this.#surfaceCatalogMirror = catalogMirror
-    a2ui.row.append(catalogMirror)
+    // section (CAPABILITY_KINDS, below) is the ONE writer of `A2UI_CATALOG_KEY`, and two write paths into
+    // one key — each obliged to reconcile the other's surface — is exactly the second-writer defect that
+    // record closes. GH #488 mounted the REAL picker directly below this row; the read-only catalog-label
+    // MIRROR that clause left behind in the trailing slot is now RETIRED too (GH #541): with the picker
+    // nested under this row, the active catalog's own card carries that identical label one line below —
+    // the same string projected twice, adjacently. The picker's card is the single projection now.
+    const a2uiGroup = surfaceGroup('a2ui', a2ui.row)
 
     // genui-surface.spec.md SPEC-R11/B2 — LIVE: the row's own "visible-but-disabled, PRD pending" state
     // (PRD §3) stood until this slice shipped; the modality's own inverse-default (OFF until an admin
@@ -710,11 +714,16 @@ export class UIAgentAdminElement extends UIElement {
     this.#surfaceGenuiSwitch = genui.toggle
 
     // genui-surface.spec.md v0.5 §11 (SPEC-R10 amended clause, GH #316/ADR-0162) — "Use agent-ui
-    // components" (Fisher-Price label; internal name `dogfood`), a sub-toggle beside the source picker
-    // (the a2ui.row catalogSelect precedent — trailing content appended after the row's own spacer).
-    // Disabled while the modality itself is off (the a2ui.row catalogSelect precedent, #applyMasterStates
-    // below); its OWN default is OFF regardless of the modality's state (a stale stored `true` never
-    // composes bytes or mounts assets while `SURFACE_GENUI_KEY` is off — the doc comment's own promise).
+    // components" (Fisher-Price label; internal name `dogfood`). GH #541 — it is a nested DETAIL row under
+    // the GenUI modality now, not trailing content in the modality's own row: two toggles of different
+    // scope in one row is one visual unit claiming to be one decision. Disabled while the modality itself
+    // is off (#applyMasterStates below); its OWN default is OFF regardless of the modality's state (a
+    // stale stored `true` never composes bytes or mounts assets while `SURFACE_GENUI_KEY` is off — the
+    // doc comment's own promise).
+    const genuiGroup = surfaceGroup('genui', genui.row)
+    const genuiDogfoodRow = document.createElement('div')
+    genuiDogfoodRow.setAttribute('data-part', 'surface-detail-row')
+    genuiDogfoodRow.setAttribute('data-detail', 'genui-dogfood')
     const genuiDogfoodLabel = document.createElement('span')
     genuiDogfoodLabel.setAttribute('data-part', 'surface-genui-dogfood-label')
     genuiDogfoodLabel.textContent = 'Use agent-ui components'
@@ -727,20 +736,22 @@ export class UIAgentAdminElement extends UIElement {
       if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
     })
     this.#surfaceGenuiDogfoodSwitch = genuiDogfoodSwitch
-    genui.row.append(genuiDogfoodLabel, genuiDogfoodSwitch)
+    // Switch leads, label next — the GH #138 row grammar the modality rows above already follow.
+    genuiDogfoodRow.append(genuiDogfoodSwitch, genuiDogfoodLabel)
+    genuiGroup.detail.append(genuiDogfoodRow)
 
-    // GH #525 — the bankroll RESET row (design call 3, 2026-08-07: a settings-pane affordance beside the
-    // persona's other rows, never a chat command). The SAME `surface-row` shape as markdown/a2ui/genui
-    // above, minus a modality toggle (there is no on/off here, only a stored figure to clear) — a plain
-    // label + spacer + trailing `<ui-button>` (the entry-list.ts `deleteBtn` precedent). Hidden entirely
-    // for a persona that never opted in (`#applyMasterStates` reflects `BANKROLL_CAPABLE_KEY`) — never
-    // just dimmed, since a persona with no `/bankroll` pointer has nothing here to configure at all.
+    // GH #525 — the bankroll RESET row (design call 3, 2026-08-07: a settings-pane affordance, never a
+    // chat command): a plain label + spacer + trailing `<ui-button>` (the entry-list.ts `deleteBtn`
+    // precedent), no toggle (there is no on/off here, only a stored figure to clear). GH #541 — it is its
+    // OWN Settings fold now, not a fourth row inside Surface Options: a persona's stored figure is not an
+    // output modality, and the shared `surface-row` chrome made it read as one. Hidden entirely (fold and
+    // all) for a persona that never opted in (`#applyMasterStates` reflects `BANKROLL_CAPABLE_KEY`) —
+    // never just dimmed, since a persona with no `/bankroll` pointer has nothing here to configure.
     const bankrollRow = document.createElement('div')
-    bankrollRow.setAttribute('data-part', 'surface-row')
-    bankrollRow.setAttribute('data-surface', 'bankroll')
+    bankrollRow.setAttribute('data-part', 'bankroll-row')
     const bankrollLabel = document.createElement('span')
-    bankrollLabel.setAttribute('data-part', 'surface-label')
-    bankrollLabel.textContent = 'Bankroll'
+    bankrollLabel.setAttribute('data-part', 'bankroll-label')
+    bankrollLabel.textContent = 'Stored figure'
     const bankrollSpacer = document.createElement('span')
     bankrollSpacer.setAttribute('data-part', 'surface-spacer')
     const bankrollReset = document.createElement('ui-button') as UIButtonElement
@@ -755,9 +766,10 @@ export class UIAgentAdminElement extends UIElement {
       if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
     })
     bankrollRow.append(bankrollLabel, bankrollSpacer, bankrollReset)
-    this.#bankrollResetRow = bankrollRow as HTMLElement & { hidden: boolean }
+    const bankrollItem = settingsItem('bankroll', 'Bankroll', bankrollRow)
+    this.#bankrollItem = bankrollItem as HTMLElement & { hidden: boolean }
 
-    surfaceOptions.append(markdown.row, a2ui.row, genui.row, bankrollRow)
+    surfaceOptions.append(markdown.row, a2uiGroup.group, genuiGroup.group)
 
     // GH #225/#226 — each Settings section is a heading-row fold (the GH #222 Context pattern applied to
     // the config column). The master switches (Agent + one per kind) ride their fold's heading row
@@ -772,6 +784,9 @@ export class UIAgentAdminElement extends UIElement {
       agentItem,
       settingsItem('model', 'Model', modelGrid),
       settingsItem('surface', 'Surface Options', surfaceOptions),
+      // GH #541 — Bankroll sits adjacent to Surface Options (the modality choices it reads alongside),
+      // as its own group rather than a row inside them.
+      bankrollItem,
       settingsItem(ENTRY_KINDS.promptSection, 'Instructions', promptSections.host),
     )
     for (const { kind, label, addLabel } of CAPABILITY_KINDS) {
@@ -786,7 +801,10 @@ export class UIAgentAdminElement extends UIElement {
       // always exactly-one-active, so there is still no top-level fold, and thus no heading row, for it
       // to ride.
       if (kind === ENTRY_KINDS.catalog) {
-        a2ui.row.insertAdjacentElement('afterend', section.host)
+        // GH #541 — into the A2UI row's own detail zone (indented, shared inner surface), not as its flat
+        // next sibling: the catalog roster and the "+ From library" add-row belong to THIS toggle, and the
+        // nesting is what says so.
+        a2uiGroup.detail.append(section.host)
         continue
       }
       const item = settingsItem(kind, label, section.host)
@@ -1531,9 +1549,7 @@ export class UIAgentAdminElement extends UIElement {
       if (kindSwitch) kindSwitch.checked = on
       this.#capabilitySections.get(kind)?.host.toggleAttribute('data-kind-disabled', !on)
     }
-    // Vision rev.6 — the Surface Options rows reflect their stored state the same way; the catalog
-    // mirror dims while its modality is off (context for a surface that can't run is noise, not
-    // configuration — the retired select's own rationale, inherited).
+    // Vision rev.6 — the Surface Options rows reflect their stored state the same way.
     const markdownOn = isEnabledFlag(store?.get(SURFACE_MARKDOWN_KEY))
     if (this.#surfaceMarkdownSwitch) this.#surfaceMarkdownSwitch.checked = markdownOn
     // GH #468 — every path that can make Markdown mode ON runs through this method (connect, a rewire, the
@@ -1542,24 +1558,16 @@ export class UIAgentAdminElement extends UIElement {
     // that would actually need `<ui-markdown>`. A no-op (memoized) once loaded/in flight; OFF fires nothing.
     if (markdownOn) preloadMarkdownRenderer()
     if (this.#surfaceA2uiSwitch) this.#surfaceA2uiSwitch.checked = a2uiOn
-    if (this.#surfaceCatalogMirror) {
-      // ADR-0170 cl.6 — the SAME fail-closed read the wire uses (`:1061`/`:1321`), feeding a label lookup
-      // instead of a select's value: an unknown/absent stored id shows the Default catalog's label, which
-      // is exactly the id a turn would thread. Falls back to the raw id if the registry ever lacks it.
-      const active = sanitizeCatalog(store?.get(A2UI_CATALOG_KEY))
-      this.#surfaceCatalogMirror.textContent = A2UI_CATALOG_OPTIONS.find((option) => option.id === active)?.label ?? active
-      this.#surfaceCatalogMirror.toggleAttribute('data-disabled', !a2uiOn)
-    }
     const genuiOn = isGenuiSurfaceEnabled(store?.get(SURFACE_GENUI_KEY))
     if (this.#surfaceGenuiSwitch) this.#surfaceGenuiSwitch.checked = genuiOn
     if (this.#surfaceGenuiDogfoodSwitch) {
       this.#surfaceGenuiDogfoodSwitch.checked = isGenuiDogfoodEnabled(store?.get(SURFACE_GENUI_DOGFOOD_KEY))
       this.#surfaceGenuiDogfoodSwitch.disabled = !genuiOn
     }
-    // GH #525 — the bankroll reset row is entirely HIDDEN for a persona that never opted in
+    // GH #525 — the bankroll group is entirely HIDDEN for a persona that never opted in
     // (`BANKROLL_CAPABLE_KEY`) — there is no in-between "visible but nothing to do" state the way an OFF
     // modality still has, so this is `hidden`, never a `data-disabled` dim.
-    if (this.#bankrollResetRow) this.#bankrollResetRow.hidden = !isBankrollCapable(store?.get(BANKROLL_CAPABLE_KEY))
+    if (this.#bankrollItem) this.#bankrollItem.hidden = !isBankrollCapable(store?.get(BANKROLL_CAPABLE_KEY))
     // GH #419 — the prompt-section lint is derived from the SAME two stored modality flags this method
     // just reflected, so it re-derives here: every path that can flip a Surface Option ends in a call to
     // this method (the row's own change listener, the store subscription, a rewire), which is exactly when

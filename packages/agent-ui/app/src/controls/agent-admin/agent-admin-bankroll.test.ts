@@ -417,9 +417,28 @@ describe('ui-agent-admin settings pane — GH #525 design call 3: the bankroll R
     for (const el of mounted.splice(0)) el.remove()
   })
 
-  function bankrollRow(el: UIAgentAdminElement): HTMLElement {
-    return el.querySelector('[data-part="surface-row"][data-surface="bankroll"]') as HTMLElement
+  /** GH #541 — the whole FOLD is what hides now: Bankroll is its own Settings group, not a row among the
+   *  Surface Options modalities (a stored figure is not an output modality). */
+  function bankrollItem(el: UIAgentAdminElement): HTMLElement {
+    return el.querySelector('[data-part="settings-item"][data-item="bankroll"]') as HTMLElement
   }
+
+  function bankrollRow(el: UIAgentAdminElement): HTMLElement {
+    return el.querySelector('[data-part="bankroll-row"]') as HTMLElement
+  }
+
+  it('GH #541: the row lives OUTSIDE Surface Options, in its own adjacent fold', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({ initial: { [BANKROLL_CAPABLE_KEY]: true } })
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    const surfaceOptions = el.querySelector('[data-part="surface-options"]') as HTMLElement
+    expect(surfaceOptions.contains(bankrollRow(el)), 'never inside the modality card').toBe(false)
+    expect(bankrollItem(el).contains(bankrollRow(el))).toBe(true)
+    // Adjacent to Surface Options — the fold directly after it.
+    expect((el.querySelector('[data-part="settings-item"][data-item="surface"]') as HTMLElement).nextElementSibling).toBe(bankrollItem(el))
+  })
 
   it('HIDDEN for a persona that never opted in (a bare default store)', async () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
@@ -427,7 +446,7 @@ describe('ui-agent-admin settings pane — GH #525 design call 3: the bankroll R
     document.body.append(el)
     mounted.push(el)
     await whenFlushed()
-    expect(bankrollRow(el).hidden).toBe(true)
+    expect(bankrollItem(el).hidden).toBe(true)
   })
 
   it('VISIBLE for a persona that opted in', async () => {
@@ -436,7 +455,7 @@ describe('ui-agent-admin settings pane — GH #525 design call 3: the bankroll R
     document.body.append(el)
     mounted.push(el)
     await whenFlushed()
-    expect(bankrollRow(el).hidden).toBe(false)
+    expect(bankrollItem(el).hidden).toBe(false)
   })
 
   it('a persona SWITCH (a real store reassignment) re-derives visibility — never sticky from the prior persona', async () => {
@@ -445,10 +464,10 @@ describe('ui-agent-admin settings pane — GH #525 design call 3: the bankroll R
     document.body.append(el)
     mounted.push(el)
     await whenFlushed()
-    expect(bankrollRow(el).hidden).toBe(false)
+    expect(bankrollItem(el).hidden).toBe(false)
     el.store = createMemoryStore({}) // a different persona, never opted in
     await whenFlushed()
-    expect(bankrollRow(el).hidden).toBe(true)
+    expect(bankrollItem(el).hidden).toBe(true)
   })
 
   it('clicking Reset clears the stored figure — a re-render reads "no stored bankroll" back', async () => {

@@ -391,33 +391,44 @@ describe('ui-agent-admin cross-engine smoke — the Catalogs library section (AD
     expect(sectionBox.bottom, 'above the GenUI row — never past it').toBeLessThanOrEqual(Math.round(genuiBox.top) + 1)
   })
 
-  it('the a2ui row\'s catalog MIRROR paints as visible trailing text beside the toggle, and dims with the modality', async () => {
+  // GH #541 — the nesting must be REAL INK, not just DOM ancestry: a first-time reader tells a child
+  // from a sibling by the indent, so the detail zone's left edge is measured against the row's own.
+  it('the A2UI detail zone paints INDENTED under its modality row, inside one shared group card', () => {
     const { el } = mountAgentAdmin()
+    const group = el.querySelector('[data-part="surface-group"][data-surface="a2ui"]') as HTMLElement
     const a2uiRow = el.querySelector('[data-part="surface-row"][data-surface="a2ui"]') as HTMLElement
-    const mirror = a2uiRow.querySelector('[data-part="surface-catalog"]') as HTMLElement
+    const detail = group.querySelector('[data-part="surface-detail"]') as HTMLElement
+
+    const groupBox = group.getBoundingClientRect()
     const rowBox = a2uiRow.getBoundingClientRect()
-    const mirrorBox = mirror.getBoundingClientRect()
+    const detailBox = detail.getBoundingClientRect()
 
-    expect(mirror.textContent!.length, 'the active catalog label is really there').toBeGreaterThan(0)
-    expect(mirrorBox.width, 'real painted text, not a zero box').toBeGreaterThan(0)
-    expect(mirrorBox.height).toBeGreaterThan(0)
-    expect(getComputedStyle(mirror).visibility).toBe('visible')
-    // TRAILING: past the row's flexible spacer, inside the row's own box (the GH #138 row pattern).
-    const spacer = a2uiRow.querySelector('[data-part="surface-spacer"]') as HTMLElement
-    expect(mirrorBox.left).toBeGreaterThanOrEqual(spacer.getBoundingClientRect().left)
-    expect(Math.round(mirrorBox.right)).toBeLessThanOrEqual(Math.round(rowBox.right))
-
-    // …and the modality dim is a REAL computed opacity change, not just an attribute.
-    const before = Number(getComputedStyle(mirror).opacity)
-    const a2uiToggle = a2uiRow.querySelector('[data-part="surface-toggle"]') as HTMLElement & { checked: boolean }
-    a2uiToggle.checked = false
-    a2uiToggle.dispatchEvent(new Event('change'))
-    await el.updateComplete
-    expect(mirror.hasAttribute('data-disabled')).toBe(true)
-    expect(Number(getComputedStyle(mirror).opacity), 'dimmed in real paint').toBeLessThan(before)
+    expect(detailBox.height, 'a real, non-zero painted box').toBeGreaterThan(0)
+    expect(detailBox.left, 'indented past the modality row it belongs to').toBeGreaterThan(rowBox.left)
+    expect(detailBox.top, 'below that row').toBeGreaterThanOrEqual(Math.round(rowBox.bottom) - 1)
+    // Both inside ONE card — the group carries the chrome; the row inside it carries none of its own.
+    expect(Math.round(detailBox.bottom)).toBeLessThanOrEqual(Math.round(groupBox.bottom))
+    expect(getComputedStyle(group).borderTopWidth, 'the group is the card').toBe('1px')
+    expect(getComputedStyle(a2uiRow).borderTopWidth, 'the row inside it is not a card-in-card').toBe('0px')
   })
 
-  it('flipping a catalog switch in a real engine moves the selection AND the mirror text together', async () => {
+  // GH #541 — the GenUI sub-option left the modality row: one toggle scope per row.
+  it('the GenUI dogfood sub-option paints as a nested detail row, not a second toggle in the GenUI row', () => {
+    const { el } = mountAgentAdmin()
+    const genuiRow = el.querySelector('[data-part="surface-row"][data-surface="genui"]') as HTMLElement
+    const dogfoodRow = el.querySelector('[data-part="surface-detail-row"][data-detail="genui-dogfood"]') as HTMLElement
+
+    expect(genuiRow.contains(dogfoodRow), 'out of the modality row entirely').toBe(false)
+    expect(genuiRow.querySelectorAll('ui-switch')).toHaveLength(1)
+
+    const rowBox = genuiRow.getBoundingClientRect()
+    const dogfoodBox = dogfoodRow.getBoundingClientRect()
+    expect(dogfoodBox.height).toBeGreaterThan(0)
+    expect(dogfoodBox.left, 'indented under the modality it configures').toBeGreaterThan(rowBox.left)
+    expect(dogfoodBox.top).toBeGreaterThanOrEqual(Math.round(rowBox.bottom) - 1)
+  })
+
+  it('flipping a catalog switch in a real engine moves the selection, radio-style', async () => {
     const { el } = mountAgentAdmin()
     const second = A2UI_CATALOG_OPTIONS.find((o) => o.id !== DEFAULT_A2UI_CATALOG_ID)!
     el.store!.set(entriesStoreKey(ENTRY_KINDS.catalog), [
@@ -428,8 +439,6 @@ describe('ui-agent-admin cross-engine smoke — the Catalogs library section (AD
     const section = el.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.catalog}"]`) as HTMLElement
     const toggleFor = (id: string): HTMLElement & { checked: boolean } =>
       section.querySelector(`[data-part="entry"][data-entry-id="${id}"] [data-part="entry-toggle"]`) as HTMLElement & { checked: boolean }
-    const mirror = el.querySelector('[data-part="surface-catalog"]') as HTMLElement
-
     expect(toggleFor(DEFAULT_A2UI_CATALOG_ID).checked).toBe(true)
     toggleFor(second.id).checked = true
     toggleFor(second.id).dispatchEvent(new Event('change'))
@@ -438,7 +447,6 @@ describe('ui-agent-admin cross-engine smoke — the Catalogs library section (AD
     expect(el.store!.get(A2UI_CATALOG_KEY)).toBe(second.id)
     expect(toggleFor(second.id).checked, 'the picked row').toBe(true)
     expect(toggleFor(DEFAULT_A2UI_CATALOG_ID).checked, 'and the sibling switched itself off — radio semantics in real paint').toBe(false)
-    expect(mirror.textContent).toBe(second.label)
   })
 })
 
@@ -1002,7 +1010,12 @@ describe('ui-agent-admin — segment content wins its OWN display:flex, not supe
     // → ui-settings → Model heading → model-grid → Surface Options heading (GH #488: now BEFORE
     // Instructions, carrying the catalog picker inside it too) → Surface Options card → prompt section →
     // each remaining capability entry-section.
-    const children = [...settingsContent.querySelectorAll(':scope > *')] as HTMLElement[]
+    // GH #541 — only the sections that actually PAINT: the Bankroll fold is `hidden` for a persona that
+    // never opted in, and a display:none flex item takes no `gap` at all, so measuring against its
+    // zero-box would assert a gap the layout never had.
+    const children = ([...settingsContent.querySelectorAll(':scope > *')] as HTMLElement[]).filter(
+      (c) => c.getBoundingClientRect().height > 0,
+    )
     expect(children.length, 'the Settings segment composes many top-level sections').toBeGreaterThan(5)
     const expectedGapPx = Number.parseFloat(cs.rowGap)
     expect(expectedGapPx, 'a real, non-zero declared gap to measure against').toBeGreaterThan(0)
@@ -1047,13 +1060,21 @@ describe('ui-agent-admin — GH #225: the Settings sections fold like the Contex
     const { el } = mountAgentAdmin()
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
     const settings = el.querySelector('[data-role="settings-content"]') as HTMLElement
-    const items = [...settings.querySelectorAll(':scope > [data-part="settings-item"]')] as (HTMLElement & { open: boolean })[]
-    // GH #488 — Surface Options sits above Instructions now, and Catalogs is no longer a top-level fold
-    // at all (it mounts inside the Surface Options fold, adjacent to the A2UI row) — NINE items, not TEN.
-    expect(items.map((i) => i.getAttribute('data-item'))).toEqual([
-      'agent', 'model', 'surface', ENTRY_KINDS.promptSection,
+    const allItems = [...settings.querySelectorAll(':scope > [data-part="settings-item"]')] as (HTMLElement & { open: boolean; hidden: boolean })[]
+    // GH #488 — Catalogs is no longer a top-level fold at all (it mounts inside the Surface Options fold).
+    // GH #541 — Bankroll became one, lifted out of the Surface Options card into its own group.
+    expect(allItems.map((i) => i.getAttribute('data-item'))).toEqual([
+      'agent', 'model', 'surface', 'bankroll', ENTRY_KINDS.promptSection,
       ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource,
     ])
+    // …and `hidden` on a fold really removes it from layout here (ui-disclosure's own `display:block`
+    // outranks the UA's `[hidden]` rule, so agent-admin.css restates it — this is the cross-engine proof).
+    const bankroll = allItems.find((i) => i.getAttribute('data-item') === 'bankroll')!
+    expect(bankroll.hidden, 'no persona opted into the bankroll capability here').toBe(true)
+    expect(getComputedStyle(bankroll).display).toBe('none')
+    expect(bankroll.getBoundingClientRect().height).toBe(0)
+
+    const items = allItems.filter((i) => !i.hidden)
     for (const item of items) {
       expect(item.open, `${item.getAttribute('data-item')} defaults open (config is an editing surface)`).toBe(true)
       // A real, visibly-sized chevron on the heading row — the fold affordance itself.

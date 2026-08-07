@@ -247,16 +247,16 @@ describe('UIAgentAdminElement — shell composition (GH #52/ADR-0154): segments 
   // ── GH #225 — the Settings sections are heading-row folds (the GH #222 Context pattern applied to
   // the config column). jsdom pins the STRUCTURE; agent-admin.browser.test.ts proves the real
   // fold/register/toggle-vs-fold geometry cross-engine. ──────────────────────────────────────────────
-  it('GH #225/#488: every Settings section is a settings-item fold — NINE top-level folds (genui-surface B2 added Pattern sources; GH #488 folded Catalogs INTO Surface Options, so it is no longer a TENTH top-level fold), Surface Options above Instructions, ALL open by default (config is an editing surface)', () => {
+  it('GH #225/#488/#541: every Settings section is a settings-item fold — TEN top-level folds (GH #488 folded Catalogs INTO Surface Options; GH #541 lifted Bankroll OUT of them into its own adjacent fold), Surface Options above Instructions, ALL open by default (config is an editing surface)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const settings = el.querySelector('[data-segment="Settings"]') as HTMLElement
     const items = [...settings.querySelectorAll(':scope > [data-part="settings-item"]')]
     expect(items.map((i) => i.getAttribute('data-item'))).toEqual([
-      'agent', 'model', 'surface', ENTRY_KINDS.promptSection,
+      'agent', 'model', 'surface', 'bankroll', ENTRY_KINDS.promptSection,
       ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource,
     ])
     expect(items.map((i) => i.getAttribute('summary'))).toEqual([
-      'Agent', 'Model', 'Surface Options', 'Instructions', 'Skills', 'Workflows', 'Resources', 'Tools', 'Pattern sources',
+      'Agent', 'Model', 'Surface Options', 'Bankroll', 'Instructions', 'Skills', 'Workflows', 'Resources', 'Tools', 'Pattern sources',
     ])
     for (const item of items) expect(item.hasAttribute('open'), `${item.getAttribute('data-item')} defaults open`).toBe(true)
     // The section content is the fold's BODY (the disclosure adopted it — SPEC-R16 children=body).
@@ -271,7 +271,12 @@ describe('UIAgentAdminElement — shell composition (GH #52/ADR-0154): segments 
     expect(a2uiRow).not.toBeNull()
     const catalogSection = settings.querySelector(`[data-item="surface"] [data-part="entry-section"][data-kind="${ENTRY_KINDS.catalog}"]`)
     expect(catalogSection, 'the catalog picker mounts INSIDE the Surface Options fold').not.toBeNull()
-    expect(a2uiRow.nextElementSibling, 'directly adjacent to the A2UI row — the very next sibling').toBe(catalogSection)
+    // GH #541 — nested, not adjacent: the picker lives in the A2UI GROUP's own detail zone, so the
+    // catalog roster and its "+ From library" row read as children of the toggle that gates them.
+    const a2uiGroup = settings.querySelector('[data-part="surface-group"][data-surface="a2ui"]') as HTMLElement
+    expect(a2uiGroup.firstElementChild, 'the modality row leads its group').toBe(a2uiRow)
+    const detail = a2uiGroup.querySelector('[data-part="surface-detail"]') as HTMLElement
+    expect(detail.contains(catalogSection!), 'the picker sits inside the A2UI detail zone').toBe(true)
   })
 
   it('GH #225: the master switches sit ON their fold heading rows — the Agent switch in the agent summary, one kind switch per capability summary', () => {
@@ -778,9 +783,11 @@ describe('UIAgentAdminElement — the default store persists across a reload (AD
       (second.querySelector('[data-part="settings-item"][data-item="skill"] [data-part="kind-enabled"]') as HTMLElement & { checked: boolean })
         .checked,
     ).toBe(false)
-    // The A2UI catalog MIRROR rides the same flag (ADR-0170 cl.6 — the select it replaced dimmed the
-    // same way): an off modality's trailing context stays dimmed after a reload.
-    expect((second.querySelector('[data-part="surface-catalog"]') as HTMLElement).hasAttribute('data-disabled')).toBe(true)
+    // The nested catalog picker rides the same flag (ADR-0170 cl.5): an off modality's children stay
+    // dimmed after a reload.
+    expect(
+      (second.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.catalog}"]`) as HTMLElement).hasAttribute('data-kind-disabled'),
+    ).toBe(true)
   })
 })
 
@@ -2017,29 +2024,32 @@ describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
     throw new Error(`waitFor timed out: ${label}`)
   }
 
-  it('composes the card: markdown/a2ui/genui rows in order; genui-surface B2 — GenUI is LIVE (its own inverse-default OFF switch, never PRD-disabled); the a2ui row carries the read-only catalog mirror (ADR-0170 cl.6)', async () => {
+  it('composes the card: markdown/a2ui/genui rows in order, a2ui + genui each wrapped in their own GROUP (GH #541); genui-surface B2 — GenUI is LIVE (its own inverse-default OFF switch, never PRD-disabled)', async () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
     el.store = createMemoryStore({})
     document.body.append(el)
     mounted.push(el)
     await whenFlushed()
-    const rows = [...el.querySelectorAll('[data-part="surface-row"]')]
-    // GH #525 — the bankroll RESET row is a FOURTH `surface-row`, always built (HIDDEN by default: no
-    // persona opted in via a bare `createMemoryStore({})`) — see agent-admin-bankroll.test.ts for its own
-    // presence/absence/reset coverage.
-    expect(rows.map((r) => r.getAttribute('data-surface'))).toEqual(['markdown', 'a2ui', 'genui', 'bankroll'])
+    const surfaceOptions = el.querySelector('[data-part="surface-options"]') as HTMLElement
+    const rows = [...surfaceOptions.querySelectorAll('[data-part="surface-row"]')]
+    // GH #541 — three MODALITY rows and nothing else: Bankroll moved out to its own Settings fold (see
+    // agent-admin-bankroll.test.ts for its presence/absence/reset coverage).
+    expect(rows.map((r) => r.getAttribute('data-surface'))).toEqual(['markdown', 'a2ui', 'genui'])
+    // Only the modalities WITH children are grouped — Markdown has none, so it stays a bare row.
+    expect([...surfaceOptions.querySelectorAll('[data-part="surface-group"]')].map((g) => g.getAttribute('data-surface'))).toEqual(['a2ui', 'genui'])
     const genui = rows[2] as HTMLElement
     expect(genui.hasAttribute('data-disabled')).toBe(false)
     const genuiToggle = genui.querySelector('[data-part="surface-toggle"]') as HTMLElement & { disabled: boolean; checked: boolean }
     expect(genuiToggle.disabled).toBe(false)
     expect(genuiToggle.checked, 'GenUI defaults OFF (the inverse of the two live-since-launch modalities)').toBe(false)
-    // ADR-0170 cl.6 — the bare `<ui-select>` is GONE (one writer into the key); what rides the a2ui row
-    // is a read-only <span> mirroring the ACTIVE catalog's label.
-    const catalog = el.querySelector('[data-part="surface-catalog"]') as HTMLElement
-    expect(catalog.tagName.toLowerCase(), 'a plain span, not a control').toBe('span')
-    expect(el.querySelector('[data-part="surface-catalog"] [role="option"]'), 'no options: nothing to pick here anymore').toBeNull()
+    // GH #541 — the modality row carries exactly ONE toggle scope: the dogfood sub-option is a nested
+    // detail row now, never a second switch in the GenUI row itself.
+    expect(genui.querySelectorAll('ui-switch'), 'one toggle scope per row').toHaveLength(1)
+    const dogfoodRow = el.querySelector('[data-part="surface-detail-row"][data-detail="genui-dogfood"]') as HTMLElement
+    expect(dogfoodRow.closest('[data-part="surface-detail"]')!.parentElement!.getAttribute('data-surface')).toBe('genui')
+    expect(dogfoodRow.querySelector('[data-part="surface-genui-dogfood-toggle"]')).not.toBeNull()
+    // ADR-0170 cl.6 — the bare `<ui-select>` is GONE (one writer into the key).
     expect(el.querySelector('ui-select'), 'the element composes no ui-select at all now').toBeNull()
-    expect(catalog.textContent).toBe(A2UI_CATALOG_OPTIONS.find((o) => o.id === DEFAULT_A2UI_CATALOG_ID)!.label)
     // both live-since-launch modalities ship ON
     expect((rows[0]!.querySelector('[data-part="surface-toggle"]') as HTMLElement & { checked: boolean }).checked).toBe(true)
     expect((rows[1]!.querySelector('[data-part="surface-toggle"]') as HTMLElement & { checked: boolean }).checked).toBe(true)
@@ -2223,12 +2233,13 @@ describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
     expect(seen, 'the armed runner must be bypassed while the modality is off').toHaveLength(0)
     expect(lastAgentBody(el).textContent, 'the prose stub answered instead').toContain('stub')
 
-    // the catalog mirror dims with the modality (context for a dead surface is noise, ADR-0170 cl.6)
-    expect((el.querySelector('[data-part="surface-catalog"]') as HTMLElement).hasAttribute('data-disabled')).toBe(true)
+    // the nested catalog picker dims with the modality (configuring a dead surface is noise, ADR-0170 cl.5)
+    const picker = (): HTMLElement => el.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.catalog}"]`) as HTMLElement
+    expect(picker().hasAttribute('data-kind-disabled')).toBe(true)
 
     el.store!.set(SURFACE_A2UI_KEY, true)
     await whenFlushed()
-    expect((el.querySelector('[data-part="surface-catalog"]') as HTMLElement).hasAttribute('data-disabled')).toBe(false)
+    expect(picker().hasAttribute('data-kind-disabled')).toBe(false)
     composerSubmit(el, 'draw again')
     await whenFlushed()
     await new Promise((r) => setTimeout(r, 0))
@@ -2489,33 +2500,23 @@ describe('UIAgentAdminElement — the Catalogs section (ADR-0170)', () => {
     expect(read().enabled, 'the section reports the modality gate, not a phantom master').toBe(false)
   })
 
-  // ── cl.6 — the retired select + the read-only mirror ────────────────────────────────────────────────
+  // ── cl.6 — the retired select, and (GH #541) the retired mirror that replaced it ───────────────────
 
-  it('the a2ui row mirrors the ACTIVE catalog LABEL, and the mirror TRACKS a selection made in the section', async () => {
+  it('GH #541: the a2ui row carries NO catalog mirror — the active catalog label is projected once, by the picker card the row now nests', async () => {
     const el = mountWithRoster([rosterRow(SECOND.id, 0, SECOND.label)])
     await whenFlushed()
-    const mirror = (): HTMLElement => el.querySelector('[data-part="surface-catalog"]') as HTMLElement
-    expect(mirror().textContent).toBe(A2UI_CATALOG_OPTIONS.find((o) => o.id === DEFAULT_A2UI_CATALOG_ID)!.label)
+    const a2uiRow = el.querySelector('[data-part="surface-row"][data-surface="a2ui"]') as HTMLElement
+    expect(el.querySelector('[data-part="surface-catalog"]'), 'the trailing mirror is gone').toBeNull()
+    expect(a2uiRow.textContent, 'the row names the modality and nothing else').toBe('A2UI')
 
+    // The label lives EXACTLY once on the surface — on the active catalog's own row inside the picker.
+    const activeLabel = A2UI_CATALOG_OPTIONS.find((o) => o.id === DEFAULT_A2UI_CATALOG_ID)!.label
+    const showing = [...el.querySelectorAll('[data-part="entry-label"]')].filter((n) => n.textContent === activeLabel)
+    expect(showing, 'one projection, not two adjacent ones').toHaveLength(1)
+
+    // …and it still tracks a selection made in the section (the picker is the one writer, ADR-0170 cl.6).
     flip(el, SECOND.id, true)
-    expect(mirror().textContent, 'the section wrote the key; the mirror re-derived from it').toBe(SECOND.label)
-    flip(el, SECOND.id, false)
-    expect(mirror().textContent, 'and back to Default when the active row is switched off').toBe(
-      A2UI_CATALOG_OPTIONS.find((o) => o.id === DEFAULT_A2UI_CATALOG_ID)!.label,
-    )
-  })
-
-  it('the mirror is READ-ONLY: it carries no control, and an EXTERNAL key write still reaches it (fail-closed on junk)', async () => {
-    const el = mountWithRoster([])
-    await whenFlushed()
-    const mirror = el.querySelector('[data-part="surface-catalog"]') as HTMLElement
-    expect(mirror.querySelector('*'), 'plain text — no nested control to commit from').toBeNull()
-
-    el.store!.set(A2UI_CATALOG_KEY, SECOND.id)
-    expect(mirror.textContent).toBe(SECOND.label)
-    // a stale/foreign stored id shows the DEFAULT label — the same coercion the wire read applies
-    el.store!.set(A2UI_CATALOG_KEY, 'a-catalog-that-was-removed')
-    expect(mirror.textContent).toBe(A2UI_CATALOG_OPTIONS.find((o) => o.id === DEFAULT_A2UI_CATALOG_ID)!.label)
+    expect(el.store!.get(A2UI_CATALOG_KEY)).toBe(SECOND.id)
   })
 
   it('a store with NO subscribe still snaps back and still re-renders (the #updateEntries fallback discipline)', async () => {
