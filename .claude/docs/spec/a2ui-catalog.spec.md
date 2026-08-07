@@ -10,7 +10,7 @@
 
 ## 1. Purpose
 
-Define what an A2UI **catalog** is in `@agent-ui/a2ui`, the **default catalog** it ships (mapping A2UI component types onto the zero-dependency `@agent-ui/components` controls — PRD-G1), and the **two-tier extension surface** by which a downstream app/service registers its own catalog + renderer with zero edits to the package (PRD-G2).
+Define what an A2UI **catalog** is in `@agent-ui/a2ui`, the **default catalog** it ships (mapping A2UI component types onto the zero-dependency `@agent-ui/components` controls — PRD-G1), the **second first-party catalog** it ships beside it (`a2ui-basic`, the upstream-Basic interop partition — §3.4, ADR-0169), and the **two-tier extension surface** by which a downstream app/service registers its own catalog + renderer with zero edits to the package (PRD-G2).
 
 A2UI fact this conforms to (Constraint C1): *a catalog is a JSON-Schema file declaring the components and functions an agent may use* (the "themes" clause in an earlier paraphrase of this fact was stale — v1.0's "Decoupled Branding" removes theming from the protocol entirely; a2ui-ecosystem-alignment.spec.md, GH #531), and A2UI explicitly recommends building catalogs that **directly reflect the client's design system rather than adapting a generic catalog**. That guidance *is* our design: the default catalog's component types render directly to `ui-*` controls — not a runtime adapter over A2UI's Basic catalog (this resolves **PRD-D3**, SPEC-R8).
 
@@ -58,6 +58,10 @@ Normative per RFC 2119; each carries an ID, PRD trace, and acceptance criteria.
 - **AC2** *Given* a registered project `catalogId`, *when* a `createSurface` names it, *then* the renderer resolves that surface's components against the project catalog, and `capabilities()` lists it in `supportedCatalogIds`.
 - **AC3** *Given* a `createSurface.catalogId` not in the registry, *when* applied, *then* the renderer emits `CATALOG_UNKNOWN` (renderer SPEC-R2 AC3) — the registry is the allowlist.
 
+**The first tier ships TWO first-party catalogs (ADR-0169).** "Two-tier" names the *registration seam*, not a count of catalogs: the package itself pre-registers the default (`agent-ui`, SPEC-R3) **and** the upstream-interop catalog (`a2ui-basic`, §3.4) — plus `a2ui-basic`'s canonical-URI inbound alias (SPEC-R10) — in the `Renderer` constructor, so every `createRenderer()` host is Basic-capable with **zero call-site edits** and `supportedCatalogIds()` advertises all three ids on every renderer in the fleet, never only on a specially-bootstrapped page. First-party registration rides the SAME public `register()` seam a project catalog uses (no privileged path); that seam takes an optional third argument — a **per-catalog function-implementation table** (ADR-0169 cl.8, §5.1) — so a catalog MAY bind its own dialect of a shared function name without forking the evaluator, and an unshadowed name still falls through to the shared table. Registering a second first-party catalog is a REGISTRATION fact, never an adapter: SPEC-R8 stands unchanged — neither first-party catalog translates the other, and neither is a layer inside the other. The project seam (AC1–AC3) is untouched by this; a project catalog registers exactly as before.
+- **AC4** *Given* a bare `createRenderer()` with no project registration, *when* `capabilities()` is read, *then* `supportedCatalogIds` contains `agent-ui`, `a2ui-basic`, **and** the canonical URI `https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json`; *and given* a `createSurface` naming any of the three, *then* that surface resolves against the named catalog with no `CATALOG_UNKNOWN`.
+- **AC5** *Given* a function name declared with an implementation in a catalog's own function table, *when* a payload of that catalog calls it, *then* the catalog's implementation runs (not the shared default-table one); *given* a name with no per-catalog implementation, *then* the shared table answers.
+
 **SPEC-R7 — Catalog conformance validation.** The system MUST validate (a) a catalog document (well-formed, UAX-31 names, no reserved `@`, every component has a registered factory) and (b) a payload against its catalog (every `component` type and property exists and is typed-correct, including membership in a declared `enum` for a literal value — ADR-0098). Payload validation MUST be the same shared validator used by the renderer (a2ui-runtime §3.7) and corpus admission (corpus SPEC-N1). *(→ PRD-G4, PRD-G2)*
 - **AC1** *Given* a catalog whose component lacks a registered factory, *when* registered, *then* registration fails with `CATALOG_FACTORY_MISSING`.
 - **AC2** *Given* a payload referencing a property absent from the catalog component, *when* validated, *then* it fails with `CATALOG` (identical verdict in renderer and corpus gate).
@@ -68,6 +72,18 @@ Normative per RFC 2119; each carries an ID, PRD trace, and acceptance criteria.
 **SPEC-R9 — Security allowlist.** Only components present in the bound catalog MAY render; the renderer MUST validate agent-supplied properties against the component's typed schema and MUST NOT render unsanitized agent text into unsafe sinks. *(→ PRD-G4)*
 - **AC1** *Given* a payload naming a component absent from the bound catalog, *when* rendered, *then* it does not render (placeholder + `CATALOG`, renderer SPEC-R9 AC2).
 
+### 3.4 The upstream Basic interop catalog (`a2ui-basic`, ADR-0169)
+
+The second first-party catalog (SPEC-R6). It exists so an **upstream-authored** A2UI stream renders on a fleet renderer unchanged — the interop direction SPEC-R8 deliberately does not serve. SPEC-R8 is untouched by it: `a2ui-basic` is a SECOND catalog sitting beside the default, never a translation layer inside it, and the default catalog still binds its types directly to `ui-*` controls.
+
+**SPEC-R10 — `a2ui-basic` is a RECORDED partition of the upstream Basic catalog, never a silent subset.** The catalog MUST be derived from the pinned upstream Basic-catalog machine schema (source URI + fetch date recorded in the module header, ADR-0169 cl.13) and MUST partition that schema's whole `components` set: every upstream type is EITHER declared + factory-bound OR carries a recorded exclusion reason — never both, never neither (the SPEC-N2/ADR-0087 two-arm law, here applied to an UPSTREAM-pinned set instead of the shipped fleet). It MUST declare **no type outside** that upstream set (interop purity — fleet-only types belong to the default catalog, never to this one). Exclusions are recorded down to **variant/prop-arm** granularity and MUST be gate-encoded in the declared schema, so an excluded arm fails conformance **loudly** (`CATALOG`) rather than rendering as something it is not. Every included type MUST also declare the schema-wide upstream common props (`weight`, `accessibility`). *(→ PRD-G2, PRD-G4, PRD-G6)*
+- **AC1** *Given* the upstream schema's component set (18 types as pinned 2026-08-04), *when* the partition gate runs, *then* 14 are declared + factory-bound and 4 carry recorded exclusion reasons (`Video`/`AudioPlayer` — no fleet media control; `Tabs`/`Modal` — reference-typed props / named-slot children, no mount seam), and no type is in both or neither sets.
+- **AC2** *Given* the declared component keys, *when* checked against the pinned upstream set, *then* every key is a member — a fleet-only type added here FAILS the gate.
+- **AC3** *Given* the declared functions, *then* all 13 implemented upstream functions are declared, each `callableFrom:'clientOnly'`, each with an implementation in this catalog's own function table (SPEC-R6 AC5), and the excluded `openUrl` is absent (no client action-execution surface exists).
+- **AC4** *Given* an upstream payload naming an excluded ARM — today `Icon.name` as a `{svgPath}` object (the declared type is a closed string enum; `ui-icon` renders REGISTERED glyphs only) — *when* validated, *then* it fails `CATALOG`; it never silently renders as the included arm. *(Drain law, worked example: the other prop-arm exclusion — `ChoicePicker.variant:'multipleSelection'` — was DRAINED 2026-08-07 by GH #545's variant-dispatch factory slot, and the declared enum widened to `['mutuallyExclusive','multipleSelection']` in the SAME change that added its factory arm. That is the shape a drain MUST take: a mechanism + a declared-enum row edit + the gate assertion flipped from rejection to positive proof, never a quiet widening.)*
+- **AC5** *Given* the pinned upstream example payloads, *when* validated against `a2ui-basic` and rendered, *then* 0 validation failures and real controls mount — the "interop-anchored" claim is TESTED, not asserted.
+- **AC6** *Given* a `createSurface.catalogId` carrying the upstream **canonical URI**, *when* applied on any fleet renderer, *then* it resolves against the same components/factories/functions with zero translation (the inbound alias, SPEC-R6); the alias is never a picker option and never an outbound authority stamp — our own produced streams stamp the local short id `a2ui-basic`.
+
 ---
 
 ## 4. Non-functional requirements
@@ -76,6 +92,7 @@ Normative per RFC 2119; each carries an ID, PRD trace, and acceptance criteria.
 |---|---|---|
 | **SPEC-N1** | Zero-edit extensibility | Registering a project catalog requires 0 edits to `@agent-ui/a2ui` and no rebuild of the package (PRD-G2). |
 | **SPEC-N2** | Coverage is whole-fleet or gate-encoded-allowlisted (ADR-0087) | Every shipped control (`packages/agent-ui/components/src/controls/*/*.md`) MUST resolve to a default-catalog component type, OR appear on the **exclusion allowlist** — a code-level set (in `catalog/default/index.test.ts`) whose every entry carries a recorded reason + citation. The coverage gate **derives** the expected primary-type set from the descriptor glob (the same source `site-coverage.test.ts` walks: `tag` → PascalCase), subtracts the allowlist, and asserts the remainder is declared in `catalog.json` AND factory-bound — so a shipped-but-uncatalogued control FAILS CI. The allowlist is the ONLY sanctioned form of "absent": no silent dead types (a declared type with no factory), no silent uncatalogued controls, no reliance on a per-type `experimental` marker. Composite sub-types (`Option`/`Tab`/`CardHeader`/… , `MenuItem`/`Radio`) are parent-declared and exempt from the fleet derivation (the reverse "no extra type without a factory" is already gated by `factories.test.ts`). Supersedes the pre-ADR-0087 "tracks the family / mark `experimental`" rule. |
+| **SPEC-N5** | The `a2ui-basic` partition is gate-encoded (SPEC-R10; the SPEC-N2 pattern on an UPSTREAM-pinned set) | The upstream type list and the exclusion table are code-level constants in `packages/agent-ui/a2ui/src/catalog/a2ui-basic/index.test.ts`, each exclusion carrying a reason + ADR citation. The gate asserts the SPEC-R10 partition (either-or, never-both-never-neither), interop purity (no type outside the pinned set), the function set + `clientOnly`-ness + impl coverage, the sub-type-arm encodings (E5's closed `Icon.name` enum; E6's `ChoicePicker.variant` row now asserts the DRAINED two-member enum, GH #545), and that BOTH the short-id catalog and the canonical-URI alias `register()` cleanly (after which the registry's own `CATALOG_FACTORY_MISSING` enforces factory coverage forever). `upstream-fixtures.test.ts` is the companion conformance gate: the pinned upstream example payloads validate 0-failure and render (SPEC-R10 AC5). Draining an exclusion row is a follow-up ADR + row edit — exactly the SPEC-N2 allowlist law, never a silent widening. |
 | **SPEC-N3** | Validator parity | Catalog-conformance (SPEC-R7) is the same code path in renderer + corpus admission (one implementation). |
 | **SPEC-N4** | Zero runtime deps | The default catalog + registry add no third-party runtime dependency (Constraint C2). |
 
@@ -121,7 +138,15 @@ interface WidgetFactory {                                  // consumed by render
                                // FormProvider (→ ui-form-provider) is the default catalog's one gate.
 }
 interface CatalogRegistry {                                // the two-tier extension point (SPEC-R6)
-  register(catalog: Catalog, factories: Record<string, WidgetFactory>): void;  // throws CATALOG_FACTORY_MISSING / CATALOG_NAME_INVALID
+  register(catalog: Catalog, factories: Record<string, WidgetFactory | VariantDispatch>,
+           functions?: Record<string, (args: Record<string, unknown>) => unknown>): void;
+           // A table slot MAY be a `VariantDispatch` — one catalog type resolving to a per-variant
+           // factory arm (GH #545), the vehicle that drained a2ui-basic's ChoicePicker E6 exclusion;
+           // a plain `WidgetFactory` slot passes through unchanged.
+           // throws CATALOG_FACTORY_MISSING / CATALOG_NAME_INVALID. The optional third arg is the
+           // PER-CATALOG function-impl table (ADR-0169 cl.8, SPEC-R6 AC5): a catalog's own impl wins
+           // for its payloads; an unshadowed name falls through to the shared table. The same seam
+           // registers both first-party catalogs and any project catalog — no privileged path.
   get(catalogId: string): { catalog: Catalog; factories: Record<string, WidgetFactory> } | undefined;
   supportedCatalogIds(): string[];                         // → renderer capabilities (a2ui-runtime §3.7)
   submitGateSelector(): string;    // ADR-0054: CSS selector over every registered submitGate factory's
@@ -305,7 +330,8 @@ set to begin with.
 | Requirement | PRD goal(s) |
 |---|---|
 | SPEC-R1, R3, R4, R5 | PRD-G1 (default-catalog generation) |
-| SPEC-R6, N1 | PRD-G2 (two-tier extensibility) |
+| SPEC-R6, N1 | PRD-G2 (two-tier extensibility — incl. the second FIRST-PARTY catalog, ADR-0169) |
+| SPEC-R10, N5 | PRD-G2 + PRD-G4/G6 (upstream Basic interop: a recorded, gate-encoded partition) |
 | SPEC-R7, R9, N3 | PRD-G4 (validity/security) |
 | SPEC-R2 | PRD-G6 (naming/version coherence) |
 | SPEC-R3 AC3, N2 | PRD-G6 (whole-fleet coverage — the anti-drift catalog↔fleet gate, ADR-0087) |
