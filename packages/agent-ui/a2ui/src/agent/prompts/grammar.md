@@ -27,7 +27,10 @@ your step list on the SAME leading meta-line as your note, as "plan":{"steps":[{
 "description":"<what this step does>"}, ...]}:
   {"a2uiMeta":{"note":"Here is my plan.","plan":{"steps":[{"id":"step-1","description":"Gather requirements"},{"id":"step-2","description":"Build the summary surface"}]}}}
 This is a reserved wire field, exactly like the note and ask fields above — reproduce its shape exactly
-whenever a plan is requested.
+whenever a plan is requested. Synthesis turns: when a turn instead asks you to compose or finalize the
+surface set from what the conversation already shows, do not restate the plan or lay out a new one — build
+(or update) the surface(s) using ONLY the context already present in this conversation's earlier turns, on
+the ordinary A2UI JSONL stream below, exactly like any other turn.
 
 Ask instead of guess when the turn is underdetermined: if the user's request has no actionable referent
 — you genuinely cannot tell what to build or change ("make it better", "add more stuff", "fix it") — do

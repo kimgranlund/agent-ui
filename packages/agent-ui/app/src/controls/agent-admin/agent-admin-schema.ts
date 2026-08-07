@@ -205,6 +205,26 @@ export function isGenuiDogfoodEnabled(value: unknown): boolean {
   return value === true
 }
 
+// ── Planner-stage pilot (ADR-0174 cl.1 / SPEC-R21) ────────────────────────────────────────────────────
+// The opt-in seam for the sequential plan→execute→synthesize host loop (`site/lib/plan-runner.ts`'s
+// `runPlannerTurn`). A persona-scoped, `ProduceOptions`-ADJACENT knob (ADR-0174 cl.1): the HOST LOOP reads
+// it BEFORE deciding which shape to run — the single-`produce()`-call microloop (today's shape, gate
+// OFF/absent) or the multi-call plan→execute→synthesize loop (gate ON) — never inside `produce()` itself,
+// which stays a plain per-call primitive either way. All three stages (planning/executing/synthesizing)
+// stay INTERNAL (ADR-0174 cl.6 — no stage UI); this is the ONE user-facing lever the pilot introduces.
+
+/** Planner-stage surface — ON: the persona's turns MAY run the opt-in sequential host loop instead of a
+ *  single dispatch; OFF (the default — the SAME inverse-default law `SURFACE_GENUI_KEY` uses): every turn
+ *  runs today's single-dispatch path, byte-identical, even when a model volunteers a `plan` declaration
+ *  anyway (SPEC-R20's degrade law — the host never consumes it while this gate is off). */
+export const SURFACE_PLANNER_KEY = 'surfacePlanner'
+
+/** Fail-closed read for the planner modality's OWN inverse-default: absent/malformed ⇒ OFF (the SAME
+ *  `isGenuiSurfaceEnabled` shape). An explicit stored `true` is the only way this surface turns on. */
+export function isPlannerSurfaceEnabled(value: unknown): boolean {
+  return value === true
+}
+
 /** The A2UI catalog picker's persisted selection (an id from `A2UI_CATALOG_OPTIONS`). */
 export const A2UI_CATALOG_KEY = 'a2uiCatalog'
 

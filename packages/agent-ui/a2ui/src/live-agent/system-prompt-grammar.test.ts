@@ -569,6 +569,44 @@ describe('buildSystemPrompt plan-arm mechanics — mode-invariant (SPEC-R6 AC6 /
       expect(body).not.toMatch(/Plan declarations|"plan":\{"steps"/i)
     }
   })
+
+  // ── v0.11 widening (ADR-0174 cl.4/cl.6, SPEC-R21): the SAME block additionally teaches the SYNTHESIS
+  // turn's mechanics — procedural mechanics about what synthesis MEANS, never persona voice. Joins the
+  // IDENTICAL "Plan declarations:" paragraph the plan-arm shape above lives in (the "SAME block" SPEC-R6
+  // AC6 requires), so the mode-invariant byte-identity assertion above ALREADY covers this addition too
+  // (its `mechanicsOf` extraction runs to the next blank line, which now includes the synthesis sentence).
+
+  it('teaches the synthesis-turn procedural mechanics: compose from prior session context, never re-plan', () => {
+    const prompt = buildSystemPrompt(defaultCatalog, [])
+    expect(prompt).toContain('Synthesis turns:')
+    expect(prompt).toMatch(/compose or finalize the\s+surface set from what the conversation already shows/)
+    expect(prompt).toMatch(/do not restate the plan or lay out a new one/)
+  })
+
+  it('the synthesis-turn teaching is present, byte-identical, in every mode (mode-invariant, ADR-0174 cl.6)', () => {
+    const marker = 'Synthesis turns:'
+    for (const mode of [undefined, 'default', 'specific', 'blue-sky'] as const) {
+      const prompt = buildSystemPrompt(defaultCatalog, [], mode)
+      expect(prompt).toContain(marker)
+    }
+    const synthesisOf = (prompt: string): string => {
+      const start = prompt.indexOf('Synthesis turns:')
+      const rest = prompt.slice(start)
+      const end = rest.indexOf('\n\n')
+      return end === -1 ? rest : rest.slice(0, end)
+    }
+    const dflt = synthesisOf(buildSystemPrompt(defaultCatalog, []))
+    expect(dflt).toBe(synthesisOf(buildSystemPrompt(defaultCatalog, [], 'specific')))
+    expect(dflt).toBe(synthesisOf(buildSystemPrompt(defaultCatalog, [], 'blue-sky')))
+  })
+
+  it('none of the synthesis-turn prose leaks into the derived "## Available components" inventory section', () => {
+    for (const mode of [undefined, 'default', 'specific', 'blue-sky'] as const) {
+      const prompt = buildSystemPrompt(defaultCatalog, [], mode)
+      const body = catalogInventoryBody(prompt)
+      expect(body).not.toMatch(/Synthesis turns/i)
+    }
+  })
 })
 
 // ── ADR-0126 (TKT-0016): the message-lifecycle decision-layer teaching, appended in the OUTPUT_RULES
