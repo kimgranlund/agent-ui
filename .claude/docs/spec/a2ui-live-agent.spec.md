@@ -23,7 +23,7 @@
 > ADR-0177 posture); §5 gains NO contracts — exact connector interfaces are the connector LLD's
 > (S-LLD, the #567 decomposition). v0.11 (SPEC-R21/R22) is untouched and orthogonal — its own
 > PROPOSED marker awaits Kim independently; each flips on its own utterance.
-> v0.11 changelog (ADR-0174 cl.1/cl.3/cl.4/cl.6, PROPOSED pending Kim's review — the planner-stage
+> v0.11 changelog (ADR-0174 cl.1/cl.3/cl.4/cl.6, ACCEPTED by Kim 2026-08-07 — PR #570 comment "v0.11 accepted" — the planner-stage
 > pilot's HOST-SIDE loop, the half SPEC-R20 scoped out): NEW **SPEC-R21** (§3.2c) — the opt-in sequential
 > plan-runner: entirely HOST-side of the `AgentTransport` seam (each dispatched turn is an ordinary
 > `TurnInput`; `produce()`/the proxies serve it indistinguishably from a chat turn — zero produce/proxy/
@@ -51,7 +51,7 @@
 > established pattern) to add the synthesis-turn teaching ADR-0174 cl.6 routes into `GRAMMAR`. SPEC-R20
 > and every existing requirement are byte-untouched; `ProduceOptions`/`ProduceDeps` gain NOTHING (the
 > loop lives above the seam).
-> v0.10 changelog (ADR-0174 cl.2, PROPOSED pending Kim's review — the planner-stage pilot's plan-turn
+> v0.10 changelog (ADR-0174 cl.2, ACCEPTED — the 2026-08-06 batch ratification, commit 54861c2; marker flip trailed — the planner-stage pilot's plan-turn
 > wire representation): the ADR-0088 meta-line envelope gains a SIXTH, additive, MODEL-authored field,
 > `plan: { steps: [{ id: string; description: string }] }`, following the `ask`-arm precedent EXACTLY
 > (ADR-0097 §1) — shallow-validated the same way `readMetaLine`'s existing per-field-independent guard
