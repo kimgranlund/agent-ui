@@ -145,10 +145,10 @@ describe('the store-swap probe (TKT-0074 acceptance) — assigning a new store r
 // ── GH #47/#48 — the library packs' data integrity (the AGENT_PRESETS describe's discipline) ────────────
 
 describe('ADMIN_LIBRARIES — data integrity (GH #47/#48)', () => {
-  it('skill + workflow kinds each carry packs; every pack has unique non-empty entry labels', async () => {
+  it('skill + workflow + resource kinds each carry packs; every pack has unique non-empty entry labels', async () => {
     const { ADMIN_LIBRARIES } = await import('./agent-admin-libraries.ts')
     const { ENTRY_KINDS } = await import('@agent-ui/app')
-    for (const kind of [ENTRY_KINDS.skill, ENTRY_KINDS.workflow]) {
+    for (const kind of [ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource]) {
       const packs = ADMIN_LIBRARIES[kind]!
       expect(packs.length, `${kind} has at least one pack`).toBeGreaterThan(0)
       const packIds = new Set(packs.map((p) => p.id))
@@ -560,6 +560,7 @@ describe('librariesForCategory — GH #143 per-preset library scoping', () => {
     const scoped = librariesForCategory('hospitality')
     expect(scoped[ENTRY_KINDS.skill]!.map((p) => p.id).sort()).toEqual(['a2ui-idioms', 'hospitality'])
     expect(scoped[ENTRY_KINDS.workflow]!.map((p) => p.id).sort()).toEqual(['playbooks-core', 'playbooks-hospitality'])
+    expect(scoped[ENTRY_KINDS.resource]!.map((p) => p.id)).toEqual([])
     expect(scoped[ENTRY_KINDS.tool]!.map((p) => p.id)).toEqual(['integrations'])
   })
 
@@ -569,6 +570,7 @@ describe('librariesForCategory — GH #143 per-preset library scoping', () => {
     const scoped = librariesForCategory('games')
     expect(scoped[ENTRY_KINDS.skill]!.map((p) => p.id).sort()).toEqual(['a2ui-idioms', 'games'])
     expect(scoped[ENTRY_KINDS.workflow]!.map((p) => p.id).sort()).toEqual(['playbooks-core', 'playbooks-games'])
+    expect(scoped[ENTRY_KINDS.resource]!.map((p) => p.id)).toEqual(['game-rules'])
     expect(scoped[ENTRY_KINDS.tool]!.map((p) => p.id)).toEqual(['integrations'])
   })
 
@@ -578,6 +580,7 @@ describe('librariesForCategory — GH #143 per-preset library scoping', () => {
     const scoped = librariesForCategory(undefined)
     expect(scoped[ENTRY_KINDS.skill]!.map((p) => p.id)).toEqual(['a2ui-idioms'])
     expect(scoped[ENTRY_KINDS.workflow]!.map((p) => p.id)).toEqual(['playbooks-core'])
+    expect(scoped[ENTRY_KINDS.resource]!.map((p) => p.id)).toEqual([])
     expect(scoped[ENTRY_KINDS.tool]!.map((p) => p.id)).toEqual(['integrations'])
   })
 
