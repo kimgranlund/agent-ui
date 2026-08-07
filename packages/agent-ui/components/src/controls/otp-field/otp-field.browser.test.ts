@@ -47,13 +47,12 @@ function cellsOf(el: HTMLElement): HTMLElement[] {
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-otp-field — focus order (one tab stop, both engines)', () => {
-  // KNOWN GAP (build-time, reported — not silently patched): a second real Tab does not always leave the
-  // control in WebKit on this exact "editor spans the grid, opacity:0" overlay shape (Chromium: clean). An
-  // LLD §14-authorized fallback (a real 1×1px offscreen-clipped editor + host-level pointerdown) was
-  // attempted and reverted — it fixed nothing conclusively and introduced NEW regressions in BOTH engines
-  // (paste-forward-write + the C10 reconnect count), so the overlay shape below — proven clean everywhere
-  // else in both engines — stands, and this one WebKit leg is flagged for the design/coordinator seat as a
-  // follow-up rather than worked around further inside this build.
+  // KNOWN GAP — filed as GH #589 (build-time, reported — not silently patched): a second real Tab does not
+  // always leave the control in WebKit on this exact "editor spans the grid, opacity:0" overlay shape
+  // (Chromium: clean). An LLD §14-authorized fallback (a real 1×1px offscreen-clipped editor + host-level
+  // pointerdown) was attempted and reverted — it fixed nothing conclusively and introduced NEW regressions
+  // in BOTH engines (paste-forward-write + the C10 reconnect count), so the overlay shape below — proven
+  // clean everywhere else in both engines — stands; see GH #589 for the follow-up.
   it.skipIf(server.browser === 'webkit')('Tab enters ONCE (a single tab stop); cells are never separately tab-reachable', async () => {
     const before = document.createElement('button')
     before.textContent = 'before'
@@ -105,10 +104,10 @@ describe('ui-otp-field — focus order (one tab stop, both engines)', () => {
     expect(cells[2]!.hasAttribute('data-active')).toBe(true)
   })
 
-  // KNOWN GAP (build-time, reported — not silently patched): a real keyboard Backspace sometimes no-ops in
-  // WebKit on this exact overlay shape (Chromium: clean); the SAME class as the Tab gap above, same
-  // disposition — the pure-reducer Backspace arms (both filled-cell and walk-back) are exhaustively proven
-  // in otp-field.test.ts, and `deleteContentBackward` routing is proven in Chromium here.
+  // KNOWN GAP — filed as GH #589 (build-time, reported — not silently patched): a real keyboard Backspace
+  // sometimes no-ops in WebKit on this exact overlay shape (Chromium: clean); the SAME class as the Tab gap
+  // above, same disposition — the pure-reducer Backspace arms (both filled-cell and walk-back) are
+  // exhaustively proven in otp-field.test.ts, and `deleteContentBackward` routing is proven in Chromium here.
   it.skipIf(server.browser === 'webkit')('backspace walks back and removes the digit', async () => {
     const { el } = mount()
     const editor = editorOf(el)

@@ -20,10 +20,13 @@
  *       cell layout never depends on DOM order. The `[data-part='editor']` — the ONE focusable/hit-testable
  *       surface (LLD §6) — is stretched over the WHOLE grid (`grid-column: 1 / -1`) as a transparent overlay:
  *       its text is invisible (`opacity: 0`, `caret-color: transparent`) — the CELLS paint the digits — but it
- *       still receives every keystroke/paste/composition and carries `role=textbox`. The message + echo nodes
- *       are visually hidden (the standard sr-only clip recipe) — the echo (`aria-live=polite`) is a FROZEN
- *       announcement channel (LLD-C8), not a contingency; see otp-field.ts's header for why. Motion is gated
- *       behind `:state(ready)`, reduced-motion zeroed, forced-colors keeps every cell border/ink visible.
+ *       still receives every keystroke/paste/composition and carries `role=textbox`. The echo node
+ *       (`aria-live=polite`) is always visually hidden (the standard sr-only clip recipe) — a FROZEN
+ *       announcement channel (LLD-C8), not a contingency; see otp-field.ts's header for why. The message
+ *       node (ADR-0029 A1, ADOPTED — Kim ruling 2026-08-08, host round) is `hidden` by default and becomes
+ *       VISIBLE (danger ink, small type) only under `:state(user-invalid)` while it carries text — the
+ *       text-field ratified shape, closing the bare-usage colour-only gap. Motion is gated behind
+ *       `:state(ready)`, reduced-motion zeroed, forced-colors keeps every cell border/ink visible.
  *
  * Standalone stylesheet — linked via the host page / component-styles barrel; NEVER injected from otp-field.ts
  * (behaviour-only `.ts`, no runtime style injection — plan §2).
@@ -52,8 +55,12 @@
   --ui-otp-field-cell-ink: var(--md-sys-color-neutral-on-surface-variant);
   --ui-otp-field-cell-ink-disabled: var(--md-sys-color-neutral-low);
 
-  /* Hidden inline-validation message tokens (ADR-0014 cl.4 baseline — NOT the ADR-0029 A1 visible extension;
-     otp-field's message stays sr-only, aria-describedby-only, exactly like text-field's ORIGINAL cl.4 shape). */
+  /* Visible inline-validation message tokens (ADR-0029 A1, ADOPTED — Kim ruling 2026-08-08, host round,
+     code-entry-control.lld.md §6 REPAIRED: the text-field ratified shape, closing the bare-usage
+     colour-only gap WCAG 1.4.1 names). The `.ui-otp-field-message` node (control-managed, aria-describedby
+     target) becomes VISIBLE when non-empty under :state(user-invalid) — declared here (specificity 0,
+     overridable), consumed in the @scope block. */
+  --ui-otp-field-message-font: var(--md-sys-font-sm); /* small type — subordinate to the cell readout */
   --ui-otp-field-message-ink: var(--md-sys-color-danger-on-surface-variant);
 }
 
@@ -137,7 +144,7 @@
      BOTH engines (a stale `#active` after the extra focus() cycle broke paste-forward-write and the C10
      reconnect count) without conclusively fixing WebKit within this build's budget. The overlay-over-cells
      shape below is the one that is KNOWN GOOD for every other probe in both engines; the two WebKit legs are
-     flagged for the design/coordinator seat as a follow-up, not locally worked around further. */
+     filed as GH #589, not locally worked around further. */
   :scope > [data-part='editor'] {
     grid-column: 1 / -1;
     grid-row: 1;
@@ -170,10 +177,8 @@
     cursor: default;
   }
 
-  /* sr-only recipe (WCAG-standard clip) — the hidden aria-describedby message node (ADR-0014 cl.4 baseline,
-     NOT the ADR-0029 A1 visible extension) AND the LLD-C8 echo (always visually hidden — it is an
-     announcement channel, never a visible readout). */
-  :scope > .ui-otp-field-message,
+  /* sr-only recipe (WCAG-standard clip) — the LLD-C8 echo ONLY: always visually hidden, an announcement
+     channel, never a visible readout. The message node is NOT in this rule (see below, ADR-0029 A1). */
   :scope > [data-part='echo'] {
     position: absolute;
     inline-size: 1px;
@@ -184,6 +189,21 @@
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
+  }
+
+  /* Visible inline-validation message (ADR-0029 A1, ADOPTED — Kim ruling 2026-08-08, host round). The
+     control-managed `.ui-otp-field-message` node (the aria-describedby target, ADR-0014 cl.4) is `hidden`
+     by default (native `[hidden]` → display:none — no base display rule needed here) and has NO sr-only
+     clip recipe (unlike the echo above): when :state(user-invalid) is active AND the node carries a
+     message text (otp-field.ts toggles `hidden` false only when non-empty), it becomes visible — danger
+     ink, small type, subordinate to the cell readout, closing the bare-usage colour-only gap (WCAG 1.4.1).
+     Gated by :state(user-invalid) to keep the ADR-0014 interaction-state timing (only after first blur/
+     change). A `ui-field` association still yields (otp-field.ts keeps the node emptied + hidden while
+     fielded) — the field's own error part stays the ONE AT-announced error, this rule never fires there. */
+  :scope:state(user-invalid) > .ui-otp-field-message {
+    display: block;
+    font-size: var(--ui-otp-field-message-font);
+    color: var(--ui-otp-field-message-ink);
   }
 
   /* Motion (ADR-0008 / interaction-states standard) — the cell state-PAINT properties only, gated behind

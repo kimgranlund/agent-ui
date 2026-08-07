@@ -169,13 +169,23 @@ export class UIOtpFieldElement extends UIFormElement {
 
     // pointer down — the editor is the ONE hit-testable surface (§6); translate the click's X position into
     // a cell index (the "pointer down on cell k" row, §3) rather than giving cells their own listeners.
+    // MINOR-4 (component-checker, 2026-08-08 host round): nearest-cell-CENTER math over the REAL per-cell
+    // rects — not `editor.getBoundingClientRect()` divided evenly by N, which ignores `--ui-otp-field-gap`
+    // and skews the resolved index once the inter-cell gaps accumulate across the row.
     this.listen(editor, 'pointerdown', (event) => {
       const pe = event as PointerEvent
-      const rect = editor.getBoundingClientRect()
-      const n = this.#n()
-      if (rect.width <= 0 || n <= 0) return // no layout yet (jsdom / not painted) — nothing to compute
-      const relative = (pe.clientX - rect.left) / rect.width
-      const index = Math.max(0, Math.min(n - 1, Math.floor(relative * n)))
+      if (this.#cells.length === 0) return
+      let index = 0
+      let bestDist = Infinity
+      for (let i = 0; i < this.#cells.length; i++) {
+        const r = this.#cells[i]!.getBoundingClientRect()
+        if (r.width <= 0) return // no layout yet (jsdom / not painted) — nothing to compute
+        const dist = Math.abs(pe.clientX - (r.left + r.width / 2))
+        if (dist < bestDist) {
+          bestDist = dist
+          index = i
+        }
+      }
       this.#dispatch({ type: 'pointer-down', index })
     })
 

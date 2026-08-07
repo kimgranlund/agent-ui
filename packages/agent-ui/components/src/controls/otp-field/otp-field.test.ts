@@ -19,7 +19,8 @@ declare const process: { cwd(): string }
 // real pointerdown-with-layout are BOTH left to the browser leg (otp-field.browser.test.ts) per the LLD's own
 // split — jsdom cannot measure layout and has no working DataTransfer; every paste-split arm is still fully
 // covered here via a multi-character `insertText` (§3 row 2 routes it through the SAME §5 path a real paste
-// takes), and pointer-index math is covered with a stubbed `getBoundingClientRect`.
+// takes), and the nearest-cell-CENTER pointer-index math (MINOR-4) is covered with each cell's own stubbed
+// `getBoundingClientRect`.
 
 const S = (value: string, active: number): OtpState => ({ value, active })
 
@@ -348,6 +349,9 @@ function cellsOf(el: HTMLElement): HTMLElement[] {
 function echoOf(el: HTMLElement): HTMLElement {
   return el.querySelector('[data-part="echo"]') as HTMLElement
 }
+function messageOf(el: HTMLElement): HTMLElement {
+  return el.querySelector('.ui-otp-field-message') as HTMLElement
+}
 
 /** A jsdom-safe `beforeinput` InputEvent — jsdom's native InputEvent support is inconsistent across the
  *  fields this control reads, so every field is defensively (re)stamped as an own property after
@@ -634,20 +638,52 @@ describe('UIOtpFieldElement — paste-split (via multi-character beforeinput, re
   })
 })
 
-// ── pointer-down cell-index math (real jsdom layout is 0×0 — stub getBoundingClientRect) ───────────────
+// ── pointer-down cell-index math (real jsdom layout is 0×0 — stub each cell's own getBoundingClientRect) ──
+//
+// MINOR-4 (component-checker, 2026-08-08 host round): the resolver reads REAL per-cell rects (nearest
+// cell-CENTER), not `editor.getBoundingClientRect()` divided evenly by N — dividing evenly ignores
+// `--ui-otp-field-gap` and skews the resolved index once the gaps accumulate. Stub each cell's own rect to
+// exercise it in jsdom (real layout is 0×0 everywhere here).
+
+/** Stub every cell's `getBoundingClientRect` to a fixed-width, fixed-gap row starting at x=0. */
+function layOutCells(el: HTMLElement, cellWidth: number, gap: number): void {
+  cellsOf(el).forEach((cell, i) => {
+    const left = i * (cellWidth + gap)
+    cell.getBoundingClientRect = () =>
+      ({ left, width: cellWidth, top: 0, height: cellWidth, right: left + cellWidth, bottom: cellWidth, x: left, y: 0, toJSON() {} }) as DOMRect
+  })
+}
 
 describe('UIOtpFieldElement — pointer-down cell-index resolution (§3 table)', () => {
-  it('resolves the click position to the nearest cell, clamped to firstEmpty', () => {
+  it('resolves the click position to the nearest cell CENTER, clamped to firstEmpty', () => {
     const el = make()
     el.length = 4
     document.body.append(el)
     const editor = editorOf(el)
-    editor.getBoundingClientRect = () => ({ left: 0, width: 120, top: 0, height: 30, right: 120, bottom: 30, x: 0, y: 0, toJSON() {} }) as DOMRect
+    layOutCells(el, 30, 10) // cells at x=[0,40,80,120], width 30 → centers [15,55,95,135]
     digit(editor, '1')
     digit(editor, '2') // value='12', firstEmpty=2
-    editor.dispatchEvent(new PointerEvent('pointerdown', { clientX: 115, bubbles: true })) // far right → cell 3, clamps to firstEmpty=2
+    editor.dispatchEvent(new PointerEvent('pointerdown', { clientX: 130, bubbles: true })) // nearest center 135 (cell 3), clamps to firstEmpty=2
     digit(editor, '9')
     expect(el.value).toBe('129')
+    el.remove()
+  })
+
+  it('a gap-adjacent click resolves to the CLOSER cell, not a uniform-division guess', () => {
+    const el = make()
+    el.length = 3
+    document.body.append(el)
+    const editor = editorOf(el)
+    layOutCells(el, 20, 20) // cells at x=[0,40,80], width 20 → centers [10,50,90]; the gap is [20,40)
+    digit(editor, '1')
+    digit(editor, '2') // value='12', firstEmpty=2
+    // clientX=25 sits INSIDE the gap between cell 0 and cell 1; a uniform-division-by-width guess over the
+    // whole row (0..100 / 3 ≈ 33px lanes) would land this in lane 0 too, so this alone wouldn't discriminate
+    // the two algorithms — the discriminating case is nearest-CENTER (10 vs 50): 25 is 15px from cell 0's
+    // center and 25px from cell 1's, so cell 0 (clamped to firstEmpty=... here 0 < 2, no clamp) wins.
+    editor.dispatchEvent(new PointerEvent('pointerdown', { clientX: 25, bubbles: true }))
+    digit(editor, '9') // overwrites cell 0 in place
+    expect(el.value, 'pointer-down did not resolve to the nearest cell CENTER (cell 0)').toBe('92')
     el.remove()
   })
 
@@ -778,7 +814,7 @@ describe('UIOtpFieldElement — length change mid-entry (§8)', () => {
     el.remove()
   })
 
-  it('a shrink that completes the code fires the completion commit (the edge is still len===N, §8)', async () => {
+  it('a length shrink that lands on a complete code never fires change — completion commits are USER-TRANSITION-ONLY (§8, REPAIRED)', async () => {
     const el = make()
     document.body.append(el)
     const editor = editorOf(el)
@@ -788,13 +824,79 @@ describe('UIOtpFieldElement — length change mid-entry (§8)', () => {
     digit(editor, '4') // value='1234', length=6 (not complete)
     let changeCount = 0
     el.addEventListener('change', () => changeCount++)
-    el.length = 4 // shrink completes the code
+    el.length = 4 // a programmatic length shrink lands value.length === N — NOT a #dispatch transition
     await el.updateComplete
-    // the length-reconcile effect does not itself emit change (§8 describes VALUE truncation, not a user
-    // edit) — completion is a §3/§2-events concept tied to a #dispatch transition; asserting the truncation
-    // itself is the load-bearing behaviour here.
     expect(el.value).toBe('1234')
     expect(changeCount).toBe(0)
+    el.remove()
+  })
+})
+
+// ── the visible inline-validation message (ADR-0029 A1, ADOPTED — Kim ruling 2026-08-08, host round) ──
+//
+// jsdom cannot compute real layout/CSS visibility, so this probes the JS-owned half exactly like
+// text-field.test.ts's own A1 probe (`message.hidden`/`.textContent` — the properties the CSS rule
+// (`:state(user-invalid) > .ui-otp-field-message { display: block; … }`, otp-field.css) keys off): no
+// flash before interaction, VISIBLE (hidden=false, real text) once armed, CLIPPED (hidden=true, empty)
+// once resolved or under a `ui-field` association. The real CSS paint is the browser leg's job.
+
+describe('UIOtpFieldElement — the visible inline-validation message (ADR-0029 A1, ADOPTED)', () => {
+  it('no flash before interaction: hidden, empty', () => {
+    const el = make()
+    el.required = true
+    document.body.append(el)
+    const message = messageOf(el)
+    expect(message.hidden).toBe(true)
+    expect(message.textContent).toBe('')
+    el.remove()
+  })
+
+  it('VISIBLE (hidden=false) with the real validity message once armed by the first interaction', async () => {
+    const el = make()
+    el.required = true
+    document.body.append(el)
+    const editor = editorOf(el)
+    editor.dispatchEvent(new Event('blur')) // first interaction, capture-phase trackUserInvalid
+    await el.updateComplete // the user-invalid effect is microtask-batched
+    const message = messageOf(el)
+    expect(message.hidden, 'the message must become visible once user-invalid arms').toBe(false)
+    expect(message.textContent).toBe('Please fill out this field.')
+    expect(editor.getAttribute('aria-invalid')).toBe('true')
+    expect(editor.getAttribute('aria-describedby')).toBe(message.id)
+    el.remove()
+  })
+
+  it('CLIPPED (hidden=true, empty) again once the value resolves the validity', async () => {
+    const el = make()
+    el.required = true
+    document.body.append(el)
+    const editor = editorOf(el)
+    editor.dispatchEvent(new Event('blur'))
+    await el.updateComplete
+    digit(editor, '1') // len>0, still tooShort at default length=6
+    await el.updateComplete
+    const message = messageOf(el)
+    // len=1 < 6 → tooShort, still invalid — message stays visible with the tooShort text
+    expect(message.hidden).toBe(false)
+    expect(message.textContent).toBe('Please enter all 6 digits.')
+    el.value = '123456' // externally complete the code → valid
+    await el.updateComplete
+    expect(message.hidden, 'the message must clip again once valid').toBe(true)
+    expect(message.textContent).toBe('')
+    el.remove()
+  })
+
+  it('yields under a ui-field association — stays hidden/empty even while user-invalid (the field owns the ONE announced error)', async () => {
+    const el = make()
+    el.required = true
+    document.body.append(el)
+    const editor = editorOf(el)
+    el.setFieldLabelling({ label: null, description: null, error: null })
+    editor.dispatchEvent(new Event('blur'))
+    await el.updateComplete
+    const message = messageOf(el)
+    expect(message.hidden, 'fielded: the internal message must never surface (the field is the one AT-announced error)').toBe(true)
+    expect(message.textContent).toBe('')
     el.remove()
   })
 })

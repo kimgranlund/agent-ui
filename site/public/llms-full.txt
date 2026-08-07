@@ -2282,6 +2282,15 @@ every user-driven mutation (a digit, a clear, a paste, or the code completing) a
 message. An **external** `value` write (a data-bound prop/attribute set, a form reset/restore) never touches
 the echo and never emits `input` — native parity: only a real user edit is "user-driven".
 
+`required` + an empty value raises `valueMissing`; the danger border on every cell, `aria-invalid`, and a
+**visible** inline validation message appear only **after the first interaction** (blur/change), timed by
+the `trackUserInvalid` controller (ADR-0014 dev#c) — the message node (a `className` hook, not a `data-part`;
+`ui-text-field`'s own shape) becomes visible (danger ink, small type) only while it carries text under
+`:state(user-invalid)` (ADR-0029 A1, ADOPTED), the non-colour WCAG 1.4.1 reinforcement the danger border
+alone cannot provide. In bare usage this is the sole validity cue; the visible label/description/error
+wrapper is `ui-field` — once associated, the internal message node yields (emptied, hidden) so assistive
+tech hears exactly one announced error, the field's.
+
 ## Sizes
 
 `size` selects a step on the dimensional ramp (`sm` · `md` (default) · `lg`), the same `(scale × size) → §1

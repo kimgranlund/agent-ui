@@ -141,7 +141,12 @@ const targets = [
   // measured 51620 at the M-F merge tip; the movers are ui-multi-select (412 B, the ADR-0175/SPEC-accepted
   // primitive) plus the GH #535/#536 menu/tabs fixes (~37 B), all reviewed weight. Same law as above:
   // a CHECKPOINT, not a ratchet — GH #455 remains the standing shrink follow-up.
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 51 * KB],
+  // RULED 2026-08-08 (Kim, host round — the ui-otp-field S2-a build, GH #490): re-based 51 KB → 53 KB
+  // (54272 B gz) — measured 54049 B gz with ui-otp-field's real, LLD-mandated weight (total reducer +
+  // paste-split + echo channel, its own per-control override in MARGINAL_OVERRIDES below) landing in the
+  // family barrel. Same law as above: a CHECKPOINT, not a ratchet — GH #455 remains the standing shrink
+  // follow-up.
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 53 * KB],
   // GH #377 finding 3 — the package's FIRST `./traits/*` subpath (`traits/overlay`, package.json:74) gets
   // its own budgeted row, so the opt-in surface every other pack carries one for (`code/highlight`,
   // `./markdown`, `./editor`) is not the one exception.
@@ -240,6 +245,7 @@ const MARGINAL_OVERRIDES = {
   'sandbox-frame': [2304, 'genui-surface.spec.md SPEC §3.2/§3.3 (D9, B1): the CSP builder, the closed bridge message-guard, the host-owned bootstrap script TEXT, and the build/replace/teardown + live-theme control logic — measured 2124 B gz 2026-07-24, ~8% headroom'],
   'status-stream': [2192, 'gzip measurement-frame drift from the SAME genui-surface B1 wave adding a new family member (the split-wave precedent above — leave-one-out deltas shift with the shared dictionary once the family bundle grows); status-stream source is byte-identical that wave — measured 2107 B gz 2026-07-24 (was within budget pre-wave); re-bumped 2176 → 2192 for the SAME drift class when MA-1 grew the family bundle (measured 2182 B gz 2026-08-05, source untouched by that diff — GH #445, Kim ruling)'],
   'table': [2624, 'RULED 2026-08-05 (GH #445, Kim — "re-base + shrink follow-up"): ADR-0163 widens the ratified display-only contract IN PLACE (Kim\'s 2026-07-28 direction, deliberately against a separate interactive tier), so one control carries selection + sort + filter/search + pagination composition + their a11y and delegation machinery — measured 2558 B gz 2026-08-05 after three review rounds already trimmed it; the cap is a checkpoint, not a ratchet. GH #455\'s shrink pass (same day): consolidated the three `<th scope="col">` builders into one shared helper, folded the `cleanColumns`/`cleanRows`/`cleanFilter` array-hardening loop into one `hardenArray`, merged the `#thead`/`#tbody` `change` listeners into one delegated on `#table` (a stable node wrapping both — behaviorally identical, listener count 3→2), and shared the two selection-toggle commits\' `selected` write + `select` emit — measured 2517 B gz 2026-08-05, zero behavior change (table-interactive.browser.test.ts + the byte-identity probe both green). Cap stays 2624 (the checkpoint), not re-based down — the next honest shrink continues from here'],
+  'otp-field': [2304, 'Kim ruling 2026-08-08 (host round): LLD-mandated machinery (total reducer + paste-split + echo channel), reviewer confirmed no remaining fat — measured 2150 B gz 2026-08-08 (code-entry-control.lld.md, GH #490 S2-a).'],
 }
 
 // ── The CLUSTER leg (GH #354, Kim's 2026-07-29 ruling) — the one shape a leave-one-out cannot measure ────

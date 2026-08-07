@@ -73,8 +73,6 @@ parts:                 # control-created light-DOM anatomy, created ONCE (idempo
     description: The ONE focusable/hit-testable surface (LLD §6's ruling) — a control-created `<div data-part="editor" contenteditable="plaintext-only" role="textbox" aria-multiline="false" inputmode="numeric">`, stretched over the whole cell grid as a visually transparent overlay (opacity 0 — the cells paint the digits; its literal text content mirrors `value` for screen-reader navigation). Receives every keystroke/paste/composition/pointerdown; the native caret never edits (every beforeinput is intercepted unconditionally and routed through the pure reducer in model.ts). Created once, never re-rendered.
   - name: cell
     description: One of `length` presentational, `aria-hidden="true"` cells — a square box painted from `value[i]` (textContent) plus the `[data-filled]` / `[data-active]` state attributes. Created/removed by an effect on `length` (append/remove tail cells only, never recreate all). Never independently focusable or interactive — a click anywhere in the grid resolves to a cell index via the editor's own pointerdown handler (position math), not a per-cell listener.
-  - name: message
-    description: The hidden aria-describedby validity node (ADR-0014 cl.4 baseline — NOT the ADR-0029 A1 visible extension; this message stays sr-only always). Carries validity().message under :state(user-invalid) when unassociated; yields (emptied, out of aria-describedby) under a ui-field association (ADR-0051), whose own error part becomes the one AT-announced error. Not declared as a public part (a control-managed internal, the text-field precedent) — listed here for the descriptor↔DOM parts-truthfulness gate's own real-DOM scan.
   - name: echo
     description: The frozen LLD-C8 polite announcement channel — a visually hidden `<div data-part="echo" aria-live="polite" aria-atomic="true">`, NEVER id-referenced from aria-describedby (it must never double-read as a description). Written by the same #dispatch choke point that applies a reducer result, on USER-DRIVEN mutations only (never an external value write) — digit → "{d}, {len} of {N}" · backspace/delete → "cleared, {len} of {N}" · paste/multi-char insert → "{k} digits entered, {len} of {N}" · a transition that also completes the code → "code complete" (replacing whatever that transition's own echo would have been). Needed because the interception model (unconditional beforeinput preventDefault + scripted textContent writes) makes the editor mute by default — a real `<input>` would announce these on its own.
 
@@ -93,7 +91,7 @@ aria:
   roleSource: editor part
   labelSource: label / aria-label   # bare usage: the `label` prop → the editor's aria-label; inside a ui-field (ADR-0051) applyFieldLabelling overrides this — the field's label/description/error part ids are id-referenced onto the editor's aria-labelledby/aria-describedby instead, and this aria-label yields
   disabledState: editor aria-disabled + the form-disabled channel   # effectiveDisabled = own disabled || form-disabled (ADR-0013); NOT host ariaDisabled — ADR-0014 dev#b
-  describedBy: editor aria-describedby → the hidden message part carrying validity().message under :state(user-invalid)   # the WCAG 1.4.1 non-colour validity cue (ADR-0014 cl.4); the echo part is DELIBERATELY never referenced here (LLD-C8 — it must not double-read as a description)
+  describedBy: editor aria-describedby → a control-managed message node (a className hook, not a data-part — text-field precedent) carrying validity().message, VISIBLE (danger ink + text) under :state(user-invalid) (ADR-0029 A1, ADOPTED)   # the WCAG 1.4.1 non-colour validity cue (ADR-0014 cl.4 / ADR-0029 A1); the echo part is DELIBERATELY never referenced here (LLD-C8 — it must not double-read as a description)
 
 keyboard:
   - keys: typing (digits)
@@ -172,6 +170,15 @@ construction — so a dedicated `aria-live="polite"` **echo** part is the design
 every user-driven mutation (a digit, a clear, a paste, or the code completing) announces a short, frozen
 message. An **external** `value` write (a data-bound prop/attribute set, a form reset/restore) never touches
 the echo and never emits `input` — native parity: only a real user edit is "user-driven".
+
+`required` + an empty value raises `valueMissing`; the danger border on every cell, `aria-invalid`, and a
+**visible** inline validation message appear only **after the first interaction** (blur/change), timed by
+the `trackUserInvalid` controller (ADR-0014 dev#c) — the message node (a `className` hook, not a `data-part`;
+`ui-text-field`'s own shape) becomes visible (danger ink, small type) only while it carries text under
+`:state(user-invalid)` (ADR-0029 A1, ADOPTED), the non-colour WCAG 1.4.1 reinforcement the danger border
+alone cannot provide. In bare usage this is the sole validity cue; the visible label/description/error
+wrapper is `ui-field` — once associated, the internal message node yields (emptied, hidden) so assistive
+tech hears exactly one announced error, the field's.
 
 ## Sizes
 
