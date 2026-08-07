@@ -92,10 +92,13 @@ before a first build; `controls/checkbox/` is the gold probe template.
 ## Validation loop (finalize only when clean)
 
 1. `npm run check` (tsc + site) and `npm test` green — read the gate, THEN commit, separately.
-2. Standing trip-wires pass: import-layering, naming/structure, descriptor ↔ `static props`
-   AND ↔ source, zero-native + internals-ARIA, the geometry/token checks. A slot/role/prop
-   **rename** is a deliberate contract change — run the migration step
-   (`.claude/docs/process.md`) before treating it as done.
+2. Standing trip-wires pass: import-layering, naming/structure, descriptor ↔ source (always),
+   descriptor ↔ `static props` **or**, once a control has been converted onto the
+   descriptor-generation ratchet ([[agent-ui-component-packaging]], ADR-0173), the
+   generator-drift gate instead — regenerate with `node scripts/generate-props.mjs {name}` after
+   any descriptor edit, never hand-edit the committed `{name}.props.gen.ts` — plus zero-native +
+   internals-ARIA, the geometry/token checks. A slot/role/prop **rename** is a deliberate contract
+   change — run the migration step (`.claude/docs/process.md`) before treating it as done.
 3. `npm run size` by hand when the bundle surface changed (manual by Kim's ruling);
    marginal size within the tier budget, tree-shake clean.
 4. **Hand off to the `component-checker` agent** (both rubric axes ≥ 4 at G5+) — the

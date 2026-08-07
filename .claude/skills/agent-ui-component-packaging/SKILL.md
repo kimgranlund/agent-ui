@@ -38,9 +38,11 @@ consumers. Routing + reading order only; each row's owner doc/source is the sing
   `vitest.config.ts` `resolve.alias` entry (the broad `@agent-ui/components` alias
   prefix-matches and mangles subpaths under vitest) — the `controls/text` entry there is the
   commented precedent.
-- The descriptor is **trip-wired against source** (`compareDescriptorToSource` /
-  `compareDescriptorToProps`): `customStates` must match the `internals.states` calls +
-  `:state()` CSS; every styled slot must be declared. Declare truthfully or the gate reds.
+- The descriptor is **trip-wired against source, permanently** (`compareDescriptorToSource`):
+  `customStates` must match the `internals.states` calls + `:state()` CSS; every styled slot must
+  be declared. Declare truthfully or the gate reds. It is also trip-wired against props
+  (`compareDescriptorToProps`) **for unconverted controls only** — see the ratchet below; a
+  converted control's props are checked by the generator-drift gate instead.
 - New site-visible surfaces (a doc/demo page) drag standing site gates with them — nav/TOC
   enumeration, preview partition sets; see [[agent-ui-component-testing]] for the gate list.
 
@@ -55,7 +57,7 @@ beyond `type`/`default`/`reflect`/`values` (`component-descriptor.ts`'s `ParsedA
 | Field | Carries | Specimen |
 |---|---|---|
 | `attribute` | string \| `false` — an attribute-name override, or opts a prop OUT of DOM reflection | `button.md`'s `icon-only` |
-| `tsType` | a TS type expression, legal (and required) only when `type: json` | `split.ts`'s `number[] \| undefined` |
+| `tsType` | a TS type expression, legal (and required) only when `type: json` AND no `codec:` is declared (a codec's own type rides its import) | `split.ts`'s `number[] \| undefined` |
 | `const` | the exported shared-tuple constant name, legal only when `type: enum` | `badge.md`'s `const: INTENTS` |
 | `codec` | `{ import, name }` — a bespoke, already-assembled `PropConfig` import for a control whose codec encodes real validation logic no field can express | `table.md`'s `codec: { import: './table-model.ts', name: 'tableColumnsProp' }` |
 | `description` | plain-scalar per-attribute teaching, emitted as a provenance-stamped comment in the generated file | — |
