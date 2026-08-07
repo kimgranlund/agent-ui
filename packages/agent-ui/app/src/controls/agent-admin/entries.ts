@@ -205,12 +205,23 @@ export interface LiveCapabilityGroup {
  * GATED EQUIVALENCE (ADR-0136 Fork 3): with no enabled capability entries the result is byte-identical
  * to `composeSystemPrompt(sections)` — the live prompt degrades exactly to today's composed prompt,
  * never a trailing empty header.
+ *
+ * GH #525 (design call 1, 2026-08-07) — `bankroll`, when given, appends ONE terse line stating the
+ * persona's current stored figure and that any game dealt this turn MUST seed `/bankroll` from it rather
+ * than a fresh stake, right after the base prompt and ahead of the capability groups. `undefined` (every
+ * call site's law: not opted in, or nothing stored yet) is the SAME gated equivalence — byte-identical to
+ * the pre-#525 output.
  */
 export function composeLiveSystemPrompt(
   sections: readonly Entry[],
   capabilities: readonly LiveCapabilityGroup[],
+  bankroll?: number,
 ): string {
   const base = composeSystemPrompt(sections)
+  const withBankroll =
+    bankroll === undefined
+      ? base
+      : `${base}\n\nYour current bankroll is ${bankroll}. Any game you deal MUST seed /bankroll from this figure, never a fresh stake.`
   const groups: string[] = []
   for (const group of capabilities) {
     if (!group.enabled) continue // the kind's master switch gates the whole group out
@@ -226,5 +237,5 @@ export function composeLiveSystemPrompt(
     })
     groups.push(`## ${group.heading}\n${blocks.join('\n\n')}`)
   }
-  return groups.length > 0 ? `${base}\n\n${groups.join('\n\n')}` : base
+  return groups.length > 0 ? `${withBankroll}\n\n${groups.join('\n\n')}` : withBankroll
 }
