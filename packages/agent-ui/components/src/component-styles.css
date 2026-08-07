@@ -159,3 +159,7 @@
 /* M-F — ui-multi-select (multi-select-field.lld.md · multi-select-field.spec.md · ADR-0175): a
  * form-associated, always-visible multi-pick listbox — no trigger, no overlay/top-layer. */
 @import './controls/multi-select/multi-select.css';
+
+/* code-entry-control.lld.md (GH #490 S2-a) — ui-otp-field, the identity family's segmented N-cell
+ * one-time-code entry field: the cell grid + the invisible editor overlay geometry. */
+@import './controls/otp-field/otp-field.css';
