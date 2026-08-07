@@ -200,6 +200,98 @@ describe('readMetaLine — the progress field (ADR-0146 F1)', () => {
   })
 })
 
+// ── ADR-0174 cl.2 / SPEC-R20: the additive `plan` field ─────────────────────────────────────────────────
+describe('readMetaLine — the plan field (ADR-0174 cl.2 / SPEC-R20 AC1)', () => {
+  it('round-trips {note, plan:{steps:[{id,description}]}} alongside note/trace/ask/progress/error', () => {
+    const line = JSON.stringify({
+      a2uiMeta: {
+        note: 'Here is my plan.',
+        ask: { surfaceId: 'ask-1' },
+        plan: { steps: [{ id: 'step-1', description: 'Gather requirements' }, { id: 'step-2', description: 'Build the surface' }] },
+      },
+    })
+    const parsed = readMetaLine(line)
+    expect(parsed).toEqual({
+      a2uiMeta: {
+        note: 'Here is my plan.',
+        ask: { surfaceId: 'ask-1' },
+        plan: { steps: [{ id: 'step-1', description: 'Gather requirements' }, { id: 'step-2', description: 'Build the surface' }] },
+        trace: undefined,
+      },
+    })
+  })
+
+  it('a malformed plan (non-object) yields the envelope WITHOUT plan — note/ask/trace still parse', () => {
+    const line = '{"a2uiMeta":{"note":"hi","ask":{"surfaceId":"ask-1"},"plan":"not-an-object"}}'
+    const parsed = readMetaLine(line)
+    expect(parsed).toBeDefined()
+    expect(parsed!.a2uiMeta.note).toBe('hi')
+    expect(parsed!.a2uiMeta.ask).toEqual({ surfaceId: 'ask-1' })
+    expect(parsed!.a2uiMeta.plan).toBeUndefined()
+  })
+
+  it('a malformed plan (missing steps) yields the envelope WITHOUT plan', () => {
+    const line = '{"a2uiMeta":{"note":"hi","plan":{}}}'
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.note).toBe('hi')
+    expect(parsed!.a2uiMeta.plan).toBeUndefined()
+  })
+
+  it('a malformed plan (non-array steps) yields the envelope WITHOUT plan', () => {
+    const line = '{"a2uiMeta":{"note":"hi","plan":{"steps":"nope"}}}'
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.plan).toBeUndefined()
+  })
+
+  it('a malformed plan (a step missing a string id) yields the envelope WITHOUT plan', () => {
+    const line = '{"a2uiMeta":{"note":"hi","plan":{"steps":[{"description":"no id"}]}}}'
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.plan).toBeUndefined()
+  })
+
+  it('a malformed plan (a step missing a string description) yields the envelope WITHOUT plan', () => {
+    const line = '{"a2uiMeta":{"note":"hi","plan":{"steps":[{"id":"step-1"}]}}}'
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.plan).toBeUndefined()
+  })
+
+  it('a malformed plan (a step with non-string id/description) yields the envelope WITHOUT plan', () => {
+    const line = '{"a2uiMeta":{"note":"hi","plan":{"steps":[{"id":42,"description":"nope"}]}}}'
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.plan).toBeUndefined()
+  })
+
+  it('an array "plan" is rejected the same way (never a Record cast on an array)', () => {
+    const line = '{"a2uiMeta":{"note":"hi","plan":["step-1"]}}'
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.plan).toBeUndefined()
+  })
+
+  it('a note-only line (no plan at all) still parses with plan undefined — zero blast radius', () => {
+    const line = '{"a2uiMeta":{"note":"hi"}}'
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.plan).toBeUndefined()
+  })
+
+  it('a plan with an empty steps array round-trips (a degenerate but structurally valid plan)', () => {
+    const line = '{"a2uiMeta":{"note":"hi","plan":{"steps":[]}}}'
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.plan).toEqual({ steps: [] })
+  })
+
+  it('the version discriminator still wins even when plan is present (adversarial input)', () => {
+    const line = '{"version":"v1.0","a2uiMeta":{"note":"nope","plan":{"steps":[{"id":"s","description":"d"}]}}}'
+    expect(isMetaLine(line)).toBe(false)
+  })
+
+  it('a malformed plan never blocks a well-formed ask on the SAME line — each field is independent', () => {
+    const line = '{"a2uiMeta":{"note":"hi","ask":{"surfaceId":"ask-1"},"plan":{"steps":"nope"}}}'
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.ask).toEqual({ surfaceId: 'ask-1' })
+    expect(parsed!.a2uiMeta.plan).toBeUndefined()
+  })
+})
+
 // ── GH #144: the additive `error` field (a transport-composed terminal failure signal) ─────────────────────
 describe('readMetaLine / formatErrorLine — the error field (GH #144)', () => {
   it('formatErrorLine round-trips through readMetaLine', () => {
