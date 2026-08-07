@@ -1,6 +1,6 @@
 # SPEC — Multi-Select Field (M-F component contract)
 
-> Status: proposed · v0.1 · 2026-08-07 · Layer: SPEC (execution contract)
+> Status: accepted · v0.1 · 2026-08-07 · Layer: SPEC (execution contract)
 > Refines: [`../adr/0175-association-multiselect-field-design-intake.md`](../adr/0175-association-multiselect-field-design-intake.md)
 > (the ratified architecture this document turns into a checkable behavior contract — cl.1 mint
 > ruling, cl.2 wire/catalog shape, cl.3 association-editing fence; ADR-0175's own Open forks
