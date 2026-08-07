@@ -83,4 +83,10 @@ it carries the `ToolDef`/`ExecuteTool` seam, never key handling, registry code, 
 - New/changed catalog components the renderer paints → `agent-ui-catalog`.
 - Authoring the A2UI message stream an agent emits → `a2ui-compose`.
 - The session/turn model or validate-then-stream pipeline → `agent-protocols:a2ui-chat-agent-facts`.
-- MCP client integration → not built; deferred to its own future ADR (ADR-0168 Non-goals :109-110).
+- MCP client integration → DESIGNED, not built: ADR-0177 (which un-defers ADR-0168 Non-goals
+  :109-110). An MCP server registers as a manifest-registry SOURCE (N discovered
+  `IntegrationManifest`s, never one multi-tool entry), HTTP/SSE server-side only (stdio deferred),
+  tool schemas map additively onto `ToolDef`/`validateToolInput` under the id≠tool.name≠label law,
+  behind a config-registered server allowlist. Read the ADR before building — the connector module,
+  the allowlist config, and this skill's own MCP-manifest pattern section are its named build-wave
+  repairs, not yet landed.
