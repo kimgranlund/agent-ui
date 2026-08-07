@@ -4,7 +4,7 @@
 // it — this file's own `vi.mock` of the provider dispatch module is scoped to its own module
 // registry, so neither file's mocks can leak into the other's suite.
 //
-// Four things S5 adds over the shipped S1-S4 seam, each its own describe block below:
+// Five things S5+S6 add over the shipped S1-S4 seam, each its own describe block below:
 //   1. the ready-gate itself — a request racing boot QUEUES on discovery, never served early
 //      (the `mcpDiscovery` test-only injection, LLD §5.6 — a manually-resolved deferred, no sink,
 //      no REGISTRY mutation);
@@ -16,12 +16,19 @@
 //      `chat-route.test.ts:231-244` — `validateMcpServersConfig`'s own throw behavior is S1's unit
 //      contract, already proven in `servers-config.test.ts`; what's left to prove here is that S5's
 //      WIRING calls it unguarded, so a real malformed roster is a boot failure, never deferred into
-//      the first request).
+//      the first request);
+//   5. (S6, LLD-C6 / SPEC-R28, the F1 ruling) the admin GET (`/integrations`) — rides the SAME
+//      ready-gate as `/status`, and serves trios ONLY. `projectIntegrationTrios` is unit-tested
+//      directly against a FABRICATED manifest array (never the real `REGISTRY` — the SPEC-R26/S4
+//      untouched-registry discipline this whole arc holds) so the leak-proof claim holds for ANY
+//      future registry content, not just today's three hand-authored entries.
 
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { a2uiDevProxyPlugin } from '../../tools/agent/dev-proxy-plugin.ts'
+import { a2uiDevProxyPlugin, projectIntegrationTrios } from '../../tools/agent/dev-proxy-plugin.ts'
 import type { DiscoveryReport } from '../../tools/agent/integrations/mcp/discover.ts'
+import { listIntegrations } from '../../tools/agent/integrations/index.ts'
+import type { IntegrationManifest } from '../../tools/agent/integrations/index.ts'
 
 declare const process: { cwd(): string; env: Record<string, string | undefined> }
 
@@ -78,6 +85,22 @@ function mountPlugin(opts?: Parameters<typeof a2uiDevProxyPlugin>[0]): Middlewar
  *  no key required). */
 function getStatus(handler: Middleware): Promise<{ status: number; body: Record<string, unknown> }> {
   const req = { method: 'GET', url: '/status' }
+  let settle: (v: { status: number; body: Record<string, unknown> }) => void = () => {}
+  const done = new Promise<{ status: number; body: Record<string, unknown> }>((resolve) => {
+    settle = resolve
+  })
+  const res = {
+    statusCode: 0,
+    setHeader: () => {},
+    end: (payload: string) => settle({ status: res.statusCode, body: JSON.parse(payload) as Record<string, unknown> }),
+  }
+  handler(req, res)
+  return done
+}
+
+/** GET /integrations (S6, LLD-C6) — the SAME shape as `getStatus` above, one sub-path over. */
+function getIntegrations(handler: Middleware): Promise<{ status: number; body: Record<string, unknown> }> {
+  const req = { method: 'GET', url: '/integrations' }
   let settle: (v: { status: number; body: Record<string, unknown> }) => void = () => {}
   const done = new Promise<{ status: number; body: Record<string, unknown> }>((resolve) => {
     settle = resolve
@@ -192,6 +215,100 @@ describe('empty-roster byte-identity (SPEC-R27 AC2 — the default, uninjected p
     const request = captured.requests[before]!
     expect((request['tools'] as Array<{ name: string }>).map((t) => t.name)).toEqual(['weather', 'currency'])
     expect(typeof request['executeTool']).toBe('function')
+  })
+})
+
+// ── S6 (LLD-C6, SPEC-R28) — the admin GET, the F1 ruling (Kim, GH #567) ─────────────────────────────────
+
+describe('projectIntegrationTrios (LLD-C6 §3.5, SPEC-R28) — a fact-only projection, leak-proof by construction', () => {
+  // A FABRICATED manifest array — never the real REGISTRY (registry.ts is frozen, §0; and no test in
+  // this arc mutates the module singleton, the SPEC-R26/S4 discipline). `mcp:*`-shaped on purpose, so
+  // the leak-proof claim covers a DISCOVERED manifest too, not only a hand-authored one.
+  const fake: IntegrationManifest[] = [
+    {
+      id: 'weather',
+      version: '1.0.0',
+      label: 'Weather (Open-Meteo)',
+      description: 'Current conditions. Keyless.',
+      tool: { name: 'weather', description: 'weather', input_schema: { type: 'object', properties: {} } },
+      auth: 'none',
+      execute: async () => '',
+    },
+    {
+      id: 'mcp:acme:lookup',
+      version: '1.0.0',
+      label: 'Acme: lookup',
+      description: 'A discovered MCP tool.',
+      // The WIRE tool name is deliberately unrelated text to the id/label/description above (the
+      // three-fact law, SPEC-R25) — so a leak of it is unambiguously detectable below, unlike `lookup`
+      // itself which legitimately appears in the label by the mapping's own convention.
+      tool: { name: 'internal_op_9f3', description: 'looks things up', input_schema: { type: 'object', properties: {} } },
+      auth: 'serverKey',
+      envKey: 'ACME_API_KEY',
+      execute: async () => '',
+    },
+  ]
+
+  it('carries every {id, label, description} trio, in order, and NOTHING else', () => {
+    expect(projectIntegrationTrios(fake)).toEqual([
+      { id: 'weather', label: 'Weather (Open-Meteo)', description: 'Current conditions. Keyless.' },
+      { id: 'mcp:acme:lookup', label: 'Acme: lookup', description: 'A discovered MCP tool.' },
+    ])
+  })
+
+  it('never leaks envKey, auth, tool, or version — a JSON round-trip proves no OTHER field survives', () => {
+    const projected = projectIntegrationTrios(fake)
+    for (const row of projected) expect(Object.keys(row).sort()).toEqual(['description', 'id', 'label'])
+    const json = JSON.stringify(projected)
+    expect(json).not.toContain('ACME_API_KEY')
+    expect(json).not.toContain('serverKey')
+    expect(json).not.toContain('internal_op_9f3') // the wire tool.name — absent from the trio entirely
+  })
+
+  it('an empty manifest list projects to an empty array', () => {
+    expect(projectIntegrationTrios([])).toEqual([])
+  })
+})
+
+describe('GET /integrations rides the SAME boot-await ready-gate as /status (SPEC-R28, LLD-C6)', () => {
+  it('answers a request ONLY after the injected discovery pass resolves', async () => {
+    let resolveDiscovery!: (r: DiscoveryReport) => void
+    const discovery = new Promise<DiscoveryReport>((resolve) => {
+      resolveDiscovery = resolve
+    })
+    const handler = mountPlugin({ mcpDiscovery: () => discovery })
+
+    const done = getIntegrations(handler)
+    let settled = false
+    void done.then(() => {
+      settled = true
+    })
+
+    for (let i = 0; i < 5; i++) await Promise.resolve()
+    expect(settled).toBe(false) // still queued — discovery hasn't resolved yet
+
+    resolveDiscovery({ registered: [], skipped: [] })
+    const { status } = await done
+    expect(status).toBe(200)
+  })
+})
+
+describe('GET /integrations — empty-roster byte-identity (SPEC-R28 AC1 — the served trios equal listIntegrations(), no leak)', () => {
+  it('the served set equals the REAL registry\'s trio projection (today: the three hand-authored entries only)', async () => {
+    const handler = mountPlugin() // no mcpDiscovery override — REAL discovery, REAL committed EMPTY roster
+    const { status, body } = await getIntegrations(handler)
+    expect(status).toBe(200)
+    expect(Object.keys(body)).toEqual(['integrations'])
+    expect(body['integrations']).toEqual(projectIntegrationTrios(listIntegrations()))
+  })
+
+  it('the response body carries no URL, envKey, key value, or JSON-RPC fact (SPEC-R28 cl.2 boundary)', async () => {
+    const handler = mountPlugin()
+    const { body } = await getIntegrations(handler)
+    const json = JSON.stringify(body)
+    for (const leak of ['endpoint', 'envKey', 'jsonrpc', 'http://', 'https://']) {
+      expect(json.toLowerCase(), `leaked "${leak}"`).not.toContain(leak.toLowerCase())
+    }
   })
 })
 

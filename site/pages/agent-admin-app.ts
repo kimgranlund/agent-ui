@@ -54,7 +54,7 @@ import type { UIButtonElement } from '@agent-ui/components/controls/button'
 import type { UIToastRegionElement } from '@agent-ui/components/controls/toast-region'
 import { ACTIVE_PRESET_KEY, personaRoster, personaStore, resetPersona, saveImportedPersona, type Persona } from './agent-admin-presets.ts'
 import { exportPersonaFile, importedPersonaFrom, personaFileName, personaFileText, readPersonaFile } from './agent-admin-persona-file.ts'
-import { librariesForCategory } from './agent-admin-libraries.ts'
+import { librariesForCategory, setLiveIntegrations } from './agent-admin-libraries.ts'
 
 const root = document.querySelector('#app') ?? document.body
 
@@ -323,6 +323,19 @@ void (async () => {
       console.info('[agent-admin-app] stub preview — set a provider key in .env and restart `npm run dev` for a live model')
     } else {
       console.info('[agent-admin-app] stub preview — the shipped build makes no live model call')
+    }
+    // GH #567 S6 (LLD-C6/SPEC-R28, Kim's F1 ruling) — DEV only: the dev proxy's `GET /integrations`
+    // exists only under `vite dev` (worker/index.ts stays frozen, no production twin — ADR-0177
+    // §0/Non-goals); production keeps the hand-authored INTEGRATION_TOOLS pack, untouched. A
+    // discovered `mcp:*` trio joins the Integrations pack without a page reload: `setLiveIntegrations`
+    // plus a fresh `admin.libraries` assignment — the SAME identity-change law `applyPersona`'s own
+    // reassignment above relies on (agent-admin-libraries.ts's `librariesForCategory` doc comment).
+    if (import.meta.env.DEV) {
+      const trios = await overlay.fetchLiveIntegrations()
+      if (trios) {
+        setLiveIntegrations(trios)
+        admin.libraries = librariesForCategory(active.category)
+      }
     }
   } catch {
     console.info('[agent-admin-app] stub preview — the live overlay is unavailable')

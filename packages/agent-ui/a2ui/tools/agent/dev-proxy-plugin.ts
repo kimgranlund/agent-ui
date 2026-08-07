@@ -24,6 +24,13 @@
 // behavior (SPEC-R27's zero-cost no-op). `mcpDiscovery` is the test-only injection point (LLD §5.6):
 // production code and `vite.config.ts` never pass it, so the default (the real discovery pass) is
 // what actually boots.
+//
+// LLD-C6 (S6, mcp-connector.lld.md §3.5) — the admin GET (Kim's F1 ruling, GH #567). `GET /integrations`
+// sits beside `/status` in the SAME handler, so it rides the SAME `await mcpReady` gate above: a request
+// racing boot queues exactly like every other branch, and a `mcp:*` manifest is visible the instant
+// discovery has registered it. The body is TRIOS ONLY (`projectIntegrationTrios`, below) — no endpoint,
+// envKey name, key value, version, or tool fact ever leaves this route (SPEC-R28's cl.2 boundary); the
+// enablement wire itself (`integrations: string[]` of ids, browser→host) is untouched by this slice.
 
 import { readFileSync } from 'node:fs'
 import { loadEnv } from 'vite'
@@ -39,7 +46,8 @@ import { retrieve } from '../../src/corpus/retrieve.ts'
 import type { CorpusRecord } from '../../src/corpus/record.ts'
 import { loadCatalog } from '../../src/catalog/catalog.ts'
 import type { TurnInput, Effort } from '../../src/agent/agent-transport.ts'
-import { buildToolDispatch, resolveIntegrations } from './integrations/index.ts'
+import { buildToolDispatch, resolveIntegrations, listIntegrations } from './integrations/index.ts'
+import type { IntegrationManifest } from './integrations/index.ts'
 import { validateMcpServersConfig } from './integrations/mcp/servers-config.ts'
 import type { McpServersConfig } from './integrations/mcp/servers-config.ts'
 import { discoverMcpIntegrations } from './integrations/mcp/discover.ts'
@@ -101,6 +109,17 @@ function sendJson(res: ServerResponse, status: number, body: unknown): void {
   res.statusCode = status
   res.setHeader('content-type', 'application/json')
   res.end(JSON.stringify(body))
+}
+
+/** LLD-C6 §3.5 / SPEC-R28 — the trios-ONLY projection the admin GET serves. Exported (not `registry.ts`,
+ *  frozen by ADR-0177 §0) so a unit test can feed it a FABRICATED manifest array — incl. an `mcp:*`-shaped
+ *  id, a `serverKey`/`envKey` pair, a `tool`/`version` — without ever touching the real `REGISTRY`
+ *  singleton (the SPEC-R26/S4 REGISTRY-untouched discipline this whole arc holds). Whatever the input
+ *  carries, only `{id, label, description}` survives. */
+export function projectIntegrationTrios(
+  manifests: readonly IntegrationManifest[],
+): Array<{ id: string; label: string; description: string }> {
+  return manifests.map((m) => ({ id: m.id, label: m.label, description: m.description }))
 }
 
 export function a2uiDevProxyPlugin(opts?: {
@@ -173,9 +192,9 @@ export function a2uiDevProxyPlugin(opts?: {
 
       server.middlewares.use(MOUNT, (req: IncomingMessage, res: ServerResponse) => {
         void (async () => {
-          // The ready-gate (LLD §5.3): EVERY branch below — /status, /chat, produce — sits behind
-          // discovery's completion. A request racing boot queues here instead of racing the registry;
-          // once `mcpReady` is settled this is a zero-cost microtask on every later request.
+          // The ready-gate (LLD §5.3): EVERY branch below — /status, /integrations, /chat, produce —
+          // sits behind discovery's completion. A request racing boot queues here instead of racing the
+          // registry; once `mcpReady` is settled this is a zero-cost microtask on every later request.
           await mcpReady
           const url = req.url ?? '/'
           try {
@@ -186,6 +205,13 @@ export function a2uiDevProxyPlugin(opts?: {
                 (e) => e.implemented && typeof env[e.envKey] === 'string' && env[e.envKey] !== '',
               ).length
               sendJson(res, 200, { available: available > 0, providers: available })
+              return
+            }
+
+            // GET /integrations — LLD-C6 (S6, SPEC-R28, the F1 ruling): the registered trios, post-gate
+            // so `mcp:*` entries appear. Trios ONLY — no endpoint/envKey/key/tool/version fact.
+            if (req.method === 'GET' && url.startsWith('/integrations')) {
+              sendJson(res, 200, { integrations: projectIntegrationTrios(listIntegrations()) })
               return
             }
 

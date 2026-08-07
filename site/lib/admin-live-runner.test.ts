@@ -1,7 +1,7 @@
 // admin-live-runner.test.ts — ALM-C7 (TKT-0052/ADR-0136): createAdminAgentTurn's fetch-boundary legs.
 // `fetch` is stubbed (no real network, no key) — the feed-live-transport.test.ts stub-fetch precedent.
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createAdminAgentTurn, createAdminSurfaceTurn } from './admin-live-runner.ts'
+import { createAdminAgentTurn, createAdminSurfaceTurn, fetchLiveIntegrations } from './admin-live-runner.ts'
 import type { AdminTurnRequest, AdminSurfaceTurnRequest } from '@agent-ui/app/agent-admin-schema'
 import { formatErrorLine } from '../../packages/agent-ui/a2ui/src/agent/meta-line.ts'
 
@@ -264,5 +264,48 @@ describe('createAdminSurfaceTurn — effort threading (the Effort picker reachin
     const body = JSON.parse(init.body) as Record<string, unknown>
     expect(body.effort).toBe('high')
     expect(body.model).toBe('claude-sonnet-5')
+  })
+})
+
+// ── GH #567 S6 (LLD-C6/SPEC-R28, Kim's F1 ruling) — fetchLiveIntegrations' fetch-boundary legs ──────────
+
+describe('fetchLiveIntegrations', () => {
+  it('resolves the served trios on a well-shaped 200', async () => {
+    const served = [
+      { id: 'weather', label: 'Weather (Open-Meteo)', description: 'Current conditions. Keyless.' },
+      { id: 'mcp:acme:lookup', label: 'Acme: lookup', description: 'A discovered MCP tool.' },
+    ]
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      expect(url).toBe('/__a2ui/agent/integrations')
+      return new Response(JSON.stringify({ integrations: served }), { status: 200 })
+    }))
+    await expect(fetchLiveIntegrations()).resolves.toEqual(served)
+  })
+
+  it('degrades to undefined on a non-2xx response (no proxy / production build)', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('not found', { status: 404 })))
+    await expect(fetchLiveIntegrations()).resolves.toBeUndefined()
+  })
+
+  it('degrades to undefined on a network failure — never a thrown turn', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('offline') }))
+    await expect(fetchLiveIntegrations()).resolves.toBeUndefined()
+  })
+
+  it('degrades to undefined on a malformed body (non-array, or a row missing a trio field)', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ integrations: 'not-an-array' }), { status: 200 })))
+    await expect(fetchLiveIntegrations()).resolves.toBeUndefined()
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ integrations: [{ id: 'x', label: 'X' }] }), { status: 200 })))
+    await expect(fetchLiveIntegrations()).resolves.toBeUndefined()
+  })
+
+  it('an empty roster\'s response (the hand-authored-only trios) resolves as a normal, non-empty array — never mistaken for "unavailable"', async () => {
+    const handAuthored = [
+      { id: 'weather', label: 'Weather (Open-Meteo)', description: 'Current conditions. Keyless.' },
+      { id: 'wikipedia-search', label: 'Wikipedia search', description: 'Search Wikipedia and return the top results with one-line summaries. Keyless.' },
+      { id: 'currency', label: 'Currency rates (Frankfurter)', description: 'Convert an amount between currencies at the latest ECB reference rates. Keyless.' },
+    ]
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ integrations: handAuthored }), { status: 200 })))
+    await expect(fetchLiveIntegrations()).resolves.toEqual(handAuthored)
   })
 })
