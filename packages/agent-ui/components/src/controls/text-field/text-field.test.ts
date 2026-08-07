@@ -347,6 +347,36 @@ describe('ui-text-field — user-invalid timing + the non-colour cue', () => {
     expect(message.textContent).toBe('')
     el.remove()
   })
+
+  // GH #554 — a setCustomValidity-only rejection (native formValidity() stays valid) must gate the SAME
+  // danger treatment a native invalid does, after the first interaction. Before the fix, the trackUserInvalid
+  // gate read `formValidity()` alone, so this case never surfaced: aria-invalid never set, the message node
+  // stayed empty, even though internals.setValidity had already published the custom message.
+  it('a setCustomValidity-only rejection (native valid) renders through the message node after interaction', async () => {
+    const { el } = makeField()
+    document.body.append(el)
+    const editor = editorOf(el)
+    const message = messageOf(el)
+
+    el.setCustomValidity('Account already exists')
+    await whenFlushed()
+    // pre-interaction: invalid (merged) but no danger cue yet (same timing gate as the native case)
+    expect(editor.hasAttribute('aria-invalid')).toBe(false)
+
+    editor.dispatchEvent(new Event('blur')) // first interaction
+    await whenFlushed()
+    expect(editor.getAttribute('aria-invalid')).toBe('true')
+    expect(editor.getAttribute('aria-describedby')).toBe(message.id)
+    expect(message.hidden).toBe(false)
+    expect(message.textContent).toBe('Account already exists')
+
+    el.setCustomValidity('') // clears the custom contribution — resolves to valid
+    await whenFlushed()
+    expect(editor.hasAttribute('aria-invalid')).toBe(false)
+    expect(message.hidden).toBe(true)
+    expect(message.textContent).toBe('')
+    el.remove()
+  })
 })
 
 // ── the disabled / readonly channel (tf-disabled) ─────────────────────────────

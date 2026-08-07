@@ -325,8 +325,8 @@ export class UIFormElement extends UIElement {
    * The MERGED validity verdict — `formValidity()` ⊕ the renderer-driven `#customValidity` signal (ADR-0029
    * §5): native wins when already invalid; a non-empty custom message produces `{valid:false,
    * flags:{customError:true}, message}`; both empty → valid (clear). The SINGLE source feeding both the
-   * internals-publishing effect above and `FormConnectDetail.validity` (ADR-0050 — extracted so the two
-   * never drift apart).
+   * internals-publishing effect above, `FormConnectDetail.validity` (ADR-0050), AND the protected
+   * `mergedValidity()` wrapper below — extracted so none of the three ever drift apart.
    */
   #mergedValidity(): ValidityResult {
     const native = this.formValidity()
@@ -334,6 +334,21 @@ export class UIFormElement extends UIElement {
     if (!native.valid) return native // native wins (e.g. valueMissing overrides the custom message)
     if (custom !== '') return { valid: false, flags: { customError: true }, message: custom }
     return native // both valid: clear
+  }
+
+  /**
+   * Protected read of the MERGED validity verdict (GH #554) — the same `formValidity() ⊕ setCustomValidity`
+   * merge already published to `internals.setValidity` and the ADR-0050 connect detail, exposed to a
+   * subclass because a private `#`-field is invisible across the class boundary. A subclass wiring
+   * `trackUserInvalid`'s `invalid` gate (or building its own internal error-message text) MUST read this,
+   * NOT `formValidity()` directly: `formValidity()` is native-only, so a `setCustomValidity`-only rejection
+   * (no native constraint violation) would satisfy `formValidity().valid` while `internals.validationMessage`
+   * already carries the custom message — the exact fleet-wide blind spot GH #554 found (every
+   * `trackUserInvalid`-composing control shared the same `!this.formValidity().valid` gate). Reading THIS
+   * keeps the visible danger treatment and the submission gate agreeing on one verdict, always.
+   */
+  protected mergedValidity(): ValidityResult {
+    return this.#mergedValidity()
   }
 
   /**

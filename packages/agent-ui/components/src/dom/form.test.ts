@@ -83,6 +83,11 @@ class FieldEl extends UIFormElement {
   effectiveDisabledProbe(): boolean {
     return this.effectiveDisabled()
   }
+  // GH #554 — the protected merged-validity accessor a subclass (e.g. `trackUserInvalid`'s `invalid` gate)
+  // reads instead of `formValidity()` directly.
+  mergedValidityProbe(): ValidityResult {
+    return this.mergedValidity()
+  }
 }
 customElements.define('ui-form-field', FieldEl)
 
@@ -388,6 +393,49 @@ describe('setCustomValidity — renderer-driven custom-validity seam (ADR-0029)'
     document.body.append(el)
     // No setCustomValidity call — only the initial clear should appear
     for (const v of calls.validitySets) expect(Object.keys(v.flags)).toHaveLength(0)
+    el.remove()
+  })
+})
+
+// ── protected mergedValidity() accessor (GH #554) ──────────────────────────────
+// The fix: `formUserInvalid()`'s underlying `trackUserInvalid` gate (every composing control) read only
+// `formValidity()` (native), never the merged verdict already published to `internals.setValidity` — so a
+// `setCustomValidity`-only rejection satisfied `formValidity().valid` and never gated the visible danger
+// treatment. `mergedValidity()` is the SAME single source (`#mergedValidity`) exposed across the class
+// boundary, so a subclass's gate and the platform's published verdict can never drift apart again.
+
+describe('protected mergedValidity() accessor (GH #554)', () => {
+  it('both empty → valid (identical to formValidity() when no custom message is set)', () => {
+    const { el } = makeField()
+    expect(el.mergedValidityProbe()).toEqual({ valid: true })
+  })
+
+  it('setCustomValidity-only (native valid) → invalid, customError, the custom message — the exact GH #554 gap', async () => {
+    const { el } = makeField()
+    document.body.append(el)
+    el.setCustomValidity('Account already exists')
+    await el.updateComplete
+    const verdict = el.mergedValidityProbe()
+    expect(verdict.valid).toBe(false)
+    if (!verdict.valid) {
+      expect(verdict.flags).toEqual({ customError: true })
+      expect(verdict.message).toBe('Account already exists')
+    }
+    el.remove()
+  })
+
+  it('native invalid + a custom message → native wins (same precedence as the internals-published verdict)', async () => {
+    const { el } = makeField()
+    document.body.append(el)
+    el.required = true // native valueMissing (value is '')
+    el.setCustomValidity('custom message')
+    await el.updateComplete
+    const verdict = el.mergedValidityProbe()
+    expect(verdict.valid).toBe(false)
+    if (!verdict.valid) {
+      expect(verdict.flags).toEqual({ valueMissing: true })
+      expect(verdict.message).toBe('Required')
+    }
     el.remove()
   })
 })

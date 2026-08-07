@@ -70,7 +70,8 @@ export class UICheckboxElement extends UIIndicatorElement {
     // ADR-0051 — the user-invalid TIMING controller: gates the danger treatment until the first
     // blur/change (host itself is the focusable element — the tabbable trait's tabindex rides the
     // host directly, no internal part). Reflects :state(user-invalid) + internals.ariaInvalid.
-    const invalidController = trackUserInvalid(this, { invalid: () => !this.formValidity().valid })
+    // GH #554 — MERGED validity, not `formValidity()` alone (a `setCustomValidity`-only rejection must gate).
+    const invalidController = trackUserInvalid(this, { invalid: () => !this.mergedValidity().valid })
     this.#userInvalid = invalidController
     this.effect(() => {
       if (invalidController.userInvalid()) {

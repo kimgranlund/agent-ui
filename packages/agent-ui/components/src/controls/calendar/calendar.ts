@@ -459,7 +459,8 @@ export class UICalendarElement extends UIFormElement {
     // `change` is emitted directly on `this` by #commitDate/#commitRangeDate, so it lands here
     // regardless of which commit path fired. Reflects :state(user-invalid) + aria-invalid on the
     // grid part (the role-carrying part — role='grid' rides the part, not internals.role).
-    const invalidController = trackUserInvalid(this, { invalid: () => !this.formValidity().valid })
+    // GH #554 — MERGED validity, not `formValidity()` alone (a `setCustomValidity`-only rejection must gate).
+    const invalidController = trackUserInvalid(this, { invalid: () => !this.mergedValidity().valid })
     this.#userInvalid = invalidController
     this.effect(() => {
       if (invalidController.userInvalid()) {

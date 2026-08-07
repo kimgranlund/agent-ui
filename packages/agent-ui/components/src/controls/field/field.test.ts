@@ -150,6 +150,61 @@ describe('UIFieldElement — error timing (LLD-C4 #renderValidity)', () => {
   })
 })
 
+// ── setCustomValidity-only rejection renders through the field's inline error (GH #554) ────────────
+// Root cause: the control's `trackUserInvalid` gate (feeding `formUserInvalid()` → `assoc.userInvalid()`,
+// read above) checked ONLY `formValidity()` (native) — so a control that is native-VALID but carries a
+// `setCustomValidity` message (the a2ui `checks` seam, ADR-0029) never flipped `userInvalid()` true, and
+// `#renderValidity` gates its `showing` on `assoc.userInvalid() && message !== ''`: the message was there
+// (`assoc.validity()` already read the merged verdict) but the gate stayed closed, so the field's error part
+// never showed it. Fixed by routing the tracker's `invalid` gate through the new protected `mergedValidity()`
+// accessor (dom/form.ts) — the SAME merge `assoc.validity()` already read, so gate and message agree.
+describe('UIFieldElement — setCustomValidity-only rejection (GH #554)', () => {
+  it('a native-VALID control with only a setCustomValidity message shows the field error after interaction', async () => {
+    const field = document.createElement('ui-field') as UIFieldElement
+    const control = makeControl() // no `required` — native formValidity() stays valid throughout
+    field.append(control)
+    document.body.append(field)
+    await whenFlushed()
+    const editor = editorOf(control)
+    const error = errorPartOf(field)
+
+    control.setCustomValidity('Account already exists')
+    await whenFlushed()
+    // pre-interaction: merged-invalid but no danger cue yet (the same untouched-timing law as native invalid)
+    expect(error.hidden).toBe(true)
+    expect(error.textContent).toBe('')
+
+    editor.dispatchEvent(new Event('blur')) // first interaction
+    await whenFlushed()
+    expect(error.hidden).toBe(false)
+    expect(error.textContent).toBe('Account already exists')
+
+    control.setCustomValidity('') // renderer clears the rejection (native parity)
+    await whenFlushed()
+    expect(error.hidden).toBe(true)
+    expect(error.textContent).toBe('')
+    field.remove()
+  })
+
+  it('the pre-existing native-validity path is unchanged (required+empty still renders through the field error)', async () => {
+    const field = document.createElement('ui-field') as UIFieldElement
+    const control = makeControl()
+    control.required = true
+    field.append(control)
+    document.body.append(field)
+    await whenFlushed()
+    const editor = editorOf(control)
+    const error = errorPartOf(field)
+
+    editor.dispatchEvent(new Event('blur'))
+    await whenFlushed()
+    expect(error.hidden).toBe(false)
+    const verdict = control.formValidityProbe()
+    expect(error.textContent).toBe(verdict.valid ? '' : verdict.message)
+    field.remove()
+  })
+})
+
 // ── ONE-message stitching + the aria-describedby retention probe (LLD-C2 §wire, F3) ────────────────
 
 describe('UIFieldElement — one-message stitching + describedby retention (LLD-C2/LLD-C4)', () => {

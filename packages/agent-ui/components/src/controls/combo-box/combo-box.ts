@@ -151,7 +151,8 @@ export class UIComboBoxElement extends UIFormElement {
     // precedent. Reflects :state(user-invalid) + aria-invalid on the editor (the role-carrying
     // part — role='combobox' rides the part, not internals.role, so the base's guarded default
     // never fires).
-    const invalidController = trackUserInvalid(this, { invalid: () => !this.formValidity().valid })
+    // GH #554 — MERGED validity, not `formValidity()` alone (a `setCustomValidity`-only rejection must gate).
+    const invalidController = trackUserInvalid(this, { invalid: () => !this.mergedValidity().valid })
     this.#userInvalid = invalidController
     this.effect(() => {
       if (invalidController.userInvalid()) {
