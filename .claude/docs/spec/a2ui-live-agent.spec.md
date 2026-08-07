@@ -1,6 +1,34 @@
 # SPEC — A2UI Live-Agent Example (a real LLM emitting A2UI over the wire)
 
-> Status: accepted · v0.10 · 2026-08-06 (v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> Status: accepted · v0.11 · 2026-08-07 (v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> v0.11 changelog (ADR-0174 cl.1/cl.3/cl.4/cl.6, PROPOSED pending Kim's review — the planner-stage
+> pilot's HOST-SIDE loop, the half SPEC-R20 scoped out): NEW **SPEC-R21** (§3.2c) — the opt-in sequential
+> plan-runner: entirely HOST-side of the `AgentTransport` seam (each dispatched turn is an ordinary
+> `TurnInput`; `produce()`/the proxies serve it indistinguishably from a chat turn — zero produce/proxy/
+> transport change), gated per persona by a `SURFACE_A2UI_KEY`-precedent modality gate (OFF/absent ⇒
+> byte-identical single-turn behavior), consuming a declared plan ONLY from the host's own plan-request
+> turn (never from a runner-dispatched turn — no recursion, the plan frozen at consumption), driving one
+> `{kind:'intent'}` dispatch per step in declared order over ONE growing `Session` via the UNCHANGED
+> reducers, closing with exactly one synthesis dispatch (never host-side surface assembly — SPEC-R5's
+> law), projecting step lifecycle onto the EXISTING status-stream grouping (ADR-0146 F5 `parent` +
+> ADR-0159 receipts; K+1 groups — steps + synthesis; `TURN_PROGRESS_STAGES` NOT widened; zero new
+> component), bounded by a plan-step cap
+> (over-cap ⇒ NOT consumed, one visible warning) and one shared `AbortSignal` (runner dispatches are
+> EXEMPT from SPEC-R8's demo max-turns cap — the step cap + no-recursion are their runaway guard), with
+> user-initiated dispatches SUPPRESSED for a run's duration (at most one run in flight, K+1 accounting
+> true by construction; disable-vs-queue is the LLD's presentation call), and with all three stages
+> INTERNAL per ADR-0174 cl.6 (no stage UI, no persona-editable stage prose). NEW **SPEC-R22** — the
+> failure/abandon grain + the advisory law: a step's failure continues the run (the acknowledgment folded
+> into the NEXT dispatch's user content — the `frameClientMessage` `error`-arm shape, never a separate
+> dispatch), a synthesis failure leaves every rendered step surface standing, the plan turn's own failure
+> is the one true abort, an aborted run dispatches nothing further, and the runner NEVER verifies a
+> step's output against its declaration (ADR-0174 OF1's no-integrity-check law — divergence is legal;
+> groups close on the CALL's terminal state, never on content matching). An ask declared on a
+> runner-dispatched turn degrades to its prose note (the ADR-0097 standing degrade) — the pilot loop is
+> non-interactive by construction. SPEC-R6's plan-mechanics paragraph + AC6 widen IN PLACE (this SPEC's
+> established pattern) to add the synthesis-turn teaching ADR-0174 cl.6 routes into `GRAMMAR`. SPEC-R20
+> and every existing requirement are byte-untouched; `ProduceOptions`/`ProduceDeps` gain NOTHING (the
+> loop lives above the seam).
 > v0.10 changelog (ADR-0174 cl.2, PROPOSED pending Kim's review — the planner-stage pilot's plan-turn
 > wire representation): the ADR-0088 meta-line envelope gains a SIXTH, additive, MODEL-authored field,
 > `plan: { steps: [{ id: string; description: string }] }`, following the `ask`-arm precedent EXACTLY
@@ -222,6 +250,13 @@ isolated behind one interface (ADR-0069).
   never a second catalog — the render-time SPEC-R9 allowlist is untouched and unwidened by any mode.
 - **Turn / Session** — a turn is one agent generation (`user` = intent or a framed client message;
   `assistant` = the emitted A2UI stream); a session is the ordered turn list (ADR-0072).
+- **Plan run / plan-runner** (ADR-0174 cl.1/cl.3/cl.4, SPEC-R21/R22) — the HOST-side loop that, for a
+  planner-enabled persona, reframes a user intent as a plan request, reads the completed turn's declared
+  `plan` (SPEC-R20), then drives one ordinary `AgentTransport.turn()` dispatch per declared step plus one
+  closing synthesis dispatch, all over ONE growing `Session`. Lives entirely ABOVE the transport seam:
+  every dispatched turn is a plain `TurnInput`, so `produce()`/the proxies serve a plan run
+  indistinguishably from N ordinary chat turns. A declared plan is ADVISORY (ADR-0174 OF1) — displayed
+  and driven as declared, never verified against what the steps actually emit.
 - **Note / meta-line** (ADR-0088 §1) — a short natural-language rationale/reply the agent emits for a
   turn, carried as a reserved leading JSON line (`{"a2uiMeta":{"note":"…"}}`) on the SAME
   `AgentTransport.turn()` stream, ahead of any A2UI JSONL. It carries no `version` key, so it is provably
@@ -413,17 +448,22 @@ honesty floor (above) applies identically to a feed ask's payload.
   plus all five archetype recipes — `system-prompt-grammar.test.ts`, `npm test` green, no live model.
 
 **The GRAMMAR half additionally carries plan-arm mechanics teaching, mode-INVARIANT (ADR-0174 cl.2/cl.6,
-SPEC-R20).** Beside the note-line and feed-ask-mechanics instructions, the GRAMMAR half MUST teach how to
+SPEC-R20; synthesis half added v0.11 per SPEC-R21).** Beside the note-line and feed-ask-mechanics
+instructions, the GRAMMAR half MUST teach how to
 declare a plan turn: the meta `plan` field's exact shape (`{steps: [{id, description}]}`), that `plan`
 rides the SAME leading meta-line as `note`/`ask`, and that this is a HOST-OWNED mechanics fact the model
-must reproduce exactly. Like the `ask`-mechanics block above, this teaching MUST be present,
-verbatim-identical, in EVERY mode — the ADR-0090 mode axis conditions WHETHER/HOW MUCH the agent asks or
-approximates, never the wire mechanics it must reproduce exactly. Per ADR-0174 cl.6, this teaching joins
-`GRAMMAR` (host-owned, byte-pinned, drift-gated), NEVER a persona-editable `kind: "prompt-section"`
-entry — the SAME wire-integrity reasoning that keeps the `ask`-mechanics block above GRAMMAR-owned, not
-persona-editable.
+must reproduce exactly. The SAME block MUST additionally teach the SYNTHESIS turn's mechanics (ADR-0174
+cl.4/cl.6): when a turn asks the model to compose/finalize the surface set from what the session already
+shows, it composes ONLY from prior turns' context on the ordinary validated stream — procedural mechanics
+about what synthesis MEANS, never persona voice. Like the `ask`-mechanics block above, this teaching MUST
+be present, verbatim-identical, in EVERY mode — the ADR-0090 mode axis conditions WHETHER/HOW MUCH the
+agent asks or approximates, never the wire mechanics it must reproduce exactly. Per ADR-0174 cl.6, this
+teaching joins `GRAMMAR` (host-owned, byte-pinned, drift-gated), NEVER a persona-editable
+`kind: "prompt-section"` entry — the SAME wire-integrity reasoning that keeps the `ask`-mechanics block
+above GRAMMAR-owned, not persona-editable.
 - **AC6** *Given* `buildSystemPrompt(catalog, [])` (any mode), *when* read, *then* the plan-arm mechanics
-  teaching (the `plan` field's shape, its leading-meta-line placement) is present, byte-identical, in
+  teaching (the `plan` field's shape, its leading-meta-line placement, AND the synthesis-turn procedural
+  teaching — the v0.11 widening) is present, byte-identical, in
   `undefined`/`'default'`/`'specific'`/`'blue-sky'`, and none of it leaks into the derived `## Available
   components` section — `system-prompt-grammar.test.ts`, `npm test` green, no live model.
 
@@ -626,6 +666,154 @@ on) and the turn's `note`/A2UI lines render exactly as they do without it.
   as a well-formed `note`, *then* the streamed meta-line drops ONLY `plan` (the note still ships) — mirroring
   SPEC-R14's `RecordedTurn`/`createRecordedTransport` `{note, ask}` parity requirement EXACTLY, the SAME
   seam, no new mechanism — `round-trip.test.ts`, `npm test` green, no live model.
+
+### 3.2c The host-side planner loop (ADR-0174 cl.1/cl.3/cl.4/cl.6 — the pilot's execution contract)
+
+**SPEC-R21 — Opt-in sequential plan-runner: plan → K steps → synthesis, host-side of the
+`AgentTransport` seam.** The system MUST provide a host-side plan-runner realizing ADR-0174's sequential
+pilot loop, composed ENTIRELY from shipped mechanics. *(→ PRD-G1/G6; ADR-0174 cl.1/cl.3/cl.4/cl.6)*
+- **Placement.** The runner MUST live host-side of the `AgentTransport` seam (SPEC-R1): every turn it
+  dispatches MUST be an ordinary `TurnInput` (`{kind:'intent', text, session}` — the shape every shipped
+  chat consumer already fires at every turn index), so `produce()`, `ProduceOptions`, `ProduceDeps`, the
+  dev proxy, and the Worker are byte-UNTOUCHED — a plan run is, below the seam, indistinguishable from
+  N ordinary chat turns (the ADR-0174 Context finding, now normative). The runner module itself MUST be
+  pure of key/proxy/registry shapes (SPEC-N1's shell law governs its home either way; the exact module
+  path is the LLD's).
+- **The opt-in gate.** Planner mode MUST be OPT-IN per persona, via a modality-gate boolean following
+  the `SURFACE_A2UI_KEY`/`SURFACE_GENUI_KEY` precedent (ADR-0174 cl.1; the exact store constant and
+  admin presentation are the LLD's — ADR-0174 OF3). With the gate OFF or absent, the turn path MUST be
+  byte-identical to today's single-dispatch shape — including when a model volunteers a `plan`
+  declaration anyway: the host MUST NOT consume it (SPEC-R20's degrade law — the field drops from
+  consumption; the turn's note/lines render exactly as today).
+- **Consumption.** With the gate ON, the runner MUST dispatch the user's intent wrapped in a host-owned
+  plan-request framing (a PURE function — the `frameClientMessage` one-place precedent; the GRAMMAR's
+  request-triggered plan teaching, SPEC-R6 AC6, is what it triggers). The runner MUST consume a declared
+  `plan` ONLY from that completed plan-request turn's leading meta-line, and ONLY when it is well-formed
+  (SPEC-R20's shallow validation) AND within the step cap (below). A completed plan-request turn with NO
+  consumable plan (the model built directly, declined, or over-declared) MUST stand as an ordinary turn —
+  its validated output renders, the loop simply does not start; never an error. A `plan` declared on a
+  RUNNER-dispatched turn (a step or the synthesis turn) MUST NEVER be consumed — no nested/recursive
+  plan runs in this pilot — and the consumed plan is FROZEN at consumption: nothing declared mid-run
+  restructures the running loop.
+- **All three stages INTERNAL (ADR-0174 cl.6).** The runner MUST introduce NO user-facing stage UI — no
+  stage selector, no per-stage settings group, no persona-editable stage prose (the plan/synthesis
+  mechanics live in `GRAMMAR`, SPEC-R6 AC6). The status-stream projection below is the ONLY visible
+  artifact of a run.
+- **Sequencing.** The runner MUST dispatch exactly ONE turn per consumed step, in DECLARED order, each
+  step's instruction composed by a pure host-owned framing function embedding the declared `id` +
+  `description` verbatim (instruction text is DATA from the plan, never admin-authored teaching —
+  ADR-0174 cl.6), all over ONE growing `Session` via the UNCHANGED `appendUserTurn`/
+  `appendAssistantTurn` reducers — step N's dispatched session MUST contain every prior turn (the plan
+  turn included). Each dispatched turn runs its own full SPEC-R4 microloop below the seam, untouched.
+- **Synthesis.** After the last executed step the runner MUST dispatch exactly ONE closing synthesis
+  turn (a pure host-owned framing; the model composes the final surface set from the session on the
+  ordinary validated stream — SPEC-R5's validate-then-stream law is the ONLY path to a shipped surface;
+  the host MUST NEVER assemble/stitch surfaces itself, ADR-0174 cl.4).
+- **Projection.** On consumption the runner MUST seed K+1 `ui-status-stream` GROUPS — one per consumed
+  step (a stable per-step `parent` key derived from the declared step `id` — ADR-0146 F5) PLUS one for
+  the synthesis turn (a stable host-derived key; it is a dispatch with a lifecycle like any step's, and
+  SPEC-R22's synthesis-failure tier needs a group to close) — project each dispatch's own `TurnProgress`
+  events as children under its group (ADR-0159's receipt pattern), and close
+  each group with a terminal state: done (clean completion) · failed/warning (halt or transport error) ·
+  not-run (aborted before dispatch). `TURN_PROGRESS_STAGES` MUST NOT widen — a step is a GROUP, never a
+  stage (ADR-0146 F2's closed table stands) — and NO new component may be introduced.
+- **Bounds.** A plan-step cap MUST exist (the shipped default is build-tuning, indicative 8 — tunable
+  without a spec change, the SPEC-R13 budget precedent); a plan declaring MORE steps than the cap MUST
+  NOT be consumed (zero step dispatches — the host never truncates/rewrites a declaration it didn't
+  author, the advisory law's flip side) and the refusal MUST be visible (one warning-state status entry
+  naming the cap — the model's note announced a plan, so silent non-execution would lie by omission).
+  A consumed K-step plan MUST cost exactly K+1 further dispatches (K steps + 1 synthesis; the plan turn
+  makes K+2 total) — never more; the failure-acknowledgment (SPEC-R22) rides existing dispatches. ONE
+  caller-supplied `AbortSignal` MUST thread through every dispatch of a run. Worst-case VALIDATOR
+  (self-correct) rounds are therefore `(K+2) × maxRounds` by construction — SPEC-R4's per-call bound is
+  untouched, and each dispatch's provider-internal tool rounds stay separately bounded by the adapter
+  (GH #49's `MAX_TOOL_ROUNDS`), so every bound in the composition is finite. Runner-dispatched turns do
+  NOT count against SPEC-R8's demo max-turns cap — that cap keeps governing user-initiated/client-message
+  turns exactly as today, while the step cap + the no-recursion rule above are the equivalent runaway
+  guard for runner dispatches (counting them would make a plan's capacity shrink with conversation
+  length, a surprise with no offsetting safety: runner dispatches can never trigger further runs).
+- **Mid-run user interaction.** While a run is in flight, the host MUST NOT dispatch any user-initiated
+  turn — the composer's submit and every `shouldRunTurn`-eligible client message are SUPPRESSED for the
+  run's duration (whether the affordance disables or queues-then-replays is the LLD's presentation
+  call); a `wantResponse: false` silent apply stays legal as today (it never dispatches — SPEC-R8).
+  WHY: suppression is the only ruling that keeps SPEC-R21's K+1 accounting, the one-growing-`Session`
+  turn order, and at-most-ONE-run-in-flight true BY CONSTRUCTION rather than by page discipline — an
+  interleaved user turn would corrupt the run's session sequencing, and (gate ON) a mid-run submit
+  would start a SECOND concurrent run this sequential pilot explicitly does not design.
+- **Asks during a run.** An `ask` declared on a runner-dispatched turn MUST degrade to its prose note
+  (the ADR-0097 standing degrade path — never mounted as a pending ask): the pilot loop is
+  NON-INTERACTIVE by construction, so no runner-dispatched turn — step or synthesis alike — may mount
+  a control awaiting user input mid-run; the note-standalone rule (SPEC-R6) guarantees the question
+  survives as prose either way. Pausing a run for an ask is a named future extension, not designed
+  here.
+- **AC1** *Given* the runner with planner mode OFF/absent and a scripted stub `AgentTransport` whose
+  turn declares a `plan`, *when* the turn completes, *then* ZERO further dispatches occur and the
+  rendered result is byte-identical to today's single-turn path — deterministic unit test, `npm test`
+  green, no key, no live model.
+- **AC2** *Given* planner mode ON and a scripted transport declaring a K-step plan on the plan-request
+  turn, *when* the runner drives it, *then* exactly K step dispatches occur in declared order plus ONE
+  synthesis dispatch, every dispatched input is a plain `{kind:'intent'}` `TurnInput` (nothing
+  plan-shaped crosses the seam), and step N's session contains every prior turn — deterministic, no
+  live model; *given* the SAME scripted turns with the model declining to plan (no `plan` field), *then*
+  zero further dispatches occur and the turn stands as ordinary output.
+- **AC3** *Given* the plan-request/step/synthesis framing functions, *when* called twice with the same
+  declaration, *then* output is byte-identical (pure, deterministic), and a step's framing embeds its
+  declared `id` + `description` verbatim — unit test, `npm test` green.
+- **AC4** *Given* a plan declaring cap+1 steps, *then* NOTHING is consumed (zero step dispatches) and
+  exactly one warning status entry names the refusal; *given* a consumed K-step plan, *then* total
+  runner dispatches equal K+1 exactly; *given* a `plan` declared on a step turn mid-run, *then* it is
+  never consumed and the running step list is unchanged — deterministic unit tests.
+- **AC5** *Given* a consumed K-step plan driven with progress on, *then* K+1 groups seed (one per
+  declared step, keys derived from the declared ids, plus the synthesis group), each dispatch's
+  progress events land under its OWN group, terminal
+  states land as specified, and the diff introduces no new component and no `TURN_PROGRESS_STAGES`
+  member — unit + site test, `npm test`/`check:site` green.
+- **AC6** *Given* a scripted transport declaring an `ask` on a step turn's leading meta-line (with a
+  payload creating that surface), *when* the runner drives the run, *then* NO pending ask is mounted
+  (no per-ask `createRenderer()` host, no `pending` lifecycle entry), the ask's question survives as
+  the turn's prose note, and the run proceeds to the next dispatch uninterrupted — deterministic
+  unit/site test, `npm test` green, no key, no live model.
+
+**SPEC-R22 — Plan failure/abandon semantics + the advisory law.** A plan is ADVISORY (ADR-0174 OF1);
+failure handling is tiered by where a failure can actually occur (ADR-0174 cl.4), and the runner never
+polices declaration-vs-output. *(→ PRD-G1/G6; ADR-0174 cl.4, OF1)*
+- **The plan turn's own failure is the one true abort.** A `ProduceHalt`/transport error on the
+  plan-request turn means nothing ran and nothing was consumed — the existing single-call failure
+  semantics (SPEC-R5's halt-and-report, the GH #144 error line) apply completely unchanged; no loop
+  starts.
+- **A step's failure does NOT abort the run.** On a step dispatch's `ProduceHalt`/transport error the
+  runner MUST close that step's group failed, MUST continue to the next step (or synthesis, when the
+  failed step was last), and MUST fold a failure acknowledgment into the NEXT dispatch's user content —
+  the `frameClientMessage` `error`-arm framing shape ("step <id> failed … continue"), adapted, so the
+  model can never hallucinate the missing work — NEVER as a separate dispatch (the SPEC-R21 budget stays
+  exact, and no consecutive-same-role session shape is minted). This is safe by construction: a failed
+  step contributed ZERO wire content (SPEC-R5 — `produce()` yields only fully validated lines), so
+  there is nothing to roll back.
+- **A synthesis failure leaves every rendered step surface standing.** Each step's surfaces already
+  streamed as validated content; the runner MUST close the synthesis group failed/warning, MUST NOT
+  hide, dispose, or roll back any step's rendered output, and the run ends cleanly.
+- **Abandon.** Once the run's `AbortSignal` fires, the runner MUST dispatch nothing further (the
+  in-flight call's own signal semantics apply unchanged) and MUST close every not-yet-dispatched step's
+  group not-run — display honesty over silent disappearance.
+- **The advisory law (divergence is legal).** The runner MUST NOT verify a step's emitted output
+  against its declared `description` — no content-vs-declaration check, no plan-analogue of the `ask`
+  integrity check (ADR-0174 OF1 stands, genuinely undecided, NOT resolved here). A step MAY emit
+  surfaces unrelated to its declaration, or none at all; its group closes on the CALL's terminal state
+  (done/failed), never on content matching, and whatever validated content it did emit renders as
+  ordinary output.
+- **AC1** *Given* a scripted transport failing step j of K (j < K), *when* the runner drives it, *then*
+  steps j+1…K and synthesis still dispatch, the dispatch AFTER the failure carries the acknowledgment
+  (naming step j) folded into its user content with NO extra dispatch added, and step j's group ends
+  failed — deterministic unit test, `npm test` green, no live model.
+- **AC2** *Given* a scripted transport failing the synthesis turn, *then* every prior step's ingested
+  lines/rendered state remain (nothing disposed), the synthesis group ends failed/warning, and the run
+  returns cleanly — deterministic.
+- **AC3** *Given* the run's `AbortSignal` fired after step j completes, *then* no further dispatch
+  occurs and steps j+1…K's groups end not-run — deterministic.
+- **AC4** *Given* a step whose scripted output creates a surface unrelated to its declaration (and,
+  separately, one emitting a note only), *then* the runner performs no declaration-vs-output check
+  (no failure, no warning from content mismatch), each group closes on its call's terminal state, and
+  the emitted content renders normally — deterministic unit test.
 
 ### 3.3 The round-trip
 
@@ -956,10 +1144,10 @@ interface TurnTrace {
 interface AskDeclaration {
   surfaceId: string;
 }
-// PlanStep / PlanDeclaration (SPEC-R20 / ADR-0174 cl.2) — a model-authored step list; wire representation
-// ONLY. The host-side plan→execute→synthesize loop that reads it (ADR-0174 cl.1/cl.3/cl.4), and any
-// `plan`-analogue of AskDeclaration's surfaceId-correlation check (ADR-0174 Open fork OF1), are a future
-// SPEC/LLD's job, not this contract's.
+// PlanStep / PlanDeclaration (SPEC-R20 / ADR-0174 cl.2) — a model-authored step list; the wire
+// representation. The host-side loop that reads it is SPEC-R21/R22 (v0.11); any `plan`-analogue of
+// AskDeclaration's surfaceId-correlation check stays undecided (ADR-0174 Open fork OF1 — SPEC-R22's
+// advisory law rules the runner performs NO such check).
 interface PlanStep {
   id: string;
   description: string;
@@ -967,6 +1155,23 @@ interface PlanStep {
 interface PlanDeclaration {
   steps: PlanStep[];
 }
+
+// The host-side plan-runner (SPEC-R21/R22 / ADR-0174 cl.1/cl.3/cl.4) — INDICATIVE shape; the exact
+// module home + API surface are the LLD's. Lives ABOVE the AgentTransport seam: dispatches ordinary
+// TurnInputs only; produce()/ProduceOptions/ProduceDeps/proxies untouched. The framing trio is pure +
+// one-place (the frameClientMessage precedent); onStepState is the status-stream projection seam
+// (ADR-0146 F5 groups — the runner never touches the component itself).
+type PlanStepState = 'pending' | 'running' | 'done' | 'failed' | 'not-run';
+function framePlanRequest(intent: string): string;
+function frameStepInstruction(step: PlanStep, priorFailure?: PlanStep): string;  // priorFailure ⇒ folds the SPEC-R22 acknowledgment in
+function frameSynthesis(plan: PlanDeclaration, priorFailure?: PlanStep): string; // same fold — a failed LAST step's acknowledgment rides the synthesis dispatch (SPEC-R22)
+function runPlan(opts: {
+  transport: AgentTransport;
+  session: Session;                                  // grown via the UNCHANGED reducers; returned grown
+  plan: PlanDeclaration;                             // the consumed, frozen declaration (≤ the step cap)
+  signal?: AbortSignal;                              // ONE signal threads every dispatch (SPEC-R21 Bounds)
+  onStepState?: (stepId: string, state: PlanStepState) => void;
+}): Promise<Session>;
 interface A2uiMetaEnvelope {
   a2uiMeta: { note?: string; ask?: AskDeclaration; plan?: PlanDeclaration; trace?: TurnTrace };   // note: model prose; ask: SPEC-R14 routing; plan: SPEC-R20 step list; trace: runtime-assembled, never model-authored
 }
@@ -1095,5 +1300,6 @@ function buildToolDispatch(active: readonly IntegrationManifest[], env: Record<s
 | SPEC-R18 | Constraint C2 (the secret-free invariant — integration keys resolve server-side in both hosts, never in a build/browser/tool_result; ADR-0073 cl.5, ADR-0152, ADR-0168 §4) |
 | SPEC-R19 | PRD-G7 (transport interop — enablement reaches every live arm via one shared dispatch; GH #402 branch (a); ADR-0136/0152/0168 §5) |
 | SPEC-R20, R6 AC6 | PRD-G1/G6 (the `plan` meta-line arm — a model-authored, additive, shallow-validated field on the ADR-0088 envelope, following the `ask`-arm precedent exactly; parsed by `readMetaLine` and passed through `produce()`'s outgoing meta-line unchanged; its GRAMMAR-half mechanics teaching folded into SPEC-R6 per ADR-0174 cl.6; the host-side plan→execute→synthesize loop and any `plan`-analogue of the `ask` integrity check are OUT OF SCOPE — ADR-0174 cl.2) |
+| SPEC-R21, R22 | PRD-G1/G6 (the host-side sequential plan-runner — persona-gated opt-in, one ordinary `{kind:'intent'}` dispatch per declared step over one growing `Session`, closing-turn synthesis under SPEC-R5's validate-then-stream law, step lifecycle projected onto the existing status-stream grouping with `TURN_PROGRESS_STAGES` unwidened, a step cap + one `AbortSignal` bounding the run at `(K+2) × maxRounds`, tiered failure grain with fold-in acknowledgment, and the OF1 advisory law — no declaration-vs-output check; ADR-0174 cl.1/cl.3/cl.4/cl.6) |
 
 _Realizes streaming SPEC-R2 and harness SPEC-R6 in running code, co-serving PRD-G1 and PRD-G7. Status: each doc's own header (the tree wins); the original charter table is archived (frozen 2026-07-08)._
