@@ -423,32 +423,56 @@ describe('the produce POST body across the catalog refactor (ADR-0170 acceptance
   })
 })
 
-// ── GH #49 — the Integrations pack ↔ dev-proxy registry parity (the a2ui-idioms drift-gate discipline) ──
-
-describe('Integrations pack ↔ registry parity (GH #49)', () => {
+// ── GH #49/#567 S6 — the Integrations pack ↔ SERVED trios parity (the a2ui-idioms drift-gate discipline) ─
+// SPEC-R28 AC2 (LLD-C6) — the ONE sanctioned reshape: the pack now reads a LIVE source
+// (`setLiveIntegrations`, agent-admin-libraries.ts) instead of hand-mirroring the registry, so this
+// suite grades `pack.entries` against "the served trios" rather than a single fixed reference. What
+// "served" means depends on the case: with no live override (production, and every OTHER test in this
+// file) it is `listIntegrations()`'s own trio projection — exactly what `dev-proxy-plugin.ts`'s
+// `GET /integrations` route serves (`projectIntegrationTrios`, proven leak-proof + wired to the SAME
+// `listIntegrations()` call in `mcp-boot.test.ts`) — so grading against it here, in-process, is
+// grading against the real served set without a network round trip, the SAME discipline every other
+// slice in this arc uses (S1-S5 never spin up a real server either). With a live override SET, "served"
+// is whatever the dev proxy's GET actually answered — proven by feeding the seam a FABRICATED trio set
+// (incl. an `mcp:*` id) and asserting the pack reflects it byte-for-byte. Both directions stay honest
+// either way: `assertTrioParity` fails if EITHER side drops or drifts an entry (SPEC-R28 AC2's mutation
+// probe) — the hand-authored half is unweakened, only reframed onto the shared helper.
+describe('Integrations pack ↔ registry parity (GH #49/#567 S6)', () => {
   // SPEC-R16 AC2 / ADR-0168 cl.2 (LLD-C7) — widened from "every pack entry's LABEL is a registry id" to
   // the full `{id, label, description}` TRIO. The old assertion could only ever hold while the three
   // facts were one string; now a registry edit that renames a label, retitles a description, or re-keys
   // an id and forgets this pack goes red on the exact field that drifted.
   const trio = (e: { id?: string; label: string; description: string }) => ({ id: e.id, label: e.label, description: e.description })
+  const byId = (a: { id?: string }, b: { id?: string }) => (a.id ?? '').localeCompare(b.id ?? '')
 
-  it('every pack entry matches its registry manifest on the FULL {id, label, description} trio', async () => {
+  /** The both-directions comparison itself, extracted so BOTH the hand-authored case (below) and the
+   *  live-injected case (S6) run the identical check: every pack entry must match a served trio and
+   *  vice versa — either side dropping or drifting an entry reddens this (SPEC-R28 AC2). */
+  function assertTrioParity(entries: readonly { id?: string; label: string; description: string }[], served: readonly { id: string; label: string; description: string }[]): void {
+    expect([...entries].map(trio).sort(byId)).toEqual([...served].map(trio).sort(byId))
+    for (const row of served) {
+      const entry = entries.find((e) => e.id === row.id)
+      expect(entry, `served integration "${row.id}" has no pack entry`).toBeDefined()
+      expect(entry!.label, `"${row.id}" label parity`).toBe(row.label)
+      expect(entry!.description, `"${row.id}" description parity`).toBe(row.description)
+    }
+  }
+
+  afterEach(async () => {
+    // The live override is module state (agent-admin-libraries.ts) — reset it so a live-injected case
+    // never leaks into this describe block's other tests or another file sharing the module registry.
+    const { setLiveIntegrations } = await import('./agent-admin-libraries.ts')
+    setLiveIntegrations(undefined)
+  })
+
+  it('every pack entry matches the SERVED trios (no live override — the hand-authored fallback, byte-compat with today)', async () => {
     const { ADMIN_LIBRARIES } = await import('./agent-admin-libraries.ts')
     const { ENTRY_KINDS } = await import('@agent-ui/app')
     const { listIntegrations } = await import('../../packages/agent-ui/a2ui/tools/agent/integrations/index.ts')
     const INTEGRATIONS = listIntegrations()
     const pack = ADMIN_LIBRARIES[ENTRY_KINDS.tool]!.find((p) => p.id === 'integrations')!
 
-    const byId = (a: { id?: string }, b: { id?: string }) => (a.id ?? '').localeCompare(b.id ?? '')
-    expect([...pack.entries].map(trio).sort(byId)).toEqual([...INTEGRATIONS].map(trio).sort(byId))
-
-    // Both directions, named per-entry so a failure says WHICH integration drifted.
-    for (const integration of INTEGRATIONS) {
-      const entry = pack.entries.find((e) => e.id === integration.id)
-      expect(entry, `registry integration "${integration.id}" has no pack entry`).toBeDefined()
-      expect(entry!.label, `"${integration.id}" label parity`).toBe(integration.label)
-      expect(entry!.description, `"${integration.id}" description parity`).toBe(integration.description)
-    }
+    assertTrioParity(pack.entries, INTEGRATIONS.map(trio) as { id: string; label: string; description: string }[])
 
     // The decoupling itself: every pack entry carries an EXPLICIT id (never left to slugify(label)) and
     // the label is genuinely HUMAN text, no longer the id in disguise — the bug ADR-0168 cl.2 retires.
@@ -460,6 +484,22 @@ describe('Integrations pack ↔ registry parity (GH #49)', () => {
     // the tool wire name === the id for the v1 three (an LLD §4 non-decision: decoupling is a capability
     // this arc buys, not a rename it performs) — nothing on the wire changed for the shipped tools
     for (const integration of INTEGRATIONS) expect(integration.tool.name).toBe(integration.id)
+  })
+
+  it('S6: a LIVE override (a fabricated served set, incl. an mcp:* id) reaches the pack — the live-read seam, not a hand-mirrored copy', async () => {
+    const { ADMIN_LIBRARIES, setLiveIntegrations } = await import('./agent-admin-libraries.ts')
+    const { ENTRY_KINDS } = await import('@agent-ui/app')
+    const served = [
+      { id: 'weather', label: 'Weather (Open-Meteo)', description: 'Current conditions. Keyless.' },
+      { id: 'mcp:acme:lookup', label: 'Acme: lookup', description: 'A discovered MCP tool — never hand-mirrored here.' },
+    ]
+    setLiveIntegrations(served)
+    const pack = ADMIN_LIBRARIES[ENTRY_KINDS.tool]!.find((p) => p.id === 'integrations')!
+    assertTrioParity(pack.entries, served)
+    // Reverting the override reverts the pack — no residue, no partial merge with the static fallback.
+    setLiveIntegrations(undefined)
+    const { listIntegrations } = await import('../../packages/agent-ui/a2ui/tools/agent/integrations/index.ts')
+    assertTrioParity(pack.entries, listIntegrations().map(trio) as { id: string; label: string; description: string }[])
   })
 
   it('a library add mints a store entry keyed to the REGISTRY id, not to the human label', async () => {

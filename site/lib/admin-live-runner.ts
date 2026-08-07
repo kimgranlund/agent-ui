@@ -88,6 +88,41 @@ const PRODUCE_ENDPOINT = '/__a2ui/agent'
 // wrong pairing degrades to a 400 here, never an unauthenticated call.
 const PROVIDER = 'anthropic'
 
+// ── GH #567 S6 (LLD-C6/SPEC-R28, Kim's F1 ruling) — the admin GET, read LIVE ────────────────────────────
+
+/** The dev proxy's served trio shape (SPEC-R28) — `{id, label, description}`, nothing else. */
+export interface LiveIntegrationTrio {
+  id: string
+  label: string
+  description: string
+}
+
+/** Ask the dev proxy for its discovered registry trios (`mcp:*` entries included, post-boot-gate).
+ *  DEV ONLY — the page's own call site gates on `import.meta.env.DEV` (agent-admin-app.ts): the GET
+ *  route exists only under `vite dev` (`dev-proxy-plugin.ts`'s `apply: 'serve'`); production keeps the
+ *  hand-authored `INTEGRATION_TOOLS` pack untouched (`worker/index.ts` stays frozen, no GET twin —
+ *  ADR-0177 §0/Non-goals — a stated temporary asymmetry, the SAME one the Worker-rollout deferral
+ *  already accepts for discovery itself). Any failure (no proxy, network fault, malformed body)
+ *  degrades to `undefined` — the mirror of `probeLive`'s own not-available degrade above — so the
+ *  caller's existing static pack is never replaced with a broken or partial one. */
+export async function fetchLiveIntegrations(): Promise<LiveIntegrationTrio[] | undefined> {
+  try {
+    const res = await fetch(`${PRODUCE_ENDPOINT}/integrations`)
+    if (!res.ok) return undefined
+    const body = (await res.json()) as { integrations?: unknown }
+    if (!Array.isArray(body.integrations)) return undefined
+    const isTrio = (v: unknown): v is LiveIntegrationTrio =>
+      typeof v === 'object' &&
+      v !== null &&
+      typeof (v as LiveIntegrationTrio).id === 'string' &&
+      typeof (v as LiveIntegrationTrio).label === 'string' &&
+      typeof (v as LiveIntegrationTrio).description === 'string'
+    return body.integrations.every(isTrio) ? (body.integrations as LiveIntegrationTrio[]) : undefined
+  } catch {
+    return undefined
+  }
+}
+
 /** Build the injectable SURFACE-turn runner: one closure per call, owning ONE fresh a2ui `Session` — the
  *  page re-creates it per persona switch, so each persona's game/transcript starts clean. Streams typed
  *  events (the peeled ADR-0088 note + validated wire lines); appends the session turns only after a turn

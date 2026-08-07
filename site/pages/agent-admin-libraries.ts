@@ -370,6 +370,24 @@ export const INTEGRATION_TOOLS: readonly NewEntryInput[] = [
   },
 ]
 
+// GH #567 S6 (Kim's F1 ruling) — the DEV-only live-read override. `undefined` (the default, and the
+// ONLY state a production build ever reaches — the dev proxy's `GET /integrations` route exists only
+// under `vite dev`, `worker/index.ts` stays frozen with no twin, ADR-0177 §0/Non-goals) keeps the
+// Integrations pack on the hand-authored INTEGRATION_TOOLS trio above, byte-identical to before this
+// slice. Once set, a registered `mcp:*` manifest joins the pack without a hand-mirrored static copy —
+// the exact drift this pack's OWN header comment above used to accept as its cost.
+let liveIntegrationEntries: NewEntryInput[] | undefined
+
+/** Called by the site's live overlay (`site/lib/admin-live-runner.ts`'s `fetchLiveIntegrations`) with
+ *  the dev proxy's served trios — already `{id, label, description}`, SPEC-R28's vocabulary. `content`
+ *  is always empty for a live-discovered tool (no hand-authored usage tip exists for an arbitrary MCP
+ *  tool yet — the "Registered catalogs" pack below takes the identical empty-content posture for the
+ *  same reason: an entry keying an external registry has no authored body). Passing `undefined` reverts
+ *  to the hand-authored fallback (used by this page's own tests to reset state between cases). */
+export function setLiveIntegrations(trios: readonly { id: string; label: string; description: string }[] | undefined): void {
+  liveIntegrationEntries = trios?.map((t) => ({ id: t.id, label: t.label, description: t.description, content: '' }))
+}
+
 /** GH #143 — per-preset library scoping. Every OTHER preset (The Quant, The Curator, The Stylist —
  *  dashboards/collections/tokens; none of them a hotel or a game) sees `undefined`: generic packs only,
  *  never a stray Hospitality or Games pack. Kept to exactly the two flavors the pack catalog actually
@@ -467,7 +485,13 @@ export const ADMIN_LIBRARIES: Record<string, EntryLibraryPack[]> = {
       id: 'integrations',
       label: 'Integrations',
       description: 'Keyless live integrations executed by the dev proxy (GH #49) — enable + toolsEnabled to arm.',
-      entries: INTEGRATION_TOOLS,
+      // GH #567 S6 — a getter, not a fixed array: reads whatever `setLiveIntegrations` last set, falling
+      // back to the hand-authored INTEGRATION_TOOLS trio. `librariesForCategory` filters this SAME pack
+      // object (never clones it), so a live-read that lands AFTER the first `admin.libraries` assignment
+      // still reaches the menu once the page reassigns `admin.libraries` (the identity-change law below).
+      get entries(): readonly NewEntryInput[] {
+        return liveIntegrationEntries ?? INTEGRATION_TOOLS
+      },
     },
   ],
   // genui-surface.spec.md SPEC-R9/R11 (B2) — the shipped GenUI pattern-source packs (data-viz layouts,
