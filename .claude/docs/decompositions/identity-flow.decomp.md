@@ -49,7 +49,7 @@ paperwork four of the five slices actually earn:
 | Slice | Earns | Why |
 |---|---|---|
 | S1 Registration + Email+Password | **plain GH issue**, inline Components/Risks | Lane C, zero new controls (ADR-0176 cl.1) — no component decomposition to freeze in an LLD, no real ambiguity a SPEC would resolve |
-| S2 Codes + Magic Link | **full LLD** for the code-entry control · **plain GH issue** for Magic Link | The code-entry field is ADR-0176's one Lane-A control — real interface/state decomposition (cell focus graph, paste-split algorithm, a11y) earns the full seat; Magic Link stays Lane C, no LLD |
+| S2 Codes + Magic Link | **full LLD** for the code-entry control (S2-a) · **plain GH issue** for the OTP flow's request/resend/submit composition (S2-a2) · **plain GH issue** for Magic Link (S2-b) | The code-entry field is ADR-0176's one Lane-A control — real interface/state decomposition (cell focus graph, paste-split algorithm, a11y) earns the full seat; the OTP flow's request-code/resend-timer/submit wiring AROUND that control, and Magic Link, are both Lane C — no LLD. (S1-a/S1-b and S4-a/S4-b both split their control-or-none leaf from their Lane-C composition leaf the same way; the first pass of this manifest missed that S2 needed the same split — fixed here.) |
 | S3 Social Auth | **plain GH issue**, inline Components/Risks | Lane C; OQ2 (brand marks) is a product/licensing call, not a component-decomposition question — doesn't earn an ADR or SPEC by itself |
 | S4 Onboarding | **plain GH issue** for the step shell · **small SPEC amendment, IF OQ1 resolves "build it"** for the `ui-progress` segments prop | Step shell is Lane C; the segments prop (if built) is Lane B — additive, not a full LLD, but the prop shape is genuinely undecided pre-build |
 | S5 Account Management | **plain GH issue**, inline Components/Risks | Lane C, no new control, no extraction (ADR-0176 cl.1) — the entire scope is a worked exemplar |
@@ -76,6 +76,7 @@ Identity & account flow family (GH #490)
 │   └── S1-g  GH sub-issue (ADR-0145 routing)
 ├── S2  Codes + Magic Link
 │   ├── S2-a  code-entry control — LLD + build (the one Lane-A control)
+│   ├── S2-a2 OTP flow composition (Lane C: request-code button, resend timer, submit — wires S2-a)
 │   ├── S2-b  Magic Link pattern (Lane C)
 │   ├── S2-c  *.flow.json cards (otp-signin incl. resend, magic-link-signin) + flow-checker grade
 │   ├── S2-d  layout card(s) + layout-checker grade
@@ -98,7 +99,7 @@ Identity & account flow family (GH #490)
 │   ├── S4-f  docs-site page + example
 │   └── S4-g  GH sub-issue
 └── S5  Account Management
-    ├── S5-a  account-settings SchemaSchema instance over EXISTING ui-settings (no new control)
+    ├── S5-a  account-settings SettingsSchema instance over EXISTING ui-settings (no new control)
     ├── S5-b  *.flow.json card (view/edit/save a preference) + flow-checker grade
     ├── S5-c  layout card + layout-checker grade
     ├── S5-d  composition-patterns SKILL.md row
@@ -117,9 +118,9 @@ own action, not to add a new one).
 |---|---|---|
 | a1 | Create an account (register) | S1-a |
 | a2 | Sign in with email + password, incl. reveal/hide password | S1-b |
-| a3 | Request a one-time code | S2-a |
+| a3 | Request a one-time code | S2-a2 |
 | a4 | Verify a one-time code (auto-advance/backspace/paste-split across cells) | S2-a |
-| a5 | Resend a one-time code (rate-limited) | S2-a |
+| a5 | Resend a one-time code (rate-limited) | S2-a2 |
 | a6 | Request a magic link | S2-b |
 | a7 | Confirm the magic-link "check your email" state | S2-b |
 | a8 | Sign in via a social provider (redirect + callback) | S3-a |
@@ -134,6 +135,13 @@ action. Every leaf node either hosts an action directly or carries a `justify` �
 `UNJUSTIFIED-LEAF`. Quadrant: **load-bearing** (clean cross-check); nothing in the ADR-0176
 architecture describes a capability this manifest's structure fails to host, and nothing in the
 structure is decoration with no named action or justification.
+
+*(doc-checker finding, fixed in this revision: a3/a5 were originally pointed at S2-a — the code-entry
+CONTROL leaf — which doesn't cover them; "request a code" and "resend a code" are the OTP flow's
+Lane-C composition half, not the control's own interaction surface. §1/§2 above split S2-a2 to host
+them, matching how S1-a/S1-b and S4-a/S4-b already split their Lane-C composition from any
+Lane-A/B control leaf. The table's letter was clean before the fix; the coverage it claimed was
+not.)*
 
 ## 4 · Open forks — Kim's, stated as OPEN (carried from ADR-0176, not re-decided)
 
@@ -173,10 +181,14 @@ Edges reproduce ADR-0176 cl.4's own sequencing rationale verbatim, formalized: S
 shell reuses S1's), S2→S3 (S3's provider-button row reuses the same shell S2 establishes), S3→S4
 (a first-run journey presumes a completed sign-in to demo against — needs every Authentication mode
 live), S4→S5 (S5 generalizes its worked exemplar against real login/onboarding demo state). Within
-each slice, the pattern/control build (`-a`/`-b`) precedes its own flow card (`-c`), layout card
-(`-d`), pattern-skill row (`-e`), docs page (`-f`), and GH issue (`-g`) — those five are otherwise
-parallel-safe with each other (file-disjoint: SKILL.md row / docs-site page / flow-checker input /
-layout-checker input / a GH Issue body share no file).
+each slice, the pattern/control build (`-a`/`-b`, plus `-a2` where a slice splits one) precedes its
+own flow card (`-c`), layout card (`-d`), pattern-skill row (`-e`), docs page (`-f`), and GH issue
+(`-g`) — those five are otherwise parallel-safe with each other (file-disjoint: SKILL.md row /
+docs-site page / flow-checker input / layout-checker input / a GH Issue body share no file). One
+intra-slice edge inside S2 specifically: **S2-a → S2-a2** — the OTP composition wires the code-entry
+control, so the control's own interface (S2-a's LLD + build) must land before its Lane-C composition
+(S2-a2) can be built against it; S2-b (Magic Link) has no such internal dependency and stays
+parallel-safe with both.
 
 ## 6 · Recommended first slice
 
