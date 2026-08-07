@@ -154,7 +154,10 @@ intake 2026-07-18 (three archetypes), F1/F3 pending his pass; the M5 SPEC/LLD ow
 - **(v1.2 — the v1.1 row MOVED IN-SCOPE by Kim's F3 fork answer, 2026-07-10.)** The schema-driven
   preferences framework now belongs to M4 ([ADR-0120](../adr/0120-app-surfaces-m4-panes-settings.md)
   F3/clause 4). What STAYS out: remote sync, account/identity, and policy/permission layers — those
-  route to new intakes, never riders. — *the fence moved, it did not vanish.*
+  route to new intakes, never riders. — *the fence moved, it did not vanish.* (The account/identity
+  intake this line predicted now exists:
+  [ADR-0176](../adr/0176-identity-account-flow-family-design-intake.md), ratified 2026-08-06 — its
+  own on-ratification courtesy pointer.)
 - **Non-web / mobile-native targets.** — *out of the library's remit.*
 
 ## 4. Direction forks — the ratified architecture

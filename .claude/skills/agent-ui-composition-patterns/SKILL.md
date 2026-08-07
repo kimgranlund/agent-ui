@@ -46,6 +46,13 @@ contract-authoring rules; the diagnostic use is this map's recast). Visual proof
 ADR-0110 screenshot harness (Chromium committed baselines, opt-in `*.visual` suites) plus
 computed-style probes as WebKit's sanctioned leg.
 
+## Queued
+
+The identity & account flow family (ADR-0176, ratified 2026-08-06) is intake-done and
+build-sequenced: five per-flow pattern rows (Registration · the four Auth modes · Onboarding)
+land in this skill's assembly table per build slice, mirroring how ADR-0172's rows arrived —
+the forward-pointer its Repairs cell books, executed here.
+
 ## Cross-links
 
 Which control → [[agent-ui-catalog]] · the compose procedures → [[agent-ui-compose-ui]] /
