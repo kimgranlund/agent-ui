@@ -36,13 +36,24 @@ import type { McpServerEntry, McpServersConfig } from './servers-config.ts'
 export interface DiscoveryDeps {
   /** Discovery-time key resolution — the caller passes the loadEnv-merged env (SPEC-R27). */
   env: Record<string, string | undefined>
-  /** INJECTABLE registration sink, default registerIntegration — no test touches REGISTRY. */
+  /** INJECTABLE registration sink, default registerIntegration — no test touches REGISTRY. MUST NOT
+   *  throw for anything this module doesn't already anticipate: the per-tool try/catch below treats
+   *  every throw here as one of `registerIntegration`'s two documented policy rejections (SPEC-R26)
+   *  and degrades it to a skip row regardless — a real caller passes the real `registerIntegration`,
+   *  whose throw surface is exactly those two. */
   register?: (m: IntegrationManifest) => void
-  /** Injectable client factory for tests (scripted fake clients, zero transport). */
+  /** Injectable client factory for tests (scripted fake clients, zero transport). MUST NOT throw
+   *  SYNCHRONOUSLY when called: only the returned client's async methods (`initialize`/`listTools`)
+   *  run inside this module's try/catch (the LLD §3.4 catch-all below) — a factory that throws at
+   *  construction time escapes that guard and propagates straight out of `discoverMcpIntegrations`,
+   *  the one way this "never throws outward" module could still throw. The real `createMcpClient`
+   *  never does this: it only builds an object, no I/O at construction time. */
   createClient?: typeof createMcpClient
   /** Boot log line sink; lines carry ids/reasons, never a key value. Omitted ⇒ split by kind
    *  (console.info for a registration line, console.warn for a skip line); an INJECTED sink
-   *  receives every line through this ONE callback instead — the deterministic test seam. */
+   *  receives every line through this ONE callback instead — the deterministic test seam. MUST NOT
+   *  throw: `emit()` below calls it synchronously and uncaught, so a throwing sink would propagate
+   *  straight out of `discoverMcpIntegrations`, the same escape hatch `createClient` above names. */
   log?: (line: string) => void
 }
 
@@ -83,7 +94,9 @@ function resolveServerKey(server: McpServerEntry, env: Record<string, string | u
 /**
  * Discover + register every allowlisted server's tools (LLD §3.4). NEVER throws outward — every
  * failure becomes a report row. An empty roster resolves immediately with an empty report and
- * constructs zero clients (SPEC-R27's zero-cost no-op).
+ * constructs zero clients (SPEC-R27's zero-cost no-op). `cfg` arrives ALREADY validated — the §5
+ * boot sequencing (S5) runs `validateMcpServersConfig` before ever calling this function, so this
+ * module trusts its shape and re-checks none of it.
  */
 export async function discoverMcpIntegrations(cfg: McpServersConfig, deps: DiscoveryDeps): Promise<DiscoveryReport> {
   const registered: string[] = []
