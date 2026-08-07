@@ -2,7 +2,7 @@
 # menu.md frontmatter — the attributes-as-API descriptor for ui-menu (ADR-0004 /
 # overlay-controller.lld.md / ADR-0043 / control-suite-wave4-overlay.decomp.md S3). The
 # machine-checkable public surface lives HERE (frontmatter); the prose below the fence is the
-# /site doc. The `attributes[]` block MUST mirror UIMenuElement.props (open + placement) — the
+# /site doc. The `attributes[]` block MUST mirror UIMenuElement.props (open, placement, label) — the
 # contract↔props trip-wire (menu.test.ts) and the frontmatter schema (validateComponentDescriptor)
 # both target this fence. Field set per .claude/docs/plan.md §10 / ADR-0004; overlay mechanism per
 # the overlay-controller LLD-C1..C4; bindable `open` two-way per ADR-0019.
@@ -12,7 +12,7 @@ tier: pattern           # geometry size-class — panel uses Container/surface g
 extends: UIElement      # NOT form-associated — the menu carries no form value; it emits an action (`select`)
 # marginal: tracked at the wave-4 integration slice (s12 barrel pass); ≤ ~2 kB tier budget (plan §10)
 
-attributes:             # attributes-as-API — mirrors UIMenuElement.props (open first, then placement)
+attributes:             # attributes-as-API — mirrors UIMenuElement.props (open, then placement, then label)
   - name: open
     type: boolean
     default: false
@@ -22,12 +22,18 @@ attributes:             # attributes-as-API — mirrors UIMenuElement.props (ope
     values: [bottom-start, bottom-end, top-start, top-end, left-start, left-end, right-start, right-end]
     default: bottom-start
     reflect: true       # reflects so <ui-menu placement="top-end"> works declaratively; captured once per connection (changing after connect takes effect on the next reconnect)
+  - name: label
+    type: string
+    default: ''
+    reflect: true       # reflects so <ui-menu label="Actions"> works declaratively (GH #535); '' = the panel keeps the default aria-labelledby → trigger-id chain; set = the panel's aria-label instead, labelledby dropped
 
 properties:             # IDL beyond attributes-as-API
   - name: open
     description: Whether the menu panel is shown (boolean). Setting true calls showPopover() (top layer + light-dismiss via Escape + outside-click); false calls hidePopover(). Reflected + bindable (two-way `open`, ADR-0019). The overlay trait emits `close` + `toggle` on the host for every ACTUAL open-state transition — platform dismissal (Escape / outside-click), a commit's programmatic close, or a model-driven write alike (ADR-0101) — after `open` has settled to its new value.
   - name: placement
     description: Preferred panel placement relative to the trigger (OverlayPlacement enum, default 'bottom-start'). The JS positioning controller (LLD-C3) flips to the opposite side when the preferred side lacks space and shifts within the viewport. Captured at connection time; a reconnect picks up a new value.
+  - name: label
+    description: Opt-in accessible-name override for the panel (GH #535). '' (default) = the panel is named via aria-labelledby → the trigger's id (minted at connect if the author gave the trigger none). Set = the panel gets aria-label with this text instead, and the labelledby default is removed (aria-labelledby beats aria-label in accname resolution, so the default reference must actually be dropped, not merely shadowed). Clearing it reverts to the labelledby default. Driven by a scope-owned effect, the sole writer of aria-label/aria-labelledby on the panel.
 
 events:
   - name: select
@@ -50,9 +56,9 @@ slots:
 
 parts:
   - name: panel
-    description: The control-created light-DOM `<div data-part="panel" role="menu" popover="auto">` that enters the Popover API top layer when open. Created ONCE (idempotent guard — the same node persists across disconnect/reconnect). Has tabindex="-1" so programmatic focus (moveFocusIn, overlay LLD-C4) can land on it when no enabled items exist. The overlay controller sets position:fixed + inset on open (LLD-C3); the JS positioning controller manages placement.
+    description: The control-created light-DOM `<div data-part="panel" role="menu" popover="auto">` that enters the Popover API top layer when open. Created ONCE (idempotent guard — the same node persists across disconnect/reconnect). Has tabindex="-1" so programmatic focus (moveFocusIn, overlay LLD-C4) can land on it when no enabled items exist. The overlay controller sets position:fixed + inset on open (LLD-C3); the JS positioning controller manages placement. Always accessibly named (GH #535) — aria-labelledby → the trigger's id by default, or aria-label when the `label` prop is set.
   - name: trigger
-    description: The first element child, marked with `data-part="trigger"`. The control adds aria-expanded (synced via the model→overlay effect), aria-controls (pointing to the panel's stable id), and aria-haspopup="menu". The author owns the trigger's visual styling and accessible name.
+    description: The first element child, marked with `data-part="trigger"`. The control adds aria-expanded (synced via the model→overlay effect), aria-controls (pointing to the panel's stable id), and aria-haspopup="menu". The author owns the trigger's visual styling and accessible name. If the author gave no `id`, one is minted (GH #535) so the panel's default aria-labelledby can reference it.
 
 customStates: []        # no :state() hooks — open/closed state is the panel's popover top-layer presence
 
@@ -63,6 +69,7 @@ aria:
   role: none            # the host has no explicit role (a logical disclosure wrapper); internals.role is not set
   roleSource: none      # ARIA is provided by the trigger (aria-expanded/aria-controls/aria-haspopup set as child attributes) and the panel (role=menu on the div part; items get role=menuitem auto-assigned, or keep an author-pre-marked role=menuitemradio|menuitemcheckbox, GH #55)
   labelSource: aria-label on the trigger element
+  panelLabelSource: GH #535 — the panel (`role=menu`) is always accessibly named. Default — aria-labelledby → the trigger's id, minted at connect if the trigger has none. Opt-in — the `label` prop sets aria-label on the panel instead and removes the labelledby default; clearing `label` reverts to the labelledby chain.
   selectableItems: menuitemradio/menuitemcheckbox items always carry aria-checked (defaulted false at connect if the author omitted it); the control writes it on commit — one-true-per-data-group for menuitemradio, independent toggle for menuitemcheckbox. aria-checked stays invalid on plain menuitem (unchanged law).
 
 keyboard:
@@ -196,6 +203,29 @@ finds the next item whose label starts with the typed buffer.
 enabled item receives focus via the roving-focus tabindex=0 + `moveFocusIn()`), and is restored to
 the trigger on close (the overlay handle's `restoreFocus()`). On close without a selection
 (Escape/outside-click), focus returns to the trigger.
+
+## Accessibility
+
+The panel (`role="menu"`) is always accessibly named (GH #535). By default, `aria-labelledby`
+points at the trigger's `id` — one is minted at connect if the author gave the trigger none (an
+author-pre-set `id` is left untouched). Set the `label` prop to override this with an explicit
+`aria-label` instead; the labelledby default is removed while `label` is set (accname resolution
+prefers `aria-labelledby` over `aria-label`, so leaving both would silently keep the default name).
+Clearing `label` reverts the panel to the labelledby chain.
+
+```html
+<!-- Default: the panel's name comes from the trigger's (minted) id -->
+<ui-menu>
+  <button>Actions</button>
+  <div data-value="copy">Copy</div>
+</ui-menu>
+
+<!-- Opt-in override: an explicit accessible name for the panel -->
+<ui-menu label="File actions">
+  <button>⋮</button>
+  <div data-value="copy">Copy</div>
+</ui-menu>
+```
 
 ## Placement
 

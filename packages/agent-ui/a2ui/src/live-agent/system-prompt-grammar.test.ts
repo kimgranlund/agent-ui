@@ -522,6 +522,55 @@ describe('buildSystemPrompt feed-ask derived allowed-types list (ADR-0097 §3/§
   })
 })
 
+// ── ADR-0174 cl.2/cl.6, SPEC-R20/SPEC-R6 AC6: the plan-arm mechanics teaching (mode-invariant) ───────────
+
+describe('buildSystemPrompt plan-arm mechanics — mode-invariant (SPEC-R6 AC6 / ADR-0174 cl.2/cl.6)', () => {
+  it('the mechanics block is present, byte-identical, in undefined/default/specific/blue-sky', () => {
+    const dflt = buildSystemPrompt(defaultCatalog, [])
+    const explicitUndefined = buildSystemPrompt(defaultCatalog, [], undefined)
+    const explicitDefault = buildSystemPrompt(defaultCatalog, [], 'default')
+    const specific = buildSystemPrompt(defaultCatalog, [], 'specific')
+    const blueSky = buildSystemPrompt(defaultCatalog, [], 'blue-sky')
+    const marker = 'Plan declarations:'
+    for (const prompt of [dflt, explicitUndefined, explicitDefault, specific, blueSky]) expect(prompt).toContain(marker)
+
+    // Extract the mechanics paragraph out of each composed prompt (blank-line-delimited, the SAME idiom
+    // the feed-ask mechanics test above uses) and assert genuine byte-identity, not just marker presence.
+    const mechanicsOf = (prompt: string): string => {
+      const start = prompt.indexOf(marker)
+      const rest = prompt.slice(start)
+      const end = rest.indexOf('\n\n')
+      return end === -1 ? rest : rest.slice(0, end)
+    }
+    const dfltMechanics = mechanicsOf(dflt)
+    expect(dfltMechanics).toBe(mechanicsOf(explicitUndefined))
+    expect(dfltMechanics).toBe(mechanicsOf(explicitDefault))
+    expect(dfltMechanics).toBe(mechanicsOf(specific))
+    expect(dfltMechanics).toBe(mechanicsOf(blueSky))
+  })
+
+  it("teaches the plan field's exact shape and its leading-meta-line placement", () => {
+    const prompt = buildSystemPrompt(defaultCatalog, [])
+    expect(prompt).toMatch(/SAME leading meta-line as your note/)
+    expect(prompt).toMatch(/"plan":\{"steps":\[\{"id":"<step-id>",\s*"description":"<what this step does>"\}/)
+    expect(prompt).toMatch(/"a2uiMeta":\{"note":"[^"]+","plan":\{"steps":\[\{"id":"step-1"/)
+  })
+
+  it('grammarFor(undefined) === the literal GRAMMAR constant still holds with the plan-arm addition (Decision §1)', () => {
+    const twoArg = buildSystemPrompt(defaultCatalog, [])
+    expect(buildSystemPrompt(defaultCatalog, [], undefined)).toBe(twoArg)
+    expect(buildSystemPrompt(defaultCatalog, [], 'default')).toBe(twoArg)
+  })
+
+  it('none of the plan-arm prose leaks into the derived "## Available components" inventory section', () => {
+    for (const mode of [undefined, 'default', 'specific', 'blue-sky'] as const) {
+      const prompt = buildSystemPrompt(defaultCatalog, [], mode)
+      const body = catalogInventoryBody(prompt)
+      expect(body).not.toMatch(/Plan declarations|"plan":\{"steps"/i)
+    }
+  })
+})
+
 // ── ADR-0126 (TKT-0016): the message-lifecycle decision-layer teaching, appended in the OUTPUT_RULES
 // zone — the four-type choice rule + deleteSurface's wire shape + the whole-record-upsert warning. ──────
 

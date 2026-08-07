@@ -135,7 +135,8 @@ describe('ui-tabs — the selected-tab indicator paints + survives forced-colors
 
 describe('ui-tabs — [density] shifts shell spacing; the tab control height is density-invariant (both engines)', () => {
   it('[density] strip-gap + panel-pad SHIFT (--md-sys-space-driven); the tab block-size (--md-sys-height) HOLDS', () => {
-    // tabs.css:29-30: --ui-tabs-strip-gap rides --md-sys-space-xs; --ui-tabs-panel-pad rides --md-sys-space-md.
+    // tabs.css: --ui-tabs-strip-gap rides --md-sys-space-xs + --md-sys-space-md (GH #536 — carries the spacing
+    // the removed per-tab inline padding used to); --ui-tabs-panel-pad rides --md-sys-space-md.
     // Both are shell/layout-ladder quantities (density-responsive). The tab CONTROL HEIGHT is --md-sys-height-lg
     // (36px explicit literal, ADR-0038, GH #297 — not a --md-sys-space quantity, density-invariant). Anti-vacuous: strip-gap
     // and panel-pad must measurably CHANGE, AND the tab height must be the same at compact and spacious.

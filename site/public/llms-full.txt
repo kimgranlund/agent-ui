@@ -2026,6 +2026,29 @@ enabled item receives focus via the roving-focus tabindex=0 + `moveFocusIn()`), 
 the trigger on close (the overlay handle's `restoreFocus()`). On close without a selection
 (Escape/outside-click), focus returns to the trigger.
 
+## Accessibility
+
+The panel (`role="menu"`) is always accessibly named (GH #535). By default, `aria-labelledby`
+points at the trigger's `id` — one is minted at connect if the author gave the trigger none (an
+author-pre-set `id` is left untouched). Set the `label` prop to override this with an explicit
+`aria-label` instead; the labelledby default is removed while `label` is set (accname resolution
+prefers `aria-labelledby` over `aria-label`, so leaving both would silently keep the default name).
+Clearing `label` reverts the panel to the labelledby chain.
+
+```html
+<!-- Default: the panel's name comes from the trigger's (minted) id -->
+<ui-menu>
+  <button>Actions</button>
+  <div data-value="copy">Copy</div>
+</ui-menu>
+
+<!-- Opt-in override: an explicit accessible name for the panel -->
+<ui-menu label="File actions">
+  <button>⋮</button>
+  <div data-value="copy">Copy</div>
+</ui-menu>
+```
+
 ## Placement
 
 `placement` (default `'bottom-start'`) is the preferred position relative to the trigger. The JS

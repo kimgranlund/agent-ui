@@ -47,8 +47,9 @@ describe('tabs.css — structure + sectioning (s8)', () => {
   it('declares the --ui-tabs-* chain — control-height tab rows + the --md-sys-space shell + the ink/indicator roles', () => {
     // the interactive rows take the CONTROL height (geometry.md Pattern class), the shell uses --md-sys-space
     expect(tokenBlock).toMatch(/--ui-tabs-tab-height:\s*var\(--md-sys-height-lg\)/) // GH #297 — repointed up the ramp
-    expect(tokenBlock).toMatch(/--ui-tabs-tab-pad-inline:\s*var\(--md-sys-space-md\)/)
-    expect(tokenBlock).toMatch(/--ui-tabs-strip-gap:\s*var\(--md-sys-space-xs\)/)
+    // GH #536 — the per-tab inline padding is gone; the strip gap grew by one former padding unit (xs + md).
+    expect(tokenBlock).not.toMatch(/--ui-tabs-tab-pad-inline/)
+    expect(tokenBlock).toMatch(/--ui-tabs-strip-gap:\s*calc\(var\(--md-sys-space-xs\)\s*\+\s*var\(--md-sys-space-md\)\)/)
     expect(tokenBlock).toMatch(/--ui-tabs-panel-pad:\s*var\(--md-sys-space-md\)/)
     // the ink ladder + the indicator (SOLID roles)
     expect(tokenBlock).toMatch(/--ui-tabs-ink:\s*var\(--md-sys-color-neutral-on-surface-variant\)/)
@@ -94,7 +95,8 @@ describe('tabs.css — the tablist strip + tab rows + panel anatomy (s8)', () =>
     expect(m, 'the ui-tab rule is missing').not.toBeNull()
     const rule = (m as RegExpMatchArray)[1]
     expect(rule).toMatch(/block-size:\s*var\(--ui-tabs-tab-height\)/)
-    expect(rule).toMatch(/padding-inline:\s*var\(--ui-tabs-tab-pad-inline\)/)
+    // GH #536 — no per-tab inline padding; the clickable area is the label box at the control height.
+    expect(rule).not.toMatch(/padding-inline/)
     expect(rule).toMatch(/cursor:\s*pointer/)
     // selected ink + the underline indicator both key on :state(selected) (no [aria-selected] attribute exists)
     expect(stylesBlock).toMatch(/ui-tab:state\(selected\)\s*\{\s*color:\s*var\(--ui-tabs-ink-selected\)/)

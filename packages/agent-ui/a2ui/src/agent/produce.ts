@@ -34,6 +34,14 @@
 //       source SPEC-R15 gates) — a violation feeds the failure back as a produce-layer-only `'FEED_SCOPE'`
 //       literal (never joining the protocol's closed `ErrorCode` union) and retries, never streams.
 //
+// ADR-0174 cl.2 / SPEC-R20: the model may additionally author a `plan` on the SAME leading meta-line — a
+// step-list declaration (`{steps: [{id, description}]}`), following the `ask`-arm precedent EXACTLY:
+// MODEL-authored, shallow-validated by `readMetaLine` (a malformed `plan` drops only itself). UNLIKE
+// `ask`, `plan` carries NO produce-layer integrity check and NO self-correct gate — it is peeled alongside
+// `note`/`ask` and passed through UNCHANGED onto the outgoing meta-line whenever the model declared one
+// (Scope: no runtime rewriting; the host-side plan→execute→synthesize loop that reads it is a future
+// SPEC/LLD's job, not this file's).
+//
 // genui-surface SPEC-R1/R2/R10: a genui-shaped candidate line (the reserved `{"genui":{surfaceId,html}}`
 // kind) is peeled OUT of the model's raw output on EVERY round, immediately after the meta-line peel and
 // BEFORE `heal`/`validateA2ui` ever see the remaining text — mirroring the meta-line peel precedent for a
@@ -70,7 +78,7 @@ import type { AgentProvider, Effort, ExecuteTool, ProviderEvent, Session, ToolDe
 import { buildSystemPrompt } from './system-prompt.ts'
 import { frameClientMessage } from './session.ts'
 import { readMetaLine } from './meta-line.ts'
-import type { AskDeclaration, TurnProgress, TurnTrace } from './meta-line.ts'
+import type { AskDeclaration, PlanDeclaration, TurnProgress, TurnTrace } from './meta-line.ts'
 import type { GenUiMode } from './gen-ui-mode.ts'
 import { MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from './mini-skills.ts'
 import { FEED_SURFACE_TYPE_SET } from './feed-catalog.ts'
@@ -554,14 +562,27 @@ function assembleFromRaw(raw: string): { output: A2uiOutput; healedCount: number
  * `ask` (ADR-0097 §1) is the model-authored feed-ask declaration, peeled alongside `note` — its integrity
  * (does a payload line actually create it? does it collide with a session-known surface?) is checked by
  * the caller AFTER heal/validate, never here (this is peel-only, symmetric with `note`'s own treatment).
+ * `plan` (ADR-0174 cl.2 / SPEC-R20) is peeled alongside `note`/`ask` — it carries NO integrity check
+ * (Scope, ADR-0174 Open fork OF1): the caller passes it through to the outgoing meta-line UNCHANGED,
+ * exactly as declared, whenever present.
  */
-function peelMetaLine(raw: string): { note: string | undefined; ask: AskDeclaration | undefined; rest: string } {
+function peelMetaLine(raw: string): {
+  note: string | undefined
+  ask: AskDeclaration | undefined
+  plan: PlanDeclaration | undefined
+  rest: string
+} {
   const lines = raw.split('\n')
   const idx = lines.findIndex((l) => l.trim().length > 0) // first NON-EMPTY line
-  if (idx === -1) return { note: undefined, ask: undefined, rest: raw } // all-blank raw — nothing to peel
+  if (idx === -1) return { note: undefined, ask: undefined, plan: undefined, rest: raw } // all-blank raw — nothing to peel
   const meta = readMetaLine(lines[idx]!.trim())
-  if (meta === undefined) return { note: undefined, ask: undefined, rest: raw }
-  return { note: meta.a2uiMeta.note, ask: meta.a2uiMeta.ask, rest: lines.slice(idx + 1).join('\n') }
+  if (meta === undefined) return { note: undefined, ask: undefined, plan: undefined, rest: raw }
+  return {
+    note: meta.a2uiMeta.note,
+    ask: meta.a2uiMeta.ask,
+    plan: meta.a2uiMeta.plan,
+    rest: lines.slice(idx + 1).join('\n'),
+  }
 }
 
 /** genui-surface SPEC-R1: which produce-layer-only failure code names a rejected genui candidate —
@@ -624,13 +645,16 @@ function peelGenuiLines(afterMeta: string): GenuiPeelResult {
   }
 }
 
-/** Serialize the outgoing meta-line (ADR-0088 §1/§2, ADR-0097 §1) — the runtime-composed envelope,
- * carrying the model's own `note`, the `ask` declaration ONLY when it has passed integrity (`undefined`
- * otherwise — JSON.stringify then omits the key entirely, so a note-only turn's wire shape is byte-
- * identical to before ADR-0097), plus the `TurnTrace` `produce()` assembled for this turn (never the
- * model's raw wrapper verbatim — the model never has `trace`). */
-function formatMetaLine(note: string, trace: TurnTrace, ask: AskDeclaration | undefined): string {
-  return JSON.stringify({ a2uiMeta: { note, ask, trace } })
+/** Serialize the outgoing meta-line (ADR-0088 §1/§2, ADR-0097 §1, ADR-0174 cl.2 / SPEC-R20) — the
+ * runtime-composed envelope, carrying the model's own `note`, the `ask` declaration ONLY when it has
+ * passed integrity (`undefined` otherwise — JSON.stringify then omits the key entirely, so a note-only
+ * turn's wire shape is byte-identical to before ADR-0097), the model's own `plan` declaration THROUGH
+ * UNCHANGED when present (`undefined` when absent — JSON.stringify omits the key entirely, so a plan-less
+ * turn's wire shape stays byte-identical to before this field existed; no runtime rewriting, no integrity
+ * check — SPEC-R20 Scope), plus the `TurnTrace` `produce()` assembled for this turn (never the model's raw
+ * wrapper verbatim — the model never has `trace`). */
+function formatMetaLine(note: string, trace: TurnTrace, ask: AskDeclaration | undefined, plan: PlanDeclaration | undefined): string {
+  return JSON.stringify({ a2uiMeta: { note, ask, plan, trace } })
 }
 
 /**
@@ -872,7 +896,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
     }
     lastRaw = raw
 
-    const { note, ask, rest: afterMeta } = peelMetaLine(raw) // ADR-0088 §1 / ADR-0097 §1 — peeled BEFORE heal/validate
+    const { note, ask, plan, rest: afterMeta } = peelMetaLine(raw) // ADR-0088 §1 / ADR-0097 §1 / ADR-0174 cl.2 — peeled BEFORE heal/validate
     // genui-surface SPEC-R1 — peeled SECOND, still BEFORE heal/validate: a genui line (valid or not) never
     // reaches the shared A2UI healer/validator, which doesn't know this kind exists. Recomputed FRESH every
     // round (never carried over): a round's genui candidate belongs to THAT round's own raw output, never
@@ -913,7 +937,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
       // not only to the retried case already covered by `failuresFedBack` above.
       if (genuiPeel.failure !== undefined) failureCodes.push(genuiPeel.failure.code)
       if (emitProgress) yield formatProgressLine({ stage: 'done' }) // before the final (note-only/genui-only) yield
-      if (note !== undefined) yield formatMetaLine(note, traceFor(round + 1, 0, failureCodes), undefined)
+      if (note !== undefined) yield formatMetaLine(note, traceFor(round + 1, 0, failureCodes), undefined, plan)
       if (genuiLine !== undefined) yield genuiLine // SPEC-R1 AC2 — ships intact, the model's own line verbatim
       return
     }
@@ -957,7 +981,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
         // SPEC-N4/SPEC-R1 — see the note-only branch's identical comment: a genui failure dropped on an
         // otherwise-successful round still needs to land on the trace, not just the retried case.
         if (genuiPeel.failure !== undefined) failureCodes.push(genuiPeel.failure.code)
-        yield formatMetaLine(note, traceFor(round + 1, assembled.healedCount, failureCodes), finalAsk) // meta-line FIRST
+        yield formatMetaLine(note, traceFor(round + 1, assembled.healedCount, failureCodes), finalAsk, plan) // meta-line FIRST
       }
       // genui-surface SPEC-R1 — a genui structural failure on an OTHERWISE-valid A2UI round is DROPPED
       // silently here (never manufactures an extra round purely to fix it: "degrade, never halt" — the
