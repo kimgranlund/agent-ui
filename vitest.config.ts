@@ -83,11 +83,20 @@ export default defineConfig({
           // guard (`process.argv[1]?.endsWith('run.ts')`), so importing its pure `runSuite`/`readFixtures`
           // exports here is exactly as safe as the corpus entries above; its own test also spawns the real
           // script as a subprocess (the AC1 exit-code proof), the same tier-2 shape as `import-seeds.test.ts`.
+          //
+          // GH #567 (S1, mcp-manifest-registry.decomp.md) adds `a2ui/tools/agent/integrations/mcp/` — the
+          // MCP connector's OWN sibling folder one level below `integrations/`. The existing
+          // `integrations/*.test.ts` line above is a single-segment glob (`*` never crosses a `/`), so it
+          // does NOT pick up `integrations/mcp/*.test.ts` — measured empirically (a probe test file there
+          // ran 0 times under `npm test` while still exiting 0, a false-green gate). This explicit sibling
+          // line closes that gap for servers-config.test.ts (S1) and every later mcp/ slice's test file
+          // (client.test.ts/map-tool.test.ts/discover.test.ts, S2-S4) — no further edits needed as they land.
           name: 'tools',
           environment: 'node',
           include: [
             'packages/agent-ui/*/tools/agent/worker/*.test.ts',
             'packages/agent-ui/a2ui/tools/agent/integrations/*.test.ts',
+            'packages/agent-ui/a2ui/tools/agent/integrations/mcp/*.test.ts',
             'packages/agent-ui/a2ui/tools/corpus/*.test.ts',
             'packages/agent-ui/a2ui/tools/conformance/*.test.ts',
             'packages/agent-ui/a2a/tools/corpus/*.test.ts',
