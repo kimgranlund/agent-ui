@@ -179,6 +179,36 @@ describe('ui-tabs — [density] shifts shell spacing; the tab control height is 
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  [3b] GH #542 — the strip-gap RESOLVED VALUE pins the exact calc(space-xs + space-md); a tab carries
+//  zero padding-inline (GH #536's removal, both engines)
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-tabs — strip-gap resolves the exact calc(space-xs + space-md); a tab has zero padding-inline (GH #542, both engines)', () => {
+  it('at density 1 the tablist column-gap/gap is 16px (space-xs 4px + space-md 12px); a rendered tab is padding-inline:0px', () => {
+    const { tabs, tabEls } = mount(THREE)
+    const tablist = tabs.querySelector('[data-part="tablist"]') as HTMLElement
+
+    // --ui-tabs-strip-gap: calc(var(--md-sys-space-xs) + var(--md-sys-space-md)) (tabs.css). The space tokens
+    // themselves (shared/src/tokens/dimensions.css): --md-sys-space-xs: calc(4px * density),
+    // --md-sys-space-md: calc(12px * density) — at density 1 (no [density] attr on the mount) that's
+    // 4px + 12px = 16px EXACTLY. GH #536 grew the strip gap to carry the spacing the removed per-tab inline
+    // padding used to provide; GH #542 pins the concrete resolved px (not merely >0) so a future ramp/space-
+    // token edit that silently shifts the sum away from 16px fails HERE, in a real engine's cascade — the
+    // same discipline the 36px tab-height probe above applies to the control-height ramp.
+    const gapPx = px(getComputedStyle(tablist).columnGap)
+    expect(gapPx, 'the tablist column-gap did not resolve to 16px at density 1 (space-xs 4px + space-md 12px)').toBeCloseTo(16, 0)
+    expect(px(getComputedStyle(tablist).gap), 'gap and column-gap disagree on the resolved value').toBeCloseTo(16, 0)
+
+    // GH #536 — the per-tab inline padding was removed (a tab's clickable area is now its label box; the strip
+    // gap above carries the spacing that padding used to). Pin the negative directly: a rendered tab's own
+    // computed padding-inline-start/-end must both be the literal 0px, not merely falsy/absent.
+    const tabStyle = getComputedStyle(tabEls[0])
+    expect(tabStyle.paddingInlineStart, 'a tab must carry zero padding-inline-start (GH #536)').toBe('0px')
+    expect(tabStyle.paddingInlineEnd, 'a tab must carry zero padding-inline-end (GH #536)').toBe('0px')
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
 //  [4] The ARIA wiring is live in a real engine — roles via internals + the element-reflection relations
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 
