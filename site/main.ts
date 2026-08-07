@@ -537,6 +537,23 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    // M-F — the multi-select field (multi-select-field.lld.md · ADR-0175): an always-visible listbox,
+    // no trigger/overlay. tier=pattern ⇒ {doc, demo}, the ui-select precedent.
+    label: 'ui-multi-select',
+    cards: [
+      {
+        href: './multi-select-demo.html',
+        title: 'Demo',
+        blurb: 'The multi-select form field, live in a <form> — toggle options with click/Space/Enter; the value array round-trips into MULTIPLE FormData entries under name, with a select event log.',
+      },
+      {
+        href: './multi-select-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-multi-select attributes (name/value/label/required/size) and form participation, generated from its multi-select.md descriptor.',
+      },
+    ],
+  },
+  {
     // GH #294 F4 — the packaged ui-popover + form-spine recipe: a control-created trigger over a real
     // form-content panel, edited live-apply. tier=pattern ⇒ {doc, demo}, mirroring the nav.
     label: 'ui-form-popover',

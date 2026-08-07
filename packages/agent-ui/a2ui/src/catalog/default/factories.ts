@@ -840,6 +840,49 @@ export const swiperItemFactory: WidgetFactory = accessorFactory('ui-swiper-item'
 // are ALL identity `mapsTo`).
 export const colorPickerFactory: WidgetFactory = accessorFactory('ui-color-picker', { prop: 'value', event: 'change' })
 
+// ── M-F — MultiSelect → ui-multi-select (multi-select-field.lld.md §9, SPEC-R9, ADR-0175) ─────────────
+
+const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
+
+/** Reconcile `ui-multi-select`'s direct `[role=option]` light-DOM children from the `options` array prop
+ *  (OF3 — a `PropDef` array of `{label, value}`, byte-identical to `ChoicePicker.options`, a2ui-basic
+ *  `factories.ts`'s `applyChoicePickerOptions`, near-verbatim adapted here). A full rebuild on every
+ *  apply — `options` is a whole-array bindable prop, the `Table.columns`/`Sparkline.values` precedent,
+ *  never a per-item bind. Unlike `ui-select` (which ADOPTS author children into a control-created
+ *  listbox PANEL), `ui-multi-select`'s host IS the listbox — `replaceChildren` targets the element
+ *  itself directly, no panel indirection. */
+function applyMultiSelectOptions(el: HTMLElement, value: unknown): void {
+  const items = Array.isArray(value) ? value : []
+  const fresh = items.map((item) => {
+    const opt = document.createElement('div')
+    opt.setAttribute('role', 'option')
+    const label = isObject(item) && typeof item.label === 'string' ? item.label : ''
+    const optionValue = isObject(item) && typeof item.value === 'string' ? item.value : ''
+    opt.setAttribute('value', optionValue)
+    opt.textContent = label
+    return opt
+  })
+  el.replaceChildren(...fresh)
+}
+
+/**
+ * `MultiSelect` → `ui-multi-select` (SPEC-R9). `value`/`label`/`name`/`disabled`/`required`/`size` are
+ * ALL 1:1 reflecting accessor props (verified against `multi-select.ts` `static props`); `options` is
+ * the one bespoke mapping (`applyMultiSelectOptions`, above) — a catalog-only prop with no matching JS
+ * accessor on the control (the `ChoicePicker.options` precedent, OF3). Two-way bindable on `value` via
+ * the control's own `select` commit event; no `marshal` step (SPEC-R2 — the control's DOM value already
+ * IS the array).
+ */
+export const multiSelectFactory: WidgetFactory = {
+  tag: 'ui-multi-select',
+  create: () => document.createElement('ui-multi-select'),
+  applyProp: (el, prop, value) => {
+    if (prop === 'options') applyMultiSelectOptions(el, value)
+    else setProp(el, prop, value)
+  },
+  value: { prop: 'value', event: 'select' },
+}
+
 /** The default catalog's factory table — keyed by A2UI component type (catalog LLD-C5, consumed by the
  *  host at `registry.register`; the renderer resolves a node's control via `factories[type]`). Every type
  *  declared in `catalog.json` MUST appear here — a gap is a `CATALOG_FACTORY_MISSING` at register (SPEC-R7 AC1). */
@@ -902,4 +945,5 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   Swiper: swiperFactory,
   SwiperItem: swiperItemFactory,
   ColorPicker: colorPickerFactory,
+  MultiSelect: multiSelectFactory,
 }

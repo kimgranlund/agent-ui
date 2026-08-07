@@ -155,3 +155,7 @@
  * iframe + the fail-closed fallback affordance. Catalog-invisible by construction (SPEC-N1) — still a
  * fleet member, imported like any other control. */
 @import './controls/sandbox-frame/sandbox-frame.css';
+
+/* M-F — ui-multi-select (multi-select-field.lld.md · multi-select-field.spec.md · ADR-0175): a
+ * form-associated, always-visible multi-pick listbox — no trigger, no overlay/top-layer. */
+@import './controls/multi-select/multi-select.css';

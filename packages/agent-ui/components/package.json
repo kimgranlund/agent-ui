@@ -34,6 +34,7 @@
     "./controls/list": "./src/controls/list/list.ts",
     "./controls/menu": "./src/controls/menu/menu.ts",
     "./controls/modal": "./src/controls/modal/modal.ts",
+    "./controls/multi-select": "./src/controls/multi-select/multi-select.ts",
     "./controls/pagination": "./src/controls/pagination/pagination.ts",
     "./controls/popover": "./src/controls/popover/popover.ts",
     "./controls/progress": "./src/controls/progress/progress.ts",

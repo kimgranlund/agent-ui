@@ -357,6 +357,21 @@
       "children": "ChildList"
     },
 
+    "MultiSelect": {
+      "properties": {
+        "value": { "type": { "type": "array", "items": { "type": "string" } }, "bindable": true, "mapsTo": "value" },
+        "options": { "type": { "type": "array", "items": { "type": "object",
+                     "properties": { "label": { "type": "string" }, "value": { "type": "string" } },
+                     "required": ["label", "value"] } }, "bindable": true, "mapsTo": "options" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "name": { "type": { "type": "string" }, "mapsTo": "name" },
+        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
+        "required": { "type": { "type": "boolean" }, "mapsTo": "required" },
+        "size": { "type": { "type": "string", "enum": ["sm", "md", "lg"] }, "mapsTo": "size" }
+      },
+      "value": { "prop": "value", "event": "select" }
+    },
+
     "List": {
       "properties": {
         "elevation": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "elevation" },

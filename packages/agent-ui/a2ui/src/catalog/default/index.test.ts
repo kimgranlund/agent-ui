@@ -701,6 +701,45 @@ describe('default catalog — Table.selected / Pagination.page live round trips 
   })
 })
 
+// M-F — ui-multi-select (multi-select-field.lld.md · multi-select-field.spec.md SPEC-R2 AC2/SPEC-R9 AC1
+// · ADR-0175). Proves `input.ts`'s generic two-way controller writes the FULL new array to
+// `surface.data` at `valuePath` with ZERO per-component renderer code — the same LLD-C8 shape every
+// other value-mark control above already proves, exercised here for the new array-typed single slot.
+describe('default catalog — MultiSelect.value live round trip (M-F, multi-select-field.lld.md)', () => {
+  it("MultiSelect.value is a LIVE two-way bind: a real click on an option commits the FULL selected array, and the renderer's generic LLD-C8 controller writes it back into surface.data at the bound path, with zero per-component renderer code", () => {
+    const surface = createSurface({ id: 'ms-s', catalogId: 'agent-ui', version: 'v1.0' })
+    surface.data.value = { skills: [] }
+
+    // The real ui-multi-select control (defaultFactories self-defines the whole family on import) — no
+    // mocks, no stub factory. `options` is applied via the bespoke applyMultiSelectOptions mapping (OF3).
+    const multiSelect = defaultFactories.MultiSelect.create() as HTMLElement & { value: unknown }
+    defaultFactories.MultiSelect.applyProp(multiSelect, 'options', [
+      { label: 'JavaScript', value: 'js' },
+      { label: 'CSS', value: 'css' },
+    ])
+    document.body.append(multiSelect)
+
+    const node: A2uiComponent = { id: 'ms', component: 'MultiSelect', value: { path: '/skills' } }
+    installInputBinding(multiSelect, defaultFactories.MultiSelect, node, surface)
+
+    // The user gesture: a real click on the 'js' [role=option] (selectionCommit's 'multi-toggle' mode).
+    const jsOption = multiSelect.querySelector('[value="js"]') as HTMLElement
+    expect(jsOption).toBeTruthy()
+    jsOption.click()
+
+    expect(multiSelect.value).toEqual(['js']) // the control's own accessor reflects the committed array
+    expect((surface.data.peek() as { skills: unknown }).skills).toEqual(['js']) // LLD-C8 wrote it back (SPEC-R2 AC2)
+
+    // A second toggle — the FULL updated array commits again (SPEC-R3), never a per-item delta.
+    const cssOption = multiSelect.querySelector('[value="css"]') as HTMLElement
+    cssOption.click()
+    expect((surface.data.peek() as { skills: unknown }).skills).toEqual(['js', 'css'])
+
+    multiSelect.remove()
+    disposeSurface(surface)
+  })
+})
+
 describe('default catalog — Calendar range mode (ADR-0093 clause 7 follow-up): mode + valueStart/valueEnd', () => {
   it('Calendar carries a three-slot value mark (ADR-0161): value stays inert-but-harmless in mode=range (unchanged from before), and valueStart/valueEnd are now bindable TWO-WAY', () => {
     expect(defaultCatalog.components.Calendar.value).toEqual([

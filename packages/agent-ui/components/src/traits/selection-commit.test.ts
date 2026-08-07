@@ -240,3 +240,153 @@ describe('selectionCommit — single/multi selection controller (LLD-C2)', () =>
     host.remove()
   })
 })
+
+// LLD-C4 (multi-select-field.lld.md) — 'multi-toggle' mode: every commit path (plain click AND Enter)
+// unconditionally toggles, no modifier keys ever consulted. Additive-only: 'single'/'multi' regression-
+// unchanged (proven above, byte-identical, untouched by this mode's addition).
+describe("selectionCommit — 'multi-toggle' mode (LLD-C4)", () => {
+  it('sel-multi-toggle-click: plain click with NO modifier toggles membership (never replaces)', () => {
+    const host = makeHost('multi-toggle')
+
+    click(getItem(host, 'a'))
+    expect(host.lastSelection).toEqual(new Set(['a']))
+
+    // A SECOND plain click on a DIFFERENT item ADDS it — a 'multi' plain click would have REPLACED
+    // the selection with just {'b'}; 'multi-toggle' must not.
+    click(getItem(host, 'b'))
+    expect(host.lastSelection).toEqual(new Set(['a', 'b']))
+
+    // A third plain click on an ALREADY-selected item removes it (toggle-off).
+    click(getItem(host, 'a'))
+    expect(host.lastSelection).toEqual(new Set(['b']))
+
+    host.remove()
+  })
+
+  it('sel-multi-toggle-modifiers-ignored: Shift/Ctrl/Meta modifiers on click are ignored — every click still toggles', () => {
+    const host = makeHost('multi-toggle', ['a', 'b', 'c', 'd'])
+
+    click(getItem(host, 'a'))
+    click(getItem(host, 'c'))
+    expect(host.lastSelection).toEqual(new Set(['a', 'c']))
+
+    // Shift+click on 'd' must NOT range-extend (the 'multi' mode behaviour) — it toggles 'd' on alone.
+    click(getItem(host, 'd'), { shiftKey: true })
+    expect(host.lastSelection).toEqual(new Set(['a', 'c', 'd']))
+
+    // Ctrl+click on an already-selected item still just toggles it off (identical to a plain click).
+    click(getItem(host, 'a'), { ctrlKey: true })
+    expect(host.lastSelection).toEqual(new Set(['c', 'd']))
+
+    host.remove()
+  })
+
+  it('sel-multi-toggle-enter: Enter on the focused option toggles membership — byte-identical outcome to click', () => {
+    const host = makeHost('multi-toggle')
+
+    getItem(host, 'b').focus()
+    enter(host)
+    expect(host.lastSelection).toEqual(new Set(['b']))
+    expect(ariaSelected(getItem(host, 'b'))).toBe('true')
+
+    // Enter again on the SAME focused option toggles it back off.
+    enter(host)
+    expect(host.lastSelection).toEqual(new Set())
+    expect(ariaSelected(getItem(host, 'b'))).toBe('false')
+
+    host.remove()
+  })
+
+  it('sel-multi-toggle-aria-selected: aria-selected reflects the multiKeys Set (the multi-mode reflection path, unchanged)', () => {
+    const host = makeHost('multi-toggle')
+
+    click(getItem(host, 'a'))
+    click(getItem(host, 'c'))
+    expect(ariaSelected(getItem(host, 'a'))).toBe('true')
+    expect(ariaSelected(getItem(host, 'b'))).toBe('false')
+    expect(ariaSelected(getItem(host, 'c'))).toBe('true')
+
+    host.remove()
+  })
+
+  it('sel-multi-toggle-disabled: a disabled option is non-committable via click AND Enter (the shared backstop, unchanged)', () => {
+    const host = makeHost('multi-toggle')
+    const b = getItem(host, 'b')
+    b.setAttribute('aria-disabled', 'true')
+
+    click(b)
+    expect(host.lastSelection).toBeNull()
+
+    b.focus()
+    enter(host)
+    expect(host.lastSelection).toBeNull()
+
+    host.remove()
+  })
+
+  it('sel-multi-toggle-event: the select event detail is a ReadonlySet, matching multi mode exactly', () => {
+    const host = makeHost('multi-toggle')
+    let detail: unknown
+    host.addEventListener('select', (e) => {
+      detail = (e as CustomEvent).detail
+    })
+
+    click(getItem(host, 'a'))
+    expect(detail).toEqual(new Set(['a']))
+
+    host.remove()
+  })
+
+  it('sel-multi-toggle-sync: syncSelection re-seeds the internal Set from live external state before each toggle', () => {
+    // A bare UIElement host — deliberately NOT `SelectEl` (its own `connected()` auto-wires a SECOND
+    // selectionCommit instance, which would double-process every click against this test's manual wire).
+    class SyncHost extends UIElement {
+      lastSelection: ReadonlySet<string> | null = null
+    }
+    customElements.define('ui-sel-sync-host', SyncHost)
+
+    const host = new SyncHost()
+    for (const k of ['apple', 'banana', 'cherry']) {
+      const li = document.createElement('li')
+      li.setAttribute('role', 'option')
+      li.dataset['key'] = k
+      li.tabIndex = -1
+      host.append(li)
+    }
+    document.body.append(host)
+
+    let external: ReadonlySet<string> = new Set(['apple']) // simulates an attribute-seeded / externally-written value
+    selectionCommit(host, {
+      mode: 'multi-toggle',
+      syncSelection: () => external,
+      onSelect: (sel) => {
+        host.lastSelection = sel as ReadonlySet<string>
+        external = sel as ReadonlySet<string> // the host's own onSelect would write this back to `value`
+      },
+    })
+
+    const cherry = host.querySelector<HTMLElement>('[data-key="cherry"]')!
+    // Toggling 'cherry' must ADD to the externally-seeded 'apple', not discard it (the trait's own
+    // internal Set starts EMPTY — without syncSelection, this would wrongly yield just {'cherry'}).
+    click(cherry)
+    expect(host.lastSelection).toEqual(new Set(['apple', 'cherry']))
+
+    host.remove()
+  })
+
+  it("sel-single/sel-multi regression: 'single' and 'multi' modes stay byte-unchanged after the 'multi-toggle' addition", () => {
+    // single — a plain click still REPLACES (unchanged from sel-single above).
+    const single = makeHost('single')
+    click(getItem(single, 'a'))
+    click(getItem(single, 'b'))
+    expect(single.lastSelection).toBe('b')
+    single.remove()
+
+    // multi — a plain click still REPLACES the whole selection (unchanged from sel-multi-add above).
+    const multi = makeHost('multi')
+    click(getItem(multi, 'a'))
+    click(getItem(multi, 'b')) // plain click, no modifier — REPLACES, not adds
+    expect(multi.lastSelection).toEqual(new Set(['b']))
+    multi.remove()
+  })
+})

@@ -23,7 +23,7 @@
 // browser-side page, with no catalog-loading machinery riding along).
 
 /**
- * The 28 catalog types a feed ask MAY host (ADR-0097 §3): choice controls, value inputs, one commit
+ * The 29 catalog types a feed ask MAY host (ADR-0097 §3): choice controls, value inputs, one commit
  * affordance, and light structure — nothing that overlays, paginates, or dashboards. Widened by the
  * report/content/feed catalog wave (ADR-0111/0113/0112): `Badge` (light ask furniture, the `Text`/`Icon`
  * class), `Code` (verbatim inline content, no overlay/dashboard shape), `Avatar` (a non-interactive
@@ -40,7 +40,10 @@
  * INPUT (unlike `Swatch`/`Ramp`/`Ladder`'s display-only report content), but no ask affordance admits an
  * editor to the artifact feed. Widened by the 2026-07-28 per-control catalog intake: `Textarea` is the
  * TextField parity argument — a plain multi-line value input, commit-gated (blur-with-change, ADR-0134),
- * no overlay/dashboard shape — the same class as the choice/value inputs already IN.
+ * no overlay/dashboard shape — the same class as the choice/value inputs already IN. Widened by M-F
+ * (multi-select-field.lld.md, ADR-0175): `MultiSelect` is the Select/ComboBox parity argument — a choice
+ * control binding an array, one commit affordance (`select`), no overlay/pagination/dashboard shape (in
+ * fact LESS overlay surface than `Select`, which already carries a top-layer trigger+panel and is IN).
  */
 export const FEED_SURFACE_TYPES = [
   'Text',
@@ -62,6 +65,7 @@ export const FEED_SURFACE_TYPES = [
   'Select',
   'Option',
   'ComboBox',
+  'MultiSelect',
   'TextField',
   'Textarea',
   'Calendar',
