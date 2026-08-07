@@ -155,8 +155,14 @@ decision (dated line in §4).
   over ADR-0169's two-catalog registry (no third wire-visible catalog id), the persona carrying only
   its catalog SELECTION on the ADR-0170 seam. Next artifact per the ADR's own Repairs cell: **M-D's
   SPEC** (then the build — GH #480). After M-D: **M-E** (upstream-drift correctness; Q3 pre-ruled,
-  GH #477 drops `surfaceProperties`) then **M-F** (the second SaaS composition + the
-  association/multi-select intake) — the 2026-08-05 wave's ruled order (§2).
+  GH #477 drops `surfaceProperties`) then **M-F** — per
+  [ADR-0175](adr/0175-association-multiselect-field-design-intake.md) (ratified 2026-08-06, GH
+  #498): a multi-select FIELD primitive is minted for the record-edit/binding case (PRD-D3's
+  composed facet vehicle stands, unreopened, for the filter case); its wire value rides the
+  ORIGINAL single two-way slot with an array-typed prop, not ADR-0161's multi-slot mechanism;
+  to-many association/relationship editing is fenced OUT as its own, later, harder intake. Next
+  artifact: [`spec/multi-select-field.spec.md`](spec/multi-select-field.spec.md) (this SPEC), then
+  M-F's own LLD/build — the 2026-08-05 wave's ruled order (§2).
 - **The 2026-07-28 intake ruled the next arc.** A six-system inventory wave (agent-admin · a2ui ·
   GenUI · components · shells · SaaS patterns) fed a dependency-spine synthesis and three
   candidate milestones; Kim ruled the order on 2026-07-28. The full wave record — six inventories
