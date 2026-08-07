@@ -8,6 +8,15 @@
 > `.claude/docs/rubrics/fixtures/a2ui-deceptive-composition/`, and the lane's operator procedure +
 > VerdictsFile contract are appended to the clause itself. Scoped to SPEC-R3 only: its route line is
 > extended in place (P8 + the manifest link) and one v0.2 bullet is appended; no other clause touched.
+> **Amendment (2026-08-07, SPEC-R4 only — GH #532, owner ruling:
+> [#532 comment](https://github.com/kimgranlund/agent-ui/issues/532#issuecomment-5219435344)):**
+> SPEC-R4's "applied on emit" phrasing overclaimed what shipped. The clause is edited in place to
+> scope the guarantee honestly as TOOLKIT-LEVEL — `Session.surfacePrefix` +
+> `ownsSurfaceId`/`prefixSurfaceId`/`enforceSurfacePrefix` exist and are tested (26 tests, PR #519) —
+> with live-pipeline integration into `produce()` explicitly DEFERRED until a real multi-producer
+> surface needs it; the [ADR-0097](../adr/0097-a2ui-feed-embedded-asks.md) feed-ask
+> `ask.surfaceId` remap is the named precondition for that future wiring. Scoped to SPEC-R4 only:
+> its requirement sentence and AC1 are edited in place; no other clause touched.
 > Refines: [`../prd/a2ui-expert-system.prd.md`](../prd/a2ui-expert-system.prd.md) — primarily
 > **PRD-G6** (coherence over time: divergence surfaces mechanically, not as silent rot — here
 > extended to divergence from the UPSTREAM ecosystem, not just internal drift) and **PRD-G7**
@@ -195,11 +204,20 @@ scope, and the payload rubric MUST carry the dimension.
 [ADR-0137](../adr/0137-a2ui-agent-producer-toolkit-export.md) agent toolkit,
 `packages/agent-ui/a2ui/src/agent/`)*. The v1.0 spec source itself advises orchestrators to
 prefix subagent surface IDs to prevent conflicts (§2.1). The producer toolkit's `Session` seam
-MUST offer the convention first-class: a per-producer surface-ID prefix, applied on emit, so two
-subagent producers under one orchestrator cannot collide on or address each other's surfaces.
-- **AC1** *Given* two sessions with distinct prefixes, *when* both emit `createSurface` +
-  updates, *then* their surface IDs are disjoint by construction and a cross-prefix update is
-  rejected — proven by a test in the toolkit's own gates.
+MUST offer the convention first-class: a per-producer surface-ID prefix as a TOOLKIT-LEVEL
+guarantee (`Session.surfacePrefix` + the `ownsSurfaceId`/`prefixSurfaceId`/`enforceSurfacePrefix`
+primitives), so two subagent producers under one orchestrator cannot collide on or address each
+other's surfaces. Wiring `enforceSurfacePrefix` into `produce()`'s default emit path is EXPLICITLY
+DEFERRED until a real multi-producer surface needs it — the named precondition for that future
+wiring is remapping the [ADR-0097](../adr/0097-a2ui-feed-embedded-asks.md) feed-ask
+`ask.surfaceId` alongside the payload's surface IDs (an unremapped ask would silently break the
+feed-ask integrity check, `produce.ts:669-673` — GH #532, amendment 2026-08-07).
+- **AC1** *Given* two sessions with distinct prefixes, *when* both apply the toolkit's prefix
+  primitives (`Session.surfacePrefix` + `ownsSurfaceId`/`prefixSurfaceId`/`enforceSurfacePrefix`,
+  shipped PR #519 with 26 tests), *then* their surface IDs are disjoint by construction and a
+  cross-prefix update is rejected — proven by tests in the toolkit's own gates. `produce()`'s
+  live emit path does NOT yet apply the prefix; that integration is deferred per the clause
+  above, gated on the ADR-0097 `ask.surfaceId` remap.
 
 **SPEC-R5 — Conformance-suite lane** *(→ PRD-G4, PRD-G6 · route: the shared validator +
 its fixture corpus; upstream issue #2150)*. No conformance suite exists upstream (§2.1). This
