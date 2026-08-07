@@ -1,0 +1,72 @@
+[
+  {
+    "id": "registration",
+    "task": "create an account and reach the signed-in state (GH #490 S1-a, decomp a1)",
+    "entry": ["forms"],
+    "states": [
+      { "id": "forms", "screen": "credentials" },
+      { "id": "registering", "screen": "credentials" },
+      { "id": "signed-in", "screen": "credentials" }
+    ],
+    "transitions": [
+      { "from": "forms", "to": "registering", "verb": "submit-registration", "fallible": true },
+      { "from": "registering", "to": "signed-in", "verb": "succeed" },
+      { "from": "signed-in", "to": "forms", "verb": "sign-out" }
+    ],
+    "exits": [
+      {
+        "state": "signed-in",
+        "kind": "success",
+        "asserts": [
+          "getSession() returns a session for the submitted email",
+          "session.method === 'password'"
+        ]
+      },
+      {
+        "state": "forms",
+        "kind": "abandon",
+        "asserts": ["no account was created", "getSession() returns null"]
+      }
+    ],
+    "recovery": [{ "from": "registering", "to": "forms", "preserves_input": true }],
+    "persistence": {
+      "resumable": false,
+      "across": "no cross-reload persistence by design (identity-mock-transport.spec.md SPEC-N3) — a reload restarts at forms with only the seed account present"
+    }
+  },
+  {
+    "id": "email-password-signin",
+    "task": "sign in with email + password and reach the signed-in state (GH #490 S1-b, decomp a2)",
+    "entry": ["forms"],
+    "states": [
+      { "id": "forms", "screen": "credentials" },
+      { "id": "signing-in", "screen": "credentials" },
+      { "id": "signed-in", "screen": "credentials" }
+    ],
+    "transitions": [
+      { "from": "forms", "to": "signing-in", "verb": "submit-signin", "fallible": true },
+      { "from": "signing-in", "to": "signed-in", "verb": "succeed" },
+      { "from": "signed-in", "to": "forms", "verb": "sign-out" }
+    ],
+    "exits": [
+      {
+        "state": "signed-in",
+        "kind": "success",
+        "asserts": [
+          "getSession() returns the account's session",
+          "session.method === 'password'"
+        ]
+      },
+      {
+        "state": "forms",
+        "kind": "abandon",
+        "asserts": ["no session was created", "getSession() returns null"]
+      }
+    ],
+    "recovery": [{ "from": "signing-in", "to": "forms", "preserves_input": true }],
+    "persistence": {
+      "resumable": false,
+      "across": "no cross-reload persistence by design (identity-mock-transport.spec.md SPEC-N3) — a reload restarts at forms"
+    }
+  }
+]
