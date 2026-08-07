@@ -247,7 +247,13 @@ swiper-item comment's own cited precedent). The A2UI catalog keeps its shipped W
 (`Icon.name`, `Stat.value`, …): `catalog.json`'s `mapsTo` + `mappedAccessorFactory` translate
 wire→prop at apply time, so every corpus record and taught idiom stays valid — the ONE catalog-vs-
 component naming divergence class, deliberate (§7's namespace is the protocol surface, §3's is the
-DOM surface).
+DOM surface). · **`ui-otp-field`'s `otp` acronym — RULED (Kim, GH #490 comment
+[5221585741](https://github.com/kimgranlund/agent-ui/issues/490#issuecomment-5221585741),
+code-entry-control.lld.md §2 Tag row): the owner-accepted exception to §1's never-abbreviate law** —
+shorter and unambiguous in the auth domain, and `-field` places it in the entry family the way
+`text-field` already does; the working-title alternatives (`ui-code-entry` collided with the
+`@agent-ui/code`/`ui-code-editor`/catalog-`Code` concept canon, `ui-one-time-code` was the platform-canon
+spelling v0.1 recommended) were both superseded by this ruling. Closed, not re-litigable at build.
 
 ## 13 · The worked example — deriving a family's names from ONE decision
 

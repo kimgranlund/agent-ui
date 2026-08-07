@@ -79,6 +79,10 @@ const FOCUS_TIMING_FILES = [
   'packages/agent-ui/code/src/markdown/markdown.browser.test.ts',
   'packages/agent-ui/components/src/controls/swiper/swiper.browser.test.ts',
   'packages/agent-ui/components/src/controls/textarea/textarea.browser.test.ts',
+  // code-entry-control.lld.md (GH #490 S2-a) — the focus-order probe asserts document.activeElement after
+  // real Tab/refocus (one tab stop, active-cell parking) — the SAME concurrent-page focus-contention class
+  // as every other file in this list; added at build time per the LLD's own §11 instruction, not found flaky.
+  'packages/agent-ui/components/src/controls/otp-field/otp-field.browser.test.ts',
   // 2026-07-20 append (the GH #56 one-line-append law): the real-timer pause-on-hover leg timed out
   // repeatedly across the day's PR gate runs whenever a SIBLING worktree's suite ran concurrently on the
   // same machine (measured at least 3 independent runs), then passed solo every time (20/20 both engines)

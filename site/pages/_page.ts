@@ -107,6 +107,17 @@ export const NAV: readonly NavGroup[] = [
     ],
   },
   {
+    // code-entry-control.lld.md (GH #490 S2-a) — ui-otp-field, the identity family's segmented N-cell
+    // one-time-code entry field (tier=control ⇒ the same {permutations, states, doc} set). Permanently
+    // catalog-excluded (ADR-0176 cl.3) — still a site-documented fleet member like any other control.
+    label: 'ui-otp-field',
+    links: [
+      { href: './otp-field-permutations.html', label: 'Permutations' },
+      { href: './otp-field-states.html', label: 'States' },
+      { href: './otp-field-doc.html', label: 'API' },
+    ],
+  },
+  {
     // The Display-class text primitive — a single descriptor-derived API doc (tier=display ⇒ {doc} only).
     label: 'ui-text',
     links: [{ href: './text-doc.html', label: 'API' }],

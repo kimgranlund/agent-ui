@@ -178,7 +178,10 @@ describe('site coverage — every shipped component has its required per-tier pa
   }
 
   it('sourced the controls, the display leaf, the Wave 1 indicators, the Wave 2 Range controls, and the G9 containers/patterns/layout', () => {
-    expect(COMPONENTS.filter((c) => c.tier === 'control').map((c) => c.name).sort()).toEqual(['button', 'text-field', 'textarea'])
+    // code-entry-control.lld.md (GH #490 S2-a) — ui-otp-field, the identity family's segmented N-cell
+    // one-time-code entry field: tier=control (a FACE form control, full control height), permanently
+    // catalog-excluded (ADR-0176 cl.3) but still a site-documented fleet member like any other control.
+    expect(COMPONENTS.filter((c) => c.tier === 'control').map((c) => c.name).sort()).toEqual(['button', 'otp-field', 'text-field', 'textarea'])
     // Display tier: ui-text (ADR-0025) + ui-icon (ADR-0065/0066, the icon-adapter's declarative consumer) +
     // the Wave M1 chart family (ADR-0107): ui-sparkline + ui-bar-chart + the Wave M1 report family (ADR-0111):
     // ui-table + ui-stat + ui-badge + the Wave M1 content family (ADR-0113): ui-code + the Wave M1 feed
