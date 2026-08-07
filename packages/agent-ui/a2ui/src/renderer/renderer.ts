@@ -53,6 +53,7 @@ import type { CreateWidget, ItemScope } from './types.ts'
 import type { Scope } from '@agent-ui/components'
 import { Registry } from '../catalog/registry.ts'
 import type { WidgetFactory } from '../catalog/types.ts'
+import { resolveFactory } from '../catalog/variant.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import { defaultFactories } from '../catalog/default/factories.ts'
 import { a2uiBasicCatalog, a2uiBasicCatalogCanonical } from '../catalog/a2ui-basic/index.ts'
@@ -297,7 +298,9 @@ class Renderer implements RendererHost {
         create: (node, surface) => this.#create(node, surface),
         rewireNode: (el, node, surface, scope, itemScope, ac) => this.#wireNode(el, node, surface, scope, itemScope, ac),
         resetProp: (el, node, surface, prop, value) => {
-          const factory = this.#registry.get(surface.catalogId)?.factories[node.component]
+          // GH #545 — the same `resolveFactory` re-dispatch `widget.ts` uses, so a reset onto a
+          // variant-dispatched node lands on the SAME concrete factory the node was minted/wired with.
+          const factory = resolveFactory(this.#registry.get(surface.catalogId)?.factories[node.component], node)
           factory?.applyProp(el, prop, value)
         },
         componentDefOf: (node, surface) => this.#registry.get(surface.catalogId)?.catalog?.components?.[node.component],

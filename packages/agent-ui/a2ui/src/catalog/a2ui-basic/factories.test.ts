@@ -18,11 +18,15 @@ import {
   textFieldFactory,
   checkBoxFactory,
   choicePickerFactory,
+  choicePickerMultiFactory,
+  choicePickerVariants,
   basicSliderFactory,
   dateTimeInputFactory,
 } from './factories.ts'
 import { a2uiBasicCatalog } from './index.ts'
 import { Registry, RegistryError, RegistryErrorCode } from '../registry.ts'
+import { resolveFactory, factoriesOf } from '../variant.ts'
+import type { A2uiComponent } from '../../protocol.ts'
 import { phosphorPack } from '@agent-ui/icons/phosphor'
 
 describe('a2ui-basic factories — table parity (ADR-0169 cl.9)', () => {
@@ -52,16 +56,21 @@ describe('a2ui-basic factories — table parity (ADR-0169 cl.9)', () => {
 
 describe('a2ui-basic factories — cl.9a common props apply on every factory', () => {
   it('weight → el.style.flexGrow; accessibility → aria-label/aria-description', () => {
-    for (const [name, factory] of Object.entries(a2uiBasicFactories)) {
-      const el = factory.create()
-      factory.applyProp(el, 'weight', 2)
-      expect(el.style.flexGrow, `${name}.weight`).toBe('2')
-      factory.applyProp(el, 'weight', null)
-      expect(el.style.flexGrow, `${name}.weight reset`).toBe('')
+    // `factoriesOf` (GH #545) flattens `ChoicePicker`'s `VariantDispatch` slot to its two concrete arms
+    // (`choicePickerFactory` + `choicePickerMultiFactory`) — every other slot is already a plain
+    // `WidgetFactory`, a one-element loop, byte-identical to the pre-#545 direct iteration.
+    for (const [name, slot] of Object.entries(a2uiBasicFactories)) {
+      for (const factory of factoriesOf(slot)) {
+        const el = factory.create()
+        factory.applyProp(el, 'weight', 2)
+        expect(el.style.flexGrow, `${name}.weight`).toBe('2')
+        factory.applyProp(el, 'weight', null)
+        expect(el.style.flexGrow, `${name}.weight reset`).toBe('')
 
-      factory.applyProp(el, 'accessibility', { label: 'A label', description: 'A description' })
-      expect(el.getAttribute('aria-label'), `${name}.accessibility.label`).toBe('A label')
-      expect(el.getAttribute('aria-description'), `${name}.accessibility.description`).toBe('A description')
+        factory.applyProp(el, 'accessibility', { label: 'A label', description: 'A description' })
+        expect(el.getAttribute('aria-label'), `${name}.accessibility.label`).toBe('A label')
+        expect(el.getAttribute('aria-description'), `${name}.accessibility.description`).toBe('A description')
+      }
     }
   })
 })
@@ -235,6 +244,69 @@ describe('a2ui-basic factories — ChoicePicker (PARTIAL INCLUDE → ui-select, 
     const el = choicePickerFactory.create()
     choicePickerFactory.applyProp(el, 'label', 'Choose a size')
     expect(el.getAttribute('aria-label')).toBe('Choose a size')
+  })
+})
+
+describe('a2ui-basic factories — ChoicePicker.variant:"multipleSelection" → ui-multi-select (GH #545, SPEC-R10 E6 drain)', () => {
+  it('declares the ui-multi-select tag + a marshal-free value mark (SPEC-R10: "the DOM value already IS the array")', () => {
+    expect(choicePickerMultiFactory.tag).toBe('ui-multi-select')
+    expect(choicePickerMultiFactory.value).toEqual({ prop: 'value', event: 'select' })
+  })
+
+  it('options synthesizes div[role=option] children — the SAME rebuild shape as the mutuallyExclusive arm', () => {
+    const el = choicePickerMultiFactory.create()
+    choicePickerMultiFactory.applyProp(el, 'options', [
+      { label: 'Small', value: 'sm' },
+      { label: 'Large', value: 'lg' },
+    ])
+    const options = [...el.querySelectorAll('[role=option]')]
+    expect(options.length).toBe(2)
+    expect(options[0]!.textContent).toBe('Small')
+    expect(options[0]!.getAttribute('value')).toBe('sm')
+  })
+
+  it('value passes the array straight through — no marshal step', () => {
+    const el = choicePickerMultiFactory.create()
+    choicePickerMultiFactory.applyProp(el, 'value', ['sm', 'lg'])
+    expect((el as unknown as { value?: unknown }).value).toEqual(['sm', 'lg'])
+  })
+
+  it('variant/displayStyle/filterable are declared but v1-inert — no DOM effect (byte-identical to the mutuallyExclusive arm)', () => {
+    const el = choicePickerMultiFactory.create()
+    choicePickerMultiFactory.applyProp(el, 'variant', 'multipleSelection')
+    choicePickerMultiFactory.applyProp(el, 'displayStyle', 'chips')
+    choicePickerMultiFactory.applyProp(el, 'filterable', true)
+    expect(el.attributes.length).toBe(0)
+  })
+
+  it('label maps to aria-label', () => {
+    const el = choicePickerMultiFactory.create()
+    choicePickerMultiFactory.applyProp(el, 'label', 'Choose sizes')
+    expect(el.getAttribute('aria-label')).toBe('Choose sizes')
+  })
+})
+
+describe('a2ui-basic factories — ChoicePicker is a VariantDispatch table (GH #545)', () => {
+  const node = (variant: unknown): A2uiComponent => ({ id: 'n1', component: 'ChoicePicker', variant }) as A2uiComponent
+
+  it('dispatches "mutuallyExclusive" to choicePickerFactory (ui-select)', () => {
+    expect(resolveFactory(choicePickerVariants, node('mutuallyExclusive'))).toBe(choicePickerFactory)
+  })
+
+  it('dispatches "multipleSelection" to choicePickerMultiFactory (ui-multi-select) — the E6 drain proof', () => {
+    expect(resolveFactory(choicePickerVariants, node('multipleSelection'))).toBe(choicePickerMultiFactory)
+  })
+
+  it('falls back to choicePickerFactory (the schema default) on an absent/unbound/unknown variant', () => {
+    expect(resolveFactory(choicePickerVariants, node(undefined))).toBe(choicePickerFactory)
+    expect(resolveFactory(choicePickerVariants, node({ path: '/v' }))).toBe(choicePickerFactory) // a dynamic binding, never a plain string at create time
+    expect(resolveFactory(choicePickerVariants, node('bogus'))).toBe(choicePickerFactory)
+  })
+
+  it('REGRESSION (SPEC-R10 AC2): the table\'s own arms are byte-identical to the standalone factories — no shape drift from being wrapped in a dispatch table', () => {
+    expect(choicePickerVariants.variants.mutuallyExclusive).toBe(choicePickerFactory)
+    expect(choicePickerVariants.variants.multipleSelection).toBe(choicePickerMultiFactory)
+    expect(choicePickerVariants.fallback).toBe(choicePickerFactory)
   })
 })
 

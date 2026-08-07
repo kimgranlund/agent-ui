@@ -21,7 +21,7 @@
 import { validateComponent, validateFunctions, CatalogError, CatalogLoadCode } from './catalog.ts'
 import type { Catalog, ComponentDef, FunctionDef } from './catalog.ts'
 import { validName } from './naming.ts'
-import type { CatalogEntry, CatalogRegistry, WidgetFactory } from './types.ts'
+import type { CatalogEntry, CatalogRegistry, VariantDispatch, WidgetFactory } from './types.ts'
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 
@@ -217,7 +217,7 @@ export function composePersonaCatalogs(registry: CatalogRegistry, personas: read
         )
       }
       const derived = composeCatalog(entry.catalog, persona.fragment, persona.personaId)
-      const factories: Record<string, WidgetFactory> = { ...entry.factories, ...persona.factories }
+      const factories: Record<string, WidgetFactory | VariantDispatch> = { ...entry.factories, ...persona.factories }
       const functions =
         entry.functions !== undefined || persona.functions !== undefined ? { ...entry.functions, ...persona.functions } : undefined
       registry.register(derived, factories, functions)

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { Registry, RegistryError, RegistryErrorCode } from './registry.ts'
-import type { WidgetFactory } from './types.ts'
+import type { VariantDispatch, WidgetFactory } from './types.ts'
 
 // All fixtures are synthetic — a registry test must not depend on the default catalog or any real
 // `ui-*` control (it is decoupled from the factory/catalog.json slices, which build concurrently).
@@ -35,7 +35,7 @@ describe('Registry — register / get / supportedCatalogIds (catalog LLD-C3, SPE
     expect(entry).toBeDefined()
     expect(entry?.catalog.catalogId).toBe('proj')
     expect(Object.keys(entry?.catalog.components ?? {})).toEqual(['Widget'])
-    expect(entry?.factories.Widget.tag).toBe('ui-widget')
+    expect((entry?.factories.Widget as WidgetFactory | undefined)?.tag).toBe('ui-widget')
     // stored catalog is the loader-normalized result (functions defaulted), not the raw input
     expect(entry?.catalog.functions).toEqual({})
   })
@@ -105,7 +105,7 @@ describe('Registry — CATALOG_FACTORY_MISSING (catalog LLD-C3, SPEC-R7 AC1)', (
     // lookup; `factories.toString` would instead resolve to Object.prototype.toString.)
     const key: string = 'toString'
     reg.register(synthCatalog('proj', ['toString']), { [key]: fakeFactory('ui-x') })
-    expect(reg.get('proj')?.factories[key]?.tag).toBe('ui-x')
+    expect((reg.get('proj')?.factories[key] as WidgetFactory | undefined)?.tag).toBe('ui-x')
   })
 })
 
@@ -162,5 +162,48 @@ describe('Registry — submitGateSelector (catalog LLD-C3, ADR-0054 the submit-g
     reg.register(synthCatalog('a', ['Provider']), { Provider: { ...fakeFactory('ui-provider'), submitGate: true } })
     reg.register(synthCatalog('b', ['Provider2']), { Provider2: { ...fakeFactory('ui-provider'), submitGate: true } })
     expect(reg.submitGateSelector()).toBe('ui-provider') // one tag, not 'ui-provider, ui-provider'
+  })
+})
+
+// GH #545 — one catalog TYPE dispatching to a different concrete factory by a node prop's value. A
+// `VariantDispatch` table occupies the SAME factory-table slot a plain `WidgetFactory` would.
+describe('Registry — VariantDispatch table slots (GH #545)', () => {
+  const dispatch = (): VariantDispatch => ({
+    variantProp: 'variant',
+    variants: { a: fakeFactory('ui-a'), b: fakeFactory('ui-b') },
+    fallback: fakeFactory('ui-a'),
+  })
+
+  it('registers a table whose slot is a VariantDispatch — byte-compatible with the FACTORY_MISSING coverage gate', () => {
+    const reg = new Registry()
+    const d = dispatch()
+    expect(() => reg.register(synthCatalog('proj', ['Widget']), { Widget: d })).not.toThrow()
+    const entry = reg.get('proj')
+    expect(entry?.factories.Widget).toBe(d) // stored verbatim — register never rewraps a table slot
+  })
+
+  it('a VariantDispatch slot still satisfies coverage — no CATALOG_FACTORY_MISSING for its declared type', () => {
+    const reg = new Registry()
+    expect(() => reg.register(synthCatalog('proj', ['Widget', 'Plain']), { Widget: dispatch(), Plain: fakeFactory('ui-plain') })).not.toThrow()
+  })
+
+  it('submitGateSelector fans a dispatch table out to EVERY arm — a variant may mark its own gate independent of its siblings', () => {
+    const reg = new Registry()
+    const gated: VariantDispatch = {
+      variantProp: 'variant',
+      variants: {
+        a: { ...fakeFactory('ui-a'), submitGate: true },
+        b: fakeFactory('ui-b'), // unmarked sibling — not a gate
+      },
+      fallback: { ...fakeFactory('ui-a'), submitGate: true },
+    }
+    reg.register(synthCatalog('proj', ['Widget']), { Widget: gated })
+    expect(reg.submitGateSelector()).toBe('ui-a') // 'ui-b' excluded; the fallback dupes 'ui-a', deduped
+  })
+
+  it('NEGATIVE: a dispatch table with no submitGate arm contributes nothing to the selector', () => {
+    const reg = new Registry()
+    reg.register(synthCatalog('proj', ['Widget']), { Widget: dispatch() })
+    expect(reg.submitGateSelector()).toBe('')
   })
 })

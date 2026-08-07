@@ -10,6 +10,7 @@ import { a2uiBasicCatalog, a2uiBasicCatalogCanonical, A2UI_BASIC_CANONICAL_URI }
 import { a2uiBasicFactories } from './factories.ts'
 import { a2uiBasicFunctions } from './functions.ts'
 import { Registry } from '../registry.ts'
+import { resolveFactory } from '../variant.ts'
 import { buildSystemPrompt } from '../../agent/system-prompt.ts'
 import { defaultCatalog } from '../default/index.ts'
 import { validateA2ui } from '../../renderer/validate.ts'
@@ -83,9 +84,9 @@ describe('a2ui-basic — the partition coverage gate (ADR-0169 cl.14)', () => {
     for (const fn of declared) expect(Object.hasOwn(a2uiBasicFunctions, fn), fn).toBe(true)
   })
 
-  it('(4) sub-type-granularity gates hold: ChoicePicker.variant is the narrowed [\'mutuallyExclusive\'] enum (E6); Icon.name is the closed string enum (E5, no {svgPath} arm)', () => {
+  it('(4) sub-type-granularity gates hold: ChoicePicker.variant is the WIDENED [\'mutuallyExclusive\', \'multipleSelection\'] enum (E6 DRAINED, GH #545/SPEC-R10); Icon.name is the closed string enum (E5, no {svgPath} arm)', () => {
     const choicePickerVariant = a2uiBasicCatalog.components.ChoicePicker!.properties.variant!.type as { enum?: unknown[] }
-    expect(choicePickerVariant.enum).toEqual(['mutuallyExclusive'])
+    expect(choicePickerVariant.enum).toEqual(['mutuallyExclusive', 'multipleSelection'])
 
     const iconName = a2uiBasicCatalog.components.Icon!.properties.name!
     expect((iconName.type as { type?: unknown }).type).toBe('string')
@@ -133,15 +134,10 @@ function surface(components: readonly A2uiComponent[]): A2uiServerMessage[] {
   ] as A2uiServerMessage[]
 }
 
-describe('a2ui-basic — the exclusion-gate coverage (E1/E5/E6), each a CATALOG rejection', () => {
+describe('a2ui-basic — the exclusion-gate coverage (E1/E5), each a CATALOG rejection', () => {
   it('(E1) a Video component — no fleet media control, not a catalog key at all — rejects', () => {
     const msgs = surface([{ id: 'root', component: 'Video', url: 'https://example.com/clip.mp4' }])
     expect(validateA2ui(msgs, a2uiBasicCatalog)).toEqual({ valid: false, failures: [{ code: 'CATALOG', path: 'root' }] })
-  })
-
-  it("(E6) ChoicePicker.variant:'multipleSelection' — the narrowed ['mutuallyExclusive'] enum rejects it — rejects", () => {
-    const msgs = surface([{ id: 'root', component: 'ChoicePicker', variant: 'multipleSelection', options: [] }])
-    expect(validateA2ui(msgs, a2uiBasicCatalog)).toEqual({ valid: false, failures: [{ code: 'CATALOG', path: 'root.variant' }] })
   })
 
   it('(E5) Icon.name:{svgPath} — the closed string enum has no object arm — rejects', () => {
@@ -159,7 +155,7 @@ describe('a2ui-basic — the exclusion-gate coverage (E1/E5/E6), each a CATALOG 
 
   // (E7) `Button.action:{functionCall:{...}}` — GH #429: gate-encoded at conformance via the narrow
   // `PropDef.rejectFunctionCall` extension (declared only on `a2ui-basic/catalog.json`'s `Button.action`,
-  // conformance.ts's `matchesType`). Unlike E1/E5/E6's type/enum closures this is NOT a general
+  // conformance.ts's `matchesType`). Unlike E1/E5's type/enum closures this is NOT a general
   // `matchesSchemaType` descent into nested `properties`/`required` — that stays deliberately shallow,
   // fleet-wide, so ADR-0011's Postel tolerance arms (the `name` synonym, the bare-string arm, the cl.10
   // `{event}` arm) keep passing un-narrowed. It is one named key, checked only when the declaring PropDef
@@ -181,5 +177,34 @@ describe('a2ui-basic — the exclusion-gate coverage (E1/E5/E6), each a CATALOG 
       },
     ] as A2uiServerMessage[]
     expect(validateA2ui(msgs, defaultCatalog)).toEqual({ valid: true, failures: [] })
+  })
+})
+
+// GH #545 / multi-select-field.spec.md SPEC-R10 — the E6 drain. `ChoicePicker.variant`'s enum widened
+// past `['mutuallyExclusive']` (ADR-0169's original E6 gate encoding) to also admit `'multipleSelection'`,
+// routed by a NEW `VariantDispatch` factory arm to `ui-multi-select` rather than `ui-select`. The
+// `mutuallyExclusive` arm's own conformance/render behavior is untouched (SPEC-R10 AC2 — proved in
+// `factories.test.ts`'s regression describe block; this file re-proves it at the CATALOG-conformance
+// layer, the same layer the old E6 rejection used to run at).
+describe('a2ui-basic — SPEC-R10 (GH #545): the E6 drain — ChoicePicker.variant:"multipleSelection" now VALIDATES and renders via ui-multi-select', () => {
+  it('(SPEC-R10 AC1) passes enum conformance — where it used to fail as E6', () => {
+    const msgs = surface([{ id: 'root', component: 'ChoicePicker', variant: 'multipleSelection', options: [] }])
+    expect(validateA2ui(msgs, a2uiBasicCatalog)).toEqual({ valid: true, failures: [] })
+  })
+
+  it('(SPEC-R10 AC1) renders via the NEW ui-multi-select factory arm, resolved off the real registered table', () => {
+    const registry = new Registry()
+    registry.register(a2uiBasicCatalog, a2uiBasicFactories)
+    const slot = registry.get('a2ui-basic')?.factories.ChoicePicker
+    const node: A2uiComponent = { id: 'root', component: 'ChoicePicker', variant: 'multipleSelection', options: [] }
+    expect(slot === undefined ? undefined : resolveFactory(slot, node)?.tag).toBe('ui-multi-select')
+  })
+
+  it('(SPEC-R10 AC2 — regression) the existing mutuallyExclusive arm still resolves to ui-select, unchanged', () => {
+    const registry = new Registry()
+    registry.register(a2uiBasicCatalog, a2uiBasicFactories)
+    const slot = registry.get('a2ui-basic')?.factories.ChoicePicker
+    const node: A2uiComponent = { id: 'root', component: 'ChoicePicker', variant: 'mutuallyExclusive', options: [] }
+    expect(slot === undefined ? undefined : resolveFactory(slot, node)?.tag).toBe('ui-select')
   })
 })
