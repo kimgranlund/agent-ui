@@ -41,8 +41,9 @@ export function readEntries(store: { get(key: string): unknown } | undefined, ki
 
 /** A slug id from a label — lowercase, non-alphanumeric runs collapsed to one hyphen, trimmed. Falls
  *  back to `entry` if the label is entirely non-alphanumeric (e.g. all emoji/punctuation) — never an
- *  empty id. */
-function slugify(label: string): string {
+ *  empty id. Exported (GH #564) so `entry-list.ts`'s add-from-library picker can predict a pack entry's
+ *  resulting id — the SAME resolution `validateNewEntry` uses below — to know whether it would collide. */
+export function slugify(label: string): string {
   const slug = label
     .toLowerCase()
     .trim()
@@ -84,12 +85,32 @@ export interface EntryLibraryPack {
 
 export type ValidateNewEntryResult = { ok: true; entry: Entry } | { ok: false; error: string }
 
+/** GH #564 — `validateNewEntry`'s own additive options bag (the SAME law `EntryListOptions` follows,
+ *  entry-list.ts): new members are optional with a default that is byte-identical for every existing
+ *  caller. */
+export interface ValidateNewEntryOptions {
+  /** `true` for a kind whose entry id is a FOREIGN KEY into an external registry (the catalog kind,
+   *  ADR-0170 cl.8) — a colliding id there is a genuine DUPLICATE (re-adding the SAME registered catalog
+   *  mints a second identical-looking card), not a name clash a suffix can resolve; mangling the id "would
+   *  be the very coupling this widening exists to break" (see the comment below). `false`/absent — every
+   *  hand-authored kind (e.g. two "Rules" prose entries legitimately coexisting) — keeps the suffix
+   *  counter exactly as before. */
+  rejectOnCollision?: boolean
+}
+
 /** Fail-closed validation for a new custom entry (ADR-0132 cl.4): a required, non-empty `label`, and an
- *  id that doesn't collide with an existing entry of the SAME kind (a suffix counter resolves a
- *  collision rather than rejecting it outright — a friendlier failure mode than forcing the author to
- *  rename). The id is `input.id` when the caller supplies one (LLD-C7: a pack keying an external
- *  vocabulary), else `slugify(label)` exactly as before. Never mutates `existing`. */
-export function validateNewEntry(existing: readonly Entry[], kind: string, input: NewEntryInput): ValidateNewEntryResult {
+ *  id that doesn't collide with an existing entry of the SAME kind. GH #564 — the collision itself now
+ *  branches on `options.rejectOnCollision` (default `false`): a suffix counter resolves it (a friendlier
+ *  failure mode than forcing the author to rename) UNLESS the caller flags this kind's id as a foreign
+ *  key, in which case the add is rejected outright instead of minting an unregistered `${base}-2` row.
+ *  The id is `input.id` when the caller supplies one (LLD-C7: a pack keying an external vocabulary), else
+ *  `slugify(label)` exactly as before. Never mutates `existing`. */
+export function validateNewEntry(
+  existing: readonly Entry[],
+  kind: string,
+  input: NewEntryInput,
+  options?: ValidateNewEntryOptions,
+): ValidateNewEntryResult {
   const label = input.label.trim()
   if (label.length === 0) return { ok: false, error: 'A name is required.' }
 
@@ -98,10 +119,15 @@ export function validateNewEntry(existing: readonly Entry[], kind: string, input
   const base = input.id?.trim() ? input.id.trim() : slugify(label)
   const usedIds = new Set(existing.map((e) => e.id))
   let id = base
-  let suffix = 2
-  while (usedIds.has(id)) {
-    id = `${base}-${suffix}`
-    suffix += 1
+  if (usedIds.has(id)) {
+    // GH #564 — a foreign-key id's collision IS the duplicate; reject rather than mint a second, dedup-
+    // suffixed row that would still render the SAME pack label as a phantom copy.
+    if (options?.rejectOnCollision) return { ok: false, error: 'Already in the list.' }
+    let suffix = 2
+    while (usedIds.has(id)) {
+      id = `${base}-${suffix}`
+      suffix += 1
+    }
   }
 
   const maxOrder = existing.reduce((max, e) => Math.max(max, e.order), -1)

@@ -897,8 +897,14 @@ export class UIAgentAdminElement extends UIElement {
           ? this.#deleteCatalog(id)
           : this.#updateEntries(kind, (entries) => entries.filter((e) => e.id !== id || e.builtin)),
       onAdd: (input) => {
-        const existing = readEntries(this.store, kind)
-        const result = validateNewEntry(existing, kind, input)
+        // GH #564 — the catalog kind's entry id is a FOREIGN KEY into `A2UI_CATALOG_OPTIONS`: a collision
+        // there is a duplicate (re-adding an already-registered catalog), never a name clash to suffix
+        // around, so it rejects instead of minting an `-2` id the registry does not know. The collision
+        // set is the PROJECTED roster (`readCatalogEntries` ensures the Default row), matching what the
+        // picker disables against — a raw-store read would still accept a deletable Default duplicate
+        // through a programmatic onAdd (review M1).
+        const existing = isCatalog ? readCatalogEntries(this.store) : readEntries(this.store, kind)
+        const result = validateNewEntry(existing, kind, input, { rejectOnCollision: isCatalog })
         if (!result.ok) {
           showAddError(section, result.error)
           return false
@@ -916,8 +922,10 @@ export class UIAgentAdminElement extends UIElement {
       // ADR-0170 cl.8 — the catalog kind alone suppresses BOTH authoring affordances: its entries key an
       // EXTERNAL registry (`A2UI_CATALOG_OPTIONS`), so there is nothing to author or edit — adds come
       // from the library menu, rows render as label + description + switch. Every other kind passes
-      // `true`, which is exactly the absent-option default (byte-identical render).
-      { libraries: this.libraries?.[kind], customAdd: !isCatalog, contentField: !isCatalog },
+      // `true`, which is exactly the absent-option default (byte-identical render). `rejectOnCollision`
+      // (GH #564) rides the SAME `isCatalog` split as the `onAdd` handler above — the picker disables an
+      // already-added catalog row instead of leaving it clickable-but-silently-rejected.
+      { libraries: this.libraries?.[kind], customAdd: !isCatalog, contentField: !isCatalog, rejectOnCollision: isCatalog },
     )
     this.#capabilitySections.set(kind, section)
     return section

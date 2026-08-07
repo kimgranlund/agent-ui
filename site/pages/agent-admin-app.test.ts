@@ -242,6 +242,7 @@ describe('the Registered catalogs pack (ADR-0170 cl.7)', () => {
   it('renders as the Catalogs section\'s only add path, and a pick lands a roster row keyed to the registry id', async () => {
     const { librariesForCategory } = await import('./agent-admin-libraries.ts')
     const { ENTRY_KINDS, entriesStoreKey, A2UI_CATALOG_OPTIONS } = await import('@agent-ui/app')
+    const { DEFAULT_A2UI_CATALOG_ID } = await import('@agent-ui/app/agent-admin-schema')
     const { createMemoryStore } = await import('@agent-ui/app/settings-memory-store')
     const second = A2UI_CATALOG_OPTIONS[1]!
 
@@ -255,9 +256,16 @@ describe('the Registered catalogs pack (ADR-0170 cl.7)', () => {
     const section = admin.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.catalog}"]`) as HTMLElement
     const menu = section.querySelector('[data-part="entry-library-menu"]') as HTMLElement
     expect(menu, 'the pack reached the section').not.toBeNull()
+    // GH #564 — the Default row is ENSURED present from the very first render (`readCatalogEntries`), so
+    // the picker already disables it: adding it again would mint the exact phantom-duplicate the fix
+    // closes. Every other option is untouched.
     expect([...menu.querySelectorAll('[data-value]')].map((r) => r.textContent)).toEqual(
-      A2UI_CATALOG_OPTIONS.map((o) => `${o.label} — Registered catalogs`),
+      A2UI_CATALOG_OPTIONS.map((o) =>
+        o.id === DEFAULT_A2UI_CATALOG_ID ? `${o.label} — Registered catalogs (already added)` : `${o.label} — Registered catalogs`,
+      ),
     )
+    const defaultRow = menu.querySelector(`[data-value="registered-catalogs:${A2UI_CATALOG_OPTIONS.findIndex((o) => o.id === DEFAULT_A2UI_CATALOG_ID)}"]`)
+    expect(defaultRow?.getAttribute('aria-disabled')).toBe('true')
     expect(section.querySelector('[data-part="entry-add-toggle"]'), 'the menu is the ONLY add path (cl.8)').toBeNull()
 
     // The real commit path: ui-menu's `select` event, exactly as entry-list.ts listens for it.

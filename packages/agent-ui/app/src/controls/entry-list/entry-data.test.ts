@@ -70,3 +70,42 @@ describe('validateNewEntry — the optional explicit id (LLD-C7)', () => {
     if (!result.ok) expect(result.error).toBe('A name is required.')
   })
 })
+
+describe('validateNewEntry — rejectOnCollision (GH #564, ADR-0170 cl.8: the catalog kind\'s foreign-key id)', () => {
+  const input = (over: Partial<NewEntryInput> & Pick<NewEntryInput, 'label'>): NewEntryInput => ({
+    description: '',
+    content: '',
+    ...over,
+  })
+
+  it('a colliding id is REJECTED, not suffixed, when rejectOnCollision is true', () => {
+    const first = validateNewEntry([], 'catalog', input({ id: 'agent-ui', label: 'Default (agent-ui)' }), { rejectOnCollision: true })
+    expect(first.ok).toBe(true)
+    if (!first.ok) return
+    const second = validateNewEntry([first.entry], 'catalog', input({ id: 'agent-ui', label: 'Default (agent-ui)' }), {
+      rejectOnCollision: true,
+    })
+    expect(second.ok, 'a re-add of the same registered catalog is refused outright').toBe(false)
+    if (!second.ok) expect(second.error).toBe('Already in the list.')
+  })
+
+  it('a NON-colliding id still commits normally under rejectOnCollision (the flag guards the COLLISION branch only)', () => {
+    const result = validateNewEntry([], 'catalog', input({ id: 'a2ui-org', label: 'A2UI.org' }), { rejectOnCollision: true })
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.entry.id).toBe('a2ui-org')
+  })
+
+  it('BACKWARD COMPAT: rejectOnCollision absent/false ⇒ the suffix-dedup law is UNCHANGED (load-bearing for every hand-authored kind)', () => {
+    const first = validateNewEntry([], 'skill', input({ label: 'Rules' }))
+    expect(first.ok).toBe(true)
+    if (!first.ok) return
+    // absent
+    const secondAbsent = validateNewEntry([first.entry], 'skill', input({ label: 'Rules' }))
+    expect(secondAbsent.ok, 'two same-name prose entries legitimately coexist').toBe(true)
+    if (secondAbsent.ok) expect(secondAbsent.entry.id).toBe('rules-2')
+    // explicit false — same as absent
+    const secondFalse = validateNewEntry([first.entry], 'skill', input({ label: 'Rules' }), { rejectOnCollision: false })
+    expect(secondFalse.ok).toBe(true)
+    if (secondFalse.ok) expect(secondFalse.entry.id).toBe('rules-2')
+  })
+})
