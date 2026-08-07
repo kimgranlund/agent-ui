@@ -103,12 +103,15 @@ describe('composeCatalog — AC3 collision case (OF1, ruled reject-loud)', () =>
 
 describe('composeCatalog — AC5 protocolVersion carries through unchanged', () => {
   it('carries THAT base\'s protocolVersion, independent per targeted base', () => {
-    const baseA: Catalog = { ...baseCatalog('agent-ui', ['Card']), protocolVersion: 'v1.0' }
-    const baseB: Catalog = { ...baseCatalog('a2ui-basic', ['Text']), protocolVersion: 'v1.0' }
+    // distinct versions so cross-contamination between derivations is detectable (composeCatalog is a
+    // pure passthrough — no version validation blocks the v0.9.1 fixture)
+    const baseA: Catalog = baseCatalog('agent-ui', ['Card'])
+    const baseB: Catalog = { ...baseCatalog('a2ui-basic', ['Text']), protocolVersion: 'v0.9.1' }
     const derivedA = composeCatalog(baseA, emptyFragment, 'p')
     const derivedB = composeCatalog(baseB, emptyFragment, 'p')
-    expect(derivedA.protocolVersion).toBe(baseA.protocolVersion)
-    expect(derivedB.protocolVersion).toBe(baseB.protocolVersion)
+    expect(derivedA.protocolVersion).toBe('v1.0')
+    expect(derivedB.protocolVersion).toBe('v0.9.1')
+    expect(derivedA.protocolVersion).not.toBe(derivedB.protocolVersion)
   })
 })
 
