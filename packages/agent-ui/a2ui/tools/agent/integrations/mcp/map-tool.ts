@@ -22,12 +22,14 @@
 // law, unchanged.
 //
 // `execute` = `client.callTool(tool.name, input, {signal, apiKey})` + a TEXT-only result mapping:
-// each `type:'text'` part contributes its own text, each non-text part degrades to the literal
-// placeholder `[<type> content omitted]` (stated, never silently dropped), and the parts join with
-// `\n\n` in original order. `isError: true` THROWS with the flattened text so the adapter's existing
-// `is_error` tool_result conversion applies (GH #49's degrade-the-answer-never-the-turn contract,
-// unchanged) — a transport `McpClientError` from `callTool` propagates the exact same way, since
-// this closure never catches it.
+// each `type:'text'` part with a genuinely string `text` contributes that text, every other part
+// (non-text, or a malformed `text:'text'` part off-spec) degrades to the literal placeholder
+// `[<type> content omitted]` (stated, never silently dropped), and the parts join with `\n\n` in
+// original order. A TRUTHY `isError` (normalized with `Boolean(...)`, since an off-spec server owes
+// no guarantee the wire value is a real boolean) THROWS with the flattened text so the adapter's
+// existing `is_error` tool_result conversion applies (GH #49's degrade-the-answer-never-the-turn
+// contract, unchanged) — a transport `McpClientError` from `callTool` propagates the exact same way,
+// since this closure never catches it.
 
 import type { ExecuteContext, IntegrationManifest } from '../registry.ts'
 import type { McpClient, McpContentPart, McpToolInfo } from './client.ts'
@@ -43,9 +45,15 @@ export interface MapToolInput {
 const TEXT_JOIN = '\n\n'
 
 /** Flatten one `tools/call` content array into model-facing TEXT (SPEC-R25 AC2): a `type:'text'`
- *  part contributes its own text; anything else degrades to a stated placeholder, never silently. */
+ *  part contributes its own text; anything else degrades to a stated placeholder, never silently.
+ *  The `typeof part.text === 'string'` check is a runtime floor against an off-spec server sending
+ *  `{type:'text', text: <non-string>}` — the type declares `text: string`, but nothing upstream
+ *  enforces it on the wire, so a malformed value degrades to the same placeholder rather than
+ *  stringifying to the literal `"undefined"` or throwing inside `execute`. */
 function flattenContent(parts: readonly McpContentPart[]): string {
-  return parts.map((part) => (part.type === 'text' ? part.text : `[${part.type} content omitted]`)).join(TEXT_JOIN)
+  return parts
+    .map((part) => (part.type === 'text' && typeof part.text === 'string' ? part.text : `[${part.type} content omitted]`))
+    .join(TEXT_JOIN)
 }
 
 /**
@@ -77,7 +85,10 @@ export function mapMcpTool(input: MapToolInput): IntegrationManifest {
     async execute(toolInput: Record<string, unknown>, ctx: ExecuteContext): Promise<string> {
       const result = await client.callTool(tool.name, toolInput, { signal: ctx.signal, apiKey: ctx.apiKey })
       const text = flattenContent(result.content)
-      if (result.isError === true) {
+      // Boolean(...) rather than `=== true`: the field is typed boolean, but an off-spec server is
+      // free to send a truthy non-boolean (`"true"`, `1`, …) on the wire — normalizing here means
+      // that never silently reads as SUCCESS with the error text handed back as the model's answer.
+      if (Boolean(result.isError)) {
         throw new Error(text.length > 0 ? text : `${tool.name}: the MCP server reported an error`)
       }
       return text

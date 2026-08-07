@@ -82,13 +82,50 @@ describe('mapMcpTool — the three-fact law (SPEC-R25 AC1)', () => {
 })
 
 describe('mapMcpTool — id grammar (the no-colon server-id guarantee upstream, SPEC-R27)', () => {
-  it('produces exactly the mcp:<server-id>:<tool-name> shape given a colon-free server-id', () => {
+  it('composes mcp:<server-id>:<tool-name>; a colon-free server-id is always the SECOND colon-delimited field', () => {
     // servers-config.ts's loader (S1) already rejects any server-id containing ':' at LOAD time —
-    // this module never re-validates that; it trusts the upstream guarantee and just composes the
-    // string, so a colon-free id always splits into exactly three segments.
+    // this module never re-validates that; it trusts the upstream guarantee. That guarantee buys
+    // exactly THREE segments only when the tool name is ALSO colon-free (MCP names carry no such
+    // promise) — the property this grammar actually holds is INJECTIVITY of (serverId, tool.name)
+    // ↦ id, not a fixed segment count: 'mcp' is always the first field and the colon-free serverId
+    // is always the second, however many colons the tool name itself contributes after that.
     const { client } = recordingClient({ content: [] })
-    const manifest = mapMcpTool({ serverId: 'docs-server_1', server: NONE_SERVER, tool: TOOL, client })
-    expect(manifest.id.split(':')).toEqual(['mcp', 'docs-server_1', 'search_docs'])
+    const plain = mapMcpTool({ serverId: 'docs-server_1', server: NONE_SERVER, tool: TOOL, client })
+    expect(plain.id.split(':')).toEqual(['mcp', 'docs-server_1', 'search_docs'])
+
+    const colonToolName: McpToolInfo = { name: 'namespace:search', inputSchema: { type: 'object' } }
+    const withColonTool = mapMcpTool({ serverId: 'docs-server_1', server: NONE_SERVER, tool: colonToolName, client })
+    expect(withColonTool.id).toBe('mcp:docs-server_1:namespace:search') // four segments, not three
+    expect(withColonTool.id.split(':').slice(0, 2).join(':')).toBe('mcp:docs-server_1') // still unambiguous
+  })
+
+  it('is injective across two distinct (server-id, tool-name) pairs — the colon separators prevent concatenation collisions', () => {
+    // Without a separator, 'ab'+'c' and 'a'+'bc' would BOTH concatenate to "abc". The colon
+    // delimiter is what keeps `mcp:<server-id>:<tool-name>` from colliding in that shape.
+    const { client } = recordingClient({ content: [] })
+    const a = mapMcpTool({ serverId: 'ab', server: NONE_SERVER, tool: { name: 'c', inputSchema: { type: 'object' } }, client })
+    const b = mapMcpTool({ serverId: 'a', server: NONE_SERVER, tool: { name: 'bc', inputSchema: { type: 'object' } }, client })
+    expect(a.id).toBe('mcp:ab:c')
+    expect(b.id).toBe('mcp:a:bc')
+    expect(a.id).not.toBe(b.id)
+  })
+})
+
+describe('mapMcpTool — derived-but-fixed fields (LLD §8 non-decisions)', () => {
+  it('description falls back to the label when the tool declares none; version is the fixed constant', () => {
+    const noDescription: McpToolInfo = { name: 'no_desc', inputSchema: { type: 'object' } }
+    const { client } = recordingClient({ content: [] })
+    const manifest = mapMcpTool({ serverId: 'docs', server: NONE_SERVER, tool: noDescription, client })
+    expect(manifest.description).toBe(manifest.label)
+    expect(manifest.tool.description).toBe(manifest.label)
+    expect(manifest.version).toBe('1.0.0')
+  })
+
+  it("uses the tool's own description when present, never the label", () => {
+    const { client } = recordingClient({ content: [] })
+    const manifest = mapMcpTool({ serverId: 'docs', server: NONE_SERVER, tool: TOOL, client })
+    expect(manifest.description).toBe('Search the docs.')
+    expect(manifest.tool.description).toBe('Search the docs.')
   })
 })
 
@@ -175,6 +212,13 @@ describe('mapMcpTool — execute: TEXT-only flattening (SPEC-R25 AC2)', () => {
     const manifest = mapMcpTool({ serverId: 'docs', server: NONE_SERVER, tool: TOOL, client })
     await expect(manifest.execute({ q: 'x' }, {})).resolves.toBe('')
   })
+
+  it('degrades a text-typed part whose `text` is NOT a string (off-spec) to the placeholder — never "undefined", never a crash', async () => {
+    const malformed = { content: [{ type: 'text', text: 123 }] } as unknown as McpCallResult
+    const client = stubClient(async () => malformed)
+    const manifest = mapMcpTool({ serverId: 'docs', server: NONE_SERVER, tool: TOOL, client })
+    await expect(manifest.execute({ q: 'x' }, {})).resolves.toBe('[text content omitted]')
+  })
 })
 
 describe('mapMcpTool — execute: isError throws into the existing is_error path (SPEC-R25 AC2)', () => {
@@ -203,6 +247,18 @@ describe('mapMcpTool — execute: isError throws into the existing is_error path
     const manifest = mapMcpTool({ serverId: 'docs', server: NONE_SERVER, tool: TOOL, client })
     const { executeTool } = buildToolDispatch([manifest], {})
     await expect(executeTool('search_docs', { q: 'x' })).rejects.toThrow('upstream 503')
+  })
+
+  it('treats a truthy non-boolean isError (an off-spec server sending "true"/1) as an error, never a success answer', async () => {
+    const offSpecString = { content: [{ type: 'text', text: 'bad request' }], isError: 'true' } as unknown as McpCallResult
+    const stringClient = stubClient(async () => offSpecString)
+    const stringManifest = mapMcpTool({ serverId: 'docs', server: NONE_SERVER, tool: TOOL, client: stringClient })
+    await expect(stringManifest.execute({ q: 'x' }, {})).rejects.toThrow('bad request')
+
+    const offSpecNumber = { content: [{ type: 'text', text: 'quota exceeded' }], isError: 1 } as unknown as McpCallResult
+    const numberClient = stubClient(async () => offSpecNumber)
+    const numberManifest = mapMcpTool({ serverId: 'docs', server: NONE_SERVER, tool: TOOL, client: numberClient })
+    await expect(numberManifest.execute({ q: 'x' }, {})).rejects.toThrow('quota exceeded')
   })
 })
 
