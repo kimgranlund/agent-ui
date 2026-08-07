@@ -141,7 +141,7 @@
     "ChoicePicker": {
       "properties": {
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "aria-label" },
-        "variant": { "type": { "type": "string", "enum": ["mutuallyExclusive"] }, "mapsTo": "variant" },
+        "variant": { "type": { "type": "string", "enum": ["mutuallyExclusive", "multipleSelection"] }, "mapsTo": "variant" },
         "options": {
           "type": {
             "type": "array",

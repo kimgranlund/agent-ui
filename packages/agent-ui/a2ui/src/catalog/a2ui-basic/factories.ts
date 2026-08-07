@@ -10,8 +10,8 @@
 // them"); every other row is bespoke, matching its cl.9b "Factory shape" cell.
 
 import '@agent-ui/components/components' // self-defines ui-* controls on import (the default/factories.ts precedent)
-import type { WidgetFactory } from '../types.ts'
-import { textFactory, cardFactory, sliderFactory } from '../default/factories.ts'
+import type { VariantDispatch, WidgetFactory } from '../types.ts'
+import { textFactory, cardFactory, sliderFactory, multiSelectFactory } from '../default/factories.ts'
 
 // ── cl.9a — the schema-wide common-prop decorator, shown verbatim in ADR-0169 §9a ──────────────────
 
@@ -358,6 +358,47 @@ export const choicePickerFactory: WidgetFactory = withBasicCommon({
   value: { prop: 'value', event: 'select', marshal: 'singletonStringList' },
 })
 
+// ── cl.9b row 16, SPEC-R10 — the E6 drain: ChoicePicker.variant:'multipleSelection' → ui-multi-select ──
+//
+// GH #545 / multi-select-field.lld.md §9/§11 step 5. REUSEs the default catalog's `multiSelectFactory`
+// (tag/create/`options` rebuild/`value` mark) — its `options` reconciliation is already a near-verbatim
+// adaptation of `applyChoicePickerOptions` above (default/factories.ts:847-866's own doc comment) and its
+// value mark needs no `marshal` step (SPEC-R10: "the control's DOM value already IS the array"), so this
+// arm only overrides `label`/`variant`/`displayStyle`/`filterable` — the SAME four props the
+// `mutuallyExclusive` arm special-cases just above, byte-identical treatment (aria-label + v1-inert).
+export const choicePickerMultiFactory: WidgetFactory = withBasicCommon({
+  ...multiSelectFactory,
+  applyProp: (el, prop, value) => {
+    switch (prop) {
+      case 'label':
+        setAttr(el, 'aria-label', value)
+        break
+      case 'variant': // declared (the dispatch key itself), never applied — no real target
+      case 'displayStyle': // v1-inert (both arms render as the dropdown/listbox, the guide's own preference)
+      case 'filterable': // v1-inert (declared, no filtering UI yet)
+        break
+      default:
+        multiSelectFactory.applyProp(el, prop, value) // options/value (array pass-through, no marshal) + anything else
+    }
+  },
+})
+
+/**
+ * The `ChoicePicker` catalog-table slot (SPEC-R10 / ADR-0169 cl.9b row 16): a `VariantDispatch` (GH
+ * #545), not a plain `WidgetFactory` — `mutuallyExclusive` keeps routing to `ui-select`
+ * (`choicePickerFactory`, byte-identical, SPEC-R10 AC2's own regression clause), `multipleSelection`
+ * NEWLY routes to `ui-multi-select` (`choicePickerMultiFactory`, SPEC-R10 AC1). `fallback` is
+ * `mutuallyExclusive` — the schema's own default arm (ADR-0169 cl.9b row 16's "the schema's default").
+ */
+export const choicePickerVariants: VariantDispatch = {
+  variantProp: 'variant',
+  variants: {
+    mutuallyExclusive: choicePickerFactory,
+    multipleSelection: choicePickerMultiFactory,
+  },
+  fallback: choicePickerFactory,
+}
+
 // ── cl.9b row 17 — Slider → ui-slider (REUSE, thin `label`→`aria-label` wrapper) ────────────────────────
 
 export const basicSliderFactory: WidgetFactory = withBasicCommon({
@@ -391,8 +432,9 @@ export const dateTimeInputFactory: WidgetFactory = withBasicCommon({
 
 /** The a2ui-basic catalog's factory table — keyed by upstream A2UI type (ADR-0169 cl.9b). Every type
  *  declared in `catalog.json` MUST appear here — a gap is `CATALOG_FACTORY_MISSING` at `register`
- *  (SPEC-R7 AC1, the same registry-enforced coverage `default/factories.ts` relies on). */
-export const a2uiBasicFactories: Record<string, WidgetFactory> = {
+ *  (SPEC-R7 AC1, the same registry-enforced coverage `default/factories.ts` relies on). `ChoicePicker`
+ *  is a `VariantDispatch` (GH #545, SPEC-R10) — every other row is a plain `WidgetFactory`, unchanged. */
+export const a2uiBasicFactories: Record<string, WidgetFactory | VariantDispatch> = {
   Text: basicTextFactory,
   Image: imageFactory,
   Icon: iconFactory,
@@ -404,7 +446,7 @@ export const a2uiBasicFactories: Record<string, WidgetFactory> = {
   Button: basicButtonFactory,
   TextField: textFieldFactory,
   CheckBox: checkBoxFactory,
-  ChoicePicker: choicePickerFactory,
+  ChoicePicker: choicePickerVariants,
   Slider: basicSliderFactory,
   DateTimeInput: dateTimeInputFactory,
 }

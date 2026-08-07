@@ -29,6 +29,7 @@ import { effect } from '@agent-ui/components'
 import type { Scope } from '@agent-ui/components'
 import type { A2uiComponent, A2uiError, FunctionCall } from '../protocol.ts'
 import type { CatalogRegistry, WidgetFactory } from '../catalog/types.ts'
+import { resolveFactory } from '../catalog/variant.ts'
 import type { ComponentDef } from '../catalog/catalog.ts'
 import type { CreateWidget, ItemScope } from './types.ts'
 import type { Surface } from './surface.ts'
@@ -113,7 +114,10 @@ export interface WidgetDeps {
  */
 export function create(node: A2uiComponent, surface: Surface, deps: WidgetDeps): HTMLElement {
   const entry = deps.registry.get(surface.catalogId)
-  const factory = entry?.factories[node.component]
+  // `resolveFactory` (GH #545) is a no-op passthrough for a plain `WidgetFactory` slot — byte-identical
+  // to the pre-#545 direct index for every non-variant catalog type; only a `VariantDispatch` slot
+  // re-resolves against `node`.
+  const factory = resolveFactory(entry?.factories[node.component], node)
   if (factory === undefined) {
     // Unknown component type — or, defensively, a catalog that vanished after createSurface's
     // CATALOG_UNKNOWN guard. Non-fatal: report + placeholder so sibling nodes still mount.
@@ -145,7 +149,10 @@ export function wireProps(
 ): void {
   const { registry, resolveValue } = deps
   const entry = registry.get(surface.catalogId)
-  const factory = entry?.factories[node.component]
+  // Re-resolved (not shared with `create()`'s closure, per the create/wire split's own header note) —
+  // the SAME `resolveFactory` re-dispatch, so a variant's chosen concrete factory (GH #545) is the one
+  // whose `applyProp`/`value` mark drive the rest of this function, exactly as `create()` already used.
+  const factory = resolveFactory(entry?.factories[node.component], node)
   if (factory === undefined) return // placeholder element — no props/input wiring (create() already reported CATALOG)
 
   const componentDef = entry?.catalog?.components?.[node.component] // the PropDefs — the enum authority for `applies` (absent in a stub catalog ⇒ unconstrained)

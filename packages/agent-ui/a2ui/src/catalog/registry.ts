@@ -10,7 +10,8 @@
 
 import { loadCatalog } from './catalog.ts'
 import type { Catalog } from './catalog.ts'
-import type { CatalogEntry, CatalogRegistry, WidgetFactory } from './types.ts'
+import type { CatalogEntry, CatalogRegistry, VariantDispatch, WidgetFactory } from './types.ts'
+import { factoriesOf } from './variant.ts'
 
 /** Registration-time diagnostic codes owned by the registry (catalog LLD-C3, error table §8). */
 export const RegistryErrorCode = {
@@ -38,7 +39,7 @@ export class Registry implements CatalogRegistry {
 
   register(
     catalog: unknown,
-    factories: Record<string, WidgetFactory>,
+    factories: Record<string, WidgetFactory | VariantDispatch>,
     functions?: Record<string, (args: Record<string, unknown>) => unknown>,
   ): void {
     // Defensive re-assert + narrow `unknown` → a structurally-valid `Catalog`. The loader is the single
@@ -82,8 +83,12 @@ export class Registry implements CatalogRegistry {
     // a later `register` is picked up without a cache-invalidation seam.
     const tags = new Set<string>()
     for (const entry of this.#catalogs.values()) {
-      for (const factory of Object.values(entry.factories)) {
-        if (factory.submitGate === true) tags.add(factory.tag)
+      for (const slot of Object.values(entry.factories)) {
+        // A `VariantDispatch` slot (GH #545) fans out to every concrete arm — a variant MAY mark its
+        // own `submitGate` independent of its sibling arms.
+        for (const factory of factoriesOf(slot)) {
+          if (factory.submitGate === true) tags.add(factory.tag)
+        }
       }
     }
     return [...tags].join(', ')

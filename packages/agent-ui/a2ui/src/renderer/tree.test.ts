@@ -7,6 +7,7 @@ import { resolve, setPointer } from './binding.ts'
 import { create as widgetCreate, wireProps, makeCreateWidget } from './widget.ts'
 import type { WidgetDeps } from './widget.ts'
 import type { CatalogEntry, CatalogRegistry, WidgetFactory } from '../catalog/types.ts'
+import { resolveFactory } from '../catalog/variant.ts'
 import { SurfaceTree, type UpdateComponentsMessage } from './tree.ts'
 
 /** A stub `TreeDeps.create`/`rewireNode`/`resetProp`/`componentDefOf` no test in THIS describe block
@@ -528,7 +529,7 @@ function reconcileHarness() {
     wireProps(el, node, surface, scope, itemScope, ac, deps)
   }
   const resetProp: ResetProp = (el, node, surface, prop, value) => {
-    registry.get(surface.catalogId)?.factories[node.component]?.applyProp(el, prop, value)
+    resolveFactory(registry.get(surface.catalogId)?.factories[node.component], node)?.applyProp(el, prop, value)
   }
   const componentDefOf: ComponentDefOf = (node, surface) => registry.get(surface.catalogId)?.catalog?.components?.[node.component]
 

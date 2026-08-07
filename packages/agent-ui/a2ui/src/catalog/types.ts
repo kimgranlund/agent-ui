@@ -43,8 +43,36 @@ export interface WidgetFactory {
 }
 
 /**
+ * One catalog TYPE dispatching to a DIFFERENT concrete `WidgetFactory` per the value of one node prop
+ * (GH #545 — `WidgetFactory.create()` is a zero-arg closure with no access to the incoming node, so a
+ * single catalog type could resolve to exactly one factory; the a2ui-basic E6 drain, SPEC-R10 of the
+ * accepted multi-select-field SPEC, needs `ChoicePicker.variant: 'mutuallyExclusive'` to keep routing
+ * to `ui-select` while `'multipleSelection'` routes to `ui-multi-select`).
+ *
+ * Occupies the SAME `CatalogEntry.factories`/registry-table slot a plain `WidgetFactory` would — the
+ * renderer's widget resolution (LLD-C7, `variant.ts`'s `resolveFactory`) checks the slot's SHAPE
+ * (`variants` marks it as a dispatch table, never a factory itself) and resolves to the concrete factory
+ * ONCE per node, BEFORE `create()`/`applyProp()`/the `value` mark are ever touched — so a dispatched
+ * variant behaves EXACTLY like any single-tag type for the rest of its lifecycle (mint, static/bound
+ * props, two-way input binding, and the submit-gate selector all read off the SAME resolved concrete
+ * factory). Dispatch is decided from the node's OWN (static) prop value, never a resolved/bound value —
+ * the tag choice, like every catalog type's tag, is fixed at mint time and never re-dispatches reactively.
+ */
+export interface VariantDispatch {
+  /** The node prop whose value selects the concrete factory (e.g. `'variant'`). */
+  readonly variantProp: string
+  /** variant value → the concrete factory to use. */
+  readonly variants: Record<string, WidgetFactory>
+  /** Used when the node's `variantProp` value is absent, a dynamic binding (never a plain string at
+   *  create time), or matches no key in `variants` — every dispatch table MUST declare one so
+   *  resolution can never come back empty for a node whose type otherwise resolved. */
+  readonly fallback: WidgetFactory
+}
+
+/**
  * A registered catalog paired with its factory table — the registry's component-resolution result
- * (catalog LLD-C3). The renderer resolves a node's control via `registry.get(catalogId)?.factories[type]`.
+ * (catalog LLD-C3). The renderer resolves a node's control via `registry.get(catalogId)?.factories[type]`
+ * (variant.ts's `resolveFactory` when the resolved slot is a `VariantDispatch`, GH #545).
  *
  * `functions` (ADR-0169 cl.8, amends ADR-0034's shared-table seam): a PER-CATALOG override of the
  * function-call implementation table. `renderer/functions.ts`'s `evaluateCatalog` prefers
@@ -56,7 +84,7 @@ export interface WidgetFactory {
  */
 export interface CatalogEntry {
   catalog: Catalog
-  factories: Record<string, WidgetFactory>
+  factories: Record<string, WidgetFactory | VariantDispatch>
   functions?: Record<string, (args: Record<string, unknown>) => unknown>
 }
 
@@ -67,9 +95,14 @@ export interface CatalogEntry {
  */
 export interface CatalogRegistry {
   /** Register a catalog + its factory table (throws `CATALOG_FACTORY_MISSING` on a gap; last-wins on a dup
-   *  id). `functions` (ADR-0169 cl.8) is an optional per-catalog function-impl override table — absent ⇒
+   *  id). A table slot MAY be a `VariantDispatch` (GH #545) in place of a plain `WidgetFactory`.
+   *  `functions` (ADR-0169 cl.8) is an optional per-catalog function-impl override table — absent ⇒
    *  every declared function falls through to the shared `catalogFunctions` table, unchanged. */
-  register(catalog: unknown, factories: Record<string, WidgetFactory>, functions?: Record<string, (args: Record<string, unknown>) => unknown>): void
+  register(
+    catalog: unknown,
+    factories: Record<string, WidgetFactory | VariantDispatch>,
+    functions?: Record<string, (args: Record<string, unknown>) => unknown>,
+  ): void
   /** Resolve a registered catalog by id, or `undefined` if unregistered (the renderer's `CATALOG_UNKNOWN` allowlist). */
   get(id: string): CatalogEntry | undefined
   /** Every registered catalog id — feeds renderer capabilities (renderer LLD-C12). */

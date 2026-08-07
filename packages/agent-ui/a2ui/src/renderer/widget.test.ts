@@ -7,7 +7,7 @@ import { resolve } from './binding.ts'
 import type { Surface } from './surface.ts'
 import type { CreateWidget } from './types.ts'
 import type { A2uiComponent, A2uiError } from '../protocol.ts'
-import type { CatalogEntry, CatalogRegistry, WidgetFactory } from '../catalog/types.ts'
+import type { CatalogEntry, CatalogRegistry, VariantDispatch, WidgetFactory } from '../catalog/types.ts'
 // The REAL default factories (which import + self-define the `@agent-ui/components` control family) — used by
 // the render-integration block to prove the LLD-C8 two-way wiring end-to-end against a live `ui-*` control.
 import { defaultFactories } from '../catalog/default/factories.ts'
@@ -39,7 +39,7 @@ function stubFactory(tag = 'ui-button'): { factory: WidgetFactory; applied: Appl
 }
 
 /** A registry that resolves exactly `catalogId` to `factories`; every other id is unregistered. */
-function stubRegistry(catalogId: string, factories: Record<string, WidgetFactory>): CatalogRegistry {
+function stubRegistry(catalogId: string, factories: Record<string, WidgetFactory | VariantDispatch>): CatalogRegistry {
   const entry = { factories } as unknown as CatalogEntry // `catalog` is irrelevant to widget resolution
   return {
     register: () => {},
@@ -65,7 +65,7 @@ const resolveValue: WidgetDeps['resolveValue'] = (value, surface) => {
 
 const init = { id: 's1', catalogId: 'demo', version: 'v1.0' }
 
-function harness(factories: Record<string, WidgetFactory>, registryCatalogId = 'demo') {
+function harness(factories: Record<string, WidgetFactory | VariantDispatch>, registryCatalogId = 'demo') {
   const errors: A2uiError[] = []
   const registry = stubRegistry(registryCatalogId, factories)
   const createWidget = makeCreateWidget({ registry, emitError: (e) => void errors.push(e), resolveValue })
@@ -149,6 +149,68 @@ describe('widget resolution — unknown type is non-fatal (SPEC-R9 AC2)', () => 
     expect(b.tagName.toLowerCase()).toBe('ui-button')
     expect(x.tagName.toLowerCase()).toBe('a2ui-placeholder')
     expect(errors).toHaveLength(1) // only the unknown node faulted
+  })
+})
+
+describe('widget resolution — VariantDispatch table slots (GH #545)', () => {
+  it('mint + prop-apply both dispatch to the SAME concrete arm chosen by the node\'s variant prop', () => {
+    const small = stubFactory('ui-select-small')
+    const large = stubFactory('ui-select-large')
+    const dispatch: VariantDispatch = { variantProp: 'size', variants: { small: small.factory, large: large.factory }, fallback: small.factory }
+    const { createWidget, errors } = harness({ Picker: dispatch })
+    const surface = createSurface(init)
+
+    const el = createWidget(comp({ id: 'p1', component: 'Picker', size: 'large', label: 'X' }), surface)
+
+    expect(el.tagName.toLowerCase()).toBe('ui-select-large')
+    expect(errors).toEqual([]) // never CATALOG — a resolved dispatch table is a known type
+    expect(large.applied).toContainEqual({ el, prop: 'label', value: 'X' })
+    expect(small.applied).toEqual([]) // the sibling arm never touched
+  })
+
+  it('falls back to the declared fallback arm on an absent/unmatched variant value', () => {
+    const small = stubFactory('ui-select-small')
+    const large = stubFactory('ui-select-large')
+    const dispatch: VariantDispatch = { variantProp: 'size', variants: { small: small.factory, large: large.factory }, fallback: small.factory }
+    const { createWidget } = harness({ Picker: dispatch })
+    const surface = createSurface(init)
+
+    const el = createWidget(comp({ id: 'p1', component: 'Picker' }), surface) // no `size` at all
+    expect(el.tagName.toLowerCase()).toBe('ui-select-small')
+  })
+
+  it('a plain WidgetFactory slot alongside a VariantDispatch slot is unaffected — byte-compatible mixed table', () => {
+    const { factory: buttonFactory, applied } = stubFactory('ui-button')
+    const small = stubFactory('ui-select-small')
+    const dispatch: VariantDispatch = { variantProp: 'size', variants: { small: small.factory }, fallback: small.factory }
+    const { createWidget } = harness({ Button: buttonFactory, Picker: dispatch })
+    const surface = createSurface(init)
+
+    const btn = createWidget(comp({ id: 'b1', component: 'Button', label: 'Save' }), surface)
+    expect(btn.tagName.toLowerCase()).toBe('ui-button')
+    expect(applied).toContainEqual({ el: btn, prop: 'label', value: 'Save' })
+  })
+
+  it('two-way input binding wires onto the RESOLVED arm\'s own value mark, not the sibling arm\'s', () => {
+    const single = stubFactory('ui-select')
+    const multi = stubFactory('ui-multi-select')
+    const dispatch: VariantDispatch = {
+      variantProp: 'variant',
+      variants: {
+        one: { ...single.factory, value: { prop: 'value', event: 'select' } },
+        many: { ...multi.factory, value: { prop: 'value', event: 'select' } },
+      },
+      fallback: single.factory,
+    }
+    const { createWidget } = harness({ Picker: dispatch })
+    const surface = createSurface(init)
+    surface.data.value = { picked: [] }
+
+    const el = createWidget(comp({ id: 'p1', component: 'Picker', variant: 'many', value: { path: '/picked' } }), surface)
+    expect(el.tagName.toLowerCase()).toBe('ui-multi-select')
+    ;(el as unknown as { value: unknown }).value = ['a', 'b']
+    el.dispatchEvent(new Event('select'))
+    expect(surface.data.peek()).toEqual({ picked: ['a', 'b'] })
   })
 })
 
