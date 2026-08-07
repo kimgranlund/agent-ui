@@ -897,10 +897,13 @@ export class UIAgentAdminElement extends UIElement {
           ? this.#deleteCatalog(id)
           : this.#updateEntries(kind, (entries) => entries.filter((e) => e.id !== id || e.builtin)),
       onAdd: (input) => {
-        const existing = readEntries(this.store, kind)
         // GH #564 — the catalog kind's entry id is a FOREIGN KEY into `A2UI_CATALOG_OPTIONS`: a collision
         // there is a duplicate (re-adding an already-registered catalog), never a name clash to suffix
-        // around, so it rejects instead of minting an `-2` id the registry does not know.
+        // around, so it rejects instead of minting an `-2` id the registry does not know. The collision
+        // set is the PROJECTED roster (`readCatalogEntries` ensures the Default row), matching what the
+        // picker disables against — a raw-store read would still accept a deletable Default duplicate
+        // through a programmatic onAdd (review M1).
+        const existing = isCatalog ? readCatalogEntries(this.store) : readEntries(this.store, kind)
         const result = validateNewEntry(existing, kind, input, { rejectOnCollision: isCatalog })
         if (!result.ok) {
           showAddError(section, result.error)
