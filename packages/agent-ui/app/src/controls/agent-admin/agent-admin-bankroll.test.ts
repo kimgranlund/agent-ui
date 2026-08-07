@@ -325,7 +325,12 @@ describe('ui-agent-admin surface turn — GH #525 design call 1: the post-turn m
   })
 })
 
-describe('ui-agent-admin — GH #525 design call 1: the composed prompt states the stored bankroll', () => {
+// GH #525 bootstrap fix (2026-08-07 live-proof finding) — a real croupier session played two settled
+// rounds and the store's bankroll key stayed undefined throughout: the path was ONLY ever taught once a
+// value already existed, a deadlock. `#bankrollForPrompt` now teaches `/bankroll` UNCONDITIONALLY for a
+// capable, A2UI-on persona (stored or not) — the arm below ("nothing stored yet ⇒ the PATH line still
+// appears") is the direct regression proof for that finding.
+describe('ui-agent-admin — GH #525 (bootstrap fix): the composed prompt teaches /bankroll', () => {
   const mounted: Element[] = []
   afterEach(() => {
     for (const el of mounted.splice(0)) el.remove()
@@ -350,26 +355,59 @@ describe('ui-agent-admin — GH #525 design call 1: the composed prompt states t
     return seen[0]!
   }
 
-  it('opted-in AND a stored figure exists ⇒ the line appears, stating the exact figure', async () => {
+  // The PROSE arm runs whenever `agentSurfaceTurn` is unset — the SAME `#bankrollForPrompt` call site,
+  // exercised without needing to juggle the structured-modality routing gate.
+  async function proseRequestFor(el: UIAgentAdminElement): Promise<{ system: string }> {
+    const seen: { system: string }[] = []
+    el.agentTurn = async (req) => {
+      seen.push(req as unknown as { system: string })
+      return 'ok'
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    const composer = el.querySelector('ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = 'play'
+    const editor = composer.querySelector('[data-part="editor"]') as HTMLElement
+    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+    await whenFlushed()
+    await new Promise((r) => setTimeout(r, 0))
+    await whenFlushed()
+    return seen[0]!
+  }
+
+  it('capable + a stored figure ⇒ the path-teaching line PLUS a resume-figure sentence naming the exact figure', async () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
     el.store = createMemoryStore({ initial: { [BANKROLL_CAPABLE_KEY]: true, [BANKROLL_KEY]: 620 } })
     const req = await requestFor(el)
-    expect(req.personaSystem).toContain('Your current bankroll is 620.')
-    expect(req.personaSystem).toContain('seed /bankroll from this figure')
+    expect(req.personaSystem).toContain('the data-model path /bankroll')
+    expect(req.personaSystem).toContain('Your current bankroll is 620 — resume from it, never a fresh stake.')
   })
 
-  it('opted-in but nothing stored yet ⇒ no line (a fresh seed applies, per the design ruling)', async () => {
+  // THE bootstrap-fix regression proof: the live find's exact shape (capable, A2UI on, no settlement
+  // mirrored yet — a fresh croupier session's very first turn).
+  it('capable + NOTHING stored yet ⇒ the PATH-TEACHING line still appears — no resume sentence, but the path is taught (the bootstrap fix itself)', async () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
     el.store = createMemoryStore({ initial: { [BANKROLL_CAPABLE_KEY]: true } })
     const req = await requestFor(el)
+    expect(req.personaSystem).toContain(
+      "Keep your game's running chip count at the data-model path /bankroll — that exact key, never chips/stack/score; every settlement writes the new figure there.",
+    )
     expect(req.personaSystem).not.toContain('Your current bankroll is')
+  })
+
+  it('capable but A2UI is OFF ⇒ no line at all (modality-correct: no A2UI renderer this turn, no data-model teaching) — proven via the prose arm', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({ initial: { [BANKROLL_CAPABLE_KEY]: true, [BANKROLL_KEY]: 500, [SURFACE_A2UI_KEY]: false } })
+    const req = await proseRequestFor(el)
+    expect(req.system).not.toContain('/bankroll')
   })
 
   it('a stored figure with NO opt-in ⇒ no line (a persona whose games track no `/bankroll` pointer)', async () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
     el.store = createMemoryStore({ initial: { [BANKROLL_KEY]: 620 } })
     const req = await requestFor(el)
-    expect(req.personaSystem).not.toContain('Your current bankroll is')
+    expect(req.personaSystem).not.toContain('/bankroll')
   })
 })
 
