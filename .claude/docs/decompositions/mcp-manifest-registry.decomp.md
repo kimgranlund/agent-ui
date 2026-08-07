@@ -1,6 +1,6 @@
 # Decomposition — the MCP manifest-registry BUILD arc (allowlist config · wire client · additive mapping · fail-soft discovery · boot-await)
 
-> Status: proposed · v0.1 · 2026-08-07 · planner · Tracker: GH [#567](https://github.com/kimgranlund/agent-ui/issues/567) ·
+> Status: proposed · v0.2 · 2026-08-07 · planner · Tracker: GH [#567](https://github.com/kimgranlund/agent-ui/issues/567) ·
 > Contract: [ADR-0177](../adr/0177-mcp-client-registry-source-http-transport-additive-manifest-mapping.md)
 > (RATIFIED 2026-08-06, incl. its 2026-08-07 amendment: the build tracker is #567, not a reopened #438) —
 > this doc does not re-derive that decision; it slices ADR-0177's four clauses + Repairs-cell build
@@ -36,7 +36,9 @@ contract):**
 - `worker/` — production Worker rollout is a deferred, additive follow-up (ADR-0177 cl.4/Non-goals);
   v1 is dev-proxy-only, a stated temporary asymmetry, not a #402-class silent gap.
 - The enablement wire — the browser still forwards `integrations: string[]` of registry `id`s; no
-  server URL, MCP tool name, or credential ever crosses in either direction (cl.2).
+  server endpoint URL, credential, or raw MCP JSON-RPC frame ever crosses in either direction
+  (cl.2). (The registry TRIOS — `{id, label, description}` — do cross host→browser via S6's GET,
+  per Kim's F1 ruling, §4; they are admin-display facts, not the cl.2 secrets.)
 
 ## 1 · Plane 1 — outside-in (the whole, broken into parts)
 
@@ -85,6 +87,11 @@ The domain: a second manifest PRODUCER — an MCP connector at
    `a2ui-live-agent.spec.md` gains MCP-sourcing requirements beside SPEC-R16–R19; a connector LLD
    (the module/interface decomposition above earns one); the `agent-ui-integration-standards` skill
    gains its MCP-manifest pattern section beside the five laws + a repointed Routing-out line.
+7. **Admin surfacing (the F1 ruling — Kim, 2026-08-07, [GH #567 comment](https://github.com/kimgranlund/agent-ui/issues/567#issuecomment-5221201991))** —
+   the dev proxy serves the discovered registry trios (`{id, label, description}` — the SPEC-R16 AC2
+   vocabulary) over a host GET; the admin integrations pack reads it LIVE instead of hand-mirroring;
+   the both-directions trio-parity test reshapes ONCE to grade the pack-projection against the
+   served trios. The enablement wire itself stays `integrations: string[]` of ids, unchanged.
 
 ## 2 · Plane 2 — inside-out (the actions each part must support)
 
@@ -104,22 +111,22 @@ The domain: a second manifest PRODUCER — an MCP connector at
 | a12 | Keep hand-authored registration + both routes byte-identical when the roster is empty (zero-cost no-op) | 4, 5 |
 | a13 | Report each boot's discovery outcome (registered/skipped + why) in the proxy log | 4, 5 |
 | a14 | Teach the next author the pattern (SPEC requirements + skill section + LLD of record) | 6 |
+| a15 | Serve the registered trios over a host GET — the browser learns `mcp:*` ids live, so the enablement wire can carry them | 7 |
 
-**Coverage check (both directions):** every action a1–a14 names ≥1 part; every part 1–6 hosts ≥1
+**Coverage check (both directions):** every action a1–a15 names ≥1 part; every part 1–7 hosts ≥1
 action (1: a1/a2/a3 · 2: a5/a10 · 3: a4/a6/a7/a10 · 4: a2/a5/a7/a8/a9/a12/a13 · 5: a3/a11/a12/a13 ·
-6: a14). No orphan part, no unhomed action. Deliberately ABSENT actions are ADR-0177's recorded
-Non-goals, not gaps: Worker-side discovery/dispatch of MCP tools, periodic/admin-triggered
+6: a14 · 7: a15). No orphan part, no unhomed action. Deliberately ABSENT actions are ADR-0177's
+recorded Non-goals, not gaps: Worker-side discovery/dispatch of MCP tools, periodic/admin-triggered
 re-discovery, multi-modal result content, stdio transport, wiring any real MCP server, agent-ui AS an
-MCP server (SPEC-R6), MCP Apps delivery (ecosystem SPEC-R8). One further absent action is a genuinely
-unruled fork, not a non-goal: how the BROWSER learns `mcp:*` ids so the enablement wire can carry
-them (F1, §4) — no slice below builds it, and no slice pretends it isn't owed.
+MCP server (SPEC-R6), MCP Apps delivery (ecosystem SPEC-R8).
 
 ## 3 · Slices (independently shippable; each executable from its enumerated inputs alone)
 
 Every build slice's standing DoD, in addition to its own: `npm run check && npm test` green by exit
-code · new code under `tools/agent/integrations/mcp/` only (plus the one named seam file per slice) ·
-no diff to the §0 frozen list · no key value or server URL reaches browser-shipped code (SPEC-N2's
-grep-gate class).
+code · new code under `tools/agent/integrations/mcp/` only, except each slice's OWN named files
+outside it where stated below (S1's NEW roster file at the `tools/agent/` root beside
+`providers.json`; S5/S6's edits to their named existing seam/surface files) · no diff to the §0
+frozen list · no key value or server URL reaches browser-shipped code (SPEC-N2's grep-gate class).
 
 - **S-SPEC — the SPEC amendment (doc, serial-first).**
   *Does:* an amendment sheet (the `tool-enablement.spec-amendment.md` precedent) applied to
@@ -141,9 +148,10 @@ grep-gate class).
   *Inputs:* S-SPEC output · `registry.ts`/`providers-config.ts`/`dev-proxy-plugin.ts` as shipped.
   *DoD:* doc-checker pass; every S1–S5 interface named well enough that no builder guesses.
 - **S1 — allowlist config + loader.**
-  *Does:* the committed roster file (sibling to `providers.json`; exact name/schema per S-LLD) + its
-  fail-fast loader (`mcp/servers-config.ts`): malformed entry / `serverKey`-without-`envKey` throw at
-  load (the `providers-config.ts` posture); ships an EMPTY/example-only roster.
+  *Does:* the committed roster — a NEW file at the `tools/agent/` root, sibling to `providers.json`
+  (not a seam edit to any existing file; exact name/schema per S-LLD) + its fail-fast loader
+  (`mcp/servers-config.ts`): malformed entry / `serverKey`-without-`envKey` throw at load (the
+  `providers-config.ts` posture); ships an EMPTY/example-only roster.
   *Does NOT:* dial anything (zero I/O); register anything; name any real server.
   *Inputs:* S-LLD schema. *DoD:* unit tests for valid/malformed/empty rosters; gates green.
 - **S2 — MCP wire client.**
@@ -171,7 +179,7 @@ grep-gate class).
   *Inputs:* S1+S2+S3. *DoD:* tests proving one bad tool costs exactly one tool (N−1 registered);
   cross-server duplicate `tool.name` drops the SECOND, logged with its reason; empty roster → empty
   report; the shipped `agent-admin-app.test.ts` trio-parity test still green untouched; gates green.
-- **S5 — dev-proxy boot integration (the ONE seam-file slice).**
+- **S5 — dev-proxy boot integration (a shared-seam-file slice).**
   *Does:* `dev-proxy-plugin.ts` gains the awaited discovery pass per cl.4's law — a ready-gate
   before `/chat`/produce handling (mechanics per S-LLD), discovery-time key resolution from the
   existing `loadEnv`-merged env, the S4 report logged at boot.
@@ -181,31 +189,41 @@ grep-gate class).
   *Inputs:* S4 · shipped `dev-proxy-plugin.ts`. *DoD:* tests for the ready-gate (no request served
   ahead of completed discovery; empty roster = no-op cost) and for hand-authored manifests
   registering exactly as before; `npm run check && npm test` green; `npm run test:browser` unaffected.
+- **S6 — admin surfacing via the host GET endpoint (the F1 ruling, built).**
+  *Does:* the dev-proxy GET route serving the registered trios (`{id, label, description}` — the
+  SPEC-R16 AC2 vocabulary), post-discovery so `mcp:*` entries appear; the admin integrations pack
+  (`site/pages/agent-admin-libraries.ts` + its consumers) reads it LIVE instead of hand-mirroring;
+  reshapes the both-directions trio-parity test (`agent-admin-app.test.ts:435`) ONCE to grade the
+  pack-projection against the served trios.
+  *Does NOT:* widen the enablement wire (still `integrations: string[]` of ids, browser→host only);
+  expose endpoint URLs, `envKey` names, key values, or raw MCP frames in the GET body (trios only);
+  add refresh/re-discovery (the GET reflects the boot-time registry, the accepted v1 staleness);
+  touch `worker/index.ts` (frozen, §0 — Worker parity for the GET rides the deferred rollout).
+  *Inputs:* S5 (discovery live in the proxy) · Kim's F1 ruling
+  ([GH #567, 2026-08-07](https://github.com/kimgranlund/agent-ui/issues/567#issuecomment-5221201991)).
+  *DoD:* served trios match `listIntegrations()` incl. `mcp:*` entries; no server URL/credential/env
+  fact in the response; the reshaped parity test green and still both-directions-honest; gates green.
 - **S-SKILL — the skill + doc-state repair (doc, serial-last).**
   *Does:* `agent-ui-integration-standards` gains the MCP-manifest pattern section beside its five
   laws (symbol-first cites into the SHIPPED `mcp/` modules) and its Routing-out MCP line repoints
-  from "not yet landed" to built; roadmap/plan rows touched iff they carry this arc.
+  from "not yet landed" to built; the SAME pass sweeps the frontmatter description's `SKILL.md:11`
+  "NOT for MCP servers (deferred, ADR-0168 Non-goals)" line — stale-ambiguous post-ADR-0177 — to the
+  built posture; roadmap/plan rows touched iff they carry this arc.
   *Does NOT:* restate ADR-0177 (cites it); grade the build.
-  *Inputs:* S1–S5 as merged. *DoD:* skill cites resolve against real symbols; gates green.
+  *Inputs:* S1–S6 as merged. *DoD:* skill cites resolve against real symbols; gates green.
 
 ## 4 · Open forks — genuinely unruled by ADR-0177 (never pre-decided here)
 
-- **F1 — browser-side surfacing of MCP-sourced manifests (KIM'S FORK — the one real scope hole).**
-  ADR-0177 cl.4 asserts the enablement wire "can select AMONG config-registered MCP-sourced
-  manifests" but never rules HOW the browser learns their `mcp:*` ids. Today that knowledge is
-  hand-authored (`site/pages/agent-admin-libraries.ts` `INTEGRATION_TOOLS`) and pinned by the
-  BOTH-directions trio-parity test (SPEC-R16 AC2, `agent-admin-app.test.ts:435` —
-  `pack ≡ listIntegrations()` exactly). Discovered-at-boot manifests cannot appear in a static
-  browser pack without either drift or a parity-test redesign. Options, none prejudged: **(a)** a
-  new host GET endpoint serving registered `{id, label, description, auth}` trios, consumed
-  dynamically by the admin pack (new wire surface; parity test reshaped to cover the projection);
-  **(b)** hand-mirror expected MCP tools in the static pack (drift-prone AND reddens the
-  both-directions parity test in the test env, where discovery never runs — likely a non-starter,
-  stated for completeness); **(c)** v1 ships the connector proven at the route level (an
-  `integrations: ['mcp:…']` body from a test/dev caller) with NO admin-UI exposure — smallest, but
-  the toggle-affordance gap should be a stated scope cut, not a silent one (the #402 lesson).
-  **Gates nothing in S1–S4; gates whether S5 is the arc's last build slice or an S6 follows.**
-  Routed to Kim with this handback; S-SPEC records the ruling.
+- **F1 — browser-side surfacing of MCP-sourced manifests: RULED, no longer open.** Kim, 2026-08-07,
+  recorded on the tracker
+  ([GH #567 comment](https://github.com/kimgranlund/agent-ui/issues/567#issuecomment-5221201991)):
+  **host GET endpoint** — the dev proxy serves the discovered registry trios over a GET, the admin
+  UI reads it live, and the both-directions trio-parity test (SPEC-R16 AC2,
+  `agent-admin-app.test.ts:435`) reshapes ONCE to grade the projection. Built as **S6** (§3);
+  S-SPEC records the surfacing requirement from day one. The fork entry is kept here (not deleted)
+  so its resolution stays traceable: the rejected shapes were a hand-mirrored static pack
+  (drift-prone; reddens the parity test in the test env where discovery never runs) and a
+  no-admin-exposure v1 (a stated-scope-cut-only fallback, the #402 lesson).
 - **F2 — HTTP transport flavor + protocol-version pin (design-owned; S-SPEC freezes it).** ADR-0177
   cl.2 grants "HTTP-based MCP transport (Streamable HTTP / SSE)" without pinning: Streamable HTTP
   only (the current MCP revision) vs also the legacy HTTP+SSE flavor vs negotiate; and which MCP
@@ -227,24 +245,23 @@ grep-gate class).
 
 ```
 S-SPEC ──→ S-LLD ──→ S1 ─┐
-                          ├─→ S3 ──→ S4 ──→ S5 ──→ S-SKILL
-              └────→ S2 ─┘                   ▲
-F1 (Kim) ────────────────────────────────────┘  (gates only whether an S6 admin-surfacing slice
-                                                 exists after S5 — S1–S5 dispatch regardless)
+                          ├─→ S3 ──→ S4 ──→ S5 ──→ S6 ──→ S-SKILL
+              └────→ S2 ─┘
+F1: RULED (Kim, GH #567, 2026-08-07) — built as S6; no external wait anywhere on it
 F2/F3 resolve inside S-SPEC/S-LLD (no external wait unless F3's escape hatch fires → blocked handback)
 ```
 
 Every edge is a real input dependency, not convention: S-LLD needs S-SPEC's frozen requirements
 (F2 especially — S2's handshake shape depends on it); S1 and S2 are file-disjoint and parallel-safe;
 S3 imports S1's config types + S2's client; S4 composes S3's mapping and S1's roster through S2's
-list call; S5 is the only slice touching a shared seam file (`dev-proxy-plugin.ts`) and needs S4
-whole; S-SKILL cites shipped symbols so it trails everything. One writer per file per slice holds
-throughout — only S5 touches `dev-proxy-plugin.ts`, only S1 touches the roster/loader, only S-SPEC
-touches the SPEC.
+list call; S5 needs S4 whole; S6 needs S5 (its GET serves the post-discovery registry, and both edit
+the same seam file). One writer per file per slice holds throughout — `dev-proxy-plugin.ts` is
+touched only by S5 and S6, SERIALIZED by their edge, never concurrently; only S1 creates the
+roster + loader; the admin pack + parity test are S6's alone; only S-SPEC touches the SPEC.
+S-SKILL cites shipped symbols so it trails everything.
 
 ## 6 · Recommended first dispatch
 
-**S-SPEC.** It is the ADR's own first booked repair, it freezes F2/F3 so S-LLD and every build slice
-proceed guess-free, and it is where F1's ruling (routed to Kim now, in parallel) gets recorded when
-it arrives — nothing in S-SPEC blocks on F1, since the amendment can state the surfacing requirement
-in whichever shape Kim rules or mark it explicitly deferred under option (c).
+**S-SPEC.** It is the ADR's own first booked repair, and it freezes F2/F3 so S-LLD and every build
+slice proceed guess-free. F1 is already ruled (§4), so S-SPEC records the GET-endpoint surfacing
+requirement from day one — no slice anywhere in this arc waits on an external answer.
