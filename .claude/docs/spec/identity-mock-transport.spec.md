@@ -137,9 +137,13 @@ closed `SocialProvider` union (SPEC-R6).
 - **AC1** *Given* a fresh transport instance, *when* `startSocialSignIn` is called for a supported
   provider, *then* it resolves `{redirectHint}` — an opaque string the consuming page may display
   (e.g. "redirecting to Google…"), never a real URL the page navigates to.
-- **AC2** *Given* a started social sign-in, *when* `completeSocialSignIn` is called for the SAME
+- **AC2** *Given* any `redirectHint` value `startSocialSignIn` can return, *then* it does not parse as
+  an absolute URL — it never matches `^https?:\/\/` — and no code path anywhere in this seam or its
+  consuming pages ever assigns a transport return value to `window.location`, an `<a href>`, or
+  `window.open` (SPEC-N8) — a source-level probe over the transport's own implementation is the gate.
+- **AC3** *Given* a started social sign-in, *when* `completeSocialSignIn` is called for the SAME
   provider, *then* it resolves `{session}` with `session.method === 'social'`.
-- **AC3** *Given* a started social sign-in, *when* `completeSocialSignIn` is called with the
+- **AC4** *Given* a started social sign-in, *when* `completeSocialSignIn` is called with the
   `provider: 'generic'` demo-denial affordance (a page-level "simulate the user cancelling" control),
   *then* it rejects `code: 'social-denied'` — the one unhappy path this seam names for S3; further
   provider-specific error shapes are S3's own extension (SPEC-R11) if its build needs more.
@@ -171,8 +175,9 @@ the contract.
 - **AC2** *Given* two separate `createIdentityMockTransport()` instances constructed with the SAME
   options (including no options), *then* both produce byte-identical `requestId`/`expiresAt`
   sequences for the same call order — no `Math.random()`/`crypto.getRandomValues` anywhere in the
-  default path (a source-level grep gate, mirroring ADR-0069's `dist/` grep-for-a-known-string
-  convention).
+  default path (a source-level grep gate over this transport's own call sites, not a mirror of
+  ADR-0069's convention — that gate greps BUILT `dist/` output for a known string's presence; this one
+  greps SOURCE for an absent call site, a different check on a different artifact).
 - **AC3** *Given* `createIdentityMockTransport({accounts, code, latencyMs, cooldownMs,
   expiresInMs})`, *then* every op's behavior reflects the overridden value — a construction-time
   options probe.
@@ -204,6 +209,10 @@ SPEC-R11's amendment rule, never a redefinition of an existing member's meaning.
   exhaustiveness check in the transport's own implementation, TypeScript-enforced via the
   discriminated `IdentityMockErrorCode` union.
 
+Malformed input (an empty or syntactically invalid email/password) is form-level validation's job on
+the consuming page, before any op is called — this transport mints no error code for it and never
+sees it.
+
 **SPEC-R9 — Docs-site injection seam (DEV-only).**
 Each consuming docs-site page (S1-f, S2-f, S3-f, S5-e/f) wires the mock through a page-local
 function shaped like `site/pages/agent-admin.ts`'s `wireLiveOverlay` (dynamic import + page-owned
@@ -224,8 +233,16 @@ interactive one is a strictly richer bonus this fence keeps out of the shipped b
 - **AC2** *Given* a production build (`import.meta.env.DEV === false`), *when* the SAME page's
   source is bundled, *then* the dynamic-import branch is dead-code-eliminated — `identity-mock-
   transport.ts`'s own distinguishing exported symbol name does not appear anywhere in the production
-  `dist/` output (a `vite build` + grep probe, mirroring `a2ui-live-agent.spec.md` SPEC-N2's own
-  `dist/`-grep convention) — and the page instead renders the flow's static specimen state.
+  `dist/` output (a `vite build` + grep probe). This is a NEW symbol-absence check, not a mirror of
+  `a2ui-live-agent.spec.md` SPEC-N2's own `dist/`-grep convention — that gate greps for the ABSENCE of
+  a KEY VALUE inside an overlay module its own text says DOES ship in production (SPEC-N2's v0.7
+  changelog records the prior build-time DEV-only + tree-shake enforcement being REPLACED, not merely
+  extended, by a runtime `/status` probe once ADR-0152 made that module reachable by every visitor).
+  This seam's build-time-only proof stands on its own merits, not that precedent's: the risk here is
+  presentational — an interactive, credential-shaped demo form reading as a real sign-in surface on
+  the public docs site — never a secret, so eliminating the whole module from the bundle removes the
+  risk entirely; there is no secret-holding "ships but stays safe" runtime posture to fall back to
+  here, and none is needed.
 
 **SPEC-R10 — Home: `site/lib/identity-mock-transport.ts`, not a package export.**
 The transport lives at `site/lib/identity-mock-transport.ts` — site-local, never exported from any
@@ -256,7 +273,13 @@ already-numbered SPEC-R's existing text (mirroring the doc-standards §2 append-
 accepted docs, applied here to a proposed cross-slice seam specifically because it is shared: a
 silent in-place edit to, say, SPEC-R2's `verifyOneTimeCode` signature would break S1's already-built
 demo wiring without a trace). No slice re-derives the seam's shape from ADR-0176 cl.2 in its own
-SPEC/LLD — each cites this document's requirement IDs by reference.
+SPEC/LLD — each cites this document's requirement IDs by reference. This deliberately diverges from
+`a2ui-live-agent.spec.md`'s top-of-header versioned-changelog convention: that document's amendments
+land from one sequential authoring session at a time, so a single top-of-file block reads cleanly,
+while this SPEC's amendments arrive from S2/S3/S5's independently-timed future builds, each touching
+one specific requirement — anchoring each addition as a dated section under the SPEC-R it extends
+keeps a contributing slice's diff scoped to the requirement it actually touched, rather than forcing
+every contributor to also edit one shared top-of-file block.
 - **AC1** *Given* this document's git history from v0.1 forward, *then* every subsequent change to
   an already-numbered SPEC-R's requirement text is either a pure clarification (no behavior change,
   no new AC) or lands inside a dated `## Amendment` section — never a silent rewrite of a shipped
@@ -292,6 +315,11 @@ SPEC/LLD — each cites this document's requirement IDs by reference.
   `getSession()` to gate its first-run journey on an existing demo session; it earns no NEW
   transport operation — matching `identity-flow.decomp.md`'s own S4-a/S4-b split, neither of which
   names a transport dependency beyond that read.
+- **SPEC-N8 — No operation's return value is ever a navigation target.** `redirectHint` (SPEC-R4 AC2)
+  and every other string this seam returns are DISPLAY-only; no consuming page may assign any of them
+  to `window.location`, an `<a href>`, `window.open`, or any other navigation sink. S3's own build
+  (SPEC-R4's first real consumer) inherits this guardrail without re-deriving it — ADR-0176 cl.2 is
+  the authority forbidding a real redirect anywhere in this fence.
 
 ## 5 · Typed contracts
 
