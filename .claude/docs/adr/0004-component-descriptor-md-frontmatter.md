@@ -9,7 +9,7 @@
 > | **Proposed by** | planning-lead — encoding the host/user-ratified plan-incorporation, forced live by the gold `ui-button` + the `/site` docs consumer (Phase 3) |
 > | **Ratified by** | orchestration-lead — 2026-06-26 |
 > | **Repairs** | `.claude/docs/plan.md` §10 (the `{name}.api.json` API-contract instrument), `.claude/docs/process.md` §1 + §4 (the contract↔props trip-wire target + the "api-contract schema" referential row), `.claude/docs/goals.md` §G5 DoD (the `button.api.json` bullet), the `component-author` skill (descriptor step 6). |
-> | **Supersedes / Superseded by** | *(none)* |
+> | **Supersedes / Superseded by** | **Extended by** [ADR-0173](./0173-descriptor-inversion-generation-intake.md) — this record's one-artifact-two-consumers decision STANDS; ADR-0173 promotes the same `{name}.md` frontmatter from contract-MIRROR (trip-wire-checked) to contract-SOURCE (generated-from) for the props layer only, never the catalog row. |
 
 ## Context
 

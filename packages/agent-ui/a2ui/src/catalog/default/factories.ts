@@ -1,7 +1,11 @@
 // factories.ts — default-catalog widget factories (catalog LLD-C5, SPEC-R4/R3/R8).
 //
 // One `WidgetFactory` per default-catalog component type, binding each A2UI type DIRECTLY to a live
-// `ui-*` FACE control — no Basic-catalog adapter (SPEC-R8). Importing this module also imports the
+// `ui-*` FACE control — no Basic-catalog adapter (SPEC-R8). That stays TRUE under ADR-0169: upstream
+// Basic ships as a SECOND first-party catalog (`../a2ui-basic/`, SPEC-R10) registered BESIDE this one,
+// never as a translation layer inside it — a few of these factories are REUSED there through the
+// `withBasicCommon` wrapper (ADR-0169 cl.9a), which is import direction a2ui-basic → default, not an
+// adapter here. Importing this module also imports the
 // `@agent-ui/components` controls barrel, whose control modules `customElements.define` their tags as a
 // load-time side effect; so a `create()`'d element is the REAL upgraded control (e.g. `UIButtonElement`),
 // not an inert `HTMLUnknownElement`. `applyProp` maps one A2UI property (per the catalog `PropDef.mapsTo`)

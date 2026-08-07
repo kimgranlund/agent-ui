@@ -354,3 +354,27 @@ dialed.**
   server-held registry (`resolvePair`'s exact law, `providers-config.ts:11-13`); an unfenced MCP URL would
   let a compromised or malicious client instruct the server to dial an arbitrary host, a materially
   different and strictly worse trust posture than every existing integration.
+
+## Amendment — 2026-08-07: the Repairs cell's "GH #438 stays open" booking is OVERTAKEN; #438 stays CLOSED and the build tracker will be a FRESH issue
+
+Dated, append-only note (Kim's ruling of 2026-08-07, relayed into this record through the GH
+[#559](https://github.com/kimgranlund/agent-ui/issues/559) backfill-repair dispatch — the 2026-08-07
+audit thread, GH [#544](https://github.com/kimgranlund/agent-ui/issues/544)). **The ADR text is amended;
+the issue state stands.** The Status cell is untouched (owner-only), and every build-wave repair the
+cell books is unchanged.
+
+The Repairs cell above books, on ratification, *"GH #438 stays open, tracking the build this ADR
+unblocks (the ADR-0172 precedent: a design-intake ADR resolves the intake, not the build)."* Reality
+diverged the same day: GH [#438](https://github.com/kimgranlund/agent-ui/issues/438) closed
+2026-08-06, hours after this record was ratified. The 2026-08-07 audit surfaced the contradiction and
+asked which side was wrong. Ruled: **the booking**, not the closure.
+
+- #438 was the **deferral tracker** — ADR-0168's own Non-goals revisit hook (`0168:109-110`), whose
+  stated job was to hold the "MCP is deliberately not built" fork until an intake decided it. This
+  record IS that decision, so the issue's job completed at design-intake completion; closing it there
+  is correct bookkeeping, not a dropped thread.
+- The MCP **build** gets a FRESH issue, filed when the build arc is actually scheduled — not a
+  reopened deferral tracker carrying its own pre-intake framing (the revisit trigger, the
+  "not prejudged here" posture) into a wave that has now been prejudged, right here.
+- The ADR-0172 precedent still holds for what it says — a design-intake ADR resolves the intake, not
+  the build — it just does not require that the SAME issue carry both halves.

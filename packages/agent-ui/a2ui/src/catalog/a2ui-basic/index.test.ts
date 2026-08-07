@@ -29,7 +29,7 @@ const BASIC_TYPE_EXCLUSIONS: Record<string, string> = {
   Modal: 'ADR-0169 E4 — named-slot children pair; no grammar/mechanism',
 }
 
-// The 14 upstream `functions` this wave implements (cl.11); `openUrl` is the ONE deliberate exclusion (E7).
+// The 13 upstream `functions` this wave implements (cl.11); `openUrl` is the ONE deliberate exclusion (E7).
 const IMPLEMENTED_FUNCTIONS = [
   'formatString', 'required', 'regex', 'length', 'numeric', 'email',
   'formatNumber', 'formatCurrency', 'formatDate', 'pluralize', 'and', 'or', 'not',
