@@ -375,6 +375,14 @@ export class UIAgentAdminElement extends UIElement {
   // conversation model/prompt/capability switch applies to the NEXT turn only and prior turns are never
   // rewritten (the acceptance criterion falls out by construction).
   #history: AdminTurn[] = []
+  // GH #525 (review MAJOR 1b) — the surfaceIds this admin has actually forwarded a `createSurface` for
+  // (via `handle.ingestLine`, so ONLY while A2UI is on — the SAME gate that decides whether the real
+  // renderer's own `SurfaceStore` would know it), minus any it has forwarded a `deleteSurface` for.
+  // Mirrors the real renderer's own bookkeeping (renderer.ts's `SurfaceStore`) without importing it — the
+  // bankroll mirror's OWN "is this surfaceId real" check (`#runSurfaceTurn`) reads this set rather than
+  // trusting an `updateDataModel` envelope's `surfaceId` at face value. Element-lifetime, cleared on a
+  // real persona switch (`#resetConversationState`) exactly like `#history`/`#turnLog` above.
+  #knownSurfaceIds: Set<string> = new Set()
   // The composer's Effort picker selection (the Figma chat-input refactor) — ephemeral, element-lifetime
   // state, deliberately NOT persisted to `store` (unlike `model`): reasoning effort is a per-conversation
   // dial, not a saved agent-profile setting, and Figma's own composer design carries no Effort field in
@@ -1381,8 +1389,16 @@ export class UIAgentAdminElement extends UIElement {
             // would then refuse (the reported "renders, looks alive, dies on click" defect). The raw line
             // still rides into `wireLines`/`#logTurn` below — visible in the Dialog Turns inspector for
             // debugging a non-compliant model reply — it just never reaches the live surface host.
-            if (a2uiOn) handle.ingestLine(event.line)
-            else a2uiRefused = true
+            if (a2uiOn) {
+              handle.ingestLine(event.line)
+              // GH #525 (review MAJOR 1b) — kept in lockstep with the SAME lines that just reached the
+              // real renderer: a createSurface it actually rendered is now "known" (the bankroll mirror
+              // may trust an updateDataModel naming it); a deleteSurface retires it, mirroring the real
+              // renderer's own SurfaceStore teardown (`#onDeleteSurface`).
+              const lifecycle = surfaceLifecycleOf(event.line)
+              if (lifecycle?.kind === 'create') this.#knownSurfaceIds.add(lifecycle.surfaceId)
+              else if (lifecycle?.kind === 'delete') this.#knownSurfaceIds.delete(lifecycle.surfaceId)
+            } else a2uiRefused = true
           }
         }
         // GH #354 — the degraded-assets reason rides out WITH this turn's own note rather than replacing
@@ -1403,8 +1419,13 @@ export class UIAgentAdminElement extends UIElement {
         // `clientMessageSurfaceId`/`categoryOf` already inspect wire envelopes structurally). A turn that
         // never touched `/bankroll`, or whose figure fails to sanitize, writes nothing — fail-closed,
         // never a stale-but-wrong overwrite of whatever the store already holds.
-        if (isBankrollCapable(store?.get(BANKROLL_CAPABLE_KEY))) {
-          const bankroll = bankrollFromWireLines(wireLines)
+        //
+        // GH #525 (review MAJOR 1a) — gated on `a2uiOn` too, the SAME condition `handle.ingestLine` above
+        // is gated on: `wireLines` collects every raw line REGARDLESS of the toggle (GH #418's own
+        // debugging-visibility law), but a line the toggle refused was never rendered — persisting a
+        // figure nothing rendered would silently disagree with what the player actually saw.
+        if (a2uiOn && isBankrollCapable(store?.get(BANKROLL_CAPABLE_KEY))) {
+          const bankroll = bankrollFromWireLines(wireLines, this.#knownSurfaceIds)
           if (bankroll !== undefined) store?.set(BANKROLL_KEY, bankroll)
         }
         this.#logTurn('surface', request, {
@@ -1666,6 +1687,7 @@ export class UIAgentAdminElement extends UIElement {
     this.#history = []
     this.#turnLog = []
     this.#turnCounter = 0
+    this.#knownSurfaceIds.clear() // GH #525 — a new persona's surfaces are unrelated to the old ones
     this.#conversationEpoch += 1 // GH #354 — invalidate any surface turn waiting on its lazy dogfood chunk
   }
 }
@@ -1738,16 +1760,38 @@ function isGenuiActionClientMessage(message: unknown): boolean {
   return typeof message === 'object' && message !== null && 'genuiAction' in message
 }
 
-/** GH #525 (design call 1, 2026-08-07) — the `/bankroll` pointer's value at the END of this turn's own
- *  raw wire-line stream, read the SAME structural way `categoryOf`/`surfaceIdOf` (conversation.ts) and
- *  `clientMessageSurfaceId` (above) already inspect A2UI envelopes — never a new a2ui read. Two shapes of
- *  `updateDataModel` can touch the pointer: a direct `path:'/bankroll'` set, or a whole-document replace
- *  (`path` absent/`''`/`'/'`, the SAME root alias `#onUpdateDataModel` resolves, renderer.ts) whose
- *  `value.bankroll` carries it. The LAST touch across the whole turn wins (a later line supersedes an
- *  earlier one, matching the real renderer's own last-write-wins merge); a turn that never touches the
- *  pointer, or whose final figure fails `sanitizeBankroll`, returns `undefined` — "no mirror write this
- *  turn", never a throw and never a stale-but-wrong figure. */
-function bankrollFromWireLines(lines: readonly string[]): number | undefined {
+/** GH #525 (review MAJOR 1b) — `{kind:'create'|'delete', surfaceId}` for a createSurface/deleteSurface
+ *  envelope, `undefined` for anything else/unparseable — the SAME structural inspection technique
+ *  `categoryOf`/`surfaceIdOf` (conversation.ts) already use, narrowed to the two lifecycle edges the
+ *  bankroll mirror's own known-surfaceId bookkeeping needs (`#knownSurfaceIds`, above). */
+function surfaceLifecycleOf(line: string): { kind: 'create' | 'delete'; surfaceId: string } | undefined {
+  let msg: unknown
+  try {
+    msg = JSON.parse(line)
+  } catch {
+    return undefined
+  }
+  if (typeof msg !== 'object' || msg === null) return undefined
+  const m = msg as Record<string, { surfaceId?: unknown } | undefined>
+  if (m.createSurface && typeof m.createSurface.surfaceId === 'string') return { kind: 'create', surfaceId: m.createSurface.surfaceId }
+  if (m.deleteSurface && typeof m.deleteSurface.surfaceId === 'string') return { kind: 'delete', surfaceId: m.deleteSurface.surfaceId }
+  return undefined
+}
+
+/** GH #525 (design call 1, 2026-08-07; review MAJOR 1b) — the `/bankroll` pointer's value at the END of
+ *  this turn's own raw wire-line stream, read the SAME structural way `categoryOf`/`surfaceIdOf`
+ *  (conversation.ts) and `clientMessageSurfaceId` (above) already inspect A2UI envelopes — never a new
+ *  a2ui read. Two shapes of `updateDataModel` can touch the pointer: a direct `path:'/bankroll'` set, or
+ *  a whole-document replace (`path` absent/`''`/`'/'`, the SAME root alias `#onUpdateDataModel` resolves,
+ *  renderer.ts) whose `value.bankroll` carries it — EITHER shape is counted only when its OWN `surfaceId`
+ *  is a member of `knownSurfaceIds` (the real renderer's own `#onUpdateDataModel` no-ops for a surfaceId
+ *  its `SurfaceStore` never created, renderer.ts:318-319 — an envelope naming an unknown/hallucinated id
+ *  must degrade the SAME way here, not mirror a figure nothing actually holds). The LAST touch across the
+ *  whole turn wins (a later line supersedes an earlier one, matching the real renderer's own
+ *  last-write-wins merge); a turn that never touches the pointer on a known surface, or whose final
+ *  figure fails `sanitizeBankroll`, returns `undefined` — "no mirror write this turn", never a throw and
+ *  never a stale-but-wrong figure. */
+function bankrollFromWireLines(lines: readonly string[], knownSurfaceIds: ReadonlySet<string>): number | undefined {
   let last: unknown
   let touched = false
   for (const line of lines) {
@@ -1760,7 +1804,8 @@ function bankrollFromWireLines(lines: readonly string[]): number | undefined {
     if (typeof msg !== 'object' || msg === null) continue
     const body = (msg as Record<string, unknown>).updateDataModel
     if (typeof body !== 'object' || body === null) continue
-    const { path, value } = body as { path?: unknown; value?: unknown }
+    const { surfaceId, path, value } = body as { surfaceId?: unknown; path?: unknown; value?: unknown }
+    if (typeof surfaceId !== 'string' || !knownSurfaceIds.has(surfaceId)) continue
     if (path === '/bankroll') {
       last = value
       touched = true

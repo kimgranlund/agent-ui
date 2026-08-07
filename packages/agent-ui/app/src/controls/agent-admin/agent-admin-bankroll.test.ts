@@ -90,6 +90,13 @@ describe('ui-agent-admin surface turn — GH #525 design call 1: the post-turn m
     await whenFlushed()
   }
 
+  // review MAJOR 1b (2026-08-07) — every well-formed mirror scenario now needs a REAL createSurface for
+  // 'table-1' first (the surfaceId-known-set gate): a bare updateDataModel with no prior createSurface is
+  // exactly the "unknown id" case its own dedicated test below covers, never a stand-in for it here.
+  function createSurfaceLine(id = 'table-1'): string {
+    return JSON.stringify({ version: 'v1.0', createSurface: { surfaceId: id, catalogId: 'agent-ui' } })
+  }
+
   function updateDataModelLine(path: string | undefined, value: unknown): string {
     return JSON.stringify({ version: 'v1.0', updateDataModel: { surfaceId: 'table-1', ...(path === undefined ? {} : { path }), value } })
   }
@@ -100,6 +107,7 @@ describe('ui-agent-admin surface turn — GH #525 design call 1: the post-turn m
     el.store!.set(BANKROLL_CAPABLE_KEY, true)
     el.agentSurfaceTurn = async function* () {
       yield { kind: 'note' as const, note: 'Dealt.' }
+      yield { kind: 'line' as const, line: createSurfaceLine() }
       yield { kind: 'line' as const, line: updateDataModelLine('/bankroll', 450) }
     }
     await runTurn(el)
@@ -111,6 +119,7 @@ describe('ui-agent-admin surface turn — GH #525 design call 1: the post-turn m
     el.store = createMemoryStore({})
     el.store!.set(BANKROLL_CAPABLE_KEY, true)
     el.agentSurfaceTurn = async function* () {
+      yield { kind: 'line' as const, line: createSurfaceLine() }
       yield { kind: 'line' as const, line: updateDataModelLine(undefined, { bankroll: 900, hand: [] }) }
     }
     await runTurn(el)
@@ -122,6 +131,7 @@ describe('ui-agent-admin surface turn — GH #525 design call 1: the post-turn m
     el.store = createMemoryStore({})
     el.store!.set(BANKROLL_CAPABLE_KEY, true)
     el.agentSurfaceTurn = async function* () {
+      yield { kind: 'line' as const, line: createSurfaceLine() }
       yield { kind: 'line' as const, line: updateDataModelLine('/bankroll', 100) }
       yield { kind: 'line' as const, line: updateDataModelLine('/bankroll', 250) }
     }
@@ -154,9 +164,113 @@ describe('ui-agent-admin surface turn — GH #525 design call 1: the post-turn m
     el.store = createMemoryStore({})
     el.store!.set(BANKROLL_CAPABLE_KEY, true)
     el.agentSurfaceTurn = async function* () {
+      // A KNOWN surface (createSurface first) — this must fail on the VALUE, not accidentally pass via
+      // the unknown-surfaceId path the dedicated test below already covers.
+      yield { kind: 'line' as const, line: createSurfaceLine() }
       yield { kind: 'line' as const, line: updateDataModelLine('/bankroll', -50) }
     }
     await runTurn(el)
+    expect(el.store!.get(BANKROLL_KEY)).toBeUndefined()
+  })
+
+  // review MAJOR 1a (2026-08-07) — the mirror must never persist a value the A2UI toggle refused to
+  // RENDER: `wireLines` collects every raw line regardless of the toggle (GH #418's own debugging-
+  // visibility law), but a line the toggle refused never reached `handle.ingestLine`.
+  it('A2UI OFF ⇒ no mirror write, even though the toggle-refused line still carries a well-formed `/bankroll` write', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    el.store!.set(SURFACE_A2UI_KEY, false)
+    el.store!.set(BANKROLL_CAPABLE_KEY, true)
+    el.agentSurfaceTurn = async function* () {
+      yield { kind: 'line' as const, line: updateDataModelLine('/bankroll', 450) }
+    }
+    await runTurn(el)
+    expect(el.store!.get(BANKROLL_KEY)).toBeUndefined()
+  })
+
+  // review MAJOR 1b (2026-08-07) — the real renderer no-ops `updateDataModel` for a surfaceId its own
+  // `SurfaceStore` never created (renderer.ts:318-319); the mirror must degrade the SAME way for an
+  // envelope naming a surfaceId THIS admin never actually rendered a `createSurface` for.
+  it('an `updateDataModel` naming a surfaceId this turn never created ⇒ no mirror write (unknown/hallucinated id, real-renderer parity)', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    el.store!.set(BANKROLL_CAPABLE_KEY, true)
+    el.agentSurfaceTurn = async function* () {
+      // NO createSurface anywhere in this stream — 'table-1' is never known.
+      yield { kind: 'line' as const, line: updateDataModelLine('/bankroll', 450) }
+    }
+    await runTurn(el)
+    expect(el.store!.get(BANKROLL_KEY)).toBeUndefined()
+  })
+
+  // The positive counterpart of the unknown-id refusal above IS "a direct `/bankroll` path write mirrors
+  // into the store when the persona opted in" (further up this file — it yields a real `createSurfaceLine()`
+  // ahead of its `updateDataModel`, the SAME known-surface shape).
+
+  it('a surface created in an EARLIER turn stays known for a later turn\'s settlement (no re-createSurface needed — "one surfaceId for the session")', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    el.store!.set(BANKROLL_CAPABLE_KEY, true)
+    let round = 0
+    el.agentSurfaceTurn = async function* () {
+      round += 1
+      if (round === 1) {
+        yield { kind: 'line' as const, line: JSON.stringify({ version: 'v1.0', createSurface: { surfaceId: 'table-1', catalogId: 'agent-ui' } }) }
+        return
+      }
+      // Round 2: settles WITHOUT recreating the surface — the real croupier shape (round-loop.md:
+      // "ONE surfaceId for the session").
+      yield { kind: 'line' as const, line: updateDataModelLine('/bankroll', 650) }
+    }
+    await runTurn(el, 'deal')
+    expect(el.store!.get(BANKROLL_KEY)).toBeUndefined() // round 1 never touched /bankroll
+    await runTurn(el, 'hit')
+    expect(el.store!.get(BANKROLL_KEY)).toBe(650)
+  })
+
+  it('a `deleteSurface` retires the id — a later turn naming it again is treated as unknown', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    el.store!.set(BANKROLL_CAPABLE_KEY, true)
+    let round = 0
+    el.agentSurfaceTurn = async function* () {
+      round += 1
+      if (round === 1) {
+        yield { kind: 'line' as const, line: JSON.stringify({ version: 'v1.0', createSurface: { surfaceId: 'table-1', catalogId: 'agent-ui' } }) }
+        yield { kind: 'line' as const, line: JSON.stringify({ version: 'v1.0', deleteSurface: { surfaceId: 'table-1' } }) }
+        return
+      }
+      yield { kind: 'line' as const, line: updateDataModelLine('/bankroll', 900) }
+    }
+    await runTurn(el, 'deal')
+    await runTurn(el, 'hit')
+    expect(el.store!.get(BANKROLL_KEY)).toBeUndefined()
+  })
+
+  it('a persona SWITCH clears the known-surfaceId set — a stale id from the old persona never authorizes the new one\'s mirror', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    el.store!.set(BANKROLL_CAPABLE_KEY, true)
+    el.agentSurfaceTurn = async function* () {
+      yield { kind: 'line' as const, line: JSON.stringify({ version: 'v1.0', createSurface: { surfaceId: 'table-1', catalogId: 'agent-ui' } }) }
+    }
+    await runTurn(el, 'deal')
+
+    // A real store reassignment — the GH #145 persona-switch reset.
+    el.store = createMemoryStore({ initial: { [BANKROLL_CAPABLE_KEY]: true } })
+    await whenFlushed()
+    el.agentSurfaceTurn = async function* () {
+      // The SAME surfaceId the OLD persona created — never recreated under the new store.
+      yield { kind: 'line' as const, line: updateDataModelLine('/bankroll', 999) }
+    }
+    const composer = el.querySelector('ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = 'hit'
+    const editor = composer.querySelector('[data-part="editor"]') as HTMLElement
+    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+    await whenFlushed()
+    await new Promise((r) => setTimeout(r, 0))
+    await whenFlushed()
+
     expect(el.store!.get(BANKROLL_KEY)).toBeUndefined()
   })
 
