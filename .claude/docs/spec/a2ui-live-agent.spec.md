@@ -1,6 +1,17 @@
 # SPEC — A2UI Live-Agent Example (a real LLM emitting A2UI over the wire)
 
-> Status: accepted · v0.12 · 2026-08-07 (v0.11 2026-08-07; v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> Status: accepted · v0.13 · 2026-08-07 (v0.12 2026-08-07; v0.11 2026-08-07; v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> v0.13 changelog (fork F4 RULED — Kim, 2026-08-07, [GH #567
+> comment](https://github.com/kimgranlund/agent-ui/issues/567#issuecomment-5221451663), relayed from
+> the S-LLD slice's mandated pin sanity-check against modelcontextprotocol.io's live revision
+> history): SPEC-R24's negotiated-version acceptance set gains **`2025-11-25`** (the Final,
+> handshake-based revision — verified wire-compatible with the pinned client mechanics byte-for-byte:
+> same `initialize` lifecycle, same `Mcp-Session-Id` echo, same `MCP-Protocol-Version` header, same
+> Streamable-HTTP POST shape). The pin stays `2025-06-18`; the `2026-07-28` stateless redesign (no
+> `initialize`, no `Mcp-Session-Id`, mandatory `server/discover`) stays a future arc — servers
+> negotiating it continue to skip-and-log. ONE requirement line changed; everything else in §3.7 is
+> byte-untouched, and the connector LLD's §3.2 `ACCEPTED_PROTOCOL_VERSIONS` constant gains the same
+> member in the same change.
 > v0.12 changelog (ADR-0177, ACCEPTED by Kim 2026-08-07 — PR #571 comment — MCP servers as a manifest-registry
 > SOURCE; GH #567 S-SPEC): NEW §3.7, **SPEC-R23–R28** — an MCP connector
 > (`tools/agent/integrations/mcp/`) turns each allowlisted server's `tools/list` into N ordinary
@@ -1117,7 +1128,9 @@ Streamable HTTP the client MUST send `Accept: application/json, text/event-strea
 BOTH sanctioned framings of a POST response (a single JSON body OR an SSE-framed body) — that
 duality is part of the pinned transport, not a fallback. The `initialize` handshake MUST send
 `protocolVersion: "2025-06-18"` (the pin); the client MUST proceed with a server iff the
-negotiated version ∈ {`"2025-06-18"`, `"2025-03-26"`} (the Streamable-HTTP-capable revisions) and
+negotiated version ∈ {`"2025-06-18"`, `"2025-03-26"`, `"2025-11-25"`} (the Streamable-HTTP-capable
+handshake-based revisions; the third member per Kim's F4 ruling, [GH #567
+comment](https://github.com/kimgranlund/agent-ui/issues/567#issuecomment-5221451663), v0.13) and
 otherwise skip-and-log that SERVER (SPEC-R26's fail-soft grain, applied at server scope); every
 post-initialize request MUST carry the `MCP-Protocol-Version` header (the 2025-06-18
 requirement); and the client MUST honor a server-assigned `Mcp-Session-Id` — captured from the
