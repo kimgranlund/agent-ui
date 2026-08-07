@@ -72,7 +72,7 @@ export interface RecordedTranscript {
 /** Compose a turn's leading meta-line — `note` alone (the pre-ADR-0097 shape), `{note, ask}`, `{note, plan}`,
  * or `{note, ask, plan}` when the turn also carries an ask and/or plan declaration (ADR-0174 cl.2 / SPEC-R20,
  * GH #538 — `plan` follows the `ask`-arm precedent EXACTLY, the SAME seam, no new mechanism). `undefined`
- * when the turn carries neither `note` (no meta-line at all — the pre-slice-6 behavior for a note-less,
+ * when the turn carries no `note` (no meta-line at all — the pre-slice-6 behavior for a note-less,
  * ask-less, plan-less turn). */
 function formatTurnMetaLine(t: RecordedTurn): string | undefined {
   if (t.note === undefined) return undefined
