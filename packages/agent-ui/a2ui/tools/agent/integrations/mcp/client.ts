@@ -94,25 +94,44 @@ interface JsonRpcResponseBody {
   error?: { message?: unknown } | unknown
 }
 
+/** The one name-check every abort surface (the initial fetch AND a stalled body read) translates
+ *  through — a combined timeout-or-caller signal firing mid-stream throws the SAME DOMException
+ *  shape a rejected fetch does, so both call sites recognize it identically. */
+function isAbortError(error: unknown): boolean {
+  return error instanceof Error && (error.name === 'AbortError' || error.name === 'TimeoutError')
+}
+
 /** Read a `Response` body into text with the shared per-response byte cap — the SAME reader both
  *  sanctioned framings (JSON body / SSE-framed body) feed through, so the cap applies uniformly
- *  (LLD §3.2). A response with no body streams to an empty string. */
-async function readCapped(response: Response, maxResponseBytes: number): Promise<string> {
+ *  (LLD §3.2), enforced INCREMENTALLY per chunk (never buffer-then-check) so a hostile/looping body
+ *  can't grow unbounded before the cap bites. A response with no body streams to an empty string.
+ *  A headers-fast-body-stall server (the SSE keep-open shape the spec permits) can abort mid-read
+ *  just as easily as mid-fetch — `reader.read()` rejects with the SAME DOMException shape `fetch`
+ *  itself throws on abort, so it gets the SAME `timeout` translation, never a raw DOMException. */
+async function readCapped(response: Response, maxResponseBytes: number, method: string): Promise<string> {
   const body = response.body
   if (!body) return ''
   const reader = body.getReader()
   const chunks: Uint8Array[] = []
   let total = 0
   for (;;) {
-    const { done, value } = await reader.read()
-    if (done) break
-    if (value) {
-      total += value.byteLength
+    let step: ReadableStreamReadResult<Uint8Array>
+    try {
+      step = await reader.read()
+    } catch (error) {
+      if (isAbortError(error)) {
+        throw new McpClientError('timeout', `${method}: request timed out or was aborted while reading the response body`)
+      }
+      throw error
+    }
+    if (step.done) break
+    if (step.value) {
+      total += step.value.byteLength
       if (total > maxResponseBytes) {
         await reader.cancel().catch(() => {})
         throw new McpClientError('too-large', `response exceeded ${maxResponseBytes} bytes`)
       }
-      chunks.push(value)
+      chunks.push(step.value)
     }
   }
   const out = new Uint8Array(total)
@@ -216,7 +235,7 @@ export function createMcpClient(opts: McpClientOptions): McpClient {
         signal,
       })
     } catch (error) {
-      if (error instanceof Error && (error.name === 'AbortError' || error.name === 'TimeoutError')) {
+      if (isAbortError(error)) {
         throw new McpClientError('timeout', `${body.method}: request timed out or was aborted`)
       }
       throw error
@@ -235,7 +254,7 @@ export function createMcpClient(opts: McpClientOptions): McpClient {
   ): Promise<{ result: unknown; headers: Headers }> {
     const response = await post(body, kind, callOpts)
     const contentType = response.headers.get('content-type') ?? ''
-    const text = await readCapped(response, maxResponseBytes)
+    const text = await readCapped(response, maxResponseBytes, body.method)
 
     if (contentType.includes('application/json')) {
       const parsed = parseJsonRpcFrame(text, body.method)

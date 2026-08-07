@@ -12,6 +12,9 @@ interface RecordedCall {
   url: string
   headers: Headers
   body: { jsonrpc: string; id?: number; method: string; params?: unknown }
+  /** The combined timeout-or-caller signal the client dialed with — lets a step simulate a
+   *  headers-arrived-then-body-stalls server that only errors once THIS signal aborts. */
+  signal: AbortSignal | undefined
 }
 
 /** A scripted fetch: each element answers the Nth outbound POST, in order. A function element can read
@@ -23,7 +26,7 @@ function scriptedFetch(steps: Array<Response | ((call: RecordedCall) => Response
     const text = typeof init?.body === 'string' ? init.body : '{}'
     const body = JSON.parse(text) as RecordedCall['body']
     const headers = init?.headers instanceof Headers ? init.headers : new Headers(init?.headers as HeadersInit | undefined)
-    const call: RecordedCall = { url: String(input), headers, body }
+    const call: RecordedCall = { url: String(input), headers, body, signal: init?.signal ?? undefined }
     calls.push(call)
     const step = steps[index++]
     if (step === undefined) throw new Error(`scriptedFetch: no step scripted for call #${index} (${body.method})`)
@@ -45,6 +48,36 @@ function sseResponse(messages: unknown[], opts: { headers?: Record<string, strin
     status: opts.status ?? 200,
     headers: { 'content-type': 'text/event-stream', ...opts.headers },
   })
+}
+
+/** A response whose headers arrive immediately but whose BODY never completes on its own — the
+ *  Streamable-HTTP keep-open shape the spec permits. It errors (with the same DOMException shape a
+ *  real aborted fetch throws) only once the given signal — the client's combined timeout-or-caller
+ *  signal — actually aborts, so this proves the abort→`timeout` translation applies to a stalled
+ *  BODY READ, not just a stalled initial fetch. */
+function stallingResponse(signal: AbortSignal | undefined): Response {
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      const onAbort = () => controller.error(new DOMException('The operation was aborted.', 'AbortError'))
+      if (signal === undefined) return
+      if (signal.aborted) onAbort()
+      else signal.addEventListener('abort', onAbort, { once: true })
+    },
+  })
+  return new Response(stream, { status: 200, headers: { 'content-type': 'application/json' } })
+}
+
+/** A response body that keeps yielding chunks FOREVER (never closes) — proves the byte cap is
+ *  enforced INCREMENTALLY per chunk, not by buffering the whole body then checking its length
+ *  (a buffer-then-check implementation would hang here instead of throwing promptly). */
+function infiniteResponse(chunkBytes: number): Response {
+  const chunk = new Uint8Array(chunkBytes).fill(97)
+  const stream = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      controller.enqueue(chunk)
+    },
+  })
+  return new Response(stream, { status: 200, headers: { 'content-type': 'application/json' } })
 }
 
 /** initialize() + the notifications/initialized notification, no session id assigned. A FRESH pair
@@ -277,6 +310,24 @@ describe('byte cap + abort/timeout — the registry TRUST-NOTE parity (LLD §3.2
     await client.initialize()
     const error = (await reject(client.listTools())) as McpClientError
     expect(error.code).toBe('too-large')
+  })
+
+  it('a stream yielding chunks forever hits `too-large` mid-stream — never buffers the whole body first', async () => {
+    const { fetchImpl } = scriptedFetch([...handshakeSteps(), () => infiniteResponse(64)])
+    const client = createMcpClient({ endpoint: ENDPOINT, fetchImpl, maxResponseBytes: 200 })
+    await client.initialize()
+    const error = (await reject(client.listTools())) as McpClientError
+    expect(error).toBeInstanceOf(McpClientError)
+    expect(error.code).toBe('too-large')
+  })
+
+  it('a headers-arrive-then-body-stalls response times out via the SAME translation as a stalled fetch', async () => {
+    const { fetchImpl } = scriptedFetch([...handshakeSteps(), (call) => stallingResponse(call.signal)])
+    const client = createMcpClient({ endpoint: ENDPOINT, fetchImpl, timeoutMs: 20 })
+    await client.initialize()
+    const error = (await reject(client.listTools())) as McpClientError
+    expect(error).toBeInstanceOf(McpClientError)
+    expect(error.code).toBe('timeout')
   })
 
   it('an already-aborted per-call signal surfaces as `timeout` — no real timer wait', async () => {
