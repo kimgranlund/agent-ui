@@ -4,7 +4,7 @@
 // keyboard. The control owns all ARIA/roving/selection (tabs.ts) — this page only stages it and logs the event.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log + section spacing)
-import { el, exampleSection } from '../lib/specimens.ts'
+import { applyDemoWidth, el, exampleSection } from '../lib/specimens.ts'
 
 const { content } = mountPage({
   title: 'ui-tabs — demo',
@@ -50,8 +50,26 @@ const keyboard = el('p', {}, [
   code('select'), text('; a programmatic '), code('selected'), text(' write applies silently (binding hygiene).'),
 ])
 
+// ── orientation="vertical" (GH #581) — a left-nav-plus-content specimen, the reference consumer the LLD names ──
+const verticalTabs = el('ui-tabs', { orientation: 'vertical', selected: 'overview', elevation: '0' }, [
+  el('ui-tab', { key: 'overview' }, [text('Overview')]),
+  el('ui-tab', { key: 'pricing' }, [text('Pricing')]),
+  el('ui-tab', { key: 'support' }, [text('Support')]),
+  el('ui-tab-panel', {}, [text('Overview panel — the product at a glance.')]),
+  el('ui-tab-panel', {}, [text('Pricing panel — plans and tiers.')]),
+  el('ui-tab-panel', {}, [text('Support panel — docs and contact.')]),
+])
+applyDemoWidth(verticalTabs, '32rem') // a left-nav-plus-content bound — the strip stays its own max-content width
+
+const verticalNote = el('p', {}, [
+  text('The strip becomes a column beside the panel: the divider and selected-tab indicator move to its '),
+  strong('inline-end'), text(' edge, labels start-align, and '), strong('ArrowDown / ArrowUp'),
+  text(' replace ArrowLeft / ArrowRight (Left/Right are inert) — the APG tabs vertical variant.'),
+])
+
 content.append(
   exampleSection('Live tabs', tabs),
   exampleSection('Keyboard & roving focus', keyboard),
   exampleSection('select event log', log),
+  exampleSection('Vertical orientation', verticalTabs, verticalNote),
 )

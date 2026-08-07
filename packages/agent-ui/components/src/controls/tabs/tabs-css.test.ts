@@ -154,6 +154,68 @@ describe('tabs.css — [fill] (ADR-0144 Q1 cl.1) — the shell flex-column + the
   })
 })
 
+describe('tabs.css — [orientation=vertical] (GH #581) — shell row, strip column, edges, labels', () => {
+  it(":scope[orientation='vertical'] is a flex ROW (the shell)", () => {
+    const m = stylesBlock.match(/:scope\[orientation='vertical'\]\s*\{([^}]*)\}/)
+    expect(m, "the :scope[orientation='vertical'] shell rule is missing").not.toBeNull()
+    const rule = (m as RegExpMatchArray)[1]
+    expect(rule).toMatch(/display:\s*flex/)
+    expect(rule).toMatch(/flex-direction:\s*row/)
+  })
+
+  it("the vertical strip is a pinned flex COLUMN at max-content width, divider on inline-end, own overflow-y", () => {
+    const m = stylesBlock.match(/:scope\[orientation='vertical'\] > \[data-part='tablist'\]\s*\{([^}]*)\}/)
+    expect(m, 'the vertical tablist rule is missing').not.toBeNull()
+    const rule = (m as RegExpMatchArray)[1]
+    expect(rule).toMatch(/flex-direction:\s*column/)
+    expect(rule).toMatch(/flex:\s*none/)
+    expect(rule).toMatch(/inline-size:\s*max-content/)
+    expect(rule).toMatch(/border-block-end:\s*0/) // the horizontal divider is off
+    expect(rule).toMatch(/border-inline-end:\s*1px solid var\(--ui-tabs-strip-line\)/) // the SAME edge the indicator rides
+    expect(rule).toMatch(/overflow-y:\s*auto/) // the strip's own overflow axis flips (GH #221, vertical form)
+  })
+
+  it('a vertical tab label re-aligns start (center is a horizontal-strip convention)', () => {
+    const m = stylesBlock.match(/:scope\[orientation='vertical'\] ui-tab\s*\{([^}]*)\}/)
+    expect(m, 'the vertical ui-tab rule is missing').not.toBeNull()
+    const rule = (m as RegExpMatchArray)[1]
+    expect(rule).toMatch(/justify-content:\s*flex-start/)
+  })
+
+  it('the vertical indicator rides the inline-end edge as a full-height bar (not a bottom bar)', () => {
+    const m = stylesBlock.match(/:scope\[orientation='vertical'\] ui-tab::after\s*\{([^}]*)\}/)
+    expect(m, 'the vertical ui-tab::after rule is missing').not.toBeNull()
+    const rule = (m as RegExpMatchArray)[1]
+    expect(rule).toMatch(/inset-inline:\s*auto 0/)
+    expect(rule).toMatch(/inset-block:\s*0/)
+    expect(rule).toMatch(/inline-size:\s*var\(--ui-tabs-indicator-size\)/)
+    expect(rule).toMatch(/block-size:\s*auto/) // overrides the horizontal fixed block-size
+  })
+
+  it('the vertical panel is the row shrink-to-fit item (min-inline-size:0)', () => {
+    const m = stylesBlock.match(/:scope\[orientation='vertical'\] ui-tab-panel\s*\{([^}]*)\}/)
+    expect(m, 'the vertical ui-tab-panel rule is missing').not.toBeNull()
+    const rule = (m as RegExpMatchArray)[1]
+    expect(rule).toMatch(/flex:\s*1 1 auto/)
+    expect(rule).toMatch(/min-inline-size:\s*0/)
+  })
+
+  it('NEGATIVE — zero new tokens: every declaration in the vertical block reads only the EXISTING --ui-tabs-* chain', () => {
+    const start = stylesBlock.indexOf(":scope[orientation='vertical']")
+    const end = stylesBlock.indexOf('/* Motion —')
+    const verticalBlock = stylesBlock.slice(start, end)
+    expect(verticalBlock.length).toBeGreaterThan(0) // anti-vacuous
+    expect(foreignScopeRefs(verticalBlock)).toEqual([])
+    const refs = [...verticalBlock.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1] as string)
+    expect(new Set(refs)).toEqual(new Set(['--ui-tabs-strip-line', '--ui-tabs-indicator-size'])) // no NEW token names
+  })
+
+  it('the forced-colors block covers BOTH divider edges (block-end horizontal, inline-end vertical)', () => {
+    const fc = stylesBlock.slice(stylesBlock.indexOf('@media (forced-colors: active)'))
+    expect(fc).toMatch(/border-inline-end-color:\s*CanvasText/)
+  })
+})
+
 describe('tabs.css — the shared focus ring + motion + forced-colors (s8)', () => {
   it('the tab focus ring is :focus-visible from the fleet tokens (ADR-0009)', () => {
     const m = stylesBlock.match(/ui-tab:focus-visible\s*\{([^}]*)\}/)

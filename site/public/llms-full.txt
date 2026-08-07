@@ -4056,6 +4056,9 @@ form-associated; it carries a bindable **`selected`** prop (which tab is active)
 `role="tabpanel"`, `aria-selected`, `aria-controls`, `aria-labelledby` — is set through `ElementInternals`,
 never as a host attribute.
 
+Not a duplicate of `ui-nav-rail` (`@agent-ui/app`): vertical tabs (below) keep tab/tabpanel semantics —
+content switching with owned panels — while a rail is navigation between destinations.
+
 ```html
 <ui-tabs selected="overview">
   <ui-tab key="overview">Overview</ui-tab>
@@ -4088,14 +4091,36 @@ write applies silently — no event is echoed, so the renderer's own write never
 (click or keyboard) commits and emits the one `select` event carrying `{ value, index }`, so the agent learns
 the active tab. The control itself knows nothing of A2UI — it is a plain reflected prop + a `select` event.
 
+## Orientation
+
+`<ui-tabs orientation="vertical">` renders the strip as a column beside the panel instead of a row above it —
+a left-nav-plus-content shape. The shell becomes a flex row; the strip becomes a flex column pinned at its
+natural (widest-tab) width; the divider and the selected-tab indicator both move to the strip's inline-end
+edge (the edge facing the panel — the same pairing the horizontal bottom edge already keeps); tab labels
+re-align **start** (a list reads left-aligned; center is a horizontal-strip convention). The `[data-part=tablist]`
+strip also carries `aria-orientation="vertical"` (absent under the default horizontal — byte-identical
+default DOM). `--ui-tabs-strip-gap` is unchanged — flex `gap` follows whichever axis is main, so the same
+16px-at-density-1 token spaces rows instead of columns. `#536`'s zero-`padding-inline` law stands unchanged:
+the row's full-width hit area comes from the column's default cross-axis stretch, never per-tab padding.
+`orientation` is reflected and default `'horizontal'`, so every existing consumer stays byte-identical.
+
+`[fill]` composes with vertical (§ below): the shell stays a flex row filling its bounded parent, the strip
+becomes a pinned, internally-scrolling column, and the visible panel keeps its existing scroll leg unchanged.
+
 ## Keyboard & roving focus
 
 The strip uses a **roving tabindex**: exactly the selected tab is in the tab order (`tabindex=0`), the rest
 are `-1`, so `Tab` enters/leaves the whole strip as one stop. Within it:
 
-- **ArrowRight / ArrowLeft** — move selection **and** focus to the next / previous tab (wrapping), committing
-  the selection (selection follows focus — APG automatic activation).
-- **Home / End** — move to the first / last tab.
+- **ArrowRight / ArrowLeft** (default `orientation="horizontal"`) — move selection **and** focus to the next /
+  previous tab (wrapping), committing the selection (selection follows focus — APG automatic activation).
+  Inert under `orientation="vertical"`.
+- **ArrowDown / ArrowUp** (`orientation="vertical"` only) — the same move, on the vertical axis (APG's tabs
+  vertical variant). Inert under the default horizontal.
+- **Home / End** — move to the first / last tab, either axis.
+
+The keyboard axis is **connect-resolved** from `orientation` (the `ui-radio-group` / `ui-toolbar` precedent):
+a live attribute flip re-resolves only on the next reconnect, never mid-session.
 
 The roving listeners + the selection effect are installed in `connected()`, so they ride the connection
 `AbortSignal` (zero residue on disconnect) and **re-arm on reconnect**.

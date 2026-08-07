@@ -275,6 +275,97 @@ describe('ui-tabs — `fill` reflected boolean (ADR-0144 Q1 cl.1)', () => {
   })
 })
 
+describe('ui-tabs — `orientation` reflected enum (GH #581, jsdom part of LLD-C11)', () => {
+  it('defaults to horizontal/absent; setting the property reflects the attribute and vice versa', () => {
+    const { tabs } = build()
+    expect(tabs.orientation).toBe('horizontal')
+    expect(tabs.hasAttribute('orientation')).toBe(false)
+
+    tabs.orientation = 'vertical'
+    expect(tabs.getAttribute('orientation')).toBe('vertical') // property → attribute reflection
+
+    tabs.orientation = 'horizontal' // an ENUM codec's `to` always serializes a string (never null, unlike boolean) —
+    expect(tabs.getAttribute('orientation'), 'an explicit horizontal write DOES set the attribute (enum reflect, not boolean presence)').toBe('horizontal')
+
+    tabs.setAttribute('orientation', 'vertical') // attribute → property
+    expect(tabs.orientation).toBe('vertical')
+  })
+
+  it('an out-of-vocabulary write fails OPEN to the default (enum codec law)', () => {
+    const tabs = new ProbeTabs()
+    tabs.setAttribute('orientation', 'diagonal')
+    document.body.append(tabs)
+    expect(tabs.orientation).toBe('horizontal')
+  })
+
+  it('horizontal (default, no attribute) ⇒ the strip carries NO aria-orientation — byte-identical default DOM', () => {
+    const { strip } = build()
+    expect(strip.hasAttribute('aria-orientation')).toBe(false)
+  })
+
+  it('vertical ⇒ the strip carries aria-orientation="vertical"', () => {
+    const tabs = new ProbeTabs()
+    tabs.setAttribute('orientation', 'vertical')
+    for (let i = 0; i < 3; i++) {
+      const t = new ProbeTab()
+      t.textContent = `Tab ${i}`
+      tabs.append(t)
+    }
+    document.body.append(tabs)
+    const strip = tabs.querySelector('[data-part="tablist"]') as HTMLElement
+    expect(strip.getAttribute('aria-orientation')).toBe('vertical')
+  })
+
+  it('re-resolves on reconnect: flipping the attribute while disconnected updates aria-orientation on reconnect', () => {
+    const { tabs, strip } = build()
+    expect(strip.hasAttribute('aria-orientation')).toBe(false)
+    tabs.remove()
+    tabs.setAttribute('orientation', 'vertical')
+    document.body.append(tabs) // reconnect → connected() re-resolves both aria-orientation and the roving axis
+    expect(strip.getAttribute('aria-orientation')).toBe('vertical')
+  })
+
+  it('under vertical, ArrowDown/ArrowUp move selection (roving axis re-resolved); ArrowLeft/ArrowRight are inert', async () => {
+    const tabs = new ProbeTabs()
+    tabs.setAttribute('orientation', 'vertical')
+    const tabEls: ProbeTab[] = []
+    for (let i = 0; i < 3; i++) {
+      const t = new ProbeTab()
+      t.textContent = `Tab ${i}`
+      tabs.append(t)
+      tabEls.push(t)
+    }
+    document.body.append(tabs)
+    const strip = tabs.querySelector('[data-part="tablist"]') as HTMLElement
+
+    arrow(strip, 'ArrowDown')
+    await tabs.updateComplete
+    expect(tabEls[1].ii.ariaSelected, 'ArrowDown did not move selection under vertical').toBe('true')
+
+    arrow(strip, 'ArrowUp')
+    await tabs.updateComplete
+    expect(tabEls[0].ii.ariaSelected, 'ArrowUp did not move selection back under vertical').toBe('true')
+
+    const rightEvent = arrow(strip, 'ArrowRight')
+    await tabs.updateComplete
+    expect(rightEvent.defaultPrevented, 'ArrowRight must be INERT under vertical').toBe(false)
+    expect(tabEls[0].ii.ariaSelected, 'ArrowRight moved selection under vertical (must be inert)').toBe('true')
+
+    const leftEvent = arrow(strip, 'ArrowLeft')
+    await tabs.updateComplete
+    expect(leftEvent.defaultPrevented, 'ArrowLeft must be INERT under vertical').toBe(false)
+    expect(tabEls[0].ii.ariaSelected, 'ArrowLeft moved selection under vertical (must be inert)').toBe('true')
+  })
+
+  it('NEGATIVE — the existing horizontal props (selected/fill/surface) stay byte-identical alongside orientation', () => {
+    const { tabs, tabEls } = build()
+    expect(tabs.orientation).toBe('horizontal')
+    expect(tabs.fill).toBe(false)
+    expect(tabs.selected).toBe('')
+    expect(tabEls[0].ii.ariaSelected).toBe('true') // untouched default-selection behaviour
+  })
+})
+
 describe('ui-tabs — PANEL-LESS composition (GH #221: the ui-super-shell strip contract)', () => {
   // ui-super-shell composes both its tab strips from ui-tabs WITHOUT ui-tab-panel children (the
   // shell's segments/participants are its own visibility targets, never panels). This pin freezes
