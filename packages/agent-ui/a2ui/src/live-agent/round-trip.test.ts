@@ -131,6 +131,44 @@ describe('recorded backbone round-trip (LLD-C2/C8 / SPEC-R2 AC1)', () => {
     for (const t of recordedTranscript.turns) expect(t.ask).toBeUndefined()
   })
 
+  // ADR-0174 cl.2 / SPEC-R20 (GH #538) — the SAME `ask`-arm precedent (test above), for `plan`: a LOCAL
+  // fixture transcript proving `createRecordedTransport` composes `{note, plan}` on the SAME meta-line
+  // shape `produce()` emits live, with `lines` streaming byte-identical right after it (recorded/live
+  // parity, SPEC-R5/N4).
+  it("a transcript turn carrying `plan` streams {a2uiMeta:{note,plan}} ahead of byte-identical lines (ADR-0174 cl.2 / SPEC-R20); a malformed `plan` drops only `plan`", async () => {
+    const planLines = ['{"version":"v1.0","createSurface":{"surfaceId":"s","catalogId":"agent-ui"}}']
+    const plan = { steps: [{ id: 'step-1', description: 'Look up the record.' }, { id: 'step-2', description: 'Summarize it.' }] }
+    const fixture: RecordedTranscript = {
+      intent: 'a fixture plan turn',
+      turns: [{ lines: planLines, note: 'Here is my plan.', plan }],
+    }
+    const transport = createRecordedTransport(fixture)
+    const wire: string[] = []
+    for await (const line of transport.turn({ kind: 'intent', text: 'anything', session: { turns: [] } })) wire.push(line)
+
+    const meta = readMetaLine(wire[0]!)
+    expect(meta?.a2uiMeta.note).toBe('Here is my plan.')
+    expect(meta?.a2uiMeta.plan).toEqual(plan)
+    expect(wire.slice(1)).toEqual(planLines) // byte-identical to the fixture's own `lines`
+
+    // A malformed `plan` (a step missing `description`) drops ONLY `plan` — the note still parses, the SAME
+    // per-field-independent guard `readMetaLine` already applies live (SPEC-R20 AC1), now proven recorded-side.
+    const malformedFixture: RecordedTranscript = {
+      intent: 'a fixture malformed-plan turn',
+      turns: [{ lines: planLines, note: 'Still here.', plan: { steps: [{ id: 'step-1' }] } as unknown as typeof plan }],
+    }
+    const malformedTransport = createRecordedTransport(malformedFixture)
+    const malformedWire: string[] = []
+    for await (const line of malformedTransport.turn({ kind: 'intent', text: 'anything', session: { turns: [] } })) malformedWire.push(line)
+    const malformedMeta = readMetaLine(malformedWire[0]!)
+    expect(malformedMeta?.a2uiMeta.note).toBe('Still here.')
+    expect(malformedMeta?.a2uiMeta.plan).toBeUndefined()
+
+    // The shipped transcript's own turns carry no `plan` — this fixture proves the mechanism, not a change
+    // to the committed backbone (ADR-0089's scripted-turn fork stands, untouched).
+    for (const t of recordedTranscript.turns) expect(t.plan).toBeUndefined()
+  })
+
   // ADR-0146 F1 — authored `progress` stages replay as the SAME meta-line shape produce() interleaves live.
   it('a transcript turn carrying `progress` replays {a2uiMeta:{progress}} meta-lines AHEAD of the note/lines (SPEC-R5/N4 parity); a progress-less turn is byte-identical', async () => {
     const lines = ['{"version":"v1.0","createSurface":{"surfaceId":"s","catalogId":"agent-ui"}}']

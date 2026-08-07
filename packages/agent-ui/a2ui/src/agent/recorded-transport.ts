@@ -19,9 +19,15 @@
 // replayed as the SAME `{"a2uiMeta":{"progress":…}}` meta-lines `produce()` interleaves live, AHEAD of the
 // turn's lines (SPEC-R5/N4 parity). The keyless default demo authors these so a visitor with NO API key
 // still sees the staged live-turn feedback; a turn with no `progress` streams byte-identically to before.
+//
+// ADR-0174 cl.2 / SPEC-R20 (GH #538): a recorded turn MAY also carry `plan` — the SAME model-authored step
+// list `produce()`'s outgoing meta-line passes through live. Following the `ask`-arm precedent EXACTLY
+// (the SAME seam, no new mechanism): it is folded onto the SAME meta-line as `note`/`ask` —
+// `{"a2uiMeta":{"note":"…","plan":{"steps":[…]}}}` — the identical envelope shape the live path emits
+// (SPEC-R5/N4 parity). A turn with no `plan` streams byte-identically to before this addition.
 
 import type { AgentTransport, TurnInput } from './agent-transport.ts'
-import type { A2uiMetaEnvelope, AskDeclaration, TurnProgress } from './meta-line.ts'
+import type { A2uiMetaEnvelope, AskDeclaration, PlanDeclaration, TurnProgress } from './meta-line.ts'
 import type { A2uiClientMessage } from '../renderer/index.ts'
 
 // ADR-0137 clause 2: the `RecordedTranscript`/`RecordedTurn` shapes live HERE — the replay engine that
@@ -41,6 +47,12 @@ export interface RecordedTurn {
   lines: string[]
   note?: string
   ask?: AskDeclaration
+  /** ADR-0174 cl.2 / SPEC-R20 (GH #538) — the SAME model-authored plan step list `produce()`'s outgoing
+   * meta-line carries live. `createRecordedTransport` streams it on the SAME meta-line as `note`/`ask`, so
+   * the recorded backbone can carry a plan turn-for-turn parity with the live path (SPEC-R5/N4) — the SAME
+   * seam `ask` already rides, no new mechanism. A turn with no `plan` streams byte-identically to before
+   * (the note/ask optional-field precedent). */
+  plan?: PlanDeclaration
   /** ADR-0146 F1 — authored live-turn progress stages, replayed as the SAME `{"a2uiMeta":{"progress":…}}`
    * meta-lines the live producer emits, AHEAD of this turn's lines (SPEC-R5/N4 parity), so the keyless demo
    * demonstrates the staged feedback with zero network/key. A turn with no `progress` streams byte-
@@ -57,12 +69,14 @@ export interface RecordedTranscript {
   turns: RecordedTurn[]
 }
 
-/** Compose a turn's leading meta-line — `note` alone (the pre-ADR-0097 shape) or `{note, ask}` when the
- * turn also carries an ask declaration. `undefined` when the turn carries neither (no meta-line at all —
- * the pre-slice-6 behavior for a note-less, ask-less turn). */
+/** Compose a turn's leading meta-line — `note` alone (the pre-ADR-0097 shape), `{note, ask}`, `{note, plan}`,
+ * or `{note, ask, plan}` when the turn also carries an ask and/or plan declaration (ADR-0174 cl.2 / SPEC-R20,
+ * GH #538 — `plan` follows the `ask`-arm precedent EXACTLY, the SAME seam, no new mechanism). `undefined`
+ * when the turn carries neither `note` (no meta-line at all — the pre-slice-6 behavior for a note-less,
+ * ask-less, plan-less turn). */
 function formatTurnMetaLine(t: RecordedTurn): string | undefined {
   if (t.note === undefined) return undefined
-  const envelope: A2uiMetaEnvelope = { a2uiMeta: { note: t.note, ask: t.ask } }
+  const envelope: A2uiMetaEnvelope = { a2uiMeta: { note: t.note, ask: t.ask, plan: t.plan } }
   return JSON.stringify(envelope)
 }
 

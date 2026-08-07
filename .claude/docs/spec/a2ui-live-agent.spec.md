@@ -8,7 +8,9 @@
 > treats `note`/`ask`/`trace`/`progress`/`error` (a malformed `plan` drops only itself, never the whole
 > envelope), the envelope stays versionless and provably disjoint from `A2uiServerMessage` (unchanged),
 > `produce()`'s outgoing meta-line passes a declared `plan` through unchanged (mirroring `note`/`ask`'s
-> existing passthrough), and `AgentTransport.turn`'s signature stays byte-identical (NEW **SPEC-R20**,
+> existing passthrough), `AgentTransport.turn`'s signature stays byte-identical, and `RecordedTurn`/
+> `createRecordedTransport` carry the identical `{note, plan}` shape for recorded/live parity (SPEC-R5/N4),
+> mirroring SPEC-R14's `{note, ask}` parity requirement EXACTLY (NEW **AC4**, GH #538) (NEW **SPEC-R20**,
 > §3.2b). SPEC-R6 gains the plan-arm's GRAMMAR-half mechanics teaching (NEW **AC6**), mode-invariant,
 > folded in the SAME place the `ask`-mechanics block (AC5) already lives — ADR-0174 cl.6 rules this
 > teaching host-owned/GRAMMAR-internal, never persona-editable. This requirement governs the WIRE
@@ -582,7 +584,11 @@ precedent EXACTLY (SPEC-R14; ADR-0097 §1, ADR-0174 cl.2):
   rewriting; no integrity check performed here, per Scope below) — the SAME passthrough treatment `note`
   already receives, and the SAME conditional-key-omission `ask` already receives (`JSON.stringify` omits
   `plan` entirely on a plan-less turn, so the wire shape stays byte-identical to before this field
-  existed). *(→ PRD-G1/G6; ADR-0174 cl.2)*
+  existed).
+- `RecordedTurn`/`createRecordedTransport` MUST be able to carry the identical `{note, plan}` meta-line
+  shape for parity between the recorded and live paths (SPEC-R5/N4) — mirroring SPEC-R14's `{note, ask}`
+  parity requirement EXACTLY, the SAME seam `ask` already rides, no new mechanism (GH #538). *(→ PRD-G1/G6;
+  ADR-0174 cl.2)*
 
 **Scope.** This requirement governs the WIRE REPRESENTATION in BOTH directions — the model's declared
 `plan` parsed IN by `readMetaLine` (above) and passed OUT through `produce()`'s outgoing meta-line
@@ -613,6 +619,13 @@ on) and the turn's `note`/A2UI lines render exactly as they do without it.
   a stub run emitting no `plan`, *then* the outgoing meta-line omits the key entirely (byte-identical to
   the pre-this-field wire shape) — mirroring SPEC-R14 AC2's stub-`produce()`-run shape,
   `produce-loop.test.ts`, `npm test` green, no live model.
+- **AC4** *Given* a `RecordedTurn` carrying `{note, plan:{steps:[{id,description}]}}`, *when*
+  `createRecordedTransport` streams it, *then* the leading meta-line ships `{note, plan}` intact — the
+  identical envelope shape `readMetaLine` round-trips on the live path (AC1), `lines` following
+  byte-identical right after it; *given* a `RecordedTurn` carrying a malformed `plan` on the SAME meta-line
+  as a well-formed `note`, *then* the streamed meta-line drops ONLY `plan` (the note still ships) — mirroring
+  SPEC-R14's `RecordedTurn`/`createRecordedTransport` `{note, ask}` parity requirement EXACTLY, the SAME
+  seam, no new mechanism — `round-trip.test.ts`, `npm test` green, no live model.
 
 ### 3.3 The round-trip
 
