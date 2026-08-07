@@ -1,6 +1,6 @@
 # SPEC — A2UI Ecosystem Alignment (2026-08-05 survey intake)
 
-> Status: accepted · v0.2 · 2026-08-06 (v0.1 accepted 2026-08-05) · Layer: SPEC (execution contract)
+> Status: accepted · v0.3 · 2026-08-07 (v0.2 2026-08-06 · v0.1 accepted 2026-08-05) · Layer: SPEC (execution contract)
 > **v0.2 amendment (2026-08-06, SPEC-R3 only — GH #474):** SPEC-R3's rubric + fixture halves are
 > REALIZED and its eval lane is SHAPED as a named manual run — the payload rubric carries the dimension
 > as [`../rubrics/a2ui-payload.md`](../rubrics/a2ui-payload.md) **P8** (`[review], definitional`; rubric
@@ -8,11 +8,12 @@
 > `.claude/docs/rubrics/fixtures/a2ui-deceptive-composition/`, and the lane's operator procedure +
 > VerdictsFile contract are appended to the clause itself. Scoped to SPEC-R3 only: its route line is
 > extended in place (P8 + the manifest link) and one v0.2 bullet is appended; no other clause touched.
-> **Amendment (2026-08-07, SPEC-R4 only — GH #532, owner ruling:
-> [#532 comment](https://github.com/kimgranlund/agent-ui/issues/532#issuecomment-5219435344)):**
+> **v0.3 amendment (2026-08-07, SPEC-R4 only — GH #532, owner ruling:
+> [#532 comment](https://github.com/kimgranlund/agent-ui/issues/532#issuecomment-5219435344); the
+> ruling relay's filename corrected — the clause lives here, not `a2ui-live-agent.spec.md`):**
 > SPEC-R4's "applied on emit" phrasing overclaimed what shipped. The clause is edited in place to
 > scope the guarantee honestly as TOOLKIT-LEVEL — `Session.surfacePrefix` +
-> `ownsSurfaceId`/`prefixSurfaceId`/`enforceSurfacePrefix` exist and are tested (26 tests, PR #519) —
+> `ownsSurfaceId`/`prefixSurfaceId`/`enforceSurfacePrefix` exist and are tested (12 tests, PR #519) —
 > with live-pipeline integration into `produce()` explicitly DEFERRED until a real multi-producer
 > surface needs it; the [ADR-0097](../adr/0097-a2ui-feed-embedded-asks.md) feed-ask
 > `ask.surfaceId` remap is the named precondition for that future wiring. Scoped to SPEC-R4 only:
@@ -207,17 +208,18 @@ prefix subagent surface IDs to prevent conflicts (§2.1). The producer toolkit's
 MUST offer the convention first-class: a per-producer surface-ID prefix as a TOOLKIT-LEVEL
 guarantee (`Session.surfacePrefix` + the `ownsSurfaceId`/`prefixSurfaceId`/`enforceSurfacePrefix`
 primitives), so two subagent producers under one orchestrator cannot collide on or address each
-other's surfaces. Wiring `enforceSurfacePrefix` into `produce()`'s default emit path is EXPLICITLY
-DEFERRED until a real multi-producer surface needs it — the named precondition for that future
-wiring is remapping the [ADR-0097](../adr/0097-a2ui-feed-embedded-asks.md) feed-ask
+other's surfaces. The primitives are SHIPPED (PR #519 — 12 tests in the toolkit's own gates,
+`live-agent/session.test.ts`); wiring `enforceSurfacePrefix` into `produce()`'s default emit path
+is EXPLICITLY DEFERRED until a real multi-producer surface needs it — the named precondition for
+that future wiring is remapping the [ADR-0097](../adr/0097-a2ui-feed-embedded-asks.md) feed-ask
 `ask.surfaceId` alongside the payload's surface IDs (an unremapped ask would silently break the
-feed-ask integrity check, `produce.ts:669-673` — GH #532, amendment 2026-08-07).
+feed-ask integrity check, `produce.ts:669-673` — GH #532, v0.3 amendment 2026-08-07).
 - **AC1** *Given* two sessions with distinct prefixes, *when* both apply the toolkit's prefix
-  primitives (`Session.surfacePrefix` + `ownsSurfaceId`/`prefixSurfaceId`/`enforceSurfacePrefix`,
-  shipped PR #519 with 26 tests), *then* their surface IDs are disjoint by construction and a
-  cross-prefix update is rejected — proven by tests in the toolkit's own gates. `produce()`'s
-  live emit path does NOT yet apply the prefix; that integration is deferred per the clause
-  above, gated on the ADR-0097 `ask.surfaceId` remap.
+  primitives (`Session.surfacePrefix` + `ownsSurfaceId`/`prefixSurfaceId`/`enforceSurfacePrefix`),
+  *then* their surface IDs are disjoint by construction and a cross-prefix update is rejected —
+  proven by tests in the toolkit's own gates. `produce()`'s live emit path does NOT yet apply the
+  prefix; that integration is deferred per the clause above, gated on the ADR-0097 `ask.surfaceId`
+  remap.
 
 **SPEC-R5 — Conformance-suite lane** *(→ PRD-G4, PRD-G6 · route: the shared validator +
 its fixture corpus; upstream issue #2150)*. No conformance suite exists upstream (§2.1). This
