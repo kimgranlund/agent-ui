@@ -1,0 +1,192 @@
+// a2ui-live.planner.test.ts — GH #579 (ADR-0174/SPEC-R21/R22): drives the REAL page's planner-stage wiring
+// end to end through a SCRIPTED stub `AgentTransport` (the `a2ui-live.ask-lifecycle.test.ts` precedent —
+// same dynamic-import + `__setTransportForTest` seam, no key, no live model, jsdom-covered). Adds a
+// SECOND test-only seam this slice introduces, `__setPlannerEnabledForTest` (a2ui-live.ts), so the gate
+// can be flipped without touching `location.search`.
+import { describe, it, expect, beforeAll, beforeEach } from 'vitest'
+import type { AgentTransport, TurnInput } from '../lib/agent-runtime.ts'
+
+// `a2ui-live.ts`'s test-only injection seams — bound in `beforeAll` below via a DEFERRED (dynamic) import,
+// never a static one (see the ask-lifecycle precedent's own comment for why ordering is load-bearing).
+let __setTransportForTest: (next: AgentTransport, live?: boolean) => void
+let __setPlannerEnabledForTest: (enabled: boolean) => void
+
+beforeAll(async () => {
+  // jsdom reality (the ask-lifecycle/`a2ui-gallery.test.ts` precedent): `ElementInternals.setFormValue`/
+  // `setValidity` are ABSENT in jsdom, and importing `a2ui-live.ts` itself eagerly builds + connects the
+  // chat composer's real, form-associated editor as a side effect of import — stub once at the shared
+  // prototype, additive, a no-op if a future jsdom ships the real method.
+  if (typeof ElementInternals.prototype.setFormValue !== 'function') {
+    ;(ElementInternals.prototype as unknown as Record<string, unknown>).setFormValue = function (): void {}
+    ;(ElementInternals.prototype as unknown as Record<string, unknown>).setValidity = function (): void {}
+  }
+  const mod = await import('./a2ui-live.ts')
+  __setTransportForTest = mod.__setTransportForTest
+  __setPlannerEnabledForTest = mod.__setPlannerEnabledForTest
+})
+
+// ── scripting helpers (the ask-lifecycle precedent's own small, page-local duplicates) ────────────────────
+
+/** A per-turn scripted `AgentTransport`: `byTurn(turnIndex, input)` returns the raw lines that turn emits
+ *  (sync or a Promise of them, so a specific turn can be held open by the test — the mid-run composer-
+ *  suppression proof needs exactly this). */
+function scriptedTransport(byTurn: (turnIndex: number, input: TurnInput) => string[] | Promise<string[]>): AgentTransport {
+  let turnIndex = 0
+  return {
+    async *turn(input: TurnInput): AsyncIterable<string> {
+      turnIndex += 1
+      const lines = await byTurn(turnIndex, input)
+      for (const line of lines) yield line
+    },
+  }
+}
+
+function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((res) => {
+    resolve = res
+  })
+  return { promise, resolve }
+}
+
+async function waitUntil(predicate: () => boolean, timeoutMs = 2000): Promise<void> {
+  const start = Date.now()
+  for (;;) {
+    if (predicate()) return
+    if (Date.now() - start > timeoutMs) throw new Error('waitUntil: condition never became true within the timeout')
+    await new Promise((r) => setTimeout(r, 0))
+  }
+}
+
+function lastNarrationStrip(): HTMLElement | null {
+  const strips = document.querySelectorAll<HTMLElement>('.chat-log .narration-strip')
+  return strips.length > 0 ? strips[strips.length - 1]! : null
+}
+function narrationLabel(key: string): string | null | undefined {
+  return lastNarrationStrip()?.querySelector(`[data-key="${key}"] [data-role="label"]`)?.textContent
+}
+
+function composerBusy(): boolean {
+  return document.querySelector('.chat-composer')?.hasAttribute('busy') ?? false
+}
+
+async function sendIntent(text: string): Promise<void> {
+  const editor = document.querySelector('.chat-composer [data-part="editor"]') as HTMLElement
+  editor.textContent = text
+  editor.dispatchEvent(new Event('input', { bubbles: true }))
+  const sendBtn = document.querySelector('.chat-composer [data-part="send"]') as HTMLElement
+  sendBtn.click()
+}
+
+function resetPage(): void {
+  const resetBtn = [...document.querySelectorAll<HTMLElement>('ui-button')].find((b) => b.textContent?.trim() === 'Reset')
+  resetBtn?.click()
+}
+
+/** The reserved leading meta-line envelope (ADR-0088 §1 / ADR-0097 §1 / ADR-0174 cl.2) — hand-built (the
+ *  wire shape is tiny and public, `readMetaLine`'s own contract). `plan` is this ticket's own field. */
+function metaLine(fields: { note?: string; plan?: { steps: { id: string; description: string }[] } }): string {
+  return JSON.stringify({ a2uiMeta: fields })
+}
+
+function surfaceLines(surfaceId: string, text: string): string[] {
+  return [
+    `{"version":"v1.0","createSurface":{"surfaceId":"${surfaceId}","catalogId":"agent-ui"}}`,
+    `{"version":"v1.0","updateComponents":{"surfaceId":"${surfaceId}","components":[{"id":"root","component":"Text","text":"${text}"}]}}`,
+  ]
+}
+
+beforeEach(() => {
+  resetPage()
+})
+
+describe('a2ui-live planner-stage wiring (GH #579, ADR-0174/SPEC-R21/R22) — a scripted transport drives the REAL page', () => {
+  it('gate OFF (default): a volunteered plan declaration is never consumed — one ordinary dispatch, byte-identical single-turn output', async () => {
+    __setPlannerEnabledForTest(false)
+    let calls = 0
+    __setTransportForTest(
+      scriptedTransport(() => {
+        calls += 1
+        return [metaLine({ plan: { steps: [{ id: 'a', description: 'do a' }] } }), ...surfaceLines('s1', 'built directly')]
+      }),
+    )
+
+    await sendIntent('build me something')
+    await waitUntil(() => document.querySelector("ui-surface-host [data-part='surface']")?.textContent?.includes('built directly') === true)
+
+    expect(calls, 'SPEC-R21 AC1 — a plan is never consumed while the gate is off, no further dispatches').toBe(1)
+    expect(document.querySelectorAll('.chat-log .narration-strip').length, 'ONE flat strip, never K+1 groups, while the gate is off').toBe(1)
+  })
+
+  it('gate ON: a consumed 2-step plan drives K+2 total dispatches, seeds K+1 status-stream groups, suppresses the composer mid-run, and the closing synthesis renders', async () => {
+    __setPlannerEnabledForTest(true)
+    const stepAGate = deferred<string[]>()
+    const calls: { turn: number; text: string }[] = []
+    __setTransportForTest(
+      scriptedTransport((turn, input) => {
+        calls.push({ turn, text: input.kind === 'intent' ? input.text : '' })
+        if (turn === 1) return [metaLine({ plan: { steps: [{ id: 'a', description: 'Do A' }, { id: 'b', description: 'Do B' }] } })]
+        if (turn === 2) return stepAGate.promise // step "a" — held open so the test can assert mid-run state
+        if (turn === 3) return surfaceLines('surf-b', 'B done')
+        return surfaceLines('final', 'Synthesis done')
+      }),
+    )
+
+    await sendIntent('plan this out')
+
+    // Mid-run: the composer is suppressed (v0.11 ruling — the DISABLE presentation, `[busy]` reflects the
+    // SAME mechanism an ordinary turn already uses) and the K+1 groups have seeded with the correct
+    // pending/running split (SPEC-R21 Projection: all seed BEFORE any step dispatches; step "a" is the
+    // only one currently running).
+    await waitUntil(() => composerBusy())
+    expect(composerBusy(), 'mid-run composer suppression (SPEC-R21 Mid-run user interaction)').toBe(true)
+    await waitUntil(() => narrationLabel('plan-step:a') === 'Step "a" — Running…')
+    expect(narrationLabel('plan-step:b'), 'seeded pending up front, before its own dispatch').toBe('Step "b" — Queued')
+    expect(narrationLabel('plan-synthesis'), 'seeded pending up front, before any step or synthesis runs').toBe('Synthesis — Queued')
+
+    stepAGate.resolve(surfaceLines('surf-a', 'A done'))
+
+    await waitUntil(() => document.querySelector("ui-surface-host [data-part='surface']")?.textContent?.includes('Synthesis done') === true)
+
+    // K+2 total dispatches (plan + 2 steps + synthesis), each an ordinary `{kind:'intent'}` TurnInput —
+    // nothing plan-shaped crosses the AgentTransport seam (SPEC-R21 Placement/Bounds).
+    expect(calls.length).toBe(4)
+    expect(calls[1]!.text).toContain('Do A')
+    expect(calls[2]!.text).toContain('Do B')
+
+    expect(narrationLabel('plan-step:a')).toBe('Step "a" — Done')
+    expect(narrationLabel('plan-step:b')).toBe('Step "b" — Done')
+    expect(narrationLabel('plan-synthesis')).toBe('Synthesis — Done')
+
+    // Every dispatched surface (both steps + the closing synthesis) rendered into the SAME shared canvas,
+    // progressively, as the run advanced — not just the synthesis turn's own output.
+    const canvasText = document.querySelector("ui-surface-host [data-part='surface']")?.textContent ?? ''
+    expect(canvasText).toContain('A done')
+    expect(canvasText).toContain('B done')
+    expect(canvasText).toContain('Synthesis done')
+
+    await waitUntil(() => !composerBusy())
+  })
+
+  it('gate ON: a plan declaring more steps than the cap is REFUSED — zero step/synthesis dispatches, ONE visible warning entry', async () => {
+    __setPlannerEnabledForTest(true)
+    let calls = 0
+    const overCapSteps = Array.from({ length: 9 }, (_, i) => ({ id: `s${i}`, description: `step ${i}` })) // DEFAULT_PLAN_STEP_CAP is 8
+    __setTransportForTest(
+      scriptedTransport(() => {
+        calls += 1
+        return [metaLine({ plan: { steps: overCapSteps } })]
+      }),
+    )
+
+    await sendIntent('do way too much')
+    await waitUntil(() => narrationLabel('plan-refused') !== null && narrationLabel('plan-refused') !== undefined)
+
+    // SPEC-R21 Bounds/AC4 — over cap ⇒ zero step dispatches (the plan-request turn is the ONLY call) and
+    // exactly one visible warning entry naming the refusal.
+    expect(calls, 'over-cap ⇒ the host never consumes, never dispatches a single step or synthesis turn').toBe(1)
+    expect(narrationLabel('plan-refused')).toContain('9 step(s), over the 8-step cap')
+
+    await waitUntil(() => !composerBusy())
+  })
+})
