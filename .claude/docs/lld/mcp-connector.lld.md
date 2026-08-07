@@ -1,8 +1,9 @@
 # LLD — the MCP connector (allowlist roster · Streamable-HTTP wire client · three-fact mapping · fail-soft discovery · dev-proxy boot-await · admin GET)
 
-> Refines: [`../spec/a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md) v0.12 §3.7
+> Refines: [`../spec/a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md) v0.13 §3.7
 > (SPEC-R23–R28 — the merged S-SPEC, PR #571, incl. the F2 freeze: Streamable HTTP only, pin
-> `2025-06-18`, acceptance {`2025-06-18`, `2025-03-26`}, the `Mcp-Session-Id` echo law; and F3
+> `2025-06-18`, acceptance {`2025-06-18`, `2025-03-26`, `2025-11-25`} — the third member per Kim's
+> F4 ruling, §7 — the `Mcp-Session-Id` echo law; and F3
 > recorded: hand-rolled `fetch`, SDK = blocked handback) under
 > [ADR-0177](../adr/0177-mcp-client-registry-source-http-transport-additive-manifest-mapping.md)
 > (RATIFIED 2026-08-06). Build plan:
@@ -71,8 +72,10 @@ export function validateMcpServersConfig(cfg: unknown): McpServersConfig
 ```
 
 Fail-fast rules (first violation throws, `providers-config.ts` message style): non-object root or
-`servers`; server-id not matching `/^[a-z0-9][a-z0-9_-]*$/` (NO `:` — it is a namespace segment of
-the manifest `id`, so a colon would make `mcp:<server-id>:<tool>` unparseable); empty/missing
+`servers`; a server-id containing `:` (it is a namespace segment of the manifest `id`, so a colon
+would make `mcp:<server-id>:<tool>` unparseable — the one DERIVED charset exclusion) or falling
+outside the `/^[a-z0-9][a-z0-9_-]*$/` convention (a convention choice, recorded in §8, not a
+derivation); empty/missing
 `label`; `endpoint` not an absolute `http(s)` URL; `auth` outside the two-member enum;
 `serverKey` without a non-empty `envKey`. An EMPTY `servers` map is VALID (unlike
 `validateProvidersConfig`'s no-providers throw — the empty roster is SPEC-R27's shipped state,
@@ -81,9 +84,10 @@ a zero-cost no-op, not a defect). Pure module, zero I/O, Worker-portable by cons
 ### 3.2 Wire client (`client.ts`)
 
 ```ts
-/** The F2 freeze as one-line constants — a future SPEC-R24 amendment (§7 F4) is a one-line edit. */
+/** The F2 freeze as one-line constants — which is exactly how the F4 widening landed (§7):
+ *  '2025-11-25' entered as one member, zero client-design change. */
 export const MCP_PROTOCOL_VERSION = '2025-06-18'
-export const ACCEPTED_PROTOCOL_VERSIONS: readonly string[] = ['2025-06-18', '2025-03-26']
+export const ACCEPTED_PROTOCOL_VERSIONS: readonly string[] = ['2025-06-18', '2025-03-26', '2025-11-25']
 
 export interface McpClientOptions {
   endpoint: string
@@ -139,7 +143,8 @@ Wire mechanics (the pinned `2025-06-18` Streamable-HTTP shape — all POST, no G
   response's `protocolVersion ∉ ACCEPTED_PROTOCOL_VERSIONS` → return the `not-ok` outcome
   (server-scope skip, SPEC-R24; `tools/list` is never dialed). Otherwise capture the
   `Mcp-Session-Id` response header if assigned, POST the `notifications/initialized`
-  notification (a 202/204, no body expected), and resolve `ok`.
+  notification (success = ANY 2xx status, no body expected — the tolerant read; the error
+  taxonomy below applies the same rule), and resolve `ok`.
 - **Session + version headers**: every post-initialize request carries
   `MCP-Protocol-Version: <negotiated>` and — iff the server assigned one — `Mcp-Session-Id`
   echoed verbatim (a server assigning none ⇒ the header is simply never sent). Session state is
@@ -154,7 +159,8 @@ Wire mechanics (the pinned `2025-06-18` Streamable-HTTP shape — all POST, no G
 - **`listTools()`**: `tools/list`, following `nextCursor` pagination to completion, bounded at 16
   pages (beyond → `too-many-pages`, a server-scope skip — a hostile/looping cursor never hangs
   boot).
-- **HTTP non-2xx** (and non-202-on-notification) → `http`; timeout/abort → `timeout`; malformed
+- **HTTP non-2xx** → `http` — for notifications too: ANY 2xx is success there (the same tolerant
+  read as the handshake bullet above); timeout/abort → `timeout`; malformed
   frame → `parse`; a JSON-RPC `error` member → `jsonrpc`. Raw frames never leave this module in
   either direction (SPEC-R24 AC2's fence: no JSON-RPC construction outside `mcp/` + the shell).
 
@@ -216,8 +222,10 @@ tiebreak that makes "the FIRST server wins a cross-server `tool.name` collision"
 Per server — **server-scope skips** (no tool listed, one report row): `auth:'serverKey'` with an
 unset/empty `env[envKey]` (reason `no-key` — the roster declares auth the host cannot provide, so
 the server is never dialed; the discovery-time twin of `resolveIntegrations`' not-offered
-degrade); `initialize` not-ok (reason `unsupported-version:<negotiated>`); any `McpClientError`
-from handshake or `listTools`. Then per tool: `mapMcpTool` → `deps.register(manifest)` inside a
+degrade); `initialize` not-ok (reason `unsupported-version:<negotiated>`); and a CATCH-ALL over
+ANY error thrown during handshake or `listTools` (reason = the thrown message) — `McpClientError`'s
+closed codes are the EXPECTED enumeration, but the catch never narrows to it: the boot gate is
+wedge-proof by construction, not by contract. Then per tool: `mapMcpTool` → `deps.register(manifest)` inside a
 per-tool try/catch covering BOTH `registerIntegration` throw paths — unsupported schema, and
 duplicate wire `tool.name` (incl. the disclosed second-server-loses drop) — one bad tool costs
 exactly that one tool (SPEC-R26). Never throws outward: every failure is a report row, so S5's
@@ -313,26 +321,27 @@ beside `/status` in the same handler (a `GET` + `url.startsWith('/integrations')
 
 ## 7 · Open forks
 
-- **F4 — the SPEC-R24 protocol pin is STALE against the live spec (found by this slice's
-  mandated sanity check; recorded, NOT silently re-pinned — SPEC-R24 is the owning doc).**
-  Checked 2026-08-07 against modelcontextprotocol.io's revision history: the CURRENT revision is
+- **F4 — the SPEC-R24 protocol pin vs the live spec: RULED, no longer open** (Kim, 2026-08-07,
+  recorded on the tracker — [GH #567
+  comment](https://github.com/kimgranlund/agent-ui/issues/567#issuecomment-5221451663)):
+  **widen** — the acceptance set gains `2025-11-25`, becoming
+  `{2025-06-18, 2025-03-26, 2025-11-25}`; landed as the one-line SPEC-R24 amendment (SPEC v0.13)
+  + this doc's §3.2 constant, zero client-design change. The fork entry is kept here (not
+  deleted) so its resolution stays traceable. The finding, from this slice's mandated sanity
+  check against modelcontextprotocol.io's revision history (2026-08-07): the CURRENT revision is
   **`2026-07-28`**, with **`2025-11-25`** (Final) between it and the pinned `2025-06-18`.
   `2025-11-25` is handshake-based and wire-compatible with this LLD's client mechanics byte-for-
-  byte (same `initialize` lifecycle, same `Mcp-Session-Id` echo, same `MCP-Protocol-Version`
-  header, same Streamable HTTP POST shape). `2026-07-28` is a BREAKING redesign: the
-  `initialize` handshake and `Mcp-Session-Id` are REMOVED (stateless per-request `_meta`
-  versioning, mandatory `server/discover`, required `Mcp-Method`/`Mcp-Name` headers) — a
-  different client design, not a widened acceptance set. Behavior under the freeze as merged:
-  a server negotiating `2025-11-25` — or speaking only `2026-07-28` — is skipped-and-logged
-  (fail-soft, never a crash), which excludes current-generation servers from an otherwise-empty
-  roster. Options for the host: **(a)** widen the acceptance set to
-  `{2025-06-18, 2025-03-26, 2025-11-25}` — a one-line SPEC-R24 amendment + the §3.2 constant,
-  zero client-design change (the LLD's constants exist precisely so this is one line);
-  **(b)** keep the freeze exactly as merged — safe, honest, revisit when a real server enters
-  the roster (ADR-0177 Non-goals already parks that call with Kim); **(c)** re-target the
-  `2026-07-28` stateless protocol — a materially different wire client, premature while the
-  roster is empty and the ecosystem straddles revisions. Recommendation: (a) or (b); neither
-  blocks S1–S6, and every slice below builds identically under both.
+  byte — same `initialize` lifecycle, same `Mcp-Session-Id` echo, same `MCP-Protocol-Version`
+  header, same Streamable HTTP POST shape (its
+  [changelog](https://modelcontextprotocol.io/specification/2025-11-25/changelog) is
+  auth/elicitation/tasks additions, no transport-lifecycle change) — which is what made the
+  widening a one-member edit. `2026-07-28` is a BREAKING redesign: the `initialize` handshake
+  and `Mcp-Session-Id` are REMOVED (stateless per-request `_meta` versioning, mandatory
+  `server/discover`, required `Mcp-Method`/`Mcp-Name` headers) — a different client design,
+  RULED a future arc: servers negotiating it continue to skip-and-log (fail-soft, never a
+  crash). The rejected shapes: keeping the freeze as merged (safe but excludes
+  current-generation servers for no compatibility gain) and re-targeting `2026-07-28`
+  (premature while the roster is empty and the ecosystem straddles revisions).
 - **F3 status: NOT fired.** The pinned flavor hand-rolls cleanly — four POST verbs, one SSE line
   parser, no SDK wall found while sizing §3.2. The escape hatch stays what the SPEC says it is.
 
@@ -349,6 +358,11 @@ beside `/status` in the same handler (a `GET` + `url.startsWith('/integrations')
   fact with no consumer. Revisit only if the admin UI ever needs real MCP versioning.
 - **Non-decision:** the roster filename `mcp-servers.json` and the `Record<serverId, entry>` map
   shape mirror `providers.json`'s grammar deliberately — nothing was at stake beyond consistency.
+- **Non-decision (convention, recorded — the derived part lives in §3.1):** the full lowercase
+  server-id charset `/^[a-z0-9][a-z0-9_-]*$/` is a CONVENTION choice — it mirrors the
+  `providers.json` id style and keeps `mcp:*` manifest ids shell-quote- and grep-friendly. Only
+  the no-colon exclusion is derived from the id grammar (§3.1); widening the rest of the charset
+  later is a loader-local change with no downstream consumer.
 - **Log hygiene** — report/log lines carry server-ids, tool names, and closed reason strings;
   never a key value (SPEC-N2 class), and endpoints stay out of the S6 GET by shape (§3.5).
 
@@ -365,5 +379,5 @@ beside `/status` in the same handler (a `GET` + `url.startsWith('/integrations')
 
 S1 ∥ S2 (disjoint files); S3 needs both; S4 needs S3; S5 needs S4; S6 needs S5 (same seam file,
 serialized). Every slice: one writer per file, `npm run check && npm test` green by exit code;
-`test:browser` where site files are touched (S6). Reviewer of this doc: the doc-checker seat;
-any F4 ruling: Kim, landing in SPEC-R24 first, this doc's §3.2 constants second.
+`test:browser` where site files are touched (S6). Reviewer of this doc: the doc-checker seat.
+F4 is RULED and landed (§7 — SPEC v0.13 + the §3.2 constant); no external wait anywhere.
