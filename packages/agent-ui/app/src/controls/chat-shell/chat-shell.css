@@ -18,4 +18,21 @@
     flex: 1 1 auto;
     min-block-size: 0;
   }
+
+  /* GH #575 — the composed shell's SPEC-R7b narrow-tabs strip (super-shell.ts/super-shell.css) rendered
+     flush against the shell's own inline edge at the narrow width, while the header bar directly above it
+     kept its inline inset. NOT a tabs.css defect: `ui-tabs`'s tablist carries no inline padding of its own
+     by design (GH #536 moved a tab's spacing into the strip's inter-tab gap; #543 ruled that control-level
+     flush edge KEEP-AS-DESIGNED) — the padding RHYTHM around the strip was always meant to come from the
+     region composing it, and no region ever supplied it. `ui-chat-shell` is, today, the one archetype that
+     ships a `narrow-*="tabs"` side (agent-admin composes it) — this rule supplies that rhythm here, at the
+     composition that actually exposes the gap, rather than a fleet-wide super-shell change nobody asked
+     for. Reuses `--ui-super-shell-narrow-tabs-seam` (already public on the composed `ui-super-shell`,
+     inherited by this descendant) rather than minting a new dimension: it is the SAME `module / 3`
+     fraction the header bar's own `padding-inline` (`[data-part='bar']`, super-shell.css) already computes
+     to, so the strip's inline inset tracks the header's by construction — a future module repoint keeps
+     both equal without a second edit. */
+  :scope ui-tabs[data-part='narrow-tabs'] {
+    padding-inline: var(--ui-super-shell-narrow-tabs-seam);
+  }
 }
