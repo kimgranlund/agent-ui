@@ -10,13 +10,13 @@ import { validName } from './naming.ts'
 /** A JSON-Schema fragment: an object schema or a boolean schema (`true`/`false`). */
 export type JsonSchema = Record<string, unknown> | boolean
 
-/** A2UI v1.0 catalog (catalog SPEC §5.1). */
+/** A2UI v1.0 catalog (catalog SPEC §5.1). No surface-theming field — GH #531, following upstream
+ *  v1.0's "Decoupled Branding": theming is a consumer/CSS concern, not a catalog-level mechanism. */
 export interface Catalog {
   catalogId: string
   protocolVersion: string
   components: Record<string, ComponentDef>
   functions: Record<string, FunctionDef>
-  surfaceProperties?: JsonSchema
 }
 
 export interface ComponentDef {
@@ -195,7 +195,6 @@ export function loadCatalog(json: unknown): Catalog {
     components,
     functions,
   }
-  if (root.surfaceProperties !== undefined) out.surfaceProperties = root.surfaceProperties as JsonSchema
   return out
 }
 

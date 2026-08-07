@@ -101,15 +101,14 @@ describe('composeCatalog — AC3 collision case (OF1, ruled reject-loud)', () =>
   })
 })
 
-describe('composeCatalog — AC5 protocolVersion/surfaceProperties carry through unchanged', () => {
-  it('carries THAT base\'s protocolVersion + surfaceProperties, independent per targeted base', () => {
-    const baseA: Catalog = { ...baseCatalog('agent-ui', ['Card']), surfaceProperties: { type: 'object', properties: { theme: {} } } }
+describe('composeCatalog — AC5 protocolVersion carries through unchanged', () => {
+  it('carries THAT base\'s protocolVersion, independent per targeted base', () => {
+    const baseA: Catalog = { ...baseCatalog('agent-ui', ['Card']), protocolVersion: 'v1.0' }
     const baseB: Catalog = { ...baseCatalog('a2ui-basic', ['Text']), protocolVersion: 'v1.0' }
     const derivedA = composeCatalog(baseA, emptyFragment, 'p')
     const derivedB = composeCatalog(baseB, emptyFragment, 'p')
     expect(derivedA.protocolVersion).toBe(baseA.protocolVersion)
-    expect(derivedA.surfaceProperties).toEqual(baseA.surfaceProperties)
-    expect(derivedB.surfaceProperties).toBeUndefined()
+    expect(derivedB.protocolVersion).toBe(baseB.protocolVersion)
   })
 })
 

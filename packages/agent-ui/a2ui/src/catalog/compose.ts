@@ -95,9 +95,10 @@ export function derivedCatalogId(baseId: string, personaId: string): string {
 
 /**
  * The pure compose-time overlay (ADR-0172 cl.2): merges `local`'s `components`/`functions` maps over
- * `base`'s, producing a NEW `Catalog` document under its own derived `catalogId` (OF1b). `protocolVersion`/
- * `surfaceProperties` carry through from `base` UNCHANGED (SPEC-R2 AC5) — neither is named as
- * overlay-composable by ADR-0172. Reject-loud on ANY component or function name collision (OF1, SPEC-R2
+ * `base`'s, producing a NEW `Catalog` document under its own derived `catalogId` (OF1b). `protocolVersion`
+ * carries through from `base` UNCHANGED (SPEC-R2 AC5) — it is not named as overlay-composable by ADR-0172
+ * (the catalog carries no surface-theming field to carry through — GH #531). Reject-loud on ANY component
+ * or function name collision (OF1, SPEC-R2
  * AC3) — thrown synchronously, before any partial merge is ever returned. An empty fragment
  * (`components: {}`, `functions: {}`) composes to a content-equal copy of `base`'s maps (AC1's identity
  * case) — `composePersonaCatalogs`'s caller then registers the result, which re-validates it through
@@ -132,7 +133,6 @@ export function composeCatalog(base: Catalog, local: CatalogFragment, personaId:
     components,
     functions,
   }
-  if (base.surfaceProperties !== undefined) out.surfaceProperties = base.surfaceProperties
   return out
 }
 
