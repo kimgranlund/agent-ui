@@ -1153,6 +1153,78 @@ describe('produce() feed-embedded ask — peel/compose (ADR-0097 §1)', () => {
   })
 })
 
+// ── ADR-0174 cl.2 / SPEC-R20 AC3: the plan meta-line arm — pure passthrough, no integrity check ─────────
+describe('produce() plan meta-line arm — passthrough (ADR-0174 cl.2 / SPEC-R20 AC3)', () => {
+  const PLAN = { steps: [{ id: 'step-1', description: 'Gather requirements' }, { id: 'step-2', description: 'Build the surface' }] }
+
+  it('meta{note,plan} + a payload with zero A2UI lines ships the outgoing meta-line with plan intact (unchanged)', async () => {
+    const { provider } = stubProvider([JSON.stringify({ a2uiMeta: { note: 'Here is my plan.', plan: PLAN } })])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    let halted: unknown
+    try {
+      for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+    } catch (e) {
+      halted = e
+    }
+    expect(halted).toBeUndefined() // empty A2UI ≠ invalid — no ProduceHalt
+    expect(lines).toHaveLength(1) // the meta-line only, zero A2UI lines
+    const meta = readMetaLine(lines[0]!)
+    expect(meta).toBeDefined()
+    expect(meta!.a2uiMeta.note).toBe('Here is my plan.')
+    expect(meta!.a2uiMeta.plan).toEqual(PLAN) // passed through UNCHANGED from the model's own declaration
+  })
+
+  it('meta{note,plan} + an ordinary validated payload also ships the outgoing meta-line with plan intact', async () => {
+    const { provider } = stubProvider([JSON.stringify({ a2uiMeta: { note: 'Building it.', plan: PLAN } }) + '\n' + VALID])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+
+    expect(lines).toHaveLength(3) // meta-line + VALID's two messages
+    const meta = readMetaLine(lines[0]!)
+    expect(meta!.a2uiMeta.note).toBe('Building it.')
+    expect(meta!.a2uiMeta.plan).toEqual(PLAN)
+    const a2uiLines = lines.slice(1)
+    expect(validateA2ui(a2uiLines.map((l) => JSON.parse(l)), defaultCatalog).valid).toBe(true)
+  })
+
+  it('a stub that never authors plan omits the key entirely — byte-identical to the pre-this-field wire shape', async () => {
+    const { provider } = stubProvider(['{"a2uiMeta":{"note":"hi"}}\n' + VALID])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+
+    expect(lines).toHaveLength(3)
+    expect(lines[0]).not.toContain('"plan"') // JSON.stringify omits the key entirely — no bare `"plan":undefined`
+    const meta = readMetaLine(lines[0]!)
+    expect(meta!.a2uiMeta.plan).toBeUndefined()
+  })
+
+  it('plan carries NO integrity check — a plan naming steps with no corresponding payload still ships through, no self-correct round', async () => {
+    const { provider, calls } = stubProvider([JSON.stringify({ a2uiMeta: { note: 'plan only', plan: PLAN } }) + '\n' + VALID])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+
+    expect(calls()).toBe(1) // no FEED_SCOPE/integrity-style retry — plan is host-trusted, per Scope
+    expect(readMetaLine(lines[0]!)!.a2uiMeta.plan).toEqual(PLAN)
+  })
+
+  it('plan and ask compose independently on the SAME meta-line — both survive passthrough', async () => {
+    const { provider } = stubProvider([
+      JSON.stringify({ a2uiMeta: { note: 'Ready?', ask: { surfaceId: 'ask-1' }, plan: PLAN } }) + '\n' + ASK_VALID,
+    ])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+
+    const meta = readMetaLine(lines[0]!)
+    expect(meta!.a2uiMeta.ask).toEqual({ surfaceId: 'ask-1' })
+    expect(meta!.a2uiMeta.plan).toEqual(PLAN)
+  })
+})
+
 describe('produce() feed-embedded ask — the FEED_SCOPE self-correct gate (ADR-0097 §3 / SPEC-R15)', () => {
   const ASK_OUT_OF_SCOPE =
     '{"version":"v1.0","createSurface":{"surfaceId":"ask-1","catalogId":"agent-ui"}}\n' +
