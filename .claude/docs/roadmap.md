@@ -217,6 +217,17 @@ decision (dated line in §4).
   wave's inv-2 §3 verification): the five once-uncataloged controls are all dispositioned — four
   PERMANENT allowlist exclusions with cited ADRs, one catalog row. No open work; the 2026-07-28
   ruling was executed and this line simply lagged it.
+- **Identity & account flow family — intake DONE, build sequenced.**
+  ([GH #490](https://github.com/kimgranlund/agent-ui/issues/490) ·
+  [ADR-0176](adr/0176-identity-account-flow-family-design-intake.md), ratified 2026-08-06.) The
+  ADR's four frozen rulings govern: the per-flow lane cut (exactly ONE new control — the code-entry
+  field — everything else pattern composition or documented idiom, ADR-0102's three lanes
+  repurposed); the hard demo-only security fence (mock transport, never real auth); the
+  catalog-exposure ruling; and cl.4's five-slice build sequence. The decomposition manifest
+  ([`decompositions/identity-flow.decomp.md`](decompositions/identity-flow.decomp.md)) carries the
+  leaf/tier map and dependency edges; recommended first slice **S1 (Registration +
+  Email+Password)**, startable now — three open forks (OQ1 progress-segments prop · OQ2 provider
+  brand marks · OQ3 interactive vs static demos) await Kim and gate later slices only.
 - **AC19's sheet set — widen deliberately, or not.** The spacing-drift gate covers the shell
   family today (every `@agent-ui/app` sheet + the shell-composing site sheets). Whether it extends
   further — components-package sheets, the remaining site sheets — is an open, per-sheet decision;
@@ -226,12 +237,9 @@ decision (dated line in §4).
 
 ## 4 · Later — deferred, revisit-triggered
 
-- **Identity & account flow family** ([GH #490](https://github.com/kimgranlund/agent-ui/issues/490),
-  size:big) — Registration · Authentication (Magic Link / Codes / Social / Email+Password) ·
-  Onboarding · Account Management (Preferences + Settings patterns). The flow/pattern tier over the
-  existing FACE form primitives; design intake runs the decomposition toolchain (flow/layout
-  break-downs + critics) before any build. Queued behind the live M-D lane; revisit when a
-  milestone slot opens.
+- *(The identity & account flow family moved to §3 — its design intake is ratified, no longer
+  deferred: [ADR-0176](adr/0176-identity-account-flow-family-design-intake.md), executing that
+  ADR's own on-ratification repair.)*
 - **Linear, for this repo specifically.** ADR-0145 chose GitHub Issues as the work-item backend
   here. If Linear becomes the standard elsewhere in the user's work, the open question is whether
   this repo follows (and how the ID-spine convention — ADR/SPEC/LLD citing an issue — survives a
