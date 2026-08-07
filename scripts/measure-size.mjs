@@ -137,7 +137,11 @@ const targets = [
   // filter/search + pagination landing on ui-table in place) plus the new ui-pagination control, all real,
   // twice-reviewed weight. Per Kim's ruling this re-base is a CHECKPOINT, not a ratchet: GH #455 is the
   // standing shrink follow-up that hunts the marginal back down.
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 50 * KB],
+  // RULED 2026-08-07 (Kim, in-session — the ui-multi-select build): re-based 50 KB → 51 KB (52224 B gz) —
+  // measured 51620 at the M-F merge tip; the movers are ui-multi-select (412 B, the ADR-0175/SPEC-accepted
+  // primitive) plus the GH #535/#536 menu/tabs fixes (~37 B), all reviewed weight. Same law as above:
+  // a CHECKPOINT, not a ratchet — GH #455 remains the standing shrink follow-up.
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 51 * KB],
   // GH #377 finding 3 — the package's FIRST `./traits/*` subpath (`traits/overlay`, package.json:74) gets
   // its own budgeted row, so the opt-in surface every other pack carries one for (`code/highlight`,
   // `./markdown`, `./editor`) is not the one exception.

@@ -54,6 +54,7 @@
 ## Components — overlays & selection
 
 - [ui-select](./select-doc.html): the closed single-select — trigger + listbox with option groups; [demo](./select-demo.html).
+- [ui-multi-select](./multi-select-doc.html): the multi-select field — an always-visible listbox with CSS-only checkmarks, no trigger/overlay; [demo](./multi-select-demo.html).
 - [ui-combo-box](./combo-box-doc.html): the filtering single-select — an entry editor over a listbox; [demo](./combo-box-demo.html).
 - [ui-menu](./menu-doc.html): the action menu — trigger + menuitem panel with platform dismissal; [demo](./menu-demo.html).
 - [ui-popover](./popover-doc.html): the anchored light-dismiss panel; [demo](./popover-demo.html).

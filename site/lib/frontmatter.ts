@@ -45,6 +45,8 @@ import formPopoverMd from '../../packages/agent-ui/components/src/controls/form-
 import tooltipMd from '../../packages/agent-ui/components/src/controls/tooltip/tooltip.md?raw'
 import menuMd from '../../packages/agent-ui/components/src/controls/menu/menu.md?raw'
 import selectMd from '../../packages/agent-ui/components/src/controls/select/select.md?raw'
+// M-F — ui-multi-select (multi-select-field.lld.md · ADR-0175): tier=pattern ⇒ {doc, demo}.
+import multiSelectMd from '../../packages/agent-ui/components/src/controls/multi-select/multi-select.md?raw'
 import comboBoxMd from '../../packages/agent-ui/components/src/controls/combo-box/combo-box.md?raw'
 // ADR-0125 — ui-command-modal, the CMD-K command palette (nests ui-modal + re-derives the combo-box filter).
 import commandModalMd from '../../packages/agent-ui/components/src/controls/command-modal/command-modal.md?raw'
@@ -150,6 +152,7 @@ export const loadFormPopoverDoc = (): ComponentDoc => parseDoc(formPopoverMd)
 export const loadTooltipDoc = (): ComponentDoc => parseDoc(tooltipMd)
 export const loadMenuDoc = (): ComponentDoc => parseDoc(menuMd)
 export const loadSelectDoc = (): ComponentDoc => parseDoc(selectMd)
+export const loadMultiSelectDoc = (): ComponentDoc => parseDoc(multiSelectMd)
 export const loadComboBoxDoc = (): ComponentDoc => parseDoc(comboBoxMd)
 // ADR-0125 — the CMD-K command palette (tier=pattern ⇒ {doc,demo}; permanently catalog-excluded, F8).
 export const loadCommandModalDoc = (): ComponentDoc => parseDoc(commandModalMd)

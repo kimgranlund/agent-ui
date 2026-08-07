@@ -75,6 +75,11 @@ export * from './select/select.ts'       // form-associated single-select (overl
 export * from './combo-box/combo-box.ts' // form-associated filter combobox (overlay + active-descendant)
 export * from './form-popover/form-popover.ts' // GH #294 F4: a control-created trigger + [data-box] panel packaging the form-popover recipe (overlay, NOT form-associated — live-apply, no aggregate value)
 
+// M-F — ui-multi-select (multi-select-field.lld.md · multi-select-field.spec.md · ADR-0175): a
+// form-associated, ALWAYS-VISIBLE multi-pick listbox (no trigger, no overlay) — the host itself is the
+// `role=listbox` surface, composing rovingFocus + selectionCommit's new 'multi-toggle' mode directly.
+export * from './multi-select/multi-select.ts'
+
 // Picker controls — Wave 5B (ADR-0048): standalone month-grid date picker; also the popup body
 // for ui-text-field type=date (lazily imported there in slice 5B-3).
 export * from './calendar/calendar.ts'   // form-associated date picker (bespoke 2D grid, UIFormElement base)

@@ -258,6 +258,14 @@ export const NAV: readonly NavGroup[] = [
     ],
   },
   {
+    // M-F — the multi-select field (multi-select-field.lld.md · ADR-0175): tier=pattern ⇒ {doc, demo}.
+    label: 'ui-multi-select',
+    links: [
+      { href: './multi-select-demo.html', label: 'Demo' },
+      { href: './multi-select-doc.html', label: 'API' },
+    ],
+  },
+  {
     // GH #294 F4 — the packaged ui-popover + form-spine recipe: a control-created trigger over a real
     // form-content panel. tier=pattern ⇒ {doc, demo}, the ui-popover/ui-select precedent.
     label: 'ui-form-popover',

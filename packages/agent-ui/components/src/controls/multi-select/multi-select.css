@@ -1,0 +1,236 @@
+/* multi-select.css — ui-multi-select, the single-file component stylesheet (ADR-0003).
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-multi-select)` (specificity 0,0,0) DECLARES the `--ui-multi-select-*`
+ *       chain from the colour roles (`--md-sys-color-{family}-{role}`) and the dimensional ramp
+ *       (`--md-sys-height-{size}` / `--md-sys-font-{size}` / `--md-sys-icon-{size}`) — the SAME
+ *       `(scale × size) → §1-row` lookup `ui-select`'s trigger uses (ADR-0038), sourced here as a
+ *       VIRTUAL row-height lever (LLD-C5): there is no trigger to render, only a listbox surface + its
+ *       option rows, both DERIVED off this one lever. `[size]` repoints the lever; `[disabled]` mutes to
+ *       neutral roles.
+ *   [2] STYLES BLOCK — `@scope (ui-multi-select)` CONSUMES ONLY `--ui-multi-select-*`. The host IS the
+ *       listbox surface (no separate control-created panel — unlike `ui-select`'s overlay trigger+panel,
+ *       there is no trigger here at all): an always-visible, scrollable Container/surface holding the
+ *       author's `[role=option]` children as direct light-DOM children. The checkmark is painted
+ *       ENTIRELY in CSS as `[role=option][aria-selected="true"]::before` (LLD-C3, the `ui-checkbox`
+ *       precedent: no shadow DOM, no per-node JS injection) — a font-sized tick, centred in an
+ *       icon-sized leading cell (the §4.1 caret-law mechanics, applied to a LEADING position).
+ *
+ * Standalone stylesheet — NOT injected from multi-select.ts (behaviour-only `.ts`, no runtime injection
+ * per plan §2). Linked via the component-styles barrel; the barrel @imports foundation roles FIRST.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-multi-select) declares --ui-multi-select-* ════════════════ */
+
+:where(ui-multi-select) {
+  /* ── The virtual row-height lever (LLD-C5) — off the §1-row ramp (ADR-0038), default size = md. ── */
+  --ui-multi-select-height: var(--md-sys-height-md);
+  --ui-multi-select-font: var(--md-sys-font-md);
+  --ui-multi-select-icon: var(--md-sys-icon-md);
+  --ui-multi-select-glyph: var(--ui-multi-select-font); /* checkmark = font (the §4.1 caret law) */
+  --ui-multi-select-gap: var(--md-sys-gap-md); /* icon-cell ↔ label rhythm gap, = font/2 (§4.4) */
+
+  /* ── Listbox surface — Container/surface (always visible; no overlay/top-layer, LLD-C5). ── */
+  --ui-multi-select-bg: var(--md-sys-color-neutral-surface);
+  --ui-multi-select-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-multi-select-outline: var(--md-sys-color-neutral-outline-variant);
+  --ui-multi-select-radius: var(--md-sys-shape-corner-base);
+  /* panel padding = h/4 (the `ui-select` listbox-token mechanism copied, LLD-C5) — feeds the 12-row
+     scroll-cap formula below too. */
+  --ui-multi-select-padding: calc(var(--ui-multi-select-height) / 4);
+  --ui-multi-select-min-inline-size: 12ch; /* floor: at least as wide as a short option (select.md's listbox floor) */
+  /* the SAME 12-real-option-rows-or-half-viewport scroll cap `ui-select`'s listbox uses (TKT-0027), an
+     option row here rendering at exactly --ui-multi-select-height (the row-height law below). */
+  --ui-multi-select-max-block-size: min(50vh, calc(12 * var(--ui-multi-select-height) + 13 * var(--ui-multi-select-padding) + 2px));
+
+  /* user-invalid (ADR-0051) — the danger outline, appearing only AFTER the first interaction (the
+     trackUserInvalid controller owns that timing; multi-select.ts toggles :state(user-invalid)). Paints
+     the LISTBOX'S OWN outline — unlike `ui-select` (whose danger border lives on the trigger, not the
+     hidden-until-open panel), this control's listbox IS the always-visible primary surface. */
+  --ui-multi-select-outline-invalid: var(--md-sys-color-danger);
+
+  /* ── Disabled state — muted neutral roles (effectiveDisabled channel). ── */
+  --ui-multi-select-bg-disabled: var(--md-sys-color-neutral-container-low);
+  --ui-multi-select-ink-disabled: var(--md-sys-color-neutral-low);
+
+  /* ── Option rows — legacy item-pad (§5.1/ROV-C5): padding-based row height, not a fixed widget-box.
+     Numbers DERIVED off the height/font lever (the `ui-select` options-token mechanism copied, LLD-C5). ── */
+  --ui-multi-select-option-block: calc((var(--ui-multi-select-height) - var(--ui-multi-select-font)) / 2); /* (h−font)/2 */
+  --ui-multi-select-option-inline: calc(var(--ui-multi-select-height) / 4); /* h/4 */
+  --ui-multi-select-option-font: var(--ui-multi-select-font);
+  --ui-multi-select-option-radius: calc(var(--ui-multi-select-radius) - var(--ui-multi-select-padding)); /* nested-radius, ADR-0018 */
+  --ui-multi-select-option-bg-hover: var(--md-sys-color-neutral-surface-high);
+  --ui-multi-select-option-bg-selected: var(--md-sys-color-primary-container-low);
+  --ui-multi-select-option-ink-selected: var(--md-sys-color-primary-high);
+  --ui-multi-select-option-bg-focus: var(--md-sys-color-primary-container-low);
+  --ui-multi-select-option-ink-focus: var(--md-sys-color-primary-high);
+
+  /* The checkmark glyph's own fill colour (the `ui-checkbox` ink-checked precedent, repointed to the
+     row's own selected-ink so the glyph reads consistently against the tinted selected background). */
+  --ui-multi-select-check-ink: var(--md-sys-color-primary-high);
+}
+
+/* ── size → dimensional ramp repoint (ADR-0038) ──────────────────────────────────────────────────── */
+
+:where(ui-multi-select[size='sm']) {
+  --ui-multi-select-height: var(--md-sys-height-sm);
+  --ui-multi-select-font: var(--md-sys-font-sm);
+  --ui-multi-select-icon: var(--md-sys-icon-sm);
+  --ui-multi-select-gap: var(--md-sys-gap-sm);
+}
+
+:where(ui-multi-select[size='lg']) {
+  --ui-multi-select-height: var(--md-sys-height-lg);
+  --ui-multi-select-font: var(--md-sys-font-lg);
+  --ui-multi-select-icon: var(--md-sys-icon-lg);
+  --ui-multi-select-gap: var(--md-sys-gap-lg);
+}
+
+/* ── disabled → muted neutral roles ──────────────────────────────────────────────────────────────── */
+
+:where(ui-multi-select:is([disabled], :state(disabled))) {
+  --ui-multi-select-bg: var(--ui-multi-select-bg-disabled);
+  --ui-multi-select-ink: var(--ui-multi-select-ink-disabled);
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-multi-select) consumes ONLY --ui-multi-select-* ════════════════ */
+
+@scope (ui-multi-select) {
+  /* The host IS the listbox — an always-visible, scrollable Container/surface. `display: inline-block`
+     (LLD §4's "inline block-level" anatomy) with a min-inline-size floor (the ADR-0021 lesson: a control
+     that can render as a short option list still needs a floor so it is hittable). */
+  :scope {
+    display: inline-block;
+    box-sizing: border-box;
+    vertical-align: middle;
+    min-inline-size: var(--ui-multi-select-min-inline-size);
+    max-block-size: var(--ui-multi-select-max-block-size); /* TKT-0027-style public dial */
+    overflow-y: auto;
+
+    background-color: var(--ui-multi-select-bg);
+    color: var(--ui-multi-select-ink);
+    border: 1px solid var(--ui-multi-select-outline);
+    border-radius: var(--ui-multi-select-radius);
+    padding: var(--ui-multi-select-padding);
+    font-size: var(--ui-multi-select-option-font);
+
+    transition:
+      background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      border-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :scope {
+      transition: none;
+    }
+  }
+
+  /* ── Option rows (legacy item-pad — §5.1/ROV-C5) ─────────────────────────────────────────────────
+     `position: relative` is the containing block for the absolutely-positioned checkmark ::before.
+     Leading inline padding reserves an icon-sized cell (+ the rhythm gap) for the checkmark; the
+     TRAILING edge is a plain slotless h/4 pad (no trailing affordance on this control). rovingFocus
+     manages tabindex (0 = roving current, -1 = others); real DOM focus lands ON the option (no
+     active-descendant), so :focus-visible below draws the fleet ring directly. */
+  :scope > [role='option'] {
+    position: relative;
+    box-sizing: border-box;
+    display: block;
+    padding-block: var(--ui-multi-select-option-block);
+    padding-inline-start: calc(var(--ui-multi-select-option-inline) + var(--ui-multi-select-icon) + var(--ui-multi-select-gap));
+    padding-inline-end: var(--ui-multi-select-option-inline);
+    line-height: 1; /* the row-height law: font + 2×block-pad == the trigger-equivalent height exactly */
+    border-radius: var(--ui-multi-select-option-radius);
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    outline: none; /* suppress the UA default outline — :focus-visible supplies the ring below */
+  }
+
+  /* Checkmark base (::before) — CSS-only paint (LLD-C3), zero DOM injection into the option node.
+     Centred in an icon-sized leading cell: inset = option-inline (the row's own leading pad start) +
+     ½(icon − glyph) (the §4.1 caret-law centring, applied at a LEADING position instead of trailing).
+     Unselected: no declared size/background → renders nothing (an implicit, zero-footprint pseudo). */
+  :scope > [role='option']::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: calc(var(--ui-multi-select-option-inline) + (var(--ui-multi-select-icon) - var(--ui-multi-select-glyph)) / 2);
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  /* Selected: the checkmark tick — the SAME clip-path polygon `ui-checkbox`'s own checked glyph uses,
+     sized off the GLYPH (font), not a widget box (this control has none). `aria-selected` is already
+     reflected by `selectionCommit` (+ multi-select.ts's own value-driven sync, see the .ts header) —
+     the paint reads it directly, no separate state channel. */
+  :scope > [role='option'][aria-selected='true']::before {
+    background-color: var(--ui-multi-select-check-ink);
+    inline-size: calc(var(--ui-multi-select-glyph) * 0.6);
+    block-size: calc(var(--ui-multi-select-glyph) * 0.55);
+    clip-path: polygon(14% 44%, 0% 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  }
+
+  :scope > [role='option']:hover {
+    background-color: var(--ui-multi-select-option-bg-hover);
+  }
+
+  :scope > [role='option'][aria-selected='true'] {
+    background-color: var(--ui-multi-select-option-bg-selected);
+    color: var(--ui-multi-select-option-ink-selected);
+  }
+
+  :scope > [role='option']:focus-visible {
+    background-color: var(--ui-multi-select-option-bg-focus);
+    color: var(--ui-multi-select-option-ink-focus);
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+
+  /* Disabled option — author-set (aria-disabled/disabled on an individual option) OR host-forced (the
+     WHOLE control is disabled, multi-select.ts's #syncOptionState). Not interactive; rovingFocus +
+     selectionCommit both already skip disabled items. */
+  :scope > [role='option'][aria-disabled='true'],
+  :scope > [role='option'][disabled] {
+    color: var(--ui-multi-select-ink-disabled);
+    cursor: default;
+    pointer-events: none;
+  }
+
+  /* user-invalid (ADR-0051) — the danger outline, appearing only AFTER the first interaction. */
+  :scope:state(user-invalid) {
+    border-color: var(--ui-multi-select-outline-invalid);
+  }
+
+  /* Disabled control — the whole listbox is pointer-inert. */
+  :scope:is([disabled], :state(disabled)) {
+    cursor: default;
+  }
+  :scope:is([disabled], :state(disabled)) > [role='option'] {
+    pointer-events: none;
+    cursor: default;
+  }
+
+  /* ── forced-colors (WHCM) ─────────────────────────────────────────────────────────────────────── */
+
+  @media (forced-colors: active) {
+    :scope {
+      background-color: Canvas;
+      color: CanvasText;
+      border-color: CanvasText;
+      forced-color-adjust: none;
+    }
+
+    :scope > [role='option']:hover,
+    :scope > [role='option'][aria-selected='true'],
+    :scope > [role='option']:focus-visible {
+      background-color: Highlight;
+      color: HighlightText;
+      forced-color-adjust: none;
+    }
+
+    :scope > [role='option'][aria-selected='true']::before {
+      background-color: HighlightText;
+      forced-color-adjust: none;
+    }
+  }
+}

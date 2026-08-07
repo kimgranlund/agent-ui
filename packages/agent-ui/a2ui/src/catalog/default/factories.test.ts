@@ -35,6 +35,7 @@ import {
   barChartFactory,
   tableFactory,
   paginationFactory,
+  multiSelectFactory,
   defaultFactories,
 } from './factories.ts'
 import { defaultCatalog } from './index.ts'
@@ -284,7 +285,9 @@ describe('default catalog factories — G9 container family (catalog LLD-C5, SPE
     // non-identity-`mapsTo` factories (Button.label, Checkbox/Switch.label, Option.label all → textContent;
     // Option.value → an attribute, not a prop; Text.variant → the ADR-0078 cl.5 triple fan-out, not a
     // straight pass-through; MenuItem.value → the `data-value` attribute, MenuItem.label → textContent,
-    // the ADR-0087 Wave A Option-shape twin), each covered by its own dedicated describe block below.
+    // the ADR-0087 Wave A Option-shape twin; MultiSelect.options → a full-rebuild [role=option] children
+    // set, applyMultiSelectOptions, the ChoicePicker.options precedent — no matching JS accessor at all),
+    // each covered by its own dedicated describe block below.
     for (const [type, def] of Object.entries(defaultCatalog.components)) {
       if (
         type === 'Button' ||
@@ -302,7 +305,8 @@ describe('default catalog factories — G9 container family (catalog LLD-C5, SPE
         // no-match precedent). Covered by its own dedicated round trip in index.test.ts (a real committed
         // value against real Radio/Segment children), not this walker.
         type === 'RadioGroup' ||
-        type === 'SegmentedControl'
+        type === 'SegmentedControl' ||
+        type === 'MultiSelect' // bespoke `options` mapping (no matching JS accessor) — its own describe block below
       )
         continue
       const factory = defaultFactories[type]
@@ -826,5 +830,59 @@ describe('default catalog factories — Table / Pagination (ADR-0163 cl.9, repor
     expect(target.page).toBe(3)
     expect(target.pages).toBe(10)
     expect(target.label).toBe('Results pagination')
+  })
+})
+
+describe('default catalog factories — MultiSelect (M-F, multi-select-field.lld.md §9, SPEC-R9, ADR-0175)', () => {
+  it('MultiSelect → ui-multi-select is two-way bound on value via the select event, no marshal; value/label/disabled bindable', () => {
+    expect(multiSelectFactory.tag).toBe('ui-multi-select')
+    expect(multiSelectFactory.value).toEqual({ prop: 'value', event: 'select' })
+    expect(defaultCatalog.components.MultiSelect.value).toEqual({ prop: 'value', event: 'select' })
+    expect((defaultCatalog.components.MultiSelect.value as { marshal?: unknown }).marshal).toBeUndefined()
+    const el = multiSelectFactory.create()
+    multiSelectFactory.applyProp(el, 'value', ['a', 'b'])
+    multiSelectFactory.applyProp(el, 'label', 'Skills')
+    multiSelectFactory.applyProp(el, 'name', 'skills')
+    multiSelectFactory.applyProp(el, 'disabled', true)
+    multiSelectFactory.applyProp(el, 'required', true)
+    multiSelectFactory.applyProp(el, 'size', 'lg')
+    const target = el as unknown as Record<string, unknown>
+    expect(target.value).toEqual(['a', 'b'])
+    expect(target.label).toBe('Skills')
+    expect(target.name).toBe('skills')
+    expect(target.disabled).toBe(true)
+    expect(target.required).toBe(true)
+    expect(target.size).toBe('lg')
+  })
+
+  it('options → a full-rebuild [role=option] children set (OF3, the applyChoicePickerOptions precedent — a whole-array bindable prop, never a per-item bind)', () => {
+    const el = multiSelectFactory.create()
+    multiSelectFactory.applyProp(el, 'options', [
+      { label: 'JavaScript', value: 'js' },
+      { label: 'CSS', value: 'css' },
+    ])
+    const options = [...el.querySelectorAll<HTMLElement>('[role=option]')]
+    expect(options).toHaveLength(2)
+    expect(options[0].getAttribute('value')).toBe('js')
+    expect(options[0].textContent).toBe('JavaScript')
+    expect(options[1].getAttribute('value')).toBe('css')
+    expect(options[1].textContent).toBe('CSS')
+
+    // A second apply REPLACES the whole set (full rebuild), never appending.
+    multiSelectFactory.applyProp(el, 'options', [{ label: 'HTML', value: 'html' }])
+    const rebuilt = [...el.querySelectorAll<HTMLElement>('[role=option]')]
+    expect(rebuilt).toHaveLength(1)
+    expect(rebuilt[0].getAttribute('value')).toBe('html')
+  })
+
+  it('a non-array/malformed options value hardens to zero children (never throws)', () => {
+    const el = multiSelectFactory.create()
+    expect(() => multiSelectFactory.applyProp(el, 'options', 'not-an-array')).not.toThrow()
+    expect(el.querySelectorAll('[role=option]')).toHaveLength(0)
+
+    expect(() => multiSelectFactory.applyProp(el, 'options', [{ label: 'Only label' }])).not.toThrow()
+    const options = [...el.querySelectorAll<HTMLElement>('[role=option]')]
+    expect(options).toHaveLength(1)
+    expect(options[0].getAttribute('value')).toBe('') // a missing `value` hardens to '', never dropped
   })
 })

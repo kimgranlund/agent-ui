@@ -14,12 +14,15 @@
 
 import type { UIElement } from '../dom/index.ts'
 
-export type SelectionMode = 'single' | 'multi'
+export type SelectionMode = 'single' | 'multi' | 'multi-toggle'
 
 export interface SelectionCommitOptions {
   /**
    * `'single'` — at most one selected key. `'multi'` — a Set with Shift/Ctrl range-toggle and
-   * Ctrl+Space per-item toggle. Default: `'single'`.
+   * Ctrl+Space per-item toggle. `'multi-toggle'` (multi-select-field.lld.md LLD-C4) — every commit
+   * path (plain click AND Enter) unconditionally TOGGLES the targeted item's Set membership, ignoring
+   * Shift/Ctrl modifiers entirely — no range-extend, no separate toggle-vs-replace branch. Default:
+   * `'single'`.
    */
   mode?: SelectionMode
   /**
@@ -38,6 +41,19 @@ export interface SelectionCommitOptions {
    * items without a key are skipped. Default: `el.dataset['key'] ?? ''`.
    */
   keyOf?: (el: HTMLElement) => string
+  /**
+   * Multi/multi-toggle modes ONLY (multi-select-field.lld.md — closes a real gap SPEC-R3/R9 both
+   * depend on): re-seed the internal Set from LIVE EXTERNAL state at the START of every click/Enter
+   * event, before that event's own toggle is computed — the `rovingFocus` `syncIndex` precedent,
+   * applied to selection state instead of a roving index. Without this, a host whose bindable value
+   * prop can be written from OUTSIDE a user commit (an attribute-seeded initial value, a programmatic
+   * `el.value = […]`, a two-way data bind) would have that write be INVISIBLE to this trait's own
+   * internal Set — the next user toggle would silently DISCARD it (only the trait-tracked members
+   * would survive a toggle, since a toggle always starts from `multiKeys`, never from the host's own
+   * prop). Ignored in `'single'` mode (no analogous internal cursor gap: `singleKey` is always
+   * immediately overwritten by a fresh commit, so a stale value never leaks into the next one).
+   */
+  syncSelection?: () => ReadonlySet<string>
 }
 
 /**
@@ -108,6 +124,22 @@ export function selectionCommit(host: UIElement, opts: SelectionCommitOptions): 
       return
     }
 
+    // Re-seed from live external state BEFORE computing this event's toggle (the syncSelection doc
+    // comment above) — multi/multi-toggle only; a no-op when the option is absent.
+    if (opts.syncSelection) multiKeys = new Set(opts.syncSelection())
+
+    if (mode === 'multi-toggle') {
+      // LLD-C4: every plain click toggles the targeted item's membership, no modifier keys ever
+      // consulted (SPEC-R3/R8) — the SAME toggle the Enter-keydown branch below already performs for
+      // 'multi'/'multi-toggle' alike, so click and Enter are byte-identical outcomes.
+      const next = new Set(multiKeys)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      multiKeys = next
+      publish()
+      return
+    }
+
     // Multi mode — modifier keys determine how the selection evolves.
     if (e.shiftKey && anchorKey !== '') {
       // Range-extend: replace selection with the range from anchor to the clicked item (inclusive).
@@ -160,6 +192,8 @@ export function selectionCommit(host: UIElement, opts: SelectionCommitOptions): 
       anchorKey = key
       publish()
     } else {
+      // Re-seed from live external state BEFORE toggling (the syncSelection doc comment above).
+      if (opts.syncSelection) multiKeys = new Set(opts.syncSelection())
       // Toggle the focused item; anchor stays.
       const next = new Set(multiKeys)
       if (next.has(key)) next.delete(key)

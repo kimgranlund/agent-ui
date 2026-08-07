@@ -414,6 +414,9 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
     return [tab1, tab2, panel1, panel2]
   },
   'ui-select': () => [sampleOption('a', 'Option A'), sampleOption('b', 'Option B'), sampleOption('c', 'Option C')],
+  // M-F — ui-multi-select: the SAME [role=option] shape as ui-select, direct light-DOM children (no
+  // control-created panel to move into — the host itself IS the listbox).
+  'ui-multi-select': () => [sampleOption('a', 'Option A'), sampleOption('b', 'Option B'), sampleOption('c', 'Option C')],
   'ui-combo-box': () => [
     sampleOption('apple', 'Apple'),
     sampleOption('banana', 'Banana'),
@@ -796,7 +799,7 @@ export const NO_SLOT_TEXT = new Set([
 // never a text/label string (the ui-toast-region precedent).
 // ui-swiper-item (ADR-0124) joins this set too: its default slot IS the slide's own arbitrary content, left
 // as direct host children (sized entirely by the owning track) — the exact STRUCTURAL shape.
-export const STRUCTURAL = new Set(['ui-card', 'ui-column', 'ui-form-provider', 'ui-grid', 'ui-list', 'ui-radio-group', 'ui-row', 'ui-segmented-control', 'ui-split', 'ui-split-pane', 'ui-swiper-item', 'ui-theme-provider', 'ui-timeline', 'ui-status-stream', 'ui-toast-region', 'ui-toolbar'])
+export const STRUCTURAL = new Set(['ui-card', 'ui-column', 'ui-form-provider', 'ui-grid', 'ui-list', 'ui-multi-select', 'ui-radio-group', 'ui-row', 'ui-segmented-control', 'ui-split', 'ui-split-pane', 'ui-swiper-item', 'ui-theme-provider', 'ui-timeline', 'ui-status-stream', 'ui-toast-region', 'ui-toolbar'])
 
 // SLOT_TEXT_OK — SLOT_TEXT is a real, safe, MEANINGFUL knob: a genuine text/label default slot, the accessible
 // label content a viewer edits to see the control's OWN typography/sizing respond (button/checkbox/radio/

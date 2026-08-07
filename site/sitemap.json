@@ -201,6 +201,14 @@
       "section": "Components"
     },
     {
+      "name": "Multi Select",
+      "tag": "ui-multi-select",
+      "url": "./multi-select-doc.html",
+      "description": "ui-multi-select is a multi-select FIELD — an always-visible, non-overlay listbox whose [role=option] rows paint a CSS-only checkmark on selection, toggled by p…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Pagination",
       "tag": "ui-pagination",
       "url": "./pagination-doc.html",

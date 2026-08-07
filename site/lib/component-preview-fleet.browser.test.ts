@@ -73,6 +73,7 @@ describe('component-preview — STRUCTURAL targets mount a representative specim
     'ui-list': 3,
     'ui-card': 3, // header + content + footer
     'ui-radio-group': 3, // sm/md/lg radios
+    'ui-multi-select': 3, // 3 sample [role=option] rows (M-F, the ui-select COMPONENT_SAMPLE_CHILDREN precedent)
     'ui-segmented-control': 3, // sm/md/lg segments (ADR-0095)
     'ui-form-provider': 2, // a field + a submit button
     'ui-toast-region': 2, // a plain toast + an actionable urgent toast (ADR-0112)
