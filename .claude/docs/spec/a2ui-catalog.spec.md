@@ -1,6 +1,6 @@
 # SPEC — A2UI Catalog (default catalog + two-tier extensibility)
 
-> Status: proposed · v0.1 · 2026-06-26 · Layer: SPEC (execution contract)
+> Status: proposed · v0.2 · 2026-08-07 (v0.1 2026-06-26) · Layer: SPEC (execution contract)
 > Refines: [`../a2ui-expert-system.prd.md`](../prd/a2ui-expert-system.prd.md) — primarily **PRD-G1, PRD-G2**; closes **PRD-D3**; supports PRD-G4, PRD-G6. Target protocol: **A2UI v1.0** (Constraint C1).
 > Refined by: [`../lld/a2ui-catalog.lld.md`](../lld/a2ui-catalog.lld.md). Consumed by the renderer ([`./a2ui-runtime.spec.md`](./a2ui-runtime.spec.md) SPEC-R9) for widget resolution.
 > Altitude: owns the **catalog contract + default-catalog coverage**. Renderer mechanics are the runtime SPEC's; storage/wiring is the LLD's.
