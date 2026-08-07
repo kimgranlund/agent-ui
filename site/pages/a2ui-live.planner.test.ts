@@ -84,8 +84,14 @@ function resetPage(): void {
 }
 
 /** The reserved leading meta-line envelope (ADR-0088 §1 / ADR-0097 §1 / ADR-0174 cl.2) — hand-built (the
- *  wire shape is tiny and public, `readMetaLine`'s own contract). `plan` is this ticket's own field. */
-function metaLine(fields: { note?: string; plan?: { steps: { id: string; description: string }[] } }): string {
+ *  wire shape is tiny and public, `readMetaLine`'s own contract). `plan` is this ticket's own field;
+ *  `error` is the GH #144 transport-composed terminal-failure line; `ask` is ADR-0097 §1's routing field. */
+function metaLine(fields: {
+  note?: string
+  plan?: { steps: { id: string; description: string }[] }
+  error?: string
+  ask?: { surfaceId: string }
+}): string {
   return JSON.stringify({ a2uiMeta: fields })
 }
 
@@ -94,6 +100,14 @@ function surfaceLines(surfaceId: string, text: string): string[] {
     `{"version":"v1.0","createSurface":{"surfaceId":"${surfaceId}","catalogId":"agent-ui"}}`,
     `{"version":"v1.0","updateComponents":{"surfaceId":"${surfaceId}","components":[{"id":"root","component":"Text","text":"${text}"}]}}`,
   ]
+}
+
+function chatMessages(role: 'user' | 'agent' | 'system'): HTMLElement[] {
+  return [...document.querySelectorAll<HTMLElement>('.chat-log .msg')].filter((m) => m.dataset.role === role)
+}
+
+function askBubble(surfaceId: string): HTMLElement | null {
+  return document.querySelector(`.msg[data-ask="${surfaceId}"]`)
 }
 
 beforeEach(() => {
@@ -187,6 +201,133 @@ describe('a2ui-live planner-stage wiring (GH #579, ADR-0174/SPEC-R21/R22) — a 
     expect(calls, 'over-cap ⇒ the host never consumes, never dispatches a single step or synthesis turn').toBe(1)
     expect(narrationLabel('plan-refused')).toContain('9 step(s), over the 8-step cap')
 
+    await waitUntil(() => !composerBusy())
+  })
+
+  it('gate ON: a step failure (transport-composed error meta-line) does NOT abort the run — the acknowledgment folds into the NEXT dispatch, the run reaches terminal states', async () => {
+    __setPlannerEnabledForTest(true)
+    const calls: { turn: number; text: string }[] = []
+    __setTransportForTest(
+      scriptedTransport((turn, input) => {
+        calls.push({ turn, text: input.kind === 'intent' ? input.text : '' })
+        if (turn === 1) return [metaLine({ plan: { steps: [{ id: 'a', description: 'Do A' }, { id: 'b', description: 'Do B' }] } })]
+        if (turn === 2) return [metaLine({ error: 'boom' })] // SPEC-R22 tier 2 — a transport-composed terminal failure, GH #144
+        if (turn === 3) return surfaceLines('surf-b', 'B done')
+        return surfaceLines('final', 'Synthesis done')
+      }),
+    )
+
+    await sendIntent('plan with a failing step')
+    await waitUntil(() => document.querySelector("ui-surface-host [data-part='surface']")?.textContent?.includes('Synthesis done') === true)
+
+    // SPEC-R22 — step "a"'s own failure does not abort: all K+2 dispatches still happen, in order.
+    expect(calls.length).toBe(4)
+    // The failure acknowledgment folds into the VERY NEXT dispatch's own user content — never a separate
+    // dispatch (the SPEC-R21 budget stays exact).
+    expect(calls[2]!.text).toContain('plan step "a"')
+    expect(calls[2]!.text).toContain('failed')
+
+    expect(narrationLabel('plan-step:a'), 'a failed step group closes error/failed, never stranded').toBe('Step "a" — Failed')
+    expect(narrationLabel('plan-step:b')).toBe('Step "b" — Done')
+    expect(narrationLabel('plan-synthesis'), 'a synthesis dispatch after a step failure still reaches done').toBe('Synthesis — Done')
+
+    // Step "a" contributed ZERO wire content (SPEC-R5 — a failed dispatch never partially ships).
+    const canvasText = document.querySelector("ui-surface-host [data-part='surface']")?.textContent ?? ''
+    expect(canvasText).toContain('B done')
+    expect(canvasText).toContain('Synthesis done')
+
+    await waitUntil(() => !composerBusy())
+  })
+
+  it('gate ON: a THROWN dispatch (GH #592, plan-runner\'s own upstream bug) is caught by the page — every still-seeded group closes "not-run", nothing strands at Queued/Running', async () => {
+    __setPlannerEnabledForTest(true)
+    const calls: number[] = []
+    __setTransportForTest(
+      scriptedTransport((turn) => {
+        calls.push(turn)
+        if (turn === 1) return [metaLine({ plan: { steps: [{ id: 'a', description: 'Do A' }, { id: 'b', description: 'Do B' }] } })]
+        if (turn === 2) throw new Error('transport fault') // a genuine exception, NOT an error meta-line
+        return surfaceLines('unreachable', 'should never dispatch')
+      }),
+    )
+
+    await sendIntent('plan that explodes mid-step')
+    // NOT "any system message" — `resetPage()`'s own "New conversation…" system line is already in the log
+    // before this turn even starts, which would satisfy a looser wait instantly and race the real failure.
+    await waitUntil(() => chatMessages('system').some((m) => m.textContent?.includes('transport fault')))
+
+    // GH #592 stands upstream (runPlan has no per-step try/catch around a THROW, unlike the error-meta-line
+    // leg) — the whole run's promise rejects after step "a"'s dispatch; steps/synthesis after it never run.
+    expect(calls).toEqual([1, 2])
+    // This page's own defensive close (finding 2): every group that was still non-terminal when the
+    // exception hit closes honestly to `not-run` — nothing left reading "Queued"/"Running…" forever.
+    expect(narrationLabel('plan-step:a')).toBe('Step "a" — Not run (aborted)')
+    expect(narrationLabel('plan-step:b')).toBe('Step "b" — Not run (aborted)')
+    expect(narrationLabel('plan-synthesis')).toBe('Synthesis — Not run (aborted)')
+    expect(chatMessages('system').some((m) => m.textContent?.includes('transport fault'))).toBe(true)
+
+    await waitUntil(() => !composerBusy())
+  })
+
+  it('gate ON: an ask declared on a step turn degrades to its prose note — no ask bubble mounts, the run proceeds uninterrupted', async () => {
+    __setPlannerEnabledForTest(true)
+    const calls: number[] = []
+    __setTransportForTest(
+      scriptedTransport((turn) => {
+        calls.push(turn)
+        if (turn === 1) return [metaLine({ plan: { steps: [{ id: 'a', description: 'Do A' }] } })]
+        if (turn === 2) return [metaLine({ note: 'Pick A or B?', ask: { surfaceId: 'ask-inline' } }), ...surfaceLines('ask-inline', 'Pick A or B?')]
+        return surfaceLines('final', 'Synthesis done')
+      }),
+    )
+
+    await sendIntent('plan that asks mid-step')
+    await waitUntil(() => document.querySelector("ui-surface-host [data-part='surface']")?.textContent?.includes('Synthesis done') === true)
+
+    // SPEC-R21 "Asks during a run" — NO per-ask createRenderer() host, no pending lifecycle entry.
+    expect(askBubble('ask-inline'), 'a runner-dispatched ask is NEVER mounted as a pending ask').toBeNull()
+    // The note-standalone rule (SPEC-R6) — the question survives as ordinary prose on this page too.
+    expect(chatMessages('agent').some((m) => m.textContent?.includes('Pick A or B?'))).toBe(true)
+    // The run proceeded uninterrupted: plan + step "a" + synthesis, all three dispatches happened.
+    expect(calls).toEqual([1, 2, 3])
+    expect(narrationLabel('plan-step:a')).toBe('Step "a" — Done')
+    expect(narrationLabel('plan-synthesis')).toBe('Synthesis — Done')
+
+    await waitUntil(() => !composerBusy())
+  })
+
+  it('gate ON: mid-run, a second submit ATTEMPT never reaches the transport or the chat log — suppression proven by the attempt, not just the [busy] attribute', async () => {
+    __setPlannerEnabledForTest(true)
+    const stepAGate = deferred<string[]>()
+    const calls: number[] = []
+    __setTransportForTest(
+      scriptedTransport((turn) => {
+        calls.push(turn)
+        if (turn === 1) return [metaLine({ plan: { steps: [{ id: 'a', description: 'Do A' }] } })]
+        if (turn === 2) return stepAGate.promise
+        return surfaceLines('final', 'Synthesis done')
+      }),
+    )
+
+    await sendIntent('first plan')
+    // NOT bare `composerBusy()` — `setBusy(true)` is the very FIRST synchronous statement in
+    // `runPlannerFlow`, so that alone races the plan turn's own dispatch. Wait for step "a" to actually be
+    // RUNNING (plan dispatched, step "a" dispatched and held open) so `callsBeforeAttempt` is deterministic.
+    await waitUntil(() => narrationLabel('plan-step:a') === 'Step "a" — Running…')
+    const callsBeforeAttempt = calls.length
+    const userMessagesBeforeAttempt = chatMessages('user').length
+
+    // The attempted SECOND submit, while the first run is still in flight (step "a" held open).
+    await sendIntent('a second prompt, mid-run')
+    // Give any (wrongly) queued microtask a chance to run before asserting nothing happened.
+    await new Promise((r) => setTimeout(r, 0))
+
+    expect(calls.length, 'the attempted second submit must never reach the transport — no third dispatch').toBe(callsBeforeAttempt)
+    expect(chatMessages('user').length, 'the attempted second submit must never even post its own chat message').toBe(userMessagesBeforeAttempt)
+
+    stepAGate.resolve(surfaceLines('surf-a', 'A done'))
+    await waitUntil(() => document.querySelector("ui-surface-host [data-part='surface']")?.textContent?.includes('Synthesis done') === true)
+    expect(calls).toEqual([1, 2, 3])
     await waitUntil(() => !composerBusy())
   })
 })
