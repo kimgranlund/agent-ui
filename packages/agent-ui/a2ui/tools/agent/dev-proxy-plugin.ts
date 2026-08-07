@@ -12,6 +12,18 @@
 // ADR-0090 §4/LLD-C6: the body also carries `mode` (a `GenUiMode`) — validated by enum MEMBERSHIP (a closed
 // 3-value set, not a registry lookup) and defaulted, never forwarded raw, exactly as `model` is validated by
 // `resolvePair` above — but a bad `mode` degrades the DISPOSITION, never the request (no 400).
+//
+// LLD-C5 (S5, mcp-connector.lld.md §5) — the MCP boot-await ready-gate (SPEC-R27 AC2, ADR-0177 cl.4).
+// `configureServer` reads + validates the committed MCP roster ONCE at boot (fail-fast, the same
+// `loadConfig()` posture as providers.json below) and starts the whole discovery pass SYNCHRONOUSLY,
+// keeping its promise (`mcpReady`) — never a top-level `await` spliced into `integrations/index.ts`
+// (SPEC-R27's never-wedge law) and never fire-and-forget. The ONE registered middleware handler
+// AWAITS `mcpReady` at the very top, before any routing, so no request can observe a half-discovered
+// registry; `discoverMcpIntegrations` (discover.ts) NEVER rejects, so this await can never wedge the
+// proxy. An empty roster resolves immediately with an empty report — byte-identical to pre-MCP
+// behavior (SPEC-R27's zero-cost no-op). `mcpDiscovery` is the test-only injection point (LLD §5.6):
+// production code and `vite.config.ts` never pass it, so the default (the real discovery pass) is
+// what actually boots.
 
 import { readFileSync } from 'node:fs'
 import { loadEnv } from 'vite'
@@ -28,6 +40,10 @@ import type { CorpusRecord } from '../../src/corpus/record.ts'
 import { loadCatalog } from '../../src/catalog/catalog.ts'
 import type { TurnInput, Effort } from '../../src/agent/agent-transport.ts'
 import { buildToolDispatch, resolveIntegrations } from './integrations/index.ts'
+import { validateMcpServersConfig } from './integrations/mcp/servers-config.ts'
+import type { McpServersConfig } from './integrations/mcp/servers-config.ts'
+import { discoverMcpIntegrations } from './integrations/mcp/discover.ts'
+import type { DiscoveryReport } from './integrations/mcp/discover.ts'
 // GH #108 — the PAIR-allowlist validation spine now lives in chat-validation.ts (zero vite/node deps, so
 // the Cloudflare Worker port can import it directly too, which it couldn't do from THIS file — importing
 // anything from here would drag `loadEnv`/`vite` into the Workers bundle). Re-exported unchanged so this
@@ -56,6 +72,8 @@ const CATALOG_PATH = `${ROOT}/packages/agent-ui/a2ui/src/catalog/default/catalog
 // is renderer-inbound only, never server-selected — cl.13's closing note).
 const BASIC_CATALOG_PATH = `${ROOT}/packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json`
 const SHARD_PATH = `${ROOT}/packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl`
+// SPEC-R27 / LLD §3.1 — the committed MCP-server allowlist, sibling to providers.json above.
+const MCP_CONFIG_PATH = `${ROOT}/packages/agent-ui/a2ui/tools/agent/mcp-servers.json`
 
 const MOUNT = '/__a2ui/agent'
 const MAX_BODY = 1 << 20 // 1 MiB — a dev-only intent/turn body is tiny; cap it so a runaway request can't grow unbounded
@@ -85,7 +103,12 @@ function sendJson(res: ServerResponse, status: number, body: unknown): void {
   res.end(JSON.stringify(body))
 }
 
-export function a2uiDevProxyPlugin(): Plugin {
+export function a2uiDevProxyPlugin(opts?: {
+  /** Test-only injection (LLD §5.6) — replaces the real discovery pass wholesale. Production code
+   *  and `vite.config.ts` never pass this; the default is the real `discoverMcpIntegrations` over
+   *  the parsed+validated roster. */
+  mcpDiscovery?: (env: Record<string, string | undefined>) => Promise<DiscoveryReport>
+}): Plugin {
   // The provider keys live in the repo-root `.env` (gitignored). Vite does NOT load `.env` into
   // `process.env` — non-`VITE_` vars are kept out of BOTH `process.env` and `import.meta.env` — so
   // `process.env[envKey]` alone would always miss a `.env`-only key (the "no live API key found"
@@ -131,8 +154,29 @@ export function a2uiDevProxyPlugin(): Plugin {
       }
       loadConfig() // fail-fast at boot if providers.json is malformed
 
+      // SPEC-R27 / LLD §5 — the MCP roster is read + validated ONCE at boot, unlike providers.json's
+      // per-request reload above: it has no browser-facing switcher to stay in lockstep with, and
+      // discovery itself is once-per-lifetime anyway (the accepted staleness). A malformed roster
+      // throws HERE, synchronously, the same fail-fast posture `loadConfig()` just took — a boot
+      // failure, never a half-discovered proxy.
+      const mcpConfig: McpServersConfig = validateMcpServersConfig(JSON.parse(readFileSync(MCP_CONFIG_PATH, 'utf8')))
+      // The ready-gate itself: discovery STARTS synchronously right here, at boot, and its promise is
+      // kept — never spliced into `integrations/index.ts` (that would be the top-level-await hazard
+      // SPEC-R27 bans) and never fire-and-forget. `discoverMcpIntegrations` NEVER rejects (discover.ts
+      // §3.4), so awaiting `mcpReady` below can never wedge a request.
+      const runMcpDiscovery = opts?.mcpDiscovery ?? ((discoveryEnv: Record<string, string | undefined>) => discoverMcpIntegrations(mcpConfig, { env: discoveryEnv }))
+      const mcpReady: Promise<DiscoveryReport> = runMcpDiscovery(env)
+      mcpReady.then((report) => {
+        const reasons = report.skipped.map((row) => `${row.server}${row.tool ? ':' + row.tool : ''}: ${row.reason}`).join('; ')
+        console.info(`mcp: boot discovery — registered ${report.registered.length}, skipped ${report.skipped.length}${reasons ? ` (${reasons})` : ''}`)
+      })
+
       server.middlewares.use(MOUNT, (req: IncomingMessage, res: ServerResponse) => {
         void (async () => {
+          // The ready-gate (LLD §5.3): EVERY branch below — /status, /chat, produce — sits behind
+          // discovery's completion. A request racing boot queues here instead of racing the registry;
+          // once `mcpReady` is settled this is a zero-cost microtask on every later request.
+          await mcpReady
           const url = req.url ?? '/'
           try {
             const config = loadConfig() // fresh per request — stays in lockstep with the HMR'd switcher

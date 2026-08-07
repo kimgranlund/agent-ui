@@ -25,8 +25,13 @@ interface RecordedManifest {
 }
 
 /** A local stand-in for `registerIntegration`'s duplicate/schema policy — its OWN state, never the
- *  real module-level REGISTRY. Reproduces both throw messages verbatim (registry.ts's own wording)
- *  so a skip row's `reason` reads identically to what the real sink would produce. */
+ *  real module-level REGISTRY. The two duplicate-check messages below are copied VERBATIM from
+ *  `registry.ts`'s own literal wording (registry.ts:67/70), so THOSE two skip-row `reason`s read
+ *  identically to what the real sink would produce. The schema-error path is NOT verbatim the same
+ *  way: it calls the real, shared `assertSupportedSchema` bare, so its thrown message matches only
+ *  that function's own text — the real sink additionally WRAPS it
+ *  (`` `integration registry: \`${id}\` — ${message}` `` , registry.ts:76-79), which this fake does
+ *  not reproduce. The schema-path tests below assert on a substring, never the full wrapped line. */
 function fakeRegistrySink(): { register: (m: RecordedManifest) => void; manifests: RecordedManifest[] } {
   const manifests: RecordedManifest[] = []
   return {
@@ -220,8 +225,11 @@ describe('discoverMcpIntegrations — per-tool fail-soft, both registerIntegrati
   it('an off-spec server listing the SAME tool twice collides on id — the second copy is skipped, the first survives', async () => {
     // Same server + same wire name ⇒ the SAME `mcp:<server>:<tool>` id for both — this hits
     // registerIntegration's id-duplicate check (checked first, both in the real sink and here),
-    // never the tool-name check (that one needs a DIFFERENT id, i.e. a different server — the
-    // cross-server describe block below).
+    // never the tool-name check (that one needs a DIFFERENT id already holding the SAME tool.name
+    // — true here only because this test's registry starts empty; the cross-server describe block
+    // below is one way to reach it — a second MCP server mapping the same wire name to its own
+    // differently-namespaced id — but a hand-authored manifest already registered under that same
+    // tool.name would trip the identical check just as well, same server or not).
     const client = fakeClient({
       listTools: () => [
         { name: 'dup_tool', description: 'first', inputSchema: { type: 'object' } },
