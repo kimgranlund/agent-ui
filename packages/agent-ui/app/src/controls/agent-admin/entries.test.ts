@@ -112,31 +112,49 @@ describe('composeLiveSystemPrompt (ALM-C1 / ADR-0136 Fork 3) — the capability 
   })
 })
 
-describe('composeLiveSystemPrompt — the GH #525 bankroll line (design call 1, 2026-08-07)', () => {
-  it('omitted bankroll ⇒ byte-identical to the pre-#525 two-argument call (GATED EQUIVALENCE)', () => {
+// GH #525 bootstrap fix (2026-08-07 live-proof finding): a real croupier session played two settled
+// rounds and the store's bankroll key stayed undefined the whole time — the OLD contract (a bare
+// `number | undefined`) only ever taught `/bankroll` once a value was ALREADY stored, a deadlock (no
+// stored value ⇒ no path teaching ⇒ the model keeps its habitual key ⇒ nothing to mirror ⇒ never a
+// stored value). `bankroll` is now `LiveBankrollState | undefined`: presence of the OBJECT (not its
+// `.stored` field) is what gates the path teaching — a capable, A2UI-on persona ALWAYS gets it.
+describe('composeLiveSystemPrompt — the GH #525 bankroll line (bootstrap fix, 2026-08-07)', () => {
+  it('omitted bankroll (not capable, or A2UI off) ⇒ byte-identical to the pre-#525 two-argument call (GATED EQUIVALENCE)', () => {
     const skills = group(ENTRY_KINDS.skill, 'Skills available to you', [entry({ id: 's', label: 'S', content: 'x' })])
     expect(composeLiveSystemPrompt(SECTIONS, [skills])).toBe(composeLiveSystemPrompt(SECTIONS, [skills], undefined))
   })
 
-  it('a given bankroll appends ONE terse line stating the figure and the seed-from-it instruction, right after the base prompt', () => {
-    const out = composeLiveSystemPrompt(SECTIONS, [], 340)
+  it('capable + NOTHING stored yet ⇒ the path-teaching line composes, with NO resume-figure sentence (the bootstrap arm itself)', () => {
+    const out = composeLiveSystemPrompt(SECTIONS, [], {})
     expect(out).toBe(
       '## Foundation\nYou are helpful.\n\n' +
-        'Your current bankroll is 340. Any game you deal MUST seed /bankroll from this figure, never a fresh stake.',
+        "Keep your game's running chip count at the data-model path /bankroll — that exact key, never chips/stack/score; every settlement writes the new figure there.",
+    )
+    expect(out).not.toContain('Your current bankroll is')
+  })
+
+  it('capable + a stored figure ⇒ the SAME path-teaching line, plus a resume-figure sentence naming the exact stored value', () => {
+    const out = composeLiveSystemPrompt(SECTIONS, [], { stored: 340 })
+    expect(out).toBe(
+      '## Foundation\nYou are helpful.\n\n' +
+        "Keep your game's running chip count at the data-model path /bankroll — that exact key, never chips/stack/score; every settlement writes the new figure there. " +
+        'Your current bankroll is 340 — resume from it, never a fresh stake.',
     )
   })
 
-  it('the bankroll line lands BEFORE the capability groups', () => {
+  it('the bankroll block lands BEFORE the capability groups (stored and unstored alike)', () => {
     const skills = group(ENTRY_KINDS.skill, 'Skills available to you', [entry({ id: 's', label: 'S', content: 'x' })])
-    const out = composeLiveSystemPrompt(SECTIONS, [skills], 50)
-    const bankrollIndex = out.indexOf('Your current bankroll is 50.')
-    const skillsIndex = out.indexOf('## Skills available to you')
-    expect(bankrollIndex).toBeGreaterThan(-1)
-    expect(skillsIndex).toBeGreaterThan(bankrollIndex)
+    for (const bankroll of [{}, { stored: 50 }]) {
+      const out = composeLiveSystemPrompt(SECTIONS, [skills], bankroll)
+      const pathIndex = out.indexOf('/bankroll')
+      const skillsIndex = out.indexOf('## Skills available to you')
+      expect(pathIndex).toBeGreaterThan(-1)
+      expect(skillsIndex).toBeGreaterThan(pathIndex)
+    }
   })
 
-  it('a zero bankroll still composes the line (0 is a valid, sanitized figure, not "absent")', () => {
-    expect(composeLiveSystemPrompt(SECTIONS, [], 0)).toContain('Your current bankroll is 0.')
+  it('a stored zero still composes the resume sentence (0 is a valid, sanitized figure, not "absent")', () => {
+    expect(composeLiveSystemPrompt(SECTIONS, [], { stored: 0 })).toContain('Your current bankroll is 0 — resume from it')
   })
 })
 

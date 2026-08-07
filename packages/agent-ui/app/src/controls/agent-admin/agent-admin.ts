@@ -138,6 +138,7 @@ import {
   composeLiveSystemPrompt,
   pickedPatternSource,
   type LiveCapabilityGroup,
+  type LiveBankrollState,
 } from './entries.ts'
 // ADR-0164 cl.2/cl.7 — the generic data core + the section-shell mount function both moved to the shared
 // `entry-list/` folder (a `settings/` sibling, public `./entry-data`/`./entry-list` subpaths); this
@@ -1459,12 +1460,18 @@ export class UIAgentAdminElement extends UIElement {
     }))
   }
 
-  /** GH #525 (design call 1, 2026-08-07) — the bankroll figure to inject into the composed prompt at turn
-   *  start: `undefined` unless the persona opted in AND a value actually sanitizes, applied at EVERY
-   *  `composeLiveSystemPrompt` call site (the prose arm, the surface arm, the Context: System snapshot)
-   *  so the three can never read three different answers to "what is the stored bankroll right now". */
-  #bankrollForPrompt(store: SettingsStore | undefined): number | undefined {
-    return isBankrollCapable(store?.get(BANKROLL_CAPABLE_KEY)) ? sanitizeBankroll(store?.get(BANKROLL_KEY)) : undefined
+  /** GH #525 (bootstrap fix, 2026-08-07 live-proof finding) — the bankroll teaching input for the composed
+   *  prompt at turn start, applied at EVERY `composeLiveSystemPrompt` call site (the prose arm, the surface
+   *  arm, the Context: System snapshot) so the three can never read three different answers to "does this
+   *  turn teach /bankroll right now". `undefined` unless the persona opted in AND A2UI is currently on —
+   *  the SAME `a2uiOn` condition the post-turn mirror itself gates on (`#runSurfaceTurn`, below):
+   *  modality-correct, no A2UI renderer available this turn ⇒ no data-model path to teach. Capable+A2UI-on
+   *  ALWAYS returns an object (never gated on whether a figure is stored yet — the bootstrap fix itself:
+   *  the path must be taught BEFORE a first value ever exists, or nothing would ever settle there). */
+  #bankrollForPrompt(store: SettingsStore | undefined): LiveBankrollState | undefined {
+    if (!isBankrollCapable(store?.get(BANKROLL_CAPABLE_KEY))) return undefined
+    if (!isEnabledFlag(store?.get(SURFACE_A2UI_KEY))) return undefined
+    return { stored: sanitizeBankroll(store?.get(BANKROLL_KEY)) }
   }
 
   /** ADR-0168 cl.2 / LLD-C7 — the ENABLEMENT WIRE projection, shared by BOTH live arms (`#handleSubmit`'s

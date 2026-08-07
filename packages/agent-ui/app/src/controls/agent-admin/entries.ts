@@ -196,6 +196,32 @@ export interface LiveCapabilityGroup {
   enabled: boolean
 }
 
+// GH #525 bootstrap fix (2026-08-07 live-proof finding) — a real croupier session played two settled
+// rounds with chips visibly tracked ON the surface, and the store's bankroll key stayed undefined the
+// whole time: this file was the ONLY place `/bankroll` was ever taught, and it fired ONLY once a value
+// was already stored — a bootstrap deadlock (no stored value ⇒ no path teaching ⇒ the model keeps its
+// habitual key, `/chips` on the night's evidence ⇒ nothing for the mirror to read ⇒ never a stored
+// value). The fix: `/bankroll` composes UNCONDITIONALLY for a capable persona, stored value or not — this
+// is deliberately the ONLY place it may live. Persona prose (`surfaceStyle`, `agent-admin-presets.ts`)
+// stays MODALITY-NEUTRAL by law (GH #412) — a data-model path is A2UI dialect, not persona intent.
+
+/** The path-teaching sentence, byte-identical whether or not a figure is already stored (the resume
+ *  sentence is the only part that varies) — the exact key a game's data model MUST use, named explicitly
+ *  because nothing else in this build ever states it (a persona's own prose never may, GH #412). */
+const BANKROLL_PATH_LINE =
+  "Keep your game's running chip count at the data-model path /bankroll — that exact key, never chips/stack/score; every settlement writes the new figure there."
+
+/** The live prompt's bankroll-teaching input (GH #525). Presence of this object (vs. `undefined`) is the
+ *  whole gate: a caller hands one over only for a persona that is BOTH capable (`isBankrollCapable`) AND
+ *  currently on the A2UI modality (`SURFACE_A2UI_KEY` — the SAME condition the post-turn mirror itself
+ *  gates on, `agent-admin.ts`'s `#runSurfaceTurn`: no A2UI, no data-model teaching, modality-correct). */
+export interface LiveBankrollState {
+  /** The persisted figure, when the mirror has already written one. `undefined` ⇒ still fresh (no
+   *  settlement mirrored yet) — only the path teaching composes, no resume-figure sentence yet (there is
+   *  nothing to resume). */
+  stored?: number
+}
+
 /**
  * The live system prompt: `composeSystemPrompt(sections)` followed by one `## {heading}` block per
  * capability kind that has ≥1 enabled entry, each enabled entry rendered as `### {label}` + its
@@ -206,22 +232,23 @@ export interface LiveCapabilityGroup {
  * to `composeSystemPrompt(sections)` — the live prompt degrades exactly to today's composed prompt,
  * never a trailing empty header.
  *
- * GH #525 (design call 1, 2026-08-07) — `bankroll`, when given, appends ONE terse line stating the
- * persona's current stored figure and that any game dealt this turn MUST seed `/bankroll` from it rather
- * than a fresh stake, right after the base prompt and ahead of the capability groups. `undefined` (every
- * call site's law: not opted in, or nothing stored yet) is the SAME gated equivalence — byte-identical to
- * the pre-#525 output.
+ * GH #525 — `bankroll`, when given (a capable, A2UI-on persona), always composes `BANKROLL_PATH_LINE`
+ * right after the base prompt and ahead of the capability groups; `bankroll.stored`, when present, appends
+ * a resume-figure sentence naming the exact figure. `undefined` (not capable, or A2UI is off) is the SAME
+ * gated equivalence every other optional input here has — byte-identical to the pre-#525 output.
  */
 export function composeLiveSystemPrompt(
   sections: readonly Entry[],
   capabilities: readonly LiveCapabilityGroup[],
-  bankroll?: number,
+  bankroll?: LiveBankrollState,
 ): string {
   const base = composeSystemPrompt(sections)
   const withBankroll =
     bankroll === undefined
       ? base
-      : `${base}\n\nYour current bankroll is ${bankroll}. Any game you deal MUST seed /bankroll from this figure, never a fresh stake.`
+      : `${base}\n\n${BANKROLL_PATH_LINE}${
+          bankroll.stored === undefined ? '' : ` Your current bankroll is ${bankroll.stored} — resume from it, never a fresh stake.`
+        }`
   const groups: string[] = []
   for (const group of capabilities) {
     if (!group.enabled) continue // the kind's master switch gates the whole group out
