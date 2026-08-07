@@ -51,6 +51,15 @@ import {
 import type { AgentTransport, TurnInput, Session, TurnTrace, AskDeclaration } from '../lib/agent-runtime.ts'
 import { AskRegistry, surfaceIdOf, componentTypesOf } from '../lib/ask-registry.ts'
 import type { AskEntry } from '../lib/ask-registry.ts'
+// GH #579 — wire the shipped host-side plan-runner (PR #580, ADR-0174/SPEC-R21/R22) into this page.
+import { runPlannerTurn, PLAN_SYNTHESIS_GROUP_KEY } from '../lib/plan-runner.ts'
+import type { PlanStepState } from '../lib/plan-runner.ts'
+// The SAME persona-scoped modality-gate PRECEDENT `SURFACE_A2UI_KEY`/`SURFACE_GENUI_KEY` already use
+// (ADR-0174 cl.1). This page has no persona/settings surface at all (that is agent-admin's own `store`),
+// so its reachability here is a documented dev toggle (below) reading the SAME constant/reader a future
+// agent-admin row would — OF3 (the admin-authored PRESENTATION) stays open, GH #579's own handback.
+import { createMemoryStore } from '@agent-ui/app'
+import { SURFACE_PLANNER_KEY, isPlannerSurfaceEnabled } from '@agent-ui/app/agent-admin-schema'
 // GH #257 — the Provider/Model/Mode picker now rides the standalone composer's own `providers`/`provider`/
 // `modes`/`mode` props, replacing the standalone `ui-select` trio `provider-switcher.ts` used to mount into
 // `switcherSlot`. Plain, safe data (no fetch/key) — statically importable; only the prop ASSIGNMENT below
@@ -580,6 +589,270 @@ function handleClientMessage(message: A2uiClientMessage): void {
   void runTurn(nextTurn(session, message))
 }
 
+// ════════════════ the planner-stage pilot (ADR-0174 cl.1/cl.3/cl.4/cl.6, SPEC-R21/R22) — OPT-IN, OFF by
+// default; this page's wiring for the shipped `site/lib/plan-runner.ts` (GH #579). ════════════════════════
+//
+// The dev toggle (OF3 stands open — see the import comment above): `?planner=1`/`?planner=0` on the URL
+// flips `SURFACE_PLANNER_KEY` through `createMemoryStore`'s `localStorage` mirror (persisted, the SAME
+// "one visit sticks" UX the Provider/Model/Mode picker's own persistence uses) — read through the SAME
+// fail-closed `isPlannerSurfaceEnabled` reader a future agent-admin row would use, never a page-local
+// reinvention of the gate's shape.
+//
+// OF3 close-out note: `plannerStore` below is PAGE-LOCAL to a2ui-live (its own `createMemoryStore`
+// instance, `persistKey: 'a2ui-live.dev'`) — it is NOT the persona/`SettingsStore` `ui-agent-admin` reads
+// its own `SURFACE_A2UI_KEY`/`SURFACE_GENUI_KEY` through. If/when OF3 is ruled and an admin-authored row
+// for `SURFACE_PLANNER_KEY` is built, that row's read/write must REPOINT to whichever real store it lands
+// on — it is not a second independent toggle to reconcile later; the two stores would otherwise silently
+// diverge (this page's dev flag could read ON while an admin persona reads OFF, or vice versa).
+const plannerStore = createMemoryStore({ persistKey: 'a2ui-live.dev' })
+{
+  const urlPlanner = new URLSearchParams(location.search).get('planner')
+  if (urlPlanner === '1') plannerStore.set(SURFACE_PLANNER_KEY, true)
+  else if (urlPlanner === '0') plannerStore.set(SURFACE_PLANNER_KEY, false)
+}
+// Discoverability (the gate's own "reachable" acceptance criterion) — a plain visible fact, never stage
+// prose (ADR-0174 cl.6 governs STAGE teaching, not this host status line).
+if (isPlannerSurfaceEnabled(plannerStore.get(SURFACE_PLANNER_KEY))) {
+  addMessage('system', 'Planner mode is ON (dev toggle — add "?planner=0" to the URL to turn it off). Prompts run the multi-step plan → execute → synthesize loop.')
+}
+
+/** Test-only injection seam (the `__setTransportForTest` precedent) — flips the SAME store a real
+ *  `?planner=1` visit would, so a page-level test can drive the gate-ON path without touching
+ *  `location.search`. Never called by any production path. */
+export function __setPlannerEnabledForTest(enabled: boolean): void {
+  plannerStore.set(SURFACE_PLANNER_KEY, enabled)
+}
+
+/**
+ * Wrap the page's own `AgentTransport` so every dispatch the plan-runner drives renders its content lines
+ * into the SAME shared canvas AS THEY STREAM (SPEC-R5's progressive-paint law, unchanged for a plan run) —
+ * `plan-runner.ts` is a deliberately pure driver (its own file header: "never imports or calls produce()
+ * directly... never touches the component itself"), so RENDERING each dispatch's own surface is this
+ * PAGE's job, exactly as `runTurn` already does for an ordinary turn.
+ *
+ * The meta-line peel here is READ-ONLY (never mutates what it forwards) — `runPlannerTurn`'s own
+ * `drainTurn` peels its OWN copy for `plan`/`progress`/`error` (`readMetaLine` is a pure, idempotent read,
+ * so peeling the SAME line twice is safe). Unlike the first cut of this wrapper, it ALSO captures `note`
+ * (rendered via `addMessage`, same as `runTurn`) and `trace` (fed into the SAME `traces`/`notesByTurnIndex`
+ * bookkeeping `runTurn` grows) — code-checker finding 1/6 on 6bdcd39: `drainTurn` silently drops both
+ * (documented in `plan-runner.ts`'s own header), and THIS wrapper is the only place downstream of the wire
+ * that ever sees the raw line, so it is where "the ask's question survives as the turn's prose note"
+ * (SPEC-R21 "Asks during a run") must actually become true ON THIS PAGE, and where a run's own trace
+ * history must land so a LATER ordinary turn's `traceDigest()` isn't blind to what a plan run just did.
+ * This wrapper never mounts an ask (no `askRegistry.create` call here — a runner-dispatched ask stays
+ * exactly what SPEC-R21 requires: prose only) — it also carries `runTurn`'s own ask-registry line guard
+ * (a2ui-live.ts's `handleClientMessage`-adjacent guard in `runTurn`): a line targeting a surface id an
+ * ask ALREADY owns (pending or frozen, from a PRIOR ordinary turn) is never re-ingested into the shared
+ * canvas as ordinary plan-run content.
+ *
+ * `canvasHost.finalize()` runs once per dispatch, in a `finally` (code-checker finding 5): a thrown/failed
+ * dispatch still finalizes whatever DID stream before the fault, matching this comment's own claim on the
+ * error path, not just the happy path — harmless either way (it only re-stretches the artboard layout,
+ * never resets state), so a K-step plan finalizing K+2 times is inert repetition, not a bug.
+ */
+function renderingTransport(base: AgentTransport): AgentTransport {
+  return {
+    turn(input: TurnInput): AsyncIterable<string> {
+      return (async function* (): AsyncGenerator<string> {
+        let note: string | undefined
+        try {
+          for await (const line of base.turn(input)) {
+            const meta = readMetaLine(line)
+            if (meta !== undefined) {
+              if (meta.a2uiMeta.note !== undefined) note = meta.a2uiMeta.note
+              const trace = meta.a2uiMeta.trace
+              if (trace !== undefined) {
+                traces.push(trace)
+                if (note !== undefined) notesByTurnIndex.set(trace.turnIndex, note)
+              }
+              yield line
+              continue
+            }
+            const targetId = surfaceIdOf(line)
+            if (targetId !== undefined && askRegistry.has(targetId)) {
+              yield line // ask territory (a PRIOR turn's) — never re-ingested as plan-run canvas content
+              continue
+            }
+            allLines.push(line)
+            noteCreatedSurface(line)
+            canvasHost.ingest(line) // validated JSONL streamed line-by-line → progressive paint (SPEC-N4)
+            yield line
+          }
+        } finally {
+          // SPEC-R21 "Asks during a run" — an `ask` on a runner-dispatched turn is NEVER mounted (no
+          // `askRegistry.create` call anywhere in this wrapper); its question survives ONLY because the
+          // note itself renders here, same role `runTurn` uses for an ordinary turn's note.
+          if (note !== undefined) addMessage('agent', note)
+          canvasHost.finalize()
+        }
+      })()
+    },
+  }
+}
+
+/** SPEC-R21 Projection — route ONE step/synthesis dispatch's own `TurnProgress` events as nested children
+ *  under its status-stream GROUP (ADR-0146 F5's `parent` key, ADR-0159's receipt pattern), reusing the SAME
+ *  closed `PROGRESS_LABEL` table `runTurn`'s own `routeProgress` closure uses for an ordinary turn — scoped
+ *  per group so two groups' progress entries never collide on one key. One fresh router per group (a group
+ *  dispatches exactly once, so this never needs to reset mid-flight). */
+function makeGroupProgressRouter(narration: UIStatusStreamElement, groupKey: string): (progress: TurnProgress) => void {
+  const seen = new Set<string>()
+  const doneLabelByKey = new Map<string, string>()
+  let lastKey: string | undefined
+  const settle = (key: string): void => {
+    const doneLabel = doneLabelByKey.get(key)
+    narration.update(key, doneLabel === undefined ? { status: 'done' } : { status: 'done', label: doneLabel })
+  }
+  return (progress: TurnProgress): void => {
+    const pair = PROGRESS_LABEL[progress.stage] as ProgressLabelPair | undefined
+    if (pair === undefined) return
+    if (progress.stage === 'done') {
+      if (lastKey !== undefined) settle(lastKey)
+      lastKey = undefined
+      return
+    }
+    const suffix =
+      progress.stage === 'retry'
+        ? progress.round === undefined
+          ? ''
+          : ` (round ${progress.round})`
+        : progress.stage === 'tool' && progress.detail
+          ? ` (${progress.detail})`
+          : ''
+    const label = `${pair.live}${suffix}`
+    const key = `${groupKey}:${
+      progress.stage === 'retry' ? `retry-${progress.round ?? 1}` : progress.stage === 'tool' ? `tool-${progress.detail ?? 'unknown'}` : progress.stage
+    }`
+    doneLabelByKey.set(key, `${pair.done}${suffix}`)
+    if (lastKey !== undefined && lastKey !== key) settle(lastKey)
+    if (seen.has(key)) narration.update(key, { status: 'active', label })
+    else {
+      seen.add(key)
+      narration.appendEntry({ key, status: 'active', label, parent: groupKey })
+    }
+    lastKey = key
+  }
+}
+
+/** `PlanStepState` → this strip's `ItemStatus` — an exhaustive switch (a widened `PlanStepState` fails
+ *  compilation here, not silently). `not-run` maps to `warning` (distinct from a still-`pending` group
+ *  that simply never got its turn — "aborted before dispatch" deserves its own visible ink, ADR-0146 F6's
+ *  severity ladder already ranks `warning` above `pending`). */
+function planStepStatus(state: PlanStepState): 'pending' | 'active' | 'done' | 'error' | 'warning' {
+  switch (state) {
+    case 'pending':
+      return 'pending'
+    case 'running':
+      return 'active'
+    case 'done':
+      return 'done'
+    case 'failed':
+      return 'error'
+    case 'not-run':
+      return 'warning'
+  }
+}
+
+const PLAN_STEP_STATE_WORD: Record<PlanStepState, string> = {
+  pending: 'Queued',
+  running: 'Running…',
+  done: 'Done',
+  failed: 'Failed',
+  'not-run': 'Not run (aborted)',
+}
+
+function planGroupLabel(groupKey: string, state: PlanStepState): string {
+  const name = groupKey === PLAN_SYNTHESIS_GROUP_KEY ? 'Synthesis' : `Step "${groupKey.slice('plan-step:'.length)}"`
+  return `${name} — ${PLAN_STEP_STATE_WORD[state]}`
+}
+
+/**
+ * ADR-0174/SPEC-R21 — drive ONE user-submitted intent through the host-side sequential plan-runner instead
+ * of `runTurn`'s single dispatch, when the dev-reachable gate above is ON. Mirrors `runTurn`'s own
+ * busy/narration discipline: one narration strip appended at t=0 (seeding K+1 GROUPS instead of one flat
+ * progress strip — SPEC-R21 Projection) and `setBusy` held for the run's WHOLE duration — the v0.11
+ * "mid-run composer suppression" ruling's DISABLE presentation, never queue-then-replay: the composer
+ * already ships the `busy` affordance `runTurn` uses for an ordinary turn, and a queued-resubmit UX is a
+ * genuinely separate feature this ticket does not build (an OPEN item, not a silent gap). The over-cap
+ * refusal's ONE visible warning (SPEC-R21 Bounds/AC4) rides the SAME narration strip.
+ */
+async function runPlannerFlow(intent: string): Promise<void> {
+  if (busy) return
+  // ADR-0097 §2 — a plan run is a fresh, non-interactive top-level intent, never an answer to a specific
+  // ask (SPEC-R21 "Asks during a run": no runner-dispatched turn ever mounts one). Freeze whatever was
+  // LEFT pending by a prior ORDINARY turn now, same reasoning `runTurn`'s own `freezePriorPendingAsk` call
+  // uses — but at the TOP here, not after completion: a plan run spans K+2 dispatches, and leaving a stale
+  // ask "pending" (interactive, answerable) for that whole suppressed duration would let it be answered
+  // mid-run, racing the very suppression this function exists to guarantee.
+  freezePriorPendingAsk(undefined)
+  setBusy(true)
+  const narration = makeNarration()
+  narration.setAttribute('label', 'Plan run')
+  chatLog.append(narration)
+  chatLog.scrollTop = chatLog.scrollHeight
+
+  const TERMINAL_STATES = new Set<PlanStepState>(['done', 'failed', 'not-run'])
+  const groupState = new Map<string, PlanStepState>()
+  const progressRouters = new Map<string, (progress: TurnProgress) => void>()
+
+  const onStepState = (groupKey: string, state: PlanStepState): void => {
+    const status = planStepStatus(state)
+    const label = planGroupLabel(groupKey, state)
+    if (groupState.has(groupKey)) narration.update(groupKey, { status, label })
+    else narration.appendEntry({ key: groupKey, status, label })
+    groupState.set(groupKey, state)
+  }
+  const onProgress = (groupKey: string, progress: TurnProgress): void => {
+    let router = progressRouters.get(groupKey)
+    if (router === undefined) {
+      router = makeGroupProgressRouter(narration, groupKey)
+      progressRouters.set(groupKey, router)
+    }
+    router(progress)
+  }
+  const onRefused = ({ declaredSteps, cap }: { declaredSteps: number; cap: number }): void => {
+    // SPEC-R21 Bounds/AC4 — the ONE visible warning entry an over-cap refusal requires: "the model's note
+    // announced a plan, so silent non-execution would lie by omission."
+    narration.appendEntry({
+      key: 'plan-refused',
+      status: 'warning',
+      label: `Plan refused — declared ${declaredSteps} step(s), over the ${cap}-step cap.`,
+    })
+  }
+
+  try {
+    session = await runPlannerTurn({
+      transport: renderingTransport(transport),
+      session,
+      intent,
+      plannerEnabled: true,
+      onStepState,
+      onProgress,
+      onRefused,
+    })
+    narration.finalize()
+    refreshJson(allLines)
+    refreshHtml()
+    showCanvas()
+    addMessage('system', 'Plan run finished — see the status stream above for each step.')
+  } catch (e) {
+    // GH #592 (upstream, plan-runner.ts — filed at code-checker review, finding 2): a step/synthesis
+    // dispatch that THROWS (as opposed to completing with a transport-composed `error` meta-line) escapes
+    // `runPlan`'s own per-step try/catch entirely, rejecting the whole run's promise before every seeded
+    // group reaches a terminal state. Defensively close whatever is STILL non-terminal to `not-run` here —
+    // display-honest ("aborted before/mid dispatch") even while the upstream bug stands, so nothing strands
+    // at "Queued"/"Running…" forever.
+    for (const [groupKey, state] of [...groupState]) {
+      if (!TERMINAL_STATES.has(state)) onStepState(groupKey, 'not-run')
+    }
+    narration.appendEntry({ key: 'plan-error', status: 'error', label: `Plan run failed — ${(e as Error).message}` })
+    narration.fail()
+    addMessage('system', `⚠ ${(e as Error).message}`)
+  } finally {
+    setBusy(false)
+  }
+}
+
 // The composer's own `onSubmit` callback (never a CustomEvent, matching `ui-conversation`'s own event
 // contract, conversation.ts's composer-wiring section) fires with the text ALREADY trimmed and non-empty —
 // its internal `#send()` guards emptiness AND its own `busy` prop before ever calling this back, so no
@@ -587,7 +860,13 @@ function handleClientMessage(message: A2uiClientMessage): void {
 // value directly (props down, callbacks up — `readField`/`clearField` are gone with the raw field).
 composer.onSubmit((text) => {
   addMessage('user', text) // the chat shows the user's OWN typed text — never the digest prepended below
-  void runTurn({ kind: 'intent', text: traceDigest() + text, session })
+  if (isPlannerSurfaceEnabled(plannerStore.get(SURFACE_PLANNER_KEY))) {
+    // ADR-0174/SPEC-R21 — gate ON: the host-side plan-runner drives this intent (the gate-OFF branch below
+    // is BYTE-UNTOUCHED — SPEC-R21 AC1's own requirement).
+    void runPlannerFlow(text)
+  } else {
+    void runTurn({ kind: 'intent', text: traceDigest() + text, session })
+  }
 })
 
 // ── Reset: dispose the renderer, clear the session + canvas + log, restart the transport ────────────────

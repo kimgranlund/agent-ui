@@ -214,6 +214,29 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    // code-entry-control.lld.md (GH #490 S2-a) — the identity family's segmented N-cell one-time-code
+    // entry field: one focusable editable surface, N presentational cells. Permanently catalog-excluded
+    // (ADR-0176 cl.3) — still a site-documented fleet member like any other control.
+    label: 'ui-otp-field',
+    cards: [
+      {
+        href: './otp-field-permutations.html',
+        title: 'Permutations',
+        blurb: 'Every size × length of ui-otp-field, empty/partial/complete/disabled/required.',
+      },
+      {
+        href: './otp-field-states.html',
+        title: 'Interaction states',
+        blurb: 'The live field across digit entry, backspace/arrow navigation, paste-split, validation, and disabled — with an announcement log.',
+      },
+      {
+        href: './otp-field-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-otp-field attribute surface, generated from its otp-field.md descriptor — it cannot drift.',
+      },
+    ],
+  },
+  {
     label: 'ui-text',
     cards: [
       {

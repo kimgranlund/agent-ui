@@ -318,14 +318,16 @@ const ALLOWED_ROLES = new Set([
   // added in the SAME change as naming.md §6's registry line (the fix-on-touch rule).
   'user', 'agent', 'system',
   // ui-agent-admin's composed panes (@agent-ui/app, TKT-0039/ADR-0131 → vision rev.5): 'canvas' (chat) +
-  // 'tabs' (the {Settings, Context: System, Context: Dialog} ui-tabs pane — the old
+  // 'tabs' (the {Agent, Capabilities, Surface, Context: System, Context: Dialog} ui-tabs pane — the old
   // 'prompts'/'settings'/'tabs-medium' pane trio dissolved into it), the SAME "which pane is this" role
-  // category master-detail's own 'list'/'detail' already cover. 'settings-content'/'context-system-content'/
-  // 'context-dialog-content' are the THREE reparent-able content units that migrate between a split-layout
-  // tab panel and a narrow tab panel (the TKT-0085 'agent-content' wrapper discipline, renamed + tripled —
-  // GH #161 split the old single 'context-content' into the System/Dialog pair, one per tab). Added in the
-  // SAME change as naming.md §6's registry line.
-  'canvas', 'tabs', 'settings-content', 'context-system-content', 'context-dialog-content',
+  // category master-detail's own 'list'/'detail' already cover. 'agent-content'/'capabilities-content'/
+  // 'surface-content'/'context-system-content'/'context-dialog-content' are the FIVE reparent-able
+  // content units that migrate between a split-layout tab panel and a narrow tab panel (the TKT-0085
+  // 'agent-content' wrapper discipline: 'settings-content' first, renamed + tripled — GH #161 split the
+  // old single 'context-content' into the System/Dialog pair, one per tab — then GH #574 split
+  // 'settings-content' ITSELF into three ranked units, one per new tab). Added in the SAME change as
+  // naming.md §6's registry line.
+  'canvas', 'tabs', 'agent-content', 'capabilities-content', 'surface-content', 'context-system-content', 'context-dialog-content',
   // ui-timeline-item's recursive nesting slot (ADR-0143 F1, TKT-0091) — a genuine nested `<ui-timeline>`
   // adopted alongside 'detail' into the shared disclosure. Added in the SAME change as naming.md §6's
   // registry line.

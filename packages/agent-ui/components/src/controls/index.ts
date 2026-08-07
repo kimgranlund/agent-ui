@@ -169,3 +169,10 @@ export * from './command-modal/command-modal.ts'
 // affordance. Permanently catalog-excluded (SPEC-N1/PRD-G4) — still a fleet member, exported like any
 // other control.
 export * from './sandbox-frame/sandbox-frame.ts'
+
+// code-entry-control.lld.md (GH #490 S2-a, the identity family's one Lane-A control) — ui-otp-field, a
+// segmented N-cell one-time-code entry field: ONE focusable editable surface, N presentational cells,
+// auto-advance/backspace-walk/arrow traversal under a no-gaps invariant, full/partial paste-split.
+// Permanently catalog-excluded (ADR-0176 cl.3 — credential-bearing auth chrome is host-page-only) — still
+// a fleet member, exported like any other control.
+export * from './otp-field/otp-field.ts'

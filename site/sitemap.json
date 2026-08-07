@@ -209,6 +209,14 @@
       "section": "Components"
     },
     {
+      "name": "Otp Field",
+      "tag": "ui-otp-field",
+      "url": "./otp-field-doc.html",
+      "description": "A segmented N-cell one-time-code entry field — one focusable editable surface, N presentational cells, auto-advance/backspace-walk/arrow traversal under a no-gaps invariant, and full/partial paste-split.",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Pagination",
       "tag": "ui-pagination",
       "url": "./pagination-doc.html",

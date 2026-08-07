@@ -417,8 +417,10 @@ describe('ui-agent-admin settings pane — GH #525 design call 3: the bankroll R
     for (const el of mounted.splice(0)) el.remove()
   })
 
-  /** GH #541 — the whole FOLD is what hides now: Bankroll is its own Settings group, not a row among the
-   *  Surface Options modalities (a stored figure is not an output modality). */
+  /** GH #541 — the whole FOLD is what hides now: Bankroll is its own group, not a row among the Surface
+   *  Options modalities (a stored figure is not an output modality). GH #574 — that group now sits in the
+   *  Agent tab (persona state lives with the persona), not adjacent to Surface Options at all: the two
+   *  folds live in different tabs since the split. */
   function bankrollItem(el: UIAgentAdminElement): HTMLElement {
     return el.querySelector('[data-part="settings-item"][data-item="bankroll"]') as HTMLElement
   }
@@ -427,7 +429,7 @@ describe('ui-agent-admin settings pane — GH #525 design call 3: the bankroll R
     return el.querySelector('[data-part="bankroll-row"]') as HTMLElement
   }
 
-  it('GH #541: the row lives OUTSIDE Surface Options, in its own adjacent fold', async () => {
+  it('GH #541/#574: the row lives OUTSIDE Surface Options, in its own fold in the Agent tab, directly after Model', async () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
     el.store = createMemoryStore({ initial: { [BANKROLL_CAPABLE_KEY]: true } })
     document.body.append(el)
@@ -436,8 +438,11 @@ describe('ui-agent-admin settings pane — GH #525 design call 3: the bankroll R
     const surfaceOptions = el.querySelector('[data-part="surface-options"]') as HTMLElement
     expect(surfaceOptions.contains(bankrollRow(el)), 'never inside the modality card').toBe(false)
     expect(bankrollItem(el).contains(bankrollRow(el))).toBe(true)
-    // Adjacent to Surface Options — the fold directly after it.
-    expect((el.querySelector('[data-part="settings-item"][data-item="surface"]') as HTMLElement).nextElementSibling).toBe(bankrollItem(el))
+    // GH #574 — Bankroll rides the Agent tab now (who it is), directly after Model — Surface Options
+    // moved to its OWN tab, so the two folds are no longer siblings at all.
+    const agentContent = el.querySelector('[data-role="agent-content"]') as HTMLElement
+    expect(agentContent.contains(bankrollItem(el)), 'Bankroll lives in the Agent tab').toBe(true)
+    expect((el.querySelector('[data-part="settings-item"][data-item="model"]') as HTMLElement).nextElementSibling).toBe(bankrollItem(el))
   })
 
   it('HIDDEN for a persona that never opted in (a bare default store)', async () => {

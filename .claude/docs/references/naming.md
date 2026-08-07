@@ -155,12 +155,14 @@ The prefix IS the ownership boundary — no allowlist needed:
   `ui-agent-admin`'s composed panes add: `canvas` · `tabs` (vision rev.5, Kim's Figma frame 33:1693 —
   the chat pane plus the ONE {Settings, Context: System, Context: Dialog} tabs pane the old
   `prompts`/`settings`/`tabs-medium` trio dissolved into; the SAME "which pane is this" role category
-  `list`/`detail` already cover, above; app-tier, not agent-emittable) — plus `settings-content` ·
-  `context-system-content` · `context-dialog-content`, the THREE reparent-able content units that migrate
-  between a split-layout tab panel and a narrow tab panel (the TKT-0085 `agent-content` wrapper
-  discipline, renamed + tripled when the prompts column merged into Settings and the Context tab landed,
-  then GH #161 split that one Context content unit into the System/Dialog pair — one tab each); all
-  app-tier, not agent-emittable. `ui-timeline-item` adds `nested` (ADR-0143 F1, TKT-0091) — a genuine nested
+  `list`/`detail` already cover, above; app-tier, not agent-emittable) — plus `agent-content` ·
+  `capabilities-content` · `surface-content` · `context-system-content` · `context-dialog-content`, the
+  FIVE reparent-able content units that migrate between a split-layout tab panel and a narrow tab panel
+  (the TKT-0085 `agent-content` wrapper discipline: `settings-content` first, renamed + tripled when the
+  prompts column merged into Settings and the Context tab landed, then GH #161 split that one Context
+  content unit into the System/Dialog pair — one tab each, then GH #574 split `settings-content` ITSELF
+  into three ranked units — `agent-content`/`capabilities-content`/`surface-content` — one per new tab);
+  all app-tier, not agent-emittable. `ui-timeline-item` adds `nested` (ADR-0143 F1, TKT-0091) — a genuine nested
   `<ui-timeline>` adopted into the same shared disclosure `detail` uses, recursion at arbitrary
   authored depth; control-emitted, agent-emittable like `detail`. `ui-status-stream` adds `action`
   (GH #147/ADR-0153 Fork 2) — the host-appended cell hosting an `error`-status entry's inline retry
@@ -245,7 +247,13 @@ swiper-item comment's own cited precedent). The A2UI catalog keeps its shipped W
 (`Icon.name`, `Stat.value`, …): `catalog.json`'s `mapsTo` + `mappedAccessorFactory` translate
 wire→prop at apply time, so every corpus record and taught idiom stays valid — the ONE catalog-vs-
 component naming divergence class, deliberate (§7's namespace is the protocol surface, §3's is the
-DOM surface).
+DOM surface). · **`ui-otp-field`'s `otp` acronym — RULED (Kim, GH #490 comment
+[5221585741](https://github.com/kimgranlund/agent-ui/issues/490#issuecomment-5221585741),
+code-entry-control.lld.md §2 Tag row): the owner-accepted exception to §1's never-abbreviate law** —
+shorter and unambiguous in the auth domain, and `-field` places it in the entry family the way
+`text-field` already does; the working-title alternatives (`ui-code-entry` collided with the
+`@agent-ui/code`/`ui-code-editor`/catalog-`Code` concept canon, `ui-one-time-code` was the platform-canon
+spelling v0.1 recommended) were both superseded by this ruling. Closed, not re-litigable at build.
 
 ## 13 · The worked example — deriving a family's names from ONE decision
 

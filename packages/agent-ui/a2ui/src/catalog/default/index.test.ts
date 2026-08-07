@@ -192,6 +192,11 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
     'kind, never authored by an agent through A2UI\'s catalog-typed payload — the two modalities never ' +
     'render through each other (PRD §3/§6). Structurally the same "app-owner surface, not agent-emittable ' +
     'content" class as ThemeProvider/StatusStream above (the ADR-0112 cl.6 reasoning applied verbatim).'],
+  ['OtpField',
+    'ADR-0176 cl.3 — PERMANENT exclusion, never catalogue-bound: credential-bearing authentication chrome ' +
+    'is host-page-only (security inversion, PRD-D2); the ADR-0112 cl.6 Toast/ToastRegion reasoning applied ' +
+    'verbatim — a one-time-code entry is the credential-bearing element of the identity family\'s Codes ' +
+    'mode (code-entry-control.lld.md §9, GH #490 S2-a).'],
 ])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists

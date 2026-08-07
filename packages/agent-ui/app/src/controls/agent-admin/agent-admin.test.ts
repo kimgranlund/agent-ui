@@ -148,7 +148,7 @@ describe('mountEntryList — customAdd/contentField (ADR-0170 cl.8)', () => {
 })
 
 describe('UIAgentAdminElement — shell composition (GH #52/ADR-0154): segments + narrow-tabs', () => {
-  it('composes ONE ui-chat-shell: content=conversation, options-pane segmented into Settings/Context: System/Context: Dialog', () => {
+  it('composes ONE ui-chat-shell: content=conversation, options-pane segmented into Agent/Capabilities/Surface/Context: System/Context: Dialog (GH #574)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const shell = el.querySelector(':scope > ui-chat-shell') as HTMLElement
     expect(shell).not.toBeNull()
@@ -158,16 +158,29 @@ describe('UIAgentAdminElement — shell composition (GH #52/ADR-0154): segments 
     const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
     expect(pane.hasAttribute('data-segmented')).toBe(true)
     const segmentLabels = [...pane.querySelectorAll(':scope > [data-segment]')].map((s) => s.getAttribute('data-segment'))
-    expect(segmentLabels).toEqual(['Settings', 'Context: System', 'Context: Dialog'])
+    expect(segmentLabels).toEqual(['Agent', 'Capabilities', 'Surface', 'Context: System', 'Context: Dialog'])
   })
 
-  it('the Settings segment carries the WHOLE config column; each Context segment carries ONLY its own accordion — no cross-segment leakage', () => {
+  it('GH #574: the old single config column splits into three ranked segments — Agent, Capabilities, Surface; each Context segment still carries ONLY its own accordion — no cross-segment leakage', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const settings = el.querySelector('[data-segment="Settings"]') as HTMLElement
+    const agent = el.querySelector('[data-segment="Agent"]') as HTMLElement
+    const capabilities = el.querySelector('[data-segment="Capabilities"]') as HTMLElement
+    const surface = el.querySelector('[data-segment="Surface"]') as HTMLElement
     const contextSystem = el.querySelector('[data-segment="Context: System"]') as HTMLElement
     const contextDialog = el.querySelector('[data-segment="Context: Dialog"]') as HTMLElement
-    expect(settings.querySelector('[data-part="settings-item"][data-item="agent"]')).not.toBeNull()
-    expect(settings.querySelector('[data-part="settings-item"] [data-part="entry-section"]')).not.toBeNull()
+
+    expect(agent.matches('[data-role="agent-content"]')).toBe(true)
+    expect(agent.querySelector('[data-part="settings-item"][data-item="agent"]')).not.toBeNull()
+    // Agent tab (who it is) carries no entry-section — Agent/Model/Bankroll only.
+    expect(agent.querySelector('[data-part="entry-section"]')).toBeNull()
+
+    expect(capabilities.matches('[data-role="capabilities-content"]')).toBe(true)
+    expect(capabilities.querySelector('[data-part="settings-item"] [data-part="entry-section"]')).not.toBeNull()
+
+    expect(surface.matches('[data-role="surface-content"]')).toBe(true)
+    expect(surface.querySelector('[data-part="settings-item"][data-item="surface"]')).not.toBeNull()
+    expect(surface.querySelector('[data-part="settings-item"] [data-part="entry-section"]')).not.toBeNull()
+
     expect(contextSystem.matches('[data-role="context-system-content"]')).toBe(true)
     expect(contextSystem.querySelector('[data-role="context-dialog-content"]')).toBeNull()
     expect(contextSystem.querySelector('[data-part="context-turns"]')).toBeNull()
@@ -179,23 +192,23 @@ describe('UIAgentAdminElement — shell composition (GH #52/ADR-0154): segments 
   it('clicking the pane-tabs strip switches which segment is [data-active] — never a reparent (SPEC-R7c)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
-    const settings = pane.querySelector('[data-segment="Settings"]') as HTMLElement
+    const agent = pane.querySelector('[data-segment="Agent"]') as HTMLElement
     const contextSystem = pane.querySelector('[data-segment="Context: System"]') as HTMLElement
-    expect(settings.hasAttribute('data-active')).toBe(true)
+    expect(agent.hasAttribute('data-active')).toBe(true)
     const tabs = [...pane.querySelectorAll('[data-part="pane-tab"]')]
-    expect(tabs.map((t) => t.textContent)).toEqual(['Settings', 'Context: System', 'Context: Dialog'])
-    ;(tabs[1] as HTMLElement).click()
-    expect(settings.hasAttribute('data-active')).toBe(false)
+    expect(tabs.map((t) => t.textContent)).toEqual(['Agent', 'Capabilities', 'Surface', 'Context: System', 'Context: Dialog'])
+    ;(tabs.find((t) => t.textContent === 'Context: System') as HTMLElement).click()
+    expect(agent.hasAttribute('data-active')).toBe(false)
     expect(contextSystem.hasAttribute('data-active')).toBe(true)
-    expect(settings.isConnected, 'switching segments never reparents').toBe(true)
+    expect(agent.isConnected, 'switching segments never reparents').toBe(true)
   })
 
-  it('the narrow-tabs strip flattens content + every segment into ONE top-level strip: Chat, Settings, Context: System, Context: Dialog', () => {
+  it('the narrow-tabs strip flattens content + every segment into ONE top-level strip: Chat, Agent, Capabilities, Surface, Context: System, Context: Dialog', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const strip = el.querySelector('[data-part="narrow-tabs"]') as HTMLElement
     expect(strip).not.toBeNull()
     const labels = [...strip.querySelectorAll('[data-part="narrow-tab"]')].map((t) => t.textContent)
-    expect(labels).toEqual(['Chat', 'Settings', 'Context: System', 'Context: Dialog'])
+    expect(labels).toEqual(['Chat', 'Agent', 'Capabilities', 'Surface', 'Context: System', 'Context: Dialog'])
   })
 
   it('clicking a narrow tab moves data-narrow-active to the addressed participant, syncing the wide segment strip too', () => {
@@ -221,13 +234,13 @@ describe('UIAgentAdminElement — shell composition (GH #52/ADR-0154): segments 
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const conversation = el.querySelector('ui-conversation')
     const agentItem = el.querySelector('[data-part="settings-item"][data-item="agent"]')
-    // The FIRST entry-section in document order (GH #488: the catalog picker, folded into Surface
-    // Options, which now sits before Instructions — not the Instructions section itself; this probe only
-    // cares about node identity surviving a tab switch, not which kind is first).
+    // The FIRST entry-section in document order (GH #574: the Capabilities tab now precedes the Surface
+    // tab, so Instructions' entry-section — not the catalog picker nested in Surface Options — is first;
+    // this probe only cares about node identity surviving a tab switch, not which kind is first).
     const firstEntrySection = el.querySelector('[data-part="entry-section"]')
 
     const tabs = [...el.querySelectorAll('[data-part="narrow-tab"]')] as HTMLElement[]
-    tabs.find((t) => t.textContent === 'Settings')!.click()
+    tabs.find((t) => t.textContent === 'Agent')!.click()
     tabs.find((t) => t.textContent === 'Context: System')!.click()
     tabs.find((t) => t.textContent === 'Chat')!.click()
 
@@ -236,44 +249,66 @@ describe('UIAgentAdminElement — shell composition (GH #52/ADR-0154): segments 
     expect(el.querySelector('[data-part="entry-section"]')).toBe(firstEntrySection)
   })
 
-  it('capability sections (Skills/Workflows/Resources/Tools) live in the Settings segment', () => {
+  it('capability sections (Instructions/Skills/Workflows/Resources/Tools) live in the Capabilities segment', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const settings = el.querySelector('[data-segment="Settings"]') as HTMLElement
+    const capabilities = el.querySelector('[data-segment="Capabilities"]') as HTMLElement
     for (const label of ['Instructions', 'Skills', 'Workflows', 'Resources', 'Tools']) {
-      expect([...settings.querySelectorAll('[data-part="settings-item"]')].some((h) => h.getAttribute('summary') === label), `missing ${label} section`).toBe(true)
+      expect([...capabilities.querySelectorAll('[data-part="settings-item"]')].some((h) => h.getAttribute('summary') === label), `missing ${label} section`).toBe(true)
     }
   })
 
-  // ── GH #225 — the Settings sections are heading-row folds (the GH #222 Context pattern applied to
-  // the config column). jsdom pins the STRUCTURE; agent-admin.browser.test.ts proves the real
+  // ── GH #225 — the config-column sections are heading-row folds (the GH #222 Context pattern applied
+  // to the config column). jsdom pins the STRUCTURE; agent-admin.browser.test.ts proves the real
   // fold/register/toggle-vs-fold geometry cross-engine. ──────────────────────────────────────────────
-  it('GH #225/#488/#541: every Settings section is a settings-item fold — TEN top-level folds (GH #488 folded Catalogs INTO Surface Options; GH #541 lifted Bankroll OUT of them into its own adjacent fold), Surface Options above Instructions, ALL open by default (config is an editing surface)', () => {
+  it('GH #574: the old flat TEN-fold Settings tab is ranked into three tabs — Agent (Agent/Model/Bankroll), Capabilities (Instructions/Skills/Workflows/Resources/Tools), Surface (Surface Options/Pattern sources) — a CENSUS proves the union is exactly the old flat set: nothing lost, nothing duplicated', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const settings = el.querySelector('[data-segment="Settings"]') as HTMLElement
-    const items = [...settings.querySelectorAll(':scope > [data-part="settings-item"]')]
-    expect(items.map((i) => i.getAttribute('data-item'))).toEqual([
+    const agent = el.querySelector('[data-segment="Agent"]') as HTMLElement
+    const capabilities = el.querySelector('[data-segment="Capabilities"]') as HTMLElement
+    const surface = el.querySelector('[data-segment="Surface"]') as HTMLElement
+    const topItemsOf = (root: HTMLElement): HTMLElement[] => [...root.querySelectorAll<HTMLElement>(':scope > [data-part="settings-item"]')]
+
+    const agentItems = topItemsOf(agent)
+    const capabilitiesItems = topItemsOf(capabilities)
+    const surfaceItems = topItemsOf(surface)
+
+    expect(agentItems.map((i) => i.getAttribute('data-item'))).toEqual(['agent', 'model', 'bankroll'])
+    expect(agentItems.map((i) => i.getAttribute('summary'))).toEqual(['Agent', 'Model', 'Bankroll'])
+    expect(capabilitiesItems.map((i) => i.getAttribute('data-item'))).toEqual([
+      ENTRY_KINDS.promptSection, ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool,
+    ])
+    expect(capabilitiesItems.map((i) => i.getAttribute('summary'))).toEqual(['Instructions', 'Skills', 'Workflows', 'Resources', 'Tools'])
+    expect(surfaceItems.map((i) => i.getAttribute('data-item'))).toEqual(['surface', ENTRY_KINDS.patternSource])
+    expect(surfaceItems.map((i) => i.getAttribute('summary'))).toEqual(['Surface Options', 'Pattern sources'])
+
+    // The census: the union of the three tabs' top-level folds is EXACTLY the old flat ten-item set —
+    // the acceptance's "no fold lost or duplicated", proven mechanically rather than eyeballed.
+    const OLD_FLAT_SET = [
       'agent', 'model', 'surface', 'bankroll', ENTRY_KINDS.promptSection,
       ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource,
-    ])
-    expect(items.map((i) => i.getAttribute('summary'))).toEqual([
-      'Agent', 'Model', 'Surface Options', 'Bankroll', 'Instructions', 'Skills', 'Workflows', 'Resources', 'Tools', 'Pattern sources',
-    ])
-    for (const item of items) expect(item.hasAttribute('open'), `${item.getAttribute('data-item')} defaults open`).toBe(true)
+    ]
+    const allItems = [...agentItems, ...capabilitiesItems, ...surfaceItems]
+    const union = allItems.map((i) => i.getAttribute('data-item'))
+    expect([...union].sort()).toEqual([...OLD_FLAT_SET].sort())
+    expect(new Set(union).size, 'no fold duplicated across tabs').toBe(union.length)
+    expect(union.length, 'no fold silently dropped').toBe(OLD_FLAT_SET.length)
+
+    for (const item of allItems) expect(item.hasAttribute('open'), `${item.getAttribute('data-item')} defaults open`).toBe(true)
     // The section content is the fold's BODY (the disclosure adopted it — SPEC-R16 children=body).
-    expect(settings.querySelector('[data-item="agent"] [data-part="body"] ui-settings')).not.toBeNull()
-    expect(settings.querySelector('[data-item="model"] [data-part="body"] [data-part="model-grid"]')).not.toBeNull()
-    expect(settings.querySelector('[data-item="surface"] [data-part="body"] [data-part="surface-options"]')).not.toBeNull()
-    expect(settings.querySelector(`[data-item="${ENTRY_KINDS.skill}"] [data-part="body"] [data-part="entry-section"][data-kind="${ENTRY_KINDS.skill}"]`)).not.toBeNull()
+    expect(agent.querySelector('[data-item="agent"] [data-part="body"] ui-settings')).not.toBeNull()
+    expect(agent.querySelector('[data-item="model"] [data-part="body"] [data-part="model-grid"]')).not.toBeNull()
+    expect(surface.querySelector('[data-item="surface"] [data-part="body"] [data-part="surface-options"]')).not.toBeNull()
+    expect(capabilities.querySelector(`[data-item="${ENTRY_KINDS.skill}"] [data-part="body"] [data-part="entry-section"][data-kind="${ENTRY_KINDS.skill}"]`)).not.toBeNull()
     // GH #488 — the catalog picker is no longer a top-level settings-item fold at all: its entry-section
-    // lives directly adjacent to the Surface Options A2UI row instead (one visual cluster).
-    expect(settings.querySelector(`[data-part="settings-item"][data-item="${ENTRY_KINDS.catalog}"]`)).toBeNull()
-    const a2uiRow = settings.querySelector('[data-item="surface"] [data-part="surface-row"][data-surface="a2ui"]') as HTMLElement
+    // lives directly adjacent to the Surface Options A2UI row instead (one visual cluster), inside the
+    // Surface tab (GH #574).
+    expect(el.querySelector(`[data-part="settings-item"][data-item="${ENTRY_KINDS.catalog}"]`)).toBeNull()
+    const a2uiRow = surface.querySelector('[data-item="surface"] [data-part="surface-row"][data-surface="a2ui"]') as HTMLElement
     expect(a2uiRow).not.toBeNull()
-    const catalogSection = settings.querySelector(`[data-item="surface"] [data-part="entry-section"][data-kind="${ENTRY_KINDS.catalog}"]`)
+    const catalogSection = surface.querySelector(`[data-item="surface"] [data-part="entry-section"][data-kind="${ENTRY_KINDS.catalog}"]`)
     expect(catalogSection, 'the catalog picker mounts INSIDE the Surface Options fold').not.toBeNull()
     // GH #541 — nested, not adjacent: the picker lives in the A2UI GROUP's own detail zone, so the
     // catalog roster and its "+ From library" row read as children of the toggle that gates them.
-    const a2uiGroup = settings.querySelector('[data-part="surface-group"][data-surface="a2ui"]') as HTMLElement
+    const a2uiGroup = surface.querySelector('[data-part="surface-group"][data-surface="a2ui"]') as HTMLElement
     expect(a2uiGroup.firstElementChild, 'the modality row leads its group').toBe(a2uiRow)
     const detail = a2uiGroup.querySelector('[data-part="surface-detail"]') as HTMLElement
     expect(detail.contains(catalogSection!), 'the picker sits inside the A2UI detail zone').toBe(true)
@@ -423,22 +458,28 @@ describe('UIAgentAdminElement — composition (GH #52/ADR-0154: chat + {Settings
     expect(conversation.sources, 'the developer surface\'s standing opt-in — every other consumer stays default-off').toBe(true)
   })
 
-  it('the Settings content composes the Agent config (real ui-settings, wired to schema/store) PLUS all SEVEN entry-sections (prompts merged in, vision rev.5; genui-surface B2 added Pattern sources; GH #488 moved Catalogs INTO Surface Options, which now sits before Instructions — so Catalogs\' entry-section is now FIRST in document order, not last)', () => {
+  it('GH #574: the Agent tab composes the Agent config (real ui-settings, wired to schema/store); the Capabilities and Surface tabs together compose all SEVEN entry-sections (prompts merged in, vision rev.5; genui-surface B2 added Pattern sources; GH #488 moved Catalogs INTO Surface Options; GH #574 ranked Catalogs+Pattern sources into the Surface tab, everything else into Capabilities)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const settingsContent = el.querySelector('[data-role="settings-content"]') as HTMLElement
-    const settingsEl = settingsContent.querySelector('ui-settings') as UISettingsElement
+    const agentContent = el.querySelector('[data-role="agent-content"]') as HTMLElement
+    const settingsEl = agentContent.querySelector('ui-settings') as UISettingsElement
     expect(settingsEl).toBeInstanceOf(UISettingsElement)
     expect(settingsEl.schema).toBe(el.schema)
     expect(settingsEl.store).toBe(el.store)
 
-    const sections = [...settingsContent.querySelectorAll('[data-part="entry-section"]')]
-    expect(sections.map((s) => s.getAttribute('data-kind'))).toEqual([
-      ENTRY_KINDS.catalog,
+    const capabilitiesContent = el.querySelector('[data-role="capabilities-content"]') as HTMLElement
+    const capabilitiesSections = [...capabilitiesContent.querySelectorAll('[data-part="entry-section"]')]
+    expect(capabilitiesSections.map((s) => s.getAttribute('data-kind'))).toEqual([
       ENTRY_KINDS.promptSection,
       ENTRY_KINDS.skill,
       ENTRY_KINDS.workflow,
       ENTRY_KINDS.resource,
       ENTRY_KINDS.tool,
+    ])
+
+    const surfaceContent = el.querySelector('[data-role="surface-content"]') as HTMLElement
+    const surfaceSections = [...surfaceContent.querySelectorAll('[data-part="entry-section"]')]
+    expect(surfaceSections.map((s) => s.getAttribute('data-kind'))).toEqual([
+      ENTRY_KINDS.catalog, // nested inside the Surface Options A2UI detail zone — still leads the Surface tab
       ENTRY_KINDS.patternSource,
     ])
   })

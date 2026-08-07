@@ -47,6 +47,8 @@ import menuMd from '../../packages/agent-ui/components/src/controls/menu/menu.md
 import selectMd from '../../packages/agent-ui/components/src/controls/select/select.md?raw'
 // M-F — ui-multi-select (multi-select-field.lld.md · ADR-0175): tier=pattern ⇒ {doc, demo}.
 import multiSelectMd from '../../packages/agent-ui/components/src/controls/multi-select/multi-select.md?raw'
+// code-entry-control.lld.md (GH #490 S2-a): ui-otp-field, tier=control ⇒ {permutations, states, doc}.
+import otpFieldMd from '../../packages/agent-ui/components/src/controls/otp-field/otp-field.md?raw'
 import comboBoxMd from '../../packages/agent-ui/components/src/controls/combo-box/combo-box.md?raw'
 // ADR-0125 — ui-command-modal, the CMD-K command palette (nests ui-modal + re-derives the combo-box filter).
 import commandModalMd from '../../packages/agent-ui/components/src/controls/command-modal/command-modal.md?raw'
@@ -153,6 +155,9 @@ export const loadTooltipDoc = (): ComponentDoc => parseDoc(tooltipMd)
 export const loadMenuDoc = (): ComponentDoc => parseDoc(menuMd)
 export const loadSelectDoc = (): ComponentDoc => parseDoc(selectMd)
 export const loadMultiSelectDoc = (): ComponentDoc => parseDoc(multiSelectMd)
+// code-entry-control.lld.md (GH #490 S2-a) — the identity family's segmented N-cell one-time-code entry
+// field (tier=control ⇒ {permutations, states, doc}; permanently catalog-excluded, ADR-0176 cl.3).
+export const loadOtpFieldDoc = (): ComponentDoc => parseDoc(otpFieldMd)
 export const loadComboBoxDoc = (): ComponentDoc => parseDoc(comboBoxMd)
 // ADR-0125 — the CMD-K command palette (tier=pattern ⇒ {doc,demo}; permanently catalog-excluded, F8).
 export const loadCommandModalDoc = (): ComponentDoc => parseDoc(commandModalMd)
