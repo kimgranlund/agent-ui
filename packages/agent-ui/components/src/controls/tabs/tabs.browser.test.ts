@@ -533,6 +533,17 @@ describe('ui-tabs — orientation="vertical": keyboard axis — Up/Down move sel
     await userEvent.keyboard('{ArrowLeft}')
     await tabs.updateComplete
     expect(document.activeElement, `${server.browser}: ArrowLeft must be inert under vertical`).toBe(tabEls[0])
+
+    // Home/End are UNCHANGED either axis (both engines).
+    await userEvent.keyboard('{End}')
+    await tabs.updateComplete
+    expect(document.activeElement, `${server.browser}: End did not move to the last tab under vertical`).toBe(tabEls[2])
+    expect(getComputedStyle(panelEls[2]).display, 'End did not switch the panel under vertical').toBe('block')
+
+    await userEvent.keyboard('{Home}')
+    await tabs.updateComplete
+    expect(document.activeElement, `${server.browser}: Home did not move to the first tab under vertical`).toBe(tabEls[0])
+    expect(getComputedStyle(panelEls[0]).display, 'Home did not switch the panel under vertical').toBe('block')
   })
 })
 
