@@ -752,7 +752,7 @@ export class UIAgentAdminElement extends UIElement {
     bankrollRow.setAttribute('data-part', 'bankroll-row')
     const bankrollLabel = document.createElement('span')
     bankrollLabel.setAttribute('data-part', 'bankroll-label')
-    bankrollLabel.textContent = 'Stored figure'
+    bankrollLabel.textContent = 'Stored bankroll'
     const bankrollSpacer = document.createElement('span')
     bankrollSpacer.setAttribute('data-part', 'surface-spacer')
     const bankrollReset = document.createElement('ui-button') as UIButtonElement
