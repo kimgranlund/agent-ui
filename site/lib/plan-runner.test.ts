@@ -126,6 +126,25 @@ describe('consumePlan — the pure cap/well-formedness decision', () => {
   it('the shipped default cap is 8 (SPEC-R21 Bounds — indicative, tunable)', () => {
     expect(DEFAULT_PLAN_STEP_CAP).toBe(8)
   })
+
+  // M1 — a vacuous {steps:[]} declaration used to read as `consumed:true`, which would drive a K=0 run
+  // whose only dispatch is a lone, contextless synthesis turn. Treated as "no consumable plan" instead.
+  it('a ZERO-step declaration is NOT consumed — reads as "none", the SAME outcome an absent plan gets', () => {
+    expect(consumePlan({ steps: [] })).toEqual({ consumed: false, reason: 'none' })
+  })
+
+  // M2 — duplicate declared step ids would collide onto ONE `planStepGroupKey`, corrupting the projection
+  // (two steps silently sharing one status-stream group). Rejected, never deduped/renamed (the host never
+  // rewrites a declaration it didn't author — the SAME ground the over-cap refusal stands on).
+  it('duplicate declared step ids are REJECTED (never deduped/renamed) — they would collide onto one group key', () => {
+    const plan: PlanDeclaration = { steps: [step('a'), step('b'), step('a')] }
+    expect(consumePlan(plan, 8)).toEqual({ consumed: false, reason: 'duplicate-ids', duplicateId: 'a' })
+  })
+
+  it('a duplicate-id check runs BEFORE the cap check (a malformed plan is rejected regardless of length)', () => {
+    const plan: PlanDeclaration = { steps: [step('a'), step('a'), step('b')] }
+    expect(consumePlan(plan, 1)).toEqual({ consumed: false, reason: 'duplicate-ids', duplicateId: 'a' })
+  })
 })
 
 // ── AC1 — planner mode OFF/absent: byte-identical to today's single-turn path ──────────────────────────
@@ -307,6 +326,24 @@ describe('SPEC-R22 AC1 — a mid-run step failure continues the run, fold-in ack
     expect(states).toContainEqual([planStepGroupKey('s2'), 'failed'])
     expect(states).toContainEqual([planStepGroupKey('s3'), 'done'])
     expect(states).toContainEqual([PLAN_SYNTHESIS_GROUP_KEY, 'done'])
+  })
+
+  // M3 — driver-level regression: the pure `frameSynthesis(plan, priorFailure)` fold is unit-tested above,
+  // but this proves `runPlan` ITSELF actually wires a failed LAST step's acknowledgment onto the synthesis
+  // dispatch (SPEC-R22: "a failed LAST step's acknowledgment rides the synthesis dispatch") — not merely
+  // that the pure function CAN do it.
+  it('the LAST step fails ⇒ the SYNTHESIS dispatch text (not a step) carries the acknowledgment', async () => {
+    const plan: PlanDeclaration = { steps: [step('s1'), step('s2', 'Build the footer')] }
+    const { transport, calls } = scriptedTransport([
+      { lines: [] }, // s1 — ok
+      { meta: { error: 'validator exhausted' } }, // s2 (LAST step) — FAILS
+      { lines: [] }, // synthesis — must carry the fold-in
+    ])
+    await runPlan({ transport, session: EMPTY_SESSION, plan })
+    expect(calls).toHaveLength(3) // K+1 exactly — no extra dispatch for the acknowledgment itself
+    const synthesisText = (calls[2] as { text: string }).text
+    expect(synthesisText).toContain('s2')
+    expect(synthesisText).toMatch(/failed/i)
   })
 })
 

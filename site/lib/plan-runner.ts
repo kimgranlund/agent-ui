@@ -99,18 +99,38 @@ export type PlanConsumption =
   | { consumed: true; plan: PlanDeclaration }
   | { consumed: false; reason: 'none' }
   | { consumed: false; reason: 'over-cap'; declaredSteps: number; cap: number }
+  | { consumed: false; reason: 'duplicate-ids'; duplicateId: string }
 
 /**
  * SPEC-R21 Consumption + Bounds — the pure decision: `declared` is already SHALLOW-VALIDATED
  * (`readMetaLine`'s per-field-independent guard, SPEC-R20) by the time it reaches here, so this function's
- * ONLY job is the step-cap check. `undefined` (no `plan` declared, or the model built/declined instead)
- * ⇒ `{consumed:false, reason:'none'}` — never an error, the plan-request turn simply stands as ordinary
- * output. Over cap ⇒ `{consumed:false, reason:'over-cap', ...}` — the host NEVER truncates/rewrites a
- * declaration it didn't author (the advisory law's flip side); the caller is responsible for surfacing the
- * ONE visible warning this refusal requires.
+ * job is the step-cap check plus two cheap structural guards the SPEC leaves silent on:
+ *   - a ZERO-step declaration ({steps:[]}) is treated as `{consumed:false, reason:'none'}` — the SAME
+ *     "no consumable plan" outcome an absent `plan` field gets. Consuming it would drive a K=0 run whose
+ *     only dispatch is a lone, contextless synthesis turn — a vacuous shape SPEC-R21's own "K steps + 1
+ *     synthesis" framing never contemplates (K is always presented as a positive step count).
+ *   - DUPLICATE declared step ids are REJECTED, never deduped/renamed: two steps sharing one `id` would
+ *     collide onto the SAME status-stream group key (`planStepGroupKey`, derived FROM the declared id), so
+ *     their `pending`/`running`/terminal states and progress events would overwrite/interleave under one
+ *     key — a silent projection corruption, not a visible failure. The SPEC is silent on this case; reject
+ *     (never consumed) is the choice made here, on the SAME "the host never rewrites a declaration it
+ *     didn't author" ground the over-cap refusal already stands on (a dedupe/rename would be exactly that
+ *     rewrite). Checked BEFORE the cap (a duplicate-id plan is malformed regardless of its length).
+ * `undefined` (no `plan` declared, or the model built/declined instead) ⇒ `{consumed:false, reason:'none'}`
+ * — never an error, the plan-request turn simply stands as ordinary output. Over cap ⇒
+ * `{consumed:false, reason:'over-cap', ...}` — the caller is responsible for surfacing the ONE visible
+ * warning THAT refusal requires (SPEC-R21 Bounds); the zero-step/duplicate-id refusals carry no such
+ * requirement (the SPEC's visible-warning language is over-cap-specific: "the model's note announced a
+ * plan" — a genuinely malformed declaration was never announced as a usable one).
  */
 export function consumePlan(declared: PlanDeclaration | undefined, cap: number = DEFAULT_PLAN_STEP_CAP): PlanConsumption {
   if (declared === undefined) return { consumed: false, reason: 'none' }
+  if (declared.steps.length === 0) return { consumed: false, reason: 'none' } // a vacuous plan is "no plan"
+  const seen = new Set<string>()
+  for (const s of declared.steps) {
+    if (seen.has(s.id)) return { consumed: false, reason: 'duplicate-ids', duplicateId: s.id }
+    seen.add(s.id)
+  }
   if (declared.steps.length > cap) return { consumed: false, reason: 'over-cap', declaredSteps: declared.steps.length, cap }
   return { consumed: true, plan: declared }
 }
