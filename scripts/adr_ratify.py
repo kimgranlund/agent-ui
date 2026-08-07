@@ -10,18 +10,29 @@ live against GitHub and, only if every check passes, performs the whole flip mec
     Ratified-by cell <- owner login + utterance date + URL
     README index row status column `proposed -> accepted`
     derived indexes regenerated (node scripts/generate-sitemap.mjs)
-    booked-repairs checklist comment posted on the ratifying PR/issue (GH #392)
+    booked-repairs TRACKING ISSUE filed, one per flip that owes repairs (GH #544)
+    booked-repairs checklist comment posted on the ratifying PR/issue, naming that issue (GH #392)
 
-No LLM composes ratification language at any point (ADR-0149 F2). The checklist comment holds that
-line too: its items are the ADR's own Repairs-cell segments, sliced mechanically and quoted
+Why an issue AND a comment (GH #544). The comment alone was the GH #392 remedy, and it did post —
+but the ratification utterance lands on the ADR's own proposing PR, which is merged and CLOSED by
+the time anyone ratifies (ADR-0175: PR #505 closed 16:22Z, checklist comment posted 19:46Z). A
+comment on a closed PR has no state a `- [ ]` box can carry, appears in no queue, and is not a file
+any gate can read, so two flips' repairs fell through in one day. The tracking issue is the artifact
+whose OPEN state IS the repairs' un-doneness: it sits in `gh issue list` — the repo's one work queue
+since ADR-0145 — until someone closes it. The comment stays as the record at the ratification site
+and now points at that issue.
+
+No LLM composes ratification language at any point (ADR-0149 F2). The checklist holds that line in
+both surfaces: its items are the ADR's own Repairs-cell segments, sliced mechanically and quoted
 verbatim under a fixed template — never paraphrased, never summarized.
 
 Fail-closed (F3): any check failing, `gh` unavailable, URL ambiguous, zero or multiple matching ADR
-files -> exit non-zero, ZERO writes. The ONE fail-open exception is the checklist comment (GH #392):
-it is a post-flip courtesy, so a failure to post warns and still exits 0 rather than leaving the ADR
-half-flipped. Every pre-flip verification stays fail-closed. The adr-status-guard hook's
-unconditional Edit/Write deny is untouched (F4) — this script writes via plain file I/O and is
-itself the verified path the guard's threat model lacked.
+files -> exit non-zero, ZERO writes. The ONLY fail-open steps are the two post-flip booked-repairs
+artifacts (GH #392/#544): the flip is the primary act and has already landed, so a failure to file
+the issue or post the comment warns and still exits 0 rather than leaving the ADR half-flipped.
+Every pre-flip verification stays fail-closed. The adr-status-guard hook's unconditional Edit/Write
+deny is untouched (F4) — this script writes via plain file I/O and is itself the verified path the
+guard's threat model lacked.
 
 Usage:
     python3 scripts/adr_ratify.py ADR-0149 https://github.com/OWNER/REPO/pull/38#issuecomment-NNN
@@ -57,6 +68,10 @@ BOOKED_RE = re.compile(r"on ratification", re.IGNORECASE)
 # list that follows, not a note about its own segment (GH #394). Every real label reaches its colon
 # within 9 characters of the phrase; the bound just keeps a rambling sentence from posing as a label.
 SCOPE_LABEL_RE = re.compile(r"on ratification[^:]{0,40}:", re.IGNORECASE)
+
+# The label the tracking issue carries: the repo's existing generic-work-item label (ADR-0145's
+# git-native routing — "Generic work item — chore/follow-up/debt"). No new label is minted for this.
+REPAIRS_ISSUE_LABEL = "task"
 
 
 def run(cmd: list[str]) -> str:
@@ -161,18 +176,103 @@ def booked_repairs(adr_text: str) -> list[str]:
     return items
 
 
-def post_repairs_checklist(api_repo: str, number: str, adr_id: str, adr_rel: str, items: list[str]) -> None:
-    """Post the booked repairs as a checklist comment on the ratifying PR/issue (GH #392).
+def checklist(items: list[str]) -> str:
+    """The booked repairs as unticked markdown checkboxes, verbatim and in cell order.
+
+    Composed once and shared by both surfaces, so the tracking issue and the ratifying-PR comment
+    can never quote the same cell differently.
+    """
+    return "\n".join(f"- [ ] {item}" for item in items)
+
+
+def issue_title(adr_id: str) -> str:
+    """The tracking issue's title — fixed template, the ADR id is the only variable."""
+    return f"ADR-{adr_id}: execute the booked repairs"
+
+
+def issue_body(adr_id: str, adr_rel: str, url: str, date: str, items: list[str]) -> str:
+    """The tracking issue's body (GH #544). Pure: strings in, one string out.
+
+    Says three things and nothing else: what flipped, that this issue's OPEN state is the repairs'
+    un-doneness, and the verbatim checklist. No paraphrase of any item (ADR-0149 F2).
+    """
+    return (
+        f"`scripts/adr_ratify.py` flipped **ADR-{adr_id}** `proposed` → `accepted` on {date} "
+        f"(ADR-0149), via the owner's ratification utterance: {url}\n\n"
+        f"That ADR's **Repairs** cell books the items below on ratification. **This issue is their "
+        f"tracking record — it stays OPEN until they are executed, and closing it is the record "
+        f"that they landed.** It is filed automatically because the checklist comment on the "
+        f"ratifying PR (GH #392) lands on a PR that is already closed, where it carries no state "
+        f"and sits in no queue — two flips' repairs fell through that way (GH #544).\n\n"
+        f"Each item is quoted verbatim from that ADR's own **Repairs** cell:\n\n"
+        f"{checklist(items)}\n\n"
+        f"Source: `{adr_rel}`"
+    )
+
+
+def file_repairs_issue(
+    api_repo: str, adr_id: str, adr_rel: str, url: str, date: str, items: list[str]
+) -> str | None:
+    """File the booked repairs as one OPEN tracking issue (GH #544); return its `#N` ref, or None.
 
     Fail-OPEN by contract: the flip is the primary act and has already landed, so any failure here
-    warns on stderr and returns — the caller still exits 0.
+    warns on stderr and returns None — the caller still exits 0.
     """
+    payload = json.dumps({
+        "title": issue_title(adr_id),
+        "body": issue_body(adr_id, adr_rel, url, date, items),
+        "labels": [REPAIRS_ISSUE_LABEL],
+    })
+    res = subprocess.run(
+        ["gh", "api", f"repos/{api_repo}/issues", "--input", "-"],
+        input=payload, capture_output=True, text=True,
+    )
+    if res.returncode != 0:
+        print(
+            f"WARNING: the flip landed, but filing the booked-repairs tracking issue on "
+            f"{api_repo} failed ({res.returncode}): {res.stderr.strip()}\n"
+            f"         File it by hand — title '{issue_title(adr_id)}', label "
+            f"'{REPAIRS_ISSUE_LABEL}', one unticked box per Repairs item in {adr_rel}. Until it "
+            f"exists, these {len(items)} repair(s) sit in no queue.",
+            file=sys.stderr,
+        )
+        return None
+    try:
+        number = json.loads(res.stdout)["number"]
+    except (json.JSONDecodeError, KeyError, TypeError):
+        print(
+            f"WARNING: the tracking issue was created on {api_repo} but its number could not be "
+            f"read back — check `gh issue list --label {REPAIRS_ISSUE_LABEL}`.",
+            file=sys.stderr,
+        )
+        return None
+    print(f"  filed:  booked-repairs tracking issue {api_repo}#{number} ({len(items)} item(s), OPEN)")
+    return f"#{number}"
+
+
+def post_repairs_checklist(
+    api_repo: str, number: str, adr_id: str, adr_rel: str, items: list[str], issue_ref: str | None
+) -> None:
+    """Post the booked repairs as a checklist comment on the ratifying PR/issue (GH #392).
+
+    The record at the ratification site. `issue_ref` points at the tracking issue that actually
+    holds the state (GH #544) — or says plainly that none exists, so a reader is never left
+    believing this closed-PR comment is the tracking record.
+
+    Fail-OPEN by contract, same as `file_repairs_issue`.
+    """
+    tracked = (
+        f"Tracked in {issue_ref} — that issue stays OPEN until these land."
+        if issue_ref
+        else "**No tracking issue was filed** (see the flip's stderr) — these items are in no "
+             "queue until one exists."
+    )
     body = (
         f"**Booked repairs — ADR-{adr_id}**, flipped `proposed` → `accepted` by "
         f"`scripts/adr_ratify.py` (ADR-0149). Each item is quoted verbatim from that ADR's own "
         f"**Repairs** cell:\n\n"
-        + "\n".join(f"- [ ] {item}" for item in items)
-        + f"\n\nSource: `{adr_rel}`"
+        + checklist(items)
+        + f"\n\n{tracked}\n\nSource: `{adr_rel}`"
     )
     payload = json.dumps({"body": body})
     res = subprocess.run(
@@ -273,8 +373,10 @@ def main() -> int:
     utterance_number = um.group(3)
     booked = (
         "\n  booked: " + "\n          ".join(f"[ ] {item}" for item in repairs)
+        + f"\n  track:  would file '{issue_title(adr_id)}' "
+          f"(label '{REPAIRS_ISSUE_LABEL}', OPEN) on {origin_owner}/{origin_repo}"
         if repairs
-        else "\n  booked: (no `on ratification` items in the Repairs cell — nothing to post)"
+        else "\n  booked: (no `on ratification` items in the Repairs cell — nothing to track)"
     )
     if dry_run:
         print(f"DRY-RUN — all checks pass, no writes.\n{evidence}{booked}")
@@ -297,11 +399,19 @@ def main() -> int:
     print(f"RATIFIED ADR-{adr_id}\n{evidence}\n  wrote:  Status cell · Ratified-by cell · README row · derived indexes")
 
     # The flip is done. Everything below is fail-OPEN — it must never turn a landed flip non-zero.
+    # Order matters: the tracking issue is filed FIRST so the comment can name it (GH #544). If the
+    # issue fails, the comment still posts and says so, rather than implying it is the tracker.
     if repairs:
+        api_repo = f"{origin_owner}/{origin_repo}"
+        adr_rel = str(adr_path.relative_to(root))
+        issue_ref = None
+        try:
+            issue_ref = file_repairs_issue(api_repo, adr_id, adr_rel, url, date, repairs)
+        except Exception as exc:  # noqa: BLE001 — a post-flip artifact may not fail the flip
+            print(f"WARNING: booked-repairs tracking issue not filed: {exc}", file=sys.stderr)
         try:
             post_repairs_checklist(
-                f"{origin_owner}/{origin_repo}", utterance_number, adr_id,
-                str(adr_path.relative_to(root)), repairs,
+                api_repo, utterance_number, adr_id, adr_rel, repairs, issue_ref,
             )
         except Exception as exc:  # noqa: BLE001 — a courtesy comment may not fail the flip
             print(f"WARNING: booked-repairs checklist not posted: {exc}", file=sys.stderr)

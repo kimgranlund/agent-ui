@@ -1,14 +1,24 @@
 #!/usr/bin/env python3
-"""Unit test for adr_ratify.py's Repairs-cell parser.
+"""Unit test for adr_ratify.py's Repairs-cell parser and its booked-repairs artifacts.
 
 The repo carries no python test runner, so this is stdlib `unittest`, run directly:
 
     python3 scripts/adr_ratify_test.py
 
-Scope is the PURE parser only (`booked_repairs`) — no `gh`, no network, no file writes.
+Two scopes, no `gh` and no network in either:
+
+  * the PURE parser + body composers (`booked_repairs`, `checklist`, `issue_title`, `issue_body`)
+  * the WHOLE flip path (`main`) over a temp repo tree with `subprocess` faked — the only place the
+    post-flip artifacts are observed as they actually land (GH #544). A green per-function assertion
+    is not proof the flip files the tracking issue; this runs the real `main()` and reads the real
+    `gh` calls it made.
 """
 from __future__ import annotations
 
+import contextlib
+import io
+import json
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -16,7 +26,15 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from adr_ratify import REPAIRS_ROW_RE, booked_repairs  # noqa: E402
+import adr_ratify  # noqa: E402
+from adr_ratify import (  # noqa: E402
+    REPAIRS_ISSUE_LABEL,
+    REPAIRS_ROW_RE,
+    booked_repairs,
+    checklist,
+    issue_body,
+    issue_title,
+)
 
 # ADR-0167's real Repairs cell (the hard case: two bold-labelled bookings in ONE ` · `-free cell,
 # one plain "On ratification", one "On ratification+build"). Copied verbatim 2026-07-31.
@@ -237,6 +255,235 @@ class TheWholeCorpusParses(unittest.TestCase):
                     self.assertEqual(item, item.strip())
                     self.assertIn(item, row.group(1))  # verbatim, never composed
         self.assertGreater(cells, 150, "the ADR corpus got smaller — is the glob still right?")
+
+
+class BookedRepairsBodies(unittest.TestCase):
+    """The two surfaces' text is composed, never paraphrased (ADR-0149 F2)."""
+
+    ITEMS = ["**On ratification:** `roadmap.md` restates", "`catalog.json` gains a row (cl.2)"]
+
+    def test_checklist_is_one_unticked_box_per_item_verbatim(self) -> None:
+        self.assertEqual(
+            checklist(self.ITEMS),
+            "- [ ] **On ratification:** `roadmap.md` restates\n"
+            "- [ ] `catalog.json` gains a row (cl.2)",
+        )
+
+    def test_issue_title_is_the_fixed_template(self) -> None:
+        self.assertEqual(issue_title("0175"), "ADR-0175: execute the booked repairs")
+
+    def test_issue_body_quotes_every_item_verbatim_and_says_open_is_the_state(self) -> None:
+        body = issue_body("0175", ".claude/docs/adr/0175-x.md", "https://u", "2026-08-06", self.ITEMS)
+        for item in self.ITEMS:
+            self.assertIn(f"- [ ] {item}", body)
+        self.assertIn("ADR-0175", body)
+        self.assertIn("https://u", body)
+        self.assertIn("2026-08-06", body)
+        self.assertIn(".claude/docs/adr/0175-x.md", body)
+        self.assertIn("stays OPEN", body)
+
+
+# ── the whole-path harness ──────────────────────────────────────────────────────────────────────
+
+FIXTURE_ADR = """# ADR-9999 — a fixture
+
+> | | |
+> |---|---|
+> | **Status** | proposed |
+> | **Date** | 2026-08-07 |
+> | **Proposed by** | a seat |
+> | **Ratified by** | *(pending)* |
+> | **Repairs** | none owed backward — a fixture. **On ratification:** `roadmap.md` restates · \
+**On ratification+build:** `catalog.json` gains a row |
+> | **Supersedes / Superseded by** | none |
+
+## Context
+"""
+
+FIXTURE_README = (
+    "# ADR index\n\n"
+    "| ADR | Title | Status | Date |\n"
+    "|---|---|---|---|\n"
+    "| [9998](./9998-other.md) | Other | accepted | 2026-08-06 |\n"
+    "| [9999](./9999-fixture.md) | A fixture | proposed | 2026-08-07 |\n"
+)
+
+UTTERANCE_URL = "https://github.com/OWNER/REPO/pull/38#issuecomment-77"
+
+
+class FakeProc:
+    def __init__(self, stdout: str = "", returncode: int = 0, stderr: str = "") -> None:
+        self.stdout, self.returncode, self.stderr = stdout, returncode, stderr
+
+
+class FakeSubprocess:
+    """Stands in for the `subprocess` module, recording every call `main()` makes.
+
+    Every command `main()` shells out to is answered here, so the whole path runs with no git, no
+    node, no `gh` and no network — and the two post-flip artifacts are readable as the exact API
+    payloads they would have been.
+    """
+
+    def __init__(self, root: Path, issue_ok: bool = True) -> None:
+        self.root, self.issue_ok = root, issue_ok
+        self.calls: list[tuple[list[str], str | None]] = []
+
+    def run(self, cmd, capture_output=False, text=False, input=None):  # noqa: A002 — mirrors subprocess
+        self.calls.append((list(cmd), input))
+        joined = " ".join(cmd)
+        if cmd[:2] == ["git", "rev-parse"]:
+            return FakeProc(f"{self.root}\n")
+        if cmd[:2] == ["git", "remote"]:
+            return FakeProc("https://github.com/OWNER/REPO.git\n")
+        if cmd[0] == "node":
+            return FakeProc("")
+        if cmd[:2] == ["gh", "repo"]:
+            return FakeProc(json.dumps({"owner": {"login": "OWNER"}}))
+        if cmd[:2] == ["gh", "api"] and cmd[2].endswith("/issues/comments/77"):
+            return FakeProc(json.dumps({
+                "user": {"login": "OWNER"},
+                "body": "ratify ADR-9999",
+                "created_at": "2026-08-07T10:00:00Z",
+            }))
+        if joined.endswith("repos/OWNER/REPO/issues --input -"):
+            if not self.issue_ok:
+                return FakeProc("", returncode=1, stderr="HTTP 503")
+            return FakeProc(json.dumps({"number": 601, "html_url": "https://github.com/x/601"}))
+        if joined.endswith("repos/OWNER/REPO/issues/38/comments --input -"):
+            return FakeProc(json.dumps({"id": 9}))
+        raise AssertionError(f"unstubbed command: {joined}")
+
+    def payload(self, suffix: str) -> dict:
+        """The JSON body of the one recorded call whose command ends with `suffix`."""
+        hits = [body for cmd, body in self.calls if " ".join(cmd).endswith(suffix)]
+        assert len(hits) == 1, f"{len(hits)} calls ending '{suffix}'"
+        return json.loads(hits[0])
+
+    def called(self, suffix: str) -> int:
+        return sum(1 for cmd, _ in self.calls if " ".join(cmd).endswith(suffix))
+
+
+class WholeFlipPath(unittest.TestCase):
+    """Runs the real `main()` end to end and asserts what it actually did (GH #544).
+
+    The regression this pins: before the fix, a flip's ONLY post-flip artifact was a comment on the
+    ratifying PR — which is closed by then, carries no state and sits in no queue, so two ADRs'
+    repairs fell through in a day. The load-bearing assertion is that a flip owing repairs files an
+    OPEN tracking issue.
+    """
+
+    def flip(self, issue_ok: bool = True):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        adr_dir = root / ".claude" / "docs" / "adr"
+        adr_dir.mkdir(parents=True)
+        (adr_dir / "9999-fixture.md").write_text(FIXTURE_ADR, encoding="utf-8")
+        (adr_dir / "README.md").write_text(FIXTURE_README, encoding="utf-8")
+
+        fake = FakeSubprocess(root, issue_ok=issue_ok)
+        real_subprocess, real_argv = adr_ratify.subprocess, sys.argv
+        adr_ratify.subprocess = fake
+        sys.argv = ["adr_ratify.py", "ADR-9999", UTTERANCE_URL]
+        out = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+                code = adr_ratify.main()
+        finally:
+            adr_ratify.subprocess, sys.argv = real_subprocess, real_argv
+        return code, fake, adr_dir, out.getvalue()
+
+    def test_a_flip_owing_repairs_files_an_open_tracking_issue(self) -> None:
+        code, fake, adr_dir, stdout = self.flip()
+        self.assertEqual(code, 0, stdout)
+
+        # the flip itself still lands, unchanged
+        adr = (adr_dir / "9999-fixture.md").read_text(encoding="utf-8")
+        self.assertIn("> | **Status** | accepted |", adr)
+        self.assertIn("OWNER (repo owner), 2026-08-07", adr)
+        readme = (adr_dir / "README.md").read_text(encoding="utf-8")
+        self.assertIn("| [9999](./9999-fixture.md) | A fixture | accepted | 2026-08-07 |", readme)
+        self.assertIn("| [9998](./9998-other.md) | Other | accepted | 2026-08-06 |", readme)
+
+        # …and the booked repairs now land as a tracked artifact, not only a comment
+        issue = fake.payload("repos/OWNER/REPO/issues --input -")
+        self.assertEqual(issue["title"], "ADR-9999: execute the booked repairs")
+        self.assertEqual(issue["labels"], [REPAIRS_ISSUE_LABEL])
+        self.assertIn("- [ ] **On ratification:** `roadmap.md` restates", issue["body"])
+        self.assertIn("- [ ] **On ratification+build:** `catalog.json` gains a row", issue["body"])
+        # the cell's leading non-booked prose is not an item (the ADR-0164 shape)
+        self.assertNotIn("none owed backward", issue["body"])
+        self.assertIn(UTTERANCE_URL, issue["body"])
+
+        # the comment stays, and points at the issue that actually holds the state
+        comment = fake.payload("repos/OWNER/REPO/issues/38/comments --input -")
+        self.assertIn("Tracked in #601", comment["body"])
+        self.assertIn("- [ ] **On ratification:** `roadmap.md` restates", comment["body"])
+        self.assertIn("filed:  booked-repairs tracking issue OWNER/REPO#601", stdout)
+
+    def test_a_failed_filing_still_exits_zero_and_the_comment_says_so(self) -> None:
+        # Fail-OPEN: the flip is the primary act and has landed — a 503 may not revert or red it.
+        code, fake, adr_dir, stdout = self.flip(issue_ok=False)
+        self.assertEqual(code, 0, stdout)
+        self.assertIn("> | **Status** | accepted |", (adr_dir / "9999-fixture.md").read_text())
+        comment = fake.payload("repos/OWNER/REPO/issues/38/comments --input -")
+        self.assertIn("No tracking issue was filed", comment["body"])
+        self.assertNotIn("Tracked in", comment["body"])
+
+    def test_a_flip_owing_nothing_files_nothing(self) -> None:
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        adr_dir = root / ".claude" / "docs" / "adr"
+        adr_dir.mkdir(parents=True)
+        (adr_dir / "9999-fixture.md").write_text(
+            FIXTURE_ADR.replace(
+                FIXTURE_ADR.split("> | **Repairs** | ")[1].split(" |\n")[0],
+                "*(none — a sequencing decision; edits no owning doc.)*",
+            ),
+            encoding="utf-8",
+        )
+        (adr_dir / "README.md").write_text(FIXTURE_README, encoding="utf-8")
+        fake = FakeSubprocess(root)
+        real_subprocess, real_argv = adr_ratify.subprocess, sys.argv
+        adr_ratify.subprocess = fake
+        sys.argv = ["adr_ratify.py", "ADR-9999", UTTERANCE_URL]
+        try:
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                code = adr_ratify.main()
+        finally:
+            adr_ratify.subprocess, sys.argv = real_subprocess, real_argv
+        self.assertEqual(code, 0)
+        self.assertEqual(fake.called("repos/OWNER/REPO/issues --input -"), 0)
+        self.assertEqual(fake.called("repos/OWNER/REPO/issues/38/comments --input -"), 0)
+
+    def test_dry_run_writes_nothing_and_names_the_issue_it_would_file(self) -> None:
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        adr_dir = root / ".claude" / "docs" / "adr"
+        adr_dir.mkdir(parents=True)
+        (adr_dir / "9999-fixture.md").write_text(FIXTURE_ADR, encoding="utf-8")
+        (adr_dir / "README.md").write_text(FIXTURE_README, encoding="utf-8")
+        fake = FakeSubprocess(root)
+        real_subprocess, real_argv = adr_ratify.subprocess, sys.argv
+        adr_ratify.subprocess = fake
+        sys.argv = ["adr_ratify.py", "ADR-9999", UTTERANCE_URL, "--dry-run"]
+        out = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+                code = adr_ratify.main()
+        finally:
+            adr_ratify.subprocess, sys.argv = real_subprocess, real_argv
+        stdout = out.getvalue()
+        self.assertEqual(code, 0, stdout)
+        self.assertIn("DRY-RUN", stdout)
+        self.assertIn("would file 'ADR-9999: execute the booked repairs'", stdout)
+        self.assertIn(f"label '{REPAIRS_ISSUE_LABEL}'", stdout)
+        # zero writes, zero artifacts
+        self.assertIn("> | **Status** | proposed |", (adr_dir / "9999-fixture.md").read_text())
+        self.assertEqual(fake.called("repos/OWNER/REPO/issues --input -"), 0)
+        self.assertEqual(fake.called("repos/OWNER/REPO/issues/38/comments --input -"), 0)
 
 
 if __name__ == "__main__":
