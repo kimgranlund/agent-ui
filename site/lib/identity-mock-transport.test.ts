@@ -1,6 +1,7 @@
-// identity-mock-transport.test.ts — X1's own unit suite (identity-mock-transport.spec.md v0.1, S1
-// scope: SPEC-R1/R5/R6/R7/R8/R10). Every AC named below is the SPEC's own numbering, so a reviewer can
-// cross-check this file against the SPEC directly.
+// identity-mock-transport.test.ts — X1's own unit suite (identity-mock-transport.spec.md v0.1). S1
+// scope: SPEC-R1/R5/R6/R7/R8/R10. S2 scope (this widening): SPEC-R2 (one-time code request/verify/
+// resend) + SPEC-R3 (magic-link request/confirm) + their slice of SPEC-R8's vocabulary. Every AC named
+// below is the SPEC's own numbering, so a reviewer can cross-check this file against the SPEC directly.
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createIdentityMockTransport, IdentityMockError } from './identity-mock-transport.ts'
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (build-key-safety.test.ts precedent)
@@ -75,6 +76,171 @@ describe('SPEC-R1 — register / signInWithPassword', () => {
     const transport = createIdentityMockTransport({ latencyMs: 0 })
     try {
       await transport.signInWithPassword({ email: 'nobody@example.com', password: 'x' })
+      expect.unreachable('expected a rejection')
+    } catch (err) {
+      expect(err).toBeInstanceOf(IdentityMockError)
+      expect(err).toBeInstanceOf(Error)
+    }
+  })
+})
+
+// ── SPEC-R2 — requestOneTimeCode / verifyOneTimeCode (S2) ──────────────────────────────────────────────
+
+describe('SPEC-R2 — requestOneTimeCode / verifyOneTimeCode', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('AC1: requestOneTimeCode resolves {requestId, expiresAt} with a future expiresAt and a stable requestId', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0 })
+    const before = Date.now()
+    const { requestId, expiresAt } = await transport.requestOneTimeCode({ email: 'a@example.com' })
+    expect(requestId.length).toBeGreaterThan(0)
+    expect(expiresAt).toBeGreaterThan(before)
+  })
+
+  it('AC2: verifyOneTimeCode with the seeded predictable code and the matching requestId resolves session.method === "code"', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0 })
+    const { requestId } = await transport.requestOneTimeCode({ email: 'a@example.com' })
+    const { session } = await transport.verifyOneTimeCode({ requestId, code: '424242' })
+    expect(session.method).toBe('code')
+    expect(session.email).toBe('a@example.com')
+  })
+
+  it('AC3: a wrong code against a valid requestId rejects code-invalid', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0 })
+    const { requestId } = await transport.requestOneTimeCode({ email: 'a@example.com' })
+    await expect(transport.verifyOneTimeCode({ requestId, code: '000000' })).rejects.toMatchObject({ code: 'code-invalid' })
+  })
+
+  it('AC3: an unrecognized requestId also rejects code-invalid (S2\'s own fold-in choice, file banner)', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0 })
+    await expect(transport.verifyOneTimeCode({ requestId: 'nope', code: '424242' })).rejects.toMatchObject({ code: 'code-invalid' })
+  })
+
+  it('AC3: a code submitted after expiresAt has passed rejects code-expired (fake-clock probe)', async () => {
+    vi.useFakeTimers()
+    const transport = createIdentityMockTransport({ latencyMs: 0, expiresInMs: 1000 })
+    const { requestId } = await transport.requestOneTimeCode({ email: 'a@example.com' })
+    await vi.advanceTimersByTimeAsync(1001)
+    await expect(transport.verifyOneTimeCode({ requestId, code: '424242' })).rejects.toMatchObject({ code: 'code-expired' })
+  })
+
+  it('AC4: a second requestOneTimeCode for the SAME email before cooldownMs elapses rejects code-rate-limited', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0, cooldownMs: 30_000 })
+    await transport.requestOneTimeCode({ email: 'a@example.com' })
+    await expect(transport.requestOneTimeCode({ email: 'a@example.com' })).rejects.toMatchObject({ code: 'code-rate-limited' })
+  })
+
+  it('AC4: a different email is never rate-limited by another email\'s cooldown', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0, cooldownMs: 30_000 })
+    await transport.requestOneTimeCode({ email: 'a@example.com' })
+    await expect(transport.requestOneTimeCode({ email: 'b@example.com' })).resolves.toBeDefined()
+  })
+
+  it('AC4: a request AFTER cooldownMs elapses resolves normally with a NEW requestId (fake-clock probe)', async () => {
+    vi.useFakeTimers()
+    const transport = createIdentityMockTransport({ latencyMs: 0, cooldownMs: 1000 })
+    const first = await transport.requestOneTimeCode({ email: 'a@example.com' })
+    await vi.advanceTimersByTimeAsync(1001)
+    const second = await transport.requestOneTimeCode({ email: 'a@example.com' })
+    expect(second.requestId).not.toBe(first.requestId)
+  })
+
+  it('a redeemed code cannot be replayed — a second verifyOneTimeCode with the same requestId rejects code-invalid', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0 })
+    const { requestId } = await transport.requestOneTimeCode({ email: 'a@example.com' })
+    await transport.verifyOneTimeCode({ requestId, code: '424242' })
+    await expect(transport.verifyOneTimeCode({ requestId, code: '424242' })).rejects.toMatchObject({ code: 'code-invalid' })
+  })
+
+  it('a code sign-in for a not-yet-seen email auto-provisions an account (S2\'s own choice, file banner) — same session on getSession()', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0 })
+    const { requestId } = await transport.requestOneTimeCode({ email: 'new-via-code@example.com' })
+    const { session } = await transport.verifyOneTimeCode({ requestId, code: '424242' })
+    expect(transport.getSession()).toEqual(session)
+  })
+
+  it('an overridden `code` option reflects in verifyOneTimeCode (SPEC-R6 AC3)', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0, code: '000111' })
+    const { requestId } = await transport.requestOneTimeCode({ email: 'a@example.com' })
+    await expect(transport.verifyOneTimeCode({ requestId, code: '424242' })).rejects.toMatchObject({ code: 'code-invalid' })
+    await expect(transport.verifyOneTimeCode({ requestId, code: '000111' })).resolves.toBeDefined()
+  })
+})
+
+// ── SPEC-R3 — requestMagicLink / confirmMagicLink (S2) ─────────────────────────────────────────────────
+
+describe('SPEC-R3 — requestMagicLink / confirmMagicLink', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('AC1: requestMagicLink resolves {requestId, expiresAt} — the "check your email" state renders off this alone', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0 })
+    const before = Date.now()
+    const { requestId, expiresAt } = await transport.requestMagicLink({ email: 'a@example.com' })
+    expect(requestId.length).toBeGreaterThan(0)
+    expect(expiresAt).toBeGreaterThan(before)
+  })
+
+  it('AC2: confirmMagicLink before expiresAt resolves session.method === "magic-link"', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0 })
+    const { requestId } = await transport.requestMagicLink({ email: 'a@example.com' })
+    const { session } = await transport.confirmMagicLink({ requestId })
+    expect(session.method).toBe('magic-link')
+    expect(session.email).toBe('a@example.com')
+  })
+
+  it('AC2: confirmMagicLink with an unknown requestId rejects link-invalid', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0 })
+    await expect(transport.confirmMagicLink({ requestId: 'nope' })).rejects.toMatchObject({ code: 'link-invalid' })
+  })
+
+  it('AC2: confirmMagicLink after expiresAt has passed rejects link-expired (fake-clock probe)', async () => {
+    vi.useFakeTimers()
+    const transport = createIdentityMockTransport({ latencyMs: 0, expiresInMs: 1000 })
+    const { requestId } = await transport.requestMagicLink({ email: 'a@example.com' })
+    await vi.advanceTimersByTimeAsync(1001)
+    await expect(transport.confirmMagicLink({ requestId })).rejects.toMatchObject({ code: 'link-expired' })
+  })
+
+  it('a confirmed link cannot be replayed — a second confirmMagicLink with the same requestId rejects link-invalid', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0 })
+    const { requestId } = await transport.requestMagicLink({ email: 'a@example.com' })
+    await transport.confirmMagicLink({ requestId })
+    await expect(transport.confirmMagicLink({ requestId })).rejects.toMatchObject({ code: 'link-invalid' })
+  })
+
+  it('requesting again for the same email (a resend) issues an independent, still-valid requestId — no rate limit for magic link', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0 })
+    const first = await transport.requestMagicLink({ email: 'a@example.com' })
+    const second = await transport.requestMagicLink({ email: 'a@example.com' })
+    expect(second.requestId).not.toBe(first.requestId)
+    await expect(transport.confirmMagicLink({ requestId: second.requestId })).resolves.toBeDefined()
+  })
+
+  it('a magic-link sign-in for a not-yet-seen email auto-provisions an account — same session on getSession()', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0 })
+    const { requestId } = await transport.requestMagicLink({ email: 'new-via-link@example.com' })
+    const { session } = await transport.confirmMagicLink({ requestId })
+    expect(transport.getSession()).toEqual(session)
+  })
+})
+
+// ── SPEC-R8 (S2 extension) — no cross-op meaning overlap between codes/links/S1's own codes ────────────
+
+describe('SPEC-R8 — closed error vocabulary (S2 slice — no cross-op meaning overlap)', () => {
+  it('code-* codes never fire from confirmMagicLink; link-* codes never fire from verifyOneTimeCode', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0 })
+    await expect(transport.confirmMagicLink({ requestId: 'nope' })).rejects.toMatchObject({ code: 'link-invalid' })
+    await expect(transport.verifyOneTimeCode({ requestId: 'nope', code: '424242' })).rejects.toMatchObject({ code: 'code-invalid' })
+  })
+
+  it('every S2 rejection is a real IdentityMockError instance (SPEC-R8 AC1)', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0 })
+    try {
+      await transport.confirmMagicLink({ requestId: 'nope' })
       expect.unreachable('expected a rejection')
     } catch (err) {
       expect(err).toBeInstanceOf(IdentityMockError)
