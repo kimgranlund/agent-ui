@@ -1093,9 +1093,11 @@ whole arc; the `auth` vocabulary stays `'none' | 'serverKey'` (no `'mcp'` member
 `ExecuteContext` field); the enablement wire stays `integrations: string[]` of registry `id`s.
 *(→ PRD-G7; ADR-0137/0177 cl.1)*
 - **AC1** *Given* the arc's diffs, *when* reviewed at each slice, *then* `registry.ts`,
-  `validate-input.ts`, `tool-dispatch.ts`, and `src/agent/` carry ZERO changes (the frozen-file
-  fence — checkable as an empty `git diff` over those paths per PR) and the shipped SPEC-R16–R19
-  suites pass byte-unmodified — `npm test` green by exit code.
+  `validate-input.ts`, `tool-dispatch.ts`, `integrations/index.ts`, and `src/agent/` carry ZERO
+  changes (the frozen-file fence — checkable as an empty `git diff` over those paths per PR;
+  `integrations/index.ts` in the list is what makes SPEC-R27's never-top-level-`await` law
+  mechanical rather than review-enforced) and the shipped SPEC-R16–R19 suites pass
+  byte-unmodified — `npm test` green by exit code.
 - **AC2** *Given* a fake discovered tool registered through the connector, *when* read back via
   `listIntegrations()`, *then* it is a complete ordinary manifest (`id`/`label`/`description`/
   `tool`/`auth`/`execute`) with no MCP-marked field on the consumer surface — deterministic unit
@@ -1118,7 +1120,10 @@ duality is part of the pinned transport, not a fallback. The `initialize` handsh
 negotiated version ∈ {`"2025-06-18"`, `"2025-03-26"`} (the Streamable-HTTP-capable revisions) and
 otherwise skip-and-log that SERVER (SPEC-R26's fail-soft grain, applied at server scope); every
 post-initialize request MUST carry the `MCP-Protocol-Version` header (the 2025-06-18
-requirement). F3, recorded: the client is HAND-ROLLED over plain `fetch` — DERIVED, not chosen
+requirement); and the client MUST honor a server-assigned `Mcp-Session-Id` — captured from the
+`initialize` response headers, echoed on every subsequent request to that server (the
+Streamable-HTTP session law; a server assigning none ⇒ the header is simply never sent). F3,
+recorded: the client is HAND-ROLLED over plain `fetch` — DERIVED, not chosen
 fresh: SPEC-N1 pins `@agent-ui/a2ui` deps unchanged + no-SDK/plain-`fetch`, and Worker
 portability requires fetch-only I/O; adopting `@modelcontextprotocol/sdk` would be a
 repo-identity dependency change (the ADR-0139 class) needing its own Kim-ruled record — a
