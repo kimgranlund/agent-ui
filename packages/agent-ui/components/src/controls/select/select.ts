@@ -235,7 +235,8 @@ export class UISelectElement extends UIFormElement {
     // "first blur or change" contract every other control honours (this one just has one of the two
     // triggers). Reflects :state(user-invalid) + aria-invalid on the trigger (the role-carrying part
     // — the host carries no internals.role, so the base's guarded default never fires).
-    const invalidController = trackUserInvalid(this, { invalid: () => !this.formValidity().valid })
+    // GH #554 — MERGED validity, not `formValidity()` alone (a `setCustomValidity`-only rejection must gate).
+    const invalidController = trackUserInvalid(this, { invalid: () => !this.mergedValidity().valid })
     this.#userInvalid = invalidController
     this.effect(() => {
       if (invalidController.userInvalid()) {

@@ -95,7 +95,8 @@ export class UIRadioGroupElement extends UIFormElement {
     // group's real commits regardless of listener registration order. Reflects :state(user-invalid)
     // + internals.ariaInvalid — the group carries no visual surface of its own (radio-group.css); the
     // CSS leg reaches into each ui-radio child's own ::before border.
-    const invalidController = trackUserInvalid(this, { invalid: () => !this.formValidity().valid })
+    // GH #554 — MERGED validity, not `formValidity()` alone (a `setCustomValidity`-only rejection must gate).
+    const invalidController = trackUserInvalid(this, { invalid: () => !this.mergedValidity().valid })
     this.#userInvalid = invalidController
     this.effect(() => {
       if (invalidController.userInvalid()) {

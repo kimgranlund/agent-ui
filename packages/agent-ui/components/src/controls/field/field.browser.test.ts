@@ -174,6 +174,43 @@ describe('ui-field — :state(user-invalid) ⟺ the visible error (both engines,
     expect(control.matches(':state(user-invalid)')).toBe(false)
     expect(field.matches(':state(user-invalid)')).toBe(false)
   })
+
+  // GH #554 — a NATIVE-VALID control (no `required`) carrying only a `setCustomValidity` message (the a2ui
+  // `checks` seam, ADR-0029) must gate the SAME real `:state(user-invalid)` ⟺ visible-error lockstep as the
+  // native-invalid case above. Before the fix, `trackUserInvalid`'s gate read `formValidity()` alone — the
+  // custom message never flipped a real `:state(user-invalid)` in either engine, this is the exact regression
+  // the fleet-wide `mergedValidity()` fix closes.
+  it('ONE plain blur on a setCustomValidity-only control (native valid) reveals the error, in lockstep with :state(user-invalid)', async () => {
+    const wrap = mount(`<ui-field label="Zip"><ui-text-field ${SIZED}></ui-text-field></ui-field>`)
+    const field = wrap.querySelector('ui-field') as UIFieldElement
+    const control = field.querySelector('ui-text-field') as UITextFieldElement
+    const editor = field.querySelector('[data-part="editor"]') as HTMLElement
+    const { error } = partsOf(field)
+    await field.updateComplete
+
+    control.setCustomValidity('Zip code is required')
+    await field.updateComplete
+    // pre-interaction negative control — no flash, same timing law as the native-invalid case.
+    expect(error.hidden, 'error visible before any interaction').toBe(true)
+    expect(control.matches(':state(user-invalid)'), 'user-invalid armed before any interaction').toBe(false)
+
+    await userEvent.click(editor)
+    await userEvent.click(document.body) // ONE plain blur
+    await field.updateComplete
+
+    const showing = !error.hidden
+    expect(showing, `${server.browser}: the first blur did not reveal the field error for a setCustomValidity-only rejection`).toBe(true)
+    expect(error.textContent).toBe('Zip code is required')
+    expect(control.matches(':state(user-invalid)')).toBe(showing)
+    expect(field.matches(':state(user-invalid)')).toBe(showing)
+
+    // recovery — the renderer clearing the custom message (native parity) clears both together.
+    control.setCustomValidity('')
+    await field.updateComplete
+    expect(error.hidden).toBe(true)
+    expect(control.matches(':state(user-invalid)')).toBe(false)
+    expect(field.matches(':state(user-invalid)')).toBe(false)
+  })
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════

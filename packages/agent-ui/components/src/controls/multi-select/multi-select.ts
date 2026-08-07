@@ -183,7 +183,8 @@ export class UIMultiSelectElement extends UIFormElement {
     // ADR-0051 — the user-invalid TIMING controller. This control never emits a native `change` event
     // (only `select`, SPEC-R2), so blur is the sole interaction signal (the `ui-select` precedent — that
     // control shares this same one-signal shape).
-    const invalidController = trackUserInvalid(this, { invalid: () => !this.formValidity().valid })
+    // GH #554 — MERGED validity, not `formValidity()` alone (a `setCustomValidity`-only rejection must gate).
+    const invalidController = trackUserInvalid(this, { invalid: () => !this.mergedValidity().valid })
     this.#userInvalid = invalidController
     this.effect(() => {
       if (invalidController.userInvalid()) {

@@ -177,7 +177,8 @@ export class UIColorPickerElement extends UIFormElement {
     // step is needed here (unset stays the default working color, §2).
 
     // ── user-invalid TIMING controller (ADR-0051 — the calendar/text-field precedent) ──────────
-    const invalidController = trackUserInvalid(this, { invalid: () => !this.formValidity().valid })
+    // GH #554 — MERGED validity, not `formValidity()` alone (a `setCustomValidity`-only rejection must gate).
+    const invalidController = trackUserInvalid(this, { invalid: () => !this.mergedValidity().valid })
     this.#userInvalid = invalidController
     this.effect(() => {
       if (invalidController.userInvalid()) this.internals.states?.add('user-invalid')

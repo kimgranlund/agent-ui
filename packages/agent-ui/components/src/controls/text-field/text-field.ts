@@ -241,7 +241,10 @@ export class UITextFieldElement extends UIFormElement {
     })
 
     // ── the user-invalid TIMING controller — gates the danger treatment until the first blur/change ──
-    const controller = trackUserInvalid(this, { invalid: () => !this.formValidity().valid })
+    // MERGED validity (GH #554), not `formValidity()` alone — a `setCustomValidity`-only rejection (native
+    // valid, custom invalid) must still gate the danger treatment; `mergedValidity()` is the same verdict
+    // already published to `internals.setValidity` (dom/form.ts).
+    const controller = trackUserInvalid(this, { invalid: () => !this.mergedValidity().valid })
     this.#userInvalid = controller
 
     // ── type-dependent behavior: inputmode + auto-adornments + codec + validation (Wave 3/5A) ──
@@ -566,8 +569,9 @@ export class UITextFieldElement extends UIFormElement {
     this.effect(() => {
       const fielded = this.fieldLabelling !== null
       if (controller.userInvalid()) {
-        // userInvalid ⇒ invalid, so formValidity() is the invalid branch carrying the message + flags.
-        const verdict = this.formValidity()
+        // userInvalid ⇒ invalid, so mergedValidity() is the invalid branch carrying the message + flags —
+        // native ⊕ custom (GH #554), the same verdict the tracker's `invalid` gate above now reads.
+        const verdict = this.mergedValidity()
         const text = verdict.valid ? '' : verdict.message // the WCAG 1.4.1 non-colour reinforcement
         editor.setAttribute('aria-invalid', 'true')
         if (fielded) {
