@@ -7,7 +7,7 @@
 > OF1–OF4 are NOT resolved here, see §5).
 > Relates: [`../adr/0161-catalog-multi-slot-two-way-value-marks.md`](../adr/0161-catalog-multi-slot-two-way-value-marks.md)
 > (the mechanism this control does NOT use) ·
-> [`../adr/0163-ui-table-interactive-widening.md`](../adr/0163-ui-table-interactive-widening.md) cl.9/cl.10
+> [`../adr/0163-ui-table-interactive-widening.md`](../adr/0163-ui-table-interactive-widening.md) cl.9
 > (`Table.selected` — the array-typed single-slot precedent SPEC-R2/R3 argue from) ·
 > [`../adr/0169-a2ui-basic-catalog-upstream-interop.md`](../adr/0169-a2ui-basic-catalog-upstream-interop.md)
 > cl.9b row 16 / Exclusion E6 (the `ChoicePicker.variant` gate SPEC-R10 drains) ·
