@@ -95,6 +95,34 @@ The family's first single-select kind ruled one shape; a future exactly-one kind
   `A:661`); the modality gate (`SURFACE_A2UI_KEY`) drives the dim, and the kind is excluded
   from the prompt projection (`A:1293`) — a wire-threaded fact never doubles as prompt prose.
 
+### Association/multi-select kinds (ADR-0175 — the realized field, the fenced gap)
+
+No agent-admin kind has adopted this shape yet — recorded here as the law a future one builds to,
+not a shipped exemplar (unlike the catalog kind above).
+
+- **The realized building block.** `ui-multi-select`
+  (`packages/agent-ui/components/src/controls/multi-select/`, ADR-0175) is a form-associated FACE
+  field whose `value: string[]` is ONE bindable array riding the ORIGINAL single two-way slot
+  (`{prop:'value', event:'select'}`) — never ADR-0161's multi-slot mechanism (ADR-0175 cl.2). This
+  is the field a kind whose selection is a bound to-many array (not N independently-toggled
+  entries) would realize its picker with.
+- **Why this is NOT the Multi-enable shape (§4's table).** Multi-enable (skill/workflow/resource/
+  tool) stores N independent per-entry `enabled` booleans across DIFFERENT roster rows — no single
+  keyed aggregate value ever exists. Composing N such toggles gets native FormData multiplicity for
+  free but never ONE round-tripped array — `ui-form-provider`'s own descriptor documents `values()`
+  as *"a keyed convenience view of entries() — LAST entry wins on a duplicate name"*
+  (`form-provider.md:22`; ADR-0175 Fact 2/3, which also names why teaching the provider to
+  aggregate is a rejected fix, ADR-0050). A kind that needs ONE array value read from a record,
+  written to one path, and re-read on reload needs the minted field, not a stack of Multi-enable
+  toggles.
+- **The fence — what this does NOT close (ADR-0175 cl.3).** "Assign tags from these 12 tags" — a
+  small, already-loaded, in-memory option set — is fully closed by the primitive above. A real
+  relationship/association kind (e.g., "assign datasets to an account") needs strictly more: remote
+  or paginated search over another kind's roster, inline creation of the related entry, and a
+  distinct assigned/available split — none of which exists anywhere in the fleet today (ADR-0175
+  Fact 7). That is its own future design intake, not a local widening of the roster law above —
+  reaching for `ui-multi-select` alone does not close the relationship-editing problem.
+
 ## 4 · The trio law + the semantics spectrum
 
 **id ≠ tool.name ≠ label — three facts, three fields** (ADR-0168 cl.2, `docs/adr/0168:60-65`).
@@ -114,4 +142,8 @@ When a new kind picks its semantics, three shapes exist — pick by the kind's o
 | Single-select (derived) | catalog, §3 | the wire carries exactly ONE id, no none state, fail-closed default — the D3 shape would make the UI lie (`docs/adr/0170:26-34`) |
 
 Illustrative, not a menu to extend casually: a fourth shape is an ADR, not a code choice —
-ADR-0170's Consequences already cap the roster's annotated deviants at single-line filters.
+ADR-0170's Consequences already cap the roster's annotated deviants at single-line filters. An
+ASSOCIATION shape (a kind bound to another kind's roster as one array value) already has its
+field-level building block minted (`ui-multi-select`, ADR-0175 — see "Association/multi-select
+kinds" above) — but the KIND-level shape itself is not ruled; adding one is its own ADR, same as
+any other fourth shape, not a local table addition.
