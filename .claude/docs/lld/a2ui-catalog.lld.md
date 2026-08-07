@@ -183,6 +183,8 @@ function validateCatalogConformance(component: A2uiComponent, catalog: Catalog):
 
 **LLD-C8 theming:** `applySurfaceProperties(host, props, catalog)` validates `props` against `catalog.surfaceProperties` then sets CSS custom properties (`--ui-*` / `--md-sys-color-{family}-{role}`) on the surface host — **pure CSS-variable repoint, no JS restyle** (SPEC-R5 AC2), consistent with the dimensional token system. v0.9.x `theme` is normalized to `surfaceProperties` by the version adapter (renderer LLD-C2).
 
+> **Drift marker (GH #531):** this paragraph asserts a `theme`→`surfaceProperties` normalization that contradicts `a2ui-renderer.lld.md`'s LLD-C2 (which states the mapping is gone, `surfaceProperties` dropped from the wire type as of GH #477). Not reconciled — pending the #531 ruling.
+
 ## 8. Error & edge-case handling
 
 | Code / edge | Stage | Handling |
