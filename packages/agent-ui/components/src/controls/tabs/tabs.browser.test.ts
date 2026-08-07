@@ -426,3 +426,187 @@ describe('ui-tabs — tablist overflow: whole labels scroll, never clip mid-word
     expect(getComputedStyle(strip).scrollbarWidth, `${server.browser}: the inherited repoint did not reach the tablist`).toBe('none')
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  [7] GH #581 — orientation="vertical" (Slice A): whole-shape geometry, keyboard axis, edges, RTL
+//  (`.claude/docs/lld/tabs-vertical-overflow.lld.md` §3, §7 `vertical · scroll` + `fill × vertical` corners)
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+const VERTICAL = `
+  <ui-tabs orientation="vertical">
+    <ui-tab>One</ui-tab><ui-tab>Two</ui-tab><ui-tab>Three</ui-tab>
+    <ui-tab-panel>P1</ui-tab-panel><ui-tab-panel>P2</ui-tab-panel><ui-tab-panel>P3</ui-tab-panel>
+  </ui-tabs>`
+
+describe('ui-tabs — orientation="vertical": the default stays byte-identical (NEGATIVE control, both engines)', () => {
+  it('a default (no orientation attribute) ui-tabs has no aria-orientation, no shell flex/row, and the #542/#543 horizontal probes are untouched', () => {
+    const { tabs, tabEls } = mount(THREE)
+    const strip = tabs.querySelector('[data-part="tablist"]') as HTMLElement
+    expect(strip.hasAttribute('aria-orientation'), `${server.browser}: a default tabs must carry no aria-orientation`).toBe(false)
+    expect(getComputedStyle(tabs).display, `${server.browser}: a default ui-tabs must stay display:block`).toBe('block')
+    expect(getComputedStyle(strip).flexDirection, `${server.browser}: the default strip must stay flex-direction:row`).toBe('row')
+    expect(getComputedStyle(tabEls[0]).justifyContent, `${server.browser}: the default label alignment must stay centered`).toBe('center')
+    // GH #542/#543 pins, unmodified — a regression here means the horizontal path leaked vertical CSS.
+    const gapPx = px(getComputedStyle(strip).columnGap)
+    expect(gapPx, `${server.browser}: the horizontal strip-gap regressed off 16px`).toBeCloseTo(16, 0)
+  })
+})
+
+describe('ui-tabs — orientation="vertical": whole-shape geometry — strip beside panel, edges, alignment (both engines)', () => {
+  it('[MUST-PROVE] the strip sits inline-start of the visible panel; aria-orientation is set; divider + indicator ride the inline-end edge; labels start-align; zero padding-inline holds; 16px row gap', async () => {
+    const { tabs, tabEls, panelEls } = mount(VERTICAL)
+    const strip = tabs.querySelector('[data-part="tablist"]') as HTMLElement
+
+    // aria-orientation on the STRIP PART (never the host, never internals — a plain DOM attribute).
+    expect(strip.getAttribute('aria-orientation'), `${server.browser}: the vertical strip must carry aria-orientation`).toBe('vertical')
+    expect(tabs.hasAttribute('aria-orientation'), 'aria-orientation must never ride the host').toBe(false)
+
+    // the whole-shape assertion (test-the-whole-shape law): shell is a real row — the strip's box sits
+    // entirely to the inline-start (LTR: left) of the visible panel's box, and they share a top edge.
+    const stripRect = strip.getBoundingClientRect()
+    const panelRect = panelEls[0].getBoundingClientRect()
+    expect(stripRect.right, `${server.browser}: the strip must sit LEFT of the panel (LTR)`).toBeLessThanOrEqual(panelRect.left + 1)
+    expect(stripRect.top, `${server.browser}: the strip and panel must share a top edge (row layout)`).toBeCloseTo(panelRect.top, 0)
+    expect(stripRect.width, 'vacuous test setup — the strip collapsed to zero width').toBeGreaterThan(0)
+
+    // the strip is a flex COLUMN — the three tabs stack vertically, in DOM order.
+    const r0 = tabEls[0].getBoundingClientRect()
+    const r1 = tabEls[1].getBoundingClientRect()
+    const r2 = tabEls[2].getBoundingClientRect()
+    expect(r1.top, `${server.browser}: tab 1 must sit BELOW tab 0 (column stack)`).toBeGreaterThan(r0.bottom - 1)
+    expect(r2.top, `${server.browser}: tab 2 must sit BELOW tab 1`).toBeGreaterThan(r1.bottom - 1)
+
+    // the divider: border-inline-end 1px, border-block-end 0 (the horizontal edge is off).
+    const stripStyle = getComputedStyle(strip)
+    expect(stripStyle.borderInlineEndWidth, `${server.browser}: the vertical divider must be border-inline-end`).toBe('1px')
+    expect(stripStyle.borderBlockEndWidth, `${server.browser}: the horizontal divider must be OFF under vertical`).toBe('0px')
+    expect(stripStyle.borderRightWidth, `${server.browser}: inline-end resolves to the physical RIGHT edge in LTR`).toBe('1px')
+
+    // the selected-tab indicator rides the SAME edge (inline-end/right in LTR), a full block-size bar.
+    const indicator = getComputedStyle(tabEls[0], '::after')
+    expect(indicator.right, `${server.browser}: the indicator must hug the inline-end (right, LTR) edge`).toBe('0px')
+    expect(indicator.inlineSize, `${server.browser}: the indicator width did not resolve to the token`).toBe('2px')
+    expect(px(indicator.blockSize), `${server.browser}: the indicator must span the FULL tab block-size, not a thin bottom bar`).toBeCloseTo(r0.height, 0)
+
+    // #536's law extended: zero padding-inline stands under vertical too.
+    const tabStyle = getComputedStyle(tabEls[0])
+    expect(tabStyle.paddingInlineStart, 'a vertical tab must carry zero padding-inline-start (GH #536, extended)').toBe('0px')
+    expect(tabStyle.paddingInlineEnd, 'a vertical tab must carry zero padding-inline-end (GH #536, extended)').toBe('0px')
+
+    // labels start-align (a list convention) — not centered (the horizontal-strip convention).
+    expect(tabStyle.justifyContent, `${server.browser}: a vertical tab label must start-align`).toBe('flex-start')
+
+    // full-width rows via cross-axis STRETCH: every tab's inline-size equals the strip's content inline-size.
+    expect(r0.width, `${server.browser}: a vertical tab must stretch to the column's full width`).toBeCloseTo(r1.width, 0)
+
+    // the SAME strip-gap token, now spacing rows (row-gap) — 16px at density 1 (the #542 pin, vertical form).
+    const rowGapPx = px(getComputedStyle(strip).rowGap)
+    expect(rowGapPx, `${server.browser}: the vertical row-gap did not resolve to 16px at density 1`).toBeCloseTo(16, 0)
+
+    await tabs.updateComplete
+  })
+})
+
+describe('ui-tabs — orientation="vertical": keyboard axis — Up/Down move selection, Left/Right are INERT (both engines)', () => {
+  it('[MUST-PROVE] ArrowDown/ArrowUp rove focus + selection; ArrowLeft/ArrowRight do nothing', async () => {
+    const { tabs, tabEls, panelEls } = mount(VERTICAL)
+
+    await userEvent.click(tabEls[0])
+    expect(document.activeElement, 'click did not focus tab 0').toBe(tabEls[0])
+
+    await userEvent.keyboard('{ArrowDown}')
+    await tabs.updateComplete
+    expect(document.activeElement, `${server.browser}: ArrowDown did not rove focus to tab 1 under vertical`).toBe(tabEls[1])
+    expect(tabEls[1].tabIndex).toBe(0)
+    expect(getComputedStyle(panelEls[1]).display, 'ArrowDown did not switch the visible panel').toBe('block')
+
+    await userEvent.keyboard('{ArrowUp}')
+    await tabs.updateComplete
+    expect(document.activeElement, `${server.browser}: ArrowUp did not rove focus back to tab 0`).toBe(tabEls[0])
+
+    // Left/Right are INERT under vertical — focus + selection must not move.
+    await userEvent.keyboard('{ArrowRight}')
+    await tabs.updateComplete
+    expect(document.activeElement, `${server.browser}: ArrowRight must be inert under vertical`).toBe(tabEls[0])
+    expect(getComputedStyle(panelEls[0]).display, 'ArrowRight must not switch the panel under vertical').toBe('block')
+
+    await userEvent.keyboard('{ArrowLeft}')
+    await tabs.updateComplete
+    expect(document.activeElement, `${server.browser}: ArrowLeft must be inert under vertical`).toBe(tabEls[0])
+
+    // Home/End are UNCHANGED either axis (both engines).
+    await userEvent.keyboard('{End}')
+    await tabs.updateComplete
+    expect(document.activeElement, `${server.browser}: End did not move to the last tab under vertical`).toBe(tabEls[2])
+    expect(getComputedStyle(panelEls[2]).display, 'End did not switch the panel under vertical').toBe('block')
+
+    await userEvent.keyboard('{Home}')
+    await tabs.updateComplete
+    expect(document.activeElement, `${server.browser}: Home did not move to the first tab under vertical`).toBe(tabEls[0])
+    expect(getComputedStyle(panelEls[0]).display, 'Home did not switch the panel under vertical').toBe('block')
+  })
+})
+
+describe('ui-tabs — orientation="vertical": [fill] × vertical corner — shell row, strip pinned + own scroll (§7, both engines)', () => {
+  it('[MUST-PROVE] the shell stays a flex ROW at block-size:100% under [fill][orientation=vertical]; the strip is a pinned column', () => {
+    const wrap = document.createElement('div')
+    wrap.style.cssText = 'display:flex; flex-direction:column; block-size:220px;'
+    wrap.innerHTML = `
+      <ui-tabs fill orientation="vertical">
+        <ui-tab>One</ui-tab><ui-tab>Two</ui-tab><ui-tab>Three</ui-tab>
+        <ui-tab-panel>P1</ui-tab-panel><ui-tab-panel>P2</ui-tab-panel><ui-tab-panel>P3</ui-tab-panel>
+      </ui-tabs>`
+    document.body.append(wrap)
+    mounted.push(wrap)
+
+    const tabs = wrap.querySelector('ui-tabs') as UITabsElement
+    const strip = tabs.querySelector('[data-part="tablist"]') as HTMLElement
+    const panel = wrap.querySelector('ui-tab-panel') as HTMLElement
+
+    expect(getComputedStyle(tabs).display, `${server.browser}: [fill][orientation=vertical] must still be flex`).toBe('flex')
+    // [fill] alone is a column; vertical (placed AFTER in source) must win the shell's main axis back to a row.
+    expect(getComputedStyle(tabs).flexDirection, `${server.browser}: [fill]×vertical must compose to a ROW, not [fill]'s own column`).toBe('row')
+    expect(tabs.getBoundingClientRect().height, `${server.browser}: the fill shell did not fill its bounded parent under vertical`).toBeCloseTo(
+      wrap.getBoundingClientRect().height,
+      0,
+    )
+    // the strip stays pinned (flex:none) at its own content width, and keeps its own overflow-y (not flexed
+    // to fill the row) — the panel keeps its EXISTING scroll leg (flex:1 1 auto; overflow-y:auto), unchanged.
+    expect(getComputedStyle(strip).flexShrink, `${server.browser}: the vertical strip must be pinned (flex-shrink:0)`).toBe('0')
+    expect(getComputedStyle(strip).flexGrow, `${server.browser}: the vertical strip must be pinned (flex-grow:0)`).toBe('0')
+    expect(getComputedStyle(strip).overflowY, `${server.browser}: the vertical strip must keep its own overflow-y:auto`).toBe('auto')
+    expect(getComputedStyle(panel).flexGrow, `${server.browser}: the panel scroll leg (flex:1) must be unchanged under fill×vertical`).toBe('1')
+    expect(getComputedStyle(panel).overflowY, `${server.browser}: the panel scroll leg (overflow-y:auto) must be unchanged under fill×vertical`).toBe(
+      'auto',
+    )
+  })
+})
+
+describe('ui-tabs — orientation="vertical": RTL logical-properties smoke — the divider/indicator PHYSICALLY flip (both engines)', () => {
+  it('[MUST-PROVE] under dir="rtl" the strip sits physically RIGHT of the panel, and the divider/indicator ride the physical LEFT edge', () => {
+    const wrap = document.createElement('div')
+    wrap.dir = 'rtl'
+    wrap.innerHTML = VERTICAL
+    document.body.append(wrap)
+    mounted.push(wrap)
+
+    const tabs = wrap.querySelector('ui-tabs') as UITabsElement
+    const strip = tabs.querySelector('[data-part="tablist"]') as HTMLElement
+    const panel = wrap.querySelector('ui-tab-panel') as HTMLElement
+    const tab0 = wrap.querySelector('ui-tab') as HTMLElement
+
+    // a flex ROW's main axis reverses under RTL: the strip (first child) renders on the PHYSICAL RIGHT,
+    // the panel (second child) on the PHYSICAL LEFT — logical inline-start/-end tracks writing direction.
+    const stripRect = strip.getBoundingClientRect()
+    const panelRect = panel.getBoundingClientRect()
+    expect(stripRect.left, `${server.browser}: under RTL the strip must sit physically RIGHT of the panel`).toBeGreaterThanOrEqual(panelRect.right - 1)
+
+    // inline-end (the edge facing the panel) is now the PHYSICAL LEFT edge — the divider + indicator follow.
+    const stripStyle = getComputedStyle(strip)
+    expect(stripStyle.borderLeftWidth, `${server.browser}: under RTL the divider must paint on the physical LEFT`).toBe('1px')
+    expect(stripStyle.borderRightWidth, `${server.browser}: under RTL the physical RIGHT edge must be borderless`).toBe('0px')
+
+    const indicator = getComputedStyle(tab0, '::after')
+    expect(indicator.left, `${server.browser}: under RTL the indicator must hug the physical LEFT edge`).toBe('0px')
+  })
+})

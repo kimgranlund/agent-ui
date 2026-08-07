@@ -18,7 +18,18 @@
  * (`--ui-tabs-panel-scrollbar-width`) is consumer-INHERITED — var()-fallback only, deliberately NOT declared in
  * the token block below (an own declaration would beat a composing surface's inherited value — the same
  * TKT-0065 alias-resolution lesson `split-pane.css` already records). Default (`[fill]` absent) stays
- * byte-identical to today's document-flow tabs — negative control in tabs.browser.test.ts. */
+ * byte-identical to today's document-flow tabs — negative control in tabs.browser.test.ts.
+ *
+ * `[orientation=vertical]` (GH #581, `.claude/docs/lld/tabs-vertical-overflow.lld.md` §3) — the shell flips to
+ * a flex ROW (strip beside the panel); the strip flips to a flex COLUMN pinned at its natural (max-content)
+ * width; the divider + selected-tab indicator move to the SAME inline-end edge (the edge facing the panel,
+ * mirroring the horizontal bottom-edge pairing); labels re-align start (a list convention, not a strip
+ * convention). ZERO new tokens — `--ui-tabs-strip-gap` rides whichever axis is main. `[fill]` composes for
+ * FREE (no extra selector needed): `:scope[fill]` sets the shell's `block-size:100%`; at equal specificity,
+ * later source wins, so this block's `flex-direction:row` (below, placed AFTER the `[fill]` block) overrides
+ * `[fill]`'s own `column` — and the strip's `flex:none` already reads as "pinned, own-scroll" once the shell
+ * is height-bound (§7's `fill × vertical` corner). Default (`orientation` absent/`horizontal`) stays
+ * byte-identical — negative control in tabs.browser.test.ts; the GH #542/#543 horizontal probes untouched. */
 
 /* ════════════════════════ [1] TOKEN BLOCK — :where() declarations (the --md-sys-color-* + ramp entry) ════════════════════════ */
 
@@ -163,6 +174,45 @@
     scrollbar-width: var(--ui-tabs-panel-scrollbar-width, auto);
   }
 
+  /* [orientation=vertical] (GH #581) — see the file banner for the full ruling. Placed AFTER [fill] above
+     (equal specificity — :scope+one-attribute-selector on both — so `flex-direction: row` below wins the tie
+     by source order over [fill]'s `column`; every other [fill] declaration (block-size:100%, the panel's
+     scroll leg) is a DIFFERENT property and composes unchanged, which is exactly the §7 `fill × vertical`
+     corner: shell row + strip pinned/own-scroll + panel scroll leg unchanged.) */
+  :scope[orientation='vertical'] {
+    display: flex;
+    flex-direction: row;
+  }
+
+  :scope[orientation='vertical'] > [data-part='tablist'] {
+    flex-direction: column;
+    flex: none; /* pinned — never grows/shrinks along the shell's (now inline) main axis */
+    inline-size: max-content; /* the column's width = the widest tab */
+    border-block-end: 0; /* the horizontal divider is off */
+    border-inline-end: 1px solid var(--ui-tabs-strip-line); /* same edge the indicator rides, below */
+    overflow-x: visible;
+    overflow-y: auto; /* the strip's own overflow axis flips with it (GH #221's viewport, vertical form) */
+  }
+
+  :scope[orientation='vertical'] ui-tab {
+    justify-content: flex-start; /* a start-aligned list — center is a horizontal-strip convention */
+    /* Cross-axis STRETCH (the flex column's default align-items) gives the row its full-width hit area — no
+       inline-size is set here, so #536's law (zero padding-inline) stands unchanged; see the file banner. */
+  }
+
+  /* The indicator rides the SAME edge as the divider (inline-end) — a full block-size bar, not a bottom bar. */
+  :scope[orientation='vertical'] ui-tab::after {
+    inset-inline: auto 0;
+    inset-block: 0;
+    inline-size: var(--ui-tabs-indicator-size);
+    block-size: auto;
+  }
+
+  :scope[orientation='vertical'] ui-tab-panel {
+    flex: 1 1 auto;
+    min-inline-size: 0; /* the row's shrink escape hatch — the panel never forces the strip to shrink */
+  }
+
   /* Motion — the state PAINT only (ink + the indicator), gated behind :state(ready) so the first paint SNAPS
      (the selection applied synchronously at connect does not animate) and only later changes transition. Never
      geometry, never `all`; timing from the shared motion token. */
@@ -180,10 +230,13 @@
   }
 
   /* Forced-colors (WHCM) — keep the selected-tab indicator + label visible as a system colour (the surface
-     drops to Canvas via the container.css role layer; here we guarantee the SELECTED cue survives). */
+     drops to Canvas via the container.css role layer; here we guarantee the SELECTED cue survives). Both
+     border-*-color longhands are set on the one selector: whichever edge is ACTUALLY drawn (border-block-end
+     horizontal, border-inline-end vertical — the other edge is 0-width, GH #581) is the one that paints. */
   @media (forced-colors: active) {
     :scope > [data-part='tablist'] {
       border-block-end-color: CanvasText;
+      border-inline-end-color: CanvasText;
     }
     ui-tab:state(selected) {
       color: Highlight;

@@ -14,6 +14,11 @@
 // AND focus together (selection-follows-focus), committing through the same path as a click. The keyboard
 // navigation is handled by the shared `rovingFocus` trait (listbox-roving LLD-C1).
 //
+// GH #581 — `orientation` (default `'horizontal'`) flips the strip to a vertical column beside the panel:
+// `aria-orientation` on the tablist part, the roving axis (Up/Down replacing Left/Right per APG), the divider
+// + selected-tab indicator edge, and the shell/strip/panel flex geometry (tabs.css) all follow. See
+// `.claude/docs/lld/tabs-vertical-overflow.lld.md` §3 for the frozen ruling.
+//
 // `selected` is a plain reflected string the renderer two-way-binds via LLD-C8 (ADR-0019): the agent SETS it
 // (programmatic → the effect applies it, NO event echoed), a user gesture COMMITS it (the ONE `select` event
 // emitted, the renderer reads the new tab back). The control stays renderer-agnostic — it knows nothing of A2UI.
@@ -36,6 +41,11 @@ export type { UITabPanelElement } from './tab-panel.ts'
 // A per-instance id seed so each tabs' tab/panel pair gets unique IDREFs (the reverse aria-labelledby anchor).
 let tabsSeq = 0
 
+// GH #581 — the strip axis (radio-group.ts / toolbar.ts precedent — the canon `orientation` name, naming.md
+// §12). Reflected so tabs.css keys off `[orientation=vertical]`; the KEYBOARD axis fed to the shared
+// rovingFocus trait is a SEPARATE, connect-resolved concern (see connected() below).
+const ORIENTATIONS = ['horizontal', 'vertical'] as const
+
 const props = {
   // The surface axes (ADR-0015) — elevation/brightness, spread from the base (no prototype merge; the ADR-0013
   // formProps precedent). ui-tabs sets its OWN default --ui-container-bg in tabs.css (the base default is
@@ -51,6 +61,11 @@ const props = {
   // internally scrolling active panel — the exact composition `agent-admin.css` (TKT-0085) hand-rolled per
   // consumer for lack of a shipped variant. Absent (the default), tabs stays byte-identical document-flow.
   fill: { ...prop.boolean(false), reflect: true },
+  // `orientation` — GH #581: vertical renders the strip as a column beside the panel (shell flex-direction,
+  // `aria-orientation` on the tablist part, divider/indicator edge, and the Up/Down arrow axis all follow —
+  // tabs.css + connected() below). Default `'horizontal'` keeps every existing consumer byte-identical
+  // (negative controls in tabs.test.ts / tabs.browser.test.ts).
+  orientation: { ...prop.enum(ORIENTATIONS, 'horizontal'), reflect: true },
 } satisfies PropsSchema
 
 export interface UITabsElement extends ReactiveProps<typeof props> {}
@@ -70,6 +85,14 @@ export class UITabsElement extends UIContainerElement {
     if (!this.#baseId) this.#baseId = `ui-tabs-${++tabsSeq}`
 
     const strip = this.#ensureTablist()
+    // GH #581 — aria-orientation rides the STRIP PART (never a host attribute — the family discipline), the
+    // same way `role=tablist` already does. The tablist role's IMPLICIT default is horizontal, so the
+    // horizontal case simply OMITS the attribute (byte-identical default DOM, probed in tabs.test.ts) rather
+    // than writing `aria-orientation="horizontal"`. Connect-time only — re-resolves on reconnect, exactly
+    // like the roving axis below (tabs.md documents both as connect-resolved).
+    if (this.orientation === 'vertical') strip.setAttribute('aria-orientation', 'vertical')
+    else strip.removeAttribute('aria-orientation')
+
     // Reparent the tab children INTO the strip (idempotent — a tab already inside is skipped, so reconnect is a
     // no-op). Recognised by instanceof so a probe subclass nests; the panels are left as strip siblings.
     for (const child of [...this.children]) {
@@ -107,10 +130,16 @@ export class UITabsElement extends UIContainerElement {
     // The effect above runs synchronously and sets #activeIndex before we get here, so initialIndex reads
     // the correct position even after reconnect with a non-first tab selected. syncIndex reconciles on each
     // keydown after a click or programmatic selection change that bypassed the trait's onMove.
+    // GH #581 — the trait's `orientation` (RovingOrientation) is read ONCE at invoke (roving-focus.ts:100,
+    // not a live accessor — an accessor is a type error AND would leave the axis comparison permanently
+    // false); the fleet's settled shape for a reactive `orientation` prop feeding this trait is
+    // radio-group.ts / toolbar.ts: CONNECT-RESOLVE the axis to a plain value, pass the VALUE. A live flip of
+    // `orientation` therefore re-resolves only on the next reconnect (tabs.md documents this).
+    const rovingOrientation = this.orientation === 'vertical' ? 'vertical' : 'horizontal'
     rovingFocus(this, {
       container: strip,
       items: () => this.#tabs as HTMLElement[],
-      orientation: 'horizontal',
+      orientation: rovingOrientation,
       loop: true,
       typeAhead: false,
       initialIndex: () => this.#activeIndex,

@@ -33,8 +33,8 @@ const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 
 // The settled attribute surface, in declaration order (anti-vacuous anchor): the surfaceProps spread, then
-// selected, then the ADR-0144 Q1 opt-in `fill`.
-const ATTR_NAMES = ['elevation', 'brightness', 'selected', 'fill']
+// selected, then the ADR-0144 Q1 opt-in `fill`, then the GH #581 `orientation` (vertical build slice).
+const ATTR_NAMES = ['elevation', 'brightness', 'selected', 'fill', 'orientation']
 
 describe('tabs.md descriptor — frontmatter parses + schema-valid (s8 part a)', () => {
   it('has a leading frontmatter fence and a prose body documenting the three elements', () => {
@@ -92,6 +92,14 @@ describe('tabs.md descriptor — contract↔props trip-wire (s8 part b)', () => 
     expect(fill?.type).toBe('boolean')
     expect(fill?.reflect).toBe(true)
     expect(fill?.default).toBe('false')
+  })
+
+  it('`orientation` is a reflected enum [horizontal, vertical], default horizontal (GH #581)', () => {
+    const orientation = parsed.attributes.find((a) => a.name === 'orientation')
+    expect(orientation?.type).toBe('enum')
+    expect(orientation?.values).toEqual(['horizontal', 'vertical'])
+    expect(orientation?.default).toBe('horizontal')
+    expect(orientation?.reflect).toBe(true)
   })
 
   it('a drifted attribute FAILS the trip-wire (negative control — reflect + default + bijection)', () => {
