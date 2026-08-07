@@ -1,0 +1,38 @@
+/* magic-link.css — page-local chrome for the Magic link sign in guide: the card rhythm, the action row,
+ * and the status captions. Never restyles a ui-* control (card/form-provider/field/text-field/button
+ * below all keep their own CSS) — ADR-0102, layout/rhythm only. Mirrors credentials.css. */
+
+ui-card + ui-card {
+  margin-block-start: var(--md-sys-space-lg);
+}
+
+ui-card {
+  max-inline-size: 24rem;
+}
+
+/* ui-form-provider is deliberately layout-neutral (form-provider.css) — the page supplies the rhythm. */
+.magic-link-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--md-sys-space-md);
+}
+
+.magic-link-actions {
+  display: flex;
+  gap: var(--md-sys-space-sm);
+  margin-block-start: var(--md-sys-space-md);
+}
+
+.magic-link-status {
+  margin-block-start: var(--md-sys-space-sm);
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  min-block-size: 1.2em;
+}
+
+.magic-link-wiring-status,
+.magic-link-sources {
+  margin-block-start: var(--md-sys-space-md);
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}

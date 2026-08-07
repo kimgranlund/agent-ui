@@ -42,6 +42,13 @@
     "section": "Guides"
   },
   {
+    "href": "./magic-link.html",
+    "label": "Magic link sign in",
+    "description": "Request a magic link, confirm the demo's stand-in for clicking the emailed link, and reach the signed-in state — the SAME in-memory identity-mock-transport as Registration & sign in (GH #490, ADR-0176).",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
     "href": "./choosing.html",
     "label": "Which component when",
     "description": "A quick chooser between components that overlap in purpose, condensed from the A2UI catalog's own guidance.",

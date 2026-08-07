@@ -1,0 +1,42 @@
+[
+  {
+    "id": "magic-link-signin",
+    "task": "sign in via a magic link and reach the signed-in state (GH #490 S2-b, decomp a6/a7)",
+    "entry": ["forms"],
+    "states": [
+      { "id": "forms", "screen": "magic-link" },
+      { "id": "requesting", "screen": "magic-link" },
+      { "id": "check-email", "screen": "magic-link" },
+      { "id": "confirming", "screen": "magic-link" },
+      { "id": "signed-in", "screen": "magic-link" }
+    ],
+    "transitions": [
+      { "from": "forms", "to": "requesting", "verb": "submit-request" },
+      { "from": "requesting", "to": "check-email", "verb": "succeed" },
+      { "from": "check-email", "to": "requesting", "verb": "resend" },
+      { "from": "check-email", "to": "confirming", "verb": "confirm-link", "fallible": true },
+      { "from": "confirming", "to": "signed-in", "verb": "succeed" },
+      { "from": "signed-in", "to": "forms", "verb": "sign-out" }
+    ],
+    "exits": [
+      {
+        "state": "signed-in",
+        "kind": "success",
+        "asserts": [
+          "getSession() returns a session for the requested email",
+          "session.method === 'magic-link'"
+        ]
+      },
+      {
+        "state": "forms",
+        "kind": "abandon",
+        "asserts": ["no session was created", "getSession() returns null"]
+      }
+    ],
+    "recovery": [{ "from": "confirming", "to": "check-email", "preserves_input": true }],
+    "persistence": {
+      "resumable": false,
+      "across": "no cross-reload persistence by design (identity-mock-transport.spec.md SPEC-N3) — a reload restarts at forms"
+    }
+  }
+]
