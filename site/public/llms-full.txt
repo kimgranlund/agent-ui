@@ -2026,6 +2026,14 @@ enabled item receives focus via the roving-focus tabindex=0 + `moveFocusIn()`), 
 the trigger on close (the overlay handle's `restoreFocus()`). On close without a selection
 (Escape/outside-click), focus returns to the trigger.
 
+**`keepFocusOnCommit`** (GH #586 critic fold MAJOR-2) is a composition-time escape hatch from the
+"restore to trigger" half of that rule, for a COMMIT only. A composing consumer that reacts to
+`select` by moving focus itself — `ui-tabs`' overflow-menu proxy relay is the shipped case, focusing
+the promoted tab for click parity — sets `keepFocusOnCommit = true` on its own private menu instance
+so that move survives; without it, the overlay's default restore would steal focus back to the
+trigger a microtask later. Escape / outside-click never consult this property — they always restore
+to the trigger, unconditionally, for every consumer.
+
 ## Accessibility
 
 The panel (`role="menu"`) is always accessibly named (GH #535). By default, `aria-labelledby`
@@ -4204,6 +4212,17 @@ own list position). The inner `ui-menu`'s own event vocabulary (`select`/`toggle
 the `[data-part=overflow]` boundary (`stopPropagation`) so `ui-tabs`' own event surface stays exactly
 `{ select }` — an uncontained menu commit would otherwise ALSO surface a second, proxy-index-space `select` on
 `ui-tabs`, and `toggle`/`close` would leak outside the documented contract.
+
+**Known conservative residual (component-checker MINOR-1):** the fit budget subtracts a token-derived
+`reserve` (the trigger's height + one gap) from the strip's OWN measured available size whenever not every
+tab fits — but when the trigger is ALREADY visible, the CSS grid's `auto` trigger column has ALSO already
+narrowed that same measured strip box (the grid, not JS, does that subtraction first). The two together are
+a DOUBLE reserve in that state: safe (it can never show a tab that doesn't actually fit — no visual overflow
+is possible) but occasionally one tab more conservative than the true fit allows. Deliberately unfixed: the
+alternative (reading whether the trigger is CURRENTLY visible to decide whether to apply the JS reserve) is
+exactly the render-dependent feedback input LLD §4's hysteresis ruling forbids (fit must read the CACHED
+full-set + the observed size only, never today's own rendered subset) — the conservative slack is the
+accepted cost of staying oscillation-immune.
 
 `overflow` is reflected and default `'scroll'` (today's `overflow-x`/`overflow-y: auto`), so every existing
 consumer stays byte-identical; both `orientation` and `overflow` are **connect-resolved** — a live flip of

@@ -34,6 +34,8 @@ properties:             # IDL beyond attributes-as-API
     description: Preferred panel placement relative to the trigger (OverlayPlacement enum, default 'bottom-start'). The JS positioning controller (LLD-C3) flips to the opposite side when the preferred side lacks space and shifts within the viewport. Captured at connection time; a reconnect picks up a new value.
   - name: label
     description: Opt-in accessible-name override for the panel (GH #535). '' (default) = the panel is named via aria-labelledby → the trigger's id (minted at connect if the author gave the trigger none). Set = the panel gets aria-label with this text instead, and the labelledby default is removed (aria-labelledby beats aria-label in accname resolution, so the default reference must actually be dropped, not merely shadowed). Clearing it reverts to the labelledby default. Driven by a scope-owned effect, the sole writer of aria-label/aria-labelledby on the panel.
+  - name: keepFocusOnCommit
+    description: A composition-time opt-out, default false (GH #586 critic fold MAJOR-2). A plain instance property — not an attribute, not reflected, not part of `static props`; a composing consumer sets it imperatively right after creating its own private `<ui-menu>` instance, before it ever opens. When true, a commit closes the overlay WITHOUT the default "restore focus to the trigger" tail (`traits/overlay.ts`'s `close({restoreFocus:false})`) — for a consumer whose OWN `select` listener already moved focus somewhere meaningful during the SAME synchronous emit (the shipped precedent: `ui-tabs`' overflow-menu proxy relay focuses the promoted tab, matching a direct tab click). Escape / outside-click (the platform light-dismiss path) is UNAFFECTED by this property — it always restores focus to the trigger, the contract every OTHER consumer (agent-admin's page-actions, conversation-composer, entry-list, nav-rail) relies on unchanged.
 
 events:
   - name: select
@@ -203,6 +205,14 @@ finds the next item whose label starts with the typed buffer.
 enabled item receives focus via the roving-focus tabindex=0 + `moveFocusIn()`), and is restored to
 the trigger on close (the overlay handle's `restoreFocus()`). On close without a selection
 (Escape/outside-click), focus returns to the trigger.
+
+**`keepFocusOnCommit`** (GH #586 critic fold MAJOR-2) is a composition-time escape hatch from the
+"restore to trigger" half of that rule, for a COMMIT only. A composing consumer that reacts to
+`select` by moving focus itself — `ui-tabs`' overflow-menu proxy relay is the shipped case, focusing
+the promoted tab for click parity — sets `keepFocusOnCommit = true` on its own private menu instance
+so that move survives; without it, the overlay's default restore would steal focus back to the
+trigger a microtask later. Escape / outside-click never consult this property — they always restore
+to the trigger, unconditionally, for every consumer.
 
 ## Accessibility
 

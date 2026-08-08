@@ -785,6 +785,35 @@ describe('ui-tabs — overflow="menu": fit arithmetic is PINNED against real mea
     const secondPass = tabEls.map((t) => t.hasAttribute('data-overflowed'))
     expect(secondPass, `${server.browser}: the same strip size must reproduce the same visible set — no oscillation`).toEqual(firstPass)
   })
+
+  it('[MUST-PROVE] a resize transition never surfaces a "ResizeObserver loop" window error (component-checker MAJOR-1)', async () => {
+    // `#applyFit`'s own writes (menuEl.hidden, the data-overflowed swap collapsing/expanding the
+    // grid's auto trigger column) resize the SAME observed strip — pre-fix this reproduced
+    // "ResizeObserver loop completed with undelivered notifications" on every fit transition
+    // (3× in 5s). The fix defers the callback body one rAF (tabs.ts #wireOverflow); this probe
+    // listens for the real `error` event a real engine surfaces that condition as, across several
+    // real transitions (narrow → wide → narrow → mid), and asserts NONE fire.
+    const { wrap } = mountBounded(360)
+    await nextFrames()
+
+    const errors: string[] = []
+    const onError = (e: Event): void => {
+      errors.push((e as ErrorEvent).message ?? String(e))
+    }
+    window.addEventListener('error', onError)
+    try {
+      wrap.style.inlineSize = '900px' // narrow → wide: overflow disengages (trigger hides, column collapses)
+      await nextFrames(4)
+      wrap.style.inlineSize = '360px' // wide → narrow: overflow re-engages (trigger shows, column expands)
+      await nextFrames(4)
+      wrap.style.inlineSize = '500px' // one more real transition
+      await nextFrames(4)
+    } finally {
+      window.removeEventListener('error', onError)
+    }
+
+    expect(errors, `${server.browser}: a resize transition must never surface a window error (the RO-loop class): ${errors.join('; ')}`).toEqual([])
+  })
 })
 
 describe('ui-tabs — overflow="menu": selected is ALWAYS pinned visible (both engines)', () => {
@@ -838,6 +867,13 @@ describe('ui-tabs — overflow="menu": a menu commit relays through the ONE exis
     expect(selects, `${server.browser}: a menu commit must fire EXACTLY one ui-tabs select`).toHaveLength(1)
     expect(selects[0].detail).toEqual({ value: String(promotedIndex), index: promotedIndex })
     expect(promotedTab.hasAttribute('data-overflowed'), `${server.browser}: the committed tab must be promoted out of the menu`).toBe(false)
+
+    // Click parity (component-checker MAJOR-2, Kim ruling 2026-08-08): the promoted tab KEEPS focus —
+    // ui-menu's default "restore to trigger" is suppressed for this relay (menu.ts keepFocusOnCommit,
+    // set by tabs.ts's #ensureOverflowMenu) — after the model→overlay effect's own microtask has
+    // settled (the `await`s above already span it), focus must still be on the promoted tab, not
+    // pulled back to the trigger.
+    expect(document.activeElement, `${server.browser}: the promoted tab must KEEP focus after a menu commit (click parity)`).toBe(promotedTab)
 
     const visible = tabEls.filter((t) => !t.hasAttribute('data-overflowed'))
     expect(visible[visible.length - 1], `${server.browser}: the committed tab must render as the LAST visible slot`).toBe(promotedTab)

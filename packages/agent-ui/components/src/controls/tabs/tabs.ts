@@ -259,7 +259,15 @@ export class UITabsElement extends UIContainerElement {
     const changed = index !== this.#activeIndex
     const identity = this.#identityOf(tab, index)
     this.#activeIndex = index // eager — keep the keyboard delta correct before the effect flush
-    this.selected = identity // → reflects + wakes the selection effect
+    this.selected = identity // → reflects + wakes the selection effect (MICROTASK-BATCHED)
+    // GH #586 critic fold MAJOR-2 finding (found while pinning "the promoted tab keeps focus"): a
+    // menu-relay commit can target a tab CURRENTLY `[data-overflowed]` (`display:none`) — the
+    // reactive effect above that would unhide it (via `#applyFit`) has not run yet (microtask-
+    // batched), so a `tab.focus()` called before this point is a silent no-op on a display:none
+    // element. Run the fit SYNCHRONOUSLY here, eagerly, using the already-updated `#activeIndex` —
+    // pure/idempotent (the deferred effect recomputes the identical result moments later) — so the
+    // promoted tab is genuinely focusable by the time `moveFocus` asks for it below.
+    if (this.#menuMode) this.#applyFit()
     if (moveFocus) tab.focus()
     if (changed) {
       // `select` is the ONE commit event (the event-vocab's selection event). The s11 catalog binds
@@ -314,6 +322,11 @@ export class UITabsElement extends UIContainerElement {
     if (!menu) {
       menu = document.createElement('ui-menu') as UIMenuElement
       menu.setAttribute('data-part', 'overflow')
+      // Click parity (component-checker MAJOR-2, Kim ruling 2026-08-08): the relay below (`#wireOverflow`)
+      // moves focus to the promoted tab itself during the commit's `select` emit; opt OUT of ui-menu's
+      // default "restore focus to the trigger" so that move survives (menu.ts's own `keepFocusOnCommit`
+      // knob — documented there).
+      menu.keepFocusOnCommit = true
       const trigger = document.createElement('button')
       trigger.type = 'button'
       trigger.setAttribute('aria-label', 'More tabs') // literal English label — control-created, sanctioned
@@ -345,12 +358,30 @@ export class UITabsElement extends UIContainerElement {
     this.listen(menuEl, 'close', (event) => event.stopPropagation())
 
     // C9 — the fit-driving observer. One RO on the strip; every real size change recomputes the visible set.
+    // DEFERRED one rAF (component-checker MAJOR-1): `#applyFit`'s own writes (menuEl.hidden, the
+    // data-overflowed swap — collapsing/expanding the grid's auto trigger column) resize the SAME
+    // observed strip; running them synchronously INSIDE the RO callback re-triggers the observer within
+    // the same delivery cycle, which the platform reports as "ResizeObserver loop completed with
+    // undelivered notifications" (reproduced 3× in 5s pre-fix). The standard remedy: do the work one
+    // frame later, past this delivery cycle, and COALESCE repeated fires — several RO callbacks before
+    // the rAF runs collapse into the ONE pending frame, which reads live geometry when it finally runs
+    // (never stale data from whichever fire scheduled it).
     if (typeof ResizeObserver !== 'undefined') {
-      const ro = new ResizeObserver(() => this.#applyFit())
+      let pendingFrame: number | null = null
+      const ro = new ResizeObserver(() => {
+        if (pendingFrame !== null) return // already scheduled — coalesce
+        pendingFrame = requestAnimationFrame(() => {
+          pendingFrame = null
+          this.#applyFit()
+        })
+      })
       ro.observe(strip)
       // Auto-release on disconnect — the roving-focus.ts idiom: a no-op-dependency `this.effect` whose
       // RETURNED cleanup fires when the connection scope disposes at disconnect.
-      this.effect(() => () => ro.disconnect())
+      this.effect(() => () => {
+        if (pendingFrame !== null) cancelAnimationFrame(pendingFrame)
+        ro.disconnect()
+      })
     }
 
     // A late web-font swap can shift the cached tab widths after connect's initial measurement; one
@@ -457,6 +488,15 @@ export class UITabsElement extends UIContainerElement {
    * tab's commit identity (`#identityOf`); `disabled`/`aria-disabled` mirror onto the proxy so the menu's own
    * commit guards (PR #566) block it. Rebuilt on every fit change so the panel's contents and the strip's
    * visibility can never disagree.
+   *
+   * KNOWN EDGE (component-checker MINOR-2, recorded not fixed): `#applyFit` calls this unconditionally,
+   * including while the overflow menu is CURRENTLY OPEN (a resize or a `selected` change firing mid-browse).
+   * `panel.replaceChildren()` then discards and recreates whatever row the user's roving focus was on,
+   * dropping keyboard focus out of the open panel (to the panel's own tabindex=-1 fallback — no throw, no
+   * lost commit path, just a jumped focus target). Narrow window (needs a real resize or a selected-tab
+   * write while the menu is actively open) and no correctness break, so left as an accepted residual rather
+   * than added scope this build — a future pass could skip the rebuild while `menuEl.open` is true and defer
+   * it to the next open instead.
    */
   #rebuildProxies(menuEl: UIMenuElement, overflowed: UITabElement[]): void {
     const panel = menuEl.querySelector('[data-part="panel"]')

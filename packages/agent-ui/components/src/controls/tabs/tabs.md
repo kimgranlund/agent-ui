@@ -13,9 +13,9 @@ tier: pattern          # geometry size-class — geometry.md "Pattern" (containe
 extends: UIContainerElement  # the FIRST non-form family — surface axes + reused internals (ARIA); NOT form-associated (face below). NOTE: UIContainerElement enters the descriptor BASE_CLASSES at decomp s12 (integration) — until then validateComponentDescriptor flags BAD_EXTENDS, filtered in tabs-descriptor.test.ts
 # marginal: ui-tabs measures 1421 B gz (re-measured post the overflow-menu build) at the components-barrel LEAVE-ONE-OUT tier — the delta of `npm run size`'s components barrel WITH vs. WITHOUT this control's export, tree-shaken (the tabs compound: ui-tabs + ui-tab + ui-tab-panel, now also composing the shipped `ui-menu` overflow part). Within the per-control ≤ ~2 kB tier budget (plan §10) at THIS tier.
 #
-# RULED 2026-08-08 (GH #521, Kim, in-session): the `@agent-ui/app` curated bundle (super-shell+master-detail+settings+surface-host+conversation+nav-rail, which reaches ui-tabs via its settings screen) grew from 81692 to 82565 B gz on this build — re-based its checkpoint 80 KB → 83 KB (84992 B gz) in scripts/measure-size.mjs (the same "checkpoint, not a ratchet" convention as GH #454/#480): Slice B's composed-ui-menu vehicle + fit engine, an LLD-accepted tradeoff landing at the app tier, twice-reviewed; the standing app-diet follow-up (GH #468) keeps its tripwire. `node scripts/measure-size.mjs` is green for this row as of commit (see the branch's own log for the SHA that carries this ruling).
+# RULED 2026-08-08 (Kim, in-session; durable record: https://github.com/kimgranlund/agent-ui/issues/586#issuecomment-5223777160): the `@agent-ui/app` curated bundle (super-shell+master-detail+settings+surface-host+conversation+nav-rail, which reaches ui-tabs via its settings screen) grew from 81692 to 82565 B gz on this build — re-based its checkpoint 80 KB → 83 KB (84992 B gz) in scripts/measure-size.mjs (the same "checkpoint, not a ratchet" convention as GH #454/#480): Slice B's composed-ui-menu vehicle + fit engine, an LLD-accepted tradeoff landing at the app tier, twice-reviewed; the standing app-diet follow-up (GH #468) keeps its tripwire. `node scripts/measure-size.mjs` is green for this row as of commit (see the branch's own log for the SHA that carries this ruling).
 #
-# RULED 2026-08-08 (Kim, in-session — second of the day for this constant): the `@agent-ui/components/components` (self-defining ui-* family) WHOLE-BARREL absolute-size gate measured 54889 B gz against its then-current 53 KB (54272 B gz) checkpoint (itself re-based only hours earlier for the ui-otp-field S2-a build) — 617 B over. Re-based 53 KB → 54 KB (55296 B gz) in scripts/measure-size.mjs (the same "checkpoint, not a ratchet" convention): the otp-field re-base plus Slice B's overflow engine, both twice-reviewed real machinery. GH #455 remains the standing shrink follow-up.
+# RULED 2026-08-08 (Kim, in-session — second of the day for this constant; same durable record: https://github.com/kimgranlund/agent-ui/issues/586#issuecomment-5223777160): the `@agent-ui/components/components` (self-defining ui-* family) WHOLE-BARREL absolute-size gate measured 54889 B gz against its then-current 53 KB (54272 B gz) checkpoint (itself re-based only hours earlier for the ui-otp-field S2-a build) — 617 B over. Re-based 53 KB → 54 KB (55296 B gz) in scripts/measure-size.mjs (the same "checkpoint, not a ratchet" convention): the otp-field re-base plus Slice B's overflow engine, both twice-reviewed real machinery. GH #455 remains the standing shrink follow-up.
 #
 # Both walls are RULED, not open. `node scripts/measure-size.mjs` is fully green (every row, whole output scrolled) and `npm run check` is green as of the commit that carries this note.
 
@@ -199,6 +199,17 @@ own list position). The inner `ui-menu`'s own event vocabulary (`select`/`toggle
 the `[data-part=overflow]` boundary (`stopPropagation`) so `ui-tabs`' own event surface stays exactly
 `{ select }` — an uncontained menu commit would otherwise ALSO surface a second, proxy-index-space `select` on
 `ui-tabs`, and `toggle`/`close` would leak outside the documented contract.
+
+**Known conservative residual (component-checker MINOR-1):** the fit budget subtracts a token-derived
+`reserve` (the trigger's height + one gap) from the strip's OWN measured available size whenever not every
+tab fits — but when the trigger is ALREADY visible, the CSS grid's `auto` trigger column has ALSO already
+narrowed that same measured strip box (the grid, not JS, does that subtraction first). The two together are
+a DOUBLE reserve in that state: safe (it can never show a tab that doesn't actually fit — no visual overflow
+is possible) but occasionally one tab more conservative than the true fit allows. Deliberately unfixed: the
+alternative (reading whether the trigger is CURRENTLY visible to decide whether to apply the JS reserve) is
+exactly the render-dependent feedback input LLD §4's hysteresis ruling forbids (fit must read the CACHED
+full-set + the observed size only, never today's own rendered subset) — the conservative slack is the
+accepted cost of staying oscillation-immune.
 
 `overflow` is reflected and default `'scroll'` (today's `overflow-x`/`overflow-y: auto`), so every existing
 consumer stays byte-identical; both `orientation` and `overflow` are **connect-resolved** — a live flip of

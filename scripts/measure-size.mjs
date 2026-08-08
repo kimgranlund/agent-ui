@@ -146,8 +146,9 @@ const targets = [
   // paste-split + echo channel, its own per-control override in MARGINAL_OVERRIDES below) landing in the
   // family barrel. Same law as above: a CHECKPOINT, not a ratchet — GH #455 remains the standing shrink
   // follow-up.
-  // RULED 2026-08-08 (Kim, in-session — second of the day for this constant, GH #521 second wall — the
-  // tabs overflow="menu" build, GH #586 Slice B): re-based 53 KB → 54 KB (55296 B gz) — measured 54889 B
+  // RULED 2026-08-08 (Kim, in-session — second of the day for this constant; durable record:
+  // https://github.com/kimgranlund/agent-ui/issues/586#issuecomment-5223777160 — the tabs
+  // overflow="menu" build, GH #586 Slice B): re-based 53 KB → 54 KB (55296 B gz) — measured 54889 B
   // gz; the otp-field re-base above plus Slice B's overflow-engine weight (the fit engine + the composed
   // ui-menu vehicle + the CSS grid rules), both twice-reviewed real machinery. Same law as above: a
   // CHECKPOINT, not a ratchet — GH #455 remains the standing shrink follow-up.
@@ -516,7 +517,8 @@ const appCssQuerySuffixPlugin = {
 // additive, the split/status-stream precedents above say the same). The budget stays 80 KB (the
 // checkpoint) — this is headroom regained, not a re-base; GH #468 stays open for the NEXT marginal
 // (entry-list/settings shared-chunk audit, shell preset dedup — named, not yet measured).
-// RULED 2026-08-08 (GH #521, Kim — the same "checkpoint, not a ratchet" convention as #454/#480):
+// RULED 2026-08-08 (Kim — the same "checkpoint, not a ratchet" convention as #454/#480; durable
+// record: https://github.com/kimgranlund/agent-ui/issues/586#issuecomment-5223777160):
 // re-based 80 KB → 83 KB (84992 B gz) — measured 82565 B gz on the tabs overflow="menu" build
 // (GH #586 Slice B, commit 4710b89): Slice B's composed-ui-menu vehicle + fit engine, LLD-accepted
 // tradeoff landing at the app tier; next diet pass keeps its tripwire. GH #468 remains the standing

@@ -123,6 +123,23 @@ export class UIMenuElement extends UIElement {
    */
   protected _overlayHandle: OverlayHandle | null = null
 
+  /**
+   * Composition-time opt-out (GH #586 critic fold MAJOR-2, Kim ruling 2026-08-08): when `true`, a
+   * COMMIT (`#commit`, below) closes the overlay WITHOUT restoring focus to the trigger — for a
+   * composing consumer whose OWN commit-relay listener has ALREADY moved focus somewhere meaningful
+   * during the SAME synchronous turn (the shipped precedent: `ui-tabs`' overflow-menu proxy relay
+   * focuses the promoted tab — click parity with a direct tab click) and does not want the overlay's
+   * default "focus → trigger" restore stealing it back a microtask later. Escape / outside-click (the
+   * platform light-dismiss path, `overlay.ts`) is UNAFFECTED — it always restores focus to the
+   * trigger, the contract every OTHER `ui-menu` consumer (agent-admin's page-actions,
+   * conversation-composer, entry-list, nav-rail) relies on and keeps unchanged. A plain instance
+   * property, not a `static props` signal (read once, synchronously, at commit time) and never an
+   * HTML attribute — a composing consumer sets it imperatively right after creating its private menu
+   * instance, before it ever opens. Default `false` (today's behaviour, byte-identical for every
+   * existing consumer).
+   */
+  keepFocusOnCommit = false
+
   protected connected(): void {
     const { panel, trigger, items } = this.#ensureParts()
 
@@ -336,10 +353,21 @@ export class UIMenuElement extends UIElement {
   /**
    * Commit a user-driven item selection: update aria-checked for a selectable item (GH #55), emit
    * `select` with {value, index}, then close the panel. The value is the item's `data-value`
-   * attribute, falling back to trimmed text content. Close is driven programmatically (open=false
-   * → effect → handle.close()); the overlay trait announces exactly one close+toggle pair for this
-   * transition too (ADR-0101), with `el.open` already `false` by the time a listener observes
-   * either event (the ordering invariant).
+   * attribute, falling back to trimmed text content.
+   *
+   * Close is driven TWO ways, deliberately in THIS order (GH #586 critic fold MAJOR-2):
+   *   1. `this.open = false` FIRST — a synchronous prop write (the value is readable immediately,
+   *      even though the model→overlay EFFECT that reacts to it is microtask-batched). This keeps the
+   *      ADR-0101 ordering invariant intact: `el.open` must already read `false` by the time a
+   *      `toggle` listener runs (menu.test.ts's own biting assertion) — it must NOT depend on which
+   *      of the two close paths below fires the real announce.
+   *   2. An EXPLICIT `_overlayHandle.close()` call SECOND (honouring `keepFocusOnCommit` above — a
+   *      composing consumer that already moved focus itself during THIS emit gets that opt-out
+   *      applied to the ONE real close, synchronously, rather than waiting a microtask for the
+   *      model→overlay effect to get there first and restore focus before the opt-out is even read).
+   *      The effect's OWN `handle.close()` call still runs next microtask, but the overlay is already
+   *      closed by then (`actuallyOpen` false) — the existing idempotent no-op guard, never a second
+   *      announce.
    */
   #commit(index: number, item: HTMLElement): void {
     const value = item.dataset['value'] ?? item.textContent?.trim() ?? String(index)
@@ -351,8 +379,9 @@ export class UIMenuElement extends UIElement {
     } else if (role === 'menuitemradio') {
       this.#commitRadio(item)
     }
-    this.emit('select', { value, index })
-    this.open = false
+    this.emit('select', { value, index }) // a listening consumer's OWN focus move (if any) happens here, synchronously
+    this.open = false // synchronous write — el.open already reads false below (and to any listener)
+    this._overlayHandle?.close(this.keepFocusOnCommit ? { restoreFocus: false } : undefined)
   }
 
   /**
