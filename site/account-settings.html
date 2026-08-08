@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · Account settings</title>
+  </head>
+  <body>
+    <!-- S5 (Account settings, GH #615 / ADR-0176 cl.1's fifth slice): a generic account SettingsSchema
+         rendered by the SHIPPED ui-settings — no new control, the whole slice is the worked exemplar —
+         behind a "must be signed in" gate reading the identity-mock-transport seam's getSession in a
+         dev/preview build. An MPA entry auto-discovered by vite.config.ts's site/**/*.html glob. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/account-settings.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,98 @@
+/* account-settings.css — page-local chrome for the Account settings guide (S5, GH #615 / ADR-0176 cl.1):
+ * card rhythm, the action row, the status captions, the sized frame the ui-settings surface fills, and the
+ * saved-values readout. Never restyles a ui-* control (card/button/settings/master-detail/nav-rail and every
+ * generated field below all keep their own CSS) — ADR-0102, layout/rhythm only. Mirrors otp-signin.css,
+ * widened: a sections rail + panel needs more inline size than a one-column sign-in form. */
+
+ui-card + ui-card {
+  margin-block-start: var(--md-sys-space-lg);
+}
+
+ui-card {
+  max-inline-size: 32rem;
+}
+
+.account-settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--md-sys-space-sm);
+  margin-block-start: var(--md-sys-space-md);
+}
+
+.account-settings-status {
+  margin-block-start: var(--md-sys-space-sm);
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  min-block-size: 1.2em;
+}
+
+.account-settings-wiring-status,
+.account-settings-sources,
+.account-settings-caption {
+  margin-block-start: var(--md-sys-space-md);
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+/* The surface frame. `container-type: inline-size` is load-bearing, not decoration: the composed
+ * ui-master-detail's 40rem drill-in threshold is a CONTAINER query, so without a query container here it
+ * would resolve against the nearest ancestor container instead of the frame the reader actually sees
+ * (the settings.css `.settings-resize` precedent). `resize: horizontal` lets a reader drag it under the
+ * threshold and watch the rail|panel collapse into the drill-in. */
+.account-settings-frame {
+  container-type: inline-size;
+  inline-size: min(48rem, 100%);
+  min-inline-size: 18rem;
+  max-inline-size: 100%;
+  block-size: 22rem;
+  resize: horizontal;
+  overflow: hidden;
+  margin-block-start: var(--md-sys-space-md);
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 12px;
+  background: var(--md-sys-color-neutral-surface-lowest);
+}
+
+/* ui-settings declares `block-size: auto` and fills its flex parent — the consumer owns the box
+ * (settings.md's geometry row: "fills its flex parent … is the CONSUMER's job"). */
+.account-settings-surface {
+  display: flex;
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.account-settings-saved {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--md-sys-space-xs);
+  margin-block: var(--md-sys-space-sm) 0;
+  padding: 0;
+}
+
+.account-settings-saved-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--md-sys-space-sm);
+  justify-content: space-between;
+  padding-block: var(--md-sys-space-xs);
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+  font-size: 0.85rem;
+}
+
+.account-settings-saved-row dt {
+  margin: 0;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.account-settings-saved-row dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A row whose value came from the STORE (a real save), not from the schema default — the visible half of
+ * decomp a13. Colour is not the only channel: the row also gains a "saved" text marker in the DOM. */
+.account-settings-saved-row[data-saved] dd {
+  color: var(--md-sys-color-primary);
+  font-weight: 600;
+}
