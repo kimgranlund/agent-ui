@@ -47,13 +47,10 @@ function cellsOf(el: HTMLElement): HTMLElement[] {
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-otp-field — focus order (one tab stop, both engines)', () => {
-  // KNOWN GAP — filed as GH #589 (build-time, reported — not silently patched): a second real Tab does not
-  // always leave the control in WebKit on this exact "editor spans the grid, opacity:0" overlay shape
-  // (Chromium: clean). An LLD §14-authorized fallback (a real 1×1px offscreen-clipped editor + host-level
-  // pointerdown) was attempted and reverted — it fixed nothing conclusively and introduced NEW regressions
-  // in BOTH engines (paste-forward-write + the C10 reconnect count), so the overlay shape below — proven
-  // clean everywhere else in both engines — stands; see GH #589 for the follow-up.
-  it.skipIf(server.browser === 'webkit')('Tab enters ONCE (a single tab stop); cells are never separately tab-reachable', async () => {
+  // GH #589 companion split (critic-requested): the FIRST-Tab-enters half is NOT platform-broken (both
+  // engines land on the editor cleanly, proven by instrumentation) — it runs in both engines. Only the
+  // second-Tab-escape half below is the confirmed WebKit platform bug.
+  it('Tab enters the control ONCE (a single tab stop)', async () => {
     const before = document.createElement('button')
     before.textContent = 'before'
     const after = document.createElement('button')
@@ -67,6 +64,34 @@ describe('ui-otp-field — focus order (one tab stop, both engines)', () => {
     before.focus()
     await userEvent.tab()
     expect(document.activeElement, `${server.browser}: Tab did not land on the editor`).toBe(editorOf(el))
+  })
+
+  // GH #589 ROOT-CAUSED, FORKED (not fixed here — beyond this LLD's anatomy grant): a second real Tab does
+  // not always leave the control in WebKit. Instrumentation (real WebKit, both engines) PROVES this is a
+  // WebKit PLATFORM bug in sequential focus navigation OUT of any `contenteditable`, not an otp-field defect
+  // — a completely BARE `<div contenteditable="true">` with ZERO otp-field machinery (no beforeinput
+  // interception, no textContent rewriting, no selection management, no effects) reproduces the IDENTICAL
+  // symptom: WebKit's second Tab lands on `document.body` instead of the next real tabbable element
+  // (Chromium proceeds correctly). Explicit `tabindex="0"` on the editor was tested and does NOT change the
+  // outcome (WebKit still lands on `<body>`); a THIRD Tab from that stuck `<body>` state does not recover
+  // either (it re-enters the editor, not the next control) — this is WebKit's own contenteditable-editing-
+  // host focus-navigation algorithm, not a selection-collapse or textContent-rewrite artifact. Fixing it
+  // from userland would mean otp-field re-implementing Tab-key focus management itself (intercepting Tab,
+  // computing "the next tabbable element" by hand, and calling .focus() directly) — a genuinely NEW
+  // capability with its own edge cases (shadow DOM, iframes, non-doc-order tabindex), well beyond this
+  // control's LLD-granted anatomy and risky to build unreviewed. GH #589 stays open, scoped to this ONE gap.
+  it.skipIf(server.browser === 'webkit')('a second Tab LEAVES the control (cells are never tab stops)', async () => {
+    const before = document.createElement('button')
+    before.textContent = 'before'
+    const after = document.createElement('button')
+    after.textContent = 'after'
+    const wrap = document.createElement('div')
+    wrap.append(before, document.createElement('ui-otp-field'), after)
+    document.body.append(wrap)
+    mounted.push(wrap)
+
+    before.focus()
+    await userEvent.tab()
     await userEvent.tab()
     expect(document.activeElement, `${server.browser}: a second Tab must LEAVE the control (cells are never tab stops)`).toBe(after)
   })
@@ -104,11 +129,14 @@ describe('ui-otp-field — focus order (one tab stop, both engines)', () => {
     expect(cells[2]!.hasAttribute('data-active')).toBe(true)
   })
 
-  // KNOWN GAP — filed as GH #589 (build-time, reported — not silently patched): a real keyboard Backspace
-  // sometimes no-ops in WebKit on this exact overlay shape (Chromium: clean); the SAME class as the Tab gap
-  // above, same disposition — the pure-reducer Backspace arms (both filled-cell and walk-back) are
-  // exhaustively proven in otp-field.test.ts, and `deleteContentBackward` routing is proven in Chromium here.
-  it.skipIf(server.browser === 'webkit')('backspace walks back and removes the digit', async () => {
+  // GH #589 FIXED — root-caused in real WebKit (instrumented `getTargetRanges()`, see the beforeinput
+  // handler's own comment, otp-field.ts): a delete inputType's target range describes content ABOUT TO BE
+  // REMOVED, never collapsed once anything real is deleted — Chromium happened to return an empty ranges
+  // array for a plain-caret backspace (the old code's accidental pass), WebKit spec-correctly returned the
+  // real, non-collapsed 1-character range, which the old check misread as "a highlighted selection", silently
+  // no-opping every WebKit backspace. `window.getSelection().isCollapsed` is the correct, cross-engine signal
+  // (both engines proven clean below — no engine skip needed once the real defect was fixed).
+  it('backspace walks back and removes the digit', async () => {
     const { el } = mount()
     const editor = editorOf(el)
     await userEvent.click(editor)
@@ -119,6 +147,30 @@ describe('ui-otp-field — focus order (one tab stop, both engines)', () => {
     await userEvent.keyboard('{Backspace}')
     await el.updateComplete
     expect(el.value, `${server.browser}: real Backspace did not remove the last digit`).toBe('1')
+  })
+
+  // GH #589 companion proof: a delete issued while a REAL highlighted selection exists still falls to the
+  // default no-op arm (§3 row 5) — the fix discriminates "plain caret" from "a real selection" correctly,
+  // it does not simply always treat delete as collapsed.
+  it('a Backspace issued over a REAL text selection is a no-op (§3 row 5 — the selection-exists case, not the routine one)', async () => {
+    const { el } = mount()
+    const editor = editorOf(el)
+    await userEvent.click(editor)
+    await userEvent.keyboard('123')
+    await el.updateComplete
+    expect(el.value).toBe('123')
+
+    // select the whole editor's text content (a REAL, non-collapsed Selection) then Backspace.
+    const range = document.createRange()
+    range.selectNodeContents(editor)
+    const sel = window.getSelection()!
+    sel.removeAllRanges()
+    sel.addRange(range)
+    expect(sel.isCollapsed, 'the test setup itself must produce a real (non-collapsed) selection').toBe(false)
+
+    await userEvent.keyboard('{Backspace}')
+    await el.updateComplete
+    expect(el.value, `${server.browser}: a delete over a real selection must fall to the default no-op arm`).toBe('123')
   })
 
   it('ArrowLeft/ArrowRight move the active cell without editing; clamp at the bounds', async () => {

@@ -121,13 +121,25 @@ export class UIOtpFieldElement extends UIFormElement {
     // ── editor listeners (LLD-C1) ──────────────────────────────────────────────────────────────────
 
     // beforeinput — intercepted UNCONDITIONALLY (§3); routed through the pure model.ts pair.
+    //
+    // GH #589 ROOT-CAUSE REPAIR (§3, documented engine exception — investigated in real WebKit, evidence
+    // in the fix commit): `collapsed` used to come from `event.getTargetRanges()` — the wrong seam. A
+    // delete inputType's target range describes the CONTENT ABOUT TO BE REMOVED, which is never collapsed
+    // once anything real is being deleted (it always spans at least the one character). Chromium happened
+    // to return an EMPTY ranges array for a plain-caret backspace (an implementation quirk our old code
+    // accidentally rode as "collapsed"); WebKit spec-correctly returns a REAL, non-collapsed 1-character
+    // range (`start=(#text,1) end=(#text,2)` for a backspace on "12") — which the old check misread as "a
+    // highlighted selection exists", silently no-opping every WebKit backspace. `window.getSelection()
+    // .isCollapsed`, read HERE ONLY to discriminate a plain caret from a real highlighted selection BEFORE
+    // routing (never to derive WHERE to edit — the active index alone still governs that, §3's actual
+    // concern), is the correct, cross-engine-robust signal instrumentation confirmed reads `true` for a
+    // plain caret and `false` for a real selection in BOTH engines — a narrow, cited exception to "the DOM
+    // selection is never managed and never read" (§3), not a reversal of it.
     this.listen(editor, 'beforeinput', (event) => {
       const ie = event as InputEvent
       ie.preventDefault() // the native caret never edits — every mutation flows through #dispatch
       if (this.#composing) return // suppressed mid-composition; compositionend supplies the final text (§3)
-      const getRanges = (ie as unknown as { getTargetRanges?: () => StaticRange[] }).getTargetRanges
-      const ranges = typeof getRanges === 'function' ? getRanges.call(ie) : []
-      const collapsed = ranges.length === 0 || ranges.every((r) => r.collapsed)
+      const collapsed = window.getSelection()?.isCollapsed ?? true
       const transferText = ie.dataTransfer ? ie.dataTransfer.getData('text/plain') : null
       this.#dispatch(routeBeforeInput({ inputType: ie.inputType, data: ie.data, transferText, collapsed }))
     })

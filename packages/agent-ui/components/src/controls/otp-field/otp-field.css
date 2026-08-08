@@ -136,15 +136,16 @@
 
   /* The ONE focusable/hit-testable surface (LLD §6) — stretched over every cell as a transparent overlay.
      Its text is invisible; the cells paint the digits. Still real text content for SR navigation.
-     BUILD NOTE (known gap, reported — not silently patched): a build-time browser leg measured TWO WebKit-only
-     failures on this exact shape — Tab does not always leave the control on a second Tab press, and a real
-     keyboard Backspace sometimes no-ops — both absent in Chromium. An LLD §14-authorized fallback (moving the
-     editor to a real, standard 1×1px offscreen-clipped sibling, with a host-level pointerdown resolving the
-     cell index and calling `editor.focus()`) was attempted and reverted: it introduced NEW regressions in
-     BOTH engines (a stale `#active` after the extra focus() cycle broke paste-forward-write and the C10
-     reconnect count) without conclusively fixing WebKit within this build's budget. The overlay-over-cells
-     shape below is the one that is KNOWN GOOD for every other probe in both engines; the two WebKit legs are
-     filed as GH #589, not locally worked around further. */
+     BUILD NOTE (GH #589): a build-time browser leg measured TWO WebKit-only failures on this exact shape —
+     Tab not always leaving the control on a second Tab press, and a real keyboard Backspace sometimes
+     no-opping. The Backspace leg is FIXED (otp-field.ts's beforeinput handler — a `getTargetRanges()`
+     misread, not a CSS/anatomy defect). The Tab leg is CONFIRMED (real-WebKit instrumentation, GH #589) a
+     WebKit PLATFORM bug in sequential focus navigation out of ANY `contenteditable` — a completely bare
+     `<div contenteditable>` with none of this control's machinery reproduces the identical symptom in
+     WebKit only — so it is NOT this overlay shape's fault and stays open, tracked, not locally worked
+     around. (The LLD §14-authorized 1×1px offscreen-editor fallback was tried earlier and reverted: it
+     regressed paste-forward-write + the C10 reconnect count in BOTH engines without fixing WebKit — this
+     overlay-over-cells shape is the one KNOWN GOOD for every other probe in both engines.) */
   :scope > [data-part='editor'] {
     grid-column: 1 / -1;
     grid-row: 1;
