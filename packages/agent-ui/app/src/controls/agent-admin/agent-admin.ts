@@ -778,6 +778,9 @@ export class UIAgentAdminElement extends UIElement {
     // so), so there is no single runtime store to share between the two pages; a2ui-live's toggle stays its
     // own independent dev override, documented at its own definition. This row is the seam a future
     // admin-side runner (an `admin-live-runner.ts`-style planner wiring, not built here) would read.
+    // DELIBERATELY independent of the A2UI master (no dim, no disable): the planner is a turn-SHAPE knob
+    // the host loop reads, not an output modality — planner-ON + A2UI-OFF is legal here; the future
+    // admin-side runner slice owns deciding whether that combo degrades or dims (review note, 2026-08-08).
     const planner = surfaceRow('planner', 'Planner', 'Sequential plan → execute → synthesize host loop — opt-in')
     planner.toggle.checked = false // the inverse default (OFF) — applyMasterStates re-applies the real stored value below
     planner.toggle.addEventListener('change', () => {
