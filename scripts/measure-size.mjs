@@ -146,7 +146,12 @@ const targets = [
   // paste-split + echo channel, its own per-control override in MARGINAL_OVERRIDES below) landing in the
   // family barrel. Same law as above: a CHECKPOINT, not a ratchet — GH #455 remains the standing shrink
   // follow-up.
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 53 * KB],
+  // RULED 2026-08-08 (Kim, in-session — second of the day for this constant, GH #521 second wall — the
+  // tabs overflow="menu" build, GH #586 Slice B): re-based 53 KB → 54 KB (55296 B gz) — measured 54889 B
+  // gz; the otp-field re-base above plus Slice B's overflow-engine weight (the fit engine + the composed
+  // ui-menu vehicle + the CSS grid rules), both twice-reviewed real machinery. Same law as above: a
+  // CHECKPOINT, not a ratchet — GH #455 remains the standing shrink follow-up.
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 54 * KB],
   // GH #377 finding 3 — the package's FIRST `./traits/*` subpath (`traits/overlay`, package.json:74) gets
   // its own budgeted row, so the opt-in surface every other pack carries one for (`code/highlight`,
   // `./markdown`, `./editor`) is not the one exception.
