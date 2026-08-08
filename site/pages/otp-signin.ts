@@ -277,10 +277,22 @@ function wireOtpFlow(): void {
         codeStatus.textContent = ''
         showView('code-entry')
         startResendCooldown() // the real per-email cooldown starts from THIS call too (SPEC-R2 AC4)
-      } catch {
-        // Unreachable per SPEC-R2's own ACs on a FRESH transport (no prior call to collide with) — kept as
-        // the fleet's standard defensive catch-all, matching magic-link.ts's own initial-request handler.
-        requestStatus.textContent = 'Something went wrong — try again.'
+      } catch (err) {
+        // REACHABLE (MINOR-1, code-checker finding on 407a240): sign-out never clears the transport's own
+        // per-email `lastCodeRequestAt` (identity-mock-transport.ts) — a fast sign-out → re-request cycle
+        // for the SAME email inside the 30s cooldown window hits `code-rate-limited` HERE too, even though
+        // the page's own countdown display was zeroed at sign-out (`stopResendCooldown()`). Unlike
+        // magic-link.ts's own initial-request catch (genuinely unreachable there — SPEC-R3 AC1 names NO
+        // error path for `requestMagicLink` at all), `requestOneTimeCode` always carries this one rejection
+        // (SPEC-R2 AC4); the prior comment here claimed the SAME "unreachable" shape by copying that idiom
+        // without re-deriving it for THIS method's own contract — the premise didn't survive the copy.
+        // Mirrors the resend handler's own wait-message below (the SAME rejection code, reached from a
+        // different UI path).
+        const code = errorCodeOf(err)
+        requestStatus.textContent =
+          code === 'code-rate-limited'
+            ? 'You just requested a code — wait a few seconds and try again.'
+            : 'Something went wrong — try again.'
       } finally {
         setPending(requestSubmit, false, 'Sending…', 'Send code')
       }

@@ -87,9 +87,10 @@ function uniqueEmail(): string {
   return `s2a2-otp-signin-${Date.now()}-${seq}@example.com`
 }
 
-/** Requests a fresh code for a unique email and lands on the code-entry card. Returns the email used. */
-async function requestCode(): Promise<string> {
-  const email = uniqueEmail()
+/** Requests a fresh code and lands on the code-entry card. Returns the email used — a unique one unless
+ *  `emailOverride` is given (the MINOR-1 sign-out → fast-re-request leg deliberately reuses one, below). */
+async function requestCode(emailOverride?: string): Promise<string> {
+  const email = emailOverride ?? uniqueEmail()
   await typeEmail(email)
   await userEvent.click(requestSubmitButton())
   await until(() => !cards().codeEntry.hidden)
@@ -217,6 +218,25 @@ describe('resend (decomp a5, SPEC-R2 AC4 — a REAL per-email cooldown, not a pa
     await typeCode('424242')
     await until(() => !cards().signedIn.hidden)
     await signOut()
+  })
+})
+
+describe('sign-out does not clear the per-email cooldown (MINOR-1, code-checker finding on 407a240)', () => {
+  it('a fast sign-out → re-request for the SAME email hits the real transport cooldown, surfaced on the request card (not the generic fallback)', async () => {
+    // Deliberately the SAME email both times — the whole point is the transport's per-email
+    // `lastCodeRequestAt` outliving a sign-out (identity-mock-transport.ts has no session-scoped reset).
+    const email = uniqueEmail()
+    await requestCode(email)
+    await typeCode('424242')
+    await until(() => !cards().signedIn.hidden)
+    await signOut()
+
+    // Immediately re-request for the SAME email — well inside the real (default 30s) cooldown window.
+    await typeEmail(email)
+    await userEvent.click(requestSubmitButton())
+    await until(() => statusTextOf(cards().request).length > 0)
+    expect(statusTextOf(cards().request)).toContain('wait a few seconds')
+    expect(cards().codeEntry.hidden, 'a rate-limited re-request must never reach code-entry').toBe(true)
   })
 })
 
