@@ -227,7 +227,8 @@ describe('a2ui-live planner-stage wiring (GH #579, ADR-0174/SPEC-R21/R22) — a 
     expect(calls[2]!.text).toContain('plan step "a"')
     expect(calls[2]!.text).toContain('failed')
 
-    expect(narrationLabel('plan-step:a'), 'a failed step group closes error/failed, never stranded').toBe('Step "a" — Failed')
+    // #602 display honesty — the failed group's label carries the SANITIZED reason in parens.
+    expect(narrationLabel('plan-step:a'), 'a failed step group closes error/failed, never stranded').toBe('Step "a" — Failed (boom)')
     expect(narrationLabel('plan-step:b')).toBe('Step "b" — Done')
     expect(narrationLabel('plan-synthesis'), 'a synthesis dispatch after a step failure still reaches done').toBe('Synthesis — Done')
 
@@ -262,13 +263,44 @@ describe('a2ui-live planner-stage wiring (GH #579, ADR-0174/SPEC-R21/R22) — a 
     expect(calls[2]!.text).toContain('plan step "a"')
     expect(calls[2]!.text).toContain('failed')
 
-    expect(narrationLabel('plan-step:a'), 'a thrown step group closes failed, never stranded').toBe('Step "a" — Failed')
+    // #602 display honesty — the failed group's label carries the SANITIZED reason in parens.
+    expect(narrationLabel('plan-step:a'), 'a thrown step group closes failed, never stranded').toBe('Step "a" — Failed (transport fault)')
     expect(narrationLabel('plan-step:b')).toBe('Step "b" — Done')
     expect(narrationLabel('plan-synthesis'), 'a synthesis dispatch after a thrown step still reaches done').toBe('Synthesis — Done')
 
     const canvasText = document.querySelector("ui-surface-host [data-part='surface']")?.textContent ?? ''
     expect(canvasText).toContain('B done')
     expect(canvasText).toContain('Synthesis done')
+
+    await waitUntil(() => !composerBusy())
+  })
+
+  it('gate ON: a failed step\'s status label shows a SANITIZED reason — the raw secret never reaches the label OR the next dispatch (GH #602)', async () => {
+    __setPlannerEnabledForTest(true)
+    const secret = 'sk-ABC123DEF456GHI789JKL'
+    const calls: { turn: number; text: string }[] = []
+    __setTransportForTest(
+      scriptedTransport((turn, input) => {
+        calls.push({ turn, text: input.kind === 'intent' ? input.text : '' })
+        if (turn === 1) return [metaLine({ plan: { steps: [{ id: 'a', description: 'Do A' }, { id: 'b', description: 'Do B' }] } })]
+        if (turn === 2) return [metaLine({ error: `upstream rejected api_key=${secret}` })] // a key-shaped fault message
+        if (turn === 3) return surfaceLines('surf-b', 'B done')
+        return surfaceLines('final', 'Synthesis done')
+      }),
+    )
+
+    await sendIntent('plan with a key-leaking failure')
+    await waitUntil(() => document.querySelector("ui-surface-host [data-part='surface']")?.textContent?.includes('Synthesis done') === true)
+
+    const label = narrationLabel('plan-step:a') ?? ''
+    expect(label).toContain('Failed')
+    expect(label).toContain('[redacted]') // the sanitized reason IS visible…
+    expect(label).not.toContain(secret) // …but the raw secret never reaches the visible status label
+
+    // The dispatch-leak negative — the NEXT dispatch (step "b") carries the FIXED fold-in wording only;
+    // neither the raw secret nor the sanitized reason string ever rides a dispatch.
+    expect(calls[2]!.text).not.toContain(secret)
+    expect(calls[2]!.text).not.toContain('[redacted]')
 
     await waitUntil(() => !composerBusy())
   })

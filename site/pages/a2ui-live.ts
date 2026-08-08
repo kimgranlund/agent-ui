@@ -767,9 +767,13 @@ const PLAN_STEP_STATE_WORD: Record<PlanStepState, string> = {
   'not-run': 'Not run (aborted)',
 }
 
-function planGroupLabel(groupKey: string, state: PlanStepState): string {
+/** `reason` (#602 display honesty) is present ONLY on a `'failed'` terminal state — already a sanitized,
+ *  ≤120-char, one-line string (`sanitizeFailureReason`, plan-runner.ts); rendered in parens after the state
+ *  word, never re-processed here. */
+function planGroupLabel(groupKey: string, state: PlanStepState, reason?: string): string {
   const name = groupKey === PLAN_SYNTHESIS_GROUP_KEY ? 'Synthesis' : `Step "${groupKey.slice('plan-step:'.length)}"`
-  return `${name} — ${PLAN_STEP_STATE_WORD[state]}`
+  const word = PLAN_STEP_STATE_WORD[state]
+  return reason !== undefined ? `${name} — ${word} (${reason})` : `${name} — ${word}`
 }
 
 /**
@@ -801,9 +805,9 @@ async function runPlannerFlow(intent: string): Promise<void> {
   const groupState = new Map<string, PlanStepState>()
   const progressRouters = new Map<string, (progress: TurnProgress) => void>()
 
-  const onStepState = (groupKey: string, state: PlanStepState): void => {
+  const onStepState = (groupKey: string, state: PlanStepState, reason?: string): void => {
     const status = planStepStatus(state)
-    const label = planGroupLabel(groupKey, state)
+    const label = planGroupLabel(groupKey, state, reason)
     if (groupState.has(groupKey)) narration.update(groupKey, { status, label })
     else narration.appendEntry({ key: groupKey, status, label })
     groupState.set(groupKey, state)

@@ -15,6 +15,7 @@ import {
   planStepGroupKey,
   runPlan,
   runPlannerTurn,
+  sanitizeFailureReason,
 } from './plan-runner.ts'
 
 // ── the scripted transport harness ──────────────────────────────────────────────────────────────────────
@@ -22,13 +23,19 @@ import {
 /** One scripted call's raw yield — plain content lines, or a `{meta}` object merged onto the leading
  *  meta-line (`note`/`plan`/`ask`/`progress`/`error`), or an array of raw lines interleaving both. */
 interface ScriptedTurn {
+  /** #602 — content lines yielded BEFORE anything else this call scripts (progress/meta/`throws`/`lines`):
+   *  the "already streamed, already rendered" content a mid-stream fault (either arm) leaves behind. */
+  preLines?: string[]
   meta?: { note?: string; plan?: PlanDeclaration; ask?: { surfaceId: string }; error?: string }
   progress?: Array<{ stage: string }>
   lines?: string[]
   /** Fires synchronously right before this call yields anything — used to script a mid-run abort. */
   onCall?: () => void
-  /** Throw instead of yielding — the "genuinely thrown exception" leg (SPEC-R22). */
+  /** Throw instead of yielding — the "genuinely thrown exception" leg (SPEC-R22). Fires AFTER `preLines`. */
   throws?: boolean
+  /** Throw with this exact message (default: 'scripted transport failure') — #602's sanitizer-case tests
+   *  need to script specific (long/multiline/key-shaped) fault text. */
+  throwMessage?: string
 }
 
 /** Builds an `AgentTransport` whose `turn()` behavior is scripted call-by-call (1-indexed by dispatch
@@ -52,7 +59,8 @@ function scriptedTransport(script: ScriptedTurn[]): { transport: AgentTransport;
         if (turn === undefined) return
         turn.onCall?.()
         await Promise.resolve() // force a real microtask hop — a same-tick script would never expose overlap
-        if (turn.throws) throw new Error('scripted transport failure')
+        for (const line of turn.preLines ?? []) yield line // #602 — pre-fault content, before anything else
+        if (turn.throws) throw new Error(turn.throwMessage ?? 'scripted transport failure')
         for (const p of turn.progress ?? []) yield JSON.stringify({ a2uiMeta: { progress: p } })
         if (turn.meta) yield JSON.stringify({ a2uiMeta: turn.meta })
         for (const line of turn.lines ?? []) yield line
@@ -441,6 +449,204 @@ describe('GH #592 — a thrown step dispatch does not abort the run (folds into 
       'scripted transport failure',
     )
     expect(calls).toHaveLength(1) // only the plan-request turn ever dispatched — no loop ever started
+  })
+})
+
+// ── GH #602 leg 1 — render-vs-record consistency: a throw keeps pre-throw lines, same as the meta-line arm
+// (a mid-stream throw used to discard `content:''` even when lines had already streamed — and already
+// painted the canvas through the page's `renderingTransport` wrapper — while a mid-stream `error` meta-line
+// already kept them. Ruled keep-both-consistent TOWARD the meta-line arm: SPEC-R22's Advisory Law text is
+// explicit that "whatever validated content it did emit renders as ordinary output," unconditional on the
+// call's terminal state — so retaining pre-fault content on failure is spec-consistent, not spec-silent.)
+
+describe('GH #602 leg 1 — a mid-stream THROW keeps pre-throw content, consistent with the meta-line arm', () => {
+  const PRE_LINES = ['{"version":"v1.0","createSurface":{"surfaceId":"s1","catalogId":"agent-ui"}}']
+
+  it('arm consistency: a throw-with-pre-lines step and a meta-line-error-with-pre-lines step record BYTE-IDENTICAL content', async () => {
+    const plan: PlanDeclaration = { steps: [step('s1')] }
+
+    const { transport: metaTransport } = scriptedTransport([
+      { preLines: PRE_LINES, meta: { error: 'boom' } }, // the pre-existing, correct arm
+      { lines: [] }, // synthesis
+    ])
+    const metaSession = await runPlan({ transport: metaTransport, session: EMPTY_SESSION, plan })
+
+    const { transport: throwTransport } = scriptedTransport([
+      { preLines: PRE_LINES, throws: true }, // the #602-fixed arm — SAME pre-fault content
+      { lines: [] }, // synthesis
+    ])
+    const throwSession = await runPlan({ transport: throwTransport, session: EMPTY_SESSION, plan })
+
+    // session.turns: [user(step), assistant(step), user(synthesis), assistant(synthesis)] — index 1 is the
+    // step's own recorded content.
+    const metaStepContent = metaSession.turns[1]!.content
+    const throwStepContent = throwSession.turns[1]!.content
+    expect(metaStepContent).toContain('s1') // the pre-fault line really is retained on the meta-line arm
+    expect(throwStepContent).toBe(metaStepContent) // …and now BYTE-IDENTICAL on the throw arm too
+  })
+
+  it('a thrown step with pre-fault content records that content (not empty) while still ending failed', async () => {
+    const plan: PlanDeclaration = { steps: [step('s1'), step('s2')] }
+    const { transport } = scriptedTransport([
+      { preLines: PRE_LINES, throws: true }, // s1 — streams a real surface, THEN faults
+      { lines: [] }, // s2
+      { lines: [] }, // synthesis
+    ])
+    const states: Array<[string, string]> = []
+    const session = await runPlan({ transport, session: EMPTY_SESSION, plan, onStepState: (g, s) => states.push([g, s]) })
+    expect(session.turns[1]!.content).toContain('s1') // pre-fault content survived, never emptied to ''
+    expect(states).toContainEqual([planStepGroupKey('s1'), 'failed']) // still ends failed — content ≠ success
+  })
+
+  it('a thrown step with NO pre-fault content still records empty content (nothing to keep, nothing invented)', async () => {
+    const plan: PlanDeclaration = { steps: [step('s1')] }
+    const { transport } = scriptedTransport([{ throws: true }, { lines: [] }])
+    const session = await runPlan({ transport, session: EMPTY_SESSION, plan })
+    expect(session.turns[1]!.content).toBe('')
+  })
+})
+
+// ── GH #602 leg 2 — display honesty: a sanitized failure reason, status-label-only, never a dispatch ──────
+
+describe('GH #602 leg 2 — sanitizeFailureReason (pure)', () => {
+  it('collapses a multiline message to ONE line', () => {
+    expect(sanitizeFailureReason('validator exhausted\nafter 3 rounds\r\ngiving up')).toBe(
+      'validator exhausted after 3 rounds giving up',
+    )
+  })
+
+  it('truncates to ≤120 chars, trailing an ellipsis marker', () => {
+    const long = 'x'.repeat(200)
+    const sanitized = sanitizeFailureReason(long)
+    expect(sanitized.length).toBe(120)
+    expect(sanitized.endsWith('…')).toBe(true)
+    expect(sanitized.startsWith('x'.repeat(119))).toBe(true)
+  })
+
+  it('a short message is returned untouched (well under the 120-char cap, no ellipsis)', () => {
+    expect(sanitizeFailureReason('validator exhausted')).toBe('validator exhausted')
+  })
+
+  it('strips a KEY-shaped substring ("api_key=<long value>")', () => {
+    const sanitized = sanitizeFailureReason('upstream rejected: api_key=sk-ABC123DEF456GHI789JKL is invalid')
+    expect(sanitized).not.toContain('sk-ABC123DEF456GHI789JKL')
+    expect(sanitized).toContain('[redacted]')
+  })
+
+  it('strips a TOKEN-shaped substring ("token: <long value>")', () => {
+    const sanitized = sanitizeFailureReason('fetch failed, token: abcDEF123456ghi789 expired mid-call')
+    expect(sanitized).not.toContain('abcDEF123456ghi789')
+    expect(sanitized).toContain('[redacted]')
+  })
+
+  it('strips a BEARER-shaped substring ("Bearer <token>", no separator)', () => {
+    const sanitized = sanitizeFailureReason('401 Unauthorized — Authorization: Bearer sk-live-9f8e7d6c5b4a3210')
+    expect(sanitized).not.toContain('sk-live-9f8e7d6c5b4a3210')
+    expect(sanitized).toContain('[redacted]')
+  })
+
+  it('strips a bare JWT-shaped substring even with no keyword context', () => {
+    const jwt = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dGhpc2lzbm90YXJlYWxzaWduYXR1cmU'
+    const sanitized = sanitizeFailureReason(`upstream fault while validating: ${jwt}`)
+    expect(sanitized).not.toContain(jwt)
+    expect(sanitized).toContain('[redacted]')
+  })
+
+  it('does NOT redact a plain English word that happens to follow a keyword ("token expired")', () => {
+    expect(sanitizeFailureReason('token expired, please retry')).toBe('token expired, please retry')
+  })
+
+  it('an empty/whitespace-only message degrades to a fixed fallback, never an empty label', () => {
+    expect(sanitizeFailureReason('')).toBe('unspecified error')
+    expect(sanitizeFailureReason('   \n\t  ')).toBe('unspecified error')
+  })
+
+  it('is pure — called twice with the same input, byte-identical output', () => {
+    const msg = 'validator exhausted after 3 rounds'
+    expect(sanitizeFailureReason(msg)).toBe(sanitizeFailureReason(msg))
+  })
+})
+
+describe('GH #602 leg 2 — runPlan surfaces the sanitized reason on onStepState, never on a dispatch', () => {
+  it('a step failing via an error meta-line carrying a key-shaped message surfaces a SANITIZED reason to onStepState', async () => {
+    const plan: PlanDeclaration = { steps: [step('s1'), step('s2')] }
+    const secret = 'sk-ABC123DEF456GHI789JKL'
+    const { transport, calls } = scriptedTransport([
+      { meta: { error: `upstream rejected api_key=${secret}` } }, // s1 — fails, carries a key-shaped message
+      { lines: [] }, // s2 — must carry the fold-in, must NEVER see the secret
+      { lines: [] }, // synthesis
+    ])
+    const reasons: Array<[string, string, string | undefined]> = []
+    await runPlan({
+      transport,
+      session: EMPTY_SESSION,
+      plan,
+      onStepState: (g, s, reason) => reasons.push([g, s, reason]),
+    })
+
+    const failedEntry = reasons.find(([g, s]) => g === planStepGroupKey('s1') && s === 'failed')
+    expect(failedEntry, 'a failed group carries a reason').toBeDefined()
+    expect(failedEntry![2]).toBeDefined()
+    expect(failedEntry![2]).not.toContain(secret) // the SANITIZED reason, never the raw secret
+    expect(failedEntry![2]).toContain('[redacted]')
+
+    // Every non-failed onStepState call carries NO reason (pending/running/done never get one).
+    for (const [, s, reason] of reasons) {
+      if (s !== 'failed') expect(reason).toBeUndefined()
+    }
+
+    // The dispatch-leak negative: the NEXT dispatch's text is the fixed fold-in wording ONLY — the raw
+    // secret AND the sanitized reason string alike never ride any dispatch (SPEC-R21's own leak analysis).
+    const s2Text = (calls[1] as { text: string }).text
+    expect(s2Text).not.toContain(secret)
+    expect(s2Text).not.toContain('[redacted]')
+    expect(s2Text).toContain('s1')
+    expect(s2Text).toMatch(/failed/i)
+  })
+
+  it('a step failing via a genuine THROW carrying a key-shaped message ALSO surfaces a sanitized reason (both arms alike)', async () => {
+    const plan: PlanDeclaration = { steps: [step('s1'), step('s2')] }
+    const secret = 'Bearer sk-live-9f8e7d6c5b4a3210'
+    const { transport, calls } = scriptedTransport([
+      { throws: true, throwMessage: `transport fault: ${secret}` }, // s1 — throws, carries a bearer-shaped message
+      { lines: [] }, // s2
+      { lines: [] }, // synthesis
+    ])
+    const reasons: Array<[string, string, string | undefined]> = []
+    await runPlan({
+      transport,
+      session: EMPTY_SESSION,
+      plan,
+      onStepState: (g, s, reason) => reasons.push([g, s, reason]),
+    })
+
+    const failedEntry = reasons.find(([g, s]) => g === planStepGroupKey('s1') && s === 'failed')
+    expect(failedEntry![2]).toBeDefined()
+    expect(failedEntry![2]).not.toContain('sk-live-9f8e7d6c5b4a3210')
+    expect(failedEntry![2]).toContain('[redacted]')
+
+    const s2Text = (calls[1] as { text: string }).text
+    expect(s2Text).not.toContain('sk-live-9f8e7d6c5b4a3210')
+    expect(s2Text).not.toContain('[redacted]')
+  })
+
+  it('a synthesis failure ALSO surfaces a sanitized reason on its own group', async () => {
+    const plan: PlanDeclaration = { steps: [step('s1')] }
+    const { transport } = scriptedTransport([
+      { lines: [] }, // s1 — ok
+      { meta: { error: 'token: verylongsecretvalue123456' } }, // synthesis — fails, key-shaped
+    ])
+    const reasons: Array<[string, string, string | undefined]> = []
+    await runPlan({
+      transport,
+      session: EMPTY_SESSION,
+      plan,
+      onStepState: (g, s, reason) => reasons.push([g, s, reason]),
+    })
+    const synthEntry = reasons.find(([g, s]) => g === PLAN_SYNTHESIS_GROUP_KEY && s === 'failed')
+    expect(synthEntry![2]).toBeDefined()
+    expect(synthEntry![2]).not.toContain('verylongsecretvalue123456')
+    expect(synthEntry![2]).toContain('[redacted]')
   })
 })
 

@@ -79,9 +79,12 @@ export function frameSynthesis(plan: PlanDeclaration, priorFailure?: PlanStep): 
 }
 
 /** SPEC-R22 tier-2 fold-in wording — the `frameClientMessage` error-arm shape ("The previous X was
- *  rejected (...): ... Continue"), adapted: names the failed step, states it contributed nothing (SPEC-R5 —
- *  `produce()` yields only fully validated lines, so a failed step never partially shipped), and instructs
- *  the model never to assume that step's output exists. */
+ *  rejected (...): ... Continue"), adapted: names the failed step, states it contributed nothing, and
+ *  instructs the model never to assume that step's output exists. This is FRAMING advice for the model's
+ *  NEXT dispatch, not a claim about the recorded session: SPEC-R22's Advisory Law separately requires that
+ *  "whatever validated content [a step] did emit renders as ordinary output," so a failed step MAY still
+ *  have recorded some pre-fault content (#602 — `drainTurn`/`drainStepTurn` above). "Contributed nothing"
+ *  binds the model's planning going forward, not the transcript. */
 function failureAcknowledgment(step: PlanStep): string {
   return (
     `Note: plan step "${step.id}" ("${step.description}") failed to produce a valid surface — it ` +
@@ -160,14 +163,32 @@ export type PlanStepState = 'pending' | 'running' | 'done' | 'failed' | 'not-run
  *  already committed 200) and a genuinely thrown exception from `transport.turn()` (caught by
  *  `drainStepTurn` below, the caller that opts into catch-and-continue; the plan-request/gate-off dispatch
  *  instead lets a throw propagate via plain `drainTurn`, matching "existing single-call failure semantics
- *  apply completely unchanged," SPEC-R22). `plan` carries whatever the model declared on THIS turn's
- *  meta-line, whether or not the caller consumes it — a runner-dispatched turn's own caller (`runPlan`)
- *  simply never reads it (no-recursion, SPEC-R21). */
+ *  apply completely unchanged," SPEC-R22). On EITHER failure shape, `content` may still carry whatever
+ *  lines streamed before the fault (#602 — SPEC-R22's Advisory Law: "whatever validated content it did
+ *  emit renders as ordinary output," unconditional on the call's terminal state); it is never a claim that
+ *  the step succeeded. `plan` carries whatever the model declared on THIS turn's meta-line, whether or not
+ *  the caller consumes it — a runner-dispatched turn's own caller (`runPlan`) simply never reads it
+ *  (no-recursion, SPEC-R21). */
 interface TurnOutcome {
   content: string
   failed: boolean
   errorMessage?: string
   plan?: PlanDeclaration
+}
+
+/** #602 — a genuine mid-stream throw's PARTIAL content: whatever lines had already been yielded (and,
+ *  through the page's `renderingTransport` wrapper, already painted to the canvas line-by-line) before
+ *  `transport.turn()` faulted. Thrown ONLY by `drainTurn` below, carrying the SAME `Error.message` the raw
+ *  cause had, so a plain `(e as Error).message` read (every existing caller's own handling) is untouched;
+ *  `.partialLines` is the ADDITIVE part a catching caller (`drainStepTurn`) reads to keep the render-vs-
+ *  record arms consistent with the pre-existing meta-line arm below (`content: lines.join('\n')` on an
+ *  `error` meta-line already retains pre-fault lines the SAME way). */
+class PartialTurnError extends Error {
+  readonly partialLines: readonly string[]
+  constructor(cause: unknown, partialLines: readonly string[]) {
+    super(cause instanceof Error ? cause.message : String(cause))
+    this.partialLines = partialLines
+  }
 }
 
 /** Drive ONE `transport.turn()` call to completion, peeling every leading/interleaved meta-line the SAME
@@ -176,23 +197,31 @@ interface TurnOutcome {
  *  prose note by pure INACTION — SPEC-R21's "Asks during a run": no pending-ask machinery exists in this
  *  module at all, so there is nothing here that could ever mount one); `progress` forwards to `onProgress`
  *  when supplied; a terminal `error` meta-line short-circuits with `failed:true` WITHOUT throwing (the
- *  caller decides whether to rethrow); every non-meta line is content. A genuine exception from
- *  `transport.turn()` itself (a thrown `ProduceHalt`/network fault) is NOT caught here — it propagates to
- *  the caller, which decides per its own tier (SPEC-R22). */
+ *  caller decides whether to rethrow), its `content` already keeping whatever lines preceded that terminal
+ *  line; every non-meta line is content. A genuine exception from `transport.turn()` itself (a thrown
+ *  `ProduceHalt`/network fault) propagates to the caller (SPEC-R22 decides per its own tier) — as of #602 it
+ *  is wrapped in `PartialTurnError` first (same `.message`, plus whatever `lines` had already accumulated),
+ *  so a catching caller can keep pre-fault content consistent with the `error`-meta-line branch above; a
+ *  caller that just lets it propagate (`runPlannerTurn`'s plan-request/gate-off dispatches) never reads the
+ *  added `.partialLines` field and sees no behavior change. */
 async function drainTurn(transport: AgentTransport, input: TurnInput, onProgress?: (progress: TurnProgress) => void): Promise<TurnOutcome> {
   const lines: string[] = []
   let plan: PlanDeclaration | undefined
-  for await (const line of transport.turn(input)) {
-    const meta = readMetaLine(line)
-    if (meta !== undefined) {
-      if (typeof meta.a2uiMeta.error === 'string' && meta.a2uiMeta.error.length > 0) {
-        return { content: lines.join('\n'), failed: true, errorMessage: meta.a2uiMeta.error, plan }
+  try {
+    for await (const line of transport.turn(input)) {
+      const meta = readMetaLine(line)
+      if (meta !== undefined) {
+        if (typeof meta.a2uiMeta.error === 'string' && meta.a2uiMeta.error.length > 0) {
+          return { content: lines.join('\n'), failed: true, errorMessage: meta.a2uiMeta.error, plan }
+        }
+        if (meta.a2uiMeta.progress !== undefined) onProgress?.(meta.a2uiMeta.progress)
+        if (meta.a2uiMeta.plan !== undefined) plan = meta.a2uiMeta.plan
+        continue // note/ask/trace/plan are never ingested as content — the meta-line peel every consumer shares
       }
-      if (meta.a2uiMeta.progress !== undefined) onProgress?.(meta.a2uiMeta.progress)
-      if (meta.a2uiMeta.plan !== undefined) plan = meta.a2uiMeta.plan
-      continue // note/ask/trace/plan are never ingested as content — the meta-line peel every consumer shares
+      lines.push(line)
     }
-    lines.push(line)
+  } catch (e) {
+    throw new PartialTurnError(e, lines)
   }
   return { content: lines.join('\n'), failed: false, plan }
 }
@@ -201,19 +230,75 @@ async function drainTurn(transport: AgentTransport, input: TurnInput, onProgress
  *  `runPlan`'s step/synthesis dispatches are the ONLY callers that route through here: a genuinely THROWN
  *  `transport.turn()` exception (a network fault, a rejected promise — as opposed to a completed turn's
  *  transport-composed `error` meta-line) is folded into the SAME `failed:true` outcome shape a `drainTurn`
- *  error-meta-line already produces, `content: ''` (a thrown call ships zero validated lines, same as an
- *  `error`-terminated one — SPEC-R5). SPEC-R22 tier 2/3 ("a step's/synthesis's failure does NOT abort the
+ *  error-meta-line already produces. SPEC-R22 tier 2/3 ("a step's/synthesis's failure does NOT abort the
  *  run") therefore governs identically regardless of HOW the dispatch failed; `runPlan`'s own failure
  *  handling below (group→failed, fold-in acknowledgment, run continues) never has to know which happened.
  *  The plan-request/gate-off dispatch (`runPlannerTurn`) deliberately calls plain `drainTurn` instead —
  *  its throw propagates unchanged, matching SPEC-R22's "the plan turn's own failure is the one true abort."
- */
+ *
+ *  #602 — `content` keeps whatever lines streamed before the fault (`PartialTurnError.partialLines`) rather
+ *  than discarding them: a mid-stream throw is otherwise the ONLY place partial pre-fault content used to
+ *  vanish from the recorded session while the SAME lines had already painted the canvas per-line through
+ *  the page's `renderingTransport` wrapper — a render-vs-record divergence (the session claiming the user
+ *  never saw what they, in fact, already saw). The meta-line branch above never had this bug (it already
+ *  retains pre-error `lines`); this brings the throw arm to the SAME rule rather than the reverse (dropping
+ *  the meta-line arm's content too) — SPEC-R22's Advisory Law text is explicit that "whatever validated
+ *  content it did emit renders as ordinary output" REGARDLESS of the call's terminal state, so retaining
+ *  pre-fault content on a failure is spec-consistent, not merely spec-silent. This does NOT change the
+ *  fold-in acknowledgment's wording (`failureAcknowledgment` below still tells the model the step
+ *  "contributed nothing" and to never rely on its output) — that instruction is FRAMING advice for the next
+ *  dispatch, not a claim about what the transcript records; SPEC-R22's "contributed ZERO wire content" line
+ *  binds that framing contract, not the session's content field. */
 async function drainStepTurn(transport: AgentTransport, input: TurnInput, onProgress?: (progress: TurnProgress) => void): Promise<TurnOutcome> {
   try {
     return await drainTurn(transport, input, onProgress)
   } catch (e) {
-    return { content: '', failed: true, errorMessage: e instanceof Error ? e.message : String(e) }
+    const partialLines = e instanceof PartialTurnError ? e.partialLines : []
+    return { content: partialLines.join('\n'), failed: true, errorMessage: e instanceof Error ? e.message : String(e) }
   }
+}
+
+// ── Display honesty — a sanitized, ONE-LINE failure reason for a status entry ONLY (#602) ─────────────────
+//
+// `TurnOutcome.errorMessage` is transport/upstream-controlled text (a `ProduceHalt` fault's message or a
+// raw thrown exception's `.message`) that MAY carry sensitive fragments — an upstream fault echoing back a
+// header, a stack frame with an embedded credential. `sanitizeFailureReason` is the ONE place that text is
+// allowed to reach a rendered surface: the failed group's status-entry LABEL, via `onStepState`'s `reason`
+// argument (`runPlan` below). It goes ONLY there — it is NEVER folded into `frameStepInstruction`/
+// `frameSynthesis` (the fold-in acknowledgment's wording is fixed, step id/description only —
+// `failureAcknowledgment` above never reads `errorMessage`/`reason` at all), so there is no path from a raw
+// upstream message into a turn the model ever sees.
+
+/** A key/token/bearer-shaped credential run: one of the listed keywords, an optional `:`/`=` separator, then
+ *  a contiguous alnum/`.`/`_`/`~`/`+`/`/`/`-` run of 8+ chars that (via the lookahead) contains at least one
+ *  digit or symbol — excludes plain English words that happen to follow one of the keywords ("token
+ *  expired", "unauthorized" after "Authorization") while still catching the shapes a real leaked secret/API
+ *  key/bearer token/JWT segment actually takes. Conservative in the security sense (biased toward stripping
+ *  over leaking), not in the sense of matching rarely. */
+const CREDENTIAL_SHAPE =
+  /\b(api[-_ ]?key|apikey|access[-_ ]?token|refresh[-_ ]?token|token|secret|bearer|authorization|password|passwd)\b\s*[:=]?\s*(?=\S*[0-9._~+/-])[A-Za-z0-9._~+/-]{8,}/gi
+
+/** A bare JWT-shaped substring (three dot-separated base64url segments, header starting `eyJ` — base64 for
+ *  `{"`) — distinctive enough to redact with NO keyword context required. */
+const JWT_SHAPE = /\beyJ[A-Za-z0-9_-]{6,}\.[A-Za-z0-9_-]{6,}\.[A-Za-z0-9_-]{6,}\b/g
+
+/** A status label is ONE line, not a log dump. */
+const MAX_REASON_LENGTH = 120
+
+/**
+ * #602 — the ONE sanitized line of `TurnOutcome.errorMessage` a failed group's status entry may show. Pure,
+ * never throws:
+ *   1. collapses to ONE line (embedded newlines/CR → a single space — a raw multi-line fault/stack trace
+ *      must never blow up a one-line status label);
+ *   2. strips any key/token/bearer-shaped substring (`CREDENTIAL_SHAPE`/`JWT_SHAPE` above) to `[redacted]`;
+ *   3. truncates to `MAX_REASON_LENGTH` (120) chars total, trailing `…` marker included in the count.
+ * An empty/whitespace-only message degrades to a fixed fallback string, never an empty label.
+ */
+export function sanitizeFailureReason(message: string): string {
+  const oneLine = message.replace(/[\r\n]+/g, ' ').trim()
+  if (oneLine.length === 0) return 'unspecified error'
+  const redacted = oneLine.replace(CREDENTIAL_SHAPE, '$1 [redacted]').replace(JWT_SHAPE, '[redacted]')
+  return redacted.length > MAX_REASON_LENGTH ? `${redacted.slice(0, MAX_REASON_LENGTH - 1)}…` : redacted
 }
 
 export interface RunPlanOptions {
@@ -233,8 +318,13 @@ export interface RunPlanOptions {
    *  synthesis group key (`planStepGroupKey(step.id)` for a step, `PLAN_SYNTHESIS_GROUP_KEY` for synthesis),
    *  ADR-0146 F5's `parent` key. Fires `'pending'` for every K+1 group up front (seeding, on consumption),
    *  then `'running'` immediately before that group's dispatch, then exactly one terminal state
-   *  (`'done'`/`'failed'`/`'not-run'`). This module never touches `ui-status-stream` itself. */
-  onStepState?: (groupKey: string, state: PlanStepState) => void
+   *  (`'done'`/`'failed'`/`'not-run'`). This module never touches `ui-status-stream` itself. A `'failed'`
+   *  terminal state additionally carries `reason` — a SANITIZED, ≤120-char, ONE-line string derived from
+   *  `TurnOutcome.errorMessage` via `sanitizeFailureReason` (#602 display honesty). `reason` is ALWAYS
+   *  absent for every other state; it is the ONLY place `errorMessage`-derived text reaches a caller — it
+   *  NEVER rides any dispatch (`frameStepInstruction`/`frameSynthesis`'s fold-in acknowledgment is fixed
+   *  wording, unrelated to this string). */
+  onStepState?: (groupKey: string, state: PlanStepState, reason?: string) => void
   /** Forwards each dispatch's OWN `TurnProgress` events under its group key (SPEC-R21 Projection: "project
    *  each dispatch's own TurnProgress events as children under its group"). `TURN_PROGRESS_STAGES` is never
    *  widened by this module — these are the SAME closed-vocabulary events `produce()` already emits. */
@@ -248,12 +338,13 @@ export interface RunPlanOptions {
  * (the UNCHANGED `appendUserTurn`/`appendAssistantTurn` reducers) — nothing plan-shaped ever crosses the
  * `AgentTransport` seam. A step's failure does NOT abort the run (SPEC-R22 tier 2) — WHETHER the dispatch
  * completed with a transport-composed `error` meta-line OR `transport.turn()` itself threw (GH #592: both
- * route through `drainStepTurn`'s catch-and-continue into the SAME `failed:true` outcome): its group closes
- * `'failed'`, and the acknowledgment folds into the NEXT dispatch (the next step, or synthesis if the
- * failed step was last) — never a separate dispatch. A synthesis failure (tier 3) leaves every step's
- * already-rendered content standing (nothing here disposes anything — this module streams content into
- * `Session.turns` only, never a live surface). An aborted run (SPEC-R22 Abandon) dispatches nothing
- * further and closes every not-yet-dispatched group `'not-run'`.
+ * route through `drainStepTurn`'s catch-and-continue into the SAME `failed:true` outcome, `content`
+ * included — #602): its group closes `'failed'` carrying a sanitized `reason` (#602 display honesty), and
+ * the acknowledgment folds into the NEXT dispatch (the next step, or synthesis if the failed step was
+ * last) — never a separate dispatch. A synthesis failure (tier 3) leaves every step's already-rendered
+ * content standing (nothing here disposes anything — this module streams content into `Session.turns`
+ * only, never a live surface). An aborted run (SPEC-R22 Abandon) dispatches nothing further and closes
+ * every not-yet-dispatched group `'not-run'`.
  */
 export async function runPlan(opts: RunPlanOptions): Promise<Session> {
   const { transport, plan, signal, onStepState, onProgress } = opts
@@ -277,7 +368,7 @@ export async function runPlan(opts: RunPlanOptions): Promise<Session> {
     session = appendUserTurn(session, text)
     session = appendAssistantTurn(session, outcome.content)
     if (outcome.failed) {
-      onStepState?.(groupKey, 'failed')
+      onStepState?.(groupKey, 'failed', sanitizeFailureReason(outcome.errorMessage ?? ''))
       priorFailure = step
     } else {
       onStepState?.(groupKey, 'done')
@@ -295,7 +386,11 @@ export async function runPlan(opts: RunPlanOptions): Promise<Session> {
   const synthOutcome = await drainStepTurn(transport, synthesisInput, (p) => onProgress?.(PLAN_SYNTHESIS_GROUP_KEY, p))
   session = appendUserTurn(session, synthesisText)
   session = appendAssistantTurn(session, synthOutcome.content)
-  onStepState?.(PLAN_SYNTHESIS_GROUP_KEY, synthOutcome.failed ? 'failed' : 'done')
+  onStepState?.(
+    PLAN_SYNTHESIS_GROUP_KEY,
+    synthOutcome.failed ? 'failed' : 'done',
+    synthOutcome.failed ? sanitizeFailureReason(synthOutcome.errorMessage ?? '') : undefined,
+  )
   return session
 }
 
@@ -311,7 +406,8 @@ export interface RunPlannerTurnOptions {
   plannerEnabled: boolean
   stepCap?: number
   signal?: AbortSignal
-  onStepState?: (groupKey: string, state: PlanStepState) => void
+  /** See `RunPlanOptions.onStepState` — forwarded verbatim to `runPlan` below, `reason` included (#602). */
+  onStepState?: (groupKey: string, state: PlanStepState, reason?: string) => void
   onProgress?: (groupKey: string, progress: TurnProgress) => void
   /** SPEC-R21 Bounds — fires ONCE when a declared plan exceeds the step cap (zero step dispatches follow).
    *  The caller is responsible for the ONE visible warning-state status entry this refusal requires
