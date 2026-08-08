@@ -2026,6 +2026,14 @@ enabled item receives focus via the roving-focus tabindex=0 + `moveFocusIn()`), 
 the trigger on close (the overlay handle's `restoreFocus()`). On close without a selection
 (Escape/outside-click), focus returns to the trigger.
 
+**`keepFocusOnCommit`** (GH #586 critic fold MAJOR-2) is a composition-time escape hatch from the
+"restore to trigger" half of that rule, for a COMMIT only. A composing consumer that reacts to
+`select` by moving focus itself — `ui-tabs`' overflow-menu proxy relay is the shipped case, focusing
+the promoted tab for click parity — sets `keepFocusOnCommit = true` on its own private menu instance
+so that move survives; without it, the overlay's default restore would steal focus back to the
+trigger a microtask later. Escape / outside-click never consult this property — they always restore
+to the trigger, unconditionally, for every consumer.
+
 ## Accessibility
 
 The panel (`role="menu"`) is always accessibly named (GH #535). By default, `aria-labelledby`
@@ -4181,6 +4189,46 @@ the row's full-width hit area comes from the column's default cross-axis stretch
 `[fill]` composes with vertical (§ below): the shell stays a flex row filling its bounded parent, the strip
 becomes a pinned, internally-scrolling column, and the visible panel keeps its existing scroll leg unchanged.
 
+## Overflow
+
+`<ui-tabs overflow="menu">` collects the tabs that don't fit the strip's available space behind a square,
+tab-height `dots-three` trigger that opens a composed [`ui-menu`](../menu/menu.md) of **proxy** rows — never a
+reparented `ui-tab` (`role="tab"` must stay inside `role="tablist"`; a moved tab would also churn DOM identity
+under roving/focus). The shell becomes a CSS grid so the trigger stays its own child, outside `role="tablist"`
+(a non-tab tablist child is an ARIA required-owned-children violation), without absolute positioning.
+
+The **visible set** is a pure function of the tabs' cached full-set sizes, the strip's observed available
+space, and the selected identity — **never** of the currently-rendered subset, so hiding a tab can never feed
+back into the fit observer (no oscillation). The **selected tab is always pinned visible** — it is never
+overflowed. Because tab order in the DOM never changes (only a `display` swap), a tab promoted out of the menu
+renders as the **last visible slot** exactly where the strip already has room. Fit is measured on the
+inline axis under the horizontal default and the block axis under `orientation="vertical"` — an unbounded
+vertical strip therefore never overflows by construction (its column simply grows); bounding it takes `[fill]`
+or an author-bounded host.
+
+Picking a proxy commits through the **exact same path** a tab click does — `selected` updates, focus moves,
+and `ui-tabs` emits **one** `select` event with the promoted tab's own `{ value, index }` (never the proxy's
+own list position). The inner `ui-menu`'s own event vocabulary (`select`/`toggle`/`close`) is **contained** at
+the `[data-part=overflow]` boundary (`stopPropagation`) so `ui-tabs`' own event surface stays exactly
+`{ select }` — an uncontained menu commit would otherwise ALSO surface a second, proxy-index-space `select` on
+`ui-tabs`, and `toggle`/`close` would leak outside the documented contract.
+
+**Known conservative residual (component-checker MINOR-1):** the fit budget subtracts a token-derived
+`reserve` (the trigger's height + one gap) from the strip's OWN measured available size whenever not every
+tab fits — but when the trigger is ALREADY visible, the CSS grid's `auto` trigger column has ALSO already
+narrowed that same measured strip box (the grid, not JS, does that subtraction first). The two together are
+a DOUBLE reserve in that state: safe (it can never show a tab that doesn't actually fit — no visual overflow
+is possible) but occasionally one tab more conservative than the true fit allows. Deliberately unfixed: the
+alternative (reading whether the trigger is CURRENTLY visible to decide whether to apply the JS reserve) is
+exactly the render-dependent feedback input LLD §4's hysteresis ruling forbids (fit must read the CACHED
+full-set + the observed size only, never today's own rendered subset) — the conservative slack is the
+accepted cost of staying oscillation-immune.
+
+`overflow` is reflected and default `'scroll'` (today's `overflow-x`/`overflow-y: auto`), so every existing
+consumer stays byte-identical; both `orientation` and `overflow` are **connect-resolved** — a live flip of
+either takes effect on the next reconnect, never mid-session (the same `ui-radio-group`/`ui-toolbar` shape
+`orientation`'s roving axis already follows).
+
 ## Keyboard & roving focus
 
 The strip uses a **roving tabindex**: exactly the selected tab is in the tab order (`tabindex=0`), the rest
@@ -4195,6 +4243,14 @@ are `-1`, so `Tab` enters/leaves the whole strip as one stop. Within it:
 
 The keyboard axis is **connect-resolved** from `orientation` (the `ui-radio-group` / `ui-toolbar` precedent):
 a live attribute flip re-resolves only on the next reconnect, never mid-session.
+
+Under `overflow="menu"`, the roving ring covers **exactly the visible tabs** — an overflowed tab is skipped
+by Arrow/Home/End entirely. The overflow trigger is **its own Tab stop**, after the tablist strip in document
+order (a deliberate deviation from a "final arrow stop" shape: the roving trait is scoped to the strip
+container, so arrows never reach an element outside it — extending the ring to the trigger would need either
+a half-broken "arrows in, no arrows out" listener or moving the listener up to the shell, which would then
+intercept the panel's own arrow keys). Enter/Space opens its menu; Escape closes an open menu and returns
+focus to the trigger (the overlay controller's light-dismiss focus-restore, `ui-menu`'s own behavior).
 
 The roving listeners + the selection effect are installed in `connected()`, so they ride the connection
 `AbortSignal` (zero residue on disconnect) and **re-arm on reconnect**.
@@ -4251,6 +4307,9 @@ so it is unaffected by, and does not contradict, Q2's ruling.
   tab and panel via the internals element-reflection.
 - A `forced-colors` block keeps the selected-tab indicator and label visible (`Highlight`) and the strip
   divider visible (`CanvasText`).
+- Under `overflow="menu"`, the overflow part is `role="menu"` of `role="menuitem"` proxy rows ("switch to X"
+  commands) — they never claim tab semantics, and the visible tabs stay `role="tab"` inside `role="tablist"`
+  exactly as before.
 
 ## Motion
 

@@ -12,9 +12,14 @@ import { UITabPanelElement } from './tab-panel.ts'
 //
 // Side-effect CSS imports — the load-bearing order (ADR-0003): foundation roles + ramp FIRST, then the SHARED
 // container surface seam, then this component sheet. (The component-styles barrel does NOT yet @import tabs.css
-// — that is decomp s12 / integration — so this suite imports the two sheets directly, pre-barrel.)
+// — that is decomp s12 / integration — so this suite imports the two sheets directly, pre-barrel.) GH #586 —
+// `tabs.ts` composes `ui-menu` as the overflow part (a real value import, self-registers `ui-menu`), so this
+// suite ALSO needs `ui-menu`'s own sheet (its `display:contents` host rule — load-bearing for the trigger
+// button's grid-item promotion, the menu.browser.test.ts precedent) + its `[data-box]` box-model dependency.
 import '@agent-ui/components/foundation-styles.css'
 import '../_surface/container.css'
+import '../_surface/container-box.css'
+import '../menu/menu.css'
 import './tabs.css'
 
 const mounted: HTMLElement[] = []
@@ -39,6 +44,14 @@ const THREE = `
   </ui-tabs>`
 
 const px = (v: string): number => Number.parseFloat(v)
+
+/** Let a ResizeObserver learn a real post-change size (the select.browser.test.ts `nextFrames` precedent —
+ *  two rAFs comfortably clears the RO's own per-spec "after rendering updates" timing). */
+const nextFrames = (n = 2): Promise<void> =>
+  Array.from({ length: n }).reduce<Promise<void>>(
+    (p) => p.then(() => new Promise((r) => requestAnimationFrame(() => r()))),
+    Promise.resolve(),
+  )
 
 /** Alpha of a computed colour — 0 ⇒ the paint is transparent / has vanished. */
 const alphaOf = (color: string): number => {
@@ -449,6 +462,8 @@ describe('ui-tabs — orientation="vertical": the default stays byte-identical (
     // GH #542/#543 pins, unmodified — a regression here means the horizontal path leaked vertical CSS.
     const gapPx = px(getComputedStyle(strip).columnGap)
     expect(gapPx, `${server.browser}: the horizontal strip-gap regressed off 16px`).toBeCloseTo(16, 0)
+    // GH #586 negative — a default (no `overflow` attribute) ui-tabs renders no overflow part at all.
+    expect(tabs.querySelector('[data-part="overflow"]'), `${server.browser}: a default tabs must carry no overflow part`).toBeNull()
   })
 })
 
@@ -608,5 +623,406 @@ describe('ui-tabs — orientation="vertical": RTL logical-properties smoke — t
 
     const indicator = getComputedStyle(tab0, '::after')
     expect(indicator.left, `${server.browser}: under RTL the indicator must hug the physical LEFT edge`).toBe('0px')
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  [8] Slice-A review inheritance (MINOR) — a nested horizontal ui-tabs inside a vertical one's panel
+//  must NOT inherit the outer vertical skin (the exact-child-combinator hardening, tabs.css)
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-tabs — nested tabs: a horizontal ui-tabs composed inside a vertical one stays horizontal (both engines)', () => {
+  it('[MUST-PROVE] the inner (default, horizontal) tabs keeps center-aligned labels + a bottom-edge indicator — it does NOT inherit the outer vertical start-align / inline-end indicator', () => {
+    const wrap = document.createElement('div')
+    wrap.innerHTML = `
+      <ui-tabs orientation="vertical">
+        <ui-tab>Outer One</ui-tab><ui-tab>Outer Two</ui-tab>
+        <ui-tab-panel>
+          <ui-tabs>
+            <ui-tab>Inner One</ui-tab><ui-tab>Inner Two</ui-tab>
+            <ui-tab-panel>Inner P1</ui-tab-panel><ui-tab-panel>Inner P2</ui-tab-panel>
+          </ui-tabs>
+        </ui-tab-panel>
+        <ui-tab-panel>Outer P2</ui-tab-panel>
+      </ui-tabs>`
+    document.body.append(wrap)
+    mounted.push(wrap)
+
+    const outerTabs = wrap.querySelector('ui-tabs') as UITabsElement
+    const innerTabs = outerTabs.querySelector('ui-tab-panel ui-tabs') as UITabsElement
+    expect(innerTabs, 'vacuous test setup — the nested ui-tabs did not mount').not.toBeNull()
+    const innerTabEls = [...innerTabs.querySelectorAll(':scope > [data-part="tablist"] > ui-tab')] as UITabElement[]
+    expect(innerTabEls.length, "vacuous test setup — the inner tabs reparented none of its own tabs").toBe(2)
+
+    // the OUTER strip is genuinely vertical (sanity — the leak-source condition is real).
+    const outerStrip = outerTabs.querySelector(':scope > [data-part="tablist"]') as HTMLElement
+    expect(getComputedStyle(outerStrip).flexDirection, `${server.browser}: the outer strip must be the vertical column`).toBe('column')
+
+    // the INNER tabs (default, horizontal) must NOT pick up the outer's vertical-only overrides.
+    expect(getComputedStyle(innerTabEls[0]).justifyContent, `${server.browser}: a nested horizontal tab must stay CENTERED, not inherit the outer's start-align`).toBe('center')
+    const innerAfter = getComputedStyle(innerTabEls[0], '::after')
+    expect(innerAfter.insetBlockEnd, `${server.browser}: the inner indicator must ride the BOTTOM edge (horizontal), not the outer's inline-end`).toBe('0px')
+    expect(px(innerAfter.blockSize), `${server.browser}: the inner indicator must stay the THIN bottom bar, not a full-height bar`).toBeCloseTo(2, 0)
+    const innerStripStyle = getComputedStyle(innerTabs.querySelector(':scope > [data-part="tablist"]') as HTMLElement)
+    expect(innerStripStyle.flexDirection, `${server.browser}: the inner strip must stay a horizontal ROW`).toBe('row')
+    expect(innerStripStyle.borderBlockEndWidth, `${server.browser}: the inner divider must ride the horizontal bottom edge`).toBe('1px')
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  [9] GH #586 — overflow="menu" (LLD-C5..C9, `.claude/docs/lld/tabs-vertical-overflow.lld.md` §4/§5/§7)
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+// Six FIXED-WIDTH tabs (deterministic across engines — an inline style beats tabs.css's own unset
+// inline-size, independent of font metrics/label content) so the fit arithmetic is exactly computable.
+const overflowMarkup = (count: number, widthPx: number): string =>
+  `<ui-tabs overflow="menu">
+    ${Array.from({ length: count }, (_, i) => `<ui-tab style="inline-size:${widthPx}px">Tab ${i}</ui-tab>`).join('')}
+    ${Array.from({ length: count }, (_, i) => `<ui-tab-panel>P${i}</ui-tab-panel>`).join('')}
+  </ui-tabs>`
+
+const mountBounded = (
+  innerWidthPx: number,
+  count = 6,
+  tabWidthPx = 100,
+): { wrap: HTMLElement; tabs: UITabsElement; tabEls: UITabElement[]; strip: HTMLElement; menuEl: HTMLElement; trigger: HTMLButtonElement } => {
+  const wrap = document.createElement('div')
+  wrap.style.inlineSize = `${innerWidthPx}px`
+  wrap.innerHTML = overflowMarkup(count, tabWidthPx)
+  document.body.append(wrap)
+  mounted.push(wrap)
+  const tabs = wrap.querySelector('ui-tabs') as UITabsElement
+  const tabEls = [...wrap.querySelectorAll('ui-tab')] as UITabElement[]
+  const strip = tabs.querySelector('[data-part="tablist"]') as HTMLElement
+  const menuEl = tabs.querySelector('[data-part="overflow"]') as HTMLElement
+  const trigger = menuEl.querySelector('[data-part="trigger"]') as HTMLButtonElement
+  return { wrap, tabs, tabEls, strip, menuEl, trigger }
+}
+
+describe('ui-tabs — overflow="menu": the part exists, wraps a real trigger + proxy panel (both engines)', () => {
+  it("[MUST-PROVE] a bounded strip shows K visible tabs + the trigger, and exactly N-K proxy menuitems with the overflowed tabs' identities", async () => {
+    const { tabEls, menuEl, trigger } = mountBounded(360)
+    await nextFrames()
+
+    expect(menuEl.hidden, 'not everything fits — the overflow part must be visible').toBe(false)
+    expect(trigger.getAttribute('aria-haspopup'), 'the ui-menu trigger auto-gets aria-haspopup=menu (menu.ts)').toBe('menu')
+    expect(trigger.getAttribute('aria-label')).toBe('More tabs')
+    expect(trigger.id.length, 'the trigger must have SOME accessible name anchor').toBeGreaterThan(0)
+
+    const visible = tabEls.filter((t) => !t.hasAttribute('data-overflowed'))
+    const overflowed = tabEls.filter((t) => t.hasAttribute('data-overflowed'))
+    expect(visible.length, 'vacuous — nothing fit').toBeGreaterThan(0)
+    expect(visible.length, 'vacuous — everything fit, nothing overflowed').toBeLessThan(tabEls.length)
+
+    // open the menu — exactly N-K proxy menuitems, data-values matching the overflowed tabs' identities.
+    await userEvent.click(trigger)
+    const panel = menuEl.querySelector('[data-part="panel"]') as HTMLElement
+    const proxies = [...panel.querySelectorAll('[role="menuitem"]')] as HTMLElement[]
+    expect(proxies.length, 'the proxy count must equal exactly the overflowed count').toBe(overflowed.length)
+    const proxyValues = proxies.map((p) => p.dataset['value']).sort()
+    const overflowedIdx = tabEls
+      .map((t, i) => (t.hasAttribute('data-overflowed') ? String(i) : null))
+      .filter((v): v is string => v !== null)
+      .sort()
+    expect(proxyValues, 'a keyless tab addresses by its DOM index — the proxy data-values must match exactly').toEqual(overflowedIdx)
+  })
+
+  it('overflow="scroll" (default) ⇒ NO overflow part exists (negative, real layout)', () => {
+    const { tabs } = mount(THREE)
+    expect(tabs.querySelector('[data-part="overflow"]')).toBeNull()
+  })
+})
+
+describe('ui-tabs — overflow="menu": fit arithmetic is PINNED against real measurements (both engines)', () => {
+  it('[MUST-PROVE] Σ(visible widths)+gaps ≤ (available − reserve); adding the next tab overflows it — the fit is tight, not slack', async () => {
+    const { tabs, tabEls, strip } = mountBounded(360)
+    await nextFrames()
+
+    const visible = tabEls.filter((t) => !t.hasAttribute('data-overflowed'))
+    const overflowed = tabEls.filter((t) => t.hasAttribute('data-overflowed'))
+    expect(visible.length, 'vacuous test setup').toBeGreaterThan(0)
+    expect(overflowed.length, 'vacuous test setup — nothing overflowed to prove tightness against').toBeGreaterThan(0)
+    expect(visible.length + overflowed.length).toBe(tabEls.length)
+
+    const gap = px(getComputedStyle(strip).columnGap)
+    const tabHeight = px(getComputedStyle(tabs).getPropertyValue('--ui-tabs-tab-height'))
+    const reserve = tabHeight + gap
+    const budget = strip.getBoundingClientRect().width - reserve
+
+    const visibleWidths = visible.map((t) => t.getBoundingClientRect().width)
+    const visibleSum = visibleWidths.reduce((a, b) => a + b, 0) + Math.max(0, visible.length - 1) * gap
+    expect(visibleSum, `${server.browser}: the visible set must fit the reserve-adjusted budget`).toBeLessThanOrEqual(budget + 0.5)
+
+    // every tab shares the SAME forced width — reuse a visible one as the "next DOM-order tab"'s width.
+    const uniformWidth = visibleWidths[0]
+    expect(
+      visibleSum + gap + uniformWidth,
+      `${server.browser}: adding the very next tab must overflow the budget (the fit is exactly tight)`,
+    ).toBeGreaterThan(budget + 0.5)
+  })
+
+  it('[MUST-PROVE] resize wider ⇒ the trigger hides and every tab becomes visible', async () => {
+    const { wrap, tabEls, menuEl } = mountBounded(360)
+    await nextFrames()
+    expect(menuEl.hidden, 'vacuous — nothing overflowed at the narrow width').toBe(false)
+
+    wrap.style.inlineSize = '900px' // comfortably wider than 6×100px + 5×16px = 680px
+    await nextFrames()
+    expect(menuEl.hidden, `${server.browser}: the trigger must hide once everything fits`).toBe(true)
+    for (const t of tabEls) expect(t.hasAttribute('data-overflowed'), `${server.browser}: every tab must be visible once everything fits`).toBe(false)
+  })
+
+  it('[MUST-PROVE] resize is DETERMINISTIC — the same strip size yields the same visible set on re-observe (no oscillation)', async () => {
+    const { wrap, tabEls } = mountBounded(360)
+    await nextFrames()
+    const firstPass = tabEls.map((t) => t.hasAttribute('data-overflowed'))
+    expect(firstPass.some(Boolean), 'vacuous test setup').toBe(true)
+
+    wrap.style.inlineSize = '500px' // a different size — a real intermediate resize
+    await nextFrames()
+    wrap.style.inlineSize = '360px' // back to the ORIGINAL size
+    await nextFrames()
+    const secondPass = tabEls.map((t) => t.hasAttribute('data-overflowed'))
+    expect(secondPass, `${server.browser}: the same strip size must reproduce the same visible set — no oscillation`).toEqual(firstPass)
+  })
+
+  it('[MUST-PROVE] a resize transition never surfaces a "ResizeObserver loop" window error (component-checker MAJOR-1)', async () => {
+    // `#applyFit`'s own writes (menuEl.hidden, the data-overflowed swap collapsing/expanding the
+    // grid's auto trigger column) resize the SAME observed strip — pre-fix this reproduced
+    // "ResizeObserver loop completed with undelivered notifications" on every fit transition
+    // (3× in 5s). The fix defers the callback body one rAF (tabs.ts #wireOverflow); this probe
+    // listens for the real `error` event a real engine surfaces that condition as, across several
+    // real transitions (narrow → wide → narrow → mid), and asserts NONE fire.
+    const { wrap } = mountBounded(360)
+    await nextFrames()
+
+    const errors: string[] = []
+    const onError = (e: Event): void => {
+      errors.push((e as ErrorEvent).message ?? String(e))
+    }
+    window.addEventListener('error', onError)
+    try {
+      wrap.style.inlineSize = '900px' // narrow → wide: overflow disengages (trigger hides, column collapses)
+      await nextFrames(4)
+      wrap.style.inlineSize = '360px' // wide → narrow: overflow re-engages (trigger shows, column expands)
+      await nextFrames(4)
+      wrap.style.inlineSize = '500px' // one more real transition
+      await nextFrames(4)
+    } finally {
+      window.removeEventListener('error', onError)
+    }
+
+    expect(errors, `${server.browser}: a resize transition must never surface a window error (the RO-loop class): ${errors.join('; ')}`).toEqual([])
+  })
+})
+
+describe('ui-tabs — overflow="menu": selected is ALWAYS pinned visible (both engines)', () => {
+  it('[MUST-PROVE] a programmatic `selected` write to an overflowed tab promotes it — visible as the LAST slot — WITHOUT any select event', async () => {
+    const { tabs, tabEls, menuEl } = mountBounded(360)
+    await nextFrames()
+    const lastTab = tabEls[tabEls.length - 1]
+    expect(lastTab.hasAttribute('data-overflowed'), 'vacuous test setup — the last tab must start overflowed').toBe(true)
+
+    let count = 0
+    tabs.addEventListener('select', () => count++)
+    tabs.selected = String(tabEls.length - 1) // the agent / renderer two-way write — a keyless tab's index identity
+    await tabs.updateComplete
+    await nextFrames()
+
+    expect(count, 'a programmatic selected write must never echo a select event').toBe(0)
+    expect(lastTab.hasAttribute('data-overflowed'), `${server.browser}: the newly-selected tab must be promoted out of the menu`).toBe(false)
+    expect(
+      menuEl.querySelector(`[data-part="panel"] [role="menuitem"][data-value="${tabEls.length - 1}"]`),
+      'the promoted tab must no longer have a proxy row',
+    ).toBeNull()
+
+    // DOM order is preserved (display swap only) — the promoted tab renders as the LAST VISIBLE slot.
+    const visible = tabEls.filter((t) => !t.hasAttribute('data-overflowed'))
+    expect(visible[visible.length - 1], `${server.browser}: the promoted tab must be the last VISIBLE slot`).toBe(lastTab)
+  })
+})
+
+describe('ui-tabs — overflow="menu": a menu commit relays through the ONE existing path (both engines)', () => {
+  it('[MUST-PROVE] committing a proxy fires exactly ONE ui-tabs select, promotes the tab as the last visible slot, and paints its indicator', async () => {
+    // 5×100px tabs at 450px ⇒ K=3 visible (0,1,2), 2 proxies (3,4) — hand-verified fit math (generous margin
+    // against the trigger's exact rendered footprint, ~36px, varying a few px across engines).
+    const { tabs, tabEls, menuEl, trigger } = mountBounded(450, 5, 100)
+    await nextFrames()
+    const overflowedBefore = tabEls.filter((t) => t.hasAttribute('data-overflowed'))
+    expect(overflowedBefore.length, 'vacuous test setup').toBeGreaterThan(0)
+
+    const selects: CustomEvent[] = []
+    tabs.addEventListener('select', (e) => selects.push(e as CustomEvent))
+
+    await userEvent.click(trigger)
+    const panel = menuEl.querySelector('[data-part="panel"]') as HTMLElement
+    const firstProxy = panel.querySelector('[role="menuitem"]') as HTMLElement
+    const promotedIndex = Number(firstProxy.dataset['value'])
+    const promotedTab = tabEls[promotedIndex]
+
+    await userEvent.click(firstProxy)
+    await tabs.updateComplete
+    await nextFrames()
+
+    expect(selects, `${server.browser}: a menu commit must fire EXACTLY one ui-tabs select`).toHaveLength(1)
+    expect(selects[0].detail).toEqual({ value: String(promotedIndex), index: promotedIndex })
+    expect(promotedTab.hasAttribute('data-overflowed'), `${server.browser}: the committed tab must be promoted out of the menu`).toBe(false)
+
+    // Click parity (component-checker MAJOR-2, Kim ruling 2026-08-08): the promoted tab KEEPS focus —
+    // ui-menu's default "restore to trigger" is suppressed for this relay (menu.ts keepFocusOnCommit,
+    // set by tabs.ts's #ensureOverflowMenu) — after the model→overlay effect's own microtask has
+    // settled (the `await`s above already span it), focus must still be on the promoted tab, not
+    // pulled back to the trigger.
+    expect(document.activeElement, `${server.browser}: the promoted tab must KEEP focus after a menu commit (click parity)`).toBe(promotedTab)
+
+    const visible = tabEls.filter((t) => !t.hasAttribute('data-overflowed'))
+    expect(visible[visible.length - 1], `${server.browser}: the committed tab must render as the LAST visible slot`).toBe(promotedTab)
+
+    // the indicator paints on the newly-committed tab.
+    const alpha = ((): number => {
+      const c = getComputedStyle(promotedTab, '::after').backgroundColor
+      if (c === 'transparent') return 0
+      const m = c.match(/rgba?\(([^)]+)\)/i)
+      if (!m) return 1
+      const parts = m[1].split(/[\s,/]+/).filter(Boolean)
+      return parts.length >= 4 ? Number(parts[3]) : 1
+    })()
+    expect(alpha, `${server.browser}: the promoted tab's indicator did not paint`).toBeGreaterThan(0)
+  })
+
+  it('[MUST-PROVE] Escape closes an open menu and returns focus to the trigger', async () => {
+    const { menuEl, trigger } = mountBounded(360)
+    await nextFrames()
+    await userEvent.click(trigger)
+    expect(menuEl.hasAttribute('open') || (menuEl as unknown as { open?: boolean }).open, 'the menu did not open').toBeTruthy()
+
+    await userEvent.keyboard('{Escape}')
+    expect(document.activeElement, `${server.browser}: Escape must return focus to the overflow trigger`).toBe(trigger)
+  })
+})
+
+describe('ui-tabs — overflow="menu": roving focus covers exactly the VISIBLE tabs (both engines)', () => {
+  it('[MUST-PROVE] an arrow walk visits exactly the visible tabs, never a hidden one; after a click on a mid VISIBLE tab, the next arrow steps from it', async () => {
+    // 5×100px tabs at 450px ⇒ K=3 visible (0,1,2), 2 overflowed (3,4) — a genuine "mid" tab exists (generous
+    // margin against the trigger's exact rendered footprint).
+    const { tabs, tabEls } = mountBounded(450, 5, 100)
+    await nextFrames()
+    expect(tabEls[0].hasAttribute('data-overflowed')).toBe(false)
+    expect(tabEls[1].hasAttribute('data-overflowed')).toBe(false)
+    expect(tabEls[2].hasAttribute('data-overflowed')).toBe(false)
+    expect(tabEls[3].hasAttribute('data-overflowed'), 'vacuous test setup').toBe(true)
+    expect(tabEls[4].hasAttribute('data-overflowed'), 'vacuous test setup').toBe(true)
+
+    await userEvent.click(tabEls[1]) // the MID visible tab
+    expect(document.activeElement).toBe(tabEls[1])
+
+    await userEvent.keyboard('{ArrowRight}')
+    await tabs.updateComplete
+    expect(document.activeElement, `${server.browser}: ArrowRight from the mid tab must step to the NEXT visible tab`).toBe(tabEls[2])
+
+    await userEvent.keyboard('{ArrowRight}') // must WRAP to the first VISIBLE tab, never touch a hidden one
+    await tabs.updateComplete
+    expect(document.activeElement, `${server.browser}: the ring must wrap over the VISIBLE set only, skipping the overflowed tabs`).toBe(tabEls[0])
+  })
+})
+
+describe('ui-tabs — overflow="menu": an overflowed tab has no client rects; the strip never scrolls (both engines)', () => {
+  it('[MUST-PROVE] an overflowed tab renders nowhere; the strip stops scrolling entirely once fit is applied', async () => {
+    const { strip, tabEls } = mountBounded(360)
+    await nextFrames()
+    const overflowed = tabEls.filter((t) => t.hasAttribute('data-overflowed'))
+    expect(overflowed.length, 'vacuous test setup').toBeGreaterThan(0)
+    for (const t of overflowed) {
+      const r = t.getBoundingClientRect()
+      expect(r.width, `${server.browser}: an overflowed tab must have zero width`).toBe(0)
+      expect(r.height, `${server.browser}: an overflowed tab must have zero height`).toBe(0)
+    }
+    expect(getComputedStyle(strip).overflowX, `${server.browser}: the strip must not scroll in menu mode`).toBe('clip')
+    expect(strip.scrollWidth, `${server.browser}: the strip must never actually overflow its own box in menu mode`).toBeLessThanOrEqual(
+      strip.clientWidth + 1,
+    )
+  })
+})
+
+describe('ui-tabs — overflow="menu": the hidden-connect reveal engages fit (doc-review repair 1, both engines)', () => {
+  it('[MUST-PROVE] connecting inside a display:none ancestor then revealing it ENGAGES overflow (K < N, trigger visible, N-K proxies)', async () => {
+    const outer = document.createElement('div')
+    outer.style.display = 'none'
+    const inner = document.createElement('div')
+    inner.style.inlineSize = '360px'
+    inner.innerHTML = overflowMarkup(6, 100)
+    outer.append(inner)
+    document.body.append(outer)
+    mounted.push(outer)
+
+    const tabs = outer.querySelector('ui-tabs') as UITabsElement
+    const tabEls = [...outer.querySelectorAll('ui-tab')] as UITabElement[]
+    const menuEl = tabs.querySelector('[data-part="overflow"]') as HTMLElement
+
+    // while hidden: the RO never fired a real size (the standing failure this guard closes) — no assertion on
+    // the hide state here (a false negative before reveal is expected/harmless), only that nothing throws.
+    outer.style.display = 'block' // REVEAL
+    await nextFrames(4) // the reveal-time RO tick + the guard's remeasure-then-refit pass
+
+    expect(menuEl.hidden, `${server.browser}: overflow must ENGAGE once revealed — the cache-validity guard`).toBe(false)
+    const visible = tabEls.filter((t) => !t.hasAttribute('data-overflowed'))
+    const overflowed = tabEls.filter((t) => t.hasAttribute('data-overflowed'))
+    expect(visible.length, `${server.browser}: at least one tab (selected) must be visible`).toBeGreaterThan(0)
+    expect(overflowed.length, `${server.browser}: the hidden-connect bug would leave this at ZERO forever`).toBeGreaterThan(0)
+
+    await userEvent.click(menuEl.querySelector('[data-part="trigger"]') as HTMLElement)
+    const proxies = menuEl.querySelectorAll('[data-part="panel"] [role="menuitem"]')
+    expect(proxies.length, `${server.browser}: the proxy count must equal exactly the overflowed count`).toBe(overflowed.length)
+  })
+})
+
+describe('ui-tabs — orientation="vertical" × overflow="menu": the §7 corner — fit axis flips to block-size (both engines)', () => {
+  it("[MUST-PROVE] the fit axis flips to BLOCK-size under vertical; the trigger sits at the strip column's block-end, a tab-height square", () => {
+    const wrap = document.createElement('div')
+    wrap.style.cssText = 'display:flex; flex-direction:column; block-size:200px;'
+    wrap.innerHTML = `
+      <ui-tabs fill orientation="vertical" overflow="menu">
+        <ui-tab>One</ui-tab><ui-tab>Two</ui-tab><ui-tab>Three</ui-tab><ui-tab>Four</ui-tab><ui-tab>Five</ui-tab>
+        <ui-tab-panel>P1</ui-tab-panel><ui-tab-panel>P2</ui-tab-panel><ui-tab-panel>P3</ui-tab-panel><ui-tab-panel>P4</ui-tab-panel><ui-tab-panel>P5</ui-tab-panel>
+      </ui-tabs>`
+    document.body.append(wrap)
+    mounted.push(wrap)
+
+    const tabs = wrap.querySelector('ui-tabs') as UITabsElement
+    const strip = tabs.querySelector('[data-part="tablist"]') as HTMLElement
+    const menuEl = tabs.querySelector('[data-part="overflow"]') as HTMLElement
+    const trigger = menuEl.querySelector('[data-part="trigger"]') as HTMLElement
+    const tabEls = [...wrap.querySelectorAll('ui-tab')] as UITabElement[]
+    const panel = wrap.querySelector('ui-tab-panel') as HTMLElement
+
+    // the shell composes to a GRID (not [fill]'s own flex column) and still fills the bounded parent.
+    expect(getComputedStyle(tabs).display, `${server.browser}: [orientation=vertical][overflow=menu] must be display:grid`).toBe('grid')
+    expect(tabs.getBoundingClientRect().height, `${server.browser}: the fill shell must still fill its bounded parent`).toBeCloseTo(
+      wrap.getBoundingClientRect().height,
+      0,
+    )
+
+    // the fit axis flipped to BLOCK-size: the 200px-bounded column cannot hold all 5 rows + the trigger reserve.
+    const visible = tabEls.filter((t) => !t.hasAttribute('data-overflowed'))
+    const overflowed = tabEls.filter((t) => t.hasAttribute('data-overflowed'))
+    expect(visible.length, 'vacuous test setup').toBeGreaterThan(0)
+    expect(overflowed.length, `${server.browser}: the bounded column must overflow — the block-axis fit did not engage`).toBeGreaterThan(0)
+    expect(menuEl.hidden).toBe(false)
+
+    // the trigger sits BELOW the strip (the column's block-end), a tab-height square.
+    const stripRect = strip.getBoundingClientRect()
+    const triggerRect = trigger.getBoundingClientRect()
+    expect(triggerRect.top, `${server.browser}: the trigger must sit at the strip column's BLOCK-END`).toBeGreaterThanOrEqual(stripRect.bottom - 1)
+    const rowHeight = visible[0].getBoundingClientRect().height
+    expect(triggerRect.height, `${server.browser}: the trigger must be the SAME height as a tab row`).toBeCloseTo(rowHeight, 0)
+    expect(triggerRect.width, `${server.browser}: the trigger must be SQUARE`).toBeCloseTo(triggerRect.height, 0)
+
+    // the panel scroll leg (ADR-0144 Q1) is UNCHANGED under fill×vertical×menu — the SAME composition
+    // fill×vertical×scroll already proves (computed values resolve regardless of which layout mode applies).
+    expect(getComputedStyle(panel).flexGrow, `${server.browser}: the panel scroll leg (flex:1) must be unchanged under fill×vertical×menu`).toBe('1')
+    expect(
+      getComputedStyle(panel).overflowY,
+      `${server.browser}: the panel scroll leg (overflow-y:auto) must be unchanged under fill×vertical×menu`,
+    ).toBe('auto')
   })
 })

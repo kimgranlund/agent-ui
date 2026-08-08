@@ -67,9 +67,36 @@ const verticalNote = el('p', {}, [
   text(' replace ArrowLeft / ArrowRight (Left/Right are inert) — the APG tabs vertical variant.'),
 ])
 
+// ── overflow="menu" (GH #586) — a bounded-width strip that cannot hold every tab; the reference consumer the
+// LLD names. Six tabs at a ~20rem width force real overflow so the trigger + menu are actually reachable. ──
+const overflowTabs = el('ui-tabs', { overflow: 'menu', selected: 'overview', elevation: '0' }, [
+  el('ui-tab', { key: 'overview' }, [text('Overview')]),
+  el('ui-tab', { key: 'pricing' }, [text('Pricing')]),
+  el('ui-tab', { key: 'support' }, [text('Support')]),
+  el('ui-tab', { key: 'changelog' }, [text('Changelog')]),
+  el('ui-tab', { key: 'roadmap' }, [text('Roadmap')]),
+  el('ui-tab', { key: 'about' }, [text('About')]),
+  el('ui-tab-panel', {}, [text('Overview panel — the product at a glance.')]),
+  el('ui-tab-panel', {}, [text('Pricing panel — plans and tiers.')]),
+  el('ui-tab-panel', {}, [text('Support panel — docs and contact.')]),
+  el('ui-tab-panel', {}, [text('Changelog panel — recent releases.')]),
+  el('ui-tab-panel', {}, [text('Roadmap panel — what is next.')]),
+  el('ui-tab-panel', {}, [text('About panel — the team.')]),
+])
+applyDemoWidth(overflowTabs, '20rem') // bounded — narrower than all six tabs, so the trigger genuinely engages
+
+const overflowNote = el('p', {}, [
+  text('Tabs that do not fit collect behind the '), strong('⋯'),
+  text(' trigger — its own Tab stop, after the strip. Opening it lists exactly the overflowed tabs as '),
+  strong('proxy'), text(' commands; picking one runs the SAME commit path a click does (one '),
+  code('select'), text(' event), and the tab is always pinned visible once selected — never itself hidden ' +
+    'behind the trigger.'),
+])
+
 content.append(
   exampleSection('Live tabs', tabs),
   exampleSection('Keyboard & roving focus', keyboard),
   exampleSection('select event log', log),
   exampleSection('Vertical orientation', verticalTabs, verticalNote),
+  exampleSection('Overflow menu', overflowTabs, overflowNote),
 )

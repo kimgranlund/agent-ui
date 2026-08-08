@@ -3,14 +3,21 @@
 # machine-checkable PRIMARY-element surface lives HERE (frontmatter for ui-tabs); the prose below the fence is
 # the /site doc and documents all THREE elements (ui-tabs · ui-tab · ui-tab-panel — one folder, one writer). The
 # `attributes[]` block MUST mirror tabs.ts `static props` (the ...UIContainerElement.surfaceProps spread —
-# elevation/brightness — plus the bindable `selected`, plus the opt-in `fill`) — the contract↔props trip-wire
-# (tabs-descriptor.test.ts) targets this fence. Field set per .claude/docs/plan.md §10 / ADR-0004; the surface
-# axes per ADR-0015; the two-way `selected` bind per ADR-0019 (renderer LLD-C8); `fill` per ADR-0144 Q1.
+# elevation/brightness — plus the bindable `selected`, plus the opt-in `fill`, plus `orientation`/`overflow`) —
+# the contract↔props trip-wire (tabs-descriptor.test.ts) targets this fence. Field set per .claude/docs/plan.md
+# §10 / ADR-0004; the surface axes per ADR-0015; the two-way `selected` bind per ADR-0019 (renderer LLD-C8);
+# `fill` per ADR-0144 Q1; `orientation`/`overflow` per `.claude/docs/lld/tabs-vertical-overflow.lld.md`.
 tag: ui-tabs
 description: A tab strip and panel container that switches visible content via keyboard-navigable, roving-focus tabs.
 tier: pattern          # geometry size-class — geometry.md "Pattern" (container + control-height rows); tabs is the named example: the interactive tab rows take the CONTROL height, the shell uses the --md-sys-space ladder
 extends: UIContainerElement  # the FIRST non-form family — surface axes + reused internals (ARIA); NOT form-associated (face below). NOTE: UIContainerElement enters the descriptor BASE_CLASSES at decomp s12 (integration) — until then validateComponentDescriptor flags BAD_EXTENDS, filtered in tabs-descriptor.test.ts
-# marginal: ui-tabs measures 623 B gz (re-measured post GH #581 orientation) to the self-defining ui-* family (the delta of `npm run size`'s components barrel with vs. without this control's export, tree-shaken — the tabs compound: ui-tabs + ui-tab + ui-tab-panel) — within the per-control ≤ ~2 kB tier budget (plan §10); the family total stays gated each run by `npm run size` (scripts/measure-size.mjs). Gzip measurement-frame drift (the split.css/toolbar.css precedent) accounts for the swing from the pre-#581 727 B figure — it is not a regression signal.
+# marginal: ui-tabs measures 1421 B gz (re-measured post the overflow-menu build) at the components-barrel LEAVE-ONE-OUT tier — the delta of `npm run size`'s components barrel WITH vs. WITHOUT this control's export, tree-shaken (the tabs compound: ui-tabs + ui-tab + ui-tab-panel, now also composing the shipped `ui-menu` overflow part). Within the per-control ≤ ~2 kB tier budget (plan §10) at THIS tier.
+#
+# RULED 2026-08-08 (Kim, in-session; durable record: https://github.com/kimgranlund/agent-ui/issues/586#issuecomment-5223777160): the `@agent-ui/app` curated bundle (super-shell+master-detail+settings+surface-host+conversation+nav-rail, which reaches ui-tabs via its settings screen) grew from 81692 to 82565 B gz on this build — re-based its checkpoint 80 KB → 83 KB (84992 B gz) in scripts/measure-size.mjs (the same "checkpoint, not a ratchet" convention as GH #454/#480): Slice B's composed-ui-menu vehicle + fit engine, an LLD-accepted tradeoff landing at the app tier, twice-reviewed; the standing app-diet follow-up (GH #468) keeps its tripwire. `node scripts/measure-size.mjs` is green for this row as of commit (see the branch's own log for the SHA that carries this ruling).
+#
+# RULED 2026-08-08 (Kim, in-session — second of the day for this constant; same durable record: https://github.com/kimgranlund/agent-ui/issues/586#issuecomment-5223777160): the `@agent-ui/components/components` (self-defining ui-* family) WHOLE-BARREL absolute-size gate measured 54889 B gz against its then-current 53 KB (54272 B gz) checkpoint (itself re-based only hours earlier for the ui-otp-field S2-a build) — 617 B over. Re-based 53 KB → 54 KB (55296 B gz) in scripts/measure-size.mjs (the same "checkpoint, not a ratchet" convention): the otp-field re-base plus Slice B's overflow engine, both twice-reviewed real machinery. GH #455 remains the standing shrink follow-up.
+#
+# Both walls are RULED, not open. `node scripts/measure-size.mjs` is fully green (every row, whole output scrolled) and `npm run check` is green as of the commit that carries this note.
 
 attributes:            # attributes-as-API — mirrors tabs.ts `static props` (the surfaceProps spread, then selected, then fill)
   - name: elevation
@@ -36,6 +43,11 @@ attributes:            # attributes-as-API — mirrors tabs.ts `static props` (t
     values: [horizontal, vertical]
     default: horizontal
     reflect: true      # GH #581 — the strip axis. Vertical flips the shell to a row (strip beside the panel), moves the divider + selected-tab indicator to the inline-end edge, and swaps the keyboard axis to Up/Down (APG tabs vertical variant). Absent/horizontal ⇒ byte-identical to today.
+  - name: overflow
+    type: enum
+    values: [scroll, menu]
+    default: scroll
+    reflect: true      # GH #586 — the strip's not-enough-room strategy. 'menu' collects the tabs that don't fit behind a dots-three trigger opening a composed ui-menu of PROXY items (never a reparented ui-tab); the selected tab is ALWAYS pinned visible. Absent/scroll ⇒ byte-identical to today's overflow-x/y auto.
 
 properties:            # IDL beyond attributes-as-API
   - name: selected
@@ -51,6 +63,8 @@ slots: []              # NO named slots — the tabs/panels are component-native
 parts:                 # the control-created tablist strip is a PART (role=tablist rides the part div, not the host)
   - name: tablist
     description: The control-created `<div data-part="tablist" role="tablist">` strip the ui-tab children are reparented into (the panels stay as siblings). role=tablist rides the PART div — the HOST carries no role/aria-* attribute. The strip is the control's own horizontal overflow viewport (GH #221 — `overflow-x auto`; labels never clip mid-word, the strip scrolls); its scrollbar visibility is the consumer-inherited `--ui-tabs-strip-scrollbar-width` seam (var()-fallback `auto`, never declared in the token block).
+  - name: overflow
+    description: Present ONLY when `overflow="menu"` (the overflow-menu build, created lazily, once, at connect — persists like `tablist`). A composed `<ui-menu data-part="overflow">` wrapping a square, tab-height icon-button trigger (`aria-label="More tabs"`, the `dots-three` glyph) that opens a panel of PROXY rows (`role="menuitem"`, never a reparented `ui-tab`) for exactly the tabs that don't currently fit. Lives as a shell child OUTSIDE `role=tablist` — a non-tab tablist child is an ARIA required-owned-children violation. `hidden` whenever every tab fits.
 
 customStates:          # :state() hooks the stylesheet keys off — set via internals.states, never host attrs
   - ready              # the motion gate (ADR-0008): armed one frame past first paint on ui-tabs so the upgrade/first selection SNAPS and only later changes animate
@@ -67,6 +81,8 @@ aria:
   selectionSource: internals.ariaSelected  # the selected tab carries aria-selected=true via internals; the rest false
   labelSource: the tab's light-DOM children (the accessible name of the tab)
   ariaOrientation: The [data-part=tablist] strip carries aria-orientation="vertical" (set via setAttribute — never internals — the same PART-div discipline role=tablist already follows) when orientation="vertical"; ABSENT under the horizontal default (the tablist role's implicit default is horizontal, so this is byte-identical default DOM, not an explicit "horizontal" value). Connect-time only — re-resolves on reconnect (the vertical-orientation build, GH issue 581).
+  overflowRoles: In overflow="menu" mode, the visible tabs stay role=tab inside role=tablist (roving covers exactly the visible set); the overflow part is role=menu of role=menuitem PROXY rows ("switch to X" commands) that never claim tab semantics.
+  connectResolution: BOTH orientation's roving axis AND overflow's mode/part creation are resolved ONCE at connect (the radio-group/toolbar precedent) — a live attribute flip on either prop re-resolves only on the NEXT reconnect, never mid-session.
 
 keyboard:
   - keys: ArrowRight
@@ -83,6 +99,8 @@ keyboard:
     action: Move selection + roving focus to the last tab; commits. Same either axis.
   - note: ROVING TABINDEX — exactly the selected tab is tabindex=0; the rest are tabindex=-1 (a single tab-order entry). Selection follows focus (APG automatic activation). Re-armed on reconnect (connected() re-installs the listeners + the selection effect).
   - note: The keyboard AXIS is CONNECT-RESOLVED from `orientation` (the radio-group/toolbar precedent, roving-focus.ts reads its `orientation` option once at invoke, never a live accessor) — a live attribute flip re-resolves only on the next reconnect, never mid-session.
+  - note: In overflow="menu" mode, the roving ring covers exactly the VISIBLE tabs (an overflowed tab is skipped by Arrow/Home/End); a menu commit promotes the chosen tab through the same commit path a click uses.
+  - note: In overflow="menu" mode the overflow trigger is its OWN Tab stop, AFTER the tablist strip in document order — a deliberate deviation from a "final arrow stop" shape (the roving trait is scoped to the strip container; arrows never reach an element outside it). Enter/Space opens its menu (native button plus ui-menu's own trigger wiring); Escape closes the open menu and returns focus to the trigger (the overlay controller's light-dismiss focus-restore).
   - keys: ArrowDown / ArrowUp / PageDown / PageUp / Home / End
     action: In `[fill]` mode ONLY, scroll the visible panel when it itself is the focused key target (never a focused descendant's own key). MEASURED at build (ADR-0144 Q1 cl.4) — the identical `ui-card-content` shape found the platform default action for these keys unreliable across engines (Chromium moves it once trusted-focused, WebKit does not move it at all), so the panel wires the SAME explicit keydown handler `card-content.ts` ships (40px/arrow line, ~90%-viewport page step) rather than depend on it.
 
@@ -93,6 +111,7 @@ geometry:
   panelPadding: var(--ui-tabs-panel-pad)    # the panel body padding — --md-sys-space
   surface: --ui-container-bg                 # the shell plane (ADR-0015 surface seam); transparent by default (ADR-0104) — a plane is asked-for via `elevation`/`brightness`
   fillPanelScrollbarSeam: --ui-tabs-panel-scrollbar-width  # ADR-0144 Q1 cl.3 — consumer-INHERITED, var()-fallback ONLY (never declared in the :where() token block); a composing surface hides the filled panel's scrollbar by setting this on ITSELF (the ui-split-pane `--ui-split-pane-scrollbar-width` shape)
+  overflowTrigger: var(--ui-tabs-tab-height)  # the overflow-menu trigger's square footprint (inline-size = block-size); zero new tokens
 
 forcedColors: A `@media (forced-colors: active)` block keeps the SELECTED-tab indicator + label visible (Highlight) and the strip divider visible (CanvasText); the shell surface drops to Canvas via the container.css role layer.
 ---
@@ -157,6 +176,46 @@ the row's full-width hit area comes from the column's default cross-axis stretch
 `[fill]` composes with vertical (§ below): the shell stays a flex row filling its bounded parent, the strip
 becomes a pinned, internally-scrolling column, and the visible panel keeps its existing scroll leg unchanged.
 
+## Overflow
+
+`<ui-tabs overflow="menu">` collects the tabs that don't fit the strip's available space behind a square,
+tab-height `dots-three` trigger that opens a composed [`ui-menu`](../menu/menu.md) of **proxy** rows — never a
+reparented `ui-tab` (`role="tab"` must stay inside `role="tablist"`; a moved tab would also churn DOM identity
+under roving/focus). The shell becomes a CSS grid so the trigger stays its own child, outside `role="tablist"`
+(a non-tab tablist child is an ARIA required-owned-children violation), without absolute positioning.
+
+The **visible set** is a pure function of the tabs' cached full-set sizes, the strip's observed available
+space, and the selected identity — **never** of the currently-rendered subset, so hiding a tab can never feed
+back into the fit observer (no oscillation). The **selected tab is always pinned visible** — it is never
+overflowed. Because tab order in the DOM never changes (only a `display` swap), a tab promoted out of the menu
+renders as the **last visible slot** exactly where the strip already has room. Fit is measured on the
+inline axis under the horizontal default and the block axis under `orientation="vertical"` — an unbounded
+vertical strip therefore never overflows by construction (its column simply grows); bounding it takes `[fill]`
+or an author-bounded host.
+
+Picking a proxy commits through the **exact same path** a tab click does — `selected` updates, focus moves,
+and `ui-tabs` emits **one** `select` event with the promoted tab's own `{ value, index }` (never the proxy's
+own list position). The inner `ui-menu`'s own event vocabulary (`select`/`toggle`/`close`) is **contained** at
+the `[data-part=overflow]` boundary (`stopPropagation`) so `ui-tabs`' own event surface stays exactly
+`{ select }` — an uncontained menu commit would otherwise ALSO surface a second, proxy-index-space `select` on
+`ui-tabs`, and `toggle`/`close` would leak outside the documented contract.
+
+**Known conservative residual (component-checker MINOR-1):** the fit budget subtracts a token-derived
+`reserve` (the trigger's height + one gap) from the strip's OWN measured available size whenever not every
+tab fits — but when the trigger is ALREADY visible, the CSS grid's `auto` trigger column has ALSO already
+narrowed that same measured strip box (the grid, not JS, does that subtraction first). The two together are
+a DOUBLE reserve in that state: safe (it can never show a tab that doesn't actually fit — no visual overflow
+is possible) but occasionally one tab more conservative than the true fit allows. Deliberately unfixed: the
+alternative (reading whether the trigger is CURRENTLY visible to decide whether to apply the JS reserve) is
+exactly the render-dependent feedback input LLD §4's hysteresis ruling forbids (fit must read the CACHED
+full-set + the observed size only, never today's own rendered subset) — the conservative slack is the
+accepted cost of staying oscillation-immune.
+
+`overflow` is reflected and default `'scroll'` (today's `overflow-x`/`overflow-y: auto`), so every existing
+consumer stays byte-identical; both `orientation` and `overflow` are **connect-resolved** — a live flip of
+either takes effect on the next reconnect, never mid-session (the same `ui-radio-group`/`ui-toolbar` shape
+`orientation`'s roving axis already follows).
+
 ## Keyboard & roving focus
 
 The strip uses a **roving tabindex**: exactly the selected tab is in the tab order (`tabindex=0`), the rest
@@ -171,6 +230,14 @@ are `-1`, so `Tab` enters/leaves the whole strip as one stop. Within it:
 
 The keyboard axis is **connect-resolved** from `orientation` (the `ui-radio-group` / `ui-toolbar` precedent):
 a live attribute flip re-resolves only on the next reconnect, never mid-session.
+
+Under `overflow="menu"`, the roving ring covers **exactly the visible tabs** — an overflowed tab is skipped
+by Arrow/Home/End entirely. The overflow trigger is **its own Tab stop**, after the tablist strip in document
+order (a deliberate deviation from a "final arrow stop" shape: the roving trait is scoped to the strip
+container, so arrows never reach an element outside it — extending the ring to the trigger would need either
+a half-broken "arrows in, no arrows out" listener or moving the listener up to the shell, which would then
+intercept the panel's own arrow keys). Enter/Space opens its menu; Escape closes an open menu and returns
+focus to the trigger (the overlay controller's light-dismiss focus-restore, `ui-menu`'s own behavior).
 
 The roving listeners + the selection effect are installed in `connected()`, so they ride the connection
 `AbortSignal` (zero residue on disconnect) and **re-arm on reconnect**.
@@ -227,6 +294,9 @@ so it is unaffected by, and does not contradict, Q2's ruling.
   tab and panel via the internals element-reflection.
 - A `forced-colors` block keeps the selected-tab indicator and label visible (`Highlight`) and the strip
   divider visible (`CanvasText`).
+- Under `overflow="menu"`, the overflow part is `role="menu"` of `role="menuitem"` proxy rows ("switch to X"
+  commands) — they never claim tab semantics, and the visible tabs stay `role="tab"` inside `role="tablist"`
+  exactly as before.
 
 ## Motion
 
