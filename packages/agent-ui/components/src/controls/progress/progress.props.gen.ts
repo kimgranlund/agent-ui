@@ -9,4 +9,6 @@ export const props = {
   max: prop.number(100),
   // The accessible name (SPEC-R3); empty ⇒ no internals.ariaLabel. — generated from progress.md attributes.label — edit the descriptor, not this file.
   label: { ...prop.string(''), reflect: true },
+  // SPEC-R1 Amendment v1 (GH #614) — null/non-finite/<2/fractional/malformed ⇒ continuous mode, unchanged. A finite integer ≥2 activates discrete "step N of M" mode — effectiveMax=segments (max ignored), effectiveValue floors to an integer. — generated from progress.md attributes.segments — edit the descriptor, not this file.
+  segments: prop.number(null),
 } satisfies PropsSchema

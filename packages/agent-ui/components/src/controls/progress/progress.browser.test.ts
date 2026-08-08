@@ -150,6 +150,76 @@ describe('ui-progress — motion: indeterminate sweep, suppressed under reduced-
   })
 })
 
+describe('ui-progress — segments: discrete-mode whole-shape + rendering (Amendment v1 AC1)', () => {
+  it('a discrete progress paints non-collapsed with segments equal cells, first N filled', () => {
+    const el = mount('<ui-progress current="2" segments="4" style="inline-size: 400px"></ui-progress>')
+    const box = el.getBoundingClientRect()
+    expect(box.width).toBeGreaterThan(0)
+    expect(box.height).toBeGreaterThan(0)
+    const cells = el.querySelectorAll('[data-part="cell"]')
+    expect(cells.length).toBe(4)
+    for (const cell of cells) expect((cell as HTMLElement).getBoundingClientRect().width).toBeGreaterThan(0)
+    expect(Array.from(cells).filter((c) => c.hasAttribute('data-filled')).length).toBe(2)
+  })
+})
+
+describe('ui-progress — segments: default-color inter-cell separation, incl. unfilled<->unfilled (component-checker F1, 2026-08-08)', () => {
+  it('the gap ink is painted and distinguishable from unfilled-cell ink — every cell boundary reads, not just filled<->unfilled', () => {
+    // current=2 segments=4 ⇒ cells [filled, filled, unfilled, unfilled] — the trailing pair is the EXACT
+    // adjacent-unfilled boundary F1 named as invisible (a shared track/gap ink made it read as one run).
+    const el = mount('<ui-progress current="2" segments="4" style="inline-size: 400px"></ui-progress>')
+    const cellsEl = el.querySelector('[data-part="cells"]') as HTMLElement
+    const cells = Array.from(el.querySelectorAll('[data-part="cell"]')) as HTMLElement[]
+    const unfilled = cells.filter((c) => !c.hasAttribute('data-filled'))
+    expect(unfilled.length, 'need >= 2 adjacent unfilled cells to probe the unfilled<->unfilled boundary').toBeGreaterThanOrEqual(2)
+
+    const gapColor = getComputedStyle(cellsEl).backgroundColor
+    const unfilledColor = getComputedStyle(unfilled[0]!).backgroundColor
+    expect(alphaOf(gapColor), 'the gap ink vanished — the cells container painted nothing behind the gap').toBeGreaterThan(0)
+    expect(gapColor, 'the gap must differ from unfilled-cell ink, else an unfilled<->unfilled boundary is invisible').not.toBe(unfilledColor)
+
+    // a real, non-zero pixel gap exists between the two adjacent unfilled cells (spatial half of the proof;
+    // the color assertions above are the visual-distinguishability half).
+    const left = unfilled[unfilled.length - 2]!.getBoundingClientRect()
+    const right = unfilled[unfilled.length - 1]!.getBoundingClientRect()
+    expect(right.left - left.right, 'no real pixel gap between two adjacent unfilled cells').toBeGreaterThan(0)
+  })
+})
+
+describe('ui-progress — forced colors, discrete mode (Amendment v1 AC4)', () => {
+  it('filled-cell ink differs from unfilled-cell paint, and cell boundaries remain perceivable — Chromium emulates (CDP); WebKit asserts baseline', async () => {
+    const el = mount('<ui-progress current="2" segments="4"></ui-progress>')
+    const cells = Array.from(el.querySelectorAll('[data-part="cell"]')) as HTMLElement[]
+    const filled = cells.filter((c) => c.hasAttribute('data-filled'))
+    const unfilled = cells.filter((c) => !c.hasAttribute('data-filled'))
+    expect(filled.length).toBe(2)
+    expect(unfilled.length).toBe(2)
+
+    // Baseline (BOTH engines): every cell is a painted, non-transparent background.
+    for (const cell of cells) expect(alphaOf(getComputedStyle(cell).backgroundColor)).toBeGreaterThan(0)
+
+    if (server.browser !== 'chromium') {
+      expect(window.matchMedia('(forced-colors: active)').matches).toBe(false)
+      return
+    }
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'active' }] })
+    try {
+      expect(window.matchMedia('(forced-colors: active)').matches, 'CDP did not enter forced-colors').toBe(true)
+      const filledColor = getComputedStyle(filled[0]!).backgroundColor
+      const unfilledColor = getComputedStyle(unfilled[0]!).backgroundColor
+      expect(alphaOf(filledColor), 'a filled cell vanished under forced-colors').toBeGreaterThan(0)
+      expect(alphaOf(unfilledColor), 'an unfilled cell vanished under forced-colors').toBeGreaterThan(0)
+      expect(filledColor, 'filled and unfilled cells must be distinguishable under WHCM').not.toBe(unfilledColor)
+      // every non-last cell carries an explicit inter-cell boundary — the separation never rides an
+      // unstyled background alone (the bar-chart lesson, applied to the cell strip).
+      expect(getComputedStyle(filled[0]!).borderInlineEndWidth, 'a cell lost its WHCM inter-cell boundary').not.toBe('0px')
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] })
+    }
+  })
+})
+
 describe('ui-progress — forced colors (SPEC-R19 AC1)', () => {
   it('fill and track survive as distinguishable system inks — Chromium emulates (CDP); WebKit asserts baseline', async () => {
     const el = mount('<ui-progress current="50"></ui-progress>')

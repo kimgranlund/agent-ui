@@ -78,6 +78,7 @@ export const NAV: readonly NavGroup[] = [
       { href: './magic-link.html', label: 'Magic link sign in' },
       { href: './otp-signin.html', label: 'One-time code sign in' },
       { href: './social-signin.html', label: 'Social sign in' },
+      { href: './onboarding.html', label: 'Onboarding' },
       { href: './choosing.html', label: 'Which component when' },
       { href: './changelog.html', label: 'Changelog' },
     ],

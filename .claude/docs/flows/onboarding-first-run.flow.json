@@ -1,0 +1,50 @@
+[
+  {
+    "id": "onboarding-first-run",
+    "task": "advance/back/skip through a first-run onboarding step shell (Welcome / Workspace name / Choose a theme), gated on an existing demo session (GH #490 S4-a/S4-c, decomp a9/a10/a11)",
+    "entry": ["signed-out"],
+    "states": [
+      { "id": "signed-out", "screen": "onboarding" },
+      { "id": "welcome", "screen": "onboarding" },
+      { "id": "workspace", "screen": "onboarding" },
+      { "id": "theme", "screen": "onboarding" },
+      { "id": "done", "screen": "onboarding" }
+    ],
+    "transitions": [
+      { "from": "signed-out", "to": "welcome", "verb": "sign-in" },
+      { "from": "welcome", "to": "workspace", "verb": "next" },
+      { "from": "welcome", "to": "done", "verb": "skip" },
+      { "from": "workspace", "to": "welcome", "verb": "back" },
+      { "from": "workspace", "to": "theme", "verb": "next" },
+      { "from": "workspace", "to": "done", "verb": "skip" },
+      { "from": "theme", "to": "workspace", "verb": "back" },
+      { "from": "theme", "to": "done", "verb": "finish" },
+      { "from": "done", "to": "signed-out", "verb": "sign-out" }
+    ],
+    "exits": [
+      {
+        "state": "done",
+        "kind": "success",
+        "asserts": [
+          "getSession() still returns the same signed-in session (onboarding never mutates it)",
+          "the entered workspace name / chosen theme (if any) are reflected on the done card",
+          "reaching 'done' via skip (welcome or workspace) or finish (the last step, theme) is indistinguishable except by path",
+          "no transport operation beyond signInWithPassword/getSession/clearSession was needed (identity-mock-transport.spec.md SPEC-N7)"
+        ]
+      },
+      {
+        "state": "signed-out",
+        "kind": "abandon",
+        "asserts": [
+          "getSession() returns null",
+          "the step and done cards are hidden; the workspace name / theme selection are reset for the next attempt"
+        ]
+      }
+    ],
+    "recovery": [],
+    "persistence": {
+      "resumable": false,
+      "across": "no cross-reload persistence by design (identity-mock-transport.spec.md SPEC-N3) — a reload restarts at signed-out, discarding any in-progress step state and the session itself"
+    }
+  }
+]

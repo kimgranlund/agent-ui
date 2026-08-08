@@ -28,8 +28,13 @@ attributes:            # attributes-as-API — the GENERATION SOURCE for progres
     default: ''
     reflect: true       # TKT-0069 item 2 ruling: label reflects fleet-wide
     description: The accessible name (SPEC-R3); empty ⇒ no internals.ariaLabel.
+  - name: segments
+    type: number        # kindOf's behavioural verdict — the TS type is number|null
+    default: null        # null (default) ⇒ continuous mode, unchanged (SPEC-R1 Amendment v1)
+    reflect: false        # NOT reflected — the current/max posture
+    description: SPEC-R1 Amendment v1 (GH #614) — null/non-finite/<2/fractional/malformed ⇒ continuous mode, unchanged. A finite integer ≥2 activates discrete "step N of M" mode — effectiveMax=segments (max ignored), effectiveValue floors to an integer.
 
-properties: []         # no manual accessors beyond the three typed props
+properties: []         # no manual accessors beyond the four typed props
 
 events: []             # display-only — emits nothing (SPEC-R1: no events, no keyboard contract)
 
@@ -40,7 +45,11 @@ parts:                  # data-part nodes built once in connected() (selected by
   - name: track
     description: The `<span data-part="track">` — the full-width rail. Always present.
   - name: fill
-    description: The `<span data-part="fill">` — inline-size = effectiveValue/effectiveMax (SPEC-R2) when determinate; `data-indeterminate` present and CSS-animated (sweep, or a stationary opacity pulse under prefers-reduced-motion) when `value` is absent/non-finite.
+    description: The `<span data-part="fill">` — inline-size = effectiveValue/effectiveMax (SPEC-R2) when determinate; `data-indeterminate` present and CSS-animated (sweep, or a stationary opacity pulse under prefers-reduced-motion) when `value` is absent/non-finite. Present whenever discrete-determinate mode is NOT active (continuous, or any indeterminate state — SPEC-R1 Amendment v1).
+  - name: cells
+    description: The `<span data-part="cells">` — the discrete-mode cell strip, replacing `fill` as the track's sole child. Built lazily on first discrete-determinate activation; swapped in/out of the track as the mode changes (SPEC-R1 Amendment v1).
+  - name: cell
+    description: One `<span data-part="cell">` per `segments` — `segments` equal cells always present when `cells` renders. `data-filled` present on the first `effectiveValue` cells, absent on the rest — no partial cell ever paints (SPEC-R1 Amendment v1).
 
 customStates: []       # NO interaction state and NO motion gate — a display leaf has neither (no :state(); nothing to transition)
 
@@ -53,7 +62,7 @@ aria:
   valueMin: internals.ariaValueMin    # always "0"
   valueMax: internals.ariaValueMax    # String(effectiveMax) — always present, even when indeterminate
   valueNow: internals.ariaValueNow    # String(effectiveValue) when determinate; null (absent) when indeterminate
-  valueText: internals.ariaValueText  # the Intl percent reading when determinate; null when indeterminate
+  valueText: internals.ariaValueText  # the Intl percent reading when determinate (continuous) or "Step N of M" when determinate+discrete (SPEC-R1 Amendment v1); null when indeterminate
   labelSource: label prop             # internals.ariaLabel = label || null — empty label ⇒ no accessible name is minted
 
 keyboard: []           # NOT interactive and NOT focusable — no tabindex, no keyboard contract
@@ -64,7 +73,7 @@ geometry:
   # NO [size] attribute, NO [scale] geometry row, NO --md-sys-height-* consumption (SPEC-R20 AC2) — the rail
   # thickness (--ui-progress-track-size) is a fixed, density-invariant px constant.
 
-forcedColors: An explicit `@media (forced-colors: active)` block repoints the fill (a `background`-drawn rectangle, including the indeterminate sweep) to `CanvasText`, and gives the track a `Canvas` background + `CanvasText` border (SPEC-R19 — the bar-chart fill lesson: a background-drawn shape is otherwise forced to `Canvas` and vanishes against the page).
+forcedColors: An explicit `@media (forced-colors: active)` block repoints the fill (a `background`-drawn rectangle, including the indeterminate sweep) to `CanvasText`, and gives the track a `Canvas` background + `CanvasText` border (SPEC-R19 — the bar-chart fill lesson: a background-drawn shape is otherwise forced to `Canvas` and vanishes against the page). Discrete mode (SPEC-R1 Amendment v1): filled cells repoint to `CanvasText` and unfilled cells to `Canvas`, and every cell gets an explicit `CanvasText` inter-cell border — the separation is never left to ride an unstyled background alone.
 ---
 
 # ui-progress
@@ -98,6 +107,27 @@ mirrors for free). Indeterminate: the fill renders a **visibly-animated sweep** 
 translating along the track — so "working" is distinguishable from both `0%` and `100%` at a glance. Under
 `prefers-reduced-motion: reduce` the sweep is replaced by a stationary partial fill with a slow opacity
 pulse (no translation, no scaling) that stays visually distinct from any determinate state.
+
+## Discrete mode: `segments` (SPEC-R1 Amendment v1, GH #614)
+
+`segments` (`number | null`, default `null`) is an additive, backward-compatible widening — absent, `null`,
+or any hardening-fail input (non-finite, `< 2`, fractional, or a malformed attribute) leaves the continuous
+contract above byte-identical. A finite integer `≥ 2` activates **discrete "step N of M" mode**: `max` is
+IGNORED (`effectiveMax := segments`), and `effectiveValue` additionally floors to an integer after clamping —
+a step counts only when fully reached, so the painted fill count and the announced value are the same number
+by construction.
+
+```html
+<ui-progress current="2" segments="4" label="Onboarding"></ui-progress>  <!-- 4 cells, first 2 filled -->
+```
+
+Rendering replaces the single fill with `segments` equal cells split along the rail, separated by a visible
+gap: the first `effectiveValue` cells paint fill, the rest paint track — no partial cell ever paints.
+Indeterminate (`current === null`) still renders today's sweep unchanged; `segments` never changes the
+determinate/indeterminate switch, and cells exist only when determinate (an indeterminate stepper has
+nothing to count). Accessibility: `ariaValueMax = String(segments)`, `ariaValueNow` = the snapped integer,
+and `ariaValueText = "Step N of M"` — never the percent reading (announcing "50%" for a stepper misrepresents
+the control's state).
 
 ## Accessibility
 
