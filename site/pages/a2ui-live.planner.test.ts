@@ -239,32 +239,59 @@ describe('a2ui-live planner-stage wiring (GH #579, ADR-0174/SPEC-R21/R22) — a 
     await waitUntil(() => !composerBusy())
   })
 
-  it('gate ON: a THROWN dispatch (GH #592, plan-runner\'s own upstream bug) is caught by the page — every still-seeded group closes "not-run", nothing strands at Queued/Running', async () => {
+  it('gate ON: a THROWN step dispatch (GH #592, FIXED upstream) does NOT abort the run — folds into the SAME failed-tier an error meta-line already gets', async () => {
+    __setPlannerEnabledForTest(true)
+    const calls: { turn: number; text: string }[] = []
+    __setTransportForTest(
+      scriptedTransport((turn, input) => {
+        calls.push({ turn, text: input.kind === 'intent' ? input.text : '' })
+        if (turn === 1) return [metaLine({ plan: { steps: [{ id: 'a', description: 'Do A' }, { id: 'b', description: 'Do B' }] } })]
+        if (turn === 2) throw new Error('transport fault') // a genuine exception, NOT an error meta-line
+        if (turn === 3) return surfaceLines('surf-b', 'B done')
+        return surfaceLines('final', 'Synthesis done')
+      }),
+    )
+
+    await sendIntent('plan that explodes mid-step')
+    await waitUntil(() => document.querySelector("ui-surface-host [data-part='surface']")?.textContent?.includes('Synthesis done') === true)
+
+    // GH #592 FIXED (plan-runner.ts's `drainStepTurn`) — a genuinely THROWN step dispatch now folds into the
+    // SAME failed-tier a transport-composed `error` meta-line already gets: the run COMPLETES, all K+2
+    // dispatches happen in order (compare the "error meta-line" test above — byte-for-byte the same shape).
+    expect(calls.length).toBe(4)
+    expect(calls[2]!.text).toContain('plan step "a"')
+    expect(calls[2]!.text).toContain('failed')
+
+    expect(narrationLabel('plan-step:a'), 'a thrown step group closes failed, never stranded').toBe('Step "a" — Failed')
+    expect(narrationLabel('plan-step:b')).toBe('Step "b" — Done')
+    expect(narrationLabel('plan-synthesis'), 'a synthesis dispatch after a thrown step still reaches done').toBe('Synthesis — Done')
+
+    const canvasText = document.querySelector("ui-surface-host [data-part='surface']")?.textContent ?? ''
+    expect(canvasText).toContain('B done')
+    expect(canvasText).toContain('Synthesis done')
+
+    await waitUntil(() => !composerBusy())
+  })
+
+  it('gate ON: the PLAN-REQUEST turn itself throwing is still the ONE TRUE ABORT (SPEC-R22 tier 1) — the page\'s defensive catch still owns this leg, unchanged by the GH #592 fix', async () => {
     __setPlannerEnabledForTest(true)
     const calls: number[] = []
     __setTransportForTest(
       scriptedTransport((turn) => {
         calls.push(turn)
-        if (turn === 1) return [metaLine({ plan: { steps: [{ id: 'a', description: 'Do A' }, { id: 'b', description: 'Do B' }] } })]
-        if (turn === 2) throw new Error('transport fault') // a genuine exception, NOT an error meta-line
-        return surfaceLines('unreachable', 'should never dispatch')
+        throw new Error('plan-request transport fault') // turn 1 — before consumption, before any group seeds
       }),
     )
 
-    await sendIntent('plan that explodes mid-step')
-    // NOT "any system message" — `resetPage()`'s own "New conversation…" system line is already in the log
-    // before this turn even starts, which would satisfy a looser wait instantly and race the real failure.
-    await waitUntil(() => chatMessages('system').some((m) => m.textContent?.includes('transport fault')))
+    await sendIntent('a plan request that never even starts')
+    await waitUntil(() => chatMessages('system').some((m) => m.textContent?.includes('plan-request transport fault')))
 
-    // GH #592 stands upstream (runPlan has no per-step try/catch around a THROW, unlike the error-meta-line
-    // leg) — the whole run's promise rejects after step "a"'s dispatch; steps/synthesis after it never run.
-    expect(calls).toEqual([1, 2])
-    // This page's own defensive close (finding 2): every group that was still non-terminal when the
-    // exception hit closes honestly to `not-run` — nothing left reading "Queued"/"Running…" forever.
-    expect(narrationLabel('plan-step:a')).toBe('Step "a" — Not run (aborted)')
-    expect(narrationLabel('plan-step:b')).toBe('Step "b" — Not run (aborted)')
-    expect(narrationLabel('plan-synthesis')).toBe('Synthesis — Not run (aborted)')
-    expect(chatMessages('system').some((m) => m.textContent?.includes('transport fault'))).toBe(true)
+    // Nothing ran, nothing was consumed (SPEC-R22: "the plan turn's own failure is the one true abort") —
+    // `runPlan` was never reached, so no group was ever seeded; the page's defensive not-run-closing loop
+    // is a no-op here (empty `groupState`), composing cleanly with the upstream fix rather than duplicating it.
+    expect(calls).toEqual([1])
+    expect(narrationLabel('plan-error')).toContain('plan-request transport fault')
+    expect(chatMessages('system').some((m) => m.textContent?.includes('plan-request transport fault'))).toBe(true)
 
     await waitUntil(() => !composerBusy())
   })
