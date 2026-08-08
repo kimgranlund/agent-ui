@@ -175,16 +175,16 @@ describe('tabs.css — [orientation=vertical] (GH #581) — shell row, strip col
     expect(rule).toMatch(/overflow-y:\s*auto/) // the strip's own overflow axis flips (GH #221, vertical form)
   })
 
-  it('a vertical tab label re-aligns start (center is a horizontal-strip convention)', () => {
-    const m = stylesBlock.match(/:scope\[orientation='vertical'\] ui-tab\s*\{([^}]*)\}/)
-    expect(m, 'the vertical ui-tab rule is missing').not.toBeNull()
+  it('a vertical tab label re-aligns start (center is a horizontal-strip convention) — EXACT CHILD COMBINATORS (nested-tabs hardening)', () => {
+    const m = stylesBlock.match(/:scope\[orientation='vertical'\] > \[data-part='tablist'\] > ui-tab\s*\{([^}]*)\}/)
+    expect(m, 'the vertical ui-tab rule is missing (or regressed to a bare descendant combinator)').not.toBeNull()
     const rule = (m as RegExpMatchArray)[1]
     expect(rule).toMatch(/justify-content:\s*flex-start/)
   })
 
-  it('the vertical indicator rides the inline-end edge as a full-height bar (not a bottom bar)', () => {
-    const m = stylesBlock.match(/:scope\[orientation='vertical'\] ui-tab::after\s*\{([^}]*)\}/)
-    expect(m, 'the vertical ui-tab::after rule is missing').not.toBeNull()
+  it('the vertical indicator rides the inline-end edge as a full-height bar (not a bottom bar) — EXACT CHILD COMBINATORS', () => {
+    const m = stylesBlock.match(/:scope\[orientation='vertical'\] > \[data-part='tablist'\] > ui-tab::after\s*\{([^}]*)\}/)
+    expect(m, 'the vertical ui-tab::after rule is missing (or regressed to a bare descendant combinator)').not.toBeNull()
     const rule = (m as RegExpMatchArray)[1]
     expect(rule).toMatch(/inset-inline:\s*auto 0/)
     expect(rule).toMatch(/inset-block:\s*0/)
@@ -192,9 +192,9 @@ describe('tabs.css — [orientation=vertical] (GH #581) — shell row, strip col
     expect(rule).toMatch(/block-size:\s*auto/) // overrides the horizontal fixed block-size
   })
 
-  it('the vertical panel is the row shrink-to-fit item (min-inline-size:0)', () => {
-    const m = stylesBlock.match(/:scope\[orientation='vertical'\] ui-tab-panel\s*\{([^}]*)\}/)
-    expect(m, 'the vertical ui-tab-panel rule is missing').not.toBeNull()
+  it('the vertical panel is the row shrink-to-fit item (min-inline-size:0) — EXACT CHILD COMBINATOR', () => {
+    const m = stylesBlock.match(/:scope\[orientation='vertical'\] > ui-tab-panel\s*\{([^}]*)\}/)
+    expect(m, 'the vertical ui-tab-panel rule is missing (or regressed to a bare descendant combinator)').not.toBeNull()
     const rule = (m as RegExpMatchArray)[1]
     expect(rule).toMatch(/flex:\s*1 1 auto/)
     expect(rule).toMatch(/min-inline-size:\s*0/)
@@ -202,7 +202,7 @@ describe('tabs.css — [orientation=vertical] (GH #581) — shell row, strip col
 
   it('NEGATIVE — zero new tokens: every declaration in the vertical block reads only the EXISTING --ui-tabs-* chain', () => {
     const start = stylesBlock.indexOf(":scope[orientation='vertical']")
-    const end = stylesBlock.indexOf('/* Motion —')
+    const end = stylesBlock.indexOf("[overflow='menu']")
     const verticalBlock = stylesBlock.slice(start, end)
     expect(verticalBlock.length).toBeGreaterThan(0) // anti-vacuous
     expect(foreignScopeRefs(verticalBlock)).toEqual([])
@@ -210,9 +210,95 @@ describe('tabs.css — [orientation=vertical] (GH #581) — shell row, strip col
     expect(new Set(refs)).toEqual(new Set(['--ui-tabs-strip-line', '--ui-tabs-indicator-size'])) // no NEW token names
   })
 
+  it('NEGATIVE — no bare descendant combinator survives for the vertical tab/indicator/panel rules (the nested-tabs leak class of bug)', () => {
+    const start = stylesBlock.indexOf(":scope[orientation='vertical']")
+    const end = stylesBlock.indexOf("[overflow='menu']")
+    const verticalBlock = stylesBlock.slice(start, end)
+    expect(verticalBlock).not.toMatch(/:scope\[orientation='vertical'\] ui-tab\s*\{/) // bare descendant, no `>` chain
+    expect(verticalBlock).not.toMatch(/:scope\[orientation='vertical'\] ui-tab::after\s*\{/)
+    expect(verticalBlock).not.toMatch(/:scope\[orientation='vertical'\] ui-tab-panel\s*\{/)
+  })
+
   it('the forced-colors block covers BOTH divider edges (block-end horizontal, inline-end vertical)', () => {
     const fc = stylesBlock.slice(stylesBlock.indexOf('@media (forced-colors: active)'))
     expect(fc).toMatch(/border-inline-end-color:\s*CanvasText/)
+  })
+})
+
+describe('tabs.css — [overflow=menu] (GH #586) — shell grid, part assignments, trigger geometry', () => {
+  it(":scope[overflow='menu'] is a GRID — horizontal template: strip+trigger row over a full-width panel row", () => {
+    const m = stylesBlock.match(/:scope\[overflow='menu'\]\s*\{([^}]*)\}/)
+    expect(m, "the :scope[overflow='menu'] shell rule is missing").not.toBeNull()
+    const rule = (m as RegExpMatchArray)[1]
+    expect(rule).toMatch(/display:\s*grid/)
+    expect(rule).toMatch(/grid-template-columns:\s*1fr auto/)
+    expect(rule).toMatch(/grid-template-rows:\s*auto 1fr/)
+    expect(rule).toMatch(/'strip trigger'/)
+    expect(rule).toMatch(/'panel panel'/)
+  })
+
+  it("the vertical×menu corner (§7) uses a HIGHER-specificity compound selector — strip beside panel, trigger at the column's block-end", () => {
+    const m = stylesBlock.match(/:scope\[orientation='vertical'\]\[overflow='menu'\]\s*\{([^}]*)\}/)
+    expect(m, 'the vertical×menu compound corner rule is missing').not.toBeNull()
+    const rule = (m as RegExpMatchArray)[1]
+    expect(rule).toMatch(/display:\s*grid/)
+    expect(rule).toMatch(/grid-template-columns:\s*auto 1fr/)
+    expect(rule).toMatch(/grid-template-rows:\s*1fr auto/)
+    expect(rule).toMatch(/'strip panel'/)
+    expect(rule).toMatch(/'trigger panel'/)
+  })
+
+  it('grid-area assignments use EXACT CHILD COMBINATORS (the nested-tabs discipline) — strip, panel, and the promoted trigger button', () => {
+    // the strip's grid-area rule ALSO carries the grid-item min-size escape hatch (below) — check CONTAINS,
+    // not an exact-body match.
+    const stripRule = stylesBlock.match(/:scope\[overflow='menu'\] > \[data-part='tablist'\]\s*\{([^}]*)\}/)
+    expect(stripRule, 'the strip grid-area rule is missing').not.toBeNull()
+    expect((stripRule as RegExpMatchArray)[1]).toMatch(/grid-area:\s*strip/)
+    expect(stylesBlock).toMatch(/:scope\[overflow='menu'\] > ui-tab-panel\s*\{\s*grid-area:\s*panel;?\s*\}/)
+    // the trigger's grid-area rides its ONE geometry rule (below), not a separate duplicate selector
+    const m = stylesBlock.match(/:scope\[overflow='menu'\] > \[data-part='overflow'\] > \[data-part='trigger'\]\s*\{([^}]*)\}/)
+    expect(m, 'the trigger geometry rule is missing').not.toBeNull()
+    expect((m as RegExpMatchArray)[1]).toMatch(/grid-area:\s*trigger/)
+  })
+
+  it('the strip escapes the grid-item "automatic minimum size" trap (min-inline-size/min-block-size:0) and never flex-shrinks its tabs', () => {
+    const stripRule = stylesBlock.match(/:scope\[overflow='menu'\] > \[data-part='tablist'\]\s*\{([^}]*)\}/)
+    expect(stripRule, 'the strip grid-area rule is missing').not.toBeNull()
+    const rule = (stripRule as RegExpMatchArray)[1]
+    expect(rule).toMatch(/min-inline-size:\s*0/)
+    expect(rule).toMatch(/min-block-size:\s*0/)
+    expect(stylesBlock).toMatch(/:scope\[overflow='menu'\] > \[data-part='tablist'\] > ui-tab\s*\{\s*flex-shrink:\s*0;?\s*\}/)
+  })
+
+  it('an overflowed tab renders nowhere; the strip never scrolls in menu mode (overflow:clip)', () => {
+    expect(stylesBlock).toMatch(/:scope\[overflow='menu'\] > \[data-part='tablist'\] > ui-tab\[data-overflowed\]\s*\{\s*display:\s*none;?\s*\}/)
+    const m = stylesBlock.match(/:scope\[overflow='menu'\] > \[data-part='tablist'\]\s*\{\s*overflow:\s*clip;?\s*\}/)
+    expect(m, 'the strip must overflow:clip in menu mode — no bare fallback to overflow-x/y:auto').not.toBeNull()
+  })
+
+  it('the trigger is a SQUARE tab-height icon button, zero new tokens (ink + focus ring off the EXISTING --ui-tabs-* chain)', () => {
+    const m = stylesBlock.match(/:scope\[overflow='menu'\] > \[data-part='overflow'\] > \[data-part='trigger'\]\s*\{([^}]*)\}/)
+    expect(m, 'the trigger geometry rule is missing').not.toBeNull()
+    const rule = (m as RegExpMatchArray)[1]
+    expect(rule).toMatch(/inline-size:\s*var\(--ui-tabs-tab-height\)/)
+    expect(rule).toMatch(/block-size:\s*var\(--ui-tabs-tab-height\)/)
+    expect(rule).toMatch(/color:\s*var\(--ui-tabs-ink\)/)
+    expect(stylesBlock).toMatch(/:scope\[overflow='menu'\] > \[data-part='overflow'\] > \[data-part='trigger'\]:hover\s*\{\s*color:\s*var\(--ui-tabs-ink-hover\)/)
+    expect(stylesBlock).toMatch(
+      /:scope\[overflow='menu'\] > \[data-part='overflow'\] > \[data-part='trigger'\]:focus-visible\s*\{\s*outline:\s*var\(--md-sys-state-focus-ring-width\)\s+solid\s+var\(--md-sys-color-focus-ring\)/,
+    )
+  })
+
+  it('the overflow part authors its OWN [hidden]{display:none} — ui-menu\'s display:contents (an author rule) outranks the UA [hidden] rule otherwise', () => {
+    expect(stylesBlock).toMatch(/:scope\[overflow='menu'\] > \[data-part='overflow'\]\[hidden\]\s*\{\s*display:\s*none;?\s*\}/)
+  })
+
+  it('NEGATIVE — zero new tokens: every declaration in the menu-mode block reads only the EXISTING --ui-tabs-* chain (+ the shared focus ring)', () => {
+    const start = stylesBlock.indexOf("[overflow='menu']")
+    const end = stylesBlock.indexOf('/* Motion —')
+    const menuBlock = stylesBlock.slice(start, end)
+    expect(menuBlock.length).toBeGreaterThan(0) // anti-vacuous
+    expect(foreignScopeRefs(menuBlock)).toEqual([])
   })
 })
 

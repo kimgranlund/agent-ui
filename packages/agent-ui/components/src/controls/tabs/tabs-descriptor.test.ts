@@ -33,8 +33,9 @@ const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
 
 // The settled attribute surface, in declaration order (anti-vacuous anchor): the surfaceProps spread, then
-// selected, then the ADR-0144 Q1 opt-in `fill`, then the GH #581 `orientation` (vertical build slice).
-const ATTR_NAMES = ['elevation', 'brightness', 'selected', 'fill', 'orientation']
+// selected, then the ADR-0144 Q1 opt-in `fill`, then the GH #581 `orientation` (vertical build slice), then
+// the GH #586 `overflow` (overflow-menu build slice).
+const ATTR_NAMES = ['elevation', 'brightness', 'selected', 'fill', 'orientation', 'overflow']
 
 describe('tabs.md descriptor — frontmatter parses + schema-valid (s8 part a)', () => {
   it('has a leading frontmatter fence and a prose body documenting the three elements', () => {
@@ -59,6 +60,10 @@ describe('tabs.md descriptor — frontmatter parses + schema-valid (s8 part a)',
     expect(fence).toMatch(/role:\s*tablist/)
     expect(fence).toMatch(/tabRole:\s*tab\b/)
     expect(fence).toMatch(/panelRole:\s*tabpanel\b/)
+  })
+
+  it('declares the overflow PART (GH #586 — present only under overflow="menu")', () => {
+    expect(parsed.sequences.get('parts')?.some((p) => p.get('name') === 'overflow')).toBe(true)
   })
 
   it('validateComponentDescriptor reports ZERO structural failures aside from the deferred extends (schema-valid)', () => {
@@ -100,6 +105,14 @@ describe('tabs.md descriptor — contract↔props trip-wire (s8 part b)', () => 
     expect(orientation?.values).toEqual(['horizontal', 'vertical'])
     expect(orientation?.default).toBe('horizontal')
     expect(orientation?.reflect).toBe(true)
+  })
+
+  it('`overflow` is a reflected enum [scroll, menu], default scroll (GH #586)', () => {
+    const overflow = parsed.attributes.find((a) => a.name === 'overflow')
+    expect(overflow?.type).toBe('enum')
+    expect(overflow?.values).toEqual(['scroll', 'menu'])
+    expect(overflow?.default).toBe('scroll')
+    expect(overflow?.reflect).toBe(true)
   })
 
   it('a drifted attribute FAILS the trip-wire (negative control — reflect + default + bijection)', () => {

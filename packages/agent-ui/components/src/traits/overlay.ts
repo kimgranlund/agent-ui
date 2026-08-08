@@ -49,12 +49,29 @@ export interface OverlayOptions {
   focusOnOpen?: boolean
 }
 
+/**
+ * Options for an IMPERATIVE `close()` call (GH #586 critic fold MAJOR-2). Additive — every existing
+ * caller passes none and gets today's behaviour unchanged.
+ */
+export interface OverlayCloseOptions {
+  /**
+   * `false` — skip the default "restore focus to the trigger" tail for THIS close only. For a
+   * composing consumer whose OWN commit-relay listener already moved focus somewhere meaningful
+   * during the SAME synchronous turn (the `ui-menu` → `ui-tabs` promoted-tab relay is the shipped
+   * precedent) and does not want the overlay's default restore stealing it back a microtask later.
+   * The platform light-dismiss path (Escape / outside-click) NEVER reads this — it always restores
+   * focus to the trigger, the contract every other overlay consumer relies on. Default `true`
+   * (today's behaviour).
+   */
+  restoreFocus?: boolean
+}
+
 /** The object returned by `overlay()` — imperative control + cleanup. */
 export interface OverlayHandle {
   /** Show the popup (`showPopover()` + position); emits `toggle` on a real show (ADR-0101). No-op (no event) if already open. */
   open: () => void
-  /** Hide the popup (`hidePopover()` + restore focus); emits `close`+`toggle` on a real hide (ADR-0101). No-op (no event) if already closed. */
-  close: () => void
+  /** Hide the popup (`hidePopover()` + restore focus); emits `close`+`toggle` on a real hide (ADR-0101). No-op (no event) if already closed. `opts.restoreFocus:false` skips the focus restore for this one call (MAJOR-2, GH #586) — the platform light-dismiss path is unaffected. */
+  close: (opts?: OverlayCloseOptions) => void
   /** Toggle the popup. */
   toggle: () => void
   /** Remove all listeners/observers (idempotent); also called automatically on host disconnect. */
@@ -258,9 +275,13 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
   // so the prop is ALREADY false by the time `toggle` fires next (the ordering invariant, ADR-0101
   // mechanic 3 — a renderer's two-way bind reads `el.open` at `toggle` listener time and gets the
   // settled value on every path, commit or light-dismiss alike).
-  function announceHide(): void {
+  //
+  // `shouldRestoreFocus` (MAJOR-2, GH #586 critic fold) — ONLY the imperative `close()` path below can
+  // pass `false` (a composing consumer's explicit opt-out); the platform light-dismiss listener always
+  // calls this with no argument, so Escape / outside-click keeps restoring focus unconditionally.
+  function announceHide(shouldRestoreFocus = true): void {
     stopPositioning()
-    if (focusOnOpen) restoreFocus()
+    if (focusOnOpen && shouldRestoreFocus) restoreFocus()
     host.emit('close')
     host.emit('toggle') // value:{prop:'open',event:'toggle'} two-way signal (ADR-0019)
   }
@@ -307,7 +328,7 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
     host.emit('toggle') // the real show, announced AFTER the host's own open-prop write has settled
   }
 
-  function close(): void {
+  function close(opts?: OverlayCloseOptions): void {
     if (cleaned) return
     // Idempotent, but resilient to flag desync: hide whenever the popup is ACTUALLY in the top layer,
     // even if `isOpen` drifted false (a spurious/async platform toggle can desync the flag while the
@@ -323,7 +344,7 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
     } catch (_) {
       // intentional: the popup was not in the top layer (already hidden) — nothing more to do
     }
-    announceHide()
+    announceHide(opts?.restoreFocus ?? true)
   }
 
   function toggle(): void {

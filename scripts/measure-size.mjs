@@ -146,7 +146,13 @@ const targets = [
   // paste-split + echo channel, its own per-control override in MARGINAL_OVERRIDES below) landing in the
   // family barrel. Same law as above: a CHECKPOINT, not a ratchet — GH #455 remains the standing shrink
   // follow-up.
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 53 * KB],
+  // RULED 2026-08-08 (Kim, in-session — second of the day for this constant; durable record:
+  // https://github.com/kimgranlund/agent-ui/issues/586#issuecomment-5223777160 — the tabs
+  // overflow="menu" build, GH #586 Slice B): re-based 53 KB → 54 KB (55296 B gz) — measured 54889 B
+  // gz; the otp-field re-base above plus Slice B's overflow-engine weight (the fit engine + the composed
+  // ui-menu vehicle + the CSS grid rules), both twice-reviewed real machinery. Same law as above: a
+  // CHECKPOINT, not a ratchet — GH #455 remains the standing shrink follow-up.
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 54 * KB],
   // GH #377 finding 3 — the package's FIRST `./traits/*` subpath (`traits/overlay`, package.json:74) gets
   // its own budgeted row, so the opt-in surface every other pack carries one for (`code/highlight`,
   // `./markdown`, `./editor`) is not the one exception.
@@ -511,7 +517,13 @@ const appCssQuerySuffixPlugin = {
 // additive, the split/status-stream precedents above say the same). The budget stays 80 KB (the
 // checkpoint) — this is headroom regained, not a re-base; GH #468 stays open for the NEXT marginal
 // (entry-list/settings shared-chunk audit, shell preset dedup — named, not yet measured).
-const APP_MARGINAL_BUDGET = 80 * KB
+// RULED 2026-08-08 (Kim — the same "checkpoint, not a ratchet" convention as #454/#480; durable
+// record: https://github.com/kimgranlund/agent-ui/issues/586#issuecomment-5223777160):
+// re-based 80 KB → 83 KB (84992 B gz) — measured 82565 B gz on the tabs overflow="menu" build
+// (GH #586 Slice B, commit 4710b89): Slice B's composed-ui-menu vehicle + fit engine, LLD-accepted
+// tradeoff landing at the app tier; next diet pass keeps its tripwire. GH #468 remains the standing
+// app-diet follow-up unchanged.
+const APP_MARGINAL_BUDGET = 83 * KB
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })

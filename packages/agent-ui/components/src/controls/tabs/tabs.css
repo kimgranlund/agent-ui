@@ -29,7 +29,17 @@
  * later source wins, so this block's `flex-direction:row` (below, placed AFTER the `[fill]` block) overrides
  * `[fill]`'s own `column` — and the strip's `flex:none` already reads as "pinned, own-scroll" once the shell
  * is height-bound (§7's `fill × vertical` corner). Default (`orientation` absent/`horizontal`) stays
- * byte-identical — negative control in tabs.browser.test.ts; the GH #542/#543 horizontal probes untouched. */
+ * byte-identical — negative control in tabs.browser.test.ts; the GH #542/#543 horizontal probes untouched.
+ *
+ * `[overflow=menu]` (GH #586, same LLD §4/§7) — the shell becomes a GRID so the trigger (a composed `ui-menu`
+ * PART, `display:contents`, its trigger `<button>` promoted to the real grid item) stays a shell child OUTSIDE
+ * `role=tablist` without absolute positioning. Overflowed tabs get `[data-overflowed]{display:none}` (DOM order
+ * preserved — a promoted selected tab renders as the LAST visible slot); the strip stops scrolling entirely
+ * (`overflow:clip` — the menu replaces scroll). ZERO new tokens — the trigger is a square, tab-height icon
+ * button off the existing ink/focus-ring chain. Composes with `[fill]`/`[orientation=vertical]` for FREE (the
+ * SAME equal-or-greater-specificity + source-order technique the vertical block above already uses) — the §7
+ * `fill × {horizontal,vertical} × menu` corners. Default (`overflow` absent/`scroll`) stays byte-identical —
+ * negative control in tabs.browser.test.ts; the GH #542/#543 horizontal probes untouched. */
 
 /* ════════════════════════ [1] TOKEN BLOCK — :where() declarations (the --md-sys-color-* + ramp entry) ════════════════════════ */
 
@@ -194,23 +204,145 @@
     overflow-y: auto; /* the strip's own overflow axis flips with it (GH #221's viewport, vertical form) */
   }
 
-  :scope[orientation='vertical'] ui-tab {
+  /* EXACT CHILD COMBINATORS (Slice-A review, MINOR inheritance) — chained all the way through the tablist
+     part, not a bare descendant combinator: a nested HORIZONTAL `ui-tabs` composed inside this vertical
+     tabs' own panel would otherwise be a genuine CSS descendant of `:scope[orientation='vertical']` too
+     (`@scope` has no lower boundary here — no `to()` clause — so a descendant selector keeps matching past
+     the inner tabs' own scope root) and its tabs would inherit this vertical skin (start-aligned labels, the
+     inline-end indicator) despite being horizontal themselves. `>` at every step means only THIS tabs' own
+     tablist's direct-child tabs qualify; a nested tabs' tabs sit one level too deep to match. Browser-probed
+     (nested-tabs leak smoke, tabs.browser.test.ts). */
+  :scope[orientation='vertical'] > [data-part='tablist'] > ui-tab {
     justify-content: flex-start; /* a start-aligned list — center is a horizontal-strip convention */
     /* Cross-axis STRETCH (the flex column's default align-items) gives the row its full-width hit area — no
        inline-size is set here, so #536's law (zero padding-inline) stands unchanged; see the file banner. */
   }
 
   /* The indicator rides the SAME edge as the divider (inline-end) — a full block-size bar, not a bottom bar. */
-  :scope[orientation='vertical'] ui-tab::after {
+  :scope[orientation='vertical'] > [data-part='tablist'] > ui-tab::after {
     inset-inline: auto 0;
     inset-block: 0;
     inline-size: var(--ui-tabs-indicator-size);
     block-size: auto;
   }
 
-  :scope[orientation='vertical'] ui-tab-panel {
+  :scope[orientation='vertical'] > ui-tab-panel {
     flex: 1 1 auto;
     min-inline-size: 0; /* the row's shrink escape hatch — the panel never forces the strip to shrink */
+  }
+
+  /* [overflow=menu] (GH #586) — see the file banner + `.claude/docs/lld/tabs-vertical-overflow.lld.md` §4/§7
+     for the full ruling. The shell becomes a GRID so the trigger stays a shell child OUTSIDE `role=tablist`
+     (a non-tab tablist child is an ARIA required-owned-children violation) without absolute positioning. The
+     `ui-menu` PART is `display:contents` (menu.css) — its trigger `<button>` is the REAL grid item once
+     promoted through that (the modal/popover child-move precedent's inverse: here the wrapper vanishes from
+     layout, not the child). Placed AFTER [fill]/[orientation=vertical] above (equal-or-greater specificity —
+     :scope+one-or-two attribute selectors — so this block's `display:grid`/`overflow:clip` win the ties by
+     source order over [fill]'s `column` and [orientation=vertical]'s `overflow-y:auto`; every OTHER
+     [fill]/[orientation] declaration is a DIFFERENT property and composes unchanged — the §7
+     `fill×horizontal×menu` / `fill×vertical×menu` corners.) Default (`overflow` absent/`scroll`) stays
+     byte-identical — negative control in tabs.browser.test.ts; the GH #542/#543 horizontal probes untouched.
+
+     Horizontal (default orientation): "strip trigger" over a full-width "panel" row. */
+  :scope[overflow='menu'] {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      'strip trigger'
+      'panel panel';
+  }
+
+  /* Vertical × menu (§7 corner) — HIGHER specificity (two attribute selectors) than either single-attribute
+     block above, so this wins the `display`/template tie regardless of source order: "strip panel" over
+     "trigger panel" (the trigger sits at the strip column's block-end; the panel spans both rows in col 2). */
+  :scope[orientation='vertical'][overflow='menu'] {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: 1fr auto;
+    grid-template-areas:
+      'strip panel'
+      'trigger panel';
+  }
+
+  /* Grid-area assignments — ONE name per part, shared by both templates above (only the template itself
+     differs by orientation). EXACT CHILD COMBINATORS throughout (the same nested-tabs discipline as the
+     vertical block above) — never a bare descendant selector. The trigger's OWN `grid-area` is set alongside
+     its geometry below (one rule, not two, for the same selector).
+     `min-inline-size:0` + `min-block-size:0` — the grid-item "automatic minimum size" trap (the SAME
+     `min-inline-size:0` escape hatch the vertical panel rule above already documents): a grid item's default
+     `auto` minimum floors it at its CONTENT's natural size — for the strip (a flex row of `white-space:nowrap`
+     tabs) that is the SUM of every tab's full width, so without this the strip would grow past its `1fr`
+     track to fit every tab and never actually shrink small enough for #applyFit's own measurement to see a
+     real overflow (the fit engine would then never engage — caught by the fit-arithmetic browser probe). */
+  :scope[overflow='menu'] > [data-part='tablist'] {
+    grid-area: strip;
+    min-inline-size: 0;
+    min-block-size: 0;
+  }
+  :scope[overflow='menu'] > ui-tab-panel {
+    grid-area: panel;
+  }
+
+  /* A tab NEVER flex-shrinks in menu mode — the fit engine (`#applyFit`, tabs.ts), not the flex algorithm,
+     decides who's visible. Without this, the strip's default flex-shrink:1 would compress every tab to fit
+     the available space (a squished-but-all-visible strip) BEFORE the JS ever measures anything, defeating
+     the whole mechanism (the cache is meant to capture natural, unshrunk widths — LLD §4 "Cache"). */
+  :scope[overflow='menu'] > [data-part='tablist'] > ui-tab {
+    flex-shrink: 0;
+  }
+
+  /* An overflowed tab renders nowhere — DOM order is preserved (the promotion law), only display swaps. */
+  :scope[overflow='menu'] > [data-part='tablist'] > ui-tab[data-overflowed] {
+    display: none;
+  }
+
+  /* The strip never scrolls in menu mode — the menu replaces scroll entirely (belt-and-braces against a
+     programmatic scroll of a "fully fitting" strip). Wins BOTH the horizontal `overflow-x:auto` (file top)
+     and the vertical `overflow-y:auto` (above) via the specificity/source-order banner comment. */
+  :scope[overflow='menu'] > [data-part='tablist'] {
+    overflow: clip;
+  }
+
+  /* The trigger — a square, tab-height icon button (LLD §4 "trigger anatomy"): zero new tokens, the shared
+     ink ladder + focus ring. `setIcon` (tabs.ts) injects a fresh <svg fill="currentColor"> that inherits
+     `color` here; sized to a standard 1em icon cell (the ui-icon precedent, icon.css). */
+  :scope[overflow='menu'] > [data-part='overflow'] > [data-part='trigger'] {
+    grid-area: trigger;
+    box-sizing: border-box;
+    inline-size: var(--ui-tabs-tab-height);
+    block-size: var(--ui-tabs-tab-height);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    font-size: var(--ui-tabs-tab-font);
+    color: var(--ui-tabs-ink);
+    cursor: pointer;
+  }
+  :scope[overflow='menu'] > [data-part='overflow'] > [data-part='trigger'] svg {
+    inline-size: 1em;
+    block-size: 1em;
+  }
+  :scope[overflow='menu'] > [data-part='overflow'] > [data-part='trigger']:hover {
+    color: var(--ui-tabs-ink-hover);
+  }
+  /* The shared focus ring (ADR-0009), read DIRECTLY from the fleet tokens — the same documented family
+     exception `ui-tab:focus-visible` above already uses. Inset offset matches the tab ring (adjacent-parts
+     discipline within the same strip line). */
+  :scope[overflow='menu'] > [data-part='overflow'] > [data-part='trigger']:focus-visible {
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: calc(-1 * var(--md-sys-state-focus-ring-offset));
+  }
+  /* The overflow part hides via a native `hidden` attribute (tabs.ts #applyFit, K===N ⇒ hidden) — ui-menu's
+     OWN `:scope{display:contents}` (menu.css, an AUTHOR rule) outranks the UA `[hidden]{display:none}` rule
+     (author beats UA — the SAME mechanism `ui-tab-panel[hidden]` above already documents), so this sheet
+     must author its own explicit override, exactly like that panel rule does. */
+  :scope[overflow='menu'] > [data-part='overflow'][hidden] {
+    display: none;
   }
 
   /* Motion — the state PAINT only (ink + the indicator), gated behind :state(ready) so the first paint SNAPS
