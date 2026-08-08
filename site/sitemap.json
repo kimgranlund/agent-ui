@@ -579,6 +579,10 @@
       "name": "Onboarding",
       "url": "./onboarding.html",
       "description": "Advance/back/skip through a first-run step shell (Welcome / Workspace name / Choose a theme) with a discrete step-N-of-M progress readout, gated on an existing demo session — the SAME in-memory identity-mock-transport as Registration & sign in (GH #490, ADR-0176).",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
       "name": "Account settings",
       "url": "./account-settings.html",
       "description": "A generic account SettingsSchema rendered by the shipped ui-settings — view preferences, edit and save one through the SettingsStore — behind a must-be-signed-in gate reading the SAME in-memory identity-mock-transport as Registration & sign in (GH #615, ADR-0176).",
