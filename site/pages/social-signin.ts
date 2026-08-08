@@ -27,7 +27,8 @@ import { heading } from '../lib/doc-page.ts'
 import type { UIButtonElement, UICardElement } from '@agent-ui/components/components'
 // TYPE-ONLY (verbatimModuleSyntax): erased at compile time (SPEC-R9 AC2) — the only RUNTIME touch of this
 // module is the dynamic import() inside wireIdentityDemo's DEV-gated branch below.
-import type { IdentityMockErrorCode, IdentityMockTransport, IdentitySession, SocialProvider } from '../lib/identity-mock-transport.ts'
+import type { IdentityMockTransport, IdentitySession, SocialProvider } from '../lib/identity-mock-transport.ts'
+import { errorCodeOf } from '../lib/identity-error-code.ts'
 
 const { content } = mountPage({
   title: 'Social sign in',
@@ -144,16 +145,6 @@ function setPending(button: UIButtonElement, pending: boolean, pendingLabel: str
 }
 
 const PROVIDER_LABEL: Record<SocialProvider, string> = { google: 'Google', github: 'GitHub', generic: 'the demo provider' }
-
-/** Read a rejection's `.code` WITHOUT importing the `IdentityMockError` class as a runtime value
- *  (credentials.ts/magic-link.ts/otp-signin.ts's own `errorCodeOf` precedent — this page only ever holds
- *  the transport's TYPES statically, SPEC-R9 AC2). */
-function errorCodeOf(err: unknown): IdentityMockErrorCode | undefined {
-  if (err instanceof Error && 'code' in err && typeof (err as { code: unknown }).code === 'string') {
-    return (err as { code: IdentityMockErrorCode }).code
-  }
-  return undefined
-}
 
 // ── DEV-only interactive wiring (SPEC-R9) ────────────────────────────────────────────────────────────────
 

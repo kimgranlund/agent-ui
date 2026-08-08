@@ -54,6 +54,7 @@ import type {
 // TYPE-ONLY (verbatimModuleSyntax): erased at compile time (SPEC-R9 AC2) — the only RUNTIME touch of this
 // module is the dynamic import() inside wireIdentityDemo's DEV-gated branch below.
 import type { IdentityMockErrorCode, IdentityMockTransport, IdentitySession } from '../lib/identity-mock-transport.ts'
+import { errorCodeOf } from '../lib/identity-error-code.ts'
 
 const CODE_LENGTH = 6
 
@@ -175,16 +176,6 @@ function refreshSessionUI(transport: IdentityMockTransport): void {
 function setPending(button: UIButtonElement, pending: boolean, pendingLabel: string, restLabel: string): void {
   button.toggleAttribute('disabled', pending)
   button.textContent = pending ? pendingLabel : restLabel
-}
-
-/** Read a rejection's `.code` WITHOUT importing the `IdentityMockError` class as a runtime value
- *  (credentials.ts/magic-link.ts's own `errorCodeOf` precedent — this page only ever holds the transport's
- *  TYPES statically, SPEC-R9 AC2). */
-function errorCodeOf(err: unknown): IdentityMockErrorCode | undefined {
-  if (err instanceof Error && 'code' in err && typeof (err as { code: unknown }).code === 'string') {
-    return (err as { code: IdentityMockErrorCode }).code
-  }
-  return undefined
 }
 
 // ── the resend cooldown (SPEC-R2 AC4 — a REAL server-enforced per-email cooldown, unlike magic-link.ts's

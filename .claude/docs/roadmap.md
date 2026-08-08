@@ -217,17 +217,25 @@ decision (dated line in §4).
   wave's inv-2 §3 verification): the five once-uncataloged controls are all dispositioned — four
   PERMANENT allowlist exclusions with cited ADRs, one catalog row. No open work; the 2026-07-28
   ruling was executed and this line simply lagged it.
-- **Identity & account flow family — intake DONE, build sequenced.**
+- **Identity & account flow family — S1–S3 SHIPPED, S4/S5 queued, family-close on GH #611.**
   ([GH #490](https://github.com/kimgranlund/agent-ui/issues/490) ·
   [ADR-0176](adr/0176-identity-account-flow-family-design-intake.md), ratified 2026-08-06.) The
   ADR's four frozen rulings govern: the per-flow lane cut (exactly ONE new control — the code-entry
-  field — everything else pattern composition or documented idiom, ADR-0102's three lanes
-  repurposed); the hard demo-only security fence (mock transport, never real auth); the
-  catalog-exposure ruling; and cl.4's five-slice build sequence. The decomposition manifest
-  ([`decompositions/identity-flow.decomp.md`](decompositions/identity-flow.decomp.md)) carries the
-  leaf/tier map and dependency edges; recommended first slice **S1 (Registration +
-  Email+Password)**, startable now — three open forks (OQ1 progress-segments prop · OQ2 provider
-  brand marks · OQ3 interactive vs static demos) await Kim and gate later slices only.
+  field, shipped as `ui-otp-field` — everything else pattern composition or documented idiom,
+  ADR-0102's three lanes repurposed); the hard demo-only security fence (mock transport, never real
+  auth); the catalog-exposure ruling; and cl.4's five-slice build sequence. The decomposition
+  manifest ([`decompositions/identity-flow.decomp.md`](decompositions/identity-flow.decomp.md))
+  carries the leaf/tier map and dependency edges. All three open forks are RULED (2026-08-07:
+  OQ1 build the `ui-progress` discrete-segments prop at S4 · OQ2 generic icons, no brand marks ·
+  OQ3 interactive demos on the shared mock transport, X1 a hard S1 prerequisite) — none still gate
+  anything. Shipped: **S1** Registration + Email+Password (PR #561) · **S2** Codes + Magic Link,
+  incl. the new `ui-otp-field` control (PRs #596/#578, LLD PR #582) · **S3** Social Auth (PR #605).
+  Queued: **S4** Onboarding ([GH #614](https://github.com/kimgranlund/agent-ui/issues/614), the
+  OQ1-ruled `ui-progress` widening) · **S5** Account Management
+  ([GH #615](https://github.com/kimgranlund/agent-ui/issues/615)). Family-close debts (the
+  copy-pasted `errorCodeOf`, the pending-window assertion idiom, this stale line) tracked on
+  [GH #611](https://github.com/kimgranlund/agent-ui/issues/611); family-wide layout cards (S3-c
+  class) remain unbuilt, deliberately excluded from #611, riding S4/S5's own call.
 - **Planner-stage pilot — the wire half is IN, the loop half is unscheduled. 🟡**
   ([ADR-0174](adr/0174-planner-stage-pilot-sequential-opt-in-loop.md), ratified 2026-08-06.) An
   opt-in, SEQUENTIAL plan→execute→synthesize loop composed entirely from already-shipped

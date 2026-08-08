@@ -30,6 +30,28 @@ async function until(check: () => boolean, timeoutMs = 5000): Promise<void> {
   }
 }
 
+/** Deterministically prove an element disables during ITS OWN async pending window (SPEC-R7 AC1), hardened
+ *  against automation-round-trip contention (GH #611 — the family-close debt from S3's review, PR #605):
+ *  a MutationObserver records the `disabled` attribute the instant it flips, so a `userEvent` round trip
+ *  that runs slow under load can never race past the operation's own completion and read an attribute that
+ *  already cleared before a single post-click check ran — the click-then-immediately-read-once idiom this
+ *  replaces, which flaked repeatedly under load across all four identity browser test files. */
+async function assertDisablesDuring(el: Element, act: () => Promise<void>, message: string): Promise<void> {
+  let sawDisabled = el.hasAttribute('disabled')
+  const observer = new MutationObserver((records) => {
+    for (const record of records) {
+      if ((record.target as Element).hasAttribute('disabled')) sawDisabled = true
+    }
+  })
+  observer.observe(el, { attributes: true, attributeFilter: ['disabled'] })
+  await act()
+  for (const record of observer.takeRecords()) {
+    if ((record.target as Element).hasAttribute('disabled')) sawDisabled = true
+  }
+  observer.disconnect()
+  expect(sawDisabled, message).toBe(true)
+}
+
 function cards(): { providers: HTMLElement; callback: HTMLElement; signedIn: HTMLElement } {
   const [providers, callback, signedIn] = [...document.querySelectorAll('ui-card')] as HTMLElement[]
   return { providers: providers!, callback: callback!, signedIn: signedIn! }
@@ -72,9 +94,8 @@ describe('social-signin.ts — the interactive DEV demo wires (SPEC-R9 AC1)', ()
 describe('the redirect + callback + complete round trip (decomp a8, SPEC-R4 AC1/AC3)', () => {
   it('a pending state shows during the redirect, the callback card names the chosen provider, and completing reaches signed-in', async () => {
     const button = googleButton()
-    await userEvent.click(button)
     // SPEC-R7 AC1 — the pending state is observable: the button disables during the real latency window.
-    expect(button.hasAttribute('disabled'), 'the provider button must disable during the pending window').toBe(true)
+    await assertDisablesDuring(button, () => userEvent.click(button), 'the provider button must disable during the pending window')
 
     await until(() => !cards().callback.hidden)
     expect(cards().providers.hidden).toBe(true)
