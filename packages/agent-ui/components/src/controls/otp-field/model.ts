@@ -203,18 +203,28 @@ export function reduce(state: OtpState, action: OtpAction, n: number): ReduceRes
 // ── beforeinput routing (§3's taxonomy, TOTAL over the inputType space) ─────────────────────────────
 
 /** The DOM facts a `beforeinput` handler resolves BEFORE calling this — kept as plain data (not a live
- *  `InputEvent`) so the whole routing table is a pure, directly unit-testable function. `collapsed` is
- *  `event.getTargetRanges()`-derived by the caller (never `window.getSelection()` — §3: "the DOM selection
- *  is never managed and never read"; `getTargetRanges()` is the InputEvent API's own purpose-built seam for
- *  exactly this question, computed pre-default). */
+ *  `InputEvent`) so the whole routing table is a pure, directly unit-testable function.
+ *
+ *  `collapsed` — GH #589 ROOT-CAUSE REPAIR (§3, a documented exception to "the DOM selection is never
+ *  managed and never read"): this used to be `event.getTargetRanges()`-derived. That seam is WRONG for a
+ *  delete inputType — the target range describes the CONTENT ABOUT TO BE REMOVED, which is never collapsed
+ *  once anything real is being deleted (it always spans at least the one character). Chromium happened to
+ *  return an EMPTY ranges array for a plain-caret backspace (an implementation quirk the old code
+ *  accidentally rode as "collapsed"); WebKit spec-correctly returns a real, NON-collapsed 1-character range
+ *  (proven via real-WebKit instrumentation, GH #589 — `start=(#text,1) end=(#text,2)` for a backspace on
+ *  "12"), which the old check misread as "a highlighted selection exists", silently no-opping every WebKit
+ *  backspace. The caller now derives `collapsed` from `window.getSelection()?.isCollapsed` instead — read
+ *  ONLY to discriminate a plain caret from a real highlighted selection BEFORE routing (never to derive
+ *  WHERE to edit; the active index alone still governs that, §3's real concern) — confirmed cross-engine-
+ *  robust (`true` for a plain caret, `false` for a real selection, in BOTH engines). */
 export interface BeforeInputSource {
   readonly inputType: string
   readonly data: string | null
   /** `event.dataTransfer?.getData('text/plain')`, resolved by the caller — populated for
    *  `insertReplacementText` / `insertFromDrop` / `insertFromPaste`. */
   readonly transferText: string | null
-  /** True when the target range is collapsed (or unknowable, e.g. jsdom) — the safe default that lets an
-   *  edit through; false only when a REAL non-collapsed range was observed (§3 row 5's "any delete variant
+  /** True for a plain caret (`window.getSelection()?.isCollapsed`, GH #589) — the routing default that lets
+   *  an edit through; false only when a REAL highlighted selection exists (§3 row 5's "any delete variant
    *  issued while a DOM selection/range exists" case). */
   readonly collapsed: boolean
 }

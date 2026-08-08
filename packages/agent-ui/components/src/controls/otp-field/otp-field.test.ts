@@ -355,12 +355,11 @@ function messageOf(el: HTMLElement): HTMLElement {
 
 /** A jsdom-safe `beforeinput` InputEvent — jsdom's native InputEvent support is inconsistent across the
  *  fields this control reads, so every field is defensively (re)stamped as an own property after
- *  construction, regardless of what the constructor itself accepted. */
-function makeBeforeInput(
-  inputType: string,
-  data: string | null,
-  opts: { collapsed?: boolean; transferText?: string } = {},
-): InputEvent {
+ *  construction, regardless of what the constructor itself accepted. GH #589: `collapsed` is no longer
+ *  `getTargetRanges()`-derived (otp-field.ts reads `window.getSelection()?.isCollapsed` instead — see the
+ *  "real non-collapsed window.getSelection()" test below, which drives that discriminator directly rather
+ *  than stubbing an event method the real code no longer calls). */
+function makeBeforeInput(inputType: string, data: string | null, opts: { transferText?: string } = {}): InputEvent {
   let ev: InputEvent
   try {
     ev = new InputEvent('beforeinput', { inputType, data: data ?? undefined, bubbles: true, cancelable: true })
@@ -369,9 +368,6 @@ function makeBeforeInput(
   }
   Object.defineProperty(ev, 'inputType', { value: inputType, configurable: true })
   Object.defineProperty(ev, 'data', { value: data, configurable: true })
-  if (opts.collapsed === false) {
-    Object.defineProperty(ev, 'getTargetRanges', { value: () => [{ collapsed: false }], configurable: true })
-  }
   if (opts.transferText !== undefined) {
     Object.defineProperty(ev, 'dataTransfer', { value: { getData: () => opts.transferText }, configurable: true })
   }
@@ -534,13 +530,30 @@ describe('UIOtpFieldElement — backspace / delete (real beforeinput)', () => {
     el.remove()
   })
 
-  it('a delete variant with a non-collapsed range is a no-op (§3 row 5)', () => {
+  // GH #589 ROOT-CAUSE REPAIR: `collapsed` is `window.getSelection()?.isCollapsed` (otp-field.ts's
+  // beforeinput handler), never `event.getTargetRanges()` — a delete inputType's target range describes
+  // the content ABOUT TO BE REMOVED, which is never collapsed once anything real is deleted, so it cannot
+  // discriminate "a real highlighted selection" from "the routine single-character delete every backspace
+  // targets" (real-WebKit instrumentation, GH #589: WebKit's target range for a plain-caret backspace is a
+  // real, non-collapsed 1-character range — the OLD stub-based test here simulated exactly the wrong
+  // signal). This probe now drives the REAL discriminator: a genuine non-collapsed `window.getSelection()`.
+  it('a delete variant issued over a REAL non-collapsed window.getSelection() is a no-op (§3 row 5)', async () => {
     const el = make()
     document.body.append(el)
     const editor = editorOf(el)
     digit(editor, '1')
-    editor.dispatchEvent(makeBeforeInput('deleteContentBackward', null, { collapsed: false }))
-    expect(el.value).toBe('1') // unchanged — the selection-present case falls to the default arm
+    digit(editor, '2')
+    await el.updateComplete // the SR-readable mirror effect writes editor.textContent (microtask-batched)
+    const textNode = editor.firstChild as Text
+    const range = document.createRange()
+    range.setStart(textNode, 0)
+    range.setEnd(textNode, textNode.length)
+    const sel = window.getSelection()!
+    sel.removeAllRanges()
+    sel.addRange(range)
+    expect(sel.isCollapsed, 'the test setup itself must produce a real (non-collapsed) selection').toBe(false)
+    editor.dispatchEvent(makeBeforeInput('deleteContentBackward', null))
+    expect(el.value, 'a delete over a real selection must fall to the default no-op arm').toBe('12')
     el.remove()
   })
 })

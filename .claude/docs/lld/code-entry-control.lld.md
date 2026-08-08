@@ -90,9 +90,24 @@ a collapsed selection → the Backspace arm; `deleteContentForward` → the Dele
 **Everything else — including any delete variant issued while a DOM selection/range exists,
 `deleteByCut`, `insertParagraph`/`insertLineBreak`, `historyUndo`/`historyRedo`, and any inputType
 this table does not name — falls to the default arm: a no-op** (`preventDefault` already fired;
-state untouched, no event). **The DOM selection is never managed and never read: all editing is
+state untouched, no event). **The DOM selection is never managed and never read to derive editing
+state or position — the active index alone governs where an edit lands** (all editing is
 intercepted, the visual edit position is `[data-active]`, and a select-then-type gesture falls to
-the default arm** (the multi-char/replacement insertions it can produce route per (2)).
+the default arm; the multi-char/replacement insertions it can produce route per (2)).
+
+**GH #589 REPAIRED (root-caused in real WebKit, host round, 2026-08-08): the "collapsed selection"
+check for (4)/(5) is `window.getSelection()?.isCollapsed`, read ONLY to discriminate a plain caret
+from a real highlighted selection BEFORE routing — a narrow, cited exception to the rule above, not
+a reversal of it (this read never derives WHERE to edit).** v0.2 originally named
+`event.getTargetRanges()` as this seam ("the InputEvent API's own purpose-built seam for exactly
+this question") — that was WRONG: a delete inputType's target range describes the content ABOUT TO
+BE REMOVED, which is never collapsed once anything real is deleted (it always spans at least the
+one character). Chromium happened to return an EMPTY ranges array for a plain-caret backspace (an
+implementation quirk the build accidentally rode as "collapsed"); WebKit spec-correctly returns a
+real, non-collapsed 1-character range, which the old check misread as "a highlighted selection
+exists" — silently no-opping every WebKit backspace (GH #589). Instrumentation confirmed
+`window.getSelection()?.isCollapsed` reads `true` for a plain caret and `false` for a real selection
+in BOTH engines — the fix is cross-engine-robust, not WebKit-scoped.
 
 | Action | Transition |
 |---|---|
@@ -345,7 +360,16 @@ residue guards green (the exclusion arm IS the gate).
   artifacts on WebKit. The browser leg runs both engines; if WebKit misbehaves, the fallback is
   positioning the editor as a 1px offscreen-clipped sibling (same listeners, zero model change) —
   an implementation swap inside LLD-C4's own file, pre-authorized here so the builder need not
-  escalate for it.
+  escalate for it. **RISK REALIZED (GH #589, host round, 2026-08-08): the 1px-offscreen fallback
+  above was BUILT and REVERTED — it introduced NEW regressions in BOTH engines (paste-forward-write
+  + the C10 reconnect count) without conclusively fixing WebKit. Real-WebKit instrumentation then
+  root-caused the two symptoms separately: the Backspace no-op was an otp-field defect (a
+  `getTargetRanges()` misread, REPAIRED above) — the second-Tab escape gap is CONFIRMED a WebKit
+  PLATFORM bug in sequential focus navigation out of ANY `contenteditable` (a completely bare
+  `<div contenteditable>` with none of this control's machinery reproduces the identical symptom in
+  WebKit only, explicit `tabindex="0"` does not change the outcome) — FORKED, open as GH #589, not
+  fixable from this control's own anatomy (a from-scratch Tab-key focus-management reimplementation
+  would be a new capability beyond this LLD's grant, not a minimal fix).**
 - **Echo verbosity** (LLD-C8) is tuned terse by design; if the §12.7 manual pass finds it chatty
   under fast entry, dropping the per-digit echo to position-only (`"3 of 6"`) is an additive
   string change inside LLD-C8's frozen shape — not a redesign.
