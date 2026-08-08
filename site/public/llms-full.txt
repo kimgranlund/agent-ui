@@ -2479,6 +2479,27 @@ translating along the track — so "working" is distinguishable from both `0%` a
 `prefers-reduced-motion: reduce` the sweep is replaced by a stationary partial fill with a slow opacity
 pulse (no translation, no scaling) that stays visually distinct from any determinate state.
 
+## Discrete mode: `segments` (SPEC-R1 Amendment v1, GH #614)
+
+`segments` (`number | null`, default `null`) is an additive, backward-compatible widening — absent, `null`,
+or any hardening-fail input (non-finite, `< 2`, fractional, or a malformed attribute) leaves the continuous
+contract above byte-identical. A finite integer `≥ 2` activates **discrete "step N of M" mode**: `max` is
+IGNORED (`effectiveMax := segments`), and `effectiveValue` additionally floors to an integer after clamping —
+a step counts only when fully reached, so the painted fill count and the announced value are the same number
+by construction.
+
+```html
+<ui-progress current="2" segments="4" label="Onboarding"></ui-progress>  <!-- 4 cells, first 2 filled -->
+```
+
+Rendering replaces the single fill with `segments` equal cells split along the rail, separated by a visible
+gap: the first `effectiveValue` cells paint fill, the rest paint track — no partial cell ever paints.
+Indeterminate (`current === null`) still renders today's sweep unchanged; `segments` never changes the
+determinate/indeterminate switch, and cells exist only when determinate (an indeterminate stepper has
+nothing to count). Accessibility: `ariaValueMax = String(segments)`, `ariaValueNow` = the snapped integer,
+and `ariaValueText = "Step N of M"` — never the percent reading (announcing "50%" for a stepper misrepresents
+the control's state).
+
 ## Accessibility
 
 Progress is status data, never decoration — the chart inversion holds here, not the icon/avatar decorative

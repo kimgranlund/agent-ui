@@ -21,12 +21,13 @@ function make(): ProbeProgress {
 }
 
 describe('UIProgressElement — upgrade + typed props', () => {
-  it('defaults: current=null, max=100, label=""', () => {
+  it('defaults: current=null, max=100, label="", segments=null', () => {
     const el = document.createElement('ui-progress') as UIProgressElement
     expect(el).toBeInstanceOf(UIProgressElement)
     expect(el.current).toBeNull()
     expect(el.max).toBe(100)
     expect(el.label).toBe('')
+    expect(el.segments).toBeNull()
   })
 
   it('self-defines as ui-progress, guarded against double-define', () => {
@@ -212,5 +213,172 @@ describe('UIProgressElement — ARIA (SPEC-R3)', () => {
     await el.updateComplete
     expect(el.probeInternals.ariaLabel).toBe('Upload progress')
     el.remove()
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+// SPEC-R1 Amendment v1 (2026-08-08, GH #614) — discrete "step N of M" mode via the `segments` prop.
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+
+describe('UIProgressElement — segments: discrete mode DOM shape (Amendment v1 AC1)', () => {
+  it('current=2 segments=4 ⇒ 4 cells render, exactly the first 2 carry data-filled, no fill node', async () => {
+    const el = document.createElement('ui-progress') as UIProgressElement
+    el.current = 2
+    el.segments = 4
+    document.body.append(el)
+    await el.updateComplete
+    const track = el.querySelector('[data-part="track"]') as HTMLElement
+    expect(track.children.length).toBe(1)
+    const cells = track.querySelector('[data-part="cells"]')
+    expect(cells).not.toBeNull()
+    expect(track.querySelector('[data-part="fill"]')).toBeNull()
+    const cellEls = el.querySelectorAll('[data-part="cell"]')
+    expect(cellEls.length).toBe(4)
+    for (let i = 0; i < cellEls.length; i++) {
+      expect(cellEls[i]!.hasAttribute('data-filled'), `cell ${i}`).toBe(i < 2)
+    }
+    el.remove()
+  })
+
+  it('attribute forms (current/segments as HTML attributes) upgrade the same as props', async () => {
+    const el = document.createElement('ui-progress') as UIProgressElement
+    el.setAttribute('current', '3')
+    el.setAttribute('segments', '5')
+    document.body.append(el)
+    await el.updateComplete
+    expect(el.current).toBe(3)
+    expect(el.segments).toBe(5)
+    const cellEls = el.querySelectorAll('[data-part="cell"]')
+    expect(cellEls.length).toBe(5)
+    expect(Array.from(cellEls).filter((c) => c.hasAttribute('data-filled')).length).toBe(3)
+    el.remove()
+  })
+
+  it('changing segments count rebuilds the cell strip (tail append/remove, no leftover nodes)', async () => {
+    const el = document.createElement('ui-progress') as UIProgressElement
+    el.current = 2
+    el.segments = 4
+    document.body.append(el)
+    await el.updateComplete
+    expect(el.querySelectorAll('[data-part="cell"]').length).toBe(4)
+
+    el.segments = 6
+    await el.updateComplete
+    expect(el.querySelectorAll('[data-part="cell"]').length).toBe(6)
+
+    el.segments = 3
+    await el.updateComplete
+    expect(el.querySelectorAll('[data-part="cell"]').length).toBe(3)
+    el.remove()
+  })
+})
+
+describe('UIProgressElement — segments: additive-guarantee fallback (Amendment v1 AC2)', () => {
+  const fallbackCases: Array<{ name: string; segments?: number | string | null }> = [
+    { name: 'segments absent' },
+    { name: 'segments=null', segments: null },
+    { name: 'segments=0', segments: 0 },
+    { name: 'segments=1', segments: 1 },
+    { name: 'segments=2.5', segments: 2.5 },
+    { name: 'segments=NaN', segments: Number.NaN },
+    { name: 'segments="not-a-number" (malformed attribute)', segments: 'not-a-number' },
+  ]
+
+  for (const c of fallbackCases) {
+    it(`${c.name} ⇒ continuous mode, byte-identical to pre-amendment rendering + percent ariaValueText`, async () => {
+      const el = make()
+      el.current = 42
+      if (typeof c.segments === 'string') el.setAttribute('segments', c.segments)
+      else if (c.segments !== undefined) el.segments = c.segments
+      document.body.append(el)
+      await el.updateComplete
+      const track = el.querySelector('[data-part="track"]') as HTMLElement
+      expect(track.children.length).toBe(1)
+      const fill = el.querySelector('[data-part="fill"]') as HTMLElement
+      expect(fill).not.toBeNull()
+      expect(el.querySelector('[data-part="cells"]')).toBeNull()
+      expect(fill.style.getPropertyValue('--_pct')).toBe('42')
+      expect(el.probeInternals.ariaValueMax).toBe('100')
+      expect(el.probeInternals.ariaValueNow).toBe('42')
+      expect(el.probeInternals.ariaValueText).toBe('42%')
+      el.remove()
+    })
+  }
+})
+
+describe('UIProgressElement — segments: discrete hardening rows (Amendment v1 AC3)', () => {
+  it('current=null segments=4 ⇒ indeterminate sweep, ariaValueNow/Text null, ariaValueMax="4"', async () => {
+    const el = make()
+    el.segments = 4
+    document.body.append(el)
+    await el.updateComplete
+    const fill = el.querySelector('[data-part="fill"]') as HTMLElement
+    expect(fill).not.toBeNull()
+    expect(fill.hasAttribute('data-indeterminate')).toBe(true)
+    expect(el.querySelector('[data-part="cells"]')).toBeNull()
+    expect(el.probeInternals.ariaValueNow).toBeNull()
+    expect(el.probeInternals.ariaValueText).toBeNull()
+    expect(el.probeInternals.ariaValueMax).toBe('4')
+    el.remove()
+  })
+
+  it('current=9 segments=4 ⇒ clamped+floored to 4, all 4 cells filled, ariaValueNow="4"', async () => {
+    const el = make()
+    el.current = 9
+    el.segments = 4
+    document.body.append(el)
+    await el.updateComplete
+    const cellEls = el.querySelectorAll('[data-part="cell"]')
+    expect(cellEls.length).toBe(4)
+    expect(Array.from(cellEls).every((c) => c.hasAttribute('data-filled'))).toBe(true)
+    expect(el.probeInternals.ariaValueNow).toBe('4')
+    expect(el.probeInternals.ariaValueText).toBe('Step 4 of 4')
+    el.remove()
+  })
+
+  it('current=2.9 segments=4 ⇒ floors (never rounds) to 2 filled, ariaValueNow="2"', async () => {
+    const el = make()
+    el.current = 2.9
+    el.segments = 4
+    document.body.append(el)
+    await el.updateComplete
+    const cellEls = el.querySelectorAll('[data-part="cell"]')
+    expect(Array.from(cellEls).filter((c) => c.hasAttribute('data-filled')).length).toBe(2)
+    expect(el.probeInternals.ariaValueNow).toBe('2')
+    expect(el.probeInternals.ariaValueText).toBe('Step 2 of 4')
+    el.remove()
+  })
+
+  it('current=2 max=7 segments=4 ⇒ max is IGNORED, denominator is 4', async () => {
+    const el = make()
+    el.current = 2
+    el.max = 7
+    el.segments = 4
+    document.body.append(el)
+    await el.updateComplete
+    expect(el.querySelectorAll('[data-part="cell"]').length).toBe(4)
+    expect(el.probeInternals.ariaValueMax).toBe('4')
+    expect(el.probeInternals.ariaValueNow).toBe('2')
+    expect(el.probeInternals.ariaValueText).toBe('Step 2 of 4')
+    el.remove()
+  })
+
+  it('none of the hardening rows throw', () => {
+    const rows: Array<[number | null, number, number]> = [
+      [Number.NaN, 4, 100],
+      [2, Number.NaN, 4],
+      [-5, 100, 4],
+      [Number.POSITIVE_INFINITY, 100, 4],
+    ]
+    for (const [current, max, segments] of rows) {
+      expect(() => {
+        const el = document.createElement('ui-progress') as UIProgressElement
+        el.current = current
+        el.max = max
+        el.segments = segments
+        document.body.append(el)
+        el.remove()
+      }).not.toThrow()
+    }
   })
 })
