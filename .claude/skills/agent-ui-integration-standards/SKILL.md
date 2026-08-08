@@ -9,7 +9,7 @@ description: >-
   for the agent", "how do integration keys work", "validate tool input", "why isn't my tool
   offered". NOT for catalog entries (agent-ui-catalog); NOT for A2UI payloads (a2ui-compose).
   MCP servers ARE in scope (ADR-0177): adding one, its allowlist roster, serverKey/envKey, the
-  namespaced mcp:server-id:tool id law; NOT Claude Code's own MCP config (harness:adopt-plugin).
+  namespaced mcp:server-id:tool id law; NOT Claude Code's own MCP config (update-config).
 disable-model-invocation: false
 user-invocable: false
 ---
@@ -22,10 +22,12 @@ ADR `.claude/docs/adr/0168-integration-manifest-registry-validated-dispatch-serv
 `.claude/docs/adr/0177-mcp-client-registry-source-http-transport-additive-manifest-mapping.md`
 (ratified 2026-08-06, law 6) and SPEC `.claude/docs/spec/a2ui-live-agent.spec.md` v0.13 §3.6
 (laws 1–5, SPEC-R16–R19) / §3.7 (law 6, SPEC-R23–R28). This skill states the laws; the cited
-lines are the authority — re-derive there, never from a peer's quote. ADR/SPEC line numbers are
-frozen records; code cites (laws 1–5 verified 2026-08-04, law 6 verified 2026-08-08) are
-symbol-first — on drift, Grep the symbol name, then repair the line number here in the same
-change.
+lines are the authority — re-derive there, never from a peer's quote. ADR line numbers are frozen
+records (ratified, unrevised); SPEC line numbers drift as the spec grows across versions and need
+the SAME symbol-first discipline as code cites (laws 1–5 verified 2026-08-04, law 6 verified
+2026-08-08) — on drift, Grep the requirement id or symbol name, then repair the line number here
+in the same change. **Known pending:** laws 1–5's SPEC-R16–R19 line cites pending re-pin against
+v0.13 (see intent.md).
 
 ## 1 · The manifest law — one integration, one manifest, three separate facts
 
@@ -144,4 +146,5 @@ wire itself stays `integrations: string[]` of ids, unchanged. *(SPEC-R28 :1229-1
   (`a2ui-streaming-pipeline.spec.md` SPEC-R6); MCP *Apps* delivery, a separate settled non-goal
   (`a2ui-ecosystem-alignment.spec.md` SPEC-R8); stdio transport and production-Worker MCP
   discovery, both ADR-0177 Non-goals (dev-proxy-only v1); Claude Code's OWN MCP server
-  configuration, a different product surface (harness:adopt-plugin).
+  configuration, a different product surface (update-config — settings.json edits with no plugin
+  object are its literal charter).

@@ -115,7 +115,7 @@
       "id": "n06",
       "prompt": "Set up a Slack MCP server integration for Claude Code",
       "expect": "no-trigger",
-      "owner": "harness:adopt-plugin — Claude Code's OWN MCP config, a different product surface than this repo's live-agent connector"
+      "owner": "update-config — Claude Code's OWN MCP config, a different product surface than this repo's live-agent connector"
     },
     {
       "id": "x-libkinds-1",

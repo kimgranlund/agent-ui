@@ -66,7 +66,7 @@ PRODUCER, symbol-first cited into `mcp/servers-config.ts`/`client.ts`/`map-tool.
 + `dev-proxy-plugin.ts`, verified 2026-08-08), repoints the Routing-out MCP line from
 "DESIGNED, not built" to built-reality, and flips the frontmatter's stale
 `NOT for MCP servers (deferred, ADR-0168 Non-goals)` fence to a positive in-scope statement — a
-NEW fence distinguishes Claude Code's own MCP config (harness:adopt-plugin), which stays out.
+NEW fence distinguishes Claude Code's own MCP config (update-config), which stays out.
 Two new trigger cases (t15/t16) + n06's owner note corrected (evals/evals.json). Drift found and
 repaired in the SAME change (the header's own "repair the line number here" law): law 4's
 `dev-proxy-plugin.ts:191,260` → `:262,331` and `worker/index.ts:180,253` → `:182,255`, both shifted
@@ -75,3 +75,19 @@ ALSO stale against the current v0.13 SPEC (SPEC-R16 now at line 1024, not 692) �
 v0.9→v0.13 across five intervening amendment waves. Out of this slice's named scope (3 items:
 law 6, the Routing-out repoint, the frontmatter fence); flagged for a follow-up citation-repair
 pass rather than fixed here.
+
+**skill-checker round 2 (2026-08-08, verdict PASS on 4fb28cf) — two folds:**
+1. MAJOR: the header's "ADR/SPEC line numbers are frozen records" claim was itself falsified by
+   the stale-cite finding above (SPEC drifts, ADR doesn't) — reworded to split ADR (frozen) from
+   SPEC (symbol-first, same discipline as code) and added an in-body "Known pending" one-liner so
+   the flag is visible at skill-USE time, not only buried in this log.
+2. MINOR: all three Claude-Code-MCP-config redirects pointed at `harness:adopt-plugin`, which
+   never mentions MCP — a dead pointer. Repointed to `update-config` (its own NOT-for fence names
+   "settings.json edits with no plugin object" as its charter — the real home for a bare MCP
+   server entry in Claude Code's own settings.json) in the description, Routing-out, and n06.
+
+Left as directed, per the skill-checker's own call: the description length WARN (833 chars vs the
+700 soft cap — accepted, the cost of legitimately widening scope); a `client.ts` citation nit the
+skill-checker scoped as record-vs-artifact only (no skill-file change owed here — worth a line in
+the PR body instead, see the builder's handback); the SPEC-R16–R19 re-pin itself (the follow-up
+pass, already logged above).
