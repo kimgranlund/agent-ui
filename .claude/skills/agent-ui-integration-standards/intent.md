@@ -91,3 +91,13 @@ Left as directed, per the skill-checker's own call: the description length WARN 
 skill-checker scoped as record-vs-artifact only (no skill-file change owed here — worth a line in
 the PR body instead, see the builder's handback); the SPEC-R16–R19 re-pin itself (the follow-up
 pass, already logged above).
+
+## Amendment — 2026-08-08 (GH #609, the SPEC-R16–R19 re-pin follow-up)
+
+The citation-repair pass flagged above is DONE. Laws 1–5's SPEC cites re-derived against the
+current v0.13 spec, each Grep-verified by requirement id and re-pinned symbol-first (id + §3.6/§4
+anchor) with corrected line ranges: SPEC-R16 `:692-699` → `§3.6 :1024-1038` · SPEC-R17 `:708-716`
+→ `§3.6 :1040-1055` · SPEC-R18 `:725-732` → `§3.6 :1057-1072` · SPEC-R19 `:742-748` →
+`§3.6 :1074-1087` · SPEC-N1 `:763` → `§4 :1256` (the non-functional table row). The at-use-time
+"Known pending" caveat header (added by PR #600) is removed — obsolete once the re-pin landed —
+and the header's verification note now reads laws 1–6 verified 2026-08-08 against v0.13.
