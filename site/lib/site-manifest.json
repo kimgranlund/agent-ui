@@ -70,6 +70,13 @@
     "section": "Guides"
   },
   {
+    "href": "./account-settings.html",
+    "label": "Account settings",
+    "description": "A generic account SettingsSchema rendered by the shipped ui-settings — view preferences, edit and save one through the SettingsStore — behind a must-be-signed-in gate reading the SAME in-memory identity-mock-transport as Registration & sign in (GH #615, ADR-0176).",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
     "href": "./choosing.html",
     "label": "Which component when",
     "description": "A quick chooser between components that overlap in purpose, condensed from the A2UI catalog's own guidance.",

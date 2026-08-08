@@ -79,6 +79,7 @@ export const NAV: readonly NavGroup[] = [
       { href: './otp-signin.html', label: 'One-time code sign in' },
       { href: './social-signin.html', label: 'Social sign in' },
       { href: './onboarding.html', label: 'Onboarding' },
+      { href: './account-settings.html', label: 'Account settings' },
       { href: './choosing.html', label: 'Which component when' },
       { href: './changelog.html', label: 'Changelog' },
     ],

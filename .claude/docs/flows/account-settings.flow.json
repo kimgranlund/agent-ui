@@ -1,0 +1,59 @@
+[
+  {
+    "id": "account-settings",
+    "task": "view account settings/preferences, then edit and save one (GH #615 S5-a, decomp a12/a13)",
+    "entry": ["signed-out"],
+    "states": [
+      { "id": "signed-out", "screen": "account-settings" },
+      { "id": "signing-in", "screen": "account-settings" },
+      { "id": "viewing", "screen": "account-settings" },
+      { "id": "saved", "screen": "account-settings" }
+    ],
+    "transitions": [
+      { "from": "signed-out", "to": "signing-in", "verb": "sign-in", "fallible": true },
+      { "from": "signing-in", "to": "viewing", "verb": "succeed" },
+      { "from": "viewing", "to": "viewing", "verb": "select-section" },
+      { "from": "viewing", "to": "saved", "verb": "edit-preference" },
+      { "from": "saved", "to": "saved", "verb": "edit-preference" },
+      { "from": "saved", "to": "viewing", "verb": "select-section" },
+      { "from": "viewing", "to": "signed-out", "verb": "sign-out" },
+      { "from": "saved", "to": "signed-out", "verb": "sign-out" }
+    ],
+    "exits": [
+      {
+        "state": "viewing",
+        "kind": "success",
+        "asserts": [
+          "getSession() returns the signed-in session and the account card renders its email + method",
+          "every schema section has a rail item; the active section's fields render on the fleet form spine (ui-form-provider > ui-field > the type-mapped control)",
+          "each field shows store.get(key) ?? field.default — the same read generate.ts seeds it with"
+        ]
+      },
+      {
+        "state": "saved",
+        "kind": "success",
+        "asserts": [
+          "store.get(key) returns the edited value, not the schema default",
+          "the Saved preferences readout renders that value and marks the row saved (data-saved)",
+          "no transport call was made — saving a preference is pure client-side SettingsStore state; the identity seam gains no operation (SPEC-N7's reasoning, applied to S5)",
+          "the value survives a sign-out/sign-in cycle within one page lifetime — the store outlives the session, the session does not own the preferences"
+        ]
+      },
+      {
+        "state": "signed-out",
+        "kind": "abandon",
+        "asserts": [
+          "getSession() returns null",
+          "the settings surface is not rendered at all — the gate closes the whole surface, not just its writes"
+        ]
+      }
+    ],
+    "recovery": [
+      { "from": "signing-in", "to": "signed-out", "preserves_input": true }
+    ],
+    "persistence": {
+      "resumable": false,
+      "across": "no cross-reload persistence by design (identity-mock-transport.spec.md SPEC-N3) — a reload restarts at signed-out, and the in-memory SettingsStore restarts at every field's schema default with it"
+    }
+  }
+]
