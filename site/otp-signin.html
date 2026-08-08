@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · One-time code sign in</title>
+  </head>
+  <body>
+    <!-- S2-a2 (One-time code sign in, GH #490 / ADR-0176): request -> code entry (ui-otp-field) -> verify ->
+         signed-in -> sign-out, composed from shipped FACE controls + the identity family's own ui-otp-field
+         (GH #490 S2-a) over ui-form-provider/ui-field, wired to the identity-mock-transport seam in a
+         dev/preview build. An MPA entry auto-discovered by vite.config.ts's site/**/*.html glob. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/otp-signin.ts"></script>
+  </body>
+</html>

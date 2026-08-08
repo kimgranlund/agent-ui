@@ -115,6 +115,16 @@ cooldown state (SPEC-R6) is what makes a too-soon second call rate-limited, not 
   rejects `code: 'code-rate-limited'`; *when* called again AFTER the cooldown elapses, *then* it
   resolves normally with a NEW `requestId` — a fake-clock probe in the transport's own test file.
 
+### SPEC-R2 · Amendment v1 (2026-08-08, S2-a2 build, GH #490) — an unknown `requestId` reads as `code-invalid`
+
+Pure clarification, no behavior change, no new AC (SPEC-R11 AC1): AC3's "any other code" wording
+covers an **unrecognized `requestId`** too, under the SAME `code-invalid` member — SPEC-R2 never
+named a distinct "unknown request" code the way SPEC-R3's `link-invalid` does for magic link. The
+shipped transport (`identity-mock-transport.ts`) already reads it this way (its own file banner's
+"S2-local implementation choice" #1, landed with S2-b, PR #578); that PR's review recorded the
+meaning-stretch as owed a SPEC-side amendment rather than a silent gap, closed here as S2-a2 (the
+codes flow's own first UI consumer, SPEC-R11's anticipated trigger) exercises this exact path.
+
 **SPEC-R3 — Magic-link request / confirm simulation (S2).**
 The transport exposes `requestMagicLink({email}) → {requestId, expiresAt}` and
 `confirmMagicLink({requestId}) → {session}`. There is no real email and no real link URL —
