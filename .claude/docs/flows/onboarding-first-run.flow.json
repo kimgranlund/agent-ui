@@ -19,7 +19,6 @@
       { "from": "workspace", "to": "done", "verb": "skip" },
       { "from": "theme", "to": "workspace", "verb": "back" },
       { "from": "theme", "to": "done", "verb": "finish" },
-      { "from": "theme", "to": "done", "verb": "skip" },
       { "from": "done", "to": "signed-out", "verb": "sign-out" }
     ],
     "exits": [
@@ -29,7 +28,7 @@
         "asserts": [
           "getSession() still returns the same signed-in session (onboarding never mutates it)",
           "the entered workspace name / chosen theme (if any) are reflected on the done card",
-          "reaching 'done' via skip (any step) or finish (the last step) is indistinguishable except by path",
+          "reaching 'done' via skip (welcome or workspace) or finish (the last step, theme) is indistinguishable except by path",
           "no transport operation beyond signInWithPassword/getSession/clearSession was needed (identity-mock-transport.spec.md SPEC-N7)"
         ]
       },
