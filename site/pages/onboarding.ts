@@ -106,7 +106,8 @@ const skipButton = document.createElement('ui-button') as UIButtonElement
 skipButton.setAttribute('variant', 'ghost')
 skipButton.textContent = 'Skip'
 const stepActions = el('div', 'onboarding-actions')
-stepActions.append(backButton, nextButton, skipButton)
+// Wizard convention: regress-left, advance-at-the-trailing-edge — back, then skip, then the primary next/finish.
+stepActions.append(backButton, skipButton, nextButton)
 stepCard.append(stepProgress, stepHeading, stepBody, stepActions)
 
 // Step content — built ONCE, never rebuilt (a plain ui-text-field + a plain ui-radio-group; illustrative
@@ -136,12 +137,16 @@ for (const { value, label } of THEME_OPTIONS) {
 let stepIndex = 0
 
 /** Paint the current step: progress readout, heading, body content, and the back/next/skip affordances
- *  (back hidden on the first step — nothing to go back TO; "Next" relabels "Finish" on the last step). */
+ *  (back disabled on the first step — nothing to go back TO; "Next" relabels "Finish" on the last step,
+ *  at which point Skip is redundant with it — same target, same `finishOnboarding()` call — so Skip hides
+ *  rather than standing beside a button that already does the identical thing). */
 function renderStep(): void {
   const id = STEPS[stepIndex]!
   stepProgress.setAttribute('current', String(stepIndex + 1))
   backButton.toggleAttribute('disabled', stepIndex === 0)
-  nextButton.textContent = stepIndex === STEPS.length - 1 ? 'Finish' : 'Next'
+  const isLastStep = stepIndex === STEPS.length - 1
+  nextButton.textContent = isLastStep ? 'Finish' : 'Next'
+  skipButton.hidden = isLastStep
   stepBody.replaceChildren()
   if (id === 'welcome') {
     stepHeading.textContent = 'Welcome'

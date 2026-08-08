@@ -57,9 +57,15 @@ function cards(): { signedOut: HTMLElement; step: HTMLElement; done: HTMLElement
 function signInButton(): UIButtonElement {
   return cards().signedOut.querySelector('ui-button') as UIButtonElement
 }
+/** Found by TEXT, not DOM position — the action row's order (back, skip, next) is itself a fact under
+ *  test (the wizard-convention reorder below), so indexing by position here would make the helper blind
+ *  to a regression in that very order. `next`'s label alternates "Next"/"Finish" on the last step. */
 function stepButtons(): { back: UIButtonElement; next: UIButtonElement; skip: UIButtonElement } {
-  const [back, next, skip] = [...cards().step.querySelectorAll('.onboarding-actions ui-button')] as UIButtonElement[]
-  return { back: back!, next: next!, skip: skip! }
+  const buttons = [...cards().step.querySelectorAll('.onboarding-actions ui-button')] as UIButtonElement[]
+  const back = buttons.find((b) => b.textContent === 'Back')!
+  const skip = buttons.find((b) => b.textContent === 'Skip')!
+  const next = buttons.find((b) => b.textContent === 'Next' || b.textContent === 'Finish')!
+  return { back, next, skip }
 }
 function stepProgress(): UIProgressElement {
   return cards().step.querySelector('ui-progress') as UIProgressElement
@@ -126,6 +132,9 @@ describe('sign-in gates the journey (SPEC-N7 — getSession() only, no new trans
     expect(stepHeadingText()).toBe('Welcome')
     expect(totalCellCount()).toBe(3) // segments="3" (SPEC-R1 Amendment v1)
     expect(filledCellCount()).toBe(1) // current="1" — "Step 1 of 3"
+    // Wizard convention: regress-left, advance-at-the-trailing-edge — back, skip, then the primary next.
+    const actionOrder = [...cards().step.querySelectorAll('.onboarding-actions ui-button')].map((b) => b.textContent)
+    expect(actionOrder).toEqual(['Back', 'Skip', 'Next'])
 
     await signOut()
   })
@@ -147,6 +156,7 @@ describe('advance/retreat through steps (decomp a9) — the progress readout adv
     await until(() => stepHeadingText() === 'Choose a theme')
     expect(filledCellCount()).toBe(3)
     expect(stepButtons().next.textContent).toBe('Finish') // relabelled on the last step
+    expect(stepButtons().skip.hidden, 'Skip is redundant with Finish on the last step').toBe(true)
     await userEvent.click(themeRadios()[1]!) // Dark
 
     // Back twice returns to Welcome; the workspace value survives the round trip (light-DOM identity, no rebuild).

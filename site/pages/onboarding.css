@@ -7,6 +7,13 @@ ui-card + ui-card {
   margin-block-start: var(--md-sys-space-lg);
 }
 
+/* Only one of the three cards is ever visible at a time on this page (unlike the sibling identity pages
+ * this rule's shape originates from) — a `hidden` (display:none) predecessor must not still push the
+ * visible card down by a `lg` gap that has nothing above it to actually separate from. */
+ui-card[hidden] + ui-card {
+  margin-block-start: 0;
+}
+
 ui-card {
   max-inline-size: 24rem;
 }

@@ -36,7 +36,10 @@
       {
         "state": "signed-out",
         "kind": "abandon",
-        "asserts": ["getSession() returns null", "no step content was ever shown"]
+        "asserts": [
+          "getSession() returns null",
+          "the step and done cards are hidden; the workspace name / theme selection are reset for the next attempt"
+        ]
       }
     ],
     "recovery": [],
