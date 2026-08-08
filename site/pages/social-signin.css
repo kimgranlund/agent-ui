@@ -1,0 +1,32 @@
+/* social-signin.css — page-local chrome for the Social sign in guide: the card rhythm, the action row,
+ * and the status captions. Never restyles a ui-* control (card/button below all keep their own CSS) —
+ * ADR-0102, layout/rhythm only. Mirrors otp-signin.css/magic-link.css. */
+
+ui-card + ui-card {
+  margin-block-start: var(--md-sys-space-lg);
+}
+
+ui-card {
+  max-inline-size: 24rem;
+}
+
+.social-signin-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--md-sys-space-sm);
+  margin-block-start: var(--md-sys-space-md);
+}
+
+.social-signin-status {
+  margin-block-start: var(--md-sys-space-sm);
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  min-block-size: 1.2em;
+}
+
+.social-signin-wiring-status,
+.social-signin-sources {
+  margin-block-start: var(--md-sys-space-md);
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}

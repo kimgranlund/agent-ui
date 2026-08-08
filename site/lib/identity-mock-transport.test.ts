@@ -1,7 +1,8 @@
 // identity-mock-transport.test.ts — X1's own unit suite (identity-mock-transport.spec.md v0.1). S1
-// scope: SPEC-R1/R5/R6/R7/R8/R10. S2 scope (this widening): SPEC-R2 (one-time code request/verify/
-// resend) + SPEC-R3 (magic-link request/confirm) + their slice of SPEC-R8's vocabulary. Every AC named
-// below is the SPEC's own numbering, so a reviewer can cross-check this file against the SPEC directly.
+// scope: SPEC-R1/R5/R6/R7/R8/R10. S2 scope: SPEC-R2 (one-time code request/verify/resend) + SPEC-R3
+// (magic-link request/confirm) + their slice of SPEC-R8's vocabulary. S3 scope (this widening):
+// SPEC-R4 (social sign-in start/complete) + its `social-denied` slice of SPEC-R8. Every AC named below
+// is the SPEC's own numbering, so a reviewer can cross-check this file against the SPEC directly.
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createIdentityMockTransport, IdentityMockError } from './identity-mock-transport.ts'
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (build-key-safety.test.ts precedent)
@@ -237,6 +238,74 @@ describe('SPEC-R3 — requestMagicLink / confirmMagicLink', () => {
   })
 })
 
+// ── SPEC-R4 — startSocialSignIn / completeSocialSignIn (S3) ────────────────────────────────────────────
+
+describe('SPEC-R4 — startSocialSignIn / completeSocialSignIn', () => {
+  it('AC1: startSocialSignIn for a supported provider resolves {redirectHint}', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0 })
+    const { redirectHint } = await transport.startSocialSignIn({ provider: 'google' })
+    expect(redirectHint.length).toBeGreaterThan(0)
+  })
+
+  it('AC2: redirectHint never parses as an absolute URL, for every provider', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0 })
+    for (const provider of ['google', 'github', 'generic'] as const) {
+      const { redirectHint } = await transport.startSocialSignIn({ provider })
+      expect(redirectHint).not.toMatch(/^https?:\/\//)
+    }
+  })
+
+  it('AC2 (source-grep): no navigation-sink assignment anywhere in this transport\'s own source', () => {
+    const source = stripComments(read('site/lib/identity-mock-transport.ts'))
+    expect(source).not.toMatch(/window\.location/)
+    expect(source).not.toMatch(/window\.open\(/)
+  })
+
+  it('AC3: completeSocialSignIn for the SAME provider resolves session.method === "social"', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0 })
+    await transport.startSocialSignIn({ provider: 'github' })
+    const { session } = await transport.completeSocialSignIn({ provider: 'github' })
+    expect(session.method).toBe('social')
+  })
+
+  it('AC3: google and github each resolve a stable, distinct demo account across calls', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0 })
+    const google = await transport.completeSocialSignIn({ provider: 'google' })
+    const googleAgain = await transport.completeSocialSignIn({ provider: 'google' })
+    const github = await transport.completeSocialSignIn({ provider: 'github' })
+    expect(googleAgain.session.accountId).toBe(google.session.accountId)
+    expect(github.session.accountId).not.toBe(google.session.accountId)
+  })
+
+  it('AC4: completeSocialSignIn with provider: "generic" (the demo-denial affordance) rejects social-denied', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0 })
+    await transport.startSocialSignIn({ provider: 'google' })
+    await expect(transport.completeSocialSignIn({ provider: 'generic' })).rejects.toMatchObject({ code: 'social-denied' })
+  })
+
+  it('AC4: a denied completion never sets a session', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0 })
+    await expect(transport.completeSocialSignIn({ provider: 'generic' })).rejects.toBeDefined()
+    expect(transport.getSession()).toBeNull()
+  })
+
+  it('completeSocialSignIn needs no prior startSocialSignIn call (S3 choice 1, file banner) — the seam carries no per-call token to check against', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0 })
+    await expect(transport.completeSocialSignIn({ provider: 'google' })).resolves.toBeDefined()
+  })
+
+  it('every rejection is a real IdentityMockError instance (SPEC-R8 AC1) — never a bare Error, never a string throw', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0 })
+    try {
+      await transport.completeSocialSignIn({ provider: 'generic' })
+      expect.unreachable('expected a rejection')
+    } catch (err) {
+      expect(err).toBeInstanceOf(IdentityMockError)
+      expect(err).toBeInstanceOf(Error)
+    }
+  })
+})
+
 // ── SPEC-R8 (S2 extension) — no cross-op meaning overlap between codes/links/S1's own codes ────────────
 
 describe('SPEC-R8 — closed error vocabulary (S2 slice — no cross-op meaning overlap)', () => {
@@ -255,6 +324,17 @@ describe('SPEC-R8 — closed error vocabulary (S2 slice — no cross-op meaning 
       expect(err).toBeInstanceOf(IdentityMockError)
       expect(err).toBeInstanceOf(Error)
     }
+  })
+})
+
+// ── SPEC-R8 (S3 extension) — social-denied never fires from an unrelated op, and vice versa ────────────
+
+describe('SPEC-R8 — closed error vocabulary (S3 slice — no cross-op meaning overlap)', () => {
+  it('social-denied never fires from verifyOneTimeCode/confirmMagicLink; code-*/link-* never fire from completeSocialSignIn', async () => {
+    const transport = createIdentityMockTransport({ latencyMs: 0 })
+    await expect(transport.completeSocialSignIn({ provider: 'generic' })).rejects.toMatchObject({ code: 'social-denied' })
+    await expect(transport.verifyOneTimeCode({ requestId: 'nope', code: '424242' })).rejects.toMatchObject({ code: 'code-invalid' })
+    await expect(transport.confirmMagicLink({ requestId: 'nope' })).rejects.toMatchObject({ code: 'link-invalid' })
   })
 })
 
