@@ -21,7 +21,9 @@
 //
 // Zero-dep by ruling: no YAML parser is installed and the descriptor is a CONTROLLED format, so the reader is
 // a small indentation-scoped parser over the subset the descriptor uses (top-level scalars · `- ` sequences ·
-// nested maps · inline `[a, b]` arrays · trailing `#` comments). It never executes the file; it reads text.
+// nested maps · inline `[a, b]` arrays · trailing `# ` comments). It never executes the file; it reads text.
+// The COMMENT rule is stated once, at stripComment below (GH #610): quote-aware, and `#` must be followed by
+// whitespace or end-of-line — so a `#NNN` reference inside a value is value text, not a truncation point.
 
 /** The three top-level value shapes a descriptor field can take. */
 export type DescriptorShape = 'scalar' | 'sequence' | 'map'
@@ -88,8 +90,42 @@ export function splitFrontmatter(src: string): { fence: string; body: string } {
 
 const COMMENT_OR_BLANK = /^\s*#|^\s*$/
 
-/** Strip a whitespace-led inline `#` comment. (Controlled format: values carry no literal `#`.) */
-const stripComment = (raw: string): string => raw.replace(/\s+#.*$/, '').trim()
+/**
+ * An inline COMMENT token: whitespace, `#`, then whitespace or end-of-line. The trailing boundary is the
+ * load-bearing half (GH #610) — a `#` glued to its next character is a REFERENCE inside the value
+ * (`GH #221`, `#480`, a `## Amendment` heading, a `#privateField`), never a comment opener. Every comment
+ * this corpus's 195 descriptor fences actually carry is written `# text`; the boundary keeps the two apart
+ * instead of truncating the first reference it meets.
+ */
+const INLINE_COMMENT = /\s+#(?=\s|$).*$/
+
+/**
+ * Strip a trailing inline comment from a raw value, QUOTE-AWARE (GH #610). Two rules, in order:
+ *
+ *   1. A value that OPENS with a quote is scanned to its matching close (YAML's doubled-quote escape, `''`
+ *      / `""`, tolerated) and that span is kept VERBATIM — a comment is not syntactically possible inside a
+ *      quoted scalar, so nothing in it is a comment. Only the remainder AFTER the closing quote is scanned.
+ *   2. Outside quotes, a comment starts at the first INLINE_COMMENT token (see above).
+ *
+ * Both rules replace the original `/\s+#.*$/`, whose docstring assumed "values carry no literal `#`" — an
+ * assumption 120 sites across the descriptor corpus already break, silently losing everything after the
+ * first `#NNN` reference.
+ */
+const stripComment = (raw: string): string => {
+  let i = 0
+  while (i < raw.length && (raw[i] === ' ' || raw[i] === '\t')) i++
+  const quote = raw[i]
+  if (quote !== "'" && quote !== '"') return raw.replace(INLINE_COMMENT, '').trim()
+  let j = i + 1
+  while (j < raw.length) {
+    if (raw[j] !== quote) { j++; continue }
+    if (raw[j + 1] === quote) { j += 2; continue } // a doubled quote is an ESCAPE, not the close
+    j++
+    break
+  }
+  // j is one past the closing quote (or end-of-string when the quote never closes — then there is no tail).
+  return (raw.slice(0, j) + raw.slice(j).replace(INLINE_COMMENT, '')).trim()
+}
 /** Drop a single pair of surrounding quotes (e.g. `'null'` → `null`). */
 const unquote = (s: string): string => /^(['"])([\s\S]*)\1$/.exec(s)?.[2] ?? s
 /** A scalar value: comment-stripped, unquoted, trimmed. */
