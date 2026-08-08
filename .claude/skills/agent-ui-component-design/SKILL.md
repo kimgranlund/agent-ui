@@ -96,7 +96,10 @@ Load the map skills as you go: [[agent-ui-component-standards]] (law),
    the work is multi-component or another seat builds it; **ADR only for contract-changing
    forks** — status `proposed` with firm recommendations per fork, and **never self-ratified**
    (only Kim flips a status, by explicit naming). Number = next free per
-   `.claude/docs/adr/README.md`; add its README row.
+   `.claude/docs/adr/README.md`; add its README row. If the fork sheet's Props row lands on an
+   array/aggregate value (not a scalar), run `references/mint-vs-compose.md`'s bindable-aggregate
+   bar before defaulting to composition — it names exactly when that case earns a new primitive
+   (ADR-0175).
 
 7. **Decompose + test plan.** A decomposition (break-down-problem where installed;
    `coverage_check.py --strict` clean) whose leaf accept-criteria cite the
