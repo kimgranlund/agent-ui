@@ -47,6 +47,25 @@ function cellsOf(el: HTMLElement): HTMLElement[] {
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-otp-field — focus order (one tab stop, both engines)', () => {
+  // GH #589 companion split (critic-requested): the FIRST-Tab-enters half is NOT platform-broken (both
+  // engines land on the editor cleanly, proven by instrumentation) — it runs in both engines. Only the
+  // second-Tab-escape half below is the confirmed WebKit platform bug.
+  it('Tab enters the control ONCE (a single tab stop)', async () => {
+    const before = document.createElement('button')
+    before.textContent = 'before'
+    const after = document.createElement('button')
+    after.textContent = 'after'
+    const wrap = document.createElement('div')
+    wrap.append(before, document.createElement('ui-otp-field'), after)
+    document.body.append(wrap)
+    mounted.push(wrap)
+    const el = wrap.querySelector('ui-otp-field') as UIOtpFieldElement
+
+    before.focus()
+    await userEvent.tab()
+    expect(document.activeElement, `${server.browser}: Tab did not land on the editor`).toBe(editorOf(el))
+  })
+
   // GH #589 ROOT-CAUSED, FORKED (not fixed here — beyond this LLD's anatomy grant): a second real Tab does
   // not always leave the control in WebKit. Instrumentation (real WebKit, both engines) PROVES this is a
   // WebKit PLATFORM bug in sequential focus navigation OUT of any `contenteditable`, not an otp-field defect
@@ -61,7 +80,7 @@ describe('ui-otp-field — focus order (one tab stop, both engines)', () => {
   // computing "the next tabbable element" by hand, and calling .focus() directly) — a genuinely NEW
   // capability with its own edge cases (shadow DOM, iframes, non-doc-order tabindex), well beyond this
   // control's LLD-granted anatomy and risky to build unreviewed. GH #589 stays open, scoped to this ONE gap.
-  it.skipIf(server.browser === 'webkit')('Tab enters ONCE (a single tab stop); cells are never separately tab-reachable', async () => {
+  it.skipIf(server.browser === 'webkit')('a second Tab LEAVES the control (cells are never tab stops)', async () => {
     const before = document.createElement('button')
     before.textContent = 'before'
     const after = document.createElement('button')
@@ -70,11 +89,9 @@ describe('ui-otp-field — focus order (one tab stop, both engines)', () => {
     wrap.append(before, document.createElement('ui-otp-field'), after)
     document.body.append(wrap)
     mounted.push(wrap)
-    const el = wrap.querySelector('ui-otp-field') as UIOtpFieldElement
 
     before.focus()
     await userEvent.tab()
-    expect(document.activeElement, `${server.browser}: Tab did not land on the editor`).toBe(editorOf(el))
     await userEvent.tab()
     expect(document.activeElement, `${server.browser}: a second Tab must LEAVE the control (cells are never tab stops)`).toBe(after)
   })
