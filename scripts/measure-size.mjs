@@ -511,7 +511,12 @@ const appCssQuerySuffixPlugin = {
 // additive, the split/status-stream precedents above say the same). The budget stays 80 KB (the
 // checkpoint) — this is headroom regained, not a re-base; GH #468 stays open for the NEXT marginal
 // (entry-list/settings shared-chunk audit, shell preset dedup — named, not yet measured).
-const APP_MARGINAL_BUDGET = 80 * KB
+// RULED 2026-08-08 (GH #521, Kim — the same "checkpoint, not a ratchet" convention as #454/#480):
+// re-based 80 KB → 83 KB (84992 B gz) — measured 82565 B gz on the tabs overflow="menu" build
+// (GH #586 Slice B, commit 4710b89): Slice B's composed-ui-menu vehicle + fit engine, LLD-accepted
+// tradeoff landing at the app tier; next diet pass keeps its tripwire. GH #468 remains the standing
+// app-diet follow-up unchanged.
+const APP_MARGINAL_BUDGET = 83 * KB
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })
