@@ -35,6 +35,16 @@ ui-card {
   color: var(--md-sys-color-neutral-on-surface-variant);
 }
 
+/* ONE MEASURE for the section. The page's reading column is ~64rem (_page.css) but this section's widest
+ * real surface is the 48rem frame below — so anything that ANNOTATES that frame is capped to the frame's own
+ * measure rather than the page's. Load-bearing for the readout, not cosmetic: `.account-settings-saved-row`
+ * is `justify-content: space-between`, so at the full 64rem its label and its value drift ~30rem apart and
+ * stop reading as a pair. Keep this value in step with `.account-settings-frame`'s `inline-size`. */
+.account-settings-caption,
+.account-settings-saved {
+  max-inline-size: min(48rem, 100%);
+}
+
 /* The surface frame. `container-type: inline-size` is load-bearing, not decoration: the composed
  * ui-master-detail's 40rem drill-in threshold is a CONTAINER query, so without a query container here it
  * would resolve against the nearest ancestor container instead of the frame the reader actually sees
@@ -86,13 +96,34 @@ ui-card {
 }
 
 .account-settings-saved-row dd {
+  display: flex;
+  align-items: baseline;
+  gap: var(--md-sys-space-xs);
   margin: 0;
   font-variant-numeric: tabular-nums;
 }
 
 /* A row whose value came from the STORE (a real save), not from the schema default — the visible half of
- * decomp a13. Colour is not the only channel: the row also gains a "saved" text marker in the DOM. */
+ * decomp a13. Colour is not the only channel: `renderSavedValues` (account-settings.ts) also appends a real
+ * "Saved" text node — `.account-settings-saved-marker` below — to exactly the rows this rule tints, so the
+ * saved state survives a reader who cannot resolve the primary-ink shift and is announced verbatim by AT. */
 .account-settings-saved-row[data-saved] dd {
   color: var(--md-sys-color-primary);
   font-weight: 600;
+}
+
+/* The text channel of that same signal — a small container-ladder pill (soft ui-button's own bg/ink pairing).
+ * Sized in `rem`, NOT `em`: `em` here would inherit the row's own 0.85rem and land at ~10px, under the
+ * fleet's badge register (`.adr-badge` 0.72rem, `999px` its pill radius) — a marker a reader has to squint at
+ * is not the accessible channel this exists to be. */
+.account-settings-saved-marker {
+  flex: none;
+  padding-inline: var(--md-sys-space-xs);
+  border-radius: 999px;
+  background: var(--md-sys-color-primary-container-low);
+  color: var(--md-sys-color-primary-high);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: normal;
+  letter-spacing: 0.02em;
 }

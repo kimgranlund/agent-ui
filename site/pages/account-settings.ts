@@ -234,8 +234,8 @@ settingsCaption.textContent =
 const savedList = el('dl', 'account-settings-saved')
 const savedCaption = el('p', 'account-settings-caption')
 savedCaption.textContent =
-  'Saved preferences — read back out of the SettingsStore (store.get), not out of the controls. A ' +
-  'highlighted row is one the store actually holds; the rest are still their schema default.'
+  'Saved preferences — read back out of the SettingsStore (store.get), not out of the controls. A row ' +
+  'marked “Saved” is one the store actually holds; the rest are still their schema default.'
 settingsSection.append(
   heading(3, 'Preferences'),
   settingsCaption,
@@ -265,7 +265,10 @@ function formatValue(value: unknown): string {
 
 /** Re-render every field's CURRENT value using generate.ts's OWN read expression (`store.get(key) ??
  *  field.default`, settings.md's persistence section) — so this readout can never disagree with what the
- *  generated controls were seeded from. A row the store genuinely holds is marked `data-saved`. */
+ *  generated controls were seeded from. A row the store genuinely holds is marked `data-saved` AND carries a
+ *  real "Saved" text marker: `data-saved` only drives a colour/weight shift in the CSS, and colour is never
+ *  allowed to be the sole channel for a state a reader has to perceive — the marker is the text channel of
+ *  the same signal, so it is announced (no aria-hidden, no clip) rather than merely seen. */
 function renderSavedValues(): void {
   const rows: HTMLElement[] = []
   for (const section of ACCOUNT_SETTINGS_SCHEMA.sections) {
@@ -273,11 +276,20 @@ function renderSavedValues(): void {
       const stored = store.get(field.key)
       const row = el('div', 'account-settings-saved-row')
       row.dataset.key = field.key
-      if (stored !== undefined) row.dataset.saved = ''
       const term = el('dt')
       term.textContent = field.label
       const value = el('dd')
-      value.textContent = formatValue(stored ?? field.default)
+      // The value lives in its OWN span, not as the `dd`'s bare text: the marker is a sibling inside the same
+      // `dd`, so a reader (and a test) can address the value alone instead of parsing it out of "OnSaved".
+      const valueText = el('span', 'account-settings-saved-value')
+      valueText.textContent = formatValue(stored ?? field.default)
+      value.append(valueText)
+      if (stored !== undefined) {
+        row.dataset.saved = ''
+        const marker = el('span', 'account-settings-saved-marker')
+        marker.textContent = 'Saved'
+        value.append(marker)
+      }
       row.append(term, value)
       rows.push(row)
     }

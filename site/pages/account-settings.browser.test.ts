@@ -92,11 +92,23 @@ function railActivator(sectionId: string): HTMLElement {
 function panel(): HTMLElement {
   return settingsElement().querySelector('[data-part="panel"]') as HTMLElement
 }
+function settingsFrame(): HTMLElement {
+  return document.querySelector('.account-settings-frame') as HTMLElement
+}
+function savedList(): HTMLElement {
+  return document.querySelector('.account-settings-saved') as HTMLElement
+}
 function savedRow(key: string): HTMLElement {
   return document.querySelector(`.account-settings-saved-row[data-key="${key}"]`) as HTMLElement
 }
+/** The row's VALUE alone. Deliberately not `dd.textContent`: a saved row's `dd` also holds the "Saved" text
+ *  marker (the non-colour channel of `data-saved`), and reading the whole cell would return "OnSaved". */
 function savedValueOf(key: string): string {
-  return savedRow(key).querySelector('dd')?.textContent ?? ''
+  return savedRow(key).querySelector('.account-settings-saved-value')?.textContent ?? ''
+}
+/** The row's saved MARKER text, '' when the row carries none. */
+function savedMarkerOf(key: string): string {
+  return savedRow(key).querySelector('.account-settings-saved-marker')?.textContent ?? ''
 }
 function demoSignInButton(): UIButtonElement {
   return cards().signedOut.querySelector('ui-button') as UIButtonElement
@@ -166,6 +178,18 @@ describe('viewing account settings behind the session gate (decomp a12, SPEC-R5)
     expect(savedValueOf('securityAlerts')).toBe('On')
     expect(savedValueOf('digest')).toBe('weekly')
     expect(document.querySelectorAll('.account-settings-saved-row[data-saved]')).toHaveLength(0)
+    // …and with nothing saved, no row claims to be: the "Saved" marker is per-row, never decoration.
+    expect(document.querySelectorAll('.account-settings-saved-marker')).toHaveLength(0)
+
+    // THE WHOLE COLUMN'S SHAPE, not just its contents. The readout annotates the 48rem frame, so it takes
+    // the FRAME's measure and not the page's ~64rem reading column: `.account-settings-saved-row` is
+    // `justify-content: space-between`, so at the page measure its label and value drift apart until they
+    // stop reading as a pair. Measured, because only a real engine resolves `min(48rem, 100%)`.
+    const frameWidth = settingsFrame().getBoundingClientRect().width
+    const listWidth = savedList().getBoundingClientRect().width
+    expect(frameWidth, 'the frame paints').toBeGreaterThan(0)
+    expect(listWidth, 'the readout paints').toBeGreaterThan(0)
+    expect(listWidth, 'the readout must not run wider than the surface it annotates').toBeLessThanOrEqual(frameWidth + 1)
   })
 
   it('a real rail click switches the panel to another section (the composed ui-master-detail, unchanged by this slice)', async () => {
@@ -195,9 +219,19 @@ describe('editing and saving a preference (decomp a13)', () => {
     // holding the value — not merely the control remembering its own click.
     expect(savedValueOf('productUpdates')).toBe('On')
     expect(document.querySelectorAll('.account-settings-saved-row[data-saved]')).toHaveLength(1)
-    // …and nothing else moved: the other six rows are still their schema default.
+    // COLOUR IS NOT THE ONLY CHANNEL: `data-saved` tints the value, and the same commit puts a real "Saved"
+    // text node in the row — announced by AT and PAINTED (a real box, not a clipped/zero-size decoration),
+    // so a reader who cannot resolve the primary-ink shift still gets the state.
+    expect(savedMarkerOf('productUpdates')).toBe('Saved')
+    const marker = savedRow('productUpdates').querySelector('.account-settings-saved-marker') as HTMLElement
+    const markerBox = marker.getBoundingClientRect()
+    expect(markerBox.width, 'the saved marker paints a real box').toBeGreaterThan(0)
+    expect(markerBox.height).toBeGreaterThan(0)
+    // …and nothing else moved: the other six rows are still their schema default, marker included.
     expect(savedValueOf('securityAlerts')).toBe('On')
     expect(savedRow('securityAlerts').hasAttribute('data-saved')).toBe(false)
+    expect(savedMarkerOf('securityAlerts')).toBe('')
+    expect(document.querySelectorAll('.account-settings-saved-marker')).toHaveLength(1)
     expect(savedValueOf('displayName')).toBe('New member')
   })
 
@@ -215,6 +249,7 @@ describe('editing and saving a preference (decomp a13)', () => {
     // (signing out ends a session; it does not erase what that account saved).
     expect(savedValueOf('productUpdates')).toBe('On')
     expect(savedRow('productUpdates').hasAttribute('data-saved')).toBe(true)
+    expect(savedMarkerOf('productUpdates'), 'the text channel survives the cycle too, not just the tint').toBe('Saved')
     // The surface itself is never torn down across the cycle (schema/store are never reassigned, so
     // ui-settings never rebuilds — settings.md's own reconnect rule), so the generated control still shows
     // the edited state. Asserted as CONTINUITY, deliberately NOT as a re-seed-from-store proof: no
