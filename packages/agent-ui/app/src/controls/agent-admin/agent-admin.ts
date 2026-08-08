@@ -107,6 +107,8 @@ import {
   isGenuiSurfaceEnabled,
   SURFACE_GENUI_DOGFOOD_KEY,
   isGenuiDogfoodEnabled,
+  SURFACE_PLANNER_KEY,
+  isPlannerSurfaceEnabled,
   defaultAgentConfigSchema,
   isEnabledFlag,
   kindEnabledKey,
@@ -345,6 +347,10 @@ export class UIAgentAdminElement extends UIElement {
   #surfaceGenuiSwitch: (HTMLElement & { checked: boolean }) | null = null
   // genui-surface.spec.md v0.5 §11 (SPEC-R10 amended clause, GH #316/ADR-0162) — the dogfood sub-toggle.
   #surfaceGenuiDogfoodSwitch: (HTMLElement & { checked: boolean; disabled: boolean }) | null = null
+  // ADR-0174 cl.1/OF3 — the planner-stage modality's own row switch: a bare, ungrouped row (the markdown
+  // precedent) — the gate has no sub-options yet (SPEC-R21; OF4's possible future prompt-section entry is
+  // unbuilt).
+  #surfacePlannerSwitch: (HTMLElement & { checked: boolean }) | null = null
   // GH #525/#541 — the bankroll Settings FOLD (its own group since #541): built once; `hidden` reflects
   // the persona's OWN opt-in (`BANKROLL_CAPABLE_KEY`), applied in `#applyMasterStates` like every other
   // row's state — never a DOM add/remove per persona switch.
@@ -761,6 +767,26 @@ export class UIAgentAdminElement extends UIElement {
     genuiDogfoodRow.append(genuiDogfoodSwitch, genuiDogfoodLabel)
     genuiGroup.detail.append(genuiDogfoodRow)
 
+    // ADR-0174 cl.1 / OF3 (ruled here) — the planner-stage pilot's own modality row, placed beside GenUI
+    // (Kim's placement call): a persona-scoped opt-in for `site/lib/plan-runner.ts`'s sequential
+    // plan→execute→synthesize host loop, the SAME inverse-default law GenUI's row already uses (OFF until
+    // an admin opts in). A BARE row, not a `surfaceGroup` — the gate has no sub-options yet (OF4's possible
+    // future "planning style" prompt-section entry is unbuilt), matching the markdown row's own ungrouped
+    // shape. This row writes `this.store` — `ui-agent-admin`'s OWN persona `SettingsStore`, the SAME store
+    // the A2UI/GenUI rows already write — never a page-local store: `site/pages/a2ui-live.ts`'s `?planner=1`
+    // dev toggle is a SEPARATE page with no persona/settings surface of its own (its own inline comment says
+    // so), so there is no single runtime store to share between the two pages; a2ui-live's toggle stays its
+    // own independent dev override, documented at its own definition. This row is the seam a future
+    // admin-side runner (an `admin-live-runner.ts`-style planner wiring, not built here) would read.
+    const planner = surfaceRow('planner', 'Planner', 'Sequential plan → execute → synthesize host loop — opt-in')
+    planner.toggle.checked = false // the inverse default (OFF) — applyMasterStates re-applies the real stored value below
+    planner.toggle.addEventListener('change', () => {
+      this.store?.set(SURFACE_PLANNER_KEY, planner.toggle.checked)
+      this.#applyMasterStates(this.store)
+      if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
+    })
+    this.#surfacePlannerSwitch = planner.toggle
+
     // GH #525 — the bankroll RESET row (design call 3, 2026-08-07: a settings-pane affordance, never a
     // chat command): a plain label + spacer + trailing `<ui-button>` (the entry-list.ts `deleteBtn`
     // precedent), no toggle (there is no on/off here, only a stored figure to clear). GH #541 — it is its
@@ -790,7 +816,7 @@ export class UIAgentAdminElement extends UIElement {
     const bankrollItem = settingsItem('bankroll', 'Bankroll', bankrollRow)
     this.#bankrollItem = bankrollItem as HTMLElement & { hidden: boolean }
 
-    surfaceOptions.append(markdown.row, a2uiGroup.group, genuiGroup.group)
+    surfaceOptions.append(markdown.row, a2uiGroup.group, genuiGroup.group, planner.row)
 
     // GH #225/#226 — each Settings section is a heading-row fold (the GH #222 Context pattern applied to
     // the config column). The master switches (Agent + one per kind) ride their fold's heading row
@@ -1604,6 +1630,8 @@ export class UIAgentAdminElement extends UIElement {
       this.#surfaceGenuiDogfoodSwitch.checked = isGenuiDogfoodEnabled(store?.get(SURFACE_GENUI_DOGFOOD_KEY))
       this.#surfaceGenuiDogfoodSwitch.disabled = !genuiOn
     }
+    // ADR-0174 cl.1/OF3 — the planner-stage modality row reflects its own stored state the same way.
+    if (this.#surfacePlannerSwitch) this.#surfacePlannerSwitch.checked = isPlannerSurfaceEnabled(store?.get(SURFACE_PLANNER_KEY))
     // GH #525 — the bankroll group is entirely HIDDEN for a persona that never opted in
     // (`BANKROLL_CAPABLE_KEY`) — there is no in-between "visible but nothing to do" state the way an OFF
     // modality still has, so this is `hidden`, never a `data-disabled` dim.
@@ -1660,6 +1688,8 @@ export class UIAgentAdminElement extends UIElement {
             // pattern-source's label, when one is picked (undefined otherwise — the degradation law).
             genui: isGenuiSurfaceEnabled(store?.get(SURFACE_GENUI_KEY)),
             genuiSource: pickedPatternSource(readEntries(store, ENTRY_KINDS.patternSource))?.label,
+            // ADR-0174 cl.1/OF3 — the planner-stage modality's own on/off state, the same introspection law.
+            planner: isPlannerSurfaceEnabled(store?.get(SURFACE_PLANNER_KEY)),
           },
           systemPrompt: composeLiveSystemPrompt(sections, this.#capabilityGroups(store), this.#bankrollForPrompt(store)),
         },

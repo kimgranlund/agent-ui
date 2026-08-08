@@ -469,6 +469,32 @@ describe('ui-agent-admin cross-engine smoke — the Catalogs library section (AD
     expect(dogfoodBox.top).toBeGreaterThanOrEqual(Math.round(rowBox.bottom) - 1)
   })
 
+  // ADR-0174 cl.1 / OF3 (ruled) — the Planner row: a real, visibly painted bare row directly BELOW the
+  // GenUI group (Kim's placement call, "beside the GenUI row"), never a collapsed/zero-box stub.
+  it('the Planner row paints as a real, non-zero row directly below the GenUI group, with no group/detail chrome of its own', () => {
+    const { el } = mountAgentAdmin('Surface') // GH #574 — Surface Options rides its own tab now
+    const genuiGroup = el.querySelector('[data-part="surface-group"][data-surface="genui"]') as HTMLElement
+    const plannerRow = el.querySelector('[data-part="surface-row"][data-surface="planner"]') as HTMLElement
+
+    const rowBox = plannerRow.getBoundingClientRect()
+    expect(rowBox.width, 'a real painted row, not a collapsed stub').toBeGreaterThan(0)
+    expect(rowBox.height).toBeGreaterThan(0)
+    expect(rowBox.top, 'below the GenUI group it sits beside').toBeGreaterThanOrEqual(Math.round(genuiGroup.getBoundingClientRect().bottom) - 1)
+
+    const toggle = plannerRow.querySelector('[data-part="surface-toggle"]') as HTMLElement & { checked: boolean }
+    const toggleBox = toggle.getBoundingClientRect()
+    expect(toggleBox.width, 'a real painted switch').toBeGreaterThan(0)
+    expect(toggleBox.height).toBeGreaterThan(0)
+    expect(toggle.checked, 'fail-closed default OFF').toBe(false)
+
+    const label = plannerRow.querySelector('[data-part="surface-label"]') as HTMLElement
+    expect(label.textContent).toBe('Planner')
+    expect(getComputedStyle(label).visibility).toBe('visible')
+
+    // No group/detail zone — this modality has no sub-options yet.
+    expect(plannerRow.closest('[data-part="surface-group"]'), 'a bare row, the markdown precedent').toBeNull()
+  })
+
   it('flipping a catalog switch in a real engine moves the selection, radio-style', async () => {
     const { el } = mountAgentAdmin()
     const second = A2UI_CATALOG_OPTIONS.find((o) => o.id !== DEFAULT_A2UI_CATALOG_ID)!

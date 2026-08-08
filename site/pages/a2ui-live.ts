@@ -56,8 +56,9 @@ import { runPlannerTurn, PLAN_SYNTHESIS_GROUP_KEY } from '../lib/plan-runner.ts'
 import type { PlanStepState } from '../lib/plan-runner.ts'
 // The SAME persona-scoped modality-gate PRECEDENT `SURFACE_A2UI_KEY`/`SURFACE_GENUI_KEY` already use
 // (ADR-0174 cl.1). This page has no persona/settings surface at all (that is agent-admin's own `store`),
-// so its reachability here is a documented dev toggle (below) reading the SAME constant/reader a future
-// agent-admin row would — OF3 (the admin-authored PRESENTATION) stays open, GH #579's own handback.
+// so its reachability here is a documented dev toggle (below) reading the SAME constant/reader the
+// `ui-agent-admin` Surface Options row now ALSO reads — OF3 is RULED (agent-admin.ts's Planner row, beside
+// GenUI): the two stay independent stores, not one shared one (see the close-out note below for the why).
 import { createMemoryStore } from '@agent-ui/app'
 import { SURFACE_PLANNER_KEY, isPlannerSurfaceEnabled } from '@agent-ui/app/agent-admin-schema'
 // GH #257 — the Provider/Model/Mode picker now rides the standalone composer's own `providers`/`provider`/
@@ -592,18 +593,23 @@ function handleClientMessage(message: A2uiClientMessage): void {
 // ════════════════ the planner-stage pilot (ADR-0174 cl.1/cl.3/cl.4/cl.6, SPEC-R21/R22) — OPT-IN, OFF by
 // default; this page's wiring for the shipped `site/lib/plan-runner.ts` (GH #579). ════════════════════════
 //
-// The dev toggle (OF3 stands open — see the import comment above): `?planner=1`/`?planner=0` on the URL
-// flips `SURFACE_PLANNER_KEY` through `createMemoryStore`'s `localStorage` mirror (persisted, the SAME
+// The dev toggle (see the import comment above): `?planner=1`/`?planner=0` on the URL flips
+// `SURFACE_PLANNER_KEY` through `createMemoryStore`'s `localStorage` mirror (persisted, the SAME
 // "one visit sticks" UX the Provider/Model/Mode picker's own persistence uses) — read through the SAME
-// fail-closed `isPlannerSurfaceEnabled` reader a future agent-admin row would use, never a page-local
+// fail-closed `isPlannerSurfaceEnabled` reader `ui-agent-admin`'s own row now uses, never a page-local
 // reinvention of the gate's shape.
 //
-// OF3 close-out note: `plannerStore` below is PAGE-LOCAL to a2ui-live (its own `createMemoryStore`
-// instance, `persistKey: 'a2ui-live.dev'`) — it is NOT the persona/`SettingsStore` `ui-agent-admin` reads
-// its own `SURFACE_A2UI_KEY`/`SURFACE_GENUI_KEY` through. If/when OF3 is ruled and an admin-authored row
-// for `SURFACE_PLANNER_KEY` is built, that row's read/write must REPOINT to whichever real store it lands
-// on — it is not a second independent toggle to reconcile later; the two stores would otherwise silently
-// diverge (this page's dev flag could read ON while an admin persona reads OFF, or vice versa).
+// OF3 close-out ruling: `plannerStore` below stays PAGE-LOCAL to a2ui-live (its own `createMemoryStore`
+// instance, `persistKey: 'a2ui-live.dev'`) — it is NOT, and does not REPOINT to, the persona/`SettingsStore`
+// `ui-agent-admin` reads its own `SURFACE_A2UI_KEY`/`SURFACE_GENUI_KEY` through. True sharing was judged
+// architecturally wrong, not just awkward: a2ui-live is a docs-site demo page that never mounts
+// `ui-agent-admin` at all (this file's own header says so — "no persona/settings surface"), so there is no
+// single running instance of BOTH stores for one to repoint into; the two pages don't even coexist in one
+// document. The admin row (agent-admin.ts's Planner row in Surface Options, beside GenUI) writes `ui-
+// agent-admin`'s own `this.store` — the SAME persona store its A2UI/GenUI rows already write, and the seam
+// a future admin-side runner wiring would read — while THIS page's `?planner=1`/`?planner=0` toggle remains
+// its own documented DEV override, independent of any persona. The two can read different values on their
+// own separate pages; that is the intended shape, not a divergence bug.
 const plannerStore = createMemoryStore({ persistKey: 'a2ui-live.dev' })
 {
   const urlPlanner = new URLSearchParams(location.search).get('planner')

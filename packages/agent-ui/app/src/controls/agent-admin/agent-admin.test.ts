@@ -4,7 +4,7 @@ import { UIAgentAdminElement } from './agent-admin.ts'
 import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 import { UISettingsElement } from '../settings/settings.ts'
 import { UIConversationElement } from '../conversation/conversation.ts'
-import { defaultAgentConfigSchema, SUPPORTED_MODELS, DEFAULT_MODEL_ID, SURFACE_MARKDOWN_KEY, SURFACE_A2UI_KEY, A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID, sanitizeCatalog } from './agent-admin-schema.ts'
+import { defaultAgentConfigSchema, SUPPORTED_MODELS, DEFAULT_MODEL_ID, SURFACE_MARKDOWN_KEY, SURFACE_A2UI_KEY, SURFACE_PLANNER_KEY, A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID, sanitizeCatalog } from './agent-admin-schema.ts'
 import { ENTRY_KINDS, initialEntryValues, composeSystemPrompt, DEFAULT_SYSTEM_PROMPT_FALLBACK } from './entries.ts'
 import { entriesStoreKey, readEntries, type Entry, type EntryLibraryPack } from '../entry-list/entry-data.ts'
 import { mountEntryList, showAddError, type EntryListHandlers } from '../entry-list/entry-list.ts'
@@ -2073,9 +2073,10 @@ describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
     await whenFlushed()
     const surfaceOptions = el.querySelector('[data-part="surface-options"]') as HTMLElement
     const rows = [...surfaceOptions.querySelectorAll('[data-part="surface-row"]')]
-    // GH #541 — three MODALITY rows and nothing else: Bankroll moved out to its own Settings fold (see
-    // agent-admin-bankroll.test.ts for its presence/absence/reset coverage).
-    expect(rows.map((r) => r.getAttribute('data-surface'))).toEqual(['markdown', 'a2ui', 'genui'])
+    // GH #541 — modality rows and nothing else: Bankroll moved out to its own Settings fold (see
+    // agent-admin-bankroll.test.ts for its presence/absence/reset coverage). ADR-0174 cl.1/OF3 — the
+    // Planner row joins beside GenUI (agent-admin-planner.test.ts covers its schema-level gate).
+    expect(rows.map((r) => r.getAttribute('data-surface'))).toEqual(['markdown', 'a2ui', 'genui', 'planner'])
     // Only the modalities WITH children are grouped — Markdown has none, so it stays a bare row.
     expect([...surfaceOptions.querySelectorAll('[data-part="surface-group"]')].map((g) => g.getAttribute('data-surface'))).toEqual(['a2ui', 'genui'])
     const genui = rows[2] as HTMLElement
@@ -2230,6 +2231,51 @@ describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
     expect(agentJson.surface.genui).toBe(true)
   })
 
+  // ADR-0174 cl.1 / OF3 (ruled) — the Planner row: a bare, ungrouped modality row beside GenUI, the SAME
+  // inverse-default fail-closed law GenUI's own row uses (agent-admin-schema.ts's `isPlannerSurfaceEnabled`
+  // is unit-covered in its own file, agent-admin-planner.test.ts — this suite covers the ROW).
+  it('the Planner row renders beside GenUI, a bare row with no group/detail zone, defaulting OFF (fail-closed)', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    const surfaceOptions = el.querySelector('[data-part="surface-options"]') as HTMLElement
+    const plannerRow = surfaceOptions.querySelector('[data-part="surface-row"][data-surface="planner"]') as HTMLElement
+    expect(plannerRow).not.toBeNull()
+    // No `surface-group`/`surface-detail` wraps it — the gate has no sub-options yet (Kim's placement call).
+    expect(plannerRow.closest('[data-part="surface-group"]')).toBeNull()
+    const plannerToggle = plannerRow.querySelector('[data-part="surface-toggle"]') as HTMLElement & { checked: boolean }
+    expect(plannerToggle.checked, 'the SAME inverse default GenUI uses — OFF until an admin opts in').toBe(false)
+  })
+
+  it('toggling the Planner row persists + live-applies (the SAME store-write pattern markdown/a2ui/genui already prove)', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    const plannerToggle = el.querySelector('[data-surface="planner"] [data-part="surface-toggle"]') as HTMLElement & { checked: boolean }
+    plannerToggle.checked = true
+    plannerToggle.dispatchEvent(new Event('change'))
+    expect(el.store!.get(SURFACE_PLANNER_KEY)).toBe(true)
+    const agentJson = JSON.parse(
+      el.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]')!.textContent ?? '{}',
+    ) as { surface: { planner: boolean } }
+    expect(agentJson.surface.planner).toBe(true)
+  })
+
+  it('a stored surfacePlanner:true reflects onto the row switch at connect (external-write live-apply, the master-switch discipline)', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    el.store!.set(SURFACE_PLANNER_KEY, true)
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    const plannerToggle = el.querySelector('[data-surface="planner"] [data-part="surface-toggle"]') as HTMLElement & { checked: boolean }
+    expect(plannerToggle.checked).toBe(true)
+  })
+
   it('Markdown ON by default: an agent note renders through <ui-markdown> once the lazy renderer resolves; an explicit OFF falls back to a plain text node (live-apply, next bubble)', async () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
     el.store = createMemoryStore({})
@@ -2289,7 +2335,7 @@ describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
     expect(seen[0]!.catalogId).toBe(DEFAULT_A2UI_CATALOG_ID)
   })
 
-  it('the Context Agent System JSON carries the surface block (markdown/a2ui/catalog/genui) — genui-surface B2, live', async () => {
+  it('the Context Agent System JSON carries the surface block (markdown/a2ui/catalog/genui/planner) — genui-surface B2, live; ADR-0174 cl.1/OF3 planner', async () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
     el.store = createMemoryStore({})
     document.body.append(el)
@@ -2297,9 +2343,9 @@ describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
     await whenFlushed()
     const agentJson = JSON.parse(
       el.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]')!.textContent ?? '{}',
-    ) as { surface: { markdown: boolean; a2ui: boolean; catalog: string; genui: boolean; genuiSource?: string } }
+    ) as { surface: { markdown: boolean; a2ui: boolean; catalog: string; genui: boolean; genuiSource?: string; planner: boolean } }
     // No pattern-source entry picked yet ⇒ genuiSource is absent (JSON.stringify drops an undefined key).
-    expect(agentJson.surface).toEqual({ markdown: true, a2ui: true, catalog: DEFAULT_A2UI_CATALOG_ID, genui: false })
+    expect(agentJson.surface).toEqual({ markdown: true, a2ui: true, catalog: DEFAULT_A2UI_CATALOG_ID, genui: false, planner: false })
     el.store!.set(SURFACE_MARKDOWN_KEY, false)
     const after = JSON.parse(
       el.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]')!.textContent ?? '{}',
