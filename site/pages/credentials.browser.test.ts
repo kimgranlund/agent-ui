@@ -28,6 +28,28 @@ async function until(check: () => boolean, timeoutMs = 5000): Promise<void> {
   }
 }
 
+/** Deterministically prove an element disables during ITS OWN async pending window (SPEC-R7 AC1), hardened
+ *  against automation-round-trip contention (GH #611 — the family-close debt from S3's review, PR #605):
+ *  a MutationObserver records the `disabled` attribute the instant it flips, so a `userEvent` round trip
+ *  that runs slow under load can never race past the operation's own completion and read an attribute that
+ *  already cleared before a single post-click check ran — the click-then-immediately-read-once idiom this
+ *  replaces, which flaked repeatedly under load across all four identity browser test files. */
+async function assertDisablesDuring(el: Element, act: () => Promise<void>, message: string): Promise<void> {
+  let sawDisabled = el.hasAttribute('disabled')
+  const observer = new MutationObserver((records) => {
+    for (const record of records) {
+      if ((record.target as Element).hasAttribute('disabled')) sawDisabled = true
+    }
+  })
+  observer.observe(el, { attributes: true, attributeFilter: ['disabled'] })
+  await act()
+  for (const record of observer.takeRecords()) {
+    if ((record.target as Element).hasAttribute('disabled')) sawDisabled = true
+  }
+  observer.disconnect()
+  expect(sawDisabled, message).toBe(true)
+}
+
 function cards(): { register: HTMLElement; signIn: HTMLElement } {
   const [register, signIn] = [...document.querySelectorAll('.credentials-forms > ui-card')] as HTMLElement[]
   return { register: register!, signIn: signIn! }
@@ -100,9 +122,8 @@ describe('registration (decomp a1, SPEC-R1)', () => {
     await ensureTermsChecked()
 
     const submit = submitButtonOf(register)
-    await userEvent.click(submit)
     // SPEC-R7 AC1 — the pending state is observable: the button disables during the real latency window.
-    expect(submit.hasAttribute('disabled'), 'the submit button must disable during the pending window').toBe(true)
+    await assertDisablesDuring(submit, () => userEvent.click(submit), 'the submit button must disable during the pending window')
 
     await until(() => !signedInCard().hidden)
     expect(signedInCard().textContent).toContain(email)
