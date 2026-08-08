@@ -365,6 +365,85 @@ describe('SPEC-R22 AC2 — a synthesis failure leaves step content standing, ret
   })
 })
 
+// ── GH #592 — a THROWN transport.turn() folds into the SAME failed-tier as an error meta-line ──────────
+// (a genuine dispatch throw used to escape `runPlan`'s loop entirely, rejecting the whole run's promise
+// before every seeded group reached a terminal state — contradicting SPEC-R22's "a step's failure does
+// NOT abort the run." `drainStepTurn` now catches it; these mirror the SPEC-R22 AC1/AC2 error-meta-line
+// tests above, byte-for-byte, but with `throws: true` instead of `meta: { error: ... }`.)
+
+describe('GH #592 — a thrown step dispatch does not abort the run (folds into the SAME failed-tier)', () => {
+  it('step j THROWS; j+1..K and synthesis still dispatch; the NEXT dispatch carries the acknowledgment; no extra dispatch', async () => {
+    const plan: PlanDeclaration = { steps: [step('s1'), step('s2', 'Build the footer'), step('s3')] }
+    const { transport, calls } = scriptedTransport([
+      { lines: [] }, // s1 — ok
+      { throws: true }, // s2 — THROWS (a genuine transport/network fault, not an error meta-line)
+      { lines: [] }, // s3 — must still dispatch
+      { lines: [] }, // synthesis — must still dispatch
+    ])
+    const states: Array<[string, string]> = []
+    const session = await runPlan({ transport, session: EMPTY_SESSION, plan, onStepState: (g, s) => states.push([g, s]) })
+
+    expect(calls).toHaveLength(4) // K+1 exactly — the run COMPLETES, no abort
+    const s3Text = (calls[2] as { text: string }).text // calls: [s1, s2(throws), s3, synthesis]
+    expect(s3Text).toContain('s2') // names the failed step
+    expect(s3Text).toMatch(/failed/i)
+    expect(states).toContainEqual([planStepGroupKey('s1'), 'done'])
+    expect(states).toContainEqual([planStepGroupKey('s2'), 'failed']) // thrown ⇒ same terminal state an error meta-line gets
+    expect(states).toContainEqual([planStepGroupKey('s3'), 'done'])
+    expect(states).toContainEqual([PLAN_SYNTHESIS_GROUP_KEY, 'done'])
+    expect(session.turns).toHaveLength(8) // (s1+s2+s3+synthesis) × 2 turns each — the run reaches completion
+  })
+
+  it('a thrown LAST step ⇒ the SYNTHESIS dispatch (not a step) carries the acknowledgment', async () => {
+    const plan: PlanDeclaration = { steps: [step('s1'), step('s2', 'Build the footer')] }
+    const { transport, calls } = scriptedTransport([
+      { lines: [] }, // s1 — ok
+      { throws: true }, // s2 (LAST step) — THROWS
+      { lines: [] }, // synthesis — must carry the fold-in
+    ])
+    await runPlan({ transport, session: EMPTY_SESSION, plan })
+    expect(calls).toHaveLength(3) // K+1 exactly — no extra dispatch for the acknowledgment itself
+    const synthesisText = (calls[2] as { text: string }).text
+    expect(synthesisText).toContain('s2')
+    expect(synthesisText).toMatch(/failed/i)
+  })
+
+  it('the SYNTHESIS dispatch itself THROWS ⇒ every step surface stands, the synthesis group ends failed, no throw escapes', async () => {
+    const plan: PlanDeclaration = { steps: [step('s1'), step('s2')] }
+    const { transport } = scriptedTransport([
+      { lines: ['{"version":"v1.0","createSurface":{"surfaceId":"s1"}}'] },
+      { lines: ['{"version":"v1.0","createSurface":{"surfaceId":"s2"}}'] },
+      { throws: true }, // synthesis — THROWS
+    ])
+    const states: Array<[string, string]> = []
+    const session = await runPlan({ transport, session: EMPTY_SESSION, plan, onStepState: (g, s) => states.push([g, s]) })
+    expect(session.turns.some((t) => t.content.includes('s1'))).toBe(true) // nothing rolled back
+    expect(session.turns.some((t) => t.content.includes('s2'))).toBe(true)
+    expect(states).toContainEqual([PLAN_SYNTHESIS_GROUP_KEY, 'failed']) // thrown ⇒ same terminal state an error meta-line gets
+  })
+
+  it('a thrown step does not abort the run at the runPlannerTurn seam either (full plan→step→synthesis path)', async () => {
+    const plan: PlanDeclaration = { steps: [step('s1'), step('s2')] }
+    const { transport, calls } = scriptedTransport([
+      { meta: { plan } }, // 1. plan-request
+      { throws: true }, // 2. step s1 — THROWS
+      { lines: [] }, // 3. step s2
+      { lines: [] }, // 4. synthesis
+    ])
+    const session = await runPlannerTurn({ transport, session: EMPTY_SESSION, intent: 'do it', plannerEnabled: true })
+    expect(calls).toHaveLength(4) // the full K+2 run completes — no abort
+    expect(session.turns).toHaveLength(8)
+  })
+
+  it('the PLAN-REQUEST turn throwing is still the ONE TRUE ABORT (SPEC-R22 tier 1) — unchanged by this fix', async () => {
+    const { transport, calls } = scriptedTransport([{ throws: true }])
+    await expect(runPlannerTurn({ transport, session: EMPTY_SESSION, intent: 'x', plannerEnabled: true })).rejects.toThrow(
+      'scripted transport failure',
+    )
+    expect(calls).toHaveLength(1) // only the plan-request turn ever dispatched — no loop ever started
+  })
+})
+
 // ── SPEC-R22 AC3 — abandon: no further dispatch, remaining groups end not-run ──────────────────────────
 
 describe('SPEC-R22 AC3 — an aborted run dispatches nothing further', () => {

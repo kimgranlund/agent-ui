@@ -836,12 +836,15 @@ async function runPlannerFlow(intent: string): Promise<void> {
     showCanvas()
     addMessage('system', 'Plan run finished — see the status stream above for each step.')
   } catch (e) {
-    // GH #592 (upstream, plan-runner.ts — filed at code-checker review, finding 2): a step/synthesis
-    // dispatch that THROWS (as opposed to completing with a transport-composed `error` meta-line) escapes
-    // `runPlan`'s own per-step try/catch entirely, rejecting the whole run's promise before every seeded
-    // group reaches a terminal state. Defensively close whatever is STILL non-terminal to `not-run` here —
-    // display-honest ("aborted before/mid dispatch") even while the upstream bug stands, so nothing strands
-    // at "Queued"/"Running…" forever.
+    // GH #592 FIXED upstream (plan-runner.ts): a step/synthesis dispatch that THROWS now routes through
+    // `runPlan`'s own `drainStepTurn` catch-and-continue, folding into the SAME failed-tier a transport-
+    // composed `error` meta-line already gets — the run continues and every seeded group reaches a real
+    // terminal state before this promise ever settles. So this catch's only remaining entry is the
+    // plan-request turn's own genuine failure (SPEC-R22's tier-1 "one true abort" — thrown from inside
+    // `runPlannerTurn` BEFORE `runPlan`/its group-seeding ever runs, so `groupState` is still empty and the
+    // loop below is a no-op for that case). Left as a defensive backstop for any other truly-unexpected
+    // throw (e.g. the projection/narration layer itself) that would otherwise strand a group at
+    // "Queued"/"Running…" forever — display-honest either way.
     for (const [groupKey, state] of [...groupState]) {
       if (!TERMINAL_STATES.has(state)) onStepState(groupKey, 'not-run')
     }

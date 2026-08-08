@@ -157,11 +157,12 @@ export type PlanStepState = 'pending' | 'running' | 'done' | 'failed' | 'not-run
 
 /** One dispatch's outcome — `failed` folds BOTH failure shapes SPEC-R22 tiers 2/3 govern uniformly: a
  *  transport-composed terminal `error` meta-line (GH #144 — a `ProduceHalt`/upstream fault AFTER headers
- *  already committed 200) and a genuinely thrown exception from `transport.turn()` (caught by the caller
- *  that opts into catch-and-continue; the plan-request/gate-off dispatch instead lets a throw propagate,
- *  matching "existing single-call failure semantics apply completely unchanged," SPEC-R22). `plan` carries
- *  whatever the model declared on THIS turn's meta-line, whether or not the caller consumes it — a runner-
- *  dispatched turn's own caller (`runPlan`) simply never reads it (no-recursion, SPEC-R21). */
+ *  already committed 200) and a genuinely thrown exception from `transport.turn()` (caught by
+ *  `drainStepTurn` below, the caller that opts into catch-and-continue; the plan-request/gate-off dispatch
+ *  instead lets a throw propagate via plain `drainTurn`, matching "existing single-call failure semantics
+ *  apply completely unchanged," SPEC-R22). `plan` carries whatever the model declared on THIS turn's
+ *  meta-line, whether or not the caller consumes it — a runner-dispatched turn's own caller (`runPlan`)
+ *  simply never reads it (no-recursion, SPEC-R21). */
 interface TurnOutcome {
   content: string
   failed: boolean
@@ -196,6 +197,25 @@ async function drainTurn(transport: AgentTransport, input: TurnInput, onProgress
   return { content: lines.join('\n'), failed: false, plan }
 }
 
+/** GH #592 fix — the "caller that opts into catch-and-continue" the `TurnOutcome` doc above promises.
+ *  `runPlan`'s step/synthesis dispatches are the ONLY callers that route through here: a genuinely THROWN
+ *  `transport.turn()` exception (a network fault, a rejected promise — as opposed to a completed turn's
+ *  transport-composed `error` meta-line) is folded into the SAME `failed:true` outcome shape a `drainTurn`
+ *  error-meta-line already produces, `content: ''` (a thrown call ships zero validated lines, same as an
+ *  `error`-terminated one — SPEC-R5). SPEC-R22 tier 2/3 ("a step's/synthesis's failure does NOT abort the
+ *  run") therefore governs identically regardless of HOW the dispatch failed; `runPlan`'s own failure
+ *  handling below (group→failed, fold-in acknowledgment, run continues) never has to know which happened.
+ *  The plan-request/gate-off dispatch (`runPlannerTurn`) deliberately calls plain `drainTurn` instead —
+ *  its throw propagates unchanged, matching SPEC-R22's "the plan turn's own failure is the one true abort."
+ */
+async function drainStepTurn(transport: AgentTransport, input: TurnInput, onProgress?: (progress: TurnProgress) => void): Promise<TurnOutcome> {
+  try {
+    return await drainTurn(transport, input, onProgress)
+  } catch (e) {
+    return { content: '', failed: true, errorMessage: e instanceof Error ? e.message : String(e) }
+  }
+}
+
 export interface RunPlanOptions {
   transport: AgentTransport
   /** The session AFTER the plan-request turn (the plan turn INCLUDED) — SPEC-R21 Sequencing: "step N's
@@ -226,7 +246,9 @@ export interface RunPlanOptions {
  * one turn per step in declared order, plus exactly one closing synthesis turn (K+1 dispatches total,
  * never more). Every dispatch is a plain `{kind:'intent'}` `TurnInput` over the SAME growing `Session`
  * (the UNCHANGED `appendUserTurn`/`appendAssistantTurn` reducers) — nothing plan-shaped ever crosses the
- * `AgentTransport` seam. A step's failure does NOT abort the run (SPEC-R22 tier 2): its group closes
+ * `AgentTransport` seam. A step's failure does NOT abort the run (SPEC-R22 tier 2) — WHETHER the dispatch
+ * completed with a transport-composed `error` meta-line OR `transport.turn()` itself threw (GH #592: both
+ * route through `drainStepTurn`'s catch-and-continue into the SAME `failed:true` outcome): its group closes
  * `'failed'`, and the acknowledgment folds into the NEXT dispatch (the next step, or synthesis if the
  * failed step was last) — never a separate dispatch. A synthesis failure (tier 3) leaves every step's
  * already-rendered content standing (nothing here disposes anything — this module streams content into
@@ -251,7 +273,7 @@ export async function runPlan(opts: RunPlanOptions): Promise<Session> {
     onStepState?.(groupKey, 'running')
     const text = frameStepInstruction(step, priorFailure)
     const input: TurnInput = { kind: 'intent', text, session }
-    const outcome = await drainTurn(transport, input, (p) => onProgress?.(groupKey, p))
+    const outcome = await drainStepTurn(transport, input, (p) => onProgress?.(groupKey, p))
     session = appendUserTurn(session, text)
     session = appendAssistantTurn(session, outcome.content)
     if (outcome.failed) {
@@ -270,7 +292,7 @@ export async function runPlan(opts: RunPlanOptions): Promise<Session> {
   onStepState?.(PLAN_SYNTHESIS_GROUP_KEY, 'running')
   const synthesisText = frameSynthesis(plan, priorFailure)
   const synthesisInput: TurnInput = { kind: 'intent', text: synthesisText, session }
-  const synthOutcome = await drainTurn(transport, synthesisInput, (p) => onProgress?.(PLAN_SYNTHESIS_GROUP_KEY, p))
+  const synthOutcome = await drainStepTurn(transport, synthesisInput, (p) => onProgress?.(PLAN_SYNTHESIS_GROUP_KEY, p))
   session = appendUserTurn(session, synthesisText)
   session = appendAssistantTurn(session, synthOutcome.content)
   onStepState?.(PLAN_SYNTHESIS_GROUP_KEY, synthOutcome.failed ? 'failed' : 'done')
