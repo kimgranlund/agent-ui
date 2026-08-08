@@ -357,12 +357,131 @@ describe('ui-tabs — `orientation` reflected enum (GH #581, jsdom part of LLD-C
     expect(tabEls[0].ii.ariaSelected, 'ArrowLeft moved selection under vertical (must be inert)').toBe('true')
   })
 
-  it('NEGATIVE — the existing horizontal props (selected/fill/surface) stay byte-identical alongside orientation', () => {
+  it('NEGATIVE — the existing horizontal props (selected/fill/surface/overflow) stay byte-identical alongside orientation', () => {
     const { tabs, tabEls } = build()
     expect(tabs.orientation).toBe('horizontal')
     expect(tabs.fill).toBe(false)
     expect(tabs.selected).toBe('')
+    expect(tabs.overflow).toBe('scroll')
     expect(tabEls[0].ii.ariaSelected).toBe('true') // untouched default-selection behaviour
+  })
+})
+
+describe('ui-tabs — `overflow` reflected enum (GH #586, jsdom part of LLD-C11)', () => {
+  it('defaults to scroll/absent; setting the property reflects the attribute and vice versa', () => {
+    const { tabs } = build()
+    expect(tabs.overflow).toBe('scroll')
+    expect(tabs.hasAttribute('overflow')).toBe(false)
+
+    tabs.overflow = 'menu'
+    expect(tabs.getAttribute('overflow')).toBe('menu') // property → attribute reflection
+
+    tabs.overflow = 'scroll'
+    expect(tabs.getAttribute('overflow'), 'an explicit scroll write DOES set the attribute (enum reflect, not boolean presence)').toBe('scroll')
+
+    tabs.setAttribute('overflow', 'menu') // attribute → property
+    expect(tabs.overflow).toBe('menu')
+  })
+
+  it('an out-of-vocabulary write fails OPEN to the default (enum codec law)', () => {
+    const tabs = new ProbeTabs()
+    tabs.setAttribute('overflow', 'wrap') // toolbar's OWN vocabulary member — deliberately NOT tabs'
+    document.body.append(tabs)
+    expect(tabs.overflow).toBe('scroll')
+  })
+
+  it('overflow="scroll" (default) ⇒ NO [data-part=overflow] part exists (negative)', () => {
+    const { tabs } = build()
+    expect(tabs.querySelector('[data-part="overflow"]')).toBeNull()
+  })
+
+  it('overflow="menu" ⇒ the [data-part=overflow] ui-menu part exists, wrapping a labelled, iconed trigger button', () => {
+    const tabs = new ProbeTabs()
+    tabs.setAttribute('overflow', 'menu')
+    for (let i = 0; i < 3; i++) {
+      const t = new ProbeTab()
+      t.textContent = `Tab ${i}`
+      tabs.append(t)
+    }
+    document.body.append(tabs)
+
+    const menuEl = tabs.querySelector('[data-part="overflow"]') as HTMLElement
+    expect(menuEl, 'the overflow part must exist under overflow=menu').not.toBeNull()
+    expect(menuEl.tagName.toLowerCase()).toBe('ui-menu')
+    expect(menuEl.parentElement, 'the overflow part is a SHELL child, never a tablist child').toBe(tabs)
+
+    const trigger = menuEl.querySelector('[data-part="trigger"]') as HTMLButtonElement
+    expect(trigger, 'the trigger part is missing (menu.ts auto-stamps data-part=trigger on the first child)').not.toBeNull()
+    expect(trigger.tagName.toLowerCase()).toBe('button')
+    expect(trigger.getAttribute('aria-label')).toBe('More tabs')
+    expect(trigger.querySelector('svg'), 'setIcon must have injected an <svg> (dots-three)').not.toBeNull()
+  })
+
+  it('a strip that is NOT inside role=tablist: the trigger never becomes a tablist child (ARIA required-owned-children)', () => {
+    const tabs = new ProbeTabs()
+    tabs.setAttribute('overflow', 'menu')
+    document.body.append(tabs)
+    const strip = tabs.querySelector('[data-part="tablist"]') as HTMLElement
+    const menuEl = tabs.querySelector('[data-part="overflow"]') as HTMLElement
+    expect(menuEl.closest('[data-part="tablist"]'), 'the overflow part must never be inside the tablist').toBeNull()
+    expect(strip.contains(menuEl)).toBe(false)
+  })
+
+  it('a menu select event is CONTAINED at the boundary — never leaks the proxy-index-space payload onto a ui-tabs listener; toggle/close likewise', async () => {
+    const tabs = new ProbeTabs()
+    tabs.setAttribute('overflow', 'menu')
+    const tabEls: ProbeTab[] = []
+    for (let i = 0; i < 3; i++) {
+      const t = new ProbeTab()
+      t.textContent = `Tab ${i}`
+      t.setAttribute('key', `t${i}`)
+      tabs.append(t)
+      tabEls.push(t)
+    }
+    document.body.append(tabs)
+    const menuEl = tabs.querySelector('[data-part="overflow"]') as HTMLElement
+
+    const seen: CustomEvent[] = []
+    tabs.addEventListener('select', (e) => seen.push(e as CustomEvent))
+
+    // A raw menu `select` — the shape ui-menu itself would emit for a PROXY commit, carrying its OWN
+    // (unrelated) list-position index — 7, deliberately not any real tab index, so a leak is detectable.
+    const leaked = new CustomEvent('select', { bubbles: true, composed: true, detail: { value: 't1', index: 7 } })
+    menuEl.dispatchEvent(leaked)
+    await tabs.updateComplete // the selection effect is microtask-batched
+
+    // Exactly ONE `select` reaches ui-tabs — its OWN re-emission (the relay, tab index 1 for key t1) —
+    // never the raw proxy-shaped event (index 7) passing through untouched.
+    expect(seen).toHaveLength(1)
+    expect(seen[0], 'the raw bubbled menu event itself must never reach a ui-tabs listener').not.toBe(leaked)
+    expect(seen[0].detail, 'the RELAY must carry the TAB index space, not the leaked proxy index').toEqual({ value: 't1', index: 1 })
+    expect(tabEls[1].ii.ariaSelected, 'the relayed commit did not actually select tab 1').toBe('true')
+
+    let toggles = 0
+    let closes = 0
+    tabs.addEventListener('toggle', () => toggles++)
+    tabs.addEventListener('close', () => closes++)
+    menuEl.dispatchEvent(new CustomEvent('toggle', { bubbles: true, composed: true }))
+    menuEl.dispatchEvent(new CustomEvent('close', { bubbles: true, composed: true }))
+    expect(toggles, 'toggle must never surface on ui-tabs — its event surface stays exactly {select}').toBe(0)
+    expect(closes, 'close must never surface on ui-tabs — its event surface stays exactly {select}').toBe(0)
+  })
+
+  it('a bogus/unresolvable proxy identity relays to NOTHING (no commit, no garbage select)', () => {
+    const tabs = new ProbeTabs()
+    tabs.setAttribute('overflow', 'menu')
+    for (let i = 0; i < 2; i++) {
+      const t = new ProbeTab()
+      t.textContent = `Tab ${i}`
+      tabs.append(t)
+    }
+    document.body.append(tabs)
+    const menuEl = tabs.querySelector('[data-part="overflow"]') as HTMLElement
+
+    let count = 0
+    tabs.addEventListener('select', () => count++)
+    menuEl.dispatchEvent(new CustomEvent('select', { bubbles: true, composed: true, detail: { value: 'nonexistent-key', index: 0 } }))
+    expect(count).toBe(0)
   })
 })
 
