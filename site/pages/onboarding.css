@@ -1,0 +1,42 @@
+/* onboarding.css — page-local chrome for the Onboarding guide: the card rhythm, the step body spacing, the
+ * action row, and the status captions. Never restyles a ui-* control (card/progress/button/text-field/
+ * radio-group below all keep their own CSS) — ADR-0102, layout/rhythm only. Mirrors social-signin.css/
+ * otp-signin.css/magic-link.css. */
+
+ui-card + ui-card {
+  margin-block-start: var(--md-sys-space-lg);
+}
+
+ui-card {
+  max-inline-size: 24rem;
+}
+
+ui-progress {
+  margin-block-end: var(--md-sys-space-md);
+}
+
+.onboarding-step-body {
+  margin-block: var(--md-sys-space-md);
+}
+
+.onboarding-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--md-sys-space-sm);
+  margin-block-start: var(--md-sys-space-md);
+}
+
+.onboarding-status {
+  margin-block-start: var(--md-sys-space-sm);
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  min-block-size: 1.2em;
+}
+
+.onboarding-wiring-status,
+.onboarding-sources {
+  margin-block-start: var(--md-sys-space-md);
+  font-size: 0.85rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
