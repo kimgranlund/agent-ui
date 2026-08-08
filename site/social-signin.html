@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · Social sign in</title>
+  </head>
+  <body>
+    <!-- S3-a (Social Auth, GH #490 / ADR-0176): a provider-button row + a simulated redirect/callback round
+         trip, composed from ui-button over no new control, wired to the identity-mock-transport seam in a
+         dev/preview build. An MPA entry auto-discovered by vite.config.ts's site/**/*.html glob. -->
+    <div id="app"></div>
+    <script type="module" src="./pages/social-signin.ts"></script>
+  </body>
+</html>

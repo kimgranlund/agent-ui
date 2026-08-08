@@ -1,0 +1,43 @@
+[
+  {
+    "id": "social-signin",
+    "task": "sign in via a social provider through a simulated redirect + callback round trip (GH #490 S3-a, decomp a8)",
+    "entry": ["providers"],
+    "states": [
+      { "id": "providers", "screen": "social-signin" },
+      { "id": "redirecting", "screen": "social-signin" },
+      { "id": "callback", "screen": "social-signin" },
+      { "id": "completing", "screen": "social-signin" },
+      { "id": "signed-in", "screen": "social-signin" }
+    ],
+    "transitions": [
+      { "from": "providers", "to": "redirecting", "verb": "start-sign-in" },
+      { "from": "redirecting", "to": "callback", "verb": "succeed" },
+      { "from": "callback", "to": "completing", "verb": "complete", "fallible": true },
+      { "from": "completing", "to": "signed-in", "verb": "succeed" },
+      { "from": "signed-in", "to": "providers", "verb": "sign-out" }
+    ],
+    "exits": [
+      {
+        "state": "signed-in",
+        "kind": "success",
+        "asserts": [
+          "getSession() returns a session for the completed provider",
+          "session.method === 'social'"
+        ]
+      },
+      {
+        "state": "providers",
+        "kind": "abandon",
+        "asserts": ["no session was created", "getSession() returns null"]
+      }
+    ],
+    "recovery": [
+      { "from": "completing", "to": "callback", "preserves_input": true }
+    ],
+    "persistence": {
+      "resumable": false,
+      "across": "no cross-reload persistence by design (identity-mock-transport.spec.md SPEC-N3) — a reload restarts at providers"
+    }
+  }
+]

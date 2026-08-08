@@ -15,8 +15,10 @@
 // SPEC-R8's vocabulary (`code-invalid`/`code-expired`/`code-rate-limited`/`link-expired`/
 // `link-invalid`). `verifyOneTimeCode`/`confirmMagicLink` consume `code`/`cooldownMs`/`expiresInMs`
 // from `IdentityMockTransportOptions` for the first time — S1 shipped those fields unread, exactly so
-// S2 never had to widen the OPTIONS contract (S1's own header note). SPEC-R4 (social) is S3's own
-// future build.
+// S2 never had to widen the OPTIONS contract (S1's own header note).
+// SCOPE (S3 build, per SPEC-R11's extension rule — widens THIS SAME file again): SPEC-R4
+// (`startSocialSignIn`/`completeSocialSignIn`), plus its `social-denied` slice of SPEC-R8's
+// vocabulary. No new `IdentityMockTransportOptions` field — SPEC-R4 needs none.
 //
 // Two S2-local implementation choices the SPEC itself leaves open (mechanical fill-in over an
 // already-ratified contract, not new design — see identity-mock-transport.test.ts's own comments at
@@ -28,6 +30,19 @@
 // the same account-lookup shape `register` already uses — codes/magic-link are demo-only PASSWORDLESS
 // auth modes, so no SPEC-R1 pre-registration gate applies to them (SPEC-R2/R3's own ACs never name an
 // "unknown account" rejection the way `signInWithPassword` does).
+//
+// Two S3-local implementation choices, same mechanical-fill-in status: (1) `completeSocialSignIn`
+// validates no prior `startSocialSignIn` call — unlike codes/magic-link, SPEC-R4's shape carries no
+// per-call `requestId` token to check a completion against (`{provider}` only, both ways), so there is
+// nothing to look up; a consuming page's own flow (never completing before starting) is the only
+// sequencing guarantee, and SPEC-R8's closed vocabulary names no "not started" code to invent one for.
+// (2) `provider: 'generic'` is SPEC-R4 AC4's own named "demo-denial affordance" — a sentinel completion
+// value that ALWAYS rejects `social-denied`, never a real "supported provider" the button row offers
+// (AC1's phrase) alongside `'google'`/`'github'`; `completeSocialSignIn` reads it before any account
+// lookup, so it denies regardless of which provider was actually started. `'google'`/`'github'` both
+// auto-provision a fixed, deterministic per-provider `DemoAccount` (SPEC-R6 AC2) the same
+// `findOrCreateAccount` shape S2 already established — social sign-in carries no email input at all
+// (SPEC-R4's `{provider}`-only shape), so the provider name itself keys the demo account.
 //
 // Determinism (SPEC-R6 AC2): no Math.random()/crypto.getRandomValues anywhere below — every id is a
 // plain incrementing counter, seeded fresh per instance (identity-mock-transport.test.ts's own
@@ -49,9 +64,13 @@ export interface IdentitySession {
   method: 'password' | 'code' | 'magic-link' | 'social'
 }
 
-/** SPEC-R8's closed error vocabulary — the S1 slice (`account-exists`/`invalid-credentials`) plus S2's
- *  own APPEND (`code-*`/`link-*`, SPEC-R11's additive-only extension rule; never a redefinition of an
- *  existing member). S3 appends `social-denied` when it dispatches (SPEC-R4). */
+/** SPEC-R4's closed provider union. `'generic'` is the demo-denial sentinel (AC4), never a real
+ *  "supported provider" `startSocialSignIn` is meant to be called for (file banner, S3 choice 2). */
+export type SocialProvider = 'google' | 'github' | 'generic'
+
+/** SPEC-R8's closed error vocabulary — the S1 slice (`account-exists`/`invalid-credentials`), S2's own
+ *  APPEND (`code-*`/`link-*`), and S3's own APPEND (`social-denied`) — SPEC-R11's additive-only
+ *  extension rule; never a redefinition of an existing member. */
 export type IdentityMockErrorCode =
   | 'account-exists'
   | 'invalid-credentials'
@@ -60,6 +79,7 @@ export type IdentityMockErrorCode =
   | 'code-rate-limited'
   | 'link-expired'
   | 'link-invalid'
+  | 'social-denied'
 
 /** SPEC-R8 — every rejection from this transport is an `IdentityMockError` carrying exactly one closed
  *  `code`, never a bare `Error` and never a string throw. */
@@ -90,9 +110,9 @@ export interface IdentityMockTransportOptions {
   expiresInMs?: number
 }
 
-/** SPEC-R1/R2/R3/R5 — S1's + S2's slice of the full seam (SPEC §5's typed contract). S3 (SPEC-R4)
- *  widens this SAME interface with new methods when it dispatches (SPEC-R11) — never a second,
- *  parallel interface. */
+/** SPEC-R1/R2/R3/R4/R5 — S1's + S2's + S3's slice of the full seam (SPEC §5's typed contract). Every
+ *  future slice widens this SAME interface with new methods when it dispatches (SPEC-R11) — never a
+ *  second, parallel interface. */
 export interface IdentityMockTransport {
   register(input: { email: string; password: string }): Promise<{ session: IdentitySession }>
   signInWithPassword(input: { email: string; password: string }): Promise<{ session: IdentitySession }>
@@ -102,8 +122,21 @@ export interface IdentityMockTransport {
   // Magic Link (S2, SPEC-R3) — confirmMagicLink IS the demo's "user clicked the emailed link" stand-in.
   requestMagicLink(input: { email: string }): Promise<{ requestId: string; expiresAt: number }>
   confirmMagicLink(input: { requestId: string }): Promise<{ session: IdentitySession }>
+  // Social Auth (S3, SPEC-R4) — no real provider, no window navigation (SPEC-N8), no token exchange.
+  startSocialSignIn(input: { provider: SocialProvider }): Promise<{ redirectHint: string }>
+  completeSocialSignIn(input: { provider: SocialProvider }): Promise<{ session: IdentitySession }>
   getSession(): IdentitySession | null
   clearSession(): void
+}
+
+/** S3's own display copy for `startSocialSignIn`'s `redirectHint` (SPEC-R4 AC1) — DISPLAY-only strings,
+ *  never a real URL (AC2: never matches `^https?:\/\/`, never a navigation-sink assignment anywhere in
+ *  this file or a consuming page — SPEC-N8). `'generic'` never reaches this map in practice (the button
+ *  row only ever starts `'google'`/`'github'`, file banner S3 choice 2) but is total for the union. */
+const SOCIAL_PROVIDER_LABEL: Record<SocialProvider, string> = {
+  google: 'Google',
+  github: 'GitHub',
+  generic: 'the demo provider',
 }
 
 const DEFAULT_ACCOUNTS: readonly DemoAccount[] = [{ email: 'demo@agent-ui.dev', password: 'Passw0rd!', accountId: 'demo-0001' }]
@@ -262,6 +295,27 @@ export function createIdentityMockTransport(options: IdentityMockTransportOption
       linkRequests.delete(requestId) // one-shot: a confirmed link cannot be replayed
       const account = findOrCreateAccount(pending.email)
       const next: IdentitySession = { accountId: account.accountId, email: account.email, method: 'magic-link' }
+      session = next
+      return { session: next }
+    },
+
+    // ── S3 — SPEC-R4: social sign-in redirect / callback simulation ────────────────────────────────
+    async startSocialSignIn({ provider }) {
+      await delay(latencyMs)
+      return { redirectHint: `Redirecting to ${SOCIAL_PROVIDER_LABEL[provider]}…` }
+    },
+
+    async completeSocialSignIn({ provider }) {
+      await delay(latencyMs)
+      // The demo-denial sentinel (file banner, S3 choice 2) — checked BEFORE any account lookup, so it
+      // denies regardless of which provider was actually started.
+      if (provider === 'generic') {
+        throw new IdentityMockError('social-denied', 'Sign-in was cancelled.')
+      }
+      // No email input on this seam (SPEC-R4's `{provider}`-only shape) — the provider name itself keys
+      // a fixed, deterministic demo account (findOrCreateAccount's own shape, S2 precedent).
+      const account = findOrCreateAccount(`${provider}@social.agent-ui.dev`)
+      const next: IdentitySession = { accountId: account.accountId, email: account.email, method: 'social' }
       session = next
       return { session: next }
     },

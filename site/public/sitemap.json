@@ -569,6 +569,13 @@
       "section": "Guides"
     },
     {
+      "name": "Social sign in",
+      "url": "./social-signin.html",
+      "description": "Choose a provider, walk a simulated redirect + callback round trip, complete or cancel the sign-in, and reach the signed-in state — the SAME in-memory identity-mock-transport as Registration & sign in (GH #490, ADR-0176).",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
       "name": "Which component when",
       "url": "./choosing.html",
       "description": "A quick chooser between components that overlap in purpose, condensed from the A2UI catalog's own guidance.",
