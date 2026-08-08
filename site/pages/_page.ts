@@ -76,6 +76,7 @@ export const NAV: readonly NavGroup[] = [
       { href: './forms.html', label: 'Forms' },
       { href: './credentials.html', label: 'Registration & sign in' },
       { href: './magic-link.html', label: 'Magic link sign in' },
+      { href: './otp-signin.html', label: 'One-time code sign in' },
       { href: './choosing.html', label: 'Which component when' },
       { href: './changelog.html', label: 'Changelog' },
     ],

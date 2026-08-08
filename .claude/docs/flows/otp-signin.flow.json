@@ -1,0 +1,47 @@
+[
+  {
+    "id": "otp-signin",
+    "task": "sign in via a one-time code and reach the signed-in state (GH #490 S2-a2, decomp a3/a4/a5)",
+    "entry": ["forms"],
+    "states": [
+      { "id": "forms", "screen": "otp-signin" },
+      { "id": "requesting", "screen": "otp-signin" },
+      { "id": "code-entry", "screen": "otp-signin" },
+      { "id": "verifying", "screen": "otp-signin" },
+      { "id": "resending", "screen": "otp-signin" },
+      { "id": "signed-in", "screen": "otp-signin" }
+    ],
+    "transitions": [
+      { "from": "forms", "to": "requesting", "verb": "submit-request" },
+      { "from": "requesting", "to": "code-entry", "verb": "succeed" },
+      { "from": "code-entry", "to": "verifying", "verb": "complete-code", "fallible": true },
+      { "from": "verifying", "to": "signed-in", "verb": "succeed" },
+      { "from": "code-entry", "to": "resending", "verb": "resend", "fallible": true },
+      { "from": "resending", "to": "code-entry", "verb": "succeed" },
+      { "from": "signed-in", "to": "forms", "verb": "sign-out" }
+    ],
+    "exits": [
+      {
+        "state": "signed-in",
+        "kind": "success",
+        "asserts": [
+          "getSession() returns a session for the requested email",
+          "session.method === 'code'"
+        ]
+      },
+      {
+        "state": "forms",
+        "kind": "abandon",
+        "asserts": ["no session was created", "getSession() returns null"]
+      }
+    ],
+    "recovery": [
+      { "from": "verifying", "to": "code-entry", "preserves_input": true },
+      { "from": "resending", "to": "code-entry", "preserves_input": true }
+    ],
+    "persistence": {
+      "resumable": false,
+      "across": "no cross-reload persistence by design (identity-mock-transport.spec.md SPEC-N3) — a reload restarts at forms"
+    }
+  }
+]
