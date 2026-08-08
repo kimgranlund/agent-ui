@@ -102,10 +102,20 @@
       "owner": "agent-ui-component-standards"
     },
     {
+      "id": "t15",
+      "prompt": "How do I add an MCP server so the live agent can call its tools?",
+      "expect": "trigger"
+    },
+    {
+      "id": "t16",
+      "prompt": "What happens if two MCP servers expose a tool with the same name?",
+      "expect": "trigger"
+    },
+    {
       "id": "n06",
       "prompt": "Set up a Slack MCP server integration for Claude Code",
       "expect": "no-trigger",
-      "owner": "harness:adopt-plugin / MCP docs — deferred by ADR-0168 non-goals"
+      "owner": "update-config — Claude Code's OWN MCP config, a different product surface than this repo's live-agent connector"
     },
     {
       "id": "x-libkinds-1",
