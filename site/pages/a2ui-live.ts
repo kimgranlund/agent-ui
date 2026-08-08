@@ -52,7 +52,7 @@ import type { AgentTransport, TurnInput, Session, TurnTrace, AskDeclaration } fr
 import { AskRegistry, surfaceIdOf, componentTypesOf } from '../lib/ask-registry.ts'
 import type { AskEntry } from '../lib/ask-registry.ts'
 // GH #579 — wire the shipped host-side plan-runner (PR #580, ADR-0174/SPEC-R21/R22) into this page.
-import { runPlannerTurn, PLAN_SYNTHESIS_GROUP_KEY } from '../lib/plan-runner.ts'
+import { runPlannerTurn, PLAN_SYNTHESIS_GROUP_KEY, sanitizeFailureReason } from '../lib/plan-runner.ts'
 import type { PlanStepState } from '../lib/plan-runner.ts'
 // The SAME persona-scoped modality-gate PRECEDENT `SURFACE_A2UI_KEY`/`SURFACE_GENUI_KEY` already use
 // (ADR-0174 cl.1). This page has no persona/settings surface at all (that is agent-admin's own `store`),
@@ -858,9 +858,14 @@ async function runPlannerFlow(intent: string): Promise<void> {
     for (const [groupKey, state] of [...groupState]) {
       if (!TERMINAL_STATES.has(state)) onStepState(groupKey, 'not-run')
     }
-    narration.appendEntry({ key: 'plan-error', status: 'error', label: `Plan run failed — ${(e as Error).message}` })
+    // #602 review follow-up — this tier-1 message is a RAW upstream/thrown string, same as tier 2/3's
+    // `errorMessage`; it MUST pass through the SAME `sanitizeFailureReason` before reaching either rendered
+    // surface below (the narration label AND the chat message) — this catch is the only site in this
+    // module that ever displayed an unsanitized fault message.
+    const reason = sanitizeFailureReason((e as Error).message)
+    narration.appendEntry({ key: 'plan-error', status: 'error', label: `Plan run failed — ${reason}` })
     narration.fail()
-    addMessage('system', `⚠ ${(e as Error).message}`)
+    addMessage('system', `⚠ ${reason}`)
   } finally {
     setBusy(false)
   }

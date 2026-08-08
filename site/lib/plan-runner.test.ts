@@ -552,6 +552,34 @@ describe('GH #602 leg 2 — sanitizeFailureReason (pure)', () => {
     expect(sanitized).toContain('[redacted]')
   })
 
+  it('strips URL-userinfo credentials ("scheme://user:pass@host") while leaving host/path visible', () => {
+    const sanitized = sanitizeFailureReason('connect ECONNREFUSED postgres://admin:hunter2@db.internal:5432/app')
+    expect(sanitized).not.toContain('admin:hunter2')
+    expect(sanitized).toContain('[redacted]')
+    expect(sanitized).toContain('db.internal:5432/app') // host/path stay visible — useful debugging context
+  })
+
+  it('strips a literal AWS Access Key ID ("AKIA" + 16 uppercase-alnum chars)', () => {
+    const sanitized = sanitizeFailureReason('upstream rejected credentials AKIAABCDEFGHIJKLMNOP')
+    expect(sanitized).not.toContain('AKIAABCDEFGHIJKLMNOP')
+    expect(sanitized).toContain('[redacted]')
+  })
+
+  it('strips bare "key=<value>"/"access key: <value>" WITH a mandatory separator', () => {
+    const sanitized1 = sanitizeFailureReason('rejected: key=abcdef1234567890')
+    expect(sanitized1).not.toContain('abcdef1234567890')
+    expect(sanitized1).toContain('[redacted]')
+    const sanitized2 = sanitizeFailureReason('rejected: access key: xyz9876543210abc')
+    expect(sanitized2).not.toContain('xyz9876543210abc')
+    expect(sanitized2).toContain('[redacted]')
+  })
+
+  it('documented miss: bare "key <value>" with NO separator is left unredacted (the false-positive bound)', () => {
+    // No ':'/'=' after "key" — BARE_KEY_SHAPE's deliberate, documented miss (the #602 follow-up): bounding
+    // false positives on ordinary prose ("primary key", "key insight") was judged worth this narrower catch.
+    expect(sanitizeFailureReason('the primary key insight here is clear')).toBe('the primary key insight here is clear')
+  })
+
   it('does NOT redact a plain English word that happens to follow a keyword ("token expired")', () => {
     expect(sanitizeFailureReason('token expired, please retry')).toBe('token expired, please retry')
   })

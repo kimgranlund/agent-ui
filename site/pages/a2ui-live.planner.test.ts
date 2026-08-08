@@ -305,13 +305,14 @@ describe('a2ui-live planner-stage wiring (GH #579, ADR-0174/SPEC-R21/R22) — a 
     await waitUntil(() => !composerBusy())
   })
 
-  it('gate ON: the PLAN-REQUEST turn itself throwing is still the ONE TRUE ABORT (SPEC-R22 tier 1) — the page\'s defensive catch still owns this leg, unchanged by the GH #592 fix', async () => {
+  it('gate ON: the PLAN-REQUEST turn itself throwing is still the ONE TRUE ABORT (SPEC-R22 tier 1) — its displayed message is ALSO sanitized (#602 follow-up)', async () => {
     __setPlannerEnabledForTest(true)
     const calls: number[] = []
+    const secret = 'token=abcdef1234567890'
     __setTransportForTest(
       scriptedTransport((turn) => {
         calls.push(turn)
-        throw new Error('plan-request transport fault') // turn 1 — before consumption, before any group seeds
+        throw new Error(`plan-request transport fault: ${secret}`) // turn 1 — before consumption, before any group seeds
       }),
     )
 
@@ -322,8 +323,16 @@ describe('a2ui-live planner-stage wiring (GH #579, ADR-0174/SPEC-R21/R22) — a 
     // `runPlan` was never reached, so no group was ever seeded; the page's defensive not-run-closing loop
     // is a no-op here (empty `groupState`), composing cleanly with the upstream fix rather than duplicating it.
     expect(calls).toEqual([1])
-    expect(narrationLabel('plan-error')).toContain('plan-request transport fault')
-    expect(chatMessages('system').some((m) => m.textContent?.includes('plan-request transport fault'))).toBe(true)
+    // #602 follow-up — tier 1's message is a RAW upstream/thrown string too, same as tier 2/3's
+    // `errorMessage`; it goes through the SAME `sanitizeFailureReason` before EITHER rendered surface below
+    // shows it (the raw-text pin updates to the SANITIZED form, not the raw secret).
+    const label = narrationLabel('plan-error') ?? ''
+    expect(label).toContain('plan-request transport fault')
+    expect(label).toContain('[redacted]')
+    expect(label).not.toContain(secret)
+    const systemMsg = chatMessages('system').find((m) => m.textContent?.includes('plan-request transport fault'))
+    expect(systemMsg, 'the system chat message exists and is ALSO sanitized').toBeDefined()
+    expect(systemMsg!.textContent).not.toContain(secret)
 
     await waitUntil(() => !composerBusy())
   })

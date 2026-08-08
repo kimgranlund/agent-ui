@@ -186,7 +186,10 @@ interface TurnOutcome {
 class PartialTurnError extends Error {
   readonly partialLines: readonly string[]
   constructor(cause: unknown, partialLines: readonly string[]) {
-    super(cause instanceof Error ? cause.message : String(cause))
+    // `{ cause }` (ES2022) — free debugging fidelity: the original thrown value survives on `.cause` for
+    // anyone inspecting the error in a debugger/log, even though every existing reader here only looks at
+    // `.message`/`.partialLines`.
+    super(cause instanceof Error ? cause.message : String(cause), { cause })
     this.partialLines = partialLines
   }
 }
@@ -258,25 +261,54 @@ async function drainStepTurn(transport: AgentTransport, input: TurnInput, onProg
   }
 }
 
-// ── Display honesty — a sanitized, ONE-LINE failure reason for a status entry ONLY (#602) ─────────────────
+// ── Display honesty — a sanitized, ONE-LINE failure reason for a rendered surface (#602) ────────────────────
 //
-// `TurnOutcome.errorMessage` is transport/upstream-controlled text (a `ProduceHalt` fault's message or a
-// raw thrown exception's `.message`) that MAY carry sensitive fragments — an upstream fault echoing back a
-// header, a stack frame with an embedded credential. `sanitizeFailureReason` is the ONE place that text is
-// allowed to reach a rendered surface: the failed group's status-entry LABEL, via `onStepState`'s `reason`
-// argument (`runPlan` below). It goes ONLY there — it is NEVER folded into `frameStepInstruction`/
-// `frameSynthesis` (the fold-in acknowledgment's wording is fixed, step id/description only —
-// `failureAcknowledgment` above never reads `errorMessage`/`reason` at all), so there is no path from a raw
-// upstream message into a turn the model ever sees.
+// `TurnOutcome.errorMessage` (a `ProduceHalt` fault's message or a raw thrown exception's `.message`) AND a
+// plan-request turn's own thrown message (SPEC-R22 tier 1 — `runPlannerTurn` propagates it unchanged, the
+// page catches it) are BOTH transport/upstream-controlled text that MAY carry sensitive fragments — an
+// upstream fault echoing back a header, a stack frame with an embedded credential, a connection string with
+// embedded userinfo. `sanitizeFailureReason` is the ONE transform any such raw message must pass through
+// before reaching a rendered surface: `runPlan` below calls it for tier 2/3 (a step/synthesis failure, via
+// `onStepState`'s `reason` argument); the PAGE calls it directly for tier 1 (the plan-request turn's own
+// throw never flows through `runPlan` at all — `a2ui-live.ts`'s catch block). Either way it is NEVER folded
+// into `frameStepInstruction`/`frameSynthesis` (the fold-in acknowledgment's wording is fixed, step
+// id/description only — `failureAcknowledgment` above never reads `errorMessage`/`reason` at all), so there
+// is no path from a raw upstream message into a turn the model ever sees.
+
+/** A URL embedding userinfo credentials (`scheme://user:pass@host`) — fetch/connection failures echo full
+ *  URLs constantly, making this the single most probable REAL leak this sanitizer guards against. Redacts
+ *  ONLY the userinfo segment, leaving scheme/host/path visible (still useful debugging context). */
+const URL_USERINFO_SHAPE = /([a-zA-Z][a-zA-Z0-9+.-]*:\/\/)[^\s/?#@]+:[^\s/?#@]+@/g
+
+/** AWS Access Key ID literal shape (`AKIA` + 16 uppercase-alnum chars) — a fixed-format identifier with
+ *  effectively zero false-positive risk (no English word or ordinary identifier collides with it). */
+const AWS_ACCESS_KEY_SHAPE = /\bAKIA[0-9A-Z]{16}\b/g
 
 /** A key/token/bearer-shaped credential run: one of the listed keywords, an optional `:`/`=` separator, then
  *  a contiguous alnum/`.`/`_`/`~`/`+`/`/`/`-` run of 8+ chars that (via the lookahead) contains at least one
  *  digit or symbol — excludes plain English words that happen to follow one of the keywords ("token
  *  expired", "unauthorized" after "Authorization") while still catching the shapes a real leaked secret/API
  *  key/bearer token/JWT segment actually takes. Conservative in the security sense (biased toward stripping
- *  over leaking), not in the sense of matching rarely. */
+ *  over leaking), not in the sense of matching rarely.
+ *
+ *  DOCUMENTED MISS (deliberate, kept — #602 review): the digit/symbol lookahead means a purely-alphabetic
+ *  credential value (no digit, no `._~+/-`) will NOT be redacted. Real API keys/tokens/JWT segments
+ *  virtually always mix case+digits or carry `-`/`_`/`.` delimiters (base64/base64url/hex are never
+ *  letters-only in practice), so this is judged an acceptable rare miss against the alternative — dropping
+ *  the lookahead would redact plain English words after these keywords ("token expired" → "token
+ *  [redacted]"), degrading the status label's honesty in the FAR more common case. Bare `key`/`access key`
+ *  are excluded from this list entirely (see `BARE_KEY_SHAPE` below) — they are common enough as ordinary
+ *  English words that even THIS lookahead isn't enough to bound the false-positive rate. */
 const CREDENTIAL_SHAPE =
   /\b(api[-_ ]?key|apikey|access[-_ ]?token|refresh[-_ ]?token|token|secret|bearer|authorization|password|passwd)\b\s*[:=]?\s*(?=\S*[0-9._~+/-])[A-Za-z0-9._~+/-]{8,}/gi
+
+/** Bare "key"/"access key" are common non-credential English words ("primary key", "key insight", "the
+ *  access key to understanding X") — redacting them on ANY separator, the way `CREDENTIAL_SHAPE` treats more
+ *  specific words like "token"/"bearer", would false-positive on ordinary prose constantly. Bounded here to
+ *  a MANDATORY `:`/`=` separator (never bare whitespace): "key=..."/"key: ..." are genuinely
+ *  credential-shaped. DOCUMENTED MISS: bare "key <value>" with only whitespace between them is deliberately
+ *  left unredacted — narrowing false positives was judged worth this narrower catch. */
+const BARE_KEY_SHAPE = /\b(access[-_ ]?key|key)\b\s*[:=]\s*(?=\S*[0-9._~+/-])[A-Za-z0-9._~+/-]{8,}/gi
 
 /** A bare JWT-shaped substring (three dot-separated base64url segments, header starting `eyJ` — base64 for
  *  `{"`) — distinctive enough to redact with NO keyword context required. */
@@ -286,18 +318,24 @@ const JWT_SHAPE = /\beyJ[A-Za-z0-9_-]{6,}\.[A-Za-z0-9_-]{6,}\.[A-Za-z0-9_-]{6,}\
 const MAX_REASON_LENGTH = 120
 
 /**
- * #602 — the ONE sanitized line of `TurnOutcome.errorMessage` a failed group's status entry may show. Pure,
- * never throws:
+ * #602 — the ONE sanitized line a raw fault message (`TurnOutcome.errorMessage`, or a plan-request turn's
+ * own thrown message) may become before reaching a rendered surface. Pure, never throws:
  *   1. collapses to ONE line (embedded newlines/CR → a single space — a raw multi-line fault/stack trace
  *      must never blow up a one-line status label);
- *   2. strips any key/token/bearer-shaped substring (`CREDENTIAL_SHAPE`/`JWT_SHAPE` above) to `[redacted]`;
+ *   2. strips URL-userinfo, AWS access-key-id, key/token/bearer-shaped, and bare-JWT substrings (the
+ *      constants above) to `[redacted]`;
  *   3. truncates to `MAX_REASON_LENGTH` (120) chars total, trailing `…` marker included in the count.
  * An empty/whitespace-only message degrades to a fixed fallback string, never an empty label.
  */
 export function sanitizeFailureReason(message: string): string {
   const oneLine = message.replace(/[\r\n]+/g, ' ').trim()
   if (oneLine.length === 0) return 'unspecified error'
-  const redacted = oneLine.replace(CREDENTIAL_SHAPE, '$1 [redacted]').replace(JWT_SHAPE, '[redacted]')
+  const redacted = oneLine
+    .replace(URL_USERINFO_SHAPE, '$1[redacted]@')
+    .replace(AWS_ACCESS_KEY_SHAPE, '[redacted]')
+    .replace(CREDENTIAL_SHAPE, '$1 [redacted]')
+    .replace(BARE_KEY_SHAPE, '$1 [redacted]')
+    .replace(JWT_SHAPE, '[redacted]')
   return redacted.length > MAX_REASON_LENGTH ? `${redacted.slice(0, MAX_REASON_LENGTH - 1)}…` : redacted
 }
 
