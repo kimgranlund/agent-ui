@@ -325,6 +325,14 @@ every contributor to also edit one shared top-of-file block.
   `getSession()` to gate its first-run journey on an existing demo session; it earns no NEW
   transport operation — matching `identity-flow.decomp.md`'s own S4-a/S4-b split, neither of which
   names a transport dependency beyond that read.
+  *(Clarifying note, 2026-08-08, S4 build, GH #614 — additive, non-normative: the shipped
+  `site/pages/onboarding.ts` is its own standalone MPA entry with no real "arrived from
+  Authentication" hop to demo against (SPEC-N3 — a fresh page load has no session), so its
+  first-run gate is a one-click sign-in STAND-IN over the SAME SPEC-R1 `signInWithPassword` /
+  SPEC-R6 seeded demo account every other slice already uses, plus `clearSession` on its own
+  sign-out. Both are pre-existing operations, not S4-specific ones — the rule this non-goal
+  states ("no NEW transport operation") still holds exactly; only this sentence's own "only
+  `getSession()`" phrasing undersold the page's full (still non-new) surface.)*
 - **SPEC-N8 — No operation's return value is ever a navigation target.** `redirectHint` (SPEC-R4 AC2)
   and every other string this seam returns are DISPLAY-only; no consuming page may assign any of them
   to `window.location`, an `<a href>`, `window.open`, or any other navigation sink. S3's own build

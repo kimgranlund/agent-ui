@@ -23,6 +23,19 @@
  * Forced colors (SPEC-R19): a background-drawn fill vanishes under WHCM (the bar-chart lesson,
  * bar-chart.css:101-107) — an explicit `forced-colors` block repoints the fill to `CanvasText` and keeps
  * the track distinguishable (`Canvas` + a `CanvasText` border).
+ *
+ * Discrete mode (SPEC-R1 Amendment v1, GH #614): `segments` replaces the single fill with a `cells` strip —
+ * `segments` equal flex cells (`data-part="cell"`), the first `effectiveValue` carrying `data-filled`. The
+ * gap between cells is a real flex `gap`, but a real gap alone is NOT sufficient (component-checker F1,
+ * 2026-08-08): unfilled cells paint the SAME `--ui-progress-track-ink` as the track sitting behind the gap,
+ * so two adjacent UNFILLED cells were visually indistinguishable from one continuous run — M (segment
+ * count) stopped being countable, exactly the misrepresentation OQ1 ruled against. The `cells` container
+ * itself now paints its OWN `--ui-progress-cell-gap-ink` (distinct from both track and fill ink) behind the
+ * gap, so every inter-cell boundary reads regardless of the two neighbours' fill state. Under WHCM the gap
+ * ink alone is still not enough (the bar-chart lesson again): filled/unfilled cells get explicit
+ * `CanvasText`/`Canvas` repaints AND every cell gets an explicit `CanvasText` boundary — the separation
+ * never rides an unstyled background that a browser's own forced-colors auto-adjust could collapse into one
+ * indistinguishable run.
  */
 
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-progress) declares --ui-progress-* ════════════════ */
@@ -32,6 +45,10 @@
   --ui-progress-min-inline-size: 8em; /* the whole-shape floor (SPEC-R18 AC1; the slider-dot lesson) */
   --ui-progress-track-ink: var(--md-sys-color-neutral-track); /* the ADR-0059 solid-track role */
   --ui-progress-fill-ink: var(--md-sys-color-primary);
+  --ui-progress-cell-gap: 2px; /* SPEC-R1 Amendment v1 — the inter-cell separation, discrete mode */
+  /* component-checker F1 (2026-08-08): distinct from BOTH --ui-progress-track-ink and -fill-ink, so the
+   * gap reads at every cell boundary — including unfilled<->unfilled, which a shared track/gap ink hid. */
+  --ui-progress-cell-gap-ink: var(--md-sys-color-neutral-outline-variant);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-progress) consumes ONLY --ui-progress-* ════════════════ */
@@ -66,6 +83,28 @@
     animation: ui-progress-sweep 1.5s linear infinite;
   }
 
+  /* SPEC-R1 Amendment v1 — the discrete-mode cell strip, replacing `fill` as the track's sole child.
+   * `gap` is a real flex gap; the container's OWN background paints the gap area with a THIRD ink
+   * (component-checker F1) — a boundary between two same-state neighbours (e.g. unfilled<->unfilled)
+   * would otherwise be invisible, since the gap would just reveal the track behind it (== unfilled ink). */
+  :scope [data-part='cells'] {
+    display: flex;
+    inline-size: 100%;
+    block-size: 100%;
+    gap: var(--ui-progress-cell-gap);
+    background: var(--ui-progress-cell-gap-ink);
+  }
+
+  :scope [data-part='cell'] {
+    flex: 1 1 0;
+    box-sizing: border-box;
+    background: var(--ui-progress-track-ink);
+  }
+
+  :scope [data-part='cell'][data-filled] {
+    background: var(--ui-progress-fill-ink);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     :scope [data-part='fill'][data-indeterminate] {
       /* stationary; opacity-only — no translation, no scaling (SPEC-R2 AC2) */
@@ -82,6 +121,21 @@
     :scope [data-part='track'] {
       background: Canvas;
       border: 1px solid CanvasText;
+    }
+
+    /* SPEC-R1 Amendment v1 — the discrete-mode confirmation: R19's fill<->track ink swap covers filled vs
+     * unfilled cells verbatim; the ONLY added rule is an explicit per-cell boundary so the separation never
+     * rides the flex `gap`'s unstyled background alone (the same bar-chart lesson, applied to a strip of N
+     * cells instead of one fill). */
+    :scope [data-part='cell'] {
+      background: Canvas;
+      border-inline-end: 1px solid CanvasText;
+    }
+    :scope [data-part='cell']:last-child {
+      border-inline-end: 0;
+    }
+    :scope [data-part='cell'][data-filled] {
+      background: CanvasText;
     }
   }
 }

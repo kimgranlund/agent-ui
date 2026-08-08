@@ -26,7 +26,7 @@ const css = readFileSync(`${DIR}/progress.css`, 'utf8') as string
 
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
-const ATTR_NAMES = ['current', 'max', 'label']
+const ATTR_NAMES = ['current', 'max', 'label', 'segments']
 
 describe('progress.md descriptor — structural validity', () => {
   it('has a leading frontmatter fence and a prose body', () => {
