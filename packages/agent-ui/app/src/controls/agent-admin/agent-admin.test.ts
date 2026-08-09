@@ -147,18 +147,64 @@ describe('mountEntryList — customAdd/contentField (ADR-0170 cl.8)', () => {
   })
 })
 
-describe('UIAgentAdminElement — shell composition (GH #52/ADR-0154): segments + narrow-tabs', () => {
-  it('composes ONE ui-chat-shell: content=conversation, options-pane segmented into Agent/Capabilities/Surface/Context: System/Context: Dialog (GH #574)', () => {
+describe('UIAgentAdminElement — shell composition (ADR-0179): the three places + the settings sub-nav', () => {
+  it('composes ONE ui-chat-shell: header=the three-place nav, content=[test conversation | the master-detail pairing]', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const shell = el.querySelector(':scope > ui-chat-shell') as HTMLElement
     expect(shell).not.toBeNull()
-    expect(shell.getAttribute('resizable-end')).toBe('')
-    expect(shell.getAttribute('narrow-end')).toBe('tabs')
-    expect(el.querySelector('[data-part="canvas"] ui-conversation')).not.toBeNull()
-    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
-    expect(pane.hasAttribute('data-segmented')).toBe(true)
-    const segmentLabels = [...pane.querySelectorAll(':scope > [data-segment]')].map((s) => s.getAttribute('data-segment'))
+    // ADR-0179 cl.1 / LLD §7 — the end side retired with the options-pane the settings region left.
+    expect(shell.hasAttribute('resizable-end'), 'the retired end-side attrs are gone').toBe(false)
+    expect(shell.hasAttribute('narrow-end'), 'the six-entry narrow-tabs vocabulary is gone').toBe(false)
+    expect(el.querySelector('[data-slot-name="options-pane"]'), 'nothing occupies the options-pane slot any more').toBeNull()
+
+    const navBar = el.querySelector('[data-part="pane-nav-bar"]') as HTMLElement
+    expect(navBar.getAttribute('data-slot')).toBe('header')
+    expect(navBar.getAttribute('data-landmark')).toBe('navigation')
+    const places = [...navBar.querySelectorAll('[data-part="pane-nav"] ui-tab')].map((t) => t.textContent)
+    expect(places, 'ONE vehicle, three places (cl.1)').toEqual(['Chat', 'Author', 'Settings'])
+
+    const holder = el.querySelector('[data-part="pane-holder"]') as HTMLElement
+    expect(holder.getAttribute('data-slot')).toBe('content')
+    expect(holder.querySelector(':scope > ui-conversation'), 'the Chat place').not.toBeNull()
+    const pair = el.querySelector('[data-part="pane-pair"]') as HTMLElement
+    expect(pair.tagName.toLowerCase()).toBe('ui-master-detail')
+    const settingsPane = pair.querySelector('[data-part="settings-pane"]') as HTMLElement
+    expect(settingsPane.getAttribute('pane')).toBe('detail')
+    expect(pair.querySelector('[data-part="author-pane"]')!.getAttribute('pane')).toBe('list')
+    const segmentLabels = [...settingsPane.querySelectorAll(':scope > [data-segment]')].map((s) => s.getAttribute('data-segment'))
     expect(segmentLabels).toEqual(['Agent', 'Capabilities', 'Surface', 'Context: System', 'Context: Dialog'])
+  })
+
+  it('the pane nav is the ONE navigation vehicle: each place shows exactly its own region (the visibility truth-table)', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const chat = el.querySelector('[data-part="pane-holder"] > ui-conversation') as HTMLElement
+    const pair = el.querySelector('[data-part="pane-pair"]') as HTMLElement & { selected: string }
+    const nav = el.querySelector('[data-part="pane-nav"]') as HTMLElement & { selected: string }
+    const tabs = [...el.querySelectorAll('[data-part="pane-nav"] ui-tab')] as HTMLElement[]
+
+    // Entry default: Chat (LLD §4).
+    expect([chat.hidden, pair.hidden, nav.selected]).toEqual([false, true, 'chat'])
+
+    tabs.find((t) => t.textContent === 'Author')!.click()
+    expect([chat.hidden, pair.hidden, nav.selected]).toEqual([true, false, 'author'])
+    expect(pair.selected, 'Author ⇒ the narrow view is `list` (the interview)').toBe('')
+
+    tabs.find((t) => t.textContent === 'Settings')!.click()
+    expect([chat.hidden, pair.hidden, nav.selected]).toEqual([true, false, 'settings'])
+    expect(pair.selected, 'Settings ⇒ the narrow view drills into `detail`').toBe('settings')
+
+    tabs.find((t) => t.textContent === 'Chat')!.click()
+    expect([chat.hidden, pair.hidden, nav.selected]).toEqual([false, true, 'chat'])
+  })
+
+  it('the master-detail pairing`s own select/change never escape the admin host (the closed event set)', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const seen: string[] = []
+    for (const type of ['select', 'change']) el.addEventListener(type, () => seen.push(type))
+    const pair = el.querySelector('[data-part="pane-pair"]') as HTMLElement & { selected: string }
+    pair.selected = 'settings'
+    pair.selected = ''
+    expect(seen, 'contained at the MD host, exactly as the settings strip is').toEqual([])
   })
 
   it('GH #574: the old single config column splits into three ranked segments — Agent, Capabilities, Surface; each Context segment still carries ONLY its own accordion — no cross-segment leakage', () => {
@@ -189,63 +235,52 @@ describe('UIAgentAdminElement — shell composition (GH #52/ADR-0154): segments 
     expect(contextDialog.querySelector('[data-part="context-system"]')).toBeNull()
   })
 
-  it('clicking the pane-tabs strip switches which segment is [data-active] — never a reparent (SPEC-R7c)', () => {
+  it('clicking the settings sub-nav switches which section is visible — visibility-only, never a reparent (OQ2, SPEC-R7c`s own behavior)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
-    const agent = pane.querySelector('[data-segment="Agent"]') as HTMLElement
-    const contextSystem = pane.querySelector('[data-segment="Context: System"]') as HTMLElement
-    expect(agent.hasAttribute('data-active')).toBe(true)
-    const tabs = [...pane.querySelectorAll('[data-part="pane-tab"]')]
-    expect(tabs.map((t) => t.textContent)).toEqual(['Agent', 'Capabilities', 'Surface', 'Context: System', 'Context: Dialog'])
+    const settingsPane = el.querySelector('[data-part="settings-pane"]') as HTMLElement
+    const agent = settingsPane.querySelector('[data-segment="Agent"]') as HTMLElement
+    const contextSystem = settingsPane.querySelector('[data-segment="Context: System"]') as HTMLElement
+    expect([agent.hidden, contextSystem.hidden], 'the first section opens active').toEqual([false, true])
+    const tabs = [...settingsPane.querySelectorAll('[data-part="settings-nav"] ui-tab')]
+    expect(tabs.map((t) => t.textContent), 'scaffolded mechanically from the kept data-segment labels, in today\'s order').toEqual([
+      'Agent', 'Capabilities', 'Surface', 'Context: System', 'Context: Dialog',
+    ])
     ;(tabs.find((t) => t.textContent === 'Context: System') as HTMLElement).click()
-    expect(agent.hasAttribute('data-active')).toBe(false)
-    expect(contextSystem.hasAttribute('data-active')).toBe(true)
-    expect(agent.isConnected, 'switching segments never reparents').toBe(true)
+    expect([agent.hidden, contextSystem.hidden]).toEqual([true, false])
+    expect(agent.isConnected, 'switching sections never reparents').toBe(true)
   })
 
-  it('the narrow-tabs strip flattens content + every segment into ONE top-level strip: Chat, Agent, Capabilities, Surface, Context: System, Context: Dialog', () => {
+  it('the settings sub-nav`s select never escapes the admin host either', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const strip = el.querySelector('[data-part="narrow-tabs"]') as HTMLElement
-    expect(strip).not.toBeNull()
-    const labels = [...strip.querySelectorAll('[data-part="narrow-tab"]')].map((t) => t.textContent)
-    expect(labels).toEqual(['Chat', 'Agent', 'Capabilities', 'Surface', 'Context: System', 'Context: Dialog'])
+    const seen: string[] = []
+    el.addEventListener('select', () => seen.push('select'))
+    const tabs = [...el.querySelectorAll('[data-part="settings-nav"] ui-tab')] as HTMLElement[]
+    tabs.find((t) => t.textContent === 'Surface')!.click()
+    expect(seen).toEqual([])
   })
 
-  it('clicking a narrow tab moves data-narrow-active to the addressed participant, syncing the wide segment strip too', () => {
+  it('content nodes are the SAME identity across repeated place/section switches — one region ARRANGED, never rebuilt or duplicated (cl.3)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const canvasBox = el.querySelector('[data-part="canvas"]') as HTMLElement
-    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
-    expect(canvasBox.hasAttribute('data-narrow-active')).toBe(true)
-
-    const narrowTabs = [...el.querySelectorAll('[data-part="narrow-tab"]')] as HTMLElement[]
-    const contextSystemNarrowTab = narrowTabs.find((t) => t.textContent === 'Context: System')!
-    contextSystemNarrowTab.click()
-    expect(canvasBox.hasAttribute('data-narrow-active')).toBe(false)
-    expect(pane.hasAttribute('data-narrow-active')).toBe(true)
-    expect(pane.querySelector('[data-segment="Context: System"]')?.hasAttribute('data-active')).toBe(true)
-
-    const chatNarrowTab = narrowTabs.find((t) => t.textContent === 'Chat')!
-    chatNarrowTab.click()
-    expect(canvasBox.hasAttribute('data-narrow-active')).toBe(true)
-    expect(pane.hasAttribute('data-narrow-active')).toBe(false)
-  })
-
-  it('content nodes are the SAME identity across repeated segment/narrow-tab switches — nothing is ever rebuilt', () => {
-    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const conversation = el.querySelector('ui-conversation')
+    const conversation = el.querySelector('[data-part="pane-holder"] > ui-conversation')
     const agentItem = el.querySelector('[data-part="settings-item"][data-item="agent"]')
+    const agentSection = el.querySelector('[data-segment="Agent"]')
     // The FIRST entry-section in document order (GH #574: the Capabilities tab now precedes the Surface
     // tab, so Instructions' entry-section — not the catalog picker nested in Surface Options — is first;
     // this probe only cares about node identity surviving a tab switch, not which kind is first).
     const firstEntrySection = el.querySelector('[data-part="entry-section"]')
 
-    const tabs = [...el.querySelectorAll('[data-part="narrow-tab"]')] as HTMLElement[]
-    tabs.find((t) => t.textContent === 'Agent')!.click()
-    tabs.find((t) => t.textContent === 'Context: System')!.click()
-    tabs.find((t) => t.textContent === 'Chat')!.click()
+    const places = [...el.querySelectorAll('[data-part="pane-nav"] ui-tab')] as HTMLElement[]
+    const sections = [...el.querySelectorAll('[data-part="settings-nav"] ui-tab')] as HTMLElement[]
+    places.find((t) => t.textContent === 'Settings')!.click()
+    sections.find((t) => t.textContent === 'Context: System')!.click()
+    places.find((t) => t.textContent === 'Author')!.click()
+    sections.find((t) => t.textContent === 'Agent')!.click()
+    places.find((t) => t.textContent === 'Chat')!.click()
 
-    expect(el.querySelector('ui-conversation')).toBe(conversation)
+    expect(el.querySelector('[data-part="pane-holder"] > ui-conversation')).toBe(conversation)
     expect(el.querySelector('[data-part="settings-item"][data-item="agent"]')).toBe(agentItem)
+    expect(el.querySelectorAll('[data-segment="Agent"]'), 'exactly ONE settings region exists').toHaveLength(1)
+    expect(el.querySelector('[data-segment="Agent"]'), 'the SAME node before and after every arrangement flip').toBe(agentSection)
     expect(el.querySelector('[data-part="entry-section"]')).toBe(firstEntrySection)
   })
 
@@ -404,12 +439,13 @@ describe('UIAgentAdminElement — real models + real seeded content (TKT-0043)',
 })
 
 describe('UIAgentAdminElement — composition (GH #52/ADR-0154: chat + {Settings, Context: System, Context: Dialog} segments; ADR-0132 five entry-list instantiations; GH #161)', () => {
-  it('builds one ui-chat-shell with content=conversation and one segmented options-pane', () => {
+  it('builds one ui-chat-shell holding the three places (ADR-0179)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const shell = el.querySelector(':scope > ui-chat-shell')
     expect(shell).not.toBeNull()
     expect(shell?.querySelector('[data-part="canvas"] ui-conversation')).not.toBeNull()
-    expect(shell?.querySelector('[data-slot-name="options-pane"][data-segmented]')).not.toBeNull()
+    expect(shell?.querySelector('[data-part="pane-nav"]')).not.toBeNull()
+    expect(shell?.querySelector('[data-part="canvas"] [data-part="pane-pair"]')).not.toBeNull()
   })
 
   it('LLD-C4: agent-admin.css sets the two R6c floor tokens to today\'s ui-split min values, verbatim (16rem/20rem)', () => {

@@ -81,29 +81,40 @@
   }
 
   /* Narrow drill-in (SPEC-R7 AC1) — `40rem` is the shell family's named narrow line (LLD-C7/
-     GH #99's `shell-breakpoint.ts` + `shell-breakpoint.test.ts`, this file's banner above). */
+     GH #99's `shell-breakpoint.ts` + `shell-breakpoint.test.ts`, this file's banner above).
+     ┌─ NESTING (GH #651, measured in both engines) ────────────────────────────────────────────────────┐
+     │ Every selector here walks the OWN composed subtree explicitly (`:scope > ui-split > …`) rather   │
+     │ than by descendant. `ui-settings` composes its own `ui-master-detail` for its rail|panel, so an  │
+     │ outer consumer that ALSO composes one (`ui-agent-admin`'s Author⇄Settings pairing, ADR-0179)     │
+     │ nests two — and a descendant selector then reaches the INNER split's panes. It is not even       │
+     │ guarded by the container query, because `@container` resolves against the nearest container      │
+     │ ancestor of the ELEMENT BEING STYLED (the inner ui-master-detail, routinely under 40rem), not of │
+     │ `:scope`: a WIDE outer MD sitting on `data-view='list'` blanked the inner MD's whole detail pane. │
+     │ The child chain is exact — `#compose` builds `:scope > ui-split > ui-split-pane[data-role]` and  │
+     │ nothing else — so this costs no reach and closes the leak by construction.                       │
+     └──────────────────────────────────────────────────────────────────────────────────────────────────┘ */
   @container (inline-size < 40rem) {
-    :scope[data-view='list'] [data-role='detail'] {
+    :scope[data-view='list'] > ui-split > [data-role='detail'] {
       display: none;
     }
-    :scope[data-view='detail'] [data-role='list'] {
+    :scope[data-view='detail'] > ui-split > [data-role='list'] {
       display: none;
     }
 
     /* Resizing between one visible pane and a hidden one is meaningless narrow — hide the separator. */
-    :scope [data-separator] {
+    :scope > ui-split > [data-separator] {
       display: none;
     }
 
     /* Whichever pane remains fills the full width, regardless of its assigned flex ratio (which was
        computed for the WIDE two-pane layout and would otherwise leave the lone visible pane too narrow). */
-    :scope ui-split-pane {
+    :scope > ui-split > ui-split-pane {
       flex: 1 1 auto;
       max-width: none;
       max-height: none;
     }
 
-    :scope[data-view='detail'] [data-part='back'] {
+    :scope[data-view='detail'] > ui-split > [data-role='detail'] > [data-part='back'] {
       display: flex;
     }
   }

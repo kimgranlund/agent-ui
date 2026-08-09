@@ -76,12 +76,13 @@ afterEach(() => {
   localStorage.clear()
 })
 
-/** Drive the mode flip from a probe. `setModeSeam` is `protected` — a compile-time construct only — so a
- *  cast reaches it without widening the element's public API. Deliberately NOT a probe SUBCLASS (the
- *  split.ts precedent): agent-admin.css is `@scope (ui-agent-admin)`, so a probe tag would render
- *  unstyled and quietly void every geometry assertion. S4-a's try-it bar replaces this call site. */
-const flipMode = (el: UIAgentAdminElement, mode: 'authoring' | 'test'): void => {
-  ;(el as unknown as { setModeSeam(m: 'authoring' | 'test'): void }).setModeSeam(mode)
+/** Go to a PLACE from a probe (ADR-0179 — this replaces the retired `flipMode`/`setModeSeam` pair).
+ *  `setPaneSeam` is `protected` — a compile-time construct only — so a cast reaches it without widening
+ *  the element's public API. Deliberately NOT a probe SUBCLASS (the split.ts precedent): agent-admin.css
+ *  is `@scope (ui-agent-admin)`, so a probe tag would render unstyled and quietly void every geometry
+ *  assertion. The real pane-nav strip is the user-facing caller, exercised in its own describe below. */
+const goToPane = (el: UIAgentAdminElement, pane: 'chat' | 'author' | 'settings'): void => {
+  ;(el as unknown as { setPaneSeam(p: 'chat' | 'author' | 'settings'): void }).setPaneSeam(pane)
 }
 
 const PATCH = { values: { name: 'Concierge', temperature: 0.3 }, entries: { [entriesStoreKey(ENTRY_KINDS.skill)]: [{ label: 'Book a table' }] } }
@@ -115,7 +116,7 @@ async function submit(el: UIAgentAdminElement, text: string, context: 'authoring
   const host =
     context === 'authoring'
       ? (el.querySelector('[data-part="authoring-conversation"]') as HTMLElement)
-      : (el.querySelector('[data-part="chat-stack"] > ui-conversation:not([data-part="authoring-conversation"])') as HTMLElement)
+      : (el.querySelector('[data-part="pane-holder"] > ui-conversation:not([data-part="authoring-conversation"])') as HTMLElement)
   const composer = host.querySelector('ui-conversation-composer') as HTMLElement & { value: string }
   composer.value = text
   const editor = composer.querySelector('[data-part="editor"]') as HTMLElement
@@ -186,7 +187,7 @@ describe('the apply loop’s CONSUMPTION CONDITION — the fence AND the gate, b
     const builder = personaStore({ [SURFACE_AUTHORING_KEY]: true })
     const { el } = mountAdmin({ store: draft, authoringStore: builder, events: [{ kind: 'patch', patch: PATCH }] })
     await whenFlushed()
-    flipMode(el, 'test')
+    goToPane(el, 'chat')
     await submit(el, 'hello draft', 'test')
 
     expect(draft.get('name')).toBe('Untitled agent')
@@ -276,16 +277,16 @@ describe('the dual-context scaffold — one draft, two transcripts, zero store s
     const storeBefore = el.store
 
     await submit(el, 'interview turn', 'authoring')
-    flipMode(el, 'test')
+    goToPane(el, 'chat')
     await submit(el, 'test turn', 'test')
-    flipMode(el, 'authoring')
+    goToPane(el, 'author')
     await whenFlushed()
 
     // GH #145's probe, INVERTED: the reset must NOT have fired.
     expect(el.store).toBe(storeBefore)
     expect(el.store).toBe(draft)
     const authoring = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
-    const test = el.querySelector('[data-part="chat-stack"] > ui-conversation:not([data-part="authoring-conversation"])') as HTMLElement
+    const test = el.querySelector('[data-part="pane-holder"] > ui-conversation:not([data-part="authoring-conversation"])') as HTMLElement
     expect(authoring.textContent).toContain('interview turn')
     expect(test.textContent).toContain('test turn')
     // and visibility followed the mode back
@@ -299,13 +300,13 @@ describe('the dual-context scaffold — one draft, two transcripts, zero store s
     const { el } = mountAdmin({ store: draft, authoringStore: builder, events: [{ kind: 'note', note: 'ok' }] })
     await whenFlushed()
     await submit(el, 'interview turn', 'authoring')
-    flipMode(el, 'test')
+    goToPane(el, 'chat')
     await submit(el, 'test turn', 'test')
 
     el.store = personaStore() // a different persona
     await whenFlushed()
     const authoring = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
-    const test = el.querySelector('[data-part="chat-stack"] > ui-conversation:not([data-part="authoring-conversation"])') as HTMLElement
+    const test = el.querySelector('[data-part="pane-holder"] > ui-conversation:not([data-part="authoring-conversation"])') as HTMLElement
     expect(authoring.textContent).not.toContain('interview turn')
     expect(test.textContent).not.toContain('test turn')
   })
@@ -314,10 +315,10 @@ describe('the dual-context scaffold — one draft, two transcripts, zero store s
     const draft = personaStore()
     const { el } = mountAdmin({ store: draft, authoringStore: personaStore({ [SURFACE_AUTHORING_KEY]: true }) })
     await whenFlushed()
-    flipMode(el, 'test')
+    goToPane(el, 'chat')
     el.authoringStore = undefined
     await whenFlushed()
-    const test = el.querySelector('[data-part="chat-stack"] > ui-conversation:not([data-part="authoring-conversation"])') as HTMLElement
+    const test = el.querySelector('[data-part="pane-holder"] > ui-conversation:not([data-part="authoring-conversation"])') as HTMLElement
     expect(test.hasAttribute('hidden')).toBe(false)
     el.authoringStore = personaStore({ [SURFACE_AUTHORING_KEY]: true })
     await whenFlushed()
@@ -358,11 +359,11 @@ describe('the PROSE arm keeps per-context history — agentSurfaceTurn unarmed, 
     await whenFlushed()
 
     await submit(el, 'interview one', 'authoring')
-    flipMode(el, 'test')
+    goToPane(el, 'chat')
     await submit(el, 'test one', 'test')
-    flipMode(el, 'authoring')
+    goToPane(el, 'author')
     await submit(el, 'interview two', 'authoring')
-    flipMode(el, 'test')
+    goToPane(el, 'chat')
     await submit(el, 'test two', 'test')
 
     expect(calls).toHaveLength(4)
@@ -388,16 +389,16 @@ describe('the PROSE arm keeps per-context history — agentSurfaceTurn unarmed, 
     const { el, calls } = mountProse({ store: draft, authoringStore: builderA })
     await whenFlushed()
 
-    flipMode(el, 'test')
+    goToPane(el, 'chat')
     await submit(el, 'test turn', 'test')
-    flipMode(el, 'authoring')
+    goToPane(el, 'author')
     await submit(el, 'interview with A', 'authoring')
 
     // A DIFFERENT interviewer store — a real identity change (`#rewireAuthoringContext`'s `changed` arm).
     el.authoringStore = personaStore({ [SURFACE_AUTHORING_KEY]: true })
     await whenFlushed()
     await submit(el, 'interview with B', 'authoring')
-    flipMode(el, 'test')
+    goToPane(el, 'chat')
     await submit(el, 'test turn two', 'test')
 
     const interviewWithB = calls[2]!
@@ -418,12 +419,12 @@ describe('the PROSE arm keeps per-context history — agentSurfaceTurn unarmed, 
     await whenFlushed()
 
     await submit(el, 'interview turn', 'authoring')
-    flipMode(el, 'test')
+    goToPane(el, 'chat')
     await submit(el, 'test turn', 'test')
 
     el.store = personaStore() // a genuinely different persona (the draft itself was replaced)
     await whenFlushed()
-    flipMode(el, 'authoring')
+    goToPane(el, 'author')
     await submit(el, 'fresh interview', 'authoring')
 
     const freshInterview = calls[2]!
@@ -431,50 +432,58 @@ describe('the PROSE arm keeps per-context history — agentSurfaceTurn unarmed, 
   })
 })
 
-// ── LLD-C9 (S4-a, GH #646) — the try-it bar: the REAL affordance, not the `setModeSeam` stand-in above ──
-// GH #646 REOPENED (pixel-truth, 2026-08-09, Kim's reopen comment): the bar is the fleet `ui-tabs`
-// control now — Authoring/Try it are `ui-tab`s, not `ui-button`s. These probes pin the `ui-tabs`
-// selection contract (`selected`/`select` — ADR-0019, tabs.md) the same way `agent-admin.test.ts`'s
-// pane-tabs probe already pins the section strip's, not button anatomy (`aria-pressed`).
-describe('the try-it bar — the visible flip, driving the SAME seam the round trip above already proved (LLD-C9, GH #646)', () => {
-  function bar(el: UIAgentAdminElement): { bar: HTMLElement & { selected: string }; authoringTab: HTMLElement; testTab: HTMLElement } {
-    const barEl = el.querySelector('[data-part="try-it"]') as HTMLElement & { selected: string }
-    return {
-      bar: barEl,
-      authoringTab: barEl.querySelector('[data-part="try-it-authoring"]') as HTMLElement,
-      testTab: barEl.querySelector('[data-part="try-it-test"]') as HTMLElement,
-    }
+// ── ADR-0179 cl.1/cl.4 — the PANE NAV: the REAL affordance, not the `setPaneSeam` stand-in above ────────
+// (This describe replaces the retired try-it bar's, GH #646/LLD-C9: the flip it voiced is a PLACE change
+// now, and its `ui-tabs` composition method survives one level up. These probes pin the same `ui-tabs`
+// selection contract — `selected`/`select`, ADR-0019/tabs.md — the try-it probes did, plus the two things
+// only the pane world can state: per-pane composers, and the fence's survival across a place change.)
+describe('the pane nav — the visible place change, driving the SAME seam the round trip above proved (ADR-0179)', () => {
+  function nav(el: UIAgentAdminElement): { strip: HTMLElement & { selected: string }; tab: (key: string) => HTMLElement } {
+    const strip = el.querySelector('[data-part="pane-nav"]') as HTMLElement & { selected: string }
+    return { strip, tab: (key) => strip.querySelector(`[data-part="pane-nav-${key}"]`) as HTMLElement }
   }
 
-  it('renders hidden while the flow is unarmed, and visible the moment it arms — never reassigning `store`', async () => {
+  it('the three places exist whether or not the flow is armed — the Author place never vanishes (OQ4)', async () => {
     const { el } = mountAdmin({ store: personaStore() })
     await whenFlushed()
-    expect(bar(el).bar.hasAttribute('hidden')).toBe(true)
+    expect([...nav(el).strip.querySelectorAll('ui-tab')].map((t) => t.textContent)).toEqual(['Chat', 'Author', 'Settings'])
+    expect(el.querySelector('[data-part="author-empty"]')!.hasAttribute('hidden'), 'unarmed ⇒ the empty state paints').toBe(false)
     el.authoringStore = personaStore({ [SURFACE_AUTHORING_KEY]: true })
     await whenFlushed()
-    expect(bar(el).bar.hasAttribute('hidden')).toBe(false)
+    expect([...nav(el).strip.querySelectorAll('ui-tab')].map((t) => t.textContent)).toEqual(['Chat', 'Author', 'Settings'])
+    expect(el.querySelector('[data-part="author-empty"]')!.hasAttribute('hidden'), 'armed ⇒ the interview takes over').toBe(true)
   })
 
-  it('`selected` opens on Authoring and clicking Try it / Authoring flips both the strip selection and which conversation is hidden', async () => {
+  it('arming the flow LANDS the user in Author, and clicking a tab flips both the strip selection and which place is shown', async () => {
     const { el } = mountAdmin({ store: personaStore(), authoringStore: personaStore({ [SURFACE_AUTHORING_KEY]: true }) })
     await whenFlushed()
-    const { bar: strip, authoringTab, testTab } = bar(el)
+    const { strip, tab } = nav(el)
     const authoring = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
-    const test = el.querySelector('[data-part="chat-stack"] > ui-conversation:not([data-part="authoring-conversation"])') as HTMLElement
+    const test = el.querySelector('[data-part="pane-holder"] > ui-conversation:not([data-part="authoring-conversation"])') as HTMLElement
 
-    expect(strip.selected).toBe('authoring')
+    // the IA-entry re-point (LLD §2): arming navigates, at the one choke point every arm path crosses
+    expect(strip.selected).toBe('author')
     expect(authoring.hasAttribute('hidden')).toBe(false)
     expect(test.hasAttribute('hidden')).toBe(true)
 
-    testTab.click()
-    expect(strip.selected).toBe('test')
+    tab('chat').click()
+    expect(strip.selected).toBe('chat')
     expect(authoring.hasAttribute('hidden')).toBe(true)
     expect(test.hasAttribute('hidden')).toBe(false)
 
-    authoringTab.click()
-    expect(strip.selected).toBe('authoring')
+    tab('author').click()
+    expect(strip.selected).toBe('author')
     expect(authoring.hasAttribute('hidden')).toBe(false)
     expect(test.hasAttribute('hidden')).toBe(true)
+  })
+
+  it('the pane nav`s select never escapes the admin host (the closed seven-member event set)', async () => {
+    const { el } = mountAdmin({ store: personaStore(), authoringStore: personaStore({ [SURFACE_AUTHORING_KEY]: true }) })
+    await whenFlushed()
+    const seen: string[] = []
+    el.addEventListener('select', () => seen.push('select'))
+    nav(el).tab('settings').click()
+    expect(seen).toEqual([])
   })
 
   it('a real click-driven round trip: both transcripts survive, `store` stays reference-identical, `admin.store` is never touched (GH #145 inverted)', async () => {
@@ -483,41 +492,56 @@ describe('the try-it bar — the visible flip, driving the SAME seam the round t
     const { el } = mountAdmin({ store: draft, authoringStore: builder, events: [{ kind: 'note', note: 'ok' }] })
     await whenFlushed()
     const storeBefore = el.store
-    const { authoringTab, testTab } = bar(el)
+    const { tab } = nav(el)
 
     await submit(el, 'interview turn', 'authoring')
-    testTab.click()
+    tab('chat').click()
     await submit(el, 'test turn', 'test')
-    authoringTab.click()
+    tab('author').click()
     await whenFlushed()
 
     expect(el.store).toBe(storeBefore)
     expect(el.store).toBe(draft)
     const authoring = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
-    const test = el.querySelector('[data-part="chat-stack"] > ui-conversation:not([data-part="authoring-conversation"])') as HTMLElement
+    const test = el.querySelector('[data-part="pane-holder"] > ui-conversation:not([data-part="authoring-conversation"])') as HTMLElement
     expect(authoring.textContent).toContain('interview turn')
     expect(test.textContent).toContain('test turn')
   })
 
-  it('regression probe — flipping to the test chat via the bar and sending a gate-ON turn still logs patchIgnored, zero writes (the fence, unchanged by S4)', async () => {
+  it('cl.4 — per-pane composers: the Chat place`s composer STRUCTURALLY cannot drive the authoring store', async () => {
     const draft = personaStore({ [SURFACE_AUTHORING_KEY]: true })
     const builder = personaStore({ [SURFACE_AUTHORING_KEY]: true })
-    const { el } = mountAdmin({ store: draft, authoringStore: builder, events: [{ kind: 'patch', patch: PATCH }] })
+    const { el, requests } = mountAdmin({ store: draft, authoringStore: builder, events: [{ kind: 'patch', patch: PATCH }] })
     await whenFlushed()
-    bar(el).testTab.click()
+    nav(el).tab('chat').click()
     await submit(el, 'hello draft', 'test')
 
+    // the driving store is the DRAFT, so the fence refuses the patch — gate-ON notwithstanding
+    expect(requests.at(-1)!.session, 'a Chat-place turn is never an authoring session').toBeUndefined()
     expect(draft.get('name')).toBe('Untitled agent')
     expect(readEntries(draft, ENTRY_KINDS.skill)).toEqual([])
     expect((turnLogOf(el).response as { patchIgnored?: boolean }).patchIgnored).toBe(true)
   })
 
-  it('DOM order: bar, then the authoring conversation, then the test conversation (§5\'s frozen anatomy)', async () => {
+  it('DOM order: the Chat place, then the pairing; inside the Author region, the empty state then the interview (LLD §3)', async () => {
     const { el } = mountAdmin({ store: personaStore(), authoringStore: personaStore({ [SURFACE_AUTHORING_KEY]: true }) })
     await whenFlushed()
-    const stack = el.querySelector('[data-part="chat-stack"]') as HTMLElement
-    const parts = [...stack.children].map((c) => c.getAttribute('data-part'))
-    expect(parts).toEqual(['try-it', 'authoring-conversation', null])
+    const holder = el.querySelector('[data-part="pane-holder"]') as HTMLElement
+    expect([...holder.children].map((c) => c.getAttribute('data-part'))).toEqual([null, 'pane-pair'])
+    const authorPane = el.querySelector('[data-part="author-pane"]') as HTMLElement
+    expect([...authorPane.children].map((c) => c.getAttribute('data-part'))).toEqual(['author-empty', 'authoring-conversation'])
+  })
+
+  it('OQ4 — `onGenerateRequest` reveals the empty-state action and fires the page callback; unregistered, the action is hidden', async () => {
+    const { el } = mountAdmin({ store: personaStore() })
+    await whenFlushed()
+    const action = el.querySelector('[data-part="author-empty-action"]') as HTMLElement
+    expect(action.hasAttribute('hidden'), 'the static-build degrade: no mint path, no button').toBe(true)
+    let fired = 0
+    el.onGenerateRequest(() => { fired += 1 })
+    expect(action.hasAttribute('hidden')).toBe(false)
+    action.click()
+    expect(fired).toBe(1)
   })
 })
 
