@@ -48,9 +48,17 @@ describe('agent-admin-app — the #app shell stays pinned when inner content ove
 
     const appEl = document.getElementById('app') as HTMLElement
     const adminEl = document.querySelector('ui-agent-admin') as HTMLElement
-    // The active segment (default: Settings) is the real scroll container now — the outer options-pane
-    // box is overflow-y:hidden by design (SPEC-R7a).
-    const tabsEl = document.querySelector('[data-slot-name="options-pane"] [data-segment][data-active]') as HTMLElement | null
+    // ADR-0179 (GH #651) — the settings region is a master-detail pane inside the Settings PLACE now, and
+    // it owns its own scroll (agent-admin.css). Navigate there through the real pane-nav strip first: at
+    // the entry default (Chat) the whole pairing is `hidden`, so a probe that skipped this would measure a
+    // display:none box and pass vacuously.
+    const settingsTab = [...document.querySelectorAll('[data-part="pane-nav"] ui-tab')].find((t) => t.textContent === 'Settings') as HTMLElement
+    settingsTab.click()
+    await raf()
+    // The scroll region is the composed `ui-split-pane` wrapping the settings region — master-detail's own
+    // family law ("overflow is left to the wrapping split-pane"), not a bespoke scroller of the admin's.
+    const settingsRegion = document.querySelector('[data-part="settings-pane"]') as HTMLElement | null
+    const tabsEl = settingsRegion?.closest('ui-split-pane') as HTMLElement | null
     expect(appEl, "the real #app element must exist for this bug's own CSS selector to apply").not.toBeNull()
 
     // GH #130's own fix: the document must never be allowed to grow past the viewport regardless of what
@@ -68,11 +76,12 @@ describe('agent-admin-app — the #app shell stays pinned when inner content ove
     // scrollable region directly, rather than driving the tab-switch interaction.
     const bigBlock = document.createElement('div')
     bigBlock.style.blockSize = '3000px'
-    ;(tabsEl ?? adminEl).appendChild(bigBlock)
+    ;(settingsRegion ?? adminEl).appendChild(bigBlock)
     await raf()
 
     // The overflowing content must still be REACHABLE — the fix must not just clip it into oblivion; the
     // active segment's own overflow-y:auto (super-shell.css) does the real containing+scrolling job.
+    expect(tabsEl, 'the settings region must be reachable — a null here would make the scroll assertions vacuous').not.toBeNull()
     if (tabsEl) {
       expect(getComputedStyle(tabsEl).overflowY, 'the inner panel must own its own scroll region').toBe('auto')
       tabsEl.scrollTop = 99999

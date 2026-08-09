@@ -47,15 +47,23 @@ afterEach(() => {
   localStorage.clear()
 })
 
-/** GH #574 — Agent is the default active `options-pane` segment; a caller reaching into the Capabilities
- *  or Surface tab's own content passes it here to activate it (synchronously — clicking a real `ui-tabs`
- *  pane-tab flips `data-active` immediately, the agent-admin.test.ts jsdom precedent). An inactive segment
- *  computes `display:none` in a real engine, so ITS content's own geometry (getBoundingClientRect,
- *  .focus()) reads zero/no-ops until its tab is selected — style-only reads (getComputedStyle of a
- *  cascade value like border-width/font-size) are unaffected either way and need no activation. */
-function activateTab(el: HTMLElement, tab: 'Agent' | 'Capabilities' | 'Surface'): void {
-  const paneTab = [...el.querySelectorAll('[data-part="pane-tab"]')].find((t) => t.textContent === tab) as HTMLElement
-  paneTab.click()
+/** ADR-0179 — go to one of the three PLACES through the real pane-nav strip (synchronously: clicking a
+ *  real `ui-tabs` tab commits immediately, the agent-admin.test.ts jsdom precedent). */
+function goToPlace(el: HTMLElement, place: 'Chat' | 'Author' | 'Settings'): void {
+  ;([...el.querySelectorAll('[data-part="pane-nav"] ui-tab')].find((t) => t.textContent === place) as HTMLElement).click()
+}
+
+/** GH #574 — Agent is the default active settings section; a caller reaching into another section's own
+ *  content passes it here. ADR-0179 re-anchored this one level down: the strip is the admin's own
+ *  `settings-nav` inside the master-detail's detail pane, and reaching ANY settings content now also means
+ *  standing in the Settings place (at Chat the whole region is `hidden`). An inactive section computes
+ *  `display:none` in a real engine, so ITS content's own geometry (getBoundingClientRect, .focus()) reads
+ *  zero/no-ops until its tab is selected — style-only reads (getComputedStyle of a cascade value like
+ *  border-width/font-size) are unaffected either way and need no activation. */
+function activateTab(el: HTMLElement, tab: 'Agent' | 'Capabilities' | 'Surface' | 'Context: System' | 'Context: Dialog'): void {
+  goToPlace(el, 'Settings')
+  const sectionTab = [...el.querySelectorAll('[data-part="settings-nav"] ui-tab')].find((t) => t.textContent === tab) as HTMLElement
+  sectionTab.click()
 }
 
 /** GH #225 — the shared chrome every `settings-item` fold carries, regardless of which of the three
@@ -73,7 +81,11 @@ function assertFoldChrome(item: HTMLElement & { open: boolean }): void {
   expect(s.fontWeight, `${item.getAttribute('data-item')} register weight`).toBe('600')
 }
 
-function mountAgentAdmin(tab?: 'Capabilities' | 'Surface'): { wrapper: HTMLElement; el: UIAgentAdminElement } {
+/** ADR-0179 — mounts land in the SETTINGS place by default. Nearly every probe in this file measures the
+ *  settings region, which is `hidden` at the entry default (Chat, the pure test surface — cl.1's disjoint
+ *  places); a probe that wants the Chat place calls `goToPlace(el, 'Chat')` explicitly, which is exactly
+ *  the delta this IA introduces and the honest thing for a geometry suite to state out loud. */
+function mountAgentAdmin(tab: 'Agent' | 'Capabilities' | 'Surface' = 'Agent'): { wrapper: HTMLElement; el: UIAgentAdminElement } {
   const wrapper = document.createElement('div')
   wrapper.style.width = '1200px'
   wrapper.style.height = '600px'
@@ -83,7 +95,7 @@ function mountAgentAdmin(tab?: 'Capabilities' | 'Surface'): { wrapper: HTMLEleme
   wrapper.append(el)
   document.body.append(wrapper)
   mounted.push(wrapper)
-  if (tab) activateTab(el, tab)
+  activateTab(el, tab)
   return { wrapper, el }
 }
 
@@ -104,73 +116,112 @@ function mountAgentAdminAt(widthPx: number): { wrapper: HTMLElement; el: UIAgent
   return { wrapper, el }
 }
 
-describe('ui-agent-admin cross-engine smoke — the shell grammar (GH #52/ADR-0154: resizable pane + segments/narrow-tabs)', () => {
-  it('wide (≥640px): the options-pane segment strip is visible; the narrow-tabs strip computes display:none', async () => {
+describe('ui-agent-admin cross-engine smoke — the three-place shell grammar (ADR-0179: pane nav + the master-detail pairing)', () => {
+  it('wide (≥640px): the pane nav paints three real tabs in the header; the retired six-entry narrow-tabs strip does not exist at all', async () => {
     const { el } = mountAgentAdminAt(1200)
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
-    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
-    const narrowTabs = el.querySelector('[data-part="narrow-tabs"]') as HTMLElement
-    expect(getComputedStyle(pane.querySelector('[data-part="pane-tabs"]') as HTMLElement).display).not.toBe('none')
-    expect(getComputedStyle(narrowTabs).display).toBe('none') // the same [hidden]-specificity discipline TKT-0085 pinned, now owned by ui-super-shell itself
+    const nav = el.querySelector('[data-part="pane-nav"]') as HTMLElement
+    expect(getComputedStyle(nav).display).not.toBe('none')
+    const tabs = [...nav.querySelectorAll('ui-tab')] as HTMLElement[]
+    expect(tabs.map((t) => t.textContent)).toEqual(['Chat', 'Author', 'Settings'])
+    for (const tab of tabs) expect(tab.getBoundingClientRect().width).toBeGreaterThan(0)
+    // cl.1 — the six-entry vocabulary dissolved with the options-pane it enumerated.
+    expect(el.querySelector('[data-part="narrow-tabs"]'), 'the shell composes no narrow-tabs strip any more').toBeNull()
+    expect(el.querySelector('[data-slot-name="options-pane"]'), 'nothing occupies the end side any more').toBeNull()
   })
 
-  it('GH #161: the segmented options-pane renders a real, non-zero pane-tabs strip; clicking each Context segment switches to its OWN distinct content, no cross-segment leakage', async () => {
+  it('cl.3 — at wide, the Author and Settings regions DOCK as one pair: both non-zero, top-aligned, split on the INLINE axis only', async () => {
+    const { el } = mountAgentAdminAt(1200)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    goToPlace(el, 'Author')
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const author = (el.querySelector('[data-part="author-pane"]') as HTMLElement).getBoundingClientRect()
+    const settings = (el.querySelector('[data-part="settings-pane"]') as HTMLElement).getBoundingClientRect()
+    for (const box of [author, settings]) {
+      expect(box.width).toBeGreaterThan(0)
+      expect(box.height).toBeGreaterThan(0)
+    }
+    // the shipped adjacency probe, re-anchored from canvas/options-pane onto the pairing
+    expect(author.right, 'the interview is start-side of the settings rail').toBeLessThanOrEqual(settings.left + 1)
+    expect(Math.abs(author.top - settings.top), 'displacement is on the INLINE axis only').toBeLessThanOrEqual(1)
+  })
+
+  it('the Kim-blessed delta — the Chat place renders SOLO at wide: no settings rail beside it (cl.1`s disjoint places)', async () => {
+    const { el } = mountAgentAdminAt(1200)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    goToPlace(el, 'Chat')
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const conversation = el.querySelector('[data-part="pane-holder"] > ui-conversation') as HTMLElement
+    const pair = el.querySelector('[data-part="pane-pair"]') as HTMLElement
+    const canvas = (el.querySelector('[data-part="canvas"]') as HTMLElement).getBoundingClientRect()
+    const chat = conversation.getBoundingClientRect()
+    expect(getComputedStyle(pair).display, 'the pairing contributes no box at Chat').toBe('none')
+    expect(pair.getBoundingClientRect().width).toBe(0)
+    // whole-shape assert: the conversation card fills the canvas it now has to itself
+    expect(chat.width).toBeGreaterThan(0)
+    expect(Math.abs(chat.width - (canvas.width - 2 * parseFloat(getComputedStyle(el.querySelector('[data-part="canvas"]') as HTMLElement).paddingLeft)))).toBeLessThanOrEqual(1)
+  })
+
+  it('GH #161 — the settings sub-nav renders a real, non-zero strip; clicking each Context section switches to its OWN distinct content, no cross-section leakage', async () => {
     const { el } = mountAgentAdminAt(800)
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
-    const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
-    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
-    expect(canvas.getBoundingClientRect().width).toBeGreaterThan(0)
+    goToPlace(el, 'Settings')
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const pane = el.querySelector('[data-part="settings-pane"]') as HTMLElement
     expect(pane.getBoundingClientRect().width).toBeGreaterThan(0)
-    expect(canvas.getBoundingClientRect().right).toBeLessThanOrEqual(pane.getBoundingClientRect().left + 1)
-    const tabs = [...pane.querySelectorAll('[data-part="pane-tab"]')]
+    const tabs = [...pane.querySelectorAll('[data-part="settings-nav"] ui-tab')]
     expect(tabs.map((t) => t.textContent)).toEqual(['Agent', 'Capabilities', 'Surface', 'Context: System', 'Context: Dialog'])
     for (const tab of tabs) expect(tab.getBoundingClientRect().width).toBeGreaterThan(0)
-    // Agent is the default active segment (GH #574) — the Agent fold's heading row renders visibly
+    // Agent is the default active section (GH #574) — the Agent fold's heading row renders visibly
     // (GH #225: the old agent-heading h3 is the fold summary now).
     const agentHeading = el.querySelector('[data-part="settings-item"][data-item="agent"] [data-part="summary"]') as HTMLElement
     expect(agentHeading.getBoundingClientRect().width).toBeGreaterThan(0)
 
-    // Clicking Context: System switches to a real, visible segment carrying ONLY the System context sections.
+    // Clicking Context: System switches to a real, visible section carrying ONLY the System context sections.
     const systemTab = tabs.find((t) => t.textContent === 'Context: System') as HTMLElement
     systemTab.click()
     await new Promise((r) => requestAnimationFrame(r))
     const systemContent = pane.querySelector('[data-role="context-system-content"]') as HTMLElement
-    expect(systemContent.hasAttribute('data-active')).toBe(true)
+    expect(systemContent.hidden).toBe(false)
     expect(systemContent.getBoundingClientRect().width).toBeGreaterThan(0)
     // The Agent System JSON preview is a real, visible mono block with the compiled config in it.
     const agentJson = systemContent.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]') as HTMLElement
     expect(agentJson.getBoundingClientRect().height).toBeGreaterThan(0)
     expect(agentJson.textContent).toContain('systemPrompt')
-    // Distinct content: the System segment carries NO Dialog Turns part.
+    // Distinct content: the System section carries NO Dialog Turns part.
     expect(systemContent.querySelector('[data-part="context-turns"]')).toBeNull()
 
-    // Clicking Context: Dialog switches to a DIFFERENT, real, visible segment carrying ONLY Dialog Turns.
+    // Clicking Context: Dialog switches to a DIFFERENT, real, visible section carrying ONLY Dialog Turns.
     const dialogTab = tabs.find((t) => t.textContent === 'Context: Dialog') as HTMLElement
     dialogTab.click()
     await new Promise((r) => requestAnimationFrame(r))
     const dialogContent = pane.querySelector('[data-role="context-dialog-content"]') as HTMLElement
-    expect(dialogContent.hasAttribute('data-active')).toBe(true)
+    expect(dialogContent.hidden).toBe(false)
     expect(dialogContent.getBoundingClientRect().width).toBeGreaterThan(0)
-    // The System segment (now inactive) is a DIFFERENT segment than Dialog, and it's hidden again.
+    // The System section (now inactive) is a DIFFERENT node than Dialog, and it's hidden again.
     expect(systemContent).not.toBe(dialogContent)
-    expect(systemContent.hasAttribute('data-active')).toBe(false)
-    // Distinct content: the Dialog segment carries NO Agent System items.
+    expect(systemContent.hidden).toBe(true)
+    // Distinct content: the Dialog section carries NO Agent System items.
     expect(dialogContent.querySelector('[data-part="context-item"]')).toBeNull()
   })
 
-  it('GH #222: each Context segment is FLAT — Settings-register heading rows + exactly ONE card-styled container on the content card\'s ancestor chain (no card-in-card)', async () => {
+  it('GH #222: each Context section is FLAT — Settings-register heading rows + exactly ONE card-styled container on the content card\'s ancestor chain (no card-in-card)', async () => {
     const { el } = mountAgentAdminAt(900)
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    goToPlace(el, 'Settings')
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
 
-    // Capture the LIVE Settings heading register FIRST (Settings is the default active segment).
+    // Capture the LIVE Settings heading register FIRST (Agent is the default active section).
     // GH #225: the register's live source is a Settings fold's summary row now (the old plain
     // model-grid-heading h3 retired with the Settings accordions) — the probe's claim is unchanged:
     // the Context flavors must match the Settings flavor, the register must not fork.
     const headingRef = getComputedStyle(el.querySelector('[data-part="settings-item"][data-item="model"] > [data-part="details"] > [data-part="summary"]') as HTMLElement)
     const wantFont = { size: headingRef.fontSize, weight: headingRef.fontWeight, color: headingRef.color }
 
-    // Log ONE stub turn so Context: Dialog has real content (the stub arm logs like every arm).
-    const composer = el.querySelector('[data-part="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
+    // Log ONE stub turn so Context: Dialog has real content (the stub arm logs like every arm). ADR-0179 —
+    // the composer lives in the Chat PLACE now, so the turn is driven from there and the probe returns.
+    goToPlace(el, 'Chat')
+    const composer = el.querySelector('[data-part="pane-holder"] > ui-conversation ui-conversation-composer') as HTMLElement & { value: string }
     composer.value = 'hello'
     ;(composer.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
     const start = Date.now()
@@ -178,9 +229,11 @@ describe('ui-agent-admin cross-engine smoke — the shell grammar (GH #52/ADR-01
       if (Date.now() - start > 8000) throw new Error('stub turn never logged')
       await new Promise((r) => setTimeout(r, 50))
     }
+    goToPlace(el, 'Settings')
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
 
-    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
-    const tabs = [...pane.querySelectorAll('[data-part="pane-tab"]')] as HTMLElement[]
+    const pane = el.querySelector('[data-part="settings-pane"]') as HTMLElement
+    const tabs = [...pane.querySelectorAll('[data-part="settings-nav"] ui-tab')] as HTMLElement[]
     /** The file's own card recipe — a real 1px solid border (model-grid/surface-row/entry/context-json). */
     const isCarded = (n: Element): boolean => {
       const s = getComputedStyle(n)
@@ -194,7 +247,7 @@ describe('ui-agent-admin cross-engine smoke — the shell grammar (GH #52/ADR-01
       ;(tabs.find((t) => t.textContent === label) as HTMLElement).click()
       await new Promise((r) => requestAnimationFrame(r))
       const segment = pane.querySelector(`[data-role="${role}"]`) as HTMLElement
-      expect(segment.hasAttribute('data-active')).toBe(true)
+      expect(segment.hidden).toBe(false)
       const json = segment.querySelector(jsonSelector) as HTMLElement
       expect(json.getBoundingClientRect().height).toBeGreaterThan(0)
       // The flattening law (GH #222): walking from the content card up to the segment container,
@@ -213,42 +266,73 @@ describe('ui-agent-admin cross-engine smoke — the shell grammar (GH #52/ADR-01
     }
   })
 
-  it('narrow (<640px): {Chat, Agent, Capabilities, Surface, Context: System, Context: Dialog} narrow-tabs fill the shell; the wide pane-tabs strip computes display:none (GH #161/#574: a flat top-level strip, not a nested sub-tab-set)', async () => {
+  it('narrow (<640px): the SAME three-place nav drives a one-place-at-a-time surface — exactly one region has geometry per selection (cl.1/OQ3)', async () => {
     const { el } = mountAgentAdminAt(500)
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
-    const paneTabs = el.querySelector('[data-part="pane-tabs"]') as HTMLElement
-    const narrowTabs = el.querySelector('[data-part="narrow-tabs"]') as HTMLElement
-    expect(getComputedStyle(paneTabs).display).toBe('none') // the same [hidden]-specificity pin, the other direction
-    expect(getComputedStyle(narrowTabs).display).not.toBe('none')
-    const tabs = [...narrowTabs.querySelectorAll('[data-part="narrow-tab"]')]
-    expect(tabs.map((t) => t.textContent)).toEqual(['Chat', 'Agent', 'Capabilities', 'Surface', 'Context: System', 'Context: Dialog'])
+    const nav = el.querySelector('[data-part="pane-nav"]') as HTMLElement
+    expect(getComputedStyle(nav).display, 'ONE vehicle at every band').not.toBe('none')
+    const tabs = [...nav.querySelectorAll('ui-tab')] as HTMLElement[]
+    expect(tabs.map((t) => t.textContent)).toEqual(['Chat', 'Author', 'Settings'])
     for (const tab of tabs) expect(tab.getBoundingClientRect().width).toBeGreaterThan(0)
-    // The composer is reachable and has real, non-zero geometry inside the Chat participant (the default selection).
-    const composer = el.querySelector('ui-conversation-composer') as HTMLElement
-    expect(composer.getBoundingClientRect().height).toBeGreaterThan(0)
 
-    // Clicking Context: System, then Context: Dialog, lands on two DIFFERENT, real, distinctly-contented segments.
-    const systemTab = tabs.find((t) => t.textContent === 'Context: System') as HTMLElement
-    systemTab.click()
+    const widthsOf = (): [number, number, number] => [
+      (el.querySelector('[data-part="pane-holder"] > ui-conversation') as HTMLElement).getBoundingClientRect().width,
+      (el.querySelector('[data-part="author-pane"]') as HTMLElement).getBoundingClientRect().width,
+      (el.querySelector('[data-part="settings-pane"]') as HTMLElement).getBoundingClientRect().width,
+    ]
+    const oneVisible = (widths: [number, number, number], index: 0 | 1 | 2): void => {
+      widths.forEach((w, i) => {
+        if (i === index) expect(w, `region ${i} should own the surface`).toBeGreaterThan(0)
+        else expect(w, `region ${i} should contribute no box`).toBe(0)
+      })
+    }
+
+    // Chat — the composer is reachable with real, non-zero geometry.
+    goToPlace(el, 'Chat')
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    oneVisible(widthsOf(), 0)
+    expect((el.querySelector('[data-part="pane-holder"] > ui-conversation ui-conversation-composer') as HTMLElement).getBoundingClientRect().height).toBeGreaterThan(0)
+
+    // Author — the drill-in shows the `list` side alone.
+    goToPlace(el, 'Author')
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    oneVisible(widthsOf(), 1)
+
+    // Settings — the drill-in shows the `detail` side alone, full-surface (the narrow home the shell
+    // grammar had no state for), and each Context section still switches to its own distinct content.
+    goToPlace(el, 'Settings')
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    oneVisible(widthsOf(), 2)
+    const sectionTabs = [...el.querySelectorAll('[data-part="settings-nav"] ui-tab')] as HTMLElement[]
+    ;(sectionTabs.find((t) => t.textContent === 'Context: System') as HTMLElement).click()
     await new Promise((r) => requestAnimationFrame(r))
     const systemContent = el.querySelector('[data-role="context-system-content"]') as HTMLElement
-    expect(systemContent.hasAttribute('data-active')).toBe(true)
+    expect(systemContent.hidden).toBe(false)
     expect(systemContent.getBoundingClientRect().width).toBeGreaterThan(0)
     expect(systemContent.querySelector('[data-part="context-turns"]')).toBeNull()
 
-    const dialogTab = tabs.find((t) => t.textContent === 'Context: Dialog') as HTMLElement
-    dialogTab.click()
+    ;(sectionTabs.find((t) => t.textContent === 'Context: Dialog') as HTMLElement).click()
     await new Promise((r) => requestAnimationFrame(r))
     const dialogContent = el.querySelector('[data-role="context-dialog-content"]') as HTMLElement
-    expect(dialogContent.hasAttribute('data-active')).toBe(true)
+    expect(dialogContent.hidden).toBe(false)
     expect(dialogContent.getBoundingClientRect().width).toBeGreaterThan(0)
     expect(systemContent).not.toBe(dialogContent)
     expect(dialogContent.querySelector('[data-part="context-item"]')).toBeNull()
   })
 
+  it('the back affordance master-detail renders narrow is SUPPRESSED — the pane nav is the one nav vocabulary (LLD §2)', async () => {
+    const { el } = mountAgentAdminAt(500)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    goToPlace(el, 'Settings')
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const back = el.querySelector('[data-part="pane-pair"] [data-part="back"]') as HTMLElement
+    expect(getComputedStyle(back).display, 'admin CSS out-specifies master-detail.css\'s narrow reveal').toBe('none')
+    expect(back.getBoundingClientRect().height).toBe(0)
+  })
+
   /** Opens a real A2UI surface (a Hit button) in the mounted conversation, returns it + the conversation. */
   async function openLiveSurface(el: UIAgentAdminElement): Promise<{ conversation: HTMLElement }> {
-    const conversation = el.querySelector('[data-part="canvas"] ui-conversation') as HTMLElement & {
+    const conversation = el.querySelector('[data-part="pane-holder"] > ui-conversation') as HTMLElement & {
       beginAgentTurn(): { ingestLine(l: string): void; finalize(): void }
     }
     const handle = conversation.beginAgentTurn()
@@ -275,7 +359,7 @@ describe('ui-agent-admin cross-engine smoke — the shell grammar (GH #52/ADR-01
     wrapper.style.width = '800px' // still wide — nothing may move
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
 
-    expect(el.querySelector('[data-slot-name="options-pane"]'), 'the options-pane should still be there').not.toBeNull()
+    expect(el.querySelector('[data-part="pane-pair"]'), 'the pairing should still be there').not.toBeNull()
     expect(conversation.querySelector('[data-state="closed"]'), 'the surface closed on a same-band resize — it should have stayed open').toBeNull()
     expect(conversation.querySelector('ui-surface-host ui-button'), 'the rendered surface content should still be there').not.toBeNull()
   })
@@ -289,39 +373,38 @@ describe('ui-agent-admin cross-engine smoke — the shell grammar (GH #52/ADR-01
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
 
     // Assert the layout ACTUALLY reached narrow (the component-reviewer MAJOR-fix discipline this pin
-    // preserves) — the narrow-tabs strip is visible, the wide pane-tabs strip computes none.
-    const narrowTabs = el.querySelector('[data-part="narrow-tabs"]') as HTMLElement
-    expect(getComputedStyle(narrowTabs).display, 'did not actually reach narrow').not.toBe('none')
-    expect(getComputedStyle(el.querySelector('[data-part="pane-tabs"]') as HTMLElement).display).toBe('none')
+    // preserves) — ADR-0179 re-anchors the evidence onto the pairing's own drill-in: at Settings, narrow
+    // shows the detail region ALONE, which is only true below master-detail's 40rem own-container line.
+    goToPlace(el, 'Settings')
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    expect((el.querySelector('[data-part="settings-pane"]') as HTMLElement).getBoundingClientRect().width, 'did not actually reach narrow').toBeGreaterThan(0)
+    expect((el.querySelector('[data-part="author-pane"]') as HTMLElement).getBoundingClientRect().width, 'both regions painted — still wide').toBe(0)
 
     // The upgrade itself (SPEC-R7c's survival law, ADR-0154's ratified behavior delta): the surface is
     // NEVER reparented crossing into narrow — it stays open, un-cycled, no "Closed." annotation anywhere.
     expect(conversation.querySelector('[data-state="closed"]'), 'the surface should NOT have closed — R7c is visibility-only').toBeNull()
     expect(conversation.querySelector('ui-surface-host ui-button'), 'the rendered surface content survives the crossing').not.toBeNull()
 
-    // A narrow tab round-trip (Chat → Agent → Chat) leaves it exactly as un-cycled.
-    const tabs = [...el.querySelectorAll('[data-part="narrow-tab"]')] as HTMLElement[]
-    tabs.find((t) => t.textContent === 'Agent')!.click()
+    // A full place round-trip (Settings → Author → Chat) leaves it exactly as un-cycled.
+    goToPlace(el, 'Author')
     await new Promise((r) => requestAnimationFrame(r))
-    tabs.find((t) => t.textContent === 'Chat')!.click()
+    goToPlace(el, 'Chat')
     await new Promise((r) => requestAnimationFrame(r))
     expect(conversation.querySelector('[data-state="closed"]'), 'a full tab round-trip should not close the surface either').toBeNull()
     expect(conversation.querySelector('ui-surface-host ui-button')).not.toBeNull()
   })
 })
 
-describe('ui-agent-admin cross-engine smoke — chat + options-pane render side by side (GH #52/ADR-0154)', () => {
-  it('canvas and the options-pane each occupy a non-zero, non-overlapping box, left to right', () => {
+describe('ui-agent-admin cross-engine smoke — the settings region renders inside the pairing (ADR-0179)', () => {
+  it('the pane nav and the settings region each occupy a non-zero box, the nav above the region', () => {
     const { el } = mountAgentAdmin()
-    const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
-    const tabsPane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
-    const c = canvas.getBoundingClientRect()
-    const t = tabsPane.getBoundingClientRect()
-    for (const box of [c, t]) {
+    const nav = (el.querySelector('[data-part="pane-nav"]') as HTMLElement).getBoundingClientRect()
+    const region = (el.querySelector('[data-part="settings-pane"]') as HTMLElement).getBoundingClientRect()
+    for (const box of [nav, region]) {
       expect(box.width).toBeGreaterThan(0)
       expect(box.height).toBeGreaterThan(0)
     }
-    expect(c.right).toBeLessThanOrEqual(t.left + 1) // canvas is left of the options-pane (integer rounding slop)
+    expect(nav.bottom).toBeLessThanOrEqual(region.top + 1) // the header bar sits above the places (rounding slop)
   })
 
   it('a seeded prompt-section entry\'s content field is visibly focusable and legible (a real element, not display:none)', () => {
@@ -347,8 +430,8 @@ describe('ui-agent-admin cross-engine smoke — chat + options-pane render side 
 
   it('GH #574: the Capabilities and Surface tabs together render all SEVEN sections (Catalogs + Instructions + Skills/Workflows/Resources/Tools/Pattern sources), each a real non-zero box once its own tab is active — GH #488 nests Catalogs inside Surface Options, still leading the Surface tab', async () => {
     const { el } = mountAgentAdmin()
-    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
-    const tabs = [...pane.querySelectorAll('[data-part="pane-tab"]')] as HTMLElement[]
+    const pane = el.querySelector('[data-part="settings-pane"]') as HTMLElement
+    const tabs = [...pane.querySelectorAll('[data-part="settings-nav"] ui-tab')] as HTMLElement[]
 
     tabs.find((t) => t.textContent === 'Capabilities')!.click()
     await new Promise((r) => requestAnimationFrame(r))
@@ -519,12 +602,13 @@ describe('ui-agent-admin cross-engine smoke — the Catalogs library section (AD
   })
 })
 
-describe('ui-agent-admin cross-engine smoke — canvas/pane gutter is module-derived, not a silently-defeatable literal (component-reviewer finding)', () => {
-  it('[data-part="canvas"] and [data-part="pane"] both compute the SAME 12px (0.75rem) leading padding — nothing gates this today, and under @scope cascade rules a future innocuous `padding: 0` on super-shell.css\'s shared pane rule would silently defeat it with every other gate green', () => {
+describe('ui-agent-admin cross-engine smoke — canvas/region gutter is module-derived, not a silently-defeatable literal (component-reviewer finding)', () => {
+  it('[data-part="canvas"] and both master-detail regions compute the SAME 12px (0.75rem) leading padding — nothing gates this today, and under @scope cascade rules a future innocuous `padding: 0` on a shared rule would silently defeat it with every other gate green', () => {
     const { el } = mountAgentAdmin()
     const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
-    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
-    for (const part of [canvas, pane]) {
+    const settings = el.querySelector('[data-part="settings-pane"]') as HTMLElement
+    const author = el.querySelector('[data-part="author-pane"]') as HTMLElement
+    for (const part of [canvas, settings, author]) {
       const cs = getComputedStyle(part)
       expect(cs.paddingInlineStart).toBe('12px')
       expect(cs.paddingBlockStart).toBe('12px')
@@ -684,10 +768,10 @@ describe('ui-agent-admin cross-engine smoke — TKT-0045: no pane overflows at t
     expect(shell.scrollWidth).toBe(shell.clientWidth)
 
     const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
-    const tabsPane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    const tabsPane = el.querySelector('[data-part="settings-pane"]') as HTMLElement
     for (const [label, pane] of [
       ['canvas', canvas],
-      ['options-pane', tabsPane],
+      ['settings-pane', tabsPane],
     ] as const) {
       expect(pane.scrollWidth, `${label} pane must not overflow itself`).toBe(pane.clientWidth)
     }
@@ -695,10 +779,9 @@ describe('ui-agent-admin cross-engine smoke — TKT-0045: no pane overflows at t
     // The composer (ui-conversation's own overflow-x:hidden previously swallowed it invisibly) and the
     // nested ui-settings/ui-master-detail drill-in pane (the --_pane-min inheritance leak, TKT-0045) are
     // the two spots the bug actually lived — assert both directly, not just their ancestors.
-    const composer = canvas.querySelector('ui-conversation-composer') as HTMLElement
-    expect(composer.scrollWidth, 'the message composer must not overflow ui-conversation').toBeLessThanOrEqual(
-      (canvas.querySelector('ui-conversation') as HTMLElement).clientWidth,
-    )
+    const chat = canvas.querySelector(':scope > [data-part="pane-holder"] > ui-conversation') as HTMLElement
+    const composer = chat.querySelector('ui-conversation-composer') as HTMLElement
+    expect(composer.scrollWidth, 'the message composer must not overflow ui-conversation').toBeLessThanOrEqual(chat.clientWidth)
     const uiSettingsInner = tabsPane.querySelector('ui-settings') as HTMLElement
     expect(uiSettingsInner.scrollWidth, 'the generated settings form must not overflow its pane').toBe(uiSettingsInner.clientWidth)
   })
@@ -944,7 +1027,9 @@ describe('ui-agent-admin cross-engine smoke — the live-apply loop actually ren
     const store = el.store!
     store.set('name', 'Cross-engine Scout')
 
-    const composer = el.querySelector('[data-part="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
+    // ADR-0179 — the composer lives in the Chat PLACE; the setting was edited from the Settings place.
+    goToPlace(el, 'Chat')
+    const composer = el.querySelector('[data-part="pane-holder"] > ui-conversation ui-conversation-composer') as HTMLElement & { value: string }
     composer.value = 'ping' // the composer's own value prop (TKT-0058 — the nested field/form are gone)
     ;(composer.querySelector('[data-part="send"]') as HTMLElement).click()
 
@@ -1066,8 +1151,8 @@ describe('ui-agent-admin — segment content wins its OWN display:flex, not supe
   it('GH #574: each of the three ranked segments (Agent/Capabilities/Surface) computes display:flex and shows a REAL, non-zero measured gap between every pair of ITS OWN adjacent top-level sections', async () => {
     const { el } = mountAgentAdmin()
     await el.updateComplete
-    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
-    const tabs = [...pane.querySelectorAll('[data-part="pane-tab"]')] as HTMLElement[]
+    const pane = el.querySelector('[data-part="settings-pane"]') as HTMLElement
+    const tabs = [...pane.querySelectorAll('[data-part="settings-nav"] ui-tab')] as HTMLElement[]
 
     function assertSegmentFlexAndGaps(role: string, minChildren: number): void {
       const content = el.querySelector(`[data-role="${role}"]`) as HTMLElement
@@ -1117,21 +1202,23 @@ describe('ui-agent-admin — segment content wins its OWN display:flex, not supe
   it('the Context: System and Context: Dialog segments ALSO win display:flex once activated (same super-shell specificity collision, same fix)', async () => {
     const { el } = mountAgentAdminAt(800)
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
-    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
-    const tabs = [...pane.querySelectorAll('[data-part="pane-tab"]')]
+    goToPlace(el, 'Settings')
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const pane = el.querySelector('[data-part="settings-pane"]') as HTMLElement
+    const tabs = [...pane.querySelectorAll('[data-part="settings-nav"] ui-tab')]
 
     const systemTab = tabs.find((t) => t.textContent === 'Context: System') as HTMLElement
     systemTab.click()
     await new Promise((r) => requestAnimationFrame(r))
     const systemContent = pane.querySelector('[data-role="context-system-content"]') as HTMLElement
-    expect(systemContent.hasAttribute('data-active')).toBe(true)
+    expect(systemContent.hidden).toBe(false)
     expect(getComputedStyle(systemContent).display).toBe('flex')
 
     const dialogTab = tabs.find((t) => t.textContent === 'Context: Dialog') as HTMLElement
     dialogTab.click()
     await new Promise((r) => requestAnimationFrame(r))
     const dialogContent = pane.querySelector('[data-role="context-dialog-content"]') as HTMLElement
-    expect(dialogContent.hasAttribute('data-active')).toBe(true)
+    expect(dialogContent.hidden).toBe(false)
     expect(getComputedStyle(dialogContent).display).toBe('flex')
   })
 })
@@ -1143,8 +1230,8 @@ describe('ui-agent-admin — GH #225: the Settings sections fold like the Contex
   it('GH #574: each of the three ranked tabs (Agent/Capabilities/Surface) renders a real chevron fold in the shared heading register — a CENSUS across tabs matches the old flat ten; clicking a summary folds ONLY that section\'s content', async () => {
     const { el } = mountAgentAdmin()
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
-    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
-    const tabs = [...pane.querySelectorAll('[data-part="pane-tab"]')] as HTMLElement[]
+    const pane = el.querySelector('[data-part="settings-pane"]') as HTMLElement
+    const tabs = [...pane.querySelectorAll('[data-part="settings-nav"] ui-tab')] as HTMLElement[]
     const clickTab = async (label: string): Promise<void> => {
       tabs.find((t) => t.textContent === label)!.click()
       await new Promise((r) => requestAnimationFrame(r))
@@ -1307,12 +1394,13 @@ describe('ui-agent-admin — GH #225: the Settings sections fold like the Contex
 // conversation on screen, that a mode flip swaps which one occupies the canvas without either collapsing
 // to a zero box, and that a patched value paints into the settings pane while the turn streams.
 
-/** Drive the mode flip from a probe. `setModeSeam` is `protected` — a compile-time construct only — so a
- *  cast reaches it without widening the element's public API. Deliberately NOT a probe SUBCLASS (the
- *  split.ts precedent): agent-admin.css is `@scope (ui-agent-admin)`, so a probe tag would render
- *  unstyled and quietly void every geometry assertion. S4-a's try-it bar replaces this call site. */
-const flipMode = (el: UIAgentAdminElement, mode: 'authoring' | 'test'): void => {
-  ;(el as unknown as { setModeSeam(m: 'authoring' | 'test'): void }).setModeSeam(mode)
+/** ADR-0179 — go to a PLACE from a probe (this replaces the retired `flipMode`/`setModeSeam` pair).
+ *  `setPaneSeam` is `protected` — a compile-time construct only — so a cast reaches it without widening
+ *  the element's public API. Deliberately NOT a probe SUBCLASS (the split.ts precedent): agent-admin.css
+ *  is `@scope (ui-agent-admin)`, so a probe tag would render unstyled and quietly void every geometry
+ *  assertion. The real pane-nav strip is exercised by `goToPlace` in the probes above. */
+const setPane = (el: UIAgentAdminElement, pane: 'chat' | 'author' | 'settings'): void => {
+  ;(el as unknown as { setPaneSeam(p: 'chat' | 'author' | 'settings'): void }).setPaneSeam(pane)
 }
 
 describe('ui-agent-admin cross-engine smoke — the guided-authoring flow (ADR-0178 cl.5, GH #633)', () => {
@@ -1325,15 +1413,15 @@ describe('ui-agent-admin cross-engine smoke — the guided-authoring flow (ADR-0
   }
 
   function conversationsOf(el: UIAgentAdminElement): { authoring: HTMLElement | null; test: HTMLElement } {
-    const stack = el.querySelector('[data-part="chat-stack"]') as HTMLElement
     return {
-      authoring: stack.querySelector('[data-part="authoring-conversation"]'),
-      test: stack.querySelector('ui-conversation:not([data-part="authoring-conversation"])') as HTMLElement,
+      authoring: el.querySelector('[data-part="author-pane"] [data-part="authoring-conversation"]'),
+      test: el.querySelector('[data-part="pane-holder"] > ui-conversation') as HTMLElement,
     }
   }
 
-  it('unarmed, the stack paints exactly one visible conversation filling the canvas (zero-regression)', async () => {
+  it('unarmed, the Chat place paints exactly one visible conversation filling the canvas (zero-regression)', async () => {
     const { el } = mountAgentAdmin()
+    setPane(el, 'chat')
     await el.updateComplete
     const { authoring, test } = conversationsOf(el)
     expect(authoring, 'the second conversation is lazy — never mounted until the flow arms').toBeNull()
@@ -1345,7 +1433,7 @@ describe('ui-agent-admin cross-engine smoke — the guided-authoring flow (ADR-0
     expect(Math.round(box.height)).toBeGreaterThan(Math.round(canvas.getBoundingClientRect().height) - 40)
   })
 
-  it('arming the flow paints the interview in the canvas and hides the test chat — both keep real geometry across a flip', async () => {
+  it('arming the flow LANDS in Author and paints the interview; the Chat place still takes over on demand — both keep real geometry across a place change', async () => {
     const { el } = mountAgentAdmin()
     await el.updateComplete
     el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
@@ -1356,16 +1444,15 @@ describe('ui-agent-admin cross-engine smoke — the guided-authoring flow (ADR-0
     const authoringBox = authoring!.getBoundingClientRect()
     expect(authoringBox.width, 'the interview is genuinely on screen, not a zero-size stub').toBeGreaterThan(0)
     expect(authoringBox.height).toBeGreaterThan(0)
-    expect(test.getBoundingClientRect().height, 'the hidden test chat contributes no box at all').toBe(0)
+    expect(test.getBoundingClientRect().height, 'the Chat place contributes no box at all').toBe(0)
 
-    flipMode(el, 'test')
+    setPane(el, 'chat')
     await el.updateComplete
     expect(authoring!.getBoundingClientRect().height).toBe(0)
     const testBox = test.getBoundingClientRect()
-    expect(testBox.height, 'the test chat takes over the same canvas — no collapsed layout').toBeGreaterThan(0)
-    expect(Math.round(testBox.height)).toBe(Math.round(authoringBox.height))
+    expect(testBox.height, 'the test chat takes over the canvas — no collapsed layout').toBeGreaterThan(0)
 
-    flipMode(el, 'authoring')
+    setPane(el, 'author')
     await el.updateComplete
     expect(authoring!.getBoundingClientRect().height).toBeGreaterThan(0)
   })
@@ -1379,7 +1466,7 @@ describe('ui-agent-admin cross-engine smoke — the guided-authoring flow (ADR-0
 
     const authoring = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
     const composer = authoring.querySelector('ui-conversation-composer') as HTMLElement & { value: string }
-    composer.value = 'call it whatever you like'
+    composer.value = 'call it whatever you like' // the Author place's OWN composer (cl.4 — per-pane composers)
     ;(composer.querySelector('[data-part="send"]') as HTMLElement).click()
     await new Promise((r) => setTimeout(r, 0))
     await el.updateComplete
@@ -1412,207 +1499,119 @@ describe('ui-agent-admin cross-engine smoke — the guided-authoring flow (ADR-0
   })
 })
 
-// ── LLD-C9 (S4-a, GH #646) — the try-it bar, in BOTH real engines ────────────────────────────────────────
-// jsdom proves the flip's LOGIC (agent-admin-authoring.test.ts). What only a real engine can prove is that
-// the bar genuinely PAINTS — real boxes for both tabs, its content read off the fleet's shared
-// `--ui-bar-inline-inset` role (GH #626) rather than flush against the bar's own edge — and that clicking
-// it visually swaps which conversation occupies the canvas, the same geometry the S3 seam-driven smoke
-// above already proved, now from the real affordance.
-// GH #646 REOPENED (pixel-truth, 2026-08-09) — the bar is the fleet `ui-tabs` control (Authoring/Try it
-// are `ui-tab`s); these probes pin the `ui-tabs` selection contract (`.selected`) rather than button
-// anatomy (`aria-pressed`).
-describe('ui-agent-admin cross-engine smoke — the try-it bar (ADR-0178 cl.5 / LLD-C9, GH #646)', () => {
-  function bar(el: UIAgentAdminElement): { bar: HTMLElement & { selected: string }; authoringTab: HTMLElement; testTab: HTMLElement } {
-    const barEl = el.querySelector('[data-part="try-it"]') as HTMLElement & { selected: string }
-    return {
-      bar: barEl,
-      authoringTab: barEl.querySelector('[data-part="try-it-authoring"]') as HTMLElement,
-      testTab: barEl.querySelector('[data-part="try-it-test"]') as HTMLElement,
-    }
+// ── ADR-0179 cl.1 — the PANE NAV strip, in BOTH real engines ─────────────────────────────────────────────
+// (This describe replaces the retired try-it bar's, GH #646/LLD-C9 — §7's "the probes' METHOD survives
+// re-anchored; their strip subject retires". jsdom proves the place change's LOGIC
+// (agent-admin-authoring.test.ts). What only a real engine can prove is that the strip genuinely PAINTS,
+// that its inset lands where the header rhythm says it should, and that clicking it visually swaps which
+// place occupies the canvas — the same three claims the try-it probes made, one level up.)
+describe('ui-agent-admin cross-engine smoke — the pane nav (ADR-0179 cl.1)', () => {
+  function nav(el: UIAgentAdminElement): { strip: HTMLElement & { selected: string }; tab: (key: string) => HTMLElement } {
+    const strip = el.querySelector('[data-part="pane-nav"]') as HTMLElement & { selected: string }
+    return { strip, tab: (key) => strip.querySelector(`[data-part="pane-nav-${key}"]`) as HTMLElement }
   }
 
-  /** The USED px value of `--ui-agent-admin-shell-gutter` where `host` sits — the `_page-bar-inset.
-   *  browser.test.ts` (GH #626) resolution idiom: an unregistered custom property computes to its
-   *  substituted token stream, which never string-equals a used `padding` value, so a throwaway probe
-   *  element resolves it for real. GH #646 follow-up #2 — this used to resolve `--ui-bar-inline-inset`
-   *  (the bar's own, now-retracted padding); the strip's real inset is the AMBIENT `[data-part='canvas']`
-   *  gutter now (see the CSS banner), so this probe reads that token instead. */
-  function resolvedCanvasGutter(host: HTMLElement): number {
+  /** The USED px value of `--ui-bar-inline-inset` where `host` sits — the `_page-bar-inset.browser.test.ts`
+   *  (GH #626) resolution idiom: an unregistered custom property computes to its substituted token stream,
+   *  which never string-equals a used `padding` value, so a throwaway probe element resolves it for real.
+   *  GH #646 follow-up #2 taught the OPPOSITE lesson for the retired try-it strip (its parent nested inside
+   *  the padded canvas box, so the strip owed no inset of its own). This strip is genuinely header content
+   *  — super-shell's `bar`/`bar-content` deliberately carry no padding, GH #626 — so the fleet
+   *  header-content role IS its inset, and the #650 split's header-BEARING arm is the one that applies. */
+  function resolvedBarInset(host: HTMLElement): number {
     const probe = document.createElement('div')
-    probe.style.paddingInline = 'var(--ui-agent-admin-shell-gutter)'
+    probe.style.paddingInline = 'var(--ui-bar-inline-inset)'
     host.append(probe)
     const used = getComputedStyle(probe).paddingInlineStart
     probe.remove()
-    expect(used, 'the shared canvas-gutter role resolves').not.toBe('0px')
+    expect(used, 'the shared header-content inset role resolves').not.toBe('0px')
     return parseFloat(used)
   }
 
-  it('unarmed the bar contributes no box at all; arming paints it with two genuinely on-screen tabs', async () => {
+  it('paints as a real strip with three genuinely on-screen tabs, armed or not (the always-present Author place)', async () => {
     const { el } = mountAgentAdmin()
     await el.updateComplete
-    expect(bar(el).bar.getBoundingClientRect().height, 'hidden ⇒ zero box').toBe(0)
-
+    const { strip, tab } = nav(el)
+    const stripBox = strip.getBoundingClientRect()
+    expect(stripBox.width).toBeGreaterThan(0)
+    expect(stripBox.height).toBeGreaterThan(0)
+    for (const key of ['chat', 'author', 'settings']) {
+      const box = tab(key).getBoundingClientRect()
+      expect(box.width, `${key} tab width`).toBeGreaterThan(0)
+      expect(box.height, `${key} tab height`).toBeGreaterThan(0)
+    }
     el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
     await el.updateComplete
-    const { bar: barEl, authoringTab, testTab } = bar(el)
-    const barBox = barEl.getBoundingClientRect()
-    expect(barBox.width).toBeGreaterThan(0)
-    expect(barBox.height).toBeGreaterThan(0)
-    for (const tab of [authoringTab, testTab]) {
-      const box = tab.getBoundingClientRect()
-      expect(box.width).toBeGreaterThan(0)
-      expect(box.height).toBeGreaterThan(0)
-    }
-    // displacement/content-placement (the #626 gold pattern, applied locally) — GH #646 follow-up #2:
-    // the strip itself carries NO padding of its own now (byte-identical to the section strip, see the
-    // CSS banner); the first tab's content edge sits inset from the AMBIENT `[data-part='canvas']` box's
-    // own edge instead, by the SAME `--ui-agent-admin-shell-gutter` role the section strip's own ambient
-    // `[data-part='pane']` wrapper uses — anti-vacuous, since a flush layout would make this delta 0 and
-    // silently pass a `>=0` assertion.
-    const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
-    const inset = resolvedCanvasGutter(canvas)
-    expect(inset, 'the resolved inset is real slack, not a collapsed token').toBeGreaterThan(4)
-    expect(Math.abs(authoringTab.getBoundingClientRect().left - (canvas.getBoundingClientRect().left + inset)), 'tab content starts one ambient canvas-gutter in from the CANVAS edge, not the bar\'s own').toBeLessThanOrEqual(0.5)
+    expect(nav(el).strip.getBoundingClientRect().height, 'arming changes nothing about the nav itself').toBe(stripBox.height)
   })
 
-  // GH #646 follow-up (Kim's live-surface pass, 2026-08-09) — the bar used to paint its OWN
-  // `border-block-end` on top of `ui-tabs`' own tablist divider, doubling the hairline right above the
-  // conversation card's rounded top edge (the same "nothing left to divide" defect GH #382 retracted an
-  // overlay divider for). ONE separator maximum: the tablist part draws it, the bar host draws none.
-  it('paints exactly ONE separator line below the strip — the tablist\'s own divider, not a second one on the bar host', async () => {
+  // §7 — the #650 screen-x METHOD, repointed: the pane-nav strip's inset-vs-header rhythm. The
+  // border-box screen-x measurement is frame-independent (the shipped 122–124 adjacency probe's own
+  // technique); anti-vacuous because the resolved inset is asserted to be real slack first, so a flush
+  // layout cannot pass with a zero delta.
+  it('the strip`s first tab starts ONE header inset in from the bar`s own edge (the #650 rhythm, repointed)', async () => {
     const { el } = mountAgentAdmin()
     await el.updateComplete
-    el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
-    await el.updateComplete
-    const { bar: barEl } = bar(el)
-    const tablist = barEl.querySelector('[data-part="tablist"]') as HTMLElement
+    const bar = el.querySelector('[data-part="bar"][data-bar="header"]') as HTMLElement
+    expect(bar, 'the admin composes a real header now — the #650 split\'s header-BEARING arm').not.toBeNull()
+    const inset = resolvedBarInset(bar)
+    expect(inset, 'the resolved inset is real slack, not a collapsed token').toBeGreaterThan(4)
+    const firstTabX = nav(el).tab('chat').getBoundingClientRect().x
+    expect(Math.abs(firstTabX - (bar.getBoundingClientRect().x + inset)), 'the first tab lands one header inset in from the bar edge').toBeLessThanOrEqual(0.5)
+  })
 
-    expect(getComputedStyle(barEl).borderBottomWidth, 'the bar host itself paints no border — the doubled-hairline defect').toBe('0px')
+  // §7 — the settings-nav strip's inset equality against the section content it labels: both sit in the
+  // SAME column (the master-detail detail pane), so a screen-x comparison between them is meaningful
+  // (the cross-strip probe the follow-up #4 finding said only holds within one column).
+  it('the settings sub-nav and the section content it labels share ONE screen-x column', async () => {
+    const { el } = mountAgentAdmin()
+    await el.updateComplete
+    const stripTab = el.querySelector('[data-part="settings-nav"] ui-tab') as HTMLElement
+    const section = el.querySelector('[data-role="agent-content"]') as HTMLElement
+    const sectionBox = section.getBoundingClientRect()
+    expect(sectionBox.width, 'the section is genuinely on screen, not a zero-size stub').toBeGreaterThan(0)
+    expect(Math.abs(stripTab.getBoundingClientRect().x - sectionBox.x), 'strip and content share the pane\'s one ambient gutter').toBeLessThanOrEqual(0.5)
+  })
+
+  it('paints exactly ONE separator line below the strip — the tablist`s own divider, not a second one on the host', async () => {
+    const { el } = mountAgentAdmin()
+    await el.updateComplete
+    const { strip } = nav(el)
+    const tablist = strip.querySelector('[data-part="tablist"]') as HTMLElement
+    expect(getComputedStyle(strip).borderBottomWidth, 'the strip host itself paints no border — the doubled-hairline defect').toBe('0px')
     expect(parseFloat(getComputedStyle(tablist).borderBottomWidth), 'the tablist part still paints its own real divider').toBeGreaterThan(0)
   })
 
-  // GH #646 follow-up #2 (Kim's live-surface pass, 2026-08-09) — the try-it strip used to carry its OWN
-  // `padding-inline`/`padding-block` (the `--ui-bar-inline-inset`/card-pad shape, on the WRONG premise
-  // that it sits flush on the shell's raw edge like `narrow-tabs`): `chat-stack` actually nests inside
-  // super-shell's own `[data-part='canvas']` box, which THIS FILE already pads with the SAME
-  // `--ui-agent-admin-shell-gutter` token `[data-part='pane']` uses for the section strip — so the
-  // try-it strip's own padding was stacking ON TOP of that ambient inset, reading measurably
-  // tighter/smaller than the section strip. Fixed by dropping the strip's own padding entirely (zero,
-  // byte-identical to `ui-tabs[data-part='pane-tabs']`). Pinned here so the two strips' core metrics can
-  // never silently drift apart again — anti-vacuous: both strips mounted, non-collapsed, real values.
-  //
-  // GH #646 follow-up #4 (Kim, 2026-08-09) — a component-checker finding: own-box padding equality is
-  // NOT the pixel-truth target. `pane-tabs` and the try-it strip sit in DIFFERENT ancestor columns (the
-  // wide options-pane vs. the canvas) — two strips could resolve the SAME 12px own-ambient-inset and
-  // still land at a different SCREEN x, which is what Kim actually judges. The load-bearing anchor is
-  // the AUTHORING CONVERSATION CARD's own left edge (the visible card the try-it strip sits directly
-  // above): the try-it tab's screen-x must equal it, measured directly (`getBoundingClientRect().x`),
-  // not inferred from two different ambient boxes. `pane-tabs` and try-it are NOT vertically stacked at
-  // wide (different columns), so a cross-strip screen-x comparison between THEM has no meaning here —
-  // that comparison belongs to the narrow case below, where both strips share one column. The
-  // ambient-delta leg stays as a secondary, WITHIN-COLUMN sanity check (pane-tabs' own strip vs its own
-  // pane edge) — real, useful, just not the pixel-truth anchor itself.
-  it('renders with the SAME core metrics as the admin\'s own section-tab strip, and the try-it tab lands EXACTLY on the conversation card\'s own edge (GH #646 follow-up #2/#4)', async () => {
+  it('clicking the tabs flips which place occupies the canvas, with real (non-collapsed) geometry every way', async () => {
     const { el } = mountAgentAdmin()
     await el.updateComplete
     el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
     await el.updateComplete
+    const { strip, tab } = nav(el)
+    const authoring = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
+    const test = el.querySelector('[data-part="pane-holder"] > ui-conversation') as HTMLElement
 
-    const { bar: tryItStrip, authoringTab: tryItTab } = bar(el)
-    const tryItTablist = tryItStrip.querySelector('[data-part="tablist"]') as HTMLElement
-    // The authoring conversation is the one VISIBLE by default (entry mode is 'authoring') — the real
-    // card the try-it strip sits directly above; the test conversation is `hidden` here and would
-    // measure a zero box.
-    const card = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
-
-    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
-    const sectionStrip = pane.querySelector('[data-part="pane-tabs"]') as HTMLElement
-    const sectionTab = pane.querySelector('[data-part="pane-tab"]') as HTMLElement
-    const sectionTablist = sectionStrip.querySelector('[data-part="tablist"]') as HTMLElement
-
-    expect(getComputedStyle(tryItTab).fontSize, 'tab font-size matches the section strip').toBe(getComputedStyle(sectionTab).fontSize)
-    expect(getComputedStyle(tryItTab).paddingInlineStart, 'tab inline padding matches').toBe(getComputedStyle(sectionTab).paddingInlineStart)
-    expect(getComputedStyle(tryItTablist).gap, 'inter-tab gap matches').toBe(getComputedStyle(sectionTablist).gap)
-
-    // THE pixel-truth anchor — screen-x, not an ambient-box-relative delta: the try-it tab's own left
-    // edge must equal the conversation card's own OUTER (border-box) left edge — where the card's own
-    // rounded border starts, not its content edge — the same column, real engine-measured coordinates.
-    // Anti-vacuous: a non-zero card box is asserted first, so a collapsed/zeroed layout can't pass this
-    // vacuously.
-    const cardBox = card.getBoundingClientRect()
-    expect(cardBox.width, 'the card is genuinely on screen, not a zero-size stub').toBeGreaterThan(0)
-    expect(Math.abs(tryItTab.getBoundingClientRect().x - cardBox.x), 'the try-it tab lands exactly on the conversation card\'s own left edge').toBeLessThanOrEqual(0.5)
-
-    // Secondary, within-column sanity check (not the pixel-truth anchor): the section strip's own tab
-    // still sits a real, non-zero inset in from its OWN pane's edge — the same ambient-gutter mechanism
-    // the try-it strip now shares, just measured in its own (different) column.
-    const sectionInset = sectionTab.getBoundingClientRect().left - pane.getBoundingClientRect().left
-    expect(sectionInset, 'the section strip inset is real slack, not a collapsed/zeroed token').toBeGreaterThan(4)
-  })
-
-  // GH #646 follow-up #3 (Kim, live-surface pass, 2026-08-09) — Kim's SECOND pixel read: at narrow width
-  // the visible top strip is `narrow-tabs` (Chat/Agent/Capabilities/…), not `pane-tabs` — a DIFFERENT
-  // composer (chat-shell.css), previously insetting by the fleet header-bar-content role
-  // (`--ui-bar-inline-inset`, 24px) with no header to actually track (`ui-agent-admin` composes none —
-  // chat-shell.css's own updated banner). Fixed there (chat-shell.css's header-presence split); pinned
-  // here, in the REAL composition, guarding the other direction of drift the follow-up #2 probe above
-  // does not reach (that one only exercises the WIDE `pane-tabs` strip).
-  //
-  // GH #646 follow-up #4 — upgraded to a genuine SCREEN-X equality (not an own-box delta): at narrow
-  // width `narrow-tabs`, the try-it strip, AND the conversation card all share ONE column, so their
-  // first tab / left edge must land on the exact SAME viewport x — the frame-independent comparison
-  // Kim's own pixel read actually used (the `#626` header↔footer probe's own precedent shape).
-  it('narrow-tabs strip, the try-it strip, and the conversation card ALL align on the same screen-x (GH #646 follow-up #3/#4)', async () => {
-    const { el } = mountAgentAdminAt(500)
-    await el.updateComplete
-    el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
-    await el.updateComplete
-
-    const narrowTabs = el.querySelector('[data-part="narrow-tabs"]') as HTMLElement
-    expect(getComputedStyle(narrowTabs).display, 'the narrow-tabs strip is visible at this width').not.toBe('none')
-    const narrowFirstTab = narrowTabs.querySelector('[data-part="narrow-tab"]') as HTMLElement
-    const { authoringTab: tryItTab } = bar(el)
-    const card = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
-
-    const cardBox = card.getBoundingClientRect()
-    expect(cardBox.width, 'the card is genuinely on screen, not a zero-size stub').toBeGreaterThan(0)
-    // The OUTER (border-box) edge — where the card's own rounded border starts — is the anchor, not its
-    // content edge (the follow-up #2 probe above establishes this).
-    const cardEdgeX = cardBox.x
-    const narrowX = narrowFirstTab.getBoundingClientRect().x
-    const tryItX = tryItTab.getBoundingClientRect().x
-
-    expect(Math.abs(narrowX - tryItX), 'narrow-tabs and the try-it strip align on the same screen-x').toBeLessThanOrEqual(0.5)
-    expect(Math.abs(narrowX - cardEdgeX), 'narrow-tabs aligns with the conversation card\'s own left edge').toBeLessThanOrEqual(0.5)
-    expect(Math.abs(tryItX - cardEdgeX), 'the try-it strip aligns with the conversation card\'s own left edge').toBeLessThanOrEqual(0.5)
-  })
-
-  it('clicking Try it / Authoring flips which conversation occupies the canvas, with real (non-collapsed) geometry both ways', async () => {
-    const { el } = mountAgentAdmin()
-    await el.updateComplete
-    el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
-    await el.updateComplete
-    const { bar: barEl, authoringTab, testTab } = bar(el)
-    const stack = el.querySelector('[data-part="chat-stack"]') as HTMLElement
-    const authoring = stack.querySelector('[data-part="authoring-conversation"]') as HTMLElement
-    const test = stack.querySelector('ui-conversation:not([data-part="authoring-conversation"])') as HTMLElement
-
-    expect(barEl.selected).toBe('authoring')
+    // arming landed on Author (the IA-entry re-point)
+    expect(strip.selected).toBe('author')
     const authoringBox = authoring.getBoundingClientRect()
     expect(authoringBox.height).toBeGreaterThan(0)
     expect(test.getBoundingClientRect().height).toBe(0)
 
-    testTab.click()
+    tab('chat').click()
     await el.updateComplete
-    expect(barEl.selected).toBe('test')
-    expect(authoring.getBoundingClientRect().height, 'the authoring transcript collapses to zero, not just visually dims').toBe(0)
-    const testBox = test.getBoundingClientRect()
-    expect(testBox.height, 'the test chat takes over the same canvas — no collapsed layout').toBeGreaterThan(0)
-    expect(Math.round(testBox.height)).toBe(Math.round(authoringBox.height))
+    expect(strip.selected).toBe('chat')
+    expect(authoring.getBoundingClientRect().height, 'the interview collapses to zero, not just visually dims').toBe(0)
+    expect(test.getBoundingClientRect().height, 'the test chat takes over the canvas — no collapsed layout').toBeGreaterThan(0)
 
-    authoringTab.click()
+    tab('settings').click()
     await el.updateComplete
-    expect(barEl.selected).toBe('authoring')
+    expect(strip.selected).toBe('settings')
+    expect(test.getBoundingClientRect().height).toBe(0)
+    expect((el.querySelector('[data-part="settings-pane"]') as HTMLElement).getBoundingClientRect().height).toBeGreaterThan(0)
+
+    tab('author').click()
+    await el.updateComplete
+    expect(strip.selected).toBe('author')
     expect(authoring.getBoundingClientRect().height).toBeGreaterThan(0)
   })
 })

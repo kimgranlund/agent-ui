@@ -81,7 +81,10 @@
      branch REVEALS the back affordance at (0,3,0) (`:scope[data-view='detail'] [data-part='back']`)
      inside its own closer scope — scoped-style cascade compares specificity BEFORE scope proximity, so
      each rule here carries the `ui-master-detail` type selector to sit at (0,3,1)/(0,3,2) and win.
-     Multi-section schemas never match — zero behavior change outside the one-section case. THREE
+     GH #651 raised that reveal to (0,4,1) — it walks master-detail's own composed child chain now, so
+     the outer MD of a NESTED pair (ADR-0179's Author⇄Settings pairing wraps this very element) can no
+     longer style the inner one's panes — so the back rule below walks the same exact chain to sit at
+     (0,4,2) and keep winning. Multi-section schemas never match — zero behavior change outside the one-section case. THREE
      component families in this one chain, not two: `ui-master-detail` owns the list/detail panes,
      but `[data-separator]` is split.css's own generated part (a real control-rendered `<div>` inside
      master-detail's composed `ui-split`) — settings.css reaches through master-detail into split's
@@ -92,7 +95,7 @@
   :scope[data-single-section] ui-master-detail [data-separator] {
     display: none;
   }
-  :scope[data-single-section] ui-master-detail [data-part='back'] {
+  :scope[data-single-section] ui-master-detail > ui-split > [data-role='detail'] > [data-part='back'] {
     display: none;
   }
   :scope[data-single-section] ui-master-detail ui-split-pane[data-role='detail'] {

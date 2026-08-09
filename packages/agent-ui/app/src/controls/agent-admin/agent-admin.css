@@ -166,23 +166,122 @@
     min-block-size: 0;
   }
 
-  /* ADR-0178 cl.5 — the content slot hosts a STACK now (the two dual-context conversations, plus S4-a's
-     try-it bar), so the fill behaviour the conversation used to get directly moves out one level: the
-     stack fills the content box, and whichever conversation is VISIBLE fills the stack. A hidden one
-     contributes no box at all (`hidden` + `display: none`), which is what keeps the flip a pure
-     visibility change with no layout shift for the surviving transcript. */
-  [data-part='chat-stack'] {
+  /* ADR-0179 cl.1 — the content slot HOLDS THE PLACES (it was `chat-stack`, ADR-0178 cl.5's
+     two-conversation stacking vehicle for one place). Its two children are the Chat place (the test
+     conversation) and the Author⇄Settings pairing; `#applyPane` shows exactly one, and the hidden one
+     contributes no box at all (`hidden` + `display: none`) — which is what keeps a place change a pure
+     visibility change, with no layout shift for whichever region survives it. */
+  [data-part='pane-holder'] {
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
     min-block-size: 0;
   }
-  [data-part='chat-stack'] > ui-conversation {
+  [data-part='pane-holder'] > ui-conversation,
+  [data-part='pane-holder'] > [data-part='pane-pair'] {
     flex: 1 1 auto;
     min-block-size: 0;
   }
-  [data-part='chat-stack'] > ui-conversation[hidden] {
+  [data-part='pane-holder'] > ui-conversation[hidden],
+  [data-part='pane-holder'] > [data-part='pane-pair'][hidden] {
     display: none;
+  }
+
+  /* ADR-0179 cl.1 (LLD §2) — the PANE NAV, the one top-level navigation vocabulary. `ui-tabs`
+     type-prefixed for the same CASCADE reason every strip rule in this file carries (tabs.css's own
+     `@scope (ui-tabs)` rules tie a bare attribute selector on specificity, and scope proximity would hand
+     the win to the control's own sheet).
+
+     The inset reads `--ui-bar-inline-inset` — the fleet's real-header-content role (GH #575/#626), which
+     is exactly right HERE and was exactly wrong for the retired try-it strip: this strip IS header
+     content (a `header`-slot child inside super-shell's `bar`/`bar-content`, which deliberately carry no
+     padding of their own, GH #626), whereas the try-it strip sat inside the `canvas` box this file
+     already pads with `--ui-agent-admin-shell-gutter` and so stacked 24px on top of 12px (GH #646
+     follow-up #2's measured defect). The admin composing a header at all is what re-joins the
+     header-BEARING arm of chat-shell.css's #650 split; the headerless arm survives for the rest of the
+     fleet, untouched. */
+  [data-part='pane-nav-bar'] {
+    display: flex;
+    flex: 1 1 auto;
+    min-inline-size: 0;
+  }
+  ui-tabs[data-part='pane-nav'] {
+    padding-inline: var(--ui-bar-inline-inset);
+    flex: 1 1 auto;
+    min-inline-size: 0;
+  }
+
+  /* ADR-0179 cl.3 (LLD §2/§6) — the pairing. The MD itself owns the split/resize/drill-in; this file adds
+     only what a consumer owes: the fill, each region's own gutter + scroll, and the back suppression. */
+  [data-part='pane-pair'] {
+    display: flex;
+    flex-direction: column;
+  }
+  /* Each region owns its gutter and its internal rhythm; SCROLLING is deliberately NOT declared here —
+     `ui-master-detail-pane`'s own sheet states the family law ("overflow is left to the wrapping
+     split-pane, which already sets overflow: auto"), and adding a second scroller inside it produced a
+     region that grew with its content instead of scrolling (measured: `scrollTop` stayed 0 with 3000px of
+     overflow, agent-admin-app-scroll.browser.test.ts). */
+  [data-part='author-pane'],
+  [data-part='settings-pane'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-agent-admin-section-gap);
+    min-block-size: 0;
+    /* Fill the split-pane wrapper rather than shrink-wrapping: without this the two regions size to their
+       own content and the wide pair reads ragged (measured 226px of Author beside 543px of Settings in a
+       800px-tall frame). The wrapper owns the scroll (see above), so `100%` here is pure fill, not a
+       second scroller. */
+    block-size: 100%;
+    padding: var(--ui-agent-admin-shell-gutter);
+  }
+  [data-part='author-pane'] > ui-conversation {
+    flex: 1 1 auto;
+    min-block-size: 0;
+  }
+  [data-part='author-pane'] > [hidden],
+  [data-part='settings-pane'] > [hidden] {
+    display: none;
+  }
+
+  /* LLD §2, the back-affordance row — the pane nav is the ONE nav vocabulary (#651's whole point), and
+     master-detail's own back flips its internal `#view` WITHOUT touching `selected`, which would desync
+     the nav's truth. Suppressed rather than removed: no MD API change in this family (§10). The cleaner
+     fleet seam (a `back="none"` attribute) is booked in §15 for the first second consumer.
+     SPECIFICITY is load-bearing here, and the settings.css single-section rule is the precedent: inside
+     `@scope`, `:scope` counts as a pseudo-class, so master-detail.css's narrow reveal
+     (`:scope[data-view='detail'] > ui-split > [data-role='detail'] > [data-part='back']`) sits at
+     (0,4,1) — a plain `[data-part='pane-pair'] [data-part='back']` (0,2,0) simply loses, measured
+     computing `flex` in both engines before this rule took its current shape. The selector below sits at
+     (0,4,2) and wins on merit, no `!important`.
+
+     The child chain is also exact for the reason master-detail.css's own narrow rules now are (GH #651's
+     nesting finding): `ui-settings` composes its OWN `ui-master-detail` inside the settings region, and a
+     descendant selector here would suppress THAT one's back affordance too — the one the settings
+     rail|panel drill-in genuinely needs at narrow. */
+  ui-master-detail[data-part='pane-pair'][data-view] > ui-split > [data-role='detail'] > [data-part='back'] {
+    display: none;
+  }
+
+  /* OQ2 — the Settings place's internal sub-nav. Zero own padding: the pane's own gutter above supplies
+     the ambient inset, exactly the idiom `ui-tabs[data-part='pane-tabs']` follows below (an ambient
+     wrapper gutter insets the strip, never the strip itself). */
+  ui-tabs[data-part='settings-nav'] {
+    flex: 0 0 auto;
+  }
+
+  /* OQ4 — the always-present Author place's empty state. */
+  [data-part='author-empty'] {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--ui-agent-admin-card-pad);
+    padding-block: var(--ui-super-shell-module);
+  }
+  [data-part='author-empty-copy'] {
+    margin: 0;
+    max-inline-size: 44ch;
+    color: var(--md-sys-color-on-surface-variant);
   }
 
   /* ADR-0178 cl.5 / LLD-C9 (S4-a), pixel-truth-overridden GH #646 (2026-08-09 — Kim's reopen comment:

@@ -170,3 +170,54 @@ describe('ui-master-detail relocation reconnect, cross-engine (component-reviewe
     }
   })
 })
+
+// ── GH #651 — NESTED master-details: the outer one's narrow rules must not reach the inner one ─────────
+// Found building ADR-0179's Author⇄Settings pairing: `ui-settings` composes its own `ui-master-detail`
+// for its rail|panel, so an outer consumer that also composes one nests two. The narrow rules used to
+// select by DESCENDANT (`:scope[data-view='list'] [data-role='detail']`), and `@container` resolves
+// against the nearest container ancestor of the ELEMENT BEING STYLED — the inner ui-master-detail, which
+// is routinely under 40rem even when the outer one is wide. A wide outer MD sitting on `data-view='list'`
+// therefore blanked the inner MD's entire detail pane, measured in both engines. The rules walk the own
+// composed child chain now; this pins that they stay that way.
+describe('ui-master-detail cross-engine smoke — nested master-details do not style each other (GH #651)', () => {
+  it('a WIDE outer master-detail on data-view="list" leaves a narrow INNER one\'s detail pane fully painted', async () => {
+    const wrapper = document.createElement('div')
+    wrapper.style.containerType = 'inline-size'
+    wrapper.style.width = '1000px'
+    wrapper.style.height = '400px'
+
+    const outer = document.createElement('ui-master-detail') as UIMasterDetailElement
+    const outerList = document.createElement('ui-master-detail-pane')
+    outerList.setAttribute('pane', 'list')
+    outerList.textContent = 'outer list'
+    const outerDetail = document.createElement('ui-master-detail-pane')
+    outerDetail.setAttribute('pane', 'detail')
+
+    // the INNER master-detail, drilled into `detail` — the ui-settings rail|panel shape
+    const inner = document.createElement('ui-master-detail') as UIMasterDetailElement
+    const innerList = document.createElement('ui-master-detail-pane')
+    innerList.setAttribute('pane', 'list')
+    innerList.textContent = 'inner rail'
+    const innerDetail = document.createElement('ui-master-detail-pane')
+    innerDetail.setAttribute('pane', 'detail')
+    const payload = document.createElement('div')
+    payload.textContent = 'the inner panel content'
+    innerDetail.append(payload)
+    inner.append(innerList, innerDetail)
+    outerDetail.append(inner)
+
+    outer.append(outerList, outerDetail)
+    wrapper.append(outer)
+    document.body.append(wrapper)
+    mounted.push(wrapper)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    inner.selected = 'a' // the inner one drills into `detail`; the OUTER stays on `list` (selected '')
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    expect(outer.getAttribute('data-view'), 'the outer MD is on the list view — the leak\'s precondition').toBe('list')
+    expect(inner.getBoundingClientRect().width, 'the inner MD is genuinely below the 40rem line').toBeLessThan(640)
+
+    expect(payload.getBoundingClientRect().width, 'the inner detail content must still paint').toBeGreaterThan(0)
+    expect(payload.getBoundingClientRect().height).toBeGreaterThan(0)
+  })
+})
