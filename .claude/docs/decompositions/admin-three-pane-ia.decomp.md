@@ -21,7 +21,7 @@
   runner's session map, the consumption fence + gate conjunct, the GH #145 reset laws, the
   `persona-patch.ts` apply chain, and the Builder persona are **mechanism (survive, re-homed)**.
   Verified against shipped source at intake: the fence is `drivingStore === this.authoringStore`
-  (`agent-admin.ts:1769`) — selector-independent; `#contextFor()` (1069–1076) is the only place
+  (`agent-admin.ts:1798 (post-#650 numbering; symbol: the `drivingStore === this.authoringStore` conjunct in the patch-receipt check)`) — selector-independent; `#contextFor()` (1094–1108 (post-#650 numbering; symbol: `#contextFor()`)) is the only place
   `#mode` feeds it.
 - **PR #650 (`task/646-try-it-tabs`, commits `30f3c7d1`→`787c693e`):** the try-it strip's
   `ui-tabs` rework — ships INDEPENDENTLY first; this family supersedes its PLACEMENT, not its
@@ -111,7 +111,7 @@ is the fence GH #651 asked for). Every leaf hosts an action or carries a `justif
 - **OQ1 — one-composer routing (GH #651's first question).** IN or OUT: does Author host its own
   composer permanently routed to the Builder (Chat permanently the test context)?
   **Recommendation: IN** — verified mechanics: the consumption fence keys off the DRIVING store
-  (`agent-admin.ts:1769`), not the mode seam, so an Author-pane composer IS the authoring context
+  (`agent-admin.ts:1798 (post-#650 numbering; symbol: the `drivingStore === this.authoringStore` conjunct in the patch-receipt check)`), not the mode seam, so an Author-pane composer IS the authoring context
   and the fence generalizes with ZERO widening; Chat can never drive `authoringStore`, so "Chat
   stays pure test" holds by construction. The single-interleaved-surface model (#646's Findings
   note) stays OUT — it would reopen the dual-context anatomy. **Owner: Kim** — ADR-0179 cl.4
