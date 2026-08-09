@@ -61,11 +61,11 @@ flag that S2 deliberately left to this slice.
 | **Canonical key set** | `PERSONA_STATE_KEYS` HOISTS into `persona-patch.ts` (plus derived `PERSONA_VALUE_KEYS` / `PERSONA_ENTRY_LIST_KEYS` views); `site/pages/agent-admin-persona-file.ts` deletes its local construction and re-exports the hoisted set (import via a new `@agent-ui/app/agent-admin-persona-patch` subpath, the `agent-admin-schema` precedent). **`SURFACE_PLANNER_KEY` joins the set here** (the #640 ruled fix). | One source of truth or the file format and the apply gate drift apart — the exact silent-divergence class GH #406 closed. The set describes COMPONENT state (`composeLiveSystemPrompt`'s input); the site file format is its consumer, and site→app imports are the DAG's normal direction. Existing site importers keep their symbol via re-export. |
 | **Value admission rule** | Per-key ADMISSION predicates (a table in `persona-patch.ts`), built as **fixpoint checks over the shipped fail-closed readers**: a proposed value is admitted iff that key's own sanitizer/reader returns it UNCHANGED (`sanitizeModel(v, roster) === v`, `sanitizeCatalog(v) === v`, `typeof v === 'boolean'` for every switch, …). Rejected ⇒ dropped, never coerced. | The shipped sanitizers COERCE to defaults (read-time law); an apply gate that coerced would write model garbage as a silent default — a wrong-but-valid-looking store. Fixpoint admission reuses each sanitizer's judgment without inventing a second validation vocabulary. A drop is a degrade (cl.2), recorded on the turn log, never an error surface. |
 | **Dual-context anatomy** | **Two mounted `UIConversationElement` instances** (OQ3's recommendation, Kim-pre-ruled dual-context): the shipped `#conversation` stays the TEST context byte-unchanged; an AUTHORING conversation mounts lazily beside it inside a `data-part="chat-stack"` wrapper composed at `#compose()` time. Mode picks visibility (`hidden`); both keep their DOM transcripts. | No transcript serialization/restore machinery to invent (the snapshot alternative ADR-0178 OF2 named); GH #145 honored by construction — `admin.store` is never reassigned by a flip, only WHICH conversation drives the next turn changes (cl.5 verbatim). |
-| **The second-store seam** | New component prop `authoringStore` (`prop.json<SettingsStore \| undefined>`, `attribute: false` — `store`'s own shape). Set ⇒ the authoring flow is ACTIVE: authoring turns compose from THIS store; patches apply to `this.store` (the draft). Cleared ⇒ authoring context tears down. | "Authoring runs the Builder persona … patches applied to the draft" (cl.5) needs a second composition source; a prop is the component's one configuration idiom. Generalizes to cl.6 for free: a future NL-edit turn has NO `authoringStore` — the driving store IS `this.store`, gate read from itself, apply to itself; one loop, both modes (§3). |
+| **The second-store seam** | New component prop `authoringStore` (`prop.json<SettingsStore \| undefined>`, `attribute: false` — `store`'s own shape). Set ⇒ the authoring flow is ACTIVE: authoring turns compose from THIS store; patches apply to `this.store` (the draft). Cleared ⇒ authoring context tears down. | "Authoring runs the Builder persona … patches applied to the draft" (cl.5) needs a second composition source; a prop is the component's one configuration idiom. The prop seam still serves cl.6 (S5 can arm `authoringStore` however its intake rules), but per Kim's §15 ruling the apply loop no longer generalizes silently — consumption is fenced to the authoring context, and S5's intake owns its own consumption-path ruling (§14). |
 | **Session isolation** | `AdminSurfaceTurnRequest` gains `session?: 'authoring' \| 'test'` (absent = `'test'`, byte-compat); `createAdminSurfaceTurn` keeps a `Map<string, Session>` keyed by it instead of one closure `Session`. | The Builder interview and the draft's test chat are different agents' histories — one shared producer session would feed the interview to the draft as its own memory (identity confusion). Per-persona re-arming (`armSurfaceTurn`) still resets both at once, unchanged. |
 | **Gate threading (the S2 leftover)** | `AdminSurfaceTurnRequest` gains `authoring?: boolean` (fresh gate read from the DRIVING store at request build); runner POST body `...(req.authoring !== undefined ? { authoring: req.authoring } : {})`; `chat-validation.ts` gains `validateAuthoringSurface` (the `validateA2uiEnabled` shape); `dev-proxy-plugin.ts` + `worker/index.ts` thread it into `ProduceOptions.authoringSurface`. | SPEC-R30: the gate reaches the producer PER CALL on the same seam `genui`/`a2ui` ride. S2 built the produce/prompt half; nothing yet carries the flag across the wire — without this, gate-ON teaching never composes. Absent ⇒ key omitted ⇒ POST body byte-identical (the standing precedent). |
 | **Patch event** | `AdminSurfaceTurnEvent` gains `\| { kind: 'patch'; patch: PersonaPatch }` (type-only import from `@agent-ui/a2ui/agent/meta-line` — the `TurnProgress` precedent, SPEC-N1-safe); the runner peels `meta.a2uiMeta.personaPatch` into it, GATE-BLIND (consumption is the component's). | The runner owns the peel, the component consumes typed events — the shipped division (ADR-0178 cl.3). The runner checking the gate would be a second enforcement point that can drift from the component's (#640 handoff: "the apply loop must check the gate itself"). |
-| **Consumption condition** | The apply loop consumes a patch iff `isAuthoringSurfaceEnabled(drivingStore.get(SURFACE_AUTHORING_KEY))` reads ON at RECEIPT (a fresh read — the live-apply law), where drivingStore = the store that composed this turn. Apply target is ALWAYS `this.store`. | SPEC-R30's degrade law host-side: a volunteered patch on a gate-off turn (any ordinary test chat) is never consumed. Gate-on self-context consumption (a persona whose own row was flipped) is cl.3/cl.6's deliberate seam, not an accident — see §15's named risk. |
+| **Consumption condition** | **RULED (Kim, 2026-08-09, host AskUserQuestion round — §15 option (b)):** the apply loop consumes a patch iff the turn's driving store IS `authoringStore` (the store-identity fence) AND `isAuthoringSurfaceEnabled(drivingStore.get(SURFACE_AUTHORING_KEY))` reads ON at receipt (fresh read — CONJUNCTIVE; the fence never replaces the gate). Apply target is ALWAYS `this.store`. | SPEC-R30's degrade law host-side, narrowed by Kim's ruling: a volunteered patch on ANY turn outside the dedicated authoring context — test chats included, even gate-ON — is never consumed. Capability 4's consumption path is therefore deliberately blocked until S5's own ruling (§14/§15). |
 | **Builder persona home + visibility** | A module-local preset in `agent-admin-presets.ts`, exported as `builderPersona()`/`builderStore()` — **NOT in `AGENT_PRESETS`/`personaRoster()`** (hidden-until-invoked, ADR-0178 OF4's recommendation adopted as default; §15 open item). Its store is a FRESH `createMemoryStore({ initial: seed })` per flow entry, **no `persistKey`**. | The showcase roster stays a showcase; nothing user-editable reaches the Builder, so persisting it could only accumulate drift against host-authored config. Reversal (roster-visible) is a one-line array membership change — cheap either way, so the default takes the conservative arm. |
 | **Interview craft = CONFIG; key vocabulary = generated CONFIG** | The Builder's interview craft ships as seed prompt-section entries (persona content). The PATCHABLE-KEY VOCABULARY section is **composed at `builderStore()` mint time from `persona-patch.ts`'s canonical exports** (keys + expected value shapes + entry kinds), never hand-listed. The ARM MECHANICS stay exactly where S2 put them (`authoring-teaching.md`, host-owned, byte-pinned — cl.1 rule 5); Builder copy never restates wire mechanics. | SPEC-R29 makes the producer persona-key-AGNOSTIC, so the key vocabulary can only reach the model from the host side — and a generated section cannot drift from the apply gate's own allowlist. The rule-5 boundary holds because garbled vocabulary degrades to dropped keys (filter i, fail-closed, recoverable), whereas garbled MECHANICS would be unrecoverable — which is why mechanics stay in the byte-pinned prompt file and vocabulary may be config. |
 | **Draft-state feedback** | Each authoring turn's `personaSystem` = the Builder's `composeLiveSystemPrompt(...)` + a host-composed **draft-state block**: `readPersonaState(this.store)` (the hoisted canonical projection) serialized fresh per turn. | "Steering toward completion" (decomp a4/a5) requires the interviewer to see what is established vs missing — including the user's CONCURRENT hand-edits, which is the whole reason SPEC-R29's merge law is incremental. Fresh-read per turn is the standing live-apply law. |
@@ -117,9 +117,10 @@ was consumed, and `patchIgnored: true` when one arrived gate-off) — observabil
 surface, cl.2's degrade posture.
 
 **Invocation** (agent-admin.ts, `#runSurfaceTurn`'s event loop): `else if (event.kind === 'patch')`
-→ fresh gate read on the turn's driving store; ON ⇒ `applyPersonaPatch(this.store, event.patch,
-…)`; OFF ⇒ log-only. Applied mid-stream, so hydration is visible while the turn is still
-streaming. The `store` reference is the one captured at turn start — the bankroll mirror's exact
+→ consumed iff the turn's driving store IS `authoringStore` AND the fresh gate read is ON (Kim's
+§15 option-(b) ruling — conjunctive) ⇒ `applyPersonaPatch(this.store, event.patch, …)`; any other
+turn ⇒ log-only (`patchIgnored`). Applied mid-stream, so hydration is visible while the turn is
+still streaming. The `store` reference is the one captured at turn start — the bankroll mirror's exact
 posture (§10).
 
 ## 4 · Wire + runner widening (the S3 half of the SPEC-R29/R30 realization)
@@ -198,8 +199,9 @@ for free"); §12's panes-proof test EXERCISES it end-to-end rather than trusting
 
 - **Malformed patch:** never reaches the component — `readMetaLine` drops the arm whole
   (SPEC-R29); the event simply doesn't exist.
-- **Patch while gate off** (any ordinary chat; a volunteered patch in test mode): logged
-  `patchIgnored`, zero writes — SPEC-R30's degrade law, host-enforced (§3).
+- **Patch outside the authoring context or while the gate is off** (any ordinary chat, test mode
+  included — even a gate-ON persona's volunteered patch): logged `patchIgnored`, zero writes —
+  SPEC-R30's degrade law plus Kim's §15 store-identity fence, host-enforced (§3).
 - **Every-key-dropped patch:** an empty report, logged; no error surface (cl.2's degrade posture).
 - **Mid-turn persona switch:** the epoch guard already abandons pre-stream; mid-stream, writes go
   to the captured draft store — persisted per persona, harmless to the new active persona (the
@@ -226,7 +228,9 @@ for free"); §12's panes-proof test EXERCISES it end-to-end rather than trusting
 ## 10 · Non-goals
 
 - **NL-edit entry affordance + destructive-edit safety** — S5, deferred (ADR-0178 cl.6); the seam
-  ships (gate row + generalized apply loop), the capability's UX does not.
+  ships (gate row + the apply machinery), the capability's UX does not — and consumption stays
+  FENCED to the authoring context per Kim's §15 option-(b) ruling, so S5's intake also owns its
+  own consumption-path ruling (§14).
 - **A `RecordedTurn` patch analogue** — SPEC-R29 Scope fences it out (no consumer).
 - **Ask-arm peel/event** — asks ride A2UI surfaces via `ingestLine` already; the `ask` declaration
   field stays unconsumed in admin (as today).
@@ -250,8 +254,9 @@ for free"); §12's panes-proof test EXERCISES it end-to-end rather than trusting
   `authoring` when absent (byte-compat assert).
 - **LLD-C5:** `validateAuthoringSurface` unit (the `validateA2uiEnabled` matrix); threading assert
   in each host's existing request-shaping tests.
-- **LLD-C6 (jsdom, `agent-admin.test.ts`):** apply loop consumes gate-ON only (`patchIgnored`
-  logged gate-OFF, zero writes); **panes proof** — after a scripted patch turn, the settings field
+- **LLD-C6 (jsdom, `agent-admin.test.ts`):** apply loop consumes only in the authoring context
+  with the gate ON — BOTH exclusion polarities probed (gate-OFF inside the authoring context, and
+  gate-ON OUTSIDE it), each logging `patchIgnored` with zero writes; **panes proof** — after a scripted patch turn, the settings field
   /entry section DOM reflects the written values (exercising §7's cited law end-to-end);
   dual-context — `admin.store` reference IDENTICAL across mode flips + both transcripts' DOM
   intact (GH #145's probe inverted); reset law — store reassignment clears both; test-context
@@ -269,8 +274,9 @@ for free"); §12's panes-proof test EXERCISES it end-to-end rather than trusting
 
 1. §3's chain holds under unit probes: only enumerated keys, only admission-passing values, only
    `validateNewEntry`-admitted entries reach the store; drops degrade (report + log), never error.
-2. A volunteered patch is consumed ONLY on a turn whose driving persona's gate reads ON at receipt
-   (SPEC-R30's degrade law asserted host-side, both polarities).
+2. A volunteered patch is consumed ONLY on an authoring-context turn (driving store ===
+   `authoringStore`) whose gate reads ON at receipt — fence and gate polarities each asserted
+   (SPEC-R30's degrade law + Kim's §15 option-(b) ruling, host-side).
 3. `SURFACE_PLANNER_KEY` round-trips the persona file both directions (the #640 fix, tested).
 4. Authoring flips never reassign `admin.store` (reference-equality asserted) and both transcripts
    survive a flip cycle; a REAL persona switch still resets (GH #145 both ways).
@@ -301,8 +307,12 @@ for free"); §12's panes-proof test EXERCISES it end-to-end rather than trusting
 
 S4-a builds ONLY LLD-C9 (the bar + flip + round-trip proof) — every seam it needs (both
 conversations, `#mode`, `#setMode`, `#contextFor`) exists after step 4. S5's future intake
-inherits the generalized apply loop + gate row for free; its whole remaining scope is the entry
-affordance + destructive-edit safety (Kim's OQ4/OF3 confirm at that intake).
+inherits the apply machinery + gate row, but **NOT a consumption path**: Kim's §15 option-(b)
+ruling fences consumption to `drivingStore === authoringStore`, which deliberately blocks patching
+a persona from an arbitrary chat — so S5's intake (capability 4, Kim's earlier IN pre-signal) must
+make its OWN consumption-path ruling (how NL-edit arms the authoring context for an existing
+persona) alongside the entry affordance + destructive-edit safety (OQ4/OF3). Recorded here so the
+intake inherits the question, not an assumption.
 
 ## 15 · Risks / open items (named; recommendation each; none blocks dispatch)
 
@@ -311,21 +321,24 @@ affordance + destructive-edit safety (Kim's OQ4/OF3 confirm at that intake).
 - **Builder model choice.** Config, not contract: recommend the roster's sonnet-class id
   (interview quality; haiku acceptable fallback if cost rules). Picked at build; recorded in the
   preset comment.
-- **Self-patching reachable pre-S5 — RULING KIM'S, three options.** The Authoring row lets a user
-  flip an ORDINARY persona's gate ON, making gate-on self-context consumption live before S5's
-  safety work. The exposure, stated honestly: ENTRIES are additive-only (SPEC-R29's no-deletion
-  law — a patch can never remove authored entries), but VALUES merge per-key whole-value
-  LAST-WRITER-WINS (the same pinned law), so a consumed patch CAN overwrite `name`/`model`/
-  `temperature`, flip OTHER modality gates, or replace the catalog selection — and §3 step 2's
-  admission table includes `SURFACE_AUTHORING_KEY` itself, so a consumed patch can arm the draft's
-  own gate: model-authored writes widening the model's future write authority. The options:
-  **(a) accept as designed** — the row's opt-in inverse default bounds it, and S5 still owns the
-  entry affordance + undo/versioning (**recommendation**);
-  **(b)** the fenced alternative — consume only when `drivingStore === authoringStore` — named so
-  the escalation is cheap, but it would narrow cl.3's stated seam, so it is NOT taken silently;
-  **(c)** exclude `SURFACE_AUTHORING_KEY` from the patchable value set (arguably inside cl.2's
-  grant — the ADR never promises every enumerated key is patchable), closing the
-  authority-widening loop while leaving the rest of (a) intact.
+- **Self-patching reachable pre-S5 — RULED: OPTION (b) (Kim, 2026-08-09, host AskUserQuestion
+  round).** The exposure that forced the fork, kept for the record: ENTRIES are additive-only
+  (SPEC-R29's no-deletion law — a patch can never remove authored entries), but VALUES merge
+  per-key whole-value LAST-WRITER-WINS (the same pinned law), so a consumed patch CAN overwrite
+  `name`/`model`/`temperature`, flip OTHER modality gates, or replace the catalog selection — and
+  §3 step 2's admission table includes `SURFACE_AUTHORING_KEY` itself, so a consumed self-patch
+  could arm a persona's own gate: model-authored writes widening the model's future write
+  authority. Options considered: (a) accept as designed (this LLD's original recommendation);
+  (b) the store-identity fence — consume only when `drivingStore === authoringStore`;
+  (c) exclude `SURFACE_AUTHORING_KEY` from the patchable value set.
+  **Ruling: (b)** — consumption requires the fence AND the gate, conjunctive (gate ON is still
+  required; the fence never replaces it). Folded into §2 (consumption-condition + prop-seam rows),
+  §3, §8, §11, §12.2. This knowingly narrows cl.3's gate-on-⇒-consume reading — ruled by the
+  ADR's own ratifier and recorded here with provenance; if a future reader needs it ON the ADR,
+  that is a one-line amendment at S5 intake, not a silent drift. Named family consequence: the
+  fence deliberately blocks patching a persona from an arbitrary chat, so capability 4 (S5, Kim's
+  earlier IN pre-signal) requires its OWN consumption-path ruling at S5 intake — inherited via
+  §14, not resolved here.
 - **Roster label vs patched `name`.** Shipped divergence (hand-edits have it today). If the
   interview's minted "New agent" row grates in practice, file a small follow-up (page subscribes
   to the draft's `name` key); not this slice.
