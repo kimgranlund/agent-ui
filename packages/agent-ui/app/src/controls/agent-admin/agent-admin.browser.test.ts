@@ -1759,3 +1759,227 @@ describe('ui-agent-admin cross-engine smoke — the settings sub-nav grouping (L
     expect([subCs.fontSize, subCs.fontWeight]).toEqual([paneCs.fontSize, paneCs.fontWeight])
   })
 })
+
+// ── LLD-P7 (GH #658, S3-a) — the WIDE live-fill proof + density evidence, in BOTH real engines ────────
+// The pairing's ANATOMY shipped in S1-b and its cl.3 dock geometry is already probed above. What S3 owes
+// is #651's own acceptance line, exercised rather than cited: with the pair genuinely DOCKED, a gate-ON
+// Builder turn running in the Author region must be visible in the SETTINGS region while it runs — the
+// user watching their agent fill itself in. The failure mode this exists to catch is specifically
+// store-green/paint-blank: S1-b's nesting bug (PR #655) had the write land in the store with the region
+// painting nothing, so every assertion here is GEOMETRY and rendered text, never a store read alone.
+
+/** The value the scripted Builder turn patches in — deliberately a string nothing else in this file or the
+ *  admin's own defaults can produce, so "the rail shows it" can only mean the turn put it there. */
+const LIVE_FILL_NAME = 'Filled While The Turn Ran'
+
+/** The five settings sections' label → content-role map (the LLD-P6 describe's own SECTIONS list, keyed
+ *  the way the overflow-menu leg below needs to look one up from a proxy row's text). */
+const SECTION_ROLE_BY_LABEL: Record<string, string> = {
+  Agent: 'agent-content',
+  Capabilities: 'capabilities-content',
+  Surface: 'surface-content',
+  'Context: System': 'context-system-content',
+  'Context: Dialog': 'context-dialog-content',
+}
+
+describe('ui-agent-admin cross-engine smoke — the wide live-fill proof + density (LLD-P7, GH #658)', () => {
+  const frames = async (n = 3): Promise<void> => {
+    for (let i = 0; i < n; i++) await new Promise((r) => requestAnimationFrame(r))
+  }
+
+  /** The two named density lines are the PAIR's own container inline-size (`ui-master-detail` is
+   *  `container-type: inline-size`, so 40rem is measured on it, never on the viewport). The canvas box the
+   *  pair sits in adds one `--ui-agent-admin-shell-gutter` per side (12px, measured), so an OUTER mount of
+   *  `line + 24` is what puts the container exactly ON the line — each band asserts that below rather than
+   *  trusting the arithmetic. Below the line the pair drills in and only one region paints (probed above),
+   *  which is why 664 — not 640 — is the honest "at the 40rem line" mount. */
+  const BANDS = [
+    { name: 'the 40rem line', line: 640, outer: 664 },
+    { name: '52.5rem', line: 840, outer: 864 },
+  ] as const
+
+  /** The used px width of `20ch` IN THIS REGION — the region's own font, not an assumed 8px/ch. The
+   *  `resolvedBarInset` idiom one describe up: a throwaway probe element is the only honest way to turn a
+   *  font-relative unit into the number a layout assertion can compare against. */
+  function twentyCh(region: HTMLElement): number {
+    const probe = document.createElement('div')
+    probe.style.inlineSize = '20ch'
+    probe.style.position = 'absolute'
+    region.append(probe)
+    const used = probe.getBoundingClientRect().width
+    probe.remove()
+    expect(used, 'the ch floor resolves to real px in this region').toBeGreaterThan(0)
+    return used
+  }
+
+  const regionsOf = (el: UIAgentAdminElement): { pair: HTMLElement; author: HTMLElement; settings: HTMLElement } => ({
+    pair: el.querySelector('[data-part="pane-pair"]') as HTMLElement,
+    author: el.querySelector('[data-part="author-pane"]') as HTMLElement,
+    settings: el.querySelector('[data-part="settings-pane"]') as HTMLElement,
+  })
+
+  /** Both regions really are side by side with real boxes — the anti-vacuous precondition every claim
+   *  below rests on. A drilled-in pair (one region at zero) would otherwise let a "the rail updated"
+   *  assertion pass against a rail nobody can see. */
+  function expectDocked(el: UIAgentAdminElement): { author: DOMRect; settings: DOMRect } {
+    const { author, settings } = regionsOf(el)
+    const a = author.getBoundingClientRect()
+    const s = settings.getBoundingClientRect()
+    for (const [label, box] of [
+      ['author', a],
+      ['settings', s],
+    ] as const) {
+      expect(box.width, `${label} region width — the pair must be genuinely docked, not drilled in`).toBeGreaterThan(0)
+      expect(box.height, `${label} region height`).toBeGreaterThan(0)
+    }
+    expect(a.right, 'the interview sits start-side of the settings rail').toBeLessThanOrEqual(s.left + 1)
+    expect(Math.abs(a.top - s.top), 'displacement is on the INLINE axis only').toBeLessThanOrEqual(1)
+    return { author: a, settings: s }
+  }
+
+  const contains = (outer: DOMRect, inner: DOMRect): boolean =>
+    inner.left >= outer.left - 1 && inner.right <= outer.right + 1 && inner.top >= outer.top - 1 && inner.bottom <= outer.bottom + 1
+
+  it('cl.3/#651 — a gate-ON Builder turn in the Author region repaints the DOCKED settings rail WHILE the turn is still streaming', async () => {
+    const { el } = mountAgentAdminAt(1200)
+    await frames()
+
+    // A scripted Builder turn that HOLDS the stream open after emitting its patch. `armPatchRunner` one
+    // describe up runs to completion before the test can look, which can only prove the value landed at
+    // SOME point; gating the generator is what makes "mid-turn" a measured claim instead of a hopeful one
+    // (LLD §11 LLD-P7: "assert the value CHANGED during the stream, not after").
+    let releaseTurn = (): void => {}
+    const held = new Promise<void>((resolve) => (releaseTurn = resolve))
+    let patchApplied = (): void => {}
+    const applied = new Promise<void>((resolve) => (patchApplied = resolve))
+    el.agentSurfaceTurn = async function* () {
+      yield { kind: 'patch' as const, patch: { values: { name: LIVE_FILL_NAME } } }
+      // The consumer has taken the patch and written it by the time it asks for the next event.
+      patchApplied()
+      await held
+      yield { kind: 'note' as const, note: 'Named it for you.' }
+    }
+
+    // Gate ON: arming the authoring flow is what opens the fence AND lands the pane on Author (§4).
+    el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
+    await el.updateComplete
+    await frames()
+
+    const nav = el.querySelector('[data-part="pane-nav"]') as HTMLElement & { selected: string }
+    expect(nav.selected, 'the gate-ON turn runs in the Author place').toBe('author')
+    const docked = expectDocked(el)
+
+    // The field this turn will fill is the Agent section's `name`, in the docked rail — asserted to be
+    // GEOMETRICALLY inside the settings region (not merely present in the DOM somewhere) and to not
+    // already read the target value, so neither half of the proof can pass vacuously.
+    const nameField = el.querySelector('ui-settings [name="name"]') as UITextFieldElement
+    const editorOf = (): HTMLElement => nameField.querySelector('[data-part="editor"]') as HTMLElement
+    expect(contains(docked.settings, nameField.getBoundingClientRect()), 'the name field is painted inside the docked settings rail').toBe(true)
+    expect(nameField.getBoundingClientRect().width, 'and it is a real box, not a collapsed stub').toBeGreaterThan(0)
+    expect(nameField.value, 'the target value is not already showing (anti-vacuous)').not.toBe(LIVE_FILL_NAME)
+    expect(editorOf().textContent, 'nor is it already painted').not.toContain(LIVE_FILL_NAME)
+
+    // Drive the turn through the Author place's OWN composer (cl.4 — per-pane composers), the real path.
+    const authoring = el.querySelector('[data-part="author-pane"] [data-part="authoring-conversation"]') as HTMLElement
+    const composer = authoring.querySelector('ui-conversation-composer') as HTMLElement & { value: string; busy: boolean }
+    composer.value = 'call it whatever you like'
+    ;(composer.querySelector('[data-part="send"]') as HTMLElement).click()
+
+    await applied
+    await frames()
+
+    // ── MID-TURN. The turn is genuinely still in flight: the composer's own in-flight lock (TKT-0034) is
+    // still held and the closing note has not painted yet. Everything asserted below is therefore
+    // happening WHILE the interview runs, which is the whole claim.
+    expect(composer.busy, 'the turn is still streaming — the composer lock has not released').toBe(true)
+    expect(authoring.textContent, 'the closing note has not been emitted yet').not.toContain('Named it for you.')
+
+    // The rail PAINTED the patched value. Three independent reads, because the S1-b nesting bug proved a
+    // green store read can sit on top of a blank region: the control's value, the contenteditable text a
+    // user actually sees, and the box that text occupies inside the still-docked rail.
+    expect(el.store!.get('name'), 'the draft store took the write (the fence applied it)').toBe(LIVE_FILL_NAME)
+    expect(nameField.value, 'the control re-rendered the patched value').toBe(LIVE_FILL_NAME)
+    expect(editorOf().textContent, 'and it is the RENDERED text, not just a property').toContain(LIVE_FILL_NAME)
+    const midBox = nameField.getBoundingClientRect()
+    expect(midBox.width, 'the repainted field still occupies a real box').toBeGreaterThan(0)
+    expect(midBox.height).toBeGreaterThan(0)
+
+    // …and the user never left Author to see it: the pair is still docked, both regions still painted.
+    expect(nav.selected, 'no place change was needed to see the fill').toBe('author')
+    const stillDocked = expectDocked(el)
+    expect(contains(stillDocked.settings, midBox), 'the repainted field is still inside the docked rail').toBe(true)
+
+    // Let the turn finish — the interview's own reply lands in the interview, the rail keeps the value.
+    releaseTurn()
+    await el.updateComplete
+    await frames()
+    const bubble = authoring.querySelector('[data-role="agent"] [data-part="body"]') as HTMLElement
+    expect(bubble.textContent, 'the closing note painted in the interview, not the test chat').toContain('Named it for you.')
+    expect(nameField.value, 'the filled value survives the turn ending').toBe(LIVE_FILL_NAME)
+    expectDocked(el)
+  })
+
+  for (const band of BANDS) {
+    it(`density at ${band.name}: the docked pair splits evenly and BOTH regions clear the 20ch floor, with the sub-nav reachable through its menu`, async () => {
+      const { el } = mountAgentAdminAt(band.outer)
+      await frames()
+      // Density is measured in the state the pairing EXISTS for: a live interview beside the rail. The
+      // interview conversation is lazy (never mounted until the flow arms), so an unarmed measurement
+      // would be grading the empty state's roominess instead of the composed pair's.
+      el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
+      await el.updateComplete
+      await frames()
+      goToPlace(el, 'Author')
+      await frames()
+
+      const { pair, author, settings } = regionsOf(el)
+      expect(pair.getBoundingClientRect().width, `the pair's own container is ON ${band.name}, not merely above it`).toBeCloseTo(band.line, 0)
+      const boxes = expectDocked(el)
+
+      // The EVEN default (§6(c) polishes this only if it reads cramped — see the floor check below).
+      expect(Math.abs(boxes.author.width - boxes.settings.width), 'the composed split defaults to an even share').toBeLessThanOrEqual(1)
+
+      // The floor, per region, measured in that region's own type: content box ≥ 20ch, and nothing spills
+      // sideways (a region that "fits" by overflowing is not holding its content).
+      for (const [label, region] of [
+        ['author', author],
+        ['settings', settings],
+      ] as const) {
+        const cs = getComputedStyle(region)
+        const content = region.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
+        expect(content, `${label} content width clears the 20ch floor at ${band.name}`).toBeGreaterThan(twentyCh(region))
+        expect(region.scrollWidth, `${label} holds its content without overflowing sideways`).toBeLessThanOrEqual(region.clientWidth + 1)
+      }
+
+      // The two regions' real occupants — the rail's widest field and the interview's composer — are each
+      // genuinely usable, not merely non-zero (the 20ch floor is ui-text-field's own intrinsic minimum,
+      // GH #74; a field pinned AT its floor is the tell that the split has run out of room).
+      const nameField = el.querySelector('ui-settings [name="name"]') as UITextFieldElement
+      expect(nameField.getBoundingClientRect().width, `the rail's name field clears its own 20ch minimum at ${band.name}`).toBeGreaterThan(twentyCh(settings))
+      const composer = el.querySelector('[data-part="author-pane"] ui-conversation-composer') as HTMLElement
+      expect(composer.getBoundingClientRect().width, 'the interview composer paints a real box').toBeGreaterThan(0)
+
+      // S2's flagged band behaviour, asserted as the EXPECTED path rather than a regression: the five
+      // section labels do not fit a rail this narrow, so reaching an overflowed section goes through the
+      // GH #586 menu — a6 ("every section reachable at every band") is what must hold here, not "tabs fit".
+      // Measured from the Author place deliberately: the docked rail is the surface this slice is about,
+      // so the sub-nav has to work in it without a place change, at the very width just measured.
+      const strip = el.querySelector('[data-part="settings-nav"]') as HTMLElement
+      const overflowed = [...strip.querySelectorAll('ui-tab[data-overflowed]')] as HTMLElement[]
+      expect(overflowed.length, `the rail at ${band.name} genuinely overflows — otherwise this leg is decoration`).toBeGreaterThan(0)
+      const menu = strip.querySelector('[data-part="overflow"]') as HTMLElement
+      expect(menu.hidden, 'so the overflow trigger paints').toBe(false)
+      const label = overflowed[overflowed.length - 1]!.textContent!
+      ;(menu.querySelector('[data-part="trigger"]') as HTMLElement).click()
+      await frames()
+      const proxy = [...menu.querySelectorAll('[role="menuitem"]')].find((p) => p.textContent === label) as HTMLElement
+      expect(proxy, `${label} is neither on the strip nor in the menu — unreachable at ${band.name}`).toBeTruthy()
+      proxy.click()
+      await frames()
+      const reached = el.querySelector(`[data-role="${SECTION_ROLE_BY_LABEL[label]}"]`) as HTMLElement
+      expect(getComputedStyle(reached).display, `${label} reached through the menu really is the section now showing`).not.toBe('none')
+      const selected = [...strip.querySelectorAll('ui-tab')].find((t) => t.textContent === label) as HTMLElement
+      expect(selected.hasAttribute('data-overflowed'), 'and the selected tab pinned itself back onto the strip (GH #586)').toBe(false)
+    })
+  }
+})
