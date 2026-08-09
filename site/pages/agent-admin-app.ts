@@ -53,8 +53,13 @@ import type { UIAgentAdminElement } from '@agent-ui/app/agent-admin'
 import type { UIButtonElement } from '@agent-ui/components/controls/button'
 import type { UIToastRegionElement } from '@agent-ui/components/controls/toast-region'
 import { ACTIVE_PRESET_KEY, personaRoster, personaStore, resetPersona, saveImportedPersona, type Persona } from './agent-admin-presets.ts'
-import { exportPersonaFile, importedPersonaFrom, personaFileName, personaFileText, readPersonaFile } from './agent-admin-persona-file.ts'
+import { exportPersonaFile, importedPersonaFrom, mintBlankPersona, personaFileName, personaFileText, readPersonaFile } from './agent-admin-persona-file.ts'
 import { librariesForCategory, setLiveIntegrations } from './agent-admin-libraries.ts'
+// GH #637 S1 — the blank agent's seed: the EXACT shipped default `ui-agent-admin` itself falls back to
+// when no store prop is ever set (agent-admin.ts connected()'s own `initial` object) — pure reuse, so a
+// freshly-minted blank agent renders exactly what a bare, unconfigured `<ui-agent-admin>` would.
+import { DEFAULT_MODEL_ID, defaultAgentConfigSchema, initialValuesFor } from '@agent-ui/app/agent-admin-schema'
+import { initialEntryValues } from '@agent-ui/app'
 
 const root = document.querySelector('#app') ?? document.body
 
@@ -169,15 +174,27 @@ function overflowItem(value: string, label: string, title: string): HTMLElement 
   item.title = title
   return item
 }
+// GH #637 S1 — the "New agent" actions. Kept as an ARRAY of `{ value, label, title }` rows dispatched by
+// `value`, not one bare item: S3 (GH #633 §3's "New agent → Generate" sibling) adds its own row to this
+// same array and its own `value` branch below — the shape never needs restructuring for that second
+// child to join, only extending (the decomp's S1 charter: "the entry shape extensible, e.g. the
+// action's naming/anatomy shouldn't hard-code single-child"). S3-a owns the final IA (a submenu, say);
+// this array is what that IA reshuffles, not what it invents from scratch.
+const NEW_AGENT_ACTIONS = [
+  { value: 'new-agent-blank', label: 'New agent → Blank', title: 'Mint a fresh, empty agent to configure from scratch' },
+] as const
+const newAgentItems = NEW_AGENT_ACTIONS.map((a) => overflowItem(a.value, a.label, a.title))
 const resetItem = overflowItem('reset-persona', 'Reset persona', 'Discard this persona’s edits and reseed it from the preset')
 // GH #406 — the persona-library pair. Export writes the persona's whole store state as a versioned JSON
 // file; import mints a NEW persona from one (never an overwrite — library semantics).
 const exportItem = overflowItem('export-persona', 'Export persona', 'Download this persona as a shareable JSON file')
 const importItem = overflowItem('import-persona', 'Import persona…', 'Add a persona from a persona JSON file')
-overflowMenu.append(overflowTrigger, resetItem, exportItem, importItem)
+overflowMenu.append(overflowTrigger, ...newAgentItems, resetItem, exportItem, importItem)
 overflowMenu.addEventListener('select', (event) => {
   const { value } = (event as CustomEvent<{ value: string; index: number }>).detail
-  if (value === 'reset-persona') {
+  if (value === 'new-agent-blank') {
+    createBlankAgent()
+  } else if (value === 'reset-persona') {
     resetPersona(active)
     applyPersona(active)
   } else if (value === 'export-persona') {
@@ -270,6 +287,24 @@ function importPersonaText(text: string): void {
   addPersonaRow(persona)
   applyPersona(persona)
   notify(`Imported “${persona.label}”.`)
+}
+
+// ── the blank-agent path (GH #637 S1) ───────────────────────────────────────────────────────────────────
+// PURE REUSE of the GH #406 mint-on-import machinery above: mint a collision-safe identity → register it
+// in the SAME persisted library an import writes to → stage its roster row → activate it, the identical
+// four-step shape `importPersonaText` runs, differing only in WHERE the seed comes from (the component's
+// own shipped defaults, not a parsed file's state) and WHICH mint function mints it
+// (`mintBlankPersona`, not `importedPersonaFrom`) — no second mint/seed/activate path.
+function createBlankAgent(): void {
+  const seed = { model: DEFAULT_MODEL_ID, ...initialValuesFor(defaultAgentConfigSchema), ...initialEntryValues() }
+  // Mint against a FRESH roster read (importPersonaText's own comment: a second tab may have minted
+  // since boot) — the same collision-safety an import gets.
+  const persona = mintBlankPersona(seed, [...personaRoster(), ...roster])
+  saveImportedPersona(persona) // survives reload: personaRoster() reads this record at boot
+  roster.push(persona)
+  addPersonaRow(persona)
+  applyPersona(persona)
+  notify(`Created “${persona.label}”.`)
 }
 
 // The ONE native form element on this page, and a deliberate exception to the fleet's "no native form
