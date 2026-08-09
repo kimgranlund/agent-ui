@@ -1411,3 +1411,87 @@ describe('ui-agent-admin cross-engine smoke — the guided-authoring flow (ADR-0
     expect(Math.round(box.left)).toBe(Math.round(rows[0]!.getBoundingClientRect().left))
   })
 })
+
+// ── LLD-C9 (S4-a, GH #646) — the try-it bar, in BOTH real engines ────────────────────────────────────────
+// jsdom proves the flip's LOGIC (agent-admin-authoring.test.ts). What only a real engine can prove is that
+// the bar genuinely PAINTS — real boxes for both buttons, its content read off the fleet's shared
+// `--ui-bar-inline-inset` role (GH #626) rather than flush against the bar's own edge — and that clicking
+// it visually swaps which conversation occupies the canvas, the same geometry the S3 seam-driven smoke
+// above already proved, now from the real affordance.
+describe('ui-agent-admin cross-engine smoke — the try-it bar (ADR-0178 cl.5 / LLD-C9, GH #646)', () => {
+  function bar(el: UIAgentAdminElement): { bar: HTMLElement; authoringBtn: HTMLElement; testBtn: HTMLElement } {
+    const barEl = el.querySelector('[data-part="try-it"]') as HTMLElement
+    return {
+      bar: barEl,
+      authoringBtn: barEl.querySelector('[data-part="try-it-authoring"]') as HTMLElement,
+      testBtn: barEl.querySelector('[data-part="try-it-test"]') as HTMLElement,
+    }
+  }
+
+  /** The USED px value of `--ui-bar-inline-inset` where `host` sits — the `_page-bar-inset.browser.test.ts`
+   *  (GH #626) resolution idiom: an unregistered custom property computes to its substituted token stream,
+   *  which never string-equals a used `padding` value, so a throwaway probe element resolves it for real. */
+  function resolvedBarInset(host: HTMLElement): number {
+    const probe = document.createElement('div')
+    probe.style.paddingInline = 'var(--ui-bar-inline-inset)'
+    host.append(probe)
+    const used = getComputedStyle(probe).paddingInlineStart
+    probe.remove()
+    expect(used, 'the shared bar-inset role resolves').not.toBe('0px')
+    return parseFloat(used)
+  }
+
+  it('unarmed the bar contributes no box at all; arming paints it with two genuinely on-screen buttons', async () => {
+    const { el } = mountAgentAdmin()
+    await el.updateComplete
+    expect(bar(el).bar.getBoundingClientRect().height, 'hidden ⇒ zero box').toBe(0)
+
+    el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
+    await el.updateComplete
+    const { bar: barEl, authoringBtn, testBtn } = bar(el)
+    const barBox = barEl.getBoundingClientRect()
+    expect(barBox.width).toBeGreaterThan(0)
+    expect(barBox.height).toBeGreaterThan(0)
+    for (const btn of [authoringBtn, testBtn]) {
+      const box = btn.getBoundingClientRect()
+      expect(box.width).toBeGreaterThan(0)
+      expect(box.height).toBeGreaterThan(0)
+    }
+    // displacement/content-placement (the #626 gold pattern, applied locally): the first button's content
+    // edge sits INSET from the bar's own edge by the shared bar-inline-inset role, not flush against it —
+    // anti-vacuous, since a flush layout would make this delta 0 and silently pass a `>=0` assertion.
+    const inset = resolvedBarInset(barEl)
+    expect(inset, 'the resolved inset is real slack, not a collapsed token').toBeGreaterThan(4)
+    expect(Math.abs(authoringBtn.getBoundingClientRect().left - (barBox.left + inset)), 'button content starts one inset in from the bar edge').toBeLessThanOrEqual(0.5)
+  })
+
+  it('clicking Try it / Authoring flips which conversation occupies the canvas, with real (non-collapsed) geometry both ways', async () => {
+    const { el } = mountAgentAdmin()
+    await el.updateComplete
+    el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
+    await el.updateComplete
+    const { authoringBtn, testBtn } = bar(el)
+    const stack = el.querySelector('[data-part="chat-stack"]') as HTMLElement
+    const authoring = stack.querySelector('[data-part="authoring-conversation"]') as HTMLElement
+    const test = stack.querySelector('ui-conversation:not([data-part="authoring-conversation"])') as HTMLElement
+
+    expect(authoringBtn.getAttribute('aria-pressed')).toBe('true')
+    const authoringBox = authoring.getBoundingClientRect()
+    expect(authoringBox.height).toBeGreaterThan(0)
+    expect(test.getBoundingClientRect().height).toBe(0)
+
+    testBtn.click()
+    await el.updateComplete
+    expect(testBtn.getAttribute('aria-pressed')).toBe('true')
+    expect(authoringBtn.getAttribute('aria-pressed')).toBe('false')
+    expect(authoring.getBoundingClientRect().height, 'the authoring transcript collapses to zero, not just visually dims').toBe(0)
+    const testBox = test.getBoundingClientRect()
+    expect(testBox.height, 'the test chat takes over the same canvas — no collapsed layout').toBeGreaterThan(0)
+    expect(Math.round(testBox.height)).toBe(Math.round(authoringBox.height))
+
+    authoringBtn.click()
+    await el.updateComplete
+    expect(authoringBtn.getAttribute('aria-pressed')).toBe('true')
+    expect(authoring.getBoundingClientRect().height).toBeGreaterThan(0)
+  })
+})
