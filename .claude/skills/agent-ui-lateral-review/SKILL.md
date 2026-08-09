@@ -251,3 +251,15 @@ behavioral claim shipped unverified, a ledgered deviation was re-flagged as a fi
 Vertical DoD rubric → `rubrics/component.md` (this workflow complements, never replaces it) · design-time
 law → [[agent-ui-component-standards]] · prior art → [[agent-ui-component-patterns]] · the test bar
 findings cite → [[agent-ui-component-testing]] · new-component intake → [[agent-ui-component-design]].
+
+- Displacement axis (GH #630, 2026-08-09): a geometry-pinning probe (getBoundingClientRect/
+  clientHeight/offsetWidth/computed-padding on a `[data-part]` box) must also assert what the box
+  DISPLACES — content placed inside it or positioned beside it — not just the box's own rect. Gold
+  exemplar: `site/pages/_page-bar-inset.browser.test.ts` (GH #626) and the vertical-tablist-rail
+  suite (`tabs/tabs.browser.test.ts:470-523`, GH #543) — both pin box geometry AND content placement
+  together. 12 fleet GAP sites found in the 2026-08-09 sweep (nav-rail activator padding, container's
+  ADR-0100 toolbar leg, text-field-geometry's size/scale ramps + icon sweep, otp-field's cell-square/
+  ramp probes, toolbar's min-block-size floor + 3-button layout, modal's density-invariant padding
+  probe, menu's item-padding + checkmark-glyph probes) — routed as the bundled fix ticket GH #634,
+  not yet closed as of this entry; do not re-flag these 12 sites as new findings until #634 resolves
+  or ledgers them as accepted-risk.
