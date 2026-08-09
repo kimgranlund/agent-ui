@@ -1500,15 +1500,30 @@ describe('ui-agent-admin cross-engine smoke — the try-it bar (ADR-0178 cl.5 / 
   // tighter/smaller than the section strip. Fixed by dropping the strip's own padding entirely (zero,
   // byte-identical to `ui-tabs[data-part='pane-tabs']`). Pinned here so the two strips' core metrics can
   // never silently drift apart again — anti-vacuous: both strips mounted, non-collapsed, real values.
-  it('renders with the SAME core metrics as the admin\'s own section-tab strip — font-size, tab padding, inter-tab gap, and inline inset all equal (GH #646 follow-up #2)', async () => {
+  //
+  // GH #646 follow-up #4 (Kim, 2026-08-09) — a component-checker finding: own-box padding equality is
+  // NOT the pixel-truth target. `pane-tabs` and the try-it strip sit in DIFFERENT ancestor columns (the
+  // wide options-pane vs. the canvas) — two strips could resolve the SAME 12px own-ambient-inset and
+  // still land at a different SCREEN x, which is what Kim actually judges. The load-bearing anchor is
+  // the AUTHORING CONVERSATION CARD's own left edge (the visible card the try-it strip sits directly
+  // above): the try-it tab's screen-x must equal it, measured directly (`getBoundingClientRect().x`),
+  // not inferred from two different ambient boxes. `pane-tabs` and try-it are NOT vertically stacked at
+  // wide (different columns), so a cross-strip screen-x comparison between THEM has no meaning here —
+  // that comparison belongs to the narrow case below, where both strips share one column. The
+  // ambient-delta leg stays as a secondary, WITHIN-COLUMN sanity check (pane-tabs' own strip vs its own
+  // pane edge) — real, useful, just not the pixel-truth anchor itself.
+  it('renders with the SAME core metrics as the admin\'s own section-tab strip, and the try-it tab lands EXACTLY on the conversation card\'s own edge (GH #646 follow-up #2/#4)', async () => {
     const { el } = mountAgentAdmin()
     await el.updateComplete
     el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
     await el.updateComplete
 
-    const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
     const { bar: tryItStrip, authoringTab: tryItTab } = bar(el)
     const tryItTablist = tryItStrip.querySelector('[data-part="tablist"]') as HTMLElement
+    // The authoring conversation is the one VISIBLE by default (entry mode is 'authoring') — the real
+    // card the try-it strip sits directly above; the test conversation is `hidden` here and would
+    // measure a zero box.
+    const card = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
 
     const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
     const sectionStrip = pane.querySelector('[data-part="pane-tabs"]') as HTMLElement
@@ -1519,13 +1534,20 @@ describe('ui-agent-admin cross-engine smoke — the try-it bar (ADR-0178 cl.5 / 
     expect(getComputedStyle(tryItTab).paddingInlineStart, 'tab inline padding matches').toBe(getComputedStyle(sectionTab).paddingInlineStart)
     expect(getComputedStyle(tryItTablist).gap, 'inter-tab gap matches').toBe(getComputedStyle(sectionTablist).gap)
 
-    // Inline inset — measured from each strip's OWN ambient wrapper edge (canvas / pane), not the
-    // strip's own box: neither strip carries its own inline padding, so the inset is ambient by
-    // construction on both sides now, and must resolve to the SAME real, non-zero value.
-    const tryItInset = tryItTab.getBoundingClientRect().left - canvas.getBoundingClientRect().left
+    // THE pixel-truth anchor — screen-x, not an ambient-box-relative delta: the try-it tab's own left
+    // edge must equal the conversation card's own OUTER (border-box) left edge — where the card's own
+    // rounded border starts, not its content edge — the same column, real engine-measured coordinates.
+    // Anti-vacuous: a non-zero card box is asserted first, so a collapsed/zeroed layout can't pass this
+    // vacuously.
+    const cardBox = card.getBoundingClientRect()
+    expect(cardBox.width, 'the card is genuinely on screen, not a zero-size stub').toBeGreaterThan(0)
+    expect(Math.abs(tryItTab.getBoundingClientRect().x - cardBox.x), 'the try-it tab lands exactly on the conversation card\'s own left edge').toBeLessThanOrEqual(0.5)
+
+    // Secondary, within-column sanity check (not the pixel-truth anchor): the section strip's own tab
+    // still sits a real, non-zero inset in from its OWN pane's edge — the same ambient-gutter mechanism
+    // the try-it strip now shares, just measured in its own (different) column.
     const sectionInset = sectionTab.getBoundingClientRect().left - pane.getBoundingClientRect().left
-    expect(tryItInset, 'the try-it inset is real slack, not a collapsed/zeroed token').toBeGreaterThan(4)
-    expect(Math.abs(tryItInset - sectionInset), 'the two strips resolve to the SAME inline inset').toBeLessThanOrEqual(0.5)
+    expect(sectionInset, 'the section strip inset is real slack, not a collapsed/zeroed token').toBeGreaterThan(4)
   })
 
   // GH #646 follow-up #3 (Kim, live-surface pass, 2026-08-09) — Kim's SECOND pixel read: at narrow width
@@ -1535,7 +1557,12 @@ describe('ui-agent-admin cross-engine smoke — the try-it bar (ADR-0178 cl.5 / 
   // chat-shell.css's own updated banner). Fixed there (chat-shell.css's header-presence split); pinned
   // here, in the REAL composition, guarding the other direction of drift the follow-up #2 probe above
   // does not reach (that one only exercises the WIDE `pane-tabs` strip).
-  it('narrow-tabs strip (the real headerless shape) aligns with the try-it strip below it — the SAME real inline inset, direct pixel comparison (GH #646 follow-up #3)', async () => {
+  //
+  // GH #646 follow-up #4 — upgraded to a genuine SCREEN-X equality (not an own-box delta): at narrow
+  // width `narrow-tabs`, the try-it strip, AND the conversation card all share ONE column, so their
+  // first tab / left edge must land on the exact SAME viewport x — the frame-independent comparison
+  // Kim's own pixel read actually used (the `#626` header↔footer probe's own precedent shape).
+  it('narrow-tabs strip, the try-it strip, and the conversation card ALL align on the same screen-x (GH #646 follow-up #3/#4)', async () => {
     const { el } = mountAgentAdminAt(500)
     await el.updateComplete
     el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
@@ -1545,11 +1572,19 @@ describe('ui-agent-admin cross-engine smoke — the try-it bar (ADR-0178 cl.5 / 
     expect(getComputedStyle(narrowTabs).display, 'the narrow-tabs strip is visible at this width').not.toBe('none')
     const narrowFirstTab = narrowTabs.querySelector('[data-part="narrow-tab"]') as HTMLElement
     const { authoringTab: tryItTab } = bar(el)
+    const card = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
 
-    // Direct pixel comparison — both strips span the same full-width column at this narrow width, so a
-    // truly matched rhythm puts their first tab's content edge at the SAME viewport x, not just an equal
-    // delta from two different ambient boxes (the follow-up #2 probe's own shape).
-    expect(Math.abs(narrowFirstTab.getBoundingClientRect().left - tryItTab.getBoundingClientRect().left), 'the narrow-tabs strip and the try-it strip align on the same left edge').toBeLessThanOrEqual(0.5)
+    const cardBox = card.getBoundingClientRect()
+    expect(cardBox.width, 'the card is genuinely on screen, not a zero-size stub').toBeGreaterThan(0)
+    // The OUTER (border-box) edge — where the card's own rounded border starts — is the anchor, not its
+    // content edge (the follow-up #2 probe above establishes this).
+    const cardEdgeX = cardBox.x
+    const narrowX = narrowFirstTab.getBoundingClientRect().x
+    const tryItX = tryItTab.getBoundingClientRect().x
+
+    expect(Math.abs(narrowX - tryItX), 'narrow-tabs and the try-it strip align on the same screen-x').toBeLessThanOrEqual(0.5)
+    expect(Math.abs(narrowX - cardEdgeX), 'narrow-tabs aligns with the conversation card\'s own left edge').toBeLessThanOrEqual(0.5)
+    expect(Math.abs(tryItX - cardEdgeX), 'the try-it strip aligns with the conversation card\'s own left edge').toBeLessThanOrEqual(0.5)
   })
 
   it('clicking Try it / Authoring flips which conversation occupies the canvas, with real (non-collapsed) geometry both ways', async () => {
