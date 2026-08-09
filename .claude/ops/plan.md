@@ -13,9 +13,10 @@
   17→8; `campaign_close.py 636` exit 0 clean no-op) — 3/3 returned, no UNMEASURED sections.
 - **Supersedes**: the third 2026-08-09 plan; per-item disposition below.
 - **Verdict**: cleanest sweep of the day — the #613 arc is fully CLOSED (root-caused via the
-  PR #627 deliberate probe; both carried decision entries retire), zero open PRs, main clean at
-  `70c4b3a`. One verified-safe mutation queued (the merged-stale worktree reap), one human
-  decision open (ADR-0178 ratification gating the #633 family's design contract).
+  PR #627 deliberate probe; both carried decision entries retire), zero open PRs, main clean.
+  Close-out executed live (this session had shell access chore-lead's dispatch lacked): 1.1
+  self-resolved by a concurrent session, 4.1 and 4.2 committed + pushed (`7bed879`, `c4e043e5`).
+  Only 3.1 (Kim's ADR-0178 ratify/return) and 4.3 (cross-repo `chore-lead.md` encode) remain open.
 
 Queue order: (1) gated mutations verified safe → (2) blockers → (3) human decisions → (4) hygiene.
 
@@ -32,18 +33,14 @@ Queue order: (1) gated mutations verified safe → (2) blockers → (3) human de
 
 ## 1. Gated mutations already verified safe
 
-### 1.1 Reap the merged-stale worktree `agent-a76f2b0def232c02f`
-- **Action**: `git worktree remove .claude/worktrees/agent-a76f2b0def232c02f` then
-  `git branch -d worktree-agent-a76f2b0def232c02f` (keep `-d`, not `-D` — the merged-state check
-  is the last safety). No host-repo gated reap script exists, so repo-cleaner correctly stayed
-  propose-only; this is a host inline run. Consistent with the #613 practice rule (reap worktrees
-  before `--delete-branch` merges) — here the merge already landed, so ordering is moot.
-- **Owner**: host session at this repo (inline)
-- **Evidence**: repo-cleaner report `.claude/ops/reports/2026-08-09T145512Z.md` — PR #636
-  `state: MERGED`, `mergedAt: 2026-08-09T14:50:17Z`, squash `70c4b3a`; `git diff main
-  worktree-agent-a76f2b0def232c02f` = ZERO unique content; worktree `git status` clean; both
-  branch commits (`5883a55`, `417f9d9`) content-identical to the squash.
-- **Size**: 2 min
+### 1.1 Reap the merged-stale worktree `agent-a76f2b0def232c02f` — DONE (self-resolved)
+- **Status**: closed. By the time this queue's close-out leg checked `git worktree list`, the
+  worktree and its branch were already gone — another concurrent session in this workspace reaped
+  it independently between repo-cleaner's report and this verification pass. No action taken here;
+  confirmed absent (`git worktree list` shows only the primary checkout, `git branch -a` has no
+  `633`/`worktree-agent` match).
+- **Evidence**: repo-cleaner report `.claude/ops/reports/2026-08-09T145512Z.md` (original
+  zero-diff proof) + this close-out's live re-check, 2026-08-09.
 
 ## 2. Blocking other work
 
@@ -67,28 +64,23 @@ upstream wait, not a queue blocker.)
 
 ## 4. Hygiene debt
 
-### 4.1 Land this firing's ops-state delta (recurring)
-- **Action**: after applying this plan file, `git add .claude/ops && git commit` on main —
-  this firing's delta is exactly: `adr-checkpoint.json` (M, +adr-0178 hash),
-  `watch-checkpoint.json` (M, new checkpoint), `reports/2026-08-09T145512Z.md` (new), and this
-  `plan.md` rewrite. Working tree is otherwise clean (#626's dirty-file caveat retired), so a
-  scoped `git add .claude/ops` has no ride-along risk — keep the scoping anyway.
+### 4.1 Land this firing's ops-state delta (recurring) — DONE
+- **Status**: closed. Committed `7bed879` on `main` (`adr-checkpoint.json`, `watch-checkpoint.json`,
+  `reports/2026-08-09T145512Z.md`, this `plan.md`), scoped to `.claude/ops/` only — the two
+  unrelated dirty `site/pages/agent-admin-*` files (another live session's in-progress work) were
+  left untouched. Pushed to `origin/main` (`70c4b3ad..7bed8799`).
 - **Owner**: chore-lead's own close-out (this dispatch's landing leg, per the standing ruling)
-- **Evidence**: `git status --short -- .claude/ops/` at this dispatch → 2 M + 1 untracked;
-  prior landings `88b429b`, `643cc5f` in `git log -- .claude/ops/`; `rulings.md` §"Seat-payload
-  landing leg — chore-lead lands all".
-- **Size**: 5 min
+- **Evidence**: `git log -- .claude/ops/` → `7bed879`; `rulings.md` §"Seat-payload landing leg".
 
-### 4.2 Trim the 8 remaining stale gitignore rules (carried, reduced scope)
-- **Action**: retire the 8 `G1`-flagged lines: `*.log`, `npm-debug.log*`, `*.local`,
-  `.vscode/*`, `.idea`, `*.sw?`, `.claude/docs/other`, `.vitest-attachments/` (the last NEW this
-  firing — appeared post-#632, also matches nothing). The prior "after #626 ships" sequencing
-  ruling is satisfied — #626 is closed — so nothing gates this now. Verify-then-trim, same
-  discipline as PR #632's 9-rule pass; small PR or host inline.
+### 4.2 Trim the 8 remaining stale gitignore rules (carried, reduced scope) — DONE
+- **Status**: closed. Retired all 8 `G1`-flagged lines (`*.log`, `npm-debug.log*`, `*.local`,
+  `.vscode/*` + its now-orphaned `!.vscode/extensions.json` exception, `.idea`, `*.sw?`,
+  `.claude/docs/other`, `.vitest-attachments/`). Verified `git status` showed no newly-untracked
+  junk after the trim (nothing was silently relying on those ignores). Committed `c4e043e5`,
+  pushed to `origin/main`.
 - **Owner**: host inline (apply); repo-cleaner remains propose-only
-- **Evidence**: repo-cleaner this firing — `gitignore_check.py` exit 0, 8 warnings (down from
-  17; PR #632 trimmed 9), verbatim list in `reports/2026-08-09T145512Z.md`.
-- **Size**: 10 min
+- **Evidence**: repo-cleaner this firing — `gitignore_check.py` exit 0, 8 warnings verbatim in
+  `reports/2026-08-09T145512Z.md`; `git log -- .gitignore` → `c4e043e5`.
 
 ### 4.3 Encode the landing-leg + evidence-write-back rulings into `chore-lead.md` (cross-repo, carried)
 - **Action**: one change in the harness plugin (nonoun-plugins repo): `chore-lead.md`'s body
