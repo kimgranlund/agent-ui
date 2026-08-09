@@ -240,6 +240,84 @@ describe('ui-nav-rail-group — context-label uses the kicker-small typescale ro
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
+//  [1c] GH #624 — main-menu nav polish (kicker block-padding, activator border-aware padding,
+//       neutral kicker/active-family-high color roles)
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-nav-rail — GH #624 nav polish (both engines)', () => {
+  it('item 1: only the FIRST group kicker gets the extra block-start relief, not every kicker', async () => {
+    const rail = document.createElement('ui-nav-rail')
+    const groupA = new UINavRailGroupElement()
+    groupA.label = 'Components'
+    groupA.append(makeItem('/a', 'A'))
+    const groupB = new UINavRailGroupElement()
+    groupB.label = 'Guides'
+    groupB.append(makeItem('/b', 'B'))
+    rail.append(groupA, groupB)
+    mountRail(rail, '900px')
+    await (rail as unknown as { updateComplete: Promise<void> }).updateComplete
+    await (groupA as unknown as { updateComplete: Promise<void> }).updateComplete
+    await (groupB as unknown as { updateComplete: Promise<void> }).updateComplete
+
+    const firstLabel = groupA.querySelector('[data-part="context-label"]') as HTMLElement
+    const secondLabel = groupB.querySelector('[data-part="context-label"]') as HTMLElement
+    const firstPad = Number.parseFloat(getComputedStyle(firstLabel).paddingBlockStart)
+    const secondPad = Number.parseFloat(getComputedStyle(secondLabel).paddingBlockStart)
+    expect(firstPad, `${server.browser}: the first kicker did not get extra block-start relief`).toBeGreaterThan(secondPad)
+  })
+
+  it('item 2: the activator start padding is one border-width less than the end padding (optical alignment)', async () => {
+    const el = document.createElement('ui-nav-rail')
+    el.setAttribute('collapse', 'drill-in')
+    el.append(makeItem('/x', 'Row'))
+    mountRail(el, '900px')
+    await new Promise((r) => requestAnimationFrame(() => r(undefined)))
+    const activator = el.querySelector('[data-part="activator"]') as HTMLElement
+    const cs = getComputedStyle(activator)
+    const start = Number.parseFloat(cs.paddingInlineStart)
+    const end = Number.parseFloat(cs.paddingInlineEnd)
+    const borderWidth = Number.parseFloat(cs.borderInlineStartWidth)
+    expect(borderWidth, `${server.browser}: expected a non-zero marker border width`).toBeGreaterThan(0)
+    expect(end - start, `${server.browser}: start padding should trail end padding by exactly the marker border width`).toBeCloseTo(
+      borderWidth,
+      1,
+    )
+  })
+
+  it('item 4: the kicker ink resolves to the neutral role, not the on-surface ink', async () => {
+    const rail = document.createElement('ui-nav-rail')
+    const group = new UINavRailGroupElement()
+    group.label = 'Components'
+    group.append(makeItem('/a', 'A'))
+    rail.append(group)
+    mountRail(rail, '900px')
+    await (rail as unknown as { updateComplete: Promise<void> }).updateComplete
+    await (group as unknown as { updateComplete: Promise<void> }).updateComplete
+
+    const label = group.querySelector('[data-part="context-label"]') as HTMLElement
+    const kickerColor = getComputedStyle(label).color
+    const inkColor = resolveColor(getComputedStyle(rail).getPropertyValue('--ui-nav-rail-ink').trim())
+    const neutralColor = resolveColor(getComputedStyle(rail).getPropertyValue('--ui-nav-rail-meta-ink').trim())
+    expect(kickerColor, `${server.browser}: the kicker still reads the on-surface ink`).not.toBe(inkColor)
+    expect(kickerColor, `${server.browser}: the kicker does not resolve to the neutral role`).toBe(neutralColor)
+  })
+
+  it('item 5: the active item ink resolves to the primary-high role, not the base primary', async () => {
+    const el = document.createElement('ui-nav-rail')
+    el.setAttribute('collapse', 'drill-in')
+    el.append(makeItem('/x', 'Active', true))
+    mountRail(el, '900px')
+    await new Promise((r) => requestAnimationFrame(() => r(undefined)))
+    const activator = el.querySelector('[data-part="activator"]') as HTMLElement
+    const activeColor = getComputedStyle(activator).color
+    const baseColor = resolveColor('var(--md-sys-color-primary)')
+    const highColor = resolveColor('var(--md-sys-color-primary-high)')
+    expect(activeColor, `${server.browser}: the active item still reads the base primary role`).not.toBe(baseColor)
+    expect(activeColor, `${server.browser}: the active item does not resolve to the primary-high role`).toBe(highColor)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
 //  [2] collapse="menu" — whole-shape wide/narrow + Escape/outside-click dismiss (SPEC-R5)
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
@@ -971,6 +1049,19 @@ describe('ui-nav-rail — the name|tag row (SPEC-R6)', () => {
     expect(cs.whiteSpace, `${server.browser}: the tag wraps instead of truncating`).toBe('nowrap')
     const activatorHeightNarrow = (el.querySelector('[data-part="activator"]') as HTMLElement).getBoundingClientRect().height
     expect(activatorHeightNarrow, `${server.browser}: the row grew — a wrap, not a truncate`).toBeCloseTo(activatorHeightWide, 0)
+  })
+
+  it('GH #624 item 3: the tag reads the mono typeface and the neutral color role, not the row ink', async () => {
+    const { el, tag } = withTag()
+    mountRail(el, '900px')
+    await new Promise((r) => requestAnimationFrame(() => r(undefined)))
+    const cs = getComputedStyle(tag)
+    expect(cs.fontFamily.toLowerCase(), `${server.browser}: expected a monospace font stack on the tag`).toContain('mono')
+    const tagColor = cs.color
+    const inkColor = resolveColor(getComputedStyle(el).getPropertyValue('--ui-nav-rail-ink').trim())
+    const neutralColor = resolveColor(getComputedStyle(el).getPropertyValue('--ui-nav-rail-meta-ink').trim())
+    expect(tagColor, `${server.browser}: the tag still reads the row's own ink`).not.toBe(inkColor)
+    expect(tagColor, `${server.browser}: the tag does not resolve to the neutral role`).toBe(neutralColor)
   })
 })
 

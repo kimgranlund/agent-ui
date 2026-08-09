@@ -27,12 +27,24 @@
 
 :where(ui-nav-rail) {
   --ui-nav-rail-ink: var(--md-sys-color-neutral-on-surface);
-  --ui-nav-rail-ink-active: var(--md-sys-color-primary);
+  /* GH #624 item 5 (Kim, 2026-08-09 follow-up): the ACTIVE item reads the `{family}-high` tier, not
+     the base `primary` role — `-high` sits a step further from the surface than the base tone, so the
+     selected row's text reads more deliberately set-apart than a hover/indicator-only signal would. */
+  --ui-nav-rail-ink-active: var(--md-sys-color-primary-high);
   --ui-nav-rail-surface-hover: var(--md-sys-color-neutral-surface-high);
   --ui-nav-rail-indicator: var(--md-sys-color-primary);
   --ui-nav-rail-surface: var(--md-sys-color-neutral-surface);
   --ui-nav-rail-outline: var(--md-sys-color-neutral-outline-variant);
   --ui-nav-rail-scrim: var(--md-sys-color-neutral-scrim);
+  /* GH #624 items 3/4 — the kicker (`context-label`) and the trailing tag column both read the fleet's
+     `neutral` role (the muted mid-tone, distinct from `--ui-nav-rail-ink`'s near-black/white on-surface
+     ink): both are secondary/meta text, never the row's own name. */
+  --ui-nav-rail-meta-ink: var(--md-sys-color-neutral);
+  --ui-nav-rail-tag-font-family: var(--md-sys-typeface-mono);
+  /* GH #624 item 2 — the active-marker border's own width, named so the activator's left padding (below)
+     can subtract it: the marker is `border-inline-start`, always taking inline space even transparent, so
+     the label/icon column sat one border-width further right than a bare-padding row would read. */
+  --ui-nav-rail-active-border-width: 2px;
 
   --ui-nav-rail-height: var(--md-sys-height-md);
   --ui-nav-rail-font: var(--md-sys-font-md);
@@ -61,6 +73,10 @@
   --ui-nav-rail-context-label-tracking: var(--md-sys-typescale-kicker-small-tracking);
   --ui-nav-rail-context-pad-block-start: var(--md-sys-space-sm);
   --ui-nav-rail-context-pad-block-end: var(--md-sys-space-xs);
+  /* GH #624 item 1 — the FIRST group's kicker (only) gets extra block-start relief: every later kicker
+     already reads separated from the previous group by that group's own items, but the first one sits
+     directly against the rail's own top edge with nothing but its own (smaller) pad-block-start above it. */
+  --ui-nav-rail-context-pad-block-start-first: var(--md-sys-space-md);
   --ui-nav-rail-flyout-pad: var(--md-sys-space-xs);
   --ui-nav-rail-flyout-radius: var(--md-sys-shape-corner-base);
   --ui-nav-rail-chevron-size: var(--md-sys-space-sm); /* SPEC-R11c/AC19 — the trigger's own chevron glyph */
@@ -109,10 +125,16 @@
     line-height: var(--ui-nav-rail-context-label-line-height);
     letter-spacing: var(--ui-nav-rail-context-label-tracking);
     text-transform: uppercase; /* GH #370 — casing lives at the consumer (the text.css kicker precedent) */
-    color: var(--ui-nav-rail-ink);
+    color: var(--ui-nav-rail-meta-ink); /* GH #624 item 4 — the neutral role, not the on-surface ink */
     padding-inline: calc(var(--ui-nav-rail-height) / 2);
     padding-block-start: var(--ui-nav-rail-context-pad-block-start);
     padding-block-end: var(--ui-nav-rail-context-pad-block-end);
+  }
+
+  /* GH #624 item 1 — the first group's kicker only (every later one already reads separated by the
+     previous group's own items above it). */
+  ui-nav-rail-group:first-of-type > [data-part='context-label'] {
+    padding-block-start: var(--ui-nav-rail-context-pad-block-start-first);
   }
 
   [data-part='items'] {
@@ -134,14 +156,17 @@
     box-sizing: border-box;
     block-size: var(--ui-nav-rail-height); /* Pattern size-class — geometry.md "interactive rows take the control height" */
     padding-block: 0; /* NEVER block-padding (geometry.md) */
-    padding-inline: calc(var(--ui-nav-rail-height) / 2);
+    /* GH #624 item 2 — the marker border (below) always occupies inline space, even transparent/unselected,
+       so the START side subtracts its width to keep content optically aligned with the END side. */
+    padding-inline-start: calc(var(--ui-nav-rail-height) / 2 - var(--ui-nav-rail-active-border-width));
+    padding-inline-end: calc(var(--ui-nav-rail-height) / 2);
     font-size: var(--ui-nav-rail-font);
     line-height: var(--md-sys-control-line-height);
     color: var(--ui-nav-rail-ink);
     text-decoration: none;
     background: transparent;
     border: none;
-    border-inline-start: 2px solid transparent; /* the active marker's own box — never color-only (rubric C8) */
+    border-inline-start: var(--ui-nav-rail-active-border-width) solid transparent; /* the active marker's own box — never color-only (rubric C8) */
     cursor: pointer;
     text-align: start;
     white-space: nowrap;
@@ -191,7 +216,10 @@
     white-space: nowrap;
     min-inline-size: 0;
     font-size: var(--ui-nav-rail-label-font);
-    color: var(--ui-nav-rail-ink);
+    /* GH #624 item 3 — the tag reads as code/meta (a component name, e.g. `ui-attachment`), so it takes
+       the mono typeface + the neutral role rather than the row's own prose ink. */
+    font-family: var(--ui-nav-rail-tag-font-family);
+    color: var(--ui-nav-rail-meta-ink);
   }
   [data-part='activator'] > [data-part='label'] {
     overflow: hidden;
