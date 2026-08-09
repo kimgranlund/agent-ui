@@ -1470,7 +1470,7 @@ export class UIAgentAdminElement extends UIElement {
             // started, GH #354's hoisted await) — a toggle flipped mid-turn can no more change this turn's
             // decision than it could when the pair was a module constant; it applies to the NEXT turn.
             handle.mountGenui(event.surfaceId, event.html, assets)
-          } else {
+          } else if (event.kind === 'line') {
             wireLines.push(event.line)
             // GH #418 — an A2UI wire line only renders (`ingestLine`) while A2UI is actually on this
             // turn; the toggle's OFF state must never render a surface whose actions the click-gate above
