@@ -185,19 +185,23 @@
     display: none;
   }
 
-  /* ADR-0178 cl.5 / LLD-C9 (S4-a) — the try-it bar: a fixed-height row atop the stack (`flex: 0 0 auto`,
-     never fills/shrinks with the conversation below it), its bottom edge the seam that separates it from
-     whichever conversation is showing. Inline inset reads the fleet's ONE bar-content role
-     (`--ui-bar-inline-inset`, GH #626) rather than this file's own card-pad token — this bar is a rail
-     sitting directly on the shell's content edge, the same boundary the docs site's own header/footer bars
-     sit on, not a card nested inside the padded canvas gutter. Block padding reuses `--ui-agent-admin-
-     card-pad`'s own block term (`--md-sys-space-sm`) for the SAME vertical rhythm every other card-chrome
-     row in this file uses (TKT-0066 item 5: the styles block never spells `--md-sys-space-*` directly). */
-  [data-part='try-it'] {
-    display: flex;
-    align-items: center;
-    gap: var(--ui-agent-admin-row-gap);
-    padding: var(--ui-agent-admin-card-pad);
+  /* ADR-0178 cl.5 / LLD-C9 (S4-a), pixel-truth-overridden GH #646 (2026-08-09 — Kim's reopen comment:
+     https://github.com/kimgranlund/agent-ui/issues/646) — the try-it bar is the fleet `ui-tabs` control
+     now (Authoring ⇄ Try it), the SAME underline idiom the admin's own section strip
+     (`ui-tabs[data-part='pane-tabs']`, super-shell.css) uses, composed PANEL-LESS the identical way
+     (GH #221). `ui-tabs` type-prefixed — CASCADE-LOAD-BEARING, the super-shell.css `pane-tabs`/chat-
+     shell.css `narrow-tabs` precedent: tabs.css's own `@scope (ui-tabs)` rules tie a bare attribute
+     selector on specificity, and scope proximity would hand the win to the control's own sheet.
+     `flex: 0 0 auto` keeps the strip a fixed-height row atop the stack (never fills/shrinks with the
+     conversation below it); its bottom edge is the seam separating it from whichever conversation is
+     showing. Inline inset reads the fleet's ONE bar-content role (`--ui-bar-inline-inset`, GH #626) —
+     `ui-tabs`' tablist carries no inline padding of its own by design (#543), so the RHYTHM around the
+     strip comes from this composer, exactly the `narrow-tabs` precedent (chat-shell.css). Block padding
+     reuses `--ui-agent-admin-card-pad`'s own block term (`--md-sys-space-sm`) for the SAME vertical
+     rhythm every other card-chrome row in this file uses (TKT-0066 item 5: the styles block never spells
+     `--md-sys-space-*` directly). */
+  ui-tabs[data-part='try-it'] {
+    padding-block: var(--ui-agent-admin-card-pad);
     padding-inline: var(--ui-bar-inline-inset);
     border-block-end: 1px solid var(--ui-agent-admin-border);
     flex: 0 0 auto;

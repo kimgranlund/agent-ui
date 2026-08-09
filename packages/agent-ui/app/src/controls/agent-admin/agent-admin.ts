@@ -64,6 +64,12 @@ import '@agent-ui/components/controls/text-field'
 // whose roving/one-group contract doesn't fit rows interleaved with switches across provider groups).
 import '@agent-ui/components/controls/radio'
 import '@agent-ui/components/controls/disclosure' // vision rev.5 — the Context tabs' accordion primitive
+// GH #646 (reopened, pixel-truth) — the try-it bar is the fleet `ui-tabs` control, the SAME composition
+// shape `super-shell.ts`'s panel-less pane-tabs/narrow-tabs strips already use (GH #221): a bare `ui-tabs`
+// host of `ui-tab` children, no `ui-tab-panel`s (visibility rides `#applyMode`'s own hidden toggle, not
+// the control's panel machinery).
+import '@agent-ui/components/controls/tabs'
+import type { UITabsElement, UITabElement } from '@agent-ui/components/controls/tabs'
 // GH #52 (ADR-0154, agent-admin-shell-rehost.lld.md LLD-C4) — the re-host onto the shell-archetype
 // grammar: content=chat, options-pane segments=Agent/Capabilities/Surface/Context:System/Context:Dialog
 // (SPEC-R7a, GH #574 split the old single Settings segment into three), narrow-end="tabs" flattens them
@@ -352,12 +358,16 @@ export class UIAgentAdminElement extends UIElement {
   /** Which context drives the next turn. Meaningful only while `authoringStore` is set; entry default is
    *  `'authoring'` (the flow opens on the interview). The try-it bar below (LLD-C9) is what flips it. */
   #mode: 'authoring' | 'test' = 'authoring'
-  /** S4-a (LLD-C9) — the visible flip affordance atop the chat stack, and its two ui-buttons. Built once
-   *  in `#compose()` (byte-cheap, unlike the lazy authoring conversation); `#applyMode` hides it whenever
-   *  `authoringStore` is unset, so an element that never enters the flow paints no bar at all. */
-  #tryItBar: HTMLElement | null = null
-  #authoringModeButton: UIButtonElement | null = null
-  #testModeButton: UIButtonElement | null = null
+  /** S4-a (LLD-C9), pixel-truth-overridden GH #646 — the visible flip affordance atop the chat stack: a
+   *  panel-less `ui-tabs` strip (Authoring/Try it), the SAME idiom the admin's own section tabs use. Built
+   *  once in `#compose()` (byte-cheap, unlike the lazy authoring conversation); `#applyMode` hides it
+   *  whenever `authoringStore` is unset, so an element that never enters the flow paints no bar at all.
+   *  `#tryItAuthoringTab` is kept so the lazily-mounted authoring conversation can be `link()`ed once it
+   *  exists (`#mountAuthoringConversation`) — the test tab links at compose time since its conversation is
+   *  never lazy. */
+  #tryItBar: UITabsElement | null = null
+  #tryItAuthoringTab: UITabElement | null = null
+  #idSeq = 0
   /** The authoring context's own store identity, so the effect can tell a real reassignment from a bare
    *  re-run (the `#lastStore` precedent, applied to the second store). */
   #lastAuthoringStore: SettingsStore | undefined
@@ -548,6 +558,13 @@ export class UIAgentAdminElement extends UIElement {
     this.#contextUnsub = undefined
     this.#authoringUnsub?.()
     this.#authoringUnsub = undefined
+  }
+
+  /** GH #646 — a per-instance id seed for the try-it tab strip's `link()` calls (the `super-shell.ts`
+   *  `#nextId` precedent); this element mints no other ids, so a small local counter is enough. */
+  #nextId(prefix: string): string {
+    this.#idSeq += 1
+    return `ui-agent-admin-${prefix}-${this.#idSeq}`
   }
 
   // ── composition (idempotent — the master-detail.ts/settings.ts `#compose` doc-comment precedent) ──────
@@ -980,28 +997,36 @@ export class UIAgentAdminElement extends UIElement {
 
     // ADR-0178 cl.5 (LLD-C9, S4-a) — the try-it bar: the visible authoring ⇄ test flip atop the chat
     // stack (§5's frozen anatomy). Built once here — cheap, unlike the lazy authoring conversation — and
-    // hidden by default; `#applyMode` reveals it only while `authoringStore` is set. Two `ui-button`s call
-    // the SAME private `#setMode` the S3 test seam already exercised (`setModeSeam`); no new mode
-    // machinery, only its first real caller. `aria-pressed` is managed here, not through the button's own
-    // internals (the component-law exception for a CONSUMER annotating a composed child it does not own —
-    // the `agentSwitch`/`kindSwitch` `aria-label` precedent above).
-    const tryItBar = document.createElement('div')
+    // hidden by default; `#applyMode` reveals it only while `authoringStore` is set.
+    // GH #646 (REOPENED, pixel-truth, 2026-08-09) — Kim's live-surface ruling overrides LLD-C9's original
+    // two-pill-`ui-button` anatomy: the flip is the SAME underline `ui-tabs` idiom the admin's own section
+    // strip already uses (`#applySegments`/`#buildNarrowTabs` above), composed the identical PANEL-LESS
+    // way (GH #221) — a bare `ui-tabs` host, `ui-tab` children carrying `key`, no `ui-tab-panel`s (this bar
+    // has no panel content of its own; the two CONVERSATIONS it flips between are the shell's existing
+    // visibility targets, exactly how a pane-tabs segment or a narrow-tab participant is). The control's
+    // ONE user-commit `select` event (ADR-0019) drives the SAME private `#setMode` the S3 test seam already
+    // exercised (`setModeSeam`); no new mode machinery, only its first real caller. `#applyMode` syncs the
+    // strip's `selected` back on a programmatic flip (no event echo, the control's own binding contract).
+    const tryItBar = document.createElement('ui-tabs') as UITabsElement
     tryItBar.setAttribute('data-part', 'try-it')
     tryItBar.hidden = true
-    const authoringModeButton = document.createElement('ui-button') as UIButtonElement
-    authoringModeButton.setAttribute('data-part', 'try-it-authoring')
-    authoringModeButton.textContent = 'Authoring'
-    authoringModeButton.setAttribute('aria-pressed', 'true') // entry default mode is 'authoring'
-    authoringModeButton.addEventListener('click', () => this.#setMode('authoring'))
-    const testModeButton = document.createElement('ui-button') as UIButtonElement
-    testModeButton.setAttribute('data-part', 'try-it-test')
-    testModeButton.textContent = 'Try it'
-    testModeButton.setAttribute('aria-pressed', 'false')
-    testModeButton.addEventListener('click', () => this.#setMode('test'))
-    tryItBar.append(authoringModeButton, testModeButton)
+    const authoringModeTab = document.createElement('ui-tab') as UITabElement
+    authoringModeTab.setAttribute('data-part', 'try-it-authoring')
+    authoringModeTab.setAttribute('key', 'authoring')
+    authoringModeTab.textContent = 'Authoring'
+    const testModeTab = document.createElement('ui-tab') as UITabElement
+    testModeTab.setAttribute('data-part', 'try-it-test')
+    testModeTab.setAttribute('key', 'test')
+    testModeTab.textContent = 'Try it'
+    testModeTab.link(conversation, this.#nextId('try-it-test')) // aria-controls → the test conversation (panel-less; element-reflection, the pane-tabs precedent)
+    tryItBar.append(authoringModeTab, testModeTab)
+    tryItBar.selected = 'authoring' // entry default mode is 'authoring'
+    tryItBar.addEventListener('select', (event) => {
+      event.stopPropagation() // this element's OWN event vocabulary stays closed — no new host event (#setMode's own contract)
+      this.#setMode((event as CustomEvent<{ value: string; index: number }>).detail.value as 'authoring' | 'test')
+    })
     this.#tryItBar = tryItBar
-    this.#authoringModeButton = authoringModeButton
-    this.#testModeButton = testModeButton
+    this.#tryItAuthoringTab = authoringModeTab
 
     // GH #52/ADR-0154 — every content unit authors DIRECTLY into the shell, once, never moved again:
     // the shell's own pane-tabs strip (wide) and narrow-tabs strip (narrow-end="tabs") drive visibility
@@ -1108,6 +1133,9 @@ export class UIAgentAdminElement extends UIElement {
     // rather than a blind `prepend`, so this lands in the right slot whether or not the bar exists yet.
     stack.insertBefore(conversation, this.#conversation)
     this.#authoringConversation = conversation
+    // GH #646 — the authoring tab controls THIS conversation once it exists (it is lazy; the test tab
+    // linked its own conversation at compose time, `#compose` above).
+    this.#tryItAuthoringTab?.link(conversation, this.#nextId('try-it-authoring'))
   }
 
   /**
@@ -1127,7 +1155,7 @@ export class UIAgentAdminElement extends UIElement {
   }
 
   /** Reflect the current mode onto the two conversations' visibility, plus the try-it bar's own visibility
-   *  and `aria-pressed` state (LLD-C9). Nothing else: no store touch, no reset, no serialization — which is
+   *  and selection (LLD-C9, GH #646). Nothing else: no store touch, no reset, no serialization — which is
    *  precisely why both transcripts survive a flip (ADR-0178 cl.5). */
   #applyMode(): void {
     const armed = this.authoringStore !== undefined
@@ -1136,9 +1164,10 @@ export class UIAgentAdminElement extends UIElement {
     // element leaves it visible exactly as it always was.
     if (this.#conversation) this.#conversation.hidden = armed && this.#mode === 'authoring'
     // The bar itself only shows while the flow is armed — an unarmed element has nothing to flip between.
-    if (this.#tryItBar) this.#tryItBar.hidden = !armed
-    this.#authoringModeButton?.setAttribute('aria-pressed', String(this.#mode === 'authoring'))
-    this.#testModeButton?.setAttribute('aria-pressed', String(this.#mode === 'test'))
+    if (this.#tryItBar) {
+      this.#tryItBar.hidden = !armed
+      this.#tryItBar.selected = this.#mode // programmatic write — no `select` echo (ADR-0019)
+    }
   }
 
   /** Arm, re-arm, or tear down the authoring context in response to an `authoringStore` change. A real
