@@ -225,7 +225,7 @@ ui-theme-provider.app-shell > .site-shell > [data-part='frame'] > [data-part='ba
  * inside a super-shell bar, and it aligns with the other three only because #626 made that bar a
  * padding-less rail: while the bar owned 6px, this column's `100%` was 12px narrower AND offset 6px, so
  * the footer's text sat 6px right of the pager's directly above it — the misalignment this issue was
- * filed for. `super-shell-alignment.browser.test.ts` measures the two boxes' content-edge x in a real
+ * filed for. `_page-bar-inset.browser.test.ts` measures the two boxes' content-edge x in a real
  * engine and fails if they diverge, so the alignment is pinned structurally rather than by matching
  * literals nobody can see are matched. */
 .app-context-footer-inner {

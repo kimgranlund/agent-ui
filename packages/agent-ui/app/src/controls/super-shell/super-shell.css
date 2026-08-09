@@ -217,20 +217,9 @@
      content would shrink-wrap and leave the rest of the bar visibly empty; regression measured on the
      docs site's real header/footer, GH #90). `min-inline-size:0` lets the content's own children manage
      overflow (e.g. a `justify-content:space-between` row) instead of forcing the bar wider than the shell. */
-  /* GH #626 (Kim, 2026-08-09) — `align-self: stretch` is the BLOCK-axis mirror of the `flex: 1 1 auto`
-     above, and it exists for the same reason. The bar sizes off `min-block-size`, so it is routinely
-     TALLER than the content it holds — at its 54px default with a single text row, or grown past that
-     minimum by a taller sibling (a side toggle) or a consumer repointing `--ui-super-shell-bar-size`.
-     The bar's `align-items: center` then sized `bar-content` to its own content and floated it in the
-     middle, so a consumer's full-height header content (a background, a bottom-aligned row, a
-     stretch-to-fill child of its own) had no box to fill: it was laying out inside a shrink-wrapped
-     ~18px box, not the bar. Declared as `align-self` on THIS child rather than flipping the bar to
-     `align-items: stretch`: the bar's other children are the side toggles, which are centred square
-     affordances by design — stretching a 54px icon button to a 120px bar is a defect, not a fix. */
   [data-part='bar-content'] {
     flex: 1 1 auto;
     min-inline-size: 0;
-    align-self: stretch;
   }
 
   [data-part='middle'] {
