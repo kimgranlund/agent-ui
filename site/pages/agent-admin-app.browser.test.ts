@@ -273,3 +273,64 @@ describe('agent-admin-app — the persona library (GH #406)', () => {
     await expectRejected(JSON.stringify(file), 'mangled.json')
   })
 })
+
+// ── GH #637 S1 — the blank-agent path on the REAL page ─────────────────────────────────────────────────
+// The mint+seed mechanism is proven deterministically in agent-admin-persona-file.test.ts (jsdom); this
+// leg proves the PAGE WIRING: the overflow row exists, clicking it mints, persists, stages a roster row,
+// and ACTIVATES the new agent — the one leg only a real page can prove (the settings pane genuinely opens
+// on the fresh identity, same as any other persona switch).
+describe('agent-admin-app — the blank-agent path (GH #637 S1)', () => {
+  afterAll(() => {
+    // Same no-residue duty as the persona-library block above — a leftover "New agent" row would redden
+    // this file's own per-preset row counts on the next run.
+    for (const persona of loadImportedPersonas()) {
+      for (const key of Object.keys(localStorage).filter((k) => k.startsWith(`agent-admin-app.${persona.id}.`))) {
+        localStorage.removeItem(key)
+      }
+    }
+    localStorage.removeItem(IMPORTED_PERSONAS_KEY)
+    localStorage.setItem(ACTIVE_PRESET_KEY, AGENT_PRESETS[0]!.id)
+  })
+
+  it('the overflow carries "New agent → Blank"', async () => {
+    const overflow = document.querySelector('.overflow-menu') as HTMLElement
+    ;(overflow.querySelector('[data-part="trigger"]') as HTMLElement).click()
+    await raf()
+    const row = overflow.querySelector('[data-value="new-agent-blank"]')
+    expect(row, 'the blank-agent row lives in the overflow menu').not.toBeNull()
+    expect(row?.textContent).toBe('New agent → Blank')
+  })
+
+  it('clicking it mints a fresh agent, activates it, and persists it in the SAME library an import writes to', async () => {
+    const before = [...document.querySelectorAll<HTMLElement>('.agent-menu [role="menuitemradio"]')].length
+    const libraryBefore = loadImportedPersonas().length
+
+    const overflow = document.querySelector('.overflow-menu') as HTMLElement
+    ;(overflow.querySelector('[data-part="trigger"]') as HTMLElement).click()
+    await raf()
+    ;(overflow.querySelector('[data-value="new-agent-blank"]') as HTMLElement).click()
+    await raf()
+
+    const rows = [...document.querySelectorAll<HTMLElement>('.agent-menu [role="menuitemradio"]')]
+    expect(rows, 'one NEW roster row, no preset overwritten').toHaveLength(before + 1)
+    const minted = rows[rows.length - 1]!
+    expect(minted.textContent, 'the mint law: "New agent", numbered only on a real collision').toMatch(/^New agent( \d+)?$/)
+
+    // Activated: the header + aria-checked + the persisted active-id all follow the mint, the same
+    // contract applyPersona() gives an imported persona (agent-admin-app.ts's applyPersona()).
+    expect(minted.getAttribute('aria-checked'), 'the blank agent becomes the active one').toBe('true')
+    expect((document.querySelector('.canvas-header-name') as HTMLElement).textContent).toBe(minted.textContent)
+    expect(localStorage.getItem(ACTIVE_PRESET_KEY)).toBe(minted.dataset.value)
+
+    // Persisted through the GH #406 imported-library record — what survives a reload.
+    const library = loadImportedPersonas()
+    expect(library.length, 'one new library record').toBe(libraryBefore + 1)
+    const record = library.find((p) => p.id === minted.dataset.value)
+    expect(record, 'registered under the SAME id the roster row carries').toBeDefined()
+    expect(record?.imported).toBe(true)
+    // The seed carries the shipped schema default (`agent-admin-schema.ts`'s `name` field default) — a
+    // genuinely blank agent, not a persona-flavored one (no `foundation`/`surfaceStyle` skew from any
+    // preset, which a preset-derived seed would always carry as a rewritten Foundation section instead).
+    expect(record?.seed.name, 'the shipped schema default name, unrewritten by any preset').toBe('Untitled agent')
+  })
+})

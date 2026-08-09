@@ -256,16 +256,29 @@ function slug(label: string): string {
 
 /** A collision-safe id/label pair against ids/labels already on the roster — the suffix counter that
  *  `validateNewEntry` uses for entries, applied to personas (a colliding id would silently SHARE the
- *  other persona's persisted store, which is the one failure mode library semantics must not have). */
-function mintIdentity(label: string, taken: ReadonlySet<string>, takenLabels: ReadonlySet<string>): { id: string; label: string } {
+ *  other persona's persisted store, which is the one failure mode library semantics must not have).
+ *
+ *  `tag` picks the uniquify WORDING only — the loop itself (base slug, taken-id/taken-label check,
+ *  numeric suffix once both collide) is the ONE mechanism both a file import (`importedPersonaFrom`,
+ *  `'imported'`) and a from-scratch mint (`mintBlankPersona`, GH #637 S1, `'new'`) run through, so a
+ *  colliding blank agent gets the exact same collision-safety an imported one already has. */
+function mintIdentity(
+  label: string,
+  taken: ReadonlySet<string>,
+  takenLabels: ReadonlySet<string>,
+  tag: 'imported' | 'new',
+): { id: string; label: string } {
   const base = slug(label)
-  let id = `${base}-imported`
-  let display = `${label} (imported)`
-  let suffix = 2
+  const idFor = (n: number): string => (tag === 'imported' ? `${base}-imported${n > 1 ? `-${n}` : ''}` : `${base}${n > 1 ? `-${n}` : ''}`)
+  const labelFor = (n: number): string =>
+    tag === 'imported' ? `${label} (imported${n > 1 ? ` ${n}` : ''})` : `${label}${n > 1 ? ` ${n}` : ''}`
+  let n = 1
+  let id = idFor(n)
+  let display = labelFor(n)
   while (taken.has(id) || takenLabels.has(display)) {
-    id = `${base}-imported-${suffix}`
-    display = `${label} (imported ${suffix})`
-    suffix += 1
+    n += 1
+    id = idFor(n)
+    display = labelFor(n)
   }
   return { id, label: display }
 }
@@ -280,6 +293,7 @@ export function importedPersonaFrom(file: PersonaFile, roster: readonly Persona[
     file.persona.label,
     new Set(roster.map((p) => p.id)),
     new Set(roster.map((p) => p.label)),
+    'imported',
   )
   return {
     id,
@@ -288,5 +302,29 @@ export function importedPersonaFrom(file: PersonaFile, roster: readonly Persona[
     ...(file.persona.category === undefined ? {} : { category: file.persona.category }),
     seed: { ...file.state },
     imported: true,
+  }
+}
+
+/**
+ * Mint a brand-new BLANK persona (GH #637 S1, the roster's "New agent → Blank" action): the SAME
+ * collision-safe identity mint `importedPersonaFrom` runs (`mintIdentity`, tagged `'new'` so the
+ * id/label read "new-agent"/"New agent" rather than "…-imported"/"(imported)"), carrying a caller-
+ * supplied seed instead of a parsed file's state — this module owns identity + envelope shape only,
+ * never a fresh agent's default values (the page composes those from the SAME shipped defaults
+ * `ui-agent-admin` itself falls back to when no store is set, `agent-admin.ts` connected()).
+ */
+export function mintBlankPersona(seed: Readonly<Record<string, unknown>>, roster: readonly Persona[]): Persona {
+  const { id, label } = mintIdentity(
+    'New agent',
+    new Set(roster.map((p) => p.id)),
+    new Set(roster.map((p) => p.label)),
+    'new',
+  )
+  return {
+    id,
+    label,
+    tagline: 'A freshly minted agent, ready to configure.',
+    seed: { ...seed },
+    imported: true, // roster-persisted the SAME way an imported persona is (GH #406) — never a shipped preset
   }
 }

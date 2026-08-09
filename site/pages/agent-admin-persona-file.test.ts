@@ -48,11 +48,14 @@ import {
   PERSONA_STATE_KEYS,
   exportPersonaFile,
   importedPersonaFrom,
+  mintBlankPersona,
   personaFileName,
   personaFileText,
   readPersonaFile,
   readPersonaState,
 } from './agent-admin-persona-file.ts'
+import { DEFAULT_MODEL_ID, defaultAgentConfigSchema, initialValuesFor } from '@agent-ui/app/agent-admin-schema'
+import { initialEntryValues } from '@agent-ui/app'
 
 // ── the jsdom ElementInternals stub (agent-admin-app.test.ts verbatim) ─────────────────────────────────
 let realAttachInternals: typeof HTMLElement.prototype.attachInternals
@@ -480,6 +483,55 @@ describe('importedPersonaFrom — collision-safe minting (library semantics)', (
     expect(minted.label).toBe(`${label} (imported)`)
     expect(minted.seed.name).toBe(state.name) // the live agent identity is byte-identical
     expect(minted.seed.name).toBe('Meridian Night Concierge')
+  })
+})
+
+// ── GH #637 S1 — the blank-agent path's mint+seed leg (jsdom) ─────────────────────────────────────────
+// The ACTIVATE leg (the roster row lands, the settings pane opens on it) is proven on the real page in
+// agent-admin-app.browser.test.ts; this leg proves the two things a page test would only assert
+// indirectly: the identity mint is the SAME collision-safe mechanism an import uses (never a second
+// mint path), and the seed is EXACTLY the shipped default `ui-agent-admin` itself falls back to when no
+// store prop is ever set — not a lookalike reconstruction of it.
+describe('mintBlankPersona — the roster "New agent → Blank" mint (GH #637 S1)', () => {
+  const blankDefaultSeed = (): Record<string, unknown> => ({
+    model: DEFAULT_MODEL_ID,
+    ...initialValuesFor(defaultAgentConfigSchema),
+    ...initialEntryValues(),
+  })
+
+  it('mints "New agent" / "new-agent" against an empty roster, carrying the seed verbatim', () => {
+    const seed = blankDefaultSeed()
+    const persona = mintBlankPersona(seed, [])
+    expect(persona.id).toBe('new-agent')
+    expect(persona.label).toBe('New agent')
+    expect(persona.imported).toBe(true) // the SAME roster-persistence lane an import uses (GH #406)
+    expect(persona.seed).toEqual(seed)
+    expect(persona.seed).not.toBe(seed) // copied, never aliased — importedPersonaFrom's own law
+  })
+
+  it('is collision-safe against the shipped roster AND a prior blank mint — never shares an id/label', () => {
+    const roster = AGENT_PRESETS.map(personaFromPreset)
+    const first = mintBlankPersona(blankDefaultSeed(), roster)
+    const second = mintBlankPersona(blankDefaultSeed(), [...roster, first])
+    expect(roster.some((p) => p.id === first.id), 'never a shipped preset id').toBe(false)
+    expect(first.id).not.toBe(second.id)
+    expect(first.label).not.toBe(second.label)
+    expect(second.label).toBe('New agent 2') // the SAME numeric-suffix wording mintIdentity uses elsewhere
+  })
+
+  it('the seed is exactly the component’s OWN unconfigured default — proves reuse, not reconstruction', () => {
+    // What `ui-agent-admin` itself seeds when connected with no `store` ever set (agent-admin.ts's
+    // `initial: { model: DEFAULT_MODEL_ID, ...initialValuesFor(this.schema), ...initialEntryValues() }`,
+    // `this.schema` defaulting to `defaultAgentConfigSchema`) — a blank-minted persona must produce the
+    // identical store shape a bare, never-configured element would.
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    document.body.append(el)
+    const bareDefault = Object.fromEntries(PERSONA_STATE_KEYS.map((k) => [k, el.store?.get(k)]).filter(([, v]) => v !== undefined))
+    el.remove()
+
+    const persona = mintBlankPersona(blankDefaultSeed(), [])
+    const mintedSubset = Object.fromEntries(PERSONA_STATE_KEYS.map((k) => [k, persona.seed[k]]).filter(([, v]) => v !== undefined))
+    expect(mintedSubset).toEqual(bareDefault)
   })
 })
 
