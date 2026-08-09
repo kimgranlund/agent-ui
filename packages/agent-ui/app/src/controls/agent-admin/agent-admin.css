@@ -185,6 +185,27 @@
     display: none;
   }
 
+  /* ADR-0178 cl.5 / LLD-C9 (S4-a) — the try-it bar: a fixed-height row atop the stack (`flex: 0 0 auto`,
+     never fills/shrinks with the conversation below it), its bottom edge the seam that separates it from
+     whichever conversation is showing. Inline inset reads the fleet's ONE bar-content role
+     (`--ui-bar-inline-inset`, GH #626) rather than this file's own card-pad token — this bar is a rail
+     sitting directly on the shell's content edge, the same boundary the docs site's own header/footer bars
+     sit on, not a card nested inside the padded canvas gutter. Block padding reuses `--ui-agent-admin-
+     card-pad`'s own block term (`--md-sys-space-sm`) for the SAME vertical rhythm every other card-chrome
+     row in this file uses (TKT-0066 item 5: the styles block never spells `--md-sys-space-*` directly). */
+  [data-part='try-it'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-agent-admin-row-gap);
+    padding: var(--ui-agent-admin-card-pad);
+    padding-inline: var(--ui-bar-inline-inset);
+    border-block-end: 1px solid var(--ui-agent-admin-border);
+    flex: 0 0 auto;
+  }
+  [data-part='try-it'][hidden] {
+    display: none;
+  }
+
   /* The options-pane (Agent ⇄ Capabilities ⇄ Surface ⇄ Context: System ⇄ Context: Dialog — GH #161's
      Context three-way split, GH #574's Settings-into-three split) rendered with ZERO padding:
      `[data-part='pane']`'s base rule (super-shell.css) declares none by design, so

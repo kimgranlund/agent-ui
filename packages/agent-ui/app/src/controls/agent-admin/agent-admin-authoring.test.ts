@@ -325,6 +325,95 @@ describe('the dual-context scaffold — one draft, two transcripts, zero store s
   })
 })
 
+// ── LLD-C9 (S4-a, GH #646) — the try-it bar: the REAL affordance, not the `setModeSeam` stand-in above ──
+describe('the try-it bar — the visible flip, driving the SAME seam the round trip above already proved (LLD-C9)', () => {
+  function bar(el: UIAgentAdminElement): { bar: HTMLElement; authoringBtn: HTMLElement; testBtn: HTMLElement } {
+    const barEl = el.querySelector('[data-part="try-it"]') as HTMLElement
+    return {
+      bar: barEl,
+      authoringBtn: barEl.querySelector('[data-part="try-it-authoring"]') as HTMLElement,
+      testBtn: barEl.querySelector('[data-part="try-it-test"]') as HTMLElement,
+    }
+  }
+
+  it('renders hidden while the flow is unarmed, and visible the moment it arms — never reassigning `store`', async () => {
+    const { el } = mountAdmin({ store: personaStore() })
+    await whenFlushed()
+    expect(bar(el).bar.hasAttribute('hidden')).toBe(true)
+    el.authoringStore = personaStore({ [SURFACE_AUTHORING_KEY]: true })
+    await whenFlushed()
+    expect(bar(el).bar.hasAttribute('hidden')).toBe(false)
+  })
+
+  it('aria-pressed opens on Authoring and clicking Try it / Authoring flips both the attribute and which conversation is hidden', async () => {
+    const { el } = mountAdmin({ store: personaStore(), authoringStore: personaStore({ [SURFACE_AUTHORING_KEY]: true }) })
+    await whenFlushed()
+    const { authoringBtn, testBtn } = bar(el)
+    const authoring = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
+    const test = el.querySelector('[data-part="chat-stack"] > ui-conversation:not([data-part="authoring-conversation"])') as HTMLElement
+
+    expect(authoringBtn.getAttribute('aria-pressed')).toBe('true')
+    expect(testBtn.getAttribute('aria-pressed')).toBe('false')
+    expect(authoring.hasAttribute('hidden')).toBe(false)
+    expect(test.hasAttribute('hidden')).toBe(true)
+
+    testBtn.click()
+    expect(authoringBtn.getAttribute('aria-pressed')).toBe('false')
+    expect(testBtn.getAttribute('aria-pressed')).toBe('true')
+    expect(authoring.hasAttribute('hidden')).toBe(true)
+    expect(test.hasAttribute('hidden')).toBe(false)
+
+    authoringBtn.click()
+    expect(authoringBtn.getAttribute('aria-pressed')).toBe('true')
+    expect(testBtn.getAttribute('aria-pressed')).toBe('false')
+    expect(authoring.hasAttribute('hidden')).toBe(false)
+    expect(test.hasAttribute('hidden')).toBe(true)
+  })
+
+  it('a real click-driven round trip: both transcripts survive, `store` stays reference-identical, `admin.store` is never touched (GH #145 inverted)', async () => {
+    const draft = personaStore()
+    const builder = personaStore({ [SURFACE_AUTHORING_KEY]: true })
+    const { el } = mountAdmin({ store: draft, authoringStore: builder, events: [{ kind: 'note', note: 'ok' }] })
+    await whenFlushed()
+    const storeBefore = el.store
+    const { authoringBtn, testBtn } = bar(el)
+
+    await submit(el, 'interview turn', 'authoring')
+    testBtn.click()
+    await submit(el, 'test turn', 'test')
+    authoringBtn.click()
+    await whenFlushed()
+
+    expect(el.store).toBe(storeBefore)
+    expect(el.store).toBe(draft)
+    const authoring = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
+    const test = el.querySelector('[data-part="chat-stack"] > ui-conversation:not([data-part="authoring-conversation"])') as HTMLElement
+    expect(authoring.textContent).toContain('interview turn')
+    expect(test.textContent).toContain('test turn')
+  })
+
+  it('regression probe — flipping to the test chat via the bar and sending a gate-ON turn still logs patchIgnored, zero writes (the fence, unchanged by S4)', async () => {
+    const draft = personaStore({ [SURFACE_AUTHORING_KEY]: true })
+    const builder = personaStore({ [SURFACE_AUTHORING_KEY]: true })
+    const { el } = mountAdmin({ store: draft, authoringStore: builder, events: [{ kind: 'patch', patch: PATCH }] })
+    await whenFlushed()
+    bar(el).testBtn.click()
+    await submit(el, 'hello draft', 'test')
+
+    expect(draft.get('name')).toBe('Untitled agent')
+    expect(readEntries(draft, ENTRY_KINDS.skill)).toEqual([])
+    expect((turnLogOf(el).response as { patchIgnored?: boolean }).patchIgnored).toBe(true)
+  })
+
+  it('DOM order: bar, then the authoring conversation, then the test conversation (§5\'s frozen anatomy)', async () => {
+    const { el } = mountAdmin({ store: personaStore(), authoringStore: personaStore({ [SURFACE_AUTHORING_KEY]: true }) })
+    await whenFlushed()
+    const stack = el.querySelector('[data-part="chat-stack"]') as HTMLElement
+    const parts = [...stack.children].map((c) => c.getAttribute('data-part'))
+    expect(parts).toEqual(['try-it', 'authoring-conversation', null])
+  })
+})
+
 describe('the authoring request, and the zero-regression invariant it must not disturb (LLD-C6)', () => {
   it('an authoring turn carries session:"authoring", the fresh gate read, and the draft-state block', async () => {
     const draft = personaStore({ name: 'Half-built' })

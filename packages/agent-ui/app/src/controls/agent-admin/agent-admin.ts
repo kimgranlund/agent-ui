@@ -350,9 +350,14 @@ export class UIAgentAdminElement extends UIElement {
   #chatStack: HTMLElement | null = null
   #authoringConversation: UIConversationElement | null = null
   /** Which context drives the next turn. Meaningful only while `authoringStore` is set; entry default is
-   *  `'authoring'` (the flow opens on the interview). The flip affordance itself is S4-a (LLD-C9) — this
-   *  slice builds the seam it drives. */
+   *  `'authoring'` (the flow opens on the interview). The try-it bar below (LLD-C9) is what flips it. */
   #mode: 'authoring' | 'test' = 'authoring'
+  /** S4-a (LLD-C9) — the visible flip affordance atop the chat stack, and its two ui-buttons. Built once
+   *  in `#compose()` (byte-cheap, unlike the lazy authoring conversation); `#applyMode` hides it whenever
+   *  `authoringStore` is unset, so an element that never enters the flow paints no bar at all. */
+  #tryItBar: HTMLElement | null = null
+  #authoringModeButton: UIButtonElement | null = null
+  #testModeButton: UIButtonElement | null = null
   /** The authoring context's own store identity, so the effect can tell a real reassignment from a bare
    *  re-run (the `#lastStore` precedent, applied to the second store). */
   #lastAuthoringStore: SettingsStore | undefined
@@ -961,13 +966,41 @@ export class UIAgentAdminElement extends UIElement {
     this.#contextTurnsHost = contextTurnsHost
     contextDialogContent.append(contextTurnsHost)
 
+    // ADR-0178 cl.5 (LLD-C9, S4-a) — the try-it bar: the visible authoring ⇄ test flip atop the chat
+    // stack (§5's frozen anatomy). Built once here — cheap, unlike the lazy authoring conversation — and
+    // hidden by default; `#applyMode` reveals it only while `authoringStore` is set. Two `ui-button`s call
+    // the SAME private `#setMode` the S3 test seam already exercised (`setModeSeam`); no new mode
+    // machinery, only its first real caller. `aria-pressed` is managed here, not through the button's own
+    // internals (the component-law exception for a CONSUMER annotating a composed child it does not own —
+    // the `agentSwitch`/`kindSwitch` `aria-label` precedent above).
+    const tryItBar = document.createElement('div')
+    tryItBar.setAttribute('data-part', 'try-it')
+    tryItBar.hidden = true
+    const authoringModeButton = document.createElement('ui-button') as UIButtonElement
+    authoringModeButton.setAttribute('data-part', 'try-it-authoring')
+    authoringModeButton.textContent = 'Authoring'
+    authoringModeButton.setAttribute('aria-pressed', 'true') // entry default mode is 'authoring'
+    authoringModeButton.addEventListener('click', () => this.#setMode('authoring'))
+    const testModeButton = document.createElement('ui-button') as UIButtonElement
+    testModeButton.setAttribute('data-part', 'try-it-test')
+    testModeButton.textContent = 'Try it'
+    testModeButton.setAttribute('aria-pressed', 'false')
+    testModeButton.addEventListener('click', () => this.#setMode('test'))
+    tryItBar.append(authoringModeButton, testModeButton)
+    this.#tryItBar = tryItBar
+    this.#authoringModeButton = authoringModeButton
+    this.#testModeButton = testModeButton
+
     // GH #52/ADR-0154 — every content unit authors DIRECTLY into the shell, once, never moved again:
     // the shell's own pane-tabs strip (wide) and narrow-tabs strip (narrow-end="tabs") drive visibility
     // in place (SPEC-R7c) — the TKT-0085 guarded-move dance this replaced no longer has anything to do.
     // GH #574 — DOM order fixes the tab-strip order (both #applySegments and the narrow-tabs mechanism
     // read `data-segment` children in append order): Agent · Capabilities · Surface · Context: System ·
     // Context: Dialog, exactly the ruled strip.
-    chatStack.append(conversation)
+    // ADR-0178 cl.5 — chat-stack's own order is [ try-it bar | authoring conversation (lazy) | test
+    // conversation ] (§5): the bar and the test conversation both land here at compose time; the authoring
+    // conversation inserts itself directly before the test one on its first mount (`#mountAuthoringConversation`).
+    chatStack.append(tryItBar, conversation)
     shell.append(chatStack, agentContent, capabilitiesContent, surfaceContent, contextSystemContent, contextDialogContent)
     this.append(shell)
 
@@ -1052,8 +1085,10 @@ export class UIAgentAdminElement extends UIElement {
     })
     conversation.onClientMessage((message) => this.#handleClientMessage(conversation, message))
     conversation.setContentRenderer((text) => this.#renderContent(text, this.authoringStore))
-    // Before the test conversation in DOM order — the interview is what the flow opens on.
-    stack.prepend(conversation)
+    // Before the test conversation in DOM order (the interview is what the flow opens on) but AFTER the
+    // try-it bar (§5's frozen order: bar, then authoring, then test) — `insertBefore` the test conversation
+    // rather than a blind `prepend`, so this lands in the right slot whether or not the bar exists yet.
+    stack.insertBefore(conversation, this.#conversation)
     this.#authoringConversation = conversation
   }
 
@@ -1073,14 +1108,19 @@ export class UIAgentAdminElement extends UIElement {
     this.#applyMode()
   }
 
-  /** Reflect the current mode onto the two conversations' visibility. Nothing else: no store touch, no
-   *  reset, no serialization — which is precisely why both transcripts survive a flip (ADR-0178 cl.5). */
+  /** Reflect the current mode onto the two conversations' visibility, plus the try-it bar's own visibility
+   *  and `aria-pressed` state (LLD-C9). Nothing else: no store touch, no reset, no serialization — which is
+   *  precisely why both transcripts survive a flip (ADR-0178 cl.5). */
   #applyMode(): void {
     const armed = this.authoringStore !== undefined
     if (this.#authoringConversation) this.#authoringConversation.hidden = !armed || this.#mode !== 'authoring'
     // The test conversation hides only while the flow is armed AND showing the interview; an unarmed
     // element leaves it visible exactly as it always was.
     if (this.#conversation) this.#conversation.hidden = armed && this.#mode === 'authoring'
+    // The bar itself only shows while the flow is armed — an unarmed element has nothing to flip between.
+    if (this.#tryItBar) this.#tryItBar.hidden = !armed
+    this.#authoringModeButton?.setAttribute('aria-pressed', String(this.#mode === 'authoring'))
+    this.#testModeButton?.setAttribute('aria-pressed', String(this.#mode === 'test'))
   }
 
   /** Arm, re-arm, or tear down the authoring context in response to an `authoringStore` change. A real
@@ -2030,10 +2070,11 @@ export class UIAgentAdminElement extends UIElement {
 
   // ── protected test seams (the split.ts/slider-multi.ts precedent) ────────────────────────────────────
 
-  /** Drive the dual-context mode flip from a test probe. The flip's REAL caller is S4-a's try-it bar,
-   *  which does not exist yet — and the ruled acceptance (both transcripts survive a flip; `store` stays
-   *  reference-identical) has to be provable at this step. `protected` keeps it off the public element:
-   *  a consumer cannot reach it, so no API widened and no descriptor row is owed. */
+  /** Drive the dual-context mode flip from a test probe — the S3 seam that stood in for S4-a's try-it bar
+   *  before it existed. The bar's own `ui-button` click handlers call `#setMode` directly now (the bar IS
+   *  the real caller); this seam stays for jsdom probes that need the flip without a real button click.
+   *  `protected` keeps it off the public element: a consumer cannot reach it, so no API widened and no
+   *  descriptor row is owed. */
   protected setModeSeam(mode: 'authoring' | 'test'): void {
     this.#setMode(mode)
   }
