@@ -33,6 +33,8 @@ import '@agent-ui/icons/phosphor'
 import { ENTRY_KINDS } from './entries.ts'
 import { entriesStoreKey } from '../entry-list/entry-data.ts'
 import { kindEnabledKey, A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID } from './agent-admin-schema.ts'
+import { SURFACE_AUTHORING_KEY } from './agent-admin-schema.ts'
+import { createMemoryStore } from '../settings/memory-store.ts'
 
 const mounted: HTMLElement[] = []
 afterEach(() => {
@@ -1296,5 +1298,116 @@ describe('ui-agent-admin — GH #225: the Settings sections fold like the Contex
     expect(toggle.checked).toBe(!wasChecked)
     expect(el.store?.get(kindEnabledKey(ENTRY_KINDS.skill))).toBe(!wasChecked)
     expect(skillsItem.open, 'the rebuilt fold did not toggle on the switch click').toBe(wasOpen)
+  })
+})
+
+// ── ADR-0178 / GH #633 — the guided-authoring flow, in BOTH real engines ──────────────────────────────
+// jsdom proves the apply loop's LOGIC (agent-admin-authoring.test.ts). What only a real engine can prove
+// is that the dual-context stack actually LAYS OUT: that arming the flow puts a second, genuinely visible
+// conversation on screen, that a mode flip swaps which one occupies the canvas without either collapsing
+// to a zero box, and that a patched value paints into the settings pane while the turn streams.
+
+/** Drive the mode flip from a probe. `setModeSeam` is `protected` — a compile-time construct only — so a
+ *  cast reaches it without widening the element's public API. Deliberately NOT a probe SUBCLASS (the
+ *  split.ts precedent): agent-admin.css is `@scope (ui-agent-admin)`, so a probe tag would render
+ *  unstyled and quietly void every geometry assertion. S4-a's try-it bar replaces this call site. */
+const flipMode = (el: UIAgentAdminElement, mode: 'authoring' | 'test'): void => {
+  ;(el as unknown as { setModeSeam(m: 'authoring' | 'test'): void }).setModeSeam(mode)
+}
+
+describe('ui-agent-admin cross-engine smoke — the guided-authoring flow (ADR-0178 cl.5, GH #633)', () => {
+  /** A scripted surface runner: one patch turn, then a note — the shape a real Builder turn has. */
+  function armPatchRunner(el: UIAgentAdminElement): void {
+    el.agentSurfaceTurn = async function* () {
+      yield { kind: 'patch' as const, patch: { values: { name: 'Painted By Patch' } } }
+      yield { kind: 'note' as const, note: 'Named it for you.' }
+    }
+  }
+
+  function conversationsOf(el: UIAgentAdminElement): { authoring: HTMLElement | null; test: HTMLElement } {
+    const stack = el.querySelector('[data-part="chat-stack"]') as HTMLElement
+    return {
+      authoring: stack.querySelector('[data-part="authoring-conversation"]'),
+      test: stack.querySelector('ui-conversation:not([data-part="authoring-conversation"])') as HTMLElement,
+    }
+  }
+
+  it('unarmed, the stack paints exactly one visible conversation filling the canvas (zero-regression)', async () => {
+    const { el } = mountAgentAdmin()
+    await el.updateComplete
+    const { authoring, test } = conversationsOf(el)
+    expect(authoring, 'the second conversation is lazy — never mounted until the flow arms').toBeNull()
+    const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
+    const box = test.getBoundingClientRect()
+    expect(box.width).toBeGreaterThan(0)
+    expect(box.height).toBeGreaterThan(0)
+    // it still FILLS the canvas — the stack wrapper must not have eaten the fill behaviour
+    expect(Math.round(box.height)).toBeGreaterThan(Math.round(canvas.getBoundingClientRect().height) - 40)
+  })
+
+  it('arming the flow paints the interview in the canvas and hides the test chat — both keep real geometry across a flip', async () => {
+    const { el } = mountAgentAdmin()
+    await el.updateComplete
+    el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
+    await el.updateComplete
+
+    const { authoring, test } = conversationsOf(el)
+    expect(authoring).not.toBeNull()
+    const authoringBox = authoring!.getBoundingClientRect()
+    expect(authoringBox.width, 'the interview is genuinely on screen, not a zero-size stub').toBeGreaterThan(0)
+    expect(authoringBox.height).toBeGreaterThan(0)
+    expect(test.getBoundingClientRect().height, 'the hidden test chat contributes no box at all').toBe(0)
+
+    flipMode(el, 'test')
+    await el.updateComplete
+    expect(authoring!.getBoundingClientRect().height).toBe(0)
+    const testBox = test.getBoundingClientRect()
+    expect(testBox.height, 'the test chat takes over the same canvas — no collapsed layout').toBeGreaterThan(0)
+    expect(Math.round(testBox.height)).toBe(Math.round(authoringBox.height))
+
+    flipMode(el, 'authoring')
+    await el.updateComplete
+    expect(authoring!.getBoundingClientRect().height).toBeGreaterThan(0)
+  })
+
+  it('a patch turn HYDRATES the draft’s settings pane live, in a real painted turn', async () => {
+    const { el } = mountAgentAdmin()
+    await el.updateComplete
+    armPatchRunner(el)
+    el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
+    await el.updateComplete
+
+    const authoring = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
+    const composer = authoring.querySelector('ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = 'call it whatever you like'
+    ;(composer.querySelector('[data-part="send"]') as HTMLElement).click()
+    await new Promise((r) => setTimeout(r, 0))
+    await el.updateComplete
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    // the DRAFT's store took the write…
+    expect(el.store!.get('name')).toBe('Painted By Patch')
+    // …and the real settings field repainted it, with a real box (whole-shape, not just a value read)
+    const nameField = el.querySelector('ui-settings [name="name"]') as UITextFieldElement
+    expect(nameField.value).toBe('Painted By Patch')
+    expect(nameField.getBoundingClientRect().width).toBeGreaterThan(0)
+    // and the interview's own reply painted in the interview, not in the test chat
+    const bubble = authoring.querySelector('[data-role="agent"] [data-part="body"]') as HTMLElement
+    expect(bubble.textContent).toContain('Named it for you.')
+  })
+
+  it('the Authoring row paints in Surface Options, in row order, with a real toggle box', async () => {
+    const { el } = mountAgentAdmin('Surface')
+    await el.updateComplete
+    const rows = [...el.querySelectorAll('[data-part="surface-options"] [data-part="surface-row"]')] as HTMLElement[]
+    expect(rows.map((r) => r.getAttribute('data-surface'))).toEqual(['markdown', 'a2ui', 'genui', 'planner', 'authoring'])
+    const row = rows[rows.length - 1]!
+    const box = row.getBoundingClientRect()
+    expect(box.width).toBeGreaterThan(0)
+    expect(box.height).toBeGreaterThan(0)
+    const toggle = row.querySelector('[data-part="surface-toggle"]') as HTMLElement
+    expect(toggle.getBoundingClientRect().width, 'the switch itself renders, not an empty cell').toBeGreaterThan(0)
+    // it sits on the same left edge as its siblings — one row grammar, not a bespoke one
+    expect(Math.round(box.left)).toBe(Math.round(rows[0]!.getBoundingClientRect().left))
   })
 })

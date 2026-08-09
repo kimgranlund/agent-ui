@@ -13,6 +13,7 @@
 
 import type { SettingsSchema } from '../settings/schema.ts'
 import type { EffortLevel } from '../conversation/composer-options.ts'
+import type { PersonaPatch } from '@agent-ui/a2ui/agent/meta-line' // ADR-0178 cl.2 / SPEC-R29 — the declared-patch shape, type-only from the SAME pure meta-line module `TurnProgress` rides (SPEC-N1-safe: no producer bytes cross)
 import type { TurnProgress } from '@agent-ui/a2ui/agent/meta-line' // ADR-0146 F1 — the live-turn progress vocabulary (type-only, from the PURE meta-line module, never the node-first ./agent barrel); a cross-package specifier stays extensionless (the repo's own local-.ts-only convention) — a2ui/package.json exports this as its own subpath
 // M-D (SPEC-R3/R5) — the persona catalog compose-time overlay's static id-recognition inputs (the root
 // `@agent-ui/a2ui` barrel, catalog/index.ts's own re-export of `catalog/compose.ts` + `catalog/personas/index.ts`).
@@ -439,6 +440,11 @@ export type AdminSurfaceTurnEvent =
   | { kind: 'note'; note: string }
   | { kind: 'progress'; progress: TurnProgress }
   | { kind: 'genui'; surfaceId: string; html: string }
+  /** ADR-0178 cl.2 / SPEC-R29 — a model-declared persona patch, peeled off the meta-line by the runner
+   *  exactly as `note`/`progress` are. The peel is GATE-BLIND by design: whether this patch is ever
+   *  CONSUMED is the component's decision alone (the store-identity fence AND a fresh gate read,
+   *  conjunctive), and a second enforcement point in the runner could only drift from it. */
+  | { kind: 'patch'; patch: PersonaPatch }
 
 /** A surface turn's request. `turn` mirrors the producer's two arms: a typed user intent, or a surface
  *  client message (an action click / function response bubbled up via `onClientMessage`) — `message` is
@@ -482,6 +488,23 @@ export interface AdminSurfaceTurnRequest {
    *  the runner must compose zero A2UI-grammar bytes: this client has no A2UI renderer available this
    *  turn (the toggle is off), so teaching the model to emit A2UI JSONL here would only mislead it. */
   a2uiEnabled?: boolean
+  /** ADR-0178 cl.3 / SPEC-R30 — the persona-authoring gate's OWN live-apply signal (a FRESH read of the
+   *  DRIVING store's `SURFACE_AUTHORING_KEY` at request-build time, the SAME law `genui`/`a2uiEnabled`
+   *  above follow). Gates whether the runner's `ProduceOptions.authoringSurface` composes the
+   *  `personaPatch` teaching block at all. Absent ⇒ the POST body carries no `authoring` key and the
+   *  composed prompt is byte-identical to before this field existed.
+   *
+   *  This field teaches; it never authorizes. A patch that arrives anyway is still subject to the
+   *  component's own consumption condition, which this signal is only one conjunct of. */
+  authoring?: boolean
+  /** ADR-0178 cl.5 — WHICH conversation this turn belongs to, so the runner can keep one producer
+   *  `Session` per context. Absent = `'test'`, byte-compatible with every caller written before the
+   *  authoring flow existed.
+   *
+   *  Two contexts, two histories, by necessity rather than tidiness: the Builder interview and the
+   *  draft's own test chat are different agents' transcripts, and one shared session would feed the
+   *  interview to the draft as its own memory — the draft would "remember" being designed. */
+  session?: 'authoring' | 'test'
 }
 
 /** The injected surface runner (DEV-only, the `agentTurn` pattern): one turn in, an ordered stream of

@@ -71,6 +71,15 @@ export function validateA2uiEnabled(a2ui: unknown): boolean | undefined {
   return typeof a2ui === 'boolean' ? a2ui : undefined
 }
 
+// ADR-0178 cl.3 / SPEC-R30 — the persona-authoring gate, client-supplied, the SAME trust-boundary posture
+// as `a2ui` just above: fail-closed to `undefined` on anything non-boolean, never a 400. The degradation
+// is genuinely closed here rather than merely default-preserving — `buildSystemPrompt`'s `authoringBlock`
+// requires a LITERAL `true`, so `undefined` composes ZERO teaching bytes. A crafted value therefore cannot
+// talk the producer into teaching the personaPatch arm; it can only fail to enable it.
+export function validateAuthoringSurface(authoring: unknown): boolean | undefined {
+  return typeof authoring === 'boolean' ? authoring : undefined
+}
+
 // produce()-route effort threading — the SAME fail-closed posture as `validateMode`/`validateGenuiSurface`
 // (this file's shared trust-boundary spine), not the `/chat` route's `isChatBody` 400-on-malformed check
 // below: `effort` is a closed 4-member enum (`EFFORT_VALUES`, defined below and reused here rather than

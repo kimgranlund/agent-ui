@@ -43,6 +43,10 @@ import { HOSPITALITY_SKILLS, HOSPITALITY_PLAYBOOKS, INTEGRATION_TOOLS, GAMES_SKI
 // GH #525 — the persistent-bankroll capability opt-in seeds the SAME way (design call 2, 2026-08-07: a
 // games-category capability, presets opt in).
 import { A2UI_LOCAL_PATTERNS_KEY, BANKROLL_CAPABLE_KEY } from '@agent-ui/app/agent-admin-schema'
+// ADR-0178 cl.3/cl.4 (GH #633) — the Builder persona's own gate seeds + the CANONICAL key vocabulary its
+// generated prompt section is composed from (never a hand-listed copy — see `vocabularySection`).
+import { SURFACE_A2UI_KEY, SURFACE_AUTHORING_KEY, modelRoster } from '@agent-ui/app/agent-admin-schema'
+import { PATCHABLE_VALUE_SHAPES, PERSONA_ENTRY_LIST_KEYS, PERSONA_VALUE_KEYS } from '@agent-ui/app/agent-admin-persona-patch'
 
 export interface AgentPreset {
   id: string
@@ -837,4 +841,110 @@ export function saveImportedPersona(persona: Persona): void {
  *  order. Read FRESH (never cached) — the page rebuilds nothing else when an import lands. */
 export function personaRoster(): Persona[] {
   return [...AGENT_PRESETS.map(personaFromPreset), ...loadImportedPersonas()]
+}
+
+// ── the Builder (ADR-0178 cl.4 / LLD-C7, GH #633) ─────────────────────────────────────────────────────
+// The host-authored interviewer behind "New agent → Generate": it asks the user what they want, and
+// declares what it learns as `personaPatch` meta-line arms that the admin applies to the DRAFT through
+// ADR-0178 cl.2's three-filter gate.
+//
+// DELIBERATELY NOT IN `AGENT_PRESETS`/`personaRoster()` (OF4's recommendation, adopted as the default):
+// hidden-until-invoked. The roster is a SHOWCASE of personas a user picks between; the Builder is
+// machinery the flow arms for them. Reversing this is one array-membership line if it ever earns a row.
+//
+// Its store is a FRESH `createMemoryStore` per flow entry with NO `persistKey`: nothing user-editable
+// reaches the Builder (no pane binds it — the panes all bind the DRAFT), so persisting it could only
+// accumulate drift against host-authored config, never preserve a user's work.
+
+/** The interview craft — CONFIG, like every other persona's prompt content. What it must NOT carry is
+ *  the `personaPatch` WIRE MECHANICS: those compose from S2's byte-pinned `authoring-teaching.md` under
+ *  the authoring gate (ADR-0178 cl.1 rule 5). The boundary holds because garbled VOCABULARY degrades to
+ *  dropped keys (filter 1, fail-closed, recoverable in the next turn), whereas garbled MECHANICS would
+ *  be unrecoverable — which is exactly why mechanics stay host-owned and byte-pinned, and only
+ *  vocabulary may be config. */
+const BUILDER_PRESET: AgentPreset = {
+  id: 'builder',
+  label: 'Builder',
+  tagline: 'Interviews you about the agent you want, and fills in the draft as you talk',
+  // A SONNET-class id (picked at build against the shipped roster, per LLD §15): interview quality is
+  // the whole product here — a cheaper tier asks blunter questions and mis-reads what the user meant,
+  // and the flow is a handful of turns per agent, so the cost difference is negligible.
+  config: { name: 'Builder', model: 'claude-sonnet-5', temperature: 0.5, toolsEnabled: false },
+  foundation:
+    'You are the Builder. You interview someone about an AI agent they want to create, and you fill in ' +
+    'their draft agent as the conversation goes — they watch it take shape while you talk. ' +
+    'Ask about ONE thing at a time and wait for the answer; a wall of questions gets a wall of ' +
+    'half-answers. Ask before assuming: if the user has not told you the agent’s temperament, its name, ' +
+    'or how it should present its output, ask — never invent a preference and record it as theirs. ' +
+    'Work from what a complete agent needs: a name, a purpose, a temperament, the capabilities it ' +
+    'should have (skills, workflows, resources, tools), and how it should render its replies. ' +
+    'Send only what THIS turn actually established — never re-send the whole draft, and never re-send ' +
+    'a value the user has not changed. If the user edits the draft by hand while you talk, that edit ' +
+    'wins: you are told the draft’s current state at the start of every turn, so read it and carry on ' +
+    'from there rather than overwriting them. When the draft looks complete, say so plainly and offer ' +
+    'to try it out rather than continuing to ask.',
+  surfaceStyle:
+    'Stay in prose for the interview itself — the draft’s own settings panes are already showing the ' +
+    'user what you have filled in, so restating it on a surface would say the same thing twice. Reach ' +
+    'for a surface only when a choice is genuinely easier to make by picking than by typing: offering a ' +
+    'short set of temperament or capability options, for instance. Keep any such surface to the one ' +
+    'decision at hand and let the panes carry the state.',
+  skills: [],
+  workflows: [],
+  resources: [],
+  tools: [],
+}
+
+/** The GENERATED key-vocabulary section (LLD §2's fork row) — composed at mint time from
+ *  `persona-patch.ts`'s canonical exports, never hand-listed. SPEC-R29 makes the producer
+ *  persona-key-agnostic, so this vocabulary can only reach the model from the host side; generating it
+ *  from the SAME module the apply gate enumerates is what keeps the two from drifting. */
+function vocabularySection(): Entry {
+  const roster = modelRoster()
+    .map((m) => m.id)
+    .join(', ')
+  const values = PERSONA_VALUE_KEYS.map((key) => `- \`${key}\` — ${(PATCHABLE_VALUE_SHAPES[key] ?? '').replace('{roster}', roster)}`).join('\n')
+  const entries = PERSONA_ENTRY_LIST_KEYS.map((key) => `- \`${key}\``).join('\n')
+  return {
+    id: 'patchable-keys',
+    kind: ENTRY_KINDS.promptSection,
+    label: 'Draft keys you may set',
+    description: 'The draft agent’s own configuration keys, generated from the host’s apply gate.',
+    content:
+      'These are the ONLY keys of the draft agent you may set. Anything else is dropped silently, so ' +
+      'sending it just wastes the turn.\n\n' +
+      `## Single values\n\n${values}\n\n` +
+      `## Lists you may APPEND to\n\n${entries}\n\n` +
+      'Each list member is an object with a `label` (required) and optional `description`/`content`. ' +
+      'Appending is the only thing you can do to a list — you can never remove or replace what is ' +
+      'already there, so a user’s own authored entries are safe from you by construction.',
+    order: 99, // last — the reference material reads after the craft
+    enabled: true,
+    builtin: false,
+  }
+}
+
+/** The Builder as a `Persona` — same shape the roster uses, just never IN the roster. */
+export function builderPersona(): Persona {
+  const seed = presetSeed(BUILDER_PRESET)
+  const sections = [...(seed[entriesStoreKey(ENTRY_KINDS.promptSection)] as Entry[]), vocabularySection()]
+  return {
+    id: 'builder',
+    label: BUILDER_PRESET.label,
+    tagline: BUILDER_PRESET.tagline,
+    seed: {
+      ...seed,
+      [entriesStoreKey(ENTRY_KINDS.promptSection)]: sections,
+      // The point of the whole persona: its own turns are taught the personaPatch arm (SPEC-R30).
+      [SURFACE_AUTHORING_KEY]: true,
+      // ADR-0097's shipped machinery is how an interview question becomes something clickable — the
+      // ask arm rides an ordinary A2UI surface through `ingestLine`, so zero new question mechanics.
+      [SURFACE_A2UI_KEY]: true,
+    },
+  }
+}
+
+/** A FRESH store per flow entry — no `persistKey`, no cache (see this section's header for why). */
+export function builderStore(): SettingsStore {
+  return createMemoryStore({ initial: builderPersona().seed })
 }

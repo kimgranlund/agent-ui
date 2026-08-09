@@ -2,7 +2,7 @@
 // `fetch` is stubbed (no real network, no key) — the feed-live-transport.test.ts stub-fetch precedent.
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createAdminAgentTurn, createAdminSurfaceTurn, fetchLiveIntegrations } from './admin-live-runner.ts'
-import type { AdminTurnRequest, AdminSurfaceTurnRequest } from '@agent-ui/app/agent-admin-schema'
+import type { AdminTurnRequest, AdminSurfaceTurnRequest, AdminSurfaceTurnEvent } from '@agent-ui/app/agent-admin-schema'
 import { formatErrorLine } from '../../packages/agent-ui/a2ui/src/agent/meta-line.ts'
 
 const REQUEST: AdminTurnRequest = { text: 'hi', system: 'be helpful', model: 'claude-sonnet-5', history: [] }
@@ -307,5 +307,110 @@ describe('fetchLiveIntegrations', () => {
     ]
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ integrations: handAuthored }), { status: 200 })))
     await expect(fetchLiveIntegrations()).resolves.toEqual(handAuthored)
+  })
+})
+
+// ADR-0178 cl.2/cl.5 / SPEC-R29/R30 (LLD `agent-authoring-flow.lld.md` §4, LLD-C4) — the runner's S3
+// widening: the personaPatch peel, the conditional `authoring` POST key, and one producer Session PER
+// CONTEXT. Same stub-fetch discipline as every block above; no live model anywhere.
+describe('createAdminSurfaceTurn — the guided-authoring widening (LLD-C4)', () => {
+  const PATCH = { values: { name: 'Concierge' }, entries: { 'entries:skill': [{ label: 'Book a table' }] } }
+
+  it('peels a declared personaPatch into its own typed event, alongside the note on the same meta-line', async () => {
+    const lines = [JSON.stringify({ a2uiMeta: { note: 'Noted.', personaPatch: PATCH } })]
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(streamOfLines(lines), { status: 200, headers: { 'content-type': 'application/x-ndjson' } })),
+    )
+    const runner = createAdminSurfaceTurn()
+    const events: AdminSurfaceTurnEvent[] = []
+    for await (const event of runner(SURFACE_REQUEST)) events.push(event)
+    expect(events.map((e) => e.kind)).toEqual(['note', 'patch'])
+    expect(events.find((e) => e.kind === 'patch')).toEqual({ kind: 'patch', patch: PATCH })
+  })
+
+  it('the peel is GATE-BLIND: a request carrying no `authoring` flag still yields the patch event', async () => {
+    // The load-bearing half of the runner/component division: enforcement lives in ONE place (the
+    // component's conjunctive consumption condition), so this layer must not quietly add a second.
+    const lines = [JSON.stringify({ a2uiMeta: { personaPatch: PATCH } })]
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(streamOfLines(lines), { status: 200, headers: { 'content-type': 'application/x-ndjson' } })),
+    )
+    const runner = createAdminSurfaceTurn()
+    const kinds: string[] = []
+    for await (const event of runner({ ...SURFACE_REQUEST, authoring: undefined })) kinds.push(event.kind)
+    expect(kinds).toEqual(['patch'])
+  })
+
+  it('threads `authoring` onto the POST body when set, and omits the key entirely when absent', async () => {
+    const bodyOf = async (req: AdminSurfaceTurnRequest): Promise<Record<string, unknown>> => {
+      const fetchSpy = vi.fn(
+        async () => new Response(streamOfLines([]), { status: 200, headers: { 'content-type': 'application/x-ndjson' } }),
+      )
+      vi.stubGlobal('fetch', fetchSpy)
+      for await (const _event of createAdminSurfaceTurn()(req)) {
+        /* drain */
+      }
+      const init = (fetchSpy.mock.calls[0] as unknown[])[1] as { body: string }
+      return JSON.parse(init.body) as Record<string, unknown>
+    }
+    expect((await bodyOf({ ...SURFACE_REQUEST, authoring: true })).authoring).toBe(true)
+    expect((await bodyOf({ ...SURFACE_REQUEST, authoring: false })).authoring).toBe(false)
+    // byte-compat: a turn that never mentions authoring builds the SAME body it did before S3
+    expect('authoring' in (await bodyOf(SURFACE_REQUEST))).toBe(false)
+  })
+
+  it('keeps ONE session per context — two `session` values build disjoint histories', async () => {
+    // Without this, the Builder interview would be replayed to the draft as the draft's own memory.
+    const bodies: Record<string, unknown>[] = []
+    const fetchSpy = vi.fn(async (_url: unknown, init: unknown) => {
+      bodies.push(JSON.parse((init as { body: string }).body) as Record<string, unknown>)
+      return new Response(streamOfLines(['{"version":"v1.0","createSurface":{"surfaceId":"s1","catalogId":"agent-ui"}}']), {
+        status: 200,
+        headers: { 'content-type': 'application/x-ndjson' },
+      })
+    })
+    vi.stubGlobal('fetch', fetchSpy)
+    const runner = createAdminSurfaceTurn()
+    const run = async (text: string, session: 'authoring' | 'test'): Promise<void> => {
+      for await (const _event of runner({ ...SURFACE_REQUEST, session, turn: { kind: 'intent', text } })) {
+        /* drain */
+      }
+    }
+    await run('authoring one', 'authoring')
+    await run('test one', 'test')
+    await run('authoring two', 'authoring')
+
+    const turnsOf = (body: Record<string, unknown>): unknown[] => ((body.input as { session?: { turns?: unknown[] } }).session?.turns ?? [])
+    expect(turnsOf(bodies[0]!)).toEqual([]) // both contexts start empty
+    expect(turnsOf(bodies[1]!)).toEqual([])
+    // the third turn sees ONLY the authoring context's own prior exchange — never the test chat's
+    const third = JSON.stringify(turnsOf(bodies[2]!))
+    expect(third).toContain('authoring one')
+    expect(third).not.toContain('test one')
+  })
+
+  it('defaults an absent `session` to the ONE history every pre-authoring caller already had', async () => {
+    const bodies: Record<string, unknown>[] = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: unknown, init: unknown) => {
+        bodies.push(JSON.parse((init as { body: string }).body) as Record<string, unknown>)
+        return new Response(streamOfLines(['{"version":"v1.0","createSurface":{"surfaceId":"s1","catalogId":"agent-ui"}}']), {
+          status: 200,
+          headers: { 'content-type': 'application/x-ndjson' },
+        })
+      }),
+    )
+    const runner = createAdminSurfaceTurn()
+    for await (const _e of runner({ ...SURFACE_REQUEST, turn: { kind: 'intent', text: 'first' } })) {
+      /* drain */
+    }
+    for await (const _e of runner({ ...SURFACE_REQUEST, session: 'test', turn: { kind: 'intent', text: 'second' } })) {
+      /* drain */
+    }
+    // absent and explicit-'test' are the SAME slot — the second turn replays the first
+    expect(JSON.stringify((bodies[1]!.input as { session?: unknown }).session)).toContain('first')
   })
 })

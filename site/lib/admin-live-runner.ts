@@ -128,8 +128,16 @@ export async function fetchLiveIntegrations(): Promise<LiveIntegrationTrio[] | u
  *  events (the peeled ADR-0088 note + validated wire lines); appends the session turns only after a turn
  *  fully streams (a thrown turn leaves the transcript unchanged, matching a2ui-chat's failed-turn law). */
 export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
-  let session: Session = { turns: [] }
+  // ADR-0178 cl.5 — ONE `Session` PER CONTEXT, not one per closure. The guided-authoring flow runs two
+  // conversations over a single draft persona (the Builder interview and the draft's own test chat), and
+  // they are different agents' transcripts: a shared session would replay the interview to the draft as
+  // its own memory, so the draft would "remember" being designed. Keyed by `req.session ?? 'test'`, which
+  // makes every pre-authoring caller land on the same single 'test' history it always had.
+  // Per-persona re-arming (the page re-creates this closure on a persona switch) still resets both.
+  const sessions = new Map<string, Session>()
   return async function* (req: AdminSurfaceTurnRequest): AsyncIterable<AdminSurfaceTurnEvent> {
+    const sessionKey = req.session ?? 'test'
+    const session: Session = sessions.get(sessionKey) ?? { turns: [] }
     const input: TurnInput =
       req.turn.kind === 'intent'
         ? { kind: 'intent', text: req.turn.text, session }
@@ -167,6 +175,12 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
         // (byte-identical to before this field existed, the `effort`-absent precedent above); both
         // transports' `validateA2uiEnabled` degrades an absent/malformed value to `undefined` either way.
         ...(req.a2uiEnabled !== undefined ? { a2ui: req.a2uiEnabled } : {}),
+        // ADR-0178 cl.3 / SPEC-R30 — the persona-authoring gate's own fresh per-turn read; both
+        // transports validate it fail-closed (`validateAuthoringSurface`) and thread it into
+        // `ProduceOptions.authoringSurface`. Absent ⇒ the POST body carries no `authoring` key at all
+        // (the `effort`/`a2ui` absent-⇒-omit precedent), so a non-authoring turn's body is byte-identical
+        // to one built before this field existed.
+        ...(req.authoring !== undefined ? { authoring: req.authoring } : {}),
       }),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     })
@@ -193,6 +207,13 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
           if (typeof meta.a2uiMeta.note === 'string' && meta.a2uiMeta.note.length > 0) {
             yield { kind: 'note', note: meta.a2uiMeta.note }
           }
+          // ADR-0178 cl.2 / SPEC-R29 — a declared persona patch peels into its own typed event, beside
+          // note/progress. GATE-BLIND on purpose: the runner does not read the authoring gate, does not
+          // know which store drives this turn, and never decides consumption. A second enforcement point
+          // here could only drift from the component's own (which is conjunctive — the store-identity
+          // fence AND a fresh gate read), and the shipped division of labour is that the runner peels
+          // and the component consumes.
+          if (meta.a2uiMeta.personaPatch) yield { kind: 'patch', patch: meta.a2uiMeta.personaPatch }
           continue // the meta-line is never ingested (ADR-0088 §1)
         }
         // genui-surface.spec.md SPEC-R1 — a genui line is neither an A2uiServerMessage nor a meta-line
@@ -222,11 +243,13 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
       }
       throw err
     }
-    session = appendUserTurn(
+    // Append-after-stream, unchanged in law — a thrown turn leaves the transcript untouched — but now
+    // written back to THIS context's own slot, so the two histories stay disjoint.
+    const withUser = appendUserTurn(
       session,
       req.turn.kind === 'intent' ? req.turn.text : frameClientMessage(req.turn.message as A2uiClientMessage | GenuiActionMessage),
     )
-    session = appendAssistantTurn(session, turnLines.join('\n'))
+    sessions.set(sessionKey, appendAssistantTurn(withUser, turnLines.join('\n')))
   }
 }
 

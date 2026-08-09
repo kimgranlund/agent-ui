@@ -341,8 +341,10 @@ describe('UIAgentAdminElement — upgrade + defaults', () => {
     expect(el.store).toBeUndefined()
   })
 
-  it('static props is exactly [schema, store, agentTurn, agentSurfaceTurn, libraries]', () => {
-    expect(Object.keys(UIAgentAdminElement.props)).toEqual(['schema', 'store', 'agentTurn', 'agentSurfaceTurn', 'libraries'])
+  it('static props is exactly [schema, store, agentTurn, agentSurfaceTurn, libraries, authoringStore]', () => {
+    // `authoringStore` joined with ADR-0178 cl.5 (GH #633) — the guided-authoring flow's second
+    // composition source; unset, it is inert (see the dual-context describe below).
+    expect(Object.keys(UIAgentAdminElement.props)).toEqual(['schema', 'store', 'agentTurn', 'agentSurfaceTurn', 'libraries', 'authoringStore'])
   })
 
   it('agentTurn starts undefined pre-connect and stays undefined after connect (the stub arm is the default)', () => {
@@ -1368,7 +1370,7 @@ describe('agent-admin.md descriptor (ui-agent-admin)', () => {
   const md = readFileSync(`${DIR}/agent-admin.md`, 'utf8') as string
   const { fence, body } = splitFrontmatter(md)
   const parsed = parseDescriptor(fence)
-  const ATTR_NAMES = ['schema', 'store', 'agentTurn', 'agentSurfaceTurn', 'libraries']
+  const ATTR_NAMES = ['schema', 'store', 'agentTurn', 'agentSurfaceTurn', 'libraries', 'authoringStore']
 
   it('has a leading frontmatter fence and a /site prose body', () => {
     expect(fence.length).toBeGreaterThan(0)
@@ -2076,7 +2078,9 @@ describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
     // GH #541 — modality rows and nothing else: Bankroll moved out to its own Settings fold (see
     // agent-admin-bankroll.test.ts for its presence/absence/reset coverage). ADR-0174 cl.1/OF3 — the
     // Planner row joins beside GenUI (agent-admin-planner.test.ts covers its schema-level gate).
-    expect(rows.map((r) => r.getAttribute('data-surface'))).toEqual(['markdown', 'a2ui', 'genui', 'planner'])
+    // ADR-0178 cl.3 — the Authoring row is APPENDED after Planner (the LLD's placement), so every
+    // existing row keeps its index.
+    expect(rows.map((r) => r.getAttribute('data-surface'))).toEqual(['markdown', 'a2ui', 'genui', 'planner', 'authoring'])
     // Only the modalities WITH children are grouped — Markdown has none, so it stays a bare row.
     expect([...surfaceOptions.querySelectorAll('[data-part="surface-group"]')].map((g) => g.getAttribute('data-surface'))).toEqual(['a2ui', 'genui'])
     const genui = rows[2] as HTMLElement
@@ -2345,7 +2349,7 @@ describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
       el.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]')!.textContent ?? '{}',
     ) as { surface: { markdown: boolean; a2ui: boolean; catalog: string; genui: boolean; genuiSource?: string; planner: boolean } }
     // No pattern-source entry picked yet ⇒ genuiSource is absent (JSON.stringify drops an undefined key).
-    expect(agentJson.surface).toEqual({ markdown: true, a2ui: true, catalog: DEFAULT_A2UI_CATALOG_ID, genui: false, planner: false })
+    expect(agentJson.surface).toEqual({ markdown: true, a2ui: true, catalog: DEFAULT_A2UI_CATALOG_ID, genui: false, planner: false, authoring: false })
     el.store!.set(SURFACE_MARKDOWN_KEY, false)
     const after = JSON.parse(
       el.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]')!.textContent ?? '{}',

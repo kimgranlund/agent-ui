@@ -31,6 +31,7 @@ import {
   validateMode,
   validateGenuiSurface,
   validateA2uiEnabled,
+  validateAuthoringSurface,
   validateEffort,
   isChatBody,
   resolveChatDispatch,
@@ -206,7 +207,7 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
 // lazy-headersSent equivalent), so this must run BEFORE the Response is constructed, not inside the
 // detached write-loop's catch.
 async function handleProduce(request: Request, env: Env): Promise<Response> {
-  const { input, provider, model, mode, personaSystem, integrations, progressDetail, genui, a2ui, effort, catalogId } = JSON.parse(await readBody(request)) as {
+  const { input, provider, model, mode, personaSystem, integrations, progressDetail, genui, a2ui, authoring, effort, catalogId } = JSON.parse(await readBody(request)) as {
     input: unknown
     provider: string
     model: string
@@ -216,6 +217,7 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
     progressDetail?: unknown
     genui?: unknown
     a2ui?: unknown
+    authoring?: unknown
     effort?: unknown
     catalogId?: unknown
   }
@@ -241,6 +243,10 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
   // GH #418 — the SAME fail-closed validation both transports share (chat-validation.ts): a crafted/
   // malformed value degrades to `undefined` ⇒ `buildSystemPrompt`'s own A2UI-ON default.
   const a2uiEnabled = validateA2uiEnabled(a2ui)
+  // ADR-0178 cl.3 / SPEC-R30 — the SAME fail-closed validation the dev proxy uses (chat-validation.ts,
+  // shared): anything but a literal boolean degrades to `undefined`, which composes ZERO personaPatch
+  // teaching bytes; absent ⇒ the opts key is omitted and the prompt is byte-identical to a pre-S3 turn.
+  const authoringSurface = validateAuthoringSurface(authoring)
   // The reasoning-effort dial — the SAME fail-closed validation the dev proxy uses (chat-validation.ts,
   // shared): a crafted/malformed value degrades to `undefined` (the adapter's own default), never a 400.
   const validatedEffort = validateEffort(effort)
@@ -273,6 +279,7 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
         ...(detail !== undefined ? { progressDetail: detail } : {}), // GH #240 — the validated 'source' opt-in only
         ...(genuiSurface !== undefined ? { genuiSurface } : {}), // genui-surface SPEC-R10 — the validated per-turn signal
         ...(a2uiEnabled !== undefined ? { a2uiEnabled } : {}), // GH #418 — the validated A2UI Surface Option signal
+        ...(authoringSurface !== undefined ? { authoringSurface } : {}), // SPEC-R30 — the validated persona-authoring gate
         ...(validatedEffort !== undefined ? { effort: validatedEffort } : {}), // the validated reasoning-effort dial
         signal: request.signal, // GH #106 — cancel the paid upstream call if the client disconnects
         ...toolOpts,
