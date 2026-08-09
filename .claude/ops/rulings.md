@@ -37,3 +37,15 @@ clean ship as a #613 repeat.
 ADR-0173 → new reference file in `agent-ui-component-standards` · ADR-0174 → new skill (a2ui
 producer meta-line/envelope architecture, narrow scope) · ADR-0175 → new reference file in
 `agent-ui-component-design`. Dispatched 2026-08-09; adr-queue.json rows advance on landing.
+
+## Evidence write-backs — RULED 2026-08-09: chore-lead's landing leg owns them
+
+Dated evidence comments on tracker issues (e.g. #613) are part of chore-lead's close-out, same as
+its ops-state landing: seats report evidence up, chore-lead posts. Agent-definition encode rides
+the existing nonoun-plugins follow-up. First instance posted by the host (issue #613, 2026-08-09).
+
+## #613 root-cause test — RULED 2026-08-09: deliberate test (replaces wait-for-natural)
+
+One throwaway PR merged while its branch is checked out in a linked worktree; verbatim
+`gh pr merge` output captured to #613. Also ruled same round: the 07fc618 ops commit rides #626's
+PR (no cherry-pick), and the 17 stale gitignore rules get trimmed on a small PR after #626 ships.
