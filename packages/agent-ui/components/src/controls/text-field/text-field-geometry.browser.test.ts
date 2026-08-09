@@ -67,6 +67,17 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
         field.setAttribute('size', size)
         heights.push(frameHeight(field))
         fonts.push(fontPx(editor)) // the editor font rides --ui-text-field-font (the centre value cell)
+
+        // GH #634 displacement gap: height + font were pinned, but the editor's own VERTICAL position
+        // within the frame was never checked — a regression to align-items:flex-start on the field's grid
+        // host would top-anchor the editor's line box in the taller frame, undetected. Anti-vacuous: the
+        // frame must genuinely exceed the editor's own line-box height for centering to mean anything.
+        const fieldRect = field.getBoundingClientRect()
+        const editorRect = editor.getBoundingClientRect()
+        expect(fieldRect.height - editorRect.height, `[${markup}] size=${size}: no vertical slack between frame and editor line box (anti-vacuous)`).toBeGreaterThan(0.5)
+        const gapTop = editorRect.top - fieldRect.top
+        const gapBottom = fieldRect.bottom - editorRect.bottom
+        expect(Math.abs(gapTop - gapBottom), `[${markup}] size=${size}: editor not vertically centered in the frame`).toBeLessThanOrEqual(1)
       }
       // the control-band ramp @ scale 1 (geometry-sizing-spec §1): height 24·28·36, font 13·14·16.
       expect(heights[0]).toBeCloseTo(24, 0)
@@ -94,6 +105,15 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
         wrap.setAttribute('scale', scale)
         heights.push(frameHeight(field))
         fonts.push(fontPx(editor))
+
+        // GH #634 displacement gap (scale-ramp twin of the [size] check above): the editor's vertical
+        // position within the frame must hold across the scale ramp too, not just the size ramp.
+        const fieldRect = field.getBoundingClientRect()
+        const editorRect = editor.getBoundingClientRect()
+        expect(fieldRect.height - editorRect.height, `[${markup}] scale=${scale}: no vertical slack between frame and editor line box (anti-vacuous)`).toBeGreaterThan(0.5)
+        const gapTop = editorRect.top - fieldRect.top
+        const gapBottom = fieldRect.bottom - editorRect.bottom
+        expect(Math.abs(gapTop - gapBottom), `[${markup}] scale=${scale}: editor not vertically centered in the frame`).toBeLessThanOrEqual(1)
       }
       // ADR-0038 md column: ui-sm→24, ui-md→28, content-lg→48 (§1 rows, exact integers — no multiplier decimals)
       expect(heights[0]).toBeCloseTo(24, 1)  // was 24.5 (28×0.875 multiplier) — Kim's §1 row 24
@@ -379,13 +399,34 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
     const { field: searchField } = mount('<ui-text-field type="search" value="x"></ui-text-field>')
     const magnifier = searchField.querySelector('[data-part="leading-adornment"]') as HTMLElement
     const clearBtn = searchField.querySelector('[data-part="clear-button"]') as HTMLElement
-    for (const [label, el] of [['magnifier', magnifier], ['clear-button', clearBtn]] as const) {
+    // The clear-button ITSELF shrink-wraps to its glyph (padding:0, no explicit size) — the real "slot"
+    // box the geometry law pins is its parent `[slot='trailing']` cell (icon-sized, text-field.css's
+    // slot rule); measuring against the button's own box would be vacuous (box == content, always).
+    const clearSlot = clearBtn.closest('[slot="trailing"]') as HTMLElement
+    for (const [label, el, slotEl] of [
+      ['magnifier', magnifier, magnifier],
+      ['clear-button', clearBtn, clearSlot],
+    ] as const) {
       const svg = el.querySelector('svg')!
       const r = svg.getBoundingClientRect()
       const em = fontPx(el)
       expect(r.width, `${server.browser}: ${label} svg collapsed to zero width`).toBeGreaterThan(0)
       expect(r.height, `${server.browser}: ${label} svg collapsed to zero height`).toBeGreaterThan(0)
       expect(r.width, `${server.browser}: ${label} svg is not 1em-sized`).toBeCloseTo(em, 0)
+
+      // GH #634 displacement gap: the svg's own size was pinned, but never its POSITION within the
+      // adornment slot — a regression from align-items/justify-content:center to flex-start on the slot
+      // would misplace the glyph while size checks stay green. Anti-vacuous: the slot must genuinely
+      // exceed the glyph in at least one axis for centering to mean anything.
+      const slotRect = slotEl.getBoundingClientRect()
+      const slack = Math.max(slotRect.width - r.width, slotRect.height - r.height)
+      expect(slack, `${server.browser}: ${label} slot has no slack over the glyph (anti-vacuous)`).toBeGreaterThan(0.5)
+      const gapX1 = r.left - slotRect.left
+      const gapX2 = slotRect.right - r.right
+      const gapY1 = r.top - slotRect.top
+      const gapY2 = slotRect.bottom - r.bottom
+      expect(Math.abs(gapX1 - gapX2), `${server.browser}: ${label} glyph not horizontally centered in its slot`).toBeLessThanOrEqual(1)
+      expect(Math.abs(gapY1 - gapY2), `${server.browser}: ${label} glyph not vertically centered in its slot`).toBeLessThanOrEqual(1)
     }
 
     const { field: numberField } = mount('<ui-text-field type="number"></ui-text-field>')
@@ -396,6 +437,15 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
       const r = svg.getBoundingClientRect()
       expect(r.width, `${server.browser}: ${label} svg collapsed to zero width`).toBeGreaterThan(0)
       expect(r.height, `${server.browser}: ${label} svg collapsed to zero height`).toBeGreaterThan(0)
+
+      // GH #634 displacement gap (stepper twin of the magnifier/clear-button check above).
+      const slotRect = el.getBoundingClientRect()
+      const gapX1 = r.left - slotRect.left
+      const gapX2 = slotRect.right - r.right
+      const gapY1 = r.top - slotRect.top
+      const gapY2 = slotRect.bottom - r.bottom
+      expect(Math.abs(gapX1 - gapX2), `${server.browser}: ${label} glyph not horizontally centered in its slot`).toBeLessThanOrEqual(1)
+      expect(Math.abs(gapY1 - gapY2), `${server.browser}: ${label} glyph not vertically centered in its slot`).toBeLessThanOrEqual(1)
     }
 
     const { field: dateField } = mount('<ui-text-field type="date"></ui-text-field>')
@@ -404,6 +454,21 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
     const calR = calSvg.getBoundingClientRect()
     expect(calR.width, `${server.browser}: calendar-button svg collapsed to zero width`).toBeGreaterThan(0)
     expect(calR.height, `${server.browser}: calendar-button svg collapsed to zero height`).toBeGreaterThan(0)
+
+    // GH #634 displacement gap (calendar-button twin) — same shrink-wrap shape as clear-button: measure
+    // against the parent `[slot='trailing']` cell, not the button's own box.
+    const calSlot = calBtn.closest('[slot="trailing"]') as HTMLElement
+    const calSlotRect = calSlot.getBoundingClientRect()
+    const calSlack = Math.max(calSlotRect.width - calR.width, calSlotRect.height - calR.height)
+    expect(calSlack, `${server.browser}: calendar-button slot has no slack over the glyph (anti-vacuous)`).toBeGreaterThan(0.5)
+    expect(
+      Math.abs((calR.left - calSlotRect.left) - (calSlotRect.right - calR.right)),
+      `${server.browser}: calendar-button glyph not horizontally centered in its slot`,
+    ).toBeLessThanOrEqual(1)
+    expect(
+      Math.abs((calR.top - calSlotRect.top) - (calSlotRect.bottom - calR.bottom)),
+      `${server.browser}: calendar-button glyph not vertically centered in its slot`,
+    ).toBeLessThanOrEqual(1)
   })
 
   it('Phosphor-icon sweep: the password reveal button swaps eye ↔ eye-slash on click, both rendering at a real size', () => {
@@ -427,6 +492,16 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
     const maskedHtml = maskedSvg.innerHTML
     expect(maskedR.width, `${server.browser}: masked-state reveal svg collapsed to zero width`).toBeGreaterThan(0)
     expect(maskedR.height, `${server.browser}: masked-state reveal svg collapsed to zero height`).toBeGreaterThan(0)
+    // GH #634 displacement gap (reveal-button twin): position within its slot, masked state.
+    const revealSlotRect = revealBtn.getBoundingClientRect()
+    expect(
+      Math.abs((maskedR.left - revealSlotRect.left) - (revealSlotRect.right - maskedR.right)),
+      `${server.browser}: masked-state glyph not horizontally centered in the reveal-button slot`,
+    ).toBeLessThanOrEqual(1)
+    expect(
+      Math.abs((maskedR.top - revealSlotRect.top) - (revealSlotRect.bottom - maskedR.bottom)),
+      `${server.browser}: masked-state glyph not vertically centered in the reveal-button slot`,
+    ).toBeLessThanOrEqual(1)
 
     revealBtn.click()
     const revealedSvg = revealBtn.querySelector('svg')!

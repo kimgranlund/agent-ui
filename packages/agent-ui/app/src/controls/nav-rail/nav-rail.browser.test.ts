@@ -282,6 +282,19 @@ describe('ui-nav-rail — GH #624 nav polish (both engines)', () => {
       borderWidth,
       1,
     )
+
+    // GH #634 displacement gap: the padding numbers above can stay green while the rendered label
+    // content drifts (e.g. a compensating margin-inline-start on [data-part='label']) — measure where
+    // the label content ACTUALLY lands relative to the activator's own box, not just the padding tokens.
+    const label = activator.querySelector('[data-part="label"]') as HTMLElement
+    const activatorRect = activator.getBoundingClientRect()
+    const labelRect = label.getBoundingClientRect()
+    const contentStart = labelRect.left - activatorRect.left
+    expect(contentStart, `${server.browser}: label content did not land at border+padding from the activator's own edge (anti-vacuous)`).toBeGreaterThan(0)
+    expect(
+      contentStart,
+      `${server.browser}: label content start-edge drifted off border-width + start-padding — optical alignment broken`,
+    ).toBeCloseTo(borderWidth + start, 1)
   })
 
   it('item 4: the kicker ink resolves to the neutral role, not the on-surface ink', async () => {
