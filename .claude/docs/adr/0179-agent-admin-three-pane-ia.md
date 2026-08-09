@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-09 |
 > | **Proposed by** | design intake for [GH #651](https://github.com/kimgranlund/agent-ui/issues/651) (Kim's 2026-08-09 IA ruling, restated as contract here) — decomposition [`admin-three-pane-ia.decomp.md`](../decompositions/admin-three-pane-ia.decomp.md), two-plane coverage clean |
-> | **Ratified by** | *(unfilled — Kim ratifies; a `proposed` status is a real hold, never agent-flipped)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-09, via the [`ratify ADR-0179` utterance](https://github.com/kimgranlund/agent-ui/issues/651#issuecomment-5233684511) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification+build: [`agent-authoring-flow.lld.md`](../lld/agent-authoring-flow.lld.md) §2 (dual-context + try-it rows), §5 (chat-stack/mode anatomy — mechanism survives, PLACEMENT superseded), §14 (S5 inheritance note gains the Author-pane pointer; its inherited-anatomy list — `#mode`/`#setMode`/`#contextFor` — re-states to the pane vehicle) · `agent-admin.md` (anatomy/parts rows) · [ADR-0131](./0131-agent-admin-ui-scope-and-composition.md) Fork 2 (layout reading superseded-in-part, see Consequences) · GH #650's try-it strip (placement superseded; probes' method + the `chat-shell.css` headerless fix survive) |
 > | **Supersedes / Superseded by** | **Amends [ADR-0178](./0178-agent-authoring-conversational-persona-hydration.md) cl.5's VEHICLE only** — the flip affordance moves from an in-canvas strip to top-level pane navigation; cl.5's CONTRACT (one draft store, no identity swap, both transcripts survive — GH #145) stands byte-untouched. **Supersedes-in-part [ADR-0131](./0131-agent-admin-ui-scope-and-composition.md) Fork 2** (the `[chat | prompts | settings]` pane reading; the composition law itself — shipped M2/M4 primitives, no new primitive family — stands). Composes [ADR-0154] (chat-shell rehost — the shell stays the vehicle; what its strips MEAN changes) · [ADR-0150](./0150-compact-window-body-typescale-breakpoint.md)/ADR-0155 (the band ladder the "wide" line must come from) |
 

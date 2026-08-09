@@ -1237,5 +1237,12 @@
     "description": "Agent-authoring flow design intake (GH #633): conversational persona hydration is a NEW model-authored personaPatch meta-line arm — the ask/plan precedent's fi…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0179",
+    "url": "./adr-index.html#adr-0179",
+    "description": "Agent-admin three-pane IA design intake (GH #651, Kim's 2026-08-09 ruling): the admin restructures to THREE first-class panes [Chat \\| Author \\| Settings] and…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
