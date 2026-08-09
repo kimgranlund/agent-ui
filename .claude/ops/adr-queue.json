@@ -1,3 +1,11 @@
 {
-  "candidates": []
+  "candidates": [
+    {
+      "adr_id": "adr-0178",
+      "evidence": ".claude/docs/adr/0178-agent-authoring-conversational-persona-hydration.md:65-163 (Decision) — ratified 2026-08-09: a THIRD worked application of the ask-arm precedent (personaPatch, model-authored/additive/shallow-validated field) and modality-gate seam (surfaceAuthoring SURFACE_*_KEY), PLUS a genuinely new apply-gate write-discipline axis (host-side 3-filter: enumerated-key filter -> per-key sanitizer -> validateNewEntry) not yet captured in agent-ui-a2ui-meta-line-facts/SKILL.md; extend that skill's Worked-example section (or split a references/ dir if the new axis earns its own file) rather than open a new skill",
+      "kind": "harvest",
+      "plan": "",
+      "queued_at": "2026-08-09T18:47:24Z"
+    }
+  ]
 }

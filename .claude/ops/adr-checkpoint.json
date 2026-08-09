@@ -176,6 +176,6 @@
     "adr-0175": {"hash": "7fbe504b1f2d8d27c9d5faab522c38f11aeb0ce3933dbae40c48502fcfbf6723", "status": "accepted"},
     "adr-0176": {"hash": "0726a126756a366a0d836baea69a3790a9b710e7461523615e56f85ca60e0fc7", "status": "accepted"},
     "adr-0177": {"hash": "579459ad3936cb822c587d1ffeee2b027e64fd02aba21852759dd262beb0c832", "status": "accepted"},
-    "adr-0178": {"hash": "780872fc88a8ea1447425fec157087aac1c52130020b6701b9d564ab18a7f7ba", "status": "proposed"}
+    "adr-0178": {"hash": "b5a0a67d5b1e4eab7411a54091c04885fa5054b9054771193a15462293dafc23", "status": "accepted"}
   }
 }
