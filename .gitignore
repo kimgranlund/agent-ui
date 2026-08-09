@@ -1,3 +1,11 @@
+# Logs
+# KEEP-LIST (Kim-ruled 2026-08-09, twice): the rules below match nothing TODAY by design — they are
+# PREVENTIVE (see PR #632's per-rule reasoning; .claude/docs/other is ADR-0074's token-export path).
+# gitignore_check.py flagging them as "matches nothing" is expected and accepted — do NOT trim them
+# again; a sweep proposing their removal must read this note and stand down.
+*.log
+npm-debug.log*
+
 node_modules
 dist
 # scripts/publish/publish-packages.mjs's scratch publish-payload staging dir (per-package transformed
@@ -8,15 +16,23 @@ dist
 # build-css.ts's dist-shared-build-cache) — each is try/finally-cleaned in the normal case, but a wildcard
 # closes the gap for an interrupted run (a crashed process, Ctrl-C mid-test) rather than relying on that alone.
 dist-*
+*.local
 
 # Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
 .DS_Store
+*.sw?
 
 # reference dumps (design-token exports, etc.) — not source of truth, not committed
+.claude/docs/other
 .claude/docs/brand
 .claude/worktrees
 .env
 
+# Vitest browser-mode run artifacts (Playwright screenshots/attachments) — on-failure debris only.
 # ADR-0110: `__baselines__/` (committed visual-regression reference PNGs) is DELIBERATELY NOT listed
 # here and must stay tracked — do not add a blanket `__baselines__` ignore.
+.vitest-attachments/
 **/__screenshots__/
