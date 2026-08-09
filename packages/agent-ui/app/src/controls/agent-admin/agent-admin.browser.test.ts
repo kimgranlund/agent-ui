@@ -1431,16 +1431,19 @@ describe('ui-agent-admin cross-engine smoke — the try-it bar (ADR-0178 cl.5 / 
     }
   }
 
-  /** The USED px value of `--ui-bar-inline-inset` where `host` sits — the `_page-bar-inset.browser.test.ts`
-   *  (GH #626) resolution idiom: an unregistered custom property computes to its substituted token stream,
-   *  which never string-equals a used `padding` value, so a throwaway probe element resolves it for real. */
-  function resolvedBarInset(host: HTMLElement): number {
+  /** The USED px value of `--ui-agent-admin-shell-gutter` where `host` sits — the `_page-bar-inset.
+   *  browser.test.ts` (GH #626) resolution idiom: an unregistered custom property computes to its
+   *  substituted token stream, which never string-equals a used `padding` value, so a throwaway probe
+   *  element resolves it for real. GH #646 follow-up #2 — this used to resolve `--ui-bar-inline-inset`
+   *  (the bar's own, now-retracted padding); the strip's real inset is the AMBIENT `[data-part='canvas']`
+   *  gutter now (see the CSS banner), so this probe reads that token instead. */
+  function resolvedCanvasGutter(host: HTMLElement): number {
     const probe = document.createElement('div')
-    probe.style.paddingInline = 'var(--ui-bar-inline-inset)'
+    probe.style.paddingInline = 'var(--ui-agent-admin-shell-gutter)'
     host.append(probe)
     const used = getComputedStyle(probe).paddingInlineStart
     probe.remove()
-    expect(used, 'the shared bar-inset role resolves').not.toBe('0px')
+    expect(used, 'the shared canvas-gutter role resolves').not.toBe('0px')
     return parseFloat(used)
   }
 
@@ -1460,12 +1463,16 @@ describe('ui-agent-admin cross-engine smoke — the try-it bar (ADR-0178 cl.5 / 
       expect(box.width).toBeGreaterThan(0)
       expect(box.height).toBeGreaterThan(0)
     }
-    // displacement/content-placement (the #626 gold pattern, applied locally): the first tab's content
-    // edge sits INSET from the bar's own edge by the shared bar-inline-inset role, not flush against it —
-    // anti-vacuous, since a flush layout would make this delta 0 and silently pass a `>=0` assertion.
-    const inset = resolvedBarInset(barEl)
+    // displacement/content-placement (the #626 gold pattern, applied locally) — GH #646 follow-up #2:
+    // the strip itself carries NO padding of its own now (byte-identical to the section strip, see the
+    // CSS banner); the first tab's content edge sits inset from the AMBIENT `[data-part='canvas']` box's
+    // own edge instead, by the SAME `--ui-agent-admin-shell-gutter` role the section strip's own ambient
+    // `[data-part='pane']` wrapper uses — anti-vacuous, since a flush layout would make this delta 0 and
+    // silently pass a `>=0` assertion.
+    const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
+    const inset = resolvedCanvasGutter(canvas)
     expect(inset, 'the resolved inset is real slack, not a collapsed token').toBeGreaterThan(4)
-    expect(Math.abs(authoringTab.getBoundingClientRect().left - (barBox.left + inset)), 'tab content starts one inset in from the bar edge').toBeLessThanOrEqual(0.5)
+    expect(Math.abs(authoringTab.getBoundingClientRect().left - (canvas.getBoundingClientRect().left + inset)), 'tab content starts one ambient canvas-gutter in from the CANVAS edge, not the bar\'s own').toBeLessThanOrEqual(0.5)
   })
 
   // GH #646 follow-up (Kim's live-surface pass, 2026-08-09) — the bar used to paint its OWN
@@ -1482,6 +1489,43 @@ describe('ui-agent-admin cross-engine smoke — the try-it bar (ADR-0178 cl.5 / 
 
     expect(getComputedStyle(barEl).borderBottomWidth, 'the bar host itself paints no border — the doubled-hairline defect').toBe('0px')
     expect(parseFloat(getComputedStyle(tablist).borderBottomWidth), 'the tablist part still paints its own real divider').toBeGreaterThan(0)
+  })
+
+  // GH #646 follow-up #2 (Kim's live-surface pass, 2026-08-09) — the try-it strip used to carry its OWN
+  // `padding-inline`/`padding-block` (the `--ui-bar-inline-inset`/card-pad shape, on the WRONG premise
+  // that it sits flush on the shell's raw edge like `narrow-tabs`): `chat-stack` actually nests inside
+  // super-shell's own `[data-part='canvas']` box, which THIS FILE already pads with the SAME
+  // `--ui-agent-admin-shell-gutter` token `[data-part='pane']` uses for the section strip — so the
+  // try-it strip's own padding was stacking ON TOP of that ambient inset, reading measurably
+  // tighter/smaller than the section strip. Fixed by dropping the strip's own padding entirely (zero,
+  // byte-identical to `ui-tabs[data-part='pane-tabs']`). Pinned here so the two strips' core metrics can
+  // never silently drift apart again — anti-vacuous: both strips mounted, non-collapsed, real values.
+  it('renders with the SAME core metrics as the admin\'s own section-tab strip — font-size, tab padding, inter-tab gap, and inline inset all equal (GH #646 follow-up #2)', async () => {
+    const { el } = mountAgentAdmin()
+    await el.updateComplete
+    el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
+    await el.updateComplete
+
+    const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
+    const { bar: tryItStrip, authoringTab: tryItTab } = bar(el)
+    const tryItTablist = tryItStrip.querySelector('[data-part="tablist"]') as HTMLElement
+
+    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    const sectionStrip = pane.querySelector('[data-part="pane-tabs"]') as HTMLElement
+    const sectionTab = pane.querySelector('[data-part="pane-tab"]') as HTMLElement
+    const sectionTablist = sectionStrip.querySelector('[data-part="tablist"]') as HTMLElement
+
+    expect(getComputedStyle(tryItTab).fontSize, 'tab font-size matches the section strip').toBe(getComputedStyle(sectionTab).fontSize)
+    expect(getComputedStyle(tryItTab).paddingInlineStart, 'tab inline padding matches').toBe(getComputedStyle(sectionTab).paddingInlineStart)
+    expect(getComputedStyle(tryItTablist).gap, 'inter-tab gap matches').toBe(getComputedStyle(sectionTablist).gap)
+
+    // Inline inset — measured from each strip's OWN ambient wrapper edge (canvas / pane), not the
+    // strip's own box: neither strip carries its own inline padding, so the inset is ambient by
+    // construction on both sides now, and must resolve to the SAME real, non-zero value.
+    const tryItInset = tryItTab.getBoundingClientRect().left - canvas.getBoundingClientRect().left
+    const sectionInset = sectionTab.getBoundingClientRect().left - pane.getBoundingClientRect().left
+    expect(tryItInset, 'the try-it inset is real slack, not a collapsed/zeroed token').toBeGreaterThan(4)
+    expect(Math.abs(tryItInset - sectionInset), 'the two strips resolve to the SAME inline inset').toBeLessThanOrEqual(0.5)
   })
 
   it('clicking Try it / Authoring flips which conversation occupies the canvas, with real (non-collapsed) geometry both ways', async () => {
