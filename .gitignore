@@ -1,15 +1,9 @@
 # Logs
-logs
 *.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
 node_modules
 dist
-dist-ssr
 # scripts/publish/publish-packages.mjs's scratch publish-payload staging dir (per-package transformed
 # package.json + compiled dist/) — never committed, rebuilt fresh on every publish run.
 .publish
@@ -25,10 +19,6 @@ dist-*
 !.vscode/extensions.json
 .idea
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
 *.sw?
 
 # reference dumps (design-token exports, etc.) — not source of truth, not committed
