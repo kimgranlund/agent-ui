@@ -49,3 +49,10 @@ the existing nonoun-plugins follow-up. First instance posted by the host (issue 
 One throwaway PR merged while its branch is checked out in a linked worktree; verbatim
 `gh pr merge` output captured to #613. Also ruled same round: the 07fc618 ops commit rides #626's
 PR (no cherry-pick), and the 17 stale gitignore rules get trimmed on a small PR after #626 ships.
+
+## #613 CLOSED root-caused 2026-08-09 — the worktree-held-branch merge rule
+
+`gh pr merge --delete-branch` aborts before the REMOTE deletion when the branch is checked out in
+any linked worktree (local delete fails → terminal). Practice rule: reap the branch's worktree
+BEFORE a --delete-branch merge, or delete the remote branch by hand after. Proven by the PR #627
+deliberate test (verbatim output on #613). repo-cleaner's sweep stays the safety net.
