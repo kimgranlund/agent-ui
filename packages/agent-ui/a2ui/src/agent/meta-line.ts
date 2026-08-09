@@ -26,6 +26,16 @@
 // loop that reads a declared `plan`, and any `plan`-analogue of `ask`'s surfaceId-correlation integrity
 // check, are a future SPEC/LLD's job — this file carries the wire representation ONLY.
 //
+// ADR-0178 cl.1 / SPEC-R29 adds a third additive MODEL-authored field, `personaPatch`: an authoring turn
+// declares persona-state deltas by carrying `{values?, entries?}` on the SAME leading meta-line, following
+// the `ask`/`plan`-arm precedent EXACTLY (a malformed `personaPatch` drops only itself). The values stay
+// `unknown` here on purpose: this package is persona-key-AGNOSTIC by construction (the package DAG runs
+// `a2ui` ← `app`, and the persona schema lives in `app`), and every semantic filter — the enumerated-key
+// filter, the per-key fail-closed sanitizer, `validateNewEntry` — is HOST-side (ADR-0178 cl.2, a future
+// slice). The merge law those filters apply (incremental per turn; `values` last-writer-wins at whole-value
+// granularity; `entries` appended, never replacing; no deletion semantics) is SPEC-R29's, stated there and
+// enforced there — this file carries the wire representation ONLY.
+//
 // Zero-dep, pure (SPEC-N5): no imports.
 
 /**
@@ -77,6 +87,25 @@ export interface PlanStep {
  */
 export interface PlanDeclaration {
   steps: PlanStep[]
+}
+
+/**
+ * A persona-state patch (ADR-0178 cl.1 / SPEC-R29): a MODEL-authored PARTIAL record of persona-scoped
+ * store state, declared by an authoring turn on the SAME leading meta-line as `note`. `values` proposes
+ * scalar state (config values, switch states); `entries` proposes CONTRIBUTIONS to the entry-list keys.
+ * The two members are the two KINDS of proposal ADR-0178 cl.1 enumerates, declared distinctly so the model
+ * states its INTENT (set vs. contribute) rather than the host inferring it from a key table.
+ *
+ * Both members' values are `unknown` here — see the file header: no persona key set, sanitizer, or entry
+ * shape is known to this package. The host's three-filter apply gate (ADR-0178 cl.2) is what admits any of
+ * it, under SPEC-R29's merge law: incremental per turn, `values` last-writer-wins at WHOLE-VALUE
+ * granularity per key (absent key untouched, no deep merge), `entries` appended through the shipped
+ * `validateNewEntry` add path (never a list replace), and NO deletion semantics in this version — which is
+ * what keeps a hallucinated patch non-destructive by construction.
+ */
+export interface PersonaPatch {
+  values?: Record<string, unknown>
+  entries?: Record<string, unknown[]>
 }
 
 /**
@@ -135,6 +164,12 @@ export interface A2uiMetaEnvelope {
      *  the SAME leading meta-line. MODEL-authored, shallow-validated the same per-field-independent way
      *  `ask` is — a malformed `plan` drops only itself, never the whole envelope. */
     plan?: PlanDeclaration
+    /** ADR-0178 cl.1 / SPEC-R29: the model's own persona-state delta, additive alongside `note`/`ask`/
+     *  `plan` on the SAME leading meta-line. MODEL-authored, shallow-validated the same per-field-
+     *  independent way — a malformed `personaPatch` drops only itself, never the whole envelope. Whether
+     *  a declared patch is ever CONSUMED is the host's call, gated per persona (SPEC-R30); the wire layer
+     *  is gate-blind. */
+    personaPatch?: PersonaPatch
     trace?: TurnTrace
     /** ADR-0146 F1: a runtime-composed live-turn lifecycle event, INTERLEAVED during the turn (not just a
      *  single leading line). Shallow-validated the same way `ask` is — a malformed `progress` drops only
@@ -154,6 +189,13 @@ export interface A2uiMetaEnvelope {
  * `ask`/`progress` field TYPES (not `trace`'s inner shape — it is runtime-assembled, never wire-validated);
  * a malformed `ask`/`progress` drops only itself, never the whole envelope.
  */
+/** A non-null, non-array object — the shape every shallow field guard below already tests inline. Named
+ *  once for the `personaPatch` arm (SPEC-R29), which tests it three times; the older guards keep their
+ *  inline form so their diffs stay byte-quiet. */
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
 export function readMetaLine(line: string): A2uiMetaEnvelope | undefined {
   let parsed: unknown
   try {
@@ -206,6 +248,27 @@ export function readMetaLine(line: string): A2uiMetaEnvelope | undefined {
     }
   }
 
+  // ADR-0178 cl.1 / SPEC-R29: `personaPatch` is shallow-validated the SAME per-field-independent way as
+  // `ask`/`plan` — a malformed patch drops ONLY `personaPatch`, never the whole envelope. The arm
+  // validates as a WHOLE (a malformed member drops the entire arm, not just that member): a half-parsed
+  // patch is the one shape a host apply loop must never be handed. Malformed = a non-object/array arm; a
+  // present-but-non-object `values`; a present-but-non-object `entries`, or one whose any member is not an
+  // array; or NEITHER member present. Member VALUES stay `unknown` — this package knows no persona key.
+  let personaPatch: PersonaPatch | undefined
+  if (m.personaPatch !== undefined && isPlainObject(m.personaPatch)) {
+    const p = m.personaPatch
+    const values = p.values
+    const entries = p.entries
+    const valuesOk = values === undefined || isPlainObject(values)
+    const entriesOk = entries === undefined || (isPlainObject(entries) && Object.values(entries).every((v) => Array.isArray(v)))
+    if (valuesOk && entriesOk && (values !== undefined || entries !== undefined)) {
+      personaPatch = {
+        ...(values !== undefined ? { values: values as Record<string, unknown> } : {}),
+        ...(entries !== undefined ? { entries: entries as Record<string, unknown[]> } : {}),
+      }
+    }
+  }
+
   // ADR-0146 F1: `progress` is shallow-validated the SAME way — a malformed `progress` (non-object, or a
   // `stage` outside the closed vocabulary, or a non-number `round` / non-string `detail`/`source`) drops
   // only itself, never the whole envelope. The closed `stage` union is the honesty-law guard (F2): an
@@ -232,6 +295,7 @@ export function readMetaLine(line: string): A2uiMetaEnvelope | undefined {
       note: m.note as string | undefined,
       ask,
       plan,
+      personaPatch,
       trace: m.trace as TurnTrace | undefined,
       progress,
       error,

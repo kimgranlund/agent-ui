@@ -33,6 +33,7 @@ import {
   BANKROLL_KEY,
   MODELS_INCLUDED_KEY,
   SURFACE_A2UI_KEY,
+  SURFACE_AUTHORING_KEY,
   SURFACE_GENUI_DOGFOOD_KEY,
   SURFACE_GENUI_KEY,
   SURFACE_MARKDOWN_KEY,
@@ -67,6 +68,10 @@ export const PERSONA_STATE_KEYS: readonly string[] = [
     SURFACE_A2UI_KEY,
     SURFACE_GENUI_KEY,
     SURFACE_GENUI_DOGFOOD_KEY,
+    // ADR-0178 cl.3 / SPEC-R30 — the persona-authoring modality gate. Persona-scoped like every other
+    // Surface Option, so an exported Builder-shaped persona re-imports with its authoring capability
+    // intact instead of silently reverting to the inverse default (OFF).
+    SURFACE_AUTHORING_KEY,
     A2UI_CATALOG_KEY,
     // M-D SPEC-R5 — the persona's local-pattern-set SELECTION (never its definitions, which are
     // package-shipped code, SPEC-R1): symmetrical in storage shape to A2UI_CATALOG_KEY above.

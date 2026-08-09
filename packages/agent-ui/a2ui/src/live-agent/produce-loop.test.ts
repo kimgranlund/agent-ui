@@ -1225,6 +1225,107 @@ describe('produce() plan meta-line arm — passthrough (ADR-0174 cl.2 / SPEC-R20
   })
 })
 
+// ── ADR-0178 cl.1/cl.3, SPEC-R29 AC3 / SPEC-R30 AC3: the personaPatch arm — gate-blind passthrough ──────
+describe('produce() personaPatch meta-line arm — passthrough (ADR-0178 cl.1 / SPEC-R29 AC3)', () => {
+  const PATCH = { values: { name: 'Support Buddy', temperature: 0.4 } }
+
+  it('meta{note,personaPatch} + a payload with zero A2UI lines ships the outgoing meta-line with the patch intact', async () => {
+    const { provider } = stubProvider([JSON.stringify({ a2uiMeta: { note: 'Got it.', personaPatch: PATCH } })])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    let halted: unknown
+    try {
+      for await (const line of produce(intent, deps, { maxRounds: 3, authoringSurface: true })) lines.push(line)
+    } catch (e) {
+      halted = e
+    }
+    expect(halted).toBeUndefined()
+    expect(lines).toHaveLength(1)
+    const meta = readMetaLine(lines[0]!)
+    expect(meta!.a2uiMeta.note).toBe('Got it.')
+    expect(meta!.a2uiMeta.personaPatch).toEqual(PATCH) // passed through UNCHANGED from the model's declaration
+  })
+
+  it('meta{note,personaPatch} + an ordinary validated payload also ships the patch intact', async () => {
+    const { provider } = stubProvider([JSON.stringify({ a2uiMeta: { note: 'Building it.', personaPatch: PATCH } }) + '\n' + VALID])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3, authoringSurface: true })) lines.push(line)
+
+    expect(lines).toHaveLength(3)
+    expect(readMetaLine(lines[0]!)!.a2uiMeta.personaPatch).toEqual(PATCH)
+    expect(validateA2ui(lines.slice(1).map((l) => JSON.parse(l)), defaultCatalog).valid).toBe(true)
+  })
+
+  it('a stub that never authors a patch omits the key entirely — byte-identical to the pre-this-field wire shape', async () => {
+    const { provider } = stubProvider(['{"a2uiMeta":{"note":"hi"}}\n' + VALID])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+
+    expect(lines[0]).not.toContain('"personaPatch"') // no bare `"personaPatch":undefined`
+    expect(readMetaLine(lines[0]!)!.a2uiMeta.personaPatch).toBeUndefined()
+  })
+
+  it('the passthrough is GATE-BLIND: a volunteered patch with the gate OFF yields a byte-identical stream to the gate-ON run (SPEC-R30 AC3)', async () => {
+    const raw = JSON.stringify({ a2uiMeta: { note: 'Volunteered.', personaPatch: PATCH } }) + '\n' + VALID
+    const run = async (authoringSurface: boolean | undefined): Promise<string[]> => {
+      const { provider } = stubProvider([raw])
+      const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+      const lines: string[] = []
+      for await (const line of produce(intent, deps, { maxRounds: 3, ...(authoringSurface === undefined ? {} : { authoringSurface }) })) {
+        lines.push(line)
+      }
+      return lines
+    }
+    const on = await run(true)
+    const off = await run(false)
+    const absent = await run(undefined)
+    // What the gate withholds is CONSUMPTION (host-side, ADR-0178 cl.2) and TEACHING (the composed
+    // prompt) — never framing. One peel path, so there is no gate-conditional wire branch to drift.
+    expect(off).toEqual(on)
+    expect(absent).toEqual(on)
+    expect(readMetaLine(off[0]!)!.a2uiMeta.personaPatch).toEqual(PATCH)
+  })
+
+  it('the patch carries NO integrity check — a patch naming anything at all ships through, no self-correct round', async () => {
+    const { provider, calls } = stubProvider([
+      JSON.stringify({ a2uiMeta: { note: 'hi', personaPatch: { values: { totallyUnknownKey: 1 } } } }) + '\n' + VALID,
+    ])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3, authoringSurface: true })) lines.push(line)
+
+    expect(calls()).toBe(1) // the host's three filters, not a producer-side check, are what make it safe
+    expect(readMetaLine(lines[0]!)!.a2uiMeta.personaPatch).toEqual({ values: { totallyUnknownKey: 1 } })
+  })
+
+  it('personaPatch, plan and ask compose independently on the SAME meta-line — all three survive passthrough', async () => {
+    const plan = { steps: [{ id: 'step-1', description: 'Ask about tone' }] }
+    const { provider } = stubProvider([
+      JSON.stringify({ a2uiMeta: { note: 'Ready?', ask: { surfaceId: 'ask-1' }, plan, personaPatch: PATCH } }) + '\n' + ASK_VALID,
+    ])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3, authoringSurface: true })) lines.push(line)
+
+    const meta = readMetaLine(lines[0]!)
+    expect(meta!.a2uiMeta.ask).toEqual({ surfaceId: 'ask-1' })
+    expect(meta!.a2uiMeta.plan).toEqual(plan)
+    expect(meta!.a2uiMeta.personaPatch).toEqual(PATCH)
+  })
+
+  it('a MALFORMED patch drops at the peel and never reaches the wire — the note still ships', async () => {
+    const { provider } = stubProvider(['{"a2uiMeta":{"note":"hi","personaPatch":"broken"}}\n' + VALID])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3, authoringSurface: true })) lines.push(line)
+
+    expect(lines[0]).not.toContain('"personaPatch"')
+    expect(readMetaLine(lines[0]!)!.a2uiMeta.note).toBe('hi')
+  })
+})
+
 describe('produce() feed-embedded ask — the FEED_SCOPE self-correct gate (ADR-0097 §3 / SPEC-R15)', () => {
   const ASK_OUT_OF_SCOPE =
     '{"version":"v1.0","createSurface":{"surfaceId":"ask-1","catalogId":"agent-ui"}}\n' +

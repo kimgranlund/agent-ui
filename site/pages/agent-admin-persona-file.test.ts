@@ -24,6 +24,7 @@ import {
   BANKROLL_KEY,
   MODELS_INCLUDED_KEY,
   SURFACE_A2UI_KEY,
+  SURFACE_AUTHORING_KEY,
   SURFACE_GENUI_DOGFOOD_KEY,
   SURFACE_GENUI_KEY,
   SURFACE_MARKDOWN_KEY,
@@ -291,6 +292,32 @@ describe('the persona file carries the local-pattern-set SELECTION, never its de
     expect(unselected.localPatterns, 'quant must stay a genuine unselected fixture').toBeUndefined()
     const file = exportPersonaFile(personaFromPreset(unselected), createMemoryStore({ initial: presetSeed(unselected) }))
     expect(Object.keys(file.state)).not.toContain(A2UI_LOCAL_PATTERNS_KEY)
+  })
+})
+
+// ADR-0178 cl.3 / SPEC-R30 — the persona-authoring modality gate is a persona-scoped Surface Option like
+// every other, so it must round-trip: an exported Builder-shaped persona whose authoring capability
+// silently reverted to the inverse default (OFF) on re-import would be a different agent than the one
+// exported — the exact defect this file's own key-coverage law rules out for every other persona key.
+describe('the persona file carries the authoring modality gate (ADR-0178 cl.3 / SPEC-R30 AC1)', () => {
+  it('PERSONA_STATE_KEYS carries the gate key', () => {
+    expect(PERSONA_STATE_KEYS).toContain(SURFACE_AUTHORING_KEY)
+  })
+
+  it('an authoring-enabled persona round-trips the gate through export -> import', () => {
+    const storeA = authoredStore()
+    storeA.set(SURFACE_AUTHORING_KEY, true)
+    const parsed = readPersonaFile(personaFileText(exportPersonaFile(personaFromPreset(SOURCE_PRESET), storeA)))
+    expect(parsed.ok, parsed.ok ? '' : parsed.error).toBe(true)
+    if (!parsed.ok) return
+    expect(parsed.file.state[SURFACE_AUTHORING_KEY]).toBe(true)
+  })
+
+  it('a persona that never enabled it exports NO gate key at all — the inverse default survives the trip', () => {
+    const parsed = readPersonaFile(personaFileText(exportPersonaFile(personaFromPreset(SOURCE_PRESET), authoredStore())))
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) return
+    expect(SURFACE_AUTHORING_KEY in parsed.file.state).toBe(false) // unset stays omitted, never written as false
   })
 })
 

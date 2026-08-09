@@ -346,3 +346,112 @@ describe('readMetaLine / formatErrorLine — the error field (GH #144)', () => {
     expect(err!).toEqual({ code: 'VERSION_UNSUPPORTED', message: expect.stringContaining('unsupported protocol version') })
   })
 })
+
+// ── ADR-0178 cl.1 / SPEC-R29: the additive `personaPatch` field ─────────────────────────────────────────
+// The arm validates as a WHOLE (a malformed member drops the entire arm, not just that member) — one
+// simple rule, chosen because a half-parsed patch is the one shape a host apply loop must never be handed.
+// Envelope-level independence is unchanged: a dropped `personaPatch` never costs note/ask/plan/trace.
+describe('readMetaLine — the personaPatch field (ADR-0178 cl.1 / SPEC-R29 AC1)', () => {
+  it('round-trips {note, personaPatch:{values}} alongside note/ask/plan/trace/progress/error', () => {
+    const line = JSON.stringify({
+      a2uiMeta: {
+        note: 'Got it — a support agent, warm tone.',
+        ask: { surfaceId: 'ask-1' },
+        plan: { steps: [{ id: 'step-1', description: 'Gather requirements' }] },
+        personaPatch: { values: { name: 'Support Buddy', temperature: 0.4, surfaceMarkdown: true } },
+      },
+    })
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.note).toBe('Got it — a support agent, warm tone.')
+    expect(parsed!.a2uiMeta.ask).toEqual({ surfaceId: 'ask-1' })
+    expect(parsed!.a2uiMeta.plan).toEqual({ steps: [{ id: 'step-1', description: 'Gather requirements' }] })
+    expect(parsed!.a2uiMeta.personaPatch).toEqual({ values: { name: 'Support Buddy', temperature: 0.4, surfaceMarkdown: true } })
+  })
+
+  it('round-trips {note, personaPatch:{entries}} — list contributions, values absent', () => {
+    const line = JSON.stringify({
+      a2uiMeta: {
+        note: 'Added one instruction.',
+        personaPatch: { entries: { promptSectionEntries: [{ id: 'a', title: 'Tone', body: 'Be warm.' }] } },
+      },
+    })
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.personaPatch).toEqual({ entries: { promptSectionEntries: [{ id: 'a', title: 'Tone', body: 'Be warm.' }] } })
+    expect(parsed!.a2uiMeta.personaPatch!.values).toBeUndefined()
+  })
+
+  it('round-trips BOTH members on one patch', () => {
+    const line = JSON.stringify({
+      a2uiMeta: { note: 'hi', personaPatch: { values: { name: 'X' }, entries: { toolEntries: [] } } },
+    })
+    expect(readMetaLine(line)!.a2uiMeta.personaPatch).toEqual({ values: { name: 'X' }, entries: { toolEntries: [] } })
+  })
+
+  it('member values stay OPAQUE — nested objects/arrays/nulls survive verbatim (the wire layer knows no persona key)', () => {
+    const value = { nested: { deep: [1, 'two', null, { three: true }] } }
+    const line = JSON.stringify({ a2uiMeta: { note: 'hi', personaPatch: { values: { anything: value } } } })
+    expect(readMetaLine(line)!.a2uiMeta.personaPatch!.values!.anything).toEqual(value)
+  })
+
+  it('a malformed personaPatch (non-object) drops ONLY itself — note/ask/plan/trace still parse', () => {
+    const line = JSON.stringify({
+      a2uiMeta: {
+        note: 'hi',
+        ask: { surfaceId: 'ask-1' },
+        plan: { steps: [{ id: 's', description: 'd' }] },
+        personaPatch: 'not-an-object',
+      },
+    })
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.note).toBe('hi')
+    expect(parsed!.a2uiMeta.ask).toEqual({ surfaceId: 'ask-1' })
+    expect(parsed!.a2uiMeta.plan).toEqual({ steps: [{ id: 's', description: 'd' }] })
+    expect(parsed!.a2uiMeta.personaPatch).toBeUndefined()
+  })
+
+  it('an array personaPatch is rejected the same way (never a Record cast on an array)', () => {
+    expect(readMetaLine('{"a2uiMeta":{"note":"hi","personaPatch":["name"]}}')!.a2uiMeta.personaPatch).toBeUndefined()
+  })
+
+  it('a personaPatch with NEITHER member drops — an empty arm is not a patch', () => {
+    expect(readMetaLine('{"a2uiMeta":{"note":"hi","personaPatch":{}}}')!.a2uiMeta.personaPatch).toBeUndefined()
+  })
+
+  it('a personaPatch with only unrecognized members drops — same rule, no partial acceptance', () => {
+    expect(readMetaLine('{"a2uiMeta":{"note":"hi","personaPatch":{"whatever":{"a":1}}}}')!.a2uiMeta.personaPatch).toBeUndefined()
+  })
+
+  it('a non-object `values` drops the WHOLE arm, not just that member', () => {
+    const line = '{"a2uiMeta":{"note":"hi","personaPatch":{"values":"nope","entries":{"toolEntries":[]}}}}'
+    expect(readMetaLine(line)!.a2uiMeta.personaPatch).toBeUndefined()
+  })
+
+  it('an array `values` drops the whole arm', () => {
+    expect(readMetaLine('{"a2uiMeta":{"note":"hi","personaPatch":{"values":["name"]}}}')!.a2uiMeta.personaPatch).toBeUndefined()
+  })
+
+  it('a non-object `entries` drops the whole arm', () => {
+    const line = '{"a2uiMeta":{"note":"hi","personaPatch":{"values":{"name":"X"},"entries":"nope"}}}'
+    expect(readMetaLine(line)!.a2uiMeta.personaPatch).toBeUndefined()
+  })
+
+  it('an `entries` member that is not an array drops the whole arm', () => {
+    const line = '{"a2uiMeta":{"note":"hi","personaPatch":{"entries":{"toolEntries":{"not":"a list"}}}}}'
+    expect(readMetaLine(line)!.a2uiMeta.personaPatch).toBeUndefined()
+  })
+
+  it('a note-only line (no personaPatch at all) still parses with personaPatch undefined — zero blast radius', () => {
+    expect(readMetaLine('{"a2uiMeta":{"note":"hi"}}')!.a2uiMeta.personaPatch).toBeUndefined()
+  })
+
+  it('a well-formed personaPatch survives beside a MALFORMED plan on the same line (per-field independence)', () => {
+    const line = '{"a2uiMeta":{"note":"hi","plan":"broken","personaPatch":{"values":{"name":"X"}}}}'
+    const parsed = readMetaLine(line)
+    expect(parsed!.a2uiMeta.plan).toBeUndefined()
+    expect(parsed!.a2uiMeta.personaPatch).toEqual({ values: { name: 'X' } })
+  })
+
+  it('the envelope stays disjoint from A2uiServerMessage — a `version` key still refuses the whole line', () => {
+    expect(readMetaLine('{"version":"v1.0","a2uiMeta":{"personaPatch":{"values":{"name":"X"}}}}')).toBeUndefined()
+  })
+})

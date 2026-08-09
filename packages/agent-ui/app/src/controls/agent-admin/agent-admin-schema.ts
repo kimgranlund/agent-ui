@@ -225,6 +225,28 @@ export function isPlannerSurfaceEnabled(value: unknown): boolean {
   return value === true
 }
 
+// ── Persona authoring (ADR-0178 cl.3 / SPEC-R30) ──────────────────────────────────────────────────────
+// The opt-in seam for the conversational persona-hydration flow: with this on, the turn's composed system
+// prompt teaches the `personaPatch` meta-line arm (SPEC-R29), and the host applies a declared patch to the
+// draft persona's store through the three-filter gate (ADR-0178 cl.2 — enumerated-key filter → per-key
+// sanitizer → `validateNewEntry`). Persona-scoped rather than flow-hardcoded on purpose: flipping it ON
+// for an ORDINARY persona is exactly the entry point ADR-0178 cl.6's deferred NL-edit slice needs, so the
+// seam is built once. The host-authored Builder persona seeds it ON; every other persona ships it OFF.
+
+/** Authoring surface — ON: the persona's turns are taught the `personaPatch` arm and a declared patch is
+ *  applied to the draft persona's store; OFF (the default — the SAME inverse-default law
+ *  `SURFACE_GENUI_KEY` uses): zero teaching bytes compose and a volunteered `personaPatch` is NEVER
+ *  consumed (SPEC-R30's degrade law, the SPEC-R21 lineage — the field still rides the wire, gate-blind,
+ *  exactly as a volunteered `plan` does; what the gate withholds is consumption). */
+export const SURFACE_AUTHORING_KEY = 'surfaceAuthoring'
+
+/** Fail-closed read for the authoring modality's OWN inverse-default: absent/malformed ⇒ OFF (the SAME
+ *  `isGenuiSurfaceEnabled`/`isPlannerSurfaceEnabled` shape). An explicit stored `true` is the only way
+ *  this surface turns on. */
+export function isAuthoringSurfaceEnabled(value: unknown): boolean {
+  return value === true
+}
+
 /** The A2UI catalog picker's persisted selection (an id from `A2UI_CATALOG_OPTIONS`). */
 export const A2UI_CATALOG_KEY = 'a2uiCatalog'
 

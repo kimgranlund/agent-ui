@@ -27,6 +27,9 @@
 //   archetype vocabulary (`prompts/ask-archetypes-*.md`); the feed-allowed list is composed FROM
 //   `feed-catalog.ts` via the `{{FEED_SURFACE_TYPES}}` placeholder the loader fills (drift-impossible).
 // · ADR-0103 §Decision cl.4 — the `form-rhythm` mini-skill (`prompts/mini-skills/form-rhythm.md`).
+// · ADR-0178 cl.1/cl.3 (SPEC-R30) — the `personaPatch` arm's mechanics teaching
+//   (`prompts/authoring-teaching.md`), composed by `authoringBlock` ONLY under the persona's authoring
+//   gate; host-owned and byte-pinned like every prompt file here, but conditional, unlike the GRAMMAR text.
 // · ADR-0126 (LLD-C1, TKT-0016) — the message-lifecycle decision-layer teaching (the four-type choice rule +
 //   deleteSurface wire shape + whole-record-upsert warning + root-immutability), appended inside the
 //   OUTPUT_RULES zone of `prompts/grammar.md`, so it rides `OUTPUT_RULES` into every mode.
@@ -253,6 +256,25 @@ const GENUI_DOGFOOD_TEACHING = loadPrompt('genui-dogfood-teaching.md')
 // what a genui turn does).
 const A2UI_OFF_NOTE_LINE = loadPrompt('a2ui-off-note-line.md')
 
+// ---- ADR-0178 cl.1/cl.3, SPEC-R30: the persona-authoring teaching segment — a structural TWIN of
+// `genuiBlock`/`miniSkillsBlock` (degrades to '' when the gate is off, additive, orthogonal to `mode`,
+// never touches `grammarFor`). Deliberately NOT inlined into the byte-pinned GRAMMAR constant the way
+// `ask`/`plan` mechanics are, and SPEC-R30 records why: ADR-0178 cl.1 rule 5 requires this teaching be
+// HOST-OWNED and never persona-editable (a byte-pinned prompt file satisfies that exactly), while cl.3
+// requires it compose ONLY when the persona's own authoring gate is on. Inlining it in GRAMMAR would
+// satisfy neither — it would put admin-specific mechanics in EVERY A2UI consumer's prompt and move
+// SPEC-R6's byte-identity baselines (`prompt-drift`/`prompt-equivalence`) for every caller.
+const AUTHORING_TEACHING = loadPrompt('authoring-teaching.md')
+
+/** SPEC-R30 — composes the persona-authoring teaching when (and only when) the persona's authoring gate
+ *  is on for this turn. Absent/`false` ⇒ `''`, the degradation law: byte-identical to the composition
+ *  from before this capability existed, in every mode. Mode-INVARIANT when present (the ADR-0090 axis
+ *  conditions disposition, never wire mechanics the model must reproduce exactly). */
+function authoringBlock(authoringEnabled: boolean | undefined): string {
+  if (authoringEnabled !== true) return ''
+  return `\n\n${AUTHORING_TEACHING}`
+}
+
 /** SPEC-R10 — composes ONE genui block when (and only when) the modality is enabled for this turn: the
  *  fixed wire/sandbox-reality teaching; the `exclusive` override paragraph when the caller has named itself
  *  a genui-only consumer; the dogfood segment (teaching + the derived fleet inventory) when `dogfood` is
@@ -325,6 +347,13 @@ function miniSkillsFor(mode: GenUiMode | undefined, selected: readonly MiniSkill
  * regardless of the toggle). `genuiBlock` folds this same signal into its own composition (see its own
  * doc comment) so a genui-enabled turn still gets a working note-line convention and an explicit
  * no-A2UI-renderer framing even with zero GRAMMAR bytes above it.
+ *
+ * ADR-0178 cl.3 / SPEC-R30 — `authoringSurface` is the 8th, additive parameter, the persona's OWN
+ * authoring modality gate: absent/`false` composes ZERO bytes (byte-identical to before this capability
+ * existed, in every mode — every existing caller passes at most 7 arguments and is unaffected), `true`
+ * appends the `personaPatch` arm's host-owned mechanics teaching. It is orthogonal to `mode`, to
+ * `a2uiEnabled`, and to the genui axis: an authoring conversation is about the CONFIGURATION of another
+ * agent, not about which surface kind this turn paints.
  */
 export function buildSystemPrompt(
   catalog: Catalog,
@@ -334,6 +363,7 @@ export function buildSystemPrompt(
   personaSystem?: string,
   genui?: GenuiSurfaceConfig,
   a2uiEnabled?: boolean,
+  authoringSurface?: boolean,
 ): string {
   const a2uiOn = a2uiEnabled !== false // absent ⇒ on — the zero-regression default (Decision precedent)
   return (
@@ -348,6 +378,7 @@ export function buildSystemPrompt(
         miniSkillsBlock(miniSkillsFor(mode, miniSkills ?? []))
       : '') +
     genuiBlock(genui, a2uiOn) +
+    authoringBlock(authoringSurface) +
     personaBlock(personaSystem)
   )
 }
