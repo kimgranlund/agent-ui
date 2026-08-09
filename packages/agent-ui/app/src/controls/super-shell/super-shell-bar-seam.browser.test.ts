@@ -200,6 +200,28 @@ describe('ADR-0166 cl.1/cl.2 — the frame inserts no space and each bar OWNS it
     }
   })
 
+  it('GH #626 — a FULL-HEIGHT child can still stretch to the bar\'s edges (the other half of Kim\'s ruling)', () => {
+    // Kim ruled FILL + CENTRE CHILDREN: short content centres (probe above), AND a child that wants the
+    // full height can still take it. Both halves need pinning, because the obvious way to satisfy the
+    // first half destroys the second — `align-items: center` on a ROW centres short content but makes a
+    // full-height child IMPOSSIBLE, since a centred flex item never stretches. The shipped
+    // `flex-direction: column; justify-content: center` keeps both: centring is `justify-content` on the
+    // main axis, so it yields to a child that claims main-axis space with `flex: 1`.
+    // (`block-size: 100%` resolves too — `bar-content` has a definite height once stretched — but
+    // `flex: 1` is the idiom this pins, since it composes with sibling children.)
+    const el = mount(['header', 'content', 'footer'])
+    const bar = q(el, '[data-part="bar"][data-bar="header"]')
+    const content = q(bar, '[data-part="bar-content"]')
+    const authored = q(content, '[data-slot]')
+    authored.style.flex = '1'
+    const contentBox = content.getBoundingClientRect()
+    const authoredBox = authored.getBoundingClientRect()
+    // Anti-vacuous: bar-content must itself be filling, or "child fills bar-content" proves nothing about
+    // reaching the BAR's edges.
+    expect(Math.abs(contentBox.height - bar.clientHeight), 'bar-content is itself filling the bar').toBeLessThanOrEqual(0.5)
+    expect(Math.abs(authoredBox.height - contentBox.height), 'an opted-in child reaches the full height').toBeLessThanOrEqual(0.5)
+  })
+
   it('GH #626 — the side toggles do NOT stretch with it (why this is align-self, not align-items on the bar)', () => {
     // The reason the fix lives on `bar-content` rather than flipping the bar to `align-items: stretch`.
     // A toggle is a centred square affordance; stretching it to a tall bar is a defect, not a fix. This
