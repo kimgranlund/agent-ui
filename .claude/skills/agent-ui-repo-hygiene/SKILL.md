@@ -58,7 +58,7 @@ can hold.
   degrade with a visible SKIP, never a FATAL (scribe's doc_lint simply doesn't speak this repo's
   dialect; that's a boundary, not a bug to "fix" docs against).
 
-## The campaign's own failure modes (both command-composition, zero judgment errors)
+## The campaign's own failure modes (command-composition and merge mechanics, zero judgment errors)
 
 - **Gate commands `&&`-chain into the commit** — a `;` shipped a red typecheck.
 - **git add aborts the WHOLE command on one bad pathspec**, and `2>/dev/null` turns that into a
@@ -71,7 +71,8 @@ can hold.
   entries into ONE object via duplicate keys — still valid JSON, so `json.load` passed; only the
   sitemap byte-identity gate (`site/lib/sitemap.test.ts`) caught the vanished entry. After ANY
   conflict in the registration surfaces (`site-manifest.json` · sitemaps · `llms.txt`), run
-  `node scripts/generate-sitemap.mjs` and let the drift gates judge — parseability proves nothing.
+  `node scripts/generate-sitemap.mjs` and `node scripts/generate-llms-full.mjs`, then let the
+  drift gates judge — parseability proves nothing.
 
 ## When an external wave lands mid-campaign
 
