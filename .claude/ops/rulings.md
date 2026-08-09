@@ -23,10 +23,36 @@ Re-confirmed by Kim 2026-08-09. `friendlies.json` policy block is the canonical 
 
 Tracker stays open; capture `gh pr merge`'s verbatim output at the next survivor before manual
 cleanup. Best-fitting variable so far: branch checked out in a linked worktree at merge time
-(#622) vs. not checked out anywhere (#618–#621, clean). Full evidence: #613's 2026-08-09 comment.
+(#622) vs. not checked out anywhere (#618–#621, #625, clean). Full evidence: #613's 2026-08-09
+comment.
+
+**Amendment 2026-08-09 (third sweep):** a survivor classification must run `git fetch --prune`
+first. `git branch -r` alone can show a stale LOCAL remote-tracking ref for an already-deleted
+remote branch (hit this firing on `origin/task/624-nav-polish`, PR #625 — traced to a stale ref,
+not a real survivor, once pruned). Treating an unpruned ref as a survivor would misattribute a
+clean ship as a #613 repeat.
 
 ## ADR harvest confirm — RULED 2026-08-09: harvest all three
 
 ADR-0173 → new reference file in `agent-ui-component-standards` · ADR-0174 → new skill (a2ui
 producer meta-line/envelope architecture, narrow scope) · ADR-0175 → new reference file in
 `agent-ui-component-design`. Dispatched 2026-08-09; adr-queue.json rows advance on landing.
+
+## Evidence write-backs — RULED 2026-08-09: chore-lead's landing leg owns them
+
+Dated evidence comments on tracker issues (e.g. #613) are part of chore-lead's close-out, same as
+its ops-state landing: seats report evidence up, chore-lead posts. Agent-definition encode rides
+the existing nonoun-plugins follow-up. First instance posted by the host (issue #613, 2026-08-09).
+
+## #613 root-cause test — RULED 2026-08-09: deliberate test (replaces wait-for-natural)
+
+One throwaway PR merged while its branch is checked out in a linked worktree; verbatim
+`gh pr merge` output captured to #613. Also ruled same round: the 07fc618 ops commit rides #626's
+PR (no cherry-pick), and the 17 stale gitignore rules get trimmed on a small PR after #626 ships.
+
+## #613 CLOSED root-caused 2026-08-09 — the worktree-held-branch merge rule
+
+`gh pr merge --delete-branch` aborts before the REMOTE deletion when the branch is checked out in
+any linked worktree (local delete fails → terminal). Practice rule: reap the branch's worktree
+BEFORE a --delete-branch merge, or delete the remote branch by hand after. Proven by the PR #627
+deliberate test (verbatim output on #613). repo-cleaner's sweep stays the safety net.

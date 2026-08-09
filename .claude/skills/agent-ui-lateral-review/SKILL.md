@@ -118,7 +118,34 @@ TKT-0046 proved single-context works for one axis) — the phases are vehicle-ne
   (tokens.md §Consumption invariants owns the law; the fleet was swept clean, 9 files/22 reads); the
   sanctioned direct-read list stays ring/motion/`--ui-control-line-height` · `ui-command-modal`'s
   search is §1b's DEGENERATE sixth member (TKT-0068 item 4, Kim-ruled): permanently on the focus row
-  (always-focused surface), ring suppressed by ratified deviation.
+  (always-focused surface), ring suppressed by ratified deviation · **(GAP, survey 2026-08-09 →
+  RESOLVED by GH #626, Kim-ruled, no ADR — built under GH #543's rail precedent):** canon was silent on
+  who owns a BAR's inline inset and three mechanisms had diverged — `ui-super-shell`'s bar owned
+  `padding-inline: calc(module / 3)`, the docs site copy-pasted `min(64rem, 100% - 3rem)` into four
+  rules, and `chat-shell` reused a BLOCK-axis seam token for an INLINE inset because the two numbers
+  happened to match. Resolution: **a bar is a padding-less RAIL (background + seam only); its CONTENTS
+  own the inset, read from `--ui-bar-inline-inset`** — the fleet's first deliberately cross-component
+  `--ui-*` role, in shared `dimensions.css` at the `--md-sys-space-xl` (24px) stop. Do not flag a bar
+  with zero inline padding, and do not flag a content rule reading `--ui-bar-inline-inset` from outside
+  its own `--ui-{name}-*` chain: this role is a sanctioned direct read alongside ring/motion (TKT-0066
+  item 5's list), because its whole job is coordinating boxes that belong to DIFFERENT owners. Two
+  controls were surveyed and deliberately NOT chained — `ui-status-stream`'s header pad and `ui-table`'s
+  footer pad — see the ledger note under §Standing due.
+- **Ledger — the two bar-inset NON-chains (GH #626, recorded so a re-sweep does not re-open them):**
+  the 2026-08-09 survey called `ui-status-stream`'s header pad and `ui-table`'s footer pad "bespoke
+  island tokens". Measured at build time, that premise was already partly stale: BOTH are declared off
+  the `--md-sys-space-*` ramp today (`--ui-status-stream-header-pad: var(--md-sys-space-xs)
+  var(--md-sys-space-sm)`, `--ui-table-footer-pad-block: var(--md-sys-space-sm)`), so neither is a raw
+  literal. Neither was chained to `--ui-bar-inline-inset`, for reasons that are about the role, not
+  effort. **`ui-table`:** its footer pad is BLOCK-axis (`padding-block-start`); an inline-inset role
+  cannot supply a block value, and forcing the name across axes would make the role mean "any bar-ish
+  spacing", which is how a shared token stops coordinating anything. **`ui-status-stream`:** its header
+  is control-internal chrome inside a 16rem-floor strip, and its 8px inline pad's job is tracking the
+  ENTRY rail beside it, not a frame-spanning bar; the shared role is a 24px reading-column value, so
+  chaining it would triple the inset and desync the header from the entries below — a visual regression
+  wearing a unification's clothes. The distinction the role actually draws: `--ui-bar-inline-inset`
+  coordinates boxes owned by DIFFERENT parties across a component boundary. A control's own chrome and
+  its own content are one party and need no shared term.
 - **Standing due:** entry controls were LAST swept (TKT-0046) under the superseded border-only law —
   §1b conformance for text-field/textarea/select/combo-box/composer was proven by TKT-0062 itself, but
   any OTHER control with an editable/entry surface has never been checked against §1b.

@@ -105,7 +105,11 @@
      the box above it — no outer margin — while the visible tab row still starts the same 6px lower.
      Same `/3` value, so agent-admin's rendered spacing (the −12px, MEASURED by the REV 2026-07-30 and
      ACCEPTED by Kim in the GH #380 Findings comment, 2026-07-31) is unchanged: `margin(6) + box(37)`
-     and `box(37 + padding 6)` are the same 43px footprint. */
+     and `box(37 + padding 6)` are the same 43px footprint.
+     GH #626 — this is a BLOCK-axis seam and nothing else. It briefly had a second, inline-axis consumer
+     (chat-shell.css's narrow-tabs `padding-inline`, GH #575) that reused it only because `/3` numerically
+     equalled the bar's then-`padding-inline`; that coincidence ended when the bar became a padding-less
+     rail, and that consumer now reads `--ui-bar-inline-inset` — the role it actually meant. */
   --ui-super-shell-narrow-tabs-seam: calc(var(--ui-super-shell-module) / 3);
 }
 
@@ -187,8 +191,19 @@
     min-block-size: var(--ui-super-shell-bar-size);
     box-sizing: border-box;
     background: var(--ui-super-shell-surface);
-    padding-inline: calc(var(--ui-super-shell-module) / 3);
   }
+  /* GH #626 — the bar carries NO `padding-inline`. It is a RAIL: background + seam, edge-to-edge, and
+     its CONTENTS own every inset (`ui-tabs`' tablist precedent, GH #543, generalised). The retired
+     `padding-inline: calc(var(--ui-super-shell-module) / 3)` (6px) was a third, uncoordinated inset
+     mechanism: content nested in `bar-content` started 6px further in than the same consumer's content
+     in `canvas` directly below, which is exactly the docs site's pager↔footer misalignment. It also
+     produced ADR-0166's deferred "sliver" — a consumer painting its own background on the bar's content
+     let the bar's `--ui-super-shell-surface` show through at both padded extremes. With no padding
+     there are no padded extremes, so that artifact is structurally gone rather than repainted over.
+     `bar-content` deliberately gets no padding either: the sliver comes back the moment ANY box between
+     the bar edge and the authored content insets, so the inset must live on the authored content itself,
+     read from `--ui-bar-inline-inset` (shared `dimensions.css`). A consumer wanting the old flush-toggle
+     behaviour changed nothing; a consumer relying on the 6px adds the token to its own content rule. */
 
   /* ADR-0166 cl.2 — each bar draws the seam on its OWN bar-facing edge. Per-side selectors, not a
      blanket `[data-part='bar']` rule: `header` and `footer` are the part's only two consumers
@@ -202,9 +217,36 @@
      content would shrink-wrap and leave the rest of the bar visibly empty; regression measured on the
      docs site's real header/footer, GH #90). `min-inline-size:0` lets the content's own children manage
      overflow (e.g. a `justify-content:space-between` row) instead of forcing the bar wider than the shell. */
+  /* GH #626 (Kim, 2026-08-09) — `align-self: stretch` is the BLOCK-axis mirror of the `flex: 1 1 auto`
+     above, and it exists for the same reason. The bar sizes off `min-block-size`, so it is routinely
+     TALLER than the content it holds — at its 54px default with a single text row, or grown past that
+     minimum by a taller sibling (a side toggle) or a consumer repointing `--ui-super-shell-bar-size`.
+     The bar's `align-items: center` then sized `bar-content` to its own content and floated it in the
+     middle, so a consumer's full-height header content (a background, a bottom-aligned row, a
+     stretch-to-fill child of its own) had no box to fill: it was laying out inside a shrink-wrapped
+     ~18px box, not the bar. Declared as `align-self` on THIS child rather than flipping the bar to
+     `align-items: stretch`: the bar's other children are the side toggles, which are centred square
+     affordances by design — stretching a 54px icon button to a 120px bar is a defect, not a fix.
+
+     The column-flex pair below is the OTHER HALF of that fill, and it is not optional (GH #626 review,
+     MEASURED: 0px top / 35px bottom in both engines, ~4.5px of live upward shift on the docs header).
+     Filling alone left this a BLOCK box, so short authored content sat at its top edge — the bar's
+     `align-items: center` used to centre the shrink-wrapped box, and once the box is full-height there
+     is nothing short left for it to centre. The centring has to move INSIDE, with the fill.
+     `column` + `justify-content: center` is chosen over `align-items: center` on a ROW precisely because
+     it changes nothing else: authored children still stack (a row would lay two header children side by
+     side), still fill the inline axis (a column's default `align-items: stretch`), and are now centred as
+     a group exactly where the bar used to put them. Net visual delta for every existing consumer: zero —
+     while a child that genuinely wants the full height can finally take it with `flex: 1`, which was not
+     expressible at all before the fill. One behavioural footnote: a flex container does not collapse its
+     children's block margins. Nothing in the fleet's bar content relies on that. */
   [data-part='bar-content'] {
     flex: 1 1 auto;
     min-inline-size: 0;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 
   [data-part='middle'] {
@@ -371,7 +413,8 @@
   /* ADR-0166 cl.7 (posture exception C, the strip's half) — the strip lost the frame gap that used to
      space it, so the strip OWNS its own block-start seam. `/3` is one of R11a's named shipped fractions
      and is the one this file already uses for shell-tier breathing room that is not a full inter-card
-     gap (the bar's `padding-inline`, `pane-tabs`'s `padding-block-end`): a full `--ui-super-shell-gap`
+     gap (`pane-tabs`'s `padding-block-end`; the bar's `padding-inline` was the other until GH #626
+     retired it): a full `--ui-super-shell-gap`
      would read as an inter-card gap the strip is not (it is chrome spanning the frame, like a bar), and
      `0` would butt the strip's first tab against the box above it. Declared on the base (wide) rule
      rather than inside the narrow query because it is a static property of the strip; the strip is

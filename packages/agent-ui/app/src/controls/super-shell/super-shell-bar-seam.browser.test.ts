@@ -106,6 +106,134 @@ describe('ADR-0166 cl.1/cl.2 — the frame inserts no space and each bar OWNS it
     expect(Math.abs(middle.getBoundingClientRect().bottom - footer.getBoundingClientRect().top)).toBeLessThanOrEqual(1)
   })
 
+  it('GH #626 — a bar is a padding-less RAIL: zero inline padding, and its content box reaches both frame edges', () => {
+    // The other half of "background + seam only". ADR-0166 deferred a "sliver" — a consumer painting its
+    // own surface on bar content saw the bar's `--ui-super-shell-surface` show through at both inline
+    // extremes, because the bar's `padding-inline: calc(module / 3)` held that content 6px off each edge.
+    // #626 removed the padding rather than repainting anything, so the leak has no geometry to occur in.
+    // Longhands, never the `padding` shorthand — this file's standing rule 1 (the vacuous-pass trap).
+    const el = mount(['header', 'content', 'footer'])
+    for (const side of ['header', 'footer'] as const) {
+      const bar = q(el, `[data-part="bar"][data-bar="${side}"]`)
+      const cs = getComputedStyle(bar)
+      expect(cs.paddingInlineStart, `${side} bar padding-inline-start`).toBe('0px')
+      expect(cs.paddingInlineEnd, `${side} bar padding-inline-end`).toBe('0px')
+      // `bar-content` deliberately carries no inset either: any box between the bar edge and the authored
+      // content re-creates the sliver. The inset belongs on the authored content, off --ui-bar-inline-inset.
+      const content = q(bar, '[data-part="bar-content"]')
+      const barBox = bar.getBoundingClientRect()
+      const contentBox = content.getBoundingClientRect()
+      // The end edge is the shared one on both sides: this fixture authors no `options-*` slot, so no end
+      // toggle exists and `bar-content` runs to the bar's end edge. The start edge carries the nav toggle
+      // (a start side IS authored), so only the end edge is a clean flush assertion here.
+      expect(Math.abs(contentBox.right - barBox.right), `${side} bar-content reaches the bar's end edge`).toBeLessThanOrEqual(0.5)
+    }
+  })
+
+  it('GH #626 — with NO side toggles the bar content spans the frame edge-to-edge on BOTH inline edges', () => {
+    // The toggle-free census case (a shell authoring only `content`), where both edges are assertable and
+    // the sliver claim is total. Negative control, by hand: restore `padding-inline: calc(module / 3)` on
+    // `[data-part='bar']` and both offsets read 6, not 0.
+    const el = mount(['header', 'content'])
+    const bar = q(el, '[data-part="bar"][data-bar="header"]')
+    expect(bar.querySelector('[data-part="side-toggle"]'), 'the fixture is genuinely toggle-free').toBeNull()
+    const barBox = bar.getBoundingClientRect()
+    const contentBox = q(bar, '[data-part="bar-content"]').getBoundingClientRect()
+    expect(Math.abs(contentBox.left - barBox.left), 'bar-content start edge').toBeLessThanOrEqual(0.5)
+    expect(Math.abs(contentBox.right - barBox.right), 'bar-content end edge').toBeLessThanOrEqual(0.5)
+  })
+
+  it('GH #626 — bar-content FILLS the bar\'s block axis at the 54px minimum, on both bars', () => {
+    // The bar sizes off `min-block-size`, so it is routinely taller than the text it holds; the bar's
+    // `align-items: center` used to shrink-wrap `bar-content` to that text (~18px) and float it, leaving
+    // a consumer's full-height header content laying out inside a box that was not the bar.
+    // `clientHeight` is read deliberately: it IS the content-box block-size (padding is zero here, border
+    // excluded), so this needs no border arithmetic and stays correct if the seam width is repointed.
+    const el = mount(['header', 'content', 'footer'])
+    for (const side of ['header', 'footer'] as const) {
+      const bar = q(el, `[data-part="bar"][data-bar="${side}"]`)
+      const content = q(bar, '[data-part="bar-content"]')
+      // Anti-vacuous: the bar must genuinely be TALLER than the text, or "content fills bar" is satisfied
+      // by a bar that shrank to its content and the assertion below proves nothing.
+      expect(bar.clientHeight, `${side} bar is taller than its text row`).toBeGreaterThan(40)
+      expect(Math.abs(content.getBoundingClientRect().height - bar.clientHeight), `${side} bar-content fills the bar's content box`).toBeLessThanOrEqual(0.5)
+    }
+  })
+
+  it('GH #626 — bar-content still fills when the bar GROWS PAST its minimum (a taller sibling toggle)', () => {
+    // Kim's stated case. The growth has to come from a SIBLING, not from the authored content itself:
+    // tall authored content would make `bar-content` tall anyway and the probe would pass with or without
+    // the fix. A side toggle forced past 54px is the discriminating fixture — the bar grows to match it
+    // while `bar-content` still holds one short text row.
+    // Negative control, by hand: drop `align-self: stretch` from `[data-part='bar-content']` and this
+    // reads the text row's own ~18px against a 100px bar.
+    const el = mount(['header', 'nav-pane', 'content'])
+    const bar = q(el, '[data-part="bar"][data-bar="header"]')
+    const toggle = q(bar, '[data-part="side-toggle"]')
+    toggle.style.blockSize = '100px'
+    const content = q(bar, '[data-part="bar-content"]')
+    expect(bar.clientHeight, 'the bar genuinely grew past its 54px minimum').toBeGreaterThan(90)
+    expect(Math.abs(content.getBoundingClientRect().height - bar.clientHeight), 'bar-content fills the GROWN bar').toBeLessThanOrEqual(0.5)
+  })
+
+  it('GH #626 — SHORT bar content stays vertically CENTRED (the fill must not top-anchor it)', () => {
+    // The regression the #626 review caught (MEDIUM, measured on the live docs header): making
+    // `bar-content` fill the bar is only half the contract. Filling alone left it a BLOCK box, so short
+    // authored content sat at its top edge — a ~4.5px upward shift of every bar's content on every
+    // super-shell surface, because the bar's `align-items: center` used to centre the shrink-wrapped
+    // box and no longer had a short box to centre.
+    // Asserted as equal top and bottom gaps rather than a pinned offset, so it survives a bar-size or
+    // type-scale repoint. Negative control, by hand: drop `justify-content: center` from
+    // `[data-part='bar-content']` and the top gap goes to 0 while the bottom keeps the slack.
+    const el = mount(['header', 'content', 'footer'])
+    for (const side of ['header', 'footer'] as const) {
+      const bar = q(el, `[data-part="bar"][data-bar="${side}"]`)
+      const content = q(bar, '[data-part="bar-content"]')
+      const authored = q(content, '[data-slot]')
+      const contentBox = content.getBoundingClientRect()
+      const authoredBox = authored.getBoundingClientRect()
+      const gapTop = authoredBox.top - contentBox.top
+      const gapBottom = contentBox.bottom - authoredBox.bottom
+      // Anti-vacuous: there must BE slack to distribute, or "centred" is trivially true.
+      expect(gapTop + gapBottom, `${side} — the authored row is genuinely shorter than the bar`).toBeGreaterThan(8)
+      expect(Math.abs(gapTop - gapBottom), `${side} — short content centred, not top-anchored`).toBeLessThanOrEqual(0.5)
+    }
+  })
+
+  it('GH #626 — a FULL-HEIGHT child can still stretch to the bar\'s edges (the other half of Kim\'s ruling)', () => {
+    // Kim ruled FILL + CENTRE CHILDREN: short content centres (probe above), AND a child that wants the
+    // full height can still take it. Both halves need pinning, because the obvious way to satisfy the
+    // first half destroys the second — `align-items: center` on a ROW centres short content but makes a
+    // full-height child IMPOSSIBLE, since a centred flex item never stretches. The shipped
+    // `flex-direction: column; justify-content: center` keeps both: centring is `justify-content` on the
+    // main axis, so it yields to a child that claims main-axis space with `flex: 1`.
+    // (`block-size: 100%` resolves too — `bar-content` has a definite height once stretched — but
+    // `flex: 1` is the idiom this pins, since it composes with sibling children.)
+    const el = mount(['header', 'content', 'footer'])
+    const bar = q(el, '[data-part="bar"][data-bar="header"]')
+    const content = q(bar, '[data-part="bar-content"]')
+    const authored = q(content, '[data-slot]')
+    authored.style.flex = '1'
+    const contentBox = content.getBoundingClientRect()
+    const authoredBox = authored.getBoundingClientRect()
+    // Anti-vacuous: bar-content must itself be filling, or "child fills bar-content" proves nothing about
+    // reaching the BAR's edges.
+    expect(Math.abs(contentBox.height - bar.clientHeight), 'bar-content is itself filling the bar').toBeLessThanOrEqual(0.5)
+    expect(Math.abs(authoredBox.height - contentBox.height), 'an opted-in child reaches the full height').toBeLessThanOrEqual(0.5)
+  })
+
+  it('GH #626 — the side toggles do NOT stretch with it (why this is align-self, not align-items on the bar)', () => {
+    // The reason the fix lives on `bar-content` rather than flipping the bar to `align-items: stretch`.
+    // A toggle is a centred square affordance; stretching it to a tall bar is a defect, not a fix. This
+    // pins that the bar's own `align-items: center` still governs its other children.
+    const el = mount(['header', 'nav-pane', 'content'])
+    const bar = q(el, '[data-part="bar"][data-bar="header"]')
+    bar.style.minBlockSize = '120px'
+    const toggle = q(bar, '[data-part="side-toggle"]')
+    expect(bar.clientHeight, 'the bar is genuinely tall for this probe').toBeGreaterThan(110)
+    expect(toggle.getBoundingClientRect().height, 'the toggle stays its own size, centred').toBeLessThan(bar.clientHeight - 10)
+  })
+
   it('cl.2 — the seam is drawn on the BAR-FACING edge only (a header has no top hairline, a footer no bottom)', () => {
     const el = mount(['header', 'content', 'footer'])
     expect(getComputedStyle(q(el, '[data-bar="header"]')).borderBlockStartWidth).toBe('0px')
