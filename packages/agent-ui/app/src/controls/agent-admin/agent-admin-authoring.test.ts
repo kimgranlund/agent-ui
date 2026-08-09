@@ -432,13 +432,17 @@ describe('the PROSE arm keeps per-context history — agentSurfaceTurn unarmed, 
 })
 
 // ── LLD-C9 (S4-a, GH #646) — the try-it bar: the REAL affordance, not the `setModeSeam` stand-in above ──
-describe('the try-it bar — the visible flip, driving the SAME seam the round trip above already proved (LLD-C9)', () => {
-  function bar(el: UIAgentAdminElement): { bar: HTMLElement; authoringBtn: HTMLElement; testBtn: HTMLElement } {
-    const barEl = el.querySelector('[data-part="try-it"]') as HTMLElement
+// GH #646 REOPENED (pixel-truth, 2026-08-09, Kim's reopen comment): the bar is the fleet `ui-tabs`
+// control now — Authoring/Try it are `ui-tab`s, not `ui-button`s. These probes pin the `ui-tabs`
+// selection contract (`selected`/`select` — ADR-0019, tabs.md) the same way `agent-admin.test.ts`'s
+// pane-tabs probe already pins the section strip's, not button anatomy (`aria-pressed`).
+describe('the try-it bar — the visible flip, driving the SAME seam the round trip above already proved (LLD-C9, GH #646)', () => {
+  function bar(el: UIAgentAdminElement): { bar: HTMLElement & { selected: string }; authoringTab: HTMLElement; testTab: HTMLElement } {
+    const barEl = el.querySelector('[data-part="try-it"]') as HTMLElement & { selected: string }
     return {
       bar: barEl,
-      authoringBtn: barEl.querySelector('[data-part="try-it-authoring"]') as HTMLElement,
-      testBtn: barEl.querySelector('[data-part="try-it-test"]') as HTMLElement,
+      authoringTab: barEl.querySelector('[data-part="try-it-authoring"]') as HTMLElement,
+      testTab: barEl.querySelector('[data-part="try-it-test"]') as HTMLElement,
     }
   }
 
@@ -451,27 +455,24 @@ describe('the try-it bar — the visible flip, driving the SAME seam the round t
     expect(bar(el).bar.hasAttribute('hidden')).toBe(false)
   })
 
-  it('aria-pressed opens on Authoring and clicking Try it / Authoring flips both the attribute and which conversation is hidden', async () => {
+  it('`selected` opens on Authoring and clicking Try it / Authoring flips both the strip selection and which conversation is hidden', async () => {
     const { el } = mountAdmin({ store: personaStore(), authoringStore: personaStore({ [SURFACE_AUTHORING_KEY]: true }) })
     await whenFlushed()
-    const { authoringBtn, testBtn } = bar(el)
+    const { bar: strip, authoringTab, testTab } = bar(el)
     const authoring = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
     const test = el.querySelector('[data-part="chat-stack"] > ui-conversation:not([data-part="authoring-conversation"])') as HTMLElement
 
-    expect(authoringBtn.getAttribute('aria-pressed')).toBe('true')
-    expect(testBtn.getAttribute('aria-pressed')).toBe('false')
+    expect(strip.selected).toBe('authoring')
     expect(authoring.hasAttribute('hidden')).toBe(false)
     expect(test.hasAttribute('hidden')).toBe(true)
 
-    testBtn.click()
-    expect(authoringBtn.getAttribute('aria-pressed')).toBe('false')
-    expect(testBtn.getAttribute('aria-pressed')).toBe('true')
+    testTab.click()
+    expect(strip.selected).toBe('test')
     expect(authoring.hasAttribute('hidden')).toBe(true)
     expect(test.hasAttribute('hidden')).toBe(false)
 
-    authoringBtn.click()
-    expect(authoringBtn.getAttribute('aria-pressed')).toBe('true')
-    expect(testBtn.getAttribute('aria-pressed')).toBe('false')
+    authoringTab.click()
+    expect(strip.selected).toBe('authoring')
     expect(authoring.hasAttribute('hidden')).toBe(false)
     expect(test.hasAttribute('hidden')).toBe(true)
   })
@@ -482,12 +483,12 @@ describe('the try-it bar — the visible flip, driving the SAME seam the round t
     const { el } = mountAdmin({ store: draft, authoringStore: builder, events: [{ kind: 'note', note: 'ok' }] })
     await whenFlushed()
     const storeBefore = el.store
-    const { authoringBtn, testBtn } = bar(el)
+    const { authoringTab, testTab } = bar(el)
 
     await submit(el, 'interview turn', 'authoring')
-    testBtn.click()
+    testTab.click()
     await submit(el, 'test turn', 'test')
-    authoringBtn.click()
+    authoringTab.click()
     await whenFlushed()
 
     expect(el.store).toBe(storeBefore)
@@ -503,7 +504,7 @@ describe('the try-it bar — the visible flip, driving the SAME seam the round t
     const builder = personaStore({ [SURFACE_AUTHORING_KEY]: true })
     const { el } = mountAdmin({ store: draft, authoringStore: builder, events: [{ kind: 'patch', patch: PATCH }] })
     await whenFlushed()
-    bar(el).testBtn.click()
+    bar(el).testTab.click()
     await submit(el, 'hello draft', 'test')
 
     expect(draft.get('name')).toBe('Untitled agent')

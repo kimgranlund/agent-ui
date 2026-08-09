@@ -1414,55 +1414,177 @@ describe('ui-agent-admin cross-engine smoke — the guided-authoring flow (ADR-0
 
 // ── LLD-C9 (S4-a, GH #646) — the try-it bar, in BOTH real engines ────────────────────────────────────────
 // jsdom proves the flip's LOGIC (agent-admin-authoring.test.ts). What only a real engine can prove is that
-// the bar genuinely PAINTS — real boxes for both buttons, its content read off the fleet's shared
+// the bar genuinely PAINTS — real boxes for both tabs, its content read off the fleet's shared
 // `--ui-bar-inline-inset` role (GH #626) rather than flush against the bar's own edge — and that clicking
 // it visually swaps which conversation occupies the canvas, the same geometry the S3 seam-driven smoke
 // above already proved, now from the real affordance.
+// GH #646 REOPENED (pixel-truth, 2026-08-09) — the bar is the fleet `ui-tabs` control (Authoring/Try it
+// are `ui-tab`s); these probes pin the `ui-tabs` selection contract (`.selected`) rather than button
+// anatomy (`aria-pressed`).
 describe('ui-agent-admin cross-engine smoke — the try-it bar (ADR-0178 cl.5 / LLD-C9, GH #646)', () => {
-  function bar(el: UIAgentAdminElement): { bar: HTMLElement; authoringBtn: HTMLElement; testBtn: HTMLElement } {
-    const barEl = el.querySelector('[data-part="try-it"]') as HTMLElement
+  function bar(el: UIAgentAdminElement): { bar: HTMLElement & { selected: string }; authoringTab: HTMLElement; testTab: HTMLElement } {
+    const barEl = el.querySelector('[data-part="try-it"]') as HTMLElement & { selected: string }
     return {
       bar: barEl,
-      authoringBtn: barEl.querySelector('[data-part="try-it-authoring"]') as HTMLElement,
-      testBtn: barEl.querySelector('[data-part="try-it-test"]') as HTMLElement,
+      authoringTab: barEl.querySelector('[data-part="try-it-authoring"]') as HTMLElement,
+      testTab: barEl.querySelector('[data-part="try-it-test"]') as HTMLElement,
     }
   }
 
-  /** The USED px value of `--ui-bar-inline-inset` where `host` sits — the `_page-bar-inset.browser.test.ts`
-   *  (GH #626) resolution idiom: an unregistered custom property computes to its substituted token stream,
-   *  which never string-equals a used `padding` value, so a throwaway probe element resolves it for real. */
-  function resolvedBarInset(host: HTMLElement): number {
+  /** The USED px value of `--ui-agent-admin-shell-gutter` where `host` sits — the `_page-bar-inset.
+   *  browser.test.ts` (GH #626) resolution idiom: an unregistered custom property computes to its
+   *  substituted token stream, which never string-equals a used `padding` value, so a throwaway probe
+   *  element resolves it for real. GH #646 follow-up #2 — this used to resolve `--ui-bar-inline-inset`
+   *  (the bar's own, now-retracted padding); the strip's real inset is the AMBIENT `[data-part='canvas']`
+   *  gutter now (see the CSS banner), so this probe reads that token instead. */
+  function resolvedCanvasGutter(host: HTMLElement): number {
     const probe = document.createElement('div')
-    probe.style.paddingInline = 'var(--ui-bar-inline-inset)'
+    probe.style.paddingInline = 'var(--ui-agent-admin-shell-gutter)'
     host.append(probe)
     const used = getComputedStyle(probe).paddingInlineStart
     probe.remove()
-    expect(used, 'the shared bar-inset role resolves').not.toBe('0px')
+    expect(used, 'the shared canvas-gutter role resolves').not.toBe('0px')
     return parseFloat(used)
   }
 
-  it('unarmed the bar contributes no box at all; arming paints it with two genuinely on-screen buttons', async () => {
+  it('unarmed the bar contributes no box at all; arming paints it with two genuinely on-screen tabs', async () => {
     const { el } = mountAgentAdmin()
     await el.updateComplete
     expect(bar(el).bar.getBoundingClientRect().height, 'hidden ⇒ zero box').toBe(0)
 
     el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
     await el.updateComplete
-    const { bar: barEl, authoringBtn, testBtn } = bar(el)
+    const { bar: barEl, authoringTab, testTab } = bar(el)
     const barBox = barEl.getBoundingClientRect()
     expect(barBox.width).toBeGreaterThan(0)
     expect(barBox.height).toBeGreaterThan(0)
-    for (const btn of [authoringBtn, testBtn]) {
-      const box = btn.getBoundingClientRect()
+    for (const tab of [authoringTab, testTab]) {
+      const box = tab.getBoundingClientRect()
       expect(box.width).toBeGreaterThan(0)
       expect(box.height).toBeGreaterThan(0)
     }
-    // displacement/content-placement (the #626 gold pattern, applied locally): the first button's content
-    // edge sits INSET from the bar's own edge by the shared bar-inline-inset role, not flush against it —
-    // anti-vacuous, since a flush layout would make this delta 0 and silently pass a `>=0` assertion.
-    const inset = resolvedBarInset(barEl)
+    // displacement/content-placement (the #626 gold pattern, applied locally) — GH #646 follow-up #2:
+    // the strip itself carries NO padding of its own now (byte-identical to the section strip, see the
+    // CSS banner); the first tab's content edge sits inset from the AMBIENT `[data-part='canvas']` box's
+    // own edge instead, by the SAME `--ui-agent-admin-shell-gutter` role the section strip's own ambient
+    // `[data-part='pane']` wrapper uses — anti-vacuous, since a flush layout would make this delta 0 and
+    // silently pass a `>=0` assertion.
+    const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
+    const inset = resolvedCanvasGutter(canvas)
     expect(inset, 'the resolved inset is real slack, not a collapsed token').toBeGreaterThan(4)
-    expect(Math.abs(authoringBtn.getBoundingClientRect().left - (barBox.left + inset)), 'button content starts one inset in from the bar edge').toBeLessThanOrEqual(0.5)
+    expect(Math.abs(authoringTab.getBoundingClientRect().left - (canvas.getBoundingClientRect().left + inset)), 'tab content starts one ambient canvas-gutter in from the CANVAS edge, not the bar\'s own').toBeLessThanOrEqual(0.5)
+  })
+
+  // GH #646 follow-up (Kim's live-surface pass, 2026-08-09) — the bar used to paint its OWN
+  // `border-block-end` on top of `ui-tabs`' own tablist divider, doubling the hairline right above the
+  // conversation card's rounded top edge (the same "nothing left to divide" defect GH #382 retracted an
+  // overlay divider for). ONE separator maximum: the tablist part draws it, the bar host draws none.
+  it('paints exactly ONE separator line below the strip — the tablist\'s own divider, not a second one on the bar host', async () => {
+    const { el } = mountAgentAdmin()
+    await el.updateComplete
+    el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
+    await el.updateComplete
+    const { bar: barEl } = bar(el)
+    const tablist = barEl.querySelector('[data-part="tablist"]') as HTMLElement
+
+    expect(getComputedStyle(barEl).borderBottomWidth, 'the bar host itself paints no border — the doubled-hairline defect').toBe('0px')
+    expect(parseFloat(getComputedStyle(tablist).borderBottomWidth), 'the tablist part still paints its own real divider').toBeGreaterThan(0)
+  })
+
+  // GH #646 follow-up #2 (Kim's live-surface pass, 2026-08-09) — the try-it strip used to carry its OWN
+  // `padding-inline`/`padding-block` (the `--ui-bar-inline-inset`/card-pad shape, on the WRONG premise
+  // that it sits flush on the shell's raw edge like `narrow-tabs`): `chat-stack` actually nests inside
+  // super-shell's own `[data-part='canvas']` box, which THIS FILE already pads with the SAME
+  // `--ui-agent-admin-shell-gutter` token `[data-part='pane']` uses for the section strip — so the
+  // try-it strip's own padding was stacking ON TOP of that ambient inset, reading measurably
+  // tighter/smaller than the section strip. Fixed by dropping the strip's own padding entirely (zero,
+  // byte-identical to `ui-tabs[data-part='pane-tabs']`). Pinned here so the two strips' core metrics can
+  // never silently drift apart again — anti-vacuous: both strips mounted, non-collapsed, real values.
+  //
+  // GH #646 follow-up #4 (Kim, 2026-08-09) — a component-checker finding: own-box padding equality is
+  // NOT the pixel-truth target. `pane-tabs` and the try-it strip sit in DIFFERENT ancestor columns (the
+  // wide options-pane vs. the canvas) — two strips could resolve the SAME 12px own-ambient-inset and
+  // still land at a different SCREEN x, which is what Kim actually judges. The load-bearing anchor is
+  // the AUTHORING CONVERSATION CARD's own left edge (the visible card the try-it strip sits directly
+  // above): the try-it tab's screen-x must equal it, measured directly (`getBoundingClientRect().x`),
+  // not inferred from two different ambient boxes. `pane-tabs` and try-it are NOT vertically stacked at
+  // wide (different columns), so a cross-strip screen-x comparison between THEM has no meaning here —
+  // that comparison belongs to the narrow case below, where both strips share one column. The
+  // ambient-delta leg stays as a secondary, WITHIN-COLUMN sanity check (pane-tabs' own strip vs its own
+  // pane edge) — real, useful, just not the pixel-truth anchor itself.
+  it('renders with the SAME core metrics as the admin\'s own section-tab strip, and the try-it tab lands EXACTLY on the conversation card\'s own edge (GH #646 follow-up #2/#4)', async () => {
+    const { el } = mountAgentAdmin()
+    await el.updateComplete
+    el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
+    await el.updateComplete
+
+    const { bar: tryItStrip, authoringTab: tryItTab } = bar(el)
+    const tryItTablist = tryItStrip.querySelector('[data-part="tablist"]') as HTMLElement
+    // The authoring conversation is the one VISIBLE by default (entry mode is 'authoring') — the real
+    // card the try-it strip sits directly above; the test conversation is `hidden` here and would
+    // measure a zero box.
+    const card = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
+
+    const pane = el.querySelector('[data-slot-name="options-pane"]') as HTMLElement
+    const sectionStrip = pane.querySelector('[data-part="pane-tabs"]') as HTMLElement
+    const sectionTab = pane.querySelector('[data-part="pane-tab"]') as HTMLElement
+    const sectionTablist = sectionStrip.querySelector('[data-part="tablist"]') as HTMLElement
+
+    expect(getComputedStyle(tryItTab).fontSize, 'tab font-size matches the section strip').toBe(getComputedStyle(sectionTab).fontSize)
+    expect(getComputedStyle(tryItTab).paddingInlineStart, 'tab inline padding matches').toBe(getComputedStyle(sectionTab).paddingInlineStart)
+    expect(getComputedStyle(tryItTablist).gap, 'inter-tab gap matches').toBe(getComputedStyle(sectionTablist).gap)
+
+    // THE pixel-truth anchor — screen-x, not an ambient-box-relative delta: the try-it tab's own left
+    // edge must equal the conversation card's own OUTER (border-box) left edge — where the card's own
+    // rounded border starts, not its content edge — the same column, real engine-measured coordinates.
+    // Anti-vacuous: a non-zero card box is asserted first, so a collapsed/zeroed layout can't pass this
+    // vacuously.
+    const cardBox = card.getBoundingClientRect()
+    expect(cardBox.width, 'the card is genuinely on screen, not a zero-size stub').toBeGreaterThan(0)
+    expect(Math.abs(tryItTab.getBoundingClientRect().x - cardBox.x), 'the try-it tab lands exactly on the conversation card\'s own left edge').toBeLessThanOrEqual(0.5)
+
+    // Secondary, within-column sanity check (not the pixel-truth anchor): the section strip's own tab
+    // still sits a real, non-zero inset in from its OWN pane's edge — the same ambient-gutter mechanism
+    // the try-it strip now shares, just measured in its own (different) column.
+    const sectionInset = sectionTab.getBoundingClientRect().left - pane.getBoundingClientRect().left
+    expect(sectionInset, 'the section strip inset is real slack, not a collapsed/zeroed token').toBeGreaterThan(4)
+  })
+
+  // GH #646 follow-up #3 (Kim, live-surface pass, 2026-08-09) — Kim's SECOND pixel read: at narrow width
+  // the visible top strip is `narrow-tabs` (Chat/Agent/Capabilities/…), not `pane-tabs` — a DIFFERENT
+  // composer (chat-shell.css), previously insetting by the fleet header-bar-content role
+  // (`--ui-bar-inline-inset`, 24px) with no header to actually track (`ui-agent-admin` composes none —
+  // chat-shell.css's own updated banner). Fixed there (chat-shell.css's header-presence split); pinned
+  // here, in the REAL composition, guarding the other direction of drift the follow-up #2 probe above
+  // does not reach (that one only exercises the WIDE `pane-tabs` strip).
+  //
+  // GH #646 follow-up #4 — upgraded to a genuine SCREEN-X equality (not an own-box delta): at narrow
+  // width `narrow-tabs`, the try-it strip, AND the conversation card all share ONE column, so their
+  // first tab / left edge must land on the exact SAME viewport x — the frame-independent comparison
+  // Kim's own pixel read actually used (the `#626` header↔footer probe's own precedent shape).
+  it('narrow-tabs strip, the try-it strip, and the conversation card ALL align on the same screen-x (GH #646 follow-up #3/#4)', async () => {
+    const { el } = mountAgentAdminAt(500)
+    await el.updateComplete
+    el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
+    await el.updateComplete
+
+    const narrowTabs = el.querySelector('[data-part="narrow-tabs"]') as HTMLElement
+    expect(getComputedStyle(narrowTabs).display, 'the narrow-tabs strip is visible at this width').not.toBe('none')
+    const narrowFirstTab = narrowTabs.querySelector('[data-part="narrow-tab"]') as HTMLElement
+    const { authoringTab: tryItTab } = bar(el)
+    const card = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
+
+    const cardBox = card.getBoundingClientRect()
+    expect(cardBox.width, 'the card is genuinely on screen, not a zero-size stub').toBeGreaterThan(0)
+    // The OUTER (border-box) edge — where the card's own rounded border starts — is the anchor, not its
+    // content edge (the follow-up #2 probe above establishes this).
+    const cardEdgeX = cardBox.x
+    const narrowX = narrowFirstTab.getBoundingClientRect().x
+    const tryItX = tryItTab.getBoundingClientRect().x
+
+    expect(Math.abs(narrowX - tryItX), 'narrow-tabs and the try-it strip align on the same screen-x').toBeLessThanOrEqual(0.5)
+    expect(Math.abs(narrowX - cardEdgeX), 'narrow-tabs aligns with the conversation card\'s own left edge').toBeLessThanOrEqual(0.5)
+    expect(Math.abs(tryItX - cardEdgeX), 'the try-it strip aligns with the conversation card\'s own left edge').toBeLessThanOrEqual(0.5)
   })
 
   it('clicking Try it / Authoring flips which conversation occupies the canvas, with real (non-collapsed) geometry both ways', async () => {
@@ -1470,28 +1592,27 @@ describe('ui-agent-admin cross-engine smoke — the try-it bar (ADR-0178 cl.5 / 
     await el.updateComplete
     el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
     await el.updateComplete
-    const { authoringBtn, testBtn } = bar(el)
+    const { bar: barEl, authoringTab, testTab } = bar(el)
     const stack = el.querySelector('[data-part="chat-stack"]') as HTMLElement
     const authoring = stack.querySelector('[data-part="authoring-conversation"]') as HTMLElement
     const test = stack.querySelector('ui-conversation:not([data-part="authoring-conversation"])') as HTMLElement
 
-    expect(authoringBtn.getAttribute('aria-pressed')).toBe('true')
+    expect(barEl.selected).toBe('authoring')
     const authoringBox = authoring.getBoundingClientRect()
     expect(authoringBox.height).toBeGreaterThan(0)
     expect(test.getBoundingClientRect().height).toBe(0)
 
-    testBtn.click()
+    testTab.click()
     await el.updateComplete
-    expect(testBtn.getAttribute('aria-pressed')).toBe('true')
-    expect(authoringBtn.getAttribute('aria-pressed')).toBe('false')
+    expect(barEl.selected).toBe('test')
     expect(authoring.getBoundingClientRect().height, 'the authoring transcript collapses to zero, not just visually dims').toBe(0)
     const testBox = test.getBoundingClientRect()
     expect(testBox.height, 'the test chat takes over the same canvas — no collapsed layout').toBeGreaterThan(0)
     expect(Math.round(testBox.height)).toBe(Math.round(authoringBox.height))
 
-    authoringBtn.click()
+    authoringTab.click()
     await el.updateComplete
-    expect(authoringBtn.getAttribute('aria-pressed')).toBe('true')
+    expect(barEl.selected).toBe('authoring')
     expect(authoring.getBoundingClientRect().height).toBeGreaterThan(0)
   })
 })

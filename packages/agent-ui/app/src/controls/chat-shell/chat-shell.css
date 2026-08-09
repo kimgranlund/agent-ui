@@ -35,8 +35,26 @@
      its content's inset onto the fleet-shared `--ui-bar-inline-inset`, so tracking the header now means
      reading that role — the same token the header content beside it reads, one axis, one concept. Keeping
      the seam here would have frozen the strip at the retired 6px while the header moved to 24px, turning
-     a by-construction guarantee into exactly the drift #575 was filed about. */
-  :scope ui-tabs[data-part='narrow-tabs'] {
+     a by-construction guarantee into exactly the drift #575 was filed about.
+     GH #646 follow-up #3 (Kim, live-surface pass, 2026-08-09) — "tracks the header's inset" presumes a
+     header EXISTS to track. `ui-agent-admin`, the strip's one live consumer, composes NO header
+     (`content` + `options-pane` only — super-shell.css:438's own GH #380 note already recorded this:
+     "the only shipped `narrow-*='tabs'` author is `ui-agent-admin`, which composes no bar at all"). GH
+     #626's `--ui-bar-inline-inset` (24px, the fleet's real-header-content role) shipped there anyway,
+     unvalidated against the headerless shape — Kim's live pass caught the result: with nothing to
+     track, the strip read visibly deeper-inset than the try-it strip directly below it, which resolves
+     the shell's own generic module-scaled rhythm instead (agent-admin.css's `--ui-agent-admin-shell-
+     gutter`, `module * 2/3`). Split the rule on header presence (the `[data-part='frame']:has(> [data-
+     bar='header'])` idiom super-shell.css already uses for the SAME fact, GH #380): a header-bearing
+     shell still tracks the header's own inset (GH #575/#626's law, unchanged, byte-identical to a header
+     consumer that exists today only in `super-shell-bar-seam.browser.test.ts`'s own fixture); a
+     headerless shell falls back to `--ui-super-shell-module * 2/3` directly — the SAME shared, generic
+     module-derived rhythm agent-admin's own ambient canvas/pane gutter happens to resolve to, without
+     this fleet-shared file reaching into any consumer-private token to get there. */
+  :scope [data-part='frame']:has(> [data-bar='header']) ui-tabs[data-part='narrow-tabs'] {
     padding-inline: var(--ui-bar-inline-inset);
+  }
+  :scope [data-part='frame']:not(:has(> [data-bar='header'])) ui-tabs[data-part='narrow-tabs'] {
+    padding-inline: calc(var(--ui-super-shell-module) * 2 / 3);
   }
 }
