@@ -698,3 +698,75 @@ describe('buildSystemPrompt feed-ask archetype vocabulary — mode-scaled (ADR-0
     }
   })
 })
+
+// ── ADR-0178 cl.1/cl.3, SPEC-R30 AC2: the personaPatch teaching — GATED, host-owned, mode-invariant ──────
+// Unlike the ask/plan mechanics above, this teaching is NOT inlined in the byte-pinned GRAMMAR constant:
+// SPEC-R30 requires it compose only under the persona's own authoring gate, as a `genuiBlock`-shaped
+// conditional segment, so every non-authoring caller's prompt stays byte-identical to before it existed.
+
+describe('buildSystemPrompt personaPatch teaching — the authoring gate (SPEC-R30 AC2 / ADR-0178 cl.1/cl.3)', () => {
+  const MARKER = 'Authoring an agent'
+  const MODES = [undefined, 'default', 'specific', 'blue-sky'] as const
+
+  it('gate ABSENT and gate FALSE both compose ZERO teaching bytes — byte-identical in every mode', () => {
+    for (const mode of MODES) {
+      const absent = buildSystemPrompt(defaultCatalog, [], mode)
+      const off = buildSystemPrompt(defaultCatalog, [], mode, undefined, undefined, undefined, undefined, false)
+      expect(absent).not.toContain(MARKER)
+      expect(off).not.toContain(MARKER)
+      expect(off).toBe(absent) // the degradation law: byte-identical to before this capability existed
+    }
+  })
+
+  it('only an explicit boolean true composes the segment — the inverse-default posture, at the composition site too', () => {
+    const on = buildSystemPrompt(defaultCatalog, [], undefined, undefined, undefined, undefined, undefined, true)
+    const off = buildSystemPrompt(defaultCatalog, [], undefined, undefined, undefined, undefined, undefined, false)
+    expect(on).toContain(MARKER)
+    expect(off).not.toContain(MARKER)
+    expect(on.length).toBeGreaterThan(off.length)
+  })
+
+  it('with the gate ON the segment is present and byte-identical in all four modes (wire mechanics are never mode-scaled)', () => {
+    const segmentOf = (prompt: string): string => prompt.slice(prompt.indexOf(MARKER))
+    const composed = MODES.map((mode) => buildSystemPrompt(defaultCatalog, [], mode, undefined, undefined, undefined, undefined, true))
+    for (const prompt of composed) expect(prompt).toContain(MARKER)
+    const first = segmentOf(composed[0]!)
+    for (const prompt of composed.slice(1)) expect(segmentOf(prompt)).toBe(first)
+  })
+
+  it("teaches the personaPatch field's shape, its leading-meta-line placement, and both members", () => {
+    const prompt = buildSystemPrompt(defaultCatalog, [], undefined, undefined, undefined, undefined, undefined, true)
+    expect(prompt).toMatch(/SAME leading meta-line as your note/)
+    expect(prompt).toMatch(/"personaPatch":\{"values":\{/)
+    expect(prompt).toMatch(/"personaPatch":\{"entries":\{/)
+    expect(prompt).toMatch(/"a2uiMeta":\{"note":"[^"]+","personaPatch":\{"values":\{/)
+  })
+
+  it('teaches the SPEC-R29 merge law the host actually applies — incremental, no restatement, no deletion', () => {
+    const prompt = buildSystemPrompt(defaultCatalog, [], undefined, undefined, undefined, undefined, undefined, true)
+    expect(prompt).toMatch(/INCREMENTAL/)
+    expect(prompt).toMatch(/only what THIS turn established/)
+    expect(prompt).toMatch(/ADDED to their list rather than replacing it/)
+    expect(prompt).toMatch(/no way to delete anything with a patch/)
+  })
+
+  it('none of the teaching leaks into the catalog-derived inventory section', () => {
+    const prompt = buildSystemPrompt(defaultCatalog, [], undefined, undefined, undefined, undefined, undefined, true)
+    expect(catalogInventoryBody(prompt)).not.toContain('personaPatch')
+  })
+
+  it('the segment is orthogonal to the other composition axes — turning it on adds exactly its own bytes', () => {
+    // The same delta regardless of `mode` or `a2uiEnabled`: it is neither grammar text nor catalog text.
+    const delta = (mode: (typeof MODES)[number], a2uiEnabled: boolean): number => {
+      const off = buildSystemPrompt(defaultCatalog, [], mode, undefined, undefined, undefined, a2uiEnabled, false)
+      const on = buildSystemPrompt(defaultCatalog, [], mode, undefined, undefined, undefined, a2uiEnabled, true)
+      return on.length - off.length
+    }
+    const baseline = delta(undefined, true)
+    expect(baseline).toBeGreaterThan(0)
+    for (const mode of MODES) {
+      expect(delta(mode, true)).toBe(baseline)
+      expect(delta(mode, false)).toBe(baseline)
+    }
+  })
+})

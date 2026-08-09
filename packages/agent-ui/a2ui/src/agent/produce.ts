@@ -78,7 +78,7 @@ import type { AgentProvider, Effort, ExecuteTool, ProviderEvent, Session, ToolDe
 import { buildSystemPrompt } from './system-prompt.ts'
 import { frameClientMessage } from './session.ts'
 import { readMetaLine } from './meta-line.ts'
-import type { AskDeclaration, PlanDeclaration, TurnProgress, TurnTrace } from './meta-line.ts'
+import type { AskDeclaration, PersonaPatch, PlanDeclaration, TurnProgress, TurnTrace } from './meta-line.ts'
 import type { GenUiMode } from './gen-ui-mode.ts'
 import { MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from './mini-skills.ts'
 import { FEED_SURFACE_TYPE_SET } from './feed-catalog.ts'
@@ -164,6 +164,17 @@ export interface ProduceOptions {
    *  emits anyway still runs the ordinary validate/self-correct path, exactly as an `exclusive` genui-only
    *  turn's stray A2UI already does today. */
   a2uiEnabled?: boolean
+  /** ADR-0178 cl.3 / SPEC-R30 — the persona's OWN authoring modality gate, threaded per call to
+   *  `buildSystemPrompt`'s authoring teaching block. Absent/`false` ⇒ zero teaching bytes compose (the
+   *  degradation law every opt-in modality on this seam already carries: byte-identical to before this
+   *  capability existed, in every mode). `true` ⇒ the model is taught the `personaPatch` arm's mechanics.
+   *
+   *  Used for EXACTLY ONE thing — conditioning prompt composition. It is never consulted by the peel/
+   *  passthrough below: SPEC-R29's wire layer is deliberately GATE-BLIND, so there is no gate-conditional
+   *  wire branch to drift, and a volunteered patch on a gate-off turn still rides the outgoing meta-line
+   *  exactly as a volunteered `plan` does. What the gate withholds is CONSUMPTION, which is host-side
+   *  (ADR-0178 cl.2's three-filter apply gate — a future slice), never this primitive's. */
+  authoringSurface?: boolean
 }
 
 /** The bounded raw-reasoning excerpt cap (ADR-0146 F3, `progressDetail:'full'`) — a `thinking` delta can be
@@ -565,22 +576,27 @@ function assembleFromRaw(raw: string): { output: A2uiOutput; healedCount: number
  * `plan` (ADR-0174 cl.2 / SPEC-R20) is peeled alongside `note`/`ask` — it carries NO integrity check
  * (Scope, ADR-0174 Open fork OF1): the caller passes it through to the outgoing meta-line UNCHANGED,
  * exactly as declared, whenever present.
+ * `personaPatch` (ADR-0178 cl.1 / SPEC-R29) is peeled the same way and on the same terms as `plan` — no
+ * integrity check, passed through unchanged — and, per SPEC-R29's gate-blind rule, WITHOUT consulting
+ * `opts.authoringSurface`: the gate governs consumption and teaching, never framing.
  */
 function peelMetaLine(raw: string): {
   note: string | undefined
   ask: AskDeclaration | undefined
   plan: PlanDeclaration | undefined
+  personaPatch: PersonaPatch | undefined
   rest: string
 } {
   const lines = raw.split('\n')
   const idx = lines.findIndex((l) => l.trim().length > 0) // first NON-EMPTY line
-  if (idx === -1) return { note: undefined, ask: undefined, plan: undefined, rest: raw } // all-blank raw — nothing to peel
+  if (idx === -1) return { note: undefined, ask: undefined, plan: undefined, personaPatch: undefined, rest: raw } // all-blank raw — nothing to peel
   const meta = readMetaLine(lines[idx]!.trim())
-  if (meta === undefined) return { note: undefined, ask: undefined, plan: undefined, rest: raw }
+  if (meta === undefined) return { note: undefined, ask: undefined, plan: undefined, personaPatch: undefined, rest: raw }
   return {
     note: meta.a2uiMeta.note,
     ask: meta.a2uiMeta.ask,
     plan: meta.a2uiMeta.plan,
+    personaPatch: meta.a2uiMeta.personaPatch,
     rest: lines.slice(idx + 1).join('\n'),
   }
 }
@@ -645,16 +661,25 @@ function peelGenuiLines(afterMeta: string): GenuiPeelResult {
   }
 }
 
-/** Serialize the outgoing meta-line (ADR-0088 §1/§2, ADR-0097 §1, ADR-0174 cl.2 / SPEC-R20) — the
+/** Serialize the outgoing meta-line (ADR-0088 §1/§2, ADR-0097 §1, ADR-0174 cl.2 / SPEC-R20, ADR-0178
+ * cl.1 / SPEC-R29) — the
  * runtime-composed envelope, carrying the model's own `note`, the `ask` declaration ONLY when it has
  * passed integrity (`undefined` otherwise — JSON.stringify then omits the key entirely, so a note-only
  * turn's wire shape is byte-identical to before ADR-0097), the model's own `plan` declaration THROUGH
  * UNCHANGED when present (`undefined` when absent — JSON.stringify omits the key entirely, so a plan-less
  * turn's wire shape stays byte-identical to before this field existed; no runtime rewriting, no integrity
- * check — SPEC-R20 Scope), plus the `TurnTrace` `produce()` assembled for this turn (never the model's raw
- * wrapper verbatim — the model never has `trace`). */
-function formatMetaLine(note: string, trace: TurnTrace, ask: AskDeclaration | undefined, plan: PlanDeclaration | undefined): string {
-  return JSON.stringify({ a2uiMeta: { note, ask, plan, trace } })
+ * check — SPEC-R20 Scope), the model's own `personaPatch` on the SAME terms as `plan` (through unchanged
+ * when present, key omitted entirely when absent, and GATE-BLIND — SPEC-R29's rule: the SPEC-R30 gate
+ * governs consumption and teaching, never framing), plus the `TurnTrace` `produce()` assembled for this
+ * turn (never the model's raw wrapper verbatim — the model never has `trace`). */
+function formatMetaLine(
+  note: string,
+  trace: TurnTrace,
+  ask: AskDeclaration | undefined,
+  plan: PlanDeclaration | undefined,
+  personaPatch: PersonaPatch | undefined,
+): string {
+  return JSON.stringify({ a2uiMeta: { note, ask, plan, personaPatch, trace } })
 }
 
 /**
@@ -786,7 +811,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
   const query = queryOf(input, k, deps.catalog.catalogId) // ADR-0169 cl.4 — catalog-aware, not the old pinned literal
   const exemplars = deps.retrieve(query) // SPEC-R7 — top-k over the judged shard
   const miniSkills = selectMiniSkills(query.intent, MINI_SKILLS, opts.miniSkillCap ?? DEFAULT_MINI_SKILL_CAP, deps.catalog.catalogId) // ADR-0091 §2 — once per turn, beside retrieve(); ADR-0135 cl.7 — cap now tunable, absent ⇒ default; SPEC-R6 — catalogId-scoped, the SAME value line :762's queryOf already threads into retrieve's own query
-  const system = buildSystemPrompt(deps.catalog, exemplars, opts.mode, miniSkills, opts.personaSystem, opts.genuiSurface, opts.a2uiEnabled) // SPEC-R6 — catalog-derived; ADR-0090 mode + ADR-0091 mini-skills + ADR-0138 persona + genui-surface SPEC-R10 + GH #418 a2uiEnabled
+  const system = buildSystemPrompt(deps.catalog, exemplars, opts.mode, miniSkills, opts.personaSystem, opts.genuiSurface, opts.a2uiEnabled, opts.authoringSurface) // SPEC-R6 — catalog-derived; ADR-0090 mode + ADR-0091 mini-skills + ADR-0138 persona + genui-surface SPEC-R10 + GH #418 a2uiEnabled + SPEC-R30 authoring gate
   const model = opts.model ?? input.model ?? DEFAULT_MODEL // opts.model = the proxy's allowlist-validated model (SPEC-R12); it WINS over a client-supplied input.model
   // ADR-0088 §2 — data ALREADY flowing above, captured once for the eventual TurnTrace (no new collection).
   // NOTE: this is a `session.turns` MESSAGE index (the alternating Messages-API array, user+assistant per
@@ -896,7 +921,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
     }
     lastRaw = raw
 
-    const { note, ask, plan, rest: afterMeta } = peelMetaLine(raw) // ADR-0088 §1 / ADR-0097 §1 / ADR-0174 cl.2 — peeled BEFORE heal/validate
+    const { note, ask, plan, personaPatch, rest: afterMeta } = peelMetaLine(raw) // ADR-0088 §1 / ADR-0097 §1 / ADR-0174 cl.2 / ADR-0178 cl.1 — peeled BEFORE heal/validate
     // genui-surface SPEC-R1 — peeled SECOND, still BEFORE heal/validate: a genui line (valid or not) never
     // reaches the shared A2UI healer/validator, which doesn't know this kind exists. Recomputed FRESH every
     // round (never carried over): a round's genui candidate belongs to THAT round's own raw output, never
@@ -937,7 +962,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
       // not only to the retried case already covered by `failuresFedBack` above.
       if (genuiPeel.failure !== undefined) failureCodes.push(genuiPeel.failure.code)
       if (emitProgress) yield formatProgressLine({ stage: 'done' }) // before the final (note-only/genui-only) yield
-      if (note !== undefined) yield formatMetaLine(note, traceFor(round + 1, 0, failureCodes), undefined, plan)
+      if (note !== undefined) yield formatMetaLine(note, traceFor(round + 1, 0, failureCodes), undefined, plan, personaPatch)
       if (genuiLine !== undefined) yield genuiLine // SPEC-R1 AC2 — ships intact, the model's own line verbatim
       return
     }
@@ -981,7 +1006,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
         // SPEC-N4/SPEC-R1 — see the note-only branch's identical comment: a genui failure dropped on an
         // otherwise-successful round still needs to land on the trace, not just the retried case.
         if (genuiPeel.failure !== undefined) failureCodes.push(genuiPeel.failure.code)
-        yield formatMetaLine(note, traceFor(round + 1, assembled.healedCount, failureCodes), finalAsk, plan) // meta-line FIRST
+        yield formatMetaLine(note, traceFor(round + 1, assembled.healedCount, failureCodes), finalAsk, plan, personaPatch) // meta-line FIRST
       }
       // genui-surface SPEC-R1 — a genui structural failure on an OTHERWISE-valid A2UI round is DROPPED
       // silently here (never manufactures an extra round purely to fix it: "degrade, never halt" — the
