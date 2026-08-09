@@ -305,6 +305,22 @@
   --md-sys-space-lg: calc(16px * var(--md-sys-density));
   --md-sys-space-xl: calc(24px * var(--md-sys-density));
   --md-sys-space-2xl: calc(32px * var(--md-sys-density));
+
+  /* --ui-bar-inline-inset — the fleet's ONE bar-content inline inset (GH #626, Kim-ruled 2026-08-09).
+     Deliberately a cross-component `--ui-*` role, not a per-control one: it is the shared rhythm that
+     lets separately-owned boxes on DIFFERENT sides of a bar boundary land on the same x. A bar itself
+     is a padding-less RAIL (background + seam only — GH #543's `ui-tabs` tablist precedent, generalised
+     to `ui-super-shell`'s `[data-part='bar']` here); its CONTENTS carry the inset, and they read it from
+     this one token so a bar-hosted column and a canvas-hosted column stay aligned by construction
+     instead of by two hand-matched literals. That is what GH #626 fixed: the docs site's app footer sat
+     6px (`module / 3`) further in than the pager below it, because the bar owned padding the pager's
+     region did not.
+     The stop is `xl` (24px): the docs site's reading column already insets 24px each side
+     (`min(64rem, 100% - 3rem)`, `_page.css`), and `.app-context-header` already spelled that same 24px
+     as `--md-sys-space-xl` — this names the value the site had converged on rather than introducing a
+     new one, so the pick is visually a no-op for the canvas column and a −6px correction for bar content.
+     Rides [density] through the ramp; untouched by [scale] (layout rhythm, not control frame). */
+  --ui-bar-inline-inset: var(--md-sys-space-xl);
 }
 
 /* extension — not MD3 (ADR-0150): the compact-window body register — the token layer's ONE

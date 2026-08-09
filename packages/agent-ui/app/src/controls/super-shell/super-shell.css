@@ -105,7 +105,11 @@
      the box above it — no outer margin — while the visible tab row still starts the same 6px lower.
      Same `/3` value, so agent-admin's rendered spacing (the −12px, MEASURED by the REV 2026-07-30 and
      ACCEPTED by Kim in the GH #380 Findings comment, 2026-07-31) is unchanged: `margin(6) + box(37)`
-     and `box(37 + padding 6)` are the same 43px footprint. */
+     and `box(37 + padding 6)` are the same 43px footprint.
+     GH #626 — this is a BLOCK-axis seam and nothing else. It briefly had a second, inline-axis consumer
+     (chat-shell.css's narrow-tabs `padding-inline`, GH #575) that reused it only because `/3` numerically
+     equalled the bar's then-`padding-inline`; that coincidence ended when the bar became a padding-less
+     rail, and that consumer now reads `--ui-bar-inline-inset` — the role it actually meant. */
   --ui-super-shell-narrow-tabs-seam: calc(var(--ui-super-shell-module) / 3);
 }
 
@@ -187,8 +191,19 @@
     min-block-size: var(--ui-super-shell-bar-size);
     box-sizing: border-box;
     background: var(--ui-super-shell-surface);
-    padding-inline: calc(var(--ui-super-shell-module) / 3);
   }
+  /* GH #626 — the bar carries NO `padding-inline`. It is a RAIL: background + seam, edge-to-edge, and
+     its CONTENTS own every inset (`ui-tabs`' tablist precedent, GH #543, generalised). The retired
+     `padding-inline: calc(var(--ui-super-shell-module) / 3)` (6px) was a third, uncoordinated inset
+     mechanism: content nested in `bar-content` started 6px further in than the same consumer's content
+     in `canvas` directly below, which is exactly the docs site's pager↔footer misalignment. It also
+     produced ADR-0166's deferred "sliver" — a consumer painting its own background on the bar's content
+     let the bar's `--ui-super-shell-surface` show through at both padded extremes. With no padding
+     there are no padded extremes, so that artifact is structurally gone rather than repainted over.
+     `bar-content` deliberately gets no padding either: the sliver comes back the moment ANY box between
+     the bar edge and the authored content insets, so the inset must live on the authored content itself,
+     read from `--ui-bar-inline-inset` (shared `dimensions.css`). A consumer wanting the old flush-toggle
+     behaviour changed nothing; a consumer relying on the 6px adds the token to its own content rule. */
 
   /* ADR-0166 cl.2 — each bar draws the seam on its OWN bar-facing edge. Per-side selectors, not a
      blanket `[data-part='bar']` rule: `header` and `footer` are the part's only two consumers
@@ -371,7 +386,8 @@
   /* ADR-0166 cl.7 (posture exception C, the strip's half) — the strip lost the frame gap that used to
      space it, so the strip OWNS its own block-start seam. `/3` is one of R11a's named shipped fractions
      and is the one this file already uses for shell-tier breathing room that is not a full inter-card
-     gap (the bar's `padding-inline`, `pane-tabs`'s `padding-block-end`): a full `--ui-super-shell-gap`
+     gap (`pane-tabs`'s `padding-block-end`; the bar's `padding-inline` was the other until GH #626
+     retired it): a full `--ui-super-shell-gap`
      would read as an inter-card gap the strip is not (it is chrome spanning the frame, like a bar), and
      `0` would butt the strip's first tab against the box above it. Declared on the base (wide) rule
      rather than inside the narrow query because it is a static property of the strip; the strip is

@@ -154,7 +154,11 @@ ui-theme-provider.app-shell > .site-shell > [data-part='frame'] > [data-part='ba
   align-items: center;
   justify-content: space-between;
   gap: var(--md-sys-space-md);
-  padding-inline: var(--md-sys-space-xl);
+  /* GH #626 — the bar-content inline inset, read from the fleet role instead of spelled as a ramp stop.
+     Same rendered 24px; what changed is that this row and the page column below it now derive from ONE
+     token, so a repoint moves both. Before #626 the bar added its own 6px on top of this, putting the
+     brand at 30px while the page column started at 24px. */
+  padding-inline: var(--ui-bar-inline-inset);
   padding-block: var(--md-sys-space-sm);
 }
 
@@ -196,12 +200,15 @@ ui-theme-provider.app-shell > .site-shell > [data-part='frame'] > [data-part='ba
  * (the bar's `padding-inline: calc(module / 3)`) — a hairline at a DIFFERENT inset from the component's
  * own. Two independent, inconsistent derivations of one separator; the component owns it now.
  *
- * KNOWN, PRE-EXISTING, and deliberately NOT repaired here (ADR-0166's Consequences flags it so a baseline
- * diff cannot be mistaken for a component regression): this box paints `neutral-surface-low` while the
- * footer BAR it sits in paints `--ui-super-shell-surface` (= `neutral-surface`), and the bar's 6px
- * `padding-inline` leaves that lighter surface showing as a sliver at each inline extreme. An 18px band of
- * page background above the footer used to hide how the two surfaces meet; flush, the sliver reads as a
- * seam artifact. It is the consumer's own palette, and ADR-0166 does not own `_page.css`'s palette. */
+ * RESOLVED by GH #626 (2026-08-09) — the sliver ADR-0166's Consequences deferred is GONE, and not by
+ * repainting. This box paints `neutral-surface-low` while the footer BAR it sits in paints
+ * `--ui-super-shell-surface` (= `neutral-surface`); the bar's 6px `padding-inline` was what left that
+ * lighter surface showing at each inline extreme. #626 made the bar a padding-less rail (super-shell.css),
+ * so this box now spans the bar edge-to-edge: there is no padded extreme for a second surface to show
+ * through, and the artifact is structurally impossible rather than covered over. The palette itself is
+ * untouched — ADR-0166 was right that it does not own `_page.css`'s palette; the defect was never the
+ * palette, it was a box that could not reach the edge it was painting to. `super-shell-bar-seam.browser.test.ts`
+ * pins the bar's zero inline padding so the sliver cannot return unnoticed. */
 .app-context-footer {
   /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
   /* grid placement retired — ui-super-shell places regions (M5, GH #84) */
@@ -210,9 +217,19 @@ ui-theme-provider.app-shell > .site-shell > [data-part='frame'] > [data-part='ba
 
 /* Inner gutter — the footer's CONTENT is constrained to the SAME reading column as `.page-header-inner`,
  * `[data-page-content]`, and `.page-footer-inner`, so header, content, and footer line up as one column instead
- * of the footer line floating at a different inset from the page body. */
+ * of the footer line floating at a different inset from the page body.
+ *
+ * GH #626 — that promise is now KEPT, and by one shared term. All four rules run the identical formula
+ * `min(64rem, 100% - calc(2 * var(--ui-bar-inline-inset)))`, replacing four copies of the literal `3rem`.
+ * The cap is unchanged; the inset half is the fleet role. This box is the one of the four that lives
+ * inside a super-shell bar, and it aligns with the other three only because #626 made that bar a
+ * padding-less rail: while the bar owned 6px, this column's `100%` was 12px narrower AND offset 6px, so
+ * the footer's text sat 6px right of the pager's directly above it — the misalignment this issue was
+ * filed for. `super-shell-alignment.browser.test.ts` measures the two boxes' content-edge x in a real
+ * engine and fails if they diverge, so the alignment is pinned structurally rather than by matching
+ * literals nobody can see are matched. */
 .app-context-footer-inner {
-  inline-size: min(64rem, 100% - 3rem);
+  inline-size: min(64rem, 100% - calc(2 * var(--ui-bar-inline-inset)));
   margin-inline: auto;
   padding-block: var(--md-sys-space-sm);
   display: flex;
@@ -290,7 +307,7 @@ ui-theme-provider.app-shell [data-site-nav]::-webkit-scrollbar,
 /* Inner gutter — the header bar spans the column edge-to-edge (background + border), its content constrained to
  * the same reading column as `[data-page-content]`. */
 .page-header-inner {
-  inline-size: min(64rem, 100% - 3rem);
+  inline-size: min(64rem, 100% - calc(2 * var(--ui-bar-inline-inset))); /* GH #626 — the shared inset half; see .app-context-footer-inner */
   margin-inline: auto;
   padding-block: var(--md-sys-space-md);
   display: flex;
@@ -453,7 +470,7 @@ ui-theme-provider.app-shell [data-site-nav]::-webkit-scrollbar,
 }
 
 .page-footer-inner {
-  inline-size: min(64rem, 100% - 3rem);
+  inline-size: min(64rem, 100% - calc(2 * var(--ui-bar-inline-inset))); /* GH #626 — the shared inset half; see .app-context-footer-inner */
   margin-inline: auto;
   padding-block: var(--md-sys-space-sm);
   display: flex;
@@ -494,7 +511,7 @@ ui-theme-provider.app-shell [data-site-nav]::-webkit-scrollbar,
  * scrolls). */
 [data-page-content] {
   flex: 1 0 auto;
-  inline-size: min(64rem, 100% - 3rem);
+  inline-size: min(64rem, 100% - calc(2 * var(--ui-bar-inline-inset))); /* GH #626 — the shared inset half; see .app-context-footer-inner */
   margin-inline: auto;
   /* Block breathing room so content clears the sticky page-header (top) and page-footer (bottom) instead of
    * butting against them — padding on the scroll-body region, not a margin on the first child the header would

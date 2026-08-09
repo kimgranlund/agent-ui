@@ -57,11 +57,30 @@ describe('GH #575 — ui-chat-shell narrow-tabs strip inline inset', () => {
 
     const headerStyle = getComputedStyle(header)
     const stripStyle = getComputedStyle(strip)
-    expect(stripStyle.paddingInlineStart, "the strip's inline-start inset matches the header's").toBe(headerStyle.paddingInlineStart)
-    expect(stripStyle.paddingInlineEnd, "the strip's inline-end inset matches the header's").toBe(headerStyle.paddingInlineEnd)
-    // Both non-zero — a coincidental 0px===0px equality (e.g. neither region padding at all) would satisfy
-    // the assertions above vacuously without proving the fix landed.
+    // GH #626 — the comparison MOVED, the claim did not. It used to read the header BAR's own
+    // `padding-inline`; the bar is now a padding-less rail, so reading it would compare against 0px and
+    // pass vacuously in the wrong direction. What "matches the header's inset" means today is the shared
+    // role the header's CONTENT insets by — `--ui-bar-inline-inset` — resolved on the bar itself, so this
+    // stays a RELATIVE comparison (a token repoint moves both sides, exactly as before) rather than a
+    // pinned px. Deliberately NOT a rect comparison against the authored header child: this fixture's
+    // header is a bare `<div>` supplying no inset of its own, so its rect sits at the bar edge and would
+    // make the assertion measure the fixture instead of the contract.
+    // Resolved through a PROBE, not `getPropertyValue`: an unregistered custom property computes to its
+    // substituted token stream (`calc(24px * 1)`), which never string-equals a used `padding` value of
+    // `24px`. A throwaway child consuming the role the same way the strip does gives the used px.
+    const probe = document.createElement('div')
+    probe.style.paddingInline = 'var(--ui-bar-inline-inset)'
+    header.append(probe)
+    const sharedInset = getComputedStyle(probe).paddingInlineStart
+    probe.remove()
+    expect(sharedInset, 'the shared bar-inset role resolves on the bar').not.toBe('0px')
+    expect(stripStyle.paddingInlineStart, "the strip's inline-start inset reads the shared bar-inset role").toBe(sharedInset)
+    expect(stripStyle.paddingInlineEnd, "the strip's inline-end inset reads the shared bar-inset role").toBe(sharedInset)
+    // Non-zero — a coincidental 0px===0px equality would satisfy the assertions above vacuously.
     expect(parseFloat(stripStyle.paddingInlineStart)).toBeGreaterThan(0)
+    // And the bar it tracks is genuinely the rail #626 made it: if a padding mechanism returns to the bar,
+    // the strip is back to tracking a value nobody else reads, which is the #575 drift all over again.
+    expect(headerStyle.paddingInlineStart, 'the header bar itself stays a padding-less rail').toBe('0px')
   })
 
   it('negative control — wide (≥40rem): the narrow-tabs strip stays display:none, exactly as before this fix (#542\'s tabs probes stay green — this pads the REGION, never the control)', async () => {

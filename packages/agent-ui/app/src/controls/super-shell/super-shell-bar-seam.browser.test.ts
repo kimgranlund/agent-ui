@@ -106,6 +106,43 @@ describe('ADR-0166 cl.1/cl.2 — the frame inserts no space and each bar OWNS it
     expect(Math.abs(middle.getBoundingClientRect().bottom - footer.getBoundingClientRect().top)).toBeLessThanOrEqual(1)
   })
 
+  it('GH #626 — a bar is a padding-less RAIL: zero inline padding, and its content box reaches both frame edges', () => {
+    // The other half of "background + seam only". ADR-0166 deferred a "sliver" — a consumer painting its
+    // own surface on bar content saw the bar's `--ui-super-shell-surface` show through at both inline
+    // extremes, because the bar's `padding-inline: calc(module / 3)` held that content 6px off each edge.
+    // #626 removed the padding rather than repainting anything, so the leak has no geometry to occur in.
+    // Longhands, never the `padding` shorthand — this file's standing rule 1 (the vacuous-pass trap).
+    const el = mount(['header', 'content', 'footer'])
+    for (const side of ['header', 'footer'] as const) {
+      const bar = q(el, `[data-part="bar"][data-bar="${side}"]`)
+      const cs = getComputedStyle(bar)
+      expect(cs.paddingInlineStart, `${side} bar padding-inline-start`).toBe('0px')
+      expect(cs.paddingInlineEnd, `${side} bar padding-inline-end`).toBe('0px')
+      // `bar-content` deliberately carries no inset either: any box between the bar edge and the authored
+      // content re-creates the sliver. The inset belongs on the authored content, off --ui-bar-inline-inset.
+      const content = q(bar, '[data-part="bar-content"]')
+      const barBox = bar.getBoundingClientRect()
+      const contentBox = content.getBoundingClientRect()
+      // The end edge is the shared one on both sides: this fixture authors no `options-*` slot, so no end
+      // toggle exists and `bar-content` runs to the bar's end edge. The start edge carries the nav toggle
+      // (a start side IS authored), so only the end edge is a clean flush assertion here.
+      expect(Math.abs(contentBox.right - barBox.right), `${side} bar-content reaches the bar's end edge`).toBeLessThanOrEqual(0.5)
+    }
+  })
+
+  it('GH #626 — with NO side toggles the bar content spans the frame edge-to-edge on BOTH inline edges', () => {
+    // The toggle-free census case (a shell authoring only `content`), where both edges are assertable and
+    // the sliver claim is total. Negative control, by hand: restore `padding-inline: calc(module / 3)` on
+    // `[data-part='bar']` and both offsets read 6, not 0.
+    const el = mount(['header', 'content'])
+    const bar = q(el, '[data-part="bar"][data-bar="header"]')
+    expect(bar.querySelector('[data-part="side-toggle"]'), 'the fixture is genuinely toggle-free').toBeNull()
+    const barBox = bar.getBoundingClientRect()
+    const contentBox = q(bar, '[data-part="bar-content"]').getBoundingClientRect()
+    expect(Math.abs(contentBox.left - barBox.left), 'bar-content start edge').toBeLessThanOrEqual(0.5)
+    expect(Math.abs(contentBox.right - barBox.right), 'bar-content end edge').toBeLessThanOrEqual(0.5)
+  })
+
   it('cl.2 — the seam is drawn on the BAR-FACING edge only (a header has no top hairline, a footer no bottom)', () => {
     const el = mount(['header', 'content', 'footer'])
     expect(getComputedStyle(q(el, '[data-bar="header"]')).borderBlockStartWidth).toBe('0px')

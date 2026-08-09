@@ -27,12 +27,16 @@
      region composing it, and no region ever supplied it. `ui-chat-shell` is, today, the one archetype that
      ships a `narrow-*="tabs"` side (agent-admin composes it) — this rule supplies that rhythm here, at the
      composition that actually exposes the gap, rather than a fleet-wide super-shell change nobody asked
-     for. Reuses `--ui-super-shell-narrow-tabs-seam` (already public on the composed `ui-super-shell`,
-     inherited by this descendant) rather than minting a new dimension: it is the SAME `module / 3`
-     fraction the header bar's own `padding-inline` (`[data-part='bar']`, super-shell.css) already computes
-     to, so the strip's inline inset tracks the header's by construction — a future module repoint keeps
-     both equal without a second edit. */
+     for.
+     GH #626 — REPOINTED from `--ui-super-shell-narrow-tabs-seam` to `--ui-bar-inline-inset`. The stated
+     intent never changed ("the strip's inline inset tracks the header's by construction"), but the vehicle
+     was a numeric coincidence: the seam token is a BLOCK-axis value that merely happened to equal the
+     bar's then-`padding-inline`, both being `module / 3`. #626 made the bar a padding-less rail and moved
+     its content's inset onto the fleet-shared `--ui-bar-inline-inset`, so tracking the header now means
+     reading that role — the same token the header content beside it reads, one axis, one concept. Keeping
+     the seam here would have frozen the strip at the retired 6px while the header moved to 24px, turning
+     a by-construction guarantee into exactly the drift #575 was filed about. */
   :scope ui-tabs[data-part='narrow-tabs'] {
-    padding-inline: var(--ui-super-shell-narrow-tabs-seam);
+    padding-inline: var(--ui-bar-inline-inset);
   }
 }
