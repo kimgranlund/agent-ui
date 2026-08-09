@@ -19,6 +19,11 @@
 // persona that was never edited, and enumerating the keys is what keeps a foreign/hand-edited file from
 // smuggling unknown keys into a minted persona (`readPersonaState` filters on the way IN as well as OUT).
 //
+// The set + that reader are no longer CONSTRUCTED here: ADR-0178's apply gate needs the identical
+// enumeration (`@agent-ui/app/agent-admin-persona-patch`, the module that now owns it), and two
+// hand-maintained copies of one truth is exactly the silent divergence GH #406 closed for this format.
+// They are re-exported below so every importer of this file keeps its symbol unchanged.
+//
 // LIBRARY SEMANTICS (GH #406 fork 2): importing MINTS A NEW persona — a collision-safe id, its own
 // persisted store — and never overwrites a shipped preset in place. The imported STATE is carried
 // verbatim (including the `name` config key): only the roster IDENTITY (id + label) is uniquified —
@@ -26,19 +31,11 @@
 // behaves byte-identically to the one that was exported.
 import { ENTRY_KINDS, entriesStoreKey } from '@agent-ui/app'
 import {
-  A2UI_CATALOG_KEY,
-  A2UI_LOCAL_PATTERNS_KEY,
-  AGENT_ENABLED_KEY,
-  BANKROLL_CAPABLE_KEY,
-  BANKROLL_KEY,
-  MODELS_INCLUDED_KEY,
-  SURFACE_A2UI_KEY,
-  SURFACE_AUTHORING_KEY,
-  SURFACE_GENUI_DOGFOOD_KEY,
-  SURFACE_GENUI_KEY,
-  SURFACE_MARKDOWN_KEY,
-  kindEnabledKey,
-} from '@agent-ui/app/agent-admin-schema'
+  PERSONA_ENTRY_LIST_KEYS,
+  PERSONA_STATE_KEYS,
+  readPersonaState,
+  type PersonaStateReader,
+} from '@agent-ui/app/agent-admin-persona-patch'
 import type { Persona } from './agent-admin-presets.ts'
 import type { PresetCategory } from './agent-admin-libraries.ts'
 
@@ -48,48 +45,15 @@ export const PERSONA_FILE_KIND = 'agent-ui-persona'
 /** The format version this build WRITES, and the highest it reads. */
 export const PERSONA_FILE_VERSION = 1
 
-const ENTRY_LIST_KEYS: readonly string[] = Object.values(ENTRY_KINDS).map((kind) => entriesStoreKey(kind))
+const ENTRY_LIST_KEYS: readonly string[] = PERSONA_ENTRY_LIST_KEYS
 
-/** Every persona-scoped store key the file carries, in a stable order (a Set: `kindEnabledKey('tool')`
- *  IS the pre-existing `toolsEnabled` config key — one key, two readers). Order is the JSON key order of
- *  an exported file, so two exports of the same state are byte-identical strings. */
-export const PERSONA_STATE_KEYS: readonly string[] = [
-  ...new Set([
-    // the agent config (the settings pane's own fields + the Model grid's selection/inclusion record)
-    'name',
-    'model',
-    'temperature',
-    MODELS_INCLUDED_KEY,
-    // the master switches — the Agent card's own, plus one per capability kind
-    AGENT_ENABLED_KEY,
-    ...Object.values(ENTRY_KINDS).map((kind) => kindEnabledKey(kind)),
-    // Surface Options (the output-modality contract)
-    SURFACE_MARKDOWN_KEY,
-    SURFACE_A2UI_KEY,
-    SURFACE_GENUI_KEY,
-    SURFACE_GENUI_DOGFOOD_KEY,
-    // ADR-0178 cl.3 / SPEC-R30 — the persona-authoring modality gate. Persona-scoped like every other
-    // Surface Option, so an exported Builder-shaped persona re-imports with its authoring capability
-    // intact instead of silently reverting to the inverse default (OFF).
-    SURFACE_AUTHORING_KEY,
-    A2UI_CATALOG_KEY,
-    // M-D SPEC-R5 — the persona's local-pattern-set SELECTION (never its definitions, which are
-    // package-shipped code, SPEC-R1): symmetrical in storage shape to A2UI_CATALOG_KEY above.
-    A2UI_LOCAL_PATTERNS_KEY,
-    // GH #525 — the persistent-bankroll capability opt-in + its own persisted figure: both persona-scoped
-    // store keys `composeLiveSystemPrompt` now reads (this file's own header comment), so an exported
-    // croupier persona must carry them or a re-import would silently resume a fresh stake.
-    BANKROLL_CAPABLE_KEY,
-    BANKROLL_KEY,
-    // the six entry lists
-    ...ENTRY_LIST_KEYS,
-  ]),
-]
-
-/** The minimum a store must offer to be exported — `SettingsStore`'s `get`, nothing else. */
-export interface PersonaStateReader {
-  get(key: string): unknown
-}
+/** The canonical key set + the projection that reads a store through it — owned by
+ *  `@agent-ui/app/agent-admin-persona-patch` (see this file's header) and re-exported UNCHANGED, so
+ *  `PERSONA_STATE_KEYS`/`readPersonaState`/`PersonaStateReader` still resolve from here for every existing
+ *  importer. Nothing about the format changed with the move: the set is the same ordered enumeration, plus
+ *  `SURFACE_PLANNER_KEY`, whose absence was a gap (GH #640's ruled fix). */
+export { PERSONA_STATE_KEYS, readPersonaState }
+export type { PersonaStateReader }
 
 /** The persona's own roster metadata, as it travels in the file (the store state carries no label). */
 export interface PersonaFileMeta {
@@ -108,19 +72,6 @@ export interface PersonaFile {
   exportedAt: string
   persona: PersonaFileMeta
   state: Record<string, unknown>
-}
-
-/** The persona-scoped state a store currently answers, restricted to `PERSONA_STATE_KEYS` and to keys the
- *  store actually holds (an unset key is OMITTED, never written as `undefined` — the component's own
- *  fail-closed reads supply every default, and an omitted key must stay omitted for a round trip to be
- *  deep-equal). */
-export function readPersonaState(store: PersonaStateReader | undefined): Record<string, unknown> {
-  const state: Record<string, unknown> = {}
-  for (const key of PERSONA_STATE_KEYS) {
-    const value = store?.get(key)
-    if (value !== undefined) state[key] = value
-  }
-  return state
 }
 
 /** Build the file for `persona` from the state its store currently holds. */

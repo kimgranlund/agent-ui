@@ -28,6 +28,7 @@ import {
   SURFACE_GENUI_DOGFOOD_KEY,
   SURFACE_GENUI_KEY,
   SURFACE_MARKDOWN_KEY,
+  SURFACE_PLANNER_KEY,
   kindEnabledKey,
 } from '@agent-ui/app/agent-admin-schema'
 import type { AdminAgentTurn, AdminTurnRequest } from '@agent-ui/app/agent-admin-schema'
@@ -227,6 +228,10 @@ describe('the persona file — export → import round trip (GH #406, M-B DoD bo
       SURFACE_A2UI_KEY,
       SURFACE_GENUI_KEY,
       SURFACE_GENUI_DOGFOOD_KEY,
+      // Every Surface Option the pane can write belongs here — the two newest included, so a future gate
+      // cannot repeat GH #640's omission without this trip-wire firing.
+      SURFACE_PLANNER_KEY,
+      SURFACE_AUTHORING_KEY,
       A2UI_CATALOG_KEY,
       A2UI_LOCAL_PATTERNS_KEY,
     ]
@@ -321,6 +326,37 @@ describe('the persona file carries the authoring modality gate (ADR-0178 cl.3 / 
     expect(parsed.ok).toBe(true)
     if (!parsed.ok) return
     expect(SURFACE_AUTHORING_KEY in parsed.file.state).toBe(false) // unset stays omitted, never written as false
+  })
+})
+
+// GH #640 (Kim's ruling, 2026-08-09) — the planner-stage opt-in (ADR-0174 cl.1 / SPEC-R21) is a
+// persona-scoped Surface Option exactly like the authoring gate above, and its absence from
+// `PERSONA_STATE_KEYS` was pre-persona-file DRIFT, never a decision: a planner-enabled persona used to
+// re-import with the capability silently reverted to the inverse default (OFF) — a different agent than
+// the one exported. This block is the authoring gate's suite, key-for-key, per that ruling.
+describe('the persona file carries the planner-stage gate (GH #640)', () => {
+  it('PERSONA_STATE_KEYS carries the gate key', () => {
+    expect(PERSONA_STATE_KEYS).toContain(SURFACE_PLANNER_KEY)
+  })
+
+  it('a planner-enabled persona round-trips the gate through export -> import', () => {
+    const storeA = authoredStore()
+    storeA.set(SURFACE_PLANNER_KEY, true)
+    const parsed = readPersonaFile(personaFileText(exportPersonaFile(personaFromPreset(SOURCE_PRESET), storeA)))
+    expect(parsed.ok, parsed.ok ? '' : parsed.error).toBe(true)
+    if (!parsed.ok) return
+    expect(parsed.file.state[SURFACE_PLANNER_KEY]).toBe(true)
+
+    // …and reaches a real store through the mint, which is what "both ways" means here.
+    const imported = importedPersonaFrom(parsed.file, [personaFromPreset(SOURCE_PRESET)])
+    expect(createMemoryStore({ initial: imported.seed }).get(SURFACE_PLANNER_KEY)).toBe(true)
+  })
+
+  it('a persona that never enabled it exports NO gate key at all — the inverse default survives the trip', () => {
+    const parsed = readPersonaFile(personaFileText(exportPersonaFile(personaFromPreset(SOURCE_PRESET), authoredStore())))
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) return
+    expect(SURFACE_PLANNER_KEY in parsed.file.state).toBe(false)
   })
 })
 
