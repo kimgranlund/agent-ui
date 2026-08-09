@@ -171,7 +171,13 @@ describe('ui-agent-admin cross-engine smoke — the three-place shell grammar (A
     expect(pane.getBoundingClientRect().width).toBeGreaterThan(0)
     const tabs = [...pane.querySelectorAll('[data-part="settings-nav"] ui-tab')]
     expect(tabs.map((t) => t.textContent)).toEqual(['Agent', 'Capabilities', 'Surface', 'Context: System', 'Context: Dialog'])
-    for (const tab of tabs) expect(tab.getBoundingClientRect().width).toBeGreaterThan(0)
+    // LLD-P6 (GH #656) — the strip runs `overflow="menu"` now, so a tab that doesn't fit this rail is
+    // `[data-overflowed]` (display:none) and reachable through the menu instead. The claim this probe was
+    // always making — no tab is a collapsed zero-box stub — is repointed onto the ones actually laid out;
+    // the reachability of the rest is the LLD-P6 a6 probe's own subject, at both bands.
+    const laidOut = tabs.filter((t) => !t.hasAttribute('data-overflowed'))
+    expect(laidOut.length, 'at least the selected tab is always pinned onto the strip').toBeGreaterThan(0)
+    for (const tab of laidOut) expect(tab.getBoundingClientRect().width).toBeGreaterThan(0)
     // Agent is the default active section (GH #574) — the Agent fold's heading row renders visibly
     // (GH #225: the old agent-heading h3 is the fold summary now).
     const agentHeading = el.querySelector('[data-part="settings-item"][data-item="agent"] [data-part="summary"]') as HTMLElement
@@ -1613,5 +1619,143 @@ describe('ui-agent-admin cross-engine smoke — the pane nav (ADR-0179 cl.1)', (
     await el.updateComplete
     expect(strip.selected).toBe('author')
     expect(authoring.getBoundingClientRect().height).toBeGreaterThan(0)
+  })
+})
+
+// ── LLD-P6 (GH #656, S2-a) — the SETTINGS grouping, in BOTH real engines ─────────────────────────────
+// jsdom proves the grouping's LOGIC (the truth table, the key/label separation, state survival —
+// agent-admin.test.ts). What only a real engine can prove is that the strip's not-enough-room strategy
+// actually engages at the bands the admin ships at, that a section reached through the overflow menu
+// paints for real, and that this second strip holds the SAME metric register as the pane-nav above it
+// (the ledgered cross-strip equality method, extended one level down).
+describe('ui-agent-admin cross-engine smoke — the settings sub-nav grouping (LLD-P6)', () => {
+  const frames = async (n = 2): Promise<void> => {
+    for (let i = 0; i < n; i++) await new Promise((r) => requestAnimationFrame(r))
+  }
+  const SECTIONS = [
+    ['Agent', 'agent-content'],
+    ['Capabilities', 'capabilities-content'],
+    ['Surface', 'surface-content'],
+    ['Context: System', 'context-system-content'],
+    ['Context: Dialog', 'context-dialog-content'],
+  ] as const
+
+  function strip(el: UIAgentAdminElement): HTMLElement & { selected: string } {
+    return el.querySelector('[data-part="settings-nav"]') as HTMLElement & { selected: string }
+  }
+  function sectionTabs(el: UIAgentAdminElement): HTMLElement[] {
+    return [...strip(el).querySelectorAll('ui-tab')] as HTMLElement[]
+  }
+
+  /** Reach ONE section the way a user at THIS band has to: its own tab when it fits the strip, otherwise
+   *  the overflow menu's proxy row (GH #586). a6 says "reachable at every band" — this helper is what
+   *  makes the claim honest instead of assuming the tab is always on screen. */
+  async function reachSection(el: UIAgentAdminElement, label: string): Promise<'tab' | 'menu'> {
+    const tab = sectionTabs(el).find((t) => t.textContent === label)!
+    if (!tab.hasAttribute('data-overflowed')) {
+      tab.click()
+      await frames()
+      return 'tab'
+    }
+    const menuEl = strip(el).querySelector('[data-part="overflow"]') as HTMLElement
+    expect(menuEl.hidden, 'a tab is overflowed, so the trigger must be showing').toBe(false)
+    ;(menuEl.querySelector('[data-part="trigger"]') as HTMLElement).click()
+    await frames()
+    const proxy = [...menuEl.querySelectorAll('[role="menuitem"]')].find((p) => p.textContent === label) as HTMLElement
+    expect(proxy, `${label} is neither on the strip nor in the overflow menu — unreachable at this band`).toBeTruthy()
+    proxy.click()
+    await frames()
+    return 'menu'
+  }
+
+  /** The five sections' live widths — a hidden section is `display:none` in a real engine, so its box is 0. */
+  function visibleRoles(el: UIAgentAdminElement): string[] {
+    return SECTIONS.filter(([, role]) => (el.querySelector(`[data-role="${role}"]`) as HTMLElement).getBoundingClientRect().width > 0).map(
+      ([, role]) => role,
+    )
+  }
+
+  for (const widthPx of [414, 1200]) {
+    it(`a6 at ${widthPx}px: every one of the five sections is reachable through the sub-nav, and each selection paints exactly ITS OWN section`, async () => {
+      const { el } = mountAgentAdminAt(widthPx)
+      await frames()
+      goToPlace(el, 'Settings')
+      await frames()
+      expect(sectionTabs(el).map((t) => t.textContent), 'the ranked five, in GH #574 order').toEqual(SECTIONS.map(([label]) => label))
+      expect((el.querySelector('[data-part="settings-pane"]') as HTMLElement).getBoundingClientRect().width, 'the pane is genuinely on screen').toBeGreaterThan(0)
+
+      for (const [label, role] of SECTIONS) {
+        await reachSection(el, label)
+        expect(visibleRoles(el), `${widthPx}px · ${label}: exactly its own section paints`).toEqual([role])
+        // The other four are genuinely OUT of layout, not merely dimmed — the truth table with teeth.
+        for (const [, other] of SECTIONS) {
+          const cs = getComputedStyle(el.querySelector(`[data-role="${other}"]`) as HTMLElement)
+          expect(cs.display, `${widthPx}px · ${label}: ${other} display`).toBe(other === role ? 'flex' : 'none')
+        }
+        // …and the selected one has real content in it. `context-dialog-content` is the one exception: a
+        // freshly-mounted admin has logged zero turns, so that section legitimately holds nothing yet and
+        // its flex column collapses to zero height (an empty-state for it would be section INTERNALS —
+        // outside LLD §5's grouping boundary; recorded on GH #656 rather than patched here).
+        if (role !== 'context-dialog-content') {
+          expect((el.querySelector(`[data-role="${role}"]`) as HTMLElement).getBoundingClientRect().height, `${label} has real height`).toBeGreaterThan(0)
+        }
+        // The selected tab is ALWAYS pinned visible (GH #586's own law) — a user can always see where they are.
+        const selected = sectionTabs(el).find((t) => t.textContent === label)!
+        expect(selected.hasAttribute('data-overflowed'), `${label} is selected, so it must be pinned onto the strip`).toBe(false)
+        expect(selected.getBoundingClientRect().width, `${label}'s pinned tab paints`).toBeGreaterThan(0)
+      }
+    })
+  }
+
+
+  it('the not-enough-room strategy is the fleet MENU, not an affordance-less scroll — and it genuinely engages at the fleet-default narrow width', async () => {
+    const { el } = mountAgentAdminAt(414)
+    await frames()
+    goToPlace(el, 'Settings')
+    await frames(3)
+
+    const s = strip(el)
+    expect(s.getAttribute('overflow'), 'the reflected mode (tabs.md: connect-resolved)').toBe('menu')
+    const menuEl = s.querySelector('[data-part="overflow"]') as HTMLElement
+    expect(menuEl, 'overflow="menu" creates the part at connect').not.toBeNull()
+    // Non-vacuous: the five labels really do outgrow this rail, which is the whole reason the mode is set.
+    const overflowed = sectionTabs(el).filter((t) => t.hasAttribute('data-overflowed'))
+    expect(overflowed.length, 'the five sections must not all fit 414px — otherwise this mode is decoration').toBeGreaterThan(0)
+    expect(menuEl.hidden, 'so the trigger paints').toBe(false)
+    const trigger = menuEl.querySelector('[data-part="trigger"]') as HTMLElement
+    expect(trigger.getAttribute('aria-label')).toBe('More tabs')
+    const box = trigger.getBoundingClientRect()
+    expect(box.width, 'a real, on-screen trigger').toBeGreaterThan(0)
+    expect(box.height).toBeGreaterThan(0)
+    // …and reaching an overflowed section really goes THROUGH the menu at this band.
+    const hiddenLabel = overflowed[0].textContent!
+    expect(await reachSection(el, hiddenLabel), 'an overflowed section is reached via the menu').toBe('menu')
+    expect(visibleRoles(el)).toEqual([SECTIONS.find(([label]) => label === hiddenLabel)![1]])
+  })
+
+  it('the sub-nav holds the SAME metric register as the pane nav above it — one strip grammar, two levels (the cross-strip equality method, extended)', async () => {
+    const { el } = mountAgentAdmin()
+    await el.updateComplete
+    const paneNav = el.querySelector('[data-part="pane-nav"]') as HTMLElement
+    const subNav = strip(el)
+    // The strip-level register: both are the same GH #221 panel-less composition, so their token-derived
+    // metrics must not fork. Read from the CONTROLS (tokens resolve on the host), then from the real
+    // painted tablist parts (gap is only true once laid out).
+    for (const token of ['--ui-tabs-tab-height', '--ui-tabs-tab-font', '--ui-tabs-strip-gap']) {
+      const a = getComputedStyle(paneNav).getPropertyValue(token).trim()
+      expect(a, `${token} resolves to a real value on the pane nav`).not.toBe('')
+      expect(getComputedStyle(subNav).getPropertyValue(token).trim(), `${token} must not fork between the two strips`).toBe(a)
+    }
+    const tablistOf = (host: HTMLElement): CSSStyleDeclaration =>
+      getComputedStyle(host.querySelector('[data-part="tablist"]') as HTMLElement)
+    expect(tablistOf(subNav).columnGap, 'the strips share one gap').toBe(tablistOf(paneNav).columnGap)
+
+    // The painted tabs agree too — same height, same type register.
+    const paneTab = paneNav.querySelector('ui-tab') as HTMLElement
+    const subTab = subNav.querySelector('ui-tab') as HTMLElement
+    expect(subTab.getBoundingClientRect().height, 'both strips draw the same tab height').toBeCloseTo(paneTab.getBoundingClientRect().height, 1)
+    const paneCs = getComputedStyle(paneTab)
+    const subCs = getComputedStyle(subTab)
+    expect([subCs.fontSize, subCs.fontWeight]).toEqual([paneCs.fontSize, paneCs.fontWeight])
   })
 })

@@ -250,6 +250,88 @@ describe('UIAgentAdminElement — shell composition (ADR-0179): the three places
     expect(agent.isConnected, 'switching sections never reparents').toBe(true)
   })
 
+  // ── LLD-P6 (GH #656, S2-a) — the grouping pass: the five sections group behind the sub-nav, the
+  // grouping ruled final at GH #574's ranked five, and identity separated from display copy. ──────────
+  it('LLD-P6: EXACTLY one section is visible for every one of the five selections — the full truth table, not a sampled pair', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const pane = el.querySelector('[data-part="settings-pane"]') as HTMLElement
+    const sections = [...pane.querySelectorAll<HTMLElement>(':scope > [data-segment]')]
+    const tabs = [...pane.querySelectorAll('[data-part="settings-nav"] ui-tab')] as HTMLElement[]
+    expect(sections).toHaveLength(5)
+    expect(tabs).toHaveLength(5)
+
+    /** The visible section's own label — the truth table's single cell (a6: one, and exactly one). */
+    const visible = (): string[] => sections.filter((s) => !s.hidden).map((s) => s.getAttribute('data-segment')!)
+
+    expect(visible(), 'entry: the first section alone').toEqual(['Agent'])
+    for (const label of ['Agent', 'Capabilities', 'Surface', 'Context: System', 'Context: Dialog']) {
+      tabs.find((t) => t.textContent === label)!.click()
+      expect(visible(), `${label} selected ⇒ ${label} alone`).toEqual([label])
+    }
+    // …and back to the first, so the table is closed rather than one-way.
+    tabs[0].click()
+    expect(visible()).toEqual(['Agent'])
+  })
+
+  it('LLD-P6: every tab is keyed by its section`s stable `data-role`, labelled by its `data-segment` — identity is never the display copy', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const pane = el.querySelector('[data-part="settings-pane"]') as HTMLElement
+    const sections = [...pane.querySelectorAll<HTMLElement>(':scope > [data-segment]')]
+    const tabs = [...pane.querySelectorAll('[data-part="settings-nav"] ui-tab')] as HTMLElement[]
+
+    expect(tabs.map((t) => t.getAttribute('key')), 'keys are the roles').toEqual([
+      'agent-content', 'capabilities-content', 'surface-content', 'context-system-content', 'context-dialog-content',
+    ])
+    expect(tabs.map((t) => t.textContent), 'labels are the human copy, in GH #574`s ranked order').toEqual([
+      'Agent', 'Capabilities', 'Surface', 'Context: System', 'Context: Dialog',
+    ])
+    expect(tabs.map((t) => t.getAttribute('key')), 'key ↔ section pairing is positional and total').toEqual(
+      sections.map((s) => s.getAttribute('data-role')),
+    )
+    // The point of the separation, exercised: re-label a section and selection still resolves — the
+    // failure mode S1-b's label-as-key shape would have had (a blank pane on a copy edit).
+    sections[3].setAttribute('data-segment', 'System context')
+    tabs.find((t) => t.getAttribute('key') === 'context-system-content')!.click()
+    expect(sections.filter((s) => !s.hidden).map((s) => s.getAttribute('data-role'))).toEqual(['context-system-content'])
+  })
+
+  it('LLD-P6: section state survives a sub-nav flip away and back — a committed entry, an uncommitted dirty field, and a fold`s open state all outlive the flip (nothing unmounts)', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const pane = el.querySelector('[data-part="settings-pane"]') as HTMLElement
+    const tabs = [...pane.querySelectorAll('[data-part="settings-nav"] ui-tab')] as HTMLElement[]
+    const goToSection = (label: string): void => void tabs.find((t) => t.textContent === label)!.click()
+
+    goToSection('Capabilities')
+    // (a) a COMMITTED entry — the add-form's full submit path (the section re-renders its list).
+    const skills = (): HTMLElement => el.querySelector('[data-kind="skill"]') as HTMLElement
+    ;(skills().querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = 'Web search'
+    ;(skills().querySelector('[data-part="entry-add-description"]') as UITextFieldElement).value = 'Searches the web'
+    ;(skills().querySelector('[data-part="entry-add-content"]') as HTMLTextAreaElement).value = 'search(query)'
+    ;(skills().querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
+    expect(readEntries(el.store, ENTRY_KINDS.skill).map((e) => e.id)).toEqual(['web-search'])
+
+    // (b) an UNCOMMITTED dirty field — typed into the reopened add-form, never submitted. This is the
+    // state a re-mount would silently eat, and the one a `hidden` flip must not.
+    ;(skills().querySelector('[data-part="entry-add-toggle"]') as HTMLElement).click()
+    const dirtyField = skills().querySelector('[data-part="entry-add-label"]') as UITextFieldElement
+    dirtyField.value = 'Half-typed skill'
+    // (c) a fold's open state — Instructions collapsed by hand (folds default open).
+    const instructions = el.querySelector('[data-part="settings-item"][data-item="prompt-section"]') as HTMLElement & { open: boolean }
+    instructions.open = false
+
+    goToSection('Context: Dialog')
+    goToSection('Agent')
+    goToSection('Capabilities')
+
+    expect(readEntries(el.store, ENTRY_KINDS.skill).map((e) => e.id), 'the committed entry survives').toEqual(['web-search'])
+    expect([...skills().querySelectorAll('[data-part="entry-label"]')].map((n) => n.textContent)).toContain('Web search')
+    expect(skills().querySelector('[data-part="entry-add-label"]'), 'the SAME field node — never re-created').toBe(dirtyField)
+    expect(dirtyField.value, 'the uncommitted keystrokes survive the flip').toBe('Half-typed skill')
+    expect((skills().querySelector('[data-part="entry-add-form"]') as HTMLElement).hidden, 'the form stays open too').toBe(false)
+    expect(el.querySelector('[data-part="settings-item"][data-item="prompt-section"]'), 'the same fold node').toBe(instructions)
+    expect(instructions.open, 'the hand-collapsed fold stays collapsed').toBe(false)
+  })
+
   it('the settings sub-nav`s select never escapes the admin host either', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const seen: string[] = []

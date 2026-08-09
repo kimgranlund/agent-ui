@@ -405,10 +405,9 @@ export class UIAgentAdminElement extends UIElement {
    *  rather than a button that would do nothing (OQ4's degrade). */
   #authorEmptyAction: UIButtonElement | null = null
   #generateRequest: (() => void) | undefined
-  /** OQ2 — the Settings place's internal sub-nav: a second panel-less `ui-tabs`, scaffolded mechanically
-   *  from the five section units' own `data-segment` labels (S2-a owns the grouping pass). */
   /** The five settings section units, in strip order — the SAME nodes at every band (the
-   *  no-duplication assert). Visibility-only flips, exactly the shell strip's own SPEC-R7c behavior. */
+   *  no-duplication assert), keyed by their stable `data-role`. Visibility-only flips, exactly the shell
+   *  strip's own SPEC-R7c behavior: nothing is unmounted, so section state survives every flip. */
   #settingsSections: HTMLElement[] = []
   #idSeq = 0
   /** The authoring context's own store identity, so the effect can tell a real reassignment from a bare
@@ -1045,24 +1044,39 @@ export class UIAgentAdminElement extends UIElement {
     // Context: System · Context: Dialog.
     //
     // OQ2 — the sub-nav is the SAME segment/tab machinery one level down: an admin-composed PANEL-LESS
-    // `ui-tabs` (GH #221's shape, its second re-anchoring), scaffolded MECHANICALLY from each unit's kept
-    // `data-segment` label in today's order. S1-b ships the vehicle at parity — zero grouping decisions, so
-    // no intermediate commit strands a6 (every section reachable); S2-a owns the grouping pass (§5).
+    // `ui-tabs` (GH #221's shape, its second re-anchoring), driven from the five units themselves in
+    // today's order. S1-b scaffolded it mechanically; LLD-P6 (GH #656, §5's grouping boundary) rules the
+    // grouping FINAL at GH #574's ranked five — Agent · Capabilities · Surface · Context: System ·
+    // Context: Dialog — and makes two mechanical changes inside that boundary:
+    //
+    //  1. The tab's KEY is the section's stable `data-role`, its TEXT the human `data-segment` label. S1-b
+    //     used the label for both, which welded section IDENTITY to display copy: any future label edit
+    //     (§5 hands S2-a the label set) would silently desync `#applySettingsSection`'s match and blank the
+    //     pane. Keying on the role the sections already carry makes the label a free variable by
+    //     construction — no new attribute, no lookup table.
+    //  2. `overflow="menu"` (GH #586's shipped not-enough-room strategy). Five labels — two of them the
+    //     long `Context: …` pair — do not fit the detail pane's own column at the bands the admin actually
+    //     runs at. MEASURED, both engines: a 414px frame gives the rail 390px and a 800px frame (the wide
+    //     pairing docked) gives it 388px — the two `Context: …` tabs overflow at BOTH; only from ~1200px
+    //     (rail 588px) up do all five fit, and there the menu is simply `hidden`. The default `scroll`
+    //     still technically reaches every section, but through an affordance-less horizontal scroll; the
+    //     menu keeps a6 ("each section reachable at every band") honest, pins the selected tab visible,
+    //     and is the fleet's own ruled answer rather than a bespoke admin metric.
     const settingsSections = [agentContent, capabilitiesContent, surfaceContent, contextSystemContent, contextDialogContent]
     this.#settingsSections = settingsSections
     const settingsNav = document.createElement('ui-tabs') as UITabsElement
     settingsNav.setAttribute('data-part', 'settings-nav')
+    settingsNav.setAttribute('overflow', 'menu') // connect-resolved (tabs.md) — set before the strip connects
     for (const section of settingsSections) {
-      const label = section.getAttribute('data-segment') ?? ''
       const tab = document.createElement('ui-tab') as UITabElement
-      tab.setAttribute('key', label)
-      tab.textContent = label
+      tab.setAttribute('key', section.getAttribute('data-role') ?? '')
+      tab.textContent = section.getAttribute('data-segment') ?? ''
       // aria-controls → the section this tab reveals (panel-less element-reflection, the pane-tabs
       // precedent: the sections are NOT `ui-tab-panel`s, and visibility stays this element's own).
       tab.link(section, this.#nextId('settings-nav'))
       settingsNav.append(tab)
     }
-    settingsNav.selected = settingsSections[0]?.getAttribute('data-segment') ?? ''
+    settingsNav.selected = settingsSections[0]?.getAttribute('data-role') ?? ''
     settingsNav.addEventListener('select', (event) => {
       event.stopPropagation() // this element's OWN event vocabulary stays closed (the try-it bar's precedent)
       this.#applySettingsSection((event as CustomEvent<{ value: string; index: number }>).detail.value)
@@ -1140,10 +1154,14 @@ export class UIAgentAdminElement extends UIElement {
   }
 
   /** OQ2 — reveal ONE settings section (visibility-only, exactly the shell strip's own SPEC-R7c behavior:
-   *  no reparenting, no rebuild, the same node identities before and after every flip). */
+   *  no reparenting, no rebuild, the same node identities before and after every flip — so a dirty field,
+   *  an added entry, and every fold's open state all survive a flip away and back).
+   *
+   *  LLD-P6: the match is on the section's stable `data-role`, never its display label — the strip's tab
+   *  keys are minted from the same attribute, so the two cannot drift. */
   #applySettingsSection(key: string): void {
     for (const section of this.#settingsSections) {
-      section.hidden = section.getAttribute('data-segment') !== key
+      section.hidden = section.getAttribute('data-role') !== key
     }
   }
 
