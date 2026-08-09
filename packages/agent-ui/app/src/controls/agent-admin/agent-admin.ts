@@ -4,10 +4,13 @@
 // primitives PLUS the generic ordered-entry-list primitive (`entries.ts`/`entry-list.ts`, ADR-0132) —
 // no new primitive FAMILY beyond that one, no new protocol dependency.
 //
-// ONE composed `ui-chat-shell` (GH #52/ADR-0154 — superseding vision rev.5's hand-rolled `ui-split`
-// composition, which itself superseded ADR-0131 cl.2's three-pane order): `[ chat canvas | resizable
-// options-pane with {Agent ⇄ Capabilities ⇄ Surface ⇄ Context: System ⇄ Context: Dialog} segments ]`
-// (SPEC-R6/R7). GH #574 split the old single flat "Settings" segment (ten folds, three ranks flattened
+// ONE composed `ui-chat-shell` (GH #52/ADR-0154, re-hosted again by ADR-0179 — superseding vision
+// rev.5's hand-rolled `ui-split` composition, which itself superseded ADR-0131 cl.2's three-pane
+// order): `header` = the pane nav (`[ Chat | Author | Settings ]`, ADR-0179 cl.1), `content` = the
+// pane holder — the Chat place's conversation and the Author⇄Settings `ui-master-detail` pairing,
+// exactly one visible per place (LLD §3/§4). The old single resizable options-pane end retired with
+// it (admin-three-pane-ia.lld.md §7); the settings content it used to hold now lives in the Settings
+// place. GH #574 split the old single flat "Settings" segment (ten folds, three ranks flattened
 // into one scroll) into three ranked ones, Kim's ruling: Agent — who it is (Agent/Model/Bankroll);
 // Capabilities — what it can do (Instructions/Skills/Workflows/Resources/Tools); Surface — how it
 // renders (Surface Options/Pattern sources). Since GH #225 each fold is a heading-row FOLD (the GH #222
@@ -64,17 +67,19 @@ import '@agent-ui/components/controls/text-field'
 // whose roving/one-group contract doesn't fit rows interleaved with switches across provider groups).
 import '@agent-ui/components/controls/radio'
 import '@agent-ui/components/controls/disclosure' // vision rev.5 — the Context tabs' accordion primitive
-// GH #646 (reopened, pixel-truth) — the try-it bar is the fleet `ui-tabs` control, the SAME composition
-// shape `super-shell.ts`'s panel-less pane-tabs/narrow-tabs strips already use (GH #221): a bare `ui-tabs`
-// host of `ui-tab` children, no `ui-tab-panel`s (visibility rides `#applyMode`'s own hidden toggle, not
-// the control's panel machinery).
+// ADR-0179 (admin-three-pane-ia.lld.md §2) — the fleet `ui-tabs` control, the SAME composition shape
+// `super-shell.ts`'s panel-less pane-tabs/narrow-tabs strips already use (GH #221): a bare `ui-tabs`
+// host of `ui-tab` children, no `ui-tab-panel`s (visibility rides `#applyPane`'s own hidden toggle, not
+// the control's panel machinery). Two instances compose it: the top-level pane nav (Chat/Author/
+// Settings, §2) and the Settings place's own internal sub-nav (OQ2, §5) — the GH #221 shape
+// re-anchored twice over. (Originally imported for GH #646's try-it bar, which ADR-0179 retired.)
 import '@agent-ui/components/controls/tabs'
 import type { UITabsElement, UITabElement } from '@agent-ui/components/controls/tabs'
-// GH #52 (ADR-0154, agent-admin-shell-rehost.lld.md LLD-C4) — the re-host onto the shell-archetype
-// grammar: content=chat, options-pane segments=Agent/Capabilities/Surface/Context:System/Context:Dialog
-// (SPEC-R7a, GH #574 split the old single Settings segment into three), narrow-end="tabs" flattens them
-// structurally (SPEC-R7b) — replacing the hand-rolled ui-split + narrow ui-tabs dual-shell + the
-// ResizeObserver-driven #applyLayout reparenting entirely.
+// GH #52 (ADR-0154, agent-admin-shell-rehost.lld.md LLD-C4), re-hosted again by ADR-0179 — the
+// shell-archetype grammar now carries exactly two slots: `header` (the pane nav) and `content` (the
+// pane holder). The old options-pane end + `narrow-end="tabs"` six-entry vocabulary retired with cl.1
+// (admin-three-pane-ia.lld.md §7) — replacing, in turn, the original hand-rolled ui-split + narrow
+// ui-tabs dual-shell + the ResizeObserver-driven #applyLayout reparenting.
 import '../chat-shell/chat-shell.ts'
 import type { UIChatShellElement } from '../chat-shell/chat-shell.ts'
 // ADR-0179 cl.3 (admin-three-pane-ia.lld.md §2) — the wide Author⇄Settings PAIRING is a composed
@@ -347,11 +352,12 @@ export class UIAgentAdminElement extends UIElement {
   static props = agentAdminProps
 
   // The composed SHELL — created ONCE (idempotent, `#shell` doubles as the guard) and PERSISTS across a
-  // reconnect (the `master-detail.ts`/`settings.ts` precedent). GH #52/ADR-0154: a `ui-chat-shell`
-  // hosting `#conversation` in `content` and the three panels below as `options-pane` SEGMENTS
-  // (SPEC-R7a) — replacing the old hand-rolled `ui-split` + narrow `ui-tabs` dual-shell + the
-  // ResizeObserver-driven `#applyLayout` reparenting entirely. The shell's own narrow-tabs mechanism
-  // (SPEC-R7b, `narrow-end="tabs"`) is VISIBILITY-ONLY — no JS layout code, no reparenting, ever.
+  // reconnect (the `master-detail.ts`/`settings.ts` precedent). GH #52/ADR-0154, re-hosted by ADR-0179:
+  // a `ui-chat-shell` hosting the pane nav in `header` and the pane holder (Chat conversation +
+  // Author⇄Settings pairing) in `content` — replacing the old hand-rolled `ui-split` + narrow `ui-tabs`
+  // dual-shell + the ResizeObserver-driven `#applyLayout` reparenting entirely, and before that the
+  // shell's own options-pane end + narrow-tabs mechanism (admin-three-pane-ia.lld.md §7). Place
+  // visibility is likewise VISIBILITY-ONLY — no JS layout code, no reparenting, ever (`#applyPane`).
   #shell: UIChatShellElement | null = null
   #conversation: UIConversationElement | null = null
   // ── ADR-0178 cl.5 (LLD-C6) — the DUAL-CONTEXT chat ────────────────────────────────────────────────────
@@ -363,10 +369,6 @@ export class UIAgentAdminElement extends UIElement {
   // stacks one place's two conversations); the lazy interview mounts into `#authorPane`, so nothing needs
   // a field for the holder itself any more (the old `#chatStack` slot retired with the stacking model).
   #authoringConversation: UIConversationElement | null = null
-  /** RESIDUE (admin-three-pane-ia.lld.md §7 — S4-a deletes it): the retired mode seam's own state. Since
-   *  S1-b `#contextFor()` keys off `#pane` below, so nothing this field feeds is load-bearing any more —
-   *  it survives one slice, inert, so the pane routing's proof runs before the residue deletion does. */
-  #mode: 'authoring' | 'test' = 'authoring'
   /**
    * ADR-0179 cl.1/cl.2 (admin-three-pane-ia.lld.md §4) — the ACTIVE PLACE, this element's one navigation
    * state: Chat (the pure test surface) · Author (the Builder interview) · Settings (the five config
@@ -379,12 +381,6 @@ export class UIAgentAdminElement extends UIElement {
    * reach it through the protected `setPaneSeam` below.
    */
   #pane: 'chat' | 'author' | 'settings' = 'chat'
-  /** RESIDUE (admin-three-pane-ia.lld.md §7 — S4-a deletes it): the retired try-it bar's own slot. S1-b
-   *  stopped composing the bar, so this is never assigned; `#applyMode`'s inert branch is its only reader.
-   *  (`#tryItAuthoringTab` could NOT survive alongside it — with the bar uncomposed nothing reads that one
-   *  at all, and an unread private field is a `tsc` error here, not a lint warning; it went one slice
-   *  early, reported as a Findings deviation on GH #651 rather than silently.) */
-  #tryItBar: UITabsElement | null = null
   // ── ADR-0179 (admin-three-pane-ia.lld.md §3) — the three-place anatomy ────────────────────────────────
   /** The top-level place nav: an admin-composed, PANEL-LESS `ui-tabs` (Chat · Author · Settings) in the
    *  chat-shell's `header` slot — the GH #221 composition shape, re-anchored one level up from the
@@ -421,12 +417,13 @@ export class UIAgentAdminElement extends UIElement {
   // ONE registry `#rewireAllSections`/`#compose` both iterate uniformly.
   #capabilitySections: Map<string, EntryListSection> = new Map()
 
-  // GH #52/ADR-0154 (extended GH #574): the five `options-pane` segment content units (`agentContent`/
-  // `capabilitiesContent`/`surfaceContent` — the three ranked config units GH #574 split the old single
-  // Settings unit into; `#contextSystemContent`/`#contextDialogContent` — the two Context halves,
-  // GH #161) are built ONCE in `#compose()` and authored directly into the shell — never moved again, so
-  // no field holds them past construction (the shell's own tab/segment strips drive visibility in place,
-  // SPEC-R7c; TKT-0085's reparenting machinery, and the field slots that tracked its targets, are gone).
+  // GH #52/ADR-0154 (extended GH #574), re-homed by ADR-0179: the five settings content units
+  // (`agentContent`/`capabilitiesContent`/`surfaceContent` — the three ranked config units GH #574 split
+  // the old single Settings unit into; `contextSystemContent`/`contextDialogContent` — the two Context
+  // halves, GH #161) are built ONCE in `#compose()` and authored directly into the Settings place
+  // (`#settingsSections` below) — never moved again, so no field holds them past construction (the
+  // settings-nav strip drives visibility in place, SPEC-R7c; TKT-0085's reparenting machinery, and the
+  // field slots that tracked its targets, are gone).
   // ── vision rev.5: the master switches + the Context tabs' render slots ──────────────────────────────
   #agentSwitch: (HTMLElement & { checked: boolean }) | null = null
   #kindSwitches: Map<string, HTMLElement & { checked: boolean }> = new Map()
@@ -602,8 +599,9 @@ export class UIAgentAdminElement extends UIElement {
     this.#authoringUnsub = undefined
   }
 
-  /** GH #646 — a per-instance id seed for the try-it tab strip's `link()` calls (the `super-shell.ts`
-   *  `#nextId` precedent); this element mints no other ids, so a small local counter is enough. */
+  /** GH #646, now feeding the pane-nav and settings-nav `ui-tabs` strips' `link()` calls (the
+   *  `super-shell.ts` `#nextId` precedent); this element mints no other ids, so a small local counter
+   *  is enough. */
   #nextId(prefix: string): string {
     this.#idSeq += 1
     return `ui-agent-admin-${prefix}-${this.#idSeq}`
@@ -611,9 +609,10 @@ export class UIAgentAdminElement extends UIElement {
 
   // ── composition (idempotent — the master-detail.ts/settings.ts `#compose` doc-comment precedent) ──────
 
-  /** Build the ui-chat-shell + the five composed entry-list sections + the composed ui-settings, once
-   *  ever. GH #52/ADR-0154 — `content` = the conversation; the whole config column and both Context
-   *  halves ride as `options-pane` SEGMENTS (SPEC-R7a), never a separate ui-tabs/reparenting shell.
+  /** Build the ui-chat-shell + the pane nav + the five composed entry-list sections + the composed
+   *  ui-settings, once ever. ADR-0179 — `header` = the pane nav, `content` = the pane holder (the Chat
+   *  conversation + the Author⇄Settings pairing); the whole config column and both Context halves live
+   *  in the Settings place as `data-segment` siblings, never a separate ui-tabs/reparenting shell.
    *  The store-driven CONTENT (each section's rendered entries) is the `connected()` effect's job, not
    *  this method's. */
   #compose(): void {
@@ -688,11 +687,11 @@ export class UIAgentAdminElement extends UIElement {
     // real trigger is `#applyMasterStates`, which fires on connect and on every toggle, well ahead of any
     // turn reply) — memoized, so a call here after one already succeeded/is in flight is a no-op.
     conversation.setContentRenderer((text) => this.#renderContent(text, this.store))
-    // GH #52/ADR-0154 (SPEC-R7a) — Agent ⇄ Capabilities ⇄ Surface ⇄ Context: System ⇄ Context: Dialog
-    // are now FIVE `data-segment` siblings sharing ONE `options-pane` slot (GH #574 split the old single
-    // Settings segment into three ranked ones — identity/runtime, capability content, rendering surface
-    // — the SAME tripling GH #161 already did once for the old single Context segment) — the shell
-    // composes its own pane-local tab strip; no `ui-tabs`/panels of this element's own.
+    // GH #52/ADR-0154, re-homed by ADR-0179 — Agent ⇄ Capabilities ⇄ Surface ⇄ Context: System ⇄
+    // Context: Dialog are FIVE `data-segment` siblings inside the Settings place (GH #574 split the old
+    // single Settings segment into three ranked ones — identity/runtime, capability content, rendering
+    // surface — the SAME tripling GH #161 already did once for the old single Context segment), driven
+    // by this element's own admin-composed `settings-nav` `ui-tabs` strip (§9/LLD-P3).
 
     // GH #574 (Kim's ruling, in-session 2026-08-07) — the old flat Settings tab's ten folds, ranked into
     // three tabs: Agent (who it is — Agent/Model/Bankroll), Capabilities (what it can do — Instructions/
@@ -1030,12 +1029,11 @@ export class UIAgentAdminElement extends UIElement {
     this.#contextTurnsHost = contextTurnsHost
     contextDialogContent.append(contextTurnsHost)
 
-    // (ADR-0178 cl.5 / LLD-C9's try-it bar — the authoring ⇄ test flip that used to compose here — RETIRED
-    // with the mode seam it drove, ADR-0179 cl.2 / admin-three-pane-ia.lld.md §7: the flip is a PLACE
+    // ADR-0178 cl.5 / LLD-C9's try-it bar — the authoring ⇄ test flip that used to compose here — RETIRED
+    // with the mode seam it drove (ADR-0179 cl.2 / admin-three-pane-ia.lld.md §7): the flip is a PLACE
     // change now, voiced once by the pane-nav strip above. Its composition METHOD survives, re-anchored
     // one level up — the same GH #221 panel-less `ui-tabs` shape, in the shell's header slot rather than
-    // atop the chat stack. `#tryItBar`/`#tryItAuthoringTab` stay declared but never assigned for one
-    // slice; S4-a deletes them with the rest of §7's residue list.)
+    // atop the old chat stack.
 
     // ── ADR-0179 cl.1 (LLD §2/§3) — the SETTINGS place: one region, five sections, its own sub-nav ───────
     // The five units are the SAME nodes GH #574/#161 already built above, moved ONCE here at compose time
@@ -1295,34 +1293,9 @@ export class UIAgentAdminElement extends UIElement {
   }
 
   /**
-   * RESIDUE (admin-three-pane-ia.lld.md §7 — S4-a deletes it, together with `#mode`/`#applyMode`/
-   * `setModeSeam` and the try-it bar's own compose block, which S1-b already stopped running).
-   *
-   * It drove the retired authoring ⇄ test flip. Since S1-b the flip IS a place change (`#setPane` below):
-   * this writes a field nothing reads and calls an `#applyMode` whose one remaining target — the try-it
-   * bar — is never composed. Kept for one slice only, so the pane routing's proof lands before the
-   * residue deletion does; no caller outside `setModeSeam` remains.
-   */
-  #setMode(mode: 'authoring' | 'test'): void {
-    if (this.authoringStore === undefined || this.#mode === mode) return
-    this.#mode = mode
-    this.#applyMode()
-  }
-
-  /** RESIDUE (§7, S4-a) — the retired mode seam's apply half. Its conversation-visibility writes moved to
-   *  `#applyPane` (one owner of the places' visibility, never two racing writers); what is left targets
-   *  the try-it bar, which S1-b stopped composing, so every branch is inert. */
-  #applyMode(): void {
-    if (this.#tryItBar) {
-      this.#tryItBar.hidden = this.authoringStore === undefined
-      this.#tryItBar.selected = this.#mode // programmatic write — no `select` echo (ADR-0019)
-    }
-  }
-
-  /**
    * ADR-0179 cl.1/cl.2 (LLD §4) — go to a PLACE. The whole operation is a visibility + arrangement
-   * change: no store touch, no reassignment, no reset, no serialization. That is `#setMode`'s own
-   * discipline inherited verbatim — a place change is not a persona switch, so GH #145's reset must not
+   * change: no store touch, no reassignment, no reset, no serialization. That is the retired mode seam's
+   * own discipline inherited verbatim — a place change is not a persona switch, so GH #145's reset must not
    * fire and both transcripts stay mounted.
    *
    * PRIVATE by contract (LLD §4): no attribute, no event (this element's event vocabulary stays closed),
@@ -2335,13 +2308,7 @@ export class UIAgentAdminElement extends UIElement {
 
   // ── protected test seams (the split.ts/slider-multi.ts precedent) ────────────────────────────────────
 
-  /** RESIDUE (admin-three-pane-ia.lld.md §7 — S4-a deletes it alongside `#mode`/`#setMode`/`#applyMode`).
-   *  `setPaneSeam` below replaces it; no probe drives this one any more. */
-  protected setModeSeam(mode: 'authoring' | 'test'): void {
-    this.#setMode(mode)
-  }
-
-  /** ADR-0179 cl.2 (LLD §4) — go to a PLACE from a test probe, the `setModeSeam` construct it replaces:
+  /** ADR-0179 cl.2 (LLD §4) — go to a PLACE from a test probe, the retired `setModeSeam` construct it replaces:
    *  `#setPane` is private by contract, and the pane-nav strip is a real control whose click a jsdom probe
    *  cannot honestly drive (a jsdom-rendered `ui-tabs` is unstyled, which would quietly void every
    *  geometry assertion built on it). `protected` keeps it off the public element — a consumer cannot

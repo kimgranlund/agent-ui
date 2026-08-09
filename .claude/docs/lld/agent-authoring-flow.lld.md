@@ -74,6 +74,17 @@ flag that S2 deliberately left to this slice.
 | **Try-it toggle anatomy** (S4 builds) | **PIXEL-TRUTH OVERRIDE (Kim, 2026-08-09, GH #646 reopen comment: https://github.com/kimgranlund/agent-ui/issues/646):** a `data-part="try-it"` bar atop the chat stack, visible only while `authoringStore` is set — the fleet `ui-tabs` control (Authoring/Try it as `ui-tab`s, panel-less, the SAME composition shape `#applySegments`/`#buildNarrowTabs`'s own section-tab strips use, GH #221), `.selected` synced by `#applyMode`, calling `#setMode(...)` on the control's `select` commit. Originally built (S4-a, still the row below) as two `ui-button`s with managed `aria-pressed` — Kim's live-surface pass ruled that anatomy wrong: the flip reads as the SAME underline-tab idiom the admin's own section strip already uses, not a pill-button pair. No new host events either way (`#setMode` is internal; the closed event set is untouched). Two live-surface follow-ups landed in the same change: (a) the strip's own `border-block-end` was retracted (doubled a hairline `ui-tabs`' own tablist part already paints); (b) the strip's inline inset was matched to the admin's section-tab strip — which surfaced a THIRD, cross-cutting fact: at narrow width the visible strip is `narrow-tabs` (`chat-shell.css`, GH #575/#626), whose `--ui-bar-inline-inset` role presumed a header to track that `ui-agent-admin` has never composed (super-shell.css's own GH #380 note already recorded this). `chat-shell.css` gained a header-presence split (`:has(> [data-bar='header'])`) so a header-bearing shell still tracks the header (byte-identical, GH #575/#626's law unchanged) while a headerless one — today, only `ui-agent-admin` — falls back to the shell's own generic module-scaled rhythm instead, matching the try-it strip below it. | Smallest fleet-native affordance for a two-state visibility flip; S4 refines visuals against the geometry law without re-opening this contract. The override corrects which SHIPPED idiom "smallest fleet-native affordance" resolves to — a `ui-tabs` composition was already this file's own precedent one paragraph up. |
 | **Events / catalog / naming** | No new host events, no new `ui-*` element, no catalog change, no new tokens beyond the try-it bar's page… component-local CSS. | The slice composes shipped primitives (ADR-0178 Consequences: "almost entirely reuse"). |
 
+> **Repair — 2026-08-10 (GH #653 item 1, S4-a):** [ADR-0179](../adr/0179-agent-admin-three-pane-ia.md)
+> retired the **dual-context/try-it row's own VEHICLE** — the try-it toggle bar row above (and the
+> "dual-context anatomy" row's `chat-stack` wrapper) — replacing the `Authoring ⇄ Try it` bar with
+> place-based navigation (`[ Chat | Author | Settings ]`) over the same dual-conversation mechanism.
+> The mechanism these rows describe (two mounted `UIConversationElement` instances, no store swap, GH
+> #145 honored by construction) stands byte-untouched; only the toggle's PLACEMENT and control shape
+> are superseded. See [`admin-three-pane-ia.lld.md`](./admin-three-pane-ia.lld.md) §2/§4/§7 for the
+> realized replacement (`#pane`/`#setPane`/`setPaneSeam`, the pane-nav `ui-tabs`) and its retirement
+> map for exactly which symbols these rows named (`#mode`/`#setMode`/`#applyMode`/`setModeSeam`/
+> `#tryItBar`) are gone.
+
 ## 3 · The three-filter apply chain (ADR-0178 cl.2, realized)
 
 `persona-patch.ts` exports:
@@ -172,6 +183,16 @@ posture (§10).
 - **Degrade.** `agentSurfaceTurn` unarmed (static build/stub): the authoring context still mounts;
   submits run the prose/stub arm against the Builder's config; no patch ever arrives; panes simply
   don't hydrate. No special-casing — the same degrade every persona has.
+
+> **Repair — 2026-08-10 (GH #653 item 1, S4-a):** placement superseded by
+> [ADR-0179](../adr/0179-agent-admin-three-pane-ia.md) cl.1/cl.2 and realized in
+> [`admin-three-pane-ia.lld.md`](./admin-three-pane-ia.lld.md) §3/§4 — read this section's
+> **mechanism** as still true (two mounted conversations, the reset law, the degrade posture) and its
+> **DOM/Mode bullets** as historical: `chat-stack` is `pane-holder` now, `#mode`/`#setMode` is
+> `#pane`/`#setPane` (a one-token `#contextFor` selector diff, everything below it byte-identical),
+> and the try-it bar is the pane-nav `ui-tabs` in the shell's `header` slot. The Context-routing
+> bullet's `#contextFor` shape is what the new LLD's §4 freezes and re-keys; nothing about the
+> apply-chain (§3/§4 above) or the Builder persona (§6 below) changed.
 
 ## 6 · The Builder persona (ADR-0178 cl.4)
 
@@ -329,6 +350,16 @@ a persona from an arbitrary chat — so S5's intake (capability 4, Kim's earlier
 make its OWN consumption-path ruling (how NL-edit arms the authoring context for an existing
 persona) alongside the entry affordance + destructive-edit safety (OQ4/OF3). Recorded here so the
 intake inherits the question, not an assumption.
+
+> **Repair — 2026-08-10 (GH #653 item 1, S4-a):** the inherited-anatomy list re-states to the pane
+> vehicle per [ADR-0179](../adr/0179-agent-admin-three-pane-ia.md): `#mode`/`#setMode` are retired
+> (deleted, `admin-three-pane-ia.lld.md` §7) and `#contextFor` now keys off `#pane`
+> (`this.#pane === 'author'`, a one-token diff over this section's original selector, everything
+> below it byte-identical). **S5's future entry point now has a named home:** the Author place's
+> always-present empty state (`admin-three-pane-ia.lld.md` §2 OQ4, `author-empty` +
+> `onGenerateRequest`) is exactly the "New agent → Generate" shape S5 would arm an EXISTING persona's
+> draft through — named, not built (zero consumption-path widening; this section's fence stands
+> unchanged, S5 still owns its own ruling).
 
 ## 15 · Risks / open items (named; recommendation each; none blocks dispatch)
 
