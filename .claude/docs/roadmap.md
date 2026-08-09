@@ -217,7 +217,7 @@ decision (dated line in §4).
   wave's inv-2 §3 verification): the five once-uncataloged controls are all dispositioned — four
   PERMANENT allowlist exclusions with cited ADRs, one catalog row. No open work; the 2026-07-28
   ruling was executed and this line simply lagged it.
-- **Identity & account flow family — S1–S3 SHIPPED, S4/S5 queued, family-close on GH #611.**
+- **Identity & account flow family — COMPLETE, S1–S5 ALL SHIPPED (2026-08-08).**
   ([GH #490](https://github.com/kimgranlund/agent-ui/issues/490) ·
   [ADR-0176](adr/0176-identity-account-flow-family-design-intake.md), ratified 2026-08-06.) The
   ADR's four frozen rulings govern: the per-flow lane cut (exactly ONE new control — the code-entry
@@ -230,12 +230,26 @@ decision (dated line in §4).
   OQ3 interactive demos on the shared mock transport, X1 a hard S1 prerequisite) — none still gate
   anything. Shipped: **S1** Registration + Email+Password (PR #561) · **S2** Codes + Magic Link,
   incl. the new `ui-otp-field` control (PRs #596/#578, LLD PR #582) · **S3** Social Auth (PR #605).
-  Queued: **S4** Onboarding ([GH #614](https://github.com/kimgranlund/agent-ui/issues/614), the
-  OQ1-ruled `ui-progress` widening) · **S5** Account Management
-  ([GH #615](https://github.com/kimgranlund/agent-ui/issues/615)). Family-close debts (the
-  copy-pasted `errorCodeOf`, the pending-window assertion idiom, this stale line) tracked on
-  [GH #611](https://github.com/kimgranlund/agent-ui/issues/611); family-wide layout cards (S3-c
-  class) remain unbuilt, deliberately excluded from #611, riding S4/S5's own call.
+  **S4** Onboarding shipped (PR #621, the OQ1-ruled `ui-progress` segments prop,
+  [GH #614](https://github.com/kimgranlund/agent-ui/issues/614)) · **S5** Account Management
+  shipped (PR #622, [GH #615](https://github.com/kimgranlund/agent-ui/issues/615)); family-close
+  debts resolved (PR #620, [GH #611](https://github.com/kimgranlund/agent-ui/issues/611)).
+  Family-wide layout cards (S3-c class) remain unbuilt — the one deliberately-open remnant, needing
+  its own intake if ever wanted.
+- **Agent-authoring flow family — COMPLETE, S1–S4 ALL SHIPPED (2026-08-09, same-day intake→ship).**
+  ([GH #633](https://github.com/kimgranlund/agent-ui/issues/633) ·
+  [ADR-0178](adr/0178-agent-authoring-conversational-persona-hydration.md), ratified 2026-08-09 ·
+  manifest [`decompositions/agent-authoring-flow.decomp.md`](decompositions/agent-authoring-flow.decomp.md) ·
+  LLD [`lld/agent-authoring-flow.lld.md`](lld/agent-authoring-flow.lld.md).) Shipped: **S1**
+  blank path (PR #639) · **S2** the `personaPatch` producer arm + authoring gate, SPEC v0.14
+  R29/R30 (PR #642) · **S3** the guided authoring flow — Builder persona, three-filter
+  drop-never-coerce apply gate, dual-context anatomy, the Kim-ruled STORE-IDENTITY consumption
+  fence (LLD PR #643, build PR #645) · **S4** the try-it toggle (PR #647). **S5 (NL-edit
+  everywhere) is parked-IN** (Kim's pre-signal) carrying its inherited question: the fence
+  deliberately blocks arbitrary-chat patching, so S5's intake rules its own consumption path
+  (LLD §15). Residue: [GH #644](https://github.com/kimgranlund/agent-ui/issues/644) (prose-arm
+  history isolation under the degrade config, in progress).
+
 - **Planner-stage pilot — the wire half is IN, the loop half is unscheduled. 🟡**
   ([ADR-0174](adr/0174-planner-stage-pilot-sequential-opt-in-loop.md), ratified 2026-08-06.) An
   opt-in, SEQUENTIAL plan→execute→synthesize loop composed entirely from already-shipped
