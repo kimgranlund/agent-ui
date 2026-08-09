@@ -114,6 +114,21 @@ describe('GH #626 — the bar column and the canvas column land on the SAME x', 
     expect(getComputedStyle(q('.app-context-header')).paddingInlineEnd, 'header row inset (end)').toBe(inset)
   })
 
+  it('the app header row stays vertically CENTRED in its bar (GH #626 review — where the shift was measured)', async () => {
+    // The block-axis fill made `bar-content` full-height, which top-anchored short content until the
+    // centring moved inside it. The review measured that shift right here — on the live docs header at
+    // 700px, 4.5px/5.5px before, 0px/10px after. `super-shell-bar-seam.browser.test.ts` pins the
+    // mechanism generically; this pins the surface the regression was actually reported on.
+    mountAt(700)
+    await raf()
+    const barContent = q('[data-part="bar"][data-bar="header"] [data-part="bar-content"]').getBoundingClientRect()
+    const row = q('.app-context-header').getBoundingClientRect()
+    const gapTop = row.top - barContent.top
+    const gapBottom = barContent.bottom - row.bottom
+    expect(gapTop + gapBottom, 'the header row is genuinely shorter than the bar (anti-vacuous)').toBeGreaterThan(4)
+    expect(Math.abs(gapTop - gapBottom), 'header row centred in the bar, not top-anchored').toBeLessThanOrEqual(0.5)
+  })
+
   it('the footer BAR itself is a padding-less rail, so its content box reaches the frame edge', async () => {
     mountAt(700)
     await raf()

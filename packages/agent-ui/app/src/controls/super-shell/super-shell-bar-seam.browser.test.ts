@@ -176,6 +176,30 @@ describe('ADR-0166 cl.1/cl.2 — the frame inserts no space and each bar OWNS it
     expect(Math.abs(content.getBoundingClientRect().height - bar.clientHeight), 'bar-content fills the GROWN bar').toBeLessThanOrEqual(0.5)
   })
 
+  it('GH #626 — SHORT bar content stays vertically CENTRED (the fill must not top-anchor it)', () => {
+    // The regression the #626 review caught (MEDIUM, measured on the live docs header): making
+    // `bar-content` fill the bar is only half the contract. Filling alone left it a BLOCK box, so short
+    // authored content sat at its top edge — a ~4.5px upward shift of every bar's content on every
+    // super-shell surface, because the bar's `align-items: center` used to centre the shrink-wrapped
+    // box and no longer had a short box to centre.
+    // Asserted as equal top and bottom gaps rather than a pinned offset, so it survives a bar-size or
+    // type-scale repoint. Negative control, by hand: drop `justify-content: center` from
+    // `[data-part='bar-content']` and the top gap goes to 0 while the bottom keeps the slack.
+    const el = mount(['header', 'content', 'footer'])
+    for (const side of ['header', 'footer'] as const) {
+      const bar = q(el, `[data-part="bar"][data-bar="${side}"]`)
+      const content = q(bar, '[data-part="bar-content"]')
+      const authored = q(content, '[data-slot]')
+      const contentBox = content.getBoundingClientRect()
+      const authoredBox = authored.getBoundingClientRect()
+      const gapTop = authoredBox.top - contentBox.top
+      const gapBottom = contentBox.bottom - authoredBox.bottom
+      // Anti-vacuous: there must BE slack to distribute, or "centred" is trivially true.
+      expect(gapTop + gapBottom, `${side} — the authored row is genuinely shorter than the bar`).toBeGreaterThan(8)
+      expect(Math.abs(gapTop - gapBottom), `${side} — short content centred, not top-anchored`).toBeLessThanOrEqual(0.5)
+    }
+  })
+
   it('GH #626 — the side toggles do NOT stretch with it (why this is align-self, not align-items on the bar)', () => {
     // The reason the fix lives on `bar-content` rather than flipping the bar to `align-items: stretch`.
     // A toggle is a centred square affordance; stretching it to a tall bar is a defect, not a fix. This

@@ -226,11 +226,27 @@
      stretch-to-fill child of its own) had no box to fill: it was laying out inside a shrink-wrapped
      ~18px box, not the bar. Declared as `align-self` on THIS child rather than flipping the bar to
      `align-items: stretch`: the bar's other children are the side toggles, which are centred square
-     affordances by design — stretching a 54px icon button to a 120px bar is a defect, not a fix. */
+     affordances by design — stretching a 54px icon button to a 120px bar is a defect, not a fix.
+
+     The column-flex pair below is the OTHER HALF of that fill, and it is not optional (GH #626 review,
+     MEASURED: 0px top / 35px bottom in both engines, ~4.5px of live upward shift on the docs header).
+     Filling alone left this a BLOCK box, so short authored content sat at its top edge — the bar's
+     `align-items: center` used to centre the shrink-wrapped box, and once the box is full-height there
+     is nothing short left for it to centre. The centring has to move INSIDE, with the fill.
+     `column` + `justify-content: center` is chosen over `align-items: center` on a ROW precisely because
+     it changes nothing else: authored children still stack (a row would lay two header children side by
+     side), still fill the inline axis (a column's default `align-items: stretch`), and are now centred as
+     a group exactly where the bar used to put them. Net visual delta for every existing consumer: zero —
+     while a child that genuinely wants the full height can finally take it with `flex: 1`, which was not
+     expressible at all before the fill. One behavioural footnote: a flex container does not collapse its
+     children's block margins. Nothing in the fleet's bar content relies on that. */
   [data-part='bar-content'] {
     flex: 1 1 auto;
     min-inline-size: 0;
     align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 
   [data-part='middle'] {
