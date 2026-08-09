@@ -166,6 +166,25 @@
     min-block-size: 0;
   }
 
+  /* ADR-0178 cl.5 — the content slot hosts a STACK now (the two dual-context conversations, plus S4-a's
+     try-it bar), so the fill behaviour the conversation used to get directly moves out one level: the
+     stack fills the content box, and whichever conversation is VISIBLE fills the stack. A hidden one
+     contributes no box at all (`hidden` + `display: none`), which is what keeps the flip a pure
+     visibility change with no layout shift for the surviving transcript. */
+  [data-part='chat-stack'] {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-block-size: 0;
+  }
+  [data-part='chat-stack'] > ui-conversation {
+    flex: 1 1 auto;
+    min-block-size: 0;
+  }
+  [data-part='chat-stack'] > ui-conversation[hidden] {
+    display: none;
+  }
+
   /* The options-pane (Agent ⇄ Capabilities ⇄ Surface ⇄ Context: System ⇄ Context: Dialog — GH #161's
      Context three-way split, GH #574's Settings-into-three split) rendered with ZERO padding:
      `[data-part='pane']`'s base rule (super-shell.css) declares none by design, so

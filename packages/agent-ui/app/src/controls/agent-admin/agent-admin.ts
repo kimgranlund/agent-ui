@@ -109,6 +109,8 @@ import {
   isGenuiDogfoodEnabled,
   SURFACE_PLANNER_KEY,
   isPlannerSurfaceEnabled,
+  SURFACE_AUTHORING_KEY,
+  isAuthoringSurfaceEnabled,
   defaultAgentConfigSchema,
   isEnabledFlag,
   kindEnabledKey,
@@ -149,6 +151,9 @@ import {
 import { entriesStoreKey, readEntries, validateNewEntry, type Entry, type EntryLibraryPack } from '../entry-list/entry-data.ts'
 import { mountEntryList, showAddError, type EntryListSection } from '../entry-list/entry-list.ts'
 import { lintPromptSections } from './prompt-lint.ts'
+// ADR-0178 cl.2 — the three-filter apply gate + the canonical key set it enumerates (LLD-C1). A pure
+// module: store in, writes out, a report back — this element owns WHEN it may run, never HOW it filters.
+import { applyPersonaPatch, draftStateBlock, type PatchReport } from './persona-patch.ts'
 
 const agentAdminProps = {
   // Non-reflected properties — too structured for an attribute (the `ui-split` `sizes` / `ui-settings`
@@ -178,6 +183,17 @@ const agentAdminProps = {
   // switch. Only the menu updates; a section's rendered ENTRIES are unaffected (those already re-render
   // off `store`, a separate signal).
   libraries: { ...prop.json<Record<string, readonly EntryLibraryPack[]> | undefined>(undefined), attribute: false as const },
+  // ADR-0178 cl.5 (LLD-C6) — the guided-authoring flow's second composition source. SET ⇒ the flow is
+  // ACTIVE: a second conversation mounts beside the test one, its turns compose from THIS store (the
+  // host-authored Builder persona's own config), and any patch they declare applies to `store` — the
+  // DRAFT. CLEARED ⇒ the authoring context tears down and the element is byte-identically what it was
+  // before this prop existed.
+  //
+  // A prop rather than a flag because the flow needs a whole second persona to compose from, and a prop
+  // is this element's one configuration idiom (the `store` shape, verbatim). Crucially it is a SECOND
+  // store, never a replacement: `store` is never reassigned by entering, leaving, or flipping the flow
+  // (GH #145's reset fires on a real persona switch and on nothing else).
+  authoringStore: { ...prop.json<SettingsStore | undefined>(undefined), attribute: false as const },
 } satisfies PropsSchema
 
 /** The five ENTRY_KINDS instantiations, each paired with its display copy — the single source of truth
@@ -326,6 +342,23 @@ export class UIAgentAdminElement extends UIElement {
   // (SPEC-R7b, `narrow-end="tabs"`) is VISIBILITY-ONLY — no JS layout code, no reparenting, ever.
   #shell: UIChatShellElement | null = null
   #conversation: UIConversationElement | null = null
+  // ── ADR-0178 cl.5 (LLD-C6) — the DUAL-CONTEXT chat ────────────────────────────────────────────────────
+  // Two MOUNTED conversations, never one conversation with two transcripts: the test context above stays
+  // byte-unchanged, and the authoring one mounts lazily beside it inside `#chatStack`. Both keep their DOM
+  // transcripts for the element's whole life, which is what makes a mode flip a pure visibility change —
+  // no snapshot/restore machinery to invent, and nothing for `admin.store` to be reassigned FOR.
+  #chatStack: HTMLElement | null = null
+  #authoringConversation: UIConversationElement | null = null
+  /** Which context drives the next turn. Meaningful only while `authoringStore` is set; entry default is
+   *  `'authoring'` (the flow opens on the interview). The flip affordance itself is S4-a (LLD-C9) — this
+   *  slice builds the seam it drives. */
+  #mode: 'authoring' | 'test' = 'authoring'
+  /** The authoring context's own store identity, so the effect can tell a real reassignment from a bare
+   *  re-run (the `#lastStore` precedent, applied to the second store). */
+  #lastAuthoringStore: SettingsStore | undefined
+  /** The authoring context's own store subscription teardown (its own slot, the `#modelGridUnsub`
+   *  precedent — the shared `#unsubscribes` map is cleared on every DRAFT-store rewire). */
+  #authoringUnsub: (() => void) | undefined
   #settingsEl: UISettingsElement | null = null
   // Every entry-list instantiation (prompt sections + all four capability kinds), keyed by `kind` — the
   // ONE registry `#rewireAllSections`/`#compose` both iterate uniformly.
@@ -351,6 +384,9 @@ export class UIAgentAdminElement extends UIElement {
   // precedent) — the gate has no sub-options yet (SPEC-R21; OF4's possible future prompt-section entry is
   // unbuilt).
   #surfacePlannerSwitch: (HTMLElement & { checked: boolean }) | null = null
+  // ADR-0178 cl.3 / SPEC-R30 — the persona-authoring gate's row switch: the planner row's shape,
+  // verbatim (bare, ungrouped, inverse-default OFF).
+  #surfaceAuthoringSwitch: (HTMLElement & { checked: boolean }) | null = null
   // GH #525/#541 — the bankroll Settings FOLD (its own group since #541): built once; `hidden` reflects
   // the persona's OWN opt-in (`BANKROLL_CAPABLE_KEY`), applied in `#applyMasterStates` like every other
   // row's state — never a DOM add/remove per persona switch.
@@ -457,6 +493,8 @@ export class UIAgentAdminElement extends UIElement {
       const schema = this.schema
       const store = this.store
       const libraries = this.libraries
+      // ADR-0178 cl.5 — tracked alongside the others so arming/clearing the flow re-runs this effect.
+      const authoringStore = this.authoringStore
       untracked(() => {
         // GH #145 — a REAL store reassignment (a persona switch: `admin.store = presetStore(other)`)
         // must start a genuinely fresh conversation for the newly-selected persona: the visible chat
@@ -476,6 +514,10 @@ export class UIAgentAdminElement extends UIElement {
         this.#updateLibraries(libraries)
         this.#syncConversationConfig(store)
         this.#rewireContext(store)
+        // AFTER the draft's own rewire: a persona switch clears `authoringStore` first (the page's
+        // `applyPersona` choke point), so by the time both props have settled this call sees the final
+        // state and the flow always opens — or closes — clean.
+        this.#rewireAuthoringContext(authoringStore)
       })
     })
   }
@@ -487,6 +529,8 @@ export class UIAgentAdminElement extends UIElement {
     this.#modelGridUnsub = undefined
     this.#contextUnsub?.()
     this.#contextUnsub = undefined
+    this.#authoringUnsub?.()
+    this.#authoringUnsub = undefined
   }
 
   // ── composition (idempotent — the master-detail.ts/settings.ts `#compose` doc-comment precedent) ──────
@@ -506,9 +550,17 @@ export class UIAgentAdminElement extends UIElement {
     shell.setAttribute('resizable-end', '')
     shell.setAttribute('narrow-end', 'tabs')
 
+    // ADR-0178 cl.5 (LLD-C6) — the content slot is a STACK now, not the conversation itself: the shell's
+    // one content slot has to host two conversations (plus S4-a's try-it bar), and the slot/tab attributes
+    // belong to whatever occupies that slot. The test conversation below is otherwise byte-unchanged — it
+    // simply sits inside the stack instead of directly in the shell.
+    const chatStack = document.createElement('div')
+    chatStack.setAttribute('data-part', 'chat-stack')
+    chatStack.setAttribute('data-slot', 'content')
+    chatStack.setAttribute('data-tab-label', 'Chat') // SPEC-R7b's narrow-tabs content label
+    this.#chatStack = chatStack
+
     const conversation = new UIConversationElement()
-    conversation.setAttribute('data-slot', 'content')
-    conversation.setAttribute('data-tab-label', 'Chat') // SPEC-R7b's narrow-tabs content label
     // GH #238/#239/ADR-0159 — the admin chat opts INTO the receipt pattern (Kim's 2026-07-23 ruling; this
     // is the surface the ruling's screenshot came from): each turn's activity renders as one morphing line
     // while live and auto-collapses to a "N steps · total" receipt at the turn's end, expandable both ways.
@@ -550,25 +602,7 @@ export class UIAgentAdminElement extends UIElement {
     //      an error turn is the agent's chance to self-correct, not a license to loop — the budget
     //      exhausting halts visibly (a failed turn bubble), and any non-error client message (a real
     //      user action) or typed intent re-arms it.
-    conversation.onClientMessage((message) => {
-      if (this.agentSurfaceTurn === undefined) return
-      const isError = typeof message === 'object' && message !== null && 'error' in message
-      if (isError) {
-        if (this.#errorLoopHalted) return // already halted + reported; drop until a user action re-arms
-        this.#consecutiveErrorTurns += 1
-        if (this.#consecutiveErrorTurns > ERROR_TURN_BUDGET) {
-          this.#errorLoopHalted = true
-          conversation
-            .beginAgentTurn()
-            .fail(`surface loop halted — ${ERROR_TURN_BUDGET} consecutive turns ended in a renderer error`)
-          return
-        }
-      } else {
-        this.#consecutiveErrorTurns = 0
-        this.#errorLoopHalted = false
-      }
-      setTimeout(() => this.#runSurfaceTurn({ kind: 'client', message }), 0)
-    })
+    conversation.onClientMessage((message) => this.#handleClientMessage(conversation, message))
     // Vision rev.6 — the Markdown surface rides ui-conversation's SPEC-R12 content-render seam: agent
     // notes/system bubbles render through <ui-markdown> (sanitized by construction) while the switch is
     // ON, and fall back to a plain text node (the frame's own "simple text is fallback") when OFF. The
@@ -579,16 +613,7 @@ export class UIAgentAdminElement extends UIElement {
     // way. `preloadMarkdownRenderer()` below fires the load in case nothing already did (defensive; the
     // real trigger is `#applyMasterStates`, which fires on connect and on every toggle, well ahead of any
     // turn reply) — memoized, so a call here after one already succeeded/is in flight is a no-op.
-    conversation.setContentRenderer((text) => {
-      if (!isEnabledFlag(this.store?.get(SURFACE_MARKDOWN_KEY))) return document.createTextNode(text)
-      if (customElements.get('ui-markdown') === undefined) {
-        preloadMarkdownRenderer()
-        return document.createTextNode(text)
-      }
-      const node = document.createElement('ui-markdown') as HTMLElement & { markdown: string }
-      node.markdown = text
-      return node
-    })
+    conversation.setContentRenderer((text) => this.#renderContent(text, this.store))
     // GH #52/ADR-0154 (SPEC-R7a) — Agent ⇄ Capabilities ⇄ Surface ⇄ Context: System ⇄ Context: Dialog
     // are now FIVE `data-segment` siblings sharing ONE `options-pane` slot (GH #574 split the old single
     // Settings segment into three ranked ones — identity/runtime, capability content, rendering surface
@@ -790,6 +815,25 @@ export class UIAgentAdminElement extends UIElement {
     })
     this.#surfacePlannerSwitch = planner.toggle
 
+    // ADR-0178 cl.3 / SPEC-R30 — the persona-authoring gate's own row, appended after Planner: the SAME
+    // `surfaceRow` shape and the SAME inverse-default law (OFF until a persona explicitly opts in), zero
+    // new row machinery — the Planner row IS the template. A BARE row, not a `surfaceGroup`: the gate has
+    // no sub-options, so ADR-0170 cl.5's dimmed-while-off law has no child to dim here (it is the reason
+    // this row mints no nested detail zone at all, not an omission). Flipping it ON for an ORDINARY
+    // persona is exactly cl.6's deferred NL-edit entry point — the seam is built once, here.
+    //
+    // The gate governs TEACHING (the composed prompt's personaPatch arm) and is ONE conjunct of
+    // consumption; it never authorizes a write on its own. A patch declared outside the dedicated
+    // authoring context is ignored with this switch ON — see `#runSurfaceTurn`'s apply loop.
+    const authoring = surfaceRow('authoring', 'Authoring', 'Let this agent propose edits to a draft agent’s own configuration — opt-in')
+    authoring.toggle.checked = false // the inverse default (OFF) — applyMasterStates re-applies the stored value
+    authoring.toggle.addEventListener('change', () => {
+      this.store?.set(SURFACE_AUTHORING_KEY, authoring.toggle.checked)
+      this.#applyMasterStates(this.store)
+      if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
+    })
+    this.#surfaceAuthoringSwitch = authoring.toggle
+
     // GH #525 — the bankroll RESET row (design call 3, 2026-08-07: a settings-pane affordance, never a
     // chat command): a plain label + spacer + trailing `<ui-button>` (the entry-list.ts `deleteBtn`
     // precedent), no toggle (there is no on/off here, only a stored figure to clear). GH #541 — it is its
@@ -819,7 +863,7 @@ export class UIAgentAdminElement extends UIElement {
     const bankrollItem = settingsItem('bankroll', 'Bankroll', bankrollRow)
     this.#bankrollItem = bankrollItem as HTMLElement & { hidden: boolean }
 
-    surfaceOptions.append(markdown.row, a2uiGroup.group, genuiGroup.group, planner.row)
+    surfaceOptions.append(markdown.row, a2uiGroup.group, genuiGroup.group, planner.row, authoring.row)
 
     // GH #225/#226 — each Settings section is a heading-row fold (the GH #222 Context pattern applied to
     // the config column). The master switches (Agent + one per kind) ride their fold's heading row
@@ -923,12 +967,168 @@ export class UIAgentAdminElement extends UIElement {
     // GH #574 — DOM order fixes the tab-strip order (both #applySegments and the narrow-tabs mechanism
     // read `data-segment` children in append order): Agent · Capabilities · Surface · Context: System ·
     // Context: Dialog, exactly the ruled strip.
-    shell.append(conversation, agentContent, capabilitiesContent, surfaceContent, contextSystemContent, contextDialogContent)
+    chatStack.append(conversation)
+    shell.append(chatStack, agentContent, capabilitiesContent, surfaceContent, contextSystemContent, contextDialogContent)
     this.append(shell)
 
     this.#shell = shell
     this.#conversation = conversation
     this.#settingsEl = settingsEl
+  }
+
+  /** One conversation's content-render seam, parameterized by the store whose Markdown modality governs
+   *  it (extracted verbatim from the test conversation's own inline callback so the authoring context can
+   *  share it — the behaviour is identical, only the store it reads differs). */
+  #renderContent(text: string, store: SettingsStore | undefined): Node {
+    if (!isEnabledFlag(store?.get(SURFACE_MARKDOWN_KEY))) return document.createTextNode(text)
+    if (customElements.get('ui-markdown') === undefined) {
+      preloadMarkdownRenderer()
+      return document.createTextNode(text)
+    }
+    const node = document.createElement('ui-markdown') as HTMLElement & { markdown: string }
+    node.markdown = text
+    return node
+  }
+
+  /** The GH #63 client-turn guards, extracted so BOTH conversations run the one budget. The budget is
+   *  deliberately SHARED rather than per-context: it bounds this element's error-driven turn spawning as a
+   *  whole, which is what the livelock it closes was made of. */
+  #handleClientMessage(conversation: UIConversationElement, message: unknown): void {
+    if (this.agentSurfaceTurn === undefined) return
+    const isError = typeof message === 'object' && message !== null && 'error' in message
+    if (isError) {
+      if (this.#errorLoopHalted) return // already halted + reported; drop until a user action re-arms
+      this.#consecutiveErrorTurns += 1
+      if (this.#consecutiveErrorTurns > ERROR_TURN_BUDGET) {
+        this.#errorLoopHalted = true
+        conversation.beginAgentTurn().fail(`surface loop halted — ${ERROR_TURN_BUDGET} consecutive turns ended in a renderer error`)
+        return
+      }
+    } else {
+      this.#consecutiveErrorTurns = 0
+      this.#errorLoopHalted = false
+    }
+    setTimeout(() => this.#runSurfaceTurn({ kind: 'client', message }), 0)
+  }
+
+  /**
+   * ADR-0178 cl.5 (LLD-C6) — WHICH context drives the next turn, and everything that follows from it.
+   *
+   * The authoring context resolves only while the flow is armed AND the mode says so; everything else
+   * resolves to EXACTLY today's values, which is the zero-regression invariant this whole dual-context
+   * scaffold rests on (asserted in the suite: an inactive flow builds a byte-identical request).
+   *
+   * `store` is what the turn COMPOSES FROM — never what a patch applies to. A patch always targets
+   * `this.store`, the draft.
+   */
+  #contextFor(): { store: SettingsStore | undefined; conversation: UIConversationElement | null; session: 'authoring' | 'test' | undefined } {
+    const authoringStore = this.authoringStore
+    if (authoringStore !== undefined && this.#mode === 'authoring' && this.#authoringConversation) {
+      return { store: authoringStore, conversation: this.#authoringConversation, session: 'authoring' }
+    }
+    // `session` stays UNDEFINED for the test context rather than the literal 'test': the runner defaults an
+    // absent value to the same slot, so an inactive flow's request is byte-identical to a pre-S3 one.
+    return { store: this.store, conversation: this.#conversation, session: undefined }
+  }
+
+  /** ADR-0178 cl.5 — mount the authoring conversation, once, on the first `authoringStore` assignment.
+   *  Lazy by design: an element that never enters the flow carries no second conversation at all. */
+  #mountAuthoringConversation(): void {
+    const stack = this.#chatStack
+    if (this.#authoringConversation !== null || stack === null) return
+    const conversation = new UIConversationElement()
+    conversation.setAttribute('data-part', 'authoring-conversation')
+    // Same two developer-surface opt-ins the test conversation takes (GH #238/#240/ADR-0159): the
+    // interview is watched by the same person debugging the draft.
+    conversation.receipt = true
+    conversation.sources = true
+    conversation.onSubmit((text) => this.#handleSubmit(text))
+    // The Builder's own model selection lives in the Builder's own store — writing it to the draft would
+    // let the interviewer's model choice silently become the draft agent's.
+    conversation.onModelChange((id) => this.authoringStore?.set('model', id))
+    conversation.onEffortChange((id) => {
+      this.#effort = id as EffortLevel
+      conversation.effort = this.#effort
+    })
+    conversation.onClientMessage((message) => this.#handleClientMessage(conversation, message))
+    conversation.setContentRenderer((text) => this.#renderContent(text, this.authoringStore))
+    // Before the test conversation in DOM order — the interview is what the flow opens on.
+    stack.prepend(conversation)
+    this.#authoringConversation = conversation
+  }
+
+  /**
+   * ADR-0178 cl.5 — flip WHICH context drives the next turn. The whole operation is a visibility change:
+   * no store touch, no reassignment, no reset, no serialization. That is the cl.5 contract stated as
+   * code — a flip is not a persona switch, so GH #145's reset must not fire and both transcripts stay.
+   *
+   * INTERNAL seam, not part of the attributes-as-API contract: it carries no attribute, emits no event
+   * (this element's event vocabulary stays closed), and appears in no `attributes[]` row. S4-a's try-it
+   * bar is its caller; the LLD books it as existing after this step so the round-trip is provable now.
+   * A no-op unless the flow is armed.
+   */
+  setMode(mode: 'authoring' | 'test'): void {
+    if (this.authoringStore === undefined || this.#mode === mode) return
+    this.#mode = mode
+    this.#applyMode()
+  }
+
+  /** Reflect the current mode onto the two conversations' visibility. Nothing else: no store touch, no
+   *  reset, no serialization — which is precisely why both transcripts survive a flip (ADR-0178 cl.5). */
+  #applyMode(): void {
+    const armed = this.authoringStore !== undefined
+    if (this.#authoringConversation) this.#authoringConversation.hidden = !armed || this.#mode !== 'authoring'
+    // The test conversation hides only while the flow is armed AND showing the interview; an unarmed
+    // element leaves it visible exactly as it always was.
+    if (this.#conversation) this.#conversation.hidden = armed && this.#mode === 'authoring'
+  }
+
+  /** Arm, re-arm, or tear down the authoring context in response to an `authoringStore` change. A real
+   *  identity change rebuilds only THIS context — the draft's own transcript is untouched, because the
+   *  draft did not change (that is `store`'s job, and its GH #145 reset). */
+  #rewireAuthoringContext(authoringStore: SettingsStore | undefined): void {
+    const changed = this.#lastAuthoringStore !== authoringStore
+    this.#lastAuthoringStore = authoringStore
+    if (authoringStore === undefined) {
+      // Leaving the flow: the conversation stays mounted (cheap, and re-entering is common) but is
+      // emptied and hidden, and the mode resets so the next entry always opens on the interview.
+      if (changed) this.#authoringConversation?.reset()
+      this.#authoringUnsub?.()
+      this.#authoringUnsub = undefined
+      this.#mode = 'authoring'
+      this.#applyMode()
+      return
+    }
+    this.#mountAuthoringConversation()
+    if (changed) {
+      this.#authoringConversation?.reset() // a DIFFERENT interviewer starts a fresh interview
+      this.#mode = 'authoring'
+    }
+    this.#syncAuthoringConversationConfig(authoringStore)
+    this.#applyMode()
+  }
+
+  /** The authoring conversation's own model roster/selection + master-switch reflection, read from the
+   *  BUILDER's store (the `#syncConversationConfig`/`#applyMasterStates` pair, scoped to this context). */
+  #syncAuthoringConversationConfig(store: SettingsStore | undefined): void {
+    const conversation = this.#authoringConversation
+    if (!conversation) return
+    conversation.efforts = EFFORT_LEVELS
+    conversation.effort = this.#effort
+    const render = (): void => {
+      const roster = modelRoster()
+      conversation.models = roster.filter((m) => isModelIncluded(store?.get(MODELS_INCLUDED_KEY), m))
+      conversation.model = sanitizeModel(store?.get('model'), roster)
+      conversation.disabled = !isEnabledFlag(store?.get(AGENT_ENABLED_KEY))
+    }
+    render()
+    // Props down, callbacks up: the picker writes the store, the store feeds the committed value back.
+    // Its OWN teardown slot (the `#modelGridUnsub` precedent) — it must outlive `#rewireAllSections`'
+    // clears of the shared map, which belong to the DRAFT's store, not this one.
+    this.#authoringUnsub?.()
+    this.#authoringUnsub = store?.subscribe?.((key) => {
+      if (key === 'model' || key === MODELS_INCLUDED_KEY || key === AGENT_ENABLED_KEY) render()
+    })
   }
 
   /** Build ONE entry-list section wired to THIS element's store — the ONE shared mechanism every
@@ -1221,9 +1421,10 @@ export class UIAgentAdminElement extends UIElement {
    *  `setNote`/`finalize` (LLD Q3), degrading a thrown/rejected runner via `handle.fail()` (LLD Q5, no crash,
    *  no silent swallow). Both arms append the completed exchange to `#history`. */
   #handleSubmit(text: string): void {
-    const conversation = this.#conversation
+    // ADR-0178 cl.5 — every read below is against the DRIVING context's store. With the flow inactive
+    // that resolves to `this.store` and today's conversation, so this method's behaviour is unchanged.
+    const { store, conversation } = this.#contextFor()
     if (!conversation) return
-    const store = this.store
     const schema = this.schema ?? defaultAgentConfigSchema
     // Vision rev.5 — the Agent master switch ("active/available or not", Kim's ruling): the composer is
     // already busy-disabled via `conversation.disabled`, so this is the belt (a programmatic submit).
@@ -1288,7 +1489,7 @@ export class UIAgentAdminElement extends UIElement {
     // (TKT-0034, auto-tracked off beginAgentTurn) disables the composer until finalize()/fail() runs.
     const request: AdminTurnRequest = {
       text,
-      system: composeLiveSystemPrompt(sections, this.#capabilityGroups(store), this.#bankrollForPrompt(store)),
+      system: this.#personaSystemFor(store, sections),
       model: config.model,
       effort: this.#effort,
       // ADR-0168 cl.5 / GH #402 — the prose arm forwards enablement too (it was the one live arm the
@@ -1326,10 +1527,14 @@ export class UIAgentAdminElement extends UIElement {
    *  live-apply law); the runner owns the transport-side session/history (SPEC-N1 — the component never
    *  sees a transport type). Errors surface through the fail path, exactly the text arm's discipline. */
   #runSurfaceTurn(turn: { kind: 'intent'; text: string } | { kind: 'client'; message: unknown }): void {
-    const conversation = this.#conversation
+    // ADR-0178 cl.5 — as in `#handleSubmit`: with the flow inactive, `store`/`conversation` resolve to
+    // exactly today's values and `session` stays absent, so the built request is byte-identical.
+    const { store, conversation, session } = this.#contextFor()
     const surfaceTurn = this.agentSurfaceTurn
     if (!conversation || surfaceTurn === undefined) return
-    const store = this.store
+    // The store this turn is FENCED to. Captured here, at turn start, and compared by IDENTITY when a
+    // patch arrives — the bankroll mirror's own captured-store posture.
+    const drivingStore = store
     // The Agent master switch gates surface turns too — BOTH kinds: a typed intent and a surface action
     // click (an inactive agent runs nothing, Kim's ruling).
     if (!isEnabledFlag(store?.get(AGENT_ENABLED_KEY))) return
@@ -1365,7 +1570,7 @@ export class UIAgentAdminElement extends UIElement {
     const sections = readEntries(store, ENTRY_KINDS.promptSection)
     const request = {
       turn,
-      personaSystem: composeLiveSystemPrompt(sections, this.#capabilityGroups(store), this.#bankrollForPrompt(store)),
+      personaSystem: this.#personaSystemFor(store, sections),
       model: sanitizeModel(store?.get('model'), modelRoster()),
       // The composer's Effort picker selection (see AdminSurfaceTurnRequest.effort) — the same dial the
       // plain-chat arm (`#handleSubmit`'s `AdminTurnRequest`) already threads.
@@ -1396,6 +1601,11 @@ export class UIAgentAdminElement extends UIElement {
       // A2UI renderer available this turn. Before this field existed, the composed prompt ignored the
       // toggle entirely (the reported defect: a GenUI-only turn taught the model the FULL A2UI catalog).
       a2uiEnabled: a2uiOn,
+      // ADR-0178 cl.5 / SPEC-R30 — BOTH fields exist only for the authoring context, so an inactive flow
+      // (and every pre-S3 caller) builds the byte-identical request it always did. `authoring` is a FRESH
+      // read of the DRIVING store's gate (the live-apply law); `session` keeps this interview's producer
+      // history separate from the draft's test chat.
+      ...(session === undefined ? {} : { session, authoring: isAuthoringSurfaceEnabled(store?.get(SURFACE_AUTHORING_KEY)) }),
     }
     // TKT-0079 — an action-click/error turn RESUMES the bubble owning its surface (the game loop stays in
     // one card); a typed intent stays a fresh bubble (its reply must not appear above the question).
@@ -1414,6 +1624,9 @@ export class UIAgentAdminElement extends UIElement {
       // grow into ANOTHER silently-inert surface, the click-gate above's whole point) — never-render is
       // the chosen client-plane policy, paired with ONE visible notice rather than a silent drop.
       let a2uiRefused = false
+      // ADR-0178 cl.2 — what the patch arm did this turn, for the log (never an error surface).
+      const patchReports: PatchReport[] = []
+      let patchIgnored = false
       try {
         // GH #354 — the ONE await the lazy asset pair introduces is HOISTED HERE, ahead of the first
         // consumed event, so `mountGenui` below stays SYNCHRONOUS inside the stream loop exactly as it was
@@ -1470,6 +1683,34 @@ export class UIAgentAdminElement extends UIElement {
             // started, GH #354's hoisted await) — a toggle flipped mid-turn can no more change this turn's
             // decision than it could when the pair was a module constant; it applies to the NEXT turn.
             handle.mountGenui(event.surfaceId, event.html, assets)
+          } else if (event.kind === 'patch') {
+            // ── the CONSUMPTION CONDITION (ADR-0178 cl.2, narrowed by Kim's §15 option-(b) ruling) ──────
+            // CONJUNCTIVE, and both conjuncts are load-bearing:
+            //
+            //   1. the store-identity FENCE — this turn must be driven by `authoringStore` itself, i.e. it
+            //      is a turn of the dedicated authoring interview. A patch volunteered on ANY other turn,
+            //      a test chat included, is never consumed, even with the gate on.
+            //   2. the GATE, read FRESH from the driving store at RECEIPT (never the value captured when
+            //      the request was built — a gate switched off mid-turn takes effect on the rest of it).
+            //
+            // The fence exists because values merge last-writer-wins, and the patchable value set
+            // includes `SURFACE_AUTHORING_KEY` itself: without it, a consumed self-patch could arm a
+            // persona's own gate — model-authored writes widening the model's future write authority.
+            // The fence never REPLACES the gate; a persona that has not opted in is still never patched.
+            //
+            // The target is always `this.store`, the DRAFT — never the driving store, which holds the
+            // interviewer's own configuration.
+            const fenced = drivingStore !== undefined && drivingStore === this.authoringStore
+            const gateOn = isAuthoringSurfaceEnabled(drivingStore?.get(SURFACE_AUTHORING_KEY))
+            const target = this.store
+            if (fenced && gateOn && target !== undefined) {
+              // Applied MID-STREAM, so the panes hydrate while the turn is still streaming — the live
+              // feedback the whole flow exists to give. Every write lands on a key class with a shipped
+              // store subscription, so no re-render machinery is needed here (ADR-0178 cl.2).
+              patchReports.push(applyPersonaPatch(target, event.patch, { models: modelRoster(), schema: this.schema ?? defaultAgentConfigSchema }))
+            } else {
+              patchIgnored = true // logged below; zero writes, no error surface (SPEC-R30's degrade law)
+            }
           } else if (event.kind === 'line') {
             wireLines.push(event.line)
             // GH #418 — an A2UI wire line only renders (`ingestLine`) while A2UI is actually on this
@@ -1520,6 +1761,11 @@ export class UIAgentAdminElement extends UIElement {
           note,
           lines: wireLines,
           ...(assetWarning === undefined ? {} : { assetWarning }),
+          // ADR-0178 cl.2 — observability without an error surface: what a consumed patch actually wrote
+          // (including every DROP), or the bare fact that one arrived and was refused. Both keys are
+          // absent on a turn that carried no patch, so an ordinary turn's record is unchanged.
+          ...(patchReports.length === 0 ? {} : { patch: patchReports.length === 1 ? patchReports[0] : patchReports }),
+          ...(patchIgnored ? { patchIgnored: true } : {}),
         })
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err)
@@ -1527,6 +1773,20 @@ export class UIAgentAdminElement extends UIElement {
         this.#logTurn('surface', request, { error: message, lines: wireLines })
       }
     })()
+  }
+
+  /** The turn's composed persona, for whichever context is driving.
+   *
+   *  The test context gets exactly today's composition. The AUTHORING context gets the interviewer's own
+   *  persona PLUS a fresh serialization of the draft's current state (ADR-0178 cl.4 / LLD §2): steering an
+   *  interview toward completion is impossible without seeing what is already established — and because
+   *  the user may hand-edit the same draft between turns, that projection has to be re-read per turn
+   *  rather than accumulated from what the model itself has patched. This is the host side of SPEC-R29's
+   *  incremental merge law. */
+  #personaSystemFor(store: SettingsStore | undefined, sections: readonly Entry[]): string {
+    const persona = composeLiveSystemPrompt(sections, this.#capabilityGroups(store), this.#bankrollForPrompt(store))
+    const isAuthoringContext = this.authoringStore !== undefined && store === this.authoringStore
+    return isAuthoringContext ? `${persona}\n\n${draftStateBlock(this.store)}` : persona
   }
 
   /** Each capability kind's raw store slice + its live `##` group heading + its MASTER switch (vision
@@ -1635,6 +1895,8 @@ export class UIAgentAdminElement extends UIElement {
     }
     // ADR-0174 cl.1/OF3 — the planner-stage modality row reflects its own stored state the same way.
     if (this.#surfacePlannerSwitch) this.#surfacePlannerSwitch.checked = isPlannerSurfaceEnabled(store?.get(SURFACE_PLANNER_KEY))
+    // ADR-0178 cl.3 — the authoring gate reflects its own stored state the same way.
+    if (this.#surfaceAuthoringSwitch) this.#surfaceAuthoringSwitch.checked = isAuthoringSurfaceEnabled(store?.get(SURFACE_AUTHORING_KEY))
     // GH #525 — the bankroll group is entirely HIDDEN for a persona that never opted in
     // (`BANKROLL_CAPABLE_KEY`) — there is no in-between "visible but nothing to do" state the way an OFF
     // modality still has, so this is `hidden`, never a `data-disabled` dim.
@@ -1693,6 +1955,8 @@ export class UIAgentAdminElement extends UIElement {
             genuiSource: pickedPatternSource(readEntries(store, ENTRY_KINDS.patternSource))?.label,
             // ADR-0174 cl.1/OF3 — the planner-stage modality's own on/off state, the same introspection law.
             planner: isPlannerSurfaceEnabled(store?.get(SURFACE_PLANNER_KEY)),
+            // ADR-0178 cl.3 — the authoring gate's own on/off state, the same introspection law.
+            authoring: isAuthoringSurfaceEnabled(store?.get(SURFACE_AUTHORING_KEY)),
           },
           systemPrompt: composeLiveSystemPrompt(sections, this.#capabilityGroups(store), this.#bankrollForPrompt(store)),
         },
@@ -1772,6 +2036,10 @@ export class UIAgentAdminElement extends UIElement {
    *  (the connected() effect) re-renders that view immediately after via `#rewireContext`. */
   #resetConversationState(): void {
     this.#conversation?.reset()
+    // ADR-0178 cl.5 — the authoring transcript belongs to the DRAFT too (it is the interview that
+    // produced it), so a real persona switch clears both. A mode FLIP clears neither: that is the
+    // distinction this method's caller draws, and the whole reason a flip is not a store reassignment.
+    this.#authoringConversation?.reset()
     this.#history = []
     this.#turnLog = []
     this.#turnCounter = 0
