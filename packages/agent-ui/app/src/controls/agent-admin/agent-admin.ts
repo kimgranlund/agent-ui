@@ -374,11 +374,15 @@ export class UIAgentAdminElement extends UIElement {
    * state: Chat (the pure test surface) · Author (the Builder interview) · Settings (the five config
    * sections). Entry default `'chat'` (content-first, the narrow content-tab's own precedent).
    *
-   * It replaces `#mode` as `#contextFor()`'s selector: pane identity IS the routing (cl.4's per-pane
-   * composers), so no composer ever re-routes and a Chat-pane turn can never resolve the authoring
-   * context. PRIVATE by contract, exactly as `#setMode` was: no attribute, no event, no `attributes[]`
-   * row — the pane-nav strip and `#rewireAuthoringContext` are `#setPane`'s only callers, and probes
-   * reach it through the protected `setPaneSeam` below.
+   * It replaced `#mode` as `#contextFor()`'s selector at S1-b; GH #662's triple dock moved the selector
+   * one step further, to the submitting composer's ORIGIN (see `#contextFor` for why the triple makes
+   * that mandatory). So this field is now PURELY a navigation state: it says which place the nav names,
+   * and the sheet reads it off the pane holder to decide what paints at the current band. It carries no
+   * routing meaning at all — which is what makes the triple's two simultaneously-visible composers safe.
+   *
+   * PRIVATE by contract, exactly as `#setMode` was: no attribute, no event, no `attributes[]` row — the
+   * pane-nav strip and `#rewireAuthoringContext` are `#setPane`'s only callers, and probes reach it
+   * through the protected `setPaneSeam` below.
    */
   #pane: 'chat' | 'author' | 'settings' = 'chat'
   // ── ADR-0179 (admin-three-pane-ia.lld.md §3) — the three-place anatomy ────────────────────────────────
@@ -386,6 +390,18 @@ export class UIAgentAdminElement extends UIElement {
    *  chat-shell's `header` slot — the GH #221 composition shape, re-anchored one level up from the
    *  retired try-it strip (LLD §2). `#applyPane` syncs its `selected` on a programmatic flip. */
   #paneNav: UITabsElement | null = null
+  /**
+   * The content slot's holder — the box the three places live in (GH #662, ADR-0179 cl.1's Amendment).
+   *
+   * It carries `data-pane` (the active place) and is the CONTAINER the band rules query: which places
+   * PAINT is a pure CSS reading of `data-pane` × the holder's own inline-size, never a JS decision. That
+   * is what makes the triple dock possible at all — below the triple line one place paints, at and above
+   * it all three do, and no resize ever writes state (the shell family's own-container-width law,
+   * `shell-breakpoint.ts`). The regions therefore carry NO `hidden` attribute of their own: a region that
+   * paints at wide must not claim to be hidden, and `display:none` from the band rule removes a
+   * non-painting one from the a11y tree exactly as `hidden` did.
+   */
+  #paneHolder: HTMLElement | null = null
   /** The pairing vehicle (LLD §2/§6): `ui-master-detail` holding the Author region (`pane="list"`) and the
    *  Settings region (`pane="detail"`). ONE region arranged, never duplicated — at wide it docks as the
    *  composed `ui-split`, at narrow it drills into one place at a time. */
@@ -627,11 +643,14 @@ export class UIAgentAdminElement extends UIElement {
     // ADR-0179 cl.1 (LLD §3) — the content slot HOLDS THE PLACES (it was `chat-stack`, a two-conversation
     // stacking vehicle for one place; ADR-0178 cl.5's stacking model is superseded by citation). Its two
     // children are the test conversation (the Chat place) and the master-detail pairing (the Author and
-    // Settings places); `#applyPane` picks which one has a box. The test conversation below is otherwise
-    // byte-unchanged — it simply sits inside the holder instead of directly in the shell.
+    // Settings places). GH #662 (cl.1's Amendment): `#applyPane` writes the active place onto this box as
+    // `data-pane` and the SHEET decides which places have a box — one below the triple line, all three at
+    // and above it. The test conversation below is otherwise byte-unchanged — it simply sits inside the
+    // holder instead of directly in the shell.
     const paneHolder = document.createElement('div')
     paneHolder.setAttribute('data-part', 'pane-holder')
     paneHolder.setAttribute('data-slot', 'content')
+    this.#paneHolder = paneHolder
 
     const conversation = new UIConversationElement()
     // GH #238/#239/ADR-0159 — the admin chat opts INTO the receipt pattern (Kim's 2026-07-23 ruling; this
@@ -644,7 +663,10 @@ export class UIAgentAdminElement extends UIElement {
     // other conversation consumer (a2ui-chat, the demos) stays default-off, byte-identical. The producer
     // half of the channel is the live runner's own `progressDetail:'source'` request (admin-live-runner.ts).
     conversation.sources = true
-    conversation.onSubmit((text) => this.#handleSubmit(text))
+    // GH #662 — the ORIGIN travels with the submission. Per-pane composers (cl.4) mean this composer IS
+    // the test context, permanently and at every band; naming that here is what makes the triple dock's
+    // two simultaneously-visible composers unable to cross-route (see `#contextFor`).
+    conversation.onSubmit((text) => this.#handleSubmit(text, 'chat'))
     // Models picker → the SAME persisted `model` store key the settings pane's own generated field reads/
     // writes (one source of truth, TKT-0021's own external-store-write precedent) — `#syncConversationConfig`'s
     // subscription feeds the committed value back down into `conversation.model` (props down, callbacks up).
@@ -675,7 +697,7 @@ export class UIAgentAdminElement extends UIElement {
     //      an error turn is the agent's chance to self-correct, not a license to loop — the budget
     //      exhausting halts visibly (a failed turn bubble), and any non-error client message (a real
     //      user action) or typed intent re-arms it.
-    conversation.onClientMessage((message) => this.#handleClientMessage(conversation, message))
+    conversation.onClientMessage((message) => this.#handleClientMessage(conversation, 'chat', message))
     // Vision rev.6 — the Markdown surface rides ui-conversation's SPEC-R12 content-render seam: agent
     // notes/system bubbles render through <ui-markdown> (sanitized by construction) while the switch is
     // ON, and fall back to a plain text node (the frame's own "simple text is fallback") when OFF. The
@@ -1210,7 +1232,7 @@ export class UIAgentAdminElement extends UIElement {
   /** The GH #63 client-turn guards, extracted so BOTH conversations run the one budget. The budget is
    *  deliberately SHARED rather than per-context: it bounds this element's error-driven turn spawning as a
    *  whole, which is what the livelock it closes was made of. */
-  #handleClientMessage(conversation: UIConversationElement, message: unknown): void {
+  #handleClientMessage(conversation: UIConversationElement, origin: 'chat' | 'author', message: unknown): void {
     if (this.agentSurfaceTurn === undefined) return
     const isError = typeof message === 'object' && message !== null && 'error' in message
     if (isError) {
@@ -1225,7 +1247,11 @@ export class UIAgentAdminElement extends UIElement {
       this.#consecutiveErrorTurns = 0
       this.#errorLoopHalted = false
     }
-    setTimeout(() => this.#runSurfaceTurn({ kind: 'client', message }), 0)
+    // GH #662 — the deferred turn carries the ORIGIN it was spawned from. Under the pane-keyed selector a
+    // pane flip inside this macrotask window re-routed the turn to whatever place the user had walked to
+    // (LLD §8's named inherited hazard); origin-anchoring closes it as a side effect of the triple's own
+    // requirement.
+    setTimeout(() => this.#runSurfaceTurn({ kind: 'client', message }, origin), 0)
   }
 
   /**
@@ -1236,24 +1262,36 @@ export class UIAgentAdminElement extends UIElement {
    * dual-context scaffold rests on (asserted in the suite: an inactive flow builds a byte-identical
    * request).
    *
-   * ADR-0179 cl.2 (admin-three-pane-ia.lld.md §2/§4 — the frozen algorithm) re-keyed the selector from the
-   * retired `#mode` seam to `#pane`: a ONE-TOKEN diff (`this.#mode === 'authoring'` → `this.#pane ===
-   * 'author'`), everything below it byte-untouched. It widens nothing, because the consumption fence keys
-   * off DRIVING-STORE IDENTITY, not this selector (`#runSurfaceTurn`'s `drivingStore === this.authoringStore`
-   * conjunct) — a Chat-pane or Settings-pane turn can never resolve `authoringStore`, so "Chat stays the
-   * pure test surface" holds by construction (cl.4).
+   * ADR-0179 cl.2 (admin-three-pane-ia.lld.md §2/§4) re-keyed the selector from the retired `#mode` seam
+   * to `#pane`. GH #662's TRIPLE DOCK re-keys it once more, to the SUBMITTING COMPOSER'S ORIGIN — and this
+   * is a correctness requirement of the triple, not a preference:
+   *
+   *   Below the triple line exactly one place paints, so "the active place" and "the composer the user can
+   *   reach" are the same thing and `#pane` is a sound proxy for origin. At the triple line BOTH composers
+   *   are on screen and typable at once. A user typing into CHAT's composer while the nav still says
+   *   Author would have resolved the AUTHORING quadruple under the pane-keyed selector — the turn landing
+   *   in the interview transcript and, gate ON, its patch reaching the draft. That is precisely the thing
+   *   cl.4 promises cannot happen ("Chat stays pure test by construction"), and the pane proxy is what
+   *   would have broken it. Origin is the property cl.4 actually rests on: per-pane composers mean each
+   *   composer IS a context, permanently, at every band.
+   *
+   * The fence itself is untouched — it keys off DRIVING-STORE IDENTITY, never this selector
+   * (`#runSurfaceTurn`'s `drivingStore === this.authoringStore` conjunct). Re-keying to origin STRENGTHENS
+   * it: the Chat composer can no longer resolve `authoringStore` under any pane, band, or timing, which
+   * also closes the mid-defer pane-flip misroute the LLD §8 named as inherited (a deferred client turn now
+   * reads the origin it was spawned from, not whatever place the user has since walked to).
    *
    * `store` is what the turn COMPOSES FROM — never what a patch applies to. A patch always targets
    * `this.store`, the draft.
    */
-  #contextFor(): {
+  #contextFor(origin: 'chat' | 'author'): {
     store: SettingsStore | undefined
     conversation: UIConversationElement | null
     session: 'authoring' | 'test' | undefined
     history: AdminTurn[]
   } {
     const authoringStore = this.authoringStore
-    if (authoringStore !== undefined && this.#pane === 'author' && this.#authoringConversation) {
+    if (authoringStore !== undefined && origin === 'author' && this.#authoringConversation) {
       return { store: authoringStore, conversation: this.#authoringConversation, session: 'authoring', history: this.#authoringHistory }
     }
     // `session` stays UNDEFINED for the test context rather than the literal 'test': the runner defaults an
@@ -1276,7 +1314,7 @@ export class UIAgentAdminElement extends UIElement {
     // interview is watched by the same person debugging the draft.
     conversation.receipt = true
     conversation.sources = true
-    conversation.onSubmit((text) => this.#handleSubmit(text))
+    conversation.onSubmit((text) => this.#handleSubmit(text, 'author')) // GH #662 — this composer IS the authoring context
     // The Builder's own model selection lives in the Builder's own store — writing it to the draft would
     // let the interviewer's model choice silently become the draft agent's.
     conversation.onModelChange((id) => this.authoringStore?.set('model', id))
@@ -1284,7 +1322,7 @@ export class UIAgentAdminElement extends UIElement {
       this.#effort = id as EffortLevel
       conversation.effort = this.#effort
     })
-    conversation.onClientMessage((message) => this.#handleClientMessage(conversation, message))
+    conversation.onClientMessage((message) => this.#handleClientMessage(conversation, 'author', message))
     conversation.setContentRenderer((text) => this.#renderContent(text, this.authoringStore))
     // After the empty state in the Author region's own DOM order — `#applyPane` shows exactly one of the
     // two, so the order is about reading sequence, not visibility.
@@ -1311,7 +1349,10 @@ export class UIAgentAdminElement extends UIElement {
   /**
    * Reflect the active place onto the composed anatomy — visibility and arrangement ONLY (LLD §4):
    *
-   *  - the test conversation shows ⇔ pane = chat; the master-detail region shows ⇔ pane ∈ {author, settings}
+   *  - the active place is written onto the pane holder as `data-pane`, and the SHEET reads it: below the
+   *    triple line exactly the named place paints; at and above it all three do (GH #662, cl.1's
+   *    Amendment). Nothing here consults a width — a band crossing repaints with zero state written, which
+   *    is the shell family's own-container-width law and the reason no ResizeObserver exists in this file.
    *  - the MD's consumer-written `selected` carries the narrow drill-in: `''` (view=list, the interview)
    *    for Author, `'settings'` (view=detail) for Settings. At WIDE both places converge on the same
    *    docked pair — the selection is still tracked so a band crossing lands on the place the nav names.
@@ -1320,16 +1361,16 @@ export class UIAgentAdminElement extends UIElement {
    */
   #applyPane(): void {
     const armed = this.authoringStore !== undefined
-    if (this.#conversation) this.#conversation.hidden = this.#pane !== 'chat'
-    if (this.#panePair) this.#panePair.hidden = this.#pane === 'chat'
+    this.#paneHolder?.setAttribute('data-pane', this.#pane)
     if (this.#panePair) this.#panePair.selected = this.#pane === 'settings' ? 'settings' : ''
     if (this.#paneNav) this.#paneNav.selected = this.#pane // programmatic write — no `select` echo (ADR-0019)
     // OQ4 — the Author place is ALWAYS present; what it SHOWS depends on whether the flow is armed.
     if (this.#authorEmpty) this.#authorEmpty.hidden = armed
-    // The `pane === 'chat'` conjunct is belt-and-braces once the MD region carries the whole Author place
-    // (the region itself is hidden at Chat) — it is what keeps the interview correctly out of sight in a
-    // build where the region is not composed at all.
-    if (this.#authoringConversation) this.#authoringConversation.hidden = !armed || this.#pane === 'chat'
+    // ARMED-state visibility, and only that: the interview paints whenever the flow is armed, wherever the
+    // band puts the Author region. GH #662 removed the old `|| #pane === 'chat'` conjunct — in the triple
+    // dock the Author region paints WHILE the nav says Chat, and an interview hidden there would blank the
+    // middle column. Which places have a box is the sheet's job now, one level up (`data-pane`).
+    if (this.#authoringConversation) this.#authoringConversation.hidden = !armed
   }
 
   /** Arm, re-arm, or tear down the authoring context in response to an `authoringStore` change. A real
@@ -1678,13 +1719,13 @@ export class UIAgentAdminElement extends UIElement {
    *  ⇒ a real live turn through the reused `dev-proxy-plugin.ts` trust boundary, single-shot into
    *  `setNote`/`finalize` (LLD Q3), degrading a thrown/rejected runner via `handle.fail()` (LLD Q5, no crash,
    *  no silent swallow). Both arms append the completed exchange to `#history`. */
-  #handleSubmit(text: string): void {
+  #handleSubmit(text: string, origin: 'chat' | 'author'): void {
     // ADR-0178 cl.5 — every read below is against the DRIVING context's store. With the flow inactive
     // that resolves to `this.store` and today's conversation, so this method's behaviour is unchanged.
     // GH #644 — `history` is this call's context-scoped array (test vs. authoring); every read/append
     // below goes through it rather than `this.#history` directly, so the two contexts' model memory never
     // cross-pollinate.
-    const { store, conversation, history } = this.#contextFor()
+    const { store, conversation, history } = this.#contextFor(origin)
     if (!conversation) return
     const schema = this.schema ?? defaultAgentConfigSchema
     // Vision rev.5 — the Agent master switch ("active/available or not", Kim's ruling): the composer is
@@ -1725,7 +1766,7 @@ export class UIAgentAdminElement extends UIElement {
       // GH #63 — a typed intent is a fresh user gesture: re-arm the error-loop budget.
       this.#consecutiveErrorTurns = 0
       this.#errorLoopHalted = false
-      this.#runSurfaceTurn({ kind: 'intent', text })
+      this.#runSurfaceTurn({ kind: 'intent', text }, origin)
       return
     }
 
@@ -1786,11 +1827,16 @@ export class UIAgentAdminElement extends UIElement {
    *  this turn's bubble; known ⇒ routed to its ORIGINAL host, ADR-0129 — the Croupier's one-table game);
    *  the peeled `note` renders via setNote at finalize. The persona + model are FRESH store reads (the
    *  live-apply law); the runner owns the transport-side session/history (SPEC-N1 — the component never
-   *  sees a transport type). Errors surface through the fail path, exactly the text arm's discipline. */
-  #runSurfaceTurn(turn: { kind: 'intent'; text: string } | { kind: 'client'; message: unknown }): void {
+   *  sees a transport type). Errors surface through the fail path, exactly the text arm's discipline.
+   *
+   *  `origin` (GH #662) is a SEPARATE parameter, deliberately not a member of `turn`: `turn` is the wire
+   *  shape handed verbatim to the injected runner (SPEC-N1), and which composer a turn came from is this
+   *  element's own routing business, not the runner's. It selects the context (`#contextFor`) and nothing
+   *  else. */
+  #runSurfaceTurn(turn: { kind: 'intent'; text: string } | { kind: 'client'; message: unknown }, origin: 'chat' | 'author'): void {
     // ADR-0178 cl.5 — as in `#handleSubmit`: with the flow inactive, `store`/`conversation` resolve to
     // exactly today's values and `session` stays absent, so the built request is byte-identical.
-    const { store, conversation, session } = this.#contextFor()
+    const { store, conversation, session } = this.#contextFor(origin)
     const surfaceTurn = this.agentSurfaceTurn
     if (!conversation || surfaceTurn === undefined) return
     // The store this turn is FENCED to. Captured here, at turn start, and compared by IDENTITY when a

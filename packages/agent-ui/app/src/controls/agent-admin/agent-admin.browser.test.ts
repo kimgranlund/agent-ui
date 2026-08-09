@@ -86,9 +86,12 @@ function assertFoldChrome(item: HTMLElement & { open: boolean }): void {
  *  settings region, which is `hidden` at the entry default (Chat, the pure test surface — cl.1's disjoint
  *  places); a probe that wants the Chat place calls `goToPlace(el, 'Chat')` explicitly, which is exactly
  *  the delta this IA introduces and the honest thing for a geometry suite to state out loud. */
-function mountAgentAdmin(tab: 'Agent' | 'Capabilities' | 'Surface' = 'Agent'): { wrapper: HTMLElement; el: UIAgentAdminElement } {
+/** `widthPx` (GH #662) exists for the place-EXCLUSIVITY probes: the default 1200 sits in the triple band,
+ *  where all three places paint by contract, so a probe whose subject is "exactly one place has a box"
+ *  mounts at `PAIR_BAND_WIDTH` instead — the same claim, in the band that still makes it. */
+function mountAgentAdmin(tab: 'Agent' | 'Capabilities' | 'Surface' = 'Agent', widthPx = 1200): { wrapper: HTMLElement; el: UIAgentAdminElement } {
   const wrapper = document.createElement('div')
-  wrapper.style.width = '1200px'
+  wrapper.style.width = `${widthPx}px`
   wrapper.style.height = '600px'
   const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
   el.style.flex = '1 1 auto' // the master-detail.md/conversation.md "consumer-supplied block-size" precedent
@@ -104,6 +107,11 @@ function mountAgentAdmin(tab: 'Agent' | 'Capabilities' | 'Surface' = 'Agent'): {
  *  (`mountAgentAdmin()` above fixes 1200px on a flex-item host inside a sized wrapper; this widens that
  *  to an arbitrary width so both the wide and narrow bands are reachable with a REAL browser-measured
  *  resize, not a simulated one — TKT-0085's own ResizeObserver is gone with the shell it drove). */
+/** Two CSS px below the 52.5rem triple line's own mount (840 holder + 24 gutter) — the widest frame at
+ *  which exactly one place still paints, and therefore the honest home for every place-exclusivity probe
+ *  written before GH #662 widened the wide band. */
+const PAIR_BAND_WIDTH = 862
+
 function mountAgentAdminAt(widthPx: number): { wrapper: HTMLElement; el: UIAgentAdminElement } {
   const wrapper = document.createElement('div')
   wrapper.style.width = `${widthPx}px`
@@ -147,8 +155,13 @@ describe('ui-agent-admin cross-engine smoke — the three-place shell grammar (A
     expect(Math.abs(author.top - settings.top), 'displacement is on the INLINE axis only').toBeLessThanOrEqual(1)
   })
 
-  it('the Kim-blessed delta — the Chat place renders SOLO at wide: no settings rail beside it (cl.1`s disjoint places)', async () => {
-    const { el } = mountAgentAdminAt(1200)
+  // GH #662 RE-ANCHOR: this probe's claim is now BAND-BOUND. Kim's S1-b delta (Chat solo, disjoint places)
+  // is the reading BELOW the 52.5rem triple line; at and above it his 2026-08-10 revision supersedes it and
+  // all three places paint (ADR-0179 cl.1's Amendment, probed in the triple-dock describe at the foot of
+  // this file). The mount moves from 1200 to 862 — two CSS px under the line — so the probe keeps testing
+  // exactly what it was written to test, in the band where that is still the contract.
+  it('the Kim-blessed delta — the Chat place renders SOLO in the PAIR band: no settings rail beside it (cl.1`s disjoint places, below the triple line)', async () => {
+    const { el } = mountAgentAdminAt(862)
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
     goToPlace(el, 'Chat')
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
@@ -1440,8 +1453,10 @@ describe('ui-agent-admin cross-engine smoke — the guided-authoring flow (ADR-0
     expect(Math.round(box.height)).toBeGreaterThan(Math.round(canvas.getBoundingClientRect().height) - 40)
   })
 
-  it('arming the flow LANDS in Author and paints the interview; the Chat place still takes over on demand — both keep real geometry across a place change', async () => {
-    const { el } = mountAgentAdmin()
+  // GH #662 RE-ANCHOR: "exactly one place has a box" is the PAIR band's contract; at and above the triple
+  // line all three paint (ADR-0179 cl.1's Amendment). Mounted in the pair band so the claim stays testable.
+  it('arming the flow LANDS in Author and paints the interview; the Chat place still takes over on demand — both keep real geometry across a place change (pair band)', async () => {
+    const { el } = mountAgentAdmin('Agent', PAIR_BAND_WIDTH)
     await el.updateComplete
     el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
     await el.updateComplete
@@ -1589,8 +1604,10 @@ describe('ui-agent-admin cross-engine smoke — the pane nav (ADR-0179 cl.1)', (
     expect(parseFloat(getComputedStyle(tablist).borderBottomWidth), 'the tablist part still paints its own real divider').toBeGreaterThan(0)
   })
 
-  it('clicking the tabs flips which place occupies the canvas, with real (non-collapsed) geometry every way', async () => {
-    const { el } = mountAgentAdmin()
+  // GH #662 RE-ANCHOR: same reason as above — a nav click "flips which place occupies the canvas" only
+  // below the triple line, where there is one canvas to occupy.
+  it('clicking the tabs flips which place occupies the canvas, with real (non-collapsed) geometry every way (pair band)', async () => {
+    const { el } = mountAgentAdmin('Agent', PAIR_BAND_WIDTH)
     await el.updateComplete
     el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
     await el.updateComplete
@@ -1796,7 +1813,14 @@ describe('ui-agent-admin cross-engine smoke — the wide live-fill proof + densi
    *  which is why 664 — not 640 — is the honest "at the 40rem line" mount. */
   const BANDS = [
     { name: 'the 40rem line', line: 640, outer: 664 },
-    { name: '52.5rem', line: 840, outer: 864 },
+    // GH #662 RE-ANCHOR: `line` is and always was the PAIR's OWN container width, and the outer mount is
+    // whatever produces it. Below the triple line the pair takes the whole holder, so `line + 24` did; at
+    // and above it the pair is two of three columns (`flex: 2` of the holder, floored at its 40rem dock
+    // line), so an 864 mount now yields a 640 pair — the same claim, a different arithmetic. 1284 is the
+    // mount that puts the pair's own container on 840 in the triple world; the assert below still measures
+    // it rather than trusting this number. (1286, not 1284: the Chat column's own 2px border is not
+    // shrinkable, so the flex free space the `2` share divides is `holder - 2`.)
+    { name: '52.5rem', line: 840, outer: 1286 },
   ] as const
 
   /** The used px width of `20ch` IN THIS REGION — the region's own font, not an assumed 8px/ch. The
@@ -1965,17 +1989,34 @@ describe('ui-agent-admin cross-engine smoke — the wide live-fill proof + densi
       // GH #586 menu — a6 ("every section reachable at every band") is what must hold here, not "tabs fit".
       // Measured from the Author place deliberately: the docked rail is the surface this slice is about,
       // so the sub-nav has to work in it without a place change, at the very width just measured.
+      // GH #662 RE-ANCHOR: the CLAIM here is a6 — every section reachable at this band — not "the strip
+      // overflows". Which of those two roads a6 travels is a measured property of the rail's width, and the
+      // triple re-anchor moved it: at the 40rem line the rail is 296px and the two long `Context: …` tabs
+      // overflow; at 52.5rem the rail is 420px and all five now fit outright. Asserting overflow
+      // unconditionally would be asserting the road instead of the destination, so the leg takes whichever
+      // road this band actually offers and proves the SAME reachability either way.
       const strip = el.querySelector('[data-part="settings-nav"]') as HTMLElement
       const overflowed = [...strip.querySelectorAll('ui-tab[data-overflowed]')] as HTMLElement[]
-      expect(overflowed.length, `the rail at ${band.name} genuinely overflows — otherwise this leg is decoration`).toBeGreaterThan(0)
       const menu = strip.querySelector('[data-part="overflow"]') as HTMLElement
-      expect(menu.hidden, 'so the overflow trigger paints').toBe(false)
-      const label = overflowed[overflowed.length - 1]!.textContent!
-      ;(menu.querySelector('[data-part="trigger"]') as HTMLElement).click()
-      await frames()
-      const proxy = [...menu.querySelectorAll('[role="menuitem"]')].find((p) => p.textContent === label) as HTMLElement
-      expect(proxy, `${label} is neither on the strip nor in the menu — unreachable at ${band.name}`).toBeTruthy()
-      proxy.click()
+      let label: string
+      if (overflowed.length > 0) {
+        expect(menu.hidden, 'the rail overflows at this band, so the overflow trigger paints').toBe(false)
+        label = overflowed[overflowed.length - 1]!.textContent!
+        ;(menu.querySelector('[data-part="trigger"]') as HTMLElement).click()
+        await frames()
+        const proxy = [...menu.querySelectorAll('[role="menuitem"]')].find((p) => p.textContent === label) as HTMLElement
+        expect(proxy, `${label} is neither on the strip nor in the menu — unreachable at ${band.name}`).toBeTruthy()
+        proxy.click()
+      } else {
+        // The rail holds all five: the menu retires and every tab is a real, directly clickable box.
+        expect(menu.hidden, 'nothing overflows, so the trigger is gone rather than an empty affordance').toBe(true)
+        const tabs = [...strip.querySelectorAll('ui-tab')] as HTMLElement[]
+        expect(tabs).toHaveLength(5)
+        for (const t of tabs) expect(t.getBoundingClientRect().width, `${t.textContent} is laid out, not a stub`).toBeGreaterThan(0)
+        const last = tabs[tabs.length - 1]!
+        label = last.textContent!
+        last.click()
+      }
       await frames()
       const reached = el.querySelector(`[data-role="${SECTION_ROLE_BY_LABEL[label]}"]`) as HTMLElement
       expect(getComputedStyle(reached).display, `${label} reached through the menu really is the section now showing`).not.toBe('none')
@@ -1983,4 +2024,230 @@ describe('ui-agent-admin cross-engine smoke — the wide live-fill proof + densi
       expect(selected.hasAttribute('data-overflowed'), 'and the selected tab pinned itself back onto the strip (GH #586)').toBe(false)
     })
   }
+})
+
+// ── GH #662 (S6) — the WIDE TRIPLE DOCK: [chat | author-chat | settings] side by side ─────────────────
+// ADR-0179 cl.1's Amendment (2026-08-10). Three things are proven here and nowhere else, because all
+// three are questions only a real engine can answer: WHERE the triple band starts (a measured line, not an
+// assumed one), that the three columns still hold their content there (the 20ch engagement floor, per
+// region, in that region's own type), and that nothing paints a rule between them (Kim's 2026-08-10
+// addition — regions separate by spacing and surface alone).
+describe('ui-agent-admin — the wide TRIPLE dock (GH #662, ADR-0179 cl.1 Amendment)', () => {
+  const frames = async (n = 3): Promise<void> => {
+    for (let i = 0; i < n; i++) await new Promise((r) => requestAnimationFrame(r))
+  }
+
+  /** The band line is `SHELL_COMPACT_BREAKPOINT` (52.5rem = 840px, ADR-0150/0155) measured on the pane
+   *  HOLDER's own inline-size — the shell family's own-container-width law, never the viewport. The canvas
+   *  the holder sits in adds one `--ui-agent-admin-shell-gutter` per side (12px, measured), so `line + 24`
+   *  is the honest outer mount that puts the holder exactly ON the line; each test asserts that rather
+   *  than trusting the arithmetic. `TRIPLE_BELOW` is two CSS px under it — the tightest honest "just below"
+   *  probe, which is what makes the band a LINE and not a vibe. */
+  const TRIPLE_LINE = 840
+  const TRIPLE_AT = TRIPLE_LINE + 24
+  const TRIPLE_BELOW = TRIPLE_AT - 2
+
+  function twentyCh(region: HTMLElement): number {
+    const probe = document.createElement('div')
+    probe.style.inlineSize = '20ch'
+    probe.style.position = 'absolute'
+    region.append(probe)
+    const used = probe.getBoundingClientRect().width
+    probe.remove()
+    expect(used, 'the ch floor resolves to real px in this region').toBeGreaterThan(0)
+    return used
+  }
+
+  const partsOf = (el: UIAgentAdminElement): { holder: HTMLElement; chat: HTMLElement; pair: HTMLElement; author: HTMLElement; settings: HTMLElement } => ({
+    holder: el.querySelector('[data-part="pane-holder"]') as HTMLElement,
+    chat: el.querySelector('[data-part="pane-holder"] > ui-conversation') as HTMLElement,
+    pair: el.querySelector('[data-part="pane-pair"]') as HTMLElement,
+    author: el.querySelector('[data-part="author-pane"]') as HTMLElement,
+    settings: el.querySelector('[data-part="settings-pane"]') as HTMLElement,
+  })
+
+  /** Mount ARMED — the interview is lazy, so an unarmed measurement would be grading the empty state's
+   *  roominess instead of the composed triple's. Arming also lands the nav on Author (the IA-entry
+   *  re-point), which is deliberately NOT corrected here: at the triple line the place the nav names must
+   *  stop deciding what paints, and leaving it on Author is what puts that under test. */
+  async function mountTripleAt(outer: number): Promise<UIAgentAdminElement> {
+    const { el } = mountAgentAdminAt(outer)
+    await frames()
+    el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
+    await el.updateComplete
+    await frames()
+    return el
+  }
+
+  it('AT the 52.5rem line: all three places paint side by side, in reading order, on the inline axis alone', async () => {
+    const el = await mountTripleAt(TRIPLE_AT)
+    const { holder, chat, author, settings } = partsOf(el)
+    expect(holder.getBoundingClientRect().width, 'the holder is ON the named line, not merely above it').toBeCloseTo(TRIPLE_LINE, 0)
+
+    const boxes = [chat, author, settings].map((r) => r.getBoundingClientRect())
+    for (const [i, label] of ['chat', 'author', 'settings'].entries()) {
+      expect(boxes[i]!.width, `${label} has a real box in the triple`).toBeGreaterThan(0)
+      expect(boxes[i]!.height, `${label} height`).toBeGreaterThan(0)
+    }
+    // Reading order, and displacement on the INLINE axis only (the ledgered screen-x/displacement idiom).
+    expect(boxes[0]!.right, 'the test chat is start-side of the interview').toBeLessThanOrEqual(boxes[1]!.left + 1)
+    expect(boxes[1]!.right, 'the interview is start-side of the settings rail').toBeLessThanOrEqual(boxes[2]!.left + 1)
+    for (const i of [1, 2]) expect(Math.abs(boxes[i]!.top - boxes[0]!.top), 'all three are top-aligned').toBeLessThanOrEqual(1)
+
+    // The nav still says Author. That the OTHER two places paint anyway is the whole Amendment: at this
+    // band the nav names a place, it no longer gates one.
+    expect((el.querySelector('[data-part="pane-nav"]') as HTMLElement & { selected: string }).selected).toBe('author')
+    expect(holder.getAttribute('data-pane')).toBe('author')
+  })
+
+  it('TWO PIXELS BELOW the line: the band collapses back to one place — the ladder is a line, not a slope', async () => {
+    const el = await mountTripleAt(TRIPLE_BELOW)
+    const { holder, chat, pair } = partsOf(el)
+    expect(holder.getBoundingClientRect().width).toBeCloseTo(TRIPLE_LINE - 2, 0)
+    // The nav stands on Author, so the pair paints and the test chat does not — S1-b's behaviour, intact.
+    expect(getComputedStyle(chat).display, 'the Chat place has no box below the line').toBe('none')
+    expect(chat.getBoundingClientRect().width).toBe(0)
+    expect(pair.getBoundingClientRect().width, 'and the pair takes the whole holder').toBeCloseTo(TRIPLE_LINE - 2, 0)
+
+    // …and the same place change still works below the line: Chat solo, the pair gone.
+    goToPlace(el, 'Chat')
+    await frames()
+    expect(getComputedStyle(pair).display).toBe('none')
+    expect(chat.getBoundingClientRect().width).toBeCloseTo(TRIPLE_LINE - 2, 0)
+  })
+
+  for (const outer of [TRIPLE_AT, 1200]) {
+    it(`density at holder ${outer - 24}px: all THREE columns clear the 20ch engagement floor`, async () => {
+      const el = await mountTripleAt(outer)
+      const { chat, author, settings } = partsOf(el)
+
+      // Per region, in that region's own type — the floor is content box ≥ 20ch, and nothing may "fit" by
+      // spilling sideways instead.
+      for (const [label, region] of [
+        ['chat', chat],
+        ['author', author],
+        ['settings', settings],
+      ] as const) {
+        const cs = getComputedStyle(region)
+        const content = region.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
+        expect(content, `${label} content width clears the 20ch floor`).toBeGreaterThan(twentyCh(region))
+        expect(region.scrollWidth, `${label} holds its content without overflowing sideways`).toBeLessThanOrEqual(region.clientWidth + 1)
+      }
+
+      // The three columns' real occupants, each measured against its OWN intrinsic minimum (GH #74's 20ch
+      // text-field floor). The Chat composer is the binding constraint of the whole band — it is the
+      // narrowest thing in the narrowest column, and it is what decides that 52.5rem, not 40rem, is where
+      // a triple can live at all.
+      const chatComposer = chat.querySelector('ui-conversation-composer') as HTMLElement
+      expect(chatComposer.getBoundingClientRect().width, 'the test composer clears its own 20ch minimum').toBeGreaterThan(twentyCh(chat))
+      const authorComposer = author.querySelector('ui-conversation-composer') as HTMLElement
+      expect(authorComposer.getBoundingClientRect().width, 'the interview composer clears it too').toBeGreaterThan(twentyCh(author))
+      const nameField = el.querySelector('ui-settings [name="name"]') as UITextFieldElement
+      expect(nameField.getBoundingClientRect().width, 'the rail’s name field clears its own 20ch minimum').toBeGreaterThan(twentyCh(settings))
+    })
+  }
+
+  it('Kim’s 2026-08-10 addition — NO painted divider between docked regions, with every resize mechanic intact', async () => {
+    const el = await mountTripleAt(1200)
+    const { holder, author, settings } = partsOf(el)
+    const separators = [...holder.querySelectorAll('ui-split > [data-separator]')] as HTMLElement[]
+    expect(separators.length, 'the docked arrangement really does compose separators to unpaint').toBeGreaterThan(0)
+
+    for (const sep of separators) {
+      const cs = getComputedStyle(sep)
+      // The ink is RETRACTED, not the element: a fully transparent background and no border on any side.
+      expect(cs.backgroundColor, 'the resting separator paints no fill').toMatch(/rgba\(0,\s*0,\s*0,\s*0\)|transparent/)
+      expect(cs.backgroundImage, 'nor a gradient standing in for one').toBe('none')
+      for (const side of ['borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth'] as const) {
+        expect(parseFloat(cs[side]), `no ${side} rule either`).toBe(0)
+      }
+      // …and the MECHANICS survive untouched (the retract-don't-delete pattern): the element is still a
+      // real, focusable, grabbable separator with its ≥24px hit-slop.
+      expect(sep.getAttribute('role')).toBe('separator')
+      expect(sep.hasAttribute('tabindex')).toBe(true)
+      expect(cs.cursor).toBe('col-resize')
+      const slop = getComputedStyle(sep, '::before')
+      expect(parseFloat(slop.insetInlineStart), 'the invisible hit-slop still expands past the track').toBeLessThan(0)
+    }
+
+    // The rendered-pixel-adjacent assert (the ledgered displacement idiom): with no ink between them, the
+    // two regions are separated by the separator's own track and nothing more — the gap between the
+    // author region's trailing edge and the settings region's leading edge is at most that 1px track plus
+    // the regions' own padding, and it contains no painted box of its own.
+    const a = author.getBoundingClientRect()
+    const s = settings.getBoundingClientRect()
+    const sepBox = separators[separators.length - 1]!.getBoundingClientRect()
+    expect(s.left - a.right, 'the regions sit hairline-adjacent — no painted rule occupies the seam').toBeLessThanOrEqual(sepBox.width + 1)
+  })
+
+  it('the LIVE-FILL gate at TRIPLE (PR #659’s proof, extended to three-region liveness)', async () => {
+    // #659 proved the pair: a held-open Builder turn repaints the docked rail while it streams. The triple
+    // owes one more thing — that the third region is not collateral. The test chat must still be PAINTED,
+    // with a real box, throughout a turn it has nothing to do with.
+    const { el } = mountAgentAdminAt(1200)
+    await frames()
+
+    let releaseTurn = (): void => {}
+    const held = new Promise<void>((resolve) => (releaseTurn = resolve))
+    let patchApplied = (): void => {}
+    const applied = new Promise<void>((resolve) => (patchApplied = resolve))
+    el.agentSurfaceTurn = async function* () {
+      yield { kind: 'patch' as const, patch: { values: { name: LIVE_FILL_NAME } } }
+      patchApplied()
+      await held
+      yield { kind: 'note' as const, note: 'Named it for you.' }
+    }
+
+    el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
+    await el.updateComplete
+    await frames()
+
+    const { chat, author, settings } = partsOf(el)
+    const chatBefore = chat.getBoundingClientRect()
+    expect(chatBefore.width, 'all three regions paint before the turn starts').toBeGreaterThan(0)
+    for (const [label, r] of [
+      ['author', author],
+      ['settings', settings],
+    ] as const) {
+      expect(r.getBoundingClientRect().width, `${label} paints too`).toBeGreaterThan(0)
+    }
+
+    const nameField = el.querySelector('ui-settings [name="name"]') as UITextFieldElement
+    const editorOf = (): HTMLElement => nameField.querySelector('[data-part="editor"]') as HTMLElement
+    expect(nameField.value, 'anti-vacuous: the target value is not already showing').not.toBe(LIVE_FILL_NAME)
+
+    const authoring = el.querySelector('[data-part="author-pane"] [data-part="authoring-conversation"]') as HTMLElement
+    expect(authoring.getBoundingClientRect().width, 'the interview itself is painted, not merely mounted').toBeGreaterThan(0)
+    const composer = authoring.querySelector('ui-conversation-composer') as HTMLElement & { value: string; busy: boolean }
+    composer.value = 'call it whatever you like'
+    ;(composer.querySelector('[data-part="send"]') as HTMLElement).click()
+
+    await applied
+    await frames()
+
+    // MID-TURN — the composer lock is still held, so everything below is happening while it streams.
+    expect(composer.busy, 'the turn is still streaming').toBe(true)
+    expect(authoring.textContent, 'the closing note has not landed yet').not.toContain('Named it for you.')
+
+    // (1) the interview paints, (2) the rail's field fills — the three independent reads plus its rect,
+    // and (3) the test chat's region stays painted at its own unchanged size. Three-region liveness.
+    expect(authoring.getBoundingClientRect().width, 'the interview is still painted mid-turn').toBeGreaterThan(0)
+    expect(el.store!.get('name'), 'the draft store took the write').toBe(LIVE_FILL_NAME)
+    expect(nameField.value, 'the control re-rendered it').toBe(LIVE_FILL_NAME)
+    expect(editorOf().textContent, 'and it is the RENDERED text').toContain(LIVE_FILL_NAME)
+    const midBox = nameField.getBoundingClientRect()
+    expect(midBox.width, 'the repainted field occupies a real box').toBeGreaterThan(0)
+    expect(midBox.left, 'still inside the settings column').toBeGreaterThanOrEqual(settings.getBoundingClientRect().left - 1)
+    const chatMid = chat.getBoundingClientRect()
+    expect(chatMid.width, 'the test chat is still painted — the third region is not collateral').toBeGreaterThan(0)
+    expect(Math.abs(chatMid.width - chatBefore.width), 'and it did not reflow around the streaming turn').toBeLessThanOrEqual(1)
+
+    releaseTurn()
+    await el.updateComplete
+    await frames()
+    const bubble = authoring.querySelector('[data-role="agent"] [data-part="body"]') as HTMLElement
+    expect(bubble.textContent, 'the reply landed in the interview, not the test chat').toContain('Named it for you.')
+    expect(chat.textContent, 'the test chat never saw the interview’s turn').not.toContain('Named it for you.')
+    expect(chat.getBoundingClientRect().width, 'and it is still painted after the turn').toBeGreaterThan(0)
+  })
 })

@@ -176,26 +176,38 @@ describe('UIAgentAdminElement — shell composition (ADR-0179): the three places
     expect(segmentLabels).toEqual(['Agent', 'Capabilities', 'Surface', 'Context: System', 'Context: Dialog'])
   })
 
-  it('the pane nav is the ONE navigation vehicle: each place shows exactly its own region (the visibility truth-table)', () => {
+  it('the pane nav is the ONE navigation vehicle: the active place is written onto the holder for the sheet to read (the place truth-table)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const holder = el.querySelector('[data-part="pane-holder"]') as HTMLElement
     const chat = el.querySelector('[data-part="pane-holder"] > ui-conversation') as HTMLElement
     const pair = el.querySelector('[data-part="pane-pair"]') as HTMLElement & { selected: string }
     const nav = el.querySelector('[data-part="pane-nav"]') as HTMLElement & { selected: string }
     const tabs = [...el.querySelectorAll('[data-part="pane-nav"] ui-tab')] as HTMLElement[]
 
+    // GH #662 — what a place change WRITES is `data-pane`, and only that. Which regions then have a box is
+    // the sheet's reading of that attribute against the band (one place below 52.5rem, all three at and
+    // above it), so it is asserted in the browser shard where boxes are real, not here. What this suite
+    // owns is the state: the nav, the holder, and the MD's drill selection agree at every place.
+    const place = (): [string | null, string, string] => [holder.getAttribute('data-pane'), nav.selected, pair.selected]
+
     // Entry default: Chat (LLD §4).
-    expect([chat.hidden, pair.hidden, nav.selected]).toEqual([false, true, 'chat'])
+    expect(place()).toEqual(['chat', 'chat', ''])
 
     tabs.find((t) => t.textContent === 'Author')!.click()
-    expect([chat.hidden, pair.hidden, nav.selected]).toEqual([true, false, 'author'])
-    expect(pair.selected, 'Author ⇒ the narrow view is `list` (the interview)').toBe('')
+    expect(place(), 'Author ⇒ the narrow view is `list` (the interview)').toEqual(['author', 'author', ''])
 
     tabs.find((t) => t.textContent === 'Settings')!.click()
-    expect([chat.hidden, pair.hidden, nav.selected]).toEqual([true, false, 'settings'])
-    expect(pair.selected, 'Settings ⇒ the narrow view drills into `detail`').toBe('settings')
+    expect(place(), 'Settings ⇒ the narrow view drills into `detail`').toEqual(['settings', 'settings', 'settings'])
 
     tabs.find((t) => t.textContent === 'Chat')!.click()
-    expect([chat.hidden, pair.hidden, nav.selected]).toEqual([false, true, 'chat'])
+    expect(place()).toEqual(['chat', 'chat', ''])
+
+    // …and no region ever carries the `hidden` attribute again: a region that paints in the triple dock
+    // must not also be claiming to be hidden (the a11y lie the attribute model would tell at wide).
+    for (const tab of tabs) {
+      tab.click()
+      expect([chat.hidden, pair.hidden], `no region is attribute-hidden at ${holder.getAttribute('data-pane')}`).toEqual([false, false])
+    }
   })
 
   it('the master-detail pairing`s own select/change never escape the admin host (the closed event set)', () => {

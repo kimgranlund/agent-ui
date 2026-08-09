@@ -166,25 +166,80 @@
     min-block-size: 0;
   }
 
-  /* ADR-0179 cl.1 — the content slot HOLDS THE PLACES (it was `chat-stack`, ADR-0178 cl.5's
-     two-conversation stacking vehicle for one place). Its two children are the Chat place (the test
-     conversation) and the Author⇄Settings pairing; `#applyPane` shows exactly one, and the hidden one
-     contributes no box at all (`hidden` + `display: none`) — which is what keeps a place change a pure
-     visibility change, with no layout shift for whichever region survives it. */
+  /* ADR-0179 cl.1 + its GH #662 Amendment — the content slot HOLDS THE PLACES (it was `chat-stack`,
+     ADR-0178 cl.5's two-conversation stacking vehicle for one place). Its two children are the Chat place
+     (the test conversation) and the Author⇄Settings pairing.
+     ┌─ THE BAND LADDER (three places, two arrangements) ────────────────────────────────────────────────┐
+     │ `#applyPane` writes the active place here as `data-pane` and writes nothing else; THIS SHEET says  │
+     │ what paints, reading `data-pane` against the holder's OWN inline-size (the shell family's          │
+     │ own-container-width law — no ResizeObserver, no JS layout, no state written by a resize).          │
+     │                                                                                                    │
+     │   below 52.5rem   exactly the named place paints (Chat solo, or the Author⇄Settings pair, which    │
+     │                   the MD itself further drills into one region below its own 40rem line)           │
+     │   52.5rem and up  the TRIPLE DOCK: all three regions paint side by side, [chat | author | settings]│
+     │                                                                                                    │
+     │ 52.5rem is `SHELL_COMPACT_BREAKPOINT` (ADR-0150/0155) — the ladder's OWN second line, never a third│
+     │ number, and exactly the escalation seam the LLD §6 booked for this case. It is what it is because  │
+     │ the pair below cannot survive being squeezed: the MD needs 40rem of its own to stay docked (below  │
+     │ that it drills in and the "triple" would silently become a pair), which leaves the Chat column the │
+     │ remainder — and 52.5rem is the first named line where that remainder still clears the 20ch         │
+     │ engagement floor. Measured in both engines, GH #662's density table.                               │
+     └────────────────────────────────────────────────────────────────────────────────────────────────────┘ */
   [data-part='pane-holder'] {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     flex: 1 1 auto;
     min-block-size: 0;
+    container-type: inline-size; /* the band the rules below query is the HOLDER's own width */
   }
-  [data-part='pane-holder'] > ui-conversation,
+  [data-part='pane-holder'] > ui-conversation {
+    flex: 1 1 0;
+    min-inline-size: 0;
+    min-block-size: 0;
+  }
+  /* The pair's floor IS the MD's own dock line: at 40rem it stays a docked split, below it drills in. The
+     `2` share keeps the three columns reading roughly equal once there is room to spare (the pair holds
+     two of them), and the floor is what wins while there is not. */
   [data-part='pane-holder'] > [data-part='pane-pair'] {
-    flex: 1 1 auto;
+    flex: 2 1 0;
+    min-inline-size: 40rem;
     min-block-size: 0;
   }
-  [data-part='pane-holder'] > ui-conversation[hidden],
-  [data-part='pane-holder'] > [data-part='pane-pair'][hidden] {
-    display: none;
+  /* Below the triple line — exactly the named place has a box. `display: none` (not the `hidden`
+     attribute, which S1-b used and GH #662 retired) is deliberate: it takes the non-painting region out of
+     the a11y tree the same way, and it is a reading of the band rather than a claim written into the DOM
+     that would be a lie the moment the triple paints the same region. */
+  @container (inline-size < 52.5rem) {
+    [data-part='pane-holder'][data-pane='chat'] > [data-part='pane-pair'] {
+      display: none;
+    }
+    [data-part='pane-holder']:not([data-pane='chat']) > ui-conversation {
+      display: none;
+    }
+    /* Solo, the surviving region takes the whole holder — its share and the pair's dock floor were both
+       computed for the three-column arrangement. */
+    [data-part='pane-holder'] > ui-conversation,
+    [data-part='pane-holder'] > [data-part='pane-pair'] {
+      flex: 1 1 auto;
+      min-inline-size: 0;
+    }
+  }
+
+  /* GH #662, Kim's 2026-08-10 addition — NO PAINTED DIVIDERS between docked regions. The regions separate
+     by spacing and surface alone; the split's resting 1px rule is retracted, never removed. This is a
+     TOKEN repoint, which is exactly the retract-don't-delete shape: `ui-split` keeps its separator element,
+     its 24px hit-slop, its `role=separator`, its keyboard step and its drag — every resize mechanic
+     survives untouched, and the hover/drag cue (`--ui-split-divider-ink-hover`) is deliberately LEFT ALONE
+     so the handle still says "you're grabbing this" at the moment a user reaches for it. Only the resting
+     ink goes.
+     The selector must land on the `ui-split` elements THEMSELVES, not on an ancestor: split.css declares
+     `--ui-split-divider-ink` in its own `:where(ui-split)` token block, and a locally-declared custom
+     property beats an inherited one no matter how the ancestor's specificity compares. A descendant reach
+     is intended here — it covers the triple's own separator AND the one inside `ui-settings`'s nested
+     rail|panel master-detail, so "no painted divider between docked regions" holds everywhere in this
+     surface rather than only at the top level. */
+  [data-part='pane-holder'] ui-split {
+    --ui-split-divider-ink: transparent;
   }
 
   /* ADR-0179 cl.1 (LLD §2) — the PANE NAV, the one top-level navigation vocabulary. `ui-tabs`
