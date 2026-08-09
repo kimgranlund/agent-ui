@@ -325,6 +325,112 @@ describe('the dual-context scaffold — one draft, two transcripts, zero store s
   })
 })
 
+// GH #644 — the S3-b review finding: with `agentTurn` live but `agentSurfaceTurn` UNARMED (the LLD §8
+// degrade config — no structured modality reachable, so `#handleSubmit` always falls to the PROSE arm),
+// the two dual-context transcripts must feed the model two SEPARATE histories, exactly like the surface
+// arm's per-context `Session` map (`admin-live-runner.ts`'s `sessions` keyed by `req.session`) already
+// does. Before the fix, both contexts appended onto one shared `#history` array, so an interleaved
+// interview/test-chat exchange leaked into the OTHER context's next request.
+describe('the PROSE arm keeps per-context history — agentSurfaceTurn unarmed, agentTurn live (GH #644)', () => {
+  /** A live prose-arm mount with `agentSurfaceTurn` left `undefined` (the S3 degrade config) and
+   *  `agentTurn` wired to record every request it is handed. */
+  function mountProse(options: { store: SettingsStore; authoringStore?: SettingsStore }): {
+    el: UIAgentAdminElement
+    calls: import('./agent-admin-schema.ts').AdminTurnRequest[]
+  } {
+    const calls: import('./agent-admin-schema.ts').AdminTurnRequest[] = []
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = options.store
+    el.agentTurn = async (req) => {
+      calls.push(req)
+      return `ack:${req.text}`
+    }
+    document.body.append(el)
+    mounted.push(el)
+    if (options.authoringStore) el.authoringStore = options.authoringStore
+    return { el, calls }
+  }
+
+  it('interleaved interview/test-chat turns each see ONLY their own history, never the other context\'s', async () => {
+    const draft = personaStore()
+    const builder = personaStore({ [SURFACE_AUTHORING_KEY]: true })
+    const { el, calls } = mountProse({ store: draft, authoringStore: builder })
+    await whenFlushed()
+
+    await submit(el, 'interview one', 'authoring')
+    flipMode(el, 'test')
+    await submit(el, 'test one', 'test')
+    flipMode(el, 'authoring')
+    await submit(el, 'interview two', 'authoring')
+    flipMode(el, 'test')
+    await submit(el, 'test two', 'test')
+
+    expect(calls).toHaveLength(4)
+    const [interviewOne, testOne, interviewTwo, testTwo] = calls
+    // Turn 1 in each context carries no prior history — the two contexts never seeded each other.
+    expect(interviewOne!.history).toEqual([])
+    expect(testOne!.history).toEqual([])
+    // The authoring context's SECOND turn replays only ITS OWN first exchange — never the test chat's.
+    expect(interviewTwo!.history).toEqual([
+      { role: 'user', content: 'interview one' },
+      { role: 'assistant', content: 'ack:interview one' },
+    ])
+    // Symmetrically, the test context's second turn carries only its own first exchange.
+    expect(testTwo!.history).toEqual([
+      { role: 'user', content: 'test one' },
+      { role: 'assistant', content: 'ack:test one' },
+    ])
+  })
+
+  it('a real `authoringStore` identity change clears the authoring history but leaves the test history untouched', async () => {
+    const draft = personaStore()
+    const builderA = personaStore({ [SURFACE_AUTHORING_KEY]: true })
+    const { el, calls } = mountProse({ store: draft, authoringStore: builderA })
+    await whenFlushed()
+
+    flipMode(el, 'test')
+    await submit(el, 'test turn', 'test')
+    flipMode(el, 'authoring')
+    await submit(el, 'interview with A', 'authoring')
+
+    // A DIFFERENT interviewer store — a real identity change (`#rewireAuthoringContext`'s `changed` arm).
+    el.authoringStore = personaStore({ [SURFACE_AUTHORING_KEY]: true })
+    await whenFlushed()
+    await submit(el, 'interview with B', 'authoring')
+    flipMode(el, 'test')
+    await submit(el, 'test turn two', 'test')
+
+    const interviewWithB = calls[2]!
+    const testTurnTwo = calls[3]!
+    // The new interviewer's first turn carries no trace of interviewer A's exchange.
+    expect(interviewWithB.history).toEqual([])
+    // The test chat's own history survived the authoring-store swap untouched (it belongs to the draft).
+    expect(testTurnTwo.history).toEqual([
+      { role: 'user', content: 'test turn' },
+      { role: 'assistant', content: 'ack:test turn' },
+    ])
+  })
+
+  it('a real persona switch (GH #145) clears BOTH histories, not just the test one', async () => {
+    const draft = personaStore()
+    const builder = personaStore({ [SURFACE_AUTHORING_KEY]: true })
+    const { el, calls } = mountProse({ store: draft, authoringStore: builder })
+    await whenFlushed()
+
+    await submit(el, 'interview turn', 'authoring')
+    flipMode(el, 'test')
+    await submit(el, 'test turn', 'test')
+
+    el.store = personaStore() // a genuinely different persona (the draft itself was replaced)
+    await whenFlushed()
+    flipMode(el, 'authoring')
+    await submit(el, 'fresh interview', 'authoring')
+
+    const freshInterview = calls[2]!
+    expect(freshInterview.history, 'the new persona\'s first authoring turn must carry no prior interview').toEqual([])
+  })
+})
+
 // ── LLD-C9 (S4-a, GH #646) — the try-it bar: the REAL affordance, not the `setModeSeam` stand-in above ──
 describe('the try-it bar — the visible flip, driving the SAME seam the round trip above already proved (LLD-C9)', () => {
   function bar(el: UIAgentAdminElement): { bar: HTMLElement; authoringBtn: HTMLElement; testBtn: HTMLElement } {
