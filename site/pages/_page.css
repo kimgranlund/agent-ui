@@ -25,8 +25,29 @@ body {
      itself steps 14px -> 13px below 52.5rem — no separate rule needed here). */
   font-size: var(--md-sys-typescale-body-medium-size);
   line-height: var(--md-sys-typescale-body-medium-line-height);
-  color: var(--md-sys-color-neutral-on-surface);
+  /* GH #628 — Kim's typography-ink law: BODY prose (paragraphs, list items — the reading-column content
+     every page inherits this rule for) recedes to the variant role, so headings alone carry hierarchy.
+     Was `-on-surface` (the same ink as headings) — measured at 8.3:1 (light) / 9.0:1 (dark) against
+     `--md-sys-color-neutral-surface` below, both comfortably clear of the 4.5:1 AA floor. The heading
+     pin right below restores `-on-surface` for real h1-h6 so they still read louder than the prose
+     around them. */
+  color: var(--md-sys-color-neutral-on-surface-variant);
   background: var(--md-sys-color-neutral-surface);
+}
+
+/* GH #628 — real headings (h1-h6, ADR-0025) keep the stronger `-on-surface` ink the body rule above just
+   gave up, so they carry the page's visual hierarchy while surrounding prose recedes. Site-wide (every
+   page imports this file first), not a per-page rule. A ui-* control's OWN heading (e.g. `<ui-text
+   as="h2">`) is unaffected: its `@scope (ui-text) { :scope > :is(h1, …) { color: inherit } }` rule reads
+   `--ui-text-color` off the component's own host, at higher specificity (0,1,1 vs this rule's 0,0,1), so
+   this plain-tag rule only ever reaches a page's OWN bare heading elements, never overrides a control. */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--md-sys-color-neutral-on-surface);
 }
 
 /* ── the outer shell grid ─────────────────────────────────────────────────────────────────────────────────
