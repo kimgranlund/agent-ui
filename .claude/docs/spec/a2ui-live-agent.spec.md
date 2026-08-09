@@ -1,6 +1,32 @@
 # SPEC — A2UI Live-Agent Example (a real LLM emitting A2UI over the wire)
 
-> Status: accepted · v0.13 · 2026-08-07 (v0.12 2026-08-07; v0.11 2026-08-07; v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> Status: accepted · v0.14 · 2026-08-09 (v0.13 2026-08-07; v0.12 2026-08-07; v0.11 2026-08-07; v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> v0.14 changelog ([ADR-0178](../adr/0178-agent-authoring-conversational-persona-hydration.md)
+> cl.1/cl.2/cl.3, ACCEPTED by Kim 2026-08-09 — the [`ratify ADR-0178`
+> utterance](https://github.com/kimgranlund/agent-ui/issues/633#issuecomment-5232182942); the
+> agent-authoring family's S2 slice, [`agent-authoring-flow.decomp.md`](../decompositions/agent-authoring-flow.decomp.md)
+> §S2, GH [#640](https://github.com/kimgranlund/agent-ui/issues/640)): NEW §3.2d — the ADR-0088 meta-line
+> envelope gains a SEVENTH, additive, MODEL-authored field, `personaPatch: {values?, entries?}`, carrying
+> a PARTIAL record of persona-scoped store state, following the `ask`/`plan`-arm precedent EXACTLY
+> (ADR-0097 §1, SPEC-R14/R20) — shallow-validated by `readMetaLine`'s existing per-field-independent guard
+> (a malformed `personaPatch` drops ONLY itself, never the whole envelope), the envelope stays versionless
+> and provably disjoint from `A2uiServerMessage`, `AgentTransport.turn`'s signature stays BYTE-IDENTICAL,
+> and `produce()`'s outgoing meta-line passes a declared patch THROUGH unchanged (the key omitted entirely
+> on a patch-less turn, so the wire shape is byte-identical to before this field existed) — PLUS the merge
+> law ADR-0178 OF1 left to this amendment: patches are INCREMENTAL per turn (never a full-state rewrite),
+> `values` merges per key at WHOLE-VALUE granularity (last-writer-wins; an absent key is untouched), and
+> `entries` are CONTRIBUTIONS (appended through the host's shipped single add path, never a list replace)
+> (NEW **SPEC-R29**). NEW **SPEC-R30** — the opt-in authoring gate: ONE persona-scoped
+> `SURFACE_A2UI_KEY`/`SURFACE_PLANNER_KEY`-precedent modality boolean (inverse-default OFF, fail-closed
+> read, joining the persona-file key set), threaded PER CALL, gating BOTH the arm's mechanics teaching —
+> composed as a host-owned, byte-pinned, conditionally-composed prompt segment (the `genuiBlock`
+> structural-twin shape, NOT a widening of the mode-invariant `GRAMMAR` constant, so SPEC-R6's
+> byte-identity baselines never move; ADR-0178 cl.1 rule 5's host-owned/never-persona-editable law is what
+> "in `GRAMMAR`" means here, and cl.3 is what makes it conditional) — AND host CONSUMPTION (SPEC-R21's
+> degrade law verbatim: a volunteered `personaPatch` while the gate is off is never consumed). OUT OF
+> SCOPE here, and unbuilt: ADR-0178 cl.2's HOST-side three-filter apply gate, `AdminSurfaceTurnEvent`'s
+> new event kind, the Builder persona, and the try-it anatomy — all the S3 LLD's. SPEC-R14/R20/R21/R22
+> and every existing requirement are byte-untouched; §5's contracts gain the arm's types only.
 > v0.13 changelog (fork F4 RULED — Kim, 2026-08-07, [GH #567
 > comment](https://github.com/kimgranlund/agent-ui/issues/567#issuecomment-5221451663), relayed from
 > the S-LLD slice's mandated pin sanity-check against modelcontextprotocol.io's live revision
@@ -860,6 +886,143 @@ polices declaration-vs-output. *(→ PRD-G1/G6; ADR-0174 cl.4, OF1)*
   (no failure, no warning from content mismatch), each group closes on its call's terminal state, and
   the emitted content renders normally — deterministic unit test.
 
+### 3.2d The `personaPatch` meta-line arm (ADR-0178 cl.1/cl.3 — the agent-authoring wire contract)
+
+**SPEC-R29 — Additive, model-authored, shallow-validated `personaPatch` field on the meta-line envelope,
+and its merge law.** The system MUST let an authoring turn's model output declare persona-state deltas as
+a NEW, additive field on the SAME leading meta-line `note`/`ask`/`plan`/`trace`/`progress`/`error` already
+ride (SPEC-R5's meta-line convention; ADR-0088 §1). Following the `ask`/`plan`-arm precedent EXACTLY
+(SPEC-R14/R20; ADR-0097 §1, ADR-0178 cl.1): *(→ PRD-G1/G6; ADR-0178 cl.1)*
+- **Wire shape.** `personaPatch: { values?: { [storeKey: string]: unknown }, entries?: { [storeKey:
+  string]: unknown[] } }` — `values` proposes scalar persona-store state (config values, switch states),
+  `entries` proposes contributions to the entry-list keys. The two members are the two KINDS of proposal
+  ADR-0178 cl.1 enumerates, declared distinctly so the model states its INTENT (set vs. contribute)
+  rather than the host inferring it from a key table.
+- `personaPatch` MUST be MODEL-authored — the model, interviewing the user, is the author of the extracted
+  structure (ADR-0178 cl.1's rule-2 application, which is what rules OUT host-side extraction over prose).
+  It MUST NEVER be runtime-composed like `progress`/`trace`/`error`.
+- `personaPatch` MUST be shallow-validated by `readMetaLine`'s existing per-field-independent guard: a
+  malformed `personaPatch` MUST drop ONLY that field — NEVER the whole envelope
+  (`note`/`ask`/`plan`/`trace`/`progress`/`error` on the SAME line still parse normally). Malformed means:
+  a non-object (or array/null) arm; a present-but-non-object `values`; a present-but-non-object `entries`,
+  or an `entries` whose any member value is not an array; or NEITHER member present. The arm validates as
+  a WHOLE — a malformed member drops the entire arm, not just that member — deliberately ONE simple rule,
+  since a half-parsed patch is the one shape a host apply loop must never be handed.
+- The wire layer MUST stay persona-key-AGNOSTIC: `values`/`entries` values are `unknown` here, and NO
+  persona key set, sanitizer, or entry shape is known to, imported by, or duplicated in the producer
+  package. This is forced as well as chosen — the package DAG runs `a2ui` ← `app`, and the persona schema
+  lives in `app` — and it is the correct seam anyway: ADR-0178 cl.2 puts every semantic filter host-side.
+- **Merge law (ADR-0178 OF1, pinned here).** Patches MUST be INCREMENTAL per turn — each turn's patch
+  merges onto the draft, NEVER a full-state rewrite — so progressive hydration composes with the user's
+  own concurrent hand-edits instead of clobbering them. Within `values`, merge granularity MUST be the
+  WHOLE VALUE per key: a key present in the patch replaces that key's draft value entirely (last-writer-
+  wins), a key ABSENT is left untouched, and there is NO deep/partial merge inside a value. Within
+  `entries`, each member MUST be a CONTRIBUTION — appended through the host's shipped single validated add
+  path (`validateNewEntry`, ADR-0132 cl.4 / ADR-0164), never a replacement of that list — so a patch can
+  never silently delete entries the user already authored. A patch MUST have NO deletion semantics at all
+  in this version (no key removal, no entry removal): removal stays a user action in the panes, which is
+  what keeps a hallucinated patch non-destructive by construction.
+- The envelope MUST stay versionless and provably disjoint from `A2uiServerMessage` — the SPEC-R5
+  disjointness proof (no `version` key) is UNCHANGED by this addition.
+- `AgentTransport.turn(input): AsyncIterable<string>`'s signature MUST stay BYTE-IDENTICAL — `personaPatch`
+  is additive framing INSIDE the string stream the interface already returns, never a new interface member
+  (the SAME precedent ADR-0097/ADR-0146/GH#144/ADR-0174 each already extended this envelope by once).
+- `produce()`'s OUTGOING meta-line MUST carry the model's declared `personaPatch` value THROUGH when the
+  model's own leading meta-line carried one — passed through UNCHANGED (no runtime rewriting, no integrity
+  check) — the SAME passthrough treatment `note`/`plan` already receive, and the SAME conditional-key
+  omission `ask`/`plan` already receive (`JSON.stringify` omits `personaPatch` entirely on a patch-less
+  turn, so the wire shape stays byte-identical to before this field existed). This passthrough MUST be
+  GATE-BLIND, exactly as `plan`'s is: the wire layer never inspects the SPEC-R30 gate, because the gate
+  governs CONSUMPTION and TEACHING, not framing (one peel path, no gate-conditional wire branch).
+
+**Scope.** This requirement governs the WIRE REPRESENTATION in both directions plus the merge law every
+consumer builds against. The merge law's ENFORCEMENT is deliberately NOT here: applying a patch is
+ADR-0178 cl.2's HOST-side three-filter gate (enumerated-key filter → per-key fail-closed sanitizer →
+`validateNewEntry`), which lives in the admin component and is the S3 LLD's to build. Also OUT OF SCOPE,
+and unbuilt: `AdminSurfaceTurnEvent`'s new event kind and the runner's peel of it (S3); the Builder
+persona and the try-it anatomy (S3/S4); and any `personaPatch`-analogue of the `ask` field's integrity
+check (the SPEC-R22 advisory law's posture applies — a declared patch is passed through as declared, and
+the host's own three filters, not a producer-side correlation check, are what make it safe).
+`RecordedTurn`/`createRecordedTransport` parity is deliberately NOT extended to this arm (unlike SPEC-R14's
+`{note, ask}` and SPEC-R20 AC4's `{note, plan}`): the recorded transport replays committed demo
+transcripts, and persona authoring is a live admin-only capability with no recorded turn to carry — an
+unused parity seam would be scope with no consumer. A `personaPatch` on a recorded turn therefore simply
+does not occur; if one ever must, it is an additive amendment on the SAME seam, not a redesign.
+- **AC1** *Given* `readMetaLine`, *when* fed `{note, personaPatch:{values:{…}}}` and
+  `{note, personaPatch:{entries:{…:[…]}}}`, *then* each round-trips `personaPatch` intact alongside
+  `note`/`ask`/`plan`/`trace`/`progress`/`error`; *given* a malformed `personaPatch` (a non-object/array
+  arm, a non-object `values`, a non-object `entries`, an `entries` member that is not an array, or an arm
+  with NEITHER member), *then* the envelope returns WITHOUT `personaPatch` and EVERY other field on the
+  same line still parses — `meta-line.test.ts`, `npm test` green.
+- **AC2** *Given* the repo's `AgentTransport.turn` interface, *when* diffed before/after this field's
+  addition, *then* its signature is BYTE-IDENTICAL — no new interface member, no request/response shape
+  change (the additive-framing precedent, re-verified for `personaPatch`).
+- **AC3** *Given* a stub `produce()` run whose model output's leading meta-line carries
+  `{note, personaPatch:{…}}`, *when* it completes, *then* the OUTGOING meta-line ships `personaPatch`
+  intact, passed through unchanged; *given* a stub run emitting no `personaPatch`, *then* the outgoing
+  meta-line omits the key entirely (byte-identical to the pre-this-field wire shape); *given* the SAME
+  patch-carrying run with the SPEC-R30 gate OFF, *then* the outgoing meta-line is IDENTICAL to the
+  gate-ON run's (the passthrough is gate-blind — the gate governs consumption, SPEC-R30) — mirroring
+  SPEC-R20 AC3's stub-`produce()`-run shape, `produce-loop.test.ts`, `npm test` green, no live model.
+
+**SPEC-R30 — The opt-in authoring gate: one persona-scoped modality boolean gating BOTH the arm's
+mechanics teaching and host consumption.** Persona authoring MUST be OPT-IN per persona, via a modality
+gate following the `SURFACE_A2UI_KEY`/`SURFACE_GENUI_KEY`/`SURFACE_PLANNER_KEY` precedent, so a persona
+that does not author agents is byte-identical to before this capability existed. *(→ PRD-G1/G6; ADR-0178
+cl.3)*
+- **The gate constant.** ONE new `SURFACE_*_KEY`-shaped persona-scoped store key MUST carry it, with the
+  INVERSE default the opt-in modalities use: absent, malformed, or any non-`true` value ⇒ OFF; ONLY an
+  explicit boolean `true` turns it on (the `isGenuiSurfaceEnabled`/`isPlannerSurfaceEnabled` fail-closed
+  read shape, reused — never a new read idiom). It MUST join the enumerated persona key set so it
+  round-trips through the persona file's filter-both-ways law (GH #406) like every other persona key.
+- **Threading.** The gate MUST reach the producer PER CALL, on the SAME `ProduceOptions`-adjacent seam
+  `genuiSurface`/`mode` already ride (ADR-0178 cl.3's "threaded per-call"). `produce()` MUST use it for
+  exactly ONE thing — conditioning prompt composition — and MUST NOT consume a patch itself: consumption
+  is host-side (ADR-0178 cl.2, S3), which keeps `produce()` a plain per-call primitive that never branches
+  on persona config it should not know about (ADR-0174 cl.1's law, applied to this gate).
+- **The teaching.** With the gate ON, the composed system prompt MUST carry the arm's mechanics teaching:
+  the `personaPatch` field's exact shape, that it rides the SAME leading meta-line as `note`, the merge
+  law's user-visible consequence (patches are incremental — send only what THIS turn established; never
+  restate the whole persona), and that entries are contributions, never replacements. This teaching MUST
+  be HOST-OWNED, byte-pinned, and drift-gated — NEVER a persona-editable `kind: "prompt-section"` entry
+  (ADR-0178 cl.1 rule 5; ADR-0174 cl.6's reasoning verbatim: garbled mechanics teaching is a shape
+  `readMetaLine` can shallow-validate but never RECOVER from). It MUST be mode-INVARIANT (byte-identical
+  under `undefined`/`'default'`/`'specific'`/`'blue-sky'`) — the ADR-0090 mode axis conditions
+  disposition, never wire mechanics.
+- **Conditional composition, and why it is NOT inside the `GRAMMAR` constant.** With the gate OFF or
+  ABSENT, the composed prompt MUST carry ZERO bytes of this teaching — byte-identical to before this
+  capability existed, across every mode. It therefore MUST compose as a conditional segment (the
+  `genuiBlock` structural-twin shape: degrade-to-`''`, additive, orthogonal to `mode`, never touching
+  `grammarFor`), NOT as text inlined into the mode-invariant `GRAMMAR` constant the way `ask`/`plan`
+  mechanics are. This is the ONE place this arm's realization diverges from the `plan`-arm precedent, and
+  deliberately so: `plan`'s teaching is generic enough to ride every consumer's prompt unconditionally,
+  whereas persona-authoring mechanics are meaningful only to a persona that authors personas — inlining
+  them in `GRAMMAR` would put admin-specific teaching in every A2UI consumer's prompt AND would move
+  SPEC-R6's byte-identity baselines (`prompt-drift`/`prompt-equivalence`) for every caller. ADR-0178 cl.1
+  rule 5's requirement is HOST-OWNED and never-persona-editable, which a byte-pinned prompt file satisfies
+  exactly; cl.3 is what makes it conditional.
+- **The degrade law (SPEC-R21's, verbatim).** With the gate OFF or absent, the turn path MUST be
+  byte-identical to today's — INCLUDING when a model volunteers a `personaPatch` anyway: the host MUST NOT
+  consume it. The field is still parsed and passed through at the wire layer (SPEC-R29's gate-blind
+  passthrough); what the gate withholds is CONSUMPTION. The turn's note and A2UI lines MUST render exactly
+  as they do today.
+- **AC1** *Given* the gate's fail-closed read, *when* fed `undefined`, `false`, `0`, `'true'`, `{}`, and
+  `true`, *then* only boolean `true` reads ON; *given* a persona file round-trip carrying the gate key,
+  *then* the key survives the enumerated-key filter in BOTH directions (the GH #406 law) — deterministic
+  unit tests, `npm test` green.
+- **AC2** *Given* `buildSystemPrompt` with the gate ABSENT and with it explicitly OFF, *when* each is
+  compared against the composition from before this parameter existed, *then* all three are
+  BYTE-IDENTICAL across all four `mode` values; *given* the gate ON, *then* the teaching segment is
+  present and byte-identical in all four modes, contains the `personaPatch` shape and the incremental-merge
+  instruction, and NONE of it leaks into the derived `## Available components` section —
+  `system-prompt-grammar.test.ts` (+ the standing `prompt-drift`/`prompt-equivalence` gates, which MUST
+  stay green untouched), `npm test` green, no live model.
+- **AC3** *Given* a stub `produce()` run with the gate OFF whose model volunteers a well-formed
+  `personaPatch`, *when* it completes, *then* the run composes ZERO teaching bytes and yields a stream
+  byte-identical to the gate-ON run's (the wire is gate-blind, SPEC-R29 AC3) — the degrade is a
+  CONSUMPTION fact, asserted host-side at S3, and this AC pins the producer half: no gate-conditional wire
+  branch exists to drift — `produce-loop.test.ts`, `npm test` green, no live model.
+
 ### 3.3 The round-trip
 
 **SPEC-R8 — Multi-turn client round-trip ("the agent continues").** A client message from
@@ -1361,6 +1524,18 @@ interface PlanStep {
 interface PlanDeclaration {
   steps: PlanStep[];
 }
+// PersonaPatch (SPEC-R29 / ADR-0178 cl.1) — a model-authored PARTIAL record of persona-scoped store
+// state; the wire representation ONLY. Values stay `unknown` here: the producer package is persona-key-
+// AGNOSTIC by construction (the package DAG runs a2ui ← app, and the persona schema lives in app), and
+// every semantic filter is host-side (ADR-0178 cl.2's three-filter apply gate, S3). Merge law (SPEC-R29):
+// incremental per turn; `values` last-writer-wins at whole-value granularity per key; `entries` are
+// contributions appended through the host's `validateNewEntry` add path, never list replacements; no
+// deletion semantics in this version. At least one member must be present and well-typed, else the whole
+// arm drops (only itself — never the envelope).
+interface PersonaPatch {
+  values?: { [storeKey: string]: unknown };
+  entries?: { [storeKey: string]: unknown[] };
+}
 
 // The host-side plan-runner (SPEC-R21/R22 / ADR-0174 cl.1/cl.3/cl.4) — INDICATIVE shape; the exact
 // module home + API surface are the LLD's. Lives ABOVE the AgentTransport seam: dispatches ordinary
@@ -1379,7 +1554,7 @@ function runPlan(opts: {
   onStepState?: (stepId: string, state: PlanStepState) => void;
 }): Promise<Session>;
 interface A2uiMetaEnvelope {
-  a2uiMeta: { note?: string; ask?: AskDeclaration; plan?: PlanDeclaration; trace?: TurnTrace };   // note: model prose; ask: SPEC-R14 routing; plan: SPEC-R20 step list; trace: runtime-assembled, never model-authored
+  a2uiMeta: { note?: string; ask?: AskDeclaration; plan?: PlanDeclaration; personaPatch?: PersonaPatch; trace?: TurnTrace };   // note: model prose; ask: SPEC-R14 routing; plan: SPEC-R20 step list; personaPatch: SPEC-R29 persona-state delta; trace: runtime-assembled, never model-authored
 }
 // Provably disjoint from A2uiServerMessage (which always carries `version`); never throws.
 function readMetaLine(line: string): A2uiMetaEnvelope | undefined;
@@ -1507,6 +1682,8 @@ function buildToolDispatch(active: readonly IntegrationManifest[], env: Record<s
 | SPEC-R19 | PRD-G7 (transport interop — enablement reaches every live arm via one shared dispatch; GH #402 branch (a); ADR-0136/0152/0168 §5) |
 | SPEC-R20, R6 AC6 | PRD-G1/G6 (the `plan` meta-line arm — a model-authored, additive, shallow-validated field on the ADR-0088 envelope, following the `ask`-arm precedent exactly; parsed by `readMetaLine` and passed through `produce()`'s outgoing meta-line unchanged; its GRAMMAR-half mechanics teaching folded into SPEC-R6 per ADR-0174 cl.6; the host-side plan→execute→synthesize loop and any `plan`-analogue of the `ask` integrity check are OUT OF SCOPE — ADR-0174 cl.2) |
 | SPEC-R21, R22 | PRD-G1/G6 (the host-side sequential plan-runner — persona-gated opt-in, one ordinary `{kind:'intent'}` dispatch per declared step over one growing `Session`, closing-turn synthesis under SPEC-R5's validate-then-stream law, step lifecycle projected onto the existing status-stream grouping with `TURN_PROGRESS_STAGES` unwidened, a step cap + one `AbortSignal` bounding the run at `(K+2) × maxRounds`, tiered failure grain with fold-in acknowledgment, and the OF1 advisory law — no declaration-vs-output check; ADR-0174 cl.1/cl.3/cl.4/cl.6) |
+| SPEC-R29 | PRD-G1/G6 (the `personaPatch` meta-line arm — a model-authored, additive, shallow-validated seventh field on the ADR-0088 envelope, following the `ask`/`plan`-arm precedent exactly; parsed by `readMetaLine` and passed through `produce()`'s outgoing meta-line unchanged and gate-blind; the merge law ADR-0178 OF1 left open, pinned here (incremental per turn, per-key whole-value last-writer-wins, entries-as-contributions, no deletion semantics); the host-side three-filter apply gate, the runner event kind, and recorded-transport parity are OUT OF SCOPE — ADR-0178 cl.1) |
+| SPEC-R30 | PRD-G1/G6 (the opt-in authoring gate — one persona-scoped, inverse-default, fail-closed modality boolean joining the persona-file key set, threaded per call, gating BOTH the arm's host-owned byte-pinned mechanics teaching (composed as a `genuiBlock`-shaped conditional segment so SPEC-R6's byte-identity baselines never move) AND host consumption, with SPEC-R21's degrade law verbatim; ADR-0178 cl.3) |
 | SPEC-R23 | PRD-G7 (MCP as a second manifest PRODUCER — a registry source through the existing `registerIntegration()`, every consumer surface byte-untouched; ADR-0137/0177 cl.1) |
 | SPEC-R24 | Constraint C2 + PRD-G7 (the server-side-only wire client — Streamable HTTP ONLY, protocol pinned `2025-06-18`, hand-rolled plain `fetch` per SPEC-N1's no-SDK law; raw frames never leave the host; the F2/F3 freeze; ADR-0177 cl.2) |
 | SPEC-R25 | PRD-G4/G6 (the three-fact additive mapping + schema passthrough into the SAME `assertSupportedSchema` gate + TEXT-only execute through the existing `is_error` path; per-server key inheritance under SPEC-R18's law unchanged; ADR-0177 cl.3, ADR-0168 §3/§4) |
