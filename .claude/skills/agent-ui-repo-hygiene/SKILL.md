@@ -66,6 +66,12 @@ can hold.
   reference just-dissolved dirs in an add.
 - **A new gate biting on its first run is the system working** (S1 caught tkt-0003's missing
   `kind` within minutes of existing) — write the gate before trusting the sweep that motivated it.
+- **Hand-union of both-sides-append JSON conflicts fuses adjacent objects** (2026-08-09, the S5
+  rebase over S4): keeping both sides of a conflict hunk inside `site-manifest.json` merged two
+  entries into ONE object via duplicate keys — still valid JSON, so `json.load` passed; only the
+  sitemap byte-identity gate (`site/lib/sitemap.test.ts`) caught the vanished entry. After ANY
+  conflict in the registration surfaces (`site-manifest.json` · sitemaps · `llms.txt`), run
+  `node scripts/generate-sitemap.mjs` and let the drift gates judge — parseability proves nothing.
 
 ## When an external wave lands mid-campaign
 
