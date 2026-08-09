@@ -368,6 +368,15 @@ describe('ui-otp-field — C10 zero-residue reconnect (both engines)', () => {
 
 const px = (v: string): number => Number.parseFloat(v)
 
+/** Measures the actual rendered glyph (the cell's own text node), not the padded cell box — a Range over
+ *  the text node gives the real ink rect, distinct from `cell.getBoundingClientRect()`. */
+function glyphRectOf(cell: HTMLElement): DOMRect {
+  const textNode = cell.firstChild!
+  const range = document.createRange()
+  range.selectNodeContents(textNode)
+  return range.getBoundingClientRect()
+}
+
 describe('ui-otp-field — geometry (GEO-LAW: cell inline = block = height off the row, gap = font/2)', () => {
   it('default [size=md]: cell inline-size equals block-size equals the height token', async () => {
     const { el } = mount()
@@ -378,6 +387,27 @@ describe('ui-otp-field — geometry (GEO-LAW: cell inline = block = height off t
     expect(rect.width, `${server.browser}: cell is not square — GEO-LAW violation`).toBeCloseTo(rect.height, 1)
     const heightToken = px(getComputedStyle(el).getPropertyValue('--ui-otp-field-height'))
     expect(rect.width).toBeCloseTo(heightToken, 1)
+
+    // GH #634 displacement gap: the cell's own square-ness is pinned above, but never where the DIGIT
+    // itself lands inside that square — a regression from align-items/justify-content:center to
+    // flex-start on the cell would top/left-anchor the glyph, undetected. Type a real digit and measure
+    // its own text-node rect against the cell box. Anti-vacuous: --md-sys-control-line-height:1 means the
+    // glyph's line box (= font-size) is genuinely shorter than the cell (= the height token), so there is
+    // real slack for centering to mean something.
+    const editor = editorOf(el)
+    await userEvent.click(editor)
+    await userEvent.keyboard('7')
+    await el.updateComplete
+    const filledCell = cellsOf(el)[0]!
+    const cellRect = filledCell.getBoundingClientRect()
+    const glyphRect = glyphRectOf(filledCell)
+    expect(cellRect.height - glyphRect.height, 'no vertical slack between the cell and the digit glyph (anti-vacuous)').toBeGreaterThan(0.5)
+    const gapTop = glyphRect.top - cellRect.top
+    const gapBottom = cellRect.bottom - glyphRect.bottom
+    const gapLeft = glyphRect.left - cellRect.left
+    const gapRight = cellRect.right - glyphRect.right
+    expect(Math.abs(gapTop - gapBottom), `${server.browser}: digit glyph not vertically centered in its cell`).toBeLessThanOrEqual(1)
+    expect(Math.abs(gapLeft - gapRight), `${server.browser}: digit glyph not horizontally centered in its cell`).toBeLessThanOrEqual(1)
   })
 
   it('[size=sm] and [size=lg] repoint the SAME lever off the ramp (no ad hoc size value)', async () => {
@@ -389,6 +419,22 @@ describe('ui-otp-field — geometry (GEO-LAW: cell inline = block = height off t
     const lgWidth = cellsOf(lg)[0]!.getBoundingClientRect().width
     expect(smWidth, `${server.browser}: sm cell collapsed`).toBeGreaterThan(0)
     expect(lgWidth, `${server.browser}: lg cell did not grow past sm — the ramp did not apply`).toBeGreaterThan(smWidth)
+
+    // GH #634 displacement gap (ramp twin of the default-size digit-centering check above): centering
+    // must hold at every ramp tier, not just md.
+    for (const el of [sm, lg]) {
+      const editor = editorOf(el)
+      await userEvent.click(editor)
+      await userEvent.keyboard('3')
+      await el.updateComplete
+      const cell = cellsOf(el)[0]!
+      const cellRect = cell.getBoundingClientRect()
+      const glyphRect = glyphRectOf(cell)
+      expect(cellRect.height - glyphRect.height, `${server.browser}: no vertical slack between the cell and the digit glyph (anti-vacuous)`).toBeGreaterThan(0.5)
+      const gapTop = glyphRect.top - cellRect.top
+      const gapBottom = cellRect.bottom - glyphRect.bottom
+      expect(Math.abs(gapTop - gapBottom), `${server.browser}: digit glyph not vertically centered in its cell`).toBeLessThanOrEqual(1)
+    }
   })
 
   it('inter-cell gap resolves to a real, positive pixel value (= font/2 × density)', async () => {

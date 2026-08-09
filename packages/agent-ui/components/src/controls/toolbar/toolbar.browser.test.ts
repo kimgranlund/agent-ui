@@ -144,11 +144,21 @@ describe('ui-toolbar — real keyboard roving (SPEC-R4, both engines)', () => {
 
 describe('ui-toolbar — whole-shape: a populated bar renders with real width/height (SPEC-R7, both engines)', () => {
   it('the min-block-size floor holds even with small content — the bar reads as a bar, not a collapsed dot', () => {
-    const { toolbar } = mount(`<ui-toolbar><ui-button variant="ghost">One</ui-button></ui-toolbar>`)
+    const { toolbar, buttons } = mount(`<ui-toolbar><ui-button variant="ghost" size="sm">One</ui-button></ui-toolbar>`)
     const box = toolbar.getBoundingClientRect()
     expect(box.width, 'the toolbar collapsed to zero width').toBeGreaterThan(0)
     // --ui-toolbar-min-block-size: var(--md-sys-height-md) — 28px @ scale 1 (the ADR-0038 lookup, the tabs precedent)
     expect(box.height, 'the toolbar did not honour its min-block-size floor').toBeGreaterThanOrEqual(28)
+
+    // GH #634 displacement gap: the bar's OWN height is pinned above, but never the lone button's
+    // VERTICAL POSITION inside the enforced floor — a regression from align-items:center to flex-start on
+    // ui-toolbar top-anchors the button, undetected (the exact reported bar-centering defect shape). A
+    // size="sm" button (< the md floor) guarantees genuine slack, so the anti-vacuous check is real.
+    const buttonRect = buttons[0]!.getBoundingClientRect()
+    expect(box.height - buttonRect.height, 'no vertical slack between the bar floor and the button (anti-vacuous)').toBeGreaterThan(0.5)
+    const gapTop = buttonRect.top - box.top
+    const gapBottom = box.bottom - buttonRect.bottom
+    expect(Math.abs(gapTop - gapBottom), 'the lone button must be vertically centered in the enforced floor, not top-anchored').toBeLessThanOrEqual(1)
   })
 
   it('a populated 3-button toolbar renders a real bounding box with all items laid out horizontally', () => {
@@ -160,6 +170,18 @@ describe('ui-toolbar — whole-shape: a populated bar renders with real width/he
     expect(buttons[1].getBoundingClientRect().left).toBeGreaterThan(buttons[0].getBoundingClientRect().left)
     expect(buttons[2].getBoundingClientRect().left).toBeGreaterThan(buttons[1].getBoundingClientRect().left)
     expect(buttons[0].getBoundingClientRect().top).toBeCloseTo(buttons[1].getBoundingClientRect().top, 0)
+
+    // GH #634 displacement gap: button-to-button top parity is checked above, but never button-vs-bar
+    // vertical centering — the min-block-size-floor test proves button height ≠ bar height is possible,
+    // so this is not moot. Skip the anti-vacuous/centering pair when the bar has no slack over this
+    // particular button set (a real 3-button row can legitimately define the bar's own height).
+    const middleRect = buttons[1]!.getBoundingClientRect()
+    const slack = box.height - middleRect.height
+    if (slack > 0.5) {
+      const gapTop = middleRect.top - box.top
+      const gapBottom = box.bottom - middleRect.bottom
+      expect(Math.abs(gapTop - gapBottom), 'the middle button is not vertically centered in the bar').toBeLessThanOrEqual(1)
+    }
   })
 
   it('orientation=vertical stacks the items in a column (a real px layout change, not just a computed keyword)', async () => {

@@ -450,6 +450,22 @@ describe('ui-menu — whole-shape assertion (the Test-the-whole-shape DoD law)',
       `${server.browser}: menuitem inline-pad (${padInlineStart}) is less than block-pad (${padBlockStart}) — unexpected item proportions`,
     ).toBeGreaterThanOrEqual(padBlockStart)
 
+    // GH #634 displacement gap: padding-inline is pinned as a computed-style number above, but never
+    // where the item's LABEL TEXT actually renders relative to that padding — a wrapping span with a
+    // canceling `margin-inline-start: calc(-1 * pad-inline)` would keep the padding check green while the
+    // text sits flush against the row edge. Measure the label's own text-node rect (a Range over the
+    // first child), not the item's padded box. (Block axis is deliberately NOT pinned here: line-height
+    // leading puts real, legitimate space between the padding edge and the glyph ink that has nothing to
+    // do with displacement — the inline axis is where the reported slip-through class lives.)
+    const labelRange = document.createRange()
+    labelRange.selectNodeContents(firstItem.firstChild!)
+    const labelRect = labelRange.getBoundingClientRect()
+    const firstItemRect = firstItem.getBoundingClientRect()
+    expect(
+      labelRect.left - firstItemRect.left,
+      `${server.browser}: label text did not land at the pinned inline padding (a canceling margin would slip through)`,
+    ).toBeCloseTo(padInlineStart, 1)
+
     // Each item has a real non-zero rendered height (not collapsed).
     for (const item of items) {
       const itemRect = item.getBoundingClientRect()
@@ -796,5 +812,23 @@ describe('ui-menu — selectable items: real-engine roving + commit-managed aria
       alphaOf(uncheckedStyle.backgroundColor),
       `${server.browser}: an UNCHECKED row painted a checkmark — should stay transparent`,
     ).toBe(0)
+
+    // GH #634 displacement gap: the glyph slot's SIZE + paint are pinned above, but never its POSITION —
+    // menu.css's `inset-inline-start: var(--ui-menu-item-pad-inline)` governs placement and nothing here
+    // reads it, so dropping that value would misalign the checkmark against the label while width/height/
+    // alpha stay green. A pseudo-element has no real box for getBoundingClientRect, so read the USED
+    // inset value and compare it against the SAME token resolved through a throwaway probe (repoint-safe
+    // — no hard-coded px) rather than a pixel literal.
+    const probe = document.createElement('div')
+    probe.style.paddingInlineStart = 'var(--ui-menu-item-pad-inline)'
+    items[1]!.append(probe)
+    const expectedInset = px(getComputedStyle(probe).paddingInlineStart)
+    probe.remove()
+    expect(expectedInset, 'the shared --ui-menu-item-pad-inline token resolves').toBeGreaterThan(0)
+    const checkedInset = px(checkedStyle.insetInlineStart)
+    expect(
+      checkedInset,
+      `${server.browser}: checkmark glyph inset did not track the --ui-menu-item-pad-inline token — misaligned against the label`,
+    ).toBeCloseTo(expectedInset, 1)
   })
 })

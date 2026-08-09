@@ -261,7 +261,7 @@ describe('ui-modal — [box-model] the dialog is a padding-less box; region padd
     // padding — a content region inside carries the FIXED region padding (inline 0.75rem=12px · block
     // 0.375rem=6px, rem-based → NOT --md-sys-space × --md-sys-density, so density-INVARIANT). The frame (border 1px ·
     // radius) is invariant too.
-    const { modal, dialog } = mount('<ui-modal><div data-region="content"><p>Body</p></div></ui-modal>')
+    const { modal, dialog } = mount('<ui-modal><div data-region="content"><p style="margin:0">Body</p></div></ui-modal>')
     modal.open = true
     await modal.updateComplete
     const content = dialog.querySelector('[data-region="content"]') as HTMLElement
@@ -278,6 +278,16 @@ describe('ui-modal — [box-model] the dialog is a padding-less box; region padd
     expect(padBlockBase, 'content block padding is not ~6px').toBeCloseTo(6, 0)
     expect(borderBase, 'border is 0 (frame invariant is vacuous)').toBeGreaterThan(0)
     expect(radiusBase, 'radius is 0 (frame invariant is vacuous)').toBeGreaterThan(0)
+
+    // GH #634 displacement gap: every check above reads getComputedStyle padding — never where the BODY
+    // content actually renders. A wrapper with a canceling `margin-inline-start: calc(-1 * 12px)` keeps
+    // paddingLeft reading 12px while the visual inset collapses to zero — measure the real content-edge
+    // gap instead (the p's own margin is zeroed inline above so it can't confound this reading).
+    const body = content.querySelector('p') as HTMLElement
+    const contentRect = content.getBoundingClientRect()
+    const bodyRect = body.getBoundingClientRect()
+    expect(bodyRect.left - contentRect.left, 'body content did not land at the pinned inline padding (a canceling margin would slip through)').toBeCloseTo(padInlineBase, 1)
+    expect(bodyRect.top - contentRect.top, 'body content did not land at the pinned block padding (a canceling margin would slip through)').toBeCloseTo(padBlockBase, 1)
 
     // density-INVARIANT: compact + spacious leave the region padding + frame unchanged (rem, not --md-sys-space)
     for (const d of ['compact', 'spacious']) {

@@ -70,6 +70,31 @@ describe('ADR-0100 — toolbar leg (document-row-toolbar shape)', () => {
     expect(rect(actions).right).toBeCloseTo(rect(toolbar).right, 0)
   })
 
+  // GH #634 displacement gap: the test above pins nested-row WIDTHS + one edge, but never the VERTICAL
+  // placement of a nested row inside a taller outer row — align="center" on the outer ui-row could
+  // regress to a top-anchor and every assertion above would still pass, because in that fixture the info
+  // and actions rows happen to render at the SAME height (no slack to expose a centering regression). A
+  // taller info-row button (measured, not asserted-in) creates the genuine slack this needs.
+  it('GH #634 — a taller nested row is vertically CENTRED in the outer row, not top-anchored (align=center)', () => {
+    const b = boundary(600)
+    b.innerHTML = `
+      <ui-row justify="between" align="center" gap="md">
+        <ui-row gap="sm" align="center"><button style="block-size: 48px">Q3 roadmap.pdf</button></ui-row>
+        <ui-row gap="sm" align="center"><button>Info</button><button>Share</button><button>More</button></ui-row>
+      </ui-row>`
+    const toolbar = b.querySelector('ui-row') as HTMLElement
+    const actions = toolbar.children[1] as HTMLElement
+
+    const toolbarRect = rect(toolbar)
+    const actionsRect = rect(actions)
+    // Anti-vacuous: the outer row must genuinely be taller than the actions row for its centering to
+    // mean anything (the outer row's own height is driven by the now-explicitly-tall info row).
+    expect(toolbarRect.height - actionsRect.height, 'no vertical slack between the outer row and the actions row (anti-vacuous)').toBeGreaterThan(1)
+    const actionsGapTop = actionsRect.top - toolbarRect.top
+    const actionsGapBottom = toolbarRect.bottom - actionsRect.bottom
+    expect(Math.abs(actionsGapTop - actionsGapBottom), 'actions row not vertically centered in the outer row (align=center)').toBeLessThanOrEqual(1)
+  })
+
   it('NEGATIVE CONTROL — re-adding container-type to a nested row fails the leg (0px)', () => {
     const b = boundary(600)
     b.innerHTML = `
