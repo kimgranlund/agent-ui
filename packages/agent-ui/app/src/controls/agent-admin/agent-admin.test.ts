@@ -24,10 +24,10 @@ declare const process: { cwd(): string }
 // jsdom probes for ui-agent-admin (TKT-0039, ADR-0131/ADR-0132). jsdom cannot resolve CSS container-
 // query/flex layout — the actual visual geometry is agent-admin.browser.test.ts's job (the
 // master-detail.test.ts / master-detail.browser.test.ts split, mirrored). This file proves: the
-// connect-time composition (GH #52/ADR-0154: ONE ui-chat-shell hosting content=conversation + an
-// options-pane segmented into Settings/Context: System/Context: Dialog — the settings segment
-// composing the Agent config + four capability entry-lists, the prompts pane composing the
-// prompt-section entry-list), the generic entry-list primitive's own behavior (toggle/edit/delete/add,
+// connect-time composition (GH #52/ADR-0154, re-hosted by ADR-0179: ONE ui-chat-shell hosting the pane
+// nav in `header` and the Chat/Author/Settings places in `content` — the Settings place composing the
+// Agent config + four capability entry-lists, the prompt-section entry-list), the generic entry-list
+// primitive's own behavior (toggle/edit/delete/add,
 // fail-closed validation, built-in non-deletability), the composed-prompt + enabled-capabilities
 // live-apply wiring, persistence across a real reload, reconnect idempotence, and the descriptor's
 // structural + contract↔props + contract↔source trip-wires.
@@ -75,11 +75,12 @@ function contentFieldOf(row: HTMLElement): HTMLTextAreaElement {
   return row.querySelector('[data-part="entry-content"]') as HTMLTextAreaElement
 }
 
-// GH #52/ADR-0154 — the responsive shell is now ui-chat-shell/ui-super-shell's OWN grammar (SPEC-R6/
-// R7): content=conversation, options-pane segments=Settings/Context:System/Context:Dialog, narrow-end
-//="tabs" flattens them. TKT-0085's ResizeObserver-driven reparenting is GONE — there is no width
+// GH #52/ADR-0154, re-hosted by ADR-0179 — the responsive shell is ui-chat-shell/ui-super-shell's OWN
+// grammar (SPEC-R6/R7): header=pane nav, content=the pane holder (Chat/Author⇄Settings). The old
+// options-pane end + `narrow-end="tabs"` six-entry vocabulary retired with cl.1 (admin-three-pane-ia
+// .lld.md §7), which itself replaced TKT-0085's ResizeObserver-driven reparenting — there is no width
 // threshold in this element anymore, and content is authored once, never moved. jsdom cannot resolve
-// the real container query (super-shell.browser.test.ts's own precedent), but the segment/narrow-tab
+// the real container query (super-shell.browser.test.ts's own precedent), but the place/pane-nav
 // SWITCHING is pure JS/DOM behavior, independent of which band is actually painted — this file proves
 // that DOM behavior; agent-admin.browser.test.ts proves the real cross-engine geometry/survival.
 // ── ADR-0170 cl.8 (LLD-C2) — the entry-list's per-kind PRESENTATION vocabulary ─────────────────────────

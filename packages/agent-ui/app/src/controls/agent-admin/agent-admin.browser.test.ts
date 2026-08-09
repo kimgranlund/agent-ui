@@ -1,9 +1,10 @@
 import { describe, it, expect, afterEach } from 'vitest'
 
-// The CROSS-ENGINE ui-agent-admin smoke (TKT-0039, ADR-0131; re-hosted GH #52/ADR-0154). jsdom cannot
-// resolve CSS flex/@scope/container-query layout — this file is where the chat+options-pane side-by-
-// side geometry (and the container-query narrow crossing) becomes TRUE in BOTH Chromium and WebKit
-// (the master-detail.browser.test.ts precedent). CSS wiring: the foundation first, then
+// The CROSS-ENGINE ui-agent-admin smoke (TKT-0039, ADR-0131; re-hosted GH #52/ADR-0154, then again by
+// ADR-0179). jsdom cannot resolve CSS flex/@scope/container-query layout — this file is where the
+// pane-nav geometry, the narrow one-place-at-a-time drill-in, and the wide Author⇄Settings pairing
+// (the container-query narrow crossing) become TRUE in BOTH Chromium and WebKit (the master-detail
+// .browser.test.ts precedent). CSS wiring: the foundation first, then
 // `component-styles.css` (the family barrel carries ui-text-field/etc.'s shipped CSS), then every
 // composed sibling's own CSS (incl. chat-shell/super-shell below), then this element's own.
 import '@agent-ui/components/foundation-styles.css'
