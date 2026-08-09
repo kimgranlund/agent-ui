@@ -94,7 +94,7 @@ TKT-0046 proved single-context works for one axis) — the phases are vehicle-ne
 ## Axis pack — styling
 
 - **Ledger — the displacement axis (GH #630, 2026-08-09):** a geometry-pinning probe
-  clientHeight/offsetWidth/computed-padding on a `[data-part]` box) must also assert what the box
+  (getBoundingClientRect/clientHeight/offsetWidth/computed-padding on a `[data-part]` box) must also assert what the box
   DISPLACES — content placed inside it or positioned beside it — not just the box's own rect. Gold
   exemplar: `site/pages/_page-bar-inset.browser.test.ts` (GH #626) and the vertical-tablist-rail
   suite (`tabs/tabs.browser.test.ts:470-523`, GH #543) — both pin box geometry AND content placement
