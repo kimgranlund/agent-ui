@@ -52,7 +52,7 @@ import './agent-admin-app.css' // page-local: full-viewport layout + the preset 
 import type { UIAgentAdminElement } from '@agent-ui/app/agent-admin'
 import type { UIButtonElement } from '@agent-ui/components/controls/button'
 import type { UIToastRegionElement } from '@agent-ui/components/controls/toast-region'
-import { ACTIVE_PRESET_KEY, personaRoster, personaStore, resetPersona, saveImportedPersona, type Persona } from './agent-admin-presets.ts'
+import { ACTIVE_PRESET_KEY, builderStore, personaRoster, personaStore, resetPersona, saveImportedPersona, type Persona } from './agent-admin-presets.ts'
 import { exportPersonaFile, importedPersonaFrom, mintBlankPersona, personaFileName, personaFileText, readPersonaFile } from './agent-admin-persona-file.ts'
 import { librariesForCategory, setLiveIntegrations } from './agent-admin-libraries.ts'
 // GH #637 S1 — the blank agent's seed: the EXACT shipped default `ui-agent-admin` itself falls back to
@@ -182,6 +182,10 @@ function overflowItem(value: string, label: string, title: string): HTMLElement 
 // this array is what that IA reshuffles, not what it invents from scratch.
 const NEW_AGENT_ACTIONS = [
   { value: 'new-agent-blank', label: 'New agent → Blank', title: 'Mint a fresh, empty agent to configure from scratch' },
+  // ADR-0178 / GH #633 (LLD-C8) — the guided path, EXTENDING S1's array rather than restructuring it:
+  // the same blank mint, then the Builder interview armed over it. Both paths mint through the one
+  // `mintBlankPersona` call, so a generated agent is an ordinary roster row from the first turn.
+  { value: 'new-agent-generate', label: 'New agent → Generate', title: 'Describe the agent you want and let the Builder fill in the draft as you talk' },
 ] as const
 const newAgentItems = NEW_AGENT_ACTIONS.map((a) => overflowItem(a.value, a.label, a.title))
 const resetItem = overflowItem('reset-persona', 'Reset persona', 'Discard this persona’s edits and reseed it from the preset')
@@ -194,6 +198,8 @@ overflowMenu.addEventListener('select', (event) => {
   const { value } = (event as CustomEvent<{ value: string; index: number }>).detail
   if (value === 'new-agent-blank') {
     createBlankAgent()
+  } else if (value === 'new-agent-generate') {
+    createGeneratedAgent()
   } else if (value === 'reset-persona') {
     resetPersona(active)
     applyPersona(active)
@@ -207,6 +213,10 @@ overflowMenu.addEventListener('select', (event) => {
 function applyPersona(persona: Persona): void {
   active = persona
   localStorage.setItem(ACTIVE_PRESET_KEY, persona.id)
+  // ADR-0178 cl.5 (LLD-C8) — the ONE choke point that exits the guided-authoring flow: clearing it here,
+  // BEFORE the store swap, makes the ordering deterministic (exit the flow → GH #145's reset → optionally
+  // re-enter), so switching personas can never leave a previous draft's interview armed over a new one.
+  admin.authoringStore = undefined
   admin.store = personaStore(persona)
   // GH #143 — re-scope the add-from-library menu to the NEW persona's category. A fresh object every call
   // (never a reused reference) is load-bearing: `libraries`' reactive effect (agent-admin.ts) rebuilds the
@@ -305,6 +315,21 @@ function createBlankAgent(): void {
   addPersonaRow(persona)
   applyPersona(persona)
   notify(`Created “${persona.label}”.`)
+}
+
+/** ADR-0178 / GH #633 — "New agent → Generate": mint the SAME blank draft the Blank path mints (S1's
+ *  seed + `mintBlankPersona`, verbatim reuse — one mint path), activate it, then arm the Builder over it.
+ *  Order matters: `applyPersona` clears `authoringStore` and reassigns `store` first, firing GH #145's
+ *  reset, so the interview always opens on a clean thread. */
+function createGeneratedAgent(): void {
+  const seed = { model: DEFAULT_MODEL_ID, ...initialValuesFor(defaultAgentConfigSchema), ...initialEntryValues() }
+  const persona = mintBlankPersona(seed, [...personaRoster(), ...roster])
+  saveImportedPersona(persona)
+  roster.push(persona)
+  addPersonaRow(persona)
+  applyPersona(persona)
+  admin.authoringStore = builderStore() // a FRESH interviewer per flow entry (no persistKey, no cache)
+  notify(`Created “${persona.label}” — describe what you want and the Builder will fill it in.`)
 }
 
 // The ONE native form element on this page, and a deliberate exception to the fleet's "no native form

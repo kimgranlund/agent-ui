@@ -28,6 +28,7 @@ import {
   PERSONA_ENTRY_LIST_KEYS,
   PERSONA_STATE_KEYS,
   PERSONA_VALUE_KEYS,
+  PATCHABLE_VALUE_SHAPES,
   applyPersonaPatch,
   draftStateBlock,
   readPersonaState,
@@ -47,6 +48,13 @@ describe('the canonical key set (LLD-C1) — one enumeration, two consumers', ()
   it('carries the planner gate (GH #640) alongside the authoring gate', () => {
     expect(PERSONA_STATE_KEYS).toContain(SURFACE_PLANNER_KEY)
     expect(PERSONA_STATE_KEYS).toContain(SURFACE_AUTHORING_KEY)
+  })
+
+  it('the published value SHAPES cover exactly the patchable value keys — the vocabulary drift trip-wire', () => {
+    // The Builder's key-vocabulary prompt section is generated from this map. A key present in one and
+    // absent from the other would teach a model to send something the gate then silently drops (or hide
+    // a key it may legitimately set) — so the two sets are pinned equal, not merely overlapping.
+    expect(Object.keys(PATCHABLE_VALUE_SHAPES).sort()).toEqual([...PERSONA_VALUE_KEYS].sort())
   })
 
   it('has an admission row for EVERY value key — the drift trip-wire', () => {

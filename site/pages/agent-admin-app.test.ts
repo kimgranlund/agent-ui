@@ -7,7 +7,7 @@
 // form controls call setFormValue/setValidity, absent in jsdom).
 import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest'
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (sitemap.test.ts precedent)
-import { readdirSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { whenFlushed } from '@agent-ui/components'
 import '@agent-ui/app/agent-admin'
 import type { UIAgentAdminElement } from '@agent-ui/app/agent-admin'
@@ -675,5 +675,85 @@ describe('the games roster — every game persona seeds real capabilities from t
         expect(packLabels.has(seed.label), `${id}: seed ${seed.label} not in any pack`).toBe(true)
       }
     }
+  })
+})
+
+// ── the Builder + the guided IA entry (ADR-0178 cl.4 / LLD-C7, C8; GH #633) ────────────────────────────
+describe('the Builder persona (ADR-0178 cl.4 — hidden-until-invoked)', () => {
+  it('is NOT on the roster: the showcase stays a showcase, the Builder is machinery the flow arms', async () => {
+    const { builderPersona, personaRoster } = await import('./agent-admin-presets.ts')
+    expect(AGENT_PRESETS.map((p) => p.id)).not.toContain('builder')
+    expect(personaRoster().map((p) => p.id)).not.toContain(builderPersona().id)
+  })
+
+  it('seeds the authoring gate ON and A2UI ON — the two capabilities the interview actually needs', async () => {
+    const { builderStore } = await import('./agent-admin-presets.ts')
+    const { SURFACE_AUTHORING_KEY, SURFACE_A2UI_KEY } = await import('@agent-ui/app/agent-admin-schema')
+    const store = builderStore()
+    expect(store.get(SURFACE_AUTHORING_KEY)).toBe(true)
+    expect(store.get(SURFACE_A2UI_KEY)).toBe(true)
+  })
+
+  it('mints a FRESH, unpersisted store per flow entry (nothing user-editable reaches it, so persisting could only drift)', async () => {
+    const { builderStore } = await import('./agent-admin-presets.ts')
+    const first = builderStore()
+    first.set('name', 'Scribbled over')
+    const second = builderStore()
+    expect(second).not.toBe(first)
+    expect(second.get('name')).toBe('Builder') // a fresh entry never inherits the last one's state
+    // no persistKey ⇒ nothing under a builder namespace survives in localStorage
+    expect(Object.keys(localStorage).some((k) => k.includes('builder'))).toBe(false)
+  })
+
+  it('runs a sonnet-class model — the interview quality IS the product here', async () => {
+    const { builderStore } = await import('./agent-admin-presets.ts')
+    expect(builderStore().get('model')).toBe('claude-sonnet-5')
+  })
+
+  it('its GENERATED vocabulary section names EVERY patchable key — the drift trip-wire', async () => {
+    // Hand-listing this vocabulary would rot the first time a key changed, teaching the model to send
+    // something the apply gate then drops. It is composed from the gate's own canonical exports, and
+    // this asserts the composition really covers them.
+    const { builderStore } = await import('./agent-admin-presets.ts')
+    const { PERSONA_VALUE_KEYS, PERSONA_ENTRY_LIST_KEYS } = await import('@agent-ui/app/agent-admin-persona-patch')
+    const sections = builderStore().get(entriesStoreKey(ENTRY_KINDS.promptSection)) as Entry[]
+    const vocabulary = sections.find((s) => s.id === 'patchable-keys')
+    expect(vocabulary, 'the generated section must be seeded').not.toBeUndefined()
+    for (const key of [...PERSONA_VALUE_KEYS, ...PERSONA_ENTRY_LIST_KEYS]) {
+      expect(vocabulary!.content, `${key} must reach the model`).toContain(key)
+    }
+    // the model roster is interpolated live, never a stale hand-typed list
+    expect(vocabulary!.content).toContain('claude-sonnet-5')
+    expect(vocabulary!.content).not.toContain('{roster}')
+  })
+
+  it('teaches interview CRAFT and key VOCABULARY, never the personaPatch wire mechanics (ADR-0178 cl.1 rule 5)', async () => {
+    // The mechanics compose from S2's byte-pinned authoring-teaching.md under the gate. Restating them
+    // in persona config is the drift this boundary exists to prevent — garbled vocabulary degrades to
+    // dropped keys, garbled mechanics would be unrecoverable.
+    const { builderStore } = await import('./agent-admin-presets.ts')
+    const sections = builderStore().get(entriesStoreKey(ENTRY_KINDS.promptSection)) as Entry[]
+    const prose = sections.map((s) => s.content).join('\n')
+    for (const mechanism of ['a2uiMeta', 'personaPatch', 'meta-line', 'JSONL']) {
+      expect(prose, `persona copy must not restate the wire mechanic "${mechanism}"`).not.toContain(mechanism)
+    }
+  })
+})
+
+describe('the "New agent → Generate" IA entry (LLD-C8)', () => {
+  it('EXTENDS the new-agent action set rather than restructuring it — Blank keeps its row and its value', async () => {
+    const source = readFileSync('site/pages/agent-admin-app.ts', 'utf8')
+    const actions = source.slice(source.indexOf('const NEW_AGENT_ACTIONS'), source.indexOf('] as const', source.indexOf('const NEW_AGENT_ACTIONS')))
+    expect(actions).toContain("value: 'new-agent-blank'")
+    expect(actions).toContain("value: 'new-agent-generate'")
+    expect(actions.indexOf('new-agent-blank')).toBeLessThan(actions.indexOf('new-agent-generate'))
+  })
+
+  it('applyPersona clears `authoringStore` BEFORE swapping `store` — the one choke point that exits the flow', async () => {
+    // Ordering is the contract (LLD §2's IA row): exit the flow, THEN let GH #145's reset fire, so a
+    // persona switch can never leave a previous draft's interview armed over a new draft.
+    const source = readFileSync('site/pages/agent-admin-app.ts', 'utf8')
+    const body = source.slice(source.indexOf('function applyPersona'))
+    expect(body.indexOf('admin.authoringStore = undefined')).toBeLessThan(body.indexOf('admin.store = personaStore(persona)'))
   })
 })

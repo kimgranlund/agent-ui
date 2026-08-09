@@ -178,6 +178,36 @@ const ADMISSION: Readonly<Record<string, Admit>> = {
   [BANKROLL_KEY]: (value) => sanitizeBankroll(value) === value,
 }
 
+/**
+ * One human-readable VALUE SHAPE per patchable key — what a model must send for that key to be admitted.
+ *
+ * It lives here, beside the admission table, for one reason: SPEC-R29 makes the producer persona-key-
+ * AGNOSTIC, so the key vocabulary can only reach a model from the host side, and a hand-listed vocabulary
+ * would drift from the gate the moment a key changed — teaching a model to send something that then
+ * silently drops. Declared as a sibling of `ADMISSION` and pinned key-for-key against
+ * `PERSONA_VALUE_KEYS` by this module's own suite, so the two cannot diverge.
+ */
+export const PATCHABLE_VALUE_SHAPES: Readonly<Record<string, string>> = {
+  name: 'a string — the agent’s display name',
+  model: `a model id, one of: ${'{roster}'}`, // filled at compose time from the live roster
+  temperature: 'a number from 0 to 1',
+  [MODELS_INCLUDED_KEY]: 'an object of modelId → boolean (which models the picker offers)',
+  [AGENT_ENABLED_KEY]: 'true or false — whether the agent is active at all',
+  ...Object.fromEntries(
+    Object.values(ENTRY_KINDS).map((kind) => [kindEnabledKey(kind), `true or false — the ${kind} section’s master switch`]),
+  ),
+  [SURFACE_MARKDOWN_KEY]: 'true or false — render replies as rich text',
+  [SURFACE_A2UI_KEY]: 'true or false — structured generative UI',
+  [SURFACE_GENUI_KEY]: 'true or false — sandboxed free-form generative UI',
+  [SURFACE_GENUI_DOGFOOD_KEY]: 'true or false — use agent-ui components inside the GenUI frame',
+  [SURFACE_PLANNER_KEY]: 'true or false — the sequential plan → execute → synthesize loop',
+  [SURFACE_AUTHORING_KEY]: 'true or false — let this agent propose edits to a draft agent’s configuration',
+  [BANKROLL_CAPABLE_KEY]: 'true or false — the agent keeps a persistent score at /bankroll',
+  [A2UI_CATALOG_KEY]: 'a registered catalog id (leave it alone unless the user asks)',
+  [A2UI_LOCAL_PATTERNS_KEY]: 'a shipped persona-pattern-set id (leave it alone unless the user asks)',
+  [BANKROLL_KEY]: 'a non-negative number — the starting/current figure',
+}
+
 // ── filter 3: entries, through the pane's OWN add path ───────────────────────────────────────────────────
 
 /** `entries:skill` → `skill`. The reverse of `entriesStoreKey`, over the enumerated kinds only (an
