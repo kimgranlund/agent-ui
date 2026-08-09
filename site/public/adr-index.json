@@ -1230,5 +1230,12 @@
     "description": "MCP client integration design intake (GH #438, un-defers ADR-0168's own Non-goals): an MCP server registers as a manifest-registry SOURCE, not a per-server ent…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0178",
+    "url": "./adr-index.html#adr-0178",
+    "description": "Agent-authoring flow design intake (GH #633): conversational persona hydration is a NEW model-authored personaPatch meta-line arm — the ask/plan precedent's fi…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
