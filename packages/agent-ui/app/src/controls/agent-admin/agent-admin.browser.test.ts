@@ -1468,6 +1468,22 @@ describe('ui-agent-admin cross-engine smoke — the try-it bar (ADR-0178 cl.5 / 
     expect(Math.abs(authoringTab.getBoundingClientRect().left - (barBox.left + inset)), 'tab content starts one inset in from the bar edge').toBeLessThanOrEqual(0.5)
   })
 
+  // GH #646 follow-up (Kim's live-surface pass, 2026-08-09) — the bar used to paint its OWN
+  // `border-block-end` on top of `ui-tabs`' own tablist divider, doubling the hairline right above the
+  // conversation card's rounded top edge (the same "nothing left to divide" defect GH #382 retracted an
+  // overlay divider for). ONE separator maximum: the tablist part draws it, the bar host draws none.
+  it('paints exactly ONE separator line below the strip — the tablist\'s own divider, not a second one on the bar host', async () => {
+    const { el } = mountAgentAdmin()
+    await el.updateComplete
+    el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
+    await el.updateComplete
+    const { bar: barEl } = bar(el)
+    const tablist = barEl.querySelector('[data-part="tablist"]') as HTMLElement
+
+    expect(getComputedStyle(barEl).borderBottomWidth, 'the bar host itself paints no border — the doubled-hairline defect').toBe('0px')
+    expect(parseFloat(getComputedStyle(tablist).borderBottomWidth), 'the tablist part still paints its own real divider').toBeGreaterThan(0)
+  })
+
   it('clicking Try it / Authoring flips which conversation occupies the canvas, with real (non-collapsed) geometry both ways', async () => {
     const { el } = mountAgentAdmin()
     await el.updateComplete
