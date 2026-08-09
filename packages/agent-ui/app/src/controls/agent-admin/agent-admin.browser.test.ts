@@ -1528,6 +1528,30 @@ describe('ui-agent-admin cross-engine smoke — the try-it bar (ADR-0178 cl.5 / 
     expect(Math.abs(tryItInset - sectionInset), 'the two strips resolve to the SAME inline inset').toBeLessThanOrEqual(0.5)
   })
 
+  // GH #646 follow-up #3 (Kim, live-surface pass, 2026-08-09) — Kim's SECOND pixel read: at narrow width
+  // the visible top strip is `narrow-tabs` (Chat/Agent/Capabilities/…), not `pane-tabs` — a DIFFERENT
+  // composer (chat-shell.css), previously insetting by the fleet header-bar-content role
+  // (`--ui-bar-inline-inset`, 24px) with no header to actually track (`ui-agent-admin` composes none —
+  // chat-shell.css's own updated banner). Fixed there (chat-shell.css's header-presence split); pinned
+  // here, in the REAL composition, guarding the other direction of drift the follow-up #2 probe above
+  // does not reach (that one only exercises the WIDE `pane-tabs` strip).
+  it('narrow-tabs strip (the real headerless shape) aligns with the try-it strip below it — the SAME real inline inset, direct pixel comparison (GH #646 follow-up #3)', async () => {
+    const { el } = mountAgentAdminAt(500)
+    await el.updateComplete
+    el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
+    await el.updateComplete
+
+    const narrowTabs = el.querySelector('[data-part="narrow-tabs"]') as HTMLElement
+    expect(getComputedStyle(narrowTabs).display, 'the narrow-tabs strip is visible at this width').not.toBe('none')
+    const narrowFirstTab = narrowTabs.querySelector('[data-part="narrow-tab"]') as HTMLElement
+    const { authoringTab: tryItTab } = bar(el)
+
+    // Direct pixel comparison — both strips span the same full-width column at this narrow width, so a
+    // truly matched rhythm puts their first tab's content edge at the SAME viewport x, not just an equal
+    // delta from two different ambient boxes (the follow-up #2 probe's own shape).
+    expect(Math.abs(narrowFirstTab.getBoundingClientRect().left - tryItTab.getBoundingClientRect().left), 'the narrow-tabs strip and the try-it strip align on the same left edge').toBeLessThanOrEqual(0.5)
+  })
+
   it('clicking Try it / Authoring flips which conversation occupies the canvas, with real (non-collapsed) geometry both ways', async () => {
     const { el } = mountAgentAdmin()
     await el.updateComplete

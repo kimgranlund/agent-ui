@@ -45,6 +45,30 @@ function mountChatShellAt(widthPx: number): { wrapper: HTMLElement; el: UIChatSh
   return { wrapper, el }
 }
 
+/** GH #646 follow-up #3 — the SAME shell, minus the header: `ui-agent-admin`'s own real shape
+ *  (`content` + `options-pane` only, no `header` slot authored) — the fixture `mountChatShellAt` above
+ *  can never reach, since it always authors one. */
+function mountChatShellNoHeaderAt(widthPx: number): { wrapper: HTMLElement; el: UIChatShellElement } {
+  const wrapper = document.createElement('div')
+  wrapper.style.width = `${widthPx}px`
+  wrapper.style.height = '400px'
+  wrapper.style.display = 'flex'
+  const el = document.createElement('ui-chat-shell') as UIChatShellElement
+  el.style.flex = '1 1 auto'
+  el.setAttribute('narrow-end', 'tabs')
+  const content = document.createElement('div')
+  content.setAttribute('data-slot', 'content')
+  content.textContent = 'Content'
+  const optionsPane = document.createElement('div')
+  optionsPane.setAttribute('data-slot', 'options-pane')
+  optionsPane.textContent = 'Options'
+  el.append(content, optionsPane)
+  wrapper.append(el)
+  document.body.append(wrapper)
+  mounted.push(wrapper)
+  return { wrapper, el }
+}
+
 describe('GH #575 — ui-chat-shell narrow-tabs strip inline inset', () => {
   it('narrow (<40rem): the narrow-tabs strip\'s inline padding matches the header bar\'s own inline inset — RELATIVE comparison, not a pinned px (a module re-scale must not redden this)', async () => {
     const { el } = mountChatShellAt(500)
@@ -89,5 +113,38 @@ describe('GH #575 — ui-chat-shell narrow-tabs strip inline inset', () => {
     const strip = el.querySelector('[data-part="narrow-tabs"]') as HTMLElement
     expect(strip, 'the strip is still composed (a tabs side is authored)').not.toBeNull()
     expect(getComputedStyle(strip).display, 'the strip stays hidden at wide — this fix is narrow-only').toBe('none')
+  })
+
+  // GH #646 follow-up #3 (Kim, live-surface pass, 2026-08-09) — "tracks the header's inset" presumes a
+  // header exists. `ui-agent-admin`, the strip's one live consumer, composes NO header — a shape this
+  // suite never actually measured before (the fixture above always authors one). Split the rule on
+  // header presence: headerless falls back to the shell's own generic module-scaled rhythm instead of
+  // the (nonexistent) header's fleet-bar-content role.
+  it('narrow, HEADERLESS (the real ui-agent-admin shape): the strip falls back to the shell\'s own module-scaled rhythm, NOT the fleet header-bar role', async () => {
+    const { el } = mountChatShellNoHeaderAt(500)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const strip = el.querySelector('[data-part="narrow-tabs"]') as HTMLElement
+    expect(el.querySelector('[data-part="bar"][data-bar="header"]'), 'this fixture authors no header — the fact under test').toBeNull()
+    expect(getComputedStyle(strip).display, 'the strip is visible at the narrow width').not.toBe('none')
+
+    // Resolved through a probe (the same idiom as the header-bearing test above): an unregistered custom
+    // property computes to its substituted token stream, which never string-equals a used padding value.
+    const modProbe = document.createElement('div')
+    modProbe.style.paddingInline = 'calc(var(--ui-super-shell-module) * 2 / 3)'
+    strip.append(modProbe)
+    const moduleInset = getComputedStyle(modProbe).paddingInlineStart
+    modProbe.remove()
+    const barProbe = document.createElement('div')
+    barProbe.style.paddingInline = 'var(--ui-bar-inline-inset)'
+    strip.append(barProbe)
+    const barInset = getComputedStyle(barProbe).paddingInlineStart
+    barProbe.remove()
+
+    expect(moduleInset, 'the module-scaled role resolves').not.toBe('0px')
+    // Anti-vacuous: the two roles must genuinely differ under the default token values, or this test
+    // could pass even if the fallback silently regressed to the header role.
+    expect(moduleInset, 'the module role and the fleet bar-content role are NOT the same value by default').not.toBe(barInset)
+    expect(getComputedStyle(strip).paddingInlineStart, "the strip's inline-start inset reads the module-scaled role").toBe(moduleInset)
+    expect(getComputedStyle(strip).paddingInlineEnd, "the strip's inline-end inset reads the module-scaled role").toBe(moduleInset)
   })
 })
