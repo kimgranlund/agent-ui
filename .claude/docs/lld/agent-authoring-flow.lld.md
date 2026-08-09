@@ -206,6 +206,19 @@ for free"); §12's panes-proof test EXERCISES it end-to-end rather than trusting
 - **Mid-turn persona switch:** the epoch guard already abandons pre-stream; mid-stream, writes go
   to the captured draft store — persisted per persona, harmless to the new active persona (the
   bankroll mirror's shipped posture, cited not re-derived).
+- **PROSE-arm dual context (GH #644, S3-b review MINOR 3):** the plain-chat arm's live request
+  (`AdminTurnRequest.history`, LLD-C6's `#handleSubmit`) is per-context too, exactly like §4's
+  `session`-keyed `Session` map the SURFACE arm's runner already keeps — the component holds
+  `#history` (test) and `#authoringHistory` (authoring) as two separate arrays, and `#contextFor()`
+  picks between them the same way it already picks `store`/`conversation`/`session`. This closes the
+  gap the degrade config (`agentTurn` live, `agentSurfaceTurn` unarmed or its structured modalities
+  off) exposed: without it, both contexts appended onto one shared array, so the Builder interview
+  and the draft's own test chat fed each other's transcript into the model as prior turns — the
+  identity confusion §4's per-context `Session` map exists to prevent, reopened on the arm that
+  forwards `history` as a plain array rather than a `session` key. Reset law: a real persona switch
+  (`#resetConversationState`, GH #145) clears both arrays; a real `authoringStore` identity change
+  (`#rewireAuthoringContext`) clears `#authoringHistory` alone — the draft's own test-chat memory is
+  untouched, matching the transcript reset it already sits beside.
 - **`name` patched ≠ roster label:** the roster row keeps its minted label — the SAME divergence a
   hand-edited `name` field already has today (shipped behavior, not a new gap; §15).
 - **Draft deleted/never completed:** nothing to clean — the draft is an ordinary imported-class

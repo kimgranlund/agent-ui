@@ -420,8 +420,20 @@ export class UIAgentAdminElement extends UIElement {
   // user text + reply — appended on BOTH the stub and the live path. Replayed into the live request as
   // PRIOR turns only; the system prompt is rebuilt fresh every turn and NEVER stored here, so a mid-
   // conversation model/prompt/capability switch applies to the NEXT turn only and prior turns are never
-  // rewritten (the acceptance criterion falls out by construction).
+  // rewritten (the acceptance criterion falls out by construction). GH #644 — this is the TEST context's
+  // own array; the authoring context has its own below (`#authoringHistory`), and `#contextFor()` is the
+  // one place that picks between them.
   #history: AdminTurn[] = []
+  // GH #644 — the PROSE arm's authoring-context counterpart to `#history` above, mirroring the surface
+  // arm's per-context `Session` map (`admin-live-runner.ts`'s `sessions` keyed by `req.session`, ADR-0178
+  // cl.5): the Builder interview and the draft's own test chat are different agents' transcripts, so a
+  // single shared history would feed the interview to the draft as its own memory (and vice-versa) — the
+  // exact identity confusion the surface arm's map already prevents. `#contextFor()` selects which array a
+  // turn reads/appends; both are cleared together on a real persona switch (`#resetConversationState`,
+  // GH #145) and `#authoringHistory` alone resets on a real `authoringStore` identity change
+  // (`#rewireAuthoringContext`) — a different interviewer starts a fresh interview, but the draft's own
+  // test-chat memory is untouched.
+  #authoringHistory: AdminTurn[] = []
   // GH #525 (review MAJOR 1b) — the surfaceIds this admin has actually forwarded a `createSurface` for
   // (via `handle.ingestLine`, so ONLY while A2UI is on — the SAME gate that decides whether the real
   // renderer's own `SurfaceStore` would know it), minus any it has forwarded a `deleteSurface` for.
@@ -1054,14 +1066,20 @@ export class UIAgentAdminElement extends UIElement {
    * `store` is what the turn COMPOSES FROM — never what a patch applies to. A patch always targets
    * `this.store`, the draft.
    */
-  #contextFor(): { store: SettingsStore | undefined; conversation: UIConversationElement | null; session: 'authoring' | 'test' | undefined } {
+  #contextFor(): {
+    store: SettingsStore | undefined
+    conversation: UIConversationElement | null
+    session: 'authoring' | 'test' | undefined
+    history: AdminTurn[]
+  } {
     const authoringStore = this.authoringStore
     if (authoringStore !== undefined && this.#mode === 'authoring' && this.#authoringConversation) {
-      return { store: authoringStore, conversation: this.#authoringConversation, session: 'authoring' }
+      return { store: authoringStore, conversation: this.#authoringConversation, session: 'authoring', history: this.#authoringHistory }
     }
     // `session` stays UNDEFINED for the test context rather than the literal 'test': the runner defaults an
     // absent value to the same slot, so an inactive flow's request is byte-identical to a pre-S3 one.
-    return { store: this.store, conversation: this.#conversation, session: undefined }
+    // GH #644 — `history` is likewise the TEST context's own array, never `#authoringHistory`.
+    return { store: this.store, conversation: this.#conversation, session: undefined, history: this.#history }
   }
 
   /** ADR-0178 cl.5 — mount the authoring conversation, once, on the first `authoringStore` assignment.
@@ -1132,7 +1150,11 @@ export class UIAgentAdminElement extends UIElement {
     if (authoringStore === undefined) {
       // Leaving the flow: the conversation stays mounted (cheap, and re-entering is common) but is
       // emptied and hidden, and the mode resets so the next entry always opens on the interview.
-      if (changed) this.#authoringConversation?.reset()
+      // GH #644 — the interview's own model memory leaves with it, alongside its visible transcript.
+      if (changed) {
+        this.#authoringConversation?.reset()
+        this.#authoringHistory = []
+      }
       this.#authoringUnsub?.()
       this.#authoringUnsub = undefined
       this.#mode = 'authoring'
@@ -1142,6 +1164,7 @@ export class UIAgentAdminElement extends UIElement {
     this.#mountAuthoringConversation()
     if (changed) {
       this.#authoringConversation?.reset() // a DIFFERENT interviewer starts a fresh interview
+      this.#authoringHistory = [] // GH #644 — and a fresh interview carries no prior interviewer's memory
       this.#mode = 'authoring'
     }
     this.#syncAuthoringConversationConfig(authoringStore)
@@ -1463,7 +1486,10 @@ export class UIAgentAdminElement extends UIElement {
   #handleSubmit(text: string): void {
     // ADR-0178 cl.5 — every read below is against the DRIVING context's store. With the flow inactive
     // that resolves to `this.store` and today's conversation, so this method's behaviour is unchanged.
-    const { store, conversation } = this.#contextFor()
+    // GH #644 — `history` is this call's context-scoped array (test vs. authoring); every read/append
+    // below goes through it rather than `this.#history` directly, so the two contexts' model memory never
+    // cross-pollinate.
+    const { store, conversation, history } = this.#contextFor()
     if (!conversation) return
     const schema = this.schema ?? defaultAgentConfigSchema
     // Vision rev.5 — the Agent master switch ("active/available or not", Kim's ruling): the composer is
@@ -1518,7 +1544,7 @@ export class UIAgentAdminElement extends UIElement {
       const reply = runStubAgentTurn(text, config)
       handle.setNote(reply)
       handle.finalize()
-      this.#recordTurn(text, reply)
+      this.#recordTurn(history, text, reply)
       this.#logTurn('stub', { text, config }, { reply })
       return
     }
@@ -1538,14 +1564,14 @@ export class UIAgentAdminElement extends UIElement {
       // never drift. NOT `config.tools`: that stays the enabled LABELS (its own doc comment's contract),
       // which the stub arm and the turn logger want for human display.
       integrations: this.#enabledToolIds(store),
-      history: [...this.#history],
+      history: [...history],
     }
     void (async () => {
       try {
         const reply = await agentTurn(request)
         handle.setNote(reply)
         handle.finalize()
-        this.#recordTurn(text, reply)
+        this.#recordTurn(history, text, reply)
         this.#logTurn('live', request, { reply })
       } catch (err) {
         // A network/provider fault, a non-2xx proxy response, or the runner's 120s timeout: surface it
@@ -2059,13 +2085,15 @@ export class UIAgentAdminElement extends UIElement {
     this.#renderContextTurns()
   }
 
-  /** Append one completed exchange to the multi-turn history (both arms). */
-  #recordTurn(text: string, reply: string): void {
+  /** Append one completed exchange to the multi-turn history (both arms). GH #644 — `history` is the
+   *  CALLER's context-scoped array (`#handleSubmit`'s `#contextFor()` read), never `this.#history`
+   *  directly, so a turn always lands in the transcript it was actually composed from. */
+  #recordTurn(history: AdminTurn[], text: string, reply: string): void {
     const turns: AdminTurn[] = [
       { role: 'user', content: text },
       { role: 'assistant', content: reply },
     ]
-    this.#history.push(...turns)
+    history.push(...turns)
   }
 
   // ── protected test seams (the split.ts/slider-multi.ts precedent) ────────────────────────────────────
@@ -2092,6 +2120,10 @@ export class UIAgentAdminElement extends UIElement {
     // distinction this method's caller draws, and the whole reason a flip is not a store reassignment.
     this.#authoringConversation?.reset()
     this.#history = []
+    // GH #644 — the authoring context's own model memory belongs to the DRAFT too, exactly like its
+    // transcript above: a real persona switch must clear both, or the next persona's first authoring turn
+    // would still carry the PREVIOUS persona's interview as prior context.
+    this.#authoringHistory = []
     this.#turnLog = []
     this.#turnCounter = 0
     this.#knownSurfaceIds.clear() // GH #525 — a new persona's surfaces are unrelated to the old ones
