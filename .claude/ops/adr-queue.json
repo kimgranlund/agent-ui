@@ -1,0 +1,31 @@
+{
+  "candidates": [
+    {
+      "adr_id": "adr-0173",
+      "evidence": "Ratified 2026-08-06 (design intake). Decision: {name}.md descriptor becomes the generation SOURCE for the static props table + type layer via a committed {name}.props.gen.ts sibling (icons.gen.ts vehicle reused); catalog rows and .ts/.css behavior stay hand-authored (partial inversion, ruled on 3 independent grounds); attributes[] grammar gains attribute/tsType/const fields; drift gate = same generator diffed against committed output (llms.test.ts G1 pattern); s10 retires per-control as conversions land, s11 never retires; migration incremental starting with ui-button, allowlist-drained for 7 bespoke-codec controls. Durable pattern for every future component's props-generation migration. No existing skill covers descriptor-generation architecture (checked agent-ui-component-standards, agent-ui-component-create, agent-ui-component-design, agent-ui-component-packaging -- none own this axis yet).",
+      "kind": "harvest",
+      "plan": "Likely new-reference-file within agent-ui-component-standards (the descriptor/component-law skill) once the generator mechanics are concrete enough to state as rules, not a new skill -- descriptor law already lives there. Exact wording/timing (wait for the ui-button conversion wave to land vs. capture the architecture now) TBD at Phase 3 human confirm.",
+      "queued_at": "2026-08-07T21:34:50Z",
+      "confirmed": "2026-08-09",
+      "harvested": ".claude/skills/agent-ui-component-standards/references/descriptor-generation.md"
+    },
+    {
+      "adr_id": "adr-0174",
+      "evidence": "Ratified 2026-08-06 (design intake, GH #485/#489, planner-stage pilot). Decision: planner mode is a persona-scoped modality-gate boolean (SURFACE_PLANNER_KEY, joining SURFACE_A2UI_KEY/SURFACE_GENUI_KEY precedent) threaded to a ProduceOptions-adjacent host-loop flag -- absent/false stays byte-identical to today's single-produce()-call microloop; the plan turn's step list rides a NEW additive plan arm on the ADR-0088 meta-line envelope following the ask-arm precedent EXACTLY (model-authored, shallow-validated, envelope stays versionless); live rendering reuses ui-status-stream grouping (ADR-0146 F5) + the receipt pattern (ADR-0159), zero new UI component. Durable precedent for (a) opt-in modality-gate seams for future persona capabilities and (b) the ask-arm-precedent shape for any future additive meta-line field. No existing skill covers the a2ui agent producer toolkit's meta-line/envelope architecture as its own axis (checked a2ui-prompt-author [prompt STACK only], agent-ui-a2ui-review-standards [reviewer rubrics only], a2ui-compose [payload authoring, explicitly routes producer/renderer code elsewhere] -- none own this domain).",
+      "kind": "harvest",
+      "plan": "Likely a new skill (no existing axis owns the a2ui agent producer toolkit's meta-line/envelope architecture) -- scope TBD at Phase 3: whether it should fold in the whole ADR-0088/0097/0146/0159/0174 meta-line-envelope lineage (the agent-admin-library-kinds precedent for lineage-scoped skills) or stay narrow to just the plan-arm/modality-gate pattern.",
+      "queued_at": "2026-08-07T21:34:50Z",
+      "confirmed": "2026-08-09",
+      "harvested": ".claude/skills/agent-ui-a2ui-meta-line-facts/SKILL.md"
+    },
+    {
+      "adr_id": "adr-0175",
+      "evidence": "Ratified 2026-08-06 (design intake, GH #498, association/multiselect field). Decision: a new FACE form-associated multi-select FIELD primitive is minted for the record-edit/binding case (PRD-D3's composed ui-form-popover+checkbox-group vehicle stands unreopened for the FILTER case) -- composition structurally fails the edit-side bar (no single bindable aggregate value, cannot round-trip through ui-form-provider.values()/an A2UI value mark), while minting is architecturally cheap (FormValue already includes FormData; the new control is a thin aggregation shell around existing disclosure mechanics). Wire shape: the ORIGINAL single two-way slot with an array-typed prop -- ADR-0161's multi-slot mechanism is NOT what this needs. Durable mint-vs-compose precedent generalizing beyond this one control (when an aggregate/array-valued FACE field structurally cannot be composed, mint; ADR-0163's ui-table widening is the sequencing precedent). No existing skill states mint-vs-compose decision criteria for aggregate-valued fields (checked agent-ui-component-design [design intake, no such criteria yet], agent-ui-composition-patterns, agent-admin-library-kinds -- none own this heuristic).",
+      "kind": "harvest",
+      "plan": "Likely new-reference-file within agent-ui-component-design (the design-intake skill) capturing the mint-vs-compose decision criteria (ADR-0102's three-lane chooser + this ADR's aggregate-bindable-value refinement + ADR-0163's ui-table sequencing precedent) -- not a new skill, since component-design already owns 'does this need a new control' as its own question, just lacks this heuristic today. TBD at Phase 3.",
+      "queued_at": "2026-08-07T21:34:50Z",
+      "confirmed": "2026-08-09",
+      "harvested": ".claude/skills/agent-ui-component-design/references/mint-vs-compose.md"
+    }
+  ]
+}

@@ -1,0 +1,137 @@
+{
+  "savedAt": "2026-08-03T21:00:21.421Z",
+  "failure": "waitUntil timed out (30000ms): the click becomes a client surface turn",
+  "formValid": false,
+  "formInvalidMembers": [
+    "UI-SELECT[name=roomType]"
+  ],
+  "formValues": {
+    "dates": {},
+    "guests": "2"
+  },
+  "surfaces": [
+    "<ui-surface-host wrap=\"\" bare=\"\"> \n  <div data-part=\"stage\"> \n    <div data-part=\"surface\"> \n      <ui-card elevation=\"1\"> \n        <ui-card-content> \n          <ui-form-provider> \n            <ui-column gap=\"md\"> \n"
+  ],
+  "requests": [
+    {
+      "kind": "intent",
+      "text": "I would like to book a room for a few nights in mid-August. Please show me a booking form with a date-range calendar so I can pick my dates."
+    }
+  ],
+  "transcript": [
+    {
+      "at": "2026-08-03T20:59:35.062Z",
+      "dir": "request",
+      "turn": {
+        "kind": "intent",
+        "text": "I would like to book a room for a few nights in mid-August. Please show me a booking form with a date-range calendar so I can pick my dates."
+      },
+      "model": "claude-sonnet-5"
+    },
+    {
+      "at": "2026-08-03T20:59:35.101Z",
+      "dir": "event",
+      "ev": {
+        "kind": "progress",
+        "progress": {
+          "stage": "sent"
+        }
+      }
+    },
+    {
+      "at": "2026-08-03T20:59:36.569Z",
+      "dir": "event",
+      "ev": {
+        "kind": "progress",
+        "progress": {
+          "stage": "started"
+        }
+      }
+    },
+    {
+      "at": "2026-08-03T20:59:37.745Z",
+      "dir": "event",
+      "ev": {
+        "kind": "progress",
+        "progress": {
+          "stage": "tool",
+          "detail": "wikipedia-search"
+        }
+      }
+    },
+    {
+      "at": "2026-08-03T20:59:39.945Z",
+      "dir": "event",
+      "ev": {
+        "kind": "progress",
+        "progress": {
+          "stage": "tool",
+          "detail": "wikipedia-search"
+        }
+      }
+    },
+    {
+      "at": "2026-08-03T20:59:50.714Z",
+      "dir": "event",
+      "ev": {
+        "kind": "progress",
+        "progress": {
+          "stage": "content"
+        }
+      }
+    },
+    {
+      "at": "2026-08-03T20:59:50.718Z",
+      "dir": "event",
+      "ev": {
+        "kind": "progress",
+        "progress": {
+          "stage": "validating",
+          "source": "{\"createSurface\":{\"catalogId\":\"agent-ui\",\"sendDataModel\":true,\"surfaceId\":\"booking-room\"},\"version\":\"v1.0\"}\n{\"updateDataModel\":{\"surfaceId\":\"booking-room\",\"value\":{\"booking\":{\"checkIn\":\"2025-08-14\",\"checkOut\":\"2025-08-17\",\"roomType\":\"\",\"guests\":2,\"breakfast\":false,\"lateCheckout\":false}}},\"version\":\"v1.0\"}\n{\"updateComponents\":{\"components\":[{\"children\":[\"root_content\"],\"component\":\"Card\",\"elevation\":\"1\",\"id\":\"root\"},{\"children\":[\"form\"],\"component\":\"CardContent\",\"id\":\"root_content\"},{\"children\":[\"col\"],\"component\":\"FormProvider\",\"id\":\"form\"},{\"children\":[\"title\",\"f_dates\",\"f_room\",\"f_guests\",\"f_extras\",\"actions\"],\"component\":\"Column\",\"gap\":\"md\",\"id\":\"col\"},{\"component\":\"Text\",\"id\":\"title\",\"text\":\"Book a room at the Grand Meridian\",\"variant\":\"h4\"},{\"child\":\"cal_dates\",\"component\":\"Field\",\"id\":\"f_dates\",\"label\":\"Check-in — check-out\"},{\"component\":\"Calendar\",\"id\":\"cal_dates\",\"mode\":\"range\",\"name\":\"dates\",\"min\":\"2025-07-07\",\"valueStart\":{\"path\":\"/booking/checkIn\"},\"valueEnd\":{\"path\":\"/booking/checkOut\"}},{\"child\":\"room_select\",\"component\":\"Field\",\"id\":\"f_room\",\"label\":\"Room type\"},{\"children\":[\"opt_std\",\"opt_dlx\",\"opt_ste\"],\"component\":\"Select\",\"id\":\"room_select\",\"name\":\"roomType\",\"required\":true,\"value\":{\"path\":\"/booking/roomType\"},\"placeholder\":\"Choose a room type\"},{\"component\":\"Option\",\"id\":\"opt_std\",\"label\":\"Classic Room\",\"value\":\"classic\"},{\"component\":\"Option\",\"id\":\"opt_dlx\",\"label\":\"Deluxe Sea View\",\"value\":\"deluxe\"},{\"component\":\"Option\",\"id\":\"opt_ste\",\"label\":\"Suite with Terrace\",\"value\":\"suite\"},{\"child\":\"in_guests\",\"component\":\"Field\",\"id\":\"f_guests\",\"label\":\"Guests\"},{\"component\":\"TextField\",\"id\":\"in_guests\",\"name\":\"guests\",\"type\":\"number\",\"min\":\"1\",\"max\":\"6\",\"value\":{\"path\":\"/booking/guests\"}},{\"children\":[\"chk_breakfast\",\"chk_late\"],\"component\":\"Column\",\"gap\":\"xs\",\"id\":\"f_extras\"},{\"checked\":{\"path\":\"/booking/breakfast\"},\"component\":\"Checkbox\",\"id\":\"chk_breakfast\",\"label\":\"Add breakfast each morning\",\"name\":\"breakfast\"},{\"checked\":{\"path\":\"/booking/lateCheckout\"},\"component\":\"Checkbox\",\"id\":\"chk_late\",\"label\":\"Request late check-out (subject to availability)\",\"name\":\"lateCheckout\"},{\"children\":[\"btn_submit\"],\"component\":\"Row\",\"gap\":\"md\",\"id\":\"actions\",\"justify\":\"end\"},{\"action\":{\"action\":\"submit_booking\",\"submit\":true},\"checks\":[{\"args\":{\"value\":{\"path\":\"/booking/roomType\"}},\"call\":\"required\",\"message\":\"Please choose a room type\"}],\"component\":\"Button\",\"id\":\"btn_submit\",\"label\":\"Submit request\",\"variant\":\"solid\"}],\"surfaceId\":\"booking-room\"},\"version\":\"v1.0\"}"
+        }
+      }
+    },
+    {
+      "at": "2026-08-03T20:59:50.724Z",
+      "dir": "event",
+      "ev": {
+        "kind": "progress",
+        "progress": {
+          "stage": "done"
+        }
+      }
+    },
+    {
+      "at": "2026-08-03T20:59:50.727Z",
+      "dir": "event",
+      "ev": {
+        "kind": "note",
+        "note": "Here's a room booking form with a date-range calendar for your mid-August stay — pick your dates, room type, and any extras, then submit."
+      }
+    },
+    {
+      "at": "2026-08-03T20:59:50.727Z",
+      "dir": "event",
+      "ev": {
+        "kind": "line",
+        "line": "{\"createSurface\":{\"catalogId\":\"agent-ui\",\"sendDataModel\":true,\"surfaceId\":\"booking-room\"},\"version\":\"v1.0\"}"
+      }
+    },
+    {
+      "at": "2026-08-03T20:59:50.733Z",
+      "dir": "event",
+      "ev": {
+        "kind": "line",
+        "line": "{\"updateDataModel\":{\"surfaceId\":\"booking-room\",\"value\":{\"booking\":{\"checkIn\":\"2025-08-14\",\"checkOut\":\"2025-08-17\",\"roomType\":\"\",\"guests\":2,\"breakfast\":false,\"lateCheckout\":false}}},\"version\":\"v1.0\"}"
+      }
+    },
+    {
+      "at": "2026-08-03T20:59:50.734Z",
+      "dir": "event",
+      "ev": {
+        "kind": "line",
+        "line": "{\"updateComponents\":{\"components\":[{\"children\":[\"root_content\"],\"component\":\"Card\",\"elevation\":\"1\",\"id\":\"root\"},{\"children\":[\"form\"],\"component\":\"CardContent\",\"id\":\"root_content\"},{\"children\":[\"col\"],\"component\":\"FormProvider\",\"id\":\"form\"},{\"children\":[\"title\",\"f_dates\",\"f_room\",\"f_guests\",\"f_extras\",\"actions\"],\"component\":\"Column\",\"gap\":\"md\",\"id\":\"col\"},{\"component\":\"Text\",\"id\":\"title\",\"text\":\"Book a room at the Grand Meridian\",\"variant\":\"h4\"},{\"child\":\"cal_dates\",\"component\":\"Field\",\"id\":\"f_dates\",\"label\":\"Check-in — check-out\"},{\"component\":\"Calendar\",\"id\":\"cal_dates\",\"mode\":\"range\",\"name\":\"dates\",\"min\":\"2025-07-07\",\"valueStart\":{\"path\":\"/booking/checkIn\"},\"valueEnd\":{\"path\":\"/booking/checkOut\"}},{\"child\":\"room_select\",\"component\":\"Field\",\"id\":\"f_room\",\"label\":\"Room type\"},{\"children\":[\"opt_std\",\"opt_dlx\",\"opt_ste\"],\"component\":\"Select\",\"id\":\"room_select\",\"name\":\"roomType\",\"required\":true,\"value\":{\"path\":\"/booking/roomType\"},\"placeholder\":\"Choose a room type\"},{\"component\":\"Option\",\"id\":\"opt_std\",\"label\":\"Classic Room\",\"value\":\"classic\"},{\"component\":\"Option\",\"id\":\"opt_dlx\",\"label\":\"Deluxe Sea View\",\"value\":\"deluxe\"},{\"component\":\"Option\",\"id\":\"opt_ste\",\"label\":\"Suite with Terrace\",\"value\":\"suite\"},{\"child\":\"in_guests\",\"component\":\"Field\",\"id\":\"f_guests\",\"label\":\"Guests\"},{\"component\":\"TextField\",\"id\":\"in_guests\",\"name\":\"guests\",\"type\":\"number\",\"min\":\"1\",\"max\":\"6\",\"value\":{\"path\":\"/booking/guests\"}},{\"children\":[\"chk_breakfast\",\"chk_late\"],\"component\":\"Column\",\"gap\":\"xs\",\"id\":\"f_extras\"},{\"checked\":{\"path\":\"/booking/breakfast\"},\"component\":\"Checkbox\",\"id\":\"chk_breakfast\",\"label\":\"Add breakfast each morning\",\"name\":\"breakfast\"},{\"checked\":{\"path\":\"/booking/lateCheckout\"},\"component\":\"Checkbox\",\"id\":\"chk_late\",\"label\":\"Request late check-out (subject to availability)\",\"name\":\"lateCheckout\"},{\"children\":[\"btn_submit\"],\"component\":\"Row\",\"gap\":\"md\",\"id\":\"actions\",\"justify\":\"end\"},{\"action\":{\"action\":\"submit_booking\",\"submit\":true},\"checks\":[{\"args\":{\"value\":{\"path\":\"/booking/roomType\"}},\"call\":\"required\",\"message\":\"Please choose a room type\"}],\"component\":\"Button\",\"id\":\"btn_submit\",\"label\":\"Submit request\",\"variant\":\"solid\"}],\"surfaceId\":\"booking-room\"},\"version\":\"v1.0\"}"
+      }
+    }
+  ]
+}

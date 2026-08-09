@@ -1,0 +1,24 @@
+{
+  "kimgranlund/agent-ui": {
+    "allow_list": [
+      "kimgranlund"
+    ],
+    "policy": {
+      "seeded_at": "2026-08-04T08:30:01Z",
+      "seed_basis": "REQ-011 evidence-only bootstrap: sole issue/PR author and repo owner across all discoverable history at first firing (public repo, no external filings observed) \u2014 never a guessed second author.",
+      "roster_confirmed": true,
+      "roster_confirmed_by": "kimgranlund",
+      "roster_confirmed_date": "2026-08-05",
+      "roster_confirmed_via": "host AskUserQuestion round",
+      "standing_rule": "hold-first-filing",
+      "standing_rule_note": "RULED by kimgranlund 2026-08-08 (host AskUserQuestion round): an unknown author's first issue/PR waits in the triage queue for an explicit allow \u2014 fail-closed, one-time friction per new person. Supersedes the 2026-08-08 OPEN GAP note.",
+      "github_mcp_offer": "declined",
+      "github_mcp_offer_by": "kimgranlund",
+      "github_mcp_offer_date": "2026-08-05",
+      "github_mcp_offer_note": "gh CLI serves intake; product-side MCP separately deferred (GH #438)",
+      "standing_rule_by": "kimgranlund",
+      "standing_rule_date": "2026-08-08",
+      "standing_rule_via": "host AskUserQuestion round"
+    }
+  }
+}

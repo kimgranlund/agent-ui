@@ -1,0 +1,9 @@
+{
+  "savedAt": "2026-08-04T07:47:29.507Z",
+  "box": "M-B DoD box 4 — live catalog-switch leg (branch fix-413-a2ui-basic-catalog dev server :5175)",
+  "requestCatalogId": "a2ui-basic",
+  "createSurfaceStamp": "a2ui-basic",
+  "wireLines": 4,
+  "renderedNodes": 18,
+  "model": "claude-sonnet-5"
+}

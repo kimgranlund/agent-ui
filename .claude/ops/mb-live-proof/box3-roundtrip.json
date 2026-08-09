@@ -1,0 +1,13 @@
+{
+  "savedAt": "2026-08-03T22:43:22.955Z",
+  "box": "M-B DoD box 3 — live round-trip leg",
+  "originalId": "quizmaster",
+  "importedId": "the-quizmaster-imported",
+  "personaSystemBytes": 1218,
+  "personaSystemByteEqual": true,
+  "modelBoth": "claude-haiku-4-5-20251001",
+  "exportedFileMeta": {
+    "kind": "agent-ui-persona",
+    "version": 1
+  }
+}
