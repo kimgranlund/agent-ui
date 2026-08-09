@@ -23,7 +23,14 @@ Re-confirmed by Kim 2026-08-09. `friendlies.json` policy block is the canonical 
 
 Tracker stays open; capture `gh pr merge`'s verbatim output at the next survivor before manual
 cleanup. Best-fitting variable so far: branch checked out in a linked worktree at merge time
-(#622) vs. not checked out anywhere (#618–#621, clean). Full evidence: #613's 2026-08-09 comment.
+(#622) vs. not checked out anywhere (#618–#621, #625, clean). Full evidence: #613's 2026-08-09
+comment.
+
+**Amendment 2026-08-09 (third sweep):** a survivor classification must run `git fetch --prune`
+first. `git branch -r` alone can show a stale LOCAL remote-tracking ref for an already-deleted
+remote branch (hit this firing on `origin/task/624-nav-polish`, PR #625 — traced to a stale ref,
+not a real survivor, once pruned). Treating an unpruned ref as a survivor would misattribute a
+clean ship as a #613 repeat.
 
 ## ADR harvest confirm — RULED 2026-08-09: harvest all three
 
