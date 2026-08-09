@@ -7,9 +7,9 @@
 > cl.5 the no-store-swap try-it contract, cl.6 mechanism-generalizes) ·
 > [`agent-authoring-flow.decomp.md`](../decompositions/agent-authoring-flow.decomp.md) §S3 (the S3-a
 > leaf this LLD fills; §1 grants S3 "full LLD" — acceptance lives inline here, §13, per doc-tier law) ·
-> [`a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md) **§3.2d SPEC-R29/R30** (v0.14, authored
-> on `feat/633-s2-persona-patch-arm` / PR #642 — S3's frozen wire contract; this LLD builds against
-> those rows and never re-litigates them) · Kim's rulings on GH
+> [`a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md) **§3.2d SPEC-R29/R30** (v0.14,
+> MERGED to main @ `8bdb1ef3`, spec Status accepted 2026-08-09 — S3's wire contract; this LLD
+> builds against those rows and never re-litigates them) · Kim's rulings on GH
 > [#633](https://github.com/kimgranlund/agent-ui/issues/633) (try-it is **DUAL-CONTEXT** — authoring
 > pane + test chat coexist over ONE draft persona, no store swap per GH #145) and GH
 > [#640](https://github.com/kimgranlund/agent-ui/issues/640) (**`SURFACE_PLANNER_KEY` joins
@@ -36,8 +36,9 @@
 > every generated field holds its own `store.subscribe`; external writes reflect live).
 >
 > **Freeze discipline.** §9 is the fan-out contract for the builder seat — a builder who finds a seam
-> unworkable STOPS and escalates, never improvises past this document. PR #642 may merge while S3
-> builds; if a merge conflict reveals the SPEC rows moved, that is the same escalation.
+> unworkable STOPS and escalates, never improvises past this document. If SPEC-R29/R30 are later
+> amended out from under this LLD, that is the same escalation. S3-b builds on a main-rebased
+> branch (this LLD was authored on a pre-S2 worktree; the merged rows verified zero-drift).
 
 ## 1 · Intent
 
@@ -310,17 +311,26 @@ affordance + destructive-edit safety (Kim's OQ4/OF3 confirm at that intake).
 - **Builder model choice.** Config, not contract: recommend the roster's sonnet-class id
   (interview quality; haiku acceptable fallback if cost rules). Picked at build; recorded in the
   preset comment.
-- **Self-patching reachable pre-S5.** The Authoring row lets a user flip an ORDINARY persona's
-  gate ON, making gate-on self-context consumption live before S5's safety work. Defused by
-  SPEC-R29's no-deletion law (a patch is additive-only — it cannot destroy authored state) and by
-  the row's opt-in inverse default. **Recommendation: accept; S5 still owns the affordance + undo.**
-  If Kim wants it fenced harder, the one-line alternative (consume only when
-  `drivingStore === authoringStore`) is named here so the escalation is cheap — but it would
-  narrow cl.3's stated seam, so it is NOT taken silently.
+- **Self-patching reachable pre-S5 — RULING KIM'S, three options.** The Authoring row lets a user
+  flip an ORDINARY persona's gate ON, making gate-on self-context consumption live before S5's
+  safety work. The exposure, stated honestly: ENTRIES are additive-only (SPEC-R29's no-deletion
+  law — a patch can never remove authored entries), but VALUES merge per-key whole-value
+  LAST-WRITER-WINS (the same pinned law), so a consumed patch CAN overwrite `name`/`model`/
+  `temperature`, flip OTHER modality gates, or replace the catalog selection — and §3 step 2's
+  admission table includes `SURFACE_AUTHORING_KEY` itself, so a consumed patch can arm the draft's
+  own gate: model-authored writes widening the model's future write authority. The options:
+  **(a) accept as designed** — the row's opt-in inverse default bounds it, and S5 still owns the
+  entry affordance + undo/versioning (**recommendation**);
+  **(b)** the fenced alternative — consume only when `drivingStore === authoringStore` — named so
+  the escalation is cheap, but it would narrow cl.3's stated seam, so it is NOT taken silently;
+  **(c)** exclude `SURFACE_AUTHORING_KEY` from the patchable value set (arguably inside cl.2's
+  grant — the ADR never promises every enumerated key is patchable), closing the
+  authority-widening loop while leaving the rest of (a) intact.
 - **Roster label vs patched `name`.** Shipped divergence (hand-edits have it today). If the
   interview's minted "New agent" row grates in practice, file a small follow-up (page subscribes
   to the draft's `name` key); not this slice.
 - **Captured-store writes after a mid-turn switch** — the bankroll mirror's shipped posture,
   inherited knowingly (§8); no new exposure class.
-- **PR #642 merge timing.** This LLD binds to SPEC-R29/R30 as frozen on the branch; a
-  post-merge byte drift in those rows is an escalation trigger (Freeze discipline, header).
+- **PR #642 merge timing — CLOSED.** SPEC-R29/R30 merged to main (`8bdb1ef3`, v0.14, spec Status
+  accepted 2026-08-09) with zero byte drift from the rows this LLD bound to (reviewer-confirmed);
+  the risk did not realize. Any FUTURE amendment of those rows remains the header's escalation.
