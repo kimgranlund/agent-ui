@@ -1307,6 +1307,14 @@ describe('ui-agent-admin — GH #225: the Settings sections fold like the Contex
 // conversation on screen, that a mode flip swaps which one occupies the canvas without either collapsing
 // to a zero box, and that a patched value paints into the settings pane while the turn streams.
 
+/** Drive the mode flip from a probe. `setModeSeam` is `protected` — a compile-time construct only — so a
+ *  cast reaches it without widening the element's public API. Deliberately NOT a probe SUBCLASS (the
+ *  split.ts precedent): agent-admin.css is `@scope (ui-agent-admin)`, so a probe tag would render
+ *  unstyled and quietly void every geometry assertion. S4-a's try-it bar replaces this call site. */
+const flipMode = (el: UIAgentAdminElement, mode: 'authoring' | 'test'): void => {
+  ;(el as unknown as { setModeSeam(m: 'authoring' | 'test'): void }).setModeSeam(mode)
+}
+
 describe('ui-agent-admin cross-engine smoke — the guided-authoring flow (ADR-0178 cl.5, GH #633)', () => {
   /** A scripted surface runner: one patch turn, then a note — the shape a real Builder turn has. */
   function armPatchRunner(el: UIAgentAdminElement): void {
@@ -1350,14 +1358,14 @@ describe('ui-agent-admin cross-engine smoke — the guided-authoring flow (ADR-0
     expect(authoringBox.height).toBeGreaterThan(0)
     expect(test.getBoundingClientRect().height, 'the hidden test chat contributes no box at all').toBe(0)
 
-    el.setMode('test')
+    flipMode(el, 'test')
     await el.updateComplete
     expect(authoring!.getBoundingClientRect().height).toBe(0)
     const testBox = test.getBoundingClientRect()
     expect(testBox.height, 'the test chat takes over the same canvas — no collapsed layout').toBeGreaterThan(0)
     expect(Math.round(testBox.height)).toBe(Math.round(authoringBox.height))
 
-    el.setMode('authoring')
+    flipMode(el, 'authoring')
     await el.updateComplete
     expect(authoring!.getBoundingClientRect().height).toBeGreaterThan(0)
   })

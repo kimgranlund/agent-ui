@@ -76,6 +76,14 @@ afterEach(() => {
   localStorage.clear()
 })
 
+/** Drive the mode flip from a probe. `setModeSeam` is `protected` — a compile-time construct only — so a
+ *  cast reaches it without widening the element's public API. Deliberately NOT a probe SUBCLASS (the
+ *  split.ts precedent): agent-admin.css is `@scope (ui-agent-admin)`, so a probe tag would render
+ *  unstyled and quietly void every geometry assertion. S4-a's try-it bar replaces this call site. */
+const flipMode = (el: UIAgentAdminElement, mode: 'authoring' | 'test'): void => {
+  ;(el as unknown as { setModeSeam(m: 'authoring' | 'test'): void }).setModeSeam(mode)
+}
+
 const PATCH = { values: { name: 'Concierge', temperature: 0.3 }, entries: { [entriesStoreKey(ENTRY_KINDS.skill)]: [{ label: 'Book a table' }] } }
 
 /** A persona store seeded the way the page seeds one — the real defaults, so pane reads are honest. */
@@ -178,11 +186,38 @@ describe('the apply loop’s CONSUMPTION CONDITION — the fence AND the gate, b
     const builder = personaStore({ [SURFACE_AUTHORING_KEY]: true })
     const { el } = mountAdmin({ store: draft, authoringStore: builder, events: [{ kind: 'patch', patch: PATCH }] })
     await whenFlushed()
-    el.setMode('test')
+    flipMode(el, 'test')
     await submit(el, 'hello draft', 'test')
 
     expect(draft.get('name')).toBe('Untitled agent')
     expect((turnLogOf(el).response as { patchIgnored?: boolean }).patchIgnored).toBe(true)
+  })
+
+  it('a POISONED key never costs the turn — the drop-the-item law, proven at the turn level', async () => {
+    // The regression this pins (review MAJOR): a prototype-chain key used to THROW inside the apply gate,
+    // and the throw escaped into this method's own catch → `handle.fail()`, killing a turn whose real
+    // content was perfectly good. §3 says a drop removes the ITEM, never the patch and never the turn, and
+    // SPEC-R30's degrade law says the same — so this asserts the turn still finalizes normally, its note
+    // still paints, and its good keys still land, with only the bad key recorded as dropped.
+    const draft = personaStore()
+    const builder = personaStore({ [SURFACE_AUTHORING_KEY]: true })
+    const poisoned = JSON.parse('{"values":{"__proto__":"evil","name":"Survived","toString":"y"}}') as { values: Record<string, unknown> }
+    const { el } = mountAdmin({
+      store: draft,
+      authoringStore: builder,
+      events: [{ kind: 'patch', patch: poisoned }, { kind: 'note', note: 'Still here.' }],
+    })
+    await whenFlushed()
+    await submit(el, 'go')
+
+    expect(draft.get('name'), 'the turn’s good content still applied').toBe('Survived')
+    const authoring = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
+    expect(authoring.textContent, 'the reply painted — the turn was not failed').toContain('Still here.')
+    expect(authoring.querySelector('[data-role="system"]')?.textContent ?? '', 'no ⚠ failure bubble').not.toContain('⚠')
+    const response = turnLogOf(el).response as { patch: { applied: string[]; dropped: string[] }; error?: string }
+    expect(response.error, 'the turn recorded no error at all').toBeUndefined()
+    expect(response.patch.applied).toEqual(['name'])
+    expect(response.patch.dropped).toEqual(['__proto__', 'toString'])
   })
 
   it('a consumed patch still DROPS what the gate refuses — the three filters are not bypassed by consumption', async () => {
@@ -241,9 +276,9 @@ describe('the dual-context scaffold — one draft, two transcripts, zero store s
     const storeBefore = el.store
 
     await submit(el, 'interview turn', 'authoring')
-    el.setMode('test')
+    flipMode(el, 'test')
     await submit(el, 'test turn', 'test')
-    el.setMode('authoring')
+    flipMode(el, 'authoring')
     await whenFlushed()
 
     // GH #145's probe, INVERTED: the reset must NOT have fired.
@@ -264,7 +299,7 @@ describe('the dual-context scaffold — one draft, two transcripts, zero store s
     const { el } = mountAdmin({ store: draft, authoringStore: builder, events: [{ kind: 'note', note: 'ok' }] })
     await whenFlushed()
     await submit(el, 'interview turn', 'authoring')
-    el.setMode('test')
+    flipMode(el, 'test')
     await submit(el, 'test turn', 'test')
 
     el.store = personaStore() // a different persona
@@ -279,7 +314,7 @@ describe('the dual-context scaffold — one draft, two transcripts, zero store s
     const draft = personaStore()
     const { el } = mountAdmin({ store: draft, authoringStore: personaStore({ [SURFACE_AUTHORING_KEY]: true }) })
     await whenFlushed()
-    el.setMode('test')
+    flipMode(el, 'test')
     el.authoringStore = undefined
     await whenFlushed()
     const test = el.querySelector('[data-part="chat-stack"] > ui-conversation:not([data-part="authoring-conversation"])') as HTMLElement

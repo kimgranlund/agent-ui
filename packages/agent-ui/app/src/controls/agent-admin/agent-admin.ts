@@ -1062,12 +1062,12 @@ export class UIAgentAdminElement extends UIElement {
    * no store touch, no reassignment, no reset, no serialization. That is the cl.5 contract stated as
    * code — a flip is not a persona switch, so GH #145's reset must not fire and both transcripts stay.
    *
-   * INTERNAL seam, not part of the attributes-as-API contract: it carries no attribute, emits no event
-   * (this element's event vocabulary stays closed), and appears in no `attributes[]` row. S4-a's try-it
-   * bar is its caller; the LLD books it as existing after this step so the round-trip is provable now.
+   * PRIVATE by contract (the LLD books `#setMode`): it carries no attribute, emits no event (this
+   * element's event vocabulary stays closed), and appears in no `attributes[]` row. S4-a's try-it bar is
+   * its caller — the LLD books this seam as existing after step 4 so the round-trip is provable now.
    * A no-op unless the flow is armed.
    */
-  setMode(mode: 'authoring' | 'test'): void {
+  #setMode(mode: 'authoring' | 'test'): void {
     if (this.authoringStore === undefined || this.#mode === mode) return
     this.#mode = mode
     this.#applyMode()
@@ -2026,6 +2026,16 @@ export class UIAgentAdminElement extends UIElement {
       { role: 'assistant', content: reply },
     ]
     this.#history.push(...turns)
+  }
+
+  // ── protected test seams (the split.ts/slider-multi.ts precedent) ────────────────────────────────────
+
+  /** Drive the dual-context mode flip from a test probe. The flip's REAL caller is S4-a's try-it bar,
+   *  which does not exist yet — and the ruled acceptance (both transcripts survive a flip; `store` stays
+   *  reference-identical) has to be provable at this step. `protected` keeps it off the public element:
+   *  a consumer cannot reach it, so no API widened and no descriptor row is owed. */
+  protected setModeSeam(mode: 'authoring' | 'test'): void {
+    this.#setMode(mode)
   }
 
   /** GH #145 — every piece of PER-PERSONA conversation state, cleared together on a real store

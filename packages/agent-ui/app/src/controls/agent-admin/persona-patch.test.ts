@@ -33,6 +33,7 @@ import {
   draftStateBlock,
   readPersonaState,
   type PatchDeps,
+  type PatchReport,
 } from './persona-patch.ts'
 
 const deps: PatchDeps = { models: modelRoster(), schema: defaultAgentConfigSchema }
@@ -84,10 +85,59 @@ describe('the canonical key set (LLD-C1) — one enumeration, two consumers', ()
 describe('filter 1 — the enumerated-key filter', () => {
   it('drops an unknown key silently, writing nothing', () => {
     const store = freshStore()
-    const report = applyPersonaPatch(store, { values: { nonsense: 'x', __proto__: 'evil' } }, deps)
+    const report = applyPersonaPatch(store, { values: { nonsense: 'x' } }, deps)
     expect(report.applied).toEqual([])
     expect(report.dropped).toContain('nonsense')
     expect(store.get('nonsense')).toBeUndefined()
+  })
+
+  // A patch arrives as PARSED JSON off the wire, and `JSON.parse` makes `__proto__`/`toString`/
+  // `constructor` ordinary OWN keys that `Object.entries` hands straight to the admission lookup. Building
+  // them with an object LITERAL instead would prove nothing: `{ __proto__: 'evil' }` is the literal's
+  // special form — it sets the prototype and creates no own key at all, so the gate never even sees it.
+  // Every case below is therefore built through `JSON.parse`, the real shape.
+  const wirePatch = (json: string): { values?: Record<string, unknown>; entries?: Record<string, unknown[]> } =>
+    JSON.parse(json) as { values?: Record<string, unknown>; entries?: Record<string, unknown[]> }
+
+  it('a prototype-chain key is DROPPED like any other unknown — never thrown on, never admitted', () => {
+    // Measured before the admission table became a Map: `__proto__`/`hasOwnProperty`/`valueOf` THREW
+    // (the inherited member is not a callable predicate), and `toString`/`constructor` returned something
+    // truthy and were ADMITTED AND WRITTEN — a non-enumerated key straight past filter 1. The throws were
+    // the worse half: they escape into the component's turn `catch` and fail the WHOLE turn, breaking
+    // §3's drop-the-item-never-the-turn law from a single malformed key.
+    for (const key of ['__proto__', 'toString', 'constructor', 'hasOwnProperty', 'valueOf', 'isPrototypeOf']) {
+      const store = freshStore()
+      const before = { name: store.get('name'), model: store.get('model') }
+      let report: PatchReport | undefined
+      expect(() => {
+        report = applyPersonaPatch(store, wirePatch(`{"values":{${JSON.stringify(key)}:"y"}}`), deps)
+      }, `${key} must not throw — a bad key drops the ITEM, never the turn`).not.toThrow()
+      expect(report!.applied, `${key} must never be admitted`).toEqual([])
+      expect(report!.dropped).toEqual([key])
+      expect(store.get(key), `${key} must never be written`).toBeUndefined()
+      expect({ name: store.get('name'), model: store.get('model') }, 'no collateral writes').toEqual(before)
+    }
+  })
+
+  it('a prototype-chain key alongside a GOOD one drops only itself — the rest of the patch still applies', () => {
+    // The whole point of drop-the-item: one poisoned key must not cost the user the turn's real content.
+    const store = freshStore()
+    const report = applyPersonaPatch(store, wirePatch('{"values":{"__proto__":"evil","name":"Concierge","toString":"y"}}'), deps)
+    expect(report.applied).toEqual(['name'])
+    expect(report.dropped).toEqual(['__proto__', 'toString'])
+    expect(store.get('name')).toBe('Concierge')
+    // and the prototype itself is untouched — no pollution reached Object.prototype
+    expect(({} as Record<string, unknown>).evil).toBeUndefined()
+  })
+
+  it('a prototype-chain key in the ENTRIES arm drops the same way (the kind map is a Map too)', () => {
+    const store = freshStore()
+    let report: PatchReport | undefined
+    expect(() => {
+      report = applyPersonaPatch(store, wirePatch('{"entries":{"__proto__":[{"label":"x"}],"toString":[{"label":"y"}]}}'), deps)
+    }).not.toThrow()
+    expect(report!.added).toEqual({})
+    expect(report!.dropped).toEqual(['__proto__', 'toString'])
   })
 
   it('drops a WRONG-INTENT member: an entry-list key named in `values`, and a value key named in `entries`', () => {

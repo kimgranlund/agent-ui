@@ -152,7 +152,25 @@ type Admit = (value: unknown, deps: PatchDeps) => boolean
  *  already refuses one; admitting it here would write a value those readers then ignore). */
 const admitBoolean: Admit = (value) => typeof value === 'boolean'
 
-const ADMISSION: Readonly<Record<string, Admit>> = {
+/**
+ * A MAP, not an object literal — and that is a correctness requirement, not a style preference.
+ *
+ * The keys looked up here come off the WIRE, so a model (or anything upstream of it) can name any string
+ * at all. A plain-object lookup walks the PROTOTYPE CHAIN, and `Object.entries` over a `JSON.parse`d body
+ * yields `__proto__`/`toString`/`constructor` as ordinary OWN keys — measured, before this was a Map:
+ *
+ *   • `__proto__` → `ADMISSION['__proto__']` is `Object.prototype`, not a function ⇒ TypeError
+ *   • `hasOwnProperty`/`valueOf` → the inherited method is CALLED with a `this` of `undefined` ⇒ TypeError
+ *   • `toString`/`constructor` → the inherited member returns something TRUTHY ⇒ the key is ADMITTED and
+ *     WRITTEN, straight past filter 1's enumerated-key law
+ *
+ * The throws were the worse half: they escape `applyPersonaPatch` into the component's turn `catch`, which
+ * fails the whole turn — violating §3's drop-the-ITEM-never-the-turn law and SPEC-R30's degrade posture,
+ * from one malformed key. A `Map` has no prototype chain to walk, so both failure modes are gone by
+ * construction rather than by a guard someone must remember at each lookup (the `KIND_FOR_ENTRY_KEY`
+ * precedent, applied to the table that actually faces untrusted input).
+ */
+const ADMISSION: ReadonlyMap<string, Admit> = new Map<string, Admit>(Object.entries({
   // `name` is free text — the settings field's own `required` validation is a UI-level affordance, and an
   // empty name degrades to 'Untitled agent' at read time exactly as a hand-cleared field does.
   name: (value) => typeof value === 'string',
@@ -176,7 +194,7 @@ const ADMISSION: Readonly<Record<string, Admit>> = {
   [A2UI_CATALOG_KEY]: (value) => sanitizeCatalog(value) === value,
   [A2UI_LOCAL_PATTERNS_KEY]: (value) => sanitizeLocalPatterns(value) === value,
   [BANKROLL_KEY]: (value) => sanitizeBankroll(value) === value,
-}
+}))
 
 /**
  * One human-readable VALUE SHAPE per patchable key — what a model must send for that key to be admitted.
@@ -269,7 +287,7 @@ export function applyPersonaPatch(
   const report: PatchReport = { applied: [], added: {}, dropped: [] }
 
   for (const [key, value] of Object.entries(patch.values ?? {})) {
-    const admit = ADMISSION[key]
+    const admit = ADMISSION.get(key)
     // Filter 1 and filter 2 collapse into one lookup: a key outside PERSONA_VALUE_KEYS has no admission
     // row (the table is built FROM the canonical set), so an unknown key and an entry-list key named in
     // `values` both fall out here.
