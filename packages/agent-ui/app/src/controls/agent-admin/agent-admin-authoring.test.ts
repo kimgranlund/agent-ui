@@ -126,12 +126,12 @@ async function submit(el: UIAgentAdminElement, text: string, context: 'authoring
   await whenFlushed()
 }
 
-/** GH #666 REOPENED — the Author card's empty-log state, resolved through the ENTIRE chain Kim's ruling
- *  rests on: the copy is a child of the interview conversation's own `[data-part="log"]`, not a box
- *  standing beside the card. A bare `[data-part="author-empty"]` lookup would still pass if the empty state
- *  regressed to a sibling, which is the exact shape the ruling rejected. */
-const emptyInLog = (el: UIAgentAdminElement): HTMLElement | null =>
-  el.querySelector('[data-part="authoring-conversation"] > [data-part="log"] > [data-part="author-empty"]')
+/** GH #684 — the Author card's log while unarmed carries no dedicated empty-state node any more (Kim's
+ *  live pixel-truth ruling removed the headline + copy GH #666 REOPENED had seated there): "unarmed" now
+ *  reads directly off the log's own child count — zero children until the first turn lands. */
+const authorLog = (el: UIAgentAdminElement): HTMLElement =>
+  el.querySelector('[data-part="authoring-conversation"] > [data-part="log"]') as HTMLElement
+const authorLogEmpty = (el: UIAgentAdminElement): boolean => authorLog(el).children.length === 0
 
 /** The Author card's ONE composer — the interview's own, the only one in the column at any moment. */
 const authorComposer = (el: UIAgentAdminElement): HTMLElement & { value: string; busy: boolean } =>
@@ -532,13 +532,13 @@ describe('the pane nav — the visible place change, driving the SAME seam the r
     const { el } = mountAdmin({ store: personaStore() })
     await whenFlushed()
     expect([...nav(el).strip.querySelectorAll('ui-tab')].map((t) => t.textContent)).toEqual(['Chat', 'Author', 'Settings'])
-    // GH #666 — armed-ness is the LOG's content now, not a visibility flip between two boxes: unarmed the
-    // copy sits in the card's log, armed it is gone and the transcript has the room.
-    expect(emptyInLog(el), 'unarmed ⇒ the empty-log copy paints inside the card').not.toBeNull()
+    // GH #666 — armed-ness is the LOG's content now, not a visibility flip between two boxes. GH #684 — and
+    // that log carries no dedicated empty-state node any more (Kim's live pixel-truth ruling removed the
+    // headline + copy): unarmed it is simply EMPTY, and stays that way until the first turn lands.
+    expect(authorLogEmpty(el), 'unarmed ⇒ the log carries no content of its own').toBe(true)
     el.authoringStore = personaStore({ [SURFACE_AUTHORING_KEY]: true })
     await whenFlushed()
     expect([...nav(el).strip.querySelectorAll('ui-tab')].map((t) => t.textContent)).toEqual(['Chat', 'Author', 'Settings'])
-    expect(emptyInLog(el), 'armed ⇒ the interview takes the log over').toBeNull()
   })
 
   it('arming the flow LANDS the user in Author, and clicking a tab flips both the strip selection and which place is shown', async () => {
@@ -629,9 +629,10 @@ describe('the pane nav — the visible place change, driving the SAME seam the r
 // ── GH #666 — the unarmed Author place is the flow's ENTRY, and it is a CHAT CARD ──────────────────────
 // Kim's 2026-08-10 live report ("where am I supposed to describe it?") ruled the entry composer-first, and
 // his REOPEN the same day ruled its shape: "the center pane should be a CHAT, just like Test chat". So the
-// unarmed column is the interview's own `ui-conversation` — one card, one composer, the copy occupying its
-// log until the first turn. These probes pin the plumbing (arming, equivalence, never-swallowed); the
-// card's TREATMENT parity with Test chat is a rendered-geometry claim and lives in the browser suite.
+// unarmed column is the interview's own `ui-conversation` — one card, one composer, an EMPTY log until the
+// first turn (GH #684 — Kim's later live pixel-truth ruling removed the headline + copy that used to
+// occupy that log). These probes pin the plumbing (arming, equivalence, never-swallowed); the card's
+// TREATMENT parity with Test chat is a rendered-geometry claim and lives in the browser suite.
 describe('GH #666 — the unarmed Author card: a live composer, and the arming it drives', () => {
   /** The page's `createGeneratedAgent`, in miniature: mint the interviewer and assign it. This IS the arm
    *  path — the probes below register it exactly once per element and let BOTH entries run it. */
@@ -644,7 +645,6 @@ describe('GH #666 — the unarmed Author card: a live composer, and the arming i
       armed: el.authoringStore !== undefined,
       pane: el.querySelector('[data-part="pane-holder"]')!.getAttribute('data-pane'),
       navSelected: (el.querySelector('[data-part="pane-nav"]') as HTMLElement & { selected: string }).selected,
-      emptyGone: emptyInLog(el) === null,
       interviewMounted: interview !== null,
       interviewAvailable: !interview.disabled,
     }
@@ -664,18 +664,19 @@ describe('GH #666 — the unarmed Author card: a live composer, and the arming i
     expect(card.disabled, 'registered pre-connect ⇒ the entry still opens').toBe(false)
   })
 
-  it('the copy lives INSIDE the card`s log, above the card`s own bottom composer (the empty-conversation idiom)', async () => {
-    // Kim's reopen in one assertion: the anatomy of the unarmed column is conversation → log → copy, with
-    // the composer as the card's LAST child. A headline floating beside a card would satisfy neither.
+  it('the unarmed card`s anatomy is kicker, EMPTY log, then the card`s own bottom composer (the empty-conversation idiom)', async () => {
+    // GH #684 (Kim's live pixel-truth ruling) removed the headline + copy that used to occupy this log —
+    // the anatomy claim that survives is conversation → log (now empty) → composer, with the composer as
+    // the card's LAST child. A headline floating beside a card would have satisfied neither the old ruling
+    // nor this one.
     const { el } = mountAdmin({ store: personaStore() })
     await whenFlushed()
     el.onGenerateRequest(() => {})
     const card = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
-    expect(emptyInLog(el), 'the copy is the log`s own child').not.toBeNull()
-    expect(emptyInLog(el)!.textContent).toContain('Describe the agent you want')
+    expect(authorLogEmpty(el), 'the log carries no content while unarmed').toBe(true)
     expect(
       [...card.children].map((c) => c.getAttribute('data-part') ?? c.tagName.toLowerCase()),
-      'kicker, then the log holding the copy, then the composer pinned last — Test chat`s own anatomy',
+      'kicker, then the empty log, then the composer pinned last — Test chat`s own anatomy',
     ).toEqual(['region-kicker', 'log', 'ui-conversation-composer'])
     expect(card.querySelector('[data-part="region-kicker"]')!.textContent).toBe('Builder interview')
   })
@@ -709,7 +710,6 @@ describe('GH #666 — the unarmed Author card: a live composer, and the arming i
     expect(el.authoringStore).toBe(builder)
     const interview = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
     expect(interview, 'the transition FILLS the card the user typed into — no swap').toBe(cardBefore)
-    expect(emptyInLog(el), 'the copy left the log the moment the flow armed').toBeNull()
     expect(interview.textContent, 'the description the user typed IS the opening turn').toContain('a hotel concierge please')
     expect(
       interview.querySelectorAll('[data-part="log"] [data-part="bubble"][data-role="user"]'),
@@ -762,21 +762,22 @@ describe('GH #666 — the unarmed Author card: a live composer, and the arming i
     expect(el.authoringStore).toBeUndefined()
     expect(authorComposer(el).value).toBe('a hotel concierge please')
     expect(el.querySelectorAll('[data-part="authoring-conversation"] [data-part="bubble"]')).toHaveLength(0)
-    expect(emptyInLog(el), 'and the card still shows what it is for').not.toBeNull()
     expect(requests).toEqual([])
   })
 
-  it('leaving the flow returns the card to its empty-log state — the same node, re-seated', async () => {
+  it('leaving the flow returns the card to its empty-log state — the same node, cleared', async () => {
     const builder = personaStore({ [SURFACE_AUTHORING_KEY]: true })
     const { el } = mountAdmin({ store: personaStore(), authoringStore: builder, events: [{ kind: 'note', note: 'ok' }] })
     el.onGenerateRequest(() => {})
     await whenFlushed()
     await submit(el, 'interview turn', 'authoring')
-    expect(emptyInLog(el)).toBeNull()
+    expect(authorLogEmpty(el), 'armed and a turn ran ⇒ the log is no longer empty').toBe(false)
 
     el.authoringStore = undefined
     await whenFlushed()
-    expect(emptyInLog(el), 'the copy comes back into the same card').not.toBeNull()
+    // GH #684 — no dedicated empty-state node comes back; the log is simply empty again, same as any
+    // fresh unarmed card.
+    expect(authorLogEmpty(el), 'the log returns to empty').toBe(true)
     expect(el.querySelectorAll('[data-part="authoring-conversation"] [data-part="bubble"]'), 'and the interview is cleared').toHaveLength(0)
   })
 })
