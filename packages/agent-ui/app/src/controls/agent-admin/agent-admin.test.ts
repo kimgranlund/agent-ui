@@ -149,7 +149,7 @@ describe('mountEntryList — customAdd/contentField (ADR-0170 cl.8)', () => {
 })
 
 describe('UIAgentAdminElement — shell composition (ADR-0179): the three places + the settings sub-nav', () => {
-  it('composes ONE ui-chat-shell: header=the three-place nav, content=[test conversation | the master-detail pairing]', () => {
+  it('composes ONE ui-chat-shell: header=EMPTY this slice, content=three sibling regions (chat/settings/copilot) — GH #686\'s Amendment', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const shell = el.querySelector(':scope > ui-chat-shell') as HTMLElement
     expect(shell).not.toBeNull()
@@ -158,66 +158,76 @@ describe('UIAgentAdminElement — shell composition (ADR-0179): the three places
     expect(shell.hasAttribute('narrow-end'), 'the six-entry narrow-tabs vocabulary is gone').toBe(false)
     expect(el.querySelector('[data-slot-name="options-pane"]'), 'nothing occupies the options-pane slot any more').toBeNull()
 
-    const navBar = el.querySelector('[data-part="pane-nav-bar"]') as HTMLElement
-    expect(navBar.getAttribute('data-slot')).toBe('header')
-    expect(navBar.getAttribute('data-landmark')).toBe('navigation')
-    const places = [...navBar.querySelectorAll('[data-part="pane-nav"] ui-tab')].map((t) => t.textContent)
-    expect(places, 'ONE vehicle, three places (cl.1)').toEqual(['Chat', 'Author', 'Settings'])
+    // LLD §16.4 S7-b row — the pane nav retires and no replacement lands until S7-c: `header` composes
+    // NOTHING in this slice (a documented gap, not an oversight).
+    expect(el.querySelector('[data-slot="header"]'), 'no admin-composed header content this slice').toBeNull()
+    expect(el.querySelector('[data-part="pane-nav-bar"]'), 'the retired pane-nav bar').toBeNull()
+    expect(el.querySelector('[data-part="pane-nav"]'), 'the retired pane nav').toBeNull()
 
     const holder = el.querySelector('[data-part="pane-holder"]') as HTMLElement
     expect(holder.getAttribute('data-slot')).toBe('content')
-    expect(holder.querySelector(':scope > ui-conversation'), 'the Chat place').not.toBeNull()
-    const pair = el.querySelector('[data-part="pane-pair"]') as HTMLElement
-    expect(pair.tagName.toLowerCase()).toBe('ui-master-detail')
-    const settingsPane = pair.querySelector('[data-part="settings-pane"]') as HTMLElement
-    expect(settingsPane.getAttribute('pane')).toBe('detail')
-    expect(pair.querySelector('[data-part="author-pane"]')!.getAttribute('pane')).toBe('list')
+    // LLD §16.5 — the TOP-LEVEL MD pairing vehicle retires: no ui-master-detail/-pane as a DIRECT child of
+    // the pane holder, no back-affordance-suppression target left to suppress. Scoped to the holder's own
+    // children, deliberately: `ui-settings` composes its OWN unrelated rail|panel `ui-master-detail`
+    // nested inside the Settings region (settings.ts), which this slice never touches.
+    expect([...holder.children].some((c) => c.tagName.toLowerCase().startsWith('ui-master-detail')), 'the pairing vehicle is gone from the holder').toBe(false)
+    expect(el.querySelector('[data-part="pane-pair"]')).toBeNull()
+    expect(el.querySelector('[data-part="author-pane"]')).toBeNull()
+
+    // LLD §16.1's anatomy — three sibling regions, direct children of the holder, in PANE_ORDER.
+    const regions = [...holder.children] as HTMLElement[]
+    expect(regions.map((r) => r.getAttribute('data-part')), 'DOM order is PANE_ORDER: chat · settings · copilot').toEqual([
+      'chat-pane', 'settings-pane', 'copilot-pane',
+    ])
+    expect(regions[0]!.tagName.toLowerCase()).toBe('ui-conversation')
+    expect(regions[2]!.tagName.toLowerCase()).toBe('ui-conversation')
+
+    const settingsPane = regions[1]!
     const segmentLabels = [...settingsPane.querySelectorAll(':scope > [data-segment]')].map((s) => s.getAttribute('data-segment'))
     expect(segmentLabels).toEqual(['Agent', 'Capabilities', 'Surface', 'Context: System', 'Context: Dialog'])
   })
 
-  it('the pane nav is the ONE navigation vehicle: the active place is written onto the holder for the sheet to read (the place truth-table)', () => {
+  it('LLD §16.2 — the shown-set/primary visibility truth-table: data-show/data-primary agree with the seam at every combination, min-one is refused, and the primary auto-repoints off its own set', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const holder = el.querySelector('[data-part="pane-holder"]') as HTMLElement
-    const chat = el.querySelector('[data-part="pane-holder"] > ui-conversation') as HTMLElement
-    const pair = el.querySelector('[data-part="pane-pair"]') as HTMLElement & { selected: string }
-    const nav = el.querySelector('[data-part="pane-nav"]') as HTMLElement & { selected: string }
-    const tabs = [...el.querySelectorAll('[data-part="pane-nav"] ui-tab')] as HTMLElement[]
+    const seam = (shown: readonly ('chat' | 'settings' | 'copilot')[], primary: 'chat' | 'settings' | 'copilot'): void =>
+      (el as unknown as { setPaneVisibilitySeam(s: readonly ('chat' | 'settings' | 'copilot')[], p: 'chat' | 'settings' | 'copilot'): void }).setPaneVisibilitySeam(shown, primary)
+    const state = (): { show: string | null; primary: string | null } => ({
+      show: holder.getAttribute('data-show'),
+      primary: holder.getAttribute('data-primary'),
+    })
 
-    // GH #662 — what a place change WRITES is `data-pane`, and only that. Which regions then have a box is
-    // the sheet's reading of that attribute against the band (one place below 52.5rem, all three at and
-    // above it), so it is asserted in the browser shard where boxes are real, not here. What this suite
-    // owns is the state: the nav, the holder, and the MD's drill selection agree at every place.
-    const place = (): [string | null, string, string] => [holder.getAttribute('data-pane'), nav.selected, pair.selected]
+    // Entry default (OQ-D's rec, LLD §16.2/§16.4): all three shown, Chat primary.
+    expect(state()).toEqual({ show: 'chat settings copilot', primary: 'chat' })
 
-    // Entry default: Chat (LLD §4).
-    expect(place()).toEqual(['chat', 'chat', ''])
-
-    tabs.find((t) => t.textContent === 'Author')!.click()
-    expect(place(), 'Author ⇒ the narrow view is `list` (the interview)').toEqual(['author', 'author', ''])
-
-    tabs.find((t) => t.textContent === 'Settings')!.click()
-    expect(place(), 'Settings ⇒ the narrow view drills into `detail`').toEqual(['settings', 'settings', 'settings'])
-
-    tabs.find((t) => t.textContent === 'Chat')!.click()
-    expect(place()).toEqual(['chat', 'chat', ''])
-
-    // …and no region ever carries the `hidden` attribute again: a region that paints in the triple dock
-    // must not also be claiming to be hidden (the a11y lie the attribute model would tell at wide).
-    for (const tab of tabs) {
-      tab.click()
-      expect([chat.hidden, pair.hidden], `no region is attribute-hidden at ${holder.getAttribute('data-pane')}`).toEqual([false, false])
+    // The full set×primary truth-table — every subset that includes the chosen primary.
+    const cases: Array<{ shown: readonly ('chat' | 'settings' | 'copilot')[]; primary: 'chat' | 'settings' | 'copilot'; show: string }> = [
+      { shown: ['chat'], primary: 'chat', show: 'chat' },
+      { shown: ['settings'], primary: 'settings', show: 'settings' },
+      { shown: ['copilot'], primary: 'copilot', show: 'copilot' },
+      { shown: ['chat', 'settings'], primary: 'chat', show: 'chat settings' },
+      { shown: ['settings', 'copilot'], primary: 'copilot', show: 'settings copilot' },
+      { shown: ['chat', 'copilot'], primary: 'copilot', show: 'chat copilot' },
+      { shown: ['chat', 'settings', 'copilot'], primary: 'settings', show: 'chat settings copilot' },
+    ]
+    for (const c of cases) {
+      seam(c.shown, c.primary)
+      // `data-show` is always composed in PANE_ORDER (reading order), independent of the caller's argument
+      // order — the truth-table's own reading-order invariant.
+      expect(state(), JSON.stringify(c)).toEqual({ show: c.show, primary: c.primary })
     }
-  })
 
-  it('the master-detail pairing`s own select/change never escape the admin host (the closed event set)', () => {
-    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const seen: string[] = []
-    for (const type of ['select', 'change']) el.addEventListener(type, () => seen.push(type))
-    const pair = el.querySelector('[data-part="pane-pair"]') as HTMLElement & { selected: string }
-    pair.selected = 'settings'
-    pair.selected = ''
-    expect(seen, 'contained at the MD host, exactly as the settings strip is').toEqual([])
+    // Min-one refusal (LLD §16.2's "a zero-pane surface is broken by construction"): an empty shown set is
+    // a no-op — the previous state stands, byte-identical.
+    seam(['settings'], 'settings')
+    seam([], 'chat')
+    expect(state(), 'refused — the last state before the empty call stands').toEqual({ show: 'settings', primary: 'settings' })
+
+    // Primary auto-repoint: a `primary` argument outside `shown` repoints to the first remaining member in
+    // PANE_ORDER (the "removing the primary repoints it to the first remaining member in reading order"
+    // rule, general-cased beyond the pill-removal scenario it was written for).
+    seam(['settings', 'copilot'], 'chat')
+    expect(state(), 'primary not in shown ⇒ repoints to the first PANE_ORDER member that IS').toEqual({ show: 'settings copilot', primary: 'settings' })
   })
 
   it('GH #574: the old single config column splits into three ranked segments — Agent, Capabilities, Surface; each Context segment still carries ONLY its own accordion — no cross-segment leakage', () => {
@@ -354,29 +364,42 @@ describe('UIAgentAdminElement — shell composition (ADR-0179): the three places
     expect(seen).toEqual([])
   })
 
-  it('content nodes are the SAME identity across repeated place/section switches — one region ARRANGED, never rebuilt or duplicated (cl.3)', () => {
+  it('content nodes are the SAME identity across repeated visibility-set flips — three sibling regions ARRANGED, never rebuilt or duplicated or reparented (cl.3, LLD §16.2/§16.5) — isSameNode-verified', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const conversation = el.querySelector('[data-part="pane-holder"] > ui-conversation')
-    const agentItem = el.querySelector('[data-part="settings-item"][data-item="agent"]')
-    const agentSection = el.querySelector('[data-segment="Agent"]')
+    const seam = (shown: readonly ('chat' | 'settings' | 'copilot')[], primary: 'chat' | 'settings' | 'copilot'): void =>
+      (el as unknown as { setPaneVisibilitySeam(s: readonly ('chat' | 'settings' | 'copilot')[], p: 'chat' | 'settings' | 'copilot'): void }).setPaneVisibilitySeam(shown, primary)
+
+    const chatPane = el.querySelector('[data-part="chat-pane"]') as Node
+    const settingsPaneEl = el.querySelector('[data-part="settings-pane"]') as Node
+    const copilotPane = el.querySelector('[data-part="copilot-pane"]') as Node
+    const agentItem = el.querySelector('[data-part="settings-item"][data-item="agent"]') as Node
+    const agentSection = el.querySelector('[data-segment="Agent"]') as Node
     // The FIRST entry-section in document order (GH #574: the Capabilities tab now precedes the Surface
     // tab, so Instructions' entry-section — not the catalog picker nested in Surface Options — is first;
-    // this probe only cares about node identity surviving a tab switch, not which kind is first).
-    const firstEntrySection = el.querySelector('[data-part="entry-section"]')
+    // this probe only cares about node identity surviving a flip, not which kind is first).
+    const firstEntrySection = el.querySelector('[data-part="entry-section"]') as Node
 
-    const places = [...el.querySelectorAll('[data-part="pane-nav"] ui-tab')] as HTMLElement[]
     const sections = [...el.querySelectorAll('[data-part="settings-nav"] ui-tab')] as HTMLElement[]
-    places.find((t) => t.textContent === 'Settings')!.click()
+    // Flip through every arrangement a visibility-set change can produce — solo copilot, solo settings, the
+    // whole triple, back to the entry default — plus a settings sub-nav flip along the way (a SEPARATE
+    // visibility axis, one level down, that must survive the outer flips too).
+    seam(['copilot'], 'copilot')
     sections.find((t) => t.textContent === 'Context: System')!.click()
-    places.find((t) => t.textContent === 'Author')!.click()
+    seam(['settings'], 'settings')
     sections.find((t) => t.textContent === 'Agent')!.click()
-    places.find((t) => t.textContent === 'Chat')!.click()
+    seam(['chat', 'settings', 'copilot'], 'chat')
 
-    expect(el.querySelector('[data-part="pane-holder"] > ui-conversation')).toBe(conversation)
-    expect(el.querySelector('[data-part="settings-item"][data-item="agent"]')).toBe(agentItem)
-    expect(el.querySelectorAll('[data-segment="Agent"]'), 'exactly ONE settings region exists').toHaveLength(1)
-    expect(el.querySelector('[data-segment="Agent"]'), 'the SAME node before and after every arrangement flip').toBe(agentSection)
-    expect(el.querySelector('[data-part="entry-section"]')).toBe(firstEntrySection)
+    // isSameNode, not `toBe` alone — the explicit DOM-identity assertion the LLD's own done-when names.
+    expect(el.querySelector('[data-part="chat-pane"]')!.isSameNode(chatPane), 'the chat region is the SAME node').toBe(true)
+    expect(el.querySelector('[data-part="settings-pane"]')!.isSameNode(settingsPaneEl), 'the settings region is the SAME node').toBe(true)
+    expect(el.querySelector('[data-part="copilot-pane"]')!.isSameNode(copilotPane), 'the copilot region is the SAME node').toBe(true)
+    expect(el.querySelector('[data-part="settings-item"][data-item="agent"]')!.isSameNode(agentItem)).toBe(true)
+    expect(el.querySelectorAll('[data-segment="Agent"]'), 'exactly ONE settings region exists — never duplicated').toHaveLength(1)
+    expect(el.querySelector('[data-segment="Agent"]')!.isSameNode(agentSection), 'the SAME node before and after every arrangement flip').toBe(true)
+    expect(el.querySelector('[data-part="entry-section"]')!.isSameNode(firstEntrySection)).toBe(true)
+    // …and no region ever left the pane holder to relocate somewhere else (never a runtime reparent).
+    const holder = el.querySelector('[data-part="pane-holder"]') as HTMLElement
+    expect(holder.contains(chatPane) && holder.contains(settingsPaneEl) && holder.contains(copilotPane)).toBe(true)
   })
 
   it('capability sections (Instructions/Skills/Workflows/Resources/Tools) live in the Capabilities segment', () => {
@@ -534,13 +557,13 @@ describe('UIAgentAdminElement — real models + real seeded content (TKT-0043)',
 })
 
 describe('UIAgentAdminElement — composition (GH #52/ADR-0154: chat + {Settings, Context: System, Context: Dialog} segments; ADR-0132 five entry-list instantiations; GH #161)', () => {
-  it('builds one ui-chat-shell holding the three places (ADR-0179)', () => {
+  it('builds one ui-chat-shell holding the three places (ADR-0179, re-ruled by GH #686\'s Amendment)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const shell = el.querySelector(':scope > ui-chat-shell')
     expect(shell).not.toBeNull()
-    expect(shell?.querySelector('[data-part="canvas"] ui-conversation')).not.toBeNull()
-    expect(shell?.querySelector('[data-part="pane-nav"]')).not.toBeNull()
-    expect(shell?.querySelector('[data-part="canvas"] [data-part="pane-pair"]')).not.toBeNull()
+    expect(shell?.querySelector('[data-part="canvas"] [data-part="chat-pane"]')).not.toBeNull()
+    expect(shell?.querySelector('[data-part="canvas"] [data-part="settings-pane"]')).not.toBeNull()
+    expect(shell?.querySelector('[data-part="canvas"] [data-part="copilot-pane"]')).not.toBeNull()
   })
 
   it('LLD-C4: agent-admin.css sets the two R6c floor tokens to today\'s ui-split min values, verbatim (16rem/20rem)', () => {

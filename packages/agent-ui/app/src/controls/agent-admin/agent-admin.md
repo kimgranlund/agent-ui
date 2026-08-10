@@ -46,7 +46,7 @@ properties:
     description: OPTIONAL entry-library packs keyed by entry kind (`Record<string, EntryLibraryPack[]>`, entries.ts; GH #47/#48) — each kind's packs render as that section's add-from-library menu, whose commits route through the SAME validated `onAdd` path as hand-authored entries (slug-dedup, order, enabled, deletable). Non-reflected pure type-carrier (the `schema`/`store` precedent). Reactive (GH #143, same identity-change law as `schema`/`store`) — a real reassignment (a new object reference) rebuilds each kind's add-from-library MENU in place via the `connected()` effect, letting a caller re-scope which packs a persona/preset sees without recreating the element; the section shell itself and its rendered entries are unaffected. Absent/empty ⇒ the affordance renders nowhere (byte-identical sections).
 
   - name: authoringStore
-    description: OPTIONAL second `SettingsStore` (ADR-0178 cl.5, GH #633) arming the GUIDED-AUTHORING flow — the host-authored Builder persona's own config, from which the interview's turns compose. Set the flow arms: a second `ui-conversation` mounts inside the Author place and drives the next turn while that place is active (ADR-0179 re-keyed the selector from the retired `#mode` seam to the ACTIVE PLACE — a one-token change with everything below it untouched); arming also NAVIGATES to Author, and clearing tears the context down WITHOUT forcing navigation (the always-present empty state paints instead). `store` is NEVER reassigned by arming, clearing, or flipping between the two — GH #145's conversation reset fires on a real persona switch and on nothing else, so both transcripts survive a flip over ONE draft. A `personaPatch` the interview declares applies to `store` (the DRAFT), and only when BOTH conjuncts of the ruled consumption condition hold: the turn's driving store IS this one, AND the driving store's `surfaceAuthoring` gate reads ON at receipt. Every other turn — a test chat's, an ordinary persona's, even a gate-ON one's — logs `patchIgnored` and writes nothing.
+    description: OPTIONAL second `SettingsStore` (ADR-0178 cl.5, GH #633) arming the GUIDED-AUTHORING flow — the host-authored Builder persona's own config, from which the interview's turns compose. Set the flow arms: the `copilot-pane` conversation drives the next turn from its own composer, origin-keyed (GH #662's Amendment re-keyed `#contextFor` from pane identity to the SUBMITTING COMPOSER's origin — untouched by GH #686's Amendment, LLD §16.2: "with subsets, multiple visible composers are the norm and origin-keying is what already makes that sound"); arming also lands Co-pilot visible AND primary (`ensure copilot ∈ shown + primary = 'copilot'`), and clearing tears the context down WITHOUT forcing navigation (the always-present empty log paints instead). `store` is NEVER reassigned by arming, clearing, or flipping between the two — GH #145's conversation reset fires on a real persona switch and on nothing else, so both transcripts survive a flip over ONE draft. A `personaPatch` the interview declares applies to `store` (the DRAFT), and only when BOTH conjuncts of the ruled consumption condition hold: the turn's driving store IS this one, AND the driving store's `surfaceAuthoring` gate reads ON at receipt. Every other turn — a test chat's, an ordinary persona's, even a gate-ON one's — logs `patchIgnored` and writes nothing.
 
 events: []               # no DOM events of its own — the composed ui-settings/ui-conversation each emit their OWN events (unchanged, not re-emitted); this element adds no new event vocabulary
 
@@ -55,22 +55,16 @@ slots: []                 # content model is NOT author-composed — the split/p
 parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-DOM markers this element's own JS creates; documented for completeness (compareDescriptorToSource does not mechanically check `parts:`, the split.md/master-detail.md precedent)
   - name: settings-item
     description: One config-column section's FOLD, now spread across the Agent/Capabilities/Surface tabs (GH #574 — Kim's ruling, splitting the old single flat Settings tab; GH #225's Kim ruling, the GH #222 Context pattern applied back to the config column, is unchanged) — `<ui-disclosure data-part="settings-item" data-item="agent|model|surface|bankroll|prompt-section|skill|workflow|resource|tool|pattern-source">`, a chrome-free fold host whose summary IS the section heading (the shared heading register, chevron on the heading row) over the section's content card(s) as its body. ALL default OPEN (config is an editing surface — Context's newest-open logic is a log-reading choice, not a config one); built once, fold state lives in the live DOM, session-ephemeral. The Agent/kind folds carry their master switch ON the summary row via ui-disclosure's `slot="summary"` position slot (GH #226/ADR-0158 — a switch click never folds; the component owns the activation guard and the switch survives any fold rebuild). Replaces the old plain heading parts (agent-header/agent-heading/model-grid-heading/surface-options-heading/entry-section-header/-heading), all retired.
-  - name: pane-nav-bar
-    description: ADR-0179 cl.1 (admin-three-pane-ia.lld.md §3, GH #651) — the THREE-PLACE navigation bar, authored into the composed chat-shell's `header` slot as `<div data-part="pane-nav-bar" data-slot="header" data-landmark="navigation">`. The `data-landmark` override retargets the header slot's default `banner` role onto `navigation` through super-shell's own shipped seam (ADR-0083's role-decoupled-from-placement precedent). The admin composing a header at all is what re-joins the header-BEARING arm of chat-shell.css's GH #650 inset split.
-  - name: pane-nav
-    description: ADR-0179 cl.1 — the ONE navigation vehicle, at every band: a panel-less `<ui-tabs data-part="pane-nav">` hosting three `<ui-tab data-part="pane-nav-chat|pane-nav-author|pane-nav-settings" key="chat|author|settings">`s — Chat · Author · Settings. Composed the GH #221 way (a bare `ui-tabs`, `ui-tab` children carrying `key`, no `ui-tab-panel`s: the PLACES it selects are this element's own visibility targets, `link()`ed for aria-controls), which is the retired try-it strip's composition method re-anchored one level up. `selected` reflects the active place, written programmatically on a non-user flip (no `select` echo, ADR-0019); the control's ONE user-commit `select` is `stopPropagation`'d, so the element's event vocabulary stays closed and no new host event is minted. It replaces BOTH the try-it bar (the authoring ⇄ test flip is a place change now) and the shell's six-entry narrow-tabs strip.
   - name: pane-holder
-    description: ADR-0179 cl.1 — the content slot's holder (`<div data-part="pane-holder" data-slot="content">`), was `chat-stack`. It holds the PLACES, not one place's two conversations: the test conversation (the Chat place) and the master-detail pairing (the Author and Settings places). Both conversations stay MOUNTED for the element's whole life; a place change writes the active place here as `data-pane` and nothing else, which is what lets both transcripts survive without any snapshot/restore machinery. GH #662 — this box is also the CONTAINER the band rules query (`container-type: inline-size`): the sheet reads `data-pane` against the holder's own width to decide what paints, so no region carries a `hidden` attribute and no resize writes any state.
-  - name: pane-pair
-    description: ADR-0179 cl.3 — the Author⇄Settings PAIRING: a composed `<ui-master-detail data-part="pane-pair">` whose `list` pane is the Author region and whose `detail` pane is the Settings region. ONE region, ARRANGED — never a second mount: at or above master-detail's own 40rem own-container line the two dock as a resizable `ui-split` (the live-hydration adjacency — hand-edit the draft beside the interview), and below it the element drills into one region at a time, which is what gives Settings a full-surface narrow home. The consumer-written `selected` carries that drill-in (`''` for Author, `'settings'` for Settings); the MD's own `select`/`change` are contained at its host. Its control-rendered back affordance is suppressed in admin CSS — the pane nav is the one nav vocabulary.
-  - name: author-pane
-    description: ADR-0179 / GH #666 — the Author place's region (`<ui-master-detail-pane pane="list" data-part="author-pane">`), holding exactly ONE child at every point of the flow: the interview's `authoring-conversation` card. Its node identity survives master-detail's compose-time relocation (whole pane elements move, never their grandchildren), so the conversation always mounts into the arranged region.
+    description: GH #686's Amendment (admin-three-pane-ia.lld.md §16.1/§16.2, S7-b) — the content slot's holder (`<div data-part="pane-holder" data-slot="content">`), was `chat-stack`, then ADR-0179's fixed pair/triple `data-pane` box. It now holds THREE SIBLING regions in `PANE_ORDER` (chat · settings · copilot) — no pairing vehicle. `data-show` (the shown SET, space-joined, `PANE_ORDER`) and `data-primary` (the narrow truth, always a member of the set) are the ONLY state written here (`#applyPaneVisibility`); the sheet reads both against the holder's own inline-size (`container-type: inline-size`) — below `SHELL_COMPACT_BREAKPOINT` (52.5rem) exactly the `data-primary` region paints, at and above it every `data-show` member does. No region carries a `hidden` attribute, and no resize writes any state. `header` composes NO content this slice — the unified selector/visibility/actions bar that replaces the retired pane nav is S7-c's own build (a documented gap).
+  - name: chat-pane
+    description: LLD §16.1 — the Chat place's region: `#conversation`, the test `<ui-conversation data-part="chat-pane">`, byte-unchanged in substance from every earlier revision. A direct child of `pane-holder`, first in `PANE_ORDER`.
   - name: settings-pane
-    description: ADR-0179 — the Settings place's region (`<ui-master-detail-pane pane="detail" data-part="settings-pane">`): the `settings-nav` strip over the five section units, which moved here WHOLE at compose time from the retired `options-pane` slot (a compose-time re-home, never a runtime reparent).
+    description: GH #686's Amendment — the Settings place's region: a plain `<div data-part="settings-pane">` now (the `ui-master-detail-pane` wrapper role retired with the whole pairing vehicle) holding the `settings-nav` strip over the five section units, moved here WHOLE at compose time (a compose-time re-home, never a runtime reparent). Owns its own scroll directly (`overflow-y: auto`, the fleet's scrollbar-chrome-hidden convention) — no wrapping `ui-split-pane` exists to own it any more. A direct child of `pane-holder`, second in `PANE_ORDER`.
+  - name: copilot-pane
+    description: GH #686's Amendment / GH #666 — the Co-pilot place's region (renamed from Author, the vocabulary re-pins to `[Chat | Settings | Co-pilot]`): `#authoringConversation`, the interview's own `<ui-conversation data-part="copilot-pane">` — renamed from the retired `author-pane` wrapper, whose identity this element now carries directly (no wrapper exists any more). Present whether or not the flow is armed: unarmed its log is empty (GH #684 removed the headline + copy that used to occupy it) and its own composer is the flow's entry; arming FILLS the same element rather than swapping it for another. Keeps its OWN composer permanently — cl.4's per-pane composers: no composer ever re-routes, so a Chat-place submission structurally cannot drive the Builder, and a Co-pilot-place one structurally cannot drive the test context. Same `receipt`/`sources` developer-surface opt-ins as the test conversation; its model picker writes the AUTHORING store, so the interviewer's model choice can never silently become the draft agent's. GH #670 — that write is the ARMED half of one path: unarmed there is no store to write, so the same pick is held on the element and seeds the store the arm mints (Effort likewise, into the element's own dial). A direct child of `pane-holder`, third in `PANE_ORDER`.
   - name: settings-nav
-    description: ADR-0179 OQ2 — the Settings place's internal sub-nav: a second panel-less `<ui-tabs data-part="settings-nav" overflow="menu">` over the five section units, in GH #574's ranked order (Agent · Capabilities · Surface · Context: System · Context: Dialog). Each tab's `key` is its section's stable `data-role`, its TEXT the human `data-segment` label — identity and display copy are separate by construction, so a label edit can never desync which section a tab reveals. Flips are VISIBILITY-ONLY — the same node identities before and after, exactly the shell segment strip's own SPEC-R7c behavior, one level down, so a dirty field, an added entry, and every fold's open state survive a flip away and back. `overflow="menu"` (GH #586) is the not-enough-room strategy: five labels do not fit the detail pane's column at either band, and the menu keeps every section reachable through a real affordance rather than an affordance-less horizontal scroll. LLD-P6 (GH #656) rules the grouping final at these five.
-  - name: authoring-conversation
-    description: ADR-0178 cl.5 — the guided-authoring interview's own `<ui-conversation data-part="authoring-conversation">`, mounted inside `author-pane` (ADR-0179) at compose time and present whether or not the flow is armed (GH #666 retired the lazy mount: unarmed, this card IS the Author column, its log empty — GH #684 removed the headline + copy that used to occupy it — arming FILLS the same element rather than swapping it for another). It keeps its OWN composer permanently — cl.4's per-pane composers: no composer ever re-routes, so a Chat-place submission structurally cannot drive the Builder, and an Author-place one structurally cannot drive the test context. Same `receipt`/`sources` developer-surface opt-ins as the test conversation; its model picker writes the AUTHORING store, so the interviewer's model choice can never silently become the draft agent's. GH #670 — that write is the ARMED half of one path: unarmed there is no store to write, so the same pick is held on the element and seeds the store the arm mints (Effort likewise, into the element's own dial). Either way a choice made on this card configures the INTERVIEWER, never the draft.
+    description: ADR-0179 OQ2 — the Settings place's internal sub-nav: a panel-less `<ui-tabs data-part="settings-nav" overflow="menu">` over the five section units, in GH #574's ranked order (Agent · Capabilities · Surface · Context: System · Context: Dialog). Each tab's `key` is its section's stable `data-role`, its TEXT the human `data-segment` label — identity and display copy are separate by construction, so a label edit can never desync which section a tab reveals. Flips are VISIBILITY-ONLY — the same node identities before and after, exactly the shell segment strip's own SPEC-R7c behavior, one level down, so a dirty field, an added entry, and every fold's open state survive a flip away and back. `overflow="menu"` (GH #586) is the not-enough-room strategy: five labels do not fit the detail pane's column at either band, and the menu keeps every section reachable through a real affordance rather than an affordance-less horizontal scroll. LLD-P6 (GH #656) rules the grouping final at these five.
   - name: agent-enabled
     description: The Agent ACTIVE master switch (vision rev.5, Kim's ruling — "is the agent active/available"), riding the Agent fold's heading row (GH #225). OFF sets `conversation.disabled` (composer busy-disabled, no turns run, both prose and surface arms guarded); everything stays editable, and the switch stays visible even with its fold collapsed (the way back never folds away). Backed by the `agentEnabled` store key (default ON — only an explicit stored `false` disables).
   - name: kind-enabled
@@ -167,55 +161,50 @@ protocol dependency.
 <ui-agent-admin></ui-agent-admin>
 ```
 
-THREE first-class PLACES (ADR-0179, GH #651 — superseding vision rev.5's two-pane `ui-split` and the
-GH #52/ADR-0154 shell arrangement that replaced it): **Chat · Author · Settings**, voiced by ONE
-navigation vehicle at every band — a panel-less `ui-tabs` in the composed chat-shell's header slot
-(`pane-nav`).
+THREE first-class PLACES (ADR-0179, GH #651, re-ruled by GH #686's Amendment — superseding vision rev.5's
+two-pane `ui-split`, the GH #52/ADR-0154 shell arrangement that replaced it, and ADR-0179 cl.1's own
+fixed-triple-dock reading): **Chat · Settings · Co-pilot** (renamed from Author). The header slot's
+unified selector/visibility/actions bar (S7-c) is the eventual navigation vehicle; this slice (S7-b)
+builds the visibility MACHINE it will drive — `header` composes no content yet (a documented gap).
 
-- **Chat** is the pure test surface: the draft agent's own conversation. Below the triple line it renders
-  SOLO — no settings rail beside it (places are disjoint in that band; the tune-while-testing adjacency
-  is the AUTHOR pairing below).
-- **Author** is the guided-authoring interview's own place (`authoringStore`, ADR-0178 cl.5). It is
+- **Chat** is the pure test surface: the draft agent's own conversation.
+- **Settings** groups the five section units — Agent · Capabilities · Surface · Context: System ·
+  Context: Dialog — under one place with its own internal sub-nav (`settings-nav`).
+- **Co-pilot** is the guided-authoring interview's own place (`authoringStore`, ADR-0178 cl.5). It is
   ALWAYS present, and it is always the interview's own conversation card — same treatment as Chat's
   (GH #666). Unarmed, that card's log is empty (GH #684 removed the "Describe the agent you want"
   headline + copy that used to occupy it), and the card's own composer is the flow's entry: the first
   message arms (through the `onGenerateRequest(cb)` registration seam) and becomes the interview's opening
   turn. The roster (...) menu's own "New agent → Generate" item is the OTHER arming entry, for arming
   without typing anything (GH #681 removed the in-card duplicate of that item). Armed, the transcript takes
-  the log. Arming from anywhere lands the user here.
-- **Settings** groups the five section units — Agent · Capabilities · Surface · Context: System ·
-  Context: Dialog — under one place with its own internal sub-nav (`settings-nav`).
+  the log. Arming from anywhere lands Co-pilot visible AND primary.
 
-Author and Settings are two panes of ONE composed `ui-master-detail` (`pane-pair`), which is what makes
-the pairing an ARRANGEMENT rather than a duplication: at or above its 40rem own-container line the two
-regions dock side by side, resizable, so a patch the interview declares hydrates the settings region
-live while the turn streams; below that line it drills into one region at a time, giving Settings a
-full-surface narrow home. The five section units are the SAME DOM nodes at every band and in every
-arrangement.
-
-**The band ladder (GH #662, ADR-0179 cl.1's proposed Amendment).** Which places paint is a reading of
-`pane-holder`'s own inline-size, never a JS decision:
+**The visibility model (LLD §16.2) — a shown SET + a primary member, two band renderings.** GH #686's
+Amendment retires `ui-master-detail` as the Author⇄Settings pairing vehicle entirely — the wireframe's
+all-active geometry (three ~296px columns) doesn't fit the MD's own 40rem dock floor. The three places are
+THREE SIBLING regions now, no pairing, arranged by CSS alone:
 
 | holder width | what paints |
 |---|---|
-| below 40rem | the named place, with the pair itself drilled into one region |
-| 40rem – 52.5rem | the named place: Chat solo, or the Author⇄Settings pair docked |
-| 52.5rem and up | the TRIPLE DOCK — `[chat \| author \| settings]` all three side by side |
+| below 52.5rem | exactly the PRIMARY region, alone |
+| 52.5rem and up | every member of the SHOWN SET, as equal flex columns |
 
-52.5rem is `SHELL_COMPACT_BREAKPOINT` (ADR-0150/0155), not a new number, and it is where it is by
-constraint: the master-detail needs 40rem of its own or it drills in, leaving Chat the remainder, and
-52.5rem is the first named line where that remainder still clears the 20ch engagement floor (measured
-both engines at the line: chat 200px, author 320px, settings 320px, floor 160px). The pane nav persists
-at every band; above the line it names a place rather than gating one. No painted divider separates
-docked regions — the split separator's resting ink is retracted while every resize mechanic survives.
+52.5rem is `SHELL_COMPACT_BREAKPOINT` (ADR-0150/0155) — the SAME named line the retired triple dock used,
+re-derived for the new equal-thirds geometry (measured both engines: three ~272–385px columns depending
+on mount width, each clearing the 20ch/160px engagement floor with real margin). A wide pill toggles shown-
+set membership (turning off the last member is refused — min-one, a zero-pane surface is broken by
+construction; turning off the primary repoints it to the first remaining member in reading order); a
+narrow segment sets the primary and ensures its own membership. A resize writes NOTHING — crossing bands
+projects/restores losslessly. No painted divider separates the top-level regions (a plain row gap now, not
+a retracted split-ink token) — `ui-settings`' own nested rail|panel split still carries the no-divider law.
 
-Which context drives the next turn is keyed by the SUBMITTING COMPOSER'S ORIGIN (GH #662; it was the
-active place at S1-b, and the mode flag before that): cl.4's per-pane composers mean the Chat place's
-composer is permanently the test context and the Author place's is permanently the Builder — no composer
-ever re-routes, at any band. Origin rather than place is what keeps that true in the triple dock, where
-both composers are on screen at once; the consumption fence itself is unchanged (it keys off
-driving-store identity), and Chat structurally cannot reach the draft. The retired vocabulary: the try-it bar, the `#mode`
-seam, and the shell's six-entry narrow-tabs strip.
+Which context drives the next turn is keyed by the SUBMITTING COMPOSER'S ORIGIN (GH #662's Amendment;
+untouched by GH #686's — LLD §16.2: "with subsets, multiple visible composers are the norm and
+origin-keying is what already makes that sound"): cl.4's per-pane composers mean the Chat place's
+composer is permanently the test context and the Co-pilot place's is permanently the Builder — no composer
+ever re-routes, at any band or shown-set state. The consumption fence itself is unchanged (it keys off
+driving-store identity), and Chat structurally cannot reach the draft. The retired vocabulary: the try-it
+bar, the `#mode` seam, the pane-nav `ui-tabs` strip, and the shell's six-entry narrow-tabs strip.
 
 GH #574 (Kim's ruling, 2026-08-07) split the old single flat Settings tab's ten folds — three
 distinct ranks flattened into one scroll — into three sections, each still a heading-row FOLD since GH #225

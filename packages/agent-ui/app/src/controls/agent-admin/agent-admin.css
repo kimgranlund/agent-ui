@@ -177,38 +177,77 @@
     min-block-size: 0;
   }
 
-  /* ADR-0179 cl.1 + its GH #662 Amendment — the content slot HOLDS THE PLACES (it was `chat-stack`,
-     ADR-0178 cl.5's two-conversation stacking vehicle for one place). Its two children are the Chat place
-     (the test conversation) and the Author⇄Settings pairing.
-     ┌─ THE BAND LADDER (three places, two arrangements) ────────────────────────────────────────────────┐
-     │ `#applyPane` writes the active place here as `data-pane` and writes nothing else; THIS SHEET says  │
-     │ what paints, reading `data-pane` against the holder's OWN inline-size (the shell family's          │
-     │ own-container-width law — no ResizeObserver, no JS layout, no state written by a resize).          │
-     │                                                                                                    │
-     │   below 52.5rem   exactly the named place paints (Chat solo, or the Author⇄Settings pair, which    │
-     │                   the MD itself further drills into one region below its own 40rem line)           │
-     │   52.5rem and up  the TRIPLE DOCK: all three regions paint side by side, [chat | author | settings]│
-     │                                                                                                    │
-     │ 52.5rem is `SHELL_COMPACT_BREAKPOINT` (ADR-0150/0155) — the ladder's OWN second line, never a third│
-     │ number, and exactly the escalation seam the LLD §6 booked for this case. It is what it is because  │
-     │ the pair below cannot survive being squeezed: the MD needs 40rem of its own to stay docked (below  │
-     │ that it drills in and the "triple" would silently become a pair), which leaves the Chat column the │
-     │ remainder — and 52.5rem is the first named line where that remainder still clears the 20ch         │
-     │ engagement floor. Measured in both engines, GH #662's density table.                               │
-     └────────────────────────────────────────────────────────────────────────────────────────────────────┘ */
+  /* GH #686's Amendment (admin-three-pane-ia.lld.md §16.1/§16.2, S7-b) — the content slot HOLDS THE
+     PLACES (it was `chat-stack`, ADR-0178 cl.5's two-conversation stacking vehicle for one place; ADR-0179
+     cl.1's Amendment then made it a fixed pair/triple band gated on one ACTIVE place). Its THREE children
+     are sibling regions now — no pairing vehicle, `ui-master-detail` retires from this composition
+     entirely (LLD §16.5) — in `PANE_ORDER` (chat · settings · copilot).
+     ┌─ THE VISIBILITY MODEL (a shown SET + a primary member, two band renderings) ──────────────────────┐
+     │ `#applyPaneVisibility` writes `data-show` (the WHOLE shown set, space-joined, PANE_ORDER) +        │
+     │ `data-primary` onto this box and writes nothing else; THIS SHEET says what paints, reading both    │
+     │ against the holder's OWN inline-size (the shell family's own-container-width law — no              │
+     │ ResizeObserver, no JS layout, no state written by a resize).                                       │
+     │                                                                                                     │
+     │   below 52.5rem   exactly the `data-primary` region paints, alone                                  │
+     │   52.5rem and up  every `data-show` member paints, as EQUAL flex columns                           │
+     │                                                                                                     │
+     │ 52.5rem is `SHELL_COMPACT_BREAKPOINT` (ADR-0150/0155) — the SAME named line the retired triple dock │
+     │ used (never a third number), re-derived directly for the new equal-thirds geometry: the first       │
+     │ Amendment's own density table measured the RETIRED flex-2:1-plus-MD-40rem-floor arrangement, which  │
+     │ does not carry over as evidence for THIS geometry (the second Amendment's own words) — re-measured  │
+     │ live, both engines, S7-b (agent-admin.browser.test.ts's own density describe block). */
   [data-part='pane-holder'] {
     display: flex;
     flex-direction: row;
     flex: 1 1 auto;
     min-block-size: 0;
+    /* No per-pane inline padding any more (below) — a plain row `gap` replaces the old asymmetric
+       leading/trailing padding the pairing vehicle's own separator track used to make necessary, giving
+       all three inter-column gutters the SAME value (the wireframe's own equal-columns reading) instead of
+       two hand-tuned near-equal ones. Reuses `--ui-agent-admin-shell-gutter` (the canvas's own outer inset)
+       rather than minting a second token: the design wants outer margin and inter-column gutter to read as
+       ONE consistent rhythm. */
+    gap: var(--ui-agent-admin-shell-gutter);
     container-type: inline-size; /* the band the rules below query is the HOLDER's own width */
   }
-  [data-part='pane-holder'] > ui-conversation {
+  /* Base sizing for all three sibling regions, unconditional (every band). Hidden by default —
+     `display: none` (never `hidden`, S1-b's retired attribute model: a region that paints must not also
+     claim to be hidden, the a11y-tree lie GH #662 already ruled out) — the container queries below REVEAL
+     exactly the regions each band shows by `:not()`-excluding them from this rule, never by re-asserting a
+     "shown" `display` value: `[data-part='chat-pane']`/`[data-part='copilot-pane']` are `ui-conversation`
+     instances with their OWN internal `:scope{display:flex}` (conversation.css) that a directly-matching
+     ancestor declaration would beat regardless of scope proximity — the same class of bug this file's
+     other scope-proximity notes document elsewhere. Letting the control's own default stand (by never
+     fighting it) is the safe shape; only `[data-part='settings-pane']` (a plain div, no built-in default)
+     gets its OWN unconditional `display: flex` below. */
+  [data-part='pane-holder'] > [data-part='chat-pane'],
+  [data-part='pane-holder'] > [data-part='settings-pane'],
+  [data-part='pane-holder'] > [data-part='copilot-pane'] {
     flex: 1 1 0;
     min-inline-size: 0;
     min-block-size: 0;
   }
-  /* GH #665 — the three regions' own quiet identity header (`#makeRegionKicker`): the fleet
+  @container (inline-size < 52.5rem) {
+    [data-part='pane-holder']:not([data-primary='chat']) > [data-part='chat-pane'],
+    [data-part='pane-holder']:not([data-primary='settings']) > [data-part='settings-pane'],
+    [data-part='pane-holder']:not([data-primary='copilot']) > [data-part='copilot-pane'] {
+      display: none;
+    }
+    /* Solo, the surviving region takes the whole holder. */
+    [data-part='pane-holder'][data-primary='chat'] > [data-part='chat-pane'],
+    [data-part='pane-holder'][data-primary='settings'] > [data-part='settings-pane'],
+    [data-part='pane-holder'][data-primary='copilot'] > [data-part='copilot-pane'] {
+      flex: 1 1 auto;
+    }
+  }
+  @container (inline-size >= 52.5rem) {
+    [data-part='pane-holder']:not([data-show~='chat']) > [data-part='chat-pane'],
+    [data-part='pane-holder']:not([data-show~='settings']) > [data-part='settings-pane'],
+    [data-part='pane-holder']:not([data-show~='copilot']) > [data-part='copilot-pane'] {
+      display: none;
+    }
+  }
+  /* GH #665 — the two conversation regions' own quiet identity header (`#makeRegionKicker`): the fleet
      `ui-text[variant='kicker']` eyebrow (nav-rail's `context-label`/GH #624 precedent), ONE token-repoint
      for the muted "neutral" ink role (item 4 of that same ruling — secondary/meta text, never the
      region's own content). flex-shrink is left at its default (0 is unnecessary — a one-line kicker never
@@ -224,235 +263,74 @@
      role-named token rather than reading `--ui-conversation-*` cross-scope) — the kicker's text lands on
      the EXACT left line the log's own turns render on directly beneath it, "the same left line the
      transcript … content uses" per the ruling. Padding, not margin, is deliberate: it insets the kicker's
-     own CONTENT without moving the kicker's own border-box position, so the cross-column "shared top
-     line" probe (GH #665, the triple describe block) — which compares BOX tops, not rendered text —
-     stays true unmodified.
+     own CONTENT without moving the kicker's own border-box position, so a cross-column "shared top line"
+     probe — which compares BOX tops, not rendered text — stays true unmodified.
      `screens:layout-checker` finding 4 (SHIPPABLE grade, MINOR) — the END sides are deliberately BARE,
      not the same `section-gap` the start sides carry: a symmetric `padding: section-gap` doubled the
-     rhythm below the chat/author kickers specifically (measured: kicker's own padding-block-end 16px +
+     rhythm below the chat/copilot kickers specifically (measured: kicker's own padding-block-end 16px +
      the log's OWN leading `--ui-conversation-log-pad` 16px = 32px to the first turn, against a real 16px
      from the card's own border to the kicker's text above it — the SAME asymmetry finding 4 named).
      Dropping the end padding here and letting whatever sits BELOW the kicker own its own leading inset —
-     `[data-part='log']`'s existing `--ui-conversation-log-pad` for chat/author, `[data-part='settings-
-     pane']`'s existing flex `gap: var(--ui-agent-admin-section-gap)` for the new Settings kicker (below)
-     — collapses both regions to ONE 16px rhythm, matching the top gap exactly, with zero new declarations
+     `[data-part='log']`'s existing `--ui-conversation-log-pad` for chat/copilot, `[data-part='settings-
+     pane']`'s existing flex `gap: var(--ui-agent-admin-section-gap)` for the Settings sub-nav (below) —
+     collapses both regions to ONE 16px rhythm, matching the top gap exactly, with zero new declarations
      for the settings case (the pane's own gap already did that job). */
   [data-part='region-kicker'] {
     --ui-text-color: var(--md-sys-color-neutral);
     padding-block-start: var(--ui-agent-admin-section-gap);
     padding-inline-start: var(--ui-agent-admin-section-gap);
   }
-  /* The pair's floor IS the MD's own dock line: at 40rem it stays a docked split, below it drills in. The
-     `2` share keeps the three columns reading roughly equal once there is room to spare (the pair holds
-     two of them), and the floor is what wins while there is not. */
-  [data-part='pane-holder'] > [data-part='pane-pair'] {
-    flex: 2 1 0;
-    min-inline-size: 40rem;
-    min-block-size: 0;
-  }
-  /* Below the triple line — exactly the named place has a box. `display: none` (not the `hidden`
-     attribute, which S1-b used and GH #662 retired) is deliberate: it takes the non-painting region out of
-     the a11y tree the same way, and it is a reading of the band rather than a claim written into the DOM
-     that would be a lie the moment the triple paints the same region. */
-  @container (inline-size < 52.5rem) {
-    [data-part='pane-holder'][data-pane='chat'] > [data-part='pane-pair'] {
-      display: none;
-    }
-    [data-part='pane-holder']:not([data-pane='chat']) > ui-conversation {
-      display: none;
-    }
-    /* Solo, the surviving region takes the whole holder — its share and the pair's dock floor were both
-       computed for the three-column arrangement. */
-    [data-part='pane-holder'] > ui-conversation,
-    [data-part='pane-holder'] > [data-part='pane-pair'] {
-      flex: 1 1 auto;
-      min-inline-size: 0;
-    }
-  }
 
-  /* GH #662, Kim's 2026-08-10 addition — NO PAINTED DIVIDERS between docked regions. The regions separate
-     by spacing and surface alone; the split's resting 1px rule is retracted, never removed. This is a
-     TOKEN repoint, which is exactly the retract-don't-delete shape: `ui-split` keeps its separator element,
-     its 24px hit-slop, its `role=separator`, its keyboard step and its drag — every resize mechanic
-     survives untouched, and the hover/drag cue (`--ui-split-divider-ink-hover`) is deliberately LEFT ALONE
-     so the handle still says "you're grabbing this" at the moment a user reaches for it. Only the resting
-     ink goes.
-     The selector must land on the `ui-split` elements THEMSELVES, not on an ancestor: split.css declares
-     `--ui-split-divider-ink` in its own `:where(ui-split)` token block, and a locally-declared custom
-     property beats an inherited one no matter how the ancestor's specificity compares. A descendant reach
-     is intended here — it covers the triple's own separator AND the one inside `ui-settings`'s nested
-     rail|panel master-detail, so "no painted divider between docked regions" holds everywhere in this
-     surface rather than only at the top level. */
+  /* GH #662's addition, carried over verbatim by GH #686's Amendment — NO PAINTED DIVIDERS between docked
+     regions. The three sibling regions here have no separator element of their own to begin with (no more
+     `ui-split` at this level — the row `gap` above is spacing alone, never a rendered seam), so this
+     descendant reach now covers exactly ONE remaining case: `ui-settings`' OWN nested rail|panel
+     `ui-master-detail` inside the Settings region — unrelated to and untouched by this slice, but the "no
+     painted divider between docked regions" law still needs to hold there too. The selector must land on
+     the `ui-split` elements THEMSELVES, not on an ancestor: split.css declares `--ui-split-divider-ink` in
+     its own `:where(ui-split)` token block, and a locally-declared custom property beats an inherited one
+     no matter how the ancestor's specificity compares. */
   [data-part='pane-holder'] ui-split {
     --ui-split-divider-ink: transparent;
   }
 
-  /* ADR-0179 cl.1 (LLD §2) — the PANE NAV, the one top-level navigation vocabulary. `ui-tabs`
-     type-prefixed for the same CASCADE reason every strip rule in this file carries (tabs.css's own
-     `@scope (ui-tabs)` rules tie a bare attribute selector on specificity, and scope proximity would hand
-     the win to the control's own sheet).
+  /* GH #686's Amendment (LLD §16.1) — the `header` slot composes NOTHING in this slice (the pane nav that
+     used to occupy it retires with the visibility model it drove, LLD §16.5; the unified header bar that
+     replaces it is S7-c's own build, LLD §16.4 — a documented gap, not an oversight). No CSS is owed for
+     this: `ui-super-shell` itself only CREATES the `[data-part='bar'][data-bar='header']` box when at
+     least one `data-slot="header"` child is authored (super-shell.ts's own `if (headerChildren.length > 0)`
+     guard) — with none, the box does not exist in the DOM at all, never merely an empty one to collapse.
+     (Verified live: an earlier draft of this file carried a `--ui-super-shell-bar-size: 0` repoint here on
+     the assumption the box always exists; a real-engine run proved the selector matches nothing.) */
 
-     The inset reads `--ui-bar-inline-inset` — the fleet's real-header-content role (GH #575/#626), which
-     is exactly right HERE and was exactly wrong for the retired try-it strip: this strip IS header
-     content (a `header`-slot child inside super-shell's `bar`/`bar-content`, which deliberately carry no
-     padding of their own, GH #626), whereas the try-it strip sat inside the `canvas` box this file
-     already pads with `--ui-agent-admin-shell-gutter` and so stacked 24px on top of 12px (GH #646
-     follow-up #2's measured defect). The admin composing a header at all is what re-joins the
-     header-BEARING arm of chat-shell.css's #650 split; the headerless arm survives for the rest of the
-     fleet, untouched. */
-  [data-part='pane-nav-bar'] {
-    display: flex;
-    flex: 1 1 auto;
-    min-inline-size: 0;
-  }
-  ui-tabs[data-part='pane-nav'] {
-    padding-inline: var(--ui-bar-inline-inset);
-    flex: 1 1 auto;
-    min-inline-size: 0;
-  }
-
-  /* GH #665, ADR-0179 Amendment addendum (Kim's 2026-08-10 follow-on ruling, dated note added there —
-     "the Amendment is ratified; append, never rewrite") — at and above the triple line the pane nav is
-     redundant (all three places already paint side by side) and goes away; below it the nav is the ONLY
-     drill-in vehicle and stays. Below the pane's own display:none, agent-admin never composes a second
-     nav — so this can't reuse the pane-holder's OWN `@container` block above (a DIFFERENT container:
-     `[data-part='pane-nav-bar']` is the header slot's own box, a SIBLING of the canvas the holder lives
-     in, not a descendant of it — no `@container` query can cross that boundary regardless of naming).
-     `container-type: inline-size` lands on the composed `ui-super-shell` instead (above, alongside this
-     file's other two deliberate `--ui-agent-admin-*`-only exceptions) — the nearest ancestor BOTH the bar
-     and the holder share. `54rem`, not `52.5rem`: measured, both engines — the composed shell's own
-     inline-size is always exactly the pane holder's own `52.5rem` line PLUS one full `shell-gutter` on
-     each side (the canvas box's own padding, `--ui-agent-admin-shell-gutter` × 2 = 1.5rem at the default
-     scale) — 54rem here fires at the IDENTICAL real pixel moment 52.5rem does on the holder (864px outer
-     = 840px holder, both measured together at the triple's own entry line), so the nav vanishes on the
-     exact frame the triple starts painting, never a beat early or late. Like the triple line itself
-     (ADR-0150/0155's `SHELL_COMPACT_BREAKPOINT`), this is a fixed literal, not scale-derived — the fleet's
-     own precedent for THAT line already treats it as unscaled, and the constant 1.5rem gutter offset
-     between the two containers only holds by riding the same assumption. */
-  @container (inline-size >= 54rem) {
-    [data-part='pane-nav-bar'] {
-      display: none;
-    }
-    /* Kim's live-screenshot follow-on (2026-08-10) — `display:none` on the CONTENT above empties the
-       header bar, but super-shell's OWN structural box, `[data-part='bar']`, still reserves a real,
-       painted band: `min-block-size: var(--ui-super-shell-bar-size)` (super-shell.css) is a floor that
-       holds regardless of what its content computes to, ADR-0166 cl.3's documented "bars are never
-       hidden at any band" law — `display:none`-ing the BAR ITSELF (not just its content) would violate
-       that fleet-wide invariant every OTHER super-shell consumer relies on (the radius-squaring `:has()`
-       rules, the seam border math, `super-shell-bar-seam.browser.test.ts`'s own nested-shell probe all
-       assume the bar box is a permanent structural fixture). `--ui-super-shell-bar-size` is the
-       DOCUMENTED consumer-repoint seam instead (super-shell.css's own comment: "a taller sibling … or a
-       consumer repointing `--ui-super-shell-bar-size`") — repointing it to `0` on the header bar
-       specifically collapses the reserved floor to nothing while leaving the box, its `:has()`-matched
-       DOM presence, and its seam border all structurally untouched (a hairline border may still paint at
-       zero height — the seam law is retract-the-fill-never-the-border, unchanged from the no-divider
-       precedent above). Scoped to `[data-bar='header']` alone: agent-admin composes no footer bar, and a
-       blanket repoint would reach one if some future consumer's shell ever grew one here. */
-    [data-part='bar'][data-bar='header'] {
-      --ui-super-shell-bar-size: 0;
-    }
-    /* `screens:layout-checker` finding 3 (SHIPPABLE grade, MINOR) — measured: the seam survives the
-       `bar-size` collapse just above as a real, painted 1px hairline across the now-headerless band (the
-       comment on that rule was wrong to call this "unchanged from the no-divider precedent" without
-       actually retracting it the SAME way). The no-divider ruling's own law applies here verbatim: a bar
-       that no longer has content to seam OFF FROM is exactly the "regions separate by spacing and surface
-       alone" case, so the ink retracts — `border-block-end-color: transparent`, never `border-block-end:
-       none` (retract-don't-delete: the border-BOX geometry stays, only the resting ink goes, matching
-       `--ui-split-divider-ink: transparent`'s own shape above). `ui-super-shell` TYPE-PREFIXED, not a bare
-       `[data-part='bar'][data-bar='header']` — the SAME scope-proximity tie this file already documents
-       twice over (search "scope proximity" above): super-shell.css's own `border-block-end` rule ties this
-       one on raw specificity, and its OWN `@scope (ui-super-shell)` scope root sits far closer to the bar
-       than this file's `@scope (ui-agent-admin)` root does — the type selector breaks the tie on
-       specificity instead of leaving it to proximity. */
-    ui-super-shell [data-part='bar'][data-bar='header'] {
-      border-block-end-color: transparent;
-    }
-  }
-
-  /* ADR-0179 cl.3 (LLD §2/§6) — the pairing. The MD itself owns the split/resize/drill-in; this file adds
-     only what a consumer owes: the fill, each region's own gutter + scroll, and the back suppression. */
-  [data-part='pane-pair'] {
+  /* GH #686's Amendment (LLD §16.1/§16.5) — the Settings region: a plain sibling `div` now, never a
+     `ui-master-detail-pane` (the MD wrapper role retires with the whole pairing vehicle). No inline padding
+     of its own — the row `gap` above supplies inter-column spacing uniformly now, so there is no more
+     asymmetric leading/trailing edge to hand-tune per seam (the old MD-era comment on this rule documented
+     exactly that hand-tuning; the flat three-sibling layout doesn't need it). SCROLLING, unlike the retired
+     MD-wrapper era ("the wrapper owns the scroll"), is this region's OWN job now — no wrapping split-pane
+     exists to own it any more (measured regression risk named explicitly: `scrollTop` staying 0 with
+     overflowing content is exactly the GH #130 class of bug, agent-admin-app-scroll.browser.test.ts). The
+     scrollbar-chrome hide (GH #665's app-chrome convention, this file's own `--ui-agent-admin-scrollbar-
+     width` token) needs its own explicit repoint here too — it used to ride the composed `ui-split-pane`'s
+     public `--ui-split-pane-scrollbar-width` knob (below), which this element no longer wraps the region
+     in. */
+  [data-part='settings-pane'] {
     display: flex;
     flex-direction: column;
-  }
-  /* Each region owns its gutter and its internal rhythm; SCROLLING is deliberately NOT declared here —
-     `ui-master-detail-pane`'s own sheet states the family law ("overflow is left to the wrapping
-     split-pane, which already sets overflow: auto"), and adding a second scroller inside it produced a
-     region that grew with its content instead of scrolling (measured: `scrollTop` stayed 0 with 3000px of
-     overflow, agent-admin-app-scroll.browser.test.ts).
-     GH #665 — this shared rule used to carry a full, four-side `shell-gutter` padding: a SECOND gutter
-     layer stacked on top of the canvas's own outer one (the chat conversation, `[data-part='pane-holder']
-     > ui-conversation` above, carries none of its own and relies on the canvas gutter alone), which is
-     what read as ragged tops/bottoms — author/settings content started a full gutter further in than
-     chat's, on every edge. `padding-block: 0` below drops that redundant top/bottom layer so all three
-     columns' content shares chat's own top line and bottom rhythm (adding the padding to CHAT instead was
-     tried and reverted: it costs the composer 24px of the 20ch floor it needs at the triple's own tightest
-     measured band, regressing the GH #662 density gate — dropping the extra layer here costs nothing, it
-     only touches vertical inset). The two panes' OWN inline padding stays (below), asymmetric now instead
-     of uniform: `pane-holder` never declared a `gap` for its row, so author's leading edge is still the
-     ONLY thing separating it from chat and needs its full gutter; the split between author and settings
-     already has its OWN separator track, so pairing full gutters on BOTH sides of that seam produced ~25px
-     against the chat↔author seam's ~12 (GH #665's "uneven gutters") — dropping the inner-facing side of
-     each (author's trailing edge, settings' both edges) leaves ONE full-gutter contributor per seam
-     (author's leading edge for chat↔author; settings' leading edge + the separator's own hairline track
-     for author↔settings), closing the two gaps to within that hairline of each other, and drops settings'
-     own trailing edge in favor of the canvas's outer gutter it already sits inside — the same single-layer
-     treatment chat's own leading edge already gets. */
-  /* GH #666 (Kim's 2026-08-10 additional pixel note: the settings sub-nav's underline sits flush against
-     the first section heading, in BOTH the narrow panel and the docked pair) — root cause, measured in
-     both engines: the TAG is load-bearing in this selector, and its absence made `display: flex` below a
-     dead declaration ever since these regions moved into `ui-master-detail-pane` (ADR-0179).
-     `master-detail-pane.css` declares `@scope (ui-master-detail-pane) { :scope { display: block } }`.
-     Inside `@scope`, `:scope` is a pseudo-class — (0,1,0) — and a bare `[data-part='settings-pane']` here
-     is ALSO (0,1,0). At equal specificity the cascade's SCOPE PROXIMITY step decides, and it outranks
-     source order: the pane's own sheet is scoped to the element ITSELF (proximity 0) while this sheet is
-     scoped to `ui-agent-admin` several levels up, so `display: block` won no matter which sheet loaded
-     last. `gap`/`flex-direction` landed (nothing competed for them) and then did nothing, because a block
-     box has neither — which is exactly the hairline Kim measured: the declared 16px never applied.
-     Adding the tag makes this (0,1,1), and specificity DOES outrank scope proximity (verified in Chromium
-     AND WebKit with the real two-scope configuration, not assumed from the spec text). Same class of trap,
-     same remedy, as the back-affordance rule further down — that one already documents "SPECIFICITY is
-     load-bearing here" against `master-detail.css`; this is its sibling against `master-detail-pane.css`. */
-  ui-master-detail-pane[data-part='author-pane'],
-  ui-master-detail-pane[data-part='settings-pane'] {
-    display: flex;
-    flex-direction: column;
+    box-sizing: border-box; /* matches the chat/copilot conversations' own border-box (conversation.css) — an equal-thirds flex row needs one box model, not a mixed one */
     gap: var(--ui-agent-admin-section-gap);
-    min-block-size: 0;
-    /* Fill the split-pane wrapper rather than shrink-wrapping: without this the two regions size to their
-       own content and the wide pair reads ragged (measured 226px of Author beside 543px of Settings in a
-       800px-tall frame). The wrapper owns the scroll (see above), so `100%` here is pure fill, not a
-       second scroller. */
-    block-size: 100%;
-    padding-block: 0;
-    padding-inline-start: var(--ui-agent-admin-shell-gutter);
-    padding-inline-end: 0;
+    overflow-y: auto;
+    scrollbar-width: var(--ui-agent-admin-scrollbar-width);
   }
-  [data-part='author-pane'] > ui-conversation {
-    flex: 1 1 auto;
-    min-block-size: 0;
-  }
-  [data-part='author-pane'] > [hidden],
+  /* GH #197's own fix, re-anchored: the settings SECTIONS' `[data-role='…-content']` rule below declares
+     `display: flex` (an AUTHOR rule), which — same origin, and at least as specific as the UA's own
+     `[hidden] { display: none }` — wins the cascade regardless of the JS-set `hidden` property
+     (`#applySettingsSection`) unless something re-asserts `none` at equal-or-higher specificity. The retired
+     `ui-master-detail-pane` wrapper era carried exactly that override (`[data-part='author-pane'] >
+     [hidden], [data-part='settings-pane'] > [hidden] { display: none }`); GH #686's Amendment drops the
+     wrapper but the override is still owed — scoped to the settings-pane's own children only. */
   [data-part='settings-pane'] > [hidden] {
-    display: none;
-  }
-
-  /* LLD §2, the back-affordance row — the pane nav is the ONE nav vocabulary (#651's whole point), and
-     master-detail's own back flips its internal `#view` WITHOUT touching `selected`, which would desync
-     the nav's truth. Suppressed rather than removed: no MD API change in this family (§10). The cleaner
-     fleet seam (a `back="none"` attribute) is booked in §15 for the first second consumer.
-     SPECIFICITY is load-bearing here, and the settings.css single-section rule is the precedent: inside
-     `@scope`, `:scope` counts as a pseudo-class, so master-detail.css's narrow reveal
-     (`:scope[data-view='detail'] > ui-split > [data-role='detail'] > [data-part='back']`) sits at
-     (0,4,1) — a plain `[data-part='pane-pair'] [data-part='back']` (0,2,0) simply loses, measured
-     computing `flex` in both engines before this rule took its current shape. The selector below sits at
-     (0,4,2) and wins on merit, no `!important`.
-
-     The child chain is also exact for the reason master-detail.css's own narrow rules now are (GH #651's
-     nesting finding): `ui-settings` composes its OWN `ui-master-detail` inside the settings region, and a
-     descendant selector here would suppress THAT one's back affordance too — the one the settings
-     rail|panel drill-in genuinely needs at narrow. */
-  ui-master-detail[data-part='pane-pair'][data-view] > ui-split > [data-role='detail'] > [data-part='back'] {
     display: none;
   }
 
