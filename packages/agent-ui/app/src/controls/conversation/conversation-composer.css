@@ -100,6 +100,10 @@
     border-radius: var(--ui-conversation-composer-radius);
     font-size: var(--ui-conversation-composer-font);
     line-height: var(--ui-conversation-composer-line-height);
+    /* GH #665 — the query subject for the picker triggers' own narrow-host compact mode (see
+       `[data-part='options']`'s comment below): the composer's OWN inline-size, the own-container-width
+       law the shell family's band ladder already uses, never a viewport media query or a ResizeObserver. */
+    container-type: inline-size;
     cursor: text;
   }
 
@@ -210,6 +214,24 @@
     display: none;
   }
 
+  /* GH #665 (Kim's ruling, superseding this file's own first attempt — a retired `overflow-x: auto` arm:
+     real horizontal scrollbars under the action row at the triple's narrow columns read as WORSE than the
+     crush it fixed) — a narrow-host compact mode for the picker triggers: the LABEL collapses, never the
+     row. `container-type: inline-size` (the composer's own `:scope` rule, above) makes the composer's own
+     inline-size the query subject — the same own-container-width law the shell family's band ladder
+     already uses (agent-admin.css's "THE BAND LADDER" comment), not a viewport media query or a
+     ResizeObserver. The container-query rule further down (after the picker trigger tokens) names the
+     line as a LITERAL `21rem` — custom properties inside an `@container`/`@media` condition are not
+     resolved (verified: fails identically in both engines, unlike a var() used as a property VALUE),
+     which is also why every OTHER band line in this fleet (agent-admin.css's 52.5rem/40rem) is a literal,
+     never a token. 21rem: measured, both engines — below it a full-width Models+Effort pair (their own
+     natural, UNSHRUNK content width) no longer fits beside the mic/send pair without the crush this
+     closes; above it there is real slack, so the label stays. That rule targets `[data-part='label']`
+     specifically (NOT the `icon-only` structural attribute, button.css's five-anatomy law): the trigger
+     keeps its full leading-icon+label+trailing-caret DOM shape at every width, so the accessible name (the
+     label's own text, still in the light DOM, merely zero-width and clipped) survives compaction untouched
+     — a screen reader announces "Haiku 4.5" either way, only the SIGHTED rendering compacts. */
+
   /* The Provider/Models/Effort/Mode trigger pills (GH #257 widened the original Models/Effort pair) —
      `variant="soft"` gives the right STRUCTURAL treatment (a tonal pill), but ui-button's own soft/ghost
      variants are PRIMARY-family by design (button.css's own "colour channel, default family = primary"
@@ -226,6 +248,48 @@
     --ui-button-bg-hover: var(--md-sys-color-neutral-container);
     --ui-button-bg-active: var(--md-sys-color-neutral-container-high);
     --ui-button-ink: var(--ui-conversation-composer-ink-variant);
+  }
+
+  /* GH #665 (Kim's ruling) — the compact collapse itself, keyed off the composer's own `:scope`
+     container-type above (its comment names the `21rem` line). Only `[data-part='label']` is touched —
+     the trigger keeps its full leading-icon+label+trailing-caret light-DOM shape at every width (see that
+     same comment for why NOT the `icon-only` structural attribute): `max-inline-size: 0` collapses the
+     label's rendered box to nothing (the grid track it occupies, already `min-inline-size: 0` in
+     button.css's own ADR-0133 label rule, shrinks to match), `overflow: hidden` keeps the clipped text out
+     of the paint, and the trigger's own `inline-size` (never set explicitly — host-as-grid, ADR-0006)
+     shrinks to fit its two remaining icon-sized cells. The label's TEXT NODE is untouched, so the
+     accessible name (a screen reader's "Haiku 4.5"/"Effort: Medium") survives compaction — only the
+     sighted rendering compacts, and only for the picker triggers (mic/send are already icon-only by
+     design, GH #257, and never had a label to collapse).
+     `ui-button` TYPE-PREFIXED, not a bare `[data-picker] [data-part='label']` — the tabs.css/agent-admin.css
+     precedent (search "scope proximity" in either file): button.css's OWN `:scope > [data-part='label']`
+     rule (inside `@scope (ui-button)`) ties this rule on RAW specificity (both (0,2,0) — two attribute-
+     class selectors apiece), and when two `@scope` blocks tie on specificity the CLOSER scope root wins —
+     button's own scope root is the button itself (distance 1 to the label), this file's scope root is the
+     whole composer (many hops further), so an equal-specificity rule here would silently lose regardless of
+     source order (verified: `max-inline-size` measured `100%`, the UNCOLLAPSED default, before this type
+     prefix). The extra type selector breaks the tie on RAW specificity instead of relying on proximity. */
+  @container (inline-size < 21rem) {
+    ui-button[data-picker] [data-part='label'] {
+      max-inline-size: 0;
+      overflow: hidden;
+    }
+    /* Measured, both engines: at the triple's own tightest real column (the composer pinned near its 20ch
+       floor) two labelless-but-still-caret'd triggers plus Send still overflowed the row by ~18px — two
+       icon-CELL-plus-caret-CELL pills genuinely do not fit that budget. The trailing caret goes too: a real
+       `display: none` (not a width collapse — button.css's own trailing-adornment cell rule sets a fixed
+       `inline-size: var(--ui-button-icon)` there, which would otherwise hold its ground regardless of any
+       override short of removing the box outright). `ui-button`'s own `[leading|label|trailing]` grid-template stays
+       `auto 1fr auto` (`:has()` matches DOM presence, not paintedness — the caret element is still there,
+       merely hidden), but a `display:none` grid item is excluded from placement entirely, so the two
+       remaining items (icon, now-empty label) auto-place into the first two tracks and the empty trailing
+       `auto` track — nothing left to size against — collapses to zero on its own; no separate override
+       needed for it. The trigger reads as a true single-icon pill; `aria-haspopup`/`aria-expanded`
+       (ui-menu's own ARIA wiring, unaffected by any of this) still carry the "this opens a menu" meaning a
+       sighted caret otherwise would. */
+    ui-button[data-picker] [data-role='caret'] {
+      display: none;
+    }
   }
 
   /* The mic/send icon buttons — BOTH neutral ghost (Kim's ruling): the ghost STRUCTURE (transparent idle,

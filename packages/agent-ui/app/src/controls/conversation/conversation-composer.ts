@@ -420,6 +420,12 @@ export class UIConversationComposerElement extends UIElement {
       this.#markPickerSelection(this.#modelsMenu, selected)
     }
     this.#modelsTrigger!.textContent = options.find((o) => o.id === selected)?.label ?? 'Models'
+    // GH #665 (Kim's ruling) — the leading glyph the composer's own narrow-host compact mode collapses
+    // to (conversation-composer.css's `21rem` container query): `list` is the closest fit the fleet's
+    // curated Phosphor subset (icons.gen.ts, ADR-0066) ships today for "choose from a set" — there is no
+    // dedicated model/cpu glyph in that set. Re-appended every rewrite, matching `#appendCaret`'s own
+    // documented reason (`trigger.textContent =` above wipes every prior child, this one included).
+    this.#appendLeadingIcon(this.#modelsTrigger!, 'list')
     this.#appendCaret(this.#modelsTrigger!)
   }
 
@@ -450,6 +456,9 @@ export class UIConversationComposerElement extends UIElement {
       this.#markPickerSelection(this.#effortMenu, selected)
     }
     this.#effortTrigger!.textContent = options.find((o) => o.id === selected)?.label ?? 'Effort'
+    // GH #665 — see `#syncModelsPicker`'s identical comment. `fast-forward` (intensity/push-harder) is the
+    // closest fit the curated set ships for a reasoning-effort dial; there is no dedicated gauge glyph.
+    this.#appendLeadingIcon(this.#effortTrigger!, 'fast-forward')
     this.#appendCaret(this.#effortTrigger!)
   }
 
@@ -542,6 +551,23 @@ export class UIConversationComposerElement extends UIElement {
     this.#optionsLeading!.append(menu) // connects `menu` — its OWN connected() now runs, forcibly re-tagging `trigger`'s data-part
     trigger.setAttribute('data-picker', part)
     return { menu, trigger }
+  }
+
+  /** GH #665 (Kim's ruling) — a leading glyph on the Models/Effort picker triggers ONLY (`#syncModelsPicker`/
+   *  `#syncEffortsPicker` are the two callers): the icon the composer's own narrow-host compact mode
+   *  (conversation-composer.css's `21rem` container query) collapses TO once the label vanishes, so a
+   *  compacted trigger still says WHICH picker it is rather than reading as a bare caret. Re-appended every
+   *  label rewrite for the SAME reason `#appendCaret` below re-appends its own caret — `trigger.textContent
+   *  =` wipes every prior child, this one included; button.ts's own heal pass then re-wraps whatever stray
+   *  text node the rewrite left as the fresh `[data-part='label']`, and both adornments land back in their
+   *  slots regardless of re-append order (button.css's `:has()` grid keys off SLOT presence, not source
+   *  order). */
+  #appendLeadingIcon(trigger: UIButtonElement, glyph: string): void {
+    const icon = document.createElement('ui-icon')
+    icon.setAttribute('slot', 'leading')
+    icon.setAttribute('data-role', 'icon')
+    icon.setAttribute('glyph', glyph)
+    trigger.prepend(icon)
   }
 
   /** A trailing caret glyph on a picker trigger — re-appended on every label rewrite since `textContent =`

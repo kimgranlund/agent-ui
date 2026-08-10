@@ -126,8 +126,14 @@ function mountAgentAdminAt(widthPx: number): { wrapper: HTMLElement; el: UIAgent
 }
 
 describe('ui-agent-admin cross-engine smoke — the three-place shell grammar (ADR-0179: pane nav + the master-detail pairing)', () => {
-  it('wide (≥640px): the pane nav paints three real tabs in the header; the retired six-entry narrow-tabs strip does not exist at all', async () => {
-    const { el } = mountAgentAdminAt(1200)
+  // GH #665, ADR-0179 Amendment addendum (Kim's 2026-08-10 follow-on ruling) — the pane nav is redundant
+  // once the triple paints all three places at once and goes away at that line (54rem outer/864px here,
+  // the composed shell's own inline-size — see agent-admin.css's "54rem" comment for why that number, not
+  // 52.5rem, on THIS element). 700px keeps this probe below that line: real pane-nav geometry, in the
+  // band where the nav is still the pairing's only drill-in vehicle, unaffected by the wide-hide rule
+  // this same GH also added (a SEPARATE probe, "the pane nav vanishes…" below, owns that line).
+  it('wide (≥640px, below the wide-hide line): the pane nav paints three real tabs in the header; the retired six-entry narrow-tabs strip does not exist at all', async () => {
+    const { el } = mountAgentAdminAt(700)
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
     const nav = el.querySelector('[data-part="pane-nav"]') as HTMLElement
     expect(getComputedStyle(nav).display).not.toBe('none')
@@ -416,8 +422,10 @@ describe('ui-agent-admin cross-engine smoke — the three-place shell grammar (A
 })
 
 describe('ui-agent-admin cross-engine smoke — the settings region renders inside the pairing (ADR-0179)', () => {
+  // GH #665 — below the wide-hide line (700px, see the "wide (≥640px, below the wide-hide line)" test's
+  // own comment); mountAgentAdmin()'s 1200px default sits ABOVE it, where the nav pane vanishes by design.
   it('the pane nav and the settings region each occupy a non-zero box, the nav above the region', () => {
-    const { el } = mountAgentAdmin()
+    const { el } = mountAgentAdmin('Agent', 700)
     const nav = (el.querySelector('[data-part="pane-nav"]') as HTMLElement).getBoundingClientRect()
     const region = (el.querySelector('[data-part="settings-pane"]') as HTMLElement).getBoundingClientRect()
     for (const box of [nav, region]) {
@@ -623,15 +631,32 @@ describe('ui-agent-admin cross-engine smoke — the Catalogs library section (AD
 })
 
 describe('ui-agent-admin cross-engine smoke — canvas/region gutter is module-derived, not a silently-defeatable literal (component-reviewer finding)', () => {
-  it('[data-part="canvas"] and both master-detail regions compute the SAME 12px (0.75rem) leading padding — nothing gates this today, and under @scope cascade rules a future innocuous `padding: 0` on a shared rule would silently defeat it with every other gate green', () => {
+  it('[data-part="canvas"] and both master-detail regions compute the SAME 12px (0.75rem) leading INLINE padding — nothing gates this today, and under @scope cascade rules a future innocuous `padding: 0` on a shared rule would silently defeat it with every other gate green', () => {
     const { el } = mountAgentAdmin()
     const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
     const settings = el.querySelector('[data-part="settings-pane"]') as HTMLElement
     const author = el.querySelector('[data-part="author-pane"]') as HTMLElement
     for (const part of [canvas, settings, author]) {
+      expect(getComputedStyle(part).paddingInlineStart).toBe('12px')
+    }
+  })
+
+  // GH #665 — the BLOCK half of the old combined assert above is retired, not merely loosened: it used to
+  // pin author/settings' own top padding at the SAME 12px as canvas's, which is exactly the double-layered
+  // gutter ("ragged tops") Kim's screenshot caught — author/settings sat a full canvas-gutter PLUS their
+  // own gutter below the chat conversation's un-padded top. Canvas alone now carries the block gutter for
+  // all three triple columns (the chat conversation, relying on it exclusively, is unchanged); author and
+  // settings drop their own block padding to match it — this probe pins THAT law so a future `padding-block:
+  // var(--ui-agent-admin-shell-gutter)` re-add on the shared rule (the exact regression the retired half
+  // guarded against, just inverted) fails loudly instead of silently re-raggeding the triple.
+  it('author/settings carry NO OWN block padding — the canvas gutter alone sets their vertical inset, matching the chat conversation', () => {
+    const { el } = mountAgentAdmin()
+    const settings = el.querySelector('[data-part="settings-pane"]') as HTMLElement
+    const author = el.querySelector('[data-part="author-pane"]') as HTMLElement
+    for (const part of [settings, author]) {
       const cs = getComputedStyle(part)
-      expect(cs.paddingInlineStart).toBe('12px')
-      expect(cs.paddingBlockStart).toBe('12px')
+      expect(cs.paddingBlockStart).toBe('0px')
+      expect(cs.paddingBlockEnd).toBe('0px')
     }
   })
 })
@@ -1550,8 +1575,9 @@ describe('ui-agent-admin cross-engine smoke — the pane nav (ADR-0179 cl.1)', (
     return parseFloat(used)
   }
 
+  // GH #665 — below the wide-hide line (700px; mountAgentAdmin()'s 1200px default sits above it).
   it('paints as a real strip with three genuinely on-screen tabs, armed or not (the always-present Author place)', async () => {
-    const { el } = mountAgentAdmin()
+    const { el } = mountAgentAdmin('Agent', 700)
     await el.updateComplete
     const { strip, tab } = nav(el)
     const stripBox = strip.getBoundingClientRect()
@@ -1571,8 +1597,10 @@ describe('ui-agent-admin cross-engine smoke — the pane nav (ADR-0179 cl.1)', (
   // border-box screen-x measurement is frame-independent (the shipped 122–124 adjacency probe's own
   // technique); anti-vacuous because the resolved inset is asserted to be real slack first, so a flush
   // layout cannot pass with a zero delta.
+  // GH #665 — below the wide-hide line (700px; mountAgentAdmin()'s 1200px default sits above it, where
+  // the strip this probe measures no longer exists).
   it('the strip`s first tab starts ONE header inset in from the bar`s own edge (the #650 rhythm, repointed)', async () => {
-    const { el } = mountAgentAdmin()
+    const { el } = mountAgentAdmin('Agent', 700)
     await el.updateComplete
     const bar = el.querySelector('[data-part="bar"][data-bar="header"]') as HTMLElement
     expect(bar, 'the admin composes a real header now — the #650 split\'s header-BEARING arm').not.toBeNull()
@@ -1751,8 +1779,10 @@ describe('ui-agent-admin cross-engine smoke — the settings sub-nav grouping (L
     expect(visibleRoles(el)).toEqual([SECTIONS.find(([label]) => label === hiddenLabel)![1]])
   })
 
+  // GH #665 — below the wide-hide line (700px; mountAgentAdmin()'s 1200px default sits above it, where
+  // the pane nav this probe cross-compares against no longer paints real geometry).
   it('the sub-nav holds the SAME metric register as the pane nav above it — one strip grammar, two levels (the cross-strip equality method, extended)', async () => {
-    const { el } = mountAgentAdmin()
+    const { el } = mountAgentAdmin('Agent', 700)
     await el.updateComplete
     const paneNav = el.querySelector('[data-part="pane-nav"]') as HTMLElement
     const subNav = strip(el)
@@ -2100,6 +2130,22 @@ describe('ui-agent-admin — the wide TRIPLE dock (GH #662, ADR-0179 cl.1 Amendm
     expect(holder.getAttribute('data-pane')).toBe('author')
   })
 
+  // GH #665, ADR-0179 Amendment addendum (Kim's 2026-08-10 follow-on ruling) — the pane nav is redundant
+  // once all three places already paint side by side, and goes away exactly on the SAME line the triple
+  // itself engages: below it the nav is the drill-in's only vehicle and stays (a separate probe, "the
+  // pane nav (ADR-0179 cl.1)" describe block above, pins that band unaffected); at and above it, gone.
+  it('the pane nav vanishes AT the same 52.5rem line the triple engages — one line, not two', async () => {
+    const atLine = await mountTripleAt(TRIPLE_AT)
+    const navBarAtLine = atLine.querySelector('[data-part="pane-nav-bar"]') as HTMLElement
+    expect(getComputedStyle(navBarAtLine).display, 'gone AT the line, the same frame the triple starts painting').toBe('none')
+    expect(navBarAtLine.getBoundingClientRect().height).toBe(0)
+
+    const belowLine = await mountTripleAt(TRIPLE_BELOW)
+    const navBarBelowLine = belowLine.querySelector('[data-part="pane-nav-bar"]') as HTMLElement
+    expect(getComputedStyle(navBarBelowLine).display, 'two pixels below the line the nav is still the ONLY drill-in vehicle').not.toBe('none')
+    expect(navBarBelowLine.getBoundingClientRect().height, 'a real, on-screen strip').toBeGreaterThan(0)
+  })
+
   it('TWO PIXELS BELOW the line: the band collapses back to one place — the ladder is a line, not a slope', async () => {
     const el = await mountTripleAt(TRIPLE_BELOW)
     const { holder, chat, pair } = partsOf(el)
@@ -2180,6 +2226,194 @@ describe('ui-agent-admin — the wide TRIPLE dock (GH #662, ADR-0179 cl.1 Amendm
     expect(s.left - a.right, 'the regions sit hairline-adjacent — no painted rule occupies the seam').toBeLessThanOrEqual(sepBox.width + 1)
   })
 
+  // GH #665 — the four screenshot defects, each pinned by its own probe (extending the screen-x/
+  // displacement idiom above rather than re-deriving it): a shared CONTENT top line (not merely the
+  // region boxes', which the AT-the-line test above already covers), gutter equality between the two
+  // inter-column seams, a visible identity kicker per conversation, and no mid-word composer-label crush.
+  //
+  // `screens:layout-checker` findings 1/2 (SHIPPABLE grade) folded in here: a THIRD kicker now labels the
+  // settings column ("Settings" — the same `#makeRegionKicker`, one labeling system at one level, closing
+  // the gap where the pane-nav's own "Settings" label vanishes at this exact band), and the probe compares
+  // TEXT rects (kicker padding-top offset), not just box tops — box-true/text-false was finding 2's own
+  // bug: a bare box comparison passed even when the settings sub-nav's OWN inset differed from the
+  // kickers'.
+  it('a shared CONTENT top line: all three region kickers — chat, interview, AND settings — land their TEXT on the same y, not just their boxes', async () => {
+    const el = await mountTripleAt(1200)
+    const { chat, author, settings } = partsOf(el)
+    const chatKicker = chat.querySelector('[data-part="region-kicker"]') as HTMLElement
+    const authorKicker = author.querySelector('ui-conversation [data-part="region-kicker"]') as HTMLElement
+    const settingsKicker = settings.querySelector('[data-part="region-kicker"]') as HTMLElement
+    expect(settingsKicker, 'the settings column carries its OWN identity kicker now, not just its sub-nav').not.toBeNull()
+    expect(settingsKicker.textContent?.trim()).toBe('Settings')
+
+    const textTop = (el: HTMLElement): number => el.getBoundingClientRect().top + parseFloat(getComputedStyle(el).paddingTop)
+    const texts = [chatKicker, authorKicker, settingsKicker].map(textTop)
+    for (const [i, label] of ['interview kicker', 'settings kicker'].entries()) {
+      expect(Math.abs(texts[i + 1]! - texts[0]!), `${label}'s own TEXT lands on the test chat kicker's`).toBeLessThanOrEqual(1)
+    }
+    // The settings sub-nav sits one level BELOW its own kicker now (finding 1's "one level" law) — it is
+    // deliberately NOT compared against the kicker line; the pane's own flex `gap` places it, matching the
+    // kicker↔log rhythm one column over (the "doubled rhythm" probe below pins that gap's real value).
+
+    // …and BENEATH the kickers, the two conversation logs still share a bottom rhythm with each other.
+    const chatLog = chat.querySelector('[data-part="log"]') as HTMLElement
+    const authorLog = author.querySelector('ui-conversation [data-part="log"]') as HTMLElement
+    expect(Math.abs(chatLog.getBoundingClientRect().top - authorLog.getBoundingClientRect().top), 'the two conversation logs align with each other, below their shared kicker line').toBeLessThanOrEqual(1)
+  })
+
+  // `screens:layout-checker` finding 4 (SHIPPABLE grade, MINOR) — the kicker's own trailing edge must NOT
+  // double the rhythm the region's own next content already supplies (the log's `--ui-conversation-log-
+  // pad`, or the settings pane's own flex `gap`): the gap from the card's own border to the kicker's TEXT
+  // (one layer) must read the SAME as the gap from the kicker's text to the next real content (also one
+  // layer), not twice it.
+  it('one rhythm, not two: the gap above each kicker matches the gap below it', async () => {
+    const el = await mountTripleAt(1200)
+    const { chat, author, settings } = partsOf(el)
+    for (const [label, card, kicker, next] of [
+      ['chat', chat, chat.querySelector('[data-part="region-kicker"]') as HTMLElement, chat.querySelector('[data-part="log"]') as HTMLElement],
+      ['author', author, author.querySelector('ui-conversation [data-part="region-kicker"]') as HTMLElement, author.querySelector('ui-conversation [data-part="log"]') as HTMLElement],
+      ['settings', settings, settings.querySelector('[data-part="region-kicker"]') as HTMLElement, settings.querySelector('[data-part="settings-nav"]') as HTMLElement],
+    ] as const) {
+      const cardTop = card.getBoundingClientRect().top
+      const kickerTextTop = kicker.getBoundingClientRect().top + parseFloat(getComputedStyle(kicker).paddingTop)
+      const aboveGap = kickerTextTop - cardTop
+      // The kicker's own box bottom is what the region's next content butts against — assert THAT gap
+      // reads close to the gap above the kicker's text, not doubled (the pre-fix defect measured a real
+      // 2× stack here: 32px below vs 16px above).
+      const belowGap = next.getBoundingClientRect().top - kicker.getBoundingClientRect().bottom
+      expect(aboveGap, `${label}: a real gap above the kicker's text`).toBeGreaterThan(4)
+      expect(belowGap, `${label}: the gap below the kicker's box reads as ONE rhythm with the gap above its text, not doubled`).toBeLessThanOrEqual(aboveGap + 2)
+    }
+  })
+
+  // `screens:layout-checker` finding 3 (SHIPPABLE grade, MINOR) — the vacated header bar's own structural
+  // seam border must retract (transparent ink), never paint a stray hairline across a headerless band —
+  // the SAME retract-don't-delete law the no-divider ruling above already applies to the split separators.
+  it('the vacated header bar paints no stray seam hairline — the ink retracts, the border-box geometry does not', async () => {
+    const el = await mountTripleAt(1200)
+    const shell = el.querySelector('ui-chat-shell') as HTMLElement
+    const barHeader = shell.querySelector('[data-part="bar"][data-bar="header"]') as HTMLElement
+    const cs = getComputedStyle(barHeader)
+    expect(cs.borderBottomColor, 'the seam ink is fully transparent, not merely thin').toMatch(/rgba\(0,\s*0,\s*0,\s*0\)|transparent/)
+  })
+
+  it('gutter equality: the chat↔author gap and the author↔settings gap read as ONE rhythm, not two', async () => {
+    const el = await mountTripleAt(1200)
+    const { chat, author, settings } = partsOf(el)
+    const chatLog = chat.querySelector('[data-part="log"]') as HTMLElement
+    const authorLog = author.querySelector('ui-conversation [data-part="log"]') as HTMLElement
+    const settingsNav = settings.querySelector('[data-part="settings-nav"]') as HTMLElement
+    const chatAuthorGap = authorLog.getBoundingClientRect().left - chatLog.getBoundingClientRect().right
+    const authorSettingsGap = settingsNav.getBoundingClientRect().left - authorLog.getBoundingClientRect().right
+    expect(chatAuthorGap, 'a real, positive gutter — not a coincidental zero').toBeGreaterThan(0)
+    expect(Math.abs(chatAuthorGap - authorSettingsGap), 'the two inter-column gaps equal (±1, the split track hairline)').toBeLessThanOrEqual(1)
+  })
+
+  it('each conversation region carries its own visible identity kicker — the test chat and the Builder interview no longer read as two identical empty threads', async () => {
+    const el = await mountTripleAt(1200)
+    const { chat, author } = partsOf(el)
+    const chatKicker = chat.querySelector('[data-part="region-kicker"]') as HTMLElement
+    const authorKicker = author.querySelector('ui-conversation [data-part="region-kicker"]') as HTMLElement
+    expect(chatKicker.getBoundingClientRect().height, 'the test chat kicker paints').toBeGreaterThan(0)
+    expect(authorKicker.getBoundingClientRect().height, 'the interview kicker paints').toBeGreaterThan(0)
+    expect(chatKicker.textContent?.trim()).not.toBe('')
+    expect(authorKicker.textContent?.trim()).not.toBe('')
+    expect(chatKicker.textContent, 'the two regions read as DIFFERENT identities').not.toBe(authorKicker.textContent)
+    // The kicker sits BEFORE the log in reading order — an identity header, not a trailing caption.
+    expect(chatKicker.compareDocumentPosition(chat.querySelector('[data-part="log"]') as HTMLElement) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  // GH #665 (Kim's ruling, superseding this describe block's own first pass — a full-label-never-crushes
+  // assertion): at the triple's own tightest column the composer's action row has no room for two
+  // full-width picker labels beside Send, and Kim's ruling is explicit — "no horizontal scrolling in the
+  // action row, ever." The triggers collapse to icon-only (conversation-composer.css's own `21rem`
+  // container query) instead: never a scroll, never a mid-word crush, and — the actual named acceptance —
+  // the row's own scrollWidth never exceeds its clientWidth at this band, while the MENU POPUP (never
+  // queried by the same container, a real ui-menu overlay in the top layer) keeps full labels regardless.
+  it('the composer’s Models/Effort pickers compact to icon-only at the triple’s own tightest column — no row overflow, popup labels intact', async () => {
+    const el = await mountTripleAt(TRIPLE_AT) // the narrowest real triple — the density table's own binding band
+    const { chat } = partsOf(el)
+    const composer = chat.querySelector('ui-conversation-composer') as HTMLElement
+    const options = composer.querySelector('[data-part="options"]') as HTMLElement
+    // The named acceptance, verbatim: NO overflow in the action row at this band.
+    expect(options.scrollWidth, 'the action row fits its own rail — no horizontal scroll ever').toBeLessThanOrEqual(options.clientWidth)
+
+    const modelsTrigger = composer.querySelector('[data-picker="models"]') as HTMLElement
+    const effortTrigger = composer.querySelector('[data-picker="effort"]') as HTMLElement
+    for (const [name, trigger] of [['Models', modelsTrigger], ['Effort', effortTrigger]] as const) {
+      const label = trigger.querySelector('[data-part="label"]') as HTMLElement
+      expect(label.getBoundingClientRect().width, `${name} trigger's label is fully collapsed (icon-only), not crushed to a sliver`).toBe(0)
+      const icon = trigger.querySelector('[slot="leading"]') as HTMLElement
+      expect(icon.getBoundingClientRect().width, `${name} trigger keeps its leading identity glyph`).toBeGreaterThan(0)
+      // The accessible name survives compaction — the label's own text stays in the light DOM, merely
+      // zero-width, never removed (screen-reader parity: "Haiku 4.5" either way).
+      expect(label.textContent?.trim(), `${name} trigger keeps a real accessible name`).not.toBe('')
+    }
+
+    // The popup itself — a SEPARATE ui-menu overlay, never inside the composer's own container-query
+    // subject — is untouched: opening it still shows full, un-collapsed option labels.
+    const modelsMenu = composer.querySelector('[data-part="models-menu"]') as HTMLElement & { open: boolean }
+    modelsMenu.open = true
+    await el.updateComplete
+    const firstItem = modelsMenu.querySelector('[role="menuitem"]') as HTMLElement | null
+    expect(firstItem, 'the popup opens with real items').not.toBeNull()
+    expect(firstItem!.textContent?.trim(), 'the popup itself never compacts — full labels regardless of the trigger').not.toBe('')
+    modelsMenu.open = false
+  })
+
+  // GH #665 (Kim's live-screenshot follow-on) — the kicker's own rect must inset from ui-conversation's
+  // real, painted border on BOTH axes (not the flush 0/0 the earlier build shipped), and it must not have
+  // MOVED the kicker's own box position (the padding-not-margin choice this same fix made, so the
+  // cross-column shared-top-line probe above stays true unmodified).
+  it('each region kicker insets from its card border on both axes — never flush, never clipped', async () => {
+    const el = await mountTripleAt(1200)
+    const { chat, author } = partsOf(el)
+    for (const [label, region] of [['chat', chat], ['author', author]] as const) {
+      const kicker = region.querySelector('[data-part="region-kicker"]') as HTMLElement
+      const cs = getComputedStyle(kicker)
+      expect(parseFloat(cs.paddingInlineStart), `${label} kicker insets on the inline axis`).toBeGreaterThan(4)
+      expect(parseFloat(cs.paddingBlockStart), `${label} kicker insets on the block axis`).toBeGreaterThan(4)
+      // Both regions read the SAME inset — one shared card-content rhythm, not a per-region guess.
+    }
+    const chatPad = getComputedStyle(chat.querySelector('[data-part="region-kicker"]') as HTMLElement)
+    const authorPad = getComputedStyle(author.querySelector('[data-part="region-kicker"]') as HTMLElement)
+    expect(chatPad.paddingInlineStart).toBe(authorPad.paddingInlineStart)
+    expect(chatPad.paddingBlockStart).toBe(authorPad.paddingBlockStart)
+  })
+
+  // GH #665 (Kim's live-screenshot follow-on) — the pane nav's own `display:none` (above) must not leave
+  // an empty band behind: super-shell's structural header bar carries a `min-block-size` FLOOR
+  // (`--ui-super-shell-bar-size`) independent of its content, ADR-0166 cl.3's "bars are never hidden"
+  // law — a real, measured regression this same fix's OWN box could reintroduce if the floor were left
+  // standing. Collapsed to (at most) its own hairline seam border, never a painted band.
+  it('the vacated pane-nav band genuinely collapses at the triple line — no empty header strip left behind', async () => {
+    const el = await mountTripleAt(1200)
+    const shell = el.querySelector('ui-chat-shell') as HTMLElement
+    const barHeader = shell.querySelector('[data-part="bar"][data-bar="header"]') as HTMLElement
+    expect(barHeader.getBoundingClientRect().height, 'collapsed to (at most) its own seam hairline').toBeLessThanOrEqual(2)
+  })
+
+  // GH #665 (Kim's ruling) — the settings column's own scroller (a real `ui-split-pane`, GH #662's wide
+  // triple dock put one back under the author⇄settings pairing) painted a visible scrollbar the fleet's
+  // app-chrome convention hides everywhere else in this surface — `--ui-split-pane-scrollbar-width` was
+  // simply never wired (split-pane.css's own comment already claimed agent-admin did this). Functional
+  // scroll survives untouched (the agent-admin-app-scroll.browser.test.ts idiom: a real scrollTop write
+  // reaches real overflowing content) — only the OS/engine scrollbar chrome goes.
+  it('the settings scroller hides its scrollbar (the fleet app-chrome convention) — scrolling itself stays fully functional', async () => {
+    const el = await mountTripleAt(1200)
+    const settingsPane = el.querySelector('[data-part="settings-pane"]') as HTMLElement
+    const scroller = settingsPane.closest('ui-split-pane') as HTMLElement
+    expect(scroller, 'the settings pane\'s real scrolling ancestor is a ui-split-pane').not.toBeNull()
+    expect(getComputedStyle(scroller).scrollbarWidth, 'the OS/engine scrollbar chrome is hidden').toBe('none')
+    // Force real overflow (the settings content at the default 600px test height may or may not already
+    // overflow) so the functional-scroll write is never vacuous.
+    scroller.style.maxBlockSize = '100px'
+    await frames()
+    expect(scroller.scrollHeight, 'anti-vacuous: there is real overflowing content to reach').toBeGreaterThan(scroller.clientHeight)
+    scroller.scrollTop = 99999
+    expect(scroller.scrollTop, 'the scroller genuinely scrolls to reach the overflowing content — hiding the chrome never disabled scrolling').toBeGreaterThan(0)
+  })
+
   it('the LIVE-FILL gate at TRIPLE (PR #659’s proof, extended to three-region liveness)', async () => {
     // #659 proved the pair: a held-open Builder turn repaints the docked rail while it streams. The triple
     // owes one more thing — that the third region is not collateral. The test chat must still be PAINTED,
@@ -2251,3 +2485,10 @@ describe('ui-agent-admin — the wide TRIPLE dock (GH #662, ADR-0179 cl.1 Amendm
     expect(chat.getBoundingClientRect().width, 'and it is still painted after the turn').toBeGreaterThan(0)
   })
 })
+
+
+
+
+
+
+
