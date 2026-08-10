@@ -28,8 +28,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import adr_ratify  # noqa: E402
 from adr_ratify import (  # noqa: E402
+    AMENDMENT_HEADER_RE,
     REPAIRS_ISSUE_LABEL,
     REPAIRS_ROW_RE,
+    amendment_body,
+    amendment_booked_repairs,
+    amendment_issue_body,
+    amendment_issue_title,
     booked_repairs,
     checklist,
     issue_body,
@@ -324,8 +329,15 @@ class FakeSubprocess:
     payloads they would have been.
     """
 
-    def __init__(self, root: Path, issue_ok: bool = True) -> None:
+    def __init__(
+        self,
+        root: Path,
+        issue_ok: bool = True,
+        comment_body: str = "ratify ADR-9999",
+        comment_date: str = "2026-08-07T10:00:00Z",
+    ) -> None:
         self.root, self.issue_ok = root, issue_ok
+        self.comment_body, self.comment_date = comment_body, comment_date
         self.calls: list[tuple[list[str], str | None]] = []
 
     def run(self, cmd, capture_output=False, text=False, input=None):  # noqa: A002 — mirrors subprocess
@@ -342,8 +354,8 @@ class FakeSubprocess:
         if cmd[:2] == ["gh", "api"] and cmd[2].endswith("/issues/comments/77"):
             return FakeProc(json.dumps({
                 "user": {"login": "OWNER"},
-                "body": "ratify ADR-9999",
-                "created_at": "2026-08-07T10:00:00Z",
+                "body": self.comment_body,
+                "created_at": self.comment_date,
             }))
         if joined.endswith("repos/OWNER/REPO/issues --input -"):
             if not self.issue_ok:
@@ -484,6 +496,383 @@ class WholeFlipPath(unittest.TestCase):
         self.assertIn("> | **Status** | proposed |", (adr_dir / "9999-fixture.md").read_text())
         self.assertEqual(fake.called("repos/OWNER/REPO/issues --input -"), 0)
         self.assertEqual(fake.called("repos/OWNER/REPO/issues/38/comments --input -"), 0)
+
+
+# ── amendment-ratification mode (GH #664) ──────────────────────────────────────────────────────
+# An ADR's own body may carry a `## Amendment (DATE, **proposed** — Kim ratifies) — TITLE` section
+# — a narrower re-ruling appended after the whole ADR already flipped `accepted`. The whole-ADR
+# flip above only ever touches Status/Ratified-by/README, so it correctly fail-closes on these;
+# this section covers the sibling path that flips ONLY the one Amendment header.
+
+# ADR-0179's REAL amendment section, copied verbatim from its state just BEFORE the 2026-08-10 hand
+# flip this build replaces (`git show 34be0f87^:.claude/docs/adr/0179-agent-admin-three-pane-ia.md`,
+# sliced from `## Amendment` to EOF — that heading runs to the end of the file, no later `## `
+# section). Used to prove the mechanical path reproduces the exact hand flip that already happened.
+ADR_0179_PREFLIP_AMENDMENT_SECTION = (
+'## Amendment (2026-08-10, **proposed** — Kim ratifies) — cl.1\'s WIDE reading becomes the TRIPLE dock `[chat | author-chat | settings]`; cl.3\'s arrangement law extends to three; cl.2\'s selector re-keys from pane to composer ORIGIN\n\n> Append-only, and **proposed**: the Status cell reads `accepted` for the record as a whole and stays\n> byte-untouched — agents never flip status (`.claude/hooks/adr-status-guard.py`), and this amendment\n> carries no ratification of its own until Kim gives one. Every accepted section above is unedited.\n> The build that carries it is GH [#662](https://github.com/kimgranlund/agent-ui/issues/662) (S6 of the\n> GH [#651](https://github.com/kimgranlund/agent-ui/issues/651) family), with the LLD\'s §2/§5 rows\n> re-stated in the same change (`../lld/admin-three-pane-ia.lld.md`).\n>\n> **What this re-rules, precisely.** cl.1\'s *tier* sentence — "places, all three, at every width" —\n> stands; what changes is what "a place" costs at wide. cl.3\'s law — arrangement of the ONE settings\n> region, never duplication, never a runtime reparent — stands and now governs three regions instead\n> of two. cl.2\'s *survive* list stands byte-for-byte; its one SELECTOR sentence is re-ruled. cl.4\n> stands entirely and is in fact what makes the re-keying possible. Nothing in Consequences moves.\n\n**Why cl.1\'s wide reading changes.** cl.1 was ratified against a surface that did not exist yet. The\ndisjoint-places reading was the honest call at intake and the LLD flagged its one visible cost openly\n(§15\'s first risk: "today\'s wide first paint is chat + settings; post-S1-b it is Chat alone", with the\nrecommendation "ship disjoint; show Kim early"). That is exactly what happened — the family shipped,\nKim looked at the finished surface, and ruled the other way (2026-08-10, GH #662): at wide the test\nchat, the Builder interview and the settings rail sit SIDE BY SIDE. This is pixel-truth superseding a\npaper reading, which is the process working, not a defect in it. The `[chat | author | settings]`\nvocabulary cl.1 pinned is unchanged; the three places simply stop taking turns once there is room.\n\n**The amended reading of cl.1.** Three first-class places at every width, arranged in two bands:\n\n- **Below the triple line** — exactly the place the nav names has a box. Chat solo, or the\n  Author⇄Settings pair (itself drilling into one region below the master-detail\'s own 40rem line).\n  cl.1\'s original wide reading survives intact as this band\'s contract.\n- **At and above the triple line** — the TRIPLE DOCK: all three regions paint side by side, in that\n  reading order. The nav still names a place; it no longer gates one.\n\n**cl.3 extended, not stretched.** The triple is arrangement of the same three singleton regions —\nzero duplication, zero runtime reparenting, no second mount of anything. The pane holder becomes a\nflex row of the Chat conversation plus the existing `ui-master-detail`; the master-detail, its two\npane elements and the five section units are byte-identical nodes in both bands. The visibility\nmechanism moves from a `hidden` attribute written by `#applyPane` to a `data-pane` attribute written\nby `#applyPane` and READ by the sheet against the holder\'s own inline-size — which keeps cl.3\'s\n"never a JS layout decision" promise more literally than the attribute model did, since no resize\nwrites anything at all. Dropping the attribute is load-bearing, not incidental: a region that paints\nin the triple must not simultaneously claim to be hidden, and `display:none` removes a non-painting\nregion from the a11y tree exactly as `hidden` did.\n\n**The line: 52.5rem, measured, and the only one available.** `SHELL_COMPACT_BREAKPOINT`\n(ADR-0150/0155) — the band ladder\'s own second line, which is precisely the escalation seam the LLD\n§6 booked for this case ("a named drill-band seam citing `SHELL_COMPACT_BREAKPOINT` … never a third\nnumber"). It is where it is by constraint, not by taste: the master-detail needs 40rem of its own\ncontainer or it drills in and the "triple" silently degrades to a pair, so the Chat column gets the\nremainder, and 52.5rem is the first named line where that remainder still clears the engagement\nfloor. At the line, measured identically in Chromium and WebKit (holder 840px):\n\n| region | box | content | floor (20ch) | margin |\n|---|---|---|---|---|\n| chat | 200px | 198px | 160px | 1.24× (composer 174px, 1.09× — the binding constraint) |\n| author | 320px | 296px | 160px | 1.85× |\n| settings | 320px | 296px | 160px | 1.85× (name field 270px) |\n\nAbove ~61rem the pair stops being floored and the three columns equalise (at a 1176px holder: 393 /\n391 / 391). The floor holds at the line and everywhere above it, so this is BANDING — pair below,\ntriple at and above — not a cram, and no escalation is owed.\n\n**cl.2\'s selector re-keys to ORIGIN — a correctness requirement the triple forced, flagged for Kim as\nthe one contract-touching finding in this slice.** cl.2 ruled that "pane identity replaces `#mode` as\n`#contextFor()`\'s selector". Below the triple line that is sound, because exactly one place paints and\nso "the active place" and "the composer the user can reach" are the same thing. At the triple line they\ncome apart: both composers are on screen and typable at once. Under pane-keying, a turn typed into\nCHAT\'s composer while the nav stood on Author resolved the AUTHORING quadruple — landing in the\ninterview transcript and, gate ON, patching the draft. That is the precise thing cl.4 promises cannot\nhappen ("Chat stays pure test holds by construction, not by policy"), and it was reproduced as a\nnegative control before the fix: the probe fails with `expected \'Concierge\' to be \'Untitled agent\'`\nunder the shipped selector.\n\nThe amended reading: `#contextFor()` is keyed by the **submitting composer\'s origin**. This is cl.4\'s\nown property, not a new one — per-pane composers mean each composer IS a context, permanently, at\nevery band; pane identity was only ever a proxy for it. Consequences:\n\n- **The fence is byte-untouched.** It keys off driving-store identity, never the selector. Origin\n  STRENGTHENS it: the Chat composer cannot resolve `authoringStore` under any pane, band or timing.\n- **cl.2\'s survive list is untouched.** Both conversations, the per-context histories, the session map,\n  the gate conjunct, the GH #145 resets, the apply chain, the Builder persona — all byte-identical.\n- **A named hazard closes for free.** The LLD §8 mid-defer pane-flip misroute (a deferred client turn\n  reading `#contextFor()` at RUN time and routing to whatever place the user had since walked to) is\n  gone: the deferred turn now carries the origin it was spawned from.\n- **`#pane` becomes purely navigational** — it says which place the nav names and nothing else.\n- `origin` is a separate parameter, deliberately never a member of the runner\'s `turn` wire shape\n  (SPEC-N1): which composer a turn came from is this element\'s routing business, not the runner\'s.\n\n**No painted dividers between docked regions** (Kim, GH #662 Findings 2026-08-10). The split\nseparator\'s resting rule unpaints via a token repoint (`--ui-split-divider-ink: transparent` on the\nadmin\'s own splits) — the retract-don\'t-delete pattern: the separator element, its ≥24px hit-slop,\n`role=separator`, tabindex, keyboard step and drag survive untouched, and the hover/drag cue is\ndeliberately LEFT PAINTED so the handle still answers a reach for it. Only the resting ink goes. The\nrepoint must land on the `ui-split` elements themselves — `split.css` declares the token in its own\n`:where(ui-split)` block, and a locally-declared custom property beats an inherited one regardless of\nancestor specificity. Its descendant reach is intended: it covers the triple\'s separators AND the one\ninside `ui-settings`\'s nested rail|panel, so the law holds everywhere in this surface.\n\n**The pane-nav persists at wide** (the slice\'s measured call, Kim-visible). It stays painted and\nmechanically unchanged at every band. Hiding it above the line was the alternative: it buys back one\nheader strip and removes a click that repaints nothing once all three places are already on screen.\nRejected because a resize would then ADD AND REMOVE the surface\'s primary navigation — the worst\ndiscontinuity on offer — and because the nav still does real work at wide: it is the sole vehicle\nbelow the line, and its selection is what a wide→narrow crossing lands on. Deliberately NOT given\nfocus-move mechanics on activation: `ui-tabs` may activate on arrow traversal, so a tab that yanked\nfocus into its region would fight keyboard navigation. If Kim prefers it hidden above the line, that\nis a CSS-only change in this file.\n\n**Alternative considered and rejected: a three-pane split vehicle.** Composing `ui-split` directly with\nthree panes (or widening `ui-master-detail` to a third position) would give a single uniform\narrangement instead of a flex row wrapping a nested master-detail. Rejected: it mints an MD API change\nthis family\'s Non-goals fence off (LLD §10), it discards the narrow drill-in that composing the shipped\nelement buys for free, and the nested reading is what makes the pair band and the triple band the same\nDOM with two sheet readings rather than two arrangements to keep in sync.\n\n**If Kim rules against this**, the fallback is exact: the band rule and the flex row revert (the holder\nreturns to a column with `data-pane` still driving one-place-at-a-time), and cl.1\'s disjoint reading\nstands unchanged. The ORIGIN re-keying should NOT revert with it — it is a defect fix that happens to\nhave been found by the triple, and the pane-keyed selector is unsound the moment two composers can\nshare a screen. The divider unpaint is likewise independent of the arrangement.\n'
+)
+
+# ADR-0170's REAL amendment section, copied verbatim, still **proposed** as of this build — GH
+# #664's own named second live consumer. Used ONLY as a dry-run fixture below; this test suite
+# never ratifies it (Kim ratifies, not a build).
+ADR_0170_AMENDMENT_SECTION = (
+'## Amendment (2026-08-07, **proposed** — Kim ratifies) — cl.6\'s read-only catalog mirror RETIRES: the GH [#541](https://github.com/kimgranlund/agent-ui/issues/541) Surface Options nesting supplies the at-a-glance context structurally\n\n> Append-only, and **proposed**: the Status cell reads `accepted` for the record as a whole and stays\n> byte-untouched — agents never flip status (`.claude/hooks/adr-status-guard.py`), and this amendment\n> carries no ratification of its own until Kim gives one. Every accepted section above is unedited.\n> What this amendment re-rules is exactly **one sentence of cl.6** — "In its place the row shows the\n> active catalog\'s LABEL as read-only trailing text, re-derived in `#applyMasterStates` … so the\n> at-a-glance context beside the A2UI toggle survives". cl.6\'s OTHER two sentences — the bare\n> `ui-select` retires, and keeping it as a second writer is REJECTED — **stand unchanged**, as does\n> the one-writer rule they exist to protect and every other clause (cl.1–5, cl.7, cl.8). The build\n> that carries this amendment is GH [#541](https://github.com/kimgranlund/agent-ui/issues/541) /\n> PR [#550](https://github.com/kimgranlund/agent-ui/pull/550).\n\n**Why the mirror goes.** cl.6 minted the mirror in a layout where it was the ONLY catalog context on\nthe A2UI row: at ratification the picker still lived in a separate "Catalogs" fold far below the\nmodality it configures, so a trailing label was the one thing that answered "which catalog is this\nsurface running?" without scrolling. GH [#488](https://github.com/kimgranlund/agent-ui/issues/488)\nthen moved the picker directly beneath the A2UI row, and GH #541 nests it INSIDE that row\'s own\ndetail zone. The active catalog\'s card now sits one line below the toggle, carrying that identical\nlabel — so the mirror projects a fact the surface already states, adjacently. A `break-down-layout`\ndecomposition of the shipped panel (logged on GH #541) scored this **B5=3, "Default (agent-ui)"\nprojected twice adjacently**, and named the removal as part of the corrective.\n\n**The amended reading of cl.6.** The bare `<select>` retires (unchanged). In its place the row shows\n**nothing** in its trailing slot: the at-a-glance context beside the A2UI toggle is supplied\nSTRUCTURALLY, by the Catalogs section nested directly under the row, rather than by a text mirror of\nit. cl.6\'s rationale is therefore satisfied, not abandoned — the same requirement, met by\ncontainment instead of duplication.\n\n**What changes in the tree** (GH #541\'s build, `packages/agent-ui/app/src/controls/agent-admin/`):\nthe `surface-catalog` span, the `#surfaceCatalogMirror` field, and its `#applyMasterStates`\nre-derivation block are removed; `agent-admin.md` drops the `surface-catalog` part. Nothing else\ncl.6 governs moves — `sanitizeCatalog`, `A2UI_CATALOG_KEY`\'s vocabulary, the Catalogs section\'s\nsole-writer status, and the produce POST body\'s `catalogId` are byte-identical across this change\n(the Non-goals\' standing promise holds).\n\n**The dim goes with it, deliberately.** cl.5\'s `data-kind-disabled` dim on the Catalogs section\nalready expresses "this modality can\'t run" on the very element the mirror\'s own `[data-disabled]`\nwas shadowing — one signal, on the thing being configured, instead of two. The probes that asserted\nthe mirror\'s dim now assert the section\'s, unchanged in intent.\n\n**Alternative considered and rejected: keep the slot, empty it.** Leaving `surface-catalog` in place\nwith no text preserves the part name for a future consumer, but it ships a permanently blank\ntrailing span whose only remaining behavior is a dim no one can see — dead anatomy the descriptor\nwould still have to document truthfully. If a future layout un-nests the picker, re-minting the\nmirror is a smaller change than carrying an empty one until then.\n\n**If Kim rules against this**, the fallback is exact and cheap: restore the span, the field, and the\n`#applyMasterStates` block (one commit\'s revert), and the nesting from GH #541 stands without it —\nthe two changes are independent, and only the duplication argument ties them together.\n'
+)
+
+
+def _amendment_fixture(amendment_section: str, status: str = "accepted") -> str:
+    """Wrap an Amendment section (real or synthetic) in the minimum ADR shape the parser reads."""
+    return (
+        "# ADR-9999 — a fixture\n\n"
+        "> | | |\n"
+        "> |---|---|\n"
+        f"> | **Status** | {status} |\n"
+        "> | **Date** | 2026-08-07 |\n"
+        "> | **Proposed by** | a seat |\n"
+        "> | **Ratified by** | someone, 2026-08-07, via an utterance |\n"
+        "> | **Repairs** | none — a fixture |\n"
+        "> | **Supersedes / Superseded by** | none |\n\n"
+        "## Context\n\nSome context the amendment re-rules.\n\n"
+        f"{amendment_section}"
+    )
+
+
+class AmendmentBodyAndRepairs(unittest.TestCase):
+    """Pure-function coverage for the amendment path's own text-scanning (GH #664)."""
+
+    def test_amendment_body_stops_at_the_next_heading(self) -> None:
+        text = (
+            "## Amendment (2026-08-01, **proposed** — Kim ratifies) — a re-ruling\n\n"
+            "> Some blockquote line.\n\nSome prose that belongs to the amendment.\n\n"
+            "## Consequences\n\nThis belongs to a LATER section and must not be included.\n"
+        )
+        m = AMENDMENT_HEADER_RE.search(text)
+        self.assertIsNotNone(m)
+        body = amendment_body(text, m)
+        self.assertIn("Some prose that belongs to the amendment.", body)
+        self.assertNotIn("LATER section", body)
+
+    def test_amendment_body_runs_to_eof_when_no_later_heading(self) -> None:
+        text = (
+            "## Amendment (2026-08-01, **proposed** — Kim ratifies) — a re-ruling\n\n"
+            "Prose to the end of the file, no further heading.\n"
+        )
+        m = AMENDMENT_HEADER_RE.search(text)
+        body = amendment_body(text, m)
+        self.assertIn("Prose to the end of the file", body)
+
+    def test_no_repairs_label_yields_nothing(self) -> None:
+        self.assertEqual(amendment_booked_repairs("Plain prose, no label at all."), [])
+
+    def test_repairs_label_with_no_bullets_yields_nothing(self) -> None:
+        self.assertEqual(amendment_booked_repairs("**Repairs**: none owed by this amendment."), [])
+
+    def test_repairs_labelled_list_yields_its_items_verbatim(self) -> None:
+        body = (
+            "Some prose ahead of the label, never an item.\n\n"
+            "**Repairs**\n\n"
+            "- `foo.ts` gains a new export\n"
+            "- `bar.md` restates the note\n\n"
+            "Prose after the list, past the blank line, is not an item either.\n"
+        )
+        items = amendment_booked_repairs(body)
+        self.assertEqual(items, ["`foo.ts` gains a new export", "`bar.md` restates the note"])
+
+    def test_a_colon_after_the_label_is_tolerated(self) -> None:
+        self.assertEqual(amendment_booked_repairs("**Repairs**:\n- one item\n"), ["one item"])
+
+    def test_neither_real_amendment_books_anything(self) -> None:
+        # ADR-0179's and ADR-0170's real amendments (above) both carry ordinary prose about repairs
+        # already booked in the header table, never a **Repairs**-labelled bullet list of their own
+        # — so the tool correctly SKIPS filing for both of the two real, live consumers (GH #664's
+        # documented default: "never fabricate one").
+        self.assertEqual(amendment_booked_repairs(ADR_0179_PREFLIP_AMENDMENT_SECTION), [])
+        self.assertEqual(amendment_booked_repairs(ADR_0170_AMENDMENT_SECTION), [])
+
+
+class AmendmentIssueBodies(unittest.TestCase):
+    """Pure composer coverage for the amendment tracking-issue title/body (GH #664)."""
+
+    ITEMS = ["`foo.ts` gains a new export", "`bar.md` restates the note"]
+
+    def test_amendment_issue_title_is_the_fixed_template(self) -> None:
+        self.assertEqual(
+            amendment_issue_title("0170"), "ADR-0170 Amendment: execute the booked repairs"
+        )
+
+    def test_amendment_issue_body_quotes_every_item_verbatim(self) -> None:
+        body = amendment_issue_body(
+            "0170", ".claude/docs/adr/0170-x.md", "cl.6's mirror retires",
+            "https://u", "2026-08-07", self.ITEMS,
+        )
+        for item in self.ITEMS:
+            self.assertIn(f"- [ ] {item}", body)
+        self.assertIn("ADR-0170", body)
+        self.assertIn("cl.6's mirror retires", body)
+        self.assertIn("https://u", body)
+        self.assertIn("2026-08-07", body)
+        self.assertIn("GH #664", body)
+        self.assertIn("stays OPEN", body)
+
+
+class _AmendmentFixtureMixin:
+    """Shared harness for the amendment-mode `main()` tests (GH #664): a fresh temp ADR corpus per
+    call, `main()` run for real with `subprocess` faked — no gh/git/node in earshot.
+    """
+
+    def _fixture_root(self, amendment_section: str, status: str = "accepted"):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        adr_dir = root / ".claude" / "docs" / "adr"
+        adr_dir.mkdir(parents=True)
+        (adr_dir / "9999-fixture.md").write_text(
+            _amendment_fixture(amendment_section, status=status), encoding="utf-8"
+        )
+        (adr_dir / "README.md").write_text(FIXTURE_README, encoding="utf-8")
+        return root, adr_dir
+
+    def _flip(
+        self,
+        root: Path,
+        comment_body: str,
+        url: str = UTTERANCE_URL,
+        dry_run: bool = False,
+        comment_date: str = "2026-08-07T10:00:00Z",
+        issue_ok: bool = True,
+    ):
+        fake = FakeSubprocess(root, issue_ok=issue_ok, comment_body=comment_body, comment_date=comment_date)
+        real_subprocess, real_argv = adr_ratify.subprocess, sys.argv
+        adr_ratify.subprocess = fake
+        argv = ["adr_ratify.py", "ADR-9999", url]
+        if dry_run:
+            argv.append("--dry-run")
+        sys.argv = argv
+        out = io.StringIO()
+        code = None
+        raised: SystemExit | None = None
+        try:
+            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+                try:
+                    code = adr_ratify.main()
+                except SystemExit as exc:
+                    raised = exc
+        finally:
+            adr_ratify.subprocess, sys.argv = real_subprocess, real_argv
+        return code, raised, out.getvalue(), fake
+
+
+class AmendmentFlipPath(_AmendmentFixtureMixin, unittest.TestCase):
+    """The amendment path's whole-`main()` coverage (GH #664) over a synthetic single-candidate
+    fixture — the shape neither real ADR-0179 nor ADR-0170 differs from structurally.
+    """
+
+    SIMPLE_AMENDMENT = (
+        "## Amendment (2026-08-01, **proposed** — Kim ratifies) — a re-ruling of cl.1\n\n"
+        "> Append-only, and **proposed**: the Status cell reads `accepted` for the record as a "
+        "whole and stays byte-untouched.\n\nSome prose, no Repairs list here.\n"
+    )
+
+    def test_flips_only_the_header_status_and_everything_else_untouched(self) -> None:
+        root, adr_dir = self._fixture_root(self.SIMPLE_AMENDMENT)
+        original = (adr_dir / "9999-fixture.md").read_text(encoding="utf-8")
+        code, raised, stdout, fake = self._flip(root, "ratify ADR-9999 amendment")
+        self.assertIsNone(raised, stdout)
+        self.assertEqual(code, 0, stdout)
+
+        new_text = (adr_dir / "9999-fixture.md").read_text(encoding="utf-8")
+        self.assertIn("> | **Status** | accepted |", new_text)  # untouched
+        new_header = (
+            "## Amendment (2026-08-01, **ratified** — OWNER, "
+            f"[utterance]({UTTERANCE_URL}), verified 2026-08-07) — a re-ruling of cl.1"
+        )
+        self.assertIn(new_header, new_text)
+        # nothing else in the file moved — the header line is the ONLY diff
+        expected = original.replace(
+            "## Amendment (2026-08-01, **proposed** — Kim ratifies) — a re-ruling of cl.1",
+            new_header,
+        )
+        self.assertEqual(new_text, expected)
+        # README is never touched by an amendment flip
+        self.assertEqual((adr_dir / "README.md").read_text(encoding="utf-8"), FIXTURE_README)
+        # no repairs booked -> no gh issues/comments calls at all
+        self.assertEqual(fake.called("repos/OWNER/REPO/issues --input -"), 0)
+        self.assertEqual(fake.called("repos/OWNER/REPO/issues/38/comments --input -"), 0)
+
+    def test_dry_run_writes_nothing(self) -> None:
+        root, adr_dir = self._fixture_root(self.SIMPLE_AMENDMENT)
+        original = (adr_dir / "9999-fixture.md").read_text(encoding="utf-8")
+        code, raised, stdout, fake = self._flip(root, "ratify ADR-9999 amendment", dry_run=True)
+        self.assertIsNone(raised, stdout)
+        self.assertEqual(code, 0, stdout)
+        self.assertIn("DRY-RUN", stdout)
+        self.assertIn("nothing to track", stdout)
+        self.assertEqual((adr_dir / "9999-fixture.md").read_text(encoding="utf-8"), original)
+        self.assertEqual(fake.called("repos/OWNER/REPO/issues --input -"), 0)
+
+
+class AmendmentRepairsFilingPath(_AmendmentFixtureMixin, unittest.TestCase):
+    """An amendment that DOES book repairs of its own — the opt-in filing path (GH #664
+    Scope/Open: file booked-repairs artifacts only when the amendment's own text carries a
+    Repairs-shaped list; neither real live consumer does, so this fixture is synthetic).
+    """
+
+    WITH_REPAIRS = (
+        "## Amendment (2026-08-01, **proposed** — Kim ratifies) — a re-ruling that books repairs\n\n"
+        "> Append-only, and **proposed**: boilerplate.\n\nSome prose explaining the re-ruling.\n\n"
+        "**Repairs**\n\n"
+        "- `foo.ts` gains a new export\n"
+        "- `bar.md` restates the note\n"
+    )
+
+    def test_files_an_open_tracking_issue_and_posts_the_checklist_comment(self) -> None:
+        root, adr_dir = self._fixture_root(self.WITH_REPAIRS)
+        code, raised, stdout, fake = self._flip(root, "ratify ADR-9999 amendment")
+        self.assertIsNone(raised, stdout)
+        self.assertEqual(code, 0, stdout)
+
+        issue = fake.payload("repos/OWNER/REPO/issues --input -")
+        self.assertEqual(issue["title"], "ADR-9999 Amendment: execute the booked repairs")
+        self.assertIn("- [ ] `foo.ts` gains a new export", issue["body"])
+        self.assertIn("- [ ] `bar.md` restates the note", issue["body"])
+        self.assertIn("`proposed` \u2192 `ratified`", issue["body"])
+        self.assertIn("GH #664", issue["body"])
+
+        comment = fake.payload("repos/OWNER/REPO/issues/38/comments --input -")
+        self.assertIn("Tracked in #601", comment["body"])
+        self.assertIn("ADR-9999 Amendment", comment["body"])
+        self.assertIn("- [ ] `foo.ts` gains a new export", comment["body"])
+        self.assertIn("filed:  booked-repairs tracking issue OWNER/REPO#601", stdout)
+
+    def test_a_failed_filing_still_exits_zero_and_the_comment_says_so(self) -> None:
+        root, adr_dir = self._fixture_root(self.WITH_REPAIRS)
+        code, raised, stdout, fake = self._flip(root, "ratify ADR-9999 amendment", issue_ok=False)
+        self.assertIsNone(raised, stdout)
+        self.assertEqual(code, 0, stdout)
+        comment = fake.payload("repos/OWNER/REPO/issues/38/comments --input -")
+        self.assertIn("No tracking issue was filed", comment["body"])
+        self.assertNotIn("Tracked in", comment["body"])
+
+
+class AmendmentNegativeControls(_AmendmentFixtureMixin, unittest.TestCase):
+    """Fail-closed coverage for the amendment path (GH #664) — mirrors the whole-ADR flip's own
+    fail-closed discipline: zero or multiple candidates, an utterance that doesn't select this
+    mode, and a mis-targeted utterance all refuse before any write.
+    """
+
+    ALREADY_RATIFIED = (
+        "## Amendment (2026-08-01, **ratified** — someone, [utterance](https://x), "
+        "verified 2026-08-01) — already done\n\nNothing left to ratify here.\n"
+    )
+    TWO_PROPOSED = (
+        "## Amendment (2026-08-01, **proposed** — Kim ratifies) — first re-ruling\n\nProse one.\n\n"
+        "## Amendment (2026-08-02, **proposed** — Kim ratifies) — second re-ruling\n\nProse two.\n"
+    )
+    ONE_PROPOSED = AmendmentFlipPath.SIMPLE_AMENDMENT
+
+    def test_an_already_ratified_amendment_yields_zero_candidates(self) -> None:
+        root, adr_dir = self._fixture_root(self.ALREADY_RATIFIED)
+        original = (adr_dir / "9999-fixture.md").read_text(encoding="utf-8")
+        code, raised, stdout, fake = self._flip(root, "ratify ADR-9999 amendment")
+        self.assertIsNotNone(raised)
+        self.assertIn("carries 0 ", str(raised.code))
+        self.assertEqual((adr_dir / "9999-fixture.md").read_text(encoding="utf-8"), original)
+        self.assertEqual(fake.called("repos/OWNER/REPO/issues --input -"), 0)
+
+    def test_two_proposed_amendments_refuse_to_guess(self) -> None:
+        root, adr_dir = self._fixture_root(self.TWO_PROPOSED)
+        original = (adr_dir / "9999-fixture.md").read_text(encoding="utf-8")
+        code, raised, stdout, fake = self._flip(root, "ratify ADR-9999 amendment")
+        self.assertIsNotNone(raised)
+        self.assertIn("carries 2 ", str(raised.code))
+        self.assertEqual((adr_dir / "9999-fixture.md").read_text(encoding="utf-8"), original)
+
+    def test_a_comment_missing_the_amendment_word_routes_to_the_whole_adr_path_and_still_refuses(self) -> None:
+        # "ratify ADR-9999" (no "amendment") on a target whose Status is already accepted — the
+        # utterance names the right ADR but the wrong CONTRACT: the whole-ADR path's own Status
+        # check correctly refuses (nothing `proposed` for it to flip), never silently ratifying the
+        # wrong artifact just because the id matched.
+        root, adr_dir = self._fixture_root(self.ONE_PROPOSED)  # Status: accepted (fixture default)
+        original = (adr_dir / "9999-fixture.md").read_text(encoding="utf-8")
+        code, raised, stdout, fake = self._flip(root, "ratify ADR-9999")
+        self.assertIsNotNone(raised)
+        self.assertIn("does not carry exactly one `proposed` Status row", str(raised.code))
+        self.assertEqual((adr_dir / "9999-fixture.md").read_text(encoding="utf-8"), original)
+
+    def test_a_comment_naming_a_different_adr_fails_closed(self) -> None:
+        root, adr_dir = self._fixture_root(self.ONE_PROPOSED)
+        original = (adr_dir / "9999-fixture.md").read_text(encoding="utf-8")
+        code, raised, stdout, fake = self._flip(root, "ratify ADR-1234 amendment")
+        self.assertIsNotNone(raised)
+        self.assertIn("not ADR-9999", str(raised.code))
+        self.assertEqual((adr_dir / "9999-fixture.md").read_text(encoding="utf-8"), original)
+
+
+class AmendmentRealFixtureFlip(_AmendmentFixtureMixin, unittest.TestCase):
+    """Runs the real `main()` over ADR-0179's REAL pre-flip amendment text and proves the produced
+    header matches the hand flip that already happened (commit 34be0f87), modulo one deliberate,
+    documented substitution: the hand flip wrote the human display name "Kim"; this mechanical path
+    writes the verified GitHub login instead (this module's docstring records the choice) — every
+    other byte of the header, and every other byte of the file, must be identical.
+    """
+
+    def test_the_flip_reproduces_the_real_hand_flip_modulo_the_author_name(self) -> None:
+        root, adr_dir = self._fixture_root(ADR_0179_PREFLIP_AMENDMENT_SECTION)
+        original = (adr_dir / "9999-fixture.md").read_text(encoding="utf-8")
+
+        real_path = Path(__file__).resolve().parent.parent / ".claude" / "docs" / "adr" / "0179-agent-admin-three-pane-ia.md"
+        if not real_path.is_file():
+            self.skipTest("no ADR corpus checkout to cross-check against")
+        real_text = real_path.read_text(encoding="utf-8")
+        real_header = next(line for line in real_text.splitlines() if line.startswith("## Amendment"))
+        # the fixture's fake remote is OWNER/REPO and its fake utterance URL keeps the real issue
+        # + comment ids for realism but under that fake remote — both substitutions are mechanical,
+        # never a hand-edit of the wording itself.
+        expected_header = (
+            real_header
+            .replace(
+                "https://github.com/kimgranlund/agent-ui/issues/662#issuecomment-5235141210",
+                "https://github.com/OWNER/REPO/issues/662#issuecomment-77",
+            )
+            .replace("**ratified** — Kim,", "**ratified** — OWNER,")
+        )
+        self.assertNotEqual(expected_header, real_header)  # the substitution actually did something
+
+        code, raised, stdout, fake = self._flip(
+            root, "ratify ADR-9999 amendment",
+            url="https://github.com/OWNER/REPO/issues/662#issuecomment-77",
+            comment_date="2026-08-10T02:11:36Z",  # the real utterance's real timestamp
+        )
+        self.assertIsNone(raised, stdout)
+        self.assertEqual(code, 0, stdout)
+
+        new_text = (adr_dir / "9999-fixture.md").read_text(encoding="utf-8")
+        produced_header = next(line for line in new_text.splitlines() if line.startswith("## Amendment"))
+        self.assertEqual(produced_header, expected_header)
+
+        old_header_line = ADR_0179_PREFLIP_AMENDMENT_SECTION.splitlines()[0]
+        expected_new_text = original.replace(old_header_line, expected_header, 1)
+        self.assertEqual(new_text, expected_new_text)  # nothing else in the file moved
+        self.assertEqual(fake.called("repos/OWNER/REPO/issues --input -"), 0)  # neither real amendment books anything
+
+
+class AmendmentDryRunOnRealAdr0170(_AmendmentFixtureMixin, unittest.TestCase):
+    """ADR-0170's real amendment — GH #664's own named second live consumer, still **proposed** —
+    proves the tool is READY to ratify it without actually doing so (Kim ratifies, not a build).
+    """
+
+    def test_dry_run_detects_the_one_candidate_and_would_flip_it(self) -> None:
+        root, adr_dir = self._fixture_root(ADR_0170_AMENDMENT_SECTION)
+        original = (adr_dir / "9999-fixture.md").read_text(encoding="utf-8")
+        code, raised, stdout, fake = self._flip(root, "ratify ADR-9999 amendment", dry_run=True)
+        self.assertIsNone(raised, stdout)
+        self.assertEqual(code, 0, stdout)
+        self.assertIn("DRY-RUN", stdout)
+        self.assertIn("cl.6's read-only catalog mirror RETIRES", stdout)
+        self.assertIn("nothing to track", stdout)
+        self.assertEqual((adr_dir / "9999-fixture.md").read_text(encoding="utf-8"), original)
+        self.assertEqual(fake.called("repos/OWNER/REPO/issues --input -"), 0)
+
 
 
 if __name__ == "__main__":
