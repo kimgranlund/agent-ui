@@ -6,9 +6,10 @@
 //
 // ONE composed `ui-chat-shell` (GH #52/ADR-0154, re-hosted again by ADR-0179, then again by GH #686's
 // Amendment — superseding vision rev.5's hand-rolled `ui-split` composition, which itself superseded
-// ADR-0131 cl.2's three-pane order): `header` = EMPTY in this slice (S7-c's own unified header bar
-// build, admin-three-pane-ia.lld.md §16.4 — the pane nav that used to occupy this slot is retired),
-// `content` = the pane holder — three sibling regions (Chat · Settings · Co-pilot), a shown-SET + a
+// ADR-0131 cl.2's three-pane order): `header` = the unified header bar (S7-c, admin-three-pane-ia.lld.md
+// §16.1/§16.3/§16.4 — the pane nav that used to occupy this slot is retired; this replacement is a
+// different shape, not a restoration: agent select + pane pills/segments + page actions, never a mode
+// switcher), `content` = the pane holder — three sibling regions (Chat · Settings · Co-pilot), a shown-SET + a
 // primary member deciding what paints at a given band (§16.2) — no more pairing vehicle, no more single
 // active place. The old single resizable options-pane end retired with cl.1 first
 // (admin-three-pane-ia.lld.md §7); the settings content it used to hold now lives in the Settings
@@ -63,6 +64,21 @@ import '@agent-ui/components/controls/icon'
 import '@agent-ui/code/editor'
 import '@agent-ui/components/controls/field'
 import '@agent-ui/components/controls/text-field'
+// S7-c (LLD §16.1/§16.3) — the unified header bar's own controls: `ui-toggle` (S7-a, ADR-0179 GH #686
+// Amendment) for the wide pane pills, `ui-segmented-control`/`ui-segment` for the narrow single-select
+// rendering of the SAME visibility choice, `ui-select` for the agent roster, and `ui-menu` for the narrow
+// `•••` overflow (Import/Export). `ui-icon`/`ui-button` are already registered above.
+import '@agent-ui/components/controls/toggle'
+import type { UIToggleElement } from '@agent-ui/components/controls/toggle'
+import '@agent-ui/components/controls/segmented-control'
+import type { UISegmentedControlElement } from '@agent-ui/components/controls/segmented-control'
+import '@agent-ui/components/controls/segment'
+import type { UISegmentElement } from '@agent-ui/components/controls/segment'
+import '@agent-ui/components/controls/select'
+import type { UISelectElement } from '@agent-ui/components/controls/select'
+import '@agent-ui/components/controls/menu'
+import type { UIMenuElement } from '@agent-ui/components/controls/menu'
+import type { UIIconElement } from '@agent-ui/components/controls/icon'
 // GH #665 — the two conversation regions' own quiet identity kicker (`#makeRegionKicker`): the fleet's
 // `ui-text[variant='kicker']` idiom (the nav-rail `context-label` precedent, GH #624), reused rather than
 // re-minted — the eyebrow-header dimensions/casing already live there, this file only repoints the ink.
@@ -81,8 +97,8 @@ import '@agent-ui/components/controls/disclosure' // vision rev.5 — the Contex
 import '@agent-ui/components/controls/tabs'
 import type { UITabsElement, UITabElement } from '@agent-ui/components/controls/tabs'
 // GH #52 (ADR-0154, agent-admin-shell-rehost.lld.md LLD-C4), re-hosted again by ADR-0179, then again by
-// GH #686's Amendment — the shell-archetype grammar still carries exactly two slots: `header` (EMPTY in
-// this slice — S7-c's own unified header bar build, LLD §16.4) and `content` (the pane holder). The old
+// GH #686's Amendment — the shell-archetype grammar still carries exactly two slots: `header` (the
+// unified header bar, S7-c's own build, LLD §16.4) and `content` (the pane holder). The old
 // options-pane end + `narrow-end="tabs"` six-entry vocabulary retired with ADR-0179 cl.1
 // (admin-three-pane-ia.lld.md §7) — replacing, in turn, the original hand-rolled ui-split + narrow
 // ui-tabs dual-shell + the ResizeObserver-driven #applyLayout reparenting.
@@ -183,6 +199,14 @@ import { applyPersonaPatch, draftStateBlock, type PatchReport } from './persona-
  *  consumed by every DOM-order, `data-show` composition, and primary-repoint site below. */
 type Pane = 'chat' | 'settings' | 'copilot'
 const PANE_ORDER: readonly Pane[] = ['chat', 'settings', 'copilot']
+/** S7-c (LLD §16.1) — each pane's identity glyph + label, the ONE table both header renderings (the wide
+ *  pills and the narrow segments) read from, so the two can never drift onto different icons/copy for the
+ *  same pane. */
+const PANE_IDENTITY: Record<Pane, { glyph: string; label: string }> = {
+  chat: { glyph: 'chats-circle', label: 'Chat' },
+  settings: { glyph: 'gear-six', label: 'Settings' },
+  copilot: { glyph: 'robot', label: 'Co-pilot' },
+}
 
 const agentAdminProps = {
   // Non-reflected properties — too structured for an attribute (the `ui-split` `sizes` / `ui-settings`
@@ -377,6 +401,17 @@ export interface GenerateSeed {
   model?: string
 }
 
+/**
+ * S7-c (LLD §16.3, frozen seam shape, verbatim) — one roster row for the header's `agent-select`: the
+ * page-owned persona/agent identity this component renders but does not itself know the shape of (the
+ * component cannot import site code, the DAG — the same reason `onGenerateRequest`'s mint path is a
+ * callback, never an import).
+ */
+export interface AgentRosterEntry {
+  id: string
+  label: string
+}
+
 export interface UIAgentAdminElement extends ReactiveProps<typeof agentAdminProps> {}
 export class UIAgentAdminElement extends UIElement {
   static props = agentAdminProps
@@ -385,11 +420,11 @@ export class UIAgentAdminElement extends UIElement {
   // reconnect (the `master-detail.ts`/`settings.ts` precedent). GH #52/ADR-0154, re-hosted by ADR-0179,
   // re-ruled again by GH #686's Amendment (admin-three-pane-ia.lld.md §16, S7-b): a `ui-chat-shell`
   // hosting `content` = the pane holder, three sibling regions (Chat conversation · Settings · Co-pilot
-  // conversation). The `header` slot carries NO admin-composed content in this slice — the pane nav that
-  // used to live there retires with the visibility model it drove (§16.5), and the unified header bar
-  // that replaces it is S7-c's own build (a documented gap, not an oversight: `header` renders empty until
-  // that slice lands). Region visibility is likewise VISIBILITY-ONLY — no JS layout code, no reparenting,
-  // ever (`#applyPaneVisibility`).
+  // conversation). The `header` slot now carries S7-c's own unified header bar (LLD §16.1/§16.3) — the
+  // pane nav that used to live there retired with the visibility model it drove (§16.5); the replacement
+  // is a different shape (agent select + pane pills/segments + page actions), not a restoration of the
+  // old nav. Region visibility is likewise VISIBILITY-ONLY — no JS layout code, no reparenting, ever
+  // (`#applyPaneVisibility`).
   #shell: UIChatShellElement | null = null
   #conversation: UIConversationElement | null = null
   // ── ADR-0178 cl.5 (LLD-C6) — the DUAL-CONTEXT chat ────────────────────────────────────────────────────
@@ -414,8 +449,8 @@ export class UIAgentAdminElement extends UIElement {
    * against names no other default.
    *
    * Replaces `#pane` as the visibility truth. `#setPane`/`#applyPane` are gone with it — there is no
-   * single "active place" concept left in this element; S7-c's header pills mirror THIS state, they never
-   * own a second copy of it.
+   * single "active place" concept left in this element; the header's pills/segments (S7-c) mirror THIS
+   * state (`#applyHeaderPaneState`), they never own a second copy of it.
    */
   #panesShown: Set<Pane> = new Set(PANE_ORDER)
   /**
@@ -452,6 +487,36 @@ export class UIAgentAdminElement extends UIElement {
   // singleton nodes, zero duplication, zero reparenting after this one compose-time build (verified with
   // `isSameNode` probes across visibility-set flips, agent-admin.test.ts).
   #generateRequest: ((seed?: GenerateSeed) => void) | undefined
+  // ── S7-c (LLD §16.3) — the unified header bar's six registration seams + the elements they drive ──────
+  // Callback fields, the `#generateRequest` shape verbatim: registration, never a CustomEvent (SPEC-R5);
+  // last registration wins (a bare reassignment); read at call/reflect time, so registering before OR
+  // after connect both work (the GH #666 order rule — `#applyActionAvailability`/`#applyAgentRoster`
+  // below are this seam family's own `#reflectAuthorEntry`).
+  #agentSelectCallback: ((id: string) => void) | undefined
+  #newAgentRequest: (() => void) | undefined
+  #importRequest: (() => void) | undefined
+  #exportRequest: (() => void) | undefined
+  // S7-d places this seam's CONSUMER (the Settings model-grid fold's own "Reset Agent" affordance) — this
+  // slice builds only the registration seam itself, unconsumed by any header affordance yet (LLD §16.4's
+  // own S7-c/S7-d split).
+  #resetRequest: (() => void) | undefined
+  // `setAgentRoster` is data-in, not a callback — but the SAME "safe before or after connect" law applies
+  // (LLD §16.3), so a pre-connect call is held here and applied once `#agentSelectEl` exists
+  // (`#applyAgentRoster`), exactly the `#generateRequest`/`#reflectAuthorEntry` build-time-reflect shape.
+  #pendingRoster: { entries: readonly AgentRosterEntry[]; activeId: string | undefined } | undefined
+  #agentSelectEl: UISelectElement | null = null
+  // Keyed by pane so `#applyHeaderPaneState` (`#applyPaneVisibility`'s own mirror step) can write pressed/
+  // selected state onto the right control without re-querying the DOM every render.
+  #panePills: Map<Pane, UIToggleElement> = new Map()
+  #panePillStateIcons: Map<Pane, UIIconElement> = new Map()
+  #paneSegments: UISegmentedControlElement | null = null
+  #newAgentWideBtn: HTMLElement | null = null
+  #newAgentNarrowBtn: HTMLElement | null = null
+  #importActionBtn: HTMLElement | null = null
+  #exportActionBtn: HTMLElement | null = null
+  #overflowTriggerBtn: HTMLElement | null = null
+  #overflowImportItem: HTMLElement | null = null
+  #overflowExportItem: HTMLElement | null = null
   /**
    * GH #670 — the Author card's Model/Effort pick made BEFORE the flow is armed, held here until there is
    * somewhere real to put it. It exists because the pickers are props-down/callbacks-up: armed, a pick
@@ -690,8 +755,8 @@ export class UIAgentAdminElement extends UIElement {
     const shell = document.createElement('ui-chat-shell') as UIChatShellElement
     // (SPEC-R6a/R7b's `resizable-end` + `narrow-end="tabs"` RETIRED with the options-pane they governed —
     // ADR-0179 cl.1 / admin-three-pane-ia.lld.md §7: the settings region left the shell's end side for the
-    // pane holder below. The shell still carries exactly two slots: `header` (EMPTY this slice — S7-c's
-    // build) and `content` (the pane holder).)
+    // pane holder below. The shell still carries exactly two slots: `header` (S7-c's unified header bar,
+    // `#composeHeader` below) and `content` (the pane holder).)
 
     // GH #686's Amendment (LLD §16.1/§16.2) — the content slot HOLDS THE PLACES (it was `chat-stack`, a
     // two-conversation stacking vehicle for one place; ADR-0178 cl.5's stacking model is superseded by
@@ -1196,7 +1261,8 @@ export class UIAgentAdminElement extends UIElement {
     // shipped-anatomy precedent this ordering preserves).
     paneHolder.append(conversation, settingsPane)
     this.#mountAuthoringConversation()
-    shell.append(paneHolder) // `header` stays EMPTY this slice — S7-c's unified header bar build, LLD §16.4
+    // S7-c — the unified header bar (LLD §16.1/§16.3), `data-slot="header"`'s one authored child.
+    shell.append(this.#composeHeader(), paneHolder)
     this.append(shell)
 
     this.#shell = shell
@@ -1206,6 +1272,209 @@ export class UIAgentAdminElement extends UIElement {
     // settings sub-section.
     this.#applySettingsSection(settingsNav.selected)
     this.#applyPaneVisibility()
+    // GH #666 order rule, applied to the header's own seams — a page can register/push data BEFORE this
+    // element ever connects (the `#generateRequest`/`#reflectAuthorEntry` precedent); both reflect calls
+    // read whatever landed on the private fields BEFORE `#compose` ran, so build-time state is honest
+    // whichever order the page called in.
+    this.#applyAgentRoster()
+    this.#applyActionAvailability()
+  }
+
+  /**
+   * S7-c (LLD §16.1/§16.3) — the unified header bar: `[data-part="admin-header"]`, the `header` slot's one
+   * authored child. Three zones, DOM order matching the anatomy diagram: `agent-select` (`setAgentRoster`/
+   * `onAgentSelect`), the pane-visibility pair (`pane-pills` wide / `pane-segments` narrow — the SAME
+   * `#panesShown`/`#panePrimary` truth §16.2 already owns, never a second copy of it), and
+   * `header-actions` (New Agent · Import · Export, wide labeled `ui-button`s / narrow `+` + a `•••`
+   * `ui-menu`). No `data-landmark` override — the slot's own default (`banner`, super-shell.ts's
+   * `roleFor`) is exactly the anatomy's "no landmark override; the nav retired" note.
+   *
+   * Band rendering (pills⇄segments, wide-actions⇄narrow-actions) is pure CSS (agent-admin.css's own
+   * `@container` pair on the composed `ui-super-shell`, the GH #665 54rem line REPURPOSED — see that
+   * file for the full mechanics); this method only builds both renderings of the SAME state, once, and
+   * wires each to write through the shared visibility machine (`#setPanesShown`/`#setPanePrimary`) or its
+   * own registered seam.
+   */
+  #composeHeader(): HTMLElement {
+    const header = document.createElement('div')
+    header.setAttribute('data-slot', 'header')
+    header.setAttribute('data-part', 'admin-header')
+
+    // ── Zone 1 — the agent roster select (setAgentRoster / onAgentSelect) ──────────────────────────────
+    const agentSelect = document.createElement('ui-select') as UISelectElement
+    agentSelect.setAttribute('data-part', 'agent-select')
+    agentSelect.setAttribute('placeholder', 'Select agent')
+    // The select's own internal select/change events stay CONTAINED (LLD §16.3's own restatement of the
+    // closed-seven-event law) — the registered callback, not a re-emitted host event, is this element's
+    // vocabulary for "the user picked an agent".
+    agentSelect.addEventListener('select', (event) => {
+      event.stopPropagation()
+      this.#agentSelectCallback?.((event as CustomEvent<string>).detail)
+    })
+    this.#agentSelectEl = agentSelect
+
+    // ── Zone 2a — the WIDE pane pills (ui-toggle ×3, LLD §16.1) ────────────────────────────────────────
+    const panePills = document.createElement('div')
+    panePills.setAttribute('data-part', 'pane-pills')
+    for (const pane of PANE_ORDER) {
+      const { glyph, label } = PANE_IDENTITY[pane]
+      const pill = document.createElement('ui-toggle') as UIToggleElement
+      pill.setAttribute('data-pane', pane)
+      const identityIcon = document.createElement('ui-icon')
+      identityIcon.setAttribute('slot', 'icon')
+      identityIcon.setAttribute('glyph', glyph)
+      const stateIcon = document.createElement('ui-icon') as UIIconElement
+      stateIcon.setAttribute('slot', 'state-icon')
+      // The pill's own visible label text IS its accessible name (toggle.md's `label` slot) — no
+      // aria-label owed here; only the ICON-ONLY narrow segments/actions need one (LLD §16.4 done-when).
+      pill.append(identityIcon, document.createTextNode(label), stateIcon)
+      // LLD §16.2's refused-toggle wiring, for real (toggle.md's "Refused toggle" mechanism, S7-a's own
+      // reason for existing): `toggle` fires BEFORE `pressed` commits — compute the WOULD-BE next set,
+      // and if it is empty, refuse (event.preventDefault()) rather than let the pill flip to a state
+      // `#setPanesShown` would immediately refuse anyway (a flip-then-stick paint the min-one invariant
+      // does not actually allow). A non-empty result always commits through the ONE shared mutator, which
+      // repoints `primary` itself when the caller's own primary fell out of the set — turning a pane ON
+      // never needs to move primary, turning the CURRENT primary off does, and `#setPanesShown` already
+      // knows which; this handler only ever hands it the CURRENT primary, unchanged.
+      //
+      // The `pane` argument to `#setPanesShown` below (its own third, "skip this one" parameter) is load-
+      // bearing, not decorative: `toggle` fires BEFORE `pressed` commits, and toggle.ts's OWN click handler
+      // runs its single authoritative `this.pressed = !this.pressed` line immediately AFTER this listener
+      // returns (same synchronous dispatch). If the mirror this call triggers (`#applyHeaderPaneState`,
+      // via `#setPanesShown` → `#applyPaneVisibility`) also wrote THIS pill's own `pressed` here, that
+      // write would land BEFORE toggle.ts's own commit line reads `this.pressed` to flip it — a real,
+      // measured double-flip (mirror sets it correct, then toggle.ts's `!` flips it wrong again), which
+      // silently desyncs `pressed` from `#panesShown` and corrupts the NEXT click's own `turningOn` read.
+      // Every OTHER pill/segment/icon still mirrors normally; only THIS pane's own `pressed` write is
+      // deferred to toggle.ts's own commit, which is correct unassisted the moment nothing races it.
+      pill.addEventListener('toggle', (event) => {
+        const turningOn = !pill.pressed
+        const next = new Set(this.#panesShown)
+        if (turningOn) next.add(pane)
+        else next.delete(pane)
+        if (next.size === 0) {
+          event.preventDefault() // refused — min-one invariant; pressed stays exactly where it was
+          return
+        }
+        this.#setPanesShown(next, this.#panePrimary, pane)
+      })
+      this.#panePills.set(pane, pill)
+      this.#panePillStateIcons.set(pane, stateIcon)
+      panePills.append(pill)
+    }
+
+    // ── Zone 2b — the NARROW pane segments (ui-segmented-control, single-select, LLD §16.1) ───────────
+    const paneSegments = document.createElement('ui-segmented-control') as UISegmentedControlElement
+    paneSegments.setAttribute('data-part', 'pane-segments')
+    paneSegments.setAttribute('aria-label', 'Visible pane')
+    for (const pane of PANE_ORDER) {
+      const { glyph, label } = PANE_IDENTITY[pane]
+      const segment = document.createElement('ui-segment') as UISegmentElement
+      segment.setAttribute('value', pane)
+      // Icon-only (LLD §16.4 done-when: "every icon-only affordance... carries an asserted accessible
+      // name") — segment.md's own labelSource is textContent, which an icon-only segment has none of, so
+      // the consumer-supplied `aria-label` (the same idiom this file already uses for every icon-only
+      // ui-switch/ui-button, e.g. `agentSwitch`/`overflowTrigger` below) is the real name source.
+      segment.setAttribute('aria-label', label)
+      const segmentIcon = document.createElement('ui-icon')
+      segmentIcon.setAttribute('glyph', glyph)
+      segment.append(segmentIcon)
+      paneSegments.append(segment)
+    }
+    // LLD §16.2's narrow-segment write semantics ("set primary AND ensure membership") — `#setPanePrimary`
+    // verbatim, the arm's own caller (`#rewireAuthoringContext`).
+    paneSegments.addEventListener('change', (event) => {
+      event.stopPropagation() // the closed seven-event set stays closed — this element re-emits nothing
+      const pane = paneSegments.value as Pane | null
+      if (pane !== null) this.#setPanePrimary(pane)
+    })
+    this.#paneSegments = paneSegments
+
+    // ── Zone 3 — header-actions (New Agent · Import · Export; LLD §16.1's wide/narrow collapse) ───────
+    const headerActions = document.createElement('div')
+    headerActions.setAttribute('data-part', 'header-actions')
+
+    const newAgentWide = document.createElement('ui-button') as UIButtonElement
+    newAgentWide.setAttribute('data-part', 'new-agent-wide')
+    newAgentWide.setAttribute('variant', 'soft')
+    const newAgentWideIcon = document.createElement('ui-icon')
+    newAgentWideIcon.setAttribute('slot', 'leading')
+    newAgentWideIcon.setAttribute('glyph', 'plus')
+    newAgentWide.append(newAgentWideIcon, document.createTextNode('New Agent'))
+    newAgentWide.addEventListener('click', () => this.#newAgentRequest?.())
+    this.#newAgentWideBtn = newAgentWide
+
+    // The narrow `+` collapse (LLD §16.4) — the SAME seam, an icon-only rendering (button.md's
+    // `icon-only` opt-in + a real `aria-label`, the overflowTrigger idiom below).
+    const newAgentNarrow = document.createElement('ui-button') as UIButtonElement
+    newAgentNarrow.setAttribute('data-part', 'new-agent-narrow')
+    newAgentNarrow.setAttribute('variant', 'soft')
+    newAgentNarrow.setAttribute('icon-only', '')
+    newAgentNarrow.setAttribute('aria-label', 'New Agent')
+    const newAgentNarrowIcon = document.createElement('ui-icon')
+    newAgentNarrowIcon.setAttribute('slot', 'leading')
+    newAgentNarrowIcon.setAttribute('glyph', 'plus')
+    newAgentNarrow.append(newAgentNarrowIcon)
+    newAgentNarrow.addEventListener('click', () => this.#newAgentRequest?.())
+    this.#newAgentNarrowBtn = newAgentNarrow
+
+    const importAction = document.createElement('ui-button') as UIButtonElement
+    importAction.setAttribute('data-part', 'import-action')
+    importAction.setAttribute('variant', 'ghost')
+    importAction.textContent = 'Import'
+    importAction.addEventListener('click', () => this.#importRequest?.())
+    this.#importActionBtn = importAction
+
+    const exportAction = document.createElement('ui-button') as UIButtonElement
+    exportAction.setAttribute('data-part', 'export-action')
+    exportAction.setAttribute('variant', 'ghost')
+    exportAction.textContent = 'Export'
+    exportAction.addEventListener('click', () => this.#exportRequest?.())
+    this.#exportActionBtn = exportAction
+
+    // The narrow `•••` collapse (LLD §16.4/§16.6 OQ-B) — Import/Export ONLY (Reset stays Settings-only,
+    // Kim's text ruling, OQ-B). The `overflowTrigger` shape mirrors the retired site-level overflow menu
+    // exactly (icon-only + a real aria-label, GH #168's "no glued '…' text node" fix). No `data-part` of
+    // its own: `ui-menu`'s `#ensureParts` unconditionally stamps `data-part="trigger"` on its first child
+    // at connect (menu.ts), clobbering any value authored here — every selector/CSS rule that needs THIS
+    // button addresses it as `[data-part='overflow-menu'] [data-part='trigger']` instead (scoped through
+    // the menu's own part, never a second, losing attribute name).
+    const overflowMenu = document.createElement('ui-menu') as UIMenuElement
+    overflowMenu.setAttribute('data-part', 'overflow-menu')
+    overflowMenu.setAttribute('placement', 'bottom-end')
+    const overflowTrigger = document.createElement('ui-button') as UIButtonElement
+    overflowTrigger.setAttribute('variant', 'ghost')
+    overflowTrigger.setAttribute('icon-only', '')
+    overflowTrigger.setAttribute('aria-label', 'More actions')
+    const overflowIcon = document.createElement('ui-icon')
+    overflowIcon.setAttribute('slot', 'leading')
+    overflowIcon.setAttribute('glyph', 'dots-three')
+    overflowTrigger.append(overflowIcon)
+    this.#overflowTriggerBtn = overflowTrigger
+    const overflowImportItem = document.createElement('div')
+    // A real gotcha, not stylistic naming: layering.test.ts's raw-text specifier scanner keys on the
+    // module-loading keyword sitting directly against a following quote mark, ANYWHERE in this file — it
+    // cannot tell that from a plain string literal holding the same six letters. The trailing suffix here
+    // breaks that adjacency.
+    overflowImportItem.dataset.value = 'import-agent'
+    overflowImportItem.textContent = 'Import'
+    this.#overflowImportItem = overflowImportItem
+    const overflowExportItem = document.createElement('div')
+    overflowExportItem.dataset.value = 'export-agent'
+    overflowExportItem.textContent = 'Export'
+    this.#overflowExportItem = overflowExportItem
+    overflowMenu.append(overflowTrigger, overflowImportItem, overflowExportItem)
+    overflowMenu.addEventListener('select', (event) => {
+      event.stopPropagation()
+      const { value } = (event as CustomEvent<{ value: string; index: number }>).detail
+      if (value === 'import-agent') this.#importRequest?.()
+      else if (value === 'export-agent') this.#exportRequest?.()
+    })
+
+    headerActions.append(newAgentWide, importAction, exportAction, newAgentNarrow, overflowMenu)
+
+    header.append(agentSelect, panePills, paneSegments, headerActions)
+    return header
   }
 
   /** OQ2 — reveal ONE settings section (visibility-only, exactly the shell strip's own SPEC-R7c behavior:
@@ -1545,23 +1814,28 @@ export class UIAgentAdminElement extends UIElement {
    * remaining member in reading order" rule, read as a general invariant rather than a pill-specific one).
    *
    * PRIVATE by contract (LLD §4/§16.2's "no attribute, no event" carryover): no attribute, no event, no
-   * `attributes[]` row. `#setPanePrimary` below is today's one real caller (the arm — LLD §16.2's
-   * "ensure copilot ∈ shown + primary = 'copilot'" line); a WIDE pill's toggle-membership write is S7-c's
-   * own build (that header bar doesn't exist in this slice) and funnels through this same mutator when it
-   * lands, so the min-one/primary-repoint invariants below need no second implementation then. Probes
-   * reach the machine directly via the protected `setPaneVisibilitySeam`.
+   * `attributes[]` row. `#setPanePrimary` below is one real caller (the arm — LLD §16.2's "ensure copilot
+   * ∈ shown + primary = 'copilot'" line); a WIDE pill's toggle-membership write (S7-c's `#composeHeader`)
+   * is the other, funnelling through this SAME mutator, so the min-one/primary-repoint invariants below
+   * need no second implementation. Probes reach the machine directly via the protected
+   * `setPaneVisibilitySeam`.
+   *
+   * `skipPillPressedFor` (optional) — the ONE pane whose own pill `#applyHeaderPaneState` must NOT write
+   * `pressed` for this reflect (see the wide pill's own `toggle` listener, `#composeHeader`, for the full
+   * double-flip mechanics this parameter exists to avoid). Every other caller (the narrow segment
+   * `change` handler, the arm) passes nothing — no pill is mid-commit for either of those paths.
    */
-  #setPanesShown(shown: ReadonlySet<Pane> | readonly Pane[], primary: Pane): void {
+  #setPanesShown(shown: ReadonlySet<Pane> | readonly Pane[], primary: Pane, skipPillPressedFor?: Pane): void {
     const next = new Set(shown)
     if (next.size === 0) return // refused — min-one invariant (LLD §16.2)
     this.#panesShown = next
     this.#panePrimary = next.has(primary) ? primary : (PANE_ORDER.find((p) => next.has(p)) ?? primary)
-    this.#applyPaneVisibility()
+    this.#applyPaneVisibility(skipPillPressedFor)
   }
 
-  /** The NARROW segment's write semantics (LLD §16.2): set primary AND ensure membership. Used today by
-   *  the arm (below); S7-c's own narrow segment click handler is this method's other real caller once the
-   *  header bar exists. */
+  /** The NARROW segment's write semantics (LLD §16.2): set primary AND ensure membership. Two real
+   *  callers: the arm (below, `#rewireAuthoringContext`) and the header's own narrow segment `change`
+   *  handler (S7-c's `#composeHeader`). */
   #setPanePrimary(pane: Pane): void {
     const next = new Set(this.#panesShown)
     next.add(pane)
@@ -1577,19 +1851,46 @@ export class UIAgentAdminElement extends UIElement {
    *    exactly `data-primary`'s region paints; at and above it every `data-show` member does. Nothing here
    *    consults a width — a band crossing repaints with zero state written, the shell family's
    *    own-container-width law (the reason no ResizeObserver exists in this file).
-   *  - S7-c mirrors pressed/selected state onto the header's pills/segment control here — no header bar
-   *    exists in THIS slice (LLD §16.4's own S7-c row), so that half of this method's eventual body is a
-   *    documented gap, not a silent omission: there is nothing to mirror onto yet.
+   *  - S7-c (`#applyHeaderPaneState` below) mirrors pressed/selected state onto the header's pills AND
+   *    the segment control here — programmatic writes, no event echo (ADR-0019), so flipping one
+   *    rendering (e.g. a wide pill click) repaints the OTHER (the narrow segment's selection) without
+   *    either side ever re-entering the visibility mutator.
    *
    * GH #666 — nothing here is armed-state dependent. The Co-pilot region is ONE card at every point of the
    * flow: unarmed its log is empty (GH #684 — no dedicated empty-state node), armed it shows the
    * transcript, and the swap is the log's own content, never a visibility flip between two boxes.
    */
-  #applyPaneVisibility(): void {
+  #applyPaneVisibility(skipPillPressedFor?: Pane): void {
     const holder = this.#paneHolder
     if (holder === null) return
     holder.setAttribute('data-show', PANE_ORDER.filter((p) => this.#panesShown.has(p)).join(' '))
     holder.setAttribute('data-primary', this.#panePrimary)
+    this.#applyHeaderPaneState(skipPillPressedFor)
+  }
+
+  /**
+   * S7-c (LLD §16.4 done-when: "pills and segment mirror ONE state") — the header half of
+   * `#applyPaneVisibility`'s reflect, factored out so it is a no-op (never a throw) before `#composeHeader`
+   * has run: `#panePills`/`#paneSegments` are empty/null pre-compose, and `#applyPaneVisibility` itself is
+   * called once from within `#compose()` before any pill exists — the SAME "reflect is safe whenever it
+   * runs" shape `#applyMasterStates` already relies on elsewhere in this file.
+   *
+   * Every write here is PROGRAMMATIC (`.pressed =` / `.value =` / `.glyph =`, never `.click()` or a
+   * synthesized `toggle`/`change`) — ADR-0019's law, and the reason this can run unconditionally on every
+   * visibility change without the mirror itself re-triggering the very handlers that call
+   * `#setPanesShown`/`#setPanePrimary` in the first place — EXCEPT `skipPillPressedFor`'s own one pane
+   * (see `#setPanesShown`'s doc comment): its `pressed` write is left to toggle.ts's own post-emit commit
+   * line, which runs immediately after the wide pill's `toggle` listener returns and would otherwise race
+   * a write landing here first (a measured double-flip, not a hypothetical one).
+   */
+  #applyHeaderPaneState(skipPillPressedFor?: Pane): void {
+    for (const [pane, pill] of this.#panePills) {
+      const shown = this.#panesShown.has(pane)
+      if (pane !== skipPillPressedFor) pill.pressed = shown
+      const stateIcon = this.#panePillStateIcons.get(pane)
+      if (stateIcon) stateIcon.glyph = shown ? 'eye' : 'eye-slash'
+    }
+    if (this.#paneSegments) this.#paneSegments.value = this.#panePrimary
   }
 
   /** Arm, re-arm, or tear down the authoring context in response to an `authoringStore` change. A real
@@ -2592,16 +2893,146 @@ export class UIAgentAdminElement extends UIElement {
     this.#reflectAuthorEntry()
   }
 
+  // ── S7-c (LLD §16.3, frozen seam shapes) — the unified header bar's six registration seams ───────────
+  // All six follow `onGenerateRequest`'s shipped semantics verbatim: callback registration, never a
+  // CustomEvent (SPEC-R5); last registration wins (a bare field reassignment); safe before OR after
+  // connect (the GH #666 order rule — each setter's own reflect call, mirrored by `#compose`'s build-time
+  // call, covers both orders). The DEGRADE diverges deliberately from `onGenerateRequest`'s own precedent
+  // (stated, not silently inherited): that seam DISABLES its card when unregistered (a disabled
+  // conversation still shows its own copy); these HIDE their affordance entirely — the right degrade for a
+  // bare action button/menu item, which has no copy to show disabled (LLD §16.3).
+
+  /**
+   * Push the current agent roster into the header's `agent-select` — data-in, not a callback, and
+   * RE-CALLABLE (a page re-pushes after a mint/import, LLD §16.3). Rebuilds the select's OWN roster
+   * options wholesale from `entries` (the select's own dynamic-adoption seam, select.md's Slots note,
+   * handles a later call without a disconnect/reconnect) and sets `value` to `activeId` (or '' — nothing
+   * selected) as a silent programmatic write (no `select` emission, ADR-0019 — only a real user pick
+   * fires that).
+   */
+  setAgentRoster(entries: readonly AgentRosterEntry[], activeId?: string): void {
+    this.#pendingRoster = { entries, activeId }
+    this.#applyAgentRoster()
+  }
+
+  /**
+   * `setAgentRoster`'s own build-time/call-time reflect (the `#reflectAuthorEntry` shape) — a no-op
+   * before `#composeHeader` has run OR before `setAgentRoster` has ever been called; both call sites
+   * (`setAgentRoster` itself, and `#compose`'s tail) are safe to call unconditionally.
+   *
+   * A real bug once lived here, root-caused post-review: `select.replaceChildren()` wipes EVERY host
+   * child, and `ui-select` creates its own trigger/aria-label span/listbox as direct children of the
+   * host itself (select.ts's `#ensureParts`) — a full wipe destroyed the control's own internal parts
+   * on the FIRST call, not merely the roster options, so `onAgentSelect` could never fire again (no
+   * trigger left to click, and any freshly-adopted options landed in a listbox already severed from the
+   * control's own machinery). The fix removes ONLY the previously-pushed `[role='option']` nodes — real
+   * descendants of the host (adopted into the listbox by the control's own TKT-0026 machinery, but still
+   * findable via a plain descendant query, no private-field reach-in needed) — leaving the trigger/aria-
+   * label span/listbox untouched, then re-adopts the new set through the SAME public, documented seam
+   * every other author-supplied option already uses (`select.append(...)`, select.md's Slots note: "No
+   * disconnect/reconnect is required to add or remove options").
+   */
+  #applyAgentRoster(): void {
+    const select = this.#agentSelectEl
+    const pending = this.#pendingRoster
+    if (select === null || pending === undefined) return
+    for (const option of [...select.querySelectorAll('[role="option"]')]) option.remove()
+    for (const entry of pending.entries) {
+      const option = document.createElement('div')
+      option.setAttribute('role', 'option')
+      option.setAttribute('value', entry.id)
+      option.textContent = entry.label
+      select.append(option)
+    }
+    select.value = pending.activeId ?? ''
+  }
+
+  /** Register the header roster's own pick handler — the select's `select` event stays CONTAINED
+   *  (stopPropagation, wired at build time in `#composeHeader`); this is the seam a page reads it through. */
+  onAgentSelect(callback: (id: string) => void): void {
+    this.#agentSelectCallback = callback
+  }
+
+  /** Register the header's "New Agent" affordance (the wide labeled button AND its narrow `+` icon-only
+   *  twin, LLD §16.1's collapse — ONE seam drives both renderings). Unregistered ⇒ both are HIDDEN (never
+   *  disabled) — a bare "+" with nothing to do is not a legible affordance the way a disabled labeled
+   *  button is. */
+  onNewAgentRequest(callback: () => void): void {
+    this.#newAgentRequest = callback
+    this.#applyActionAvailability()
+  }
+
+  /** Register the header's Import affordance (the wide labeled button AND the narrow `•••` menu's own
+   *  "Import" item). Unregistered ⇒ both HIDE independently of Export's own registration state (each
+   *  action seam degrades on its own — LLD §16.3's "the right degrade for a bare action... menu item"). */
+  onImportRequest(callback: () => void): void {
+    this.#importRequest = callback
+    this.#applyActionAvailability()
+  }
+
+  /** Register the header's Export affordance — the Import seam's shape, mirrored. */
+  onExportRequest(callback: () => void): void {
+    this.#exportRequest = callback
+    this.#applyActionAvailability()
+  }
+
+  /**
+   * Register "Reset Agent"'s mint path. S7-d (LLD §16.4) places this seam's CONSUMER — the Settings
+   * model-grid fold's own affordance — and the site page's registration of it; this slice builds only the
+   * seam itself, matching the other five's frozen shape (§16.3) so S7-d has nothing left to design here,
+   * only to wire. No availability to reflect: nothing in THIS slice's header renders from this field yet.
+   */
+  onResetRequest(callback: () => void): void {
+    this.#resetRequest = callback
+  }
+
+  /**
+   * The header-actions HIDE degrade (LLD §16.3), applied per affordance — never a blanket disable. New
+   * Agent's two renderings share one registration; Import/Export each degrade independently (a wide
+   * button AND its own narrow menu item); the `•••` trigger itself hides only when BOTH narrow items it
+   * would open onto are gone (an openable-but-empty menu is not a real affordance either). Safe to call
+   * before `#composeHeader` has built anything (every ref is nullable) and is `#compose`'s own build-time
+   * reflect call, the `#reflectAuthorEntry` shape.
+   */
+  #applyActionAvailability(): void {
+    const newAgentHidden = this.#newAgentRequest === undefined
+    if (this.#newAgentWideBtn) this.#newAgentWideBtn.hidden = newAgentHidden
+    if (this.#newAgentNarrowBtn) this.#newAgentNarrowBtn.hidden = newAgentHidden
+    const importHidden = this.#importRequest === undefined
+    const exportHidden = this.#exportRequest === undefined
+    if (this.#importActionBtn) this.#importActionBtn.hidden = importHidden
+    if (this.#exportActionBtn) this.#exportActionBtn.hidden = exportHidden
+    if (this.#overflowImportItem) {
+      this.#overflowImportItem.hidden = importHidden
+      this.#overflowImportItem.setAttribute('aria-disabled', String(importHidden))
+    }
+    if (this.#overflowExportItem) {
+      this.#overflowExportItem.hidden = exportHidden
+      this.#overflowExportItem.setAttribute('aria-disabled', String(exportHidden))
+    }
+    if (this.#overflowTriggerBtn) this.#overflowTriggerBtn.hidden = importHidden && exportHidden
+  }
+
   // ── protected test seams (the split.ts/slider-multi.ts precedent) ────────────────────────────────────
 
   /** LLD §16.2 — set the visibility model's whole state from a test probe: `setPaneSeam(pane)` retires
-   *  with `#pane`/`#setPane` (there is no single active place any more to set). `#setPanesShown` is
-   *  private by contract, and there is no real pill/segment control to drive a jsdom/browser probe through
-   *  yet either (S7-c's own build) — `protected` keeps this off the public element, exactly the
-   *  `setPaneSeam`/`setModeSeam` precedent: a consumer cannot reach it, so no API is widened and no
-   *  descriptor row is owed. */
+   *  with `#pane`/`#setPane` (there is no single active place any more to set). `#setPanesShown` stays
+   *  private by contract; `protected` keeps this off the PUBLIC element, exactly the
+   *  `setPaneSeam`/`setModeSeam` precedent — a consumer cannot reach it, so no API is widened and no
+   *  descriptor row is owed. S7-c's real pills/segments (`#composeHeader`) are the honest end-to-end path
+   *  now (a probe can click a pill / select a segment directly); this seam remains the shortest path for a
+   *  test that only cares about the RESULTING state, not the interaction that produced it. */
   protected setPaneVisibilitySeam(shown: readonly Pane[], primary: Pane): void {
     this.#setPanesShown(shown, primary)
+  }
+
+  /** S7-c/S7-d (LLD §16.3/§16.4) — `onResetRequest`'s own registration is otherwise UNOBSERVABLE from
+   *  outside this element this slice (true `#`-private, and no consumer affordance reads it yet): a
+   *  register-before/after-connect probe (the done-when every one of the six seams owes) needs SOME way
+   *  to confirm the callback landed. `protected`, the `setPaneVisibilitySeam` precedent — no descriptor
+   *  row, no public API widened. */
+  protected hasResetRequestRegistered(): boolean {
+    return this.#resetRequest !== undefined
   }
 
   /** GH #145 — every piece of PER-PERSONA conversation state, cleared together on a real store

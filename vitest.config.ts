@@ -187,6 +187,17 @@ export default defineConfig({
       // composes a real `ui-menu` (self-defining side effect) for its per-group flyout. Same alias-ordering
       // necessity as `controls/split`/`controls/text-field` above.
       '@agent-ui/components/controls/menu': r('./packages/agent-ui/components/src/controls/menu/menu.ts'),
+      // ADR-0179 GH #686 Amendment S7-c (admin-three-pane-ia.lld.md §16.1/§16.3) — `@agent-ui/app`'s
+      // `ui-agent-admin` unified header bar is the first direct `./controls/{name}` subpath consumer of
+      // `toggle`/`segmented-control`/`segment` from OUTSIDE the components package (the wide pane pills /
+      // narrow single-select rendering): it side-effect-imports all three so
+      // `document.createElement('ui-toggle' | 'ui-segmented-control' | 'ui-segment')` resolve to the REAL
+      // classes. Same alias-ordering necessity as `controls/tabs`/`controls/menu` above — `segment` must
+      // sit ahead of the broad `@agent-ui/components` entry below for the identical reason every other
+      // `./controls/{name}` entry in this list does.
+      '@agent-ui/components/controls/toggle': r('./packages/agent-ui/components/src/controls/toggle/toggle.ts'),
+      '@agent-ui/components/controls/segmented-control': r('./packages/agent-ui/components/src/controls/segmented-control/segmented-control.ts'),
+      '@agent-ui/components/controls/segment': r('./packages/agent-ui/components/src/controls/segment/segment.ts'),
       // TKT-0085 — `@agent-ui/app`'s `ui-agent-admin` is the next direct `./controls/{name}` subpath
       // consumer from OUTSIDE the components package: the responsive-collapse shell side-effect-imports
       // `tabs` so its `document.createElement('ui-tabs' | 'ui-tab' | 'ui-tab-panel')` calls resolve to the

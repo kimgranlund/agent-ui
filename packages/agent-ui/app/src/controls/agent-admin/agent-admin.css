@@ -161,8 +161,11 @@
     --ui-super-shell-canvas-min-size: 16rem; /* today's ui-split canvasPane[min] value, verbatim (LLD-C4) */
     --ui-super-shell-pane-min-size: 20rem; /* today's ui-split tabsPane[min] value, verbatim (LLD-C4) */
     /* GH #665, ADR-0179 Amendment addendum (Kim's 2026-08-10 follow-on ruling) — the query subject for
-       the pane-nav bar's own wide-hide rule (search "54rem" below for why THIS element, not the pane
-       holder the triple band already queries). */
+       the header bar's own band rendering (search "54rem" below for why THIS element, not the pane
+       holder the triple band already queries). Originally minted for the now-retired pane-nav bar's
+       wide-HIDE rule; S7-c (LLD §16.1/§16.3) repurposes the SAME container for a different purpose — the
+       header never hides at either band now, only which of its two pane-visibility renderings (pills /
+       segments) and which header-actions subset (labeled buttons / "+"+"•••") paints. */
     container-type: inline-size;
   }
 
@@ -294,14 +297,95 @@
     --ui-split-divider-ink: transparent;
   }
 
-  /* GH #686's Amendment (LLD §16.1) — the `header` slot composes NOTHING in this slice (the pane nav that
-     used to occupy it retires with the visibility model it drove, LLD §16.5; the unified header bar that
-     replaces it is S7-c's own build, LLD §16.4 — a documented gap, not an oversight). No CSS is owed for
-     this: `ui-super-shell` itself only CREATES the `[data-part='bar'][data-bar='header']` box when at
-     least one `data-slot="header"` child is authored (super-shell.ts's own `if (headerChildren.length > 0)`
-     guard) — with none, the box does not exist in the DOM at all, never merely an empty one to collapse.
-     (Verified live: an earlier draft of this file carried a `--ui-super-shell-bar-size: 0` repoint here on
-     the assumption the box always exists; a real-engine run proved the selector matches nothing.) */
+  /* GH #686's Amendment (LLD §16.1/§16.3, S7-c) — the unified header bar: `[data-part='admin-header']`,
+     the `header` slot's one authored child (agent-admin.ts's `#composeHeader`). The pane nav that used to
+     occupy this slot retired with the visibility model it drove (LLD §16.5); this replacement is a
+     different shape — agent select, pane pills/segments, page actions — never a mode switcher, and it
+     paints at EVERY band (unlike the retired nav, which used to hide itself wide). Landmark role is the
+     slot's own default (`banner`, super-shell.ts's `roleFor`) — no `data-landmark` override. */
+  [data-part='admin-header'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-agent-admin-row-gap);
+    min-inline-size: 0;
+    flex: 1 1 auto;
+    /* GH #626's bar-content law — the bar itself is a padding-less rail (super-shell.css); this content
+       supplies its own inline inset. `--ui-agent-admin-shell-gutter` (declared on the composed
+       `ui-super-shell` above, a real ancestor of THIS descendant selector — no var()-resolution-order
+       issue, the SAME direct-descendant-consumption shape `[data-part='canvas']`/`[data-part='pane']`
+       below already use), not the fleet's generic `--ui-bar-inline-inset` default: this consumer already
+       has its OWN established rhythm (the canvas/pane content directly below the header reads this exact
+       token too), and the header's own zones want to land on that SAME column, not a second, larger inset
+       that would read as misaligned against the panes it sits above (a deliberate, named departure from
+       GH #626's generic default — the docs site's own convergence on 24px for both roles was a
+       coincidence of THAT page's rhythm, never a mandate that every consumer's two tokens must match). */
+    padding-inline: var(--ui-agent-admin-shell-gutter);
+  }
+
+  [data-part='agent-select'] {
+    flex: 0 1 auto;
+    min-inline-size: 0;
+  }
+
+  [data-part='pane-pills'],
+  [data-part='header-actions'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-agent-admin-row-gap);
+  }
+
+  /* Page actions pin to the bar's inline end; the selector + pane-visibility pair sit beside each other at
+     the bar's start, never stretching to fill (a plain flex row — `header-actions` owns whatever slack the
+     bar's own content leaves). */
+  [data-part='header-actions'] {
+    margin-inline-start: auto;
+  }
+
+  /* GH #665's own 54rem derivation, REPURPOSED — see the `container-type: inline-size` declaration on the
+     composed `ui-super-shell` above for the shared-ancestor mechanics (identical real pixel moment the
+     pane holder's own 52.5rem line fires at, `SHELL_COMPACT_BREAKPOINT` plus one `shell-gutter` on each
+     side). The retired pane-nav bar used this line to HIDE itself entirely at wide; S7-c reuses the SAME
+     line for a different purpose — swapping which pane-visibility control paints (pills / segments) and
+     which header-actions subset paints (labeled buttons / the "+"+"•••" pair), never hiding the header
+     itself at either band. */
+  @container (inline-size < 54rem) {
+    [data-part='pane-pills'] {
+      display: none;
+    }
+    ui-button[data-part='new-agent-wide'],
+    ui-button[data-part='import-action'],
+    ui-button[data-part='export-action'] {
+      display: none;
+    }
+  }
+  @container (inline-size >= 54rem) {
+    ui-segmented-control[data-part='pane-segments'] {
+      display: none;
+    }
+    ui-button[data-part='new-agent-narrow'],
+    /* `ui-menu`'s own `#ensureParts` stamps `data-part="trigger"` on its first child at connect
+       (menu.ts), clobbering any value authored on it directly — scoped through the menu's own
+       `overflow-menu` part instead of a second, losing attribute name (agent-admin.ts's own comment on
+       this exact button). */
+    [data-part='overflow-menu'] ui-button[data-part='trigger'] {
+      display: none;
+    }
+  }
+
+  /* The `[hidden]` UNREGISTERED-seam degrade (LLD §16.3) — HIDE, never disable, an action affordance with
+     no registered callback. Type-selector-boosted specificity (0,2,1)/(0,3,1) beats each control's own
+     `@scope { :scope { display:… } }` rule (author-origin, 0,1,0) regardless of import order — the SAME
+     pattern this file's own `[data-part='settings-item'][hidden]` rule (below) already established for
+     the identical reason (ui-disclosure's `:scope{display:block}`). The band-query rules above need the
+     SAME boost for the SAME reason — a plain `[data-part='...']` selector alone ties `:scope`'s
+     specificity and would depend on import order to win. */
+  ui-button[data-part='new-agent-wide'][hidden],
+  ui-button[data-part='new-agent-narrow'][hidden],
+  ui-button[data-part='import-action'][hidden],
+  ui-button[data-part='export-action'][hidden],
+  [data-part='overflow-menu'] ui-button[data-part='trigger'][hidden] {
+    display: none;
+  }
 
   /* GH #686's Amendment (LLD §16.1/§16.5) — the Settings region: a plain sibling `div` now, never a
      `ui-master-detail-pane` (the MD wrapper role retires with the whole pairing vehicle). No inline padding
