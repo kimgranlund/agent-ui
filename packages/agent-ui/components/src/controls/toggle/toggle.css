@@ -59,10 +59,20 @@
   --ui-toggle-icon: var(--md-sys-icon-lg);
 }
 
-/* :state(pressed) — the tonal primary-container fill (dedicated interaction roles — no hand-derived hover/
-   active ladder needed, unlike button's soft variant): the ON state. The idle outline drops — the fill
-   itself now carries the pill's boundary. */
-:where(ui-toggle):state(pressed) {
+/* [pressed] / :state(pressed) — the tonal primary-container fill (dedicated interaction roles — no
+   hand-derived hover/active ladder needed, unlike button's soft variant): the ON state. The idle outline
+   drops — the fill itself now carries the pill's boundary. Both selectors are read: `[pressed]` (the
+   reflected attribute, toggle.ts) is what makes this paint rule apply under jsdom too — a real engine's
+   :state(pressed) capability is absent there (the segmented-control [checked] / indicator-element.ts dual-
+   write precedent) — and `:state(pressed)` covers a rare divergence (a consumer that writes
+   `internals.states` directly, never legal here, but the pairing is the established fleet shape). Both
+   pseudo-classes sit INSIDE the `:where()` parens via `:is()` (component-checker finding — a bare
+   `:where(ui-toggle):state(pressed)` puts the pseudo-class OUTSIDE :where()'s zero-specificity net, so it
+   contributes its own (0,1,0), beating the `[disabled]` override below (fully `:where()`-wrapped, (0,0,0))
+   regardless of source order — `<ui-toggle pressed disabled>` painted as a fully active primary pill
+   instead of muted; switch.css carries the SAME latent shape at its own checked-state repoint rule, out
+   of this slice's scope — flag for a follow-up issue, do not fix here). */
+:where(ui-toggle:is([pressed], :state(pressed))) {
   --ui-toggle-bg: var(--md-sys-color-primary-container);
   --ui-toggle-bg-hover: var(--md-sys-color-primary-container-hover);
   --ui-toggle-bg-active: var(--md-sys-color-primary-container-active);
