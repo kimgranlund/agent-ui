@@ -714,6 +714,61 @@ describe('ui-conversation — reset()', () => {
   })
 })
 
+// GH #666 — the empty-log seam. It exists so a consumer's "nothing here yet" state can live INSIDE this
+// element's card (border, log, bottom-pinned composer) instead of being a differently-shaped box beside it
+// — agent-admin's unarmed Author column is the first consumer, and Kim's 2026-08-10 pixel ruling is why.
+describe('ui-conversation — setEmptyState (GH #666)', () => {
+  const empty = (): HTMLElement => {
+    const node = document.createElement('div')
+    node.dataset.part = 'my-empty'
+    node.textContent = 'nothing here yet'
+    return node
+  }
+
+  it('seats the node FIRST in the log, so real turns read below it', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.setEmptyState(empty())
+    el.addUserMessage('hello')
+    expect([...log(el).children].map((c) => c.getAttribute('data-part'))).toEqual(['my-empty', 'turn'])
+  })
+
+  it('a pre-connect call is honored at connect (the setContentRenderer two-sided shape)', () => {
+    const el = document.createElement('ui-conversation') as UIConversationElement
+    el.setEmptyState(empty())
+    mount(el)
+    expect(log(el).querySelector('[data-part="my-empty"]'), 'the node is seated by connected()').not.toBeNull()
+  })
+
+  it('reset() KEEPS it — a reset conversation is empty again', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const node = empty()
+    el.setEmptyState(node)
+    el.addUserMessage('hello')
+    el.reset()
+    expect([...log(el).children]).toEqual([node])
+  })
+
+  it('null removes it, and re-seating the SAME node is a no-op rather than a move', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const node = empty()
+    el.setEmptyState(node)
+    el.addUserMessage('hello')
+    el.setEmptyState(node) // idempotent — the consumer may reflect its state unconditionally
+    expect([...log(el).children].map((c) => c.getAttribute('data-part'))).toEqual(['my-empty', 'turn'])
+    el.setEmptyState(null)
+    expect(log(el).querySelector('[data-part="my-empty"]')).toBeNull()
+    el.reset()
+    expect(log(el).children.length, 'and a later reset does not resurrect it').toBe(0)
+  })
+
+  it('unset (the default) leaves reset() byte-identical for every pre-#666 consumer', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.addUserMessage('hello')
+    el.reset()
+    expect(log(el).children.length).toBe(0)
+  })
+})
+
 describe('ui-conversation — disconnect disposes every open surface host (leak-safety net)', () => {
   it('removing the element WITHOUT calling reset()/dispose() still tears down every composed RendererHost', () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)

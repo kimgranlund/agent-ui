@@ -335,6 +335,9 @@ export class UIConversationElement extends UIElement {
   // `undefined` (default) ⇒ byte-identical plain `textContent`, no dependency. NEVER applied to
   // `addUserMessage` (SPEC-R4 AC1 — user text stays unescaped/unmodified, deliberately unaffected).
   #contentRenderer: ((text: string) => Node) | undefined
+  // GH #666 — the consumer-owned empty-log node (`setEmptyState`), seated first in the log and preserved
+  // across `reset()`. `undefined` (default) ⇒ byte-identical to every pre-#666 consumer.
+  #emptyState: HTMLElement | undefined
   #turnSeq = 0
   // TKT-0034 — the busy/re-entrancy guard: a COUNT (not a bool) of `beginAgentTurn()` handles that exist
   // but have not yet `finalize()`d/`fail()`d. `#send` no-ops while this is > 0 (auto-tracked, zero consumer
@@ -373,6 +376,9 @@ export class UIConversationElement extends UIElement {
 
       this.#composer = composer
       this.append(this.#log, composer)
+      // GH #666 — a `setEmptyState` call that arrived before this element connected (the consumer builds
+      // its card, then appends it) seats its node now.
+      if (this.#emptyState !== undefined) this.#log.prepend(this.#emptyState)
     }
 
     // Forward models/model/efforts/effort/contextItems straight through — the composed child's OWN
@@ -835,6 +841,26 @@ export class UIConversationElement extends UIElement {
     this.#contentRenderer = fn
   }
 
+  /** GH #666 — the EMPTY-LOG state: a consumer-owned node placed in the log area, so a conversation with
+   *  nothing in it yet is still THIS element's own card (border, kicker, log, composer pinned at the
+   *  bottom) rather than a different-looking box the consumer has to build beside it. `null` removes it.
+   *
+   *  Placement only, deliberately: this element never decides WHEN the state applies — a conversation can
+   *  be legitimately empty and armed (the agent speaks first) or full and idle, and only the consumer knows
+   *  which. `reset()` keeps it, because a reset conversation IS empty again; the consumer drops it with
+   *  `setEmptyState(null)` at whatever moment its own flow calls "no longer empty".
+   *
+   *  The node sits FIRST in the log, so real turns append below it in reading order. Safe before or after
+   *  connect (the `setContentRenderer` opt-in's own two-sided shape): pre-connect it is stored and
+   *  `connected()` seats it; post-connect it lands immediately. */
+  setEmptyState(node: HTMLElement | null): void {
+    const next = node ?? undefined
+    if (this.#emptyState === next) return
+    this.#emptyState?.remove()
+    this.#emptyState = next
+    if (next !== undefined) this.#log?.prepend(next)
+  }
+
   /** Disposes every open surface host and clears the thread. A documented no-op pre-connect. A consumer that
    *  resets mid-turn (abandoning an un-finalized `AgentTurnHandle` rather than calling `finalize()`/`fail()`
    *  on it) must not leave the composer permanently disabled — TKT-0034's counter/busy-state zero here too
@@ -849,7 +875,9 @@ export class UIConversationElement extends UIElement {
     // below removes it from the DOM (the SAME platform-fires-disconnectedCallback mechanism the leak-safety
     // net doc comment on `disconnected()` names) — only the Map bookkeeping needs clearing here.
     this.#genuiRegistry.clear()
-    this.#log!.replaceChildren()
+    // GH #666 — the empty-log state survives a reset by construction: a reset conversation is empty again,
+    // so re-seating the consumer's node here is the same statement `replaceChildren()` makes about turns.
+    this.#log!.replaceChildren(...(this.#emptyState ? [this.#emptyState] : []))
     this.#turnsInFlight = 0
     this.#reflectBusy()
   }
