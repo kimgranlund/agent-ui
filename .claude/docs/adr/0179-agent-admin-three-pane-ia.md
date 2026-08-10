@@ -204,6 +204,15 @@ focus-move mechanics on activation: `ui-tabs` may activate on arrow traversal, s
 focus into its region would fight keyboard navigation. If Kim prefers it hidden above the line, that
 is a CSS-only change in this file.
 
+> **2026-08-10 addendum (Kim's follow-on ruling, GH #665):** hidden above the line after all — with
+> the triple showing all three regions the pane nav reads redundant, and the S6 persist-at-every-band
+> call above is overruled. Implemented exactly as this paragraph's own closing sentence anticipated: a
+> CSS-only change in `agent-admin.css`, on the SAME container-query line the triple itself engages
+> (54rem on the composed shell's own width — the 1.5rem offset from the pane holder's own 52.5rem line
+> is the canvas box's own gutter, both sides; see that rule's comment for the full derivation). Below
+> the line the nav remains untouched — it is still the drill-in's only vehicle there, and this ruling
+> does not extend to it (flagged to Kim as a separate design question if he wants it gone everywhere).
+
 **Alternative considered and rejected: a three-pane split vehicle.** Composing `ui-split` directly with
 three panes (or widening `ui-master-detail` to a third position) would give a single uniform
 arrangement instead of a flex row wrapping a nested master-detail. Rejected: it mints an MD API change

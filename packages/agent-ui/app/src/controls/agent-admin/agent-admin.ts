@@ -61,6 +61,10 @@ import '@agent-ui/components/controls/icon'
 import '@agent-ui/code/editor'
 import '@agent-ui/components/controls/field'
 import '@agent-ui/components/controls/text-field'
+// GH #665 — the two conversation regions' own quiet identity kicker (`#makeRegionKicker`): the fleet's
+// `ui-text[variant='kicker']` idiom (the nav-rail `context-label` precedent, GH #624), reused rather than
+// re-minted — the eyebrow-header dimensions/casing already live there, this file only repoints the ink.
+import '@agent-ui/components/controls/text'
 // The Model grid's row controls (2026-07-19 rev.2) — ui-switch is already registered above; ui-radio
 // registers here for the default-position column (rev.3: a radio SYSTEM — the semantically honest
 // pick-exactly-one control; selection coordination stays this element's render, not a ui-radio-group,
@@ -653,6 +657,12 @@ export class UIAgentAdminElement extends UIElement {
     this.#paneHolder = paneHolder
 
     const conversation = new UIConversationElement()
+    // GH #665 — the triple dock puts two conversations on screen at once with nothing saying which is
+    // which (Kim's screenshot: two visually identical empty threads). A quiet region kicker, prepended
+    // before the control's own log/composer mount (`ui-conversation`'s `connected()` only ever APPENDS —
+    // see `#makeRegionKicker`'s own comment), names this one the permanent test context (`#contextFor`'s
+    // 'chat' origin) — host chrome, not something the agent itself authors.
+    conversation.prepend(this.#makeRegionKicker('Test chat'))
     // GH #238/#239/ADR-0159 — the admin chat opts INTO the receipt pattern (Kim's 2026-07-23 ruling; this
     // is the surface the ruling's screenshot came from): each turn's activity renders as one morphing line
     // while live and auto-collapses to a "N steps · total" receipt at the turn's end, expandable both ways.
@@ -1185,6 +1195,23 @@ export class UIAgentAdminElement extends UIElement {
     }
   }
 
+  /** GH #665 — a quiet identity header for a conversation region: the fleet's `ui-text[variant='kicker']`
+   *  eyebrow (nav-rail's `context-label`/GH #624 precedent — dimensions/uppercase-casing already live on
+   *  the shared control, this method only repoints the ink via `[data-part='region-kicker']` in
+   *  agent-admin.css, the same token-repoint pattern the picker pills use). `prepend`-ed onto a fresh
+   *  `ui-conversation` BEFORE it ever connects: `connected()` only ever `this.append(this.#log, composer)`
+   *  (conversation.ts) — appending to whatever is already there — so a kicker seated first stays first,
+   *  and `reset()`'s own `#log!.replaceChildren()` clears only the log's OWN children, never this
+   *  host-level sibling. */
+  #makeRegionKicker(label: string): HTMLElement {
+    const kicker = document.createElement('ui-text')
+    kicker.setAttribute('variant', 'kicker')
+    kicker.setAttribute('size', 'sm')
+    kicker.setAttribute('data-part', 'region-kicker')
+    kicker.textContent = label
+    return kicker
+  }
+
   /**
    * ADR-0179 OQ4 (LLD §2) — the Author place's empty state: a first-class place that vanishes when the
    * flow is unarmed would not be a place at all, so the region always exists and says what it is for.
@@ -1310,6 +1337,9 @@ export class UIAgentAdminElement extends UIElement {
     if (this.#authoringConversation !== null || stack === null) return
     const conversation = new UIConversationElement()
     conversation.setAttribute('data-part', 'authoring-conversation')
+    // GH #665 — the interview's own kicker (the "Builder INTERVIEW" identity Kim's screenshot named),
+    // matching the test conversation's `#makeRegionKicker` above.
+    conversation.prepend(this.#makeRegionKicker('Builder interview'))
     // Same two developer-surface opt-ins the test conversation takes (GH #238/#240/ADR-0159): the
     // interview is watched by the same person debugging the draft.
     conversation.receipt = true

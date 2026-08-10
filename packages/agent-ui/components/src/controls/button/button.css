@@ -284,6 +284,20 @@
     cursor: default;
   }
 
+  /* GH #665 (found live, not a hunch: a conversation-composer mic button reflects `hidden` — TKT-0056's
+     own OPT-IN pattern, "hidden until a consumer registers onMicClick" — yet kept a real, measured
+     28×28px box in the row, eating space a narrow composer needed) — `:scope`'s own unconditional
+     `display: inline-grid` (base rule, top of this file) is an AUTHOR-level declaration, and author
+     styles beat the UA stylesheet's `[hidden] { display: none }` regardless of specificity (a plain
+     browser law, not a bug in the UA rule). Every custom element with its own unconditional `display`
+     needs this SAME one-line repoint to keep `[hidden]` working (the `UIElement` base class doesn't
+     supply it — each control owns its own `display`, ADR-0006) — `ui-button` had never needed to reach
+     for `hidden` itself before this consumer did. `!important`-free: `:is([hidden])`, like the disabled
+     rule just above, is specific enough (0,1,1) to win outright over the base `:scope` rule (0,0,1). */
+  :scope:is([hidden]) {
+    display: none;
+  }
+
   /* forced-colors — keep the ink + border visible (the label/outline must not vanish). The focus ring
      survives for free: `--md-sys-color-focus-ring` carries the token layer's `→ Highlight` WHCM mapping, so the
      `:focus-visible` outline above resolves to the system focus colour with no per-control rule. */

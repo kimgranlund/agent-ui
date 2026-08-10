@@ -104,8 +104,15 @@
        ui-settings' master-detail detail pane go scrollbar-less to match this surface's own panes. Their
        defaults elsewhere stay `auto`. GH #52/ADR-0154: the ui-split-pane/fill-tabs knobs this repointed
        are gone with the shell they belonged to — ui-super-shell's own panes scroll natively (its
-       `[data-part='pane']` rule already sets `overflow-y: auto`, no consumer knob to repoint here). */
+       `[data-part='pane']` rule already sets `overflow-y: auto`, no consumer knob to repoint here).
+       GH #665 (Kim's ruling, live screenshot: a real, painted scrollbar on the settings column) —
+       `--ui-split-pane-scrollbar-width` is back, and was never re-wired: GH #662's wide TRIPLE DOCK put a
+       real `ui-split`/`ui-split-pane` UNDER the settings/author pairing again (the master-detail's own
+       ≥40rem docked-split arm), the exact primitive the paragraph above once retired for a narrower
+       architecture — split-pane.css's own comment on `--ui-split-pane-scrollbar-width` already documents
+       "ui-agent-admin sets `none`" as the consumer contract, a claim this file never actually kept. */
     --ui-conversation-scrollbar-width: var(--ui-agent-admin-scrollbar-width);
+    --ui-split-pane-scrollbar-width: var(--ui-agent-admin-scrollbar-width);
   }
 
   /* GH #52/ADR-0154 — the one composed child (the JS-created ui-chat-shell) fills the available block
@@ -153,6 +160,10 @@
        DIFFERENT reason (var() resolution order); this is the cascade-precedence sibling of that bug. */
     --ui-super-shell-canvas-min-size: 16rem; /* today's ui-split canvasPane[min] value, verbatim (LLD-C4) */
     --ui-super-shell-pane-min-size: 20rem; /* today's ui-split tabsPane[min] value, verbatim (LLD-C4) */
+    /* GH #665, ADR-0179 Amendment addendum (Kim's 2026-08-10 follow-on ruling) — the query subject for
+       the pane-nav bar's own wide-hide rule (search "54rem" below for why THIS element, not the pane
+       holder the triple band already queries). */
+    container-type: inline-size;
   }
 
   /* The conversation fills super-shell's own `content`/canvas box; its internal scrolling is its own
@@ -196,6 +207,30 @@
     flex: 1 1 0;
     min-inline-size: 0;
     min-block-size: 0;
+  }
+  /* GH #665 — the two conversation regions' own quiet identity header (`#makeRegionKicker`): the fleet
+     `ui-text[variant='kicker']` eyebrow (nav-rail's `context-label`/GH #624 precedent), ONE token-repoint
+     for the muted "neutral" ink role (item 4 of that same ruling — secondary/meta text, never the
+     region's own content). flex-shrink is left at its default (0 is unnecessary — a one-line kicker never
+     has slack to give up before the log/composer below, which both carry their own min-block-size floors).
+     Kim's live-screenshot follow-on (2026-08-10) — the kicker's OWN border-box sits flush against
+     `ui-conversation`'s real, PAINTED 1px border (conversation.css's `:scope { border: 1px solid … }` —
+     this element genuinely is a bordered card, not just a conceptual one), and a bare `margin-block-end`
+     never gave its own TEXT any inset from that border on the top/left it never touched at all — reading
+     as clipped in Kim's screenshot. `padding: var(--ui-agent-admin-section-gap)` replaces that margin
+     with real inset on all four sides, sized to MATCH `--ui-conversation-log-pad`'s own numeric value
+     (`--md-sys-space-lg`, the SAME `--md-sys-*` primitive under a different name — SPEC-R11c/AC19's own
+     law: this file mints its own role-named token rather than reading `--ui-conversation-*` cross-scope)
+     — the kicker's text now lands on the EXACT left line the log's own turns render on directly beneath
+     it, "the same left line the transcript … content uses" per the ruling. Padding, not margin, is
+     deliberate: it insets the kicker's own CONTENT without moving the kicker's own border-box position,
+     so the cross-column "shared top line" probe (GH #665, the triple describe block) — which compares BOX
+     tops, not rendered text — stays true unmodified; only the OTHER two candidates that WOULD have moved
+     it (conversation's own host padding, or the settings-nav's own ambient inset) were ruled out earlier
+     in this same ticket for cost reasons untouched here. */
+  [data-part='region-kicker'] {
+    --ui-text-color: var(--md-sys-color-neutral);
+    padding: var(--ui-agent-admin-section-gap);
   }
   /* The pair's floor IS the MD's own dock line: at 40rem it stays a docked split, below it drills in. The
      `2` share keeps the three columns reading roughly equal once there is room to spare (the pair holds
@@ -266,6 +301,48 @@
     min-inline-size: 0;
   }
 
+  /* GH #665, ADR-0179 Amendment addendum (Kim's 2026-08-10 follow-on ruling, dated note added there —
+     "the Amendment is ratified; append, never rewrite") — at and above the triple line the pane nav is
+     redundant (all three places already paint side by side) and goes away; below it the nav is the ONLY
+     drill-in vehicle and stays. Below the pane's own display:none, agent-admin never composes a second
+     nav — so this can't reuse the pane-holder's OWN `@container` block above (a DIFFERENT container:
+     `[data-part='pane-nav-bar']` is the header slot's own box, a SIBLING of the canvas the holder lives
+     in, not a descendant of it — no `@container` query can cross that boundary regardless of naming).
+     `container-type: inline-size` lands on the composed `ui-super-shell` instead (above, alongside this
+     file's other two deliberate `--ui-agent-admin-*`-only exceptions) — the nearest ancestor BOTH the bar
+     and the holder share. `54rem`, not `52.5rem`: measured, both engines — the composed shell's own
+     inline-size is always exactly the pane holder's own `52.5rem` line PLUS one full `shell-gutter` on
+     each side (the canvas box's own padding, `--ui-agent-admin-shell-gutter` × 2 = 1.5rem at the default
+     scale) — 54rem here fires at the IDENTICAL real pixel moment 52.5rem does on the holder (864px outer
+     = 840px holder, both measured together at the triple's own entry line), so the nav vanishes on the
+     exact frame the triple starts painting, never a beat early or late. Like the triple line itself
+     (ADR-0150/0155's `SHELL_COMPACT_BREAKPOINT`), this is a fixed literal, not scale-derived — the fleet's
+     own precedent for THAT line already treats it as unscaled, and the constant 1.5rem gutter offset
+     between the two containers only holds by riding the same assumption. */
+  @container (inline-size >= 54rem) {
+    [data-part='pane-nav-bar'] {
+      display: none;
+    }
+    /* Kim's live-screenshot follow-on (2026-08-10) — `display:none` on the CONTENT above empties the
+       header bar, but super-shell's OWN structural box, `[data-part='bar']`, still reserves a real,
+       painted band: `min-block-size: var(--ui-super-shell-bar-size)` (super-shell.css) is a floor that
+       holds regardless of what its content computes to, ADR-0166 cl.3's documented "bars are never
+       hidden at any band" law — `display:none`-ing the BAR ITSELF (not just its content) would violate
+       that fleet-wide invariant every OTHER super-shell consumer relies on (the radius-squaring `:has()`
+       rules, the seam border math, `super-shell-bar-seam.browser.test.ts`'s own nested-shell probe all
+       assume the bar box is a permanent structural fixture). `--ui-super-shell-bar-size` is the
+       DOCUMENTED consumer-repoint seam instead (super-shell.css's own comment: "a taller sibling … or a
+       consumer repointing `--ui-super-shell-bar-size`") — repointing it to `0` on the header bar
+       specifically collapses the reserved floor to nothing while leaving the box, its `:has()`-matched
+       DOM presence, and its seam border all structurally untouched (a hairline border may still paint at
+       zero height — the seam law is retract-the-fill-never-the-border, unchanged from the no-divider
+       precedent above). Scoped to `[data-bar='header']` alone: agent-admin composes no footer bar, and a
+       blanket repoint would reach one if some future consumer's shell ever grew one here. */
+    [data-part='bar'][data-bar='header'] {
+      --ui-super-shell-bar-size: 0;
+    }
+  }
+
   /* ADR-0179 cl.3 (LLD §2/§6) — the pairing. The MD itself owns the split/resize/drill-in; this file adds
      only what a consumer owes: the fill, each region's own gutter + scroll, and the back suppression. */
   [data-part='pane-pair'] {
@@ -276,7 +353,25 @@
      `ui-master-detail-pane`'s own sheet states the family law ("overflow is left to the wrapping
      split-pane, which already sets overflow: auto"), and adding a second scroller inside it produced a
      region that grew with its content instead of scrolling (measured: `scrollTop` stayed 0 with 3000px of
-     overflow, agent-admin-app-scroll.browser.test.ts). */
+     overflow, agent-admin-app-scroll.browser.test.ts).
+     GH #665 — this shared rule used to carry a full, four-side `shell-gutter` padding: a SECOND gutter
+     layer stacked on top of the canvas's own outer one (the chat conversation, `[data-part='pane-holder']
+     > ui-conversation` above, carries none of its own and relies on the canvas gutter alone), which is
+     what read as ragged tops/bottoms — author/settings content started a full gutter further in than
+     chat's, on every edge. `padding-block: 0` below drops that redundant top/bottom layer so all three
+     columns' content shares chat's own top line and bottom rhythm (adding the padding to CHAT instead was
+     tried and reverted: it costs the composer 24px of the 20ch floor it needs at the triple's own tightest
+     measured band, regressing the GH #662 density gate — dropping the extra layer here costs nothing, it
+     only touches vertical inset). The two panes' OWN inline padding stays (below), asymmetric now instead
+     of uniform: `pane-holder` never declared a `gap` for its row, so author's leading edge is still the
+     ONLY thing separating it from chat and needs its full gutter; the split between author and settings
+     already has its OWN separator track, so pairing full gutters on BOTH sides of that seam produced ~25px
+     against the chat↔author seam's ~12 (GH #665's "uneven gutters") — dropping the inner-facing side of
+     each (author's trailing edge, settings' both edges) leaves ONE full-gutter contributor per seam
+     (author's leading edge for chat↔author; settings' leading edge + the separator's own hairline track
+     for author↔settings), closing the two gaps to within that hairline of each other, and drops settings'
+     own trailing edge in favor of the canvas's outer gutter it already sits inside — the same single-layer
+     treatment chat's own leading edge already gets. */
   [data-part='author-pane'],
   [data-part='settings-pane'] {
     display: flex;
@@ -288,7 +383,9 @@
        800px-tall frame). The wrapper owns the scroll (see above), so `100%` here is pure fill, not a
        second scroller. */
     block-size: 100%;
-    padding: var(--ui-agent-admin-shell-gutter);
+    padding-block: 0;
+    padding-inline-start: var(--ui-agent-admin-shell-gutter);
+    padding-inline-end: 0;
   }
   [data-part='author-pane'] > ui-conversation {
     flex: 1 1 auto;
