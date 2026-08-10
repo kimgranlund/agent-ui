@@ -56,7 +56,27 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
   - name: settings-item
     description: One config-column section's FOLD, now spread across the Agent/Capabilities/Surface tabs (GH #574 — Kim's ruling, splitting the old single flat Settings tab; GH #225's Kim ruling, the GH #222 Context pattern applied back to the config column, is unchanged) — `<ui-disclosure data-part="settings-item" data-item="agent|model|surface|bankroll|prompt-section|skill|workflow|resource|tool|pattern-source">`, a chrome-free fold host whose summary IS the section heading (the shared heading register, chevron on the heading row) over the section's content card(s) as its body. ALL default OPEN (config is an editing surface — Context's newest-open logic is a log-reading choice, not a config one); built once, fold state lives in the live DOM, session-ephemeral. The Agent/kind folds carry their master switch ON the summary row via ui-disclosure's `slot="summary"` position slot (GH #226/ADR-0158 — a switch click never folds; the component owns the activation guard and the switch survives any fold rebuild). Replaces the old plain heading parts (agent-header/agent-heading/model-grid-heading/surface-options-heading/entry-section-header/-heading), all retired.
   - name: pane-holder
-    description: GH #686's Amendment (admin-three-pane-ia.lld.md §16.1/§16.2, S7-b) — the content slot's holder (`<div data-part="pane-holder" data-slot="content">`), was `chat-stack`, then ADR-0179's fixed pair/triple `data-pane` box. It now holds THREE SIBLING regions in `PANE_ORDER` (chat · settings · copilot) — no pairing vehicle. `data-show` (the shown SET, space-joined, `PANE_ORDER`) and `data-primary` (the narrow truth, always a member of the set) are the ONLY state written here (`#applyPaneVisibility`); the sheet reads both against the holder's own inline-size (`container-type: inline-size`) — below `SHELL_COMPACT_BREAKPOINT` (52.5rem) exactly the `data-primary` region paints, at and above it every `data-show` member does. No region carries a `hidden` attribute, and no resize writes any state. `header` composes NO content this slice — the unified selector/visibility/actions bar that replaces the retired pane nav is S7-c's own build (a documented gap).
+    description: GH #686's Amendment (admin-three-pane-ia.lld.md §16.1/§16.2, S7-b) — the content slot's holder (`<div data-part="pane-holder" data-slot="content">`), was `chat-stack`, then ADR-0179's fixed pair/triple `data-pane` box. It now holds THREE SIBLING regions in `PANE_ORDER` (chat · settings · copilot) — no pairing vehicle. `data-show` (the shown SET, space-joined, `PANE_ORDER`) and `data-primary` (the narrow truth, always a member of the set) are the ONLY state written here (`#applyPaneVisibility`); the sheet reads both against the holder's own inline-size (`container-type: inline-size`) — below `SHELL_COMPACT_BREAKPOINT` (52.5rem) exactly the `data-primary` region paints, at and above it every `data-show` member does. No region carries a `hidden` attribute, and no resize writes any state. `header` composes S7-c's own unified header bar (see `admin-header` below) — the retired pane nav's replacement, a different shape (selector/visibility/actions), never a restoration.
+  - name: admin-header
+    description: S7-c (admin-three-pane-ia.lld.md §16.1/§16.3) — `<div data-part="admin-header" data-slot="header">`, the `header` slot's one authored child (`#composeHeader`). Three zones in DOM order — `agent-select`, the pane-visibility pair (`pane-pills` wide / `pane-segments` narrow, one CSS band swap, never two copies of the truth), and `header-actions` — landmark role is the slot's own default (`banner`, super-shell.ts's `roleFor`; no `data-landmark` override, matching the anatomy's "no landmark override; the nav retired"). Paints at every band (unlike the retired nav, which used to hide itself wide at ≥54rem — this element reuses that SAME line to swap which of its two pane-visibility/actions renderings paints, never to hide the bar itself).
+  - name: agent-select
+    description: S7-c — `<ui-select data-part="agent-select">`, the roster picker `setAgentRoster`/`onAgentSelect` drive. Options are rebuilt wholesale on every `setAgentRoster` call (re-callable — a page re-pushes after a mint/import); the committed value is a silent programmatic write (`value =`, ADR-0019 — no `select` re-emission). The control's own internal `select`/`change` events stay contained (`stopPropagation`) — the closed seven-event set is untouched.
+  - name: pane-pills
+    description: S7-c — `<div data-part="pane-pills">` holding three `<ui-toggle data-pane="chat|settings|copilot">` (S7-a), the WIDE rendering of the shared shown-set/primary truth (§16.2): icon (identity glyph) + label + a state-icon (Eye/EyeSlash, mirroring membership). A press refuses via `ui-toggle`'s own cancelable-before-commit `toggle` event when it would empty the shown set (the min-one invariant); an accepted press funnels through the SAME `#setPanesShown` mutator the narrow segments and the guided-authoring arm already use. Hidden (CSS, `@container (inline-size < 54rem)`) in favor of `pane-segments` below that line.
+  - name: pane-segments
+    description: S7-c — `<ui-segmented-control data-part="pane-segments" aria-label="Visible pane">` holding three icon-only `<ui-segment aria-label="Chat|Settings|Co-pilot">`, the NARROW single-select rendering of the SAME truth. A commit sets primary AND ensures membership (`#setPanePrimary`, LLD §16.2's narrow-segment write semantics) — never a second copy of `#panesShown`/`#panePrimary`. Its own `change` event stays contained (`stopPropagation`). Hidden (CSS) at and above 54rem in favor of `pane-pills`.
+  - name: header-actions
+    description: S7-c — `<div data-part="header-actions">`, pinned to the header's inline end. Wide renders `new-agent-wide`/`import-action`/`export-action` as labeled `ui-button`s; narrow collapses to `new-agent-narrow` (an icon-only "+") plus `overflow-menu`'s icon-only trigger ("•••", Import/Export as menu items, addressed as `[data-part='overflow-menu'] [data-part='trigger']` — `ui-menu` itself owns that button's `data-part`, LLD §16.3) — the CSS band swap is unconditional; the PER-AFFORDANCE `[hidden]` layered on top is the unregistered-seam degrade (`onNewAgentRequest`/`onImportRequest`/`onExportRequest`, LLD §16.3), never a disable.
+  - name: new-agent-wide
+    description: S7-c — the wide `onNewAgentRequest` affordance, a labeled `<ui-button data-part="new-agent-wide">` with a leading `plus` icon. `[hidden]` while unregistered.
+  - name: new-agent-narrow
+    description: S7-c — the narrow `onNewAgentRequest` affordance, an icon-only `<ui-button data-part="new-agent-narrow" icon-only aria-label="New Agent">` ("+"). Shares registration state with `new-agent-wide` — ONE seam, two renderings.
+  - name: import-action
+    description: S7-c — the wide `onImportRequest` affordance, a labeled `<ui-button data-part="import-action">`. `[hidden]` while unregistered, independent of `export-action`'s own state.
+  - name: export-action
+    description: S7-c — the wide `onExportRequest` affordance, the `import-action` shape mirrored.
+  - name: overflow-menu
+    description: S7-c — the narrow `<ui-menu data-part="overflow-menu" placement="bottom-end">` holding Import/Export as plain menu items (LLD §16.6 OQ-B — Reset stays Settings-only, out of this menu). Its own trigger is icon-only (`dots-three`, `aria-label="More actions"`) and carries NO `data-part` of its own — `ui-menu`'s own connect-time `#ensureParts` stamps `data-part="trigger"` on its first child unconditionally, so this button is addressed scoped through the menu's own part (`[data-part='overflow-menu'] [data-part='trigger']`), never a second, losing attribute name. Each item independently `[hidden]`+`aria-disabled` per its own seam's registration, and the trigger itself hides only when BOTH are gone (an openable-but-empty menu is not a real affordance).
   - name: chat-pane
     description: LLD §16.1 — the Chat place's region: `#conversation`, the test `<ui-conversation data-part="chat-pane">`, byte-unchanged in substance from every earlier revision. A direct child of `pane-holder`, first in `PANE_ORDER`.
   - name: settings-pane
@@ -242,6 +262,39 @@ from outside any specific card, has no pick to carry, so its own call sends no s
 default stands (GH #681). Optional at both ends: a page that ignores the argument behaves exactly as before.
 Effort takes the same pre-arm-then-apply path but is not part of the seed — it has no store home by design (it
 is a per-conversation dial on the element, never persisted).
+
+### S7-c — the unified header bar's six seams (admin-three-pane-ia.lld.md §16.3, frozen shapes)
+
+```ts
+setAgentRoster(entries: readonly AgentRosterEntry[], activeId?: string): void
+onAgentSelect(callback: (id: string) => void): void
+onNewAgentRequest(callback: () => void): void
+onImportRequest(callback: () => void): void
+onExportRequest(callback: () => void): void
+onResetRequest(callback: () => void): void
+```
+
+All six follow `onGenerateRequest`'s shipped semantics: a callback registration, never a CustomEvent
+(SPEC-R5); last registration wins; safe before OR after connect (the GH #666 order rule — each setter's
+own reflect call, mirrored by the header's build-time call, covers both orders). `setAgentRoster` is the
+one DATA-in seam of the six (not a callback) — re-callable, so a page re-pushes the roster after a
+mint/import; the same order-free law applies (a pre-connect call is held and applied once the header
+exists).
+
+**The degrade diverges deliberately from `onGenerateRequest`'s own precedent, stated rather than
+inherited**: that seam DISABLES its card when unregistered — a disabled conversation still shows its own
+copy. These five action seams (`onNewAgentRequest`/`onImportRequest`/`onExportRequest` — `onAgentSelect`
+and `setAgentRoster` carry no availability state of their own) instead HIDE their affordance entirely —
+the right degrade for a bare action button or menu item, which has no copy to show disabled. New Agent's
+wide labeled button and its narrow icon-only "+" twin share ONE registration; Import/Export each degrade
+independently (their own wide button AND their own narrow overflow-menu item); the narrow `•••` trigger
+itself hides only when BOTH Import and Export are unregistered (an openable-but-empty menu is not a real
+affordance either). `onResetRequest` is a bare registration in this slice — S7-d places its consumer (the
+Settings model-grid fold's "Reset Agent" affordance) and the site page's registration of it.
+
+`onAgentSelect`'s callback fires from the header select's own commit; the select's internal `select`/
+`change` events stay contained (`stopPropagation`) — the closed seven-event set (naming.md §4) is
+untouched by this slice, same as every other composed child's events elsewhere in this element.
 
 ## One primitive, seven instantiations (ADR-0132; genui-surface SPEC-R11 added pattern-source, ADR-0170 added catalog)
 

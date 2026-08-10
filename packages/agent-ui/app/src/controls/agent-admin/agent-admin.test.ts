@@ -149,7 +149,7 @@ describe('mountEntryList — customAdd/contentField (ADR-0170 cl.8)', () => {
 })
 
 describe('UIAgentAdminElement — shell composition (ADR-0179): the three places + the settings sub-nav', () => {
-  it('composes ONE ui-chat-shell: header=EMPTY this slice, content=three sibling regions (chat/settings/copilot) — GH #686\'s Amendment', () => {
+  it('composes ONE ui-chat-shell: header=the S7-c unified header bar, content=three sibling regions (chat/settings/copilot) — GH #686\'s Amendment', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const shell = el.querySelector(':scope > ui-chat-shell') as HTMLElement
     expect(shell).not.toBeNull()
@@ -158,11 +158,18 @@ describe('UIAgentAdminElement — shell composition (ADR-0179): the three places
     expect(shell.hasAttribute('narrow-end'), 'the six-entry narrow-tabs vocabulary is gone').toBe(false)
     expect(el.querySelector('[data-slot-name="options-pane"]'), 'nothing occupies the options-pane slot any more').toBeNull()
 
-    // LLD §16.4 S7-b row — the pane nav retires and no replacement lands until S7-c: `header` composes
-    // NOTHING in this slice (a documented gap, not an oversight).
-    expect(el.querySelector('[data-slot="header"]'), 'no admin-composed header content this slice').toBeNull()
+    // LLD §16.4 S7-c row — the pane nav retires; the replacement is the unified header bar (a different
+    // shape — agent select + pane pills/segments + page actions — never a restoration of the old nav).
+    const header = el.querySelector('[data-slot="header"]') as HTMLElement
+    expect(header, 'S7-c composes the unified header bar').not.toBeNull()
+    expect(header.getAttribute('data-part')).toBe('admin-header')
     expect(el.querySelector('[data-part="pane-nav-bar"]'), 'the retired pane-nav bar').toBeNull()
     expect(el.querySelector('[data-part="pane-nav"]'), 'the retired pane nav').toBeNull()
+    // LLD §16.1's anatomy — three zones, in DOM order.
+    expect(header.querySelector('[data-part="agent-select"]')).not.toBeNull()
+    expect(header.querySelector('[data-part="pane-pills"]')).not.toBeNull()
+    expect(header.querySelector('[data-part="pane-segments"]')).not.toBeNull()
+    expect(header.querySelector('[data-part="header-actions"]')).not.toBeNull()
 
     const holder = el.querySelector('[data-part="pane-holder"]') as HTMLElement
     expect(holder.getAttribute('data-slot')).toBe('content')
@@ -483,6 +490,222 @@ describe('UIAgentAdminElement — shell composition (ADR-0179): the three places
     // reads. GH #488 — it has no fold heading row of its own to carry one on anyway (it mounts inside
     // Surface Options now, not as its own top-level settings-item — the test above pins that placement).
     expect(el.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.catalog}"] [data-part="kind-enabled"]`)).toBeNull()
+  })
+})
+
+// ── S7-c (LLD §16.1/§16.3/§16.4) — the unified header bar: the six seams, the refused-toggle wiring, the
+// pills⇄segment mirror, and every icon-only affordance's accessible name. jsdom cannot resolve the real
+// @container band query (agent-admin.browser.test.ts proves the pills⇄segments/wide⇄narrow-actions CSS
+// swap cross-engine); this file proves the DOM/state behavior independent of which band is painted. ────
+describe('UIAgentAdminElement — the unified header bar (S7-c, ADR-0179 GH #686 Amendment)', () => {
+  function header(el: UIAgentAdminElement): HTMLElement {
+    return el.querySelector('[data-part="admin-header"]') as HTMLElement
+  }
+  function pillOf(el: UIAgentAdminElement, pane: 'chat' | 'settings' | 'copilot'): HTMLElement & { pressed: boolean } {
+    return header(el).querySelector(`[data-part="pane-pills"] ui-toggle[data-pane="${pane}"]`) as HTMLElement & { pressed: boolean }
+  }
+  function segmentsOf(el: UIAgentAdminElement): HTMLElement & { value: string | null } {
+    return header(el).querySelector('[data-part="pane-segments"]') as HTMLElement & { value: string | null }
+  }
+
+  it('anatomy: three zones in DOM order, no data-landmark override (the slot default banner stands)', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const h = header(el)
+    expect(h.hasAttribute('data-landmark'), 'no landmark override — the anatomy\'s own "no landmark override" note').toBe(false)
+    const zoneParts = [...h.children].map((c) => c.getAttribute('data-part'))
+    expect(zoneParts).toEqual(['agent-select', 'pane-pills', 'pane-segments', 'header-actions'])
+    // Every pane pill carries an identity icon, a visible label, and a state icon (toggle.md's three slots).
+    for (const [pane, label] of [['chat', 'Chat'], ['settings', 'Settings'], ['copilot', 'Co-pilot']] as const) {
+      const pill = pillOf(el, pane)
+      expect(pill.textContent).toContain(label)
+      expect(pill.querySelector('[slot="icon"]'), `${pane} pill identity icon`).not.toBeNull()
+      expect(pill.querySelector('[slot="state-icon"]'), `${pane} pill state icon`).not.toBeNull()
+    }
+  })
+
+  it('every icon-only affordance carries an asserted accessible name (aria-label) — the narrow segments, "+", "•••"', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const h = header(el)
+    const segments = [...h.querySelectorAll('[data-part="pane-segments"] ui-segment')] as HTMLElement[]
+    expect(segments.map((s) => s.getAttribute('aria-label'))).toEqual(['Chat', 'Settings', 'Co-pilot'])
+    const newAgentNarrow = h.querySelector('[data-part="new-agent-narrow"]') as HTMLElement
+    expect(newAgentNarrow.hasAttribute('icon-only'), 'icon-only opt-in (button.md)').toBe(true)
+    expect(newAgentNarrow.getAttribute('aria-label')).toBe('New Agent')
+    const overflowTrigger = h.querySelector('[data-part="overflow-menu"] [data-part="trigger"]') as HTMLElement
+    expect(overflowTrigger.hasAttribute('icon-only')).toBe(true)
+    expect(overflowTrigger.getAttribute('aria-label')).toBe('More actions')
+    // Wide pills/labeled buttons carry their own visible text — no aria-label owed (toggle.md's label slot).
+    expect(pillOf(el, 'chat').hasAttribute('aria-label'), 'a labeled pill needs no aria-label').toBe(false)
+  })
+
+  it('setAgentRoster / onAgentSelect: rebuilds the roster wholesale, is re-callable, and the pick reaches the registered callback — the select\'s own select/change never escapes the host', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const picks: string[] = []
+    el.onAgentSelect((id) => picks.push(id))
+    el.setAgentRoster([{ id: 'a', label: 'Agent A' }, { id: 'b', label: 'Agent B' }], 'a')
+    const select = header(el).querySelector('[data-part="agent-select"]') as HTMLElement & { value: string }
+    expect([...select.querySelectorAll('[role="option"]')].map((o) => o.textContent)).toEqual(['Agent A', 'Agent B'])
+    expect(select.value).toBe('a')
+
+    // Re-callable — a later push replaces the roster wholesale (a page re-pushing after a mint/import).
+    el.setAgentRoster([{ id: 'c', label: 'Agent C' }])
+    expect([...select.querySelectorAll('[role="option"]')].map((o) => o.textContent)).toEqual(['Agent C'])
+    expect(select.value, 'no activeId this time ⇒ nothing selected').toBe('')
+
+    const seen: string[] = []
+    el.addEventListener('select', () => seen.push('select'))
+    el.addEventListener('change', () => seen.push('change'))
+    select.value = 'c' // a programmatic write below never fires select — only the registered callback path does
+    expect(seen).toEqual([])
+    ;(select.querySelectorAll('[role="option"]')[0] as HTMLElement).dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    // The real user commit path fires the registered callback, never a host-level select/change.
+    expect(seen, 'the select\'s own events stay contained — this element re-emits nothing').toEqual([])
+  })
+
+  it('setAgentRoster is safe called BEFORE first connect (the GH #666 order rule, applied to a data-in seam)', () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.setAgentRoster([{ id: 'x', label: 'Agent X' }], 'x')
+    mount(el)
+    const select = header(el).querySelector('[data-part="agent-select"]') as HTMLElement & { value: string }
+    expect([...select.querySelectorAll('[role="option"]')].map((o) => o.textContent)).toEqual(['Agent X'])
+    expect(select.value).toBe('x')
+  })
+
+  // ── the four action seams: register-before/after-connect + the per-affordance hidden degrade ─────────
+  for (const [seamName, part, register] of [
+    ['onNewAgentRequest', 'new-agent-wide', (el: UIAgentAdminElement, cb: () => void) => el.onNewAgentRequest(cb)],
+    ['onImportRequest', 'import-action', (el: UIAgentAdminElement, cb: () => void) => el.onImportRequest(cb)],
+    ['onExportRequest', 'export-action', (el: UIAgentAdminElement, cb: () => void) => el.onExportRequest(cb)],
+  ] as const) {
+    it(`${seamName}: HIDDEN unregistered, revealed by a register AFTER connect, and the click reaches the callback`, () => {
+      const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+      const btn = header(el).querySelector(`[data-part="${part}"]`) as HTMLElement
+      expect(btn.hidden, 'unregistered ⇒ hidden, never merely disabled').toBe(true)
+      let calls = 0
+      register(el, () => { calls += 1 })
+      expect(btn.hidden, 'registering AFTER connect reveals it (the GH #666 order rule)').toBe(false)
+      btn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      expect(calls).toBe(1)
+    })
+
+    it(`${seamName}: registered BEFORE first connect is honest at build time too`, () => {
+      const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+      register(el, () => {})
+      mount(el)
+      const btn = header(el).querySelector(`[data-part="${part}"]`) as HTMLElement
+      expect(btn.hidden, 'registering BEFORE connect reflects at #compose\'s own build-time call').toBe(false)
+    })
+  }
+
+  it('onNewAgentRequest: the narrow "+" twin shares the SAME registration as the wide button — one seam, two renderings', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const narrow = header(el).querySelector('[data-part="new-agent-narrow"]') as HTMLElement
+    expect(narrow.hidden).toBe(true)
+    let calls = 0
+    el.onNewAgentRequest(() => { calls += 1 })
+    expect(narrow.hidden).toBe(false)
+    narrow.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(calls).toBe(1)
+  })
+
+  it('the narrow "•••" overflow: each item degrades on its OWN seam\'s registration, and the trigger itself hides only when BOTH are gone', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const h = header(el)
+    const trigger = h.querySelector('[data-part="overflow-menu"] [data-part="trigger"]') as HTMLElement
+    const importItem = h.querySelector('[data-value="import-agent"]') as HTMLElement
+    const exportItem = h.querySelector('[data-value="export-agent"]') as HTMLElement
+    expect([trigger.hidden, importItem.hidden, exportItem.hidden], 'nothing registered ⇒ everything hidden').toEqual([true, true, true])
+
+    let imports = 0
+    el.onImportRequest(() => { imports += 1 })
+    expect(trigger.hidden, 'ONE affordance registered ⇒ the trigger reveals (something real to open onto)').toBe(false)
+    expect([importItem.hidden, exportItem.hidden]).toEqual([false, true])
+    expect(importItem.getAttribute('aria-disabled')).toBe('false')
+    expect(exportItem.getAttribute('aria-disabled')).toBe('true')
+
+    let exports = 0
+    el.onExportRequest(() => { exports += 1 })
+    expect(exportItem.hidden).toBe(false)
+
+    importItem.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    exportItem.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect([imports, exports]).toEqual([1, 1])
+  })
+
+  it('onResetRequest: a bare registration seam (S7-d places its consumer) — safe before AND after connect, observed via the protected test seam', () => {
+    const before = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    const hasReset = (el: UIAgentAdminElement): boolean => (el as unknown as { hasResetRequestRegistered(): boolean }).hasResetRequestRegistered()
+    before.onResetRequest(() => {})
+    mount(before)
+    expect(hasReset(before), 'registered before connect').toBe(true)
+
+    const after = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    expect(hasReset(after), 'nothing registered yet').toBe(false)
+    after.onResetRequest(() => {})
+    expect(hasReset(after), 'registered after connect').toBe(true)
+  })
+
+  // ── the refused-toggle wiring (LLD §16.2, S7-a's own cancelable-before-commit mechanism, used for real) ─
+  it('a wide pill click REFUSES to turn off the LAST shown pane — a true no-op, pressed stays true, the shown set is untouched', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const seam = (shown: readonly ('chat' | 'settings' | 'copilot')[], primary: 'chat' | 'settings' | 'copilot'): void =>
+      (el as unknown as { setPaneVisibilitySeam(s: readonly ('chat' | 'settings' | 'copilot')[], p: 'chat' | 'settings' | 'copilot'): void }).setPaneVisibilitySeam(shown, primary)
+    seam(['settings'], 'settings') // down to the last member
+    const holder = el.querySelector('[data-part="pane-holder"]') as HTMLElement
+    const pill = pillOf(el, 'settings')
+    expect(pill.pressed, 'the last member\'s pill reads pressed').toBe(true)
+    pill.click() // a real press — pressActivation → click → the pill's own toggle emission
+    expect(pill.pressed, 'refused — the pill stays pressed, no flip-then-revert flicker').toBe(true)
+    expect(holder.getAttribute('data-show'), 'the shown set is byte-identical to before the refused press').toBe('settings')
+  })
+
+  it('a wide pill click turning OFF the primary repoints primary to the first remaining member in reading order (PANE_ORDER)', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const holder = el.querySelector('[data-part="pane-holder"]') as HTMLElement
+    // Entry default: all three shown, chat primary. Turn OFF chat — settings is next in PANE_ORDER.
+    pillOf(el, 'chat').click()
+    expect(holder.getAttribute('data-show')).toBe('settings copilot')
+    expect(holder.getAttribute('data-primary'), 'primary repoints off its own removal, to the first remaining PANE_ORDER member').toBe('settings')
+  })
+
+  it('a wide pill click turning a pane ON adds it to the shown set without moving primary', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const holder = el.querySelector('[data-part="pane-holder"]') as HTMLElement
+    pillOf(el, 'chat').click() // chat off ⇒ settings copilot, primary settings
+    pillOf(el, 'chat').click() // chat back on
+    expect(holder.getAttribute('data-show')).toBe('chat settings copilot')
+    expect(holder.getAttribute('data-primary'), 'turning a pane back ON never moves primary').toBe('settings')
+  })
+
+  // ── pills⇄segment mirroring (LLD §16.4 done-when: "flip in one rendering, cross-check the other") ──────
+  it('a wide pill flip mirrors onto the narrow segment\'s own selection (primary) — cross-checked in the OTHER rendering', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    expect(segmentsOf(el).value, 'entry default primary').toBe('chat')
+    pillOf(el, 'chat').click() // chat off ⇒ primary repoints to settings
+    expect(segmentsOf(el).value, 'the segment mirrors the repointed primary').toBe('settings')
+  })
+
+  it('a narrow segment select mirrors onto the wide pills\' own pressed/state-icon state — cross-checked in the OTHER rendering', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const segments = segmentsOf(el)
+    const copilotSegment = segments.querySelector('ui-segment[value="copilot"]') as HTMLElement
+    copilotSegment.click()
+    expect(segments.value, 'the segment control commits the click').toBe('copilot')
+    // LLD §16.2's narrow-segment write semantics: set primary AND ensure membership — copilot joins the
+    // shown set (it was already a member at the entry default, but the mirror must hold regardless).
+    expect(pillOf(el, 'copilot').pressed, 'the copilot pill mirrors membership').toBe(true)
+    const holder = el.querySelector('[data-part="pane-holder"]') as HTMLElement
+    expect(holder.getAttribute('data-primary')).toBe('copilot')
+  })
+
+  it('the state-icon glyph mirrors membership (eye shown / eye-slash hidden) on every pill, at every flip', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const stateIconOf = (pane: 'chat' | 'settings' | 'copilot'): HTMLElement & { glyph: string } =>
+      pillOf(el, pane).querySelector('[slot="state-icon"]') as HTMLElement & { glyph: string }
+    expect(['chat', 'settings', 'copilot'].map((p) => stateIconOf(p as never).glyph)).toEqual(['eye', 'eye', 'eye'])
+    pillOf(el, 'chat').click() // chat off
+    expect(stateIconOf('chat').glyph, 'hidden ⇒ eye-slash').toBe('eye-slash')
+    expect(stateIconOf('settings').glyph, 'still shown ⇒ eye').toBe('eye')
   })
 })
 
@@ -2248,8 +2471,11 @@ describe('UIAgentAdminElement — Surface Options (vision rev.6)', () => {
     const dogfoodRow = el.querySelector('[data-part="surface-detail-row"][data-detail="genui-dogfood"]') as HTMLElement
     expect(dogfoodRow.closest('[data-part="surface-detail"]')!.parentElement!.getAttribute('data-surface')).toBe('genui')
     expect(dogfoodRow.querySelector('[data-part="surface-genui-dogfood-toggle"]')).not.toBeNull()
-    // ADR-0170 cl.6 — the bare `<ui-select>` is GONE (one writer into the key).
-    expect(el.querySelector('ui-select'), 'the element composes no ui-select at all now').toBeNull()
+    // ADR-0170 cl.6 — the bare catalog-picker `<ui-select>` is GONE from Surface Options (one writer into
+    // the key) — scoped to `surfaceOptions` itself: S7-c's OWN `<ui-select data-part="agent-select">` in
+    // the header is an unrelated control (the roster picker, a different key entirely), not a revival of
+    // the retired catalog mirror this clause is about.
+    expect(surfaceOptions.querySelector('ui-select'), 'no catalog-picker ui-select inside Surface Options').toBeNull()
     // both live-since-launch modalities ship ON
     expect((rows[0]!.querySelector('[data-part="surface-toggle"]') as HTMLElement & { checked: boolean }).checked).toBe(true)
     expect((rows[1]!.querySelector('[data-part="surface-toggle"]') as HTMLElement & { checked: boolean }).checked).toBe(true)

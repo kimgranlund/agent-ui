@@ -138,18 +138,41 @@ function mountAgentAdminAt(widthPx: number): { wrapper: HTMLElement; el: UIAgent
 }
 
 describe('ui-agent-admin cross-engine smoke — the three-place shell grammar (GH #686\'s Amendment: shown-set visibility, no pairing vehicle)', () => {
-  // GH #686's Amendment (LLD §16.1/§16.4 S7-b) — the pane nav retires with the visibility model it drove;
-  // the unified header bar that replaces it is S7-c's own build. `header` composes nothing this slice —
-  // and `ui-super-shell` only CREATES the `[data-part='bar'][data-bar='header']` box at all when at least
-  // one `data-slot="header"` child is authored (super-shell.ts's own guard), so with none composed the box
-  // is genuinely ABSENT from the DOM at every band, never merely an empty one needing a CSS collapse
-  // (verified live: no bar-size/seam CSS is owed here — see agent-admin.css's own comment on this finding).
-  it('the header bar box does not exist at all, at every band — no admin-composed header content (S7-c\'s own build lands the real bar — LLD §16.4, a documented gap)', async () => {
-    for (const width of [500, 700, 900, 1200]) {
+  // GH #686's Amendment (LLD §16.1/§16.3/§16.4, S7-c) — the pane nav retired with the visibility model it
+  // drove; the unified header bar that replaces it is a real, admin-composed box now, at EVERY band —
+  // `ui-super-shell` only CREATES the `[data-part='bar'][data-bar='header']` box when at least one
+  // `data-slot="header"` child is authored (super-shell.ts's own guard), and `#composeHeader` authors
+  // exactly one (LLD §16.1's `admin-header`), so the box exists unconditionally from first connect.
+  it('the header bar box exists at every band, and paints the right pane-visibility/actions rendering for its own width (LLD §16.1/§16.3 — pills⇄segments, wide⇄narrow actions)', async () => {
+    // The header's own band line (agent-admin.css's own comment): the composed ui-super-shell's inline-size
+    // is always the pane holder's 52.5rem line PLUS one shell-gutter on each side — 54rem (864px) here
+    // fires at the IDENTICAL real pixel moment the holder's own 52.5rem (840px) does.
+    for (const [width, band] of [[700, 'narrow'], [900, 'wide'], [1200, 'wide']] as const) {
       const { el, wrapper } = mountAgentAdminAt(width)
+      // Register the New Agent seam so its own unregistered-hide degrade cannot be confused with the
+      // band's own hide — the assertions below need to isolate the BAND rule, and an unregistered button
+      // is `display:none` at every band regardless (LLD §16.3's own degrade).
+      el.onNewAgentRequest(() => {})
       await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
-      expect(el.querySelector('[data-slot="header"]'), `width ${width}: no admin-composed header content`).toBeNull()
-      expect(el.querySelector('[data-part="bar"][data-bar="header"]'), `width ${width}: no header bar box exists at all`).toBeNull()
+      const header = el.querySelector('[data-slot="header"]') as HTMLElement
+      expect(header, `width ${width}: the admin-composed header exists`).not.toBeNull()
+      const bar = el.querySelector('[data-part="bar"][data-bar="header"]') as HTMLElement
+      expect(bar, `width ${width}: super-shell creates the header bar box`).not.toBeNull()
+      expect(bar.getBoundingClientRect().height, `width ${width}: the bar box has real height`).toBeGreaterThan(0)
+
+      const pills = el.querySelector('[data-part="pane-pills"]') as HTMLElement
+      const segments = el.querySelector('[data-part="pane-segments"]') as HTMLElement
+      const newAgentWide = el.querySelector('[data-part="new-agent-wide"]') as HTMLElement
+      const newAgentNarrow = el.querySelector('[data-part="new-agent-narrow"]') as HTMLElement
+      if (band === 'narrow') {
+        expect(getComputedStyle(pills).display, `width ${width}: pills hidden narrow`).toBe('none')
+        expect(getComputedStyle(segments).display, `width ${width}: segments paint narrow`).not.toBe('none')
+        expect(getComputedStyle(newAgentWide).display, `width ${width}: wide actions hidden narrow`).toBe('none')
+      } else {
+        expect(getComputedStyle(pills).display, `width ${width}: pills paint wide`).not.toBe('none')
+        expect(getComputedStyle(segments).display, `width ${width}: segments hidden wide`).toBe('none')
+        expect(getComputedStyle(newAgentNarrow).display, `width ${width}: narrow actions hidden wide`).toBe('none')
+      }
       wrapper.remove()
     }
     // cl.1 — the six-entry narrow-tabs vocabulary dissolved with the options-pane it enumerated, well before
@@ -158,6 +181,35 @@ describe('ui-agent-admin cross-engine smoke — the three-place shell grammar (G
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
     expect(el.querySelector('[data-part="narrow-tabs"]'), 'the shell composes no narrow-tabs strip any more').toBeNull()
     expect(el.querySelector('[data-slot-name="options-pane"]'), 'nothing occupies the end side any more').toBeNull()
+  })
+
+  // S7-c's own header inset rhythm — re-anchored from the retired pane-nav bar (this describe's own
+  // banner note: "no real affordance survives to re-target these probes onto until S7-c lands"). GH #626's
+  // bar-content law says the header supplies its OWN inline inset (the bar itself is padding-less); this
+  // consumer deliberately reads `--ui-agent-admin-shell-gutter` (agent-admin.css's own comment on the
+  // rule) rather than the fleet's generic `--ui-bar-inline-inset` default, so the header's zones land on
+  // the SAME screen-x column as the canvas/pane content directly beneath them — measured here, both
+  // engines, at both bands (a band crossing changes which pane-visibility control paints, never the
+  // header's own inset).
+  it('header inset rhythm: the header content lands on the SAME screen-x as the canvas/pane-holder content below it', async () => {
+    for (const width of [700, 1200]) {
+      const { el, wrapper } = mountAgentAdminAt(width)
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+      // The honest pair: `admin-header`'s own FIRST CHILD (a real content box, inset by the header's own
+      // padding) against `pane-holder` (the canvas's content, inset by the canvas's own padding) — NOT
+      // `admin-header` itself, whose bounding rect is the OUTER, unpadded border-box (comparing it
+      // against the padded `pane-holder` would just measure the header's own padding back at itself, a
+      // guaranteed-nonzero artifact of the wrong pair, not a real misalignment).
+      const header = el.querySelector('[data-part="admin-header"]') as HTMLElement
+      const agentSelect = el.querySelector('[data-part="agent-select"]') as HTMLElement
+      const holder = el.querySelector('[data-part="pane-holder"]') as HTMLElement
+      expect(header.getBoundingClientRect().width, `width ${width}: the header genuinely renders`).toBeGreaterThan(0)
+      expect(
+        Math.abs(agentSelect.getBoundingClientRect().x - holder.getBoundingClientRect().x),
+        `width ${width}: the header's own inline inset matches the pane holder's, one rhythm not two`,
+      ).toBeLessThanOrEqual(1)
+      wrapper.remove()
+    }
   })
 
   it('at wide, the entry default paints all three regions side by side, in reading order, top-aligned (LLD §16.1/§16.2 — no pairing vehicle any more)', async () => {
@@ -2141,14 +2193,18 @@ describe('ui-agent-admin — the wide band (GH #662, re-ruled by GH #686\'s Amen
     }
   })
 
-  // `screens:layout-checker` finding 3's own header-seam concern is MOOT under GH #686's Amendment (not
-  // merely retracted): `ui-super-shell` only creates the `[data-part='bar'][data-bar='header']` box when a
-  // real `data-slot="header"` child is authored (super-shell.ts's own guard) — with none composed this
-  // slice, there is no bar box, and therefore no seam border to retract, at any band. Verified directly.
-  it('with no header content composed, the header bar box does not exist in the DOM at all — nothing to retract', async () => {
+  // `screens:layout-checker` finding 3's own header-seam concern was MOOT only for as long as `header`
+  // composed nothing (S7-b): with no authored `data-slot="header"` child, `ui-super-shell` never created
+  // the `[data-part='bar'][data-bar='header']` box at all (super-shell.ts's own guard), so there was no
+  // seam border to have an opinion about. S7-c composes a real header — the box exists now, and
+  // ADR-0166 cl.2's blanket seam rule (every `[data-bar='header']` box carries a border-block-end,
+  // unconditionally) applies to it exactly like every other shell-archetype consumer's header.
+  it('S7-c\'s real header composes a real bar box, carrying the fleet\'s own header seam border (ADR-0166 cl.2)', async () => {
     const el = await mountTripleAt(1200)
     const shell = el.querySelector('ui-chat-shell') as HTMLElement
-    expect(shell.querySelector('[data-part="bar"][data-bar="header"]'), 'no header bar box exists — super-shell never creates one with zero authored header children').toBeNull()
+    const bar = shell.querySelector('[data-part="bar"][data-bar="header"]') as HTMLElement
+    expect(bar, 'the header bar box exists — this element authors a real data-slot="header" child now').not.toBeNull()
+    expect(parseFloat(getComputedStyle(bar).borderBottomWidth), 'the shell-archetype header seam paints').toBeGreaterThan(0)
   })
 
   it('gutter equality: the chat↔settings gap and the settings↔copilot gap read as ONE rhythm, not two', async () => {
