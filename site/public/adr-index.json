@@ -1244,5 +1244,12 @@
     "description": "Agent-admin three-pane IA design intake (GH #651, Kim's 2026-08-09 ruling): the admin restructures to THREE first-class panes [Chat \\| Author \\| Settings] and…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0180",
+    "url": "./adr-index.html#adr-0180",
+    "description": "ui-conversation declarative composition (GH #688, forks SPEC-R4): an explicit OPT-IN adoption mode — <ui-conversation-header>/<ui-conversation-dialog>/<ui-conv…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
