@@ -225,3 +225,144 @@ returns to a column with `data-pane` still driving one-place-at-a-time), and cl.
 stands unchanged. The ORIGIN re-keying should NOT revert with it — it is a defect fix that happens to
 have been found by the triple, and the pane-keyed selector is unsound the moment two composers can
 share a screen. The divider unpaint is likewise independent of the arrangement.
+
+## Amendment (2026-08-10, **proposed** — GH [#686](https://github.com/kimgranlund/agent-ui/issues/686), Kim's Figma wireframe ruling; awaiting Kim's ratification) — cl.1's `header` slot becomes the UNIFIED selector/visibility/actions bar; the pane nav retires everywhere; pane visibility becomes ONE shown-set with two band renderings; the place vocabulary re-pins to `[Chat | Settings | Co-pilot]`
+
+> Append-only, and **proposed**: the Status cell reads `accepted` for the record as a whole and stays
+> byte-untouched — agents never flip status (`.claude/hooks/adr-status-guard.py`), and this amendment
+> carries no ratification of its own until Kim gives one via a real GitHub utterance (`adr_ratify.py`,
+> ADR-0149). Every section above, including both prior amendments, is unedited. The design brief is
+> GH [#686](https://github.com/kimgranlund/agent-ui/issues/686) (Kim's Figma wireframe — desktop nodes
+> `1:162`/`1:163`, mobile node `1:502`); the LLD's corresponding revision lands in the same change
+> ([`admin-three-pane-ia.lld.md`](../lld/admin-three-pane-ia.lld.md) §16). No build dispatches until
+> Kim rules.
+>
+> **What this re-rules, precisely.** cl.1's *tier* sentence — three first-class places at every
+> width — stands; what changes is the places' NAMES and reading order, the header slot's contents,
+> and how "which places paint" is chosen. cl.2's survive list and the first Amendment's ORIGIN-keyed
+> `#contextFor` stand byte-for-byte — origin routing is in fact what makes independent visibility
+> SOUND (multiple composers on screen stops being the triple's special case and becomes the norm).
+> cl.3's law — arrangement of singleton regions, never duplication, never a runtime reparent —
+> stands and now governs every visibility SUBSET, not two fixed bands. cl.4 stands entirely.
+> Superseded-in-part: the first Amendment's fixed pair/triple BANDING and its
+> pane-nav-persists/pane-nav-hidden arc (the GH #665 addendum included — moot once the nav retires
+> everywhere), and cl.1's original `header` = pane-nav reading.
+
+**The unified header (cl.1's slot contract, re-ruled).** The `header` slot stops holding the pane
+nav and holds ONE three-zone bar — absorbing the site page's own canvas-header, which retires
+(`site/pages/agent-admin-app.ts`: title/tagline + roster `ui-menu` + the `(...)` overflow):
+
+- **Leading — the agent selector.** A component-composed `ui-select` naming the active agent; the
+  roster CONTENT and the switch handling stay page-owned, reaching the component through
+  registration seams (below). The page's title/tagline pair retires — the selector IS the identity.
+- **Center — pane visibility.** Wide: three toggle pills — Chat · Settings · Co-pilot, each
+  icon + label + an Eye/EyeSlash state icon, independently on/off. Narrow: the SAME three, as an
+  icon-only `ui-segmented-control` — mutually exclusive, one pane at a time. One state, two
+  renderings (the model below).
+- **Trailing — actions.** Wide: New Agent (Plus) · Import · Export as direct buttons. Narrow:
+  `+` plus a `•••` overflow menu holding Import/Export. **Reset is deliberately NOT here** — it
+  moves into the Settings pane's Model fold as "Reset Agent" (Kim's original text ruling).
+
+**The vocabulary re-pins: `[Chat | Settings | Co-pilot]`.** The Author place is renamed
+**Co-pilot** (the Builder interview, unchanged in substance — Robot icon) and the reading order
+becomes chat | settings | copilot, per the wireframe's own pane order (`chat-pane`,
+`settings-pane`, `copilot-pane`). A NEW shared icon vocabulary binds the pills, the segments and
+the panes: ChatsCircle (Chat) · GearSix (Settings) · Robot (Co-pilot).
+
+**The visibility model — one source of truth, two renderings, never two state machines.** The
+state is a shown-SET plus a primary member: `shown ⊆ {chat, settings, copilot}` (wide truth,
+invariant `|shown| ≥ 1` — the last-on pill's toggle is refused, a zero-pane surface is broken by
+construction) and `primary ∈ shown` (narrow truth). Wide pills write set membership (removing the
+primary repoints it to the first remaining member in reading order); the narrow segment writes
+`primary` (and ensures membership). Rendering follows the shipped triple-dock mechanism made
+general: the one apply method writes `data-show` (the set) + `data-primary` onto the pane holder,
+and the sheet renders set-members at and above the line, the primary alone below it. A resize
+writes NOTHING — crossing wide→narrow projects the set to its primary, narrow→wide restores the
+full set, both losslessly, because no crossing ever wrote state.
+
+**The line: 52.5rem, the SAME named line — not OQ3's 40rem, and not a new number.**
+`SHELL_COMPACT_BREAKPOINT` (ADR-0150/0155), the line the triple dock already engages and measured
+against. The first Amendment's table measured the RETIRED arrangement (200/320/320 under flex 2:1 +
+the MD's 40rem floor), so it does not carry over as evidence; the new equal-thirds geometry
+re-derives directly: at the line (840px holder) three equal columns are ~280px box each, clearing
+the 160px (20ch) floor with margin — but the settings column's ~256px content sits BELOW the 270px
+name-field width the old table measured, so this arithmetic is a floor check only and the LLD books
+a real-engine density re-measure into S7-b rather than resting on it. Justification for
+reusing it rather than OQ3's 40rem or a third number: (a) the multi-select pills are only an honest
+control where more than one pane can actually paint, and 52.5rem is the measured line where that
+holds three-up; (b) one line means the header rendering and the pane arrangement swap together — a
+second line would let the header promise multi-select while the surface can only fit one pane;
+(c) the header-level CSS already has the derived 54rem composed-shell container query (the GH #665
+rule's own derivation, which this amendment repurposes rather than re-derives). OQ3's 40rem line
+LEAVES this surface along with its owner (next paragraph) — the accepted trade, stated openly: in
+the 40–52.5rem band today's Author⇄Settings docked pair becomes one-pane-at-a-time (flagged to
+Kim, OQ-F below).
+
+**What the wireframe geometry forces: `ui-master-detail` retires from this composition.** The
+all-active state (`1:162`) paints settings + copilot at 296px each — 592px total, below the MD's
+own 40rem (640px) dock floor, so the wireframe cannot be painted while the MD remains the vehicle.
+Independent subsets don't fit pair semantics either (the MD has no "detail alone at wide" state —
+verified at the S1 intake). The pane holder becomes three sibling regions — the chat conversation,
+the settings region (its internal `settings-nav` sub-nav and five section units untouched), the
+Co-pilot conversation card — with visibility per the model above. cl.3's law survives the vehicle:
+same singleton nodes, zero duplication, zero runtime reparenting; the no-painted-dividers rule
+carries over. The live-fill acceptance re-anchors from "the Author pairing" to the visibility
+state `{settings, copilot} ⊆ shown` — the adjacency Kim named as must-survive is now a user
+CHOICE the default state grants, not a band the layout imposes.
+
+**The wide-pill vehicle: the fleet has no `ui-toggle` — mint it.** The wireframe's pill (icon +
+label + state icon, pressed/unpressed) matches no shipped control: `ui-switch` is a track-and-thumb
+form control, `ui-segmented-control` is single-select by construction (extends the radio group),
+`ui-button` carries no pressed state. Ruling: a small fleet `ui-toggle` (a pressed-state pill
+button; `aria-pressed` via `ElementInternals`; emits `toggle` — already a member of the closed
+seven-event set, ADR-0153). Alternatives rejected: an admin-local pressed-button hack (bespoke
+state on a composed `ui-button` — exactly what the fleet exists to prevent, and the second consumer
+would re-mint it) and widening `ui-segmented-control` with a `multiple` mode (radio inheritance
+makes that a semantics fork, not a flag). Kim can overrule the vehicle at ratification without
+touching the rest of this amendment.
+
+**New registration seams (SPEC-R5's never-a-CustomEvent law; the `onGenerateRequest` idiom —
+last registration wins, safe before or after connect (the GH #666 order rule); unregistered ⇒ the
+affordance HIDDEN — a stated divergence from the precedent, which DISABLES its card
+(agent-admin.ts:1318) because a card has copy worth showing disabled and a bare button does not).** The component cannot import site/persona code
+(the DAG, `layering.test.ts`), so the page registers in:
+
+```ts
+interface AgentRosterEntry { id: string; label: string }
+setAgentRoster(entries: readonly AgentRosterEntry[], activeId?: string): void  // data-in; re-callable (mint/import re-push)
+onAgentSelect(callback: (id: string) => void): void      // roster commit → page's applyPersona
+onNewAgentRequest(callback: () => void): void            // trailing "New Agent"
+onImportRequest(callback: () => void): void              // trailing "Import" / narrow ••• item
+onExportRequest(callback: () => void): void              // trailing "Export" / narrow ••• item
+onResetRequest(callback: () => void): void               // "Reset Agent", Settings › Model fold
+```
+
+`onGenerateRequest` (the Co-pilot card's composer-first entry) is untouched.
+
+**"Reset Agent" lands in the Settings pane's Model fold** — a component-rendered action at the end
+of the `model-grid` fold's content (the GH #225 fold whose summary carries the "Model" heading),
+invoking `onResetRequest`; hidden when unregistered. The page's "Reset persona" overflow item
+retires with the overflow menu; any confirm step stays page-side business.
+
+**Retires** (each a named RETIRE entry in the LLD's map): the pane-nav `ui-tabs` + its header bar +
+`setPaneSeam` (cl.1's original vehicle; the GH #665 hidden-at-wide CSS rule goes with it — moot,
+not overruled) · single-`#pane` state as the visibility truth (`#pane`/`#setPane`/`#applyPane`
+re-shape into the shown-set model) · the `ui-master-detail` composition + its back-affordance
+suppression CSS (the MD element itself is untouched fleet stock) · the site page's canvas-header
+(title/tagline, `agentMenu`, `overflowMenu` — the page keeps mount + seam registrations only).
+
+**Open questions — flagged for Kim, deliberately NOT ruled here** (the LLD §16 fences them;
+recommendations only): **OQ-A** New Agent's verb — one button, two shipped mint paths (Blank ·
+Generate); rec: the button invokes `onNewAgentRequest` and the page routes it to the Generate
+flow, Blank's home is Kim's call. **OQ-B** the narrow `•••` contents — the wireframe implies
+Import/Export only; rec: exactly those two, Reset stays Settings-only. **OQ-C** inter-pane
+resizing — the MD's resizable split retires with it; the wireframe's equal columns suggest fixed
+flex; rec: fixed flex, compose `ui-split` back in only if Kim asks. **OQ-D** the entry default;
+rec: all three shown at wide (the wireframe's all-active state), `chat` primary at narrow.
+**OQ-F** the 40–52.5rem band's behavior change (pair → single pane) — named above, Kim-visible.
+
+**If Kim rules against this**, the fallback is exact: the header bar reverts to the pane nav, the
+shown-set reverts to `#pane`, the MD composition stands, and the site page keeps its
+canvas-header — this amendment ships nothing until ratified, so the fallback is the shipped
+surface itself. The seam SHAPES (registration methods, SPEC-R5) should survive any partial
+adoption — they are the only DAG-legal bridge regardless of which header wins.

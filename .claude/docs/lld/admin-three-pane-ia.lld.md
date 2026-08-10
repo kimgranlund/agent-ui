@@ -1,6 +1,6 @@
 # LLD — the agent-admin three-pane IA (S1-a, the admin-three-pane family's one full-LLD slice)
 
-> Status: proposed · v0.3 · 2026-08-10 (S6/GH #662 re-statements: §2 rows, §5, §6, §8, §15 — dated in place; GH #681/GH #684 re-statement: §2 rows (74, 84), §3, §8 — dated in place) · Layer: LLD (implementation plan)
+> Status: proposed · v0.3 · 2026-08-10 (S6/GH #662 re-statements: §2 rows, §5, §6, §8, §15 — dated in place; GH #681/GH #684 re-statement: §2 rows (74, 84), §3, §8 — dated in place; GH #686 amendment: §16 — the unified header + shown-set visibility, dated in place; supersession markers added to the §2/§3/§10/§12 rows it re-rules) · Layer: LLD (implementation plan)
 >
 > Refines: [ADR-0179](../adr/0179-agent-admin-three-pane-ia.md) (ACCEPTED 2026-08-09 — cl.1 the
 > three-place vocabulary, cl.2 place-based routing + the named survive/retire lists, cl.3 the
@@ -67,25 +67,25 @@ the six-entry narrow-tabs vocabulary dissolves.
 
 | Row | Ruling | Why |
 |---|---|---|
-| **Top-level nav vehicle** | An admin-owned, panel-less fleet `ui-tabs` strip — `data-part="pane-nav"`, three `ui-tab`s (Chat · Author · Settings, ADR-0179 cl.1's vocabulary verbatim) — authored into the chat-shell's **`header` slot** (`data-slot="header"`, `data-landmark="navigation"` via super-shell's shipped override seam). ONE vehicle at every band; `select` commits call `#setPane(...)`, `stopPropagation`'d (the try-it bar's own containment precedent — the host's closed event set is untouched). | The shell's own narrow-tabs machinery enumerates content + pane segments — structurally the SIX-entry vocabulary cl.1 retires; it cannot voice three grouped places, so the top-level nav must be admin-composed. The GH #221 panel-less `ui-tabs` composition is the shipped shape (the try-it strip's own — its composition method survives re-anchored one level up, which is exactly what "#650's placement superseded, method survives" means). Header placement makes the shell meaningfully the vehicle still (ADR-0154 composed, not hollowed) and re-joins the GH #575/#626 `--ui-bar-inline-inset` rhythm the #650 headerless split existed to patch around — the header-bearing arm now applies to the admin; the headerless arm survives as the fleet fact it already is. |
-| **The pairing vehicle** ⚠️ **Author-region contents AMENDED 2026-08-10 (GH #666) — the region is ONE conversation card, armed or not; see the row below** | `ui-master-detail`, composed inside the shell's `content` slot: `pane="list"` = the **Author region** (empty state + the lazily-mounted authoring conversation) · `pane="detail"` = the **Settings region** (sub-nav strip + the five section units, moved whole — TKT-0085's single reparent-able nodes, a compose-time re-home, never a runtime reparent). The admin's `options-pane`/`resizable-end`/`narrow-end` usage retires with the move. | cl.3 names the idiom; OQ3's rec names the element: composing it buys the docked resizable pair at wide (ui-split inherited, SPEC-R7's zero-bespoke-split-code law) AND the narrow one-place-at-a-time drill-in for FREE — the one shipped arrangement that gives Settings a full-surface narrow home (the super-shell grammar has no "end pane as sole surface" state; verified against `narrow-start/end`'s three arms). Pane assignment by visual truth: the settings region stays the END/right rail (its home since ADR-0154) and the interview reads primary — list-then-detail DOM order makes Author start-side. |
+| **Top-level nav vehicle** ⚠️ **SUPERSEDED (proposed) 2026-08-10 (GH #686) — the pane nav retires everywhere; the header slot becomes the unified selector/visibility/actions bar, §16** | An admin-owned, panel-less fleet `ui-tabs` strip — `data-part="pane-nav"`, three `ui-tab`s (Chat · Author · Settings, ADR-0179 cl.1's vocabulary verbatim) — authored into the chat-shell's **`header` slot** (`data-slot="header"`, `data-landmark="navigation"` via super-shell's shipped override seam). ONE vehicle at every band; `select` commits call `#setPane(...)`, `stopPropagation`'d (the try-it bar's own containment precedent — the host's closed event set is untouched). | The shell's own narrow-tabs machinery enumerates content + pane segments — structurally the SIX-entry vocabulary cl.1 retires; it cannot voice three grouped places, so the top-level nav must be admin-composed. The GH #221 panel-less `ui-tabs` composition is the shipped shape (the try-it strip's own — its composition method survives re-anchored one level up, which is exactly what "#650's placement superseded, method survives" means). Header placement makes the shell meaningfully the vehicle still (ADR-0154 composed, not hollowed) and re-joins the GH #575/#626 `--ui-bar-inline-inset` rhythm the #650 headerless split existed to patch around — the header-bearing arm now applies to the admin; the headerless arm survives as the fleet fact it already is. |
+| **The pairing vehicle** ⚠️ **Author-region contents AMENDED 2026-08-10 (GH #666) — the region is ONE conversation card, armed or not; see the row below** · ⚠️ **SUPERSEDED (proposed) 2026-08-10 (GH #686) — the MD composition retires; the wireframe's all-active geometry cannot paint under its 40rem dock floor, §16** | `ui-master-detail`, composed inside the shell's `content` slot: `pane="list"` = the **Author region** (empty state + the lazily-mounted authoring conversation) · `pane="detail"` = the **Settings region** (sub-nav strip + the five section units, moved whole — TKT-0085's single reparent-able nodes, a compose-time re-home, never a runtime reparent). The admin's `options-pane`/`resizable-end`/`narrow-end` usage retires with the move. | cl.3 names the idiom; OQ3's rec names the element: composing it buys the docked resizable pair at wide (ui-split inherited, SPEC-R7's zero-bespoke-split-code law) AND the narrow one-place-at-a-time drill-in for FREE — the one shipped arrangement that gives Settings a full-surface narrow home (the super-shell grammar has no "end pane as sole surface" state; verified against `narrow-start/end`'s three arms). Pane assignment by visual truth: the settings region stays the END/right rail (its home since ADR-0154) and the interview reads primary — list-then-detail DOM order makes Author start-side. |
 | **`#contextFor` re-keyed by pane — the frozen algorithm (cl.2's zero-widening move)** ⚠️ **RE-STATED 2026-08-10 (GH #662) — see the row below; this row records what S1-b shipped, the row below what the triple dock requires** | `#pane: 'chat' \| 'author' \| 'settings'` replaces `#mode` as component state (entry default `'chat'`). The selector: **authoring quadruple iff `this.#pane === 'author' ∧ this.authoringStore !== undefined ∧ this.#authoringConversation !== null`; else the test quadruple** — the literal diff from shipped 1101 is `this.#mode === 'authoring'` → `this.#pane === 'author'`, one token. Everything downstream — the quadruple's members, `#handleSubmit`/`#runSurfaceTurn`'s parameterization, the session map, the fence conjunct at 1798 — is byte-untouched. | The fence keys off DRIVING-STORE IDENTITY, not the selector (verified at intake and again here) — so re-keying the selector widens nothing: a Settings-pane or Chat-pane turn can never resolve to `authoringStore`, and "Chat stays pure test" holds by construction, cl.4's own mechanics. Stating the algorithm frozen is what lets S1-b's builder prove the zero-regression assert byte-wise. | *(conjunct LIST, not byte order — shipped line 1101's byte order keeps `authoringStore !== undefined` first; the one-token-diff sentence is the byte-wise claim)*
 | **Per-pane composers (cl.4 IN, realized)** | Chat's `#conversation` keeps its composer, permanently the test context; Author's `#authoringConversation` keeps its own, permanently the Builder. No composer ever re-routes; no shared composer exists; submissions can only originate from the visible place's composer. | Kim's IN ruling verbatim — pane identity IS the routing. The deeper single-interleaved-surface model stays OUT (ADR-0179 cl.4's own fence). |
 | **The Author region is ONE conversation card, armed or not** — **NEW 2026-08-10 (GH #666, Kim's pixel ruling: "the center pane should be a CHAT, just like Test chat")** ⚠️ **`author-empty`'s CONTENT AMENDED 2026-08-10 (GH #681 + GH #684) — the copy this row describes is gone; see the OQ4 amendment row below (§2 row 84's amendment)** | The Author pane holds exactly one child: `#authoringConversation`, mounted at `#compose()` time rather than on the first `authoringStore` assignment. Unarmed, its log carries the `author-empty` copy through `ui-conversation.setEmptyState()` (a new, additive, default-off seam on the fleet control — `setContentRenderer`'s own optional-hook shape) and its OWN bottom-pinned composer is the flow's entry; arming DROPS the copy and fills the same element. The `hidden` flips `#applyPane` used to make between two boxes are gone with the second box. | Kim shipped-surface ruling: the pre-#666-reopen arrangement rendered a borderless prose block beside a bordered chat card. The card treatment, the BUILDER INTERVIEW kicker and the bottom-pinned composer are `ui-conversation`'s own, so the only non-duplicative way to wear them is to BE one. This supersedes ADR-0178 cl.5's lazy-mount clause on cost grounds only: cl.5's dual-context mechanism (two mounted conversations, the reset law, the fence keyed off driving-store identity) is untouched. Per-pane composers (the row above) now read literally — one composer per place at every moment of the flow, with no second unarmed composer to keep in step. |
 | **Settings place arrangement** | `#applyPane()` drives the MD's consumer-written `selected`: pane=`author` ⇒ `selected=''` (narrow view `list` = the interview); pane=`settings` ⇒ `selected='settings'` (narrow view `detail` = the settings region); pane=`chat` ⇒ the MD region `hidden`, the chat region shown. At WIDE the Author and Settings places converge on the SAME docked arrangement (both regions visible — the pairing); selection is still tracked so a wide→narrow band crossing lands on the place the nav says. MD's `select`/`change` emissions are contained (`stopPropagation` on the MD host — the closed-event-set discipline). | One region, arranged — never duplicated (cl.3). The convergence at wide is the honest reading of "three places at every width": at wide the settings region is on screen either way; the tab-switch cost is narrow's accepted trade (cl.3, Kim's restated contract). |
 | **The back affordance** | Suppressed via admin CSS (`[data-part='back']` display:none, winning the scoped cascade on SPECIFICITY (the shipped `(0,4,2)` exact-chain selector beats the reveal's `(0,4,1)` — `:scope` counts as an ordinary pseudo-class and specificity compares BEFORE scope proximity, the fleet fact settings.css already records; a bare attribute selector could never win, no `!important`)). | The pane-nav is the ONE nav vocabulary — #651's whole point; MD's back flips `#view` without touching `selected`, which would desync the nav's truth. A future `ui-master-detail back="none"` attr is the cleaner fleet seam — named in §15, not minted here (no MD API change in this family). |
 | **Chat is solo at every width** ⚠️ **SUPERSEDED 2026-08-10 (GH #662) — true BELOW the triple line only** | The Chat place shows the test conversation alone — no settings rail beside it, wide included. | Places are disjoint (cl.1) and Chat is "the pure test surface" (ADR-0179 Context). The settings node lives in the MD detail pane; a Chat-wide rail would need a reparent or second mount — cl.3's named escalation, not an improvisation. The tune-while-testing adjacency survives at wide as the AUTHOR pairing (hand-edit the draft beside the interview, decomp a5); flagged as a Kim-visible first-paint change in §15 — today's wide admin paints chat + settings. **§15's first risk fired exactly as written: Kim looked at the shipped surface and ruled the adjacency back in (2026-08-10, GH #662). The triple-dock row below is the resolution — and it needs no reparent and no second mount, so cl.3's escalation was never owed.** |
-| **THE TRIPLE DOCK (2026-08-10, GH #662 — ADR-0179 cl.1's proposed Amendment)** | Two bands, one DOM. `#applyPane` stops writing `hidden` onto the place regions and writes the active place onto the pane holder as `data-pane`; `agent-admin.css` reads that attribute against the holder's OWN inline-size (the holder is `container-type: inline-size`). **Below 52.5rem** exactly the named place has a box — every row above holds unchanged. **At and above 52.5rem** all three paint side by side: the holder is a flex row of the Chat conversation (`flex: 1 1 0`) and the existing `ui-master-detail` (`flex: 2 1 0; min-inline-size: 40rem`), giving `[chat \| author \| settings]`. | 52.5rem is `SHELL_COMPACT_BREAKPOINT` — §6's own booked escalation seam, never a third number — and it is forced, not chosen: the MD needs 40rem of its own container or it drills in and the triple silently degrades to a pair, leaving Chat the remainder. MEASURED at the line, both engines, holder 840px: chat 200 (content 198, composer 174) · author 320 (content 296) · settings 320 (content 296, name 270), against a 20ch floor of 160 — every column clears it, the Chat composer by the narrowest margin (1.09×) and therefore the constraint that SETS the line. The `2` share makes the three columns equalise once the MD floor stops binding (holder 1176 ⇒ 393/391/391). Dropping the `hidden` attribute is load-bearing, not cosmetic: a region that paints in the triple must not also claim to be hidden, and `display:none` takes a non-painting one out of the a11y tree identically. No ResizeObserver, no JS layout, no state written by a resize — the own-container-width law, kept more literally than the attribute model kept it. |
+| **THE TRIPLE DOCK (2026-08-10, GH #662 — ADR-0179 cl.1's proposed Amendment)** ⚠️ **SUPERSEDED (proposed) 2026-08-10 (GH #686) — fixed pair/triple banding gives way to the user-chosen shown-set; the 52.5rem line, the `data-*`+container-query mechanism and the no-JS-layout law all carry over, §16** | Two bands, one DOM. `#applyPane` stops writing `hidden` onto the place regions and writes the active place onto the pane holder as `data-pane`; `agent-admin.css` reads that attribute against the holder's OWN inline-size (the holder is `container-type: inline-size`). **Below 52.5rem** exactly the named place has a box — every row above holds unchanged. **At and above 52.5rem** all three paint side by side: the holder is a flex row of the Chat conversation (`flex: 1 1 0`) and the existing `ui-master-detail` (`flex: 2 1 0; min-inline-size: 40rem`), giving `[chat \| author \| settings]`. | 52.5rem is `SHELL_COMPACT_BREAKPOINT` — §6's own booked escalation seam, never a third number — and it is forced, not chosen: the MD needs 40rem of its own container or it drills in and the triple silently degrades to a pair, leaving Chat the remainder. MEASURED at the line, both engines, holder 840px: chat 200 (content 198, composer 174) · author 320 (content 296) · settings 320 (content 296, name 270), against a 20ch floor of 160 — every column clears it, the Chat composer by the narrowest margin (1.09×) and therefore the constraint that SETS the line. The `2` share makes the three columns equalise once the MD floor stops binding (holder 1176 ⇒ 393/391/391). Dropping the `hidden` attribute is load-bearing, not cosmetic: a region that paints in the triple must not also claim to be hidden, and `display:none` takes a non-painting one out of the a11y tree identically. No ResizeObserver, no JS layout, no state written by a resize — the own-container-width law, kept more literally than the attribute model kept it. |
 | **`#contextFor` re-keyed by composer ORIGIN (2026-08-10, GH #662 — cl.2's selector, re-ruled)** | The selector is the SUBMITTING COMPOSER'S ORIGIN, not `#pane`: authoring quadruple iff `origin === 'author' ∧ authoringStore !== undefined ∧ #authoringConversation !== null`, else the test quadruple. `origin` is threaded from each conversation's own `onSubmit`/`onClientMessage` registration through `#handleSubmit` and `#runSurfaceTurn` — a SEPARATE parameter, never a member of the runner's `turn` wire shape (SPEC-N1). `#pane` becomes purely navigational. | A CORRECTNESS requirement of the triple, not a preference. The pane key was sound while exactly one place painted, because "active place" and "the composer the user can reach" were the same thing. In the triple both composers are on screen and typable: a turn typed into CHAT's composer while the nav stood on Author resolved the AUTHORING quadruple — landing in the interview and, gate ON, patching the draft, which is exactly what cl.4 promises cannot happen. NEGATIVE-CONTROLLED before the fix (`expected 'Concierge' to be 'Untitled agent'` under the shipped selector). Origin is cl.4's OWN property — per-pane composers mean each composer IS a context, permanently; pane identity was only ever a proxy for it. The fence is byte-untouched (it keys off driving-store identity) and strictly strengthened, cl.2's survive list is byte-untouched, and §8's mid-defer misroute closes for free (a deferred turn carries the origin it was spawned from). |
 | **No painted dividers between docked regions (2026-08-10, GH #662 — Kim's Findings addition)** | `--ui-split-divider-ink: transparent`, declared on `[data-part='pane-holder'] ui-split`. Resize MECHANICS untouched: the separator element, its ≥24px hit-slop, `role=separator`, tabindex, keyboard step and drag all survive, and `--ui-split-divider-ink-hover` is deliberately left painted. | Kim's 2026-08-10 ruling on the shipped pair — regions separate by spacing and surface alone. Retract-don't-delete: only the RESTING ink goes, so the handle still answers a reach for it. The repoint must land on the `ui-split` elements THEMSELVES — `split.css` declares the token in its own `:where(ui-split)` block, and a locally-declared custom property beats an inherited one regardless of ancestor specificity. The descendant reach is intended: it covers the triple's separators AND `ui-settings`'s nested rail\|panel, so the law holds everywhere in this surface. |
-| **The pane-nav at wide (2026-08-10, GH #662 — the slice's measured call, Kim-visible)** | PERSISTS, mechanically unchanged, at every band. No focus-move mechanics on activation. | Hiding it above the line buys one header strip and removes a click that repaints nothing once all three places are on screen; rejected because a resize would then ADD AND REMOVE the surface's primary navigation, and because the nav still does real work at wide (sole vehicle below the line; its selection is what a wide→narrow crossing lands on). Focus-move on activation was considered and rejected: `ui-tabs` may activate on arrow traversal, so a tab that yanked focus into its region would fight keyboard navigation. If Kim prefers it hidden above the line, that is a CSS-only change. |
+| **The pane-nav at wide (2026-08-10, GH #662 — the slice's measured call, Kim-visible; overruled by the GH #665 addendum)** ⚠️ **MOOT (proposed) 2026-08-10 (GH #686) — the nav retires at every band, §16** | PERSISTS, mechanically unchanged, at every band. No focus-move mechanics on activation. | Hiding it above the line buys one header strip and removes a click that repaints nothing once all three places are on screen; rejected because a resize would then ADD AND REMOVE the surface's primary navigation, and because the nav still does real work at wide (sole vehicle below the line; its selection is what a wide→narrow crossing lands on). Focus-move on activation was considered and rejected: `ui-tabs` may activate on arrow traversal, so a tab that yanked focus into its region would fight keyboard navigation. If Kim prefers it hidden above the line, that is a CSS-only change. |
 | **OQ2 — Settings sub-nav vehicle (ruled: the segment machinery, per the rec)** | An admin-composed panel-less `ui-tabs` strip — `data-part="settings-nav"`, five `ui-tab`s labeled from the sections' kept `data-segment` attributes, `link()`ed per section (the `#nextId` aria-controls precedent), visibility-only flips (one section visible at a time, exactly the shell strip's SPEC-R7c behavior). | The rec adopted in vehicle: the same segment/tab machinery, one level down — visibility-only by construction, shipped metrics, #650's cross-strip equality probes transfer. Divergence in LETTER, flagged: the shell's own `#applySegments` instance no longer reaches the region (it left the shell pane for the MD), so the strip is admin-composed from the identical GH #221 shape (~30 lines, the try-it bar's pattern — its second re-anchoring). A rail idiom would mint a second nav vocabulary inside the pane that just shed one (the rec's own argument, unchanged). |
 | **OQ3 — the wide line (ruled: the 40rem line, per the rec)** | The pairing docks/drills at `ui-master-detail`'s own 40rem own-container line (`SHELL_NARROW_BREAKPOINT`, master-detail.css 85). Never a third number. | The rec adopted: composing the shipped element gives the line AND the drill-in for free; own-container-width is the shell family's law. Static arithmetic check (this seat is docs-only; the real-engine check is booked into S3-a, §11): at the worst wide width (40rem = 640px) the pair splits ≈ 388px interview + 252px rail (the composed `ui-split`'s default EVEN flex split (≈320/320 at 640px) — `--ui-super-shell-pane-size`'s 252px is the retiring options-pane's shipped-width comparison and the §6(c) flex-basis polish target, not the vehicle's own math; both splits clear the 20ch floor) — above the conversation's 20ch floor and the settings pane's shipped width; the fleet default 414×896 viewport (ADR-0150's below-compact band) correctly lands narrow. Escalation if S3-a's density evidence fails: widen `ui-master-detail` with a named drill-band seam citing `SHELL_COMPACT_BREAKPOINT` (an ADR-0155-shaped follow-up) — §15. |
 | **OQ4 — the Author empty state (ruled: always-present, per the rec)** ⚠️ **CONTENT STALE 2026-08-10 (GH #681 removed the action; GH #684 removed the headline + copy) — see the amendment row below** | The Author place always exists in the nav. `authoringStore` unset ⇒ the region shows `data-part="author-empty"`: headline + copy + the flow-entry action ("New agent → Generate") invoking a NEW registration seam `onGenerateRequest(cb)` (the `UIConversationElement.onSubmit` registration idiom; SPEC-R5's never-CustomEvent law; the action hides when no callback is registered — the static-build degrade). Armed ⇒ the interview conversation shows, empty state hides. | The rec adopted: a first-class PLACE that vanishes isn't one; the empty state hosts a8's entry affordance where the user already is, and is exactly where S5's future existing-persona entry will live (OQ5's fence — named, NOT built; zero consumption-path widening). The callback seam is the smallest bridge to the page-owned mint path (`createGeneratedAgent`, reused verbatim) — the component cannot import site code (DAG). |
 | **OQ4 amendment — the Author empty state is now truly EMPTY (2026-08-10, GH #681 + GH #684 — Kim's live pixel-truth rulings)** | OQ4's core ruling (always-present) is UNCHANGED — this amends only what the always-present place SHOWS while unarmed. GH #681 removed the SECONDARY "New agent → Generate" action first (it duplicated the roster menu's identically-labelled item, both ultimately calling the page's `createGeneratedAgent`). GH #684 then removed the headline + copy that were the state's only remaining content. `#authorEmpty`/`#createAuthorEmpty()` and the `ui-conversation.setEmptyState()` call are gone from `agent-admin.ts` entirely (no dead code for a node with nothing left to hold) — `data-part="author-empty"` no longer exists anywhere in the composed DOM. The unarmed card's log is now simply EMPTY until the first turn lands; the only orientation left is the composer's own placeholder ("Ask anything..", never overridden for this instance) plus the pre-arm Model/Effort pickers (GH #670, unchanged). Armed ⇒ the interview conversation's transcript takes the log, unchanged. | Both rulings read directly off the shipped surface (Kim's live pixel-truth authority, the same authority OQ4's original rec and GH #666's reopen both carry) — not a re-litigation of "always-present," only of what the place shows while empty. Whether the composer placeholder alone is sufficient orientation for a first-time user is an OPEN QUESTION for a future live ruling, named here and deliberately NOT resolved (GH #684) — no speculative placeholder override was added. |
 | **IA-entry re-point** | `createGeneratedAgent()` (site) stays byte-identical; the COMPONENT lands the user in Author: `#rewireAuthoringContext`'s arm branch calls `#setPane('author')` on a real `authoringStore` arm. Teardown never forces navigation (clearing while on Author shows the empty state — always-present). | a8's "lands IN the Author pane" with one line, at the one choke point every arm path already crosses; both entry affordances (roster menu + empty state) converge on the same page path. |
 | **Retirement + seam split (S1-b vs S4-a)** | S1-b RETIRES THE SEAM: `#contextFor` re-keys to `#pane`, the try-it bar stops being composed, `setModeSeam`-anchored tests re-anchor to a `setPaneSeam` (same protected compile-time construct), mode-flip suites re-state in pane vocabulary. S4-a DELETES THE RESIDUE: `#mode`/`#setMode`/`#applyMode`/`#tryItBar`/`#tryItAuthoringTab` + the compose block 998–1040 + agent-admin.css 189–216 + the browser strip probes (method repointed, §11) — and executes #653's record repairs. | `#contextFor` cannot serve two selectors, so the seam necessarily flips at S1-b; deleting the residue earlier than S4 would strand a red intermediate state, later would leave two mode vocabularies live. The decomp's "mode seam stays load-bearing until pane routing is proven" is honored: the SYMBOLS survive till S4, inert, while the routing proof runs on panes. |
-| **Events / catalog / naming** | No new host events (the closed seven-member set untouched); one new registration seam (`onGenerateRequest`); no new `ui-*` element; no catalog change; no new tokens beyond `pane-nav`/`settings-nav`/`author-empty` component-local CSS (`author-empty` CSS since removed — GH #684, see the OQ4 amendment row); `data-part="chat-stack"` renames to `data-part="pane-holder"` (it no longer stacks two conversations of one place — it holds the places). | The slice composes shipped primitives end to end; naming follows the thing it IS. |
+| **Events / catalog / naming** ⚠️ **SUPERSEDED (proposed) 2026-08-10 (GH #686) — §16 mints the fleet `ui-toggle`, adds five registration seams + one data-in setter, and renames `author-pane` → `copilot-pane`; the closed seven-event set stays untouched either way** | No new host events (the closed seven-member set untouched); one new registration seam (`onGenerateRequest`); no new `ui-*` element; no catalog change; no new tokens beyond `pane-nav`/`settings-nav`/`author-empty` component-local CSS (`author-empty` CSS since removed — GH #684, see the OQ4 amendment row); `data-part="chat-stack"` renames to `data-part="pane-holder"` (it no longer stacks two conversations of one place — it holds the places). | The slice composes shipped primitives end to end; naming follows the thing it IS. |
 
 ## 3 · Pane anatomy (the composed DOM after S1-b)
 
@@ -114,6 +114,10 @@ does), and the authoring conversation inserts into the RELOCATED `author-pane` e
 node identity after MD's relocation — verified against `#compose` 147–148: whole elements move,
 never their grandchildren). *(GH #666, 2026-08-10: that insert happens at compose time now, not on
 the first arm — the relocation property it depends on is unchanged either way.)*
+
+*(GH #686, 2026-08-10, proposed: this anatomy is superseded by §16.1's — the header slot's contents
+change and the MD row dissolves into three sibling regions. This diagram stays as the shipped
+record.)*
 
 ## 4 · Place-based routing (ADR-0179 cl.2/cl.4, realized)
 
@@ -263,10 +267,15 @@ subject retires.
   ruling (authoring LLD §14, inherited verbatim; the Author empty state merely NAMES the future
   front door, OQ5).
 - **No MD API change** — back suppression is admin CSS; the drill-band seam is the named
-  escalation, built only if S3-a's evidence demands it.
+  escalation, built only if S3-a's evidence demands it. ⚠️ **MOOT (proposed) 2026-08-10
+  (GH #686) — the MD leaves this composition entirely (§16); the fleet element itself is still
+  untouched, so the no-API-change fence holds in its own terms.**
 - **No pane persistence, no URL/router binding** (the router stays catalog-invisible; the admin is
   not router-bound), no new host events, no new `ui-*` element, no catalog rows, no entry-machinery
-  changes (ADR-0132/0164/0170 untouched).
+  changes (ADR-0132/0164/0170 untouched). ⚠️ **SUPERSEDED IN PART (proposed) 2026-08-10
+  (GH #686) — §16 mints `ui-toggle` (a fleet control, with catalog/doc rows of its own) and six
+  seam methods; no-persistence, no-router, no-new-host-events and the entry-machinery fence all
+  still stand.**
 - **No interim dual nav** — the try-it strip stops composing the moment pane routing lands (S1-b);
   its residue deletion is S4-a's.
 
@@ -307,15 +316,19 @@ subject retires.
 ## 12 · Acceptance (inline — the decomp granted no SPEC for this family)
 
 1. The three-place nav is live at every band from ONE vehicle; the six-entry narrow-tabs
-   vocabulary is gone (cl.1).
+   vocabulary is gone (cl.1). ⚠️ **SUPERSEDED (proposed) 2026-08-10 (GH #686) — the nav vehicle
+   retires; "one vehicle" becomes the one visibility STATE with two band renderings, §16.2.**
 2. `#contextFor` is keyed by active pane via §2's frozen algorithm — the selector diff is the one
    token; the fence conjunct ships byte-identical, both polarities asserted in the pane world
-   (cl.2/cl.4; zero widening).
+   (cl.2/cl.4; zero widening). ⚠️ **RE-STATED 2026-08-10 — the GH #662 wave re-keyed the selector
+   to composer ORIGIN (§2's origin row); GH #686 (proposed) inherits origin-keying untouched, §16.2.**
 3. Per-pane composers: Author's composer drives the Builder, Chat's the test context, permanently;
    `admin.store` reference-identity holds across every pane flip; GH #145 resets unchanged.
 4. The wide pairing is the SAME section nodes arranged (identity-asserted), docked at the 40rem
    named line, resizable via the composed split; the live-fill proof passes non-vacuously at wide,
-   both engines (cl.3; #651's acceptance line).
+   both engines (cl.3; #651's acceptance line). ⚠️ **SUPERSEDED (proposed) 2026-08-10 (GH #686) —
+   the MD and its 40rem line leave the composition; the identity assert and the live-fill proof
+   survive re-anchored to `{settings, copilot} ⊆ shown`, §16.2/§16.4 S7-e.**
 5. Settings' five sections are each reachable via the internal sub-nav at every band (a6).
 6. "New agent → Generate" — from the roster menu AND the Author empty state — lands the user in
    Author with the flow armed (a8); clearing the flow leaves an always-present Author place (OQ4).
@@ -381,3 +394,132 @@ ADR-0179; contradictions escalate.
 - **MD emission containment** — `stopPropagation` on light-DOM children's `select`/`change` is the
   shipped try-it precedent; if a future consumer WANTS pane-change observability, that is a new
   host-event fork (the closed set) — an ADR, not a drive-by.
+
+## 16 · Amendment — the unified header + shown-set visibility (GH #686, 2026-08-10, **proposed**)
+
+> Dated in place, append-only: every section above stays the shipped record; the §2/§3 rows this
+> re-rules carry dated ⚠️ markers pointing here, never rewrites. Refines ADR-0179's GH
+> [#686](https://github.com/kimgranlund/agent-ui/issues/686) (proposed) Amendment — the
+> unified-header ruling (Kim's Figma wireframe: desktop `1:162`/`1:163`, mobile `1:502`); cited by
+> issue number, never by ordinal. **Nothing here dispatches
+> until Kim ratifies that amendment**; this section is the build-ready OUTLINE (slice grain +
+> seam shapes + retirement map), and each slice gets its full per-slice acceptance detail in a
+> post-ratification pass. Contradictions with the accepted body escalate, never silently edit.
+
+### 16.1 · Anatomy (post-#686 target)
+
+```
+ui-agent-admin
+└── ui-chat-shell
+    ├── [data-slot="header"] div[data-part="admin-header"]           (banner — no landmark override; the nav retired)
+    │   ├── [data-part="agent-select"]   ui-select                    ← setAgentRoster / onAgentSelect
+    │   ├── [data-part="pane-pills"]     ui-toggle ×3                  wide only (CSS band) — Chat · Settings · Co-pilot,
+    │   │                                                              icon + label + Eye/EyeSlash state icon
+    │   ├── [data-part="pane-segments"]  ui-segmented-control          narrow only (CSS band) — same 3, icon-only, single-select
+    │   └── [data-part="header-actions"]                               wide: New Agent (+) · Import · Export as ui-buttons;
+    │                                                                  narrow: + and a ••• ui-menu (Import/Export)
+    └── [data-slot="content"] div[data-part="pane-holder"]            container-type: inline-size; data-show + data-primary
+        ├── [data-part="chat-pane"]      #conversation                 (byte-unchanged)
+        ├── [data-part="settings-pane"]  settings-nav + 5 section units (internals untouched; "Reset Agent" joins the
+        │                                                              model-grid fold's content end)
+        └── [data-part="copilot-pane"]   #authoringConversation        (the GH #666 card, renamed from author-pane)
+```
+
+The `ui-master-detail`, both its pane elements' wrapper role, and the back-affordance suppression
+CSS leave the composition (the MD element itself is untouched fleet stock). The five section units
+and both conversations move as whole nodes — cl.3's singleton law, re-verified at build with the
+`isSameNode` probes.
+
+### 16.2 · The visibility model (one machine, two renderings)
+
+- **State:** `#panesShown: Set<'chat' | 'settings' | 'copilot'>` (invariant `size ≥ 1`) +
+  `#panePrimary: 'chat' | 'settings' | 'copilot'` (invariant: a member of the set). Replaces
+  `#pane`/`#setPane`/`#applyPane` as the truth; `setPaneSeam` retires in favor of
+  `protected setPaneVisibilitySeam(shown: readonly Pane[], primary: Pane): void`.
+- **Writes:** a wide pill toggles membership (turning off the last member is refused — the pill
+  no-ops and stays pressed; turning off the primary repoints primary to the first remaining member
+  in reading order). A narrow segment select sets `primary` and ensures membership. Arm
+  (`#rewireAuthoringContext`) replaces its `#setPane('author')` line with: ensure
+  `copilot ∈ shown` + `primary = 'copilot'`. Teardown still never forces navigation.
+- **Render:** ONE `#applyPaneVisibility()` writes `data-show="chat settings copilot"` (space-joined
+  set) + `data-primary` onto the pane holder and mirrors pressed/selected state onto the pills and
+  the segment control (programmatic writes — no event echo, ADR-0019). The sheet does the rest
+  against the holder's own inline-size: `≥ 52.5rem` (`SHELL_COMPACT_BREAKPOINT`; the header bar
+  uses the derived 54rem composed-shell query, the GH #665 rule's own derivation repurposed) shows
+  the `data-show` members as equal flex columns; below it only the `data-primary` pane. A resize
+  writes nothing — band crossings are lossless by construction.
+- **Routing:** untouched. `#contextFor` stays ORIGIN-keyed (the first Amendment); with subsets,
+  multiple visible composers are the norm and origin-keying is what already makes that sound. The
+  fence conjunct, both histories, the session map, the GH #145 resets: byte-identical.
+
+### 16.3 · Seam shapes (frozen enough to build from; SPEC-R5's law throughout)
+
+```ts
+export interface AgentRosterEntry { id: string; label: string }
+setAgentRoster(entries: readonly AgentRosterEntry[], activeId?: string): void
+onAgentSelect(callback: (id: string) => void): void
+onNewAgentRequest(callback: () => void): void
+onImportRequest(callback: () => void): void
+onExportRequest(callback: () => void): void
+onResetRequest(callback: () => void): void
+```
+
+All six follow `onGenerateRequest`'s shipped semantics: callback registration, never a CustomEvent;
+last registration wins; safe before OR after connect (the GH #666 order rule — reflect at build
+time and at registration). The DEGRADE diverges deliberately, stated rather than inherited: the
+shipped precedent DISABLES its card (`conversation.disabled = this.#generateRequest === undefined`,
+agent-admin.ts:1318 — a disabled conversation still shows its copy), while these seams HIDE their
+affordance when unregistered — the right degrade for a bare action button/menu item, which has no
+copy to show disabled. `setAgentRoster` is data-in and re-callable (the page re-pushes after
+mint/import); the select's internal `select`/`change` stay contained (`stopPropagation` — the
+closed event set is untouched). `onGenerateRequest`/`GenerateSeed` unchanged. Site side,
+`agent-admin-app.ts` retires its canvas-header DOM + CSS and instead registers: roster +
+`applyPersona` routing, New Agent (OQ-A's ruling), the import flow (the hidden
+`fileInput.click()` → `readPersonaFile`/`importedPersonaFrom` path — agent-admin-app.ts 209/299/308,
+symbols from `agent-admin-persona-file.ts`), the export flow (`exportPersonaFile`), and
+`resetPersona`.
+
+### 16.4 · Slice outline (S-numbered; serialized, one writer per file; full acceptance detail
+post-ratification)
+
+| Slice | Scope | Done-when (outline grade) |
+|---|---|---|
+| **S7-a** | The fleet `ui-toggle` control (pressed pill: icon + label + optional state-icon slot; `aria-pressed` via `ElementInternals`; `toggle` event; disabled/refused-toggle affordance) + vendored icons (`chats-circle`, `gear-six`, `robot` — `vendor-phosphor.mjs` regen; `eye`/`eye-slash`/`plus`/`dots-three` already in the pack) + control doc + jsdom/browser tests. | Control passes the fleet's naming/styling gates; `toggle` emission + pressed reflection probed; icons resolve from `@agent-ui/icons/phosphor`. |
+| **S7-b** | The visibility model in `agent-admin.ts`/`.css`: §16.2 verbatim — shown-set + primary, `#applyPaneVisibility`, `data-show`/`data-primary` + band CSS, MD retirement (three sibling regions, `author-pane` → `copilot-pane` rename, back-suppression CSS deleted), pane-nav retirement incl. the GH #665 rule, `setPaneVisibilitySeam`. | jsdom visibility truth-table over set×band; `isSameNode` across arrangement flips; min-one refusal; arm lands Co-pilot visible+primary; browser band matrix (wide subsets paint, narrow paints primary alone); no state written on resize; a real-engine density/floor RE-MEASURE at the 52.5rem line for the equal-thirds geometry, both engines — every visible column ≥ the 20ch floor, and the settings name field's fit re-measured against the old table's 270px (the ADR's own booking; the first Amendment's table measured the retired arrangement and does not carry over). |
+| **S7-c** | The unified header bar: three zones composed into `header` (§16.1), the six seams (§16.3), pills⇄segment band rendering, narrow `+`/`•••` collapse. | Seams' register-before/after-connect probes; unregistered-degrade per affordance; pills and segment mirror ONE state (flip in one rendering, cross-check the other); header inset rhythm probes re-anchored from the retired pane-nav; every icon-only affordance (the narrow segments, `+`, `•••`) carries an asserted accessible name (aria-label per fleet ARIA law — `ElementInternals`, never host attributes). |
+| **S7-d** | "Reset Agent" at the `model-grid` fold's content end (`onResetRequest`) + the site page pass: canvas-header retired, registrations in, overflow menu deleted, roster re-push on mint/import. | Reset hidden unregistered / invokes callback registered; the page renders no header of its own; every prior overflow action reachable through its new home; `layering.test.ts` untouched-green. |
+| **S7-e** | Residue + records: grep-gates for retired symbols (`#pane`, `#setPane`, `#applyPane`, `setPaneSeam`, pane-nav parts, MD parts, canvas-header classes); probe repointing (live-fill re-anchored to `{settings, copilot} ⊆ shown`; the #650-descended screen-x probes onto the new bar); `agent-admin.md` re-stated; this LLD's §16 markers confirmed against the built tree. | Full gates green by exit code; zero retired-symbol references outside history/docs; doc-checker ratifies the record pass. |
+
+### 16.5 · Retirement map additions (RETIRE entries, the §7 convention)
+
+**Retires:** the pane-nav `ui-tabs` + `pane-nav-bar` + per-tab `link()` wiring + `setPaneSeam` ·
+`#pane`/`#setPane`/`#applyPane` as visibility truth (re-shaped per §16.2) · the `ui-master-detail`
+composition (`pane-pair`, both `ui-master-detail-pane` wrappers, the back-affordance suppression
+CSS, the MD `selected` mapping row) · the GH #665 hidden-at-wide CSS rule (moot — its 54rem
+derivation is REUSED by §16.2's header query) · site: the canvas-header (title/tagline,
+`agentMenu`, `overflowMenu` incl. `NEW_AGENT_ACTIONS`' menu items, `resetItem`, `exportItem`,
+`importItem` — the ACTIONS survive behind the seams; only their menu housing retires).
+
+**Survives byte-identical (the overreach guard, §7's list still binding):** both mounted
+conversations · origin-keyed `#contextFor` · the fence + gate conjunct · both histories · the
+session map · GH #145 resets · the apply chain · the Builder persona · `onGenerateRequest` +
+`GenerateSeed` · the settings region's internals (settings-nav, five section units, entry
+machinery) · the no-painted-dividers token law.
+
+### 16.6 · Open questions (fenced for Kim — named, NOT ruled; the OQ5 discipline)
+
+- **OQ-A — New Agent's verb.** One wireframe button; two shipped mint paths (Blank · Generate).
+  Rec: `onNewAgentRequest` → the page routes to the Generate flow; Blank's home is Kim's call
+  (narrow `•••`? retire? an ADR-0170 pack action?).
+- **OQ-B — the narrow `•••` contents.** The wireframe implies Import/Export only ("presumably", the
+  issue's own word). Rec: exactly those two; Reset stays Settings-only per Kim's text ruling.
+- **OQ-C — inter-pane resizing.** The MD's resizable split retires with it; the wireframe's equal
+  columns suggest fixed flex. Rec: fixed flex; compose `ui-split` back only on Kim's ask.
+- **OQ-D — entry default.** Rec: all three shown at wide (the wireframe's all-active state),
+  `chat` primary at narrow — a change from the shipped chat-first entry, so it is Kim's to confirm.
+- **OQ-F — the 40–52.5rem band.** Today it paints the Author⇄Settings docked pair; post-#686 it is
+  single-pane (the MD's 40rem line leaves with the MD). Kim-visible behavior change between the two
+  wireframe states; flagged, not smoothed over.
+
+*(OQ-E from the drafting pass — "can the set be empty" — is RULED, not open: min-one, §16.2; a
+zero-pane surface is broken by construction.)*
