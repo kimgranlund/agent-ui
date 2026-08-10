@@ -583,16 +583,144 @@ describe('the pane nav — the visible place change, driving the SAME seam the r
     expect([...authorPane.children].map((c) => c.getAttribute('data-part'))).toEqual(['author-empty', 'authoring-conversation'])
   })
 
-  it('OQ4 — `onGenerateRequest` reveals the empty-state action and fires the page callback; unregistered, the action is hidden', async () => {
+  it('OQ4 — `onGenerateRequest` reveals the empty state`s composer AND its secondary action; unregistered, both are hidden', async () => {
     const { el } = mountAdmin({ store: personaStore() })
     await whenFlushed()
     const action = el.querySelector('[data-part="author-empty-action"]') as HTMLElement
-    expect(action.hasAttribute('hidden'), 'the static-build degrade: no mint path, no button').toBe(true)
+    const composer = el.querySelector('[data-part="author-empty-composer"]') as HTMLElement
+    expect(
+      [action.hasAttribute('hidden'), composer.hasAttribute('hidden')],
+      'the static-build degrade: no mint path, no affordance that could do nothing',
+    ).toEqual([true, true])
     let fired = 0
     el.onGenerateRequest(() => { fired += 1 })
-    expect(action.hasAttribute('hidden')).toBe(false)
+    expect([action.hasAttribute('hidden'), composer.hasAttribute('hidden')]).toEqual([false, false])
     action.click()
     expect(fired).toBe(1)
+  })
+})
+
+// ── GH #666 — COMPOSER-FIRST: the unarmed Author place is the flow's ENTRY, not a promise with no verb ──
+// Kim's 2026-08-10 live report ("where am I supposed to describe it?") ruled two things at once: the
+// registered action was not rendering at all (defect 1, the pre-connect registration below), and the fix
+// is not a better button — the column carries a real composer, and typing the first message IS the start.
+describe('GH #666 — the unarmed Author place: a live composer, and the arming it drives', () => {
+  /** The page's `createGeneratedAgent`, in miniature: mint the interviewer and assign it. This IS the arm
+   *  path — the probes below register it exactly once per element and let BOTH entries run it. */
+  const mintPath = (el: UIAgentAdminElement, builder: SettingsStore): (() => void) => () => { el.authoringStore = builder }
+
+  /** Submit through the UNARMED empty state's own composer (`submit` above drives an armed conversation's).
+   *  The extra flush round is not padding: arming rides a signal effect, so the entry awaits it before the
+   *  opening turn can land — the probe has to await the same sequence. */
+  async function submitFirst(el: UIAgentAdminElement, text: string): Promise<void> {
+    const composer = el.querySelector('[data-part="author-empty-composer"]') as HTMLElement & { value: string }
+    const editor = composer.querySelector('[data-part="editor"]') as HTMLElement
+    composer.value = text
+    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+    for (let round = 0; round < 3; round += 1) {
+      await whenFlushed()
+      await new Promise((r) => setTimeout(r, 0))
+    }
+    await whenFlushed()
+  }
+
+  /** Everything about an ARMED admin that arming is supposed to establish — the equivalence probe's subject. */
+  const armedShape = (el: UIAgentAdminElement): Record<string, unknown> => {
+    const interview = el.querySelector('[data-part="authoring-conversation"]')
+    return {
+      armed: el.authoringStore !== undefined,
+      pane: el.querySelector('[data-part="pane-holder"]')!.getAttribute('data-pane'),
+      navSelected: (el.querySelector('[data-part="pane-nav"]') as HTMLElement & { selected: string }).selected,
+      emptyHidden: el.querySelector('[data-part="author-empty"]')!.hasAttribute('hidden'),
+      interviewMounted: interview !== null,
+      interviewHidden: interview?.hasAttribute('hidden'),
+    }
+  }
+
+  it('defect 1 — a registration BEFORE the element connects reveals the entry (the live page`s own order)', async () => {
+    // agent-admin-app.ts registers on a DETACHED element and appends it 150 lines later. The reveal used
+    // to be a push onto an empty state that did not exist yet, so the live column painted copy with no
+    // verb at all — exactly Kim's screenshot. Both orders must reveal.
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = personaStore()
+    el.onGenerateRequest(() => {})
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    const hiddenState = ['author-empty-action', 'author-empty-composer'].map((part) =>
+      el.querySelector(`[data-part="${part}"]`)!.hasAttribute('hidden'),
+    )
+    expect(hiddenState, 'registered pre-connect ⇒ the entry still paints').toEqual([false, false])
+  })
+
+  it('the unarmed Author place is USABLE while the nav says Chat — the triple band`s middle column is the entry, not dead copy', async () => {
+    // The band itself is the sheet's job (`data-pane` + a container query, browser-probed); what this
+    // pins is the thing GH #666 called a near-orphan: with the flow unarmed and the user standing in Chat,
+    // the Author region is un-hidden and the affordance inside it is real.
+    const { el } = mountAdmin({ store: personaStore() })
+    await whenFlushed()
+    el.onGenerateRequest(() => {})
+    const empty = el.querySelector('[data-part="author-empty"]') as HTMLElement
+    const composer = el.querySelector('[data-part="author-empty-composer"]') as HTMLElement
+    expect(el.querySelector('[data-part="pane-holder"]')!.getAttribute('data-pane')).toBe('chat')
+    expect([empty.hasAttribute('hidden'), composer.hasAttribute('hidden')]).toEqual([false, false])
+    expect(composer.querySelector('[data-part="editor"]'), 'a real editable surface, not a link to one').not.toBeNull()
+  })
+
+  it('the first message ARMS the flow and reaches the Builder as the interview`s opening turn — nothing swallowed', async () => {
+    const draft = personaStore()
+    const builder = personaStore({ [SURFACE_AUTHORING_KEY]: true })
+    const { el, requests } = mountAdmin({ store: draft, events: [{ kind: 'patch', patch: PATCH }] })
+    await whenFlushed()
+    let mints = 0
+    el.onGenerateRequest(() => { mints += 1; mintPath(el, builder)() })
+
+    await submitFirst(el, 'a hotel concierge please')
+
+    expect(mints, 'the arm ran once, through the page`s own mint path').toBe(1)
+    expect(el.authoringStore).toBe(builder)
+    const interview = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
+    expect(interview.textContent, 'the description the user typed IS the opening turn').toContain('a hotel concierge please')
+    expect(requests.at(-1)!.session, 'and it runs as an authoring turn').toBe('authoring')
+    // The fence is untouched by construction: the driving store IS the authoring store, so the patch
+    // consumes — into the DRAFT, never the interviewer.
+    expect(draft.get('name')).toBe('Concierge')
+    expect(readEntries(draft, ENTRY_KINDS.skill).map((e) => e.label)).toEqual(['Book a table'])
+    expect(builder.get('name')).toBe('Untitled agent')
+  })
+
+  it('the two entries CONVERGE: arming by first message leaves the same state as arming by the roster action', async () => {
+    const byAction = mountAdmin({ store: personaStore() })
+    const actionBuilder = personaStore({ [SURFACE_AUTHORING_KEY]: true })
+    byAction.el.onGenerateRequest(mintPath(byAction.el, actionBuilder))
+    const byMessage = mountAdmin({ store: personaStore() })
+    const messageBuilder = personaStore({ [SURFACE_AUTHORING_KEY]: true })
+    byMessage.el.onGenerateRequest(mintPath(byMessage.el, messageBuilder))
+    await whenFlushed()
+
+    ;(byAction.el.querySelector('[data-part="author-empty-action"]') as HTMLElement).click()
+    await whenFlushed()
+    await submitFirst(byMessage.el, 'a hotel concierge please')
+
+    expect(armedShape(byMessage.el)).toEqual(armedShape(byAction.el))
+    // The ONE intended difference, stated rather than left implicit: the message entry opens the
+    // interview with the user's description; the button entry hands over an empty transcript.
+    const transcript = (r: { el: UIAgentAdminElement }): string =>
+      r.el.querySelector('[data-part="authoring-conversation"]')!.textContent ?? ''
+    expect(transcript(byMessage)).toContain('a hotel concierge please')
+    expect(transcript(byAction)).not.toContain('a hotel concierge please')
+  })
+
+  it('a first message with NO mint path registered is never swallowed — the composer keeps the text', async () => {
+    const { el, requests } = mountAdmin({ store: personaStore() })
+    await whenFlushed()
+    const composer = el.querySelector('[data-part="author-empty-composer"]') as HTMLElement & { value: string }
+    // The degrade hides this composer, so a user cannot reach it — but a programmatic submit must still
+    // hand the text back rather than drop it (the guard `#startFromFirstMessage` ends on).
+    await submitFirst(el, 'a hotel concierge please')
+    expect(el.authoringStore).toBeUndefined()
+    expect(composer.value).toBe('a hotel concierge please')
+    expect(requests).toEqual([])
   })
 })
 

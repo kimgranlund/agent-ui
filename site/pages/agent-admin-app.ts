@@ -213,9 +213,11 @@ overflowMenu.addEventListener('select', (event) => {
 // ADR-0179 OQ4 (admin-three-pane-ia.lld.md §2) — the Author place's empty state hosts the flow's OTHER
 // front door, where the user already is. It reaches this page's mint path through the component's
 // `onGenerateRequest` registration seam (a callback, never a CustomEvent — SPEC-R5), because the component
-// cannot import site code without inverting the DAG. Both affordances — the roster menu's "New agent →
-// Generate" above and the empty state's — converge on the SAME `createGeneratedAgent` below; registering
-// is also what REVEALS the empty state's action (unregistered ⇒ copy only, the static-build degrade).
+// cannot import site code without inverting the DAG. Every affordance — the roster menu's "New agent →
+// Generate" above, the Author place's secondary button, and (GH #666) its composer's FIRST MESSAGE —
+// converges on the SAME `createGeneratedAgent` below; registering is also what REVEALS them (unregistered
+// ⇒ copy only, the static-build degrade). This call deliberately happens BEFORE `root.append(admin)`
+// below — that ordering used to lose the reveal (GH #666 defect 1) and is now the probed case.
 admin.onGenerateRequest(() => createGeneratedAgent())
 
 function applyPersona(persona: Persona): void {

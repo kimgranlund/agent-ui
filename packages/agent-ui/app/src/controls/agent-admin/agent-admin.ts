@@ -42,7 +42,7 @@
 // `controls → @agent-ui/components` (+ this package's own `../settings/`/`../conversation/` siblings)
 // only — NEVER `@agent-ui/router`/`@agent-ui/a2a`; the app `layering.test.ts` trip-wire guards it.
 
-import { UIElement, prop, untracked, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
+import { UIElement, prop, untracked, whenFlushed, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
 // Side-effect only: registers these tags before this element (or the `entry-list.ts` sibling it composes)
 // ever calls `document.createElement` on one. `button`/`icon` (TKT-0048) register entry-list.ts's
 // `entry-add-toggle`/`entry-delete` `<ui-button>`s + the add-toggle's leading `<ui-icon>` explicitly;
@@ -104,6 +104,9 @@ import '../master-detail/master-detail-pane.ts'
 // search "GH #468" for the loader + the render-path fallback.
 import { UISettingsElement } from '../settings/settings.ts'
 import { UIConversationElement } from '../conversation/conversation.ts'
+// GH #666 — the unarmed Author place's composer-first entry. `conversation.ts` above already registers
+// <ui-conversation-composer>; this is the TYPE alone (its `onSubmit`/`value` seams).
+import type { UIConversationComposerElement } from '../conversation/conversation-composer.ts'
 // genui-surface.spec.md v0.5 §11 (SPEC-R12, GH #316/ADR-0162) — the dogfood frame asset pair rides the
 // opt-in `@agent-ui/components/dogfood-frame` subpath (`app` already imports `components`;
 // catalog-invisible by construction — the a2ui catalog never maps `ui-sandbox-frame` either way). GH #354
@@ -420,6 +423,10 @@ export class UIAgentAdminElement extends UIElement {
    *  stays HIDDEN until a callback is registered — a static build with no mint path shows the copy alone
    *  rather than a button that would do nothing (OQ4's degrade). */
   #authorEmptyAction: UIButtonElement | null = null
+  /** GH #666 — the unarmed Author place's OWN composer: the flow's primary entry (typing the first message
+   *  arms the flow and opens the interview with it). Hidden alongside the action under the same
+   *  no-mint-path degrade — a composer that could arm nothing would swallow the user's first description. */
+  #authorEmptyComposer: UIConversationComposerElement | null = null
   #generateRequest: (() => void) | undefined
   /** The five settings section units, in strip order — the SAME nodes at every band (the
    *  no-duplication assert), keyed by their stable `data-role`. Visibility-only flips, exactly the shell
@@ -1218,14 +1225,29 @@ export class UIAgentAdminElement extends UIElement {
   }
 
   /**
-   * ADR-0179 OQ4 (LLD §2) — the Author place's empty state: a first-class place that vanishes when the
+   * ADR-0179 OQ4 (LLD §2) — the Author place's UNARMED state: a first-class place that vanishes when the
    * flow is unarmed would not be a place at all, so the region always exists and says what it is for.
    *
-   * The flow-entry action reaches the page through `onGenerateRequest(cb)` — the registration idiom
+   * GH #666 — COMPOSER-FIRST (Kim's 2026-08-10 ruling on his own live report: "where am I supposed to
+   * describe it?"). The unarmed third is no longer a promise with no verb: it carries a REAL composer, and
+   * typing the first message IS the start. Headline + copy are supporting text ABOVE that composer; the
+   * "New agent → Generate" button stays as the SECONDARY affordance (a bare arm, no opening turn) rather
+   * than folding away — the roster menu's identically-labelled item makes the pairing legible, and it is
+   * the only path for someone who wants the interviewer to open the conversation.
+   *
+   * Both affordances reach the page through ONE seam, `onGenerateRequest(cb)` — the registration idiom
    * (`UIConversationElement.onSubmit`'s own shape, SPEC-R5's never-a-CustomEvent law), because the mint
-   * path is page-owned (`createGeneratedAgent`) and this component cannot import site code (the DAG). With
-   * no callback registered the action is ABSENT and the copy still names the flow — the static-build
-   * degrade.
+   * path is page-owned (`createGeneratedAgent`) and this component cannot import site code (the DAG).
+   *
+   * The static-build degrade is unchanged, and now covers both: with NO callback registered there is no
+   * mint path, so neither the action nor the composer paints (a composer whose first message could not arm
+   * anything would swallow what the user typed) — the copy alone, exactly as OQ4 ruled.
+   *
+   * GH #666 defect 1 — the reveal is computed HERE from `#generateRequest`, not only pushed by
+   * `onGenerateRequest`. The page registers before it appends the element (agent-admin-app.ts), so at
+   * registration time this state does not exist yet and the push landed on nothing; reading the field at
+   * build time makes the reveal order-free — register before OR after connect, both reveal.
+   * (`ui-conversation-composer`'s own `onMicClick` opt-in carries this same two-sided shape.)
    */
   #createAuthorEmpty(): HTMLElement {
     const empty = document.createElement('div')
@@ -1235,16 +1257,58 @@ export class UIAgentAdminElement extends UIElement {
     headline.textContent = 'Describe the agent you want'
     const copy = document.createElement('p')
     copy.setAttribute('data-part', 'author-empty-copy')
-    copy.textContent = 'Start a guided interview and the Builder fills in the draft beside you as you talk — every answer lands in Settings live.'
+    copy.textContent = 'Type it below — the Builder interviews you from there, and every answer lands in the draft beside you, live.'
+    const composer = document.createElement('ui-conversation-composer') as UIConversationComposerElement
+    composer.setAttribute('data-part', 'author-empty-composer')
+    composer.onSubmit((text) => this.#startFromFirstMessage(text))
+    composer.hidden = this.#generateRequest === undefined
+    this.#authorEmptyComposer = composer
     const action = document.createElement('ui-button') as UIButtonElement
     action.setAttribute('data-part', 'author-empty-action')
-    action.setAttribute('variant', 'filled')
+    // Secondary, not `filled`: the composer is the primary verb now, and two filled affordances in one
+    // small region would compete for the same "start here".
+    action.setAttribute('variant', 'text')
     action.textContent = 'New agent → Generate'
-    action.hidden = true // revealed by `onGenerateRequest`; absent means the page registered no mint path
+    action.hidden = this.#generateRequest === undefined
     action.addEventListener('click', () => this.#generateRequest?.())
     this.#authorEmptyAction = action
-    empty.append(headline, copy, action)
+    empty.append(headline, copy, composer, action)
     return empty
+  }
+
+  /**
+   * GH #666 — the composer-first entry: the unarmed Author composer's first message ARMS the flow and then
+   * lands in the Builder's transcript as the interview's opening turn. Nothing is swallowed — the
+   * description the user typed is what the Builder answers.
+   *
+   * ONE arming path, never a second: `#generateRequest` is the SAME page callback the roster menu's "New
+   * agent → Generate" and this empty state's own button run (`createGeneratedAgent` — mint the draft,
+   * assign `authoringStore`). Everything that follows is `#rewireAuthoringContext`'s already-shipped
+   * machinery: mount the interview, reset it, sync its config, land the user in Author. Arming here and
+   * arming from the roster therefore converge on identical state by construction.
+   *
+   * The submit itself replays what `ui-conversation`'s own composer does — `addUserMessage(text)` then the
+   * submit callback — because the interview's composer is not reachable from here and duplicating the
+   * TURN logic (rather than reusing `#handleSubmit`) is what a second path would mean.
+   *
+   * If the arm does not take (no mint path registered, or a page that armed nothing), the text goes BACK
+   * into the composer rather than into the void.
+   *
+   * The `whenFlushed()` await is load-bearing, not defensive: `authoringStore` is a SIGNAL, so the page's
+   * assignment lands synchronously but the effect that acts on it (mount the interview, `reset()` it,
+   * sync its config) is microtask-batched. Submitting before that flush would push the opening turn into a
+   * conversation that does not exist yet — or, worse, into one the arm's own `reset()` is about to clear.
+   */
+  async #startFromFirstMessage(text: string): Promise<void> {
+    if (this.authoringStore === undefined) this.#generateRequest?.()
+    if (this.authoringStore !== undefined) await whenFlushed()
+    const conversation = this.#authoringConversation
+    if (this.authoringStore === undefined || conversation === null || conversation.disabled) {
+      if (this.#authorEmptyComposer) this.#authorEmptyComposer.value = text
+      return
+    }
+    conversation.addUserMessage(text)
+    this.#handleSubmit(text, 'author')
   }
 
   /** One conversation's content-render seam, parameterized by the store whose Markdown modality governs
@@ -2379,12 +2443,19 @@ export class UIAgentAdminElement extends UIElement {
    * (`createGeneratedAgent` — a roster mint plus a `builderStore()` arm), and this component cannot import
    * site code without inverting the DAG.
    *
-   * Registering REVEALS the action; a component with no registration paints the copy alone (the
-   * static-build degrade). Last registration wins — one page owns one admin.
+   * Registering REVEALS the flow entry — GH #666's composer AND the secondary action; a component with no
+   * registration paints the copy alone (the static-build degrade). Last registration wins — one page owns
+   * one admin.
+   *
+   * Safe BEFORE or AFTER connect, and that is a fix, not a nicety (GH #666 defect 1): the real page
+   * registers on a detached element and appends it later, so this call used to land on a not-yet-built
+   * empty state and the reveal was silently lost — Kim's live Author column showed copy with no verb.
+   * `#createAuthorEmpty` now reads `#generateRequest` at build time, so both orders reveal.
    */
   onGenerateRequest(callback: () => void): void {
     this.#generateRequest = callback
     if (this.#authorEmptyAction) this.#authorEmptyAction.hidden = false
+    if (this.#authorEmptyComposer) this.#authorEmptyComposer.hidden = false
   }
 
   // ── protected test seams (the split.ts/slider-multi.ts precedent) ────────────────────────────────────

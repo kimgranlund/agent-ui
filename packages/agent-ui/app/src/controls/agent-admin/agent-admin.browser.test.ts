@@ -2011,7 +2011,9 @@ describe('ui-agent-admin cross-engine smoke — the wide live-fill proof + densi
       // GH #74; a field pinned AT its floor is the tell that the split has run out of room).
       const nameField = el.querySelector('ui-settings [name="name"]') as UITextFieldElement
       expect(nameField.getBoundingClientRect().width, `the rail's name field clears its own 20ch minimum at ${band.name}`).toBeGreaterThan(twentyCh(settings))
-      const composer = el.querySelector('[data-part="author-pane"] ui-conversation-composer') as HTMLElement
+      // GH #666 — scoped to the INTERVIEW's own composer: the Author region now holds a second one (the
+      // unarmed empty state's composer-first entry), and this probe mounts ARMED, where that one is hidden.
+      const composer = el.querySelector('[data-part="authoring-conversation"] ui-conversation-composer') as HTMLElement
       expect(composer.getBoundingClientRect().width, 'the interview composer paints a real box').toBeGreaterThan(0)
 
       // S2's flagged band behaviour, asserted as the EXPECTED path rather than a regression: the five
@@ -2186,7 +2188,9 @@ describe('ui-agent-admin — the wide TRIPLE dock (GH #662, ADR-0179 cl.1 Amendm
       // a triple can live at all.
       const chatComposer = chat.querySelector('ui-conversation-composer') as HTMLElement
       expect(chatComposer.getBoundingClientRect().width, 'the test composer clears its own 20ch minimum').toBeGreaterThan(twentyCh(chat))
-      const authorComposer = author.querySelector('ui-conversation-composer') as HTMLElement
+      // GH #666 — the INTERVIEW's composer specifically (this probe mounts armed; the empty state's own
+      // composer-first entry is the region's other, hidden one).
+      const authorComposer = author.querySelector('[data-part="authoring-conversation"] ui-conversation-composer') as HTMLElement
       expect(authorComposer.getBoundingClientRect().width, 'the interview composer clears it too').toBeGreaterThan(twentyCh(author))
       const nameField = el.querySelector('ui-settings [name="name"]') as UITextFieldElement
       expect(nameField.getBoundingClientRect().width, 'the rail’s name field clears its own 20ch minimum').toBeGreaterThan(twentyCh(settings))
@@ -2474,6 +2478,48 @@ describe('ui-agent-admin — the wide TRIPLE dock (GH #662, ADR-0179 cl.1 Amendm
     expect(bubble.textContent, 'the reply landed in the interview, not the test chat').toContain('Named it for you.')
     expect(chat.textContent, 'the test chat never saw the interview’s turn').not.toContain('Named it for you.')
     expect(chat.getBoundingClientRect().width, 'and it is still painted after the turn').toBeGreaterThan(0)
+  })
+
+  // GH #666 (Kim's live report: "this UI makes no sense — where am I supposed to describe it?") — the
+  // UNARMED third. Every probe above mounts ARMED, which is exactly how the near-orphan survived review:
+  // unarmed, the middle column was static copy occupying a third of the surface with no verb in it. Under
+  // the composer-first ruling it is the flow's entry, so what has to be proven live is that the entry is a
+  // REAL painted composer at the triple band and that typing into it actually starts the interview.
+  it('UNARMED at the triple: the Author third is a live composer, and its first message arms the flow and opens the interview', async () => {
+    const { el } = mountAgentAdminAt(1200)
+    await frames()
+    el.onGenerateRequest(() => {
+      el.authoringStore = createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder' } })
+    })
+    el.agentSurfaceTurn = async function* () {
+      yield { kind: 'note' as const, note: 'Tell me more.' }
+    }
+    await el.updateComplete
+    await frames()
+
+    const { author } = partsOf(el)
+    const empty = el.querySelector('[data-part="author-empty"]') as HTMLElement
+    const composer = el.querySelector('[data-part="author-empty-composer"]') as HTMLElement & { value: string }
+    expect(author.getBoundingClientRect().width, 'the unarmed Author third has a real box in the triple').toBeGreaterThan(0)
+    const box = composer.getBoundingClientRect()
+    expect(box.width, 'and the composer inside it is PAINTED, not merely mounted').toBeGreaterThan(0)
+    expect(box.height, 'with a real typing surface').toBeGreaterThan(0)
+    // It fills the region's measure rather than shrink-wrapping in the flex-start column (the
+    // `align-self: stretch` rule) — a message field narrowed to a chip is the defect, not the fix.
+    expect(box.width, 'the composer spans the Author column').toBeGreaterThan(author.getBoundingClientRect().width * 0.6)
+
+    composer.value = 'a hotel concierge please'
+    ;(composer.querySelector('[data-part="send"]') as HTMLElement).click()
+    await el.updateComplete
+    await frames()
+    await el.updateComplete
+    await frames()
+
+    expect(el.authoringStore, 'the first message armed the flow').toBeDefined()
+    expect(empty.getBoundingClientRect().height, 'the empty state gave way to the interview').toBe(0)
+    const authoring = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
+    expect(authoring.getBoundingClientRect().width, 'which paints in the same third').toBeGreaterThan(0)
+    expect(authoring.textContent, 'and the description the user typed opened it — nothing swallowed').toContain('a hotel concierge please')
   })
 })
 
