@@ -2230,22 +2230,71 @@ describe('ui-agent-admin — the wide TRIPLE dock (GH #662, ADR-0179 cl.1 Amendm
   // displacement idiom above rather than re-deriving it): a shared CONTENT top line (not merely the
   // region boxes', which the AT-the-line test above already covers), gutter equality between the two
   // inter-column seams, a visible identity kicker per conversation, and no mid-word composer-label crush.
-  it('a shared CONTENT top line: the first thing painted in each column — the chat kicker, the interview kicker, the settings sub-nav — lands on the same y, not just the region boxes', async () => {
+  //
+  // `screens:layout-checker` findings 1/2 (SHIPPABLE grade) folded in here: a THIRD kicker now labels the
+  // settings column ("Settings" — the same `#makeRegionKicker`, one labeling system at one level, closing
+  // the gap where the pane-nav's own "Settings" label vanishes at this exact band), and the probe compares
+  // TEXT rects (kicker padding-top offset), not just box tops — box-true/text-false was finding 2's own
+  // bug: a bare box comparison passed even when the settings sub-nav's OWN inset differed from the
+  // kickers'.
+  it('a shared CONTENT top line: all three region kickers — chat, interview, AND settings — land their TEXT on the same y, not just their boxes', async () => {
     const el = await mountTripleAt(1200)
     const { chat, author, settings } = partsOf(el)
     const chatKicker = chat.querySelector('[data-part="region-kicker"]') as HTMLElement
     const authorKicker = author.querySelector('ui-conversation [data-part="region-kicker"]') as HTMLElement
-    const settingsNav = settings.querySelector('[data-part="settings-nav"]') as HTMLElement
-    const tops = [chatKicker, authorKicker, settingsNav].map((el) => el.getBoundingClientRect().top)
-    for (const [i, label] of ['interview kicker', 'settings sub-nav'].entries()) {
-      expect(Math.abs(tops[i + 1]! - tops[0]!), `${label} top matches the test chat kicker's`).toBeLessThanOrEqual(1)
+    const settingsKicker = settings.querySelector('[data-part="region-kicker"]') as HTMLElement
+    expect(settingsKicker, 'the settings column carries its OWN identity kicker now, not just its sub-nav').not.toBeNull()
+    expect(settingsKicker.textContent?.trim()).toBe('Settings')
+
+    const textTop = (el: HTMLElement): number => el.getBoundingClientRect().top + parseFloat(getComputedStyle(el).paddingTop)
+    const texts = [chatKicker, authorKicker, settingsKicker].map(textTop)
+    for (const [i, label] of ['interview kicker', 'settings kicker'].entries()) {
+      expect(Math.abs(texts[i + 1]! - texts[0]!), `${label}'s own TEXT lands on the test chat kicker's`).toBeLessThanOrEqual(1)
     }
-    // …and BENEATH the kickers, the two conversation logs still share a bottom rhythm with each other (the
-    // settings sub-nav's own content — the active section beneath it — scrolls independently and is not
-    // pinned to this same line by design, so it is deliberately not compared here).
+    // The settings sub-nav sits one level BELOW its own kicker now (finding 1's "one level" law) — it is
+    // deliberately NOT compared against the kicker line; the pane's own flex `gap` places it, matching the
+    // kicker↔log rhythm one column over (the "doubled rhythm" probe below pins that gap's real value).
+
+    // …and BENEATH the kickers, the two conversation logs still share a bottom rhythm with each other.
     const chatLog = chat.querySelector('[data-part="log"]') as HTMLElement
     const authorLog = author.querySelector('ui-conversation [data-part="log"]') as HTMLElement
     expect(Math.abs(chatLog.getBoundingClientRect().top - authorLog.getBoundingClientRect().top), 'the two conversation logs align with each other, below their shared kicker line').toBeLessThanOrEqual(1)
+  })
+
+  // `screens:layout-checker` finding 4 (SHIPPABLE grade, MINOR) — the kicker's own trailing edge must NOT
+  // double the rhythm the region's own next content already supplies (the log's `--ui-conversation-log-
+  // pad`, or the settings pane's own flex `gap`): the gap from the card's own border to the kicker's TEXT
+  // (one layer) must read the SAME as the gap from the kicker's text to the next real content (also one
+  // layer), not twice it.
+  it('one rhythm, not two: the gap above each kicker matches the gap below it', async () => {
+    const el = await mountTripleAt(1200)
+    const { chat, author, settings } = partsOf(el)
+    for (const [label, card, kicker, next] of [
+      ['chat', chat, chat.querySelector('[data-part="region-kicker"]') as HTMLElement, chat.querySelector('[data-part="log"]') as HTMLElement],
+      ['author', author, author.querySelector('ui-conversation [data-part="region-kicker"]') as HTMLElement, author.querySelector('ui-conversation [data-part="log"]') as HTMLElement],
+      ['settings', settings, settings.querySelector('[data-part="region-kicker"]') as HTMLElement, settings.querySelector('[data-part="settings-nav"]') as HTMLElement],
+    ] as const) {
+      const cardTop = card.getBoundingClientRect().top
+      const kickerTextTop = kicker.getBoundingClientRect().top + parseFloat(getComputedStyle(kicker).paddingTop)
+      const aboveGap = kickerTextTop - cardTop
+      // The kicker's own box bottom is what the region's next content butts against — assert THAT gap
+      // reads close to the gap above the kicker's text, not doubled (the pre-fix defect measured a real
+      // 2× stack here: 32px below vs 16px above).
+      const belowGap = next.getBoundingClientRect().top - kicker.getBoundingClientRect().bottom
+      expect(aboveGap, `${label}: a real gap above the kicker's text`).toBeGreaterThan(4)
+      expect(belowGap, `${label}: the gap below the kicker's box reads as ONE rhythm with the gap above its text, not doubled`).toBeLessThanOrEqual(aboveGap + 2)
+    }
+  })
+
+  // `screens:layout-checker` finding 3 (SHIPPABLE grade, MINOR) — the vacated header bar's own structural
+  // seam border must retract (transparent ink), never paint a stray hairline across a headerless band —
+  // the SAME retract-don't-delete law the no-divider ruling above already applies to the split separators.
+  it('the vacated header bar paints no stray seam hairline — the ink retracts, the border-box geometry does not', async () => {
+    const el = await mountTripleAt(1200)
+    const shell = el.querySelector('ui-chat-shell') as HTMLElement
+    const barHeader = shell.querySelector('[data-part="bar"][data-bar="header"]') as HTMLElement
+    const cs = getComputedStyle(barHeader)
+    expect(cs.borderBottomColor, 'the seam ink is fully transparent, not merely thin').toMatch(/rgba\(0,\s*0,\s*0,\s*0\)|transparent/)
   })
 
   it('gutter equality: the chat↔author gap and the author↔settings gap read as ONE rhythm, not two', async () => {
@@ -2436,6 +2485,7 @@ describe('ui-agent-admin — the wide TRIPLE dock (GH #662, ADR-0179 cl.1 Amendm
     expect(chat.getBoundingClientRect().width, 'and it is still painted after the turn').toBeGreaterThan(0)
   })
 })
+
 
 
 

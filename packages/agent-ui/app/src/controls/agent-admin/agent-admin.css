@@ -208,29 +208,39 @@
     min-inline-size: 0;
     min-block-size: 0;
   }
-  /* GH #665 — the two conversation regions' own quiet identity header (`#makeRegionKicker`): the fleet
+  /* GH #665 — the three regions' own quiet identity header (`#makeRegionKicker`): the fleet
      `ui-text[variant='kicker']` eyebrow (nav-rail's `context-label`/GH #624 precedent), ONE token-repoint
      for the muted "neutral" ink role (item 4 of that same ruling — secondary/meta text, never the
      region's own content). flex-shrink is left at its default (0 is unnecessary — a one-line kicker never
-     has slack to give up before the log/composer below, which both carry their own min-block-size floors).
+     has slack to give up before the log/composer/sub-nav below, which all carry their own min-block-size
+     floors or content-driven height).
      Kim's live-screenshot follow-on (2026-08-10) — the kicker's OWN border-box sits flush against
      `ui-conversation`'s real, PAINTED 1px border (conversation.css's `:scope { border: 1px solid … }` —
      this element genuinely is a bordered card, not just a conceptual one), and a bare `margin-block-end`
      never gave its own TEXT any inset from that border on the top/left it never touched at all — reading
-     as clipped in Kim's screenshot. `padding: var(--ui-agent-admin-section-gap)` replaces that margin
-     with real inset on all four sides, sized to MATCH `--ui-conversation-log-pad`'s own numeric value
-     (`--md-sys-space-lg`, the SAME `--md-sys-*` primitive under a different name — SPEC-R11c/AC19's own
-     law: this file mints its own role-named token rather than reading `--ui-conversation-*` cross-scope)
-     — the kicker's text now lands on the EXACT left line the log's own turns render on directly beneath
-     it, "the same left line the transcript … content uses" per the ruling. Padding, not margin, is
-     deliberate: it insets the kicker's own CONTENT without moving the kicker's own border-box position,
-     so the cross-column "shared top line" probe (GH #665, the triple describe block) — which compares BOX
-     tops, not rendered text — stays true unmodified; only the OTHER two candidates that WOULD have moved
-     it (conversation's own host padding, or the settings-nav's own ambient inset) were ruled out earlier
-     in this same ticket for cost reasons untouched here. */
+     as clipped in Kim's screenshot. Padding, START sides only (below), replaces that margin with real
+     inset, sized to MATCH `--ui-conversation-log-pad`'s own numeric value (`--md-sys-space-lg`, the SAME
+     `--md-sys-*` primitive under a different name — SPEC-R11c/AC19's own law: this file mints its own
+     role-named token rather than reading `--ui-conversation-*` cross-scope) — the kicker's text lands on
+     the EXACT left line the log's own turns render on directly beneath it, "the same left line the
+     transcript … content uses" per the ruling. Padding, not margin, is deliberate: it insets the kicker's
+     own CONTENT without moving the kicker's own border-box position, so the cross-column "shared top
+     line" probe (GH #665, the triple describe block) — which compares BOX tops, not rendered text —
+     stays true unmodified.
+     `screens:layout-checker` finding 4 (SHIPPABLE grade, MINOR) — the END sides are deliberately BARE,
+     not the same `section-gap` the start sides carry: a symmetric `padding: section-gap` doubled the
+     rhythm below the chat/author kickers specifically (measured: kicker's own padding-block-end 16px +
+     the log's OWN leading `--ui-conversation-log-pad` 16px = 32px to the first turn, against a real 16px
+     from the card's own border to the kicker's text above it — the SAME asymmetry finding 4 named).
+     Dropping the end padding here and letting whatever sits BELOW the kicker own its own leading inset —
+     `[data-part='log']`'s existing `--ui-conversation-log-pad` for chat/author, `[data-part='settings-
+     pane']`'s existing flex `gap: var(--ui-agent-admin-section-gap)` for the new Settings kicker (below)
+     — collapses both regions to ONE 16px rhythm, matching the top gap exactly, with zero new declarations
+     for the settings case (the pane's own gap already did that job). */
   [data-part='region-kicker'] {
     --ui-text-color: var(--md-sys-color-neutral);
-    padding: var(--ui-agent-admin-section-gap);
+    padding-block-start: var(--ui-agent-admin-section-gap);
+    padding-inline-start: var(--ui-agent-admin-section-gap);
   }
   /* The pair's floor IS the MD's own dock line: at 40rem it stays a docked split, below it drills in. The
      `2` share keeps the three columns reading roughly equal once there is room to spare (the pair holds
@@ -340,6 +350,22 @@
        blanket repoint would reach one if some future consumer's shell ever grew one here. */
     [data-part='bar'][data-bar='header'] {
       --ui-super-shell-bar-size: 0;
+    }
+    /* `screens:layout-checker` finding 3 (SHIPPABLE grade, MINOR) — measured: the seam survives the
+       `bar-size` collapse just above as a real, painted 1px hairline across the now-headerless band (the
+       comment on that rule was wrong to call this "unchanged from the no-divider precedent" without
+       actually retracting it the SAME way). The no-divider ruling's own law applies here verbatim: a bar
+       that no longer has content to seam OFF FROM is exactly the "regions separate by spacing and surface
+       alone" case, so the ink retracts — `border-block-end-color: transparent`, never `border-block-end:
+       none` (retract-don't-delete: the border-BOX geometry stays, only the resting ink goes, matching
+       `--ui-split-divider-ink: transparent`'s own shape above). `ui-super-shell` TYPE-PREFIXED, not a bare
+       `[data-part='bar'][data-bar='header']` — the SAME scope-proximity tie this file already documents
+       twice over (search "scope proximity" above): super-shell.css's own `border-block-end` rule ties this
+       one on raw specificity, and its OWN `@scope (ui-super-shell)` scope root sits far closer to the bar
+       than this file's `@scope (ui-agent-admin)` root does — the type selector breaks the tie on
+       specificity instead of leaving it to proximity. */
+    ui-super-shell [data-part='bar'][data-bar='header'] {
+      border-block-end-color: transparent;
     }
   }
 

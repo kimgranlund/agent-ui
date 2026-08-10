@@ -1114,7 +1114,12 @@ export class UIAgentAdminElement extends UIElement {
     const settingsPane = document.createElement('ui-master-detail-pane')
     settingsPane.setAttribute('pane', 'detail')
     settingsPane.setAttribute('data-part', 'settings-pane')
-    settingsPane.append(settingsNav, ...settingsSections)
+    // GH #665 (screens:layout-checker finding 1, SHIPPABLE grade) — the settings column is unnamed at
+    // exactly the band the pane-nav's own "Settings" label vanishes (the wide-hide rule above), and its
+    // sub-nav tabs (interactive labels, one level deeper) were visually outranking the two conversations'
+    // own quiet kickers. The SAME `#makeRegionKicker` — one labeling system, at one level, across all
+    // three columns — sits above the sub-nav here exactly as it sits above each conversation's log.
+    settingsPane.append(this.#makeRegionKicker('Settings'), settingsNav, ...settingsSections)
 
     // ── ADR-0179 OQ4 (LLD §2) — the AUTHOR place: always present, empty state until the flow arms ────────
     const authorEmpty = this.#createAuthorEmpty()
