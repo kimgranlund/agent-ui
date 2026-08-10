@@ -250,6 +250,34 @@
     --ui-button-ink: var(--ui-conversation-composer-ink-variant);
   }
 
+  /* GH #673 — the inverse of the compact collapse just below: once the label is VISIBLE (full/"big"
+     width, the default state), the leading identity glyph is redundant beside it ("☰ Haiku 4.5" reads
+     worse than "Haiku 4.5" once the label already names the picker) — hidden by default, the SAME
+     `display: none` approach the trailing caret already uses at the opposite (narrow) end, just below.
+     `#appendLeadingIcon` (conversation-composer.ts) still appends the icon into the light DOM
+     UNCONDITIONALLY, on purpose — GH #665's own reasoning applies here too: the trigger keeps its full
+     leading-icon+label+trailing-caret DOM shape at every width, only the SIGHTED rendering compacts, so
+     there is no structural/a11y state to desync. Revealed only inside the narrow band below, where the
+     label itself has collapsed and the icon becomes the trigger's ONLY visible identity (GH #665,
+     unchanged, unregressed). */
+  ui-button[data-picker] [data-role='icon'] {
+    display: none;
+  }
+  /* A `display: none` grid item isn't merely invisible — it's removed from grid placement ENTIRELY
+     (the SAME fact the caret's own compact-mode comment below relies on), and button.css's
+     `:has(leading):has(trailing)` template (`auto 1fr auto`) still applies once the icon is hidden here
+     (`:has()` matches DOM PRESENCE, unaffected by `display`) — so without an explicit column, auto-
+     placement would slide the still-visible label/caret PAIR one column left (into the `auto`/`1fr`
+     tracks meant for icon/label), swapping their sizing roles and pulling the caret off the trigger's
+     trailing edge. Pinning both to their DESIGNED columns keeps the row correct regardless of which
+     adornment(s) the current width has hidden. */
+  ui-button[data-picker] [data-part='label'] {
+    grid-column: 2;
+  }
+  ui-button[data-picker] [data-role='caret'] {
+    grid-column: 3;
+  }
+
   /* GH #665 (Kim's ruling) — the compact collapse itself, keyed off the composer's own `:scope`
      container-type above (its comment names the `21rem` line). Only `[data-part='label']` is touched —
      the trigger keeps its full leading-icon+label+trailing-caret light-DOM shape at every width (see that
@@ -270,6 +298,14 @@
      source order (verified: `max-inline-size` measured `100%`, the UNCOLLAPSED default, before this type
      prefix). The extra type selector breaks the tie on RAW specificity instead of relying on proximity. */
   @container (inline-size < 21rem) {
+    /* GH #673's other half — reveal the icon this band's compact form actually needs: once the label
+       (just below) collapses to zero-width, the icon becomes the trigger's ONLY visible identity, same
+       as GH #665 always intended. `inline-flex` (not `revert`) — ui-icon's OWN `@scope (ui-icon) :scope`
+       rule (icon.css) is the value being restored; naming it explicitly keeps this correct even if a
+       future `@layer` changes what `revert` would resolve to. */
+    ui-button[data-picker] [data-role='icon'] {
+      display: inline-flex;
+    }
     ui-button[data-picker] [data-part='label'] {
       max-inline-size: 0;
       overflow: hidden;
