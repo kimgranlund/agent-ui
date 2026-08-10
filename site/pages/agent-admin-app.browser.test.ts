@@ -37,8 +37,13 @@ function resolvedActive(): (typeof AGENT_PRESETS)[number] {
   return AGENT_PRESETS.find((p) => p.id === localStorage.getItem(ACTIVE_PRESET_KEY)) ?? AGENT_PRESETS[0]!
 }
 
-function admin(): HTMLElement {
-  return document.querySelector('ui-agent-admin') as HTMLElement
+/** The subset of `SettingsStore` this file reads/writes directly — real delivery proof, never a source grep. */
+interface StoreLike {
+  get(key: string): unknown
+  set(key: string, value: unknown): void
+}
+function admin(): HTMLElement & { store?: StoreLike } {
+  return document.querySelector('ui-agent-admin') as HTMLElement & { store?: StoreLike }
 }
 function agentSelect(): HTMLElement & { value: string } {
   return admin().querySelector('[data-part="agent-select"]') as HTMLElement & { value: string }
@@ -145,11 +150,16 @@ describe('agent-admin-app — the persona library (GH #406) via onImportRequest/
     expect(exported, 'the export leg above must have run first').not.toBe('')
     const before = [...agentSelect().querySelectorAll('[role="option"]')].length
 
-    // The real click path: onImportRequest's registered callback opens the hidden file input.
+    // The real click path: onImportRequest's registered callback opens the hidden file input — spied,
+    // not assumed, so a dead registration (the file input populated below regardless) cannot pass this
+    // test silently (the exact gap a source-only check would miss).
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement
+    const clickSpy = vi.spyOn(input, 'click')
     const overflow = await openOverflow()
     ;(overflow.querySelector('[data-value="import-agent"]') as HTMLElement).click()
     await raf()
-    const input = document.querySelector('input[type="file"]') as HTMLInputElement
+    expect(clickSpy, 'clicking the menu item genuinely reached onImportRequest\'s callback, which opened the file input').toHaveBeenCalledTimes(1)
+    clickSpy.mockRestore()
     const transfer = new DataTransfer()
     transfer.items.add(new File([exported], 'persona.json', { type: 'application/json' }))
     input.files = transfer.files
@@ -282,5 +292,36 @@ describe('agent-admin-app — the header\'s New Agent button routes to Generate 
     const holder = admin().querySelector('[data-part="pane-holder"]') as HTMLElement
     expect(holder.getAttribute('data-show')?.split(' '), 'Co-pilot joins the shown set').toContain('copilot')
     expect(holder.getAttribute('data-primary'), 'Co-pilot becomes primary — the interview opens on it').toBe('copilot')
+  })
+})
+
+// ── GH #686 S7-d — Reset Agent's real delivery (onResetRequest → resetPersona + applyPersona) ─────────────
+// The exact "picker-wiring" trap this codebase has hit three times this session: a callback registered is
+// not evidence a real click reaches it, still less that it does something real. This clicks the ACTUAL
+// `reset-agent-button` on the mounted page and asserts the ACTIVE PERSONA'S STORE genuinely re-seeds — a
+// brand-new store instance whose dirtied value is gone — never just "a function reference exists in the
+// source" (agent-admin-app.test.ts's own jsdom suite proves the seam's shape; this proves the real click's
+// real effect). Independent of WHICH persona is active at this point in the file (earlier describe blocks
+// switch/mint/import several) — it captures the seed value fresh, dirties it, and proves the exact revert.
+describe("agent-admin-app — the Settings model-grid fold's Reset Agent button genuinely re-seeds the active persona (GH #686, S7-d)", () => {
+  it('dirtying the active persona then clicking Reset Agent restores the seed value through a FRESH store instance', async () => {
+    await raf()
+    const before = admin().store
+    expect(before, 'the component has a real store to dirty').toBeDefined()
+    const original = before!.get('name')
+
+    // Dirty a real field on the REAL, currently-active persona's store — a genuine edit, not a stub.
+    before!.set('name', 'DIRTY-RESET-DELIVERY-PROBE')
+    expect(before!.get('name')).toBe('DIRTY-RESET-DELIVERY-PROBE')
+
+    const resetBtn = admin().querySelector('[data-part="reset-agent-button"]') as HTMLElement
+    expect(resetBtn.hidden, 'onResetRequest IS registered on this page').toBe(false)
+    resetBtn.click()
+    await raf()
+
+    const after = admin().store
+    expect(after, 'applyPersona reassigns admin.store to a FRESH instance — never a mutation of the dirtied one').not.toBe(before)
+    expect(after!.get('name'), 'the dirtied value is genuinely gone — a real re-seed, not a no-op').not.toBe('DIRTY-RESET-DELIVERY-PROBE')
+    expect(after!.get('name'), 'the seed value is restored').toBe(original)
   })
 })

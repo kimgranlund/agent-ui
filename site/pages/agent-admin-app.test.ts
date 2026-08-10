@@ -755,7 +755,14 @@ describe('the "New agent → Generate" IA entry (LLD-C8) / GH #686 S7-d — the 
     }
   })
 
-  it('registers all six header seams, routes New Agent to Generate (OQ-A), and wires Import/Export/Reset to their existing flows', async () => {
+  // NOTE: this is a presence smoke, not delivery proof — "a callback registered is not evidence a real
+  // click reaches it" (the picker-wiring trap). The REAL proof for every one of these six seams is the
+  // real-click, real-effect suite in agent-admin-app.browser.test.ts (agent-select commit, Export Blob
+  // capture + round-trip, Import click-spy + file round-trip, New Agent → Generate mint+arm, and Reset
+  // Agent's own store-re-seed proof) — this test only pins that the WIRING SITE exists, in case a future
+  // edit deletes a registration call without deleting its browser-test twin (which would otherwise redden
+  // silently only in the slower gate).
+  it('registers all six header seams, routing New Agent to Generate (OQ-A)', async () => {
     const source = readFileSync('site/pages/agent-admin-app.ts', 'utf8')
     expect(source).toContain('admin.setAgentRoster' /* via pushRoster */)
     expect(source).toContain('admin.onAgentSelect(')

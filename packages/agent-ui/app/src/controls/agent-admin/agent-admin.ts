@@ -1101,9 +1101,12 @@ export class UIAgentAdminElement extends UIElement {
     // precedent (LLD §16.3): a bare action row has no copy worth showing disabled.
     const resetAgentRow = document.createElement('div')
     resetAgentRow.setAttribute('data-part', 'reset-agent-row')
+    // The bankroll-row NOUN-label/VERB-button pairing (review finding, S7-d): "Stored bankroll" | Reset —
+    // never the same verb phrase twice at two casings. The label names the THING being reset, the button
+    // names the ACTION.
     const resetAgentLabel = document.createElement('span')
     resetAgentLabel.setAttribute('data-part', 'reset-agent-label')
-    resetAgentLabel.textContent = 'Reset agent'
+    resetAgentLabel.textContent = 'Agent configuration'
     const resetAgentSpacer = document.createElement('span')
     resetAgentSpacer.setAttribute('data-part', 'surface-spacer')
     const resetAgentBtn = document.createElement('ui-button') as UIButtonElement
