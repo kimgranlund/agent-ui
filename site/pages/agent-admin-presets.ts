@@ -944,7 +944,13 @@ export function builderPersona(): Persona {
   }
 }
 
-/** A FRESH store per flow entry — no `persistKey`, no cache (see this section's header for why). */
-export function builderStore(): SettingsStore {
-  return createMemoryStore({ initial: builderPersona().seed })
+/** A FRESH store per flow entry — no `persistKey`, no cache (see this section's header for why).
+ *
+ *  GH #670 — `model` is the Author card's PRE-ARM pick, folded into the seed rather than written after the
+ *  fact: the interview's own config read then finds the user's choice already committed, so the pick wins by
+ *  construction and there is no overwrite step to lose a race with. Absent ⇒ the Builder preset's own
+ *  Sonnet-class id stands (LLD §15: interview quality is the product). */
+export function builderStore(model?: string): SettingsStore {
+  const seed = builderPersona().seed
+  return createMemoryStore({ initial: model === undefined ? seed : { ...seed, model } })
 }

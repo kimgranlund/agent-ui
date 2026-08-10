@@ -52,7 +52,7 @@ import type { SettingsStore } from '../settings/store.ts'
 import type { AdminSurfaceTurnEvent, AdminSurfaceTurnRequest } from './agent-admin-schema.ts'
 import { ENTRY_KINDS, initialEntryValues } from './entries.ts'
 import { entriesStoreKey, readEntries } from '../entry-list/entry-data.ts'
-import { DEFAULT_MODEL_ID, initialValuesFor, defaultAgentConfigSchema } from './agent-admin-schema.ts'
+import { DEFAULT_MODEL_ID, SUPPORTED_MODELS, initialValuesFor, defaultAgentConfigSchema } from './agent-admin-schema.ts'
 
 // jsdom reality (the agent-admin.test.ts precedent, verbatim): jsdom's ElementInternals carries no real
 // setFormValue/setValidity, so every composed FACE form control would throw on connect without this stub.
@@ -136,6 +136,26 @@ const emptyInLog = (el: UIAgentAdminElement): HTMLElement | null =>
 /** The Author card's ONE composer — the interview's own, the only one in the column at any moment. */
 const authorComposer = (el: UIAgentAdminElement): HTMLElement & { value: string; busy: boolean } =>
   el.querySelector('[data-part="authoring-conversation"] > ui-conversation-composer') as HTMLElement & { value: string; busy: boolean }
+
+/** Submit through the UNARMED card's composer — which is the SAME element `submit` above drives once the
+ *  flow is armed (that is the point of GH #666's reopen: one composer, one card). The extra flush round is
+ *  not padding: arming rides a signal effect, so the entry awaits it before the opening turn can land.
+ *  (File-scope since GH #670, which drives the same entry from its own describe — one arming driver.) */
+async function submitFirst(el: UIAgentAdminElement, text: string): Promise<void> {
+  // A registration that just opened the card reaches the composer through `disabled` → the conversation's
+  // own forwarding effect, which is microtask-batched: a probe that typed in the same tick would be
+  // testing the busy guard, not the entry.
+  await whenFlushed()
+  const composer = authorComposer(el)
+  const editor = composer.querySelector('[data-part="editor"]') as HTMLElement
+  composer.value = text
+  editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+  for (let round = 0; round < 3; round += 1) {
+    await whenFlushed()
+    await new Promise((r) => setTimeout(r, 0))
+  }
+  await whenFlushed()
+}
 
 const turnLogOf = (el: UIAgentAdminElement): Record<string, unknown> => {
   const newest = el.querySelector('[data-part="context-turn"] [data-part="context-json"]')
@@ -635,25 +655,6 @@ describe('GH #666 — the unarmed Author card: a live composer, and the arming i
    *  path — the probes below register it exactly once per element and let BOTH entries run it. */
   const mintPath = (el: UIAgentAdminElement, builder: SettingsStore): (() => void) => () => { el.authoringStore = builder }
 
-  /** Submit through the UNARMED card's composer — which is the SAME element `submit` above drives once the
-   *  flow is armed (that is the point of the reopen: one composer, one card). The extra flush round is not
-   *  padding: arming rides a signal effect, so the entry awaits it before the opening turn can land. */
-  async function submitFirst(el: UIAgentAdminElement, text: string): Promise<void> {
-    // A registration that just opened the card reaches the composer through `disabled` → the conversation's
-    // own forwarding effect, which is microtask-batched: a probe that typed in the same tick would be
-    // testing the busy guard, not the entry.
-    await whenFlushed()
-    const composer = authorComposer(el)
-    const editor = composer.querySelector('[data-part="editor"]') as HTMLElement
-    composer.value = text
-    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
-    for (let round = 0; round < 3; round += 1) {
-      await whenFlushed()
-      await new Promise((r) => setTimeout(r, 0))
-    }
-    await whenFlushed()
-  }
-
   /** Everything about an ARMED admin that arming is supposed to establish — the equivalence probe's subject. */
   const armedShape = (el: UIAgentAdminElement): Record<string, unknown> => {
     const interview = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement & { disabled: boolean }
@@ -791,6 +792,207 @@ describe('GH #666 — the unarmed Author card: a live composer, and the arming i
     await whenFlushed()
     expect(emptyInLog(el), 'the copy comes back into the same card').not.toBeNull()
     expect(el.querySelectorAll('[data-part="authoring-conversation"] [data-part="bubble"]'), 'and the interview is cleared').toHaveLength(0)
+  })
+})
+
+// ── GH #670 — the Author card's Model/Effort pickers, at BOTH arming states ─────────────────────────────
+// The filing's measured table: unarmed, the card's `models`/`efforts` were both `undefined`, which the
+// composer's own guard reads as "no picker to render", so the first-touch surface offered no choice at all.
+// A one-line fix (set the props) would have been WORSE than the gap: `onModelChange` wrote
+// `this.authoringStore?.set(...)`, and unarmed that store does not exist — a picker that visibly accepts a
+// choice and drops it. Kim's 2026-08-10 ruling closed all three forks: a LOCAL field holds the pre-arm pick,
+// the arm passes it INTO the mint so the new store is seeded with it (the user's pick wins by construction,
+// never by a later overwrite), and Effort takes the identical path with no special-casing.
+describe('GH #670 — the unarmed Author card’s Model/Effort pickers: picked before the arm, SEEDED into it', () => {
+  const INCLUDED = SUPPORTED_MODELS.filter((m) => m.includedByDefault)
+  /** A pickable model that is NOT the mint path's own default — the discriminator every seed probe turns
+   *  on. A pick equal to the default would pass whether it was honoured or silently discarded. */
+  const PICK = INCLUDED.find((m) => m.id !== DEFAULT_MODEL_ID)!.id
+  const labelOf = (id: string): string => SUPPORTED_MODELS.find((m) => m.id === id)!.label
+
+  /** The page's `createGeneratedAgent`, in miniature and SEED-AWARE — the real one folds `seed.model` into
+   *  `builderStore()`'s INITIAL state (agent-admin-presets.ts), never a `set()` afterwards, which is the
+   *  whole point of fork 1's mechanism. Records every seed it is handed so a probe can read the SEAM itself
+   *  and not only its downstream effect. Its own default is Haiku, so a Sonnet pick discriminates. */
+  function seedingMintPath(el: UIAgentAdminElement): { seeds: ({ model?: string } | undefined)[]; builder: () => SettingsStore } {
+    const seeds: ({ model?: string } | undefined)[] = []
+    let builder: SettingsStore | undefined
+    el.onGenerateRequest((seed) => {
+      seeds.push(seed)
+      builder = personaStore({ [SURFACE_AUTHORING_KEY]: true, name: 'Builder', ...(seed?.model === undefined ? {} : { model: seed.model }) })
+      el.authoringStore = builder
+    })
+    return { seeds, builder: () => builder! }
+  }
+
+  /** Commit a picker choice the way a real menu commit does — a click on the option row, through ui-menu's
+   *  own delegation into the composer's `select` listener (agent-admin.test.ts's Models-picker idiom).
+   *  Scoped to the AUTHOR card: the Chat place's composer carries the same two pickers. */
+  function pick(el: UIAgentAdminElement, picker: 'models' | 'effort', value: string): void {
+    const card = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
+    const item = card.querySelector(`[data-part="${picker}-menu"] [data-value="${value}"]`) as HTMLElement
+    item.dispatchEvent(new Event('click', { bubbles: true }))
+  }
+
+  /** What a picker TRIGGER currently says — the user-visible half of "the pick stuck". */
+  const trigger = (el: UIAgentAdminElement, picker: 'models' | 'effort'): HTMLElement =>
+    el.querySelector(`[data-part="authoring-conversation"] [data-picker="${picker}"]`) as HTMLElement
+
+  /** The four props the composer actually renders the pickers from. */
+  const pickerProps = (el: UIAgentAdminElement): Record<string, unknown> => {
+    const composer = authorComposer(el) as HTMLElement & {
+      models?: readonly { id: string }[]
+      efforts?: readonly { id: string }[]
+      model?: string
+      effort?: string
+    }
+    return {
+      models: composer.models?.map((m) => m.id),
+      efforts: composer.efforts?.map((e) => e.id),
+      model: composer.model,
+      effort: composer.effort,
+    }
+  }
+
+  it('the UNARMED card offers both pickers — the same roster and the same levels the ARMED interview offers', async () => {
+    const unarmed = mountAdmin({ store: personaStore() })
+    const armed = mountAdmin({ store: personaStore(), authoringStore: personaStore({ [SURFACE_AUTHORING_KEY]: true }) })
+    unarmed.el.onGenerateRequest(() => {})
+    await whenFlushed()
+
+    // Compared against the ARMED card rather than literals (GH #666's cross-state idiom): whatever roster
+    // the interview offers, the entry that hands off to it must offer the same one — a claim that survives a
+    // roster change, which a hard-coded id list would not.
+    const offered = (el: UIAgentAdminElement): unknown[] => [pickerProps(el).models, pickerProps(el).efforts]
+    expect(offered(unarmed.el)).toEqual(offered(armed.el))
+    expect(pickerProps(unarmed.el).models, 'anti-vacuous: a real, non-empty roster, not two matching undefineds').toEqual(INCLUDED.map((m) => m.id))
+    expect(pickerProps(unarmed.el).efforts).toEqual(['low', 'medium', 'high', 'xhigh'])
+
+    // …and the picker DOM exists in the unarmed card — the filing's table read no menu parts at all here.
+    const menus = [...authorComposer(unarmed.el).querySelectorAll('[data-part$="-menu"]')].map((m) => m.getAttribute('data-part'))
+    expect(menus, 'both menus are built into the unarmed card’s own composer').toEqual(['models-menu', 'effort-menu'])
+
+    // The ONE intended difference, stated rather than left implicit: unarmed there is no committed model to
+    // name (the store that owns it does not exist yet), so the trigger wears its neutral label. Effort IS
+    // knowable unarmed — it is this element's own dial — so it names the value the arm will carry over.
+    expect(trigger(unarmed.el, 'models').textContent).toContain('Models')
+    expect(trigger(armed.el, 'models').textContent).toContain(labelOf(DEFAULT_MODEL_ID))
+    expect([trigger(unarmed.el, 'effort').textContent, trigger(armed.el, 'effort').textContent]).toEqual(['Medium', 'Medium'])
+  })
+
+  it('a pre-arm MODEL pick SEEDS the mint — the interviewer opens on the user’s choice, with no overwrite step', async () => {
+    const { el } = mountAdmin({ store: personaStore() })
+    await whenFlushed()
+    const mint = seedingMintPath(el)
+    await whenFlushed()
+
+    pick(el, 'models', PICK)
+    await whenFlushed()
+    expect(trigger(el, 'models').textContent, 'the unarmed pick STICKS — the write that used to evaporate').toContain(labelOf(PICK))
+
+    await submitFirst(el, 'a hotel concierge please')
+
+    expect(mint.seeds, 'the pick crossed the mint seam exactly once, as the seed').toEqual([{ model: PICK }])
+    expect(mint.builder().get('model'), 'and the store was MINTED with it — its first read is already the user’s').toBe(PICK)
+    expect(pickerProps(el).model, 'which is what the armed composer reads back — nothing overwrote it').toBe(PICK)
+    expect(el.store!.get('model'), 'the DRAFT’s own model is untouched: the pick chose the INTERVIEWER’s').toBe(DEFAULT_MODEL_ID)
+  })
+
+  it('a pre-arm EFFORT pick gets the IDENTICAL treatment — it is the interview’s effort from its opening turn', async () => {
+    const { el, requests } = mountAdmin({ store: personaStore(), events: [{ kind: 'note', note: 'ok' }] })
+    await whenFlushed()
+    seedingMintPath(el)
+    await whenFlushed()
+
+    pick(el, 'effort', 'high')
+    await whenFlushed()
+    expect(trigger(el, 'effort').textContent, 'the unarmed pick sticks here too').toBe('High')
+
+    await submitFirst(el, 'a hotel concierge please')
+
+    // The end of the wire, not a field read: the opening turn RUNS at the picked effort.
+    expect(requests.at(-1)!.effort).toBe('high')
+    expect(pickerProps(el).effort, 'and the armed composer still shows it').toBe('high')
+  })
+
+  it('the two arming entries SEED IDENTICALLY — first message and the empty state’s action (GH #666’s equivalence law, extended to configuration)', async () => {
+    const byMessage = mountAdmin({ store: personaStore(), events: [{ kind: 'note', note: 'ok' }] })
+    const messageMint = seedingMintPath(byMessage.el)
+    const byAction = mountAdmin({ store: personaStore(), events: [{ kind: 'note', note: 'ok' }] })
+    const actionMint = seedingMintPath(byAction.el)
+    await whenFlushed()
+
+    for (const el of [byMessage.el, byAction.el]) {
+      pick(el, 'models', PICK)
+      pick(el, 'effort', 'high')
+    }
+    await whenFlushed()
+
+    ;(byAction.el.querySelector('[data-part="author-empty-action"]') as HTMLElement).click()
+    await whenFlushed()
+    await submitFirst(byMessage.el, 'a hotel concierge please')
+
+    const seeded = (el: UIAgentAdminElement, mint: { seeds: ({ model?: string } | undefined)[]; builder: () => SettingsStore }): Record<string, unknown> => ({
+      seeds: mint.seeds,
+      builderModel: mint.builder().get('model'),
+      composerModel: pickerProps(el).model,
+      composerEffort: pickerProps(el).effort,
+    })
+    expect(seeded(byMessage.el, messageMint)).toEqual(seeded(byAction.el, actionMint))
+    // Anti-vacuous: both really carried the pick, rather than both dropping it identically.
+    expect(seeded(byAction.el, actionMint)).toMatchObject({ seeds: [{ model: PICK }], builderModel: PICK, composerEffort: 'high' })
+  })
+
+  it('an UNTOUCHED picker seeds nothing — the minted store’s own default stands (fork 2’s other arm)', async () => {
+    const { el, requests } = mountAdmin({ store: personaStore(), events: [{ kind: 'note', note: 'ok' }] })
+    await whenFlushed()
+    const mint = seedingMintPath(el)
+    await submitFirst(el, 'a hotel concierge please')
+
+    expect(mint.seeds[0]?.model, 'no pick ⇒ nothing to seed').toBeUndefined()
+    expect(mint.builder().get('model'), 'so the mint path’s own default is what the interview opens on').toBe(DEFAULT_MODEL_ID)
+    expect(requests.at(-1)!.effort, 'and effort keeps the element’s own resting dial').toBe('medium')
+  })
+
+  it('a real persona switch CLEARS the pre-arm pick — it never leaks into the next unarmed session (GH #145/#644)', async () => {
+    const { el, requests } = mountAdmin({ store: personaStore(), events: [{ kind: 'note', note: 'ok' }] })
+    await whenFlushed()
+    const mint = seedingMintPath(el)
+    await whenFlushed()
+    pick(el, 'models', PICK)
+    pick(el, 'effort', 'high')
+    await whenFlushed()
+
+    el.store = personaStore() // a DIFFERENT store object — the GH #145 reset's own trigger
+    await whenFlushed()
+
+    expect(
+      [trigger(el, 'models').textContent, trigger(el, 'effort').textContent],
+      'the card repaints neutral: this persona was never described with those choices',
+    ).toEqual(['Models', 'Medium'])
+    await submitFirst(el, 'a hotel concierge please')
+    expect(mint.seeds[0]?.model, 'and the arm carries nothing stale across the switch').toBeUndefined()
+    expect(requests.at(-1)!.effort).toBe('medium')
+  })
+
+  it('arming EMPTIES the bridge — leaving the flow returns neutral pickers, and a re-arm carries no stale pick', async () => {
+    const { el } = mountAdmin({ store: personaStore() })
+    await whenFlushed()
+    const mint = seedingMintPath(el)
+    await whenFlushed()
+    pick(el, 'models', PICK)
+    await whenFlushed()
+    ;(el.querySelector('[data-part="author-empty-action"]') as HTMLElement).click()
+    await whenFlushed()
+    expect(mint.builder().get('model')).toBe(PICK)
+
+    el.authoringStore = undefined // leave the flow — the card returns to its empty-log state
+    await whenFlushed()
+    expect(trigger(el, 'models').textContent, 'the bridge is spent: from the arm on, the store was the truth').toContain('Models')
+
+    ;(el.querySelector('[data-part="author-empty-action"]') as HTMLElement).click()
+    await whenFlushed()
+    expect(mint.seeds[1]?.model, 'so the second arm seeds nothing it was not freshly told').toBeUndefined()
   })
 })
 
