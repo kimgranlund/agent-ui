@@ -145,7 +145,12 @@ function deadHrefs(refs: readonly string[], htmlSet: ReadonlySet<string>): strin
 // entirely, the same way the M1-b chart-family stopgap drained at M1-c. `ui-toast-region` never needed an
 // entry here — its tier is `layout`, which `expectedGroupLabels` bundles into the single, already-shipped
 // 'Layout primitives' group (the editorial rule above), so it never grows a group of its own.
-const PENDING_TOC_GROUPS = new Set<string>([])
+//
+// ADR-0179 GH #686 Amendment S7-a (admin-three-pane-ia.lld.md §16.4, 2026-08-10) — `ui-toggle` ships its
+// descriptor + control ahead of its site pages/TOC rows (the same site-coverage.test.ts KNOWN_UNDOCUMENTED
+// parking, mirrored here); a TOC entry with no page to link to would just be a dead href. Drains the moment
+// its site pages + nav/landing rows land in a later slice.
+const PENDING_TOC_GROUPS = new Set<string>(['ui-toggle'])
 
 // ── the live site state ───────────────────────────────────────────────────────────────────────────────────────
 const COMPONENTS = shippedComponents()

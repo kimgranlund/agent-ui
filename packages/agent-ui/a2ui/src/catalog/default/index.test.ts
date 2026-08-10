@@ -197,6 +197,12 @@ const EXCLUSION_ALLOWLIST = new Map<string, string>([
     'is host-page-only (security inversion, PRD-D2); the ADR-0112 cl.6 Toast/ToastRegion reasoning applied ' +
     'verbatim — a one-time-code entry is the credential-bearing element of the identity family\'s Codes ' +
     'mode (code-entry-control.lld.md §9, GH #490 S2-a).'],
+  ['Toggle',
+    'ADR-0179 GH #686 Amendment S7-a (admin-three-pane-ia.lld.md §16.4) — TEMPORARY exclusion, shipped ' +
+    'ahead of its catalog row: this slice mints the fleet control (a small toggle-button primitive) for ' +
+    'the agent-admin unified header\'s pane pills; whether it earns a general A2UI catalog row is a ' +
+    'separate decision for a later pass (a2ui is team-led, out of this slice\'s authorization), not a ' +
+    'chrome/security exclusion like the PERMANENT entries above — drains the moment that decision lands.'],
 ])
 
 /** The types in `expected` covered by neither `catalogKeys` nor `allowlist` — the drift this gate exists

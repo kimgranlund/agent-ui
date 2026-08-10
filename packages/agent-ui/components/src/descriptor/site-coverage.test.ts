@@ -132,7 +132,12 @@ const LAYOUT_SHOWCASE = ['layout-overview.html', 'layout-permutations.html'] as 
 // progress-doc/avatar-doc/attachment-doc/toast-region-doc/toast-doc+demo) — the stopgap DRAINED entirely, the
 // same way the M1-b chart-family stopgap drained at M1-c. Empty again = the whole fleet is documented; a
 // missing required page on ANY shipped component now fails the build.
-const KNOWN_UNDOCUMENTED = new Set<string>([])
+//
+// ADR-0179 GH #686 Amendment S7-a (admin-three-pane-ia.lld.md §16.4, 2026-08-10) — ui-toggle's descriptor +
+// control ship in this slice; its site pages (permutations/states/doc, tier=control) are explicitly a LATER
+// slice's scope (the dispatch's own "ONLY the control + icons + its own tests/docs" cut) — the same shape as
+// every prior wave parked here ahead of its pages. Parked now, drains the moment ui-toggle's site pages land.
+const KNOWN_UNDOCUMENTED = new Set<string>(['toggle'])
 
 // ── the live site state ───────────────────────────────────────────────────────────────────────────────────────
 const COMPONENTS = shippedComponents()
@@ -181,7 +186,9 @@ describe('site coverage — every shipped component has its required per-tier pa
     // code-entry-control.lld.md (GH #490 S2-a) — ui-otp-field, the identity family's segmented N-cell
     // one-time-code entry field: tier=control (a FACE form control, full control height), permanently
     // catalog-excluded (ADR-0176 cl.3) but still a site-documented fleet member like any other control.
-    expect(COMPONENTS.filter((c) => c.tier === 'control').map((c) => c.name).sort()).toEqual(['button', 'otp-field', 'text-field', 'textarea'])
+    // ui-toggle (ADR-0179 GH #686 Amendment S7-a) — a pressed-state pill button, Control-band geometry;
+    // parked in KNOWN_UNDOCUMENTED above until its site pages land in a later slice.
+    expect(COMPONENTS.filter((c) => c.tier === 'control').map((c) => c.name).sort()).toEqual(['button', 'otp-field', 'text-field', 'textarea', 'toggle'])
     // Display tier: ui-text (ADR-0025) + ui-icon (ADR-0065/0066, the icon-adapter's declarative consumer) +
     // the Wave M1 chart family (ADR-0107): ui-sparkline + ui-bar-chart + the Wave M1 report family (ADR-0111):
     // ui-table + ui-stat + ui-badge + the Wave M1 content family (ADR-0113): ui-code + the Wave M1 feed
@@ -266,9 +273,9 @@ describe('site coverage — every descriptor is documented XOR a known, delibera
   it('KNOWN_UNDOCUMENTED lists exactly the real undocumented descriptors (no stale name lingers, no surprise gap)', () => {
     const undocumentedNames = COMPONENTS.filter((c) => !isDocumented(c)).map((c) => c.name).sort()
     expect([...KNOWN_UNDOCUMENTED].sort()).toEqual(undocumentedNames)
-    // empty again — the report-family LLD-C11 / content-family LLD-C12 / feed-family LLD-C12 site pages all
-    // landed, draining the gap the same way the M1-b chart-family stopgap drained at M1-c.
-    expect([...KNOWN_UNDOCUMENTED].sort()).toEqual([])
+    // non-empty again — ui-toggle (ADR-0179 GH #686 Amendment S7-a) ships its descriptor ahead of its site
+    // pages, the same shape every prior wave's stopgap took; drains the moment its pages land.
+    expect([...KNOWN_UNDOCUMENTED].sort()).toEqual(['toggle'])
   })
 })
 

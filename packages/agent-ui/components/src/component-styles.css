@@ -163,3 +163,7 @@
 /* code-entry-control.lld.md (GH #490 S2-a) — ui-otp-field, the identity family's segmented N-cell
  * one-time-code entry field: the cell grid + the invisible editor overlay geometry. */
 @import './controls/otp-field/otp-field.css';
+
+/* ADR-0179 GH #686 Amendment S7-a (admin-three-pane-ia.lld.md §16.4) — ui-toggle, the fleet's first
+ * pressed-state pill button (Control-band ramp; idle outlined chip → pressed tonal-primary fill). */
+@import './controls/toggle/toggle.css';

@@ -242,11 +242,12 @@ describe('Gate 1 — the emit-seam event allowlist (naming.md §4, packages/**/s
 })
 
 // ── Gate 2 — the custom-state vocabulary (naming.md §6) ─────────────────────────────────────────────────────────
-// The 10-member registry. A NEW state name is a design decision — it lands in naming.md §6 AND this set in the
+// The 11-member registry. A NEW state name is a design decision — it lands in naming.md §6 AND this set in the
 // SAME change (this comment is the "extend together" contract the dispatch specifies).
+// `pressed` (ADR-0179 GH #686 Amendment S7-a) — ui-toggle's aria-pressed toggle-button state.
 
 const ALLOWED_STATES = new Set([
-  'ready', 'user-invalid', 'checked', 'dragging', 'revealed', 'disabled', 'collapsed', 'truncated', 'selected', 'indeterminate',
+  'ready', 'user-invalid', 'checked', 'dragging', 'revealed', 'disabled', 'collapsed', 'truncated', 'selected', 'indeterminate', 'pressed',
 ])
 
 /** Every custom-state NAME used in one file's TEXT (comment-stripped) — `states?.add/delete/toggle/replace/has(

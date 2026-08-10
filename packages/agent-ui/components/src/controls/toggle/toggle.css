@@ -1,0 +1,219 @@
+/* toggle.css — ui-toggle, the single-file component stylesheet (ADR-0003; ADR-0179 GH #686 Amendment S7-a).
+ * Two clearly-SECTIONED blocks:
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-toggle)` (specificity 0,0,0) DECLARES the `--ui-toggle-*` chain from the
+ *       colour roles (`--md-sys-color-{family}-{role}`) and the CONTROL-BAND dimensional ramp
+ *       (`--md-sys-height/font/gap/icon-{size}` — the button.css ramp, NOT the Indicator compact/widget-box
+ *       ramp ADR-0041 owns; ui-toggle carries no form value at all). Idle (unpressed) reads like an
+ *       outlined, neutral-ink chip (ghost-family transparent fill + a visible outline so a transparent pill
+ *       still reads as a control when NOT pressed); `:state(pressed)` repoints to the tonal
+ *       `primary-container` family (the same "primary marks ON" convention `ui-switch`/`ui-segmented-control`
+ *       both already use) and drops the outline (the filled bg itself now carries the boundary). `[size]`
+ *       repoints geometry. No `color-mix` — every colour value is a role (ADR-0008).
+ *   [2] STYLES BLOCK — `@scope (ui-toggle)` CONSUMES only `--ui-toggle-*` for its OWN tokens. Anatomy per
+ *       ADR-0006 host-as-grid, the button.css precedent MINUS its position/role split (toggle.md's Slots
+ *       section: `icon`/`state-icon` are each a single FIXED role, unlike button's generic leading/trailing —
+ *       so no `data-role` selector is needed, the slot name IS the role). Geometry per references/geometry.md:
+ *       `block-size` off the ramp, `padding-block: 0`, pill `border-radius: h/2`. The label always CENTERS
+ *       (no per-structure edge-spread law — ADR-0171 is a button-specific rule this control does not adopt;
+ *       every named consumer label is a single short word, so the simpler constant-center rule is sufficient
+ *       — see toggle.md). Interaction states (ADR-0008): `:hover`/`:active` repoint `background` only;
+ *       `:focus-visible` draws the SHARED fleet ring. Forced-colors repaints the pressed fill to
+ *       Highlight/HighlightText (the segmented-control indicator precedent) and keeps the idle outline/ink at
+ *       ButtonText.
+ *
+ * Standalone stylesheet — linked via the host page / component-styles barrel (Phase 2); NEVER injected from
+ * toggle.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-toggle) declares --ui-toggle-* ════════════════ */
+
+:where(ui-toggle) {
+  /* Idle (unpressed) — a transparent, outlined chip. Ink is neutral (an "off" pill is not itself a primary
+     action — contrast button's ghost variant, whose ink stays primary-high even idle because a ghost BUTTON
+     always IS a primary action; an unpressed toggle is not). */
+  --ui-toggle-bg: transparent;
+  --ui-toggle-bg-hover: var(--md-sys-color-neutral-container-low);
+  --ui-toggle-bg-active: var(--md-sys-color-neutral-container);
+  --ui-toggle-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-toggle-border: var(--md-sys-color-neutral-outline);
+
+  /* Geometry — the CONTROL-band ramp (default size = md). [size] repoints below. */
+  --ui-toggle-height: var(--md-sys-height-md);
+  --ui-toggle-font: var(--md-sys-font-md);
+  --ui-toggle-gap: var(--md-sys-gap-md);
+  --ui-toggle-icon: var(--md-sys-icon-md);
+}
+
+/* [size] → Control-band dimensional ramp repoint (the button.css precedent). */
+:where(ui-toggle[size='sm']) {
+  --ui-toggle-height: var(--md-sys-height-sm);
+  --ui-toggle-font: var(--md-sys-font-sm);
+  --ui-toggle-gap: var(--md-sys-gap-sm);
+  --ui-toggle-icon: var(--md-sys-icon-sm);
+}
+:where(ui-toggle[size='lg']) {
+  --ui-toggle-height: var(--md-sys-height-lg);
+  --ui-toggle-font: var(--md-sys-font-lg);
+  --ui-toggle-gap: var(--md-sys-gap-lg);
+  --ui-toggle-icon: var(--md-sys-icon-lg);
+}
+
+/* [pressed] / :state(pressed) — the tonal primary-container fill (dedicated interaction roles — no
+   hand-derived hover/active ladder needed, unlike button's soft variant): the ON state. The idle outline
+   drops — the fill itself now carries the pill's boundary. Both selectors are read: `[pressed]` (the
+   reflected attribute, toggle.ts) is what makes this paint rule apply under jsdom too — a real engine's
+   :state(pressed) capability is absent there (the segmented-control [checked] / indicator-element.ts dual-
+   write precedent) — and `:state(pressed)` covers a rare divergence (a consumer that writes
+   `internals.states` directly, never legal here, but the pairing is the established fleet shape). Both
+   pseudo-classes sit INSIDE the `:where()` parens via `:is()` (component-checker finding — a bare
+   `:where(ui-toggle):state(pressed)` puts the pseudo-class OUTSIDE :where()'s zero-specificity net, so it
+   contributes its own (0,1,0), beating the `[disabled]` override below (fully `:where()`-wrapped, (0,0,0))
+   regardless of source order — `<ui-toggle pressed disabled>` painted as a fully active primary pill
+   instead of muted; switch.css carries the SAME latent shape at its own checked-state repoint rule, out
+   of this slice's scope — flag for a follow-up issue, do not fix here). */
+:where(ui-toggle:is([pressed], :state(pressed))) {
+  --ui-toggle-bg: var(--md-sys-color-primary-container);
+  --ui-toggle-bg-hover: var(--md-sys-color-primary-container-hover);
+  --ui-toggle-bg-active: var(--md-sys-color-primary-container-active);
+  --ui-toggle-ink: var(--md-sys-color-primary-high);
+  --ui-toggle-border: transparent;
+}
+
+/* [disabled] → muted neutral roles, overriding both idle AND pressed (source-order-last under :where()'s
+   zero specificity — the switch.css precedent: disabled always wins regardless of which state preceded it).
+   HOLDS at idle: the disabled host is pointer-inert (styles block), so :hover/:active never match it. */
+:where(ui-toggle[disabled]) {
+  --ui-toggle-bg: var(--md-sys-color-neutral-surface-high);
+  --ui-toggle-bg-hover: var(--md-sys-color-neutral-surface-high);
+  --ui-toggle-bg-active: var(--md-sys-color-neutral-surface-high);
+  --ui-toggle-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-toggle-border: transparent;
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-toggle) consumes ONLY --ui-toggle-* ════════════════ */
+
+@scope (ui-toggle) {
+  :scope {
+    display: inline-grid;
+    grid-template-columns: 1fr; /* bare label — slotless */
+    align-items: center;
+    box-sizing: border-box;
+
+    block-size: var(--ui-toggle-height); /* the vertical lever — geometry.md */
+    padding-block: 0; /* NEVER block-padding */
+    padding-inline: calc(var(--ui-toggle-height) / 2); /* slotless edge = h/2 */
+
+    font-size: var(--ui-toggle-font);
+    line-height: var(--md-sys-control-line-height); /* single-line control standard — ADR-0036 */
+    white-space: nowrap; /* every named consumer label is a single short word (toggle.md) */
+
+    background: var(--ui-toggle-bg);
+    color: var(--ui-toggle-ink);
+    border: 1px solid var(--ui-toggle-border);
+    border-radius: calc(var(--ui-toggle-height) / 2); /* pill radius = h/2 */
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+
+    /* The label always CENTERS in its track — no per-structure edge-spread law (contrast ui-button's
+       ADR-0171; see toggle.md's Slots section for why this control does not adopt it). The label is
+       anonymous content (no control-created wrapper, unlike ui-button's ADR-0133 span — toggle.md's own
+       documented scope cut), so this sits on the CONTAINER as `justify-items` rather than a per-item
+       `justify-self` on a real node: it applies uniformly to the bare 1fr-track case (a no-op — the sole
+       item already fills its track) and to every icon/state-icon variant below alike. */
+    justify-items: center;
+  }
+
+  /* Both icon slots get the SAME square, icon-sized cell (border-box, so a role's inset stays within it). */
+  :scope > [slot='icon'],
+  :scope > [slot='state-icon'] {
+    inline-size: var(--ui-toggle-icon);
+    block-size: var(--ui-toggle-icon);
+    box-sizing: border-box;
+  }
+
+  /* [icon | label] (no state-icon): auto 1fr — icon slot edge ½(h−icon), trailing label edge h/2. */
+  :scope:has(> [slot='icon']):not(:has(> [slot='state-icon'])) {
+    grid-template-columns: auto 1fr;
+    column-gap: var(--ui-toggle-gap);
+    padding-inline-start: calc((var(--ui-toggle-height) - var(--ui-toggle-icon)) / 2);
+    padding-inline-end: calc(var(--ui-toggle-height) / 2);
+  }
+
+  /* [label | state-icon] (no icon): 1fr auto — leading label edge h/2, state-icon slot edge ½(h−icon). */
+  :scope:has(> [slot='state-icon']):not(:has(> [slot='icon'])) {
+    grid-template-columns: 1fr auto;
+    column-gap: var(--ui-toggle-gap);
+    padding-inline-start: calc(var(--ui-toggle-height) / 2);
+    padding-inline-end: calc((var(--ui-toggle-height) - var(--ui-toggle-icon)) / 2);
+  }
+
+  /* [icon | label | state-icon]: auto 1fr auto — both slot edges ½(h−icon). */
+  :scope:has(> [slot='icon']):has(> [slot='state-icon']) {
+    grid-template-columns: auto 1fr auto;
+    column-gap: var(--ui-toggle-gap);
+    padding-inline-start: calc((var(--ui-toggle-height) - var(--ui-toggle-icon)) / 2);
+    padding-inline-end: calc((var(--ui-toggle-height) - var(--ui-toggle-icon)) / 2);
+  }
+
+  /* Interaction states (ADR-0008) — repoint ONLY `background`, from the per-state ladder tokens. Disabled
+     holds at idle: the disabled host is pointer-inert (below), so :hover/:active never match it. */
+  :scope:hover {
+    background: var(--ui-toggle-bg-hover);
+  }
+  :scope:active {
+    background: var(--ui-toggle-bg-active);
+  }
+
+  /* Focus ring (ADR-0009) — the SHARED fleet ring: `:focus-visible` (keyboard-only) draws a layout-neutral
+     `outline` from the shared tokens — the ONE deliberate exception to "consume only --ui-toggle-*". */
+  :scope:focus-visible {
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+
+  /* Motion (ADR-0008 / interaction-states standard) — transition the state-PAINT properties ONLY, gated
+     behind :state(ready) (set in toggle.ts one frame past first paint) so the upgrade snaps in. */
+  :scope:state(ready) {
+    transition:
+      background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      border-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :scope:state(ready) {
+      transition: none;
+    }
+  }
+
+  /* disabled host — pointer-inert (the reflected `disabled` attribute). */
+  :scope:is([disabled]) {
+    pointer-events: none;
+    cursor: default;
+  }
+
+  /* [hidden] — the same unconditional-`display` fix every host-as-grid control with its own `display` needs
+     (button.css's GH #665 precedent): author `display: inline-grid` beats the UA `[hidden]` stylesheet
+     regardless of specificity unless explicitly repointed. */
+  :scope:is([hidden]) {
+    display: none;
+  }
+
+  /* forced-colors — the idle outline/ink hold at ButtonText; the pressed fill inverts to Highlight/
+     HighlightText (the segmented-control indicator precedent), so ON/OFF survives WHCM without relying on
+     hue alone. The focus ring survives for free via the token layer's `--md-sys-color-focus-ring → Highlight`
+     mapping. */
+  @media (forced-colors: active) {
+    :scope {
+      color: ButtonText;
+      border-color: ButtonText;
+    }
+    :scope:state(pressed) {
+      forced-color-adjust: none;
+      background: Highlight;
+      color: HighlightText;
+      border-color: Highlight;
+    }
+  }
+}

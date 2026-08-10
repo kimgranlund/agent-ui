@@ -810,7 +810,11 @@ export const STRUCTURAL = new Set(['ui-card', 'ui-column', 'ui-form-provider', '
 // default and fails loud instead of silently inheriting a guess.
 // ui-swiper-label (ADR-0124) joins this set too: its default slot IS a genuine text/label content — the
 // author's text becomes the owning ui-swiper's accessible name.
-export const SLOT_TEXT_OK = new Set(['ui-button', 'ui-checkbox', 'ui-code', 'ui-radio', 'ui-segment', 'ui-swiper-label', 'ui-switch', 'ui-text'])
+// ui-toggle (ADR-0179 GH #686 Amendment S7-a) joins this set too: the same ui-button shape (optional
+// icon/state-icon adornment slots + a genuine text/label default slot) — a bare component-mode specimen
+// carries no adornment children (no COMPONENT_SAMPLE_CHILDREN entry here), so the SLOT_TEXT knob only ever
+// edits the label, exactly as it does for ui-button.
+export const SLOT_TEXT_OK = new Set(['ui-button', 'ui-checkbox', 'ui-code', 'ui-radio', 'ui-segment', 'ui-swiper-label', 'ui-switch', 'ui-text', 'ui-toggle'])
 
 // ── the element ──────────────────────────────────────────────────────────────────────────────────────────────
 type Mode = 'component' | 'a2ui'

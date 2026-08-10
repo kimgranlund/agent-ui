@@ -100,6 +100,23 @@ per-entry action click, never emitted from a programmatic `update()`/`appendEntr
 shapes are per-event, documented in the descriptor's `events:` block — the descriptor allowlist is
 gated; the emit-seam gate is the planned closure (§11).
 
+`toggle` carries TWO legal shapes, same name, opposite timing — a naming-vocabulary member is closed
+on NAME, not on timing/cancelability, and both shapes already satisfy every other rule in this
+section (a user commit, never programmatic). **Shape 1 (the original, overlay/disclosure lifecycle,
+POST-commit)**: announced AFTER the host's own state write has already settled (`traits/overlay.ts`
+— `host.emit('toggle')` fires once `isOpen`/`showPopover()` are done; ADR-0101's "sole announcer"
+rule). **Shape 2 (ADR-0179 GH #686 Amendment S7-a, `ui-toggle`, PRE-commit + cancelable)**: fired
+BEFORE the host's own `pressed` write, via the base `emit()` seam's existing `cancelable: true`
+default (`dom/element.ts`) — a listener's `preventDefault()` refuses the press (`pressed` never
+flips, no second event). This reproduces the platform `<input type=checkbox>` click-then-commit
+shape on the `toggle` name specifically because minting an eighth event name (a `beforetoggle`-
+shaped sibling) is the ADR-level move this vocabulary is deliberately closed against — `ui-toggle`
+reuses the existing member instead of widening the set. A future `toggle` emitter picks WHICHEVER
+shape its own commit semantics need (most will want Shape 1, the disclosure-lifecycle default); a
+consumer distinguishes the two only by which control it is listening to, never by inspecting the
+event itself (both are named identically, on purpose — the closed-vocabulary discipline this
+section states, not a design gap).
+
 ## 5 · CSS custom properties — the two tiers, split by PREFIX (ADR-0140, 2026-07-17)
 
 The prefix IS the ownership boundary — no allowlist needed:
@@ -173,7 +190,11 @@ The prefix IS the ownership boundary — no allowlist needed:
   disclosure); control-emitted, host-created like `action`/`text`, never author-composed.
 - **Custom states** (`internals.states` / `:state()`) are ADJECTIVES/participles, lowercase,
   kebab: ready · user-invalid · checked · dragging · revealed · disabled · collapsed · truncated
-  · selected · indeterminate. A verb or noun is not a state name.
+  · selected · indeterminate · pressed. A verb or noun is not a state name. `pressed` (ADR-0179 GH
+  #686 Amendment S7-a) — `ui-toggle`'s ARIA-pressed toggle-button state; distinct from `checked`
+  (an Indicator-class boolean form value/ARIA-checked pattern) and `selected` (mutually-exclusive
+  choice, e.g. radio/tab) — `ui-toggle` is neither: an independent, non-form boolean matching the
+  native `aria-pressed` toggle-button pattern.
 
 ## 7 · A2UI catalog types
 
