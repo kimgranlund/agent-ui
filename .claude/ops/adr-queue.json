@@ -1,3 +1,11 @@
 {
-  "candidates": []
+  "candidates": [
+    {
+      "adr_id": "adr-0179",
+      "evidence": "ADR-0179 (accepted 2026-08-09, amended+ratified 2026-08-10, GH #651/#662/#665): agent-admin three-pane IA — origin-keyed #contextFor() routing (composer origin, not pane/selector state, once two composers can be on-screen at once — cl.2's amended reading, .claude/docs/adr/0179-agent-admin-three-pane-ia.md:161-185), band-driven pair-vs-triple docking off the shell's own named breakpoint ladder (SHELL_COMPACT_BREAKPOINT, never a new magic number, :143-159), and the retract-don't-delete divider-unpaint pattern (token repoint on the local ui-split, not removing separator semantics, :187-195). No existing row in agent-ui-composition-patterns/SKILL.md's consumer-pattern table covers pane-origin routing or band-driven docking (checked 2026-08-10).",
+      "kind": "harvest",
+      "plan": "",
+      "queued_at": "2026-08-10T05:05:05Z"
+    }
+  ]
 }
