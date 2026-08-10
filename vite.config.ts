@@ -33,12 +33,23 @@ import { a2aFeedDevProxyPlugin } from './packages/agent-ui/a2a/tools/feed/dev-pr
 // keys become chunk names; each html's OUTPUT path mirrors its location under `root`, so `site/index.html`
 // -> `dist/index.html` and `site/permutations.html` -> `dist/permutations.html`. The page set is derived
 // purely from the filesystem — no `Date.now()`/`Math.random()` (unavailable in some config contexts).
+//
+// GH #669: excludes `dist`/`dist-`-prefixed directories, mirroring `isScratchOrDist` in
+// `site/lib/build-css.ts:130` (that sibling tree-walk skips the same names for the same reason — a stray
+// scratch/dist directory, e.g. `site/dist-666-scratch/`, left behind by a concurrent scratch build). Without
+// this, any `.html` file under such a directory gets vacuumed into the `input` map of EVERY `vite build`
+// invocation (dev, prod, and the `*-scratch` test-suite builds) and can crash unrelated builds if that
+// entry's hashed asset reference doesn't actually exist on disk. Applied as a post-glob filter (not the
+// `exclude` option) so the predicate is one visible, testable expression shared in spirit with the sibling.
 const siteDir = fileURLToPath(new URL('./site', import.meta.url))
+const isScratchOrDist = (name: string): boolean => name === 'dist' || name.startsWith('dist-')
 const input = Object.fromEntries(
-  globSync('**/*.html', { cwd: siteDir }).map((page) => [
-    page.replace(/\.html$/, '').replaceAll('/', '-'),
-    resolve(siteDir, page),
-  ]),
+  globSync('**/*.html', { cwd: siteDir })
+    .filter((page) => !page.split('/').some(isScratchOrDist))
+    .map((page) => [
+      page.replace(/\.html$/, '').replaceAll('/', '-'),
+      resolve(siteDir, page),
+    ]),
 )
 
 export default defineConfig({
