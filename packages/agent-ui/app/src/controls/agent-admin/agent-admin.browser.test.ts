@@ -2360,6 +2360,48 @@ describe('ui-agent-admin — the wide TRIPLE dock (GH #662, ADR-0179 cl.1 Amendm
     modelsMenu.open = false
   })
 
+  // GH #680 — the ghost-gap fix: `button.css`'s `:has(> [slot='leading']):has(> [slot='trailing'])`
+  // structural rule keys off DOM PRESENCE, not paintedness (button.css:213-218), so it stays matched at
+  // this same compacted band and the trigger keeps its 3-column `auto 1fr auto` template — without the
+  // `--ui-button-gap` repoint (conversation-composer.css's `@container` block) the two now-empty seams
+  // (icon⟷label, label⟷trailing) would still carry `column-gap`, inflating the box past a real
+  // `[icon-only]` footprint. Proven against a GENUINE icon-only button (send — always present,
+  // unlike mic which stays `[hidden]` until a consumer calls `onMicClick`, conversation-composer.ts:180
+  // — same unset/default `md` size class) rather than a declared value, and the un-compacted (>=21rem)
+  // trigger's real gap is checked unregressed in the same pass.
+  it('the compacted picker trigger has no ghost grid gap — its box matches a true icon-only button, mic/send unregressed', async () => {
+    const el = await mountTripleAt(TRIPLE_AT)
+    const { chat } = partsOf(el)
+    const composer = chat.querySelector('ui-conversation-composer') as HTMLElement
+    const modelsTrigger = composer.querySelector('[data-picker="models"]') as HTMLElement
+    const sendBtn = composer.querySelector('[data-part="send"]') as HTMLElement
+
+    // The resolved column-gap is genuinely zero — a real engine resolving the repointed token, not a
+    // declared value (the "column-gap is the mechanism" idiom, this file's own #74 precedent above).
+    const gap = Number.parseFloat(getComputedStyle(modelsTrigger).columnGap)
+    expect(gap, 'the compacted trigger carries zero column-gap — no ghost seam').toBe(0)
+
+    // Byte-close to a real icon-only button at the same (default, unset) size class — no residual width
+    // from the now-hidden label/trailing tracks.
+    const triggerBox = modelsTrigger.getBoundingClientRect()
+    const sendBox = sendBtn.getBoundingClientRect()
+    expect(triggerBox.width, 'the compacted trigger is as wide as a true icon-only button — no ghost width').toBeCloseTo(sendBox.width, 0)
+    expect(triggerBox.height, 'the compacted trigger is as tall as a true icon-only button').toBeCloseTo(sendBox.height, 0)
+
+    // Unregressed: at full width the trigger keeps its real inter-adornment rhythm (the fix is scoped
+    // to the `@container` compact block only, never touching the un-compacted state).
+    const wideEl = await mountTripleAt(1200)
+    const wideComposer = partsOf(wideEl).chat.querySelector('ui-conversation-composer') as HTMLElement
+    const wideTrigger = wideComposer.querySelector('[data-picker="models"]') as HTMLElement
+    const wideGap = Number.parseFloat(getComputedStyle(wideTrigger).columnGap)
+    expect(wideGap, 'the full-width trigger keeps its real label/caret gap, unregressed').toBeGreaterThan(0)
+
+    // mic/send themselves are genuinely icon-only and were never touched by this fix — unregressed here too.
+    const micBtn = composer.querySelector('[data-part="mic"]') as HTMLElement
+    expect(getComputedStyle(micBtn).columnGap, 'mic stays column-gap-free (a real icon-only button, untouched by this fix)').toBe('normal')
+    expect(getComputedStyle(sendBtn).columnGap, 'send stays column-gap-free too').toBe('normal')
+  })
+
   // GH #673 — the inverse case: at FULL width (well above the composer's own 21rem line) the label is
   // visible, so the leading identity glyph is redundant beside it and must be gone — not merely invisible
   // structurally-but-painted, a real zero-size box — while the trailing caret still lands FLUSH on the
