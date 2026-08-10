@@ -49,7 +49,7 @@ import '@agent-ui/app/super-shell' // self-defines ui-super-shell (composed by u
 import '@agent-ui/app/chat-shell' // self-defines ui-chat-shell (composed by ui-agent-admin)
 import '@agent-ui/app/agent-admin' // self-defines ui-agent-admin
 import './agent-admin-app.css' // page-local: full-viewport layout + the preset strip chrome
-import type { UIAgentAdminElement } from '@agent-ui/app/agent-admin'
+import type { GenerateSeed, UIAgentAdminElement } from '@agent-ui/app/agent-admin'
 import type { UIButtonElement } from '@agent-ui/components/controls/button'
 import type { UIToastRegionElement } from '@agent-ui/components/controls/toast-region'
 import { ACTIVE_PRESET_KEY, builderStore, personaRoster, personaStore, resetPersona, saveImportedPersona, type Persona } from './agent-admin-presets.ts'
@@ -218,7 +218,9 @@ overflowMenu.addEventListener('select', (event) => {
 // converges on the SAME `createGeneratedAgent` below; registering is also what REVEALS them (unregistered
 // ⇒ copy only, the static-build degrade). This call deliberately happens BEFORE `root.append(admin)`
 // below — that ordering used to lose the reveal (GH #666 defect 1) and is now the probed case.
-admin.onGenerateRequest(() => createGeneratedAgent())
+// GH #670 — the component hands over the Model pick the user made on the unarmed card, and it is passed
+// straight through to the mint so the new interviewer store is SEEDED with it (never corrected afterwards).
+admin.onGenerateRequest((seed) => createGeneratedAgent(seed))
 
 function applyPersona(persona: Persona): void {
   active = persona
@@ -330,15 +332,21 @@ function createBlankAgent(): void {
 /** ADR-0178 / GH #633 — "New agent → Generate": mint the SAME blank draft the Blank path mints (S1's
  *  seed + `mintBlankPersona`, verbatim reuse — one mint path), activate it, then arm the Builder over it.
  *  Order matters: `applyPersona` clears `authoringStore` and reassigns `store` first, firing GH #145's
- *  reset, so the interview always opens on a clean thread. */
-function createGeneratedAgent(): void {
+ *  reset, so the interview always opens on a clean thread.
+ *
+ *  GH #670 — `pick` is the Author card's PRE-ARM Model choice (absent from the roster-menu entry, which has
+ *  no card to pick on). It is applied by SEEDING `builderStore`, never by writing the store afterwards: the
+ *  interview's very first read of `model` is already the user's, so nothing can overwrite the pick. Absent
+ *  ⇒ the Builder preset's own model wins, exactly as before. The DRAFT's seed below is untouched by it —
+ *  the pick chooses the interviewer's model, never the agent-being-built's. */
+function createGeneratedAgent(pick?: GenerateSeed): void {
   const seed = { model: DEFAULT_MODEL_ID, ...initialValuesFor(defaultAgentConfigSchema), ...initialEntryValues() }
   const persona = mintBlankPersona(seed, [...personaRoster(), ...roster])
   saveImportedPersona(persona)
   roster.push(persona)
   addPersonaRow(persona)
   applyPersona(persona)
-  admin.authoringStore = builderStore() // a FRESH interviewer per flow entry (no persistKey, no cache)
+  admin.authoringStore = builderStore(pick?.model) // a FRESH interviewer per flow entry (no persistKey, no cache)
   notify(`Created “${persona.label}” — describe what you want and the Builder will fill it in.`)
 }
 

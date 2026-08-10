@@ -2620,6 +2620,89 @@ describe('ui-agent-admin — the wide TRIPLE dock (GH #662, ADR-0179 cl.1 Amendm
     const bubble = author.querySelector('[data-part="log"] [data-part="bubble"][data-role="user"]') as HTMLElement
     expect(bubble.getBoundingClientRect().height, 'as a painted turn in the log').toBeGreaterThan(0)
   })
+
+  // GH #670 — the unarmed card had NO Model/Effort picker at all (the filing's measured table: `models` and
+  // `efforts` both `undefined`, no menu parts), so the first-touch surface offered no choice. Two claims here
+  // need real pixels rather than a prop read: that both pickers PAINT in the unarmed card exactly as they do
+  // in the card beside it, and that a pick made through the real overlay survives all the way into the
+  // interviewer the arm mints.
+  it('UNARMED at the triple: the Model and Effort pickers PAINT in the Author card’s own composer, laid out exactly like Test chat’s', async () => {
+    const el = await mountUnarmedTriple()
+    const { test, author } = cardsOf(el)
+    const composerOf = (card: HTMLElement): HTMLElement => card.querySelector(':scope > ui-conversation-composer') as HTMLElement
+
+    // Compared against the sibling card rather than literals (this describe's own cross-card idiom): whatever
+    // the fleet paints for a picker row, the unarmed entry must paint the same one. WIDTH is deliberately not
+    // in the comparison — the unarmed Models trigger reads its neutral "Models" label where Test chat's names
+    // a committed model, so the two pills are honestly different lengths. What must match is the ROW: same
+    // pill height, same vertical seat inside the action row, same leading edge to start from.
+    const pickerRow = (card: HTMLElement): (string | number)[] => {
+      const composer = composerOf(card)
+      const options = composer.querySelector('[data-part="options"]') as HTMLElement
+      const row = options.getBoundingClientRect()
+      const triggers = ['models', 'effort'].map((p) => composer.querySelector(`[data-picker="${p}"]`) as HTMLElement)
+      return [
+        ...triggers.map((t) => Math.round(t.getBoundingClientRect().height)),
+        ...triggers.map((t) => Math.round(t.getBoundingClientRect().top - row.top)),
+        Math.round(triggers[0]!.getBoundingClientRect().left - row.left),
+      ]
+    }
+    for (const picker of ['models', 'effort'] as const) {
+      const trigger = composerOf(author).querySelector(`[data-picker="${picker}"]`) as HTMLElement | null
+      expect(trigger, `the unarmed card carries a real ${picker} trigger`).not.toBeNull()
+      expect(trigger!.getBoundingClientRect().height, `and it is PAINTED, not merely mounted`).toBeGreaterThan(0)
+      expect(trigger!.getBoundingClientRect().width, `with a real width, not a collapsed sliver`).toBeGreaterThan(0)
+    }
+    expect(pickerRow(author), 'the unarmed Author card’s picker row wears Test chat’s own row treatment').toEqual(pickerRow(test))
+    expect(pickerRow(author)[0], 'anti-vacuous: a real painted height, not two matching zeroes').toBeGreaterThan(0)
+    // …and they sit in reading order with a real gap, not stacked on one another.
+    const [models, effort] = ['models', 'effort'].map((p) => composerOf(author).querySelector(`[data-picker="${p}"]`) as HTMLElement)
+    expect(effort!.getBoundingClientRect().left, 'Effort follows Models along the row').toBeGreaterThan(models!.getBoundingClientRect().right)
+  })
+
+  it('UNARMED at the triple: a Model picked through the real overlay sticks, then SEEDS the interviewer the first message mints', async () => {
+    const el = await mountUnarmedTriple()
+    // The page's real mint path is SEED-AWARE (agent-admin-app.ts → `builderStore(seed?.model)`), so this
+    // probe's stands in for it — last registration wins, and the shared helper's own is deliberately naive.
+    el.onGenerateRequest((seed) => {
+      el.authoringStore = createMemoryStore({
+        initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder', ...(seed?.model === undefined ? {} : { model: seed.model }) },
+      })
+    })
+    await el.updateComplete
+    const { author } = cardsOf(el)
+    const composer = author.querySelector(':scope > ui-conversation-composer') as HTMLElement & { value: string }
+    const trigger = composer.querySelector('[data-picker="models"]') as HTMLElement
+    const menu = composer.querySelector('[data-part="models-menu"]') as HTMLElement & { open: boolean }
+    const before = trigger.textContent
+
+    // Through the REAL overlay: open the popover, click the row. A prop write would prove the plumbing but
+    // not that the choice is reachable with a pointer on the unarmed card.
+    trigger.click()
+    await el.updateComplete
+    await frames()
+    const rows = [...menu.querySelectorAll('[role="menuitem"]')] as HTMLElement[]
+    expect(rows.length, 'the popup holds real options').toBeGreaterThan(1)
+    const wanted = rows.find((r) => r.dataset.value !== undefined && r.textContent?.trim() !== before?.trim())!
+    const picked = wanted.dataset.value!
+    expect(wanted.getBoundingClientRect().height, 'the row the user aims at is genuinely painted').toBeGreaterThan(0)
+    wanted.click()
+    await el.updateComplete
+    await frames()
+
+    expect(trigger.textContent, 'the pick STICKS on the unarmed trigger — the write that used to evaporate').toContain(wanted.textContent!.trim())
+
+    composer.value = 'a hotel concierge please'
+    ;(composer.querySelector('[data-part="send"]') as HTMLElement).click()
+    await el.updateComplete
+    await frames()
+    await el.updateComplete
+    await frames()
+
+    expect(el.authoringStore, 'the first message armed the flow').toBeDefined()
+    expect(el.authoringStore!.get('model'), 'and the interviewer was MINTED on the user’s pick, not corrected into it').toBe(picked)
+    expect(trigger.textContent, 'which the armed composer still shows').toContain(wanted.textContent!.trim())
+  })
 })
 
 // GH #666 (Kim's 2026-08-10 additional pixel note) — the settings sub-nav sat flush against the first

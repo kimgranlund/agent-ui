@@ -422,9 +422,10 @@ export class UIConversationComposerElement extends UIElement {
       })
     }
     this.#modelsMenu.toggleAttribute('hidden', false)
+    // GH #670 — pinned only on a build that really happened (see `#rebuildPickerItems`), so a bail leaves the
+    // guard open for the next pass instead of freezing an empty panel forever. Same rule in all four pickers.
     if (this.#modelsBuiltFrom !== options) {
-      this.#rebuildPickerItems(this.#modelsMenu, options, selected)
-      this.#modelsBuiltFrom = options
+      if (this.#rebuildPickerItems(this.#modelsMenu, options, selected)) this.#modelsBuiltFrom = options
     } else {
       this.#markPickerSelection(this.#modelsMenu, selected)
     }
@@ -459,8 +460,7 @@ export class UIConversationComposerElement extends UIElement {
     }
     this.#effortMenu.toggleAttribute('hidden', false)
     if (this.#effortsBuiltFrom !== options) {
-      this.#rebuildPickerItems(this.#effortMenu, options, selected)
-      this.#effortsBuiltFrom = options
+      if (this.#rebuildPickerItems(this.#effortMenu, options, selected)) this.#effortsBuiltFrom = options
     } else {
       this.#markPickerSelection(this.#effortMenu, selected)
     }
@@ -503,8 +503,7 @@ export class UIConversationComposerElement extends UIElement {
     }
     this.#providersMenu.toggleAttribute('hidden', false)
     if (this.#providersBuiltFrom !== options) {
-      this.#rebuildPickerItems(this.#providersMenu, options, selected)
-      this.#providersBuiltFrom = options
+      if (this.#rebuildPickerItems(this.#providersMenu, options, selected)) this.#providersBuiltFrom = options
     } else {
       this.#markPickerSelection(this.#providersMenu, selected)
     }
@@ -534,8 +533,7 @@ export class UIConversationComposerElement extends UIElement {
     }
     this.#modesMenu.toggleAttribute('hidden', false)
     if (this.#modesBuiltFrom !== options) {
-      this.#rebuildPickerItems(this.#modesMenu, options, selected)
-      this.#modesBuiltFrom = options
+      if (this.#rebuildPickerItems(this.#modesMenu, options, selected)) this.#modesBuiltFrom = options
     } else {
       this.#markPickerSelection(this.#modesMenu, selected)
     }
@@ -592,10 +590,25 @@ export class UIConversationComposerElement extends UIElement {
   /** Replace a picker menu's item list wholesale (cheap for the small, static lists this control expects —
    *  a handful of models/effort levels, never a long scrollable catalog). Marks the current selection via
    *  `data-selected` (ui-menu's items are `role=menuitem` — action semantics, not `role=option` — so a
-   *  visual marker, not `aria-selected`, is the correct signal here). */
-  #rebuildPickerItems(menu: UIMenuElement, options: readonly PickerOption[], selected: string | undefined): void {
+   *  visual marker, not `aria-selected`, is the correct signal here).
+   *
+   *  Answers whether it actually BUILT, so a caller only pins its `#…BuiltFrom` guard to a list it really
+   *  rendered (GH #670). Returning void made the pre-connect bail below PERMANENT for any option list whose
+   *  REFERENCE never changes: the caller pinned the guard anyway, and no later pass ever tried again. That
+   *  is why the Effort picker (`EFFORT_LEVELS`, a module constant) could sit as a real, clickable trigger
+   *  over an empty panel while Models — a fresh `roster.filter(...)` array every render — quietly rebuilt
+   *  itself out of the same hole on the next pass.
+   *
+   *  Measured on the agent-admin Author card (GH #670, 2026-08-10): the composer's FIRST sync pass runs from
+   *  a `connectedCallback` whose own `isConnected` is already `false` — the GH #302 reentrancy shape, here
+   *  produced by `ui-master-detail`'s compose-time pane relocation — so the `ui-menu` this pass appends
+   *  never gets its panel, and both pickers bail together. Only a COMPOSED relocation produces that pass,
+   *  which is why this law's regression proof lives at that level (agent-admin-authoring.test.ts's GH #670
+   *  block picks a real Effort option out of the Author card's own menu) rather than in this control's own
+   *  suite, where a plain mount always has its panel by the first pass. */
+  #rebuildPickerItems(menu: UIMenuElement, options: readonly PickerOption[], selected: string | undefined): boolean {
     const panel = menu.querySelector('[data-part="panel"]')
-    if (!panel) return // pre-connect ui-menu — its own connected() hasn't run yet; the effect re-fires once it has
+    if (!panel) return false // pre-connect ui-menu — its own connected() hasn't run yet; the effect re-fires once it has
     panel.replaceChildren()
     // The roving-focus trait's own one-time settle pass only covers items present at ITS first population —
     // items added later (here) start all at tabindex=-1 with nothing focusable on Tab/open. Give the
@@ -619,6 +632,7 @@ export class UIConversationComposerElement extends UIElement {
       if (option.disabled) item.setAttribute('aria-disabled', 'true')
       panel.append(item)
     }
+    return true
   }
 
   #markPickerSelection(menu: UIMenuElement, selected: string | undefined): void {

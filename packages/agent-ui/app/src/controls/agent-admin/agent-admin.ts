@@ -351,6 +351,24 @@ function preloadMarkdownRenderer(): void {
   loadMarkdownRenderer().catch(() => {})
 }
 
+/**
+ * GH #670 (Kim's 2026-08-10 fork ruling) — what an Author-card PRE-ARM pick asks the page's mint path to
+ * seed the newly-minted interviewer store with, handed over as `onGenerateRequest`'s one argument.
+ *
+ * The pick WINS by being seeded, never by a later overwrite: there is no write-then-correct step anywhere
+ * on this path, so the arm's own `#syncAuthoringConversationConfig` reads the user's choice out of the
+ * store as that store's committed value from its very first read (fork 2).
+ *
+ * A key the user never touched is simply ABSENT, and the minted store's own default wins — which is why
+ * every field here is optional. `effort` is deliberately NOT a field: it has no store home in this design
+ * (`#effort`, this element's own per-conversation dial), so its half of the same pre-arm record is applied
+ * where effort actually lives — see `#requestGenerate`.
+ */
+export interface GenerateSeed {
+  /** The model id picked on the unarmed Author card, before there was a store to hold it. */
+  model?: string
+}
+
 export interface UIAgentAdminElement extends ReactiveProps<typeof agentAdminProps> {}
 export class UIAgentAdminElement extends UIElement {
   static props = agentAdminProps
@@ -421,7 +439,25 @@ export class UIAgentAdminElement extends UIElement {
    *  stays HIDDEN until a callback is registered — a static build with no mint path shows the copy alone
    *  rather than a button that would do nothing (OQ4's degrade). */
   #authorEmptyAction: UIButtonElement | null = null
-  #generateRequest: (() => void) | undefined
+  #generateRequest: ((seed?: GenerateSeed) => void) | undefined
+  /**
+   * GH #670 — the Author card's Model/Effort pick made BEFORE the flow is armed, held here until there is
+   * somewhere real to put it. It exists because the pickers are props-down/callbacks-up: armed, a pick
+   * commits to its home and the home feeds the committed value back; UNARMED there is no interviewer store
+   * and no interview, so the same callback used to write `this.authoringStore?.set('model', id)` into
+   * nothing at all. A picker that visibly accepts a choice and drops it is worse than no picker, which is
+   * why the props were never set unarmed in the first place.
+   *
+   * ONE record for BOTH pickers (Kim's fork-3 ruling: no special-casing) — same capture rule, same single
+   * apply point (`#requestGenerate`), same clears. Only the DESTINATION differs at the arm, and that split
+   * is this file's pre-existing law rather than anything #670 introduces: `model` is store state (the
+   * Builder's own, page-minted), `effort` is element state (`#effort`, deliberately store-less).
+   *
+   * A BRIDGE, never a second source of truth: it is emptied the moment the flow arms (from there the store
+   * is the truth) and on a real persona switch (`#resetConversationState`, GH #145/#644 — a pick made for
+   * one persona's unarmed session must not leak into the next one's).
+   */
+  #preArm: { model?: string; effort?: EffortLevel } = {}
   /** The five settings section units, in strip order — the SAME nodes at every band (the
    *  no-duplication assert), keyed by their stable `data-role`. Visibility-only flips, exactly the shell
    *  strip's own SPEC-R7c behavior: nothing is unmounted, so section state survives every flip. */
@@ -1270,7 +1306,10 @@ export class UIAgentAdminElement extends UIElement {
     action.setAttribute('variant', 'text')
     action.textContent = 'New agent → Generate'
     action.hidden = this.#generateRequest === undefined
-    action.addEventListener('click', () => this.#generateRequest?.())
+    // GH #670 — through `#requestGenerate`, never the raw callback: this is the SECOND of the two Author
+    // arming entries, and both must seed the mint from the same pre-arm pick or the equivalence GH #666
+    // proved would hold for state but quietly break for configuration.
+    action.addEventListener('click', () => this.#requestGenerate())
     this.#authorEmptyAction = action
     empty.append(headline, copy, action)
     return empty
@@ -1286,6 +1325,81 @@ export class UIAgentAdminElement extends UIElement {
     if (conversation === null || this.authoringStore !== undefined) return
     conversation.setEmptyState(this.#authorEmpty)
     conversation.disabled = this.#generateRequest === undefined
+    this.#reflectPreArmPickers(conversation)
+  }
+
+  /**
+   * GH #670 — the UNARMED card's Model/Effort pickers: the same two rows the armed interview shows, from
+   * the same roster and the same `EFFORT_LEVELS`, so a choice exists at FIRST TOUCH instead of only after
+   * the user has already committed to defaults. Setting the four props is all it takes — the composer's own
+   * guard reads an unset `models`/`efforts` as "no picker to render" (conversation-composer.ts), which is
+   * precisely why the unarmed card had none.
+   *
+   * The inclusion set reads as ABSENT here (there is no Builder store yet), which `isModelIncluded` answers
+   * with each model's own `includedByDefault` — the SAME set a freshly-minted Builder store yields, since
+   * its seed carries no inclusion record either. Same roster before and after the arm, by construction.
+   *
+   * The committed VALUE is whatever this element can honestly answer with no store to read:
+   *  - `model` is the pre-arm pick ALONE. Unpicked it stays `undefined`, which the composer renders as the
+   *    neutral "Models" trigger — and that is the truthful reading, not a gap: the model a fresh interviewer
+   *    runs on is its own store's default, which is page-owned (`builderStore()`) and unknowable from here,
+   *    so naming one would print a label the arm then contradicts.
+   *  - `effort` IS knowable (`#effort` is element-local and is exactly what the arm will carry over), so the
+   *    pre-arm pick falls back to the live value rather than to nothing.
+   */
+  #reflectPreArmPickers(conversation: UIConversationElement): void {
+    const roster = modelRoster()
+    conversation.models = roster.filter((m) => isModelIncluded(undefined, m))
+    conversation.model = this.#preArm.model
+    conversation.efforts = EFFORT_LEVELS
+    conversation.effort = this.#preArm.effort ?? this.#effort
+  }
+
+  /**
+   * GH #670 — a Model pick from the Author card, at EITHER arming state (the one pre-arm-then-seed path
+   * Kim's fork-1/3 ruling names). ARMED it commits to the Builder's OWN store, which feeds the committed
+   * value back down — writing it to the draft instead would let the interviewer's model choice silently
+   * become the draft agent's. UNARMED there is no store to write, so the pick is REMEMBERED and seeds the
+   * mint (`#requestGenerate`) rather than evaporating into a no-op.
+   */
+  #pickAuthoringModel(id: string): void {
+    if (this.authoringStore !== undefined) {
+      this.authoringStore.set('model', id)
+      return
+    }
+    this.#preArm = { ...this.#preArm, model: id }
+    this.#reflectAuthorEntry() // props down: the trigger now names what the user chose
+  }
+
+  /** GH #670 — an Effort pick, the IDENTICAL treatment (fork 3: no special-casing). Armed, effort's home is
+   *  this element's own dial; unarmed, the same `#preArm` record holds it until the arm carries it there. */
+  #pickAuthoringEffort(level: EffortLevel): void {
+    if (this.authoringStore !== undefined) {
+      this.#effort = level
+      if (this.#authoringConversation) this.#authoringConversation.effort = level
+      return
+    }
+    this.#preArm = { ...this.#preArm, effort: level }
+    this.#reflectAuthorEntry()
+  }
+
+  /**
+   * GH #670 — the ONE arm both Author entries run (the card's first message and the empty state's secondary
+   * action), carrying the pre-arm pick INTO the mint. Each half goes to the home that owns it: `model` rides
+   * the seed into the store the page is about to mint, and `effort` lands on this element, which is where
+   * effort lives at every arming state. An untouched half is simply absent, and the minted store's own
+   * default wins (fork 2).
+   *
+   * Seeded, never written-then-overwritten: by the time `#rewireAuthoringContext` runs
+   * `#syncAuthoringConversationConfig` against the new store, the user's model IS that store's committed
+   * value, so there is no second write to lose a race with. The pick is read into locals BEFORE the callback
+   * because the mint path re-enters this element (the page's `applyPersona` swaps `store`, firing GH #145's
+   * reset) and empties `#preArm` on the way through — the seed is already in hand by then.
+   */
+  #requestGenerate(): void {
+    const { model, effort } = this.#preArm
+    if (effort !== undefined) this.#effort = effort
+    this.#generateRequest?.({ model })
   }
 
   /**
@@ -1316,7 +1430,9 @@ export class UIAgentAdminElement extends UIElement {
    * conversation that does not exist yet — or, worse, into one the arm's own `reset()` is about to clear.
    */
   async #startFromFirstMessage(text: string): Promise<void> {
-    if (this.authoringStore === undefined) this.#generateRequest?.()
+    // GH #670 — the arm carries the card's pre-arm Model/Effort pick into the mint (`#requestGenerate`), so
+    // a choice made before there was a store to hold it seeds the one this call is about to create.
+    if (this.authoringStore === undefined) this.#requestGenerate()
     if (this.authoringStore !== undefined) await whenFlushed()
     const conversation = this.#authoringConversation
     if (this.authoringStore === undefined || conversation === null) return
@@ -1443,13 +1559,13 @@ export class UIAgentAdminElement extends UIElement {
       if (this.authoringStore === undefined) void this.#startFromFirstMessage(text)
       else this.#handleSubmit(text, 'author')
     })
-    // The Builder's own model selection lives in the Builder's own store — writing it to the draft would
-    // let the interviewer's model choice silently become the draft agent's.
-    conversation.onModelChange((id) => this.authoringStore?.set('model', id))
-    conversation.onEffortChange((id) => {
-      this.#effort = id as EffortLevel
-      conversation.effort = this.#effort
-    })
+    // GH #670 — one handler per picker, covering BOTH arming states: armed, the pick commits to its own
+    // home (the Builder's store for model — writing it to the draft would let the interviewer's model choice
+    // silently become the draft agent's; this element for effort); unarmed, it is remembered and seeds the
+    // arm. The unconditional `this.authoringStore?.set(...)` these replace was the #670 bug itself: unarmed
+    // there is no store, so the write landed on nothing.
+    conversation.onModelChange((id) => this.#pickAuthoringModel(id))
+    conversation.onEffortChange((id) => this.#pickAuthoringEffort(id as EffortLevel))
     conversation.onClientMessage((message) => this.#handleClientMessage(conversation, 'author', message))
     conversation.setContentRenderer((text) => this.#renderContent(text, this.authoringStore))
     stack.append(conversation)
@@ -1528,6 +1644,11 @@ export class UIAgentAdminElement extends UIElement {
     if (changed) {
       this.#authoringConversation?.reset() // a DIFFERENT interviewer starts a fresh interview
       this.#authoringHistory = [] // GH #644 — and a fresh interview carries no prior interviewer's memory
+      // GH #670 — the pre-arm bridge's job ends exactly here: its model half is already SEEDED into the
+      // store being wired in below, its effort half is already on `#effort`, and from this moment the store
+      // is the truth. Emptying it is what stops a pick from re-applying to a LATER arm (leave the flow, come
+      // back, and the card starts neutral again) — the same no-leak law GH #145's reset carries.
+      this.#preArm = {}
     }
     this.#syncAuthoringConversationConfig(authoringStore)
     // ADR-0179's IA-entry re-point (LLD §2) — arming the flow LANDS the user in Author, at the one choke
@@ -2483,8 +2604,13 @@ export class UIAgentAdminElement extends UIElement {
    * registers on a detached element and appends it later, so this call used to land on a not-yet-built
    * empty state and the reveal was silently lost — Kim's live Author column showed copy with no verb.
    * `#createAuthorEmpty`/`#reflectAuthorEntry` read `#generateRequest` at build time, so both orders open.
+   *
+   * GH #670 — the callback now receives a `GenerateSeed`: the Model pick the user made on the unarmed card,
+   * for the page to SEED the store it is about to mint with (`builderStore(seed?.model)`). Optional on both
+   * ends — a page that ignores the argument keeps exactly its previous behaviour, and an untouched picker
+   * sends nothing, leaving the minted store's own default in charge.
    */
-  onGenerateRequest(callback: () => void): void {
+  onGenerateRequest(callback: (seed?: GenerateSeed) => void): void {
     this.#generateRequest = callback
     if (this.#authorEmptyAction) this.#authorEmptyAction.hidden = false
     this.#reflectAuthorEntry()
@@ -2521,6 +2647,10 @@ export class UIAgentAdminElement extends UIElement {
     this.#turnLog = []
     this.#turnCounter = 0
     this.#knownSurfaceIds.clear() // GH #525 — a new persona's surfaces are unrelated to the old ones
+    // GH #670 — and so is an unarmed Author pick: a Model/Effort choice made while describing THIS persona's
+    // successor must not silently seed the next persona's interview. The card re-paints neutral pickers on
+    // the `#reflectAuthorEntry` the caller's `#rewireAuthoringContext` already runs.
+    this.#preArm = {}
     this.#conversationEpoch += 1 // GH #354 — invalidate any surface turn waiting on its lazy dogfood chunk
   }
 }
