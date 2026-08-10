@@ -226,7 +226,7 @@ stands unchanged. The ORIGIN re-keying should NOT revert with it — it is a def
 have been found by the triple, and the pane-keyed selector is unsound the moment two composers can
 share a screen. The divider unpaint is likewise independent of the arrangement.
 
-## Amendment (2026-08-10, **proposed** — GH [#686](https://github.com/kimgranlund/agent-ui/issues/686), Kim's Figma wireframe ruling; awaiting Kim's ratification) — cl.1's `header` slot becomes the UNIFIED selector/visibility/actions bar; the pane nav retires everywhere; pane visibility becomes ONE shown-set with two band renderings; the place vocabulary re-pins to `[Chat | Settings | Co-pilot]`
+## Amendment (2026-08-10, **ratified** — kimgranlund, [utterance](https://github.com/kimgranlund/agent-ui/issues/686#issuecomment-5242385245), verified 2026-08-10) — GH [#686](https://github.com/kimgranlund/agent-ui/issues/686), Kim's Figma wireframe ruling: cl.1's `header` slot becomes the UNIFIED selector/visibility/actions bar; the pane nav retires everywhere; pane visibility becomes ONE shown-set with two band renderings; the place vocabulary re-pins to `[Chat | Settings | Co-pilot]`
 
 > Append-only, and **proposed**: the Status cell reads `accepted` for the record as a whole and stays
 > byte-untouched — agents never flip status (`.claude/hooks/adr-status-guard.py`), and this amendment
