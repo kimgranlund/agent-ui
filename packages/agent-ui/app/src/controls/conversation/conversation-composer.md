@@ -13,6 +13,10 @@ attributes:              # attributes-as-API — mirrors conversation-composer.t
     type: string          # the live message text — property-only: never author-composed, so no markup value to seed (unlike ui-text-field/ui-textarea, whose value ATTRIBUTE seeds a reset baseline)
     default: ''
     reflect: false
+  - name: placeholder
+    type: string          # the editor's ghost text (GH #672) — property-only, alongside `value` (never author-composed); mirrored onto the editor's `data-placeholder` attribute, the ui-textarea `placeholder` precedent
+    default: 'Ask anything..'
+    reflect: false
   - name: models
     type: json            # readonly {id,label}[] (composer-options.ts's PickerOption) — too structured to reflect
     default: undefined    # undefined ⇒ no Models picker; the original field+Send composer, unchanged
@@ -57,6 +61,8 @@ attributes:              # attributes-as-API — mirrors conversation-composer.t
 properties:
   - name: value
     description: The live message text (TKT-0058) — the same two ADR-0014 wires as `ui-textarea` bind it to the editor surface (surface→model on `input`, IME-guarded; model→surface under the CARET GUARD). `#send()` reads and clears it; a programmatic write flows to the editor on the next flush.
+  - name: placeholder
+    description: The editor's ghost text, shown via `[data-empty]::before { content: attr(data-placeholder) }` (GH #672). Default `'Ask anything..'` — unchanged from the prior hard-coded literal, so a consumer that never sets this is byte-identical to before. A reactive effect mirrors it onto the editor's `data-placeholder` attribute on every change (not just at build time), the ui-textarea `placeholder` precedent.
   - name: models
     description: OPTIONAL `readonly {id, label}[]` (composer-options.ts's `PickerOption`) — when set (and non-empty), renders a Models picker. Default `undefined` ⇒ no picker, the original field+Send composer shape.
   - name: model
@@ -86,7 +92,7 @@ parts:                    # NOT shadow-DOM ::part() (light-DOM only) — light-D
   - name: context-chips
     description: The opt-in chip row (`[data-part="context-chips"]`), the tags row above the text — hidden (`[hidden]`) when `contextItems` is empty. One `[data-part="context-chip"]` per entry, each a `[data-part="context-chip-label"]` + a `[data-part="context-chip-dismiss"]` `ui-button` (icon-only, `x` glyph) firing `onContextDismiss`.
   - name: editor
-    description: The message text (`[data-part="editor"]`) — this element's OWN contenteditable surface (TKT-0058; the ADR-0014 pattern via its multi-line sibling `ui-textarea`, ADR-0134): `contenteditable="plaintext-only"`, `role="textbox"`/`aria-multiline="true"`/`aria-label="Message"` on the PART (never the host), `data-placeholder="Ask anything.."` ghost text keyed by `data-empty`. Auto-grows from a one-line minimum, capped at `max-block-size: 6em`, then scrolls.
+    description: The message text (`[data-part="editor"]`) — this element's OWN contenteditable surface (TKT-0058; the ADR-0014 pattern via its multi-line sibling `ui-textarea`, ADR-0134): `contenteditable="plaintext-only"`, `role="textbox"`/`aria-multiline="true"`/`aria-label="Message"` on the PART (never the host), `data-placeholder` ghost text (from the `placeholder` prop, GH #672 — default `"Ask anything.."`) keyed by `data-empty`. Auto-grows from a one-line minimum, capped at `max-block-size: 6em`, then scrolls.
   - name: options
     description: The row below the text (`[data-part="options"]`) — `[data-part="options-leading"]` (the opt-in Provider/Models/Effort/Mode pickers) and `[data-part="options-trailing"]` (the opt-in mic + the always-present send button), space-between.
   - name: models-trigger
@@ -141,6 +147,7 @@ composer')`, forwarding props down and listening for its callback registrations.
 
 ```ts
 const composer = document.createElement('ui-conversation-composer')
+composer.placeholder = 'Describe the agent you want…' // GH #672 — default 'Ask anything..' unless set
 composer.models = [{ id: 'claude-sonnet-5', label: 'Sonnet 5' }, /* … */]
 composer.model = 'claude-sonnet-5'
 composer.onSubmit((text) => { /* the consumer's own turn loop */ })
