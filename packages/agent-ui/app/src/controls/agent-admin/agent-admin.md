@@ -60,7 +60,7 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
   - name: pane-nav
     description: ADR-0179 cl.1 — the ONE navigation vehicle, at every band: a panel-less `<ui-tabs data-part="pane-nav">` hosting three `<ui-tab data-part="pane-nav-chat|pane-nav-author|pane-nav-settings" key="chat|author|settings">`s — Chat · Author · Settings. Composed the GH #221 way (a bare `ui-tabs`, `ui-tab` children carrying `key`, no `ui-tab-panel`s: the PLACES it selects are this element's own visibility targets, `link()`ed for aria-controls), which is the retired try-it strip's composition method re-anchored one level up. `selected` reflects the active place, written programmatically on a non-user flip (no `select` echo, ADR-0019); the control's ONE user-commit `select` is `stopPropagation`'d, so the element's event vocabulary stays closed and no new host event is minted. It replaces BOTH the try-it bar (the authoring ⇄ test flip is a place change now) and the shell's six-entry narrow-tabs strip.
   - name: pane-holder
-    description: ADR-0179 cl.1 — the content slot's holder (`<div data-part="pane-holder" data-slot="content">`), was `chat-stack`. It holds the PLACES, not one place's two conversations: the test conversation (the Chat place) and the master-detail pairing (the Author and Settings places). Both conversations stay MOUNTED for the element's whole life; a place change flips `hidden` and nothing else, which is what lets both transcripts survive without any snapshot/restore machinery.
+    description: ADR-0179 cl.1 — the content slot's holder (`<div data-part="pane-holder" data-slot="content">`), was `chat-stack`. It holds the PLACES, not one place's two conversations: the test conversation (the Chat place) and the master-detail pairing (the Author and Settings places). Both conversations stay MOUNTED for the element's whole life; a place change writes the active place here as `data-pane` and nothing else, which is what lets both transcripts survive without any snapshot/restore machinery. GH #662 — this box is also the CONTAINER the band rules query (`container-type: inline-size`): the sheet reads `data-pane` against the holder's own width to decide what paints, so no region carries a `hidden` attribute and no resize writes any state.
   - name: pane-pair
     description: ADR-0179 cl.3 — the Author⇄Settings PAIRING: a composed `<ui-master-detail data-part="pane-pair">` whose `list` pane is the Author region and whose `detail` pane is the Settings region. ONE region, ARRANGED — never a second mount: at or above master-detail's own 40rem own-container line the two dock as a resizable `ui-split` (the live-hydration adjacency — hand-edit the draft beside the interview), and below it the element drills into one region at a time, which is what gives Settings a full-surface narrow home. The consumer-written `selected` carries that drill-in (`''` for Author, `'settings'` for Settings); the MD's own `select`/`change` are contained at its host. Its control-rendered back affordance is suppressed in admin CSS — the pane nav is the one nav vocabulary.
   - name: author-pane
@@ -174,9 +174,9 @@ GH #52/ADR-0154 shell arrangement that replaced it): **Chat · Author · Setting
 navigation vehicle at every band — a panel-less `ui-tabs` in the composed chat-shell's header slot
 (`pane-nav`).
 
-- **Chat** is the pure test surface: the draft agent's own conversation, alone. At wide it renders SOLO
-  — no settings rail beside it (places are disjoint; the tune-while-testing adjacency survives at wide as
-  the AUTHOR pairing below).
+- **Chat** is the pure test surface: the draft agent's own conversation. Below the triple line it renders
+  SOLO — no settings rail beside it (places are disjoint in that band; the tune-while-testing adjacency
+  is the AUTHOR pairing below).
 - **Author** is the guided-authoring interview's own place (`authoringStore`, ADR-0178 cl.5). It is
   ALWAYS present: unarmed it paints an empty state whose "New agent → Generate" action reaches the page
   through the `onGenerateRequest(cb)` registration seam; armed, the interview takes over. Arming from
@@ -191,9 +191,28 @@ live while the turn streams; below that line it drills into one region at a time
 full-surface narrow home. The five section units are the SAME DOM nodes at every band and in every
 arrangement.
 
-Which context drives the next turn is now keyed by the ACTIVE PLACE, not by a mode flag: cl.4's per-pane
-composers mean the Chat place's composer is permanently the test context and the Author place's is
-permanently the Builder — no composer ever re-routes. The retired vocabulary: the try-it bar, the `#mode`
+**The band ladder (GH #662, ADR-0179 cl.1's proposed Amendment).** Which places paint is a reading of
+`pane-holder`'s own inline-size, never a JS decision:
+
+| holder width | what paints |
+|---|---|
+| below 40rem | the named place, with the pair itself drilled into one region |
+| 40rem – 52.5rem | the named place: Chat solo, or the Author⇄Settings pair docked |
+| 52.5rem and up | the TRIPLE DOCK — `[chat \| author \| settings]` all three side by side |
+
+52.5rem is `SHELL_COMPACT_BREAKPOINT` (ADR-0150/0155), not a new number, and it is where it is by
+constraint: the master-detail needs 40rem of its own or it drills in, leaving Chat the remainder, and
+52.5rem is the first named line where that remainder still clears the 20ch engagement floor (measured
+both engines at the line: chat 200px, author 320px, settings 320px, floor 160px). The pane nav persists
+at every band; above the line it names a place rather than gating one. No painted divider separates
+docked regions — the split separator's resting ink is retracted while every resize mechanic survives.
+
+Which context drives the next turn is keyed by the SUBMITTING COMPOSER'S ORIGIN (GH #662; it was the
+active place at S1-b, and the mode flag before that): cl.4's per-pane composers mean the Chat place's
+composer is permanently the test context and the Author place's is permanently the Builder — no composer
+ever re-routes, at any band. Origin rather than place is what keeps that true in the triple dock, where
+both composers are on screen at once; the consumption fence itself is unchanged (it keys off
+driving-store identity), and Chat structurally cannot reach the draft. The retired vocabulary: the try-it bar, the `#mode`
 seam, and the shell's six-entry narrow-tabs strip.
 
 GH #574 (Kim's ruling, 2026-08-07) split the old single flat Settings tab's ten folds — three

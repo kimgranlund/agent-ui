@@ -194,6 +194,51 @@ describe('the apply loop’s CONSUMPTION CONDITION — the fence AND the gate, b
     expect((turnLogOf(el).response as { patchIgnored?: boolean }).patchIgnored).toBe(true)
   })
 
+  it('THE TRIPLE-DOCK POLARITY (GH #662) — the Chat composer cannot reach the draft even while the nav stands on Author', async () => {
+    // This is the probe the triple dock exists to force. Below the triple line exactly one place paints, so
+    // "the active place" and "the composer the user can reach" are the same thing, and the S1-b selector
+    // (`#pane === 'author'`) was a sound proxy for origin. At the triple line BOTH composers are on screen
+    // at once — so a user can type into CHAT's composer while the nav still says Author, and under the
+    // pane-keyed selector that turn resolved the AUTHORING quadruple: landing in the interview transcript
+    // and, gate ON, patching the draft. Origin-keying is what makes cl.4's "Chat stays pure test by
+    // construction" true in the triple world rather than only below its line.
+    const draft = personaStore({ [SURFACE_AUTHORING_KEY]: true })
+    const builder = personaStore({ [SURFACE_AUTHORING_KEY]: true })
+    const { el } = mountAdmin({ store: draft, authoringStore: builder, events: [{ kind: 'patch', patch: PATCH }] })
+    await whenFlushed()
+
+    // The nav stands on Author — the arming already put it there — and stays there for the whole turn.
+    expect((el.querySelector('[data-part="pane-holder"]') as HTMLElement).getAttribute('data-pane')).toBe('author')
+    await submit(el, 'rename yourself', 'test') // …but the TEST composer is what the user typed into
+
+    expect(draft.get('name'), 'the draft is untouched — the Chat composer is fenced out by ORIGIN').toBe('Untitled agent')
+    expect(readEntries(draft, ENTRY_KINDS.skill)).toEqual([])
+    expect((turnLogOf(el).response as { patchIgnored?: boolean }).patchIgnored).toBe(true)
+
+    // …and the turn landed where it came from: the test transcript, never the interview's.
+    const authoring = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
+    const test = el.querySelector('[data-part="pane-holder"] > ui-conversation:not([data-part="authoring-conversation"])') as HTMLElement
+    expect(test.textContent, 'the turn is in the test transcript').toContain('rename yourself')
+    expect(authoring.textContent, 'and nowhere near the interview').not.toContain('rename yourself')
+  })
+
+  it('THE TRIPLE-DOCK POLARITY, the other way (GH #662) — the Author composer still drives the Builder while the nav stands on Chat', async () => {
+    // The symmetric half: origin-keying must not merely refuse, it must ROUTE. In the triple the interview
+    // is on screen and typable while the nav names Chat, and a turn from it is an authoring turn — gate ON,
+    // the patch lands on the draft, exactly as it does when the nav agrees.
+    const draft = personaStore()
+    const builder = personaStore({ [SURFACE_AUTHORING_KEY]: true, name: 'Builder' })
+    const { el } = mountAdmin({ store: draft, authoringStore: builder, events: [{ kind: 'patch', patch: PATCH }] })
+    await whenFlushed()
+    goToPane(el, 'chat')
+    await submit(el, 'a hotel concierge please', 'authoring')
+
+    expect(draft.get('name'), 'the interview reached the draft from its own composer').toBe('Concierge')
+    expect(builder.get('name'), 'and never the interviewer’s own store').toBe('Builder')
+    const authoring = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
+    expect(authoring.textContent).toContain('a hotel concierge please')
+  })
+
   it('a POISONED key never costs the turn — the drop-the-item law, proven at the turn level', async () => {
     // The regression this pins (review MAJOR): a prototype-chain key used to THROW inside the apply gate,
     // and the throw escaped into this method's own catch → `handle.fail()`, killing a turn whose real
@@ -289,9 +334,12 @@ describe('the dual-context scaffold — one draft, two transcripts, zero store s
     const test = el.querySelector('[data-part="pane-holder"] > ui-conversation:not([data-part="authoring-conversation"])') as HTMLElement
     expect(authoring.textContent).toContain('interview turn')
     expect(test.textContent).toContain('test turn')
-    // and visibility followed the mode back
-    expect(authoring.hasAttribute('hidden')).toBe(false)
-    expect(test.hasAttribute('hidden')).toBe(true)
+    // …and the place followed the round trip back. GH #662 — the PLACE is what a nav change writes (the
+    // holder's `data-pane`); which regions then paint is the sheet's band reading, proven in the browser
+    // shard. The interview's own `hidden` is armed-state only now, and the flow is armed throughout.
+    expect((el.querySelector('[data-part="pane-holder"]') as HTMLElement).getAttribute('data-pane')).toBe('author')
+    expect(authoring.hasAttribute('hidden'), 'the flow is armed, so the interview is not hidden').toBe(false)
+    expect(test.hasAttribute('hidden'), 'and no region is attribute-hidden any more').toBe(false)
   })
 
   it('a REAL persona switch still resets BOTH transcripts (GH #145, extended)', async () => {
@@ -461,20 +509,23 @@ describe('the pane nav — the visible place change, driving the SAME seam the r
     const authoring = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
     const test = el.querySelector('[data-part="pane-holder"] > ui-conversation:not([data-part="authoring-conversation"])') as HTMLElement
 
+    // GH #662 — a tab click writes the PLACE onto the holder; the sheet turns that into boxes per band
+    // (one place below 52.5rem, all three above). Both conversations stay mounted and un-hidden either way
+    // — the triple dock paints the interview while the nav says Chat, so an interview hidden by PLACE
+    // would blank the middle column.
+    const holder = el.querySelector('[data-part="pane-holder"]') as HTMLElement
+    const place = (): [string, string | null] => [strip.selected, holder.getAttribute('data-pane')]
+
     // the IA-entry re-point (LLD §2): arming navigates, at the one choke point every arm path crosses
-    expect(strip.selected).toBe('author')
-    expect(authoring.hasAttribute('hidden')).toBe(false)
-    expect(test.hasAttribute('hidden')).toBe(true)
+    expect(place()).toEqual(['author', 'author'])
 
     tab('chat').click()
-    expect(strip.selected).toBe('chat')
-    expect(authoring.hasAttribute('hidden')).toBe(true)
-    expect(test.hasAttribute('hidden')).toBe(false)
+    expect(place()).toEqual(['chat', 'chat'])
 
     tab('author').click()
-    expect(strip.selected).toBe('author')
-    expect(authoring.hasAttribute('hidden')).toBe(false)
-    expect(test.hasAttribute('hidden')).toBe(true)
+    expect(place()).toEqual(['author', 'author'])
+
+    expect([authoring.hasAttribute('hidden'), test.hasAttribute('hidden')], 'no region is attribute-hidden by a place change').toEqual([false, false])
   })
 
   it('the pane nav`s select never escapes the admin host (the closed seven-member event set)', async () => {
