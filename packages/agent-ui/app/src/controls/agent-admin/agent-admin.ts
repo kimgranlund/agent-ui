@@ -2904,24 +2904,39 @@ export class UIAgentAdminElement extends UIElement {
 
   /**
    * Push the current agent roster into the header's `agent-select` — data-in, not a callback, and
-   * RE-CALLABLE (a page re-pushes after a mint/import, LLD §16.3). Rebuilds the select's option children
-   * wholesale from `entries` (the select's own dynamic-adoption seam, select.md's Slots note, handles a
-   * later call without a disconnect/reconnect) and sets `value` to `activeId` (or '' — nothing selected)
-   * as a silent programmatic write (no `select` emission, ADR-0019 — only a real user pick fires that).
+   * RE-CALLABLE (a page re-pushes after a mint/import, LLD §16.3). Rebuilds the select's OWN roster
+   * options wholesale from `entries` (the select's own dynamic-adoption seam, select.md's Slots note,
+   * handles a later call without a disconnect/reconnect) and sets `value` to `activeId` (or '' — nothing
+   * selected) as a silent programmatic write (no `select` emission, ADR-0019 — only a real user pick
+   * fires that).
    */
   setAgentRoster(entries: readonly AgentRosterEntry[], activeId?: string): void {
     this.#pendingRoster = { entries, activeId }
     this.#applyAgentRoster()
   }
 
-  /** `setAgentRoster`'s own build-time/call-time reflect (the `#reflectAuthorEntry` shape) — a no-op
-   *  before `#composeHeader` has run OR before `setAgentRoster` has ever been called; both call sites
-   *  (`setAgentRoster` itself, and `#compose`'s tail) are safe to call unconditionally. */
+  /**
+   * `setAgentRoster`'s own build-time/call-time reflect (the `#reflectAuthorEntry` shape) — a no-op
+   * before `#composeHeader` has run OR before `setAgentRoster` has ever been called; both call sites
+   * (`setAgentRoster` itself, and `#compose`'s tail) are safe to call unconditionally.
+   *
+   * A real bug once lived here, root-caused post-review: `select.replaceChildren()` wipes EVERY host
+   * child, and `ui-select` creates its own trigger/aria-label span/listbox as direct children of the
+   * host itself (select.ts's `#ensureParts`) — a full wipe destroyed the control's own internal parts
+   * on the FIRST call, not merely the roster options, so `onAgentSelect` could never fire again (no
+   * trigger left to click, and any freshly-adopted options landed in a listbox already severed from the
+   * control's own machinery). The fix removes ONLY the previously-pushed `[role='option']` nodes — real
+   * descendants of the host (adopted into the listbox by the control's own TKT-0026 machinery, but still
+   * findable via a plain descendant query, no private-field reach-in needed) — leaving the trigger/aria-
+   * label span/listbox untouched, then re-adopts the new set through the SAME public, documented seam
+   * every other author-supplied option already uses (`select.append(...)`, select.md's Slots note: "No
+   * disconnect/reconnect is required to add or remove options").
+   */
   #applyAgentRoster(): void {
     const select = this.#agentSelectEl
     const pending = this.#pendingRoster
     if (select === null || pending === undefined) return
-    select.replaceChildren()
+    for (const option of [...select.querySelectorAll('[role="option"]')]) option.remove()
     for (const entry of pending.entries) {
       const option = document.createElement('div')
       option.setAttribute('role', 'option')

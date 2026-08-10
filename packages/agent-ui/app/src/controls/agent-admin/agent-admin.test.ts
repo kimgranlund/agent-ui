@@ -538,7 +538,7 @@ describe('UIAgentAdminElement — the unified header bar (S7-c, ADR-0179 GH #686
     expect(pillOf(el, 'chat').hasAttribute('aria-label'), 'a labeled pill needs no aria-label').toBe(false)
   })
 
-  it('setAgentRoster / onAgentSelect: rebuilds the roster wholesale, is re-callable, and the pick reaches the registered callback — the select\'s own select/change never escapes the host', () => {
+  it('setAgentRoster / onAgentSelect: rebuilds the roster wholesale, is re-callable WITHOUT destroying the select\'s own internal parts, and the pick actually reaches the registered callback — the select\'s own select/change never escapes the host', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const picks: string[] = []
     el.onAgentSelect((id) => picks.push(id))
@@ -547,8 +547,21 @@ describe('UIAgentAdminElement — the unified header bar (S7-c, ADR-0179 GH #686
     expect([...select.querySelectorAll('[role="option"]')].map((o) => o.textContent)).toEqual(['Agent A', 'Agent B'])
     expect(select.value).toBe('a')
 
-    // Re-callable — a later push replaces the roster wholesale (a page re-pushing after a mint/import).
+    // A real user commit — clicking a DIFFERENT option than the one already selected, so a delivery
+    // failure (the trigger destroyed, or the click landing on nothing) cannot be mistaken for "already
+    // that value, no-op" — must actually reach the registered callback (the "trace the whole path" law:
+    // a listener existing is not proof a value ever arrives at it).
+    const optionB = [...select.querySelectorAll('[role="option"]')].find((o) => o.textContent === 'Agent B') as HTMLElement
+    optionB.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(picks, 'the click actually reached onAgentSelect\'s registered callback').toEqual(['b'])
+    expect(select.value, 'the commit also updates the control\'s own value').toBe('b')
+
+    // Re-callable — a later push replaces the ROSTER OPTIONS wholesale (a page re-pushing after a mint/
+    // import) — this is the regression proof for the destroy-the-select bug (post-review fix): the
+    // control's own trigger/listbox survive a re-push, they are not a casualty of a full children wipe.
     el.setAgentRoster([{ id: 'c', label: 'Agent C' }])
+    expect(select.querySelector('[data-part="trigger"]'), 'the trigger survives a re-push — it is not part of the wiped roster').not.toBeNull()
+    expect(select.querySelector('[data-part="listbox"]'), 'the listbox survives a re-push too').not.toBeNull()
     expect([...select.querySelectorAll('[role="option"]')].map((o) => o.textContent)).toEqual(['Agent C'])
     expect(select.value, 'no activeId this time ⇒ nothing selected').toBe('')
 
@@ -558,6 +571,10 @@ describe('UIAgentAdminElement — the unified header bar (S7-c, ADR-0179 GH #686
     select.value = 'c' // a programmatic write below never fires select — only the registered callback path does
     expect(seen).toEqual([])
     ;(select.querySelectorAll('[role="option"]')[0] as HTMLElement).dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    // The re-pushed roster's own click ALSO actually reaches the callback — the trigger surviving is not
+    // enough on its own; the whole path (click → adopted option → commit → onAgentSelect) must still work
+    // after a re-push, not merely before one.
+    expect(picks, 'the post-re-push click also reaches the callback').toEqual(['b', 'c'])
     // The real user commit path fires the registered callback, never a host-level select/change.
     expect(seen, 'the select\'s own events stay contained — this element re-emits nothing').toEqual([])
   })
