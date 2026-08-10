@@ -213,11 +213,13 @@ overflowMenu.addEventListener('select', (event) => {
 // ADR-0179 OQ4 (admin-three-pane-ia.lld.md §2) — the Author place's empty state hosts the flow's OTHER
 // front door, where the user already is. It reaches this page's mint path through the component's
 // `onGenerateRequest` registration seam (a callback, never a CustomEvent — SPEC-R5), because the component
-// cannot import site code without inverting the DAG. Every affordance — the roster menu's "New agent →
-// Generate" above, the Author place's secondary button, and (GH #666) its composer's FIRST MESSAGE —
-// converges on the SAME `createGeneratedAgent` below; registering is also what REVEALS them (unregistered
-// ⇒ copy only, the static-build degrade). This call deliberately happens BEFORE `root.append(admin)`
-// below — that ordering used to lose the reveal (GH #666 defect 1) and is now the probed case.
+// cannot import site code without inverting the DAG. Two affordances converge on the SAME
+// `createGeneratedAgent` mint path: the roster menu's "New agent → Generate" above (calls it directly, no
+// seed), and (GH #666, GH #681) the Author place's composer FIRST MESSAGE (via the registered callback,
+// carrying the GH #670 pre-arm seed); registering is also what REVEALS the composer-first entry
+// (unregistered ⇒ copy only, the static-build degrade). This call deliberately happens BEFORE
+// `root.append(admin)` below — that ordering used to lose the reveal (GH #666 defect 1) and is now the
+// probed case.
 // GH #670 — the component hands over the Model pick the user made on the unarmed card, and it is passed
 // straight through to the mint so the new interviewer store is SEEDED with it (never corrected afterwards).
 admin.onGenerateRequest((seed) => createGeneratedAgent(seed))

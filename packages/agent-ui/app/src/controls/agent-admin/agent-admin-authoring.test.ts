@@ -725,10 +725,11 @@ describe('GH #666 — the unarmed Author card: a live composer, and the arming i
 
   it('the two entries CONVERGE: arming by first message leaves the same state as arming by the roster action', async () => {
     // GH #681 — the in-card "New agent → Generate" button is gone; the roster (...) menu's item is the
-    // survivor for "arm without typing anything", and it reaches this element through the exact same
-    // `onGenerateRequest` callback the page registers (`createGeneratedAgent`, invoked from OUTSIDE any
-    // specific card — this element's own test harness can't reach the real site-level menu, so a direct
-    // call standing in for its page-side call is the `mintPath` precedent this describe block already uses).
+    // survivor for "arm without typing anything". In production it reaches this element NOT through the
+    // callback — it calls `createGeneratedAgent` directly, page-side, and assigns `authoringStore` itself —
+    // but this element's own test harness has no roster menu to click, so `mintPath` (the same stand-in
+    // this describe block already uses) is registered onto `onGenerateRequest` purely as a vehicle to
+    // reproduce that same end state: `authoringStore` set, with no seed carried.
     const byAction = mountAdmin({ store: personaStore() })
     const actionBuilder = personaStore({ [SURFACE_AUTHORING_KEY]: true })
     const armFromRoster = mintPath(byAction.el, actionBuilder)

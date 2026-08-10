@@ -236,14 +236,15 @@ card): **Context: System** (the compiled agent-system JSON, incl. the `surface` 
 
 ## Registration seams
 
-`onGenerateRequest(callback)` — register the page's "start the guided flow" path (ADR-0179 OQ4). The
-same callback is invoked from TWO places: the card's own first message (this element,
-`#startFromFirstMessage`) and the roster (...) menu's "New agent → Generate" item (page-side,
-`site/pages/agent-admin-app.ts`; GH #681 removed the in-card duplicate of that item). Registering is also
-what OPENS the card's own entry — the unarmed card stops being `disabled` — so a static build with no mint
-path paints the copy alone. A callback, never a CustomEvent (SPEC-R5): the mint path is page-owned
-(`createGeneratedAgent` — a roster mint plus a `builderStore()` arm) and this component cannot import site
-code without inverting the layering DAG.
+`onGenerateRequest(callback)` — register the page's "start the guided flow" path (ADR-0179 OQ4). Two
+affordances reach the SAME page-side mint path (`createGeneratedAgent`), by different routes: the card's
+own first message (this element, `#startFromFirstMessage`) invokes the registered callback, carrying a
+seed; the roster (...) menu's "New agent → Generate" item (page-side, `site/pages/agent-admin-app.ts`;
+GH #681 removed the in-card duplicate of that item) calls `createGeneratedAgent` directly, with no seed —
+from outside any specific card it has no pre-arm pick to carry. Registering is also what OPENS the card's
+own entry — the unarmed card stops being `disabled` — so a static build with no mint path paints the copy
+alone. A callback, never a CustomEvent (SPEC-R5): the mint path is page-owned and this component cannot
+import site code without inverting the layering DAG.
 
 The callback receives a `GenerateSeed` (GH #670, Kim's 2026-08-10 ruling): the Model the user picked on the
 unarmed card, for the page to SEED the store it is about to mint with (`builderStore(seed?.model)`). The pick

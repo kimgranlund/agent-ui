@@ -2599,9 +2599,9 @@ export class UIAgentAdminElement extends UIElement {
    * for the page to SEED the store it is about to mint with (`builderStore(seed?.model)`). Optional on both
    * ends — a page that ignores the argument keeps exactly its previous behaviour, and an untouched picker
    * sends nothing, leaving the minted store's own default in charge. GH #681 — this is now the ONLY
-   * arm-with-a-seed path: the roster (...) menu also runs this same callback (for "arm without typing
-   * anything"), but from outside any specific card it has no pre-arm pick to carry, so its own call sends
-   * no seed and the minted store's own default stands.
+   * arm-with-a-seed path: the roster (...) menu reaches the same page-side mint path directly (for "arm
+   * without typing anything"), not through this callback — from outside any specific card it has no
+   * pre-arm pick to carry, so its own call sends no seed and the minted store's own default stands.
    */
   onGenerateRequest(callback: (seed?: GenerateSeed) => void): void {
     this.#generateRequest = callback
