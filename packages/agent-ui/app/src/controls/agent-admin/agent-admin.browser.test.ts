@@ -1469,7 +1469,11 @@ describe('ui-agent-admin cross-engine smoke — the guided-authoring flow (ADR-0
     setPane(el, 'chat')
     await el.updateComplete
     const { authoring, test } = conversationsOf(el)
-    expect(authoring, 'the second conversation is lazy — never mounted until the flow arms').toBeNull()
+    // GH #666 REOPENED — this used to assert the second conversation was LAZY (null until the flow armed).
+    // Kim's pixel ruling makes the unarmed Author column that very card, so it is mounted from first paint
+    // and, at this 1200px triple mount, painted beside Chat. The zero-regression claim this probe exists
+    // for is untouched and is what the rest of it states: the Chat conversation still FILLS the canvas.
+    expect(authoring, 'the Author card exists unarmed (GH #666)').not.toBeNull()
     const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
     const box = test.getBoundingClientRect()
     expect(box.width).toBeGreaterThan(0)
@@ -2480,12 +2484,15 @@ describe('ui-agent-admin — the wide TRIPLE dock (GH #662, ADR-0179 cl.1 Amendm
     expect(chat.getBoundingClientRect().width, 'and it is still painted after the turn').toBeGreaterThan(0)
   })
 
-  // GH #666 (Kim's live report: "this UI makes no sense — where am I supposed to describe it?") — the
-  // UNARMED third. Every probe above mounts ARMED, which is exactly how the near-orphan survived review:
-  // unarmed, the middle column was static copy occupying a third of the surface with no verb in it. Under
-  // the composer-first ruling it is the flow's entry, so what has to be proven live is that the entry is a
-  // REAL painted composer at the triple band and that typing into it actually starts the interview.
-  it('UNARMED at the triple: the Author third is a live composer, and its first message arms the flow and opens the interview', async () => {
+  // GH #666 (Kim's live report: "this UI makes no sense — where am I supposed to describe it?", then his
+  // REOPEN the same day: "the center pane should be a CHAT, just like Test chat") — the UNARMED third.
+  // Every probe above mounts ARMED, which is exactly how the near-orphan survived review. Two claims have
+  // to be proven with real pixels, because both are claims about what the column LOOKS like: the unarmed
+  // Author column is the same card treatment as Test chat, and typing into it starts the interview.
+
+  /** Mount UNARMED at the triple with a mint path registered — the live page's own posture before the user
+   *  has described anything. */
+  async function mountUnarmedTriple(): Promise<UIAgentAdminElement> {
     const { el } = mountAgentAdminAt(1200)
     await frames()
     el.onGenerateRequest(() => {
@@ -2496,17 +2503,71 @@ describe('ui-agent-admin — the wide TRIPLE dock (GH #662, ADR-0179 cl.1 Amendm
     }
     await el.updateComplete
     await frames()
+    return el
+  }
 
-    const { author } = partsOf(el)
-    const empty = el.querySelector('[data-part="author-empty"]') as HTMLElement
-    const composer = el.querySelector('[data-part="author-empty-composer"]') as HTMLElement & { value: string }
+  const cardsOf = (el: UIAgentAdminElement): { test: HTMLElement; author: HTMLElement } => ({
+    test: el.querySelector('[data-part="pane-holder"] > ui-conversation') as HTMLElement,
+    author: el.querySelector('[data-part="authoring-conversation"]') as HTMLElement,
+  })
+
+  it('UNARMED at the triple: the Author column wears Test chat`s card treatment — same border, same kicker, same bottom-pinned composer', async () => {
+    // Kim's reopen was a TREATMENT complaint ("a borderless prose block beside a bordered chat card"), so
+    // the probe compares the two cards against EACH OTHER rather than against literals: whatever the fleet
+    // paints on a conversation card, both columns must paint the same. Cross-card parity also survives a
+    // token change, which a hard-coded 1px/12px assertion would not.
+    const el = await mountUnarmedTriple()
+    const { test, author } = cardsOf(el)
     expect(author.getBoundingClientRect().width, 'the unarmed Author third has a real box in the triple').toBeGreaterThan(0)
-    const box = composer.getBoundingClientRect()
-    expect(box.width, 'and the composer inside it is PAINTED, not merely mounted').toBeGreaterThan(0)
-    expect(box.height, 'with a real typing surface').toBeGreaterThan(0)
-    // It fills the region's measure rather than shrink-wrapping in the flex-start column (the
-    // `align-self: stretch` rule) — a message field narrowed to a chip is the defect, not the fix.
-    expect(box.width, 'the composer spans the Author column').toBeGreaterThan(author.getBoundingClientRect().width * 0.6)
+
+    const chrome = (node: HTMLElement): string[] => {
+      const s = getComputedStyle(node)
+      return [s.borderTopWidth, s.borderTopStyle, s.borderTopColor, s.borderRadius, s.backgroundColor, s.overflow]
+    }
+    expect(chrome(author), 'the unarmed Author card is chromed exactly like Test chat').toEqual(chrome(test))
+    expect(getComputedStyle(author).borderTopWidth, 'anti-vacuous: the shared treatment is a REAL painted border').not.toBe('0px')
+
+    const kickerOf = (card: HTMLElement): HTMLElement => card.querySelector('[data-part="region-kicker"]') as HTMLElement
+    const kickerMetrics = (card: HTMLElement): (string | number)[] => {
+      const kicker = kickerOf(card)
+      const s = getComputedStyle(kicker)
+      return [
+        s.paddingTop,
+        s.paddingLeft,
+        s.fontSize,
+        s.textTransform,
+        s.color,
+        // its inset from the card's own edges — the thing Kim reads as "the same header"
+        Math.round(kicker.getBoundingClientRect().top - card.getBoundingClientRect().top),
+        Math.round(kicker.getBoundingClientRect().left - card.getBoundingClientRect().left),
+      ]
+    }
+    expect(kickerMetrics(author), 'and its BUILDER INTERVIEW kicker sits exactly where Test chat`s does').toEqual(kickerMetrics(test))
+    expect([kickerOf(test).textContent, kickerOf(author).textContent]).toEqual(['Test chat', 'Builder interview'])
+
+    // The composer is the card's OWN, pinned at its bottom — the same gap on both cards.
+    const composerOf = (card: HTMLElement): HTMLElement => card.querySelector(':scope > ui-conversation-composer') as HTMLElement
+    const bottomGap = (card: HTMLElement): number =>
+      Math.round(card.getBoundingClientRect().bottom - composerOf(card).getBoundingClientRect().bottom)
+    expect(composerOf(author).getBoundingClientRect().height, 'the Author card`s composer is PAINTED, not merely mounted').toBeGreaterThan(0)
+    expect(Math.abs(bottomGap(author) - bottomGap(test)), 'both composers are pinned the same distance off the card floor').toBeLessThanOrEqual(1)
+    expect(bottomGap(author), 'and that distance is an inset, not a floating block halfway up the column').toBeLessThan(40)
+
+    // The copy occupies the LOG area — inside the log's box, above the composer (the empty-conversation
+    // idiom Kim named). A headline rendered outside the card is the shape the reopen rejected.
+    const logBox = (author.querySelector(':scope > [data-part="log"]') as HTMLElement).getBoundingClientRect()
+    const copyBox = (el.querySelector('[data-part="author-empty"]') as HTMLElement).getBoundingClientRect()
+    expect(copyBox.height, 'the copy paints').toBeGreaterThan(0)
+    expect(copyBox.top).toBeGreaterThanOrEqual(logBox.top - 1)
+    expect(copyBox.bottom).toBeLessThanOrEqual(logBox.bottom + 1)
+    expect(copyBox.bottom, 'and it sits above the composer, not under it').toBeLessThanOrEqual(composerOf(author).getBoundingClientRect().top + 1)
+  })
+
+  it('UNARMED at the triple: the first message arms the flow and FILLS the same card — the copy leaves, the transcript takes the log', async () => {
+    const el = await mountUnarmedTriple()
+    const { author } = cardsOf(el)
+    const composer = author.querySelector(':scope > ui-conversation-composer') as HTMLElement & { value: string }
+    const cardBefore = author.getBoundingClientRect()
 
     composer.value = 'a hotel concierge please'
     ;(composer.querySelector('[data-part="send"]') as HTMLElement).click()
@@ -2516,10 +2577,13 @@ describe('ui-agent-admin — the wide TRIPLE dock (GH #662, ADR-0179 cl.1 Amendm
     await frames()
 
     expect(el.authoringStore, 'the first message armed the flow').toBeDefined()
-    expect(empty.getBoundingClientRect().height, 'the empty state gave way to the interview').toBe(0)
-    const authoring = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
-    expect(authoring.getBoundingClientRect().width, 'which paints in the same third').toBeGreaterThan(0)
-    expect(authoring.textContent, 'and the description the user typed opened it — nothing swallowed').toContain('a hotel concierge please')
+    expect(el.querySelector('[data-part="authoring-conversation"]'), 'the SAME card — arming fills it, never swaps it').toBe(author)
+    expect(el.querySelector('[data-part="author-empty"]'), 'the empty-log copy is gone from the log').toBeNull()
+    const after = author.getBoundingClientRect()
+    expect(Math.abs(after.width - cardBefore.width), 'and the column does not jump').toBeLessThanOrEqual(1)
+    expect(author.textContent, 'the description the user typed opened it — nothing swallowed').toContain('a hotel concierge please')
+    const bubble = author.querySelector('[data-part="log"] [data-part="bubble"][data-role="user"]') as HTMLElement
+    expect(bubble.getBoundingClientRect().height, 'as a painted turn in the log').toBeGreaterThan(0)
   })
 })
 
