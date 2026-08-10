@@ -49,8 +49,7 @@ import '@agent-ui/app/super-shell' // self-defines ui-super-shell (composed by u
 import '@agent-ui/app/chat-shell' // self-defines ui-chat-shell (composed by ui-agent-admin)
 import '@agent-ui/app/agent-admin' // self-defines ui-agent-admin
 import './agent-admin-app.css' // page-local: full-viewport layout + the preset strip chrome
-import type { GenerateSeed, UIAgentAdminElement } from '@agent-ui/app/agent-admin'
-import type { UIButtonElement } from '@agent-ui/components/controls/button'
+import type { AgentRosterEntry, GenerateSeed, UIAgentAdminElement } from '@agent-ui/app/agent-admin'
 import type { UIToastRegionElement } from '@agent-ui/components/controls/toast-region'
 import { ACTIVE_PRESET_KEY, builderStore, personaRoster, personaStore, resetPersona, saveImportedPersona, type Persona } from './agent-admin-presets.ts'
 import { exportPersonaFile, importedPersonaFrom, mintBlankPersona, personaFileName, personaFileText, readPersonaFile } from './agent-admin-persona-file.ts'
@@ -84,142 +83,66 @@ const initialPreset: Persona =
 // `libraries` prop's now-reactive add-from-library MENU picks up, agent-admin.ts's GH #143 update).
 admin.libraries = librariesForCategory(initialPreset.category)
 
-// ── the canvas-header (GH #51): `[ title | … | agent-menu ]` — replaces the TKT-0074 truncating chip
-// row. The active agent NAMES the surface (the title zone); switching moves into a ui-menu (one row per
-// preset, never truncated); page actions (Reset persona today) live in the "…" overflow menu. Page-local
-// by design — a shared canvas-header COMPONENT is #44/M5's call, not this page's (GH #51 scope note).
-const header = document.createElement('header')
-header.className = 'canvas-header'
-header.setAttribute('aria-label', 'Active agent')
-
-const title = document.createElement('div')
-title.className = 'canvas-header-title'
-const titleName = document.createElement('span')
-titleName.className = 'canvas-header-name'
-const titleTagline = document.createElement('span')
-titleTagline.className = 'canvas-header-tagline'
-title.append(titleName, titleTagline)
-
 let active: Persona = initialPreset
 
 // Armed by the DEV overlay below once a live key probes available; re-invoked per persona switch so each
 // persona's SURFACE session (TKT-0076 — the runner closure owns the a2ui transcript) starts clean.
 let armSurfaceTurn: (() => void) | undefined
 
-// The agent switcher — ui-menu owns the overlay/roving-focus/type-ahead; this page stages one
-// `div[role=menuitemradio]` row per preset (the ui-menu selectable-item variant, GH #55 — the
-// fleet-level fix that replaces the PR #54 ✓-text/data-active fallback) and applies the committed
-// selection. Pre-marking `role="menuitemradio"` opts each row into the SAME roving-focus/
-// type-ahead/commit machinery as a plain menuitem, with the control itself managing `aria-checked`
-// on commit (one-true across the ungrouped default radio group — exactly the "exactly one active
-// agent" semantics this switcher needs). The initial `aria-checked` is seeded here (declaring the
-// already-active preset) since ui-menu only DEFAULTS a missing aria-checked to false at connect —
-// it never guesses which row should start checked.
-const agentMenu = document.createElement('ui-menu')
-agentMenu.className = 'agent-menu'
-const agentTrigger = document.createElement('ui-button') as UIButtonElement
-agentTrigger.variant = 'soft'
-agentTrigger.size = 'sm'
-agentMenu.append(agentTrigger)
-const agentItems = new Map<string, HTMLElement>()
-/** Stage one persona row. Pre-connect (page boot) the row goes on the HOST — ui-menu moves every
- *  non-trigger child into its panel at connect. AFTER connect (GH #406 — an import mints a persona while
- *  the page is live) the panel already exists, so the row must be appended THERE (a host child added late
- *  is never moved in) and must carry its own `tabindex="-1"`: the auto-stamp that gives connect-time
- *  children their roving-focus base state has already run. `#itemsIn` reads the panel live, so a row added
- *  this way joins roving focus/type-ahead/commit exactly like a boot-time one. */
-function addPersonaRow(persona: Persona): void {
-  const item = document.createElement('div')
-  item.dataset.value = persona.id
-  item.setAttribute('role', 'menuitemradio')
-  item.setAttribute('aria-checked', String(persona.id === active.id))
-  item.setAttribute('tabindex', '-1')
-  item.textContent = persona.label
-  item.title = persona.tagline
-  agentItems.set(persona.id, item)
-  ;(agentMenu.querySelector('[data-part="panel"]') ?? agentMenu).append(item)
+// GH #686's Amendment (admin-three-pane-ia.lld.md §16.3/§16.5, S7-d) — the canvas-header (title/tagline,
+// the agentMenu switcher, the "…" overflow) is RETIRED entirely: this page renders NO header of its own
+// any more — `ui-agent-admin`'s own S7-c unified header bar is the only header, and every prior overflow
+// action now reaches its page-side handler through one of the component's six registration seams
+// (admin-three-pane-ia.lld.md §16.3, frozen shapes) instead of a menu commit.
+
+/** Push the current roster into the header's agent-select (setAgentRoster — data-in, re-callable). Called
+ *  on every persona switch (so the select's own "current choice" reflects it, replacing the retired
+ *  title/tagline zone + the agentMenu's own aria-checked loop) AND after every mint/import (a fresh row
+ *  needs a fresh push — the seam's own re-callable contract, LLD §16.3). */
+function pushRoster(activeId: string): void {
+  const entries: AgentRosterEntry[] = roster.map((p) => ({ id: p.id, label: p.label }))
+  admin.setAgentRoster(entries, activeId)
 }
-for (const persona of roster) addPersonaRow(persona)
-agentMenu.addEventListener('select', (event) => {
-  const { value } = (event as CustomEvent<{ value: string; index: number }>).detail
-  const persona = roster.find((p) => p.id === value)
+admin.onAgentSelect((id) => {
+  const persona = roster.find((p) => p.id === id)
   if (persona) applyPersona(persona)
 })
 
-// The "…" overflow — page actions: Reset persona (TKT-0074) + the GH #406 persona-library pair,
-// Export/Import (future actions join them here).
-const overflowMenu = document.createElement('ui-menu')
-overflowMenu.className = 'overflow-menu'
-overflowMenu.setAttribute('placement', 'bottom-end')
-const overflowTrigger = document.createElement('ui-button') as UIButtonElement
-overflowTrigger.variant = 'ghost'
-overflowTrigger.size = 'sm'
-// GH #168 — a real <ui-icon> in the leading adornment cell instead of a glued '…' text node (the
-// TKT-0048 anti-pattern, same fix as entry-list.ts's Remove button). No label at all → the explicit
-// `icon-only` square anatomy (button.md "icon-only (no label) → square").
-overflowTrigger.setAttribute('icon-only', '')
-const overflowIcon = document.createElement('ui-icon')
-overflowIcon.setAttribute('slot', 'leading')
-overflowIcon.setAttribute('data-role', 'icon')
-overflowIcon.setAttribute('glyph', 'dots-three')
-overflowTrigger.append(overflowIcon)
-overflowTrigger.title = 'Page actions'
-// The icon-only trigger needs a REAL accessible name — title never reaches the accessible name
-// (PR #54 review finding; the button.ts glyph-trigger convention).
-overflowTrigger.setAttribute('aria-label', 'Page actions')
-function overflowItem(value: string, label: string, title: string): HTMLElement {
-  const item = document.createElement('div')
-  item.dataset.value = value
-  item.textContent = label
-  item.title = title
-  return item
-}
-// GH #637 S1 — the "New agent" actions. Kept as an ARRAY of `{ value, label, title }` rows dispatched by
-// `value`, not one bare item: S3 (GH #633 §3's "New agent → Generate" sibling) adds its own row to this
-// same array and its own `value` branch below — the shape never needs restructuring for that second
-// child to join, only extending (the decomp's S1 charter: "the entry shape extensible, e.g. the
-// action's naming/anatomy shouldn't hard-code single-child"). S3-a owns the final IA (a submenu, say);
-// this array is what that IA reshuffles, not what it invents from scratch.
-const NEW_AGENT_ACTIONS = [
-  { value: 'new-agent-blank', label: 'New agent → Blank', title: 'Mint a fresh, empty agent to configure from scratch' },
-  // ADR-0178 / GH #633 (LLD-C8) — the guided path, EXTENDING S1's array rather than restructuring it:
-  // the same blank mint, then the Builder interview armed over it. Both paths mint through the one
-  // `mintBlankPersona` call, so a generated agent is an ordinary roster row from the first turn.
-  { value: 'new-agent-generate', label: 'New agent → Generate', title: 'Describe the agent you want and let the Builder fill in the draft as you talk' },
-] as const
-const newAgentItems = NEW_AGENT_ACTIONS.map((a) => overflowItem(a.value, a.label, a.title))
-const resetItem = overflowItem('reset-persona', 'Reset persona', 'Discard this persona’s edits and reseed it from the preset')
-// GH #406 — the persona-library pair. Export writes the persona's whole store state as a versioned JSON
-// file; import mints a NEW persona from one (never an overwrite — library semantics).
-const exportItem = overflowItem('export-persona', 'Export persona', 'Download this persona as a shareable JSON file')
-const importItem = overflowItem('import-persona', 'Import persona…', 'Add a persona from a persona JSON file')
-overflowMenu.append(overflowTrigger, ...newAgentItems, resetItem, exportItem, importItem)
-overflowMenu.addEventListener('select', (event) => {
-  const { value } = (event as CustomEvent<{ value: string; index: number }>).detail
-  if (value === 'new-agent-blank') {
-    createBlankAgent()
-  } else if (value === 'new-agent-generate') {
-    createGeneratedAgent()
-  } else if (value === 'reset-persona') {
-    resetPersona(active)
-    applyPersona(active)
-  } else if (value === 'export-persona') {
-    exportActivePersona()
-  } else if (value === 'import-persona') {
-    fileInput.click()
-  }
+// LLD §16.3/§16.6 OQ-A — New Agent's ONE verb (this header carries a single button, not the retired
+// menu's two-row choice) is GENERATE: the LLD's own recommendation, unrebutted by anything later on GH
+// #686 (checked at build time — no Kim ruling names OQ-A directly; the ratification comment ratifies the
+// amendment as a whole). It is also the reading GH #681's own text already commits to ("creating a new
+// agent is an action that belongs in the roster menu, not duplicated inside the card") — the roster
+// menu's surviving item was "New agent → Generate", never "→ Blank". Called with NO seed, exactly as that
+// menu item called `createGeneratedAgent` directly: this button sits outside any specific card, so it has
+// no pre-arm Model/Effort pick to carry (`GenerateSeed`'s own doc comment states the identical reasoning
+// for this exact call site).
+//
+// Blank's OWN dedicated front door (GH #637 S1's `createBlankAgent`, "New agent → Blank" — mint WITHOUT
+// an interview) has NO seam of the six to route through and is RETIRED here, not silently: OQ-A's own text
+// names three candidate homes (the narrow "•••" menu; an ADR-0170-style pack action; retire) and rules
+// none of them — the first would edit S7-c's own frozen header (a different, already-shipped slice's
+// contract), the second is a new mechanism, so this slice ships the third, PROVISIONALLY, flagged for a
+// ruling rather than assumed. `mintBlankPersona` itself is untouched and still exercised by
+// `createGeneratedAgent` below — only the interview-less, dedicated mint button is gone. See this slice's
+// GH #686 Findings comment for the full trace.
+admin.onNewAgentRequest(() => createGeneratedAgent())
+admin.onImportRequest(() => fileInput.click())
+admin.onExportRequest(() => exportActivePersona())
+admin.onResetRequest(() => {
+  resetPersona(active)
+  applyPersona(active)
 })
 
-// ADR-0179 OQ4 (admin-three-pane-ia.lld.md §2) — the Author place's empty state hosts the flow's OTHER
+// ADR-0179 OQ4 (admin-three-pane-ia.lld.md §2) — the Co-pilot place's empty state hosts the flow's OTHER
 // front door, where the user already is. It reaches this page's mint path through the component's
 // `onGenerateRequest` registration seam (a callback, never a CustomEvent — SPEC-R5), because the component
 // cannot import site code without inverting the DAG. Two affordances converge on the SAME
-// `createGeneratedAgent` mint path: the roster menu's "New agent → Generate" above (calls it directly, no
-// seed), and (GH #666, GH #681) the Author place's composer FIRST MESSAGE (via the registered callback,
-// carrying the GH #670 pre-arm seed); registering is also what REVEALS the composer-first entry
-// (unregistered ⇒ copy only, the static-build degrade). This call deliberately happens BEFORE
-// `root.append(admin)` below — that ordering used to lose the reveal (GH #666 defect 1) and is now the
-// probed case.
+// `createGeneratedAgent` mint path: the card's own composer FIRST MESSAGE (via the registered callback,
+// carrying the GH #670 pre-arm seed), and the header's own New Agent button above (no seed — outside any
+// specific card, the retired roster menu's own reasoning carried over). This call deliberately happens
+// BEFORE `root.append(admin)` below — that ordering used to lose the reveal (GH #666 defect 1) and is now
+// the probed case.
 // GH #670 — the component hands over the Model pick the user made on the unarmed card, and it is passed
 // straight through to the mint so the new interviewer store is SEEDED with it (never corrected afterwards).
 admin.onGenerateRequest((seed) => createGeneratedAgent(seed))
@@ -238,30 +161,10 @@ function applyPersona(persona: Persona): void {
   // reference-equal object would be a silent no-op.
   admin.libraries = librariesForCategory(persona.category)
   armSurfaceTurn?.()
-  titleName.textContent = persona.label
-  titleTagline.textContent = persona.tagline
-  // GH #168 — the visible label stays plain text; the dropdown affordance is a real trailing
-  // <ui-icon> caret, not a glued '▾' character (the TKT-0048 anti-pattern). The composer's
-  // #appendCaret (conversation-composer.ts) is the precedent, including its re-append law: the
-  // `textContent =` write wipes ALL children (any prior caret included), so the caret is appended
-  // fresh on every label rewrite.
-  agentTrigger.textContent = persona.label
-  const caret = document.createElement('ui-icon')
-  caret.setAttribute('slot', 'trailing')
-  caret.setAttribute('data-role', 'caret')
-  caret.setAttribute('glyph', 'caret-down')
-  agentTrigger.append(caret)
-  agentTrigger.title = 'Switch agent'
-  // ui-menu's own commit path (menu.ts's #commitRadio, GH #55) already sets aria-checked correctly
-  // for a row the user CLICKED — but applyPersona() also runs on paths that never go through a menu
-  // commit (initial load from a persisted localStorage id, the "Reset persona" overflow action, an
-  // import): this loop is the single source of truth for those, simplified to just WRITING the real
-  // aria-checked state per id (no more hand-rolled ✓-text prefix or a parallel data-active
-  // attribute — the control's own checkmark indicator + real ARIA state carry the "current choice"
-  // signal now; agent-admin-app.css reads [aria-checked='true'] directly for the font-weight).
-  for (const [id, item] of agentItems) {
-    item.setAttribute('aria-checked', String(id === persona.id))
-  }
+  // GH #686's Amendment — the header's own agent-select now carries the "current choice" signal
+  // (setAgentRoster's re-callable contract, LLD §16.3), replacing the retired title/tagline zone and the
+  // agentMenu's own aria-checked loop.
+  pushRoster(persona.id)
 }
 
 // ── the persona library: export / import (GH #406, M-B DoD box 3) ──────────────────────────────────────
@@ -308,30 +211,17 @@ function importPersonaText(text: string): void {
   const persona = importedPersonaFrom(parsed.file, [...personaRoster(), ...roster])
   saveImportedPersona(persona) // survives reload: personaRoster() reads this record at boot
   roster.push(persona)
-  addPersonaRow(persona)
-  applyPersona(persona)
+  applyPersona(persona) // pushRoster(persona.id) inside applyPersona stages the header's own roster row
   notify(`Imported “${persona.label}”.`)
 }
 
-// ── the blank-agent path (GH #637 S1) ───────────────────────────────────────────────────────────────────
-// PURE REUSE of the GH #406 mint-on-import machinery above: mint a collision-safe identity → register it
-// in the SAME persisted library an import writes to → stage its roster row → activate it, the identical
-// four-step shape `importPersonaText` runs, differing only in WHERE the seed comes from (the component's
-// own shipped defaults, not a parsed file's state) and WHICH mint function mints it
-// (`mintBlankPersona`, not `importedPersonaFrom`) — no second mint/seed/activate path.
-function createBlankAgent(): void {
-  const seed = { model: DEFAULT_MODEL_ID, ...initialValuesFor(defaultAgentConfigSchema), ...initialEntryValues() }
-  // Mint against a FRESH roster read (importPersonaText's own comment: a second tab may have minted
-  // since boot) — the same collision-safety an import gets.
-  const persona = mintBlankPersona(seed, [...personaRoster(), ...roster])
-  saveImportedPersona(persona) // survives reload: personaRoster() reads this record at boot
-  roster.push(persona)
-  addPersonaRow(persona)
-  applyPersona(persona)
-  notify(`Created “${persona.label}”.`)
-}
+// GH #637 S1's dedicated "New agent → Blank" mint path (`createBlankAgent`, an interview-less mint) is
+// RETIRED by this slice, not silently: see `admin.onNewAgentRequest`'s own comment above for the full
+// trace (OQ-A names three candidate homes for this action and rules none of them; this build ships
+// "retire" PROVISIONALLY, flagged in the GH #686 Findings comment for a ruling). `mintBlankPersona` itself
+// is untouched — `createGeneratedAgent` below still reuses it verbatim for its own seed.
 
-/** ADR-0178 / GH #633 — "New agent → Generate": mint the SAME blank draft the Blank path mints (S1's
+/** ADR-0178 / GH #633 — "New agent → Generate": mint a fresh blank draft (S1's
  *  seed + `mintBlankPersona`, verbatim reuse — one mint path), activate it, then arm the Builder over it.
  *  Order matters: `applyPersona` clears `authoringStore` and reassigns `store` first, firing GH #145's
  *  reset, so the interview always opens on a clean thread.
@@ -346,8 +236,7 @@ function createGeneratedAgent(pick?: GenerateSeed): void {
   const persona = mintBlankPersona(seed, [...personaRoster(), ...roster])
   saveImportedPersona(persona)
   roster.push(persona)
-  addPersonaRow(persona)
-  applyPersona(persona)
+  applyPersona(persona) // pushRoster(persona.id) inside applyPersona stages the header's own roster row
   admin.authoringStore = builderStore(pick?.model) // a FRESH interviewer per flow entry (no persistKey, no cache)
   notify(`Created “${persona.label}” — describe what you want and the Builder will fill it in.`)
 }
@@ -375,9 +264,8 @@ fileInput.addEventListener('change', () => {
     })
 })
 
-header.append(title, overflowMenu, agentMenu)
-applyPersona(active)
-root.append(header, admin, toasts, fileInput)
+applyPersona(active) // also stages the header's own roster row (pushRoster, inside applyPersona)
+root.append(admin, toasts, fileInput)
 
 // GH #114 (review finding): this page uses the SAME site/lib/admin-live-runner.ts backend as
 // agent-admin.ts (identical /__a2ui/agent/chat + /__a2ui/agent endpoints), but was missed when that

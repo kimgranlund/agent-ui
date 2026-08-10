@@ -649,17 +649,39 @@ describe('UIAgentAdminElement — the unified header bar (S7-c, ADR-0179 GH #686
     expect([imports, exports]).toEqual([1, 1])
   })
 
-  it('onResetRequest: a bare registration seam (S7-d places its consumer) — safe before AND after connect, observed via the protected test seam', () => {
-    const before = document.createElement('ui-agent-admin') as UIAgentAdminElement
-    const hasReset = (el: UIAgentAdminElement): boolean => (el as unknown as { hasResetRequestRegistered(): boolean }).hasResetRequestRegistered()
-    before.onResetRequest(() => {})
-    mount(before)
-    expect(hasReset(before), 'registered before connect').toBe(true)
+  // S7-d (LLD §16.4) — onResetRequest's own consumer: the Settings model-grid fold's "Reset Agent" button,
+  // OUTSIDE the header entirely, reflected through the SAME #applyActionAvailability funnel as the other
+  // five action seams (HIDE, not disable, per LLD §16.3's stated divergence).
+  it('onResetRequest: HIDDEN unregistered, revealed by a register AFTER connect, and the click reaches the callback', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const btn = el.querySelector('[data-part="reset-agent-button"]') as HTMLElement
+    expect(btn.hidden, 'unregistered ⇒ hidden, never merely disabled').toBe(true)
+    let calls = 0
+    el.onResetRequest(() => { calls += 1 })
+    expect(btn.hidden, 'registering AFTER connect reveals it (the GH #666 order rule)').toBe(false)
+    btn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(calls).toBe(1)
+  })
 
-    const after = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    expect(hasReset(after), 'nothing registered yet').toBe(false)
-    after.onResetRequest(() => {})
-    expect(hasReset(after), 'registered after connect').toBe(true)
+  it('onResetRequest: registered BEFORE first connect is honest at build time too', () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.onResetRequest(() => {})
+    mount(el)
+    const btn = el.querySelector('[data-part="reset-agent-button"]') as HTMLElement
+    expect(btn.hidden, "registering BEFORE connect reflects at #compose's own build-time call").toBe(false)
+  })
+
+  it('onResetRequest: the button lives at the model-grid fold\'s content end, a sibling of model-grid, never inside it (a #renderModelGrid re-render must not wipe it)', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.onResetRequest(() => {})
+    const modelFold = el.querySelector('[data-part="settings-item"][data-item="model"]') as HTMLElement
+    const grid = modelFold.querySelector('[data-part="model-grid"]') as HTMLElement
+    const btn = modelFold.querySelector('[data-part="reset-agent-button"]') as HTMLElement
+    expect(grid.contains(btn), 'the button is a SIBLING of model-grid, not a child wiped by its replaceChildren re-render').toBe(false)
+    expect(modelFold.contains(btn), 'still inside the SAME fold, at its content end').toBe(true)
+    // Force a model-grid re-render (a store write the grid subscribes to) — the button must survive.
+    el.store?.set('model', el.store.get('model'))
+    expect(el.querySelector('[data-part="reset-agent-button"]'), 'survives a model-grid re-render').not.toBeNull()
   })
 
   // ── the refused-toggle wiring (LLD §16.2, S7-a's own cancelable-before-commit mechanism, used for real) ─
