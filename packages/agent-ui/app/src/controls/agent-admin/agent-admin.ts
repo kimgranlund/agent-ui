@@ -362,7 +362,7 @@ function preloadMarkdownRenderer(): void {
  * A key the user never touched is simply ABSENT, and the minted store's own default wins — which is why
  * every field here is optional. `effort` is deliberately NOT a field: it has no store home in this design
  * (`#effort`, this element's own per-conversation dial), so its half of the same pre-arm record is applied
- * where effort actually lives — see `#requestGenerate`.
+ * where effort actually lives — see `#startFromFirstMessage`, the arm this pick seeds.
  */
 export interface GenerateSeed {
   /** The model id picked on the unarmed Author card, before there was a store to hold it. */
@@ -431,14 +431,13 @@ export class UIAgentAdminElement extends UIElement {
   /** The Author place's own pane element — the interview card's mount target (its node identity survives
    *  the MD's relocation: whole elements move, never their grandchildren). */
   #authorPane: HTMLElement | null = null
-  /** OQ4 / GH #666 — the Author card's EMPTY-LOG state: headline + copy + the secondary "New agent →
-   *  Generate" action, seated inside the interview conversation's log (`setEmptyState`) while the flow is
-   *  unarmed and dropped the moment it arms. Held here so leaving the flow can re-seat the same node. */
+  /** OQ4 / GH #666 — the Author card's EMPTY-LOG state: headline + copy, seated inside the interview
+   *  conversation's log (`setEmptyState`) while the flow is unarmed and dropped the moment it arms. Held
+   *  here so leaving the flow can re-seat the same node. GH #681 — the secondary "New agent → Generate"
+   *  button that used to ride inside this state is gone: it duplicated the roster (...) menu's identically
+   *  labelled item (both ultimately called the page's `createGeneratedAgent`), and the roster menu is the
+   *  survivor for "arm without typing anything" (Kim's 2026-08-10 ruling). */
   #authorEmpty: HTMLElement | null = null
-  /** The empty state's flow-entry action + the page callback it invokes (`onGenerateRequest`). The action
-   *  stays HIDDEN until a callback is registered — a static build with no mint path shows the copy alone
-   *  rather than a button that would do nothing (OQ4's degrade). */
-  #authorEmptyAction: UIButtonElement | null = null
   #generateRequest: ((seed?: GenerateSeed) => void) | undefined
   /**
    * GH #670 — the Author card's Model/Effort pick made BEFORE the flow is armed, held here until there is
@@ -449,7 +448,7 @@ export class UIAgentAdminElement extends UIElement {
    * why the props were never set unarmed in the first place.
    *
    * ONE record for BOTH pickers (Kim's fork-3 ruling: no special-casing) — same capture rule, same single
-   * apply point (`#requestGenerate`), same clears. Only the DESTINATION differs at the arm, and that split
+   * apply point (`#startFromFirstMessage`, the arm), same clears. Only the DESTINATION differs at the arm, and that split
    * is this file's pre-existing law rather than anything #670 introduces: `model` is store state (the
    * Builder's own, page-minted), `effort` is element state (`#effort`, deliberately store-less).
    *
@@ -1271,20 +1270,24 @@ export class UIAgentAdminElement extends UIElement {
    * into is the CARD'S OWN, pinned at its bottom exactly like Test chat's. One composer in the column, at
    * every moment of the flow — arming fills the card rather than swapping it for a different one.
    *
-   * What stays here is the copy plus the SECONDARY "New agent → Generate" action (a bare arm, no opening
-   * turn) — the roster menu's identically-labelled item makes the pairing legible, and it is the only path
-   * for someone who wants the interviewer to open the conversation. It reaches the page through ONE seam,
-   * `onGenerateRequest(cb)` — the registration idiom (`UIConversationElement.onSubmit`'s own shape,
-   * SPEC-R5's never-a-CustomEvent law), because the mint path is page-owned (`createGeneratedAgent`) and
-   * this component cannot import site code (the DAG).
+   * What stays here is the copy alone. A secondary "New agent → Generate" action used to ride inside this
+   * state (a bare arm, no opening turn) but GH #681 (Kim's 2026-08-10 live pass) removed it: it duplicated
+   * the roster (...) menu's identically-labelled item down to the outcome (both ultimately called the
+   * page's `createGeneratedAgent`), and creating a new agent is an action that belongs in the roster menu,
+   * not duplicated inside the card. The card's own composer — the first message arms via
+   * `#startFromFirstMessage` — remains the one in-card entry; the roster menu is the survivor for "arm
+   * without typing anything".
    *
-   * The static-build degrade is unchanged in effect and simpler in mechanism: with NO callback registered
-   * there is no mint path, so the action does not paint AND the unarmed card is `disabled` — the composer's
-   * own busy guard refuses the send before it reads the text (`#send`'s first line, TKT-0034), so a first
-   * message that could arm nothing is structurally impossible to swallow rather than handed back after the
-   * fact. The copy alone, exactly as OQ4 ruled.
+   * The card's `disabled` state still tracks whether a mint path exists at all (`#generateRequest`,
+   * registered through `onGenerateRequest(cb)` — the registration idiom, `UIConversationElement.onSubmit`'s
+   * own shape, SPEC-R5's never-a-CustomEvent law, because the mint path is page-owned
+   * (`createGeneratedAgent`) and this component cannot import site code, the DAG). With NO callback
+   * registered there is no mint path, so the unarmed card is `disabled` — the composer's own busy guard
+   * refuses the send before it reads the text (`#send`'s first line, TKT-0034), so a first message that
+   * could arm nothing is structurally impossible to swallow rather than handed back after the fact. The
+   * copy alone, exactly as OQ4 ruled.
    *
-   * GH #666 defect 1 — the reveal is computed HERE from `#generateRequest`, not only pushed by
+   * GH #666 defect 1 — the `disabled` reveal is computed HERE from `#generateRequest`, not only pushed by
    * `onGenerateRequest`. The page registers before it appends the element (agent-admin-app.ts), so at
    * registration time this state does not exist yet and the push landed on nothing; reading the field at
    * build time makes the reveal order-free — register before OR after connect, both reveal.
@@ -1299,19 +1302,7 @@ export class UIAgentAdminElement extends UIElement {
     const copy = document.createElement('p')
     copy.setAttribute('data-part', 'author-empty-copy')
     copy.textContent = 'Type it below — the Builder interviews you from there, and every answer lands in the draft beside you, live.'
-    const action = document.createElement('ui-button') as UIButtonElement
-    action.setAttribute('data-part', 'author-empty-action')
-    // Secondary, not `filled`: the card's own composer is the primary verb, and two filled affordances in
-    // one small region would compete for the same "start here".
-    action.setAttribute('variant', 'text')
-    action.textContent = 'New agent → Generate'
-    action.hidden = this.#generateRequest === undefined
-    // GH #670 — through `#requestGenerate`, never the raw callback: this is the SECOND of the two Author
-    // arming entries, and both must seed the mint from the same pre-arm pick or the equivalence GH #666
-    // proved would hold for state but quietly break for configuration.
-    action.addEventListener('click', () => this.#requestGenerate())
-    this.#authorEmptyAction = action
-    empty.append(headline, copy, action)
+    empty.append(headline, copy)
     return empty
   }
 
@@ -1360,7 +1351,7 @@ export class UIAgentAdminElement extends UIElement {
    * Kim's fork-1/3 ruling names). ARMED it commits to the Builder's OWN store, which feeds the committed
    * value back down — writing it to the draft instead would let the interviewer's model choice silently
    * become the draft agent's. UNARMED there is no store to write, so the pick is REMEMBERED and seeds the
-   * mint (`#requestGenerate`) rather than evaporating into a no-op.
+   * mint (`#startFromFirstMessage`, the arm) rather than evaporating into a no-op.
    */
   #pickAuthoringModel(id: string): void {
     if (this.authoringStore !== undefined) {
@@ -1384,34 +1375,29 @@ export class UIAgentAdminElement extends UIElement {
   }
 
   /**
-   * GH #670 — the ONE arm both Author entries run (the card's first message and the empty state's secondary
-   * action), carrying the pre-arm pick INTO the mint. Each half goes to the home that owns it: `model` rides
-   * the seed into the store the page is about to mint, and `effort` lands on this element, which is where
-   * effort lives at every arming state. An untouched half is simply absent, and the minted store's own
-   * default wins (fork 2).
-   *
-   * Seeded, never written-then-overwritten: by the time `#rewireAuthoringContext` runs
-   * `#syncAuthoringConversationConfig` against the new store, the user's model IS that store's committed
-   * value, so there is no second write to lose a race with. The pick is read into locals BEFORE the callback
-   * because the mint path re-enters this element (the page's `applyPersona` swaps `store`, firing GH #145's
-   * reset) and empties `#preArm` on the way through — the seed is already in hand by then.
-   */
-  #requestGenerate(): void {
-    const { model, effort } = this.#preArm
-    if (effort !== undefined) this.#effort = effort
-    this.#generateRequest?.({ model })
-  }
-
-  /**
    * GH #666 — the composer-first entry: the first message typed into the UNARMED Author card ARMS the flow
    * and then lands in the Builder's transcript as the interview's opening turn. Nothing is swallowed — the
    * description the user typed is what the Builder answers.
    *
-   * ONE arming path, never a second: `#generateRequest` is the SAME page callback the roster menu's "New
-   * agent → Generate" and the empty state's own button run (`createGeneratedAgent` — mint the draft,
-   * assign `authoringStore`). Everything that follows is `#rewireAuthoringContext`'s already-shipped
-   * machinery: reset the interview, sync its config, land the user in Author. Arming here and arming from
-   * the roster therefore converge on identical state by construction.
+   * GH #681 — the card's ONE in-card arming entry (the empty state's secondary "New agent → Generate"
+   * button, which used to run the same arm from a click, was removed as a duplicate of the roster (...)
+   * menu's identically-labelled item; `#requestGenerate` accordingly folded in here, its own single caller).
+   * `#generateRequest` is the SAME page callback the roster menu's item runs (`createGeneratedAgent` — mint
+   * the draft, assign `authoringStore`). Everything that follows is `#rewireAuthoringContext`'s
+   * already-shipped machinery: reset the interview, sync its config, land the user in Author. Arming here
+   * and arming from the roster therefore converge on identical state by construction — except the pre-arm
+   * pick below, which only this entry carries (the roster menu, invoked from outside any specific card, has
+   * no pick to carry).
+   *
+   * GH #670 — the arm carries the card's pre-arm Model/Effort pick INTO the mint. Each half goes to the
+   * home that owns it: `model` rides the seed into the store the page is about to mint, and `effort` lands
+   * on this element, which is where effort lives at every arming state. An untouched half is simply absent,
+   * and the minted store's own default wins (fork 2). Seeded, never written-then-overwritten: by the time
+   * `#rewireAuthoringContext` runs `#syncAuthoringConversationConfig` against the new store, the user's
+   * model IS that store's committed value, so there is no second write to lose a race with. The pick is
+   * read into a local BEFORE the callback because the mint path re-enters this element (the page's
+   * `applyPersona` swaps `store`, firing GH #145's reset) and empties `#preArm` on the way through — the
+   * seed is already in hand by then.
    *
    * GH #666 REOPENED — the caller is the CARD'S OWN composer (`#mountAuthoringConversation`'s `onSubmit`),
    * so this method no longer replays a submit from outside: `ui-conversation`'s own composer forwarder has
@@ -1430,9 +1416,13 @@ export class UIAgentAdminElement extends UIElement {
    * conversation that does not exist yet — or, worse, into one the arm's own `reset()` is about to clear.
    */
   async #startFromFirstMessage(text: string): Promise<void> {
-    // GH #670 — the arm carries the card's pre-arm Model/Effort pick into the mint (`#requestGenerate`), so
-    // a choice made before there was a store to hold it seeds the one this call is about to create.
-    if (this.authoringStore === undefined) this.#requestGenerate()
+    if (this.authoringStore === undefined) {
+      // GH #670 — a choice made before there was a store to hold it seeds the one this call is about to
+      // create.
+      const { model, effort } = this.#preArm
+      if (effort !== undefined) this.#effort = effort
+      this.#generateRequest?.({ model })
+    }
     if (this.authoringStore !== undefined) await whenFlushed()
     const conversation = this.#authoringConversation
     if (this.authoringStore === undefined || conversation === null) return
@@ -1652,9 +1642,9 @@ export class UIAgentAdminElement extends UIElement {
     }
     this.#syncAuthoringConversationConfig(authoringStore)
     // ADR-0179's IA-entry re-point (LLD §2) — arming the flow LANDS the user in Author, at the one choke
-    // point every arm path already crosses (the roster menu's "New agent → Generate" and the Author empty
-    // state's own action both converge here through the page's `createGeneratedAgent`). `#setPane` no-ops
-    // when the user is already there, and `#applyPane` below runs either way.
+    // point every arm path already crosses (the roster menu's "New agent → Generate" and the Author card's
+    // own composer-first entry both converge here through the page's `createGeneratedAgent`). `#setPane`
+    // no-ops when the user is already there, and `#applyPane` below runs either way.
     this.#setPane('author')
     this.#applyPane()
   }
@@ -2590,29 +2580,31 @@ export class UIAgentAdminElement extends UIElement {
   }
 
   /**
-   * ADR-0179 OQ4 (LLD §2) — register the page's "start the guided flow" path, invoked by the Author
-   * place's empty-state action. A CALLBACK registration, never a CustomEvent (SPEC-R5's law, and the
-   * `UIConversationElement.onSubmit` idiom this copies): the mint path is page-owned
-   * (`createGeneratedAgent` — a roster mint plus a `builderStore()` arm), and this component cannot import
-   * site code without inverting the DAG.
+   * ADR-0179 OQ4 (LLD §2) — register the page's "start the guided flow" path, invoked by the Author card's
+   * own composer-first entry (`#startFromFirstMessage`). A CALLBACK registration, never a CustomEvent
+   * (SPEC-R5's law, and the `UIConversationElement.onSubmit` idiom this copies): the mint path is
+   * page-owned (`createGeneratedAgent` — a roster mint plus a `builderStore()` arm), and this component
+   * cannot import site code without inverting the DAG.
    *
-   * Registering OPENS the flow entry — the unarmed card stops being `disabled`, and the secondary action
-   * paints; a component with no registration shows the copy inside an unavailable card (the static-build
-   * degrade). Last registration wins — one page owns one admin.
+   * Registering OPENS the flow entry — the unarmed card stops being `disabled`; a component with no
+   * registration shows the copy inside an unavailable card (the static-build degrade). Last registration
+   * wins — one page owns one admin.
    *
    * Safe BEFORE or AFTER connect, and that is a fix, not a nicety (GH #666 defect 1): the real page
    * registers on a detached element and appends it later, so this call used to land on a not-yet-built
    * empty state and the reveal was silently lost — Kim's live Author column showed copy with no verb.
    * `#createAuthorEmpty`/`#reflectAuthorEntry` read `#generateRequest` at build time, so both orders open.
    *
-   * GH #670 — the callback now receives a `GenerateSeed`: the Model pick the user made on the unarmed card,
+   * GH #670 — the callback receives a `GenerateSeed`: the Model pick the user made on the unarmed card,
    * for the page to SEED the store it is about to mint with (`builderStore(seed?.model)`). Optional on both
    * ends — a page that ignores the argument keeps exactly its previous behaviour, and an untouched picker
-   * sends nothing, leaving the minted store's own default in charge.
+   * sends nothing, leaving the minted store's own default in charge. GH #681 — this is now the ONLY
+   * arm-with-a-seed path: the roster (...) menu also runs this same callback (for "arm without typing
+   * anything"), but from outside any specific card it has no pre-arm pick to carry, so its own call sends
+   * no seed and the minted store's own default stands.
    */
   onGenerateRequest(callback: (seed?: GenerateSeed) => void): void {
     this.#generateRequest = callback
-    if (this.#authorEmptyAction) this.#authorEmptyAction.hidden = false
     this.#reflectAuthorEntry()
   }
 
