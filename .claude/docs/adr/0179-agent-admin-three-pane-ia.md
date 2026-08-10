@@ -282,7 +282,12 @@ full set, both losslessly, because no crossing ever wrote state.
 
 **The line: 52.5rem, the SAME named line — not OQ3's 40rem, and not a new number.**
 `SHELL_COMPACT_BREAKPOINT` (ADR-0150/0155), the line the triple dock already engages and measured
-against (every column clears the 20ch floor there; the first Amendment's table). Justification for
+against. The first Amendment's table measured the RETIRED arrangement (200/320/320 under flex 2:1 +
+the MD's 40rem floor), so it does not carry over as evidence; the new equal-thirds geometry
+re-derives directly: at the line (840px holder) three equal columns are ~280px box each, clearing
+the 160px (20ch) floor with margin — but the settings column's ~256px content sits BELOW the 270px
+name-field width the old table measured, so this arithmetic is a floor check only and the LLD books
+a real-engine density re-measure into S7-b rather than resting on it. Justification for
 reusing it rather than OQ3's 40rem or a third number: (a) the multi-select pills are only an honest
 control where more than one pane can actually paint, and 52.5rem is the measured line where that
 holds three-up; (b) one line means the header rendering and the pane arrangement swap together — a
@@ -317,8 +322,9 @@ makes that a semantics fork, not a flag). Kim can overrule the vehicle at ratifi
 touching the rest of this amendment.
 
 **New registration seams (SPEC-R5's never-a-CustomEvent law; the `onGenerateRequest` idiom —
-last registration wins, unregistered ⇒ the affordance hidden (the static-build degrade), safe
-before or after connect (the GH #666 order rule)).** The component cannot import site/persona code
+last registration wins, safe before or after connect (the GH #666 order rule); unregistered ⇒ the
+affordance HIDDEN — a stated divergence from the precedent, which DISABLES its card
+(agent-admin.ts:1318) because a card has copy worth showing disabled and a bare button does not).** The component cannot import site/persona code
 (the DAG, `layering.test.ts`), so the page registers in:
 
 ```ts

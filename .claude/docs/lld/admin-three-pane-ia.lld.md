@@ -84,7 +84,7 @@ the six-entry narrow-tabs vocabulary dissolves.
 | **OQ4 — the Author empty state (ruled: always-present, per the rec)** | The Author place always exists in the nav. `authoringStore` unset ⇒ the region shows `data-part="author-empty"`: headline + copy + the flow-entry action ("New agent → Generate") invoking a NEW registration seam `onGenerateRequest(cb)` (the `UIConversationElement.onSubmit` registration idiom; SPEC-R5's never-CustomEvent law; the action hides when no callback is registered — the static-build degrade). Armed ⇒ the interview conversation shows, empty state hides. | The rec adopted: a first-class PLACE that vanishes isn't one; the empty state hosts a8's entry affordance where the user already is, and is exactly where S5's future existing-persona entry will live (OQ5's fence — named, NOT built; zero consumption-path widening). The callback seam is the smallest bridge to the page-owned mint path (`createGeneratedAgent`, reused verbatim) — the component cannot import site code (DAG). |
 | **IA-entry re-point** | `createGeneratedAgent()` (site) stays byte-identical; the COMPONENT lands the user in Author: `#rewireAuthoringContext`'s arm branch calls `#setPane('author')` on a real `authoringStore` arm. Teardown never forces navigation (clearing while on Author shows the empty state — always-present). | a8's "lands IN the Author pane" with one line, at the one choke point every arm path already crosses; both entry affordances (roster menu + empty state) converge on the same page path. |
 | **Retirement + seam split (S1-b vs S4-a)** | S1-b RETIRES THE SEAM: `#contextFor` re-keys to `#pane`, the try-it bar stops being composed, `setModeSeam`-anchored tests re-anchor to a `setPaneSeam` (same protected compile-time construct), mode-flip suites re-state in pane vocabulary. S4-a DELETES THE RESIDUE: `#mode`/`#setMode`/`#applyMode`/`#tryItBar`/`#tryItAuthoringTab` + the compose block 998–1040 + agent-admin.css 189–216 + the browser strip probes (method repointed, §11) — and executes #653's record repairs. | `#contextFor` cannot serve two selectors, so the seam necessarily flips at S1-b; deleting the residue earlier than S4 would strand a red intermediate state, later would leave two mode vocabularies live. The decomp's "mode seam stays load-bearing until pane routing is proven" is honored: the SYMBOLS survive till S4, inert, while the routing proof runs on panes. |
-| **Events / catalog / naming** | No new host events (the closed seven-member set untouched); one new registration seam (`onGenerateRequest`); no new `ui-*` element; no catalog change; no new tokens beyond `pane-nav`/`settings-nav`/`author-empty` component-local CSS; `data-part="chat-stack"` renames to `data-part="pane-holder"` (it no longer stacks two conversations of one place — it holds the places). | The slice composes shipped primitives end to end; naming follows the thing it IS. |
+| **Events / catalog / naming** ⚠️ **SUPERSEDED (proposed) 2026-08-10 (GH #686) — §16 mints the fleet `ui-toggle`, adds five registration seams + one data-in setter, and renames `author-pane` → `copilot-pane`; the closed seven-event set stays untouched either way** | No new host events (the closed seven-member set untouched); one new registration seam (`onGenerateRequest`); no new `ui-*` element; no catalog change; no new tokens beyond `pane-nav`/`settings-nav`/`author-empty` component-local CSS; `data-part="chat-stack"` renames to `data-part="pane-holder"` (it no longer stacks two conversations of one place — it holds the places). | The slice composes shipped primitives end to end; naming follows the thing it IS. |
 
 ## 3 · Pane anatomy (the composed DOM after S1-b)
 
@@ -260,10 +260,15 @@ subject retires.
   ruling (authoring LLD §14, inherited verbatim; the Author empty state merely NAMES the future
   front door, OQ5).
 - **No MD API change** — back suppression is admin CSS; the drill-band seam is the named
-  escalation, built only if S3-a's evidence demands it.
+  escalation, built only if S3-a's evidence demands it. ⚠️ **MOOT (proposed) 2026-08-10
+  (GH #686) — the MD leaves this composition entirely (§16); the fleet element itself is still
+  untouched, so the no-API-change fence holds in its own terms.**
 - **No pane persistence, no URL/router binding** (the router stays catalog-invisible; the admin is
   not router-bound), no new host events, no new `ui-*` element, no catalog rows, no entry-machinery
-  changes (ADR-0132/0164/0170 untouched).
+  changes (ADR-0132/0164/0170 untouched). ⚠️ **SUPERSEDED IN PART (proposed) 2026-08-10
+  (GH #686) — §16 mints `ui-toggle` (a fleet control, with catalog/doc rows of its own) and six
+  seam methods; no-persistence, no-router, no-new-host-events and the entry-machinery fence all
+  still stand.**
 - **No interim dual nav** — the try-it strip stops composing the moment pane routing lands (S1-b);
   its residue deletion is S4-a's.
 
@@ -304,15 +309,19 @@ subject retires.
 ## 12 · Acceptance (inline — the decomp granted no SPEC for this family)
 
 1. The three-place nav is live at every band from ONE vehicle; the six-entry narrow-tabs
-   vocabulary is gone (cl.1).
+   vocabulary is gone (cl.1). ⚠️ **SUPERSEDED (proposed) 2026-08-10 (GH #686) — the nav vehicle
+   retires; "one vehicle" becomes the one visibility STATE with two band renderings, §16.2.**
 2. `#contextFor` is keyed by active pane via §2's frozen algorithm — the selector diff is the one
    token; the fence conjunct ships byte-identical, both polarities asserted in the pane world
-   (cl.2/cl.4; zero widening).
+   (cl.2/cl.4; zero widening). ⚠️ **RE-STATED 2026-08-10 — the GH #662 wave re-keyed the selector
+   to composer ORIGIN (§2's origin row); GH #686 (proposed) inherits origin-keying untouched, §16.2.**
 3. Per-pane composers: Author's composer drives the Builder, Chat's the test context, permanently;
    `admin.store` reference-identity holds across every pane flip; GH #145 resets unchanged.
 4. The wide pairing is the SAME section nodes arranged (identity-asserted), docked at the 40rem
    named line, resizable via the composed split; the live-fill proof passes non-vacuously at wide,
-   both engines (cl.3; #651's acceptance line).
+   both engines (cl.3; #651's acceptance line). ⚠️ **SUPERSEDED (proposed) 2026-08-10 (GH #686) —
+   the MD and its 40rem line leave the composition; the identity assert and the live-fill proof
+   survive re-anchored to `{settings, copilot} ⊆ shown`, §16.2/§16.4 S7-e.**
 5. Settings' five sections are each reachable via the internal sub-nav at every band (a6).
 6. "New agent → Generate" — from the roster menu AND the Author empty state — lands the user in
    Author with the flow armed (a8); clearing the flow leaves an always-present Author place (OQ4).
@@ -382,9 +391,10 @@ ADR-0179; contradictions escalate.
 ## 16 · Amendment — the unified header + shown-set visibility (GH #686, 2026-08-10, **proposed**)
 
 > Dated in place, append-only: every section above stays the shipped record; the §2/§3 rows this
-> re-rules carry dated ⚠️ markers pointing here, never rewrites. Refines ADR-0179's third (proposed)
-> Amendment — the GH [#686](https://github.com/kimgranlund/agent-ui/issues/686) unified-header
-> ruling (Kim's Figma wireframe: desktop `1:162`/`1:163`, mobile `1:502`). **Nothing here dispatches
+> re-rules carry dated ⚠️ markers pointing here, never rewrites. Refines ADR-0179's GH
+> [#686](https://github.com/kimgranlund/agent-ui/issues/686) (proposed) Amendment — the
+> unified-header ruling (Kim's Figma wireframe: desktop `1:162`/`1:163`, mobile `1:502`); cited by
+> issue number, never by ordinal. **Nothing here dispatches
 > until Kim ratifies that amendment**; this section is the build-ready OUTLINE (slice grain +
 > seam shapes + retirement map), and each slice gets its full per-slice acceptance detail in a
 > post-ratification pass. Contradictions with the accepted body escalate, never silently edit.
@@ -447,14 +457,20 @@ onExportRequest(callback: () => void): void
 onResetRequest(callback: () => void): void
 ```
 
-All six follow `onGenerateRequest`'s shipped semantics verbatim: callback registration, never a
-CustomEvent; last registration wins; unregistered ⇒ the affordance hidden (static-build degrade);
-safe before OR after connect (the GH #666 order rule — reflect at build time and at registration).
-`setAgentRoster` is data-in and re-callable (the page re-pushes after mint/import); the select's
-internal `select`/`change` stay contained (`stopPropagation` — the closed event set is untouched).
-`onGenerateRequest`/`GenerateSeed` unchanged. Site side, `agent-admin-app.ts` retires its
-canvas-header DOM + CSS and instead registers: roster + `applyPersona` routing, New Agent (OQ-A's
-ruling), `importPersonaFile`, the export flow, and `resetPersona`.
+All six follow `onGenerateRequest`'s shipped semantics: callback registration, never a CustomEvent;
+last registration wins; safe before OR after connect (the GH #666 order rule — reflect at build
+time and at registration). The DEGRADE diverges deliberately, stated rather than inherited: the
+shipped precedent DISABLES its card (`conversation.disabled = this.#generateRequest === undefined`,
+agent-admin.ts:1318 — a disabled conversation still shows its copy), while these seams HIDE their
+affordance when unregistered — the right degrade for a bare action button/menu item, which has no
+copy to show disabled. `setAgentRoster` is data-in and re-callable (the page re-pushes after
+mint/import); the select's internal `select`/`change` stay contained (`stopPropagation` — the
+closed event set is untouched). `onGenerateRequest`/`GenerateSeed` unchanged. Site side,
+`agent-admin-app.ts` retires its canvas-header DOM + CSS and instead registers: roster +
+`applyPersona` routing, New Agent (OQ-A's ruling), the import flow (the hidden
+`fileInput.click()` → `readPersonaFile`/`importedPersonaFrom` path — agent-admin-app.ts 209/299/308,
+symbols from `agent-admin-persona-file.ts`), the export flow (`exportPersonaFile`), and
+`resetPersona`.
 
 ### 16.4 · Slice outline (S-numbered; serialized, one writer per file; full acceptance detail
 post-ratification)
@@ -462,8 +478,8 @@ post-ratification)
 | Slice | Scope | Done-when (outline grade) |
 |---|---|---|
 | **S7-a** | The fleet `ui-toggle` control (pressed pill: icon + label + optional state-icon slot; `aria-pressed` via `ElementInternals`; `toggle` event; disabled/refused-toggle affordance) + vendored icons (`chats-circle`, `gear-six`, `robot` — `vendor-phosphor.mjs` regen; `eye`/`eye-slash`/`plus`/`dots-three` already in the pack) + control doc + jsdom/browser tests. | Control passes the fleet's naming/styling gates; `toggle` emission + pressed reflection probed; icons resolve from `@agent-ui/icons/phosphor`. |
-| **S7-b** | The visibility model in `agent-admin.ts`/`.css`: §16.2 verbatim — shown-set + primary, `#applyPaneVisibility`, `data-show`/`data-primary` + band CSS, MD retirement (three sibling regions, `author-pane` → `copilot-pane` rename, back-suppression CSS deleted), pane-nav retirement incl. the GH #665 rule, `setPaneVisibilitySeam`. | jsdom visibility truth-table over set×band; `isSameNode` across arrangement flips; min-one refusal; arm lands Co-pilot visible+primary; browser band matrix (wide subsets paint, narrow paints primary alone); no state written on resize. |
-| **S7-c** | The unified header bar: three zones composed into `header` (§16.1), the six seams (§16.3), pills⇄segment band rendering, narrow `+`/`•••` collapse. | Seams' register-before/after-connect probes; unregistered-degrade per affordance; pills and segment mirror ONE state (flip in one rendering, cross-check the other); header inset rhythm probes re-anchored from the retired pane-nav. |
+| **S7-b** | The visibility model in `agent-admin.ts`/`.css`: §16.2 verbatim — shown-set + primary, `#applyPaneVisibility`, `data-show`/`data-primary` + band CSS, MD retirement (three sibling regions, `author-pane` → `copilot-pane` rename, back-suppression CSS deleted), pane-nav retirement incl. the GH #665 rule, `setPaneVisibilitySeam`. | jsdom visibility truth-table over set×band; `isSameNode` across arrangement flips; min-one refusal; arm lands Co-pilot visible+primary; browser band matrix (wide subsets paint, narrow paints primary alone); no state written on resize; a real-engine density/floor RE-MEASURE at the 52.5rem line for the equal-thirds geometry, both engines — every visible column ≥ the 20ch floor, and the settings name field's fit re-measured against the old table's 270px (the ADR's own booking; the first Amendment's table measured the retired arrangement and does not carry over). |
+| **S7-c** | The unified header bar: three zones composed into `header` (§16.1), the six seams (§16.3), pills⇄segment band rendering, narrow `+`/`•••` collapse. | Seams' register-before/after-connect probes; unregistered-degrade per affordance; pills and segment mirror ONE state (flip in one rendering, cross-check the other); header inset rhythm probes re-anchored from the retired pane-nav; every icon-only affordance (the narrow segments, `+`, `•••`) carries an asserted accessible name (aria-label per fleet ARIA law — `ElementInternals`, never host attributes). |
 | **S7-d** | "Reset Agent" at the `model-grid` fold's content end (`onResetRequest`) + the site page pass: canvas-header retired, registrations in, overflow menu deleted, roster re-push on mint/import. | Reset hidden unregistered / invokes callback registered; the page renders no header of its own; every prior overflow action reachable through its new home; `layering.test.ts` untouched-green. |
 | **S7-e** | Residue + records: grep-gates for retired symbols (`#pane`, `#setPane`, `#applyPane`, `setPaneSeam`, pane-nav parts, MD parts, canvas-header classes); probe repointing (live-fill re-anchored to `{settings, copilot} ⊆ shown`; the #650-descended screen-x probes onto the new bar); `agent-admin.md` re-stated; this LLD's §16 markers confirmed against the built tree. | Full gates green by exit code; zero retired-symbol references outside history/docs; doc-checker ratifies the record pass. |
 
