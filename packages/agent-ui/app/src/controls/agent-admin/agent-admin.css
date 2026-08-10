@@ -461,6 +461,13 @@
     max-inline-size: 44ch;
     color: var(--md-sys-color-on-surface-variant);
   }
+  /* GH #666 — the composer-first entry. The column above is `align-items: flex-start` (headline + copy
+     shrink-wrap), so the composer has to opt OUT of that: a message field narrowed to its own intrinsic
+     width would read as a chip, not as the place you type. `stretch` gives it the region's full measure,
+     the same full-width composer the two conversations carry. */
+  ui-conversation-composer[data-part='author-empty-composer'] {
+    align-self: stretch;
+  }
 
   /* The options-pane (Agent ⇄ Capabilities ⇄ Surface ⇄ Context: System ⇄ Context: Dialog — GH #161's
      Context three-way split, GH #574's Settings-into-three split) rendered with ZERO padding:
