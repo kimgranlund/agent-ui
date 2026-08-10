@@ -5,13 +5,12 @@
       "worktree-agent-a02368e41e2b2641c"
     ],
     "worktrees": [
-      "/Users/kimba/Projects/nonoun/agent-ui",
-      "/Users/kimba/Projects/nonoun/agent-ui/.claude/worktrees/agent-a02368e41e2b2641c"
+      "/Users/kimba/Projects/nonoun/agent-ui"
     ],
     "stashes": [],
     "issues": [
       616,
-      670
+      680
     ],
     "prs": [],
     "docs": [
