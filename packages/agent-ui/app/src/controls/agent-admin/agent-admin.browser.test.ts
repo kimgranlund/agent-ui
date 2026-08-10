@@ -2356,6 +2356,41 @@ describe('ui-agent-admin — the wide TRIPLE dock (GH #662, ADR-0179 cl.1 Amendm
     modelsMenu.open = false
   })
 
+  // GH #673 — the inverse case: at FULL width (well above the composer's own 21rem line) the label is
+  // visible, so the leading identity glyph is redundant beside it and must be gone — not merely invisible
+  // structurally-but-painted, a real zero-size box — while the trailing caret still lands FLUSH on the
+  // trigger's own trailing edge (the real risk this fix carries: `display:none`ing the FIRST grid item of
+  // button.css's three-column `[leading|label|trailing]` template removes it from placement entirely, and
+  // without an explicit `grid-column` pin auto-placement would slide label/caret one column left, pulling
+  // the caret off the trailing edge — conversation-composer.css's own comment on the pin names this).
+  it('the composer’s Models/Effort/Provider/Mode pickers show NO leading icon at full width — label + trailing caret only, caret still flush on the trailing edge', async () => {
+    const el = await mountTripleAt(1200)
+    const { chat } = partsOf(el)
+    const composer = chat.querySelector('ui-conversation-composer') as HTMLElement
+
+    const modelsTrigger = composer.querySelector('[data-picker="models"]') as HTMLElement
+    const effortTrigger = composer.querySelector('[data-picker="effort"]') as HTMLElement
+    for (const [name, trigger] of [['Models', modelsTrigger], ['Effort', effortTrigger]] as const) {
+      const icon = trigger.querySelector('[data-role="icon"]') as HTMLElement
+      expect(icon, `${name} trigger still carries the icon in the light DOM (GH #665's a11y-stable shape, unregressed)`).not.toBeNull()
+      expect(getComputedStyle(icon).display, `${name} trigger's leading icon is not painted at full width`).toBe('none')
+      expect(icon.getBoundingClientRect().width, `${name} trigger's leading icon occupies no visual space at full width`).toBe(0)
+
+      const label = trigger.querySelector('[data-part="label"]') as HTMLElement
+      expect(label.getBoundingClientRect().width, `${name} trigger's label is fully visible at full width`).toBeGreaterThan(0)
+      expect(label.textContent?.trim(), `${name} trigger still names the picker`).not.toBe('')
+
+      const caret = trigger.querySelector('[data-role="caret"]') as HTMLElement
+      const triggerRect = trigger.getBoundingClientRect()
+      const caretRect = caret.getBoundingClientRect()
+      expect(caretRect.width, `${name} trigger's trailing caret is real and painted at full width`).toBeGreaterThan(0)
+      // Flush on the trailing edge, not slid left into the label's own track (the grid-column-pin regression
+      // this test exists to catch) — within the trigger's own icon-cell inset, never past mid-trigger.
+      expect(triggerRect.right - caretRect.right, `${name} trigger's caret sits at the trailing edge, not mid-row`).toBeLessThan(triggerRect.width / 2)
+      expect(caretRect.left, `${name} trigger's caret is start-side of the trigger's OWN trailing edge`).toBeGreaterThan(triggerRect.left)
+    }
+  })
+
   // GH #665 (Kim's live-screenshot follow-on) — the kicker's own rect must inset from ui-conversation's
   // real, painted border on BOTH axes (not the flush 0/0 the earlier build shipped), and it must not have
   // MOVED the kicker's own box position (the padding-not-margin choice this same fix made, so the
