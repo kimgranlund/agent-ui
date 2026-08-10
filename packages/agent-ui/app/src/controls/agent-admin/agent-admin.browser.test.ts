@@ -2587,6 +2587,63 @@ describe('ui-agent-admin — the wide TRIPLE dock (GH #662, ADR-0179 cl.1 Amendm
   })
 })
 
+// GH #666 (Kim's 2026-08-10 additional pixel note) — the settings sub-nav sat flush against the first
+// section heading. The cause was NOT a missing declaration: `[data-part='settings-pane']`'s `display: flex`
+// lost to `master-detail-pane.css`'s own `@scope`d `:scope { display: block }` at equal specificity, where
+// the cascade's SCOPE PROXIMITY step outranks source order — so the pane never became a flex container and
+// its declared `gap` did nothing. That failure is invisible to any probe that reads the STYLESHEET; only a
+// measured box between two real siblings catches it, which is what this describe is.
+describe('ui-agent-admin — the settings pane is a real flex column, so its declared section gap actually applies (GH #666)', () => {
+  const frames = async (n = 3): Promise<void> => {
+    for (let i = 0; i < n; i += 1) await new Promise((r) => requestAnimationFrame(() => r(null)))
+  }
+
+  // Both states Kim named: the docked pair inside the triple, and the narrow single-panel drill-in.
+  for (const [label, width] of [
+    ['the triple/docked pair', 1200],
+    ['the narrow single panel', 700],
+  ] as const) {
+    it(`${label}: the sub-nav and the first section are separated by the pane's own section gap, not a hairline`, async () => {
+      const { el } = mountAgentAdminAt(width)
+      await frames()
+      setPane(el, 'settings')
+      await frames()
+
+      const pane = el.querySelector('[data-part="settings-pane"]') as HTMLElement
+      const nav = el.querySelector('[data-part="settings-nav"]') as HTMLElement
+      const section = [...pane.children].find((c) => c !== nav && !(c as HTMLElement).hidden) as HTMLElement
+      expect(section, 'exactly one settings section is revealed at a time').toBeDefined()
+
+      const paneStyle = getComputedStyle(pane)
+      // The mechanism, stated: a declared `gap` on a BLOCK box is inert, so the container type is the
+      // thing that has to hold, not merely the gap declaration.
+      expect(paneStyle.display, 'the pane is a flex container — the tag in its selector is load-bearing').toBe('flex')
+      expect(paneStyle.flexDirection).toBe('column')
+
+      const declared = Math.round(parseFloat(paneStyle.rowGap))
+      expect(declared, 'anti-vacuous: the section gap resolves to a real length').toBeGreaterThan(0)
+
+      const measured = Math.round(section.getBoundingClientRect().top - nav.getBoundingClientRect().bottom)
+      expect(measured, 'and the RENDERED distance is that gap, not zero').toBe(declared)
+    })
+  }
+
+  it('the Author pane is the same real flex column — its `flex` child rule is live, not dead weight', async () => {
+    // The same shared selector governs both regions, so the Author card's fill was riding on
+    // `ui-conversation`'s own `block-size: 100%` while `> ui-conversation { flex: 1 1 auto }` did nothing.
+    const { el } = mountAgentAdminAt(1200)
+    await frames()
+    const authorPane = el.querySelector('[data-part="author-pane"]') as HTMLElement
+    const card = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
+    expect(getComputedStyle(authorPane).display).toBe('flex')
+    expect(getComputedStyle(card).flexGrow, 'the card is a real flex item now').toBe('1')
+    expect(
+      Math.round(authorPane.getBoundingClientRect().height - card.getBoundingClientRect().height),
+      'and it still fills its column exactly, as it did before the container type was fixed',
+    ).toBe(0)
+  })
+})
+
 
 
 
