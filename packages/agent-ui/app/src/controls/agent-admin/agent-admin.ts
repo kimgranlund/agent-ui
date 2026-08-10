@@ -104,9 +104,6 @@ import '../master-detail/master-detail-pane.ts'
 // search "GH #468" for the loader + the render-path fallback.
 import { UISettingsElement } from '../settings/settings.ts'
 import { UIConversationElement } from '../conversation/conversation.ts'
-// GH #666 — the unarmed Author place's composer-first entry. `conversation.ts` above already registers
-// <ui-conversation-composer>; this is the TYPE alone (its `onSubmit`/`value` seams).
-import type { UIConversationComposerElement } from '../conversation/conversation-composer.ts'
 // genui-surface.spec.md v0.5 §11 (SPEC-R12, GH #316/ADR-0162) — the dogfood frame asset pair rides the
 // opt-in `@agent-ui/components/dogfood-frame` subpath (`app` already imports `components`;
 // catalog-invisible by construction — the a2ui catalog never maps `ui-sandbox-frame` either way). GH #354
@@ -413,20 +410,17 @@ export class UIAgentAdminElement extends UIElement {
    *  Settings region (`pane="detail"`). ONE region arranged, never duplicated — at wide it docks as the
    *  composed `ui-split`, at narrow it drills into one place at a time. */
   #panePair: (HTMLElement & { selected: string }) | null = null
-  /** The Author place's own pane element — the lazily-mounted interview's mount target (its node identity
-   *  survives the MD's relocation: whole elements move, never their grandchildren). */
+  /** The Author place's own pane element — the interview card's mount target (its node identity survives
+   *  the MD's relocation: whole elements move, never their grandchildren). */
   #authorPane: HTMLElement | null = null
-  /** OQ4 — the always-present Author place's empty state: shown whenever `authoringStore` is unset, with
-   *  the "New agent → Generate" action wired to the `onGenerateRequest` registration seam. */
+  /** OQ4 / GH #666 — the Author card's EMPTY-LOG state: headline + copy + the secondary "New agent →
+   *  Generate" action, seated inside the interview conversation's log (`setEmptyState`) while the flow is
+   *  unarmed and dropped the moment it arms. Held here so leaving the flow can re-seat the same node. */
   #authorEmpty: HTMLElement | null = null
   /** The empty state's flow-entry action + the page callback it invokes (`onGenerateRequest`). The action
    *  stays HIDDEN until a callback is registered — a static build with no mint path shows the copy alone
    *  rather than a button that would do nothing (OQ4's degrade). */
   #authorEmptyAction: UIButtonElement | null = null
-  /** GH #666 — the unarmed Author place's OWN composer: the flow's primary entry (typing the first message
-   *  arms the flow and opens the interview with it). Hidden alongside the action under the same
-   *  no-mint-path degrade — a composer that could arm nothing would swallow the user's first description. */
-  #authorEmptyComposer: UIConversationComposerElement | null = null
   #generateRequest: (() => void) | undefined
   /** The five settings section units, in strip order — the SAME nodes at every band (the
    *  no-duplication assert), keyed by their stable `data-role`. Visibility-only flips, exactly the shell
@@ -1128,14 +1122,18 @@ export class UIAgentAdminElement extends UIElement {
     // stands on its own. The two CONVERSATION kickers remain the labeling system for the canvases.
     settingsPane.append(settingsNav, ...settingsSections)
 
-    // ── ADR-0179 OQ4 (LLD §2) — the AUTHOR place: always present, empty state until the flow arms ────────
-    const authorEmpty = this.#createAuthorEmpty()
-    this.#authorEmpty = authorEmpty
+    // ── ADR-0179 OQ4 (LLD §2), GH #666 — the AUTHOR place: ONE conversation card, armed or not ───────────
+    // Kim's 2026-08-10 pixel ruling ("the center pane should be a CHAT, just like Test chat") retires the
+    // old two-box arrangement — a borderless prose block beside a bordered chat card. The Author place IS
+    // the interview's `ui-conversation` from first paint; unarmed, its log carries the empty-state copy
+    // (`setEmptyState`, GH #666) and its own composer is the flow's entry. Arming FILLS this card — it
+    // never swaps one box for another, which is why the mount below is no longer lazy.
     const authorPane = document.createElement('ui-master-detail-pane')
     authorPane.setAttribute('pane', 'list')
     authorPane.setAttribute('data-part', 'author-pane')
-    authorPane.append(authorEmpty)
     this.#authorPane = authorPane
+    this.#authorEmpty = this.#createAuthorEmpty()
+    this.#mountAuthoringConversation()
 
     // ── ADR-0179 cl.3 (LLD §2/§6) — the PAIRING vehicle ─────────────────────────────────────────────────
     // `ui-master-detail` buys both halves of cl.3 by composition, with zero bespoke code of this element's
@@ -1229,19 +1227,26 @@ export class UIAgentAdminElement extends UIElement {
    * flow is unarmed would not be a place at all, so the region always exists and says what it is for.
    *
    * GH #666 — COMPOSER-FIRST (Kim's 2026-08-10 ruling on his own live report: "where am I supposed to
-   * describe it?"). The unarmed third is no longer a promise with no verb: it carries a REAL composer, and
-   * typing the first message IS the start. Headline + copy are supporting text ABOVE that composer; the
-   * "New agent → Generate" button stays as the SECONDARY affordance (a bare arm, no opening turn) rather
-   * than folding away — the roster menu's identically-labelled item makes the pairing legible, and it is
-   * the only path for someone who wants the interviewer to open the conversation.
+   * describe it?"). The unarmed third is not a promise with no verb: typing the first message IS the start.
    *
-   * Both affordances reach the page through ONE seam, `onGenerateRequest(cb)` — the registration idiom
-   * (`UIConversationElement.onSubmit`'s own shape, SPEC-R5's never-a-CustomEvent law), because the mint
-   * path is page-owned (`createGeneratedAgent`) and this component cannot import site code (the DAG).
+   * GH #666 REOPENED (Kim's second 2026-08-10 ruling, pixel-truth) — that composer is no longer a separate
+   * element here. This node is the interview card's EMPTY-LOG STATE (`ui-conversation.setEmptyState`): the
+   * headline + copy occupy the card's log area until the first turn lands, and the composer the user types
+   * into is the CARD'S OWN, pinned at its bottom exactly like Test chat's. One composer in the column, at
+   * every moment of the flow — arming fills the card rather than swapping it for a different one.
    *
-   * The static-build degrade is unchanged, and now covers both: with NO callback registered there is no
-   * mint path, so neither the action nor the composer paints (a composer whose first message could not arm
-   * anything would swallow what the user typed) — the copy alone, exactly as OQ4 ruled.
+   * What stays here is the copy plus the SECONDARY "New agent → Generate" action (a bare arm, no opening
+   * turn) — the roster menu's identically-labelled item makes the pairing legible, and it is the only path
+   * for someone who wants the interviewer to open the conversation. It reaches the page through ONE seam,
+   * `onGenerateRequest(cb)` — the registration idiom (`UIConversationElement.onSubmit`'s own shape,
+   * SPEC-R5's never-a-CustomEvent law), because the mint path is page-owned (`createGeneratedAgent`) and
+   * this component cannot import site code (the DAG).
+   *
+   * The static-build degrade is unchanged in effect and simpler in mechanism: with NO callback registered
+   * there is no mint path, so the action does not paint AND the unarmed card is `disabled` — the composer's
+   * own busy guard refuses the send before it reads the text (`#send`'s first line, TKT-0034), so a first
+   * message that could arm nothing is structurally impossible to swallow rather than handed back after the
+   * fact. The copy alone, exactly as OQ4 ruled.
    *
    * GH #666 defect 1 — the reveal is computed HERE from `#generateRequest`, not only pushed by
    * `onGenerateRequest`. The page registers before it appends the element (agent-admin-app.ts), so at
@@ -1258,41 +1263,52 @@ export class UIAgentAdminElement extends UIElement {
     const copy = document.createElement('p')
     copy.setAttribute('data-part', 'author-empty-copy')
     copy.textContent = 'Type it below — the Builder interviews you from there, and every answer lands in the draft beside you, live.'
-    const composer = document.createElement('ui-conversation-composer') as UIConversationComposerElement
-    composer.setAttribute('data-part', 'author-empty-composer')
-    composer.onSubmit((text) => this.#startFromFirstMessage(text))
-    composer.hidden = this.#generateRequest === undefined
-    this.#authorEmptyComposer = composer
     const action = document.createElement('ui-button') as UIButtonElement
     action.setAttribute('data-part', 'author-empty-action')
-    // Secondary, not `filled`: the composer is the primary verb now, and two filled affordances in one
-    // small region would compete for the same "start here".
+    // Secondary, not `filled`: the card's own composer is the primary verb, and two filled affordances in
+    // one small region would compete for the same "start here".
     action.setAttribute('variant', 'text')
     action.textContent = 'New agent → Generate'
     action.hidden = this.#generateRequest === undefined
     action.addEventListener('click', () => this.#generateRequest?.())
     this.#authorEmptyAction = action
-    empty.append(headline, copy, composer, action)
+    empty.append(headline, copy, action)
     return empty
   }
 
+  /** GH #666 — the UNARMED card's own state, in one place: the empty-log copy is seated in the log, and the
+   *  card is available only when a mint path exists (the OQ4 degrade above). Armed, neither line applies —
+   *  `#rewireAuthoringContext` drops the copy and `#syncAuthoringConversationConfig` owns `disabled` from
+   *  the Builder's own store. Idempotent, so every caller (mount · registration · leaving the flow) can run
+   *  it unconditionally. */
+  #reflectAuthorEntry(): void {
+    const conversation = this.#authoringConversation
+    if (conversation === null || this.authoringStore !== undefined) return
+    conversation.setEmptyState(this.#authorEmpty)
+    conversation.disabled = this.#generateRequest === undefined
+  }
+
   /**
-   * GH #666 — the composer-first entry: the unarmed Author composer's first message ARMS the flow and then
-   * lands in the Builder's transcript as the interview's opening turn. Nothing is swallowed — the
+   * GH #666 — the composer-first entry: the first message typed into the UNARMED Author card ARMS the flow
+   * and then lands in the Builder's transcript as the interview's opening turn. Nothing is swallowed — the
    * description the user typed is what the Builder answers.
    *
    * ONE arming path, never a second: `#generateRequest` is the SAME page callback the roster menu's "New
-   * agent → Generate" and this empty state's own button run (`createGeneratedAgent` — mint the draft,
+   * agent → Generate" and the empty state's own button run (`createGeneratedAgent` — mint the draft,
    * assign `authoringStore`). Everything that follows is `#rewireAuthoringContext`'s already-shipped
-   * machinery: mount the interview, reset it, sync its config, land the user in Author. Arming here and
-   * arming from the roster therefore converge on identical state by construction.
+   * machinery: reset the interview, sync its config, land the user in Author. Arming here and arming from
+   * the roster therefore converge on identical state by construction.
    *
-   * The submit itself replays what `ui-conversation`'s own composer does — `addUserMessage(text)` then the
-   * submit callback — because the interview's composer is not reachable from here and duplicating the
-   * TURN logic (rather than reusing `#handleSubmit`) is what a second path would mean.
+   * GH #666 REOPENED — the caller is the CARD'S OWN composer (`#mountAuthoringConversation`'s `onSubmit`),
+   * so this method no longer replays a submit from outside: `ui-conversation`'s own composer forwarder has
+   * already painted the user's bubble (`addUserMessage`, then the callback) by the time this runs. The
+   * arm's `reset()` clears that optimistic bubble along with the empty-log copy, so the `addUserMessage`
+   * below re-seats it — exactly one bubble either way, and the description is on screen from the keystroke
+   * onward. `#handleSubmit` is reused rather than re-implemented, which is what keeps the TURN logic single.
    *
-   * If the arm does not take (no mint path registered, or a page that armed nothing), the text goes BACK
-   * into the composer rather than into the void.
+   * If the arm does not take, nothing is swallowed and nothing is put back by hand: with NO mint path the
+   * card is `disabled`, so the composer's own busy guard refused the send before reading the text; with a
+   * mint path that armed nothing, the optimistic bubble simply stays in the card unanswered.
    *
    * The `whenFlushed()` await is load-bearing, not defensive: `authoringStore` is a SIGNAL, so the page's
    * assignment lands synchronously but the effect that acts on it (mount the interview, `reset()` it,
@@ -1303,11 +1319,9 @@ export class UIAgentAdminElement extends UIElement {
     if (this.authoringStore === undefined) this.#generateRequest?.()
     if (this.authoringStore !== undefined) await whenFlushed()
     const conversation = this.#authoringConversation
-    if (this.authoringStore === undefined || conversation === null || conversation.disabled) {
-      if (this.#authorEmptyComposer) this.#authorEmptyComposer.value = text
-      return
-    }
+    if (this.authoringStore === undefined || conversation === null) return
     conversation.addUserMessage(text)
+    if (conversation.disabled) return // armed, but the Builder's own master switch is off — the turn is not owed
     this.#handleSubmit(text, 'author')
   }
 
@@ -1396,8 +1410,17 @@ export class UIAgentAdminElement extends UIElement {
     return { store: this.store, conversation: this.#conversation, session: undefined, history: this.#history }
   }
 
-  /** ADR-0178 cl.5 — mount the authoring conversation, once, on the first `authoringStore` assignment.
-   *  Lazy by design: an element that never enters the flow carries no second conversation at all. */
+  /**
+   * ADR-0178 cl.5 — mount the authoring conversation, once.
+   *
+   * GH #666 (Kim's 2026-08-10 pixel ruling) — NO LONGER LAZY. ADR-0178 cl.5 mounted this on the first
+   * `authoringStore` assignment so an element that never entered the flow carried no second conversation;
+   * that was a cost argument, and the ruling overrides it with a shape requirement: the Author place must
+   * BE this card unarmed, with the same border, kicker and bottom-pinned composer as Test chat. A second
+   * element that only imitated the card is the duplication the lazy mount was avoiding in the first place,
+   * so the honest reading of cl.5 is to mount the real one. `#compose()` is now its only caller of
+   * consequence; the guard below keeps `#rewireAuthoringContext`'s historical call a no-op.
+   */
   #mountAuthoringConversation(): void {
     // ADR-0179 (LLD §3) — the mount target is the AUTHOR PLACE now, not the old chat stack. `#authorPane`
     // is the same node identity after `ui-master-detail`'s own compose-time relocation (it moves whole
@@ -1413,7 +1436,13 @@ export class UIAgentAdminElement extends UIElement {
     // interview is watched by the same person debugging the draft.
     conversation.receipt = true
     conversation.sources = true
-    conversation.onSubmit((text) => this.#handleSubmit(text, 'author')) // GH #662 — this composer IS the authoring context
+    // GH #662 — this composer IS the authoring context. GH #666 — and while the flow is UNARMED it is also
+    // the flow's entry: the first message arms, then lands as the interview's opening turn (one composer in
+    // the column at every moment, so there is no second submit path to keep in step).
+    conversation.onSubmit((text) => {
+      if (this.authoringStore === undefined) void this.#startFromFirstMessage(text)
+      else this.#handleSubmit(text, 'author')
+    })
     // The Builder's own model selection lives in the Builder's own store — writing it to the draft would
     // let the interviewer's model choice silently become the draft agent's.
     conversation.onModelChange((id) => this.authoringStore?.set('model', id))
@@ -1423,10 +1452,10 @@ export class UIAgentAdminElement extends UIElement {
     })
     conversation.onClientMessage((message) => this.#handleClientMessage(conversation, 'author', message))
     conversation.setContentRenderer((text) => this.#renderContent(text, this.authoringStore))
-    // After the empty state in the Author region's own DOM order — `#applyPane` shows exactly one of the
-    // two, so the order is about reading sequence, not visibility.
     stack.append(conversation)
     this.#authoringConversation = conversation
+    // GH #666 — the card starts in its empty-log state (and, with no mint path, unavailable).
+    this.#reflectAuthorEntry()
   }
 
   /**
@@ -1456,20 +1485,17 @@ export class UIAgentAdminElement extends UIElement {
    *    for Author, `'settings'` (view=detail) for Settings. At WIDE both places converge on the same
    *    docked pair — the selection is still tracked so a band crossing lands on the place the nav names.
    *  - the pane-nav strip's `selected` is synced programmatically (no `select` echo, ADR-0019)
-   *  - the Author region shows its empty state ⇔ `authoringStore` is unset, the interview otherwise
+   *
+   * GH #666 — nothing here is armed-state dependent any more. The Author region is ONE card at every point
+   * of the flow: unarmed it shows the empty-log copy inside that card, armed it shows the transcript, and
+   * the swap is the log's own content (`setEmptyState`), never a visibility flip between two boxes. The two
+   * `hidden` writes this method used to carry (the empty state on arm, the interview while unarmed) are
+   * gone with the second box they arranged.
    */
   #applyPane(): void {
-    const armed = this.authoringStore !== undefined
     this.#paneHolder?.setAttribute('data-pane', this.#pane)
     if (this.#panePair) this.#panePair.selected = this.#pane === 'settings' ? 'settings' : ''
     if (this.#paneNav) this.#paneNav.selected = this.#pane // programmatic write — no `select` echo (ADR-0019)
-    // OQ4 — the Author place is ALWAYS present; what it SHOWS depends on whether the flow is armed.
-    if (this.#authorEmpty) this.#authorEmpty.hidden = armed
-    // ARMED-state visibility, and only that: the interview paints whenever the flow is armed, wherever the
-    // band puts the Author region. GH #662 removed the old `|| #pane === 'chat'` conjunct — in the triple
-    // dock the Author region paints WHILE the nav says Chat, and an interview hidden there would blank the
-    // middle column. Which places have a box is the sheet's job now, one level up (`data-pane`).
-    if (this.#authoringConversation) this.#authoringConversation.hidden = !armed
   }
 
   /** Arm, re-arm, or tear down the authoring context in response to an `authoringStore` change. A real
@@ -1489,10 +1515,16 @@ export class UIAgentAdminElement extends UIElement {
       }
       this.#authoringUnsub?.()
       this.#authoringUnsub = undefined
+      // GH #666 — the card stays; it returns to its empty-log state (and to the no-mint-path degrade, if
+      // that is where this element stands). `reset()` above already cleared the transcript.
+      this.#reflectAuthorEntry()
       this.#applyPane()
       return
     }
     this.#mountAuthoringConversation()
+    // GH #666 — the copy leaves the log the moment the flow arms: from here the card holds the interview.
+    // Before `reset()`, so a re-arm's fresh-interview clear has nothing of the empty state left to re-seat.
+    this.#authoringConversation?.setEmptyState(null)
     if (changed) {
       this.#authoringConversation?.reset() // a DIFFERENT interviewer starts a fresh interview
       this.#authoringHistory = [] // GH #644 — and a fresh interview carries no prior interviewer's memory
@@ -2443,19 +2475,19 @@ export class UIAgentAdminElement extends UIElement {
    * (`createGeneratedAgent` — a roster mint plus a `builderStore()` arm), and this component cannot import
    * site code without inverting the DAG.
    *
-   * Registering REVEALS the flow entry — GH #666's composer AND the secondary action; a component with no
-   * registration paints the copy alone (the static-build degrade). Last registration wins — one page owns
-   * one admin.
+   * Registering OPENS the flow entry — the unarmed card stops being `disabled`, and the secondary action
+   * paints; a component with no registration shows the copy inside an unavailable card (the static-build
+   * degrade). Last registration wins — one page owns one admin.
    *
    * Safe BEFORE or AFTER connect, and that is a fix, not a nicety (GH #666 defect 1): the real page
    * registers on a detached element and appends it later, so this call used to land on a not-yet-built
    * empty state and the reveal was silently lost — Kim's live Author column showed copy with no verb.
-   * `#createAuthorEmpty` now reads `#generateRequest` at build time, so both orders reveal.
+   * `#createAuthorEmpty`/`#reflectAuthorEntry` read `#generateRequest` at build time, so both orders open.
    */
   onGenerateRequest(callback: () => void): void {
     this.#generateRequest = callback
     if (this.#authorEmptyAction) this.#authorEmptyAction.hidden = false
-    if (this.#authorEmptyComposer) this.#authorEmptyComposer.hidden = false
+    this.#reflectAuthorEntry()
   }
 
   // ── protected test seams (the split.ts/slider-multi.ts precedent) ────────────────────────────────────

@@ -126,6 +126,17 @@ async function submit(el: UIAgentAdminElement, text: string, context: 'authoring
   await whenFlushed()
 }
 
+/** GH #666 REOPENED — the Author card's empty-log state, resolved through the ENTIRE chain Kim's ruling
+ *  rests on: the copy is a child of the interview conversation's own `[data-part="log"]`, not a box
+ *  standing beside the card. A bare `[data-part="author-empty"]` lookup would still pass if the empty state
+ *  regressed to a sibling, which is the exact shape the ruling rejected. */
+const emptyInLog = (el: UIAgentAdminElement): HTMLElement | null =>
+  el.querySelector('[data-part="authoring-conversation"] > [data-part="log"] > [data-part="author-empty"]')
+
+/** The Author card's ONE composer — the interview's own, the only one in the column at any moment. */
+const authorComposer = (el: UIAgentAdminElement): HTMLElement & { value: string; busy: boolean } =>
+  el.querySelector('[data-part="authoring-conversation"] > ui-conversation-composer') as HTMLElement & { value: string; busy: boolean }
+
 const turnLogOf = (el: UIAgentAdminElement): Record<string, unknown> => {
   const newest = el.querySelector('[data-part="context-turn"] [data-part="context-json"]')
   return JSON.parse(newest?.textContent ?? '{}') as Record<string, unknown>
@@ -305,13 +316,19 @@ describe('live pane hydration — the written values reach the real DOM (LLD-C6 
 })
 
 describe('the dual-context scaffold — one draft, two transcripts, zero store swaps (ADR-0178 cl.5 / GH #145)', () => {
-  it('mounts the authoring conversation lazily: never before the flow is armed', async () => {
+  // GH #666 REOPENED (Kim's 2026-08-10 pixel ruling) — this probe used to pin the OPPOSITE: the interview
+  // mounted lazily, never before the flow armed (ADR-0178 cl.5's cost argument). The ruling overrides it
+  // with a shape requirement — the Author place must BE this card unarmed — and arming is now a FILL of the
+  // same element, which is the property worth pinning: one node identity across the transition, so nothing
+  // can quietly go back to swapping one box for another.
+  it('the interview card exists from first paint; arming FILLS it — the same element, never a second box', async () => {
     const { el } = mountAdmin({ store: personaStore() })
     await whenFlushed()
-    expect(el.querySelector('[data-part="authoring-conversation"]')).toBeNull()
+    const card = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
+    expect(card, 'the Author place is a conversation card before the flow arms').not.toBeNull()
     el.authoringStore = personaStore({ [SURFACE_AUTHORING_KEY]: true })
     await whenFlushed()
-    expect(el.querySelector('[data-part="authoring-conversation"]')).not.toBeNull()
+    expect(el.querySelector('[data-part="authoring-conversation"]'), 'armed, it is the SAME element').toBe(card)
   })
 
   it('a mode flip never reassigns `store` and both transcripts survive the round trip', async () => {
@@ -495,11 +512,13 @@ describe('the pane nav — the visible place change, driving the SAME seam the r
     const { el } = mountAdmin({ store: personaStore() })
     await whenFlushed()
     expect([...nav(el).strip.querySelectorAll('ui-tab')].map((t) => t.textContent)).toEqual(['Chat', 'Author', 'Settings'])
-    expect(el.querySelector('[data-part="author-empty"]')!.hasAttribute('hidden'), 'unarmed ⇒ the empty state paints').toBe(false)
+    // GH #666 — armed-ness is the LOG's content now, not a visibility flip between two boxes: unarmed the
+    // copy sits in the card's log, armed it is gone and the transcript has the room.
+    expect(emptyInLog(el), 'unarmed ⇒ the empty-log copy paints inside the card').not.toBeNull()
     el.authoringStore = personaStore({ [SURFACE_AUTHORING_KEY]: true })
     await whenFlushed()
     expect([...nav(el).strip.querySelectorAll('ui-tab')].map((t) => t.textContent)).toEqual(['Chat', 'Author', 'Settings'])
-    expect(el.querySelector('[data-part="author-empty"]')!.hasAttribute('hidden'), 'armed ⇒ the interview takes over').toBe(true)
+    expect(emptyInLog(el), 'armed ⇒ the interview takes the log over').toBeNull()
   })
 
   it('arming the flow LANDS the user in Author, and clicking a tab flips both the strip selection and which place is shown', async () => {
@@ -574,46 +593,57 @@ describe('the pane nav — the visible place change, driving the SAME seam the r
     expect((turnLogOf(el).response as { patchIgnored?: boolean }).patchIgnored).toBe(true)
   })
 
-  it('DOM order: the Chat place, then the pairing; inside the Author region, the empty state then the interview (LLD §3)', async () => {
+  it('DOM order: the Chat place, then the pairing; the Author region holds ONE card, armed or not (LLD §3, GH #666)', async () => {
     const { el } = mountAdmin({ store: personaStore(), authoringStore: personaStore({ [SURFACE_AUTHORING_KEY]: true }) })
     await whenFlushed()
     const holder = el.querySelector('[data-part="pane-holder"]') as HTMLElement
     expect([...holder.children].map((c) => c.getAttribute('data-part'))).toEqual([null, 'pane-pair'])
     const authorPane = el.querySelector('[data-part="author-pane"]') as HTMLElement
-    expect([...authorPane.children].map((c) => c.getAttribute('data-part'))).toEqual(['author-empty', 'authoring-conversation'])
+    // GH #666 REOPENED — the empty state left this level: the region is the card, and the copy lives in the
+    // card's log. Two children here would be the two-box arrangement Kim's ruling retired.
+    expect([...authorPane.children].map((c) => c.getAttribute('data-part'))).toEqual(['authoring-conversation'])
   })
 
-  it('OQ4 — `onGenerateRequest` reveals the empty state`s composer AND its secondary action; unregistered, both are hidden', async () => {
+  it('OQ4 — `onGenerateRequest` OPENS the entry: the card stops being disabled and the secondary action paints', async () => {
     const { el } = mountAdmin({ store: personaStore() })
     await whenFlushed()
     const action = el.querySelector('[data-part="author-empty-action"]') as HTMLElement
-    const composer = el.querySelector('[data-part="author-empty-composer"]') as HTMLElement
-    expect(
-      [action.hasAttribute('hidden'), composer.hasAttribute('hidden')],
-      'the static-build degrade: no mint path, no affordance that could do nothing',
-    ).toEqual([true, true])
+    const card = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement & { disabled: boolean }
+    // The static-build degrade: no mint path ⇒ no affordance that could do nothing. The card's own
+    // `disabled` carries what a hidden composer used to — and carries it better, because the composer's
+    // busy guard refuses a send BEFORE reading the text (TKT-0034), so nothing can be swallowed.
+    expect([action.hasAttribute('hidden'), card.disabled]).toEqual([true, true])
+    expect(authorComposer(el).busy, 'and the card`s own composer reflects it').toBe(true)
     let fired = 0
     el.onGenerateRequest(() => { fired += 1 })
-    expect([action.hasAttribute('hidden'), composer.hasAttribute('hidden')]).toEqual([false, false])
+    await whenFlushed()
+    expect([action.hasAttribute('hidden'), card.disabled]).toEqual([false, false])
+    expect(authorComposer(el).busy).toBe(false)
     action.click()
     expect(fired).toBe(1)
   })
 })
 
-// ── GH #666 — COMPOSER-FIRST: the unarmed Author place is the flow's ENTRY, not a promise with no verb ──
-// Kim's 2026-08-10 live report ("where am I supposed to describe it?") ruled two things at once: the
-// registered action was not rendering at all (defect 1, the pre-connect registration below), and the fix
-// is not a better button — the column carries a real composer, and typing the first message IS the start.
-describe('GH #666 — the unarmed Author place: a live composer, and the arming it drives', () => {
+// ── GH #666 — the unarmed Author place is the flow's ENTRY, and it is a CHAT CARD ──────────────────────
+// Kim's 2026-08-10 live report ("where am I supposed to describe it?") ruled the entry composer-first, and
+// his REOPEN the same day ruled its shape: "the center pane should be a CHAT, just like Test chat". So the
+// unarmed column is the interview's own `ui-conversation` — one card, one composer, the copy occupying its
+// log until the first turn. These probes pin the plumbing (arming, equivalence, never-swallowed); the
+// card's TREATMENT parity with Test chat is a rendered-geometry claim and lives in the browser suite.
+describe('GH #666 — the unarmed Author card: a live composer, and the arming it drives', () => {
   /** The page's `createGeneratedAgent`, in miniature: mint the interviewer and assign it. This IS the arm
    *  path — the probes below register it exactly once per element and let BOTH entries run it. */
   const mintPath = (el: UIAgentAdminElement, builder: SettingsStore): (() => void) => () => { el.authoringStore = builder }
 
-  /** Submit through the UNARMED empty state's own composer (`submit` above drives an armed conversation's).
-   *  The extra flush round is not padding: arming rides a signal effect, so the entry awaits it before the
-   *  opening turn can land — the probe has to await the same sequence. */
+  /** Submit through the UNARMED card's composer — which is the SAME element `submit` above drives once the
+   *  flow is armed (that is the point of the reopen: one composer, one card). The extra flush round is not
+   *  padding: arming rides a signal effect, so the entry awaits it before the opening turn can land. */
   async function submitFirst(el: UIAgentAdminElement, text: string): Promise<void> {
-    const composer = el.querySelector('[data-part="author-empty-composer"]') as HTMLElement & { value: string }
+    // A registration that just opened the card reaches the composer through `disabled` → the conversation's
+    // own forwarding effect, which is microtask-batched: a probe that typed in the same tick would be
+    // testing the busy guard, not the entry.
+    await whenFlushed()
+    const composer = authorComposer(el)
     const editor = composer.querySelector('[data-part="editor"]') as HTMLElement
     composer.value = text
     editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
@@ -626,14 +656,14 @@ describe('GH #666 — the unarmed Author place: a live composer, and the arming 
 
   /** Everything about an ARMED admin that arming is supposed to establish — the equivalence probe's subject. */
   const armedShape = (el: UIAgentAdminElement): Record<string, unknown> => {
-    const interview = el.querySelector('[data-part="authoring-conversation"]')
+    const interview = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement & { disabled: boolean }
     return {
       armed: el.authoringStore !== undefined,
       pane: el.querySelector('[data-part="pane-holder"]')!.getAttribute('data-pane'),
       navSelected: (el.querySelector('[data-part="pane-nav"]') as HTMLElement & { selected: string }).selected,
-      emptyHidden: el.querySelector('[data-part="author-empty"]')!.hasAttribute('hidden'),
+      emptyGone: emptyInLog(el) === null,
       interviewMounted: interview !== null,
-      interviewHidden: interview?.hasAttribute('hidden'),
+      interviewAvailable: !interview.disabled,
     }
   }
 
@@ -647,23 +677,40 @@ describe('GH #666 — the unarmed Author place: a live composer, and the arming 
     document.body.append(el)
     mounted.push(el)
     await whenFlushed()
-    const hiddenState = ['author-empty-action', 'author-empty-composer'].map((part) =>
-      el.querySelector(`[data-part="${part}"]`)!.hasAttribute('hidden'),
-    )
-    expect(hiddenState, 'registered pre-connect ⇒ the entry still paints').toEqual([false, false])
+    const card = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement & { disabled: boolean }
+    expect(
+      [el.querySelector('[data-part="author-empty-action"]')!.hasAttribute('hidden'), card.disabled],
+      'registered pre-connect ⇒ the entry still opens',
+    ).toEqual([false, false])
   })
 
-  it('the unarmed Author place is USABLE while the nav says Chat — the triple band`s middle column is the entry, not dead copy', async () => {
-    // The band itself is the sheet's job (`data-pane` + a container query, browser-probed); what this
-    // pins is the thing GH #666 called a near-orphan: with the flow unarmed and the user standing in Chat,
-    // the Author region is un-hidden and the affordance inside it is real.
+  it('the copy lives INSIDE the card`s log, above the card`s own bottom composer (the empty-conversation idiom)', async () => {
+    // Kim's reopen in one assertion: the anatomy of the unarmed column is conversation → log → copy, with
+    // the composer as the card's LAST child. A headline floating beside a card would satisfy neither.
     const { el } = mountAdmin({ store: personaStore() })
     await whenFlushed()
     el.onGenerateRequest(() => {})
-    const empty = el.querySelector('[data-part="author-empty"]') as HTMLElement
-    const composer = el.querySelector('[data-part="author-empty-composer"]') as HTMLElement
+    const card = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
+    expect(emptyInLog(el), 'the copy is the log`s own child').not.toBeNull()
+    expect(emptyInLog(el)!.textContent).toContain('Describe the agent you want')
+    expect(
+      [...card.children].map((c) => c.getAttribute('data-part') ?? c.tagName.toLowerCase()),
+      'kicker, then the log holding the copy, then the composer pinned last — Test chat`s own anatomy',
+    ).toEqual(['region-kicker', 'log', 'ui-conversation-composer'])
+    expect(card.querySelector('[data-part="region-kicker"]')!.textContent).toBe('Builder interview')
+  })
+
+  it('the unarmed Author card is USABLE while the nav says Chat — the triple band`s middle column is the entry, not dead copy', async () => {
+    // The band itself is the sheet's job (`data-pane` + a container query, browser-probed); what this
+    // pins is the thing GH #666 called a near-orphan: with the flow unarmed and the user standing in Chat,
+    // the Author region is available and the affordance inside it is real.
+    const { el } = mountAdmin({ store: personaStore() })
+    await whenFlushed()
+    el.onGenerateRequest(() => {})
+    await whenFlushed()
+    const composer = authorComposer(el)
     expect(el.querySelector('[data-part="pane-holder"]')!.getAttribute('data-pane')).toBe('chat')
-    expect([empty.hasAttribute('hidden'), composer.hasAttribute('hidden')]).toEqual([false, false])
+    expect(composer.busy, 'the entry accepts typing from the unarmed place').toBe(false)
     expect(composer.querySelector('[data-part="editor"]'), 'a real editable surface, not a link to one').not.toBeNull()
   })
 
@@ -675,12 +722,19 @@ describe('GH #666 — the unarmed Author place: a live composer, and the arming 
     let mints = 0
     el.onGenerateRequest(() => { mints += 1; mintPath(el, builder)() })
 
+    const cardBefore = el.querySelector('[data-part="authoring-conversation"]')
     await submitFirst(el, 'a hotel concierge please')
 
     expect(mints, 'the arm ran once, through the page`s own mint path').toBe(1)
     expect(el.authoringStore).toBe(builder)
     const interview = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement
+    expect(interview, 'the transition FILLS the card the user typed into — no swap').toBe(cardBefore)
+    expect(emptyInLog(el), 'the copy left the log the moment the flow armed').toBeNull()
     expect(interview.textContent, 'the description the user typed IS the opening turn').toContain('a hotel concierge please')
+    expect(
+      interview.querySelectorAll('[data-part="log"] [data-part="bubble"][data-role="user"]'),
+      'exactly one user bubble — the optimistic one the arm`s reset cleared is not doubled',
+    ).toHaveLength(1)
     expect(requests.at(-1)!.session, 'and it runs as an authoring turn').toBe('authoring')
     // The fence is untouched by construction: the driving store IS the authoring store, so the patch
     // consumes — into the DRAFT, never the interviewer.
@@ -711,16 +765,32 @@ describe('GH #666 — the unarmed Author place: a live composer, and the arming 
     expect(transcript(byAction)).not.toContain('a hotel concierge please')
   })
 
-  it('a first message with NO mint path registered is never swallowed — the composer keeps the text', async () => {
+  it('a first message with NO mint path registered is never swallowed — the disabled card keeps the text', async () => {
     const { el, requests } = mountAdmin({ store: personaStore() })
     await whenFlushed()
-    const composer = el.querySelector('[data-part="author-empty-composer"]') as HTMLElement & { value: string }
-    // The degrade hides this composer, so a user cannot reach it — but a programmatic submit must still
-    // hand the text back rather than drop it (the guard `#startFromFirstMessage` ends on).
+    // The degrade leaves the card `disabled`, so the composer's own busy guard refuses the send BEFORE it
+    // reads the value (TKT-0034) — the text is retained by construction rather than handed back after the
+    // fact, and no bubble is painted for a turn that will never run.
     await submitFirst(el, 'a hotel concierge please')
     expect(el.authoringStore).toBeUndefined()
-    expect(composer.value).toBe('a hotel concierge please')
+    expect(authorComposer(el).value).toBe('a hotel concierge please')
+    expect(el.querySelectorAll('[data-part="authoring-conversation"] [data-part="bubble"]')).toHaveLength(0)
+    expect(emptyInLog(el), 'and the card still shows what it is for').not.toBeNull()
     expect(requests).toEqual([])
+  })
+
+  it('leaving the flow returns the card to its empty-log state — the same node, re-seated', async () => {
+    const builder = personaStore({ [SURFACE_AUTHORING_KEY]: true })
+    const { el } = mountAdmin({ store: personaStore(), authoringStore: builder, events: [{ kind: 'note', note: 'ok' }] })
+    el.onGenerateRequest(() => {})
+    await whenFlushed()
+    await submit(el, 'interview turn', 'authoring')
+    expect(emptyInLog(el)).toBeNull()
+
+    el.authoringStore = undefined
+    await whenFlushed()
+    expect(emptyInLog(el), 'the copy comes back into the same card').not.toBeNull()
+    expect(el.querySelectorAll('[data-part="authoring-conversation"] [data-part="bubble"]'), 'and the interview is cleared').toHaveLength(0)
   })
 })
 

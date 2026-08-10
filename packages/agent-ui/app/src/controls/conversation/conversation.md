@@ -94,12 +94,12 @@ properties:
   - name: contextItems
     description: A `readonly {id, label}[]` of dismissable chips shown above the field (e.g. "something selected elsewhere, attached to this turn's context"). Default `undefined` — no chip row. A dismiss click fires `onContextDismiss(id)`; the consumer owns actually removing it from this list.
 
-events:                   # onSubmit/onClientMessage/onModelChange/onEffortChange/onProviderChange/onModeChange/onContextDismiss/onMicClick/setContentRenderer are ALL callback/hook registrations, never CustomEvents (SPEC-R5/SPEC-R12; the closed vocabulary has no submission/picker-commit/client-message/render-hook kind). GH #291/ADR-0160 clause 3 adds the ONE real DOM event: `action`, fired from the settled-turn action-chip row — the SAME closed-vocabulary member ui-status-stream's inline retry button already uses (ADR-0153's seventh member), never an eighth.
+events:                   # onSubmit/onClientMessage/onModelChange/onEffortChange/onProviderChange/onModeChange/onContextDismiss/onMicClick/setContentRenderer/setEmptyState are ALL callback/hook registrations, never CustomEvents (SPEC-R5/SPEC-R12; the closed vocabulary has no submission/picker-commit/client-message/render-hook kind). GH #291/ADR-0160 clause 3 adds the ONE real DOM event: `action`, fired from the settled-turn action-chip row — the SAME closed-vocabulary member ui-status-stream's inline retry button already uses (ADR-0153's seventh member), never an eighth.
   - name: action
     detail: '{ id: string }'
     description: Fired when the user clicks a settled agent turn's pre-hydrated action chip (rendered when `AgentTurnHandle.finalize()` was called with a non-empty `actions` list). `id` is the clicked `TurnAction.id` — the consumer's own vocabulary (e.g. `'helpful'`/`'not-helpful'`, or `'yes'`/`'no'`), never interpreted by this primitive. Clicking any chip in the row removes the WHOLE row first (one-shot commit — a settled turn's feedback/reply choice can never double-fire), then fires this event on `ui-conversation` itself (never on the button, never on the bubble). GH #291 review — a consumer must still discriminate by `event.target === conv` before treating an `action` event as this chip commit: a genui `ui-sandbox-frame`'s own game-loop `action` (SPEC-R8, `routeGenui`) is a DIFFERENT `action` shape (`{surfaceId, name, payload}`, not `{id}`) that this build stops from bubbling past its own frame (`stopPropagation()`), but a consumer listening directly on a mounted surface, or on any DOM ancestor of `ui-conversation`, can still observe it — `event.target` is the only reliable discriminant between the two closed-vocabulary `action` shapes sharing this fleet's seventh event name (ADR-0153/ADR-0160).
 
-slots: []                 # content model is NOT author-composed — the thread/composer are built entirely by this element's own connect-time logic and imperative API; no slotted children
+slots: []                 # content model is NOT author-composed — the thread/composer are built entirely by this element's own connect-time logic and imperative API; no slotted children. GH #666's empty-log state is not a slot either: the consumer hands its node to `setEmptyState(node)` and this element seats it in the log (see the section below).
 
 parts:                    # NOT shadow-DOM ::part() (light-DOM only) — light-DOM markers this element's own JS creates; documented for completeness (compareDescriptorToSource does not mechanically check `parts:`, the master-detail.md precedent)
   - name: log
@@ -135,7 +135,7 @@ face:
 aria:
   role: none               # this element carries no ARIA role of its own
   roleSource: none
-  childModel: none — the thread is built entirely by this element's own connect-time logic and imperative API; the composer is a JS-created composed child (ui-conversation-composer, TKT-0056); nothing is ever author-composed or slotted
+  childModel: none — the thread is built entirely by this element's own connect-time logic and imperative API; the composer is a JS-created composed child (ui-conversation-composer, TKT-0056); nothing is ever author-composed or slotted. The one consumer-owned node, GH #666's empty-log state, is handed over imperatively (`setEmptyState`) and seated inside `[data-part=log]` — it is the consumer's own DOM, so its roles/labels are the consumer's to declare.
 
 contentModel: 'GH #306/ADR-0160 amendment — [data-part=bubble] and (user/agent only) its owning [data-part=turn] wrapper both carry a [data-role=user|agent|system] speaker kind (references/naming.md §6 registry). A user/agent turn is [data-part=turn][data-role=…] > [data-part=who] ("You"/"Agent"), then (agent only) [data-part=narration], then [data-part=bubble][data-role=…] holding a [data-part=body] text cell (plain textContent by default; a registered setContentRenderer replaces its children instead, SPEC-R12 — never for the user bubble) and (agent only) [data-part=mounts]/[data-part=annotation]/[data-part=disclosure]/[data-part=actions] children. A system turn has neither [data-part=who] nor [data-part=narration] nor a [data-part=turn] wrapper — its [data-part=bubble][data-role=system] is a direct child of [data-part=log], holding only [data-part=body]. None of these are author-composed (SPEC-R4)'
 
@@ -276,6 +276,25 @@ unchanged; the renderer function is entirely consumer-supplied code the app/site
 permission to import. Unregistered (default `undefined`) behavior is byte-identical to before this hook
 existed. **`addUserMessage`'s text never routes through this renderer** — user-authored text stays
 unescaped/unmodified (SPEC-R4 AC1), deliberately unaffected by this hook.
+
+## The empty-log state is a consumer-owned node in the log area (GH #666)
+
+A conversation with nothing in it yet is still this element's own card — border, log, composer pinned at
+the bottom. `setEmptyState(node)` seats a consumer-owned node FIRST in `[data-part="log"]`, so the
+"nothing here yet" copy lives inside the card instead of being a differently-shaped box the consumer
+builds beside it:
+
+```ts
+conv.setEmptyState(myEmptyCopy) // headline + copy + whatever affordance the flow starts with
+// …the flow earns its first turn:
+conv.setEmptyState(null)
+```
+
+Placement only — this element never decides WHEN the state applies. A conversation can be legitimately
+empty and live (the agent speaks first) or full and idle; only the consumer knows which, so the node stays
+until `setEmptyState(null)` removes it. `reset()` KEEPS it (a reset conversation is empty again), which is
+the same statement `reset()` already makes about turns. Safe before or after connect, exactly like
+`setContentRenderer`; unset (the default) is byte-identical to before this seam existed.
 
 ## The composer is a composed child, `ui-conversation-composer` (TKT-0056)
 
