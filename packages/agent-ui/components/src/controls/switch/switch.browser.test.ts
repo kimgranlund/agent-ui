@@ -225,6 +225,32 @@ describe('ui-switch cross-engine browser smoke — forced-colors', () => {
   })
 })
 
+// ── cascade-specificity regression pin (GH #694, the ui-toggle GH #686/#693 finding) ───────────────────
+
+describe('ui-switch cross-engine browser smoke — disabled/checked cascade precedence (GH #694)', () => {
+  // component-checker finding (GH #686/#693) on ui-toggle, confirmed to carry over here: a bare
+  // `:where(ui-switch):state(checked)` puts `:state()` OUTSIDE the `:where()` net, contributing its own
+  // (0,1,0) specificity — beating the fully `:where()`-wrapped `[disabled]` override (0,0,0) regardless
+  // of source order. `<ui-switch checked disabled>` would paint the ON (primary) track instead of the
+  // muted disabled one. Fixed by moving `:state(checked)` inside the parens (switch.css). Pinned here by
+  // comparing a `disabled`-only switch's track colour against a `checked disabled` switch's track colour:
+  // they must be IDENTICAL — the exact combination the regression would have inverted.
+  it('disabled OVERRIDES checked in the paint cascade — <ui-switch checked disabled> reads the SAME muted track colour as <ui-switch disabled> (regression pin)', () => {
+    const { sw: disabledOnly } = mount('<ui-switch disabled></ui-switch>')
+    const disabledOnlyBg = getComputedStyle(disabledOnly, '::before').backgroundColor
+
+    const { sw: checkedDisabled } = mount('<ui-switch checked disabled></ui-switch>')
+    const checkedDisabledBg = getComputedStyle(checkedDisabled, '::before').backgroundColor
+    expect(checkedDisabledBg, 'a checked+disabled switch must paint the SAME muted track colour as disabled-only — checked must not leak through the disabled override').toBe(disabledOnlyBg)
+
+    // Anti-vacuous: the disabled paint is genuinely DIFFERENT from the (uncontested) checked paint, so
+    // the equality above is a real discriminator, not two coincidentally-equal colours.
+    const { sw: checkedOnly } = mount('<ui-switch checked></ui-switch>')
+    const checkedOnlyBg = getComputedStyle(checkedOnly, '::before').backgroundColor
+    expect(checkedOnlyBg, 'anti-vacuous: checked-only and disabled-only must paint DIFFERENT track colours for the equality check above to mean anything').not.toBe(disabledOnlyBg)
+  })
+})
+
 // ── C10 zero-residue ──────────────────────────────────────────────────────────────────────────────────
 
 describe('ui-switch cross-engine browser smoke — C10 zero-residue', () => {
