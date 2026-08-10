@@ -40,6 +40,11 @@ const props = {
   // ATTRIBUTE seeds a reset baseline). The live value rides this signal + the editor surface, never a host
   // attribute.
   value: { ...prop.string(), attribute: false as const },
+  // The editor's ghost text (GH #672) — default UNCHANGED from the prior hard-coded literal ("Ask
+  // anything.."), so a consumer that never sets this is byte-identical to before. `attribute: false` —
+  // this element is never author-composed (the `value` precedent, above): a consumer that wants a
+  // different placeholder (e.g. agent-admin's Author empty-state) sets the PROPERTY, never markup.
+  placeholder: { ...prop.string('Ask anything..'), attribute: false as const },
   // Every one below defaults to undefined/empty, so a consumer that never sets them (the ORIGINAL
   // field+Send shape) gets exactly that — `ui-conversation` stays generic, it never names a model or
   // hardcodes "Effort"'s levels beyond the shared `EFFORT_LEVELS` constant a consumer may reuse.
@@ -150,7 +155,6 @@ export class UIConversationComposerElement extends UIElement {
       editor.setAttribute('role', 'textbox')
       editor.setAttribute('aria-multiline', 'true')
       editor.setAttribute('aria-label', 'Message')
-      editor.setAttribute('data-placeholder', 'Ask anything..')
       editor.toggleAttribute('data-empty', true)
       this.#editor = editor
 
@@ -228,6 +232,11 @@ export class UIConversationComposerElement extends UIElement {
       // already updated textContent) never resets the caret; a programmatic write/clear DOES flow.
       if (editor.textContent !== value) editor.textContent = value
       editor.toggleAttribute('data-empty', value === '') // keys the CSS placeholder (not :empty — ADR-0014 cl.1)
+    })
+
+    // ── editor attribute mirror — the placeholder text (GH #672, the ui-textarea `placeholder` precedent) ──
+    this.effect(() => {
+      editor.setAttribute('data-placeholder', this.placeholder) // the CSS placeholder reads attr(data-placeholder)
     })
 
     // Reactive composer content — models/efforts/model/effort/contextItems can all change post-connect

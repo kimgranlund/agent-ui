@@ -71,6 +71,19 @@ describe('ui-conversation-composer — the own editor (TKT-0058, the ui-textarea
     expect(el.querySelector('form'), 'the v1 nested <form> must be gone').toBeNull()
   })
 
+  it('the `placeholder` prop is unset by default — the editor keeps its original "Ask anything.." ghost text (GH #672)', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    expect(el.placeholder).toBe('Ask anything..')
+    expect(editorOf(el).getAttribute('data-placeholder')).toBe('Ask anything..')
+  })
+
+  it('setting `placeholder` reflects onto the editor\'s data-placeholder attribute, even post-connect (GH #672)', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.placeholder = 'Describe the agent you want…'
+    await whenFlushed()
+    expect(editorOf(el).getAttribute('data-placeholder')).toBe('Describe the agent you want…')
+  })
+
   it('surface→model: typing (editor input) flows into `value`; model→surface: a programmatic write flows back under the caret guard, toggling data-empty', async () => {
     const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
     const editor = editorOf(el)
@@ -529,7 +542,7 @@ describe('conversation-composer.md descriptor', () => {
   const { fence, body } = splitFrontmatter(md)
   const parsed = parseDescriptor(fence)
   const ATTR_NAMES = [
-    'value', 'models', 'model', 'efforts', 'effort', 'providers', 'provider', 'modes', 'mode', 'contextItems', 'busy',
+    'value', 'placeholder', 'models', 'model', 'efforts', 'effort', 'providers', 'provider', 'modes', 'mode', 'contextItems', 'busy',
   ]
 
   it('has a leading frontmatter fence and a /site prose body', () => {

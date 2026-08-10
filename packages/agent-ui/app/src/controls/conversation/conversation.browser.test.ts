@@ -311,6 +311,19 @@ describe('ui-conversation-composer cross-engine smoke — the v2 field frame (TK
     }
   })
 
+  it('the `placeholder` prop paints real ghost text via the CSS `attr(data-placeholder)` read; default unchanged (GH #672)', async () => {
+    const el = mountConversation()
+    const composer = el.querySelector('ui-conversation-composer') as HTMLElement & { placeholder: string }
+    const editor = el.querySelector('[data-part="editor"]') as HTMLElement
+
+    // Default — a consumer that never sets `placeholder` is byte-identical to before the prop existed.
+    expect(getComputedStyle(editor, '::before').content).toContain('Ask anything..')
+
+    composer.placeholder = 'Describe the agent you want…'
+    await whenFlushed()
+    expect(getComputedStyle(editor, '::before').content).toContain('Describe the agent you want…')
+  })
+
   it('the TKT-0062 filled/container state law: empty vs typed repaint background AND ink together', async () => {
     // code-reviewer HIGH finding: reading `composer.color` (the host) alone is vacuous — the editor
     // part carries its own color declaration reading the same token, so a state rule that only
