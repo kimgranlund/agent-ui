@@ -97,7 +97,7 @@ slices) the 3-pane IA live at every band, the wide pairing's live-fill moment de
 preserved (a browser proof at wide width, non-vacuous — panes visibly hydrate DURING an
 interview turn without leaving Author), the strip retired, gates green by exit code.
 
-## Amendment (2026-08-10, **proposed** — Kim ratifies) — cl.1's WIDE reading becomes the TRIPLE dock `[chat | author-chat | settings]`; cl.3's arrangement law extends to three; cl.2's selector re-keys from pane to composer ORIGIN
+## Amendment (2026-08-10, **ratified** — Kim, [utterance](https://github.com/kimgranlund/agent-ui/issues/662#issuecomment-5235141210), verified 2026-08-10) — cl.1's WIDE reading becomes the TRIPLE dock `[chat | author-chat | settings]`; cl.3's arrangement law extends to three; cl.2's selector re-keys from pane to composer ORIGIN
 
 > Append-only, and **proposed**: the Status cell reads `accepted` for the record as a whole and stays
 > byte-untouched — agents never flip status (`.claude/hooks/adr-status-guard.py`), and this amendment
