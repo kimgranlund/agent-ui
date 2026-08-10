@@ -2630,21 +2630,20 @@ describe('ui-agent-admin — the wide TRIPLE dock (GH #662, ADR-0179 cl.1 Amendm
     expect(Math.abs(bottomGap(author) - bottomGap(test)), 'both composers are pinned the same distance off the card floor').toBeLessThanOrEqual(1)
     expect(bottomGap(author), 'and that distance is an inset, not a floating block halfway up the column').toBeLessThan(40)
 
-    // The copy occupies the LOG area — inside the log's box, above the composer (the empty-conversation
-    // idiom Kim named). A headline rendered outside the card is the shape the reopen rejected.
-    const logBox = (author.querySelector(':scope > [data-part="log"]') as HTMLElement).getBoundingClientRect()
-    const copyBox = (el.querySelector('[data-part="author-empty"]') as HTMLElement).getBoundingClientRect()
-    expect(copyBox.height, 'the copy paints').toBeGreaterThan(0)
-    expect(copyBox.top).toBeGreaterThanOrEqual(logBox.top - 1)
-    expect(copyBox.bottom).toBeLessThanOrEqual(logBox.bottom + 1)
-    expect(copyBox.bottom, 'and it sits above the composer, not under it').toBeLessThanOrEqual(composerOf(author).getBoundingClientRect().top + 1)
+    // GH #684 (Kim's later live pixel-truth ruling) — the log itself carries no dedicated empty-state node
+    // any more (the headline + copy the reopen's own idiom named are gone entirely): the unarmed log
+    // simply paints nothing of its own until the first turn lands.
+    const log = author.querySelector(':scope > [data-part="log"]') as HTMLElement
+    expect(log.children.length, 'the unarmed log paints nothing of its own').toBe(0)
   })
 
-  it('UNARMED at the triple: the first message arms the flow and FILLS the same card — the copy leaves, the transcript takes the log', async () => {
+  it('UNARMED at the triple: the first message arms the flow and FILLS the same card — the log goes from empty to holding the transcript', async () => {
     const el = await mountUnarmedTriple()
     const { author } = cardsOf(el)
     const composer = author.querySelector(':scope > ui-conversation-composer') as HTMLElement & { value: string }
     const cardBefore = author.getBoundingClientRect()
+    const logBefore = author.querySelector(':scope > [data-part="log"]') as HTMLElement
+    expect(logBefore.children.length, 'unarmed ⇒ the log starts empty').toBe(0)
 
     composer.value = 'a hotel concierge please'
     ;(composer.querySelector('[data-part="send"]') as HTMLElement).click()
@@ -2655,7 +2654,6 @@ describe('ui-agent-admin — the wide TRIPLE dock (GH #662, ADR-0179 cl.1 Amendm
 
     expect(el.authoringStore, 'the first message armed the flow').toBeDefined()
     expect(el.querySelector('[data-part="authoring-conversation"]'), 'the SAME card — arming fills it, never swaps it').toBe(author)
-    expect(el.querySelector('[data-part="author-empty"]'), 'the empty-log copy is gone from the log').toBeNull()
     const after = author.getBoundingClientRect()
     expect(Math.abs(after.width - cardBefore.width), 'and the column does not jump').toBeLessThanOrEqual(1)
     expect(author.textContent, 'the description the user typed opened it — nothing swallowed').toContain('a hotel concierge please')

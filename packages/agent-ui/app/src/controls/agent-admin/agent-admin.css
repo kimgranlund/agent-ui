@@ -463,22 +463,11 @@
     flex: 0 0 auto;
   }
 
-  /* OQ4 / GH #666 (REOPENED — Kim's 2026-08-10 pixel ruling) — the Author card's EMPTY-LOG state. This
-     node lives INSIDE the interview conversation's log now (`setEmptyState`), so the card supplies the
-     frame, the log supplies the padding and the scroll, and the composer below it is the conversation's
-     own: nothing here may re-state any of that. What is left is the copy block's own rhythm — and its
-     own gutter is gone with the second box it used to be (the log's `--ui-conversation-log-pad`). */
-  [data-part='author-empty'] {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--ui-agent-admin-card-pad);
-  }
-  [data-part='author-empty-copy'] {
-    margin: 0;
-    max-inline-size: 44ch;
-    color: var(--md-sys-color-on-surface-variant);
-  }
+  /* OQ4 / GH #666 / GH #684 — the Author card's EMPTY-LOG state carried a `data-part='author-empty'`
+     headline + copy block here (`ui-conversation.setEmptyState`) until Kim's 2026-08-10 live pixel-truth
+     ruling (GH #684) removed the headline + copy entirely: the unarmed card's log is now simply empty, so
+     this rule block is retired with the node it styled — nothing renders inside the log until the first
+     turn. */
 
   /* The options-pane (Agent ⇄ Capabilities ⇄ Surface ⇄ Context: System ⇄ Context: Dialog — GH #161's
      Context three-way split, GH #574's Settings-into-three split) rendered with ZERO padding:
