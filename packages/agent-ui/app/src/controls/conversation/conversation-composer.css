@@ -298,6 +298,35 @@
      source order (verified: `max-inline-size` measured `100%`, the UNCOLLAPSED default, before this type
      prefix). The extra type selector breaks the tie on RAW specificity instead of relying on proximity. */
   @container (inline-size < 21rem) {
+    /* GH #680 — the ghost-gap fix, TWO stacked mechanisms, both measured in a real browser (both
+       engines) rather than assumed:
+       (1) THE GAP — button.css's leading+trailing `:has()` structural rule (button.css:213-218, keyed
+       off BOTH adornment slots being DOM-present) keys off DOM presence, not paintedness, so it stays
+       matched here — the label/caret are hidden below, never removed (the accessible-name-preservation
+       invariant this file's own GH #665 comment relies on) — and the trigger keeps the 3-column
+       `auto 1fr auto` template with its `column-gap: var(--ui-button-gap)` on BOTH now-empty seams
+       (icon⟷label, label⟷trailing), even though the trailing `auto` track itself already collapses to
+       zero (the caret's own comment below). Repointing the EXPOSED `--ui-button-gap` token to 0 (the
+       same token-repoint pattern this file already uses for colour, above) zeroes both seams without
+       touching button.css's own structural law or reflecting the real `icon-only` attribute — which
+       button.css's own comment (button.css:233) documents as assuming a SINGLE adornment (leading OR
+       trailing), an assumption this trigger's still-3-slot DOM shape does not meet.
+       (2) THE BORDER — closing (1) alone left a real, measured 2px residual (both engines): this
+       trigger's inline-size is NEVER set explicitly (host-as-grid, ADR-0006 — see the comment above on
+       the label collapse), so it's intrinsically (shrink-to-fit) sized, and intrinsic sizing ADDS
+       border-width on top of padding+content regardless of `box-sizing: border-box` (border-box only
+       reinterprets an EXPLICIT size — button.css's own `[icon-only]` comment, button.css:224-232,
+       documents this EXACT mechanic as the reason icon-only sets `inline-size` explicitly rather than
+       leaving it intrinsic). This trigger's border is already `transparent` at every width (`
+       --ui-button-border` is never repointed by the `[data-picker]` retint above) — genuinely invisible
+       — so zeroing `border-width` here removes its 2px geometric footprint with NO visual change; height
+       is unaffected (`block-size` is explicit, so border-box already absorbed it there). With both (1)
+       and (2), the compacted trigger's rendered box is measured byte-equal to a real `[icon-only]`
+       button (send) at the same size class. */
+    ui-button[data-picker] {
+      --ui-button-gap: 0;
+      border-width: 0;
+    }
     /* GH #673's other half — reveal the icon this band's compact form actually needs: once the label
        (just below) collapses to zero-width, the icon becomes the trigger's ONLY visible identity, same
        as GH #665 always intended. `inline-flex` (not `revert`) — ui-icon's OWN `@scope (ui-icon) :scope`
