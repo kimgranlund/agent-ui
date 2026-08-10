@@ -264,7 +264,16 @@ describe('ui-toggle — refused toggle under REAL userEvent dispatch (the LLD §
     // un-hardened version compared post-click alpha directly against pressedAlpha and flaked under
     // full-suite load, 0.210844 vs 0.2 — a real hover-wash difference, not noise).
     await userEvent.unhover(el)
-    const settledAlpha = await pollStable(() => alphaOf(bg(el)))
+    // pollUNTIL, not pollStable, here: unlike `pressedAlpha` above (an unknown target discovered by
+    // settling), this read has a KNOWN target (`pressedAlpha` itself) — a `pollUntil` predicated on the
+    // same 0.005 tolerance `toBeCloseTo(pressedAlpha, 2)` uses below structurally cannot lock onto a
+    // stale hover-wash value (it differs from pressedAlpha by ~0.01, outside that tolerance), unlike
+    // `pollStable`'s "unchanged for 4 frames" criterion, which has no way to tell "settled at the real
+    // target" apart from "hasn't started transitioning away from hover yet" (GH #698: `unhover()`'s
+    // mouseleave→style-recalc→transition-start onset delay is unbounded under CPU contention; once it
+    // exceeds `pollStable`'s 4-frame window the stale hover value gets accepted as "stable" and fails
+    // the tolerance-0.005 assertion below).
+    const settledAlpha = await pollUntil(() => alphaOf(bg(el)), (a) => Math.abs(a - pressedAlpha) < 0.005)
     expect(settledAlpha).toBeCloseTo(pressedAlpha, 2)
   })
 
