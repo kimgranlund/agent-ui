@@ -176,3 +176,8 @@ export * from './sandbox-frame/sandbox-frame.ts'
 // Permanently catalog-excluded (ADR-0176 cl.3 — credential-bearing auth chrome is host-page-only) — still
 // a fleet member, exported like any other control.
 export * from './otp-field/otp-field.ts'
+
+// ADR-0179 GH #686 Amendment S7-a (admin-three-pane-ia.lld.md §16.4) — ui-toggle, a pressed-state pill
+// button (icon + label + an optional orthogonal state icon; aria-pressed via ElementInternals; the
+// cancelable-before-commit `toggle` refusal seam, toggle.md). The fleet's first toggle-button primitive.
+export * from './toggle/toggle.ts'

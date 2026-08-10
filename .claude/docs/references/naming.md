@@ -173,7 +173,11 @@ The prefix IS the ownership boundary — no allowlist needed:
   disclosure); control-emitted, host-created like `action`/`text`, never author-composed.
 - **Custom states** (`internals.states` / `:state()`) are ADJECTIVES/participles, lowercase,
   kebab: ready · user-invalid · checked · dragging · revealed · disabled · collapsed · truncated
-  · selected · indeterminate. A verb or noun is not a state name.
+  · selected · indeterminate · pressed. A verb or noun is not a state name. `pressed` (ADR-0179 GH
+  #686 Amendment S7-a) — `ui-toggle`'s ARIA-pressed toggle-button state; distinct from `checked`
+  (an Indicator-class boolean form value/ARIA-checked pattern) and `selected` (mutually-exclusive
+  choice, e.g. radio/tab) — `ui-toggle` is neither: an independent, non-form boolean matching the
+  native `aria-pressed` toggle-button pattern.
 
 ## 7 · A2UI catalog types
 

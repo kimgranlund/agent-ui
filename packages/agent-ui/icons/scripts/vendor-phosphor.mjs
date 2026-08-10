@@ -88,6 +88,10 @@ const NAME_MAP = {
   'speaker-slash': 'speaker-slash',
   'speaker-none': 'speaker-none',
   'speaker-high': 'speaker-high',
+  // ADR-0179 GH #686 Amendment S7-a — ui-toggle's downstream consumer's Chat/Settings/Co-pilot icon set.
+  'chats-circle': 'chats-circle',
+  'gear-six': 'gear-six',
+  robot: 'robot',
 }
 
 const EXPECTED_VIEW_BOX = '0 0 256 256'

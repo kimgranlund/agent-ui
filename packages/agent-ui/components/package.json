@@ -71,6 +71,7 @@
     "./controls/status-stream": "./src/controls/status-stream/status-stream.ts",
     "./controls/toast": "./src/controls/toast/toast.ts",
     "./controls/toast-region": "./src/controls/toast/toast-region.ts",
+    "./controls/toggle": "./src/controls/toggle/toggle.ts",
     "./controls/toolbar": "./src/controls/toolbar/toolbar.ts",
     "./controls/tooltip": "./src/controls/tooltip/tooltip.ts",
     "./descriptor": "./src/descriptor/index.ts",

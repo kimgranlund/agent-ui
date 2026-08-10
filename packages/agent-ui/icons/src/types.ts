@@ -27,6 +27,11 @@ export const ICON_NAMES = [
   'arrow-clockwise', 'rewind', 'paper-plane-right', 'gear', 'share-network', 'shopping-cart',
   'skip-forward', 'skip-back', 'star', 'star-half', 'stop', 'upload-simple', 'speaker-low',
   'speaker-slash', 'speaker-none', 'speaker-high',
+  // ADR-0179 GH #686 Amendment S7-a (admin-three-pane-ia.lld.md §16.1) — ui-toggle's downstream consumer
+  // (the agent-admin unified header's three pane pills, S7-c) needs a shared Chat/Settings/Co-pilot icon
+  // vocabulary: chats-circle (Chat) · gear-six (Settings) · robot (Co-pilot). eye/eye-slash/plus/dots-three
+  // (the state-icon + trailing-action glyphs the same wireframe names) are already vendored above.
+  'chats-circle', 'gear-six', 'robot',
 ] as const
 export type IconName = (typeof ICON_NAMES)[number]
 
