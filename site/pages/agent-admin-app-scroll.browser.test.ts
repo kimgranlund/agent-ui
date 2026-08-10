@@ -48,17 +48,14 @@ describe('agent-admin-app — the #app shell stays pinned when inner content ove
 
     const appEl = document.getElementById('app') as HTMLElement
     const adminEl = document.querySelector('ui-agent-admin') as HTMLElement
-    // ADR-0179 (GH #651) — the settings region is a master-detail pane inside the Settings PLACE now, and
-    // it owns its own scroll (agent-admin.css). Navigate there through the real pane-nav strip first: at
-    // the entry default (Chat) the whole pairing is `hidden`, so a probe that skipped this would measure a
-    // display:none box and pass vacuously.
-    const settingsTab = [...document.querySelectorAll('[data-part="pane-nav"] ui-tab')].find((t) => t.textContent === 'Settings') as HTMLElement
-    settingsTab.click()
-    await raf()
-    // The scroll region is the composed `ui-split-pane` wrapping the settings region — master-detail's own
-    // family law ("overflow is left to the wrapping split-pane"), not a bespoke scroller of the admin's.
+    // GH #686's Amendment (S7-b) — the settings region is a plain sibling `div` inside the pane holder now
+    // (the `ui-master-detail` pairing + its wrapping `ui-split-pane` retired, LLD §16.5), and OWNS its own
+    // scroll directly (agent-admin.css's own `overflow-y: auto` on `[data-part="settings-pane"]` — the
+    // "wrapper owns the scroll" law that used to apply doesn't, now that there is no wrapper). No navigation
+    // is needed to reach it either: the entry default (LLD §16.2's OQ-D rec) shows all three regions at this
+    // viewport (1024px clears the 52.5rem triple line), Settings included.
     const settingsRegion = document.querySelector('[data-part="settings-pane"]') as HTMLElement | null
-    const tabsEl = settingsRegion?.closest('ui-split-pane') as HTMLElement | null
+    const tabsEl = settingsRegion
     expect(appEl, "the real #app element must exist for this bug's own CSS selector to apply").not.toBeNull()
 
     // GH #130's own fix: the document must never be allowed to grow past the viewport regardless of what

@@ -4,13 +4,15 @@
 // primitives PLUS the generic ordered-entry-list primitive (`entries.ts`/`entry-list.ts`, ADR-0132) —
 // no new primitive FAMILY beyond that one, no new protocol dependency.
 //
-// ONE composed `ui-chat-shell` (GH #52/ADR-0154, re-hosted again by ADR-0179 — superseding vision
-// rev.5's hand-rolled `ui-split` composition, which itself superseded ADR-0131 cl.2's three-pane
-// order): `header` = the pane nav (`[ Chat | Author | Settings ]`, ADR-0179 cl.1), `content` = the
-// pane holder — the Chat place's conversation and the Author⇄Settings `ui-master-detail` pairing,
-// exactly one visible per place (LLD §3/§4). The old single resizable options-pane end retired with
-// it (admin-three-pane-ia.lld.md §7); the settings content it used to hold now lives in the Settings
-// place. GH #574 split the old single flat "Settings" segment (ten folds, three ranks flattened
+// ONE composed `ui-chat-shell` (GH #52/ADR-0154, re-hosted again by ADR-0179, then again by GH #686's
+// Amendment — superseding vision rev.5's hand-rolled `ui-split` composition, which itself superseded
+// ADR-0131 cl.2's three-pane order): `header` = EMPTY in this slice (S7-c's own unified header bar
+// build, admin-three-pane-ia.lld.md §16.4 — the pane nav that used to occupy this slot is retired),
+// `content` = the pane holder — three sibling regions (Chat · Settings · Co-pilot), a shown-SET + a
+// primary member deciding what paints at a given band (§16.2) — no more pairing vehicle, no more single
+// active place. The old single resizable options-pane end retired with cl.1 first
+// (admin-three-pane-ia.lld.md §7); the settings content it used to hold now lives in the Settings
+// region. GH #574 split the old single flat "Settings" segment (ten folds, three ranks flattened
 // into one scroll) into three ranked ones, Kim's ruling: Agent — who it is (Agent/Model/Bankroll);
 // Capabilities — what it can do (Instructions/Skills/Workflows/Resources/Tools); Surface — how it
 // renders (Surface Options/Pattern sources). Since GH #225 each fold is a heading-row FOLD (the GH #222
@@ -71,27 +73,26 @@ import '@agent-ui/components/controls/text'
 // whose roving/one-group contract doesn't fit rows interleaved with switches across provider groups).
 import '@agent-ui/components/controls/radio'
 import '@agent-ui/components/controls/disclosure' // vision rev.5 — the Context tabs' accordion primitive
-// ADR-0179 (admin-three-pane-ia.lld.md §2) — the fleet `ui-tabs` control, the SAME composition shape
-// `super-shell.ts`'s panel-less pane-tabs/narrow-tabs strips already use (GH #221): a bare `ui-tabs`
-// host of `ui-tab` children, no `ui-tab-panel`s (visibility rides `#applyPane`'s own hidden toggle, not
-// the control's panel machinery). Two instances compose it: the top-level pane nav (Chat/Author/
-// Settings, §2) and the Settings place's own internal sub-nav (OQ2, §5) — the GH #221 shape
-// re-anchored twice over. (Originally imported for GH #646's try-it bar, which ADR-0179 retired.)
+// GH #686's Amendment (admin-three-pane-ia.lld.md §16) retires the top-level pane nav that used to be a
+// SECOND `ui-tabs` instance below — the Settings place's own internal sub-nav (OQ2, §5) is the
+// one survivor: a bare `ui-tabs` host of `ui-tab` children, no `ui-tab-panel`s (the GH #221 composition
+// shape, `super-shell.ts`'s own panel-less pane-tabs/narrow-tabs strips). (Originally imported for GH
+// #646's try-it bar, which ADR-0179 retired; the pane nav that replaced it is retired in turn here.)
 import '@agent-ui/components/controls/tabs'
 import type { UITabsElement, UITabElement } from '@agent-ui/components/controls/tabs'
-// GH #52 (ADR-0154, agent-admin-shell-rehost.lld.md LLD-C4), re-hosted again by ADR-0179 — the
-// shell-archetype grammar now carries exactly two slots: `header` (the pane nav) and `content` (the
-// pane holder). The old options-pane end + `narrow-end="tabs"` six-entry vocabulary retired with cl.1
+// GH #52 (ADR-0154, agent-admin-shell-rehost.lld.md LLD-C4), re-hosted again by ADR-0179, then again by
+// GH #686's Amendment — the shell-archetype grammar still carries exactly two slots: `header` (EMPTY in
+// this slice — S7-c's own unified header bar build, LLD §16.4) and `content` (the pane holder). The old
+// options-pane end + `narrow-end="tabs"` six-entry vocabulary retired with ADR-0179 cl.1
 // (admin-three-pane-ia.lld.md §7) — replacing, in turn, the original hand-rolled ui-split + narrow
 // ui-tabs dual-shell + the ResizeObserver-driven #applyLayout reparenting.
 import '../chat-shell/chat-shell.ts'
 import type { UIChatShellElement } from '../chat-shell/chat-shell.ts'
-// ADR-0179 cl.3 (admin-three-pane-ia.lld.md §2) — the wide Author⇄Settings PAIRING is a composed
-// `ui-master-detail`: it buys the docked resizable pair above the 40rem own-container line and the
-// narrow one-place-at-a-time drill-in below it, both from shipped code (SPEC-R7's zero-bespoke-split law).
-// Side-effect imports register both tags before `#compose` calls `document.createElement` on either.
-import '../master-detail/master-detail.ts'
-import '../master-detail/master-detail-pane.ts'
+// GH #686's Amendment (LLD §16.5) retires `ui-master-detail` as the Author⇄Settings pairing vehicle
+// entirely: the wireframe's all-active geometry does not fit its 40rem own-container dock floor. The
+// three places are three sibling regions now (`#compose`, below) — no more MD import at this element's
+// top level (`ui-settings`' OWN internal rail|panel `ui-master-detail`, composed inside the Settings
+// region, is unrelated and untouched — settings.ts imports its own copy).
 // Vision rev.6 (Surface Options): the Markdown modality renders agent notes through <ui-markdown> —
 // sanitized by construction. App → code is the ADR-0139-ruled edge this file already takes for
 // `@agent-ui/code/editor`; ui-conversation itself stays code-free (the SPEC-R12 renderer seam carries it).
@@ -175,6 +176,13 @@ import { lintPromptSections } from './prompt-lint.ts'
 // ADR-0178 cl.2 — the three-filter apply gate + the canonical key set it enumerates (LLD-C1). A pure
 // module: store in, writes out, a report back — this element owns WHEN it may run, never HOW it filters.
 import { applyPersonaPatch, draftStateBlock, type PatchReport } from './persona-patch.ts'
+
+/** GH #686's Amendment (admin-three-pane-ia.lld.md §16.1/§16.2) — the vocabulary re-pins from
+ *  ADR-0179 cl.1's `chat | author | settings` to `chat | settings | copilot` (the Builder interview
+ *  renamed Co-pilot), and READING ORDER is now load-bearing: `PANE_ORDER` is the one place it is written,
+ *  consumed by every DOM-order, `data-show` composition, and primary-repoint site below. */
+type Pane = 'chat' | 'settings' | 'copilot'
+const PANE_ORDER: readonly Pane[] = ['chat', 'settings', 'copilot']
 
 const agentAdminProps = {
   // Non-reflected properties — too structured for an attribute (the `ui-split` `sizes` / `ui-settings`
@@ -374,63 +382,75 @@ export class UIAgentAdminElement extends UIElement {
   static props = agentAdminProps
 
   // The composed SHELL — created ONCE (idempotent, `#shell` doubles as the guard) and PERSISTS across a
-  // reconnect (the `master-detail.ts`/`settings.ts` precedent). GH #52/ADR-0154, re-hosted by ADR-0179:
-  // a `ui-chat-shell` hosting the pane nav in `header` and the pane holder (Chat conversation +
-  // Author⇄Settings pairing) in `content` — replacing the old hand-rolled `ui-split` + narrow `ui-tabs`
-  // dual-shell + the ResizeObserver-driven `#applyLayout` reparenting entirely, and before that the
-  // shell's own options-pane end + narrow-tabs mechanism (admin-three-pane-ia.lld.md §7). Place
-  // visibility is likewise VISIBILITY-ONLY — no JS layout code, no reparenting, ever (`#applyPane`).
+  // reconnect (the `master-detail.ts`/`settings.ts` precedent). GH #52/ADR-0154, re-hosted by ADR-0179,
+  // re-ruled again by GH #686's Amendment (admin-three-pane-ia.lld.md §16, S7-b): a `ui-chat-shell`
+  // hosting `content` = the pane holder, three sibling regions (Chat conversation · Settings · Co-pilot
+  // conversation). The `header` slot carries NO admin-composed content in this slice — the pane nav that
+  // used to live there retires with the visibility model it drove (§16.5), and the unified header bar
+  // that replaces it is S7-c's own build (a documented gap, not an oversight: `header` renders empty until
+  // that slice lands). Region visibility is likewise VISIBILITY-ONLY — no JS layout code, no reparenting,
+  // ever (`#applyPaneVisibility`).
   #shell: UIChatShellElement | null = null
   #conversation: UIConversationElement | null = null
   // ── ADR-0178 cl.5 (LLD-C6) — the DUAL-CONTEXT chat ────────────────────────────────────────────────────
   // Two MOUNTED conversations, never one conversation with two transcripts: the test context above stays
-  // byte-unchanged, and the authoring one mounts lazily into the Author place. Both keep their DOM
-  // transcripts for the element's whole life, which is what makes a place change a pure visibility change
-  // — no snapshot/restore machinery to invent, and nothing for `admin.store` to be reassigned FOR.
-  // ADR-0179 cl.1 — the content slot's holder is `pane-holder` now (it holds the PLACES, it no longer
-  // stacks one place's two conversations); the lazy interview mounts into `#authorPane`, so nothing needs
-  // a field for the holder itself any more (the old `#chatStack` slot retired with the stacking model).
+  // byte-unchanged, and the authoring one mounts alongside it. Both keep their DOM transcripts for the
+  // element's whole life, which is what makes a visibility-set flip a pure visibility change — no
+  // snapshot/restore machinery to invent, and nothing for `admin.store` to be reassigned FOR.
+  // GH #686's Amendment — the interview mounts directly into `#paneHolder` now (the `ui-master-detail`
+  // pairing it used to mount into, `#authorPane`, retired with the vehicle, LLD §16.5); its own `data-part`
+  // carries the region identity instead (`copilot-pane`, below).
   #authoringConversation: UIConversationElement | null = null
+  // ── GH #686's Amendment (admin-three-pane-ia.lld.md §16.2, S7-b) — the shown-set visibility model ──────
   /**
-   * ADR-0179 cl.1/cl.2 (admin-three-pane-ia.lld.md §4) — the ACTIVE PLACE, this element's one navigation
-   * state: Chat (the pure test surface) · Author (the Builder interview) · Settings (the five config
-   * sections). Entry default `'chat'` (content-first, the narrow content-tab's own precedent).
+   * The WIDE truth: which of the three regions have a box, independent of any single "active" one — at
+   * and above the triple line more than one paints at once, so there is no longer a single active place to
+   * name. Invariant `size ≥ 1`, enforced centrally by `#setPanesShown`: a zero-pane surface is broken by
+   * construction, so the last member's own removal is refused.
    *
-   * It replaced `#mode` as `#contextFor()`'s selector at S1-b; GH #662's triple dock moved the selector
-   * one step further, to the submitting composer's ORIGIN (see `#contextFor` for why the triple makes
-   * that mandatory). So this field is now PURELY a navigation state: it says which place the nav names,
-   * and the sheet reads it off the pane holder to decide what paints at the current band. It carries no
-   * routing meaning at all — which is what makes the triple's two simultaneously-visible composers safe.
+   * Entry default: all three (OQ-D's rec, the wireframe's own all-active state) — flagged in the LLD as
+   * still OPEN for Kim to confirm, not a ruled default; this slice ships the recommendation because a
+   * visibility model needs SOME entry state to be buildable at all, and the done-when this slice is graded
+   * against names no other default.
    *
-   * PRIVATE by contract, exactly as `#setMode` was: no attribute, no event, no `attributes[]` row — the
-   * pane-nav strip and `#rewireAuthoringContext` are `#setPane`'s only callers, and probes reach it
-   * through the protected `setPaneSeam` below.
+   * Replaces `#pane` as the visibility truth. `#setPane`/`#applyPane` are gone with it — there is no
+   * single "active place" concept left in this element; S7-c's header pills mirror THIS state, they never
+   * own a second copy of it.
    */
-  #pane: 'chat' | 'author' | 'settings' = 'chat'
-  // ── ADR-0179 (admin-three-pane-ia.lld.md §3) — the three-place anatomy ────────────────────────────────
-  /** The top-level place nav: an admin-composed, PANEL-LESS `ui-tabs` (Chat · Author · Settings) in the
-   *  chat-shell's `header` slot — the GH #221 composition shape, re-anchored one level up from the
-   *  retired try-it strip (LLD §2). `#applyPane` syncs its `selected` on a programmatic flip. */
-  #paneNav: UITabsElement | null = null
+  #panesShown: Set<Pane> = new Set(PANE_ORDER)
   /**
-   * The content slot's holder — the box the three places live in (GH #662, ADR-0179 cl.1's Amendment).
+   * The NARROW truth: which one region paints alone below the triple line, and which pill/segment reads
+   * pressed/selected when only one CAN be shown that way. Invariant: always a member of `#panesShown`
+   * (`#setPanesShown` repoints it the moment its own member leaves the set, to the first remaining member
+   * in `PANE_ORDER`).
    *
-   * It carries `data-pane` (the active place) and is the CONTAINER the band rules query: which places
-   * PAINT is a pure CSS reading of `data-pane` × the holder's own inline-size, never a JS decision. That
-   * is what makes the triple dock possible at all — below the triple line one place paints, at and above
-   * it all three do, and no resize ever writes state (the shell family's own-container-width law,
-   * `shell-breakpoint.ts`). The regions therefore carry NO `hidden` attribute of their own: a region that
-   * paints at wide must not claim to be hidden, and `display:none` from the band rule removes a
-   * non-painting one from the a11y tree exactly as `hidden` did.
+   * Entry default `'chat'` (OQ-D's rec — content-first, carried over from the retired `#pane`'s own
+   * default).
+   */
+  #panePrimary: Pane = 'chat'
+  /**
+   * The content slot's holder — the box the three regions live in. GH #686's Amendment re-rules ADR-0179
+   * cl.1's Amendment (GH #662's `data-pane`): `#applyPaneVisibility` below writes `data-show` (the WHOLE
+   * shown set, space-joined, `PANE_ORDER`) + `data-primary` (the narrow truth) and nothing else. THIS
+   * SHEET says what paints, reading both attributes against the holder's OWN inline-size — no
+   * ResizeObserver, no JS layout, no state written by a resize (the shell family's own-container-width
+   * law, carried over verbatim — only the vocabulary widened from one active place to a set). The regions
+   * therefore carry NO `hidden` attribute of their own: a region that paints must not claim to be hidden,
+   * and `display:none` from the band rule removes a non-painting one from the a11y tree exactly as
+   * `hidden` did.
    */
   #paneHolder: HTMLElement | null = null
-  /** The pairing vehicle (LLD §2/§6): `ui-master-detail` holding the Author region (`pane="list"`) and the
-   *  Settings region (`pane="detail"`). ONE region arranged, never duplicated — at wide it docks as the
-   *  composed `ui-split`, at narrow it drills into one place at a time. */
-  #panePair: (HTMLElement & { selected: string }) | null = null
-  /** The Author place's own pane element — the interview card's mount target (its node identity survives
-   *  the MD's relocation: whole elements move, never their grandchildren). */
-  #authorPane: HTMLElement | null = null
+  // GH #686's Amendment retires `ui-master-detail` as the Author⇄Settings pairing vehicle entirely (the
+  // wireframe's all-active geometry — three 296px-ish columns — does not fit the MD's 40rem own-container
+  // dock floor, LLD §16). The three places are THREE SIBLING regions directly under `#paneHolder` now, in
+  // `PANE_ORDER`: the chat conversation (`#conversation`, `data-part="chat-pane"`), a plain div
+  // (`data-part="settings-pane"` — the SAME `settings-nav` + five section units, moved here whole exactly
+  // as before, never a runtime reparent; no field of its own — `#applySettingsSection` already tracks its
+  // children via `#settingsSections`, and nothing else needs the wrapper's own identity), and the
+  // Co-pilot conversation (`#authoringConversation`, `data-part="copilot-pane"` — the GH #666 card,
+  // renamed from the retired `author-pane` wrapper). cl.3's law survives the vehicle change: same
+  // singleton nodes, zero duplication, zero reparenting after this one compose-time build (verified with
+  // `isSameNode` probes across visibility-set flips, agent-admin.test.ts).
   #generateRequest: ((seed?: GenerateSeed) => void) | undefined
   /**
    * GH #670 — the Author card's Model/Effort pick made BEFORE the flow is armed, held here until there is
@@ -670,23 +690,23 @@ export class UIAgentAdminElement extends UIElement {
     const shell = document.createElement('ui-chat-shell') as UIChatShellElement
     // (SPEC-R6a/R7b's `resizable-end` + `narrow-end="tabs"` RETIRED with the options-pane they governed —
     // ADR-0179 cl.1 / admin-three-pane-ia.lld.md §7: the settings region left the shell's end side for the
-    // master-detail pairing below, and with it the six-entry narrow-tabs vocabulary cl.1 retires. The
-    // shell now carries exactly two slots: `header` (the pane nav) and `content` (the places).)
+    // pane holder below. The shell still carries exactly two slots: `header` (EMPTY this slice — S7-c's
+    // build) and `content` (the pane holder).)
 
-    // ADR-0179 cl.1 (LLD §3) — the content slot HOLDS THE PLACES (it was `chat-stack`, a two-conversation
-    // stacking vehicle for one place; ADR-0178 cl.5's stacking model is superseded by citation). Its two
-    // children are the test conversation (the Chat place) and the master-detail pairing (the Author and
-    // Settings places). GH #662 (cl.1's Amendment): `#applyPane` writes the active place onto this box as
-    // `data-pane` and the SHEET decides which places have a box — one below the triple line, all three at
-    // and above it. The test conversation below is otherwise byte-unchanged — it simply sits inside the
-    // holder instead of directly in the shell.
+    // GH #686's Amendment (LLD §16.1/§16.2) — the content slot HOLDS THE PLACES (it was `chat-stack`, a
+    // two-conversation stacking vehicle for one place; ADR-0178 cl.5's stacking model is superseded by
+    // citation). Its THREE children are three sibling regions — the test conversation (Chat), the
+    // Settings region, the Co-pilot conversation — in `PANE_ORDER`. `#applyPaneVisibility` writes the
+    // shown SET + primary onto this box as `data-show`/`data-primary`, and the SHEET decides which
+    // regions have a box — the primary alone below the triple line, the whole shown set at and above it.
     const paneHolder = document.createElement('div')
     paneHolder.setAttribute('data-part', 'pane-holder')
     paneHolder.setAttribute('data-slot', 'content')
     this.#paneHolder = paneHolder
 
     const conversation = new UIConversationElement()
-    // GH #665 — the triple dock puts two conversations on screen at once with nothing saying which is
+    conversation.setAttribute('data-part', 'chat-pane') // LLD §16.1's anatomy — the region identity the band CSS/tests target
+    // GH #665 — putting more than one conversation on screen at once needs something saying which is
     // which (Kim's screenshot: two visually identical empty threads). A quiet region kicker, prepended
     // before the control's own log/composer mount (`ui-conversation`'s `connected()` only ever APPENDS —
     // see `#makeRegionKicker`'s own comment), names this one the permanent test context (`#contextFor`'s
@@ -1140,86 +1160,52 @@ export class UIAgentAdminElement extends UIElement {
       event.stopPropagation() // this element's OWN event vocabulary stays closed (the try-it bar's precedent)
       this.#applySettingsSection((event as CustomEvent<{ value: string; index: number }>).detail.value)
     })
-    const settingsPane = document.createElement('ui-master-detail-pane')
-    settingsPane.setAttribute('pane', 'detail')
+    // GH #686's Amendment (LLD §16.1/§16.5) — the Settings region is a plain sibling `div` now, never a
+    // `ui-master-detail-pane` (the MD wrapper role retires with the vehicle; this element owns no `pane`
+    // attribute to carry). Same contents, same DOM identities, moved here whole exactly as before.
+    const settingsPane = document.createElement('div')
     settingsPane.setAttribute('data-part', 'settings-pane')
-    // GH #665 (screens:layout-checker finding 1, SHIPPABLE grade) — the settings column is unnamed at
-    // exactly the band the pane-nav's own "Settings" label vanishes (the wide-hide rule above). The
-    // layout-checker's finding proposed a third "Settings" kicker here; Kim OVERRULED it (2026-08-10,
-    // GH #665 follow-up): the sub-nav labels the column itself — no kicker, the properties-rail grammar
-    // stands on its own. The two CONVERSATION kickers remain the labeling system for the canvases.
+    // GH #665 (screens:layout-checker finding 1, SHIPPABLE grade) — the settings column went unnamed at
+    // exactly the band the (then-)pane-nav's own "Settings" label vanished. The layout-checker's finding
+    // proposed a third "Settings" kicker here; Kim OVERRULED it (2026-08-10, GH #665 follow-up): the
+    // sub-nav labels the column itself — no kicker, the properties-rail grammar stands on its own. The two
+    // CONVERSATION kickers remain the labeling system for the canvases.
     settingsPane.append(settingsNav, ...settingsSections)
 
-    // ── ADR-0179 OQ4 (LLD §2), GH #666 — the AUTHOR place: ONE conversation card, armed or not ───────────
-    // Kim's 2026-08-10 pixel ruling ("the center pane should be a CHAT, just like Test chat") retires the
-    // old two-box arrangement — a borderless prose block beside a bordered chat card. The Author place IS
-    // the interview's `ui-conversation` from first paint; unarmed, its log is empty and its own composer
-    // is the flow's entry (GH #684 — the headline + copy that used to occupy the log while unarmed are
-    // gone; the composer's own placeholder and the pre-arm Model/Effort pickers are the only orientation
-    // left, per Kim's live pixel-truth ruling). Arming FILLS this card — it never swaps one box for
-    // another, which is why the mount below is no longer lazy.
-    const authorPane = document.createElement('ui-master-detail-pane')
-    authorPane.setAttribute('pane', 'list')
-    authorPane.setAttribute('data-part', 'author-pane')
-    this.#authorPane = authorPane
+    // ── ADR-0179 OQ4 (LLD §2), GH #666, re-ruled by GH #686's Amendment — the CO-PILOT place: ONE
+    // conversation card, armed or not (renamed from "Author" — the vocabulary re-pins to
+    // `[Chat | Settings | Co-pilot]`, LLD §16.1). Kim's 2026-08-10 pixel ruling ("the center pane should
+    // be a CHAT, just like Test chat") retires the old two-box arrangement — a borderless prose block
+    // beside a bordered chat card. The Co-pilot place IS the interview's `ui-conversation` from first
+    // paint; unarmed, its log is empty and its own composer is the flow's entry (GH #684 — the headline +
+    // copy that used to occupy the log while unarmed are gone; the composer's own placeholder and the
+    // pre-arm Model/Effort pickers are the only orientation left, per Kim's live pixel-truth ruling).
+    // Arming FILLS this card — it never swaps one box for another, which is why the mount is not lazy.
+    //
+    // GH #686's Amendment retires the `ui-master-detail-pane` wrapper this card used to mount into
+    // (`author-pane`) along with the whole MD vehicle — `#mountAuthoringConversation` below appends the
+    // conversation directly into `#paneHolder` and its OWN `data-part` (`copilot-pane`, set there) carries
+    // the region identity now; no wrapper element exists for it any more.
+
+    // GH #686's Amendment (LLD §16.1/§16.2) — three SIBLING regions, no pairing vehicle: the DOM order is
+    // `PANE_ORDER` (chat · settings · copilot), which is also the reading order `#applyPaneVisibility`'s
+    // `data-show` composes in and the order a primary repoint falls back through. `conversation`/
+    // `settingsPane` append FIRST (chat, settings) so `#mountAuthoringConversation`'s own append below
+    // lands copilot as the holder's THIRD child, never its first — several probes key off
+    // `el.querySelector('ui-conversation')` matching the TEST conversation, document order (the
+    // shipped-anatomy precedent this ordering preserves).
+    paneHolder.append(conversation, settingsPane)
     this.#mountAuthoringConversation()
-
-    // ── ADR-0179 cl.3 (LLD §2/§6) — the PAIRING vehicle ─────────────────────────────────────────────────
-    // `ui-master-detail` buys both halves of cl.3 by composition, with zero bespoke code of this element's
-    // own: at ≥ 40rem own-container width it docks the two regions as a resizable `ui-split` (SPEC-R7's
-    // "0 bespoke split/resize code"), and below that line it drills into ONE region at a time — the one
-    // shipped arrangement that gives Settings a full-surface narrow home. `selected` is the consumer-written
-    // prop `#applyPane` drives; its `select`/`change` pair is CONTAINED here, exactly as the settings pane's
-    // own strip is (this element's event vocabulary stays closed).
-    const panePair = document.createElement('ui-master-detail') as HTMLElement & { selected: string }
-    panePair.setAttribute('data-part', 'pane-pair')
-    panePair.append(authorPane, settingsPane)
-    panePair.addEventListener('select', (event) => event.stopPropagation())
-    panePair.addEventListener('change', (event) => event.stopPropagation())
-    this.#panePair = panePair
-
-    // ── ADR-0179 cl.1 (LLD §2/§3) — the PANE NAV: one vehicle, three places, at every band ───────────────
-    // An admin-owned, panel-less `ui-tabs` in the shell's `header` slot. The shell's own narrow-tabs
-    // machinery enumerates content + pane segments — structurally the six-entry vocabulary cl.1 retires —
-    // so the top-level nav has to be admin-composed; the try-it strip's GH #221 shape is what it composes.
-    // `data-landmark="navigation"` overrides the header slot's default `banner` role via super-shell's own
-    // shipped override seam (ADR-0083's role-decoupled-from-placement precedent).
-    const paneNavBar = document.createElement('div')
-    paneNavBar.setAttribute('data-part', 'pane-nav-bar')
-    paneNavBar.setAttribute('data-slot', 'header')
-    paneNavBar.setAttribute('data-landmark', 'navigation')
-    const paneNav = document.createElement('ui-tabs') as UITabsElement
-    paneNav.setAttribute('data-part', 'pane-nav')
-    for (const [key, label, controls] of [
-      ['chat', 'Chat', conversation],
-      ['author', 'Author', authorPane],
-      ['settings', 'Settings', settingsPane],
-    ] as const) {
-      const tab = document.createElement('ui-tab') as UITabElement
-      tab.setAttribute('data-part', `pane-nav-${key}`)
-      tab.setAttribute('key', key)
-      tab.textContent = label
-      tab.link(controls, this.#nextId(`pane-nav-${key}`))
-      paneNav.append(tab)
-    }
-    paneNav.selected = this.#pane // the entry default ('chat')
-    paneNav.addEventListener('select', (event) => {
-      event.stopPropagation() // the try-it bar's own containment precedent — no new host event
-      this.#setPane((event as CustomEvent<{ value: string; index: number }>).detail.value as 'chat' | 'author' | 'settings')
-    })
-    this.#paneNav = paneNav
-    paneNavBar.append(paneNav)
-
-    paneHolder.append(conversation, panePair)
-    shell.append(paneNavBar, paneHolder)
+    shell.append(paneHolder) // `header` stays EMPTY this slice — S7-c's unified header bar build, LLD §16.4
     this.append(shell)
 
     this.#shell = shell
     this.#conversation = conversation
     this.#settingsEl = settingsEl
-    // Paint the entry place: Chat visible, the pairing hidden, the first settings section active.
+    // Paint the entry visibility state (LLD §16.2's OQ-D rec: all three shown, Chat primary) and the first
+    // settings sub-section.
     this.#applySettingsSection(settingsNav.selected)
-    this.#applyPane()
+    this.#applyPaneVisibility()
   }
 
   /** OQ2 — reveal ONE settings section (visibility-only, exactly the shell strip's own SPEC-R7c behavior:
@@ -1412,7 +1398,7 @@ export class UIAgentAdminElement extends UIElement {
     if (this.authoringStore === undefined || conversation === null) return
     conversation.addUserMessage(text)
     if (conversation.disabled) return // armed, but the Builder's own master switch is off — the turn is not owed
-    this.#handleSubmit(text, 'author')
+    this.#handleSubmit(text, 'copilot')
   }
 
   /** One conversation's content-render seam, parameterized by the store whose Markdown modality governs
@@ -1432,7 +1418,7 @@ export class UIAgentAdminElement extends UIElement {
   /** The GH #63 client-turn guards, extracted so BOTH conversations run the one budget. The budget is
    *  deliberately SHARED rather than per-context: it bounds this element's error-driven turn spawning as a
    *  whole, which is what the livelock it closes was made of. */
-  #handleClientMessage(conversation: UIConversationElement, origin: 'chat' | 'author', message: unknown): void {
+  #handleClientMessage(conversation: UIConversationElement, origin: 'chat' | 'copilot', message: unknown): void {
     if (this.agentSurfaceTurn === undefined) return
     const isError = typeof message === 'object' && message !== null && 'error' in message
     if (isError) {
@@ -1484,14 +1470,14 @@ export class UIAgentAdminElement extends UIElement {
    * `store` is what the turn COMPOSES FROM — never what a patch applies to. A patch always targets
    * `this.store`, the draft.
    */
-  #contextFor(origin: 'chat' | 'author'): {
+  #contextFor(origin: 'chat' | 'copilot'): {
     store: SettingsStore | undefined
     conversation: UIConversationElement | null
     session: 'authoring' | 'test' | undefined
     history: AdminTurn[]
   } {
     const authoringStore = this.authoringStore
-    if (authoringStore !== undefined && origin === 'author' && this.#authoringConversation) {
+    if (authoringStore !== undefined && origin === 'copilot' && this.#authoringConversation) {
       return { store: authoringStore, conversation: this.#authoringConversation, session: 'authoring', history: this.#authoringHistory }
     }
     // `session` stays UNDEFINED for the test context rather than the literal 'test': the runner defaults an
@@ -1512,13 +1498,14 @@ export class UIAgentAdminElement extends UIElement {
    * consequence; the guard below keeps `#rewireAuthoringContext`'s historical call a no-op.
    */
   #mountAuthoringConversation(): void {
-    // ADR-0179 (LLD §3) — the mount target is the AUTHOR PLACE now, not the old chat stack. `#authorPane`
-    // is the same node identity after `ui-master-detail`'s own compose-time relocation (it moves whole
-    // pane elements, never their grandchildren), so this lands inside the arranged region either way.
-    const stack = this.#authorPane
-    if (this.#authoringConversation !== null || stack === null) return
+    // GH #686's Amendment (LLD §16.1/§16.5) — the mount target is `#paneHolder` DIRECTLY now: the
+    // `ui-master-detail-pane` wrapper (`#authorPane`) this used to mount into retired with the whole MD
+    // vehicle. This element's own `data-part` (`copilot-pane`, below) carries the region identity that
+    // wrapper used to.
+    const holder = this.#paneHolder
+    if (this.#authoringConversation !== null || holder === null) return
     const conversation = new UIConversationElement()
-    conversation.setAttribute('data-part', 'authoring-conversation')
+    conversation.setAttribute('data-part', 'copilot-pane') // LLD §16.1 — renamed from the retired author-pane wrapper
     // GH #665 — the interview's own kicker (the "Builder INTERVIEW" identity Kim's screenshot named),
     // matching the test conversation's `#makeRegionKicker` above.
     conversation.prepend(this.#makeRegionKicker('Builder interview'))
@@ -1526,12 +1513,13 @@ export class UIAgentAdminElement extends UIElement {
     // interview is watched by the same person debugging the draft.
     conversation.receipt = true
     conversation.sources = true
-    // GH #662 — this composer IS the authoring context. GH #666 — and while the flow is UNARMED it is also
-    // the flow's entry: the first message arms, then lands as the interview's opening turn (one composer in
-    // the column at every moment, so there is no second submit path to keep in step).
+    // GH #662 — this composer IS the authoring context, origin-keyed (`#contextFor`). GH #666 — and while
+    // the flow is UNARMED it is also the flow's entry: the first message arms, then lands as the
+    // interview's opening turn (one composer in the column at every moment, so there is no second submit
+    // path to keep in step).
     conversation.onSubmit((text) => {
       if (this.authoringStore === undefined) void this.#startFromFirstMessage(text)
-      else this.#handleSubmit(text, 'author')
+      else this.#handleSubmit(text, 'copilot')
     })
     // GH #670 — one handler per picker, covering BOTH arming states: armed, the pick commits to its own
     // home (the Builder's store for model — writing it to the draft would let the interviewer's model choice
@@ -1540,52 +1528,68 @@ export class UIAgentAdminElement extends UIElement {
     // there is no store, so the write landed on nothing.
     conversation.onModelChange((id) => this.#pickAuthoringModel(id))
     conversation.onEffortChange((id) => this.#pickAuthoringEffort(id as EffortLevel))
-    conversation.onClientMessage((message) => this.#handleClientMessage(conversation, 'author', message))
+    conversation.onClientMessage((message) => this.#handleClientMessage(conversation, 'copilot', message))
     conversation.setContentRenderer((text) => this.#renderContent(text, this.authoringStore))
-    stack.append(conversation)
+    holder.append(conversation)
     this.#authoringConversation = conversation
     // GH #666 — the card starts in its empty-log state (and, with no mint path, unavailable).
     this.#reflectAuthorEntry()
   }
 
   /**
-   * ADR-0179 cl.1/cl.2 (LLD §4) — go to a PLACE. The whole operation is a visibility + arrangement
-   * change: no store touch, no reassignment, no reset, no serialization. That is the retired mode seam's
-   * own discipline inherited verbatim — a place change is not a persona switch, so GH #145's reset must not
-   * fire and both transcripts stay mounted.
+   * GH #686's Amendment (LLD §16.2) — the ONE mutator every visibility write funnels through: it holds the
+   * min-one invariant (an empty resulting set is REFUSED — a no-op, the caller's previous state stands —
+   * "a zero-pane surface is broken by construction") and the primary invariant (`primary` always ends up a
+   * member of the resulting set: if the caller's own `primary` argument isn't in `shown`, this repoints to
+   * the first remaining member in `PANE_ORDER` — the "removing the primary repoints it to the first
+   * remaining member in reading order" rule, read as a general invariant rather than a pill-specific one).
    *
-   * PRIVATE by contract (LLD §4): no attribute, no event (this element's event vocabulary stays closed),
-   * no `attributes[]` row. The pane-nav strip and `#rewireAuthoringContext` are its only callers; probes
-   * reach it via the protected `setPaneSeam`.
+   * PRIVATE by contract (LLD §4/§16.2's "no attribute, no event" carryover): no attribute, no event, no
+   * `attributes[]` row. `#setPanePrimary` below is today's one real caller (the arm — LLD §16.2's
+   * "ensure copilot ∈ shown + primary = 'copilot'" line); a WIDE pill's toggle-membership write is S7-c's
+   * own build (that header bar doesn't exist in this slice) and funnels through this same mutator when it
+   * lands, so the min-one/primary-repoint invariants below need no second implementation then. Probes
+   * reach the machine directly via the protected `setPaneVisibilitySeam`.
    */
-  #setPane(pane: 'chat' | 'author' | 'settings'): void {
-    if (this.#pane === pane) return
-    this.#pane = pane
-    this.#applyPane()
+  #setPanesShown(shown: ReadonlySet<Pane> | readonly Pane[], primary: Pane): void {
+    const next = new Set(shown)
+    if (next.size === 0) return // refused — min-one invariant (LLD §16.2)
+    this.#panesShown = next
+    this.#panePrimary = next.has(primary) ? primary : (PANE_ORDER.find((p) => next.has(p)) ?? primary)
+    this.#applyPaneVisibility()
+  }
+
+  /** The NARROW segment's write semantics (LLD §16.2): set primary AND ensure membership. Used today by
+   *  the arm (below); S7-c's own narrow segment click handler is this method's other real caller once the
+   *  header bar exists. */
+  #setPanePrimary(pane: Pane): void {
+    const next = new Set(this.#panesShown)
+    next.add(pane)
+    this.#setPanesShown(next, pane)
   }
 
   /**
-   * Reflect the active place onto the composed anatomy — visibility and arrangement ONLY (LLD §4):
+   * Reflect the visibility state onto the composed anatomy — visibility ONLY (LLD §16.2), no arrangement
+   * left to carry (the MD's consumer-written `selected` retired with the MD itself):
    *
-   *  - the active place is written onto the pane holder as `data-pane`, and the SHEET reads it: below the
-   *    triple line exactly the named place paints; at and above it all three do (GH #662, cl.1's
-   *    Amendment). Nothing here consults a width — a band crossing repaints with zero state written, which
-   *    is the shell family's own-container-width law and the reason no ResizeObserver exists in this file.
-   *  - the MD's consumer-written `selected` carries the narrow drill-in: `''` (view=list, the interview)
-   *    for Author, `'settings'` (view=detail) for Settings. At WIDE both places converge on the same
-   *    docked pair — the selection is still tracked so a band crossing lands on the place the nav names.
-   *  - the pane-nav strip's `selected` is synced programmatically (no `select` echo, ADR-0019)
+   *  - `data-show` — the WHOLE shown set, space-joined in `PANE_ORDER` — and `data-primary` land on the
+   *    pane holder, and the SHEET reads both against the holder's own inline-size: below the triple line
+   *    exactly `data-primary`'s region paints; at and above it every `data-show` member does. Nothing here
+   *    consults a width — a band crossing repaints with zero state written, the shell family's
+   *    own-container-width law (the reason no ResizeObserver exists in this file).
+   *  - S7-c mirrors pressed/selected state onto the header's pills/segment control here — no header bar
+   *    exists in THIS slice (LLD §16.4's own S7-c row), so that half of this method's eventual body is a
+   *    documented gap, not a silent omission: there is nothing to mirror onto yet.
    *
-   * GH #666 — nothing here is armed-state dependent any more. The Author region is ONE card at every point
-   * of the flow: unarmed its log is empty (GH #684 — no dedicated empty-state node), armed it shows the
-   * transcript, and the swap is the log's own content, never a visibility flip between two boxes. The two
-   * `hidden` writes this method used to carry (the empty state on arm, the interview while unarmed) are
-   * gone with the second box they arranged.
+   * GH #666 — nothing here is armed-state dependent. The Co-pilot region is ONE card at every point of the
+   * flow: unarmed its log is empty (GH #684 — no dedicated empty-state node), armed it shows the
+   * transcript, and the swap is the log's own content, never a visibility flip between two boxes.
    */
-  #applyPane(): void {
-    this.#paneHolder?.setAttribute('data-pane', this.#pane)
-    if (this.#panePair) this.#panePair.selected = this.#pane === 'settings' ? 'settings' : ''
-    if (this.#paneNav) this.#paneNav.selected = this.#pane // programmatic write — no `select` echo (ADR-0019)
+  #applyPaneVisibility(): void {
+    const holder = this.#paneHolder
+    if (holder === null) return
+    holder.setAttribute('data-show', PANE_ORDER.filter((p) => this.#panesShown.has(p)).join(' '))
+    holder.setAttribute('data-primary', this.#panePrimary)
   }
 
   /** Arm, re-arm, or tear down the authoring context in response to an `authoringStore` change. A real
@@ -1596,9 +1600,9 @@ export class UIAgentAdminElement extends UIElement {
     this.#lastAuthoringStore = authoringStore
     if (authoringStore === undefined) {
       // Leaving the flow: the conversation stays mounted (cheap, and re-entering is common) but is
-      // emptied and hidden. ADR-0179 OQ4 — teardown NEVER forces navigation: the Author place is
-      // always-present, so clearing while the user stands on it simply returns the card to its unarmed,
-      // empty-log state (GH #684 — no dedicated empty-state node exists any more to re-seat).
+      // emptied. ADR-0179 OQ4 — teardown NEVER forces navigation (LLD §16.2's own restatement): the
+      // Co-pilot region is always-present, so clearing while the user is looking at it simply returns the
+      // card to its unarmed, empty-log state (GH #684 — no dedicated empty-state node exists to re-seat).
       // GH #644 — the interview's own model memory leaves with it, alongside its visible transcript.
       if (changed) {
         this.#authoringConversation?.reset()
@@ -1609,7 +1613,6 @@ export class UIAgentAdminElement extends UIElement {
       // GH #666 — the card stays; it returns to its empty-log state (and to the no-mint-path degrade, if
       // that is where this element stands). `reset()` above already cleared the transcript.
       this.#reflectAuthorEntry()
-      this.#applyPane()
       return
     }
     this.#mountAuthoringConversation()
@@ -1623,12 +1626,11 @@ export class UIAgentAdminElement extends UIElement {
       this.#preArm = {}
     }
     this.#syncAuthoringConversationConfig(authoringStore)
-    // ADR-0179's IA-entry re-point (LLD §2) — arming the flow LANDS the user in Author, at the one choke
-    // point every arm path already crosses (the roster menu's "New agent → Generate" and the Author card's
-    // own composer-first entry both converge here through the page's `createGeneratedAgent`). `#setPane`
-    // no-ops when the user is already there, and `#applyPane` below runs either way.
-    this.#setPane('author')
-    this.#applyPane()
+    // LLD §16.2 — arming the flow lands Co-pilot visible AND primary, at the one choke point every arm
+    // path already crosses (the roster menu's "New agent → Generate" and the card's own composer-first
+    // entry both converge here through the page's `createGeneratedAgent`). Replaces the retired
+    // `#setPane('author')` line verbatim.
+    this.#setPanePrimary('copilot')
   }
 
   /** The authoring conversation's own model roster/selection + master-switch reflection, read from the
@@ -1943,7 +1945,7 @@ export class UIAgentAdminElement extends UIElement {
    *  ⇒ a real live turn through the reused `dev-proxy-plugin.ts` trust boundary, single-shot into
    *  `setNote`/`finalize` (LLD Q3), degrading a thrown/rejected runner via `handle.fail()` (LLD Q5, no crash,
    *  no silent swallow). Both arms append the completed exchange to `#history`. */
-  #handleSubmit(text: string, origin: 'chat' | 'author'): void {
+  #handleSubmit(text: string, origin: 'chat' | 'copilot'): void {
     // ADR-0178 cl.5 — every read below is against the DRIVING context's store. With the flow inactive
     // that resolves to `this.store` and today's conversation, so this method's behaviour is unchanged.
     // GH #644 — `history` is this call's context-scoped array (test vs. authoring); every read/append
@@ -2057,7 +2059,7 @@ export class UIAgentAdminElement extends UIElement {
    *  shape handed verbatim to the injected runner (SPEC-N1), and which composer a turn came from is this
    *  element's own routing business, not the runner's. It selects the context (`#contextFor`) and nothing
    *  else. */
-  #runSurfaceTurn(turn: { kind: 'intent'; text: string } | { kind: 'client'; message: unknown }, origin: 'chat' | 'author'): void {
+  #runSurfaceTurn(turn: { kind: 'intent'; text: string } | { kind: 'client'; message: unknown }, origin: 'chat' | 'copilot'): void {
     // ADR-0178 cl.5 — as in `#handleSubmit`: with the flow inactive, `store`/`conversation` resolve to
     // exactly today's values and `session` stays absent, so the built request is byte-identical.
     const { store, conversation, session } = this.#contextFor(origin)
@@ -2592,13 +2594,14 @@ export class UIAgentAdminElement extends UIElement {
 
   // ── protected test seams (the split.ts/slider-multi.ts precedent) ────────────────────────────────────
 
-  /** ADR-0179 cl.2 (LLD §4) — go to a PLACE from a test probe, the retired `setModeSeam` construct it replaces:
-   *  `#setPane` is private by contract, and the pane-nav strip is a real control whose click a jsdom probe
-   *  cannot honestly drive (a jsdom-rendered `ui-tabs` is unstyled, which would quietly void every
-   *  geometry assertion built on it). `protected` keeps it off the public element — a consumer cannot
-   *  reach it, so no API is widened and no descriptor row is owed. */
-  protected setPaneSeam(pane: 'chat' | 'author' | 'settings'): void {
-    this.#setPane(pane)
+  /** LLD §16.2 — set the visibility model's whole state from a test probe: `setPaneSeam(pane)` retires
+   *  with `#pane`/`#setPane` (there is no single active place any more to set). `#setPanesShown` is
+   *  private by contract, and there is no real pill/segment control to drive a jsdom/browser probe through
+   *  yet either (S7-c's own build) — `protected` keeps this off the public element, exactly the
+   *  `setPaneSeam`/`setModeSeam` precedent: a consumer cannot reach it, so no API is widened and no
+   *  descriptor row is owed. */
+  protected setPaneVisibilitySeam(shown: readonly Pane[], primary: Pane): void {
+    this.#setPanesShown(shown, primary)
   }
 
   /** GH #145 — every piece of PER-PERSONA conversation state, cleared together on a real store
