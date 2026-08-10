@@ -2231,29 +2231,19 @@ describe('ui-agent-admin — the wide TRIPLE dock (GH #662, ADR-0179 cl.1 Amendm
   // region boxes', which the AT-the-line test above already covers), gutter equality between the two
   // inter-column seams, a visible identity kicker per conversation, and no mid-word composer-label crush.
   //
-  // `screens:layout-checker` findings 1/2 (SHIPPABLE grade) folded in here: a THIRD kicker now labels the
-  // settings column ("Settings" — the same `#makeRegionKicker`, one labeling system at one level, closing
-  // the gap where the pane-nav's own "Settings" label vanishes at this exact band), and the probe compares
-  // TEXT rects (kicker padding-top offset), not just box tops — box-true/text-false was finding 2's own
-  // bug: a bare box comparison passed even when the settings sub-nav's OWN inset differed from the
-  // kickers'.
-  it('a shared CONTENT top line: all three region kickers — chat, interview, AND settings — land their TEXT on the same y, not just their boxes', async () => {
+  // `screens:layout-checker` finding 2 folded in here: the probe compares TEXT rects (kicker
+  // padding-top offset), not just box tops — box-true/text-false was the finding's own bug. Finding 1's
+  // third "Settings" kicker was built, then OVERRULED by Kim (2026-08-10, GH #665 follow-up): the
+  // sub-nav labels the settings column itself; the TWO conversation kickers are the labeling system.
+  it('a shared CONTENT top line: the two conversation kickers land their TEXT on the same y, and the settings column carries NO kicker', async () => {
     const el = await mountTripleAt(1200)
     const { chat, author, settings } = partsOf(el)
     const chatKicker = chat.querySelector('[data-part="region-kicker"]') as HTMLElement
     const authorKicker = author.querySelector('ui-conversation [data-part="region-kicker"]') as HTMLElement
-    const settingsKicker = settings.querySelector('[data-part="region-kicker"]') as HTMLElement
-    expect(settingsKicker, 'the settings column carries its OWN identity kicker now, not just its sub-nav').not.toBeNull()
-    expect(settingsKicker.textContent?.trim()).toBe('Settings')
+    expect(settings.querySelector('[data-part="region-kicker"]'), "Kim's overrule: no Settings kicker — the sub-nav is the label").toBeNull()
 
     const textTop = (el: HTMLElement): number => el.getBoundingClientRect().top + parseFloat(getComputedStyle(el).paddingTop)
-    const texts = [chatKicker, authorKicker, settingsKicker].map(textTop)
-    for (const [i, label] of ['interview kicker', 'settings kicker'].entries()) {
-      expect(Math.abs(texts[i + 1]! - texts[0]!), `${label}'s own TEXT lands on the test chat kicker's`).toBeLessThanOrEqual(1)
-    }
-    // The settings sub-nav sits one level BELOW its own kicker now (finding 1's "one level" law) — it is
-    // deliberately NOT compared against the kicker line; the pane's own flex `gap` places it, matching the
-    // kicker↔log rhythm one column over (the "doubled rhythm" probe below pins that gap's real value).
+    expect(Math.abs(textTop(authorKicker) - textTop(chatKicker)), "the interview kicker's TEXT lands on the test chat kicker's").toBeLessThanOrEqual(1)
 
     // …and BENEATH the kickers, the two conversation logs still share a bottom rhythm with each other.
     const chatLog = chat.querySelector('[data-part="log"]') as HTMLElement
@@ -2268,11 +2258,12 @@ describe('ui-agent-admin — the wide TRIPLE dock (GH #662, ADR-0179 cl.1 Amendm
   // layer), not twice it.
   it('one rhythm, not two: the gap above each kicker matches the gap below it', async () => {
     const el = await mountTripleAt(1200)
-    const { chat, author, settings } = partsOf(el)
+    const { chat, author } = partsOf(el)
     for (const [label, card, kicker, next] of [
       ['chat', chat, chat.querySelector('[data-part="region-kicker"]') as HTMLElement, chat.querySelector('[data-part="log"]') as HTMLElement],
       ['author', author, author.querySelector('ui-conversation [data-part="region-kicker"]') as HTMLElement, author.querySelector('ui-conversation [data-part="log"]') as HTMLElement],
-      ['settings', settings, settings.querySelector('[data-part="region-kicker"]') as HTMLElement, settings.querySelector('[data-part="settings-nav"]') as HTMLElement],
+      // settings row removed — Kim's 2026-08-10 overrule: no Settings kicker; the sub-nav's own
+      // placement is pinned by the pane's flex gap, not a kicker rhythm.
     ] as const) {
       const cardTop = card.getBoundingClientRect().top
       const kickerTextTop = kicker.getBoundingClientRect().top + parseFloat(getComputedStyle(kicker).paddingTop)
