@@ -66,7 +66,7 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
   - name: author-pane
     description: ADR-0179 / GH #666 — the Author place's region (`<ui-master-detail-pane pane="list" data-part="author-pane">`), holding exactly ONE child at every point of the flow: the interview's `authoring-conversation` card. Its node identity survives master-detail's compose-time relocation (whole pane elements move, never their grandchildren), so the conversation always mounts into the arranged region.
   - name: author-empty
-    description: ADR-0179 OQ4 / GH #666 — the Author card's EMPTY-LOG state, seated inside `authoring-conversation`'s own `[data-part="log"]` (`ui-conversation.setEmptyState`) whenever `authoringStore` is unset and dropped the moment the flow arms. Kim's 2026-08-10 pixel ruling ("the center pane should be a CHAT, just like Test chat") is why it lives THERE and not beside the card: the unarmed Author column is the interview's own conversation — same border, same kicker, same bottom-pinned composer — with this headline + copy occupying the log until the first turn. COMPOSER-FIRST (his earlier same-day ruling) still holds and is now literal: the composer the user types into is the CARD's, and its first message arms the flow through the page's `onGenerateRequest(cb)` callback (the same one the roster menu's "New agent → Generate" runs — one arming path, never two) before landing as the interview's opening turn, so the description is never swallowed. The `<ui-button data-part="author-empty-action">` ("New agent → Generate", `variant="text"`) rides inside this state as the SECONDARY affordance: a bare arm with no opening turn. With NO callback registered the action stays hidden and the whole card is `disabled` — a static build with no mint path shows the copy alone, and the composer's own busy guard refuses a send before reading the text. Both reads are computed at build time from the registration (not only pushed by it), so registering BEFORE the element connects — what the real page does — opens the entry just as a post-connect registration does. GH #670 — the unarmed card also carries the interview's Model and Effort pickers, from the same roster and levels the armed card shows, so the first-touch surface offers a real choice instead of only defaults; the pick is held locally until the arm SEEDS the newly-minted interviewer with it (see `onGenerateRequest` under Registration seams).
+    description: ADR-0179 OQ4 / GH #666 — the Author card's EMPTY-LOG state, seated inside `authoring-conversation`'s own `[data-part="log"]` (`ui-conversation.setEmptyState`) whenever `authoringStore` is unset and dropped the moment the flow arms. Kim's 2026-08-10 pixel ruling ("the center pane should be a CHAT, just like Test chat") is why it lives THERE and not beside the card: the unarmed Author column is the interview's own conversation — same border, same kicker, same bottom-pinned composer — with this headline + copy occupying the log until the first turn. COMPOSER-FIRST (his earlier same-day ruling) still holds and is now literal: the composer the user types into is the CARD's, and its first message arms the flow through the page's `onGenerateRequest(cb)` callback before landing as the interview's opening turn, so the description is never swallowed. GH #681 (Kim's later 2026-08-10 ruling) removed the SECONDARY `<ui-button data-part="author-empty-action">` ("New agent → Generate") that used to ride inside this state: it duplicated the roster (...) menu's identically-labelled item down to the outcome (both ultimately called the page's `createGeneratedAgent`), so creating a new agent stays a roster-menu action and this state is headline + copy only. The whole card is still `disabled` with NO callback registered — a static build with no mint path shows the copy alone, and the composer's own busy guard refuses a send before reading the text. That `disabled` read is computed at build time from the registration (not only pushed by it), so registering BEFORE the element connects — what the real page does — opens the entry just as a post-connect registration does. GH #670 — the unarmed card also carries the interview's Model and Effort pickers, from the same roster and levels the armed card shows, so the first-touch surface offers a real choice instead of only defaults; the pick is held locally until the arm SEEDS the newly-minted interviewer with it (see `onGenerateRequest` under Registration seams) — a pick made on this card and then armed via the roster menu instead of typing is NOT seeded (the roster menu, invoked from outside any specific card, has no pick to carry).
   - name: settings-pane
     description: ADR-0179 — the Settings place's region (`<ui-master-detail-pane pane="detail" data-part="settings-pane">`): the `settings-nav` strip over the five section units, which moved here WHOLE at compose time from the retired `options-pane` slot (a compose-time re-home, never a runtime reparent).
   - name: settings-nav
@@ -179,10 +179,12 @@ navigation vehicle at every band — a panel-less `ui-tabs` in the composed chat
   is the AUTHOR pairing below).
 - **Author** is the guided-authoring interview's own place (`authoringStore`, ADR-0178 cl.5). It is
   ALWAYS present, and it is always the interview's own conversation card — same treatment as Chat's
-  (GH #666). Unarmed, that card's log carries the "Describe the agent you want" copy plus a "New agent →
-  Generate" action reaching the page through the `onGenerateRequest(cb)` registration seam, and the card's
-  own composer is the flow's entry: the first message arms and becomes the interview's opening turn.
-  Armed, the copy leaves and the transcript takes the log. Arming from anywhere lands the user here.
+  (GH #666). Unarmed, that card's log carries the "Describe the agent you want" copy, and the card's own
+  composer is the flow's entry: the first message arms (through the `onGenerateRequest(cb)` registration
+  seam) and becomes the interview's opening turn. The roster (...) menu's own "New agent → Generate" item
+  is the OTHER arming entry, for arming without typing anything (GH #681 removed the in-card duplicate of
+  that item). Armed, the copy leaves and the transcript takes the log. Arming from anywhere lands the user
+  here.
 - **Settings** groups the five section units — Agent · Capabilities · Surface · Context: System ·
   Context: Dialog — under one place with its own internal sub-nav (`settings-nav`).
 
@@ -234,20 +236,25 @@ card): **Context: System** (the compiled agent-system JSON, incl. the `surface` 
 
 ## Registration seams
 
-`onGenerateRequest(callback)` — register the page's "start the guided flow" path (ADR-0179 OQ4). Both
-Author entries invoke it — the card's first message and the empty state's secondary action — and
-registering is also what OPENS the entry (the action paints, the unarmed card stops being `disabled`), so
-a static build with no mint path paints the copy alone. A callback, never a CustomEvent (SPEC-R5): the mint path
-is page-owned (`createGeneratedAgent` — a roster mint plus a `builderStore()` arm) and this component
-cannot import site code without inverting the layering DAG.
+`onGenerateRequest(callback)` — register the page's "start the guided flow" path (ADR-0179 OQ4). Two
+affordances reach the SAME page-side mint path (`createGeneratedAgent`), by different routes: the card's
+own first message (this element, `#startFromFirstMessage`) invokes the registered callback, carrying a
+seed; the roster (...) menu's "New agent → Generate" item (page-side, `site/pages/agent-admin-app.ts`;
+GH #681 removed the in-card duplicate of that item) calls `createGeneratedAgent` directly, with no seed —
+from outside any specific card it has no pre-arm pick to carry. Registering is also what OPENS the card's
+own entry — the unarmed card stops being `disabled` — so a static build with no mint path paints the copy
+alone. A callback, never a CustomEvent (SPEC-R5): the mint path is page-owned and this component cannot
+import site code without inverting the layering DAG.
 
 The callback receives a `GenerateSeed` (GH #670, Kim's 2026-08-10 ruling): the Model the user picked on the
 unarmed card, for the page to SEED the store it is about to mint with (`builderStore(seed?.model)`). The pick
 therefore wins by construction — the interview's first read of `model` is already the user's, so there is no
 write-then-overwrite step to lose a race with — and an untouched picker sends nothing, leaving the minted
-store's own default in charge. Both entries seed identically. Optional at both ends: a page that ignores the
-argument behaves exactly as before. Effort takes the same pre-arm-then-apply path but is not part of the seed
-— it has no store home by design (it is a per-conversation dial on the element, never persisted).
+store's own default in charge. Only the card's own first-message entry carries a seed: the roster menu, invoked
+from outside any specific card, has no pick to carry, so its own call sends no seed and the minted store's own
+default stands (GH #681). Optional at both ends: a page that ignores the argument behaves exactly as before.
+Effort takes the same pre-arm-then-apply path but is not part of the seed — it has no store home by design (it
+is a per-conversation dial on the element, never persisted).
 
 ## One primitive, seven instantiations (ADR-0132; genui-surface SPEC-R11 added pattern-source, ADR-0170 added catalog)
 

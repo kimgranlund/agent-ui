@@ -624,24 +624,6 @@ describe('the pane nav — the visible place change, driving the SAME seam the r
     expect([...authorPane.children].map((c) => c.getAttribute('data-part'))).toEqual(['authoring-conversation'])
   })
 
-  it('OQ4 — `onGenerateRequest` OPENS the entry: the card stops being disabled and the secondary action paints', async () => {
-    const { el } = mountAdmin({ store: personaStore() })
-    await whenFlushed()
-    const action = el.querySelector('[data-part="author-empty-action"]') as HTMLElement
-    const card = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement & { disabled: boolean }
-    // The static-build degrade: no mint path ⇒ no affordance that could do nothing. The card's own
-    // `disabled` carries what a hidden composer used to — and carries it better, because the composer's
-    // busy guard refuses a send BEFORE reading the text (TKT-0034), so nothing can be swallowed.
-    expect([action.hasAttribute('hidden'), card.disabled]).toEqual([true, true])
-    expect(authorComposer(el).busy, 'and the card`s own composer reflects it').toBe(true)
-    let fired = 0
-    el.onGenerateRequest(() => { fired += 1 })
-    await whenFlushed()
-    expect([action.hasAttribute('hidden'), card.disabled]).toEqual([false, false])
-    expect(authorComposer(el).busy).toBe(false)
-    action.click()
-    expect(fired).toBe(1)
-  })
 })
 
 // ── GH #666 — the unarmed Author place is the flow's ENTRY, and it is a CHAT CARD ──────────────────────
@@ -679,10 +661,7 @@ describe('GH #666 — the unarmed Author card: a live composer, and the arming i
     mounted.push(el)
     await whenFlushed()
     const card = el.querySelector('[data-part="authoring-conversation"]') as HTMLElement & { disabled: boolean }
-    expect(
-      [el.querySelector('[data-part="author-empty-action"]')!.hasAttribute('hidden'), card.disabled],
-      'registered pre-connect ⇒ the entry still opens',
-    ).toEqual([false, false])
+    expect(card.disabled, 'registered pre-connect ⇒ the entry still opens').toBe(false)
   })
 
   it('the copy lives INSIDE the card`s log, above the card`s own bottom composer (the empty-conversation idiom)', async () => {
@@ -745,21 +724,28 @@ describe('GH #666 — the unarmed Author card: a live composer, and the arming i
   })
 
   it('the two entries CONVERGE: arming by first message leaves the same state as arming by the roster action', async () => {
+    // GH #681 — the in-card "New agent → Generate" button is gone; the roster (...) menu's item is the
+    // survivor for "arm without typing anything". In production it reaches this element NOT through the
+    // callback — it calls `createGeneratedAgent` directly, page-side, and assigns `authoringStore` itself —
+    // but this element's own test harness has no roster menu to click, so `mintPath` (the same stand-in
+    // this describe block already uses) is registered onto `onGenerateRequest` purely as a vehicle to
+    // reproduce that same end state: `authoringStore` set, with no seed carried.
     const byAction = mountAdmin({ store: personaStore() })
     const actionBuilder = personaStore({ [SURFACE_AUTHORING_KEY]: true })
-    byAction.el.onGenerateRequest(mintPath(byAction.el, actionBuilder))
+    const armFromRoster = mintPath(byAction.el, actionBuilder)
+    byAction.el.onGenerateRequest(armFromRoster)
     const byMessage = mountAdmin({ store: personaStore() })
     const messageBuilder = personaStore({ [SURFACE_AUTHORING_KEY]: true })
     byMessage.el.onGenerateRequest(mintPath(byMessage.el, messageBuilder))
     await whenFlushed()
 
-    ;(byAction.el.querySelector('[data-part="author-empty-action"]') as HTMLElement).click()
+    armFromRoster() // stands in for a click on the roster menu's own item
     await whenFlushed()
     await submitFirst(byMessage.el, 'a hotel concierge please')
 
     expect(armedShape(byMessage.el)).toEqual(armedShape(byAction.el))
     // The ONE intended difference, stated rather than left implicit: the message entry opens the
-    // interview with the user's description; the button entry hands over an empty transcript.
+    // interview with the user's description; the roster entry hands over an empty transcript.
     const transcript = (r: { el: UIAgentAdminElement }): string =>
       r.el.querySelector('[data-part="authoring-conversation"]')!.textContent ?? ''
     expect(transcript(byMessage)).toContain('a hotel concierge please')
@@ -915,34 +901,6 @@ describe('GH #670 — the unarmed Author card’s Model/Effort pickers: picked b
     expect(pickerProps(el).effort, 'and the armed composer still shows it').toBe('high')
   })
 
-  it('the two arming entries SEED IDENTICALLY — first message and the empty state’s action (GH #666’s equivalence law, extended to configuration)', async () => {
-    const byMessage = mountAdmin({ store: personaStore(), events: [{ kind: 'note', note: 'ok' }] })
-    const messageMint = seedingMintPath(byMessage.el)
-    const byAction = mountAdmin({ store: personaStore(), events: [{ kind: 'note', note: 'ok' }] })
-    const actionMint = seedingMintPath(byAction.el)
-    await whenFlushed()
-
-    for (const el of [byMessage.el, byAction.el]) {
-      pick(el, 'models', PICK)
-      pick(el, 'effort', 'high')
-    }
-    await whenFlushed()
-
-    ;(byAction.el.querySelector('[data-part="author-empty-action"]') as HTMLElement).click()
-    await whenFlushed()
-    await submitFirst(byMessage.el, 'a hotel concierge please')
-
-    const seeded = (el: UIAgentAdminElement, mint: { seeds: ({ model?: string } | undefined)[]; builder: () => SettingsStore }): Record<string, unknown> => ({
-      seeds: mint.seeds,
-      builderModel: mint.builder().get('model'),
-      composerModel: pickerProps(el).model,
-      composerEffort: pickerProps(el).effort,
-    })
-    expect(seeded(byMessage.el, messageMint)).toEqual(seeded(byAction.el, actionMint))
-    // Anti-vacuous: both really carried the pick, rather than both dropping it identically.
-    expect(seeded(byAction.el, actionMint)).toMatchObject({ seeds: [{ model: PICK }], builderModel: PICK, composerEffort: 'high' })
-  })
-
   it('an UNTOUCHED picker seeds nothing — the minted store’s own default stands (fork 2’s other arm)', async () => {
     const { el, requests } = mountAdmin({ store: personaStore(), events: [{ kind: 'note', note: 'ok' }] })
     await whenFlushed()
@@ -976,22 +934,23 @@ describe('GH #670 — the unarmed Author card’s Model/Effort pickers: picked b
   })
 
   it('arming EMPTIES the bridge — leaving the flow returns neutral pickers, and a re-arm carries no stale pick', async () => {
+    // GH #681 — the in-card button that used to drive both arms here is gone; the card's own composer-first
+    // entry (`submitFirst`) is the surviving in-card path that carries the pre-arm pick, so it drives both
+    // the first arm and the re-arm below.
     const { el } = mountAdmin({ store: personaStore() })
     await whenFlushed()
     const mint = seedingMintPath(el)
     await whenFlushed()
     pick(el, 'models', PICK)
     await whenFlushed()
-    ;(el.querySelector('[data-part="author-empty-action"]') as HTMLElement).click()
-    await whenFlushed()
+    await submitFirst(el, 'a hotel concierge please')
     expect(mint.builder().get('model')).toBe(PICK)
 
     el.authoringStore = undefined // leave the flow — the card returns to its empty-log state
     await whenFlushed()
     expect(trigger(el, 'models').textContent, 'the bridge is spent: from the arm on, the store was the truth').toContain('Models')
 
-    ;(el.querySelector('[data-part="author-empty-action"]') as HTMLElement).click()
-    await whenFlushed()
+    await submitFirst(el, 'a second concierge please')
     expect(mint.seeds[1]?.model, 'so the second arm seeds nothing it was not freshly told').toBeUndefined()
   })
 })
