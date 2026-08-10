@@ -703,6 +703,25 @@
     font-weight: 600;
   }
 
+  /* S7-d (LLD §16.4) — "Reset Agent" at the Model fold's content END: a SIBLING of model-grid (never a
+     child — model-grid is wholesale-replaceChildren'd on every store change), the bankroll-row shape
+     verbatim (own part names, since it lives among the Model fold's content rather than its own fold). */
+  [data-part='reset-agent-row'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-agent-admin-row-gap);
+    box-sizing: border-box;
+    padding: var(--ui-agent-admin-card-pad);
+    border: 1px solid var(--ui-agent-admin-border);
+    border-radius: var(--ui-agent-admin-entry-radius);
+    background: var(--ui-agent-admin-surface);
+  }
+
+  [data-part='reset-agent-label'] {
+    flex: 0 0 auto;
+    font-weight: 600;
+  }
+
   /* The mono JSON preview — GH #222: the section's ONE card of content (the shared card chrome recipe —
      model-grid/surface-row/entry — kept on the code-surface plane). Its OWN scroll container
      (overflow-x) so a long systemPrompt line can never widen the pane (the no-horizontal-overflow

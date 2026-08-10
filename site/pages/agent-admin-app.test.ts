@@ -740,13 +740,29 @@ describe('the Builder persona (ADR-0178 cl.4 — hidden-until-invoked)', () => {
   })
 })
 
-describe('the "New agent → Generate" IA entry (LLD-C8)', () => {
-  it('EXTENDS the new-agent action set rather than restructuring it — Blank keeps its row and its value', async () => {
+describe('the "New agent → Generate" IA entry (LLD-C8) / GH #686 S7-d — the header seam registrations', () => {
+  it('GH #686 S7-d — the retired canvas-header/overflow-menu code leaves no residue (checked by SYMBOL, not by a bare word a doc comment may legitimately still name)', async () => {
     const source = readFileSync('site/pages/agent-admin-app.ts', 'utf8')
-    const actions = source.slice(source.indexOf('const NEW_AGENT_ACTIONS'), source.indexOf('] as const', source.indexOf('const NEW_AGENT_ACTIONS')))
-    expect(actions).toContain("value: 'new-agent-blank'")
-    expect(actions).toContain("value: 'new-agent-generate'")
-    expect(actions.indexOf('new-agent-blank')).toBeLessThan(actions.indexOf('new-agent-generate'))
+    for (const retiredSymbol of [
+      'const NEW_AGENT_ACTIONS',
+      "className = 'canvas-header'",
+      'const agentMenu = document.createElement',
+      'const overflowMenu = document.createElement',
+      'function createBlankAgent',
+      'function addPersonaRow',
+    ]) {
+      expect(source, `"${retiredSymbol}" must leave no residue`).not.toContain(retiredSymbol)
+    }
+  })
+
+  it('registers all six header seams, routes New Agent to Generate (OQ-A), and wires Import/Export/Reset to their existing flows', async () => {
+    const source = readFileSync('site/pages/agent-admin-app.ts', 'utf8')
+    expect(source).toContain('admin.setAgentRoster' /* via pushRoster */)
+    expect(source).toContain('admin.onAgentSelect(')
+    expect(source).toContain('admin.onNewAgentRequest(() => createGeneratedAgent())')
+    expect(source).toContain('admin.onImportRequest(() => fileInput.click())')
+    expect(source).toContain('admin.onExportRequest(() => exportActivePersona())')
+    expect(source).toContain('admin.onResetRequest(')
   })
 
   it('applyPersona clears `authoringStore` BEFORE swapping `store` — the one choke point that exits the flow', async () => {

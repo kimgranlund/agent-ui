@@ -517,6 +517,9 @@ export class UIAgentAdminElement extends UIElement {
   #overflowTriggerBtn: HTMLElement | null = null
   #overflowImportItem: HTMLElement | null = null
   #overflowExportItem: HTMLElement | null = null
+  // S7-d (LLD §16.4) — "Reset Agent"'s own consumer, at the model-grid fold's content end. HIDDEN, not
+  // disabled, while `onResetRequest` is unregistered (`#applyActionAvailability`'s own law, extended).
+  #resetAgentBtn: HTMLElement | null = null
   /**
    * GH #670 — the Author card's Model/Effort pick made BEFORE the flow is armed, held here until there is
    * somewhere real to put it. It exists because the pickers are props-down/callbacks-up: armed, a pick
@@ -1088,10 +1091,33 @@ export class UIAgentAdminElement extends UIElement {
     // connect-order placement dance required.
     const agentItem = settingsItem('agent', 'Agent', settingsEl)
     agentItem.append(agentSwitch)
+
+    // S7-d (LLD §16.4) — "Reset Agent" at the model-grid fold's content END: a second content element in
+    // the SAME settingsItem below (`modelGrid` is wholesale-`replaceChildren`d by `#renderModelGrid` on
+    // every store change, so this row lives BESIDE it, never inside it, or a re-render would wipe it). The
+    // bankroll-row shape verbatim (`[ label | spacer | trailing ui-button ]`), minted for THIS seam's mint
+    // path (`onResetRequest`) rather than the store-local bankroll clear. HIDE-not-disable while
+    // unregistered — the six-seam family's own stated divergence from `onGenerateRequest`'s card-disable
+    // precedent (LLD §16.3): a bare action row has no copy worth showing disabled.
+    const resetAgentRow = document.createElement('div')
+    resetAgentRow.setAttribute('data-part', 'reset-agent-row')
+    const resetAgentLabel = document.createElement('span')
+    resetAgentLabel.setAttribute('data-part', 'reset-agent-label')
+    resetAgentLabel.textContent = 'Reset agent'
+    const resetAgentSpacer = document.createElement('span')
+    resetAgentSpacer.setAttribute('data-part', 'surface-spacer')
+    const resetAgentBtn = document.createElement('ui-button') as UIButtonElement
+    resetAgentBtn.setAttribute('variant', 'soft')
+    resetAgentBtn.setAttribute('data-part', 'reset-agent-button')
+    resetAgentBtn.textContent = 'Reset Agent'
+    resetAgentBtn.addEventListener('click', () => this.#resetRequest?.())
+    this.#resetAgentBtn = resetAgentBtn
+    resetAgentRow.append(resetAgentLabel, resetAgentSpacer, resetAgentBtn)
+
     // GH #574 — Agent tab: who it is (Agent · Model · Bankroll — persona state lives with the persona).
     agentContent.append(
       agentItem,
-      settingsItem('model', 'Model', modelGrid),
+      settingsItem('model', 'Model', modelGrid, resetAgentRow),
       // GH #541 — Bankroll sits adjacent to Surface Options (the modality choices it reads alongside),
       // as its own group rather than a row inside them; GH #574 moved the WHOLE Surface Options fold to
       // its own tab, so Bankroll now closes out the Agent tab instead.
@@ -2978,21 +3004,23 @@ export class UIAgentAdminElement extends UIElement {
 
   /**
    * Register "Reset Agent"'s mint path. S7-d (LLD §16.4) places this seam's CONSUMER — the Settings
-   * model-grid fold's own affordance — and the site page's registration of it; this slice builds only the
-   * seam itself, matching the other five's frozen shape (§16.3) so S7-d has nothing left to design here,
-   * only to wire. No availability to reflect: nothing in THIS slice's header renders from this field yet.
+   * model-grid fold's own `reset-agent-button` (`#compose`, above) — reflected through the SAME
+   * `#applyActionAvailability` funnel every other action seam already uses: HIDE, not disable, while
+   * unregistered (LLD §16.3's stated divergence from `onGenerateRequest`'s card-disable precedent).
    */
   onResetRequest(callback: () => void): void {
     this.#resetRequest = callback
+    this.#applyActionAvailability()
   }
 
   /**
-   * The header-actions HIDE degrade (LLD §16.3), applied per affordance — never a blanket disable. New
+   * The action-seam HIDE degrade (LLD §16.3/§16.4), applied per affordance — never a blanket disable. New
    * Agent's two renderings share one registration; Import/Export each degrade independently (a wide
    * button AND its own narrow menu item); the `•••` trigger itself hides only when BOTH narrow items it
-   * would open onto are gone (an openable-but-empty menu is not a real affordance either). Safe to call
-   * before `#composeHeader` has built anything (every ref is nullable) and is `#compose`'s own build-time
-   * reflect call, the `#reflectAuthorEntry` shape.
+   * would open onto are gone (an openable-but-empty menu is not a real affordance either); Reset Agent
+   * (S7-d) is its own independent affordance, outside the header entirely (the Settings model-grid fold).
+   * Safe to call before `#composeHeader`/`#compose` has built anything (every ref is nullable) and is
+   * `#compose`'s own build-time reflect call, the `#reflectAuthorEntry` shape.
    */
   #applyActionAvailability(): void {
     const newAgentHidden = this.#newAgentRequest === undefined
@@ -3011,6 +3039,7 @@ export class UIAgentAdminElement extends UIElement {
       this.#overflowExportItem.setAttribute('aria-disabled', String(exportHidden))
     }
     if (this.#overflowTriggerBtn) this.#overflowTriggerBtn.hidden = importHidden && exportHidden
+    if (this.#resetAgentBtn) this.#resetAgentBtn.hidden = this.#resetRequest === undefined
   }
 
   // ── protected test seams (the split.ts/slider-multi.ts precedent) ────────────────────────────────────
@@ -3024,15 +3053,6 @@ export class UIAgentAdminElement extends UIElement {
    *  test that only cares about the RESULTING state, not the interaction that produced it. */
   protected setPaneVisibilitySeam(shown: readonly Pane[], primary: Pane): void {
     this.#setPanesShown(shown, primary)
-  }
-
-  /** S7-c/S7-d (LLD §16.3/§16.4) — `onResetRequest`'s own registration is otherwise UNOBSERVABLE from
-   *  outside this element this slice (true `#`-private, and no consumer affordance reads it yet): a
-   *  register-before/after-connect probe (the done-when every one of the six seams owes) needs SOME way
-   *  to confirm the callback landed. `protected`, the `setPaneVisibilitySeam` precedent — no descriptor
-   *  row, no public API widened. */
-  protected hasResetRequestRegistered(): boolean {
-    return this.#resetRequest !== undefined
   }
 
   /** GH #145 — every piece of PER-PERSONA conversation state, cleared together on a real store

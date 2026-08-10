@@ -95,6 +95,10 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
     description: The Catalogs LIBRARY section (ADR-0170) — the same primitive with three row exceptions, no new list/toggle/author code. (1) SINGLE-select, derived - every switch's checked state is `entry.id === sanitizeCatalog(store.get('a2uiCatalog'))`, so exactly one row is ON by construction and the stored per-entry `enabled` flags are never the selection truth (cl.2). Toggling a REGISTERED row ON writes the key; an UNREGISTERED row (a dedup-suffixed duplicate) is a VISIBLE no-op that snaps back; toggling the ACTIVE row OFF, or deleting it, writes the DEFAULT id - a persona always has a catalog (cl.3/cl.4). (2) NO master switch - the A2UI surface toggle is the gate, and the kind is excluded from the composed prompt (`catalogId` is wire, never prose - cl.5). (3) No authoring form and no per-entry editor (`customAdd`/`contentField` both false, cl.8) - rows are label + description + switch, and adds come from the "Registered catalogs" library pack alone, which maps LIVE from `A2UI_CATALOG_OPTIONS` (cl.7). The Default row is guaranteed at READ time (never a migration write), `builtin` and so undeletable.
   - name: model-grid
     description: The Model management card (2026-07-19 rev.2) — provider-grouped rows, one per roster model, each `[ model-row-label | model-include ui-switch | model-default ui-radio ]` — one logical radio system across the provider groups (rev.3). Checking a row writes `model`; a standalone-radio untoggle restores via re-render (a roster always has a default) and the default row's include switch locks on (`model`'s row is always offered). Re-rendered wholesale on `model`/`modelsIncluded` store changes.
+  - name: reset-agent-row
+    description: S7-d (LLD §16.4) — `<div data-part="reset-agent-row">`, a SIBLING of `model-grid` at the SAME `model` fold's content end (never a child of `model-grid` — that node is wholesale-`replaceChildren`d on every `model`/`modelsIncluded` store change, which would wipe a child on the next re-render). The `bankroll-row` shape verbatim — `[ reset-agent-label | surface-spacer | reset-agent-button ]`.
+  - name: reset-agent-button
+    description: S7-d — the row's `<ui-button data-part="reset-agent-button">` ("Reset Agent"), driving the `onResetRequest` seam. `[hidden]` while unregistered, never disabled — the six-seam family's own degrade law (LLD §16.3), reflected through the SAME `#applyActionAvailability` funnel the header's own five action affordances use.
   - name: entry-list
     description: A section's `<div data-part="entry-list">` — the entries themselves, in order.
   - name: entry
@@ -289,8 +293,8 @@ the right degrade for a bare action button or menu item, which has no copy to sh
 wide labeled button and its narrow icon-only "+" twin share ONE registration; Import/Export each degrade
 independently (their own wide button AND their own narrow overflow-menu item); the narrow `•••` trigger
 itself hides only when BOTH Import and Export are unregistered (an openable-but-empty menu is not a real
-affordance either). `onResetRequest` is a bare registration in this slice — S7-d places its consumer (the
-Settings model-grid fold's "Reset Agent" affordance) and the site page's registration of it.
+affordance either). `onResetRequest`'s own consumer (S7-d) is the Settings model-grid fold's own
+`reset-agent-button` — outside the header entirely, HIDDEN by the same funnel while unregistered.
 
 `onAgentSelect`'s callback fires from the header select's own commit; the select's internal `select`/
 `change` events stay contained (`stopPropagation`) — the closed seven-event set (naming.md §4) is
