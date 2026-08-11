@@ -498,8 +498,11 @@
     background: var(--ui-agent-admin-surface);
   }
   [data-part='model-provider'] {
+    /* GH #727: provider-group headings are mono kickers (the nav-rail tag idiom — nav-rail.css's
+       --ui-nav-rail-tag-font-family precedent), 500 weight — not sans 600. */
+    font-family: var(--md-sys-typeface-mono);
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--ui-agent-admin-label-ink);
     margin-block-start: var(--ui-agent-admin-provider-gap);
   }
