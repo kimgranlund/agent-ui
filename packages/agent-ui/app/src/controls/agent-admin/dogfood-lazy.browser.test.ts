@@ -19,6 +19,7 @@ import '../master-detail/master-detail-pane.css'
 import '../nav-rail/nav-rail.css'
 import '../settings/settings.css'
 import '../conversation/conversation.css'
+import '../conversation/conversation-dialog.css' // ADR-0180 (GH #688) — the adopted-or-created log's own scroll/layout CSS, promoted off conversation.css
 import '../conversation/conversation-composer.css'
 import '../surface-host/surface-host.css'
 import '@agent-ui/components/controls/tabs'

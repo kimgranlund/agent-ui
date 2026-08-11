@@ -35,6 +35,7 @@ import '@agent-ui/app/chat-shell.css' // ui-chat-shell's own host flex-column la
 import '@agent-ui/app/chat-shell' // self-defines <ui-chat-shell> (composes an inner <ui-super-shell>)
 import '@agent-ui/app/super-shell.css' // the composed inner ui-super-shell's own geometry/collapse CSS
 import '@agent-ui/app/conversation.css' // ui-conversation's own thread/narration layout (LLD-C6)
+import '@agent-ui/app/conversation-dialog.css' // ADR-0180 (GH #688) — the adopted-or-created log's own scroll/layout CSS, promoted off conversation.css
 import '@agent-ui/app/conversation-composer.css' // TKT-0056 — the composed ui-conversation-composer's own layout/parts CSS
 import '@agent-ui/app/conversation' // self-defines <ui-conversation> (which registers <ui-surface-host>/<ui-conversation-composer> in turn)
 import '@agent-ui/code/markdown.css'

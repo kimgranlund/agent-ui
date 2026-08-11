@@ -15,6 +15,7 @@ import '@agent-ui/app/master-detail.css'
 import '@agent-ui/app/nav-rail.css'
 import '@agent-ui/app/settings.css'
 import '@agent-ui/app/conversation.css'
+import '@agent-ui/app/conversation-dialog.css' // ADR-0180 (GH #688) — the adopted-or-created log's own scroll/layout CSS, promoted off conversation.css
 import '@agent-ui/app/conversation-composer.css' // TKT-0056 — the composed ui-conversation-composer's own layout/parts CSS
 import '@agent-ui/app/surface-host.css'
 // GH #52/ADR-0154 — ui-agent-admin now composes ui-chat-shell (which composes ui-super-shell); both

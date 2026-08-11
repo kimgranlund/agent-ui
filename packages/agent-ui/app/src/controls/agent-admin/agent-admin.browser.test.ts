@@ -16,6 +16,7 @@ import '../master-detail/master-detail-pane.css'
 import '../nav-rail/nav-rail.css'
 import '../settings/settings.css'
 import '../conversation/conversation.css'
+import '../conversation/conversation-dialog.css' // ADR-0180 (GH #688) — the adopted-or-created log's own scroll/layout CSS, promoted off conversation.css
 import '../conversation/conversation-composer.css' // TKT-0056 — the composed ui-conversation-composer's own layout/parts CSS
 import '../surface-host/surface-host.css'
 // GH #52/ADR-0154 — the re-host onto the shell-archetype grammar: super-shell's own CSS,
