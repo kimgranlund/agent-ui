@@ -73,7 +73,7 @@ to give (ADR-0178's live hydration) breaks exactly when the change is off-screen
 
 A user on the Capabilities section, at a wide band, asks the co-pilot for a different default
 model: the Settings pane (if hidden) appears, the sub-nav flips to Agent, the Model fold scrolls
-into view carrying a brief attention wash, and the turn's reply includes "Updated Model
-(Agent › Model)". The same ask at a narrow band changes nothing about which pane paints; the reply
+into view carrying a brief attention wash, and the turn's reply includes "Updated Agent › Model".
+The same ask at a narrow band changes nothing about which pane paints; the reply
 carries the same line, and the Model fold carries its wash the next time the user opens Agent.
 Checkable predicates live in the SPEC (§Acceptance); the SPEC owns behavior.

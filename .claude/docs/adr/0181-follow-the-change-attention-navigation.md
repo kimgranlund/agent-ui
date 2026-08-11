@@ -52,9 +52,15 @@ this record rules the forks.
 
 2. **The co-pilot becomes a pane-visibility writer — ADDITIVE-ONLY, and that constraint is the
    ruling.** The reaction may add `settings` to `#panesShown` through the existing `#setPanesShown`
-   mutator. It may never remove a member, never repoint `#panePrimary`, never move keyboard focus,
-   and never write visibility at a band where the addition wouldn't paint (the pixel-truth paint
-   check, SPEC-R3). §16.2's owning record gains this one writer row on ratification (the Repairs
+   mutator. It may never remove a user-chosen member, never repoint `#panePrimary`, and never move
+   keyboard focus; at a band where the addition wouldn't paint, its NET visibility effect is zero —
+   mechanically: write, synchronously probe paint (the layout read forces layout in the same task,
+   so nothing frames in between), and self-revert its own never-painted addition when the probe
+   fails (SPEC-R3 step 2). Reverting the reaction's OWN uncommitted addition is ruled NOT a
+   "remove" under this clause — additive-only constrains the reaction's effect on user-chosen
+   state at reaction completion, which is also when SPEC-R4 AC2's byte-unchanged predicate is
+   evaluated. (A pre-write probe cannot substitute: a not-yet-shown pane paints at no band, and JS
+   band re-derivation is banned.) §16.2's owning record gains this one writer row on ratification (the Repairs
    cell); every existing invariant stands. The alternative — full auto-navigation including a
    narrow-band primary flip — was rejected: at narrow, primary IS the conversation the user is
    typing into; stealing it to show a settings fold hides the interview mid-turn, the exact
@@ -65,8 +71,10 @@ this record rules the forks.
    (`prefers-reduced-motion` honored), and mark it with a transient `data-attention` wash on the
    existing `--md-sys-color-primary` tokens (~1.6s, no new color system). Suppressed paths (user's
    focus inside the settings pane; narrow band): no section flip, no scroll — instead a receipt
-   line in the turn's own note ("Updated Model (Agent › Model)") plus PENDING attention that fires
-   when the user next reveals the owning section themselves. ADR-0159's receipt pattern was
+   line in the turn's own note ("Updated Agent › Model") plus PENDING attention that fires when
+   the user next reveals the owning section themselves — a section flip OR a write-driven pane
+   reveal with that section already selected (both fire points are load-bearing: the sub-nav
+   defaults to Agent selected, so a pane reveal alone must fire; SPEC-R4). ADR-0159's receipt pattern was
    considered and not reused — it is a status-stream turn-lifecycle collapse, a different job; the
    conversational half here is a plain note line, and the visual half is fold-local. (SPEC-R4/R5/R7.)
 

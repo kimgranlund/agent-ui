@@ -46,7 +46,7 @@ honest trigger and needs zero new wire semantics.
   (existing `patchIgnored` path untouched).
 - AC3: a consumed patch with ≥1 applied key fires exactly one reaction per patch event.
 
-**SPEC-R2 — The field→location map (GH #695 open Q5, ruled ADR-0181 cl.4).**
+**SPEC-R2 — The field→location map (GH #695 open Q5, ruled ADR-0181 cl.4; PRD-G4).**
 A new pure module `field-location.ts` (beside `persona-patch.ts`) exports
 `locationFor(storeKey: string): FieldLocation | undefined` with
 
@@ -72,15 +72,23 @@ per-key table that can drift (the `persona-patch.ts` hoisting rationale, applied
 - AC3 (fail-closed): an unmapped key returns `undefined` and the reaction skips it silently —
   never a throw (the §3-filter drop discipline; a throw would fail the turn).
 
-**SPEC-R3 — The wide-band reaction (GH #695's headline behavior, post-#686 model).**
+**SPEC-R3 — The wide-band reaction (GH #695's headline behavior, post-#686 model; PRD-G1).**
 On trigger, coalesced per patch event (SPEC-R6):
 
 1. **Ensure the pane**: if `settings ∉ #panesShown`, add it via the existing `#setPanesShown`
    mutator with the CURRENT primary unchanged — an ADDITIVE-ONLY write (ADR-0181 cl.2): the
-   reaction never removes a set member, never repoints primary, never writes at narrow bands
-   (step 2's paint check is what makes that true without re-deriving the band).
-2. **Paint check**: if the settings pane is still not visible (narrow band — only primary paints),
-   stop here and take SPEC-R4's degrade path.
+   reaction never removes a user-chosen set member and never repoints primary.
+2. **Paint probe + self-revert**: synchronously probe `paints(#settingsPane)` — the layout read
+   forces style/layout within the same task, so no frame paints between steps 1 and 2. If the
+   pane does not paint (narrow band — only primary does), REVERT step 1's own addition (restore
+   the prior set through the same mutator; a no-op when `settings` was already a member) and take
+   SPEC-R4's degrade path. Reverting the reaction's OWN same-task, never-painted addition is NOT
+   a "remove" under cl.2's additive-only law: that law constrains the reaction's effect on
+   USER-chosen state at reaction COMPLETION (no user-chosen member removed, primary untouched),
+   and SPEC-R4 AC2's byte-unchanged predicate is likewise evaluated at reaction completion, never
+   mid-reaction — the net visibility effect at narrow is zero. (Neither ordering alternative
+   works: a PRE-write probe cannot tell wide from narrow — a not-yet-shown pane paints at NO
+   band — and re-deriving the 52.5rem band in JS is banned by §1's Visible definition.)
 3. **Ensure the section**: if the target section is not the selected settings sub-nav tab, select
    it (`settingsNav.selected` + `#applySettingsSection`) — UNLESS suppressed (SPEC-R4).
 4. **Scroll**: `scrollIntoView({ block: 'nearest' })` on the owning fold, `behavior: 'smooth'`
@@ -98,7 +106,7 @@ On trigger, coalesced per patch event (SPEC-R6):
   truth-table stays green byte-identical).
 
 **SPEC-R4 — Focus-stealing guards: suppression + the narrow degrade (GH #695 open Q2, ruled
-ADR-0181 cl.3).** The reaction is suppressed — steps 3–4 skipped, never queued as a later yank —
+ADR-0181 cl.3; PRD-G2).** The reaction is suppressed — steps 3–4 skipped, never queued as a later yank —
 when the user is mid-interaction in the settings pane: `document.activeElement` is, or is
 contained by, the settings pane at trigger time. At narrow bands (paint check fails) the primary
 is NEVER repointed. Both degrade identically:
@@ -106,16 +114,25 @@ is NEVER repointed. Both degrade identically:
 1. The receipt line (SPEC-R7) still rides the turn — the user is told in the conversation they are
    already looking at.
 2. The changed folds' attention is queued in `#pendingAttention` (a `Set` of `(section, item)`);
-   when the user next reveals the owning section themselves (a `#applySettingsSection` to it while
-   the pane paints), the queued folds wash + the first scrolls, then the queue clears for that
-   section. Pending attention survives section flips, is per-draft (cleared on persona switch —
+   when the user next REVEALS the owning section themselves — EITHER a section flip to it while
+   the pane paints, OR a pane reveal (the settings pane transitions not-painting → painting via a
+   visibility WRITE: a segment select, a pill re-add, the arm) while that section is already
+   selected — the queued folds wash + the first scrolls, then the queue clears for that section.
+   Both fire points are required: the sub-nav defaults to Agent already selected, so a pane
+   reveal alone (no section flip) must fire pending for the selected section or the AC2 scenario
+   below never triggers. A reveal caused purely by a resize crossing the band runs no JS at all
+   (§16.2's "a resize writes nothing" law), so it defers pending attention to the next
+   write-driven reveal or section flip — an accepted residual, stated here rather than smoothed
+   over. Pending attention survives section flips, is per-draft (cleared on persona switch —
    the `#conversationEpoch` reset family), and never persists to storage.
 
 - AC1: focus inside a settings field at trigger → sub-nav selection and scroll position unchanged;
   the fold still washes if visible; receipt line present.
 - AC2 (narrow): at a band where only primary paints, a consumed patch leaves `data-primary` and
-  `data-show` byte-unchanged; opening Settings › Agent afterwards washes + scrolls the Model fold
-  exactly once (repeat visits: no wash).
+  `data-show` byte-unchanged, asserted at reaction COMPLETION (SPEC-R3 step 2's self-revert is
+  what makes this true; mid-reaction state is not the predicate's subject); selecting the
+  Settings segment afterwards (Agent already the selected section — a pane reveal, no section
+  flip) washes + scrolls the Model fold exactly once (repeat visits: no wash).
 - AC3: persona switch clears pending attention (no ghost wash on the next draft).
 
 **SPEC-R5 — Highlight mechanics (GH #695 open Q4, ruled ADR-0181 cl.3).** Reuse fleet vocabulary,
@@ -143,10 +160,12 @@ already applied independently, agent-admin.ts:2573).
 
 **SPEC-R7 — The receipt line (PRD-G3).** Every consumed patch with a non-empty report appends one
 block to the turn's outgoing note (the existing append-never-replace note join,
-agent-admin.ts:2604): one line per changed location, `Updated <itemLabel> (<sectionLabel> ›
-<itemLabel>)` — labels from the map, values deliberately not echoed (the panes already show them;
-`#logTurn` keeps the key-grain record). Dropped keys stay log-only (ADR-0178 cl.2's no-error-
-surface posture, unchanged).
+agent-admin.ts:2604): one line per changed location, `Updated <sectionLabel> › <itemLabel>` —
+labels from the map, values deliberately not echoed (the panes already show them; `#logTurn`
+keeps the key-grain record). One named degeneracy: when `sectionLabel` equals `itemLabel` (the
+Agent tab's own `agent` fold), the line collapses to `Updated Agent` — never the stuttering
+`Updated Agent › Agent`. Dropped keys stay log-only (ADR-0178 cl.2's no-error-surface posture,
+unchanged).
 
 - AC1: the note contains the line(s) on every consumed-patch turn, both bands, suppressed or not.
 - AC2: `#logTurn`'s existing patch record is byte-unchanged.

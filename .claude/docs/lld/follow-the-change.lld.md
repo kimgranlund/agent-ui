@@ -52,8 +52,15 @@ Surface Options A2UI detail zone :1147–:1152, so its anchor is the `surface` f
 | `bankrollCapable` · `bankroll` | `agent-content` | `bankroll` | Bankroll |
 | `entries:prompt-section` · `kindEnabledKey('prompt-section')` | `capabilities-content` | `prompt-section` | Instructions |
 | `entries:<k>` · `kindEnabledKey(<k>)` for k ∈ skill/workflow/resource/tool | `capabilities-content` | `<k>` | the kind's label |
-| `surfaceMarkdown` · `surfaceA2ui` · `surfaceGenui` · `surfaceGenuiDogfood` · `surfacePlanner` · `surfaceAuthoring` · `a2uiCatalog` · `a2uiLocalPatterns` · `entries:catalog` | `surface-content` | `surface` | Surface Options |
+| `surfaceMarkdown` · `surfaceA2ui` · `surfaceGenui` · `surfaceGenuiDogfood` · `surfacePlanner` · `surfaceAuthoring` · `a2uiCatalog` · `a2uiLocalPatterns` · `entries:catalog` · `catalogsEnabled` | `surface-content` | `surface` | Surface Options |
 | `entries:pattern-source` · `kindEnabledKey('pattern-source')` | `surface-content` | `pattern-source` | Pattern sources |
+
+`catalogsEnabled` is mapped HONESTLY rather than excluded (doc-checker minor 3): it rides
+`PERSONA_STATE_KEYS` and the admission table via the `ENTRY_KINDS` spread
+(persona-patch.ts:70/:186 — a patch CAN write it), but no UI reads it (ADR-0170 cl.5 minted no
+catalog master switch; agent-admin.ts:1160's own comment). Excluding it would break SPEC-R2 AC1's
+totality gate; its location is the catalog roster's home (the Surface Options A2UI detail zone),
+which is where a user sent there would look.
 
 ```ts
 // field-location.ts — beside persona-patch.ts; imports ONLY schema/entries constants (pure data).
@@ -87,8 +94,13 @@ family; no public API.
   locs   = keys.map(locationFor).filter(defined)                    // SPEC-R2 AC3: silent skip
   if locs empty → return                                            // SPEC-R1 AC1
   target = locs[0]                                                  // SPEC-R6: first applied key
-  if settings ∉ #panesShown → #setPanesShown([...shown, 'settings'], #panePrimary)   // additive, cl.2
-  if !paints(#settingsPane) → #queuePending(locs); return           // narrow degrade, SPEC-R4
+  added = settings ∉ #panesShown
+  if added → #setPanesShown([...shown, 'settings'], #panePrimary)   // additive, cl.2
+  if !paints(#settingsPane):                                        // synchronous layout probe —
+    if added → #setPanesShown(priorShown, #panePrimary)             //   SELF-REVERT own addition
+    #queuePending(locs); return                                     // narrow degrade, SPEC-R4
+    // net-zero at narrow: write+probe+revert are one task, nothing frames in between (SPEC-R3
+    // step 2's ruling — reverting our OWN never-painted addition is not a cl.2 "remove")
   if activeElement within #settingsPane → #queuePending(locs); #washVisible(locs); return  // suppression
   if settingsNav.selected ≠ target.section → settingsNav.selected = …; #applySettingsSection(…)
   scroll fold(target) — scrollIntoView({ block:'nearest', behavior: reducedMotion ? 'auto' : 'smooth' })
@@ -98,9 +110,16 @@ family; no public API.
 - `paints(el)` = `el.getClientRects().length > 0` — pixel truth, never a JS re-derivation of the
   52.5rem band (§16.2's no-JS-layout law stays intact; we READ paint state, write none).
 - `#pendingAttention: Map<section, Set<item>>`, cleared on persona switch (piggyback the
-  `#conversationEpoch` reset family) and per-section on fire. The fire hook lives at the END of
-  `#applySettingsSection(key)`: if the pane paints and `#pendingAttention.has(key)`, wash all +
-  scroll first, then delete the section's entry.
+  `#conversationEpoch` reset family) and per-section on fire. TWO fire hooks, both required
+  (SPEC-R4.2): (a) the END of `#applySettingsSection(key)` — a section flip; (b) the END of
+  `#applyPaneVisibility()` — the one choke point every visibility WRITE funnels through (pills,
+  segments, the arm, this reaction) — firing for the CURRENTLY-selected section when the settings
+  pane transitioned not-painting → painting (track the prior probe result in a private field; the
+  sub-nav defaults to Agent selected, so a pane reveal with no section flip is the common case —
+  hook (a) alone never fires SPEC-R4 AC2's own scenario). Guard: hook (b) must ignore the
+  transient add-then-revert inside `#followChange` itself (probe after the reaction settles, or
+  flag-fence the reentrant call). Resize-driven band crossings run no JS (§16.2) — the SPEC's
+  stated residual, no ResizeObserver minted for it.
 - The `settingsNav.selected` write is programmatic — `ui-tabs` emits no `select` for property
   writes (ADR-0019's no-event-echo law), so `#applySettingsSection` is called explicitly, exactly
   as the compose entry does (:1302).
@@ -128,7 +147,8 @@ the fold's real border-radius — the CONTRACT is SPEC-R5's ACs, not these liter
 ## 6 · The receipt line (LLD-C5)
 
 Compose once per consumed patch, from the SAME `locs` list (deduped by `(section,item)`):
-`Updated <itemLabel> (<sectionLabel> › <itemLabel>)`, one line each, joined under the existing
+`Updated <sectionLabel> › <itemLabel>` — collapsed to `Updated <sectionLabel>` when the two
+labels are equal (the `agent` fold; SPEC-R7's named degeneracy) — one line each, joined under the existing
 `outgoing` note join (agent-admin.ts:2604) — append-never-replace, after the agent's own note and
 before/beside the warning notices (exact order at build; the law is "never displaces the agent's
 prose"). `#logTurn`'s patch record: byte-unchanged (SPEC-R7 AC2).

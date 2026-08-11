@@ -17,12 +17,14 @@
 | P2 | `field-location.ts` — the map: store key → `{pane, section, item}` + human labels, DERIVED from the canonical constants (`PERSONA_STATE_KEYS`, `ENTRY_KINDS`, `kindEnabledKey`, `entriesStoreKey`), never hand-listed per key; total-coverage parity test | `persona-patch.ts:61–96` · `entries.ts:24–43` · `agent-admin.ts` §compose (`data-role`/`data-item` ground truth, LLD §3 table) |
 | P3 | The reaction engine — `#followChange(report)` in `agent-admin.ts`, called at the ONE patch-consumption site (agent-admin.ts:2569–2576): coalesce applied keys → locations, ensure `settings ∈ #panesShown` (additive), select the owning settings section, scroll the owning fold | LLD §4 · `#setPanesShown` (agent-admin.ts:1857) · `#applySettingsSection` (:1515) · `PatchReport` (persona-patch.ts:255) |
 | P4 | Highlight + pending mechanics — the `data-attention` wash on `settings-item` folds (`agent-admin.css`), reduced-motion honored; `#pendingAttention` fires on next section reveal when navigation was suppressed | LLD §5 · GH #225 fold anatomy · `--md-sys-color-primary` token family |
-| P5 | The receipt line — a consumed patch's turn note gains one human-readable "Updated <item> (<section> › <fold>)" line per changed location (the narrow/suppressed band's only affordance; also the wide band's narration) | LLD §6 · the note-composition join (agent-admin.ts:2604) · P2's labels |
+| P5 | The receipt line — a consumed patch's turn note gains one human-readable "Updated <section> › <fold>" line per changed location (collapsed when the labels are equal, SPEC-R7; the narrow/suppressed band's only affordance, also the wide band's narration) | LLD §6 · the note-composition join (agent-admin.ts:2604) · P2's labels |
 | P6 | Docs + gates — `agent-admin.md` restate, jsdom truth-table + browser scroll/paint probes, grammar gates green | LLD §7 · SPEC §Acceptance |
 
-Dependency edges: P1 → everything (ratification gate; GH #691 gates P3–P6's live proof, not their
-authoring). P2 independent (pure data + test). P3 depends on P2 (consumes the map). P4 depends on
-P3 (the reaction sets/queues attention). P5 depends on P2 (labels) — parallel to P3/P4. P6 last.
+Dependency edges: P1 → everything — BOTH gates (ADR-0181 ratification AND GH #691 landed) block
+every slice, S1 included; the conservative reading is the ruled one (doc-checker minor 5): no
+build dispatches, even the pure-data map, before both clear. P2 independent of P3–P6 (pure data +
+test). P3 depends on P2 (consumes the map). P4 depends on P3 (the reaction sets/queues attention).
+P5 depends on P2 (labels) — parallel to P3/P4. P6 last.
 
 ## Plane 2 — inside-out (actions the change must support)
 
