@@ -30,6 +30,10 @@
 // · ADR-0178 cl.1/cl.3 (SPEC-R30) — the `personaPatch` arm's mechanics teaching
 //   (`prompts/authoring-teaching.md`), composed by `authoringBlock` ONLY under the persona's authoring
 //   gate; host-owned and byte-pinned like every prompt file here, but conditional, unlike the GRAMMAR text.
+// · ADR-0182 cl.2/cl.3 (SPEC-R31) — the builder-mission drive-to-completion teaching
+//   (`prompts/builder-mission.md`), composed by `missionBlock` ONLY when this turn IS the Builder's own
+//   dedicated interview (`session === 'authoring'`, derived host-side) — a separate gate from
+//   `authoringSurface`, since a persona authoring patches is not the same fact as being the Builder itself.
 // · ADR-0126 (LLD-C1, TKT-0016) — the message-lifecycle decision-layer teaching (the four-type choice rule +
 //   deleteSurface wire shape + whole-record-upsert warning + root-immutability), appended inside the
 //   OUTPUT_RULES zone of `prompts/grammar.md`, so it rides `OUTPUT_RULES` into every mode.
@@ -275,6 +279,27 @@ function authoringBlock(authoringEnabled: boolean | undefined): string {
   return `\n\n${AUTHORING_TEACHING}`
 }
 
+// ---- ADR-0182 cl.2/cl.3, SPEC-R31: the builder-mission teaching segment — a structural TWIN of
+// `authoringBlock` immediately above (degrades to '' when the gate is off, additive, orthogonal to
+// `mode`, never touches `grammarFor`). Kept OUT of the byte-pinned GRAMMAR constant for the SAME
+// reason SPEC-R30 already gives `authoringBlock`: this teaching is meaningful only to the Builder's
+// own interview turn, never to an ordinary A2UI/genui caller, so inlining it in GRAMMAR would move
+// SPEC-R6's byte-identity baselines for every consumer. Gated on a SEPARATE boolean from
+// `authoringSurface` on purpose (ADR-0182 cl.1) — the two answer different questions: whether this
+// persona may emit personaPatch AT ALL, versus whether THIS specific turn is the Builder's own
+// dedicated interview (a fact derived host-side from turn origin, never a persona-editable flag). ----
+
+const BUILDER_MISSION_TEACHING = loadPrompt('builder-mission.md')
+
+/** SPEC-R31 — composes the drive-to-completion teaching when (and only when) this turn is the
+ *  Builder's own interview (the derived `session === 'authoring'` fact, threaded here as a plain
+ *  boolean). Absent/`false` ⇒ `''` — byte-identical to the composition from before this capability
+ *  existed, in every mode. Mode-INVARIANT when present, matching `authoringBlock`. */
+function missionBlock(builderMission: boolean | undefined): string {
+  if (builderMission !== true) return ''
+  return `\n\n${BUILDER_MISSION_TEACHING}`
+}
+
 /** SPEC-R10 — composes ONE genui block when (and only when) the modality is enabled for this turn: the
  *  fixed wire/sandbox-reality teaching; the `exclusive` override paragraph when the caller has named itself
  *  a genui-only consumer; the dogfood segment (teaching + the derived fleet inventory) when `dogfood` is
@@ -354,6 +379,13 @@ function miniSkillsFor(mode: GenUiMode | undefined, selected: readonly MiniSkill
  * appends the `personaPatch` arm's host-owned mechanics teaching. It is orthogonal to `mode`, to
  * `a2uiEnabled`, and to the genui axis: an authoring conversation is about the CONFIGURATION of another
  * agent, not about which surface kind this turn paints.
+ *
+ * ADR-0182 cl.2/cl.3 / SPEC-R31 — `builderMission` is the 9th, additive parameter: absent/`false`
+ * composes ZERO bytes (byte-identical to before this capability existed — every existing caller passes
+ * at most 8 arguments and is unaffected), `true` appends the drive-to-completion teaching. It is a
+ * SEPARATE gate from `authoringSurface` — a persona may author patches (`authoringSurface: true`)
+ * without this being ITS OWN dedicated interview turn (`builderMission`), so the two are threaded and
+ * composed independently even though only the Builder's own turn ever sets both.
  */
 export function buildSystemPrompt(
   catalog: Catalog,
@@ -364,6 +396,7 @@ export function buildSystemPrompt(
   genui?: GenuiSurfaceConfig,
   a2uiEnabled?: boolean,
   authoringSurface?: boolean,
+  builderMission?: boolean,
 ): string {
   const a2uiOn = a2uiEnabled !== false // absent ⇒ on — the zero-regression default (Decision precedent)
   return (
@@ -379,6 +412,7 @@ export function buildSystemPrompt(
       : '') +
     genuiBlock(genui, a2uiOn) +
     authoringBlock(authoringSurface) +
+    missionBlock(builderMission) +
     personaBlock(personaSystem)
   )
 }

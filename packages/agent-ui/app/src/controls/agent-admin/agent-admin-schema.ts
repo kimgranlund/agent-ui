@@ -14,6 +14,7 @@
 import type { SettingsSchema } from '../settings/schema.ts'
 import type { EffortLevel } from '../conversation/composer-options.ts'
 import type { PersonaPatch } from '@agent-ui/a2ui/agent/meta-line' // ADR-0178 cl.2 / SPEC-R29 — the declared-patch shape, type-only from the SAME pure meta-line module `TurnProgress` rides (SPEC-N1-safe: no producer bytes cross)
+import type { PlanDeclaration } from '@agent-ui/a2ui/agent/meta-line' // ADR-0182 cl.4 / SPEC-R20 — the ALREADY-SHIPPED plan-step shape, the SAME type-only import as PersonaPatch above
 import type { TurnProgress } from '@agent-ui/a2ui/agent/meta-line' // ADR-0146 F1 — the live-turn progress vocabulary (type-only, from the PURE meta-line module, never the node-first ./agent barrel); a cross-package specifier stays extensionless (the repo's own local-.ts-only convention) — a2ui/package.json exports this as its own subpath
 // M-D (SPEC-R3/R5) — the persona catalog compose-time overlay's static id-recognition inputs (the root
 // `@agent-ui/a2ui` barrel, catalog/index.ts's own re-export of `catalog/compose.ts` + `catalog/personas/index.ts`).
@@ -445,6 +446,11 @@ export type AdminSurfaceTurnEvent =
    *  CONSUMED is the component's decision alone (the store-identity fence AND a fresh gate read,
    *  conjunctive), and a second enforcement point in the runner could only drift from it. */
   | { kind: 'patch'; patch: PersonaPatch }
+  /** ADR-0182 cl.4 / SPEC-R20 — a model-declared plan, peeled off the meta-line by the runner exactly as
+   *  `patch`/`note`/`progress` are. The ALREADY-SHIPPED `plan` arm, reused verbatim (no new wire shape):
+   *  here it carries the Builder-mission's open-sections view, per the runner's derived `builderMission`
+   *  gate (ADR-0182 cl.1) rather than a new field of its own. */
+  | { kind: 'plan'; plan: PlanDeclaration }
 
 /** A surface turn's request. `turn` mirrors the producer's two arms: a typed user intent, or a surface
  *  client message (an action click / function response bubbled up via `onClientMessage`) — `message` is
@@ -503,7 +509,11 @@ export interface AdminSurfaceTurnRequest {
    *
    *  Two contexts, two histories, by necessity rather than tidiness: the Builder interview and the
    *  draft's own test chat are different agents' transcripts, and one shared session would feed the
-   *  interview to the draft as its own memory — the draft would "remember" being designed. */
+   *  interview to the draft as its own memory — the draft would "remember" being designed.
+   *
+   *  ADR-0182 cl.1 — this field is ALSO the sole, structurally-guaranteed source of the runner's
+   *  derived `builderMission` gate (`session === 'authoring'`): a fact never carried as a separate
+   *  field on this interface, since `session` already answers it exactly. */
   session?: 'authoring' | 'test'
 }
 
