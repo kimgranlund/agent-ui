@@ -212,8 +212,18 @@
      Models/Effort pickers, marked via `data-selected` — token block above explains why this is a
      bg+ink swap rather than the GH #55 checkmark mechanism). Ordered AFTER :hover, BEFORE
      :focus-visible below — same precedence ui-select's option rows use (hover < selected <
-     focus-visible; select.css), so a focused row still reads as focused even when selected. */
-  :scope [role='menuitem'][data-selected] {
+     focus-visible; select.css), so a focused row still reads as focused even when selected.
+     FIXED (2026-08-11, review finding on the original fix): source order alone does NOT deliver
+     that ordering — the :hover rule above carries FOUR specificity-contributing simple selectors
+     (:scope + :is(...) + two :not()s + :hover = (0,5,0)) while this rule originally carried only
+     three ((0,3,0)), so hover won regardless of order and wiped the selected fill on hover. The
+     :not([disabled]):not([aria-disabled='true']) guards below are not just correctness (a
+     disabled+selected row no longer paints the selected fill either) — they also TIE this rule's
+     specificity to the hover rule's at (0,5,0), so source order actually governs, matching what
+     the comment above already claimed. Same defect CLASS as the ui-toggle/ui-switch cascade bugs
+     (GH #686/#693/#694) — an unequal-specificity sibling silently beating an intended-precedence
+     rule, just a new shape (no :where() involved here, plain unequal simple-selector counts). */
+  :scope [role='menuitem'][data-selected]:not([disabled]):not([aria-disabled='true']) {
     background-color: var(--ui-menu-item-bg-selected);
     color: var(--ui-menu-item-ink-selected);
   }
