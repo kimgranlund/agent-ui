@@ -1342,7 +1342,10 @@ describe('ui-agent-admin — segment content wins its OWN display:flex, not supe
 describe('ui-agent-admin — the Model fold body wins its OWN display:flex, so model-grid and reset-agent-row get a real gap (GH #706)', () => {
   it('a real, non-zero measured gap separates the models-list card from the "Agent configuration" (Reset Agent) card', async () => {
     const { el } = mountAgentAdmin('Agent')
-    el.onResetRequest(() => {}) // reset-agent-row is [hidden] unregistered — the gap can't be measured against a collapsed box
+    el.onResetRequest(() => {}) // the RESET BUTTON is [hidden] unregistered (agent-admin.ts #applyActionAvailability),
+    // not the row itself — register so the button paints too, since GH #706's own bug wasn't specific to
+    // that state (a real, un-hidden latent defect: an unregistered card still paints label+spacer with no
+    // affordance — tracked separately, not this test's concern)
     await el.updateComplete
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
 
