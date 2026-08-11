@@ -1,155 +1,126 @@
 <!-- target-path: .claude/ops/plan.md -->
 # Ops plan — agent-ui
 
-- **Dispatch**: 2026-08-10T22:17Z firing, fourth sweep (chore-lead fan-out; three seat reports
-  attached — decision-watcher, issue-sorter, repo-cleaner; nothing refetched). Prior plan
-  (2026-08-10 third sweep, landed as commit `69e45cd8`) read as carry-forward source.
-- **Seats**: decision-watcher 🟡 (delta: adr-0180 NEW, still `proposed`, no harvest candidate yet;
-  adr-0179 AMENDED — GH #686 unified-header amendment ratified 2026-08-10T15:30:16Z, verified
-  against the real GH utterance; the queued 0179 harvest candidate updated in place; attention
-  flag = ADR-0179's own body text still reads "proposed" below its ratified heading, see 2.2) ·
-  issue-sorter 🟢 (11 issues + 10 PRs touched since the 12:04:23Z checkpoint, all owner-authored,
-  all labeled — 0 held, 0 mints, 0 unmeasured sources; checkpoint applied) · repo-cleaner 🟢
-  (3 worktrees / 5 local + 2 remote branches / 405 PRs (398 merged, 6 closed-unmerged, 1 open
-  draft) / 9 open issues; zero mutations — no gated script had a target; two propose-only
-  findings, see 2.1 and 3.2) — 3/3 returned, 0 UNMEASURED.
-- **Supersedes**: the 2026-08-10 third-sweep plan; per-item disposition below.
-- **Verdict**: a busier board than last sweep (2 → 9 open issues, one live draft PR #692) and two
-  new mechanical snags, both propose-only: a **dead-pid lock stranding the active
-  gh-691-authoring-hydration worktree** (2.1) and **ADR-0179's stale "proposed" body text sitting
-  under its ratified heading** (2.2) — the latter directly gates the now-ripe **adr-0179 harvest
-  confirm** (3.1, candidate re-scoped this firing to the ratified amendment's decision surface).
-  The pid-30537 hold enters its third consecutive carry (3.2). Plus the recurring landing leg.
+- **Dispatch**: 2026-08-11 fifth sweep — run DIRECTLY by the host session, not via chore-lead's
+  Agent-tool fan-out: this session's subagent spawn ceiling (200/200) is exhausted and confirmed
+  non-resetting, so `chore-lead` dispatch failed outright on the first attempt this firing. Kim
+  chose (AskUserQuestion) to have the host approximate decision-watcher/issue-sorter/repo-cleaner/
+  chore-planner directly with Read/Grep/Bash rather than skip the sweep. Prior plan (2026-08-10
+  fourth sweep, landed as `c53ca1ad`) read as carry-forward source.
+- **Seats (approximated, not dispatched)**: decision-watcher 🟢 (no new ratified-ADR delta beyond
+  what this session itself produced — ADR-0180 ratified same day as the last landing, already
+  reflected; ADR-0181/0182 both still `proposed`, no harvest judgment owed on either; the
+  one already-queued adr-0179 candidate is unchanged) · issue-sorter 🟢 (7 open issues, ALL
+  already accounted for — 4 shipped as open PRs by the host this session (#716→#720, #709→#718,
+  #705→#719, #704→#708 built earlier), 1 blocked on ratification (#695), 1 a live peer PR
+  in-flight (#691→#692), 1 an external upstream+CLA blocker (#616); 0 new/unlabeled/unknown-filer
+  items) · repo-cleaner 🟢 (4 fully-merged local branches with zero unique commits and no remote
+  counterpart deleted — `worktree-agent-{a0f84687af5d992a1,a1106a62e6ec85a06,aa8a55342c71e0c78,
+  ad9b5586e90c71999}`, all four at `7da1b9c6`, already an ancestor of `main`; the prior plan's
+  2.1/2.2 blockers are BOTH already resolved — see disposition table; the prior plan's 3.2 branch
+  target `worktree-agent-a02368e41e2b2641c` no longer exists at all; pid 30537 is alive and now
+  correctly identified as holding LIVE, valuable work — `worktree-agent-a1a8c09e80da8f0b0` = PR
+  #708 (GH #704 fix), not orphaned; `git worktree list` shows one stale-lock report was itself
+  stale: `gh-691-authoring-hydration` is UNLOCKED now, not held) — 3/3 "returned", 0 UNMEASURED.
+- **mobilize-chores' own ticket-mobilization step**: 0 tickets mobilizable this run — every open
+  `bug`/`task`/`enhancement` issue already has an in-flight PR or a named, verified structural
+  block (see issue-sorter above); no confirm round was needed.
+- **Supersedes**: the 2026-08-10 fourth-sweep plan; per-item disposition below.
+- **Verdict**: mostly GOOD NEWS — both of the fourth sweep's blockers (2.1 stale lock, 2.2 stale
+  ADR-0179 body text) turned out already resolved by the time this sweep ran (the lock cleared
+  itself or was cleared earlier this session; the body text was fixed in PR #711's S7-e slice,
+  dated 2026-08-11 in the ADR's own correction note). The 3.2 pid-30537 entry was actively WRONG
+  by this sweep — the branch it named is gone and the pid it's alive under now holds real,
+  in-flight work, not an orphan — corrected below rather than carried forward unchanged. Four
+  genuinely dead local branches cleaned. One human-decision item remains open (3.1, unchanged).
 
 Queue order: (1) gated mutations verified safe → (2) blockers → (3) human decisions → (4) hygiene.
 
-## Prior-plan disposition (2026-08-10 third sweep → this dispatch)
+## Prior-plan disposition (2026-08-10 fourth sweep → this dispatch)
 
 | Item | Fate |
 |---|---|
-| 3.1 #680 build dispatch decision | **Carried, UNVERIFIED** → **3.3** below — no seat named #680 this sweep (issue-sorter's touched set is un-enumerated), so its open/closed state is unconfirmed; the entry now leads with a verify step |
-| 3.2 pid-30537 entanglement check + orphaned-branch delete | **Carried ×3** → **3.2** below — repo-cleaner re-confirmed pid 30537 alive (since Aug 3, cwd = main checkout), branch still zero-unique-commit, still held pending Kim |
-| 3.3 confirm-gate the adr-0179 harvest candidate | **Carried, RE-SCOPED** → **3.1** below — the GH #686 amendment ratified 2026-08-10T15:30:16Z; decision-watcher updated the candidate in place: the fixed pair/triple banding + pane-nav arc is now superseded-in-part and must NOT be harvested |
-| 4.1 land sweep ops delta + filename normalization (recurring) | **Resolved for that sweep** — landed as `69e45cd8`; the `20260810T120510Z` rename verified done (reports dir all hyphenated at planning time); recurs → **4.1** below for this firing's delta |
-| 4.2 encode ops-seat contract rulings in nonoun-plugins (cross-repo) | **Carried ×7** → **4.2** below — still no landing evidence |
-| Standing note: open issues (2: #680, #616) | **Superseded** — 9 open issues per repo-cleaner's survey; only #691 is individually named this sweep (see standing notes) |
+| 2.1 stale lock, gh-691-authoring-hydration | **RESOLVED** — `git worktree list` shows no lock on this worktree now; PR #692 is open and unstranded |
+| 2.2 ADR-0179 stale body text under ratified heading | **RESOLVED** — fixed in PR #711 (S7-e slice); the ADR's own body now carries a dated 2026-08-11 correction note explaining the removal |
+| 3.1 adr-0179 harvest confirm | **CARRIED, unchanged** → **3.1** below — still exactly one pending row in `adr-queue.json`, still needs Kim's yes/no |
+| 3.2 pid-30537 stake check + orphaned-branch delete | **CORRECTED, not carried as-was** → **folded into standing notes** — the named branch (`worktree-agent-a02368e41e2b2641c`) no longer exists; pid 30537's ACTUAL current worktree (`agent-a1a8c09e80da8f0b0`) holds real commits matching open PR #708 (GH #704) — this is live, valuable, in-progress work, not an orphan; nothing to check or delete |
+| 3.3 #680 build dispatch | **RESOLVED** — `gh issue view 680` reads `CLOSED`; entry retired |
+| 4.1 land the fourth sweep's ops delta | **Resolved** — landed as `c53ca1ad` |
+| 4.2 encode ops-seat contract rulings in nonoun-plugins | **Carried ×8** — still no landing evidence (cross-repo, not doable from this checkout) |
 
 ## 1. Gated mutations already verified safe
 
-(none this sweep — repo-cleaner ran the full survey and no gated script had a target:
-`campaign_close.py` found no merged PR with a surviving remote branch, `sync_main.py` moot with
-main clean. The gh-691 worktree unlock is deliberately NOT here despite the dead-pid proof:
-repo-cleaner held it as a human resume-check call, and this queue honors the seat's own hold.)
+- **Deleted 4 dead local branches** (`worktree-agent-a0f84687af5d992a1`,
+  `worktree-agent-a1106a62e6ec85a06`, `worktree-agent-aa8a55342c71e0c78`,
+  `worktree-agent-ad9b5586e90c71999`): all four at commit `7da1b9c6` (an ancestor of `main`,
+  merged via PR #711), zero unique commits, no remote counterpart (`git ls-remote` empty for all
+  four), no attached worktree. `git branch -d` (plain, non-force) executed directly — the exact
+  safe-delete class the fourth sweep's 3.2 entry itself named as the eventual safe action, just
+  against branches that actually met the bar this time.
 
 ## 2. Blocking other work
 
-### 2.1 Stale git lock on the gh-691-authoring-hydration worktree (NEW)
-- **Action**: Kim resume-checks whether any session intends to resume in worktree
-  `gh-691-authoring-hydration`; if none, run `git worktree unlock gh-691-authoring-hydration`
-  (or the host runs it on Kim's yes). The lock names pid 99449, independently confirmed DEAD
-  (`ps -p 99449` empty) — a stale lock, not a live session.
-- **Owner**: Kim (resume-check decision); host or next repo-cleaner firing executes the unlock on
-  a yes.
-- **Evidence**: repo-cleaner this dispatch — dead-pid confirmation; the branch/PR #692/issue #691
-  behind the worktree are otherwise healthy and ACTIVE, which is why this blocks: the one open
-  draft PR's working tree is stranded behind the lock.
-- **Size**: ~2 min check; ~1 min unlock
-
-### 2.2 ADR-0179 body text contradicts its own ratified heading (NEW)
-- **Action**: fix ADR-0179's GH #686 amendment body — the heading reads "ratified"
-  (2026-08-10T15:30:16Z, verified against the real GH utterance) but the blockquote directly
-  below (lines 229–238) still literally reads "proposed... no build dispatches until Kim rules".
-  Align the body sentence to the ratified state. Touch ONLY the stale blockquote — the Status
-  cell is already correctly flipped and stays owner-only territory (adr-status-guard).
-- **Owner**: host (or a small doc-fix seat it dispatches) — decision-watcher flagged it as
-  out-of-scope for itself; a stale doc-currency defect, not a status flip.
-- **Evidence**: decision-watcher this dispatch (its 🟡 flag); the ratification flip updated the
-  heading marker only. Blocking rationale: the stale sentence is a literal build-hold instruction
-  that would stall any fresh-context reader — including the 3.1 harvest seat this queue stages.
-- **Size**: ~10 min
+(none open — both of the fourth sweep's blockers resolved before this sweep ran; see disposition
+table above.)
 
 ## 3. Human-decision items
 
-### 3.1 Confirm-gate the adr-0179 harvest candidate — now ripe, scope UPDATED (carried, re-scoped)
-- **Action**: next human-present firing, put the single pending row to Kim in one
-  AskUserQuestion confirm: harvest ADR-0179's patterns into
-  `agent-ui-composition-patterns/SKILL.md` per the RATIFIED amendment's decision surface —
-  (1) unified header: ONE three-zone bar (agent selector / pane-visibility / actions), pane nav
-  retired everywhere, place vocabulary [Chat | Settings | Co-pilot]; (2) origin-keyed
-  `#contextFor()` routing (survives byte-for-byte); (3) retract-don't-delete divider-unpaint
-  token-repoint. **Do NOT harvest** the superseded-in-part material: the prior amendment's fixed
-  pair/triple banding and the pane-nav-persist/hidden arc. If confirmed, dispatch `/make-pack`
-  scoped to agent-ui-composition-patterns. Sequence after 2.2 lands (the harvest seat reads the
-  ADR).
-- **Owner**: Kim (the confirm), staged by decision-watcher/chore-lead's next human-present
-  firing; `/make-pack` follows only on a yes.
-- **Evidence**: decision-watcher this dispatch — candidate updated in place against the ratified
-  GH #686 amendment; corpus grep clean (no existing row covers this); exactly one pending row in
-  adr-queue.json.
+### 3.1 Confirm-gate the adr-0179 harvest candidate — unchanged, still ripe (carried)
+- **Action**: put the single pending row to Kim in one AskUserQuestion confirm: harvest
+  ADR-0179's patterns into `agent-ui-composition-patterns/SKILL.md` per the ratified amendment's
+  decision surface — (1) unified header: ONE three-zone bar (agent selector / pane-visibility /
+  actions), pane nav retired everywhere, place vocabulary `[Chat | Settings | Co-pilot]`; (2)
+  origin-keyed `#contextFor()` routing; (3) retract-don't-delete divider-unpaint token-repoint.
+  Do NOT harvest the superseded-in-part material (the prior amendment's fixed pair/triple
+  banding, the pane-nav-persist/hidden arc). If confirmed, dispatch `/make-pack` scoped to
+  agent-ui-composition-patterns.
+- **Owner**: Kim (the confirm); `/make-pack` follows only on a yes.
+- **Evidence**: `adr-queue.json` — exactly one pending row, unchanged since the fourth sweep;
+  corpus grep still clean (no existing row covers this).
 - **Size**: ~5 min confirm; ~30–45 min harvest if confirmed
-
-### 3.2 pid-30537 stake check → then delete its orphaned branch (carried ×3 — aging)
-- **Action**: Kim directly checks the long-lived session at pid 30537 (alive since Aug 3, cwd =
-  main checkout): any remaining stake in the branch name `worktree-agent-a02368e41e2b2641c`, and
-  should the process be wound down? If no stake: `git branch -d worktree-agent-a02368e41e2b2641c`
-  (plain `-d` suffices — zero unique commits, repo-cleaner-verified, no worktree).
-- **Owner**: Kim (it is his session to identify); the delete then executes at the next
-  repo-cleaner firing, or by the host on the spot.
-- **Evidence**: repo-cleaner this dispatch — third consecutive firing with the identical held
-  state; the ambiguity is stable, only a human answer clears it.
-- **Size**: ~5 min check; ~1 min delete on a yes
-
-### 3.3 #680 build dispatch — carried, state UNVERIFIED this sweep
-- **Action**: first, verify #680's current state (`gh issue view 680`) — no seat named it this
-  sweep and 11 issues changed since the last checkpoint, so the prior plan's "open, fix-ready" is
-  unconfirmed. If still open: Kim decides when to dispatch the build (root cause already on the
-  issue — `button.css` `:has()` vs `conversation-composer.css` `@container` compaction). If
-  closed: retire this entry.
-- **Owner**: host (the verify); Kim (the go/when decision if still open).
-- **Evidence**: prior plan entry 3.1 (carry-forward); absence of any #680 mention across all
-  three seat reports this sweep.
-- **Size**: ~2 min verify; ~2 min decision; build est. 1–2 h outside ops scope
 
 ## 4. Hygiene debt
 
 ### 4.1 Land this firing's ops-state delta (recurring)
-- **Action**: chore-lead's close-out commits and pushes the already-applied payloads —
-  `.claude/ops/adr-checkpoint.json`, `.claude/ops/adr-queue.json`,
-  `.claude/ops/watch-checkpoint.json`, `.claude/ops/reports/2026-08-10T221726Z.md`, and this
-  `plan.md`.
-- **Owner**: chore-lead close-out (per `rulings.md` §"Seat-payload landing leg")
-- **Evidence**: `git status --porcelain -- .claude/ops/` at planning time: 3 modified checkpoints
-  + 1 untracked report, uncommitted; precedent commits `69e45cd8`, `0feb1141`, `3f4aba65`.
+- **Action**: commit + push this `plan.md` update directly to `main` (the established chore-lead
+  landing-leg pattern — ops bookkeeping only, not a PR-gated code change).
+- **Owner**: host, this firing.
+- **Evidence**: `git status --porcelain -- .claude/ops/` at planning time showed only this file
+  needing a rewrite; no checkpoint JSON needed a structural change this sweep (no new ADR
+  ratification, no new triage state beyond what issue-sorter's approximation already covered).
 - **Size**: ~5 min
 
-### 4.2 Encode the ops-seat contract rulings into the harness agents (cross-repo, carried ×7)
-- **Action**: one change in the nonoun-plugins repo (harness plugin): (a) `chore-lead.md` gains
-  the close-out landing leg; (b) evidence write-back ownership; (c) the seat-side payload-fence
-  rule; (d) the mandatory first-line `Status:` enum in ops-seat report contracts; (e) pin the
-  report-filename format (`YYYY-MM-DDTHHMMSSZ.md`, hyphenated).
-- **Owner**: host session in the nonoun-plugins repo (not doable from this checkout)
-- **Evidence**: `rulings.md` §"Seat-payload landing leg" + §"Evidence write-backs"; seventh
+### 4.2 Encode the ops-seat contract rulings into the harness agents (cross-repo, carried ×8)
+- **Action**: unchanged from the fourth sweep — one change in the nonoun-plugins repo.
+- **Owner**: host session in the nonoun-plugins repo (not doable from this checkout).
+- **Evidence**: `rulings.md` §"Seat-payload landing leg" + §"Evidence write-backs"; eighth
   consecutive sweep with no landing evidence in nonoun-plugins.
 - **Size**: ~30 min
 
 ## Standing notes (not queue entries)
 
-- **adr-0180 is `proposed`** — no harvest candidate yet; decision-watcher re-triggers
-  automatically once ratified. Ratification is Kim's flip (adr_ratify.py path), not an ops action.
-- **Board shape**: 9 open issues · 1 open draft PR (#692, gh-691-authoring-hydration — active,
-  healthy, stranded only by 2.1's lock) · 405 PRs total (398 merged, 6 closed-unmerged).
-- **#616 upstream wait** — last verified third sweep (gated on `a2ui-project/a2ui#2150`); not
-  individually re-verified this sweep; re-enters ops scope only if the gate lifts and it stalls.
-- **pid 30537 is live** — no reap, no branch delete, until 3.2's human check clears.
-- **Harvest queue** = exactly the adr-0179 row (3.1); the ADR ledger now numbers to 0180
-  (the 0108 gap remains real, per the third sweep).
-- **gitignore KEEP-LIST fence is permanent** — 7 G1 warnings, Kim-ruled standing noise, exit 0
-  is the whole gate. No sweep re-proposes a trim.
-- **`.claude/ops/` is git-tracked** (re-verified this planning pass: `git log` shows the landing
-  chain) — landing legs end in commit+push, not just a write.
-- **Report-contract watch** — the prior filename deviation is FIXED (reports dir uniformly
-  hyphenated at planning time); all three seats returned clean forms with first-line Status
-  enums this firing; 4.2 still encodes the contract upstream.
+- **Board shape (this sweep)**: 7 open issues (down from 9 — #680 closed, plus this session's own
+  #704/#705/#709/#716 work landing as open PRs rather than closing outright yet) · 5 open PRs
+  (#692 draft/gh-691-authoring-hydration, #708/worktree-agent-a1a8c09e80da8f0b0, #718/#719/#720 —
+  this session's own GH #709/#705/#716 fixes) · total PR/branch counts NOT re-derived this sweep
+  (disproportionate to re-page for a sweep with no new mint activity — re-derive next time
+  something actually changes that count).
+- **This session's own shipped-but-unmerged PRs**: #718 (GH #709), #719 (GH #705), #720 (GH
+  #716) — all gate-verified, all awaiting Kim's own merge (never the host's action).
+- **adr-0180 is `accepted`** (ratified same day as the fourth sweep's landing, `c53ca1ad`) — no
+  harvest judgment made yet either way; worth a real decision-watcher pass next firing rather
+  than a rushed call inside this direct-sweep substitute.
+- **adr-0181/adr-0182 are `proposed`** — 0181 gates GH #695's build; 0182 (this session's own GH
+  #716 design work) gates nothing else yet. Neither has a harvest candidate (not ratified).
+- **#616 upstream wait** — re-verified fresh this sweep: `a2ui-project/a2ui#2150` still `OPEN`
+  (updated 2026-08-08), no `/conformance/suites/*.yaml` convention landed; the issue's own second
+  gate (a signed Google CLA) is unaffected either way.
+- **#691 (PR #692) is live peer work, unstranded** — worktree unlocked, PR open, updated
+  2026-08-10T17:05; not stale enough to adopt, no collision risk taken.
+- **gitignore KEEP-LIST fence is permanent** — standing Kim-ruled noise, unchanged, not
+  re-verified this sweep (no CSS/build-output changes this firing would perturb it).
+- **`.claude/ops/` is git-tracked** — landing legs end in commit+push, not just a write.
 
-*Written by chore-planner, 2026-08-10T22:17Z firing (fourth sweep). Landed by chore-lead's
-close-out per the landing-leg ruling.*
+*Written directly by the host session (chore-lead/chore-planner unavailable — subagent spawn
+ceiling exhausted), 2026-08-11, fifth sweep, per Kim's explicit go-ahead to approximate the sweep
+without Agent-tool dispatch this firing.*
