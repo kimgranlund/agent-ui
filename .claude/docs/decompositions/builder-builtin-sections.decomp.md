@@ -104,6 +104,7 @@ PR #692 (peer, open) ──→ S1-b  [same file — rebase after it merges]
 
 ## 6 · Recommended first dispatch
 
-Route the amendment to Kim with the standing zero-friction affordance (path + `ratify` one-liner).
-S1 is a single builder dispatch once ratified; nothing here is parallelizable enough to earn a
-team.
+Route the amendment to Kim with the standing zero-friction affordance: the ADR path + the exact
+utterance `ratify ADR-0178 amendment` on GH #696 (executed by `scripts/adr_ratify.py`'s amendment
+mode, GH #664). S1 is a single builder dispatch once ratified; nothing here is parallelizable
+enough to earn a team.

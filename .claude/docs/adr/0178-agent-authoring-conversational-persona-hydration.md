@@ -210,11 +210,15 @@ prose — rejected, cl.1 (wrong field class). Host-heuristic question scripts �
 toggle) — rejected, cl.5 (GH #145 makes the swap a reset; state loss by construction). Building
 NL-edit-everywhere in v1 — rejected, cl.6 (unproven arm; safety questions unanswered).
 
-## Amendment (2026-08-11, **proposed** — Kim ratifies via a real GitHub utterance on GH [#696](https://github.com/kimgranlund/agent-ui/issues/696)) — cl.2's entries filter gains ONE scoped UPDATE verb: host-seeded builtin prompt sections become model-updatable IN PLACE; user-authored entries stay append-protected; the no-deletion law stands whole
+## Amendment (2026-08-11, **proposed** — Kim ratifies) — GH [#696](https://github.com/kimgranlund/agent-ui/issues/696): cl.2's entries filter gains ONE scoped UPDATE verb: host-seeded builtin prompt sections become model-updatable IN PLACE; user-authored entries stay append-protected; the no-deletion law stands whole
 
 > Append-only: the Status cell reads `accepted` for the record as a whole and stays byte-untouched
 > — agents never flip status (`.claude/hooks/adr-status-guard.py`). Every section above is
-> unedited. **This amendment ships nothing until ratified**; its companion manifest is
+> unedited. **This amendment ships nothing until ratified** — the path is Kim's
+> `ratify ADR-0178 amendment` utterance on GH
+> [#696](https://github.com/kimgranlund/agent-ui/issues/696), executed by
+> `scripts/adr_ratify.py`'s amendment mode (GH #664, the `AMENDMENT_HEADER_RE` path this heading's
+> exact marker format exists for). Its companion manifest is
 > [`builder-builtin-sections.decomp.md`](../decompositions/builder-builtin-sections.decomp.md) and
 > its build plan is [`builder-builtin-section-update.lld.md`](../lld/builder-builtin-section-update.lld.md)
 > (both proposed alongside it). No build dispatches until Kim rules.
@@ -303,23 +307,27 @@ entries teaching fails; concrete keys comply).
 - Every Builder-authored agent's composed prompt carries its authored identity at `order: 0` with
   ZERO "helpful assistant" boilerplate — the Foundation/Personality/Critical-Items cards become
   what the flow fills, not what it works around.
-- `PatchReport` gains `updated` — GH #695's cross-tab-reaction design gets a richer trigger signal
-  (which section changed, by store key + id) for free; noted there, not solved here.
+- `PatchReport` gains `updated` — and GH #695's cross-tab-reaction design NEEDS it, not merely
+  benefits: once updates ship, an update-only patch (this flow's primary write class — the
+  Foundation rewrite) leaves `applied` AND `added` empty, so a trigger keyed on those two fields
+  alone would silently miss exactly the change the feature exists to surface. Cross-noted on
+  GH #695 as a dated 2026-08-11 comment; designed there, not here.
 - PR #692 (GH #691's teaching fix) is compatible and orthogonal; it touches the same
   `authoring-teaching.md`, so the build slice rebases after it merges (sequencing, not conflict).
 - The vocabulary copy's protection sentence re-words to what was always true: a user's own
   AUTHORED entries are safe by construction; the host's placeholder scaffolding is the flow's to
   fill.
 
-**Repairs (on ratification, landed in the build slice's one change):**
-[`a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md) SPEC-R29 (the merge-law bullet's
-"never a replacement" sentence scope-narrows to non-builtin members; the update verb + field scope
-pinned) and SPEC-R30 (the teaching bullet's "entries are contributions, never replacements" gains
-the builtin exception) · `packages/agent-ui/app/src/controls/agent-admin/persona-patch.ts` (the
-update branch + `PatchReport.updated` + `draftStateBlock` builtin content) ·
-`packages/agent-ui/a2ui/src/agent/prompts/authoring-teaching.md` (+ the fs-shim regen — the
-GH #640 trap fires here) · `site/pages/agent-admin-presets.ts` (`vocabularySection`) ·
-`agent-admin.ts` (turn-log `updated`) ·
-[`agent-authoring-flow.lld.md`](../lld/agent-authoring-flow.lld.md) §3 (record repair: the
-"never a replacement, never a removal" sentence gains the carve-out pointer) — per
-[`builder-builtin-section-update.lld.md`](../lld/builder-builtin-section-update.lld.md).
+On ratification the items below land in the build slice's ONE change, per
+[`builder-builtin-section-update.lld.md`](../lld/builder-builtin-section-update.lld.md); the
+ratify script's amendment mode books them verbatim as the tracking issue (GH #664 — closing that
+issue is the record they landed).
+
+**Repairs**:
+- [`a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md) SPEC-R29 — the merge-law bullet's "never a replacement" sentence scope-narrows to non-builtin members; the update verb + field scope pinned.
+- [`a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md) SPEC-R30 — the teaching bullet's "entries are contributions, never replacements" gains the builtin exception.
+- `packages/agent-ui/app/src/controls/agent-admin/persona-patch.ts` — the update branch + `PatchReport.updated` + `draftStateBlock` builtin content.
+- `packages/agent-ui/a2ui/src/agent/prompts/authoring-teaching.md` — the generic update-mechanics sentence, + the fs-shim regen (the GH #640 trap fires here).
+- `site/pages/agent-admin-presets.ts` — `vocabularySection`'s builtin-sections block + worked example.
+- `packages/agent-ui/app/src/controls/agent-admin/agent-admin.ts` — turn-log `updated`.
+- [`agent-authoring-flow.lld.md`](../lld/agent-authoring-flow.lld.md) §3 — record repair: the "never a replacement, never a removal" sentence gains the carve-out pointer.
