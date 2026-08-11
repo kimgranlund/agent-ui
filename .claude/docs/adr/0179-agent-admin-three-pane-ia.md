@@ -228,14 +228,25 @@ share a screen. The divider unpaint is likewise independent of the arrangement.
 
 ## Amendment (2026-08-10, **ratified** — kimgranlund, [utterance](https://github.com/kimgranlund/agent-ui/issues/686#issuecomment-5242385245), verified 2026-08-10) — GH [#686](https://github.com/kimgranlund/agent-ui/issues/686), Kim's Figma wireframe ruling: cl.1's `header` slot becomes the UNIFIED selector/visibility/actions bar; the pane nav retires everywhere; pane visibility becomes ONE shown-set with two band renderings; the place vocabulary re-pins to `[Chat | Settings | Co-pilot]`
 
-> Append-only, and **proposed**: the Status cell reads `accepted` for the record as a whole and stays
-> byte-untouched — agents never flip status (`.claude/hooks/adr-status-guard.py`), and this amendment
-> carries no ratification of its own until Kim gives one via a real GitHub utterance (`adr_ratify.py`,
-> ADR-0149). Every section above, including both prior amendments, is unedited. The design brief is
+> Append-only: the Status cell reads `accepted` for the record as a whole and stays
+> byte-untouched — agents never flip status (`.claude/hooks/adr-status-guard.py`). Every section
+> above, including both prior amendments, is unedited. The design brief is
 > GH [#686](https://github.com/kimgranlund/agent-ui/issues/686) (Kim's Figma wireframe — desktop nodes
 > `1:162`/`1:163`, mobile node `1:502`); the LLD's corresponding revision lands in the same change
-> ([`admin-three-pane-ia.lld.md`](../lld/admin-three-pane-ia.lld.md) §16). No build dispatches until
-> Kim rules.
+> ([`admin-three-pane-ia.lld.md`](../lld/admin-three-pane-ia.lld.md) §16).
+>
+> **2026-08-11 correction (S7-e record-repair pass, GH #686).** The two sentences this paragraph
+> used to close on — "**proposed**: … this amendment carries no ratification of its own until Kim
+> gives one via a real GitHub utterance" and "No build dispatches until Kim rules" — were accurate
+> the moment this amendment was drafted (2026-08-10, before ratification) and went stale the same
+> day once the heading directly above gained its own "**ratified**" line (kimgranlund's
+> [utterance](https://github.com/kimgranlund/agent-ui/issues/686#issuecomment-5242385245), verified
+> 2026-08-10 by `adr_ratify.py`'s ADR-0149 path) — a same-day edit that updated the heading but left
+> this paragraph's own prose narrating the pre-ratification state. Four build dispatches (S7-a
+> through S7-d) then shipped against the ratified amendment, and this S7-e slice is the fifth and
+> last (LLD §16.4's own S7-e row). Removed the two stale sentences rather than leaving them to
+> mislead a future reader — the original text is preserved in git history, not deleted from the
+> record.
 >
 > **What this re-rules, precisely.** cl.1's *tier* sentence — three first-class places at every
 > width — stands; what changes is the places' NAMES and reading order, the header slot's contents,

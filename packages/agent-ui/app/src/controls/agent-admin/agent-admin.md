@@ -188,8 +188,10 @@ protocol dependency.
 THREE first-class PLACES (ADR-0179, GH #651, re-ruled by GH #686's Amendment — superseding vision rev.5's
 two-pane `ui-split`, the GH #52/ADR-0154 shell arrangement that replaced it, and ADR-0179 cl.1's own
 fixed-triple-dock reading): **Chat · Settings · Co-pilot** (renamed from Author). The header slot's
-unified selector/visibility/actions bar (S7-c) is the eventual navigation vehicle; this slice (S7-b)
-builds the visibility MACHINE it will drive — `header` composes no content yet (a documented gap).
+unified selector/visibility/actions bar (S7-c, LLD §16.1/§16.3) is the LIVE navigation vehicle — the
+agent selector, the pane-visibility pills/segments, and New Agent/Import/Export all compose real
+content today; the site's own former canvas-header (title/tagline, the roster switcher, the "…"
+overflow) retired with it (S7-d).
 
 - **Chat** is the pure test surface: the draft agent's own conversation.
 - **Settings** groups the five section units — Agent · Capabilities · Surface · Context: System ·
@@ -199,9 +201,14 @@ builds the visibility MACHINE it will drive — `header` composes no content yet
   (GH #666). Unarmed, that card's log is empty (GH #684 removed the "Describe the agent you want"
   headline + copy that used to occupy it), and the card's own composer is the flow's entry: the first
   message arms (through the `onGenerateRequest(cb)` registration seam) and becomes the interview's opening
-  turn. The roster (...) menu's own "New agent → Generate" item is the OTHER arming entry, for arming
-  without typing anything (GH #681 removed the in-card duplicate of that item). Armed, the transcript takes
-  the log. Arming from anywhere lands Co-pilot visible AND primary.
+  turn. The header's own New Agent button (`onNewAgentRequest`, S7-d) is the OTHER arming entry, for
+  arming without typing anything — it invokes the SAME page-side mint path with no seed, since outside
+  any specific card there is no pre-arm pick to carry. Generate is now the ONLY "new agent" verb (Kim's
+  OQ-A ruling, LLD §16.6, GH #686 Findings 2026-08-11): the retired canvas-header's own two-choice
+  "New agent → Generate/→ Blank" menu item is gone with the header it lived on, and the dedicated
+  interview-less "New agent → Blank" front door (GH #637 S1) is RETIRED entirely, not just relocated —
+  `mintBlankPersona`'s own mint logic stays in the codebase, still reused by Generate for its own seed.
+  Armed, the transcript takes the log. Arming from anywhere lands Co-pilot visible AND primary.
 
 **The visibility model (LLD §16.2) — a shown SET + a primary member, two band renderings.** GH #686's
 Amendment retires `ui-master-detail` as the Author⇄Settings pairing vehicle entirely — the wireframe's
@@ -248,22 +255,25 @@ card): **Context: System** (the compiled agent-system JSON, incl. the `surface` 
 ## Registration seams
 
 `onGenerateRequest(callback)` — register the page's "start the guided flow" path (ADR-0179 OQ4). Two
-affordances reach the SAME page-side mint path (`createGeneratedAgent`), by different routes: the card's
-own first message (this element, `#startFromFirstMessage`) invokes the registered callback, carrying a
-seed; the roster (...) menu's "New agent → Generate" item (page-side, `site/pages/agent-admin-app.ts`;
-GH #681 removed the in-card duplicate of that item) calls `createGeneratedAgent` directly, with no seed —
-from outside any specific card it has no pre-arm pick to carry. Registering is also what OPENS the card's
-own entry — the unarmed card stops being `disabled` — so a static build with no mint path leaves the card
-unavailable (GH #684 — no copy rides inside it any more). A callback, never a CustomEvent (SPEC-R5): the
-mint path is page-owned and this component cannot import site code without inverting the layering DAG.
+affordances reach the SAME page-side mint path (`createGeneratedAgent`), by different seams: the card's
+own first message (this element, `#startFromFirstMessage`) invokes this callback, carrying a seed; the
+header's own New Agent button (`onNewAgentRequest`, S7-d — below) calls the page's own handler directly,
+with no seed — from outside any specific card it has no pre-arm pick to carry. (GH #637 S1's separate
+"New agent → Blank" interview-less mint front door, and the retired canvas-header's own "New agent →
+Generate" roster-menu item these two seams once sat beside, are both RETIRED — Kim's OQ-A ruling, LLD
+§16.6, GH #686 Findings 2026-08-11: Generate through the header's one New Agent button is now the only
+"new agent" verb.) Registering `onGenerateRequest` is also what OPENS the card's own entry — the unarmed
+card stops being `disabled` — so a static build with no mint path leaves the card unavailable (GH #684 —
+no copy rides inside it any more). A callback, never a CustomEvent (SPEC-R5): the mint path is page-owned
+and this component cannot import site code without inverting the layering DAG.
 
 The callback receives a `GenerateSeed` (GH #670, Kim's 2026-08-10 ruling): the Model the user picked on the
 unarmed card, for the page to SEED the store it is about to mint with (`builderStore(seed?.model)`). The pick
 therefore wins by construction — the interview's first read of `model` is already the user's, so there is no
 write-then-overwrite step to lose a race with — and an untouched picker sends nothing, leaving the minted
-store's own default in charge. Only the card's own first-message entry carries a seed: the roster menu, invoked
-from outside any specific card, has no pick to carry, so its own call sends no seed and the minted store's own
-default stands (GH #681). Optional at both ends: a page that ignores the argument behaves exactly as before.
+store's own default in charge. Only the card's own first-message entry carries a seed: the header's own New
+Agent button, invoked from outside any specific card, has no pick to carry, so its own call sends no seed and
+the minted store's own default stands. Optional at both ends: a page that ignores the argument behaves exactly as before.
 Effort takes the same pre-arm-then-apply path but is not part of the seed — it has no store home by design (it
 is a per-conversation dial on the element, never persisted).
 

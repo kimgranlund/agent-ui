@@ -672,8 +672,19 @@
      own card top-margin (context-json below) so both tab families share one vertical rhythm. On the
      BODY here (not per-child): a Settings body is a section's whole content unit (ui-settings card /
      model grid / a headless entry-section / the surface rows), not the single JSON card the Context
-     items carry. */
+     items carry.
+     GH #706 — a THIRD instance of this file's own named failure class (GH #197; the master-detail-pane
+     @scope fix at the `settings-pane` rule below): `disclosure.css`'s own `[data-part='body']` declares
+     no `display` of its own (padding only), so the UA default `display:block` wins here and any gap
+     between this body's OWN children stacks at zero — invisible until a fold's body holds more than one
+     top-level card, which S7-d's `reset-agent-row` (a SIBLING of `model-grid`, both direct children of
+     THIS body) is the first to do. `display:flex` + this SAME `section-gap` token (the file's one
+     top-level-section rhythm, already used by context-system/context-turns above) makes the body a
+     column of its own children — a no-op for every OTHER fold (one child, gap has nothing to act on). */
   [data-part='settings-item'] > [data-part='details'] > [data-part='body'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-agent-admin-section-gap);
     margin-block-start: var(--ui-agent-admin-list-gap);
   }
 
