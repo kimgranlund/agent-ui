@@ -1345,10 +1345,9 @@ describe('ui-agent-admin — segment content wins its OWN display:flex, not supe
 describe('ui-agent-admin — the Model fold body wins its OWN display:flex, so model-grid and reset-agent-row get a real gap (GH #706)', () => {
   it('a real, non-zero measured gap separates the models-list card from the "Agent configuration" (Reset Agent) card', async () => {
     const { el } = mountAgentAdmin('Agent')
-    el.onResetRequest(() => {}) // the RESET BUTTON is [hidden] unregistered (agent-admin.ts #applyActionAvailability),
-    // not the row itself — register so the button paints too, since GH #706's own bug wasn't specific to
-    // that state (a real, un-hidden latent defect: an unregistered card still paints label+spacer with no
-    // affordance — tracked separately, not this test's concern)
+    el.onResetRequest(() => {}) // the WHOLE ROW is [hidden] unregistered (agent-admin.ts #applyActionAvailability,
+    // GH #709) — register so the row paints at all, since this test measures a gap between two painted
+    // boxes; the unregistered-hidden case has its own dedicated test below (GH #709's own regression pin).
     await el.updateComplete
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
 
@@ -1365,6 +1364,22 @@ describe('ui-agent-admin — the Model fold body wins its OWN display:flex, so m
     expect(expectedGapPx, 'a real, non-zero declared section gap to measure against').toBeGreaterThan(0)
     const measuredGapPx = resetRow.getBoundingClientRect().top - grid.getBoundingClientRect().bottom
     expect(measuredGapPx, 'the models card and the Reset Agent card no longer butt together').toBeCloseTo(expectedGapPx, 0)
+  })
+
+  // GH #709 — the SAME failure class this describe block's own GH #706 fix already named for settings-item
+  // ([hidden] loses to a bare author `display` declaration unless explicitly re-asserted): reset-agent-row's
+  // own `display: flex` rule is exactly that shape, so hiding the ROW (not just its button, the fix this
+  // ticket shipped) needs the matching `[data-part='reset-agent-row'][hidden] { display: none }` override —
+  // a real-engine assertion, since jsdom never applies this cascade and would pass even if the CSS override
+  // were missing entirely (only the DOM attribute/property, never computed style).
+  it('an unregistered Reset Agent row actually PAINTS as display:none, not just carries the [hidden] attribute (GH #709)', async () => {
+    const { el } = mountAgentAdmin('Agent') // no onResetRequest — the unregistered/hidden case
+    await el.updateComplete
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const resetRow = el.querySelector('[data-part="reset-agent-row"]') as HTMLElement
+    expect(resetRow.hidden, 'anti-vacuous: the attribute really is set').toBe(true)
+    expect(getComputedStyle(resetRow).display, 'the CSS override wins — [hidden] actually removes the box').toBe('none')
+    expect(resetRow.getBoundingClientRect().height, 'zero-height, not merely attribute-hidden while still laid out').toBe(0)
   })
 })
 

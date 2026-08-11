@@ -735,6 +735,15 @@
     background: var(--ui-agent-admin-surface);
   }
 
+  /* GH #709 — the SAME failure class the settings-item [hidden] rule above already names: this rule's own
+     bare `display: flex` (an author declaration, ANY specificity) outranks the native `[hidden] { display:
+     none }` UA-stylesheet rule (the lowest-priority presentational-attribute mapping), so hiding the whole
+     row (not just its button, #applyActionAvailability) needs the same explicit override this file already
+     ships for settings-item. */
+  [data-part='reset-agent-row'][hidden] {
+    display: none;
+  }
+
   [data-part='reset-agent-label'] {
     flex: 0 0 auto;
     font-weight: 600;
