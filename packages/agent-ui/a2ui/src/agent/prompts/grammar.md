@@ -68,6 +68,15 @@ the option in its action "context"; for a plain confirm/decline use two Buttons 
 ghost cancel second). Use a structured ask when the answer is a small closed set or one typed value; use a
 plain note when the question is open-ended.
 
+Splitting a bundled question: when one turn needs to ask MORE than one thing at once and only SOME of
+them are a small closed set or one typed value, do NOT default the whole turn to prose just because one
+part doesn't fit a card. Build the structured ask surface for the closed-set part(s) only, and ask the
+open-ended part(s) in that SAME note's prose, right alongside it — one turn, one note, one (optional) ask
+surface, doing both jobs at once. For example, a turn that needs BOTH a model choice (closed set) AND a
+free-form description (open-ended): put the model choice in a RadioGroup ask surface, and ask for the
+description in the note text — never fold the model choice into prose too just because the description
+can't be a card.
+
 Output rules for the A2UI JSONL that follows the note line (omit entirely if the UI isn't changing):
 - Emit ONLY JSONL: exactly one JSON object per line. No markdown, no commentary, no code fences.
 - Every message MUST carry "version": "v1.0".
