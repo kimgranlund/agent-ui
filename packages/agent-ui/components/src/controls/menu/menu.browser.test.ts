@@ -116,6 +116,84 @@ describe('ui-menu — open round-trip via the native Popover API (both engines)'
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
+//  [1b] TRIGGER CARET — a [data-role='caret'] descendant rotates with [aria-expanded] (GH #705)
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+// GH #705 (Kim's ruling) — the trigger's own [aria-expanded] (menu.ts's connected() effect, already
+// proven live by [1] above) drives a CSS-only caret rotation; no new JS state. A plain <span
+// data-role="caret"> stands in for conversation-composer.ts's real <ui-icon> — the rule only reads the
+// attribute, so this isolates the CSS contract from an unrelated component's own rendering.
+const WITH_CARET = `
+  <ui-menu>
+    <button style="padding:6px 12px">Open menu<span data-role="caret" style="display:inline-block">▾</span></button>
+    <div data-value="a">Alpha</div>
+    <div data-value="b">Beta</div>
+  </ui-menu>`
+
+describe('ui-menu — trigger caret rotates with [aria-expanded] (both engines, GH #705)', () => {
+  it('closed ⇒ caret unrotated; open ⇒ rotated 180deg; closed again ⇒ rotates back', async () => {
+    const { el } = mount(WITH_CARET)
+    const caret = el.querySelector<HTMLElement>('[data-role="caret"]')!
+    const trigger = el.querySelector<HTMLElement>('[data-part="trigger"]')!
+
+    expect(trigger.getAttribute('aria-expanded'), 'closed by default').toBe('false')
+    expect(getComputedStyle(caret).transform, 'no rotation while closed').toBe('none')
+
+    el.open = true
+    await el.updateComplete
+    expect(trigger.getAttribute('aria-expanded')).toBe('true')
+    // The rule's own transition (--md-sys-motion-duration-fast, 300ms) is still mid-flight right after
+    // updateComplete (that only awaits the reactive prop update, never a running CSS Transition) —
+    // await the real Web Animations API finish signal rather than a computed-style read that would
+    // race the animation and land on an intermediate value.
+    await Promise.all(caret.getAnimations().map((a) => a.finished))
+    const openTransform = getComputedStyle(caret).transform
+    expect(openTransform, 'a real, non-identity transform while open').not.toBe('none')
+    // matrix(cosθ, sinθ, -sinθ, cosθ, 0, 0) for θ=180deg ⇒ matrix(-1, 0, 0, -1, 0, 0) — check the
+    // sign flip on both diagonal terms rather than string-matching one engine's own matrix formatting.
+    const [a, , , d] = openTransform.replace(/matrix\(|\)/g, '').split(',').map(Number)
+    expect(a, 'a real 180deg rotation, not merely SOME transform').toBeCloseTo(-1, 1)
+    expect(d).toBeCloseTo(-1, 1)
+
+    el.open = false
+    await el.updateComplete
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
+    await Promise.all(caret.getAnimations().map((a) => a.finished))
+    expect(getComputedStyle(caret).transform, 'rotates back on close').toBe('none')
+  })
+
+  it('respects prefers-reduced-motion (Chromium via CDP; WebKit asserts the baseline): the rotation still lands, the transition is suppressed', async () => {
+    const { el } = mount(WITH_CARET)
+    const caret = el.querySelector<HTMLElement>('[data-role="caret"]')!
+
+    if (server.browser !== 'chromium') {
+      // WebKit: no CDP / reduced-motion emulation in this driver stack — assert we are NOT already
+      // reduced, then just confirm the rotation itself still works normally (the [1b] test above
+      // already covers the un-reduced transition value; this is only the reduced-motion LEG).
+      expect(window.matchMedia('(prefers-reduced-motion: reduce)').matches).toBe(false)
+      el.open = true
+      await el.updateComplete
+      expect(getComputedStyle(caret).transform).not.toBe('none')
+      return
+    }
+
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', {
+      features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
+    })
+    try {
+      expect(window.matchMedia('(prefers-reduced-motion: reduce)').matches).toBe(true)
+      expect(getComputedStyle(caret).transitionDuration, 'reduced-motion suppresses the transition').toBe('0s')
+      el.open = true
+      await el.updateComplete
+      expect(getComputedStyle(caret).transform, 'the end state still rotates — reduced motion drops the ANIMATION, not the state').not.toBe('none')
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] })
+    }
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
 //  [2] TOP LAYER — panel renders above an overflow:hidden and a transform ancestor
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
