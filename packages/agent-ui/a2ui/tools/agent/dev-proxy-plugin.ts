@@ -61,6 +61,7 @@ import {
   validateGenuiSurface,
   validateA2uiEnabled,
   validateAuthoringSurface,
+  validateBuilderMission,
   validateEffort,
   isChatBody,
   resolveChatDispatch,
@@ -271,7 +272,7 @@ export function a2uiDevProxyPlugin(opts?: {
 
             // POST — run one turn and stream validated A2UI JSONL back.
             if (req.method === 'POST') {
-              const { input, provider, model, mode, personaSystem, integrations, progressDetail, genui, a2ui, authoring, effort, catalogId } = JSON.parse(await readBody(req)) as {
+              const { input, provider, model, mode, personaSystem, integrations, progressDetail, genui, a2ui, authoring, builderMission, effort, catalogId } = JSON.parse(await readBody(req)) as {
                 input: TurnInput
                 provider: string
                 model: string
@@ -282,6 +283,7 @@ export function a2uiDevProxyPlugin(opts?: {
                 genui?: unknown
                 a2ui?: unknown
                 authoring?: unknown
+                builderMission?: unknown
                 effort?: unknown
                 catalogId?: unknown
               }
@@ -353,12 +355,17 @@ export function a2uiDevProxyPlugin(opts?: {
               // composes ZERO personaPatch teaching bytes. Absent ⇒ the opts key is omitted entirely and
               // the composed prompt is byte-identical to a pre-S3 turn.
               const authoringSurface = validateAuthoringSurface(authoring)
+              // ADR-0182 cl.2 / SPEC-R31 — the SAME fail-closed validation both transports share
+              // (chat-validation.ts): anything but a literal boolean degrades to `undefined`, which
+              // composes ZERO builder-mission teaching bytes. Absent ⇒ the opts key is omitted entirely
+              // and the composed prompt is byte-identical to a pre-#716 turn.
+              const builderMissionGate = validateBuilderMission(builderMission)
               // The reasoning-effort dial (the SAME fail-closed posture as mode/genuiSurface above,
               // chat-validation.ts): a crafted/malformed value degrades to `undefined` (the adapter's own
               // default), never a 400.
               const validatedEffort = validateEffort(effort)
               try {
-                for await (const line of produce(input, deps, { maxRounds: 3, model, mode: validateMode(mode), personaSystem: persona, progress: true, ...(detail !== undefined ? { progressDetail: detail } : {}), ...(genuiSurface !== undefined ? { genuiSurface } : {}), ...(a2uiEnabled !== undefined ? { a2uiEnabled } : {}), ...(authoringSurface !== undefined ? { authoringSurface } : {}), ...(validatedEffort !== undefined ? { effort: validatedEffort } : {}), ...toolOpts })) {
+                for await (const line of produce(input, deps, { maxRounds: 3, model, mode: validateMode(mode), personaSystem: persona, progress: true, ...(detail !== undefined ? { progressDetail: detail } : {}), ...(genuiSurface !== undefined ? { genuiSurface } : {}), ...(a2uiEnabled !== undefined ? { a2uiEnabled } : {}), ...(authoringSurface !== undefined ? { authoringSurface } : {}), ...(builderMissionGate !== undefined ? { builderMission: builderMissionGate } : {}), ...(validatedEffort !== undefined ? { effort: validatedEffort } : {}), ...toolOpts })) {
                   res.write(line + '\n')
                 }
               } catch (err) {

@@ -1258,5 +1258,12 @@
     "description": "follow-the-change design intake (GH #695, Kim's PRD/SPEC/LLD ask): the Builder co-pilot becomes the shown-set visibility model's first non-user writer — ADDITI…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0182",
+    "url": "./adr-index.html#adr-0182",
+    "description": "Builder-interview mission nudge + plan visibility (GH #716): the drive-to-completion teaching gates on session === 'authoring' (derived host-side in admin-live…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

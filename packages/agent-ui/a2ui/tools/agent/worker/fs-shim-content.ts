@@ -22,6 +22,9 @@ import genuiDogfoodTeaching from '../../../src/agent/prompts/genui-dogfood-teach
 // ADR-0178 cl.1/cl.3 (SPEC-R30) — the personaPatch arm's mechanics teaching, composed by
 // `authoringBlock` only under the persona's own authoring gate.
 import authoringTeaching from '../../../src/agent/prompts/authoring-teaching.md'
+// ADR-0182 cl.2/cl.3 (SPEC-R31) — the builder-mission drive-to-completion teaching, composed by
+// `missionBlock` only when this turn IS the Builder's own dedicated interview.
+import builderMission from '../../../src/agent/prompts/builder-mission.md'
 
 import cardGameSheet from '../../../src/agent/prompts/mini-skills/card-game-sheet.md'
 import cardLayout from '../../../src/agent/prompts/mini-skills/card-layout.md'
@@ -56,6 +59,7 @@ export const FILES: Record<string, string> = {
   [`${PROMPTS_PATH}/genui-teaching.md`]: genuiTeaching,
   [`${PROMPTS_PATH}/genui-dogfood-teaching.md`]: genuiDogfoodTeaching,
   [`${PROMPTS_PATH}/authoring-teaching.md`]: authoringTeaching,
+  [`${PROMPTS_PATH}/builder-mission.md`]: builderMission,
   [`${GENUI_PACKS_PATH}/data-viz-layouts.md`]: dataVizLayouts,
   [`${GENUI_PACKS_PATH}/interactive-widgets.md`]: interactiveWidgets,
   [`${GENUI_PACKS_PATH}/animated-explainers.md`]: animatedExplainers,

@@ -175,6 +175,17 @@ export interface ProduceOptions {
    *  exactly as a volunteered `plan` does. What the gate withholds is CONSUMPTION, which is host-side
    *  (ADR-0178 cl.2's three-filter apply gate — a future slice), never this primitive's. */
   authoringSurface?: boolean
+  /** ADR-0182 cl.1/cl.2 / SPEC-R31 — whether THIS turn is the Builder's own dedicated interview (a fact
+   *  derived host-side from turn origin, `session === 'authoring'`, never a persona-editable flag),
+   *  threaded per call to `buildSystemPrompt`'s builder-mission teaching block. Absent/`false` ⇒ zero
+   *  teaching bytes compose. `true` ⇒ the model is taught to actively drive the interview toward
+   *  completion and declare its own remaining-work view via the ALREADY-SHIPPED `plan` arm.
+   *
+   *  A SEPARATE gate from `authoringSurface` above — this primitive never derives one from the other;
+   *  the caller (the runner) decides both independently, per ADR-0182 cl.1. Used for exactly the same
+   *  ONE thing — conditioning prompt composition — and equally gate-blind at the wire layer: `plan` is
+   *  SPEC-R20's existing passthrough, unaffected by this flag either way. */
+  builderMission?: boolean
 }
 
 /** The bounded raw-reasoning excerpt cap (ADR-0146 F3, `progressDetail:'full'`) — a `thinking` delta can be
@@ -811,7 +822,7 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
   const query = queryOf(input, k, deps.catalog.catalogId) // ADR-0169 cl.4 — catalog-aware, not the old pinned literal
   const exemplars = deps.retrieve(query) // SPEC-R7 — top-k over the judged shard
   const miniSkills = selectMiniSkills(query.intent, MINI_SKILLS, opts.miniSkillCap ?? DEFAULT_MINI_SKILL_CAP, deps.catalog.catalogId) // ADR-0091 §2 — once per turn, beside retrieve(); ADR-0135 cl.7 — cap now tunable, absent ⇒ default; SPEC-R6 — catalogId-scoped, the SAME value line :762's queryOf already threads into retrieve's own query
-  const system = buildSystemPrompt(deps.catalog, exemplars, opts.mode, miniSkills, opts.personaSystem, opts.genuiSurface, opts.a2uiEnabled, opts.authoringSurface) // SPEC-R6 — catalog-derived; ADR-0090 mode + ADR-0091 mini-skills + ADR-0138 persona + genui-surface SPEC-R10 + GH #418 a2uiEnabled + SPEC-R30 authoring gate
+  const system = buildSystemPrompt(deps.catalog, exemplars, opts.mode, miniSkills, opts.personaSystem, opts.genuiSurface, opts.a2uiEnabled, opts.authoringSurface, opts.builderMission) // SPEC-R6 — catalog-derived; ADR-0090 mode + ADR-0091 mini-skills + ADR-0138 persona + genui-surface SPEC-R10 + GH #418 a2uiEnabled + SPEC-R30 authoring gate + SPEC-R31 builder-mission gate
   const model = opts.model ?? input.model ?? DEFAULT_MODEL // opts.model = the proxy's allowlist-validated model (SPEC-R12); it WINS over a client-supplied input.model
   // ADR-0088 §2 — data ALREADY flowing above, captured once for the eventual TurnTrace (no new collection).
   // NOTE: this is a `session.turns` MESSAGE index (the alternating Messages-API array, user+assistant per

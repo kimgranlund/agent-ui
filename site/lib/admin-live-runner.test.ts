@@ -391,6 +391,38 @@ describe('createAdminSurfaceTurn — the guided-authoring widening (LLD-C4)', ()
     expect(third).not.toContain('test one')
   })
 
+  it('ADR-0182: peels a declared plan into its own typed event, alongside the note on the same meta-line', async () => {
+    const PLAN = { steps: [{ id: 'model', description: 'Choose a model' }] }
+    const lines = [JSON.stringify({ a2uiMeta: { note: 'Next: pick a model.', plan: PLAN } })]
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(streamOfLines(lines), { status: 200, headers: { 'content-type': 'application/x-ndjson' } })),
+    )
+    const runner = createAdminSurfaceTurn()
+    const events: AdminSurfaceTurnEvent[] = []
+    for await (const event of runner(SURFACE_REQUEST)) events.push(event)
+    expect(events.map((e) => e.kind)).toEqual(['note', 'plan'])
+    expect(events.find((e) => e.kind === 'plan')).toEqual({ kind: 'plan', plan: PLAN })
+  })
+
+  it('ADR-0182 cl.1: derives `builderMission` from `session` — true only for the authoring context, sent unconditionally (never omitted)', async () => {
+    const bodyOf = async (session: 'authoring' | 'test' | undefined): Promise<Record<string, unknown>> => {
+      const fetchSpy = vi.fn(
+        async () => new Response(streamOfLines([]), { status: 200, headers: { 'content-type': 'application/x-ndjson' } }),
+      )
+      vi.stubGlobal('fetch', fetchSpy)
+      for await (const _event of createAdminSurfaceTurn()({ ...SURFACE_REQUEST, session })) {
+        /* drain */
+      }
+      const init = (fetchSpy.mock.calls[0] as unknown[])[1] as { body: string }
+      return JSON.parse(init.body) as Record<string, unknown>
+    }
+    expect((await bodyOf('authoring')).builderMission).toBe(true)
+    expect((await bodyOf('test')).builderMission).toBe(false)
+    // absent `session` defaults to the 'test' slot (the existing law above) — same false derivation
+    expect((await bodyOf(undefined)).builderMission).toBe(false)
+  })
+
   it('defaults an absent `session` to the ONE history every pre-authoring caller already had', async () => {
     const bodies: Record<string, unknown>[] = []
     vi.stubGlobal(

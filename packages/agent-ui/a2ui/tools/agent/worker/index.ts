@@ -32,6 +32,7 @@ import {
   validateGenuiSurface,
   validateA2uiEnabled,
   validateAuthoringSurface,
+  validateBuilderMission,
   validateEffort,
   isChatBody,
   resolveChatDispatch,
@@ -207,7 +208,7 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
 // lazy-headersSent equivalent), so this must run BEFORE the Response is constructed, not inside the
 // detached write-loop's catch.
 async function handleProduce(request: Request, env: Env): Promise<Response> {
-  const { input, provider, model, mode, personaSystem, integrations, progressDetail, genui, a2ui, authoring, effort, catalogId } = JSON.parse(await readBody(request)) as {
+  const { input, provider, model, mode, personaSystem, integrations, progressDetail, genui, a2ui, authoring, builderMission, effort, catalogId } = JSON.parse(await readBody(request)) as {
     input: unknown
     provider: string
     model: string
@@ -218,6 +219,7 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
     genui?: unknown
     a2ui?: unknown
     authoring?: unknown
+    builderMission?: unknown
     effort?: unknown
     catalogId?: unknown
   }
@@ -247,6 +249,11 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
   // shared): anything but a literal boolean degrades to `undefined`, which composes ZERO personaPatch
   // teaching bytes; absent ⇒ the opts key is omitted and the prompt is byte-identical to a pre-S3 turn.
   const authoringSurface = validateAuthoringSurface(authoring)
+  // ADR-0182 cl.2 / SPEC-R31 — the SAME fail-closed validation the dev proxy uses (chat-validation.ts,
+  // shared): anything but a literal boolean degrades to `undefined`, which composes ZERO builder-
+  // mission teaching bytes; absent ⇒ the opts key is omitted and the prompt is byte-identical to a
+  // pre-#716 turn.
+  const builderMissionGate = validateBuilderMission(builderMission)
   // The reasoning-effort dial — the SAME fail-closed validation the dev proxy uses (chat-validation.ts,
   // shared): a crafted/malformed value degrades to `undefined` (the adapter's own default), never a 400.
   const validatedEffort = validateEffort(effort)
@@ -280,6 +287,7 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
         ...(genuiSurface !== undefined ? { genuiSurface } : {}), // genui-surface SPEC-R10 — the validated per-turn signal
         ...(a2uiEnabled !== undefined ? { a2uiEnabled } : {}), // GH #418 — the validated A2UI Surface Option signal
         ...(authoringSurface !== undefined ? { authoringSurface } : {}), // SPEC-R30 — the validated persona-authoring gate
+        ...(builderMissionGate !== undefined ? { builderMission: builderMissionGate } : {}), // SPEC-R31 — the validated builder-mission gate
         ...(validatedEffort !== undefined ? { effort: validatedEffort } : {}), // the validated reasoning-effort dial
         signal: request.signal, // GH #106 — cancel the paid upstream call if the client disconnects
         ...toolOpts,

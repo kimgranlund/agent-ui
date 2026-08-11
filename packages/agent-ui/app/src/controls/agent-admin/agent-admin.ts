@@ -308,6 +308,16 @@ const ERROR_TURN_BUDGET = 3
 const A2UI_OFF_ACTION_REFUSAL = 'A2UI is off in Surface Options — this action was not sent.'
 const A2UI_OFF_INGEST_NOTICE = '⚠ A2UI is off in Surface Options — a surface the agent tried to render was not shown.'
 
+/** ADR-0182 cl.5 — formats a declared `plan` (the Builder-mission's open-sections view) into the SAME
+ *  plain-prose shape `note` already renders in, for the append-only `outgoing` fold in `#runSurfaceTurn`.
+ *  No new UI component: a checklist is one more line of text, exactly like `assetWarning`/the a2ui-
+ *  refused notice above it. An empty step list composes `undefined` — the model's own note already says
+ *  so in plain prose (`prompts/builder-mission.md`) when nothing remains, so this never doubles that up. */
+function formatPlanChecklist(plan: { steps: readonly { description: string }[] }): string | undefined {
+  if (plan.steps.length === 0) return undefined
+  return `Still open: ${plan.steps.map((step) => step.description).join(' · ')}`
+}
+
 // genui-surface.spec.md v0.5 §11 (SPEC-R12, GH #316/ADR-0162) — the ONE committed asset pair, now fetched
 // LAZILY: at most ONCE per page, and ONLY on a dogfood-ON frame mount (GH #354, Kim's 2026-07-29 ruling).
 //
@@ -2503,6 +2513,9 @@ export class UIAgentAdminElement extends UIElement {
       // ADR-0178 cl.2 — what the patch arm did this turn, for the log (never an error surface).
       const patchReports: PatchReport[] = []
       let patchIgnored = false
+      // ADR-0182 cl.5 — the Builder-mission's own declared open-sections view, last-write-wins per turn
+      // exactly like `note` (a turn carries at most one leading meta-line either way).
+      let planChecklist: string | undefined
       try {
         // GH #354 — the ONE await the lazy asset pair introduces is HOISTED HERE, ahead of the first
         // consumed event, so `mountGenui` below stays SYNCHRONOUS inside the stream loop exactly as it was
@@ -2587,6 +2600,12 @@ export class UIAgentAdminElement extends UIElement {
             } else {
               patchIgnored = true // logged below; zero writes, no error surface (SPEC-R30's degrade law)
             }
+          } else if (event.kind === 'plan') {
+            // ADR-0182 cl.4/cl.5 — the ALREADY-SHIPPED `plan` arm, reused verbatim; consumption here is
+            // pure rendering (no store write, unlike the `patch` arm above), so no fence/gate check is
+            // needed — a plan arriving on a turn this client never asked the model to produce is simply
+            // formatted the same as one it did (the wire is gate-blind, SPEC-R20/SPEC-R31).
+            planChecklist = formatPlanChecklist(event.plan)
           } else if (event.kind === 'line') {
             wireLines.push(event.line)
             // GH #418 — an A2UI wire line only renders (`ingestLine`) while A2UI is actually on this
@@ -2614,7 +2633,11 @@ export class UIAgentAdminElement extends UIElement {
         // GH #418 — the a2ui-refused notice rides the SAME "append, never replace" composition: the
         // agent's own note (if any) stays intact, with the refusal appended so the never-silent law holds
         // even when the model DID say something narratable alongside the line this client refused.
-        const outgoing = [note, assetWarning, a2uiRefused ? A2UI_OFF_INGEST_NOTICE : undefined].filter((text) => text !== undefined).join('\n\n')
+        // ADR-0182 cl.5 — the plan checklist rides the SAME "append, never replace" fold, one more
+        // member alongside the a2ui-refused notice: the agent's own note (if any) stays intact.
+        const outgoing = [note, assetWarning, a2uiRefused ? A2UI_OFF_INGEST_NOTICE : undefined, planChecklist]
+          .filter((text) => text !== undefined)
+          .join('\n\n')
         if (outgoing !== '') handle.setNote(outgoing)
         handle.finalize()
         // GH #525 (design call 1, 2026-08-07) — "NO new tool — zero API surface, rides the existing turn
