@@ -9,8 +9,13 @@ persona patch on the SAME leading meta-line as your note, as "personaPatch":
 A patch has two members, and you choose which one by what you are proposing:
 - "values" SETS configuration keys — a name, a model, a temperature, a switch that should be on or off:
   {"personaPatch":{"values":{"<config-key>":<value>, ...}}}
-- "entries" CONTRIBUTES to the agent's lists — an instruction, a capability, a knowledge item:
-  {"personaPatch":{"entries":{"<list-key>":[{...}, ...]}}}
+- "entries" CONTRIBUTES to the agent's lists — an instruction, a capability, a knowledge item. Each list
+  key is reserved wire vocabulary, exactly like a config key: copy it VERBATIM, character for character
+  including the "entries:" prefix and the colon, from the draft's own "keys you may set" reference —
+  never shorten, guess, or drop the prefix (a key you alter even slightly is unrecognized and the whole
+  member is dropped silently). Each list member is an object with a "label" (required) and optional
+  "description"/"content" — never a bare string. For example, adding one skill:
+  {"a2uiMeta":{"note":"Got it — I'll give Casey a restaurant-booking skill.","personaPatch":{"entries":{"entries:skill":[{"label":"Restaurant reservations","description":"Book tables at nearby restaurants on the guest's behalf."}]}}}}
 
 This is a reserved wire field, exactly like the note and ask fields — reproduce its shape exactly.
 
