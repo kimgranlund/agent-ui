@@ -44,8 +44,10 @@
   --ui-conversation-radius: var(--md-sys-shape-corner-base, 12px);
   --ui-conversation-bubble-radius: calc(var(--ui-conversation-radius) - 2px);
   /* SPEC-R11c/AC19 (spacing-drift gate): the STYLES block below never reads --md-sys-space-* directly
-     inside @scope (TKT-0066 item 5) — it mints these role-named tokens here and consumes THOSE. */
-  --ui-conversation-log-pad: var(--md-sys-space-lg);
+     inside @scope (TKT-0066 item 5) — it mints these role-named tokens here and consumes THOSE.
+     ADR-0180 (GH #688) — the log's own inset (formerly --ui-conversation-log-pad here) moved WITH the
+     scroll region to conversation-dialog.css's own token block, which aliases the old name for backward
+     compat; nothing in THIS file's @scope reads it anymore. */
   --ui-conversation-bubble-pad: var(--md-sys-space-sm) var(--md-sys-space-md);
   --ui-conversation-mounts-gap: var(--md-sys-space-sm);
   --ui-conversation-composer-inset: var(--md-sys-space-md);
@@ -71,17 +73,12 @@
     overflow: hidden;
   }
 
-  /* ── the thread — owns its OWN scroll region (SPEC-R4) ──────────────────────────────────────────────── */
-  [data-part='log'] {
-    flex: 1 1 auto;
-    min-block-size: 0;
-    overflow-y: auto;
-    scrollbar-width: var(--ui-conversation-scrollbar-width, auto); /* consumer-inherited seam (split-pane.css's own note) — deliberately NOT self-declared */
-    padding: var(--ui-conversation-log-pad);
-    display: flex;
-    flex-direction: column;
-    gap: 0.65rem;
-  }
+  /* ── the thread — owns its OWN scroll region (SPEC-R4) ────────────────────────────────────────────────
+     ADR-0180 (GH #688) — the whole `[data-part='log']` rule MOVED to conversation-dialog.css's own
+     `@scope (ui-conversation-dialog) :scope { … }` (the scroll region is now that element's own intrinsic
+     layout, adopted-or-created by this element's connected()). The `[data-part='log']` ATTRIBUTE marker
+     itself is still written here (connected()) — every shipped selector keys on it, tag-agnostic — this
+     file's own @scope simply has nothing left to say about it. */
 
   /* GH #306/ADR-0160 amendment — the free-standing turn chrome: `[data-part='who']` + (agent only)
      `[data-part='narration']`, above the bubble, on the page background (never chromed itself). Takes

@@ -9,9 +9,13 @@ import { server, cdp } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/component-styles.css'
 import './conversation.css'
+import './conversation-dialog.css' // ADR-0180 (GH #688) — the adopted-or-created log's own layout/scroll CSS, promoted off conversation.css
+import './conversation-header.css' // ADR-0180 — the optional recognized header band's own layout CSS
 import './conversation-composer.css' // TKT-0056 — the composed ui-conversation-composer's own layout/parts CSS
 import '../surface-host/surface-host.css'
 import { UIConversationElement } from './conversation.ts'
+import type { UIConversationDialogElement } from './conversation-dialog.ts'
+import type { UIConversationHeaderElement } from './conversation-header.ts'
 import { whenFlushed } from '@agent-ui/components'
 
 // jsdom-free here (real engine) — the composer's form-associated ui-button parts need no stub in a REAL
@@ -140,6 +144,69 @@ describe('ui-conversation cross-engine smoke — whole-shape (SPEC-R4)', () => {
     expect(composerRect.width).toBeGreaterThan(0)
     expect(composerRect.height).toBeGreaterThan(0)
     expect(logRect.bottom).toBeLessThanOrEqual(composerRect.top + 0.5)
+  })
+
+  it("LLD test 1's own deliberate delta: the default (no children) log is a real UI-CONVERSATION-DIALOG box, not a bare div", () => {
+    const el = mountConversation()
+    expect(logOf(el).tagName).toBe('UI-CONVERSATION-DIALOG')
+  })
+})
+
+// ADR-0180 (GH #688) — the declarative composition adoption path's OWN cross-engine truth: real painted
+// geometry (jsdom cannot resolve it) for the ticket's own acceptance bullet — "the header remains visible
+// while the dialog beneath it scrolls" — plus a whole-shape proof of the fully-authored triple.
+describe('ui-conversation cross-engine smoke — ADR-0180 declarative composition, real geometry', () => {
+  it('a fully-authored header/dialog/composer triple all render as real, non-zero-area boxes in canonical order', () => {
+    const el = document.createElement('ui-conversation') as UIConversationElement
+    el.style.width = '420px'
+    el.style.height = '360px'
+    const header = document.createElement('ui-conversation-header') as UIConversationHeaderElement
+    header.textContent = 'Support Agent'
+    const dialog = document.createElement('ui-conversation-dialog') as UIConversationDialogElement
+    const composerEl = document.createElement('ui-conversation-composer')
+    el.append(header, dialog, composerEl)
+    document.body.append(el)
+    mounted.push(el)
+
+    const headerRect = header.getBoundingClientRect()
+    const dialogRect = dialog.getBoundingClientRect()
+    const composerRect = composerEl.getBoundingClientRect()
+    for (const [name, rect] of [['header', headerRect], ['dialog', dialogRect], ['composer', composerRect]] as const) {
+      expect(rect.width, `${name} collapsed to zero width`).toBeGreaterThan(0)
+      expect(rect.height, `${name} collapsed to zero height`).toBeGreaterThan(0)
+    }
+    // canonical top-to-bottom band order, real geometry.
+    expect(headerRect.bottom).toBeLessThanOrEqual(dialogRect.top + 0.5)
+    expect(dialogRect.bottom).toBeLessThanOrEqual(composerRect.top + 0.5)
+  })
+
+  it("the ticket's own acceptance bullet: the header STAYS VISIBLE (unmoved, non-zero area) while the dialog beneath it scrolls — never position:sticky, simply outside the scroller", () => {
+    const el = document.createElement('ui-conversation') as UIConversationElement
+    el.style.width = '420px'
+    el.style.height = '260px'
+    const header = document.createElement('ui-conversation-header') as UIConversationHeaderElement
+    header.textContent = 'Support Agent'
+    const dialog = document.createElement('ui-conversation-dialog') as UIConversationDialogElement
+    const composerEl = document.createElement('ui-conversation-composer')
+    el.append(header, dialog, composerEl)
+    document.body.append(el)
+    mounted.push(el)
+
+    const headerRectBefore = header.getBoundingClientRect()
+    expect(getComputedStyle(header).position, 'the header must never rely on position:sticky (ADR-0180 clause 3)').not.toBe('sticky')
+
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement('p')
+      p.textContent = `real content line ${i} — enough to force real overflow in a short dialog`
+      dialog.append(p)
+    }
+    dialog.scrollTop = dialog.scrollHeight // scroll the dialog, and ONLY the dialog
+
+    expect(dialog.scrollTop, 'the dialog itself never scrolled — the test setup is broken, not the component').toBeGreaterThan(0)
+    const headerRectAfter = header.getBoundingClientRect()
+    expect(headerRectAfter.top, "the header moved when the dialog beneath it scrolled — it must stay put").toBeCloseTo(headerRectBefore.top, 0)
+    expect(headerRectAfter.width, 'the header lost its area while the dialog scrolled').toBeGreaterThan(0)
+    expect(headerRectAfter.height, 'the header lost its area while the dialog scrolled').toBeGreaterThan(0)
   })
 })
 

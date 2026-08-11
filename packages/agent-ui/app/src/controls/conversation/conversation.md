@@ -9,7 +9,7 @@ tag: ui-conversation
 # control height of its own (the ui-master-detail precedent).
 tier: layout
 extends: UIElement      # a plain structural base — composes ui-surface-host/ui-status-stream/ui-conversation-composer rather than extending any of them (ADR-0129 clause 2)
-composes: [ui-surface-host, ui-status-stream, ui-conversation-composer]  # all JS-created internal children — documentary only (component-descriptor.ts's FIELD_SHAPE has no `composes` key)
+composes: [ui-surface-host, ui-status-stream, ui-conversation-composer, ui-conversation-dialog, ui-conversation-header]  # ADR-0180 (GH #688) adds the two new tags — every one of the five is ADOPTED (if author-supplied) or JS-created, documentary only (component-descriptor.ts's FIELD_SHAPE has no `composes` key)
 # marginal: measured at the @agent-ui/app integration slice (scripts/measure-size.mjs, LLD-C9), after the M2 reference-app re-host — the M1/M4 kickoff discipline, never guessed in advance
 
 attributes:              # attributes-as-API — mirrors conversation.ts `props`
@@ -99,11 +99,20 @@ events:                   # onSubmit/onClientMessage/onModelChange/onEffortChang
     detail: '{ id: string }'
     description: Fired when the user clicks a settled agent turn's pre-hydrated action chip (rendered when `AgentTurnHandle.finalize()` was called with a non-empty `actions` list). `id` is the clicked `TurnAction.id` — the consumer's own vocabulary (e.g. `'helpful'`/`'not-helpful'`, or `'yes'`/`'no'`), never interpreted by this primitive. Clicking any chip in the row removes the WHOLE row first (one-shot commit — a settled turn's feedback/reply choice can never double-fire), then fires this event on `ui-conversation` itself (never on the button, never on the bubble). GH #291 review — a consumer must still discriminate by `event.target === conv` before treating an `action` event as this chip commit: a genui `ui-sandbox-frame`'s own game-loop `action` (SPEC-R8, `routeGenui`) is a DIFFERENT `action` shape (`{surfaceId, name, payload}`, not `{id}`) that this build stops from bubbling past its own frame (`stopPropagation()`), but a consumer listening directly on a mounted surface, or on any DOM ancestor of `ui-conversation`, can still observe it — `event.target` is the only reliable discriminant between the two closed-vocabulary `action` shapes sharing this fleet's seventh event name (ADR-0153/ADR-0160).
 
-slots: []                 # content model is NOT author-composed — the thread/composer are built entirely by this element's own connect-time logic and imperative API; no slotted children. GH #666's empty-log state is not a slot either: the consumer hands its node to `setEmptyState(node)` and this element seats it in the log (see the section below).
+slots:                     # ADR-0180 (GH #688) — a RECOGNIZED-CHILDREN contract, superseding the old "no slotted children" line (this is still NOT a platform `<slot>` — light-DOM law; the fleet is light-DOM by construction). Every one is OPTIONAL, ADOPT-OR-CREATE: an author-supplied `:scope > {tag}` direct child is ADOPTED at connect (never a second imperative surface); absent, this element creates the dialog/composer itself exactly as before this ADR — the byte-identical default every existing consumer (a2ui-chat, a2ui-live, agent-admin) that authors no children keeps getting. Band order is normalized at connect (header → dialog → composer), regardless of authored order.
+  - name: ui-conversation-header
+    optional: true
+    description: The family's ONE fully author-composed member (conversation-header.md) — recognized and seated first, never created. Absent means today's shape minus nothing; the imperative API never touches it (ADR-0180 clause 3).
+  - name: ui-conversation-dialog
+    optional: true
+    description: The scrolling thread's mechanical role (conversation-dialog.md) — adopted as this element's own `#log` if authored, else created. Any author-authored initial content inside it is PRESERVED at adoption (turns append after it); `reset()` clears it, the empty-state node the one survivor (GH #666 parity, ADR-0180 clause 4).
+  - name: ui-conversation-composer
+    optional: true
+    description: The message-composition UI (conversation-composer.md, TKT-0056) — adopted as this element's own `#composer` if authored, else created. The seven callback registrations forward identically either way (ADR-0180 clause 4 — path-blind by construction). GH #666's empty-log state is NOT one of these three — the consumer hands its node to `setEmptyState(node)` and this element seats it inside the (adopted-or-created) dialog (see the section below).
 
 parts:                    # NOT shadow-DOM ::part() (light-DOM only) — light-DOM markers this element's own JS creates; documented for completeness (compareDescriptorToSource does not mechanically check `parts:`, the master-detail.md precedent)
   - name: log
-    description: The scrolling thread region (`[data-part="log"]`), `aria-live="polite"`. Owns its own scroll (SPEC-R4).
+    description: The scrolling thread region (`[data-part="log"]`, tag-agnostic — every shipped selector keys on the attribute, never the tagName). ADR-0180 (GH #688) — this is now a `<ui-conversation-dialog>` instance (adopted-or-created; see `slots:` above and conversation-dialog.md for its own `aria-live`/scroll-follow contract), promoted off a bare `div`. Owns its own scroll (SPEC-R4).
   - name: turn
     description: 'GH #306/ADR-0160 amendment (Kim''s 2026-07-27 revision) — the free-standing turn-chrome wrapper (`[data-part="turn"][data-role="user"|"agent"]`) a user/agent turn renders into: `[data-part="who"]` then (agent only) `[data-part="narration"]`, both OUTSIDE the bubble, followed by the bubble itself. Owns the log-level alignment (`align-self`) and the 92% width cap the bubble used to carry on its own. A system turn has no `who`/`narration` and so gets no wrapper — its bubble is still a direct child of `[data-part="log"]`, unchanged.'
   - name: bubble
@@ -135,9 +144,9 @@ face:
 aria:
   role: none               # this element carries no ARIA role of its own
   roleSource: none
-  childModel: none — the thread is built entirely by this element's own connect-time logic and imperative API; the composer is a JS-created composed child (ui-conversation-composer, TKT-0056); nothing is ever author-composed or slotted. The one consumer-owned node, GH #666's empty-log state, is handed over imperatively (`setEmptyState`) and seated inside `[data-part=log]` — it is the consumer's own DOM, so its roles/labels are the consumer's to declare.
+  childModel: ADR-0180 (GH #688) restates the pre-ADR-0180 "none" — the thread/composer/header are EITHER JS-created by this element's own connect-time logic (the byte-identical default) OR, opt-in, ADOPTED from an author-supplied `:scope > ui-conversation-{header,dialog,composer}` direct child (see `slots:` above); nothing is ever a platform `<slot>`, and the imperative API never changes shape between the two paths. The one consumer-owned node OUTSIDE that three-tag contract, GH #666's empty-log state, is handed over imperatively (`setEmptyState`) and seated inside the adopted-or-created dialog (`[data-part=log]`) — it is the consumer's own DOM, so its roles/labels are the consumer's to declare.
 
-contentModel: 'GH #306/ADR-0160 amendment — [data-part=bubble] and (user/agent only) its owning [data-part=turn] wrapper both carry a [data-role=user|agent|system] speaker kind (references/naming.md §6 registry). A user/agent turn is [data-part=turn][data-role=…] > [data-part=who] ("You"/"Agent"), then (agent only) [data-part=narration], then [data-part=bubble][data-role=…] holding a [data-part=body] text cell (plain textContent by default; a registered setContentRenderer replaces its children instead, SPEC-R12 — never for the user bubble) and (agent only) [data-part=mounts]/[data-part=annotation]/[data-part=disclosure]/[data-part=actions] children. A system turn has neither [data-part=who] nor [data-part=narration] nor a [data-part=turn] wrapper — its [data-part=bubble][data-role=system] is a direct child of [data-part=log], holding only [data-part=body]. None of these are author-composed (SPEC-R4)'
+contentModel: 'GH #306/ADR-0160 amendment — [data-part=bubble] and (user/agent only) its owning [data-part=turn] wrapper both carry a [data-role=user|agent|system] speaker kind (references/naming.md §6 registry). A user/agent turn is [data-part=turn][data-role=…] > [data-part=who] ("You"/"Agent"), then (agent only) [data-part=narration], then [data-part=bubble][data-role=…] holding a [data-part=body] text cell (plain textContent by default; a registered setContentRenderer replaces its children instead, SPEC-R12 — never for the user bubble) and (agent only) [data-part=mounts]/[data-part=annotation]/[data-part=disclosure]/[data-part=actions] children. A system turn has neither [data-part=who] nor [data-part=narration] nor a [data-part=turn] wrapper — its [data-part=bubble][data-role=system] is a direct child of [data-part=log], holding only [data-part=body]. None of this turn anatomy is EVER author-composed (SPEC-R4/SPEC-R13 unchanged) — ADR-0180 (GH #688) only widens WHICH ELEMENT seats the log/composer/header bands (adopted vs created, see slots: above), never who builds a turn'
 
 keyboard:
   - keys: Enter
@@ -178,6 +187,29 @@ handle.finalize()
 // non-resumable (unknown id, closed surface, disconnected bubble) falls through to a fresh bubble.
 const followUp = conv.beginAgentTurn({ intoSurface: clickedMessage.action.surfaceId })
 ```
+
+## An explicit opt-in declarative composition mode (ADR-0180, GH #688)
+
+By default (every example above) the DOM is never author-composed — the thread/composer are built entirely
+by this element's own imperative API, exactly as before. An author MAY instead compose the three
+recognized child tags directly; `ui-conversation` ADOPTS whichever it finds instead of creating it — never a
+second imperative surface, and the whole turn/registry/narration/busy engine stays solely on
+`ui-conversation` regardless of which path seated its parts:
+
+```html
+<ui-conversation>
+  <ui-conversation-header><strong>Support Agent</strong></ui-conversation-header>
+  <ui-conversation-dialog></ui-conversation-dialog>
+  <ui-conversation-composer></ui-conversation-composer>
+</ui-conversation>
+```
+
+Any subset works — a missing band is created exactly as it always was; band order is normalized at connect
+(header → dialog → composer) regardless of authored order. The imperative API (`addUserMessage`/
+`beginAgentTurn`/`reset`/…) is path-blind: it writes through whichever dialog/composer got seated, adopted
+or created, with zero mode branches. See `conversation-dialog.md`/`conversation-header.md` for the two new
+elements' own contracts, and the `slots:` field above for the full recognized-children detail (preserved
+initial content, `reset()` lifecycle).
 
 ## Composes `ui-surface-host` internally, one per open surface (ADR-0129 clause 2)
 
@@ -296,10 +328,11 @@ until `setEmptyState(null)` removes it. `reset()` KEEPS it (a reset conversation
 the same statement `reset()` already makes about turns. Safe before or after connect, exactly like
 `setContentRenderer`; unset (the default) is byte-identical to before this seam existed.
 
-## The composer is a composed child, `ui-conversation-composer` (TKT-0056)
+## The composer is an adopted-or-composed child, `ui-conversation-composer` (TKT-0056, ADR-0180)
 
-`ui-conversation` JS-creates ONE `<ui-conversation-composer>` (the `master-detail.ts` → `ui-split`
-precedent — never author-composed), forwarding `models`/`model`/`efforts`/`effort`/`providers`/`provider`/
+`ui-conversation` seats exactly ONE `<ui-conversation-composer>` — adopted from an author-supplied
+`:scope > ui-conversation-composer` (ADR-0180) if present, else JS-created (the `master-detail.ts` →
+`ui-split` precedent, the byte-identical default) — forwarding `models`/`model`/`efforts`/`effort`/`providers`/`provider`/
 `modes`/`mode`/`contextItems` down as props and forwarding its seven callback registrations up to whatever
 THIS element's own consumer registered. See `conversation-composer.md` for the composer's own full
 contract (its parts, its `busy` prop, its opt-in mic/pickers/chips). Beyond the field + send button, the

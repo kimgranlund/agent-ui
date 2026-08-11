@@ -31,6 +31,7 @@ import '@agent-ui/app/master-detail.css'
 import '@agent-ui/app/nav-rail.css'
 import '@agent-ui/app/settings.css'
 import '@agent-ui/app/conversation.css'
+import '@agent-ui/app/conversation-dialog.css' // ADR-0180 (GH #688) — the adopted-or-created log's own scroll/layout CSS, promoted off conversation.css
 import '@agent-ui/app/conversation-composer.css'
 import '@agent-ui/app/surface-host.css'
 // GH #52/ADR-0154 — the re-host onto the shell-archetype grammar: ui-agent-admin now composes
@@ -109,23 +110,24 @@ admin.onAgentSelect((id) => {
 })
 
 // LLD §16.3/§16.6 OQ-A — New Agent's ONE verb (this header carries a single button, not the retired
-// menu's two-row choice) is GENERATE: the LLD's own recommendation, unrebutted by anything later on GH
-// #686 (checked at build time — no Kim ruling names OQ-A directly; the ratification comment ratifies the
-// amendment as a whole). It is also the reading GH #681's own text already commits to ("creating a new
-// agent is an action that belongs in the roster menu, not duplicated inside the card") — the roster
-// menu's surviving item was "New agent → Generate", never "→ Blank". Called with NO seed, exactly as that
-// menu item called `createGeneratedAgent` directly: this button sits outside any specific card, so it has
-// no pre-arm Model/Effort pick to carry (`GenerateSeed`'s own doc comment states the identical reasoning
-// for this exact call site).
+// menu's two-row choice) is GENERATE: the LLD's own recommendation, since RULED by Kim (2026-08-11,
+// GH #686 comment 5246724206) — retire "New agent → Blank" entirely; Generate is the only "new agent"
+// entry point through the unified header's single button. It is also the reading GH #681's own text
+// already commits to ("creating a new agent is an action that belongs in the roster menu, not
+// duplicated inside the card") — the roster menu's surviving item was "New agent → Generate", never
+// "→ Blank". Called with NO seed, exactly as that menu item called `createGeneratedAgent` directly:
+// this button sits outside any specific card, so it has no pre-arm Model/Effort pick to carry
+// (`GenerateSeed`'s own doc comment states the identical reasoning for this exact call site).
 //
 // Blank's OWN dedicated front door (GH #637 S1's `createBlankAgent`, "New agent → Blank" — mint WITHOUT
-// an interview) has NO seam of the six to route through and is RETIRED here, not silently: OQ-A's own text
-// names three candidate homes (the narrow "•••" menu; an ADR-0170-style pack action; retire) and rules
-// none of them — the first would edit S7-c's own frozen header (a different, already-shipped slice's
-// contract), the second is a new mechanism, so this slice ships the third, PROVISIONALLY, flagged for a
-// ruling rather than assumed. `mintBlankPersona` itself is untouched and still exercised by
-// `createGeneratedAgent` below — only the interview-less, dedicated mint button is gone. See this slice's
-// GH #686 Findings comment for the full trace.
+// an interview) has NO seam of the six to route through and is RETIRED here — Kim's ruling above
+// confirms the retirement this slice shipped provisionally: OQ-A's own text had named three candidate
+// homes (the narrow "•••" menu; an ADR-0170-style pack action; retire) and ruled none of them at build
+// time, so S7-d retired `createBlankAgent()`'s wiring pending exactly this ruling, rather than guess at
+// the other two. No rework was needed. `mintBlankPersona` itself is untouched and still exercised by
+// `createGeneratedAgent` below — only the interview-less, dedicated mint button is gone. See this
+// slice's GH #686 Findings comment for the build-time trace; the ruling itself is GH #686 comment
+// 5246724206.
 admin.onNewAgentRequest(() => createGeneratedAgent())
 admin.onImportRequest(() => fileInput.click())
 admin.onExportRequest(() => exportActivePersona())

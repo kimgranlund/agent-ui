@@ -1,11 +1,14 @@
 // agent-admin.ts — UIAgentAdminElement, the Agent Admin UI (TKT-0039, ADR-0131/ADR-0132): a live-editable
 // agent config + instructions with a working chat preview, composing the shipped M2 (`ui-conversation`)
-// and M5 shell-archetype (`ui-chat-shell`→`ui-super-shell`, GH #52/ADR-0154) + M4 (`ui-settings`)
-// primitives PLUS the generic ordered-entry-list primitive (`entries.ts`/`entry-list.ts`, ADR-0132) —
-// no new primitive FAMILY beyond that one, no new protocol dependency.
+// and M5 shell-archetype (`ui-super-shell`, GH #52/ADR-0154 — GH #700 flattened out the `ui-chat-shell`
+// hop: that preset contributed nothing to this element but the `narrow-start="stack"` default, now set
+// directly below) + M4 (`ui-settings`) primitives PLUS the generic ordered-entry-list primitive
+// (`entries.ts`/`entry-list.ts`, ADR-0132) — no new primitive FAMILY beyond that one, no new protocol
+// dependency.
 //
-// ONE composed `ui-chat-shell` (GH #52/ADR-0154, re-hosted again by ADR-0179, then again by GH #686's
-// Amendment — superseding vision rev.5's hand-rolled `ui-split` composition, which itself superseded
+// ONE composed `ui-super-shell` (GH #52/ADR-0154 via the retired `ui-chat-shell` preset, re-hosted again
+// by ADR-0179, then again by GH #686's Amendment, then flattened to a direct composition by GH #700 —
+// superseding vision rev.5's hand-rolled `ui-split` composition, which itself superseded
 // ADR-0131 cl.2's three-pane order): `header` = the unified header bar (S7-c, admin-three-pane-ia.lld.md
 // §16.1/§16.3/§16.4 — the pane nav that used to occupy this slot is retired; this replacement is a
 // different shape, not a restoration: agent select + pane pills/segments + page actions, never a mode
@@ -101,9 +104,12 @@ import type { UITabsElement, UITabElement } from '@agent-ui/components/controls/
 // unified header bar, S7-c's own build, LLD §16.4) and `content` (the pane holder). The old
 // options-pane end + `narrow-end="tabs"` six-entry vocabulary retired with ADR-0179 cl.1
 // (admin-three-pane-ia.lld.md §7) — replacing, in turn, the original hand-rolled ui-split + narrow
-// ui-tabs dual-shell + the ResizeObserver-driven #applyLayout reparenting.
-import '../chat-shell/chat-shell.ts'
-import type { UIChatShellElement } from '../chat-shell/chat-shell.ts'
+// ui-tabs dual-shell + the ResizeObserver-driven #applyLayout reparenting. GH #700 — this element used
+// to reach `ui-super-shell` through the `ui-chat-shell` preset (whose ONLY real contribution here was
+// the `narrow-start="stack"` default); it now composes `ui-super-shell` directly and sets that default
+// itself (`#compose()` below), removing one wrapper element from every agent-admin DOM tree.
+import '../super-shell/super-shell.ts'
+import type { UISuperShellElement } from '../super-shell/super-shell.ts'
 // GH #686's Amendment (LLD §16.5) retires `ui-master-detail` as the Author⇄Settings pairing vehicle
 // entirely: the wireframe's all-active geometry does not fit its 40rem own-container dock floor. The
 // three places are three sibling regions now (`#compose`, below) — no more MD import at this element's
@@ -302,6 +308,16 @@ const ERROR_TURN_BUDGET = 3
 const A2UI_OFF_ACTION_REFUSAL = 'A2UI is off in Surface Options — this action was not sent.'
 const A2UI_OFF_INGEST_NOTICE = '⚠ A2UI is off in Surface Options — a surface the agent tried to render was not shown.'
 
+/** ADR-0182 cl.5 — formats a declared `plan` (the Builder-mission's open-sections view) into the SAME
+ *  plain-prose shape `note` already renders in, for the append-only `outgoing` fold in `#runSurfaceTurn`.
+ *  No new UI component: a checklist is one more line of text, exactly like `assetWarning`/the a2ui-
+ *  refused notice above it. An empty step list composes `undefined` — the model's own note already says
+ *  so in plain prose (`prompts/builder-mission.md`) when nothing remains, so this never doubles that up. */
+function formatPlanChecklist(plan: { steps: readonly { description: string }[] }): string | undefined {
+  if (plan.steps.length === 0) return undefined
+  return `Still open: ${plan.steps.map((step) => step.description).join(' · ')}`
+}
+
 // genui-surface.spec.md v0.5 §11 (SPEC-R12, GH #316/ADR-0162) — the ONE committed asset pair, now fetched
 // LAZILY: at most ONCE per page, and ONLY on a dogfood-ON frame mount (GH #354, Kim's 2026-07-29 ruling).
 //
@@ -418,14 +434,15 @@ export class UIAgentAdminElement extends UIElement {
 
   // The composed SHELL — created ONCE (idempotent, `#shell` doubles as the guard) and PERSISTS across a
   // reconnect (the `master-detail.ts`/`settings.ts` precedent). GH #52/ADR-0154, re-hosted by ADR-0179,
-  // re-ruled again by GH #686's Amendment (admin-three-pane-ia.lld.md §16, S7-b): a `ui-chat-shell`
+  // re-ruled again by GH #686's Amendment (admin-three-pane-ia.lld.md §16, S7-b), then flattened by
+  // GH #700 to compose `ui-super-shell` directly (no more intermediate `ui-chat-shell`): a `ui-super-shell`
   // hosting `content` = the pane holder, three sibling regions (Chat conversation · Settings · Co-pilot
   // conversation). The `header` slot now carries S7-c's own unified header bar (LLD §16.1/§16.3) — the
   // pane nav that used to live there retired with the visibility model it drove (§16.5); the replacement
   // is a different shape (agent select + pane pills/segments + page actions), not a restoration of the
   // old nav. Region visibility is likewise VISIBILITY-ONLY — no JS layout code, no reparenting, ever
   // (`#applyPaneVisibility`).
-  #shell: UIChatShellElement | null = null
+  #shell: UISuperShellElement | null = null
   #conversation: UIConversationElement | null = null
   // ── ADR-0178 cl.5 (LLD-C6) — the DUAL-CONTEXT chat ────────────────────────────────────────────────────
   // Two MOUNTED conversations, never one conversation with two transcripts: the test context above stays
@@ -517,9 +534,15 @@ export class UIAgentAdminElement extends UIElement {
   #overflowTriggerBtn: HTMLElement | null = null
   #overflowImportItem: HTMLElement | null = null
   #overflowExportItem: HTMLElement | null = null
-  // S7-d (LLD §16.4) — "Reset Agent"'s own consumer, at the model-grid fold's content end. HIDDEN, not
-  // disabled, while `onResetRequest` is unregistered (`#applyActionAvailability`'s own law, extended).
-  #resetAgentBtn: HTMLElement | null = null
+  // S7-d (LLD §16.4) — "Reset Agent"'s own consumer, at the model-grid fold's content end. GH #709 — the
+  // WHOLE ROW hides (not just the button) while `onResetRequest` is unregistered: unlike the header's five
+  // bare-action seams, this row also carries a label ("Agent configuration") — but that label has no
+  // standalone informational value once its one action is gone (it names the thing the button resets, not
+  // a summary worth showing on its own), so a buttonless labeled card is the wrong degrade, not an
+  // acceptable one. Only the ROW is tracked here — the button itself has no other reader (its click
+  // handler binds directly on the local variable at construction, `#compose` below) once hiding moved up
+  // one level.
+  #resetAgentRow: HTMLElement | null = null
   /**
    * GH #670 — the Author card's Model/Effort pick made BEFORE the flow is armed, held here until there is
    * somewhere real to put it. It exists because the pickers are props-down/callbacks-up: armed, a pick
@@ -746,7 +769,7 @@ export class UIAgentAdminElement extends UIElement {
 
   // ── composition (idempotent — the master-detail.ts/settings.ts `#compose` doc-comment precedent) ──────
 
-  /** Build the ui-chat-shell + the pane nav + the five composed entry-list sections + the composed
+  /** Build the ui-super-shell + the pane nav + the five composed entry-list sections + the composed
    *  ui-settings, once ever. ADR-0179 — `header` = the pane nav, `content` = the pane holder (the Chat
    *  conversation + the Author⇄Settings pairing); the whole config column and both Context halves live
    *  in the Settings place as `data-segment` siblings, never a separate ui-tabs/reparenting shell.
@@ -755,7 +778,13 @@ export class UIAgentAdminElement extends UIElement {
   #compose(): void {
     if (this.#shell) return
 
-    const shell = document.createElement('ui-chat-shell') as UIChatShellElement
+    // GH #700 — composes `ui-super-shell` directly now, not through the `ui-chat-shell` preset: that
+    // preset's ONLY real contribution here was defaulting `narrow-start="stack"` (chat-shell.ts's own
+    // FORWARD_ATTRS — `resizable-end`/`size-end`/`narrow-end`/`resizable-start`/`size-start`/
+    // `collapse-band` — were never set on the composed shell by this element, so nothing else needed to
+    // move with the flatten); that default is set explicitly below instead.
+    const shell = document.createElement('ui-super-shell') as UISuperShellElement
+    shell.setAttribute('narrow-start', 'stack')
     // (SPEC-R6a/R7b's `resizable-end` + `narrow-end="tabs"` RETIRED with the options-pane they governed —
     // ADR-0179 cl.1 / admin-three-pane-ia.lld.md §7: the settings region left the shell's end side for the
     // pane holder below. The shell still carries exactly two slots: `header` (S7-c's unified header bar,
@@ -1114,7 +1143,7 @@ export class UIAgentAdminElement extends UIElement {
     resetAgentBtn.setAttribute('data-part', 'reset-agent-button')
     resetAgentBtn.textContent = 'Reset Agent'
     resetAgentBtn.addEventListener('click', () => this.#resetRequest?.())
-    this.#resetAgentBtn = resetAgentBtn
+    this.#resetAgentRow = resetAgentRow
     resetAgentRow.append(resetAgentLabel, resetAgentSpacer, resetAgentBtn)
 
     // GH #574 — Agent tab: who it is (Agent · Model · Bankroll — persona state lives with the persona).
@@ -2490,6 +2519,9 @@ export class UIAgentAdminElement extends UIElement {
       // ADR-0178 cl.2 — what the patch arm did this turn, for the log (never an error surface).
       const patchReports: PatchReport[] = []
       let patchIgnored = false
+      // ADR-0182 cl.5 — the Builder-mission's own declared open-sections view, last-write-wins per turn
+      // exactly like `note` (a turn carries at most one leading meta-line either way).
+      let planChecklist: string | undefined
       try {
         // GH #354 — the ONE await the lazy asset pair introduces is HOISTED HERE, ahead of the first
         // consumed event, so `mountGenui` below stays SYNCHRONOUS inside the stream loop exactly as it was
@@ -2574,6 +2606,12 @@ export class UIAgentAdminElement extends UIElement {
             } else {
               patchIgnored = true // logged below; zero writes, no error surface (SPEC-R30's degrade law)
             }
+          } else if (event.kind === 'plan') {
+            // ADR-0182 cl.4/cl.5 — the ALREADY-SHIPPED `plan` arm, reused verbatim; consumption here is
+            // pure rendering (no store write, unlike the `patch` arm above), so no fence/gate check is
+            // needed — a plan arriving on a turn this client never asked the model to produce is simply
+            // formatted the same as one it did (the wire is gate-blind, SPEC-R20/SPEC-R31).
+            planChecklist = formatPlanChecklist(event.plan)
           } else if (event.kind === 'line') {
             wireLines.push(event.line)
             // GH #418 — an A2UI wire line only renders (`ingestLine`) while A2UI is actually on this
@@ -2601,7 +2639,11 @@ export class UIAgentAdminElement extends UIElement {
         // GH #418 — the a2ui-refused notice rides the SAME "append, never replace" composition: the
         // agent's own note (if any) stays intact, with the refusal appended so the never-silent law holds
         // even when the model DID say something narratable alongside the line this client refused.
-        const outgoing = [note, assetWarning, a2uiRefused ? A2UI_OFF_INGEST_NOTICE : undefined].filter((text) => text !== undefined).join('\n\n')
+        // ADR-0182 cl.5 — the plan checklist rides the SAME "append, never replace" fold, one more
+        // member alongside the a2ui-refused notice: the agent's own note (if any) stays intact.
+        const outgoing = [note, assetWarning, a2uiRefused ? A2UI_OFF_INGEST_NOTICE : undefined, planChecklist]
+          .filter((text) => text !== undefined)
+          .join('\n\n')
         if (outgoing !== '') handle.setNote(outgoing)
         handle.finalize()
         // GH #525 (design call 1, 2026-08-07) — "NO new tool — zero API surface, rides the existing turn
@@ -3042,7 +3084,9 @@ export class UIAgentAdminElement extends UIElement {
       this.#overflowExportItem.setAttribute('aria-disabled', String(exportHidden))
     }
     if (this.#overflowTriggerBtn) this.#overflowTriggerBtn.hidden = importHidden && exportHidden
-    if (this.#resetAgentBtn) this.#resetAgentBtn.hidden = this.#resetRequest === undefined
+    // GH #709 — the WHOLE ROW hides, not just the button (its label has no standalone value once the
+    // action it names is gone). `#resetAgentBtn` itself is never toggled here anymore.
+    if (this.#resetAgentRow) this.#resetAgentRow.hidden = this.#resetRequest === undefined
   }
 
   // ── protected test seams (the split.ts/slider-multi.ts precedent) ────────────────────────────────────

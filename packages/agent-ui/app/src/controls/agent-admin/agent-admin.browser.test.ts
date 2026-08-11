@@ -1,12 +1,13 @@
 import { describe, it, expect, afterEach } from 'vitest'
 
 // The CROSS-ENGINE ui-agent-admin smoke (TKT-0039, ADR-0131; re-hosted GH #52/ADR-0154, then again by
-// ADR-0179). jsdom cannot resolve CSS flex/@scope/container-query layout — this file is where the
+// ADR-0179, then flattened onto a direct `ui-super-shell` composition by GH #700). jsdom cannot resolve
+// CSS flex/@scope/container-query layout — this file is where the
 // pane-nav geometry, the narrow one-place-at-a-time drill-in, and the wide Author⇄Settings pairing
 // (the container-query narrow crossing) become TRUE in BOTH Chromium and WebKit (the master-detail
 // .browser.test.ts precedent). CSS wiring: the foundation first, then
 // `component-styles.css` (the family barrel carries ui-text-field/etc.'s shipped CSS), then every
-// composed sibling's own CSS (incl. chat-shell/super-shell below), then this element's own.
+// composed sibling's own CSS (incl. super-shell below), then this element's own.
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/component-styles.css'
 import '@agent-ui/code/editor.css' // ADR-0139 — ui-code-editor's own sheet (the entry editors' frame + CM highlight tokens)
@@ -15,11 +16,13 @@ import '../master-detail/master-detail-pane.css'
 import '../nav-rail/nav-rail.css'
 import '../settings/settings.css'
 import '../conversation/conversation.css'
+import '../conversation/conversation-dialog.css' // ADR-0180 (GH #688) — the adopted-or-created log's own scroll/layout CSS, promoted off conversation.css
 import '../conversation/conversation-composer.css' // TKT-0056 — the composed ui-conversation-composer's own layout/parts CSS
 import '../surface-host/surface-host.css'
-// GH #52/ADR-0154 — the re-host onto the shell-archetype grammar: chat-shell/super-shell's own CSS,
+// GH #52/ADR-0154 — the re-host onto the shell-archetype grammar: super-shell's own CSS,
 // replacing TKT-0085's <ui-tabs>/<ui-tab>/<ui-tab-panel> registration (no longer composed here at all).
-import '../chat-shell/chat-shell.css'
+// GH #700 flattened out the intermediate `ui-chat-shell` preset this element used to compose (and
+// therefore no longer needs `../chat-shell/chat-shell.css` for) — `ui-super-shell` is composed directly.
 import '../super-shell/super-shell.css'
 import './agent-admin.css'
 import './agent-admin.ts'
@@ -875,7 +878,7 @@ describe('ui-agent-admin cross-engine smoke — TKT-0045: no pane overflows at t
     // clipping via their own overflow-x, so every pane is checked independently too.
     expect(wrapper.scrollWidth).toBe(wrapper.clientWidth)
 
-    const shell = el.querySelector('ui-chat-shell') as HTMLElement
+    const shell = el.querySelector('ui-super-shell') as HTMLElement
     expect(shell.scrollWidth).toBe(shell.clientWidth)
 
     const canvas = el.querySelector('[data-part="canvas"]') as HTMLElement
@@ -1331,6 +1334,52 @@ describe('ui-agent-admin — segment content wins its OWN display:flex, not supe
     const dialogContent = pane.querySelector('[data-role="context-dialog-content"]') as HTMLElement
     expect(dialogContent.hidden).toBe(false)
     expect(getComputedStyle(dialogContent).display).toBe('flex')
+  })
+})
+
+// ── GH #706 — a THIRD instance of this file's own named failure class (GH #197 above; the
+// master-detail-pane @scope fix, agent-admin.css:405-415): the Model fold's `body` (a plain div,
+// disclosure.css declares no `display` of its own) held TWO top-level cards once S7-d's
+// `reset-agent-row` joined `model-grid` as its sibling, and the UA default `display:block` zeroed
+// the gap `--ui-agent-admin-section-gap` was supposed to give them. ────────────────────────────────
+describe('ui-agent-admin — the Model fold body wins its OWN display:flex, so model-grid and reset-agent-row get a real gap (GH #706)', () => {
+  it('a real, non-zero measured gap separates the models-list card from the "Agent configuration" (Reset Agent) card', async () => {
+    const { el } = mountAgentAdmin('Agent')
+    el.onResetRequest(() => {}) // the WHOLE ROW is [hidden] unregistered (agent-admin.ts #applyActionAvailability,
+    // GH #709) — register so the row paints at all, since this test measures a gap between two painted
+    // boxes; the unregistered-hidden case has its own dedicated test below (GH #709's own regression pin).
+    await el.updateComplete
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    const modelFold = el.querySelector('[data-part="settings-item"][data-item="model"]') as HTMLElement
+    const body = modelFold.querySelector('[data-part="details"] > [data-part="body"]') as HTMLElement
+    const grid = body.querySelector('[data-part="model-grid"]') as HTMLElement
+    const resetRow = body.querySelector('[data-part="reset-agent-row"]') as HTMLElement
+
+    expect(getComputedStyle(body).display, 'the body wins display:flex, not the UA default display:block').toBe('flex')
+    expect(grid.getBoundingClientRect().height, 'the models card is a real, painted box').toBeGreaterThan(0)
+    expect(resetRow.getBoundingClientRect().height, 'the Reset Agent card is a real, painted box (registered, so not [hidden])').toBeGreaterThan(0)
+
+    const expectedGapPx = Number.parseFloat(getComputedStyle(body).rowGap)
+    expect(expectedGapPx, 'a real, non-zero declared section gap to measure against').toBeGreaterThan(0)
+    const measuredGapPx = resetRow.getBoundingClientRect().top - grid.getBoundingClientRect().bottom
+    expect(measuredGapPx, 'the models card and the Reset Agent card no longer butt together').toBeCloseTo(expectedGapPx, 0)
+  })
+
+  // GH #709 — the SAME failure class this describe block's own GH #706 fix already named for settings-item
+  // ([hidden] loses to a bare author `display` declaration unless explicitly re-asserted): reset-agent-row's
+  // own `display: flex` rule is exactly that shape, so hiding the ROW (not just its button, the fix this
+  // ticket shipped) needs the matching `[data-part='reset-agent-row'][hidden] { display: none }` override —
+  // a real-engine assertion, since jsdom never applies this cascade and would pass even if the CSS override
+  // were missing entirely (only the DOM attribute/property, never computed style).
+  it('an unregistered Reset Agent row actually PAINTS as display:none, not just carries the [hidden] attribute (GH #709)', async () => {
+    const { el } = mountAgentAdmin('Agent') // no onResetRequest — the unregistered/hidden case
+    await el.updateComplete
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const resetRow = el.querySelector('[data-part="reset-agent-row"]') as HTMLElement
+    expect(resetRow.hidden, 'anti-vacuous: the attribute really is set').toBe(true)
+    expect(getComputedStyle(resetRow).display, 'the CSS override wins — [hidden] actually removes the box').toBe('none')
+    expect(resetRow.getBoundingClientRect().height, 'zero-height, not merely attribute-hidden while still laid out').toBe(0)
   })
 })
 
@@ -2201,7 +2250,7 @@ describe('ui-agent-admin — the wide band (GH #662, re-ruled by GH #686\'s Amen
   // unconditionally) applies to it exactly like every other shell-archetype consumer's header.
   it('S7-c\'s real header composes a real bar box, carrying the fleet\'s own header seam border (ADR-0166 cl.2)', async () => {
     const el = await mountTripleAt(1200)
-    const shell = el.querySelector('ui-chat-shell') as HTMLElement
+    const shell = el.querySelector('ui-super-shell') as HTMLElement
     const bar = shell.querySelector('[data-part="bar"][data-bar="header"]') as HTMLElement
     expect(bar, 'the header bar box exists — this element authors a real data-slot="header" child now').not.toBeNull()
     expect(parseFloat(getComputedStyle(bar).borderBottomWidth), 'the shell-archetype header seam paints').toBeGreaterThan(0)

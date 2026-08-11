@@ -2,6 +2,8 @@ import { describe, it, expect, vi, afterEach, beforeAll, afterAll } from 'vitest
 import { whenFlushed } from '@agent-ui/components'
 import { UIConversationElement } from './conversation.ts'
 import type { UIConversationComposerElement } from './conversation-composer.ts'
+import type { UIConversationDialogElement } from './conversation-dialog.ts'
+import type { UIConversationHeaderElement } from './conversation-header.ts'
 import type { UISurfaceHostElement } from '../surface-host/surface-host.ts'
 import '@agent-ui/components/components' // self-registers ui-button/ui-status-stream/ui-timeline-item
 import {
@@ -836,6 +838,125 @@ describe('ui-conversation — SPEC-R7 AC1: persistent identity survives an ORDIN
     // scope is ONLY the no-duplicate-mint guarantee asserted above, not resuming a closed surface's render.
     expect(bubble1.dataset.state, 'the original surface was not marked closed by the disconnect teardown').toBe('closed')
     expect(bubble1.querySelector('[data-part="annotation"]')?.textContent).toBe('Closed.')
+  })
+})
+
+// ── ADR-0180 (GH #688) — the declarative composition adoption seam ─────────────────────────────────────
+
+describe('ui-conversation — ADR-0180 declarative composition: the default (no children) path', () => {
+  it("LLD test 1's own deliberate delta: the log element is now a UI-CONVERSATION-DIALOG, not a bare div", () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    expect(log(el).tagName).toBe('UI-CONVERSATION-DIALOG')
+  })
+})
+
+describe('ui-conversation — ADR-0180 declarative composition: all three children authored', () => {
+  it('adopts each by IDENTITY (never a second imperative surface); header untouched and first in DOM order; forwarders fire', () => {
+    const el = document.createElement('ui-conversation') as UIConversationElement
+    const header = document.createElement('ui-conversation-header') as UIConversationHeaderElement
+    header.textContent = 'Support Agent'
+    const dialog = document.createElement('ui-conversation-dialog') as UIConversationDialogElement
+    const composerEl = document.createElement('ui-conversation-composer') as UIConversationComposerElement
+    el.append(header, dialog, composerEl)
+    mount(el)
+
+    expect(log(el)).toBe(dialog) // #log IS the authored dialog, by identity
+    expect(composer(el)).toBe(composerEl)
+    expect(el.firstElementChild).toBe(header) // the header is never touched beyond canonical ordering
+    expect([...el.children]).toEqual([header, dialog, composerEl])
+
+    const received: string[] = []
+    el.onSubmit((text) => received.push(text))
+    composerEl.value = 'hello agent'
+    ;(composerEl.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    expect(received, 'the adopted composer\'s own forwarders never fired').toEqual(['hello agent'])
+    expect(log(el).querySelector('[data-part="bubble"][data-role="user"] [data-part="body"]')?.textContent).toBe('hello agent')
+  })
+})
+
+describe('ui-conversation — ADR-0180 declarative composition: partial authoring', () => {
+  it('header-only → dialog+composer created after it, canonical order asserted', () => {
+    const el = document.createElement('ui-conversation') as UIConversationElement
+    const header = document.createElement('ui-conversation-header') as UIConversationHeaderElement
+    el.append(header)
+    mount(el)
+    expect([...el.children].map((c) => c.tagName)).toEqual([
+      'UI-CONVERSATION-HEADER', 'UI-CONVERSATION-DIALOG', 'UI-CONVERSATION-COMPOSER',
+    ])
+    expect(el.firstElementChild).toBe(header)
+  })
+
+  it('composer-only → no header ever created (absent means today\'s shape minus nothing), dialog created before it', () => {
+    const el = document.createElement('ui-conversation') as UIConversationElement
+    const composerEl = document.createElement('ui-conversation-composer') as UIConversationComposerElement
+    el.append(composerEl)
+    mount(el)
+    expect([...el.children].map((c) => c.tagName)).toEqual(['UI-CONVERSATION-DIALOG', 'UI-CONVERSATION-COMPOSER'])
+    expect(composer(el)).toBe(composerEl)
+    expect(el.querySelector('ui-conversation-header')).toBeNull()
+  })
+
+  it('dialog-with-children: author-authored initial content is PRESERVED at adoption; turns append AFTER it; reset() clears it, the empty-state node the one survivor (GH #666 parity)', () => {
+    const el = document.createElement('ui-conversation') as UIConversationElement
+    const dialog = document.createElement('ui-conversation-dialog') as UIConversationDialogElement
+    const initial = document.createElement('p')
+    initial.dataset.part = 'my-initial'
+    initial.textContent = 'welcome'
+    dialog.append(initial)
+    el.append(dialog)
+    mount(el)
+
+    expect(log(el)).toBe(dialog)
+    expect(log(el).firstElementChild).toBe(initial)
+    el.addUserMessage('hello')
+    expect([...log(el).children].map((c) => c.getAttribute('data-part'))).toEqual(['my-initial', 'turn'])
+
+    const empty = document.createElement('div')
+    empty.dataset.part = 'my-empty'
+    el.setEmptyState(empty)
+    el.reset()
+    // reset()'s own replaceChildren law (unchanged by ADR-0180) — the pre-existing authored content is
+    // cleared exactly like a turn would be; the empty-state node is the one survivor.
+    expect([...log(el).children]).toEqual([empty])
+  })
+})
+
+describe('ui-conversation — ADR-0180 declarative composition: imperative identity both paths (LLD §7 test 4)', () => {
+  it('the SAME script run against a no-children mount and an all-authored mount produces IDENTICAL resulting DOM shape and callback traces', () => {
+    const run = (el: UIConversationElement): { shape: (string | null)[]; calls: unknown[] } => {
+      const calls: unknown[] = []
+      el.onSubmit((text) => calls.push(['submit', text]))
+      el.onClientMessage((m) => calls.push(['client', m]))
+      el.addEventListener('action', (e) => calls.push(['action', (e as CustomEvent<{ id: string }>).detail.id]))
+      const child = composer(el)
+      child.value = 'hi'
+      ;(child.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+      const handle = el.beginAgentTurn()
+      handle.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 'sX', catalogId: 'agent-ui' } }))
+      handle.setNote('done')
+      handle.finalize([{ id: 'ok', label: 'OK' }])
+      ;(el.querySelector('[data-part="actions"] ui-button') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+      el.reset()
+      const shape = [...log(el).children].map((c) => c.getAttribute('data-part'))
+      return { shape, calls }
+    }
+
+    const bare = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const bareResult = run(bare)
+
+    const authored = document.createElement('ui-conversation') as UIConversationElement
+    authored.append(
+      document.createElement('ui-conversation-header'),
+      document.createElement('ui-conversation-dialog'),
+      document.createElement('ui-conversation-composer'),
+    )
+    mount(authored)
+    const authoredResult = run(authored)
+
+    expect(authoredResult.shape, 'the two paths produced a different resulting [data-part] tree').toEqual(bareResult.shape)
+    expect(authoredResult.calls, 'the two paths produced different callback traces').toEqual(bareResult.calls)
+    // anti-vacuous: the compared trace genuinely exercised all three callback kinds.
+    expect(bareResult.calls.map((c) => (c as unknown[])[0])).toEqual(['submit', 'action'])
   })
 })
 

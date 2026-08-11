@@ -80,6 +80,16 @@ export function validateAuthoringSurface(authoring: unknown): boolean | undefine
   return typeof authoring === 'boolean' ? authoring : undefined
 }
 
+// ADR-0182 cl.2 / SPEC-R31 — the builder-mission drive-to-completion gate, the SAME trust-boundary
+// posture as `authoringSurface` just above: fail-closed to `undefined` on anything non-boolean,
+// never a 400. Unlike `authoringSurface` (a persona-scoped store key), the TRUE source of this
+// boolean is structural turn-origin (`session === 'authoring'`, derived host-side in
+// `admin-live-runner.ts`) — by the time it reaches this validator it is an ordinary untrusted wire
+// boolean like any other, so the same degrade law applies verbatim.
+export function validateBuilderMission(builderMission: unknown): boolean | undefined {
+  return typeof builderMission === 'boolean' ? builderMission : undefined
+}
+
 // produce()-route effort threading — the SAME fail-closed posture as `validateMode`/`validateGenuiSurface`
 // (this file's shared trust-boundary spine), not the `/chat` route's `isChatBody` 400-on-malformed check
 // below: `effort` is a closed 4-member enum (`EFFORT_VALUES`, defined below and reused here rather than

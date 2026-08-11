@@ -1,20 +1,30 @@
 // conversation.ts — UIConversationElement, the M2 thread/composer/narration primitive (LLD-C4/C5 ·
-// SPEC-R4/R5/R6/R7; ADR-0129 clauses 2/3). BEHAVIOUR + props + the internal per-surface registry +
-// narration + self-define ONLY; the thread/bubble layout lives in conversation.css, the public contract
-// in conversation.md. The message-COMPOSITION UI itself (TKT-0056) is a separate composed child,
-// `ui-conversation-composer` (own `.ts`/`.css`/`.md`) — this file forwards props down and callbacks up to
-// it (the master-detail.ts → ui-split precedent), it does not build the composer's own DOM.
+// SPEC-R4/R5/R6/R7/R13; ADR-0129 clauses 2/3; ADR-0180). BEHAVIOUR + props + the internal per-surface
+// registry + narration + self-define ONLY; the thread/bubble layout lives in conversation.css, the public
+// contract in conversation.md. The message-COMPOSITION UI itself (TKT-0056) is a separate composed/adopted
+// child, `ui-conversation-composer` (own `.ts`/`.css`/`.md`) — this file forwards props down and callbacks
+// up to it (the master-detail.ts → ui-split precedent), it does not build the composer's own DOM.
 //
-// Renders its OWN internal thread (user/agent/system bubbles) + composer — never author-composed, driven
-// entirely through the imperative API (SPEC-R4). Composes `ui-surface-host` INTERNALLY, one instance per
-// OPEN A2UI surface (ADR-0129 clause 2) — generalizing `site/lib/surface-registry.ts`'s per-surface
-// lifecycle (itself a generalization of `site/lib/ask-registry.ts`, ADR-0097 §2) as this element's OWN
-// mechanism: a fresh `surfaceId` mounts a NEW `ui-surface-host` inline in that turn's own bubble; a KNOWN
-// `surfaceId` (open or closed) routes to that surface's ORIGINAL host, at its original bubble — never a
-// new mount for the same id (persistent identity across turns); a `deleteSurface` line disposes that ONE
-// surface's host and leaves a VISIBLE, non-removable "Closed." annotation — history is never silently
-// removed (SPEC-R7). This composition is edge-to-edge sound only because the accepted ADR-0128 makes a
-// resent, already-mounted container's record reconcile correctly — a precondition this file assumes.
+// ADR-0180 (GH #688) — an explicit OPT-IN declarative-composition adoption mode rides alongside the
+// original imperative-only default: `connected()` looks up an author-supplied `:scope > ui-conversation-
+// header` / `:scope > ui-conversation-dialog` / `:scope > ui-conversation-composer` and ADOPTS whichever
+// exists instead of creating it — never a parallel imperative surface (clause 2); the whole turn/registry/
+// narration/busy engine stays SOLELY on this element regardless of which path seated its parts. A consumer
+// that authors NO children (a2ui-chat, a2ui-live, agent-admin — every consumer today) gets the
+// byte-identical original shape; only an author of the new tags opts in. See conversation-dialog.md /
+// conversation-header.md for the two new elements' own contracts.
+//
+// Renders its OWN internal thread (user/agent/system bubbles) + composer BY DEFAULT — the DOM is never
+// author-composed UNLESS the ADR-0180 opt-in path above is used, driven otherwise entirely through the
+// imperative API (SPEC-R4/SPEC-R13). Composes `ui-surface-host` INTERNALLY, one instance per OPEN A2UI
+// surface (ADR-0129 clause 2) — generalizing `site/lib/surface-registry.ts`'s per-surface lifecycle
+// (itself a generalization of `site/lib/ask-registry.ts`, ADR-0097 §2) as this element's OWN mechanism: a
+// fresh `surfaceId` mounts a NEW `ui-surface-host` inline in that turn's own bubble; a KNOWN `surfaceId`
+// (open or closed) routes to that surface's ORIGINAL host, at its original bubble — never a new mount for
+// the same id (persistent identity across turns); a `deleteSurface` line disposes that ONE surface's host
+// and leaves a VISIBLE, non-removable "Closed." annotation — history is never silently removed (SPEC-R7).
+// This composition is edge-to-edge sound only because the accepted ADR-0128 makes a resent, already-
+// mounted container's record reconcile correctly — a precondition this file assumes.
 //
 // `onSubmit`/`onClientMessage` are callback registrations, NEVER `CustomEvent`s (SPEC-R5) — the closed
 // six-event vocabulary (`change · input · select · open · close · toggle`, references/naming.md §4) has no
@@ -72,8 +82,15 @@ import type { ClientMessageListener, A2uiClientMessage } from '@agent-ui/a2ui'
 // `meta-line` module (not the `./agent` barrel) so the app/site type-check never drags in the barrel's
 // NODE-FIRST modules (system-prompt/mini-skills `readFileSync` at load — no node types under those tsconfigs).
 import type { TurnProgress, TurnProgressStage } from '@agent-ui/a2ui/agent/meta-line' // cross-package specifier stays extensionless (the repo's own local-.ts-only convention) — a2ui/package.json exports this as its own subpath
-import './conversation-composer.ts' // registers <ui-conversation-composer> (TKT-0056) — composed internally, the master-detail.ts → ui-split precedent
+import './conversation-composer.ts' // registers <ui-conversation-composer> (TKT-0056) — adopted-or-composed, the master-detail.ts → ui-split precedent
 import type { UIConversationComposerElement } from './conversation-composer.ts'
+// ADR-0180 (GH #688) — registers the two NEW declarative-composition tags this element's connected() may
+// ADOPT (an author-supplied direct child) instead of creating. `UIConversationDialogElement` also narrows
+// `#log`'s own field type below (it now owns the scroll-follow public-method seam, ADR-0023).
+import './conversation-dialog.ts'
+import type { UIConversationDialogElement } from './conversation-dialog.ts'
+import './conversation-header.ts'
+import type { UIConversationHeaderElement } from './conversation-header.ts'
 import type { PickerOption, ProviderOption, ContextItem } from './composer-options.ts'
 
 const props = {
@@ -299,22 +316,23 @@ function summarize(lines: readonly string[]): string {
   return `Emitted ${lines.length} A2UI message(s): ${kinds.join(', ')}.`
 }
 
-// The outer log's OWN stick-to-bottom guard (SPEC-R4 AC2) — sampled ONCE per turn, before that turn's own
-// content starts growing, never re-sampled reactively mid-turn (a naive reactive-scroll-listener
-// regresses this — the a2ui-chat.ts banner's own documented failure mode; promoted unchanged).
-const LOG_STICK_THRESHOLD_PX = 24
-const TAIL_FOLLOW_STABLE_CHECKS = 3
-const TAIL_FOLLOW_CHECK_MS = 40
-const TAIL_FOLLOW_MAX_CHECKS = 25
+// ADR-0180 (GH #688, ADR-0023 public-method seam) — the outer log's OWN stick-to-bottom guard (SPEC-R4
+// AC2) MOVED verbatim to `ui-conversation-dialog`'s own `isNearBottom()`/`followTail()` (conversation-
+// dialog.ts) — this file now calls THROUGH `#log` rather than owning the mechanism itself. Sampled ONCE
+// per turn, before that turn's own content starts growing, never re-sampled reactively mid-turn (a naive
+// reactive-scroll-listener regresses this — the a2ui-chat.ts banner's own documented failure mode).
 
 export interface UIConversationElement extends ReactiveProps<typeof props> {}
 export class UIConversationElement extends UIElement {
   static props = props
 
-  #log: HTMLElement | undefined
-  // The composed message-composition child (TKT-0056) — JS-created ONCE (the master-detail.ts → ui-split
-  // precedent), forwarded props down via an effect, forwarded callbacks via the closures registered in
-  // #compose() below.
+  // ADR-0180 — narrowed off `HTMLElement` to `UIConversationDialogElement`: adopted (an author-supplied
+  // `:scope > ui-conversation-dialog`) or created, either way it owns the scroll-follow public-method
+  // seam (`isNearBottom()`/`followTail()`, ADR-0023) this file used to own directly as private methods.
+  #log: UIConversationDialogElement | undefined
+  // The adopted-or-composed message-composition child (TKT-0056, ADR-0180 cl.2/4) — JS-created ONCE
+  // UNLESS an author-supplied `:scope > ui-conversation-composer` exists (adopted instead), forwarded
+  // props down via an effect, forwarded callbacks via the closures registered in connected() below.
   #composer: UIConversationComposerElement | undefined
   #warnedPreConnect = false
 
@@ -346,18 +364,35 @@ export class UIConversationElement extends UIElement {
 
   protected connected(): void {
     if (this.#log === undefined) {
-      this.#log = document.createElement('div')
-      this.#log.dataset.part = 'log'
-      this.#log.setAttribute('aria-live', 'polite')
+      // ADR-0180 (GH #688) — adopt-or-create seating: ALL three lookups are :scope > direct-child,
+      // connect-time only. An author-supplied element is ADOPTED — never a second imperative surface
+      // (clause 2); absent, this element creates one exactly as before ADR-0180, the byte-identical
+      // default every existing consumer (a2ui-chat, a2ui-live, agent-admin — none of which authors
+      // children today) keeps getting.
+      const authoredHeader = this.querySelector<UIConversationHeaderElement>(':scope > ui-conversation-header')
+      const authoredDialog = this.querySelector<UIConversationDialogElement>(':scope > ui-conversation-dialog')
+      const authoredComposer = this.querySelector<UIConversationComposerElement>(':scope > ui-conversation-composer')
 
-      // JS-created internal child (TKT-0056, the master-detail.ts → ui-split precedent) — the message-
-      // composition UI (context chips, field, Models/Effort pickers, mic/send) lives entirely inside
-      // ui-conversation-composer now; this element only forwards props down and callbacks up (below).
-      const composer = document.createElement('ui-conversation-composer') as UIConversationComposerElement
+      // The internal log vehicle is PROMOTED from a bare `div[data-part='log']` to a JS-created-or-adopted
+      // `<ui-conversation-dialog>` (ADR-0180 clause 1a) — the exact TKT-0056 composer-extraction precedent,
+      // so ONE engine drives one structural shape on both the adopted and the created path. The
+      // `[data-part='log']` compat spine stays: every shipped selector keys on it, tag-agnostic (ADR-0180
+      // clause 1's own grep claim). The dialog's own `internals.role='log'`/`ariaLive='polite'` now carry
+      // the live-region semantics (conversation-dialog.ts) — the bare `aria-live` HOST-ATTRIBUTE write this
+      // line used to make is GONE (ARIA via internals, never host attributes).
+      const dialog = authoredDialog ?? (document.createElement('ui-conversation-dialog') as UIConversationDialogElement)
+      dialog.dataset.part = 'log'
+      this.#log = dialog
+
+      // Adopted-or-composed internal child (TKT-0056, NOW ALSO adopt-or-create — ADR-0180 clauses 2/4) —
+      // the message-composition UI (context chips, field, Models/Effort pickers, mic/send) lives entirely
+      // inside ui-conversation-composer; this element only forwards props down and callbacks up (below).
+      const composer = authoredComposer ?? (document.createElement('ui-conversation-composer') as UIConversationComposerElement)
       // The four side-effect-free forwarders — safe to register ONCE, unconditionally: none of them has a
       // visible effect on registration, and each reads its own `#onXCb` field FRESH on every invocation, so
       // it works regardless of whether the consumer's own `onXChange(cb)` call happens before or after
-      // THIS element connects (LLD CVC-C5, code-reviewer finding F1).
+      // THIS element connects (LLD CVC-C5, code-reviewer finding F1) — identical for an adopted composer,
+      // the registration mechanism is path-blind by construction (ADR-0180 clause 4).
       composer.onSubmit((text) => {
         if (this.disabled) return // belt to the composer's own busy-disable — no bubble, no callback
         this.addUserMessage(text)
@@ -375,10 +410,16 @@ export class UIConversationElement extends UIElement {
       if (this.#onMicClickCb !== undefined) composer.onMicClick(() => this.#onMicClickCb?.())
 
       this.#composer = composer
-      this.append(this.#log, composer)
+      // Canonical band order, normalized by re-append (ADR-0180 clause 4) — `append` MOVES an existing
+      // child; connect-time only, before any turn state/focus/CodeMirror-class stateful child exists, so
+      // moving an author-authored element (header, or a dialog/composer carrying its own initial content)
+      // never disturbs anything live. The header is NEVER created, only recognized — absent means today's
+      // shape minus nothing (clause 3); the imperative API never touches it.
+      if (authoredHeader) this.append(authoredHeader)
+      this.append(dialog, composer)
       // GH #666 — a `setEmptyState` call that arrived before this element connected (the consumer builds
       // its card, then appends it) seats its node now.
-      if (this.#emptyState !== undefined) this.#log.prepend(this.#emptyState)
+      if (this.#emptyState !== undefined) dialog.prepend(this.#emptyState)
     }
 
     // Forward models/model/efforts/effort/contextItems straight through — the composed child's OWN
@@ -402,14 +443,14 @@ export class UIConversationElement extends UIElement {
   /** A user bubble with `text`, unescaped/unmodified (SPEC-R4 AC1). A documented no-op pre-connect. */
   addUserMessage(text: string): void {
     if (!this.#guard('addUserMessage')) return
-    const wasNear = this.#isNearLogBottom()
+    const wasNear = this.#log!.isNearBottom()
     const { outer, bubble } = this.#makeBubble('user')
     const body = document.createElement('p')
     body.dataset.part = 'body'
     body.textContent = text
     bubble.append(body)
     this.#log!.append(outer)
-    void this.#tailFollowLog(wasNear)
+    void this.#log!.followTail(wasNear)
   }
 
   /** Opens one agent turn: a fresh `[data-part='turn']` wrapper (who → narration → bubble, GH #306/
@@ -431,7 +472,7 @@ export class UIConversationElement extends UIElement {
       return { ingestLine: () => {}, mountGenui: () => {}, setNote: () => {}, progress: () => {}, finalize: () => {}, fail: () => {} }
     }
 
-    const wasNear = this.#isNearLogBottom()
+    const wasNear = this.#log!.isNearBottom()
     const resumed = opts?.intoSurface !== undefined ? this.#resumableBubble(opts.intoSurface) : undefined
     let bubble: HTMLElement
     let narration: UIStatusStreamElement
@@ -467,7 +508,7 @@ export class UIConversationElement extends UIElement {
       // than a CSS-only one.
       bubble.dataset.empty = ''
     }
-    void this.#tailFollowLog(wasNear)
+    void this.#log!.followTail(wasNear)
 
     this.#turnSeq += 1
     const seq = this.#turnSeq
@@ -712,7 +753,7 @@ export class UIConversationElement extends UIElement {
           bubble.append(this.#buildActions(actions))
         }
         this.#settleTouchedHosts(touchedIds)
-        void this.#tailFollowLog(wasNear)
+        void this.#log!.followTail(wasNear)
       },
       fail: (message: string) => {
         endTurn() // TKT-0034 — re-enable the composer THE MOMENT fail() runs
@@ -932,7 +973,7 @@ export class UIConversationElement extends UIElement {
   }
 
   #addSystemBubble(text: string): void {
-    const wasNear = this.#isNearLogBottom()
+    const wasNear = this.#log!.isNearBottom()
     // A system bubble has no `[data-part='who']` label and no narration strip — it never gets a
     // `[data-part='turn']` wrapper (`#makeBubble` returns `outer === bubble` for this role, the smaller
     // diff than inventing an empty, chrome-less wrapper for a role that never carries any).
@@ -942,7 +983,7 @@ export class UIConversationElement extends UIElement {
     this.#renderBody(body, text)
     bubble.append(body)
     this.#log!.append(outer)
-    void this.#tailFollowLog(wasNear)
+    void this.#log!.followTail(wasNear)
   }
 
   /** SPEC-R12 — writes `text` into `el` via the registered content renderer, or plain `textContent`
@@ -1022,57 +1063,6 @@ export class UIConversationElement extends UIElement {
       row.append(button)
     }
     return row
-  }
-
-  #isNearLogBottom(): boolean {
-    const log = this.#log!
-    return log.scrollHeight - log.scrollTop - log.clientHeight <= LOG_STICK_THRESHOLD_PX
-  }
-
-  /** Scroll to the log's newest content IFF `wasNear` held — never re-samples reactively. Promoted from
-   *  a2ui-chat.ts's `tailFollowLog` (the biting negative control this guard exists to survive).
-   *
-   *  Resolves `'skipped'` when the stick-to-bottom guard said don't follow, `'settled'` once the log's own
-   *  scroll extent has held still for TAIL_FOLLOW_STABLE_CHECKS consecutive checks, or `'exhausted'` when
-   *  the ~1s ceiling is hit first. GH #365 — all three used to resolve one indistinguishable `void`, so a
-   *  caller could not tell a followed-and-settled wait from a timed-out one from a wait that never
-   *  scrolled at all. It resolves either way and NEVER rejects: every call site is fire-and-forget
-   *  (`void`), and a rejection on a discarded promise is an unhandled rejection in production, not a
-   *  signal anyone reads.
-   *
-   *  Timer-paced ON PURPOSE — do NOT port GH #364's per-`requestAnimationFrame` sampling here. That fix is
-   *  for an OBSERVER of a smooth `scrollIntoView`, whose position only reaches `scrollTop` when the browser
-   *  paints. This loop is a WRITER: the log declares no `scroll-behavior`, so the assignment below is an
-   *  instant scroll and the read-back is its synchronously-clamped result — what it samples is really
-   *  `scrollHeight - clientHeight`, layout-derived, current at any sampling instant, unrelated to paint.
-   *  Frame pacing would also shrink the stability window from 120ms to ~50ms, making it worse at its actual
-   *  job (waiting out content that is still growing), and would stall the loop outright on a hidden tab,
-   *  where rAF does not fire but the log should still stay pinned. */
-  #tailFollowLog(wasNear: boolean): Promise<'skipped' | 'settled' | 'exhausted'> {
-    const log = this.#log!
-    if (!wasNear) return Promise.resolve('skipped')
-    return new Promise((resolve) => {
-      let prevTop = -1
-      let stableStreak = 0
-      let checks = 0
-      const tick = (): void => {
-        log.scrollTop = log.scrollHeight
-        const top = log.scrollTop
-        stableStreak = top === prevTop ? stableStreak + 1 : 0
-        prevTop = top
-        checks += 1
-        if (stableStreak >= TAIL_FOLLOW_STABLE_CHECKS) {
-          resolve('settled')
-          return
-        }
-        if (checks >= TAIL_FOLLOW_MAX_CHECKS) {
-          resolve('exhausted')
-          return
-        }
-        setTimeout(tick, TAIL_FOLLOW_CHECK_MS)
-      }
-      tick()
-    })
   }
 
   /** `true` once connected (the log/composer exist); else warns ONCE (across every guarded method) and

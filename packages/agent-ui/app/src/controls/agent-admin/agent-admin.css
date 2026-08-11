@@ -4,7 +4,7 @@
  *   [1] TOKEN BLOCK — `:where(ui-agent-admin)` declares ONLY `--ui-agent-admin-*`: this element's own
  *       card-chrome ink/surface/border roles, shared across every card-shaped surface it composes
  *       (model-grid/surface-row/ui-settings-panel/context-json) — the ONE piece of this element's own
- *       visual surface; the composed `ui-chat-shell`/`ui-settings`/`ui-conversation`/`ui-switch` children
+ *       visual surface; the composed `ui-super-shell`/`ui-settings`/`ui-conversation`/`ui-switch` children
  *       keep their OWN shipped CSS untouched (the `master-detail.css` precedent). ADR-0164 cl.4 — the
  *       generic entry-list primitive's OWN style block (heading/list/entry/toggle/add-form) EXTRACTED to
  *       `../entry-list/entry-list.css` (its own `--ui-entry-list-*` family): the five dimensional
@@ -16,7 +16,7 @@
  *       custom properties inherit only downward, so this ANCESTOR-level block structurally cannot read
  *       it — the [1] TOKEN BLOCK's own comment on these five names has the full mechanics + the live
  *       regression that proved it).
- *   [2] STYLES BLOCK — `@scope (ui-agent-admin)` fills the host, sizes the composed `ui-chat-shell` to
+ *   [2] STYLES BLOCK — `@scope (ui-agent-admin)` fills the host, sizes the composed `ui-super-shell` to
  *       the available space, and styles this element's OWN remaining card surfaces (Model grid/Agent
  *       config panel/Surface Options/Context tabs) — `ui-agent-admin` is the extraction's first CONSUMER
  *       now (ADR-0164 cl.7), composing `../entry-list/entry-list.ts`'s section shell rather than owning
@@ -35,13 +35,15 @@
  *       rule's own comment for the min-size-floors census's live-paint proof).
  *
  * GH #52/ADR-0154 — re-hosted onto the shell-archetype grammar: the hand-rolled `ui-split` +
- * ResizeObserver-driven narrow `ui-tabs` dual-shell (TKT-0085) is GONE, replaced by `ui-chat-shell`'s
- * own resizable pane (SPEC-R6) + segments/narrow-tabs (SPEC-R7). This file no longer owns ANY
- * responsive-collapse CSS of its own — `@scope` still reaches through the composed `ui-chat-shell`/
- * `ui-super-shell` (light-DOM descendants, no shadow boundary) to style their generated parts directly.
+ * ResizeObserver-driven narrow `ui-tabs` dual-shell (TKT-0085) is GONE, replaced by `ui-super-shell`'s
+ * own resizable pane (SPEC-R6) + segments/narrow-tabs (SPEC-R7) — composed DIRECTLY since GH #700
+ * flattened out the intermediate `ui-chat-shell` preset (its only real contribution, the
+ * `narrow-start="stack"` default, is now set explicitly in agent-admin.ts's `#compose()`). This file no
+ * longer owns ANY responsive-collapse CSS of its own — `@scope` still reaches through the composed
+ * `ui-super-shell` (a light-DOM descendant, no shadow boundary) to style its generated parts directly.
  */
 
-/* ADR-0164 cl.4/cl.7 — unlike `ui-chat-shell`/`ui-settings`/`ui-conversation` (composed CUSTOM ELEMENTS a
+/* ADR-0164 cl.4/cl.7 — unlike `ui-super-shell`/`ui-settings`/`ui-conversation` (composed CUSTOM ELEMENTS a
  * consuming page creates by tag and therefore already imports its own CSS sheet for, matching every other
  * `@agent-ui/app/*.css` sheet a page lists explicitly), `../entry-list/entry-list.ts`'s `mountEntryList` is
  * a plain JS mount function — invisible glue INSIDE this file, never a tag a page's own markup names. A
@@ -115,15 +117,18 @@
     --ui-split-pane-scrollbar-width: var(--ui-agent-admin-scrollbar-width);
   }
 
-  /* GH #52/ADR-0154 — the one composed child (the JS-created ui-chat-shell) fills the available block
-     space; min-block-size:0 is the standard flex-overflow guard (the master-detail.css precedent). No
-     `[hidden]` guard is needed anymore — the shell is never toggled, it owns its own responsive collapse. */
-  :scope > ui-chat-shell {
-    flex: 1 1 auto;
-    min-block-size: 0;
-  }
-
-  /* SPEC-R1c-derived (every shell dimension chains off the ONE `--ui-super-shell-module`): the padded
+  /* GH #52/ADR-0154, MERGED by GH #700 — this used to be two rules: a `:scope > ui-chat-shell` sizing
+     rule right here, plus a separate bare `ui-super-shell { ... }` rule below reaching through that
+     wrapper (before the flatten, `ui-super-shell` was `ui-agent-admin > ui-chat-shell > ui-super-shell`,
+     never a DIRECT child, so the two selectors legitimately targeted the same element two different ways).
+     Now that `ui-super-shell` IS the direct composed child, folding the sizing declarations into the same
+     `:scope > ui-super-shell` rule below avoids two rules fighting over cascade order for one element —
+     `:scope > ui-super-shell` (specificity 0,1,1) still beats super-shell.css's own `:where(ui-super-shell)`
+     defaults (0,0,0) at least as decisively as the old bare type selector (0,0,1) did. `flex: 1 1 auto` +
+     `min-block-size: 0` fill the available block space (the standard flex-overflow guard, the
+     master-detail.css precedent); no `[hidden]` guard is needed — the shell is never toggled, it owns its
+     own responsive collapse.
+     SPEC-R1c-derived (every shell dimension chains off the ONE `--ui-super-shell-module`): the padded
      gutter this consumer wants on BOTH of the shell's content-holding siblings, `[data-part='canvas']`
      and `[data-part='pane']` below. `* 2 / 3` reproduces the old 0.75rem literal unchanged, so this is a
      law fix, not a visual change.
@@ -142,7 +147,9 @@
      cl.4 retired this rule's SECOND former alias, `--ui-agent-admin-compact-gap`: its only consumers
      (entry/entry-add-form's internal gap) moved to `../entry-list/entry-list.css`, which mints its own
      standalone `--ui-entry-list-compact-gap` (no `--ui-super-shell-module` dependency needed there). */
-  ui-super-shell {
+  :scope > ui-super-shell {
+    flex: 1 1 auto;
+    min-block-size: 0;
     --ui-agent-admin-shell-gutter: calc(var(--ui-super-shell-module) * 2 / 3);
     /* min-size-floors census (GH #185 follow-up) — moved down from the [1] TOKEN BLOCK's
        `:where(ui-agent-admin)`, where it silently never won: `--ui-super-shell-canvas-min-size`/
@@ -672,8 +679,19 @@
      own card top-margin (context-json below) so both tab families share one vertical rhythm. On the
      BODY here (not per-child): a Settings body is a section's whole content unit (ui-settings card /
      model grid / a headless entry-section / the surface rows), not the single JSON card the Context
-     items carry. */
+     items carry.
+     GH #706 — a THIRD instance of this file's own named failure class (GH #197; the master-detail-pane
+     @scope fix at the `settings-pane` rule below): `disclosure.css`'s own `[data-part='body']` declares
+     no `display` of its own (padding only), so the UA default `display:block` wins here and any gap
+     between this body's OWN children stacks at zero — invisible until a fold's body holds more than one
+     top-level card, which S7-d's `reset-agent-row` (a SIBLING of `model-grid`, both direct children of
+     THIS body) is the first to do. `display:flex` + this SAME `section-gap` token (the file's one
+     top-level-section rhythm, already used by context-system/context-turns above) makes the body a
+     column of its own children — a no-op for every OTHER fold (one child, gap has nothing to act on). */
   [data-part='settings-item'] > [data-part='details'] > [data-part='body'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-agent-admin-section-gap);
     margin-block-start: var(--ui-agent-admin-list-gap);
   }
 
@@ -715,6 +733,15 @@
     border: 1px solid var(--ui-agent-admin-border);
     border-radius: var(--ui-agent-admin-entry-radius);
     background: var(--ui-agent-admin-surface);
+  }
+
+  /* GH #709 — the SAME failure class the settings-item [hidden] rule above already names: this rule's own
+     bare `display: flex` (an author declaration, ANY specificity) outranks the native `[hidden] { display:
+     none }` UA-stylesheet rule (the lowest-priority presentational-attribute mapping), so hiding the whole
+     row (not just its button, #applyActionAvailability) needs the same explicit override this file already
+     ships for settings-item. */
+  [data-part='reset-agent-row'][hidden] {
+    display: none;
   }
 
   [data-part='reset-agent-label'] {

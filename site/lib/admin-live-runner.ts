@@ -181,6 +181,13 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
         // (the `effort`/`a2ui` absent-⇒-omit precedent), so a non-authoring turn's body is byte-identical
         // to one built before this field existed.
         ...(req.authoring !== undefined ? { authoring: req.authoring } : {}),
+        // ADR-0182 cl.1 — `builderMission` is DERIVED here, never carried on `AdminSurfaceTurnRequest`
+        // itself: its true source is structural turn-origin (is THIS turn the Builder's own dedicated
+        // interview?), which `session === 'authoring'` already answers exactly (the SAME field this
+        // runner already reads at `sessionKey` above, per-context — never a persona-editable flag).
+        // Sent unconditionally (never the absent-⇒-omit shape the OTHER gates use above) because it is
+        // never undefined here — every request either IS the Builder's own turn or is not.
+        builderMission: sessionKey === 'authoring',
       }),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     })
@@ -214,6 +221,11 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
           // fence AND a fresh gate read), and the shipped division of labour is that the runner peels
           // and the component consumes.
           if (meta.a2uiMeta.personaPatch) yield { kind: 'patch', patch: meta.a2uiMeta.personaPatch }
+          // ADR-0182 cl.4 / SPEC-R20 — a declared plan (the ALREADY-SHIPPED arm, reused verbatim) peels
+          // into its own typed event, the SAME `personaPatch` peel precedent immediately above: no
+          // integrity check, no gate read here — this runner peels, the component decides whether/how
+          // to render it.
+          if (meta.a2uiMeta.plan) yield { kind: 'plan', plan: meta.a2uiMeta.plan }
           continue // the meta-line is never ingested (ADR-0088 §1)
         }
         // genui-surface.spec.md SPEC-R1 — a genui line is neither an A2uiServerMessage nor a meta-line

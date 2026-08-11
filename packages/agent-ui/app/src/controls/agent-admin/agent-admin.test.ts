@@ -24,7 +24,8 @@ declare const process: { cwd(): string }
 // jsdom probes for ui-agent-admin (TKT-0039, ADR-0131/ADR-0132). jsdom cannot resolve CSS container-
 // query/flex layout — the actual visual geometry is agent-admin.browser.test.ts's job (the
 // master-detail.test.ts / master-detail.browser.test.ts split, mirrored). This file proves: the
-// connect-time composition (GH #52/ADR-0154, re-hosted by ADR-0179: ONE ui-chat-shell hosting the pane
+// connect-time composition (GH #52/ADR-0154, re-hosted by ADR-0179, flattened onto a direct
+// `ui-super-shell` composition by GH #700: ONE ui-super-shell hosting the pane
 // nav in `header` and the Chat/Author/Settings places in `content` — the Settings place composing the
 // Agent config + four capability entry-lists, the prompt-section entry-list), the generic entry-list
 // primitive's own behavior (toggle/edit/delete/add,
@@ -75,7 +76,8 @@ function contentFieldOf(row: HTMLElement): HTMLTextAreaElement {
   return row.querySelector('[data-part="entry-content"]') as HTMLTextAreaElement
 }
 
-// GH #52/ADR-0154, re-hosted by ADR-0179 — the responsive shell is ui-chat-shell/ui-super-shell's OWN
+// GH #52/ADR-0154, re-hosted by ADR-0179, composed DIRECTLY since GH #700 flattened out the
+// intermediate `ui-chat-shell` preset — the responsive shell is ui-super-shell's OWN
 // grammar (SPEC-R6/R7): header=pane nav, content=the pane holder (Chat/Author⇄Settings). The old
 // options-pane end + `narrow-end="tabs"` six-entry vocabulary retired with cl.1 (admin-three-pane-ia
 // .lld.md §7), which itself replaced TKT-0085's ResizeObserver-driven reparenting — there is no width
@@ -149,9 +151,9 @@ describe('mountEntryList — customAdd/contentField (ADR-0170 cl.8)', () => {
 })
 
 describe('UIAgentAdminElement — shell composition (ADR-0179): the three places + the settings sub-nav', () => {
-  it('composes ONE ui-chat-shell: header=the S7-c unified header bar, content=three sibling regions (chat/settings/copilot) — GH #686\'s Amendment', () => {
+  it('composes ONE ui-super-shell directly: header=the S7-c unified header bar, content=three sibling regions (chat/settings/copilot) — GH #686\'s Amendment, GH #700\'s flatten', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const shell = el.querySelector(':scope > ui-chat-shell') as HTMLElement
+    const shell = el.querySelector(':scope > ui-super-shell') as HTMLElement
     expect(shell).not.toBeNull()
     // ADR-0179 cl.1 / LLD §7 — the end side retired with the options-pane the settings region left.
     expect(shell.hasAttribute('resizable-end'), 'the retired end-side attrs are gone').toBe(false)
@@ -649,16 +651,20 @@ describe('UIAgentAdminElement — the unified header bar (S7-c, ADR-0179 GH #686
     expect([imports, exports]).toEqual([1, 1])
   })
 
-  // S7-d (LLD §16.4) — onResetRequest's own consumer: the Settings model-grid fold's "Reset Agent" button,
+  // S7-d (LLD §16.4) — onResetRequest's own consumer: the Settings model-grid fold's "Reset Agent" row,
   // OUTSIDE the header entirely, reflected through the SAME #applyActionAvailability funnel as the other
-  // five action seams (HIDE, not disable, per LLD §16.3's stated divergence).
-  it('onResetRequest: HIDDEN unregistered, revealed by a register AFTER connect, and the click reaches the callback', () => {
+  // five action seams (HIDE, not disable, per LLD §16.3's stated divergence). GH #709 — the WHOLE ROW
+  // hides, never just the button (a buttonless labeled card is the wrong degrade): the button itself is
+  // never hidden/disabled on its own.
+  it('onResetRequest: the ROW is HIDDEN unregistered (button never touched directly), revealed by a register AFTER connect, and the click reaches the callback', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const row = el.querySelector('[data-part="reset-agent-row"]') as HTMLElement
     const btn = el.querySelector('[data-part="reset-agent-button"]') as HTMLElement
-    expect(btn.hidden, 'unregistered ⇒ hidden, never merely disabled').toBe(true)
+    expect(row.hidden, 'unregistered ⇒ the ROW hides, never merely disabled').toBe(true)
+    expect(btn.hidden, 'the button itself is never toggled directly — only its row').toBe(false)
     let calls = 0
     el.onResetRequest(() => { calls += 1 })
-    expect(btn.hidden, 'registering AFTER connect reveals it (the GH #666 order rule)').toBe(false)
+    expect(row.hidden, 'registering AFTER connect reveals the row (the GH #666 order rule)').toBe(false)
     btn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     expect(calls).toBe(1)
   })
@@ -667,8 +673,16 @@ describe('UIAgentAdminElement — the unified header bar (S7-c, ADR-0179 GH #686
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
     el.onResetRequest(() => {})
     mount(el)
-    const btn = el.querySelector('[data-part="reset-agent-button"]') as HTMLElement
-    expect(btn.hidden, "registering BEFORE connect reflects at #compose's own build-time call").toBe(false)
+    const row = el.querySelector('[data-part="reset-agent-row"]') as HTMLElement
+    expect(row.hidden, "registering BEFORE connect reflects at #compose's own build-time call").toBe(false)
+  })
+
+  it('onResetRequest: unregistered leaves the row hidden even though its label ("Agent configuration") would otherwise have no action to pair with (GH #709 — the buttonless-card defect this test guards against)', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const row = el.querySelector('[data-part="reset-agent-row"]') as HTMLElement
+    const label = el.querySelector('[data-part="reset-agent-label"]') as HTMLElement
+    expect(row.hidden).toBe(true)
+    expect(label, 'the label still exists in the DOM (never removed) — [hidden] on the row is what hides it, not a separate removal').not.toBeNull()
   })
 
   it('onResetRequest: the button lives at the model-grid fold\'s content end, a sibling of model-grid, never inside it (a #renderModelGrid re-render must not wipe it)', () => {
@@ -819,9 +833,9 @@ describe('UIAgentAdminElement — real models + real seeded content (TKT-0043)',
 })
 
 describe('UIAgentAdminElement — composition (GH #52/ADR-0154: chat + {Settings, Context: System, Context: Dialog} segments; ADR-0132 five entry-list instantiations; GH #161)', () => {
-  it('builds one ui-chat-shell holding the three places (ADR-0179, re-ruled by GH #686\'s Amendment)', () => {
+  it('builds one ui-super-shell holding the three places (ADR-0179, re-ruled by GH #686\'s Amendment, composed directly since GH #700)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const shell = el.querySelector(':scope > ui-chat-shell')
+    const shell = el.querySelector(':scope > ui-super-shell')
     expect(shell).not.toBeNull()
     expect(shell?.querySelector('[data-part="canvas"] [data-part="chat-pane"]')).not.toBeNull()
     expect(shell?.querySelector('[data-part="canvas"] [data-part="settings-pane"]')).not.toBeNull()
@@ -1647,12 +1661,12 @@ describe('UIAgentAdminElement — a bring-your-own store with NO subscribe() sti
 })
 
 describe('UIAgentAdminElement — composition survives a RECONNECT (the master-detail.ts/settings.ts precedent)', () => {
-  it('re-parenting a connected instance leaves EXACTLY ONE ui-chat-shell — no duplicate composition', () => {
+  it('re-parenting a connected instance leaves EXACTLY ONE ui-super-shell — no duplicate composition', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const wrapper = document.createElement('div')
     document.body.append(wrapper)
     wrapper.append(el) // detach + reattach — connectedCallback fires again
-    expect(el.querySelectorAll(':scope > ui-chat-shell').length).toBe(1)
+    expect(el.querySelectorAll(':scope > ui-super-shell').length).toBe(1)
     expect(el.querySelectorAll('[data-part="canvas"]').length).toBe(1)
     expect(el.querySelectorAll('[data-kind="skill"]').length).toBe(1)
     wrapper.remove()

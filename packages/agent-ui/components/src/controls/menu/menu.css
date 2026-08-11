@@ -172,6 +172,32 @@
     border-radius: var(--ui-menu-radius);
   }
 
+  /* GH #705 (Kim's ruling) — a trigger's own trailing caret (button.css's `[data-role='caret']`
+     adornment) rotates to reflect open state. The state hook already exists — the connected() effect
+     above writes `[aria-expanded]` onto the trigger the moment it joins the connected tree, kept live
+     by the SAME effect on every open/close — so no new JS state is needed, only a CSS consumer of what
+     `ui-menu` already publishes. Fleet-wide, not composer-scoped (conversation-composer.ts's own
+     `#appendCaret` is today's only caller, but "any menu trigger with a caret gets this" is the right
+     grain): checked every OTHER `ui-menu` consumer in this repo before choosing — entry-list's library
+     menu (leading icon only), nav-rail-group's overflow (a moved leading icon, no caret), and both
+     tabs.ts's and agent-admin.ts's own overflow triggers (icon-only `dots-three`, no caret either) —
+     NONE appends a `[data-role='caret']` into its trigger today, so this rule's blast radius is
+     verified zero, not merely assumed. `:scope >` since `ui-menu`'s own `#ensureParts` requires the
+     trigger to be `firstElementChild` by construction — always a direct child, never nested deeper. */
+  :scope > [data-part='trigger'] [data-role='caret'] {
+    transition: transform var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
+  }
+
+  :scope > [data-part='trigger'][aria-expanded='true'] [data-role='caret'] {
+    transform: rotate(180deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :scope > [data-part='trigger'] [data-role='caret'] {
+      transition: none;
+    }
+  }
+
   /* Menu-item rows — the LEGACY ITEM-PAD row (§4.6/§5.1). NOT --md-sys-height-* (a menuitem is a
      list row, not a single-line fixed-height control widget). cursor + user-select mirror the
      interactive-row standard (pointer for items, not-allowed for disabled). `:is(...)` groups the

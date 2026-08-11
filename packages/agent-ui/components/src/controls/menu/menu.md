@@ -60,7 +60,7 @@ parts:
   - name: panel
     description: The control-created light-DOM `<div data-part="panel" role="menu" popover="auto">` that enters the Popover API top layer when open. Created ONCE (idempotent guard — the same node persists across disconnect/reconnect). Has tabindex="-1" so programmatic focus (moveFocusIn, overlay LLD-C4) can land on it when no enabled items exist. The overlay controller sets position:fixed + inset on open (LLD-C3); the JS positioning controller manages placement. Always accessibly named (GH #535) — aria-labelledby → the trigger's id by default, or aria-label when the `label` prop is set.
   - name: trigger
-    description: The first element child, marked with `data-part="trigger"`. The control adds aria-expanded (synced via the model→overlay effect), aria-controls (pointing to the panel's stable id), and aria-haspopup="menu". The author owns the trigger's visual styling and accessible name. If the author gave no `id`, one is minted (GH #535) so the panel's default aria-labelledby can reference it.
+    description: The first element child, marked with `data-part="trigger"`. The control adds aria-expanded (synced via the model→overlay effect), aria-controls (pointing to the panel's stable id), and aria-haspopup="menu". The author owns the trigger's visual styling and accessible name. If the author gave no `id`, one is minted (GH #535) so the panel's default aria-labelledby can reference it. GH #705 — if the trigger carries a `[data-role="caret"]` adornment (`ui-button`'s own leading/trailing caret role, `button.md`), this control's own CSS rotates it 180° while open, driven off the same `aria-expanded` it already writes — no author wiring needed; reduced-motion honored.
 
 customStates: []        # no :state() hooks — open/closed state is the panel's popover top-layer presence
 
@@ -187,10 +187,13 @@ stays invalid on that role).
 
 The control only writes `aria-checked` in response to a user commit (click/Enter/Space). A consumer
 that mutates `aria-checked` directly on a mounted item (outside a commit) owns the one-true-per-group
-invariant itself for that write — the control does not observe or reconcile it. The shipped
-agent-admin canvas-header consumer (`site/pages/agent-admin-app.ts`) satisfies this today: its own
-preset-apply loop is one-true-by-construction on every non-commit write path (persisted-load, Reset
-persona).
+invariant itself for that write — the control does not observe or reconcile it.
+
+_Historical (GH #710): the site's agent-admin canvas-header consumer used to satisfy this — its
+preset-apply loop was one-true-by-construction on every non-commit write path (persisted-load, Reset
+persona) — before that consumer retired in S7-d (GH #684/#701; `agent-admin-app.ts` no longer writes
+`aria-checked` there). As of this writing no live consumer exercises the selectable-item variant's
+non-commit write path; the pattern above is exercised only via the control's own commit machinery._
 
 ## Keyboard navigation
 

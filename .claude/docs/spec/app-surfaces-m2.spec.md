@@ -28,6 +28,20 @@
 > post-hoc replay + `NARRATION_STEP_MS` deleted), the `AgentTurnHandle.progress()` widening routing through
 > a closed code-owned stage-label table, and the strip's header opt-in all shipped gate-green — the
 > blank-bubble regression proof (a zero-line, zero-progress turn shows a working header at t=0) asserted.
+>
+> **Amendment (2026-08-11, docs-only — the body below is UNCHANGED, append-only):**
+> [ADR-0180](../adr/0180-conversation-declarative-composition-opt-in.md) (accepted, ratified 2026-08-10)
+> adds an explicit OPT-IN declarative-composition adoption mode to **SPEC-R4**, never the default: the
+> "the DOM is never author-composed" clause gains its delta — never BY DEFAULT; an explicit opt-in
+> declarative adoption mode exists (ADR-0180), stated in full as the new **SPEC-R13** below. SPEC-R4's
+> own body is otherwise byte-unchanged — every existing imperative-API consumer (a2ui-chat, a2ui-live,
+> agent-admin — none of which authors children today) keeps the byte-identical original shape; only a
+> consumer that authors `<ui-conversation-header>`/`<ui-conversation-dialog>`/`<ui-conversation-
+> composer>` as light-DOM children opts in. BUILT (GH #688, 2026-08-11): S1–S4 shipped gate-green — the
+> two new elements (`ui-conversation-dialog`/`ui-conversation-header`), the `connected()` adopt-or-create
+> seam, the CSS migration, and the `@agent-ui/app` size re-base (SPEC-R11's own discipline) all landed;
+> the byte-identical-default claim is evidenced by zero deleted/modified lines in every pre-existing
+> `conversation.test.ts`/`conversation.browser.test.ts` assertion.
 
 ---
 
@@ -89,6 +103,12 @@ M2 pays down the two site embryos this SPEC generalizes: `site/lib/canvas-surfac
 - **AC1** *Given* no `setContentRenderer` call, *when* an agent turn finalizes with a note or a system bubble is added, *then* the text renders exactly as literal `textContent` — byte-identical to pre-existing behavior (a regression gate for every consumer that never opts in).
 - **AC2** *Given* a registered renderer, *when* an agent turn's note is set (or falls back to `summarize()`) or a system bubble's text is added, *then* the element replaces that body's children with the renderer's returned `Node`, and the raw string is never separately written via `textContent`.
 - **AC3** *Given* a registered renderer, *when* `addUserMessage(text)` is called, *then* the user bubble's text still renders via plain `textContent`, unaffected by the registered renderer (SPEC-R4 AC1 unchanged).
+
+**SPEC-R13 — The declarative-composition opt-in (ADR-0180, accepted; amends SPEC-R4's default-imperative clause above, never replaces it).** `ui-conversation` MUST recognize, at connect-time only, an author-supplied `:scope > ui-conversation-header`/`:scope > ui-conversation-dialog`/`:scope > ui-conversation-composer` and ADOPT it in place of creating one — never a parallel imperative surface. The whole turn/registry/narration/busy engine MUST stay solely owned by `ui-conversation` regardless of which path (adopted or created) seated a given part. A consumer that authors none of the three tags MUST get the byte-identical original shape (SPEC-R4's imperative-only default, unamended). `ui-conversation-header` MUST be recognized-only, never created — its absence means today's shape minus nothing; the imperative API never touches it. `ui-conversation-dialog` carries the log's mechanical role (scroll region, `internals.role='log'`, `internals.ariaLive='polite'`) whether adopted or created. *(→ PRD-G4, [ADR-0180](../adr/0180-conversation-declarative-composition-opt-in.md))*
+
+- **AC1** *Given* a consumer that authors no children, *when* `ui-conversation` connects, *then* every existing imperative-API assertion (the full pre-ADR-0180 `conversation.test.ts`/`conversation.browser.test.ts` suite) passes byte-identically, zero deleted or modified pre-existing assertions.
+- **AC2** *Given* a consumer that authors one, two, or all three of the recognized tags, *when* `ui-conversation` connects, *then* the authored element is adopted (never duplicated, never a second imperative surface) and the turn/registry/narration/busy engine behaves identically to the created-default path.
+- **AC3** *Given* no authored `ui-conversation-header`, *when* `ui-conversation` connects, *then* no header element is created — the region is absent, not an empty placeholder.
 
 ### 3.4 The transport boundary (per [ADR-0129](../adr/0129-app-surfaces-m2-composition-and-transport-boundary.md) F1 — proposed, Kim's ruling pending; this SPEC states the recommended requirement)
 
@@ -175,5 +195,6 @@ interface AgentTurnHandle {
 | SPEC-R10 | catalog-invisible by construction, no allowlist entry | PRD-D2 · PRD-G6 |
 | SPEC-R11 | fleet DoD, re-based budget | PRD-G6 |
 | SPEC-R12 | content-render hook (agent/system text only, user text unaffected) | PRD-G4 · [TKT-0071](../tickets/tkt-0071-conversation-bubble-markdown-rendering.md) |
+| SPEC-R13 | declarative-composition opt-in (adopt-or-create; byte-identical default) | PRD-G4 · [ADR-0180](../adr/0180-conversation-declarative-composition-opt-in.md) |
 
-_All twelve requirements trace to a ratified PRD goal; PRD-G3 and PRD-G4 (M2's charter) are both fully covered. PRD-G5/M3 and PRD-G7/G8/M4 are deliberately out of this SPEC (M4 already specced separately). SPEC-R12 was appended 2026-07-16 (TKT-0071) — numbered after R11 despite living in §3.3, to avoid renumbering every existing cross-reference in the tree; ordering within this table and §3 is by addition, not by section._
+_All thirteen requirements trace to a ratified PRD goal; PRD-G3 and PRD-G4 (M2's charter) are both fully covered. PRD-G5/M3 and PRD-G7/G8/M4 are deliberately out of this SPEC (M4 already specced separately). SPEC-R12 was appended 2026-07-16 (TKT-0071) — numbered after R11 despite living in §3.3, to avoid renumbering every existing cross-reference in the tree; SPEC-R13 was appended 2026-08-11 (GH #688/ADR-0180), living in §3.3 for the same reason; ordering within this table and §3 is by addition, not by section._

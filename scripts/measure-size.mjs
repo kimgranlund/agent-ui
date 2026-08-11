@@ -523,7 +523,19 @@ const appCssQuerySuffixPlugin = {
 // (GH #586 Slice B, commit 4710b89): Slice B's composed-ui-menu vehicle + fit engine, LLD-accepted
 // tradeoff landing at the app tier; next diet pass keeps its tripwire. GH #468 remains the standing
 // app-diet follow-up unchanged.
-const APP_MARGINAL_BUDGET = 83 * KB
+//
+// Re-based 83 KB → 88 KB (90112 B gz) at the ADR-0180 declarative-composition wave (GH #688, S1-S4):
+// two NEW app-tier custom elements — `ui-conversation-dialog` (the scroll/live-region mechanical role +
+// the isNearBottom()/followTail() public methods, promoted off ui-conversation's own private methods,
+// zero net new BEHAVIOUR bytes but a full new self-defining custom-element shell) and `ui-conversation-
+// header` (a thin, fully author-composed band) — both riding this SAME shared barrel via ui-conversation's
+// own connected() (adopt-or-create), per the LLD's own kickoff discipline ("two new elements will not fit
+// current headroom", conversation-declarative-composition.lld.md §7 test 7). Measured 86679 B gz
+// pre-re-base (up from the 82565 B gz checkpoint — a real ~4114 B gz cost, two new registered elements +
+// their own CSS reachable through the barrel, not a regression to chase); ~3.8% headroom reserved (90112 −
+// 86679 = 3433 B gz) for the next change, the SAME margin discipline every prior re-base in this file
+// leaves. GH #468 remains the standing app-diet follow-up, unchanged by this wave.
+const APP_MARGINAL_BUDGET = 88 * KB
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })
