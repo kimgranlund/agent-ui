@@ -1,6 +1,6 @@
 # LLD — the agent-admin three-pane IA (S1-a, the admin-three-pane family's one full-LLD slice)
 
-> Status: proposed · v0.4 · 2026-08-11 (S6/GH #662 re-statements: §2 rows, §5, §6, §8, §15 — dated in place; GH #681/GH #684 re-statement: §2 rows (74, 84), §3, §8 — dated in place; GH #686 amendment: §16 — the unified header + shown-set visibility, dated in place; supersession markers added to the §2/§3/§10/§12 rows it re-rules; S7-e record-repair pass, 2026-08-11 — GH #686 built S7-a→S7-e, every "(proposed)" §16/§2/§3/§12 marker corrected to RATIFIED/BUILT, §16.6 OQ-A row updated to Kim's ruling, `agent-admin.md` re-stated) · Layer: LLD (implementation plan)
+> Status: proposed · v0.4 · 2026-08-11 (S6/GH #662 re-statements: §2 rows, §5, §6, §8, §15 — dated in place; GH #681/GH #684 re-statement: §2 rows (74, 84), §3, §8 — dated in place; GH #686 amendment: §16 — the unified header + shown-set visibility, dated in place; supersession markers added to the §2/§3/§10/§12 rows it re-rules; S7-e record-repair pass, 2026-08-11 — GH #686 built S7-a→S7-e, every "(proposed)" §16/§2/§3/§10/§12 marker corrected to RATIFIED/BUILT, §16.6 OQ-A row updated to Kim's ruling, §1/§4 gain a §16 pointer marker, `agent-admin.md` re-stated) · Layer: LLD (implementation plan)
 >
 > Refines: [ADR-0179](../adr/0179-agent-admin-three-pane-ia.md) (ACCEPTED 2026-08-09 — cl.1 the
 > three-place vocabulary, cl.2 place-based routing + the named survive/retire lists, cl.3 the
@@ -48,6 +48,12 @@
 > escalation is the §6 drill-band widening (the 52.5rem named line), never a third number.
 
 ## 1 · Intent
+
+⚠️ **This section narrates the S1-b-era shipped record (`[Chat | Author | Settings]`, the
+`ui-master-detail` pairing) — GH #686's Amendment (§16, RATIFIED; BUILT S7-a→S7-e, confirmed
+2026-08-11) re-rules the vocabulary (`[Chat | Settings | Co-pilot]`) and the pairing vehicle
+(the MD retires entirely, three sibling regions instead). Left un-rewritten per this file's own
+append-only law — §16 is the current record.**
 
 Restructure `ui-agent-admin`'s IA from one chat surface + five flattened section tabs + the
 in-canvas try-it strip into THREE first-class places — **[Chat | Author | Settings]** — per Kim's
@@ -120,6 +126,14 @@ superseded by §16.1's — the header slot's contents change and the MD row diss
 sibling regions. This diagram stays as the shipped record.)*
 
 ## 4 · Place-based routing (ADR-0179 cl.2/cl.4, realized)
+
+⚠️ **This section narrates the S1-b-era shipped mechanism — `#pane`/`#setPane`/`#applyPane` as the
+visibility truth, `#contextFor()` keyed by `#pane` — both RE-RULED since: GH #662's Amendment
+re-keys `#contextFor()` to the submitting composer's ORIGIN (§2's own row, unmarked here); GH #686's
+Amendment (§16, RATIFIED; BUILT S7-a→S7-e, confirmed 2026-08-11) replaces `#pane`/`#setPane`/
+`#applyPane` outright with the shown-set + primary model (`#panesShown`/`#panePrimary`/
+`#applyPaneVisibility`, `setPaneVisibilitySeam`). Left un-rewritten per this file's own append-only
+law — §16.2 is the current record.**
 
 - **State.** `#pane: 'chat' | 'author' | 'settings'`, entry default `'chat'` (content-first, the
   narrow content-tab's own precedent; §15 flags the default for Kim). `#setPane()` guards no-ops,

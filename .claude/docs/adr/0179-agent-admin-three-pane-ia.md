@@ -106,6 +106,18 @@ interview turn without leaving Author), the strip retired, gates green by exit c
 > GH [#651](https://github.com/kimgranlund/agent-ui/issues/651) family), with the LLD's §2/§5 rows
 > re-stated in the same change (`../lld/admin-three-pane-ia.lld.md`).
 >
+> **2026-08-11 correction (S7-e record-repair pass, found by doc-checker review of the GH #686
+> Amendment's own identical fix below).** The "**proposed**… this amendment carries no ratification
+> of its own until Kim gives one" sentence above was accurate when drafted and went stale the same
+> day this amendment's own heading gained its "**ratified**" line (Kim's
+> [utterance](https://github.com/kimgranlund/agent-ui/issues/662#issuecomment-5235141210), verified
+> 2026-08-10) — a same-day edit that updated the heading but left this paragraph's own prose
+> narrating the pre-ratification state, exactly the contradiction pattern the GH #686 Amendment
+> below carried and this same slice corrected. GH #662 (S6) shipped against the ratified amendment
+> the same wave; the whole GH #686 family (S7-a through S7-e) has since shipped on top of it. The
+> stale sentence is left quoted above, not deleted, per this repo's append-over-edit-in-place
+> ledger law — read it as describing the moment before ratification, not the record's current state.
+>
 > **What this re-rules, precisely.** cl.1's *tier* sentence — "places, all three, at every width" —
 > stands; what changes is what "a place" costs at wide. cl.3's law — arrangement of the ONE settings
 > region, never duplication, never a runtime reparent — stands and now governs three regions instead
@@ -246,7 +258,12 @@ share a screen. The divider unpaint is likewise independent of the arrangement.
 > through S7-d) then shipped against the ratified amendment, and this S7-e slice is the fifth and
 > last (LLD §16.4's own S7-e row). Removed the two stale sentences rather than leaving them to
 > mislead a future reader — the original text is preserved in git history, not deleted from the
-> record.
+> record. This amendment's own closing "If Kim rules against this" paragraph, below, carries the
+> same class of staleness in its premise ("this amendment ships nothing until ratified, so the
+> fallback is the shipped surface itself") — left as-is (a real hypothetical fallback, still
+> correctly describing what "rules against this" would mean), but "the shipped surface itself" no
+> longer means the pre-#686 pane-nav+MD surface that sentence was written against: S7-a→S7-e already
+> shipped past it, so a revert today would be a REAL rollback of built work, not a no-op.
 >
 > **What this re-rules, precisely.** cl.1's *tier* sentence — three first-class places at every
 > width — stands; what changes is the places' NAMES and reading order, the header slot's contents,
