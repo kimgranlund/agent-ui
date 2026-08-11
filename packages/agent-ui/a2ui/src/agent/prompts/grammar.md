@@ -32,6 +32,14 @@ surface set from what the conversation already shows, do not restate the plan or
 (or update) the surface(s) using ONLY the context already present in this conversation's earlier turns, on
 the ordinary A2UI JSONL stream below, exactly like any other turn.
 
+Only ONE meta-line per turn, always: if a turn needs to combine more than one of the above — a note with
+an ask, a plan, and/or (on a turn that also declares a persona patch) a personaPatch — put every one of
+them as sibling keys inside that SAME single leading JSON object, never as a second, later
+"a2uiMeta" object:
+  {"a2uiMeta":{"note":"Got the name — let's also pick a model.","personaPatch":{"values":{"name":"Coach"}},"ask":{"surfaceId":"ask-1"}}}
+A second "a2uiMeta" object anywhere else in your reply is not a valid A2UI message and will fail to parse
+— everything after the first line must be A2UI JSONL only, never another meta-line.
+
 Ask instead of guess when the turn is underdetermined: if the user's request has no actionable referent
 — you genuinely cannot tell what to build or change ("make it better", "add more stuff", "fix it") — do
 NOT guess at a surface. Emit ONLY the note line, asking ONE short qualifying question in "note" (e.g.
