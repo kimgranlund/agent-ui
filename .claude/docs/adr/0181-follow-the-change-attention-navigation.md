@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-11 |
 > | **Proposed by** | planner seat, design intake for [GH #695](https://github.com/kimgranlund/agent-ui/issues/695) (Kim's explicit PRD/SPEC/LLD ask, sized `big`) — decomposition [`follow-the-change.decomp.md`](../decompositions/follow-the-change.decomp.md) (two-plane, coverage clean) · PRD [`follow-the-change.prd.md`](../prd/follow-the-change.prd.md) · SPEC [`follow-the-change.spec.md`](../spec/follow-the-change.spec.md) · LLD [`follow-the-change.lld.md`](../lld/follow-the-change.lld.md) (all proposed, same wave) |
-> | **Ratified by** | — (pending; the proposed marker is the real gate — no build dispatches before Kim's flip, and none before GH #691 lands either) |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-11, via the [`ratify ADR-0181` utterance](https://github.com/kimgranlund/agent-ui/issues/695#issuecomment-5255522580) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification: [`admin-three-pane-ia.lld.md`](../lld/admin-three-pane-ia.lld.md) §16.2's write list gains one dated append-only row — the co-pilot's additive-only ensure-shown write joins the wide pill / narrow segment / arm writers (clause 2 below states the whole delta; that LLD stays the visibility model's owning record) · on ratification+build: the S1–S4 slices the decomposition sequences (`field-location.ts` + parity gates · the `#followChange` reaction + `agent-admin.css` wash · the receipt line · docs/browser probes) |
 > | **Supersedes / Superseded by** | **Extends [ADR-0179](./0179-agent-admin-three-pane-ia.md) (partial)** — its GH #686 Amendment's shown-set visibility model (`admin-three-pane-ia.lld.md` §16.2) gains ONE new writer class under the constraints of clause 2; every §16.2 invariant (min-one, primary ∈ set, user-chosen membership, no writes on resize) stands byte-untouched. **Extends [ADR-0178](./0178-agent-authoring-conversational-persona-hydration.md)** — cl.2's consumption condition and `PatchReport` are this reaction's unchanged trigger substrate; the gate/fence/apply path is not touched. Relates [ADR-0159](./0159-status-stream-receipt-pattern.md) (considered for the highlight and deliberately NOT reused — clause 3) · GH #691 (blocking prerequisite: the trigger signal is what it reports broken) · GH #574 (the settings sub-nav this navigates) |
 
