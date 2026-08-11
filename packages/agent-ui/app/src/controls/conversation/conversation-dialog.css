@@ -1,0 +1,43 @@
+/* conversation-dialog.css — ui-conversation-dialog (ADR-0180 · GH #688), the scrolling message-thread's
+ * mechanical layout — promoted VERBATIM off conversation.css's own `[data-part='log']` block (LLD §5:
+ * conversation.css:75–84 pre-migration, including the `display: flex; flex-direction: column; gap: 0.65rem`
+ * turn-stacking rules). Single file, two sectioned blocks (ADR-0003): a `:where(ui-conversation-dialog)`
+ * TOKEN block, then an `@scope (ui-conversation-dialog)` STYLES block consuming ONLY that chain.
+ *
+ * Standalone sheet — linked via the package `./conversation-dialog.css` export; NEVER injected from
+ * conversation-dialog.ts (behaviour-only `.ts`, no runtime style; plan §2).
+ */
+
+/* ════════════════ [ui-conversation-dialog] TOKEN BLOCK ═══ */
+
+:where(ui-conversation-dialog) {
+  /* Rename-with-alias (ADR-0180 §5): a consumer that set the PRE-existing `--ui-conversation-log-pad`
+     custom property (inherited from `ui-conversation` or any ancestor — custom properties cross a light-
+     DOM custom-element boundary for free) keeps working unchanged; a fresh consumer sets THIS element's
+     own name directly, or standalone (outside ui-conversation) falls back to the same space token the
+     old name resolved to. */
+  --ui-conversation-dialog-pad: var(--ui-conversation-log-pad, var(--md-sys-space-lg));
+}
+
+/* ════════════════ [ui-conversation-dialog] STYLES — @scope consumes ONLY --ui-conversation-dialog-* ═══ */
+
+@scope (ui-conversation-dialog) {
+  :scope {
+    /* The flex-child sizing role moves WITH the scroll region (unlike ui-conversation-composer's own
+       flex:0 0 auto, set from the CONSUMER's @scope) — this element is legal standalone too (LLD §3), so
+       its own intrinsic "how do I behave inside a flex parent" belongs on ITS scope, not a consumer rule
+       that would silently not apply to a standalone mount. flex-grow/shrink are simply ignored outside a
+       flex container, so this is harmless there. */
+    flex: 1 1 auto;
+    min-block-size: 0;
+    overflow-y: auto;
+    /* consumer-inherited seam (split-pane.css's own note; surface-host.css's own comment names the same
+       token) — deliberately NOT self-declared here, unchanged by the move off ui-conversation's own
+       @scope: custom-property inheritance is unaffected by which custom element consumes the read. */
+    scrollbar-width: var(--ui-conversation-scrollbar-width, auto);
+    padding: var(--ui-conversation-dialog-pad);
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+}

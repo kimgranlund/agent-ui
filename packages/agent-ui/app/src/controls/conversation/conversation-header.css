@@ -1,0 +1,56 @@
+/* conversation-header.css — ui-conversation-header (ADR-0180 · GH #688), the family's ONE fully
+ * author-composed member: a plain non-scrolling flex band the consumer fills with its own DOM (title,
+ * avatar, actions…). Single file, two sectioned blocks (ADR-0003): a `:where(ui-conversation-header)`
+ * TOKEN block declaring `--ui-conversation-header-*` from the shared colour roles + the dimensional
+ * ramps, then an `@scope (ui-conversation-header)` STYLES block consuming ONLY that chain — mirrors
+ * conversation.css's own token-role choices (LLD §2's own token table).
+ *
+ * Standalone sheet — linked via the package `./conversation-header.css` export; NEVER injected from
+ * conversation-header.ts (behaviour-only `.ts`, no runtime style; plan §2).
+ */
+
+/* ════════════════ [ui-conversation-header] TOKEN BLOCK ═══ */
+
+:where(ui-conversation-header) {
+  --ui-conversation-header-surface: var(--md-sys-color-neutral-surface-low, currentColor);
+  --ui-conversation-header-ink: var(--md-sys-color-neutral-on-surface, currentColor);
+  --ui-conversation-header-border: var(--md-sys-color-neutral-outline-variant, currentColor);
+  /* SPEC-R11c/AC19 (spacing-drift gate, TKT-0066 item 5): the STYLES block below never reads
+     --md-sys-space-* directly inside @scope — it mints these role-named tokens here and consumes THOSE. */
+  --ui-conversation-header-pad-block: var(--md-sys-space-sm);
+  --ui-conversation-header-pad-inline: var(--md-sys-space-lg);
+}
+
+/* ════════════════ [ui-conversation-header] STYLES — @scope consumes ONLY --ui-conversation-header-* ═══ */
+
+@scope (ui-conversation-header) {
+  :scope {
+    display: flex;
+    align-items: center;
+    /* Pinned by construction (ADR-0180 clause 3) — a plain flex-column sibling, never inside a shared
+       scroller, never position:sticky. Set on THIS element's own scope (not the consumer's, unlike
+       ui-conversation-composer's precedent) — this element is legal standalone too, so its own "how do I
+       behave inside a flex parent" belongs on its own scope (flex-grow/shrink are simply ignored outside
+       a flex container, harmless there). */
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    padding: var(--ui-conversation-header-pad-block) var(--ui-conversation-header-pad-inline);
+    border-block-end: 1px solid var(--ui-conversation-header-border);
+    background: var(--ui-conversation-header-surface);
+    color: var(--ui-conversation-header-ink);
+  }
+}
+
+/* ════════════════ forced-colors (WHCM) ════════════════ */
+
+/* The band's own border/background stay legible (SPEC-R11 AC2) — nested in its OWN @scope block (the
+ * conversation.css/app-shell.css precedent) so selector/specificity matches the light-mode rule exactly.
+ * The author's own content inside carries its own forced-colors handling (nothing here is engine-owned). */
+@media (forced-colors: active) {
+  @scope (ui-conversation-header) {
+    :scope {
+      border-color: CanvasText;
+      color: CanvasText;
+    }
+  }
+}
