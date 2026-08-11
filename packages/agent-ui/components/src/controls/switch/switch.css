@@ -52,8 +52,16 @@
 }
 
 /* :state(checked) — primary-family track + on-primary thumb: the ON state, solid primary fill.
-   Hover steps to a darker primary (same ADR-0008 role-ladder pattern as the button). */
-:where(ui-switch):state(checked) {
+   Hover steps to a darker primary (same ADR-0008 role-ladder pattern as the button). The `:state()`
+   pseudo-class sits INSIDE the `:where()` parens (GH #694, the ui-toggle GH #686/#693 finding applied
+   here) — a bare `:where(ui-switch):state(checked)` puts the pseudo-class OUTSIDE :where()'s zero-
+   specificity net, so it contributes its own (0,1,0), beating the `[disabled]` override below (fully
+   `:where()`-wrapped, (0,0,0)) regardless of source order — `<ui-switch checked disabled>` painted as
+   a fully active primary track instead of muted. `:state(checked)` alone (no `[checked]` companion) —
+   matching the pairing this file already uses everywhere else (thumb slide, forced-colors): ui-switch's
+   checked visuals are a real-engine-only concern (switch.browser.test.ts), unlike ui-toggle's
+   `:is([pressed], :state(pressed))` jsdom-compat pairing. */
+:where(ui-switch:state(checked)) {
   --ui-switch-track: var(--md-sys-color-primary);
   --ui-switch-track-hover: var(--md-sys-color-primary-hover);
   --ui-switch-thumb: var(--md-sys-color-primary-on-primary);
