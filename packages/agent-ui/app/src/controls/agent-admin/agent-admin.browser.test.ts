@@ -1334,6 +1334,37 @@ describe('ui-agent-admin — segment content wins its OWN display:flex, not supe
   })
 })
 
+// ── GH #706 — a THIRD instance of this file's own named failure class (GH #197 above; the
+// master-detail-pane @scope fix, agent-admin.css:405-415): the Model fold's `body` (a plain div,
+// disclosure.css declares no `display` of its own) held TWO top-level cards once S7-d's
+// `reset-agent-row` joined `model-grid` as its sibling, and the UA default `display:block` zeroed
+// the gap `--ui-agent-admin-section-gap` was supposed to give them. ────────────────────────────────
+describe('ui-agent-admin — the Model fold body wins its OWN display:flex, so model-grid and reset-agent-row get a real gap (GH #706)', () => {
+  it('a real, non-zero measured gap separates the models-list card from the "Agent configuration" (Reset Agent) card', async () => {
+    const { el } = mountAgentAdmin('Agent')
+    el.onResetRequest(() => {}) // the RESET BUTTON is [hidden] unregistered (agent-admin.ts #applyActionAvailability),
+    // not the row itself — register so the button paints too, since GH #706's own bug wasn't specific to
+    // that state (a real, un-hidden latent defect: an unregistered card still paints label+spacer with no
+    // affordance — tracked separately, not this test's concern)
+    await el.updateComplete
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    const modelFold = el.querySelector('[data-part="settings-item"][data-item="model"]') as HTMLElement
+    const body = modelFold.querySelector('[data-part="details"] > [data-part="body"]') as HTMLElement
+    const grid = body.querySelector('[data-part="model-grid"]') as HTMLElement
+    const resetRow = body.querySelector('[data-part="reset-agent-row"]') as HTMLElement
+
+    expect(getComputedStyle(body).display, 'the body wins display:flex, not the UA default display:block').toBe('flex')
+    expect(grid.getBoundingClientRect().height, 'the models card is a real, painted box').toBeGreaterThan(0)
+    expect(resetRow.getBoundingClientRect().height, 'the Reset Agent card is a real, painted box (registered, so not [hidden])').toBeGreaterThan(0)
+
+    const expectedGapPx = Number.parseFloat(getComputedStyle(body).rowGap)
+    expect(expectedGapPx, 'a real, non-zero declared section gap to measure against').toBeGreaterThan(0)
+    const measuredGapPx = resetRow.getBoundingClientRect().top - grid.getBoundingClientRect().bottom
+    expect(measuredGapPx, 'the models card and the Reset Agent card no longer butt together').toBeCloseTo(expectedGapPx, 0)
+  })
+})
+
 // ── GH #225 — the Settings sections are heading-row FOLDS (the GH #222 Context pattern applied back to
 // the config column): chevron on the heading row, one shared heading register, fold toggles content,
 // and the master switches ride their fold summaries WITHOUT the summary swallowing their clicks. ──────
