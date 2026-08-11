@@ -124,6 +124,20 @@
   --ui-menu-item-bg-hover: var(--md-sys-color-neutral-surface-high);
   --ui-menu-item-ink-disabled: var(--md-sys-color-neutral-outline);   /* muted, not invisible */
 
+  /* Selected-row treatment for a plain-role menuitem picker (GH #704 fix) — the composer's
+     Models/Effort single-select pickers mark their current item via a bare `data-selected`
+     attribute (conversation-composer.ts: `role=menuitem`, action semantics, not `role=option`/
+     `menuitemradio` — its own :592 comment). This paints the SAME bg+ink treatment ui-select's
+     option rows already use for `[aria-selected='true']`, rather than the GH #55 checkmark-glyph
+     mechanism above: that mechanism assumes the option-role family and reserves a glyph slot on
+     EVERY row in the group so rows align (only meaningful when every row in the group carries the
+     role); a plain menuitem carries no such per-group marker to key that reservation off, and only
+     the one currently-selected item ever carries `data-selected` (conversation-composer.ts's own
+     toggleAttribute calls), so a bg+ink swap — no added padding, no assumption about sibling rows —
+     is the fit here. */
+  --ui-menu-item-bg-selected: var(--md-sys-color-primary-container-low);
+  --ui-menu-item-ink-selected: var(--md-sys-color-primary-high);
+
 }
 
 /* ════════ [2] STYLES BLOCK — @scope (ui-menu) consumes ONLY --ui-menu-* ════════ */
@@ -220,6 +234,26 @@
     background-color: var(--ui-menu-item-bg-hover);
   }
 
+  /* Selected state (GH #704 fix) — a plain-role menuitem picker's current item (the composer's
+     Models/Effort pickers, marked via `data-selected` — token block above explains why this is a
+     bg+ink swap rather than the GH #55 checkmark mechanism). Ordered AFTER :hover, BEFORE
+     :focus-visible below — same precedence ui-select's option rows use (hover < selected <
+     focus-visible; select.css), so a focused row still reads as focused even when selected.
+     FIXED (2026-08-11, review finding on the original fix): source order alone does NOT deliver
+     that ordering — the :hover rule above carries FOUR specificity-contributing simple selectors
+     (:scope + :is(...) + two :not()s + :hover = (0,5,0)) while this rule originally carried only
+     three ((0,3,0)), so hover won regardless of order and wiped the selected fill on hover. The
+     :not([disabled]):not([aria-disabled='true']) guards below are not just correctness (a
+     disabled+selected row no longer paints the selected fill either) — they also TIE this rule's
+     specificity to the hover rule's at (0,5,0), so source order actually governs, matching what
+     the comment above already claimed. Same defect CLASS as the ui-toggle/ui-switch cascade bugs
+     (GH #686/#693/#694) — an unequal-specificity sibling silently beating an intended-precedence
+     rule, just a new shape (no :where() involved here, plain unequal simple-selector counts). */
+  :scope [role='menuitem'][data-selected]:not([disabled]):not([aria-disabled='true']) {
+    background-color: var(--ui-menu-item-bg-selected);
+    color: var(--ui-menu-item-ink-selected);
+  }
+
   /* Keyboard focus ring (ADR-0009) — reads fleet tokens directly (the documented family exception:
      every control draws the identical ring; see button.css for the precedent). Outset (positive
      offset), matching ui-select's option ring and the fleet-wide convention (button/checkbox/
@@ -281,7 +315,8 @@
     }
 
     :scope :is([role='menuitem'], [role='menuitemradio'], [role='menuitemcheckbox']):not([disabled]):not([aria-disabled='true']):hover,
-    :scope :is([role='menuitem'], [role='menuitemradio'], [role='menuitemcheckbox']):not([disabled]):not([aria-disabled='true']):focus-visible {
+    :scope :is([role='menuitem'], [role='menuitemradio'], [role='menuitemcheckbox']):not([disabled]):not([aria-disabled='true']):focus-visible,
+    :scope [role='menuitem'][data-selected] {
       forced-color-adjust: none;
       background-color: Highlight;
       color: HighlightText;
