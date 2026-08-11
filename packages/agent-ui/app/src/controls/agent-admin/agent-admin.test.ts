@@ -651,16 +651,20 @@ describe('UIAgentAdminElement — the unified header bar (S7-c, ADR-0179 GH #686
     expect([imports, exports]).toEqual([1, 1])
   })
 
-  // S7-d (LLD §16.4) — onResetRequest's own consumer: the Settings model-grid fold's "Reset Agent" button,
+  // S7-d (LLD §16.4) — onResetRequest's own consumer: the Settings model-grid fold's "Reset Agent" row,
   // OUTSIDE the header entirely, reflected through the SAME #applyActionAvailability funnel as the other
-  // five action seams (HIDE, not disable, per LLD §16.3's stated divergence).
-  it('onResetRequest: HIDDEN unregistered, revealed by a register AFTER connect, and the click reaches the callback', () => {
+  // five action seams (HIDE, not disable, per LLD §16.3's stated divergence). GH #709 — the WHOLE ROW
+  // hides, never just the button (a buttonless labeled card is the wrong degrade): the button itself is
+  // never hidden/disabled on its own.
+  it('onResetRequest: the ROW is HIDDEN unregistered (button never touched directly), revealed by a register AFTER connect, and the click reaches the callback', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const row = el.querySelector('[data-part="reset-agent-row"]') as HTMLElement
     const btn = el.querySelector('[data-part="reset-agent-button"]') as HTMLElement
-    expect(btn.hidden, 'unregistered ⇒ hidden, never merely disabled').toBe(true)
+    expect(row.hidden, 'unregistered ⇒ the ROW hides, never merely disabled').toBe(true)
+    expect(btn.hidden, 'the button itself is never toggled directly — only its row').toBe(false)
     let calls = 0
     el.onResetRequest(() => { calls += 1 })
-    expect(btn.hidden, 'registering AFTER connect reveals it (the GH #666 order rule)').toBe(false)
+    expect(row.hidden, 'registering AFTER connect reveals the row (the GH #666 order rule)').toBe(false)
     btn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     expect(calls).toBe(1)
   })
@@ -669,8 +673,16 @@ describe('UIAgentAdminElement — the unified header bar (S7-c, ADR-0179 GH #686
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
     el.onResetRequest(() => {})
     mount(el)
-    const btn = el.querySelector('[data-part="reset-agent-button"]') as HTMLElement
-    expect(btn.hidden, "registering BEFORE connect reflects at #compose's own build-time call").toBe(false)
+    const row = el.querySelector('[data-part="reset-agent-row"]') as HTMLElement
+    expect(row.hidden, "registering BEFORE connect reflects at #compose's own build-time call").toBe(false)
+  })
+
+  it('onResetRequest: unregistered leaves the row hidden even though its label ("Agent configuration") would otherwise have no action to pair with (GH #709 — the buttonless-card defect this test guards against)', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const row = el.querySelector('[data-part="reset-agent-row"]') as HTMLElement
+    const label = el.querySelector('[data-part="reset-agent-label"]') as HTMLElement
+    expect(row.hidden).toBe(true)
+    expect(label, 'the label still exists in the DOM (never removed) — [hidden] on the row is what hides it, not a separate removal').not.toBeNull()
   })
 
   it('onResetRequest: the button lives at the model-grid fold\'s content end, a sibling of model-grid, never inside it (a #renderModelGrid re-render must not wipe it)', () => {

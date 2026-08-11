@@ -524,9 +524,15 @@ export class UIAgentAdminElement extends UIElement {
   #overflowTriggerBtn: HTMLElement | null = null
   #overflowImportItem: HTMLElement | null = null
   #overflowExportItem: HTMLElement | null = null
-  // S7-d (LLD §16.4) — "Reset Agent"'s own consumer, at the model-grid fold's content end. HIDDEN, not
-  // disabled, while `onResetRequest` is unregistered (`#applyActionAvailability`'s own law, extended).
-  #resetAgentBtn: HTMLElement | null = null
+  // S7-d (LLD §16.4) — "Reset Agent"'s own consumer, at the model-grid fold's content end. GH #709 — the
+  // WHOLE ROW hides (not just the button) while `onResetRequest` is unregistered: unlike the header's five
+  // bare-action seams, this row also carries a label ("Agent configuration") — but that label has no
+  // standalone informational value once its one action is gone (it names the thing the button resets, not
+  // a summary worth showing on its own), so a buttonless labeled card is the wrong degrade, not an
+  // acceptable one. Only the ROW is tracked here — the button itself has no other reader (its click
+  // handler binds directly on the local variable at construction, `#compose` below) once hiding moved up
+  // one level.
+  #resetAgentRow: HTMLElement | null = null
   /**
    * GH #670 — the Author card's Model/Effort pick made BEFORE the flow is armed, held here until there is
    * somewhere real to put it. It exists because the pickers are props-down/callbacks-up: armed, a pick
@@ -1127,7 +1133,7 @@ export class UIAgentAdminElement extends UIElement {
     resetAgentBtn.setAttribute('data-part', 'reset-agent-button')
     resetAgentBtn.textContent = 'Reset Agent'
     resetAgentBtn.addEventListener('click', () => this.#resetRequest?.())
-    this.#resetAgentBtn = resetAgentBtn
+    this.#resetAgentRow = resetAgentRow
     resetAgentRow.append(resetAgentLabel, resetAgentSpacer, resetAgentBtn)
 
     // GH #574 — Agent tab: who it is (Agent · Model · Bankroll — persona state lives with the persona).
@@ -3055,7 +3061,9 @@ export class UIAgentAdminElement extends UIElement {
       this.#overflowExportItem.setAttribute('aria-disabled', String(exportHidden))
     }
     if (this.#overflowTriggerBtn) this.#overflowTriggerBtn.hidden = importHidden && exportHidden
-    if (this.#resetAgentBtn) this.#resetAgentBtn.hidden = this.#resetRequest === undefined
+    // GH #709 — the WHOLE ROW hides, not just the button (its label has no standalone value once the
+    // action it names is gone). `#resetAgentBtn` itself is never toggled here anymore.
+    if (this.#resetAgentRow) this.#resetAgentRow.hidden = this.#resetRequest === undefined
   }
 
   // ── protected test seams (the split.ts/slider-multi.ts precedent) ────────────────────────────────────
