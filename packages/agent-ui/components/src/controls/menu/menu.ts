@@ -387,8 +387,8 @@ export class UIMenuElement extends UIElement {
   /**
    * One-true-at-a-time: set `item` checked and every OTHER menuitemradio sharing its `data-group`
    * unchecked. Ungrouped radio items (no `data-group`) share the default '' group — so a panel
-   * with no explicit grouping still behaves as ONE radio group, the common case (e.g. the
-   * agent-admin canvas-header's single agent-switcher group).
+   * with no explicit grouping still behaves as ONE radio group, the common case (e.g. a
+   * `Sort by ▸` submenu with three mutually-exclusive options).
    */
   #commitRadio(item: HTMLElement): void {
     if (!this.#panel) return

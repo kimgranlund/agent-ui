@@ -1,11 +1,14 @@
 // agent-admin.ts — UIAgentAdminElement, the Agent Admin UI (TKT-0039, ADR-0131/ADR-0132): a live-editable
 // agent config + instructions with a working chat preview, composing the shipped M2 (`ui-conversation`)
-// and M5 shell-archetype (`ui-chat-shell`→`ui-super-shell`, GH #52/ADR-0154) + M4 (`ui-settings`)
-// primitives PLUS the generic ordered-entry-list primitive (`entries.ts`/`entry-list.ts`, ADR-0132) —
-// no new primitive FAMILY beyond that one, no new protocol dependency.
+// and M5 shell-archetype (`ui-super-shell`, GH #52/ADR-0154 — GH #700 flattened out the `ui-chat-shell`
+// hop: that preset contributed nothing to this element but the `narrow-start="stack"` default, now set
+// directly below) + M4 (`ui-settings`) primitives PLUS the generic ordered-entry-list primitive
+// (`entries.ts`/`entry-list.ts`, ADR-0132) — no new primitive FAMILY beyond that one, no new protocol
+// dependency.
 //
-// ONE composed `ui-chat-shell` (GH #52/ADR-0154, re-hosted again by ADR-0179, then again by GH #686's
-// Amendment — superseding vision rev.5's hand-rolled `ui-split` composition, which itself superseded
+// ONE composed `ui-super-shell` (GH #52/ADR-0154 via the retired `ui-chat-shell` preset, re-hosted again
+// by ADR-0179, then again by GH #686's Amendment, then flattened to a direct composition by GH #700 —
+// superseding vision rev.5's hand-rolled `ui-split` composition, which itself superseded
 // ADR-0131 cl.2's three-pane order): `header` = the unified header bar (S7-c, admin-three-pane-ia.lld.md
 // §16.1/§16.3/§16.4 — the pane nav that used to occupy this slot is retired; this replacement is a
 // different shape, not a restoration: agent select + pane pills/segments + page actions, never a mode
@@ -101,9 +104,12 @@ import type { UITabsElement, UITabElement } from '@agent-ui/components/controls/
 // unified header bar, S7-c's own build, LLD §16.4) and `content` (the pane holder). The old
 // options-pane end + `narrow-end="tabs"` six-entry vocabulary retired with ADR-0179 cl.1
 // (admin-three-pane-ia.lld.md §7) — replacing, in turn, the original hand-rolled ui-split + narrow
-// ui-tabs dual-shell + the ResizeObserver-driven #applyLayout reparenting.
-import '../chat-shell/chat-shell.ts'
-import type { UIChatShellElement } from '../chat-shell/chat-shell.ts'
+// ui-tabs dual-shell + the ResizeObserver-driven #applyLayout reparenting. GH #700 — this element used
+// to reach `ui-super-shell` through the `ui-chat-shell` preset (whose ONLY real contribution here was
+// the `narrow-start="stack"` default); it now composes `ui-super-shell` directly and sets that default
+// itself (`#compose()` below), removing one wrapper element from every agent-admin DOM tree.
+import '../super-shell/super-shell.ts'
+import type { UISuperShellElement } from '../super-shell/super-shell.ts'
 // GH #686's Amendment (LLD §16.5) retires `ui-master-detail` as the Author⇄Settings pairing vehicle
 // entirely: the wireframe's all-active geometry does not fit its 40rem own-container dock floor. The
 // three places are three sibling regions now (`#compose`, below) — no more MD import at this element's
@@ -418,14 +424,15 @@ export class UIAgentAdminElement extends UIElement {
 
   // The composed SHELL — created ONCE (idempotent, `#shell` doubles as the guard) and PERSISTS across a
   // reconnect (the `master-detail.ts`/`settings.ts` precedent). GH #52/ADR-0154, re-hosted by ADR-0179,
-  // re-ruled again by GH #686's Amendment (admin-three-pane-ia.lld.md §16, S7-b): a `ui-chat-shell`
+  // re-ruled again by GH #686's Amendment (admin-three-pane-ia.lld.md §16, S7-b), then flattened by
+  // GH #700 to compose `ui-super-shell` directly (no more intermediate `ui-chat-shell`): a `ui-super-shell`
   // hosting `content` = the pane holder, three sibling regions (Chat conversation · Settings · Co-pilot
   // conversation). The `header` slot now carries S7-c's own unified header bar (LLD §16.1/§16.3) — the
   // pane nav that used to live there retired with the visibility model it drove (§16.5); the replacement
   // is a different shape (agent select + pane pills/segments + page actions), not a restoration of the
   // old nav. Region visibility is likewise VISIBILITY-ONLY — no JS layout code, no reparenting, ever
   // (`#applyPaneVisibility`).
-  #shell: UIChatShellElement | null = null
+  #shell: UISuperShellElement | null = null
   #conversation: UIConversationElement | null = null
   // ── ADR-0178 cl.5 (LLD-C6) — the DUAL-CONTEXT chat ────────────────────────────────────────────────────
   // Two MOUNTED conversations, never one conversation with two transcripts: the test context above stays
@@ -746,7 +753,7 @@ export class UIAgentAdminElement extends UIElement {
 
   // ── composition (idempotent — the master-detail.ts/settings.ts `#compose` doc-comment precedent) ──────
 
-  /** Build the ui-chat-shell + the pane nav + the five composed entry-list sections + the composed
+  /** Build the ui-super-shell + the pane nav + the five composed entry-list sections + the composed
    *  ui-settings, once ever. ADR-0179 — `header` = the pane nav, `content` = the pane holder (the Chat
    *  conversation + the Author⇄Settings pairing); the whole config column and both Context halves live
    *  in the Settings place as `data-segment` siblings, never a separate ui-tabs/reparenting shell.
@@ -755,7 +762,13 @@ export class UIAgentAdminElement extends UIElement {
   #compose(): void {
     if (this.#shell) return
 
-    const shell = document.createElement('ui-chat-shell') as UIChatShellElement
+    // GH #700 — composes `ui-super-shell` directly now, not through the `ui-chat-shell` preset: that
+    // preset's ONLY real contribution here was defaulting `narrow-start="stack"` (chat-shell.ts's own
+    // FORWARD_ATTRS — `resizable-end`/`size-end`/`narrow-end`/`resizable-start`/`size-start`/
+    // `collapse-band` — were never set on the composed shell by this element, so nothing else needed to
+    // move with the flatten); that default is set explicitly below instead.
+    const shell = document.createElement('ui-super-shell') as UISuperShellElement
+    shell.setAttribute('narrow-start', 'stack')
     // (SPEC-R6a/R7b's `resizable-end` + `narrow-end="tabs"` RETIRED with the options-pane they governed —
     // ADR-0179 cl.1 / admin-three-pane-ia.lld.md §7: the settings region left the shell's end side for the
     // pane holder below. The shell still carries exactly two slots: `header` (S7-c's unified header bar,

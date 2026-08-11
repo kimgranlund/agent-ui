@@ -24,7 +24,8 @@ declare const process: { cwd(): string }
 // jsdom probes for ui-agent-admin (TKT-0039, ADR-0131/ADR-0132). jsdom cannot resolve CSS container-
 // query/flex layout — the actual visual geometry is agent-admin.browser.test.ts's job (the
 // master-detail.test.ts / master-detail.browser.test.ts split, mirrored). This file proves: the
-// connect-time composition (GH #52/ADR-0154, re-hosted by ADR-0179: ONE ui-chat-shell hosting the pane
+// connect-time composition (GH #52/ADR-0154, re-hosted by ADR-0179, flattened onto a direct
+// `ui-super-shell` composition by GH #700: ONE ui-super-shell hosting the pane
 // nav in `header` and the Chat/Author/Settings places in `content` — the Settings place composing the
 // Agent config + four capability entry-lists, the prompt-section entry-list), the generic entry-list
 // primitive's own behavior (toggle/edit/delete/add,
@@ -75,7 +76,8 @@ function contentFieldOf(row: HTMLElement): HTMLTextAreaElement {
   return row.querySelector('[data-part="entry-content"]') as HTMLTextAreaElement
 }
 
-// GH #52/ADR-0154, re-hosted by ADR-0179 — the responsive shell is ui-chat-shell/ui-super-shell's OWN
+// GH #52/ADR-0154, re-hosted by ADR-0179, composed DIRECTLY since GH #700 flattened out the
+// intermediate `ui-chat-shell` preset — the responsive shell is ui-super-shell's OWN
 // grammar (SPEC-R6/R7): header=pane nav, content=the pane holder (Chat/Author⇄Settings). The old
 // options-pane end + `narrow-end="tabs"` six-entry vocabulary retired with cl.1 (admin-three-pane-ia
 // .lld.md §7), which itself replaced TKT-0085's ResizeObserver-driven reparenting — there is no width
@@ -149,9 +151,9 @@ describe('mountEntryList — customAdd/contentField (ADR-0170 cl.8)', () => {
 })
 
 describe('UIAgentAdminElement — shell composition (ADR-0179): the three places + the settings sub-nav', () => {
-  it('composes ONE ui-chat-shell: header=the S7-c unified header bar, content=three sibling regions (chat/settings/copilot) — GH #686\'s Amendment', () => {
+  it('composes ONE ui-super-shell directly: header=the S7-c unified header bar, content=three sibling regions (chat/settings/copilot) — GH #686\'s Amendment, GH #700\'s flatten', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const shell = el.querySelector(':scope > ui-chat-shell') as HTMLElement
+    const shell = el.querySelector(':scope > ui-super-shell') as HTMLElement
     expect(shell).not.toBeNull()
     // ADR-0179 cl.1 / LLD §7 — the end side retired with the options-pane the settings region left.
     expect(shell.hasAttribute('resizable-end'), 'the retired end-side attrs are gone').toBe(false)
@@ -819,9 +821,9 @@ describe('UIAgentAdminElement — real models + real seeded content (TKT-0043)',
 })
 
 describe('UIAgentAdminElement — composition (GH #52/ADR-0154: chat + {Settings, Context: System, Context: Dialog} segments; ADR-0132 five entry-list instantiations; GH #161)', () => {
-  it('builds one ui-chat-shell holding the three places (ADR-0179, re-ruled by GH #686\'s Amendment)', () => {
+  it('builds one ui-super-shell holding the three places (ADR-0179, re-ruled by GH #686\'s Amendment, composed directly since GH #700)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
-    const shell = el.querySelector(':scope > ui-chat-shell')
+    const shell = el.querySelector(':scope > ui-super-shell')
     expect(shell).not.toBeNull()
     expect(shell?.querySelector('[data-part="canvas"] [data-part="chat-pane"]')).not.toBeNull()
     expect(shell?.querySelector('[data-part="canvas"] [data-part="settings-pane"]')).not.toBeNull()
@@ -1647,12 +1649,12 @@ describe('UIAgentAdminElement — a bring-your-own store with NO subscribe() sti
 })
 
 describe('UIAgentAdminElement — composition survives a RECONNECT (the master-detail.ts/settings.ts precedent)', () => {
-  it('re-parenting a connected instance leaves EXACTLY ONE ui-chat-shell — no duplicate composition', () => {
+  it('re-parenting a connected instance leaves EXACTLY ONE ui-super-shell — no duplicate composition', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const wrapper = document.createElement('div')
     document.body.append(wrapper)
     wrapper.append(el) // detach + reattach — connectedCallback fires again
-    expect(el.querySelectorAll(':scope > ui-chat-shell').length).toBe(1)
+    expect(el.querySelectorAll(':scope > ui-super-shell').length).toBe(1)
     expect(el.querySelectorAll('[data-part="canvas"]').length).toBe(1)
     expect(el.querySelectorAll('[data-kind="skill"]').length).toBe(1)
     wrapper.remove()

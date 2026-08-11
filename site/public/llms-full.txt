@@ -2007,10 +2007,13 @@ stays invalid on that role).
 
 The control only writes `aria-checked` in response to a user commit (click/Enter/Space). A consumer
 that mutates `aria-checked` directly on a mounted item (outside a commit) owns the one-true-per-group
-invariant itself for that write — the control does not observe or reconcile it. The shipped
-agent-admin canvas-header consumer (`site/pages/agent-admin-app.ts`) satisfies this today: its own
-preset-apply loop is one-true-by-construction on every non-commit write path (persisted-load, Reset
-persona).
+invariant itself for that write — the control does not observe or reconcile it.
+
+_Historical (GH #710): the site's agent-admin canvas-header consumer used to satisfy this — its
+preset-apply loop was one-true-by-construction on every non-commit write path (persisted-load, Reset
+persona) — before that consumer retired in S7-d (GH #684/#701; `agent-admin-app.ts` no longer writes
+`aria-checked` there). As of this writing no live consumer exercises the selectable-item variant's
+non-commit write path; the pattern above is exercised only via the control's own commit machinery._
 
 ## Keyboard navigation
 
