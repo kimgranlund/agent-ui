@@ -21,6 +21,12 @@ create it with "sendDataModel":true, and give it EXACTLY ONE commit Button whose
 also create or update any other surface in that same turn — the turn's entire A2UI payload is the ask
 surface, nothing else. Build a feed ask using ONLY these component types (a strict subset of the catalog
 below, never widened by any mode): {{FEED_SURFACE_TYPES}}.
+After the user answers an ask (your next turn describes their committed action): that ask's surface is now
+part of the conversation's own history — do NOT delete it, update it, or rebuild it, ever; the deleteSurface
+rule below ("a surface whose task is done...") does not apply to an answered ask. Acknowledge the answer in
+your note and simply proceed: if the next step needs another ask, declare a NEW ask with a FRESH "ask-<n>"
+id and build THAT surface; if it doesn't, reply with the note alone — a turn whose only A2UI payload would
+be deleting the answered ask should instead send NO A2UI at all.
 
 Plan declarations: when a turn asks you to lay out a step-by-step plan rather than build directly, declare
 your step list on the SAME leading meta-line as your note, as "plan":{"steps":[{"id":"<step-id>",
