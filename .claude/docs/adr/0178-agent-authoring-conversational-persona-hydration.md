@@ -209,3 +209,117 @@ prose — rejected, cl.1 (wrong field class). Host-heuristic question scripts �
 (brittle, duplicates the model, ask arm exists). Store-swap-based try-it (two stores, swap on
 toggle) — rejected, cl.5 (GH #145 makes the swap a reset; state loss by construction). Building
 NL-edit-everywhere in v1 — rejected, cl.6 (unproven arm; safety questions unanswered).
+
+## Amendment (2026-08-11, **proposed** — Kim ratifies via a real GitHub utterance on GH [#696](https://github.com/kimgranlund/agent-ui/issues/696)) — cl.2's entries filter gains ONE scoped UPDATE verb: host-seeded builtin prompt sections become model-updatable IN PLACE; user-authored entries stay append-protected; the no-deletion law stands whole
+
+> Append-only: the Status cell reads `accepted` for the record as a whole and stays byte-untouched
+> — agents never flip status (`.claude/hooks/adr-status-guard.py`). Every section above is
+> unedited. **This amendment ships nothing until ratified**; its companion manifest is
+> [`builder-builtin-sections.decomp.md`](../decompositions/builder-builtin-sections.decomp.md) and
+> its build plan is [`builder-builtin-section-update.lld.md`](../lld/builder-builtin-section-update.lld.md)
+> (both proposed alongside it). No build dispatches until Kim rules.
+
+**The gap (GH #696, verified on source 2026-08-11).** cl.2's apply gate protects entries by being
+append-only by construction (`applyPersonaPatch`'s entries branch, `persona-patch.ts:302-328` —
+`store.set(key, [...current, ...admitted])`, no update path anywhere; the Builder's own vocabulary
+teaches "Appending is the only thing you can do to a list"). That protection was derived for
+USER-authored entries — "a user's own authored entries are safe from you by construction." Applied
+uniformly, it also protects the three HOST-seeded placeholder sections
+(`DEFAULT_PROMPT_SECTIONS`, `entries.ts:48-79` — Foundation "You are a helpful assistant." /
+Personality / Critical Items, `order` 0-2), so an authored agent's real identity can only ever
+land as a FOURTH section appended BELOW three unchanged generic placeholders — and
+`composeSystemPrompt` ships the boilerplate ahead of the persona in every Builder-authored agent's
+live prompt, forever. Content nobody authored is the one thing the flow can never fix. Two sound
+intents collide; this amendment re-draws the line where the protection's own rationale actually
+runs.
+
+**Load-bearing fact the ruling turns on:** `builtin: true` means NON-DELETABLE only (ADR-0132
+Fork 4 — `entry-list.ts` withholds the Remove affordance), NOT immutable: the content editor
+mounts for every prompt-section row, so a builtin's content is already hand-editable by the user
+today. The three placeholders are therefore not a protected-content class anywhere else in the
+substrate — only the patch gate treats them as one, by accident of uniformity.
+
+### The ruling — GH #696's candidate (a), refined: an UPDATE verb admitted for builtin prompt sections only
+
+The entries filter (cl.2 filter iii) gains a SECOND admitted verb beside APPEND. A proposed
+entries member is an **UPDATE** iff its `id` names an entry that already exists in that list AND
+that entry is `builtin: true` AND the list's kind is `prompt-section`. An admitted update replaces
+the existing entry's `content` (required: a non-empty-after-trim string — an emptying update is a
+de-facto deletion and DROPS, preserving the no-deletion law) and MAY replace its `description`
+(optional string); `label` · `order` · `enabled` · `builtin` · `kind` · `id` are NEVER patchable —
+labels are the panes' stable anchors (GH #695 navigates by them), `order` keeps Foundation leading
+the composition, and a user's toggle state is the user's. Everything else about the gate is
+byte-unchanged:
+
+- **Merge law:** updates are whole-field last-writer-wins, repeatable across turns — the VALUES
+  class (cl.1's pinned law) extended to exactly this entry class, so the model can refine its own
+  earlier Foundation as the interview crystallizes. Non-builtin members (and members whose `id`
+  matches nothing) keep TODAY's behavior verbatim: append through `validateNewEntry`, dedup-suffix
+  and all. ADR-0132 cl.4's single-validated-ADD-path law is untouched — an update is not an add
+  (no id minting, no slug, no order assignment); it gets its own narrow admission, it never
+  bypasses the add path for adds.
+- **The fence and the gate:** consumption still requires the authoring-context store-identity
+  fence AND a fresh gate-ON read, conjunctive (Kim's 2026-08-09 option-(b) ruling). This amendment
+  widens what a CONSUMED patch may express, never when one is consumed.
+- **No deletion, still, anywhere:** no member removal, no key removal, no emptying — structurally.
+
+**The concurrency mitigation is part of the ruling, not an implementation detail.** A builtin's
+content is hand-editable, and LWW over a hand-editable field is only acceptable if the model can
+SEE the current state — the exact mitigation `name`/`model`/`temperature` already rely on. The
+draft-state block (`draftStateBlock`) therefore MUST carry the builtin prompt sections' current
+`content` (today it collapses every entry list to labels), so "the user's hand edit wins — read
+the state and carry on" (the shipped Builder craft) is enforceable for sections exactly as it is
+for values. Bounded: exactly the builtin sections' bodies, never the full entry lists (the size
+rationale that excluded entry bodies stands for everything else).
+
+**Teaching split (cl.1 rule 5's boundary, applied):** the generic update MECHANICS — "a member
+carrying the `id` of an existing built-in section replaces that section's text instead of
+appending" — lands in the byte-pinned, host-owned `authoring-teaching.md` (wire-shape teaching,
+persona-key-agnostic; the byte-pin gates re-pin). WHICH ids are updatable and what each section is
+for lands in the GENERATED vocabulary section (`vocabularySection()`), composed from the canonical
+exports with a concrete worked example — never hand-listed (PR #692's live-proven lesson: abstract
+entries teaching fails; concrete keys comply).
+
+### Alternatives considered (the issue's other two candidates, plus one found)
+
+- **(b) Seed the Generate-path draft WITHOUT placeholder content — rejected.** The gate would
+  still have no way to WRITE Foundation: empty builtins fall out of `composeSystemPrompt` (the
+  boilerplate disappears) but the identity still lands as a differently-named appended section
+  while the Foundation card sits empty forever — GH #691's product expectation (the card reflects
+  the agent) still fails. It also forks seeding per entry path (blank vs generate drafts diverge)
+  and deletes the hand-authoring path's example content, which is a teaching affordance.
+- **(c) Compose-time shadowing (a Builder-authored section supersedes a builtin at compose) —
+  rejected.** The store stops being WYSIWYG: the Foundation card displays content that no longer
+  composes, and two entries silently claim one slot — the exact second-writer drift class
+  ADR-0170 cl.2 closed by construction for catalogs, reintroduced for prompt sections.
+- **(d) Replaceable-while-pristine (content byte-equal to its seed ⇒ replaceable; touched ⇒
+  protected) — rejected.** More faithful-sounding, but it blocks the model refining its OWN
+  Foundation on any later turn (after the first update the content is no longer the seed), and
+  fixing that requires provenance tracking on `Entry` — a schema field rippling through the
+  persona-file format for a distinction the draft-state mitigation already covers.
+
+### Consequences
+
+- Every Builder-authored agent's composed prompt carries its authored identity at `order: 0` with
+  ZERO "helpful assistant" boilerplate — the Foundation/Personality/Critical-Items cards become
+  what the flow fills, not what it works around.
+- `PatchReport` gains `updated` — GH #695's cross-tab-reaction design gets a richer trigger signal
+  (which section changed, by store key + id) for free; noted there, not solved here.
+- PR #692 (GH #691's teaching fix) is compatible and orthogonal; it touches the same
+  `authoring-teaching.md`, so the build slice rebases after it merges (sequencing, not conflict).
+- The vocabulary copy's protection sentence re-words to what was always true: a user's own
+  AUTHORED entries are safe by construction; the host's placeholder scaffolding is the flow's to
+  fill.
+
+**Repairs (on ratification, landed in the build slice's one change):**
+[`a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md) SPEC-R29 (the merge-law bullet's
+"never a replacement" sentence scope-narrows to non-builtin members; the update verb + field scope
+pinned) and SPEC-R30 (the teaching bullet's "entries are contributions, never replacements" gains
+the builtin exception) · `packages/agent-ui/app/src/controls/agent-admin/persona-patch.ts` (the
+update branch + `PatchReport.updated` + `draftStateBlock` builtin content) ·
+`packages/agent-ui/a2ui/src/agent/prompts/authoring-teaching.md` (+ the fs-shim regen — the
+GH #640 trap fires here) · `site/pages/agent-admin-presets.ts` (`vocabularySection`) ·
+`agent-admin.ts` (turn-log `updated`) ·
+[`agent-authoring-flow.lld.md`](../lld/agent-authoring-flow.lld.md) §3 (record repair: the
+"never a replacement, never a removal" sentence gains the carve-out pointer) — per
+[`builder-builtin-section-update.lld.md`](../lld/builder-builtin-section-update.lld.md).
