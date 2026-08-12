@@ -135,6 +135,51 @@ describe('ui-status-stream — appendEntry (SPEC-R9 AC1)', () => {
     expect(items.map((i) => i.label)).toEqual(['first', 'second']) // `label` does not reflect — read via the typed property
     el.remove()
   })
+
+  it('GH #722 — marks exactly the LAST top-level item [data-last], and re-marks as the tail moves', () => {
+    // timeline-item.css's terminal-row contract names this host as the marker ("ui-timeline/
+    // ui-status-stream marks its last child [data-last]") — without it the final entry paints a
+    // dangling connector stub below its marker (the screenshot's candidate 3).
+    const { el } = makeStream()
+    const a = el.appendEntry({ key: 'a', label: 'first' })
+    expect(a.hasAttribute('data-last')).toBe(true) // a single entry IS the tail
+    const b = el.appendEntry({ key: 'b', label: 'second' })
+    expect(a.hasAttribute('data-last')).toBe(false) // the tail moved
+    expect(b.hasAttribute('data-last')).toBe(true)
+    el.remove()
+  })
+
+  it('GH #722 — a GROUPED append never steals the top-level [data-last] (the nested list marks its own)', async () => {
+    const { el } = makeStream()
+    el.appendEntry({ key: 'parent', label: 'group' })
+    const tail = el.appendEntry({ key: 'tail', label: 'top-level tail' })
+    const child = el.appendEntry({ key: 'child', label: 'nested', parent: 'parent' })
+    await whenFlushed() // the nested <ui-timeline>'s own #markLastItem runs on its childList observer
+    expect(tail.hasAttribute('data-last')).toBe(true) // unchanged — the child went INSIDE the group
+    expect(child.hasAttribute('data-last')).toBe(true) // the nested list marked its own (only) child
+    el.remove()
+  })
+})
+
+describe('GH #722 — the header-marker literals mirror timeline-item\'s default register (drift gate)', () => {
+  // status-stream.css PINS its header marker-box/dot-size as raw literals equal to timeline-item's
+  // default-register ramp row — a var() read is barred by the family-coherence trip-wire (cross-family
+  // token consumption), and timeline-item keeps its ramp deliberately file-local. This gate is what makes
+  // the literal mirror safe: edit either file's value and this reddens, naming the other.
+  it('marker-box and dot-size literals match --ui-timeline-item-{marker-box,dot-size}-md', async () => {
+    const { readFileSync } = await import('node:fs')
+    const here = import.meta.dirname ?? new URL('.', import.meta.url).pathname
+    const streamCss = readFileSync(`${here}/status-stream.css`, 'utf8')
+    const itemCss = readFileSync(`${here}/../timeline-item/timeline-item.css`, 'utf8')
+    const pick = (css: string, prop: string): string => {
+      const m = css.match(new RegExp(`${prop}\\s*:\\s*([^;]+);`))
+      expect(m, `${prop} must be declared`).not.toBeNull()
+      return m![1]!.trim()
+    }
+    // timeline-item's DEFAULT register is its bare :root block (the FIRST declaration of each row var).
+    expect(pick(streamCss, '--ui-status-stream-header-marker-box')).toBe(pick(itemCss, '--ui-timeline-item-marker-box-md'))
+    expect(pick(streamCss, '--ui-status-stream-header-dot-size')).toBe(pick(itemCss, '--ui-timeline-item-dot-size-md'))
+  })
 })
 
 describe('ui-status-stream — keyed update (SPEC-R9 AC1/AC2)', () => {
