@@ -28,6 +28,7 @@ import { patternSeeds } from './patterns.ts'
 import { catalogCoverageSeeds } from './catalog-coverage.ts'
 import { messageLifecycleSeeds } from './message-lifecycle.ts'
 import { corpusGrowthSeeds } from './corpus-growth.ts'
+import { catalogFrontierSeeds } from './catalog-frontier.ts'
 import { validateA2ui } from '../renderer/validate.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import { createRenderer } from '../renderer/renderer.ts'
@@ -78,7 +79,8 @@ describe('the example seed shelf (ADR-0055) — shape', () => {
       patternSeeds.length +
       catalogCoverageSeeds.length +
       messageLifecycleSeeds.length +
-      corpusGrowthSeeds.length
+      corpusGrowthSeeds.length +
+      catalogFrontierSeeds.length
     expect(allSeeds).toHaveLength(expectedTotal)
   })
 
@@ -375,5 +377,32 @@ describe('ADR-0163 cl.9 coverage fixture — widened Table (selectable/selected/
 
   it('is NOT exported from the shelf — allSeeds carries no seed named "interactive-table-pagination-fixture" (never becomes a corpus candidate by accident)', () => {
     expect(allSeeds.some((s) => s.name === 'interactive-table-pagination-fixture')).toBe(false)
+  })
+})
+
+// ── GH #729 — the standing catalog-coverage gate (the 2026-08-12 example sweep's durable fix) ──────────
+// The sweep found 13 of the catalog's 59 components appearing in NO example anywhere (this shelf ∪ the
+// committed exemplar shard) — the catalog had outgrown its examples, and nothing reddened. This gate makes
+// example-coverage a standing invariant: a future catalog row with no example fails HERE, naming itself,
+// instead of silently shipping example-less onto the gallery/patterns/docs pages that derive from the shelf.
+describe('GH #729 — every catalog component appears in at least one example (shelf ∪ committed corpus shard)', () => {
+  it('no component of the default catalog is example-less', async () => {
+    const { readFileSync } = await import('node:fs')
+    const used = new Set<string>()
+    const collect = (messages: readonly unknown[]): void => {
+      for (const m of messages) {
+        const uc = (m as { updateComponents?: { components?: { component?: string }[] } }).updateComponents
+        for (const c of uc?.components ?? []) if (c.component !== undefined) used.add(c.component)
+      }
+    }
+    for (const seed of allSeeds) collect(seed.messages)
+    // the committed exemplar shard — read the same way corpus-data.test.ts reads it (node:fs, never ?raw)
+    const here = (import.meta as { dirname?: string }).dirname ?? '.'
+    const shard = readFileSync(`${here}/../../corpus/exemplar/v1_0/agent-ui.jsonl`, 'utf8') as string
+    for (const line of shard.split('\n').filter((l: string) => l.trim().length > 0)) {
+      collect((JSON.parse(line) as { a2uiOutput?: unknown[] }).a2uiOutput ?? [])
+    }
+    const uncovered = Object.keys(defaultCatalog.components).filter((c) => !used.has(c))
+    expect(uncovered, `catalog component(s) with NO example anywhere — add a seed: ${uncovered.join(', ')}`).toEqual([])
   })
 })
