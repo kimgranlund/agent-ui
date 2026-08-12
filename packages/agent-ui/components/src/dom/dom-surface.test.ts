@@ -68,7 +68,9 @@ describe('d-barrel — the dom public surface (D7)', () => {
       'mount',
       'prop',
       'repeat',
+      'viewTransitionAvailable',
       'watch',
+      'withViewTransition',
     ])
   })
 

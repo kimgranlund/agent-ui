@@ -32,3 +32,5 @@ export { watch } from './watch.ts'
 // The directive-authoring trio + the imperative mount host (ADR-0023). `render`/`html`/`ChildPart` stay private.
 export { Directive, directive, NO_COMMIT, mount } from './template.ts'
 export type { RenderContext, DirectiveResult } from './template.ts'
+// GH #740/ADR-0183 — the fleet's one View Transitions seam (opt-in, progressive-enhancement-only).
+export { withViewTransition, viewTransitionAvailable } from './view-transition.ts'

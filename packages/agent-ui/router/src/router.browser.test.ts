@@ -310,3 +310,61 @@ describe('connectUrl history mode — REAL browser back/forward stays index-alig
     cleanup()
   })
 })
+
+// ── GH #740/ADR-0183 — view transitions on route swaps, REAL platform (the jsdom half stubs the API;
+// this is the genuine startViewTransition where the engine ships it, and the feature-detect honesty
+// where it does not) ──────────────────────────────────────────────────────────────────────────────────
+describe('ui-router-outlet — viewTransitions against the real platform (GH #740)', () => {
+  const hasApi = typeof (document as { startViewTransition?: unknown }).startViewTransition === 'function'
+
+  it(`${server.browser}: an opted-in navigation still lands the right child (API ${hasApi ? 'present — through a real transition' : 'ABSENT — the sync fallback, byte-identical behavior'})`, async () => {
+    const routes: RouteRecord[] = [
+      { path: '/a', component: () => Object.assign(document.createElement('div'), { textContent: 'route A' }) },
+      { path: '/b', component: () => Object.assign(document.createElement('div'), { textContent: 'route B' }) },
+    ]
+    const router = createRouter(routes, { initial: '/a' })
+    const outlet = document.createElement('ui-router-outlet') as UIRouterOutletElement
+    outlet.viewTransitions = true
+    document.body.append(outlet)
+    outlet.router = router
+    await whenFlushed()
+    // the transition path commits asynchronously — poll briefly for the child to land either way
+    for (let i = 0; i < 40 && outlet.textContent !== 'route A'; i++) await new Promise((r) => requestAnimationFrame(r))
+    expect(outlet.textContent).toBe('route A')
+
+    router.navigate('/b')
+    await whenFlushed()
+    for (let i = 0; i < 40 && outlet.textContent !== 'route B'; i++) await new Promise((r) => requestAnimationFrame(r))
+    expect(outlet.textContent).toBe('route B')
+    outlet.remove()
+  })
+
+  it(`${server.browser}: reduced motion forces the SYNC path even where the API exists (Chromium CDP; WebKit asserts its own real availability)`, async () => {
+    if (server.browser !== 'chromium') {
+      // No CDP media emulation on WebKit in this driver stack (the fleet's established split) — assert
+      // the feature-detect itself tells the truth on this engine instead.
+      const { viewTransitionAvailable } = await import('@agent-ui/components')
+      expect(viewTransitionAvailable()).toBe(hasApi)
+      return
+    }
+    interface CdpSession {
+      send(method: string, params?: Record<string, unknown>): Promise<unknown>
+    }
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
+    try {
+      const routes: RouteRecord[] = [{ path: '/a', component: () => Object.assign(document.createElement('div'), { textContent: 'reduced A' }) }]
+      const router = createRouter(routes, { initial: '/a' })
+      const outlet = document.createElement('ui-router-outlet') as UIRouterOutletElement
+      outlet.viewTransitions = true
+      document.body.append(outlet)
+      outlet.router = router
+      await whenFlushed()
+      // the SYNC path commits within the flush — no polling needed, which IS the assertion
+      expect(outlet.textContent, 'reduced motion: the swap committed synchronously (no transition ran)').toBe('reduced A')
+      outlet.remove()
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] })
+    }
+  })
+})

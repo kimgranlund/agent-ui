@@ -8,7 +8,13 @@ tier: layout           # geometry size-class (Container/layout band — a transp
 extends: UIElement     # a plain structural base — NOT UIContainerElement (no surfaceProps/flexProps; the outlet owns no elevation/flex grammar)
 # marginal: measured at LLD-C9 (the size line-item slice, out of this component's own scope)
 
-attributes: []          # property-only surface — no attribute-as-API rows (SPEC-R5)
+attributes:              # `.router` stays property-only (SPEC-R5); the GH #740 opt-in is an ordinary boolean row
+  - name: viewTransitions
+    attribute: view-transitions
+    type: boolean
+    default: false
+    reflect: true
+    description: GH #740/ADR-0183 — opt-in View Transitions on route swaps. `true` wraps every child swap (sync, async-resolved, and clear alike) in `document.startViewTransition` when the API exists AND `prefers-reduced-motion` is not set; on every other path (default `false`, no API, reduced motion) the swap runs synchronously, byte-identical to the pre-#740 outlet — progressive enhancement, no polyfill, no errors. The last-navigation-wins guard is re-checked INSIDE the transition callback (the platform snapshots before mutating), so a superseded navigation never paints through a transition.
 
 properties:              # the ONE manual accessor beyond the (empty) attributes-as-API
   - name: router

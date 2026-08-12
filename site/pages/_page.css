@@ -615,3 +615,23 @@ code {
  * rail's own `collapse="menu"` dropdown + its TKT-0035 `collapse-container="ancestor"` arrangement RETIRE for
  * this consumer, and with them the old `@media (max-width: 40rem)` stacked-nav arms (the shell's container
  * query owns the reflow now — the site adds no viewport media rule of its own for the nav). */
+
+/* ── GH #740/ADR-0183 cl.5 — cross-document View Transitions for the MPA docs site ──────────────────────
+ * The docs site is deliberately MPA (ADR-0115's own fence — no router here), so its navigation animation
+ * is the CSS-only Level-2 form: same-origin page-to-page navigations cross-fade where the browser
+ * implements `@view-transition` (Chromium 126+, Safari 18.2+), and are byte-identical hard navigations
+ * everywhere else — progressive enhancement with zero JS and zero polyfill (the same posture the
+ * `withViewTransition` helper takes for the same-document surfaces). Reduced motion: the transition
+ * pseudo-elements' animations are suppressed outright — the swap still happens, instantly (the SPEC's
+ * "transition skipped" reading, expressed in the only vocabulary the cross-document form has). */
+@view-transition {
+  navigation: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

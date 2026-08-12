@@ -242,8 +242,10 @@ describe('ui-router-outlet — descriptor (ADR-0004, LLD-C7)', () => {
     expect(/formAssociated:\s*false/.test(fence)).toBe(true)
   })
 
-  it('contract↔props: attributes[] is empty and matches the live (empty) props — zero drift', () => {
-    expect(parsed.attributes).toEqual([])
+  it('contract↔props: exactly the GH #740 view-transitions row, matching the live props — zero drift', () => {
+    // `.router` stays property-only (SPEC-R5) — the ONE attribute row is the ADR-0183 opt-in boolean.
+    expect(parsed.attributes.map((a) => a.name)).toEqual(['viewTransitions'])
+    expect(parsed.attributes[0]!.attribute).toBe('view-transitions') // the kebab DOM form (ADR-0173 cl.2 override)
     expect(compareDescriptorToProps(parsed.attributes, UIRouterOutletElement.props)).toEqual([])
   })
 
@@ -259,5 +261,102 @@ describe('ui-router-outlet — descriptor (ADR-0004, LLD-C7)', () => {
     expect(compareDescriptorToSource(parsed, { ts: syntheticTs, css: '' })).toContainEqual(
       expect.objectContaining({ code: 'STATE_UNDOCUMENTED', path: 'customStates.ready' }),
     )
+  })
+})
+
+// ── GH #740/ADR-0183 — the view-transitions opt-in (jsdom half; the real startViewTransition is the
+// browser probe's) ────────────────────────────────────────────────────────────────────────────────────
+describe('ui-router-outlet — viewTransitions opt-in (GH #740)', () => {
+  // Standalone stub shape, not `extends Document` — lib.dom declares `startViewTransition` as
+  // required, so only the unknown-cast lets the tests assign and delete the seam.
+  const doc = document as unknown as { startViewTransition?: (cb: () => void) => unknown }
+  afterEach(() => {
+    delete doc.startViewTransition
+  })
+
+  it('default false: swaps run synchronously exactly as before — no API touch even when present', async () => {
+    let transitions = 0
+    doc.startViewTransition = () => {
+      transitions++
+    }
+    const routes: RouteRecord[] = [{ path: '/a', component: () => tagged('a') }]
+    const router = createRouter(routes, { initial: '/a' })
+    const outlet = mountThenAssign(router)
+    await whenFlushed()
+    expect((outlet.firstElementChild as HTMLElement).dataset.route).toBe('a')
+    expect(transitions).toBe(0)
+  })
+
+  it('no API (jsdom default): enabled degrades to the synchronous swap — progressive enhancement, no throw', async () => {
+    const routes: RouteRecord[] = [{ path: '/a', component: () => tagged('a') }]
+    const router = createRouter(routes, { initial: '/a' })
+    const outlet = makeOutlet()
+    outlet.viewTransitions = true
+    document.body.append(outlet)
+    outlet.router = router
+    await whenFlushed()
+    expect((outlet.firstElementChild as HTMLElement).dataset.route).toBe('a')
+  })
+
+  it('enabled + API present: the swap routes THROUGH startViewTransition, and the child lands when the platform runs the callback', async () => {
+    const pending: Array<() => void> = []
+    doc.startViewTransition = (cb: () => void) => {
+      pending.push(cb)
+    }
+    const routes: RouteRecord[] = [{ path: '/a', component: () => tagged('a') }]
+    const router = createRouter(routes, { initial: '/a' })
+    const outlet = makeOutlet()
+    outlet.viewTransitions = true
+    document.body.append(outlet)
+    outlet.router = router
+    await whenFlushed()
+    expect(outlet.children.length, 'nothing painted until the platform runs the callback').toBe(0)
+    expect(pending).toHaveLength(1)
+    pending[0]!()
+    expect((outlet.firstElementChild as HTMLElement).dataset.route).toBe('a')
+  })
+
+  it('the last-navigation-wins guard holds INSIDE the transition callback — a superseded swap never paints', async () => {
+    const pending: Array<() => void> = []
+    doc.startViewTransition = (cb: () => void) => {
+      pending.push(cb)
+    }
+    const routes: RouteRecord[] = [
+      { path: '/a', component: () => tagged('a') },
+      { path: '/b', component: () => tagged('b') },
+    ]
+    const router = createRouter(routes, { initial: '/a' })
+    const outlet = makeOutlet()
+    outlet.viewTransitions = true
+    document.body.append(outlet)
+    outlet.router = router
+    await whenFlushed()
+    router.navigate('/b') // supersede /a while its transition callback is still queued
+    await whenFlushed()
+    expect(pending.length).toBe(2)
+    pending[0]!() // the STALE /a callback — must be a no-op (token moved)
+    expect(outlet.children.length).toBe(0)
+    pending[1]!() // the live /b callback paints
+    expect((outlet.firstElementChild as HTMLElement).dataset.route).toBe('b')
+  })
+
+  it('toggling the opt-in does NOT re-run the route effect (untracked — no fresh factory element for an unchanged route)', async () => {
+    let factoryCalls = 0
+    const routes: RouteRecord[] = [
+      {
+        path: '/a',
+        component: () => {
+          factoryCalls++
+          return tagged('a')
+        },
+      },
+    ]
+    const router = createRouter(routes, { initial: '/a' })
+    const outlet = mountThenAssign(router)
+    await whenFlushed()
+    expect(factoryCalls).toBe(1)
+    outlet.viewTransitions = true
+    await whenFlushed()
+    expect(factoryCalls, 'the flag flip must not re-invoke the factory').toBe(1)
   })
 })
