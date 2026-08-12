@@ -42,6 +42,23 @@ points — a kind missing any of them ships a silent gap, not a build error:
 | preset seed map | `site/pages/agent-admin-presets.ts` `presetSeed` | seed-completeness: `presetSeed` enumerates EVERY kind's `entries:` key — a new kind owes a row here even when seeded `[]` (its own precedent comment says so) |
 | library pack (optional) | `site/pages/agent-admin-libraries.ts` (`ADMIN_LIBRARIES`) | ready-to-add entries; pure data through the same `entries.ts` `validateNewEntry` path |
 
+A pack need not be a fixed authored array. Two shipped patterns, both on the `tool` kind:
+
+- **Live-derived pack** — reads a runtime source through a setter, and is ABSENT (not empty, not
+  errored) when that source degrades. The Integrations pack reads `setLiveIntegrations` (falling back to a
+  static trio); the **MCP-services pack** (`MCP_SERVICES_PACK`, GH #783/ADR-0185) reads `setLiveServices`,
+  fed by the dev proxy's `services` GET array (`fetchLiveServices`, `site/lib/admin-live-runner.ts`), and
+  has NO static fallback — so `ADMIN_LIBRARIES`'s `tool` key is a GETTER that omits the pack entirely while
+  `liveServiceEntries` is `undefined`. Each pack entry keys the external registry by an EXPLICIT
+  `NewEntryInput.id` (the service ref `mcp:<server-id>:*`), never a slugged label (§4's trio law).
+- **Per-pack collision rejection** — a pack keying an external registry sets its OWN
+  `EntryLibraryPack.rejectOnCollision` (`entry-data.ts`, GH #783 S3/LLD-C5): re-adding an id already in the
+  list is a DUPLICATE `validateNewEntry` rejects (`Already in the list.`), never a suffixed phantom row, and
+  `entry-list.ts`'s picker-disable + render-refresh gate honor the KIND flag OR the PACK flag. This is what
+  lets a foreign-key pack ride under an ORDINARY kind (`MCP_SERVICES_PACK`, `rejectOnCollision: true`, on the
+  `tool` kind) — the same reject-on-commit + picker-disable the catalog KIND flag buys (§3), without the kind
+  itself becoming registry-keyed.
+
 Built-ins are toggle-off-only, never deletable (ADR-0132 Fork 4, enforced by the UI: `entry-list.ts` renders
 no delete affordance for `builtin: true`). Kind-specific field schemas stay Fork 3's explicitly
 deferred extension — a kind that needs one owes its own intake, not a quiet widening.

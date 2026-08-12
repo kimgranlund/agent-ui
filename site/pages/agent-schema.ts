@@ -243,6 +243,16 @@ content.append(
         'The generic prompt-section/skill/workflow/resource/tool row (id, kind, label, description, content, order, enabled, builtin) and the add-from-library pack it can seed from. Live demo: ',
         'agent-admin.html',
       ),
+      // GH #783 / SPEC-N2 — the MCP-services grain of the tool kind (the ADR-0185 wire widening). No new
+      // store key, schema field, or entry kind (SPEC-R1): a service reference is just a tool-kind Entry
+      // whose id happens to be `mcp:<server-id>:*`. Cited by its owning SPEC requirement, not transcribed —
+      // the grammar's one home is service-ref.ts; this page only names the grain and points at the pack.
+      relatedItem(
+        'MCP service reference (tool kind)',
+        'mcp-agent-config.spec.md SPEC-R1/R2',
+        'A tool-kind entry’s id may be a service reference mcp:<server-id>:* — "every tool this server currently has" — expanded server-side against the live registry at turn time, never a new store key, schema field, or entry kind (SPEC-R1). Added from the live-derived MCP services pack (MCP_SERVICES_PACK, site/pages/agent-admin-libraries.ts), which is absent unless the dev proxy is serving live. Live in the full composition: ',
+        'agent-admin-app.html',
+      ),
     ]),
     el('p', { class: 'as-caption' }, [
       document.createTextNode(
@@ -273,6 +283,12 @@ const changelog = renderChangelogTable([
     type: 'Feature',
     id: 'GH #781',
     summary: 'Added this Agent Schema reference, derived from agent-admin-schema.ts live.',
+  },
+  {
+    date: '2026-08-12',
+    type: 'Change',
+    id: 'GH #783',
+    summary: 'Noted the tool kind’s MCP service-reference grain (mcp:<server-id>:*, ADR-0185) — §4 pointer, per SPEC-R1/R2.',
   },
 ])
 if (changelog) content.append(changelog)

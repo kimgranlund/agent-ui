@@ -123,6 +123,43 @@ export async function fetchLiveIntegrations(): Promise<LiveIntegrationTrio[] | u
   }
 }
 
+// ── GH #783 S4 (LLD-C6/SPEC-R5, ADR-0185) — the additive `services` array, read LIVE ─────────────────────
+
+/** The dev proxy's served SERVICE-row shape (SPEC-R4) — one row per live MCP server, `{id, label,
+ *  description}`, `id` a `mcp:<server-id>:*` service ref (never a registry key). Structurally identical to
+ *  `LiveIntegrationTrio` above but named for its own body key so the two GET arms read honestly. */
+export interface LiveServiceRow {
+  id: string
+  label: string
+  description: string
+}
+
+/** SPEC-R4/R5 (LLD-C6) — ask the dev proxy for its live MCP SERVICE rows (`body.services`, the S2 array
+ *  beside `integrations`). The SAME degrade-to-`undefined` law `fetchLiveIntegrations` above takes, and for
+ *  the SAME reasons: no proxy / a network fault / a non-array / a malformed row all degrade to `undefined`,
+ *  so the caller's MCP-services pack is ABSENT rather than stale or partial (SPEC-R5 — no static service
+ *  roster exists to fall back to). A pre-S2 proxy answers a body with NO `services` key at all —
+ *  `Array.isArray(undefined)` is `false`, so that too degrades to `undefined` (old proxy + new page is
+ *  safe). Deliberately a SECOND GET of the same route rather than a shared body with `fetchLiveIntegrations`
+ *  (LLD §6.3): coupling the two functions' degrade paths buys nothing on a dev-only, one-page-load probe. */
+export async function fetchLiveServices(): Promise<LiveServiceRow[] | undefined> {
+  try {
+    const res = await fetch(`${PRODUCE_ENDPOINT}/integrations`)
+    if (!res.ok) return undefined
+    const body = (await res.json()) as { services?: unknown }
+    if (!Array.isArray(body.services)) return undefined
+    const isRow = (v: unknown): v is LiveServiceRow =>
+      typeof v === 'object' &&
+      v !== null &&
+      typeof (v as LiveServiceRow).id === 'string' &&
+      typeof (v as LiveServiceRow).label === 'string' &&
+      typeof (v as LiveServiceRow).description === 'string'
+    return body.services.every(isRow) ? (body.services as LiveServiceRow[]) : undefined
+  } catch {
+    return undefined
+  }
+}
+
 /** Build the injectable SURFACE-turn runner: one closure per call, owning ONE fresh a2ui `Session` — the
  *  page re-creates it per persona switch, so each persona's game/transcript starts clean. Streams typed
  *  events (the peeled ADR-0088 note + validated wire lines); appends the session turns only after a turn
