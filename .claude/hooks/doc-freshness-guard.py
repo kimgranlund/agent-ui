@@ -25,7 +25,24 @@ import os
 import re
 import sys
 
-GIT_COMMIT_PUSH_RE = re.compile(r"(?:^|[;&|]\s*)git\s+(?:commit|push)\b")
+# GH #752 — the detection regex, hardened against the audit's three reproduced bypasses:
+#   1. newline-joined compounds (`npm run build\ngit commit -am wip`) — `^` now matches per line
+#      (re.MULTILINE); Bash runs newline-separated commands exactly like `;`.
+#   2. env-prefixed invocations (`FOO=bar git commit`) — an assignment-prefix allowance.
+#   3. `bash -c 'git commit …'` / `$(git push …)` — quote and paren join the separator class.
+# Deliberate direction of error, documented: a quote directly before `git commit` also matches
+# `echo "git commit now"` — an over-match only costs a doc check that exits 0 on healthy docs,
+# while an under-match is the silent bypass this issue is about. Prose mentions with a WORD before
+# `git` (`echo "please run git commit later"`) still never match — no separator precedes `git`.
+GIT_COMMIT_PUSH_RE = re.compile(
+    r"(?:^|[;&|('\"`]\s*)(?:[A-Za-z_][A-Za-z_0-9]*=\S*\s+)*git\s+(?:commit|push)\b",
+    re.MULTILINE,
+)
+
+
+def is_git_commit_push(command: str) -> bool:
+    """The one detection decision, extracted so --selftest exercises the REAL matcher (GH #755)."""
+    return GIT_COMMIT_PUSH_RE.search(command) is not None
 MD_LINK_RE = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 EXTERNAL_SCHEME_RE = re.compile(r"^(?:https?://|mailto:|tel:)", re.IGNORECASE)
 HEADING_RE = re.compile(r"^#{1,6}\s+(.+?)\s*$", re.MULTILINE)
@@ -94,15 +111,20 @@ def check_doc(name: str, root: str) -> "list[str]":
 
 
 def main() -> int:
+    if len(sys.argv) > 1 and sys.argv[1] == "--selftest":
+        return selftest()
     try:
         data = json.load(sys.stdin)
     except (json.JSONDecodeError, ValueError):
         return 0
+    return decide(data)
 
+
+def decide(data: dict) -> int:
     if data.get("tool_name", "") != "Bash":
         return 0
     command = (data.get("tool_input", {}) or {}).get("command", "") or ""
-    if not GIT_COMMIT_PUSH_RE.search(command):
+    if not is_git_commit_push(command):
         return 0
 
     root = project_dir()
@@ -118,6 +140,79 @@ def main() -> int:
         return 2
 
     return 0
+
+
+def selftest() -> int:
+    """`--selftest` (GH #755): fixtures through the REAL matcher + the REAL doc checks against a
+    sandbox root — a genuine branch with fixture I/O, never an argv-ignoring exit 0 (the audit's
+    false-PASS probe shape). Exit 0 = all rows pass, 1 = any row fails."""
+    import subprocess
+    import tempfile
+
+    failures = 0
+
+    def row(ok: bool, expected: object, got: object, label: str) -> None:
+        nonlocal failures
+        failures += 0 if ok else 1
+        print(f"  {'PASS' if ok else 'FAIL'}  expected {expected!r} got {got!r}  {label}", file=sys.stderr)
+
+    # ── the matcher (GH #752's reproduced shapes + negative controls) ──
+    matcher_rows: "list[tuple[str, bool, str]]" = [
+        ("git commit -m x", True, "plain commit"),
+        ("git add -A && git push", True, "&&-joined push"),
+        ("npm run build\ngit commit -am wip", True, "NEWLINE-joined compound (the reproduced bypass)"),
+        ("FOO=bar git commit -m x", True, "env-prefixed (the reproduced bypass)"),
+        ("A=1 B=2 git push origin main", True, "double env-prefix"),
+        ("bash -c 'git commit -m x'", True, "bash -c quoted (the reproduced bypass)"),
+        ("echo done $(git push)", True, "command substitution"),
+        ("npm run check", False, "negative: unrelated command"),
+        ('echo "please run git commit later"', False, "negative: prose mention, word before git"),
+        ("git log --oneline", False, "negative: a git verb outside commit|push"),
+        ("legit commit -m x", False, "negative: 'git' inside another word"),
+        ("git pushup", False, "negative: word boundary after push"),
+    ]
+    for command, expected, label in matcher_rows:
+        got = is_git_commit_push(command)
+        row(got == expected, expected, got, f"matcher: {label}")
+
+    # ── the doc checks, against a sandbox CLAUDE_PROJECT_DIR (never this repo's live docs) ──
+    with tempfile.TemporaryDirectory() as tmp:
+        saved = os.environ.get("CLAUDE_PROJECT_DIR")
+        os.environ["CLAUDE_PROJECT_DIR"] = tmp
+        try:
+            payload = {"tool_name": "Bash", "tool_input": {"command": "git commit -m x"}}
+            with open(os.path.join(tmp, "README.md"), "w", encoding="utf-8") as f:
+                f.write("# Fixture\n\nA [good link](./CONTRIBUTING.md).\n")
+            with open(os.path.join(tmp, "CONTRIBUTING.md"), "w", encoding="utf-8") as f:
+                f.write("# Contributing\n\nFine.\n")
+            got = decide(payload)
+            row(got == 0, 0, got, "healthy sandbox docs: commit ALLOWED")
+
+            with open(os.path.join(tmp, "README.md"), "w", encoding="utf-8") as f:
+                f.write("# Fixture\n\nA [dangling link](./missing.md).\n")
+            got = decide(payload)
+            row(got == 2, 2, got, "dangling link in sandbox README: commit BLOCKED")
+
+            got = decide({"tool_name": "Bash", "tool_input": {"command": "npm run check"}})
+            row(got == 0, 0, got, "negative: non-commit command never reads the docs")
+
+            got = decide({"tool_name": "Edit", "tool_input": {}})
+            row(got == 0, 0, got, "negative: non-Bash tool is a quiet 0")
+
+            got = decide({})
+            row(got == 0, 0, got, "malformed: missing keys is a quiet 0")
+        finally:
+            if saved is None:
+                del os.environ["CLAUDE_PROJECT_DIR"]
+            else:
+                os.environ["CLAUDE_PROJECT_DIR"] = saved
+
+    # malformed: EMPTY STDIN through the real entrypoint (the audit's false-PASS probe shape).
+    empty = subprocess.run([sys.executable, os.path.abspath(__file__)], input=b"", capture_output=True)
+    row(empty.returncode == 0, 0, empty.returncode, "malformed: empty stdin via the real entrypoint")
+
+    print(("doc-freshness-guard --selftest: ALL PASS" if failures == 0 else f"doc-freshness-guard --selftest: {failures} FAILED"), file=sys.stderr)
+    return 0 if failures == 0 else 1
 
 
 if __name__ == "__main__":

@@ -37,16 +37,16 @@ exemplar to read first: `site/pages/forms.ts` (one live form, narrated end-to-en
    validation errors render reactively via the control's own validity — don't build a
    parallel error system). Exemplar + the seam law: the patterns map's form row.
 5. **Listen on the allowlist** — the fleet emits only the event names `CLAUDE.md`'s
-   Conventions allowlist declares (six today; CLAUDE.md is the home — don't trust a copy);
+   Conventions allowlist declares (CLAUDE.md §Conventions is the home, realized as `naming-gates.test.ts`'s `ALLOWED_EVENTS` — read it there, never from a copy: this line's own past copy carried a count that drifted, GH #754);
    wire feature logic to those. Needing a different event from a control is a
    fleet-contract question, not a local patch.
 6. **No restyling internals** — the fragment's own chrome consumes
    `--md-sys-color-{family}-{role}`; anything visually wrong INSIDE a control routes down
-   ADR-0102's three lanes (component defect / prop gap / held-it-wrong) before any CSS is
+   ADR-0102's three lanes, in its own vocabulary (component-owned defect · catalog-reachable prop gap · taught idiom — the page held it wrong) before any CSS is
    written over it.
 7. **Prove it** — `npm run check` type-clean; a behavior probe for the fragment's own logic
    (jsdom where DOM-truth suffices; the browser project when layout/scheme/scroll is the
-   claim — [[agent-ui-component-testing]]'s blind-spot table says which); honest states
+   claim — [[agent-ui-component-testing]]'s jsdom blind-spot list says which); honest states
    (real interactions, not mocked visuals).
 
 ## Review (generator ≠ critic)

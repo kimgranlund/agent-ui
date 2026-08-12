@@ -1,14 +1,16 @@
 ---
 name: a2ui-prompt-author
 description: >-
-  Author or edit the A2UI producer's PROMPT STACK — grammar.md, the mode files, and the
-  prompts/mini-skills/*.md registry under packages/agent-ui/a2ui/src/agent/prompts/ — without breaking
-  its byte-pinned gates. Use when adding/editing a mini-skill idiom module, changing grammar/mode prose,
-  engineering trigger vocabularies, or when a red prompt-equivalence gate needs the deliberate-change
-  recapture flow. Carries the token budget, the TF-IDF trigger-set mechanics, the restart-vite rule, and
-  the teaching-lane triage for recurring model misbehavior. NOT for composing payloads (a2ui-compose),
-  producer/renderer CODE (a2ui-builder), the composed persona/admin prompts (component-owned,
-  agent-admin), or corpus exemplars (a2ui-corpus-curate).
+  Author or edit the A2UI producer's PROMPT STACK — grammar.md, the mode files, the
+  prompts/mini-skills/*.md registry, AND the rest of the byte-pinned prompt surface under
+  packages/agent-ui/a2ui/src/agent/prompts/ (genui-packs/, genui-dogfood-teaching.md,
+  honesty-floor.md, builder-mission.md — all ride the SAME golden baseline/gates) — without breaking
+  those gates. Use when adding/editing a mini-skill idiom module or a genui pack, changing
+  grammar/mode/teaching prose, engineering trigger vocabularies, or when a red prompt-equivalence
+  gate needs the deliberate-change recapture flow. Carries the token budget, the TF-IDF trigger-set
+  mechanics, the restart-vite rule, and the teaching-lane triage for recurring model misbehavior.
+  NOT for composing payloads (a2ui-compose), producer/renderer CODE (a2ui-builder), the composed
+  persona/admin prompts (component-owned, agent-admin), or corpus exemplars (a2ui-corpus-curate).
 user-invocable: true
 disable-model-invocation: false
 ---
@@ -26,38 +28,29 @@ TKT-0077/0080/0081 game-loop arc, where every lesson below was measured live.
 `src/live-agent/prompt-equivalence.baseline.json` is a GOLDEN reference: the four composed prompts
 (default/defaultExplicit/specific/blueSky) and every mini-skill's id/triggers/body, byte-identical.
 Its own rule: regenerate ONLY on a DELIBERATE text change — never to green a red gate you don't
-understand. After any deliberate edit, re-capture with a scratch vitest spec (write it, run it, delete
-it — the sanctioned flow):
+understand. After any deliberate edit, re-capture with the CHECKED-IN writer (GH #748 — the old
+copy-pasted scratch snippet in this file froze at 5 of the baseline's keys and destroyed the golden
+reference when run; the writer now lives next to the gate it feeds, so the captured shape can never
+drift from the asserted shape):
 
-```ts
-// tmp-recapture-baseline.test.ts (in src/live-agent/, deleted after the run)
-import { it } from 'vitest'
-import { writeFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import { dirname } from 'node:path'
-import { buildSystemPrompt } from '../agent/system-prompt.ts'
-import { MINI_SKILLS } from '../agent/mini-skills.ts'
-import { defaultCatalog } from '../catalog/default/index.ts'
-const here = (import.meta as { dirname?: string }).dirname ?? dirname(fileURLToPath(import.meta.url))
-it('recaptures the baseline', () => {
-  writeFileSync(`${here}/prompt-equivalence.baseline.json`, `${JSON.stringify({
-    default: buildSystemPrompt(defaultCatalog, []),
-    defaultExplicit: buildSystemPrompt(defaultCatalog, [], 'default'),
-    specific: buildSystemPrompt(defaultCatalog, [], 'specific'),
-    blueSky: buildSystemPrompt(defaultCatalog, [], 'blue-sky'),
-    miniSkills: MINI_SKILLS.map((m) => ({ id: m.id, triggers: m.triggers, body: m.body })),
-  }, null, 2)}\n`)
-})
+```sh
+RECAPTURE_BASELINE=1 npx vitest run --project packages \
+  packages/agent-ui/a2ui/src/live-agent/recapture-baseline.test.ts
 ```
 
-A mini-skill-only edit changes only the `miniSkills` section; a grammar/mode edit changes the composed
-prompts too. Diff the baseline after recapture — an unexpected delta means you touched more than you
-meant to.
+The full baseline shape is owned by `prompt-equivalence.test.ts`'s `Baseline` interface — never
+carry a copy of its key set anywhere (this file's own past mistake). A mini-skill-only edit changes
+only the `miniSkills` section; a pack edit only `genuiPacks`; a grammar/mode edit changes the
+composed prompts too. Diff the baseline after recapture — an unexpected delta means you touched more
+than you meant to, and an armed run on an UNCHANGED tree is a byte-identical no-op (the self-check).
 
 ## Mini-skill modules (`prompts/mini-skills/*.md`)
 
-- **Shape:** `---\nid: <kebab>\ntriggers: <space-separated intent vocabulary>\n---\n<body>` — single-line
-  frontmatter values, body trimmed on load (whitespace edges never matter).
+- **Shape:** `---\nid: <kebab>\ntriggers: <space-separated intent vocabulary>\ncatalogId: <catalog id>\n---\n<body>`
+  — single-line frontmatter values, body trimmed on load (whitespace edges never matter). ALL THREE
+  frontmatter fields are required: the loader THROWS on a missing `catalogId` (`mini-skills.ts`'s
+  SPEC-R6 hard filter — a module is retrievable only for its own catalog; GH #748 caught this field
+  missing from the shape spec entirely).
 - **Budget:** body ≤ ~200 tokens (`chars / 4`, gated by `mini-skills.test.ts`). Trim prose, never
   frontmatter. The count pin in that test moves when you add/remove modules.
 - **Catalog-grounded ONLY:** every component/prop the body names must exist in

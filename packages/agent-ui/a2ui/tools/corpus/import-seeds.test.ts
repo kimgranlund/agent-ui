@@ -34,6 +34,14 @@ import { allSeeds } from '../../src/examples/index.ts'
 
 declare const process: { cwd(): string }
 
+// The LIVE rubric's version marker (its own `version:` line) — fixtures that must parse as a
+// CURRENT VerdictsFile cite the owner instead of a copied literal (GH #747 bumped it 1.0 → 1.1;
+// the hardcoded copies were exactly the rot GH #757 names). Archived-history plants below keep
+// their frozen '1.0' — an old archive legitimately cites the version it was judged under.
+const LIVE_RUBRIC_VERSION = /^version:\s*(\S+)/m.exec(
+  readFileSync(join(process.cwd(), '.claude/docs/rubrics/a2ui-corpus.md'), 'utf8'),
+)![1]!
+
 /** No archived verdicts — the guard input every pre-ADR-0165 case implicitly had. */
 const NO_ARCHIVE = new Map<string, ArchivedVerdict>()
 
@@ -333,7 +341,7 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
     const path = join(sandbox, name)
     writeFileSync(
       path,
-      `${JSON.stringify({ rubric: 'a2ui-corpus', rubricVersion: '1.0', judgedBy: 'a2ui-reviewer', ...body }, null, 2)}\n`,
+      `${JSON.stringify({ rubric: 'a2ui-corpus', rubricVersion: LIVE_RUBRIC_VERSION, judgedBy: 'a2ui-reviewer', ...body }, null, 2)}\n`,
     )
     return path
   }

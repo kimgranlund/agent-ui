@@ -6,7 +6,7 @@ description: >-
   for the docs site's preview example content. Model-only knowledge preloaded by the example-builder
   seat; not a user-facing action.
 user-invocable: false
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # example-builder standards

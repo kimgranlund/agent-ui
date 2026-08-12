@@ -55,7 +55,7 @@ before a first build; `controls/checkbox/` is the gold probe template.
    Content model per the anatomy law: host-as-grid (`render()` stays the inherited no-op) or
    a rendered content cell. Gate first-paint motion behind the `ready` state. ARIA via
    `this.internals` — never host attributes. Emit only
-   `change · input · select · open · close · toggle`. Self-define at module scope:
+   the closed set CLAUDE.md §Conventions declares (`naming.md §4` / `naming-gates.test.ts`'s `ALLOWED_EVENTS` — cite, never copy: this line's own member-list copy drifted past ADR-0153's seventh member, GH #754). Self-define at module scope:
    `if (!customElements.get('ui-{name}')) customElements.define('ui-{name}', UI{Name}Element)`.
 
 5. **CSS** (single `{name}.css`) — behaviour-only `.ts`; styling is pure CSS in two sectioned
@@ -92,6 +92,10 @@ before a first build; `controls/checkbox/` is the gold probe template.
 ## Validation loop (finalize only when clean)
 
 1. `npm run check` (tsc + site) and `npm test` green — read the gate, THEN commit, separately.
+   **Red-BEFORE-diff branch (GH #761):** a gate already red on origin/main is not this build's
+   defect — before blaming (or "fixing") anything, run the same gate on a clean checkout of
+   origin/main in place; a pre-existing red is reported upstream and never absorbed into this
+   component's diff (the 2026-07-18 main-red-gates lesson).
 2. Standing trip-wires pass: import-layering, naming/structure, descriptor ↔ source (always),
    descriptor ↔ `static props` **or**, once a control has been converted onto the
    descriptor-generation ratchet ([[agent-ui-component-packaging]], ADR-0173), the
@@ -101,7 +105,7 @@ before a first build; `controls/checkbox/` is the gold probe template.
    change — run the migration step (`.claude/docs/process.md`) before treating it as done.
 3. `npm run size` by hand when the bundle surface changed (manual by Kim's ruling);
    marginal size within the tier budget, tree-shake clean.
-4. **Hand off to the `component-checker` agent** (both rubric axes ≥ 4 at G5+) — the
+4. **Hand off to the `screens:component-checker` agent** (both rubric axes ≥ 4 at G5+) — the
    non-optional independent pass before any control-wave commit. Fix the component, not the
    check.
 

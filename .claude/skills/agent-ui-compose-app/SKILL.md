@@ -21,13 +21,18 @@ entirely from the fleet — read them before scaffolding a new host.
 
 ## Procedure
 
-1. **Respect the package DAG** (enforced by per-package `layering.test.ts`; `CLAUDE.md`
-   Layout is the map): `shared` ← `components` ← `a2ui` ← `app`, with `router` a sibling
-   branch off `components` — `router` never imports `a2ui` and `a2ui`/`app` never import
+1. **Respect the package DAG** (`CLAUDE.md` Layout §Conventions is the OWNING map — read it
+   there, never from a copy here): `shared` ← `components` ← `a2ui` ← `app`, with `router`
+   AND `code` as sibling branches off `components` (ADR-0119) — neither imports `a2ui`;
+   `a2ui` imports neither; `app` may import `code` (the editor surface, ADR-0139) but never
    `router` (catalog-invisible by construction, ADR-0115); `icons`/`a2a` are leaves. An app
    composes DOWN this graph; needing an upward edge means the design is wrong.
-2. **Foundation imports** — `@agent-ui/shared/tokens.css` (the color system) + the controls
-   the app uses (barrel, or subpaths where tree-shaking matters — single-control subpath
+2. **Foundation imports** — `@agent-ui/components/foundation-styles.css` (tokens.css THEN
+   dimensions.css, order load-bearing — ADR-0003; the exemplar is `site/pages/_page.ts`'s
+   own first import). NEVER bare `tokens.css` alone: it carries only the color system, so
+   every control's `--ui-{height,font,gap}-*` geometry ramp stays unresolved (GH #749 — an
+   app built that way renders visibly broken while checklists pass). Then the controls the
+   app uses (barrel, or subpaths where tree-shaking matters — single-control subpath
    consumers under vitest need the `resolve.alias` precedent,
    [[agent-ui-component-packaging]]).
 3. **Shell** — `ui-super-shell` (`@agent-ui/app`, ADR-0151/0154/0155): ONE element, no
@@ -35,9 +40,11 @@ entirely from the fleet — read them before scaffolding a new host.
    section-nav|content|options-section|options-pane|global-options|footer"` (SPEC-R1/R5);
    `content` is mandatory. Per-side behavior rides `collapsed-start|-end`,
    `narrow-start|-end` (`collapse|stack|tabs`), `collapse-band`. Prefer a PRESET when the
-   archetype fits — `ui-workspace-shell` or `ui-chat-shell` (behavior-only, zero
-   data/transport ownership, the SAME `data-slot` vocabulary). Demo pages:
-   `site/pages/super-shell.ts`, `site/pages/chat-shell.ts`.
+   archetype fits — `ui-workspace-shell`, `ui-chat-shell`, or `ui-master-detail` (M4's
+   list-pane ⇄ detail archetype; GH #749 added it here) — all behavior-only, zero
+   data/transport ownership, the SAME `data-slot` vocabulary; the app package's export map
+   is the authoritative surface list. Demo pages: `site/pages/super-shell.ts`,
+   `site/pages/chat-shell.ts`, `site/pages/master-detail.ts`.
 4. **Routing — memory-first, URL opt-in** (ADR-0115): route state is one signal;
    `createRouter` + plain navigate/back/forward from the HEADLESS barrel
    (`@agent-ui/router`); `connectUrl` only when the host wants URL reflection (hash default,
@@ -72,6 +79,6 @@ hand off.
 - [ ] Imports point down the DAG only; layering tests green.
 - [ ] Shell regions per the app package's contract; no global singletons.
 - [ ] Router headless-first; elements via subpaths; URL reflection only where opted in.
-- [ ] Theme/scale/density boundaries explicit; tokens.css loaded once at the root.
+- [ ] Theme/scale/density boundaries explicit; foundation-styles.css (tokens THEN dimensions, ADR-0003) loaded once at the root.
 - [ ] A2UI seam (if any) mounted through the public renderer surface; keys server-side.
 - [ ] Gates green; independent review passed.

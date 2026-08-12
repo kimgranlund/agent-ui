@@ -166,14 +166,14 @@ TKT-0046 proved single-context works for one axis) — the phases are vehicle-ne
 
 - **Slice:** each control's `static props` + descriptor frontmatter (`attributes`/`events`/`slots`).
 - **Canon:** ADR-0004 (attributes-as-API) · `naming.md` (vocab law) · `dom/props.ts` (the schema
-  primitives) · the closed event set `change · input · select · open · close · toggle`. **Gold:**
+  primitives) · the closed event set (owned by CLAUDE.md §Conventions / `naming.md §4`, gated by `naming-gates.test.ts`'s `ALLOWED_EVENTS` — read the owner before judging; a copied list here false-positived ui-status-stream's lawful `action`, GH #754). **Gold:**
   `checkbox.md` · `text-field.md`.
 - **Checklist (the LATERAL questions the per-control bijection gate can't ask):** same-named attributes
   agree on type/semantics/default ACROSS controls (`size` vocab, `disabled`, `value`, `open`,
   `placeholder`) · reflect policy is consistent (geometry/state-selector props reflect; rich data is
   `attribute:false`; a reflected JSON prop is a smell) · enum vocabularies match where concepts match
   (`variant` families) · opt-in props default `undefined` not `[]` (the descriptor round-trip rule) ·
-  events ⊂ the closed six, callbacks-not-events at the app layer (SPEC-R5 lineage) · no boolean
+  events ⊂ the owned closed set (CLAUDE.md §Conventions — never a copied count), callbacks-not-events at the app layer (SPEC-R5 lineage) · no boolean
   explosion a sibling solved with an enum.
 - **Pre-pass (build on first run):** a script over the existing `@agent-ui/components/descriptor`
   parser emitting the cross-control attribute MATRIX (name × control → type/reflect/default) — makes

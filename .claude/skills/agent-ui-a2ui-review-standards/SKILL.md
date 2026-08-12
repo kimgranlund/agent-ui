@@ -6,7 +6,7 @@ description: >-
   records, compose-time mechanism functions, and skill-doc pattern sections. Model-only knowledge
   preloaded by the a2ui-reviewer seat; not a user-facing action.
 user-invocable: false
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # a2ui-reviewer standards
@@ -17,7 +17,7 @@ Route by artifact type; score against that rubric's dimensions ONLY. Do not mix 
 
 | Artifact under grade | Named rubric | Deterministic floor you CITE (never re-decide) |
 |---|---|---|
-| An A2UI payload (`A2uiOutput` stream / message batch) | `.claude/docs/rubrics/a2ui-payload.md` (P1–P7) | the `validate-payload` CLI verdict |
+| An A2UI payload (`A2uiOutput` stream / message batch) | `.claude/docs/rubrics/a2ui-payload.md` (P1–P8) | the `validate-payload` CLI verdict |
 | A catalog row (one `catalog.json` type ↔ `ui-*` factory, its tests/example/doc) | `.claude/docs/rubrics/a2ui-catalog.md` (D1–D6) | `naming.ts`/`conformance.ts`/`registry` probes via `npm test` |
 | A corpus record (one `CorpusRecord` line) | `.claude/docs/rubrics/a2ui-corpus.md` (D1–D5) | `a2ui-payload.md` (folded), `validateRecord`'s enum, the θ_dup index |
 | A compose-time mechanism function (`compose.ts`-class — code that assembles/derives/selects at compose time) | `.claude/docs/rubrics/a2ui-mechanism.md` (M1–M4) | M1: the co-located `*.test.ts` via `npm test` · M2's cited floor: `layering.test.ts` + the biting test (M2 itself is [review], definitional) |
@@ -58,15 +58,16 @@ fragment's own rows (`catalog/personas/*/`) are catalog rows and take the catalo
 
 - **Payload → `a2ui-payload.md`.** Run
   `node --experimental-strip-types packages/agent-ui/a2ui/tools/harness/validate-payload.ts <payload.json> --catalog agent-ui`.
-  Score P1–P3 from the exit code + codes + the `repairs` array; then, only if it exits 0, judge P4–P7
+  Score P1–P3 from the exit code + codes + the `repairs` array; then, only if it exits 0, judge P4–P8
   (composition · catalog idiom incl. the enum-range check the gate skips · binding hygiene ·
-  accessibility intent) against the seed shelf, citing the seed the payload should read like.
+  accessibility intent · declared-scope fidelity — P8, the GH #474 deceptive-composition defense,
+  hard-blocks promotion regardless of the other dimensions) against the seed shelf, citing the seed the payload should read like.
 - **Catalog row → `a2ui-catalog.md`.** Cite `naming.test.ts`/`conformance.test.ts`/`registry.test.ts`
   for D1–D3 (name conformance · load/payload conformance · factory binding & coverage), then judge
   D4–D6 (mapping fidelity to the real `ui-*` surface · PropDef typing idiom · example/doc coverage)
   against `factories.ts` + `catalog.json` + the row's tests/example/doc.
 - **Corpus record → `a2ui-corpus.md`.** D1 folds the payload rubric: run the CLI on the record's
-  `a2uiOutput` and take `MIN` across `a2ui-payload.md` P1–P7 (N/A + omitted for an eval-facet record).
+  `a2uiOutput` and take `MIN` across `a2ui-payload.md` P1–P8 (N/A + omitted for an eval-facet record).
   D2–D5 apply each dimension's deterministic floor (non-empty `promptText`/`description`; the
   `target ?? description` ADR-0063 consumer rule — grade the *effective* target, never `target` raw;
   the closed `source` enum + a resolvable `origin`; the θ_dup neighbour), then judge above that floor.

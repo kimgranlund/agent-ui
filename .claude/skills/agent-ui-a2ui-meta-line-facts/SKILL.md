@@ -7,7 +7,7 @@ description: >-
   capabilities, and the host-side apply-gate write
   discipline for model-proposed store state (drop-never-coerce). Use for "how does the meta-line
   envelope work", "add a field to the envelope", "what's a modality gate", "how was the
-  plan/personaPatch arm designed", "how does a model-authored patch reach the store". NOT for the
+  plan/personaPatch arm designed", "how does a model-authored patch reach the store", "why does markdown render without opting in". NOT for the
   producer's PROMPT STACK (a2ui-prompt-author); NOT for composing A2UI payloads (a2ui-compose).
 user-invocable: false
 disable-model-invocation: false
@@ -74,6 +74,12 @@ shape: a `SURFACE_*_KEY`-style boolean constant (`agent-admin-schema.ts` — `SU
 `SURFACE_GENUI_KEY`, `SURFACE_GENUI_DOGFOOD_KEY`, `SURFACE_PLANNER_KEY` joining them per
 ADR-0174 cl.1, and `SURFACE_AUTHORING_KEY` per ADR-0178 cl.3), OFF by default, admin-authored per persona, dimmed in the admin UI while its own
 gate is off ("noise, not configuration" — ADR-0170 cl.5's phrasing, reused verbatim at ADR-0174).
+
+**The one named INVERSE member (GH #761): `SURFACE_MARKDOWN_KEY`.** Markdown rendering is ON by
+default — only an explicit stored `false` switches the frame to plain `textContent`
+(`agent-admin-schema.ts`'s own doc comment on the constant). It is an opt-OUT presentation
+preference, not an opt-in capability gate: never cite it as precedent for a new modality (the
+byte-identical-when-off law below is exactly what it does NOT satisfy).
 
 The seam has two load-bearing properties, both required together — a gate satisfying only one is
 not this pattern:

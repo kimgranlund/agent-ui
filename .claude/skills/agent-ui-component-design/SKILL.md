@@ -27,7 +27,7 @@ Load the map skills as you go: [[agent-ui-component-standards]] (law),
 
 ## Procedure
 
-1. **Extract intent** (find-the-ask where installed; its discipline inline otherwise).
+1. **Extract intent** (find-intent where installed; its discipline inline otherwise — the old find-the-ask name is dead, GH #761).
    Root goal vs literal ask; ONE batched clarifying round max. Name the component's *job* in
    one sentence — everything downstream keys off it. **Combined intakes are a valid shape**
    (two tickets whose components may be one family — the timeline/status-stream precedent):
@@ -71,7 +71,7 @@ Load the map skills as you go: [[agent-ui-component-standards]] (law),
    | Tag | `ui-{name}` under the naming law |
    | Anatomy | slots × `data-role` roles; host-as-grid vs rendered cell |
    | Props | typed `prop.enum` unions; which reflect; defaults (`''`-first for inherit-ambient semantics) |
-   | Events | ⊂ `change · input · select · open · close · toggle` — a new event name is a fleet-contract fork |
+   | Events | ⊂ the closed set CLAUDE.md §Conventions owns (`naming.md §4`, gated by `ALLOWED_EVENTS` — read it there; a copied list here drifted past `action`, GH #754) — a name OUTSIDE that set is a fleet-contract fork |
    | Geometry | the (scale × size) → §1-row assignment, or the widget ramp; the control-class frame laws (floors, radius) |
    | Tokens | the `--ui-{name}-*` roles and which `--md-sys-color-{family}-{role}` each consumes; non-color signifier for any intent |
    | A11y | `internals` role/states (never host attributes); keyboard map; focus behavior |
