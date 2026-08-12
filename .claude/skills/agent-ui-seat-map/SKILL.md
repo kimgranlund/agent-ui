@@ -24,6 +24,16 @@ disable-model-invocation: false
 | Non-UI code diffs / slices | `teamwork:builder` | `teamwork:code-checker` |
 | Broad searches / codebase questions | `Explore` (read-only, conclusions not dumps) | — |
 | Measured experiment loops (regressions, tuning, stress) | `docs:experiment-runner` | host verifies the report |
+| A2UI corpus record admission/judging (ADR-0068) | `a2ui-corpus-curate` (skill, host-run or briefed) | `a2ui-reviewer` (the VerdictsFile judge — never the seed's own author) |
+| One confirmed work-item build (feature/task/bug, by issue id) | `teamwork:build-lead` | per-artifact critic above |
+| Raw report/idea intake → durable records | `docs:intake-lead` | — (intake only, structurally cannot dispatch builds) |
+| A SKILL.md's contract/shape | maker of the change | `harness:skill-checker` |
+| An agents/*.md definition | maker of the change | `harness:agent-checker` |
+| A hook (registration + script) | maker of the change | `harness:hook-checker` |
+| Prompt-carrying wording (a brief, a description, a CLAUDE.md line) | maker of the change | `harness:wording-checker` |
+| Skill/agent/team wiring + frontmatter composition | maker of the change | `teamwork:wiring-checker` |
+| One screen/shell/page layout | maker of the change | `screens:layout-checker` |
+| A cross-screen user flow (*.flow.json, journeys) | maker of the change | `screens:flow-checker` |
 
 `example-builder` and `docs-writer` share `component-preview.ts` by concern — never dispatch both
 onto that file concurrently.
