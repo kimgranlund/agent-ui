@@ -28,9 +28,17 @@
 // LLD-C6 (S6, mcp-connector.lld.md §3.5) — the admin GET (Kim's F1 ruling, GH #567). `GET /integrations`
 // sits beside `/status` in the SAME handler, so it rides the SAME `await mcpReady` gate above: a request
 // racing boot queues exactly like every other branch, and a `mcp:*` manifest is visible the instant
-// discovery has registered it. The body is TRIOS ONLY (`projectIntegrationTrios`, below) — no endpoint,
-// envKey name, key value, version, or tool fact ever leaves this route (SPEC-R28's cl.2 boundary); the
-// enablement wire itself (`integrations: string[]` of ids, browser→host) is untouched by this slice.
+// discovery has registered it. `integrations` is TRIOS ONLY (`projectIntegrationTrios`, below) — no
+// endpoint, envKey name, key value, version, or tool fact ever leaves this route (SPEC-R28's cl.2
+// boundary); the enablement wire itself (`integrations: string[]` of ids, browser→host) is untouched
+// by this slice.
+//
+// LLD-C4 (S2, mcp-agent-config.lld.md §3.2, SPEC-R4, ADR-0185) — the body widens ADDITIVELY with a
+// SECOND array, `services`: one `{id, label, description}` row per roster server with ≥1 registered
+// `mcp:<sid>:`-prefixed manifest (`projectServiceRows`, below), same trio-only leak boundary as
+// `integrations`. `integrations` itself stays byte-identical — every pre-SPEC-R4 reader parses this
+// body unchanged. The factory's `mcpRoster` opt (test-only) stages a fabricated roster for a route
+// test without touching the committed (empty) `mcp-servers.json`.
 
 import { readFileSync } from 'node:fs'
 import { loadEnv } from 'vite'
@@ -52,6 +60,9 @@ import { validateMcpServersConfig } from './integrations/mcp/servers-config.ts'
 import type { McpServersConfig } from './integrations/mcp/servers-config.ts'
 import { discoverMcpIntegrations } from './integrations/mcp/discover.ts'
 import type { DiscoveryReport } from './integrations/mcp/discover.ts'
+// LLD-C4 (S2, SPEC-R4) — the composer/prefix pair `projectServiceRows` reuses; never hand-formats
+// the `mcp:<server-id>:*` string twice (S1's one home for the shape, service-ref.ts).
+import { serviceRef, serviceRefPrefix } from './integrations/service-ref.ts'
 // GH #108 — the PAIR-allowlist validation spine now lives in chat-validation.ts (zero vite/node deps, so
 // the Cloudflare Worker port can import it directly too, which it couldn't do from THIS file — importing
 // anything from here would drag `loadEnv`/`vite` into the Workers bundle). Re-exported unchanged so this
@@ -124,11 +135,40 @@ export function projectIntegrationTrios(
   return manifests.map((m) => ({ id: m.id, label: m.label, description: m.description }))
 }
 
+/** LLD-C4 §3.2 / SPEC-R4 AC1/AC2 (ADR-0185) — the admin GET's additive `services` projection: one
+ *  row per ROSTER server (committed key order) with ≥1 registered `mcp:<sid>:`-prefixed manifest;
+ *  a server with zero discovered tools contributes no row. Exported (not `registry.ts`, frozen)
+ *  for the SAME fabricated-array testability `projectIntegrationTrios` above already has — no test
+ *  needs the real `REGISTRY` or a real roster file. The description is registry-derived-only (LLD
+ *  §6.4): no roster prose, no endpoint/envKey/key-value/JSON-RPC fact (the SPEC-R4 cl.2 boundary). */
+export function projectServiceRows(
+  cfg: McpServersConfig,
+  manifests: readonly IntegrationManifest[],
+): Array<{ id: string; label: string; description: string }> {
+  const rows: Array<{ id: string; label: string; description: string }> = []
+  for (const serverId of Object.keys(cfg.servers)) {
+    const prefix = serviceRefPrefix(serverId)
+    const count = manifests.filter((m) => m.id.startsWith(prefix)).length
+    if (count === 0) continue
+    rows.push({
+      id: serviceRef(serverId),
+      label: cfg.servers[serverId]!.label,
+      description: `${count} ${count === 1 ? 'tool' : 'tools'} discovered at boot`,
+    })
+  }
+  return rows
+}
+
 export function a2uiDevProxyPlugin(opts?: {
   /** Test-only injection (LLD §5.6) — replaces the real discovery pass wholesale. Production code
    *  and `vite.config.ts` never pass this; the default is the real `discoverMcpIntegrations` over
    *  the parsed+validated roster. */
   mcpDiscovery?: (env: Record<string, string | undefined>) => Promise<DiscoveryReport>
+  /** Test-only injection (LLD §3.2, S2) — replaces the `readFileSync` + validate roster load
+   *  wholesale, the same way `mcpDiscovery` above replaces the discovery pass: a route test stages
+   *  a two-server roster without touching the committed (empty) `mcp-servers.json` file. Production
+   *  code and `vite.config.ts` never pass this; the default reads + validates the committed roster. */
+  mcpRoster?: McpServersConfig
 }): Plugin {
   // The provider keys live in the repo-root `.env` (gitignored). Vite does NOT load `.env` into
   // `process.env` — non-`VITE_` vars are kept out of BOTH `process.env` and `import.meta.env` — so
@@ -180,7 +220,8 @@ export function a2uiDevProxyPlugin(opts?: {
       // discovery itself is once-per-lifetime anyway (the accepted staleness). A malformed roster
       // throws HERE, synchronously, the same fail-fast posture `loadConfig()` just took — a boot
       // failure, never a half-discovered proxy.
-      const mcpConfig: McpServersConfig = validateMcpServersConfig(JSON.parse(readFileSync(MCP_CONFIG_PATH, 'utf8')))
+      const mcpConfig: McpServersConfig =
+        opts?.mcpRoster ?? validateMcpServersConfig(JSON.parse(readFileSync(MCP_CONFIG_PATH, 'utf8')))
       // The ready-gate itself: discovery STARTS synchronously right here, at boot, and its promise is
       // kept — never spliced into `integrations/index.ts` (that would be the top-level-await hazard
       // SPEC-R27 bans) and never fire-and-forget. `discoverMcpIntegrations` NEVER rejects (discover.ts
@@ -212,8 +253,15 @@ export function a2uiDevProxyPlugin(opts?: {
 
             // GET /integrations — LLD-C6 (S6, SPEC-R28, the F1 ruling): the registered trios, post-gate
             // so `mcp:*` entries appear. Trios ONLY — no endpoint/envKey/key/tool/version fact.
+            // LLD-C4 (S2, SPEC-R4, ADR-0185): the body gains a SECOND, additive array — `services`,
+            // one row per roster server with ≥1 registered manifest (`projectServiceRows` above).
+            // `integrations` stays byte-identical (SPEC-R28's parity untouched); every reader written
+            // before SPEC-R4 parses this body unchanged.
             if (req.method === 'GET' && url.startsWith('/integrations')) {
-              sendJson(res, 200, { integrations: projectIntegrationTrios(listIntegrations()) })
+              sendJson(res, 200, {
+                integrations: projectIntegrationTrios(listIntegrations()),
+                services: projectServiceRows(mcpConfig, listIntegrations()),
+              })
               return
             }
 
