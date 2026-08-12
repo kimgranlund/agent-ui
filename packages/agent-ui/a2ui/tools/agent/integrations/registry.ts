@@ -19,6 +19,7 @@
 
 import type { ToolDef } from '../../../src/agent/agent-transport.ts'
 import { assertSupportedSchema } from './validate-input.ts'
+import { parseServiceRef, serviceRefPrefix } from './service-ref.ts'
 
 /** What the HOST hands an executor at dispatch time. `signal` is the turn's abort signal (an executor
  *  combines it with its own timeout); `apiKey` is present iff the manifest declares `auth: 'serverKey'` and
@@ -50,6 +51,12 @@ export interface IntegrationManifest {
 /** The defensive ceiling on a browser-supplied enablement list (carried over from the shipped
  *  `resolveIntegrations`) — far above any real pack, low enough to bound a hostile list. */
 const MAX_ENABLED = 16
+
+/** The POST-expansion ceiling (LLD-C2/§3.2, ADR-0185, SPEC-R3): 4× `MAX_ENABLED` — comfortably
+ *  above any real kit (a 30-tool server + a few pins), low enough to bound a hostile
+ *  wanted-list × registry product (the registry TRUST-NOTE posture). Registration order;
+ *  truncation is disclosed via `console.warn`, never silent. */
+const MAX_RESOLVED = 64
 
 const REGISTRY: IntegrationManifest[] = []
 
@@ -94,17 +101,55 @@ function isProvisioned(m: IntegrationManifest, env: Record<string, string | unde
 }
 
 /**
- * Validate + resolve the browser-supplied enablement list: strings only, intersected with the registry
- * (unknown ids silently dropped — the browser forwards ids; only registry matches count), capped
- * defensively, and — new in ADR-0168 cl.4 — with every `serverKey` manifest whose env var is unset or empty
- * EXCLUDED, so the model is never offered a tool that cannot run. Anything malformed ⇒ empty (tools off),
- * never a throw.
+ * The pure, injectable-registry core `resolveIntegrations` delegates to (LLD-C2, ADR-0185) —
+ * tests feed FABRICATED manifest arrays (the `projectIntegrationTrios` precedent), so no test
+ * needs to touch the module-level `REGISTRY`. Mechanics, in order (LLD §3.2):
+ *   1. non-array `ids` ⇒ `[]` (unchanged);
+ *   2. string-filter + `slice(0, MAX_ENABLED)` — the PRE-expansion cap, unchanged;
+ *   3. partition the wanted members via `parseServiceRef` into exact ids and service-ref
+ *      prefixes (SPEC-R2) — anything that doesn't parse as a ref is an exact id;
+ *   4. ONE pass over `registry`, matching either grain, still gated by `isProvisioned`
+ *      (ADR-0168 cl.4) — registration order and dedup by construction (each manifest tested once);
+ *   5. the POST-expansion `MAX_RESOLVED` ceiling, truncation logged.
+ * Unknown ids AND unknown refs drop silently; a registry with no MCP manifests (the Worker)
+ * resolves every ref to nothing — fail-closed, zero Worker edit.
+ */
+export function resolveAgainst(
+  registry: readonly IntegrationManifest[],
+  ids: unknown,
+  env: Record<string, string | undefined>,
+): IntegrationManifest[] {
+  if (!Array.isArray(ids)) return []
+  const wanted = ids.filter((v): v is string => typeof v === 'string').slice(0, MAX_ENABLED)
+
+  const exact = new Set<string>()
+  const prefixes: string[] = []
+  for (const member of wanted) {
+    const serverId = parseServiceRef(member)
+    if (serverId === null) exact.add(member)
+    else prefixes.push(serviceRefPrefix(serverId))
+  }
+
+  const resolved = registry.filter(
+    (m) => (exact.has(m.id) || prefixes.some((p) => m.id.startsWith(p))) && isProvisioned(m, env),
+  )
+
+  if (resolved.length > MAX_RESOLVED) {
+    console.warn(`integration registry: resolved set truncated to ${MAX_RESOLVED}`)
+    return resolved.slice(0, MAX_RESOLVED)
+  }
+  return resolved
+}
+
+/**
+ * Validate + resolve the browser-supplied enablement list against the module `REGISTRY`.
+ * SIGNATURE UNCHANGED (LLD-C2) — the body now delegates to `resolveAgainst`, which is what gained
+ * the ADR-0185 service-reference expansion; every pre-existing caller and behavior over exact ids
+ * is byte-identical. Anything malformed ⇒ empty (tools off), never a throw.
  */
 export function resolveIntegrations(
   ids: unknown,
   env: Record<string, string | undefined>,
 ): IntegrationManifest[] {
-  if (!Array.isArray(ids)) return []
-  const wanted = new Set(ids.filter((v): v is string => typeof v === 'string').slice(0, MAX_ENABLED))
-  return REGISTRY.filter((m) => wanted.has(m.id) && isProvisioned(m, env))
+  return resolveAgainst(REGISTRY, ids, env)
 }

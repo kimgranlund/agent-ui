@@ -12,16 +12,23 @@
 //     dialed); and a CATCH-ALL over ANY error thrown during the handshake or `listTools` (reason =
 //     the thrown message). `McpClientError`'s closed codes are the EXPECTED taxonomy here, but the
 //     catch never narrows to them — wedge-proof by construction, not by contract (LLD §3.4).
-//   · PER-TOOL skip (`tool` present): the empty-name floor below, or a `mapMcpTool`/sink throw —
-//     covering BOTH of `registerIntegration`'s relevant throw paths (unsupported schema, duplicate
-//     wire `tool.name`, incl. the disclosed second-server-loses drop, SPEC-R26). One bad tool costs
-//     exactly that one tool; the other N−1 on the same server still register.
+//   · PER-TOOL skip (`tool` present): the empty-name floor below, the reserved-name guard below, or
+//     a `mapMcpTool`/sink throw — covering BOTH of `registerIntegration`'s relevant throw paths
+//     (unsupported schema, duplicate wire `tool.name`, incl. the disclosed second-server-loses
+//     drop, SPEC-R26). One bad tool costs exactly that one tool; the other N−1 on the same server
+//     still register.
 //
 // The empty-name floor (review-inherited hardening, GH #567): an off-spec server can emit a tool
 // whose `name` is empty or whitespace-only. Mapping that unchecked would hand `mapMcpTool` a
 // degenerate wire name, producing a manifest id like `mcp:docs:` (an empty third segment) — this
 // module refuses that INPUT before it ever reaches `mapMcpTool` or the sink: a per-tool skip row,
 // never a crash, never a silently-registered garbage id.
+//
+// The reserved-name guard (LLD-C3, SPEC-R2 AC2, ADR-0185 — mcp-agent-config.spec.md): a tool
+// literally named `*` would mint the ONE manifest id the enablement wire's new service-reference
+// grammar (`../service-ref.ts`) could ever mistake for a ref; skipped with a stated reason before
+// `mapMcpTool` runs, keeping the ref/exact-id parse jointly complete. The ONLY discovery-side
+// change that arc makes.
 //
 // Iterates `cfg.servers` in KEY order (committed-file/object-insertion order) — the deterministic
 // tiebreak that makes "the FIRST server wins a cross-server `tool.name` collision" reproducible.
@@ -83,6 +90,15 @@ function hasUsableName(tool: McpToolInfo): boolean {
   return typeof tool.name === 'string' && tool.name.trim().length > 0
 }
 
+/** LLD-C3 (SPEC-R2 AC2, ADR-0185) — the ONE discovery-side change the mcp-agent-config arc makes:
+ *  a tool literally named `*` would mint the one manifest id the service-reference grammar
+ *  (`service-ref.ts`'s `SERVICE_REF_PATTERN`) could ever match, making the ref/exact-id parse
+ *  ambiguous. Skip it here, before `mapMcpTool` ever sees it — the anchor + this skip are jointly
+ *  complete (ADR-0185 Decision cl.1). */
+function isReservedToolName(tool: McpToolInfo): boolean {
+  return tool.name === '*'
+}
+
 /** A `serverKey` server's key, host-resolved from the merged env — `undefined` if unset/empty
  *  (never dials with a blank credential) or if the server declares `auth: 'none'`. */
 function resolveServerKey(server: McpServerEntry, env: Record<string, string | undefined>): string | undefined {
@@ -137,6 +153,12 @@ export async function discoverMcpIntegrations(cfg: McpServersConfig, deps: Disco
       if (!hasUsableName(tool)) {
         skipped.push({ server: serverId, tool: tool.name, reason: 'empty tool name' })
         emit(deps, 'warn', `mcp:${serverId}:${JSON.stringify(tool.name)} — skipped (empty tool name)`)
+        continue
+      }
+
+      if (isReservedToolName(tool)) {
+        skipped.push({ server: serverId, tool: tool.name, reason: 'reserved tool name "*"' })
+        emit(deps, 'warn', `mcp:${serverId}:${tool.name} — skipped (reserved tool name "*")`)
         continue
       }
 
