@@ -70,43 +70,35 @@ Queue order: (1) gated mutations verified safe → (2) blockers → (3) human de
 
 ## 3. Human-decision items
 
-### 3.1 Confirm-gate the FOUR-row ADR harvest batch
-- **Action**: put all 4 rows to Kim as ONE AskUserQuestion batch — adr-0179 (composition patterns,
-  re-verified unlanded) · adr-0180 (declarative composition opt-in / adopt-if-authored-else-create)
-  · adr-0181 (derive-from-canonical-constants attention discipline) · adr-0183 (View Transitions
-  family + ratified Amendment). adr-0184 is NOT in this batch (judged NO — already covered by
-  agent-ui-component-design's precedent-sweep step). On yes → dispatch `/make-pack` scoped per row.
-- **Owner**: Kim (the confirm); `/make-pack` seat follows only on a yes.
-- **Evidence**: `adr-queue.json` on main (post-05f9ad8b) — 4 rows, each with cited ratification
-  utterances and zero-hit greps against the target skills.
-- **Size**: ~5 min confirm; ~1–2 h total harvest if all four confirmed
+### 3.1 Confirm-gate the FOUR-row ADR harvest batch — RESOLVED, harvested 2026-08-13
+- **Finding**: Kim confirmed ALL FOUR in the batched round; one harvest seat landed them
+  sequentially (PR #800 MERGED): adr-0179 → 5 composition-patterns rows (superseded-in-part
+  material skipped) · adr-0180 → component-patterns mechanism row + a cross-linked
+  composition-patterns consumer row (the queue row named both tables as gaps) · adr-0181 +
+  adr-0183 → component-patterns rows. Zero citation drift found; §5b anchors throughout.
+  Queue rows consumed (this commit) — `adr-queue.json` empty.
+- **Owner**: RESOLVED — no further action.
 
-### 3.2 Rule GH #782 Fork 2 — rail+pane overlay seam (two hairlines vs one card)
-- **Action**: put Fork 2 to Kim/design seat: keep per-part `--ui-super-shell-overlay-outline`
-  (two adjacent hairlines at the pane|rail seam) or compose ONE bordered card per SPEC-R9d's
-  single-box sizing. Pure polish, non-blocking, by the issue's own framing.
-- **Owner**: Kim (ruling); host dispatches any build after.
-- **Evidence**: GH #782 OPEN (verified live); Fork 1 already shipped via PR #789 MERGED 2026-08-12.
-- **Size**: ~10 min ruling; small build behind it if "change"
+### 3.2 Rule GH #782 Fork 2 — RESOLVED, ruled 2026-08-13
+- **Finding**: Kim ruled keep-two-hairlines (in-session confirm). #782 CLOSED as
+  ruled-and-complete (Fork 1 had shipped via PR #789; Fork 2 = no change, no build).
+- **Owner**: RESOLVED — no further action.
 
-### 3.3 Rule GH #791 — generalize `rejectOnCollision` to ALL tool-kind packs, or wontfix
-- **Action**: put the fork to Kim/design seat per the issue's own acceptance. Note: #793 does NOT
-  wait on this — see 4.1; once #793 lands, every SHIPPED tool-kind pack (Integrations + the S4
-  MCP-services pack) rejects collisions, so a "yes" ruling closes #791 on #793's merge. Clear the
-  stale `doing` label either way.
-- **Owner**: Kim or a design seat (decision); host executes the outcome.
-- **Evidence**: GH #791 OPEN, `bug/doing/severity:minor` (verified live); the SPEC-R6 vehicle it
-  was parked on now exists (PR #794 MERGED).
-- **Size**: ~15 min ruling; small build or a wontfix close behind it
+### 3.3 Rule GH #791 — RESOLVED, ruled + closed 2026-08-13
+- **Finding**: Kim ruled GENERALIZE (in-session confirm): tool-kind packs reject id collisions,
+  the standing rule. #791 CLOSED on PR #799's merge — every shipped tool-kind pack now rejects
+  (Integrations #799 · MCP-services #797) through the S3 vehicle (#794). Ruling + close-out
+  recorded on the issue; stale `doing` label cleared.
+- **Owner**: RESOLVED — no further action.
 
 ## 4. Hygiene debt
 
-### 4.1 Mobilize GH #793 — the board's ONE mobilizable build
-- **Action**: dispatch a small build seat: set `rejectOnCollision: true` on the Integrations pack
-  literal in `site/pages/agent-admin-libraries.ts` (~L485) + the pack-grain test.
-- **Owner**: host dispatches (behind the mobilize confirm round); build seat executes; host ships.
-- **Evidence**: GH #793 OPEN `task/size:small` (verified live), booked by #783 S3.
-- **Size**: ~30–45 min build
+### 4.1 Mobilize GH #793 — RESOLVED, shipped 2026-08-13
+- **Finding**: confirmed in the mobilize round, built by a dispatched seat, PR #799 MERGED
+  (flag flip + the end-to-end pack-grain test: colliding add rejected visibly, store unchanged,
+  picker row disabled, non-colliding adds unaffected). #793 CLOSED completed. Gates green on
+  merge; the SPEC-R6 fence held (exit 1) throughout.
+- **Owner**: RESOLVED — no further action.
 
 ### 4.2 Encode the ops-seat contract rulings into the harness agents (cross-repo, carried ×11)
 - **Action**: unchanged — one change in the nonoun-plugins repo.
@@ -125,10 +117,15 @@ Queue order: (1) gated mutations verified safe → (2) blockers → (3) human de
 
 ## Standing notes (not queue entries)
 
-- **Board shape (post-landing, 2026-08-13)**: 4 open issues — #793 (mobilizable → 4.1) ·
-  #791 (ruling → 3.3) · #782 (ruling → 3.2) · #616 (blocked) · **0 open PRs** (#795 closed
-  unmerged) · 0 extra worktrees · origin main-only · main gates green (run at 38cc4d81; HEAD now
-  64033e62, `.claude/ops/`-only diffs since).
+- **Board shape (end of cycle, 2026-08-13)**: **1 open issue — #616 (blocked)**; #793/#791/#782
+  all closed this cycle (PRs #799/#800 merged). 0 open PRs · 0 extra worktrees · origin main-only.
+  Remaining queued actions: 4.2 (cross-repo) and 4.3 (the 0178/0185 decision-watcher follow-up).
+- **This cycle's lesson (chore-lead-sweep4)**: multiple same-day sweep generations produced real,
+  valuable, UNCOORDINATED direct-to-main writes that a naive "land the sweep PR verbatim"
+  recommendation would have regressed. The save was cross-checking every claim against live
+  `git`/`gh` state immediately before writing — including this session's own earlier reports.
+  Fold into 4.2's cross-repo encoding: seat-payload landing legs re-verify at write time, not
+  just at report time.
 - **#616 stays blocked** — upstream `a2ui-project/a2ui#2150` verified OPEN live this dispatch.
 - **#783 closure soundness** — independently verified, all 5 slice PRs MERGED, gates green.
 - **gitignore KEEP-LIST fence is permanent** — 7 standing G1 warnings, never re-propose.
