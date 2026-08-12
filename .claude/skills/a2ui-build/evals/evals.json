@@ -1,0 +1,14 @@
+{
+  "skill": "a2ui-build",
+  "_note": "The a2ui-builder seat's preloaded build METHOD (GH #764/D3). Positives: building/upgrading a package unit of @agent-ui/a2ui (renderer, catalog, protocol.ts, validation spine, corpus store, A2UI/A2A conformance). Negatives drawn from the sibling territory the description fences: a2ui-compose (payload authoring), a2ui-corpus-curate (curation), agent-ui-component-create (ui-* source). A preload-routing tripwire; the pass condition is description-lint + a human read of the named grabs/misses.",
+  "cases": [
+    { "id": "t01", "prompt": "Implement LLD-C6 in the a2ui renderer", "expect": "trigger" },
+    { "id": "t02", "prompt": "Add the catalog entry that binds this ui-* factory in @agent-ui/a2ui", "expect": "trigger" },
+    { "id": "t03", "prompt": "The validator rejects this message — fix the validation spine", "expect": "trigger" },
+    { "id": "t04", "prompt": "Wire the A2A callFunction extension into protocol.ts", "expect": "trigger" },
+    { "id": "t05", "prompt": "Build the corpus store admission stage to the SPEC", "expect": "trigger" },
+    { "id": "n01", "prompt": "Compose an A2UI payload for a settings surface", "expect": "no-trigger", "owner": "a2ui-compose (payload authoring, not package code)" },
+    { "id": "n02", "prompt": "Import this authored seed into the corpus and rescore it", "expect": "no-trigger", "owner": "a2ui-corpus-curate (curation)" },
+    { "id": "n03", "prompt": "Write the ui-checkbox control source with ElementInternals", "expect": "no-trigger", "owner": "agent-ui-component-create (ui-* control source)" }
+  ]
+}
