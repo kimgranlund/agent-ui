@@ -13,7 +13,9 @@
 > **No owning PRD — a deliberate, acknowledged deviation** (the `form-popover.spec.md` precedent):
 > GH #783's issue body already carries the problem statement, user, and done-when; a PRD would restate
 > it under different frontmatter.
-> Refined by: an LLD to be authored at build dispatch (`mcp-agent-config.lld.md` — does not exist yet).
+> Refined by: [`mcp-agent-config.lld.md`](../lld/mcp-agent-config.lld.md) +
+> [`mcp-agent-config.decomp.md`](../decompositions/mcp-agent-config.decomp.md) (both authored at build
+> dispatch, 2026-08-12 — this line's earlier "does not exist yet" note repaired in that same change).
 > The one genuine fork this SPEC opens — the enablement wire's grammar widening (SPEC-R2/R3),
 > amending a fence four accepted records pin — is recorded, not self-ratified, in
 > [`../adr/0185-enablement-wire-service-reference-grammar.md`](../adr/0185-enablement-wire-service-reference-grammar.md)
