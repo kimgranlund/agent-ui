@@ -481,3 +481,62 @@ describe('ui-super-shell — the bar-seam contract, source-pinned (ADR-0166, GH 
     }
   })
 })
+
+// ── GH #740/ADR-0183 cl.3 — the viewTransitions opt-in on segment swaps (jsdom half; the real
+// startViewTransition proof is the router outlet's browser probe — ONE shared helper, one platform
+// proof, per ADR-0183's one-seam law) ─────────────────────────────────────────────────────────────────
+describe('ui-super-shell — viewTransitions opt-in on segment swaps (GH #740)', () => {
+  // Standalone stub shape, not `extends Document` — lib.dom declares `startViewTransition` as
+  // required, so only the unknown-cast lets the tests assign and delete the seam.
+  const doc = document as unknown as { startViewTransition?: (cb: () => void) => unknown }
+  afterEach(() => {
+    delete doc.startViewTransition
+  })
+
+  function mountSegmented(viewTransitions: boolean): { el: UISuperShellElement; pane: HTMLElement } {
+    const el = document.createElement('ui-super-shell') as UISuperShellElement
+    if (viewTransitions) el.viewTransitions = true
+    const content = document.createElement('div')
+    content.setAttribute('data-slot', 'content')
+    const a = document.createElement('div')
+    a.setAttribute('data-slot', 'options-pane')
+    a.setAttribute('data-segment', 'Settings')
+    const b = document.createElement('div')
+    b.setAttribute('data-slot', 'options-pane')
+    b.setAttribute('data-segment', 'Context')
+    el.append(content, a, b)
+    document.body.append(el)
+    mounted.push(el)
+    return { el, pane: a.parentElement as HTMLElement }
+  }
+
+  it('default false: a segment select flips visibility synchronously, no API touch even when present', async () => {
+    let transitions = 0
+    doc.startViewTransition = () => {
+      transitions++
+    }
+    const { el, pane } = mountSegmented(false)
+    await el.updateComplete
+    const strip = pane.querySelector('[data-part="pane-tabs"]') as HTMLElement
+    strip.dispatchEvent(new CustomEvent('select', { detail: { value: '1', index: 1 } }))
+    expect(pane.getAttribute('data-active-segment')).toBe('1')
+    expect(transitions).toBe(0)
+  })
+
+  it('enabled + API present: the visibility flip routes THROUGH startViewTransition; the strip mirror stays outside the wrap', async () => {
+    const pending: Array<() => void> = []
+    doc.startViewTransition = (cb: () => void) => {
+      pending.push(cb)
+    }
+    const { el, pane } = mountSegmented(true)
+    await el.updateComplete
+    const before = pane.getAttribute('data-active-segment')
+    const strip = pane.querySelector('[data-part="pane-tabs"]') as HTMLElement
+    strip.dispatchEvent(new CustomEvent('select', { detail: { value: '1', index: 1 } }))
+    // the flip is deferred to the platform's callback…
+    expect(pane.getAttribute('data-active-segment')).toBe(before)
+    expect(pending.length).toBeGreaterThan(0)
+    pending.at(-1)!()
+    expect(pane.getAttribute('data-active-segment')).toBe('1')
+  })
+})

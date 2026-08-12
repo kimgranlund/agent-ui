@@ -7,6 +7,11 @@
 name: ui-super-shell
 
 attributes:
+  - name: view-transitions
+    type: boolean
+    default: false
+    reflect: true
+    description: GH #740/ADR-0183 — opt-in View Transitions on the shell's SEGMENT swaps (`#setActiveSegment`'s visibility flips ride `document.startViewTransition` when the API exists and reduced motion is not set; every other path is byte-identical to before). Segment swaps only — band crossings stay pure CSS (no JS runs on a resize, the shell family's own law) and are deliberately not wrapped.
   - name: collapsed-start
     type: boolean
     default: false
