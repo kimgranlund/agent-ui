@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-12 |
 > | **Proposed by** | planner (design seat — GH [#783](https://github.com/kimgranlund/agent-ui/issues/783)'s SPEC leg; authored ALONGSIDE [`mcp-agent-config.spec.md`](../spec/mcp-agent-config.spec.md) v0.2, the `app-surfaces-m2.spec.md`/ADR-0129 precedent: a genuine fork recorded at authoring time, never after the fact) |
-> | **Ratified by** | *(pending — Kim's ruling; never self-flipped, the ADR-0149 boundary)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-12, via the [`ratify ADR-0185` utterance](https://github.com/kimgranlund/agent-ui/pull/786#issuecomment-5269956992) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification+build (the SPEC's own SPEC-N2 rows, booked here so the amendment wave has one home): [`a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md) takes a version-bump amendment — SPEC-R23's and SPEC-R28's *"the enablement wire stays `integrations: string[]` of registry `id`s"* sentences gain this ADR's delta, append-only in that doc's own discipline · `.claude/skills/agent-ui-integration-standards/SKILL.md`'s Admin-surfacing law (*"the enablement wire itself stays `integrations: string[]` of ids, unchanged"*, `SKILL.md:132-133`) repoints to the widened grammar · `site/pages/agent-schema.ts` + the `agent-admin-library-kinds` skill gain their MCP-services rows. ADR-0168/0177 themselves are NOT edited — their clauses stand as written for their arcs; this record is the amendment. |
 > | **Supersedes / Superseded by** | **Amends (append-only)** [ADR-0168](./0168-integration-manifest-registry-validated-dispatch-server-keys.md) cl.2 (*"`id` is the stable registry key and THE enablement wire vocabulary"*, `0168:60-62`) · [ADR-0177](./0177-mcp-client-registry-source-http-transport-additive-manifest-mapping.md) cl.2 (*"The browser's enablement wire is unchanged: `integrations: string[]` of registry `id`s"*, `0177:149-151`) and cl.4 (*"stays `integrations: string[]` of registry `id`s exactly as today"*, `0177:251-253`) · **Relates** [`a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md) SPEC-R23 (`:1267`) / SPEC-R28 (`:1401`) — the two SPEC-side pins, amended on ratification per Repairs · **Resolves** the grammar fork [`mcp-agent-config.spec.md`](../spec/mcp-agent-config.spec.md) §9 records (GH #783's one ADR-worthy decision; every other choice there is additive under existing law). |
 
