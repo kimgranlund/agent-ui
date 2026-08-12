@@ -107,10 +107,23 @@ const groupCards: Array<{ caption: string; group: StatusEntry; steps: StatusEntr
   },
 ]
 
+// GH #737/ADR-0184 — the reasoning-trace shape (nano-ui's agent-reasoning surface, absorbed as three
+// additive opt-ins): setPlan's up-front plan block, `note` prose narration interleaved between steps,
+// and a consumer-supplied metric summary on finalize. Populated AFTER connection (the groupCards order),
+// since the trace also nests one iteration group.
+const trace = document.createElement('ui-status-stream') as UIStatusStreamElement
+trace.setAttribute('label', 'Generating the dashboard')
+// `receipt` (not bare `header`) — the meta cell only exists in an opted-in mode, and the settled
+// auto-collapse to "label + the consumer's metric summary" IS the reasoning-trace terminal shape
+// (nano-ui's auto-collapse-after-finish, realized through the ADR-0159 machinery); click re-expands
+// into the plan + narration + steps.
+trace.setAttribute('receipt', '')
+
 const specimens = document.createElement('div')
 specimens.append(
   exampleSection('A seeded strip (appendEntry + update)', stream),
   exampleSection('Grouped entries — a reasoning-chain card (ADR-0146 F5/F6, GH #147/ADR-0153)', ...groupCards.map((c) => captioned(c.caption, c.el))),
+  exampleSection('A reasoning trace — plan + narration notes + a metric summary (GH #737/ADR-0184)', trace),
 )
 
 composeDocPage(content, descriptor, body, specimens) // connects every specimen above to the live document
@@ -121,6 +134,20 @@ for (const { group, steps, el } of groupCards) {
   for (const step of steps) el.appendEntry({ ...step, parent: group.key })
   ;(el.querySelector(`ui-timeline-item[data-key="${group.key}"]`) as UITimelineItemElement).toggleDetail(true)
 }
+
+// GH #737/ADR-0184 — the reasoning trace, populated post-connection: plan first, then steps with
+// narration notes interleaved (prose rides `text`; the host stamps `data-note`, timeline-item.css paints
+// the markerless muted row), one iteration group (F5 — NOTHING new), then a settled receipt whose meta is
+// the CONSUMER's own metric string, verbatim (never parsed).
+trace.setPlan(['Read intent + classify domain', 'Search the pattern corpus', 'Adapt the best match', 'Validate and surface metrics'])
+trace.appendEntry({ key: 't-note-1', note: true, text: 'The request reads as a metrics dashboard — searching layout patterns.' })
+trace.appendEntry({ key: 't-search', status: 'done', label: 'search: Ranking corpus against intent', timestamp: '960ms' })
+trace.appendEntry({ key: 't-note-2', note: true, text: 'Best match: pattern #12 (KPI grid + trend chart). Adapting.' })
+trace.appendEntry({ key: 't-iter', status: 'done', label: 'Attempt 1', description: 'validation 94/100' })
+trace.appendEntry({ key: 't-iter-gen', status: 'done', label: 'generate', timestamp: '2s', parent: 't-iter' })
+trace.appendEntry({ key: 't-iter-val', status: 'done', label: 'validate', timestamp: '400ms', parent: 't-iter' })
+trace.appendEntry({ key: 't-assemble', status: 'done', label: 'assemble: Emitting components', timestamp: '2s' })
+trace.finalize({ summary: '31 components · 94/100 · 5.4s' })
 
 // GH #147/ADR-0153 Fork 2 — the CONSUMER'S OWN retry handling: the component only emits `action`; this
 // page decides what "retry" means (here: flip the failed step back to `active` and simulate it succeeding

@@ -3601,7 +3601,7 @@ all belongs to the producer/consumer (the `progressDetail:'source'` opt-in ladde
 
 - **`appendEntry(entry: StatusEntry): UITimelineItemElement`** — for a NEW `key`, creates a `ui-timeline-item`,
   assigns the entry's fields (`key`, `status?`, `label?`, `description?`, `timestamp?`, `icon?`, `text?`,
-  `startedAt?`, `action?`), appends it, tail-follows to it, and returns the element. Named `appendEntry`, not `append` — every element
+  `startedAt?`, `action?`, `note?`), appends it, tail-follows to it, and returns the element. Named `appendEntry`, not `append` — every element
   already inherits a native, incompatible `Node.prototype.append()` (a build-time LLD deviation from
   SPEC-R9's literal name, flagged for amendment; behaviour/signature otherwise identical). A **duplicate**
   `key` is a silent no-op — returns the existing element unchanged, never creating a second element or
@@ -3610,9 +3610,26 @@ all belongs to the producer/consumer (the `progressDetail:'source'` opt-in ladde
   already-rendered entry with that `key`: transitions `status`, grows/replaces streamed `text`, or reveals
   detail. A `key` with no matching entry is a silent no-op — never a throw (a late update after
   truncation is tolerated).
-- **`finalize(): void`** — the completion invariant: every still-`pending`/`active` entry renders
-  TRUNCATED (a distinct, non-color-only interrupted affordance on the item). Fail-closed. Also stops every
-  ticking elapsed-time display (GH #147/ADR-0153) — a settled stream never keeps a clock running.
+- **`finalize(options?: { summary?: string }): void`** — the completion invariant: every
+  still-`pending`/`active` entry renders TRUNCATED (a distinct, non-color-only interrupted affordance on
+  the item). Fail-closed. Also stops every ticking elapsed-time display (GH #147/ADR-0153) — a settled
+  stream never keeps a clock running. A non-empty `summary` (GH #737/ADR-0184) replaces the computed
+  receipt meta verbatim; `fail()` takes the same bag.
+- **`setPlan(items: readonly string[]): void`** (GH #737/ADR-0184) — the up-front plan block: a code-owned
+  "Plan" kicker over an `<ol>` of the items, pinned between the header and the entries. Idempotent
+  in-place replace; an empty array removes it. Not an entry — no key, no status, no chronology position.
+
+## Reasoning-trace narration + plan + summary (GH #737/ADR-0184)
+
+nano-ui's `agent-reasoning` surface, absorbed as three additive opt-ins rather than a ported sibling
+component (ADR-0184's ruling — its collapsible header, ticking, statuses, iterations, and disclosures all
+already lived here). **Notes**: `appendEntry({ key, note: true, text })` renders a markerless prose
+narration row — the host stamps `data-note`, `timeline-item.css` owns the styling (the `data-last`
+hosting-contract precedent); the prose rides the existing `text` field, so `update(key, { text })` grows
+it in place. A note's neutral status never escalates, never truncates, and is excluded from the receipt's
+"N steps" count. **Plan**: `setPlan` above. **Summary**: `finalize({ summary })`/`fail({ summary })`
+above. Iterations need nothing new — a group parent (F5) labeled "Attempt 1" with its escalated status is
+the iteration header.
 
 This host holds **no transport** of its own — no `fetch`/`ReadableStream` reference anywhere in its
 source. The consumer owns the stream and drives `appendEntry`/`update`/`finalize` as it yields.
@@ -4902,6 +4919,12 @@ a `ui-timeline-item`, several levels down) — which is exactly what the Figma c
 reads `label · description  time` on one line. Only an item with no grouped ancestor anywhere above it
 keeps the original two-row stack. Both the glyph and the layout are pure-CSS/data distinctions — no new
 prop.
+
+Two host-stamped attributes complete the hosting contract (stamped by `ui-timeline`/`ui-status-stream`,
+styled here — never props): `data-last` suppresses the terminal item's trailing connector (the
+no-dangling-connector law, SPEC-R6 AC2), and `data-note` (GH #737/ADR-0184) renders the row as a prose
+NARRATION line — no dot, no ring, no connector (the gutter column stays, so content alignment with step
+rows holds), muted ink — for interstitial reasoning text between steps.
 
 ## Accessibility
 

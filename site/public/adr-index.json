@@ -1265,5 +1265,12 @@
     "description": "Builder-interview mission nudge + plan visibility (GH #716): the drive-to-completion teaching gates on session === 'authoring' (derived host-side in admin-live…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0184",
+    "url": "./adr-index.html#adr-0184",
+    "description": "agent-reasoning trace (GH #737): EXTEND ui-status-stream, never port — nano-ui's agent-reasoning maps ~80% onto shipped machinery (F5 grouping = iterations, F6…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

@@ -41,9 +41,11 @@ properties:               # IDL beyond attributes-as-API — the imperative stre
   - name: update
     description: 'Method — update(key: string, patch: Partial<StatusEntry>) => void. A KEYED, in-place mutation to the already-rendered entry with that key: transitions status, grows/replaces streamed text, or reveals detail. A key with no matching entry is a silent no-op (never a throw — SPEC-R9 AC2). `patch.startedAt`/`patch.action` re-arm the SAME Fork 1/2 ticking-timer/retry-button mechanism appendEntry does. `patch.source` (GH #240/ADR-0159 wave B) re-stamps an EXISTING per-step reveal''s `<pre data-role="source">` in place (a same-node textContent mutation inside a closed details body — outside the live region''s announcement path); it never CREATES a reveal on an entry born without one (the `parent` set-once precedent — a graceful no-op).'
   - name: finalize
-    description: 'Method — finalize() => void. The completion invariant (SPEC-R11): marks every still-pending/active entry TRUNCATED, then settles the header (when opted in) to the escalated FINAL status (ADR-0146 F8; a truncated entry contributes `warning`). Fail-closed — a torn stream never shows "still working." Also stops every ticking elapsed-time display (GH #147/ADR-0153) — a settled stream never keeps a clock running.'
+    description: 'Method — finalize(options?: { summary?: string }) => void. The completion invariant (SPEC-R11): marks every still-pending/active entry TRUNCATED, then settles the header (when opted in) to the escalated FINAL status (ADR-0146 F8; a truncated entry contributes `warning`). Fail-closed — a torn stream never shows "still working." Also stops every ticking elapsed-time display (GH #147/ADR-0153) — a settled stream never keeps a clock running. GH #737/ADR-0184: a non-empty `options.summary` replaces the computed "N steps · total" receipt meta VERBATIM (e.g. "31 components · 94/100 · 5.4s" — nano-ui''s finish-summary shape; never parsed, never recomputed); a bare call keeps the computed shape, which counts STEPS only (note entries are narration, excluded).'
   - name: fail
-    description: 'Method — fail() => void. A FAILED stream (ADR-0146 F8): the completion invariant (like finalize()) PLUS the header forced to `error` regardless of the entries'' own escalation — the completion invariant''s header-level face for a thrown turn. A no-op on the header when `header` is not set. Also stops every ticking elapsed-time display, exactly as finalize() does.'
+    description: 'Method — fail(options?: { summary?: string }) => void. A FAILED stream (ADR-0146 F8): the completion invariant (like finalize()) PLUS the header forced to `error` regardless of the entries'' own escalation — the completion invariant''s header-level face for a thrown turn. A no-op on the header when `header` is not set. Also stops every ticking elapsed-time display, exactly as finalize() does. Takes the same optional `summary` as finalize() (GH #737/ADR-0184) — the forced-error status ink/glyph stays loud either way.'
+  - name: setPlan
+    description: 'Method — setPlan(items: readonly string[]) => void (GH #737/ADR-0184). The up-front plan block (nano-ui''s setPlan shape): a code-owned "Plan" kicker over an `<ol>` of the consumer''s items, pinned after the header (when present) and before every entry — NOT an entry (no key, no status, no place in the chronology). Idempotent replace: repeated calls mutate the existing `<li>` texts IN PLACE (the role=log same-node discipline), growing or shrinking the tail; an EMPTY array removes the block entirely. Hidden while collapsed, exactly like the entry list. Order header → plan → entries holds regardless of call order (a later-created header still prepends first).'
 
 events:                    # GH #147/ADR-0153 Fork 2 — the ONE new closed-vocabulary member; everything else (streamed text/state) still rides the role=log live region, never a synthetic event (SPEC-R12's original scope, unchanged)
   - name: action
@@ -67,6 +69,12 @@ parts:                     # the appended ui-timeline-item children are the "ent
     description: 'GH #239/ADR-0159 — the disclosure caret (a `caret-down` glyph), present only in an opted-in mode; rotates open when the header row''s `aria-expanded` reads true.'
   - name: source
     description: 'GH #240/ADR-0159 wave B — the `<pre data-role="source">` mono block rendering an entry''s attached raw wire text (`StatusEntry.source`) EXACTLY, byte-for-byte, never parsed. Lives inside a `[data-role="detail"]` child the host plants at appendEntry time, which the item''s OWN anatomy adopts into its shared composed `ui-disclosure` (`[data-part="detail"]`, ADR-0143 — one fold primitive, never a second) — collapsed by default, summary labelled "Source" (native details/summary supplies the button semantics, expanded/collapsed announcement, and Enter/Space keyboard operation, per ADR-0113). Absent entirely when the entry carries no `source` — the byte-identical default.'
+  - name: plan
+    description: 'GH #737/ADR-0184 — the `<div data-part="plan">` block setPlan() builds (present only once a non-empty plan is set): a kicker eyebrow + an ordered list, in the secondary ink, sharing the entries'' inline-start rail. Hidden while collapsed.'
+  - name: plan-label
+    description: 'GH #737/ADR-0184 — the plan block''s code-owned kicker ("Plan", uppercase, the fleet''s kicker typescale role) — chrome, never model text (the "Source" summary-label discipline).'
+  - name: plan-list
+    description: 'GH #737/ADR-0184 — the plan block''s `<ol data-part="plan-list">`; each `<li>` is one consumer-supplied plan item, mutated in place on repeated setPlan() calls.'
 
 customStates:              # GH #239/ADR-0159 — the disclosure state; the completion invariant still rides the ITEM's own :state(truncated) (timeline-item.md)
   - collapsed              # set via internals.states (jsdom-optional-chained) while the strip renders as one line — the `oneline` live posture or the settled `receipt`; CSS hides the entry list through it; never set outside the opt-in modes
@@ -199,7 +207,7 @@ all belongs to the producer/consumer (the `progressDetail:'source'` opt-in ladde
 
 - **`appendEntry(entry: StatusEntry): UITimelineItemElement`** — for a NEW `key`, creates a `ui-timeline-item`,
   assigns the entry's fields (`key`, `status?`, `label?`, `description?`, `timestamp?`, `icon?`, `text?`,
-  `startedAt?`, `action?`), appends it, tail-follows to it, and returns the element. Named `appendEntry`, not `append` — every element
+  `startedAt?`, `action?`, `note?`), appends it, tail-follows to it, and returns the element. Named `appendEntry`, not `append` — every element
   already inherits a native, incompatible `Node.prototype.append()` (a build-time LLD deviation from
   SPEC-R9's literal name, flagged for amendment; behaviour/signature otherwise identical). A **duplicate**
   `key` is a silent no-op — returns the existing element unchanged, never creating a second element or
@@ -208,9 +216,26 @@ all belongs to the producer/consumer (the `progressDetail:'source'` opt-in ladde
   already-rendered entry with that `key`: transitions `status`, grows/replaces streamed `text`, or reveals
   detail. A `key` with no matching entry is a silent no-op — never a throw (a late update after
   truncation is tolerated).
-- **`finalize(): void`** — the completion invariant: every still-`pending`/`active` entry renders
-  TRUNCATED (a distinct, non-color-only interrupted affordance on the item). Fail-closed. Also stops every
-  ticking elapsed-time display (GH #147/ADR-0153) — a settled stream never keeps a clock running.
+- **`finalize(options?: { summary?: string }): void`** — the completion invariant: every
+  still-`pending`/`active` entry renders TRUNCATED (a distinct, non-color-only interrupted affordance on
+  the item). Fail-closed. Also stops every ticking elapsed-time display (GH #147/ADR-0153) — a settled
+  stream never keeps a clock running. A non-empty `summary` (GH #737/ADR-0184) replaces the computed
+  receipt meta verbatim; `fail()` takes the same bag.
+- **`setPlan(items: readonly string[]): void`** (GH #737/ADR-0184) — the up-front plan block: a code-owned
+  "Plan" kicker over an `<ol>` of the items, pinned between the header and the entries. Idempotent
+  in-place replace; an empty array removes it. Not an entry — no key, no status, no chronology position.
+
+## Reasoning-trace narration + plan + summary (GH #737/ADR-0184)
+
+nano-ui's `agent-reasoning` surface, absorbed as three additive opt-ins rather than a ported sibling
+component (ADR-0184's ruling — its collapsible header, ticking, statuses, iterations, and disclosures all
+already lived here). **Notes**: `appendEntry({ key, note: true, text })` renders a markerless prose
+narration row — the host stamps `data-note`, `timeline-item.css` owns the styling (the `data-last`
+hosting-contract precedent); the prose rides the existing `text` field, so `update(key, { text })` grows
+it in place. A note's neutral status never escalates, never truncates, and is excluded from the receipt's
+"N steps" count. **Plan**: `setPlan` above. **Summary**: `finalize({ summary })`/`fail({ summary })`
+above. Iterations need nothing new — a group parent (F5) labeled "Attempt 1" with its escalated status is
+the iteration header.
 
 This host holds **no transport** of its own — no `fetch`/`ReadableStream` reference anywhere in its
 source. The consumer owns the stream and drives `appendEntry`/`update`/`finalize` as it yields.

@@ -1119,3 +1119,142 @@ describe('ui-status-stream — the per-step source reveal (GH #240/ADR-0159 wave
     el.remove()
   })
 })
+
+// ── the reasoning-trace opt-ins (GH #737/ADR-0184): note entries · setPlan · settle summary ────────────
+
+describe('ui-status-stream — StatusEntry.note renders a prose narration row (GH #737/ADR-0184)', () => {
+  it('note: true stamps data-note on the item; a plain entry never carries it (the byte-identical default)', () => {
+    const { el } = makeStream()
+    const note = el.appendEntry({ key: 'n1', note: true, text: 'The request matches the product-card pattern.' })
+    const step = el.appendEntry({ key: 's1', status: 'active', label: 'search: Ranking corpus…' })
+    expect(note.hasAttribute('data-note')).toBe(true)
+    expect(step.hasAttribute('data-note')).toBe(false)
+    expect(note.querySelector(':scope > [data-role="text"]')!.textContent).toBe('The request matches the product-card pattern.')
+    el.remove()
+  })
+
+  it('note prose grows in place via update(key, { text }) — the streamed-text machinery, unchanged', () => {
+    const { el } = makeStream()
+    const note = el.appendEntry({ key: 'n1', note: true, text: 'Reading intent' })
+    el.update('n1', { text: 'Reading intent — matched the dashboard domain.' })
+    expect(note.querySelector(':scope > [data-role="text"]')!.textContent).toBe('Reading intent — matched the dashboard domain.')
+    el.remove()
+  })
+
+  it('note is set-once at creation (the parent precedent): update() never mints data-note on a plain entry', () => {
+    const { el } = makeStream()
+    const step = el.appendEntry({ key: 's1', status: 'done', label: 'Validated' })
+    el.update('s1', { note: true, text: 'still a step' })
+    expect(step.hasAttribute('data-note')).toBe(false)
+    el.remove()
+  })
+
+  it('a note neither escalates the header nor truncates at settle — prose, not a step', async () => {
+    const { el } = await makeHeaderStream()
+    el.appendEntry({ key: 'n1', note: true, text: 'Thinking about the layout…' })
+    el.appendEntry({ key: 's1', status: 'done', label: 'Validated' })
+    el.finalize()
+    expect(headerStatus(el), 'the settled escalation reads done — the note contributed nothing').toBe('done')
+    const note = el.querySelector('[data-key="n1"]') as UITimelineItemElement
+    expect(note.matches(':state(truncated)'), 'a neutral note is never truncated by the completion invariant').toBe(false)
+    el.remove()
+  })
+
+  it('notes are EXCLUDED from the receipt step count', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-12T00:00:00.000Z'))
+    const { el, meta } = await makeReceiptStream({ receipt: true })
+    el.appendEntry({ key: 's1', status: 'done', label: 'search' })
+    el.appendEntry({ key: 'n1', note: true, text: 'Best match: pattern #12.' })
+    el.appendEntry({ key: 's2', status: 'done', label: 'assemble' })
+    vi.advanceTimersByTime(3200)
+    el.finalize()
+    expect(meta()!.textContent, 'two steps, one note ⇒ "2 steps", never three').toBe('2 steps · 3.2s')
+    el.remove()
+  })
+})
+
+describe('ui-status-stream — setPlan builds the up-front plan block (GH #737/ADR-0184)', () => {
+  const plan = (el: UIStatusStreamElement): HTMLElement | null => el.querySelector(':scope > [data-part="plan"]')
+  const items = (el: UIStatusStreamElement): string[] =>
+    Array.from(el.querySelectorAll(':scope > [data-part="plan"] > [data-part="plan-list"] > li')).map((li) => li.textContent ?? '')
+
+  it('builds kicker + <ol> before the entries; no setPlan call ⇒ no plan DOM at all (the default guarantee)', () => {
+    const { el } = makeStream()
+    el.appendEntry({ key: 's1', status: 'active', label: 'search' })
+    expect(plan(el), 'no plan DOM without the call').toBeNull()
+    el.setPlan(['Read intent', 'Search patterns', 'Synthesize output'])
+    const block = plan(el)!
+    expect(block.querySelector(':scope > [data-part="plan-label"]')!.textContent).toBe('Plan')
+    expect(items(el)).toEqual(['Read intent', 'Search patterns', 'Synthesize output'])
+    // pinned BEFORE the entries: the plan precedes the first ui-timeline-item in document order
+    const first = el.querySelector(':scope > ui-timeline-item')!
+    expect(block.compareDocumentPosition(first) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    el.remove()
+  })
+
+  it('idempotent replace mutates the SAME <li> nodes in place (role=log discipline), growing/shrinking the tail', () => {
+    const { el } = makeStream()
+    el.setPlan(['a', 'b'])
+    const firstLi = el.querySelector('[data-part="plan-list"] > li')!
+    el.setPlan(['a2', 'b2', 'c2'])
+    expect(items(el)).toEqual(['a2', 'b2', 'c2'])
+    expect(el.querySelector('[data-part="plan-list"] > li')).toBe(firstLi) // same node, re-stamped
+    el.setPlan(['only'])
+    expect(items(el)).toEqual(['only'])
+    expect(el.querySelector('[data-part="plan-list"] > li')).toBe(firstLi)
+    el.remove()
+  })
+
+  it('an empty array removes the block; a later setPlan rebuilds it', () => {
+    const { el } = makeStream()
+    el.setPlan(['a'])
+    el.setPlan([])
+    expect(plan(el)).toBeNull()
+    el.setPlan(['b'])
+    expect(items(el)).toEqual(['b'])
+    el.remove()
+  })
+
+  it('order is header → plan → entries regardless of call order (a later-armed header still lands first)', async () => {
+    const { el } = makeStream()
+    el.setPlan(['step one'])
+    el.appendEntry({ key: 's1', status: 'active', label: 'working' })
+    el.header = true
+    await whenFlushed()
+    const kids = Array.from(el.children).map((c) => (c as HTMLElement).dataset.part ?? c.tagName.toLowerCase())
+    expect(kids).toEqual(['header', 'plan', 'ui-timeline-item'])
+    el.remove()
+  })
+})
+
+describe('ui-status-stream — finalize/fail({ summary }) replaces the receipt meta verbatim (GH #737/ADR-0184)', () => {
+  it('finalize({ summary }) shows the consumer string in place of the computed "N steps · total"', async () => {
+    const { el, meta, header } = await makeReceiptStream({ receipt: true })
+    el.appendEntry({ key: 's1', status: 'done', label: 'search' })
+    el.finalize({ summary: '31 components · 94/100 · 5.4s' })
+    expect(meta()!.textContent).toBe('31 components · 94/100 · 5.4s')
+    expect(header()!.getAttribute('data-status'), 'the settled glyph state is untouched').toBe('done')
+    el.remove()
+  })
+
+  it('fail({ summary }) keeps the forced-error face loud with the consumer meta', async () => {
+    const { el, meta, header } = await makeReceiptStream({ receipt: true })
+    el.appendEntry({ key: 's1', status: 'active', label: 'generate' })
+    el.fail({ summary: '2 attempts · validation 62/100' })
+    expect(meta()!.textContent).toBe('2 attempts · validation 62/100')
+    expect(header()!.getAttribute('data-status')).toBe('error')
+    el.remove()
+  })
+
+  it('a bare finalize() keeps the computed receipt — the additive default (and an empty summary is ignored)', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-12T00:00:00.000Z'))
+    const { el, meta } = await makeReceiptStream({ receipt: true })
+    el.appendEntry({ key: 's1', status: 'done', label: 'search' })
+    vi.advanceTimersByTime(500)
+    el.finalize({ summary: '' })
+    expect(meta()!.textContent, 'empty summary ⇒ the computed shape, exactly as shipped').toBe('1 step · 0.5s')
+    el.remove()
+  })
+})

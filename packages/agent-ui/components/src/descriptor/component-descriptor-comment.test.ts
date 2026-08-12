@@ -69,12 +69,13 @@ describe('descriptor comment rule — the LIVE instances (GH #610)', () => {
 
   it("status-stream.md's QUOTED part descriptions survive their leading GH reference", () => {
     const d = parseDescriptor(fenceOf(repo('packages/agent-ui/components/src/controls/status-stream/status-stream.md')))
-    // these four are authored as single-quoted scalars OPENING on a `#NNN` reference — the old rule cut each
-    // one down to the bare `'GH` fragment (an unterminated quote at that), losing the whole description
+    // these are authored as single-quoted scalars OPENING on a `#NNN` reference — the old rule cut each
+    // one down to the bare `'GH` fragment (an unterminated quote at that), losing the whole description.
+    // Four at GH #610's fix; the GH #737/ADR-0184 plan parts (plan/plan-label/plan-list) grew it to seven.
     const quoted = (d.sequences.get('parts') ?? [])
       .map((p) => p.get('description'))
       .filter((v): v is string => typeof v === 'string' && v.startsWith('GH #'))
-    expect(quoted.length).toBe(4)
+    expect(quoted.length).toBe(7)
     for (const v of quoted) expect(v.length).toBeGreaterThan(120)
   })
 })

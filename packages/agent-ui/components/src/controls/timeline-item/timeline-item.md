@@ -169,6 +169,12 @@ reads `label · description  time` on one line. Only an item with no grouped anc
 keeps the original two-row stack. Both the glyph and the layout are pure-CSS/data distinctions — no new
 prop.
 
+Two host-stamped attributes complete the hosting contract (stamped by `ui-timeline`/`ui-status-stream`,
+styled here — never props): `data-last` suppresses the terminal item's trailing connector (the
+no-dangling-connector law, SPEC-R6 AC2), and `data-note` (GH #737/ADR-0184) renders the row as a prose
+NARRATION line — no dot, no ring, no connector (the gutter column stays, so content alignment with step
+rows holds), muted ink — for interstitial reasoning text between steps.
+
 ## Accessibility
 
 `internals.role = 'listitem'` is set in the constructor (semantics before insertion). No built-in
