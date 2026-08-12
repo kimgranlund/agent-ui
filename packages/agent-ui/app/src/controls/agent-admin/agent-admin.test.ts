@@ -2257,6 +2257,111 @@ describe('UIAgentAdminElement — GH #418: the client-plane never-silent law (A2
   })
 })
 
+// ── GH #802 (ADR-0097 §1, Kim's 2026-08-13 ruling) — an ASK-declared surface advances the dialog ROUND;
+// every NON-ask surface keeps TKT-0079's stay-in-the-card resume. The two tests below are the SAME script
+// with ONE difference — whether the runner declares its surfaces as asks — so the ask arm is provably the
+// only thing that moves the routing. ────────────────────────────────────────────────────────────────────
+
+describe('UIAgentAdminElement — GH #802: an answered ask opens the next dialog round', () => {
+  /** One surface + one clickable commit Button, the minimal REAL A2UI payload a click can come out of
+   *  (the GH #418 block's own two-line shape). The ask-ness never lives in this payload — it rides the
+   *  meta-line's `ask` declaration, which is exactly what the peel/discriminator pair is about. */
+  function surfaceLines(surfaceId: string, label: string): { kind: 'line'; line: string }[] {
+    return [
+      { kind: 'line' as const, line: JSON.stringify({ version: 'v1.0', createSurface: { surfaceId, catalogId: 'agent-ui' } }) },
+      {
+        kind: 'line' as const,
+        line: JSON.stringify({
+          version: 'v1.0',
+          updateComponents: {
+            surfaceId,
+            components: [{ id: 'root', component: 'Button', variant: 'solid', label, action: { action: 'submit' } }],
+          },
+        }),
+      },
+    ]
+  }
+
+  /** Mount an admin whose intent turn builds round 1 and whose client turn builds round 2 — `declareAsks`
+   *  picks whether each round is DECLARED as a feed ask (the peeled `{kind:'ask'}` event the live runner
+   *  emits, admin-live-runner.ts). */
+  async function mountRounds(declareAsks: boolean): Promise<{ el: UIAgentAdminElement; turns: unknown[] }> {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({})
+    const turns: unknown[] = []
+    el.agentSurfaceTurn = async function* (req) {
+      turns.push(req.turn)
+      const round = req.turn.kind === 'intent' ? 1 : 2
+      const surfaceId = `ask-${round}`
+      if (declareAsks) yield { kind: 'ask' as const, ask: { surfaceId } }
+      yield { kind: 'note' as const, note: round === 1 ? 'Which size?' : 'Got it — and which colour?' }
+      for (const line of surfaceLines(surfaceId, `Commit ${round}`)) yield line
+    }
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    await gh418Submit(el, 'coach me')
+    return { el, turns }
+  }
+
+  /** Click the rendered commit Button of round 1 and settle the DEFERRED client turn (GH #63). */
+  async function commitRoundOne(el: UIAgentAdminElement): Promise<void> {
+    const button = [...el.querySelectorAll<HTMLElement>('ui-surface-host ui-button')].find((b) => b.textContent?.trim() === 'Commit 1')
+    expect(button, 'round 1 rendered a real, clickable commit Button').not.toBeUndefined()
+    button!.click()
+    await whenFlushed()
+    await new Promise((r) => setTimeout(r, 0))
+    await whenFlushed()
+  }
+
+  const agentBubbles = (el: UIAgentAdminElement): HTMLElement[] => [
+    ...el.querySelectorAll<HTMLElement>('[data-part="bubble"][data-role="agent"]'),
+  ]
+
+  /** A bubble's OWN note text — its direct `[data-part="body"]` child (GH #240: a bare descendant query
+   *  would match the narration reveal's own disclosure anatomy first). */
+  const noteOf = (bubble: HTMLElement): string | undefined =>
+    [...bubble.children].find((c) => (c as HTMLElement).dataset?.part === 'body')?.textContent ?? undefined
+
+  it('answering a DECLARED ask opens a NEW round — a fresh bubble with the next card, the answered one left behind as history', async () => {
+    const { el, turns } = await mountRounds(true)
+    const firstBubble = agentBubbles(el)[0]!
+    const firstHost = firstBubble.querySelector('ui-surface-host') as HTMLElement
+
+    await commitRoundOne(el)
+
+    expect(turns).toHaveLength(2)
+    expect((turns[1] as { kind: string }).kind, 'the commit click really ran a new surface turn').toBe('client')
+
+    const bubbles = agentBubbles(el)
+    expect(bubbles, 'the ask answer advances the dialog: a SECOND agent bubble').toHaveLength(2)
+    // The new round's own card mounted in the NEW bubble…
+    const secondHost = bubbles[1]!.querySelector('ui-surface-host') as HTMLElement
+    expect(secondHost, 'round 2 mounted its own surface host in the new bubble').not.toBeNull()
+    expect(secondHost.querySelector('ui-button')?.textContent?.trim()).toBe('Commit 2')
+    // …and the ANSWERED card is untouched history: same host, same bubble, its own question prose intact.
+    expect(firstHost.isConnected, 'the answered ask survives').toBe(true)
+    expect(firstHost.closest('[data-part="bubble"]'), 'the answered ask stays in ITS bubble').toBe(firstBubble)
+    expect(firstBubble.querySelectorAll('ui-surface-host'), 'nothing new mounted into the answered bubble').toHaveLength(1)
+    expect(firstHost.querySelector('ui-button')?.textContent?.trim(), 'the answered ask was never rebuilt').toBe('Commit 1')
+    expect(noteOf(firstBubble), "the answered ask keeps its OWN question — the next round's prose never overwrote it").toBe(
+      'Which size?',
+    )
+  })
+
+  it('REGRESSION (TKT-0079): with no ask declared, the SAME script still resumes the owning bubble in place', async () => {
+    const { el, turns } = await mountRounds(false)
+    const firstBubble = agentBubbles(el)[0]!
+
+    await commitRoundOne(el)
+
+    expect(turns).toHaveLength(2)
+    expect(agentBubbles(el), 'a non-ask action reply opens NO new bubble (TKT-0079)').toHaveLength(1)
+    // TKT-0079's own clause: even a FRESH surfaceId in a resumed turn mounts into the SAME bubble's mounts.
+    expect(firstBubble.querySelectorAll('ui-surface-host'), "round 2's card mounted into the resumed bubble").toHaveLength(2)
+    expect(noteOf(firstBubble), 'the resumed bubble takes the new note').toBe('Got it — and which colour?')
+  })
+})
 
 // ── GH #47/#48 — the add-from-library seam ──────────────────────────────────────────────────────────────
 

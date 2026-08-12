@@ -677,6 +677,20 @@ export class UIAgentAdminElement extends UIElement {
   // trusting an `updateDataModel` envelope's `surfaceId` at face value. Element-lifetime, cleared on a
   // real persona switch (`#resetConversationState`) exactly like `#history`/`#turnLog` above.
   #knownSurfaceIds: Set<string> = new Set()
+  // GH #802 (ADR-0097 §1) — the surfaceIds this admin has seen DECLARED as feed ASKS (the runner's peeled
+  // `ask` event) and actually rendered. The dialog-round discriminator: an answered ask is never updated —
+  // the producer grammar's own law ("that ask's surface is now part of the conversation's own history — do
+  // NOT delete it, update it, or rebuild it, ever… if the next step needs another ask, declare a NEW ask
+  // with a FRESH id", prompts/grammar.md) — so a reply to one must open a NEW round rather than resume its
+  // bubble (`#resumeTargetFor`). Element-lifetime, cleared on a real persona switch
+  // (`#resetConversationState`) exactly like `#knownSurfaceIds` above; append-only within a conversation
+  // (an ask stays history for as long as its bubble does).
+  //
+  // ELEMENT-scoped, not per-context (the `#knownSurfaceIds` precedent, deliberately): both contexts' asks
+  // want the same round-advance, so the only cross-talk a shared set can produce is a NON-ask surface in one
+  // conversation coincidentally wearing an ask id declared in the other — which would cost that one click a
+  // fresh bubble, and nothing else. A per-context map buys nothing against that.
+  #askSurfaceIds: Set<string> = new Set()
   // The composer's Effort picker selection (the Figma chat-input refactor) — ephemeral, element-lifetime
   // state, deliberately NOT persisted to `store` (unlike `model`): reasoning effort is a per-conversation
   // dial, not a saved agent-profile setting, and Figma's own composer design carries no Effort field in
@@ -2634,6 +2648,9 @@ export class UIAgentAdminElement extends UIElement {
    *  live-apply law); the runner owns the transport-side session/history (SPEC-N1 — the component never
    *  sees a transport type). Errors surface through the fail path, exactly the text arm's discipline.
    *
+   *  GH #802 — a peeled `ask` renders nothing; it records WHICH surface is an ask, which is what decides the
+   *  next round's bubble when that ask is answered (`#resumeTargetFor`).
+   *
    *  `origin` (GH #662) is a SEPARATE parameter, deliberately not a member of `turn`: `turn` is the wire
    *  shape handed verbatim to the injected runner (SPEC-N1), and which composer a turn came from is this
    *  element's own routing business, not the runner's. It selects the context (`#contextFor`) and nothing
@@ -2721,8 +2738,10 @@ export class UIAgentAdminElement extends UIElement {
     }
     // TKT-0079 — an action-click/error turn RESUMES the bubble owning its surface (the game loop stays in
     // one card); a typed intent stays a fresh bubble (its reply must not appear above the question).
+    // GH #802 (Kim's 2026-08-13 ruling) — with ONE ruled exception, `#resumeTargetFor`: a click that
+    // ANSWERS a declared ask advances the dialog to a new round instead of resuming.
     const handle = conversation.beginAgentTurn(
-      turn.kind === 'client' ? { intoSurface: clientMessageSurfaceId(turn.message) } : undefined,
+      turn.kind === 'client' ? { intoSurface: this.#resumeTargetFor(turn.message) } : undefined,
     )
     // GH #354 — the conversation generation this turn belongs to, captured BEFORE the (dogfood-only) asset
     // await below; see `#conversationEpoch`.
@@ -2838,6 +2857,12 @@ export class UIAgentAdminElement extends UIElement {
             // needed — a plan arriving on a turn this client never asked the model to produce is simply
             // formatted the same as one it did (the wire is gate-blind, SPEC-R20/SPEC-R31).
             planChecklist = formatPlanChecklist(event.plan)
+          } else if (event.kind === 'ask') {
+            // GH #802 (ADR-0097 §1) — RECORD, never render: an ask's own surface arrives as ordinary `line`
+            // events below (this event carries the routing fact alone). Gated on `a2uiOn` for the SAME
+            // reason `#knownSurfaceIds` is, one arm down: an ask this client refused to render has no
+            // clickable card, so it must never claim to own a dialog round.
+            if (a2uiOn) this.#askSurfaceIds.add(event.ask.surfaceId)
           } else if (event.kind === 'line') {
             wireLines.push(event.line)
             // GH #418 — an A2UI wire line only renders (`ingestLine`) while A2UI is actually on this
@@ -2911,6 +2936,33 @@ export class UIAgentAdminElement extends UIElement {
         this.#logTurn('surface', request, { error: message, lines: wireLines })
       }
     })()
+  }
+
+  /** GH #802 (Kim's 2026-08-13 ruling) — WHICH bubble a client turn RESUMES, or `undefined` for a fresh
+   *  one (the dialog's next round).
+   *
+   *  TKT-0079's law stands untouched for every surface this element has NOT seen declared as an ask: the
+   *  clicked surface's own bubble, so an interaction/game loop stays in one card. An ASK-declared surface is
+   *  the one ruled exception, and the exception comes from the ask contract itself (ADR-0097 §1, and the
+   *  producer grammar that teaches it): an answered ask is never updated — it becomes conversation history
+   *  and the next step declares a FRESH ask id — so the reply to an answered ask IS by definition a new
+   *  round. Resuming its bubble both hid that round and overwrote the answered card's own question prose at
+   *  finalize (`#renderBody(note, …)`, conversation.ts) — the two halves of the GH #802 symptom.
+   *
+   *  Decided HERE, at turn START, off the ANSWERED surface's ask-ness — deliberately NOT mid-stream off the
+   *  reply's own declaration. Two reasons, both mechanical: (1) the answered surface is known before the
+   *  request is even built, so nothing needs re-routing; (2) `beginAgentTurn` has already swapped a resumed
+   *  bubble's narration strip by the time any meta-line arrives, so a mid-stream re-route could only reach a
+   *  fresh bubble by first mutating (and then having to settle) the very card it is supposed to leave
+   *  untouched. This way the answered card is never written to at all.
+   *
+   *  ADR-0129 cl.2 is untouched by this: a fresh ask id is not a KNOWN surfaceId, so mounting it in a fresh
+   *  bubble IS that law's own fresh-surface arm; a known surfaceId still routes to its original host either
+   *  way (`routeLine`, conversation.ts). */
+  #resumeTargetFor(message: unknown): string | undefined {
+    const surfaceId = clientMessageSurfaceId(message)
+    if (surfaceId !== undefined && this.#askSurfaceIds.has(surfaceId)) return undefined
+    return surfaceId
   }
 
   /** The turn's composed persona, for whichever context is driving.
@@ -3355,6 +3407,7 @@ export class UIAgentAdminElement extends UIElement {
     this.#turnLog = []
     this.#turnCounter = 0
     this.#knownSurfaceIds.clear() // GH #525 — a new persona's surfaces are unrelated to the old ones
+    this.#askSurfaceIds.clear() // GH #802 — and so are its asks: the answered history just went away with the log
     // GH #670 — and so is an unarmed Author pick: a Model/Effort choice made while describing THIS persona's
     // successor must not silently seed the next persona's interview. The card re-paints neutral pickers on
     // the `#reflectAuthorEntry` the caller's `#rewireAuthoringContext` already runs.
