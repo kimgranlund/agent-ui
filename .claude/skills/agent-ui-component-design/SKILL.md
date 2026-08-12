@@ -27,7 +27,7 @@ Load the map skills as you go: [[agent-ui-component-standards]] (law),
 
 ## Procedure
 
-1. **Extract intent** (find-the-ask where installed; its discipline inline otherwise).
+1. **Extract intent** (find-intent where installed; its discipline inline otherwise — the old find-the-ask name is dead, GH #761).
    Root goal vs literal ask; ONE batched clarifying round max. Name the component's *job* in
    one sentence — everything downstream keys off it. **Combined intakes are a valid shape**
    (two tickets whose components may be one family — the timeline/status-stream precedent):

@@ -22,7 +22,7 @@ exemplars ARE the standard — read them, don't re-derive.
 
 | Layer | What it proves | Pattern from (exemplar) |
 |---|---|---|
-| Descriptor trip-wire | frontmatter ≡ `finalize(Class)` AND ≡ source (`customStates`/slots) | `packages/agent-ui/components/src/descriptor/component-descriptor-{driftwire,sourcewire}.test.ts`; per-control `{name}-descriptor.test.ts` (theme-provider's is the newest) |
+| Descriptor trip-wire | frontmatter ≡ `finalize(Class)` AND ≡ source (`customStates`/slots) | `packages/agent-ui/components/src/descriptor/component-descriptor-{driftwire,sourcewire}.test.ts`; per-control `{name}-descriptor.test.ts` (any recent control's is a current exemplar) |
 | jsdom behaviour + geometry/token trip-wires | props/events/form behavior; the geometry/centering trip-wires per [[agent-ui-component-standards]]'s law; every `--ui-{cmp}-*` declared in `:where()`; no raw primitive refs; no dimensional-constant reads in `@scope` (fleet-wide: `controls/styling-gates.test.ts`, the TKT-0066 item 5 ruling) | `controls/checkbox/` (the gold template) · `controls/button/` |
 | Cross-engine browser truth (Chromium + WebKit, `{name}.browser.test.ts`) | rendered px responds to `[size]`/`[scale]`/`[density]`; survives `forced-colors`; **the WHOLE rendered bounding box in a realistic container** (the whole-shape law — per-part px can all pass while the control collapses to a dot; assert the gestalt) | `controls/checkbox/checkbox.browser.test.ts`; the negative-control probe pattern in `site/pages/a2a-artifact-feed.browser.test.ts` (proves a width-floor assertion non-vacuous) |
 | Built-output proofs (when the behavior depends on the PRODUCTION build) | the shipped CSS/JS bytes behave — dev-green ≠ built-green (TKT-0002: LightningCSS downleveled `light-dark()` and broke per-subtree `color-scheme`; only a built-output test catches the class) | the two-test bridge: `site/lib/theme-provider-build-fixture.test.ts` (node-side real `vite build`, byte-identity vs a committed fixture — red names its own fix: regenerate) + `site/lib/theme-provider-build.browser.test.ts` (`?raw` fixture import, real `getComputedStyle`); shared build via `site/lib/build-css.ts` |
@@ -102,8 +102,9 @@ back, or OBSERVE an animation it does not drive? (GH #359/#364/#365/#366.)
 - **Writer** — e.g. `scrollTop = scrollHeight` with no `scroll-behavior`. The read-back is
   synchronous and layout-derived, so TIMER pacing is correct and frame pacing is wrong: rAF
   shrinks the stability window, and it stalls outright on a hidden tab where the log must stay
-  pinned. Pattern: `#tailFollowLog` in
-  `packages/agent-ui/app/src/controls/conversation/conversation.ts` (discriminated resolve).
+  pinned. Pattern: the public `followTail()` seam on
+  `packages/agent-ui/app/src/controls/conversation/conversation-dialog.ts` (discriminated resolve —
+  promoted verbatim off conversation.ts's old `#tailFollowLog`, whose name this line once cited, GH #761).
 - **Observer** — e.g. a smooth `scrollIntoView`. Positions commit only at PAINT, so it must
   sample once per painted frame (N identical painted frames is evidence; N identical timer
   reads is not — queued timers drain back-to-back under starvation) PLUS a wall-clock floor.
@@ -135,7 +136,7 @@ passes solo); a future addition to that class is a one-line append to
 1. `npm run check` (tsc + site) and `npm test` — both green, read separately.
 2. The control's `.browser.test.ts` green on BOTH engines — jsdom-green ≠ done.
 3. `npm run size` by hand when the bundle surface changed (manual by Kim's ruling).
-4. **Independent review is non-optional**: the `component-checker` agent grades before the
+4. **Independent review is non-optional**: the `screens:component-checker` agent grades before the
    commit (generator ≠ critic) — it has caught real cross-engine bugs green suites bypassed.
 5. New site pages drag the standing site gates: `site-canon`, `site-toc`,
    `site-coverage` (all under `components/src/descriptor/`), and the llms byte-gate
