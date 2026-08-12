@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach, beforeAll, afterAll } from 'vitest'
 import { UISurfaceHostElement } from './surface-host.ts'
 import { whenFlushed } from '@agent-ui/components'
 import '@agent-ui/components/components' // self-registers ui-button/ui-column for the streamed fixture below
@@ -21,6 +21,23 @@ declare const process: { cwd(): string }
 // props + contract↔source trip-wires. What jsdom CANNOT resolve — the actual painted checkered/forced-
 // colors geometry — is surface-host.browser.test.ts's job.
 
+// jsdom reality (the conversation.test.ts precedent) — no native ElementInternals.setFormValue/
+// setValidity; GH #805's fixtures mount REAL form-associated ui-checkbox/ui-text-field controls (to prove
+// the disable walk is duck-typed, not button-only), which need this stub to connect at all under jsdom.
+let realAttachInternals: typeof HTMLElement.prototype.attachInternals
+beforeAll(() => {
+  realAttachInternals = HTMLElement.prototype.attachInternals
+  HTMLElement.prototype.attachInternals = function (this: HTMLElement): ElementInternals {
+    const internals = realAttachInternals.call(this) as unknown as Record<string, unknown>
+    if (typeof internals.setFormValue !== 'function') internals.setFormValue = () => {}
+    if (typeof internals.setValidity !== 'function') internals.setValidity = () => {}
+    return internals as unknown as ElementInternals
+  }
+})
+afterAll(() => {
+  HTMLElement.prototype.attachInternals = realAttachInternals
+})
+
 const mounted: Element[] = []
 afterEach(() => {
   while (mounted.length) mounted.pop()?.remove()
@@ -34,13 +51,14 @@ function mount<T extends Element>(el: T): T {
 const line = (obj: unknown): string => JSON.stringify(obj)
 
 describe('ui-surface-host — pre-connect calls are a documented no-op (LLD-C1)', () => {
-  it('ingest/finalize/dispose/onClientMessage before connect never throw, and warn ONCE total (not per-call)', () => {
+  it('ingest/finalize/dispose/onClientMessage/setInteractiveDisabled before connect never throw, and warn ONCE total (not per-call)', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const el = document.createElement('ui-surface-host') as UISurfaceHostElement
     expect(() => el.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'agent-ui' } }))).not.toThrow()
     expect(() => el.finalize()).not.toThrow()
     expect(() => el.dispose()).not.toThrow()
     expect(() => el.onClientMessage(() => {})).not.toThrow()
+    expect(() => el.setInteractiveDisabled(false)).not.toThrow() // GH #805
     expect(warn).toHaveBeenCalledTimes(1)
     expect(String(warn.mock.calls[0][0])).toMatch(/before connect/i)
     warn.mockRestore()
@@ -173,6 +191,107 @@ describe('ui-surface-host — onClientMessage delivers a stubbed client message 
     expect(received).toHaveLength(1)
     expect(received[0]).toMatchObject({ action: { surfaceId: 's2', name: 'submit' } })
   })
+})
+
+// GH #805 — answered cards disable their inputs. The self-wired mechanism (disable-on-action, re-enable-
+// on-ingest) plus the one caller-driven arm this element exposes (`setInteractiveDisabled`, for a failed/
+// aborted turn — driven from ui-conversation, proven end to end there).
+describe('ui-surface-host — GH #805: answered cards disable their inputs', () => {
+  const CREATE = (id: string): string => line({ version: 'v1.0', createSurface: { surfaceId: id, catalogId: 'agent-ui' } })
+
+  it('an action click disables EVERY interactive descendant — the fleet\'s whole disabled-bearing set, duck-typed', () => {
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.ingest(CREATE('d1'))
+    el.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'd1',
+          components: [
+            { id: 'root', component: 'Column', children: ['tf', 'cb', 'btn'] },
+            { id: 'tf', component: 'TextField', name: 'budget', label: 'Budget' },
+            { id: 'cb', component: 'Checkbox', name: 'terms', label: 'I accept' },
+            { id: 'btn', component: 'Button', variant: 'solid', label: 'Go', action: { action: 'go' } },
+          ],
+        },
+      }),
+    )
+    const btn = el.querySelector('ui-button') as HTMLElement & { disabled: boolean }
+    const tf = el.querySelector('ui-text-field') as HTMLElement & { disabled: boolean }
+    const cb = el.querySelector('ui-checkbox') as HTMLElement & { disabled: boolean }
+    expect(btn.disabled).toBe(false)
+    expect(tf.disabled).toBe(false)
+    expect(cb.disabled).toBe(false)
+
+    btn.click()
+    expect(btn.disabled, 'the clicked control itself').toBe(true)
+    expect(tf.disabled, 'a sibling text field').toBe(true)
+    expect(cb.disabled, 'a sibling checkbox').toBe(true)
+  })
+
+  it('a SECOND action message never re-queues past the first — the disabled control itself makes it inert (unit-level: disabling twice is idempotent)', () => {
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    const received: unknown[] = []
+    el.onClientMessage((m) => received.push(m))
+    el.ingest(CREATE('d2'))
+    el.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: { surfaceId: 'd2', components: [{ id: 'root', component: 'Button', variant: 'solid', label: 'Go', action: { action: 'go' } }] },
+      }),
+    )
+    const btn = el.querySelector('ui-button') as HTMLElement & { disabled: boolean }
+    btn.click()
+    expect(received).toHaveLength(1)
+    expect(btn.disabled).toBe(true)
+    // jsdom applies no CSS (pointer-events:none is a real-engine-only guarantee — surface-host.browser.
+    // test.ts proves the real hit-testing block); this only proves re-disabling an already-disabled
+    // control is a harmless no-op, never a crash/double-toggle.
+    expect(() => el.setInteractiveDisabled(true)).not.toThrow()
+    expect(btn.disabled).toBe(true)
+  })
+
+  it('ingest() re-enables unconditionally on entry — a new line for THIS surface comes back live (TKT-0079)', () => {
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.ingest(CREATE('d3'))
+    el.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: { surfaceId: 'd3', components: [{ id: 'root', component: 'Button', variant: 'solid', label: 'Go', action: { action: 'go' } }] },
+      }),
+    )
+    const btn = el.querySelector('ui-button') as HTMLElement & { disabled: boolean }
+    btn.click()
+    expect(btn.disabled).toBe(true)
+
+    el.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: { surfaceId: 'd3', components: [{ id: 'root', component: 'Button', variant: 'solid', label: 'Go again', action: { action: 'go' } }] },
+      }),
+    )
+    expect(btn.disabled, 're-enabled the moment a new line arrived, before finalize()').toBe(false)
+  })
+
+  it('an ask-declared surface that never receives another line stays disabled — setInteractiveDisabled(false) is the ONE way back', () => {
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.ingest(CREATE('d4'))
+    el.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: { surfaceId: 'd4', components: [{ id: 'root', component: 'Button', variant: 'solid', label: 'Go', action: { action: 'go' } }] },
+      }),
+    )
+    const btn = el.querySelector('ui-button') as HTMLElement & { disabled: boolean }
+    btn.click()
+    expect(btn.disabled).toBe(true)
+    el.finalize() // finalize() alone (no new line) never re-enables — matches the "stays disabled as history" law
+    expect(btn.disabled).toBe(true)
+
+    el.setInteractiveDisabled(false) // the failed/aborted-turn arm, driven by the app (conversation.ts's fail())
+    expect(btn.disabled).toBe(false)
+  })
+
 })
 
 describe('ui-surface-host — dispose (idempotent, SPEC-R2 AC2)', () => {

@@ -228,6 +228,107 @@ describe('ui-conversation — per-surface registry (SPEC-R7): persistent identit
   })
 })
 
+// GH #805 — answered A2UI cards disable their inputs. The disable-on-action + re-enable-on-update arms
+// are surface-host.ts's OWN mechanism (self-wired, zero wiring here — proven there); this file's job is
+// the ONE arm ui-conversation itself owns: `AgentTurnHandle.fail()` re-enabling the surface whose own
+// action started the now-failed turn when that turn never sent it another line.
+describe('ui-conversation — GH #805: fail() re-enables the surface its own action started', () => {
+  function mountButtonSurface(el: UIConversationElement, surfaceId: string): { host: UISurfaceHostElement; button: HTMLElement & { disabled: boolean } } {
+    const t = el.beginAgentTurn()
+    t.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId, catalogId: 'agent-ui' } }))
+    t.ingestLine(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId,
+          components: [{ id: 'root', component: 'Button', variant: 'solid', label: 'Go', action: { action: 'go' } }],
+        },
+      }),
+    )
+    t.finalize()
+    const hosts = log(el).querySelectorAll('ui-surface-host')
+    const host = hosts[hosts.length - 1] as UISurfaceHostElement // THIS call's own fresh mount — never an earlier surface's
+    const button = host.querySelector('ui-button') as HTMLElement & { disabled: boolean }
+    return { host, button }
+  }
+
+  it('a click disables the card; a resumed update (TKT-0079) re-enables it — no fail() needed', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const { button } = mountButtonSurface(el, 'game')
+    expect(button.disabled).toBe(false)
+    button.click()
+    expect(button.disabled, 'the click disabled its own card').toBe(true)
+
+    const t2 = el.beginAgentTurn({ intoSurface: 'game' })
+    t2.ingestLine(
+      line({ version: 'v1.0', updateComponents: { surfaceId: 'game', components: [{ id: 'root', component: 'Button', variant: 'solid', label: 'Go again', action: { action: 'go' } }] } }),
+    )
+    expect(button.disabled, 'a new update line re-enables the card live, mid-batch').toBe(false)
+    t2.finalize()
+    expect(button.disabled).toBe(false)
+  })
+
+  it('fail() re-enables the originating surface when the turn NEVER sends it another line (the ask-arm shape, GH #802/#803)', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const { button } = mountButtonSurface(el, 'ask-1')
+    button.click()
+    expect(button.disabled).toBe(true)
+
+    // The ask-arm's real turn: a FRESH bubble (no intoSurface — GH #802's own routing), never resending
+    // the answered surfaceId at all.
+    const t2 = el.beginAgentTurn()
+    t2.fail('network error')
+    expect(button.disabled, 'a failed turn must not strand the dead card disabled').toBe(false)
+  })
+
+  it('finalize() does NOT re-enable an untouched surface — a successful ask round stays disabled as history', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const { button } = mountButtonSurface(el, 'ask-2')
+    button.click()
+    expect(button.disabled).toBe(true)
+
+    const t2 = el.beginAgentTurn() // fresh round, never touches 'ask-2'
+    t2.setNote('a fresh question')
+    t2.finalize()
+    expect(button.disabled, 'success on an untouched surface leaves it disabled — answered history').toBe(true)
+  })
+
+  it('FIFO: two surfaces disabled in click order are each claimed by their OWN beginAgentTurn(), never swapped', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const { button: buttonA } = mountButtonSurface(el, 'card-a')
+    const { button: buttonB } = mountButtonSurface(el, 'card-b')
+    buttonA.click()
+    buttonB.click()
+    expect(buttonA.disabled).toBe(true)
+    expect(buttonB.disabled).toBe(true)
+
+    const turnA = el.beginAgentTurn() // claims card-a (the OLDEST pending entry)
+    const turnB = el.beginAgentTurn() // claims card-b
+
+    turnA.fail('a failed')
+    expect(buttonA.disabled, 'turnA re-enabled its OWN surface').toBe(false)
+    expect(buttonB.disabled, 'turnA must never touch the OTHER surface').toBe(true)
+
+    turnB.fail('b failed')
+    expect(buttonB.disabled).toBe(false)
+  })
+
+  it('a surface already re-enabled by its own update is a harmless no-op for a later fail() (no double-fire)', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const { button } = mountButtonSurface(el, 'game-2')
+    button.click()
+    expect(button.disabled).toBe(true)
+
+    const t2 = el.beginAgentTurn({ intoSurface: 'game-2' })
+    t2.ingestLine(
+      line({ version: 'v1.0', updateComponents: { surfaceId: 'game-2', components: [{ id: 'root', component: 'Button', variant: 'solid', label: 'Again', action: { action: 'go' } }] } }),
+    )
+    expect(button.disabled).toBe(false) // re-enabled by the update already
+    expect(() => t2.fail('late error')).not.toThrow()
+    expect(button.disabled).toBe(false)
+  })
+})
+
 describe('ui-conversation — mountGenui (genui-surface.spec.md SPEC-R5/R8): the PARALLEL per-surface mount', () => {
   it('a fresh surfaceId mounts a NEW ui-sandbox-frame inline in that turn bubble; a KNOWN id (a later turn) rebuilds the SAME host in place', () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)

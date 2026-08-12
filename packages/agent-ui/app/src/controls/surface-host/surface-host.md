@@ -88,7 +88,30 @@ host.onClientMessage((message) => { /* route an action/response/error however th
 host.ingest(jsonlLine) // one validated A2UI JSONL line at a time, as the app's OWN transport yields them
 host.finalize()        // end of a batch — stretches a root ui-column to fill the artboard
 host.dispose()         // tears down the RendererHost; idempotent-safe
+host.setInteractiveDisabled(false) // GH #805 — re-enable a card after its own turn failed/aborted
 ```
+
+## Answered cards disable their inputs (GH #805)
+
+The moment this surface emits an outbound `action` client-message (a button/etc click), EVERY
+interactive descendant currently mounted disables — self-wired at connect, before any consumer's own
+`onClientMessage(cb)` runs, so no consumer wiring is required for this arm. Duck-typed
+(`'disabled' in el`), never a hardcoded tag list: today's fleet set is
+ui-button/ui-checkbox/ui-radio-group/ui-select/ui-text-field/ui-slider, and any future control that
+grows a `disabled` prop participates for free. This is also the double-submit guard, for free — the
+disabled controls themselves make a second click on the same card inert.
+
+`ingest()` re-enables unconditionally on entry: a NEW line arriving for this surface is the model
+re-engaging the card (an in-place `updateComponents` re-render — TKT-0079's game loop) — it "comes back
+live" the moment ANY new data arrives, never by inspecting which component ids the new line touches. An
+ask-declared surface (GH #802/#803) never receives another line by contract, so it stays disabled as
+answered history — exactly the wanted shape, no special-casing needed here.
+
+The one arm this element cannot own itself — a FAILED/aborted turn's re-enable, since only the app
+knows whether its own transport call ultimately succeeded — is the public
+`setInteractiveDisabled(disabled: boolean)` method: a documented no-op pre-connect, callable any time
+to force the disabled state either way (`ui-conversation`'s `AgentTurnHandle.fail()` is the one shipped
+caller, conversation.ts).
 
 ## Mount + stream ONLY (ADR-0129 clause 1)
 

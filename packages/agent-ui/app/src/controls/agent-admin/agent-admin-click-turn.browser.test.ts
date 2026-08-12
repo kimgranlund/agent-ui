@@ -287,4 +287,43 @@ describe('ui-agent-admin — GH #42: a REAL canvas click drives the next surface
     await new Promise((r) => setTimeout(r, 0))
     expect(document.body.isConnected).toBe(true)
   })
+
+  // GH #805 — answered A2UI cards disable their inputs. Real-engine coverage: jsdom cannot compute CSS at
+  // all (no `pointer-events`, no `getComputedStyle` truth), so the double-submit guard — a REAL platform
+  // fact, not a JS flag — can only be proven here.
+  it('GH #805: a REAL click disables the card SYNCHRONOUSLY, with the real pointer-events:none guard engaged', async () => {
+    const { el } = await mountWithScript(() => [{ kind: 'note', note: 'click acknowledged' }])
+    const btn = (await driveIntentToButton(el)) as HTMLElement & { disabled: boolean }
+    expect(btn.disabled).toBe(false)
+    expect(getComputedStyle(btn).pointerEvents).not.toBe('none')
+
+    btn.click() // the REAL A2uiAction through the renderer into onClientMessage
+    // Disabled the INSTANT the action fires — synchronous, before the deferred (setTimeout(0), GH #63)
+    // surface turn even starts. No `waitUntil` needed for this assertion; it proves the disable is not
+    // waiting on the turn's own async round-trip.
+    expect(btn.disabled, 'disabled synchronously on click, ahead of any turn even starting').toBe(true)
+    expect(getComputedStyle(btn).pointerEvents, 'the REAL platform double-submit guard — CSS, not JS').toBe('none')
+  })
+
+  it('GH #805/TKT-0079: the follow-through update re-renders the SAME card LIVE — a stale disabled state never survives a real re-render', async () => {
+    const { el } = await mountWithScript(() => [{ kind: 'line', line: VALID_FOLLOWUP_LINE }])
+    const btn = (await driveIntentToButton(el)) as HTMLElement & { disabled: boolean }
+    btn.click()
+    expect(btn.disabled).toBe(true)
+    await waitUntil(() => btn.textContent?.trim() === 'Round 2') // TKT-0079's own resumed-update proof, unchanged
+    expect(btn.disabled, "the resumed update (this SAME node, rewireNode's identity-preserving reconcile) comes back live").toBe(false)
+    expect(getComputedStyle(btn).pointerEvents).not.toBe('none')
+  })
+
+  it('GH #805: a failed/aborted turn re-enables the card — never a stranded disabled control', async () => {
+    const { el } = await mountWithScript(() => {
+      throw new Error('boom')
+    })
+    const btn = (await driveIntentToButton(el)) as HTMLElement & { disabled: boolean }
+    btn.click()
+    expect(btn.disabled, 'disabled synchronously, ahead of the (about-to-throw) turn').toBe(true)
+    await waitUntil(() => btn.disabled === false)
+    expect(getComputedStyle(btn).pointerEvents, 're-enabled for real, not just a stale JS flag').not.toBe('none')
+    expect(el.textContent, "fail()'s own existing system-bubble behavior is untouched").toContain('boom')
+  })
 })

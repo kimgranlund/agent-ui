@@ -6,8 +6,9 @@
 // `[data-part="stage"]` checkered box nesting a `[data-part="surface"]` translate-centered mount point,
 // `site/lib/canvas-surface.ts`'s proven shape, promoted verbatim — at connect, mounts a fresh
 // `createRenderer()` host into it, and exposes that host's own mount/stream seam as public imperative
-// methods (`ingest`/`finalize`/`dispose`/`onClientMessage`). It NEVER calls a transport, holds a model/
-// provider reference, or reads an API key — mount + stream only (ADR-0129 clause 1, SPEC-R2/R8).
+// methods (`ingest`/`finalize`/`dispose`/`onClientMessage`/`setInteractiveDisabled`, GH #805). It NEVER
+// calls a transport, holds a model/provider reference, or reads an API key — mount + stream only
+// (ADR-0129 clause 1, SPEC-R2/R8).
 //
 // Standalone-usable (SPEC-R3): holds no reference to any `ui-conversation` ancestor, so it behaves
 // identically composed directly into an app frame's persistent canvas (a2ui-live's re-hosted
@@ -22,6 +23,20 @@
 // Deep-import guard (SPEC-R2 AC4): imports ONLY `createRenderer`/`RendererHost`/`ClientMessageListener`/
 // `A2uiClientMessage` from the `@agent-ui/a2ui` PUBLIC barrel — never `packages/agent-ui/a2ui/tools/**`
 // (the produce loop / `AgentTransport` types). A standing grep in surface-host.test.ts guards this.
+//
+// GH #805 — answered cards disable their inputs. On ANY outbound `action` client-message this surface
+// emits, every interactive descendant (button/checkbox/radio/select/text-field/slider — the fleet's
+// WHOLE `disabled`-bearing set, duck-typed, never a hardcoded tag list) disables immediately — self-
+// wired at connect (`#host.onClientMessage`, registered BEFORE any external `onClientMessage(cb)` a
+// consumer adds, so it always sees the action first) — a proper answered-history posture, AND the
+// double-submit guard for free (the disabled controls themselves make a second click inert; no extra
+// bookkeeping needed). `ingest()` re-enables unconditionally on entry: a NEW line for this surface IS
+// the model re-engaging this card (an in-place `updateComponents` re-render, TKT-0079's game loop) —
+// "comes back live" by construction, never by inspecting WHAT the line changed. An ask-declared surface
+// (GH #802/#803) never receives another line by contract, so it never re-enables this way — it stays
+// disabled as history, exactly the wanted shape. The one caller-driven arm this element cannot own
+// itself — a FAILED/aborted turn's re-enable — is the public `setInteractiveDisabled(false)` method
+// below; `ui-conversation`'s `AgentTurnHandle.fail()` is the one shipped caller (conversation.ts).
 
 import { UIElement, prop, withViewTransition, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
 import { createRenderer } from '@agent-ui/a2ui'
@@ -68,6 +83,12 @@ export class UISurfaceHostElement extends UIElement {
   // rebuilds a fresh, empty artboard (below), so its next stream is a first paint again.
   #settledOnce = false
 
+  // GH #805 — cheap common-case skip: most surfaces never have an action fire, so `ingest()`'s
+  // unconditional re-enable call would otherwise walk the WHOLE mounted subtree on every streamed line
+  // for nothing. Set true the moment `#applyInteractiveDisabled(true)` runs; only a `true` value ever
+  // triggers the (cheap, but non-zero) walk on the way back to `false`.
+  #interactiveDisabledActive = false
+
   protected connected(): void {
     if (this.#host === undefined) {
       const stage = document.createElement('div')
@@ -79,6 +100,12 @@ export class UISurfaceHostElement extends UIElement {
       this.#surface = surface
       this.#host = createRenderer()
       this.#host.mount(surface)
+      // GH #805 — the self-wired disable-on-action listener (see the file-header note). Registered
+      // BEFORE any consumer's own `onClientMessage(cb)` call (this element's own connect-time setup runs
+      // first, by construction), so the `RendererHost`'s listener `Set` always calls this one first.
+      this.#host.onClientMessage((message) => {
+        if ('action' in message) this.#applyInteractiveDisabled(true)
+      })
     }
 
     // ARIA via internals only, never a host attribute. A `region` role is meaningful only paired with a
@@ -103,6 +130,12 @@ export class UISurfaceHostElement extends UIElement {
    *  amendment's one accepted (sub-second, not a real operating condition) edge. */
   ingest(line: string): void {
     if (!this.#guard('ingest')) return
+    // GH #805 — a new line for THIS surface is the model re-engaging this card: re-enable un-
+    // conditionally, on entry, before applying it. Never inspects what the line changes — "comes back
+    // live" is a property of a NEW update arriving at all (TKT-0079's in-place game loop), not of which
+    // component ids it happens to touch (a resumed reply may re-wire only SOME of the tree, `rewireNode`'s
+    // identity-preserving reconcile — the OLD disabled elements it does not touch must still come back).
+    this.#applyInteractiveDisabled(false)
     withViewTransition(() => {
       // The helper's stated caveat: the transition path runs this ASYNC — a disconnect between queue
       // and run nulls #host (below), so the staleness re-check lives INSIDE the mutate (ADR-0183 cl.1).
@@ -149,7 +182,37 @@ export class UISurfaceHostElement extends UIElement {
     this.#host = undefined
     this.#surface = undefined
     this.#settledOnce = false // GH #742 — a rebuilt artboard's next stream is a first paint again
+    this.#interactiveDisabledActive = false // GH #805 — a rebuilt artboard's next mount starts live
     this.replaceChildren()
+  }
+
+  /** GH #805 — the caller-driven re-enable arm: a failed/aborted turn re-enables this card's controls
+   *  even though it never sent another line (the ONE thing this element cannot know on its own — whether
+   *  the app's own transport call that the emitted `action` started ultimately succeeded or failed). Also
+   *  usable to force-disable from OUTSIDE an action click (a consumer's own busy/availability gate), though
+   *  the shipped fleet never needs that arm — the self-wired listener above already covers every real
+   *  click. A no-op pre-connect (the documented `#guard` idiom, matching `ingest`/`finalize`/`dispose`). */
+  setInteractiveDisabled(disabled: boolean): void {
+    if (!this.#guard('setInteractiveDisabled')) return
+    this.#applyInteractiveDisabled(disabled)
+  }
+
+  /** Walks the mounted subtree and sets every interactive descendant's OWN `disabled` prop — duck-typed
+   *  (`'disabled' in el`), never a hardcoded tag list, so any control the catalog resolves to (today:
+   *  ui-button/ui-checkbox/ui-radio-group/ui-select/ui-text-field/ui-slider — the fleet's whole
+   *  `disabled`-bearing set) participates, and a FUTURE one grown a `disabled` prop participates for free.
+   *  Each control's own reactive effect chain does the rest (tabbable/aria-disabled/`:state(disabled)` —
+   *  this never touches ARIA or a host attribute directly, only the control's typed prop, same as any
+   *  consumer calling `el.disabled = true` would). The `#interactiveDisabledActive` guard makes the common
+   *  case (never disabled) an O(1) no-op — most `ingest()` calls have nothing to re-enable. */
+  #applyInteractiveDisabled(disabled: boolean): void {
+    if (this.#surface === undefined) return
+    if (disabled) this.#interactiveDisabledActive = true
+    else if (!this.#interactiveDisabledActive) return
+    else this.#interactiveDisabledActive = false
+    for (const el of this.#surface.querySelectorAll('*')) {
+      if ('disabled' in el) (el as unknown as { disabled: boolean }).disabled = disabled
+    }
   }
 
   /** Registers a callback for outbound client messages (actions/responses/errors) the mounted surface

@@ -286,6 +286,19 @@ conv.addEventListener('action', (e) => {
 })
 ```
 
+## Answered A2UI cards disable their inputs (GH #805)
+
+Every composed `ui-surface-host` self-disables its own interactive descendants the moment it emits an
+outbound `action` client-message — zero wiring required here or at any consumer (surface-host.md owns
+the mechanism). This element's own contribution is the one arm a surface-host cannot own itself: when
+`AgentTurnHandle.fail(message)` runs, it re-enables the ONE surface whose own action started this now-
+failed turn, even if the turn never sent that surface another line (e.g. an ask-declared surface's real
+turn opens a fresh bubble and never resends the answered surfaceId, GH #802/#803's own routing) — a dead
+card is never stranded disabled. A surface that DID receive an update this turn already re-enabled
+itself the moment that update arrived (`ui-surface-host.ingest()`'s own re-enable-on-entry) — `fail()`'s
+call is a harmless no-op for it. TKT-0079's in-place game loop is unaffected either way: the SAME
+surfaceId's host re-renders live on its own next `updateComponents`, regardless of which bubble resumed.
+
 ## Transport-free by construction (SPEC-R8)
 
 `ui-conversation` exposes **no** transport/provider-shaped type. The app's own turn loop (its own
