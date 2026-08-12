@@ -491,3 +491,43 @@ describe('createAdminSurfaceTurn — the guided-authoring widening (LLD-C4)', ()
     expect(JSON.stringify((bodies[1]!.input as { session?: unknown }).session)).toContain('first')
   })
 })
+
+// GH #802 (ADR-0097 §1) — the ASK peel: the routing fact the component's dialog-round decision reads. The
+// SAME per-field-independent discipline the note/patch/plan arms above are pinned to; the ask's own SURFACE
+// still rides the ordinary `line` stream (that disjointness is asserted here too — an ask event must never
+// consume or replace the payload it names).
+describe('createAdminSurfaceTurn — the ADR-0097 ask peel (GH #802)', () => {
+  const ASK_SURFACE_LINE = '{"version":"v1.0","createSurface":{"surfaceId":"ask-1","catalogId":"agent-ui"}}'
+
+  function stubStream(lines: string[]): void {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(streamOfLines(lines), { status: 200, headers: { 'content-type': 'application/x-ndjson' } })),
+    )
+  }
+
+  it('peels a declared ask into its own typed event, alongside the note on the same meta-line', async () => {
+    stubStream([JSON.stringify({ a2uiMeta: { note: 'Which size?', ask: { surfaceId: 'ask-1' } } }), ASK_SURFACE_LINE])
+    const events: AdminSurfaceTurnEvent[] = []
+    for await (const event of createAdminSurfaceTurn()(SURFACE_REQUEST)) events.push(event)
+    // note → ask → the ask surface's OWN wire line, in stream order: the peel adds an event, it never
+    // swallows the payload (the meta-line itself is still never ingested — ADR-0088 §1).
+    expect(events.map((e) => e.kind)).toEqual(['note', 'ask', 'line'])
+    expect(events.find((e) => e.kind === 'ask')).toEqual({ kind: 'ask', ask: { surfaceId: 'ask-1' } })
+    expect(events.find((e) => e.kind === 'line')).toEqual({ kind: 'line', line: ASK_SURFACE_LINE })
+  })
+
+  it('a note-only turn yields NO ask event (the discriminator never fires on an ordinary turn)', async () => {
+    stubStream([JSON.stringify({ a2uiMeta: { note: 'Table set.' } }), ASK_SURFACE_LINE])
+    const kinds: string[] = []
+    for await (const event of createAdminSurfaceTurn()(SURFACE_REQUEST)) kinds.push(event.kind)
+    expect(kinds).toEqual(['note', 'line'])
+  })
+
+  it('a MALFORMED ask drops only itself — the note on the same line still rides (readMetaLine\'s per-field law, end to end)', async () => {
+    stubStream([JSON.stringify({ a2uiMeta: { note: 'Which size?', ask: { surfaceId: 42 } } })])
+    const events: AdminSurfaceTurnEvent[] = []
+    for await (const event of createAdminSurfaceTurn()(SURFACE_REQUEST)) events.push(event)
+    expect(events).toEqual([{ kind: 'note', note: 'Which size?' }])
+  })
+})

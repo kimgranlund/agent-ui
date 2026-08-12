@@ -96,12 +96,21 @@ interface Mounted {
   requests: AdminSurfaceTurnRequest[]
 }
 
-/** Mount the admin with a scripted runner whose client branch is caller-supplied. */
-async function mountWithScript(clientTurn: (req: AdminSurfaceTurnRequest) => AdminSurfaceTurnEvent[]): Promise<Mounted> {
+/** Mount the admin with a scripted runner whose client branch is caller-supplied. `intentTurn` (GH #802)
+ *  overrides the seed script for the INTENT leg — the ask test needs its first round declared as an ask;
+ *  every pre-existing caller omits it and gets the byte-identical seed replay. */
+async function mountWithScript(
+  clientTurn: (req: AdminSurfaceTurnRequest) => AdminSurfaceTurnEvent[],
+  intentTurn?: (req: AdminSurfaceTurnRequest) => AdminSurfaceTurnEvent[],
+): Promise<Mounted> {
   const requests: AdminSurfaceTurnRequest[] = []
   const script = async function* (req: AdminSurfaceTurnRequest): AsyncIterable<AdminSurfaceTurnEvent> {
     requests.push(req)
     if (req.turn.kind === 'intent') {
+      if (intentTurn !== undefined) {
+        for (const ev of intentTurn(req)) yield ev
+        return
+      }
       for (const message of SEED_MESSAGES) yield { kind: 'line', line: JSON.stringify(message) }
       yield { kind: 'note', note: 'seed surface up' }
     } else {
@@ -201,6 +210,64 @@ describe('ui-agent-admin — GH #42: a REAL canvas click drives the next surface
       el.querySelectorAll('[data-part="bubble"]').length,
       'a resumed client turn opens NO new bubble (TKT-0079)',
     ).toBe(bubblesBefore)
+  })
+
+  // GH #802 (ADR-0097 §1, Kim's 2026-08-13 ruling) — the SAME click→turn vehicle, one round of a real
+  // interview: an ASK-declared card is answered, so the reply advances the DIALOG (a fresh bubble carrying
+  // the next ask) instead of resuming the answered card. The TKT-0079 follow-through test right above is
+  // this test's own control — same file, same driver, non-ask surface, resume unchanged.
+  it('GH #802: answering a DECLARED ask advances the dialog round — a fresh bubble/card, the answered card untouched', async () => {
+    const askLines = (surfaceId: string, label: string): AdminSurfaceTurnEvent[] => [
+      { kind: 'line', line: JSON.stringify({ version: 'v1.0', createSurface: { surfaceId, catalogId: 'agent-ui' } }) },
+      {
+        kind: 'line',
+        line: JSON.stringify({
+          version: 'v1.0',
+          updateComponents: {
+            surfaceId,
+            components: [{ id: 'root', component: 'Button', variant: 'solid', label, action: { action: 'submit' } }],
+          },
+        }),
+      },
+    ]
+    const { el, requests } = await mountWithScript(
+      () => [{ kind: 'ask', ask: { surfaceId: 'ask-2' } }, { kind: 'note', note: 'Got it — and which colour?' }, ...askLines('ask-2', 'Commit 2')],
+      () => [{ kind: 'ask', ask: { surfaceId: 'ask-1' } }, { kind: 'note', note: 'Which size?' }, ...askLines('ask-1', 'Commit 1')],
+    )
+    const buttonLabeled = (label: string): HTMLElement | undefined =>
+      [...el.querySelectorAll<HTMLElement>('[data-part="mounts"] ui-surface-host ui-button')].find((b) => b.textContent?.trim() === label)
+    const agentBubbles = (): HTMLElement[] => [...el.querySelectorAll<HTMLElement>('[data-part="bubble"][data-role="agent"]')]
+
+    const editor = el.querySelector('ui-conversation-composer [data-part="editor"]') as HTMLElement
+    editor.textContent = 'coach me'
+    editor.dispatchEvent(new Event('input', { bubbles: true }))
+    ;(el.querySelector('ui-conversation-composer [data-part="send"]') as HTMLElement).click()
+    await waitUntil(() => buttonLabeled('Commit 1') !== undefined)
+
+    const firstCard = buttonLabeled('Commit 1')!
+    const firstHost = firstCard.closest('ui-surface-host') as HTMLElement
+    const firstBubble = firstHost.closest('[data-part="bubble"]') as HTMLElement
+    expect(agentBubbles(), 'round 1 is one agent bubble').toHaveLength(1)
+
+    firstCard.click() // the REAL A2uiAction through the renderer → onClientMessage → the client turn
+    await waitUntil(() => requests.length === 2 && buttonLabeled('Commit 2') !== undefined)
+
+    const secondHost = buttonLabeled('Commit 2')!.closest('ui-surface-host') as HTMLElement
+    const secondBubble = secondHost.closest('[data-part="bubble"]') as HTMLElement
+    expect(agentBubbles(), 'the answered ask advanced the dialog: a SECOND agent bubble').toHaveLength(2)
+    expect(secondBubble, 'the next round mounted in a DIFFERENT bubble').not.toBe(firstBubble)
+    // The answered card is untouched history — still there, still in its own bubble, still its own label.
+    expect(firstHost.isConnected).toBe(true)
+    expect(firstHost.closest('[data-part="bubble"]'), 'the answered ask stays in ITS bubble').toBe(firstBubble)
+    expect(firstBubble.querySelectorAll('ui-surface-host'), 'nothing new mounted into the answered bubble').toHaveLength(1)
+    expect(buttonLabeled('Commit 1'), 'the answered ask was never rebuilt or deleted').not.toBeUndefined()
+    // Whole-shape, real engine: BOTH rounds are genuinely laid out, stacked in reading order (the answered
+    // card above the new one) — not one card overwritten in place.
+    const firstRect = firstCard.getBoundingClientRect()
+    const secondRect = buttonLabeled('Commit 2')!.getBoundingClientRect()
+    expect(firstRect.width, 'the answered card still occupies real space').toBeGreaterThan(0)
+    expect(secondRect.width, "the new round's card has real size").toBeGreaterThan(0)
+    expect(secondRect.top, 'the new round renders BELOW the answered one').toBeGreaterThan(firstRect.top)
   })
 
   it('GH #63 regression: a producer that answers every error turn with a poisoned root-resend HALTS at the budget instead of livelocking', async () => {

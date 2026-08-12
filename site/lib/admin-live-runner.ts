@@ -251,6 +251,15 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
           if (typeof meta.a2uiMeta.note === 'string' && meta.a2uiMeta.note.length > 0) {
             yield { kind: 'note', note: meta.a2uiMeta.note }
           }
+          // GH #802 (ADR-0097 §1) — a declared feed ASK peels into its own typed event, beside note/
+          // progress. The ROUTING FACT only ("that surfaceId is an ask"), never a payload: the ask's own
+          // surface rides the ordinary validated `line` stream below, completely unchanged (ADR-0097 §1's
+          // own division). Peeled here for the SAME reason `personaPatch`/`plan` are — this runner peels,
+          // the component decides what it means (its ask-aware dialog-round routing, agent-admin.ts).
+          // `produce()` has already DROPPED any ask whose integrity failed (`askIntegrityHolds`: no
+          // matching createSurface this turn, or a session-colliding id), so an `ask` that reaches this
+          // line names a surface this very turn creates.
+          if (meta.a2uiMeta.ask) yield { kind: 'ask', ask: meta.a2uiMeta.ask }
           // ADR-0178 cl.2 / SPEC-R29 — a declared persona patch peels into its own typed event, beside
           // note/progress. GATE-BLIND on purpose: the runner does not read the authoring gate, does not
           // know which store drives this turn, and never decides consumption. A second enforcement point

@@ -364,6 +364,20 @@ receipt line to the turn's note — `Updated <section> › <fold>` per changed l
 field→location map (`field-location.ts`) is derived from the canonical persona-key constants and
 parity-gated total over `PERSONA_STATE_KEYS`; an unmapped key skips silently, never throws.
 
+## Which bubble a surface action answers into (TKT-0079 + GH #802)
+
+A surface turn started by an ACTION CLICK resumes the bubble that owns the clicked surface — the
+interaction/game loop stays in one card (TKT-0079: "stay in the same card unless it has to become a new
+card"), and even a fresh `surfaceId` in that resumed turn mounts into the same bubble. Answering a
+**declared feed ask** is the one exception (ADR-0097 §1, Kim's 2026-08-13 ruling on GH #802): an answered
+ask is never updated — it becomes conversation history and the next step declares a FRESH ask id — so its
+reply opens a NEW dialog round (a fresh bubble carrying the next card, the answered card left untouched
+above it). The discriminator is the ask DECLARATION the runner peels off the meta-line (`{kind:'ask'}`,
+`AdminSurfaceTurnEvent`), recorded per rendered ask and read at turn start off the ANSWERED surface — never
+the reply's own mid-stream declaration, which could only reach a fresh bubble by first mutating the card it
+is supposed to leave alone. ADR-0129 cl.2 is untouched either way: a known `surfaceId` still routes to its
+original host, and a fresh ask id is by definition not a known one.
+
 ## The chat canvas: a stub by default, a real model call under a DEV-only opt-in (ADR-0131/ADR-0136)
 
 By default `ui-agent-admin` has **no external runtime dependency** — the turn loop that answers each
