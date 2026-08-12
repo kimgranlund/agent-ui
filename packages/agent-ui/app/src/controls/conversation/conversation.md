@@ -286,6 +286,34 @@ conv.addEventListener('action', (e) => {
 })
 ```
 
+## Answered A2UI cards disable their inputs (GH #805)
+
+Every composed `ui-surface-host` self-disables its own interactive descendants the moment it emits an
+outbound `action` client-message (excepting an explicit `wantResponse:false` opt-out, ADR-0088 §3 — no
+turn will ever run for one, so this element mirrors the skip rather than disabling a card nothing will
+ever re-enable) — zero wiring required here or at any consumer (surface-host.md owns the disable/
+re-enable mechanism itself, including which elements are its own to revert). This element's own
+contribution is the one arm a surface-host cannot own itself: `beginAgentTurn(opts)` accepts an OPTIONAL
+`disabledSurfaceId` (defaulting to `intoSurface` when omitted — pass it explicitly only when it diverges,
+e.g. GH #802/#803's ask-arm, where the answered surface routes to a FRESH bubble but is still owed a
+re-enable on failure) naming the surface whose own action started this turn; `AgentTurnHandle.fail(
+message)` re-enables that ONE surface if the turn never sent it another line — a dead card is never
+stranded disabled. A surface that DID receive an update this turn already re-enabled itself the moment
+that update arrived (`ui-surface-host.ingest()`'s own re-enable-on-entry, which also drops this
+element's own bookkeeping for it, `routeLine`'s known-surface branch) — `fail()`'s call is a harmless
+no-op for it. TKT-0079's in-place game loop is unaffected either way: the SAME surfaceId's host
+re-renders live on its own next `updateComponents`, regardless of which bubble resumed.
+
+The bookkeeping is a plain membership `Set`, deliberately keyed rather than FIFO-ordered: a `disabledSurfaceId`
+is only ever claimed by the specific `beginAgentTurn()` call that names it (or its `intoSurface`
+default) — never "whatever's oldest pending" — so an UNRELATED turn (a genui action's own turn, which
+never disables anything through this element at all; a typed intent, which names neither field) can
+never misclaim a click it has nothing to do with. A consumer that calls `beginAgentTurn()` with neither
+field for a client-action turn (no TKT-0079 resume concept of its own) gets no automatic fail-reenable
+for the narrow case where that turn fails before ever resending its own surfaceId — `ui-surface-host`'s
+own update-reenable arm still covers the ordinary case for every consumer, unchanged. `reset()` clears
+this bookkeeping along with the rest of the per-session registry.
+
 ## Transport-free by construction (SPEC-R8)
 
 `ui-conversation` exposes **no** transport/provider-shaped type. The app's own turn loop (its own

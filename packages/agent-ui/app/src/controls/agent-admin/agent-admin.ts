@@ -2660,13 +2660,31 @@ export class UIAgentAdminElement extends UIElement {
     // exactly today's values and `session` stays absent, so the built request is byte-identical.
     const { store, conversation, session } = this.#contextFor(origin)
     const surfaceTurn = this.agentSurfaceTurn
-    if (!conversation || surfaceTurn === undefined) return
+    // GH #805 repair (independent component-checker, PR #809) — a `client` message's OWN action already
+    // disabled its card the instant it fired (surface-host.ts's self-wired listener), before this
+    // function even runs (`#handleClientMessage`'s `setTimeout(0)` defer). EVERY early return below that
+    // declines to run a turn for a `client` message must claim-and-refuse — the GH #418 posture already
+    // shipped a few lines down (the a2uiOn-off gate) — so the card is never stranded disabled with
+    // nothing ever coming back to re-enable it. A typed `intent` never disabled anything (no `conversation`
+    // to claim through, or nothing to claim) — the helper is then a no-op by construction.
+    const refuseClientAction = (message: string): void => {
+      if (turn.kind === 'client' && conversation) {
+        conversation.beginAgentTurn({ intoSurface: clientMessageSurfaceId(turn.message) }).fail(message)
+      }
+    }
+    if (!conversation || surfaceTurn === undefined) {
+      refuseClientAction('No surface-turn runner is configured — this action was not sent.')
+      return
+    }
     // The store this turn is FENCED to. Captured here, at turn start, and compared by IDENTITY when a
     // patch arrives — the bankroll mirror's own captured-store posture.
     const drivingStore = store
     // The Agent master switch gates surface turns too — BOTH kinds: a typed intent and a surface action
     // click (an inactive agent runs nothing, Kim's ruling).
-    if (!isEnabledFlag(store?.get(AGENT_ENABLED_KEY))) return
+    if (!isEnabledFlag(store?.get(AGENT_ENABLED_KEY))) {
+      refuseClientAction('The agent is currently off — this action was not sent.')
+      return
+    }
     const a2uiOn = isEnabledFlag(store?.get(SURFACE_A2UI_KEY))
     const genuiOn = isGenuiSurfaceEnabled(store?.get(SURFACE_GENUI_KEY))
     // genui-surface.spec.md v0.5 §11 (GH #316/ADR-0162) — a FRESH store read (the live-apply law); a stale
@@ -2690,7 +2708,9 @@ export class UIAgentAdminElement extends UIElement {
         // while A2UI is off. Never spawn a real network turn (the modality really is off, unchanged), but
         // DO surface a one-line visible refusal on the clicked surface's own bubble — `fail()` only
         // narrates (conversation.ts), it starts no work — so this stays a client-only, zero-network path.
-        conversation.beginAgentTurn({ intoSurface: clientMessageSurfaceId(turn.message) }).fail(A2UI_OFF_ACTION_REFUSAL)
+        // GH #805 repair — the SAME `refuseClientAction` helper the two gates above now share; this is
+        // the posture they were widened to match, unchanged in its own behavior.
+        refuseClientAction(A2UI_OFF_ACTION_REFUSAL)
         return
       }
     } else if (!a2uiOn && !genuiOn) {
@@ -2740,8 +2760,14 @@ export class UIAgentAdminElement extends UIElement {
     // one card); a typed intent stays a fresh bubble (its reply must not appear above the question).
     // GH #802 (Kim's 2026-08-13 ruling) — with ONE ruled exception, `#resumeTargetFor`: a click that
     // ANSWERS a declared ask advances the dialog to a new round instead of resuming.
+    // GH #805 repair — `disabledSurfaceId` is passed EXPLICITLY, separate from `intoSurface`: for an ask
+    // (GH #802/#803), `#resumeTargetFor` deliberately returns `undefined` (the fresh-bubble routing), but
+    // the answered surfaceId (`clientMessageSurfaceId`) is still real and still owed a re-enable if this
+    // turn fails — `intoSurface` alone would silently drop that case.
     const handle = conversation.beginAgentTurn(
-      turn.kind === 'client' ? { intoSurface: this.#resumeTargetFor(turn.message) } : undefined,
+      turn.kind === 'client'
+        ? { intoSurface: this.#resumeTargetFor(turn.message), disabledSurfaceId: clientMessageSurfaceId(turn.message) }
+        : undefined,
     )
     // GH #354 — the conversation generation this turn belongs to, captured BEFORE the (dogfood-only) asset
     // await below; see `#conversationEpoch`.
