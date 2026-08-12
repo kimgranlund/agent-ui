@@ -298,7 +298,10 @@ describe('GET /integrations — empty-roster byte-identity (SPEC-R28 AC1 — the
     const handler = mountPlugin() // no mcpDiscovery override — REAL discovery, REAL committed EMPTY roster
     const { status, body } = await getIntegrations(handler)
     expect(status).toBe(200)
-    expect(Object.keys(body)).toEqual(['integrations'])
+    // GH #783 S2 (SPEC-R4 AC2 / ADR-0185, LLD-C4 §3.2): the body gained an ADDITIVE `services` key
+    // (a same-change consequence of the SPEC-mandated widening, SPEC-N2) — `integrations` itself
+    // stays byte-identical, proven by the untouched assertion below.
+    expect(Object.keys(body)).toEqual(['integrations', 'services'])
     expect(body['integrations']).toEqual(projectIntegrationTrios(listIntegrations()))
   })
 
