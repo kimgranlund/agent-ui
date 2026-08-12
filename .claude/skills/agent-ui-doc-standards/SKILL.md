@@ -56,7 +56,7 @@ stay files on this map, always; only the TICKET tier moved.
 human-gated field) and *builds* (the tree + gates + `done` tickets). SPEC/LLD statuses lag by
 design — "when it disagrees with the tree, the tree wins" — so a `proposed` SPEC whose build
 shipped is normal; do NOT sweep-flip statuses to match ship state. A SPEC/LLD flips to `accepted`
-only when someone deliberately marks the contract stable (rare; 3 SPECs / 5 LLDs to date).
+only when someone deliberately marks the contract stable (rare — grep the corpus for the current set; a copied count here decays, GH #761).
 Accepted ADRs are append-only: extensions land as `## Amendment` sections or as rows in the
 current wave's OWN proposed ADR, never edits to the accepted body (REV-annotated mechanical
 pointer repairs excepted).
@@ -70,9 +70,11 @@ pointer repairs excepted).
 - Prose cites tickets UPPERCASE (`TKT-0018`); filenames + YAML `id:` stay lowercase (`tkt-0018`).
 - Supersession/extension vocabulary lives in the ADR's `Supersedes / Superseded by` cell as prose
   (`Supersedes · Superseded by [(partial)] · Extends · Extended by · Amends · Amended by ·
-  Relates · Resolves`); LLD headers use `Refines:` (→ SPEC+ADR) and `Composes on:`; ADRs use
-  `Repairs:` (→ the owning PRD-G/SPEC-R/LLD-C IDs). There is no `Implements:`/`Refined-by:` row —
-  don't invent one.
+  Relates · Resolves`); LLD headers come in TWO live dialects: `Refines:` (→ SPEC+ADR, the canon for new LLDs) and the
+  legacy `Implements:` (present across the older LLD corpus at HEAD — read it as history, never
+  "fix" it in place; H1 tracks the uniformity as hygiene). `Composes on:` rides both; ADRs use
+  `Repairs:` (→ the owning PRD-G/SPEC-R/LLD-C IDs). There is no `Refined-by:` row — don't invent
+  one (GH #761 corrected this line's earlier denial that `Implements:` existed at all).
 - **Re-derive a cited authority at its source; never transcribe a peer's citation.** A citation
   error propagates through a review chain exactly as easily as it originates in one — ADR-0167's
   3-round ratification review caught this in both directions: the author's own "disposition
@@ -98,15 +100,21 @@ pointer repairs excepted).
 ## 5 · The gates (deterministic tier — cite, never restate)
 
 - `site/lib/adr.test.ts` — ADR filename/table/status-enum/date/summary (the original gate).
-- `site/lib/docs-grammar.test.ts` — the Phase-3 two-tier gate: STRUCTURAL (fails the run):
-  SPEC/LLD/PRD status-keyword presence · the dangling-relative-link sweep over active docs ·
-  hook-registration liveness both directions. HYGIENE (reported, promoted later): LLD
-  dialect/Layer-spelling uniformity · TKT case in prose · ADR numbering gaps. The ticket-YAML
+- `site/lib/docs-grammar.test.ts` — the two-tier gate: STRUCTURAL S2–S9 fail the run, HYGIENE H1
+  reports (its own file-header ledger is the authoritative check list — read the tiers there, never
+  from a copy here; GH #761 corrected this line's stale three-item restatement against it). The ticket-YAML
   enum/kind/size STRUCTURAL checks (ADR-0145, 2026-07-18) RETIRED with the file-based ticket
   tier itself — nothing replaces them file-side, since an Issue body isn't a file this gate can
   read; `.github/ISSUE_TEMPLATE/*.yml` is the new authoring-time contract, enforced by GitHub's
   own required-field validation at submission, not a repo-side lint.
-- `.claude/hooks/adr-status-guard.py` (PreToolUse, registered) — blocks agent flips → `accepted`.
+- `.claude/hooks/adr-status-guard.py` (PreToolUse, registered) — blocks agent flips → `accepted`
+  (and, since GH #745, fails closed on any edit leaving ≠ 1 Status rows — the decoy defense).
+- `scripts/adr_ratify.py` — THE sanctioned flip path, BOTH modes: whole-ADR `proposed → accepted`
+  (a verified `ratify ADR-####` owner utterance) AND the GH #664 AMENDMENT mode — an in-body
+  `## Amendment (DATE, **proposed** — Kim ratifies) — TITLE` header (that literal marker grammar,
+  exactly one candidate, or the script fails closed) flipped by a `ratify ADR-#### amendment`
+  utterance; the Status cell and every accepted section stay byte-untouched. The script edits
+  files but does NOT commit — the host commits and pushes the flip.
 - scribe's `doc_lint.py` fit ONLY tickets here (YAML) while the file-based tier existed; with no
   new ticket files being authored, that particular fit is now moot going forward — the blockquote
   types stay out of its dialect regardless, do not "fix" a doc to satisfy it.

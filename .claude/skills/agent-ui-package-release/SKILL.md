@@ -96,8 +96,9 @@ never restate their internals here.
   sibling imports; `component-styles.css` must stay RELATIVE-imports-only (CDN-safe today) while
   `foundation-styles.css` is known-bare (browsers can't resolve its `@import`s — the recipes link
   shared's `tokens.css` + `dimensions.css` directly instead). A CSS-barrel edit that introduces a bare
-  `@import` silently breaks the documented recipe — GH #71 (install-from-registry smoke) is the gate
-  that should catch it.
+  `@import` silently breaks the documented recipe — the SHIPPED install-from-registry smoke
+  (`.github/workflows/consumer-smoke.yml`) is the gate that catches it (GH #71, closed — the
+  should-catch-it framing this line once carried is history, GH #761).
 - License: MIT (`LICENSE` at repo root) — Kim's decision, 2026-07-19.
 - The app package's Vite-only consumer profile is HISTORY (relaxed GH #283, 2026-07-27, on a real
   esbuild+webpack+browser install smoke): its forcing mechanism was `?url`/`?raw` import-query specifiers
@@ -106,6 +107,14 @@ never restate their internals here.
   header is the authority on the current status — read it there rather than restating it here. Two gaps
   stay documented in `app/README.md`, not silently dropped: plain Node ESM (no DOM) works for no control
   package in the family, and no CDN probe covers the app package yet.
+- **The published a2ui EXCLUDES its `./agent` subpath** — `EXCLUDE_EXPORTS_FROM_PUBLISH` in
+  `publish-packages.mjs` (its own comment is the authority: the node-first producer reads prompt
+  `.md` files via a cwd path no consumer install can have, so the export would throw on import;
+  `./agent/meta-line`, pure type-only, stays published). Shipping the producer for real is a
+  separate deliberate effort, never a silent default.
+- **Adding a package to the family** = extend `PACKAGE_ORDER` (+ its keywords row) in
+  `publish-packages.mjs` — the one knob; the DAG-ordered list is the publish order, so a new
+  package lands AFTER everything it depends on.
 - npm version numbers are burned forever once published, even after unpublish — decide deliberately
   per step 1 above rather than tagging speculatively and fixing forward.
 

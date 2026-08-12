@@ -23,7 +23,7 @@ consumers. Routing + reading order only; each row's owner doc/source is the sing
 | Question | Owner (read this) | Decision authority |
 |---|---|---|
 | Folder + file set, single-CSS rule, barrels, host page | `.claude/docs/references/component-packaging.md` (the resolved shape) | ADR-0003 (single-file component CSS + barrels + host-page packaging) |
-| The `{name}.md` descriptor — what the frontmatter declares (the field set `FIELD_SHAPE` enumerates) | the schema SOURCE: `packages/agent-ui/components/src/descriptor/component-descriptor.ts` (hand-rolled parser — **block-style YAML + inline `[a, b]` arrays**; flow mappings do not parse) | ADR-0004 (descriptor replaces api.json; one parser, two consumers — the contract trip-wire and the site) |
+| The `{name}.md` descriptor — what the frontmatter declares (the field set `FIELD_SHAPE` enumerates) | the schema SOURCE: `packages/agent-ui/components/src/descriptor/component-descriptor.ts` (hand-rolled parser — **block-style YAML + inline `[a, b]` arrays**, and inline flow mappings for `codec:` — ADR-0173 OF1; GH #761 corrected this row's earlier they-do-not-parse claim, contradicted by the parser's own tests) | ADR-0004 (descriptor replaces api.json; one parser, three consumers — the contract trip-wire, the site, and ADR-0173's `scripts/generate-props.mjs` generator) |
 | Whether a control's `static props` table is GENERATED from its descriptor, or still hand-mirrored; the widened grammar fields; the per-control ratchet | the generator SOURCE: `packages/agent-ui/components/src/descriptor/generate-props.ts` (+ CLI `scripts/generate-props.mjs`) — see "The descriptor generation ratchet" below | ADR-0173 (descriptor inversion — the props layer only; the catalog row stays hand-authored forever, cl.5) |
 | Base classes, `static props` + `ReactiveProps` declare-merge, events, `internals` | `.claude/docs/plan.md` §5, realized in `packages/agent-ui/components/src/dom/` | — |
 | Naming, strict-TS constraints, import layering | `CLAUDE.md` (Conventions — already in every session's context; don't restate it) | the per-package `layering.test.ts` trip-wires |
@@ -57,7 +57,7 @@ beyond `type`/`default`/`reflect`/`values` (`component-descriptor.ts`'s `ParsedA
 | Field | Carries | Specimen |
 |---|---|---|
 | `attribute` | string \| `false` — an attribute-name override, or opts a prop OUT of DOM reflection | `button.md`'s `icon-only` |
-| `tsType` | a TS type expression, legal (and required) only when `type: json` AND no `codec:` is declared (a codec's own type rides its import) | `split.ts`'s `number[] \| undefined` |
+| `tsType` | a TS type expression, legal (and required) only when `type: json` AND no `codec:` is declared (a codec's own type rides its import) | PROSPECTIVE — no live descriptor carries one at HEAD (GH #761); the shape a `split.md` sizes-array row WOULD use: `number[] \| undefined` |
 | `const` | the exported shared-tuple constant name, legal only when `type: enum` | `badge.md`'s `const: INTENTS` |
 | `codec` | `{ import, name }` — a bespoke, already-assembled `PropConfig` import for a control whose codec encodes real validation logic no field can express | `table.md`'s `codec: { import: './table-model.ts', name: 'tableColumnsProp' }` |
 | `description` | plain-scalar per-attribute teaching, emitted as a provenance-stamped comment in the generated file | — |

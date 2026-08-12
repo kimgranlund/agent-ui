@@ -28,9 +28,10 @@ documents. This skill is the *method*; the per-type depth and the rubrics live i
 - **Skip** for the *referential* docs under `.claude/docs/` (plan / goals / process / `references/`) — those are
   authored with [[make-reference]], not this. This skill owns the **published site**, not the
   repo's internal knowledge docs.
-- **Generator, not critic.** You author *to* the rubric; a **separate** reviewer (the
-  `docs-writer` agent, or the host gate) scores the page against it — build it to clear the gate,
-  then hand off.
+- **Generator, not critic.** This skill (and the `docs-writer` seat that preloads it) is the
+  AUTHORING side; a **separate** critic scores the page — `teamwork:code-checker` for the page's
+  code, `docs:doc-checker` for a rubric-bearing document (GH #761 corrected the earlier line that
+  named `docs-writer` as its own reviewer). Build it to clear the gate, then hand off.
 
 ## The cardinal discipline — every fact derives from its owner
 
@@ -79,14 +80,21 @@ score on" is `references/rubric.md`.
 | # | Content type | What it is | Derives from | Drift gate |
 |---|---|---|---|---|
 | T1 | **landing / overview** | the hero + the card grid that routes to every page (`site/main.ts`) | the live control (hero specimens) + the nav link set | every nav/card target resolves; the hero mounts the real control |
-| T2 | **permutation matrix** | the full size × variant × state grid, built **programmatically** from the enum arrays (`permutations.ts`) | the props enum (loop bounds = \|sizes\|×\|variants\|×\|cols\|) | completeness provable from structure; no dead slot/role name (site-canon) |
-| T3 | **states showcase** | the live control staged in each interaction state, **honestly labelled** (`states.ts`) | the control's own `{name}.css` (styling lives there, not the page) | the page sets no state styling; a real activation log proves pointer + keyboard |
+| T2 | **permutation matrix** | the full size × variant × state grid, built **programmatically** from the enum arrays (e.g. `button-permutations.ts`) | the props enum (loop bounds = \|sizes\|×\|variants\|×\|cols\|) | completeness provable from structure; no dead slot/role name (site-canon) |
+| T3 | **states showcase** | the live control staged in each interaction state, **honestly labelled** (e.g. `button-states.ts`) | the control's own `{name}.css` (styling lives there, not the page) | the page sets no state styling; a real activation log proves pointer + keyboard |
 | T4 | **component API doc** | the attribute table + enum-driven specimens, **descriptor-derived** (`button-doc.ts`) | `{name}.md` via the canonical parser (ADR-0004) | the contract trip-wire: frontmatter `attributes[]` ≡ `finalize(Class)` |
 | T5 | **live A2UI demo** | a literal payload fed through the **real** renderer → a live control → the round-trip message (`a2ui-canvas.ts`) | `createRenderer` public surface (no internals) | the renderer integration test; the page is its visible proof |
 | T6 | **conceptual guide** | getting-started / theming / architecture prose — the *why* and *how* | the canonical `.claude/docs/` it summarizes (cite by ID rather than restating) | soft (prose staleness → reviewer judgment); code samples must type-check |
 | T7 | **per-family overview** | one page per component family — its members, shape, status | the catalog / the family's shipped descriptors | every shipped member listed; no member missing its page (enumeration) |
 | T8 | **interactive playground** | live controls bound to inputs that drive their real attributes/props | the real control + its parsed enum (the input set) | every input maps to a real attribute; mounts the real control |
 | T9 | **recipe / pattern** | a small, copyable, working composition answering a task ("a form row") | the real controls it composes | the recipe code runs (mounts live); samples type-check |
+
+Nine TYPED rows, plus the site's real pages the taxonomy doesn't cleanly type (GH #761 — named,
+not force-fit): live demo pages (the a2ui/arena replays beyond T5's single-payload shape),
+`LAYOUT_SHOWCASE` shell/layout compositions, app-surface compositions (super-shell/agent-admin
+surfaces), and index/generated pages (the landing grid, sitemap, llms-full, gallery — machine-built,
+gated by their generators below, never hand-authored). A page that fits none of T1–T9 authors to the
+NEAREST row's derivation discipline and names the mismatch, exactly as `file-*`'s capture rules do.
 
 ## The drift discipline — back a page with a check where structurable
 
@@ -101,10 +109,16 @@ Every component has its pages; the API table matches the descriptor; no dead slo
   `data-role=` name absent from the canonical vocab (sourced from the descriptors + control CSS through
   the *same* parser). This caught the `slot="icon"` left behind after the `icon`→`leading` rename.
   Comments are stripped first — a historical note in a `//` comment is not a live usage.
-- **Coverage** — every shipped descriptor should have its page (T4) and family listing (T7): an
-  enumeration check (walk the descriptors, assert each maps to a page) extends the site-canon pattern.
+- **Coverage + TOC** — SHIPPED, not future (GH #761): `descriptor/site-coverage.test.ts` walks
+  the descriptors and asserts each maps to a page (T4) + family listing (T7); `descriptor/site-toc.test.ts`
+  pins every page's table-of-contents ≡ the fleet. Both extend the site-canon static-scan pattern.
+- **Site-wide derived surfaces** — `site/lib/sitemap.test.ts` (the generated sitemap ≡ the pages +
+  ADR/changelog records), `site/lib/llms.test.ts` (the committed `llms-full.txt` byte-identical to a
+  fresh generation), and `site/lib/docs-grammar.test.ts` (the `.claude/docs` grammar tiers) each back
+  a class of generated page — a page feeding any of them regenerates through its generator, never a
+  hand edit.
 - **Soft staleness** — prose drift (T6 guides going stale against `.claude/docs/`) isn't mechanically
-  checkable; route it to the reviewer's judgment and cite upstream by ID so a human can re-verify.
+  checkable; route it to the critic's judgment and cite upstream by ID so a human can re-verify.
 
 The rule: **where a fact is structurable, a green check is its guarantee; where it isn't, name the
 upstream source so a reviewer can re-derive it.** A page is not done until its structurable facts are

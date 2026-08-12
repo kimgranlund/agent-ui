@@ -1,5 +1,6 @@
-# publish.yml — builds and publishes the 8 @agent-ui/* workspace packages to npm, unscoped
-# (agent-ui-shared, agent-ui-components, …), under the agent-ui-kit npm account. See
+# publish.yml — builds and publishes the 8 @agent-ui/* workspace packages to npm, SCOPED as
+# @agent-ui-kit/* under the agent-ui-kit org (Kim's 2026-07-19 ruling; the unscoped agent-ui-*
+# names this header once described were the launch-day shape, superseded — GH #761). See
 # scripts/publish/publish-packages.mjs for the full build/transform/publish mechanics and the "why unscoped
 # + why a build step" reasoning; this workflow is deliberately thin — it gates, resolves the version, and
 # calls that one script.
