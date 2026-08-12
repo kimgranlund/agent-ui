@@ -111,6 +111,14 @@ content.append(
       a.textContent = 'sizing guide'
       return a
     })(),
+    // GH #728 — the [scale]-riding -size leg's own reference: the live typescale specimens.
+    document.createTextNode('; the type scale the -size leg rescales is rendered live on the '),
+    (() => {
+      const a = document.createElement('a')
+      a.href = './tokens.html#type-scale'
+      a.textContent = 'token reference'
+      return a
+    })(),
     document.createTextNode('.'),
   ]),
 )

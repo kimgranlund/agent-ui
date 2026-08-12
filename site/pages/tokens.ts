@@ -18,7 +18,7 @@
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './tokens.css'
 import { heading } from '../lib/doc-page.ts'
-import { familiesOf, parseColorPrimitives, parseColorRoles, parseDimensionRamp, type ColorRole } from '../lib/token-parse.ts'
+import { familiesOf, parseColorPrimitives, parseColorRoles, parseDimensionRamp, parseTypescale, type ColorRole } from '../lib/token-parse.ts'
 import tokensCss from '../../packages/agent-ui/shared/src/tokens/tokens.css?raw'
 import dimensionsCss from '../../packages/agent-ui/shared/src/tokens/dimensions.css?raw'
 
@@ -49,13 +49,22 @@ for (const { prefix } of DIMENSION_LADDERS) {
   }
 }
 
+// GH #728 — the type scale (the missing quarter of the token story): every complete
+// `--md-sys-typescale-{role}-{size}` cell, joined from the sheet's two declaration homes. Anti-vacuous
+// like every parser above.
+const TYPESCALE = parseTypescale(dimensionsCss)
+if (TYPESCALE.length === 0) {
+  throw new Error('tokens.ts: parseTypescale resolved 0 rows — dimensions.css did not match the expected typescale shape')
+}
+const TYPESCALE_ROLES = [...new Set(TYPESCALE.map((r) => r.role))]
+
 const { content } = mountPage({
   title: 'Token reference',
   intro:
-    `${ROLES.length} colour roles across ${FAMILIES.length} families, the numbered tonal primitives, plus ` +
-    'the five dimensional ladders — parsed live from the foundation sheets and rendered on the shipped ' +
-    'token-surface primitives, not hand-copied. If this page and the shipped tokens ever disagree, the page ' +
-    'is stale and its derivation is the bug.',
+    `${ROLES.length} colour roles across ${FAMILIES.length} families, the numbered tonal primitives, ` +
+    `the five dimensional ladders, plus the ${TYPESCALE_ROLES.length}-role type scale — parsed live from ` +
+    'the foundation sheets and rendered on the shipped token-surface primitives, not hand-copied. If this ' +
+    'page and the shipped tokens ever disagree, the page is stale and its derivation is the bug.',
 })
 
 content.append(
@@ -155,5 +164,67 @@ for (const { prefix, label, note } of DIMENSION_LADDERS) {
   ladder.setAttribute('tiers', JSON.stringify(tiers.map((t) => ({ label: t.tier, value: t.value }))))
   ladder.setAttribute('label', label)
   section.append(ladder)
+  content.append(section)
+}
+
+// ── type scale (GH #728) — every --md-sys-typescale-{role}-{size} cell as a LIVE specimen ─────────────────
+// The fourth quarter of the token story: real rendered text at each cell's resolved size/weight/line-height/
+// tracking, reading the SAME custom properties every consumer reads (the swatch/ladder live-resolution
+// honesty, applied to type). A small in-page display idiom, deliberately NOT a new shipped primitive
+// (ui-ladder's one-value-per-tier shape does not fit a 4-property cell — the issue's own scope ruling).
+const typescaleHeading = heading(2, 'Type scale')
+typescaleHeading.id = 'type-scale' // the cross-link anchor (sizing/theming link here)
+content.append(typescaleHeading)
+{
+  const lead = document.createElement('p')
+  lead.className = 'page-lead'
+  lead.append(
+    document.createTextNode(
+      `The ${TYPESCALE_ROLES.length}-role × 3-size fleet type scale (--md-sys-typescale-{role}-{size}-*, ` +
+        'ADR-0078): the five M3-verbatim roles plus the editorial extensions, each cell four properties — ' +
+        'size (the one leg that rides [scale]) · weight · line-height · tracking. Rendered live below at each ' +
+        'cell’s own resolved values. Note: kicker and overline render uppercase in consumers (a text.css ' +
+        'treatment, not a typescale property). Controls never read these directly — ui-text does, via its own ' +
+        '--ui-text-* repoint. How a subtree rescales the -size leg is the ',
+    ),
+    (() => {
+      const a = document.createElement('a')
+      a.href = './theming.html'
+      a.textContent = 'theming guide'
+      return a
+    })(),
+    document.createTextNode('’s story; where the type scale sits among the five size systems is the '),
+    (() => {
+      const a = document.createElement('a')
+      a.href = './sizing.html'
+      a.textContent = 'sizing guide'
+      return a
+    })(),
+    document.createTextNode('’s.'),
+  )
+  content.append(lead)
+}
+for (const role of TYPESCALE_ROLES) {
+  const section = document.createElement('section')
+  section.append(heading(3, role))
+  for (const row of TYPESCALE.filter((r) => r.role === role)) {
+    const base = `--md-sys-typescale-${row.role}-${row.size}`
+    const wrap = document.createElement('div')
+    wrap.className = 'typescale-row'
+    const meta = document.createElement('code')
+    meta.className = 'typescale-meta'
+    meta.textContent = `${base}-*  ·  ${row.sizeValue}  ·  ${row.weight}  ·  ${row.lineHeight}  ·  ${row.tracking}`
+    const specimen = document.createElement('div')
+    specimen.className = 'typescale-specimen'
+    // LIVE resolution — the specimen reads the real custom properties, so a [scale] ancestor or a token
+    // edit repaints it exactly as it repaints every consumer (never a re-typed literal).
+    specimen.style.fontSize = `var(${base}-size)`
+    specimen.style.fontWeight = `var(${base}-weight)`
+    specimen.style.lineHeight = `var(${base}-line-height)`
+    specimen.style.letterSpacing = `var(${base}-tracking)`
+    specimen.textContent = `${row.role} ${row.size} — Sphinx of black quartz, judge my vow`
+    wrap.append(meta, specimen)
+    section.append(wrap)
+  }
   content.append(section)
 }
