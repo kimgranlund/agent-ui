@@ -1,0 +1,110 @@
+# GENERATED — DO NOT EDIT BY HAND.
+# Source of truth: packages/agent-ui/a2ui/conformance/fixtures.jsonl.
+# Regenerate: node --experimental-strip-types packages/agent-ui/a2ui/tools/conformance/generate-suites.ts
+#
+# Ported to the upstream a2ui-project/a2ui `agent_sdks/conformance/suites/*.yaml` row convention
+# (GH #616). See ../README.md ("Upstream suites/*.yaml port") for the field-by-field mapping and the
+# two named shape mismatches (expect_verdict vs. expect_error; no prune/render/load action analog).
+#
+# Upstream submission formatting (Apache license headers, etc.) is applied at contribution time —
+# never carried in this repo's own generated copy. See UPSTREAM-PROPOSAL.md for the draft issue text.
+
+- name: "parse-failure"
+  description: "The payload is a raw string that is not parseable JSON — PARSE, the earliest pipeline stage."
+  catalog:
+    version: "v1.0"
+    catalogId: "agent-ui"
+    catalog_schema: "../../src/catalog/default/catalog.json"
+  action: "validate"
+  payload: "{not valid json"
+  expect_verdict: {"valid":false,"failures":[{"code":"PARSE","path":""}]}
+
+- name: "bad-envelope"
+  description: "A message carrying no recognized envelope key (createSurface/updateComponents/updateDataModel/deleteSurface/actionResponse/callFunction) — SCHEMA."
+  catalog:
+    version: "v1.0"
+    catalogId: "agent-ui"
+    catalog_schema: "../../src/catalog/default/catalog.json"
+  action: "validate"
+  payload: [{"version":"v1.0","surfaceId":"s-bad-envelope","note":"no recognized envelope key present"}]
+  expect_verdict: {"valid":false,"failures":[{"code":"SCHEMA","path":"[0]"}]}
+
+- name: "missing-surfaceId"
+  description: "An updateComponents body with no `surfaceId` field — SCHEMA at the specific missing field."
+  catalog:
+    version: "v1.0"
+    catalogId: "agent-ui"
+    catalog_schema: "../../src/catalog/default/catalog.json"
+  action: "validate"
+  payload: [{"version":"v1.0","updateComponents":{"components":[]}}]
+  expect_verdict: {"valid":false,"failures":[{"code":"SCHEMA","path":"[0].updateComponents.surfaceId"}]}
+
+- name: "unsupported-version"
+  description: "A message version outside the pinned SUPPORTED_VERSIONS set ({v1.0, v0.9.1}) — VERSION_UNSUPPORTED."
+  catalog:
+    version: "v1.0"
+    catalogId: "agent-ui"
+    catalog_schema: "../../src/catalog/default/catalog.json"
+  action: "validate"
+  payload: [{"version":"v0.5","createSurface":{"catalogId":"agent-ui","surfaceId":"s-ver"}}]
+  expect_verdict: {"valid":false,"failures":[{"code":"VERSION_UNSUPPORTED","path":"[0]"}]}
+
+- name: "bad-pointer-binding"
+  description: "A component-prop {path} binding with a malformed RFC-6901 `~` escape (`~2`, not `~0`/`~1`) — POINTER."
+  catalog:
+    version: "v1.0"
+    catalogId: "agent-ui"
+    catalog_schema: "../../src/catalog/default/catalog.json"
+  action: "validate"
+  payload: [{"version":"v1.0","createSurface":{"catalogId":"agent-ui","surfaceId":"s-pointer-bind"}},{"version":"v1.0","updateComponents":{"surfaceId":"s-pointer-bind","components":[{"id":"root","component":"Text","variant":"body","text":{"path":"foo~2bar"}}]}}]
+  expect_verdict: {"valid":false,"failures":[{"code":"POINTER","path":"root.text"}]}
+
+- name: "bad-pointer-datamodel"
+  description: "An updateDataModel.path that is non-empty but not root-relative (`/`-led) — POINTER (the data-model root has no list-item scope, unlike a component binding)."
+  catalog:
+    version: "v1.0"
+    catalogId: "agent-ui"
+    catalog_schema: "../../src/catalog/default/catalog.json"
+  action: "validate"
+  payload: [{"version":"v1.0","createSurface":{"catalogId":"agent-ui","surfaceId":"s-pointer-dm"}},{"version":"v1.0","updateDataModel":{"surfaceId":"s-pointer-dm","path":"not-absolute"}}]
+  expect_verdict: {"valid":false,"failures":[{"code":"POINTER","path":"[1].updateDataModel.path"}]}
+
+- name: "missing-root"
+  description: "A complete component set with no `root` id — IDGRAPH root-missing (runtime SPEC finalize-granularity judgment)."
+  catalog:
+    version: "v1.0"
+    catalogId: "agent-ui"
+    catalog_schema: "../../src/catalog/default/catalog.json"
+  action: "validate"
+  payload: [{"version":"v1.0","createSurface":{"catalogId":"agent-ui","surfaceId":"s-missing-root"}},{"version":"v1.0","updateComponents":{"surfaceId":"s-missing-root","components":[{"id":"a","component":"Text","text":"hi","variant":"body"}]}}]
+  expect_verdict: {"valid":false,"failures":[{"code":"IDGRAPH","path":"s-missing-root:root-missing"}]}
+
+- name: "duplicate-root"
+  description: "Two components both delivered as id `root` on the same surface — IDGRAPH second-root."
+  catalog:
+    version: "v1.0"
+    catalogId: "agent-ui"
+    catalog_schema: "../../src/catalog/default/catalog.json"
+  action: "validate"
+  payload: [{"version":"v1.0","createSurface":{"catalogId":"agent-ui","surfaceId":"s-dup-root"}},{"version":"v1.0","updateComponents":{"surfaceId":"s-dup-root","components":[{"id":"root","component":"Text","text":"a","variant":"body"},{"id":"root","component":"Text","text":"b","variant":"body"}]}}]
+  expect_verdict: {"valid":false,"failures":[{"code":"IDGRAPH","path":"s-dup-root:root"}]}
+
+- name: "dangling-child"
+  description: "root's `child` reference names an id no delivered component carries — IDGRAPH dangling."
+  catalog:
+    version: "v1.0"
+    catalogId: "agent-ui"
+    catalog_schema: "../../src/catalog/default/catalog.json"
+  action: "validate"
+  payload: [{"version":"v1.0","createSurface":{"catalogId":"agent-ui","surfaceId":"s-dangling"}},{"version":"v1.0","updateComponents":{"surfaceId":"s-dangling","components":[{"id":"root","component":"Text","text":"hi","variant":"body","child":"missing-node"}]}}]
+  expect_verdict: {"valid":false,"failures":[{"code":"IDGRAPH","path":"root->missing-node"}]}
+
+- name: "cycle"
+  description: "root -> node-a -> root, a back-edge in the child graph — IDGRAPH cycle."
+  catalog:
+    version: "v1.0"
+    catalogId: "agent-ui"
+    catalog_schema: "../../src/catalog/default/catalog.json"
+  action: "validate"
+  payload: [{"version":"v1.0","createSurface":{"catalogId":"agent-ui","surfaceId":"s-cycle"}},{"version":"v1.0","updateComponents":{"surfaceId":"s-cycle","components":[{"id":"root","component":"Text","text":"a","variant":"body","child":"node-a"},{"id":"node-a","component":"Text","text":"b","variant":"body","child":"root"}]}}]
+  expect_verdict: {"valid":false,"failures":[{"code":"IDGRAPH","path":"s-cycle:cycle"}]}
