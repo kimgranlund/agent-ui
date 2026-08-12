@@ -474,6 +474,13 @@ and both conversations move as whole nodes — cl.3's singleton law, re-verified
   in reading order). A narrow segment select sets `primary` and ensures membership. Arm
   (`#rewireAuthoringContext`) replaces its `#setPane('author')` line with: ensure
   `copilot ∈ shown` + `primary = 'copilot'`. Teardown still never forces navigation.
+  **2026-08-12 (ADR-0181 Repairs, GH #695/#721 — append-only): the co-pilot's follow-the-change
+  reaction joins the writer set as the model's FIRST non-user writer, under the tightest contract
+  of the four: ADDITIVE-ONLY — it may ensure `settings ∈ shown` (current primary untouched) on a
+  CONSUMED patch, never removes a member, never repoints primary, never moves focus; its
+  narrow-band self-revert of its OWN same-task, never-painted addition is not a "remove" under
+  this clause (evaluated at reaction completion — follow-the-change.spec.md SPEC-R3 step 2). Every
+  invariant above (min-one, primary ∈ set, no writes on resize) stands byte-untouched.**
 - **Render:** ONE `#applyPaneVisibility()` writes `data-show="chat settings copilot"` (space-joined
   set) + `data-primary` onto the pane holder and mirrors pressed/selected state onto the pills and
   the segment control (programmatic writes — no event echo, ADR-0019). The sheet does the rest

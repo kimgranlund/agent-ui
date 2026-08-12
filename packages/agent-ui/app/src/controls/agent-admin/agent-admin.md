@@ -348,6 +348,22 @@ stub turn loop reads the store's CURRENT entries at the moment each turn begins 
 prompt sections and gathering each capability kind's enabled labels — a store read trivially reflects
 whatever was most recently written, so no separate propagation channel exists because none is needed.
 
+## Follow-the-change: a consumed patch navigates attention (ADR-0181, GH #695)
+
+When a Builder-interview turn's `personaPatch` is CONSUMED (the fence + gate condition, ADR-0178 cl.2 —
+never a hand edit, import, preset seed, or test-chat turn), the element reacts at commit time: the
+settings pane is ensured visible (an ADDITIVE-ONLY write — the reaction may add `settings` to the shown
+set but never removes a user-chosen member, never repoints primary, and never moves keyboard focus), the
+owning settings section is selected, the owning `settings-item` fold is scrolled into the pane's viewport
+and washed with a transient `data-attention` primary-token fade (reduced motion: a static outline). The
+degrade ladder: with the user mid-interaction inside the settings pane there is no section yank; at
+narrow bands (the pane does not paint) visibility is left byte-unchanged and the attention QUEUES, firing
+once when the user next reveals the owning section themselves. Every consumed patch also appends a
+receipt line to the turn's note — `Updated <section> › <fold>` per changed location (collapsed to
+`Updated Agent` for the Agent fold's own degeneracy) — the narrow/suppressed path's one affordance. The
+field→location map (`field-location.ts`) is derived from the canonical persona-key constants and
+parity-gated total over `PERSONA_STATE_KEYS`; an unmapped key skips silently, never throws.
+
 ## The chat canvas: a stub by default, a real model call under a DEV-only opt-in (ADR-0131/ADR-0136)
 
 By default `ui-agent-admin` has **no external runtime dependency** — the turn loop that answers each

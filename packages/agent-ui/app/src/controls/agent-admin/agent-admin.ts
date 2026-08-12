@@ -198,6 +198,9 @@ import { lintPromptSections } from './prompt-lint.ts'
 // ADR-0178 cl.2 — the three-filter apply gate + the canonical key set it enumerates (LLD-C1). A pure
 // module: store in, writes out, a report back — this element owns WHEN it may run, never HOW it filters.
 import { applyPersonaPatch, draftStateBlock, type PatchReport } from './persona-patch.ts'
+// follow-the-change (GH #695/#721, ADR-0181 / SPEC-R2) — the field→location map the reaction engine and
+// the SPEC-R7 receipt line both consume; pure data, parity-gated in field-location.test.ts.
+import { locationFor, type FieldLocation } from './field-location.ts'
 
 /** GH #686's Amendment (admin-three-pane-ia.lld.md §16.1/§16.2) — the vocabulary re-pins from
  *  ADR-0179 cl.1's `chat | author | settings` to `chat | settings | copilot` (the Builder interview
@@ -565,6 +568,29 @@ export class UIAgentAdminElement extends UIElement {
    *  no-duplication assert), keyed by their stable `data-role`. Visibility-only flips, exactly the shell
    *  strip's own SPEC-R7c behavior: nothing is unmounted, so section state survives every flip. */
   #settingsSections: HTMLElement[] = []
+  // ── follow-the-change (GH #695/#721, ADR-0181 / SPEC-R1…R8) — the reaction engine's own state ──────
+  /** The settings sub-nav strip, held for the reaction's programmatic section select (SPEC-R3 step 3 —
+   *  ui-tabs emits no `select` echo for property writes, ADR-0019, so `#applySettingsSection` is called
+   *  explicitly, exactly as the compose's own `select` handler does). */
+  #settingsNav: UITabsElement | null = null
+  /** The settings pane wrapper — the paint-probe subject (SPEC-R3 step 2: `getClientRects().length > 0`
+   *  is the ONE band signal; never a JS re-derivation of the 52.5rem line, §16.2's law). */
+  #settingsPane: HTMLElement | null = null
+  /** Queued attention (SPEC-R4.2): section `data-role` → the fold `data-item`s owed a wash when the user
+   *  next reveals that section themselves. Per-draft — cleared on persona switch (`#resetConversationState`,
+   *  the `#conversationEpoch` reset family); never persisted. */
+  #pendingAttention: Map<string, Set<string>> = new Map()
+  /** Whether the settings pane painted at the LAST `#applyPaneVisibility` — the not-painting → painting
+   *  transition detector behind SPEC-R4.2's fire hook (b) (a pane reveal with no section flip is the
+   *  common case: the sub-nav defaults to Agent selected, so hook (a) alone never fires AC2's scenario). */
+  #settingsWasPainting = false
+  /** Reentrancy fence for `#followChange`'s own transient add-then-revert (SPEC-R3 step 2): both
+   *  `#setPanesShown` calls inside the reaction re-enter `#applyPaneVisibility`, and hook (b) must not
+   *  read that never-painted flicker as a user-driven reveal (LLD §4's named guard). */
+  #inFollowChange = false
+  /** Per-fold wash teardown (SPEC-R5) — re-washing an already-washed fold must cancel the OLD timer/
+   *  listener or the earlier deadline strips the new wash early. */
+  #washCleanup: WeakMap<HTMLElement, () => void> = new WeakMap()
   #idSeq = 0
   /** The authoring context's own store identity, so the effect can tell a real reassignment from a bare
    *  re-run (the `#lastStore` precedent, applied to the second store). */
@@ -1288,6 +1314,10 @@ export class UIAgentAdminElement extends UIElement {
     // attribute to carry). Same contents, same DOM identities, moved here whole exactly as before.
     const settingsPane = document.createElement('div')
     settingsPane.setAttribute('data-part', 'settings-pane')
+    // follow-the-change (GH #695/#721) — the reaction needs both identities past compose: the nav for the
+    // programmatic section select, the pane for the paint probe + the focus-suppression containment check.
+    this.#settingsNav = settingsNav
+    this.#settingsPane = settingsPane
     // GH #665 (screens:layout-checker finding 1, SHIPPABLE grade) — the settings column went unnamed at
     // exactly the band the (then-)pane-nav's own "Settings" label vanished. The layout-checker's finding
     // proposed a third "Settings" kicker here; Kim OVERRULED it (2026-08-10, GH #665 follow-up): the
@@ -1545,6 +1575,179 @@ export class UIAgentAdminElement extends UIElement {
     for (const section of this.#settingsSections) {
       section.hidden = section.getAttribute('data-role') !== key
     }
+    // follow-the-change SPEC-R4.2 fire hook (a) — a section flip TO a section holding queued attention
+    // fires it (wash + first-fold scroll, queue cleared for that section), provided the pane actually
+    // paints. Safe on the compose-time call too: the queue is empty then, so this is a no-op.
+    if (this.#paintsSettingsPane()) this.#firePendingFor(key)
+  }
+
+  // ── follow-the-change (GH #695/#721 — ADR-0181, follow-the-change.spec.md SPEC-R1…R8, LLD §4/§5) ─────
+
+  /** SPEC §1's "Visible" — pixel truth (`getClientRects().length > 0`), never a JS re-derivation of the
+   *  52.5rem band (§16.2's no-JS-layout law: we READ paint state, write none). */
+  #paintsSettingsPane(): boolean {
+    return (this.#settingsPane?.getClientRects().length ?? 0) > 0
+  }
+
+  /**
+   * The reaction engine (SPEC-R3/R4/R6) — called at the ONE patch-consumption site with the just-returned
+   * `PatchReport`. Coalesced per patch event: ONE navigation (the FIRST applied key's location, patch
+   * order — the model's own emphasis order), every changed fold washed (or queued, SPEC-R4.2).
+   *
+   * ADDITIVE-ONLY (ADR-0181 cl.2): may add `settings` to the shown set; never removes a user-chosen
+   * member, never repoints primary, never moves keyboard focus (no `.focus()` call exists in this
+   * feature). The narrow-band self-revert (step 2) is NOT a cl.2 "remove": it reverts the reaction's OWN
+   * same-task, never-painted addition, so the net effect on user-chosen state at reaction completion is
+   * zero (SPEC-R3 step 2's ruling, stated there in full).
+   */
+  #followChange(report: PatchReport): void {
+    const keys = [...report.applied, ...Object.keys(report.added)] // patch order preserved (SPEC-R6)
+    const locations: FieldLocation[] = []
+    for (const key of keys) {
+      const location = locationFor(key)
+      if (location !== undefined) locations.push(location) // SPEC-R2 AC3 — an unmapped key skips silently
+    }
+    if (locations.length === 0) return // SPEC-R1 AC1 — a dropped-only/unmappable patch fires nothing
+    const target = locations[0]!
+    this.#inFollowChange = true
+    try {
+      // step 1 — ensure the pane, additively: current primary untouched
+      const priorShown = new Set(this.#panesShown)
+      const added = !this.#panesShown.has('settings')
+      if (added) this.#setPanesShown([...this.#panesShown, 'settings'], this.#panePrimary)
+      // step 2 — synchronous paint probe + self-revert (the layout read forces style/layout in the same
+      // task, so no frame paints between the write and this read)
+      if (!this.#paintsSettingsPane()) {
+        if (added) this.#setPanesShown(priorShown, this.#panePrimary)
+        this.#queuePending(locations) // the narrow degrade (SPEC-R4): receipt line + pending attention
+        return
+      }
+      // suppression (SPEC-R4) — the user is mid-interaction inside the settings pane: no section yank,
+      // no scroll; visible folds still wash, the rest queue.
+      const active = document.activeElement
+      if (active !== null && this.#settingsPane !== null && this.#settingsPane.contains(active)) {
+        const selected = this.#settingsNav?.selected ?? ''
+        const visible = locations.filter((l) => l.section === selected)
+        for (const l of this.#dedupeLocations(visible)) this.#washFold(l)
+        this.#queuePending(locations.filter((l) => l.section !== selected))
+        return
+      }
+      // step 3 — ensure the section (programmatic write: ui-tabs emits no select echo, ADR-0019)
+      if (this.#settingsNav !== null && this.#settingsNav.selected !== target.section) {
+        this.#settingsNav.selected = target.section
+        this.#applySettingsSection(target.section)
+      }
+      // step 4 — scroll the target fold into the pane's viewport
+      this.#scrollToFold(target)
+      // step 5 — wash every changed fold in the target section; queue the cross-section rest (SPEC-R4.2)
+      for (const l of this.#dedupeLocations(locations.filter((l) => l.section === target.section))) this.#washFold(l)
+      this.#queuePending(locations.filter((l) => l.section !== target.section))
+    } finally {
+      this.#inFollowChange = false
+      // re-sync the reveal tracker to the settled truth so hook (b)'s next comparison starts honest
+      this.#settingsWasPainting = this.#paintsSettingsPane()
+    }
+  }
+
+  /** One fold per `(section, item)` — a patch touching `model` twice (a value + an entries member) washes
+   *  its fold once (SPEC-R6's coalescing, applied at wash grain). */
+  #dedupeLocations(locations: readonly FieldLocation[]): FieldLocation[] {
+    const seen = new Set<string>()
+    const out: FieldLocation[] = []
+    for (const l of locations) {
+      const key = `${l.section}/${l.item}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      out.push(l)
+    }
+    return out
+  }
+
+  #foldFor(location: FieldLocation): HTMLElement | null {
+    return this.#settingsPane?.querySelector(`[data-role="${location.section}"] [data-part="settings-item"][data-item="${location.item}"]`) ?? null
+  }
+
+  #scrollToFold(location: FieldLocation): void {
+    const fold = this.#foldFor(location)
+    // scrollIntoView is absent in jsdom (a real browser always has it) — the status-stream.ts guard,
+    // applied here so a jsdom-driven reaction never throws mid-turn; the REAL scroll-position proof is
+    // the browser probe's (SPEC-R3 AC1).
+    if (fold === null || typeof fold.scrollIntoView !== 'function') return
+    const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches
+    fold.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' })
+  }
+
+  /** Queue attention for later reveal (SPEC-R4.2) — deduped into the per-section sets. */
+  #queuePending(locations: readonly FieldLocation[]): void {
+    for (const l of locations) {
+      const items = this.#pendingAttention.get(l.section) ?? new Set<string>()
+      items.add(l.item)
+      this.#pendingAttention.set(l.section, items)
+    }
+  }
+
+  /** Fire queued attention for `section` (SPEC-R4.2): every queued fold washes, the FIRST scrolls, the
+   *  queue clears for that section (repeat visits: no wash — AC2). Called by both fire hooks: a section
+   *  flip (`#applySettingsSection`) and a write-driven pane reveal (`#applyPaneVisibility`). */
+  #firePendingFor(section: string): void {
+    const items = this.#pendingAttention.get(section)
+    if (items === undefined || items.size === 0) return
+    this.#pendingAttention.delete(section)
+    let first = true
+    for (const item of items) {
+      const location = { pane: 'settings', section, sectionLabel: '', item, itemLabel: '' } as FieldLocation
+      if (first) {
+        this.#scrollToFold(location)
+        first = false
+      }
+      this.#washFold(location)
+    }
+  }
+
+  /** The receipt line block (SPEC-R7): one `Updated <sectionLabel> › <itemLabel>` line per changed
+   *  location across this turn's consumed patches, deduped by `(section, item)` — collapsed to
+   *  `Updated <sectionLabel>` when the two labels are equal (the Agent tab's own `agent` fold: never the
+   *  stuttering `Updated Agent › Agent`). `undefined` when no report changed anything (a dropped-only
+   *  patch narrates nothing — dropped keys stay log-only, ADR-0178 cl.2's posture). */
+  #patchReceiptFor(reports: readonly PatchReport[]): string | undefined {
+    const locations: FieldLocation[] = []
+    for (const report of reports) {
+      for (const key of [...report.applied, ...Object.keys(report.added)]) {
+        const location = locationFor(key)
+        if (location !== undefined) locations.push(location)
+      }
+    }
+    const deduped = this.#dedupeLocations(locations)
+    if (deduped.length === 0) return undefined
+    return deduped
+      .map((l) => (l.sectionLabel === l.itemLabel ? `Updated ${l.sectionLabel}` : `Updated ${l.sectionLabel} › ${l.itemLabel}`))
+      .join('\n')
+  }
+
+  /** The attention wash (SPEC-R5): `data-attention` on the owning fold, removed on `animationend` for the
+   *  named keyframe plus a timeout fallback (jsdom fires no animation events; reduced-motion runs none).
+   *  Re-washing an already-washed fold restarts (cancel old teardown → remove → reflow → re-add). */
+  #washFold(location: FieldLocation): void {
+    const fold = this.#foldFor(location)
+    if (fold === null) return
+    this.#washCleanup.get(fold)?.()
+    if (fold.hasAttribute('data-attention')) {
+      fold.removeAttribute('data-attention')
+      void fold.offsetWidth // force a reflow so the re-added attribute restarts the animation
+    }
+    fold.setAttribute('data-attention', '')
+    const onEnd = (event: AnimationEvent): void => {
+      if (event.animationName === 'ui-admin-attention') cleanup()
+    }
+    const timer = setTimeout(() => cleanup(), 2500)
+    const cleanup = (): void => {
+      clearTimeout(timer)
+      fold.removeEventListener('animationend', onEnd)
+      fold.removeAttribute('data-attention')
+      this.#washCleanup.delete(fold)
+    }
+    fold.addEventListener('animationend', onEnd)
+    this.#washCleanup.set(fold, cleanup)
   }
 
   /** GH #665 — a quiet identity header for a conversation region: the fleet's `ui-text[variant='kicker']`
@@ -1924,6 +2127,18 @@ export class UIAgentAdminElement extends UIElement {
     holder.setAttribute('data-show', PANE_ORDER.filter((p) => this.#panesShown.has(p)).join(' '))
     holder.setAttribute('data-primary', this.#panePrimary)
     this.#applyHeaderPaneState(skipPillPressedFor)
+    // follow-the-change SPEC-R4.2 fire hook (b) — a write-driven pane REVEAL (the settings pane
+    // transitions not-painting → painting via a segment select / pill re-add / the arm) fires pending
+    // attention for the CURRENTLY-selected section: the sub-nav defaults to Agent already selected, so a
+    // reveal with no section flip is the common case hook (a) alone can never fire. `#inFollowChange`
+    // fences the reaction's own transient add-then-revert (neither half is a user-driven reveal — the
+    // tracker is left untouched too; `#followChange`'s finally re-syncs it to the settled truth). A
+    // resize-driven band crossing runs no JS at all (§16.2's law) — the SPEC's stated residual.
+    if (!this.#inFollowChange) {
+      const painting = this.#paintsSettingsPane()
+      if (painting && !this.#settingsWasPainting) this.#firePendingFor(this.#settingsNav?.selected ?? '')
+      this.#settingsWasPainting = painting
+    }
   }
 
   /**
@@ -2602,7 +2817,13 @@ export class UIAgentAdminElement extends UIElement {
               // Applied MID-STREAM, so the panes hydrate while the turn is still streaming — the live
               // feedback the whole flow exists to give. Every write lands on a key class with a shipped
               // store subscription, so no re-render machinery is needed here (ADR-0178 cl.2).
-              patchReports.push(applyPersonaPatch(target, event.patch, { models: modelRoster(), schema: this.schema ?? defaultAgentConfigSchema }))
+              const report = applyPersonaPatch(target, event.patch, { models: modelRoster(), schema: this.schema ?? defaultAgentConfigSchema })
+              patchReports.push(report)
+              // follow-the-change (GH #695/#721, ADR-0181 cl.1 / SPEC-R1) — the reaction fires HERE, at
+              // the one consumption site, on the just-returned report: commit-time, never propose-time
+              // (the gate DROPS items — navigating to a field that never changed would be a lie in
+              // navigation form). A refused patch (the else branch below) fires nothing by construction.
+              this.#followChange(report)
             } else {
               patchIgnored = true // logged below; zero writes, no error surface (SPEC-R30's degrade law)
             }
@@ -2641,7 +2862,14 @@ export class UIAgentAdminElement extends UIElement {
         // even when the model DID say something narratable alongside the line this client refused.
         // ADR-0182 cl.5 — the plan checklist rides the SAME "append, never replace" fold, one more
         // member alongside the a2ui-refused notice: the agent's own note (if any) stays intact.
-        const outgoing = [note, assetWarning, a2uiRefused ? A2UI_OFF_INGEST_NOTICE : undefined, planChecklist]
+        // follow-the-change SPEC-R7 — the receipt line(s): one `Updated <section> › <fold>` per changed
+        // location across this turn's consumed patches (labels from the map, values deliberately not
+        // echoed — the panes already show them; `#logTurn` keeps the key-grain record byte-unchanged).
+        // Rides the SAME append-never-replace fold, directly after the agent's own prose (never
+        // displacing it) — present on every consumed-patch turn, both bands, suppressed or not (AC1:
+        // the narrow/suppressed path's ONLY affordance).
+        const patchReceipt = this.#patchReceiptFor(patchReports)
+        const outgoing = [note, patchReceipt, assetWarning, a2uiRefused ? A2UI_OFF_INGEST_NOTICE : undefined, planChecklist]
           .filter((text) => text !== undefined)
           .join('\n\n')
         if (outgoing !== '') handle.setNote(outgoing)
@@ -3126,6 +3354,10 @@ export class UIAgentAdminElement extends UIElement {
     // successor must not silently seed the next persona's interview. The card re-paints neutral pickers on
     // the `#reflectAuthorEntry` the caller's `#rewireAuthoringContext` already runs.
     this.#preArm = {}
+    // follow-the-change SPEC-R4 AC3 — pending attention is per-draft: a persona switch clears it, so the
+    // next draft never inherits a ghost wash queued against the previous one's folds.
+    this.#pendingAttention.clear()
+    this.#settingsWasPainting = false
     this.#conversationEpoch += 1 // GH #354 — invalidate any surface turn waiting on its lazy dogfood chunk
   }
 }
