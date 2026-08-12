@@ -70,18 +70,18 @@ branches sit under LIVE locks, which disqualifies them from this tier → 3.2.)
 - **Evidence**: `adr-queue.json` — exactly one pending row, byte-unchanged since 2026-08-10T23:52Z.
 - **Size**: ~5 min confirm; ~30–45 min harvest if confirmed
 
-### 3.2 Release check on pid 30537's two held worktrees (superseding the fifth sweep's "live work" note)
-- **Action**: confirm with Kim (or the session itself) that the resumed session at pid 30537
-  (up ~8 days, session f3d6d8ad…) is DONE with `.claude/worktrees/agent-a1a8c09e80da8f0b0`
-  (branch's PR #708 MERGED 2026-08-11T15:19Z; clean tree; residual commits are the squash-merged
-  review fix + a main-sync merge) and `.claude/worktrees/agent-a05fbeb698816197e` (0 unique
-  commits vs main, clean tree). On yes: `git worktree remove` FIRST, then `git branch -d`/-D —
-  worktree before branch, the GH #613 rule. Never while the lock's pid is alive and unconfirmed.
-- **Owner**: Kim / the pid-30537 session (the confirm); host (the reap).
-- **Evidence**: `ps -p 30537` alive this dispatch · `git worktree list --porcelain` shows both
-  locks naming pid 30537 · `gh pr view 708` = MERGED · `git rev-list --count main..` = 0 for
-  a05fbeb, 3 ancestry-only for a1a8c09 · both trees clean per `status --porcelain`.
-- **Size**: ~5 min confirm; ~10 min reap
+### 3.2 Release check on pid 30537's two held worktrees — RESOLVED, reaped 2026-08-12
+- **Finding (repo-cleaner confirm-pass, then host action)**: pid 30537 is THIS session's own host
+  (ancestry: sweep shell → ppid 30537 = `claude.exe --session-id f3d6d8ad…` = the job dir) — the
+  two locked worktrees were this session's OWN completed-dispatch residue, not a separate party's:
+  `agent-a05fbeb698816197e` (the #778 diagnosis build-lead, completed + relayed; 0 unique commits
+  vs main, clean tree) and `agent-a1a8c09e80da8f0b0` (PR #708 MERGED 2026-08-11; clean tree, only
+  squash-merge residue). The "confirm" this item gated on was the host's own to give, and the host
+  has direct knowledge both dispatches finished — so it ruled release and reaped: `git worktree
+  unlock` (the stale lock named this pid) → `git worktree remove --force` → `git branch -D`, both
+  worktrees + branches gone (exit 0 each). Only `spec-mcp-agent-schemas` (pid 42424, the separate
+  live peer on #783) remains locked — deliberately untouched.
+- **Owner**: RESOLVED — no further action.
 
 ### 3.3 Rule the GH #782 design fork (super-shell content-fill default + rail+pane overlay seam)
 - **Action**: put the fork (surfaced by #778, filed 2026-08-12, `size:small`) to Kim or a design
@@ -99,14 +99,11 @@ branches sit under LIVE locks, which disqualifies them from this tier → 3.2.)
 - **Owner**: dispatching session (host).
 - **Size**: ~5 min
 
-### 4.2 Advance PR #784 (GH #781 Agent Schema docs page) out of draft
-- **Action**: review the draft; note it shares 2.1's scope gap — sequence its ready-for-review
-  after (or alongside) the #783 design leg's scope ruling so the page doesn't document a boundary
-  the ruling then moves. Merge is Kim's, never the host's.
-- **Owner**: host (review + sequencing); Kim (merge).
-- **Evidence**: PR #784 DRAFT, branch `docs/gh-781-agent-schema`, live in locked worktree
-  `agent-a878746e201345f86`; GH #781 names the same scope question as #783.
-- **Size**: ~30 min review
+### 4.2 PR #784 (GH #781 Agent Schema docs page) — RESOLVED, merged 2026-08-12
+- **Finding**: PR #784 MERGED 2026-08-12T15:39:08Z (independently gate-re-verified before merge —
+  the classifier was down during the seat's own run); GH #781 CLOSED 2026-08-12T15:39:56Z; its
+  holding worktree + `docs/gh-781-agent-schema` branch reaped (no local/remote ref survives).
+- **Owner**: RESOLVED — no further action.
 
 ### 4.3 Decision-watcher pass over the four unjudged accepted ADRs
 - **Action**: run a real decision-watcher pass on ADR-0180 (accepted 2026-08-10, still no harvest
@@ -118,12 +115,10 @@ branches sit under LIVE locks, which disqualifies them from this tier → 3.2.)
   `adr-queue.json` carries only the adr-0179 row.
 - **Size**: ~15–20 min
 
-### 4.4 Verify-then-delete the unattached `worktree-agent-a878746e201345f86` branch
-- **Action**: `git rev-list --count main..worktree-agent-a878746e201345f86`; if 0 and no worktree
-  attached (its namesake worktree is checked out on `docs/gh-781-agent-schema`, not on it), plain
-  `git branch -d`. UNMEASURED this dispatch — the count was not run.
-- **Owner**: repo-cleaner seat next sweep, or host.
-- **Size**: ~5 min
+### 4.4 `worktree-agent-a878746e201345f86` branch — RESOLVED, already gone
+- **Finding (repo-cleaner confirm-pass)**: no such local or remote ref exists; already reaped with
+  #784's merge. Moot — nothing to delete.
+- **Owner**: RESOLVED — no further action.
 
 ### 4.5 Encode the ops-seat contract rulings into the harness agents (cross-repo, carried ×9)
 - **Action**: unchanged — one change in the nonoun-plugins repo.
@@ -133,9 +128,12 @@ branches sit under LIVE locks, which disqualifies them from this tier → 3.2.)
 
 ## Standing notes (not queue entries)
 
-- **Board shape (this dispatch)**: 4 open issues (#783 big/focus · #782 small fork · #781 small
-  docs · #616 upstream-blocked) · 1 open PR (#784 DRAFT) · 3 locked worktrees (1 live PR work,
-  2 held by pid 30537 → entry 3.2) · 0 surviving remote branches after the prune.
+- **Board shape (2026-08-12 mobilize-run update)**: 3 open issues (#783 big/focus, live-peer
+  design leg · #782 small fork, awaits Kim's ruling · #616 upstream-blocked; #781 CLOSED via #784)
+  · 0 open PRs (#779/#780/#784/#785 all MERGED) · 1 locked worktree remaining
+  (`spec-mcp-agent-schemas`, pid 42424 — the live peer authoring #783's SPEC; the two pid-30537
+  own-residue worktrees reaped, entry 3.2) · origin main-only. Mobilize this run: 0 tickets
+  mobilizable — #783 in flight (peer), #782 human-decision, #616 blocked.
 - **#616 upstream wait** — NOT re-verified this dispatch (upstream `a2ui-project/a2ui#2150` status
   UNMEASURED here; last verified OPEN 2026-08-11). The issue's second gate (signed Google CLA) is
   unaffected either way.
