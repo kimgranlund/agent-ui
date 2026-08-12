@@ -1,6 +1,20 @@
 # SPEC — A2UI Live-Agent Example (a real LLM emitting A2UI over the wire)
 
-> Status: accepted · v0.14 · 2026-08-09 (v0.13 2026-08-07; v0.12 2026-08-07; v0.11 2026-08-07; v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> Status: accepted · v0.15 · 2026-08-12 (v0.14 2026-08-09; v0.13 2026-08-07; v0.12 2026-08-07; v0.11 2026-08-07; v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> v0.15 changelog ([ADR-0185](../adr/0185-enablement-wire-service-reference-grammar.md), ACCEPTED
+> by Kim 2026-08-12 — the [`ratify ADR-0185`
+> utterance](https://github.com/kimgranlund/agent-ui/pull/786#issuecomment-5269956992); GH
+> [#783](https://github.com/kimgranlund/agent-ui/issues/783)'s S1 slice, repairing GH
+> [#787](https://github.com/kimgranlund/agent-ui/issues/787)'s first two checkboxes per SPEC-N2's
+> same-change law — [`mcp-agent-config.decomp.md`](../decompositions/mcp-agent-config.decomp.md)
+> S1): docs-only, append-only, no requirement/ID/AC shape added or removed. SPEC-R23's and
+> SPEC-R28's *"the enablement wire stays `integrations: string[]` of registry `id`s"* sentences
+> each gain a parenthetical delta: ADR-0185 widens the wire's VOCABULARY (never its shape,
+> never this SPEC's own text otherwise) to also honor a service reference `mcp:<server-id>:*`,
+> expanded server-side inside `resolveIntegrations` — the full grammar/expansion/degrade contract
+> is [`mcp-agent-config.spec.md`](./mcp-agent-config.spec.md) SPEC-R2/R3, not restated here. Every
+> other sentence of both requirements — the `auth` vocabulary, the frozen-file fence, the GET's
+> trio shape and secrets boundary — stays byte-unchanged.
 > v0.14 changelog ([ADR-0178](../adr/0178-agent-authoring-conversational-persona-hydration.md)
 > cl.1/cl.2/cl.3, ACCEPTED by Kim 2026-08-09 — the [`ratify ADR-0178`
 > utterance](https://github.com/kimgranlund/agent-ui/issues/633#issuecomment-5232182942); the
@@ -1264,7 +1278,10 @@ core stays types-only, no key and no MCP byte enters it) MUST turn each allowlis
 one to every consumer: `registerIntegration`/`listIntegrations`/`resolveIntegrations`,
 `validateToolInput`/`assertSupportedSchema`, and `buildToolDispatch` stay byte-untouched by this
 whole arc; the `auth` vocabulary stays `'none' | 'serverKey'` (no `'mcp'` member, no new
-`ExecuteContext` field); the enablement wire stays `integrations: string[]` of registry `id`s.
+`ExecuteContext` field); the enablement wire stays `integrations: string[]` of registry `id`s
+(widened by [ADR-0185](../adr/0185-enablement-wire-service-reference-grammar.md): a member may
+also be a service reference `mcp:<server-id>:*`, expanded server-side; the contract lives in
+[`mcp-agent-config.spec.md`](./mcp-agent-config.spec.md) SPEC-R2/R3).
 *(→ PRD-G7; ADR-0137/0177 cl.1)*
 - **AC1** *Given* the arc's diffs, *when* reviewed at each slice, *then* `registry.ts`,
   `validate-input.ts`, `tool-dispatch.ts`, `integrations/index.ts`, and `src/agent/` carry ZERO
@@ -1399,8 +1416,11 @@ pack-projection against the SERVED trios — still both-directions-honest (eithe
 an entry goes red). The GET body MUST carry trios ONLY: no endpoint URL, no `envKey` name, no key
 value, no raw MCP frame (the cl.2 boundary — trios are admin-display facts, not secrets). The
 enablement wire itself stays `integrations: string[]` of registry `id`s, browser→host,
-unchanged. The GET reflects the boot-time registry (SPEC-R27's accepted staleness — no refresh
-endpoint); Worker parity for the route rides the deferred rollout (`worker/` frozen).
+unchanged (widened by [ADR-0185](../adr/0185-enablement-wire-service-reference-grammar.md): a
+member may also be a service reference `mcp:<server-id>:*`, expanded server-side; the contract
+lives in [`mcp-agent-config.spec.md`](./mcp-agent-config.spec.md) SPEC-R2/R3). The GET reflects
+the boot-time registry (SPEC-R27's accepted staleness — no refresh endpoint); Worker parity for
+the route rides the deferred rollout (`worker/` frozen).
 *(→ PRD-G7; Kim's F1 ruling GH #567; ADR-0177 cl.2/cl.4, ADR-0168 §2)*
 - **AC1** *Given* the GET route test, *when* discovery has registered `mcp:*` manifests, *then*
   the served trios equal the `listIntegrations()` `{id, label, description}` projection including

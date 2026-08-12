@@ -130,7 +130,11 @@ roster resolves immediately — byte-identical to pre-MCP behavior. *(SPEC-R27 :
 (`dev-proxy-plugin.ts:119`) — `{id, label, description}` ONLY, post-ready-gate so `mcp:*` entries
 appear. No endpoint, `envKey` name, key value, or raw MCP frame ever rides this route (SPEC-R28's
 cl.2 boundary — trios are admin-display facts, not the enablement wire's secrets); the enablement
-wire itself stays `integrations: string[]` of ids, unchanged. *(SPEC-R28 :1229-1248)*
+wire itself stays `integrations: string[]` of ids — widened by ADR
+`.claude/docs/adr/0185-enablement-wire-service-reference-grammar.md` to also honor a service
+reference `mcp:<server-id>:*`, expanded server-side inside `resolveIntegrations`; that
+grammar/expansion contract is `mcp-agent-config.spec.md` SPEC-R2/R3, a separate law from this
+one. *(SPEC-R28 :1229-1248)*
 
 *(ADR-0177 cl.1 :101-132, cl.2 :133-161, cl.3 :162-211, cl.4 :212-256)*
 

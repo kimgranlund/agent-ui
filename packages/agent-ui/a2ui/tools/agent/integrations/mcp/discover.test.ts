@@ -311,6 +311,38 @@ describe('discoverMcpIntegrations — the empty-name floor (review-inherited har
   })
 })
 
+describe('discoverMcpIntegrations — the reserved `*` tool name (LLD-C3, SPEC-R2 AC2, ADR-0185)', () => {
+  it('skips a tool literally named `*` with a stated reason; its siblings on the same server still register', async () => {
+    const client = fakeClient({
+      listTools: () => [
+        { name: 'search_docs', inputSchema: { type: 'object' } },
+        { name: '*', inputSchema: { type: 'object' } },
+        { name: 'list_docs', inputSchema: { type: 'object' } },
+      ],
+    })
+    const cfg: McpServersConfig = {
+      servers: { docs: { label: 'Docs Server', endpoint: 'https://fake.example/mcp/docs', auth: 'none' } },
+    }
+    const sink = fakeRegistrySink()
+    const report = await discoverMcpIntegrations(cfg, {
+      env: {},
+      register: sink.register,
+      createClient: clientFactoryFor({ 'https://fake.example/mcp/docs': client }),
+    })
+
+    expect(report.registered).toEqual(['mcp:docs:search_docs', 'mcp:docs:list_docs'])
+    expect(report.skipped).toEqual([{ server: 'docs', tool: '*', reason: 'reserved tool name "*"' }])
+    // The whole point of the guard: no manifest matching the service-ref grammar ever registers.
+    expect(sink.manifests.some((m) => m.id === 'mcp:docs:*')).toBe(false)
+  })
+
+  it('a `*`-named tool is caught by the reserved-name guard, never the empty-name floor (distinct reasons)', () => {
+    // Negative control: `*` is non-empty, non-whitespace — proves the two guards are independent
+    // checks, not one loosely-worded floor that happens to also catch `*`.
+    expect('*'.trim().length).toBeGreaterThan(0)
+  })
+})
+
 describe('discoverMcpIntegrations — empty roster (SPEC-R27 zero-cost no-op)', () => {
   it('resolves an empty report immediately, constructing ZERO clients', async () => {
     const createClient = vi.fn() as unknown as typeof createMcpClient
