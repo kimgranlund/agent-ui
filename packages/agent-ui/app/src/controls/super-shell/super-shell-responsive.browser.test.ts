@@ -297,6 +297,73 @@ describe('ui-super-shell — floating overlay margin (shell-polish wave, S2): th
   })
 })
 
+describe('ui-super-shell — GH #778: a rail+pane side overlays as a COMPOSED PAIR, never a stack (the end-side popover overlap)', () => {
+  const OVERLAY_INSET = 12 // px — --ui-super-shell-overlay-inset = module(18px) × 2/3
+  const BAR_SIZE = 54 // px — --ui-super-shell-bar-size = module(18px) × 3 (the rail's own width)
+  const TOLERANCE = 2 // px — cross-engine subpixel-rounding slack
+
+  const middlePart = (el: UISuperShellElement): HTMLElement => el.querySelector('[data-part="middle"]') as HTMLElement
+  const endRail = (el: UISuperShellElement): HTMLElement => el.querySelector('[data-part="middle"] > [data-slot-name="global-options"]') as HTMLElement
+  const endPane = (el: UISuperShellElement): HTMLElement => el.querySelector('[data-part="middle"] > [data-slot-name="options-pane"]') as HTMLElement
+  const endToggle = (el: UISuperShellElement): HTMLElement => el.querySelector('[data-part="side-toggle"][data-side="end"]') as HTMLElement
+
+  /** A shell whose END side stacks BOTH a pane (options-pane, inboard) AND a rail (global-options, outboard)
+   *  — the "full grammar" configuration the docs composition guide renders, which the shipped single-sided
+   *  docs shell never exercises at overlay. DOM order after canvas is [ options-pane | global-options ]. */
+  function mountEndRailPane(width: number): UISuperShellElement {
+    const el = document.createElement('ui-super-shell') as UISuperShellElement
+    el.style.cssText = `position:fixed;inset-block-start:0;inset-inline-start:0;inline-size:${width}px;block-size:400px`
+    const header = document.createElement('div'); header.setAttribute('data-slot', 'header'); header.textContent = 'H'
+    const content = document.createElement('div'); content.setAttribute('data-slot', 'content'); content.textContent = 'C'
+    const options = document.createElement('div'); options.setAttribute('data-slot', 'options-pane'); options.textContent = 'OPT'
+    const globalOptions = document.createElement('div'); globalOptions.setAttribute('data-slot', 'global-options'); globalOptions.textContent = 'GO'
+    el.append(header, content, options, globalOptions)
+    document.body.append(el)
+    mounted.push(el)
+    return el
+  }
+
+  it('narrow band (<40rem): opening the end side floats BOTH the pane and rail, but the pane is pushed inboard so the rail never paints on it', async () => {
+    const el = mountEndRailPane(600) // 37.5rem — narrow band, the demo-guide width the report reproduced at
+    endToggle(el).click(); await settle(el)
+    expect(el.getAttribute('data-narrow-open'), 'the end overlay is open').toBe('end')
+
+    const railBox = endRail(el)
+    const paneBox = endPane(el)
+    expect(isHidden(railBox), 'the rail overlays (its content is not dropped)').toBe(false)
+    expect(isHidden(paneBox), 'the pane overlays').toBe(false)
+
+    const middle = middlePart(el).getBoundingClientRect()
+    const rail = railBox.getBoundingClientRect()
+    const pane = paneBox.getBoundingClientRect()
+
+    // the rail floats flush at the end (inline-end) edge, one float-inset in — unchanged base behavior
+    expect(Math.abs(middle.right - rail.right - OVERLAY_INSET), 'rail floats at the end edge (≈ inset)').toBeLessThanOrEqual(TOLERANCE)
+    // THE REGRESSION: before the fix both carried inset-inline-end:inset, so the 252px pane extended UNDER
+    // the 54px rail (pane.right ≈ rail.right ≫ rail.left). After: the pane's end edge meets the rail's inner
+    // edge — adjacent, not overlapping.
+    expect(pane.right, 'the pane never extends under the rail (the GH #778 overlap)').toBeLessThanOrEqual(rail.left + TOLERANCE)
+    expect(Math.abs(pane.right - rail.left), 'pane sits flush-adjacent inboard of the rail (a composed pair)').toBeLessThanOrEqual(TOLERANCE)
+    // the pane's own end edge is offset inboard from the container edge by inset + one rail width
+    expect(Math.abs(middle.right - pane.right - (OVERLAY_INSET + BAR_SIZE)), 'pane offset inboard by exactly one rail width').toBeLessThanOrEqual(TOLERANCE)
+  })
+
+  it('a pane-ONLY end side is untouched — its overlay still floats flush at the edge (the :has() guard holds)', async () => {
+    const el = document.createElement('ui-super-shell') as UISuperShellElement
+    el.style.cssText = 'position:fixed;inset-block-start:0;inset-inline-start:0;inline-size:600px;block-size:400px'
+    const header = document.createElement('div'); header.setAttribute('data-slot', 'header'); header.textContent = 'H'
+    const content = document.createElement('div'); content.setAttribute('data-slot', 'content'); content.textContent = 'C'
+    const options = document.createElement('div'); options.setAttribute('data-slot', 'options-pane'); options.textContent = 'OPT'
+    el.append(header, content, options)
+    document.body.append(el); mounted.push(el)
+    endToggle(el).click(); await settle(el)
+    const middle = middlePart(el).getBoundingClientRect()
+    const pane = endPane(el).getBoundingClientRect()
+    // no rail on this side ⇒ no offset: the pane keeps the plain flush-at-edge inset (never +bar-size)
+    expect(Math.abs(middle.right - pane.right - OVERLAY_INSET), 'pane-only overlay unchanged (flush at edge, no rail offset)').toBeLessThanOrEqual(TOLERANCE)
+  })
+})
+
 describe('ui-super-shell — SPEC-R7c survival law across an RO band round-trip (LLD-C7 trip-wire)', () => {
   it('a tracked authored node survives a compact → wide → compact crossing un-cycled (same isConnected identity)', async () => {
     const el = mount({ width: 768, collapseBand: 'compact' })
