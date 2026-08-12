@@ -705,6 +705,29 @@
     display: none;
   }
 
+  /* follow-the-change (GH #695/#721 — ADR-0181 cl.3, follow-the-change SPEC-R5): the attention wash a
+     consumed patch lands on its owning fold — a transient primary-token box-shadow fade (the
+     token-repoint discipline, no new color role), removed by agent-admin.ts on `animationend` (+ a
+     timeout fallback). Reduced motion: no animation — a static primary outline instead, held until the
+     same timeout clears the attribute (SPEC-R5 AC2: appears and clears, no motion). */
+  [data-part='settings-item'][data-attention] {
+    animation: ui-admin-attention 1.6s ease-out;
+  }
+  @keyframes ui-admin-attention {
+    from {
+      box-shadow: 0 0 0 2px var(--md-sys-color-primary);
+    }
+    to {
+      box-shadow: 0 0 0 2px transparent;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-part='settings-item'][data-attention] {
+      animation: none;
+      outline: 2px solid var(--md-sys-color-primary);
+    }
+  }
+
   /* GH #525/#541 — the Bankroll group's one row: the shared card chrome (model-grid/surface-row/entry),
      a label + flexible spacer + trailing Reset button. Its own part names, not surface-row's, since it
      no longer lives among the modality rows. */
