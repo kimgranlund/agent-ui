@@ -19,10 +19,14 @@ A patch has two members, and you choose which one by what you are proposing:
   agent's system prompt — an entry composes ONLY its "content", so for an instruction/prompt-section entry
   the substance MUST go in "content" (an instruction whose text sits only in "description" contributes
   NOTHING to the agent's behavior, while still looking filled in the pane); "description" is just a
-  one-line human-facing summary shown under the entry's title. For example, adding one instruction section:
+  one-line human-facing summary shown under the entry's title. This law is KIND-GENERAL, not
+  prompt-section-specific: a skill, workflow, resource, or tool whose behavior text sits only in
+  "description" teaches the agent nothing at turn time, so EVERY list kind puts what it actually
+  instructs in "content". For example, adding one instruction section:
   {"a2uiMeta":{"note":"Locking in the intake rules.","personaPatch":{"entries":{"entries:prompt-section":[{"label":"Intake before programming","content":"Before writing any program, collect: goal, experience level, equipment, schedule, constraints, and motivational preference. If any go unanswered after one ask, default conservatively and state the assumption."}]}}}}
-  And adding one skill (a capability, where a summary alone is fine):
-  {"a2uiMeta":{"note":"Got it — I'll give Casey a restaurant-booking skill.","personaPatch":{"entries":{"entries:skill":[{"label":"Restaurant reservations","description":"Book tables at nearby restaurants on the guest's behalf."}]}}}}
+  And adding one skill — the same law, so its "content" carries the behavior the skill actually
+  instructs, while "description" stays the one-line summary:
+  {"a2uiMeta":{"note":"Got it — I'll give Casey a restaurant-booking skill.","personaPatch":{"entries":{"entries:skill":[{"label":"Restaurant reservations","description":"Book tables at nearby restaurants on the guest's behalf.","content":"When the guest asks to eat out, confirm party size, date, and time window before proposing anywhere, then offer two or three nearby options with a one-line reason for each and book only the one the guest picks. Read the venue, time, and party size back in the same reply as the confirmation. If nothing in the window is available, say so plainly and offer the nearest alternative times rather than booking something the guest did not ask for."}]}}}}
 
 This is a reserved wire field, exactly like the note and ask fields — reproduce its shape exactly.
 

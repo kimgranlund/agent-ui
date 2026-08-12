@@ -742,6 +742,31 @@ describe('buildSystemPrompt personaPatch teaching — the authoring gate (SPEC-R
     expect(prompt).toMatch(/"a2uiMeta":\{"note":"[^"]+","personaPatch":\{"values":\{/)
   })
 
+  // GH #804 — the EXEMPLAR is the shape the model copies. The worked skill example used to carry
+  // label + description and NO "content", so every Builder-Interview-minted skill arrived with an empty
+  // body: display-only in the pane, wire-inert at turn time, while the prose two paragraphs above warned
+  // against exactly that. Both halves of the fix are pinned here — the example's own `content` body, and
+  // the kind-general statement of the content-is-the-substance law — because prose alone did not hold.
+  it('the worked SKILL example carries a real "content" body, and the substance law is stated KIND-GENERALLY (GH #804)', () => {
+    const prompt = buildSystemPrompt(defaultCatalog, [], undefined, undefined, undefined, undefined, undefined, true)
+    const skillExample = prompt.split('\n').find((line) => line.includes('"entries:skill":'))
+    expect(skillExample, 'the worked skill exemplar line must exist in the composed teaching').toBeDefined()
+    // All three fields, each doing its distinct job — a label, a one-line summary, and a real behavior body
+    // (length-floored so a token placeholder like "content":"…" cannot pass as substance).
+    expect(skillExample).toMatch(/"label":"[^"]+"/)
+    expect(skillExample).toMatch(/"description":"[^"]+"/)
+    expect(skillExample).toMatch(/"content":"[^"]{120,}"/)
+    // The exemplar stays copy-able verbatim: valid JSON, with the entry's content non-empty.
+    const parsed = JSON.parse(skillExample!.trim()) as {
+      a2uiMeta: { personaPatch: { entries: Record<string, Array<{ label: string; description?: string; content?: string }>> } }
+    }
+    const entry = parsed.a2uiMeta.personaPatch.entries['entries:skill']![0]!
+    expect(entry.content?.trim().length ?? 0).toBeGreaterThan(0)
+    // …and the law is taught for EVERY kind, not just prompt-sections (the generalization the bug needed).
+    expect(prompt).toMatch(/KIND-GENERAL/)
+    expect(prompt).toMatch(/EVERY list kind puts what it actually\n?\s*instructs in "content"/)
+  })
+
   it('teaches the SPEC-R29 merge law the host actually applies — incremental, no restatement, no deletion', () => {
     const prompt = buildSystemPrompt(defaultCatalog, [], undefined, undefined, undefined, undefined, undefined, true)
     expect(prompt).toMatch(/INCREMENTAL/)
