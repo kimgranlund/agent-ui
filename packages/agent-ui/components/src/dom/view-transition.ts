@@ -37,5 +37,14 @@ export function withViewTransition(mutate: () => void, enabled: boolean): void {
     mutate()
     return
   }
-  document.startViewTransition(mutate)
+  const transition = document.startViewTransition(mutate)
+  // Rapid successive calls are the DESIGNED coalescing path (each new call skips the one in flight —
+  // the file-header caveat), and a skipped transition REJECTS its `ready` promise with AbortError
+  // ("Transition was skipped" / "Old view transition aborted by new view transition") — routine noise
+  // here, never a caller-visible failure (found live: GH #742's re-render bursts). Only `ready` is
+  // silenced: `finished`/`updateCallbackDone` stay untouched, so a mutate that genuinely THROWS keeps
+  // surfacing as an unhandled rejection instead of being swallowed by the seam.
+  // Optional-chained: the REAL API always returns a ViewTransition, but the fleet's jsdom tests stub
+  // `startViewTransition` with bare callback-recorders (no ready promise) — the seam stays stub-tolerant.
+  ;(transition as { ready?: Promise<unknown> } | undefined)?.ready?.catch(() => {})
 }

@@ -240,7 +240,7 @@ describe('surface-host.md descriptor', () => {
   const md = readFileSync(`${DIR}/surface-host.md`, 'utf8') as string
   const { fence, body } = splitFrontmatter(md)
   const parsed = parseDescriptor(fence)
-  const ATTR_NAMES = ['label', 'wrap', 'bare']
+  const ATTR_NAMES = ['label', 'wrap', 'bare', 'viewTransitions']
 
   it('has a leading frontmatter fence and a /site prose body', () => {
     expect(fence.length).toBeGreaterThan(0)
@@ -273,5 +273,112 @@ describe('surface-host.md descriptor', () => {
 
   it('customStates/slots agree with the source (no undeclared CSS-styled slot, no unused state)', () => {
     expect(compareDescriptorToSource(parsed, { ts, css })).toEqual([])
+  })
+})
+
+// ── the viewTransitions opt-in (GH #742/ADR-0183 Amendment) — the re-render grain, jsdom half ─────────
+// jsdom ships no startViewTransition, which IS the sync-fallback environment; the transition path is
+// proven by stubbing the seam (the router-outlet test's exact pattern). The real-engine proof is
+// surface-host.browser.test.ts's.
+
+describe('ui-surface-host — viewTransitions wraps RE-RENDERS only (GH #742/ADR-0183 Amendment)', () => {
+  const doc = document as unknown as { startViewTransition?: (cb: () => void) => unknown }
+  afterEach(() => {
+    delete doc.startViewTransition
+  })
+
+  const CREATE = (id: string): string => line({ version: 'v1.0', createSurface: { surfaceId: id, catalogId: 'agent-ui' } })
+  const ROOT = (id: string, label: string): string =>
+    line({
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: id,
+        components: [
+          { id: 'root', component: 'Column', children: ['t1'] },
+          { id: 't1', component: 'Text', text: label },
+        ],
+      },
+    })
+
+  it('default off: a full stream + a post-settle re-render never touch the API even when present', () => {
+    let transitions = 0
+    doc.startViewTransition = () => {
+      transitions++
+    }
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.ingest(CREATE('vt-a'))
+    el.ingest(ROOT('vt-a', 'first'))
+    el.finalize()
+    el.ingest(ROOT('vt-a', 'second')) // a re-render — still unwrapped without the opt-in
+    el.finalize()
+    expect(transitions).toBe(0)
+    expect(el.textContent).toContain('second')
+  })
+
+  it('opted in: FIRST-PAINT streaming stays synchronous — no API touch before the first finalize()', () => {
+    let transitions = 0
+    doc.startViewTransition = () => {
+      transitions++
+    }
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.viewTransitions = true
+    el.ingest(CREATE('vt-b'))
+    el.ingest(ROOT('vt-b', 'painted'))
+    expect(transitions, 'progressive first paint never transitions').toBe(0)
+    expect(el.textContent, 'and it painted synchronously').toContain('painted')
+    el.finalize() // the FIRST finalize runs sync too (nothing queued before it, by construction)
+    expect(transitions).toBe(0)
+  })
+
+  it('opted in + settled: a re-render line AND its finalize both route THROUGH the transition, in FIFO order', () => {
+    const queued: Array<() => void> = []
+    doc.startViewTransition = (cb: () => void) => {
+      queued.push(cb)
+    }
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.viewTransitions = true
+    el.ingest(CREATE('vt-c'))
+    el.ingest(ROOT('vt-c', 'first'))
+    el.finalize() // settles — sync (asserted above)
+    el.ingest(ROOT('vt-c', 'second'))
+    el.finalize()
+    expect(queued, 'the re-render line + its finalize both queued').toHaveLength(2)
+    expect(el.textContent, 'nothing applied yet — the platform owns when').toContain('first')
+    for (const cb of queued) cb() // the platform runs the update callbacks in order
+    expect(el.textContent).toContain('second')
+  })
+
+  it('a disconnect between queue and run is survived — the staleness re-check inside the mutate', () => {
+    const queued: Array<() => void> = []
+    doc.startViewTransition = (cb: () => void) => {
+      queued.push(cb)
+    }
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.viewTransitions = true
+    el.ingest(CREATE('vt-d'))
+    el.finalize()
+    el.ingest(ROOT('vt-d', 'late'))
+    el.remove() // nulls #host/#surface + resets the settled flag
+    expect(() => {
+      for (const cb of queued) cb()
+    }, 'the queued mutate no-ops on a dead host, never throws').not.toThrow()
+  })
+
+  it('disconnect resets the settled flag — a rebuilt artboard streams its first paint unwrapped again', () => {
+    let transitions = 0
+    doc.startViewTransition = () => {
+      transitions++
+    }
+    const el = document.createElement('ui-surface-host') as UISurfaceHostElement
+    el.viewTransitions = true
+    mount(el)
+    el.ingest(CREATE('vt-e'))
+    el.finalize() // settled
+    el.remove()
+    mount(el) // fresh artboard (the reconnect-rebuild contract above)
+    el.ingest(CREATE('vt-e2'))
+    el.ingest(ROOT('vt-e2', 'fresh paint'))
+    expect(transitions, 'the rebuilt host is un-settled — first paint stays sync').toBe(0)
+    expect(el.textContent).toContain('fresh paint')
   })
 })

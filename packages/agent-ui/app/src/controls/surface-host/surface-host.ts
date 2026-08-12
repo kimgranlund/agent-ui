@@ -23,7 +23,7 @@
 // `A2uiClientMessage` from the `@agent-ui/a2ui` PUBLIC barrel — never `packages/agent-ui/a2ui/tools/**`
 // (the produce loop / `AgentTransport` types). A standing grep in surface-host.test.ts guards this.
 
-import { UIElement, prop, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
+import { UIElement, prop, withViewTransition, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
 import { createRenderer } from '@agent-ui/a2ui'
 import type { RendererHost, ClientMessageListener, A2uiClientMessage } from '@agent-ui/a2ui'
 
@@ -46,6 +46,13 @@ const props = {
   // hook (`[bare]`, surface-host.css) — no JS behavior beyond reflection; composes with `wrap`
   // (ui-conversation sets BOTH on every surface it mounts inline in a bubble).
   bare: { ...prop.boolean(), reflect: true },
+  // GH #742/ADR-0183 Amendment — opt-in View Transitions on RE-RENDERS: once this host has settled
+  // once (its first finalize()), every later ingest()/finalize() wraps in `withViewTransition` (a
+  // root cross-fade over the update burst — the platform skips superseded transitions, so a burst
+  // shows at most ~one fade, and the spec's FIFO update-callback queue keeps every line in order).
+  // Pre-settle streaming NEVER transitions — progressive first paint is the surface's whole value.
+  // Default false / no API / reduced motion: byte-identical to the pre-#742 host (the family law).
+  viewTransitions: { ...prop.boolean(false), reflect: true, attribute: 'view-transitions' },
 } satisfies PropsSchema
 
 export interface UISurfaceHostElement extends ReactiveProps<typeof props> {}
@@ -55,6 +62,11 @@ export class UISurfaceHostElement extends UIElement {
   #host: RendererHost | undefined
   #surface: HTMLElement | undefined
   #warnedPreConnect = false
+  // GH #742/ADR-0183 Amendment — the re-render detector: flipped by the FIRST finalize(); every
+  // ingest() after it is a mutation of an already-painted surface (the grain worth a cross-fade),
+  // every one before it is first-paint streaming (never wrapped). Reset on disconnect — a reconnect
+  // rebuilds a fresh, empty artboard (below), so its next stream is a first paint again.
+  #settledOnce = false
 
   protected connected(): void {
     if (this.#host === undefined) {
@@ -83,19 +95,39 @@ export class UISurfaceHostElement extends UIElement {
     })
   }
 
-  /** One validated A2UI JSONL line → progressive paint (SPEC-R2). A documented no-op pre-connect. */
+  /** One validated A2UI JSONL line → progressive paint (SPEC-R2). A documented no-op pre-connect.
+   *  GH #742/ADR-0183 Amendment: under the `viewTransitions` opt-in, a line arriving AFTER the host
+   *  settled once (a re-render of an already-painted surface) applies inside `withViewTransition`;
+   *  first-paint streaming stays synchronous, always. `enabled` is evaluated per call — a
+   *  reduced-motion/API flip mid-burst could run a later line sync past a queued earlier one, the
+   *  amendment's one accepted (sub-second, not a real operating condition) edge. */
   ingest(line: string): void {
     if (!this.#guard('ingest')) return
-    this.#host!.ingest(line)
+    withViewTransition(() => {
+      // The helper's stated caveat: the transition path runs this ASYNC — a disconnect between queue
+      // and run nulls #host (below), so the staleness re-check lives INSIDE the mutate (ADR-0183 cl.1).
+      this.#host?.ingest(line)
+    }, this.viewTransitions && this.#settledOnce)
   }
 
   /** End of a batch: forwards to the `RendererHost`, then stretches a root `ui-column` to fill the
-   *  artboard (`applyRootStretch`, unchanged from the `canvas-surface.ts` embryo). A no-op pre-connect. */
+   *  artboard (`applyRootStretch`, unchanged from the `canvas-surface.ts` embryo). A no-op pre-connect.
+   *  GH #742/ADR-0183 Amendment: on a re-render (settled once, opted in) this rides the SAME
+   *  `withViewTransition` channel the wrapped ingest() lines queued through — the spec's FIFO
+   *  update-callback queue is what keeps the validator + root-stretch BEHIND the last queued
+   *  mutation (a sync call here would validate a half-applied surface). The first finalize() runs
+   *  synchronously (nothing queued before it, by construction) and flips the settled flag AFTER
+   *  its own forward — the flip itself is never inside the wrap. */
   finalize(): void {
     if (!this.#guard('finalize')) return
-    this.#host!.finalize()
-    const root = this.#surface!.firstElementChild
-    if (root && root.tagName.toLowerCase() === 'ui-column') root.setAttribute('stretch', '')
+    withViewTransition(() => {
+      // Same staleness re-check as ingest() — a disconnect between queue and run nulls both refs.
+      if (this.#host === undefined || this.#surface === undefined) return
+      this.#host.finalize()
+      const root = this.#surface.firstElementChild
+      if (root && root.tagName.toLowerCase() === 'ui-column') root.setAttribute('stretch', '')
+    }, this.viewTransitions && this.#settledOnce)
+    this.#settledOnce = true
   }
 
   /** Tears down the `RendererHost` — idempotent-safe (mirrors `RendererHost.dispose()`'s own contract: a
@@ -116,6 +148,7 @@ export class UISurfaceHostElement extends UIElement {
     this.#host?.dispose()
     this.#host = undefined
     this.#surface = undefined
+    this.#settledOnce = false // GH #742 — a rebuilt artboard's next stream is a first paint again
     this.replaceChildren()
   }
 

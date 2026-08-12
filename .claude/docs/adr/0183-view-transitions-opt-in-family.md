@@ -61,3 +61,42 @@ intake time — so every design below MUST be progressive enhancement (the issue
   feature-detect honesty on WebKit) grains.
 - `@agent-ui/router`'s ≤4.0 KB gz marginal (ADR-0115 cl.8, ADR-0040 manual gate) re-measured with the
   new prop — the helper itself is ~30 lines and lives in components (already counted in its own line).
+
+## Amendment (2026-08-12) — the A2UI surface's grain is RESOLVED: `ui-surface-host`'s settled-once re-render boundary, an opt-in `viewTransitions` boolean on that host (GH [#742](https://github.com/kimgranlund/agent-ui/issues/742), the slice cl.6 booked)
+
+> Append-only. The Status cell, its vocabulary, and every accepted section above stay byte-untouched —
+> agents never flip status; the ratification path for this amendment is Kim's own `ratify ADR-0183
+> amendment` utterance (adr_ratify.py's amendment mode, GH #664), and GH #742 is the durable design
+> record. This amendment RESOLVES cl.6's deferred design question; cl.6's deferral reasoning stands as
+> history, un-edited.
+
+**The grain ruling.** cl.6's candidate (`finalize(surfaceId)`) did not survive contact with the
+mechanism: the renderer's `finalize()` is a VALIDATION stage (the ADR-0002 id-graph check) — the DOM
+was already painted progressively during `ingest()`, so wrapping finalize would animate nothing.
+The event actually worth a transition is the **re-render**: wire lines mutating a surface that is
+already fully painted (the Builder updating a persona card turns after it first rendered — the
+flash Kim's sessions saw live). The detector for "already painted" is `ui-surface-host`'s OWN
+settled-once boundary — the host's first `finalize()` call marks it settled; every `ingest()` before
+that is first-paint streaming, every one after is re-render.
+
+1. **`viewTransitions` boolean prop on `ui-surface-host`** (attribute `view-transitions`, default
+   `false` — the family's byte-identical guarantee). When set, `ingest()` wraps the line's
+   application in `withViewTransition` **iff the host has settled once**; `finalize()` routes through
+   the SAME wrap under the same condition. Pre-settle streaming NEVER transitions — progressive
+   paint is the surface's whole value (cl.6's strobe concern, honored by construction rather than
+   by wrapping less often).
+2. **Burst coalescing is the platform's own semantics, relied on deliberately.** A re-render turn
+   applies several wire lines in rapid succession; each wrapped call skips the previous in-flight
+   transition (at most ~one visible cross-fade per burst), and the spec's update-callback queue runs
+   every mutate in FIFO order — no line is lost, none reorders. `finalize()` riding the same channel
+   is what keeps the validator behind the last queued mutation.
+3. **The ADR-0022 `moveBefore` interaction, analyzed as cl.6 demanded:** the fleet ships ZERO
+   `view-transition-name`s (cl.4 above), so a re-render transition is a single root cross-fade —
+   there are no named elements to double-animate and no identity conflicts for a reorder to trip.
+   The `moveBefore` identity preservation happens INSIDE the wrapped mutate, invisible to the
+   transition machinery. Should a names convention ever ship (cl.4's separate intake), this analysis
+   must be redone — that intake owes a re-read of this amendment.
+4. **One accepted edge, stated:** `enabled` is evaluated per call, so a reduced-motion/API flip
+   arriving MID-burst could run a later line synchronously past a still-queued earlier one. A
+   mid-burst environment flip is not a real operating condition (bursts are sub-second); accepted
+   and documented at the wrap site rather than engineered around.
