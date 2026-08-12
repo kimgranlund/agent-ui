@@ -45,3 +45,25 @@
   border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
   vertical-align: middle;
 }
+
+/* GH #728 — the type-scale specimens: one row per role×size cell, the token/meta line above a live
+ * specimen rendered at the cell's own resolved properties (tokens.ts sets the four `var()` reads inline —
+ * this sheet only frames the rows). */
+.typescale-row {
+  padding-block: 0.6rem;
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+}
+
+.typescale-meta {
+  display: block;
+  margin-block-end: 0.35rem;
+  font-family: var(--md-sys-typeface-mono);
+  font-size: 0.72rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.typescale-specimen {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap; /* a display-large specimen must clip, never wrap the page sideways */
+}
