@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>agent-ui · Agent Schema</title>
+  </head>
+  <body>
+    <!-- The AGENT SCHEMA reference (GH #781): the two data shapes ui-agent-admin reads and writes —
+         agentConfigSchema()'s SettingsSchema (the config surface ui-settings renders) and
+         AgentConfigSnapshot (the turn-time read a runner consumes) — both derived live from
+         agent-admin-schema.ts, plus pointers to the persona/entry-library/preset shapes their own
+         dedicated pages already own. An MPA entry auto-discovered by vite.config.ts's site/**/*.html
+         glob (matches the nav link ./agent-schema.html) — no config edit needed. The page module imports
+         pages/_page.ts FIRST for the foundation CSS cascade + self-defining ui-* controls (ADR-0003). -->
+    <div id="app"></div>
+    <script type="module" src="./pages/agent-schema.ts"></script>
+  </body>
+</html>
