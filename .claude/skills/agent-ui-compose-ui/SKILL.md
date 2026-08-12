@@ -42,11 +42,11 @@ exemplar to read first: `site/pages/forms.ts` (one live form, narrated end-to-en
    fleet-contract question, not a local patch.
 6. **No restyling internals** — the fragment's own chrome consumes
    `--md-sys-color-{family}-{role}`; anything visually wrong INSIDE a control routes down
-   ADR-0102's three lanes (component defect / prop gap / held-it-wrong) before any CSS is
+   ADR-0102's three lanes, in its own vocabulary (component-owned defect · catalog-reachable prop gap · taught idiom — the page held it wrong) before any CSS is
    written over it.
 7. **Prove it** — `npm run check` type-clean; a behavior probe for the fragment's own logic
    (jsdom where DOM-truth suffices; the browser project when layout/scheme/scroll is the
-   claim — [[agent-ui-component-testing]]'s blind-spot table says which); honest states
+   claim — [[agent-ui-component-testing]]'s jsdom blind-spot list says which); honest states
    (real interactions, not mocked visuals).
 
 ## Review (generator ≠ critic)
