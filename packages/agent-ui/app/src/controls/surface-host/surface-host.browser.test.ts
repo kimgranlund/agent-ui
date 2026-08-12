@@ -270,3 +270,60 @@ describe('ui-surface-host [bare] — the chromeless chat mount (GH #241)', () =>
     expect(getComputedStyle(surface).paddingTop).not.toBe('0px')
   })
 })
+
+// ── GH #742/ADR-0183 Amendment — view transitions on RE-RENDERS, real platform (the jsdom half stubs
+// the API; this is the genuine startViewTransition where the engine ships it, and the feature-detect
+// honesty where it does not — the router probe's established split) ───────────────────────────────────
+describe('ui-surface-host — viewTransitions against the real platform (GH #742)', () => {
+  const hasApi = typeof (document as { startViewTransition?: unknown }).startViewTransition === 'function'
+
+  const CREATE = (id: string): string => line({ version: 'v1.0', createSurface: { surfaceId: id, catalogId: 'agent-ui' } })
+  const ROOT = (id: string, label: string): string =>
+    line({
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: id,
+        components: [
+          { id: 'root', component: 'Column', children: ['t1'] },
+          { id: 't1', component: 'Text', text: label },
+        ],
+      },
+    })
+
+  it(`${server.browser}: an opted-in RE-RENDER still lands the update (API ${hasApi ? 'present — through a real transition' : 'ABSENT — the sync fallback, byte-identical behavior'})`, async () => {
+    const el = mountHost()
+    el.viewTransitions = true
+    el.ingest(CREATE('vt-live'))
+    el.ingest(ROOT('vt-live', 'first paint'))
+    // first paint is synchronous BY CONTRACT even opted-in (pre-settle) — no polling, which IS the assertion
+    expect(el.textContent).toContain('first paint')
+    el.finalize()
+
+    el.ingest(ROOT('vt-live', 'second paint')) // the re-render — through a real transition where the API exists
+    el.finalize()
+    for (let i = 0; i < 40 && !el.textContent!.includes('second paint'); i++) await new Promise((r) => requestAnimationFrame(r))
+    expect(el.textContent).toContain('second paint')
+  })
+
+  it(`${server.browser}: reduced motion forces the SYNC path even where the API exists (Chromium CDP; WebKit asserts its own real availability)`, async () => {
+    if (server.browser !== 'chromium') {
+      const { viewTransitionAvailable } = await import('@agent-ui/components')
+      expect(viewTransitionAvailable()).toBe(hasApi)
+      return
+    }
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
+    try {
+      const el = mountHost()
+      el.viewTransitions = true
+      el.ingest(CREATE('vt-reduced'))
+      el.ingest(ROOT('vt-reduced', 'first'))
+      el.finalize()
+      el.ingest(ROOT('vt-reduced', 'reduced update'))
+      // the SYNC path commits immediately — no polling needed, which IS the assertion
+      expect(el.textContent, 'reduced motion: the re-render applied synchronously (no transition ran)').toContain('reduced update')
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] })
+    }
+  })
+})
