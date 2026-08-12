@@ -2255,15 +2255,20 @@ export class UIAgentAdminElement extends UIElement {
         isCatalog
           ? this.#deleteCatalog(id)
           : this.#updateEntries(kind, (entries) => entries.filter((e) => e.id !== id || e.builtin)),
-      onAdd: (input) => {
+      onAdd: (input, context) => {
         // GH #564 — the catalog kind's entry id is a FOREIGN KEY into `A2UI_CATALOG_OPTIONS`: a collision
         // there is a duplicate (re-adding an already-registered catalog), never a name clash to suffix
         // around, so it rejects instead of minting an `-2` id the registry does not know. The collision
         // set is the PROJECTED roster (`readCatalogEntries` ensures the Default row), matching what the
         // picker disables against — a raw-store read would still accept a deletable Default duplicate
         // through a programmatic onAdd (review M1).
+        //
+        // GH #783/LLD-C5 (SPEC-R6) — the reject law also fires when the ADDING PACK flags itself
+        // (`context.rejectOnCollision`), so a foreign-key pack offered under an ordinary kind gets the
+        // same duplicate-reject the catalog KIND gets. The collision LAW keeps its ONE home in
+        // `validateNewEntry`; this only widens the boolean that feeds it (`isCatalog OR the pack flag`).
         const existing = isCatalog ? readCatalogEntries(this.store) : readEntries(this.store, kind)
-        const result = validateNewEntry(existing, kind, input, { rejectOnCollision: isCatalog })
+        const result = validateNewEntry(existing, kind, input, { rejectOnCollision: isCatalog || context?.rejectOnCollision === true })
         if (!result.ok) {
           showAddError(section, result.error)
           return false

@@ -6,7 +6,7 @@ import { UISettingsElement } from '../settings/settings.ts'
 import { UIConversationElement } from '../conversation/conversation.ts'
 import { defaultAgentConfigSchema, SUPPORTED_MODELS, DEFAULT_MODEL_ID, SURFACE_MARKDOWN_KEY, SURFACE_A2UI_KEY, SURFACE_PLANNER_KEY, A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID, sanitizeCatalog } from './agent-admin-schema.ts'
 import { ENTRY_KINDS, initialEntryValues, composeSystemPrompt, DEFAULT_SYSTEM_PROMPT_FALLBACK } from './entries.ts'
-import { entriesStoreKey, readEntries, type Entry, type EntryLibraryPack } from '../entry-list/entry-data.ts'
+import { entriesStoreKey, readEntries, type Entry, type EntryLibraryPack, type NewEntryInput } from '../entry-list/entry-data.ts'
 import { mountEntryList, showAddError, type EntryListHandlers } from '../entry-list/entry-list.ts'
 import { createMemoryStore } from '../settings/memory-store.ts'
 import type { SettingsStore } from '../settings/store.ts'
@@ -3163,5 +3163,124 @@ describe('UIAgentAdminElement — the Catalogs picker (GH #564): reject-on-colli
     const entries = readEntries(el.store, ENTRY_KINDS.skill)
     expect(entries).toHaveLength(2)
     expect(entries[1]!.id).toBe('grid-idiom-2')
+  })
+})
+
+// ── GH #783 / LLD-C5 (SPEC-R6 AC1/AC2) — the PER-PACK rejectOnCollision flag ─────────────────────────────
+// The GH #564 fix above pins the foreign-key reject to the catalog KIND (`isCatalog`). S3 widens it to a
+// per-PACK flag so a live-derived pack keying an external registry can carry the reject + picker-disable
+// while sitting under an ORDINARY (hand-authored) kind whose own `rejectOnCollision` stays false — the
+// exact shape the GH #783 S4 live-services pack rides, WITHOUT this package ever learning that service
+// vocabulary (SPEC-R6/N1 — every id below is a plain foreign key, and the SPEC-R6 app-package grep fence
+// stays clean by construction: no service-registry token appears in this file). The collision LAW keeps
+// its one home in `validateNewEntry`; these prove only the threading (pack flag → picker-disable → onAdd
+// context → the same validator).
+describe('per-pack rejectOnCollision (S3, LLD-C5, SPEC-R6) — the flag opts in at PACK grain, plain ids', () => {
+  const SKILL = ENTRY_KINDS.skill
+  // A flagged pack under the SKILL kind — the S4 shape: an external-registry pack under a kind whose own
+  // flag is false. Entries carry an EXPLICIT foreign-key id (never slugged).
+  const FLAGGED_PACK: EntryLibraryPack = {
+    id: 'external-registry',
+    label: 'External registry',
+    description: 'fixture — a foreign-key pack under a hand-authored kind',
+    rejectOnCollision: true,
+    entries: [{ id: 'svc-alpha', label: 'Alpha service', description: '', content: '' }],
+  }
+  // An UNflagged pack under the SAME kind — proves the additive-options law: absent flag ⇒ byte-identical
+  // suffix-dedup, no picker-disable ever.
+  const PLAIN_PACK: EntryLibraryPack = {
+    id: 'plain',
+    label: 'Plain',
+    description: 'fixture — an ordinary suffix-dedup pack',
+    entries: [{ label: 'grid-idiom', description: '', content: '' }],
+  }
+  const seedRow = (id: string, label: string): Entry => ({ id, kind: SKILL, label, description: '', content: '', order: 0, enabled: true, builtin: false })
+
+  function mountSkill(packs: EntryLibraryPack[], roster: Entry[] = []): UIAgentAdminElement {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({ initial: { [entriesStoreKey(SKILL)]: roster } })
+    el.libraries = { [SKILL]: packs }
+    return mount(el)
+  }
+  const skillSection = (el: UIAgentAdminElement): HTMLElement => el.querySelector(`[data-part="entry-section"][data-kind="${SKILL}"]`) as HTMLElement
+  const pickerRow = (el: UIAgentAdminElement, value: string): HTMLElement => skillSection(el).querySelector(`[data-value="${value}"]`) as HTMLElement
+  const menuEl = (el: UIAgentAdminElement): HTMLElement => skillSection(el).querySelector('[data-part="entry-library-menu"]') as HTMLElement
+
+  it('SPEC-R6 AC1 — a flagged pack\'s already-added row is picker-disabled (never hidden); an unflagged pack\'s never is', async () => {
+    const flagged = mountSkill([FLAGGED_PACK], [seedRow('svc-alpha', 'Alpha service')])
+    await whenFlushed()
+    const disabled = pickerRow(flagged, 'external-registry:0')
+    expect(disabled.getAttribute('aria-disabled'), 'the PACK flag disables the colliding row (kind flag is false)').toBe('true')
+    expect(disabled.textContent, 'and states WHY, the visible-not-hidden UX').toContain('already added')
+
+    const plain = mountSkill([PLAIN_PACK], [seedRow('grid-idiom', 'grid-idiom')])
+    await whenFlushed()
+    expect(pickerRow(plain, 'plain:0').getAttribute('aria-disabled'), 'an unflagged pack never disables a row — byte-identical to before').toBeNull()
+  })
+
+  it('SPEC-R6 AC1 — adding from a flagged pack commits, then its row DISABLES on the same signal (render-refresh); a re-click is inert', async () => {
+    const el = mountSkill([FLAGGED_PACK], [])
+    await whenFlushed()
+    expect(pickerRow(el, 'external-registry:0').getAttribute('aria-disabled'), 'nothing collides yet').toBeNull()
+
+    pickerRow(el, 'external-registry:0').click()
+    await whenFlushed()
+    expect(readEntries(el.store, SKILL).map((e) => e.id), 'the foreign-key id rides through untouched').toEqual(['svc-alpha'])
+    // The render-refresh gate widened for a pack flag under a non-flag kind: the just-added row disables.
+    expect(pickerRow(el, 'external-registry:0').getAttribute('aria-disabled'), 'same signal — the added row is now picker-disabled').toBe('true')
+
+    pickerRow(el, 'external-registry:0').click() // disabled → ui-menu skips it
+    await whenFlushed()
+    expect(readEntries(el.store, SKILL), 'no duplicate lands — the store is unchanged').toHaveLength(1)
+  })
+
+  it('SPEC-R6 AC2 — the reject safety net: a colliding add reaching onAdd is REJECTED (not suffix-deduped), visibly', async () => {
+    // Dispatch the raw `select` the picker-disable normally makes unreachable, so onAdd fires with the
+    // pack context on an already-present id — proving `#makeSection` merges `context.rejectOnCollision`
+    // into the ONE validateNewEntry call (else it would suffix-dedup to `svc-alpha-2`).
+    const el = mountSkill([FLAGGED_PACK], [seedRow('svc-alpha', 'Alpha service')])
+    await whenFlushed()
+    menuEl(el).dispatchEvent(new CustomEvent('select', { detail: { value: 'external-registry:0', index: 0 } }))
+    await whenFlushed()
+    const entries = readEntries(el.store, SKILL)
+    expect(entries, 'rejected, NOT deduped — no svc-alpha-2 row minted').toHaveLength(1)
+    expect(entries.map((e) => e.id)).toEqual(['svc-alpha'])
+    const note = skillSection(el).querySelector('[data-part="entry-add-error"]') as HTMLElement
+    expect(note.hidden, 'the fail-closed note is visible').toBe(false)
+    expect(note.textContent, 'the SPEC-R5 AC2 literal').toBe('Already in the list.')
+  })
+
+  it('the additive-options law at PACK grain: an unflagged pack still suffix-dedups (byte-identical to before)', async () => {
+    const el = mountSkill([PLAIN_PACK], [])
+    await whenFlushed()
+    pickerRow(el, 'plain:0').click()
+    await whenFlushed()
+    expect(pickerRow(el, 'plain:0').getAttribute('aria-disabled'), 'an unflagged pack never disables its row').toBeNull()
+    pickerRow(el, 'plain:0').click()
+    await whenFlushed()
+    const entries = readEntries(el.store, SKILL)
+    expect(entries.map((e) => e.id), 'a second add suffix-dedups, unchanged by S3').toEqual(['grid-idiom', 'grid-idiom-2'])
+  })
+
+  it('entry-list.ts threading (unit) — the select handler forwards the pack flag as onAdd\'s optional context; an unflagged pack forwards undefined', () => {
+    const calls: Array<{ input: NewEntryInput; context: { rejectOnCollision?: boolean } | undefined }> = []
+    const capturing: EntryListHandlers = {
+      onToggle: () => {},
+      onContentChange: () => {},
+      onDelete: () => {},
+      onAdd: (input, context) => {
+        calls.push({ input, context })
+        return true
+      },
+    }
+    const section = mountEntryList(SKILL, 'Add skill', capturing, { libraries: [FLAGGED_PACK, PLAIN_PACK] })
+    section.render([])
+    const menu = section.host.querySelector('[data-part="entry-library-menu"]') as HTMLElement
+    menu.dispatchEvent(new CustomEvent('select', { detail: { value: 'external-registry:0', index: 0 } }))
+    menu.dispatchEvent(new CustomEvent('select', { detail: { value: 'plain:0', index: 0 } }))
+
+    expect(calls).toHaveLength(2)
+    expect(calls[0]!.context, 'a flagged pack forwards { rejectOnCollision: true }').toEqual({ rejectOnCollision: true })
+    expect(calls[1]!.context, 'an unflagged pack forwards undefined — the pre-#783 call, byte-identical').toBeUndefined()
   })
 })

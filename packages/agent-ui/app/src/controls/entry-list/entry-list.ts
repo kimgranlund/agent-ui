@@ -34,8 +34,16 @@ export interface EntryListHandlers {
   onDelete(id: string): void
   /** Returns `true` on a successful add, `false` on a fail-closed rejection (component-reviewer MAJOR
    *  fix: the caller needs this to decide whether to reset/hide the form — resetting on a REJECTED
-   *  submit silently discarded the typed description/content the user still needs to see and fix. */
-  onAdd(input: NewEntryInput): boolean
+   *  submit silently discarded the typed description/content the user still needs to see and fix.
+   *
+   *  GH #783/LLD-C5 — an OPTIONAL second argument carries the ADDING PACK's own `rejectOnCollision`
+   *  flag through to the caller's one `validateNewEntry` call (the library-menu select handler supplies
+   *  it; the hand-author form omits it entirely — byte-identical to before). The return stays the BARE
+   *  boolean ADR-0164 cl.3 pins: nothing in this arc is async, and `submitAdd` branches on the raw
+   *  return, so a `Promise` would be always-truthy — resetting the form on a rejection, the exact defect
+   *  the boolean return exists to prevent. Every existing single-argument implementation stays valid by
+   *  TS structural typing (§6.1's non-decision). */
+  onAdd(input: NewEntryInput, context?: { rejectOnCollision?: boolean }): boolean
 }
 
 export interface EntryListSection {
@@ -158,8 +166,11 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
         // never hide it (ui-menu's own `aria-disabled` precedent, the conversation-composer.ts "coming
         // soon" idiom) — so the author sees WHY a click would do nothing instead of a click that just does
         // nothing.
+        // GH #783/LLD-C5 — the disable honors the kind-level flag OR this PACK's own `rejectOnCollision`,
+        // so a foreign-key pack offered under an ordinary kind (the S4 services pack) disables its
+        // already-added rows just as the catalog KIND does.
         const wouldBeId = entry.id?.trim() ? entry.id.trim() : slugify(entry.label)
-        const alreadyPresent = rejectOnCollision && currentEntries.some((e) => e.id === wouldBeId)
+        const alreadyPresent = (rejectOnCollision || pack.rejectOnCollision === true) && currentEntries.some((e) => e.id === wouldBeId)
         row.textContent = alreadyPresent ? `${entry.label} — ${pack.label} (already added)` : `${entry.label} — ${pack.label}`
         row.title = entry.description
         if (alreadyPresent) row.setAttribute('aria-disabled', 'true')
@@ -178,7 +189,11 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
       // there is nothing to reset here, but the return must not be silently discarded: a rejected
       // library entry (e.g. a pack shipping an empty label) shows the same visible note the
       // hand-authored path shows, proven by the rejection test.
-      void handlers.onAdd(entry)
+      //
+      // GH #783/LLD-C5 — forward the ADDING PACK's own `rejectOnCollision` as `onAdd`'s optional context,
+      // so the caller's ONE `validateNewEntry` call rejects a foreign-key duplicate even for a pack under
+      // an ordinary kind. An unflagged pack forwards `undefined` — byte-identical to the pre-#783 call.
+      void handlers.onAdd(entry, pack?.rejectOnCollision === true ? { rejectOnCollision: true } : undefined)
     })
 
     return libraryMenu
@@ -392,7 +407,11 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
     // GH #564 — a `rejectOnCollision` kind's add/delete just changed what's "already in the list"; rebuild
     // the picker so a newly-collided row disables (or a deleted one re-enables), never a stale menu. Gated
     // on the flag so every other kind's render stays exactly as before (no picker rebuild at all).
-    if (rejectOnCollision) refreshLibraryMenu()
+    // GH #783/LLD-C5 — the gate also fires when ANY offered PACK carries its own `rejectOnCollision`, so a
+    // foreign-key pack under an ordinary kind (the S4 services pack, whose kind flag is false) keeps its
+    // disabled rows live across an add/delete too — the same signal the catalog kind gets. A section with
+    // neither flag never rebuilds its picker on render: byte-identical to before.
+    if (rejectOnCollision || currentLibraries.some((p) => p.rejectOnCollision === true)) refreshLibraryMenu()
   }
 
   // GH #419 — the non-blocking per-entry notice. Kept OUT of the row-building loop above so it can also

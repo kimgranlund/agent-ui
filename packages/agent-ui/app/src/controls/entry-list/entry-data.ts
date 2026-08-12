@@ -81,6 +81,14 @@ export interface EntryLibraryPack {
   description: string
   /** Ready-to-add entry inputs, in menu order. */
   entries: readonly NewEntryInput[]
+  /** GH #783/LLD-C5 (SPEC-R6 AC1) — GH #564's foreign-key law at PACK grain: this pack's entries key an
+   *  external registry, so a colliding id is a duplicate to REJECT, never a name clash to suffix. Absent ⇒
+   *  the shipped suffix behavior for every existing pack (byte-identical). A `rejectOnCollision` PACK
+   *  offered under an ordinary (non-catalog) kind gets the same reject-on-commit + picker-disable the
+   *  catalog KIND flag gets, without the kind itself becoming registry-keyed — the vehicle a live-derived
+   *  services pack (GH #783 S4) rides. Generic vocabulary — no service-registry semantics reach this
+   *  module: this package stays opaque to whatever external registry a flagged pack keys (SPEC-R6/N1). */
+  rejectOnCollision?: boolean
 }
 
 export type ValidateNewEntryResult = { ok: true; entry: Entry } | { ok: false; error: string }
