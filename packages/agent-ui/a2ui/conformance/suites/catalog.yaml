@@ -1,0 +1,70 @@
+# GENERATED — DO NOT EDIT BY HAND.
+# Source of truth: packages/agent-ui/a2ui/conformance/fixtures.jsonl.
+# Regenerate: node --experimental-strip-types packages/agent-ui/a2ui/tools/conformance/generate-suites.ts
+#
+# Ported to the upstream a2ui-project/a2ui `agent_sdks/conformance/suites/*.yaml` row convention
+# (GH #616). See ../README.md ("Upstream suites/*.yaml port") for the field-by-field mapping and the
+# two named shape mismatches (expect_verdict vs. expect_error; no prune/render/load action analog).
+#
+# Upstream submission formatting (Apache license headers, etc.) is applied at contribution time —
+# never carried in this repo's own generated copy. See UPSTREAM-PROPOSAL.md for the draft issue text.
+
+- name: "valid-button"
+  description: "One clickable Button with a canonical {action} shape — a minimal known-good default-catalog payload."
+  catalog:
+    version: "v1.0"
+    catalogId: "agent-ui"
+    catalog_schema: "../../src/catalog/default/catalog.json"
+  action: "validate"
+  payload: [{"version":"v1.0","createSurface":{"catalogId":"agent-ui","surfaceId":"canvas"}},{"version":"v1.0","updateComponents":{"surfaceId":"canvas","components":[{"id":"root","component":"Button","label":"Click me","variant":"solid","action":{"action":"submit"}}]}}]
+  expect_verdict: {"valid":true,"failures":[]}
+
+- name: "valid-list"
+  description: "A Row/Text dynamic-list template over an updateDataModel-seeded array — exercises ADR-0024's positional child-template binding."
+  catalog:
+    version: "v1.0"
+    catalogId: "agent-ui"
+    catalog_schema: "../../src/catalog/default/catalog.json"
+  action: "validate"
+  payload: [{"version":"v1.0","createSurface":{"catalogId":"agent-ui","surfaceId":"list-display"}},{"version":"v1.0","updateDataModel":{"surfaceId":"list-display","value":{"tags":[{"name":"signals"},{"name":"zero-dep"}]}}},{"version":"v1.0","updateComponents":{"surfaceId":"list-display","components":[{"id":"root","component":"Row","gap":"md","wrap":true,"children":{"componentId":"tag_chip","path":"/tags"}},{"id":"tag_chip","component":"Text","variant":"body","text":{"path":"name"}}]}}]
+  expect_verdict: {"valid":true,"failures":[]}
+
+- name: "unknown-component"
+  description: "A component type not declared by the target catalog — CATALOG (the security allowlist, SPEC-R9)."
+  catalog:
+    version: "v1.0"
+    catalogId: "agent-ui"
+    catalog_schema: "../../src/catalog/default/catalog.json"
+  action: "validate"
+  payload: [{"version":"v1.0","createSurface":{"catalogId":"agent-ui","surfaceId":"s-unknown"}},{"version":"v1.0","updateComponents":{"surfaceId":"s-unknown","components":[{"id":"root","component":"Frobnicator"}]}}]
+  expect_verdict: {"valid":false,"failures":[{"code":"CATALOG","path":"root"}]}
+
+- name: "upstream-interactive-button"
+  description: "The upstream a2ui.org Basic Catalog 'Interactive Button' example (v0.9 envelope translated to v1.0, every other byte verbatim — ADR-0169 cl.1) — the interop-anchored seed."
+  catalog:
+    version: "v1.0"
+    catalogId: "a2ui-basic"
+    catalog_schema: "../../src/catalog/a2ui-basic/catalog.json"
+  action: "validate"
+  payload: [{"version":"v1.0","createSurface":{"surfaceId":"gallery-interactive-button","catalogId":"https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json"}},{"version":"v1.0","updateComponents":{"surfaceId":"gallery-interactive-button","components":[{"id":"root","component":"Column","children":["title","action_button"],"justify":"center","align":"center"},{"id":"title","component":"Text","text":"Click the button below","variant":"body"},{"id":"action_button","component":"Button","child":"button_label","variant":"primary","action":{"event":{"name":"button_clicked","context":{}}}},{"id":"button_label","component":"Text","text":"Click Me"}]}}]
+  expect_verdict: {"valid":true,"failures":[]}
+
+- name: "upstream-simple-login-form"
+  description: "The upstream a2ui.org Basic Catalog 'Simple Login Form' example (v0.9 -> v1.0 envelope translation only)."
+  catalog:
+    version: "v1.0"
+    catalogId: "a2ui-basic"
+    catalog_schema: "../../src/catalog/a2ui-basic/catalog.json"
+  action: "validate"
+  payload: [{"version":"v1.0","createSurface":{"surfaceId":"gallery-simple-login-form","catalogId":"https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json","sendDataModel":true}},{"version":"v1.0","updateComponents":{"surfaceId":"gallery-simple-login-form","components":[{"id":"root","component":"Column","children":["form_title","username_field","password_field","submit_button"],"justify":"start","align":"stretch"},{"id":"form_title","component":"Text","text":"Login","variant":"h2"},{"id":"username_field","component":"TextField","label":"Username","value":{"path":"/username"},"variant":"shortText"},{"id":"password_field","component":"TextField","label":"Password","value":{"path":"/password"},"variant":"obscured"},{"id":"submit_button","component":"Button","child":"submit_label","variant":"primary","action":{"event":{"name":"login_submitted","context":{"user":{"path":"/username"},"pass":{"path":"/password"}}}}},{"id":"submit_label","component":"Text","text":"Sign In"}]}}]
+  expect_verdict: {"valid":true,"failures":[]}
+
+- name: "upstream-product-card"
+  description: "The upstream a2ui.org Basic Catalog 'Product Card' example, exercising the formatCurrency/formatString/formatNumber/pluralize function chain (v0.9 -> v1.0 envelope translation only)."
+  catalog:
+    version: "v1.0"
+    catalogId: "a2ui-basic"
+    catalog_schema: "../../src/catalog/a2ui-basic/catalog.json"
+  action: "validate"
+  payload: [{"version":"v1.0","createSurface":{"surfaceId":"gallery-product-card","catalogId":"https://a2ui.org/specification/v0_9/catalogs/basic/catalog.json","sendDataModel":true}},{"version":"v1.0","updateComponents":{"surfaceId":"gallery-product-card","components":[{"id":"root","component":"Card","child":"main-column"},{"id":"main-column","component":"Column","children":["image","details"]},{"id":"image","component":"Image","url":{"path":"/imageUrl"},"fit":"cover"},{"id":"details","component":"Column","children":["name","rating-row","price-row","actions"]},{"id":"name","component":"Text","text":{"path":"/name"},"variant":"h3"},{"id":"rating-row","component":"Row","children":["stars","reviews"],"align":"center"},{"id":"stars","component":"Text","text":{"path":"/stars"},"variant":"body"},{"id":"reviews","component":"Text","text":{"call":"formatString","args":{"value":"(${formatNumber(value: ${/reviewCount})} ${pluralize(value: ${/reviewCount}, one: 'review', other: 'reviews')})"},"returnType":"string"},"variant":"caption"},{"id":"price-row","component":"Row","children":["price","original-price"],"align":"start"},{"id":"price","component":"Text","text":{"call":"formatCurrency","args":{"value":{"path":"/price"},"currency":"USD"},"returnType":"string"},"variant":"h2"},{"id":"original-price","component":"Text","text":{"call":"formatCurrency","args":{"value":{"path":"/originalPrice"},"currency":"USD"},"returnType":"string"},"variant":"caption"},{"id":"actions","component":"Row","children":["add-cart-btn"]},{"id":"add-cart-btn-text","component":"Text","text":"Add to Cart"},{"id":"add-cart-btn","component":"Button","child":"add-cart-btn-text","variant":"primary","action":{"event":{"name":"addToCart","context":{}}}}]}},{"version":"v1.0","updateDataModel":{"surfaceId":"gallery-product-card","value":{"imageUrl":"https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=200&fit=crop","name":"Wireless Headphones Pro","stars":"★★★★★","reviewCount":2847,"price":199.99,"originalPrice":249.99}}}]
+  expect_verdict: {"valid":true,"failures":[]}

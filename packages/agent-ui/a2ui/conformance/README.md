@@ -67,10 +67,78 @@ the mismatching fixtures (name, expected, actual) to stderr. This script is the 
 the format contract that makes the suite implementation-agnostic lives entirely in `manifest.json` +
 `fixtures.jsonl`, not here.
 
+## Upstream `suites/*.yaml` port (GH #616)
+
+Upstream landed its own conformance convention — `agent_sdks/conformance/suites/*.yaml`
+(a2ui-project/a2ui#2182, following the #2150 scoping thread) — after this pack already existed. GH
+[#616](https://github.com/kimgranlund/agent-ui/issues/616) ports our fixtures into that SAME row
+shape as a **sibling `suites/` directory**, so a contributor (or any tool already speaking upstream's
+convention) can point straight at it.
+
+`suites/validator.yaml` and `suites/catalog.yaml` are **generated, never hand-edited** —
+`fixtures.jsonl` stays the one canonical source (this repo's own GH #406 silent-divergence class: two
+hand-maintained enumerations of one truth). The generator + drift gate live in
+`packages/agent-ui/a2ui/tools/conformance/`:
+
+- **`generate-suites.ts`** — pure `buildSuites(fixtures)` function + a guarded CLI entry (the
+  `run.ts` idiom already in this folder). Hand-rolled YAML string building — **no YAML library, zero
+  new deps (SPEC-N5)**: every row's scalar/collection VALUE is emitted via `JSON.stringify`, which is
+  valid YAML because a YAML 1.1/1.2 parser accepts JSON flow syntax as a value verbatim (a
+  double-quoted YAML scalar is a strict superset of a JSON string literal). Only the row structure
+  (`- `, `key:`, indentation, the blank line between rows) is hand-rolled.
+  Regenerate: `node --experimental-strip-types packages/agent-ui/a2ui/tools/conformance/generate-suites.ts`
+- **`suites-driftwire.test.ts`** — the byte-identity drift gate (the components package's
+  `props-gen-driftwire.test.ts`/`generate-props.mjs` pairing, ported here): regenerates every
+  `suites/*.yaml` file in-memory from the real `fixtures.jsonl` and diffs against the committed bytes.
+  RED the moment a `suites/*.yaml` file is hand-edited, or a fixture falls out of sync with
+  `SUITE_MEMBERSHIP` (every fixture claimed exactly once, none orphaned). Runs under `npm test`.
+
+### Fixture → suite mapping
+
+The split mirrors upstream's own validator/catalog file-granularity CONCERN boundary, not a
+`catalogId` split: `validator.yaml` carries protocol-pipeline mechanics that hold regardless of which
+catalog is targeted; `catalog.yaml` carries catalog-document-scoped concerns (the CATALOG
+membership-allowlist code, plus every catalog-interop known-good payload).
+
+| Suite | Fixtures | Failure codes covered |
+| --- | --- | --- |
+| `suites/validator.yaml` | `parse-failure` · `bad-envelope` · `missing-surfaceId` · `unsupported-version` · `bad-pointer-binding` · `bad-pointer-datamodel` · `missing-root` · `duplicate-root` · `dangling-child` · `cycle` | PARSE, SCHEMA ×2, VERSION_UNSUPPORTED, POINTER ×2, IDGRAPH ×4 |
+| `suites/catalog.yaml` | `valid-button` · `valid-list` · `unknown-component` · `upstream-interactive-button` · `upstream-simple-login-form` · `upstream-product-card` | CATALOG, plus 5 known-good (2 default-catalog, 3 `a2ui.org` interop) |
+
+### Row shape — field-by-field, against the fetched upstream examples
+
+Fetched `validator.yaml` / `catalog.yaml` / `parser.yaml` from
+`a2ui-project/a2ui@main:agent_sdks/conformance/suites/` (2026-08-13) to extract the real row shape
+before writing the generator. Every row here carries: `name` · `description` · `catalog: {version,
+catalogId, catalog_schema}` · `action` · `payload` · an expected-outcome field — the same top-level
+keys upstream's own rows use.
+
+**Two deliberate mismatches** (named, not forced-fit — see `UPSTREAM-PROPOSAL.md` for the same note
+addressed to upstream maintainers):
+
+1. **Outcome field** — upstream's `expect_error: {category, message}` (or a bare string) names a
+   SINGLE first-raised exception; a row with no `expect_error` at all means success. This repo's
+   validator returns a full `ValidationVerdict` — a SET of `{code, path}` failures, order-independent
+   (ADR-0024) — never a single first-raised exception. Squeezing that into upstream's singular field
+   would be lossy, so every row here carries `expect_verdict` instead: the shared `ValidationVerdict`
+   shape verbatim, valid or not.
+2. **No `catalog.yaml` action-vocabulary analog** — upstream's `catalog.yaml` suite exercises
+   catalog-SCHEMA *transforms* (`prune` / `render` / `load` / `remove_strict_validation` /
+   `verify_cuttable_keys`) — pruning disallowed components out of a schema, rendering a schema as LLM
+   instructions, etc. This repo's validator has no such operation: it only checks whether a payload's
+   components are members of a catalog's declared set, never transforms the catalog document. Every
+   row in both of our suites uses `action: "validate"` — our `catalog.yaml` groups catalog-
+   DOCUMENT-scoped **validate** cases, not a different action.
+
+Upstream submission formatting — Apache license headers, `test_data/` external-file schema refs,
+etc. — is applied **at contribution time**, never carried in this repo's own generated copy (see
+`UPSTREAM-PROPOSAL.md`).
+
 ## Contributing upstream
 
 Every fixture here traces to this repo's own shared validator
 (`packages/agent-ui/a2ui/src/renderer/validate.ts` + `src/catalog/conformance.ts`) and, for the
-three interop fixtures, to the pinned `a2ui.org` machine schema fetched for ADR-0169. A contributor
-porting this suite to `a2ui-project/a2ui#2150` needs only `manifest.json` + `fixtures.jsonl` + the two
-referenced `catalog.json` documents — no other file in this repo.
+three interop fixtures, to the pinned `a2ui.org` machine schema fetched for ADR-0169. The draft issue
+proposing this pack as a complementary sibling suite to `a2ui-project/a2ui#2150`/#2182 is
+`UPSTREAM-PROPOSAL.md`, ready to paste into a new upstream issue — filed by a human, from their own
+GitHub account, never by this repo's own tooling.
