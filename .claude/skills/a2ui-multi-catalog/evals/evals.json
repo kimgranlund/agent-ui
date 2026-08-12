@@ -107,14 +107,37 @@
       "prompt": "Is there an upstream npm update for CodeMirror we should take?"
     },
     {
-      "id": "x-libkinds-1",
+      "id": "n10",
       "expect": "no-trigger",
-      "prompt": "Add an entry kind — a new library section in the agent-admin settings pane."
+      "prompt": "Add an entry kind — a new library section in the agent-admin settings pane.",
+      "owner": "agent-admin-library-kinds"
     },
     {
-      "id": "x-libkinds-2",
+      "id": "n11",
       "expect": "no-trigger",
-      "prompt": "Add a catalog to the persona's shelf in agent-admin — the Catalogs library section."
+      "prompt": "Add a catalog to the persona's shelf in agent-admin — the Catalogs library section.",
+      "owner": "agent-admin-library-kinds"
+    },
+    {
+      "id": "t13",
+      "prompt": "Compose a persona catalog fragment onto the agent-ui base for the card-table persona",
+      "expect": "trigger"
+    },
+    {
+      "id": "t14",
+      "prompt": "The derived catalog's composeCatalog call fails with a collision on the Button name — what's the policy?",
+      "expect": "trigger"
+    },
+    {
+      "id": "t15",
+      "prompt": "Scope this mini-skill to the derived catalog via targetCatalogs",
+      "expect": "trigger"
+    },
+    {
+      "id": "n12",
+      "prompt": "Compose an A2UI payload against the base--persona derived catalog",
+      "expect": "no-trigger",
+      "owner": "a2ui-compose (payload authoring — the derived catalog is just the target, §5 owns the derive step, not the compose)"
     }
   ]
 }

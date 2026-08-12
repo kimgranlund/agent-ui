@@ -118,9 +118,10 @@
       "owner": "update-config — Claude Code's OWN MCP config, a different product surface than this repo's live-agent connector"
     },
     {
-      "id": "x-libkinds-1",
+      "id": "n07",
       "expect": "no-trigger",
-      "prompt": "What is the capability kind roster and how does a single-select kind derive its switches?"
+      "prompt": "What is the capability kind roster and how does a single-select kind derive its switches?",
+      "owner": "agent-admin-library-kinds"
     }
   ]
 }

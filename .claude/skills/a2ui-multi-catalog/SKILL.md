@@ -6,7 +6,9 @@ description: >-
   "a2ui-basic", "catalog schema ground truth" — and for widening wire tolerances for an
   upstream dialect (foreign commit/action shapes) without forking the renderer, per-catalog
   function implementations, or threading catalogId end-to-end (picker → proxy/worker →
-  producer → authority stamp). NOT for composing payloads against a catalog (a2ui-compose);
+  producer → authority stamp). ALSO §5's composed/derived catalogs: a "persona catalog
+  fragment" (CatalogFragment) merged via composeCatalog, "derived catalog" base--persona ids,
+  "targetCatalogs" scoping, reject-loud collisions. NOT for composing payloads (a2ui-compose);
   NOT for the ui-* fleet map (agent-ui-catalog); NOT for agent-admin's Catalogs shelf/section
   or entry kinds (agent-admin-library-kinds).
 user-invocable: false
