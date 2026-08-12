@@ -13,6 +13,11 @@
 // the pack with zero hand-copying. The frontmatter split below mirrors `prompts/frontmatter.ts` (not an
 // exported subpath; the format is three trivial lines — id/triggers + body).
 import { ENTRY_KINDS, A2UI_CATALOG_OPTIONS, type EntryLibraryPack, type NewEntryInput } from '@agent-ui/app'
+// GH #783 S4 (LLD-C6) — the live SERVICE-row shape the sibling `fetchLiveServices` degrade-law serves;
+// type-only (erased under verbatimModuleSyntax), so `setLiveServices` below takes the SAME row shape the
+// site overlay hands it, no restated inline literal. No runtime cycle: admin-live-runner.ts imports nothing
+// from this page.
+import type { LiveServiceRow } from '../lib/admin-live-runner.ts'
 
 // ── pack #1: the shipped A2UI composition idioms, derived from the registry's own .md files ─────────────
 
@@ -388,6 +393,24 @@ export function setLiveIntegrations(trios: readonly { id: string; label: string;
   liveIntegrationEntries = trios?.map((t) => ({ id: t.id, label: t.label, description: t.description, content: '' }))
 }
 
+// GH #783 S4 (LLD-C6/SPEC-R5, ADR-0185) — the MCP-services live plumbing, the sibling of the Integrations
+// live-read above. `undefined` (the default, and the ONLY state a production build ever reaches — the GET's
+// `services` array exists only under `vite dev`; production degrades `fetchLiveServices` to `undefined`)
+// makes the MCP-services pack ABSENT entirely (the getter below), because — unlike INTEGRATION_TOOLS — no
+// static service roster exists to fall back to (SPEC-R5): stored service refs in an agent's store stay
+// visible and simply resolve to nothing downstream, but the OFFER pack never appears empty or errored.
+let liveServiceEntries: NewEntryInput[] | undefined
+
+/** Called by the site's live overlay (`site/lib/admin-live-runner.ts`'s `fetchLiveServices`) with the dev
+ *  proxy's served `services` rows (`{id, label, description}`, `id` a `mcp:<server-id>:*` service ref). The
+ *  ref rides `NewEntryInput.id` EXPLICIT — never slugged (LLD-C6/GH #402: the wire key survives a label
+ *  edit) — the label is the roster's human text, freely editable after add, and `content` is empty (the
+ *  external-registry posture the Integrations + catalog packs already take). Passing `undefined` reverts to
+ *  pack ABSENCE (production, degrade, and this page's own test reset between cases). */
+export function setLiveServices(rows: readonly LiveServiceRow[] | undefined): void {
+  liveServiceEntries = rows?.map((r) => ({ id: r.id, label: r.label, description: r.description, content: '' }))
+}
+
 /** GH #143 — per-preset library scoping. Every OTHER preset (The Quant, The Curator, The Stylist —
  *  dashboards/collections/tokens; none of them a hotel or a game) sees `undefined`: generic packs only,
  *  never a stray Hospitality or Games pack. Kept to exactly the two flavors the pack catalog actually
@@ -428,6 +451,39 @@ export function librariesForCategory(category: PresetCategory | undefined): Reco
     })
   }
   return filtered
+}
+
+// GH #783 S4 (LLD-C6/SPEC-R5) — the two `tool`-kind packs, hoisted to named consts so the tool key below
+// can be a GETTER that returns one or both. INTEGRATIONS_PACK is the shipped inline literal, byte-identical
+// body (its own GH #567 S6 getter unchanged); MCP_SERVICES_PACK is the NEW live-derived services pack.
+const INTEGRATIONS_PACK: EntryLibraryPack = {
+  id: 'integrations',
+  label: 'Integrations',
+  description: 'Keyless live integrations executed by the dev proxy (GH #49) — enable + toolsEnabled to arm.',
+  // GH #567 S6 — a getter, not a fixed array: reads whatever `setLiveIntegrations` last set, falling
+  // back to the hand-authored INTEGRATION_TOOLS trio. `librariesForCategory` filters this SAME pack
+  // object (never clones it), so a live-read that lands AFTER the first `admin.libraries` assignment
+  // still reaches the menu once the page reassigns `admin.libraries` (the identity-change law below).
+  get entries(): readonly NewEntryInput[] {
+    return liveIntegrationEntries ?? INTEGRATION_TOOLS
+  },
+}
+
+// GH #783 S4 (LLD-C6/SPEC-R5, ADR-0185) — the live-derived MCP-services pack. `rejectOnCollision: true`
+// (LLD-C5's per-pack widening, GH #564's foreign-key law at pack grain): a service ref keys the registry's
+// namespace, so re-adding one already in the list is a DUPLICATE `validateNewEntry` rejects with
+// `Already in the list.` — never a suffixed `mcp:calc:*-2` phantom that looks armed and is wire-inert — and
+// the picker-disable affordance rides the same flag (entry-list.ts). `content` empty, id EXPLICIT (the
+// service ref), label the roster's human text — the external-registry posture setLiveServices already mints.
+// GENERIC by construction: 'mcp-services' stays absent from FLAVORED_PACK_CATEGORY, so every persona sees it.
+const MCP_SERVICES_PACK: EntryLibraryPack = {
+  id: 'mcp-services',
+  label: 'MCP services',
+  description: 'Live-discovered MCP servers — one entry enables a whole server’s current tools.',
+  rejectOnCollision: true,
+  get entries(): readonly NewEntryInput[] {
+    return liveServiceEntries ?? []
+  },
 }
 
 /** The packs the page hands `ui-agent-admin` (`admin.libraries`), keyed by entry kind. */
@@ -480,20 +536,16 @@ export const ADMIN_LIBRARIES: Record<string, EntryLibraryPack[]> = {
       entries: GAMES_RULES,
     },
   ],
-  [ENTRY_KINDS.tool]: [
-    {
-      id: 'integrations',
-      label: 'Integrations',
-      description: 'Keyless live integrations executed by the dev proxy (GH #49) — enable + toolsEnabled to arm.',
-      // GH #567 S6 — a getter, not a fixed array: reads whatever `setLiveIntegrations` last set, falling
-      // back to the hand-authored INTEGRATION_TOOLS trio. `librariesForCategory` filters this SAME pack
-      // object (never clones it), so a live-read that lands AFTER the first `admin.libraries` assignment
-      // still reaches the menu once the page reassigns `admin.libraries` (the identity-change law below).
-      get entries(): readonly NewEntryInput[] {
-        return liveIntegrationEntries ?? INTEGRATION_TOOLS
-      },
-    },
-  ],
+  // GH #783 S4 (LLD-C6/SPEC-R5) — a GETTER, not a fixed array: the MCP-services pack is ABSENT when the
+  // live services GET degrades (`liveServiceEntries === undefined`: production, network fault, malformed
+  // body — the ONLY state a production build reaches) and PRESENT once `setLiveServices` lands rows. Because
+  // it is a getter, BOTH `librariesForCategory` (which iterates `Object.entries`) and any direct
+  // `ADMIN_LIBRARIES[ENTRY_KINDS.tool]` reader see the pack appear/disappear honestly; `librariesForCategory`
+  // itself is untouched. INTEGRATIONS_PACK is unconditional (its own getter still degrades to the
+  // hand-authored trio). Both packs live-derive, both degrade to ABSENT — no static service fallback exists.
+  get [ENTRY_KINDS.tool](): EntryLibraryPack[] {
+    return liveServiceEntries === undefined ? [INTEGRATIONS_PACK] : [INTEGRATIONS_PACK, MCP_SERVICES_PACK]
+  },
   // genui-surface.spec.md SPEC-R9/R11 (B2) — the shipped GenUI pattern-source packs (data-viz layouts,
   // interactive widgets, animated explainers), live-derived from the registry's own .md files above.
   [ENTRY_KINDS.patternSource]: GENUI_PACK_LIBRARY,

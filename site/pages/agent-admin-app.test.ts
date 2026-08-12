@@ -564,6 +564,113 @@ describe('Integrations pack ↔ registry parity (GH #49/#567 S6)', () => {
   })
 })
 
+// ── GH #783 S4 (LLD-C6/SPEC-R5, ADR-0185) — the live-derived MCP-services pack ──────────────────────────
+// SPEC-R5: a second `tool`-kind pack, populated exclusively from the GET's `services` rows via
+// `setLiveServices`, each entry keyed by the service ref as its explicit `id`; the pack is GENERIC, and
+// ABSENT entirely when the services read degrades (`undefined`). Adding a service already in the list is
+// rejected visibly (`Already in the list.`) with the store unchanged — the GH #564 foreign-key law rode in
+// per-pack (LLD-C5), so a `tool`-kind pack reaches it even though the kind flag is `false`.
+describe('the MCP-services pack (GH #783 S4 — SPEC-R5)', () => {
+  afterEach(async () => {
+    // Module state (agent-admin-libraries.ts) — reset so a services-injected case never leaks into a
+    // sibling test (e.g. the librariesForCategory block below, which asserts the tool key is ['integrations']).
+    const { setLiveServices } = await import('./agent-admin-libraries.ts')
+    setLiveServices(undefined)
+  })
+
+  it('AC1: a set `services` payload adds one pack entry per service (ref as explicit id, empty content); reset to `undefined` drops the pack for every category', async () => {
+    const { ADMIN_LIBRARIES, setLiveServices, librariesForCategory } = await import('./agent-admin-libraries.ts')
+    const { ENTRY_KINDS } = await import('@agent-ui/app')
+    const services = [
+      { id: 'mcp:calc:*', label: 'Calc server', description: '2 tools discovered at boot' },
+      { id: 'mcp:notes:*', label: 'Notes server', description: '1 tool discovered at boot' },
+    ]
+    setLiveServices(services)
+
+    const packs = ADMIN_LIBRARIES[ENTRY_KINDS.tool]!
+    expect(packs.map((p) => p.id), 'the MCP-services pack joins the Integrations pack, in order').toEqual(['integrations', 'mcp-services'])
+    const mcp = packs.find((p) => p.id === 'mcp-services')!
+    expect(mcp.rejectOnCollision, 'the per-pack foreign-key flag (LLD-C5) is set').toBe(true)
+    expect(mcp.entries.map((e) => e.id), 'the service ref rides the id EXPLICIT, never slugged').toEqual(['mcp:calc:*', 'mcp:notes:*'])
+    expect(mcp.entries.map((e) => e.label)).toEqual(['Calc server', 'Notes server'])
+    for (const e of mcp.entries) expect(e.content, 'external-registry posture — no authored body').toBe('')
+
+    // GENERIC — present for every preset category (services have no persona affinity).
+    for (const category of ['hospitality', 'games', undefined] as const) {
+      expect(librariesForCategory(category)[ENTRY_KINDS.tool]!.map((p) => p.id), `category ${String(category)}`).toEqual([
+        'integrations',
+        'mcp-services',
+      ])
+    }
+
+    // The OTHER direction: reset to undefined ⇒ the pack is ABSENT (no stale, no empty-error pack) for
+    // every category AND on the direct reader — the getter's own degrade law.
+    setLiveServices(undefined)
+    expect(ADMIN_LIBRARIES[ENTRY_KINDS.tool]!.map((p) => p.id)).toEqual(['integrations'])
+    for (const category of ['hospitality', 'games', undefined] as const) {
+      expect(librariesForCategory(category)[ENTRY_KINDS.tool]!.map((p) => p.id), `absent for ${String(category)}`).toEqual(['integrations'])
+    }
+  })
+
+  it('AC1: a library add mints a store entry keyed to the service ref (the real validateNewEntry path, ref as id)', async () => {
+    const { ADMIN_LIBRARIES, setLiveServices } = await import('./agent-admin-libraries.ts')
+    const { validateNewEntry, ENTRY_KINDS } = await import('@agent-ui/app')
+    setLiveServices([{ id: 'mcp:calc:*', label: 'Calc server', description: '2 tools discovered at boot' }])
+    const pack = ADMIN_LIBRARIES[ENTRY_KINDS.tool]!.find((p) => p.id === 'mcp-services')!
+    const result = validateNewEntry([], ENTRY_KINDS.tool, pack.entries[0]!, { rejectOnCollision: pack.rejectOnCollision })
+    expect(result.ok).toBe(true)
+    const entry = (result as { ok: true; entry: { id: string; label: string; content: string } }).entry
+    expect(entry.id, 'keyed to the wire vocabulary, not slugify(label)').toBe('mcp:calc:*')
+    expect(entry.label).toBe('Calc server')
+    expect(entry.content).toBe('')
+  })
+
+  it('AC2: re-adding a service already in the list is rejected VISIBLY (`Already in the list.`), the store unchanged, and its picker row disabled — end-to-end on the rendered ui-agent-admin', async () => {
+    const { setLiveServices, librariesForCategory } = await import('./agent-admin-libraries.ts')
+    const { ENTRY_KINDS, entriesStoreKey } = await import('@agent-ui/app')
+    const { createMemoryStore } = await import('@agent-ui/app/settings-memory-store')
+
+    setLiveServices([{ id: 'mcp:calc:*', label: 'Calc server', description: '2 tools discovered at boot' }])
+
+    const admin = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    admin.libraries = librariesForCategory(undefined) // generic — the tool key carries [integrations, mcp-services]
+    // The agent already holds the Calc server service ref as a tool entry.
+    admin.store = createMemoryStore({
+      initial: {
+        [entriesStoreKey(ENTRY_KINDS.tool)]: [
+          { id: 'mcp:calc:*', kind: ENTRY_KINDS.tool, label: 'Calc server', description: '', content: '', order: 0, enabled: true, builtin: false },
+        ],
+        toolsEnabled: true,
+      },
+    })
+    document.body.append(admin)
+    mounted.push(admin)
+    await whenFlushed()
+
+    const section = admin.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.tool}"]`) as HTMLElement
+    const menu = section.querySelector('[data-part="entry-library-menu"]') as HTMLElement
+    expect(menu, 'the tool section carries the add-from-library menu').not.toBeNull()
+
+    // The picker-disable affordance (SPEC-R5 / GH #564 pairing): the already-added service's row is
+    // DISABLED, not hidden — never clickable-but-silently-rejected. It rides the PACK flag (the kind flag
+    // is false for `tool`), the S3 per-pack widening.
+    const row = menu.querySelector('[data-value="mcp-services:0"]')
+    expect(row?.textContent, 'the row shows WHY it is unreachable').toBe('Calc server — MCP services (already added)')
+    expect(row?.getAttribute('aria-disabled')).toBe('true')
+
+    // The reject-on-commit half: dispatch the menu's own commit for that service anyway (the real path
+    // entry-list.ts listens for) and prove the visible rejection + unchanged store.
+    menu.dispatchEvent(new CustomEvent('select', { detail: { value: 'mcp-services:0', index: 3 } }))
+    await whenFlushed()
+
+    const stored = admin.store!.get(entriesStoreKey(ENTRY_KINDS.tool)) as Array<{ id: string }>
+    expect(stored.map((e) => e.id), 'no suffixed `mcp:calc:*-2` phantom — the store is unchanged').toEqual(['mcp:calc:*'])
+    const error = section.querySelector('[data-part="entry-add-error"]') as HTMLElement
+    expect(error.textContent, 'the SPEC-R5 AC2 literal rejection copy').toBe('Already in the list.')
+    expect(error.hidden, 'the rejection is visible, not silently swallowed').toBe(false)
+  })
+})
+
 // ── GH #46 / PR #60 review — the seedVersion one-time migration ─────────────────────────────────────────
 
 describe('presetStore — seedVersion migration (the in-place Concierge upgrade)', () => {

@@ -1,7 +1,7 @@
 // admin-live-runner.test.ts — ALM-C7 (TKT-0052/ADR-0136): createAdminAgentTurn's fetch-boundary legs.
 // `fetch` is stubbed (no real network, no key) — the feed-live-transport.test.ts stub-fetch precedent.
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createAdminAgentTurn, createAdminSurfaceTurn, fetchLiveIntegrations } from './admin-live-runner.ts'
+import { createAdminAgentTurn, createAdminSurfaceTurn, fetchLiveIntegrations, fetchLiveServices } from './admin-live-runner.ts'
 import type { AdminTurnRequest, AdminSurfaceTurnRequest, AdminSurfaceTurnEvent } from '@agent-ui/app/agent-admin-schema'
 import { formatErrorLine } from '../../packages/agent-ui/a2ui/src/agent/meta-line.ts'
 
@@ -307,6 +307,51 @@ describe('fetchLiveIntegrations', () => {
     ]
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ integrations: handAuthored }), { status: 200 })))
     await expect(fetchLiveIntegrations()).resolves.toEqual(handAuthored)
+  })
+})
+
+// ── GH #783 S4 (LLD-C6/SPEC-R4/R5, ADR-0185) — fetchLiveServices' fetch-boundary legs ────────────────────
+// The sibling of fetchLiveIntegrations above, reading the SECOND, additive `services` array off the SAME
+// `GET /integrations` body (S2). Same degrade-to-`undefined` law, one extra rung: a body with NO `services`
+// key at all (a pre-S2 proxy) degrades too, so an old proxy + new page is safe.
+describe('fetchLiveServices', () => {
+  it('resolves the served service rows (body.services) on a well-shaped 200', async () => {
+    const services = [
+      { id: 'mcp:calc:*', label: 'Calc server', description: '2 tools discovered at boot' },
+      { id: 'mcp:notes:*', label: 'Notes server', description: '1 tool discovered at boot' },
+    ]
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      expect(url).toBe('/__a2ui/agent/integrations')
+      return new Response(JSON.stringify({ integrations: [], services }), { status: 200 })
+    }))
+    await expect(fetchLiveServices()).resolves.toEqual(services)
+  })
+
+  it('an empty roster\'s response (services: []) resolves as an empty array, NOT undefined — "no live servers" is not "unavailable" (SPEC-R4 AC2)', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ integrations: [], services: [] }), { status: 200 })))
+    await expect(fetchLiveServices()).resolves.toEqual([])
+  })
+
+  it('degrades to undefined on a non-2xx response (no proxy / production build)', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('not found', { status: 404 })))
+    await expect(fetchLiveServices()).resolves.toBeUndefined()
+  })
+
+  it('degrades to undefined on a network failure — never a thrown turn', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('offline') }))
+    await expect(fetchLiveServices()).resolves.toBeUndefined()
+  })
+
+  it('degrades to undefined on a body with NO services key (a pre-S2 proxy) — old proxy + new page is safe', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ integrations: [] }), { status: 200 })))
+    await expect(fetchLiveServices()).resolves.toBeUndefined()
+  })
+
+  it('degrades to undefined on a malformed services array (non-array, or a row missing a trio field)', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ services: 'not-an-array' }), { status: 200 })))
+    await expect(fetchLiveServices()).resolves.toBeUndefined()
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ services: [{ id: 'mcp:calc:*', label: 'Calc' }] }), { status: 200 })))
+    await expect(fetchLiveServices()).resolves.toBeUndefined()
   })
 })
 

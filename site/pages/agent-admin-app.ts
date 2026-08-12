@@ -54,7 +54,7 @@ import type { AgentRosterEntry, GenerateSeed, UIAgentAdminElement } from '@agent
 import type { UIToastRegionElement } from '@agent-ui/components/controls/toast-region'
 import { ACTIVE_PRESET_KEY, builderStore, personaRoster, personaStore, resetPersona, saveImportedPersona, type Persona } from './agent-admin-presets.ts'
 import { exportPersonaFile, importedPersonaFrom, mintBlankPersona, personaFileName, personaFileText, readPersonaFile } from './agent-admin-persona-file.ts'
-import { librariesForCategory, setLiveIntegrations } from './agent-admin-libraries.ts'
+import { librariesForCategory, setLiveIntegrations, setLiveServices } from './agent-admin-libraries.ts'
 // GH #637 S1 — the blank agent's seed: the EXACT shipped default `ui-agent-admin` itself falls back to
 // when no store prop is ever set (agent-admin.ts connected()'s own `initial` object) — pure reuse, so a
 // freshly-minted blank agent renders exactly what a bare, unconfigured `<ui-agent-admin>` would.
@@ -300,12 +300,19 @@ void (async () => {
     // discovered `mcp:*` trio joins the Integrations pack without a page reload: `setLiveIntegrations`
     // plus a fresh `admin.libraries` assignment — the SAME identity-change law `applyPersona`'s own
     // reassignment above relies on (agent-admin-libraries.ts's `librariesForCategory` doc comment).
+    // GH #783 S4 (LLD-C6/SPEC-R5, ADR-0185) — the sibling live-read for MCP SERVICES rides the SAME
+    // DEV-only block: `GET /integrations` now carries a second `services` array (S2), read by
+    // `fetchLiveServices` under the SAME degrade-to-`undefined` law. Both fetches BEFORE the one
+    // `admin.libraries` reassignment, so a single identity-change re-render carries both live reads into
+    // the add-from-library menu. `undefined` passes straight through `setLiveServices` (production/degrade
+    // keeps the MCP-services pack absent, the getter's own law). Reassign when EITHER landed; both undefined
+    // ⇒ nothing to re-render (the boot-time `librariesForCategory` getters already have it right).
     if (import.meta.env.DEV) {
       const trios = await overlay.fetchLiveIntegrations()
-      if (trios) {
-        setLiveIntegrations(trios)
-        admin.libraries = librariesForCategory(active.category)
-      }
+      const services = await overlay.fetchLiveServices()
+      if (trios) setLiveIntegrations(trios)
+      setLiveServices(services)
+      if (trios || services) admin.libraries = librariesForCategory(active.category)
     }
   } catch {
     console.info('[agent-admin-app] stub preview — the live overlay is unavailable')
