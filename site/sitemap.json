@@ -674,6 +674,13 @@
       "section": "Guides"
     },
     {
+      "name": "Agent Schema",
+      "url": "./agent-schema.html",
+      "description": "The agentConfigSchema() config surface and the AgentConfigSnapshot turn-time read ui-agent-admin actually uses, derived live from agent-admin-schema.ts, plus pointers to the persona/entry-library/preset shapes.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
       "name": "Layout Primitives",
       "url": "./layout-overview.html",
       "description": "The structural layout family — ui-row, ui-column, ui-list, ui-grid — sharing the UIContainerElement base and gap/align/justify props.",
