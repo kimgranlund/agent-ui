@@ -569,6 +569,13 @@ export class UIStatusStreamElement extends UIContainerElement {
     for (const key of this.#byKey.keys()) this.#recomputeGroups(key)
     this.#finalized = true
     this.#failed = failed
+    // GH #722 (candidate 2, Kim-delegated ruling 2026-08-12) — the PUBLIC settled face: a `settled`
+    // custom state (jsdom-optional-chained, the `collapsed` precedent), set at settle and never
+    // cleared (a strip settles once per lifetime; per-turn consumers mount a fresh strip). Additive:
+    // no default CSS consumes it — a consumer opts in (the chat narration grows its settled strip to
+    // fit instead of cap-and-scroll: an expanded FINISHED trace is for reading, and a nested
+    // scrollbar inside a chat bubble is double-scroll pain; the LIVE cap stays, tail-follow owns it).
+    this.internals.states?.add('settled')
     this.#refreshHeader()
     // GH #147/ADR-0153 Fork 1 — a settled stream freezes EVERY ticking display, unconditionally: a truncated
     // entry's own `.status` prop is left untouched by `#markTruncated` (it's a custom STATE, not a prop

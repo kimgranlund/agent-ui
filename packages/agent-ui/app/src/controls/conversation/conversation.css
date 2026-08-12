@@ -184,6 +184,15 @@
     font-size: 0.78rem;
   }
 
+  /* GH #722 (candidate 2, ruled 2026-08-12): a SETTLED narration strip grows to fit its finite steps —
+     the 9rem cap is a LIVE-streaming bound (tail-follow owns that viewport); once finalize()/fail()
+     stamps :state(settled), a user re-expanding the receipt is READING a finished trace, and a nested
+     scrollbar inside the chat column is double-scroll pain. Opt-in via the strip's own public settled
+     state (status-stream.md customStates) — the component's default cap is untouched fleet-wide. */
+  [data-part='narration']:state(settled) {
+    --ui-status-stream-max-block-size: none;
+  }
+
   /* Fresh inline ui-surface-host instances this bubble's OWN creating turn mounted (SPEC-R7) — later turns
      route into these same hosts in place; this bubble never grows a SECOND one for a known surfaceId. */
   [data-part='mounts']:empty {

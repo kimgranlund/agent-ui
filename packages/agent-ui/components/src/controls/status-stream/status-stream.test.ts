@@ -1258,3 +1258,19 @@ describe('ui-status-stream — finalize/fail({ summary }) replaces the receipt m
     el.remove()
   })
 })
+
+// ── the settled custom state (GH #722 candidate 2's ruled mechanism) ────────────────────────────────
+
+describe('ui-status-stream — the settled custom state (GH #722)', () => {
+  it('finalize() stamps :state(settled) where internals.states exists (jsdom-optional-chained, never a throw)', () => {
+    const { el } = makeStream()
+    el.appendEntry({ key: 's1', status: 'done', label: 'step' })
+    expect(() => el.finalize()).not.toThrow() // jsdom may lack internals.states — the collapsed precedent
+  })
+
+  it('fail() takes the same path — settle is settle', () => {
+    const { el } = makeStream()
+    el.appendEntry({ key: 's1', status: 'active', label: 'step' })
+    expect(() => el.fail()).not.toThrow()
+  })
+})
