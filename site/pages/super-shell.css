@@ -142,21 +142,16 @@ ui-super-shell.ss-demo--inner {
 .ss-demo [data-slot='global-options'] { background: var(--md-sys-color-secondary-container-high); text-align: center; }
 .ss-demo [data-slot='nav-pane'],
 .ss-demo [data-slot='options-pane'] { background: var(--md-sys-color-primary-container-low); }
-/* GH #778 (A) — the authored content child FILLS the canvas. `[data-part='canvas']` is a flex column
-   (super-shell.css), but nothing stretches its direct child, so the authored `[data-slot='content']` box
-   laid out at auto height and the demo's `.ss-slot { min-block-size: 100% }` then resolved against that
-   auto-height parent → a short strip + dead space above the footer. `flex: 1 1 auto` + `min-block-size: 0`
-   make the content box take the canvas's remaining height; `display: flex; flex-direction: column` gives its
-   own `.ss-slot` (or the nested `.ss-content-wrap`) a filled parent to stretch inside.
-   OPEN DESIGN FORK (design-seat ruling, not decided here): whether this fill should instead be a
-   COMPONENT-side default on `[data-part='canvas'] > [data-slot='content']` — the component's documented
-   contract is "content — flexible, fills the rest", yet the canvas's direct child gets no default stretch
-   today. Blast radius = every consumer, so it is left as Kim's call; this demo-chrome rule makes the guide
-   correct now. Filed on #778. */
+/* GH #778 (A) / GH #782 Fork 1 (Kim's ruling, 2026-08-12) — the fill half of this rule (`flex: 1 1
+   auto; min-block-size: 0`) is now a COMPONENT-side default (`[data-part='canvas'] > [data-slot=
+   'content']`, super-shell.css) — the OPEN DESIGN FORK #778 filed (and #782 recorded) is RULED: the
+   component's documented contract, "content — flexible, fills the rest", is now real CSS on the
+   canvas's own direct child, not a per-consumer footgun. Removing the fill here would be a silent
+   double-source-of-truth otherwise; keeping ONLY the demo-specific chrome (the tint + the column
+   layout `.ss-slot`/`.ss-content-wrap` stretch inside) that has nothing to do with the shell's own
+   contract. */
 .ss-demo [data-slot='content'] {
   background: var(--md-sys-color-neutral-surface);
-  flex: 1 1 auto;
-  min-block-size: 0;
   display: flex;
   flex-direction: column;
 }

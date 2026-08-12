@@ -476,6 +476,37 @@
     flex-direction: column;
   }
 
+  /* GH #782 Fork 1 (Kim's ruling, 2026-08-12) — promotes what PR #780's demo-chrome fix (site/pages/
+     super-shell.css's `.ss-demo [data-slot='content']` rule) left an open design fork to a component-
+     side DEFAULT: `canvas` is this scope's own flex COLUMN (immediately above), but a flex column gives
+     its children no default stretch on the main (block) axis — `flex: 0 1 auto` sizes the authored
+     content box to its own content height, leaving canvas's stretched remainder empty below it on a
+     short page, exactly the "short strip + dead space" defect #780 found on the demo. The component's
+     documented grammar contract already says "content — flexible, fills the rest" (super-shell.md); this
+     rule is that contract, realized as CSS instead of every consumer re-deriving it. `min-block-size: 0`
+     is the OTHER half (not optional): without it a tall authored child can't shrink below its own content
+     size inside canvas's now-constrained remainder, so an overflow region (a chat log, a scrollable pane)
+     would push canvas past its own bounds instead of scrolling internally — the same shrink-to-fit law
+     `canvas` itself and `middle`'s other flex children already carry.
+     `[data-part='canvas'] > [data-slot='content']`, not a bare `[data-part='canvas'] > *`: `content` is
+     the one slot `#compose()` ever places into `canvas` (super-shell.ts's `place('content', 'canvas')`),
+     and every real consumer marks its top-level content child(ren) with the SAME `data-slot="content"`
+     attribute `#compose()` reads off them (verified: `_page.ts`, `dashboard.ts`, `workbench.ts`, `gen-ui-
+     live.ts`, `a2ui-live.ts`, `agent-admin.ts`'s pane-holder) — so this selector is not a narrower promise
+     than the universal one, only a more legible one that names the slot the rule is actually honoring.
+     BLAST RADIUS (why this was Kim's call, not a local fix, GH #782): every consumer whose own content
+     box already carries an explicit `flex: 1 1 auto` / `block-size: 100%` (agent-admin's `pane-holder`,
+     `.app-page` in `_page.css`, `.chat-pane`/`.canvas-pane`/`.render-pane` in a2ui-live.css/gen-ui-
+     live.css) sees NO visual change — this rule is then a harmless, idempotent duplicate of a fix those
+     pages already carry (left in place; a live cleanup is a separate, non-blocking pass). Consumers that
+     never added that workaround (dashboard.ts/workbench.ts's plain `<main data-slot="content">`, and
+     every super-shell/chat-shell/workspace-shell demo/browser-test fixture that mounts unstyled content)
+     now get the documented fill for free. */
+  [data-part='canvas'] > [data-slot='content'] {
+    flex: 1 1 auto;
+    min-block-size: 0;
+  }
+
   /* ── SPEC-R2: paired per-side collapse off the HOST's reflected state (wide bands) ─────────── */
   :scope[collapsed-start] [data-part='middle'] > [data-side='start'],
   :scope[collapsed-end] [data-part='middle'] > [data-side='end'] {
