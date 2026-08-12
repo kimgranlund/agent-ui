@@ -533,6 +533,24 @@
   }
   :scope[data-auto-collapsed-start][data-narrow-open='start'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']) { inset-inline-start: var(--ui-super-shell-overlay-inset); }
   :scope[data-auto-collapsed-end][data-narrow-open='end'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) { inset-inline-end: var(--ui-super-shell-overlay-inset); }
+  /* GH #778 (all three overlay arms) — COMPOSED-PAIR overlay for a side that stacks a RAIL outboard of a
+     PANE (R5b: `global-nav` + `nav-pane`, or `global-options` + `options-pane`). The base per-side inset
+     rule above lands EVERY part on that side — rail AND pane — at the same `--ui-super-shell-overlay-inset`,
+     so both go `position:absolute` at the identical edge inset and STACK: the 54px rail paints on top of the
+     252px pane's outer edge, its label wrapping to a sliver (the "popover overlap", capture #19). The fix is
+     an inset OFFSET, not a hide: the rail stays flush at the edge, and each pane on a rail-bearing side is
+     pushed inboard by exactly one rail width so the overlay reads `[ pane | rail ]` flush to the edge — the
+     SAME inboard-to-outboard order the wide row draws (R5b: rail outermost). No content is dropped and no
+     new state is invented; the overlay simply shows the whole side arranged as it always is.
+     `:has(> [data-part='rail'][data-side=…])` guards it to a RAIL-BEARING side only, so a pane-only side
+     (the docs shell) keeps its untouched flush-at-edge overlay. Specificity: `:has()` carries its argument's
+     (0,2,0), so each override (0,7,0) beats the base one-liner (0,5,0) and, being later, wins for the pane
+     while the rail keeps the base flush inset. The rail+pane seam draws two adjacent hairlines (each card
+     keeps its own `--ui-super-shell-overlay-outline`) — a divider between two distinct parts, not the
+     overlap defect. SPEC-R9d sized only a single overlay box; whether a rail+pane side should instead read
+     as ONE bordered card is a design-seat polish question, filed on #778, not this defect. */
+  :scope[data-auto-collapsed-start][data-narrow-open='start'] [data-part='middle']:has(> [data-part='rail'][data-side='start']) > [data-part='pane'][data-side='start'] { inset-inline-start: calc(var(--ui-super-shell-overlay-inset) + var(--ui-super-shell-bar-size)); }
+  :scope[data-auto-collapsed-end][data-narrow-open='end'] [data-part='middle']:has(> [data-part='rail'][data-side='end']) > [data-part='pane'][data-side='end'] { inset-inline-end: calc(var(--ui-super-shell-overlay-inset) + var(--ui-super-shell-bar-size)); }
   /* menu⇄X — the same swap as the band blocks; the auto-collapsed key is the stale-X guard here */
   :scope[data-auto-collapsed-start][data-narrow-open='start'] [data-part='side-toggle'][data-side='start'] [data-glyph='menu'],
   :scope[data-auto-collapsed-end][data-narrow-open='end'] [data-part='side-toggle'][data-side='end'] [data-glyph='menu'] {
@@ -661,6 +679,10 @@
     }
     :scope[data-narrow-open='start'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']) { inset-inline-start: var(--ui-super-shell-overlay-inset); }
     :scope[data-narrow-open='end'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) { inset-inline-end: var(--ui-super-shell-overlay-inset); }
+    /* GH #778 (narrow overlay arms 3+4 of six) — the composed-pair pane offset; see the mid-window block's
+       rationale. This is the arm the full-grammar docs demo actually renders (<40rem, end toggle open). */
+    :scope[data-narrow-open='start'] [data-part='middle']:has(> [data-part='rail'][data-side='start']) > [data-part='pane'][data-side='start'] { inset-inline-start: calc(var(--ui-super-shell-overlay-inset) + var(--ui-super-shell-bar-size)); }
+    :scope[data-narrow-open='end'] [data-part='middle']:has(> [data-part='rail'][data-side='end']) > [data-part='pane'][data-side='end'] { inset-inline-end: calc(var(--ui-super-shell-overlay-inset) + var(--ui-super-shell-bar-size)); }
 
     /* SPEC-R9a — a `stack`/`tabs` side's toggle HIDES below the 40rem narrow line (its narrow anatomy is
        owned by the stacked content / the narrow-tabs strip; today's no-op-or-conflicting click arms become
@@ -777,6 +799,10 @@
     }
     :scope[collapse-band='compact']:not([narrow-start='stack']):not([narrow-start='tabs'])[data-narrow-open='start'] [data-part='middle'] > [data-side='start']:not([data-part='pane-resizer']) { inset-inline-start: var(--ui-super-shell-overlay-inset); }
     :scope[collapse-band='compact']:not([narrow-end='stack']):not([narrow-end='tabs'])[data-narrow-open='end'] [data-part='middle'] > [data-side='end']:not([data-part='pane-resizer']) { inset-inline-end: var(--ui-super-shell-overlay-inset); }
+    /* GH #778 (compact overlay arms 5+6 of six) — the composed-pair pane offset; see the mid-window block's
+       rationale. Keyed to a COLLAPSE-arm side only, exactly like the compact display/inset rules above. */
+    :scope[collapse-band='compact']:not([narrow-start='stack']):not([narrow-start='tabs'])[data-narrow-open='start'] [data-part='middle']:has(> [data-part='rail'][data-side='start']) > [data-part='pane'][data-side='start'] { inset-inline-start: calc(var(--ui-super-shell-overlay-inset) + var(--ui-super-shell-bar-size)); }
+    :scope[collapse-band='compact']:not([narrow-end='stack']):not([narrow-end='tabs'])[data-narrow-open='end'] [data-part='middle']:has(> [data-part='rail'][data-side='end']) > [data-part='pane'][data-side='end'] { inset-inline-end: calc(var(--ui-super-shell-overlay-inset) + var(--ui-super-shell-bar-size)); }
     /* menu⇄X — scoped to the open collapse side */
     :scope[collapse-band='compact']:not([narrow-start='stack']):not([narrow-start='tabs'])[data-narrow-open='start'] [data-part='side-toggle'][data-side='start'] [data-glyph='menu'],
     :scope[collapse-band='compact']:not([narrow-end='stack']):not([narrow-end='tabs'])[data-narrow-open='end'] [data-part='side-toggle'][data-side='end'] [data-glyph='menu'] {

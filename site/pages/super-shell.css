@@ -70,9 +70,16 @@ ui-super-shell.ss-demo--nested {
   block-size: 420px;
 }
 /* The inner (depth-2) shell fills its content-slot wrapper instead of carrying its own fixed height. */
+/* GH #778 (D) — and its WIDTH too. The inner shell is a flex ITEM in `.ss-content-wrap`, but
+   `container-type: inline-size` (super-shell.css:128) imposes inline-size CONTAINMENT — the shell
+   contributes ZERO intrinsic inline size — and `:scope { min-inline-size: 0 }` removes any floor, so a
+   `flex-basis: auto` item resolved to a ~20px sliver (clipping "header (inner)" to "h(" + a stray
+   scrollbar nub). `flex: 1 1 auto` makes it take the wrap's available width instead. Footgun documented
+   for consumers: ANY ui-super-shell placed as a flex child with auto basis gets zero width by construction. */
 ui-super-shell.ss-demo--inner {
   block-size: 100%;
   margin-block: 0;
+  flex: 1 1 auto;
 }
 .ss-content-wrap {
   padding: var(--md-sys-space-sm);
@@ -122,13 +129,37 @@ ui-super-shell.ss-demo--inner {
    ladder maps onto the token layer's own pre-computed container roles instead of a hand-mixed
    ratio — -low for the lightest tint, the base role for the middle step, -high for the strongest
    (the same idiom master-detail.css/a2ui-live.css/a2a-artifact-feed.css already use). */
-.ss-demo [data-slot='header'] { background: var(--md-sys-color-primary-container); }
-.ss-demo [data-slot='footer'] { background: var(--md-sys-color-primary-container); }
+/* GH #778 (B) — tint the header/footer BAR, not the authored slot box. The bar carries the collapse
+   toggles (shell chrome OUTSIDE the authored content) and an 18px inter-item gap, and its 54px min-block-
+   size centers a shorter slot box; tinting `[data-slot='header']` left the bar's own surface showing under
+   the toggle + a dark seam + a brown box floating centered — reading as "broken padding". Tinting the bar
+   part paints edge-to-edge (toggles included), which is what the header/footer band should look like.
+   `[data-part='bar']` DOES appear on real chrome too, but this rule is scoped under `.ss-demo` — a class
+   only demo shells carry — so it cannot leak onto the site's own `_page.ts` shell (the same collision-safety
+   the big comment above documents for `[data-slot=…]`). Both header and footer bars share `data-part='bar'`. */
+.ss-demo [data-part='bar'] { background: var(--md-sys-color-primary-container); }
 .ss-demo [data-slot='global-nav'],
 .ss-demo [data-slot='global-options'] { background: var(--md-sys-color-secondary-container-high); text-align: center; }
 .ss-demo [data-slot='nav-pane'],
 .ss-demo [data-slot='options-pane'] { background: var(--md-sys-color-primary-container-low); }
-.ss-demo [data-slot='content'] { background: var(--md-sys-color-neutral-surface); }
+/* GH #778 (A) — the authored content child FILLS the canvas. `[data-part='canvas']` is a flex column
+   (super-shell.css), but nothing stretches its direct child, so the authored `[data-slot='content']` box
+   laid out at auto height and the demo's `.ss-slot { min-block-size: 100% }` then resolved against that
+   auto-height parent → a short strip + dead space above the footer. `flex: 1 1 auto` + `min-block-size: 0`
+   make the content box take the canvas's remaining height; `display: flex; flex-direction: column` gives its
+   own `.ss-slot` (or the nested `.ss-content-wrap`) a filled parent to stretch inside.
+   OPEN DESIGN FORK (design-seat ruling, not decided here): whether this fill should instead be a
+   COMPONENT-side default on `[data-part='canvas'] > [data-slot='content']` — the component's documented
+   contract is "content — flexible, fills the rest", yet the canvas's direct child gets no default stretch
+   today. Blast radius = every consumer, so it is left as Kim's call; this demo-chrome rule makes the guide
+   correct now. Filed on #778. */
+.ss-demo [data-slot='content'] {
+  background: var(--md-sys-color-neutral-surface);
+  flex: 1 1 auto;
+  min-block-size: 0;
+  display: flex;
+  flex-direction: column;
+}
 
 .ss-resize {
   resize: horizontal;
