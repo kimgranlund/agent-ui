@@ -111,6 +111,28 @@ pointer repairs excepted).
   new ticket files being authored, that particular fit is now moot going forward — the blockquote
   types stay out of its dialect regardless, do not "fix" a doc to satisfy it.
 
+## 5b · Cite the owner — the anchor law for skills and docs (GH #757)
+
+The 2026-08-11 audit's dominant finding class (~14 of 27 skills): facts COPIED into skill/doc
+bodies drift — line-number anchors rot with every upstream edit, enumerated member lists fork
+(the six-vs-seven event set, ×4 copies, GH #754), counts and "newest" superlatives decay. The
+standing rule, proven by the corpus's own two fully-clean skills (`agent-ui-catalog`,
+`agent-ui-component-patterns`):
+
+- **Cite by STABLE anchor**: a clause id (`ADR-0153 cl.2`), a § heading (`SPEC-R12 §3.6` — §
+  anchors into SPECs are allowed WITH their requirement id), a requirement id, a SYMBOL
+  (`ALLOWED_EVENTS`, `buildSystemPrompt`), or a directory — these survive edits to the owning
+  file.
+- **Bare `file:NNN` line-number anchors into mutable files are defects**, as are copied
+  enumerable sets, member lists, and counts — bumping a copy re-arms the drift; POINT at the
+  owning home instead (the file that a gate enforces, the CLAUDE.md section, the test constant).
+- **Escape hatch**: a deliberately frozen snapshot is legal when annotated
+  `pinned to commit <sha>` on the same line — a dated pin is a citation; an unpinned line
+  number is rot in waiting.
+- **The sweep**: `scripts/claude_wiring_check.py`'s advisory tier flags unpinned `file:NNN`
+  anchors in `.claude/skills/*/SKILL.md` on every `npm run check` (v1 advisory — the corpus
+  carries legitimate exceptions being repaired wave by wave, GH #761).
+
 ## 6 · Archive & historical records
 
 `.claude/docs/archive/` holds superseded charters (banner + pointer, never deleted). Historical

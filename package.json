@@ -12,7 +12,7 @@
     "check": "tsc && npm run check:site && npm run check:tools && npm run check:scripts",
     "check:site": "tsc -p site/tsconfig.json",
     "check:tools": "tsc -p tsconfig.tools.json",
-    "check:scripts": "python3 scripts/adr_ratify_test.py",
+    "check:scripts": "python3 scripts/adr_ratify_test.py && python3 scripts/hook_selftests.py && python3 scripts/claude_wiring_check.py",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:browser": "npm run test:browser:packages && npm run test:browser:site && npm run test:browser:focus-timing && npm run test:visual",
