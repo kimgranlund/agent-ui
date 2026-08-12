@@ -671,6 +671,93 @@ describe('the MCP-services pack (GH #783 S4 — SPEC-R5)', () => {
   })
 })
 
+// ── GH #783 S5 (LLD-C7 / SPEC-R1 AC2, ADR-0185) — the master switch gates an MCP service ref on the wire ─
+// SPEC-R1 AC2 is "the existing master-switch test pattern extended with one MCP-id case." LLD §5.3's
+// PLACEMENT TRAP pins WHERE that case lives: the literal `mcp:calc:*` MUST sit here at the SITE layer and
+// NEVER in `packages/agent-ui/app/src` — an MCP identifier in the app package (tests included) would redden
+// SPEC-R6 AC1's `grep -ri mcp packages/agent-ui/app/src` empty-fence. `#enabledToolIds` (the app package,
+// which learns nothing about MCP — SPEC-R6) forwards the ref as an OPAQUE string it never parses: master
+// OFF ⇒ `[]` on the wire (SPEC-R1 AC2); master ON ⇒ the ref rides verbatim (GH #402's ids-not-labels law,
+// widened by ADR-0185 to service refs). Driven end to end on the real `ui-agent-admin` + the real
+// `createAdminSurfaceTurn` runner with one stubbed fetch — the picker-wiring lesson: a projection updating
+// its own state is not evidence the value reached the network call.
+describe('the master switch gates an MCP service ref on the wire (GH #783 S5 — SPEC-R1 AC2)', () => {
+  function ndjsonResponse(lines: readonly string[]): Response {
+    const encoder = new TextEncoder()
+    let i = 0
+    const stream = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        if (i < lines.length) {
+          controller.enqueue(encoder.encode(`${lines[i]!}\n`))
+          i += 1
+        } else controller.close()
+      },
+    })
+    return new Response(stream, { status: 200, headers: { 'content-type': 'application/x-ndjson' } })
+  }
+
+  function submit(admin: UIAgentAdminElement, text: string): void {
+    const composer = admin.querySelector('ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = text
+    ;(composer.querySelector('[data-part="editor"]') as HTMLElement).dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
+    )
+  }
+
+  async function settle(): Promise<void> {
+    for (let i = 0; i < 20; i += 1) {
+      await whenFlushed()
+      await new Promise((r) => setTimeout(r, 0))
+    }
+  }
+
+  it('master OFF ⇒ integrations [] on the wire; master ON ⇒ the mcp:calc:* ref rides the wire opaquely', async () => {
+    const { createAdminSurfaceTurn } = await import('../lib/admin-live-runner.ts')
+    const { ENTRY_KINDS, entriesStoreKey } = await import('@agent-ui/app')
+    const { createMemoryStore } = await import('@agent-ui/app/settings-memory-store')
+
+    const bodies: Array<Record<string, unknown>> = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((_url: string, init: { body: string }) => {
+        bodies.push(JSON.parse(init.body) as Record<string, unknown>)
+        return Promise.resolve(ndjsonResponse(['{"a2uiMeta":{"note":"ok"}}']))
+      }),
+    )
+
+    // The agent holds one enabled MCP service-ref row under the ordinary `tool` kind (SPEC-R1: no new key,
+    // no new schema field) — but the master `toolsEnabled` gate is OFF.
+    const store = createMemoryStore({
+      initial: {
+        [entriesStoreKey(ENTRY_KINDS.tool)]: [
+          { id: 'mcp:calc:*', kind: ENTRY_KINDS.tool, label: 'Calc server', description: '', content: '', order: 0, enabled: true, builtin: false },
+        ],
+        toolsEnabled: false,
+      },
+    })
+    const admin = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    admin.store = store
+    admin.agentSurfaceTurn = createAdminSurfaceTurn()
+    document.body.append(admin)
+    mounted.push(admin)
+    await whenFlushed()
+
+    submit(admin, 'add two and two')
+    await settle()
+    expect(bodies, 'the turn reached the produce endpoint').toHaveLength(1)
+    expect(bodies[0]!['integrations'], 'master off ⇒ #enabledToolIds returns [] ⇒ no MCP item on the wire').toEqual([])
+
+    // Flip the master ON. `#enabledToolIds` is a FRESH per-turn store read, so the next turn reflects it.
+    store.set('toolsEnabled', true)
+    await whenFlushed()
+
+    submit(admin, 'again')
+    await settle()
+    expect(bodies).toHaveLength(2)
+    expect(bodies[1]!['integrations'], 'master on ⇒ the service ref rides the wire verbatim, unparsed by the browser').toEqual(['mcp:calc:*'])
+  })
+})
+
 // ── GH #46 / PR #60 review — the seedVersion one-time migration ─────────────────────────────────────────
 
 describe('presetStore — seedVersion migration (the in-place Concierge upgrade)', () => {
