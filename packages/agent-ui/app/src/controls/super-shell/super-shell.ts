@@ -42,7 +42,7 @@
 //
 // `controls → @agent-ui/components` + siblings only — never router/a2a (layering.test.ts).
 
-import { UIElement, prop, paneResize, scrollFade, type PaneResizeHandle, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
+import { UIElement, prop, paneResize, scrollFade, withViewTransition, type PaneResizeHandle, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
 import '@agent-ui/components/controls/button'
 import '@agent-ui/components/controls/icon'
 // GH #221 — both tab strips (SPEC-R7a pane-tabs, SPEC-R7b narrow-tabs) compose the fleet ui-tabs
@@ -108,6 +108,13 @@ const props = {
   // `stack`/`tabs` sides are NOT governed by this — their reflow answers "the row is too cramped for
   // side-by-side," which stays the 40rem narrow line regardless (the per-side band read in #belowBandLine).
   collapseBand: { ...prop.enum(['narrow', 'compact'] as const, 'narrow'), reflect: true, attribute: 'collapse-band' },
+  // GH #740/ADR-0183 cl.3 — the OPT-IN View Transitions gate for the shell's segment swaps: `true` wraps
+  // `#setActiveSegment`'s visibility flips in `document.startViewTransition` where the platform allows
+  // it (`withViewTransition`'s availability × reduced-motion gate); default `false` and every no-API/
+  // reduced-motion path are byte-identical to the pre-#740 shell. Segment swaps ONLY — band crossings
+  // stay pure CSS (no JS runs on a resize, the shell family's own law), so they are not wrappable and
+  // not wrapped.
+  viewTransitions: { ...prop.boolean(false), reflect: true, attribute: 'view-transitions' },
   // SPEC-R6a — per-side opt-in for the INNERMOST pane only (rails/outer stacked panes stay fixed).
   resizableStart: { ...prop.boolean(false), reflect: true, attribute: 'resizable-start' },
   resizableEnd: { ...prop.boolean(false), reflect: true, attribute: 'resizable-end' },
@@ -807,11 +814,17 @@ export class UISuperShellElement extends UIElement {
    *  its siblings, and syncs the strip by SETTING its `selected` prop (a programmatic write — the
    *  control applies aria-selected/roving itself and echoes no event back, ADR-0019). */
   #setActiveSegment(box: HTMLElement, index: number): void {
+    // GH #740/ADR-0183 cl.3 — the visibility flip (and only the flip) rides the opt-in transition; the
+    // strip's own selected mirror stays OUTSIDE the wrap (a programmatic tabs write is chrome state, not
+    // the swapped content — snapshotting it would animate the tab underline twice). `untracked` is not
+    // needed here: this method runs from event handlers, never inside a reactive effect.
     const segments = [...box.querySelectorAll(':scope > [data-segment]')]
     const clamped = Math.max(0, Math.min(index, segments.length - 1))
-    for (const s of segments) s.removeAttribute('data-active')
-    segments[clamped]?.setAttribute('data-active', '')
-    box.setAttribute('data-active-segment', String(clamped))
+    withViewTransition(() => {
+      for (const s of segments) s.removeAttribute('data-active')
+      segments[clamped]?.setAttribute('data-active', '')
+      box.setAttribute('data-active-segment', String(clamped))
+    }, this.viewTransitions)
     const strip = box.querySelector<UITabsElement>(':scope > [data-part="pane-tabs"]')
     if (strip) strip.selected = String(clamped) // key-less tabs resolve positionally (tabs.ts #resolveIndex)
   }

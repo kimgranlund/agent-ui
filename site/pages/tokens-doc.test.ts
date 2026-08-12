@@ -18,7 +18,7 @@
 import { describe, expect, it } from 'vitest'
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (site/lib/adr.test.ts precedent)
 import { readFileSync } from 'node:fs'
-import { familiesOf, parseColorPrimitives, parseColorRoles, parseDimensionRamp } from '../lib/token-parse.ts'
+import { familiesOf, parseColorPrimitives, parseColorRoles, parseDimensionRamp, parseTypescale } from '../lib/token-parse.ts'
 
 declare const process: { cwd(): string }
 const ROOT = process.cwd()
@@ -120,5 +120,39 @@ describe('tokens.html source — dimensional ramps', () => {
 
   it('a prefix absent from the sheet parses to zero tiers (the negative control — proves the regex bites)', () => {
     expect(parseDimensionRamp(dimensionsCss, 'ui-zzfake')).toEqual([])
+  })
+})
+
+// GH #728 — the type-scale drift gate (the fourth quarter of the token story): the SAME derive-don't-
+// hand-type discipline, applied to the --md-sys-typescale-* namespace tokens.html now renders.
+describe('tokens.html source — the type scale', () => {
+  const rows = parseTypescale(dimensionsCss)
+
+  it('parses the full 9-role × 3-size grid, every cell complete (totality — a half-declared role reddens here)', () => {
+    expect(rows.length).toBe(27)
+    for (const row of rows) {
+      for (const [prop, value] of Object.entries({ sizeValue: row.sizeValue, weight: row.weight, lineHeight: row.lineHeight, tracking: row.tracking })) {
+        expect(value.length, `${row.role}-${row.size} ${prop} must be non-empty`).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('the role set is exactly the five M3-verbatim roles plus the four cl.2b editorial extensions, sheet order', () => {
+    expect([...new Set(rows.map((r) => r.role))]).toEqual(['display', 'headline', 'title', 'body', 'label', 'kicker', 'overline', 'lead', 'quote'])
+  })
+
+  it('the -size leg rides --md-sys-scale (the one surviving display consumer) — M3-verbatim spot check', () => {
+    const displayLarge = rows.find((r) => r.role === 'display' && r.size === 'large')
+    expect(displayLarge?.sizeValue).toBe('calc(57px * var(--md-sys-scale))') // the canonical MD3 57px anchor
+    expect(displayLarge?.weight).toBe('400')
+  })
+
+  it('the GH #370 kicker ruling holds: weight 400, 0.2em tracking, all three sizes agreeing', () => {
+    const kickers = rows.filter((r) => r.role === 'kicker')
+    expect(kickers.length).toBe(3)
+    for (const k of kickers) {
+      expect(k.weight, `kicker-${k.size} weight`).toBe('400')
+      expect(k.tracking, `kicker-${k.size} tracking`).toBe('0.2em')
+    }
   })
 })

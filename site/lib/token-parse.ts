@@ -126,6 +126,53 @@ export function parseColorPrimitives(tokensCss: string): Record<string, ColorPri
   return Object.fromEntries(byFamily)
 }
 
+/** One typescale row (`--md-sys-typescale-{role}-{size}-{property}`, ADR-0078 cl.2/cl.2b): the four
+ *  properties of one role×size cell, joined back together from their two declaration homes —
+ *  `-weight`/`-line-height`/`-tracking` are `:root` constants, `-size` lives on the `*` ramp
+ *  (`calc(Npx * var(--md-sys-scale))`, the one surviving display consumer of --md-sys-scale). */
+export interface TypescaleRow {
+  readonly role: string
+  readonly size: 'large' | 'medium' | 'small'
+  /** The declared `-size` value verbatim (a `calc(Npx * var(--md-sys-scale))` expression). */
+  readonly sizeValue: string
+  readonly weight: string
+  readonly lineHeight: string
+  readonly tracking: string
+}
+
+/**
+ * parseTypescale — every complete `--md-sys-typescale-{role}-{size}-*` cell declared across
+ * dimensions.css's `:root` block (weight/line-height/tracking) and `*` block (size), GH #728
+ * (additive — every sibling function above is unchanged, the parseColorPrimitives precedent). Roles
+ * emit in sheet declaration order (display · headline · title · body · label, then the cl.2b editorial
+ * extensions kicker · overline · lead · quote), sizes in the M3 large/medium/small order. A cell missing
+ * any of its four properties is OMITTED (never a partial row) — the drift gate's totality count is what
+ * catches a half-declared role.
+ */
+export function parseTypescale(dimensionsCss: string): TypescaleRow[] {
+  const combined = firstTopLevelBlock(dimensionsCss, ':root') + '\n' + firstTopLevelBlock(dimensionsCss, '*')
+  const cells = new Map<string, Partial<Record<'size' | 'weight' | 'line-height' | 'tracking', string>>>()
+  const roleOrder: string[] = []
+  const re = /--md-sys-typescale-([a-z]+)-(large|medium|small)-(size|weight|line-height|tracking):\s*([^;]+);/g
+  for (const m of combined.matchAll(re)) {
+    const [, role, size, property, value] = m
+    const key = `${role}/${size}`
+    if (!roleOrder.includes(role!)) roleOrder.push(role!)
+    const cell = cells.get(key) ?? {}
+    cell[property as 'size' | 'weight' | 'line-height' | 'tracking'] = value!.trim()
+    cells.set(key, cell)
+  }
+  const rows: TypescaleRow[] = []
+  for (const role of roleOrder) {
+    for (const size of ['large', 'medium', 'small'] as const) {
+      const cell = cells.get(`${role}/${size}`)
+      if (cell?.size === undefined || cell.weight === undefined || cell['line-height'] === undefined || cell.tracking === undefined) continue
+      rows.push({ role, size, sizeValue: cell.size, weight: cell.weight, lineHeight: cell['line-height'], tracking: cell.tracking })
+    }
+  }
+  return rows
+}
+
 /** Every distinct `family` present in `roles`, insertion-order — the section grouping tokens.html renders by. */
 export function familiesOf(roles: readonly ColorRole[]): string[] {
   const out: string[] = []

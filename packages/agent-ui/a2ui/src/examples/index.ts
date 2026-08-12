@@ -48,6 +48,8 @@ export {
 } from './catalog-coverage.ts'
 export { kpiPanelLifecycleSeed, messageLifecycleSeeds } from './message-lifecycle.ts'
 export { feedbackFormSeed, elevationScaleSeed, triviaRoundResumeSeed, corpusGrowthSeeds } from './corpus-growth.ts'
+// GH #729 — the catalog-frontier family: the 2026-08-12 sweep's 13 example-less catalog components, covered.
+export { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, catalogFrontierSeeds } from './catalog-frontier.ts'
 
 import type { ExampleSeed } from './types.ts'
 import { canvasSeeds } from './canvas-button.ts'
@@ -57,6 +59,7 @@ import { patternSeeds } from './patterns.ts'
 import { catalogCoverageSeeds } from './catalog-coverage.ts'
 import { messageLifecycleSeeds } from './message-lifecycle.ts'
 import { corpusGrowthSeeds } from './corpus-growth.ts'
+import { catalogFrontierSeeds } from './catalog-frontier.ts'
 
 /** Every seed on the shelf — the standing gate's (`examples.test.ts`) iteration surface. Composed from
  *  each module's own family array, so the total is always derived, never a separately-maintained count. */
@@ -68,4 +71,5 @@ export const allSeeds: readonly ExampleSeed[] = [
   ...catalogCoverageSeeds,
   ...messageLifecycleSeeds,
   ...corpusGrowthSeeds,
+  ...catalogFrontierSeeds,
 ]

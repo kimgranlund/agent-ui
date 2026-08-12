@@ -45,4 +45,16 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
       'cannot express — then re-admit via the judged pipeline (a fresh import, not `--replace`, since ' +
       'this record was never written).',
   ],
+  // GH #729 (2026-08-12) — the four CATALOG-FRONTIER seeds: NO VERDICT SOUGHT YET, not a refusal. Added
+  // by the example sweep to close the 13-component coverage gap (catalog-frontier.ts's own header); their
+  // corpus admission is a PENDING judged import wave the sweep could not run — the a2ui-reviewer judge
+  // seat was unreachable (session subagent ceiling), and the authoring session judging its own seeds is
+  // exactly the manufactured judgment ADR-0068's Alternatives ban. These four entries are the loud,
+  // dated record of that pending state (category 1's no-verdict-sought shape, temporarily): run the
+  // judged pipeline (`import-seeds.ts` with real VerdictsFiles) and DELETE these entries when the wave
+  // lands — an entry surviving after admission is the drift this map's gate exists to catch.
+  ['frontier-trip-card', 'GH #729 coverage seed — admission pending the next judged import wave (no verdict sought yet, 2026-08-12); delete this entry when it lands.'],
+  ['frontier-invite-modal', 'GH #729 coverage seed — admission pending the next judged import wave (no verdict sought yet, 2026-08-12); delete this entry when it lands.'],
+  ['frontier-review-split', 'GH #729 coverage seed — admission pending the next judged import wave (no verdict sought yet, 2026-08-12); delete this entry when it lands.'],
+  ['frontier-onboarding-tour', 'GH #729 coverage seed — admission pending the next judged import wave (no verdict sought yet, 2026-08-12); delete this entry when it lands.'],
 ])

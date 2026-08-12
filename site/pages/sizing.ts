@@ -75,6 +75,20 @@ const CLASSES: readonly SizeClass[] = [
   }
   table.append(thead, tbody)
   content.append(table)
+  // GH #728 — the Display row's type scale now has a rendered home: link it (the fourth quarter of the
+  // token story, beside the colour/dimension/spacing references this page already pairs with).
+  content.append(
+    el('p', {}, [
+      document.createTextNode('The type scale the Display class reads — every --md-sys-typescale-{role}-{size} cell as a live specimen — is on the '),
+      (() => {
+        const a = document.createElement('a')
+        a.href = './tokens.html#type-scale'
+        a.textContent = 'token reference'
+        return a
+      })(),
+      document.createTextNode('.'),
+    ]),
+  )
 }
 
 // ── 2 · the [scale] × [size] lookup — a LIVE, MEASURED matrix ───────────────────────────────────────────────
