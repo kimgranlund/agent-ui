@@ -229,6 +229,93 @@ describe('ui-surface-host — GH #805: answered cards disable their inputs', () 
     expect(cb.disabled, 'a sibling checkbox').toBe(true)
   })
 
+  it('GH #805 repair — a wantResponse:false action (ADR-0088 §3) never disables ANYTHING — a fire-and-forget click has no turn that would ever re-enable it', () => {
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    const received: unknown[] = []
+    el.onClientMessage((m) => received.push(m))
+    el.ingest(CREATE('wr1'))
+    el.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'wr1',
+          components: [{ id: 'root', component: 'Button', variant: 'ghost', label: 'Cancel', action: { action: 'cancel', wantResponse: false } }],
+        },
+      }),
+    )
+    const btn = el.querySelector('ui-button') as HTMLElement & { disabled: boolean }
+    btn.click()
+    expect(received).toHaveLength(1) // the client message still fires — only the disable is skipped
+    expect(btn.disabled, 'wantResponse:false runs no turn — disabling it would strand it forever').toBe(false)
+  })
+
+  it('GH #805 repair — the sweep never claims an element ALREADY disabled for a payload/checks reason, and re-enable never reverts it', () => {
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.ingest(CREATE('sw1'))
+    el.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'sw1',
+          components: [
+            { id: 'root', component: 'Column', children: ['cb', 'btn'] },
+            // A payload-DECLARED disabled literal (default catalog's own bindable `disabled` row,
+            // catalog/default/factories.ts) — never the sweep's to own.
+            { id: 'cb', component: 'Checkbox', name: 'terms', label: 'I accept', disabled: true },
+            { id: 'btn', component: 'Button', variant: 'solid', label: 'Go', action: { action: 'go' } },
+          ],
+        },
+      }),
+    )
+    const btn = el.querySelector('ui-button') as HTMLElement & { disabled: boolean }
+    const cb = el.querySelector('ui-checkbox') as HTMLElement & { disabled: boolean }
+    expect(cb.disabled, 'the payload-declared literal, unaffected by anything yet').toBe(true)
+
+    btn.click()
+    expect(btn.disabled, 'the sweep genuinely claims this one (false→true)').toBe(true)
+    expect(cb.disabled, 'already disabled — the sweep leaves it alone, never claims it').toBe(true)
+
+    // The FAIL arm: re-enable only reverts what the sweep itself claimed.
+    el.setInteractiveDisabled(false)
+    expect(btn.disabled, 'reverted — the sweep DID claim this one').toBe(false)
+    expect(cb.disabled, 'a payload-declared disabled control survives disable→fail-re-enable untouched').toBe(true)
+  })
+
+  it('GH #805 repair — the sweep-scoped re-enable also holds through ingest()\'s own re-render arm, for a component the resend never touches', () => {
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.ingest(CREATE('sw2'))
+    el.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'sw2',
+          components: [
+            { id: 'root', component: 'Column', children: ['cb', 'btn'] },
+            { id: 'cb', component: 'Checkbox', name: 'terms', label: 'I accept', disabled: true },
+            { id: 'btn', component: 'Button', variant: 'solid', label: 'Go', action: { action: 'go' } },
+          ],
+        },
+      }),
+    )
+    const btn = el.querySelector('ui-button') as HTMLElement & { disabled: boolean }
+    const cb = el.querySelector('ui-checkbox') as HTMLElement & { disabled: boolean }
+    btn.click()
+    expect(btn.disabled).toBe(true)
+    expect(cb.disabled).toBe(true)
+
+    // A resend that only touches the Button (a valid, update-only cross-turn payload, GH #63's own
+    // precedent) — `cb` is untouched by the rewire; the ingest-entry re-enable sweep must not be the
+    // thing that makes it live again through the back door.
+    el.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: { surfaceId: 'sw2', components: [{ id: 'btn', component: 'Button', variant: 'solid', label: 'Go again', action: { action: 'go' } }] },
+      }),
+    )
+    expect(btn.disabled, 're-enabled by the update, as ever').toBe(false)
+    expect(cb.disabled, "a payload-declared disabled control survives disable→update-re-enable when the resend never touches it").toBe(true)
+  })
+
   it('a SECOND action message never re-queues past the first — the disabled control itself makes it inert (unit-level: disabling twice is idempotent)', () => {
     const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
     const received: unknown[] = []

@@ -274,9 +274,10 @@ describe('ui-conversation — GH #805: fail() re-enables the surface its own act
     button.click()
     expect(button.disabled).toBe(true)
 
-    // The ask-arm's real turn: a FRESH bubble (no intoSurface — GH #802's own routing), never resending
-    // the answered surfaceId at all.
-    const t2 = el.beginAgentTurn()
+    // The ask-arm's real turn: a FRESH bubble (no intoSurface — GH #802's own routing) — but the answered
+    // surfaceId is passed EXPLICITLY as `disabledSurfaceId` (the agent-admin.ts GH #805-repair shape),
+    // never resending the answered surfaceId at all.
+    const t2 = el.beginAgentTurn({ disabledSurfaceId: 'ask-1' })
     t2.fail('network error')
     expect(button.disabled, 'a failed turn must not strand the dead card disabled').toBe(false)
   })
@@ -287,13 +288,13 @@ describe('ui-conversation — GH #805: fail() re-enables the surface its own act
     button.click()
     expect(button.disabled).toBe(true)
 
-    const t2 = el.beginAgentTurn() // fresh round, never touches 'ask-2'
+    const t2 = el.beginAgentTurn({ disabledSurfaceId: 'ask-2' }) // fresh round, never touches 'ask-2' again
     t2.setNote('a fresh question')
     t2.finalize()
     expect(button.disabled, 'success on an untouched surface leaves it disabled — answered history').toBe(true)
   })
 
-  it('FIFO: two surfaces disabled in click order are each claimed by their OWN beginAgentTurn(), never swapped', () => {
+  it('GH #805 repair — a KEYED claim, never a blind dequeue: two pending surfaces are each claimed ONLY by name, in either order', () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)
     const { button: buttonA } = mountButtonSurface(el, 'card-a')
     const { button: buttonB } = mountButtonSurface(el, 'card-b')
@@ -302,15 +303,35 @@ describe('ui-conversation — GH #805: fail() re-enables the surface its own act
     expect(buttonA.disabled).toBe(true)
     expect(buttonB.disabled).toBe(true)
 
-    const turnA = el.beginAgentTurn() // claims card-a (the OLDEST pending entry)
-    const turnB = el.beginAgentTurn() // claims card-b
-
-    turnA.fail('a failed')
-    expect(buttonA.disabled, 'turnA re-enabled its OWN surface').toBe(false)
-    expect(buttonB.disabled, 'turnA must never touch the OTHER surface').toBe(true)
+    // Claimed OUT OF click order — B first — proving the mechanism is keyed, not FIFO-ordered.
+    const turnB = el.beginAgentTurn({ disabledSurfaceId: 'card-b' })
+    const turnA = el.beginAgentTurn({ disabledSurfaceId: 'card-a' })
 
     turnB.fail('b failed')
-    expect(buttonB.disabled).toBe(false)
+    expect(buttonB.disabled, 'turnB re-enabled its OWN surface').toBe(false)
+    expect(buttonA.disabled, 'turnB must never touch the OTHER surface').toBe(true)
+
+    turnA.fail('a failed')
+    expect(buttonA.disabled).toBe(false)
+  })
+
+  it('GH #805 repair — a turn naming NEITHER disabledSurfaceId NOR intoSurface (a typed intent, or a genui action turn) claims NOTHING', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const { button } = mountButtonSurface(el, 'card-c')
+    button.click()
+    expect(button.disabled).toBe(true)
+
+    // An UNRELATED turn (no key at all) must never steal this pending entry — the bare-FIFO defect this
+    // repair closes (a genui action's own beginAgentTurn() call shares this exact shape: it never pushed
+    // anything here, and must never claim anything either).
+    const unrelated = el.beginAgentTurn()
+    unrelated.fail('unrelated failure')
+    expect(button.disabled, 'an unrelated, unkeyed turn must never re-enable a card it has nothing to do with').toBe(true)
+
+    // The card's OWN, correctly-keyed turn still resolves it normally.
+    const t2 = el.beginAgentTurn({ disabledSurfaceId: 'card-c' })
+    t2.fail('the real failure')
+    expect(button.disabled).toBe(false)
   })
 
   it('a surface already re-enabled by its own update is a harmless no-op for a later fail() (no double-fire)', () => {
@@ -326,6 +347,54 @@ describe('ui-conversation — GH #805: fail() re-enables the surface its own act
     expect(button.disabled).toBe(false) // re-enabled by the update already
     expect(() => t2.fail('late error')).not.toThrow()
     expect(button.disabled).toBe(false)
+  })
+
+  it('GH #805 repair — a wantResponse:false action (ADR-0088 §3) never disables and never queues at all', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t = el.beginAgentTurn()
+    t.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 'cancel-1', catalogId: 'agent-ui' } }))
+    t.ingestLine(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'cancel-1',
+          components: [{ id: 'root', component: 'Button', variant: 'ghost', label: 'Cancel', action: { action: 'cancel', wantResponse: false } }],
+        },
+      }),
+    )
+    t.finalize()
+    const received: unknown[] = []
+    el.onClientMessage((m) => received.push(m))
+    const button = log(el).querySelector('ui-button') as HTMLElement & { disabled: boolean }
+
+    button.click()
+    expect(received).toHaveLength(1) // the click still fires the client message — just never disables for it
+    expect(button.disabled, 'a wantResponse:false action runs no turn — nothing would ever re-enable it').toBe(false)
+
+    // Nothing was queued either — an unrelated later turn naming this surfaceId explicitly finds nothing
+    // to re-enable (proving no false membership was ever recorded, not just that the button looks live).
+    const t2 = el.beginAgentTurn({ disabledSurfaceId: 'cancel-1' })
+    expect(() => t2.fail('unrelated')).not.toThrow()
+    expect(button.disabled).toBe(false)
+  })
+
+  it('GH #805 repair — reset() clears the pending-disabled bookkeeping (a persona switch never misaligns the next session)', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    mountButtonSurface(el, 'stale-1')
+    const staleButton = log(el).querySelector('ui-button') as HTMLElement & { disabled: boolean }
+    staleButton.click()
+    expect(staleButton.disabled).toBe(true)
+
+    el.reset() // a persona switch — the whole registry (and this bookkeeping) tears down
+
+    // A FRESH session reuses the same surfaceId string (a real, if rare, possibility) — the reset must
+    // have dropped the stale claim, or this turn would incorrectly find (and try to re-enable) it.
+    const { button: freshButton } = mountButtonSurface(el, 'stale-1')
+    freshButton.click()
+    expect(freshButton.disabled).toBe(true)
+    const t = el.beginAgentTurn() // an unrelated, unkeyed turn — must claim nothing regardless
+    t.fail('unrelated')
+    expect(freshButton.disabled, "the fresh session's own click still owns its own disable normally").toBe(true)
   })
 })
 

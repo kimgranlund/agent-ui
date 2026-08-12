@@ -93,13 +93,20 @@ host.setInteractiveDisabled(false) // GH #805 — re-enable a card after its own
 
 ## Answered cards disable their inputs (GH #805)
 
-The moment this surface emits an outbound `action` client-message (a button/etc click), EVERY
-interactive descendant currently mounted disables — self-wired at connect, before any consumer's own
-`onClientMessage(cb)` runs, so no consumer wiring is required for this arm. Duck-typed
-(`'disabled' in el`), never a hardcoded tag list: today's fleet set is
-ui-button/ui-checkbox/ui-radio-group/ui-select/ui-text-field/ui-slider, and any future control that
-grows a `disabled` prop participates for free. This is also the double-submit guard, for free — the
-disabled controls themselves make a second click on the same card inert.
+The moment this surface emits an outbound `action` client-message (a button/etc click) that ISN'T an
+explicit `wantResponse:false` opt-out (ADR-0088 §3 — a fire-and-forget action, e.g. a Cancel button, that
+no turn will ever run for), EVERY interactive descendant currently mounted disables — self-wired at
+connect, before any consumer's own `onClientMessage(cb)` runs, so no consumer wiring is required for this
+arm. Duck-typed (`'disabled' in el`), never a hardcoded tag list: today's fleet set is
+ui-button/ui-checkbox/ui-radio-group/ui-select/ui-text-field/ui-slider/ui-combo-box/ui-calendar/
+ui-color-picker/ui-multi-select/ui-range, and any future control that grows a `disabled` prop
+participates for free. This is also the double-submit guard, for free — the disabled controls themselves
+make a second click on the same card inert.
+
+The sweep never touches an element that was ALREADY disabled when it ran (a payload-declared `disabled`
+literal, or the renderer's own checks controller driving `disabled` off live validity, `renderer/
+checks.ts`) — only elements it genuinely flips false→true are remembered (a `WeakSet`), and re-enable
+ever only reverts THOSE, leaving payload/checks-owned disabled state exactly as it was.
 
 `ingest()` re-enables unconditionally on entry: a NEW line arriving for this surface is the model
 re-engaging the card (an in-place `updateComponents` re-render — TKT-0079's game loop) — it "comes back

@@ -361,21 +361,29 @@ export class UIConversationElement extends UIElement {
   // but have not yet `finalize()`d/`fail()`d. `#send` no-ops while this is > 0 (auto-tracked, zero consumer
   // wiring — the primitive already owns the AgentTurnHandle lifecycle); the composer reflects it visually.
   #turnsInFlight = 0
-  // GH #805 — a FIFO queue of surfaceIds whose OWN action just disabled them (self-wired inside
-  // `ui-surface-host`, above `routeLine`'s per-host wiring below), not yet claimed by a `beginAgentTurn()`
-  // call. Each `beginAgentTurn()` dequeues (at most) ONE — the answered surface a THIS handle's own
-  // eventual `fail()` re-enables if the turn it started never sends that surface another line (an
-  // ask-declared surface's real turn, GH #802/#803, or an early client-only refusal that never touches
-  // it at all). FIFO, not a single slot: click order IS resolution order for every shipped consumer —
-  // each click's disable (synchronous, inside the RendererHost's own listener callout) and its eventual
-  // `beginAgentTurn()` call (whether synchronous, a2ui-chat.ts's `runTurn`, or `setTimeout(0)`-deferred,
-  // agent-admin.ts's `#runSurfaceTurn`) preserve the SAME relative order end to end, so the oldest still-
-  // pending entry is always the right one to dequeue. (Accepted edge, same posture as ADR-0183's own: a
-  // click on a SECOND, still-enabled surface while a first turn is busy enough that the app's own gate
-  // drops it without ever calling `beginAgentTurn` leaves that entry queued for the NEXT call to claim —
-  // narrower than a real operating condition for any shipped consumer, which busies the composer for the
-  // duration of any in-flight turn.)
-  readonly #pendingDisabledSurfaceIds: string[] = []
+  // GH #805 repair (independent component-checker, PR #809) — surfaceIds whose OWN action just disabled
+  // them (self-wired inside `ui-surface-host`, above `routeLine`'s per-host wiring below), not yet
+  // resolved. A membership `Set`, deliberately NOT a FIFO queue (the first cut's own defect): a bare FIFO
+  // dequeues whatever is OLDEST regardless of whether it has anything to do with the beginAgentTurn()
+  // call claiming it — a genui action's own turn ALSO calls beginAgentTurn() (agent-admin.ts's
+  // `#runSurfaceTurn` runs uniformly for every client message) but never pushes here (genui surfaces
+  // never route through ui-surface-host at all), so it would silently steal an unrelated A2UI surface's
+  // entry; a composer Enter landing inside the click→`setTimeout(0)` window (agent-admin.ts) would do the
+  // same. `beginAgentTurn()` instead reads a SPECIFIC key (`opts.disabledSurfaceId`, defaulting to
+  // `opts.intoSurface`) and only `fail()` (Set.delete's own has-and-remove) ever claims it — a turn with
+  // no such key (a typed intent, a genui action — `intoSurface` there names a genui surfaceId, a
+  // disjoint id space from this Set's own A2UI-only membership, ADR-0129 clause 2) claims nothing, ever.
+  // `routeLine`'s known-surface branch also deletes an entry the moment a REAL update re-enables that
+  // surface itself (surface-host.ts's own ingest()-entry re-enable) — keeping this Set's membership from
+  // drifting stale against the thing it exists to track.
+  //
+  // Residual, DOCUMENTED gap (Kim's "your judgment" call, GH #805 repair item 4): a consumer that calls
+  // `beginAgentTurn()` with NEITHER `disabledSurfaceId` NOR `intoSurface` for a client-action turn
+  // (a2ui-chat.ts's `runTurn` — it implements no TKT-0079 resume at all, so it never sets either) gets NO
+  // automatic fail-reenable for the narrow case where that turn fails before ever calling `ingestLine`
+  // for its own surface again; `ui-surface-host`'s own re-enable-on-update arm still covers the ordinary
+  // case (any real reply resending that surfaceId, TKT-0079's game loop) for every consumer, unchanged.
+  readonly #pendingDisabledSurfaceIds = new Set<string>()
 
   protected connected(): void {
     if (this.#log === undefined) {
@@ -481,16 +489,26 @@ export class UIConversationElement extends UIElement {
    *  truncate-marks its entries — ui-status-stream's completion invariant is per-strip, so a resumed turn
    *  gets its own strip rather than un-finalizing the last one); the note div is reused (overwritten at
    *  finalize); a fresh surfaceId in a resumed turn mounts into the SAME bubble's mounts. Anything else —
-   *  unknown id, closed record, disconnected bubble — falls through to the fresh-bubble path unchanged. */
-  beginAgentTurn(opts?: { intoSurface?: string }): AgentTurnHandle {
+   *  unknown id, closed record, disconnected bubble — falls through to the fresh-bubble path unchanged.
+   *
+   *  GH #805 repair — `opts.disabledSurfaceId`: the surfaceId whose OWN action started this turn, for
+   *  `fail()` to re-enable if the turn never sends it another line. Defaults to `opts.intoSurface`
+   *  (the common, non-ask case — TKT-0079's resumed surface IS the answered one) — pass it EXPLICITLY
+   *  only when it diverges (GH #802/#803's ask-arm: the answered surface routes to a FRESH bubble,
+   *  `intoSurface` undefined by that routing's own design, but the answered surfaceId is still real and
+   *  still owed a re-enable on failure). Omit BOTH for a turn with no client-action origin at all (a
+   *  typed intent) — see `#pendingDisabledSurfaceIds`'s own doc comment for why this is a specific key
+   *  lookup, never a blind "claim whatever's pending" dequeue. */
+  beginAgentTurn(opts?: { intoSurface?: string; disabledSurfaceId?: string }): AgentTurnHandle {
     if (!this.#guard('beginAgentTurn')) {
       return { ingestLine: () => {}, mountGenui: () => {}, setNote: () => {}, progress: () => {}, finalize: () => {}, fail: () => {} }
     }
 
     const wasNear = this.#log!.isNearBottom()
-    // GH #805 — claim the oldest still-pending disabled surfaceId (if any) as THIS handle's own — see
-    // `#pendingDisabledSurfaceIds`'s doc comment for why FIFO order is resolution order.
-    const disabledSurfaceId = this.#pendingDisabledSurfaceIds.shift()
+    // GH #805 repair — the SPECIFIC key this handle's own fail()/finalize() will check against the
+    // pending Set; never a blind dequeue (see the Set's own doc comment for the two collision vectors
+    // that ruled that out).
+    const disabledSurfaceId = opts?.disabledSurfaceId ?? opts?.intoSurface
     const resumed = opts?.intoSurface !== undefined ? this.#resumableBubble(opts.intoSurface) : undefined
     let bubble: HTMLElement
     let narration: UIStatusStreamElement
@@ -635,6 +653,10 @@ export class UIConversationElement extends UIElement {
       const known = this.#registry.get(id)
       if (known !== undefined) {
         known.host.ingest(line) // SPEC-R7: routes to the surface's ORIGINAL host, never this turn's own
+        // GH #805 repair — the host's own ingest() just re-enabled this surface for real (surface-host.ts's
+        // entry re-enable); drop any stale pending-disable bookkeeping for it so a LATER-unrelated fail()
+        // never finds a stale key here to (harmlessly, but incorrectly) "claim".
+        this.#pendingDisabledSurfaceIds.delete(id)
         if (known.state === 'open' && isDeleteSurfaceFor(line, id)) this.#closeSurface(id)
         return
       }
@@ -646,10 +668,11 @@ export class UIConversationElement extends UIElement {
       revealBubble() // GH #313 — a fresh mount is real content
       host.onClientMessage((m) => {
         // GH #805 — bookkeeping ONLY: `host` (ui-surface-host) already disabled its own interactive
-        // descendants (self-wired, surface-host.ts) before this callback ever runs. This just remembers
-        // WHICH surfaceId to re-enable if the turn the action starts fails without ever sending this
-        // surface another line — see `#pendingDisabledSurfaceIds`'s own doc comment.
-        if ('action' in m) this.#pendingDisabledSurfaceIds.push(id)
+        // descendants (self-wired, surface-host.ts) before this callback ever runs — including its OWN
+        // `wantResponse:false` skip (ADR-0088 §3), which this mirrors so the bookkeeping never disagrees
+        // with what the host actually did. This just remembers WHICH surfaceId a later `fail()` may need
+        // to re-enable, keyed (never FIFO-ordered) — see `#pendingDisabledSurfaceIds`'s own doc comment.
+        if ('action' in m && m.action.wantResponse !== false) this.#pendingDisabledSurfaceIds.add(id)
         this.#onClientMessageCb?.(m) // bubble up (LLD-C4)
       })
       this.#registry.set(id, { host, bubble, state: 'open' })
@@ -778,6 +801,11 @@ export class UIConversationElement extends UIElement {
           bubble.append(this.#buildActions(actions))
         }
         this.#settleTouchedHosts(touchedIds)
+        // GH #805 — a SUCCESSFUL turn that never touched `disabledSurfaceId` again leaves it disabled,
+        // deliberately (the ask-arm's "stays disabled as answered history" law) — but this handle's own
+        // claim on the pending Set is spent either way, so drop it (never re-enable, just stop tracking
+        // it as "pending" — a card can't be re-clicked to re-push it while it's still disabled).
+        if (disabledSurfaceId !== undefined) this.#pendingDisabledSurfaceIds.delete(disabledSurfaceId)
         void this.#log!.followTail(wasNear)
       },
       fail: (message: string) => {
@@ -793,10 +821,12 @@ export class UIConversationElement extends UIElement {
         // GH #805 — don't strand a dead card: re-enable the surface whose OWN action started this now-
         // failed turn, even when the turn never sent it another line (an ask-declared surface's real
         // turn opens a FRESH bubble and never resends the answered surfaceId, GH #802/#803; a client-only
-        // refusal never ingests anything at all). Already-touched surfaces re-enabled themselves the
-        // moment their own update line arrived (`ui-surface-host.ingest()`) — this is a harmless no-op
-        // for them, never a double-fire.
-        if (disabledSurfaceId !== undefined) {
+        // refusal never ingests anything at all). `Set.delete` is the has-and-remove in one step — a
+        // surface already re-enabled by its own update (routeLine's known-surface branch already deleted
+        // it there) is simply absent, so this is a harmless no-op for it, never a double-fire. Re-enabling
+        // only reverts elements THIS surface's own sweep disabled (surface-host.ts's `#sweepDisabled`) —
+        // a payload/checks-declared disabled control is untouched.
+        if (disabledSurfaceId !== undefined && this.#pendingDisabledSurfaceIds.delete(disabledSurfaceId)) {
           const record = this.#registry.get(disabledSurfaceId)
           if (record !== undefined && record.state === 'open') record.host.setInteractiveDisabled(false)
         }
@@ -955,6 +985,12 @@ export class UIConversationElement extends UIElement {
     // so re-seating the consumer's node here is the same statement `replaceChildren()` makes about turns.
     this.#log!.replaceChildren(...(this.#emptyState ? [this.#emptyState] : []))
     this.#turnsInFlight = 0
+    // GH #805 repair — a persona switch (or any other reset()) with a click's action still pending must
+    // not leave a stale surfaceId in the Set: `#registry` above just cleared, so a LATER beginAgentTurn()
+    // in this fresh session could otherwise compute (by pure string coincidence, a fresh surfaceId reused
+    // across sessions) a `disabledSurfaceId` that spuriously matches a leftover entry from the session
+    // just torn down.
+    this.#pendingDisabledSurfaceIds.clear()
     this.#reflectBusy()
   }
 

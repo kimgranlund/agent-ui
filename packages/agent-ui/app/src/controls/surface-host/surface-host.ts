@@ -25,18 +25,33 @@
 // (the produce loop / `AgentTransport` types). A standing grep in surface-host.test.ts guards this.
 //
 // GH #805 — answered cards disable their inputs. On ANY outbound `action` client-message this surface
-// emits, every interactive descendant (button/checkbox/radio/select/text-field/slider — the fleet's
-// WHOLE `disabled`-bearing set, duck-typed, never a hardcoded tag list) disables immediately — self-
-// wired at connect (`#host.onClientMessage`, registered BEFORE any external `onClientMessage(cb)` a
-// consumer adds, so it always sees the action first) — a proper answered-history posture, AND the
-// double-submit guard for free (the disabled controls themselves make a second click inert; no extra
-// bookkeeping needed). `ingest()` re-enables unconditionally on entry: a NEW line for this surface IS
-// the model re-engaging this card (an in-place `updateComponents` re-render, TKT-0079's game loop) —
-// "comes back live" by construction, never by inspecting WHAT the line changed. An ask-declared surface
-// (GH #802/#803) never receives another line by contract, so it never re-enables this way — it stays
-// disabled as history, exactly the wanted shape. The one caller-driven arm this element cannot own
-// itself — a FAILED/aborted turn's re-enable — is the public `setInteractiveDisabled(false)` method
-// below; `ui-conversation`'s `AgentTurnHandle.fail()` is the one shipped caller (conversation.ts).
+// emits, every interactive descendant (button/checkbox/radio group/select/text-field/slider/combo-box/
+// calendar/color-picker/multi-select/range — the fleet's WHOLE `disabled`-bearing set, duck-typed, never
+// a hardcoded tag list) disables immediately — self-wired at connect (`#host.onClientMessage`,
+// registered BEFORE any external `onClientMessage(cb)` a consumer adds, so it always sees the action
+// first) — a proper answered-history posture, AND the double-submit guard for free (the disabled
+// controls themselves make a second click inert; no extra bookkeeping needed). `ingest()` re-enables
+// unconditionally on entry: a NEW line for this surface IS the model re-engaging this card (an in-place
+// `updateComponents` re-render, TKT-0079's game loop) — "comes back live" by construction, never by
+// inspecting WHAT the line changed. An ask-declared surface (GH #802/#803) never receives another line
+// by contract, so it never re-enables this way — it stays disabled as history, exactly the wanted shape.
+// The one caller-driven arm this element cannot own itself — a FAILED/aborted turn's re-enable — is the
+// public `setInteractiveDisabled(false)` method below; `ui-conversation`'s `AgentTurnHandle.fail()` is
+// the one shipped caller (conversation.ts).
+//
+// GH #805 repair (independent component-checker, PR #809) — two load-bearing narrowings the first cut
+// missed:
+// (a) ADR-0088 §3's `wantResponse:false` opt-out (an action that runs NO turn at all — a2ui-chat.ts/
+//     a2ui-live.ts both return before ever calling `beginAgentTurn`; the seed shelf's own
+//     `catalog-frontier.ts` Cancel button is exactly this shape) must never disable in the first place —
+//     nothing downstream will EVER re-enable a card no turn is running for.
+// (b) the payload can declare a component's `disabled` LITERAL (the default catalog's ~10 bindable rows,
+//     `catalog/default/factories.ts`), and the renderer's OWN checks controller (`checks.ts`) drives
+//     `el.disabled` from live validity, restoring the declared literal on pass. A blanket re-enable would
+//     force BOTH kinds live regardless of what they ought to be. `#sweepDisabled` (a `WeakSet`) remembers
+//     exactly which elements THIS sweep is the one that flipped false→true — re-enable ever only touches
+//     those; an element already disabled for a payload/checks reason when the sweep ran is never added,
+//     so it is never touched on the way back either.
 
 import { UIElement, prop, withViewTransition, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
 import { createRenderer } from '@agent-ui/a2ui'
@@ -89,6 +104,11 @@ export class UISurfaceHostElement extends UIElement {
   // triggers the (cheap, but non-zero) walk on the way back to `false`.
   #interactiveDisabledActive = false
 
+  // GH #805 repair — the elements THIS sweep's disable pass flipped false→true (never an
+  // already-payload/checks-disabled element, which the sweep leaves untouched, below). Re-enable ever
+  // only reverts membership here — a `WeakSet` so a torn-down element is never leak-held.
+  #sweepDisabled = new WeakSet<Element>()
+
   protected connected(): void {
     if (this.#host === undefined) {
       const stage = document.createElement('div')
@@ -104,7 +124,10 @@ export class UISurfaceHostElement extends UIElement {
       // BEFORE any consumer's own `onClientMessage(cb)` call (this element's own connect-time setup runs
       // first, by construction), so the `RendererHost`'s listener `Set` always calls this one first.
       this.#host.onClientMessage((message) => {
-        if ('action' in message) this.#applyInteractiveDisabled(true)
+        // GH #805 repair — ADR-0088 §3: `wantResponse:false` is the agent's explicit "no turn will ever
+        // run for this" declaration (a fire-and-forget action, e.g. a Cancel button). Disabling for one
+        // would strand the card forever — nothing downstream ever calls back to re-enable it.
+        if ('action' in message && message.action.wantResponse !== false) this.#applyInteractiveDisabled(true)
       })
     }
 
@@ -183,6 +206,7 @@ export class UISurfaceHostElement extends UIElement {
     this.#surface = undefined
     this.#settledOnce = false // GH #742 — a rebuilt artboard's next stream is a first paint again
     this.#interactiveDisabledActive = false // GH #805 — a rebuilt artboard's next mount starts live
+    this.#sweepDisabled = new WeakSet() // GH #805 — the torn-down subtree's claims are moot
     this.replaceChildren()
   }
 
@@ -199,19 +223,37 @@ export class UISurfaceHostElement extends UIElement {
 
   /** Walks the mounted subtree and sets every interactive descendant's OWN `disabled` prop — duck-typed
    *  (`'disabled' in el`), never a hardcoded tag list, so any control the catalog resolves to (today:
-   *  ui-button/ui-checkbox/ui-radio-group/ui-select/ui-text-field/ui-slider — the fleet's whole
-   *  `disabled`-bearing set) participates, and a FUTURE one grown a `disabled` prop participates for free.
-   *  Each control's own reactive effect chain does the rest (tabbable/aria-disabled/`:state(disabled)` —
-   *  this never touches ARIA or a host attribute directly, only the control's typed prop, same as any
-   *  consumer calling `el.disabled = true` would). The `#interactiveDisabledActive` guard makes the common
-   *  case (never disabled) an O(1) no-op — most `ingest()` calls have nothing to re-enable. */
+   *  ui-button/ui-checkbox/ui-radio-group/ui-select/ui-text-field/ui-slider/ui-combo-box/ui-calendar/
+   *  ui-color-picker/ui-multi-select/ui-range — the fleet's whole `disabled`-bearing set) participates,
+   *  and a FUTURE one grown a `disabled` prop participates for free. Each control's own reactive effect
+   *  chain does the rest (tabbable/aria-disabled/`:state(disabled)` — this never touches ARIA or a host
+   *  attribute directly, only the control's typed prop, same as any consumer calling `el.disabled = true`
+   *  would). The `#interactiveDisabledActive` guard makes the common case (never disabled) an O(1) no-op
+   *  — most `ingest()` calls have nothing to re-enable.
+   *
+   *  GH #805 repair — NOT a blanket flip. On disable, an element ALREADY disabled (a payload-declared
+   *  literal, or the checks controller's own validity-driven disable, `renderer/checks.ts`) is left
+   *  alone and never remembered — the sweep only claims elements it is genuinely the one disabling
+   *  (false→true). On re-enable, only CLAIMED elements revert; a payload/checks-owned disabled element
+   *  stays exactly as it was, regardless of whether this is the `ingest()` re-render arm or the `fail()`
+   *  arm — in the `ingest()` case the real payload/checks pass that follows (inside the same call, just
+   *  after this) is what actually re-derives the right state for those, never this sweep. */
   #applyInteractiveDisabled(disabled: boolean): void {
     if (this.#surface === undefined) return
     if (disabled) this.#interactiveDisabledActive = true
     else if (!this.#interactiveDisabledActive) return
     else this.#interactiveDisabledActive = false
     for (const el of this.#surface.querySelectorAll('*')) {
-      if ('disabled' in el) (el as unknown as { disabled: boolean }).disabled = disabled
+      if (!('disabled' in el)) continue
+      const control = el as unknown as { disabled: boolean }
+      if (disabled) {
+        if (control.disabled) continue // already disabled for a reason that isn't ours — not our claim
+        control.disabled = true
+        this.#sweepDisabled.add(el)
+      } else if (this.#sweepDisabled.has(el)) {
+        control.disabled = false
+        this.#sweepDisabled.delete(el)
+      }
     }
   }
 
