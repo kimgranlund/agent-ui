@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-12 |
 > | **Proposed by** | host session (GH [#737](https://github.com/kimgranlund/agent-ui/issues/737)'s design intake — the issue's own Acceptance demands this port-vs-extend ruling before any build) |
-> | **Ratified by** | pending — kimgranlund (repo owner) |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-12, via the [`ratify ADR-0184` utterance](https://github.com/kimgranlund/agent-ui/pull/744#issuecomment-5262036773) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification+build: shipped WITH this ADR in the same PR — `status-stream.{ts,css,md}` + `timeline-item.{css,md}` + tests + the doc-page specimen. No other record is invalidated: ADR-0146/0153/0159's fork history is what this decision continues, not amends. |
 > | **Supersedes / Superseded by** | **Relates** [ADR-0146](./0146-live-turn-lifecycle-progress-channel.md) (F5 grouping = the iteration vehicle; F8 header), [ADR-0153](./0153-status-stream-elapsed-timer-retry-action-planned-glyph.md) (Fork 1 ticking — the elapsed machinery the port would have duplicated), [ADR-0159](./0159-status-stream-receipt-pattern.md) (oneline/receipt — the collapse machinery ditto) · **Resolves** GH #737's design half (the build ships alongside). |
 

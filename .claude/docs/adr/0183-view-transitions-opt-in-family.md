@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-12 |
 > | **Proposed by** | host session (GH [#740](https://github.com/kimgranlund/agent-ui/issues/740)'s design intake; Kim's same-morning clarify ruling: ALL FOUR candidate surfaces are in scope) |
-> | **Ratified by** | pending — kimgranlund (repo owner) |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-12, via the [`ratify ADR-0183` utterance](https://github.com/kimgranlund/agent-ui/pull/743#issuecomment-5262035942) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification: none owed elsewhere (ADR-0115 cl.7's fence text stays as history — this ADR IS the "earns its own record" record it demanded; `prd/router.prd.md` §Non-goals' trigger line is satisfied by Kim's mobilization ruling, no edit needed) · on ratification+build: shipped WITH this ADR in the same PR (cl.2–cl.5 below) + the S4 follow-up issue for the A2UI surface (cl.6). |
 > | **Supersedes / Superseded by** | **Un-fences** [ADR-0115](./0115-spa-router-v1-scope.md) cl.7's view-transitions item (the one named "natural future candy" — every OTHER cl.7 fence stands untouched) · **Relates** [ADR-0022](./0022-childpart-native-movebefore-reorder-focus.md) (the `moveBefore` identity work is exactly why the A2UI surface is deferred, cl.6) · **Resolves** the design-intake half of GH #740 (the build ships alongside; the issue closes when the S4 follow-up is filed and the PR merges). |
 
