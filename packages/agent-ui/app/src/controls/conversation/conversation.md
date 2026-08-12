@@ -136,7 +136,8 @@ parts:                    # NOT shadow-DOM ::part() (light-DOM only) — light-D
   `ui-conversation ui-conversation-composer [data-part="…"]` (the `[data-part]` boundary is unaffected by
   the extra custom-element nesting).
 
-customStates: []          # no :state() hooks — a closed surface's dimmed bubble rides a plain `data-state` attribute, not a custom state (the master-detail.md `data-view` precedent)
+customStates:             # this host SETS no state of its own — the one entry below is a CHILD's public state this stylesheet keys off (the tabs.md `selected` precedent)
+  - settled               # GH #722 — set by the narration ui-status-stream's OWN finalize()/fail() (status-stream.md); conversation.css keys the settled-grow rule off it (the 9rem cap is a live-streaming bound; a settled, re-expanded trace grows to fit)
 
 face:
   formAssociated: false   # NOT a FACE form control — a thread/composer primitive contributes nothing to a form

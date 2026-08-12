@@ -78,6 +78,7 @@ parts:                     # the appended ui-timeline-item children are the "ent
 
 customStates:              # GH #239/ADR-0159 — the disclosure state; the completion invariant still rides the ITEM's own :state(truncated) (timeline-item.md)
   - collapsed              # set via internals.states (jsdom-optional-chained) while the strip renders as one line — the `oneline` live posture or the settled `receipt`; CSS hides the entry list through it; never set outside the opt-in modes
+  - settled                # GH #722 — set at finalize()/fail() (never cleared; a strip settles once per lifetime). Additive: NO default CSS consumes it — a consumer may key its own styling off it (ui-conversation's narration grows a settled strip to fit instead of cap-and-scroll)
 
 face:
   formAssociated: false    # NOT a FACE form control — extends UIContainerElement, no value/validity
@@ -96,7 +97,7 @@ geometry:
   sizeClass: pattern
   minInlineSize: var(--ui-status-stream-min-inline-size)
   maxBlockSize: var(--ui-status-stream-max-block-size)  # the bounded viewport that makes the strip a genuine scroll region (SPEC-R10)
-  note: A structural/live container — the marker/row-gap geometry belongs entirely to the ui-timeline-item children this host creates (ADR-0122 F1); this host owns only its scroll region. GH #722 — the scroll region hides its platform scrollbar by default (`--ui-status-stream-scrollbar-width: none`, the fleet's hidden-scroller idiom; still scrolls), the header marker reads the SAME px ramp row the entry markers use (`--ui-timeline-item-{marker-box,dot-size}-md`) so the marker rail aligns at every ambient font size, top-level entries carry the header's own inline-start inset (`--ui-status-stream-entry-inline-inset`), and this host marks its last top-level item `data-last` (timeline-item's terminal-row contract — no dangling connector below the final entry).
+  note: A structural/live container — the marker/row-gap geometry belongs entirely to the ui-timeline-item children this host creates (ADR-0122 F1); this host owns only its scroll region. GH #722 — the scroll region hides its platform scrollbar by default (`--ui-status-stream-scrollbar-width: none`, the fleet's hidden-scroller idiom; still scrolls), the header marker reads the SAME px ramp row the entry markers use (`--ui-timeline-item-{marker-box,dot-size}-md`) so the marker rail aligns at every ambient font size, top-level entries carry the header's own inline-start inset (`--ui-status-stream-entry-inline-inset`), the first entry directly under the header carries a leading gap (`--ui-status-stream-leading-gap`, GH #722), and this host marks its last top-level item `data-last` (timeline-item's terminal-row contract — no dangling connector below the final entry).
 
 forcedColors: The ui-timeline-item children carry their own forced-colors block for every entry-level signifier (marker shapes, truncated ring, connector). The opt-in header (ADR-0146 F8) adds a small forced-colors block of its OWN — the header separator, label ink, and the overall-status glyph/dot/ring resolve to CanvasText so the header stays legible by SHAPE when fills flatten.
 ---

@@ -819,3 +819,39 @@ describe('ui-status-stream — the per-step source reveal renders, hides, and op
     expect(pre.checkVisibility(), 'still genuinely hidden while collapsed (the closed details subtree)').toBe(false)
   })
 })
+
+// ── GH #722 candidate 2 — the settled state, REAL engine (:state() is CSS truth only a browser has) ──
+describe('ui-status-stream — :state(settled) against the real platform (GH #722)', () => {
+  it('un-settled never matches; finalize() stamps it; it persists (a strip settles once per lifetime)', () => {
+    const el = document.createElement('ui-status-stream') as UIStatusStreamElement
+    document.body.append(el)
+    mounted.push(el)
+    el.appendEntry({ key: 's1', status: 'done', label: 'step' })
+    expect(el.matches(':state(settled)')).toBe(false)
+    el.finalize()
+    expect(el.matches(':state(settled)')).toBe(true)
+  })
+
+  it('a consumer keying max-block-size off :state(settled) actually grows the strip (the narration opt-in shape)', () => {
+    // Both the cap AND the settled override are SHEET rules — exactly the narration mount's shape
+    // (conversation.css sets the 9rem cap as a rule, never inline; an inline cap would outrank any
+    // consumer override, which is why this probe must not use el.style for it).
+    const style = document.createElement('style')
+    style.textContent = [
+      'ui-status-stream[data-probe] { --ui-status-stream-max-block-size: 4rem; }',
+      'ui-status-stream[data-probe]:state(settled) { --ui-status-stream-max-block-size: none; }',
+    ].join('\n')
+    document.head.append(style)
+    const el = document.createElement('ui-status-stream') as UIStatusStreamElement
+    el.toggleAttribute('data-probe', true)
+    document.body.append(el)
+    mounted.push(el)
+    for (let i = 0; i < 12; i++) el.appendEntry({ key: `s${i}`, status: 'done', label: `step ${i} with a long enough label` })
+    const capped = el.getBoundingClientRect().height
+    expect(capped, 'live: the cap holds').toBeLessThanOrEqual(4 * 16 + 1)
+    el.finalize()
+    const grown = el.getBoundingClientRect().height
+    expect(grown, 'settled: grows past the cap to fit').toBeGreaterThan(capped * 2)
+    style.remove()
+  })
+})
