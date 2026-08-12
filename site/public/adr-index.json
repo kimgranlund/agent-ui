@@ -1272,5 +1272,12 @@
     "description": "View Transitions (GH #740, Kim's all-four-surfaces ruling): ONE shared withViewTransition seam in components/dom (opt-in × availability × reduced-motion gated,…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0184",
+    "url": "./adr-index.html#adr-0184",
+    "description": "agent-reasoning trace (GH #737): EXTEND ui-status-stream, never port — nano-ui's agent-reasoning maps ~80% onto shipped machinery (F5 grouping = iterations, F6…",
+    "level": "L3",
+    "section": "Records"
   }
 ]

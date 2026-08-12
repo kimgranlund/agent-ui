@@ -191,6 +191,16 @@ export interface StatusEntry {
    *  path) but never creates one late (graceful no-op, never a throw). Absent ⇒ byte-identical: no
    *  disclosure, no pre, no reveal affordance at all. */
   source?: string
+  /** GH #737/ADR-0184 — a PROSE NARRATION interstitial (nano-ui's "thought"): `true` at APPEND time renders
+   *  the entry as a markerless narration row — the host stamps `data-note` on the item and
+   *  `timeline-item.css` owns the styling in its own family file (no dot, no connector, muted ink — the
+   *  `data-last` hosting-contract precedent). The note's prose rides the EXISTING `text` field (streamed
+   *  chain-of-thought text is precisely what narration is), so keyed `update(key, { text })` growth,
+   *  tail-follow, and the role=log discipline all apply unchanged. A CREATION-time fact (the `parent`
+   *  set-once precedent — `update` never flips it). A note's neutral `''` status contributes nothing to
+   *  escalation and is never truncated by settle, and note entries are EXCLUDED from the receipt's
+   *  "N steps" count — a narration line is not a step. */
+  note?: boolean
 }
 
 // The total severity order (ADR-0146 F6): error > warning > active > pending > done; neutral '' contributes
@@ -276,6 +286,10 @@ const STICK_THRESHOLD_PX = 24
 // developer affordance (never model text — the F2 closed-vocabulary discipline applies to chrome too).
 const SOURCE_SUMMARY_LABEL = 'Source'
 
+// GH #737/ADR-0184 — the plan block's code-owned kicker label (the SOURCE_SUMMARY_LABEL chrome-discipline
+// precedent; the plan ITEMS are consumer text, the kicker is chrome).
+const PLAN_KICKER_LABEL = 'Plan'
+
 export interface UIStatusStreamElement extends ReactiveProps<typeof props> {}
 export class UIStatusStreamElement extends UIContainerElement {
   static props = props
@@ -317,6 +331,11 @@ export class UIStatusStreamElement extends UIContainerElement {
 
   // ── the inline retry/action affordance (GH #147/ADR-0153 Fork 2) ────────────────────────────────────
   #actionOf = new Map<string, { label: string }>() // key → its action config, persists across status flips
+
+  // ── the reasoning-trace opt-ins (GH #737/ADR-0184) ──────────────────────────────────────────────────
+  #noteKeys = new Set<string>() // keys appended as notes — excluded from the receipt's "N steps" count
+  #plan: HTMLElement | null = null // the setPlan() block — exists only once a non-empty plan is set
+  #summary: string | null = null // the consumer-supplied receipt meta (finalize/fail options) — verbatim, never parsed
 
   constructor() {
     super()
@@ -383,6 +402,13 @@ export class UIStatusStreamElement extends UIContainerElement {
     if (existing !== undefined) return existing // duplicate key — reject, the old element/links are left intact
     const item = document.createElement('ui-timeline-item') as UITimelineItemElement
     item.dataset.key = entry.key
+    // GH #737/ADR-0184 — a note entry: stamp the hosting contract's `data-note` (timeline-item.css owns
+    // the rendering — the `data-last` precedent) and track the key so the receipt's step count skips it.
+    // Set-once at creation (the `parent` precedent): `update()` never flips it.
+    if (entry.note === true) {
+      item.toggleAttribute('data-note', true)
+      this.#noteKeys.add(entry.key)
+    }
     this.#assign(item, entry)
 
     // Resolve the parent BEFORE registering `entry.key` in `#byKey` — a self-referencing `parent`
@@ -475,22 +501,59 @@ export class UIStatusStreamElement extends UIContainerElement {
   }
 
   /** The completion invariant — mark every still-pending/active entry TRUNCATED (SPEC-R11), then settle the
-   *  header to the escalated FINAL status (ADR-0146 F8). */
-  finalize(): void {
-    this.#settle(false)
+   *  header to the escalated FINAL status (ADR-0146 F8). GH #737/ADR-0184: the optional, additive options
+   *  bag — a non-empty `summary` replaces the computed "N steps · total" receipt meta VERBATIM (nano-ui's
+   *  `finish('2 iterations · 94/100 · 7s')` shape; never parsed, never recomputed — the F2 discipline). */
+  finalize(options?: { summary?: string }): void {
+    this.#settle(false, options?.summary)
   }
 
   /** A failed stream (ADR-0146 F8): the completion invariant PLUS a header forced to `error` — the
    *  completion invariant now has a header-level face. Marks still-pending/active entries truncated exactly
    *  as `finalize()` does (a failed turn is also torn), then paints the header `error` regardless of the
-   *  entries' own escalation. */
-  fail(): void {
-    this.#settle(true)
+   *  entries' own escalation. Takes the same optional `summary` as `finalize()` (GH #737/ADR-0184) — the
+   *  forced-error status ink/glyph stays loud either way. */
+  fail(options?: { summary?: string }): void {
+    this.#settle(true, options?.summary)
+  }
+
+  /** GH #737/ADR-0184 — the up-front plan block (nano-ui's `setPlan` shape): a code-owned "Plan" kicker
+   *  over an `<ol>` of the consumer's items, pinned after the header (when present) and before every
+   *  entry. NOT an entry — no key, no status, no place in the chronology. Idempotent replace: repeated
+   *  calls mutate the existing `<li>` texts IN PLACE (the role=log same-node discipline), growing or
+   *  shrinking the tail; an EMPTY array removes the block entirely. A header created later still lands
+   *  first (`#ensureHeader` prepends before firstChild), so the order header → plan → entries holds
+   *  regardless of call order. */
+  setPlan(items: readonly string[]): void {
+    if (items.length === 0) {
+      this.#plan?.remove()
+      this.#plan = null
+      return
+    }
+    if (!this.#plan) {
+      const plan = document.createElement('div')
+      plan.dataset.part = 'plan'
+      const kicker = document.createElement('div')
+      kicker.dataset.part = 'plan-label'
+      kicker.textContent = PLAN_KICKER_LABEL
+      const list = document.createElement('ol')
+      list.dataset.part = 'plan-list'
+      plan.append(kicker, list)
+      // After the header when present, else first — entries always append past it either way.
+      this.insertBefore(plan, this.#header !== null ? this.#header.nextSibling : this.firstChild)
+      this.#plan = plan
+    }
+    const list = this.#plan.querySelector(':scope > [data-part="plan-list"]') as HTMLElement
+    items.forEach((text, i) => {
+      const li = list.children[i] ?? list.appendChild(document.createElement('li'))
+      li.textContent = text
+    })
+    while (list.children.length > items.length) list.lastElementChild!.remove()
   }
 
   /** Shared settle path for finalize()/fail(): truncate the unresolved entries, flip the completion state,
    *  repaint the header to its settled (or forced-error) face. */
-  #settle(failed: boolean): void {
+  #settle(failed: boolean, summary?: string): void {
     for (const item of this.#byKey.values()) {
       if (item.status === 'active' || item.status === 'pending') {
         this.#markTruncated(item)
@@ -518,6 +581,8 @@ export class UIStatusStreamElement extends UIContainerElement {
     // back to the always-expanded terminal shape. The auto move clears `#userToggled` — post-settle the
     // disclosure toggles freely both ways.
     if (this.#turnStartMs !== null) this.#totalMs = Date.now() - this.#turnStartMs
+    // GH #737/ADR-0184 — the consumer-supplied receipt meta, verbatim; empty/absent keeps the computed shape.
+    if (summary !== undefined && summary !== '') this.#summary = summary
     this.#userToggled = false
     if (this.receipt) this.#setCollapsed(true, false)
     else if (this.oneline) this.#setCollapsed(false, false)
@@ -871,10 +936,16 @@ export class UIStatusStreamElement extends UIContainerElement {
     const meta = this.#headerMeta
     if (meta) {
       if (this.#settled()) {
-        const count = this.#byKey.size
-        const steps = count === 0 ? '' : `${count} ${count === 1 ? 'step' : 'steps'}`
-        const total = this.#totalMs !== null ? formatTotalElapsed(this.#totalMs) : ''
-        meta.textContent = steps === '' ? '' : total === '' ? steps : `${steps} · ${total}`
+        // GH #737/ADR-0184 — a consumer-supplied summary wins verbatim; otherwise the computed receipt,
+        // counting STEPS only (note entries are narration, not steps).
+        if (this.#summary !== null) {
+          meta.textContent = this.#summary
+        } else {
+          const count = this.#byKey.size - this.#noteKeys.size
+          const steps = count === 0 ? '' : `${count} ${count === 1 ? 'step' : 'steps'}`
+          const total = this.#totalMs !== null ? formatTotalElapsed(this.#totalMs) : ''
+          meta.textContent = steps === '' ? '' : total === '' ? steps : `${steps} · ${total}`
+        }
       } else if (this.#lineTicking()) {
         meta.textContent = formatElapsed(Date.now() - this.#turnStartMs!)
       } else {

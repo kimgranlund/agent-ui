@@ -234,7 +234,10 @@ describe('STRUCTURAL — S5-S9 (S5-S8 promoted at Phase 5, manifest M7-M10; S9 m
     // 2026-08-06, a parallel docs lane not present in this worktree) — this branch's ADR-0174 is
     // pinned by the dispatching orchestrator to avoid colliding with it, leaving this gap until
     // that branch merges.
-    const KNOWN_GAPS = new Set([108, 151, 155, 173])
+    // 183: reserved by PR #743's ADR-0183 (View Transitions family, GH #740, in-flight 2026-08-12) —
+    // this branch's ADR-0184 (GH #737) numbered past it to avoid the merge collision, leaving this
+    // gap until #743 merges.
+    const KNOWN_GAPS = new Set([108, 151, 155, 173, 183])
     const nums = readdirSync(`${DOCS}/adr`).map((f: string) => /^(\d{4})-/.exec(f)?.[1]).filter(Boolean).map(Number).sort((a: number, b: number) => a - b) as number[]
     const newGaps: number[] = []
     for (let n = nums[0]!; n <= nums[nums.length - 1]!; n++)

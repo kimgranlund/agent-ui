@@ -320,6 +320,21 @@
     display: none;
   }
 
+  /* GH #737/ADR-0184 — a hosting strip (ui-status-stream) marks a prose NARRATION row `data-note` (the
+     `data-last` precedent exactly: the attribute is the HOST's stamp, the rendering is this family's own
+     contract). A note is prose between steps, not a step: the marker paints nothing (no dot, no ring —
+     the gutter column stays, preserving content alignment with the step rows) and the row reads in the
+     muted ink. The CONNECTOR is suppressed too — a narration line breaks the chronology's visual thread
+     deliberately (nano-ui's thought rows do the same), and a line running through blank gutter beside
+     prose would read as a rendering bug. */
+  :scope[data-note] [data-part='marker']::before,
+  :scope[data-note] [data-part='marker']::after {
+    display: none;
+  }
+  :scope[data-note] {
+    color: var(--ui-timeline-item-muted-ink);
+  }
+
   /* a consumer-adopted / icon-prop-driven / status-glyph marker suppresses the plain dot (NOT the
      connector — the two are independent facts) and sizes to the content-icon register (LLD §5). */
   :scope:has([data-role='marker']) [data-part='marker']::before {

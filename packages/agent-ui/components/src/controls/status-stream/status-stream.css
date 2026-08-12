@@ -83,6 +83,14 @@
   --ui-status-stream-source-font-size: 0.8125em;
   --ui-status-stream-source-ink: var(--md-sys-color-neutral-on-surface-variant);
   --ui-status-stream-source-max-block-size: 12rem;
+
+  /* GH #737/ADR-0184 — the setPlan() block: a kicker eyebrow (the fleet's own kicker typescale role) over
+     an ordered list, both in the secondary ink — the plan frames the chronology, it never competes with
+     the step rows' own voice. Shares the entries' inline inset so all three (header, plan, entries) sit on
+     one rail. */
+  --ui-status-stream-plan-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-status-stream-plan-gap: var(--md-sys-space-xs);
+  --ui-status-stream-plan-pad-block: var(--md-sys-space-xs);
 }
 :where(ui-status-stream [data-part='header'][data-status='active']) {
   --ui-status-stream-header-status-ink: var(--md-sys-color-primary);
@@ -207,8 +215,36 @@
   :scope:state(collapsed) > ui-timeline-item {
     display: none;
   }
+  /* GH #737/ADR-0184 — the plan block collapses with the entry list (the strip IS its one line). */
+  :scope:state(collapsed) > [data-part='plan'] {
+    display: none;
+  }
   :scope:state(collapsed) > [data-part='header'] {
     border-block-end: none;
+  }
+
+  /* ── the setPlan() block (GH #737/ADR-0184) — header → plan → entries, one shared rail ── */
+  :scope > [data-part='plan'] {
+    display: grid;
+    gap: var(--ui-status-stream-plan-gap);
+    padding-block: var(--ui-status-stream-plan-pad-block);
+    padding-inline-start: var(--ui-status-stream-entry-inline-inset);
+    color: var(--ui-status-stream-plan-ink);
+  }
+  :scope > [data-part='plan'] > [data-part='plan-label'] {
+    font-size: var(--md-sys-typescale-kicker-small-size);
+    font-weight: var(--md-sys-typescale-kicker-small-weight);
+    line-height: var(--md-sys-typescale-kicker-small-line-height);
+    letter-spacing: var(--md-sys-typescale-kicker-small-tracking);
+    text-transform: uppercase;
+  }
+  :scope > [data-part='plan'] > [data-part='plan-list'] {
+    margin: 0;
+    display: grid;
+    gap: var(--ui-status-stream-plan-gap);
+    /* the list's own numbers hang in a gutter matched to the plan text indent — 1.5em keeps two-digit
+       plans aligned without a second bespoke column system */
+    padding-inline-start: 1.5em;
   }
   /* The disclosure affordance — only an opted-in header carries role=button (status-stream.ts). */
   :scope > [data-part='header'][role='button'] {
