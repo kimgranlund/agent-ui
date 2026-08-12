@@ -62,7 +62,7 @@ intake time — so every design below MUST be progressive enhancement (the issue
 - `@agent-ui/router`'s ≤4.0 KB gz marginal (ADR-0115 cl.8, ADR-0040 manual gate) re-measured with the
   new prop — the helper itself is ~30 lines and lives in components (already counted in its own line).
 
-## Amendment (2026-08-12, **proposed** — Kim ratifies) — the A2UI surface's grain is RESOLVED: `ui-surface-host`'s settled-once re-render boundary, an opt-in `viewTransitions` boolean on that host (GH [#742](https://github.com/kimgranlund/agent-ui/issues/742), the slice cl.6 booked)
+## Amendment (2026-08-12, **ratified** — kimgranlund, [utterance](https://github.com/kimgranlund/agent-ui/pull/765#issuecomment-5262269510), verified 2026-08-12) — the A2UI surface's grain is RESOLVED: `ui-surface-host`'s settled-once re-render boundary, an opt-in `viewTransitions` boolean on that host (GH [#742](https://github.com/kimgranlund/agent-ui/issues/742), the slice cl.6 booked)
 
 > Append-only. The Status cell, its vocabulary, and every accepted section above stay byte-untouched —
 > agents never flip status; the ratification path for this amendment is Kim's own `ratify ADR-0183
