@@ -2,10 +2,38 @@
   "candidates": [
     {
       "adr_id": "adr-0179",
-      "evidence": "ADR-0179 (accepted 2026-08-09; three amendments through 2026-08-10, all now ratified — GH #651/#662/#665 by header-text ratification, GH #686 by verified utterance 'ratify ADR-0179 amendment' comment 5242385245 2026-08-10T15:30:16Z): agent-admin three-pane IA's full arc — origin-keyed #contextFor() routing (composer origin, not pane/selector state, once two composers can be on-screen at once, :161-185), band-driven pair-vs-triple docking off the shell's own named breakpoint ladder (SHELL_COMPACT_BREAKPOINT, never a new magic number, :143-159), the retract-don't-delete divider-unpaint pattern (token repoint on the local ui-split, not removing separator semantics, :187-195), AND the third amendment's ruling (GH #686, :229-368): a shown-set + primary visibility model (one state, two renderings — wide multi-select pills vs narrow single-select segmented control, never two state machines), the 'mint a new fleet primitive only when no shipped control's semantics fit' precedent (ui-toggle: pressed-state pill, rejected bespoke-button and segmented-control-with-multiple alternatives, :313-322), and reusing one named breakpoint line across both the visibility-rendering swap and the arrangement swap rather than adding a second line (:283-299). No existing row in agent-ui-composition-patterns/SKILL.md's consumer-pattern table covers pane-origin routing, band-driven docking, shown-set dual-rendering visibility, or the mint-vs-compose fleet-primitive test (checked 2026-08-11).",
+      "evidence": "RE-VERIFIED 2026-08-12: still unlanded (agent-ui-composition-patterns/SKILL.md has no references/ dir and no ADR-0179 mention). Content changed since last checkpoint advance (0179:106-123, S7-e record-repair pass, commit 7da1b9c6, Aug 11) — but the delta is a dated STALENESS CORRECTION to prior amendment prose (a stale 'proposed' sentence fixed to reflect ratified-and-built), not a new decision; the substantive Decision/Amendment content (origin-keyed #contextFor() routing, band-driven docking, retract-don't-delete divider-unpaint, GH #686's shown-set+primary visibility model, mint-vs-compose fleet-primitive test) is unchanged from the prior evidence. Same target and reasoning as before, evidence timestamp refreshed only.",
       "kind": "harvest",
       "plan": "",
-      "queued_at": "2026-08-10T23:52:04Z"
+      "queued_at": "2026-08-12T17:58:51Z"
+    },
+    {
+      "adr_id": "adr-0181",
+      "evidence": "ADR-0181 (accepted+ratified 2026-08-11, GH #695, verified utterance comment 5255522580): follow-the-change — the Builder co-pilot becomes an ADDITIVE-ONLY pane-visibility writer (0181:53-68, write-then-synchronously-probe-paint-then-self-revert-on-fail, never removes a user-chosen member/repoints primary/moves focus), a commit-time-only trigger keyed off PatchReport.applied/added (0181:47-52), an attention DEGRADE LADDER whose top rung is a transient token wash never a takeover (0181:69-80, visible/suppressed/pending-on-reveal paths), and a first-party queryable field→location map module (0181:81-89). Extends ADR-0179's shown-set visibility model (companion row to the already-queued adr-0179 candidate) and ADR-0178's PatchReport substrate — same target skill. Checked: no row in agent-ui-composition-patterns/SKILL.md's consumer-pattern table covers additive-only visibility writers, the attention degrade-ladder vocabulary, or a field-to-location map as first-party data (verified 2026-08-12, grep for follow-the-change/field-location/attention-wash/panesShown across skills/*/SKILL.md and references/*.md: zero hits).",
+      "kind": "harvest",
+      "plan": "",
+      "queued_at": "2026-08-12T17:58:51Z"
+    },
+    {
+      "adr_id": "adr-0182",
+      "evidence": "ADR-0182 (accepted+ratified 2026-08-12, GH #716, verified utterance comment 5270016163): a THIRD application of the a2ui producer meta-line pattern this repo already tracks a Lineage for — but a new variant: a HOST-DERIVED (session==='authoring', never a persona-configurable modality) wire-boundary gate (0182:55-67, builderMission/SPEC-R31), reusing the shipped 'plan' arm for progress instead of minting a new one (0182:68-70), and the 'peel + fold into existing append-only outgoing composition, no new component' minimal-increment shape (0182:71-80). Checked: agent-ui-a2ui-meta-line-facts/SKILL.md's own Lineage section (SKILL.md:186-190) runs ADR-0088→0097→0146→0159→0174→0178 and stops there — ADR-0182 is not named, and its host-derived-vs-persona-configurable gate distinction is a genuinely new fact the existing chain doesn't state. Likely an extend of that Lineage section, not a new file.",
+      "kind": "harvest",
+      "plan": "",
+      "queued_at": "2026-08-12T17:58:51Z"
+    },
+    {
+      "adr_id": "adr-0183",
+      "evidence": "ADR-0183 (accepted+ratified 2026-08-12, PR #743 comment 5262035942) PLUS its own already-ratified Amendment (2026-08-12, PR #765 comment 5262269510, GH #742): the fleet's first opt-in View Transitions family — ONE shared seam withViewTransition/viewTransitionAvailable in components/dom (0183:25-31, the one layering-legal home per components ← {router,a2ui,code} ← app), opt-in viewTransitions boolean props on ui-router-outlet (0183:32-37) and ui-super-shell (0183:38-41) wrapping exactly one swap/flip site each, 'named-element morphs are the CONSUMER's vocabulary, fleet ships none' (0183:42-44), plus the ratified Amendment's resolution of the A2UI re-render grain: ui-surface-host's settled-once boundary gates a viewTransitions prop there too (0183:82-87), with burst-coalescing relied on deliberately (0183:88-92). Checked: grep for view.transition/startViewTransition across skills/*/SKILL.md and references/*.md — one incidental namedrop only (agent-ui-component-design/SKILL.md:87, a fork-sheet example, not coverage). No skill states the opt-in-prop pattern or the settled-once re-render boundary. Likely a new row in agent-ui-composition-patterns/SKILL.md's consumer-pattern table (consumer opt-in surface) — the components/dom seam itself may also warrant a agent-ui-component-patterns row (producer-side mechanism); placement fork noted for Phase 2.",
+      "kind": "harvest",
+      "plan": "",
+      "queued_at": "2026-08-12T17:58:51Z"
+    },
+    {
+      "adr_id": "adr-0184",
+      "evidence": "ADR-0184 (accepted+ratified 2026-08-12, PR #744 comment 5262036773): 'EXTEND, never port' as a stated, reusable architectural rule (0184:32-35) — when a new ask overlaps ~80% of a hardened control's territory, extend it with additive opt-in fields rather than forking/porting a new component (nano-ui's reasoning-trace shape folded onto ui-status-stream as note entries/plan block/receipt metrics, all byte-identical for non-opted-in consumers). This is a distinct, generalizable precedent from ADR-0179's already-queued 'mint a new PRIMITIVE only when no shipped control's semantics fit' test — this one governs EXTENDING an existing control's territory vs. forking/porting a whole new one. Checked: grep for 'extend, never port'/'never port' across skills/*/SKILL.md and references/*.md — zero hits; agent-ui-component-design/SKILL.md step 2 (dedup + precedent sweep) states the sweep procedure but not this named rule. Likely a new row in agent-ui-component-patterns/SKILL.md or a cross-linked addition to agent-ui-component-design/SKILL.md's step 2.",
+      "kind": "harvest",
+      "plan": "",
+      "queued_at": "2026-08-12T17:58:51Z"
     }
   ]
 }
