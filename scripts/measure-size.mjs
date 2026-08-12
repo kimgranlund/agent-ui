@@ -152,7 +152,13 @@ const targets = [
   // gz; the otp-field re-base above plus Slice B's overflow-engine weight (the fit engine + the composed
   // ui-menu vehicle + the CSS grid rules), both twice-reviewed real machinery. Same law as above: a
   // CHECKPOINT, not a ratchet — GH #455 remains the standing shrink follow-up.
-  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 54 * KB],
+  // RULED 2026-08-12 (Kim, in-session — durable record: GH #751, filed on his own instruction):
+  // re-based 54 KB → 55 KB (56320 B gz) — measured 55564 B gz on main; the movers are the merged
+  // #735/#736 wave (status-stream scrollbar/header mirrors + follow-the-change, main at 55346 before
+  // tonight's builds) plus #744's ADR-0184 reasoning-trace opt-ins (~218 B — note rows, setPlan, settle
+  // summary), all reviewed weight flagged un-flipped on PRs #743/#744 until this ruling. Same law as
+  // above: a CHECKPOINT, not a ratchet.
+  ['@agent-ui/components/components (self-defining ui-* family)', '../packages/agent-ui/components/src/controls/index.ts', 55 * KB],
   // GH #377 finding 3 — the package's FIRST `./traits/*` subpath (`traits/overlay`, package.json:74) gets
   // its own budgeted row, so the opt-in surface every other pack carries one for (`code/highlight`,
   // `./markdown`, `./editor`) is not the one exception.
