@@ -129,7 +129,10 @@ the §0 frozen list · no key value/endpoint/`envKey` fact in any browser-bound 
   `ENTRY_KINDS`, `agentConfigSchema()`, or `#enabledToolIds`.
   *Inputs:* LLD §3.3 · shipped `entry-data.ts`/`entry-list.ts`/`agent-admin.ts`.
   *DoD:* standing gates + `npm run test:browser` (app files touched) + `grep -ri mcp
-  packages/agent-ui/app/src` exits non-zero (no matches).
+  packages/agent-ui/app/src` exits non-zero (no matches) + FILE the Integrations-pack
+  suffix-dedup collision-flag follow-up as its own GitHub issue (SPEC §9.3 / LLD §6.6 — this
+  slice lands the vehicle; the filing is what keeps the booked defect from evaporating when
+  the arc closes).
 - **S4 — the MCP-services pack + live plumbing, WITH the page/skill repairs (#787-3).**
   *Traces:* SPEC-R5 AC1/AC2 · SPEC-R1 (by construction) · SPEC-N2. *Size: medium.*
   *Depends: S2 (the served `services` shape) + S3 (the pack flag).*

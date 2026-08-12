@@ -52,8 +52,8 @@ browser and the `app` package learn nothing about MCP (SPEC-R6/N1). The ADR-0185
 
 The ADR-0185 **Repairs** (GH #787) are not components; they are edits folded into the slice
 whose code falsifies each record (SPEC-N2): S1 carries the [`a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md)
-v0.15 amendment (SPEC-R23's `:1267` and SPEC-R28's `:1401` wire sentences gain the ADR-0185
-delta, append-only changelog discipline) + the `agent-ui-integration-standards` SKILL
+v0.15 amendment (SPEC-R23's and SPEC-R28's wire sentences gain the ADR-0185 delta, append-only
+changelog discipline) + the `agent-ui-integration-standards` SKILL
 Admin-surfacing repoint; S4 carries `site/pages/agent-schema.ts`'s MCP-services pointer and the
 `agent-admin-library-kinds` skill's pack row. Closing #787 = S1 and S4 merged.
 
@@ -144,8 +144,11 @@ export interface EntryLibraryPack {
   rejectOnCollision?: boolean
 }
 
-// entry-list.ts — EntryListHandlers.onAdd gains an OPTIONAL second argument:
-onAdd(input: NewEntryInput, context?: { rejectOnCollision?: boolean }): boolean | Promise<boolean>
+// entry-list.ts — EntryListHandlers.onAdd gains an OPTIONAL second argument; the return stays the
+// bare boolean ADR-0164 cl.3 pins (nothing in this arc is async, and submitAdd branches on the raw
+// return — a Promise would be always-truthy, the form-reset-on-rejection defect the boolean exists
+// to prevent):
+onAdd(input: NewEntryInput, context?: { rejectOnCollision?: boolean }): boolean
 ```
 
 Threading: `buildLibraryMenu`'s row-disable check widens from the kind-level flag to
