@@ -562,6 +562,65 @@ describe('Integrations pack ↔ registry parity (GH #49/#567 S6)', () => {
     await expect(currency.execute({ amount: 'ten', from: 'EUR', to: 'USD' }, {})).rejects.toThrow('currency: needs numeric')
     await expect(currency.execute({ amount: 5, from: 'EURO', to: 'USD' }, {})).rejects.toThrow()
   })
+
+  // GH #793/#783/#791 — the Integrations pack flips the SAME `rejectOnCollision` flag the MCP-services
+  // pack carries (SPEC-R5's sibling test, "the MCP-services pack" describe block below, AC2), because a
+  // registered integration id ALSO keys an EXTERNAL registry (the dev proxy's live ids) — re-adding one
+  // already in the list must reject, never mint a wire-inert `weather-2` phantom (the GH #564 law
+  // generalized to every foreign-key-keyed tool pack, per Kim's ruling).
+  it('re-adding an already-registered integration is rejected VISIBLY (`Already in the list.`), the store unchanged, and its picker row disabled — end-to-end on the rendered ui-agent-admin', async () => {
+    const { ADMIN_LIBRARIES, librariesForCategory } = await import('./agent-admin-libraries.ts')
+    const { ENTRY_KINDS, entriesStoreKey } = await import('@agent-ui/app')
+    const { createMemoryStore } = await import('@agent-ui/app/settings-memory-store')
+
+    const pack = ADMIN_LIBRARIES[ENTRY_KINDS.tool]!.find((p) => p.id === 'integrations')!
+    expect(pack.rejectOnCollision, 'the per-pack foreign-key flag (LLD-C5) is set on Integrations too').toBe(true)
+
+    const admin = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    admin.libraries = librariesForCategory(undefined) // generic — the tool key carries [integrations]
+    // The agent already holds "weather" (INTEGRATION_TOOLS[0]) as a tool entry.
+    admin.store = createMemoryStore({
+      initial: {
+        [entriesStoreKey(ENTRY_KINDS.tool)]: [
+          { id: 'weather', kind: ENTRY_KINDS.tool, label: 'Weather (Open-Meteo)', description: '', content: '', order: 0, enabled: true, builtin: false },
+        ],
+        toolsEnabled: true,
+      },
+    })
+    document.body.append(admin)
+    mounted.push(admin)
+    await whenFlushed()
+
+    const section = admin.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.tool}"]`) as HTMLElement
+    const menu = section.querySelector('[data-part="entry-library-menu"]') as HTMLElement
+    expect(menu, 'the tool section carries the add-from-library menu').not.toBeNull()
+
+    // The picker-disable affordance (GH #564 pairing, S3's per-pack widening): the already-added
+    // integration's row is DISABLED, not hidden.
+    const row = menu.querySelector('[data-value="integrations:0"]')
+    expect(row?.textContent, 'the row shows WHY it is unreachable').toBe('Weather (Open-Meteo) — Integrations (already added)')
+    expect(row?.getAttribute('aria-disabled')).toBe('true')
+
+    // The reject-on-commit half: dispatch the menu's own commit for that integration anyway (the real
+    // path entry-list.ts listens for) and prove the visible rejection + unchanged store — no suffixed
+    // `weather-2` phantom.
+    menu.dispatchEvent(new CustomEvent('select', { detail: { value: 'integrations:0', index: 0 } }))
+    await whenFlushed()
+
+    const stored = admin.store!.get(entriesStoreKey(ENTRY_KINDS.tool)) as Array<{ id: string }>
+    expect(stored.map((e) => e.id), 'no suffixed `weather-2` phantom — the store is unchanged').toEqual(['weather'])
+    const error = section.querySelector('[data-part="entry-add-error"]') as HTMLElement
+    expect(error.textContent, 'the SPEC-R5-pattern rejection copy, generalized to Integrations').toBe('Already in the list.')
+    expect(error.hidden, 'the rejection is visible, not silently swallowed').toBe(false)
+
+    // The OTHER direction, confirmed post-flip: a NON-colliding integration ("currency", pack-local index
+    // 2) still commits normally through the SAME end-to-end path — the flip rejects a duplicate, it does
+    // not disable adding.
+    menu.dispatchEvent(new CustomEvent('select', { detail: { value: 'integrations:2', index: 2 } }))
+    await whenFlushed()
+    const storedAfter = admin.store!.get(entriesStoreKey(ENTRY_KINDS.tool)) as Array<{ id: string }>
+    expect(storedAfter.map((e) => e.id), 'the non-colliding add commits, unaffected by the flip').toEqual(['weather', 'currency'])
+  })
 })
 
 // ── GH #783 S4 (LLD-C6/SPEC-R5, ADR-0185) — the live-derived MCP-services pack ──────────────────────────

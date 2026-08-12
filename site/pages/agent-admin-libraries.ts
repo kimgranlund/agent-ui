@@ -460,6 +460,12 @@ const INTEGRATIONS_PACK: EntryLibraryPack = {
   id: 'integrations',
   label: 'Integrations',
   description: 'Keyless live integrations executed by the dev proxy (GH #49) — enable + toolsEnabled to arm.',
+  // GH #793/#783/#791 — `rejectOnCollision: true` (LLD-C5's per-pack widening, GH #564's foreign-key
+  // law at pack grain): an integration id keys the dev proxy's EXTERNAL registry, so re-adding one
+  // already in the list is a DUPLICATE `validateNewEntry` rejects with `Already in the list.` — never
+  // a suffixed `weather-2` phantom row that looks armed and is wire-inert. Generalizes the same flip
+  // MCP_SERVICES_PACK carries below to every foreign-key-keyed tool pack, not a one-off exception.
+  rejectOnCollision: true,
   // GH #567 S6 — a getter, not a fixed array: reads whatever `setLiveIntegrations` last set, falling
   // back to the hand-authored INTEGRATION_TOOLS trio. `librariesForCategory` filters this SAME pack
   // object (never clones it), so a live-read that lands AFTER the first `admin.libraries` assignment
