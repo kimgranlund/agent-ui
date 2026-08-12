@@ -5,7 +5,7 @@ description: >-
   artifact class, and the law pointers every dispatch brief must carry. Model-only knowledge preloaded
   by the repo-local orchestrator seat; not a user-facing action.
 user-invocable: false
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # agent-ui seat map & dispatch laws
