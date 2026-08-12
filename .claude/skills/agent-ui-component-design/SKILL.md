@@ -71,7 +71,7 @@ Load the map skills as you go: [[agent-ui-component-standards]] (law),
    | Tag | `ui-{name}` under the naming law |
    | Anatomy | slots × `data-role` roles; host-as-grid vs rendered cell |
    | Props | typed `prop.enum` unions; which reflect; defaults (`''`-first for inherit-ambient semantics) |
-   | Events | ⊂ `change · input · select · open · close · toggle` — a new event name is a fleet-contract fork |
+   | Events | ⊂ the closed set CLAUDE.md §Conventions owns (`naming.md §4`, gated by `ALLOWED_EVENTS` — read it there; a copied list here drifted past `action`, GH #754) — a name OUTSIDE that set is a fleet-contract fork |
    | Geometry | the (scale × size) → §1-row assignment, or the widget ramp; the control-class frame laws (floors, radius) |
    | Tokens | the `--ui-{name}-*` roles and which `--md-sys-color-{family}-{role}` each consumes; non-color signifier for any intent |
    | A11y | `internals` role/states (never host attributes); keyboard map; focus behavior |

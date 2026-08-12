@@ -55,7 +55,7 @@ before a first build; `controls/checkbox/` is the gold probe template.
    Content model per the anatomy law: host-as-grid (`render()` stays the inherited no-op) or
    a rendered content cell. Gate first-paint motion behind the `ready` state. ARIA via
    `this.internals` — never host attributes. Emit only
-   `change · input · select · open · close · toggle`. Self-define at module scope:
+   the closed set CLAUDE.md §Conventions declares (`naming.md §4` / `naming-gates.test.ts`'s `ALLOWED_EVENTS` — cite, never copy: this line's own member-list copy drifted past ADR-0153's seventh member, GH #754). Self-define at module scope:
    `if (!customElements.get('ui-{name}')) customElements.define('ui-{name}', UI{Name}Element)`.
 
 5. **CSS** (single `{name}.css`) — behaviour-only `.ts`; styling is pure CSS in two sectioned
