@@ -18,10 +18,28 @@
   --ui-status-stream-min-inline-size: 16rem;
   --ui-status-stream-max-block-size: 20rem;
 
-  /* the opt-in streaming header (ADR-0146 F8) — chrome pinned above the scroll region. Marker sizes are
-     em/rem (never raw px), so the header rides the ambient type scale with no per-scale ramp of its own. */
-  --ui-status-stream-header-marker-box: 1em;
-  --ui-status-stream-header-dot-size: 0.5em;
+  /* GH #722 (candidate 1) — hidden scroller, live scroll: the fleet's --ui-surface-host-scrollbar-width
+     idiom (menu.css/command-modal.css/card.css precedent). A raw platform scrollbar thumb riding the
+     strip's edge was the reported defect; the region still scrolls (wheel/trackpad/keys), the token
+     re-shows it for a consumer that wants one. */
+  --ui-status-stream-scrollbar-width: none;
+
+  /* the opt-in streaming header (ADR-0146 F8) — chrome pinned above the scroll region.
+     GH #722 (candidate 6) — the header marker was em-sized ("rides the ambient type scale") while the
+     entry markers below it are px-ramped (timeline-item.css [0]), so the two only coincided at exactly
+     1rem ambient — the conversation narration pins 0.78rem and the header dot visibly drifted off the
+     entries' marker rail (Kim's screenshot). These literals PIN the header marker to the SAME values as
+     timeline-item's default register (--ui-timeline-item-{marker-box,dot-size}-md) so the rail aligns
+     at every ambient font size — a LITERAL mirror, never a var() read: the family-coherence trip-wire
+     forbids cross-family token consumption, and timeline-item keeps its ramp deliberately file-local.
+     status-stream.test.ts's GH #722 drift gate asserts the two files' values stay byte-equal. */
+  --ui-status-stream-header-marker-box: 16px;
+  --ui-status-stream-header-dot-size: 8px;
+  /* GH #722 (candidate 6, the other half) — entries carried ZERO inline inset while the header's own
+     pad starts it space-sm in; the SAME inset on both is what makes the marker columns share one rail
+     (the GH #626 bar-inset lesson: contents own their inset via a shared token, the rail stays
+     padding-less). */
+  --ui-status-stream-entry-inline-inset: var(--md-sys-space-sm);
   --ui-status-stream-header-gap: var(--md-sys-space-sm);
   --ui-status-stream-header-pad: var(--md-sys-space-xs) var(--md-sys-space-sm);
   /* GH #291/ADR-0160 — the header lost its boxed background (Kim's 2026-07-27 ruling: the activity
@@ -89,6 +107,17 @@
     max-block-size: var(--ui-status-stream-max-block-size);
     overflow-y: auto; /* the stream OWNS its scroll region (SPEC-R10) — the one-owned-scroll-region law */
     overscroll-behavior: contain; /* a nested strip's scroll never chains into the page behind it */
+    /* GH #722 — hidden scroller, live scroll (token block, above): both shipped engines support
+       scrollbar-width (the menu.css/GH #166 precedent). */
+    scrollbar-width: var(--ui-status-stream-scrollbar-width);
+  }
+
+  /* GH #722 (candidate 6) — top-level entries share the header's inline-start inset so both marker
+     columns sit on ONE vertical rail (token block, above). Direct children only: a GROUPED entry lives
+     inside its parent's nested <ui-timeline> in the content column and is already indented by the
+     parent's own grid — a second inset there would stagger the nested rail. */
+  :scope > ui-timeline-item {
+    padding-inline-start: var(--ui-status-stream-entry-inline-inset);
   }
 
   /* ── the opt-in streaming header (ADR-0146 F8) — chrome PINNED above the scroll region ── */

@@ -405,6 +405,13 @@ export class UIStatusStreamElement extends UIContainerElement {
       // TOP-LEVEL (or an unknown parent — a graceful flat fallback, never a throw): append into the strip,
       // after the pinned header when present (appendChild lands at the end, past the first-child header).
       this.appendChild(item)
+      // GH #722 (candidate 3) — timeline-item.css's own terminal-row contract names this host: "ui-timeline/
+      // ui-status-stream marks its last child [data-last]" (SPEC-R6 AC2's no-dangling-connector law) —
+      // ui-timeline held its half via #markLastItem; this host never held its own until now. Marked HERE,
+      // at the ONE site the top-level tail can change (entries are never removed or re-ordered; a nested
+      // append lands inside a parent's <ui-timeline>, whose own observer marks that list) — no
+      // MutationObserver needed, the mediated-no-observer discipline F6 already established.
+      this.#markLastTopLevel()
     }
 
     // GH #240/ADR-0159 wave B — the item is CONNECTED now (both branches above append synchronously), so
@@ -429,6 +436,17 @@ export class UIStatusStreamElement extends UIContainerElement {
     this.#refreshLine()
     this.#tailFollow(item)
     return item
+  }
+
+  /** GH #722 (candidate 3) — clear `data-last` on every top-level item, then set it on the last: the
+   *  timeline-item CSS suppresses that item's terminal connector + trailing rhythm (SPEC-R6 AC2), and its
+   *  own comment already named this host as the marker. The `:scope >` guard keeps nested items (inside a
+   *  parent's `[data-role='nested']` <ui-timeline>, which marks its OWN last child) untouched — exactly
+   *  ui-timeline's #markLastItem, minus the observer (this host appends top-level items at exactly one
+   *  site, so the one call there suffices). */
+  #markLastTopLevel(): void {
+    const items = this.querySelectorAll(':scope > ui-timeline-item')
+    items.forEach((item, i) => item.toggleAttribute('data-last', i === items.length - 1))
   }
 
   /** Keyed, in-place mutation — transition status / grow text / reveal detail. No-op if the key is unknown.

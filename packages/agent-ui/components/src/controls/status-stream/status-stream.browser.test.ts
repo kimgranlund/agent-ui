@@ -215,6 +215,59 @@ describe('ui-status-stream — the opt-in streaming header stays PINNED while en
   })
 })
 
+describe('ui-status-stream — GH #722: hidden scroller, aligned marker rail, no dangling terminal connector', () => {
+  it('the scroll region hides its platform scrollbar by default (still scrolls) — candidate 1', async () => {
+    const { stream } = mount(
+      '<ui-status-stream header label="Agent activity" style="--ui-status-stream-max-block-size:8rem"></ui-status-stream>',
+    )
+    for (let i = 0; i < 20; i++) stream.appendEntry({ key: `k${i}`, status: 'done', label: `Step ${i}` })
+    await raf2()
+    expect(stream.scrollHeight, 'the strip must genuinely overflow').toBeGreaterThan(stream.clientHeight)
+    expect(getComputedStyle(stream).scrollbarWidth, 'the platform scrollbar is hidden (the fleet idiom)').toBe('none')
+    stream.scrollTop = 60 // hidden scrollBAR, live SCROLL — the region still scrolls programmatically/by wheel
+    expect(stream.scrollTop).toBeGreaterThan(0)
+  })
+
+  it('the header marker and the entry markers share ONE vertical rail, even at a non-1rem ambient font — candidate 6', async () => {
+    // 0.78rem reproduces the conversation narration mount (conversation.css pins it): the em-sized header
+    // marker used to shrink with the ambient font while the px-ramped entry markers did not, drifting the
+    // rail apart — plus entries carried no inline inset at all while the header padded space-sm in.
+    const { stream } = mount(
+      '<ui-status-stream header label="Agent activity" style="font-size:0.78rem"></ui-status-stream>',
+    )
+    stream.appendEntry({ key: 'a', status: 'done', label: 'Request sent' })
+    stream.appendEntry({ key: 'b', status: 'active', label: 'Writing the response…' })
+    await raf2()
+    const headerMarker = stream.querySelector('[data-part="header-marker"]') as HTMLElement
+    const entryMarkers = Array.from(stream.querySelectorAll('ui-timeline-item [data-part="marker"]')) as HTMLElement[]
+    expect(entryMarkers.length).toBe(2)
+    const centerX = (el: HTMLElement): number => {
+      const r = el.getBoundingClientRect()
+      return r.left + r.width / 2
+    }
+    for (const marker of entryMarkers) {
+      expect(
+        Math.abs(centerX(marker) - centerX(headerMarker)),
+        'every marker centers on the header marker\'s own rail',
+      ).toBeLessThan(1)
+    }
+  })
+
+  it('the LAST top-level entry paints no connector below its marker — candidate 3 (data-last, real paint)', async () => {
+    const { stream } = mount('<ui-status-stream label="Live"></ui-status-stream>')
+    stream.appendEntry({ key: 'a', status: 'done', label: 'first' })
+    const last = stream.appendEntry({ key: 'b', status: 'active', label: 'last' })
+    await raf2()
+    const first = stream.querySelector('ui-timeline-item[data-key="a"]') as HTMLElement
+    const firstMarker = first.querySelector('[data-part="marker"]') as HTMLElement
+    const lastMarker = last.querySelector('[data-part="marker"]') as HTMLElement
+    // the ::after connector paints on the non-terminal item and is display:none on [data-last]
+    expect(getComputedStyle(firstMarker, '::after').display, 'a non-terminal entry keeps its connector').not.toBe('none')
+    expect(last.hasAttribute('data-last')).toBe(true)
+    expect(getComputedStyle(lastMarker, '::after').display, 'the terminal entry paints NO dangling stub').toBe('none')
+  })
+})
+
 describe('ui-status-stream — tail-follow + the stick-to-bottom guard (SPEC-R10)', () => {
   it('follows the newest entry to the bottom on appendEntry (stuck-to-bottom by default)', async () => {
     const { stream } = mount('<ui-status-stream label="Live"></ui-status-stream>')
