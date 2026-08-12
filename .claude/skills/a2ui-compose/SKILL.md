@@ -29,7 +29,7 @@ skill exists for the WIRE: an agent emitting messages a renderer paints).
 
 ## Mental model
 
-An A2UI payload is an ordered stream of `version:"v1.0"` server→client messages (`protocol.ts:143-150`), of
+An A2UI payload is an ordered stream of `version:"v1.0"` server→client messages (protocol.ts's `A2uiServerMessage` union), of
 four kinds you compose:
 
 1. **`createSurface`** — opens the surface (`{ surfaceId, catalogId, sendDataModel? }`). Always first.
@@ -114,10 +114,8 @@ Draft → validate → fix → re-check → finalize only when clean:
 - [ ] Every `child`/`children` id resolves to a node (allowing later-in-stream arrival); no dangling refs.
 - [ ] Every `{path}` bind and `${…}` template resolves against the seeded data model; relative paths only
       inside a list-item template.
-- [ ] `Tabs` and its `Tab`/`TabPanel` children ship in one `updateComponents` message. (`Select`/`Option`
-      no longer requires this for a plain APPEND — TKT-0026 — and a mid-list splice no longer crashes
-      either — TKT-0031 — but still does not land at its wire-requested position inside the panel: see
-      the Common-trap entry below.)
+- [ ] `Tabs` and its `Tab`/`TabPanel` children ship in one `updateComponents` message (`Select`/`Option`
+      ordering has its own rules — the Common-trap entry + `references/node-idioms.md`).
 - [ ] Required inputs sit under a `FormProvider` with a `submit:true` action to gate them.
 - [ ] The `validate-payload` CLI exits 0 (repairs, if any, reviewed) — THEN report gate-green to the host,
       which dispatches `a2ui-reviewer` for grading (you never invoke the critic yourself).
@@ -134,26 +132,25 @@ Draft → validate → fix → re-check → finalize only when clean:
   the mutable container) rather than resending root.
 - **Field uses `child`, not `children`.** It wraps exactly one control; its `label` is that control's
   accessible name (ADR-0051).
-- **Select/Options — APPEND and MID-POSITION insert are both safe; only the panel POSITION is not
-  wire-faithful.** TKT-0026 (2026-07-12): a late Option (or `[role=group]`) appended AFTER every
-  currently-delivered Option DOES adopt into an already-connected Select's panel and becomes
-  selectable — `node-idioms.md`'s prior "must arrive together" limitation (ADR-0053) is superseded for
-  this shape. TKT-0031 (fixed): a resend that inserts a new Option id BETWEEN two already-delivered
-  ones (e.g. `["opt_a","opt_b"]` → `["opt_a","opt_c","opt_b"]`) no longer throws — the renderer's
-  generic child-reconcile code (`tree.ts#reconcileChildren`) now skips a survivor whose real parent is
-  no longer the Select host (already relocated into the internal panel) as an insertion anchor, for the
-  whole ADR-0017 child-relocating family, not just Select. What TKT-0031 does NOT deliver: the new
-  Option still lands at the listbox's CURRENT TAIL (select.ts's own adoption-ordering doc), not at its
-  wire-requested mid-list position — SPEC-R5 (true reorder) stays a deliberate non-goal (ADR-0128).
-  Ship-together up front remains the simplest shape when EXACT panel order matters; a mid-list splice
-  is now safe to send, just not position-faithful.
+- **Select/Options ordering** — APPEND and mid-position insert are both safe now (TKT-0026/0031);
+  only the panel POSITION is not wire-faithful (a late Option lands at the listbox tail, not its
+  requested index; true reorder is a non-goal, ADR-0128). The full saga — what each ticket fixed,
+  the ADR-0017 child-relocating family it generalizes to, and the ship-together-for-exact-order
+  guidance — lives in `references/node-idioms.md` (its ONE home, GH #761 consolidated the copies).
 - **`submit:true` is client-only.** It gates the FormProvider; it never appears on the emitted action wire.
 - **Bindable prop = the control's own prop.** Bind `checked` on a Checkbox/Switch, `selected` on Tabs — not a
   generic `value` (ADR-0053 naming law).
 - **Positional lists.** A `{path, componentId}` template is index-based; v1.0 has no per-item key (ADR-0024).
 - **ISO-canonical values.** `type:"date"`/`type:"time"` fields carry ISO strings in the model
-  (`patterns.ts:208`); currency/unit/percent carry the typed number.
+  (see `examples/patterns.ts`'s date/time fields); currency/unit/percent carry the typed number.
 - **No danger tone.** A destructive button is carried by its action name + wording, not a red variant.
+
+## Report — the hand-back
+
+Hand back: the composed payload's path, the final `validate-payload` verdict (exit 0 + any
+`repairs`), and the exemplar/seed record conditioned on. A catalog gap (a needed component or prop
+that does not exist) is STOPPED and escalated to the host as an `a2ui-builder` seat item — never
+papered over inside the payload.
 
 ## References
 

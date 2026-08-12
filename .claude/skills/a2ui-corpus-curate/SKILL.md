@@ -3,15 +3,13 @@ name: a2ui-corpus-curate
 description: >-
   Curate the A2UI training corpus when adding an authored exemplar or back-scoring records: author a
   seed (the `src/examples` shape), admit it through the REALIZED store pipeline, and judge/rescore it —
-  a thin procedure over the SHIPPED mechanism, never a re-implementation of it. Use for importing seeds
-  (`import-seeds --verdicts`, whose archived verdicts file is COMMITTED with the shard), back-scoring
-  phase-1 records (`rescore`), resolving an admission HALT (near-duplicate between distinct seeds ·
-  unjudged candidate under a wired judge · quarantined-name collision · a recorded disposition on an
-  unjudged run), or the judged quarantine exit (`--replace`). It POINTS at the owning docs (corpus LLD §6 ·
-  harness LLD §7 · ADR-0055/0060–0064/0068/0165); it never restates the record schema (`record.ts` owns it),
-  the dedup math, or the pipeline internals. NOT for composing an A2UI payload from the catalog — that is
-  `a2ui-compose`; NOT for writing the pipeline / renderer / validator / catalog code — that is the
-  `a2ui-builder` agent. This skill only DRIVES the realized pipeline, as a curator.
+  a thin procedure over the SHIPPED mechanism, never a re-implementation. Use for importing seeds
+  (`import-seeds --verdicts`, its archived verdicts file COMMITTED with the shard), back-scoring records
+  (`rescore`), resolving an admission HALT (near-duplicate · unjudged candidate · quarantined-name
+  collision · a recorded disposition on an unjudged run), or the judged quarantine exit (`--replace`).
+  It POINTS at the owning docs (corpus/harness LLDs · ADR-0055/0060–0064/0068/0165), never restating the
+  record schema, dedup math, or pipeline internals. NOT for composing an A2UI payload — `a2ui-compose`;
+  NOT for writing pipeline/renderer/validator/catalog code — the `a2ui-builder` agent.
 disable-model-invocation: false
 user-invocable: true
 ---
@@ -113,13 +111,11 @@ A halt is a **stop-and-resolve**, never a bypass. The pipeline fails closed; act
    QUARANTINED record HALTS with nothing written (`ADR-0068` cl.5); identical content instead hits `E_DUP`
    (warming enumerates quarantined records). Resolve through the sanctioned `--replace <name>` re-admission
    — a routine import may never overwrite a quarantined line.
-4. **A recorded disposition on an unjudged run** — a plain run (no `--verdicts`) whose candidate **was
-   never admitted** and carries an archived `passed:false` verdict, or a curated `DISPOSITION_ALLOWLIST`
-   entry, HALTS with nothing written (`ADR-0165` cl.4; guard inputs in that order). A name ALREADY in the
-   store does not halt — the guard returns early on it, and a later wave scoring a stored record below bar
-   is `ADR-0068` cl.4's rescore/quarantine path instead (`ADR-0165` cl.5's scope note). Resolve by
-   re-running with `--verdicts` so the name is judged FRESH — and on the archived-verdict arm, never by
-   deleting the archived file, which is the record itself.
+4. **A recorded disposition on an unjudged run** — a plain run whose candidate was never admitted
+   but carries an archived `passed:false` verdict (or a `DISPOSITION_ALLOWLIST` entry) HALTS with
+   nothing written (`ADR-0165` cl.4/5 own the guard order + the stored-name early-return). Resolve by
+   re-running with `--verdicts` so the name is judged FRESH; never delete the archived file — it IS the
+   record.
 
 ## Validation loop — the pipeline is the check
 
@@ -139,6 +135,13 @@ Finalize only when the pipeline runs clean end-to-end:
 
 Never edit a gate or the pipeline code to make a halt disappear — that is `a2ui-builder`'s surface and a
 contract change, not curation. Re-run after every resolution.
+
+## Hand-back — the stopping predicate
+
+Done when: the judged run committed BOTH the store diff AND its `corpus/verdicts/<date>--<slug>.json`
+archive (no untracked verdicts file left behind), the coverage gate is green, and the report names
+each candidate's outcome — admitted · `E_DUP` · a HALT resolved-and-re-run, or a HALT handed back to
+the owner. A halt left unresolved is a blocker reported, never a bypassed gate.
 
 ## Do NOT restate (fences)
 

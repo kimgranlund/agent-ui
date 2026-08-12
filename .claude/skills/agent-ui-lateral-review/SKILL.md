@@ -25,7 +25,10 @@ individually-green components). Design record: TKT-0064.
 ## The five phases
 
 1. **Census (deterministic — never hand-list).** Derive the work-list from the descriptor corpus:
-   `grep -h "^tier:\|^extends:" packages/agent-ui/{components,app}/src/controls/*/*.md`. Per-axis
+   `grep -h "^tier:\|^extends:" packages/agent-ui/{components,app,router}/src/controls/*/*.md`
+   (GH #761 widened the glob: router's outlet/link are fleet controls too). `code/` is EXCLUDED
+   by layout, recorded not silent: its descriptors sit per-pack (`src/{markdown,editor}/*.md`),
+   not under a `controls/` dir — a code-family sweep names those two paths explicitly. Per-axis
    exclusions come from the tier — Display/Container/Layout skip interaction-state checks;
    non-`UIFormElement` skip form-participation checks. Record the census IN the run's findings (the
    fleet grows; a re-run must show what it covered).
@@ -68,6 +71,20 @@ invalidates — TKT-0062 made the styling axis due for entry controls the day af
 axes run independently. The execution vehicle is per-run (parallel agent fan-out for multi-axis;
 TKT-0046 proved single-context works for one axis) — the phases are vehicle-neutral.
 
+## Output contract (per run)
+
+```
+Campaign: <ticket id> · axes: <list> · census: <N controls, M excluded per axis + why>
+Per axis: findings table (control × checks × verdict) · route counts (DRIFT/GAP/UNRECORDED/MISSED-REUSE)
+Verified: <behavioral probes run + results> · Dropped in verification: <count>
+Routed: <inline fixes w/ Findings entries> · <tickets filed> · <law amendments / proposed ADRs>
+Ledger updates: <deviations ratified this run — append them to the axis pack above>
+```
+
+A run is **done** when every surviving finding is routed and the ledger is updated; **NOT done** when a
+behavioral claim shipped unverified, a ledgered deviation was re-flagged as a finding, or findings were
+"fixed" in bulk without the per-control evidence trail.
+
 ## Axis pack — construction
 
 - **Slice:** each control's `.ts` — `connected()`, the parts-creation guard, listeners, effects.
@@ -101,9 +118,9 @@ TKT-0046 proved single-context works for one axis) — the phases are vehicle-ne
   together. 12 fleet GAP sites found in the 2026-08-09 sweep (nav-rail activator padding, container's
   ADR-0100 toolbar leg, text-field-geometry's size/scale ramps + icon sweep, otp-field's cell-square/
   ramp probes, toolbar's min-block-size floor + 3-button layout, modal's density-invariant padding
-  probe, menu's item-padding + checkmark-glyph probes) — routed as the bundled fix ticket GH #634,
-  not yet closed as of this entry; do not re-flag these 12 sites as new findings until #634 resolves
-  or ledgers them as accepted-risk.
+  probe, menu's item-padding + checkmark-glyph probes) — routed as the bundled fix ticket GH #634
+  (CLOSED — verified 2026-08-12, GH #761; the conditional that once held this line expired): the 12
+  sites are HISTORY now — a fresh sweep judges them like any other site, no standing carve-out.
 
 - **Slice:** each control's `.css`.
 - **Canon:** `interaction-states.md` (§1 action channels · §1b entry-control filled/container law,
@@ -243,20 +260,6 @@ TKT-0046 proved single-context works for one axis) — the phases are vehicle-ne
   consumer explicitly releases its binding(s) in `disconnected()` (slider adopted slider-multi's shape) ·
   radio.ts's grouped() tabindex correction is LOAD-BEARING for late-appended radios (TKT-0068 item 3,
   measured by mutation probe; pinned by `group-tabindex-late-append`) — not stale, do not re-flag.
-
-## Output contract (per run)
-
-```
-Campaign: <ticket id> · axes: <list> · census: <N controls, M excluded per axis + why>
-Per axis: findings table (control × checks × verdict) · route counts (DRIFT/GAP/UNRECORDED/MISSED-REUSE)
-Verified: <behavioral probes run + results> · Dropped in verification: <count>
-Routed: <inline fixes w/ Findings entries> · <tickets filed> · <law amendments / proposed ADRs>
-Ledger updates: <deviations ratified this run — append them to the axis pack above>
-```
-
-A run is **done** when every surviving finding is routed and the ledger is updated; **NOT done** when a
-behavioral claim shipped unverified, a ledgered deviation was re-flagged as a finding, or findings were
-"fixed" in bulk without the per-control evidence trail.
 
 ## Cross-links
 

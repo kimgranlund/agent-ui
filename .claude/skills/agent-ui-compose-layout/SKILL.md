@@ -33,17 +33,19 @@ collapses to a sliver. Method questions (what regions, what hierarchy) belong to
    `tier:` field partitions the fleet). The box-alignment dialect is `start`/`end`
    (ADR-0039); grids are gap-only. A structure NO primitive fits is a gap report →
    [[agent-ui-component-design]], never a bespoke primitive on a shared surface.
-3. **Consume the box-model, don't fight it** — `[data-box]` surfaces own their region
-   padding and content gaps (ADR-0046); page CSS adds structure BETWEEN surfaces, never
-   padding inside them ([[agent-ui-composition-patterns]]).
-4. **Own exactly one scroll region** — decide which element scrolls (the site shell's is
-   `.app-page`; the document never overflows) and give it the overflow; scroll-to code
-   targets that element, deferred past layout settle (the TKT-0004 lesson). Sticky
-   headers/footers ride the box-model's sticky regions, not position hacks.
+3. **Consume the box-model, don't fight it** — [[agent-ui-composition-patterns]]'s
+   container-box-model row owns this law (ADR-0046); the one-line shape: surfaces own their
+   padding, page CSS adds structure BETWEEN them.
+4. **Own exactly one scroll region** — [[agent-ui-composition-patterns]]'s scroll-ownership
+   row owns this law (TKT-0004's settle-deferral lesson included); the one-line shape: decide
+   the ONE overflowing element, target scroll-to code at it, sticky rides the box-model.
 5. **Set the axes on containers** — `[scale]` and `[density]` cascade; set them at region
    roots so a whole area sizes together (`site/pages/sizing.ts` shows the tiers live).
    Theming a region = a `ui-theme-provider` boundary (mind the ink re-root — the patterns
-   map's theming row).
+   map's theming row). The fleet's ONE viewport-responsive token is ADR-0150's compact-body
+   breakpoint — body column −1px below 52.5rem/840px (the fleet's default 414×896 test
+   viewport sits BELOW that line; a layout proof at desktop width alone misses the register
+   most probes actually run in).
 6. **Give widths a floor** — content in flex/grid cells collapses to min-content without a
    definite basis; realistic containers in tests, `min-inline-size` floors where the design
    needs them (the entry-control frame law is precedent, not license to hardcode).
@@ -52,6 +54,13 @@ collapses to a sliver. Method questions (what regions, what hierarchy) belong to
    region actually overflows and scrolls, `[scale]`/`[density]` changes move real pixels.
    Per-part assertions alone are the documented trap
    ([[agent-ui-component-testing]]'s whole-shape law).
+
+## Failure branch — a red whole-shape probe on a loaded host
+
+A gestalt probe red under machine contention is a claim about the HOST, not the layout: reap
+orphaned test-browser processes and re-run the shard in isolation before touching the layout
+(the flaky-gates discipline — a different failing set per run is contention; the same probe
+red in isolation is the real defect, route it).
 
 ## Review (generator ≠ critic)
 
