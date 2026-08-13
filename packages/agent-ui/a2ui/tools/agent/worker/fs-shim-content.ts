@@ -35,6 +35,8 @@ import gameTableChrome from '../../../src/agent/prompts/mini-skills/game-table-c
 import loginForm from '../../../src/agent/prompts/mini-skills/login-form.md'
 import masterDetailSplit from '../../../src/agent/prompts/mini-skills/master-detail-split.md'
 import settingsScreen from '../../../src/agent/prompts/mini-skills/settings-screen.md'
+// GH #808 S4 (a2ui-container-vocabulary.spec.md SPEC-R8) — the structured-container taught tier.
+import structuredContainer from '../../../src/agent/prompts/mini-skills/structured-container.md'
 
 // genui-surface.spec.md SPEC-R9 — the third Node-only readFileSync/readdirSync call site
 // (`prompts/genui-packs.ts`), backed the SAME way as the mini-skills registry above.
@@ -72,6 +74,7 @@ export const FILES: Record<string, string> = {
   [`${MINI_SKILLS_PATH}/login-form.md`]: loginForm,
   [`${MINI_SKILLS_PATH}/master-detail-split.md`]: masterDetailSplit,
   [`${MINI_SKILLS_PATH}/settings-screen.md`]: settingsScreen,
+  [`${MINI_SKILLS_PATH}/structured-container.md`]: structuredContainer,
 }
 
 // mini-skills.ts's `loadMiniSkills` re-`.sort()`s this list itself, so insertion order here is not
@@ -87,6 +90,7 @@ export const DIRS: Record<string, string[]> = {
     'login-form.md',
     'master-detail-split.md',
     'settings-screen.md',
+    'structured-container.md',
   ],
   // genui-surface.spec.md SPEC-R9 — `genui-packs.ts`'s own readdirSync target.
   [GENUI_PACKS_PATH]: ['animated-explainers.md', 'data-viz-layouts.md', 'interactive-widgets.md'],
