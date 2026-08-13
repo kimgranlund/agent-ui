@@ -223,6 +223,42 @@ describe('admit — the admission pipeline (LLD-C5)', () => {
       if (result.ok) return
       expect(result.code).toBe('E_IDGRAPH')
     })
+
+    // a2ui-container-vocabulary SPEC-R6 — CONTAINMENT joins the E_IDGRAPH family (mapTier1Code, the
+    // DEPTH_EXCEEDED precedent): a graph-shape rejection over the assembled adjacency list, not a
+    // single component's catalog conformance. `demoCatalog` declares no Card region types, so this
+    // test builds its own minimal catalog carrying just enough vocabulary to exercise the rule.
+    it('a Card region delivered outside a Card rejects as E_IDGRAPH', async () => {
+      const containerCatalog = loadCatalog({
+        catalogId: 'demo-containers',
+        protocolVersion: 'v1.0',
+        components: {
+          Column: { properties: {}, children: 'children' },
+          Card: { properties: {}, children: 'child' },
+          CardHeader: { properties: {}, children: 'children' },
+        },
+      })
+      const candidate = mkCandidate({
+        a2uiOutput: [
+          { version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'demo-containers' } },
+          {
+            version: 'v1.0',
+            updateComponents: {
+              surfaceId: 's1',
+              components: [
+                { id: 'root', component: 'Column', children: ['stray'] },
+                { id: 'stray', component: 'CardHeader', children: [] },
+              ],
+            },
+          },
+        ],
+        meta: { catalogId: 'demo-containers' },
+      })
+      const result = await admit(candidate, { catalog: containerCatalog, store: createStore(), dedupIndex: createDedupIndex() })
+      expect(result.ok).toBe(false)
+      if (result.ok) return
+      expect(result.code).toBe('E_IDGRAPH')
+    })
   })
 
   describe('E_POINTER — syntax (tier-1, shared validateA2ui)', () => {

@@ -39,7 +39,7 @@ allowlist, plus three payloads pinned verbatim to your own `a2ui.org` Basic Cata
 interop proof), generated from a single canonical fixture set and drift-gated in CI so the two never
 diverge.
 
-### The 16 cases
+### The 18 cases
 
 | # | Name | Suite | Catalog | Verdict | What it proves |
 | - | --- | --- | --- | --- | --- |
@@ -59,6 +59,8 @@ diverge.
 | 14 | `upstream-interactive-button` | catalog | a2ui-basic | valid | Your own `a2ui.org` Basic Catalog "Interactive Button" example, byte-verbatim except the envelope version |
 | 15 | `upstream-simple-login-form` | catalog | a2ui-basic | valid | Your own `a2ui.org` Basic Catalog "Simple Login Form" example, same translation |
 | 16 | `upstream-product-card` | catalog | a2ui-basic | valid | Your own `a2ui.org` Basic Catalog "Product Card" example, exercising the `formatCurrency`/`formatString`/`formatNumber`/`pluralize` function chain |
+| 17 | `containment-stray-region` | catalog | agent-ui | invalid — `CONTAINMENT` | A `CardHeader`/`CardContent`/`CardFooter` region delivered outside a `Card` is rejected (a container-vocabulary rule layered on our own default catalog) |
+| 18 | `valid-structured-card-mark-free` | catalog | agent-ui | valid | A `Card` with `CardHeader`/`CardContent`/`CardFooter` each a direct child — the mark-free containment-valid shape |
 
 ### Format — already conforms to your `suites/*.yaml` shape
 

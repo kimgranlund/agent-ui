@@ -61,6 +61,8 @@ export const SUITE_MEMBERSHIP: Record<string, readonly string[]> = {
     'upstream-interactive-button',
     'upstream-simple-login-form',
     'upstream-product-card',
+    'containment-stray-region',
+    'valid-structured-card-mark-free',
   ],
 }
 

@@ -5,7 +5,7 @@
 // (parity, SPEC-N6 / corpus SPEC-N1). Pure and TOTAL — it never throws; every defect becomes a
 // structured `Failure`. Pipeline (LLD-C11 §8):
 //
-//   MIME/shape → schema (per version) → catalog-conformance → id-graph → JSON-pointer validity
+//   MIME/shape → schema (per version) → catalog-conformance → id-graph → containment → JSON-pointer validity
 //
 // Stage→code map (renderer LLD §9 error table):
 //   raw-string parse fail ............ PARSE
@@ -14,6 +14,8 @@
 //   unknown component type / prop / type mismatch ... CATALOG (via catalog conformance)
 //   missing `root`, second `root`, cycle, dangling ref ... IDGRAPH
 //   root-reachable nesting past the cap (SPEC-R2/GH #473) ... DEPTH_EXCEEDED
+//   a CardHeader/CardContent/CardFooter node whose id-graph parent is not a Card
+//     (a2ui-container-vocabulary SPEC-R6) ... CONTAINMENT
 //   malformed JSON-Pointer in a binding / data path ... POINTER
 //
 // Granularity (renderer LLD §8 "Id-graph granularity"): the id-graph stage judges a COMPLETE
@@ -117,6 +119,10 @@ function run(input: unknown, catalog: Catalog, sessionSeed?: ReadonlyMap<string,
 
   // Stage 4 — id-graph, per surface that delivered components.
   for (const [sid, g] of surfaces) checkIdGraph(sid, g, failures)
+
+  // Stage 4b — containment (a2ui-container-vocabulary SPEC-R6), on the SAME assembled (post-seed-merge)
+  // graph id-graph judged above — a region's parent is only knowable once every delivery is merged.
+  for (const g of surfaces.values()) checkContainment(g, failures)
 
   return verdict(failures)
 }
@@ -249,6 +255,34 @@ function checkIdGraph(sid: string, g: SurfaceGraph, failures: Failure[]): void {
 
   // acyclic: a back-edge in the child/children graph is a cycle.
   if (hasCycle(g.byId)) push(failures, 'IDGRAPH', `${sid}:cycle`)
+}
+
+// The three Card-region types SPEC-R6 scopes containment to (v1: no Tabs/Swiper sub-types — a future
+// extension of the SAME code, non-goal here, a2ui-container-vocabulary.spec.md SPEC-R6).
+const CARD_REGION_TYPES = new Set(['CardHeader', 'CardContent', 'CardFooter'])
+
+/**
+ * Containment (a2ui-container-vocabulary SPEC-R6): a `CardHeader`/`CardContent`/`CardFooter` node is
+ * "only meaningful as a direct child of its owning container" (SPEC-R6 §2 Definitions) — so a region
+ * with NO parent at all (delivered as `root`, or unreferenced by any other node's `child`/`children`)
+ * fails exactly like one whose parent is some OTHER component type: neither case is "a direct child of
+ * a Card". Runs on the SAME merged (post-seed) `byId` set `checkIdGraph` judges, but independently of
+ * it — a dangling ref or a cycle elsewhere in the graph does not gate this check (it only needs to know,
+ * for each region node, what ELSE in the merged set points at it).
+ */
+function checkContainment(g: SurfaceGraph, failures: Failure[]): void {
+  if (g.byId.size === 0) return
+
+  const parentType = new Map<string, string>() // childId -> parent's `component` type
+  for (const comp of g.byId.values()) {
+    for (const ref of refsOf(comp)) parentType.set(ref, comp.component)
+  }
+
+  for (const comp of g.byId.values()) {
+    if (CARD_REGION_TYPES.has(comp.component) && parentType.get(comp.id) !== 'Card') {
+      push(failures, 'CONTAINMENT', comp.id)
+    }
+  }
 }
 
 function refsOf(comp: A2uiComponent): string[] {

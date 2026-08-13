@@ -46,14 +46,21 @@ walk). A run of the whole suite is green iff **every** fixture passes.
 
 ## Coverage
 
-16 fixtures: two known-good default-catalog payloads, one negative fixture per protocol/catalog
+18 fixtures: three known-good default-catalog payloads, one negative fixture per protocol/catalog
 failure stage (`PARSE`, `SCHEMA` ×2 shapes, `VERSION_UNSUPPORTED`, `CATALOG`, `IDGRAPH` ×4 subtypes —
-root-missing / second-root / dangling child / cycle, `POINTER` ×2 — a component binding and an
-`updateDataModel.path`), and the three pinned upstream `a2ui.org` Basic Catalog examples
+root-missing / second-root / dangling child / cycle, `CONTAINMENT`, `POINTER` ×2 — a component binding
+and an `updateDataModel.path`), and the three pinned upstream `a2ui.org` Basic Catalog examples
 ([ADR-0169](../../../../.claude/docs/adr/0169-a2ui-basic-catalog-upstream-interop.md) cl.1's
 interop-anchored seed named by GH #476 — `interactive-button` / `simple-login-form` / `product-card`,
 each translated ONLY at the envelope `version` field, `v0.9` → `v1.0`; every component-tree byte is
 verbatim from the fetched upstream source).
+
+`CONTAINMENT` ([`a2ui-container-vocabulary.spec.md`](../../../../.claude/docs/spec/a2ui-container-vocabulary.spec.md)
+SPEC-R6): a `CardHeader`/`CardContent`/`CardFooter` node whose id-graph parent is not a `Card` — one
+negative fixture (`containment-stray-region`) plus one mark-free known-good structured-container shape
+(`valid-structured-card-mark-free`); the valid fixture exercising the R1–R4 catalog marks
+(`format`/`slot`/`label`) is sequenced to a LATER build slice (it cannot validate until the `format`
+mark ships — SPEC-R6's own fixture-sequencing clause).
 
 ## Running this repo's own validator against the suite
 
@@ -97,13 +104,15 @@ hand-maintained enumerations of one truth). The generator + drift gate live in
 
 The split mirrors upstream's own validator/catalog file-granularity CONCERN boundary, not a
 `catalogId` split: `validator.yaml` carries protocol-pipeline mechanics that hold regardless of which
-catalog is targeted; `catalog.yaml` carries catalog-document-scoped concerns (the CATALOG
-membership-allowlist code, plus every catalog-interop known-good payload).
+catalog is targeted; `catalog.yaml` carries catalog-document/vocabulary-scoped concerns (the CATALOG
+membership-allowlist code, the CONTAINMENT container-region rule — both hardcode default-catalog
+component-type names, so neither holds "regardless of which catalog is targeted" — plus every
+catalog-interop known-good payload).
 
 | Suite | Fixtures | Failure codes covered |
 | --- | --- | --- |
 | `suites/validator.yaml` | `parse-failure` · `bad-envelope` · `missing-surfaceId` · `unsupported-version` · `bad-pointer-binding` · `bad-pointer-datamodel` · `missing-root` · `duplicate-root` · `dangling-child` · `cycle` | PARSE, SCHEMA ×2, VERSION_UNSUPPORTED, POINTER ×2, IDGRAPH ×4 |
-| `suites/catalog.yaml` | `valid-button` · `valid-list` · `unknown-component` · `upstream-interactive-button` · `upstream-simple-login-form` · `upstream-product-card` | CATALOG, plus 5 known-good (2 default-catalog, 3 `a2ui.org` interop) |
+| `suites/catalog.yaml` | `valid-button` · `valid-list` · `unknown-component` · `upstream-interactive-button` · `upstream-simple-login-form` · `upstream-product-card` · `containment-stray-region` · `valid-structured-card-mark-free` | CATALOG, CONTAINMENT, plus 6 known-good (3 default-catalog, 3 `a2ui.org` interop) |
 
 ### Row shape — field-by-field, against the fetched upstream examples
 

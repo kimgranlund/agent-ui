@@ -93,9 +93,9 @@ describe('runSuite — pure verdict-matching logic', () => {
 })
 
 describe('the committed suite — every fixtures.jsonl line is a well-formed Fixture', () => {
-  it('parses to 16 lines, each carrying the required fields', () => {
+  it('parses to 18 lines, each carrying the required fields', () => {
     const fixtures = readFixtures()
-    expect(fixtures.length).toBe(16)
+    expect(fixtures.length).toBe(18)
     for (const f of fixtures) {
       expect(typeof f.name).toBe('string')
       expect(typeof f.catalogId).toBe('string')
@@ -110,6 +110,6 @@ describe("the real CLI — SPEC-R5 AC1, run against this repo's validator, exit 
   it('exits 0 — every committed fixture\'s actual verdict matches its expectedVerdict', () => {
     const result = spawnSync('node', ['--experimental-strip-types', RUN_SCRIPT], { encoding: 'utf8' })
     expect(result.status, `stdout:\n${result.stdout}\nstderr:\n${result.stderr}`).toBe(0)
-    expect(JSON.parse(result.stdout)).toMatchObject({ ok: true, fixtureCount: 16 })
+    expect(JSON.parse(result.stdout)).toMatchObject({ ok: true, fixtureCount: 18 })
   })
 })
