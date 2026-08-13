@@ -205,6 +205,58 @@ describe('ui-textarea — the TKT-0062 filled/container state law (real repaint,
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  [3c] GH #858 — the placeholder pins to the default-state ink (the text-field.css precedent); hover/
+//       focus no longer forward-brighten it. Disabled still dims it (now an explicit repoint).
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-textarea — GH #858: placeholder ink is FROZEN across hover/focus, still dims when disabled (both engines)', () => {
+  it('the placeholder computed colour at FOCUS equals its colour at REST (an EMPTY textarea)', async () => {
+    const { field, editor } = mount(`<ui-textarea placeholder="Write something…" ${SIZED}></ui-textarea>`)
+    const restColor = getComputedStyle(editor, '::before').color
+    expect(alphaOf(restColor), 'the placeholder is invisible at rest — the probe would be vacuous').toBeGreaterThan(0)
+
+    await userEvent.click(editor)
+    expect(field.matches(':focus-within'), 'the field did not actually focus').toBe(true)
+    await new Promise((r) => setTimeout(r, 250))
+
+    expect(
+      getComputedStyle(editor, '::before').color,
+      `${server.browser}: GH #858 regressed — the placeholder brightened to the focus ink on an EMPTY textarea`,
+    ).toBe(restColor)
+  })
+
+  it('the placeholder computed colour on HOVER (unfocused) equals its colour at REST', async () => {
+    const { field, editor } = mount(`<ui-textarea placeholder="Write something…" ${SIZED}></ui-textarea>`)
+    const restColor = getComputedStyle(editor, '::before').color
+
+    await userEvent.hover(field)
+    await expect
+      .poll(() => alphaOf(getComputedStyle(field).borderTopColor), { timeout: 1500 })
+      .toBeGreaterThan(0)
+    await new Promise((r) => setTimeout(r, 250))
+
+    expect(
+      getComputedStyle(editor, '::before').color,
+      `${server.browser}: GH #858 regressed — the placeholder brightened to the hover ink on an EMPTY textarea`,
+    ).toBe(restColor)
+    await userEvent.unhover(field)
+  })
+
+  it('a disabled textarea still DIMS the placeholder (now an explicit repoint)', () => {
+    const { editor: enabledEditor } = mount(`<ui-textarea placeholder="Write something…" ${SIZED}></ui-textarea>`)
+    const enabledColor = getComputedStyle(enabledEditor, '::before').color
+
+    const { editor: disabledEditor } = mount(`<ui-textarea placeholder="Write something…" disabled ${SIZED}></ui-textarea>`)
+    const disabledColor = getComputedStyle(disabledEditor, '::before').color
+
+    expect(
+      disabledColor,
+      `${server.browser}: a disabled textarea's placeholder no longer dims — the explicit disabled repoint regressed`,
+    ).not.toBe(enabledColor)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
 //  [4] forced-colors — the ring survives AND the idle border/ink/placeholder do not vanish
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 

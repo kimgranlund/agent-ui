@@ -833,6 +833,82 @@ describe('ui-combo-box — forced-colors (Chromium via CDP; WebKit asserts the b
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
+//  GH #858 — the placeholder pins to the default-state ink; hover/focus no longer forward-brighten
+//  it. combo-box's OWN instance of the fleet-wide alias defect was actually a DOUBLE alias — the
+//  host-level `--ui-combo-box-placeholder: var(--ui-combo-box-ink)` alias PLUS a TKT-0065
+//  re-declaration of that same alias AT THE EDITOR PART (needed to re-resolve against the editor's
+//  own state-repointed ink, since combo-box's frame IS the editor, unlike text-field/textarea's
+//  separate host/editor split) — removed entirely; the placeholder is now a fixed role, consumed
+//  unchanged by both the host and the editor. Disabled keeps its own EXPLICIT repoint (unchanged —
+//  the model this fix generalized to the other four files).
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-combo-box — GH #858: placeholder ink is FROZEN across hover/focus, still dims when disabled (both engines)', () => {
+  it('the placeholder computed colour at FOCUS equals its colour at REST (an EMPTY editor)', async () => {
+    const { el } = mount(`
+      <ui-combo-box placeholder="Search…">
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    const editor = el.querySelector<HTMLElement>('[data-part="editor"]')!
+    const restColor = getComputedStyle(editor, '::before').color
+    expect(alphaOf(restColor), 'the placeholder is invisible at rest — the probe would be vacuous').toBeGreaterThan(0)
+
+    editor.focus()
+    expect(document.activeElement, 'the editor did not actually focus').toBe(editor)
+    await new Promise((r) => setTimeout(r, 250)) // past --md-sys-motion-duration-fast — let any repaint settle
+
+    expect(
+      getComputedStyle(editor, '::before').color,
+      `${server.browser}: GH #858 regressed — the placeholder brightened to the focus ink on an EMPTY combo-box`,
+    ).toBe(restColor)
+  })
+
+  it('the placeholder computed colour on HOVER (unfocused) equals its colour at REST', async () => {
+    const { el } = mount(`
+      <ui-combo-box placeholder="Search…">
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    const editor = el.querySelector<HTMLElement>('[data-part="editor"]')!
+    const restColor = getComputedStyle(editor, '::before').color
+
+    await userEvent.hover(editor)
+    await expect
+      .poll(() => px(getComputedStyle(editor).borderTopWidth), { timeout: 1500 })
+      .toBeGreaterThan(0) // confirms the hover row really painted (the ONE visible-border state, TKT-0062)
+    await new Promise((r) => setTimeout(r, 250))
+
+    expect(
+      getComputedStyle(editor, '::before').color,
+      `${server.browser}: GH #858 regressed — the placeholder brightened to the hover ink on an EMPTY combo-box`,
+    ).toBe(restColor)
+    await userEvent.unhover(editor)
+  })
+
+  it('a disabled combo-box still DIMS the placeholder (unchanged — the fix\'s own model)', () => {
+    const { el: enabledEl } = mount(`
+      <ui-combo-box placeholder="Search…">
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    const enabledColor = getComputedStyle(enabledEl.querySelector('[data-part="editor"]')!, '::before').color
+
+    const { el: disabledEl } = mount(`
+      <ui-combo-box placeholder="Search…" disabled>
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    const disabledColor = getComputedStyle(disabledEl.querySelector('[data-part="editor"]')!, '::before').color
+
+    expect(
+      disabledColor,
+      `${server.browser}: a disabled combo-box's placeholder no longer dims`,
+    ).not.toBe(enabledColor)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
 //  Edge-aware scroll fade (the gutter-exposure fix, 2026-07-04) — DEFAULT-ON, no opt-in prop. Also
 //  proves the NEW max-block-size:40vh + overflow-y:auto bound (was `overflow: hidden`, unscrollable).
 //  scroll-fade.test.ts proves the trait's decision logic (jsdom, stubbed geometry); this proves the
@@ -1243,14 +1319,15 @@ describe('ui-combo-box — the TKT-0062 filled/container state law (real repaint
       .not.toBe(filledInk)
   })
 
-  it('an EMPTY combo-box\'s PLACEHOLDER repaints on hover and focus too (TKT-0065 lateral-review F13 regression)', async () => {
-    // The bug this pins: the state rules repointed the editor's `color:` PROPERTY, but the
-    // placeholder ::before carries its own `color: var(--ui-combo-box-placeholder)` — an alias of
-    // the ink TOKEN — so a property-only repoint never reached it: an empty combo-box's placeholder
-    // stayed frozen at the default ink under hover AND focus while text-field's repainted (proven
-    // frozen in a real Chromium+WebKit probe). The fix repoints the --ui-combo-box-ink token itself
-    // (the TKT-0062 mechanic-[b] shape); this test reads the ::before — the element that renders
-    // the visible placeholder — never the editor's own color.
+  it('an EMPTY combo-box\'s PLACEHOLDER stays FROZEN on hover and focus (GH #858 — supersedes the TKT-0065 F13 shape)', async () => {
+    // SUPERSEDED (GH #858): TKT-0065 F13 originally made hover/focus repaint the placeholder here — an
+    // intentional fix AT THE TIME (the ink-alias mechanism was believed correct; only its FORWARDING
+    // was thought missing). GH #858 root-caused the whole alias shape itself as the fleet-wide defect:
+    // every affected file's own comment stated the placeholder should track "the SAME default-state ink
+    // role" in every state, but aliasing the LIVE, state-repointed ink token instead forwarded EVERY
+    // repoint (filled/hover/focus), not just the intended disabled/busy dim. `--ui-combo-box-placeholder`
+    // is now PINNED to a fixed role (no longer an ink alias at all, at either the host or the editor
+    // level — see combo-box.css's own GH #858 comments), so hover/focus must no longer reach it.
     const { el } = mount(`
       <ui-combo-box placeholder="Pick…">
         <div role="option" value="apple">Apple</div>
@@ -1261,15 +1338,20 @@ describe('ui-combo-box — the TKT-0062 filled/container state law (real repaint
 
     await userEvent.hover(editor)
     await expect
-      .poll(() => getComputedStyle(editor, '::before').color, { timeout: 1500 })
-      .not.toBe(defaultInk)
+      .poll(() => px(getComputedStyle(editor).borderTopWidth), { timeout: 1500 })
+      .toBeGreaterThan(0) // confirms the hover row really painted (the ONE visible-border state, TKT-0062)
+    expect(
+      getComputedStyle(editor, '::before').color,
+      `${server.browser}: GH #858 regressed — the placeholder brightened on hover`,
+    ).toBe(defaultInk)
     await userEvent.unhover(editor)
 
     editor.focus()
     await expect.poll(() => editor.matches(':focus')).toBe(true)
-    await expect
-      .poll(() => getComputedStyle(editor, '::before').color, { timeout: 1500 })
-      .not.toBe(defaultInk)
+    expect(
+      getComputedStyle(editor, '::before').color,
+      `${server.browser}: GH #858 regressed — the placeholder brightened on focus`,
+    ).toBe(defaultInk)
   })
 })
 

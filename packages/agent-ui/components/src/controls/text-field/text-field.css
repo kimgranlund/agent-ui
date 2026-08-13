@@ -23,9 +23,12 @@
  *       because the editor is a CONTROL-INJECTED part (`[data-part=editor]`, the centre value cell), not DOM-ordered.
  *       The BORDER-ON-HOST field frame (border + radius on the host) so a slotted adornment sits INSIDE the box.
  *       The filled/hover/focus state rules repoint the underlying `--ui-text-field-ink` TOKEN (not a
- *       standalone `color:` on `:scope`) so the editor part's own `color: var(--ui-text-field-ink)` and the
- *       placeholder's alias both re-resolve for free (a host-only `color:` override never reaches a child
- *       with its own explicit declaration — a real bug this exact file hit and fixed). Focus (ADR-0014
+ *       standalone `color:` on `:scope`) so the editor part's own `color: var(--ui-text-field-ink)`
+ *       re-resolves for free (a host-only `color:` override never reaches a child with its own explicit
+ *       declaration — a real bug this exact file hit and fixed). `--ui-text-field-placeholder` is DELIBERATELY
+ *       NOT an alias of `--ui-text-field-ink` (GH #858, fixed) — it is pinned to the default-state ink ROLE
+ *       directly, so it never re-brightens when hover/focus repoint the live ink token; only `[disabled]`
+ *       gets an explicit placeholder repoint (its one legitimate dim). Focus (ADR-0014
  *       dev#1) = the shared `outline` ring as the SOLE indicator, with the field border stepped to
  *       `transparent` (NOT a `--md-sys-color-focus-ring` border-color step — that doubled with the ring into a visible
  *       double border), BOTH on `:focus-within` (ALL focus — native text-input parity), NOT `:focus-visible`
@@ -72,7 +75,15 @@
   --ui-text-field-ink-filled: var(--md-sys-color-neutral-on-surface-variant);
   --ui-text-field-ink-hover: var(--md-sys-color-neutral-on-surface-variant);
   --ui-text-field-ink-focus: var(--md-sys-color-neutral-on-surface);
-  --ui-text-field-placeholder: var(--ui-text-field-ink); /* tracks the SAME default-state ink role (Kim's table has no separate placeholder row) — re-resolves live off whatever --ui-text-field-ink cascades to for this element, so the disabled repoint below reaches it for free */
+  /* GH #858 (fixed): pinned to the default-state ink ROLE directly, NOT aliased to the live
+     --ui-text-field-ink token — that token is state-repointed (filled/hover/focus, the table
+     above), and an alias re-resolves WITH it, so focusing or hovering an EMPTY field silently
+     brightened the placeholder to the focus/hover ink (the alias's only intended job was
+     forwarding the disabled repoint below; it forwarded every other repoint too, for free and by
+     accident). Pinning keeps the placeholder at the SAME default-state ink role in every
+     interactive state; disabled gets its own EXPLICIT repoint below (the combo-box.css
+     disabled precedent). */
+  --ui-text-field-placeholder: var(--md-sys-color-neutral);
 
   /* Geometry — off the s6 dimensional ramp (default size = md). [size] repoints below. */
   --ui-text-field-height: var(--md-sys-height-md);
@@ -119,6 +130,7 @@
   --ui-text-field-bg: var(--md-sys-color-neutral-container-low);
   --ui-text-field-border: transparent;
   --ui-text-field-ink: var(--md-sys-color-neutral-low);
+  --ui-text-field-placeholder: var(--md-sys-color-neutral-low); /* GH #858 — the placeholder's one legitimate repoint, now explicit since the alias above no longer forwards it */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-text-field) consumes ONLY --ui-text-field-* ════════════════ */
@@ -245,11 +257,12 @@
      NOT a direct `color:` declaration on `:scope` — the editor part carries its OWN color declaration
      reading that same token (text-field.css's anatomy block), which reads the token directly, not the
      host's computed `color` (an element's own declared `color` always wins over inherited value, so a
-     host-only `color:` override never reached the visible typed text or the placeholder — proven red
-     in a real browser gate, both engines, before this fix). Repointing the TOKEN cascades to every
-     consumer (the base :scope rule's own color read, the editor's own, AND the placeholder token's
-     alias onto it) for free — the same mechanism the disabled `:where()` block below already used
-     correctly. */
+     host-only `color:` override never reached the visible typed text — proven red in a real browser
+     gate, both engines, before this fix). Repointing the TOKEN cascades to every consumer (the base
+     :scope rule's own color read AND the editor's own) for free. `--ui-text-field-placeholder` is
+     DELIBERATELY excluded from this cascade (GH #858, fixed) — it is pinned to the default-state ink
+     role, not aliased to `--ui-text-field-ink`, precisely so these filled/hover/focus repoints do NOT
+     reach it; only the disabled `:where()` block below repoints it, explicitly. */
   :scope:not(:hover):not(:focus-within):not(:is([disabled], :state(disabled))):has(> [data-part='editor']:not([data-empty])) {
     background: var(--ui-text-field-bg-filled);
     --ui-text-field-ink: var(--ui-text-field-ink-filled);

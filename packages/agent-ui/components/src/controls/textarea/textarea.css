@@ -58,7 +58,12 @@
   --ui-textarea-ink-filled: var(--md-sys-color-neutral-on-surface-variant);
   --ui-textarea-ink-hover: var(--md-sys-color-neutral-on-surface-variant);
   --ui-textarea-ink-focus: var(--md-sys-color-neutral-on-surface);
-  --ui-textarea-placeholder: var(--ui-textarea-ink); /* tracks the SAME default-state ink role (Kim's table has no separate placeholder row) — re-resolves live off whatever --ui-textarea-ink cascades to for this element, so the disabled repoint below reaches it for free */
+  /* GH #858 (fixed, the text-field.css precedent): pinned to the default-state ink ROLE directly,
+     NOT aliased to the live --ui-textarea-ink token — that token is state-repointed (filled/hover/
+     focus, the table above), and an alias re-resolves WITH it, so focusing or hovering an EMPTY
+     textarea silently brightened the placeholder to the focus/hover ink. Disabled gets its own
+     EXPLICIT repoint below instead. */
+  --ui-textarea-placeholder: var(--md-sys-color-neutral);
 
   /* Geometry — the MULTI-LINE law (ADR-0134), not the single-line ramp. Font is the ONE sizing lever that
      [size] repoints; padding-block/padding-inline/line-box all DERIVE from it via calc() below, so a single
@@ -104,6 +109,7 @@
   --ui-textarea-bg: var(--md-sys-color-neutral-container-low);
   --ui-textarea-border: transparent;
   --ui-textarea-ink: var(--md-sys-color-neutral-low);
+  --ui-textarea-placeholder: var(--md-sys-color-neutral-low); /* GH #858 — the placeholder's one legitimate repoint, now explicit since the alias above no longer forwards it */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-textarea) consumes ONLY --ui-textarea-* ════════════════ */
@@ -172,8 +178,10 @@
   /* NOTE (code-reviewer HIGH finding, fixed — the text-field.css precedent): repointing the
      --ui-textarea-ink TOKEN itself here, NOT a direct color: declaration on :scope — the editor part
      carries its own color declaration reading that same token, so a host-only color: override never
-     reached the visible typed text or the placeholder (proven red in a real browser gate before this
-     fix). Repointing the token cascades to every consumer for free. */
+     reached the visible typed text (proven red in a real browser gate before this fix). Repointing
+     the token cascades to the editor's own color read for free. `--ui-textarea-placeholder` is
+     DELIBERATELY excluded (GH #858, fixed) — pinned to the default-state ink role above, not
+     aliased to --ui-textarea-ink, so these filled/hover/focus repoints never reach it. */
   :scope:not(:hover):not(:focus-within):not(:is([disabled], :state(disabled))):has(> [data-part='editor']:not([data-empty])) {
     background: var(--ui-textarea-bg-filled);
     --ui-textarea-ink: var(--ui-textarea-ink-filled);

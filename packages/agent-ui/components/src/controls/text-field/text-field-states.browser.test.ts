@@ -150,6 +150,61 @@ describe('ui-text-field — the TKT-0062 filled/container state law (real repain
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  [1c] GH #858 — the placeholder pins to the default-state ink; hover/focus no longer forward-brighten
+//       it (the fleet-wide alias defect: `--ui-text-field-placeholder` used to alias the live, state-
+//       repointed `--ui-text-field-ink` token, so focusing/hovering an EMPTY field silently brightened
+//       the placeholder to the focus/hover ink). Disabled still dims it (the alias's one legitimate job,
+//       now an explicit repoint).
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-text-field — GH #858: placeholder ink is FROZEN across hover/focus, still dims when disabled (both engines)', () => {
+  it('the placeholder computed colour at FOCUS equals its colour at REST (an EMPTY field)', async () => {
+    const { field, editor } = mount(`<ui-text-field placeholder="Search…" ${SIZED}></ui-text-field>`)
+    const restColor = getComputedStyle(editor, '::before').color
+    expect(alphaOf(restColor), 'the placeholder is invisible at rest — the probe would be vacuous').toBeGreaterThan(0)
+
+    await userEvent.click(editor) // real mouse focus (the composer's own repro path)
+    expect(field.matches(':focus-within'), 'the field did not actually focus').toBe(true)
+    await new Promise((r) => setTimeout(r, 250)) // past --md-sys-motion-duration-fast — let any repaint settle
+
+    expect(
+      getComputedStyle(editor, '::before').color,
+      `${server.browser}: GH #858 regressed — the placeholder brightened to the focus ink on an EMPTY field`,
+    ).toBe(restColor)
+  })
+
+  it('the placeholder computed colour on HOVER (unfocused) equals its colour at REST', async () => {
+    const { field, editor } = mount(`<ui-text-field placeholder="Search…" ${SIZED}></ui-text-field>`)
+    const restColor = getComputedStyle(editor, '::before').color
+
+    await userEvent.hover(field)
+    await expect
+      .poll(() => alphaOf(getComputedStyle(field).borderTopColor), { timeout: 1500 })
+      .toBeGreaterThan(0) // the ONE visible-border state (TKT-0062) — confirms the hover row really painted
+    await new Promise((r) => setTimeout(r, 250))
+
+    expect(
+      getComputedStyle(editor, '::before').color,
+      `${server.browser}: GH #858 regressed — the placeholder brightened to the hover ink on an EMPTY field`,
+    ).toBe(restColor)
+    await userEvent.unhover(field)
+  })
+
+  it('a disabled field still DIMS the placeholder (the alias\'s one legitimate job, now explicit)', () => {
+    const { editor: enabledEditor } = mount(`<ui-text-field placeholder="Search…" ${SIZED}></ui-text-field>`)
+    const enabledColor = getComputedStyle(enabledEditor, '::before').color
+
+    const { editor: disabledEditor } = mount(`<ui-text-field placeholder="Search…" disabled ${SIZED}></ui-text-field>`)
+    const disabledColor = getComputedStyle(disabledEditor, '::before').color
+
+    expect(
+      disabledColor,
+      `${server.browser}: a disabled field's placeholder no longer dims — the explicit disabled repoint regressed`,
+    ).not.toBe(enabledColor)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
 //  [2] The value round-trips a real <form> (FormData) and reset() restores the default
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 

@@ -96,9 +96,16 @@ describe('text-field.css — the filled/container state law (TKT-0062)', () => {
     expect(b).toMatch(/--ui-text-field-border-invalid-hover:\s*var\(--md-sys-color-danger-high\)/) // invalid + hover
   })
 
-  it('the placeholder ink tracks the SAME default-state ink role (Kim\'s table has no separate placeholder row)', () => {
+  it('the placeholder is PINNED to the default-state ink role directly (GH #858) — NOT an alias of the live, state-repointed ink token', () => {
     const b = whereBlock(':where(ui-text-field) {')
-    expect(b).toMatch(/--ui-text-field-placeholder:\s*var\(--ui-text-field-ink\)/)
+    expect(b).toMatch(/--ui-text-field-placeholder:\s*var\(--md-sys-color-neutral\)/)
+    // anti-regression: the alias shape that caused GH #858 (focus/hover forwarding into the placeholder)
+    expect(b).not.toMatch(/--ui-text-field-placeholder:\s*var\(--ui-text-field-ink\)/)
+  })
+
+  it('disabled gets its OWN explicit placeholder repoint (GH #858 — the placeholder no longer inherits it via the ink alias)', () => {
+    const disabledBlock = whereBlock(":where(ui-text-field:is([disabled], :state(disabled))) {")
+    expect(disabledBlock).toMatch(/--ui-text-field-placeholder:\s*var\(--md-sys-color-neutral-low\)/)
   })
 
   it('the ladder is SOLID role steps or `transparent` — NEVER a color-mix, NEVER a soft-alpha primitive', () => {

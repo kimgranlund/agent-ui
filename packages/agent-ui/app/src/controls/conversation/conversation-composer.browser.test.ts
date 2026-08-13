@@ -60,6 +60,15 @@ function mountComposer(): { wrap: HTMLElement; el: UIConversationComposerElement
 }
 
 const editorOf = (el: UIConversationComposerElement): HTMLElement => el.querySelector('[data-part="editor"]')!
+
+const alphaOf = (color: string): number => {
+  if (color === 'transparent') return 0
+  const m = color.match(/rgba?\(([^)]+)\)/i)
+  if (!m) return 1
+  const parts = m[1].split(/[\s,/]+/).filter(Boolean)
+  return parts.length >= 4 ? Number(parts[3]) : 1
+}
+const px = (v: string): number => Number.parseFloat(v)
 const menuOf = (el: UIConversationComposerElement): HTMLElement | null => el.querySelector('[data-part="reference-menu"]')
 const optionsOf = (el: UIConversationComposerElement): HTMLElement[] => [
   ...(menuOf(el)?.querySelectorAll<HTMLElement>('[data-part="reference-option"]') ?? []),
@@ -160,5 +169,63 @@ describe('ui-conversation-composer — GH #849 reference typeahead (both engines
     expect(menu.matches(':popover-open'), 'Escape leaves the top layer').toBe(false)
     expect(editor.textContent, 'the dismissed trigger stays as plain text').toBe('/')
     expect(document.activeElement, 'Escape never moves focus off the editor').toBe(editor)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  GH #858 — the reported surface: the placeholder ("Ask anything..") pins to the default-state
+//  ink; hover/focus no longer forward-brighten it (the exact repro this issue was filed against —
+//  a focused, EMPTY composer used to brighten "Ask anything.." to the near-white focus ink). Busy
+//  (the composer's own disabled-equivalent, TKT-0034) still dims it — now an explicit repoint.
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-conversation-composer — GH #858: placeholder ink is FROZEN across hover/focus, still dims when busy (both engines)', () => {
+  it('the placeholder computed colour at FOCUS equals its colour at REST (an EMPTY composer)', async () => {
+    const { el } = mountComposer()
+    const editor = editorOf(el)
+    const restColor = getComputedStyle(editor, '::before').color
+    expect(alphaOf(restColor), 'the placeholder is invisible at rest — the probe would be vacuous').toBeGreaterThan(0)
+
+    await userEvent.click(editor)
+    expect(document.activeElement, 'the editor did not actually focus').toBe(editor)
+    await new Promise((r) => setTimeout(r, 250)) // past --md-sys-motion-duration-fast — let any repaint settle
+
+    expect(
+      getComputedStyle(editor, '::before').color,
+      `${server.browser}: GH #858 regressed — the placeholder brightened to the focus ink on an EMPTY composer`,
+    ).toBe(restColor)
+  })
+
+  it('the placeholder computed colour on HOVER (unfocused) equals its colour at REST', async () => {
+    const { el } = mountComposer()
+    const editor = editorOf(el)
+    const restColor = getComputedStyle(editor, '::before').color
+
+    await userEvent.hover(el)
+    await expect
+      .poll(() => px(getComputedStyle(el).borderTopWidth), { timeout: 1500 })
+      .toBeGreaterThan(0) // confirms the hover row really painted (the ONE visible-border state, TKT-0062)
+    await new Promise((r) => setTimeout(r, 250))
+
+    expect(
+      getComputedStyle(editor, '::before').color,
+      `${server.browser}: GH #858 regressed — the placeholder brightened to the hover ink on an EMPTY composer`,
+    ).toBe(restColor)
+    await userEvent.unhover(el)
+  })
+
+  it('busy (the disabled-equivalent, TKT-0034) still DIMS the placeholder (now an explicit repoint)', async () => {
+    const { el } = mountComposer()
+    const editor = editorOf(el)
+    const idleColor = getComputedStyle(editor, '::before').color
+
+    el.busy = true
+    await el.updateComplete
+    await new Promise((r) => setTimeout(r, 250))
+
+    expect(
+      getComputedStyle(editor, '::before').color,
+      `${server.browser}: a busy composer's placeholder no longer dims — the explicit busy repoint regressed`,
+    ).not.toBe(idleColor)
   })
 })
