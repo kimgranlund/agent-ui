@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-13 |
 > | **Proposed by** | planner seat (GH [#829](https://github.com/kimgranlund/agent-ui/issues/829)'s design leg — the issue's second Findings entry explicitly routes the fork here rather than re-attempting the reverted mechanical fix) |
-> | **Ratified by** | — |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-13, via the [`ratify ADR-0187` utterance](https://github.com/kimgranlund/agent-ui/issues/829#issuecomment-5284005297) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification+build: [`a2ui-runtime.spec.md`](../spec/a2ui-runtime.spec.md) SPEC-R11 (finalize-granularity sentence) + SPEC-R4 (mid-stream-only REV cross-ref) · [`a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md) SPEC-R5 (per-round judgment runs at finalize granularity) + SPEC-R4 (the fed-back failure class includes the at-finalize empty surface) · [`a2ui-message-lifecycle.spec.md`](../spec/a2ui-message-lifecycle.spec.md) SPEC-R4 AC1 (per-prefix validation scoped to DEFAULT mode) · [`a2ui-training-corpus.spec.md`](../spec/a2ui-training-corpus.spec.md) SPEC-N1/R8-AC3 parity prose (admission judges at finalize granularity) · [`../lld/a2ui-renderer.lld.md`](../lld/a2ui-renderer.lld.md) §8 LLD-C11 granularity/parity paragraphs + §9 IDGRAPH row |
 > | **Supersedes / Superseded by** | **Relates** TKT-0081 (the `SurfaceSeed` merge this composes with, no carve-out change) · ADR-0128 (cross-turn IDGRAPH guard, untouched) · a2ui-container-vocabulary SPEC-R6 (the new-code precedent weighed and NOT followed — §Alternatives) · **Resolves** GH #829's design fork (build BLOCKED on ratification) — the fix path for GH #802's empty-second-host symptom |
 
