@@ -1,0 +1,19 @@
+{
+  "rubric": "a2ui-corpus",
+  "rubricVersion": "1.1",
+  "judgedBy": "a2ui-reviewer",
+  "date": "2026-08-13T16:43:09Z",
+  "verdicts": {
+    "frontier-trip-card": {
+      "qualityScore": 5,
+      "passed": true
+    },
+    "stats-grid-dashboard": {
+      "qualityScore": 3,
+      "passed": false,
+      "failingDimensions": [
+        "D5"
+      ]
+    }
+  }
+}

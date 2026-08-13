@@ -53,5 +53,4 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // dated record of that pending state (category 1's no-verdict-sought shape, temporarily): run the
   // judged pipeline (`import-seeds.ts` with real VerdictsFiles) and DELETE these entries when the wave
   // lands — an entry surviving after admission is the drift this map's gate exists to catch.
-  ['frontier-trip-card', 'judged E_QUALITY 2026-08-13 (VerdictsFile, rubric a2ui-corpus 1.1 — a2ui-reviewer; archived corpus/verdicts/2026-08-13--s5-verdicts.json). Failing D1/D2: the seeded /trip/days itinerary is bound by nothing (dead model data), the day texts are static meta-copy, and the Pagination page bind writes /trip/page which nothing reads and no action reports — paging changes nothing and the agent never hears. Kept on the shelf pending repair: bind the day content (a List template over /trip/days, or an action-driven round-trip on page change) and make the description honest — then re-import judged (a fresh verdict, never --replace; this record was never written). Pagination-family catalog coverage meanwhile rides the shelf gate, not the corpus.'],
 ])
