@@ -1286,5 +1286,12 @@
     "description": "**Enablement-wire grammar widening (GH #783): alongside exact registry ids, an integrations: string[] member may be a service reference mcp:<server-id>:* — anc…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0186",
+    "url": "./adr-index.html#adr-0186",
+    "description": "ui-card structured-container design intake (GH #807, component arm; sibling GH #808, catalog arm; the Figma dialog-bubble frame): ui-card-header/ui-card-footer…",
+    "level": "L3",
+    "section": "Records"
   }
 ]
