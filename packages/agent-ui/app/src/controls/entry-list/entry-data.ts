@@ -10,6 +10,13 @@
 // label + description + free-text content, uniform across every kind — a kind-specific schema (e.g. a
 // Tool's parameter list) is an explicitly deferred, separately-scoped future extension, not built here.
 
+/** GH #850 / capability-availability-tagging.spec.md SPEC-R1 — the two AVAILABILITY modes: HOW an
+ *  ENABLED entry is reachable. `context` = ambient (the model sees it every turn — the only behaviour
+ *  before this field existed); `invocable` = inert until the user invokes it from the composer. A literal
+ *  union off an `as const` object, never an `enum` (the tsconfig's `erasableSyntaxOnly`). */
+export const ENTRY_AVAILABILITY = { context: 'context', invocable: 'invocable' } as const
+export type EntryAvailability = (typeof ENTRY_AVAILABILITY)[keyof typeof ENTRY_AVAILABILITY]
+
 export interface Entry {
   id: string
   kind: string
@@ -24,6 +31,31 @@ export interface Entry {
   /** A built-in entry can be toggled but never deleted (ADR-0132 Fork 4) — enforced by the UI
    *  (`entry-list.ts` renders no delete affordance for `builtin: true`), not by this module. */
   builtin: boolean
+  /** SPEC-R1 (GH #850) — HOW this entry is reachable, ORTHOGONAL to `enabled` (which stays "is this entry
+   *  active at all"): no read site may collapse the two. ABSENT reads as `'context'` at every read site
+   *  (`entryAvailability` below) — a READ-TIME default, never a migration write, so every stored config,
+   *  export/import payload, and library pack authored before this field is unchanged byte-for-byte (the
+   *  `readCatalogEntries` read-time-guarantee precedent). Semantics are defined for the FOUR capability
+   *  kinds only (skill/workflow/resource/tool — `entries.ts`'s `AVAILABILITY_KINDS`); on any other kind
+   *  the member is inert: readable, meaningless, and never branched on. */
+  availability?: EntryAvailability
+}
+
+/** SPEC-R1's read-time default, in ONE place: anything that is not exactly `'invocable'` — the member
+ *  absent (every entry written before the field existed), or a hand-edited persona file's garbage value —
+ *  reads as `'context'`, i.e. exactly today's ambient behaviour. Fail-soft by construction: no read site
+ *  ever sees `undefined`, and no store is ever written to make that true. */
+export function entryAvailability(entry: { availability?: string }): EntryAvailability {
+  return entry.availability === ENTRY_AVAILABILITY.invocable ? ENTRY_AVAILABILITY.invocable : ENTRY_AVAILABILITY.context
+}
+
+/** SPEC-R3's ONE conjunct, shared by every AMBIENT projection (the live system prompt, the `integrations`
+ *  wire, the config snapshot's label lists): an entry contributes ambient bytes iff it is `enabled` AND
+ *  in-context. `enabled` keeps its own meaning untouched — availability is a THIRD conjunct, never a
+ *  replacement — so a store in which no entry is `invocable` projects byte-identically to before the
+ *  field existed (the gated-equivalence law, SPEC-R3 AC3). */
+export function isAmbient(entry: Entry): boolean {
+  return entry.enabled && entryAvailability(entry) === ENTRY_AVAILABILITY.context
 }
 
 /** The store key one kind's entry list lives under — `entries:${kind}`, one array value per kind (the
@@ -112,7 +144,11 @@ export interface ValidateNewEntryOptions {
  *  failure mode than forcing the author to rename) UNLESS the caller flags this kind's id as a foreign
  *  key, in which case the add is rejected outright instead of minting an unregistered `${base}-2` row.
  *  The id is `input.id` when the caller supplies one (LLD-C7: a pack keying an external vocabulary), else
- *  `slugify(label)` exactly as before. Never mutates `existing`. */
+ *  `slugify(label)` exactly as before. Never mutates `existing`.
+ *
+ *  SPEC-R1 (GH #850) — the returned entry deliberately carries NO `availability` member: a new entry (hand-
+ *  authored and pack alike) is in-context by ABSENCE, read-side, never by a written value, so this shape is
+ *  byte-identical to the one every pre-#850 caller already gets. `NewEntryInput` gains nothing. */
 export function validateNewEntry(
   existing: readonly Entry[],
   kind: string,

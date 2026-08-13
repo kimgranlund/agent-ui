@@ -388,8 +388,12 @@ real model integration. This is the ONLY path the static build carries, so the s
 
 Set the optional `agentTurn` property to swap that stub for a **real live model turn** (TKT-0052/ADR-0136):
 the request is projected fresh from the current config every turn — the selected model, the composed
-system prompt, and every enabled capability entry (skills/workflows/resources/tools, projected as prose;
-the Tools kind gated by the `toolsEnabled` switch) — and replayed with the running multi-turn history. The
+system prompt, and every AMBIENT capability entry (skills/workflows/resources/tools, projected as prose;
+the Tools kind gated by the `toolsEnabled` switch) — and replayed with the running multi-turn history.
+"Ambient" is enabled AND in-context (GH #850): each of those four kinds' entries carries a per-entry
+availability mode, and a **user-invocable** one contributes nothing to any turn's ambient bytes — not the
+prompt, not the `integrations` wire, not the config snapshot — until the user invokes it from the
+conversation. Its row stays visibly marked in the Settings place so the state is never a mystery. The
 docs site wires this ONLY under `import.meta.env.DEV`, through the reused `dev-proxy-plugin.ts` trust
 boundary (ADR-0073, the browser never holds a key), so a live call happens only in a local `vite dev`
 session with a configured provider key; a network/provider failure degrades visibly via the conversation's

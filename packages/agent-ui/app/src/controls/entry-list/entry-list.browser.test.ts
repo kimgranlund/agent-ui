@@ -22,6 +22,7 @@ import '@agent-ui/components/controls/icon'
 import '@agent-ui/components/controls/text-field'
 import '@agent-ui/components/controls/field'
 import '@agent-ui/components/controls/switch'
+import '@agent-ui/components/controls/toggle' // GH #850 — the per-entry availability mode pill
 import '@agent-ui/code/editor'
 import { mountEntryList, showAddError, type EntryListSection } from './entry-list.ts'
 import { validateNewEntry, readEntries, entriesStoreKey, type Entry } from './entry-data.ts'
@@ -143,5 +144,85 @@ describe('mountEntryList — standalone, ZERO ui-agent-admin/agent-admin.css inv
     deleteBtn.click()
     expect(readEntries(store, KIND), 'the delete committed and the row is gone').toEqual([])
     expect(rows().find((r) => r.getAttribute('data-entry-id') === added.id)).toBeUndefined()
+  })
+})
+
+// ── GH #850 / capability-availability-tagging.spec.md SPEC-R2 — the at-a-glance row marker, for real ──────
+// The marker's whole job is to be SEEN without opening anything, and "seen" is a real-engine fact: jsdom
+// resolves neither the `@scope` rule that paints it nor the computed border it paints with. So the proof is
+// computed style on the rendered card — a context row and an invocable row, measured and compared, plus the
+// mode pill's own rendered box (an aria-pressed control the user can actually hit) rather than DOM presence.
+
+describe('mountEntryList — the user-invocable row marker is genuinely VISIBLE (SPEC-R2)', () => {
+  /** The same store-backed mount as above, with the mode opt-in and its writer wired. */
+  function mountWithModes(store: SettingsStore): EntryListSection {
+    const section = mountEntryList(
+      KIND,
+      'Add item',
+      {
+        onToggle: () => {},
+        onContentChange: () => {},
+        onDelete: () => {},
+        onAdd: () => true,
+        onAvailabilityChange: (id, availability) =>
+          store.set(
+            entriesStoreKey(KIND),
+            readEntries(store, KIND).map((e) => (e.id === id ? { ...e, availability } : e)),
+          ),
+      },
+      { availabilityToggle: true },
+    )
+    store.subscribe?.(() => section.render(readEntries(store, KIND)))
+    document.body.append(section.host)
+    mounted.push(section.host)
+    section.render(readEntries(store, KIND))
+    return section
+  }
+
+  it('an invocable card paints a DIFFERENT, thicker start edge than an in-context one (measured, not asserted from the DOM)', async () => {
+    const store = createMemoryStore({
+      initial: {
+        [entriesStoreKey(KIND)]: [
+          { ...SEED, id: 'ambient', label: 'Ambient item', order: 0 },
+          { ...SEED, id: 'invocable', label: 'Invocable item', order: 1, availability: 'invocable' },
+        ] satisfies Entry[],
+      },
+    })
+    const section = mountWithModes(store)
+    for (const editor of section.host.querySelectorAll('ui-code-editor')) await (editor as UICodeEditorElement).updateComplete
+
+    const cardOf = (id: string): HTMLElement => section.host.querySelector(`[data-part="entry"][data-entry-id="${id}"]`) as HTMLElement
+    const ambient = getComputedStyle(cardOf('ambient'))
+    const invocable = getComputedStyle(cardOf('invocable'))
+    // Anti-vacuous floor: both cards really painted a border at all (the shared card chrome).
+    expect(Number.parseFloat(ambient.borderInlineStartWidth)).toBeGreaterThan(0)
+    // The marker itself: a thicker start edge in a different colour — visible while scanning a list.
+    expect(Number.parseFloat(invocable.borderInlineStartWidth)).toBeGreaterThan(Number.parseFloat(ambient.borderInlineStartWidth))
+    expect(invocable.borderInlineStartColor).not.toBe(ambient.borderInlineStartColor)
+    // …and the card still has real height/width — a marked row is a full card, not a collapsed sliver.
+    const box = cardOf('invocable').getBoundingClientRect()
+    expect(box.height).toBeGreaterThan(20)
+    expect(box.width).toBeGreaterThan(100)
+  })
+
+  it('the mode pill is a real, hittable control — and a real press commits the mode to the store', () => {
+    const store = createMemoryStore({ initial: { [entriesStoreKey(KIND)]: [SEED] } })
+    const section = mountWithModes(store)
+    const pill = (): HTMLElement & { pressed: boolean } =>
+      section.host.querySelector('[data-part="entry-availability"]') as HTMLElement & { pressed: boolean }
+    const box = pill().getBoundingClientRect()
+    expect(box.height, 'a real control box, not a zero-size node').toBeGreaterThan(16)
+    expect(box.width).toBeGreaterThan(40)
+    // `pressed` reflects to an attribute (toggle.md) — the AX state itself rides internals.ariaPressed,
+    // which is unreadable from outside by construction (the fleet ARIA-via-internals law).
+    expect(pill().hasAttribute('pressed'), 'off to start — a field-less entry is in-context').toBe(false)
+    expect(pill().textContent, 'the row states the mode in words, not colour alone').toContain('Invocable')
+
+    pill().click() // the real user gesture — ui-toggle's own click path emits `toggle`, then commits
+    expect(readEntries(store, KIND)[0]!.availability, 'the press wrote the mode').toBe('invocable')
+    const marked = section.host.querySelector('[data-part="entry"]') as HTMLElement
+    expect(marked.getAttribute('data-availability')).toBe('invocable')
+    expect(pill().pressed, 'the re-rendered row paints the new state').toBe(true)
+    expect(pill().hasAttribute('pressed')).toBe(true)
   })
 })

@@ -171,9 +171,13 @@ additive expectation, confirmed.
   *then* its manifests are excluded and the rest of the list is unaffected — the ADR-0168 cl.4
   filter proven THROUGH expansion.
 - **AC3** *Given* the arc's diffs, *then* `client.ts`, `servers-config.ts`, `map-tool.ts`,
-  `mcp-boot`'s ready-gate wiring, and `src/agent/` show empty diffs (the SPEC-R22 AC1 fence
-  pattern, re-scoped to this arc), and the shipped SPEC-R16–R19/R23–R28 suites pass unmodified —
-  `npm test` green by exit code.
+  `mcp-boot`'s ready-gate wiring, and `src/agent/` show empty diffs — the FENCE is stated here and
+  self-contained: this arc is consumption-side only, so those five modules are named as untouched and
+  the proof is their diffs being EMPTY, not a suite that merely stays green (a transcribed
+  "SPEC-R22 AC1 fence pattern" citation stood here through v0.2; the referent — SPEC-R22 of
+  [a2ui-live-agent.spec.md](./a2ui-live-agent.spec.md) — is plan-failure/abandon semantics and carries no
+  such fence, GH #850's own doc-check caught it) — and the shipped SPEC-R16–R19/R23–R28 suites pass
+  unmodified — `npm test` green by exit code.
 
 **SPEC-R4 — Admin surfacing: an additive `services` array on the host GET.** The dev proxy's
 `GET /integrations` body MUST gain a second, additive array — `services` — carrying one trio-shaped

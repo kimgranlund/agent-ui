@@ -303,6 +303,75 @@ describe('the persona file carries the local-pattern-set SELECTION, never its de
   })
 })
 
+// GH #850 / capability-availability-tagging.spec.md SPEC-R1 AC1 — the EXPORT/IMPORT half of the
+// availability field's round-trip law (the store write/read half is entry-data.test.ts's). Two directions,
+// both load-bearing: an entry that never carried the field exports with NO `availability` key at all (the
+// migration clause — every persona file written before this slice is still byte-identical), and a
+// user-invocable entry's mode travels verbatim, so the imported persona composes the SAME prompt — i.e. the
+// gating rides through the format, rather than an imported invocable entry quietly going ambient again.
+describe('the persona file carries the per-entry availability mode (GH #850/SPEC-R1 AC1)', () => {
+  /** The authored store plus one INVOCABLE resource and one field-less (in-context) resource. */
+  function storeWithModes(): SettingsStore {
+    const store = authoredStore()
+    store.set(entriesStoreKey(ENTRY_KINDS.resource), [
+      {
+        id: 'wine-list',
+        kind: ENTRY_KINDS.resource,
+        label: 'Wine list',
+        description: 'By the glass.',
+        content: 'Riesling, Barolo.',
+        order: 0,
+        enabled: true,
+        builtin: false,
+      },
+      {
+        id: 'menu-pdf',
+        kind: ENTRY_KINDS.resource,
+        label: 'Menu PDF',
+        description: 'The dinner menu.',
+        content: 'Starters: soup, salad.',
+        order: 1,
+        enabled: true,
+        builtin: false,
+        availability: 'invocable',
+      },
+    ] satisfies Entry[])
+    return store
+  }
+
+  it('the invocable mode travels verbatim, and a field-less entry exports with NO `availability` key', () => {
+    const storeA = storeWithModes()
+    const text = personaFileText(exportPersonaFile(personaFromPreset(SOURCE_PRESET), storeA))
+    // Exactly ONE occurrence in the whole file: the entry that actually carries the mode. The in-context
+    // sibling — and every entry of every other kind — is byte-identical to a pre-#850 export.
+    expect(text.match(/"availability"/g) ?? [], 'one keyed entry, never a migration write across the file').toHaveLength(1)
+    expect(text).toContain('"availability": "invocable"')
+
+    const parsed = readPersonaFile(text)
+    expect(parsed.ok, parsed.ok ? '' : parsed.error).toBe(true)
+    if (!parsed.ok) return
+    const resources = parsed.file.state[entriesStoreKey(ENTRY_KINDS.resource)] as Entry[]
+    expect(resources[0]!.availability, 'the in-context entry keeps no key').toBeUndefined()
+    expect(resources[1]!.availability).toBe('invocable')
+  })
+
+  it('the IMPORTED persona composes a byte-identical prompt — the invocable entry stays dark, ambiently', async () => {
+    const storeA = storeWithModes()
+    const promptA = await composedPromptFor(storeA)
+    // anti-vacuity: the in-context sibling IS in the prompt, the invocable one is nowhere in it.
+    expect(promptA).toContain('### Wine list')
+    expect(promptA).not.toContain('Menu PDF')
+    expect(promptA).not.toContain('Starters: soup, salad.')
+
+    const parsed = readPersonaFile(personaFileText(exportPersonaFile(personaFromPreset(SOURCE_PRESET), storeA)))
+    expect(parsed.ok).toBe(true)
+    if (!parsed.ok) return
+    const imported = importedPersonaFrom(parsed.file, [personaFromPreset(SOURCE_PRESET)])
+    const promptB = await composedPromptFor(createMemoryStore({ initial: imported.seed }))
+    expect(promptB, 'the mode survived the format: same composed persona, byte for byte').toBe(promptA)
+  })
+})
+
 // ADR-0178 cl.3 / SPEC-R30 — the persona-authoring modality gate is a persona-scoped Surface Option like
 // every other, so it must round-trip: an exported Builder-shaped persona whose authoring capability
 // silently reverted to the inverse default (OFF) on re-import would be a different agent than the one

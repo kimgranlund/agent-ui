@@ -35,6 +35,8 @@
   --ui-entry-list-label-ink: var(--md-sys-color-neutral-on-surface-variant, var(--ui-entry-list-ink));
   --ui-entry-list-error-ink: var(--md-sys-color-danger-on-surface-variant, var(--ui-entry-list-ink)); /* the AA-gated danger TEXT ink (agent-admin.css's TKT-0065 note carries the fleet-family history) */
   --ui-entry-list-warning-ink: var(--md-sys-color-warning-on-surface-variant, var(--ui-entry-list-ink)); /* GH #419 — the AA-gated warning TEXT ink, one family over from error-ink (a NON-BLOCKING notice is not an error) */
+  --ui-entry-list-invocable-border: var(--md-sys-color-info-outline, var(--ui-entry-list-border)); /* GH #850/SPEC-R2 — the user-invocable row's at-a-glance card edge: one colour family over from the neutral default (an inert-until-invoked entry is a STATE, not a warning) */
+  --ui-entry-list-invocable-edge-size: 3px; /* GH #850/SPEC-R2 — that row's thickened START edge: a role-named constant minted HERE (the TKT-0066 item 5 shape) rather than a literal in the styles block; deliberately not a space token — a border width has no --md-sys-space-* rung, exactly as the 1px card borders below are literals */
   --ui-entry-list-entry-radius: var(--md-sys-shape-corner-base, 0.25rem); /* TKT-0066 item 5 ruling: dimensional constants route through the own chain */
   --ui-entry-list-row-gap: var(--md-sys-space-sm); /* a tight gap between adjacent inline parts within ONE row (entry-header) */
   --ui-entry-list-list-gap: var(--md-sys-space-sm); /* vertical rhythm between stacked rows (entry-section/entry-list) */
@@ -80,6 +82,16 @@
     border: 1px solid var(--ui-entry-list-border);
     border-radius: var(--ui-entry-list-entry-radius);
     background: var(--ui-entry-list-surface);
+  }
+
+  /* GH #850/SPEC-R2 — the AT-A-GLANCE row marker for a USER-INVOCABLE entry (`data-availability`, stamped
+     by entry-list.ts only for an opted-in section): the card's own edge changes colour and its start edge
+     thickens, so a marked row reads as different at a glance down a list of rows — no extra DOM, no second
+     copy of the word the row's own mode pill already carries. Both values route through this file's own
+     `--ui-entry-list-invocable-*` tokens (the TKT-0066 item 5 own-chain law). */
+  [data-part='entry'][data-availability='invocable'] {
+    border-color: var(--ui-entry-list-invocable-border);
+    border-inline-start-width: var(--ui-entry-list-invocable-edge-size);
   }
 
   /* The entry editors ride the ROW's width (column-flex cross-axis stretch guarantees a full-row typing

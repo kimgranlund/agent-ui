@@ -555,6 +555,67 @@ describe('ui-agent-admin cross-engine smoke — the settings region renders (GH 
   })
 })
 
+// ── GH #850 / capability-availability-tagging.spec.md SPEC-R2 — the availability affordance, COMPOSED ────
+// entry-list.browser.test.ts proves the marker paints in a standalone mount; this proves it survives the
+// REAL composition, where `agent-admin.css` (which `@import`s entry-list.css) and the whole shell cascade
+// are also live — the environment a user actually looks at. Style-only reads need no tab activation (this
+// file's own `activateTab` note), but the pill's BOX does, so the probe activates Capabilities.
+
+describe('ui-agent-admin cross-engine smoke — the per-entry availability affordance (GH #850/SPEC-R2)', () => {
+  /** A capability entry pair — one ambient, one user-invocable — seeded straight into a fresh store. */
+  function mountWithSeededSkills(): UIAgentAdminElement {
+    const wrapper = document.createElement('div')
+    wrapper.style.width = '1200px'
+    wrapper.style.height = '600px'
+    wrapper.style.display = 'flex'
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.style.flex = '1 1 auto'
+    el.store = createMemoryStore({
+      initial: {
+        [entriesStoreKey(ENTRY_KINDS.skill)]: [
+          { id: 'house-style', kind: ENTRY_KINDS.skill, label: 'House style', description: 'The voice.', content: 'Be brief.', order: 0, enabled: true, builtin: false },
+          { id: 'menu-pdf', kind: ENTRY_KINDS.skill, label: 'Menu PDF', description: 'The menu.', content: 'Starters.', order: 1, enabled: true, builtin: false, availability: 'invocable' },
+        ],
+      },
+    })
+    wrapper.append(el)
+    document.body.append(wrapper)
+    mounted.push(wrapper)
+    activateTab(el, 'Capabilities')
+    return el
+  }
+
+  it('the invocable row is visibly MARKED next to its ambient sibling, and its mode pill is a real hittable box', () => {
+    const el = mountWithSeededSkills()
+    const rowOf = (id: string): HTMLElement =>
+      el.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.skill}"] [data-entry-id="${id}"]`) as HTMLElement
+
+    const ambient = getComputedStyle(rowOf('house-style'))
+    const invocable = getComputedStyle(rowOf('menu-pdf'))
+    expect(Number.parseFloat(ambient.borderInlineStartWidth), 'anti-vacuous: both cards paint a real edge').toBeGreaterThan(0)
+    expect(Number.parseFloat(invocable.borderInlineStartWidth), 'the marked row reads different at a glance').toBeGreaterThan(
+      Number.parseFloat(ambient.borderInlineStartWidth),
+    )
+    expect(invocable.borderInlineStartColor).not.toBe(ambient.borderInlineStartColor)
+
+    // The mode control itself — a real ui-toggle with a real box, on BOTH rows (the mode is editable either
+    // way), pressed on the invocable one only.
+    for (const id of ['house-style', 'menu-pdf']) {
+      const pill = rowOf(id).querySelector('[data-part="entry-availability"]') as HTMLElement & { pressed: boolean }
+      expect(pill.tagName.toLowerCase()).toBe('ui-toggle')
+      const box = pill.getBoundingClientRect()
+      expect(box.width, `${id} pill width`).toBeGreaterThan(0)
+      expect(box.height, `${id} pill height`).toBeGreaterThan(0)
+      expect(pill.pressed, `${id} pressed state`).toBe(id === 'menu-pdf')
+    }
+
+    // …and the whole row is still a full card, not squeezed by the added control.
+    const rowBox = rowOf('menu-pdf').getBoundingClientRect()
+    expect(rowBox.height).toBeGreaterThan(20)
+    expect(rowBox.width).toBeGreaterThan(200)
+  })
+})
+
 // ── ADR-0170 (LLD-C7f) — the Catalogs section in a REAL engine ─────────────────────────────────────────
 // jsdom proves the write semantics; only a real engine proves the section is a legible, non-collapsed row
 // with a real switch, and that the mirror that replaced the `<ui-select>` actually PAINTS beside the A2UI

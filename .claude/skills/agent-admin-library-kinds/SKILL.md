@@ -155,7 +155,7 @@ When a new kind picks its semantics, three shapes exist — pick by the kind's o
 
 | Shape | Exemplar | When it fits |
 |---|---|---|
-| Multi-enable | skill/workflow/resource/tool | N independent on/offs, all enabled compose |
+| Multi-enable | skill/workflow/resource/tool | N independent on/offs; every enabled entry that is also **in-context** composes ambiently — since GH #850 these four kinds carry a second, ORTHOGONAL per-entry axis (`Entry.availability`: `context` \| `invocable`, absent ⇒ `context` read-side), and a `invocable` entry is reachable only by an explicit per-turn invocation (`entry-data.ts`'s `isAmbient` is the one conjunct every ambient projection filters on) |
 | Pattern-source (first-by-order) | `entries.ts` `pickedPatternSource` (SPEC-R11/D3) | single PICK with a legitimate none state; extra enabled entries a tolerated data-level no-op |
 | Single-select (derived) | catalog, §3 | the wire carries exactly ONE id, no none state, fail-closed default — the D3 shape would make the UI lie (ADR-0170 Context) |
 

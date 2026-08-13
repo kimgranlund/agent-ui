@@ -16,7 +16,7 @@
 // deferred, separately-scoped future extension — not built here.
 
 import { A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID, sanitizeCatalog } from './agent-admin-schema.ts'
-import { entriesStoreKey, readEntries, type Entry } from '../entry-list/entry-data.ts'
+import { entriesStoreKey, isAmbient, readEntries, type Entry } from '../entry-list/entry-data.ts'
 
 /** The known kinds this build seeds/instantiates. Not a closed enum — `Entry.kind` is a plain `string`
  *  (ADR-0132 Fork 2: extensible without a code change); these are the five known constants, not an
@@ -42,6 +42,21 @@ export const ENTRY_KINDS = {
   // `catalogId` the runner actually threads (cl.2's second-writer defect, closed by construction).
   catalog: 'catalog',
 } as const
+
+/** GH #850 / capability-availability-tagging.spec.md SPEC-R1 — the FOUR capability kinds an AVAILABILITY
+ *  mode (`Entry.availability`, in-context vs user-invocable) is defined for. The other kinds' selection
+ *  semantics are their own (`prompt-section`'s composition order, `pattern-source`'s first-by-order pick,
+ *  `catalog`'s derived single-select), so the field is inert on them: nothing branches on it there, and no
+ *  section outside this set renders the mode control (`agent-admin.ts`'s `#makeSection`). Deliberately its
+ *  own list rather than a filter over `CAPABILITY_KINDS` — that array's exclusions exist for a DIFFERENT
+ *  reason (double-injection / wire-threaded selection), and folding two rules into one expression is how
+ *  the next kind silently inherits the wrong one. */
+export const AVAILABILITY_KINDS: readonly string[] = [ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool]
+
+/** `true` iff `kind` is one of the four kinds availability semantics are defined for (`AVAILABILITY_KINDS`). */
+export function hasAvailabilityMode(kind: string): boolean {
+  return AVAILABILITY_KINDS.includes(kind)
+}
 
 /** The three built-in, non-deletable, toggle-on-by-default prompt sections (ADR-0132 cl.2). Order is the
  *  composition order `composeSystemPrompt` reads. */
@@ -175,17 +190,20 @@ export function composeSystemPrompt(sections: readonly Entry[]): string {
 }
 
 // ── The live system-prompt projection (ALM-C1, TKT-0052/ADR-0136 Fork 3) ───────────────────────────────
-// The DEV-only live turn's system prompt IS `composeSystemPrompt`'s output with every ENABLED capability
-// entry projected after it as labeled prose (LLD Q2). ADR-0132 Fork 3 made entries generic prose — label +
+// The DEV-only live turn's system prompt IS `composeSystemPrompt`'s output with every AMBIENT capability
+// entry projected after it as labeled prose (LLD Q2) — enabled AND in-context, since GH #850/SPEC-R3
+// widened the per-entry filter with the availability conjunct (`isAmbient`, entry-data.ts): a
+// user-invocable entry contributes NOTHING here, by design, until the user invokes it from the composer.
+// ADR-0132 Fork 3 made entries generic prose — label +
 // description + free-text content, NO parameter schema — so there is nothing machine-callable to declare as
 // API `tools`; system-prompt projection is the maximal FAITHFUL wire representation of what the user
-// authored (the model genuinely receives every enabled entry, so a capability edit changes the very next
+// authored (the model genuinely receives every ambient entry, so a capability edit changes the very next
 // live reply). A real tool-execution loop stays a future, separately-decomposed feature (ADR-0132's own
 // named deferral — it needs parameter schemas first).
 
 /** One capability kind's contribution to the live prompt: its `##` group heading + its entries (this
- *  function does the enabled-filter/sort/tools-gate itself, so the caller just hands over each kind's raw
- *  store slice). */
+ *  function does the ambient-filter — enabled AND in-context, GH #850/SPEC-R3 — plus the sort and the
+ *  master-switch gate itself, so the caller just hands over each kind's raw store slice). */
 export interface LiveCapabilityGroup {
   kind: string
   /** The `## {heading}` group header (e.g. "Skills available to you"). */
@@ -224,13 +242,15 @@ export interface LiveBankrollState {
 
 /**
  * The live system prompt: `composeSystemPrompt(sections)` followed by one `## {heading}` block per
- * capability kind that has ≥1 enabled entry, each enabled entry rendered as `### {label}` + its
+ * capability kind that has ≥1 AMBIENT entry (enabled AND in-context — GH #850/SPEC-R3), each such entry
+ * rendered as `### {label}` + its
  * description + its content, in `order` (ties by `id`, the composeSystemPrompt law). A group whose
  * `enabled` master switch is `false` is gated out wholesale (vision rev.5 generalized the old tools-only
  * `toolsEnabled` boolean to EVERY kind's section-header switch — the master wins over per-entry toggles).
- * GATED EQUIVALENCE (ADR-0136 Fork 3): with no enabled capability entries the result is byte-identical
+ * GATED EQUIVALENCE (ADR-0136 Fork 3): with no ambient capability entries the result is byte-identical
  * to `composeSystemPrompt(sections)` — the live prompt degrades exactly to today's composed prompt,
- * never a trailing empty header.
+ * never a trailing empty header. GH #850/SPEC-R3 AC3 extends that law to the new field: a store in which
+ * no entry carries `availability` composes byte-identically to the pre-#850 output.
  *
  * GH #525 — `bankroll`, when given (a capable, A2UI-on persona), always composes `BANKROLL_PATH_LINE`
  * right after the base prompt and ahead of the capability groups; `bankroll.stored`, when present, appends
@@ -252,11 +272,13 @@ export function composeLiveSystemPrompt(
   const groups: string[] = []
   for (const group of capabilities) {
     if (!group.enabled) continue // the kind's master switch gates the whole group out
-    const enabled = [...group.entries]
-      .filter((e) => e.enabled)
-      .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
-    if (enabled.length === 0) continue // a kind with nothing enabled contributes no header
-    const blocks = enabled.map((e) => {
+    // GH #850/SPEC-R3(a) — the per-entry filter is `isAmbient`, not bare `e.enabled`: enabled AND
+    // in-context. A user-invocable entry is skipped exactly the way a disabled one is (so a kind whose only
+    // enabled entries are invocable contributes no header at all). The three conjuncts stay independent:
+    // master switch → `enabled` → availability, none of them collapsed into another.
+    const ambient = [...group.entries].filter(isAmbient).sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
+    if (ambient.length === 0) continue // a kind with nothing ambient contributes no header
+    const blocks = ambient.map((e) => {
       const lines = [`### ${e.label}`]
       if (e.description.trim().length > 0) lines.push(e.description.trim())
       if (e.content.trim().length > 0) lines.push('', e.content.trim())

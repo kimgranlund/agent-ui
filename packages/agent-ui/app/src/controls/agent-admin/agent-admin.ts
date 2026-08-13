@@ -186,13 +186,14 @@ import {
   composeSystemPrompt,
   composeLiveSystemPrompt,
   pickedPatternSource,
+  hasAvailabilityMode,
   type LiveCapabilityGroup,
   type LiveBankrollState,
 } from './entries.ts'
 // ADR-0164 cl.2/cl.7 — the generic data core + the section-shell mount function both moved to the shared
 // `entry-list/` folder (a `settings/` sibling, public `./entry-data`/`./entry-list` subpaths); this
 // element is that extraction's first CONSUMER now, not its owner.
-import { entriesStoreKey, readEntries, validateNewEntry, type Entry, type EntryLibraryPack } from '../entry-list/entry-data.ts'
+import { entriesStoreKey, isAmbient, readEntries, validateNewEntry, type Entry, type EntryLibraryPack } from '../entry-list/entry-data.ts'
 import { mountEntryList, showAddError, type EntryListSection } from '../entry-list/entry-list.ts'
 import { lintPromptSections } from './prompt-lint.ts'
 // ADR-0178 cl.2 — the three-filter apply gate + the canonical key set it enumerates (LLD-C1). A pure
@@ -2297,6 +2298,13 @@ export class UIAgentAdminElement extends UIElement {
         this.#updateEntries(kind, (entries) => [...entries, result.entry])
         return true
       },
+      // GH #850/SPEC-R2 — the per-entry AVAILABILITY write, through the SAME read→transform→persist seam
+      // `onToggle` uses (one writer per kind, `#updateEntries`). Stored as the literal mode; nothing writes
+      // `'context'` back as a migration — a row flipped BACK to in-context stores the explicit `'context'`
+      // value, which reads identically to absent (`entryAvailability`), so an old and a round-tripped entry
+      // behave the same. Only offered for the four kinds availability is defined for (the option below).
+      onAvailabilityChange: (id, availability) =>
+        this.#updateEntries(kind, (entries) => entries.map((e) => (e.id === id ? { ...e, availability } : e))),
       },
       // GH #47/#48 — this kind's library packs, captured at compose time (the sections' build-once law;
       // the `libraries` prop doc names the set-before-append requirement). The kind's master switch no
@@ -2310,7 +2318,17 @@ export class UIAgentAdminElement extends UIElement {
       // `true`, which is exactly the absent-option default (byte-identical render). `rejectOnCollision`
       // (GH #564) rides the SAME `isCatalog` split as the `onAdd` handler above — the picker disables an
       // already-added catalog row instead of leaving it clickable-but-silently-rejected.
-      { libraries: this.libraries?.[kind], customAdd: !isCatalog, contentField: !isCatalog, rejectOnCollision: isCatalog },
+      //
+      // GH #850/SPEC-R2 — `availabilityToggle` is the FOUR capability kinds' opt-in (`hasAvailabilityMode`,
+      // entries.ts): the prompt-section, pattern-source and catalog sections omit it and render exactly as
+      // before, because availability semantics are defined for those four alone (SPEC-R1).
+      {
+        libraries: this.libraries?.[kind],
+        customAdd: !isCatalog,
+        contentField: !isCatalog,
+        rejectOnCollision: isCatalog,
+        availabilityToggle: hasAvailabilityMode(kind),
+      },
     )
     this.#capabilitySections.set(kind, section)
     return section
@@ -2562,10 +2580,14 @@ export class UIAgentAdminElement extends UIElement {
     const systemPrompt = composeSystemPrompt(sections)
     // A kind whose MASTER switch is off contributes NOTHING — the section-header toggle wins over
     // per-entry toggles (vision rev.5, generalizing the old tools-only boolean).
-    const enabledLabels = (kind: string): string[] =>
+    // GH #850/SPEC-R3(c) — and neither does a USER-INVOCABLE entry: this snapshot's per-kind label lists
+    // feed the stub arm's reply and the turn logger's config view, both of which are ambient truth ("what
+    // does the agent bring to every turn"), so they take the SAME `isAmbient` conjunct the prompt and the
+    // `integrations` wire take. Hence `ambientLabels`, not the old `enabledLabels` name.
+    const ambientLabels = (kind: string): string[] =>
       isEnabledFlag(store?.get(kindEnabledKey(kind)))
         ? readEntries(store, kind)
-            .filter((e) => e.enabled)
+            .filter(isAmbient)
             .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
             .map((e) => e.label)
         : []
@@ -2576,10 +2598,10 @@ export class UIAgentAdminElement extends UIElement {
       temperature: sanitizeNumber(schema, 'temperature', store?.get('temperature'), 0.5),
       toolsEnabled: isEnabledFlag(store?.get(kindEnabledKey(ENTRY_KINDS.tool))),
       systemPrompt,
-      skills: enabledLabels(ENTRY_KINDS.skill),
-      workflows: enabledLabels(ENTRY_KINDS.workflow),
-      resources: enabledLabels(ENTRY_KINDS.resource),
-      tools: enabledLabels(ENTRY_KINDS.tool),
+      skills: ambientLabels(ENTRY_KINDS.skill),
+      workflows: ambientLabels(ENTRY_KINDS.workflow),
+      resources: ambientLabels(ENTRY_KINDS.resource),
+      tools: ambientLabels(ENTRY_KINDS.tool),
     }
 
     // The SURFACE arm (TKT-0076) — takes precedence when armed AND at least ONE structured modality is on
@@ -3015,7 +3037,8 @@ export class UIAgentAdminElement extends UIElement {
   }
 
   /** Each capability kind's raw store slice + its live `##` group heading + its MASTER switch (vision
-   *  rev.5), for `composeLiveSystemPrompt` (which does the enabled-filter/sort/master-gate itself).
+   *  rev.5), for `composeLiveSystemPrompt` (which does the AMBIENT filter — enabled AND in-context since
+   *  GH #850/SPEC-R3 — plus the sort and the master-gate itself).
    *  EXCLUDES `pattern-source` (genui-surface SPEC-R10/R11): that kind's picked entry composes through
    *  the DEDICATED genui prompt block (`#runSurfaceTurn`'s own `pickedPatternSource` read) instead of the
    *  generic `## Pattern sources available to you` capability projection — including it here too would
@@ -3051,7 +3074,12 @@ export class UIAgentAdminElement extends UIElement {
    *  answers for "what is enabled right now". A FRESH store read (the live-apply law), master-gated on the
    *  tool kind's switch (the SAME switch that gates the kind's prompt projection).
    *
-   *  It forwards each enabled entry's `id`, NEVER its `label`. The id is the stable wire vocabulary the
+   *  GH #850/SPEC-R3(b) — the per-entry filter is `isAmbient` (enabled AND in-context), not bare
+   *  `e.enabled`: an enabled but USER-INVOCABLE tool forwards no id ambiently, on BOTH arms at once,
+   *  because both read this ONE projection. Its id reaches a request only when that turn invokes it
+   *  (SPEC-R4, slice S3) — until then the tool is genuinely dark, which is the mode's contract.
+   *
+   *  It forwards each ambient entry's `id`, NEVER its `label`. The id is the stable wire vocabulary the
    *  host's `resolveIntegrations` intersects against its registry; the label is human display text that a
    *  user may freely edit. They were the same string until this slice — forwarding the label worked only
    *  by that coincidence, so a prettier label silently disarmed the tool. The component stays entirely
@@ -3060,7 +3088,7 @@ export class UIAgentAdminElement extends UIElement {
   #enabledToolIds(store: SettingsStore | undefined): string[] {
     if (!isEnabledFlag(store?.get(kindEnabledKey(ENTRY_KINDS.tool)))) return []
     return readEntries(store, ENTRY_KINDS.tool)
-      .filter((e) => e.enabled)
+      .filter(isAmbient)
       .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
       .map((e) => e.id)
   }

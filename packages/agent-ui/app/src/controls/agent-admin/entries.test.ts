@@ -13,16 +13,18 @@
 
 import { describe, it, expect } from 'vitest'
 import {
+  AVAILABILITY_KINDS,
   ENTRY_KINDS,
   composeSystemPrompt,
   composeLiveSystemPrompt,
+  hasAvailabilityMode,
   pickedPatternSource,
   readCatalogEntries,
   isRegisteredCatalog,
   initialEntryValues,
   type LiveCapabilityGroup,
 } from './entries.ts'
-import { entriesStoreKey, validateNewEntry, type Entry } from '../entry-list/entry-data.ts'
+import { ENTRY_AVAILABILITY, entriesStoreKey, validateNewEntry, type Entry } from '../entry-list/entry-data.ts'
 import { A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID } from './agent-admin-schema.ts'
 
 function entry(over: Partial<Entry> & Pick<Entry, 'id'>): Entry {
@@ -109,6 +111,101 @@ describe('composeLiveSystemPrompt (ALM-C1 / ADR-0136 Fork 3) — the capability 
       group(ENTRY_KINDS.tool, 'Tools available to you', [entry({ id: 't', kind: ENTRY_KINDS.tool, label: 'T', content: 'x', enabled: true })], false),
     ]
     expect(composeLiveSystemPrompt(SECTIONS, groups)).toBe(base)
+  })
+})
+
+// ── the AVAILABILITY gate (GH #850 / capability-availability-tagging.spec.md SPEC-R3, surface (a)) ────────
+// An enabled but USER-INVOCABLE entry contributes ZERO ambient bytes to the live prompt — the third
+// conjunct (`isAmbient`), never a replacement for the master switch or the per-entry `enabled` flag. The
+// other three gated surfaces (`integrations` on both arms, the config snapshot's label lists, the Context
+// tab's System view) are agent-admin.test.ts's, driven through the real element.
+
+describe('composeLiveSystemPrompt — the availability gate (SPEC-R3 AC1)', () => {
+  it("an enabled INVOCABLE entry's label and content appear NOWHERE, while its in-context sibling composes", () => {
+    const skills = group(ENTRY_KINDS.skill, 'Skills available to you', [
+      entry({ id: 'house-style', label: 'House style', description: 'The voice.', content: 'Be brief.', order: 0 }),
+      entry({
+        id: 'menu-pdf',
+        label: 'Menu PDF',
+        description: 'The dinner menu.',
+        content: 'Starters: soup, salad.',
+        order: 1,
+        availability: ENTRY_AVAILABILITY.invocable,
+      }),
+    ])
+    const out = composeLiveSystemPrompt(SECTIONS, [skills])
+    expect(out).toContain('### House style')
+    expect(out).toContain('Be brief.')
+    // The byte assertions the requirement names — label, description AND content, all absent.
+    expect(out).not.toContain('Menu PDF')
+    expect(out).not.toContain('The dinner menu.')
+    expect(out).not.toContain('Starters: soup, salad.')
+  })
+
+  it('a kind whose only enabled entries are INVOCABLE contributes no header at all (the empty-group law, extended)', () => {
+    const tools = group(ENTRY_KINDS.tool, 'Tools available to you', [
+      entry({ id: 'calc', kind: ENTRY_KINDS.tool, label: 'Calculator', content: 'add(a,b)', availability: ENTRY_AVAILABILITY.invocable }),
+    ])
+    expect(composeLiveSystemPrompt(SECTIONS, [tools])).toBe(composeSystemPrompt(SECTIONS))
+  })
+
+  it('availability is ORTHOGONAL to the other two gates — neither collapses into the other', () => {
+    // in-context but DISABLED ⇒ still out; invocable but master-OFF ⇒ still out; the master switch wins
+    // over availability exactly as it wins over `enabled`.
+    const disabled = group(ENTRY_KINDS.skill, 'Skills available to you', [
+      entry({ id: 's', label: 'S', content: 'x', enabled: false, availability: ENTRY_AVAILABILITY.context }),
+    ])
+    expect(composeLiveSystemPrompt(SECTIONS, [disabled])).toBe(composeSystemPrompt(SECTIONS))
+    const masterOff = group(
+      ENTRY_KINDS.skill,
+      'Skills available to you',
+      [entry({ id: 's', label: 'S', content: 'x', availability: ENTRY_AVAILABILITY.invocable })],
+      false,
+    )
+    expect(composeLiveSystemPrompt(SECTIONS, [masterOff])).toBe(composeSystemPrompt(SECTIONS))
+  })
+
+  it('GATED EQUIVALENCE (SPEC-R3 AC3): a FIELD-LESS group composes byte-identically to an all-`context` one', () => {
+    // The explicit equivalence assertion the AC asks for, on the projection itself: absent ≡ 'context' ≡
+    // the pinned pre-#850 output (the literal below is the first test in this file's own expectation,
+    // unchanged by this slice — the two-sided proof that the widened filter moved no byte).
+    const fieldLess = group(ENTRY_KINDS.skill, 'Skills available to you', [
+      entry({ id: 'search', label: 'Web search', description: 'Searches the web', content: 'search(q)', order: 0 }),
+      entry({ id: 'calc', label: 'Calculator', description: '', content: '', order: 1 }),
+    ])
+    const explicitContext = group(
+      ENTRY_KINDS.skill,
+      'Skills available to you',
+      fieldLess.entries.map((e) => ({ ...e, availability: ENTRY_AVAILABILITY.context })),
+    )
+    const expected =
+      '## Foundation\nYou are helpful.\n\n' +
+      '## Skills available to you\n' +
+      '### Web search\nSearches the web\n\nsearch(q)\n\n' +
+      '### Calculator'
+    expect(composeLiveSystemPrompt(SECTIONS, [fieldLess])).toBe(expected)
+    expect(composeLiveSystemPrompt(SECTIONS, [explicitContext])).toBe(expected)
+  })
+})
+
+describe('AVAILABILITY_KINDS — the four kinds the mode is defined for (SPEC-R1)', () => {
+  it('exactly skill/workflow/resource/tool — prompt-section, pattern-source and catalog are OUT (SPEC-N1)', () => {
+    expect([...AVAILABILITY_KINDS].sort()).toEqual(['resource', 'skill', 'tool', 'workflow'])
+    for (const kind of [ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool]) {
+      expect(hasAvailabilityMode(kind), `${kind} carries the mode`).toBe(true)
+    }
+    for (const kind of [ENTRY_KINDS.promptSection, ENTRY_KINDS.patternSource, ENTRY_KINDS.catalog, 'some-future-kind']) {
+      expect(hasAvailabilityMode(kind), `${kind} does not`).toBe(false)
+    }
+  })
+
+  it("the field is INERT on a kind outside the set — `pickedPatternSource` never branches on it", () => {
+    // A pattern-source entry marked invocable (only reachable by a hand-edited file) is still picked: no
+    // code outside the four kinds may read the mode, so the D3 single-pick is untouched by this slice.
+    const picked = pickedPatternSource([
+      entry({ id: 'p', kind: ENTRY_KINDS.patternSource, label: 'P', availability: ENTRY_AVAILABILITY.invocable }),
+    ])
+    expect(picked?.id).toBe('p')
   })
 })
 
