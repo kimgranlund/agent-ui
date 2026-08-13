@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-13 |
 > | **Proposed by** | planner seat (GH [#845](https://github.com/kimgranlund/agent-ui/issues/845)'s design leg — the owner's 2026-08-13 intake-round ruling routed the Edit-Agents drawer vehicle to a new fleet control, starting at the `agent-ui-component-design` intake; the fork sheet is [`../spec/drawer.intake.md`](../spec/drawer.intake.md)) |
-> | **Ratified by** | *(pending — Kim, by hand or via a `ratify ADR-0188` GitHub utterance, ADR-0149)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-13, via the [`ratify ADR-0188` utterance](https://github.com/kimgranlund/agent-ui/issues/845#issuecomment-5287478165) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | on ratification+build (not authored here): `controls/drawer/drawer.{ts,css,md}` + barrel export + jsdom/browser tests · site doc/demo/gallery surfaces + the standing descriptor/site gates · the `Drawer` catalog row + factory (ADR-0087's catalog arm) · an `agent-ui-component-patterns` table row for the four-cell overlay/docking map (cl.2) — per the intake's S1–S4 |
 > | **Supersedes / Superseded by** | **Relates** ADR-0017/0019/0020/0101 (the modal machinery + announce law this re-applies) · ADR-0043/0045 (the non-modal branch this is NOT) · ADR-0102 (the three-lane chooser applied) · ADR-0125 (the re-derive-private-machinery precedent) · ADR-0087/0112 (catalog posture) · **Resolves** GH [#845](https://github.com/kimgranlund/agent-ui/issues/845)'s drawer-vehicle design fork (component arm only; the page-side lane composes the result — build BLOCKED on ratification) |
 
