@@ -1,6 +1,6 @@
 # SPEC — A2UI container vocabulary (catalog + taught-idiom arm)
 
-> Status: proposed · v0.1 · 2026-08-13 · Layer: SPEC (execution contract)
+> Status: proposed · v0.2 · 2026-08-13 · Layer: SPEC (execution contract)
 > Refines: GH #808 (owner ruling, intake round 2026-08-12 — the four-arm scope: header anatomy
 > contract · label/value row idiom · container type vocabulary · taught prompt idioms) on
 > [ADR-0186](../adr/0186-ui-card-header-structured-format.md) (accepted — the shared header-anatomy
@@ -55,9 +55,16 @@ minting a new catalog component.
 
 - **SPEC-R1 — the `CardHeader.format` mark.** The default catalog's `CardHeader` row gains ONE
   property: `format`, string enum `['default','structured']`, `mapsTo: 'format'`, **non-bindable**
-  (a literal prop — ADR-0186's own downstream ruling: "one-way/static, a structural mode switch,
-  not live status data"; the `Text.variant`/`Button.variant` mode-enum precedent, not the
-  `Badge.intent` live-status precedent). It rides `cardHeaderFactory`'s existing `accessorFactory`
+  (a literal prop — the `Text.variant`/`Button.variant` mode-enum precedent, not the
+  `Badge.intent` live-status precedent). **Named interpretation of an accepted ADR's wording, not a
+  silent resolution:** ADR-0186's Consequences say "one new *bindable* mark — `CardHeader.format`
+  (one-way/static, since it is a structural mode switch, not live status data)", and the intake
+  §4a says "the ONE additional *bindable* surface". This SPEC reads "bindable" there as
+  *catalog-reachable*, with the parenthetical "static" controlling the actual flag: non-bindable ⇒
+  every occurrence is a literal ⇒ the value is fully statically checked by the shipped ADR-0098
+  enum gate (`conformance.ts`), which a `{path}` binding would bypass until render time. If Kim
+  meant path-bindable, the flip is additive — see §7's fork row. It rides `cardHeaderFactory`'s
+  existing `accessorFactory`
   generically — the component-side prop is a reflecting accessor per ADR-0186's Consequences; zero
   factory code. Advertised on `CardHeader` ONLY — `ui-card-footer` accepts the attribute for
   family symmetry (ADR-0186), but the catalog does not advertise a mark with no agent use case
@@ -112,9 +119,13 @@ minting a new catalog component.
   adjacent-sibling rhythm; no gap prop needed.
   *AC1:* `Text(variant:'label')` validates and renders the `label`/`md` triple.
   *AC2:* the fallback for an unwidened consumer is graceful (`caption` approximates the register) —
-  named, not silent. *AC3:* the ADR-0078 cl.5 table extension is booked as a one-row `## Amendment`
-  (the GH #664 amendment mode, Kim ratifies) in the build slice — this SPEC does not self-amend an
-  accepted ADR.
+  named in §7's first fork row and in the R8 module's wall line, not silent. *AC3:* the amendment
+  is bigger than a bare table row and is booked honestly as such: it adds a wire-enum MEMBER
+  (`catalog.json`'s `Text.variant` enum) + a fan-out row, **amending ADR-0078 cl.5's
+  "wire vocabulary is UNCHANGED" headline claim on ADR-0142's current table** — ADR-0142
+  (accepted) owns the shifted table values in force today (its Repairs rewired
+  `a2ui-catalog.spec.md` §5.2's Text row). Filed as a `## Amendment` (the GH #664 amendment mode,
+  Kim ratifies) in the build slice — this SPEC does not self-amend an accepted ADR.
 
 ### Arm 3 — container type vocabulary + nesting rules
 
@@ -138,9 +149,12 @@ minting a new catalog component.
   is not a `Card` fails validation with `{ code: 'CONTAINMENT', path }`. Scope v1: exactly the
   three Card regions (Tabs/Swiper sub-types are a future extension of the same code — non-goal
   here). The conformance pack extends accordingly: `manifest.json`'s failure-code vocabulary +
-  ≥ 2 new fixtures in `fixtures.jsonl` (one valid structured container exercising R1–R4's marks,
-  one `CONTAINMENT` negative), `suites/*.yaml` regenerated (never hand-edited — the drift-wire
-  gate), and `UPSTREAM-PROPOSAL.md` gains the new code's row.
+  ≥ 2 new fixtures in `fixtures.jsonl`, `suites/*.yaml` regenerated (never hand-edited — the
+  drift-wire gate), and `UPSTREAM-PROPOSAL.md` gains the new code's row. **Fixture sequencing is
+  part of this requirement, not a slice footnote:** the `CONTAINMENT` negative (and, optionally, a
+  mark-free valid container fixture) lands with the validator clause in S2; the valid structured
+  container exercising R1–R4's marks CANNOT validate before S3 ships the `format` mark (an unknown
+  property fails `CATALOG`), so that fixture lands in S5.
   Alternative (taught-only, no hard failure) — REJECTED with reasoning stated: a stray region
   renders gracefully, but containment is a *vocabulary-correctness* claim the issue's acceptance
   assigns to conformance ("conformance covers it"); a rule only prose enforces is not covered.
@@ -208,19 +222,25 @@ extended suite (R6 AC1); `prompt-drift` + `prompt-equivalence` + `suites-driftwi
 
 | Slice | Contents | Depends on | Gate focus |
 |---|---|---|---|
-| S1 | R2 `slot` marks + R4 `Text.variant` `'label'` widening (catalog.json + `TEXT_VARIANT_TABLE` row) + baseline recapture; books the ADR-0078 cl.5 amendment (R4 AC3) | — | catalog/validator tests, prompt-drift, recapture diff, real-engine cell-placement probe |
-| S2 | R6 `CONTAINMENT` validator clause + manifest/fixtures/suites regen + compat sweep | — | conformance runner, suites-driftwire, corpus/examples sweep |
-| S3 | R1 `CardHeader.format` mark + recapture | GH #807's component build (ADR-0186 Repairs landed) | catalog tests, prompt-drift, render probe |
+| S1 | R2 `slot` marks + R4 `Text.variant` `'label'` widening (catalog.json + `TEXT_VARIANT_TABLE` row) + baseline recapture; books the ADR-0142-aware cl.5 amendment (R4 AC3). Drive-by (checker-flagged substrate drift, fix in passing): ADR-0078's header still calls ADR-0142 "ratification pending" though it is accepted — a REV-annotated mechanical pointer repair | — | catalog/validator tests, prompt-drift, recapture diff, real-engine cell-placement probe |
+| S2 | R6 `CONTAINMENT` validator clause + manifest/suites regen + the `CONTAINMENT` negative fixture (optionally a mark-free valid container fixture) + compat sweep | — | conformance runner, suites-driftwire, corpus/examples sweep |
+| S3 | R1 `CardHeader.format` mark + recapture. Drive-by (checker-flagged, fix in passing): `widget.ts`'s "Nothing upstream enforces catalog enum MEMBERSHIP" comment contradicts `conformance.ts`'s shipped ADR-0098 enum check — repair the stale comment | GH #807's component build (ADR-0186 Repairs landed) | catalog tests, prompt-drift, render probe |
 | S4 | R8 `structured-container` mini-skill + recapture | S1 + S3 (never teach an unemittable mark) | token-budget/selection tests, recapture diff |
-| S5 | R9 corpus exemplar (+ R6's valid fixture if not landed with S2) | S3 | admission gates, conformance runner |
+| S5 | R9 corpus exemplar + R6's valid structured-container fixture exercising R1–R4's marks (sequenced here per R6 — it cannot validate before S3) | S3 | admission gates, conformance runner |
 
 S1/S2 are dispatchable now, in parallel; S3 unblocks on the sibling arm; S4/S5 close the loop.
 
 ## 7 · Risks & open forks (named, not decided here)
 
-- **ADR-0078 cl.5 amendment (R4)** — the wire-enum widening extends an accepted ADR's table; the
-  build files the one-row Amendment for Kim's ratification (GH #664 mode). If declined, R4 falls
-  back to teaching `caption` (graceful, register-approximate) — the idiom survives, fidelity drops.
+- **ADR-0078 cl.5 amendment (R4)** — the widening adds a wire-enum member + fan-out row, amending
+  cl.5's "wire vocabulary is UNCHANGED" claim on ADR-0142's current (accepted) table; the build
+  files the Amendment for Kim's ratification (GH #664 mode). If declined, R4 falls back to
+  teaching `caption` (graceful, register-approximate) — the idiom survives, fidelity drops.
+- **`format` bindability (R1)** — this SPEC rules non-bindable, reading ADR-0186's "bindable mark
+  … (one-way/static)" as *catalog-reachable* with "static" controlling the flag (statically
+  checkable by the ADR-0098 enum gate). If Kim meant path-bindable, flipping `bindable: true` is
+  additive (one catalog field + baseline recapture, no factory/renderer change) — flag before S3
+  ships.
 - **Containment hard-fail (R6)** — recommended over taught-only; if the compat sweep (AC2) finds a
   shipped payload relying on a stray region, that finding routes back here before the code lands.
 - **`slot` mark creep (R2)** — a future trailing-`Button` ask reopens the scope line as an
