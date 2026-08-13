@@ -5,7 +5,7 @@
     "Text": {
       "properties": {
         "text": { "type": { "type": "string" }, "bindable": true, "mapsTo": "textContent" },
-        "variant": { "type": { "type": "string", "enum": ["h1", "h2", "h3", "h4", "h5", "caption", "body"] }, "mapsTo": "variant" },
+        "variant": { "type": { "type": "string", "enum": ["h1", "h2", "h3", "h4", "h5", "caption", "body", "label"] }, "mapsTo": "variant" },
         "truncate": { "type": { "type": "boolean" }, "mapsTo": "truncate" },
         "emphasis": { "type": { "type": "boolean" }, "mapsTo": "emphasis" },
         "href": { "type": { "type": "string" }, "bindable": true, "mapsTo": "href", "format": "safe-href" }
@@ -206,7 +206,8 @@
     "Icon": {
       "properties": {
         "name": { "type": { "type": "string" }, "bindable": true, "mapsTo": "glyph" },
-        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" }
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "slot": { "type": { "type": "string", "enum": ["leading", "trailing"] }, "mapsTo": "slot" }
       }
     },
 
@@ -490,7 +491,8 @@
     "Badge": {
       "properties": {
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
-        "intent": { "type": { "type": "string", "enum": ["neutral", "info", "success", "warning", "danger"] }, "bindable": true, "mapsTo": "intent" }
+        "intent": { "type": { "type": "string", "enum": ["neutral", "info", "success", "warning", "danger"] }, "bindable": true, "mapsTo": "intent" },
+        "slot": { "type": { "type": "string", "enum": ["leading", "trailing"] }, "mapsTo": "slot" }
       }
     },
 
