@@ -661,6 +661,13 @@
       "section": "Guides"
     },
     {
+      "name": "Surface Host",
+      "url": "./surface-host-doc.html",
+      "description": "ui-surface-host is the M2 mount/stream seam — wraps one @agent-ui/a2ui RendererHost, standalone-usable (SPEC-R3), with the GH #805 disable-on-action mechanics.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
       "name": "Highlight",
       "url": "./highlight-doc.html",
       "description": "@agent-ui/code/highlight: a swappable syntax-highlighter registry plus seven bundled, zero-dependency tokenizers.",

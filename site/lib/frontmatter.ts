@@ -114,6 +114,9 @@ import routerOutletMd from '../../packages/agent-ui/router/src/controls/router-o
 import routerLinkMd from '../../packages/agent-ui/router/src/controls/router-link/router-link.md?raw'
 import codeEditorMd from '../../packages/agent-ui/code/src/editor/editor.md?raw'
 import markdownMd from '../../packages/agent-ui/code/src/markdown/markdown.md?raw'
+// @agent-ui/app (LLD-C1, ADR-0129 clause 1; SPEC-R2/R3) — ui-surface-host, the M2 mount/stream seam. Same
+// posture as router/code above: an app-tier descriptor outside the components-scoped ALL_DESCRIPTORS glob.
+import surfaceHostMd from '../../packages/agent-ui/app/src/controls/surface-host/surface-host.md?raw'
 
 /** A parsed control descriptor: the structured frontmatter (its attributes-as-API drive the table) + the prose body. */
 export interface ComponentDoc {
@@ -220,6 +223,8 @@ export const loadCodeEditorDoc = (): ComponentDoc => parseDoc(codeEditorMd)
 // components/src, so outside the ALL_DESCRIPTORS glob below (TKT-0095's L1_TREES fix picks it up in the
 // SITEMAP the moment its own doc page exists on disk — no generator change needed for this one).
 export const loadMarkdownDoc = (): ComponentDoc => parseDoc(markdownMd)
+// @agent-ui/app/surface-host (LLD-C1, ADR-0129 clause 1) — same posture as router/code above (GH #834).
+export const loadSurfaceHostDoc = (): ComponentDoc => parseDoc(surfaceHostMd)
 
 // ── tier enumeration (for the family overview + tier showcase — a DERIVED member list) ───────────────────────
 // The whole `{name}.md` descriptor set, globbed at build time (Vite resolves `import.meta.glob` statically). The
