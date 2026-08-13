@@ -20,6 +20,7 @@ import { loadCatalog } from '../../src/catalog/catalog.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
 import defaultCatalogDoc from '../../src/catalog/default/catalog.json'
 import basicCatalogDoc from '../../src/catalog/a2ui-basic/catalog.json'
+import manifest from '../../conformance/manifest.json'
 
 const RUN_SCRIPT = fileURLToPath(new URL('./run.ts', import.meta.url))
 
@@ -93,15 +94,59 @@ describe('runSuite — pure verdict-matching logic', () => {
 })
 
 describe('the committed suite — every fixtures.jsonl line is a well-formed Fixture', () => {
-  it('parses to 19 lines, each carrying the required fields', () => {
+  it('parses to 21 lines, each carrying the required fields', () => {
+    // 19 → 21: ADR-0187 / GH #829's finalize-granularity pair.
     const fixtures = readFixtures()
-    expect(fixtures.length).toBe(19)
+    expect(fixtures.length).toBe(21)
     for (const f of fixtures) {
       expect(typeof f.name).toBe('string')
       expect(typeof f.catalogId).toBe('string')
       expect(f.payload).not.toBeUndefined()
       expect(typeof f.expectedVerdict.valid).toBe('boolean')
       expect(Array.isArray(f.expectedVerdict.failures)).toBe(true)
+      // ADR-0187 — `atFinalize` is OPTIONAL and, when present, strictly boolean.
+      if ('atFinalize' in f && f.atFinalize !== undefined) expect(typeof f.atFinalize).toBe('boolean')
+    }
+  })
+
+  // ── ADR-0187 / GH #829 — the per-fixture finalize field (C6) ────────────────────────────────────────
+  it('exactly ONE committed fixture opts into atFinalize — the runner default is not creeping', () => {
+    const flagged = readFixtures().filter((f) => f.atFinalize === true)
+    expect(flagged.map((f) => f.name)).toEqual(['abandoned-surface-at-finalize'])
+  })
+
+  it('the pair is the same PAYLOAD with opposite verdicts — the flag is the ONLY difference', () => {
+    // This is ADR-0187's central falsifiable claim, expressed as data: "a legitimate mid-stream prefix"
+    // and "an abandoned, truly-final empty surface" are BYTE-IDENTICAL wire shapes, so nothing but the
+    // caller's assertion can separate them. If a future change made the payloads differ, the pair would
+    // silently stop proving that.
+    const byName = new Map(readFixtures().map((f) => [f.name, f]))
+    const neg = byName.get('abandoned-surface-at-finalize')!
+    const pos = byName.get('abandoned-surface-mid-stream')!
+    expect(JSON.stringify(neg.payload)).toBe(JSON.stringify(pos.payload))
+    expect(neg.atFinalize).toBe(true)
+    expect(pos.atFinalize).toBeUndefined()
+    expect(neg.expectedVerdict).toEqual({ valid: false, failures: [{ code: 'IDGRAPH', path: 's-abandoned:root-missing' }] })
+    expect(pos.expectedVerdict).toEqual({ valid: true, failures: [] })
+  })
+
+  it("manifest.json's advertised fixtureCount matches the real line count (no second enumeration drifts)", () => {
+    // Found adding the ADR-0187 pair: `manifest.fixtureCount` is a PORTABLE consumer's advertised count
+    // but nothing read it, so it silently said 19 while the file held 21 — exactly the GH #406
+    // two-hand-maintained-enumerations class this pack's generator doctrine exists to prevent. Gated now.
+    expect(manifest.fixtureCount).toBe(readFixtures().length)
+  })
+
+  it("the two single-failure ISOLATION fixtures keep exactly one failure each (a blanket flip's casualties)", () => {
+    // ADR-0187 §4 / LLD §4: `unsupported-version` and `bad-pointer-datamodel` deliberately carry
+    // createSurface-only sids to isolate ONE failure each. The reverted mechanical fix reddened both by
+    // adding an unrelated root-missing. This asserts the per-fixture design preserved that isolation —
+    // the runner default must never become finalize.
+    const byName = new Map(readFixtures().map((f) => [f.name, f]))
+    for (const name of ['unsupported-version', 'bad-pointer-datamodel']) {
+      const f = byName.get(name)!
+      expect(f.atFinalize, `${name} must NOT opt in`).toBeUndefined()
+      expect(f.expectedVerdict.failures, `${name} must isolate ONE failure`).toHaveLength(1)
     }
   })
 })
@@ -110,6 +155,6 @@ describe("the real CLI — SPEC-R5 AC1, run against this repo's validator, exit 
   it('exits 0 — every committed fixture\'s actual verdict matches its expectedVerdict', () => {
     const result = spawnSync('node', ['--experimental-strip-types', RUN_SCRIPT], { encoding: 'utf8' })
     expect(result.status, `stdout:\n${result.stdout}\nstderr:\n${result.stderr}`).toBe(0)
-    expect(JSON.parse(result.stdout)).toMatchObject({ ok: true, fixtureCount: 19 })
+    expect(JSON.parse(result.stdout)).toMatchObject({ ok: true, fixtureCount: 21 })
   })
 })

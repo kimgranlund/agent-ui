@@ -53,6 +53,11 @@ export const SUITE_MEMBERSHIP: Record<string, readonly string[]> = {
     'duplicate-root',
     'dangling-child',
     'cycle',
+    // ADR-0187 / GH #829 — the finalize-granularity pair. Both are protocol-pipeline (IDGRAPH) mechanics
+    // that hold regardless of catalog, so `validator.yaml` is their home by the same concern boundary the
+    // rest of this list follows. They sit AFTER `cycle`, keeping the id-graph members contiguous.
+    'abandoned-surface-at-finalize',
+    'abandoned-surface-mid-stream',
   ],
   'catalog.yaml': [
     'valid-button',
@@ -93,7 +98,15 @@ const HEADER = [
 ].join('\n')
 
 /** One fixture, rendered as one upstream-shaped YAML list row (name/description/catalog/action/payload/
- *  expect_verdict). Every value position is `JSON.stringify`-emitted — see the module header. */
+ *  expect_verdict [+ at_finalize]). Every value position is `JSON.stringify`-emitted — see the module
+ *  header.
+ *
+ *  ADR-0187 / GH #829 — `at_finalize` is emitted ONLY for a fixture that carries `atFinalize: true`.
+ *  Conditional, not unconditional, for two reasons: (1) every pre-existing row stays BYTE-identical, so
+ *  the drift gate's diff shows exactly the two new rows and nothing else; (2) the field is a MODE input to
+ *  the validator, not an expectation, and a suite consumer that ignores it would silently mis-run the
+ *  negative fixture — its presence on exactly the rows that need it is the honest signal. Snake_case
+ *  matches the surrounding row convention (`expect_verdict`, `catalog_schema`), not the TS field name. */
 const emitRow = (f: Fixture): string => {
   const schema = CATALOG_SCHEMA_PATHS[f.catalogId]
   if (schema === undefined) {
@@ -108,6 +121,7 @@ const emitRow = (f: Fixture): string => {
     `    catalog_schema: ${JSON.stringify(schema)}`,
     `  action: ${JSON.stringify('validate')}`,
     `  payload: ${JSON.stringify(f.payload)}`,
+    ...(f.atFinalize === true ? [`  at_finalize: ${JSON.stringify(true)}`] : []),
     `  expect_verdict: ${JSON.stringify(f.expectedVerdict)}`,
   ].join('\n')
 }
