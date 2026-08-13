@@ -1,6 +1,13 @@
 # SPEC — Per-entry availability mode + composer tagging grammar (GH #850 · GH #849, one joint contract)
 
-> Status: proposed · v0.1 · 2026-08-13 · Layer: SPEC (execution contract)
+> Status: proposed · v0.2 · 2026-08-13 (v0.1 same day) · Layer: SPEC (execution contract)
+> v0.2 changelog (the doc-checker fix-then-ship pass, same day): SPEC-R4 owns the history
+> byte-growth trade + §8 gains the no-cap non-goal · R4 AC4's fence-precedent anchor repaired
+> (the transcribed SPEC-R22 referent was plan-failure semantics — the §3-of-doc-standards
+> transcribed-citation law caught in the wild) · §10's agent-admin.ts row reworded to the actual
+> comment wording · R7's event list de-enumerated to the owning constants (the GH #754 drift
+> class) + the composer's own pre-existing "six-event" comment drift booked into S2 · R3 AC3
+> given its operational form.
 > Refines: GH #850 (per-entry availability mode) + GH #849 (composer tagging grammar) — the intake
 > records; their Summary/Acceptance own the why/what. **No owning PRD — a deliberate, acknowledged
 > deviation** (the [`mcp-agent-config.spec.md`](./mcp-agent-config.spec.md) precedent): both issue
@@ -145,7 +152,9 @@ replacement.
   `integrations` on BOTH arms' requests carries exactly the first id.
 - **AC3** *Given* a store whose entries all lack the field, *then* the composed prompt, the
   `integrations` list, and the snapshot label lists are byte-identical to HEAD's outputs for the
-  same store (gated equivalence, asserted).
+  same store — operationally: the existing `entries.test.ts`/`agent-admin.test.ts` suites pass
+  UNMODIFIED, plus one new explicit field-less-store equivalence assertion (gated equivalence,
+  asserted, not assumed).
 
 **SPEC-R4 — Turn-time resolution: host-side, fresh-read, fail-closed, both arms, zero transport
 change.** A submitted turn MAY carry references (`{kind, id, label}[]`, SPEC-R6). At send,
@@ -157,7 +166,11 @@ change.** A submitted turn MAY carry references (`{kind, id, label}[]`, SPEC-R6)
   byte-identically). The FRAMED text is what both arms send and what `#recordTurn` records — the
   model-saw-it truth rides history, so follow-up turns keep the attachment without re-mention;
   the conversation UI keeps showing the typed text + chips (the log/Context views show the wire
-  truth, their existing job).
+  truth, their existing job). The COST is owned, not hidden: a framed attachment's full content
+  rides every subsequent request of that session (history is replayed whole), so a large resource
+  mentioned once grows every later turn's payload — accepted deliberately for follow-up
+  continuity, with no size cap or truncation this arc (§8; an LLD MAY add a stated per-block
+  ceiling later without changing this requirement's semantics).
 - **tool** — the entry's `id` unions into THAT turn's `integrations` list (both arms), deduped,
   riding the existing wire vocabulary unchanged — including an ADR-0185 service ref
   (`mcp:<server-id>:*`) stored as an entry id, which expands server-side exactly as an ambient one
@@ -180,7 +193,8 @@ change.** A submitted turn MAY carry references (`{kind, id, label}[]`, SPEC-R6)
   (three cases), *then* each contributes nothing and the turn sends with the remaining
   resolutions intact.
 - **AC4** *Given* the arc's diffs, *then* `agent-transport.ts` and the dev-proxy/Worker route
-  schemas show empty diffs (the SPEC-R22-of-a2ui-live-agent AC1 fence pattern, re-scoped).
+  schemas show empty diffs (the empty-diff fence precedent:
+  [mcp-agent-config.spec.md](./mcp-agent-config.spec.md) SPEC-R3 AC3, re-scoped to this arc).
 
 **SPEC-R5 — The grammar: `@` mentions Resources, `/` invokes, direct-by-name, never captured
 text.** Typing `@` at a TOKEN START (start of text, or after whitespace/newline) MUST open the
@@ -226,10 +240,12 @@ leaves the editor; the menu is a control-created `[role="listbox"]` popover with
 items; ArrowUp/ArrowDown move the highlight via `aria-activedescendant` on the editor; Enter
 commits the highlighted item; Escape closes. Enter with an open menu MUST commit and MUST NOT
 send (the guard runs ahead of the composer's Enter-sends law; Shift+Enter's newline law is
-untouched). NO new event name — the fleet's closed vocabulary
-(`change·input·select·open·close·toggle·action`) gains nothing; the composer's `events: []` +
-registration-callback contract stands, and no internal menu event may escape the host (the
-existing editor-`input` suppression discipline).
+untouched). NO new event name — the fleet's closed event vocabulary (ADR-0153; the owning home is
+the `ALLOWED_EVENTS` constants in `family-coherence.test.ts` + `naming-gates.test.ts`, extended
+together, never copied) gains nothing; the composer's `events: []` + registration-callback
+contract stands, and no internal menu event may escape the host (the existing editor-`input`
+suppression discipline — whose own comment carries a pre-existing "six-event" count drift, booked
+into S2, §10).
 *(→ GH #849; ADR-0043/`combo-box.ts`'s active-descendant architecture; ADR-0153's closed event
 vocabulary; the fleet ARIA-via-parts law)*
 - **AC1** *Given* an open menu, a browser-engine test walks Arrow→Arrow→Enter and asserts focus
@@ -308,6 +324,10 @@ records the framed text; the next turn's `integrations` is `[]` again.
 - **Composers beyond the chat context** — the authoring/copilot composer keeps the props
   default-off this arc; wiring it later is a props-only change (SPEC-R6's default-off law is what
   makes that true).
+- **Attachment size caps / truncation** — none this arc: a framed attachment rides history whole
+  (SPEC-R4's owned trade). An LLD MAY introduce a stated per-block ceiling later without changing
+  SPEC-R4's semantics; until one exists, big-resource byte growth is the user's visible,
+  dismissable choice (the chip), not a silent mechanism.
 - **Voice/mic, autocompletion of plain text, and `@` beyond Resources** — out; §3 grades the last.
 
 ## 9 · Build slices (each independently green; the #850 → #849 seam ruled here)
@@ -321,7 +341,7 @@ when #849's slices land. No dark-launch flag needed; no S1 byte depends on S2/S3
 | Slice | Scope (requirements) | Issue | Gate (exit-code judged, foreground) |
 |---|---|---|---|
 | **S1 — availability mode** | SPEC-R1 (model+persistence) · SPEC-R2 (row affordance) · SPEC-R3 (ambient gating, all four surfaces) + the §10 stale-record repairs | #850 complete | new units in `entry-data.test.ts`/`entries.test.ts`/`agent-admin.test.ts` (incl. R3's gated-equivalence AC3) · `npm run check && npm test` |
-| **S2 — composer grammar core** | SPEC-R5 (triggers/filter/dismiss) · SPEC-R6 (chip/commit/callback) · SPEC-R7 (keyboard/AX/event law) — generic, props-driven, zero agent-admin knowledge | #849 (component half) | `conversation-composer.test.ts` additions · ONE browser-shard case for R7 AC1 (focus/activedescendant need a real engine) · `npm run check && npm test` |
+| **S2 — composer grammar core** | SPEC-R5 (triggers/filter/dismiss) · SPEC-R6 (chip/commit/callback) · SPEC-R7 (keyboard/AX/event law) — generic, props-driven, zero agent-admin knowledge + S2's §10 repairs (incl. the pre-existing "six-event" comment drift) | #849 (component half) | `conversation-composer.test.ts` additions · ONE browser-shard case for R7 AC1 (focus/activedescendant need a real engine) · `npm run check && npm test` |
 | **S3 — admin wiring + resolution** | SPEC-R8 (roster projection) · SPEC-R4 (turn-time resolution, both arms, history/log) | #849 complete | roster + resolution units in `agent-admin.test.ts`/`entries.test.ts` (R4's four ACs) · `npm run check && npm test` · a live proof on the dev surface before close (the pixel-truth law) |
 
 S2 and S3 are parallelizable after S1 (S2 depends on S1 not at all; S3 depends on S1's field and
@@ -337,7 +357,9 @@ Records this SPEC falsifies — repaired IN the landing slice's own change, neve
 |---|---|---|
 | `.claude/skills/agent-admin-library-kinds/SKILL.md` (Multi-enable row) | "N independent on/offs, all enabled compose" | S1 — gains the availability conjunct |
 | `packages/agent-ui/app/src/controls/agent-admin/agent-admin.md` (system-view paragraph) | "every enabled capability entry" composes | S1 |
-| `entries.ts` / `agent-admin.ts` header comments (ALM-C1: "every ENABLED capability entry projected") | same | S1 |
+| `entries.ts`'s ALM-C1 section header | "every ENABLED capability entry projected after it as labeled prose" | S1 |
+| `agent-admin.ts`'s `#capabilityGroups` / `#enabledToolIds` doc comments | "does the enabled-filter/sort/master-gate itself" (and the ids projection's own filter description) — no availability conjunct | S1 |
+| `conversation-composer.ts`'s editor-`input` suppression comment | pre-existing drift, exposed not caused by this arc: "the fleet's closed six-event vocabulary" — seven since ADR-0153 (the GH #754 copied-set class); S2 touches this file, so the sweep is booked there | S2 |
 | `conversation-composer.md` + `conversation-composer.lld.md` (contract: props/callback inventory) | pre-widening seam inventory | S2 |
 
 Open questions (none blocking; all LLD-altitude):
