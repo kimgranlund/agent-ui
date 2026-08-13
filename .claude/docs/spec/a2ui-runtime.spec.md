@@ -71,6 +71,16 @@ Normative per RFC 2119. Each carries a stable ID, a PRD trace, and acceptance cr
 > SAME element, survivor identity preserved); a resent `"root"` stays governed by SPEC-R3 AC2's IDGRAPH
 > guard, unaffected. Cite that SPEC for resend behavior; this SPEC's own text is unchanged.
 
+> **REV 2026-08-13 (ADR-0187, GH #829) — this clause is MID-STREAM-only; it is not a completeness
+> guarantee. A scope cross-reference, not a narrowing.** This clause's tolerance is exactly what it says:
+> a not-yet-delivered reference MUST NOT block or error *while more messages may still arrive*. It has
+> always been silent about the different question of a stream that ENDS with a reference unfulfilled — the
+> tolerance defers a judgment, it does not waive one. SPEC-R11's REV of the same date records the
+> mechanism: a caller that can assert completeness (`atFinalize`) gets the deferred judgment, and a
+> surface created with an empty component set then fails `IDGRAPH ${surfaceId}:root-missing` instead of
+> being exempted forever. Both ACs above are unchanged and continue to hold verbatim in the default mode
+> every mid-stream caller uses — the honest reading has always been "not yet", never "never".
+
 **SPEC-R15 — Render-depth guard.** *(REV 2026-08-06 — new, `a2ui-ecosystem-alignment.spec.md`
 SPEC-R2, GH #473.)* The renderer MUST enforce a maximum root-reachable component-tree depth of
 **64 levels** (`root` counts as level 1; `MAX_RENDER_DEPTH`, `protocol.ts`). A payload whose
@@ -140,7 +150,32 @@ Additionally, the renderer MUST support **DynamicString `${…}` interpolation**
 
 **SPEC-R11 — Validation & structured errors.** The renderer MUST validate payloads (MIME `application/a2ui+json`) and, on a schema/catalog/idgraph/pointer failure, emit a structured `error` (client→server, §5.2) rather than rendering invalid UI. The validator MUST be the single shared implementation also used by the corpus admission gate (corpus SPEC-N1). *(→ PRD-G1, PRD-G4)*
 - **AC1** *Given* an invalid message, *when* validated, *then* a structured `error{code,surfaceId,path,message}` is produced and the invalid content is not rendered.
-- **AC2** *Given* the same payload, *when* validated here and in corpus admission, *then* both return the identical verdict (parity).
+- **AC2** *Given* the same payload, *when* validated here and in corpus admission, *then* both return the identical verdict (parity) **at the same granularity** (REV 2026-08-13 — see below).
+
+> **REV 2026-08-13 (ADR-0187, GH #829) — GRANULARITY, made explicit. One implementation, one new mode,
+> no fork.** The shared validator takes an OPTIONAL caller assertion — `atFinalize` — meaning "this payload
+> is COMPLETE; nothing more is coming for it". Absent (the default), verdicts are byte-identical to every
+> pre-ADR-0187 verdict; present, ONE additional judgment unlocks: a surface created (or touched) with an
+> EMPTY merged component set fails the EXISTING `IDGRAPH` `${surfaceId}:root-missing`.
+>
+> **Why the signal exists.** `createSurface` with zero `updateComponents` is a byte-identical wire shape
+> whether it is a legitimate mid-stream prefix (still legal, SPEC-R4 below) or an abandoned surface that
+> will mount permanently empty (GH #802's reported defect). The distinguishing fact — *is more coming?* —
+> is not IN the payload; only the CALLER holds it. A caller-agnostic strictness change was attempted and
+> reverted with proof: it reds the ratified prefix laws (a2ui-message-lifecycle SPEC-R4 AC1, a2ui-live-agent
+> SPEC-R5 AC1). Heuristic inference inside the validator was rejected as a category error — it is pure and
+> total over a static array.
+>
+> **This clause's "one shared implementation" law is PRESERVED**, and so is SPEC-N6's parity: one function,
+> one optional mode. What AC2's parity now requires is that two callers judging the SAME COMPLETENESS agree
+> — a renderer at finalize and corpus admission (both judging a complete set) return identical verdicts,
+> which is the case the parity law was always about. A caller judging a mid-stream prefix and a caller
+> judging a finished payload are not judging the same question, and were never required to agree.
+>
+> **Zero wire widening:** no new failure code, so §5.2's `A2uiWireError` union and the renderer LLD §9
+> mapping (`IDGRAPH` → `VALIDATION_FAILED` + surfaceId) are untouched. Which callers opt in is a build-level
+> ruling enumerated in ADR-0187 §4 (renderer finalize · the producer's per-round verdict · corpus admission
+> and its harness mirror), not a normative requirement of this SPEC.
 
 **SPEC-R12 — Capabilities exchange.** The renderer MUST be able to declare an `a2uiClientCapabilities` object (supported protocol versions, surfaces, action features) to the server; under A2A transport it MUST place it in the A2A `Message` metadata. *(→ PRD-G1, PRD-G7)*
 - **AC1** *Given* a capabilities request (or A2A handshake), *when* the renderer responds, *then* the declared object lists its supported `protocolVersion`(s) including `v1.0`.
@@ -160,7 +195,7 @@ Additionally, the renderer MUST support **DynamicString `${…}` interpolation**
 | **SPEC-N3** | Teardown is leak-free | After `deleteSurface` (or renderer disposal), the surface leaves zero live signals/effects/listeners — provable via the kernel's `inspect()` + AbortSignal (mirrors the component foundation's discipline). |
 | **SPEC-N4** | Fault isolation | One malformed message or one unknown component type MUST NOT tear down the surface or stop the stream. |
 | **SPEC-N5** | Zero runtime dependencies | The renderer adds no third-party runtime dependency (Constraint C2); it builds on `@agent-ui/components` (signals + controls) only — it MUST NOT use `@a2ui/web_core`. |
-| **SPEC-N6** | Validator parity | The validation in SPEC-R11 is the same code path as corpus admission (one implementation, two callers). |
+| **SPEC-N6** | Validator parity | The validation in SPEC-R11 is the same code path as corpus admission (one implementation, two callers). *(REV 2026-08-13, ADR-0187/GH #829: still ONE implementation — it now takes an optional `atFinalize` completeness assertion from the caller. Parity means two callers judging the same completeness return identical verdicts; the renderer's finalize and corpus admission both judge a COMPLETE set, so they agree, which is the case this law was always about. See SPEC-R11's REV of the same date.)* |
 
 ## 5. Typed contracts
 
