@@ -393,11 +393,37 @@ the Tools kind gated by the `toolsEnabled` switch) — and replayed with the run
 "Ambient" is enabled AND in-context (GH #850): each of those four kinds' entries carries a per-entry
 availability mode, and a **user-invocable** one contributes nothing to any turn's ambient bytes — not the
 prompt, not the `integrations` wire, not the config snapshot — until the user invokes it from the
-conversation. Its row stays visibly marked in the Settings place so the state is never a mystery. The
+conversation (the reach path below). Its row stays visibly marked in the Settings place so the state is never a mystery. The
 docs site wires this ONLY under `import.meta.env.DEV`, through the reused `dev-proxy-plugin.ts` trust
 boundary (ADR-0073, the browser never holds a key), so a live call happens only in a local `vite dev`
 session with a configured provider key; a network/provider failure degrades visibly via the conversation's
 error path, never a crash. A switch of model or prompt mid-conversation applies to the NEXT turn only.
+
+## The reach path: `@` mentions and `/` invocations (GH #849, SPEC-R8/R4)
+
+The composer's two rosters come from this element, rebuilt from a FRESH store read whenever anything the
+store holds changes: `@` offers the enabled **Resources**, `/` offers the enabled **Skills · Workflows ·
+Tools**, both availability modes included — an in-context entry may appear in the menu *and* compose
+ambiently; a user-invocable one appears ONLY here. A disabled entry, or any entry of a kind whose master
+switch is off, is absent. Labels are read from the entries themselves per build, so a rename (GH #848)
+shows on the next menu open with nothing else to wire; the reference the user commits carries the entry's
+`id`, which is what everything downstream resolves by (GH #402).
+
+At send, `ui-agent-admin` resolves each committed reference against a fresh store read, by id, fail-closed
+(an entry deleted, disabled, or master-switched off between menu and send contributes nothing, and the turn
+still sends):
+
+- a **skill · workflow · resource** frames into the outgoing user turn's TEXT — one `### {label} ({kind})`
+  block per entry under a single `## Referenced for this message` header, content verbatim, the typed text
+  last. That framed text is what every arm sends and what history records, so a follow-up turn keeps the
+  attachment without re-mentioning it (the cost is owned: the attachment rides the whole session's replay,
+  with no size cap this arc). The conversation itself keeps showing the typed text plus its chips — the
+  Context: Dialog log is where the wire truth is inspected.
+- a **tool** unions its id into THAT turn's `integrations` (both live arms, deduped, ambient ids first).
+  Nothing persists: the next turn's list is the ambient projection again.
+
+The transport carries zero new vocabulary for any of it — the whole mechanism is host-side, which is why
+`agent-transport.ts`, the dev proxy and the Worker were untouched by the feature.
 
 ## Fail-closed everywhere
 
