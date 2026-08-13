@@ -15,10 +15,14 @@
   judged same cycle (below). adr-0178's amendment (GH #696) checked for the
   verified-but-unexecuted-ratification class: NO ratify utterance exists on #696 — it genuinely
   awaits Kim's flip, correctly still pending in the checkpoint.
-- **Unsubstantiated claim, named**: repo-cleaner-sweep-2's idle summary said "docs deploy is
-  broken on HEAD" but the seat never delivered specifics; the host's independent probe
-  (`npm run build`) exits 0 on HEAD (only the standing chunk-size warnings). Treated as noise
-  unless the seat resurfaces with evidence.
+- **CORRECTED (post-landing): the docs-deploy claim was REAL** — repo-cleaner-sweep-2's late
+  reply carried the evidence: every "Deploy docs site" Actions run red for 15+ pushes
+  (`fs-shim.ts` missing the `statSync` export `dogfood-inventory.ts` imports; only the wrangler
+  bundler sees the alias, so `npm run build`/check/test never could — the host's first probe
+  tested the WRONG LAYER). Filed #811, fixed same cycle (PR #812 + a trip-wire test making the
+  class visible in `npm test`), deploy run 31654215766 GREEN — the first in 16. Lesson: "gates
+  green" claims must name which layers the gates actually exercise; the deploy pipeline was
+  never one of them.
 - **Verdict**: hygiene fully clean; the queue is human decisions plus this landing leg. The one
   buildable item pair (#807→#808) is design-first and Kim-gated.
 
