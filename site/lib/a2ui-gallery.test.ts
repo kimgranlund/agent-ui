@@ -165,32 +165,44 @@ describe('the render check BITES — a deliberately-broken seed is caught, not p
   })
 })
 
-// ── the empty-surface negative control (the OTHER arm of the `data-rendered` predicate) ─────────────────
+// ── the abandoned-surface negative control (both arms of the `data-rendered` predicate) ─────────────────
 // `data-rendered` is `errors.length === 0 && surface.childElementCount > 0`. The broken-seed control above
-// bites the `errors.length === 0` arm (a rejection); this fixture bites the `childElementCount > 0` arm —
-// a payload that is ACCEPTED CLEAN (zero errors) yet produces an EMPTY surface: a `createSurface` with NO
-// `updateComponents`, so nothing is ever mounted. Without this the empty-surface arm had no test that could
-// fail, and its "This seed rendered an empty surface." branch went unexercised.
-describe('the render check BITES on an empty surface — clean but empty is caught (negative control)', () => {
+// bites the `errors.length === 0` arm via a CATALOG rejection; this fixture is a `createSurface` with no
+// `updateComponents` — nothing is ever mounted.
+//
+// ADR-0187 / GH #829 REPAIR. This fixture used to bite the `childElementCount > 0` arm in ISOLATION,
+// because a bare `createSurface` validated CLEAN: that was the defect (GH #802's silent blank card). The
+// renderer's `finalize()` now judges at finalize granularity, so this payload emits
+// `VALIDATION_FAILED` (`empty:root-missing`) and the fixture bites BOTH arms. The isolation is gone
+// because the STATE it isolated is gone — "accepted clean yet renders nothing" is precisely the class
+// ADR-0187 eliminates, so no fixture can reconstruct it. `a2ui-gallery.ts`'s
+// "This seed rendered an empty surface." branch is therefore now a DEFENSIVE fallback rather than a
+// reachable one, and the card shows the rejection note instead. Kept as-is (total, harmless); flagged on
+// GH #829 rather than pruned, since removing it is a site-owned judgment, not this fix's.
+describe('the render check BITES on an abandoned surface — created-but-never-filled is caught (negative control)', () => {
   const emptySeed: ExampleSeed = {
     name: 'empty-fixture',
-    description: 'A clean-but-empty seed — createSurface with no updateComponents. Never on the shelf.',
+    description: 'An abandoned seed — createSurface with no updateComponents. Never on the shelf.',
     promptText: 'n/a — negative control only',
     surfaceId: 'empty',
     protocolVersion: 'v1.0',
     catalogId: 'agent-ui',
-    // createSurface only — no components are ever mounted, so the surface renders EMPTY with NO error.
+    // createSurface only — no components are ever mounted, so the surface renders EMPTY.
     messages: [{ version: 'v1.0', createSurface: { surfaceId: 'empty', catalogId: 'agent-ui' } }],
   }
 
-  it('the empty seed is caught: zero errors, empty surface, card flagged not-rendered, empty-surface note', () => {
+  it('the abandoned seed is caught: IDGRAPH-rejected at finalize, empty surface, card flagged not-rendered', () => {
     const { errors, surface, card } = buildSeedCard(emptySeed)
-    expect(errors, 'a bare createSurface should NOT emit a renderer error').toEqual([])
+    // ADR-0187: the finalize judgment fires — the EXISTING IDGRAPH class mapped by the renderer LLD §9
+    // table to `VALIDATION_FAILED` + surfaceId (no new code, no wire widening).
+    expect(errors, 'a bare createSurface must now emit the finalize IDGRAPH error (ADR-0187)').toHaveLength(1)
+    expect(errors[0]!.error).toMatchObject({ code: 'VALIDATION_FAILED', surfaceId: 'empty' })
+    expect(errors[0]!.error.message).toContain('empty:root-missing')
     expect(surface.childElementCount, 'a bare createSurface should mount NO components').toBe(0)
     expect(card.dataset.rendered).toBe('false')
     const defect = card.querySelector('.seed-card-defect')
-    expect(defect, 'the empty-surface defect note should be shown').not.toBeNull()
-    expect(defect?.textContent).toContain('empty surface')
+    expect(defect, 'the defect note should be shown').not.toBeNull()
+    expect(defect?.textContent).toContain('VALIDATION_FAILED')
   })
 
   it('the empty fixture is NOT on the shelf — allSeeds carries no seed named "empty-fixture"', () => {

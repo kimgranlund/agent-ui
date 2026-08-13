@@ -19,7 +19,10 @@
 // transient state (SPEC-R4), so a per-message id-graph check would false-positive. The tree eager-guards
 // the *always*-invalid in-stream cases (2nd `root`, cycle). The finalize-only judgments (missing
 // `root`, dangling) are caught by `finalize()`, which runs the shared validator on the COMPLETE
-// component set (parity with corpus admission, N6) and emits only its id-graph verdict.
+// component set (parity with corpus admission, N6) and emits only its id-graph verdict. ADR-0187/GH #829:
+// that finalize call now passes `{ atFinalize: true }`, which extends the finalize-only judgments to a
+// surface `createSurface`'d and never given ANY components — previously waved through by the validator's
+// empty-set exemption, leaving a permanently-blank host with no error to show (GH #802).
 //
 // Action wiring (the integration decision — see the build hand-back). The default catalog declares
 // Button's `action` prop with `mapsTo:'action'`. The host knows the catalog, so it knows which props
@@ -439,11 +442,19 @@ class Renderer implements RendererHost {
     // Run the SHARED validator on the COMPLETE component set (parity, N6). Emit only its id-graph
     // verdict: CATALOG/POINTER are render-time concerns already surfaced by the widget resolver, and the
     // finalize-only id-graph judgments (missing `root`, dangling) are what this stage exists to catch.
+    //
+    // ADR-0187 / GH #829 — the CLIENT half of the finalize signal. This method exists precisely to judge
+    // the COMPLETE set at finalize (LLD-C11 §8), so it is the one call site whose `atFinalize` assertion
+    // is definitional. Before the flag, a `createSurface`-only surface re-framed here as
+    // `updateComponents { components: [] }` hit `checkIdGraph`'s empty-set early return and was waved
+    // through — the empty `ui-surface-host` had no error to show, only its silent `:empty` placeholder
+    // (GH #802). Now it fails `${id}:root-missing`, and because ADR-0187 REUSES the existing IDGRAPH code
+    // the filter just below passes it unmodified → `VALIDATION_FAILED` on the wire, zero widening.
     const complete: A2uiServerMessage = {
       version: surface.version,
       updateComponents: { surfaceId: id, components: [...surface.components.values()] },
     }
-    for (const failure of validateA2ui(complete, entry.catalog).failures) {
+    for (const failure of validateA2ui(complete, entry.catalog, undefined, { atFinalize: true }).failures) {
       if (failure.code !== 'IDGRAPH') continue
       this.#emitInternalError(surface.version, {
         code: 'IDGRAPH',

@@ -171,6 +171,104 @@ describe('ui-surface-host — a real A2UI stream renders inside the surface + ap
   })
 })
 
+// ── ADR-0187 / GH #829 clause 6 — the terminal-empty presentational brace ──────────────────────────────
+//
+// The validator is the sole JUDGE (SPEC-N6). This state is a read of the host's OWN facts — finalize
+// happened + the mount point holds no element — so it also covers producers the server-side opt-in
+// cannot reach (recorded transcripts, the A2A bridge, any third-party stream). The CSS half swaps the
+// anticipatory ":empty" placeholder for a terminal message; jsdom cannot resolve `content`, so these
+// assertions target the STATE the stylesheet keys off, which is the real contract boundary.
+
+describe('ui-surface-host — ADR-0187: terminal-empty state at finalize (GH #829/#802)', () => {
+  const CREATE_ONLY = line({ version: 'v1.0', createSurface: { surfaceId: 'abandoned', catalogId: 'agent-ui' } })
+
+  it('finalize on a rootless host flips data-empty-final; the host stays MOUNTED and addressable', () => {
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.ingest(CREATE_ONLY)
+    // Pre-finalize the placeholder is still ANTICIPATORY — content may yet arrive (runtime SPEC-R4).
+    expect(el.dataset.emptyFinal).toBeUndefined()
+
+    el.finalize()
+    expect(el.dataset.emptyFinal).toBe('')
+    // Unmount-at-finalize was REJECTED (ADR-0187 §Alternatives): a later turn legitimately routes to this
+    // same surfaceId through routeLine's known branch (SPEC-R7), so the host must survive.
+    expect(el.isConnected).toBe(true)
+    expect(el.querySelectorAll('[data-part="surface"]')).toHaveLength(1)
+  })
+
+  it('a host that DID render a root never flips the state (no false positive on the working card)', async () => {
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'ok', catalogId: 'agent-ui' } }))
+    el.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: { surfaceId: 'ok', components: [{ id: 'root', component: 'Column', children: [] }] },
+      }),
+    )
+    el.finalize()
+    await whenFlushed()
+    expect(el.dataset.emptyFinal).toBeUndefined()
+  })
+
+  it('a LATER ingest clears the state, and the next finalize re-derives it from the real contents', async () => {
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.ingest(CREATE_ONLY)
+    el.finalize()
+    expect(el.dataset.emptyFinal).toBe('')
+
+    // The model came back with real content — "the stream is not over" is a property of a line arriving.
+    el.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: { surfaceId: 'abandoned', components: [{ id: 'root', component: 'Column', children: [] }] },
+      }),
+    )
+    expect(el.dataset.emptyFinal, 'ingest must retire the terminal verdict on entry').toBeUndefined()
+
+    el.finalize()
+    await whenFlushed()
+    expect(el.dataset.emptyFinal, 'a surface that now HAS a root must not re-flag').toBeUndefined()
+  })
+
+  it('a later ingest that still delivers no components RE-FLAGS at the next finalize', () => {
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.ingest(CREATE_ONLY)
+    el.finalize()
+    el.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 'abandoned', path: '/x', value: 1 } }))
+    expect(el.dataset.emptyFinal).toBeUndefined() // cleared on entry, unconditionally
+    el.finalize()
+    expect(el.dataset.emptyFinal, 'still nothing mounted ⇒ still terminal-empty').toBe('')
+  })
+
+  it('a reconnect starts clean — a rebuilt artboard has not finalized anything yet', () => {
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    el.ingest(CREATE_ONLY)
+    el.finalize()
+    expect(el.dataset.emptyFinal).toBe('')
+
+    const parent = el.parentElement!
+    el.remove()
+    expect(el.dataset.emptyFinal, 'disconnect must drop the state with the artboard').toBeUndefined()
+    parent.appendChild(el)
+    expect(el.dataset.emptyFinal).toBeUndefined()
+  })
+
+  it('the state is presentation ONLY — it emits no client message of its own (single-owner, SPEC-N6)', () => {
+    // The wire error for this surface comes from the RENDERER's own opted-in finalize (ADR-0187 C3),
+    // through the ordinary onClientMessage path. This element must never add a second verdict.
+    const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
+    const seen: unknown[] = []
+    el.onClientMessage((m) => seen.push(m))
+    el.ingest(CREATE_ONLY)
+    el.finalize()
+
+    expect(el.dataset.emptyFinal).toBe('')
+    // Exactly ONE message — the renderer's IDGRAPH verdict — and nothing minted by this element.
+    expect(seen).toHaveLength(1)
+    expect(JSON.stringify(seen[0])).toContain('abandoned:root-missing')
+  })
+})
+
 describe('ui-surface-host — onClientMessage delivers a stubbed client message (SPEC-R2 AC3)', () => {
   it('a click on a mounted control fires the registered callback with the resolved action', () => {
     const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)

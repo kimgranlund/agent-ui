@@ -3,8 +3,9 @@
   "specSource": ".claude/docs/spec/a2ui-ecosystem-alignment.spec.md SPEC-R5 (GH #476)",
   "upstreamIssue": "https://github.com/a2ui-project/a2ui/issues/2150",
   "fixturesFile": "fixtures.jsonl",
-  "fixtureCount": 19,
+  "fixtureCount": 21,
   "protocolVersion": "v1.0",
+  "fixtureFields": "Required per fixture: name | description | catalogId | payload | expectedVerdict. OPTIONAL: atFinalize (boolean, ADR-0187 / GH #829) — a MODE input, not an expectation: true asserts the payload is a COMPLETE set, which additionally fails a surface created with an empty component set (IDGRAPH `${surfaceId}:root-missing`). Absent = the streaming-tolerant default (a missing root/dangling ref may still be filled by a later message, runtime SPEC-R4). A validator with no finalize mode can skip the one flagged fixture (abandoned-surface-at-finalize) and match every other expectation unchanged.",
   "seed": "The three upstream-interactive-button/simple-login-form/product-card fixtures (ADR-0169 cl.1's pinned a2ui.org Basic Catalog examples, packages/agent-ui/a2ui/src/catalog/a2ui-basic/fixtures/) are the interop seed named by GH #476 \u2014 every other fixture is protocol/catalog-conformance coverage (SCHEMA, VERSION_UNSUPPORTED, CATALOG, IDGRAPH, POINTER, PARSE) authored for this suite.",
   "catalogs": {
     "agent-ui": "../src/catalog/default/catalog.json",

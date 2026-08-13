@@ -88,6 +88,18 @@
     color: var(--ui-surface-host-empty-ink);
     font-size: 0.85rem;
   }
+  /* ADR-0187 / GH 829 clause 6 — the terminal-empty brace. The rule above is ANTICIPATORY ("appears
+     here" — content is still expected); once `finalize()` has run with nothing mounted, that copy is a
+     lie, and the silent version of it is exactly GH 802's reported symptom (a blank card beside a
+     working one, with no indication anything went wrong). `data-empty-final` is set by surface-host.ts
+     from its OWN facts, never from a second validation. Specificity: `:scope[data-empty-final]
+     [data-part='surface']:empty::after` is (0,3,1) vs. the base rule's (0,2,1) — it wins on the same
+     pseudo-element without !important and without touching the base rule.
+     (Issue numbers are written WITHOUT a leading hash in this file: a hash plus three digits parses as a
+     3-digit hex colour to the CSS token-purity linter — a false positive worth one character to avoid.) */
+  :scope[data-empty-final] [data-part='surface']:empty::after {
+    content: 'Nothing was rendered for this surface.';
+  }
 
   /* TKT-0084 — [wrap]: the opt-in content-hugging artboard. An absolutely positioned box (the base
      `[data-part='surface']` rule) contributes NO intrinsic size to its parent, so relaxing `block-size`

@@ -403,3 +403,157 @@ describe('validateA2ui — the TKT-0081 sessionSeed (cross-turn merged-graph jud
     expect(v.failures.some((f) => f.code === 'IDGRAPH' && f.path === 's2:root-missing')).toBe(true)
   })
 })
+
+// ── ADR-0187 / GH #829 — the finalize signal (`opts.atFinalize`) ───────────────────────────────────
+
+describe('validateA2ui — ADR-0187 atFinalize: the abandoned-createSurface judgment (GH #829/#802)', () => {
+  // GH #829 Findings 1's headless repro, verbatim in shape: a complete working card (`s1`) beside a
+  // second surface created and never given ANY updateComponents (`s2`) — the exact wire shape behind
+  // #802's "empty second ui-surface-host beside a working card" screenshots.
+  const repro = [
+    { version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'demo' } },
+    {
+      version: 'v1.0',
+      updateComponents: { surfaceId: 's1', components: [{ id: 'root', component: 'Text', text: 'hi' }] },
+    },
+    { version: 'v1.0', createSurface: { surfaceId: 's2', catalogId: 'demo' } },
+  ]
+
+  it('DEFAULT mode: the #829 repro still validates CLEAN — the ratified prefix laws are untouched', () => {
+    // The regression contract (ADR-0187 §1): absent the flag, byte-identical to the pre-ADR validator.
+    expect(validateA2ui(repro, demoCatalog)).toEqual({ valid: true, failures: [] })
+  })
+
+  it('atFinalize: the #829 repro fails with EXACTLY `IDGRAPH s2:root-missing` — the existing code reused', () => {
+    // LLD §5: no new failure code. The abandoned surface IS the missing-root class judged at finalize
+    // granularity — so the renderer's IDGRAPH-only filter, the §9 wire mapping and `A2uiWireError` all
+    // stay unmodified (zero wire widening).
+    expect(validateA2ui(repro, demoCatalog, undefined, { atFinalize: true })).toEqual({
+      valid: false,
+      failures: [{ code: 'IDGRAPH', path: 's2:root-missing' }],
+    })
+  })
+
+  it('atFinalize: a COMPLETE payload is unaffected — the working card alone stays valid either way', () => {
+    const complete = repro.slice(0, 2)
+    expect(validateA2ui(complete, demoCatalog, undefined, { atFinalize: true })).toEqual({ valid: true, failures: [] })
+    expect(validateA2ui(complete, demoCatalog)).toEqual({ valid: true, failures: [] })
+  })
+
+  it('atFinalize:false and an empty bag are byte-identical to omitting the bag entirely', () => {
+    expect(validateA2ui(repro, demoCatalog, undefined, { atFinalize: false })).toEqual(validateA2ui(repro, demoCatalog))
+    expect(validateA2ui(repro, demoCatalog, undefined, {})).toEqual(validateA2ui(repro, demoCatalog))
+  })
+
+  it('registration is behavior-neutral ALONE: a bare createSurface is now VISITED, still exempt by default', () => {
+    // The half the reverted mechanical fix got right (ADR-0187 §2). `createSurface` now calls
+    // `surfaceOf`, so the id-graph loop VISITS the sid — the empty-set early return is what keeps the
+    // default verdict clean, not invisibility. Proven by the pair: one payload, two modes, two verdicts.
+    const bare = [{ version: 'v1.0', createSurface: { surfaceId: 'only', catalogId: 'demo' } }]
+    expect(validateA2ui(bare, demoCatalog)).toEqual({ valid: true, failures: [] })
+    expect(validateA2ui(bare, demoCatalog, undefined, { atFinalize: true })).toEqual({
+      valid: false,
+      failures: [{ code: 'IDGRAPH', path: 'only:root-missing' }],
+    })
+  })
+
+  it('a surfaceId-less createSurface is never double-flagged — no IDGRAPH rides along', () => {
+    // ADR-0187 §2's gate: registration requires `surfaceId` to be a string, so a line already flagged
+    // SCHEMA for its missing id cannot also collect a root-missing (no id exists to name it against).
+    const noSid = [{ version: 'v1.0', createSurface: { catalogId: 'demo' } }]
+    expect(codes(validateA2ui(noSid, demoCatalog, undefined, { atFinalize: true }))).toEqual(['SCHEMA'])
+    // A VALID surfaceId with a missing catalogId keeps its own SCHEMA failure AND gains the finalize
+    // judgment — the surface genuinely was created empty; the two failures state different facts.
+    const noCatalog = [{ version: 'v1.0', createSurface: { surfaceId: 'sx' } }]
+    expect(validateA2ui(noCatalog, demoCatalog, undefined, { atFinalize: true }).failures).toEqual([
+      { code: 'SCHEMA', path: '[0].createSurface.catalogId' },
+      { code: 'IDGRAPH', path: 'sx:root-missing' },
+    ])
+  })
+
+  it('an UNSUPPORTED-version createSurface never registers — the version gate returns first', () => {
+    const badVersion = [{ version: 'v0.0.1', createSurface: { surfaceId: 'sv', catalogId: 'demo' } }]
+    expect(codes(validateA2ui(badVersion, demoCatalog, undefined, { atFinalize: true }))).toEqual([
+      'VERSION_UNSUPPORTED',
+    ])
+  })
+
+  // — the ONE new edge (LLD §3 mechanic 4) —
+  it('same-payload create-then-DELETE is excluded: nothing mounted is nothing abandoned', () => {
+    const createThenDelete = [
+      { version: 'v1.0', createSurface: { surfaceId: 'gone', catalogId: 'demo' } },
+      { version: 'v1.0', deleteSurface: { surfaceId: 'gone' } },
+    ]
+    expect(validateA2ui(createThenDelete, demoCatalog, undefined, { atFinalize: true })).toEqual({
+      valid: true,
+      failures: [],
+    })
+    // The exclusion is SCOPED to the deleted sid — an abandoned sibling in the same payload still fails.
+    const oneDeletedOneAbandoned = [
+      ...createThenDelete,
+      { version: 'v1.0', createSurface: { surfaceId: 'stray', catalogId: 'demo' } },
+    ]
+    expect(validateA2ui(oneDeletedOneAbandoned, demoCatalog, undefined, { atFinalize: true }).failures).toEqual([
+      { code: 'IDGRAPH', path: 'stray:root-missing' },
+    ])
+  })
+
+  it('the delete exclusion is finalize-ONLY — a delete never softens a default-mode verdict', () => {
+    // A dangling-ref payload followed by a delete of the same surface still fails in BOTH modes: only
+    // the finalize emptiness arm consults `deletedHere` (LLD §3 mechanic 4).
+    const danglingThenDelete = [
+      {
+        version: 'v1.0',
+        updateComponents: { surfaceId: 'd1', components: [{ id: 'root', component: 'Column', children: ['ghost'] }] },
+      },
+      { version: 'v1.0', deleteSurface: { surfaceId: 'd1' } },
+    ]
+    const expected = { valid: false, failures: [{ code: 'IDGRAPH', path: 'root->ghost' }] }
+    expect(validateA2ui(danglingThenDelete, demoCatalog)).toEqual(expected)
+    expect(validateA2ui(danglingThenDelete, demoCatalog, undefined, { atFinalize: true })).toEqual(expected)
+  })
+
+  // — TKT-0081 seed composition: no new carve-out (ADR-0187 §5 / LLD §3 mechanic 2) —
+  describe('composition with the TKT-0081 sessionSeed — no carve-out needed', () => {
+    const seed = new Map([
+      ['known', { components: [{ id: 'root', component: 'Text', text: 'prior' }], rootDelivered: true }],
+    ])
+
+    it('a session-known surface this payload TOUCHED merges its prior graph — never judged empty', () => {
+      const touch = [
+        {
+          version: 'v1.0',
+          updateComponents: { surfaceId: 'known', components: [{ id: 'extra', component: 'Text', text: 'x' }] },
+        },
+      ]
+      expect(validateA2ui(touch, demoCatalog, seed, { atFinalize: true })).toEqual({ valid: true, failures: [] })
+    })
+
+    it('an UNTOUCHED seeded surface never enters the judged set — a data-only round stays clean', () => {
+      const dataOnly = [{ version: 'v1.0', updateDataModel: { surfaceId: 'known', path: '/a', value: 1 } }]
+      expect(validateA2ui(dataOnly, demoCatalog, seed, { atFinalize: true })).toEqual({ valid: true, failures: [] })
+    })
+
+    it('a RE-CREATED-then-abandoned seeded surface is judged standalone — exactly the defect', () => {
+      // `createdHere` makes the seed inapplicable (GH #307 F2), so a prior turn's root does NOT rescue
+      // an empty re-create. This composition is what the ADR's "no new carve-out" ruling turns on.
+      const recreateEmpty = [{ version: 'v1.0', createSurface: { surfaceId: 'known', catalogId: 'demo' } }]
+      expect(validateA2ui(recreateEmpty, demoCatalog, seed, { atFinalize: true }).failures).toEqual([
+        { code: 'IDGRAPH', path: 'known:root-missing' },
+      ])
+      // …and stays clean in default mode, seed or no seed.
+      expect(validateA2ui(recreateEmpty, demoCatalog, seed)).toEqual({ valid: true, failures: [] })
+    })
+
+    it('a re-create that DOES deliver root in the same payload is valid at finalize', () => {
+      const recreateFull = [
+        { version: 'v1.0', createSurface: { surfaceId: 'known', catalogId: 'demo' } },
+        {
+          version: 'v1.0',
+          updateComponents: { surfaceId: 'known', components: [{ id: 'root', component: 'Text', text: 'fresh' }] },
+        },
+      ]
+      expect(validateA2ui(recreateFull, demoCatalog, seed, { atFinalize: true })).toEqual({ valid: true, failures: [] })
+    })
+  })
+})

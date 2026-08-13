@@ -432,11 +432,19 @@ const IDGRAPH_HINTS = {
     "turn. If root's children did NOT need to change, instead send only the components that actually " +
     'changed, WITHOUT `id:"root"` — but every component you send must be reachable from `root` through ' +
     'some parent\'s "children"/"child", or it will silently never render.',
+  // ADR-0187 / GH #829 — the sentence extending this member to the ABANDONED-surface case the finalize
+  // signal newly catches (LLD §5's disjunctive repair, additive PROSE on the existing key — no new hint
+  // entry: the model is being told the same fact, "this surface has no root", and the two repairs read
+  // better as one member's disjunction than as a second sentence competing with it in the same round).
+  // Named last, deliberately: the two arms above are the RESUMED-surface readings, this one is the
+  // "you opened a surface you then never used" reading.
   rootMissing:
     ' This surface\'s component set has NO `id:"root"`. A payload that creates or re-creates a surface ' +
     'starts it EMPTY, so it must deliver `root` AND every component the tree references in that same ' +
     'turn. If instead you meant to update a surface that already exists, drop the `createSurface` line ' +
-    'and send only the changed components.',
+    'and send only the changed components. If you sent a `createSurface` you never delivered ANY ' +
+    'components for, that surface would render as a permanently blank card: either deliver `root` for ' +
+    'it in this same turn, or drop that unused `createSurface` line entirely.',
   dangling:
     ' A `parent->child` id-graph path means that `parent` lists a child id that NO component defines — ' +
     'neither in this payload nor in any earlier turn of this conversation. Deliver a component with ' +
@@ -992,7 +1000,15 @@ export async function* produce(input: TurnInput, deps: ProduceDeps, opts: Produc
     // SPEC-N3 — the shared validator, no fork; TKT-0081 — seeded with the session's prior graphs so the
     // per-round judgment matches the MERGED state the renderer will hold (update-only follow-ups valid;
     // a cross-turn root-resend fails pre-wire as `sid:root`, a self-correct round).
-    const verdict = validateA2ui(assembled.output, deps.catalog, sessionSeeds)
+    //
+    // ADR-0187 / GH #829 — the SERVER half of the finalize signal, and the one call site where the
+    // assertion is unarguable: `assembled.output` IS this turn's FINAL wire payload. The model has
+    // stopped; validate-then-stream (live-agent SPEC-R5) means nothing more will be added to this round
+    // before it ships. So a `createSurface` here with no components is not a mid-stream prefix — it is an
+    // abandoned surface that would mount a permanently-empty `ui-surface-host` (GH #802). At
+    // `atFinalize: true` it fails `${sid}:root-missing` PRE-WIRE and becomes an ordinary self-correct
+    // round (SPEC-R4), fed back with `IDGRAPH_HINTS.rootMissing`'s repair instruction — never a browser.
+    const verdict = validateA2ui(assembled.output, deps.catalog, sessionSeeds, { atFinalize: true })
     if (verdict.valid) {
       // ADR-0097 §3 FEED_SCOPE gate — AFTER the shared validator, BEFORE anything streams. A violation is
       // a self-correct round (never a stream), exactly like a validator failure.

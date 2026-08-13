@@ -172,6 +172,37 @@ Pure and total (never throws). Produces the `error` payloads of §5.2.
 
 **Parity (N6).** Corpus admission tier-1 calls this exact function on a record's *complete* `a2uiOutput`, and the renderer calls it at finalize granularity — so both judge the same complete component set and return identical verdicts (corpus SPEC-R8 AC3). Stages only one caller adds (the renderer's incremental render; the corpus's pointer-*resolution*, dedup, leak, quality) sit *outside* `validateA2ui` and do not affect the shared verdict.
 
+> **REV 2026-08-13 (ADR-0187, GH #829) — "finalize granularity" is now a real PARAMETER, not a caller
+> convention. The two paragraphs above described the intent correctly; the code could not express it.**
+>
+> Both paragraphs say the id-graph stage judges a *complete* component set, and that the host must call at
+> finalize granularity. Neither was enforceable: `validateA2ui` received a bare array with no way to know
+> which granularity it was being called at, so "finalize granularity" meant only *when* the host called —
+> never *how the validator judged*. One case exposed the gap. A `createSurface` that never received any
+> `updateComponents` was invisible to the id-graph stage entirely (the `createSurface` case never registered
+> its surfaceId), and even once registered it was waved through by the stage's empty-set exemption. So a
+> surface guaranteed to render nothing validated CLEAN at finalize, and the client mounted a permanently
+> empty host beside the working card (GH #802, root-caused in #829).
+>
+> **The parameter.** `validateA2ui` takes an optional 4th argument `opts?: { atFinalize?: boolean }` — the
+> caller's assertion that the payload is COMPLETE. Absent = byte-identical to every pre-ADR-0187 verdict
+> (proven: the whole suite green unflagged, plus a differential diff of 204 payloads — every conformance
+> fixture, every seed prefix, every committed corpus record — at 0 default-mode verdict diffs). Present, the
+> id-graph stage's `byId.size === 0` exemption lifts and an empty merged set falls through to the EXISTING
+> missing-root judgment. One new edge: a payload that creates AND deletes the same surfaceId leaves nothing
+> abandoned, so that sid is excluded.
+>
+> **Why an explicit signal and not stricter code.** Mid-stream prefix and abandoned surface are byte-identical
+> wire shapes; the distinguishing fact (*is more coming?*) lives only at the call site. A caller-agnostic
+> strictness change was attempted and reverted with proof — it reds the ratified prefix laws
+> (a2ui-message-lifecycle SPEC-R4 AC1, a2ui-live-agent SPEC-R5 AC1).
+>
+> **The parity paragraph holds, and is now MECHANICAL rather than aspirational:** admission and the renderer's
+> finalize both pass the assertion, so both genuinely judge the same complete set. The producer's per-round
+> verdict joins them (a2ui-live-agent SPEC-R5's REV of the same date), as does the harness `validate-payload`
+> instrument that mirrors admission. The §9 `IDGRAPH` row below is amended in place; nothing else in this LLD
+> changes — no new code, no new stage, no wire widening.
+
 ## 9. Error & edge-case handling (the enumeration this LLD owns)
 
 The first column is the **internal** diagnostic code; the **wire** column is the v1.0 two-code (`VALIDATION_FAILED` / `INVALID_FUNCTION_CALL`) the `#emit` boundary maps it to (ADR-0031). The wire `message` (with the internal `path` locus folded in — there is no wire `path`) carries the specificity the coarse wire code drops; the validator's internal codes are unchanged (corpus parity, SPEC-N6).
@@ -182,7 +213,7 @@ The first column is the **internal** diagnostic code; the **wire** column is the
 | `VERSION_UNSUPPORTED` | LLD-C2 | `VALIDATION_FAILED` | unknown `version` → emit error, skip message (SPEC-R13 AC2) |
 | `SCHEMA` | LLD-C2/C11 | `VALIDATION_FAILED` | unknown envelope key / schema fail → error, do not render |
 | `CATALOG_UNKNOWN` | LLD-C3 | `VALIDATION_FAILED` | `createSurface` with unbound `catalogId` → error, no surface (R2 AC3) |
-| `IDGRAPH` | LLD-C11 (validate, at finalize) | `VALIDATION_FAILED` | **missing `root`**, 2nd `root`, cycle, or dangling — all evaluated on a COMPLETE component set at finalize, never per-message (SPEC-R4) → error; existing root kept (R3 AC2). LLD-C4 eager-guards the always-invalid 2nd `root`/cycle in-stream. |
+| `IDGRAPH` | LLD-C11 (validate, at finalize) | `VALIDATION_FAILED` | **missing `root`**, 2nd `root`, cycle, or dangling — all evaluated on a COMPLETE component set at finalize, never per-message (SPEC-R4) → error; existing root kept (R3 AC2). LLD-C4 eager-guards the always-invalid 2nd `root`/cycle in-stream. *(REV 2026-08-13, ADR-0187/GH #829 — the missing-`root` member now ALSO fires for a surface `createSurface`'d and given NO components at all, when the caller asserts completeness via `atFinalize`. Same code, same `${sid}:root-missing` path, same wire mapping — the novelty is WHEN it is decidable, not what is wrong. Deliberately reused rather than minting `ABANDONED_SURFACE`: the renderer's IDGRAPH-only finalize filter, the `A2uiWireError` union, this table, and the conformance manifest all stay unmodified — **zero wire widening**. A same-payload `deleteSurface` of that sid excludes it. Contrast SPEC-R6's `CONTAINMENT` row, which DID mint a code because parent-typing was a genuinely new structural relation; this is the existing missing-root class at a new granularity. A code split stays additive later if telemetry ever needs the distinction.)* |
 | `CATALOG` | LLD-C7 | `VALIDATION_FAILED` | unknown `component` type → error + placeholder; siblings render (R9 AC2) |
 | undefined `path` | LLD-C5 | — (no emit) | placeholder value, not an error; updates when data arrives (R4 AC2) |
 | `FUNCTION` | LLD-C10 | `VALIDATION_FAILED` | unknown/throwing client fn in a binding → error; checks treated as invalid. **Render-time binding-eval, NOT server-initiated** → `VALIDATION_FAILED` (the message references an invalid function, like `CATALOG`); `INVALID_FUNCTION_CALL` is reserved for a server-initiated path (none yet, #23). |

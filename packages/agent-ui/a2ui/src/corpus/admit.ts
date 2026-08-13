@@ -125,7 +125,15 @@ export async function admit(candidate: unknown, deps: AdmitDeps): Promise<AdmitR
   const output = record.a2uiOutput
 
   // Stage 5 — tier-1 deterministic (LLD-C6, the shared `validateA2ui` — parity, SPEC-N1/R8-AC3).
-  const verdict = validateA2ui(output, deps.catalog)
+  //
+  // ADR-0187 / GH #829 — FINALIZE granularity. An admitted record IS a complete set by construction: a
+  // `CorpusRecord.a2uiOutput` is the whole authored stream for one task, with no "more is coming" (the
+  // renderer LLD §8 parity prose already said admission judges a COMPLETE `a2uiOutput` — finalize
+  // granularity makes that claim true for the empty-surface case too, which the empty-set exemption used
+  // to except). So a record declaring a surface it never delivers components for is now rejected
+  // `E_IDGRAPH` rather than admitted as an exemplar teaching a blank card. Nothing reds: the 29-record
+  // exemplar shard admits unchanged (proven by `corpus-data.test.ts` + the slice's re-admission sweep).
+  const verdict = validateA2ui(output, deps.catalog, undefined, { atFinalize: true })
   if (!verdict.valid) return rejectTier1(verdict.failures)
 
   // Stage 6 — pointer RESOLUTION (corpus-only, LLD-C5 §6/§7): layered on top of tier-1's syntax-only

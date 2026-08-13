@@ -145,10 +145,26 @@ judge scoring) — a validated seed under `src/examples/` is not automatically a
 this SPEC does not require that step here.
 - **AC1** *Given* the exemplar's `a2uiOutput` run through `validate-payload`/the shared validator per message in
   sequence (treating each prefix of the stream as the surface's state at that point, the `round-trip.test.ts`
-  method), *then* every message validates with 0 errors and the final `deleteSurface` leaves no orphaned
-  references.
+  method) **in the validator's DEFAULT (streaming-tolerant) mode** (REV 2026-08-13 — see below), *then* every
+  message validates with 0 errors and the final `deleteSurface` leaves no orphaned references.
 - **AC2** *Given* the exemplar's `updateComponents` message(s), *then* they satisfy SPEC-R2 (whole-record
   resends, not partial patches).
+
+> **REV 2026-08-13 (ADR-0187, GH #829) — AC1 above gains an explicit MODE qualifier. A scope statement, not
+> a weakening: the criterion is unchanged and stays green byte-identically.** AC1 judges every PREFIX of a
+> stream, which is a per-prefix judgment by construction — and a prefix is, definitionally, not a complete
+> payload. Nearly every exemplar's prefix #1 is a bare `createSurface`, so the criterion only ever made
+> sense under the validator's streaming-tolerant reading, and that is the reading it keeps. The qualifier is
+> added because the shared validator now HAS a second mode (a2ui-runtime SPEC-R11's REV of the same date: an
+> optional caller assertion that a payload is COMPLETE), so a criterion about prefixes must say which mode
+> it means rather than leave it to inference.
+>
+> This clause is named in ADR-0187's Context as one of the two ratified prefix laws the reverted
+> caller-agnostic fix broke — and it is the regression proof that the shipped design did not move the
+> default: `examples.test.ts`'s SPEC-R4 AC1 suite passes UNTOUCHED across the whole build. Note the
+> distinction it turns on: this AC judges prefixes; corpus ADMISSION judges the record's complete
+> `a2uiOutput` and therefore does opt into finalize granularity (a2ui-training-corpus SPEC-N1/R8-AC3's REV of
+> the same date). Both are true at once — different callers, different completeness, one implementation.
 
 ### 3.4 The dialog demo (Lane 2)
 

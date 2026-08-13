@@ -45,6 +45,19 @@
 //     a2ui-live.ts both return before ever calling `beginAgentTurn`; the seed shelf's own
 //     `catalog-frontier.ts` Cancel button is exactly this shape) must never disable in the first place —
 //     nothing downstream will EVER re-enable a card no turn is running for.
+// ADR-0187 / GH #829 clause 6 — the TERMINAL-EMPTY presentational brace. The validator is the sole
+// JUDGE of emptiness (SPEC-N6's one-implementation law), and `ui-conversation` must never re-implement
+// that judgment. But the SYMPTOM is presentational, and the server-side opt-in (produce.ts) only protects
+// produce-driven streams — a recorded transcript, the A2A bridge, or any third-party producer still
+// reaches a mounted host raw. So this element flips a host-owned `data-empty-final` state at `finalize()`
+// when its mount point never received a single element: a read of its OWN already-held facts (finalize
+// happened + nothing is mounted), NOT a re-validation, and NOT a second verdict. CSS swaps the
+// anticipatory `:empty` placeholder ("The rendered surface appears here.") for a terminal message. The
+// host stays MOUNTED and addressable — a later turn legitimately targets a known surfaceId through
+// `routeLine`'s known branch (SPEC-R7), which unmounting would break — and `ingest()` clears the state,
+// so a real update arriving later returns the host to normal. Defer-mount and unmount-at-finalize are
+// the ADR's recorded rejected alternatives.
+//
 // (b) the payload can declare a component's `disabled` LITERAL (the default catalog's ~10 bindable rows,
 //     `catalog/default/factories.ts`), and the renderer's OWN checks controller (`checks.ts`) drives
 //     `el.disabled` from live validity, restoring the declared literal on pass. A blanket re-enable would
@@ -159,6 +172,12 @@ export class UISurfaceHostElement extends UIElement {
     // component ids it happens to touch (a resumed reply may re-wire only SOME of the tree, `rewireNode`'s
     // identity-preserving reconcile — the OLD disabled elements it does not touch must still come back).
     this.#applyInteractiveDisabled(false)
+    // ADR-0187 — a NEW line for this surface retires any terminal-empty verdict: whatever this line
+    // turns out to contain, the stream is demonstrably not over. Cleared on ENTRY (before the ingest, and
+    // before the async transition path could reorder it) for the same reason the re-enable above is —
+    // "the model came back" is a property of a line arriving at all, never of what it changed. The next
+    // finalize() re-derives the state from the mount's real contents, so a still-empty surface re-flags.
+    delete this.dataset.emptyFinal
     withViewTransition(() => {
       // The helper's stated caveat: the transition path runs this ASYNC — a disconnect between queue
       // and run nulls #host (below), so the staleness re-check lives INSIDE the mutate (ADR-0183 cl.1).
@@ -173,7 +192,11 @@ export class UISurfaceHostElement extends UIElement {
    *  update-callback queue is what keeps the validator + root-stretch BEHIND the last queued
    *  mutation (a sync call here would validate a half-applied surface). The first finalize() runs
    *  synchronously (nothing queued before it, by construction) and flips the settled flag AFTER
-   *  its own forward — the flip itself is never inside the wrap. */
+   *  its own forward — the flip itself is never inside the wrap.
+   *
+   *  ADR-0187/GH #829: also derives the terminal-empty state (see the file-header note) — INSIDE the same
+   *  wrapped callback, AFTER `#host.finalize()`, so it reads the mount's settled contents rather than a
+   *  half-applied surface (the same FIFO-ordering reason the root-stretch read lives here). */
   finalize(): void {
     if (!this.#guard('finalize')) return
     withViewTransition(() => {
@@ -182,6 +205,12 @@ export class UISurfaceHostElement extends UIElement {
       this.#host.finalize()
       const root = this.#surface.firstElementChild
       if (root && root.tagName.toLowerCase() === 'ui-column') root.setAttribute('stretch', '')
+      // ADR-0187 — the host's OWN facts, read once the surface has settled: finalize happened, and the
+      // mount point holds no element. Presentation of a state already established, never a re-judgment
+      // (`root === null` here IS "no root ever attached" — the renderer appends exactly one root element
+      // per surface, and nothing else ever writes into this box).
+      if (root === null) this.dataset.emptyFinal = ''
+      else delete this.dataset.emptyFinal
     }, this.viewTransitions && this.#settledOnce)
     this.#settledOnce = true
   }
@@ -207,6 +236,7 @@ export class UISurfaceHostElement extends UIElement {
     this.#settledOnce = false // GH #742 — a rebuilt artboard's next stream is a first paint again
     this.#interactiveDisabledActive = false // GH #805 — a rebuilt artboard's next mount starts live
     this.#sweepDisabled = new WeakSet() // GH #805 — the torn-down subtree's claims are moot
+    delete this.dataset.emptyFinal // ADR-0187 — a rebuilt artboard has not finalized anything yet
     this.replaceChildren()
   }
 

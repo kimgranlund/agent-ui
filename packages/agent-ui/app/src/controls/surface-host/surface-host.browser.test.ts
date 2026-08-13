@@ -327,3 +327,75 @@ describe('ui-surface-host — viewTransitions against the real platform (GH #742
     }
   })
 })
+
+// ── ADR-0187 / GH 829 clause 6 — the terminal-empty brace, PAINTED ────────────────────────────────────
+//
+// jsdom cannot resolve generated `content`, so the jsdom suite can only assert the `data-empty-final`
+// state the stylesheet keys off. The copy swap itself — the thing a person actually sees instead of a
+// silently blank card (GH 802) — is only provable in a real engine. This asserts the rendered
+// `::after` content on the real surface box, in BOTH Chromium and WebKit.
+
+describe('ui-surface-host — terminal-empty copy actually paints (ADR-0187)', () => {
+  const CREATE_ONLY = line({ version: 'v1.0', createSurface: { surfaceId: 'abandoned', catalogId: 'agent-ui' } })
+  const afterContent = (el: HTMLElement): string =>
+    getComputedStyle(el.querySelector('[data-part="surface"]') as HTMLElement, '::after').content
+
+  it(`${server.browser}: the ANTICIPATORY placeholder paints before finalize, the TERMINAL copy after`, () => {
+    const el = mountHost()
+    el.ingest(CREATE_ONLY)
+    // Mid-stream: content may still arrive (runtime SPEC-R4), so the anticipatory copy is honest.
+    expect(afterContent(el)).toContain('appears here')
+    expect(el.dataset.emptyFinal).toBeUndefined()
+
+    el.finalize()
+    // Post-finalize with nothing mounted: the copy must change, or the card is silently blank.
+    expect(el.dataset.emptyFinal).toBe('')
+    const terminal = afterContent(el)
+    expect(terminal).toContain('Nothing was rendered')
+    expect(terminal, 'the anticipatory copy must be REPLACED, not appended to').not.toContain('appears here')
+  })
+
+  it(`${server.browser}: a surface that renders content paints NEITHER placeholder`, () => {
+    const el = mountHost()
+    el.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'ok', catalogId: 'agent-ui' } }))
+    el.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'ok',
+          components: [{ id: 'root', component: 'Button', variant: 'solid', label: 'Go', action: { action: 'go' } }],
+        },
+      }),
+    )
+    el.finalize()
+    expect(el.dataset.emptyFinal).toBeUndefined()
+    // `:empty` no longer matches once the root is mounted, so the ::after rule does not apply at all.
+    const content = afterContent(el)
+    expect(content).not.toContain('appears here')
+    expect(content).not.toContain('Nothing was rendered')
+    // Anti-vacuity: the real control genuinely painted (a zero-area button would make the above trivial).
+    const rect = (el.querySelector('ui-button') as HTMLElement).getBoundingClientRect()
+    expect(rect.width).toBeGreaterThan(0)
+    expect(rect.height).toBeGreaterThan(0)
+  })
+
+  it(`${server.browser}: a later real update returns the host to the no-placeholder state`, () => {
+    const el = mountHost()
+    el.ingest(CREATE_ONLY)
+    el.finalize()
+    expect(afterContent(el)).toContain('Nothing was rendered')
+
+    el.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'abandoned',
+          components: [{ id: 'root', component: 'Text', text: 'arrived late' }],
+        },
+      }),
+    )
+    el.finalize()
+    expect(el.textContent).toContain('arrived late')
+    expect(afterContent(el)).not.toContain('Nothing was rendered')
+  })
+})

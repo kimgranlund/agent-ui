@@ -21,9 +21,11 @@ const fixtures = readFixtures()
 const fresh = buildSuites(fixtures)
 
 describe('generate-suites — anti-vacuous coverage (fixtures.jsonl ↔ SUITE_MEMBERSHIP)', () => {
-  it('SUITE_MEMBERSHIP claims every one of the 19 committed fixtures exactly once', () => {
+  it('SUITE_MEMBERSHIP claims every one of the 21 committed fixtures exactly once', () => {
+    // 19 → 21: ADR-0187 / GH #829 added the finalize-granularity pair
+    // (`abandoned-surface-at-finalize` + `abandoned-surface-mid-stream`).
     const claimed = Object.values(SUITE_MEMBERSHIP).flat()
-    expect(claimed.length).toBe(19)
+    expect(claimed.length).toBe(21)
     expect(new Set(claimed).size).toBe(claimed.length) // no fixture claimed twice
     expect(new Set(claimed)).toEqual(new Set(fixtures.map((f) => f.name))) // no orphan on either side
   })

@@ -79,7 +79,29 @@ Normative language: **MUST** / **SHOULD** / **MAY** per RFC 2119. Each requireme
 **SPEC-R8 — Two-tier admission quality gate.** A candidate is admitted only if it passes **both**: (tier 1, deterministic) the A2UI validation parity check — schema, catalog-conformance (every component/property exists in the pinned catalog), single-`root` + acyclic ID graph, and valid JSON-Pointer bindings; and (tier 2, judgment) the corpus-quality rubric ≥ its gate bar. Healing (`payload_fixer`-parity) MAY be applied before tier 1 and, if it changes the record, the healed form is what is admitted — and the record is marked `status:"repaired"` (ADR-0061). *Phasing (ADR-0060, proposed):* tier 2 binds whenever a judge is wired into admission's injected seam; until the harness wave lands the corpus-quality rubric there is no judge — the stage is skipped and an absent `qualityScore` is the queryable marker of an unjudged record. *(→ PRD-G4, PRD-G5)*
 - **AC1** *Given* a candidate that fails any tier-1 check, *when* admission runs, *then* it is rejected with the specific code (`E_SCHEMA`, `E_CATALOG`, `E_IDGRAPH`, or `E_POINTER`) and is not admitted.
 - **AC2** *Given* a candidate that passes tier 1 but scores below the corpus-quality rubric gate, *when* admission runs, *then* it is rejected with `E_QUALITY` and the failing dimensions are reported.
-- **AC3** *Given* the same candidate, *when* tier-1 validation runs in admission and at generation runtime, *then* both use the same validator and return the same verdict (runtime/eval parity).
+- **AC3** *Given* the same candidate, *when* tier-1 validation runs in admission and at generation runtime, *then* both use the same validator and return the same verdict (runtime/eval parity) — **both judging at COMPLETE-SET granularity** (REV 2026-08-13 — see below).
+
+> **REV 2026-08-13 (ADR-0187, GH #829) — admission judges at FINALIZE granularity. A granularity statement
+> the parity claim always implied; one implementation, unchanged.** A `CorpusRecord.a2uiOutput` is a COMPLETE
+> set by construction — the whole authored stream for one task, with nothing still arriving — and the
+> renderer LLD §8's parity prose already said so. The shared validator now takes an optional caller
+> assertion to that effect (a2ui-runtime SPEC-R11's REV of the same date), and admission passes it. Tier-1's
+> enumerated checks (schema, catalog-conformance, single-`root` + acyclic id graph, pointer syntax) are
+> unchanged; what changes is that the id-graph check is no longer waived for a surface a record DECLARES but
+> never delivers components for. Such a record is now rejected `E_IDGRAPH` rather than admitted as an
+> exemplar that teaches a model to ship a blank card (GH #802's defect, in training data).
+>
+> AC3's parity is preserved and sharpened: admission and the RUNTIME's per-round verdict (a2ui-live-agent
+> SPEC-R5's REV of the same date) both judge complete sets, so they agree — which is the case this criterion
+> was always about. It does NOT require agreement with a caller judging a mid-stream PREFIX; that caller is
+> answering a different question and keeps the streaming-tolerant default (a2ui-message-lifecycle SPEC-R4
+> AC1's REV of the same date).
+>
+> **Blast radius, measured not assumed:** the committed 29-record exemplar shard re-admits 29/29 through the
+> real `admit()` pipeline, and the standing shard gate now re-checks tier-1 at admission's own granularity so
+> the two cannot drift. One structural fact makes this narrow: ADR-0064's single-surface rule already rejects
+> a multi-surface record before tier-1 runs, so the only reachable shape here is a single-surface record with
+> no components at all.
 
 **SPEC-R9 — Version pinning.** Every record MUST pin the A2UI `protocolVersion` and the `catalogId`(+version) it targets. *(→ PRD-G6)*
 - **AC1** *Given* any admitted record, *when* inspected, *then* `protocolVersion` and `catalogId` are present and non-empty.
@@ -216,7 +238,7 @@ interface CorpusOps {
 
 | ID | Requirement | Target |
 |---|---|---|
-| **SPEC-N1** | Validation parity | Tier-1 admission validation and runtime generation validation use one implementation; a parity test asserts identical verdicts on a shared fixture set (0 disagreements). *(→ PRD-G4)* |
+| **SPEC-N1** | Validation parity | Tier-1 admission validation and runtime generation validation use one implementation; a parity test asserts identical verdicts on a shared fixture set (0 disagreements). *(→ PRD-G4)* *(REV 2026-08-13, ADR-0187/GH #829: still ONE implementation. It now takes an optional caller assertion that a payload is COMPLETE, and BOTH parties to this parity — admission and the runtime's per-round verdict — pass it, since both judge complete sets. A caller judging a mid-stream prefix is answering a different question and is outside this parity claim. See SPEC-R8 AC3's REV of the same date; the harness `validate-payload` instrument opts in too, so the pre-check an author runs cannot disagree with the pipeline that follows it.)* |
 | **SPEC-N2** | Retrieval latency | `retrieve()` returns within **≤ 200 ms** p95 for a corpus of ≤ 10⁴ exemplars on a developer machine. *(→ PRD-G5)* |
 | **SPEC-N3** | Contamination safety | A public clone reveals **0** eval `target`/gold in plaintext; CI fails on any leak (`E_LEAK`). *(→ PRD-G5)* |
 | **SPEC-N4** | Curation throughput | Admission of a single record (heal + tier-1 + dedup) completes in **≤ 1 s** p95 (excludes tier-2 rubric/judge). |

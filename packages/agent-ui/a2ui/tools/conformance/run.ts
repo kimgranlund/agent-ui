@@ -8,6 +8,10 @@
 // match and `failures` must match as a SET of `{code, path}` pairs (order-independent: a different
 // validator may walk a component tree in a different order than this repo's ADR-0024 positional walk).
 //
+// ADR-0187 / GH #829: a fixture MAY additionally carry `atFinalize: true` (see the `Fixture` interface),
+// asserting its payload is COMPLETE. The runner itself stays DEFAULT — see that field's doc comment for
+// why a blanket flip is wrong (it would destroy two committed fixtures' single-failure isolation).
+//
 //   node --experimental-strip-types packages/agent-ui/a2ui/tools/conformance/run.ts
 //   # exit 0 → {ok:true, fixtureCount}          every fixture's actual verdict matches expectedVerdict
 //   # exit 1 → {ok:false, failed:[{name,expected,actual}]}   printed to stderr
@@ -52,6 +56,22 @@ export interface Fixture {
   catalogId: string
   payload: unknown
   expectedVerdict: ValidationVerdict
+  /**
+   * ADR-0187 / GH #829 — OPTIONAL per-fixture finalize assertion, forwarded to `validateA2ui`'s options
+   * bag. ABSENT (the overwhelming majority) = default-lenient, byte-identical to before this field
+   * existed; `true` = "this payload is COMPLETE", which additionally fails a surface created with an
+   * empty component set (`IDGRAPH sid:root-missing`).
+   *
+   * The RUNNER deliberately does NOT flip globally (ADR-0187 §4 / LLD §4): two committed fixtures
+   * (`unsupported-version`, `bad-pointer-datamodel`) carry createSurface-only sids ON PURPOSE, to isolate
+   * exactly ONE failure each — a blanket flip would add a second, unrelated failure to both and destroy
+   * that isolation (the reverted mechanical fix proved it, GH #829 Findings 2). Per-fixture opt-in keeps
+   * isolation AND covers the finalize arm, which the `abandoned-surface-*` pair below does.
+   *
+   * Portability: the field is additive and optional, so a third-party validator running this suite can
+   * ignore it entirely and still match every pre-existing fixture — the pack README documents it.
+   */
+  atFinalize?: boolean
 }
 
 export interface Result {
@@ -101,7 +121,9 @@ export function runSuite(fixtures: readonly Fixture[], catalogs: ReadonlyMap<str
     if (catalog === undefined) {
       return { name: f.name, pass: false, actual: { valid: false, failures: [] }, expected: f.expectedVerdict }
     }
-    const actual = validateA2ui(f.payload, catalog)
+    // ADR-0187 — the fixture's own `atFinalize` is forwarded; absent, the third argument is `undefined`
+    // and the options bag carries `atFinalize: false`, which the validator treats as the default mode.
+    const actual = validateA2ui(f.payload, catalog, undefined, { atFinalize: f.atFinalize === true })
     const pass = actual.valid === f.expectedVerdict.valid && failuresMatch(actual.failures, f.expectedVerdict.failures)
     return { name: f.name, pass, actual, expected: f.expectedVerdict }
   })

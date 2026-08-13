@@ -72,7 +72,13 @@ describe('corpus-data — the committed exemplar shard is self-consistent (LLD-C
         if (rec.a2uiOutput === undefined) throw new Error(`${rec.name}: exemplar record has no a2uiOutput`)
 
         // Tier-1 (LLD-C6, the SAME shared validator admission itself used — parity, SPEC-N1).
-        const verdict = validateA2ui(rec.a2uiOutput, defaultCatalog)
+        //
+        // ADR-0187 / GH #829 — at admission's OWN granularity (`{atFinalize: true}`, `admit.ts` stage 5).
+        // This gate exists to prove the committed shard is what admission would accept TODAY; judging it
+        // default-lenient while admission judges at finalize would leave a record admissible-by-this-gate
+        // yet rejected by the real pipeline — the parity gap SPEC-N1 exists to close. It is also this
+        // slice's permanent re-admission sweep: one assertion per committed record, every `npm test`.
+        const verdict = validateA2ui(rec.a2uiOutput, defaultCatalog, undefined, { atFinalize: true })
         expect(verdict.valid, `${rec.name} tier-1 failures: ${JSON.stringify(verdict.failures)}`).toBe(true)
 
         // The stored canonical hash must match a FRESH recomputation from the record's own a2uiOutput —

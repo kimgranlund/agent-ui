@@ -27,6 +27,6 @@ export { createSurface, disposeSurface, SurfaceStore } from './surface.ts'
 export type { Surface, SurfaceInit } from './surface.ts'
 
 export { validateA2ui } from './validate.ts'
-export type { ValidationVerdict } from './validate.ts'
+export type { ValidationVerdict, ValidateA2uiOptions } from './validate.ts'
 
 export type { CreateWidget, ItemScope } from './types.ts'

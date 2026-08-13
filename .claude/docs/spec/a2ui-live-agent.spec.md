@@ -456,6 +456,22 @@ PRD-G4; realizes streaming SPEC-R2, harness SPEC-R6)*
 - **AC2** *Given* the driver's validation step, *when* compared to the renderer's and corpus
   admission's, *then* all use the same `validateA2ui`/`heal` (parity; no fork — streaming SPEC-N3).
 
+> **REV 2026-08-13 (ADR-0187, GH #829) — the fed-back failure class now INCLUDES the at-finalize empty
+> surface. A membership addition, not a mechanism change.** The self-correct loop above is unchanged in
+> every respect — same stages, same `maxRounds = 3`, same structured-failure feedback, same
+> halt-and-report, same shared `validateA2ui`/`heal` (AC2 holds verbatim: still one implementation, no
+> fork). What changed is which failures the validator can PRODUCE for a round: because the per-round
+> verdict now asserts completeness (SPEC-R5's REV of the same date), a round that opens a surface and
+> never delivers any components for it fails `IDGRAPH ${surfaceId}:root-missing` and is fed back like any
+> other structured failure.
+>
+> Consequence, stated plainly so it is not a surprise in a trace: a model that habitually opens a second
+> surface and abandons it now eats a self-correct round it previously did not. The feedback names the exact
+> repair — deliver `root` for the surface in this same turn, or drop the unused `createSurface` line — and
+> the frequency is observable through the fed-back codes on the turn trace (SPEC-N4). If it is ever
+> measured hot, the lever is prompt-grammar teaching, NEVER loosening the validator: the alternative is
+> shipping a permanently blank card to a person (GH #802).
+
 **SPEC-R5 — Validate-then-stream.** A turn's payload MUST be FULLY validated before any of its lines
 stream to the browser (provable validity precedes paint — PRD-G4). The validated payload MUST then be
 streamable line-by-line so the surface still assembles progressively (root-early first paint), and the
@@ -478,6 +494,23 @@ SPEC-N1/R8)*
   success, not `ProduceHalt`) — a deterministic unit test, `npm test` green, no live model. *given* a
   meta-line reaching the renderer's `dispatch()` unfiltered (defense-in-depth), *then* its missing
   `version` key routes it to `VERSION_UNSUPPORTED`, returned not thrown — fault-isolated, never a crash.
+
+> **REV 2026-08-13 (ADR-0187, GH #829) — the per-round judgment runs at FINALIZE granularity. A
+> consequence of this clause, made explicit; the requirement itself is unchanged.** "FULLY validated before
+> any of its lines stream" already entails that the round's assembled output IS the turn's complete wire
+> payload — the model has stopped, and nothing further will be added before those lines ship. That is
+> precisely the completeness assertion a2ui-runtime SPEC-R11's REV of the same date names, so the per-round
+> `validateA2ui` call passes it: **"the model stopped" IS the finalize signal.** Deriving it, rather than
+> adding a requirement, is the point — this clause always described a complete payload; the validator was
+> simply never told.
+>
+> Both ACs hold verbatim. AC1's "no invalid partial surface is ever rendered" gets STRONGER, not different:
+> a round that opens a surface and abandons it is now invalid pre-wire and self-corrects (SPEC-R4's REV)
+> instead of streaming a payload that mounts a permanently empty host in the browser (GH #802).
+>
+> The prefix ACs elsewhere are untouched and MUST stay so: this REV is about the per-round verdict on a
+> FINISHED round, never about a prefix mid-stream. A prefix suite keeps calling the validator in its
+> default, streaming-tolerant mode by definition — a prefix is, definitionally, not complete.
 
 **SPEC-R6 — Catalog-derived, drift-gated system prompt.** The machine system prompt MUST be DERIVED
 from `catalog.json` (the sole component authority) + the `a2ui-compose` grammar + the `retrieve()`

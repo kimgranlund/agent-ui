@@ -3,9 +3,9 @@
 > Status: proposed · v1 · 2026-08-13 · Layer: a2ui (`a2ui/src/renderer/validate.ts` + call sites) ·
 > planner (design seat)
 >
-> Refines: [ADR-0187](../adr/0187-validator-finalize-signal.md) (proposed — **build BLOCKED on
-> Kim's ratification**; this LLD exists so the builder starts the moment the flip lands, not
-> sooner) · [`a2ui-runtime.spec.md`](../spec/a2ui-runtime.spec.md) SPEC-R11/N6 (the shared
+> Refines: [ADR-0187](../adr/0187-validator-finalize-signal.md) (**accepted** 2026-08-13 — ratified via
+> Kim's `ratify ADR-0187` utterance on GH #829; the hold this header used to record is DISCHARGED and the
+> S1–S7 build below has shipped, see §8) · [`a2ui-runtime.spec.md`](../spec/a2ui-runtime.spec.md) SPEC-R11/N6 (the shared
 > validator) · [`a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md) SPEC-R4/R5 (self-correct
 > + validate-then-stream). Composes on: [`a2ui-renderer.lld.md`](a2ui-renderer.lld.md) §8 LLD-C11 /
 > §9 error table · TKT-0081's `SurfaceSeed` merge (the seed-merge loop in `validate.ts`'s `run` +
@@ -180,6 +180,40 @@ code · the #829 headless repro returns `valid: false` with exactly `IDGRAPH s2:
 `{ atFinalize: true }` at C2/C3/C4 and `valid: true` default · both prefix suites byte-identical ·
 conformance runner green including the new pair · live shape: a stream ending in an abandoned
 createSurface shows no silent `:empty` host (terminal state or no second host).
+
+> **REV 2026-08-13 (the S1–S7 build, GH #829) — outcome against the acceptance above, plus the three
+> things the design did not anticipate.** All seven slices shipped, one commit each; every acceptance item
+> met by exit code (`check` 0 · `test` 0 · `test:browser` 0 across all six shards · conformance CLI 0 at 21
+> fixtures · re-admission sweep 29/29 through the real `admit()`). The default-mode identity claim got a
+> second, stronger proof beyond "whole suite green": a differential harness ran this validator against a
+> verbatim copy of the pre-change file over 204 payloads (every conformance fixture · every seed stream AND
+> every prefix · every committed corpus record · the repro + 21 edges) at **0** default-mode verdict diffs
+> and 92 diffs under the flag — the anti-vacuity arm a no-op change would also have passed.
+>
+> Three findings worth carrying forward, none of them a design change:
+>
+> 1. **A SIXTH suite reddened, beyond the five §1/§7 enumerate:** `site/lib/a2ui-gallery.test.ts`'s
+>    empty-surface negative control asserted `errors === []` for a bare `createSurface` — it encoded the
+>    defect as its PREMISE, to isolate one arm of the gallery's `data-rendered` predicate. Repaired to the
+>    new behavior. The isolation cannot be restored, and that is the fix working: "accepted clean yet renders
+>    nothing" is the state this design eliminates, so no fixture can reconstruct it. Consequence:
+>    `a2ui-gallery.ts`'s "This seed rendered an empty surface." branch is now a defensive fallback rather
+>    than a reachable one; left in place (pruning it is a site-owned judgment).
+> 2. **§4's corpus ruling is narrower than it reads, for a structural reason worth recording.** ADR-0064's
+>    single-surface rule rejects a two-surfaceId record with `E_SCHEMA` BEFORE tier-1 runs — so the runtime's
+>    headline shape (a working card plus an abandoned second surface) is unreachable at admission, and the
+>    only reachable abandoned shape is a single-surface record with no components at all. That is the
+>    mechanical reason "nothing reds" held, stronger than the 29-record scan it rested on.
+> 3. **§3 mechanic 4's delete exclusion is order-INSENSITIVE** (set membership, exactly as written). A
+>    payload that deletes and then re-creates the same sid, leaving it empty, is therefore also excluded.
+>    Implemented as specified and tested; flagged here rather than silently "improved", since narrowing it to
+>    ordered pairs would be a design change, not a build decision.
+>
+> §7's two predicted stub repairs landed as predicted. On `conversation.test.ts` the expectation was EXTENDED
+> rather than the stub completed (§7 permitted either): the emitted `'client'` entry fires identically on both
+> mount paths — that test's actual subject — and it is what finally makes its own "all three callback kinds"
+> anti-vacuous claim true. §5 left the hint shape to builder judgment; the disjunctive repair landed as
+> additive PROSE on the existing `IDGRAPH_HINTS.rootMissing` key, no new entry.
 
 ## 9. Risks
 

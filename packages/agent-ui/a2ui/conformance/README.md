@@ -36,6 +36,20 @@ suite's zero-dep format deliberately does not follow).
   consume them directly: read `manifest.json` for the catalog map, iterate `fixtures.jsonl`, run each
   `payload` through the validator under test, and diff the result against `expectedVerdict`.
 
+  **`atFinalize` (optional boolean; `at_finalize` in the `suites/*.yaml` port).** A fixture MAY carry
+  `"atFinalize": true`, asserting its payload is a **COMPLETE** set — nothing more is coming for it. It
+  is a MODE input to the validator, not an expectation. Absent (19 of the 21 fixtures) means the
+  ordinary streaming-tolerant mode, where a missing `root` or a dangling reference may still be filled
+  in by a later message (runtime SPEC-R4). At finalize, a surface created with an empty component set
+  additionally fails `IDGRAPH ${surfaceId}:root-missing`
+  ([ADR-0187](../../../../.claude/docs/adr/0187-validator-finalize-signal.md), GH #829).
+
+  A validator that does not implement a finalize mode can still run this suite: skip the one fixture
+  carrying the flag (`abandoned-surface-at-finalize`) and every other fixture's expectation is
+  unchanged. A validator that ignores the flag rather than skipping the fixture will mismatch on that
+  one row only — the flag is emitted on exactly the rows that need it, never blanket, so its presence
+  is the signal.
+
 ## Verdict-matching semantics
 
 A fixture **PASSES** iff the validator-under-test's actual verdict has `valid === expectedVerdict.valid`
@@ -46,10 +60,11 @@ walk). A run of the whole suite is green iff **every** fixture passes.
 
 ## Coverage
 
-19 fixtures: four known-good default-catalog payloads, one negative fixture per protocol/catalog
+21 fixtures: four known-good default-catalog payloads, one negative fixture per protocol/catalog
 failure stage (`PARSE`, `SCHEMA` ×2 shapes, `VERSION_UNSUPPORTED`, `CATALOG`, `IDGRAPH` ×4 subtypes —
 root-missing / second-root / dangling child / cycle, `CONTAINMENT`, `POINTER` ×2 — a component binding
-and an `updateDataModel.path`), and the three pinned upstream `a2ui.org` Basic Catalog examples
+and an `updateDataModel.path`), the ADR-0187 finalize-granularity PAIR (below), and the three pinned
+upstream `a2ui.org` Basic Catalog examples
 ([ADR-0169](../../../../.claude/docs/adr/0169-a2ui-basic-catalog-upstream-interop.md) cl.1's
 interop-anchored seed named by GH #476 — `interactive-button` / `simple-login-form` / `product-card`,
 each translated ONLY at the envelope `version` field, `v0.9` → `v1.0`; every component-tree byte is
@@ -62,6 +77,14 @@ negative fixture (`containment-stray-region`) plus one mark-free known-good stru
 shipped — `valid-structured-container`, the fixture exercising the R1–R4 catalog marks
 (`format`/`slot`/`label`): the structured header with slotted `Icon`/bound-status `Badge`, two
 `label`/value rows, and a `CardFooter` action, sourced from the SPEC-R9 corpus exemplar.
+
+**The finalize-granularity pair** ([ADR-0187](../../../../.claude/docs/adr/0187-validator-finalize-signal.md),
+GH #829) — `abandoned-surface-at-finalize` and `abandoned-surface-mid-stream` carry the **same payload**
+(a lone `createSurface`, no components ever) and differ ONLY by the `atFinalize` flag: flagged →
+`IDGRAPH s-abandoned:root-missing`, unflagged → clean. That identity is the point, and it is asserted as
+a test (`run.test.ts`): "a legitimate mid-stream prefix" and "an abandoned, permanently-empty surface"
+are byte-identical wire shapes, so nothing except the caller's completeness assertion can separate them.
+The unflagged twin is simultaneously the regression proof that streaming tolerance did not move.
 
 ## Running this repo's own validator against the suite
 
@@ -112,7 +135,7 @@ catalog-interop known-good payload).
 
 | Suite | Fixtures | Failure codes covered |
 | --- | --- | --- |
-| `suites/validator.yaml` | `parse-failure` · `bad-envelope` · `missing-surfaceId` · `unsupported-version` · `bad-pointer-binding` · `bad-pointer-datamodel` · `missing-root` · `duplicate-root` · `dangling-child` · `cycle` | PARSE, SCHEMA ×2, VERSION_UNSUPPORTED, POINTER ×2, IDGRAPH ×4 |
+| `suites/validator.yaml` | `parse-failure` · `bad-envelope` · `missing-surfaceId` · `unsupported-version` · `bad-pointer-binding` · `bad-pointer-datamodel` · `missing-root` · `duplicate-root` · `dangling-child` · `cycle` · `abandoned-surface-at-finalize` · `abandoned-surface-mid-stream` | PARSE, SCHEMA ×2, VERSION_UNSUPPORTED, POINTER ×2, IDGRAPH ×4 + the ADR-0187 finalize pair |
 | `suites/catalog.yaml` | `valid-button` · `valid-list` · `unknown-component` · `upstream-interactive-button` · `upstream-simple-login-form` · `upstream-product-card` · `containment-stray-region` · `valid-structured-card-mark-free` · `valid-structured-container` | CATALOG, CONTAINMENT, plus 6 known-good (3 default-catalog, 3 `a2ui.org` interop) |
 
 ### Row shape — field-by-field, against the fetched upstream examples
@@ -123,7 +146,7 @@ before writing the generator. Every row here carries: `name` · `description` ·
 catalogId, catalog_schema}` · `action` · `payload` · an expected-outcome field — the same top-level
 keys upstream's own rows use.
 
-**Two deliberate mismatches** (named, not forced-fit — see `UPSTREAM-PROPOSAL.md` for the same note
+**Three deliberate mismatches** (named, not forced-fit — see `UPSTREAM-PROPOSAL.md` for the same note
 addressed to upstream maintainers):
 
 1. **Outcome field** — upstream's `expect_error: {category, message}` (or a bare string) names a
@@ -139,6 +162,12 @@ addressed to upstream maintainers):
    components are members of a catalog's declared set, never transforms the catalog document. Every
    row in both of our suites uses `action: "validate"` — our `catalog.yaml` groups catalog-
    DOCUMENT-scoped **validate** cases, not a different action.
+3. **`at_finalize`, an extra optional INPUT field** (ADR-0187, GH #829) — upstream rows carry no notion
+   of stream completeness, because upstream validates one payload with no mode. This repo's validator
+   has two granularities (streaming-tolerant vs. complete-set), and a fixture needs to say which one it
+   is being judged under. Emitted ONLY on the row that opts in, so every other row stays byte-identical
+   to the pre-ADR-0187 generation and an upstream-shaped consumer ignoring the key still matches them
+   all. Snake_case to match the surrounding row convention (`expect_verdict`, `catalog_schema`).
 
 Upstream submission formatting — Apache license headers, `test_data/` external-file schema refs,
 etc. — is applied **at contribution time**, never carried in this repo's own generated copy (see
