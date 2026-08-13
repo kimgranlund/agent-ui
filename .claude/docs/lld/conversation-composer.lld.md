@@ -48,8 +48,10 @@ a stale claim, verified: it composes a canvas surface directly and never `ui-con
   names at all).
 - **CVC-C2 — the promoted callback surface.** `onModelChange`/`onEffortChange`/`onContextDismiss`/
   `onMicClick` move verbatim (the `onSubmit` precedent — callback registration, never a `CustomEvent`;
-  SPEC-R5's closed six-event vocabulary has no picker-commit/submission kind, and this component inherits
-  that same law by lineage, not by re-deriving it). **NEW**: `onSubmit(text: string): void` — the
+  SPEC-R5 declines the fleet's closed event vocabulary — whose single owning home is the `ALLOWED_EVENTS`
+  constants in `family-coherence.test.ts` + `naming-gates.test.ts` (ADR-0153), never re-enumerated or
+  counted in prose — for picker-commit/submission, and this component inherits that same law by lineage,
+  not by re-deriving it). **NEW**: `onSubmit(text: string): void` — the
   field+send submission logic (`#send()`'s trim/empty-guard/clear) moves INTO the composer; it calls
   `onSubmit` with the trimmed text and clears its own field, mirroring `ui-conversation`'s current
   `#send()` exactly. `ui-conversation` no longer touches `#field`/`#sendBtn` directly for submission at
@@ -264,7 +266,7 @@ reconnect-armed flags, `ui-conversation`'s composition/forwarding — CVC-C1/C2/
   rides `internals` — the fleet's ARIA-never-host-attributes law now applies since the carrier is the
   host itself, not an internal part. Forced-colors: frame border/ink/placeholder → `CanvasText`, busy →
   `GrayText` (the textarea block, adapted).
-- **CVC-C10 — consumer/test blast radius (selector-only).** The public callback/prop surfaces of both
+- **CVC-C10 — consumer/test blast radius (selector-only).** (v2) The public callback/prop surfaces of both
   this element and `ui-conversation` are unchanged. Selector updates only: a2ui-chat's `sendIntent`
   helpers re-scope `[data-part="composer"] [data-part="editor"]` → `ui-conversation-composer
   [data-part="editor"]` (the typing mechanism — `editor.textContent` + `input` — survives verbatim);
@@ -273,3 +275,94 @@ reconnect-armed flags, `ui-conversation`'s composition/forwarding — CVC-C1/C2/
   `conversation.browser.test.ts`'s busy/dim + focus probes retarget the host + editor part. TKT-0057's
   engine-split focus assertion is retargeted at the own editor (same question, new mechanism — the
   observed split is re-verified, not assumed).
+
+---
+
+## v3 — the reference typeahead (GH #849 · `capability-availability-tagging.spec.md` S2, 2026-08-13)
+
+Governed by [`capability-availability-tagging.spec.md`](../spec/capability-availability-tagging.spec.md)
+SPEC-R5 (grammar) / R6 (commit shape) / R7 (keyboard, AX, event law) — slice **S2**, "composer grammar
+core". No new R# minted; this section is the build-level mechanism those clauses left to an LLD, plus the
+§10-booked repair of this record's own pre-widening seam inventory. Everything v1/v2 pin and this section
+does not name is UNCHANGED. **No ADR flag**: no new event name (the closed vocabulary gains nothing — the
+`ALLOWED_EVENTS` constants are untouched), no new base class, no catalog admission, no geometry row, and no
+new dependency (the panel is control-created light DOM; the ONE import added is the *pure* `computePosition`
+function already shipped in `@agent-ui/components/traits/overlay`).
+
+- **CVC-C11 — the vocabulary + prop seam (SPEC-R6).** `composer-options.ts` gains two types:
+  `ReferenceOption {id, label, kind, description?}` (a roster entry) and `TurnReference {id, label, kind}`
+  (a committed one — the ONLY load-bearing representation of a mention/invocation). Two additive-optional
+  props, `mentionables` / `invocables` (`readonly ReferenceOption[] | undefined`, `attribute: false`, the
+  `models`/`providers` shape verbatim) sit between `contextItems` and `busy` in the props order (the
+  descriptor's `attributes[]` bijection follows). **`kind` is OPAQUE here**: this element groups and
+  displays it and nothing else — never `Entry`, never a store, never a kind's semantics (the SPEC's layering
+  clause; `ui-agent-admin` owns that projection in S3). `undefined` OR empty ⇒ that trigger is a plain
+  character and NO panel DOM is ever built (SPEC-R6 AC3's byte-identity, enforced by construction rather
+  than by a hidden-element check).
+- **CVC-C12 — the grammar as one pure function (SPEC-R5).** `activeTokenAt(text, caret)` walks back from the
+  caret to the last whitespace and accepts that word ONLY if its first character is `@`/`/`. That single
+  rule delivers all three clauses at once: a mid-word `@` yields a word starting elsewhere (no menu),
+  whitespace ends the word (menu closes, characters stay plain inert text), and everything after the trigger
+  is a whitespace-free filter query. Filtering is case-insensitive CONTAINS over `label`. Zero matches
+  CLOSES the panel (never an empty one); because every pass re-derives from the current token, backspacing
+  to a matching prefix reopens it with no state to unwind. Escape records `{trigger, start}` in
+  `#dismissedToken`, which suppresses reopening while the caret stays in that same token.
+  **The caret probe is the one real trap** (found by this slice's own suite, fixed at root): the selection's
+  end must be a TEXT NODE inside the editor. An element-level end is either an empty editor (same answer as
+  the end-of-text fallback) or a STALE selection from a previous DOM generation — trusting one read offset 0
+  for a five-character line, so no token was seen, the menu silently failed to open, and the following Enter
+  SENT instead of committing.
+- **CVC-C13 — the panel (SPEC-R7).** A control-created `<div data-part="reference-menu" role="listbox"
+  popover="manual" aria-label="References">`, built LAZILY on the first live trigger, placed with the overlay
+  trait's PURE `computePosition` (preferring `top-start` — a chat composer sits at the bottom of its surface,
+  so the panel must not cover the text being typed; flip/shift keep it on screen). **Deliberately NOT the
+  `overlay()` controller**: that controller announces `close`/`toggle` ON ITS HOST (ADR-0101), and this
+  element's contract is `events: []` with no menu event allowed to escape (SPEC-R7 AC2) — borrowing only the
+  placement math keeps the fleet's one positioning model without opening an event surface the descriptor
+  denies exists. `popover="manual"` (not `auto`) because the composer then owns EVERY close path
+  (Escape/blur/whitespace/commit/send/busy/disconnect) and there is no platform light-dismiss whose `toggle`
+  could desync the open flag — the exact desync class `combo-box.ts` needs its own echo-guard for.
+  `[data-open]` is the element's own state truth (set alongside `showPopover()`), which is also what makes
+  the whole slice jsdom-testable and keeps the panel hidden in a Popover-API-less environment.
+  Group headers (`[role="group"]` + `aria-label`, plus an `aria-hidden` sighted label) render exactly when
+  the visible set spans MORE THAN ONE kind: that is the `/` menu's grouped shape and it also suppresses a
+  redundant single header on the Resources-only `@` menu. Kind order = order of first appearance in the
+  consumer's roster.
+- **CVC-C14 — keyboard + AX (SPEC-R7).** `ui-combo-box`'s active-descendant discipline RESTATED (not an
+  embedded `ui-combo-box`): DOM focus never leaves the editor; ArrowUp/ArrowDown move `[data-active]` +
+  `aria-activedescendant` (wrapping); Escape closes; Enter commits. The typeahead branch sits at the TOP of
+  the existing editor `keydown` listener, ahead of the Enter-sends law — so an Enter with the panel open
+  commits and never sends, while Shift+Enter's newline law falls through untouched. Opening always
+  highlights the FIRST option, which is what makes "Enter with an open menu commits" true unconditionally.
+  `aria-expanded`/`aria-controls`/`aria-activedescendant` ride the EDITOR part (role=textbox supports all
+  three) and are REMOVED on close, so a roster-less composer's editor attributes are byte-identical. The
+  panel's own `pointerdown` is preventDefaulted so a commit-by-click never moves focus off the editor.
+- **CVC-C15 — commit + the chip row's cohabitation (SPEC-R6; the SPEC's open question, ruled).** A commit
+  removes the token text `[start, end)`, writing the editor SURFACE and the `value` model synchronously (so
+  the caret can be restored in the same turn and the caret-guard effect sees no divergence to fight), then
+  appends a `{trigger, ref}` entry — deduped by `kind`+`id` — and closes the panel. **Cohabitation ruling**:
+  ONE row (`[data-part="context-chips"]`), consumer-owned `[data-part="context-chip"]`s FIRST, composer-owned
+  `[data-part="reference-chip"]`s after; each family rebuilds only its OWN chips (`#syncContextChips`'s
+  previous `replaceChildren()` would have wiped a just-minted reference chip, so it now removes its own and
+  inserts before the first reference chip), and the row is `[hidden]` iff it holds no chips at all — for a
+  roster-less consumer, `contextItems.length === 0` verbatim. No wrapper elements were added, which is what
+  keeps SPEC-R6 AC3's DOM byte-identity literally true. Per-kind visual treatment = the typed trigger
+  character as a `[data-part="reference-chip-sigil"]` (mention vs invocation) plus `data-kind` for CSS, on
+  the accent family so a turn attachment reads distinct from a neutral consumer context tag — no second icon
+  vocabulary. Reference chips are composer-OWNED state (there is no `references` prop): they survive a
+  reconnect in the DOM while their listeners do not, so `connected()` rebuilds them once per connect (the
+  `#contextItemsBuiltFrom` reset precedent).
+- **CVC-C16 — `onSubmit`, widened additively (SPEC-R6).** `onSubmit(cb: (text, references?) => void)`; the
+  send delivers a stable EMPTY array when there are none (the `EMPTY_CONTEXT_ITEMS` reason) and clears the
+  chips alongside the text. A single-parameter consumer is byte-unaffected. `ui-conversation` forwards both
+  rosters down in its existing props effect and passes `references` through its `onSubmit` forwarder — a
+  PASS-THROUGH only (it adds no semantics of its own, and the user bubble still shows the typed text alone).
+  That seam is what S3 (`ui-agent-admin`'s roster projection + turn-time resolution, SPEC-R8/R4) builds on.
+- **CVC-C17 — tests.** `conversation-composer.test.ts` carries the whole slice in jsdom (grammar, filter,
+  dismissal, commit, dedupe, chip cohabitation, the reconnect re-arm, ARIA wiring, Enter/Arrow/Escape, the
+  `events: []` leak probe, busy/disconnect closure); `conversation-composer.browser.test.ts` (NEW, both
+  engines) carries what only a real engine can prove — SPEC-R7 AC1's Arrow→Arrow→Enter walk under REAL
+  keystrokes with `document.activeElement` asserted throughout, plus the panel really entering the top layer
+  out of an `overflow: hidden` chat shell (hit-tested at its own centre, the GH #260 clipping class) and the
+  committed chip's real painted box. `conversation.test.ts` proves the pass-through seam only, never the
+  composer's internals.

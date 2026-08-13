@@ -53,6 +53,14 @@ attributes:              # attributes-as-API — mirrors conversation-composer.t
     type: json            # readonly {id,label}[] (composer-options.ts's ContextItem) — the dismissable chip row
     default: undefined    # undefined ⇒ no chip row (coalesced to [] at the one read site — an array literal default cannot round-trip through this token)
     reflect: false
+  - name: mentionables
+    type: json            # readonly ReferenceOption[] (composer-options.ts — {id,label,kind,description?}) — GH #849, the '@' roster
+    default: undefined    # undefined/empty ⇒ '@' is a PLAIN CHARACTER: no typeahead, no DOM, byte-identical to before
+    reflect: false
+  - name: invocables
+    type: json            # readonly ReferenceOption[] — GH #849, the '/' roster (one menu, grouped by kind)
+    default: undefined    # undefined/empty ⇒ '/' is a plain character; same default-off law as `mentionables`
+    reflect: false
   - name: busy
     type: boolean
     default: false
@@ -81,10 +89,14 @@ properties:
     description: The Mode picker's CURRENT selection. See `model` — same props-down/callbacks-up law, via `onModeChange`.
   - name: contextItems
     description: A `readonly {id, label}[]` of dismissable chips shown above the text (e.g. "something selected elsewhere, attached to this turn's context"). Default `undefined` — no chip row. A dismiss click fires `onContextDismiss(id)`; the consumer owns actually removing it from this list.
+  - name: mentionables
+    description: OPTIONAL `readonly ReferenceOption[]` (composer-options.ts — `{id, label, kind, description?}`) — GH #849's `@` mention roster. Typing `@` at a TOKEN START (start of text, or after whitespace) opens a typeahead over it; committing an item removes the token text and mints a reference chip. Default `undefined` ⇒ `@` is a plain character (no typeahead, no panel DOM at all). `kind` is an OPAQUE string here — this element groups and displays it, never interprets it; a consumer (e.g. `ui-agent-admin`) owns the domain projection, exactly as it already owns `PickerOption`'s.
+  - name: invocables
+    description: OPTIONAL `readonly ReferenceOption[]` — GH #849's `/` invocation roster, presented as ONE menu grouped by `kind` (group headers appear only when the visible set spans more than one kind), filtered directly by display name — never a two-stage `/tool <name>` grammar. Same default-off law as `mentionables`.
   - name: busy
     description: Whether a turn is in flight (TKT-0034) — the editor becomes non-editable + pointer-inert, send/mic/picker-triggers disable, the whole composer dims via the reflected `[busy]`, and the host carries `ariaBusy`/`ariaDisabled` through `internals`. The composer's OWN send path also checks `busy` synchronously (not only via the batched disabling effect) as a backstop against a stray Enter racing the effect's flush — the guard is load-bearing behavior, not just styling.
 
-events: []               # no DOM events — onSubmit/onModelChange/onEffortChange/onProviderChange/onModeChange/onContextDismiss/onMicClick are ALL callback registrations, never CustomEvents (SPEC-R5's closed six-event vocabulary has no submission/picker-commit kind — inherited by lineage from ui-conversation, not re-derived)
+events: []               # no DOM events — onSubmit/onModelChange/onEffortChange/onProviderChange/onModeChange/onContextDismiss/onMicClick are ALL callback registrations, never CustomEvents (the fleet's CLOSED event vocabulary — owned solely by the ALLOWED_EVENTS constants in family-coherence.test.ts + naming-gates.test.ts, ADR-0153, never re-enumerated here — has no submission/picker-commit kind; inherited by lineage from ui-conversation, not re-derived). GH #849's reference typeahead adds NO event either: its internal listbox is control-created and no menu event escapes the host.
 
 slots: []                 # content model is NOT author-composed — every part is built entirely by this element's own connect-time logic; no slotted children
 
@@ -107,6 +119,14 @@ parts:                    # NOT shadow-DOM ::part() (light-DOM only) — light-D
     description: The microphone button (`[data-part="mic"]`, icon-only `ui-button`, `variant="ghost"`) — OPT-IN: hidden (`[hidden]`) until a consumer calls `onMicClick`. Fires `onMicClick`; this element has no speech-to-text mechanism of its own.
   - name: send
     description: The submit button (`[data-part="send"]`, icon-only `ui-button`, `variant="ghost"` retinted to the neutral family like the mic — the token-repoint pattern in `conversation-composer.css`; an arrow-up glyph).
+  - name: reference-menu
+    description: GH #849 — the reference typeahead panel (`[data-part="reference-menu"]`, `role="listbox"`, `popover="manual"`, `aria-label="References"`), built lazily on the first live `@`/`/` trigger and placed in the Popover API TOP LAYER with the overlay trait's own `computePosition` (preferring ABOVE the editor, flipping/shifting to stay on screen). `[data-open]` is its own state truth (set alongside `showPopover()`), the CSS/AX-visible signal that the typeahead is live. Focus NEVER moves here — the editor keeps DOM focus and carries `aria-expanded`/`aria-controls`/`aria-activedescendant` (the `ui-combo-box` active-descendant discipline, restated).
+  - name: reference-group
+    description: One kind's group inside the panel (`[data-part="reference-group"]`, `role="group"` + `aria-label`), with a sighted `[data-part="reference-group-label"]` header (`aria-hidden` — the group's own label is what AT announces). Rendered ONLY when the visible option set spans more than one `kind`, so the Resources-only `@` menu shows no redundant single header while the `/` menu groups Skills/Workflows/Tools.
+  - name: reference-option
+    description: One selectable roster entry (`[data-part="reference-option"]`, `role="option"`, a stable `id` for `aria-activedescendant`, plus `data-id`/`data-kind`), holding a `[data-part="reference-option-label"]` and — when the roster entry supplies one — a `[data-part="reference-option-description"]`. `[data-active]` marks the Enter target without moving DOM focus. A click commits it (the panel's own `pointerdown` is preventDefaulted so the editor keeps focus).
+  - name: reference-chip
+    description: A committed mention/invocation (`[data-part="reference-chip"]`, `data-kind` for per-kind treatment) living in the SAME chip row as the consumer's `contextItems` chips — consumer chips first, reference chips after. Each holds a `[data-part="reference-chip-sigil"]` (the `@`/`/` the user typed — the mention-vs-invocation marker), a `[data-part="reference-chip-label"]`, and a `[data-part="reference-chip-dismiss"]` `ui-button` that drops the reference from this turn. Composer-OWNED state (unlike `contextItems`): minted by a commit, cleared on a successful send.
 
 customStates:          # :state() hooks the stylesheet keys off — set via internals.states, never host attrs
   - ready              # the motion gate (interaction-states standard): armed one frame past first paint so the upgrade SNAPS and only subsequent border/bg/ink/dim state changes animate
@@ -123,9 +143,17 @@ contentModel: 'no author-facing content model — see `slots: []`'
 
 keyboard:
   - keys: Enter
-    action: In the editor, sends the composer text (same as clicking Send) — unless `busy` is true (the typed text is retained, never silently dropped) or an IME composition is finalizing (`isComposing` guards it).
+    action: In the editor, sends the composer text (same as clicking Send) — unless the reference typeahead is open (then it COMMITS the highlighted item and never sends, GH #849), `busy` is true (the typed text is retained, never silently dropped), or an IME composition is finalizing (`isComposing` guards it).
   - keys: Shift+Enter
-    action: Inserts a newline — the multi-line chat-composer inversion (LLD CVC-C7); this element deliberately sits between `ui-text-field` (every Enter submits) and `ui-textarea` (Enter never submits).
+    action: Inserts a newline — the multi-line chat-composer inversion (LLD CVC-C7); this element deliberately sits between `ui-text-field` (every Enter submits) and `ui-textarea` (Enter never submits). Unaffected by the typeahead.
+  - keys: '@'
+    action: At a TOKEN START (start of text, or after whitespace) opens the mention typeahead over `mentionables`; further non-whitespace characters filter it case-insensitively over display names. Mid-word, or with no `mentionables` roster set, it is a plain character (GH #849).
+  - keys: /
+    action: At a token start opens the invocation typeahead over `invocables` (one menu grouped by kind). Otherwise a plain character (GH #849).
+  - keys: ArrowDown / ArrowUp
+    action: With the typeahead open, moves the highlight via `aria-activedescendant` on the editor, wrapping at both ends — DOM focus never leaves the editor (GH #849, the `ui-combo-box` active-descendant discipline).
+  - keys: Escape
+    action: With the typeahead open, closes it and leaves the typed characters as plain inert text; further typing inside that same token does NOT reopen it. The keydown is also stopped from propagating, so an ancestor overlay never light-dismisses on a typeahead-only Escape (GH #849).
 
 geometry:
   sizeClass: pattern                # composed control, no §1 control-height row of its own
@@ -179,6 +207,38 @@ promotes from, `site/lib/provider-switcher.ts`, retired the same change). A `Pic
 is a plain flat `{id, label}[]`/selected-id pair — the same shape as `efforts`, no narrowing of its own;
 this element never imports the a2ui-owned `GenUiMode` type — a consumer builds its own `modes` list.
 
+## GH #849 — `@` mentions, `/` invocations: chips + structured references
+
+```ts
+composer.mentionables = [{ id: 'res-1', label: 'Menu PDF', kind: 'resource', description: 'Tonight’s menu' }]
+composer.invocables = [
+  { id: 'skill-1', label: 'House style', kind: 'skill' },
+  { id: 'mcp:calc:*', label: 'Calculator', kind: 'tool' },
+]
+composer.onSubmit((text, references) => {
+  // references: readonly TurnReference[] — [{ id: 'res-1', label: 'Menu PDF', kind: 'resource' }, …]
+  // A single-argument consumer is byte-unaffected: the extra argument is simply ignored.
+})
+```
+
+Typing `@` (or `/`) at a **token start** — start of text, or after whitespace — opens a control-created
+`[role="listbox"]` typeahead over that roster; more non-whitespace characters filter it case-insensitively
+over display names. **Focus never leaves the editor**: Arrow moves `aria-activedescendant`, Enter commits
+the highlighted item (and never sends), Escape closes and leaves the typed characters as plain inert text.
+Dismissal by whitespace or blur behaves the same way — typed trigger text is NEVER captured, because the
+only load-bearing representation of a mention/invocation is the structured `TurnReference`.
+
+A commit removes the in-progress token from the text and adds a **chip** to the existing chip row (never an
+inline pill — the editor is `contenteditable="plaintext-only"` by architecture, ADR-0014/ADR-0134). Chips
+are dismissable before send and clear on a successful send alongside the text; consumer-owned `contextItems`
+chips keep the row's leading positions, composer-owned reference chips follow them. Both rosters default to
+`undefined`, and with neither set this element's DOM and behavior are exactly what they were before GH #849
+(the `models`/`providers` default-off law) — including a single-argument `onSubmit` consumer.
+
+The composer stays **generic**: it knows `ReferenceOption`/`TurnReference` and treats `kind` as an opaque
+string it groups and displays. It never learns `Entry`, a store, or a kind's semantics — a consumer
+(`ui-agent-admin`) owns that projection, exactly as it already owns the `PickerOption` lists.
+
 ## The composer IS the field (TKT-0058)
 
 States and text formatting follow the text-input law, multi-line: the ADR-0014 border ladder (idle →
@@ -196,12 +256,16 @@ Every picker/dismiss/submit affordance follows **props down, callbacks up** — 
 `model`/`effort`/`provider`/`mode`/`contextItems` itself; a consumer supplies the current value and reads
 the committed choice back through the matching callback. All seven callbacks (`onSubmit`/`onModelChange`/
 `onEffortChange`/`onProviderChange`/`onModeChange`/`onContextDismiss`/`onMicClick`) are callback
-REGISTRATIONS, never `CustomEvent`s (SPEC-R5's closed six-event vocabulary has no submission/picker-commit
-kind) — and are safe to register before or after connect.
+REGISTRATIONS, never `CustomEvent`s (the fleet's closed event vocabulary — owned by the `ALLOWED_EVENTS`
+constants in `family-coherence.test.ts`/`naming-gates.test.ts` per ADR-0153 — has no submission/picker-commit
+kind) — and are safe to register before or after connect. The one exception to props-down is GH #849's
+committed references: those are composer-OWNED state (there is no `references` prop), delivered up through
+`onSubmit`'s second argument and cleared by the send that delivered them.
 
 ## Every capability is opt-in
 
-`models`/`efforts`/`providers`/`modes`/`contextItems` all default to `undefined` — no picker, no chip row.
+`models`/`efforts`/`providers`/`modes`/`contextItems`/`mentionables`/`invocables` all default to
+`undefined` — no picker, no chip row, no typeahead.
 The mic button is ALSO opt-in: hidden until a consumer calls `onMicClick`, so a consumer that never wires
 voice input never renders (or exposes to a naive "first `ui-button` in the composer" selector) a dead
 button. Only the editor and the send button are always present.

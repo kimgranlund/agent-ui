@@ -57,6 +57,25 @@ function typeInto(el: UIConversationComposerElement, text: string): void {
 function pressEnter(el: UIConversationComposerElement, init: KeyboardEventInit = {}): void {
   editorOf(el).dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true, ...init }))
 }
+/** GH #849 — press any key ON THE EDITOR (the typeahead's keys all ride the editor's own keydown). */
+function pressKey(el: UIConversationComposerElement, key: string, init: KeyboardEventInit = {}): KeyboardEvent {
+  const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init })
+  editorOf(el).dispatchEvent(event)
+  return event
+}
+function menuOf(el: UIConversationComposerElement): HTMLElement | null {
+  return el.querySelector('[data-part="reference-menu"]')
+}
+const menuIsOpen = (el: UIConversationComposerElement): boolean => menuOf(el)?.hasAttribute('data-open') === true
+function optionLabelsOf(el: UIConversationComposerElement): string[] {
+  return [...(menuOf(el)?.querySelectorAll('[data-part="reference-option-label"]') ?? [])].map((n) => n.textContent ?? '')
+}
+function optionsOf(el: UIConversationComposerElement): HTMLElement[] {
+  return [...(menuOf(el)?.querySelectorAll<HTMLElement>('[data-part="reference-option"]') ?? [])]
+}
+function chipLabelsOf(el: UIConversationComposerElement): string[] {
+  return [...el.querySelectorAll('[data-part="reference-chip-label"]')].map((n) => n.textContent ?? '')
+}
 
 describe('ui-conversation-composer — the own editor (TKT-0058, the ui-textarea ADR-0014 pattern reused)', () => {
   it('owns a contenteditable editor part — no nested ui-text-field, no nested form (the v2 unroll)', () => {
@@ -531,6 +550,358 @@ describe('ui-conversation-composer — GH #257 Provider/Mode pickers', () => {
   })
 })
 
+// ── GH #849 — the reference typeahead (capability-availability-tagging.spec.md SPEC-R5/R6/R7) ──────────
+//
+// jsdom carries this whole slice EXCEPT real focus + real caret geometry: the Popover API is absent (the
+// panel's `data-open` is the element's own state truth, which is exactly why it exists), and jsdom has no
+// selection after a programmatic `textContent` write — so `#caretOffset` falls back to end-of-text, the
+// same place a typing caret sits. SPEC-R7 AC1's focus/aria-activedescendant walk under REAL keystrokes is
+// conversation-composer.browser.test.ts's job.
+
+const MENTIONABLES = [
+  { id: 'res-menu', label: 'Menu PDF', kind: 'resource', description: 'Tonight’s menu' },
+  { id: 'res-brand', label: 'Brand guide', kind: 'resource' },
+  { id: 'res-notes', label: 'Meeting notes', kind: 'resource' },
+]
+const INVOCABLES = [
+  { id: 'skill-style', label: 'House style', kind: 'skill' },
+  { id: 'wf-review', label: 'Review flow', kind: 'workflow' },
+  { id: 'mcp:calc:*', label: 'Calculator', kind: 'tool' },
+]
+
+describe('ui-conversation-composer — GH #849 SPEC-R5: the trigger grammar', () => {
+  it('both rosters are opt-in: unset by default, no typeahead panel built at all, and `@`/`/` stay plain characters', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    expect(el.mentionables).toBeUndefined()
+    expect(el.invocables).toBeUndefined()
+    typeInto(el, '@men and /calc')
+    expect(menuOf(el), 'no roster ⇒ no panel DOM of any kind').toBeNull()
+    expect(el.value).toBe('@men and /calc') // the characters are ordinary text
+    expect(editorOf(el).hasAttribute('aria-expanded')).toBe(false)
+  })
+
+  it('an EMPTY (not undefined) roster also makes its trigger a plain character', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.mentionables = []
+    typeInto(el, '@')
+    expect(menuIsOpen(el)).toBe(false)
+  })
+
+  it('AC1 — `@` mid-word opens nothing; `@` at text start AND after a space both open the mention menu', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.mentionables = MENTIONABLES
+    typeInto(el, 'foo@men')
+    expect(menuIsOpen(el), 'a mid-word @ is not a trigger (SPEC-R5 token-start law)').toBe(false)
+    typeInto(el, '@')
+    expect(menuIsOpen(el), '@ at text start opens the menu').toBe(true)
+    expect(optionLabelsOf(el)).toEqual(['Menu PDF', 'Brand guide', 'Meeting notes'])
+    typeInto(el, 'ask about @')
+    expect(menuIsOpen(el), '@ after whitespace opens the menu').toBe(true)
+    typeInto(el, 'line\n@')
+    expect(menuIsOpen(el), '@ after a newline opens the menu').toBe(true)
+  })
+
+  it('AC2 — the typed token filters case-insensitively over DISPLAY names (contains, not prefix)', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.mentionables = MENTIONABLES
+    typeInto(el, '@men')
+    expect(optionLabelsOf(el)).toEqual(['Menu PDF'])
+    typeInto(el, '@NOT')
+    expect(optionLabelsOf(el)).toEqual(['Meeting notes']) // case-insensitive CONTAINS ("meetiNG NOTes")
+    typeInto(el, '@zzz')
+    expect(menuIsOpen(el), 'zero matches closes rather than showing an empty panel').toBe(false)
+    typeInto(el, '@me')
+    expect(menuIsOpen(el), 'backspacing to a matching token reopens it — the pass is stateless').toBe(true)
+  })
+
+  it('AC3 — Escape closes, keeps the typed token as PLAIN text, sends zero references, and does not reopen on further typing', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.mentionables = MENTIONABLES
+    const sent: [string, readonly { id: string }[] | undefined][] = []
+    el.onSubmit((text, references) => sent.push([text, references]))
+    typeInto(el, '@men')
+    expect(menuIsOpen(el)).toBe(true)
+    const escape = pressKey(el, 'Escape')
+    expect(menuIsOpen(el)).toBe(false)
+    expect(escape.defaultPrevented, 'a typeahead-only Escape is consumed, never left to an ancestor overlay').toBe(true)
+    expect(el.value).toBe('@men')
+    typeInto(el, '@menu')
+    expect(menuIsOpen(el), 'the dismissed token stays inert however much more is typed into it').toBe(false)
+    pressEnter(el)
+    expect(sent).toEqual([['@menu', []]])
+  })
+
+  it('typing whitespace without committing closes the menu and leaves the token as inert text', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.mentionables = MENTIONABLES
+    typeInto(el, '@men')
+    expect(menuIsOpen(el)).toBe(true)
+    typeInto(el, '@men ')
+    expect(menuIsOpen(el)).toBe(false)
+    expect(el.value).toBe('@men ')
+  })
+
+  it('blur closes the menu (SPEC-R5 dismissal)', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.mentionables = MENTIONABLES
+    typeInto(el, '@men')
+    expect(menuIsOpen(el)).toBe(true)
+    editorOf(el).dispatchEvent(new Event('blur'))
+    expect(menuIsOpen(el)).toBe(false)
+  })
+
+  it('the `/` roster is ONE menu grouped by kind — direct-by-name, never a two-stage `/tool <name>`', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.invocables = INVOCABLES
+    typeInto(el, '/')
+    expect(menuIsOpen(el)).toBe(true)
+    const groups = [...(menuOf(el) as HTMLElement).querySelectorAll('[data-part="reference-group"]')]
+    expect(groups.map((g) => g.getAttribute('aria-label'))).toEqual(['Skill', 'Workflow', 'Tool'])
+    expect(optionLabelsOf(el)).toEqual(['House style', 'Review flow', 'Calculator'])
+    // filtering down to ONE kind drops the now-redundant single header
+    typeInto(el, '/calc')
+    expect(optionLabelsOf(el)).toEqual(['Calculator'])
+    expect((menuOf(el) as HTMLElement).querySelector('[data-part="reference-group"]')).toBeNull()
+  })
+
+  it('the two triggers open their OWN roster — never the other one', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.mentionables = MENTIONABLES
+    el.invocables = INVOCABLES
+    typeInto(el, '@')
+    expect(optionLabelsOf(el)).toEqual(['Menu PDF', 'Brand guide', 'Meeting notes'])
+    typeInto(el, '/')
+    expect(optionLabelsOf(el)).toEqual(['House style', 'Review flow', 'Calculator'])
+  })
+})
+
+describe('ui-conversation-composer — GH #849 SPEC-R6: the commit shape (chip + structured reference)', () => {
+  it('AC1 — a commit removes the token text, renders a chip, and send delivers {kind,id,label}', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.mentionables = MENTIONABLES
+    const sent: [string, readonly { id: string; label: string; kind: string }[] | undefined][] = []
+    el.onSubmit((text, references) => sent.push([text, references]))
+    typeInto(el, 'total the order @men')
+    pressEnter(el) // the menu is open ⇒ Enter COMMITS
+    expect(el.value, 'the in-progress token text is gone from the value').toBe('total the order ')
+    expect(editorOf(el).textContent).toBe('total the order ')
+    expect(chipLabelsOf(el)).toEqual(['Menu PDF'])
+    expect((el.querySelector('[data-part="reference-chip"]') as HTMLElement).dataset.kind).toBe('resource')
+    expect((el.querySelector('[data-part="reference-chip-sigil"]') as HTMLElement).textContent).toBe('@')
+    expect(sent, 'nothing was SENT by the committing Enter').toEqual([])
+    pressEnter(el) // ...now a real send
+    expect(sent).toEqual([['total the order', [{ id: 'res-menu', label: 'Menu PDF', kind: 'resource' }]]])
+    expect(chipLabelsOf(el), 'chips clear with the text on a successful send').toEqual([])
+  })
+
+  it('a click on an option commits it too (the panel keeps the editor focused — pointerdown is preventDefaulted)', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.invocables = INVOCABLES
+    typeInto(el, '/')
+    const pointerDown = new Event('pointerdown', { bubbles: true, cancelable: true })
+    ;(menuOf(el) as HTMLElement).dispatchEvent(pointerDown)
+    expect(pointerDown.defaultPrevented, 'a panel pointerdown must never move DOM focus off the editor').toBe(true)
+    optionsOf(el)[2]!.dispatchEvent(new Event('click', { bubbles: true }))
+    expect(chipLabelsOf(el)).toEqual(['Calculator'])
+    expect(el.value).toBe('')
+    expect(menuIsOpen(el)).toBe(false)
+  })
+
+  it('AC2 — a chip dismissed pre-send drops that reference; the send delivers zero references', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.mentionables = MENTIONABLES
+    const sent: [string, readonly { id: string }[] | undefined][] = []
+    el.onSubmit((text, references) => sent.push([text, references]))
+    typeInto(el, '@men')
+    pressEnter(el)
+    expect(chipLabelsOf(el)).toEqual(['Menu PDF'])
+    ;(el.querySelector('[data-part="reference-chip-dismiss"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    expect(chipLabelsOf(el)).toEqual([])
+    typeInto(el, 'plain question')
+    pressEnter(el)
+    expect(sent).toEqual([['plain question', []]])
+  })
+
+  it('AC3 — a single-argument onSubmit consumer is unaffected (the extra argument is ignored)', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    const received: string[] = []
+    el.onSubmit((text) => received.push(text)) // the pre-GH #849 shape, verbatim
+    typeInto(el, 'hello agent')
+    pressEnter(el)
+    expect(received).toEqual(['hello agent'])
+  })
+
+  it('AC3 — a roster-less composer renders none of the typeahead/chip DOM (the chip row stays hidden and empty)', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.contextItems = []
+    await whenFlushed()
+    expect(menuOf(el)).toBeNull()
+    expect(el.querySelector('[data-part="reference-chip"]')).toBeNull()
+    expect((el.querySelector('[data-part="context-chips"]') as HTMLElement).hasAttribute('hidden')).toBe(true)
+  })
+
+  it('two mentions ride one turn; the SAME entry mentioned twice is one chip (deduped by kind+id)', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.mentionables = MENTIONABLES
+    const sent: [string, readonly { id: string }[] | undefined][] = []
+    el.onSubmit((text, references) => sent.push([text, references]))
+    typeInto(el, '@men')
+    pressEnter(el)
+    typeInto(el, '@brand')
+    pressEnter(el)
+    typeInto(el, '@menu')
+    pressEnter(el)
+    expect(chipLabelsOf(el)).toEqual(['Menu PDF', 'Brand guide'])
+    typeInto(el, 'q')
+    pressEnter(el)
+    expect(sent[0]![1]!.map((r) => r.id)).toEqual(['res-menu', 'res-brand'])
+  })
+
+  it('reference chips COHABIT the chip row with consumer contextItems — and a contextItems change never wipes them', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.mentionables = MENTIONABLES
+    el.contextItems = [{ id: 'sel-1', label: 'Context Selection' }]
+    await whenFlushed()
+    typeInto(el, '@men')
+    pressEnter(el)
+    const row = el.querySelector('[data-part="context-chips"]') as HTMLElement
+    expect(row.hasAttribute('hidden')).toBe(false)
+    expect([...row.children].map((c) => (c as HTMLElement).dataset.part)).toEqual(['context-chip', 'reference-chip'])
+    // a NEW contextItems reference rebuilds the consumer chips only — the reference chip survives, still last
+    el.contextItems = [{ id: 'sel-2', label: 'Other Selection' }, { id: 'sel-3', label: 'Third' }]
+    await whenFlushed()
+    expect([...row.children].map((c) => (c as HTMLElement).dataset.part)).toEqual([
+      'context-chip', 'context-chip', 'reference-chip',
+    ])
+    expect(chipLabelsOf(el)).toEqual(['Menu PDF'])
+    // clearing the consumer chips leaves the row VISIBLE — it still holds a reference chip
+    el.contextItems = []
+    await whenFlushed()
+    expect(row.hasAttribute('hidden')).toBe(false)
+    expect([...row.children].map((c) => (c as HTMLElement).dataset.part)).toEqual(['reference-chip'])
+  })
+
+  it('a reference-chip dismiss still fires after an ORDINARY disconnect/reconnect (the context-chip regression, re-derived for composer-owned chips)', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.mentionables = MENTIONABLES
+    typeInto(el, '@men')
+    pressEnter(el)
+    expect(chipLabelsOf(el)).toEqual(['Menu PDF'])
+
+    el.remove() // an ordinary detach — the chip DOM survives, its listeners do NOT
+    document.body.append(el)
+    await whenFlushed()
+
+    expect(chipLabelsOf(el), 'the chip is rebuilt once per connect').toEqual(['Menu PDF'])
+    ;(el.querySelector('[data-part="reference-chip-dismiss"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    expect(chipLabelsOf(el)).toEqual([])
+  })
+})
+
+describe('ui-conversation-composer — GH #849 SPEC-R7: keyboard, AX, and the event law', () => {
+  it('the open panel is a [role=listbox] of [role=option]s; the EDITOR carries aria-expanded/-controls/-activedescendant', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.mentionables = MENTIONABLES
+    typeInto(el, '@')
+    const menu = menuOf(el) as HTMLElement
+    const editor = editorOf(el)
+    expect(menu.getAttribute('role')).toBe('listbox')
+    expect(menu.getAttribute('popover')).toBe('manual')
+    expect(optionsOf(el).every((o) => o.getAttribute('role') === 'option')).toBe(true)
+    expect(editor.getAttribute('role'), 'the editor role never changes — a roster-less composer is untouched').toBe('textbox')
+    expect(editor.getAttribute('aria-expanded')).toBe('true')
+    expect(editor.getAttribute('aria-controls')).toBe(menu.id)
+    expect(editor.getAttribute('aria-activedescendant'), 'the FIRST option is highlighted on open').toBe(optionsOf(el)[0]!.id)
+    expect(optionsOf(el)[0]!.hasAttribute('data-active')).toBe(true)
+    pressKey(el, 'Escape')
+    expect(editor.hasAttribute('aria-expanded')).toBe(false)
+    expect(editor.hasAttribute('aria-controls')).toBe(false)
+    expect(editor.hasAttribute('aria-activedescendant')).toBe(false)
+  })
+
+  it('ArrowDown/ArrowUp move the highlight via aria-activedescendant, wrapping at both ends', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.mentionables = MENTIONABLES
+    typeInto(el, '@')
+    const editor = editorOf(el)
+    const ids = optionsOf(el).map((o) => o.id)
+    expect(editor.getAttribute('aria-activedescendant')).toBe(ids[0])
+    const down = pressKey(el, 'ArrowDown')
+    expect(down.defaultPrevented, 'Arrow is consumed by the typeahead, never left to the caret').toBe(true)
+    expect(editor.getAttribute('aria-activedescendant')).toBe(ids[1])
+    pressKey(el, 'ArrowDown')
+    expect(editor.getAttribute('aria-activedescendant')).toBe(ids[2])
+    pressKey(el, 'ArrowDown')
+    expect(editor.getAttribute('aria-activedescendant'), 'wraps to the first').toBe(ids[0])
+    pressKey(el, 'ArrowUp')
+    expect(editor.getAttribute('aria-activedescendant'), 'wraps to the last').toBe(ids[2])
+    expect(optionsOf(el).filter((o) => o.hasAttribute('data-active')).length, 'exactly one highlight').toBe(1)
+  })
+
+  it('Enter with the menu open COMMITS the highlighted item and never sends (the guard runs ahead of the Enter-sends law)', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.mentionables = MENTIONABLES
+    const sent: string[] = []
+    el.onSubmit((text) => sent.push(text))
+    typeInto(el, 'question @')
+    pressKey(el, 'ArrowDown') // highlight the SECOND option
+    pressEnter(el)
+    expect(sent, 'a committing Enter must not send').toEqual([])
+    expect(chipLabelsOf(el)).toEqual(['Brand guide'])
+    expect(menuIsOpen(el)).toBe(false)
+    pressEnter(el) // the menu is closed now — the ordinary send law applies again
+    expect(sent).toEqual(['question'])
+  })
+
+  it('Shift+Enter with the menu open still inserts a newline (never commits, never sends)', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.mentionables = MENTIONABLES
+    const sent: string[] = []
+    el.onSubmit((text) => sent.push(text))
+    typeInto(el, '@men')
+    const shiftEnter = pressKey(el, 'Enter', { shiftKey: true })
+    expect(shiftEnter.defaultPrevented, 'Shift+Enter must fall through to the platform newline').toBe(false)
+    expect(chipLabelsOf(el)).toEqual([])
+    expect(sent).toEqual([])
+  })
+
+  it('no internal menu event escapes the host — `events: []` still holds with the typeahead live', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.mentionables = MENTIONABLES
+    const leaked: string[] = []
+    for (const name of ['change', 'input', 'select', 'open', 'close', 'toggle', 'action']) {
+      el.addEventListener(name, () => leaked.push(name))
+    }
+    typeInto(el, '@men')
+    pressKey(el, 'ArrowDown')
+    pressEnter(el) // commit
+    pressKey(el, 'Escape')
+    typeInto(el, 'q')
+    pressEnter(el) // send
+    expect(leaked, 'the descriptor declares events: [] — nothing may escape').toEqual([])
+  })
+
+  it('going busy closes an open typeahead (never an orphan top-layer panel over an uneditable composer)', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.mentionables = MENTIONABLES
+    typeInto(el, '@men')
+    expect(menuIsOpen(el)).toBe(true)
+    el.busy = true
+    await whenFlushed()
+    expect(menuIsOpen(el)).toBe(false)
+  })
+
+  it('a disconnect closes an open typeahead (the scope-owned disposer)', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.mentionables = MENTIONABLES
+    typeInto(el, '@men')
+    expect(menuIsOpen(el)).toBe(true)
+    el.remove()
+    await whenFlushed()
+    expect(menuOf(el)?.hasAttribute('data-open')).toBe(false)
+  })
+})
+
 // ── descriptor — ADR-0004 (structural + contract↔props + contract↔source) ──────────────────────────────
 
 const DIR = `${process.cwd()}/packages/agent-ui/app/src/controls/conversation`
@@ -542,7 +913,8 @@ describe('conversation-composer.md descriptor', () => {
   const { fence, body } = splitFrontmatter(md)
   const parsed = parseDescriptor(fence)
   const ATTR_NAMES = [
-    'value', 'placeholder', 'models', 'model', 'efforts', 'effort', 'providers', 'provider', 'modes', 'mode', 'contextItems', 'busy',
+    'value', 'placeholder', 'models', 'model', 'efforts', 'effort', 'providers', 'provider', 'modes', 'mode',
+    'contextItems', 'mentionables', 'invocables', 'busy',
   ]
 
   it('has a leading frontmatter fence and a /site prose body', () => {

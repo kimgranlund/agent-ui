@@ -526,6 +526,31 @@ describe('ui-conversation — the composed ui-conversation-composer (TKT-0056): 
     expect(child.mode).toBe('default')
   })
 
+  it('mentionables/invocables forward straight through, and a committed reference rides onSubmit\'s widened second argument (GH #849)', async () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.mentionables = [{ id: 'res-menu', label: 'Menu PDF', kind: 'resource' }]
+    el.invocables = [{ id: 'mcp:calc:*', label: 'Calculator', kind: 'tool' }]
+    await whenFlushed()
+    const child = composer(el)
+    expect(child.mentionables).toEqual(el.mentionables)
+    expect(child.invocables).toEqual(el.invocables)
+
+    const sent: [string, readonly { id: string; kind: string }[] | undefined][] = []
+    el.onSubmit((text, references) => sent.push([text, references]))
+    // Type a token, commit it from the composer's own typeahead, then send — the composer's grammar itself
+    // is conversation-composer.test.ts's job; what this proves is the SEAM (pass-through + widened callback).
+    const editor = child.querySelector('[data-part="editor"]') as HTMLElement
+    editor.textContent = 'total it @men'
+    editor.dispatchEvent(new Event('input', { bubbles: true }))
+    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+    expect(child.querySelectorAll('[data-part="reference-chip"]').length, 'the commit landed in the composer').toBe(1)
+    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+    expect(sent).toEqual([['total it', [{ id: 'res-menu', label: 'Menu PDF', kind: 'resource' }]]])
+    // The user BUBBLE shows the typed text only — the chips are the composer-side attachment affordance.
+    const bubble = log(el).querySelector('[data-part="bubble"][data-role="user"]') as HTMLElement
+    expect(bubble.querySelector('[data-part="body"]')!.textContent).toBe('total it')
+  })
+
   it('committing a Provider/Mode picker choice in the composed child fires ui-conversation\'s OWN onProviderChange/onModeChange (GH #257)', async () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)
     el.providers = [
@@ -1152,7 +1177,7 @@ describe('conversation.md descriptor', () => {
   const parsed = parseDescriptor(fence)
   const ATTR_NAMES = [
     'disclosure', 'disabled', 'receipt', 'sources', 'models', 'model', 'efforts', 'effort',
-    'providers', 'provider', 'modes', 'mode', 'contextItems',
+    'providers', 'provider', 'modes', 'mode', 'contextItems', 'mentionables', 'invocables',
   ]
 
   it('has a leading frontmatter fence and a /site prose body', () => {

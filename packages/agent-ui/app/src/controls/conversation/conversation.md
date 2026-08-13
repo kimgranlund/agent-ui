@@ -65,6 +65,14 @@ attributes:              # attributes-as-API — mirrors conversation.ts `props`
     type: json            # readonly {id,label}[] (composer-options.ts's ContextItem) — the dismissable chip row
     default: undefined    # undefined ⇒ no chip row (coalesced to [] at the one read site — an array literal default cannot round-trip through this token)
     reflect: false
+  - name: mentionables
+    type: json            # readonly ReferenceOption[] (composer-options.ts) — GH #849, forwarded to the composed composer's '@' typeahead
+    default: undefined    # undefined ⇒ '@' is a plain character in the composer; byte-identical for every existing consumer
+    reflect: false
+  - name: invocables
+    type: json            # readonly ReferenceOption[] — GH #849, the composer's '/' typeahead roster (one menu, grouped by kind)
+    default: undefined
+    reflect: false
 
 properties:
   - name: disabled
@@ -93,6 +101,10 @@ properties:
     description: The Mode picker's CURRENT selection. See `model` — same props-down/callbacks-up law, via `onModeChange`.
   - name: contextItems
     description: A `readonly {id, label}[]` of dismissable chips shown above the field (e.g. "something selected elsewhere, attached to this turn's context"). Default `undefined` — no chip row. A dismiss click fires `onContextDismiss(id)`; the consumer owns actually removing it from this list.
+  - name: mentionables
+    description: OPTIONAL `readonly ReferenceOption[]` (`{id, label, kind, description?}`) — GH #849's `@` mention roster, forwarded PASS-THROUGH to the composed composer (this element adds no semantics: `kind` stays the consumer's own opaque string). Default `undefined` ⇒ `@` is a plain character. Committed references come back up through `onSubmit`'s widened second argument. See `conversation-composer.md` for the grammar.
+  - name: invocables
+    description: OPTIONAL `readonly ReferenceOption[]` — GH #849's `/` invocation roster (ONE menu grouped by kind), forwarded pass-through like `mentionables`. Default `undefined` ⇒ `/` is a plain character.
 
 events:                   # onSubmit/onClientMessage/onModelChange/onEffortChange/onProviderChange/onModeChange/onContextDismiss/onMicClick/setContentRenderer/setEmptyState are ALL callback/hook registrations, never CustomEvents (SPEC-R5/SPEC-R12; the closed vocabulary has no submission/picker-commit/client-message/render-hook kind). GH #291/ADR-0160 clause 3 adds the ONE real DOM event: `action`, fired from the settled-turn action-chip row — the SAME closed-vocabulary member ui-status-stream's inline retry button already uses (ADR-0153's seventh member), never an eighth.
   - name: action
@@ -362,7 +374,7 @@ the same statement `reset()` already makes about turns. Safe before or after con
 `ui-conversation` seats exactly ONE `<ui-conversation-composer>` — adopted from an author-supplied
 `:scope > ui-conversation-composer` (ADR-0180) if present, else JS-created (the `master-detail.ts` →
 `ui-split` precedent, the byte-identical default) — forwarding `models`/`model`/`efforts`/`effort`/`providers`/`provider`/
-`modes`/`mode`/`contextItems` down as props and forwarding its seven callback registrations up to whatever
+`modes`/`mode`/`contextItems`/`mentionables`/`invocables` down as props and forwarding its seven callback registrations up to whatever
 THIS element's own consumer registered. See `conversation-composer.md` for the composer's own full
 contract (its parts, its `busy` prop, its opt-in mic/pickers/chips). Beyond the field + send button, the
 composer can carry a **Provider picker**, a **Models picker**, an **Effort picker**, a **Mode picker**,
@@ -388,6 +400,11 @@ conv.mode = 'default'
 conv.onModeChange((id) => { /* persist the new mode */ })
 conv.contextItems = [{ id: 'sel-1', label: 'Context Selection' }]
 conv.onContextDismiss((id) => { /* remove `id` from contextItems */ })
+// GH #849 — the composer's `@`/`/` reference typeahead, pass-through props; a committed reference rides
+// `onSubmit`'s widened SECOND argument (a single-argument consumer is unaffected).
+conv.mentionables = [{ id: 'res-1', label: 'Menu PDF', kind: 'resource' }]
+conv.invocables = [{ id: 'mcp:calc:*', label: 'Calculator', kind: 'tool' }]
+conv.onSubmit((text, references) => { /* resolve `references` by id at send time */ })
 conv.onMicClick(() => { /* wire real voice input here — none is built in */ }) // ALSO reveals the mic button — hidden until this is called
 ```
 

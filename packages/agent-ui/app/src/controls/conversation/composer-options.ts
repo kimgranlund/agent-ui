@@ -32,6 +32,30 @@ export interface ContextItem {
   label: string
 }
 
+/** GH #849 (capability-availability-tagging.spec.md SPEC-R6) — ONE selectable entry of a composer
+ *  reference roster: the `mentionables` (`@`) or `invocables` (`/`) list a consumer injects. GENERIC by
+ *  construction (the SPEC's layering clause): `kind` is an OPAQUE string this element only groups and
+ *  displays — the composer never learns `Entry`, a store, or any kind's semantics; `ui-agent-admin` owns
+ *  that projection exactly as it already owns `PickerOption`'s. `description` is optional secondary text
+ *  shown under the label in the typeahead. */
+export interface ReferenceOption {
+  id: string
+  label: string
+  kind: string
+  description?: string
+}
+
+/** GH #849 (SPEC-R6) — the STRUCTURED reference a committed mention/invocation attaches to a turn, and
+ *  the ONLY load-bearing representation of one (the SPEC's "never bare text" clause): the composer hands
+ *  these to `onSubmit`'s second argument, and the consumer resolves by `id` (GH #402's id-not-label law —
+ *  `label` rides for display + the turn log only). `kind` is the same opaque string its `ReferenceOption`
+ *  carried, round-tripped verbatim. */
+export interface TurnReference {
+  id: string
+  label: string
+  kind: string
+}
+
 /** The reasoning-effort levels a live model call can be dialed to — the same low/medium/high/xhigh
  *  vocabulary this repo's own agent-authoring tooling already uses for a seat's reasoning tier, reused
  *  here rather than inventing a parallel scale. */
