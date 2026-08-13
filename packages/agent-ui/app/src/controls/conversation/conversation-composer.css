@@ -40,7 +40,14 @@
   --ui-conversation-composer-ink-filled: var(--md-sys-color-neutral-on-surface-variant);
   --ui-conversation-composer-ink-hover: var(--md-sys-color-neutral-on-surface-variant);
   --ui-conversation-composer-ink-focus: var(--md-sys-color-neutral-on-surface);
-  --ui-conversation-composer-placeholder: var(--ui-conversation-composer-ink); /* tracks the SAME default-state ink role */
+  /* GH #858 (fixed): pinned to the default-state ink ROLE directly, NOT aliased to the live
+     `--ui-conversation-composer-ink` token — that token is state-repointed (filled/hover/focus,
+     the table above), and an alias re-resolves WITH it, so focusing or hovering an EMPTY composer
+     silently brightened the placeholder to the focus/hover ink (the alias's only intended job was
+     forwarding the busy dim below; it forwarded every other repoint too, for free and by accident).
+     Pinning keeps the placeholder at the SAME default-state ink role in every interactive state;
+     busy gets its own EXPLICIT repoint below (the combo-box.css disabled precedent). */
+  --ui-conversation-composer-placeholder: var(--md-sys-color-neutral);
   --ui-conversation-composer-ink-variant: var(--md-sys-color-neutral-on-surface-variant); /* unrelated to this table — the chip/picker retint role, unchanged */
   --ui-conversation-composer-chip-bg: var(--md-sys-color-neutral-container); /* TKT-0066: was a direct role read in @scope */
 
@@ -105,6 +112,7 @@
   --ui-conversation-composer-bg: var(--md-sys-color-neutral-container-low);
   --ui-conversation-composer-border: transparent;
   --ui-conversation-composer-ink: var(--md-sys-color-neutral-low);
+  --ui-conversation-composer-placeholder: var(--md-sys-color-neutral-low); /* GH #858 — the placeholder's one legitimate repoint (busy dims it too), now explicit since the alias above no longer forwards it */
 }
 
 /* ═══ [ui-conversation-composer] STYLES ═══ */

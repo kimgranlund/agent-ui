@@ -35,7 +35,12 @@
   --ui-code-editor-ink-filled: var(--md-sys-color-neutral-on-surface-variant);
   --ui-code-editor-ink-hover: var(--md-sys-color-neutral-on-surface-variant);
   --ui-code-editor-ink-focus: var(--md-sys-color-neutral-on-surface);
-  --ui-code-editor-placeholder: var(--ui-code-editor-ink);
+  /* GH #858 (fixed, the text-field.css precedent): pinned to the default-state ink ROLE directly,
+     NOT aliased to the live --ui-code-editor-ink token — that token is state-repointed (filled/
+     hover/focus), and an alias re-resolves WITH it, so focusing or hovering an EMPTY editor
+     silently brightened the placeholder to the focus/hover ink. Disabled gets its own EXPLICIT
+     repoint below instead. */
+  --ui-code-editor-placeholder: var(--md-sys-color-neutral);
 
   /* Geometry — the MULTI-LINE law (ADR-0134). Fixed font (this control carries no [size] lever); padding /
      line-box DERIVE from it via calc(). rows is a growable MINIMUM, never a fixed §1-row height. */
@@ -95,6 +100,7 @@
   --ui-code-editor-bg: var(--md-sys-color-neutral-container-low);
   --ui-code-editor-border: transparent;
   --ui-code-editor-ink: var(--md-sys-color-neutral-low);
+  --ui-code-editor-placeholder: var(--md-sys-color-neutral-low); /* GH #858 — the placeholder's one legitimate repoint, now explicit since the alias above no longer forwards it */
 }
 
 /* richtext mode reads like PROSE (ADR-0147) — repoint off the source-mode mono default to the fleet sans. */

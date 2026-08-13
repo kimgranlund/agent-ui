@@ -88,6 +88,71 @@ describe('ui-code-editor — CodeMirror lazily mounts for language="markdown" (b
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  GH #858 — the placeholder pins to the default-state ink (the textarea.css precedent); hover/focus no
+//  longer forward-brighten it. Disabled still dims it (now an explicit repoint). language="plain" keeps
+//  the plain contenteditable fallback surface (no CM mount) — the same [data-part="editor"] the fleet's
+//  other four affected controls carry.
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+const alphaOf = (color: string): number => {
+  if (color === 'transparent') return 0
+  const m = color.match(/rgba?\(([^)]+)\)/i)
+  if (!m) return 1
+  const parts = m[1].split(/[\s,/]+/).filter(Boolean)
+  return parts.length >= 4 ? Number(parts[3]) : 1
+}
+const px = (v: string): number => Number.parseFloat(v)
+
+describe('ui-code-editor — GH #858: placeholder ink is FROZEN across hover/focus, still dims when disabled (both engines)', () => {
+  it('the placeholder computed colour at FOCUS equals its colour at REST (an EMPTY editor)', async () => {
+    const { field } = mount(`<ui-code-editor language="plain" placeholder="Write markdown…" ${SIZED}></ui-code-editor>`)
+    const editor = field.querySelector('[data-part="editor"]') as HTMLElement
+    const restColor = getComputedStyle(editor, '::before').color
+    expect(alphaOf(restColor), 'the placeholder is invisible at rest — the probe would be vacuous').toBeGreaterThan(0)
+
+    editor.focus()
+    await expect.poll(() => field.matches(':focus-within')).toBe(true)
+    await new Promise((r) => setTimeout(r, 250)) // past --md-sys-motion-duration-fast — let any repaint settle
+
+    expect(
+      getComputedStyle(editor, '::before').color,
+      `${server.browser}: GH #858 regressed — the placeholder brightened to the focus ink on an EMPTY editor`,
+    ).toBe(restColor)
+  })
+
+  it('the placeholder computed colour on HOVER (unfocused) equals its colour at REST', async () => {
+    const { field } = mount(`<ui-code-editor language="plain" placeholder="Write markdown…" ${SIZED}></ui-code-editor>`)
+    const editor = field.querySelector('[data-part="editor"]') as HTMLElement
+    const restColor = getComputedStyle(editor, '::before').color
+
+    await userEvent.hover(field)
+    await expect
+      .poll(() => px(getComputedStyle(field).borderTopWidth), { timeout: 1500 })
+      .toBeGreaterThan(0)
+    await new Promise((r) => setTimeout(r, 250))
+
+    expect(
+      getComputedStyle(editor, '::before').color,
+      `${server.browser}: GH #858 regressed — the placeholder brightened to the hover ink on an EMPTY editor`,
+    ).toBe(restColor)
+    await userEvent.unhover(field)
+  })
+
+  it('a disabled editor still DIMS the placeholder (now an explicit repoint)', () => {
+    const { field: enabledField } = mount(`<ui-code-editor language="plain" placeholder="Write markdown…" ${SIZED}></ui-code-editor>`)
+    const enabledColor = getComputedStyle(enabledField.querySelector('[data-part="editor"]')!, '::before').color
+
+    const { field: disabledField } = mount(`<ui-code-editor language="plain" placeholder="Write markdown…" disabled ${SIZED}></ui-code-editor>`)
+    const disabledColor = getComputedStyle(disabledField.querySelector('[data-part="editor"]')!, '::before').color
+
+    expect(
+      disabledColor,
+      `${server.browser}: a disabled editor's placeholder no longer dims`,
+    ).not.toBe(enabledColor)
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
 //  source mode reads as CODE (monospace) regardless of the host page's ambient font; richtext mode reads
 //  as PROSE (the fleet sans) — both engines, both the plain fallback AND the CM-mounted surface
 // ════════════════════════════════════════════════════════════════════════════════════════════════════

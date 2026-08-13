@@ -76,7 +76,14 @@
   --ui-combo-box-ink-filled: var(--md-sys-color-neutral-on-surface-variant);
   --ui-combo-box-ink-hover: var(--md-sys-color-neutral-on-surface-variant);
   --ui-combo-box-ink-focus: var(--md-sys-color-neutral-on-surface);
-  --ui-combo-box-placeholder: var(--ui-combo-box-ink); /* tracks the SAME default-state ink role dynamically (Kim's table has no separate placeholder row) — re-resolves live off whatever --ui-combo-box-ink cascades to, so the disabled repoint below reaches it for free */
+  /* GH #858 (fixed): pinned to the default-state ink ROLE directly, NOT aliased to the live
+     --ui-combo-box-ink token — that token is state-repointed (filled/hover/focus, the table
+     above) AT THE EDITOR PART (below), and an alias re-resolves WITH it, so focusing or hovering
+     an EMPTY combo-box silently brightened the placeholder to the focus/hover ink. Disabled keeps
+     its own EXPLICIT repoint below (unchanged — the model this fix generalized to the other four
+     files). Because this is now a fixed role, not a live alias, the editor part no longer needs
+     its own re-declaration either (see the removed TKT-0065 re-resolution hack, below). */
+  --ui-combo-box-placeholder: var(--md-sys-color-neutral);
 
   /* Disabled state (TKT-0062's disabled row) — an indirection layer of -disabled-suffixed tokens
      fed to the base bg/border/ink trio by the [disabled] block below (keeps the TKT-0047 shape). */
@@ -161,15 +168,14 @@
 
   :scope > [data-part='editor'] {
     box-sizing: border-box;
-    /* Re-declare the placeholder alias AT THE EDITOR (TKT-0065 F13, second half of the fix): a custom
-       property resolves at computed-value time ON THE ELEMENT THAT DECLARES IT — the host-level
-       `--ui-combo-box-placeholder: var(--ui-combo-box-ink)` locks in the HOST's ink and inherits down
-       as a resolved value, so the state rules' editor-level ink repoints below never reached the
-       placeholder ::before (proven by the F13 regression test: hover/focus repainted the typed text but
-       the placeholder stayed frozen). Declaring the same alias here re-resolves it against the EDITOR's
-       own (state-repointed) ink. Own-chain read — @scope hygiene holds. Unlike text-field, whose state
-       rules live on the host itself, combo-box's frame IS the editor part, so the alias must live here. */
-    --ui-combo-box-placeholder: var(--ui-combo-box-ink);
+    /* GH #858 (fixed): the TKT-0065 F13 re-declaration that used to live here — re-resolving a
+       `--ui-combo-box-placeholder: var(--ui-combo-box-ink)` alias AT THE EDITOR so it tracked the
+       editor's own state-repointed ink — is GONE, on purpose: that mechanism was exactly what made
+       hover/focus brighten the placeholder on an EMPTY combo-box (the same fleet-wide alias defect
+       GH #858 fixed everywhere else). `--ui-combo-box-placeholder` is now pinned to a fixed role at
+       the host's `:where()` token block (no longer an ink alias at all), so the editor needs no
+       local re-declaration — it simply inherits the host's fixed value, and the disabled row's own
+       explicit repoint (below) still reaches it the same way. */
     /* Control-class height (block-size off the ramp, not a content-height).
        line-height: 1 + padding-block: 0 = the text fills the box without double-spacing
        (matches --md-sys-control-line-height, ADR-0036). */
@@ -244,11 +250,13 @@
      combo-box.ts — so it should never actually engage). user-invalid's border-only override still
      layers on top of whichever bg/ink row above resolved, untouched. */
   /* NOTE (TKT-0065 lateral review, fixed — the text-field.css precedent): repointing the
-     --ui-combo-box-ink TOKEN itself, NOT a direct color: declaration — the placeholder ::before above
-     carries its own `color: var(--ui-combo-box-placeholder)`, which ALIASES the ink token; a property
-     repoint on the editor never reached it, so an EMPTY combo-box's placeholder stayed at the default
-     ink under hover/focus while text-field's repainted (proven frozen in a real Chromium+WebKit probe
-     before this fix — the exact TKT-0062 mechanic-[b] regression, one consumer over). */
+     --ui-combo-box-ink TOKEN itself here, NOT a direct color: declaration — the editor's own base
+     `color: var(--ui-combo-box-ink)` rule (above) reads the token directly, so a host-only override
+     would never have reached it. (Historical: at the time, `--ui-combo-box-placeholder` ALSO aliased
+     this same ink token, so this repoint doubled as the placeholder's repaint mechanism too — GH #858
+     later found that mechanism itself was the fleet-wide defect, and repointed
+     `--ui-combo-box-placeholder` to a fixed role instead; it no longer participates in this repoint at
+     all, deliberately — see the pinned declaration in the :where() token block, above.) */
   :scope > [data-part='editor']:not(:hover):not(:focus):not([aria-disabled='true']):not([data-empty]) {
     background-color: var(--ui-combo-box-bg-filled);
     --ui-combo-box-ink: var(--ui-combo-box-ink-filled);
