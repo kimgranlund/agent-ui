@@ -21,9 +21,9 @@ const fixtures = readFixtures()
 const fresh = buildSuites(fixtures)
 
 describe('generate-suites — anti-vacuous coverage (fixtures.jsonl ↔ SUITE_MEMBERSHIP)', () => {
-  it('SUITE_MEMBERSHIP claims every one of the 18 committed fixtures exactly once', () => {
+  it('SUITE_MEMBERSHIP claims every one of the 19 committed fixtures exactly once', () => {
     const claimed = Object.values(SUITE_MEMBERSHIP).flat()
-    expect(claimed.length).toBe(18)
+    expect(claimed.length).toBe(19)
     expect(new Set(claimed).size).toBe(claimed.length) // no fixture claimed twice
     expect(new Set(claimed)).toEqual(new Set(fixtures.map((f) => f.name))) // no orphan on either side
   })

@@ -122,6 +122,7 @@ import {
 import { kpiPanelLifecycleSeed } from '../../src/examples/message-lifecycle.ts'
 import { feedbackFormSeed, elevationScaleSeed, triviaRoundResumeSeed } from '../../src/examples/corpus-growth.ts'
 import { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed } from '../../src/examples/catalog-frontier.ts'
+import { structuredContainerSeed } from '../../src/examples/structured-container.ts'
 import { allSeeds } from '../../src/examples/index.ts'
 
 declare const process: { cwd(): string; argv: string[]; exit(code?: number): never }
@@ -247,6 +248,7 @@ const SEEDS_BY_MODULE: ReadonlyArray<{ module: string; seeds: readonly ExampleSe
     module: 'catalog-frontier.ts', // GH #729 — the coverage-gap seeds; admission pending the judged wave (disposition-allowlist.ts)
     seeds: [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed],
   },
+  { module: 'structured-container.ts', seeds: [structuredContainerSeed] }, // GH #808 S5 — SPEC-R9's exemplar
 ]
 
 /** Fail loudly (not silently) if the shelf's seed count/membership ever drifts from this script's
