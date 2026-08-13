@@ -21,3 +21,14 @@ export function readdirSync(path: string): string[] {
   if (entries === undefined) throw new Error(`fs-shim: no bundled directory listing for "${path}" — add it to fs-shim-content.ts`)
   return entries
 }
+
+// GH #811 — `dogfood-inventory.ts` (bundled since the M-C dogfood wave) also imports `statSync`, whose
+// one call site is `statSync(dirPath).isDirectory()`. Membership in the bundled maps IS the file-vs-
+// directory fact here: a DIRS key is a directory, a FILES key is a file, anything else is the same
+// fail-fast add-it-to-content error the two readers above throw (never a silent ENOENT-shaped guess —
+// a path the bundle doesn't know is a bundling gap, not a runtime condition).
+export function statSync(path: string): { isDirectory(): boolean } {
+  if (DIRS[path] !== undefined) return { isDirectory: () => true }
+  if (FILES[path] !== undefined) return { isDirectory: () => false }
+  throw new Error(`fs-shim: no bundled entry for "${path}" — add it to fs-shim-content.ts`)
+}
