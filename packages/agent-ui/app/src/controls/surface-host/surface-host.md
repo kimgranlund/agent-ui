@@ -134,6 +134,29 @@ chat-external canvas (e.g. a `ui-super-shell` content region — `a2ui-live`'s r
 `ui-conversation`'s own per-surface registry (`ui-conversation` creates one instance per open A2UI
 surface, ADR-0129 clause 2) — same class, same public methods, no conditional behaviour keyed on ancestry.
 
+## Terminal-empty state at finalize (`data-empty-final`, ADR-0187 / GH 829)
+
+The empty artboard's placeholder is **anticipatory** — "The rendered surface appears here." is honest only
+while content might still arrive. When `finalize()` runs and nothing was ever mounted, the host sets a
+`data-empty-final` attribute on itself and the stylesheet swaps that copy for a terminal
+"Nothing was rendered for this surface." A silently blank artboard beside a working card, with no
+indication anything went wrong, was the reported symptom of GH 802.
+
+Three properties worth knowing:
+
+- **It is a state READ, never a second verdict.** The validator is the sole judge of emptiness
+  (a2ui-runtime SPEC-N6's one-implementation law); the wire error for such a surface is emitted by the
+  renderer's own opted-in finalize and arrives through the ordinary `onClientMessage` channel. This
+  element only presents facts it already holds — finalize happened, and the mount point holds no element.
+  It exists because the producer-side guard (`produce()`) cannot protect streams it did not generate:
+  recorded transcripts, the A2A bridge, and any third-party producer reach a mounted host raw.
+- **The host stays mounted and addressable.** Unmounting was rejected: a later turn legitimately targets
+  a known `surfaceId`, which the conversation routes to the ORIGINAL host (SPEC-R7).
+- **`ingest()` clears it, unconditionally, on entry.** A new line for this surface means the stream is
+  demonstrably not over, whatever the line contains — the same "the model came back" reasoning as the
+  GH 805 re-enable arm. The next `finalize()` re-derives the state from the mount's real contents, so a
+  surface that received real content stays clear and one still empty re-flags. A reconnect starts clean.
+
 ## Pre-connect calls are a documented no-op
 
 `ingest`/`finalize`/`dispose`/`onClientMessage` called before this element has connected (no
