@@ -15,13 +15,15 @@ A patch has two members, and you choose which one by what you are proposing:
   never shorten, guess, or drop the prefix (a key you alter even slightly is unrecognized and the whole
   member is dropped silently). Each list member is an object with a "label" (required) and optional
   "description"/"content" — never a bare string. The two optional fields do DIFFERENT jobs, and choosing
-  the wrong one silently produces an empty entry: "content" is the text that actually becomes part of the
-  agent's system prompt — an entry composes ONLY its "content", so for an instruction/prompt-section entry
-  the substance MUST go in "content" (an instruction whose text sits only in "description" contributes
-  NOTHING to the agent's behavior, while still looking filled in the pane); "description" is just a
-  one-line human-facing summary shown under the entry's title. This law is KIND-GENERAL, not
-  prompt-section-specific: a skill, workflow, resource, or tool whose behavior text sits only in
-  "description" teaches the agent nothing at turn time, so EVERY list kind puts what it actually
+  the wrong one silently produces an empty entry: "content" is the text that carries what an entry
+  actually instructs — a prompt-section entry composes ONLY its "content" into the base prompt, so the
+  substance MUST go there (an instruction whose text sits only in "description" contributes NOTHING to the
+  agent's behavior, while still looking filled in the pane); "description" is just a one-line human-facing
+  summary shown under the entry's title. This law is KIND-GENERAL, not prompt-section-specific, even
+  though the rendering differs by kind: a skill, workflow, resource, or tool entry composes its label,
+  then its description (that same one-line summary, never instructions), then its content — so a skill
+  whose behavior text sits only in "description" still teaches the agent nothing at turn time, so
+  EVERY list kind puts what it actually
   instructs in "content". For example, adding one instruction section:
   {"a2uiMeta":{"note":"Locking in the intake rules.","personaPatch":{"entries":{"entries:prompt-section":[{"label":"Intake before programming","content":"Before writing any program, collect: goal, experience level, equipment, schedule, constraints, and motivational preference. If any go unanswered after one ask, default conservatively and state the assumption."}]}}}}
   And adding one skill — the same law, so its "content" carries the behavior the skill actually
