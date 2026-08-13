@@ -4,10 +4,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-13 *(authored)* |
 > | **Proposed by** | planner (design seat) — the GH [#807](https://github.com/kimgranlund/agent-ui/issues/807) design-intake leg (`card-structured-container.intake.md`), Kim's owner ruling that #807 (component arm) and #808 (catalog arm, GH [#808](https://github.com/kimgranlund/agent-ui/issues/808)) share ONE header-anatomy question, ruled once here. |
-> | **Ratified by** | *(Kim, by hand-editing this Status cell or the `ratify ADR-0186` GitHub utterance `scripts/adr_ratify.py` verifies — never self-ratified)* |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-13, via the [`ratify ADR-0186` utterance](https://github.com/kimgranlund/agent-ui/issues/807#issuecomment-5274643511) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | On ratification+build (not authored here — see the intake's §7): `packages/agent-ui/components/src/controls/card/card-header.md` (a new `format` row in `attributes[]`) · `card-header.ts` (`static props` widening) · `card.css`'s `[format='structured']` STYLES leg · the doc/demo page + a structured specimen · `agent-ui-composition-patterns` SKILL.md (the label/value-chip row recipe, §4b of the intake — doc debt riding the same wave). |
 > | **Supersedes / Superseded by** | None. **Relates** [ADR-0046](./0046-container-box-model.md) / [ADR-0056](./0056-region-less-card-humane-default.md) (the zero-padding shell + region system this fork composes with, unchanged) · [ADR-0078](./0078-ui-text-three-axis-variant-size-as.md) cl.2/cl.2b (the `kicker` typescale role + the typeface-not-typescale fence this fork REUSES rather than reopens) · [ADR-0102](./0102-css-less-consumer-contract-law.md) (the CSS-less-consumer law — the reason this needs a real prop, not an author `style=` escape hatch, since #808's catalog row cannot emit raw CSS) · [ADR-0173](./0173-descriptor-inversion-generation-intake.md) (`ui-badge`'s `intent` enum — the status affordance this fork's trailing slot rides, unchanged) · **Resolves** the header-anatomy fork of GH [#807](https://github.com/kimgranlund/agent-ui/issues/807) (component arm) — **feeds** GH [#808](https://github.com/kimgranlund/agent-ui/issues/808) (catalog arm), which builds its `CardHeader`/`Badge` catalog marks on this record without re-litigating the anatomy question. |
 
