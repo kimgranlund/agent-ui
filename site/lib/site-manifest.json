@@ -105,6 +105,13 @@
     "section": "Guides"
   },
   {
+    "href": "./workspace-shell.html",
+    "label": "Workspace Shell",
+    "description": "ui-workspace-shell is a thin ui-super-shell preset for the full outer-level workspace grammar: header, global-nav rail, nav-pane, section-nav, content, options-pane, options-section, global-options rail, footer.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
     "href": "./master-detail.html",
     "label": "Master Detail",
     "description": "ui-master-detail is a docked list | detail arrangement over the shipped ui-split, drilling into one record.",
@@ -129,6 +136,20 @@
     "href": "./router-doc.html",
     "label": "Router",
     "description": "@agent-ui/router: a memory-first SPA router whose route state lives in a kernel signal.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./surface-host-doc.html",
+    "label": "Surface Host",
+    "description": "ui-surface-host is the M2 mount/stream seam — wraps one @agent-ui/a2ui RendererHost, standalone-usable (SPEC-R3), with the GH #805 disable-on-action mechanics.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
+    "href": "./conversation-doc.html",
+    "label": "Conversation",
+    "description": "ui-conversation is the M2 thread + composer + per-turn narration primitive, with an opt-in declarative composition mode (ADR-0180) for its header/dialog/composer bands.",
     "level": "L2",
     "section": "Guides"
   },

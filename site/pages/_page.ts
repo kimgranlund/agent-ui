@@ -93,6 +93,16 @@ export const NAV: readonly NavGroup[] = [
     ],
   },
   {
+    // ADR-0179 GH #686 Amendment S7-a — ui-toggle, the fleet's first pressed-state pill button (GH #832).
+    // tier=control ⇒ {permutations, states, doc} — the same page-type set ui-button carries.
+    label: 'ui-toggle',
+    links: [
+      { href: './toggle-permutations.html', label: 'Permutations' },
+      { href: './toggle-states.html', label: 'States' },
+      { href: './toggle-doc.html', label: 'API' },
+    ],
+  },
+  {
     label: 'ui-text-field',
     links: [
       { href: './text-field-permutations.html', label: 'Permutations' },

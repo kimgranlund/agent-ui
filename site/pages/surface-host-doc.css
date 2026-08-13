@@ -1,0 +1,59 @@
+/* surface-host-doc.css — PAGE-LOCAL demo chrome for the ui-surface-host API guide (GH #834). Frames the
+ * live, standalone artboard + styles the re-enable button and the client-message log — it never restyles
+ * ui-surface-host's own internals (its checkered artboard/[data-part] geometry lives entirely in
+ * surface-host.css). Every colour is a --md-sys-color-* role, so the demo tracks light/dark. */
+
+.sh-frame {
+  block-size: 220px;
+  margin-block: var(--md-sys-space-lg) var(--md-sys-space-sm);
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.sh-frame ui-surface-host {
+  block-size: 100%;
+  inline-size: 100%;
+}
+
+.sh-reenable {
+  display: inline-flex;
+  align-items: center;
+  margin-block-end: var(--md-sys-space-sm);
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 8px;
+  background: var(--md-sys-color-neutral-surface-low);
+  color: var(--md-sys-color-neutral-on-surface);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.sh-reenable:hover {
+  background: var(--md-sys-color-neutral-surface-high);
+}
+
+.sh-note {
+  max-inline-size: 60rem;
+  margin-block: var(--md-sys-space-sm) var(--md-sys-space-xl);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+.sh-log {
+  margin: 0;
+  padding: 0.6rem 0.9rem;
+  max-block-size: 12rem;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 10px;
+  background: var(--md-sys-color-neutral-surface-lowest);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.sh-log li {
+  padding-block: 0.15rem;
+  word-break: break-all;
+}

@@ -146,11 +146,11 @@ function deadHrefs(refs: readonly string[], htmlSet: ReadonlySet<string>): strin
 // entry here — its tier is `layout`, which `expectedGroupLabels` bundles into the single, already-shipped
 // 'Layout primitives' group (the editorial rule above), so it never grows a group of its own.
 //
-// ADR-0179 GH #686 Amendment S7-a (admin-three-pane-ia.lld.md §16.4, 2026-08-10) — `ui-toggle` ships its
+// ADR-0179 GH #686 Amendment S7-a (admin-three-pane-ia.lld.md §16.4, 2026-08-10) — `ui-toggle` shipped its
 // descriptor + control ahead of its site pages/TOC rows (the same site-coverage.test.ts KNOWN_UNDOCUMENTED
-// parking, mirrored here); a TOC entry with no page to link to would just be a dead href. Drains the moment
-// its site pages + nav/landing rows land in a later slice.
-const PENDING_TOC_GROUPS = new Set<string>(['ui-toggle'])
+// parking, mirrored here). GH #832 (2026-08-13) landed its pages + both NAV (_page.ts)/landing (main.ts)
+// rows, draining this stopgap.
+const PENDING_TOC_GROUPS = new Set<string>()
 
 // ── the live site state ───────────────────────────────────────────────────────────────────────────────────────
 const COMPONENTS = shippedComponents()

@@ -1,0 +1,16 @@
+/* conversation-doc.css — PAGE-LOCAL demo chrome for the ui-conversation family guide (GH #833; ADR-0180
+ * GH #688). Frames the two live demos (imperative-only, declarative composition) — it never restyles a
+ * ui-* control's internals (ui-conversation/-header/-dialog/-composer's own geometry lives entirely in
+ * their own {name}.css). Every colour is a --md-sys-color-* role, so the demo tracks light/dark. */
+
+.cvd-frame {
+  block-size: 420px;
+  margin-block: var(--md-sys-space-lg) 1.75rem;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.cvd-frame ui-conversation.cvd-conv {
+  block-size: 100%;
+  inline-size: 100%;
+}

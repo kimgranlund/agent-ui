@@ -1,0 +1,106 @@
+/* workspace-shell.css — PAGE-LOCAL demo chrome for the ui-workspace-shell composition guide (LLD-C5,
+ * GH #97/#835). It styles the DEMO's slot-cell mocks (header/rail/pane/content) + the resizable frame + the
+ * prose scaffold — it never restyles a ui-* control's internals (ui-workspace-shell/ui-super-shell's own
+ * geometry/collapse CSS is untouched). Every colour is a --md-sys-color-* role, so the demo tracks
+ * light/dark. super-shell.css/chat-shell.css are this file's own precedent (class prefix `ws-` here, `ss-`/
+ * `cs-` there — no collision when all three pages' CSS load on the same site build). */
+
+/* ── prose scaffold ─────────────────────────────────────────────────────────────────────────────────────── */
+.ws-prose {
+  max-inline-size: 60rem;
+  line-height: 1.6;
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.ws-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+  padding: 0.05em 0.35em;
+  border-radius: 5px;
+  background: var(--md-sys-color-neutral-surface-high);
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.ws-api-tag {
+  margin-block: var(--md-sys-space-2xl) var(--md-sys-space-sm);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--md-sys-color-primary-high);
+}
+.ws-caption {
+  margin-block-start: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+/* ── the framed live shell ──────────────────────────────────────────────────────────────────────────────── */
+/* A definite block-size makes the rail/pane/content row visible; the frame + radius give the demo an edge.
+ * ui-workspace-shell fills its flex parent (auto block-size) — we give the demo a fixed height + frame. */
+ui-workspace-shell.ws-demo {
+  block-size: 380px;
+  margin-block: var(--md-sys-space-lg) 1.75rem;
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--md-sys-color-neutral-surface-lowest);
+}
+
+/* The resizable-frame wrapper (super-shell.css's own `.ss-resize` precedent) — a drag handle lets a reader
+ * cross the 52.5rem compact-window line without resizing their own browser. */
+.ws-resize {
+  resize: horizontal;
+  overflow-x: auto;
+  overflow-y: auto;
+  min-inline-size: 20rem;
+  max-inline-size: 100%;
+  inline-size: 100%;
+}
+.ws-resize ui-workspace-shell.ws-demo {
+  margin-block-end: 0;
+  inline-size: 100%;
+}
+
+/* Slot CELLS — visible content boxes so the fixed shape reads. CRITICAL: every `[data-slot=…]` rule below is
+ * scoped under `.ws-demo` — the SAME attribute values (`header`/`content`/`nav-pane`/`footer`/…) are ALSO
+ * carried by the REAL site chrome's own elements (`_page.ts`'s own shell rides ui-super-shell too) — an
+ * unscoped rule here would leak straight onto the real page shell and override its layout (chat-shell.css/
+ * super-shell.css's own comment documents the exact regression this scoping prevents). */
+.ws-demo [data-slot='header'],
+.ws-demo [data-slot='footer'] {
+  display: flex;
+  align-items: center;
+  padding: var(--md-sys-space-sm) var(--md-sys-space-md);
+  background: var(--md-sys-color-primary-container);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.ws-demo [data-slot='global-nav'],
+.ws-demo [data-slot='global-options'] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  writing-mode: vertical-rl;
+  padding: var(--md-sys-space-sm);
+  background: var(--md-sys-color-primary-container-high);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--md-sys-color-neutral-on-surface);
+}
+.ws-demo [data-slot='nav-pane'],
+.ws-demo [data-slot='section-nav'],
+.ws-demo [data-slot='options-pane'] {
+  display: flex;
+  align-items: flex-start;
+  padding: var(--md-sys-space-sm);
+  background: var(--md-sys-color-primary-container-low);
+  font-size: 0.74rem;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+}
+.ws-demo [data-slot='content'] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem var(--md-sys-space-md);
+  background: var(--md-sys-color-neutral-surface);
+  font-size: 0.78rem;
+  color: var(--md-sys-color-neutral-on-surface);
+  text-align: center;
+}

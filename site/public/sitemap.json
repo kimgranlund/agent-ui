@@ -497,6 +497,14 @@
       "section": "Components"
     },
     {
+      "name": "Toggle",
+      "tag": "ui-toggle",
+      "url": "./toggle-doc.html",
+      "description": "ui-toggle is a light-DOM pressed-state pill button (extends UIElement, ADR-0179 GH #686 Amendment S7-a) — icon + label + an optional orthogonal state icon, tog…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Toolbar",
       "tag": "ui-toolbar",
       "url": "./toolbar-doc.html",
@@ -618,6 +626,13 @@
       "section": "Guides"
     },
     {
+      "name": "Workspace Shell",
+      "url": "./workspace-shell.html",
+      "description": "ui-workspace-shell is a thin ui-super-shell preset for the full outer-level workspace grammar: header, global-nav rail, nav-pane, section-nav, content, options-pane, options-section, global-options rail, footer.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
       "name": "Master Detail",
       "url": "./master-detail.html",
       "description": "ui-master-detail is a docked list | detail arrangement over the shipped ui-split, drilling into one record.",
@@ -642,6 +657,20 @@
       "name": "Router",
       "url": "./router-doc.html",
       "description": "@agent-ui/router: a memory-first SPA router whose route state lives in a kernel signal.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "Surface Host",
+      "url": "./surface-host-doc.html",
+      "description": "ui-surface-host is the M2 mount/stream seam — wraps one @agent-ui/a2ui RendererHost, standalone-usable (SPEC-R3), with the GH #805 disable-on-action mechanics.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
+      "name": "Conversation",
+      "url": "./conversation-doc.html",
+      "description": "ui-conversation is the M2 thread + composer + per-turn narration primitive, with an opt-in declarative composition mode (ADR-0180) for its header/dialog/composer bands.",
       "level": "L2",
       "section": "Guides"
     },

@@ -15,6 +15,9 @@ import type { ParsedDescriptor } from '@agent-ui/components/descriptor'
 // control source). `vite build` reads them from disk; each `{name}.md` is the single source of truth for both
 // the in-package contract trip-wire and its /site doc page.
 import buttonMd from '../../packages/agent-ui/components/src/controls/button/button.md?raw'
+// ADR-0179 GH #686 Amendment S7-a — ui-toggle, the fleet's first pressed-state pill-button primitive
+// (the button.ts precedent, not the Indicator-class one: aria-pressed, not a checkbox/switch value).
+import toggleMd from '../../packages/agent-ui/components/src/controls/toggle/toggle.md?raw'
 import textMd from '../../packages/agent-ui/components/src/controls/text/text.md?raw'
 import iconMd from '../../packages/agent-ui/components/src/controls/icon/icon.md?raw'
 import textFieldMd from '../../packages/agent-ui/components/src/controls/text-field/text-field.md?raw'
@@ -111,6 +114,15 @@ import routerOutletMd from '../../packages/agent-ui/router/src/controls/router-o
 import routerLinkMd from '../../packages/agent-ui/router/src/controls/router-link/router-link.md?raw'
 import codeEditorMd from '../../packages/agent-ui/code/src/editor/editor.md?raw'
 import markdownMd from '../../packages/agent-ui/code/src/markdown/markdown.md?raw'
+// @agent-ui/app (LLD-C1, ADR-0129 clause 1; SPEC-R2/R3) — ui-surface-host, the M2 mount/stream seam. Same
+// posture as router/code above: an app-tier descriptor outside the components-scoped ALL_DESCRIPTORS glob.
+import surfaceHostMd from '../../packages/agent-ui/app/src/controls/surface-host/surface-host.md?raw'
+// @agent-ui/app (LLD-C4/C5/C6; ADR-0180 GH #688) — the ui-conversation family: the thread+composer+
+// narration primitive plus its three ADR-0180 recognized-children tags (header/dialog/composer).
+import conversationMd from '../../packages/agent-ui/app/src/controls/conversation/conversation.md?raw'
+import conversationHeaderMd from '../../packages/agent-ui/app/src/controls/conversation/conversation-header.md?raw'
+import conversationDialogMd from '../../packages/agent-ui/app/src/controls/conversation/conversation-dialog.md?raw'
+import conversationComposerMd from '../../packages/agent-ui/app/src/controls/conversation/conversation-composer.md?raw'
 
 /** A parsed control descriptor: the structured frontmatter (its attributes-as-API drive the table) + the prose body. */
 export interface ComponentDoc {
@@ -126,6 +138,8 @@ export function parseDoc(raw: string): ComponentDoc {
 
 // ── per-control loaders (one 2-line loader per documented control — the convention) ──────────────────────────
 export const loadButtonDoc = (): ComponentDoc => parseDoc(buttonMd)
+// ADR-0179 GH #686 Amendment S7-a — ui-toggle (tier=control ⇒ {doc} only; no permutations/states pages yet).
+export const loadToggleDoc = (): ComponentDoc => parseDoc(toggleMd)
 export const loadTextDoc = (): ComponentDoc => parseDoc(textMd)
 export const loadIconDoc = (): ComponentDoc => parseDoc(iconMd)
 export const loadTextFieldDoc = (): ComponentDoc => parseDoc(textFieldMd)
@@ -215,6 +229,13 @@ export const loadCodeEditorDoc = (): ComponentDoc => parseDoc(codeEditorMd)
 // components/src, so outside the ALL_DESCRIPTORS glob below (TKT-0095's L1_TREES fix picks it up in the
 // SITEMAP the moment its own doc page exists on disk — no generator change needed for this one).
 export const loadMarkdownDoc = (): ComponentDoc => parseDoc(markdownMd)
+// @agent-ui/app/surface-host (LLD-C1, ADR-0129 clause 1) — same posture as router/code above (GH #834).
+export const loadSurfaceHostDoc = (): ComponentDoc => parseDoc(surfaceHostMd)
+// @agent-ui/app — the ui-conversation family (GH #833; ADR-0180 GH #688).
+export const loadConversationDoc = (): ComponentDoc => parseDoc(conversationMd)
+export const loadConversationHeaderDoc = (): ComponentDoc => parseDoc(conversationHeaderMd)
+export const loadConversationDialogDoc = (): ComponentDoc => parseDoc(conversationDialogMd)
+export const loadConversationComposerDoc = (): ComponentDoc => parseDoc(conversationComposerMd)
 
 // ── tier enumeration (for the family overview + tier showcase — a DERIVED member list) ───────────────────────
 // The whole `{name}.md` descriptor set, globbed at build time (Vite resolves `import.meta.glob` statically). The

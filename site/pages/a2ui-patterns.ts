@@ -34,6 +34,7 @@ import {
   patternWizardSeed,
   patternDashboardSeed,
   patternScheduleSeed,
+  structuredContainerSeed,
 } from '@agent-ui/a2ui/examples'
 
 const { content } = mountPage({ title: 'A2UI patterns' })
@@ -277,6 +278,20 @@ content.append(
     hint:
       'Open the date field (a calendar), pick a day, set a time, choose a zone, then press “Schedule” — the action carries the ISO /schedule aggregate the server would store.',
   }),
+  patternSection({
+    step: '6',
+    title: 'Structured container — a trip-summary card',
+    blurb:
+      'A Card whose header is CardHeader(format:’structured’) composing a leading Icon + a mono Text title + a trailing Badge (its intent bound to /statusIntent for live status), whose content stacks two Row(justify:’between’) label/value pairs — Text(variant:’label’) + Badge(intent:’neutral’) — and whose footer carries one action.',
+    proves:
+      'the catalog-level structured-container anatomy (SPEC-R1–R4, a2ui-container-vocabulary.spec.md): the format mark reaches CardHeader from a payload, slot marks reach the leading/trailing header cells, and the wire’s label register (Text.variant:’label’) renders the row idiom.',
+    teaches:
+      'reach for CardHeader(format:’structured’) + Icon(slot:’leading’)/Badge(slot:’trailing’) for a titled status/summary/booking panel, stack Row(justify:’between’) pairs of Text(variant:’label’) + Badge(intent:’neutral’) for its rows, and bind the trailing badge’s intent/label through the data model for live status — the structured-container mini-skill (prompts/mini-skills/structured-container.md) teaches this same recipe to a producing agent.',
+    messages: structuredContainerSeed.messages,
+    surfaceId: structuredContainerSeed.surfaceId,
+    interactive: true,
+    hint: 'Press “Change dates” — its action (no wantResponse) appears below.',
+  }),
   composingContainers(),
 )
 
@@ -343,5 +358,77 @@ function composingContainers(): HTMLElement {
     list2.append(li)
   }
   section.append(h3, intro2, list2)
+
+  // ── the structured-container idiom (GH #807/#808, a2ui-container-vocabulary.spec.md) ──────────────
+  // Everything below is a paraphrase of the SHIPPED mini-skill
+  // (@agent-ui/a2ui/agent/prompts/mini-skills/structured-container.md) — the SAME teaching a producing
+  // agent receives, restated here for a human reader. The Pattern 6 demo above is this idiom's own
+  // worked example (B1–B3 compliant by construction, SPEC-R7 AC).
+  const h3b = document.createElement('h3')
+  h3b.textContent = 'Structured containers — the consumer idiom'
+  const intro3 = document.createElement('p')
+  intro3.textContent =
+    'A titled status/summary/booking panel (the Figma "dialog-bubble" direction) is one of three container ' +
+    'types — a choice rule, not three separate components (SPEC-R5):'
+  const list3 = document.createElement('ul')
+  for (const [rule, why] of [
+    [
+      'Section = Column, no chrome.',
+      'A surfaceless grouping (the ladder gap), optionally opened by a Text label row — reach for it when the content needs no card frame at all.',
+    ],
+    [
+      'Plain card = Card › CardHeader(default) › CardContent.',
+      'The humane region-less-or-default-header default (ADR-0056) — reach for it for ordinary chromed content with no titled status affordance.',
+    ],
+    [
+      'Structured container = Card › CardHeader(format:\'structured\') › CardContent › CardFooter(optional).',
+      'Reach for it for a TITLED status/summary/booking panel — the mock\'s "Date selection" card. The header recipe (SPEC-R3): an optional Icon(slot:\'leading\'), a title Text child, an optional Badge(slot:\'trailing\') whose intent/label bind through the data model for LIVE status (a literal for static status) — no new CardHeader prop carries status, Badge\'s own bindable intent/label do.',
+    ],
+  ] as const) {
+    const li = document.createElement('li')
+    const strong = document.createElement('strong')
+    strong.textContent = rule
+    li.append(strong, ' ', why)
+    list3.append(li)
+  }
+  const rowsPara = document.createElement('p')
+  rowsPara.append(
+    document.createTextNode('Rows (SPEC-R4): '),
+    (() => {
+      const code = document.createElement('code')
+      code.textContent = "CardContent"
+      return code
+    })(),
+    document.createTextNode(' stacks '),
+    (() => {
+      const code = document.createElement('code')
+      code.textContent = "Row(justify:'between', align:'center')"
+      return code
+    })(),
+    document.createTextNode(' pairs of '),
+    (() => {
+      const code = document.createElement('code')
+      code.textContent = "Text(variant:'label')"
+      return code
+    })(),
+    document.createTextNode(' + '),
+    (() => {
+      const code = document.createElement('code')
+      code.textContent = "Badge(intent:'neutral')"
+      return code
+    })(),
+    document.createTextNode(
+      ' per label/value pair, both bindable — the wire label register the Pattern 6 demo above renders (' +
+        '"Arrive" / "Depart"). No new LabelValueRow component: three composed nodes, not a mint.',
+    ),
+  )
+  const nestingPara = document.createElement('p')
+  nestingPara.textContent =
+    'Nesting inside a dialog bubble (SPEC-R7, taught not validator-enforced): B1 — at most ONE card-surface ' +
+    'level in a bubble, never Card-in-Card; group with rows/sections instead. B2 — a structured container\'s ' +
+    'CardContent holds label/value rows and sections only, never another headered Card; CardHeader is ' +
+    'always first, CardFooter always last. B3 — page-scale containers stay out of bubbles entirely (the ' +
+    'feed partition, already enforced structurally).'
+  section.append(h3b, intro3, list3, rowsPara, nestingPara)
   return section
 }
