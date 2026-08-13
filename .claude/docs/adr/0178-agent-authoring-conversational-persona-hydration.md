@@ -210,7 +210,7 @@ prose — rejected, cl.1 (wrong field class). Host-heuristic question scripts �
 toggle) — rejected, cl.5 (GH #145 makes the swap a reset; state loss by construction). Building
 NL-edit-everywhere in v1 — rejected, cl.6 (unproven arm; safety questions unanswered).
 
-## Amendment (2026-08-11, **proposed** — Kim ratifies) — GH [#696](https://github.com/kimgranlund/agent-ui/issues/696): cl.2's entries filter gains ONE scoped UPDATE verb: host-seeded builtin prompt sections become model-updatable IN PLACE; user-authored entries stay append-protected; the no-deletion law stands whole
+## Amendment (2026-08-11, **ratified** — kimgranlund, [utterance](https://github.com/kimgranlund/agent-ui/issues/696#issuecomment-5275019730), verified 2026-08-13) — GH [#696](https://github.com/kimgranlund/agent-ui/issues/696): cl.2's entries filter gains ONE scoped UPDATE verb: host-seeded builtin prompt sections become model-updatable IN PLACE; user-authored entries stay append-protected; the no-deletion law stands whole
 
 > Append-only: the Status cell reads `accepted` for the record as a whole and stays byte-untouched
 > — agents never flip status (`.claude/hooks/adr-status-guard.py`). Every section above is
