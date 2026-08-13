@@ -3,8 +3,9 @@
 // verbatim by every instantiation (prompt sections + skill/workflow/resource/tool/pattern-source, and
 // since ADR-0170 the `catalog` library) — no kind gets its own bespoke list/toggle/author code
 // (ADR-0132 cl.1). The per-kind knobs are `EntryListOptions`' `customAdd`/`contentField` (ADR-0170 cl.8,
-// both default-true) and `rejectOnCollision` (GH #564, default-false) — every existing call site omits the
-// new one and renders byte-identically.
+// both default-true), `rejectOnCollision` (GH #564, default-false) and `availabilityToggle` (GH #850,
+// default-false — the per-entry in-context/user-invocable mode control + its at-a-glance row marker) —
+// every existing call site omits the opt-in ones and renders byte-identically.
 //
 // The per-entry content editor is `<ui-code-editor language="markdown">` (ADR-0139) — the fleet's
 // editable-first markdown source editor (CodeMirror 6, lazy-loaded on the opt-in @agent-ui/code/editor
@@ -25,8 +26,9 @@ import type { UIIconElement } from '@agent-ui/components/controls/icon'
 import type { UICodeEditorElement } from '@agent-ui/code/editor'
 import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 import type { UIFieldElement } from '@agent-ui/components/controls/field'
-import { slugify } from './entry-data.ts'
-import type { Entry, EntryLibraryPack, NewEntryInput } from './entry-data.ts'
+import type { UIToggleElement } from '@agent-ui/components/controls/toggle'
+import { ENTRY_AVAILABILITY, entryAvailability, slugify } from './entry-data.ts'
+import type { Entry, EntryAvailability, EntryLibraryPack, NewEntryInput } from './entry-data.ts'
 
 export interface EntryListHandlers {
   onToggle(id: string, enabled: boolean): void
@@ -44,6 +46,13 @@ export interface EntryListHandlers {
    *  the boolean return exists to prevent. Every existing single-argument implementation stays valid by
    *  TS structural typing (§6.1's non-decision). */
   onAdd(input: NewEntryInput, context?: { rejectOnCollision?: boolean }): boolean
+  /** GH #850 / capability-availability-tagging.spec.md SPEC-R2 — the per-entry AVAILABILITY write, called
+   *  with the mode the row is being flipped TO. OPTIONAL, the same additive-optional law `EntryListOptions`
+   *  follows: absent ⇒ the row's mode control refuses its own flip (`toggle` is cancelable, toggle.md's
+   *  refused-toggle mechanism), so an opted-in section with no writer wired can never paint a mode the
+   *  store does not hold. Persistence is the CALLER's (this module owns no store access), exactly as
+   *  `onToggle` already works. */
+  onAvailabilityChange?(id: string, availability: EntryAvailability): void
 }
 
 export interface EntryListSection {
@@ -96,6 +105,14 @@ export interface EntryListOptions {
    *  already sits in the current list — a collision there is a genuine duplicate the caller's `onAdd`
    *  rejects outright, so the row is unreachable from the picker too, not just refused on commit. */
   rejectOnCollision?: boolean
+  /** GH #850 / capability-availability-tagging.spec.md SPEC-R2 — render the per-entry AVAILABILITY control
+   *  (in-context vs user-invocable) on each row, plus the row's at-a-glance `data-availability` marker.
+   *  OPT-IN, like `rejectOnCollision`: absent/false ⇒ byte-identical render for every existing caller
+   *  (`prompt-section`, `pattern-source` and `catalog` sections never show it — availability semantics are
+   *  defined for the four capability kinds alone, SPEC-R1). The writer is `EntryListHandlers`'
+   *  `onAvailabilityChange`; a `builtin` entry's mode is as editable as its `enabled` toggle (ADR-0132
+   *  Fork 4 protects deletion, not configuration). */
+  availabilityToggle?: boolean
 }
 
 export function mountEntryList(kind: string, addLabel: string, handlers: EntryListHandlers, options?: EntryListOptions): EntryListSection {
@@ -105,6 +122,8 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
   // GH #564 — opt-in, unlike the two above: an options bag that omits it renders exactly as before for
   // every kind except the one that flags it.
   const rejectOnCollision = options?.rejectOnCollision === true
+  // GH #850/SPEC-R2 — opt-in the same way: absent ⇒ no mode control, no row marker, byte-identical render.
+  const withAvailability = options?.availabilityToggle === true
 
   const section = document.createElement('div')
   section.setAttribute('data-part', 'entry-section')
@@ -329,6 +348,11 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
       row.setAttribute('data-part', 'entry')
       row.setAttribute('data-entry-id', entry.id)
       row.toggleAttribute('data-builtin', entry.builtin)
+      // GH #850/SPEC-R2 — the AT-A-GLANCE row marker: the resolved mode (read-time default, so a
+      // field-less entry stamps `context`) on the row itself, which entry-list.css paints as a visibly
+      // distinct card edge for `invocable`. Stamped ONLY for an opted-in section, so every existing
+      // caller's row attribute set is byte-identical (AC1).
+      if (withAvailability) row.setAttribute('data-availability', entryAvailability(entry))
 
       const header = document.createElement('div')
       header.setAttribute('data-part', 'entry-header')
@@ -349,6 +373,37 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
       entrySpacer.setAttribute('data-part', 'entry-spacer')
 
       header.append(toggle, entryLabel, entrySpacer)
+
+      // GH #850/SPEC-R2 — the per-entry MODE control: a `ui-toggle` pressed pill in the row's trailing
+      // action cluster (ADR-0179 S7-a's own primitive — the fleet's pressed-button toggle, aria-pressed via
+      // internals). `pressed` IS the mode: on ⇒ user-invocable, off ⇒ in-context (ambient). The visible
+      // label stays the STABLE word "Invocable" — the state rides `aria-pressed`, never a swapped name (a
+      // label that changes with state is the toggle-button AX anti-pattern); the per-row `aria-label` is
+      // the same `${entry.label} …` shape the enabled switch above already carries.
+      if (withAvailability) {
+        const invocable = entryAvailability(entry) === ENTRY_AVAILABILITY.invocable
+        const mode = document.createElement('ui-toggle') as UIToggleElement
+        mode.setAttribute('data-part', 'entry-availability')
+        mode.setAttribute('aria-label', `${entry.label} user-invocable`)
+        mode.title = 'On: user-invocable — inert until invoked from the conversation. Off: in context — the model sees it every turn.'
+        mode.pressed = invocable
+        mode.append('Invocable')
+        // toggle.md's refused-toggle contract: `toggle` fires BEFORE `pressed` commits and is cancelable.
+        // No writer wired ⇒ refuse the flip outright, so the pill can never paint a mode no store holds.
+        // With a writer, the caller's store write re-renders this list (the cl.5 live-apply idiom), which
+        // rebuilds this row from the fresh value — toggle.ts's own post-listener `pressed` flip lands on
+        // the by-then-detached element, so the two can never disagree (the `#panePills` double-flip lesson,
+        // avoided here by never writing `pressed` from inside the listener).
+        mode.addEventListener('toggle', (event) => {
+          const write = handlers.onAvailabilityChange
+          if (write === undefined) {
+            event.preventDefault()
+            return
+          }
+          write(entry.id, invocable ? ENTRY_AVAILABILITY.context : ENTRY_AVAILABILITY.invocable)
+        })
+        header.append(mode)
+      }
 
       if (!entry.builtin) {
         // TKT-0048: a real `<ui-button>` — its label is a plain word ("Remove"), never a glued glyph, so

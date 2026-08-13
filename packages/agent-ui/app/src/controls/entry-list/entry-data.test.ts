@@ -6,7 +6,17 @@
 // caller that supplies no id slugs from the label exactly as before.
 
 import { describe, it, expect } from 'vitest'
-import { validateNewEntry, type NewEntryInput } from './entry-data.ts'
+import {
+  ENTRY_AVAILABILITY,
+  entriesStoreKey,
+  entryAvailability,
+  isAmbient,
+  readEntries,
+  validateNewEntry,
+  type Entry,
+  type NewEntryInput,
+} from './entry-data.ts'
+import { createMemoryStore } from '../settings/memory-store.ts'
 
 describe('validateNewEntry — the optional explicit id (LLD-C7)', () => {
   const input = (over: Partial<NewEntryInput> & Pick<NewEntryInput, 'label'>): NewEntryInput => ({
@@ -95,6 +105,17 @@ describe('validateNewEntry — rejectOnCollision (GH #564, ADR-0170 cl.8: the ca
     if (result.ok) expect(result.entry.id).toBe('a2ui-org')
   })
 
+  it('SPEC-R1 AC2: the returned entry carries NO `availability` member — a new entry is in-context by ABSENCE', () => {
+    const result = validateNewEntry([], 'skill', input({ label: 'House style' }))
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    // The SHAPE assertion, not just a value one: `availability` must not appear as a key at all, so the
+    // stored JSON of a freshly authored entry is byte-identical to the pre-#850 one.
+    expect(Object.keys(result.entry).sort()).toEqual(['builtin', 'content', 'description', 'enabled', 'id', 'kind', 'label', 'order'])
+    expect('availability' in result.entry).toBe(false)
+    expect(entryAvailability(result.entry), 'and it still READS as in-context').toBe(ENTRY_AVAILABILITY.context)
+  })
+
   it('BACKWARD COMPAT: rejectOnCollision absent/false ⇒ the suffix-dedup law is UNCHANGED (load-bearing for every hand-authored kind)', () => {
     const first = validateNewEntry([], 'skill', input({ label: 'Rules' }))
     expect(first.ok).toBe(true)
@@ -107,5 +128,92 @@ describe('validateNewEntry — rejectOnCollision (GH #564, ADR-0170 cl.8: the ca
     const secondFalse = validateNewEntry([first.entry], 'skill', input({ label: 'Rules' }), { rejectOnCollision: false })
     expect(secondFalse.ok).toBe(true)
     if (secondFalse.ok) expect(secondFalse.entry.id).toBe('rules-2')
+  })
+})
+
+// ── the AVAILABILITY mode (GH #850 / capability-availability-tagging.spec.md SPEC-R1) ────────────────────
+// The core's own half of the contract: ONE optional member, a READ-TIME default of `'context'` (never a
+// migration write), and the ONE ambient conjunct every projection filters on. The admin affordance is
+// agent-admin.test.ts's; the four gated surfaces are entries.test.ts/agent-admin.test.ts's; the
+// export/import leg is site/pages/agent-admin-persona-file.test.ts's (the module that owns that format).
+
+describe('the availability mode — the read-time default (SPEC-R1)', () => {
+  const entry = (over: Partial<Entry> = {}): Entry => ({
+    id: 'menu-pdf',
+    kind: 'resource',
+    label: 'Menu PDF',
+    description: '',
+    content: 'the menu',
+    order: 0,
+    enabled: true,
+    builtin: false,
+    ...over,
+  })
+
+  it('ABSENT reads as in-context — the pre-#850 behaviour, unchanged', () => {
+    expect(entryAvailability(entry())).toBe(ENTRY_AVAILABILITY.context)
+    expect(entryAvailability(entry({ availability: 'context' })), 'and an explicit `context` reads the same').toBe(ENTRY_AVAILABILITY.context)
+  })
+
+  it("`'invocable'` reads verbatim — the one value that changes anything", () => {
+    expect(entryAvailability(entry({ availability: 'invocable' }))).toBe(ENTRY_AVAILABILITY.invocable)
+  })
+
+  it('a GARBAGE value (a hand-edited persona file) degrades to in-context, never to invocable', () => {
+    // Fail-soft in the direction of today's behaviour: a typo'd mode can only ever cost the user AMBIENCE
+    // they already had, never silently dark a capability they still see listed as available.
+    for (const bogus of ['invocble', 'Invocable', '', 'true', '1']) {
+      expect(entryAvailability({ availability: bogus }), `"${bogus}" is not the invocable literal`).toBe(ENTRY_AVAILABILITY.context)
+    }
+  })
+
+  it('`isAmbient` is the ONE conjunct — enabled AND in-context, orthogonal axes never collapsed', () => {
+    expect(isAmbient(entry()), 'enabled + field-less ⇒ ambient').toBe(true)
+    expect(isAmbient(entry({ availability: 'context' }))).toBe(true)
+    expect(isAmbient(entry({ availability: 'invocable' })), 'enabled but invocable ⇒ NOT ambient').toBe(false)
+    expect(isAmbient(entry({ enabled: false })), 'disabled ⇒ not ambient (unchanged)').toBe(false)
+    // The orthogonality itself: a DISABLED-but-invocable entry is expressible and stays disabled — the
+    // shape a tri-state `enabled` could not represent (SPEC §3's rejected shape).
+    expect(isAmbient(entry({ enabled: false, availability: 'invocable' }))).toBe(false)
+    expect(entryAvailability(entry({ enabled: false, availability: 'invocable' })), 'its mode survives being disabled').toBe(
+      ENTRY_AVAILABILITY.invocable,
+    )
+  })
+})
+
+describe('the availability mode — a store write/read round trip (SPEC-R1 AC1)', () => {
+  const KIND = 'resource'
+  const base: Entry = {
+    id: 'menu-pdf',
+    kind: KIND,
+    label: 'Menu PDF',
+    description: 'The dinner menu.',
+    content: 'Starters …',
+    order: 0,
+    enabled: true,
+    builtin: false,
+  }
+
+  it('a FIELD-LESS entry round-trips with no `availability` key in the stored JSON, and reads as in-context', () => {
+    const store = createMemoryStore()
+    store.set(entriesStoreKey(KIND), [base])
+    const read = readEntries(store, KIND)[0]!
+    expect('availability' in read, 'the read-back entry carries no such key').toBe(false)
+    expect(entryAvailability(read)).toBe(ENTRY_AVAILABILITY.context)
+    // The BYTE assertion the migration clause needs: the persisted JSON is unchanged, key for key.
+    expect(JSON.stringify(readEntries(store, KIND))).toBe(JSON.stringify([base]))
+    expect(JSON.stringify(read)).not.toContain('availability')
+  })
+
+  it("a stored `'invocable'` survives the write/read cycle verbatim", () => {
+    const store = createMemoryStore({ persistKey: 'entry-data-availability-test' })
+    store.set(entriesStoreKey(KIND), [{ ...base, availability: ENTRY_AVAILABILITY.invocable }])
+    // A SECOND store on the same persistKey is the real reload (a plain Map would pass by object identity).
+    const reloaded = createMemoryStore({ persistKey: 'entry-data-availability-test' })
+    const read = readEntries(reloaded, KIND)[0]!
+    expect(read.availability).toBe(ENTRY_AVAILABILITY.invocable)
+    expect(entryAvailability(read)).toBe(ENTRY_AVAILABILITY.invocable)
+    expect(isAmbient(read)).toBe(false)
+    localStorage.clear()
   })
 })

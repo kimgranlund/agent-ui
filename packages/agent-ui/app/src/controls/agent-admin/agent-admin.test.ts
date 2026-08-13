@@ -150,6 +150,72 @@ describe('mountEntryList — customAdd/contentField (ADR-0170 cl.8)', () => {
   })
 })
 
+// ── GH #850 / capability-availability-tagging.spec.md SPEC-R2 — the per-entry availability affordance ─────
+// Driven on the PRIMITIVE (like the cl.8 block above) so both halves are proven where they live: the
+// opt-in's own render/write behaviour, and — load-bearing — the byte-identical default every existing
+// caller depends on. The composed-element half (which kinds opt in, persistence, re-mount) is further down.
+
+describe('mountEntryList — availabilityToggle (SPEC-R2)', () => {
+  const ROW: Entry = { id: 'menu-pdf', kind: 'resource', label: 'Menu PDF', description: 'The menu.', content: 'body', order: 0, enabled: true, builtin: false }
+  const sink: EntryListHandlers = { onToggle: () => {}, onContentChange: () => {}, onDelete: () => {}, onAdd: () => true }
+  const availabilityOf = (section: { host: HTMLElement }): (HTMLElement & { pressed: boolean }) | null =>
+    section.host.querySelector('[data-part="entry-availability"]') as (HTMLElement & { pressed: boolean }) | null
+
+  it('AC1 — ABSENT option ⇒ byte-identical row: no mode control, and no `data-availability` marker attribute', () => {
+    const section = mountEntryList('resource', 'Add resource', sink)
+    section.render([ROW, { ...ROW, id: 'other', availability: 'invocable' }])
+    expect(availabilityOf(section), 'no control mounts').toBeNull()
+    for (const row of section.host.querySelectorAll('[data-part="entry"]')) {
+      // Even a row whose STORED entry is invocable renders unmarked here: availability is inert for a kind
+      // that never opted in (SPEC-R1's four-kinds-only clause), and the row's attribute set is unchanged.
+      expect(row.hasAttribute('data-availability')).toBe(false)
+    }
+  })
+
+  it('renders the pill + the at-a-glance row marker, pressed state reflecting the stored mode', () => {
+    const section = mountEntryList('resource', 'Add resource', sink, { availabilityToggle: true })
+    section.render([ROW])
+    const row = (): HTMLElement => section.host.querySelector('[data-part="entry"]') as HTMLElement
+    expect(availabilityOf(section)!.pressed, 'a field-less entry reads in-context').toBe(false)
+    expect(row().getAttribute('data-availability')).toBe('context')
+
+    section.render([{ ...ROW, availability: 'invocable' }])
+    expect(availabilityOf(section)!.pressed).toBe(true)
+    expect(row().getAttribute('data-availability'), 'the marker the row carries at a glance').toBe('invocable')
+    expect(availabilityOf(section)!.getAttribute('aria-label')).toBe('Menu PDF user-invocable')
+  })
+
+  it("a BUILTIN entry's mode is as editable as its enabled toggle (ADR-0132 Fork 4 protects deletion, not configuration)", () => {
+    const section = mountEntryList('resource', 'Add resource', sink, { availabilityToggle: true })
+    section.render([{ ...ROW, builtin: true }])
+    expect(section.host.querySelector('[data-part="entry-delete"]'), 'still no delete affordance').toBeNull()
+    expect(availabilityOf(section), 'but the mode control is there').not.toBeNull()
+  })
+
+  it('a commit calls onAvailabilityChange with the mode the row is flipping TO — both directions', () => {
+    const writes: Array<[string, string]> = []
+    const handlers: EntryListHandlers = { ...sink, onAvailabilityChange: (id, availability) => writes.push([id, availability]) }
+    const section = mountEntryList('resource', 'Add resource', handlers, { availabilityToggle: true })
+
+    section.render([ROW]) // in-context ⇒ a press asks for invocable
+    availabilityOf(section)!.dispatchEvent(new CustomEvent('toggle', { cancelable: true }))
+    section.render([{ ...ROW, availability: 'invocable' }]) // invocable ⇒ a press asks for context
+    availabilityOf(section)!.dispatchEvent(new CustomEvent('toggle', { cancelable: true }))
+    expect(writes).toEqual([
+      ['menu-pdf', 'invocable'],
+      ['menu-pdf', 'context'],
+    ])
+  })
+
+  it("NO writer wired ⇒ the flip is REFUSED (toggle.md's cancelable contract), never a pill painting a mode no store holds", () => {
+    const section = mountEntryList('resource', 'Add resource', sink, { availabilityToggle: true })
+    section.render([ROW])
+    const event = new CustomEvent('toggle', { cancelable: true })
+    availabilityOf(section)!.dispatchEvent(event)
+    expect(event.defaultPrevented, 'refused before ui-toggle commits `pressed`').toBe(true)
+  })
+})
+
 describe('UIAgentAdminElement — shell composition (ADR-0179): the three places + the settings sub-nav', () => {
   it('composes ONE ui-super-shell directly: header=the S7-c unified header bar, content=three sibling regions (chat/settings/copilot) — GH #686\'s Amendment, GH #700\'s flatten', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
@@ -1261,6 +1327,177 @@ describe('UIAgentAdminElement — the default store persists across a reload (AD
     expect(
       (second.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.catalog}"]`) as HTMLElement).hasAttribute('data-kind-disabled'),
     ).toBe(true)
+  })
+})
+
+// ── GH #850 / capability-availability-tagging.spec.md SPEC-R2/R3 — the availability mode, composed ────────
+// Through the REAL element: which kinds offer the mode control, that a flip persists and survives a reload,
+// and that a user-invocable entry contributes ZERO ambient bytes on every arm — the live prompt (both live
+// arms read the same projection), `integrations`, the stub/logger config snapshot, and the Context System
+// view. The read-time default itself is entry-data.test.ts's; the projection unit is entries.test.ts's.
+
+describe('UIAgentAdminElement — the per-entry availability mode (GH #850/SPEC-R2/R3)', () => {
+  function addEntry(el: UIAgentAdminElement, kind: string, label: string): void {
+    const section = el.querySelector(`[data-kind="${kind}"]`) as HTMLElement
+    ;(section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = label
+    ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
+  }
+  const modePill = (row: HTMLElement): (HTMLElement & { pressed: boolean }) | null =>
+    row.querySelector('[data-part="entry-availability"]') as (HTMLElement & { pressed: boolean }) | null
+  /** The one user gesture: a real `toggle` from the row's mode pill (ui-toggle emits it BEFORE committing
+   *  `pressed`, so this is exactly what a click/Space lands on the wired listener). */
+  function flipMode(el: UIAgentAdminElement, kind: string, id: string): void {
+    modePill(entryEl(el, kind, id))!.dispatchEvent(new CustomEvent('toggle', { cancelable: true, bubbles: true }))
+  }
+  function submit(el: UIAgentAdminElement, text: string): void {
+    const composer = el.querySelector('[data-part="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = text
+    ;(composer.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+  }
+  async function waitFor(predicate: () => boolean, label: string): Promise<void> {
+    for (let i = 0; i < 100; i += 1) {
+      if (predicate()) return
+      await Promise.resolve()
+    }
+    throw new Error(`waitFor timed out: ${label}`)
+  }
+
+  it('SPEC-R1/R2: only the FOUR capability kinds offer the mode control — prompt sections, pattern sources and catalogs never do', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    for (const kind of [ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool]) {
+      addEntry(el, kind, 'Item')
+      expect(modePill(entryEl(el, kind, 'item')), `${kind} offers the mode control`).not.toBeNull()
+    }
+    addEntry(el, ENTRY_KINDS.patternSource, 'Source')
+    expect(modePill(entryEl(el, ENTRY_KINDS.patternSource, 'source')), 'pattern-source has its own single-pick semantics').toBeNull()
+    expect(modePill(entryEl(el, ENTRY_KINDS.promptSection, 'foundation')), 'a prompt section composes by ORDER, not availability').toBeNull()
+    const catalogRow = el.querySelector(
+      `[data-part="entry-section"][data-kind="${ENTRY_KINDS.catalog}"] [data-part="entry"]`,
+    ) as HTMLElement
+    expect(modePill(catalogRow), "the catalog's selection threads on the wire, never as availability").toBeNull()
+    expect(catalogRow.hasAttribute('data-availability'), 'and no row marker either').toBe(false)
+  })
+
+  it('SPEC-R2 AC2: a flip persists, marks the row, and a SECOND element instance renders the same state', () => {
+    const first = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    addEntry(first, ENTRY_KINDS.resource, 'Menu PDF')
+    expect(entryEl(first, ENTRY_KINDS.resource, 'menu-pdf').getAttribute('data-availability')).toBe('context')
+
+    flipMode(first, ENTRY_KINDS.resource, 'menu-pdf')
+    expect(readEntries(first.store, ENTRY_KINDS.resource)[0]!.availability, 'the store holds the mode').toBe('invocable')
+    const flipped = entryEl(first, ENTRY_KINDS.resource, 'menu-pdf')
+    expect(flipped.getAttribute('data-availability'), 'the row carries the at-a-glance marker').toBe('invocable')
+    expect(modePill(flipped)!.pressed).toBe(true)
+
+    // …and back again: nothing is one-way, and the returning value is the explicit 'context' literal.
+    flipMode(first, ENTRY_KINDS.resource, 'menu-pdf')
+    expect(readEntries(first.store, ENTRY_KINDS.resource)[0]!.availability).toBe('context')
+    expect(entryEl(first, ENTRY_KINDS.resource, 'menu-pdf').getAttribute('data-availability')).toBe('context')
+
+    flipMode(first, ENTRY_KINDS.resource, 'menu-pdf') // leave it invocable for the reload leg
+    first.remove()
+    mounted.length = 0
+
+    const second = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement) // the default persisted store
+    const reloaded = entryEl(second, ENTRY_KINDS.resource, 'menu-pdf')
+    expect(reloaded.getAttribute('data-availability'), 'survives a reload').toBe('invocable')
+    expect(modePill(reloaded)!.pressed).toBe(true)
+  })
+
+  it('SPEC-R3 AC1/AC2: the PROSE arm carries neither the invocable entry\'s prose nor its tool id', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.store!.set(SURFACE_A2UI_KEY, false) // no structured surface ⇒ the prose arm answers
+    addEntry(el, ENTRY_KINDS.skill, 'House style')
+    addEntry(el, ENTRY_KINDS.skill, 'Menu PDF')
+    addEntry(el, ENTRY_KINDS.tool, 'weather')
+    addEntry(el, ENTRY_KINDS.tool, 'currency')
+    flipMode(el, ENTRY_KINDS.skill, 'menu-pdf')
+    flipMode(el, ENTRY_KINDS.tool, 'currency')
+
+    const calls: import('./agent-admin-schema.ts').AdminTurnRequest[] = []
+    el.agentTurn = async (req) => {
+      calls.push(req)
+      return 'ok'
+    }
+    submit(el, 'ping')
+    await waitFor(() => calls.length === 1, 'prose runner called')
+    expect(calls[0]!.system).toContain('### House style')
+    expect(calls[0]!.system, 'the invocable skill is nowhere in the prompt').not.toContain('Menu PDF')
+    expect(calls[0]!.integrations, 'and the invocable tool forwards no id').toEqual(['weather'])
+  })
+
+  it('SPEC-R3 AC2: the SURFACE arm reads the SAME projection — the two arms cannot drift', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({ initial: initialEntryValues() })
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    addEntry(el, ENTRY_KINDS.tool, 'weather')
+    addEntry(el, ENTRY_KINDS.tool, 'currency')
+    flipMode(el, ENTRY_KINDS.tool, 'currency')
+
+    const seen: Array<{ integrations?: string[]; personaSystem: string }> = []
+    el.agentSurfaceTurn = async function* (req) {
+      seen.push(req as unknown as { integrations?: string[]; personaSystem: string })
+      yield { kind: 'note' as const, note: 'ok' }
+    }
+    submit(el, 'play')
+    await whenFlushed()
+    await new Promise((r) => setTimeout(r, 0))
+    await whenFlushed()
+    expect(seen, 'the surface runner ran').toHaveLength(1)
+    expect(seen[0]!.integrations).toEqual(['weather'])
+    expect(seen[0]!.personaSystem).not.toContain('currency')
+  })
+
+  it('SPEC-R3(c)/(d): the stub-arm snapshot and the Context System view both drop the invocable entry', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    addEntry(el, ENTRY_KINDS.skill, 'House style')
+    addEntry(el, ENTRY_KINDS.resource, 'Menu PDF')
+    flipMode(el, ENTRY_KINDS.resource, 'menu-pdf')
+
+    // (c) the deterministic stub reply cites the config snapshot's per-kind LABEL lists.
+    submit(el, 'hello')
+    const bubbles = [...el.querySelectorAll('[data-role="agent"]')]
+    const body = (bubbles[bubbles.length - 1]?.querySelector('[data-part="body"]') as HTMLElement)?.textContent ?? ''
+    expect(body).toContain('Skills: House style.')
+    expect(body, 'the invocable resource is not part of what the agent brings to every turn').toContain('Resources: none.')
+
+    // (d) the Context tab's System snapshot renders composeLiveSystemPrompt's output — it inherits (a).
+    const agentJson = JSON.parse(
+      el.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]')!.textContent ?? '{}',
+    ) as { systemPrompt: string }
+    expect(agentJson.systemPrompt).toContain('### House style')
+    expect(agentJson.systemPrompt).not.toContain('Menu PDF')
+  })
+
+  it('SPEC-R3 AC3 (gated equivalence): a store whose entries all LACK the field projects byte-identically', async () => {
+    // The explicit equivalence assertion, at element grain: the same two entries, one store field-less and
+    // one carrying an explicit `availability: 'context'` on every entry, compose the same prompt bytes and
+    // the same `integrations` — so the widened filter moved nothing for any pre-#850 store.
+    const entries = (availability?: 'context'): Entry[] => [
+      { id: 'weather', kind: ENTRY_KINDS.tool, label: 'weather', description: '', content: 'w', order: 0, enabled: true, builtin: false, ...(availability === undefined ? {} : { availability }) },
+      { id: 'currency', kind: ENTRY_KINDS.tool, label: 'currency', description: '', content: 'c', order: 1, enabled: true, builtin: false, ...(availability === undefined ? {} : { availability }) },
+    ]
+    const captured: Array<{ system: string; integrations?: readonly string[] }> = []
+    for (const availability of [undefined, 'context' as const]) {
+      const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+      el.store = createMemoryStore({ initial: { ...initialEntryValues(), [entriesStoreKey(ENTRY_KINDS.tool)]: entries(availability), [SURFACE_A2UI_KEY]: false } })
+      document.body.append(el)
+      mounted.push(el)
+      await whenFlushed()
+      el.agentTurn = async (req) => {
+        captured.push({ system: req.system, integrations: req.integrations })
+        return 'ok'
+      }
+      submit(el, 'ping')
+      await waitFor(() => captured.length > 0 && captured.length === (availability === undefined ? 1 : 2), 'runner called')
+      el.remove()
+    }
+    expect(captured[0]!.system, 'anti-vacuous: the projection really carries the entries').toContain('## Tools available to you')
+    expect(captured[0]!.integrations).toEqual(['weather', 'currency'])
+    expect(captured[1]!.system, 'absent ≡ explicit context, byte for byte').toBe(captured[0]!.system)
+    expect(captured[1]!.integrations).toEqual(captured[0]!.integrations)
   })
 })
 
