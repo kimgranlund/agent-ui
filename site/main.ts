@@ -174,6 +174,27 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    // ADR-0179 GH #686 Amendment S7-a — ui-toggle, the fleet's first pressed-state pill button (GH #832).
+    label: 'ui-toggle',
+    cards: [
+      {
+        href: './toggle-permutations.html',
+        title: 'Permutations',
+        blurb: 'Every size × anatomy shape × pressed/disabled of ui-toggle.',
+      },
+      {
+        href: './toggle-states.html',
+        title: 'Interaction states',
+        blurb: 'The live control across hover, focus, active, keyboard activation, and disabled.',
+      },
+      {
+        href: './toggle-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-toggle attribute surface, generated from its toggle.md descriptor — it cannot drift.',
+      },
+    ],
+  },
+  {
     label: 'ui-text-field',
     cards: [
       {

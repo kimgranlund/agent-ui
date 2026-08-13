@@ -497,6 +497,14 @@
       "section": "Components"
     },
     {
+      "name": "Toggle",
+      "tag": "ui-toggle",
+      "url": "./toggle-doc.html",
+      "description": "ui-toggle is a light-DOM pressed-state pill button (extends UIElement, ADR-0179 GH #686 Amendment S7-a) — icon + label + an optional orthogonal state icon, tog…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Toolbar",
       "tag": "ui-toolbar",
       "url": "./toolbar-doc.html",

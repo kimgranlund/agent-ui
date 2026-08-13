@@ -15,6 +15,9 @@ import type { ParsedDescriptor } from '@agent-ui/components/descriptor'
 // control source). `vite build` reads them from disk; each `{name}.md` is the single source of truth for both
 // the in-package contract trip-wire and its /site doc page.
 import buttonMd from '../../packages/agent-ui/components/src/controls/button/button.md?raw'
+// ADR-0179 GH #686 Amendment S7-a — ui-toggle, the fleet's first pressed-state pill-button primitive
+// (the button.ts precedent, not the Indicator-class one: aria-pressed, not a checkbox/switch value).
+import toggleMd from '../../packages/agent-ui/components/src/controls/toggle/toggle.md?raw'
 import textMd from '../../packages/agent-ui/components/src/controls/text/text.md?raw'
 import iconMd from '../../packages/agent-ui/components/src/controls/icon/icon.md?raw'
 import textFieldMd from '../../packages/agent-ui/components/src/controls/text-field/text-field.md?raw'
@@ -126,6 +129,8 @@ export function parseDoc(raw: string): ComponentDoc {
 
 // ── per-control loaders (one 2-line loader per documented control — the convention) ──────────────────────────
 export const loadButtonDoc = (): ComponentDoc => parseDoc(buttonMd)
+// ADR-0179 GH #686 Amendment S7-a — ui-toggle (tier=control ⇒ {doc} only; no permutations/states pages yet).
+export const loadToggleDoc = (): ComponentDoc => parseDoc(toggleMd)
 export const loadTextDoc = (): ComponentDoc => parseDoc(textMd)
 export const loadIconDoc = (): ComponentDoc => parseDoc(iconMd)
 export const loadTextFieldDoc = (): ComponentDoc => parseDoc(textFieldMd)
