@@ -79,9 +79,36 @@ scrollNote.textContent =
   'The native scrollbar is hidden — try Tab, then Arrow/Page/Home/End (try it): the fade is the only visible ' +
   'scroll affordance, and the region itself is keyboard-scrollable.'
 
+// ── [5] structured header — ADR-0186's ONE new prop, format="structured" (the Figma dialog-bubble frame's
+// "DATE SELECTION" card: leading icon · uppercase mono title · trailing status, a header/body divider, and
+// label/value-chip body rows — ui-row[justify='between'] + ui-text[variant='label'] + ui-badge[intent='neutral'],
+// the intake's §4b recipe, zero new mechanism). Exactly ONE knob: the `format="structured"` attribute below —
+// every other element here is composition of already-shipped controls (ui-icon/ui-badge/ui-row/ui-text).
+const labelValueRow = (label: string, value: string): HTMLElement =>
+  el('ui-row', { justify: 'between' }, [
+    el('ui-text', { variant: 'label' }, [text(label)]),
+    el('ui-badge', { intent: 'neutral', label: value }, []),
+  ])
+
+const structured = el('ui-card', {}, [
+  el('ui-card-header', { format: 'structured' }, [
+    el('ui-icon', { slot: 'leading', glyph: 'calendar', 'aria-hidden': 'true' }),
+    text('Date selection'),
+    el('ui-badge', { slot: 'trailing', intent: 'success', label: 'Confirmed' }),
+  ]),
+  el('ui-card-content', {}, [labelValueRow('Arrive', 'Aug 14'), labelValueRow('Depart', 'Aug 18')]),
+])
+applyDemoWidth(structured, '22rem')
+const structuredNote = document.createElement('p')
+structuredNote.textContent =
+  'format="structured" (ui-card-header) repoints the title to the kicker metrics + the fleet mono typeface ' +
+  'and adds a header/body divider — the leading/trailing slots and the zero-padding shell law are unchanged. ' +
+  'The body rows below are plain composition (ui-row + ui-text + ui-badge), no new mechanism.'
+
 content.append(
   exampleSection('Composed regions', composed),
   exampleSection('Surface — elevation range', surfaceGrid),
   exampleSection('Nested radius (one level)', nested),
   exampleSection('Scrollable content', scrollNote, scrollCard),
+  exampleSection('Structured header', structuredNote, structured),
 )

@@ -300,6 +300,13 @@
 :where(ui-card-header, ui-card-footer) {
   --ui-card-region-gap: var(--md-sys-space-sm); /* adornment↔label column-gap (off the --md-sys-space ladder) */
 
+  /* ADR-0186 — the structured-container title's font-family. Default `inherit` (today's byte-identical
+     ambient font — no visual change absent the attribute); repointed to var(--md-sys-typeface-mono) under
+     [format='structured'] below, the SECOND opt-in consumer of the same orthogonal, typescale-independent
+     constant code/figure surfaces already use (dimensions.css; ADR-0078 cl.2's typeface-not-typescale
+     fence, deliberately unamended by this fork). */
+  --ui-card-header-title-font: inherit;
+
   display: grid;
   grid-template-columns: 1fr; /* [label] — slotless */
   align-items: center;
@@ -324,6 +331,38 @@
 /* [leading | label | trailing] — auto 1fr auto */
 :where(ui-card-header, ui-card-footer):has(> [slot='leading']):has(> [slot='trailing']) {
   grid-template-columns: auto 1fr auto;
+}
+
+/* ════════════════ [ui-card-header / -footer] format='structured' — ADR-0186 ════════════════ */
+
+/* cl.1 — title typography repoints to the kicker-medium row (the SAME row ui-text[variant='kicker'] reads,
+   text.css:86-91) + gains text-transform: uppercase (mirroring text.css:259-263's own kicker/overline
+   uppercase leg) + the mono typeface (the --ui-card-header-title-font token, above, repointed here). Set on
+   the HOST (not a `> :not([slot])` child selector) so inheritance carries the treatment to a bare, unwrapped
+   text label with no <ui-text> wrapper required (cl.1's own text; the intake's §4c names this mechanism
+   explicitly: "a <ui-text> child, if used, additionally inherits the mono font-family for free via cascade" —
+   text.css never sets font-family, so a <ui-text> child composes with zero double-declaration conflict). A
+   leading/trailing adornment inherits the same cascade (an icon renders no text, so it is unaffected in
+   practice; a trailing badge's own --ui-badge-font already overrides the inherited SIZE, badge.css) — not
+   silently patched around; a future consumer wanting the adornments visually shielded is a design follow-up,
+   not a local deviation here.
+   cl.2 — the header/body divider: the EXISTING hairline border token (--ui-card-border, this file, → the
+   --md-sys-color-neutral-outline-variant role) — no new colour role. Defined on the shared
+   :where(ui-card-header, ui-card-footer) selector for symmetry (ADR-0186's Decision — ui-card-footer carries
+   the same attribute, though the structured look is a header-only use case in practice).
+   cl.5 — the zero-padding shell law is UNTOUCHED: no --ui-card-region-margin/-pad-inline/-pad-block repoint
+   here, ever. */
+:where(ui-card-header, ui-card-footer)[format='structured'] {
+  --ui-card-header-title-font: var(--md-sys-typeface-mono);
+
+  font-family: var(--ui-card-header-title-font);
+  font-size: var(--md-sys-typescale-kicker-medium-size);
+  font-weight: var(--md-sys-typescale-kicker-medium-weight);
+  line-height: var(--md-sys-typescale-kicker-medium-line-height);
+  letter-spacing: var(--md-sys-typescale-kicker-medium-tracking);
+  text-transform: uppercase;
+
+  border-block-end: 1px solid var(--ui-card-border);
 }
 
 /* ════════════════ [ui-card-content] TOKEN + STYLES — the body + scroll ════════════════ */
