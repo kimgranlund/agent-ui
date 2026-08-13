@@ -259,6 +259,69 @@ describe('admit — the admission pipeline (LLD-C5)', () => {
       if (result.ok) return
       expect(result.code).toBe('E_IDGRAPH')
     })
+
+    // ── ADR-0187 / GH #829 — admission judges at FINALIZE granularity (LLD §4's corpus ruling) ─────────
+    //
+    // A record's `a2uiOutput` IS a complete set by construction, so a surface it declares but never
+    // delivers components for is a record that would teach a model to ship a blank card. Before ADR-0187
+    // such a record admitted CLEAN.
+    //
+    // Reachability note (found building this block, worth stating): ADR-0064's SINGLE-SURFACE rule
+    // (`validateRecord`, stage 2) already rejects a record whose envelopes address two different
+    // surfaceIds — with `E_SCHEMA`, before tier-1 ever runs. So the runtime's headline shape (a working
+    // card PLUS an abandoned second surface) is structurally unreachable at admission, and the ONE
+    // reachable abandoned shape here is the single-surface record that delivers no components at all.
+    // That is the mechanical reason the 29-record exemplar shard reds nothing (ADR-0187 §4's claim), and
+    // it is what the probes below pin.
+    it('ADR-0187: a createSurface-ONLY record rejects as E_IDGRAPH root-missing (admitted CLEAN before)', async () => {
+      const candidate = mkCandidate({
+        a2uiOutput: [{ version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'demo' } }],
+      })
+      const result = await admit(candidate, mkDeps())
+      expect(result.ok).toBe(false)
+      if (result.ok) return
+      expect(result.code).toBe('E_IDGRAPH')
+      expect(result.paths ?? []).toContain('s1:root-missing')
+    })
+
+    it('ADR-0187: a record whose only content is a DATA write (surface never given components) rejects', async () => {
+      const candidate = mkCandidate({
+        a2uiOutput: [
+          { version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'demo' } },
+          { version: 'v1.0', updateDataModel: { surfaceId: 's1', path: '/x', value: 1 } },
+        ],
+      })
+      const result = await admit(candidate, mkDeps())
+      expect(result.ok).toBe(false)
+      if (result.ok) return
+      expect(result.code).toBe('E_IDGRAPH')
+    })
+
+    it('ADR-0187: admission stays in PARITY with the runtime on the same bytes (SPEC-N1/R8-AC3)', async () => {
+      // The parity law with its granularity made explicit: admission's verdict equals the shared
+      // validator's FINALIZE-mode verdict, because both judge a complete set. The DEFAULT-mode verdict on
+      // the same bytes is clean — which is exactly why the granularity has to be stated, not assumed.
+      const output = [{ version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'demo' } }]
+      expect(validateA2ui(output, demoCatalog, undefined, { atFinalize: true }).valid).toBe(false)
+      expect(validateA2ui(output, demoCatalog).valid).toBe(true) // default mode unmoved (ADR-0187 §1)
+      const result = await admit(mkCandidate({ a2uiOutput: output }), mkDeps())
+      expect(result.ok).toBe(false)
+    })
+
+    it('ADR-0187: the four-type open→…→close arc still ADMITS (the message-lifecycle exemplar shape)', async () => {
+      // The shape message-lifecycle SPEC-R4 requires of an exemplar — all four kinds on ONE surfaceId,
+      // ending in `deleteSurface`. It must keep admitting: the surface DID receive its root, so the
+      // emptiness arm never applies (and the delete exclusion, LLD §3 mechanic 4, covers it twice over).
+      const candidate = mkCandidate({
+        a2uiOutput: [
+          ...DEFAULT_OUTPUT,
+          { version: 'v1.0', updateDataModel: { surfaceId: 's1', path: '/x', value: 1 } },
+          { version: 'v1.0', deleteSurface: { surfaceId: 's1' } },
+        ],
+      })
+      const result = await admit(candidate, mkDeps())
+      expect(result.ok).toBe(true)
+    })
   })
 
   describe('E_POINTER — syntax (tier-1, shared validateA2ui)', () => {

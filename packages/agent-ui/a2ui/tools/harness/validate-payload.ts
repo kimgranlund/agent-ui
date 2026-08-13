@@ -23,6 +23,11 @@
 // and feeds it through the SAME exported `loadCatalog()` — byte-identical to `defaultCatalog`, just
 // assembled without an ES-module JSON import in the way.
 //
+// ADR-0187 / GH #829: the validator runs at FINALIZE granularity here (`{atFinalize: true}`), mirroring
+// corpus admission — a payload FILE is a complete set by construction, and a divergent verdict between
+// this instrument and admission is the parity gap SPEC-N6 exists to close. Practical effect: a payload
+// declaring a surface it never delivers components for now exits 1 with `IDGRAPH sid:root-missing`.
+//
 // Zero new deps (SPEC-N5). Plain `.ts`, run via Node type-stripping (`erasableSyntaxOnly` guarantees
 // it strips cleanly, ADR-0062).
 
@@ -109,7 +114,12 @@ function main(): void {
     process.exit(1)
   }
 
-  const verdict = validateA2ui(healed.messages, catalog)
+  // ADR-0187 / GH #829 — FINALIZE granularity, mirroring corpus admission (`corpus/admit.ts` stage 5),
+  // which this instrument pre-checks payloads FOR. A pasted payload file is complete by construction —
+  // there is no stream still arriving into a file on disk — and diverging from admission's verdict here
+  // would re-open the exact parity gap SPEC-N6 / corpus SPEC-N1 exist to close: an author would see
+  // `{ok:true}` from this tool and `E_IDGRAPH` from admission on the same bytes.
+  const verdict = validateA2ui(healed.messages, catalog, undefined, { atFinalize: true })
   if (!verdict.valid) {
     console.log(JSON.stringify(verdict.failures.map(toPrintable), null, 2))
     process.exit(1)
