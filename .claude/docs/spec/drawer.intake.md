@@ -47,19 +47,22 @@ site surfaces ↔ the standing gates; build slices ↔ all). Coverage holds — 
 
 ## 3 · Precedent sweep (patterns-table rows + sources read, nothing redesigned)
 
+Line anchors below are *pinned to commit fd57db88* (the file states read at intake time — the §5b
+cite-the-owner escape hatch).
+
 | Mechanism needed | Reused precedent (SOURCE read, not summary) | Owner |
 |---|---|---|
 | Top layer · scrim · focus containment · Escape | native `<dialog>`.`showModal()` — all four free | ADR-0017 · `controls/modal/modal.ts` (read end-to-end) |
 | Focus RESTORE on close (the one platform gap) | `#opener` capture + restore on every close | ADR-0017 cl.4 · `modal.ts#restoreFocus` |
-| `open`↔platform sync + announce (`close`+`toggle` on a real platform dismiss, `this.open` as discriminator) | modal's platform→model `close` listener + model→platform effect | ADR-0019/ADR-0101 · `modal.ts:64-107` |
-| `persistent` dismissal gate (cancel `preventDefault` + rect-wise backdrop-click detection) | modal's `persistent` prop, verbatim shape | ADR-0020 · `modal.ts:79-92` |
+| `open`↔platform sync + announce (`close`+`toggle` on a real platform dismiss, `this.open` as discriminator) | modal's platform→model `close` listener + model→platform effect | ADR-0019/ADR-0101 · `modal.ts:64-107` (pinned fd57db88) |
+| `persistent` dismissal gate (cancel `preventDefault` + rect-wise backdrop-click detection) | modal's `persistent` prop, verbatim shape | ADR-0020 · `modal.ts:79-92` (pinned fd57db88) |
 | Author children moved into the control-owned part at connect, parts created ONCE, `render()` stays void | the ADR-0017 child-move pattern | `modal.ts#ensureDialog` · patterns-table nested-child-move row |
-| aria-label/labelledby forwarded onto the dialog part; host stays aria-clean | ADR-0017 cl.5 | `modal.ts:143-153` |
+| aria-label/labelledby forwarded onto the dialog part; host stays aria-clean | ADR-0017 cl.5 | `modal.ts#ensureDialog` (the forwarding block; pinned fd57db88 as `modal.ts:143-153`) |
 | Container box-model (region padding, sticky header/footer regions, adjacent-sibling gap) | `[data-box]` | ADR-0046 · `controls/_surface/container-box.css` |
-| Edge-aware scroll fade on the scroll viewport, default-on | modal's unconditional `scrollFade(this, { viewport: dialog })` | `modal.ts:100-106` |
+| Edge-aware scroll fade on the scroll viewport, default-on | modal's unconditional `scrollFade(this, { viewport: dialog })` | `modal.ts` `connected()` tail (pinned fd57db88 as `modal.ts:100-106`) |
 | Own z-depth scope | `isolation: isolate` on `[data-box]` | ADR-0052 |
 | Logical direction naming (`start`/`end`, never left/right) | super-shell LLD-C4 (GH #95) | `app/src/controls/super-shell/super-shell.ts` header |
-| Motion constants + reduced-motion suppression | `--md-sys-motion-duration-fast` / `--md-sys-motion-easing-standard`; `prefers-reduced-motion` precedent in split/tabs/radio | `shared/src/tokens/dimensions.css:82-83` |
+| Motion constants + reduced-motion suppression | `--md-sys-motion-duration-fast` / `--md-sys-motion-easing-standard`; `prefers-reduced-motion` precedent in split/tabs/radio | `shared/src/tokens/dimensions.css` (the motion-constants block; pinned fd57db88 as `:82-83`) |
 | Re-deriving a shipped control's private machinery instead of nesting/fighting it | `ui-command-modal` re-derived combo-box's filter (~60 lines) when the methods were private | ADR-0125 · `controls/command-modal/command-modal.ts` header |
 
 ## 4 · Fork sheet
@@ -73,8 +76,9 @@ site surfaces ↔ the standing gates; build slices ↔ all). Coverage holds — 
   round-trips through `ui-form-provider.values()` or an A2UI value mark). Per that reference's own
   scope note, the operative test is ADR-0102's three-lane chooser:
 - **Lane 1 — compose shipped controls:** NO. `ui-popover`/`ui-form-popover` are the NON-modal branch
-  (`overlay.ts:9` states the boundary itself: "a true MODAL (focus-trapped) stays on `ui-modal`'s
-  `<dialog>` `showModal()`") — no scrim, no focus containment; wrong branch entirely. `ui-modal`
+  (`overlay.ts`'s own banner comment states the boundary — "a true MODAL (focus-trapped) stays on
+  `ui-modal`'s `<dialog>` `showModal()`"; line 9, pinned fd57db88) — no scrim, no focus containment;
+  wrong branch entirely. `ui-modal`
   composed page-side would need raw CSS overriding its centered identity from outside
   (`--ui-modal-margin-block-start`, `max-inline-size: min(92vw, 32rem)`, the base radius, shrink-fit
   height → docked edge, `100svh`, zeroed docked-edge radius, axis slide) — restyling a control's
@@ -164,13 +168,22 @@ lane without page semantics entering the control.
 **ONE contract-changing fork → ADR-0188 (proposed, never self-ratified):** the mint itself — a new
 tag admitted to the fleet, a new `--ui-drawer-*` token family, a new catalog row, and the
 overlay-vocabulary boundary (§4) that places it. Everything else is shipped-pattern re-application.
-No SPEC is authored (requirements are not ambiguous — the fork sheet + ADR state the acceptance
-surface; a SPEC nobody is unsure about is manufactured process); the LLD-grade interface detail a
-builder needs is the fork sheet itself plus the cited modal source — the build brief names this
-record + ADR-0188 as the contract.
+**Ruled deviation from the procedure's step-6 default artifact set (deliberate, doc-review
+verified):** no separate SPEC/LLD is authored — the requirements are not ambiguous (the fork sheet +
+ADR state the acceptance surface; a SPEC nobody is unsure about is manufactured process), and the
+LLD-grade frozen-interface detail lives in this sheet plus the pinned modal source, checked against
+`modal.ts` by the independent doc review — the build brief names this record + ADR-0188 +
+`drawer-ship.decomp.json` as the contract.
 
-Build slices (the component build; dispatchable one-writer-per-file; **all blocked on ADR-0188's
-ratification**):
+**Decomposition manifest (the step-7 gate):**
+[`../decompositions/drawer-ship.decomp.json`](../decompositions/drawer-ship.decomp.json) — emitted
+from §2's two-plane table + the slices below (18 nodes · 14 actions · 14 hosts · 21 edges, every
+leaf carrying its accept predicate); `coverage_check.py --strict` ran CLEAN (exit 0, 2026-08-13 —
+"coverage clean — both planes cross-check"). §2's page-side rows (e/i) land in the manifest as a3's
+opaque-children obligation; the #845 page lane gets its own manifest later, not this one.
+
+Build slices (the component build; dispatchable one-writer-per-file; the manifest above is the
+frozen form — **all blocked on ADR-0188's ratification**):
 
 - **S1 — the control triple.** `controls/drawer/drawer.ts` (ADR-0017 machinery re-applied: part-once
   dialog, child-move, open effect, platform-close listener, persistent gate, focus restore, aria
@@ -184,7 +197,11 @@ ratification**):
   translate, zeroed docked-edge radius) computes from production CSS (the TKT-0002 class — the motion
   and `@starting-style` legs are cascade-dependent claims, never source-grep claims).
 - **S3 — site surfaces.** Doc page + demo page + gallery/preview specimen (all three edges, a
-  long-list scroll specimen); the standing site/descriptor coverage gates those drag.
+  long-list scroll specimen); the standing site/descriptor coverage gates those drag. Accept
+  additionally: the §4 four-cell boundary lands VERBATIM on `drawer.md`'s descriptor prose and the
+  doc page's Boundary section — the sentence "a persistent, non-scrimmed side panel is never a
+  drawer" must appear where site/catalog consumers actually read (manifest n10/n15 carry the
+  grep-asserted predicate).
 - **S4 — the catalog arm.** `Drawer` row in `catalog.json` + factory + the ADR-0087 gate
   (catalog-or-allowlist) satisfied on the row side; two-way `open` mark.
 - **Fenced out of this lane entirely:** the #845 page-side composition (picker items, roster

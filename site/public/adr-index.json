@@ -1300,12 +1300,5 @@
     "description": "The validator finalize signal (GH #829): validateA2ui gains an opt-in opts?: { atFinalize?: boolean } 4th parameter — createSurface now registers its surfaceId…",
     "level": "L3",
     "section": "Records"
-  },
-  {
-    "name": "ADR-0188",
-    "url": "./adr-index.html#adr-0188",
-    "description": "ui-drawer design intake (GH #845, component arm): a NEW edge-docked MODAL container minted on the native <dialog>/showModal() machinery (the ADR-0017 pattern r…",
-    "level": "L3",
-    "section": "Records"
   }
 ]
