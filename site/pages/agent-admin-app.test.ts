@@ -507,7 +507,7 @@ describe('Integrations pack ↔ registry parity (GH #49/#567 S6)', () => {
   // GH #847 — the reported symptom: the live overlay (any `vite dev` session, unconditional once the
   // proxy answers `GET /integrations`) used to REPLACE the whole pack, including Weather's own
   // hand-authored row, with `content: ''` — discarding the served `description` and leaving the
-  // Tools-panel box empty even for an entry whose static fallback carries real prose. ADR-0188 cl.4
+  // Tools-panel box empty even for an entry whose static fallback carries real prose. ADR-0189 cl.4
   // fixes it by seeding `content` from the SAME `description` field the wire already serves.
   it("GH #847: the live override's `content` is seeded from `description`, never a hardcoded '' — the Tools-panel box is never emptied by turning the live overlay on", async () => {
     const { ADMIN_LIBRARIES, setLiveIntegrations } = await import('./agent-admin-libraries.ts')

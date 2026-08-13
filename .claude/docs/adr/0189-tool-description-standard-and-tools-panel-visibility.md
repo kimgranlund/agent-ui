@@ -1,4 +1,4 @@
-# ADR-0188 — Tool/MCP description standard: MCP's own `tools/list` JSON Schema plus the existing `IntegrationManifest` triple are the standard (no OpenAPI/Swagger); the admin wire's description-carrying is widened, not replaced (GH #847)
+# ADR-0189 — Tool/MCP description standard: MCP's own `tools/list` JSON Schema plus the existing `IntegrationManifest` triple are the standard (no OpenAPI/Swagger); the admin wire's description-carrying is widened, not replaced (GH #847)
 
 > Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-08-13
 >
@@ -7,7 +7,7 @@
 > | **Status** | proposed |
 > | **Date** | 2026-08-13 |
 > | **Proposed by** | dispatched build seat, GH [#847](https://github.com/kimgranlund/agent-ui/issues/847)'s intake round (owner-ruled deliverable: research → a proposed ADR — this changes the integration/enablement contract, never self-ratified) |
-> | **Ratified by** | _pending — awaiting the owner's `ratify ADR-0188` utterance_ |
+> | **Ratified by** | _pending — awaiting the owner's `ratify ADR-0189` utterance_ |
 > | **Repairs** | on ratification+build: [`mcp-agent-config.spec.md`](../spec/mcp-agent-config.spec.md) SPEC-R4 (widen the `services` row shape — real per-tool description array, not the aggregate count alone) + SPEC-R5 (retire the "empty content" clause's rationale once per-tool description exists) · [`mcp-connector.lld.md`](../lld/mcp-connector.lld.md) (the wire-widening's exact shape) · `agent-ui-integration-standards` skill (an OpenAPI-rejection note + the widened trio shape) |
 > | **Supersedes / Superseded by** | **Amends** (append-only, on ratification) [ADR-0177](./0177-mcp-client-registry-source-http-transport-additive-manifest-mapping.md) cl.2's admin-surfacing boundary, [ADR-0185](./0185-enablement-wire-service-reference-grammar.md)'s wire-grammar scope (adds a description-carrying widening beside the ref grammar; the ref grammar itself is untouched) · **Relates** [ADR-0168](./0168-integration-manifest-registry-validated-dispatch-server-keys.md) (the `IntegrationManifest` triple this ADR rules is the standing standard) · **Resolves** the research half of GH [#847](https://github.com/kimgranlund/agent-ui/issues/847); ships the narrow, already-available-data slice of its visibility half now (the Integrations-pack content fix), defers the wire-widening half to ratification+build |
 

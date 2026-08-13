@@ -385,7 +385,7 @@ let liveIntegrationEntries: NewEntryInput[] | undefined
 
 /** Called by the site's live overlay (`site/lib/admin-live-runner.ts`'s `fetchLiveIntegrations`) with
  *  the dev proxy's served trios — already `{id, label, description}`, SPEC-R28's vocabulary. `content`
- *  is seeded from the SAME `description` field (GH #847/ADR-0188 cl.4) — the manifest's own
+ *  is seeded from the SAME `description` field (GH #847/ADR-0189 cl.4) — the manifest's own
  *  `description` (real prose for every hand-authored integration, e.g. Weather's "Current conditions +
  *  short forecast…"; `label` as a fallback for an MCP tool whose server left `tool.description` unset,
  *  `mapMcpTool`'s own fallback) rather than a hardcoded `''`. Before this fix, turning the live overlay
@@ -414,7 +414,7 @@ let liveServiceEntries: NewEntryInput[] | undefined
  *  tool), and the wire's own `description` for it is today only a synthetic boot-count aggregate
  *  (`projectServiceRows`, dev-proxy-plugin.ts), never a real per-tool description. Populating `content`
  *  with that aggregate would read as "not empty" without being the real description the GH #847 ask
- *  wants; ADR-0188 (proposed) books the real fix — a widened per-tool `services[].tools` wire shape —
+ *  wants; ADR-0189 (proposed) books the real fix — a widened per-tool `services[].tools` wire shape —
  *  for ratification+build rather than reversing SPEC-R5's ruled text mid-PR. Passing `undefined` reverts
  *  to pack ABSENCE (production, degrade, and this page's own test reset between cases). */
 export function setLiveServices(rows: readonly LiveServiceRow[] | undefined): void {
