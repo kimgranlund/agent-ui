@@ -8,7 +8,9 @@
 import { describe, it, expect } from 'vitest'
 import { readdirSync as realReaddirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { readFileSync, readdirSync } from './fs-shim.ts'
+import { readFileSync as realReadFileSync } from 'node:fs'
+import * as fsShim from './fs-shim.ts'
+import { readFileSync, readdirSync, statSync } from './fs-shim.ts'
 import { FILES, DIRS } from './fs-shim-content.ts'
 
 describe('fs-shim readFileSync/readdirSync — GH #112', () => {
@@ -87,6 +89,45 @@ describe('fs-shim-content.ts FILES/DIRS vs the real prompts directory — GH #11
     const bundledGenuiPacksDirKey = `${PROMPTS_KEY_PREFIX}/genui-packs`
     for (const name of DIRS[bundledGenuiPacksDirKey] ?? []) {
       expect(FILES[`${bundledGenuiPacksDirKey}/${name}`], `FILES missing entry for DIRS-listed ${name}`).toBeDefined()
+    }
+  })
+})
+
+// GH #811 — statSync joined the shim after 15 straight red deploys: dogfood-inventory.ts imports it,
+// and the wrangler build (the ONE gate that sees the alias) fails on any node:fs symbol the shim lacks.
+describe('fs-shim statSync — GH #811', () => {
+  it('a DIRS key is a directory', () => {
+    const anyDir = Object.keys(DIRS)[0]!
+    expect(statSync(anyDir).isDirectory()).toBe(true)
+  })
+
+  it('a FILES key is a file', () => {
+    const anyPath = Object.keys(FILES)[0]!
+    expect(statSync(anyPath).isDirectory()).toBe(false)
+  })
+
+  it('throws the fail-fast add-it-to-content error for an unbundled path', () => {
+    expect(() => statSync('/not/a/real/path')).toThrow(/no bundled entry/)
+  })
+
+  // The trip-wire for this whole defect class (check/test never runs the wrangler build, so an
+  // uncovered node:fs import is invisible until deploy time): every NAMED import from 'node:fs'
+  // across the modules the Worker bundle aliases through this shim must be an fs-shim export.
+  it("every node:fs named import in the shim's aliased modules has a matching shim export", () => {
+    const here = fileURLToPath(import.meta.url)
+    const a2uiRoot = here.slice(0, here.indexOf('/tools/agent/worker/'))
+    const aliasedModules = [
+      `${a2uiRoot}/src/agent/system-prompt.ts`,
+      `${a2uiRoot}/src/agent/mini-skills.ts`,
+      `${a2uiRoot}/src/agent/dogfood-inventory.ts`,
+    ]
+    for (const modPath of aliasedModules) {
+      const src = realReadFileSync(modPath, 'utf8')
+      for (const m of src.matchAll(/import\s*\{([^}]+)\}\s*from\s*'node:fs'/g)) {
+        for (const name of m[1]!.split(',').map((s) => s.trim().split(/\s+as\s+/)[0]!.trim())) {
+          expect(name in fsShim, `fs-shim missing export "${name}" imported by ${modPath}`).toBe(true)
+        }
+      }
     }
   })
 })
