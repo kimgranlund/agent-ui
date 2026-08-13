@@ -1461,3 +1461,117 @@ describe('produce() — TKT-0081 cross-turn seeded validation', () => {
     expect(lines).toHaveLength(2)
   })
 })
+
+// ── ADR-0187 / GH #829 — S2: produce()'s per-round verdict runs at FINALIZE granularity ────────────────
+//
+// The SERVER half of the finalize signal. `assembled.output` IS this turn's final wire payload (the model
+// has stopped; validate-then-stream, live-agent SPEC-R5), so an abandoned `createSurface` in it is not a
+// mid-stream prefix — it is the GH #802 empty-card defect, and it must die pre-wire as a self-correct
+// round (SPEC-R4) rather than reach a browser.
+describe('produce() — ADR-0187: an abandoned createSurface self-corrects PRE-WIRE (GH #829/#802)', () => {
+  // The #829 repro as a model reply: one working card, plus a second surface opened and never filled.
+  const ABANDONED_SECOND =
+    '{"a2uiMeta":{"note":"Here you go."}}\n' +
+    '{"version":"v1.0","createSurface":{"surfaceId":"s1","catalogId":"agent-ui"}}\n' +
+    '{"version":"v1.0","updateComponents":{"surfaceId":"s1","components":[{"id":"root","component":"Text","text":"hi"}]}}\n' +
+    '{"version":"v1.0","createSurface":{"surfaceId":"s2","catalogId":"agent-ui"}}'
+  // The self-corrected reply: the stray line dropped (the second of the hint's two repairs).
+  const REPAIRED =
+    '{"a2uiMeta":{"note":"Here you go."}}\n' +
+    '{"version":"v1.0","createSurface":{"surfaceId":"s1","catalogId":"agent-ui"}}\n' +
+    '{"version":"v1.0","updateComponents":{"surfaceId":"s1","components":[{"id":"root","component":"Text","text":"hi"}]}}'
+
+  it('the abandoned round NEVER streams — it becomes a self-correct round, and the repaired round ships', async () => {
+    const { provider, calls, reqs } = stubProvider([ABANDONED_SECOND, REPAIRED])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+
+    expect(calls()).toBe(2) // round 1 self-corrected, round 2 shipped
+    // Nothing from the abandoned round painted: the streamed lines carry NO `s2` at all (validate-then-
+    // stream, SPEC-R5 — the whole point of judging pre-wire).
+    expect(lines.some((l) => l.includes('"s2"'))).toBe(false)
+    expect(lines).toHaveLength(3) // the meta-line + the two lines of the repaired payload
+    // The failure fed back is the EXISTING member at the new granularity — `s2:root-missing`.
+    const fed = reqs()[1]!.messages.find((m) => m.role === 'user' && /INVALID/.test(m.content))!
+    expect(fed.content).toMatch(/INVALID \(IDGRAPH at s2:root-missing\)/)
+  })
+
+  it('the fed-back hint teaches BOTH repairs of the disjunction (deliver root, or drop the unused line)', async () => {
+    const { provider, reqs } = stubProvider([ABANDONED_SECOND])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    await expect(async () => {
+      for await (const _l of produce(intent, deps, { maxRounds: 2 })) void _l
+    }).rejects.toBeInstanceOf(ProduceHalt)
+    const fed = reqs()[1]!.messages.find((m) => m.role === 'user' && /INVALID/.test(m.content))!
+    // The pre-existing rootMissing prose still leads (GH #307's repair, untouched)…
+    expect(fed.content).toMatch(/has NO `id:"root"`/)
+    // …and the ADR-0187 sentence names the abandoned case and both of its repairs.
+    expect(fed.content).toMatch(/never delivered ANY components for/)
+    expect(fed.content).toMatch(/deliver `root` for it in this same turn/)
+    expect(fed.content).toMatch(/drop that unused `createSurface` line entirely/)
+  })
+
+  it('a bare-createSurface-only round exhausts the bound and HALTS — never a clean empty success', async () => {
+    const BARE_ONLY =
+      '{"a2uiMeta":{"note":"opening a canvas"}}\n' +
+      '{"version":"v1.0","createSurface":{"surfaceId":"only","catalogId":"agent-ui"}}'
+    const { provider } = stubProvider([BARE_ONLY])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    let halted: unknown
+    try {
+      for await (const _l of produce(intent, deps, { maxRounds: 2 })) void _l
+    } catch (e) {
+      halted = e
+    }
+    expect(halted).toBeInstanceOf(ProduceHalt)
+    expect((halted as ProduceHalt).failures).toEqual([{ code: 'IDGRAPH', path: 'only:root-missing' }])
+  })
+
+  it('a same-round create-then-DELETE still ships clean — the delete exclusion holds through produce()', async () => {
+    // LLD §3 mechanic 4 end-to-end: nothing mounted is nothing abandoned, so no self-correct round.
+    const CREATE_THEN_DELETE =
+      '{"a2uiMeta":{"note":"cleaning up"}}\n' +
+      '{"version":"v1.0","createSurface":{"surfaceId":"s1","catalogId":"agent-ui"}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"s1","components":[{"id":"root","component":"Text","text":"hi"}]}}\n' +
+      '{"version":"v1.0","createSurface":{"surfaceId":"tmp","catalogId":"agent-ui"}}\n' +
+      '{"version":"v1.0","deleteSurface":{"surfaceId":"tmp"}}'
+    const { provider, calls } = stubProvider([CREATE_THEN_DELETE])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+    expect(calls()).toBe(1) // zero wasted rounds
+    expect(lines).toHaveLength(5)
+  })
+
+  it('a data-only follow-up on a seeded session is UNAFFECTED — the seed skip composes with finalize mode', async () => {
+    // The TKT-0081 composition (ADR-0187 §5 / LLD §3 mechanic 2): a session-known surface this round
+    // merely writes DATA to never enters the judged set, so finalize mode cannot manufacture a failure.
+    const PRIOR =
+      '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"root","component":"Text","text":{"path":"/n"}}]}}'
+    const seededTurn: TurnInput = {
+      kind: 'intent',
+      text: 'change the name',
+      session: { turns: [{ role: 'user', content: 'start' }, { role: 'assistant', content: PRIOR }] },
+    }
+    const DATA_ONLY = '{"version":"v1.0","updateDataModel":{"surfaceId":"main","path":"/n","value":"Ada"}}'
+    const { provider, calls } = stubProvider([DATA_ONLY])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(seededTurn, deps, { maxRounds: 3 })) lines.push(line)
+    expect(calls()).toBe(1)
+    expect(lines).toEqual([DATA_ONLY])
+  })
+
+  it('a note-only round stays a CLEAN success — zero A2UI lines never reaches the validator at all', async () => {
+    // The finalize opt-in sits BELOW the note-only/genui-only early return (ADR-0088 Consequences), so
+    // "empty ≠ invalid" is untouched: a turn with no A2UI lines has no surface to judge.
+    const { provider, calls } = stubProvider(['{"a2uiMeta":{"note":"just talking"}}'])
+    const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+    expect(calls()).toBe(1)
+    expect(lines).toHaveLength(1)
+  })
+})

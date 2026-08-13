@@ -178,7 +178,16 @@ describe('produce() — GH #418: ProduceOptions.a2uiEnabled threads to buildSyst
   })
 
   it('a2uiEnabled:false never changes produce() peel/heal/validate mechanics — a stray A2UI reply still runs the ordinary validate/self-correct path', async () => {
-    const raw = '{"a2uiMeta":{"note":"here"}}\n{"version":"v1.0","createSurface":{"surfaceId":"s","catalogId":"agent-ui"}}'
+    // ADR-0187 / GH #829 (LLD §7) — this stub's reply used to be `note + a BARE createSurface, nothing
+    // else`, which `produce()` now (correctly) judges an abandoned surface at finalize granularity: it
+    // would self-correct three rounds and throw `ProduceHalt`. The stub gains the minimal `root` delivery
+    // that makes it a VALID one-round reply. The test's SUBJECT — that `a2uiEnabled` steers only the
+    // PROMPT, never the loop's peel/heal/validate mechanics — is unchanged, and is in fact better served
+    // by a reply that completes: the compared line lists are now non-trivially equal.
+    const raw =
+      '{"a2uiMeta":{"note":"here"}}\n' +
+      '{"version":"v1.0","createSurface":{"surfaceId":"s","catalogId":"agent-ui"}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"s","components":[{"id":"root","component":"Text","text":"stray"}]}}'
     const runWith = async (a2uiEnabled: boolean): Promise<string[]> => {
       const deps: ProduceDeps = { provider: stubProvider(raw), retrieve: () => [], catalog: defaultCatalog }
       const lines: string[] = []
