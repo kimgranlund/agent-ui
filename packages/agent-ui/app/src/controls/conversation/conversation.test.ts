@@ -1126,7 +1126,17 @@ describe('ui-conversation — ADR-0180 declarative composition: imperative ident
     expect(authoredResult.shape, 'the two paths produced a different resulting [data-part] tree').toEqual(bareResult.shape)
     expect(authoredResult.calls, 'the two paths produced different callback traces').toEqual(bareResult.calls)
     // anti-vacuous: the compared trace genuinely exercised all three callback kinds.
-    expect(bareResult.calls.map((c) => (c as unknown[])[0])).toEqual(['submit', 'action'])
+    //
+    // ADR-0187 / GH #829 (LLD §7) — the `'client'` entry is the DESIGNED new behavior, not collateral.
+    // The script's stream is a bare `createSurface` with no components, so `handle.finalize()` now runs
+    // the shared validator at finalize granularity and emits `VALIDATION_FAILED` (`sX:root-missing`)
+    // through `onClientMessage` — exactly the wire error the abandoned-surface fix exists to surface.
+    // It fires IDENTICALLY on both mount paths, which is this test's actual subject; and it is what
+    // finally makes the "all three callback kinds" claim above TRUE (before this, the trace held two).
+    expect(bareResult.calls.map((c) => (c as unknown[])[0])).toEqual(['submit', 'client', 'action'])
+    // …and the one client message IS the finalize verdict for the abandoned surface, not an unrelated emit.
+    const clientEntry = bareResult.calls.find((c) => (c as unknown[])[0] === 'client') as [string, unknown]
+    expect(JSON.stringify(clientEntry[1])).toContain('sX:root-missing')
   })
 })
 

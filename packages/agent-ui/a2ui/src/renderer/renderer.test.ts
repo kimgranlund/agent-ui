@@ -167,6 +167,57 @@ describe('renderer host — stream faults + lifecycle (renderer LLD §9, SPEC-N3
     cleanup()
   })
 
+  it('ADR-0187/GH #829: finalize on a createSurface-only surface emits VALIDATION_FAILED (no silent empty host)', () => {
+    // The CLIENT half of the bug (GH #829 Findings 1's closing paragraph): before ADR-0187 this surface's
+    // re-framed `updateComponents { components: [] }` hit the validator's empty-set exemption, so the
+    // empty `ui-surface-host` had NO error to show — only its silent `:empty` placeholder (GH #802).
+    const { r, sent, cleanup } = harness()
+
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's-abandoned', catalogId: 'agent-ui' } }))
+    expect(sent.filter(isError)).toEqual([]) // still nothing mid-stream — content may yet arrive (SPEC-R4)
+
+    r.finalize()
+    const errors = sent.filter(isError)
+    expect(errors).toHaveLength(1)
+    // ADR-0187 §3/LLD §5: the EXISTING IDGRAPH code, so the existing §9 mapping applies unchanged —
+    // `VALIDATION_FAILED` + surfaceId, zero wire widening.
+    expect(errors[0]!.error).toMatchObject({ code: 'VALIDATION_FAILED', surfaceId: 's-abandoned' })
+    expect(errors[0]!.error.message).toContain('s-abandoned:root-missing')
+
+    cleanup()
+  })
+
+  it('ADR-0187: a COMPLETE surface beside an abandoned one finalizes with exactly ONE error (fault isolation)', () => {
+    // The #829 repro's real shape: a working card plus a stray second surface. Only the stray one reports.
+    const { r, mount, sent, cleanup } = harness()
+
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'ok', catalogId: 'agent-ui' } }))
+    r.ingest(line({ version: 'v1.0', updateComponents: { surfaceId: 'ok', components: [{ id: 'root', component: 'Button', label: 'go' }] } }))
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'stray', catalogId: 'agent-ui' } }))
+
+    r.finalize()
+    const errors = sent.filter(isError)
+    expect(errors).toHaveLength(1)
+    expect(errors[0]!.error).toMatchObject({ surfaceId: 'stray' })
+    expect(mount.querySelector('ui-button')).not.toBeNull() // the working card still rendered (SPEC-N4)
+
+    cleanup()
+  })
+
+  it('ADR-0187: a surface DELETED in the same stream reports nothing at finalize (it is gone, not abandoned)', () => {
+    // Belt-and-braces on the delete arm from the CLIENT side: `deleteSurface` releases the surface, so
+    // `finalize()` has no tree to visit at all — the validator's `deletedHere` exclusion (LLD §3 mechanic
+    // 4) and the renderer's own teardown agree, by two independent mechanisms.
+    const { r, sent, cleanup } = harness()
+
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'temp', catalogId: 'agent-ui' } }))
+    r.ingest(line({ version: 'v1.0', deleteSurface: { surfaceId: 'temp' } }))
+    r.finalize()
+    expect(sent.filter(isError)).toEqual([])
+
+    cleanup()
+  })
+
   it('ADR-0031: FUNCTION (checks unknown fn) → VALIDATION_FAILED on the wire + surfaceId (corrected mapping)', async () => {
     // The FUNCTION wire-emit proof (corrected flow grounding, ADR-0031 clause 2): a Button node with a
     // `checks` entry calling an unknown catalog function causes the checks controller to emit a FUNCTION
