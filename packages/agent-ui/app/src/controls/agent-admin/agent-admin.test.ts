@@ -3772,7 +3772,14 @@ describe('UIAgentAdminElement — the Catalogs section (ADR-0170)', () => {
     await whenFlushed()
     const a2uiRow = el.querySelector('[data-part="surface-row"][data-surface="a2ui"]') as HTMLElement
     expect(el.querySelector('[data-part="surface-catalog"]'), 'the trailing mirror is gone').toBeNull()
-    expect(a2uiRow.textContent, 'the row names the modality and nothing else').toBe('A2UI')
+    // GH #844 — the row also carries a help affordance now, whose CARD text is a DOM descendant of the
+    // row but is never painted on the row's line (`ui-tooltip` moves it into a top-layer popover panel).
+    // The no-mirror law is about the row's OWN chrome, so read exactly that: every child except the help.
+    const rowChrome = [...a2uiRow.children]
+      .filter((child) => child.getAttribute('data-part') !== 'surface-help')
+      .map((child) => child.textContent ?? '')
+      .join('')
+    expect(rowChrome, 'the row names the modality and nothing else').toBe('A2UI')
 
     // The label lives EXACTLY once on the surface — on the active catalog's own row inside the picker.
     const activeLabel = A2UI_CATALOG_OPTIONS.find((o) => o.id === DEFAULT_A2UI_CATALOG_ID)!.label

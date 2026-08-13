@@ -91,6 +91,17 @@
   --ui-agent-admin-provider-gap: var(--md-sys-space-xs); /* the gap above each subsequent provider-group heading in the Model grid ([data-part='model-provider']) */
   --ui-agent-admin-spacer-min-size: var(--md-sys-space-sm); /* SPEC-R11c/AC19 — the shared flex-spacer floor (surface-spacer) */
   --ui-agent-admin-detail-indent: var(--md-sys-space-md); /* GH #541 — the nested detail zone's own indent under a surface row (surface-detail) */
+  /* GH #844 — the Surface tab's help affordance (surface-help-icon + the surface-help-card inside
+     ui-tooltip's panel). The icon cell routes through `--md-sys-icon-*`, the one dimensional family sized
+     for GLYPHS rather than gaps (ui-icon is a 1em×1em cell, icon.css — so this lands as the button's own
+     font-size and the glyph fills it); the card's cap is a READING MEASURE, minted as a literal for the
+     same reason `--ui-super-shell-canvas-min-size`'s 16rem is one below — no fleet primitive expresses
+     "about 50 characters of help prose", and inventing one for a single consumer would be worse. */
+  --ui-agent-admin-help-size: var(--md-sys-icon-md, 18px);
+  --ui-agent-admin-help-ink: var(--ui-agent-admin-label-ink);
+  --ui-agent-admin-help-focus-ink: var(--md-sys-color-primary);
+  --ui-agent-admin-help-card-max-inline-size: 22rem;
+  --ui-agent-admin-help-card-gap: var(--md-sys-space-xs);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-agent-admin) consumes ONLY --ui-agent-admin-* ════════════════ */
@@ -630,6 +641,100 @@
      modality that needs the same posture. */
   [data-part='surface-row'][data-disabled] {
     opacity: 0.45;
+  }
+
+  /* ── GH #844: the help affordance — a question-mark icon on every Surface-tab group header and element
+     row, opening a `ui-tooltip` card. HIDDEN AT REST; revealed by hovering the row/heading it belongs to,
+     AND by focusing the icon itself. Both halves are load-bearing — a hover-only reveal leaves the whole
+     affordance unreachable from the keyboard, which GH #844 rules out in as many words.
+
+     `opacity`, never `display`/`visibility`/`hidden`: the icon must stay FOCUSABLE while invisible (that
+     is exactly how a Tab into it can reveal it — an unfocusable icon has no keyboard path at all), and it
+     must keep occupying its box, so revealing one never reflows the row out from under the pointer that
+     is travelling to it. The tooltip PANEL is not styled here beyond its card: it lives in the Popover
+     top layer with ui-tooltip's own surface/frame/forced-colors handling, inherited unchanged.
+
+     ADDRESSING: the icon is `[data-part='surface-help'] > [data-part='anchor']`, never a bespoke part
+     name — `ui-tooltip` stamps `data-part="anchor"` on its first element child at connect, clobbering
+     anything the author set (the same platform fact entry-list.css's `ui-menu` trigger already lives
+     with). Scoping through the HOST's own marker is what keeps these rules from reaching any OTHER
+     control's anchor part inside this element. ────────────────────────────────────────────────────── */
+
+  [data-part='surface-help'] > [data-part='anchor'] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    padding: 0;
+    border: 0;
+    background: none;
+    font-size: var(--ui-agent-admin-help-size); /* ui-icon is a 1em cell — this IS the glyph's size */
+    line-height: 1;
+    color: var(--ui-agent-admin-help-ink);
+    cursor: help;
+    opacity: 0;
+    transition: opacity 120ms ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-part='surface-help'] > [data-part='anchor'] {
+      transition: none;
+    }
+  }
+
+  /* The reveal — four triggers, one declaration: the modality row hovered, a nested detail row hovered, a
+     fold's heading row hovered, or the icon itself hovered/focused. `:focus`, not `:focus-visible` alone:
+     a programmatic `focus()` (a test probe, a skip target) must reveal it too, and an always-visible-
+     while-focused help icon has no "was that really the keyboard?" ambiguity worth suppressing. */
+  [data-part='surface-row']:hover [data-part='surface-help'] > [data-part='anchor'],
+  [data-part='surface-detail-row']:hover [data-part='surface-help'] > [data-part='anchor'],
+  [data-part='settings-item'] > [data-part='details'] > [data-part='summary']:hover [data-part='surface-help'] > [data-part='anchor'],
+  [data-part='surface-help'] > [data-part='anchor']:hover,
+  [data-part='surface-help'] > [data-part='anchor']:focus {
+    opacity: 1;
+  }
+
+  /* An explicit ring: the button carries no border/background of its own, so the UA default ring has
+     nothing to sit against on some engines. Forced colors keeps it as the system Highlight. */
+  [data-part='surface-help'] > [data-part='anchor']:focus-visible {
+    outline: 2px solid var(--ui-agent-admin-help-focus-ink);
+    outline-offset: 1px;
+  }
+
+  @media (forced-colors: active) {
+    [data-part='surface-help'] > [data-part='anchor']:focus-visible {
+      outline-color: Highlight;
+    }
+  }
+
+  /* The card itself — `ui-tooltip` moves it into its own top-layer panel at connect, so these rules
+     style the CONTENT plane only (surface, frame and padding are tooltip.css's). Capped to a reading
+     measure: a help card that spans the whole viewport is a wall, not an explanation. */
+  [data-part='surface-help-card'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-agent-admin-help-card-gap);
+    max-inline-size: var(--ui-agent-admin-help-card-max-inline-size);
+    font-size: 0.75rem;
+    line-height: 1.45;
+    text-align: start; /* the anchor is a button — never inherit its centered UA text-align */
+  }
+
+  [data-part='surface-help-title'] {
+    font-size: 0.875rem; /* the shared Settings heading register (the settings-item summary rule above) */
+    font-weight: 600;
+  }
+
+  [data-part='surface-help-summary'],
+  [data-part='surface-help-body'] {
+    margin: 0;
+  }
+
+  [data-part='surface-help-facts'] {
+    margin: 0;
+    /* A typographic marker indent — relative to the card's OWN text, not the card-chrome scale, so it
+       tracks the copy at any density. */
+    padding-inline-start: 1.25em;
   }
 
   /* ── Vision rev.5 → GH #222: the Context tabs — Context: System + Context: Dialog render slots, one
