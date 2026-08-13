@@ -128,16 +128,17 @@ export const buttonFactory: WidgetFactory = {
   },
 }
 
-// The ADR-0078 cl.5 fan-out table — the wire `Text.variant` (catalog-frozen `h1…h5 | caption | body`,
-// UNCHANGED) is not bindable, so it translates once at apply-time to the ui-text three-axis triple
+// The ADR-0078 cl.5 fan-out table — the wire `Text.variant` (catalog-frozen `h1…h5 | caption | body`
+// per cl.5's original ruling; widened by ONE member, `label`, under the GH #808 S1 amendment below) is
+// not bindable, so it translates once at apply-time to the ui-text three-axis triple
 // (`as`/`variant`/`size`). An unrecognized wire value (should not occur — the catalog enum already
 // rejects it, conformance-checked upstream) falls back to the `body` triple rather than left
 // half-applied.
 //
-// TKT-0082 (amends ADR-0078 cl.5's table — see the ADR's own Amendment section, `proposed`, Kim's
-// ratification pending): the row choice is COMPACT, generative-UI-scale — headline/title rows only,
-// never `display` — deliberately NOT the nearest-M3-row-per-heading-level table ADR-0078 originally
-// shipped (display/sm…title/lg, 36→22px), which reused `ui-text`'s DOCUMENT type scale wholesale.
+// TKT-0082 (amends ADR-0078 cl.5's table — see ADR-0142, `accepted`, ratified 2026-07-18): the row
+// choice is COMPACT, generative-UI-scale — headline/title rows only, never `display` — deliberately
+// NOT the nearest-M3-row-per-heading-level table ADR-0078 originally shipped (display/sm…title/lg,
+// 36→22px), which reused `ui-text`'s DOCUMENT type scale wholesale.
 // That scale is correct for `ui-text`'s own docs-site context (ADR-0025/ADR-0078 rule type
 // density-invariant there, untouched by this change) but every A2UI surface this catalog renders is a
 // compact card/dashboard/quiz tile, not a document — a 36px h1 towers over a small card. This table is
@@ -146,6 +147,13 @@ export const buttonFactory: WidgetFactory = {
 // nearest-row-per-level shape and keeping all 5 heading sizes strictly distinct and monotonically
 // decreasing (28/24/22/16/14px — verified against dimensions.css's `--md-sys-typescale-*-size`
 // values), every one at or above `body`'s own 14px so a heading never reads smaller than prose.
+//
+// GH #808 S1 (`a2ui-container-vocabulary.spec.md` SPEC-R4): the `label` row is a straight pass-through
+// — the wire register name IS the `ui-text` M3 role name, no translation, unlike every heading row
+// above. It exists to make the fleet's label-metrics register (the label/value row idiom's `Badge`
+// caption) reachable from a payload; before this row the nearest available register was `caption`
+// (`body/sm`), which the SPEC's own §7 fork names as the graceful fallback if the enum widening this
+// row depends on (an `## Amendment` on ADR-0078 cl.5, `proposed` — Kim ratifies) is ever declined.
 const TEXT_VARIANT_TABLE: Record<string, { as: string; variant: string; size: string }> = {
   h1: { as: 'h1', variant: 'headline', size: 'md' },
   h2: { as: 'h2', variant: 'headline', size: 'sm' },
@@ -154,18 +162,21 @@ const TEXT_VARIANT_TABLE: Record<string, { as: string; variant: string; size: st
   h5: { as: 'h5', variant: 'title', size: 'sm' },
   body: { as: 'none', variant: 'body', size: 'md' },
   caption: { as: 'none', variant: 'body', size: 'sm' },
+  label: { as: 'none', variant: 'label', size: 'md' },
 }
 
 /**
  * `Text` → `ui-text` (ADR-0078, catalog LLD-C5). `text` is the display content (maps to `textContent` —
  * a non-identity `mapsTo`, so this is a bespoke factory like `buttonFactory`, untouched by the ADR-0078
  * redesign — the cl.4 heal observer makes every later bound-text write safe). `variant` is the wire's
- * ONE enum (`h1…h5 | caption | body`, catalog UNCHANGED) fanned out through `TEXT_VARIANT_TABLE` onto the
- * control's three reflecting accessor props (`as`/`variant`/`size`) — the catalog stays protocol-faithful
- * while the control gets the real semantic stamp + M3 role/size pair. Not an input ⇒ no `value`. A
- * display leaf — no children, no action. The boolean presentation intents — `truncate` (ADR-0106) and
- * `emphasis` (ADR-0109) — deliberately have NO case here: they ride the `default:` arm's `setAttr`
- * boolean-attribute form, which IS the CSS hook (`[truncate]`/`[emphasis]`).
+ * enum (`h1…h5 | caption | body`, catalog-frozen at ADR-0078 cl.5's original ruling; widened by ONE
+ * member, `label`, under the GH #808 S1 amendment — an `## Amendment` on cl.5, `proposed`, Kim
+ * ratifies) fanned out through `TEXT_VARIANT_TABLE` onto the control's three reflecting accessor props
+ * (`as`/`variant`/`size`) — the catalog stays protocol-faithful while the control gets the real
+ * semantic stamp + M3 role/size pair. Not an input ⇒ no `value`. A display leaf — no children, no
+ * action. The boolean presentation intents — `truncate` (ADR-0106) and `emphasis` (ADR-0109) —
+ * deliberately have NO case here: they ride the `default:` arm's `setAttr` boolean-attribute form,
+ * which IS the CSS hook (`[truncate]`/`[emphasis]`).
  *
  * `href` (ADR-0114 cl.5, content-family LLD-C13) fans out ALONGSIDE `variant`, ORDER-INDEPENDENTLY: a
  * non-empty `href` wins `as` over whatever the variant triple would otherwise pick (a heading VISUAL is
@@ -372,7 +383,10 @@ export const optionFactory: WidgetFactory = {
 // ── the ADR-0087 Wave A rows (Icon / Menu+MenuItem / Popover / Tooltip) ─────────────
 
 // Icon → ui-icon (ADR-0065/0066). Wire `name` → prop `glyph` (TKT-0069 item 1 — the control renamed;
-// the catalog keeps its shipped wire field); `label` stays 1:1.
+// the catalog keeps its shipped wire field); `label` stays 1:1. `slot` (GH #808 S1, catalog SPEC-R2)
+// rides the mapping's DEFAULT arm (`mapping['slot'] ?? 'slot'` → `'slot'`) straight onto `el.slot` —
+// the platform's own reflecting `HTMLElement.slot` IDL accessor, zero factory code — placing an Icon
+// in `ui-card-header`'s leading/trailing grid cell (`card.css`'s `:has([slot='leading'])` family).
 export const iconFactory: WidgetFactory = mappedAccessorFactory('ui-icon', { name: 'glyph' })
 
 // Menu → ui-menu (ADR-0043/overlay-controller.lld). Two-way bindable on `open` via the `toggle` event
@@ -646,7 +660,10 @@ export const statFactory: WidgetFactory = mappedAccessorFactory('ui-stat', { val
 // Badge → ui-badge (SPEC-R11..R13). `label`/`intent` are 1:1 reflecting accessor props — verified against
 // badge.ts `static props`; the control's OWN effect snaps an out-of-range `intent` (bound-garbage) back to
 // 'neutral' (SPEC-R11 AC2), so `setProp`'s plain property write is safe even for a `{path}`-bound value the
-// static validator's `enum` check never sees. Display-only leaf: no `value` mark, no children.
+// static validator's `enum` check never sees. Display-only leaf: no `value` mark, no children. `slot`
+// (GH #808 S1, catalog SPEC-R2) rides `accessorFactory`'s own identity `setProp` straight onto `el.slot`
+// — the same zero-factory-code native-reflection path `iconFactory` documents — placing a Badge in
+// `ui-card-header`'s trailing grid cell (the mock's bound-status affordance, SPEC-R3).
 export const badgeFactory: WidgetFactory = accessorFactory('ui-badge')
 
 // Pagination → ui-pagination (ADR-0163 cl.6/cl.9, newly minted standalone page navigator; catalog SPEC

@@ -36,6 +36,7 @@ import {
   tableFactory,
   paginationFactory,
   multiSelectFactory,
+  badgeFactory,
   defaultFactories,
 } from './factories.ts'
 import { defaultCatalog } from './index.ts'
@@ -108,11 +109,13 @@ describe('default catalog factories — Text (ADR-0078, catalog LLD-C5)', () => 
     expect(el.textContent).toBe('')
   })
 
-  // The ADR-0078 cl.5 fan-out table (amended, TKT-0082): the wire's ONE `variant` enum (catalog-frozen,
-  // unchanged) translates to the control's three-axis triple (as/variant/size) at apply-time — one row
-  // per wire value. Rows are compact/card-scale (headline/title only, never display) — the catalog's
-  // own mapping choice for a generative-UI surface, shifted one M3 tier down from the original table,
-  // not `ui-text`'s document type scale. Strictly decreasing 28/24/22/16/14px across h1-h5.
+  // The ADR-0078 cl.5 fan-out table (amended, TKT-0082/ADR-0142; widened by ONE member under the GH #808
+  // S1 amendment): the wire's `variant` enum translates to the control's three-axis triple
+  // (as/variant/size) at apply-time — one row per wire value. Rows are compact/card-scale (headline/title
+  // only, never display) — the catalog's own mapping choice for a generative-UI surface, shifted one M3
+  // tier down from the original table, not `ui-text`'s document type scale. Strictly decreasing
+  // 28/24/22/16/14px across h1-h5. `label` (GH #808 S1, catalog SPEC-R4) is a straight pass-through — the
+  // wire register name IS the `ui-text` M3 role name, no translation, unlike every heading row above.
   it.each([
     ['h1', { as: 'h1', variant: 'headline', size: 'md' }],
     ['h2', { as: 'h2', variant: 'headline', size: 'sm' }],
@@ -121,6 +124,7 @@ describe('default catalog factories — Text (ADR-0078, catalog LLD-C5)', () => 
     ['h5', { as: 'h5', variant: 'title', size: 'sm' }],
     ['body', { as: 'none', variant: 'body', size: 'md' }],
     ['caption', { as: 'none', variant: 'body', size: 'sm' }],
+    ['label', { as: 'none', variant: 'label', size: 'md' }],
   ] as const)('wire variant %s fans out to the ui-text triple', (wire, triple) => {
     const el = textFactory.create()
     textFactory.applyProp(el, 'variant', wire)
@@ -147,6 +151,20 @@ describe('default catalog factories — Text (ADR-0078, catalog LLD-C5)', () => 
   it('Text with a {path} binding for text is accepted (bindable: true)', () => {
     const bound: A2uiComponent = { id: 'txt2', component: 'Text', text: { path: '/name' }, variant: 'body' }
     expect(validateCatalogConformance(bound, defaultCatalog)).toEqual([])
+  })
+
+  // SPEC-R4 AC1 (GH #808 S1): the widened enum member validates like every other literal — no new code,
+  // the existing ADR-0098 enum gate already covers an added member for free.
+  it('Text.variant "label" (GH #808 S1) validates — the widened enum member', () => {
+    const labelRow: A2uiComponent = { id: 'txt5', component: 'Text', text: 'Status', variant: 'label' }
+    expect(validateCatalogConformance(labelRow, defaultCatalog)).toEqual([])
+  })
+
+  // SPEC-R4 AC1's negative control: an out-of-enum value still fails CATALOG — the widening added
+  // exactly one member, not an open-ended string.
+  it('NEGATIVE: an out-of-enum Text.variant value still fails CATALOG', () => {
+    const bogus: A2uiComponent = { id: 'txt6', component: 'Text', text: 'x', variant: 'subtitle' }
+    expect(validateCatalogConformance(bogus, defaultCatalog)).toEqual([{ code: 'CATALOG', path: 'txt6.variant' }])
   })
 
   // ADR-0106 — `truncate` is not `text`/`variant`, so it falls to the `default:` arm's `setAttr`, the SAME
@@ -414,6 +432,52 @@ describe('default catalog factories — Icon (ADR-0087 Wave A, ADR-0065/0066)', 
     expect(target.glyph).toBe('caret-down') // the wire field lands on the RENAMED prop
     expect(target.name).toBeUndefined() // and never on a stale `name` expando
     expect(target.label).toBe('Expand')
+  })
+
+  // GH #808 S1 (catalog SPEC-R2): `slot` rides the mapping's default arm onto the native reflecting
+  // `HTMLElement.slot` accessor — zero factory code, verified end-to-end (prop write → attribute
+  // reflection), the SAME platform mechanism `ui-card-header`'s `:has([slot='leading'])` grid reads.
+  it('Icon `slot` (GH #808 S1) reflects onto the native `slot` attribute — zero factory code', () => {
+    const el = iconFactory.create()
+    iconFactory.applyProp(el, 'slot', 'leading')
+    expect(el.slot).toBe('leading')
+    expect(el.getAttribute('slot')).toBe('leading')
+  })
+
+  it('Icon `slot` (GH #808 S1) conformance: enum values pass, an out-of-enum value fails CATALOG', () => {
+    const leading: A2uiComponent = { id: 'ic1', component: 'Icon', name: 'check', slot: 'leading' }
+    expect(validateCatalogConformance(leading, defaultCatalog)).toEqual([])
+    const bogus: A2uiComponent = { id: 'ic2', component: 'Icon', name: 'check', slot: 'center' }
+    expect(validateCatalogConformance(bogus, defaultCatalog)).toEqual([{ code: 'CATALOG', path: 'ic2.slot' }])
+  })
+})
+
+describe('default catalog factories — Badge (SPEC-R11..R13)', () => {
+  it('Badge → ui-badge: label/intent are 1:1 reflecting accessors; not an input (no value bind)', () => {
+    expect(badgeFactory.tag).toBe('ui-badge')
+    expect(badgeFactory.value).toBeUndefined() // a display leaf — no two-way binding
+    const el = badgeFactory.create()
+    badgeFactory.applyProp(el, 'label', 'Confirmed')
+    badgeFactory.applyProp(el, 'intent', 'success')
+    const target = el as unknown as Record<string, unknown>
+    expect(target.label).toBe('Confirmed')
+    expect(target.intent).toBe('success')
+  })
+
+  // GH #808 S1 (catalog SPEC-R2): the SAME zero-factory-code `slot` reflection as Icon, riding plain
+  // `accessorFactory`'s identity `setProp` this time (Badge carries no renamed props).
+  it('Badge `slot` (GH #808 S1) reflects onto the native `slot` attribute — zero factory code', () => {
+    const el = badgeFactory.create()
+    badgeFactory.applyProp(el, 'slot', 'trailing')
+    expect(el.slot).toBe('trailing')
+    expect(el.getAttribute('slot')).toBe('trailing')
+  })
+
+  it('Badge `slot` (GH #808 S1) conformance: enum values pass, an out-of-enum value fails CATALOG', () => {
+    const trailing: A2uiComponent = { id: 'bd1', component: 'Badge', label: 'Done', slot: 'trailing' }
+    expect(validateCatalogConformance(trailing, defaultCatalog)).toEqual([])
+    const bogus: A2uiComponent = { id: 'bd2', component: 'Badge', label: 'Done', slot: 'top' }
+    expect(validateCatalogConformance(bogus, defaultCatalog)).toEqual([{ code: 'CATALOG', path: 'bd2.slot' }])
   })
 })
 

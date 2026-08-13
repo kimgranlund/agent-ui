@@ -9,7 +9,7 @@
 > | **Proposed by** | planner (the design seat) — turning Kim's ratified three-axis model (intent-extract, 2026-07-04) into the buildable contract. The MODEL's forks (the axis split · the M3 role vocabulary + editorial extras · `size` sm/md/lg default md · real-element stamping) are **Kim's decisions, recorded here, not re-opened**; this ADR resolves the six design questions UNDER that model. |
 > | **Ratified by** | Kim (2026-07-04). Both open knobs resolved to **fully M3-canonical 14px**: ① bare `<ui-text>` = body-medium 14px; ② factory `body` → `body/md` 14px (the 2px demo shrink accepted for pure M3 parity). See “Resolved at ratification”. |
 > | **Repairs** | `controls/text/{text.ts,text.css,text.md}` (the three-axis contract) · `@agent-ui/shared` `dimensions.css` + `dimensions.test.ts` (`--ui-type-*` → `--md-sys-typescale-*`) · [`0025-ui-text-display-primitive-type-scale.md`](./0025-ui-text-display-primitive-type-scale.md) (reciprocal partial-supersession note) · [`0074-md-sys-color-token-namespace.md`](./0074-md-sys-color-token-namespace.md) (foreseen `## Amendment` — the namespace split widens to typescale) · [`README.md`](./README.md) (0078 log row; 0025 stale status row → accepted) · `rubrics/component.md` Display lens (the `--ui-type-*` + host-as-content lines repaired now with forward pointers; the C6/C7/C10-Display anchors — type-scale binding, internals-heading, heading-effect residue — REWRITE in the build wave, since they describe the shipped control until then) · `references/geometry.md` *Display* row + `references/dimensional-standard.md` (living type-scale refs) · `CLAUDE.md` naming line · `a2ui-catalog.spec.md` §5.2 `Text` row / SPEC-R3 AC1 · `catalog/default/factories.ts` (`textFactory` fan-out) · `site/pages/text-doc.ts` |
-> | **Supersedes / Superseded by** | **Supersedes ADR-0025 cl.1's prop schema (the one `variant` enum → the three axes — the Display-leaf class itself STANDS), cl.3/cl.3a (the `--ui-type-*` scale), and cl.4 (internals-only heading semantics); amends cl.2 (slotted content STANDS; void-`render()` gains the stamping exception) and cl.5 (catalog `Text` type STANDS; the factory gains the fan-out).** Amends **ADR-0074**’s “two token namespaces, cleanly split” consequence — the `--md-sys-*` namespace now also carries the typescale, exactly the “future decision MAY adopt additional MD3 roles” it anticipated. Relates: **ADR-0006** (host-as-content — the departure is called out in cl.4) · **ADR-0007** (`*`-ramp-vs-`:root`-constant law — the new family follows it) · **ADR-0076** (renderer honors catalog enums — the wire enum is unchanged, so no enforcement delta) · **ADR-0071** (the derived system prompt derives from `catalog.json`, which is unchanged — zero prompt drift). **Extended by ADR-0106** (adds the fourth orthogonal axis, `truncate` — CSS-only single-line ellipsis + an unconditional `title` mirror; the three-axis schema here stands unchanged). **Extended by ADR-0109** (adds the fifth orthogonal axis, `emphasis` — a bold-register `--ui-text-weight` repoint riding the cl.4 reset's inheritance into the stamp; cl.2's M3-verbatim token table explicitly untouched). **Extended by ADR-0114** (adds `"a"` to the `as` axis + a reflected `href` prop — the stamp becomes a real `<a>` under the cl.4 doctrine; the FIRST `as` value arriving with a paired prop, gated by a component-enforced scheme allowlist). **Amended by [ADR-0142](./0142-a2ui-text-heading-compact-scale.md)** (`proposed`, Kim's ratification pending — cl.5's wire→triple table only, shifted one M3 tier down for compact A2UI generative-UI scale; cl.5's other content — the wire vocabulary, the real-heading `as` stamp, `catalog.json` unchanged — stands). |
+> | **Supersedes / Superseded by** | **Supersedes ADR-0025 cl.1's prop schema (the one `variant` enum → the three axes — the Display-leaf class itself STANDS), cl.3/cl.3a (the `--ui-type-*` scale), and cl.4 (internals-only heading semantics); amends cl.2 (slotted content STANDS; void-`render()` gains the stamping exception) and cl.5 (catalog `Text` type STANDS; the factory gains the fan-out).** Amends **ADR-0074**’s “two token namespaces, cleanly split” consequence — the `--md-sys-*` namespace now also carries the typescale, exactly the “future decision MAY adopt additional MD3 roles” it anticipated. Relates: **ADR-0006** (host-as-content — the departure is called out in cl.4) · **ADR-0007** (`*`-ramp-vs-`:root`-constant law — the new family follows it) · **ADR-0076** (renderer honors catalog enums — the wire enum is unchanged, so no enforcement delta) · **ADR-0071** (the derived system prompt derives from `catalog.json`, which is unchanged — zero prompt drift). **Extended by ADR-0106** (adds the fourth orthogonal axis, `truncate` — CSS-only single-line ellipsis + an unconditional `title` mirror; the three-axis schema here stands unchanged). **Extended by ADR-0109** (adds the fifth orthogonal axis, `emphasis` — a bold-register `--ui-text-weight` repoint riding the cl.4 reset's inheritance into the stamp; cl.2's M3-verbatim token table explicitly untouched). **Extended by ADR-0114** (adds `"a"` to the `as` axis + a reflected `href` prop — the stamp becomes a real `<a>` under the cl.4 doctrine; the FIRST `as` value arriving with a paired prop, gated by a component-enforced scheme allowlist). **Amended by [ADR-0142](./0142-a2ui-text-heading-compact-scale.md)** (`accepted`, ratified by Kim 2026-07-18 — cl.5's wire→triple table only, shifted one M3 tier down for compact A2UI generative-UI scale; cl.5's other content — the wire vocabulary, the real-heading `as` stamp, `catalog.json` unchanged — stands · REV 2026-08-13, the mechanical pointer repair per [`a2ui-container-vocabulary.spec.md`](../spec/a2ui-container-vocabulary.spec.md) S1's drive-by booking). **Amended by this record's own `## Amendment` below** (`proposed` — Kim ratifies; GH [#808](https://github.com/kimgranlund/agent-ui/issues/808) S1 — cl.5's "wire vocabulary is UNCHANGED" headline claim, widened by ONE `Text.variant` enum member, `label`; ADR-0142's own table amendment stands untouched). |
 
 ## Context
 
@@ -442,3 +442,54 @@ opposite ("case is left AS-AUTHORED … these labels are proper names") — repa
   a tracking assertion tightened from `> 0.5` to `toBeCloseTo(2.2, 1)` so a slide back to 0.08em reds) ·
   `text.browser.test.ts`'s emphasis leg. The two generated artifacts carrying built `dimensions.css` bytes
   were regenerated (`dogfood-assets.ts`, `theme-provider-built.css`).
+
+## Amendment (2026-08-13, **proposed** — Kim ratifies) — the wire `Text.variant` enum widens by ONE member, `label`: cl.5's "wire vocabulary is UNCHANGED" headline claim no longer holds for this one addition ([GH #808](https://github.com/kimgranlund/agent-ui/issues/808) S1)
+
+> Append-only, and **proposed**: the Status cell reads `accepted` for the record as a whole and stays
+> byte-untouched — agents never flip status (`.claude/hooks/adr-status-guard.py`), and this amendment
+> carries no ratification of its own until Kim gives one. Every accepted section above is unedited.
+> What this amendment re-rules is exactly ONE sentence of cl.5 — "**`catalog.json` — UNCHANGED.** The
+> `Text` row keeps `variant` enum `[h1…h5, caption, body]`" (and cl.5's own opening framing, "A2UI v1.0's
+> `Text` is protocol-fixed … `variant ∈ h1…h5/caption/body`") — for exactly the ONE new member named
+> below. cl.5's OTHER content — the h1…h5/caption/body heading-row mapping (already amended by
+> [ADR-0142](./0142-a2ui-text-heading-compact-scale.md), `accepted`, untouched by this record), the
+> `text → textContent` mapping, the non-bindable/factory-seam translation mechanism, and every other
+> clause of this ADR (cl.1–cl.4, cl.6) — **stand unchanged**. The build that carries this amendment is
+> GH #808's S1 slice (`a2ui-container-vocabulary.spec.md` SPEC-R4).
+
+**What widens, and why.** `a2ui-container-vocabulary.spec.md` SPEC-R4 teaches the label/value row idiom
+— `Row(justify:'between', align:'center')` › `Text(variant:'label', …)` + `Badge(intent:'neutral', …)`
+— the catalog's compact-metrics register for a status/key-value row. `ui-text` already ships a `label`
+M3 role (this ADR's own cl.1 role vocabulary: `display · headline · title · body · label · kicker ·
+overline · quote · lead`), but the A2UI wire enum never exposed it — cl.5 (and, until ratified, ADR-0142)
+map `h1…h5/caption/body` only, so an agent's nearest reachable approximation for a label-metrics row is
+`caption` (`body/sm`), a REGISTER, not a role: `caption` is a size step down from `body`; `label` is a
+DIFFERENT role (`dimensions.css`'s label-medium row — weight 500, not body's 400) built for exactly this
+compact-key-value use. Before this widening that role is reachable from a catalog payload nowhere.
+
+**The amended reading.** `catalog.json`'s `Text.variant` enum gains ONE member, appended:
+`[h1, h2, h3, h4, h5, caption, body, label]`. `factories.ts`'s `TEXT_VARIANT_TABLE` gains one row:
+`label: { as: 'none', variant: 'label', size: 'md' }` — the ONLY row in the table that is a straight
+PASS-THROUGH (the wire register name IS the `ui-text` M3 role name), unlike every heading row above it,
+which each translate through the cl.5/ADR-0142 nearest-row mapping. No component-side change of any
+kind: `ui-text`'s `label` role has shipped since this ADR's own cl.1 (2026-07-04); this amendment only
+makes an EXISTING control capability reachable from a WIRE payload.
+
+**Consequences, recorded.** The derived system-prompt catalog inventory line for `Text.variant` grows by
+one member (`h1|h2|h3|h4|h5|caption|body|label`) — `prompt-equivalence.baseline.json` recaptures in the
+same build (`RECAPTURE_BASELINE=1`, the sanctioned writer) — an intended delta, not scope creep: the
+whole point of the widening is that the catalog inventory now truthfully advertises a role the control
+already has (`prompt-drift.test.ts`'s own literal assertion is an unanchored substring check —
+`toContain`, not `toBe` — so it keeps passing unedited against the widened line). Every existing
+payload/exemplar/fixture using `h1…h5|caption|body` is BYTE-IDENTICAL (an appended enum member changes
+nothing already emitted); the `ADR-0098` enum gate covers the new member for free (no new validator
+code — `SPEC-R4 AC1`).
+
+**If Kim rules against this**, the fallback is exact and named already in the SPEC that books it
+(`a2ui-container-vocabulary.spec.md` §7, first fork row): R4's label/value row idiom teaches `caption`
+instead of `label` — graceful, register-approximate, fidelity drops, no enum/table change to revert
+(none would have shipped).
+
+**Repairs**:
+- on ratification: `a2ui-catalog.spec.md` §5.2's `Text` row (the `h1…h5|caption|body` prose enumeration gains `label`)
+- on ratification: `a2ui-catalog.lld.md`'s `textFactory` description, if it enumerates the wire variant set verbatim
