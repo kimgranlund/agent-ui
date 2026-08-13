@@ -122,6 +122,30 @@ describe('SPEC-R1 — commit-time trigger, zero-reaction table', () => {
     expect(noteTextOf(el)).not.toContain('Updated ')
   })
 
+  // ADR-0178's ratified amendment (GH #696/#821) — the trigger keys on `updated` too, and that is a
+  // DEPENDENCY of this feature, not an extra: an update-only patch (the Foundation rewrite — this flow's
+  // primary write class) leaves `applied` AND `added` empty, so a trigger reading those two alone would fire
+  // ZERO reaction on exactly the change this feature exists to surface. Cross-noted on GH #695, 2026-08-11.
+  it('an UPDATE-ONLY patch still reacts — the Instructions fold washes and the receipt line narrates', async () => {
+    const { el } = mountAdmin({
+      store: personaStore(),
+      authoringStore: personaStore(BUILDER),
+      events: [
+        { kind: 'patch', patch: { entries: { [entriesStoreKey(ENTRY_KINDS.promptSection)]: [{ id: 'foundation', content: 'You are Casey, a concierge.' }] } } },
+        { kind: 'note', note: 'set' },
+      ],
+    })
+    await whenFlushed()
+    stubWide(el)
+    const nav = settingsNavOf(el)
+    nav.selected = 'agent-content' // start the user somewhere else, so the section flip is observable
+    await whenFlushed()
+    await submitAuthoring(el, 'Casey is a concierge')
+    expect(nav.selected).toBe('capabilities-content')
+    expect(washed(el)).toContain(ENTRY_KINDS.promptSection)
+    expect(noteTextOf(el)).toContain('Updated Capabilities › Instructions')
+  })
+
   it('SPEC-R8 AC2: a hand store.set (no patch event) fires nothing', async () => {
     const store = personaStore()
     const { el } = mountAdmin({ store, authoringStore: personaStore(BUILDER) })

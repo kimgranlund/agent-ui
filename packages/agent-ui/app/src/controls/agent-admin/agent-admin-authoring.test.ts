@@ -340,6 +340,83 @@ describe('live pane hydration — the written values reach the real DOM (LLD-C6 
     const skills = el.querySelector('[data-part="entry-section"][data-kind="skill"]') as HTMLElement
     expect(skills.textContent).toContain('Book a table')
   })
+
+  // ── ADR-0178's ratified amendment (GH #696 / GH #821 item 6) — the UPDATE verb, end to end ────────────
+  // The whole reason the verb exists: an authored identity at `order: 0` with ZERO "helpful assistant"
+  // boilerplate. Per-part assertions on the gate module cannot prove that — only the whole composed prompt
+  // and the real rendered card can, so both are asserted here on ONE update-only turn.
+  it('an UPDATE-only patch turn rewrites the Foundation card IN PLACE, and the composed prompt loses the boilerplate', async () => {
+    const draft = personaStore()
+    const builder = personaStore({ [SURFACE_AUTHORING_KEY]: true })
+    const IDENTITY = 'You are Casey, a restaurant concierge for the guests of one hotel.'
+    const { el, requests } = mountAdmin({
+      store: draft,
+      authoringStore: builder,
+      events: [{ kind: 'patch', patch: { entries: { [entriesStoreKey(ENTRY_KINDS.promptSection)]: [{ id: 'foundation', content: IDENTITY }] } } }],
+    })
+    await whenFlushed()
+    await submit(el, 'a restaurant concierge called Casey')
+    await whenFlushed()
+
+    // 1 — the store: replaced in place, still three sections, still the leading one
+    const sections = readEntries(draft, ENTRY_KINDS.promptSection)
+    expect(sections.map((e) => e.id)).toEqual(['foundation', 'personality', 'critical-items'])
+    expect(sections[0]).toMatchObject({ label: 'Foundation', order: 0, builtin: true, content: IDENTITY })
+
+    // 2 — the turn log carries `updated` (this is what an update-only patch reports: `applied`/`added` empty)
+    const response = turnLogOf(el).response as { patch: { applied: string[]; added: Record<string, number>; updated: Record<string, string[]> } }
+    expect(response.patch.updated).toEqual({ [entriesStoreKey(ENTRY_KINDS.promptSection)]: ['foundation'] })
+    expect(response.patch.applied).toEqual([])
+    expect(response.patch.added).toEqual({})
+
+    // 3 — the receipt line still narrates: an update-only patch is not a silent one (SPEC-R7)
+    const authoring = el.querySelector('[data-part="copilot-pane"]') as HTMLElement
+    expect(authoring.textContent).toContain('Updated Capabilities › Instructions')
+
+    // 4 — the real rendered card: the Instructions section's rows are the three builtins in order, and the
+    // FIRST row's own content editor carries the authored text with the placeholder gone. Asserted over the
+    // whole section (every row's label + editor value), not one lucky node — a per-part read here would pass
+    // just as happily on a fourth section appended below three untouched placeholders, which is the exact
+    // shape this amendment exists to make impossible.
+    const instructions = el.querySelector('[data-part="entry-section"][data-kind="prompt-section"]') as HTMLElement
+    const rows = [...instructions.querySelectorAll<HTMLElement>('[data-part="entry"]')].map((row) => ({
+      label: row.querySelector('[data-part="entry-header"]')?.textContent?.trim() ?? row.textContent?.trim() ?? '',
+      content: (row.querySelector('[data-part="entry-content"]') as (HTMLElement & { value?: string }) | null)?.value ?? '',
+    }))
+    expect(rows, 'in place: three rows, never a fourth').toHaveLength(3)
+    expect(rows[0]?.label).toContain('Foundation')
+    expect(rows[0]?.content, 'the leading card IS the authored identity now').toBe(IDENTITY)
+    expect(rows.map((r) => r.content), 'no row anywhere still holds the text nobody authored').not.toContain('You are a helpful assistant.')
+
+    // 5 — and the DRAFT's own composed prompt, read off the next test-chat turn's real request: the authored
+    // identity leads it, with zero boilerplate ahead of the persona (the amendment's whole Consequence)
+    goToPane(el, 'chat')
+    await submit(el, 'hello Casey', 'test')
+    const composed = requests.at(-1)!.personaSystem
+    expect(composed).toContain(IDENTITY)
+    expect(composed, 'no content nobody authored ships ahead of the persona').not.toContain('You are a helpful assistant.')
+    expect(composed.indexOf(IDENTITY), 'the identity leads — order 0').toBeLessThan(composed.indexOf('Be concise and direct.'))
+  })
+
+  it('an update REFUSED by the fence or the gate writes nothing and reports nothing — both polarities hold for the new verb', async () => {
+    const UPDATE = { entries: { [entriesStoreKey(ENTRY_KINDS.promptSection)]: [{ id: 'foundation', content: 'Never lands.' }] } }
+    // gate OFF inside the authoring context
+    const draftA = personaStore()
+    const { el: elA } = mountAdmin({ store: draftA, authoringStore: personaStore(), events: [{ kind: 'patch', patch: UPDATE }] })
+    await whenFlushed()
+    await submit(elA, 'go')
+    expect(readEntries(draftA, ENTRY_KINDS.promptSection)[0]?.content).toBe('You are a helpful assistant.')
+    expect((turnLogOf(elA).response as { patchIgnored?: boolean; patch?: unknown }).patchIgnored).toBe(true)
+    expect((turnLogOf(elA).response as { patch?: unknown }).patch).toBeUndefined()
+
+    // gate ON but outside the authoring context
+    const draftB = personaStore({ [SURFACE_AUTHORING_KEY]: true })
+    const { el: elB } = mountAdmin({ store: draftB, events: [{ kind: 'patch', patch: UPDATE }] })
+    await whenFlushed()
+    await submit(elB, 'rewrite yourself', 'test')
+    expect(readEntries(draftB, ENTRY_KINDS.promptSection)[0]?.content).toBe('You are a helpful assistant.')
+    expect((turnLogOf(elB).response as { patchIgnored?: boolean }).patchIgnored).toBe(true)
+  })
 })
 
 describe('the dual-context scaffold — one draft, two transcripts, zero store swaps (ADR-0178 cl.5 / GH #145)', () => {

@@ -19,9 +19,23 @@
 // inventing a second validation vocabulary, and makes every rejection a DROP (recorded on the turn log,
 // ADR-0178 cl.2's degrade posture) rather than a coercion or an error surface.
 //
-// NO DELETION SEMANTICS exist here, by construction: entries only ever APPEND (SPEC-R29's no-deletion law
-// has no code path to misuse), and values merge per-key whole-value last-writer-wins — the store write IS
-// that semantics.
+// NO DELETION SEMANTICS exist here, by construction: entries APPEND or (ADR-0178's Amendment, ratified
+// 2026-08-13, GH #696) UPDATE a host-seeded builtin prompt section IN PLACE — never remove, never empty, so
+// SPEC-R29's no-deletion law still has no code path to misuse — and values merge per-key whole-value
+// last-writer-wins, where the store write IS that semantics.
+//
+// THE UPDATE CARVE-OUT, and why it is exactly this narrow: cl.2's append-only entries law was derived to
+// protect a USER's own authored entries. Applied uniformly it also froze the three HOST-seeded placeholder
+// sections (`DEFAULT_PROMPT_SECTIONS` — Foundation/Personality/Critical Items), so an authored agent's real
+// identity could only land as a FOURTH section below three unchanged generic placeholders, and
+// `composeSystemPrompt` shipped "You are a helpful assistant." ahead of the persona forever. Content nobody
+// authored was the one thing the flow could never fix. `builtin: true` means NON-DELETABLE only (ADR-0132
+// Fork 4 — `entry-list.ts` withholds the Remove affordance), never immutable: the content editor already
+// mounts for every prompt-section row, so a builtin's content is hand-editable today. The amendment
+// therefore admits a SECOND verb beside APPEND, for that class alone (`updateTargetIndex` below is the whole
+// fence), and pairs it with the concurrency mitigation `name`/`model`/`temperature` already rely on:
+// `draftStateBlock` carries the builtin sections' CURRENT content, so last-writer-wins over a hand-editable
+// field is something the model can actually read before it writes.
 
 import {
   A2UI_CATALOG_KEY,
@@ -50,6 +64,10 @@ import { entriesStoreKey, readEntries, validateNewEntry, type Entry, type NewEnt
 
 /** The six-plus entry-list store keys — one per `ENTRY_KINDS` member, derived, never hand-listed. */
 export const PERSONA_ENTRY_LIST_KEYS: readonly string[] = Object.values(ENTRY_KINDS).map((kind) => entriesStoreKey(kind))
+
+/** The ONE entry list the update verb reaches (ADR-0178's amendment: `kind === 'prompt-section'`), derived
+ *  from the kind rather than spelled as a literal so a kind rename cannot silently widen or void the fence. */
+const PROMPT_SECTION_KEY: string = entriesStoreKey(ENTRY_KINDS.promptSection)
 
 /** Every persona-scoped store key, in a stable order (a Set: `kindEnabledKey('tool')` IS the pre-existing
  *  `toolsEnabled` config key — one key, two readers). Order is the JSON key order of an exported persona
@@ -124,13 +142,27 @@ export function readPersonaState(store: PersonaStateReader | undefined): Record<
  *  edits, which is the whole reason SPEC-R29's merge law is incremental.
  *
  *  Entry lists collapse to their labels: the interviewer needs to know WHICH sections/skills exist, never
- *  their bodies, and a full draft's prompt-section content would dominate the turn's context. */
+ *  their bodies, and a full draft's prompt-section content would dominate the turn's context.
+ *
+ *  ONE bounded exception (ADR-0178's ratified amendment, GH #696 — part of the ruling, not an implementation
+ *  detail): the BUILTIN prompt sections carry their current `content` too. Those are the only entries a patch
+ *  may overwrite, they are hand-editable by the user in the same breath, and last-writer-wins over a field
+ *  the model cannot see is how "the user's hand edit wins — read the state and carry on" stops being
+ *  enforceable. Bounded to exactly those bodies: every other member, including the model's OWN appended
+ *  sections, stays a bare label (the size rationale above is untouched for everything else). */
 export function draftStateBlock(store: PersonaStateReader | undefined): string {
   const state = readPersonaState(store)
   const summary: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(state)) {
     summary[key] = PERSONA_ENTRY_LIST_KEYS.includes(key) && Array.isArray(value)
-      ? value.map((item) => (typeof item === 'object' && item !== null ? ((item as Entry).label ?? '') : String(item)))
+      ? value.map((item) => {
+          if (typeof item !== 'object' || item === null) return String(item)
+          const entry = item as Entry
+          if (key === PROMPT_SECTION_KEY && entry.builtin === true) {
+            return { id: entry.id, label: entry.label ?? '', content: entry.content ?? '' }
+          }
+          return entry.label ?? ''
+        })
       : value
   }
   return `## The draft agent's current configuration\n\nThis is the draft as it stands RIGHT NOW, re-read at the start of every turn (the user may also be hand-editing it between turns). Keys absent here are unset. Steer the interview toward what is still missing, and never re-ask for something already established.\n\n${JSON.stringify(summary, null, 2)}`
@@ -250,6 +282,55 @@ function entryInputFrom(member: unknown): NewEntryInput | undefined {
   }
 }
 
+/** The fields an admitted UPDATE replaces on an existing builtin prompt section. Deliberately two, and
+ *  deliberately not more (ADR-0178's amendment pins the scope): `label` · `order` · `enabled` · `builtin` ·
+ *  `kind` · `id` are NEVER patchable — labels are the settings panes' stable anchors (GH #695 navigates by
+ *  them), `order` is what keeps Foundation leading the composition, and a user's toggle state is the user's. */
+interface EntryUpdateInput {
+  content: string
+  description?: string
+}
+
+/**
+ * Is this member an UPDATE, and of which existing entry? Answers the index into `existing`, or `-1` for
+ * "not an update" — in which case the caller takes TODAY's append path, byte-unchanged.
+ *
+ * THE WHOLE FENCE, in one predicate (ADR-0178's amendment): the list's kind must be `prompt-section`, the
+ * member must carry a string `id`, and that id must name an entry ALREADY in this list that is
+ * `builtin: true`. Every miss falls through to the append path rather than erroring: an id matching a
+ * USER-authored (non-builtin) entry, an id matching nothing, a member with no id at all, and any member of
+ * any other kind are all appends exactly as before — so a user's own entries stay append-protected, and a
+ * persona whose imported store lacks the builtins degrades to an append with that id.
+ *
+ * The `id` is trimmed before matching, for parity with `validateNewEntry`'s own `input.id?.trim()`: the two
+ * paths must agree about what a given wire id names, or the same member could update on one path and mint a
+ * second row on the other.
+ */
+function updateTargetIndex(existing: readonly Entry[], key: string, member: unknown): number {
+  if (key !== PROMPT_SECTION_KEY) return -1
+  if (typeof member !== 'object' || member === null || Array.isArray(member)) return -1
+  const id = (member as Record<string, unknown>)['id']
+  if (typeof id !== 'string') return -1
+  const trimmed = id.trim()
+  if (trimmed === '') return -1
+  return existing.findIndex((entry) => entry.id === trimmed && entry.builtin === true)
+}
+
+/** One proposed UPDATE member → the fields it replaces, or `undefined` when the update is malformed and the
+ *  member must DROP. `content` is REQUIRED and must be non-empty after trim — an emptying update is a
+ *  de-facto deletion of a section the user cannot delete either, so it drops and the no-deletion law stands
+ *  whole. `description` is optional, and a present-but-non-string one drops the WHOLE member (the arm
+ *  validates as a whole, SPEC-R29's own posture for a half-formed shape). Content is stored verbatim and the
+ *  description trimmed — the exact asymmetry `validateNewEntry` already applies on the add path. */
+function updateInputFrom(member: unknown): EntryUpdateInput | undefined {
+  const raw = member as Record<string, unknown>
+  const content = raw['content']
+  if (typeof content !== 'string' || content.trim() === '') return undefined
+  const description = raw['description']
+  if (description !== undefined && typeof description !== 'string') return undefined
+  return { content, ...(typeof description === 'string' ? { description: description.trim() } : {}) }
+}
+
 /** What one applied patch actually did — rides the turn log (never an error surface), so a dropped key is
  *  observable to whoever is debugging the interview without interrupting it (ADR-0178 cl.2). */
 export interface PatchReport {
@@ -257,6 +338,12 @@ export interface PatchReport {
   applied: string[]
   /** Entry-list store key → how many entries were appended. */
   added: Record<string, number>
+  /** Entry-list store key → the ids of the builtin entries UPDATED in place (ADR-0178's amendment). IDS, not
+   *  a count, because an update-only patch is this flow's primary write class — the Foundation rewrite —
+   *  which leaves `applied` AND `added` empty, so every consumer keyed on those two alone would silently miss
+   *  exactly the change the reaction exists to surface (GH #695's trigger; cross-noted there 2026-08-11). The
+   *  ids also give that consumer the section anchor to navigate to. */
+  updated: Record<string, string[]>
   /** Every key or entry that was refused, named for the log (`entries:skill[1]` for a member). */
   dropped: string[]
 }
@@ -273,7 +360,11 @@ export interface PatchReport {
  *   3. `validateNewEntry` — each proposed entry through the IDENTICAL call the pane's own add path makes,
  *      including `{ rejectOnCollision: kind === ENTRY_KINDS.catalog }` (GH #564: a catalog id IS a foreign
  *      key, so a collision is a duplicate, not something to dedup-suffix). Admitted entries APPEND, one
- *      `store.set` per kind — one write, one pane re-render.
+ *      `store.set` per kind — one write, one pane re-render. A member the `updateTargetIndex` fence claims
+ *      (an existing BUILTIN prompt section named by `id`) instead UPDATES that entry's `content`
+ *      (+`description`) in place, accumulating into the SAME single write — ADR-0132 cl.4's
+ *      single-validated-ADD-path law is untouched, because an update is not an add: no id minting, no slug,
+ *      no order assignment, and it never becomes a route around `validateNewEntry` for anything that IS one.
  *
  * CALLER'S DUTY: this function is gate-blind. Whether a patch may be consumed at all — the authoring-context
  * store-identity fence AND the fresh `SURFACE_AUTHORING_KEY` read, conjunctive (Kim's §15 option-(b) ruling)
@@ -284,7 +375,7 @@ export function applyPersonaPatch(
   patch: { values?: Record<string, unknown>; entries?: Record<string, unknown[]> },
   deps: PatchDeps,
 ): PatchReport {
-  const report: PatchReport = { applied: [], added: {}, dropped: [] }
+  const report: PatchReport = { applied: [], added: {}, updated: {}, dropped: [] }
 
   for (const [key, value] of Object.entries(patch.values ?? {})) {
     const admit = ADMISSION.get(key)
@@ -305,26 +396,54 @@ export function applyPersonaPatch(
       report.dropped.push(key)
       continue
     }
-    // `current` accumulates ACROSS this kind's members so a patch proposing two entries with the same
-    // label gets the same id-collision treatment two sequential add-form submissions would.
+    // `next` accumulates ACROSS this kind's members — updates in place, appends pushed — so a patch
+    // proposing two entries with the same label gets the same id-collision treatment two sequential
+    // add-form submissions would, and a mixed update+append patch still lands as ONE `store.set` (one
+    // write, one pane re-render). Updates never change an `id`, so the running array is the same
+    // collision universe `[...current, ...admitted]` was.
     const current: Entry[] = readEntries(store, kind)
-    const admitted: Entry[] = []
+    const next: Entry[] = [...current]
+    const updatedIds: string[] = []
+    let appended = 0
     for (const [index, member] of members.entries()) {
+      // UPDATE is tested FIRST, but only ever claims a member the fence recognizes — everything else falls
+      // through to the byte-unchanged append path below.
+      const target = updateTargetIndex(next, key, member)
+      if (target !== -1) {
+        const update = updateInputFrom(member)
+        if (update === undefined) {
+          report.dropped.push(`${key}[${index}]`)
+          continue
+        }
+        const existing = next[target]!
+        // Replaced fields ONLY: everything else is copied verbatim off the existing entry, so a member that
+        // also carries a `label`/`order`/`enabled` (a model echoing what it read in the draft state) changes
+        // none of them rather than being refused for mentioning them.
+        next[target] = { ...existing, content: update.content, ...(update.description === undefined ? {} : { description: update.description }) }
+        // Repeatable across turns AND within one patch: last writer wins, reported once per id.
+        if (!updatedIds.includes(existing.id)) updatedIds.push(existing.id)
+        continue
+      }
       const input = entryInputFrom(member)
       if (input === undefined) {
         report.dropped.push(`${key}[${index}]`)
         continue
       }
-      const result = validateNewEntry([...current, ...admitted], kind, input, { rejectOnCollision: kind === ENTRY_KINDS.catalog })
+      const result = validateNewEntry(next, kind, input, { rejectOnCollision: kind === ENTRY_KINDS.catalog })
       if (!result.ok) {
         report.dropped.push(`${key}[${index}]`)
         continue
       }
-      admitted.push(result.entry)
+      next.push(result.entry)
+      appended += 1
     }
-    if (admitted.length === 0) continue
-    store.set(key, [...current, ...admitted])
-    report.added[key] = admitted.length
+    if (appended === 0 && updatedIds.length === 0) continue
+    store.set(key, next)
+    // Each sub-record stays ABSENT when its own verb did nothing, so an append-only patch's report is
+    // byte-identical to the one it produced before updates existed, and an update-only patch never claims a
+    // zero-count append that a consumer keyed on `Object.keys(added)` would read as a change.
+    if (appended > 0) report.added[key] = appended
+    if (updatedIds.length > 0) report.updated[key] = updatedIds
   }
 
   return report

@@ -775,6 +775,33 @@ describe('buildSystemPrompt personaPatch teaching — the authoring gate (SPEC-R
     expect(prompt).toMatch(/no way to delete anything with a patch/)
   })
 
+  // ADR-0178's ratified amendment (GH #696, 2026-08-13) — the gate gained a scoped UPDATE verb, so the
+  // teaching that pairs with it lands HERE, in the byte-pinned host-owned half: the generic MECHANICS of how
+  // a replacement is expressed. WHICH ids are replaceable is the generated vocabulary section's job
+  // (cl.1 rule 5's teaching split), which is why the assertions below are shape assertions, not id ones.
+  it('teaches the UPDATE mechanics the gate now admits — in place, content-required, non-patchable fields named', () => {
+    const prompt = buildSystemPrompt(defaultCatalog, [], undefined, undefined, undefined, undefined, undefined, true)
+    expect(prompt).toMatch(/carrying the "id" of an existing BUILT-IN section/)
+    expect(prompt).toMatch(/REPLACES that section's text in place instead of appending/)
+    expect(prompt).toMatch(/keeping its name, its position, and\n?\s*its on\/off state/)
+    // the no-deletion law, restated for the ONE shape that could have become a deletion
+    expect(prompt).toMatch(/a replacement whose "content" is blank is refused/)
+    // and the append protection the amendment deliberately did NOT widen
+    expect(prompt).toMatch(/names an\n?\s*entry the person authored themselves, adds a new entry/)
+  })
+
+  it('the update teaching stays PERSONA-KEY-AGNOSTIC — no builtin id, no key name, reaches it (cl.1 rule 5)', () => {
+    // The teaching is host-owned and byte-pinned; the ids and their purposes are GENERATED persona config
+    // (`vocabularySection`). Naming a builtin id here would be a second, hand-maintained enumeration of the
+    // seed — the exact drift class the generated section exists to prevent.
+    const prompt = buildSystemPrompt(defaultCatalog, [], undefined, undefined, undefined, undefined, undefined, true)
+    const updateParagraph = prompt.split('\n\n').find((p) => p.includes('BUILT-IN section'))
+    expect(updateParagraph, 'the update-mechanics paragraph must exist').toBeDefined()
+    for (const forbidden of ['foundation', 'personality', 'critical-items', 'Foundation', 'Personality', 'Critical Items', 'entries:prompt-section']) {
+      expect(updateParagraph, `the mechanics must not name "${forbidden}" — that is the vocabulary's job`).not.toContain(forbidden)
+    }
+  })
+
   it('none of the teaching leaks into the catalog-derived inventory section', () => {
     const prompt = buildSystemPrompt(defaultCatalog, [], undefined, undefined, undefined, undefined, undefined, true)
     expect(catalogInventoryBody(prompt)).not.toContain('personaPatch')

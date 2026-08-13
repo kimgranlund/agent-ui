@@ -1615,7 +1615,13 @@ export class UIAgentAdminElement extends UIElement {
    * zero (SPEC-R3 step 2's ruling, stated there in full).
    */
   #followChange(report: PatchReport): void {
-    const keys = [...report.applied, ...Object.keys(report.added)] // patch order preserved (SPEC-R6)
+    // ADR-0178's ratified amendment (GH #696) — `updated` is keyed on beside `applied`/`added`, and that is
+    // the amendment's own Consequence, not an extra: an UPDATE-ONLY patch (this flow's primary write class —
+    // the Foundation rewrite) leaves `applied` and `added` both empty, so a trigger reading those two alone
+    // would silently miss exactly the change this reaction exists to surface (cross-noted on GH #695,
+    // 2026-08-11). An updated key is an entry-list store key, so it resolves through the SAME `locationFor`
+    // row `added` does and dedupes against it — no per-verb knowledge enters here.
+    const keys = [...report.applied, ...Object.keys(report.added), ...Object.keys(report.updated)] // patch order preserved (SPEC-R6)
     const locations: FieldLocation[] = []
     for (const key of keys) {
       const location = locationFor(key)
@@ -1719,14 +1725,15 @@ export class UIAgentAdminElement extends UIElement {
   }
 
   /** The receipt line block (SPEC-R7): one `Updated <sectionLabel> › <itemLabel>` line per changed
-   *  location across this turn's consumed patches, deduped by `(section, item)` — collapsed to
+   *  location across this turn's consumed patches — `applied` values, `added` entries, and (ADR-0178's
+   *  ratified amendment) `updated` builtin sections alike — deduped by `(section, item)`, collapsed to
    *  `Updated <sectionLabel>` when the two labels are equal (the Agent tab's own `agent` fold: never the
    *  stuttering `Updated Agent › Agent`). `undefined` when no report changed anything (a dropped-only
    *  patch narrates nothing — dropped keys stay log-only, ADR-0178 cl.2's posture). */
   #patchReceiptFor(reports: readonly PatchReport[]): string | undefined {
     const locations: FieldLocation[] = []
     for (const report of reports) {
-      for (const key of [...report.applied, ...Object.keys(report.added)]) {
+      for (const key of [...report.applied, ...Object.keys(report.added), ...Object.keys(report.updated)]) {
         const location = locationFor(key)
         if (location !== undefined) locations.push(location)
       }
@@ -2951,8 +2958,10 @@ export class UIAgentAdminElement extends UIElement {
           lines: wireLines,
           ...(assetWarning === undefined ? {} : { assetWarning }),
           // ADR-0178 cl.2 — observability without an error surface: what a consumed patch actually wrote
-          // (including every DROP), or the bare fact that one arrived and was refused. Both keys are
-          // absent on a turn that carried no patch, so an ordinary turn's record is unchanged.
+          // (every APPLIED value, every APPENDED list, every builtin section UPDATED in place per ADR-0178's
+          // ratified amendment, and every DROP), or the bare fact that one arrived and was refused. Both keys
+          // are absent on a turn that carried no patch, so an ordinary turn's record is unchanged. The whole
+          // `PatchReport` rides as-is, which is what keeps this record honest as the report grows a verb.
           ...(patchReports.length === 0 ? {} : { patch: patchReports.length === 1 ? patchReports[0] : patchReports }),
           ...(patchIgnored ? { patchIgnored: true } : {}),
         })

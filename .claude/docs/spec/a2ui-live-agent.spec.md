@@ -1,6 +1,25 @@
 # SPEC — A2UI Live-Agent Example (a real LLM emitting A2UI over the wire)
 
-> Status: accepted · v0.15 · 2026-08-12 (v0.14 2026-08-09; v0.13 2026-08-07; v0.12 2026-08-07; v0.11 2026-08-07; v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> Status: accepted · v0.16 · 2026-08-13 (v0.15 2026-08-12; v0.14 2026-08-09; v0.13 2026-08-07; v0.12 2026-08-07; v0.11 2026-08-07; v0.10 2026-08-06; v0.9 2026-08-04; v0.8 2026-07-24; v0.7 2026-07-20; v0.6 2026-07-19; v0.5 2026-07-16; v0.4 2026-07-07; v0.3 2026-07-07; v0.2 2026-07-07; v0.1 2026-07-04; ratified 2026-07-04) · Layer: SPEC (execution contract)
+> v0.16 changelog ([ADR-0178](../adr/0178-agent-authoring-conversational-persona-hydration.md)'s
+> **Amendment**, RATIFIED by Kim 2026-08-13 — the [`ratify ADR-0178 amendment`
+> utterance](https://github.com/kimgranlund/agent-ui/issues/696#issuecomment-5275019730) on GH
+> [#696](https://github.com/kimgranlund/agent-ui/issues/696), executed by `scripts/adr_ratify.py`'s
+> amendment mode; the first two booked Repairs of its tracking issue GH
+> [#821](https://github.com/kimgranlund/agent-ui/issues/821), landing in the SAME change as the build —
+> [`builder-builtin-section-update.lld.md`](../lld/builder-builtin-section-update.lld.md) LLD-C6):
+> docs-only, no requirement/ID/AC shape added or removed. TWO sentences change, both named verbatim by the
+> amendment's own Repairs list. SPEC-R29's merge-law bullet: *"never a replacement of that list"*
+> scope-narrows to NON-BUILTIN members, and the carve-out is pinned beside it — a scoped UPDATE verb for
+> host-seeded `builtin: true` `prompt-section` entries only (`content` required and non-empty-after-trim,
+> `description` optional, `label`/`order`/`enabled`/`builtin`/`kind`/`id` never patchable; whole-field
+> last-writer-wins; the same single per-kind write; every other member appends verbatim as before), plus the
+> draft-state block's bounded widening to those sections' current `content` (the concurrency mitigation the
+> amendment makes part of the ruling). SPEC-R30's teaching bullet gains that exception as generic,
+> persona-key-AGNOSTIC mechanics. The no-deletion law is UNCHANGED and now stated over three shapes (no key
+> removal, no entry removal, no emptying). Everything else in §3.2d — the wire shape, the shallow-validation
+> rule, the persona-key-agnostic producer, the disjointness proof, the byte-identical `AgentTransport.turn`
+> signature, the gate's fail-closed read and conjunctive consumption condition — is byte-untouched.
 > v0.15 changelog ([ADR-0185](../adr/0185-enablement-wire-service-reference-grammar.md), ACCEPTED
 > by Kim 2026-08-12 — the [`ratify ADR-0185`
 > utterance](https://github.com/kimgranlund/agent-ui/pull/786#issuecomment-5269956992); GH
@@ -933,9 +952,23 @@ ride (SPEC-R5's meta-line convention; ADR-0088 §1). Following the `ask`/`plan`-
   wins), a key ABSENT is left untouched, and there is NO deep/partial merge inside a value. Within
   `entries`, each member MUST be a CONTRIBUTION — appended through the host's shipped single validated add
   path (`validateNewEntry`, ADR-0132 cl.4 / ADR-0164), never a replacement of that list — so a patch can
-  never silently delete entries the user already authored. A patch MUST have NO deletion semantics at all
-  in this version (no key removal, no entry removal): removal stays a user action in the panes, which is
-  what keeps a hallucinated patch non-destructive by construction.
+  never silently delete entries the user already authored. **ADR-0178's Amendment (ratified 2026-08-13, GH
+  [#696](https://github.com/kimgranlund/agent-ui/issues/696)) scope-narrows that "never a replacement"
+  sentence to NON-BUILTIN members, and pins the one carve-out beside it:** a member is an UPDATE iff its
+  `id` names an entry ALREADY in that list AND that entry is `builtin: true` AND the list's kind is
+  `prompt-section` — the host-seeded placeholder sections (`DEFAULT_PROMPT_SECTIONS`) nobody authored. An
+  admitted update MUST replace exactly that entry's `content` (REQUIRED; a non-empty-after-trim string — an
+  emptying update is a de-facto deletion and MUST DROP) and MAY replace its `description` (optional string);
+  `label` · `order` · `enabled` · `builtin` · `kind` · `id` MUST NEVER be patchable. Updates are whole-field
+  last-writer-wins and repeatable across turns (the `values` class above, extended to exactly this entry
+  class), and MUST accumulate into the SAME single per-kind store write appends already make. Every OTHER
+  member — non-builtin, non-`prompt-section`, or an `id` matching nothing — MUST keep this sentence's
+  original behavior verbatim: append through `validateNewEntry`, dedup-suffix and all. Because
+  last-writer-wins over a hand-editable field is only safe if the model can SEE the current text, the
+  per-turn draft-state block MUST carry the builtin prompt sections' current `content` (bounded to exactly
+  those bodies — every other entry list stays collapsed to labels). A patch MUST have NO deletion semantics
+  at all in this version (no key removal, no entry removal, no emptying): removal stays a user action in the
+  panes, which is what keeps a hallucinated patch non-destructive by construction.
 - The envelope MUST stay versionless and provably disjoint from `A2uiServerMessage` — the SPEC-R5
   disjointness proof (no `version` key) is UNCHANGED by this addition.
 - `AgentTransport.turn(input): AsyncIterable<string>`'s signature MUST stay BYTE-IDENTICAL — `personaPatch`
@@ -997,7 +1030,14 @@ cl.3)*
 - **The teaching.** With the gate ON, the composed system prompt MUST carry the arm's mechanics teaching:
   the `personaPatch` field's exact shape, that it rides the SAME leading meta-line as `note`, the merge
   law's user-visible consequence (patches are incremental — send only what THIS turn established; never
-  restate the whole persona), and that entries are contributions, never replacements. This teaching MUST
+  restate the whole persona), and that entries are contributions, never replacements — **with the ONE
+  exception ADR-0178's Amendment (ratified 2026-08-13, GH
+  [#696](https://github.com/kimgranlund/agent-ui/issues/696)) admits: the teaching MUST also carry the
+  generic UPDATE mechanics — a member carrying the `id` of an existing BUILT-IN section replaces that
+  section's text in place instead of appending, `content` required and non-empty, `description` optional,
+  everything else about that section untouched, and an emptying replacement refused. That teaching MUST stay
+  persona-key-AGNOSTIC (no builtin id, no store key — WHICH ids are updatable and what each section is for
+  belongs to the generated host-side vocabulary, cl.1 rule 5's teaching split).** This teaching MUST
   be HOST-OWNED, byte-pinned, and drift-gated — NEVER a persona-editable `kind: "prompt-section"` entry
   (ADR-0178 cl.1 rule 5; ADR-0174 cl.6's reasoning verbatim: garbled mechanics teaching is a shape
   `readMetaLine` can shallow-validate but never RECOVER from). It MUST be mode-INVARIANT (byte-identical

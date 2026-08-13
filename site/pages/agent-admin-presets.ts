@@ -905,6 +905,17 @@ function vocabularySection(): Entry {
     .join(', ')
   const values = PERSONA_VALUE_KEYS.map((key) => `- \`${key}\` — ${(PATCHABLE_VALUE_SHAPES[key] ?? '').replace('{roster}', roster)}`).join('\n')
   const entries = PERSONA_ENTRY_LIST_KEYS.map((key) => `- \`${key}\``).join('\n')
+  // ADR-0178's ratified amendment (GH #696) — WHICH sections are replaceable, and what each is for, is
+  // VOCABULARY (the mechanics of how a replacement is expressed stay in the byte-pinned teaching, cl.1
+  // rule 5). Generated from `DEFAULT_PROMPT_SECTIONS` itself: a hand-listed trio would teach an id the
+  // apply gate no longer recognizes the moment the seed changed, which is the exact drift this whole
+  // section is generated to avoid.
+  const builtinSections = DEFAULT_PROMPT_SECTIONS.map((s) => `- \`${s.id}\` — **${s.label}**: ${s.description}`).join('\n')
+  const promptSectionKey = entriesStoreKey(ENTRY_KINDS.promptSection)
+  // The worked example names the LEADING seeded section, read off the seed — never a literal id, and never a
+  // literal fallback id either: an empty string here would REDDEN the drift gate, which is what a broken seed
+  // should do rather than quietly teaching a plausible-looking id the gate would drop.
+  const lead = DEFAULT_PROMPT_SECTIONS[0]
   return {
     id: 'patchable-keys',
     kind: ENTRY_KINDS.promptSection,
@@ -915,9 +926,19 @@ function vocabularySection(): Entry {
       'sending it just wastes the turn.\n\n' +
       `## Single values\n\n${values}\n\n` +
       `## Lists you may APPEND to\n\n${entries}\n\n` +
-      'Each list member is an object with a `label` (required) and optional `description`/`content`. ' +
-      'Appending is the only thing you can do to a list — you can never remove or replace what is ' +
-      'already there, so a user’s own authored entries are safe from you by construction.',
+      'Each list member is an object with a `label` (required) and optional `description`/`content`.\n\n' +
+      `## Built-in sections you may REPLACE\n\n${builtinSections}\n\n` +
+      'The draft starts with these sections already holding generic placeholder text nobody wrote. ' +
+      'Fill them in — that is what makes the agent’s own identity lead its prompt instead of sitting ' +
+      'underneath boilerplate. Send the section’s `id` and the new `content` on the ' +
+      `\`${promptSectionKey}\` list, and it replaces that section’s text in place. For example, writing the ` +
+      `agent’s own role into its ${lead?.label ?? ''} section:\n\n` +
+      `    {"entries":{"${promptSectionKey}":[{"id":"${lead?.id ?? ''}","content":"You are Casey, a restaurant ` +
+      'concierge for the guests of one hotel. You find them a table, book it, and tell them plainly when ' +
+      'you cannot."}]}}\n\n' +
+      'Everything else about lists is unchanged: appending is the only other thing you can do to one, and ' +
+      'you can never remove anything or empty a built-in section. A user’s own authored entries are safe ' +
+      'from you by construction; the placeholder scaffolding the draft ships with is yours to fill in.',
     order: 99, // last — the reference material reads after the craft
     enabled: true,
     builtin: false,
