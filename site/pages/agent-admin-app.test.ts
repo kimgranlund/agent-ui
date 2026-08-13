@@ -504,6 +504,27 @@ describe('Integrations pack ↔ registry parity (GH #49/#567 S6)', () => {
     assertTrioParity(pack.entries, listIntegrations().map(trio) as { id: string; label: string; description: string }[])
   })
 
+  // GH #847 — the reported symptom: the live overlay (any `vite dev` session, unconditional once the
+  // proxy answers `GET /integrations`) used to REPLACE the whole pack, including Weather's own
+  // hand-authored row, with `content: ''` — discarding the served `description` and leaving the
+  // Tools-panel box empty even for an entry whose static fallback carries real prose. ADR-0188 cl.4
+  // fixes it by seeding `content` from the SAME `description` field the wire already serves.
+  it("GH #847: the live override's `content` is seeded from `description`, never a hardcoded '' — the Tools-panel box is never emptied by turning the live overlay on", async () => {
+    const { ADMIN_LIBRARIES, setLiveIntegrations } = await import('./agent-admin-libraries.ts')
+    const { ENTRY_KINDS } = await import('@agent-ui/app')
+    const served = [
+      { id: 'weather', label: 'Weather (Open-Meteo)', description: 'Current conditions + short forecast for a named place. Keyless.' },
+      { id: 'mcp:acme:lookup', label: 'Acme: lookup', description: 'A discovered MCP tool — never hand-mirrored here.' },
+    ]
+    setLiveIntegrations(served)
+    const pack = ADMIN_LIBRARIES[ENTRY_KINDS.tool]!.find((p) => p.id === 'integrations')!
+    for (const row of served) {
+      const entry = pack.entries.find((e) => e.id === row.id)!
+      expect(entry.content, `"${row.id}" box content is non-empty and matches its served description`).toBe(row.description)
+    }
+    setLiveIntegrations(undefined)
+  })
+
   it('a library add mints a store entry keyed to the REGISTRY id, not to the human label', async () => {
     const { INTEGRATION_TOOLS } = await import('./agent-admin-libraries.ts')
     const { validateNewEntry, ENTRY_KINDS } = await import('@agent-ui/app')
