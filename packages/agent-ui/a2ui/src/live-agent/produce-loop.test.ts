@@ -465,12 +465,16 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
   // degrade branch. The feedback now names the component's actual valid property set, so a repeated
   // wrong guess (the #286/#288/#307 live-repro pattern) has a concrete alternative to act on.
   it('GH #397: an unknown-property CATALOG miss teaches the component\'s actual valid properties', async () => {
+    // CardContent nested under a Card (a2ui-container-vocabulary SPEC-R6's CONTAINMENT rule, S2): the
+    // GH #397 repro is specifically about the unknown-property `gap` miss, so the fixture keeps
+    // CardContent properly contained rather than exercising containment here (that has its own coverage
+    // in renderer/validate.test.ts + the conformance pack).
     const INVALID_CARDCONTENT_GAP =
       '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}\n' +
-      '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"root","component":"CardContent","gap":"sm"}]}}'
+      '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"root","component":"Card","children":["content"]},{"id":"content","component":"CardContent","gap":"sm"}]}}'
     const VALID_CARDCONTENT =
       '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}\n' +
-      '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"root","component":"CardContent","scrollable":true}]}}'
+      '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"root","component":"Card","children":["content"]},{"id":"content","component":"CardContent","scrollable":true}]}}'
     const { provider, calls, reqs } = stubProvider([INVALID_CARDCONTENT_GAP, VALID_CARDCONTENT])
     const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
     const lines: string[] = []
@@ -479,7 +483,7 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
     expect(calls()).toBe(2)
     const round2 = reqs()[1]!.messages
     const feedback = round2.find((m) => m.role === 'user' && /INVALID/.test(m.content))!
-    expect(feedback.content).toMatch(/CATALOG at root\.gap \(CardContent has no "gap" property; valid properties: scrollable\)/)
+    expect(feedback.content).toMatch(/CATALOG at content\.gap \(CardContent has no "gap" property; valid properties: scrollable\)/)
   })
 
   // GH #307 investigation — a PARSE failure (assembleFromRaw's per-line split handed an unparseable

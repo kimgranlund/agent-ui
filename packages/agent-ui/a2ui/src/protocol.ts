@@ -7,13 +7,17 @@
 // import cycle while keeping one definition of the wire types.
 
 /**
- * Internal error codes — the rich 9-code diagnostic taxonomy used by the renderer, validator, and
+ * Internal error codes — the rich 10-code diagnostic taxonomy used by the renderer, validator, and
  * corpus subsystems (SPEC-N6 parity). NOT the wire codes: these are mapped to `WireErrorCode` at the
  * single client→server boundary (`renderer.ts #emitInternalError → toWireError`, ADR-0031 clause 2).
  * The internal codes are kept for the validator's fine-grained `Failure` (corpus admission distinguishes
  * SCHEMA vs IDGRAPH; collapsing to two codes would gut that diagnostic — see ADR-0031 Alternatives A).
- * `DEPTH_EXCEEDED` (SPEC-R2/GH #473, a2ui-runtime SPEC-R15) joined the 8-code set this wave — a
+ * `DEPTH_EXCEEDED` (SPEC-R2/GH #473, a2ui-runtime SPEC-R15) joined the 8-code set 2026-08 — a
  * graph-shape rejection, mapped to the `E_IDGRAPH` corpus family alongside `IDGRAPH` (`corpus/admit.ts`).
+ * `CONTAINMENT` (a2ui-container-vocabulary SPEC-R6) is the newest member — a `CardHeader`/`CardContent`/
+ * `CardFooter` node whose id-graph parent is not a `Card`; also a graph-shape rejection, mapped to the
+ * SAME `E_IDGRAPH` family (`corpus/admit.ts`), for the same reason `DEPTH_EXCEEDED` is: it judges the
+ * assembled adjacency list, not a single component's catalog conformance.
  */
 export type ErrorCode =
   | 'PARSE'
@@ -25,6 +29,7 @@ export type ErrorCode =
   | 'VERSION_UNSUPPORTED'
   | 'FUNCTION'
   | 'DEPTH_EXCEEDED'
+  | 'CONTAINMENT'
 
 /**
  * The render-depth cap (a2ui-runtime SPEC-R15, GH #473, ecosystem SPEC-R2): the maximum root-reachable
@@ -67,23 +72,23 @@ export type A2uiWireError =
 
 /**
  * Map one internal `A2uiError` to the v1.0 wire shape (`A2uiWireError`, ADR-0031 clause 2/3/4).
- * ALL 9 internal codes → `VALIDATION_FAILED` + `surfaceId` this wave (the flow-grounded resolution,
+ * ALL 10 internal codes → `VALIDATION_FAILED` + `surfaceId` this wave (the flow-grounded resolution,
  * ADR-0031 clause 2): every error we emit is a message-validation failure — `FUNCTION` included (our
  * `FUNCTION` emits are render-time binding-evaluation failures, exactly parallel to `CATALOG`, not the
- * spec's server-initiated function-call rejections); `DEPTH_EXCEEDED` (SPEC-R2/GH #473) is the newest
- * member, a graph-shape rejection exactly parallel to `IDGRAPH`. A present `path` is FOLDED into
- * `message` ("… (at <path>)") so the locus survives for the server — then dropped (v1.0 wire: no
- * `path`). `INVALID_FUNCTION_CALL` is modeled by `A2uiWireError` (forward-ready for #23) but NOT
- * emitted this wave — it requires a `functionCallId` tied to a server-initiated call path the repo
- * does not have.
+ * spec's server-initiated function-call rejections); `DEPTH_EXCEEDED` (SPEC-R2/GH #473) and
+ * `CONTAINMENT` (a2ui-container-vocabulary SPEC-R6) are both graph-shape rejections exactly parallel to
+ * `IDGRAPH`. A present `path` is FOLDED into `message` ("… (at <path>)") so the locus survives for the
+ * server — then dropped (v1.0 wire: no `path`). `INVALID_FUNCTION_CALL` is modeled by `A2uiWireError`
+ * (forward-ready for #23) but NOT emitted this wave — it requires a `functionCallId` tied to a
+ * server-initiated call path the repo does not have.
  */
 export function toWireError(e: A2uiError): A2uiWireError {
   // Fold the internal path locus into the free-form message (ADR-0031 clause 4: no path on the wire).
   const message = e.path !== undefined ? `${e.message} (at ${e.path})` : e.message
-  // All 9 internal codes → VALIDATION_FAILED + surfaceId. FUNCTION included: our render-time
+  // All 10 internal codes → VALIDATION_FAILED + surfaceId. FUNCTION included: our render-time
   // binding-eval errors are message-validation failures (CATALOG parallel), not server-initiated calls.
-  // VERSION_UNSUPPORTED / CATALOG_UNKNOWN / DEPTH_EXCEEDED also map here — the two-code enum offers no
-  // third bucket.
+  // VERSION_UNSUPPORTED / CATALOG_UNKNOWN / DEPTH_EXCEEDED / CONTAINMENT also map here — the two-code
+  // enum offers no third bucket.
   return { code: 'VALIDATION_FAILED', surfaceId: e.surfaceId ?? '', message }
 }
 

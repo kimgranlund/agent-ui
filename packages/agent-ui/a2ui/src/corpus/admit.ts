@@ -223,6 +223,8 @@ function mapTier1Code(code: ErrorCode): AdmitCode {
       return 'E_CATALOG'
     case 'IDGRAPH':
     case 'DEPTH_EXCEEDED': // SPEC-R2/GH #473 — a graph-shape rejection, the E_IDGRAPH family (not E_SCHEMA)
+    case 'CONTAINMENT': // a2ui-container-vocabulary SPEC-R6 — same family, same reason: it judges the
+      // assembled adjacency list (a region's parent), not a single component's catalog conformance.
       return 'E_IDGRAPH'
     case 'POINTER':
       return 'E_POINTER'

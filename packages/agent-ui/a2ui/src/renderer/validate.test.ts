@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { validateA2ui, type ValidationVerdict } from './validate.ts'
 import { demoCatalog } from '../fixtures.ts'
+import { defaultCatalog } from '../catalog/default/index.ts'
 
 const codes = (v: ValidationVerdict): string[] => v.failures.map((f) => f.code)
 
@@ -172,6 +173,81 @@ describe('validateA2ui (renderer LLD-C11, SPEC-R11)', () => {
       v = validateA2ui([{ version: 'v1.0', updateComponents: { surfaceId: 's', components } }], demoCatalog)
     }).not.toThrow()
     expect(v!.failures).toContainEqual({ code: 'DEPTH_EXCEEDED', path: 's:depth' })
+  })
+
+  // — CONTAINMENT (a2ui-container-vocabulary SPEC-R6) — uses defaultCatalog (demoCatalog declares no
+  // CardHeader/CardContent/CardFooter): a region is only meaningful as a direct child of a Card.
+  it('CONTAINMENT: a CardHeader delivered as a direct child of a Column (not a Card)', () => {
+    const v = validateA2ui(
+      [
+        {
+          version: 'v1.0',
+          updateComponents: {
+            surfaceId: 's',
+            components: [
+              { id: 'root', component: 'Column', children: ['stray-header'] },
+              { id: 'stray-header', component: 'CardHeader', children: ['title'] },
+              { id: 'title', component: 'Text', variant: 'body', text: 'not really a header' },
+            ],
+          },
+        },
+      ],
+      defaultCatalog,
+    )
+    expect(v.failures).toContainEqual({ code: 'CONTAINMENT', path: 'stray-header' })
+  })
+  it('CONTAINMENT: a CardContent delivered as the surface root (no parent at all)', () => {
+    const v = validateA2ui(
+      [{ version: 'v1.0', updateComponents: { surfaceId: 's', components: [{ id: 'root', component: 'CardContent' }] } }],
+      defaultCatalog,
+    )
+    expect(v.failures).toContainEqual({ code: 'CONTAINMENT', path: 'root' })
+  })
+  it('CONTAINMENT: CardHeader/CardContent/CardFooter each a DIRECT child of Card — accepted', () => {
+    const v = validateA2ui(
+      [
+        {
+          version: 'v1.0',
+          updateComponents: {
+            surfaceId: 's',
+            components: [
+              { id: 'root', component: 'Card', elevation: '1', children: ['hdr', 'body', 'ftr'] },
+              { id: 'hdr', component: 'CardHeader', children: [] },
+              { id: 'body', component: 'CardContent', children: [] },
+              { id: 'ftr', component: 'CardFooter', children: [] },
+            ],
+          },
+        },
+      ],
+      defaultCatalog,
+    )
+    expect(codes(v)).not.toContain('CONTAINMENT')
+  })
+  it('CONTAINMENT: a stray CardFooter nested two levels down (Card > Column > CardFooter) still fails — only a DIRECT child of Card qualifies', () => {
+    const v = validateA2ui(
+      [
+        {
+          version: 'v1.0',
+          updateComponents: {
+            surfaceId: 's',
+            components: [
+              { id: 'root', component: 'Card', children: ['col'] },
+              { id: 'col', component: 'Column', children: ['ftr'] },
+              { id: 'ftr', component: 'CardFooter', children: [] },
+            ],
+          },
+        },
+      ],
+      defaultCatalog,
+    )
+    expect(v.failures).toContainEqual({ code: 'CONTAINMENT', path: 'ftr' })
+  })
+  it('does NOT flag a plain Card with no region children at all (ADR-0056 humane default)', () => {
+    const v = validateA2ui(
+      [{ version: 'v1.0', updateComponents: { surfaceId: 's', components: [{ id: 'root', component: 'Card', children: [] }] } }],
+      defaultCatalog,
+    )
+    expect(codes(v)).not.toContain('CONTAINMENT')
   })
 
   // — POINTER —
