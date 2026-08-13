@@ -54,14 +54,21 @@ function enumOf(def: ComponentDef | undefined, prop: string): readonly string[] 
 }
 
 /**
- * Should this (already-resolved) LITERAL value be applied for `prop`? An unconstrained prop always
- * applies; an enum-constrained prop applies ONLY if the value is a declared member. Nothing upstream
- * enforces catalog enum MEMBERSHIP — the wire validator checks a prop's type/shape, and the control's
- * property setter stores a value verbatim (only the ATTRIBUTE path runs the enum codec) — so an agent
- * can emit a value the enum forbids (e.g. `align="center"` on a `ui-column`, whose enum drops `center`).
- * Such a value is already visually INERT (the control's CSS repoints only on declared members) but, if
- * applied, lingers as a stray DOM attribute. Skipping it at the catalog boundary keeps the rendered DOM
- * faithful to the catalog — the single source of truth for what a prop may be.
+ * Should this (already-resolved) VALUE be applied for `prop`? An unconstrained prop always applies;
+ * an enum-constrained prop applies ONLY if the value is a declared member. This is the SECOND line
+ * of defense, not the only one: `conformance.ts`'s shipped ADR-0098 clause already rejects a
+ * non-member LITERAL with a `CATALOG` failure at validate-then-stream time, before a payload ever
+ * reaches widget resolution — so a static literal getting here has already passed that gate and this
+ * check is redundant-but-cheap for it. What ADR-0098 does NOT (and structurally cannot) cover is a
+ * `{path}`-BOUND value on a `bindable: true` enum prop (e.g. `CardHeader.format`, SPEC-R1): a binding
+ * is deferred resolution (ADR-0026), so its eventual value is unknowable at static-validation time —
+ * `matchesType` accepts the binding object outright and defers. THIS gate is what enforces membership
+ * for that arm, re-run on every resolution (`bindProp`'s effect, below) — a bound value that resolves
+ * to a non-member is skipped here, never applied, exactly like a stray static literal would be if it
+ * ever reached this deep (a bypassed/legacy payload, or the pre-ADR-0098 shape). Such a value is
+ * already visually INERT if applied (the control's CSS repoints only on declared members) but would
+ * linger as a stray DOM attribute — skipping it here keeps the rendered DOM faithful to the catalog,
+ * the single source of truth for what a prop may be.
  */
 function applies(members: readonly string[] | undefined, value: unknown): boolean {
   return members === undefined || members.includes(value as string)

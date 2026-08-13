@@ -155,7 +155,9 @@
     },
 
     "CardHeader": {
-      "properties": {},
+      "properties": {
+        "format": { "type": { "type": "string", "enum": ["default", "structured"] }, "bindable": true, "mapsTo": "format" }
+      },
       "children": "ChildList"
     },
 

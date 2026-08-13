@@ -304,6 +304,19 @@ describe('default catalog — G9 container declarations (SPEC-R3/R4/R8)', () => 
     expect(defaultCatalog.components.CardContent.properties.scrollable?.mapsTo).toBe('scrollable')
   })
 
+  it('CardHeader.format (SPEC-R1) is a bindable enum mark, `default`|`structured`, mapsTo format — CardFooter does NOT advertise it (prompt-inventory economy, ADR-0071)', () => {
+    // Kim ruled 2026-08-13 (GH #808) that the mark ships PATH-BINDABLE: a card may flip structured at
+    // runtime from data-model state — bindable:true, not the SPEC's own superseded v0.2 (non-bindable)
+    // reading. `ui-card-footer` accepts the `format` ATTRIBUTE for family symmetry (ADR-0186) but the
+    // catalog never advertises a mark with no agent use case — CardFooter carries no `format` PropDef.
+    const asRecord = (schema: unknown): Record<string, unknown> => (typeof schema === 'object' && schema !== null ? schema as Record<string, unknown> : {})
+    const format = defaultCatalog.components.CardHeader.properties.format
+    expect(format?.mapsTo).toBe('format')
+    expect(format?.bindable).toBe(true)
+    expect(asRecord(format?.type).enum).toEqual(['default', 'structured'])
+    expect(defaultCatalog.components.CardFooter.properties.format).toBeUndefined()
+  })
+
   it('Tabs is two-way bound on selected via the select event; Tab/TabPanel are ChildList sub-types', () => {
     const tabs = defaultCatalog.components.Tabs
     expect(tabs.value).toEqual({ prop: 'selected', event: 'select' }) // ADR-0019 cl.2
@@ -364,6 +377,18 @@ describe('default catalog — conformance (SPEC-R7/R9)', () => {
     const modal: A2uiComponent = { id: 'md', component: 'Modal', open: { path: '/shown' } }
     expect(validateCatalogConformance(tabs, defaultCatalog)).toEqual([])
     expect(validateCatalogConformance(modal, defaultCatalog)).toEqual([])
+  })
+
+  it('CardHeader.format (SPEC-R1): a declared literal member conforms, an out-of-enum literal fails CATALOG, and a {path} binding is ACCEPTED — deferred resolution, ADR-0026 (the bound arm the static ADR-0098 gate cannot see; enforced instead at render, widget.test.ts)', () => {
+    const structured: A2uiComponent = { id: 'hd', component: 'CardHeader', format: 'structured' }
+    const literal: A2uiComponent = { id: 'hd', component: 'CardHeader', format: 'default' }
+    const badLiteral: A2uiComponent = { id: 'hd', component: 'CardHeader', format: 'fancy' }
+    const bound: A2uiComponent = { id: 'hd', component: 'CardHeader', format: { path: '/headerFormat' } }
+
+    expect(validateCatalogConformance(structured, defaultCatalog)).toEqual([])
+    expect(validateCatalogConformance(literal, defaultCatalog)).toEqual([])
+    expect(validateCatalogConformance(badLiteral, defaultCatalog)).toEqual([{ code: 'CATALOG', path: 'hd.format' }])
+    expect(validateCatalogConformance(bound, defaultCatalog)).toEqual([])
   })
 
   it('NEGATIVE: a malformed Modal payload FAILS conformance with CATALOG (security allowlist, SPEC-R9)', () => {
