@@ -23,6 +23,18 @@
 // the renderer host (LLD-C13) MUST call this at FINALIZE granularity — never per incremental
 // `updateComponents`. A 2nd `root` and a cycle are always invalid. The corpus passes a complete
 // `a2uiOutput`, so both callers judge the same set → identical verdict (N6).
+//
+// ADR-0187 / GH #829 — the FINALIZE SIGNAL (`opts.atFinalize`). One fact this function cannot know
+// from its input alone: *is more content still coming?* A `createSurface` with zero
+// `updateComponents` is BYTE-IDENTICAL as "a legitimate mid-stream prefix" and as "an abandoned,
+// permanently-empty surface" — and the ratified prefix laws (message-lifecycle SPEC-R4 AC1,
+// live-agent SPEC-R5 AC1) require every prefix to validate 0-failure. Only the CALLER holds the
+// missing fact, so it is passed in explicitly: `atFinalize: true` asserts "this payload is
+// COMPLETE", unlocking the finalize-only empty-surface judgment below. Absent/false = byte-identical
+// to the pre-ADR-0187 validator (the falsifiable regression contract; see `validate.test.ts`'s
+// default-mode block and both prefix suites). Opted in by `renderer.ts#finalizeSurface`,
+// `produce.ts`'s per-round verdict, `corpus/admit.ts` stage 5 and `tools/harness/validate-payload.ts`
+// (ADR-0187 §4 / LLD §4); the conformance runner opts in PER FIXTURE, everything else stays default.
 
 import { SUPPORTED_VERSIONS, MAX_RENDER_DEPTH } from '../protocol.ts'
 import type { A2uiComponent, Failure } from '../protocol.ts'
@@ -63,16 +75,31 @@ export interface SurfaceSeed {
   rootDelivered: boolean
 }
 
+/**
+ * ADR-0187 / GH #829 — the caller's finalize assertion. An options BAG, not a bare boolean 4th
+ * parameter, so a future finalize-adjacent knob extends this interface instead of minting param #5.
+ */
+export interface ValidateA2uiOptions {
+  /** TRUE = the caller asserts this payload is COMPLETE — nothing more is coming for it. Unlocks the
+   *  finalize-only judgment: a surface created (or touched) with an EMPTY merged component set fails
+   *  IDGRAPH `${sid}:root-missing` (the EXISTING missing-root class, judged at a new granularity — no
+   *  new failure code, no wire widening; ADR-0187 §3 / LLD §5). Absent/false = byte-identical to the
+   *  pre-ADR-0187 validator, for every caller, test and fixture. */
+  atFinalize?: boolean
+}
+
 /** Validate a single A2UI message or a full message stream against a catalog. Never throws.
  *  `sessionSeed` (optional, TKT-0081) merges prior-turn graphs per surfaceId into the id-graph judgment —
- *  absent, behavior is byte-identical to before. */
+ *  absent, behavior is byte-identical to before.
+ *  `opts.atFinalize` (optional, ADR-0187) asserts the payload is complete — see the module header. */
 export function validateA2ui(
   msgOrOutput: unknown,
   catalog: Catalog,
   sessionSeed?: ReadonlyMap<string, SurfaceSeed>,
+  opts?: ValidateA2uiOptions,
 ): ValidationVerdict {
   try {
-    return run(msgOrOutput, catalog, sessionSeed)
+    return run(msgOrOutput, catalog, sessionSeed, opts?.atFinalize === true)
   } catch {
     // Totality safety net: any unforeseen input still yields a verdict, never a throw (LLD-C11).
     return { valid: false, failures: [{ code: 'SCHEMA', path: '' }] }
@@ -84,7 +111,12 @@ interface SurfaceGraph {
   byId: Map<string, A2uiComponent> // merged (upsert) view for dangling/cycle checks
 }
 
-function run(input: unknown, catalog: Catalog, sessionSeed?: ReadonlyMap<string, SurfaceSeed>): ValidationVerdict {
+function run(
+  input: unknown,
+  catalog: Catalog,
+  sessionSeed: ReadonlyMap<string, SurfaceSeed> | undefined,
+  atFinalize: boolean,
+): ValidationVerdict {
   const failures: Failure[] = []
 
   // Stage 1 — MIME/shape. A raw string is parsed first (PARSE on failure); the payload normalizes
@@ -103,12 +135,7 @@ function run(input: unknown, catalog: Catalog, sessionSeed?: ReadonlyMap<string,
   if (sessionSeed !== undefined) {
     // A payload that itself (re-)creates a surface starts that surface FRESH — its seed must not apply
     // (a legitimate delete+create re-delivery of `root` is not a resend).
-    const createdHere = new Set(
-      norm.messages
-        .filter((m): m is { createSurface: { surfaceId?: unknown } } => isObject(m) && isObject(m.createSurface))
-        .map((m) => m.createSurface.surfaceId)
-        .filter((id): id is string => typeof id === 'string'),
-    )
+    const createdHere = surfaceIdsOf(norm.messages, 'createSurface')
     for (const [sid, g] of surfaces) {
       const seed = sessionSeed.get(sid)
       if (seed === undefined || createdHere.has(sid)) continue
@@ -117,8 +144,15 @@ function run(input: unknown, catalog: Catalog, sessionSeed?: ReadonlyMap<string,
     }
   }
 
-  // Stage 4 — id-graph, per surface that delivered components.
-  for (const [sid, g] of surfaces) checkIdGraph(sid, g, failures)
+  // ADR-0187 / LLD §3 mechanic 4 — the ONE new edge the finalize arm needs: a payload that
+  // `createSurface`s AND `deleteSurface`s the same sid leaves nothing mounted, so nothing was
+  // abandoned. Built ONLY in finalize mode (the emptiness arm is its sole consumer — a dangling-ref
+  // set followed by a delete still fails today's checks in both modes, untouched).
+  const deletedHere = atFinalize ? surfaceIdsOf(norm.messages, 'deleteSurface') : NO_SURFACE_IDS
+
+  // Stage 4 — id-graph, per surface that delivered components (and, in finalize mode, per surface
+  // this payload merely CREATED — an empty one is then the abandoned-surface defect, ADR-0187).
+  for (const [sid, g] of surfaces) checkIdGraph(sid, g, failures, atFinalize && !deletedHere.has(sid))
 
   // Stage 4b — containment (a2ui-container-vocabulary SPEC-R6), on the SAME assembled (post-seed-merge)
   // graph id-graph judged above — a region's parent is only knowable once every delivery is merged.
@@ -169,6 +203,15 @@ function validateMessage(
     case 'createSurface':
       requireStr(body, 'surfaceId', `${loc}.createSurface`, failures)
       requireStr(body, 'catalogId', `${loc}.createSurface`, failures)
+      // ADR-0187 §3 clause 2 / GH #829 root cause — REGISTER the created surface into the judged set.
+      // Before this, `createSurface` was the only surface-bearing kind that never called `surfaceOf`, so
+      // a surface created and never given any `updateComponents` was INVISIBLE to the id-graph stage —
+      // not merely exempted by `checkIdGraph`'s empty-set early return, never even visited. Gated on
+      // `surfaceId` being a string so a SCHEMA-invalid line (flagged just above) isn't double-flagged.
+      // BEHAVIOR-NEUTRAL ALONE: with the empty-set early returns intact for default mode, an empty graph
+      // still yields no failure from `checkIdGraph`/`checkContainment`, and the TKT-0081 seed loop skips
+      // every `createdHere` sid — so only a caller passing `atFinalize` sees any difference.
+      if (typeof body.surfaceId === 'string') surfaceOf(surfaces, body.surfaceId)
       return
     case 'updateComponents':
       return validateUpdateComponents(body, loc, catalog, failures, surfaces)
@@ -230,8 +273,14 @@ function validateUpdateComponents(
   })
 }
 
-function checkIdGraph(sid: string, g: SurfaceGraph, failures: Failure[]): void {
-  if (g.byId.size === 0) return
+function checkIdGraph(sid: string, g: SurfaceGraph, failures: Failure[], atFinalize: boolean): void {
+  // ADR-0187 / LLD §3 mechanic 3 — the finalize arm. An EMPTY merged set is a legal transient
+  // mid-stream state (SPEC-R4: content may still be coming), so default mode keeps exempting it. In
+  // FINALIZE mode the caller has asserted nothing more is coming, so an empty set instead falls
+  // through to the `rootCount === 0` judgment below and emits the EXISTING `${sid}:root-missing` — the
+  // abandoned-createSurface defect (GH #829/#802), at the one granularity where it is decidable.
+  // (The dangling/depth/cycle checks below are all vacuous over an empty set — no new code needed.)
+  if (g.byId.size === 0 && !atFinalize) return
 
   // EXACTLY one root, on this COMPLETE set (renderer LLD §8/§9). Missing-root and 2nd-root both fail;
   // both are finalize-only judgments — a transient rootless set mid-stream is legal (SPEC-R4), which
@@ -381,6 +430,27 @@ const isObject = (v: unknown): v is Record<string, unknown> =>
 
 const isBinding = (v: unknown): v is { path: string } =>
   isObject(v) && typeof (v as { path?: unknown }).path === 'string'
+
+/** The zero-allocation stand-in for `deletedHere` in DEFAULT mode — the emptiness arm that consults it
+ *  is finalize-only, so default mode never needs the set built (ADR-0187). */
+const NO_SURFACE_IDS: ReadonlySet<string> = new Set<string>()
+
+/**
+ * Every string `surfaceId` this payload names under one envelope kind — the shared construction behind
+ * TKT-0081's `createdHere` (seed-merge skip) and ADR-0187's `deletedHere` (finalize emptiness skip).
+ * Both want the same thing: "which surfaces did THIS payload itself create / delete?" Set membership
+ * only — deliberately order-INSENSITIVE, matching the ruled semantics of each caller (a create and a
+ * delete of one sid in one payload leaves nothing mounted regardless of their order).
+ */
+function surfaceIdsOf(messages: readonly unknown[], kind: 'createSurface' | 'deleteSurface'): ReadonlySet<string> {
+  const out = new Set<string>()
+  for (const m of messages) {
+    if (!isObject(m)) continue
+    const body = m[kind]
+    if (isObject(body) && typeof body.surfaceId === 'string') out.add(body.surfaceId)
+  }
+  return out
+}
 
 function surfaceOf(surfaces: Map<string, SurfaceGraph>, sid: string): SurfaceGraph {
   let g = surfaces.get(sid)

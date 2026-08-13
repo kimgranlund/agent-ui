@@ -5,4 +5,4 @@
 // runtime SPEC-N6 / corpus SPEC-N1). This thin adapter closes the corpus LLD step-3 import TODO;
 // the rest of the admission pipeline (record/canonical/dedup/admit/heal) lands with the corpus work.
 export { validateA2ui } from '../renderer/validate.ts'
-export type { ValidationVerdict } from '../renderer/validate.ts'
+export type { ValidationVerdict, ValidateA2uiOptions } from '../renderer/validate.ts'
