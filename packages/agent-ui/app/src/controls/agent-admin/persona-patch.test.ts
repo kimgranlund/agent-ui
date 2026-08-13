@@ -22,7 +22,7 @@ import {
   kindEnabledKey,
   modelRoster,
 } from './agent-admin-schema.ts'
-import { ENTRY_KINDS, initialEntryValues } from './entries.ts'
+import { DEFAULT_PROMPT_SECTIONS, ENTRY_KINDS, initialEntryValues } from './entries.ts'
 import { entriesStoreKey, readEntries } from '../entry-list/entry-data.ts'
 import {
   PERSONA_ENTRY_LIST_KEYS,
@@ -276,11 +276,196 @@ describe('the merge law + the report (SPEC-R29 / ADR-0178 cl.2)', () => {
       { values: { name: 'Concierge', model: 'nope', mystery: 1 }, entries: { [key]: [{ label: 'Greet' }], 'entries:ghost': [{ label: 'x' }] } },
       deps,
     )
-    expect(report).toEqual({ applied: ['name'], added: { [key]: 1 }, dropped: ['model', 'mystery', 'entries:ghost'] })
+    expect(report).toEqual({ applied: ['name'], added: { [key]: 1 }, updated: {}, dropped: ['model', 'mystery', 'entries:ghost'] })
   })
 
   it('an empty patch is a no-op with an empty report', () => {
-    expect(applyPersonaPatch(freshStore(), {}, deps)).toEqual({ applied: [], added: {}, dropped: [] })
+    expect(applyPersonaPatch(freshStore(), {}, deps)).toEqual({ applied: [], added: {}, updated: {}, dropped: [] })
+  })
+})
+
+// ── the UPDATE verb — ADR-0178's ratified amendment (GH #696), `builder-builtin-section-update.lld.md` ────
+// The property under test is the FENCE, in both polarities: a host-seeded BUILTIN prompt section is
+// replaceable in place, and everything else on either side of that line still behaves exactly as it did
+// before the verb existed. Deletion has no arm at all — an emptying update is the shape that would have been
+// one, so it gets its own reject test.
+
+const SECTION_KEY = entriesStoreKey(ENTRY_KINDS.promptSection)
+
+describe('the UPDATE verb — builtin prompt sections replace in place (ADR-0178 amendment / LLD-C1)', () => {
+  it('replaces a builtin section’s content, leaving every non-patchable field byte-identical', () => {
+    const store = freshStore()
+    const before = readEntries(store, ENTRY_KINDS.promptSection).find((e) => e.id === 'foundation')!
+    const report = applyPersonaPatch(store, { entries: { [SECTION_KEY]: [{ id: 'foundation', content: 'You are Casey, a restaurant concierge.' }] } }, deps)
+    expect(report.updated).toEqual({ [SECTION_KEY]: ['foundation'] })
+    expect(report.added).toEqual({}) // an update is not an add — no zero-count row a consumer would misread
+    expect(report.dropped).toEqual([])
+    const after = readEntries(store, ENTRY_KINDS.promptSection).find((e) => e.id === 'foundation')!
+    expect(after.content).toBe('You are Casey, a restaurant concierge.')
+    // field-by-field: the placeholder text is gone and NOTHING else moved
+    expect(after.id).toBe(before.id)
+    expect(after.kind).toBe(before.kind)
+    expect(after.label).toBe(before.label)
+    expect(after.description).toBe(before.description)
+    expect(after.order).toBe(before.order)
+    expect(after.enabled).toBe(before.enabled)
+    expect(after.builtin).toBe(true)
+    // in PLACE: the list is the same length, in the same order — no fourth section, no reordering
+    expect(readEntries(store, ENTRY_KINDS.promptSection).map((e) => e.id)).toEqual(['foundation', 'personality', 'critical-items'])
+  })
+
+  it('reaches all three seeded builtins, and `description` is optional in both directions', () => {
+    const store = freshStore()
+    const report = applyPersonaPatch(
+      store,
+      {
+        entries: {
+          [SECTION_KEY]: [
+            { id: 'foundation', content: 'Role.' },
+            { id: 'personality', content: 'Voice.', description: 'How Casey speaks.' },
+            { id: 'critical-items', content: 'Rules.' },
+          ],
+        },
+      },
+      deps,
+    )
+    expect(report.updated).toEqual({ [SECTION_KEY]: ['foundation', 'personality', 'critical-items'] })
+    const sections = readEntries(store, ENTRY_KINDS.promptSection)
+    expect(sections.map((e) => e.content)).toEqual(['Role.', 'Voice.', 'Rules.'])
+    // a sent description replaces (trimmed, the add path's own asymmetry); an omitted one is untouched
+    expect(sections.find((e) => e.id === 'personality')?.description).toBe('How Casey speaks.')
+    expect(sections.find((e) => e.id === 'foundation')?.description).toBe('Core role and capabilities — who this agent is and what it does.')
+  })
+
+  it('is repeatable — last writer wins across turns, so the model can refine its own earlier Foundation', () => {
+    const store = freshStore()
+    applyPersonaPatch(store, { entries: { [SECTION_KEY]: [{ id: 'foundation', content: 'First pass.' }] } }, deps)
+    const second = applyPersonaPatch(store, { entries: { [SECTION_KEY]: [{ id: 'foundation', content: 'Refined pass.' }] } }, deps)
+    expect(second.updated).toEqual({ [SECTION_KEY]: ['foundation'] })
+    expect(readEntries(store, ENTRY_KINDS.promptSection).find((e) => e.id === 'foundation')?.content).toBe('Refined pass.')
+  })
+
+  it('ignores the fields it may never patch instead of refusing a member that mentions them', () => {
+    const store = freshStore()
+    // A model echoing what it read in the draft state: label/order/enabled/builtin/kind ride along and change
+    // nothing — labels are the panes' stable anchors, order keeps Foundation leading, the toggle is the user's.
+    applyPersonaPatch(
+      store,
+      { entries: { [SECTION_KEY]: [{ id: 'foundation', label: 'Renamed', order: 42, enabled: false, builtin: false, kind: 'skill', content: 'New body.' }] } },
+      deps,
+    )
+    const after = readEntries(store, ENTRY_KINDS.promptSection).find((e) => e.id === 'foundation')!
+    expect(after).toMatchObject({ label: 'Foundation', order: 0, enabled: true, builtin: true, kind: ENTRY_KINDS.promptSection, content: 'New body.' })
+  })
+
+  it('updates and appends in ONE patch land as a single store write — one pane re-render (the shipped law)', () => {
+    const store = freshStore()
+    let writes = 0
+    const counting = {
+      get: (key: string) => store.get(key),
+      set: (key: string, value: unknown) => {
+        if (key === SECTION_KEY) writes += 1
+        store.set(key, value)
+      },
+    }
+    const report = applyPersonaPatch(
+      counting,
+      { entries: { [SECTION_KEY]: [{ id: 'foundation', content: 'Filled in.' }, { label: 'Intake', content: 'Ask first.' }] } },
+      deps,
+    )
+    expect(writes).toBe(1)
+    expect(report.updated).toEqual({ [SECTION_KEY]: ['foundation'] })
+    expect(report.added).toEqual({ [SECTION_KEY]: 1 })
+    const sections = readEntries(store, ENTRY_KINDS.promptSection)
+    expect(sections.map((e) => e.label)).toEqual(['Foundation', 'Personality', 'Critical Items', 'Intake'])
+    expect(sections[0]?.content).toBe('Filled in.')
+    expect(sections[3]).toMatchObject({ id: 'intake', order: 3, builtin: false })
+  })
+
+  it('REFUSES an emptying update — the no-deletion law has no arm here either', () => {
+    const store = freshStore()
+    const before = store.get(SECTION_KEY)
+    const report = applyPersonaPatch(
+      store,
+      { entries: { [SECTION_KEY]: [{ id: 'foundation', content: '' }, { id: 'personality', content: '   \n  ' }, { id: 'critical-items' }] } },
+      deps,
+    )
+    expect(report.updated).toEqual({})
+    expect(report.added).toEqual({})
+    expect(report.dropped).toEqual([`${SECTION_KEY}[0]`, `${SECTION_KEY}[1]`, `${SECTION_KEY}[2]`])
+    expect(store.get(SECTION_KEY)).toBe(before) // not even a same-value rewrite
+  })
+
+  it('REFUSES a malformed update rather than half-applying it, and keeps its well-formed siblings', () => {
+    const store = freshStore()
+    const report = applyPersonaPatch(
+      store,
+      {
+        entries: {
+          [SECTION_KEY]: [
+            { id: 'foundation', content: 42 }, // content must be a string
+            { id: 'personality', content: 'Voice.', description: 7 }, // the arm validates as a WHOLE
+            { id: 'critical-items', content: 'Rules.' },
+          ],
+        },
+      },
+      deps,
+    )
+    expect(report.dropped).toEqual([`${SECTION_KEY}[0]`, `${SECTION_KEY}[1]`])
+    expect(report.updated).toEqual({ [SECTION_KEY]: ['critical-items'] })
+    const sections = readEntries(store, ENTRY_KINDS.promptSection)
+    expect(sections.find((e) => e.id === 'foundation')?.content).toBe('You are a helpful assistant.') // untouched
+    expect(sections.find((e) => e.id === 'personality')?.content).toBe(DEFAULT_PROMPT_SECTIONS[1]?.content) // untouched
+    expect(sections.find((e) => e.id === 'critical-items')?.content).toBe('Rules.')
+  })
+
+  it('REFUSES to update a USER-authored entry — the append-protection the amendment deliberately did not widen', () => {
+    const store = freshStore()
+    // the user's own section, added by hand (or by an earlier patch): NOT builtin
+    applyPersonaPatch(store, { entries: { [SECTION_KEY]: [{ label: 'House rules', content: 'The user’s own words.' }] } }, deps)
+    const report = applyPersonaPatch(store, { entries: { [SECTION_KEY]: [{ id: 'house-rules', label: 'House rules', content: 'Overwritten by the model.' }] } }, deps)
+    // it took TODAY's append path verbatim — dedup-suffixed id, a NEW entry, the user's text intact
+    expect(report.updated).toEqual({})
+    expect(report.added).toEqual({ [SECTION_KEY]: 1 })
+    const sections = readEntries(store, ENTRY_KINDS.promptSection)
+    expect(sections.find((e) => e.id === 'house-rules')?.content).toBe('The user’s own words.')
+    expect(sections.find((e) => e.id === 'house-rules-2')?.content).toBe('Overwritten by the model.')
+  })
+
+  it('a labelless member naming a user-authored entry DROPS — it can never become a replacement by another route', () => {
+    const store = freshStore()
+    applyPersonaPatch(store, { entries: { [SECTION_KEY]: [{ label: 'House rules', content: 'The user’s own words.' }] } }, deps)
+    const report = applyPersonaPatch(store, { entries: { [SECTION_KEY]: [{ id: 'house-rules', content: 'Overwritten.' }] } }, deps)
+    expect(report.updated).toEqual({})
+    expect(report.added).toEqual({})
+    expect(report.dropped).toEqual([`${SECTION_KEY}[0]`])
+    expect(readEntries(store, ENTRY_KINDS.promptSection).find((e) => e.id === 'house-rules')?.content).toBe('The user’s own words.')
+  })
+
+  it('the fence is KIND-scoped — a builtin-looking id on any other list still appends (registry rows never drift)', () => {
+    const store = freshStore()
+    // The catalog kind's rows ARE builtin-shaped at read time, and they are registry-derived foreign keys:
+    // the update verb must not reach them (LLD §4's named non-goal), so `agent-ui` collides and REJECTS.
+    const catalogKey = entriesStoreKey(ENTRY_KINDS.catalog)
+    applyPersonaPatch(store, { entries: { [catalogKey]: [{ label: 'Default', id: 'agent-ui' }] } }, deps)
+    const report = applyPersonaPatch(store, { entries: { [catalogKey]: [{ label: 'Default', id: 'agent-ui', content: 'nope' }] } }, deps)
+    expect(report.updated).toEqual({})
+    expect(report.dropped).toEqual([`${catalogKey}[0]`])
+    // and a skill list ignores the verb entirely: a matching id dedup-suffixes into a NEW entry
+    const skillKey = entriesStoreKey(ENTRY_KINDS.skill)
+    applyPersonaPatch(store, { entries: { [skillKey]: [{ label: 'Greet', content: 'first' }] } }, deps)
+    const skills = applyPersonaPatch(store, { entries: { [skillKey]: [{ label: 'Greet', id: 'greet', content: 'second' }] } }, deps)
+    expect(skills.updated).toEqual({})
+    expect(skills.added).toEqual({ [skillKey]: 1 })
+    expect(readEntries(store, ENTRY_KINDS.skill).map((e) => e.content)).toEqual(['first', 'second'])
+  })
+
+  it('an id matching NOTHING appends, so an imported persona missing its builtins degrades instead of dropping', () => {
+    const store = createMemoryStore({ initial: { model: DEFAULT_MODEL_ID, [SECTION_KEY]: [] } })
+    const report = applyPersonaPatch(store, { entries: { [SECTION_KEY]: [{ id: 'foundation', label: 'Foundation', content: 'Role.' }] } }, deps)
+    expect(report.updated).toEqual({})
+    expect(report.added).toEqual({ [SECTION_KEY]: 1 })
+    expect(readEntries(store, ENTRY_KINDS.promptSection)).toMatchObject([{ id: 'foundation', content: 'Role.', builtin: false }])
   })
 })
 
@@ -299,5 +484,39 @@ describe('the draft-state block (LLD §2 draft-state feedback)', () => {
 
   it('degrades to an empty projection for an absent store rather than throwing', () => {
     expect(() => draftStateBlock(undefined)).not.toThrow()
+  })
+
+  // ADR-0178's amendment makes this part of the RULING, not a nicety: last-writer-wins over a field the user
+  // can hand-edit is only acceptable if the model can read the current text before it overwrites it.
+  it('carries the BUILTIN prompt sections’ current content — the concurrency mitigation the update verb needs', () => {
+    const store = freshStore()
+    const block = draftStateBlock(store)
+    for (const section of DEFAULT_PROMPT_SECTIONS) {
+      expect(block, `${section.id} must be nameable by the model`).toContain(`"id": "${section.id}"`)
+      expect(block, `${section.id}'s current text must be readable`).toContain(JSON.stringify(section.content).slice(1, -1))
+    }
+    // and it reflects a HAND EDIT, which is the whole point — the user's text wins and the model can see it
+    const sections = readEntries(store, ENTRY_KINDS.promptSection).map((e) => (e.id === 'foundation' ? { ...e, content: 'Hand-edited by the user.' } : e))
+    store.set(SECTION_KEY, sections)
+    expect(draftStateBlock(store)).toContain('Hand-edited by the user.')
+  })
+
+  it('carries ONLY the builtin bodies — every other member, including the model’s own sections, stays a label', () => {
+    const store = freshStore()
+    applyPersonaPatch(
+      store,
+      {
+        entries: {
+          [SECTION_KEY]: [{ label: 'Intake', content: 'a long appended body the interviewer never needs' }],
+          [entriesStoreKey(ENTRY_KINDS.skill)]: [{ label: 'Book a table', content: 'another long body' }],
+        },
+      },
+      deps,
+    )
+    const block = draftStateBlock(store)
+    expect(block).toContain('"Intake"') // the model's OWN appended section: a bare label, like every other kind
+    expect(block).not.toContain('a long appended body the interviewer never needs')
+    expect(block).toContain('"Book a table"')
+    expect(block).not.toContain('another long body')
   })
 })

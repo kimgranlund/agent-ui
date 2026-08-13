@@ -982,6 +982,29 @@ describe('the Builder persona (ADR-0178 cl.4 — hidden-until-invoked)', () => {
     expect(vocabulary!.content).not.toContain('{roster}')
   })
 
+  // ADR-0178's ratified amendment (GH #696) — the generated block naming WHICH sections are replaceable.
+  // Generated from `DEFAULT_PROMPT_SECTIONS`, so the same drift trip-wire the value keys get: ALL and ONLY.
+  it('its GENERATED vocabulary names ALL and ONLY the seeded builtin sections as replaceable', async () => {
+    const { builderStore } = await import('./agent-admin-presets.ts')
+    const { DEFAULT_PROMPT_SECTIONS } = await import('@agent-ui/app')
+    const sections = builderStore().get(entriesStoreKey(ENTRY_KINDS.promptSection)) as Entry[]
+    const vocabulary = sections.find((s) => s.id === 'patchable-keys')!
+    const block = vocabulary.content.slice(vocabulary.content.indexOf('## Built-in sections you may REPLACE'))
+    expect(block, 'the replaceable-sections block must be composed').not.toBe('')
+    const listed = [...block.matchAll(/^- `([a-z0-9-]+)`/gm)].map((m) => m[1]!)
+    expect(listed, 'a seed change must move this block, never leave it stale').toEqual(DEFAULT_PROMPT_SECTIONS.map((s) => s.id))
+    // each row carries the section's real label + description, so the model knows what each one is FOR
+    for (const section of DEFAULT_PROMPT_SECTIONS) {
+      expect(block).toContain(section.label)
+      expect(block).toContain(section.description)
+    }
+    // the worked example is CONCRETE (PR #692's live-proven lesson): the real list key + a real builtin id
+    expect(block).toContain(`{"entries":{"${entriesStoreKey(ENTRY_KINDS.promptSection)}":[{"id":"${DEFAULT_PROMPT_SECTIONS[0]!.id}"`)
+    // and the protection sentence says what was always true, per the amendment's Consequences
+    expect(block).toMatch(/authored entries are safe from you by construction/)
+    expect(block).toMatch(/never remove anything or empty a built-in section/)
+  })
+
   it('teaches interview CRAFT and key VOCABULARY, never the personaPatch wire mechanics (ADR-0178 cl.1 rule 5)', async () => {
     // The mechanics compose from S2's byte-pinned authoring-teaching.md under the gate. Restating them
     // in persona config is the drift this boundary exists to prevent — garbled vocabulary degrades to

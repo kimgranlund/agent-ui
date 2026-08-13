@@ -1,6 +1,12 @@
 # LLD — the guided agent-authoring flow (S3-a, the agent-authoring family's one full-LLD slice)
 
-> Status: proposed · v0.1 · 2026-08-09 · Layer: LLD (implementation plan)
+> Status: proposed · v0.2 · 2026-08-13 (v0.1 2026-08-09) · Layer: LLD (implementation plan)
+>
+> v0.2 — record repair ONLY (GH [#821](https://github.com/kimgranlund/agent-ui/issues/821), the last
+> booked item of ADR-0178's ratified Amendment): §3's filter-3 "Never a replacement, never a removal"
+> sentence gains the amendment's carve-out pointer, so this record stops disagreeing with the shipped
+> gate. Nothing else in this document is re-ruled or re-scoped — the amendment's own build plan is
+> [`builder-builtin-section-update.lld.md`](./builder-builtin-section-update.lld.md).
 >
 > Refines: [ADR-0178](../adr/0178-agent-authoring-conversational-persona-hydration.md) (ACCEPTED —
 > cl.2 the three-filter apply gate, cl.3 the gate seam + admin row, cl.4 model-authored questions,
@@ -121,7 +127,16 @@ turn):
    the IDENTICAL options the pane's own add path passes (agent-admin.ts:967). Admitted entries
    APPEND; one `store.set(entriesStoreKey(kind), [...current, ...admitted])` per kind (one write =
    one pane re-render). Never a replacement, never a removal — SPEC-R29's no-deletion law is
-   satisfied structurally (this code path has no delete branch to misuse).
+   satisfied structurally (this code path has no delete branch to misuse). **REV 2026-08-13 —
+   ONE carve-out since, and only for "replacement":** the `## Amendment` section of
+   [ADR-0178](../adr/0178-agent-authoring-conversational-persona-hydration.md)
+   (ratified 2026-08-13, GH [#696](https://github.com/kimgranlund/agent-ui/issues/696) / GH
+   [#821](https://github.com/kimgranlund/agent-ui/issues/821)) admits a scoped UPDATE verb for
+   HOST-SEEDED `builtin: true` `prompt-section` entries — `content` (+`description`) replaced in
+   place, accumulating into this same single write; the full contract and field scope live in
+   [`builder-builtin-section-update.lld.md`](./builder-builtin-section-update.lld.md) and
+   `a2ui-live-agent.spec.md` SPEC-R29 (v0.16), not restated here. "Never a REMOVAL" stands
+   whole and unamended, for every class: no member removal, no key removal, no emptying.
 
 The report rides the turn log (`#logTurn`'s surface record gains `patch: PatchReport` when a patch
 was consumed, and `patchIgnored: true` when one arrived gate-off) — observability without an error

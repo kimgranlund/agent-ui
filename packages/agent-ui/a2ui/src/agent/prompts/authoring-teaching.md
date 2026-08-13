@@ -36,8 +36,21 @@ left exactly as it is, and entries you send are ADDED to their list rather than 
 settled configuration every turn is not harmless — it overwrites edits the person may have made by hand in
 between.
 
-There is no way to delete anything with a patch, by design. If something should be removed, say so in your
-note and let the person remove it themselves.
+There is ONE exception to appending, and it exists because a draft starts with built-in sections already
+holding placeholder text nobody wrote: a list member carrying the "id" of an existing BUILT-IN section
+REPLACES that section's text in place instead of appending a new one. Send its "id" plus a "content" (both
+required; "description" optional) and the section becomes what you wrote, keeping its name, its position, and
+its on/off state — those are never yours to change, and any field other than "content"/"description" you
+include is simply ignored. Use it: filling the built-in sections in is how the agent's own identity leads its
+prompt instead of sitting underneath generic boilerplate. You may refine the same built-in on a later turn —
+the last text you send wins — but read the draft's current state first, because the person may have edited
+that same text by hand in between, and their edit is the one to build on. The draft's own reference lists
+which sections are built in. Every other member still appends: an "id" that matches nothing, or that names an
+entry the person authored themselves, adds a new entry rather than overwriting theirs.
+
+There is no way to delete anything with a patch, by design — not an entry, not a key, and not by emptying a
+built-in section either (a replacement whose "content" is blank is refused). If something should be removed,
+say so in your note and let the person remove it themselves.
 
 Only propose a key you are confident about from what the person actually told you. Anything unrecognized is
 dropped silently on arrival, so a guessed key is wasted rather than harmful — but it also means a patch is
