@@ -1,6 +1,6 @@
 # SPEC — A2UI container vocabulary (catalog + taught-idiom arm)
 
-> Status: proposed · v0.2 · 2026-08-13 · Layer: SPEC (execution contract)
+> Status: proposed · v0.3 · 2026-08-13 · Layer: SPEC (execution contract)
 > Refines: GH #808 (owner ruling, intake round 2026-08-12 — the four-arm scope: header anatomy
 > contract · label/value row idiom · container type vocabulary · taught prompt idioms) on
 > [ADR-0186](../adr/0186-ui-card-header-structured-format.md) (accepted — the shared header-anatomy
@@ -54,27 +54,33 @@ minting a new catalog component.
 ### Arm 1 — header anatomy contract (catalog side)
 
 - **SPEC-R1 — the `CardHeader.format` mark.** The default catalog's `CardHeader` row gains ONE
-  property: `format`, string enum `['default','structured']`, `mapsTo: 'format'`, **non-bindable**
-  (a literal prop — the `Text.variant`/`Button.variant` mode-enum precedent, not the
-  `Badge.intent` live-status precedent). **Named interpretation of an accepted ADR's wording, not a
-  silent resolution:** ADR-0186's Consequences say "one new *bindable* mark — `CardHeader.format`
-  (one-way/static, since it is a structural mode switch, not live status data)", and the intake
-  §4a says "the ONE additional *bindable* surface". This SPEC reads "bindable" there as
-  *catalog-reachable*, with the parenthetical "static" controlling the actual flag: non-bindable ⇒
-  every occurrence is a literal ⇒ the value is fully statically checked by the shipped ADR-0098
-  enum gate (`conformance.ts`), which a `{path}` binding would bypass until render time. If Kim
-  meant path-bindable, the flip is additive — see §7's fork row. It rides `cardHeaderFactory`'s
-  existing `accessorFactory`
+  property: `format`, string enum `['default','structured']`, `mapsTo: 'format'`, **bindable: true**
+  — **RULED, 2026-08-13 (Kim, in-session confirm, recorded on GH #808 — "Ruling — 2026-08-13"):**
+  the §7 fork row below is taken; a card may flip structured at runtime from data-model state.
+  ADR-0186's literal "bindable mark" wording (Consequences: "one new *bindable* mark —
+  `CardHeader.format` (one-way/static, since it is a structural mode switch, not live status
+  data)") now reads exactly as written. **Superseded v0.2 reading, kept for the trail:** v0.2 read
+  "bindable" there as *catalog-reachable* only, with the parenthetical "static" controlling the
+  actual flag (`bindable: false`) — every occurrence a literal, fully statically checked by the
+  shipped ADR-0098 enum gate (`conformance.ts`). Taking the ruling accepts the named trade-off
+  instead: a `{path}`-bound `format` bypasses that static gate (`matchesType`'s `pd.bindable`
+  branch accepts the binding object outright, deferring membership to render); a literal `format`
+  value is unaffected — still fully statically checked, unchanged. The render-time gate
+  (`widget.ts`'s `applies()`, re-checked on every resolution — the same one every OTHER bindable
+  enum prop, e.g. `Badge.intent`, already rides) is what enforces membership on the bound arm. It
+  rides `cardHeaderFactory`'s existing `accessorFactory`
   generically — the component-side prop is a reflecting accessor per ADR-0186's Consequences; zero
   factory code. Advertised on `CardHeader` ONLY — `ui-card-footer` accepts the attribute for
   family symmetry (ADR-0186), but the catalog does not advertise a mark with no agent use case
   (prompt-inventory economy, ADR-0071).
   *AC1:* the catalog row exists and the derived prompt inventory lists it (`prompt-drift` gate
   green). *AC2:* a payload with `"format":"structured"` validates and renders
-  `ui-card-header[format='structured']`; an out-of-enum value fails validation (existing enum
-  checking, no new code). *AC3 (dependency):* this row lands only AFTER GH #807's build ships the
-  component prop (intake §7 leaf 1) — a mark mapping to a nonexistent prop is a silent no-op, the
-  GH #397 contract-defect class.
+  `ui-card-header[format='structured']`; an out-of-enum LITERAL fails validation (existing enum
+  checking, no new code); a `{path}`-bound `format` value is ACCEPTED at validation (deferred
+  resolution, ADR-0026 — conformance never judges a binding's eventual value) and resolved +
+  enum-gated at render (`widget.ts`'s `applies()`, unchanged mechanism). *AC3 (dependency):* this
+  row lands only AFTER GH #807's build ships the component prop (intake §7 leaf 1) — a mark
+  mapping to a nonexistent prop is a silent no-op, the GH #397 contract-defect class.
 - **SPEC-R2 — header-cell reachability: the `slot` mark.** Finding, verified against the renderer
   and `factories.ts`: the tree walk appends `CardHeader` children with NO slot attribute, so a
   catalog payload **cannot reach the leading/trailing cells at all today** — an Icon + Badge land
@@ -206,7 +212,7 @@ minting a new catalog component.
 ## 4 · Non-goals
 
 No new catalog component or feed-partition change (R5) · no `CardFooter.format` advertising (R1) ·
-no bindable `format` (R1) · no protocol/reserved-key change for child placement — `slot` is a
+no protocol/reserved-key change for child placement — `slot` is a
 per-row prop, not a message-schema widening (R2) · no `slot` mark beyond `Icon`/`Badge` in v1
 (R2) · no Tabs/Swiper containment rules (R6) · no validator enforcement of B1–B3 (R7) · no
 `ask-archetypes-*.md`/`grammar.md` edits (R8) · no component-source change of any kind — the
@@ -236,11 +242,14 @@ S1/S2 are dispatchable now, in parallel; S3 unblocks on the sibling arm; S4/S5 c
   cl.5's "wire vocabulary is UNCHANGED" claim on ADR-0142's current (accepted) table; the build
   files the Amendment for Kim's ratification (GH #664 mode). If declined, R4 falls back to
   teaching `caption` (graceful, register-approximate) — the idiom survives, fidelity drops.
-- **`format` bindability (R1)** — this SPEC rules non-bindable, reading ADR-0186's "bindable mark
-  … (one-way/static)" as *catalog-reachable* with "static" controlling the flag (statically
-  checkable by the ADR-0098 enum gate). If Kim meant path-bindable, flipping `bindable: true` is
-  additive (one catalog field + baseline recapture, no factory/renderer change) — flag before S3
-  ships.
+- **`format` bindability (R1) — RESOLVED, 2026-08-13.** Kim ruled `CardHeader.format` ships
+  PATH-BINDABLE (GH #808, "Ruling — 2026-08-13, Kim, in-session confirm"): `bindable: true`,
+  accepting that a bound value bypasses the static ADR-0098 enum gate until render time (the
+  render-time `applies()` gate in `widget.ts` still enforces membership on every resolution,
+  unchanged mechanism). The flip landed exactly as this row's own additive prediction: one catalog
+  field (`catalog.json`'s `CardHeader.format`) + baseline recapture, no factory/renderer change —
+  S3. R1's own text above now carries the taken ruling as primary; this row is the historical
+  trail, not a live fork.
 - **Containment hard-fail (R6)** — recommended over taught-only; if the compat sweep (AC2) finds a
   shipped payload relying on a stray region, that finding routes back here before the code lands.
 - **`slot` mark creep (R2)** — a future trailing-`Button` ask reopens the scope line as an

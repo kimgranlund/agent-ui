@@ -535,3 +535,56 @@ describe('widget resolution — catalog enum enforcement (skips a non-member lit
     expect(el.getAttribute('justify')).toBe('center') // justify DOES list center → applied (gate is selective, not blanket)
   })
 })
+
+describe('widget resolution — CardHeader.format bound (SPEC-R1, path-bindable per Kim\'s 2026-08-13 ruling on GH #808)', () => {
+  // `CardHeader.format` now ships `bindable: true` — conformance.test.ts (catalog/default/index.test.ts)
+  // covers the STATIC half (a {path} binding is ACCEPTED at validation, deferred resolution, ADR-0026);
+  // this block covers the RENDER half through the REAL default catalog + factories, the
+  // `Column.align="center"` REAL-catalog test above extended to the bound leg: a bound `format` resolves
+  // + applies on mount, re-applies reactively on a data-model change (SPEC-N2), and a resolved
+  // out-of-enum value is skipped (the render-time gate `widget.ts`'s `applies()` carries for exactly
+  // the arm the static ADR-0098 gate cannot see).
+  function cardHeaderHarness() {
+    const registry: CatalogRegistry = {
+      register: () => {},
+      get: (id) => (id === 'agent-ui' ? ({ catalog: defaultCatalog, factories: defaultFactories } as CatalogEntry) : undefined),
+      supportedCatalogIds: () => ['agent-ui'],
+      submitGateSelector: () => '',
+    }
+    const createWidget = makeCreateWidget({ registry, emitError: () => {}, resolveValue })
+    const surface = createSurface({ id: 's', catalogId: 'agent-ui', version: 'v1.0' })
+    return { createWidget, surface }
+  }
+
+  it('a {path}-bound format resolves + applies on mount, and re-applies reactively on a data-model change (SPEC-N2)', async () => {
+    const { createWidget, surface } = cardHeaderHarness()
+    surface.data.value = { headerFormat: 'structured' }
+
+    const el = createWidget(comp({ id: 'hd', component: 'CardHeader', format: { path: '/headerFormat' } }), surface)
+    expect(el.tagName.toLowerCase()).toBe('ui-card-header')
+    expect(el.getAttribute('format')).toBe('structured') // the bound-prop effect's synchronous first run
+
+    surface.data.value = { headerFormat: 'default' }
+    await whenFlushed() // effect re-runs are microtask-batched
+    expect(el.getAttribute('format')).toBe('default')
+
+    disposeSurface(surface)
+  })
+
+  it('a resolved value outside the enum is skipped — never applied, no stray attribute', () => {
+    const { createWidget, surface } = cardHeaderHarness()
+    surface.data.value = { headerFormat: 'bogus' }
+
+    const el = createWidget(comp({ id: 'hd', component: 'CardHeader', format: { path: '/headerFormat' } }), surface)
+    expect(el.getAttribute('format')).toBeNull() // 'bogus' ∉ ['default','structured'] → dropped at the render boundary
+
+    disposeSurface(surface)
+  })
+
+  it('a literal format value still applies exactly as before — the bindable flip does not touch the static-literal path', () => {
+    const { createWidget, surface } = cardHeaderHarness()
+    const el = createWidget(comp({ id: 'hd', component: 'CardHeader', format: 'structured' }), surface)
+    expect(el.getAttribute('format')).toBe('structured')
+    disposeSurface(surface)
+  })
+})
