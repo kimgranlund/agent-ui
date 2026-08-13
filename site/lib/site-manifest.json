@@ -147,6 +147,13 @@
     "section": "Guides"
   },
   {
+    "href": "./conversation-doc.html",
+    "label": "Conversation",
+    "description": "ui-conversation is the M2 thread + composer + per-turn narration primitive, with an opt-in declarative composition mode (ADR-0180) for its header/dialog/composer bands.",
+    "level": "L2",
+    "section": "Guides"
+  },
+  {
     "href": "./highlight-doc.html",
     "label": "Highlight",
     "description": "@agent-ui/code/highlight: a swappable syntax-highlighter registry plus seven bundled, zero-dependency tokenizers.",

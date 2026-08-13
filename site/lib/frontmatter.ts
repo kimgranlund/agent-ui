@@ -117,6 +117,12 @@ import markdownMd from '../../packages/agent-ui/code/src/markdown/markdown.md?ra
 // @agent-ui/app (LLD-C1, ADR-0129 clause 1; SPEC-R2/R3) — ui-surface-host, the M2 mount/stream seam. Same
 // posture as router/code above: an app-tier descriptor outside the components-scoped ALL_DESCRIPTORS glob.
 import surfaceHostMd from '../../packages/agent-ui/app/src/controls/surface-host/surface-host.md?raw'
+// @agent-ui/app (LLD-C4/C5/C6; ADR-0180 GH #688) — the ui-conversation family: the thread+composer+
+// narration primitive plus its three ADR-0180 recognized-children tags (header/dialog/composer).
+import conversationMd from '../../packages/agent-ui/app/src/controls/conversation/conversation.md?raw'
+import conversationHeaderMd from '../../packages/agent-ui/app/src/controls/conversation/conversation-header.md?raw'
+import conversationDialogMd from '../../packages/agent-ui/app/src/controls/conversation/conversation-dialog.md?raw'
+import conversationComposerMd from '../../packages/agent-ui/app/src/controls/conversation/conversation-composer.md?raw'
 
 /** A parsed control descriptor: the structured frontmatter (its attributes-as-API drive the table) + the prose body. */
 export interface ComponentDoc {
@@ -225,6 +231,11 @@ export const loadCodeEditorDoc = (): ComponentDoc => parseDoc(codeEditorMd)
 export const loadMarkdownDoc = (): ComponentDoc => parseDoc(markdownMd)
 // @agent-ui/app/surface-host (LLD-C1, ADR-0129 clause 1) — same posture as router/code above (GH #834).
 export const loadSurfaceHostDoc = (): ComponentDoc => parseDoc(surfaceHostMd)
+// @agent-ui/app — the ui-conversation family (GH #833; ADR-0180 GH #688).
+export const loadConversationDoc = (): ComponentDoc => parseDoc(conversationMd)
+export const loadConversationHeaderDoc = (): ComponentDoc => parseDoc(conversationHeaderMd)
+export const loadConversationDialogDoc = (): ComponentDoc => parseDoc(conversationDialogMd)
+export const loadConversationComposerDoc = (): ComponentDoc => parseDoc(conversationComposerMd)
 
 // ── tier enumeration (for the family overview + tier showcase — a DERIVED member list) ───────────────────────
 // The whole `{name}.md` descriptor set, globbed at build time (Vite resolves `import.meta.glob` statically). The
