@@ -479,6 +479,12 @@ async function runTurn(input: TurnInput): Promise<void> {
       narration.appendEntry({ key: 'progress-error', status: 'error', label: `Turn failed — ${transportError}` })
       narration.fail()
       addMessage('system', `⚠ ${transportError}`)
+      // GH #810 — a failed turn must never strand the persistent canvas disabled: `canvasHost`'s own click
+      // (surface-host.ts's self-wired listener) already disabled it before this turn ever ran; nothing else
+      // on THIS path re-enables it (no `finalize()`/`ingest()` below — this branch returns early). A no-op
+      // when the canvas wasn't the thing that started this turn (`setInteractiveDisabled` only ever reverts
+      // elements its OWN sweep claimed, surface-host.ts's `#sweepDisabled`).
+      canvasHost.setInteractiveDisabled(false)
       return
     }
     canvasHost.finalize() // also stretches a root ui-column to fill the artboard (ui-surface-host's own finalize())
@@ -549,6 +555,10 @@ async function runTurn(input: TurnInput): Promise<void> {
     narration.appendEntry({ key: 'progress-error', status: 'error', label: `Turn failed — ${(e as Error).message}` })
     narration.fail()
     addMessage('system', `⚠ ${(e as Error).message}`)
+    // GH #810 — the thrown-turn leg of the same fail arm as the transportError branch above (a genuine
+    // `for await` exception, e.g. the transport itself throwing) — same reasoning, same no-op-if-unrelated
+    // guarantee.
+    canvasHost.setInteractiveDisabled(false)
   } finally {
     setBusy(false)
   }

@@ -236,6 +236,11 @@ export default defineConfig({
       // browser config (no aliasing at all — real package `exports`) exercised this import before now.
       '@agent-ui/components/foundation-styles.css': r('./packages/agent-ui/components/src/foundation-styles.css'),
       '@agent-ui/components/component-styles.css': r('./packages/agent-ui/components/src/component-styles.css'),
+      // GH #810 — `workbench.ts`/`dashboard.ts` (the third/fourth full page modules to gain jsdom coverage,
+      // `workbench.summary-fail-arm.test.ts`/`dashboard.summary-fail-arm.test.ts`) import this THIRD
+      // foundation asset `a2ui-live.ts` never needed — the same unresolvable-path hazard the pair above
+      // already documents, just for the one additional CSS file these two pages' own `[1b]` import step adds.
+      '@agent-ui/components/base-styles.css': r('./packages/agent-ui/components/src/base-styles.css'),
       '@agent-ui/components': r('./packages/agent-ui/components/src/index.ts'),
       '@agent-ui/shared': r('./packages/agent-ui/shared/src/index.ts'),
       // The a2ui `./examples` subpath (the seed shelf, ADR-0055) — mirrors the package's exports map. Placed

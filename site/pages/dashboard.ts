@@ -207,6 +207,12 @@ function applySummaryKey(key: SummaryViewKey): void {
   host.className = 'dc-summary-host'
   summarySection.append(host)
   summaryHost = host
+  // GH #810 — the workbench.ts `applySummaryKey` fail-arm wiring, verbatim: this replayed panel runs NO
+  // turn for any action a future payload might carry, but `host`'s own self-wired disable-on-action
+  // (surface-host.ts) fires on a click regardless — with no client-message wiring, that click would strand
+  // the card disabled forever. Kim's 2026-08-13 ruling (fail arm everywhere, no click-once carve-out): a
+  // replay panel's action goes nowhere, so re-enable it the instant the click fires.
+  host.onClientMessage(() => host.setInteractiveDisabled(false))
   for (const line of summaryLines(key)) host.ingest(line)
   host.finalize()
 }
