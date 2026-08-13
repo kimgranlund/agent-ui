@@ -44,7 +44,14 @@ describe('MINI_SKILLS registry — the per-module token budget (ADR-0091 §3)', 
   it('seeds the TKT-0077 game-UI trio — card-layout · game-table-chrome · game-hud', () => {
     const ids = MINI_SKILLS.map((m) => m.id)
     expect(ids).toEqual(expect.arrayContaining(['card-layout', 'game-table-chrome', 'game-hud']))
-    expect(MINI_SKILLS).toHaveLength(9)
+  })
+
+  // GH #808 S4 (a2ui-container-vocabulary.spec.md SPEC-R8) — the tenth module, the taught tier for
+  // R3's header + R4's row idiom + R5's container-type choice + R7's B1-B3 nesting rules.
+  it('seeds the GH #808 S4 tenth module — `structured-container`', () => {
+    const ids = MINI_SKILLS.map((m) => m.id)
+    expect(ids).toContain('structured-container')
+    expect(MINI_SKILLS).toHaveLength(10)
   })
 
   it('no registry body embeds A2UI JSONL (a pure-prose module needs only doc-review, ADR-0091 §4)', () => {
@@ -55,8 +62,8 @@ describe('MINI_SKILLS registry — the per-module token budget (ADR-0091 §3)', 
 
   // SPEC-R6 AC1 (`persona-catalog-composition.spec.md`, ADR-0172 cl.3) — every shipped module's
   // frontmatter carries the catalog whose vocabulary its body hardcodes.
-  it('SPEC-R6 AC1 — every one of the nine shipped modules carries catalogId: \'agent-ui\'', () => {
-    expect(MINI_SKILLS).toHaveLength(9)
+  it('SPEC-R6 AC1 — every one of the ten shipped modules carries catalogId: \'agent-ui\'', () => {
+    expect(MINI_SKILLS).toHaveLength(10)
     for (const skill of MINI_SKILLS) expect(skill.catalogId, skill.id).toBe('agent-ui')
   })
 })
@@ -115,7 +122,7 @@ describe('selectMiniSkills — SPEC-R6 catalogId scoping', () => {
     expect(selectMiniSkills('deal me in', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui--fixture-demo')).toEqual([])
   })
 
-  it('AC3 — an agent-ui turn is byte-identical to today (all nine modules eligible, ranked the same way)', () => {
+  it('AC3 — an agent-ui turn is byte-identical to today (all ten modules eligible, ranked the same way)', () => {
     const filtered = selectMiniSkills('deal me in', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui').map((m) => m.id)
     // Every shipped module is already catalogId:'agent-ui' (AC1), so filtering has zero effect on the
     // scoring input — the SAME selection the un-scoped call produced before this clause existed.
@@ -154,5 +161,93 @@ describe('form-rhythm — the ADR-0103 Lane C form-provider teaching module', ()
     expect(skill.body).toMatch(/Column gap='md'/)
     expect(skill.body).toMatch(/one Field per control/)
     expect(skill.body).toMatch(/submit Button\s+rides inside the FormProvider/)
+  })
+})
+
+// GH #808 S4 (a2ui-container-vocabulary.spec.md SPEC-R8) — the structured-container taught tier:
+// the header+row recipe (R3/R4), the section/plain-card/structured-container choice rule (R5), and
+// B1-B3 nesting (R7). AC1: a summary/booking-intent probe selects the module. R8's own named risk
+// ("Trigger overlap") requires a selection test against `card-layout`'s shared "card" vocabulary.
+describe('structured-container — the SPEC-R8 taught tier (a2ui-container-vocabulary.spec.md)', () => {
+  it('AC1 — a summary/booking-intent probe selects the module', () => {
+    const result = selectMiniSkills(
+      'a trip itinerary status panel with a booking confirmation',
+      MINI_SKILLS,
+      DEFAULT_MINI_SKILL_CAP,
+      'agent-ui',
+    )
+    expect(result.map((m) => m.id)).toContain('structured-container')
+  })
+
+  it('does NOT fire on a playing-card intent (card-layout\'s own vocabulary)', () => {
+    const result = selectMiniSkills('deal me a card game hand', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).not.toContain('structured-container')
+  })
+
+  it('does NOT fire on an unrelated intent sharing no idiom vocabulary', () => {
+    const result = selectMiniSkills('show me the weather forecast for tomorrow', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).not.toContain('structured-container')
+  })
+
+  // R8's named risk ("Trigger overlap") — both modules' triggers share the bare word "card" (the
+  // collision named in the SPEC, disambiguated by each body's first line). Forcing cap=1 proves the
+  // TF-IDF ranking resolves the shared term correctly in BOTH directions rather than merely
+  // co-selecting both modules within a wider cap.
+  it('trigger-overlap check — a booking/summary+"card" query resolves to structured-container over card-layout (cap=1)', () => {
+    const result = selectMiniSkills('a summary card for the trip', MINI_SKILLS, 1, 'agent-ui')
+    expect(result.map((m) => m.id)).toEqual(['structured-container'])
+  })
+
+  it('trigger-overlap check — a playing-card "deal" query resolves to card-layout over structured-container (cap=1)', () => {
+    const result = selectMiniSkills('deal me a card game hand', MINI_SKILLS, 1, 'agent-ui')
+    expect(result.map((m) => m.id)).toEqual(['card-layout'])
+  })
+
+  it('the trio (card-layout, game-hud, game-table-chrome) still selects together on a terse "deal" intent — structured-container never leaks in', () => {
+    const ids = selectMiniSkills('deal me in', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui').map((m) => m.id)
+    expect(ids.sort()).toEqual(['card-layout', 'game-hud', 'game-table-chrome'])
+  })
+
+  it('the body disambiguates from a playing card in its first line (Lane C fallback readability)', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'structured-container')!
+    expect(skill.body).toMatch(/^A structured container \(not a playing card\)/)
+  })
+
+  it('teaches the R5 container-type choice rule (section · plain card · structured container)', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'structured-container')!
+    expect(skill.body).toMatch(/section = Column/)
+    expect(skill.body).toMatch(/plain card = Card/)
+    expect(skill.body).toMatch(/structured = Card.*CardHeader\(format:'structured'\)/)
+  })
+
+  it("teaches R3's header anatomy (leading Icon slot, trailing Badge slot bound for live status)", () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'structured-container')!
+    expect(skill.body).toMatch(/Icon\(slot:'leading'\)/)
+    expect(skill.body).toMatch(/Badge\(slot:'trailing', intent bound for live status\)/)
+  })
+
+  it("teaches R4's label/value row idiom", () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'structured-container')!
+    expect(skill.body).toMatch(/Row\(justify:'between', align:'center'\)/)
+    expect(skill.body).toMatch(/Badge\(intent:'neutral', label bound\)/)
+  })
+
+  // R7's B1-B3 nesting rules, taught verbatim in the module (SPEC-R7's own AC).
+  it('teaches B1-B3 nesting rules verbatim', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'structured-container')!
+    expect(skill.body).toMatch(/one card level per bubble, never Card-in-Card/) // B1
+    expect(skill.body).toMatch(/CardContent takes rows\/sections only, no headered Card/) // B2
+    expect(skill.body).toMatch(/CardHeader first, CardFooter last/) // B2
+    expect(skill.body).toMatch(/page-scale containers stay out of bubbles/) // B3
+  })
+
+  // R4 §7 fork row — the ADR-0078 cl.5 amendment is still `proposed` (unratified) at build time, so
+  // the taught idiom falls back to `caption`, naming the upgrade path rather than teaching `label`
+  // silently ahead of ratification.
+  it("R4 §7 fork — teaches the caption fallback (ADR-0078's label amendment is unratified), naming the upgrade path", () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'structured-container')!
+    expect(skill.body).toMatch(/Text\(variant:'caption'\)/)
+    expect(skill.body).not.toMatch(/Text\(variant:'label'\)/)
+    expect(skill.body).toMatch(/Wall: caption stands in for label until ADR-0078's amendment ratifies/)
   })
 })
