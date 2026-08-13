@@ -88,7 +88,7 @@ stance, superseded by ADR-0087 Fork A, Kim 2026-07-06). **REV 2026-07-28 — [AD
 **Coverage discipline (SPEC-N2):** a component type whose control has not shipped is either omitted from `catalog.json` or carries `"x-status":"experimental"`; `loadCatalog` warns on an experimental type so there are no silent dead types. **Edge:** `Image`/`Video` stay absent until media primitives land (Assumption A-2).
 
 **`textFactory` — a bespoke fan-out factory (ADR-0025, fanned out ADR-0078 cl.5).** `Text`'s catalog schema
-is frozen (`text`→textContent bindable, `variant` ∈ `h1…h5 | caption | body`, catalog UNCHANGED by the
+is frozen (`text`→textContent bindable, `variant` ∈ `h1…h5 | caption | body | label` — `label` joined via ADR-0078's ratified 2026-08-13 Amendment (GH #808 S1), catalog otherwise UNCHANGED by the
 ADR-0078 control redesign); `ui-text` itself grew three orthogonal props (`as`/`variant`/`size`) that the
 wire's one `variant` value cannot address 1:1, so `textFactory.applyProp` is bespoke like `Button.label`
 rather than routed through `accessorFactory`: on `'variant'` it looks the wire value up in a fixed

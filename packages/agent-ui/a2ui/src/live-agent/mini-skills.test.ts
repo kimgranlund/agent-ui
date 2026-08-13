@@ -242,12 +242,12 @@ describe('structured-container — the SPEC-R8 taught tier (a2ui-container-vocab
   })
 
   // R4 §7 fork row — the ADR-0078 cl.5 amendment is still `proposed` (unratified) at build time, so
-  // the taught idiom falls back to `caption`, naming the upgrade path rather than teaching `label`
-  // silently ahead of ratification.
-  it("R4 §7 fork — teaches the caption fallback (ADR-0078's label amendment is unratified), naming the upgrade path", () => {
+  // ADR-0078's label amendment RATIFIED 2026-08-13 (GH #808 / #827): the taught idiom now teaches the
+  // real `label` role; the interim caption wall is gone (the SPEC §7 fork row's booked upgrade).
+  it("R4 §7 fork — teaches `label` (ADR-0078's amendment ratified 2026-08-13), the caption wall retired", () => {
     const skill = MINI_SKILLS.find((m) => m.id === 'structured-container')!
-    expect(skill.body).toMatch(/Text\(variant:'caption'\)/)
-    expect(skill.body).not.toMatch(/Text\(variant:'label'\)/)
-    expect(skill.body).toMatch(/Wall: caption stands in for label until ADR-0078's amendment ratifies/)
+    expect(skill.body).toMatch(/Text\(variant:'label'\)/)
+    expect(skill.body).not.toMatch(/Text\(variant:'caption'\)/)
+    expect(skill.body).not.toMatch(/Wall: caption stands in/)
   })
 })
