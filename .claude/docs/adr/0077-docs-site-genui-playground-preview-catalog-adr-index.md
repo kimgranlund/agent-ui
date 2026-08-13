@@ -1,6 +1,6 @@
 # ADR-0077 — the docs-site Generative-UI playground: `<component-preview>` + A2UI Catalog + ADR index
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-04
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-04
 >
 > | Field | Value |
 > |---|---|

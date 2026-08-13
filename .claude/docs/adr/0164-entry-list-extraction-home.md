@@ -1,6 +1,6 @@
 # ADR-0164 — The entry-list machinery re-homes as a shared `@agent-ui/app` control folder; the settings generator is already extracted, so its remaining gap closes at the pattern tier
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-28
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-28
 >
 > | Field | Value |
 > |---|---|

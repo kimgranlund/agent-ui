@@ -1,6 +1,6 @@
 # ADR-0175 — M-F design intake: a multi-select FIELD primitive is minted for the record-editing/binding case (PRD-D3's composed facet vehicle stands, unreopened, for the filter case); its wire value rides the ORIGINAL single two-way slot with an array-typed prop — ADR-0161's multi-slot mechanism is not what this needs; to-many relationship/association editing is fenced OUT as a strictly harder, separately-scoped problem the primitive only becomes one building block of
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-08-06
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-08-06
 >
 > | Field | Value |
 > |---|---|

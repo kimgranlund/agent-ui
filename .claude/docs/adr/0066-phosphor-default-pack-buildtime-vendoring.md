@@ -1,6 +1,6 @@
 # ADR-0066 — Phosphor is the default pack: a curated subset vendored at build time from a devDependency into committed inert TS, regular weight, self-registering on subpath import
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-03
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-03
 >
 > | Field | Value |
 > |---|---|

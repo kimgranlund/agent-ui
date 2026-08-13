@@ -1,6 +1,6 @@
 # ADR-0081 — the family coherence gate: mechanized cross-family invariants + a judged remainder
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-05
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-05
 >
 > | Field | Value |
 > |---|---|

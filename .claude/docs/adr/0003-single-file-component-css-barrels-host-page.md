@@ -1,6 +1,6 @@
 # ADR-0003 — Single-file component CSS + barrels + host-page packaging
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-06-26
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-06-26
 >
 > | Field | Value |
 > |---|---|

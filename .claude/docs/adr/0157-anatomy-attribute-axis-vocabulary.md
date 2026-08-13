@@ -1,6 +1,6 @@
 # ADR-0157 — the anatomy-attribute axis vocabulary: `data-part` = anatomy · `data-slot` = composition slot · `data-*` state/variant axes · `part` reserved for shadow DOM
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-23
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-23
 >
 > | Field | Value |
 > |---|---|

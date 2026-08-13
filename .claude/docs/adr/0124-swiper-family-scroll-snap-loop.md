@@ -1,6 +1,6 @@
 # ADR-0124 — `ui-swiper`: a CSS-native scroll-snap carousel family with clone-teleport infinite loop
 
-> Source: agent-ui ADR. Log + lifecycle: [`README.md`](./README.md). · 2026-07-10
+> Source: agent-ui ADR. Lifecycle + grammar: the `agent-ui-doc-standards` skill (this directory needs no index file — the numbered filenames carry order + title, each header carries status). · 2026-07-10
 >
 > | Field | Value |
 > |---|---|

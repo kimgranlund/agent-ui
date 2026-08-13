@@ -1,6 +1,6 @@
 # ADR-0088 — the live-agent conversational channel: a natural-language `note` beside (never inside) the A2UI stream, a grounded per-turn decision-trace, and `wantResponse`-routed click→turn
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-07
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-07
 >
 > | Field | Value |
 > |---|---|

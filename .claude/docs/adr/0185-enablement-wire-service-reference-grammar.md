@@ -1,6 +1,6 @@
 # ADR-0185 — the enablement wire's grammar widens (GH #783): alongside exact registry ids, a `string[]` member may be a service reference `mcp:<server-id>:*` — anchored to `SERVER_ID_PATTERN`, expanded server-side inside `resolveIntegrations`, persisted in agent stores — an append-only amendment to the "wire stays registry ids" fence that ADR-0168 cl.2, ADR-0177 cl.2/cl.4, and a2ui-live-agent.spec.md SPEC-R23/R28 each pin
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-08-12
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-08-12
 >
 > | Field | Value |
 > |---|---|

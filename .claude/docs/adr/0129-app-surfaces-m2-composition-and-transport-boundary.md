@@ -1,6 +1,6 @@
 # ADR-0129 — M2's two primitives: `ui-conversation` composes `ui-surface-host` per turn; neither owns a transport; wire disclosure is opt-in; both site chat pages migrate
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-12
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-12
 >
 > | Field | Value |
 > |---|---|

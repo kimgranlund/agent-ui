@@ -79,12 +79,16 @@ describe('adr-index.json — byte-identical to a fresh generation', () => {
   const committed = read('site/public/adr-index.json')
   const fresh = formatJson(generateAdrIndex(ROOT))
 
-  it('anti-vacuous + AC2: entry count matches the README Index table row count; every url is a #adr-{number} anchor', () => {
+  // AC2's row-truth source moved from a committed README Index table to the ADR directory itself
+  // (Kim's no-index-file rule, 2026-08-13 — that README is deleted and the folder never carries an
+  // index file again). The count this compares against is therefore the real decision-record FILE
+  // count, which is also what the ADR page's own glob resolves — one source of truth, two readers.
+  it('anti-vacuous + AC2: entry count matches the ADR decision-record file count; every url is a #adr-{number} anchor', () => {
     const parsed = JSON.parse(fresh) as SitemapEntry[]
-    const readme = read('.claude/docs/adr/README.md')
-    const tableRows = (readme.match(/^\| \[\d{4}\]/gm) ?? []).length
+    const adrFiles = (readdirSync(`${ROOT}/.claude/docs/adr`) as string[])
+      .filter((f) => /^\d{4}-.+\.md$/.test(f) && !f.startsWith('0000-'))
     expect(parsed.length).toBeGreaterThan(50)
-    expect(parsed.length).toBe(tableRows)
+    expect(parsed.length).toBe(adrFiles.length)
     for (const e of parsed) expect(e.url).toMatch(/^\.\/adr-index\.html#adr-\d{4}$/)
   })
 

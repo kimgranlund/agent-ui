@@ -1,6 +1,6 @@
 # ADR-0180 — `ui-conversation` declarative composition: an explicit OPT-IN adoption mode (header/dialog/composer as authorable children) carved out beside SPEC-R4's imperative-only default
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-08-10
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-08-10
 >
 > | Field | Value |
 > |---|---|

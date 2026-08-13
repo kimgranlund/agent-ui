@@ -1,6 +1,6 @@
 # ADR-0166 — `ui-super-shell` bars OWN their seam: the frame's block-axis `gap` is deleted, each bar draws a hairline inside its own border box, and a card's bar-facing corners square per side (Kim's 2026-07-30 ruling, GH #371)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-30
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-30
 >
 > | Field | Value |
 > |---|---|

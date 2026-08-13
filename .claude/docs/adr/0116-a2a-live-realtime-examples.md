@@ -1,6 +1,6 @@
 # ADR-0116 — A2A live real-time examples: the arena's dev-only live match streams move-by-move into the replay UI, and the artifact feed gains its reserved live arm — a user-initiated conversational turn loop genuinely carried over A2A (caps handshake server-verified, prose + live A2UI artifacts per turn) — all recorded-default, dev-only, same-checker
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-09
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-09
 >
 > | Field | Value |
 > |---|---|

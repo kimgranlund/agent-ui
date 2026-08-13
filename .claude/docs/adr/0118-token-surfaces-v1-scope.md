@@ -1,6 +1,6 @@
 # ADR-0118 — Token-surface family v1 scope: `ui-swatch` + `ui-ramp` + `ui-ladder`, display-class, CSS/DOM-rendered, value-first contracts, M2 (next-wave) catalog rows
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-10
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-10
 >
 > | Field | Value |
 > |---|---|

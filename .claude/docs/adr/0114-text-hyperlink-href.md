@@ -1,6 +1,6 @@
 # ADR-0114 — `ui-text` gains the hyperlink capability: `as` gains `"a"` + a reflected `href` prop; a component-enforced scheme allowlist (fail-closed), unconditional `rel="noopener noreferrer"` + fixed `target="_blank"`, catalog `Text.href` bindable behind the component gate
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-08
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-08
 >
 > | Field | Value |
 > |---|---|

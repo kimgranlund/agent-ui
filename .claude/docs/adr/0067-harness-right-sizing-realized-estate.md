@@ -1,6 +1,6 @@
 # ADR-0067 — the expert harness right-sizes onto the realized estate: two skills + the `a2ui-composer`/`a2ui-reviewer` pair; catalog-author/corpus-curator retired; rubrics at `.claude/docs/rubrics/`; gates already realized; the loop is procedural until the live-agent wave
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-03
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-03
 >
 > | Field | Value |
 > |---|---|

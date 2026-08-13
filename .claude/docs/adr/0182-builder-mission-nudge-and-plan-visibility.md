@@ -1,6 +1,6 @@
 # ADR-0182 — Builder-interview mission nudge + `plan` visibility (GH #716): the drive-to-completion teaching gates on `session === 'authoring'` (derived host-side), NEVER on the broader `authoringSurface` modality; the received `plan` renders through the EXISTING append-only note composition, no new UI component
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-08-11
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-08-11
 >
 > | Field | Value |
 > |---|---|

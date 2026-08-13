@@ -1,6 +1,6 @@
 # ADR-0142 — the A2UI catalog's `Text` heading fan-out shifts one M3 tier down, for compact generative-UI scale (amends ADR-0078 cl.5's table)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-17
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-17
 >
 > | Field | Value |
 > |---|---|

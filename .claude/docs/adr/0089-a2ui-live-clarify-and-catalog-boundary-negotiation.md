@@ -1,6 +1,6 @@
 # ADR-0089 — clarify-before-acting and catalog-boundary negotiation: teaching the live agent to ASK (a note-only turn) instead of guess, and to be honest about the wall the catalog is
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-07
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-07
 >
 > | Field | Value |
 > |---|---|

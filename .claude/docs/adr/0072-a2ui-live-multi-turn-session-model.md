@@ -1,6 +1,6 @@
 # ADR-0072 — the multi-turn session: a client message (action | functionResponse | error) becomes the next turn's user input; a stateless proxy; surface continuity via the existing host
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-04
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-04
 >
 > | Field | Value |
 > |---|---|

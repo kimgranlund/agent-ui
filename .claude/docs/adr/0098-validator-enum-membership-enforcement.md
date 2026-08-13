@@ -1,6 +1,6 @@
 # ADR-0098 — validator-level catalog enum-membership enforcement: a non-member literal fails `validateA2ui` and enters the self-correct loop
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-07
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-07
 >
 > | Field | Value |
 > |---|---|

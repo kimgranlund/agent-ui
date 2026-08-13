@@ -1,6 +1,6 @@
 # ADR-0069 — the live-agent demo is a LAYERED shape isolated behind an `AgentTransport` seam: a deterministic recorded backbone (always-on, gate-covered) + an opt-in dev-server proxy live overlay (plain-fetch key-holder, SDK-free); BYOK-browser-direct deferred behind the same seam
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-04
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-04
 >
 > | Field | Value |
 > |---|---|

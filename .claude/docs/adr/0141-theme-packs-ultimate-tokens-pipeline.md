@@ -1,6 +1,6 @@
 # ADR-0141 — theme packs: Ultimate-Tokens-generated `[theme='<name>']` color layers, loaded on demand by the app, realized through `ui-theme-provider`'s reserved seam
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-17
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-17
 >
 > | Field | Value |
 > |---|---|

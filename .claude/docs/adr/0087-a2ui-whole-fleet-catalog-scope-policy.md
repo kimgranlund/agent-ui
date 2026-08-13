@@ -1,6 +1,6 @@
 # ADR-0087 — A2UI default catalog covers the whole shipped `ui-*` fleet (gate-encoded exclusion allowlist)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-06 *(authored)* ·
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-06 *(authored)* ·
 > 2026-07-06 *(forks resolved — Kim: Fork A INCLUDE w/ required usage guidance, Fork B INCLUDE, Fork C two
 > types, Fork D INCLUDE all three; Status stays `proposed` — ratification lands at the wave-gate close per the
 > `Ratified by` field below, not from the fork answers alone)*

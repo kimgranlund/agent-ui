@@ -1,6 +1,6 @@
 # ADR-0154 — The shell-archetype grammar gains resizable inner panes + tab-based narrow collapse; `ui-agent-admin`'s chat+canvas chrome becomes a `ui-chat-shell` parameterization (GH #52's fork ruled: extend the grammar, not "not a fit")
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-20
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-20
 >
 > | Field | Value |
 > |---|---|

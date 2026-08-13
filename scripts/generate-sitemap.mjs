@@ -166,36 +166,52 @@ export function generateSitemap(repoRoot = repoRootFromScript()) {
 
 // ── L3 index files (LLD-C4) ──────────────────────────────────────────────────────────────────────────────
 
-// One ADR README Index table row: `| [NNNN](./NNNN-slug.md) | Title | Status | Repairs |` (.claude/docs/adr/
-// README.md §Index). Anchored on one of the 4 known status keywords (optionally `**bold**`-wrapped, e.g. a
-// superseded row's `**superseded by ADR-0038**`) rather than a generic `\w+`+trailing-pipe shape — the Index
-// table's Status cell is NOT held to the same bare-keyword discipline as the per-ADR blockquote frontmatter
-// (README.md's own machine-readable rule targets that OTHER table); several rows carry trailing annotation
-// prose after the keyword (`accepted *(amended by 0014: …)*`). Anchoring on the keyword itself is what forces
-// the lazy title capture to backtrack to the CORRECT closing pipe (verified against all 126 real rows).
-const ADR_ROW_RE = /^\|\s*\[(\d{4})\]\(\.\/[^)]+\)\s*\|\s*(.+?)\s*\|\s*\*{0,2}(accepted|proposed|superseded|deprecated)\b/gm
+// A decision-record filename + the H1 title inside it: `NNNN-short-kebab-title.md` / `# ADR-NNNN — <title>`.
+// The ADR FILES are the index (Kim's no-index-file rule, 2026-08-13 — the ADR directory carries no README.md
+// and never may): the numbered filename gives order + identity, the H1 gives the title, each file's own
+// blockquote header gives status. This generator used to parse a committed README Index table instead, which
+// made the file tree and the index two sources of row-truth that could (and did) disagree — the table was not
+// number-sorted (0037 sat before 0036) and its title cells had drifted from the ADRs' own H1s. Deriving from
+// the directory means a new ADR file IS indexed the moment it lands, with nothing to forget to update.
+const ADR_FILE_RE = /^(\d{4})-.+\.md$/
+const ADR_H1_RE = /^#\s*ADR-\d{4}\s*—\s*(.+?)\s*$/m
 
 /**
- * generateAdrIndex — one entry per ADR (SPEC-R4/AC2), derived from the ADR log's own README Index table (never
- * a second directory glob — one source of row-truth). `url` carries the SAME `adr-{number}` fragment
- * adr-index.ts stamps as each card's DOM id (LLD-C11) — not the bare `#{number}` SPEC-R4 AC2's illustrative
- * example shows, a deliberate, named deviation: an all-numeric id (`id="0125"`) is technically legal HTML but
- * an unescaped CSS/`querySelector` footgun, and the LLD's own §6 on-load handler reads
- * `document.getElementById(location.hash.slice(1))` with ZERO translation — that only resolves if the hash
- * fragment and the DOM id are the same literal string. Matching them (`#adr-0125` both places) is what makes
- * the LLD's own snippet correct; a bare numeric hash would require translation logic the LLD never specifies.
+ * generateAdrIndex — one entry per ADR (SPEC-R4/AC2), derived from the ADR directory itself. The emitted entry
+ * shape is unchanged from the README-derived generation this replaced, so no consumer moves. `0000-template.md`
+ * is excluded (reserved scaffold, placeholder H1) — the same predicate `site/lib/adr.ts`'s `isDecisionRecord`
+ * applies for the page glob, restated here because a Node script cannot import a Vite-transformed TS module
+ * (the constraint generate-llms-full.mjs names for its own re-derivation). Status is deliberately NOT parsed:
+ * it was never part of this shape, and every ADR's Status cell already has a corpus-wide lint gate in
+ * `site/lib/adr.test.ts` — a second parse here would be an unenforced copy of that check.
+ *
+ * `url` carries the SAME `adr-{number}` fragment adr-index.ts stamps as each card's DOM id (LLD-C11) — not the
+ * bare `#{number}` SPEC-R4 AC2's illustrative example shows, a deliberate, named deviation: an all-numeric id
+ * (`id="0125"`) is technically legal HTML but an unescaped CSS/`querySelector` footgun, and the LLD's own §6
+ * on-load handler reads `document.getElementById(location.hash.slice(1))` with ZERO translation — that only
+ * resolves if the hash fragment and the DOM id are the same literal string. Matching them (`#adr-0125` both
+ * places) is what makes the LLD's own snippet correct; a bare numeric hash would require translation logic the
+ * LLD never specifies.
  */
 export function generateAdrIndex(repoRoot) {
-  const readme = readFileSync(join(repoRoot, '.claude/docs/adr/README.md'), 'utf8')
-  const rows = [...readme.matchAll(ADR_ROW_RE)]
-  if (rows.length === 0) throw new Error('generate-sitemap: zero ADR index rows found — README.md table shape changed')
-  return rows.map(([, number, rawTitle]) => ({
-    name: `ADR-${number}`,
-    url: `./adr-index.html#adr-${number}`,
-    description: truncate(stripEmphasis(rawTitle), 160),
-    level: 'L3',
-    section: 'Records',
-  }))
+  const dir = join(repoRoot, '.claude/docs/adr')
+  const files = readdirSync(dir)
+    .filter((f) => ADR_FILE_RE.test(f) && !f.startsWith('0000-'))
+    .sort()
+  // Anti-vacuous, now on the GLOB rather than a table shape: an empty ADR directory is a broken checkout.
+  if (files.length === 0) throw new Error('generate-sitemap: zero ADR files found — .claude/docs/adr/NNNN-*.md did not match')
+  return files.map((filename) => {
+    const number = ADR_FILE_RE.exec(filename)[1]
+    const title = ADR_H1_RE.exec(readFileSync(join(dir, filename), 'utf8'))?.[1]
+    if (!title) throw new Error(`generate-sitemap: ${filename} carries no '# ADR-NNNN — <title>' H1`)
+    return {
+      name: `ADR-${number}`,
+      url: `./adr-index.html#adr-${number}`,
+      description: truncate(stripEmphasis(title), 160),
+      level: 'L3',
+      section: 'Records',
+    }
+  })
 }
 
 /** generateChangelogIndex — one entry per `## ` milestone heading in CHANGELOG.md (SPEC-R4 AC3), reusing

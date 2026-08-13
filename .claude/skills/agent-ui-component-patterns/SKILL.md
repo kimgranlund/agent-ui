@@ -48,8 +48,9 @@ fork, not a local choice.
 
 ## How to use a row
 
-1. Read the ADR (the rationale + the forks it settled) — `.claude/docs/adr/README.md` is the
-   index with per-ADR consequence trails.
+1. Read the ADR (the rationale + the forks it settled) — `.claude/docs/adr/` IS the index: the
+   numbered filenames carry order + title, and each file's own header carries status and its
+   consequence trail. (No index file lives there — `agent-ui-doc-standards` §1b.)
 2. Read the realized home end-to-end — the code is the resolved shape, the ADR is why.
 3. If your case doesn't fit the row's stated scope, that's a **fork**: name it in the intake
    ([[agent-ui-component-design]]), don't quietly stretch the mechanism.

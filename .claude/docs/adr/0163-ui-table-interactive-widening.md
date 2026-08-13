@@ -1,6 +1,6 @@
 # ADR-0163 — `ui-table` widens in place: selection + sort + filter + pagination land on the ratified display-only contract (Kim's 2026-07-28 ruling, held to the letter at F1), `ui-pagination` minted
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-28
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-28
 >
 > | Field | Value |
 > |---|---|

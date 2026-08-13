@@ -1,6 +1,6 @@
 # ADR-0184 — agent-reasoning trace (GH #737): EXTEND `ui-status-stream`, never port — nano-ui's `agent-reasoning` maps ~80% onto shipped machinery; the genuine delta lands as three additive opt-ins (note entries · `setPlan` · consumer-supplied receipt summary) in the control's own established fork pattern
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-08-12
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-08-12
 >
 > | Field | Value |
 > |---|---|

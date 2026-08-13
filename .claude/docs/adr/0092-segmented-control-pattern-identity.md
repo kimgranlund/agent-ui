@@ -1,6 +1,6 @@
 # ADR-0092 — "Segmented control" becomes a first-class NAMED PATTERN; the tag stays `ui-radio-group[variant=segmented]` (ADR-0086 stands)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-07 *(authored — the design-only revisit of ADR-0086, Kim's intake)* · 2026-07-07 *(superseded — Kim ruled the T3 fork the same day: the tag IS the requirement; discarded unratified per §Consequences last bullet. The supersession is [ADR-0095](./0095-ui-segmented-control-standalone-component.md), authored from §Alternatives-1 exactly as this ADR instructs for this outcome)*
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-07 *(authored — the design-only revisit of ADR-0086, Kim's intake)* · 2026-07-07 *(superseded — Kim ruled the T3 fork the same day: the tag IS the requirement; discarded unratified per §Consequences last bullet. The supersession is [ADR-0095](./0095-ui-segmented-control-standalone-component.md), authored from §Alternatives-1 exactly as this ADR instructs for this outcome)*
 >
 > | Field | Value |
 > |---|---|

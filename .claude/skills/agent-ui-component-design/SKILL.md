@@ -95,8 +95,9 @@ Load the map skills as you go: [[agent-ui-component-standards]] (law),
 6. **Decide what the change earns.** Default-no on documents: a TICKET always; SPEC/LLD when
    the work is multi-component or another seat builds it; **ADR only for contract-changing
    forks** — status `proposed` with firm recommendations per fork, and **never self-ratified**
-   (only Kim flips a status, by explicit naming). Number = next free per
-   `.claude/docs/adr/README.md`; add its README row. If the fork sheet's Props row lands on an
+   (only Kim flips a status, by explicit naming). Number = next free in the ADR FILE TREE
+   (`ls .claude/docs/adr/[0-9]*.md` — that directory carries no index file to add a row to, and
+   never may; Kim's no-index-file rule, `agent-ui-doc-standards` §1b). If the fork sheet's Props row lands on an
    array/aggregate value (not a scalar), run `references/mint-vs-compose.md`'s bindable-aggregate
    bar before defaulting to composition — it names exactly when that case earns a new primitive
    (ADR-0175).
@@ -127,7 +128,7 @@ Load the map skills as you go: [[agent-ui-component-standards]] (law),
 - [ ] Job stated; precedent rows recorded; three axes classified.
 - [ ] Fork sheet complete — every row decided or explicitly named as an open fork.
 - [ ] Contract-changing forks in a `proposed` ADR with firm recommendations (never
-      self-ratified); README row added.
+      self-ratified); its number verified free against the ADR file tree.
 - [ ] Decomposition coverage-clean; test plan meets the bar incl. any built-output leg.
 - [ ] Independent doc review PASSED; the design is frozen; the build brief names the LLD/spec
       as the contract.

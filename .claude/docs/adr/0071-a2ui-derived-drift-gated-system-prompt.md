@@ -1,6 +1,6 @@
 # ADR-0071 — the machine system prompt is DERIVED from `catalog.json` + the `a2ui-compose` grammar and drift-gated, never hand-maintained
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-04
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-04
 >
 > | Field | Value |
 > |---|---|

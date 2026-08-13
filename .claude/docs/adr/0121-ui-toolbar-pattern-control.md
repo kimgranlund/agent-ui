@@ -1,6 +1,6 @@
 # ADR-0121 — `ui-toolbar`: a Pattern-class action bar, one element across floating & embedded postures
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-10
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-10
 >
 > | Field | Value |
 > |---|---|

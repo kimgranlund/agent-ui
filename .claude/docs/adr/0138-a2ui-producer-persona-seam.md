@@ -1,6 +1,6 @@
 # ADR-0138 — the A2UI producer gains a PERSONA seam: an optional caller-supplied system-prompt section rides `ProduceOptions.personaSystem` → `buildSystemPrompt`, appended after the catalog law
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-16
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-16
 >
 > | Field | Value |
 > |---|---|

@@ -1,6 +1,6 @@
 # ADR-0001 — Start A1 with the control-free validation spine ahead of G7
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-06-26
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-06-26
 >
 > | Field | Value |
 > |---|---|

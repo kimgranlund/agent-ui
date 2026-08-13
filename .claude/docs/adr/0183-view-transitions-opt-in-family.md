@@ -1,6 +1,6 @@
 # ADR-0183 — View Transitions (GH #740): ONE shared `withViewTransition` seam in `components/dom`, per-surface OPT-IN booleans (router outlet · super-shell segments · a CSS-only `@view-transition` for the MPA docs site), progressive-enhancement-only — un-fencing ADR-0115 cl.7's named future candy; the A2UI re-render surface is DESIGN-DEFERRED to its own booked slice
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-08-12
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-08-12
 >
 > | Field | Value |
 > |---|---|

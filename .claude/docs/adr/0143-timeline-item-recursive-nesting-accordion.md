@@ -1,6 +1,6 @@
 # ADR-0143 — `ui-timeline-item` gains recursive nesting, a shared accordion, and a collapsed-summary preview; unfences ADR-0122 F6
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-17
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-17
 >
 > | Field | Value |
 > |---|---|

@@ -1,6 +1,6 @@
 # ADR-0027 — A2UI v1.0 `${…}` DynamicString interpolation: path interpolation in any bindable string (renderer LLD-C5/C10)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-06-29
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-06-29
 >
 > | Field | Value |
 > |---|---|

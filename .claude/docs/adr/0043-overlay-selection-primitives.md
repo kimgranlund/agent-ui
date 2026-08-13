@@ -1,6 +1,6 @@
 # ADR-0043 — Overlay + selection primitives: the Overlay controller (Popover API + JS positioning) + the roving-focus trait + selection-commit + UIListboxElement
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-06-30
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-06-30
 >
 > | Field | Value |
 > |---|---|

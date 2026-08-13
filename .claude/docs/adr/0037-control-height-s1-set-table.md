@@ -1,6 +1,6 @@
 # ADR-0037 — Control heights are the explicit §1 SET-height table (snap `--ui-height` to the ramp; supersedes the height-linear leg)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-06-30
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-06-30
 >
 > | Field | Value |
 > |---|---|

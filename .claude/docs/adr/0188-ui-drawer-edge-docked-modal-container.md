@@ -1,6 +1,6 @@
 # ADR-0188 — `ui-drawer` (GH #845, component arm): a NEW edge-docked MODAL container is minted on the native `<dialog>`/`showModal()` machinery (the ADR-0017 pattern re-applied, not a nested `ui-modal`, not a `dock` widening of it), completing the overlay/docking vocabulary as a four-cell map — centered modal · edge-docked modal · anchored non-modal · shell-docked non-overlay
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-08-13
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-08-13
 >
 > | Field | Value |
 > |---|---|

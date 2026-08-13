@@ -1,6 +1,6 @@
 # ADR-0046 — The container box-model: margin inset, the sticky-region pattern, and the header/content/footer padding system
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-01
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-01
 >
 > | Field | Value |
 > |---|---|

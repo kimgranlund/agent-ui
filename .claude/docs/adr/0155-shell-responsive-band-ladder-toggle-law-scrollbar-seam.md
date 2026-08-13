@@ -1,6 +1,6 @@
 # ADR-0155 — The shell family goes responsive as a system: a two-line band ladder (compact 52.5rem joins narrow 40rem via `collapse-band`), a header-toggle affordance law (presence · menu⇄X · overlay dismissal), the fleet scrollbar seam on the shell's own scroll regions, and the docs-site narrow story moves from `stack` to overlay
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-20
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-20
 >
 > | Field | Value |
 > |---|---|

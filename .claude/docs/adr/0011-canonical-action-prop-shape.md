@@ -1,6 +1,6 @@
 # ADR-0011 — Canonical inbound `action`-prop shape (`{ action, context?, wantResponse? }`)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-06-27
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-06-27
 >
 > | Field | Value |
 > |---|---|

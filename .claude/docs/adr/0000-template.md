@@ -1,6 +1,6 @@
 # ADR-NNNN — <short decision title>
 
-> Source: agent-ui ADR template. Copy to `NNNN-<short-kebab-title>.md`, fill the fields, set a real date. Log + lifecycle: [`README.md`](./README.md). · template
+> Source: agent-ui ADR template. Copy to `NNNN-<short-kebab-title>.md`, fill the fields, set a real date. Lifecycle + grammar: the `agent-ui-doc-standards` skill (this directory needs no index file — the numbered filenames carry order + title, each header carries status). · template
 >
 > | Field | Value |
 > |---|---|

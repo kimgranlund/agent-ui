@@ -1,6 +1,6 @@
 # ADR-0065 — the icon adapter: a swappable-pack registry + a `@agent-ui/icons` leaf package, feeding SVG content into the existing icon-cell geometry
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-03
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-03
 >
 > | Field | Value |
 > |---|---|

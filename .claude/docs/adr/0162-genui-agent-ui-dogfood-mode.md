@@ -1,6 +1,6 @@
 # ADR-0162 — GenUI agent-ui dogfood mode (GH #316): an opt-in per-turn mode that loads the fleet's docs-page asset set (CSS + the self-defining component bundle, delivered INLINE under the unchanged CSP) into the sandboxed frame, and injects descriptor-derived dogfooding prompt modules into the LLM payload — off = byte-identical to today on both surfaces
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-28
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-28
 >
 > | Field | Value |
 > |---|---|

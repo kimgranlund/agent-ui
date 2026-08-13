@@ -1,6 +1,6 @@
 # ADR-0126 — the A2UI message-lifecycle decision layer: one new SPEC/LLD, a GRAMMAR-floor insertion point, and the demo's delete-vs-keep rule
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-11
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-11
 >
 > | Field | Value |
 > |---|---|

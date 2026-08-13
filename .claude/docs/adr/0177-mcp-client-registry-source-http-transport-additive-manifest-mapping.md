@@ -1,6 +1,6 @@
 # ADR-0177 — MCP client integration for the tool-enablement layer: an MCP server registers as a manifest-registry SOURCE (N discovered `IntegrationManifest`s, not one multi-tool entry), server-side-only HTTP/SSE transport in scope now (stdio deferred — infeasible in the production Worker), MCP tool schemas map additively onto `ToolDef`/`validateToolInput` under the id≠tool.name≠label law, dev-proxy-first behind a config-registered server allowlist
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-08-06
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-08-06
 >
 > | Field | Value |
 > |---|---|

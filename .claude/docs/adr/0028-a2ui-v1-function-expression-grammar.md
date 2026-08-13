@@ -1,6 +1,6 @@
 # ADR-0028 — A2UI v1.0 `${fn(arg:val)}` function-expression grammar: the in-string call form resolves (renderer LLD-C10)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-06-29
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-06-29
 >
 > | Field | Value |
 > |---|---|

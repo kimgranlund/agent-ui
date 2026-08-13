@@ -1,6 +1,6 @@
 # ADR-0120 — Panes + settings surface join agent-app-surfaces as M4; the split-pane PRIMITIVE lands components-tier (`ui-split`), chrome patterns app-tier
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-10
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-10
 >
 > | Field | Value |
 > |---|---|

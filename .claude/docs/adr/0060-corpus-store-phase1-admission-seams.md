@@ -1,6 +1,6 @@
 # ADR-0060 — corpus store phase 1: the tier-2 judge is an injected seam (tier-1-only admission until the harness wave); the eval facet fail-closes until contamination lands
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-03
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-03
 >
 > | Field | Value |
 > |---|---|

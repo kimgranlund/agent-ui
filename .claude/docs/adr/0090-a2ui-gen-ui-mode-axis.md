@@ -1,6 +1,6 @@
 # ADR-0090 — the Gen-UI mode axis: a per-turn `mode` that SCALES the ADR-0089 ASK grammar (directive `specific` ↔ exploratory `blue-sky`), a mode-invariant honesty floor, and Structural named as the already-shipped recorded transport
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-07
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-07
 >
 > | Field | Value |
 > |---|---|

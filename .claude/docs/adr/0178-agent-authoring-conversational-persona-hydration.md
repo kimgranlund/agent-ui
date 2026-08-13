@@ -1,6 +1,6 @@
 # ADR-0178 — Agent-authoring flow (GH #633): conversational persona hydration is a NEW model-authored `personaPatch` meta-line arm (the ask/plan precedent, exactly), applied HOST-side through the persona-file key-enumeration + per-key-sanitizer gate; a builder-scoped modality gate keys it; the guiding questions are MODEL-authored (ask arm + prose), never host heuristics; the try-it toggle never swaps store identity
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-08-09
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-08-09
 >
 > | Field | Value |
 > |---|---|

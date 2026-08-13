@@ -1,6 +1,6 @@
 # ADR-0100 — Query-container establishment moves off the layout primitives to externally-sized boundaries; card `min-inline-size: 0` retained
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-07
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-07
 >
 > | Field | Value |
 > |---|---|

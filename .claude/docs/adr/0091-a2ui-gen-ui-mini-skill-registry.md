@@ -1,6 +1,6 @@
 # ADR-0091 — the Gen-UI mini-skill registry: a modular, on-demand-selected idiom-instruction layer composed into the prompt as one bounded block riding the shipped `fewShot` seam — degrading to empty on no match, promotable to the corpus
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-07
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-07
 >
 > | Field | Value |
 > |---|---|

@@ -1,6 +1,6 @@
 # ADR-0019 — Pull renderer LLD-C8 (two-way input binding) into the G9 container milestone
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-06-28
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-06-28
 >
 > | Field | Value |
 > |---|---|

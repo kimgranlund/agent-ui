@@ -1,6 +1,6 @@
 # ADR-0172 — M-D design intake: a persona's local A2UI patterns are catalog-schema content, composed at derive-time over its selected base catalog — never prompt-only, never N duplicated catalogs; "shared system patterns" is a new catalog-level tier still to carve out, distinct from mini-skills' prompt-layer idioms
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-08-05
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-08-05
 >
 > | Field | Value |
 > |---|---|

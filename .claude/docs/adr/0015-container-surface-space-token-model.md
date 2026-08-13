@@ -1,6 +1,6 @@
 # ADR-0015 — Container surface model (elevation × brightness) + the `--ui-space` / `--ui-radius-base` tokens
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-06-28
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-06-28
 >
 > | Field | Value |
 > |---|---|

@@ -1,6 +1,6 @@
 # ADR-0187 — the validator finalize signal (GH #829): `validateA2ui` gains an opt-in `atFinalize` option — an abandoned content-less `createSurface` fails `IDGRAPH sid:root-missing` at the two finalize call-sites (renderer finalize + produce's per-round judgment) and at corpus admission, while every default-mode verdict stays byte-identical and the ratified prefix laws stand untouched
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-08-13
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-08-13
 >
 > | Field | Value |
 > |---|---|

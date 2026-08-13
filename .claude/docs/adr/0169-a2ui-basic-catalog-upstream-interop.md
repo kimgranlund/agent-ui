@@ -1,6 +1,6 @@
 # ADR-0169 — The second catalog IS upstream A2UI Basic: `a2ui-basic` registers beside the default on every renderer, schema-derived fleet-factory mappings with a recorded 18-type partition, per-catalog function implementations, and catalog selection threaded end-to-end
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-08-04
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-08-04
 >
 > | Field | Value |
 > |---|---|

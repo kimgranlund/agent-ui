@@ -1,6 +1,6 @@
 # ADR-0068 — the corpus-quality judge is a deterministic verdict-adapter over critic-authored verdicts: `createVerdictJudge` fails closed on unjudged candidates; back-scoring quarantines below-bar records; the standing gate and the import path learn quarantine in the same change
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-03
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-03
 >
 > | Field | Value |
 > |---|---|

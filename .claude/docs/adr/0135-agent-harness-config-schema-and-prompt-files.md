@@ -1,6 +1,6 @@
 # ADR-0135 — The agent harness's config unifies on a hoisted SettingsSchema and its prompt text moves into files: three intertwined pieces, one change
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-14
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-14
 >
 > | Field | Value |
 > |---|---|

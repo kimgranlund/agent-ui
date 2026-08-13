@@ -1,6 +1,6 @@
 # ADR-0073 — the config-driven multi-provider seam: an `AgentProvider` stream seam + a committed `providers.json` registry (Anthropic/OpenAI/Gemini), the SoT for the in-chat switcher and the proxy allowlist; Anthropic now, OpenAI/Gemini the next adapter slices
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-04
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-04
 >
 > | Field | Value |
 > |---|---|

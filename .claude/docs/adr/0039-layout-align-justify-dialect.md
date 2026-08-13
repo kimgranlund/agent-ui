@@ -1,6 +1,6 @@
 # ADR-0039 — The layout family standardizes on the box-alignment `align`/`justify` dialect (`start`/`end`, not `flex-start`/`flex-end`)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-06-30
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-06-30
 >
 > | Field | Value |
 > |---|---|

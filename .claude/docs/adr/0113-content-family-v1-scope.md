@@ -1,6 +1,6 @@
 # ADR-0113 — Content family v1 scope: `ui-code` (verbatim, mono, self-scrolling; highlighting fenced) + the `ui-text` hyperlink capability (own record: ADR-0114) + `ui-disclosure` (native `<details>` wrap), same-wave catalog rows + feed dispositions
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-08
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-08
 >
 > | Field | Value |
 > |---|---|
