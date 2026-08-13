@@ -443,7 +443,7 @@ opposite ("case is left AS-AUTHORED … these labels are proper names") — repa
   `text.browser.test.ts`'s emphasis leg. The two generated artifacts carrying built `dimensions.css` bytes
   were regenerated (`dogfood-assets.ts`, `theme-provider-built.css`).
 
-## Amendment (2026-08-13, **proposed** — Kim ratifies) — the wire `Text.variant` enum widens by ONE member, `label`: cl.5's "wire vocabulary is UNCHANGED" headline claim no longer holds for this one addition ([GH #808](https://github.com/kimgranlund/agent-ui/issues/808) S1)
+## Amendment (2026-08-13, **ratified** — kimgranlund, [utterance](https://github.com/kimgranlund/agent-ui/issues/808#issuecomment-5280526380), verified 2026-08-13) — the wire `Text.variant` enum widens by ONE member, `label`: cl.5's "wire vocabulary is UNCHANGED" headline claim no longer holds for this one addition ([GH #808](https://github.com/kimgranlund/agent-ui/issues/808) S1)
 
 > Append-only, and **proposed**: the Status cell reads `accepted` for the record as a whole and stays
 > byte-untouched — agents never flip status (`.claude/hooks/adr-status-guard.py`), and this amendment
