@@ -8,8 +8,8 @@
 > sooner) · [`a2ui-runtime.spec.md`](../spec/a2ui-runtime.spec.md) SPEC-R11/N6 (the shared
 > validator) · [`a2ui-live-agent.spec.md`](../spec/a2ui-live-agent.spec.md) SPEC-R4/R5 (self-correct
 > + validate-then-stream). Composes on: [`a2ui-renderer.lld.md`](a2ui-renderer.lld.md) §8 LLD-C11 /
-> §9 error table · TKT-0081's `SurfaceSeed` merge (`validate.ts:99-118`, `produce.ts
-> sessionSurfaceSeeds`) · GH [#829](https://github.com/kimgranlund/agent-ui/issues/829)'s two dated
+> §9 error table · TKT-0081's `SurfaceSeed` merge (the seed-merge loop in `validate.ts`'s `run` +
+> `produce.ts`'s `sessionSurfaceSeeds`) · GH [#829](https://github.com/kimgranlund/agent-ui/issues/829)'s two dated
 > Findings (2026-08-13 — the diagnosis this designs against, incl. the attempted-and-reverted
 > naive fix and its 5 red suites).
 
@@ -30,13 +30,13 @@ through as an explicit opt-in finalize signal, defaulting to today's lenient beh
 | # | Component | File | Change |
 |---|---|---|---|
 | C1 | Validator core | `a2ui/src/renderer/validate.ts` | `atFinalize` option + createSurface registration + the finalize-mode empty-surface judgment |
-| C2 | Server opt-in | `a2ui/src/agent/produce.ts` (per-round verdict, ~:995) | passes `{ atFinalize: true }`; hint prose extension |
+| C2 | Server opt-in | `a2ui/src/agent/produce.ts` (the per-round `validateA2ui(assembled.output, …)` judgment) | passes `{ atFinalize: true }`; hint prose extension |
 | C3 | Client opt-in | `a2ui/src/renderer/renderer.ts#finalizeSurface` | passes `{ atFinalize: true }` |
 | C4 | Admission opt-ins | `a2ui/src/corpus/admit.ts` stage 5 · `a2ui/tools/harness/validate-payload.ts` | pass `{ atFinalize: true }` (a record/pasted payload IS a complete set) |
 | C5 | Holds (no change to verdicts) | `a2ui/tools/conformance/run.ts` (runner default) · `site/lib/artifact-feed.ts` · `site/pages/workbench-summary.ts` | stay default-lenient; see §4 rulings |
 | C6 | Conformance extension | `a2ui/conformance/fixtures.jsonl` (+ `tools/conformance/{run,generate-suites}.ts`) | additive per-fixture `atFinalize?: boolean` + a negative/positive fixture pair |
 | C7 | Client presentation | `app/src/controls/surface-host/surface-host.ts` (+ css) | terminal-empty state at finalize — presentation of the verdict, never a second judgment |
-| C8 | Doc amendments | spec/LLD clauses named in ADR-0187 Consequences | REV blocks, post-ratification, with the build PR |
+| C8 | Doc amendments | spec/LLD clauses enumerated in ADR-0187's **Repairs** cell | REV blocks, post-ratification, with the build PR |
 
 ## 3. Interfaces (C1 — the whole contract change)
 
@@ -70,7 +70,7 @@ mint param #5. Threading: `run(input, catalog, sessionSeed, atFinalize)` →
    got right; dropping the exemption unconditionally is the half it got wrong.)
 2. **Seed-merge composes unchanged (TKT-0081).** The seed loop already runs BEFORE the id-graph
    stage and already skips `createdHere` sids (GH #307 F2). Consequence — **no new carve-out is
-   needed** (#829's open question 3): a session-known surface this payload touched gets its prior
+   needed** (Findings 2's third fork): a session-known surface this payload touched gets its prior
    graph merged, so it cannot be judged empty; a `createdHere` surface is judged standalone, and a
    standalone-empty created surface at finalize is EXACTLY the defect. An untouched seeded surface
    never enters `surfaces` at all (nothing to judge — data-only rounds stay clean).
@@ -84,19 +84,20 @@ mint param #5. Threading: `run(input, catalog, sessionSeed, atFinalize)` →
    judgment skips members. Lenient-mode verdicts are untouched (a dangling-ref set followed by
    delete still fails today's checks — only the finalize-only emptiness arm consults the set).
 
-## 4. Call-site rulings (#829 open question 1 — every `validateA2ui` caller, with reasons)
+## 4. Call-site rulings (Findings 2's opt-in fork — every `validateA2ui` caller, with reasons)
 
 | Caller | Ruling | Reason |
 |---|---|---|
 | `renderer.ts#finalizeSurface` | **OPT IN** | The client half of the bug. It already exists to judge the COMPLETE set at finalize (LLD-C11 §8); a createSurface-only surface re-frames as `updateComponents { components: [] }`, which now fails `sid:root-missing` → the existing IDGRAPH-only filter passes it → `VALIDATION_FAILED` on the wire. Zero filter change (§5). |
 | `produce.ts` per-round verdict | **OPT IN** | The server half. A round's assembled output is that turn's final wire payload (validate-then-stream, live-agent SPEC-R5) — "the model stopped" IS the finalize signal. An abandoned createSurface becomes a pre-wire self-correct round (live-agent SPEC-R4), never reaching the browser. |
-| `corpus/admit.ts` stage 5 | **OPT IN** (#829 open question 2: **yes**) | An admitted record IS a complete set — renderer LLD §8's parity prose already says the corpus judges complete `a2uiOutput`s; finalize granularity makes the claim true for the empty-surface case too. **Nothing reds:** the 29-record exemplar shard scanned clean (zero createSurface-only sids, 2026-08-13); the reverted attempt's `examples.test.ts` failure was the per-PREFIX test (which keeps calling default-lenient by definition), never admission. AC: a full re-admission sweep in the slice. |
+| `corpus/admit.ts` stage 5 | **OPT IN** (Findings 2's corpus-admission call: **yes**) | An admitted record IS a complete set — renderer LLD §8's parity prose already says the corpus judges complete `a2uiOutput`s; finalize granularity makes the claim true for the empty-surface case too. **Nothing reds:** the 29-record exemplar shard scanned clean (zero createSurface-only sids, 2026-08-13); the reverted attempt's `examples.test.ts` failure was the per-PREFIX test (which keeps calling default-lenient by definition), never admission. AC: a full re-admission sweep in the slice. |
 | `tools/harness/validate-payload.ts` | **OPT IN** | It mirrors admission (imports via `corpus/validate.ts`, pre-checks payloads destined for admission) — diverging verdicts here re-opens the exact parity gap SPEC-N6 exists to close. A pasted payload is complete by construction. |
 | `tools/conformance/run.ts` | **DEFAULT** (runner) + **per-fixture opt-in** (C6) | Two committed fixtures (`unsupported-version`, `bad-pointer-datamodel`) deliberately carry createSurface-only sids to isolate ONE failure each — a blanket flip destroys their isolation (the reverted attempt proved it). The fixture schema gains an additive `atFinalize?: boolean` the runner forwards; absent = today, byte-identical. New fixture pair rides C6. |
 | `site/lib/artifact-feed.ts` | **DEFAULT** | It judges per-artifact envelope chunks of a recorded A2A feed; an artifact MAY be a partial delivery completed by a later artifact — a chunk boundary is not a finalize boundary. |
 | `site/pages/workbench-summary.ts` (via its test gate) | **DEFAULT now, MAY opt in later** | Authored-complete demo sets would benefit, but the gate is not on the bug's path; flipping it is a one-line follow-up once C1 ships, not required scope. Named here so the hold is a decision, not an omission. |
+| `site/pages/dashboard-summary.ts` (via `dashboard-summary.test.ts`) | **DEFAULT now, MAY opt in later** | Mirrors `workbench-summary.test.ts` exactly (its own header says so) — same ruling, same reason, same one-line follow-up if wanted. |
 
-## 5. Failure shape (#829 open question 4): REUSE `IDGRAPH` + `${sid}:root-missing`
+## 5. Failure shape (the first fork this design names beyond Findings 2): REUSE `IDGRAPH` + `${sid}:root-missing`
 
 **No new code.** SPEC-R6's `CONTAINMENT` precedent minted a code because parent-typing was a
 genuinely NEW structural relation the id-graph never expressed. Here the defect IS the id-graph's
@@ -107,7 +108,7 @@ is wrong (no `root` was ever delivered for the surface). Reuse buys, concretely:
 - The §9 error-table mapping (`IDGRAPH` → `VALIDATION_FAILED` + surfaceId) and the wire union
   (`A2uiWireError`) are untouched — **zero wire widening**.
 - `produce`'s self-correct feedback already teaches root-missing; C2 extends the hint PROSE
-  (deliver `root` for the surface **or drop the unused `createSurface` line`) — additive text,
+  (deliver `root` for the surface, or drop the unused `createSurface` line) — additive text,
   no new hint key required by this design (builder's judgment whether a dedicated
   `IDGRAPH_HINTS` entry keyed off the empty-set case reads better; either satisfies the AC).
 - Conformance needs only fixtures (C6), never a code-table/manifest extension.
@@ -115,7 +116,7 @@ is wrong (no `root` was ever delivered for the surface). Reuse buys, concretely:
 `ABANDONED_SURFACE`/`EMPTY_SURFACE` is recorded as the rejected alternative in ADR-0187; if
 telemetry ever needs the distinction, a code split stays additive later.
 
-## 6. Client presentation (#829 open question 5): single-owner, one presentational brace
+## 6. Client presentation (the second design-named fork): single-owner, one presentational brace
 
 **The validator is the sole JUDGE** — `conversation.ts` must NOT re-implement emptiness judgment
 (a second judge is the SPEC-N6 fork the one-implementation law forbids). But the SYMPTOM is
