@@ -125,7 +125,7 @@ describe('ui-conversation-composer — GH #849 reference typeahead (both engines
     el.invocables = [
       { id: 'skill-style', label: 'House style', kind: 'skill' },
       { id: 'wf-review', label: 'Review flow', kind: 'workflow' },
-      { id: 'mcp:calc:*', label: 'Calculator', kind: 'tool' },
+      { id: 'svc:calc:*', label: 'Calculator', kind: 'tool' },
     ]
     await el.updateComplete
     const editor = editorOf(el)

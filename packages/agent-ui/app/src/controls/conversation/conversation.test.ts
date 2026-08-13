@@ -529,7 +529,7 @@ describe('ui-conversation — the composed ui-conversation-composer (TKT-0056): 
   it('mentionables/invocables forward straight through, and a committed reference rides onSubmit\'s widened second argument (GH #849)', async () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)
     el.mentionables = [{ id: 'res-menu', label: 'Menu PDF', kind: 'resource' }]
-    el.invocables = [{ id: 'mcp:calc:*', label: 'Calculator', kind: 'tool' }]
+    el.invocables = [{ id: 'svc:calc:*', label: 'Calculator', kind: 'tool' }]
     await whenFlushed()
     const child = composer(el)
     expect(child.mentionables).toEqual(el.mentionables)
