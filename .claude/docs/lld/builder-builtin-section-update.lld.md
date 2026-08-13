@@ -1,9 +1,9 @@
 # LLD — Builder builtin-section update (GH #696): the apply gate's scoped UPDATE verb
 
-> Status: proposed · v0.1 · 2026-08-11 · Layer: LLD (implementation plan)
+> Status: accepted (shipped) · v0.2 · 2026-08-13 · Layer: LLD (implementation plan) — marker flipped per Kim's in-session ruling (close-session confirm round 2026-08-13); the build shipped as PR #826 under ADR-0178's ratified Amendment (GH #821's booked repairs)
 >
 > Refines: [ADR-0178](../adr/0178-agent-authoring-conversational-persona-hydration.md)
-> **Amendment (2026-08-11, proposed — Kim ratifies; nothing below dispatches until then)** ·
+> **Amendment (2026-08-11 — the gating clause RESOLVED: ADR-0178's Amendment ratified 2026-08-13, utterance on GH #696; the plan below shipped as PR #826)** ·
 > [`builder-builtin-sections.decomp.md`](../decompositions/builder-builtin-sections.decomp.md) §S1
 > (this LLD is that slice's build plan, at slice grain — per-leaf acceptance detail is deliberately
 > thin; the amendment carries the contract).
