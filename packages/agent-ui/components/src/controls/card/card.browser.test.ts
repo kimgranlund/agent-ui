@@ -20,6 +20,13 @@ import './card.ts'
 import './card-header.ts'
 import { UICardContentElement } from './card-content.ts'
 import './card-footer.ts'
+// ADR-0186's structured-format leg reads the SAME kicker typescale row ui-text[variant='kicker'] does — the
+// browser suite below MEASURES a real <ui-text variant="kicker"> as the reference, so its own module + sheet
+// are loaded here too. ui-badge composes the trailing status affordance in the leading/trailing anatomy proof.
+import '../text/text.css'
+import '../text/text.ts'
+import '../badge/badge.css'
+import '../badge/badge.ts'
 
 const mounted: HTMLElement[] = []
 const mount = (markup: string): HTMLElement => {
@@ -383,6 +390,109 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     } finally {
       await session.send('Emulation.setEmulatedMedia', { features: [] }) // reset for the next test
     }
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  ADR-0186 — ui-card-header/-footer format='structured'. jsdom cannot resolve @scope/:has()/inherited
+//  computed typography honestly (card.test.ts pins the reflected-prop CONTRACT); this is the real-DOM leaf
+//  the ADR's Consequences owe (the intake's TKT-0002-class leaf 2): the RESOLVED font-family under
+//  [format='structured'] genuinely computes to the mono stack, not just that the token declaration exists in
+//  source text — a cascade-dependent claim needs a measured assertion.
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-card-header / ui-card-footer — format="structured" (ADR-0186, both engines)', () => {
+  it('DEFAULT format is byte-identical to today — no divider, no uppercase, ambient (non-mono) font-family', () => {
+    const card = mount('<ui-card><ui-card-header>Title</ui-card-header><ui-card-content>Body</ui-card-content></ui-card>')
+    const header = card.querySelector('ui-card-header') as HTMLElement
+    const cs = getComputedStyle(header)
+    expect(cs.borderBottomWidth, 'a default-format header must carry no divider').toBe('0px')
+    expect(cs.textTransform, 'a default-format header must not be uppercased').toBe('none')
+    expect(cs.fontFamily.toLowerCase(), 'a default-format header leaked the mono stack').not.toContain('mono')
+  })
+
+  it('format="structured" repoints the RESOLVED font-family to the fleet mono stack (cl.1) — the cascade-dependent, real-DOM claim', () => {
+    const card = mount(
+      '<ui-card><ui-card-header format="structured">Date selection</ui-card-header><ui-card-content>Body</ui-card-content></ui-card>',
+    )
+    const header = card.querySelector('ui-card-header') as HTMLElement
+    // The reference: --md-sys-typeface-mono RESOLVED through a real property on a sibling that reads it
+    // directly — engine-agnostic (never hardcodes the font stack string).
+    const ref = document.createElement('div')
+    ref.style.fontFamily = 'var(--md-sys-typeface-mono)'
+    card.append(ref)
+    const monoStack = getComputedStyle(ref).fontFamily
+    expect(monoStack.toLowerCase(), 'the reference itself did not resolve to a mono stack (test setup)').toContain('mono')
+    expect(getComputedStyle(header).fontFamily, 'the header font-family did not resolve to the mono stack').toBe(monoStack)
+  })
+
+  it('format="structured" repoints title metrics to the SAME kicker-medium row ui-text[variant="kicker"] reads, + text-transform:uppercase (cl.1)', () => {
+    const card = mount('<ui-card><ui-card-header format="structured">Date selection</ui-card-header></ui-card>')
+    const header = card.querySelector('ui-card-header') as HTMLElement
+    const kicker = mount('<ui-text variant="kicker">reference</ui-text>')
+    const hcs = getComputedStyle(header)
+    const kcs = getComputedStyle(kicker)
+    expect(hcs.fontSize, 'font-size did not match the kicker-medium row').toBe(kcs.fontSize)
+    expect(hcs.fontWeight, 'font-weight did not match the kicker-medium row').toBe(kcs.fontWeight)
+    expect(hcs.letterSpacing, 'letter-spacing did not match the kicker-medium row').toBe(kcs.letterSpacing)
+    expect(hcs.textTransform, 'structured format did not gain text-transform:uppercase').toBe('uppercase')
+  })
+
+  it('a BARE, unwrapped text label gets the treatment via inheritance — no <ui-text> wrapper required (cl.1 / the intake §4c requirement)', () => {
+    const card = mount('<ui-card><ui-card-header format="structured">Bare title, no wrapper</ui-card-header></ui-card>')
+    const header = card.querySelector('ui-card-header') as HTMLElement
+    // No element wraps the text — the header itself is what a bare text node's anonymous box inherits from.
+    expect(header.children.length, 'test setup: the label must be a bare text node, not element-wrapped').toBe(0)
+    expect(getComputedStyle(header).textTransform).toBe('uppercase')
+    expect(header.textContent?.trim()).toBe('Bare title, no wrapper')
+  })
+
+  it('format="structured" draws the header/body divider off the EXISTING --ui-card-border hairline token (cl.2) — the SAME colour the card frame itself uses', () => {
+    const card = mount(
+      '<ui-card><ui-card-header format="structured">T</ui-card-header><ui-card-content>C</ui-card-content></ui-card>',
+    )
+    const header = card.querySelector('ui-card-header') as HTMLElement
+    expect(px(getComputedStyle(header).borderBottomWidth), 'the structured divider did not render').toBeGreaterThan(0)
+    expect(
+      getComputedStyle(header).borderBottomColor,
+      'the divider colour did not read the SAME --ui-card-border the card frame uses (no new colour role)',
+    ).toBe(getComputedStyle(card).borderTopColor)
+  })
+
+  it('the zero-padding shell law is UNTOUCHED under format="structured" (cl.5) — region padding/margin identical to default', () => {
+    const def = mount('<ui-card><ui-card-header>T</ui-card-header><ui-card-content>C</ui-card-content></ui-card>')
+    const structured = mount(
+      '<ui-card><ui-card-header format="structured">T</ui-card-header><ui-card-content>C</ui-card-content></ui-card>',
+    )
+    const defHeader = def.querySelector('ui-card-header') as HTMLElement
+    const structHeader = structured.querySelector('ui-card-header') as HTMLElement
+    expect(px(getComputedStyle(structHeader).paddingLeft)).toBeCloseTo(px(getComputedStyle(defHeader).paddingLeft), 1)
+    expect(px(getComputedStyle(structHeader).paddingTop)).toBeCloseTo(px(getComputedStyle(defHeader).paddingTop), 1)
+    expect(px(getComputedStyle(structHeader).marginLeft)).toBeCloseTo(px(getComputedStyle(defHeader).marginLeft), 1)
+  })
+
+  it('ui-card-footer carries the SAME format attribute, symmetric to ui-card-header (ADR-0186\'s Decision — defined on both)', () => {
+    const card = mount(
+      '<ui-card><ui-card-content>C</ui-card-content><ui-card-footer format="structured">F</ui-card-footer></ui-card>',
+    )
+    const footer = card.querySelector('ui-card-footer') as HTMLElement
+    expect(px(getComputedStyle(footer).borderBottomWidth), 'the footer divider did not render under format="structured"').toBeGreaterThan(0)
+    expect(getComputedStyle(footer).textTransform).toBe('uppercase')
+  })
+
+  it('leading/trailing composition is UNCHANGED — an icon + a trailing badge still place in their existing grid cells (cl.3, zero anatomy change)', () => {
+    const card = mount(
+      '<ui-card><ui-card-header format="structured">' +
+        '<span slot="leading" aria-hidden="true">📅</span>' +
+        'Date selection' +
+        '<ui-badge slot="trailing" intent="success" label="Confirmed"></ui-badge>' +
+        '</ui-card-header></ui-card>',
+    )
+    const header = card.querySelector('ui-card-header') as HTMLElement
+    expect(getComputedStyle(header).gridTemplateColumns.trim().split(/\s+/).length, 'the leading+trailing grid template did not resolve to 3 columns').toBe(3)
+    const leading = header.querySelector('[slot="leading"]') as HTMLElement
+    const badge = header.querySelector('[slot="trailing"]') as HTMLElement
+    expect(leading.getBoundingClientRect().left, 'the leading adornment did not place in the start cell').toBeLessThan(badge.getBoundingClientRect().left)
   })
 })
 

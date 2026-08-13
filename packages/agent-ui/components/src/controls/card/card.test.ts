@@ -115,11 +115,36 @@ describe('ui-card-content — the scroll-mode signal reflects (puts the CARD int
     expect(el.hasAttribute('scrollable')).toBe(false) // boolean-false removes the attribute
   })
 
-  it('header/footer carry NO props (the leading/label/trailing anatomy is pure CSS, no observedAttributes)', () => {
-    expect('props' in UICardHeaderElement).toBe(false)
-    expect('props' in UICardFooterElement).toBe(false)
-    expect(UICardHeaderElement.observedAttributes).toEqual([])
-    expect(UICardFooterElement.observedAttributes).toEqual([])
+  it('header/footer carry ONLY the ADR-0186 `format` prop (the leading/label/trailing anatomy stays pure CSS)', () => {
+    // REVISED (ADR-0186): header/footer gained their first-ever prop, the reflected `format` enum
+    // ('default' | 'structured') — the structured-container title treatment (card.css's
+    // [format='structured'] leg). Symmetric on both (card.css's Decision), header-only in practice.
+    expect(Object.keys(UICardHeaderElement.props)).toEqual(['format'])
+    expect(Object.keys(UICardFooterElement.props)).toEqual(['format'])
+    expect(UICardHeaderElement.observedAttributes).toEqual(['format'])
+    expect(UICardFooterElement.observedAttributes).toEqual(['format'])
+  })
+
+  it('format defaults to \'default\', reflects, and snaps an out-of-enum attribute back to \'default\' (the ui-text variant/size/as precedent, prop.enum\'s own codec)', () => {
+    const header = new UICardHeaderElement()
+    expect(header.format).toBe('default')
+    expect(header.hasAttribute('format')).toBe(false) // the default member does not reflect a bare attribute
+
+    header.format = 'structured'
+    expect(header.getAttribute('format')).toBe('structured')
+    header.format = 'default'
+    expect(header.getAttribute('format')).toBe('default') // 'default' is a real member — it reflects, not removes
+
+    document.body.append(header)
+    header.setAttribute('format', 'bogus')
+    expect(header.format).toBe('default') // the enumType codec's own synchronous snap (the ui-badge intent precedent)
+    expect(header.getAttribute('format')).toBe('bogus') // the codec snaps the PROPERTY, not the raw attribute text itself
+    header.remove()
+
+    const footer = new UICardFooterElement()
+    expect(footer.format).toBe('default')
+    footer.format = 'structured'
+    expect(footer.getAttribute('format')).toBe('structured')
   })
 })
 

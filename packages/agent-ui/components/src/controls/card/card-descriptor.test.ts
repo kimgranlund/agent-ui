@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { UICardElement } from './card.ts'
+import { UICardHeaderElement } from './card-header.ts'
 import {
   splitFrontmatter,
   parseDescriptor,
@@ -93,5 +94,32 @@ describe('card.md descriptor — contract↔props trip-wire (part b)', () => {
     expect(compareDescriptorToProps(addBogus, UICardElement.props)).toContainEqual(
       expect.objectContaining({ code: 'DRIFT_EXTRA', path: 'attributes.gap' }),
     )
+  })
+})
+
+// ── ui-card-header `format` (ADR-0186) — NOT a second fenced {name}.md ─────────────────────────────────────
+//
+// The ADR's Repairs cell names "card-header.md" / "card-header-descriptor.test.ts (or its equivalent)" — the
+// ADR's own hedge, taken here deliberately: a genuine SECOND `{name}.md` in this folder is structurally
+// unavailable for the card family. `family-coherence.test.ts`'s fleet discovery pairs every `{name}.md` it
+// finds with a REQUIRED sibling `{name}.css` (one descriptor ⇒ one stylesheet, the swiper-family shape) — but
+// `ui-card-header`/`-content`/`-footer` deliberately share ONE `card.css` (this file's own banner: "the
+// SINGLE-file stylesheet for the whole ui-card family", ADR-0003 one-sheet-per-folder). A `card-header.md`
+// with no matching `card-header.css` breaks that REAL fleet-wide invariant (verified: adding one throws
+// ENOENT reading a `card-header.css` that must never exist) — inventing an empty/duplicate stylesheet just to
+// satisfy the discovery scan would be the deviation, not this choice. The EQUIVALENT machine-checked contract
+// instead lives where every other card-family sub-element's contract already lives: `card.md`'s PROSE (the
+// `format` axis, documented above) + `card.test.ts`'s live-class probes (props shape, default, reflect, the
+// enum codec's out-of-enum snap — the SAME `Object.keys(...props)` + behavioural style `tab.ts`'s own
+// undocumented `key` prop is held to) + `card.browser.test.ts`'s real-DOM computed-style leg (the
+// cascade-dependent claim this ADR's Consequences owe). `UICardHeaderElement`/`UICardFooterElement` are
+// imported below only to keep this file's own drift-detection honest (a future prop rename here is still
+// caught structurally, even without a fenced bijection).
+
+describe('ui-card-header / ui-card-footer — format (ADR-0186), the equivalent contract check (no second {name}.md)', () => {
+  it('both carry ONLY the format prop — a reflected enum, default \'default\' (mirrors card.test.ts\'s own live-class assertion)', () => {
+    expect(Object.keys(UICardHeaderElement.props)).toEqual(['format'])
+    expect(UICardHeaderElement.props.format.default).toBe('default')
+    expect(UICardHeaderElement.props.format.reflect).toBe(true)
   })
 })

@@ -107,7 +107,32 @@ absent region simply contributes **no box** (no grid track to null out, no `:has
 (`anatomy.md`) — this is the one place grid remains, *inside* a region, because end-alignment of the
 trailing cell genuinely needs it (the rule stops at the shell): a `slot="leading"` adornment in the start
 cell, the default children as the accessible label in the `1fr` centre, an optional `slot="trailing"`
-adornment (a footer's action row, a header's overflow glyph). Because a card region has no control height,
+adornment (a footer's action row, a header's overflow glyph). **`ui-card-header`** (and, for anatomy
+symmetry, `ui-card-footer`) also carries a `format: 'default' | 'structured'` attribute — the
+structured-container title treatment (`ADR-0186`): under `format="structured"` the label column repoints
+to the `kicker` typescale metrics + the fleet mono typeface + `text-transform: uppercase`, and the region
+gains a `border-block-end` header/body divider off the existing `--ui-card-border` hairline token. The
+leading/trailing anatomy and the zero-padding shell law (below) are unchanged either way. `format` is
+NOT a separate `card-header.md` fence (the family shares ONE `card.css`, ADR-0003 one-sheet-per-folder —
+`family-coherence.test.ts` requires every `{name}.md` to pair with its OWN `{name}.css`, which a second
+descriptor here would break); its contract is this prose + `card-header.ts`'s `static props` +
+`card.test.ts`'s live-class probes + `card.browser.test.ts`'s computed-style leg — the same posture
+`ui-tab`'s undocumented `key` prop already holds inside the `ui-tabs` compound.
+
+```html
+<ui-card>
+  <ui-card-header format="structured">
+    <ui-icon slot="leading" glyph="calendar"></ui-icon>
+    Date selection
+    <ui-badge slot="trailing" intent="success" label="Confirmed"></ui-badge>
+  </ui-card-header>
+  <ui-card-content>
+    <ui-row justify="between"><ui-text variant="label">Arrive</ui-text><ui-badge intent="neutral" label="Aug 14"></ui-badge></ui-row>
+  </ui-card-content>
+</ui-card>
+```
+
+Because a card region has no control height,
 the adornment cells size **intrinsically** — the grid *structure* is reused, not the control-frame glyph sizing.
 
 `ui-card-content` is the body — plain flow content, no anatomy. It also carries the **edge-fade mask** (below),
