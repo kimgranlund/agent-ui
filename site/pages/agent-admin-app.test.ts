@@ -642,6 +642,67 @@ describe('Integrations pack ↔ registry parity (GH #49/#567 S6)', () => {
     const storedAfter = admin.store!.get(entriesStoreKey(ENTRY_KINDS.tool)) as Array<{ id: string }>
     expect(storedAfter.map((e) => e.id), 'the non-colliding add commits, unaffected by the flip').toEqual(['weather', 'currency'])
   })
+
+  // GH #848 × GH #567 S6 — the one place a rename could plausibly be fought: the live overlay re-fires
+  // (`setLiveIntegrations` + a fresh `admin.libraries` assignment, exactly what agent-admin-app.ts does on
+  // every DEV boot) and rebuilds the Integrations PACK. A renamed entry must keep its custom name, because
+  // the pack is only ever the OFFER — the store is the entry, and the rename lives there. Asserted with the
+  // overlay's effect PROVEN in the same test (the picker menu shows the freshly served label), so a
+  // no-op `setLiveIntegrations` could not make this pass vacuously.
+  it('GH #848: a renamed live tool KEEPS its custom label when setLiveIntegrations re-fires (the pack is the offer; the store is the entry)', async () => {
+    const { setLiveIntegrations, librariesForCategory } = await import('./agent-admin-libraries.ts')
+    const { ENTRY_KINDS, entriesStoreKey } = await import('@agent-ui/app')
+    const { createMemoryStore } = await import('@agent-ui/app/settings-memory-store')
+
+    const admin = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    admin.libraries = librariesForCategory(undefined)
+    admin.store = createMemoryStore({
+      initial: {
+        [entriesStoreKey(ENTRY_KINDS.tool)]: [
+          { id: 'weather', kind: ENTRY_KINDS.tool, label: 'Weather (Open-Meteo)', description: 'Current conditions.', content: 'Current conditions.', order: 0, enabled: true, builtin: false },
+        ],
+        toolsEnabled: true,
+      },
+    })
+    document.body.append(admin)
+    mounted.push(admin)
+    await whenFlushed()
+
+    // Rename it through the real row affordance.
+    const section = admin.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.tool}"]`) as HTMLElement
+    const row = section.querySelector('[data-part="entry"][data-entry-id="weather"]') as HTMLElement
+    ;(row.querySelector('[data-part="entry-rename"]') as HTMLElement).click()
+    const field = row.querySelector('[data-part="entry-rename-field"]') as HTMLElement & { value: string }
+    field.value = 'Local forecast'
+    field.dispatchEvent(new Event('change'))
+    await whenFlushed()
+    expect((admin.store!.get(entriesStoreKey(ENTRY_KINDS.tool)) as Array<{ label: string }>)[0]!.label).toBe('Local forecast')
+
+    // The live overlay lands (or re-lands) — new served trios + the identity-change reassignment.
+    setLiveIntegrations([
+      { id: 'weather', label: 'Weather (served label)', description: 'A freshly served description.' },
+      { id: 'currency', label: 'Currency (served label)', description: 'Conversion.' },
+    ])
+    admin.libraries = librariesForCategory(undefined)
+    await whenFlushed()
+
+    // The overlay genuinely took effect: the rebuilt picker offers the SERVED labels…
+    const menuText = (admin.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.tool}"] [data-part="entry-library-menu"]`) as HTMLElement).textContent ?? ''
+    expect(menuText, 'the pack refreshed from the served trios').toContain('Currency (served label)')
+    // …and the already-added row is offered as such under its SERVED label — the pack row is pack truth,
+    // never a second writer over the store's own display name.
+    expect(menuText).toContain('Weather (served label) — Integrations (already added)')
+
+    // The load-bearing half: the STORED entry is untouched by the refresh — custom label, original id,
+    // its content intact (the GH #847 seeding writes pack `content`, and it must not reach a stored row).
+    const stored = admin.store!.get(entriesStoreKey(ENTRY_KINDS.tool)) as Array<{ id: string; label: string; content: string }>
+    expect(stored).toHaveLength(1)
+    expect(stored[0]!.label, 'the rename survives the live-overlay refresh').toBe('Local forecast')
+    expect(stored[0]!.id, 'and the wire key never moved').toBe('weather')
+    expect(stored[0]!.content, 'no pack field was re-stomped onto the stored entry').toBe('Current conditions.')
+    const renderedLabel = admin.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.tool}"] [data-part="entry"][data-entry-id="weather"] [data-part="entry-label"]`) as HTMLElement
+    expect(renderedLabel.textContent, 'and the row still SHOWS the custom name').toBe('Local forecast')
+  })
 })
 
 // ── GH #783 S4 (LLD-C6/SPEC-R5, ADR-0185) — the live-derived MCP-services pack ──────────────────────────

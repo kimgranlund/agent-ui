@@ -3,9 +3,10 @@
 // verbatim by every instantiation (prompt sections + skill/workflow/resource/tool/pattern-source, and
 // since ADR-0170 the `catalog` library) — no kind gets its own bespoke list/toggle/author code
 // (ADR-0132 cl.1). The per-kind knobs are `EntryListOptions`' `customAdd`/`contentField` (ADR-0170 cl.8,
-// both default-true), `rejectOnCollision` (GH #564, default-false) and `availabilityToggle` (GH #850,
-// default-false — the per-entry in-context/user-invocable mode control + its at-a-glance row marker) —
-// every existing call site omits the opt-in ones and renders byte-identically.
+// both default-true) and the three default-FALSE opt-ins — `rejectOnCollision` (GH #564),
+// `availabilityToggle` (GH #850, the per-entry in-context/user-invocable mode control + its at-a-glance row
+// marker) and `rename` (GH #848, the per-row display-name edit) — every existing call site omits the opt-in
+// ones and renders byte-identically.
 //
 // The per-entry content editor is `<ui-code-editor language="markdown">` (ADR-0139) — the fleet's
 // editable-first markdown source editor (CodeMirror 6, lazy-loaded on the opt-in @agent-ui/code/editor
@@ -51,8 +52,24 @@ export interface EntryListHandlers {
    *  follows: absent ⇒ the row's mode control refuses its own flip (`toggle` is cancelable, toggle.md's
    *  refused-toggle mechanism), so an opted-in section with no writer wired can never paint a mode the
    *  store does not hold. Persistence is the CALLER's (this module owns no store access), exactly as
-   *  `onToggle` already works. */
+   *  `onToggle` already works.
+   *
+   *  GH #848 reconciliation — this handler's missing-writer posture (render, then REFUSE the flip)
+   *  deliberately differs from `onRename`'s (render NOTHING), and the difference is the affordance's own
+   *  nature, not an inconsistency: a mode pill carries STATE the row must show whether or not anything can
+   *  change it (`pressed` + the row marker ARE the answer to "is this entry invocable?"), so it renders and
+   *  refuses; a rename TRIGGER carries no state at all, so with no writer it could only ever be a button
+   *  that fails. Both remain OPT-IN through `EntryListOptions`, and neither can write without its handler. */
   onAvailabilityChange?(id: string, availability: EntryAvailability): void
+  /** GH #848 — commit a per-entry DISPLAY-NAME change (`entry-data.ts`'s `renameEntry` is the law; the
+   *  caller owns the store write, this module owns the affordance). OPTIONAL, the `onAdd`-second-argument
+   *  law: every existing implementation stays valid by TS structural typing, and a section whose handlers
+   *  omit it renders no rename affordance at all — byte-identical to before this member existed, even if
+   *  `options.rename` is set (a trigger with nothing to commit through is a button that can only fail; see
+   *  `onAvailabilityChange` above for why the mode pill's missing-writer posture is the other way round).
+   *  `label` arrives RAW (the field's own text): trimming and the empty-label refusal are `renameEntry`'s,
+   *  so the law has exactly one home. The entry's `id` is never affected. */
+  onRename?(id: string, label: string): void
 }
 
 export interface EntryListSection {
@@ -113,6 +130,16 @@ export interface EntryListOptions {
    *  `onAvailabilityChange`; a `builtin` entry's mode is as editable as its `enabled` toggle (ADR-0132
    *  Fork 4 protects deletion, not configuration). */
   availabilityToggle?: boolean
+  /** GH #848 — render the per-entry RENAME affordance on each row (a display-name edit; the entry's `id` is
+   *  never rewritten). OPT-IN, the same `rejectOnCollision`/`availabilityToggle` law rather than the
+   *  `customAdd`/`contentField` one: absent/`false` ⇒ byte-identical rows for every existing caller, so the
+   *  kinds whose names are NOT free human text keep them (agent-admin flags only its four capability kinds —
+   *  a `prompt-section` label is the composed prompt's own `## {label}` heading, and a `catalog` label
+   *  mirrors the registry entry the row keys). Also requires `handlers.onRename` (see that handler's doc for
+   *  why a missing writer hides this affordance while it only REFUSES the mode pill's flip). Independent of
+   *  `builtin` — ADR-0132 Fork 4 protects DELETION, not configuration (the `enabled` toggle and the mode
+   *  pill a builtin row already carry are the precedent). */
+  rename?: boolean
 }
 
 export function mountEntryList(kind: string, addLabel: string, handlers: EntryListHandlers, options?: EntryListOptions): EntryListSection {
@@ -124,6 +151,11 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
   const rejectOnCollision = options?.rejectOnCollision === true
   // GH #850/SPEC-R2 — opt-in the same way: absent ⇒ no mode control, no row marker, byte-identical render.
   const withAvailability = options?.availabilityToggle === true
+  // GH #848 — opt-in too, and doubly gated: the OPTION says this kind's names are free human text, the
+  // HANDLER is what a commit rides. Either one missing ⇒ no rename affordance (byte-identical rows). The
+  // second gate is this affordance's own (see `onRename`'s doc) — `withAvailability` needs no handler gate
+  // because its control has state to show regardless, and refuses its flip instead.
+  const withRename = options?.rename === true && handlers.onRename !== undefined
 
   const section = document.createElement('div')
   section.setAttribute('data-part', 'entry-section')
@@ -374,6 +406,14 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
 
       header.append(toggle, entryLabel, entrySpacer)
 
+      // The trailing action cluster's ORDER, ruled once here so the next affordance knows where to land
+      // (GH #848 reconciling with GH #850, which landed the mode pill first): STATE reads before ACTIONS,
+      // and the destructive action stays last — `[switch | label | spacer | Invocable | Rename | Remove]`.
+      // The leading `enabled` switch and the `Invocable` pill are the row's two state controls (they answer
+      // "is this on?" / "how is it reachable?"); `Rename` and `Remove` are its two buttons, kept adjacent so
+      // the cluster reads as one pair rather than a button, a chip, and another button. DOM order IS tab
+      // order here (no tabindex anywhere in this row), so a keyboard user reaches configuration before
+      // deletion.
       // GH #850/SPEC-R2 — the per-entry MODE control: a `ui-toggle` pressed pill in the row's trailing
       // action cluster (ADR-0179 S7-a's own primitive — the fleet's pressed-button toggle, aria-pressed via
       // internals). `pressed` IS the mode: on ⇒ user-invocable, off ⇒ in-context (ambient). The visible
@@ -403,6 +443,103 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
           write(entry.id, invocable ? ENTRY_AVAILABILITY.context : ENTRY_AVAILABILITY.invocable)
         })
         header.append(mode)
+      }
+
+      // GH #848 — the per-entry RENAME affordance (display name only; `entry.id` is never rewritten, so
+      // every foreign-key id — a registry id, an ADR-0185 namespaced service ref — keeps resolving).
+      // Anatomy: the "Rename" trigger swaps the label span for an inline `ui-text-field` IN PLACE, and the
+      // field swaps back on commit or cancel. All of that state is the ROW's own (one closure local below,
+      // born and buried with this row) — deliberately NOT section-level bookkeeping: a `render` rebuild
+      // throws the row away, so an open rename cannot outlive its entry or leak onto a re-rendered sibling
+      // (the cross-contamination the content field's own `list.contains(active)` guard exists to prevent).
+      // The trade this accepts: an EXTERNAL re-render mid-rename (a sibling toggle, a store write) drops an
+      // uncommitted rename. That is the deliberate asymmetry with the content editor's mid-edit
+      // preservation dance — a content field holds long-form authored prose worth rescuing; a rename holds
+      // a few characters, and the label it replaces is still on screen a keystroke later.
+      if (withRename) {
+        let renameField: UITextFieldElement | null = null
+
+        /** Swap the field back out for the label span — the ONE close path (commit and cancel share it).
+         *
+         *  RE-ENTRANT BY CONSTRUCTION, and that is load-bearing (a real-engine failure, chromium + webkit
+         *  both): detaching the field removes the focused editor inside it, and the engine fires that
+         *  editor's `blur`/`focusout` SYNCHRONOUSLY, from inside this very `replaceWith` call — so the
+         *  focusout listener below re-enters here mid-swap and threw `NotFoundError: the node to be removed
+         *  is no longer a child of this node`. Clearing the state BEFORE mutating the DOM makes the nested
+         *  call a no-op; the `parentNode` check keeps it safe even if something else detached the field
+         *  first (an external `render` rebuild while a rename was open). */
+        const closeRename = (): void => {
+          const field = renameField
+          if (field === null) return
+          renameField = null
+          if (field.parentNode !== null) field.replaceWith(entryLabel)
+        }
+
+        const renameBtn = document.createElement('ui-button') as UIButtonElement
+        renameBtn.setAttribute('variant', 'soft')
+        // TKT-0048's law, the `deleteBtn` shape verbatim: a real `<ui-button>` whose label is a plain word
+        // ("Rename"), no glued glyph — so no leading-adornment icon, and the shared state-styling contract
+        // (hover/active/focus-ring) comes for free.
+        renameBtn.setAttribute('data-part', 'entry-rename')
+        renameBtn.textContent = 'Rename'
+        renameBtn.addEventListener('click', () => {
+          if (renameField !== null) {
+            renameField.focus() // already open (a second click on the trigger) — refocus, never a second field
+            return
+          }
+          const field = document.createElement('ui-text-field') as UITextFieldElement
+          field.setAttribute('data-part', 'entry-rename-field')
+          // ui-text-field's `label` prop IS its labelling seam (→ the editor's aria-label, text-field.ts's
+          // own ADR-0051 note) — the `${entry.label} enabled` switch idiom above, one row over.
+          field.label = `${entry.label} name`
+          field.value = entry.label
+          renameField = field
+          entryLabel.replaceWith(field)
+          // Focus only lands once the field's own render effect has built its editor part (`focus()`
+          // forwards to it) — the SAME already-connected/already-flushed discipline the content field's
+          // `selectToEnd()` restoration below documents.
+          void field.updateComplete.then(() => field.focus())
+
+          /** Commit whatever the field holds. The OPEN-state guard is what makes Escape a real cancel:
+           *  closing the field un-focuses its editor, whose `blur` then emits ui-text-field's own
+           *  change-on-blur-with-change — arriving here AFTER the cancel already cleared the state, so a
+           *  dismissed rename can never write (measured: without this guard, Escape committed the very text
+           *  the user was backing out of). The same guard makes a commit-then-blur pair idempotent. */
+          const commitRename = (): void => {
+            if (renameField !== field) return
+            const typed = field.value
+            closeRename()
+            // The empty case is a DISPLAY decision, not a second copy of the validation law: the label span
+            // is back with the STORED name, which is exactly the visible refusal (`renameEntry` still owns
+            // the trim and the empty-label no-op). A real rename shows immediately and the caller's
+            // re-render then confirms it from the store — the `onToggle` posture (the switch moves, the
+            // re-render is the truth).
+            if (typed.trim().length === 0) return
+            entryLabel.textContent = typed.trim()
+            handlers.onRename?.(entry.id, typed)
+          }
+
+          // `change`, never `input`: ui-text-field commits on Enter or blur-with-change (text-field.ts's
+          // own baseline-gated pair) — the fleet's per-field-on-change law this whole section follows.
+          field.addEventListener('change', commitRename)
+          field.addEventListener('keydown', (event) => {
+            if ((event as KeyboardEvent).key !== 'Escape') return
+            // Local cancel: swallow it so an ancestor (a ui-disclosure fold, a menu) never also acts on the
+            // same Escape — the rename is what the user is dismissing.
+            event.stopPropagation()
+            closeRename()
+          })
+          // A blur that changed NOTHING fires no `change` at all — close anyway, so the row never keeps a
+          // stale open field. A blur that DID change the text already committed through `change` (dispatched
+          // ahead of focusout) and cleared the state, which the guard sees; focus moving WITHIN the field is
+          // not a close.
+          field.addEventListener('focusout', (event) => {
+            if (renameField !== field) return
+            if (field.contains((event as FocusEvent).relatedTarget as Node | null)) return
+            closeRename()
+          })
+        })
+        header.append(renameBtn)
       }
 
       if (!entry.builtin) {

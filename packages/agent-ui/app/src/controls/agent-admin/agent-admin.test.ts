@@ -216,6 +216,160 @@ describe('mountEntryList — availabilityToggle (SPEC-R2)', () => {
   })
 })
 
+// ── GH #848 — the rename OPTION on the primitive itself (both polarities, the ADR-0170 cl.8 discipline) ──
+describe('mountEntryList — the rename option (GH #848)', () => {
+  const ROW: Entry = { id: 'a', kind: 'skill', label: 'A', description: 'about A', content: 'body', order: 0, enabled: true, builtin: false }
+  const BUILTIN: Entry = { ...ROW, id: 'b', label: 'B', order: 1, builtin: true }
+
+  it('ABSENT ⇒ byte-identical rows: no rename trigger anywhere', () => {
+    const section = mountEntryList('skill', 'Add skill', { onToggle: () => {}, onContentChange: () => {}, onDelete: () => {}, onAdd: () => true, onRename: () => {} })
+    section.render([ROW])
+    expect(section.host.querySelector('[data-part="entry-rename"]'), 'the handler alone renders nothing').toBeNull()
+  })
+
+  it('the option WITHOUT the handler renders nothing either (both gates, so neither half can ship half-wired)', () => {
+    const section = mountEntryList('skill', 'Add skill', { onToggle: () => {}, onContentChange: () => {}, onDelete: () => {}, onAdd: () => true }, { rename: true })
+    section.render([ROW])
+    expect(section.host.querySelector('[data-part="entry-rename"]')).toBeNull()
+  })
+
+  it('option + handler ⇒ every row gets a trigger, BUILTIN rows included (Fork 4 protects deletion, not configuration)', () => {
+    const renames: Array<[string, string]> = []
+    const section = mountEntryList(
+      'skill',
+      'Add skill',
+      { onToggle: () => {}, onContentChange: () => {}, onDelete: () => {}, onAdd: () => true, onRename: (id, label) => renames.push([id, label]) },
+      { rename: true },
+    )
+    section.render([ROW, BUILTIN])
+    const rows = [...section.host.querySelectorAll<HTMLElement>('[data-part="entry"]')]
+    expect(rows.map((r) => r.querySelector('[data-part="entry-rename"]') !== null)).toEqual([true, true])
+    // The builtin row still has no DELETE affordance — the two are independent (regression fence).
+    expect(rows[1]!.querySelector('[data-part="entry-delete"]')).toBeNull()
+
+    // Commit through the builtin row: the handler gets the RAW typed text and the entry's own id.
+    ;(rows[1]!.querySelector('[data-part="entry-rename"]') as HTMLElement).click()
+    const field = rows[1]!.querySelector('[data-part="entry-rename-field"]') as UITextFieldElement
+    expect(field.value, 'pre-filled with the name being changed').toBe('B')
+    field.value = '  Renamed B  '
+    field.dispatchEvent(new Event('change'))
+    expect(renames, 'raw text — the trim is renameEntry\'s one home').toEqual([['b', '  Renamed B  ']])
+    expect(rows[1]!.querySelector('[data-part="entry-rename-field"]'), 'the field closed on commit').toBeNull()
+    expect(rows[1]!.querySelector('[data-part="entry-label"]')!.textContent, 'and the label shows the trimmed name').toBe('Renamed B')
+  })
+
+  it('an EMPTY commit calls nothing and puts the stored name back (the visible refusal)', () => {
+    const renames: string[] = []
+    const section = mountEntryList(
+      'skill',
+      'Add skill',
+      { onToggle: () => {}, onContentChange: () => {}, onDelete: () => {}, onAdd: () => true, onRename: (id) => renames.push(id) },
+      { rename: true },
+    )
+    section.render([ROW])
+    const row = section.host.querySelector('[data-part="entry"]') as HTMLElement
+    ;(row.querySelector('[data-part="entry-rename"]') as HTMLElement).click()
+    const field = row.querySelector('[data-part="entry-rename-field"]') as UITextFieldElement
+    field.value = '   '
+    field.dispatchEvent(new Event('change'))
+    expect(renames, 'no write attempt at all').toEqual([])
+    expect(row.querySelector('[data-part="entry-label"]')!.textContent).toBe('A')
+  })
+
+  it('an external render() while a rename is open drops it cleanly — never a throw, never a stale field', () => {
+    const section = mountEntryList(
+      'skill',
+      'Add skill',
+      { onToggle: () => {}, onContentChange: () => {}, onDelete: () => {}, onAdd: () => true, onRename: () => {} },
+      { rename: true },
+    )
+    section.render([ROW])
+    const row = section.host.querySelector('[data-part="entry"]') as HTMLElement
+    ;(row.querySelector('[data-part="entry-rename"]') as HTMLElement).click()
+    expect(row.querySelector('[data-part="entry-rename-field"]')).not.toBeNull()
+    // A sibling toggle / an external store write rebuilds the list under the open field.
+    expect(() => section.render([ROW, BUILTIN])).not.toThrow()
+    expect(section.host.querySelectorAll('[data-part="entry-rename-field"]'), 'the rebuilt rows are all closed').toHaveLength(0)
+    expect([...section.host.querySelectorAll('[data-part="entry-label"]')].map((n) => n.textContent)).toEqual(['A', 'B'])
+  })
+})
+
+// ── GH #848 — WHICH kinds the composed element flags (the four capability kinds, nothing else) ───────────
+describe('UIAgentAdminElement — the rename affordance is scoped to the four capability kinds (GH #848)', () => {
+  it('Skills/Workflows/Resources/Tools rows carry a rename trigger; prompt-section and catalog rows do NOT', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    // One entry per capability kind, plus the seeded prompt sections and the ensured Default catalog row.
+    for (const kind of [ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource]) {
+      el.store!.set(entriesStoreKey(kind), [
+        { id: 'one', kind, label: 'One', description: '', content: '', order: 0, enabled: true, builtin: false },
+      ] satisfies Entry[])
+    }
+    await whenFlushed()
+
+    const hasRename = (kind: string): boolean =>
+      (el.querySelector(`[data-part="entry-section"][data-kind="${kind}"] [data-part="entry"] [data-part="entry-rename"]`) ?? null) !== null
+
+    expect(hasRename(ENTRY_KINDS.skill)).toBe(true)
+    expect(hasRename(ENTRY_KINDS.workflow)).toBe(true)
+    expect(hasRename(ENTRY_KINDS.resource)).toBe(true)
+    expect(hasRename(ENTRY_KINDS.tool)).toBe(true)
+    // A prompt-section label IS the composed prompt's `## {label}` heading; a pattern-source/catalog row's
+    // label mirrors the pack/registry entry its id keys — none of them free display text.
+    expect(hasRename(ENTRY_KINDS.promptSection), 'Instructions rows are unchanged').toBe(false)
+    expect(hasRename(ENTRY_KINDS.patternSource), 'Pattern sources rows are unchanged').toBe(false)
+    expect(hasRename(ENTRY_KINDS.catalog), 'Catalog rows are unchanged').toBe(false)
+  })
+
+  it('a rename persists across a reload — a SECOND element instance on the same default store reads the new name', async () => {
+    const first = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    first.store!.set(entriesStoreKey(ENTRY_KINDS.skill), [
+      { id: 'web-search', kind: ENTRY_KINDS.skill, label: 'Web search', description: '', content: 'Search the web.', order: 0, enabled: true, builtin: false },
+    ] satisfies Entry[])
+    await whenFlushed()
+
+    const row = entryEl(first, ENTRY_KINDS.skill, 'web-search')
+    ;(row.querySelector('[data-part="entry-rename"]') as HTMLElement).click()
+    const field = row.querySelector('[data-part="entry-rename-field"]') as UITextFieldElement
+    field.value = 'Research'
+    field.dispatchEvent(new Event('change'))
+    await whenFlushed()
+
+    const second = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    await whenFlushed()
+    const reloaded = readEntries(second.store, ENTRY_KINDS.skill)
+    expect(reloaded, 'one entry, same id').toEqual([{ id: 'web-search', kind: ENTRY_KINDS.skill, label: 'Research', description: '', content: 'Search the web.', order: 0, enabled: true, builtin: false }])
+    expect(entryEl(second, ENTRY_KINDS.skill, 'web-search').querySelector('[data-part="entry-label"]')!.textContent).toBe('Research')
+  })
+
+  // GH #848 × GH #850 — the composed element hands BOTH opt-ins to the same four sections. Proven on the
+  // rendered DOM (not from the options object) that each capability row carries both controls, and that the
+  // three non-capability sections carry neither — one assertion pass over both features, so a future kind
+  // added to one list and not the other shows up here as a mismatch rather than as a silent asymmetry.
+  it('every capability row carries BOTH the rename trigger and the mode pill; the other three sections carry neither', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    for (const kind of [ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource]) {
+      el.store!.set(entriesStoreKey(kind), [
+        { id: 'one', kind, label: 'One', description: '', content: '', order: 0, enabled: true, builtin: false },
+      ] satisfies Entry[])
+    }
+    await whenFlushed()
+
+    const affordances = (kind: string): { rename: boolean; mode: boolean } => {
+      const row = el.querySelector(`[data-part="entry-section"][data-kind="${kind}"] [data-part="entry"]`) as HTMLElement | null
+      return {
+        rename: row?.querySelector('[data-part="entry-rename"]') != null,
+        mode: row?.querySelector('[data-part="entry-availability"]') != null,
+      }
+    }
+    for (const kind of [ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool]) {
+      expect(affordances(kind), `${kind} rows carry both`).toEqual({ rename: true, mode: true })
+    }
+    for (const kind of [ENTRY_KINDS.promptSection, ENTRY_KINDS.patternSource, ENTRY_KINDS.catalog]) {
+      expect(affordances(kind), `${kind} rows carry neither`).toEqual({ rename: false, mode: false })
+    }
+  })
+})
+
 describe('UIAgentAdminElement — shell composition (ADR-0179): the three places + the settings sub-nav', () => {
   it('composes ONE ui-super-shell directly: header=the S7-c unified header bar, content=three sibling regions (chat/settings/copilot) — GH #686\'s Amendment, GH #700\'s flatten', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
@@ -1874,6 +2028,39 @@ describe('UIAgentAdminElement — the DEV-only live-turn fork (TKT-0052/ADR-0136
     submit(el, 'hi')
     expect(lastAgentBody(el)).toMatch(/^\[stub preview — no live model call\]/)
     expect(lastAgentBody(el)).toContain('You said: hi')
+  })
+
+  // GH #848 — the whole point of a DISPLAY-ONLY rename, measured on the two projections that matter: the
+  // prompt (where names are TAUGHT — the renamed label must be what the model reads) and the enablement
+  // wire (where ids are RESOLVED — the rename must be invisible). One turn proves both directions.
+  it('a renamed tool teaches its NEW name in the prompt while the wire keeps its ORIGINAL id (GH #848)', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.store!.set(SURFACE_A2UI_KEY, false) // the prose arm answers, so ONE request carries both facts
+    // A pack-shaped entry: the id is a foreign key into an external registry, the label human text
+    // (`NewEntryInput.id`, ADR-0168 cl.2) — exactly the row a rename must not break.
+    el.store!.set(entriesStoreKey(ENTRY_KINDS.tool), [
+      { id: 'weather', kind: ENTRY_KINDS.tool, label: 'Weather (Open-Meteo)', description: 'Current conditions.', content: 'Keyless.', order: 0, enabled: true, builtin: false },
+    ] satisfies Entry[])
+    await whenFlushed()
+
+    const row = entryEl(el, ENTRY_KINDS.tool, 'weather')
+    ;(row.querySelector('[data-part="entry-rename"]') as HTMLElement).click()
+    const field = row.querySelector('[data-part="entry-rename-field"]') as UITextFieldElement
+    field.value = 'Local forecast'
+    field.dispatchEvent(new Event('change'))
+    await whenFlushed()
+
+    const stored = readEntries(el.store, ENTRY_KINDS.tool)
+    expect(stored[0]!.label, 'the store carries the new display name').toBe('Local forecast')
+    expect(stored[0]!.id, 'the registry id is untouched').toBe('weather')
+
+    const runner = recordingRunner('ok')
+    el.agentTurn = runner.fn
+    submit(el, 'weather in Oslo?')
+    await waitFor(() => runner.calls.length === 1, 'runner called')
+    expect(runner.calls[0]!.system, 'the prompt teaches the RENAMED name').toContain('### Local forecast')
+    expect(runner.calls[0]!.system, 'and never the old one').not.toContain('Weather (Open-Meteo)')
+    expect(runner.calls[0]!.integrations, 'the wire still resolves by the original id').toEqual(['weather'])
   })
 })
 

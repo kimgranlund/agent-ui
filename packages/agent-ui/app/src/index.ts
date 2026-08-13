@@ -46,7 +46,10 @@ export type { AgentConfigSnapshot } from './controls/agent-admin/agent-admin-sch
 // generic data core out to `entry-list/entry-data.ts` — every name below stays byte-identical, re-pointed
 // to its new home rather than renamed.
 export { ENTRY_KINDS, DEFAULT_PROMPT_SECTIONS, DEFAULT_SYSTEM_PROMPT_FALLBACK, composeSystemPrompt, initialEntryValues } from './controls/agent-admin/entries.ts'
-export { validateNewEntry, entriesStoreKey } from './controls/entry-list/entry-data.ts'
+// GH #848 — `renameEntry` joins them: the display-name write (ids never rewritten), exported for the same
+// reason `validateNewEntry` is — a consumer that owns its own store writes (the site's own tests, a
+// bring-your-own-store host) applies the one shared law instead of hand-rolling a second label writer.
+export { validateNewEntry, renameEntry, entriesStoreKey } from './controls/entry-list/entry-data.ts'
 export type { Entry, EntryLibraryPack, NewEntryInput } from './controls/entry-list/entry-data.ts'
 // GH #419 — the prompt-section modality LINT (pure, non-blocking): the vocabulary that says an enabled
 // prompt section names a modality whose Surface Option is off. Exported because the persona TEXTS that
