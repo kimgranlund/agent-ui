@@ -34,6 +34,12 @@ Queue order: (1) gated mutations verified safe → (2) blockers → (3) human de
 
 ## 3. Human-decision items
 
+**ALL FOUR RULED in the 2026-08-13 batched confirm (post-landing amendment):** 3.1 both
+pixel-CONFIRMED → #802/#804 CLOSED · 3.2 ruled fail-arm-everywhere → #810 build dispatched ·
+3.3 green-lit both-sequenced → #807's design leg dispatched (#808 follows the anatomy ruling) ·
+3.4 PARKED with condition (revisit on the next nonoun-plugins session; carry-counter stops).
+Entries below kept for the record.
+
 ### 3.1 Pixel-confirm #802 + #804, then close both (Kim, ~10 min)
 - **Action**: both fixes are MERGED and live on :5173 (#802 → PR #803 ask-arm round routing;
   #804 → PR #806 skill-exemplar content). Kim's live checks: (a) answer an intake card — it
