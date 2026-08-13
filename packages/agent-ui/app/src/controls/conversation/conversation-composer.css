@@ -64,6 +64,35 @@
   --ui-conversation-composer-stack-gap: var(--md-sys-space-sm); /* the host's own chips/editor/options column rhythm */
   --ui-conversation-composer-pad-inline: var(--md-sys-space-md); /* the host frame's horizontal inset (vertical stays its own 0.65rem — no ladder rung) */
   --ui-conversation-composer-options-gap: var(--md-sys-space-sm); /* the options row's own leading/trailing spread */
+
+  /* GH #849 — the reference typeahead panel (SPEC-R7's control-created [role=listbox] popover) + the
+     committed-reference chips. Surface roles mirror ui-menu's own panel exactly (neutral-surface +
+     outline-variant frame + corner-base radius, the fleet's one overlay-panel plane) and the active-
+     descendant row highlight reads the SAME neutral-surface-high the whole fleet uses for an
+     interactive row — no new plane, no new colour idea, just this element's own token names for them. */
+  --ui-conversation-composer-menu-bg: var(--md-sys-color-neutral-surface);
+  --ui-conversation-composer-menu-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-conversation-composer-menu-outline: var(--md-sys-color-neutral-outline-variant);
+  --ui-conversation-composer-menu-radius: var(--md-sys-shape-corner-base);
+  --ui-conversation-composer-menu-padding: var(--md-sys-space-xs);
+  /* Floor + ceiling, the ui-menu reasons verbatim: a panel that can be narrow needs a floor (ADR-0021's
+     collapse trap; the JS placement measures the box on open, so a zero-width panel mis-positions too),
+     and an auto-width panel needs a cap that itself never exceeds a narrow viewport (GH #133/#134). */
+  --ui-conversation-composer-menu-min-inline-size: 12rem;
+  --ui-conversation-composer-menu-max-inline-size: min(90vw, 24rem);
+  --ui-conversation-composer-menu-max-block-size: min(50vh, 18rem); /* then scrolls — a roster is unbounded */
+  --ui-conversation-composer-menu-item-pad-block: var(--md-sys-space-xs);
+  --ui-conversation-composer-menu-item-pad-inline: var(--md-sys-space-sm);
+  --ui-conversation-composer-menu-item-radius: calc(var(--md-sys-shape-corner-base) - var(--md-sys-space-xs));
+  --ui-conversation-composer-menu-item-bg-active: var(--md-sys-color-neutral-surface-high);
+  --ui-conversation-composer-menu-item-ink-secondary: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-conversation-composer-menu-group-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-conversation-composer-menu-group-font: 0.68rem;
+  --ui-conversation-composer-menu-gap: var(--md-sys-space-xs); /* the panel's own row/group rhythm */
+  /* The reference chips share the context-chip pill shape (same row, same rhythm) and differ only by ink:
+     an accent-family sigil marks "this rides THIS turn" against the neutral consumer chips beside them. */
+  --ui-conversation-composer-reference-chip-bg: var(--md-sys-color-primary-container-low);
+  --ui-conversation-composer-reference-chip-ink: var(--md-sys-color-primary-high);
 }
 
 /* busy → this element's own disabled-equivalent — TKT-0062's disabled row (bg=container-low,
@@ -190,9 +219,101 @@
     color: var(--ui-conversation-composer-ink-variant);
     cursor: default; /* a chip is not part of the click-to-focus text area (LLD CVC-C8) */
   }
-  [data-part='context-chip-dismiss'] {
+  [data-part='context-chip-dismiss'],
+  [data-part='reference-chip-dismiss'] {
     --ui-button-height: 0.875rem;
     --ui-button-icon: 0.625rem;
+  }
+
+  /* GH #849 — the committed-reference chips (SPEC-R6): the SAME pill geometry as the consumer context
+     chips above (they cohabit one row, so one shape), retinted to the accent family so "this rides THIS
+     turn" reads distinct from a consumer-owned context tag. The `@`/`/` sigil is the mention-vs-invocation
+     marker — the character the user actually typed, not a second icon vocabulary. */
+  [data-part='reference-chip'] {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.15rem 0.3rem 0.15rem 0.45rem;
+    border-radius: 999px; /* pill — the context-chip rule's own value, deliberately shared */
+    background: var(--ui-conversation-composer-reference-chip-bg);
+    font-size: 0.72rem;
+    color: var(--ui-conversation-composer-reference-chip-ink);
+    cursor: default; /* a chip is not part of the click-to-focus text area (LLD CVC-C8) */
+  }
+  [data-part='reference-chip-sigil'] {
+    font-weight: 600;
+    opacity: 0.75;
+  }
+  [data-part='reference-chip-dismiss'] {
+    --ui-button-ink: var(--ui-conversation-composer-reference-chip-ink);
+  }
+
+  /* The reference typeahead panel — a control-created [role='listbox'] in the Popover API TOP LAYER
+     (conversation-composer.ts places it with the overlay trait's own `computePosition`), so no ancestor
+     `overflow: hidden` can clip it. Closed state is explicit rather than left to the UA `[popover]` rule
+     alone: `[data-open]` is the element's own state truth (the .ts sets it alongside showPopover), which
+     keeps the panel hidden even in an engine/environment without the Popover API. */
+  [data-part='reference-menu'] {
+    display: none;
+    box-sizing: border-box;
+    min-inline-size: var(--ui-conversation-composer-menu-min-inline-size);
+    max-inline-size: var(--ui-conversation-composer-menu-max-inline-size);
+    max-block-size: var(--ui-conversation-composer-menu-max-block-size);
+    overflow-y: auto;
+    padding: var(--ui-conversation-composer-menu-padding);
+    background: var(--ui-conversation-composer-menu-bg);
+    color: var(--ui-conversation-composer-menu-ink);
+    border: 1px solid var(--ui-conversation-composer-menu-outline);
+    border-radius: var(--ui-conversation-composer-menu-radius);
+    font-size: var(--ui-conversation-composer-font);
+    line-height: 1.35;
+    cursor: default; /* the panel is not part of the click-to-focus text area */
+  }
+  [data-part='reference-menu'][data-open] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-conversation-composer-menu-gap);
+  }
+  [data-part='reference-group'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-conversation-composer-menu-gap);
+  }
+  /* The kind header — rendered only when the visible set spans more than one kind (the `/` menu's
+     grouped shape; conversation-composer.ts's `#buildReferenceOptions`). `aria-hidden` in the DOM: the
+     group's own `aria-label` is what AT announces, so this is purely the sighted label. */
+  [data-part='reference-group-label'] {
+    padding-inline: var(--ui-conversation-composer-menu-item-pad-inline);
+    font-size: var(--ui-conversation-composer-menu-group-font);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ui-conversation-composer-menu-group-ink);
+  }
+  [data-part='reference-option'] {
+    display: flex;
+    flex-direction: column;
+    padding: var(--ui-conversation-composer-menu-item-pad-block) var(--ui-conversation-composer-menu-item-pad-inline);
+    border-radius: var(--ui-conversation-composer-menu-item-radius);
+  }
+  /* The active-descendant highlight — DOM focus never moves here (SPEC-R7), so `[data-active]` is the
+     ONLY visible "this is what Enter commits" cue; it must read as strongly as a hover would. */
+  [data-part='reference-option'][data-active] {
+    background: var(--ui-conversation-composer-menu-item-bg-active);
+  }
+  [data-part='reference-option']:hover {
+    background: var(--ui-conversation-composer-menu-item-bg-active);
+  }
+  [data-part='reference-option-label'] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  [data-part='reference-option-description'] {
+    overflow: hidden;
+    font-size: 0.72rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ui-conversation-composer-menu-item-ink-secondary);
   }
 
   /* The options row — Models/Effort pickers (leading, opt-in) + mic/send (trailing, always present). */
@@ -421,6 +542,24 @@
     :scope[busy] {
       border-color: GrayText;
       color: GrayText;
+    }
+    /* GH #849 — the typeahead panel is app chrome in the top layer: its frame/ink must survive WHCM, and
+       the active-descendant row (whose ONLY cue is a background wash, since DOM focus never moves) needs
+       the system Highlight pair — a wash alone degrades to invisible under forced colours. */
+    [data-part='reference-menu'] {
+      border-color: CanvasText;
+      background: Canvas;
+      color: CanvasText;
+    }
+    [data-part='reference-option'][data-active],
+    [data-part='reference-option']:hover {
+      background: Highlight;
+      color: HighlightText;
+      forced-color-adjust: none;
+    }
+    [data-part='reference-group-label'],
+    [data-part='reference-option-description'] {
+      color: CanvasText;
     }
   }
 }

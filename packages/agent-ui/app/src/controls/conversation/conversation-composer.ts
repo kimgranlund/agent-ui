@@ -18,6 +18,17 @@
 // registrations (`onSubmit`/`onModelChange`/`onEffortChange`/`onProviderChange`/`onModeChange`/
 // `onContextDismiss`/`onMicClick`) — see conversation.ts (LLD CVC-C5) for the pinned forwarding mechanism.
 //
+// GH #849 (capability-availability-tagging.spec.md SPEC-R5/R6/R7, LLD v3) — the reference typeahead: two
+// default-off roster props (`mentionables` → `@`, `invocables` → `/`) drive a control-created
+// `[role="listbox"]` popover over the editor. The composer stays GENERIC (it knows `ReferenceOption`/
+// `TurnReference`, never `Entry`, a store, or a kind's semantics — `ui-agent-admin` owns that projection);
+// a commit mints a CHIP in the existing chip row (never an inline pill — the plaintext-only editor
+// architecture stands, the SPEC's own §3 ruling) plus a structured `{kind,id,label}` reference delivered as
+// `onSubmit`'s SECOND argument. Keyboard follows `ui-combo-box`'s active-descendant discipline RESTATED
+// (not an embedded ui-combo-box): focus never leaves the editor, Arrow moves `aria-activedescendant`,
+// Enter-with-menu-open commits and never sends. Unset rosters ⇒ `@`/`/` are plain characters and this
+// element renders byte-identically to before (the `models`/`providers` default-off law).
+//
 // The editable surface (LLD CVC-C3′, TKT-0058): the ADR-0014 contenteditable pattern via its multi-line
 // sibling `ui-textarea` (ADR-0134) — a stable `<div data-part="editor" contenteditable="plaintext-only"
 // role="textbox" aria-multiline="true">`, created ONCE and never re-rendered; surface→model on `input`
@@ -29,10 +40,77 @@
 
 import { UIElement, prop, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
 import type { UIButtonElement, UIMenuElement } from '@agent-ui/components/components'
-import type { PickerOption, ProviderOption, ContextItem } from './composer-options.ts'
+// The PURE placement function out of the overlay trait (flip + viewport shift) — NOT the `overlay()`
+// controller itself: that controller announces `close`/`toggle` ON ITS HOST (ADR-0101), and this element's
+// contract is `events: []` with no menu event allowed to escape the host (SPEC-R7). Borrowing only the
+// measured-placement math keeps the fleet's one positioning model without opening an event surface the
+// descriptor denies exists.
+import { computePosition } from '@agent-ui/components/traits/overlay'
+import type { PickerOption, ProviderOption, ContextItem, ReferenceOption, TurnReference } from './composer-options.ts'
 
 // The editor's editable mode (ADR-0014 cl.1, the ui-textarea reuse).
 const EDITABLE = 'plaintext-only'
+
+// GH #849 (SPEC-R5) — the two trigger characters and the roster each opens over. A trigger is only ever
+// live at a TOKEN START (start of text, or after whitespace) and only while its own roster is non-empty.
+type Trigger = '@' | '/'
+
+/** The in-progress token the caret currently sits in, when it is a live reference token. */
+interface ActiveToken {
+  trigger: Trigger
+  /** Everything typed after the trigger character (never contains whitespace, by construction). */
+  query: string
+  /** Offset of the trigger character in the editor text. */
+  start: number
+  /** Offset just past the token (the caret). */
+  end: number
+}
+
+/** A committed reference plus the trigger that minted it (the chip's sigil — mention vs invocation). */
+interface CommittedReference {
+  trigger: Trigger
+  ref: TurnReference
+}
+
+// Module-level id counter — stable, unique `[role="listbox"]`/`[role="option"]` ids for
+// aria-activedescendant across every composer instance on a page (the combo-box.ts precedent).
+let _nextMenuId = 0
+
+/** A STABLE empty reference list for `onSubmit`'s second argument — the `EMPTY_CONTEXT_ITEMS` reason
+ *  (never mint a fresh array literal for the common no-references send). */
+const EMPTY_REFERENCES: readonly TurnReference[] = []
+
+/**
+ * SPEC-R5's grammar, as one pure function: the live reference token at `caret`, or `undefined`.
+ *
+ * Walks back from the caret to the last whitespace — the CURRENT word — and accepts it only when its
+ * FIRST character is a trigger. That one rule delivers all three of the requirement's clauses without a
+ * second mechanism: `@` mid-word (`foo@men`) yields a word starting with `f` (no menu); typing whitespace
+ * ends the word (the token disappears ⇒ the menu closes and the typed characters stay plain inert text);
+ * and everything after the trigger is the filter query, whitespace-free by construction.
+ */
+function activeTokenAt(text: string, caret: number): ActiveToken | undefined {
+  const upto = text.slice(0, Math.max(0, Math.min(caret, text.length)))
+  let start = upto.length
+  while (start > 0 && !/\s/.test(upto[start - 1]!)) start -= 1
+  const word = upto.slice(start)
+  const trigger = word[0]
+  if (trigger !== '@' && trigger !== '/') return undefined
+  return { trigger, query: word.slice(1), start, end: upto.length }
+}
+
+/** SPEC-R5's filter: case-insensitive CONTAINS over DISPLAY names. An empty query matches everything. */
+function filterRoster(roster: readonly ReferenceOption[], query: string): readonly ReferenceOption[] {
+  if (query === '') return roster
+  const needle = query.toLowerCase()
+  return roster.filter((o) => o.label.toLowerCase().includes(needle))
+}
+
+/** A group header's display text. Capitalize-first ONLY — `kind` is an opaque consumer string here (the
+ *  SPEC's layering clause), so this element never pluralizes, translates, or maps it to a vocabulary. */
+function kindLabel(kind: string): string {
+  return kind === '' ? kind : kind[0]!.toUpperCase() + kind.slice(1)
+}
 
 const props = {
   // The live message text (TKT-0058) — property-only (`attribute: false`): this element is never
@@ -68,6 +146,15 @@ const props = {
   // `undefined`, not `[]` (the models/efforts precedent) — an array-literal default cannot round-trip
   // through the descriptor's `default:` token (ADR-0004); coalesced to `[]` at the one read site (`#syncContextChips`).
   contextItems: { ...prop.json<readonly ContextItem[] | undefined>(undefined), attribute: false as const },
+  // GH #849 (SPEC-R5/R6) — the `@` roster: the entries a MENTION may reference (Resources, per the ruled
+  // grammar — but this element never checks that; the roster is whatever its consumer injects).
+  // `undefined`/empty ⇒ `@` is a PLAIN CHARACTER: no menu, no interception, no DOM of any kind, so a
+  // consumer that never sets it is byte-identical to before (the `models`/`providers` default-off law).
+  mentionables: { ...prop.json<readonly ReferenceOption[] | undefined>(undefined), attribute: false as const },
+  // GH #849 — the `/` roster: the entries an INVOCATION may reference (Skills/Workflows/Tools), presented
+  // as ONE menu grouped by `kind`, filtered directly by name — never a two-stage `/tool <name>` grammar
+  // (the SPEC's §3 ruling). Same default-off law as `mentionables`.
+  invocables: { ...prop.json<readonly ReferenceOption[] | undefined>(undefined), attribute: false as const },
   // Replaces `ui-conversation` reaching into `#field`/`#sendBtn`/`#micBtn`/the picker triggers directly to
   // set `.disabled`; this element owns disabling its OWN parts from ONE prop. Reflects — `[busy]` on the
   // host is the CSS hook for the whole-composer dim (the v1 form's `data-busy`, moved to the host).
@@ -118,7 +205,27 @@ export class UIConversationComposerElement extends UIElement {
   // model→surface caret-guard write are BOTH suppressed mid-composition; compositionend catches up.
   #composing = false
 
-  #onSubmitCb: ((text: string) => void) | undefined
+  // ── GH #849 — the reference typeahead's own state (SPEC-R5/R6/R7) ──────────────────────────────────
+  // The `[role="listbox"]` popover, built lazily on the FIRST live trigger (a consumer with no rosters
+  // never pays for it — the picker-menus precedent).
+  #referenceMenu: HTMLElement | undefined
+  // Whether the popover is currently shown. The composer owns EVERY close path (Escape, blur, whitespace,
+  // commit, send, busy, disconnect), which is why the panel is `popover="manual"`: there is no platform
+  // light-dismiss to desync this flag against.
+  #menuOpen = false
+  // The token the OPEN menu is filtering on, and the option list in VISIBLE (DOM) order — the commit path
+  // reads the chosen option from here rather than parsing it back out of the DOM.
+  #activeToken: ActiveToken | undefined
+  #menuOptions: readonly ReferenceOption[] = []
+  #activeIdx = -1
+  // The token Escape dismissed (SPEC-R5): while the caret still sits in the SAME token, further typing
+  // must NOT reopen the menu — the characters are plain inert text from that point on.
+  #dismissedToken: { trigger: Trigger; start: number } | undefined
+  // The committed references — composer-OWNED state (NOT a prop, unlike consumer-owned `contextItems`):
+  // minted by a commit, dropped by a chip dismiss, cleared by a successful send.
+  #references: CommittedReference[] = []
+
+  #onSubmitCb: ((text: string, references?: readonly TurnReference[]) => void) | undefined
   #onModelChangeCb: ((id: string) => void) | undefined
   #onEffortChangeCb: ((id: string) => void) | undefined
   #onProviderChangeCb: ((id: string) => void) | undefined
@@ -208,13 +315,18 @@ export class UIConversationComposerElement extends UIElement {
 
     // ── surface → model (ADR-0014 cl.1, the ui-textarea reuse) — edits flow into `value`, IME-guarded ──
     this.listen(editor, 'input', (event) => {
-      // Suppress the raw part-level event unconditionally (code-reviewer LOW): `input` is in the fleet's
-      // closed six-event vocabulary, and this element's contract is `events: []` — an internal editor
-      // `input` escaping the host would hand a future consumer part-targeted events the descriptor
-      // denies exist. Unlike the ui-textarea donor there is NO host re-emit (deliberate — same contract).
+      // Suppress the raw part-level event unconditionally (code-reviewer LOW): `input` is a member of the
+      // fleet's CLOSED event vocabulary — whose single owning home is the `ALLOWED_EVENTS` constants in
+      // `family-coherence.test.ts` + `naming-gates.test.ts` (ADR-0153; never re-enumerated or counted in
+      // prose here — that copied-set drift is the GH #754 class, and this comment's own stale "six-event"
+      // count was booked for this sweep by capability-availability-tagging.spec.md §10). This element's
+      // contract is `events: []`, so an internal editor `input` escaping the host would hand a future
+      // consumer part-targeted events the descriptor denies exist. Unlike the ui-textarea donor there is
+      // NO host re-emit (deliberate — same contract).
       event.stopPropagation()
       if (this.#composing) return // never mid-composition — compositionend commits the final composed text
       this.value = editor.textContent ?? '' // model ← surface (the caret guard below then skips the echo write)
+      this.#syncReferenceMenu() // GH #849 — re-derive the typeahead from the token under the caret
     })
     this.listen(editor, 'compositionstart', () => {
       this.#composing = true
@@ -222,7 +334,12 @@ export class UIConversationComposerElement extends UIElement {
     this.listen(editor, 'compositionend', () => {
       this.#composing = false
       this.value = editor.textContent ?? '' // catch the model up to the composed result (the suppressed inputs)
+      this.#syncReferenceMenu()
     })
+    // GH #849 (SPEC-R5's dismissal clause) — blur closes the menu. A click INSIDE the panel never gets
+    // here: `#ensureReferenceMenu` preventDefaults the panel's own pointerdown, so focus never leaves the
+    // editor for a commit-by-click (the active-descendant law, SPEC-R7).
+    this.listen(editor, 'blur', () => this.#closeReferenceMenu())
 
     // ── model → surface (ADR-0014 cl.1: the CARET GUARD) + the placeholder presence flag ──
     this.effect(() => {
@@ -265,6 +382,34 @@ export class UIConversationComposerElement extends UIElement {
     // guards the IME case: Enter finalizing a composition must never send. ──
     this.listen(editor, 'keydown', (e) => {
       const ke = e as KeyboardEvent
+      // ── GH #849 (SPEC-R7) — the typeahead's keys run AHEAD of the Enter-sends law below, so an Enter
+      // with the menu open COMMITS and never sends. Shift+Enter's newline law is untouched (it falls
+      // through here exactly as before, menu open or not). ──
+      if (this.#menuOpen) {
+        if (ke.key === 'ArrowDown') {
+          e.preventDefault()
+          this.#moveActive(1)
+          return
+        }
+        if (ke.key === 'ArrowUp') {
+          e.preventDefault()
+          this.#moveActive(-1)
+          return
+        }
+        if (ke.key === 'Escape') {
+          // stopPropagation too: an ancestor overlay (ui-conversation-dialog, a modal) must NOT also
+          // light-dismiss on the Escape that only meant "close this typeahead".
+          e.preventDefault()
+          e.stopPropagation()
+          this.#dismissActiveToken()
+          return
+        }
+        if (ke.key === 'Enter' && !ke.shiftKey && !ke.isComposing && !this.#composing) {
+          e.preventDefault()
+          this.#commitActiveReference()
+          return
+        }
+      }
       // Both composition signals, belt-and-braces (code-reviewer INFO): `isComposing` is the
       // platform-truthful flag on the event itself; `#composing` is this element's own listener-tracked
       // state — for the confirming-Enter-before-compositionend case they agree, and carrying both costs
@@ -281,9 +426,28 @@ export class UIConversationComposerElement extends UIElement {
     // click on a button/menu/chip ("not its tags, menus, buttons"), each of which owns its own focus. ──
     this.listen(this, 'click', (e) => {
       const target = e.target as Element | null
-      if (target && target !== this && target.closest('ui-button, ui-menu, [data-part="context-chip"]')) return
+      // `[data-part="reference-chip"]` joins the tags exclusion (GH #849) — a reference chip is a TAG, the
+      // same "not its tags, menus, buttons" class as a context chip. (A click on a typeahead OPTION is
+      // deliberately NOT excluded: the commit keeps the editor focused, which is exactly this law.)
+      if (
+        target &&
+        target !== this &&
+        target.closest('ui-button, ui-menu, [data-part="context-chip"], [data-part="reference-chip"]')
+      ) {
+        return
+      }
       this.#editor?.focus()
     })
+
+    // GH #849 — the reference chips are composer-OWNED state, so their DOM SURVIVES a reconnect while
+    // their dismiss listeners do NOT (those ride the connection AbortSignal) — rebuild once per connect,
+    // the `#contextItemsBuiltFrom` reset precedent at the top of this method.
+    if (this.#references.length > 0) this.#syncReferenceChips()
+
+    // Never leave an orphaned top-layer panel behind on disconnect (the picker `menu.open = false` law,
+    // and the overlay trait's own `host.effect(() => cleanup)` idiom): a scope-owned disposer closes the
+    // typeahead whenever this connection ends.
+    this.effect(() => () => this.#closeReferenceMenu())
 
     // Motion gate (interaction-states standard, the ui-textarea reuse) — arm `ready` ONE frame past first
     // paint so the upgrade/first paint SNAPS and only subsequent state changes animate. `states`
@@ -297,9 +461,14 @@ export class UIConversationComposerElement extends UIElement {
     else super.focus(options)
   }
 
-  /** The reply affordance — a callback, NEVER a CustomEvent (SPEC-R5's closed six-event vocabulary has no
-   *  submission kind, inherited by lineage from `ui-conversation`). Safe to call before OR after connect. */
-  onSubmit(cb: (text: string) => void): void {
+  /** The reply affordance — a callback, NEVER a CustomEvent (the fleet's closed event vocabulary, owned by
+   *  the `ALLOWED_EVENTS` constants in `family-coherence.test.ts`/`naming-gates.test.ts` per ADR-0153, has
+   *  no submission kind; inherited by lineage from `ui-conversation`). Safe to call before OR after connect.
+   *
+   *  GH #849 (SPEC-R6) — WIDENED ADDITIVELY: the callback now also receives the turn's committed
+   *  `TurnReference[]` (the `@`/`/` chips, in commit order; a STABLE empty array when there are none). An
+   *  existing single-parameter consumer is byte-unaffected — the extra argument is simply ignored. */
+  onSubmit(cb: (text: string, references?: readonly TurnReference[]) => void): void {
     this.#onSubmitCb = cb
   }
 
@@ -354,8 +523,16 @@ export class UIConversationComposerElement extends UIElement {
     if (this.busy) return
     const text = this.value.trim()
     if (text === '') return
+    // GH #849 (SPEC-R6) — the chips clear WITH the text on a successful send, and the references ride the
+    // callback's second argument (a stable EMPTY array in the overwhelmingly common no-chips case).
+    const references = this.#references.length === 0 ? EMPTY_REFERENCES : this.#references.map((r) => r.ref)
     this.value = '' // the caret-guard effect wipes the editor surface on the next flush
-    this.#onSubmitCb?.(text)
+    this.#closeReferenceMenu()
+    if (this.#references.length > 0) {
+      this.#references = []
+      this.#syncReferenceChips()
+    }
+    this.#onSubmitCb?.(text, references)
   }
 
   /** The in-flight visual affordance (TKT-0034, promoted; TKT-0058 v2): the editor becomes non-editable
@@ -366,6 +543,9 @@ export class UIConversationComposerElement extends UIElement {
   #applyBusy(busy: boolean): void {
     const editor = this.#editor!
     if (busy) {
+      // A turn in flight makes the editor non-editable — never leave the typeahead open over a composer
+      // nobody can type into (the same "never leave a hidden host's popover open" law the pickers follow).
+      this.#closeReferenceMenu()
       editor.setAttribute('contenteditable', 'false')
       editor.setAttribute('aria-disabled', 'true')
       this.internals.ariaBusy = 'true'
@@ -646,15 +826,22 @@ export class UIConversationComposerElement extends UIElement {
     }
   }
 
-  /** Rebuild the context-chip row wholesale from `contextItems` (cheap — never more than a few). Each
-   *  chip's dismiss button fires `onContextDismiss` with THAT item's own `id`; the consumer owns actually
-   *  removing it (props down, callbacks up). */
+  /** Rebuild the CONSUMER chips (`contextItems`) inside the shared chip row (cheap — never more than a
+   *  few). Each chip's dismiss button fires `onContextDismiss` with THAT item's own `id`; the consumer owns
+   *  actually removing it (props down, callbacks up).
+   *
+   *  GH #849 — the row now COHABITS two chip families: consumer-owned `[data-part="context-chip"]`s
+   *  (these) come first, composer-owned `[data-part="reference-chip"]`s after. That is why this rebuild
+   *  removes only its OWN chips and inserts before the first reference chip, instead of the previous
+   *  `row.replaceChildren()` (which would wipe the reference chips a commit had just minted). For a
+   *  consumer that sets no rosters the resulting row is byte-identical to before: same children, same
+   *  order, same `[hidden]` state (SPEC-R6 AC3). */
   #syncContextChips(items: readonly ContextItem[]): void {
     if (this.#contextItemsBuiltFrom === items) return // unchanged reference — an unrelated prop change re-ran this effect
     this.#contextItemsBuiltFrom = items
     const row = this.#contextChips!
-    row.replaceChildren()
-    row.toggleAttribute('hidden', items.length === 0)
+    for (const stale of [...row.querySelectorAll('[data-part="context-chip"]')]) stale.remove()
+    const firstReferenceChip = row.querySelector('[data-part="reference-chip"]')
     for (const item of items) {
       const chip = document.createElement('span')
       chip.dataset.part = 'context-chip'
@@ -673,8 +860,367 @@ export class UIConversationComposerElement extends UIElement {
       dismiss.append(icon)
       this.listen(dismiss, 'click', () => this.#onContextDismissCb?.(item.id))
       chip.append(label, dismiss)
+      row.insertBefore(chip, firstReferenceChip)
+    }
+    this.#syncChipRowVisibility()
+  }
+
+  /** The shared chip row is shown exactly when it holds at least one chip of EITHER family — for a
+   *  roster-less consumer that is `contextItems.length === 0`, the pre-GH #849 condition verbatim. */
+  #syncChipRowVisibility(): void {
+    const row = this.#contextChips!
+    row.toggleAttribute('hidden', row.children.length === 0)
+  }
+
+  // ── GH #849 — the reference typeahead (SPEC-R5 grammar · R6 commit · R7 keyboard/AX) ────────────────
+
+  /** Build the `[role="listbox"]` popover ONCE, on the first live trigger — a consumer with no rosters
+   *  never pays for it (the lazy-picker precedent). `popover="manual"`: this element owns every close path
+   *  (Escape/blur/whitespace/commit/send/busy/disconnect), so there is no platform light-dismiss whose
+   *  `toggle` could desync `#menuOpen` — and no menu event ever reaches the host (`events: []`, SPEC-R7).
+   *  The panel's own pointerdown is preventDefaulted so a commit-by-click never moves DOM focus off the
+   *  editor (the active-descendant law). */
+  #ensureReferenceMenu(): HTMLElement {
+    if (this.#referenceMenu) return this.#referenceMenu
+    const menu = document.createElement('div')
+    menu.dataset.part = 'reference-menu'
+    menu.setAttribute('role', 'listbox')
+    menu.setAttribute('popover', 'manual')
+    menu.setAttribute('tabindex', '-1')
+    menu.setAttribute('aria-label', 'References')
+    menu.id = `ui-conversation-composer-references-${++_nextMenuId}`
+    // NOT `this.listen` — the panel outlives a reconnect exactly like the picker menus do, and these two
+    // listeners are stateless DOM plumbing bound to the panel itself (re-arming them per connection would
+    // stack duplicates). Focus-preservation must hold on `pointerdown`, BEFORE the platform's own
+    // focus-follows-pointer step, which is why the commit itself rides the later `click`.
+    menu.addEventListener('pointerdown', (e) => e.preventDefault())
+    menu.addEventListener('click', (e) => {
+      const option = (e.target as Element | null)?.closest('[data-part="reference-option"]')
+      if (!option) return
+      const idx = this.#optionEls().indexOf(option as HTMLElement)
+      if (idx < 0) return
+      this.#setActive(idx)
+      this.#commitActiveReference()
+    })
+    this.#referenceMenu = menu
+    this.append(menu)
+    return menu
+  }
+
+  /** Re-derive the typeahead from the token under the caret — the ONE entry point (every `input`/
+   *  `compositionend` runs it). Stateless by design: open/closed, which roster, and the filtered option set
+   *  are all functions of the current text + caret + props, never of an accumulated menu state. */
+  #syncReferenceMenu(): void {
+    const editor = this.#editor
+    if (!editor || this.busy) return
+    const text = editor.textContent ?? ''
+    const token = activeTokenAt(text, this.#caretOffset(text))
+    if (token === undefined) {
+      this.#dismissedToken = undefined // the token is gone — a NEW one may open freely
+      this.#closeReferenceMenu()
+      return
+    }
+    // Escape-dismissed and still in the same token ⇒ stay inert, however much more the user types.
+    if (this.#dismissedToken?.trigger === token.trigger && this.#dismissedToken.start === token.start) {
+      this.#closeReferenceMenu()
+      return
+    }
+    this.#dismissedToken = undefined
+    const roster = token.trigger === '@' ? this.mentionables : this.invocables
+    if (roster === undefined || roster.length === 0) {
+      this.#closeReferenceMenu() // SPEC-R5: an absent/empty roster makes its trigger a plain character
+      return
+    }
+    const matches = filterRoster(roster, token.query)
+    if (matches.length === 0) {
+      // Nothing matches: close rather than show an empty panel. Backspacing to a matching prefix reopens
+      // it on the next `input` — this pass derives everything from the CURRENT token, so no state to undo.
+      this.#closeReferenceMenu()
+      return
+    }
+    this.#activeToken = token
+    this.#buildReferenceOptions(matches)
+    this.#openReferenceMenu()
+  }
+
+  /** The caret's text offset inside the editor — the token grammar's reference point. Falls back to the
+   *  END of the text (where a typing caret sits) whenever there is no TRUSTWORTHY selection.
+   *
+   *  "Trustworthy" is deliberately narrow: the selection's end must be a TEXT NODE inside the editor. A
+   *  real typing caret always is. An ELEMENT-level end (the editor itself) is either an empty editor — same
+   *  answer either way — or a STALE selection left over from a previous DOM generation, and trusting that
+   *  reads a caret offset the current text never had. Measured (jsdom, this file's own suite): after a
+   *  commit empties the editor, the restored caret is `(editor, 0)`; the next programmatic text write leaves
+   *  it there, so an element-level read returned offset 0 for a 5-character line and the grammar saw no
+   *  token at all — the menu silently failed to open and the following Enter SENT instead of committing. */
+  #caretOffset(text: string): number {
+    const editor = this.#editor
+    if (!editor) return text.length
+    try {
+      const selection = window.getSelection?.()
+      if (!selection || selection.rangeCount === 0) return text.length
+      const range = selection.getRangeAt(0)
+      const end = range.endContainer
+      if (end.nodeType !== Node.TEXT_NODE || !editor.contains(end)) return text.length
+      const probe = document.createRange()
+      probe.setStart(editor, 0)
+      probe.setEnd(end, range.endOffset)
+      return probe.toString().length
+    } catch {
+      return text.length // selection-less environment — the fallback above is the right answer there
+    }
+  }
+
+  /** Rebuild the panel's options from the filtered roster. Group headers (`[role="group"]` + an
+   *  `aria-hidden` visual label — the group's own `aria-label` is what AT announces) appear exactly when
+   *  the visible set spans MORE THAN ONE `kind`: that is the `/` menu's grouped-by-kind shape (SPEC-R5) and
+   *  it also means the Resources-only `@` menu shows no redundant single header. Kind order = order of
+   *  first appearance in the roster, so the consumer's own ordering is the truth. */
+  #buildReferenceOptions(matches: readonly ReferenceOption[]): void {
+    const menu = this.#ensureReferenceMenu()
+    menu.replaceChildren()
+    const kinds = [...new Set(matches.map((o) => o.kind))]
+    const grouped = kinds.length > 1
+    const ordered: ReferenceOption[] = []
+    let seq = 0
+    for (const kind of kinds) {
+      let container: HTMLElement = menu
+      if (grouped) {
+        const group = document.createElement('div')
+        group.dataset.part = 'reference-group'
+        group.setAttribute('role', 'group')
+        group.setAttribute('aria-label', kindLabel(kind))
+        const heading = document.createElement('span')
+        heading.dataset.part = 'reference-group-label'
+        heading.setAttribute('aria-hidden', 'true')
+        heading.textContent = kindLabel(kind)
+        group.append(heading)
+        menu.append(group)
+        container = group
+      }
+      for (const option of matches) {
+        if (option.kind !== kind) continue
+        const item = document.createElement('div')
+        item.dataset.part = 'reference-option'
+        item.setAttribute('role', 'option')
+        item.id = `${menu.id}-opt-${++seq}`
+        item.dataset.id = option.id
+        item.dataset.kind = option.kind
+        const label = document.createElement('span')
+        label.dataset.part = 'reference-option-label'
+        label.textContent = option.label
+        item.append(label)
+        if (option.description !== undefined && option.description !== '') {
+          const description = document.createElement('span')
+          description.dataset.part = 'reference-option-description'
+          description.textContent = option.description
+          item.append(description)
+        }
+        container.append(item)
+        ordered.push(option)
+      }
+    }
+    this.#menuOptions = ordered // parallel to the DOM order above — the commit path's lookup
+  }
+
+  /** Every `[role="option"]` in the panel, in DOM order (group wrappers are transparent here). */
+  #optionEls(): HTMLElement[] {
+    if (!this.#referenceMenu) return []
+    return [...this.#referenceMenu.querySelectorAll<HTMLElement>('[role="option"]')]
+  }
+
+  /** Show the panel and highlight its FIRST option. Always highlighting one is what makes SPEC-R7's
+   *  "Enter with an open menu commits" true unconditionally — an open menu always has a commit target. */
+  #openReferenceMenu(): void {
+    const menu = this.#ensureReferenceMenu()
+    const editor = this.#editor!
+    menu.toggleAttribute('data-open', true) // the CSS/test-visible truth; the popover call below paints it
+    if (!this.#menuOpen) {
+      this.#menuOpen = true
+      const show = (menu as HTMLElement & { showPopover?: () => void }).showPopover
+      if (typeof show === 'function') {
+        try {
+          show.call(menu)
+        } catch {
+          // Already showing, or a pre-Popover-API engine — `data-open` above still carries the state.
+        }
+      }
+    }
+    // aria-expanded/-controls ride the EDITOR (role=textbox supports both) — the fleet's ARIA-on-the-part
+    // law. Both are REMOVED on close, so a roster-less composer's editor attributes are unchanged.
+    editor.setAttribute('aria-expanded', 'true')
+    editor.setAttribute('aria-controls', menu.id)
+    this.#setActive(0)
+    this.#positionReferenceMenu()
+  }
+
+  #closeReferenceMenu(): void {
+    this.#activeToken = undefined
+    this.#menuOptions = []
+    this.#activeIdx = -1
+    const editor = this.#editor
+    editor?.removeAttribute('aria-expanded')
+    editor?.removeAttribute('aria-controls')
+    editor?.removeAttribute('aria-activedescendant')
+    const menu = this.#referenceMenu
+    if (!menu) return
+    menu.removeAttribute('data-open')
+    if (!this.#menuOpen) return
+    this.#menuOpen = false
+    const hide = (menu as HTMLElement & { hidePopover?: () => void }).hidePopover
+    if (typeof hide === 'function') {
+      try {
+        hide.call(menu)
+      } catch {
+        // Not currently showing — a harmless no-op (the overlay trait guards the same call the same way).
+      }
+    }
+  }
+
+  /** Escape (SPEC-R5): close AND remember this token, so further typing inside it stays plain inert text. */
+  #dismissActiveToken(): void {
+    const token = this.#activeToken
+    if (token) this.#dismissedToken = { trigger: token.trigger, start: token.start }
+    this.#closeReferenceMenu()
+  }
+
+  /** Place the panel with the fleet's own measured placement math (`computePosition` — flip + viewport
+   *  shift), anchored to the editor and preferring ABOVE it: a chat composer sits at the bottom of its
+   *  surface, and the panel must never cover the text being typed. Top-layer, so no ancestor
+   *  `overflow: hidden` can clip it (the GH #260 clipping-ancestor class). */
+  #positionReferenceMenu(): void {
+    const menu = this.#referenceMenu
+    const editor = this.#editor
+    if (!menu || !editor) return
+    const rootPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+    const { top, left, placement } = computePosition(
+      'top-start',
+      editor.getBoundingClientRect(),
+      menu.getBoundingClientRect(),
+      window.innerWidth,
+      window.innerHeight,
+      0.25 * rootPx,
+    )
+    menu.style.position = 'fixed'
+    menu.style.top = `${top}px`
+    menu.style.left = `${left}px`
+    menu.style.margin = '0'
+    menu.setAttribute('data-placement', placement)
+  }
+
+  /** Highlight the option at `idx` — `[data-active]` on the option + `aria-activedescendant` on the EDITOR.
+   *  DOM focus NEVER moves (`ui-combo-box`'s `#setActive`, restated for this control per SPEC-R7). */
+  #setActive(idx: number): void {
+    const options = this.#optionEls()
+    for (const option of options) option.removeAttribute('data-active')
+    if (idx < 0 || idx >= options.length) {
+      this.#activeIdx = -1
+      this.#editor?.removeAttribute('aria-activedescendant')
+      return
+    }
+    this.#activeIdx = idx
+    const option = options[idx]!
+    option.toggleAttribute('data-active', true)
+    this.#editor?.setAttribute('aria-activedescendant', option.id)
+    option.scrollIntoView?.({ block: 'nearest' })
+  }
+
+  /** Move the highlight by `delta`, wrapping at both ends (the combo-box `#moveActive` law). */
+  #moveActive(delta: 1 | -1): void {
+    const count = this.#optionEls().length
+    if (count === 0) return
+    const next = this.#activeIdx < 0 ? (delta === 1 ? 0 : count - 1) : (this.#activeIdx + delta + count) % count
+    this.#setActive(next)
+  }
+
+  /** Commit the highlighted option (SPEC-R6): the in-progress token text leaves the editor, a chip carrying
+   *  `{kind, id, label}` joins the chip row, and the menu closes. The editor SURFACE is rewritten
+   *  synchronously alongside the model so the caret can be restored in the same turn — the caret-guard
+   *  effect then sees no divergence and skips its own write (never fighting this one). */
+  #commitActiveReference(): void {
+    const token = this.#activeToken
+    const chosen = this.#menuOptions[this.#activeIdx]
+    const editor = this.#editor
+    if (!token || !chosen || !editor) return
+    const text = editor.textContent ?? ''
+    const next = text.slice(0, token.start) + text.slice(token.end)
+    editor.textContent = next
+    this.value = next
+    editor.toggleAttribute('data-empty', next === '')
+    this.#placeCaret(token.start)
+    this.#addReference(token.trigger, { id: chosen.id, label: chosen.label, kind: chosen.kind })
+    this.#closeReferenceMenu()
+    this.#dismissedToken = undefined
+  }
+
+  /** Best-effort caret restore after a commit rewrote the editor's single text node. Cosmetic — a failure
+   *  leaves the caret at the platform default rather than breaking the commit (jsdom has no real caret). */
+  #placeCaret(offset: number): void {
+    const editor = this.#editor
+    if (!editor) return
+    try {
+      const selection = window.getSelection?.()
+      if (!selection) return
+      const range = document.createRange()
+      const node = editor.firstChild
+      if (node && node.nodeType === Node.TEXT_NODE) range.setStart(node, Math.min(offset, node.textContent?.length ?? 0))
+      else range.setStart(editor, 0)
+      range.collapse(true)
+      selection.removeAllRanges()
+      selection.addRange(range)
+    } catch {
+      // selection-less environment (jsdom) — nothing to restore, and nothing depends on it
+    }
+  }
+
+  /** Add a committed reference, deduped by `kind`+`id`: mentioning the same entry twice is one attachment,
+   *  not two identical chips (resolution is by id — a duplicate would resolve to the same bytes twice). */
+  #addReference(trigger: Trigger, ref: TurnReference): void {
+    if (this.#references.some((r) => r.ref.kind === ref.kind && r.ref.id === ref.id)) return
+    this.#references = [...this.#references, { trigger, ref }]
+    this.#syncReferenceChips()
+  }
+
+  /** Rebuild the composer-owned reference chips at the END of the shared chip row (consumer `contextItems`
+   *  chips keep the row's leading positions — `#syncContextChips`'s own insertion point). Each chip is
+   *  dismissable BEFORE send, which drops that reference from the turn entirely (SPEC-R6 AC2). */
+  #syncReferenceChips(): void {
+    const row = this.#contextChips!
+    for (const stale of [...row.querySelectorAll('[data-part="reference-chip"]')]) stale.remove()
+    for (const { trigger, ref } of this.#references) {
+      const chip = document.createElement('span')
+      chip.dataset.part = 'reference-chip'
+      chip.dataset.kind = ref.kind
+      // The trigger character IS the per-kind visual distinction (mention vs invocation) — no icon-set
+      // dependency, and it reads exactly like what the user typed. `aria-hidden`: the chip's dismiss button
+      // already carries the full accessible name ("Remove <label> from this turn").
+      const sigil = document.createElement('span')
+      sigil.dataset.part = 'reference-chip-sigil'
+      sigil.setAttribute('aria-hidden', 'true')
+      sigil.textContent = trigger
+      const label = document.createElement('span')
+      label.dataset.part = 'reference-chip-label'
+      label.textContent = ref.label
+      const dismiss = document.createElement('ui-button') as UIButtonElement
+      dismiss.setAttribute('variant', 'ghost')
+      dismiss.setAttribute('icon-only', '')
+      dismiss.setAttribute('aria-label', `Remove ${ref.label} from this turn`)
+      dismiss.dataset.part = 'reference-chip-dismiss'
+      const icon = document.createElement('ui-icon')
+      icon.setAttribute('slot', 'leading')
+      icon.setAttribute('data-role', 'icon')
+      icon.setAttribute('glyph', 'x')
+      dismiss.append(icon)
+      this.listen(dismiss, 'click', () => this.#removeReference(ref.kind, ref.id))
+      chip.append(sigil, label, dismiss)
       row.append(chip)
     }
+    this.#syncChipRowVisibility()
+  }
+
+  #removeReference(kind: string, id: string): void {
+    this.#references = this.#references.filter((r) => !(r.ref.kind === kind && r.ref.id === id))
+    this.#syncReferenceChips()
   }
 }
 

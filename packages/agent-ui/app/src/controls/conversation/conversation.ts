@@ -91,7 +91,7 @@ import './conversation-dialog.ts'
 import type { UIConversationDialogElement } from './conversation-dialog.ts'
 import './conversation-header.ts'
 import type { UIConversationHeaderElement } from './conversation-header.ts'
-import type { PickerOption, ProviderOption, ContextItem } from './composer-options.ts'
+import type { PickerOption, ProviderOption, ContextItem, ReferenceOption, TurnReference } from './composer-options.ts'
 
 const props = {
   // OPT-IN raw-wire disclosure (ADR-0129 clause 3) — reflected, default false. Narration itself (below)
@@ -141,6 +141,13 @@ const props = {
   // round-trip through the descriptor's `default:` token (ADR-0004); forwarded straight through to the
   // composed `ui-conversation-composer` child (TKT-0056), which coalesces to `[]` at its own read site.
   contextItems: { ...prop.json<readonly ContextItem[] | undefined>(undefined), attribute: false as const },
+  // GH #849 — the composer's `@`/`/` reference rosters, forwarded straight through to the composed child
+  // exactly like every picker list above (this element adds NO semantics of its own: `ReferenceOption.kind`
+  // stays an opaque consumer string all the way down). `undefined` (default) ⇒ no typeahead at all, so
+  // every existing consumer is byte-identical. A committed reference comes back up through `onSubmit`'s
+  // widened second argument.
+  mentionables: { ...prop.json<readonly ReferenceOption[] | undefined>(undefined), attribute: false as const },
+  invocables: { ...prop.json<readonly ReferenceOption[] | undefined>(undefined), attribute: false as const },
 } satisfies PropsSchema
 
 /** GH #291/ADR-0160 clause 3 (Kim's 2026-07-27 ruling) — a CONSUMER-DEFINED pre-hydrated inline-action
@@ -341,7 +348,7 @@ export class UIConversationElement extends UIElement {
   // (never merged with `#registry` above — a genui surfaceId and an A2UI surfaceId live in disjoint id
   // spaces by construction; the two mechanisms never route the same surfaceId to different host types).
   readonly #genuiRegistry = new Map<string, GenuiSurfaceRecord>()
-  #onSubmitCb: ((text: string) => void) | undefined
+  #onSubmitCb: ((text: string, references?: readonly TurnReference[]) => void) | undefined
   #onClientMessageCb: ClientMessageListener | undefined
   #onModelChangeCb: ((id: string) => void) | undefined
   #onEffortChangeCb: ((id: string) => void) | undefined
@@ -416,10 +423,13 @@ export class UIConversationElement extends UIElement {
       // it works regardless of whether the consumer's own `onXChange(cb)` call happens before or after
       // THIS element connects (LLD CVC-C5, code-reviewer finding F1) — identical for an adopted composer,
       // the registration mechanism is path-blind by construction (ADR-0180 clause 4).
-      composer.onSubmit((text) => {
+      // GH #849 — `references` rides through ADDITIVELY: the user BUBBLE still shows the typed text only
+      // (the chips are the visible attachment affordance, composer-side), while the consumer's own callback
+      // receives the structured references it must resolve at send time.
+      composer.onSubmit((text, references) => {
         if (this.disabled) return // belt to the composer's own busy-disable — no bubble, no callback
         this.addUserMessage(text)
-        this.#onSubmitCb?.(text)
+        this.#onSubmitCb?.(text, references)
       })
       composer.onModelChange((id) => this.#onModelChangeCb?.(id))
       composer.onEffortChange((id) => this.#onEffortChangeCb?.(id))
@@ -459,6 +469,8 @@ export class UIConversationElement extends UIElement {
       this.#composer.modes = this.modes
       this.#composer.mode = this.mode
       this.#composer.contextItems = this.contextItems
+      this.#composer.mentionables = this.mentionables // GH #849 — the `@`/`/` rosters, pass-through only
+      this.#composer.invocables = this.invocables
       this.#reflectBusy() // `disabled` reads here too — the effect re-runs on its change
     })
   }
@@ -882,8 +894,12 @@ export class UIConversationElement extends UIElement {
     return { bubble: resolvedBubble, narration, note, mounts }
   }
 
-  /** The reply affordance — a callback, NEVER a CustomEvent (SPEC-R5). Safe to call before OR after connect. */
-  onSubmit(cb: (text: string) => void): void {
+  /** The reply affordance — a callback, NEVER a CustomEvent (SPEC-R5). Safe to call before OR after connect.
+   *
+   *  GH #849 — WIDENED ADDITIVELY (the composed composer's own `onSubmit`, forwarded): the callback also
+   *  receives the turn's committed `@`/`/` references (`TurnReference[]`, a stable empty array when there
+   *  are none). A single-parameter consumer is byte-unaffected — the extra argument is simply ignored. */
+  onSubmit(cb: (text: string, references?: readonly TurnReference[]) => void): void {
     this.#onSubmitCb = cb
   }
 
