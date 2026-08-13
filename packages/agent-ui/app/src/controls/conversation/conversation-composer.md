@@ -213,7 +213,7 @@ this element never imports the a2ui-owned `GenUiMode` type — a consumer builds
 composer.mentionables = [{ id: 'res-1', label: 'Menu PDF', kind: 'resource', description: 'Tonight’s menu' }]
 composer.invocables = [
   { id: 'skill-1', label: 'House style', kind: 'skill' },
-  { id: 'mcp:calc:*', label: 'Calculator', kind: 'tool' },
+  { id: 'svc:calc:*', label: 'Calculator', kind: 'tool' },
 ]
 composer.onSubmit((text, references) => {
   // references: readonly TurnReference[] — [{ id: 'res-1', label: 'Menu PDF', kind: 'resource' }, …]

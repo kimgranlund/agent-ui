@@ -403,7 +403,7 @@ conv.onContextDismiss((id) => { /* remove `id` from contextItems */ })
 // GH #849 — the composer's `@`/`/` reference typeahead, pass-through props; a committed reference rides
 // `onSubmit`'s widened SECOND argument (a single-argument consumer is unaffected).
 conv.mentionables = [{ id: 'res-1', label: 'Menu PDF', kind: 'resource' }]
-conv.invocables = [{ id: 'mcp:calc:*', label: 'Calculator', kind: 'tool' }]
+conv.invocables = [{ id: 'svc:calc:*', label: 'Calculator', kind: 'tool' }]
 conv.onSubmit((text, references) => { /* resolve `references` by id at send time */ })
 conv.onMicClick(() => { /* wire real voice input here — none is built in */ }) // ALSO reveals the mic button — hidden until this is called
 ```

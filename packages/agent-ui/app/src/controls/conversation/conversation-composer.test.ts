@@ -566,7 +566,7 @@ const MENTIONABLES = [
 const INVOCABLES = [
   { id: 'skill-style', label: 'House style', kind: 'skill' },
   { id: 'wf-review', label: 'Review flow', kind: 'workflow' },
-  { id: 'mcp:calc:*', label: 'Calculator', kind: 'tool' },
+  { id: 'svc:calc:*', label: 'Calculator', kind: 'tool' },
 ]
 
 describe('ui-conversation-composer — GH #849 SPEC-R5: the trigger grammar', () => {
