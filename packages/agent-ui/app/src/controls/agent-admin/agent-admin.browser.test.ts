@@ -2862,6 +2862,157 @@ describe('ui-agent-admin — the settings pane is a real flex column, so its dec
   }
 })
 
+// ── GH #844 — the Surface tab's help affordance, where it becomes TRUE ──────────────────────────────
+//
+// jsdom proves the wiring (`surface-help.test.ts`: an icon per group header and row, non-empty card
+// content, focusin driving `ui-tooltip` open, Escape dismissing, aria-describedby intact). None of the
+// REVEAL is provable there: `@scope`, `:hover`, `:focus`, computed opacity and the Popover top layer all
+// need a real engine. So this block measures exactly the three claims jsdom cannot hold —
+//   [1] hidden AT REST but still laid out (opacity 0, a real box — never display:none, or a Tab could
+//       never reach it),
+//   [2] revealed by hovering the ROW, and independently by FOCUSING the icon (the a11y floor: a
+//       hover-only reveal is what GH #844 rules out in as many words), and
+//   [3] focus really opens the card into the TOP LAYER, painting real ink — an opened-but-invisible
+//       panel would pass every structural check and still be broken.
+// Both engines, no engine-conditional expectations.
+describe('ui-agent-admin Surface tab — the help icons are hidden at rest and revealed by hover AND by focus (GH #844)', () => {
+  const frames = async (n = 3): Promise<void> => {
+    for (let i = 0; i < n; i += 1) await new Promise((r) => requestAnimationFrame(() => r(null)))
+  }
+
+  /** Poll until `icon`'s COMPUTED opacity settles at `want`, returning whatever it last read.
+   *
+   *  The reveal is a real 120ms transition, not an instant flip — measured, both engines: three rAFs after
+   *  the hover lands, Chromium reads 0.71 and WebKit 0.76, mid-fade and climbing. Asserting the frame after
+   *  the trigger would be racing the animation (a genuine flake, not a defect), so this polls for the
+   *  SETTLED value exactly as `tooltip.browser.test.ts`'s own hover probe polls for its delayed show —
+   *  asserting the end state the user actually sees, with a ceiling generous against runner latency. */
+  async function opacitySettlesTo(icon: HTMLElement, want: string, timeoutMs = 4000): Promise<string> {
+    const deadline = Date.now() + timeoutMs
+    let seen = getComputedStyle(icon).opacity
+    while (seen !== want && Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 25))
+      seen = getComputedStyle(icon).opacity
+    }
+    return seen
+  }
+
+  /** The help affordance for `key`, its icon (ui-tooltip's own `anchor` part — it stamps that name over
+   *  any bespoke one, the ui-menu trigger precedent) and its top-layer panel. */
+  function help(el: HTMLElement, key: string): { host: HTMLElement & { open: boolean }; icon: HTMLElement; panel: HTMLElement } {
+    const host = el.querySelector(`[data-part="surface-help"][data-help="${key}"]`) as HTMLElement & { open: boolean }
+    return {
+      host,
+      icon: host.querySelector('[data-part="anchor"]') as HTMLElement,
+      panel: host.querySelector('[data-part="panel"]') as HTMLElement,
+    }
+  }
+
+  it('at rest every icon is invisible but still LAID OUT — opacity 0 on a real box, never display:none', async () => {
+    const { el } = mountAgentAdmin('Surface')
+    await frames()
+    const icons = [...el.querySelectorAll('[data-part="surface-help"] > [data-part="anchor"]')] as HTMLElement[]
+    // Anti-vacuous: the whole ruled set is present before anything is asserted about it.
+    expect(icons.length, `${server.browser}: the Surface tab paints one icon per group header and row`).toBe(9)
+    for (const icon of icons) {
+      const style = getComputedStyle(icon)
+      expect(style.opacity, `${server.browser}: hidden at rest`).toBe('0')
+      expect(style.display, 'laid out, so focus can reach it and revealing it never reflows the row').not.toBe('none')
+      expect(style.visibility).not.toBe('hidden')
+      const box = icon.getBoundingClientRect()
+      expect(box.width, `${server.browser}: a real, non-zero icon box`).toBeGreaterThan(0)
+      expect(box.height).toBeGreaterThan(0)
+    }
+  })
+
+  it('hovering a modality ROW reveals that row’s icon — and only that row’s', async () => {
+    const { el } = mountAgentAdmin('Surface')
+    await frames()
+    const row = el.querySelector('[data-part="surface-row"][data-surface="planner"]') as HTMLElement
+    const mine = help(el, 'planner')
+    const other = help(el, 'markdown')
+
+    await userEvent.hover(row)
+    expect(await opacitySettlesTo(mine.icon, '1'), `${server.browser}: the hovered row reveals its own icon`).toBe('1')
+    expect(getComputedStyle(other.icon).opacity, 'a sibling row stays at rest — the reveal is per-row').toBe('0')
+
+    await userEvent.unhover(row)
+    expect(await opacitySettlesTo(mine.icon, '0'), 'and it goes back to rest when the pointer leaves').toBe('0')
+  })
+
+  it('hovering a GROUP HEADER’s heading row reveals its icon (the fold summary, not just the body)', async () => {
+    const { el } = mountAgentAdmin('Surface')
+    await frames()
+    const summary = el.querySelector(
+      '[data-part="settings-item"][data-item="surface"] > [data-part="details"] > [data-part="summary"]',
+    ) as HTMLElement
+    const { icon } = help(el, 'surface-options')
+    expect(summary.contains(icon), 'the icon really rides the heading row (ADR-0158 adoption)').toBe(true)
+
+    await userEvent.hover(summary)
+    expect(await opacitySettlesTo(icon, '1'), `${server.browser}: hovering the heading row reveals it`).toBe('1')
+  })
+
+  it('FOCUS alone reveals the icon and opens its card into the top layer, with real painted ink', async () => {
+    const { el } = mountAgentAdmin('Surface')
+    await frames()
+    const { host, icon, panel } = help(el, 'a2ui')
+    expect(panel.matches(':popover-open'), 'closed at rest').toBe(false)
+    expect(getComputedStyle(icon).opacity, 'invisible at rest').toBe('0')
+
+    // No hover anywhere near it — this is the keyboard path and nothing else.
+    icon.focus()
+    await frames()
+
+    expect(document.activeElement === icon || icon.contains(document.activeElement), 'the icon is a real focusable').toBe(true)
+    expect(await opacitySettlesTo(icon, '1'), `${server.browser}: focus reveals it — a hover-only reveal is not acceptable`).toBe('1')
+    expect(host.open, 'ui-tooltip shows on focusin immediately — no delay for keyboard users').toBe(true)
+    expect(panel.matches(':popover-open'), `${server.browser}: the card is really in the Popover top layer`).toBe(true)
+
+    // The WHOLE shape, not a per-part assertion: a real box, real text, inside the viewport.
+    const box = panel.getBoundingClientRect()
+    expect(box.width, `${server.browser}: a real painted card, not a collapsed stub`).toBeGreaterThan(0)
+    expect(box.height).toBeGreaterThan(0)
+    expect(box.left).toBeGreaterThanOrEqual(0)
+    expect(box.top).toBeGreaterThanOrEqual(0)
+    expect(box.right).toBeLessThanOrEqual(window.innerWidth + 1)
+    const panelStyle = getComputedStyle(panel)
+    expect(panelStyle.visibility).not.toBe('hidden')
+    expect(parseFloat(panelStyle.opacity)).toBeGreaterThan(0)
+
+    // Structured rich text, not a bare line: a heading, the gist, at least one expanded paragraph.
+    const card = panel.querySelector('[data-part="surface-help-card"]') as HTMLElement
+    expect(card, 'the card rode into the panel').not.toBeNull()
+    expect(card.querySelector('[data-part="surface-help-title"]')?.textContent).toBe('A2UI')
+    expect(card.querySelectorAll('[data-part="surface-help-body"]').length).toBeGreaterThanOrEqual(1)
+    expect((card.textContent ?? '').trim().length, 'real copy, not an empty shell').toBeGreaterThan(80)
+    const cardBox = card.getBoundingClientRect()
+    expect(cardBox.height, `${server.browser}: the card itself paints`).toBeGreaterThan(0)
+    expect(cardBox.width, 'capped to a reading measure, never the whole viewport').toBeLessThanOrEqual(window.innerWidth)
+
+    // Escape ends the whole thing — the panel leaves the top layer and the icon returns to rest.
+    await userEvent.keyboard('{Escape}')
+    await frames()
+    expect(host.open, `${server.browser}: Escape dismisses`).toBe(false)
+    expect(panel.matches(':popover-open'), 'and it really left the top layer').toBe(false)
+  })
+
+  it('every helped surface opens its OWN card — nine icons, nine distinct explanations', async () => {
+    const { el } = mountAgentAdmin('Surface')
+    await frames()
+    const seen = new Set<string>()
+    for (const host of [...el.querySelectorAll('[data-part="surface-help"]')] as HTMLElement[]) {
+      const key = host.getAttribute('data-help') ?? ''
+      const panel = host.querySelector('[data-part="panel"]') as HTMLElement
+      const text = (panel.textContent ?? '').trim()
+      expect(text.length, `${server.browser}: ${key} carries no copy`).toBeGreaterThan(80)
+      expect(seen.has(text), `${key}: two icons must never open the same card`).toBe(false)
+      seen.add(text)
+    }
+    expect(seen.size).toBe(9)
+  })
+})
+
 
 
 

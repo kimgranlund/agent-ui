@@ -171,12 +171,18 @@ import {
   sanitizeModel,
   runStubAgentTurn,
   sanitizeNumber,
+  SURFACE_HELP,
+  type SurfaceHelpKey,
   type AgentConfigSnapshot,
   type AdminAgentTurn,
   type AdminAgentSurfaceTurn,
   type AdminTurn,
   type AdminTurnRequest,
 } from './agent-admin-schema.ts'
+// GH #844 — the Surface tab's question-mark help affordance (a `ui-tooltip` card per group header and
+// element row). The factory owns the DOM shape + the `ui-tooltip`/`ui-icon` tag registrations; the COPY it
+// projects lives in `agent-admin-schema.ts` above, shared with the rows' own native `title` hints.
+import { buildSurfaceHelp, buildSurfaceHelpForSummary } from './surface-help.ts'
 import { EFFORT_LEVELS, type EffortLevel, type TurnReference } from '../conversation/composer-options.ts'
 import {
   ENTRY_KINDS,
@@ -992,7 +998,18 @@ export class UIAgentAdminElement extends UIElement {
     // GH #138 (row-pattern standardization, Kim's option-A ruling): switch leads, label next, a
     // flexible spacer, then trailing action/selection content pinned to the right edge — every
     // `surfaceRow` and its caller-appended trailing content (catalog select / note) follows this.
-    const surfaceRow = (surface: string, label: string, title: string): { row: HTMLElement; toggle: HTMLElement & { checked: boolean; disabled: boolean } } => {
+    //
+    // GH #844 — the row's copy is no longer a literal at the call site: `help` names its `SURFACE_HELP`
+    // entry (agent-admin-schema.ts) and BOTH renderings come from it — the native `title` hover hint from
+    // `.summary`, and the question-mark card from the whole record. One source, so the hint and the card
+    // structurally cannot drift. The icon lands directly after the label (before the spacer): it reads as
+    // part of the label, and it is hidden at rest until this row is hovered or the icon itself is focused
+    // (agent-admin.css — the reveal is CSS-only; the focus half is the a11y floor, not an extra).
+    const surfaceRow = (
+      surface: string,
+      label: string,
+      help: SurfaceHelpKey,
+    ): { row: HTMLElement; toggle: HTMLElement & { checked: boolean; disabled: boolean } } => {
       const row = document.createElement('div')
       row.setAttribute('data-part', 'surface-row')
       row.setAttribute('data-surface', surface)
@@ -1003,10 +1020,10 @@ export class UIAgentAdminElement extends UIElement {
       const rowLabel = document.createElement('span')
       rowLabel.setAttribute('data-part', 'surface-label')
       rowLabel.textContent = label
-      rowLabel.title = title
+      rowLabel.title = SURFACE_HELP[help].summary
       const spacer = document.createElement('span')
       spacer.setAttribute('data-part', 'surface-spacer')
-      row.append(toggle, rowLabel, spacer)
+      row.append(toggle, rowLabel, buildSurfaceHelp(help), spacer)
       return { row, toggle }
     }
 
@@ -1024,7 +1041,7 @@ export class UIAgentAdminElement extends UIElement {
       return { group, detail }
     }
 
-    const markdown = surfaceRow('markdown', 'Markdown', 'Rendered as rich text — simple text is the fallback')
+    const markdown = surfaceRow('markdown', 'Markdown', 'markdown')
     markdown.toggle.addEventListener('change', () => {
       this.store?.set(SURFACE_MARKDOWN_KEY, markdown.toggle.checked)
       this.#applyMasterStates(this.store)
@@ -1032,7 +1049,7 @@ export class UIAgentAdminElement extends UIElement {
     })
     this.#surfaceMarkdownSwitch = markdown.toggle
 
-    const a2ui = surfaceRow('a2ui', 'A2UI', 'Structured generative UI against the picked catalog')
+    const a2ui = surfaceRow('a2ui', 'A2UI', 'a2ui')
     a2ui.toggle.addEventListener('change', () => {
       this.store?.set(SURFACE_A2UI_KEY, a2ui.toggle.checked)
       this.#applyMasterStates(this.store)
@@ -1054,7 +1071,7 @@ export class UIAgentAdminElement extends UIElement {
     // opts in, `isGenuiSurfaceEnabled`) replaces the PRD-gated `disabled` lock. The pattern-source PICK
     // itself lives in the "Pattern sources" capability section below (CAPABILITY_KINDS, D4's "From
     // library" affordance) — this row is only the modality's own on/off switch, mirroring markdown/a2ui.
-    const genui = surfaceRow('genui', 'GenUI', 'Sandboxed free-form generative UI — a pattern source, picked below, conditions it')
+    const genui = surfaceRow('genui', 'GenUI', 'genui')
     genui.toggle.checked = false // the inverse default (OFF) — applyMasterStates re-applies the real stored value below
     genui.toggle.addEventListener('change', () => {
       this.store?.set(SURFACE_GENUI_KEY, genui.toggle.checked)
@@ -1075,7 +1092,11 @@ export class UIAgentAdminElement extends UIElement {
     genuiDogfoodRow.setAttribute('data-part', 'surface-detail-row')
     genuiDogfoodRow.setAttribute('data-detail', 'genui-dogfood')
     const genuiDogfoodLabel = document.createElement('span')
-    genuiDogfoodLabel.setAttribute('data-part', 'surface-genui-dogfood-label')
+    // GH #844 — `surface-detail-label` (was the row-specific `surface-genui-dogfood-label`): the detail
+    // zone has TWO labeled rows now (this sub-option and the catalog card's header), and one part name for
+    // one grammar is the file's own convention (`surface-label` names every modality row's label alike).
+    // The old name was referenced by nothing — no CSS, no test, not the descriptor's parts block.
+    genuiDogfoodLabel.setAttribute('data-part', 'surface-detail-label')
     genuiDogfoodLabel.textContent = 'Use agent-ui components'
     const genuiDogfoodSwitch = document.createElement('ui-switch') as HTMLElement & { checked: boolean; disabled: boolean }
     genuiDogfoodSwitch.setAttribute('data-part', 'surface-genui-dogfood-toggle')
@@ -1086,8 +1107,10 @@ export class UIAgentAdminElement extends UIElement {
       if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
     })
     this.#surfaceGenuiDogfoodSwitch = genuiDogfoodSwitch
-    // Switch leads, label next — the GH #138 row grammar the modality rows above already follow.
-    genuiDogfoodRow.append(genuiDogfoodSwitch, genuiDogfoodLabel)
+    // Switch leads, label next — the GH #138 row grammar the modality rows above already follow. GH #844
+    // adds the help icon in the SAME position a modality row carries it: directly after the label.
+    genuiDogfoodLabel.title = SURFACE_HELP['genui-dogfood'].summary
+    genuiDogfoodRow.append(genuiDogfoodSwitch, genuiDogfoodLabel, buildSurfaceHelp('genui-dogfood'))
     genuiGroup.detail.append(genuiDogfoodRow)
 
     // ADR-0174 cl.1 / OF3 (ruled here) — the planner-stage pilot's own modality row, placed beside GenUI
@@ -1104,7 +1127,7 @@ export class UIAgentAdminElement extends UIElement {
     // DELIBERATELY independent of the A2UI master (no dim, no disable): the planner is a turn-SHAPE knob
     // the host loop reads, not an output modality — planner-ON + A2UI-OFF is legal here; the future
     // admin-side runner slice owns deciding whether that combo degrades or dims (review note, 2026-08-08).
-    const planner = surfaceRow('planner', 'Planner', 'Sequential plan → execute → synthesize host loop — opt-in')
+    const planner = surfaceRow('planner', 'Planner', 'planner')
     planner.toggle.checked = false // the inverse default (OFF) — applyMasterStates re-applies the real stored value below
     planner.toggle.addEventListener('change', () => {
       this.store?.set(SURFACE_PLANNER_KEY, planner.toggle.checked)
@@ -1123,7 +1146,7 @@ export class UIAgentAdminElement extends UIElement {
     // The gate governs TEACHING (the composed prompt's personaPatch arm) and is ONE conjunct of
     // consumption; it never authorizes a write on its own. A patch declared outside the dedicated
     // authoring context is ignored with this switch ON — see `#runSurfaceTurn`'s apply loop.
-    const authoring = surfaceRow('authoring', 'Authoring', 'Let this agent propose edits to a draft agent’s own configuration — opt-in')
+    const authoring = surfaceRow('authoring', 'Authoring', 'authoring')
     authoring.toggle.checked = false // the inverse default (OFF) — applyMasterStates re-applies the stored value
     authoring.toggle.addEventListener('change', () => {
       this.store?.set(SURFACE_AUTHORING_KEY, authoring.toggle.checked)
@@ -1211,7 +1234,13 @@ export class UIAgentAdminElement extends UIElement {
     // capability the agent has.
     capabilitiesContent.append(settingsItem(ENTRY_KINDS.promptSection, 'Instructions', promptSections.host))
     // GH #574 — Surface tab: how it renders (Surface Options · Pattern sources).
-    surfaceContent.append(settingsItem('surface', 'Surface Options', surfaceOptions))
+    // GH #844 — a GROUP HEADER's help icon rides its fold's heading row exactly as the master switches
+    // already do: appended as an ordinary fold child marked `slot="summary"`, adopted into the summary
+    // part by `ui-disclosure` itself at connect (ADR-0158). No placement dance, and it stays on the
+    // heading row whether the fold is open or closed.
+    const surfaceOptionsItem = settingsItem('surface', 'Surface Options', surfaceOptions)
+    surfaceOptionsItem.append(buildSurfaceHelpForSummary('surface-options'))
+    surfaceContent.append(surfaceOptionsItem)
     for (const { kind, label, addLabel } of CAPABILITY_KINDS) {
       const section = this.#makeSection(kind, addLabel)
       // GH #488 — the catalog picker is no longer a separate top-level Settings fold: it mounts directly
@@ -1227,7 +1256,23 @@ export class UIAgentAdminElement extends UIElement {
         // GH #541 — into the A2UI row's own detail zone (indented, shared inner surface), not as its flat
         // next sibling: the catalog roster and the "+ From library" add-row belong to THIS toggle, and the
         // nesting is what says so.
-        a2uiGroup.detail.append(section.host)
+        //
+        // GH #844 — the catalog card is one of the Surface tab's helped elements, and it was the ONE with
+        // nowhere to hang an icon: the section is HEADLESS by construction (ADR-0170 cl.5 — no master
+        // switch, so no top-level fold and no heading row of its own), leaving an unlabeled roster of
+        // catalog rows floating under the A2UI toggle. So it gets a header of exactly the shape its
+        // sibling detail zone already uses — a `surface-detail-row` carrying [ label | help ] — rather
+        // than a bespoke one. The label is what the fold summary would have said; the icon behaves
+        // identically to every other one on this tab.
+        const catalogHeader = document.createElement('div')
+        catalogHeader.setAttribute('data-part', 'surface-detail-row')
+        catalogHeader.setAttribute('data-detail', 'a2ui-catalog')
+        const catalogLabel = document.createElement('span')
+        catalogLabel.setAttribute('data-part', 'surface-detail-label')
+        catalogLabel.textContent = SURFACE_HELP['a2ui-catalog'].title
+        catalogLabel.title = SURFACE_HELP['a2ui-catalog'].summary
+        catalogHeader.append(catalogLabel, buildSurfaceHelp('a2ui-catalog'))
+        a2uiGroup.detail.append(catalogHeader, section.host)
         continue
       }
       const item = settingsItem(kind, label, section.host)
@@ -1252,8 +1297,14 @@ export class UIAgentAdminElement extends UIElement {
       item.append(kindSwitch)
       // GH #574 — Pattern sources rides the Surface tab (how it renders, alongside Surface Options —
       // the modality it conditions); every other capability kind rides Capabilities (what it can do).
-      if (kind === ENTRY_KINDS.patternSource) surfaceContent.append(item)
-      else capabilitiesContent.append(item)
+      // GH #844 — and so its fold heading row (and ONLY its, of the capability kinds) carries a help
+      // icon: the affordance is Surface-tab-scoped by ruling, and the Capabilities tab's own four kinds
+      // are a separate, deliberately deferred pass. The icon slots onto the summary beside the master
+      // switch already there, the same ADR-0158 adoption.
+      if (kind === ENTRY_KINDS.patternSource) {
+        item.append(buildSurfaceHelpForSummary('pattern-source'))
+        surfaceContent.append(item)
+      } else capabilitiesContent.append(item)
     }
 
     // GH #161 — the old single Context tab's ONE content unit split into TWO content units:

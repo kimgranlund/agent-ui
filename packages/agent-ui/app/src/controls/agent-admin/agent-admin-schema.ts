@@ -334,6 +334,151 @@ export function resolveEffectiveCatalogId(baseId: string, localPatternsSelection
   return DERIVED_A2UI_CATALOG_IDS.has(candidate) ? candidate : baseId
 }
 
+// ── the Surface tab's HELP COPY (GH #844) ─────────────────────────────────────────────────────────────
+// The ONE copy source for every explanation the Surface tab shows. Both consumers read THIS table:
+//  - `agent-admin.ts`'s `surfaceRow(...)` takes each row's native `title` hint from `.summary` (those
+//    five literal strings used to live inline at the call sites — they are gone; the table is where
+//    they live now), and
+//  - `surface-help.ts` renders the whole entry — title, summary, expanded body, labeled facts — into the
+//    `ui-tooltip` help card the row's question-mark icon opens.
+// So the hover hint and the help card can never drift: they are the same record, projected twice at
+// different depths. This is DATA, like every other export in this file — no DOM, no copy in the view.
+//
+// The catalog entry is a further degree of the same law: its facts are PROJECTED from
+// `A2UI_CATALOG_OPTIONS` above rather than restated, so registering a third catalog writes its
+// explanation into the help card with zero edits here (the "the pack IS this array, mapped" discipline
+// that array's own doc comment already states for the library pack).
+//
+// The bodies are PLAIN structured prose — no markdown syntax (GH #844's ruled default: structured markup,
+// `ui-markdown` only if the copy genuinely needs it). Keep it that way: `surface-help.ts` renders each
+// paragraph as textContent, so a stray `**bold**` here would paint its own asterisks.
+
+/** One labeled fact on a help card — "Default: Off", "Requires: the GenUI modality above, on". */
+export interface SurfaceHelpFact {
+  term: string
+  detail: string
+}
+
+/** One Surface-tab group header's or element row's whole explanation. */
+export interface SurfaceHelpEntry {
+  /** The card's heading — the group/row's own display label, verbatim (also the icon's accessible name). */
+  title: string
+  /** The one-line gist. ALSO the row's native `title` hover hint — one string, two renderings. */
+  summary: string
+  /** The expanded explanation, one paragraph per member (at least one). Plain prose, no markup. */
+  body: readonly string[]
+  /** Optional labeled facts, rendered as a list under the prose. */
+  facts?: readonly SurfaceHelpFact[]
+}
+
+/** Every helped surface — the two group headers plus every element row the Surface tab paints. The
+ *  union is what makes a typo a COMPILE error at the call site rather than a silently missing icon. */
+export const SURFACE_HELP_KEYS = [
+  'surface-options',
+  'markdown',
+  'a2ui',
+  'a2ui-catalog',
+  'genui',
+  'genui-dogfood',
+  'planner',
+  'authoring',
+  'pattern-source',
+] as const
+
+export type SurfaceHelpKey = (typeof SURFACE_HELP_KEYS)[number]
+
+export const SURFACE_HELP: Readonly<Record<SurfaceHelpKey, SurfaceHelpEntry>> = {
+  'surface-options': {
+    title: 'Surface Options',
+    summary: 'Which output modalities this agent may use, and how each one is configured',
+    body: [
+      'Each row here is one output modality — a way this agent is allowed to answer. A modality that is switched off composes no teaching for itself, so the agent is never told to produce something this client would refuse to show.',
+      'Markdown and A2UI ship on; GenUI, Planner and Authoring are opt-in and ship off. Switching one off degrades the answer rather than breaking it: anything the model volunteers for a disabled modality is simply never consumed, and any surface left over from an earlier turn goes inert instead of starting a hidden turn.',
+    ],
+    facts: [{ term: 'Applies', detail: 'from the next turn — every switch is read fresh at turn time, never cached' }],
+  },
+  markdown: {
+    title: 'Markdown',
+    summary: 'Rendered as rich text — simple text is the fallback',
+    body: [
+      "On: the agent's notes and the system bubbles render as rich text — headings, lists, emphasis, links and code paint as real elements, sanitized by construction.",
+      'Off: the very same text renders verbatim, character for character. Nothing is lost — the formatting is simply not interpreted.',
+    ],
+    facts: [{ term: 'Default', detail: 'On' }],
+  },
+  a2ui: {
+    title: 'A2UI',
+    summary: 'Structured generative UI against the picked catalog',
+    body: [
+      'On: a turn may stream A2UI wire lines, which this client renders into real controls — forms, cards, choices the reader can act on. Acting on one sends the agent a follow-up turn, so the surface is a conversation, not a picture.',
+      'Off: no A2UI grammar is taught at all, and a surface from an earlier turn stops accepting clicks. A surface the agent tries to render while this is off is announced in the log rather than silently dropped.',
+    ],
+    facts: [
+      { term: 'Default', detail: 'On' },
+      { term: 'Configured by', detail: 'the catalog picked directly below this row' },
+    ],
+  },
+  'a2ui-catalog': {
+    title: 'Catalog',
+    summary: 'The component vocabulary an A2UI surface is rendered against',
+    body: [
+      'Exactly one catalog is active. It decides both which components the agent is taught to emit and which ones this client will paint, so switching catalogs changes the vocabulary of every surface from the next turn on.',
+      'Use "From library" to add a registered catalog to this roster. An entry already in the list is offered disabled rather than hidden, so it is visible why a second copy cannot be added.',
+    ],
+    // PROJECTED, never restated — see this block's own header comment. A third registered catalog
+    // explains itself here for free.
+    facts: A2UI_CATALOG_OPTIONS.map((option) => ({ term: option.label, detail: option.description ?? '' })),
+  },
+  genui: {
+    title: 'GenUI',
+    summary: 'Sandboxed free-form generative UI — a pattern source, picked below, conditions it',
+    body: [
+      'On: a turn may compose a free-form surface that mounts inside a sandboxed frame — no catalog, no fixed component set, and no access to this page. The pattern source picked under "Pattern sources" is what conditions the structure and style the agent aims for.',
+      'Off: no GenUI teaching composes, and a frame left over from an earlier turn is inert — its actions start no hidden turn.',
+    ],
+    facts: [{ term: 'Default', detail: 'Off — an explicit opt-in per agent' }],
+  },
+  'genui-dogfood': {
+    title: 'Use agent-ui components',
+    summary: "Serve the fleet's own components into the GenUI frame",
+    body: [
+      "On: the sandboxed frame is served this fleet's own component and token assets, and the turn is taught to build with those elements instead of hand-rolled markup — so a generated surface looks like the rest of this app rather than a stranger inside it.",
+      'Only meaningful while GenUI itself is on. With the modality off this setting composes nothing and mounts nothing, even if it was left on in an earlier session.',
+    ],
+    facts: [
+      { term: 'Default', detail: 'Off' },
+      { term: 'Requires', detail: 'the GenUI modality above, switched on' },
+    ],
+  },
+  planner: {
+    title: 'Planner',
+    summary: 'Sequential plan → execute → synthesize host loop — opt-in',
+    body: [
+      'On: a turn may run as a sequence — the host asks for a plan, executes its steps, then asks for a synthesis — instead of one single dispatch. The stages stay internal: what changes is how the answer is produced, not what the reader sees.',
+      'Off: every turn runs the single-dispatch path. A model that volunteers a plan anyway is not stopped from saying so — the host simply never acts on it.',
+    ],
+    facts: [{ term: 'Default', detail: 'Off — an explicit opt-in per agent' }],
+  },
+  authoring: {
+    title: 'Authoring',
+    summary: 'Let this agent propose edits to a draft agent’s own configuration — opt-in',
+    body: [
+      "On: the turn is taught how to declare a configuration patch, and a patch it declares may be applied to the draft agent's own settings. This is the seam the conversational agent-builder runs on.",
+      'This switch teaches; it never authorizes on its own. A declared patch is still filtered key by key, sanitized, and validated before anything is written, and a patch declared outside the dedicated authoring conversation is ignored outright.',
+    ],
+    facts: [{ term: 'Default', detail: 'Off — an explicit opt-in per agent' }],
+  },
+  'pattern-source': {
+    title: 'Pattern sources',
+    summary: 'The style and structure reference a GenUI turn composes against',
+    body: [
+      'A pattern source is a body of reference material — markup conventions, a design language, a worked example — handed to a GenUI turn to compose against. Exactly the one picked here rides the turn; the rest stay parked in the list.',
+      '"Add pattern source" authors one by hand: a name, an optional description, and the content itself. "From library" adds a shipped source with the typing already done. Both paths commit through the same validation, so a duplicate name is refused identically either way.',
+    ],
+    facts: [{ term: 'Read by', detail: 'the GenUI modality — with GenUI off, no source composes at all' }],
+  },
+}
+
 // ── the persona's persisted BANKROLL (GH #525) ────────────────────────────────────────────────────────
 // A games-category capability, not every games persona's: a persona whose games keep a running score at
 // a FIXED data-model path (`/bankroll`) may opt in (design call 2, 2026-08-07) so `agent-admin.ts`

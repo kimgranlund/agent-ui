@@ -170,6 +170,11 @@ export default defineConfig({
       // Vision rev.5 (Kim's Figma frame 33:1693) — `agent-admin.ts` side-effect-imports `disclosure` so
       // the Context tab's `document.createElement('ui-disclosure')` accordions resolve to the REAL class.
       '@agent-ui/components/controls/disclosure': r('./packages/agent-ui/components/src/controls/disclosure/disclosure.ts'),
+      // GH #844 — `@agent-ui/app`'s `agent-admin/surface-help.ts` side-effect-imports `tooltip` so the
+      // Surface tab's help icons resolve `document.createElement('ui-tooltip')` to the REAL class (the
+      // focusin/Escape/aria-describedby contract is the whole point of reusing the primitive). Same
+      // alias-ordering necessity as `controls/disclosure` immediately above.
+      '@agent-ui/components/controls/tooltip': r('./packages/agent-ui/components/src/controls/tooltip/tooltip.ts'),
       // app-surfaces-m4.lld.md LLD-C13/C14 — `@agent-ui/app`'s `ui-settings` schema/generate.ts are the
       // sixth/seventh/etc. direct `./controls/{name}` subpath consumers from OUTSIDE the components
       // package: the field-type registry self-defines the four mapped controls (text-field/switch/
