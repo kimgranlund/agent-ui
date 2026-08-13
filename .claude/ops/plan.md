@@ -117,9 +117,14 @@ Queue order: (1) gated mutations verified safe → (2) blockers → (3) human de
 
 ## Standing notes (not queue entries)
 
-- **Board shape (end of cycle, 2026-08-13)**: **1 open issue — #616 (blocked)**; #793/#791/#782
-  all closed this cycle (PRs #799/#800 merged). 0 open PRs · 0 extra worktrees · origin main-only.
-  Remaining queued actions: 4.2 (cross-repo) and 4.3 (the 0178/0185 decision-watcher follow-up).
+- **Board shape (post-evening-wave update, 2026-08-13 late)**: #616 CLOSED (gate had fired months
+  ago — convention live upstream since June; pack ported via PR #801, UPSTREAM-PROPOSAL.md is Kim's
+  to file + CLA). The evening wave then filed+shipped: #802 ask-arm round routing (PR #803) ·
+  #804 authoring-teaching skill exemplar (PR #806) · #805 disable-on-answer (PR #809, full
+  adversarial review cycle). Open now: **#802 + #804 (merged fixes held open for Kim's pixel
+  confirmation) · #810 (standalone-canvas fail-arm scope ruling, follow-up task)**. 0 open PRs ·
+  0 extra worktrees · origin main-only. Remaining queued actions: 4.2 (cross-repo) and 4.3 (the
+  0178/0185 decision-watcher follow-up).
 - **This cycle's lesson (chore-lead-sweep4)**: multiple same-day sweep generations produced real,
   valuable, UNCOORDINATED direct-to-main writes that a naive "land the sweep PR verbatim"
   recommendation would have regressed. The save was cross-checking every claim against live
