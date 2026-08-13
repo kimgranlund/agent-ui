@@ -1,6 +1,6 @@
 # ADR-0165 — a judged import run ARCHIVES its verdicts file into the corpus data dir, and the admission-coverage gate reads judged-ness (not just admitted-ness) off the shard: an `E_QUALITY` rejection becomes durable and machine-readable with no human transcription step, and a re-admission can no longer turn the gate green
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-28
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-28
 >
 > | Field | Value |
 > |---|---|

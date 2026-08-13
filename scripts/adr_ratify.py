@@ -8,7 +8,6 @@ live against GitHub and, only if every check passes, performs the whole flip mec
 
     Status cell `proposed -> accepted`
     Ratified-by cell <- owner login + utterance date + URL
-    README index row status column `proposed -> accepted`
     derived indexes regenerated (node scripts/generate-sitemap.mjs)
     booked-repairs TRACKING ISSUE filed, one per flip that owes repairs (GH #544)
     booked-repairs checklist comment posted on the ratifying PR/issue, naming that issue (GH #392)
@@ -51,7 +50,7 @@ Amendment-ratification mode (GH #664). An ADR's own body may carry later
 `## Amendment (DATE, **proposed** — Kim ratifies) — TITLE` sections — narrower re-rulings appended
 after the whole ADR already flipped `accepted` (ADR-0179's triple-dock amendment is the hand-flipped
 precedent this mode replaces; ADR-0170 carries the next live one, still `proposed`). The whole-ADR
-flip above only ever touches the Status/Ratified-by/README triad, so it correctly fail-closes on
+flip above only ever touches the Status/Ratified-by pair, so it correctly fail-closes on
 these (no `proposed` Status row to flip) — and used to leave no verified path forward, only a hand
 edit. This script now also recognizes the distinct utterance shape `ratify ADR-#### amendment` (the
 literal word "amendment" trailing the ADR token) and, on that shape, flips ONLY that one Amendment
@@ -458,7 +457,7 @@ def main() -> int:
 
     # ═══════════════════════════════════════════════════════════════════════════════════════════
     # amendment-ratification mode (GH #664) — flips ONE in-body Amendment header, nothing else:
-    # never the Status cell, never README, never the derived indexes (none of those changed).
+    # never the Status cell, never the derived indexes (neither of those changed).
     # ═══════════════════════════════════════════════════════════════════════════════════════════
     if is_amendment:
         matches = sorted(adr_dir.glob(f"{adr_id}-*.md"))
@@ -549,16 +548,6 @@ def main() -> int:
     if not RATIFIED_BY_ROW_RE.search(adr_text):
         raise SystemExit(f"FAIL-CLOSED: {adr_path.name} carries no Ratified-by row to fill")
 
-    # ── README index row: locate exactly one row for this id with a `proposed` status cell ──────
-    readme_path = adr_dir / "README.md"
-    readme_lines = readme_path.read_text(encoding="utf-8").splitlines(keepends=True)
-    row_idx = [i for i, l in enumerate(readme_lines) if l.startswith(f"| [{adr_id}](./{adr_path.name})")]
-    if len(row_idx) != 1:
-        raise SystemExit(f"FAIL-CLOSED: {len(row_idx)} README index rows for {adr_id} (need exactly 1)")
-    cells = readme_lines[row_idx[0]].split("|")
-    if len(cells) < 5 or cells[-3].strip() != "proposed":
-        raise SystemExit("FAIL-CLOSED: README index row's status cell is not `proposed`")
-
     evidence = (
         f"verified: {kind} by @{author} (repo owner) on {date}\n"
         f"  url:    {url}\n"
@@ -587,12 +576,8 @@ def main() -> int:
     adr_text = RATIFIED_BY_ROW_RE.sub(ratified_by_row, adr_text, count=1)
     adr_path.write_text(adr_text, encoding="utf-8")
 
-    cells[-3] = " accepted "
-    readme_lines[row_idx[0]] = "|".join(cells)
-    readme_path.write_text("".join(readme_lines), encoding="utf-8")
-
     run(["node", str(root / "scripts" / "generate-sitemap.mjs")])
-    print(f"RATIFIED ADR-{adr_id}\n{evidence}\n  wrote:  Status cell · Ratified-by cell · README row · derived indexes")
+    print(f"RATIFIED ADR-{adr_id}\n{evidence}\n  wrote:  Status cell · Ratified-by cell · derived indexes")
 
     # The flip is done. Everything below is fail-OPEN — it must never turn a landed flip non-zero.
     # Order matters: the tracking issue is filed FIRST so the comment can name it (GH #544). If the

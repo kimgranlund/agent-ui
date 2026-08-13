@@ -1,6 +1,6 @@
 # ADR-0111 — Report family v1 scope: `ui-table` + `ui-stat` + `ui-badge` — static display vocabulary, the native-`<table>` stamp, the compact realm's first consumer, same-wave catalog rows
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-08
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-08
 >
 > | Field | Value |
 > |---|---|

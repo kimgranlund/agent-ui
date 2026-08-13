@@ -1,6 +1,6 @@
 # ADR-0101 — Overlay open-state transitions always announce: `toggle` fires on every actual show/hide
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-08
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-08
 >
 > | Field | Value |
 > |---|---|

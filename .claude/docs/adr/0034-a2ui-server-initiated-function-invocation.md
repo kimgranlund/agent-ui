@@ -1,6 +1,6 @@
 # ADR-0034 — A2UI v1.0 server-initiated function invocation: the `callFunction` RPC + `functionResponse` (activates ADR-0031's reserved `INVALID_FUNCTION_CALL` arm)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-06-30
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-06-30
 >
 > | Field | Value |
 > |---|---|

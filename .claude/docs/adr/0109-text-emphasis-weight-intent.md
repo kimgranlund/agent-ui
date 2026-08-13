@@ -1,6 +1,6 @@
 # ADR-0109 — `ui-text` gains an `emphasis` prop: visual weight intent (the bold register), catalog-reachable, purely presentational — the typescale's M3-verbatim weights stay untouched
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-08
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-08
 
 > | Field | Value |
 > |---|---|

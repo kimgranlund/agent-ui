@@ -1,6 +1,6 @@
 # ADR-0021 — `ui-text-field` intrinsic width: the entry-control `min-inline-size` floor (native `<input size>` parity), the chars-width prop rejected
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-06-28
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-06-28
 >
 > | Field | Value |
 > |---|---|

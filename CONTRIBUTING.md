@@ -26,8 +26,10 @@ fact, under [`.claude/docs/`](.claude/docs/):
   historical archive (98 files through TKT-0096) — read for context, never a target for new ones.
 - **ADRs** (`.claude/docs/adr/`) record a ratified decision — a naming rule, an architectural fork,
   an accepted tradeoff. An ADR starts `proposed`; only a human ratifies the flip to `accepted` (a
-  standing hook blocks any agent-authored self-flip). See [`adr/README.md`](.claude/docs/adr/README.md)
-  for the index and status lifecycle.
+  standing hook blocks any agent-authored self-flip). The directory IS the index — the numbered
+  filenames carry order + title, each file's own header carries status; there is no index file and
+  never may be. The status lifecycle + the amendment-vs-supersession test live in
+  `.claude/skills/agent-ui-doc-standards/SKILL.md` §1/§1b.
 - **PRD/SPEC/LLD** (`.claude/docs/{prd,spec,lld}/`) — the fuller design-document set for work that
   spans multiple components or needs a frozen contract before a build starts.
 

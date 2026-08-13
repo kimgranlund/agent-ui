@@ -1,6 +1,6 @@
 # ADR-0023 — A public `mount()` directive-host seam + the directive-authoring trio (imperative consumers can drive kernel directives; `render`/`html` stay private)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-06-28
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-06-28
 >
 > | Field | Value |
 > |---|---|

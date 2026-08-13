@@ -1,6 +1,6 @@
 # ADR-0014 — ui-text-field: the contenteditable editable surface + the form-control interaction deviations
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-06-27
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-06-27
 >
 > | Field | Value |
 > |---|---|

@@ -1,6 +1,6 @@
 # ADR-0153 — `ui-status-stream` gains a ticking elapsed timer, an inline retry/action affordance (a new closed-vocabulary `action` event), and a "Planned" pending-group glyph; step-count/score ship as a `description` convention
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-20
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-20
 >
 > | Field | Value |
 > |---|---|

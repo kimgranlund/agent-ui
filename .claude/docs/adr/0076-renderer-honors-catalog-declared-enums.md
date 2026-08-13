@@ -1,6 +1,6 @@
 # ADR-0076 — the renderer honors catalog-declared `enum`s at widget resolution: a literal the enum forbids is never applied
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-04
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-04
 >
 > | Field | Value |
 > |---|---|

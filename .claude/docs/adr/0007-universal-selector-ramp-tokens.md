@@ -1,6 +1,6 @@
 # ADR-0007 — Universal-selector ramp tokens: derived dimensions on `*` for subtree scale/density
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-06-27
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-06-27
 >
 > | Field | Value |
 > |---|---|

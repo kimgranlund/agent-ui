@@ -1,6 +1,6 @@
 # ADR-0128 — the renderer reconciles a mounted container's resent record (structural-resend reconciliation): a generalized per-node scope, id-keyed children diff, and a create/wire split — survivor reorder deferred
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-12
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-12
 >
 > | Field | Value |
 > |---|---|

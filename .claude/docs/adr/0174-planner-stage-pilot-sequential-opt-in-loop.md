@@ -1,6 +1,6 @@
 # ADR-0174 — Planner-stage pilot: an opt-in, sequential plan→execute→synthesize loop composed entirely from shipped `Session`/`produce()`/meta-line/status-stream mechanics — AG-UI and SPEC-R4 prefixing gate a LATER concurrent upgrade, not this pilot
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-08-06
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-08-06
 >
 > | Field | Value |
 > |---|---|

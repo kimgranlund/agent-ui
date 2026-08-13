@@ -1,6 +1,6 @@
 # ADR-0148 — the scheme-boundary ink re-root folds into `theme-provider.css` itself: ADR-0117 LLD §5.3's named-not-solved trigger has fired (the TKT-0088 site shell is the second consumer), so the inherited-ink re-resolution becomes the component's own identity concern (ADR-0102 Lane A), amending SPEC-R6's "exactly one rule"
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-18
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-18
 >
 > | Field | Value |
 > |---|---|

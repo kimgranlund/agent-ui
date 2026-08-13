@@ -1,6 +1,6 @@
 # ADR-0102 — The CSS-less-consumer contract law: no rendered-correctness concern may live only in "the page author's CSS"; the three-lane decision rule
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-08
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-08
 >
 > | Field | Value |
 > |---|---|

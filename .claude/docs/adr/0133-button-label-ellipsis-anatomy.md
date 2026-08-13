@@ -1,6 +1,6 @@
 # ADR-0133 — `ui-button` gains a real `[data-part="label"]` wrapper: CSS-only single-line ellipsis on the label region, reusing `ui-text`'s stamp/heal mechanism; `ui-badge`/`ui-tab` stay named deferrals
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-14
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-14
 >
 > | Field | Value |
 > |---|---|

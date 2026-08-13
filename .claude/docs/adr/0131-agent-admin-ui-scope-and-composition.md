@@ -1,6 +1,6 @@
 # ADR-0131 — Agent Admin UI: a generic self-contained config, three panes, real persistence — composing the shipped M2/M4 primitives, no new primitive family
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-14
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-14
 >
 > | Field | Value |
 > |---|---|

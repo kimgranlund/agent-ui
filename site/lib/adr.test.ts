@@ -22,12 +22,12 @@ declare const process: { cwd(): string }
 const ROOT = process.cwd()
 const ADR_DIR = `${ROOT}/.claude/docs/adr`
 
-// A representative synthetic ADR — the exact shape README.md documents (H1 em-dash separator, a blockquote
-// MARKDOWN TABLE frontmatter with a separator row, then prose under ## Context). Exercises the parser without
-// depending on any real file's exact wording.
+// A representative synthetic ADR — the exact shape `0000-template.md` + the `agent-ui-doc-standards` skill
+// document (H1 em-dash separator, a blockquote MARKDOWN TABLE frontmatter with a separator row, then prose
+// under ## Context). Exercises the parser without depending on any real file's exact wording.
 const SAMPLE = `# ADR-0099 — the sample decision title with an \`inline code\` span
 
-> Source: agent-ui ADR log. Log + lifecycle: [\`README.md\`](./README.md). · 2026-07-04
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-04
 >
 > | Field | Value |
 > |---|---|
@@ -176,7 +176,10 @@ describe('lib/adr.ts — isDecisionRecord', () => {
     expect(isDecisionRecord('0076-renderer-honors-catalog-declared-enums.md')).toBe(true)
   })
 
-  it('excludes README.md (the log index, no NNNN- prefix)', () => {
+  // Defence-in-depth, not a live case: the ADR folder carries no README.md and never may (Kim's
+  // no-index-file rule, 2026-08-13 — the trip-wire below is what enforces the absence). This keeps
+  // the predicate honest if a stray non-`NNNN-` file ever lands there again.
+  it('excludes README.md (no NNNN- prefix — a stray index file must never become a card)', () => {
     expect(isDecisionRecord('README.md')).toBe(false)
   })
 
@@ -192,9 +195,22 @@ describe('lib/adr.ts — the real .claude/docs/adr log parses cleanly', () => {
   const files = allEntries.filter((f) => isDecisionRecord(f))
   const records = files.map((f) => parseAdr(f, readFileSync(`${ADR_DIR}/${f}`, 'utf8') as string))
 
-  it('the real directory actually carries README.md + 0000-template.md (the filter is non-vacuous)', () => {
-    expect(allEntries).toContain('README.md')
+  it('the real directory actually carries 0000-template.md (the filter is non-vacuous)', () => {
     expect(allEntries).toContain('0000-template.md')
+  })
+
+  // THE RULE'S OWN GATE — Kim's standing no-index-file rule (2026-08-13), verbatim: "Never create or
+  // maintain a README.md (or any other index file) inside an ADR folder. The numbered filename already
+  // carries order + title; each ADR's own frontmatter carries its status. That's the whole index — don't
+  // build a second one." A rollup is generated on the fly (`ls` + a grep across frontmatter) and never
+  // committed. This asserts the absence mechanically, so the 313 KB index cannot quietly grow back:
+  // the ONLY legal .md files here are `NNNN-*.md` decision records plus the reserved 0000 template.
+  it('carries NO index file — every .md in the ADR folder is a numbered record (Kim\'s no-index-file rule)', () => {
+    const mdFiles = allEntries.filter((f) => f.endsWith('.md'))
+    const nonNumbered = mdFiles.filter((f) => !/^\d{4}-.+\.md$/.test(f))
+    expect(nonNumbered, `non-numbered .md files in .claude/docs/adr: ${nonNumbered.join(', ')}`).toEqual([])
+    expect(mdFiles).not.toContain('README.md')
+    expect(mdFiles.length, 'the sweep saw a real corpus').toBeGreaterThan(50)
   })
 
   it('found a non-zero, non-trivial set of real ADR files (the count the site glob must also resolve)', () => {
@@ -224,8 +240,9 @@ describe('lib/adr.ts — the real .claude/docs/adr log parses cleanly', () => {
 
   // The Status LINT GATE — the machine-readable contract this module reads without a heuristic: every real
   // ADR's Status cell must be EXACTLY one of the 4 canonical keywords, verbatim, no trailing prose/ratification
-  // detail (that detail lives in Ratified-by / Supersedes-Superseded-by instead — see .claude/docs/adr/README.md
-  // and the per-ADR audit that normalized the corpus to this shape). This is the check that actually bites: a
+  // detail (that detail lives in Ratified-by / Supersedes-Superseded-by instead — see the
+  // `agent-ui-doc-standards` skill §1 and the per-ADR audit that normalized the corpus to this shape). This
+  // is the check that actually bites: a
   // future non-conforming Status cell fails HERE, not just at the (always-safe) statusShort fallback above.
   it('every real ADR Status cell is EXACTLY one of the 4 canonical keywords — the lint gate', () => {
     const offenders = records.filter((r) => !(STATUS_KEYS as readonly string[]).includes(r.status)).map((r) => `${r.filename}: "${r.status}"`)

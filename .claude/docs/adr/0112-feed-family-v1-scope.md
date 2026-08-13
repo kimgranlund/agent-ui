@@ -1,6 +1,6 @@
 # ADR-0112 — Feed/agent-activity family v1 scope: `ui-progress` + `ui-avatar` + `ui-attachment` + `ui-toast`(+region) — bar-only progress, no-hue avatar, FilePart-aligned attachment card, region-hosted never-focus-stealing toast; three catalog rows + a reasoned two-entry allowlist
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-08
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-08
 >
 > | Field | Value |
 > |---|---|

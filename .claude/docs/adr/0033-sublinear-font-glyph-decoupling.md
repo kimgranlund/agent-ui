@@ -1,6 +1,6 @@
 # ADR-0033 — Sublinear font/glyph decoupling: under `[scale]`, glyphs re-derive from height via the §1.1 power laws (height stays linear)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-06-30
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-06-30
 >
 > | Field | Value |
 > |---|---|

@@ -1,6 +1,6 @@
 # ADR-0168 — Integrations become a manifest registry: validated dispatch, server-resolved keys, and tools on BOTH live arms
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-08-04
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-08-04
 >
 > | Field | Value |
 > |---|---|

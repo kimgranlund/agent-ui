@@ -1,6 +1,6 @@
 # ADR-0070 — the live runtime loop is the SPEC-R6 contract minus the critic round: generate → heal+validate → self-correct (maxRounds 3) → VALIDATE-THEN-STREAM → render; the rubric stays authoring-time
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-04
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-04
 >
 > | Field | Value |
 > |---|---|

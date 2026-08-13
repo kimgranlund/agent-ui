@@ -305,14 +305,6 @@ FIXTURE_ADR = """# ADR-9999 — a fixture
 ## Context
 """
 
-FIXTURE_README = (
-    "# ADR index\n\n"
-    "| ADR | Title | Status | Date |\n"
-    "|---|---|---|---|\n"
-    "| [9998](./9998-other.md) | Other | accepted | 2026-08-06 |\n"
-    "| [9999](./9999-fixture.md) | A fixture | proposed | 2026-08-07 |\n"
-)
-
 UTTERANCE_URL = "https://github.com/OWNER/REPO/pull/38#issuecomment-77"
 
 
@@ -391,7 +383,6 @@ class WholeFlipPath(unittest.TestCase):
         adr_dir = root / ".claude" / "docs" / "adr"
         adr_dir.mkdir(parents=True)
         (adr_dir / "9999-fixture.md").write_text(FIXTURE_ADR, encoding="utf-8")
-        (adr_dir / "README.md").write_text(FIXTURE_README, encoding="utf-8")
 
         fake = FakeSubprocess(root, issue_ok=issue_ok)
         real_subprocess, real_argv = adr_ratify.subprocess, sys.argv
@@ -413,9 +404,9 @@ class WholeFlipPath(unittest.TestCase):
         adr = (adr_dir / "9999-fixture.md").read_text(encoding="utf-8")
         self.assertIn("> | **Status** | accepted |", adr)
         self.assertIn("OWNER (repo owner), 2026-08-07", adr)
-        readme = (adr_dir / "README.md").read_text(encoding="utf-8")
-        self.assertIn("| [9999](./9999-fixture.md) | A fixture | accepted | 2026-08-07 |", readme)
-        self.assertIn("| [9998](./9998-other.md) | Other | accepted | 2026-08-06 |", readme)
+        # Kim's no-index-file rule (2026-08-13): the flip writes the ADR's own cells and the derived
+        # indexes, and NEVER an index file in the ADR folder — it used to also flip a README row.
+        self.assertFalse((adr_dir / "README.md").exists())
 
         # …and the booked repairs now land as a tracked artifact, not only a comment
         issue = fake.payload("repos/OWNER/REPO/issues --input -")
@@ -455,7 +446,6 @@ class WholeFlipPath(unittest.TestCase):
             ),
             encoding="utf-8",
         )
-        (adr_dir / "README.md").write_text(FIXTURE_README, encoding="utf-8")
         fake = FakeSubprocess(root)
         real_subprocess, real_argv = adr_ratify.subprocess, sys.argv
         adr_ratify.subprocess = fake
@@ -476,7 +466,6 @@ class WholeFlipPath(unittest.TestCase):
         adr_dir = root / ".claude" / "docs" / "adr"
         adr_dir.mkdir(parents=True)
         (adr_dir / "9999-fixture.md").write_text(FIXTURE_ADR, encoding="utf-8")
-        (adr_dir / "README.md").write_text(FIXTURE_README, encoding="utf-8")
         fake = FakeSubprocess(root)
         real_subprocess, real_argv = adr_ratify.subprocess, sys.argv
         adr_ratify.subprocess = fake
@@ -629,7 +618,6 @@ class _AmendmentFixtureMixin:
         (adr_dir / "9999-fixture.md").write_text(
             _amendment_fixture(amendment_section, status=status), encoding="utf-8"
         )
-        (adr_dir / "README.md").write_text(FIXTURE_README, encoding="utf-8")
         return root, adr_dir
 
     def _flip(
@@ -693,8 +681,8 @@ class AmendmentFlipPath(_AmendmentFixtureMixin, unittest.TestCase):
             new_header,
         )
         self.assertEqual(new_text, expected)
-        # README is never touched by an amendment flip
-        self.assertEqual((adr_dir / "README.md").read_text(encoding="utf-8"), FIXTURE_README)
+        # no index file is created in the ADR folder (Kim's no-index-file rule, 2026-08-13)
+        self.assertFalse((adr_dir / "README.md").exists())
         # no repairs booked -> no gh issues/comments calls at all
         self.assertEqual(fake.called("repos/OWNER/REPO/issues --input -"), 0)
         self.assertEqual(fake.called("repos/OWNER/REPO/issues/38/comments --input -"), 0)

@@ -1,6 +1,6 @@
 # ADR-0107 — Chart family v1 scope: `ui-sparkline` + `ui-bar-chart`, axis-free, hand-rolled SVG/CSS, Display-class, same-wave catalog rows
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-08
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-08
 >
 > | Field | Value |
 > |---|---|

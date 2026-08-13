@@ -6,8 +6,8 @@
 // of a packages test importing a site/ module by relative path). One parser, two consumers, so the frontmatter
 // grammar can never drift between "what the index page reads" and "what the test proves it reads."
 //
-// Frontmatter here is a markdown TABLE, not YAML (see .claude/docs/adr/README.md) — hence the row regex below,
-// not a YAML parser.
+// Frontmatter here is a markdown TABLE, not YAML (the `agent-ui-doc-standards` skill §1 owns that dialect) —
+// hence the row regex below, not a YAML parser.
 
 export interface AdrRecord {
   /** The zero-padded number, e.g. '0076' (read from the filename, the log's own numbering authority). */
@@ -33,7 +33,8 @@ const FILENAME_RE = /^(\d{4})-/
 const H1_RE = /^#\s*ADR-\d{4}\s*—\s*(.+?)\s*$/m
 const ISO_DATE_RE = /\d{4}-\d{2}-\d{2}/
 
-/** The 4 lifecycle states the badge (adr-index.css `[data-status=…]`) has a colour for — README.md's ladder. */
+/** The 4 lifecycle states the badge (adr-index.css `[data-status=…]`) has a colour for — the status ladder
+ *  the `agent-ui-doc-standards` skill §1 owns. */
 export const STATUS_KEYS = ['accepted', 'proposed', 'superseded', 'deprecated'] as const
 export type StatusKey = (typeof STATUS_KEYS)[number]
 const isStatusKey = (s: string | undefined): s is StatusKey => (STATUS_KEYS as readonly string[]).includes(s ?? '')
@@ -42,7 +43,7 @@ const isStatusKey = (s: string | undefined): s is StatusKey => (STATUS_KEYS as r
  * deriveStatusShort — the badge key for a raw Status cell. The corpus's lint gate (site-adr-index.test.ts)
  * guarantees every real ADR's Status cell IS one of the 4 keys, verbatim, no trailing prose — so this is a
  * literal membership check, not a heuristic. `'proposed'` is the fallback for an unparsed/malformed cell (the
- * README lifecycle's own starting state) — it never over-claims an unstyled cell as `accepted`. GUARANTEES a
+ * lifecycle's own starting state) — it never over-claims an unstyled cell as `accepted`. GUARANTEES a
  * value in STATUS_KEYS (never an arbitrary word), so a future non-canonical cell degrades to a safe badge
  * instead of an unstyled one, while the lint gate is what actually catches the drift.
  */
@@ -59,11 +60,12 @@ export function adrNumber(filename: string): string {
 }
 
 /**
- * isDecisionRecord — a glob hit that is a REAL decision, not the log's own scaffolding: excludes `README.md`
- * (the index/lifecycle doc, no `NNNN-` prefix) and `0000-template.md` (README.md: "`NNNN` is a zero-padded
- * sequential integer, never reused. `0000-template.md` is the template" — `0000` is reserved, its H1 is the
- * literal placeholder `ADR-NNNN`, not a real number). The one predicate both the page glob and this test filter
- * through, so a future non-decision file added to the directory has one place to teach the exclusion.
+ * isDecisionRecord — a glob hit that is a REAL decision, not the log's own scaffolding: excludes any file
+ * without an `NNNN-` prefix (the ADR folder carries no index file at all — Kim's no-index-file rule, 2026-08-13
+ * — but a stray one must never render as a card) and `0000-template.md` (`NNNN` is a zero-padded sequential
+ * integer, never reused; `0000` is reserved for the template, whose H1 is the literal placeholder `ADR-NNNN`,
+ * not a real number). The one predicate both the page glob and this test filter through, so a future
+ * non-decision file added to the directory has one place to teach the exclusion.
  */
 export function isDecisionRecord(filename: string): boolean {
   return /^\d{4}-.+\.md$/.test(filename) && !filename.startsWith('0000-')

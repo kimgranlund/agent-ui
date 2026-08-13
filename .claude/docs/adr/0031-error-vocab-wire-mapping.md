@@ -1,6 +1,6 @@
 # ADR-0031 — A2UI error-vocab reconciliation: a rich internal taxonomy mapped to the v1.0 two-code wire contract at the emit boundary
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-06-30
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-06-30
 >
 > | Field | Value |
 > |---|---|

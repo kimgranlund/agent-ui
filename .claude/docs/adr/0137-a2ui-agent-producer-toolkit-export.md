@@ -1,6 +1,6 @@
 # ADR-0137 — the A2UI producer toolkit becomes exportable: a `./agent` subpath on `@agent-ui/a2ui` — the portable core moves out of `tools/agent/` into `src/agent/`, the dev-proxy/key shell stays site-internal, SPEC-N1 amended at build
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-16
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-16
 >
 > | Field | Value |
 > |---|---|

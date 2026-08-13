@@ -1,6 +1,6 @@
 # ADR-0045 — Overlay dismissal semantics: platform-owned light-dismiss, anchor focus-restore, DOM-state-resilient close
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-01
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-01
 >
 > | Field | Value |
 > |---|---|

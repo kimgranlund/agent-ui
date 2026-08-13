@@ -1,6 +1,6 @@
 # ADR-0064 — a v1 corpus record is SINGLE-SURFACE: an exemplar's `a2uiOutput` addresses exactly one surface; multi-surface records reject at the record schema
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-03
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-03
 >
 > | Field | Value |
 > |---|---|

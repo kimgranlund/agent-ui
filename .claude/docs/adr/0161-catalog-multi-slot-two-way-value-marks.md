@@ -1,6 +1,6 @@
 # ADR-0161 — The catalog's two-way `value` mark widens to one-or-more slots (Calendar range + SliderMulti write-back)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-28
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-28
 >
 > | Field | Value |
 > |---|---|

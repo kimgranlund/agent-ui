@@ -1,6 +1,6 @@
 # ADR-0151 — Named shell archetypes join agent-app-surfaces as M5: `ui-chat-shell` + `ui-workspace-shell` + `ui-super-shell`, behavior-only app-tier compositions (two extracted from in-repo chrome, one owner-spec'd)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-18
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-18
 >
 > | Field | Value |
 > |---|---|

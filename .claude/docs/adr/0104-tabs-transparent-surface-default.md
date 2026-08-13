@@ -1,6 +1,6 @@
 # ADR-0104 — `ui-tabs` drops its self-seeded surface plane: transparent by default (ADR-0015 cl.1), the plane becomes an asked-for intent
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-08
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-08
 >
 > | Field | Value |
 > |---|---|

@@ -1,6 +1,6 @@
 # ADR-0171 — Button label alignment: CENTER only bare and double-adorned; a SINGLE adornment start-aligns the label (Kim's 2026-08-05 ruling, GH #442)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-08-05
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-08-05
 >
 > | Field | Value |
 > |---|---|

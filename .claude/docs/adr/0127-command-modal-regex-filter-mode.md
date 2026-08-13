@@ -1,6 +1,6 @@
 # ADR-0127 — `ui-command-modal` gains an opt-in `filter="regex"` match mode (TKT-0018 site command-search)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-11
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-11
 >
 > | Field | Value |
 > |---|---|

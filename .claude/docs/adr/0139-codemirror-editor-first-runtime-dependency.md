@@ -1,6 +1,6 @@
 # ADR-0139 — CodeMirror 6 becomes agent-ui's first genuine third-party runtime dependency: a lazy-loaded `./editor` subpath on `@agent-ui/code` (`ui-code-editor`, FACE, editable-first fallback); `ui-agent-admin`'s entry editors gain markdown-highlighted source editing; every default barrel stays CodeMirror-free
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-17
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-17
 >
 > | Field | Value |
 > |---|---|

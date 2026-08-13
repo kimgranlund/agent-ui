@@ -1,6 +1,6 @@
 # ADR-0053 — A2UI form-family catalog rows (Field · FormProvider · Checkbox · Switch · Select · Option) + the bindable-naming law
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-02
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-02
 >
 > | Field | Value |
 > |---|---|

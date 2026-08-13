@@ -1,6 +1,6 @@
 # ADR-0160 — GH #291 chat redesign: `ui-status-stream`'s header loses its background, the agent turn RE-BUBBLES (reversing ADR-0129/GH #241 fleet-wide), and `ui-conversation` gains a general pre-hydrated action-chip mechanism on settled turns
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-27
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-27
 >
 > | Field | Value |
 > |---|---|

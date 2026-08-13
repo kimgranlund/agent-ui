@@ -105,7 +105,9 @@ description is authored — never duplicated into a page's own source.
 pointers to their own pages, each also naming its lazy index file (`SitemapEntry.index?: string`, e.g.
 `"./changelog-index.json"` / `"./adr-index.json"`) — never the per-record content itself. The per-record content
 MUST live in two separately generated, separately fetched files: `site/public/adr-index.json` (one entry per
-ADR, derived from `.claude/docs/adr/README.md`'s Index table — number, title, status, a one-line summary) and
+ADR, derived from the `.claude/docs/adr/` directory itself — one `NNNN-*.md` decision-record file per entry,
+number from the filename and title from that file's own H1; REV 2026-08-13, a mechanical source repoint under
+Kim's no-index-file rule — this named the folder's `README.md` Index table until that file was deleted) and
 `site/public/changelog-index.json` (one entry per `## ` milestone heading in `CHANGELOG.md` — heading text + the
 first sentence of its body as the description). Per-record granularity settles TKT-0018's own "L3 granularity"
 open exactly as its Scope/Open section already reads the `Swiper Paddles` example: per-component (i.e.

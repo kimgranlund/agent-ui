@@ -1,6 +1,6 @@
 # ADR-0095 — `ui-segmented-control` becomes a standalone first-class component (supersedes the ADR-0086 variant architecture)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-07 *(authored — from Kim's T3 ruling on the ADR-0092 fork; built from ADR-0092 §Alternatives-1 as that record instructs for exactly this outcome)*
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-07 *(authored — from Kim's T3 ruling on the ADR-0092 fork; built from ADR-0092 §Alternatives-1 as that record instructs for exactly this outcome)*
 >
 > | Field | Value |
 > |---|---|

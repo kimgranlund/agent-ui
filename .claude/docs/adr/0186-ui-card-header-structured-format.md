@@ -1,6 +1,6 @@
 # ADR-0186 — `ui-card-header` gains `format: 'default' | 'structured'`: the one prop the Figma dialog-bubble structured-container header needs, composed from shipped typescale + typeface + border tokens, no new mechanism
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-08-13
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-08-13
 >
 > | Field | Value |
 > |---|---|

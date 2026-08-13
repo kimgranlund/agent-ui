@@ -1,6 +1,6 @@
 # ADR-0146 — the live-turn lifecycle channel: progress meta-lines riding the existing stream DURING the turn, a `warning`-extended status vocabulary, a status-stream header + grouped entries (reusing ADR-0143's nesting), and a two-slice build
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-17
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-17
 >
 > | Field | Value |
 > |---|---|

@@ -1,6 +1,6 @@
 # ADR-0074 — the color-token namespace becomes `--md-sys-color-*`: an extension of Google Material Design 3 is the official color foundation; a color-only, value-preserving rename of `--c-*` (+ one `-500-50 → -500-050` alpha-padding normalization)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-04
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-04
 >
 > | Field | Value |
 > |---|---|

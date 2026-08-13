@@ -34,7 +34,7 @@ control extension (the filter mode).
 | LLD-C1 | `generateSitemap(repoRoot)` — walks the descriptor glob (L1) + `site-manifest.json` (L2 + L3 stubs), emits `sitemap.json`'s `{entries}` shape; pure, deterministic, byte-stable (the `generateLlmsFull` precedent) | `scripts/generate-sitemap.mjs` | SPEC-R1, R2, R3, R4 |
 | LLD-C2 | descriptor `description` derivation — read an authored `description:` scalar if present, else the first-sentence-of-body fallback (plain-text, Markdown-emphasis-stripped, ≤160 chars, `…`-suffixed on truncation) | `scripts/generate-sitemap.mjs` (a pure helper, unit-testable in isolation) | SPEC-R2 |
 | LLD-C3 | `site/lib/site-manifest.json` — the hand-authored L2 + L3-stub manifest (`{href,label,description,level,section,index?}[]`), one row per guide/package page + the two L3 stubs | `site/lib/site-manifest.json` | SPEC-R3, R4 |
-| LLD-C4 | `generateAdrIndex()` / `generateChangelogIndex()` — parse `.claude/docs/adr/README.md`'s Index table / `CHANGELOG.md`'s `## ` headings into per-record JSON, reusing `site/lib/adr.ts` (`parseAdr`) and `site/pages/changelog.ts`'s `parseChangelog` shape rather than a third parser | `scripts/generate-sitemap.mjs` (two more pure helpers) | SPEC-R4 |
+| LLD-C4 | `generateAdrIndex()` / `generateChangelogIndex()` — derive per-record JSON from the `.claude/docs/adr/` directory glob (REV 2026-08-13: was the folder README's Index table) / `CHANGELOG.md`'s `## ` headings, reusing `site/lib/adr.ts` (`parseAdr`) and `site/pages/changelog.ts`'s `parseChangelog` shape rather than a third parser | `scripts/generate-sitemap.mjs` (two more pure helpers) | SPEC-R4 |
 | LLD-C5 | `sitemap.test.ts` — the drift gate: byte-identity (sitemap + both L3 index files) + page-coverage (`unindexedPages`-shaped negative control, the `llms.test.ts` G1/G2 precedent) | `site/lib/sitemap.test.ts` | SPEC-R5 |
 | LLD-C6 | the palette mount — `_page.ts`'s `mountPage`/`mountFullBleedPage` gain one shared call, lazy-`import()`ing a new `site/lib/command-palette.ts` module that creates `<ui-command-modal hotkey="mod+k">`, renders the merged L1+L2+(L3 stubs) options as `[role=option]`/`[role=group]` children, and appends it once per page | `site/pages/_page.ts`, NEW `site/lib/command-palette.ts` | SPEC-R6 |
 | LLD-C7 | the `data-keywords` pack — each rendered option's `data-keywords` carries `tag + ' ' + description` (name is already the visible label the control's own filter reads), so the shipped haystack (item label + `data-keywords`) covers name+tag+description with zero control change | `site/lib/command-palette.ts` | SPEC-R7 |
@@ -61,9 +61,12 @@ manifest order for L2/L3-stubs), written only when run as a CLI (`node scripts/g
   required set from it").
 - **L2 + L3 stubs** — `JSON.parse(readFileSync('site/lib/site-manifest.json'))`, mapped through unchanged (it is
   already `SitemapEntry`-shaped minus `tag`).
-- **L3 index files** — `generateAdrIndex()` parses `.claude/docs/adr/README.md`'s Index table rows (`| [NNNN]
-  (...) | Title | Status | Repairs |`) via the same row-splitting regex the README's own table already commits
-  to (one row per ADR, numbers zero-padded); `generateChangelogIndex()` reuses `changelog.ts`'s own
+- **L3 index files** — `generateAdrIndex()` globs the `.claude/docs/adr/` directory for `NNNN-*.md`
+  decision-record files (excluding the reserved `0000-` template), taking the number from each filename and the
+  title from that file's own `# ADR-NNNN — <title>` H1 (REV 2026-08-13, a mechanical source repoint under Kim's
+  no-index-file rule: this parsed the folder's `README.md` Index table until that file was deleted — the
+  directory is now the single source of row-truth, and an empty glob is the anti-vacuous throw);
+  `generateChangelogIndex()` reuses `changelog.ts`'s own
   `parseChangelog` **split logic** (duplicated as a small pure function here, since the Node script cannot
   import a Vite-transformed TS module — the same constraint `generate-llms-full.mjs`'s own comment names for
   why it re-derives from raw text rather than executing site code) to get one entry per `## ` heading, slugified

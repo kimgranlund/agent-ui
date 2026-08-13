@@ -1,6 +1,6 @@
 # ADR-0144 — the pane/tab content-region rule system: layout hosts own bounds+scroll, regions compose INSIDE; `ui-tabs` gains an opt-in `fill` posture; `ui-split-pane` stays zero-padding by law
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-17
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-17
 >
 > | Field | Value |
 > |---|---|

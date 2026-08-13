@@ -1,6 +1,6 @@
 # ADR-0029 — A2UI v1.0 `checks`: client-side inline validation (custom-validity seam + reactive checks controller + button auto-disable)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-06-29
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-06-29
 >
 > | Field | Value |
 > |---|---|

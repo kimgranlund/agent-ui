@@ -1,6 +1,6 @@
 # ADR-0086 — `ui-radio-group[variant=segmented]`: the joined-button presentation for single-select
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-06 *(authored)* · 2026-07-06 *(revised — both-orientations + shared-moving-indicator redesign; Kim)* · 2026-07-06 *(ratified — Kim)* · 2026-07-06 *(amended — the state seam is written on the form-reset path too, not only `#commit`; a component-review reproduced an indicator desync after reset)*
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-06 *(authored)* · 2026-07-06 *(revised — both-orientations + shared-moving-indicator redesign; Kim)* · 2026-07-06 *(ratified — Kim)* · 2026-07-06 *(amended — the state seam is written on the form-reset path too, not only `#commit`; a component-review reproduced an indicator desync after reset)*
 >
 > | Field | Value |
 > |---|---|

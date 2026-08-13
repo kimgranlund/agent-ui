@@ -1,6 +1,6 @@
 # ADR-0115 — SPA router v1 scope: a new top-level `@agent-ui/router` package — memory-first (the route signal is the single source of truth), URL reflection as an opt-in projection (hash default, history opt-in), a factory-seam `ui-router-outlet` + a dedicated `ui-router-link`; catalog-invisible by construction
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-09
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-09
 >
 > | Field | Value |
 > |---|---|

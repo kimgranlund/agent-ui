@@ -1,6 +1,6 @@
 # ADR-0189 — Tool/MCP description standard: MCP's own `tools/list` JSON Schema plus the existing `IntegrationManifest` triple are the standard (no OpenAPI/Swagger); the admin wire's description-carrying is widened, not replaced (GH #847)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-08-13
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-08-13
 >
 > | Field | Value |
 > |---|---|

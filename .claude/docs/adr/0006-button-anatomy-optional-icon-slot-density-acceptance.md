@@ -1,6 +1,6 @@
 # ADR-0006 — Button anatomy: optional leading icon slot, and the law-true `[density]` acceptance
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-06-27
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-06-27
 >
 > | Field | Value |
 > |---|---|

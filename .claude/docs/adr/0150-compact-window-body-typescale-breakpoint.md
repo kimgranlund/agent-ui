@@ -1,6 +1,6 @@
 # ADR-0150 — compact-window body type: the body column drops 1px below `52.5rem` — the token layer's FIRST viewport-responsive lever (the M3-verbatim table stands byte-untouched; the override is a marked extension on the `*` ramp)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-18
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-18
 >
 > | Field | Value |
 > |---|---|

@@ -1,6 +1,6 @@
 # ADR-0136 — `ui-agent-admin`'s chat preview gains an opt-in, DEV-only live-model overlay, reusing the AgentTransport/dev-proxy seam — ADR-0131 cl.4/7 narrows to the production path, it is not reversed
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-14
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-14
 >
 > | Field | Value |
 > |---|---|

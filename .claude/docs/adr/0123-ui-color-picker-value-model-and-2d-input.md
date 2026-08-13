@@ -1,6 +1,6 @@
 # ADR-0123 — `ui-color-picker` — the color-INPUT control: an OKLCH-internal / hex-canonical value model, a new 2-axis pad interaction class, and the standalone-first vehicle
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-10
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-10
 >
 > | Field | Value |
 > |---|---|

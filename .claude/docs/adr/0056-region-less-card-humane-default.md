@@ -1,6 +1,6 @@
 # ADR-0056 — the region-less card gets a CSS humane default (no factory auto-wrap) + the Card region pedagogy
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-02
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-02
 >
 > | Field | Value |
 > |---|---|

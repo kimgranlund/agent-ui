@@ -1,6 +1,6 @@
 # ADR-0132 — Agent Admin's Instructions/Settings become a generic ordered-entry-list foundation: structured prompt sections + four toggleable capability kinds, one shared primitive
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-14
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-14
 >
 > | Field | Value |
 > |---|---|

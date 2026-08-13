@@ -1,6 +1,6 @@
 # ADR-0044 — Contenteditable password masking via `-webkit-text-security` (the ui-text-field `type=password` wrinkle)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-06-30
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-06-30
 >
 > | Field | Value |
 > |---|---|

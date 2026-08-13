@@ -2,7 +2,8 @@
 """PreToolUse gate (Edit|Write) — blocks any Claude-authored edit that flips an ADR's `Status`
 cell TO `accepted` when it wasn't already `accepted`. Guards a real past incident: a subagent
 fabricated a "Kim ruling" and self-flipped an ADR proposed->accepted, passing the ADR lint gate.
-Only Kim (the human) ratifies proposed->accepted — per this repo's own ADR README, the cell holds
+Only Kim (the human) ratifies proposed->accepted — per this repo's own ADR grammar (the
+`agent-ui-doc-standards` skill §1; formerly the ADR folder's README, deleted 2026-08-13), the cell holds
 exactly one bare keyword in a `| **Status** | <word> |` table row (site/lib/adr.ts reads it
 literally). Every Edit/Write in a Claude Code session is agent-performed (Kim never touches the
 Edit/Write tool directly), so this denies the transition unconditionally, regardless of what the
@@ -62,7 +63,9 @@ def decide(data: dict) -> int:
     if not ADR_PATH_RE.search(file_path):
         return 0
     if os.path.basename(file_path) in ("README.md", "0000-template.md"):
-        return 0  # the log index + the template (placeholder Status cell, 0 matching rows) — neither is a ratifiable record
+        return 0  # the template (placeholder Status cell, 0 matching rows) + a defensive bypass for a stray
+        # README.md, which the ADR folder must never carry at all (Kim's no-index-file rule, 2026-08-13; the
+        # `site/lib/adr.test.ts` trip-wire enforces the absence) — neither is a ratifiable record
 
     abs_path = file_path
     if not os.path.isabs(abs_path):
@@ -175,7 +178,7 @@ def selftest() -> int:
             ("negative: body edit on an accepted ADR ALLOWS", edit(p_accepted, "Body.", "Body, revised."), 0),
             ("negative: accepted->superseded (not TO accepted) ALLOWS", edit(p_accepted, "| **Status** | accepted |", "| **Status** | superseded |"), 0),
             ("negative: a non-ADR .md path ALLOWS", edit(os.path.join(tmp, "notes.md"), "a", "b"), 0),
-            ("negative: the ADR README index ALLOWS", edit(p_readme, "Body.", "Body!"), 0),
+            ("negative: a stray non-NNNN- file in the ADR folder ALLOWS", edit(p_readme, "Body.", "Body!"), 0),
             ("negative: Write of a NEW file born proposed ALLOWS", write(p_new, PROPOSED), 0),
             ("malformed: missing keys is a quiet 0", {}, 0),
         ]

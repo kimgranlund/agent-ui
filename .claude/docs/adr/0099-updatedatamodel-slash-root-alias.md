@@ -1,6 +1,6 @@
 # ADR-0099 — `updateDataModel` `path:"/"` is the protocol's root alias: whole-model replace at every apply-site
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-07
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-07
 >
 > | Field | Value |
 > |---|---|

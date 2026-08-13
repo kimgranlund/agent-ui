@@ -1,6 +1,6 @@
 # ADR-0134 — A new FACE primitive `ui-textarea` for long-form multi-line text — a sibling of `ui-text-field`, NOT a text-field mode; `ui-agent-admin`'s per-entry editors migrate to it
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-14
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-14
 >
 > | Field | Value |
 > |---|---|

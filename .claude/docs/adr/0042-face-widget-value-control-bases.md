@@ -1,6 +1,6 @@
 # ADR-0042 — FACE widget value-control bases: the `controls/_base/` layer + UIIndicatorElement + UIRangeElement + the value-drag controller
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-06-30
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-06-30
 >
 > | Field | Value |
 > |---|---|

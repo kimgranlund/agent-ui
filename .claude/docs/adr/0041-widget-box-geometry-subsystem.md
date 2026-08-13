@@ -1,6 +1,6 @@
 # ADR-0041 — The widget-box geometry sub-system: Kim's 8-value ramp + the 2px inset law (the Indicator/Range box, mirroring ADR-0038)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-06-30
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-06-30
 >
 > | Field | Value |
 > |---|---|

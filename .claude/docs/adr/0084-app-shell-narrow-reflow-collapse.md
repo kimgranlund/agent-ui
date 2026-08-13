@@ -1,6 +1,6 @@
 # ADR-0084 — the app-shell narrow-reflow strategy: per-region `collapse` (hide | stack)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-06
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-06
 >
 > | Field | Value |
 > |---|---|

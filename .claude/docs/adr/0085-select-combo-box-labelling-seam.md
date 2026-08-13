@@ -1,6 +1,6 @@
 # ADR-0085 — the `ui-select` / `ui-combo-box` labelling seam (trigger accessible name; the button-value concatenation)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-06
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-06
 >
 > | Field | Value |
 > |---|---|

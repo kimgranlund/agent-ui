@@ -1,6 +1,6 @@
 # ADR-0147 — `ui-code-editor` gains a richtext live-preview mode: the same CodeMirror document, decoration-rendered (Obsidian-style reveal-near-cursor); ADR-0139's live-preview non-goal is lifted, narrowly, with the markdown string staying the ONLY model
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-18
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-18
 >
 > | Field | Value |
 > |---|---|

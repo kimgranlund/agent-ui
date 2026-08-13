@@ -1,6 +1,6 @@
 # ADR-0156 — `ui-app-shell` is deprecated in favor of the `ui-super-shell` archetype family (the shell-archetypes LLD §7 fork ruled: Option C)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-20
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-20
 >
 > | Field | Value |
 > |---|---|

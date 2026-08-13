@@ -1,6 +1,6 @@
 # ADR-0170 — The A2UI catalog picker becomes a library-pack entry kind with SINGLE-select semantics: the persisted key stays the one selection truth, switches derive from it, and the bare `<select>` retires
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-08-04
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-08-04
 >
 > | Field | Value |
 > |---|---|

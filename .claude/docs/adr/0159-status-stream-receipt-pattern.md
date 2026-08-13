@@ -1,6 +1,6 @@
 # ADR-0159 — `ui-status-stream` adopts the receipt pattern: a live/done label-pair law for the closed stage table, plus two opt-in props (`oneline` — one morphing line while the turn runs; `receipt` — auto-collapse to a one-line receipt at a terminal state)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-23
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-23
 >
 > | Field | Value |
 > |---|---|

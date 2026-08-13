@@ -1,6 +1,6 @@
 # ADR-0152 — the live-agent overlay (`a2ui-chat`/`a2ui-live`/`agent-admin`/`agent-admin-app`) goes live in PRODUCTION via a Cloudflare Worker proxy — ADR-0136 Fork 1 and ADR-0131 cl.4/7's dev-only ruling are REVERSED for the deployed docs site, not merely narrowed
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-20
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-20
 >
 > | Field | Value |
 > |---|---|

@@ -1,6 +1,6 @@
 # ADR-0061 — the ONE shared healer's contract: text-first `heal()` with a CLOSED form-only repair list; healed admission marks `status:"repaired"`
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-07-03
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-07-03
 >
 > | Field | Value |
 > |---|---|

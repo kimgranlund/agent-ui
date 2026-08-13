@@ -1,6 +1,6 @@
 # ADR-0173 — Descriptor inversion (GH #483 design intake): `{name}.md` becomes the generation SOURCE for the props layer via a committed `{name}.props.gen.ts`; the catalog row stays hand-curated a2ui content under a new mechanical agreement gate; the site API doc page and llms-full corpus are already derived
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-08-06
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-08-06
 >
 > | Field | Value |
 > |---|---|

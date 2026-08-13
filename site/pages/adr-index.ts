@@ -23,7 +23,7 @@ const ADR_MODULES = import.meta.glob('../../.claude/docs/adr/*.md', {
 const RECORDS: AdrRecord[] = sortAdrsDescending(
   Object.entries(ADR_MODULES)
     .map(([path, source]) => [path.slice(path.lastIndexOf('/') + 1), source] as const)
-    .filter(([filename]) => isDecisionRecord(filename)) // excludes README.md + the 0000 template scaffold
+    .filter(([filename]) => isDecisionRecord(filename)) // excludes the 0000 template scaffold + any non-NNNN- stray
     .map(([filename, source]) => parseAdr(filename, source)),
 )
 

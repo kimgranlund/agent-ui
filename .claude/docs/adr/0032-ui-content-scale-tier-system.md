@@ -1,6 +1,6 @@
 # ADR-0032 — The `ui-sm…content-lg` two-band `[scale]` tier system (replacing the 3-step placeholder)
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-06-30
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-06-30
 >
 > | Field | Value |
 > |---|---|

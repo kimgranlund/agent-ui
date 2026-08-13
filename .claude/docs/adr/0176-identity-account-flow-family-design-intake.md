@@ -1,6 +1,6 @@
 # ADR-0176 — Identity & account flow family design intake (GH #490): a mixed cut — Registration/Magic-Link/Social/Email+Password compose EXISTING FACE controls, the Codes mode's code-entry field earns the one new components-tier control, Account Management needs no new control at all (`ui-settings` is already general — the gap is a missing worked exemplar); a DEMO-ONLY security fence (no real auth backend, ever, forced by the zero-dep charter); identity/auth stays host-page-only (never A2UI-catalog-driven) per PRD-D2, onboarding/account-management left open to a future catalog-exposure intake; five-slice sequenced build
 
-> Source: agent-ui ADR log. Log + lifecycle: [`README.md`](./README.md). · 2026-08-06
+> Source: agent-ui ADR log (this directory — the numbered files ARE the index; status lives in each ADR's own header). · 2026-08-06
 >
 > | Field | Value |
 > |---|---|
