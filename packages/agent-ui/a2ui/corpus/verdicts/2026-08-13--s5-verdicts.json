@@ -1,0 +1,34 @@
+{
+  "rubric": "a2ui-corpus",
+  "rubricVersion": "1.1",
+  "judgedBy": "a2ui-reviewer",
+  "date": "2026-08-13",
+  "verdicts": {
+    "structured-container-trip-summary": {
+      "qualityScore": 5,
+      "passed": true
+    },
+    "frontier-trip-card": {
+      "qualityScore": 2,
+      "passed": false,
+      "failingDimensions": ["D1", "D2"]
+    },
+    "frontier-invite-modal": {
+      "qualityScore": 4,
+      "passed": true
+    },
+    "frontier-review-split": {
+      "qualityScore": 4,
+      "passed": true
+    },
+    "frontier-onboarding-tour": {
+      "qualityScore": 4,
+      "passed": true
+    },
+    "stats-grid-dashboard": {
+      "qualityScore": 3,
+      "passed": false,
+      "failingDimensions": ["D5"]
+    }
+  }
+}

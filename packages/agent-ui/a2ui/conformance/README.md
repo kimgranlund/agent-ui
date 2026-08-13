@@ -46,7 +46,7 @@ walk). A run of the whole suite is green iff **every** fixture passes.
 
 ## Coverage
 
-18 fixtures: three known-good default-catalog payloads, one negative fixture per protocol/catalog
+19 fixtures: four known-good default-catalog payloads, one negative fixture per protocol/catalog
 failure stage (`PARSE`, `SCHEMA` ×2 shapes, `VERSION_UNSUPPORTED`, `CATALOG`, `IDGRAPH` ×4 subtypes —
 root-missing / second-root / dangling child / cycle, `CONTAINMENT`, `POINTER` ×2 — a component binding
 and an `updateDataModel.path`), and the three pinned upstream `a2ui.org` Basic Catalog examples
@@ -58,9 +58,10 @@ verbatim from the fetched upstream source).
 `CONTAINMENT` ([`a2ui-container-vocabulary.spec.md`](../../../../.claude/docs/spec/a2ui-container-vocabulary.spec.md)
 SPEC-R6): a `CardHeader`/`CardContent`/`CardFooter` node whose id-graph parent is not a `Card` — one
 negative fixture (`containment-stray-region`) plus one mark-free known-good structured-container shape
-(`valid-structured-card-mark-free`); the valid fixture exercising the R1–R4 catalog marks
-(`format`/`slot`/`label`) is sequenced to a LATER build slice (it cannot validate until the `format`
-mark ships — SPEC-R6's own fixture-sequencing clause).
+(`valid-structured-card-mark-free`); and — landed with the S5 slice now that the `format` mark has
+shipped — `valid-structured-container`, the fixture exercising the R1–R4 catalog marks
+(`format`/`slot`/`label`): the structured header with slotted `Icon`/bound-status `Badge`, two
+`label`/value rows, and a `CardFooter` action, sourced from the SPEC-R9 corpus exemplar.
 
 ## Running this repo's own validator against the suite
 
@@ -112,7 +113,7 @@ catalog-interop known-good payload).
 | Suite | Fixtures | Failure codes covered |
 | --- | --- | --- |
 | `suites/validator.yaml` | `parse-failure` · `bad-envelope` · `missing-surfaceId` · `unsupported-version` · `bad-pointer-binding` · `bad-pointer-datamodel` · `missing-root` · `duplicate-root` · `dangling-child` · `cycle` | PARSE, SCHEMA ×2, VERSION_UNSUPPORTED, POINTER ×2, IDGRAPH ×4 |
-| `suites/catalog.yaml` | `valid-button` · `valid-list` · `unknown-component` · `upstream-interactive-button` · `upstream-simple-login-form` · `upstream-product-card` · `containment-stray-region` · `valid-structured-card-mark-free` | CATALOG, CONTAINMENT, plus 6 known-good (3 default-catalog, 3 `a2ui.org` interop) |
+| `suites/catalog.yaml` | `valid-button` · `valid-list` · `unknown-component` · `upstream-interactive-button` · `upstream-simple-login-form` · `upstream-product-card` · `containment-stray-region` · `valid-structured-card-mark-free` · `valid-structured-container` | CATALOG, CONTAINMENT, plus 6 known-good (3 default-catalog, 3 `a2ui.org` interop) |
 
 ### Row shape — field-by-field, against the fetched upstream examples
 

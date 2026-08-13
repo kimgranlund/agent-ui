@@ -61,6 +61,7 @@ diverge.
 | 16 | `upstream-product-card` | catalog | a2ui-basic | valid | Your own `a2ui.org` Basic Catalog "Product Card" example, exercising the `formatCurrency`/`formatString`/`formatNumber`/`pluralize` function chain |
 | 17 | `containment-stray-region` | catalog | agent-ui | invalid — `CONTAINMENT` | A `CardHeader`/`CardContent`/`CardFooter` region delivered outside a `Card` is rejected (a container-vocabulary rule layered on our own default catalog) |
 | 18 | `valid-structured-card-mark-free` | catalog | agent-ui | valid | A `Card` with `CardHeader`/`CardContent`/`CardFooter` each a direct child — the mark-free containment-valid shape |
+| 19 | `valid-structured-container` | catalog | agent-ui | valid | The full structured-container register: `CardHeader[format='structured']` with slotted `Icon` + bound-status `Badge`, two label/value rows, a `CardFooter` action |
 
 ### Format — already conforms to your `suites/*.yaml` shape
 
