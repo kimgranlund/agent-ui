@@ -385,12 +385,16 @@ let liveIntegrationEntries: NewEntryInput[] | undefined
 
 /** Called by the site's live overlay (`site/lib/admin-live-runner.ts`'s `fetchLiveIntegrations`) with
  *  the dev proxy's served trios — already `{id, label, description}`, SPEC-R28's vocabulary. `content`
- *  is always empty for a live-discovered tool (no hand-authored usage tip exists for an arbitrary MCP
- *  tool yet — the "Registered catalogs" pack below takes the identical empty-content posture for the
- *  same reason: an entry keying an external registry has no authored body). Passing `undefined` reverts
- *  to the hand-authored fallback (used by this page's own tests to reset state between cases). */
+ *  is seeded from the SAME `description` field (GH #847/ADR-0189 cl.4) — the manifest's own
+ *  `description` (real prose for every hand-authored integration, e.g. Weather's "Current conditions +
+ *  short forecast…"; `label` as a fallback for an MCP tool whose server left `tool.description` unset,
+ *  `mapMcpTool`'s own fallback) rather than a hardcoded `''`. Before this fix, turning the live overlay
+ *  on discarded even Weather/Wikipedia/Currency's own non-empty hand-authored `content` — the empty-box
+ *  bug GH #847 reported — because this setter REPLACES the whole pack, static entries included, with
+ *  rows carrying no `content` field of their own. Passing `undefined` reverts to the hand-authored
+ *  fallback (used by this page's own tests to reset state between cases). */
 export function setLiveIntegrations(trios: readonly { id: string; label: string; description: string }[] | undefined): void {
-  liveIntegrationEntries = trios?.map((t) => ({ id: t.id, label: t.label, description: t.description, content: '' }))
+  liveIntegrationEntries = trios?.map((t) => ({ id: t.id, label: t.label, description: t.description, content: t.description }))
 }
 
 // GH #783 S4 (LLD-C6/SPEC-R5, ADR-0185) — the MCP-services live plumbing, the sibling of the Integrations
@@ -404,9 +408,15 @@ let liveServiceEntries: NewEntryInput[] | undefined
 /** Called by the site's live overlay (`site/lib/admin-live-runner.ts`'s `fetchLiveServices`) with the dev
  *  proxy's served `services` rows (`{id, label, description}`, `id` a `mcp:<server-id>:*` service ref). The
  *  ref rides `NewEntryInput.id` EXPLICIT — never slugged (LLD-C6/GH #402: the wire key survives a label
- *  edit) — the label is the roster's human text, freely editable after add, and `content` is empty (the
- *  external-registry posture the Integrations + catalog packs already take). Passing `undefined` reverts to
- *  pack ABSENCE (production, degrade, and this page's own test reset between cases). */
+ *  edit) — the label is the roster's human text, freely editable after add, and `content` stays empty:
+ *  a DELIBERATE SPEC-R5 ruling (`mcp-agent-config.spec.md`), not the GH #847 content-stomp bug
+ *  `setLiveIntegrations` above just fixed — this row is SERVER-grain (one row per service, not per
+ *  tool), and the wire's own `description` for it is today only a synthetic boot-count aggregate
+ *  (`projectServiceRows`, dev-proxy-plugin.ts), never a real per-tool description. Populating `content`
+ *  with that aggregate would read as "not empty" without being the real description the GH #847 ask
+ *  wants; ADR-0189 (proposed) books the real fix — a widened per-tool `services[].tools` wire shape —
+ *  for ratification+build rather than reversing SPEC-R5's ruled text mid-PR. Passing `undefined` reverts
+ *  to pack ABSENCE (production, degrade, and this page's own test reset between cases). */
 export function setLiveServices(rows: readonly LiveServiceRow[] | undefined): void {
   liveServiceEntries = rows?.map((r) => ({ id: r.id, label: r.label, description: r.description, content: '' }))
 }
