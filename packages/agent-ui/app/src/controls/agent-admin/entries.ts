@@ -1,5 +1,6 @@
 // entries.ts — the agent-admin DOMAIN layer over the generic ordered-entry-list primitive (ADR-0132 `n1`):
-// the kind taxonomy, seeded defaults, and the system-prompt projection. The generic data CORE (`Entry`,
+// the kind taxonomy, seeded defaults, the system-prompt projection, and — since GH #849 — the composer's
+// reference rosters plus the send-time resolution they feed. The generic data CORE (`Entry`,
 // `NewEntryInput`, `EntryLibraryPack`, `ValidateNewEntryResult`, `validateNewEntry`, `entriesStoreKey`,
 // `readEntries`) moved to `../entry-list/entry-data.ts` (ADR-0164 cl.2) — `entry-list.ts` owns the
 // rendering, this module owns the composition this consumer's kinds need.
@@ -17,6 +18,7 @@
 
 import { A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID, sanitizeCatalog } from './agent-admin-schema.ts'
 import { entriesStoreKey, isAmbient, readEntries, type Entry } from '../entry-list/entry-data.ts'
+import type { ReferenceOption, TurnReference } from '../conversation/composer-options.ts'
 
 /** The known kinds this build seeds/instantiates. Not a closed enum — `Entry.kind` is a plain `string`
  *  (ADR-0132 Fork 2: extensible without a code change); these are the five known constants, not an
@@ -77,6 +79,20 @@ export const RENAMABLE_KINDS: readonly string[] = [ENTRY_KINDS.skill, ENTRY_KIND
 export function hasRenamableName(kind: string): boolean {
   return RENAMABLE_KINDS.includes(kind)
 }
+
+/** GH #849 / capability-availability-tagging.spec.md SPEC-R5/R8 — the kinds the composer's `@` trigger
+ *  reaches: MENTIONS attach material, and a Resource is the one kind that IS material. */
+export const MENTIONABLE_KINDS: readonly string[] = [ENTRY_KINDS.resource]
+
+/** GH #849 / SPEC-R5/R8 — the kinds the composer's `/` trigger reaches: INVOCATIONS do a thing (a skill,
+ *  a workflow, a tool), listed as ONE grouped menu, direct-by-name (never a two-stage `/tool <name>`).
+ *
+ *  Two lists, not one filter over `AVAILABILITY_KINDS`: the `@`/`/` split IS the grammar (attach material
+ *  vs do a thing, the harness idiom SPEC-R5 adopts), and the two sets' union happening to equal the four
+ *  availability kinds today is a coincidence, not a rule — the same reasoning `AVAILABILITY_KINDS` and
+ *  `RENAMABLE_KINDS` each state above. Widening `@` beyond Resources (SPEC's §3 grading — additive later)
+ *  is one line here and zero grammar change. */
+export const INVOCABLE_KINDS: readonly string[] = [ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.tool]
 
 /** The three built-in, non-deletable, toggle-on-by-default prompt sections (ADR-0132 cl.2). Order is the
  *  composition order `composeSystemPrompt` reads. */
@@ -307,4 +323,151 @@ export function composeLiveSystemPrompt(
     groups.push(`## ${group.heading}\n${blocks.join('\n\n')}`)
   }
   return groups.length > 0 ? `${withBankroll}\n\n${groups.join('\n\n')}` : withBankroll
+}
+
+// ── the composer's reference rosters + turn-time resolution (GH #849, SPEC-R8/SPEC-R4) ─────────────────
+// The two halves of the user-invocable REACH PATH, both pure functions over the same input shape
+// (`ReferenceGroup[]` — one per mapped kind, exactly the `LiveCapabilityGroup` division of labor the
+// prompt projection already uses: `agent-admin.ts` does the fresh store reads, this module does the
+// filter/sort/projection). The composer stays generic (it knows `ReferenceOption`/`TurnReference`, never
+// `Entry`, a store, or a kind's semantics — the SPEC's layering clause); this is the domain side of that
+// seam, and the SINGLE repoint site if display truth ever moves off `Entry.label` (SPEC-R8).
+
+/** One kind's raw store slice + its MASTER switch, for the roster/resolution projections below. The
+ *  `LiveCapabilityGroup` shape minus `heading` — neither of these projections renders a group header (the
+ *  composer's own menu groups by `kind` and labels it, conversation-composer.ts's `kindLabel`). */
+export interface ReferenceGroup {
+  kind: string
+  entries: readonly Entry[]
+  /** The kind's MASTER switch — `false` gates the whole kind out of BOTH the menu and every resolution. */
+  enabled: boolean
+}
+
+/** The two rosters `ui-agent-admin` hands the composer (SPEC-R8): `@` and `/`, each already filtered,
+ *  sorted and projected to the composer's generic option vocabulary. */
+export interface ComposerRosters {
+  mentionables: ReferenceOption[]
+  invocables: ReferenceOption[]
+}
+
+/** One entry → one `ReferenceOption`. `label` is read from the entry ITSELF on every build, which is the
+ *  whole of SPEC-R8's rename-following clause (GH #848 landed the rename as an in-place `label` write, so
+ *  a fresh read IS the propagation — nothing to repoint). An empty description is OMITTED rather than sent
+ *  as `''`, so the menu row renders label-only instead of an empty second line. */
+function referenceOptionOf(entry: Entry): ReferenceOption {
+  const description = entry.description.trim()
+  return { id: entry.id, label: entry.label, kind: entry.kind, ...(description === '' ? {} : { description }) }
+}
+
+/** The entries of one group that may appear in a menu / resolve at send: the kind's MASTER switch on AND
+ *  the entry `enabled` — BOTH availability modes (SPEC-R8: an in-context entry may appear in the menu AND
+ *  compose ambiently; a user-invocable one appears ONLY here). Deliberately NOT `isAmbient`: this is the
+ *  reach path availability's `invocable` mode exists FOR, so filtering by it here would make a
+ *  user-invocable entry unreachable everywhere — the exact inversion of the mode's contract. */
+function reachableEntries(group: ReferenceGroup): Entry[] {
+  if (!group.enabled) return []
+  return [...group.entries].filter((e) => e.enabled).sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
+}
+
+/**
+ * SPEC-R8 — the menu roster projection: entries of the mapped kinds (`MENTIONABLE_KINDS` → `@`,
+ * `INVOCABLE_KINDS` → `/`) that are `enabled` and whose kind's MASTER switch is on, BOTH availability
+ * modes, in each kind's own `order` (ties by `id`, the `composeSystemPrompt` sort law). Disabled entries
+ * and master-off kinds are absent; a kind mapped to neither roster (prompt sections, pattern sources,
+ * catalogs) contributes nothing wherever it appears in `groups`.
+ *
+ * PURE and fresh-read by construction: it holds no state, so every build reflects whatever the store said
+ * at the moment the caller read it (`agent-admin.ts`'s `#referenceGroups`) — which is what makes a rename
+ * show on the next menu open with zero further wiring, and what keeps `id` (never `label`) the resolution
+ * key everywhere (GH #402's law).
+ */
+export function buildComposerRosters(groups: readonly ReferenceGroup[]): ComposerRosters {
+  const rosterFor = (kinds: readonly string[]): ReferenceOption[] =>
+    groups.filter((g) => kinds.includes(g.kind)).flatMap((g) => reachableEntries(g).map(referenceOptionOf))
+  return { mentionables: rosterFor(MENTIONABLE_KINDS), invocables: rosterFor(INVOCABLE_KINDS) }
+}
+
+/** SPEC-R4 — the reference kinds that frame into the outgoing user turn's TEXT. The `tool` kind is the one
+ *  exception: it already HAS a wire (`integrations`, ADR-0168 cl.2), so an invoked tool rides that instead
+ *  of prose. Everything else an entry can be (a skill, a workflow, a resource) is generic prose by
+ *  ADR-0132 Fork 3 — label + description + free-text content, nothing machine-callable — so framing it into
+ *  the turn IS the maximal faithful representation of "the user attached this". */
+const FRAMED_KINDS: readonly string[] = [ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource]
+
+/** SPEC-R4's framing block heading — ONE header for the whole attached set, whatever it spans. */
+const REFERENCE_FRAME_HEADING = '## Referenced for this message'
+
+/** What one turn's references resolved to (SPEC-R4): the text that goes on the wire and into history, and
+ *  the invoked tool ids the caller unions into THAT turn's `integrations`. */
+export interface ResolvedTurnReferences {
+  /** The typed text, FRAMED: each resolved prose entry as a labeled block, typed text last. With zero
+   *  resolved references this is the typed text byte-identically (the gated-equivalence law again). */
+  text: string
+  /** The invoked TOOL entries' ids, deduped, in reference order — never their labels (GH #402). The caller
+   *  unions them with the ambient projection; nothing here persists past this turn. */
+  toolIds: string[]
+}
+
+/**
+ * SPEC-R4 — turn-time resolution, host-side, by `id`, fail-closed.
+ *
+ * Each reference is resolved against `groups` (the caller's FRESH store read — the live-apply law) and
+ * contributes NOTHING unless its kind is one this grammar maps, its kind's MASTER switch is on, an entry
+ * with that `id` still exists, and that entry is `enabled`. A reference that was minted from a menu and
+ * then deleted, disabled, or master-switched off between menu and send simply drops; the turn still sends
+ * with the remaining resolutions intact (the `resolveIntegrations` drop law, applied host-side). Duplicate
+ * references (same kind + id) resolve once.
+ *
+ * The FRAMING GRAMMAR (the SPEC leaves the exact bytes to an LLD; no LLD was authored for this arc, so it
+ * is ruled here, in code, inside SPEC-R4's four stated constraints — labeled per entry, content verbatim,
+ * typed text last, and zero resolved references ⇒ the bare typed text byte-identically):
+ *
+ *     ## Referenced for this message
+ *     ### {label} ({kind})
+ *     {description}          ← omitted when empty
+ *
+ *     {content}              ← omitted when empty, otherwise VERBATIM
+ *
+ *     {typed text}
+ *
+ * It deliberately reuses the ambient projection's own `### {label}` block shape (`composeLiveSystemPrompt`)
+ * so the model meets an attachment in the same shape it already meets a capability, with ONE header naming
+ * whose material it is and the kind in each block's own heading (a resource attached vs a skill invoked —
+ * one deterministic line, no per-kind noun table to drift).
+ *
+ * The framed text is what BOTH arms send and what history records (SPEC-R4): the model-saw-it truth rides
+ * the transcript, so a follow-up turn keeps the attachment without re-mentioning it. The COST is owned, not
+ * hidden — a framed attachment's full content rides every later request of that session, with no cap this
+ * arc (SPEC-N1); the chip the user dismissed or kept is the visible choice.
+ */
+export function resolveTurnReferences(
+  text: string,
+  references: readonly TurnReference[] | undefined,
+  groups: readonly ReferenceGroup[],
+): ResolvedTurnReferences {
+  if (references === undefined || references.length === 0) return { text, toolIds: [] }
+  const reachable = new Map<string, Map<string, Entry>>()
+  for (const group of groups) reachable.set(group.kind, new Map(reachableEntries(group).map((e) => [e.id, e])))
+  const seen = new Set<string>()
+  const blocks: string[] = []
+  const toolIds: string[] = []
+  for (const reference of references) {
+    const key = `${reference.kind} ${reference.id}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    const entry = reachable.get(reference.kind)?.get(reference.id)
+    if (entry === undefined) continue // fail-closed: deleted, disabled, or a master-off kind
+    if (entry.kind === ENTRY_KINDS.tool) {
+      toolIds.push(entry.id)
+      continue
+    }
+    if (!FRAMED_KINDS.includes(entry.kind)) continue // a kind with no framing semantics contributes nothing
+    const lines = [`### ${entry.label} (${entry.kind})`]
+    if (entry.description.trim().length > 0) lines.push(entry.description.trim())
+    if (entry.content.trim().length > 0) lines.push('', entry.content.trim())
+    blocks.push(lines.join('\n'))
+  }
+  if (blocks.length === 0) return { text, toolIds }
+  const framed = `${REFERENCE_FRAME_HEADING}\n${blocks.join('\n\n')}`
+  return { text: text.trim().length === 0 ? framed : `${framed}\n\n${text}`, toolIds }
 }

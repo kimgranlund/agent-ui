@@ -177,19 +177,24 @@ import {
   type AdminTurn,
   type AdminTurnRequest,
 } from './agent-admin-schema.ts'
-import { EFFORT_LEVELS, type EffortLevel } from '../conversation/composer-options.ts'
+import { EFFORT_LEVELS, type EffortLevel, type TurnReference } from '../conversation/composer-options.ts'
 import {
   ENTRY_KINDS,
+  INVOCABLE_KINDS,
+  MENTIONABLE_KINDS,
   initialEntryValues,
   readCatalogEntries,
   isRegisteredCatalog,
+  buildComposerRosters,
   composeSystemPrompt,
   composeLiveSystemPrompt,
   pickedPatternSource,
+  resolveTurnReferences,
   hasAvailabilityMode,
   hasRenamableName,
   type LiveCapabilityGroup,
   type LiveBankrollState,
+  type ReferenceGroup,
 } from './entries.ts'
 // ADR-0164 cl.2/cl.7 — the generic data core + the section-shell mount function both moved to the shared
 // `entry-list/` folder (a `settings/` sibling, public `./entry-data`/`./entry-list` subpaths); this
@@ -864,7 +869,10 @@ export class UIAgentAdminElement extends UIElement {
     // GH #662 — the ORIGIN travels with the submission. Per-pane composers (cl.4) mean this composer IS
     // the test context, permanently and at every band; naming that here is what makes the triple dock's
     // two simultaneously-visible composers unable to cross-route (see `#contextFor`).
-    conversation.onSubmit((text) => this.#handleSubmit(text, 'chat'))
+    // GH #849/SPEC-R4 — the callback's SECOND argument is this turn's committed `@`/`/` references
+    // (`TurnReference[]`, structured, never bare text). They are resolved at send, against a fresh read of
+    // THIS context's store (`#handleSubmit`), and nothing about them persists past the turn.
+    conversation.onSubmit((text, references) => this.#handleSubmit(text, 'chat', references))
     // Models picker → the SAME persisted `model` store key the settings pane's own generated field reads/
     // writes (one source of truth, TKT-0021's own external-store-write precedent) — `#syncConversationConfig`'s
     // subscription feeds the committed value back down into `conversation.model` (props down, callbacks up).
@@ -1938,7 +1946,7 @@ export class UIAgentAdminElement extends UIElement {
    * sync its config) is microtask-batched. Submitting before that flush would push the opening turn into a
    * conversation that does not exist yet — or, worse, into one the arm's own `reset()` is about to clear.
    */
-  async #startFromFirstMessage(text: string): Promise<void> {
+  async #startFromFirstMessage(text: string, references?: readonly TurnReference[]): Promise<void> {
     if (this.authoringStore === undefined) {
       // GH #670 — a choice made before there was a store to hold it seeds the one this call is about to
       // create.
@@ -1951,7 +1959,7 @@ export class UIAgentAdminElement extends UIElement {
     if (this.authoringStore === undefined || conversation === null) return
     conversation.addUserMessage(text)
     if (conversation.disabled) return // armed, but the Builder's own master switch is off — the turn is not owed
-    this.#handleSubmit(text, 'copilot')
+    this.#handleSubmit(text, 'copilot', references)
   }
 
   /** One conversation's content-render seam, parameterized by the store whose Markdown modality governs
@@ -2070,9 +2078,13 @@ export class UIAgentAdminElement extends UIElement {
     // the flow is UNARMED it is also the flow's entry: the first message arms, then lands as the
     // interview's opening turn (one composer in the column at every moment, so there is no second submit
     // path to keep in step).
-    conversation.onSubmit((text) => {
-      if (this.authoringStore === undefined) void this.#startFromFirstMessage(text)
-      else this.#handleSubmit(text, 'copilot')
+    // GH #849/SPEC-R4 — references ride BOTH arming states, exactly as the text does: the armed submit
+    // resolves them against the Builder's own store, and the arming first message carries them into the
+    // turn `#startFromFirstMessage` reuses (an unarmed card has no store to build a roster from, so in
+    // practice that list is empty — the rosters below are fail-closed by construction, not by a guard).
+    conversation.onSubmit((text, references) => {
+      if (this.authoringStore === undefined) void this.#startFromFirstMessage(text, references)
+      else this.#handleSubmit(text, 'copilot', references)
     })
     // GH #670 — one handler per picker, covering BOTH arming states: armed, the pick commits to its own
     // home (the Builder's store for model — writing it to the draft would let the interviewer's model choice
@@ -2578,8 +2590,16 @@ export class UIAgentAdminElement extends UIElement {
    *  the only path the static build ever carries); `agentTurn` SET (a DEV-only, site-page-injected runner)
    *  ⇒ a real live turn through the reused `dev-proxy-plugin.ts` trust boundary, single-shot into
    *  `setNote`/`finalize` (LLD Q3), degrading a thrown/rejected runner via `handle.fail()` (LLD Q5, no crash,
-   *  no silent swallow). Both arms append the completed exchange to `#history`. */
-  #handleSubmit(text: string, origin: 'chat' | 'copilot'): void {
+   *  no silent swallow). Both arms append the completed exchange to `#history`.
+   *
+   *  GH #849/SPEC-R4 — `references` are this turn's committed `@`/`/` chips, resolved HERE (the one place
+   *  every arm passes through) against the DRIVING context's store, by `id`, fail-closed. The resolution
+   *  produces exactly two things: the FRAMED text — which is what every arm sends, what the log records,
+   *  and what `#recordTurn` writes into history, so a follow-up turn keeps the attachment without
+   *  re-mentioning it — and this turn's invoked TOOL ids, unioned into `integrations` by `#turnIntegrations`.
+   *  A turn with no resolved reference frames to the typed text byte-identically, so every pre-S3 call site
+   *  (and every programmatic submit) behaves exactly as before. */
+  #handleSubmit(text: string, origin: 'chat' | 'copilot', references?: readonly TurnReference[]): void {
     // ADR-0178 cl.5 — every read below is against the DRIVING context's store. With the flow inactive
     // that resolves to `this.store` and today's conversation, so this method's behaviour is unchanged.
     // GH #644 — `history` is this call's context-scoped array (test vs. authoring); every read/append
@@ -2591,6 +2611,16 @@ export class UIAgentAdminElement extends UIElement {
     // Vision rev.5 — the Agent master switch ("active/available or not", Kim's ruling): the composer is
     // already busy-disabled via `conversation.disabled`, so this is the belt (a programmatic submit).
     if (!isEnabledFlag(store?.get(AGENT_ENABLED_KEY))) return
+
+    // GH #849/SPEC-R4 — resolve this turn's references ONCE, here, before any arm reads the text:
+    // `framedText` is what every arm sends, what the log records and what `#recordTurn` writes into
+    // history (the model-saw-it law — one outgoing truth, no second framing site to drift), while the
+    // conversation's own bubble keeps showing the TYPED text plus its chips, which the composer already
+    // painted. A FRESH store read per turn (`#referenceGroups`) is what makes the resolution honest: an
+    // entry deleted, renamed, disabled or master-switched off between menu and send resolves against its
+    // CURRENT state or not at all. Zero references ⇒ `framedText === text`, byte for byte.
+    const resolved = resolveTurnReferences(text, references, this.#referenceGroups(store))
+    const framedText = resolved.text
 
     const sections = readEntries(store, ENTRY_KINDS.promptSection)
     const systemPrompt = composeSystemPrompt(sections)
@@ -2630,7 +2660,10 @@ export class UIAgentAdminElement extends UIElement {
       // GH #63 — a typed intent is a fresh user gesture: re-arm the error-loop budget.
       this.#consecutiveErrorTurns = 0
       this.#errorLoopHalted = false
-      this.#runSurfaceTurn({ kind: 'intent', text }, origin)
+      // GH #849/SPEC-R4 — the surface arm takes the SAME framed text and this turn's invoked tool ids;
+      // the ids are a SEPARATE parameter, deliberately not a member of `turn` (which is the wire shape
+      // handed verbatim to the runner — the `origin` parameter's own reasoning).
+      this.#runSurfaceTurn({ kind: 'intent', text: framedText }, origin, resolved.toolIds)
       return
     }
 
@@ -2639,13 +2672,14 @@ export class UIAgentAdminElement extends UIElement {
     const handle = conversation.beginAgentTurn()
     const agentTurn = this.agentTurn
 
-    // Stub arm — byte-unchanged (ADR-0131). The only path the static build carries.
+    // Stub arm — byte-unchanged (ADR-0131) for every turn that carries no reference: `framedText` IS the
+    // typed text there. The only path the static build carries.
     if (agentTurn === undefined) {
-      const reply = runStubAgentTurn(text, config)
+      const reply = runStubAgentTurn(framedText, config)
       handle.setNote(reply)
       handle.finalize()
-      this.#recordTurn(history, text, reply)
-      this.#logTurn('stub', { text, config }, { reply })
+      this.#recordTurn(history, framedText, reply)
+      this.#logTurn('stub', { text: framedText, config }, { reply })
       return
     }
 
@@ -2654,16 +2688,16 @@ export class UIAgentAdminElement extends UIElement {
     // mid-conversation config switch applies next-turn-only by construction (Q4). The in-flight busy-lock
     // (TKT-0034, auto-tracked off beginAgentTurn) disables the composer until finalize()/fail() runs.
     const request: AdminTurnRequest = {
-      text,
+      text: framedText,
       system: this.#personaSystemFor(store, sections),
       model: config.model,
       effort: this.#effort,
       // ADR-0168 cl.5 / GH #402 — the prose arm forwards enablement too (it was the one live arm the
       // tool toggle never reached: a silent no-op). LLD-C7: the wire carries entry IDS, not labels —
-      // `#enabledToolIds` is the SAME master-gated fresh read the surface arm uses, so the two arms can
+      // `#turnIntegrations` is the SAME master-gated fresh read the surface arm uses, so the two arms can
       // never drift. NOT `config.tools`: that stays the enabled LABELS (its own doc comment's contract),
       // which the stub arm and the turn logger want for human display.
-      integrations: this.#enabledToolIds(store),
+      integrations: this.#turnIntegrations(store, resolved.toolIds),
       history: [...history],
     }
     void (async () => {
@@ -2671,7 +2705,7 @@ export class UIAgentAdminElement extends UIElement {
         const reply = await agentTurn(request)
         handle.setNote(reply)
         handle.finalize()
-        this.#recordTurn(history, text, reply)
+        this.#recordTurn(history, framedText, reply)
         this.#logTurn('live', request, { reply })
       } catch (err) {
         // A network/provider fault, a non-2xx proxy response, or the runner's 120s timeout: surface it
@@ -2699,8 +2733,17 @@ export class UIAgentAdminElement extends UIElement {
    *  `origin` (GH #662) is a SEPARATE parameter, deliberately not a member of `turn`: `turn` is the wire
    *  shape handed verbatim to the injected runner (SPEC-N1), and which composer a turn came from is this
    *  element's own routing business, not the runner's. It selects the context (`#contextFor`) and nothing
-   *  else. */
-  #runSurfaceTurn(turn: { kind: 'intent'; text: string } | { kind: 'client'; message: unknown }, origin: 'chat' | 'copilot'): void {
+   *  else.
+   *
+   *  `invokedToolIds` (GH #849/SPEC-R4) is a separate parameter for the SAME reason: a typed intent may
+   *  carry `/tool` invocations, which union into THIS request's `integrations` and nothing else — no
+   *  per-turn state persists, so the next turn's list is the ambient projection again. A CLIENT message
+   *  (an action click) never carries one: it is a surface gesture, not a composer submission. */
+  #runSurfaceTurn(
+    turn: { kind: 'intent'; text: string } | { kind: 'client'; message: unknown },
+    origin: 'chat' | 'copilot',
+    invokedToolIds?: readonly string[],
+  ): void {
     // ADR-0178 cl.5 — as in `#handleSubmit`: with the flow inactive, `store`/`conversation` resolve to
     // exactly today's values and `session` stays absent, so the built request is byte-identical.
     const { store, conversation, session } = this.#contextFor(origin)
@@ -2778,7 +2821,8 @@ export class UIAgentAdminElement extends UIElement {
       // GH #49 / ADR-0168 cl.2 — the ENABLED tool entries' IDS (never their labels: LLD-C7 decoupled the
       // two), master-gated on the tool kind's switch: the proxy intersects with its registry; a
       // non-registry id is inert. A FRESH store read (the live-apply law), shared with the prose arm.
-      integrations: this.#enabledToolIds(store),
+      // GH #849/SPEC-R4 — plus THIS turn's invoked tool ids, unioned by the same shared projection.
+      integrations: this.#turnIntegrations(store, invokedToolIds),
       // genui-surface.spec.md SPEC-R10/R11 — a FRESH store read (the live-apply law): `enabled` gates
       // whether the runner composes the genui teaching block at all; `sourceBody`, when present, is the
       // D3-picked `pattern-source` entry's `content` VERBATIM (never a pack id — `pickedPatternSource`
@@ -3109,6 +3153,53 @@ export class UIAgentAdminElement extends UIElement {
       .map((e) => e.id)
   }
 
+  /** GH #849/SPEC-R4 — ONE turn's `integrations`: the AMBIENT projection above, plus whatever tool entries
+   *  this turn's `/` invocations resolved to (already fail-closed by `resolveTurnReferences` — a deleted,
+   *  disabled or master-off tool never reaches here), deduped. Shared by BOTH live arms for the same
+   *  anti-drift reason `#enabledToolIds` is, and ambient-first so a turn with no invocation produces the
+   *  byte-identical list it always did. Nothing persists: the next turn calls this again with no ids. */
+  #turnIntegrations(store: SettingsStore | undefined, invokedToolIds?: readonly string[]): string[] {
+    const ambient = this.#enabledToolIds(store)
+    if (invokedToolIds === undefined || invokedToolIds.length === 0) return ambient
+    return [...new Set([...ambient, ...invokedToolIds])]
+  }
+
+  /** GH #849/SPEC-R8 — each MAPPED kind's raw store slice + its MASTER switch, for the two reference
+   *  projections (`buildComposerRosters` for the menus, `resolveTurnReferences` at send). The
+   *  `#capabilityGroups` division of labor exactly: this method does the FRESH store reads, `entries.ts`
+   *  does the filter/sort/projection. Its own kind list rather than `#capabilityGroups`' — that one exists
+   *  to compose PROMPT prose and excludes kinds for prompt-shaped reasons (double-injection, wire-threaded
+   *  selection), which are not this projection's reasons (`MENTIONABLE_KINDS`/`INVOCABLE_KINDS`, entries.ts). */
+  #referenceGroups(store: SettingsStore | undefined): ReferenceGroup[] {
+    return [...MENTIONABLE_KINDS, ...INVOCABLE_KINDS].map((kind) => ({
+      kind,
+      entries: readEntries(store, kind),
+      enabled: isEnabledFlag(store?.get(kindEnabledKey(kind))),
+    }))
+  }
+
+  /** GH #849/SPEC-R8 — (re-)hand each composer its `@`/`/` rosters, each read FRESH from the store of the
+   *  context that composer submits into (`#contextFor`'s pairing: the Chat composer reads this element's
+   *  store, the Co-pilot composer the Builder's). Called from `#applyMasterStates` — the ONE reflect point
+   *  every write path already funnels through (a store notification, a master switch's own listener, the
+   *  no-subscribe `#updateEntries` fallback, a rewire) — which is what makes a rename, an add, a delete, an
+   *  enable flip, an availability flip and a master-switch flip ALL show on the next menu open with no
+   *  per-writer wiring. An EMPTY roster is handed down as-is: SPEC-R5 makes an empty roster's trigger a
+   *  plain character, so an element with no capability entries behaves exactly as it did before this slice.
+   *
+   *  The rosters are display truth only. Resolution never trusts them — it re-reads the store by `id` at
+   *  send (SPEC-R4), so even a roster that went stale between two writes cannot attach the wrong bytes. */
+  #syncComposerRosters(): void {
+    const apply = (conversation: UIConversationElement | null, store: SettingsStore | undefined): void => {
+      if (!conversation) return
+      const { mentionables, invocables } = buildComposerRosters(this.#referenceGroups(store))
+      conversation.mentionables = mentionables
+      conversation.invocables = invocables
+    }
+    apply(this.#conversation, this.store)
+    apply(this.#authoringConversation, this.authoringStore)
+  }
+
   // ── vision rev.5: master-state application + the Context tabs' renderers ────────────────────────────
 
   /** (Re-)apply the master states + (re-)render both Context tabs + (re-)arm their shared store
@@ -3175,6 +3266,11 @@ export class UIAgentAdminElement extends UIElement {
     // this method (the row's own change listener, the store subscription, a rewire), which is exactly when
     // a warning must appear or clear.
     this.#applyPromptLint(store, { a2ui: a2uiOn, genui: genuiOn })
+    // GH #849/SPEC-R8 — the composers' `@`/`/` rosters are reflected stored truth too, and they depend on
+    // exactly what this method already reads (each kind's master switch) plus each kind's entries. Same
+    // reasoning as the lint above: every path that can change either ends in a call to this method, so this
+    // is the one place a fresh roster has to be built. Both composers, each from its own store.
+    this.#syncComposerRosters()
   }
 
   /** GH #419 — stamp the non-blocking modality warning onto whichever ENABLED prompt sections name a

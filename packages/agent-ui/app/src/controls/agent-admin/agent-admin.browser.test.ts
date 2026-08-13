@@ -1,4 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
+// GH #849 — the reference typeahead needs REAL keystrokes + the real focus/caret the engine owns.
+import { server, userEvent } from 'vitest/browser'
 
 // The CROSS-ENGINE ui-agent-admin smoke (TKT-0039, ADR-0131; re-hosted GH #52/ADR-0154, then again by
 // ADR-0179, then flattened onto a direct `ui-super-shell` composition by GH #700). jsdom cannot resolve
@@ -1193,6 +1195,72 @@ describe('ui-agent-admin cross-engine smoke — TKT-0060: entry-add-form drops i
     expect(el.querySelector('[data-kind="skill"] [data-entry-id="web-search"]')).toBeNull()
     const form = section.querySelector('[data-part="entry-add-form"]') as HTMLElement
     expect(form.hidden).toBe(false) // still open — no submission happened
+  })
+})
+
+// ── GH #849 / capability-availability-tagging.spec.md SPEC-R4/R8 (slice S3) — the whole reach path ─────
+// The one real-engine case for the ADMIN half of the arc: the composer's typeahead is driven by REAL
+// keystrokes (jsdom has no caret and no focus under synthesised typing — the S2 leg of this same grammar
+// lives in conversation-composer.browser.test.ts), the menu really opens over a roster this element built
+// from its own store, and what leaves the element is asserted as ONE whole shape: the framed request text,
+// that turn's `integrations`, AND what the user actually sees left behind (the typed text in the bubble,
+// an empty chip row). The dev-surface pixel proof is the operator's; this is the mechanical stand-in.
+
+describe('ui-agent-admin — the reference reach path, real engine (GH #849/SPEC-R4/R8)', () => {
+  it('a real @ + / typeahead commit sends a FRAMED user turn with the per-turn integrations union, while the bubble keeps the typed text', async () => {
+    const { el } = mountAgentAdmin()
+    const store = el.store!
+    store.set(entriesStoreKey(ENTRY_KINDS.resource), [
+      { id: 'menu-pdf', kind: ENTRY_KINDS.resource, label: 'Menu PDF', description: '', content: 'Starters — soup 6', order: 0, enabled: true, builtin: false, availability: 'invocable' },
+    ])
+    store.set(entriesStoreKey(ENTRY_KINDS.tool), [
+      { id: 'weather', kind: ENTRY_KINDS.tool, label: 'Weather', description: '', content: '', order: 0, enabled: true, builtin: false },
+      { id: 'currency', kind: ENTRY_KINDS.tool, label: 'Currency', description: '', content: '', order: 1, enabled: true, builtin: false, availability: 'invocable' },
+    ])
+    const calls: Array<{ text: string; integrations?: readonly string[] }> = []
+    el.agentTurn = async (request) => {
+      calls.push(request)
+      return 'ok'
+    }
+    goToPlace(el, 'Chat')
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    const composer = el.querySelector('[data-part="chat-pane"] ui-conversation-composer') as HTMLElement & { value: string }
+    const editor = composer.querySelector('[data-part="editor"]') as HTMLElement
+    editor.focus()
+
+    // `@` — the mention menu opens over the roster this element built from the store above.
+    await userEvent.type(editor, '@Menu')
+    const menu = composer.querySelector('[data-part="reference-menu"]') as HTMLElement
+    expect(menu?.hasAttribute('data-open'), `${server.browser}: the admin's own roster drives a real menu`).toBe(true)
+    expect(document.activeElement, 'focus stays in the editor (the active-descendant discipline)').toBe(editor)
+    await userEvent.keyboard('{Enter}') // commits — must NOT send
+
+    // `/` — the invocation menu, same path, one turn.
+    await userEvent.type(editor, ' /Curr')
+    await userEvent.keyboard('{Enter}')
+    expect(calls, 'neither commit may send the turn (SPEC-R7)').toHaveLength(0)
+    expect([...composer.querySelectorAll('[data-part="reference-chip-label"]')].map((n) => n.textContent)).toEqual(['Menu PDF', 'Currency'])
+
+    await userEvent.type(editor, 'Total the dinner order')
+    await userEvent.keyboard('{Enter}') // sends
+
+    for (let i = 0; i < 100 && calls.length === 0; i += 1) await new Promise((r) => setTimeout(r, 10))
+    expect(calls, 'the turn ran').toHaveLength(1)
+    expect(calls[0]!.text, 'the resource frames ahead of the typed text, content verbatim').toBe(
+      '## Referenced for this message\n### Menu PDF (resource)\n\nStarters — soup 6\n\nTotal the dinner order',
+    )
+    expect(calls[0]!.integrations, 'the ambient tool id plus the invoked one, once each').toEqual(['weather', 'currency'])
+
+    // The WHOLE shape the user is left with: the bubble shows what they typed (never the framing), and the
+    // chips cleared with the text.
+    const bubbles = [...el.querySelectorAll('[data-part="chat-pane"] [data-role="user"]')]
+    const bubble = bubbles[bubbles.length - 1] as HTMLElement
+    expect(bubble.textContent, 'the conversation shows the typed text, not the wire truth').toContain('Total the dinner order')
+    expect(bubble.textContent).not.toContain('## Referenced for this message')
+    expect(bubble.getBoundingClientRect().height, 'and it is a real painted box').toBeGreaterThan(0)
+    expect(composer.querySelectorAll('[data-part="reference-chip"]').length, 'chips clear with the text on send').toBe(0)
+    expect(composer.value).toBe('')
   })
 })
 

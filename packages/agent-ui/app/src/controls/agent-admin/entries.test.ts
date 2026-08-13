@@ -15,14 +15,19 @@ import { describe, it, expect } from 'vitest'
 import {
   AVAILABILITY_KINDS,
   ENTRY_KINDS,
+  INVOCABLE_KINDS,
+  MENTIONABLE_KINDS,
+  buildComposerRosters,
   composeSystemPrompt,
   composeLiveSystemPrompt,
   hasAvailabilityMode,
   pickedPatternSource,
   readCatalogEntries,
+  resolveTurnReferences,
   isRegisteredCatalog,
   initialEntryValues,
   type LiveCapabilityGroup,
+  type ReferenceGroup,
 } from './entries.ts'
 import { ENTRY_AVAILABILITY, entriesStoreKey, validateNewEntry, type Entry } from '../entry-list/entry-data.ts'
 import { A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID } from './agent-admin-schema.ts'
@@ -415,5 +420,191 @@ describe('isRegisteredCatalog — the ONE membership expression (ADR-0170 cl.3)'
     expect(isRegisteredCatalog(`${DEFAULT_A2UI_CATALOG_ID}-2`), 'a dedup-suffixed duplicate is NOT registered').toBe(false)
     expect(isRegisteredCatalog('')).toBe(false)
     expect(isRegisteredCatalog('https://a2ui.org/catalogs/basic'), 'the canonical URI alias is never a picker id (ADR-0169 cl.13)').toBe(false)
+  })
+})
+
+// ── GH #849 / capability-availability-tagging.spec.md SPEC-R8 + SPEC-R4 — the reach path, as pure units ──
+// The two halves of slice S3's domain layer: what the composer's `@`/`/` menus may offer (the roster
+// projection) and what a committed reference turns into at send (framing + the tool wire). Both take the
+// SAME `ReferenceGroup[]` the element builds from a fresh store read, so every case below is exactly the
+// state `agent-admin.ts` would hand them. The composed-element half (props reaching the real composer,
+// both live arms, history) is agent-admin.test.ts's.
+
+function refGroup(kind: string, entries: Entry[], enabled = true): ReferenceGroup {
+  return { kind, entries, enabled }
+}
+
+describe('buildComposerRosters (GH #849/SPEC-R8) — the menu roster projection', () => {
+  const groups = (): ReferenceGroup[] => [
+    refGroup(ENTRY_KINDS.resource, [
+      entry({
+        id: 'menu',
+        kind: ENTRY_KINDS.resource,
+        label: 'Menu PDF',
+        description: 'Tonight’s menu',
+        availability: ENTRY_AVAILABILITY.invocable,
+        order: 0,
+      }),
+      entry({ id: 'brand', kind: ENTRY_KINDS.resource, label: 'Brand guide', order: 1 }),
+      entry({ id: 'old', kind: ENTRY_KINDS.resource, label: 'Retired', enabled: false, order: 2 }),
+    ]),
+    refGroup(ENTRY_KINDS.skill, [entry({ id: 'style', kind: ENTRY_KINDS.skill, label: 'House style', order: 0 })]),
+    refGroup(ENTRY_KINDS.workflow, [
+      entry({ id: 'review', kind: ENTRY_KINDS.workflow, label: 'Review flow', availability: ENTRY_AVAILABILITY.invocable, order: 0 }),
+    ]),
+    refGroup(ENTRY_KINDS.tool, [entry({ id: 'weather', kind: ENTRY_KINDS.tool, label: 'Weather', order: 0 })], false),
+  ]
+
+  it('AC1: exactly the ENABLED entries of master-on mapped kinds — BOTH availability modes, nothing else', () => {
+    const { mentionables, invocables } = buildComposerRosters(groups())
+    // `@` = Resources: both modes present, the disabled row absent.
+    expect(mentionables.map((o) => o.id)).toEqual(['menu', 'brand'])
+    expect(mentionables[0]).toEqual({ id: 'menu', label: 'Menu PDF', kind: ENTRY_KINDS.resource, description: 'Tonight’s menu' })
+    expect(mentionables[1], 'an empty description is omitted, never sent as an empty second line').toEqual({
+      id: 'brand',
+      label: 'Brand guide',
+      kind: ENTRY_KINDS.resource,
+    })
+    // `/` = Skills + Workflows + Tools, in that kind order; the master-OFF tool kind is absent wholesale.
+    expect(invocables.map((o) => o.id)).toEqual(['style', 'review'])
+    expect(invocables.map((o) => o.kind)).toEqual([ENTRY_KINDS.skill, ENTRY_KINDS.workflow])
+  })
+
+  it('AC1 (the other side): an entry of an UNMAPPED kind never reaches either roster', () => {
+    const rosters = buildComposerRosters([
+      refGroup(ENTRY_KINDS.promptSection, [entry({ id: 'foundation', kind: ENTRY_KINDS.promptSection, label: 'Foundation' })]),
+      refGroup(ENTRY_KINDS.patternSource, [entry({ id: 'pack', kind: ENTRY_KINDS.patternSource, label: 'Pack' })]),
+      refGroup(ENTRY_KINDS.catalog, [entry({ id: 'agent-ui', kind: ENTRY_KINDS.catalog, label: 'Default' })]),
+    ])
+    expect(rosters).toEqual({ mentionables: [], invocables: [] })
+  })
+
+  it('AC2: a relabeled entry carries the NEW label on the next build, with the SAME id', () => {
+    const before = buildComposerRosters(groups()).mentionables[0]!
+    const renamed = groups().map((g) =>
+      g.kind === ENTRY_KINDS.resource
+        ? refGroup(
+            g.kind,
+            g.entries.map((e) => (e.id === 'menu' ? { ...e, label: 'Dinner menu' } : e)),
+          )
+        : g,
+    )
+    const after = buildComposerRosters(renamed).mentionables[0]!
+    expect(before.label).toBe('Menu PDF')
+    expect(after.label, 'display truth is read fresh per build — a rename needs no further wiring').toBe('Dinner menu')
+    expect(after.id, 'the reference key never moves (GH #402)').toBe(before.id)
+  })
+
+  it('sorts each kind by `order`, ties by `id` — the composeSystemPrompt sort law', () => {
+    const { invocables } = buildComposerRosters([
+      refGroup(ENTRY_KINDS.skill, [
+        entry({ id: 'c', kind: ENTRY_KINDS.skill, label: 'C', order: 1 }),
+        entry({ id: 'a', kind: ENTRY_KINDS.skill, label: 'A', order: 0 }),
+        entry({ id: 'b', kind: ENTRY_KINDS.skill, label: 'B', order: 0 }),
+      ]),
+    ])
+    expect(invocables.map((o) => o.id)).toEqual(['a', 'b', 'c'])
+  })
+
+  it('the two trigger rosters map disjoint kinds, and their union is the four availability kinds', () => {
+    expect(MENTIONABLE_KINDS.filter((k) => INVOCABLE_KINDS.includes(k))).toEqual([])
+    expect([...MENTIONABLE_KINDS, ...INVOCABLE_KINDS].every((k) => AVAILABILITY_KINDS.includes(k))).toBe(true)
+    expect(AVAILABILITY_KINDS.every((k) => [...MENTIONABLE_KINDS, ...INVOCABLE_KINDS].includes(k))).toBe(true)
+  })
+})
+
+describe('resolveTurnReferences (GH #849/SPEC-R4) — send-time resolution', () => {
+  const groups = (): ReferenceGroup[] => [
+    refGroup(ENTRY_KINDS.resource, [
+      entry({
+        id: 'menu',
+        kind: ENTRY_KINDS.resource,
+        label: 'Menu PDF',
+        description: 'Tonight’s menu',
+        content: 'Starters\n- soup 6',
+        availability: ENTRY_AVAILABILITY.invocable,
+      }),
+    ]),
+    refGroup(ENTRY_KINDS.skill, [entry({ id: 'style', kind: ENTRY_KINDS.skill, label: 'House style', content: 'Be terse.' })]),
+    refGroup(ENTRY_KINDS.tool, [
+      entry({ id: 'weather', kind: ENTRY_KINDS.tool, label: 'Weather' }),
+      // ADR-0185 — an entry id may BE a namespaced service ref. Nothing in this path parses an id, so a
+      // namespaced shape rides through verbatim exactly as a plain registry id does.
+      entry({ id: 'svc:calc:*', kind: ENTRY_KINDS.tool, label: 'Calculator', availability: ENTRY_AVAILABILITY.invocable }),
+    ]),
+  ]
+  const ref = (kind: string, id: string, label = id): { kind: string; id: string; label: string } => ({ kind, id, label })
+
+  it('AC1: a mentioned resource frames as a labeled block AHEAD of the typed text, content verbatim', () => {
+    const out = resolveTurnReferences('Total the dinner order', [ref(ENTRY_KINDS.resource, 'menu', 'Menu PDF')], groups())
+    expect(out.text).toBe(
+      '## Referenced for this message\n' +
+        '### Menu PDF (resource)\n' +
+        'Tonight’s menu\n' +
+        '\n' +
+        'Starters\n- soup 6\n' +
+        '\n' +
+        'Total the dinner order',
+    )
+    expect(out.toolIds, 'a prose kind never touches the wire').toEqual([])
+  })
+
+  it('frames MULTIPLE prose references under one header, in reference order, typed text last', () => {
+    const out = resolveTurnReferences('go', [ref(ENTRY_KINDS.skill, 'style'), ref(ENTRY_KINDS.resource, 'menu')], groups())
+    expect(out.text.indexOf('### House style (skill)')).toBeLessThan(out.text.indexOf('### Menu PDF (resource)'))
+    expect(out.text.split('\n\n').pop()).toBe('go')
+    expect([...out.text.matchAll(/## Referenced for this message/g)], 'one header, however many blocks').toHaveLength(1)
+  })
+
+  it('AC2 (unit half): an invoked TOOL rides `toolIds` — never the text — and duplicates resolve once', () => {
+    const out = resolveTurnReferences('add these', [ref(ENTRY_KINDS.tool, 'svc:calc:*'), ref(ENTRY_KINDS.tool, 'svc:calc:*')], groups())
+    expect(out.toolIds).toEqual(['svc:calc:*'])
+    expect(out.text, 'no prose reference ⇒ the typed text is untouched, byte for byte').toBe('add these')
+  })
+
+  it('AC3 (fail-closed): a deleted id, a disabled entry and a master-OFF kind each contribute nothing — the rest survive', () => {
+    const state: ReferenceGroup[] = [
+      refGroup(ENTRY_KINDS.resource, [entry({ id: 'menu', kind: ENTRY_KINDS.resource, label: 'Menu PDF', content: 'stays' })]),
+      refGroup(ENTRY_KINDS.skill, [entry({ id: 'style', kind: ENTRY_KINDS.skill, label: 'House style', content: 'dropped', enabled: false })]),
+      refGroup(ENTRY_KINDS.tool, [entry({ id: 'weather', kind: ENTRY_KINDS.tool, label: 'Weather' })], false),
+    ]
+    const out = resolveTurnReferences(
+      'ping',
+      [
+        ref(ENTRY_KINDS.resource, 'gone'), // deleted between menu and send
+        ref(ENTRY_KINDS.skill, 'style'), // disabled since
+        ref(ENTRY_KINDS.tool, 'weather'), // its kind's master switch went off
+        ref(ENTRY_KINDS.resource, 'menu'), // still good — the turn keeps it
+      ],
+      state,
+    )
+    expect(out.toolIds).toEqual([])
+    expect(out.text).toContain('### Menu PDF (resource)')
+    expect(out.text).toContain('stays')
+    expect(out.text).not.toContain('gone')
+    expect(out.text).not.toContain('dropped')
+    expect(out.text, 'the turn still sends, with the remaining resolution intact').toContain('ping')
+  })
+
+  it('every reference dropping leaves the typed text byte-identical (fail-closed is never a mangled turn)', () => {
+    const out = resolveTurnReferences('ping', [ref(ENTRY_KINDS.resource, 'gone')], groups())
+    expect(out).toEqual({ text: 'ping', toolIds: [] })
+  })
+
+  it('zero references (absent OR empty) is the identity — the pre-S3 turn, byte for byte', () => {
+    expect(resolveTurnReferences('ping', undefined, groups())).toEqual({ text: 'ping', toolIds: [] })
+    expect(resolveTurnReferences('ping', [], groups())).toEqual({ text: 'ping', toolIds: [] })
+  })
+
+  it('an entry with neither description nor content frames as its label block alone', () => {
+    const out = resolveTurnReferences('hi', [ref(ENTRY_KINDS.resource, 'bare')], [
+      refGroup(ENTRY_KINDS.resource, [entry({ id: 'bare', kind: ENTRY_KINDS.resource, label: 'Bare' })]),
+    ])
+    expect(out.text).toBe('## Referenced for this message\n### Bare (resource)\n\nhi')
+  })
+
+  it('a reference of an UNMAPPED kind contributes nothing (no group, nothing to resolve against)', () => {
+    const out = resolveTurnReferences('hi', [ref(ENTRY_KINDS.promptSection, 'foundation')], groups())
+    expect(out).toEqual({ text: 'hi', toolIds: [] })
   })
 })

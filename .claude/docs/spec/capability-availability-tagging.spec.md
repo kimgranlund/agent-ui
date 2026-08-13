@@ -1,6 +1,15 @@
 # SPEC — Per-entry availability mode + composer tagging grammar (GH #850 · GH #849, one joint contract)
 
-> Status: proposed · v0.2 · 2026-08-13 (v0.1 same day) · Layer: SPEC (execution contract)
+> Status: proposed · v0.3 · 2026-08-14 (v0.2, v0.1 2026-08-13) · Layer: SPEC (execution contract)
+> v0.3 changelog (the BUILD-STATE pass, filed with the arc's last slice): all three slices have
+> landed — §9's table carries each one's PR, and §10's bookings are marked repaired in the slice
+> that repaired them. §10's four open questions are CLOSED with pointers to where each was
+> actually ruled: no LLD was ever authored for this arc, so the three LLD-altitude questions were
+> ruled IN BUILD, in code, inside the constraints their requirements already stated (the framing
+> grammar in `entries.ts`'s `resolveTurnReferences` doc comment, the chip treatment in
+> `conversation-composer.ts`, the row control in `entry-list.ts`), and the fourth was answered by
+> GH #848 shipping the rename as an in-place `label` write. Status stays `proposed` by convention —
+> the tree is the ship record, statuses lag by design (`agent-ui-doc-standards` §2).
 > v0.2 changelog (the doc-checker fix-then-ship pass, same day): SPEC-R4 owns the history
 > byte-growth trade + §8 gains the no-cap non-goal · R4 AC4's fence-precedent anchor repaired
 > (the transcribed SPEC-R22 referent was plan-failure semantics — the §3-of-doc-standards
@@ -15,8 +24,10 @@
 > frontmatter. ONE SPEC covers the pair because the owner's framing makes them halves of one
 > contract: #849's `@`/`/` menus ARE #850's user-invocable reach path — neither is complete, or even
 > fully testable, specified alone.
-> Refined by: an LLD at build dispatch (not yet authored — exact constants, file layout, chip
-> styling, and the framing's byte grammar are its altitude, flagged per requirement below).
+> Refined by: NO LLD — one was anticipated at build dispatch and never authored; all three slices
+> shipped straight off this contract, and each LLD-altitude detail (exact constants, file layout,
+> chip styling, the framing's byte grammar) was ruled in its own build, in code, inside the
+> constraints the owning requirement already stated. §10 names where each ruling lives.
 > **No ADR** — the one genuine-looking fork (third enablement state vs orthogonal flag) is resolved
 > by existing law rather than a new hard-to-reverse commitment; §3 records the analysis so the
 > non-decision is auditable (the default-no doctrine: an ADR nobody was unsure about is process,
@@ -338,11 +349,11 @@ user-invocable goes genuinely dark until S3 lands, which is exactly the mode's c
 until invoked") — the row marker (SPEC-R2) keeps the state visible, and the `/`-menu lights up
 when #849's slices land. No dark-launch flag needed; no S1 byte depends on S2/S3.
 
-| Slice | Scope (requirements) | Issue | Gate (exit-code judged, foreground) |
-|---|---|---|---|
-| **S1 — availability mode** | SPEC-R1 (model+persistence) · SPEC-R2 (row affordance) · SPEC-R3 (ambient gating, all four surfaces) + the §10 stale-record repairs | #850 complete | new units in `entry-data.test.ts`/`entries.test.ts`/`agent-admin.test.ts` (incl. R3's gated-equivalence AC3) · `npm run check && npm test` |
-| **S2 — composer grammar core** | SPEC-R5 (triggers/filter/dismiss) · SPEC-R6 (chip/commit/callback) · SPEC-R7 (keyboard/AX/event law) — generic, props-driven, zero agent-admin knowledge + S2's §10 repairs (incl. the pre-existing "six-event" comment drift) | #849 (component half) | `conversation-composer.test.ts` additions · ONE browser-shard case for R7 AC1 (focus/activedescendant need a real engine) · `npm run check && npm test` |
-| **S3 — admin wiring + resolution** | SPEC-R8 (roster projection) · SPEC-R4 (turn-time resolution, both arms, history/log) | #849 complete | roster + resolution units in `agent-admin.test.ts`/`entries.test.ts` (R4's four ACs) · `npm run check && npm test` · a live proof on the dev surface before close (the pixel-truth law) |
+| Slice | Scope (requirements) | Issue | Gate (exit-code judged, foreground) | Landed |
+|---|---|---|---|---|
+| **S1 — availability mode** | SPEC-R1 (model+persistence) · SPEC-R2 (row affordance) · SPEC-R3 (ambient gating, all four surfaces) + the §10 stale-record repairs | #850 complete | new units in `entry-data.test.ts`/`entries.test.ts`/`agent-admin.test.ts` (incl. R3's gated-equivalence AC3) · `npm run check && npm test` | PR #855 |
+| **S2 — composer grammar core** | SPEC-R5 (triggers/filter/dismiss) · SPEC-R6 (chip/commit/callback) · SPEC-R7 (keyboard/AX/event law) — generic, props-driven, zero agent-admin knowledge + S2's §10 repairs (incl. the pre-existing "six-event" comment drift) | #849 (component half) | `conversation-composer.test.ts` additions · ONE browser-shard case for R7 AC1 (focus/activedescendant need a real engine) · `npm run check && npm test` | PR #857 |
+| **S3 — admin wiring + resolution** | SPEC-R8 (roster projection) · SPEC-R4 (turn-time resolution, both arms, history/log) | #849 complete | roster + resolution units in `agent-admin.test.ts`/`entries.test.ts` (R4's four ACs) · `npm run check && npm test` · a live proof on the dev surface before close (the pixel-truth law) | PR #859 — the SPEC's own dev-surface pixel proof is the operator's step; the build's real-engine stand-in is `agent-admin.browser.test.ts`'s whole-path case (both engines) |
 
 S2 and S3 are parallelizable after S1 (S2 depends on S1 not at all; S3 depends on S1's field and
 S2's callback shape). Every slice's seams are additive-optional, so partial landings never break
@@ -351,21 +362,35 @@ S2's callback shape). Every slice's seams are additive-optional, so partial land
 ## 10 · Stale-context bookings + open questions
 
 Records this SPEC falsifies — repaired IN the landing slice's own change, never a follow-up
-(the stale-context-is-a-defect law):
+(the stale-context-is-a-defect law). All six are repaired; the slice column now reads as the record
+of which change carried each repair:
 
 | Record | Stale claim | Repair slice |
 |---|---|---|
-| `.claude/skills/agent-admin-library-kinds/SKILL.md` (Multi-enable row) | "N independent on/offs, all enabled compose" | S1 — gains the availability conjunct |
-| `packages/agent-ui/app/src/controls/agent-admin/agent-admin.md` (system-view paragraph) | "every enabled capability entry" composes | S1 |
-| `entries.ts`'s ALM-C1 section header | "every ENABLED capability entry projected after it as labeled prose" | S1 |
-| `agent-admin.ts`'s `#capabilityGroups` / `#enabledToolIds` doc comments | "does the enabled-filter/sort/master-gate itself" (and the ids projection's own filter description) — no availability conjunct | S1 |
-| `conversation-composer.ts`'s editor-`input` suppression comment | pre-existing drift, exposed not caused by this arc: "the fleet's closed six-event vocabulary" — seven since ADR-0153 (the GH #754 copied-set class); S2 touches this file, so the sweep is booked there | S2 |
-| `conversation-composer.md` + `conversation-composer.lld.md` (contract: props/callback inventory) | pre-widening seam inventory | S2 |
+| `.claude/skills/agent-admin-library-kinds/SKILL.md` (Multi-enable row) | "N independent on/offs, all enabled compose" | S1 — gained the availability conjunct (PR #855) ✔ |
+| `packages/agent-ui/app/src/controls/agent-admin/agent-admin.md` (system-view paragraph) | "every enabled capability entry" composes | S1 (PR #855) ✔ — S3 extended the same section with the reach path it promised (PR #859) |
+| `entries.ts`'s ALM-C1 section header | "every ENABLED capability entry projected after it as labeled prose" | S1 (PR #855) ✔ |
+| `agent-admin.ts`'s `#capabilityGroups` / `#enabledToolIds` doc comments | "does the enabled-filter/sort/master-gate itself" (and the ids projection's own filter description) — no availability conjunct | S1 (PR #855) ✔ |
+| `conversation-composer.ts`'s editor-`input` suppression comment | pre-existing drift, exposed not caused by this arc: "the fleet's closed six-event vocabulary" — seven since ADR-0153 (the GH #754 copied-set class); S2 touches this file, so the sweep is booked there | S2 (PR #857) ✔ |
+| `conversation-composer.md` + `conversation-composer.lld.md` (contract: props/callback inventory) | pre-widening seam inventory | S2 (PR #857) ✔ |
 
-Open questions (none blocking; all LLD-altitude):
-- Chip visual treatment per kind (mention vs invocation vs consumer `contextItems`) and the row
-  cohabitation — LLD.
-- The framing block's exact byte grammar (SPEC-R4 pins its constraints) — LLD.
-- The row's mode control shape (icon toggle vs mini-menu) and marker glyph — LLD.
-- Whether GH #848's rename lands as an in-place `label` edit or a separate display field — this
-  SPEC is compatible with either (SPEC-R8 names the single repoint site).
+S3 booked no new record of its own: the one document its change falsifies is `agent-admin.md`, already
+on this table, and it is repaired in the same change (the reach-path section).
+
+Open questions — all four CLOSED, each where it was actually ruled. No LLD was authored for this arc,
+so the three LLD-altitude questions were ruled IN BUILD, in code, inside the constraints their own
+requirements already stated (the SPEC's altitude is unchanged by any of them):
+- Chip visual treatment per kind and the row cohabitation — S2: the trigger character itself is the
+  per-kind mark (no icon-set dependency), consumer `contextItems` chips keep the row's leading
+  positions and composer-owned reference chips follow, each family rebuilding only its own
+  (`conversation-composer.ts`'s `#syncReferenceChips`).
+- The framing block's exact byte grammar — S3: one `## Referenced for this message` header, a
+  `### {label} ({kind})` block per resolved prose entry (description then content, verbatim), typed
+  text last — the ambient projection's own block shape reused; `entries.ts`'s `resolveTurnReferences`
+  doc comment is the home, and it states SPEC-R4's four constraints it was ruled inside.
+- The row's mode control shape and marker glyph — S1: an "Invocable" toggle pill on the row plus a
+  `data-availability` row marker (`entry-list.ts`).
+- Whether GH #848's rename lands as an in-place `label` edit or a separate display field — ANSWERED
+  by #848 itself (PR #856): an in-place `label` write, no second display field, so SPEC-R8's roster
+  projection reads display truth straight off the entry and the "single repoint site" it named stayed
+  a repoint site nobody had to use.

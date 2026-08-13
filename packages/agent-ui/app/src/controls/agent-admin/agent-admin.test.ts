@@ -1655,6 +1655,218 @@ describe('UIAgentAdminElement — the per-entry availability mode (GH #850/SPEC-
   })
 })
 
+// ── GH #849 / capability-availability-tagging.spec.md SPEC-R8 + SPEC-R4 (slice S3) — the reach path ───────
+// The composed half: the rosters this element hands its composers, and what a committed reference does at
+// send on BOTH live arms (the framed user turn, the `integrations` union, the recorded history, and the
+// fail-closed drop). The projections themselves are entries.test.ts's pure units; the typeahead's own
+// grammar/keyboard is conversation-composer.test.ts's. Everything below drives the REAL composer.
+
+describe('UIAgentAdminElement — the composer reach path (GH #849/SPEC-R8/R4)', () => {
+  function addEntry(el: UIAgentAdminElement, kind: string, label: string): void {
+    const section = el.querySelector(`[data-kind="${kind}"]`) as HTMLElement
+    ;(section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = label
+    ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
+  }
+  /** Give an entry a real body, the way the row's content editor commits one. */
+  function setEntry(el: UIAgentAdminElement, kind: string, id: string, patch: Partial<Entry>): void {
+    el.store!.set(
+      entriesStoreKey(kind),
+      readEntries(el.store, kind).map((e) => (e.id === id ? { ...e, ...patch } : e)),
+    )
+  }
+  type Composer = HTMLElement & {
+    value: string
+    mentionables?: readonly { id: string; label: string; kind: string }[]
+    invocables?: readonly { id: string; label: string; kind: string }[]
+  }
+  const composersOf = (el: UIAgentAdminElement): Composer[] => [...el.querySelectorAll<Composer>('ui-conversation-composer')]
+  const chatComposer = (el: UIAgentAdminElement): Composer => composersOf(el)[0]!
+  const editorOf = (composer: Composer): HTMLElement => composer.querySelector('[data-part="editor"]') as HTMLElement
+  /** Type like a user: write the editor surface, then fire its own `input` (the composer's one entry point). */
+  function typeInto(composer: Composer, text: string): void {
+    const editor = editorOf(composer)
+    editor.textContent = text
+    editor.dispatchEvent(new Event('input', { bubbles: true }))
+  }
+  const menuLabels = (composer: Composer): string[] =>
+    [...composer.querySelectorAll('[data-part="reference-option-label"]')].map((n) => n.textContent ?? '')
+  /** Commit the menu's first option — a real click on the option (the panel's own delegated listener). */
+  function commitFirstOption(composer: Composer): void {
+    const option = composer.querySelector('[data-part="reference-option"]') as HTMLElement
+    option.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+  }
+  function send(composer: Composer): void {
+    ;(composer.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+  }
+  /** Type a trigger token, commit the first match, then type the message and send it. */
+  function referenceAndSend(composer: Composer, token: string, text: string): void {
+    typeInto(composer, token)
+    commitFirstOption(composer)
+    typeInto(composer, text)
+    send(composer)
+  }
+  async function waitFor(predicate: () => boolean, label: string): Promise<void> {
+    for (let i = 0; i < 100; i += 1) {
+      if (predicate()) return
+      await Promise.resolve()
+    }
+    throw new Error(`waitFor timed out: ${label}`)
+  }
+
+  it('SPEC-R8: the rosters carry enabled entries of BOTH modes, and nothing disabled or master-off', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    addEntry(el, ENTRY_KINDS.resource, 'Menu PDF')
+    addEntry(el, ENTRY_KINDS.resource, 'Retired')
+    addEntry(el, ENTRY_KINDS.skill, 'House style')
+    addEntry(el, ENTRY_KINDS.tool, 'weather')
+    setEntry(el, ENTRY_KINDS.resource, 'menu-pdf', { availability: 'invocable' })
+    setEntry(el, ENTRY_KINDS.resource, 'retired', { enabled: false })
+    await whenFlushed() // ui-conversation hands its composer the rosters in its own batched effect
+
+    const composer = chatComposer(el)
+    expect(composer.mentionables?.map((o) => o.id), 'both modes in, the disabled row out').toEqual(['menu-pdf'])
+    expect(composer.invocables?.map((o) => o.id)).toEqual(['house-style', 'weather'])
+
+    el.store!.set('toolsEnabled', false) // the tool kind's MASTER switch
+    await whenFlushed()
+    expect(composer.invocables?.map((o) => o.id), 'a master-off kind leaves the menu wholesale').toEqual(['house-style'])
+  })
+
+  it('SPEC-R8 AC2: a rename in the store shows on the next roster build; the id never moves', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    addEntry(el, ENTRY_KINDS.resource, 'Menu PDF')
+    setEntry(el, ENTRY_KINDS.resource, 'menu-pdf', { label: 'Dinner menu' })
+    await whenFlushed()
+    expect(chatComposer(el).mentionables).toEqual([{ id: 'menu-pdf', label: 'Dinner menu', kind: ENTRY_KINDS.resource }])
+  })
+
+  it('SPEC-R8: the Co-pilot composer reads the BUILDER store — unarmed, it offers nothing at all', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    addEntry(el, ENTRY_KINDS.resource, 'Menu PDF')
+    await whenFlushed()
+    const copilot = composersOf(el)[1]!
+    expect(copilot.mentionables, 'the draft persona’s entries never leak into the interview composer').toEqual([])
+    expect(copilot.invocables).toEqual([])
+  })
+
+  it('SPEC-R4 AC1: a mentioned resource frames into the user turn, and HISTORY records the framed text', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.store!.set(SURFACE_A2UI_KEY, false) // no structured surface ⇒ the prose arm answers
+    addEntry(el, ENTRY_KINDS.resource, 'Menu PDF')
+    setEntry(el, ENTRY_KINDS.resource, 'menu-pdf', { availability: 'invocable', content: 'Starters — soup 6' })
+    await whenFlushed()
+
+    const calls: import('./agent-admin-schema.ts').AdminTurnRequest[] = []
+    el.agentTurn = async (req) => {
+      calls.push(req)
+      return 'ok'
+    }
+    const composer = chatComposer(el)
+    typeInto(composer, '@Menu')
+    expect(menuLabels(composer), 'the roster really drives the menu').toEqual(['Menu PDF'])
+    commitFirstOption(composer)
+    expect(composer.value, 'the token text leaves the editor on commit').toBe('')
+    typeInto(composer, 'Total the dinner order')
+    send(composer)
+
+    await waitFor(() => calls.length === 1, 'prose runner called')
+    expect(calls[0]!.text).toBe(
+      '## Referenced for this message\n### Menu PDF (resource)\n\nStarters — soup 6\n\nTotal the dinner order',
+    )
+    expect(calls[0]!.system, 'and it is STILL not ambient — invocable means invocable').not.toContain('Starters — soup 6')
+
+    // The next turn replays history: what the model saw is what rides forward (no re-mention needed).
+    typeInto(composer, 'and the wine?')
+    send(composer)
+    await waitFor(() => calls.length === 2, 'second turn')
+    expect(calls[1]!.history?.[0]).toEqual({ role: 'user', content: calls[0]!.text })
+    expect(calls[1]!.text, 'a turn with no reference is the bare typed text').toBe('and the wine?')
+  })
+
+  it('SPEC-R4 AC2: an invoked tool unions into THAT turn’s integrations; the next turn is ambient again', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.store!.set(SURFACE_A2UI_KEY, false)
+    addEntry(el, ENTRY_KINDS.tool, 'weather')
+    addEntry(el, ENTRY_KINDS.tool, 'currency')
+    setEntry(el, ENTRY_KINDS.tool, 'currency', { availability: 'invocable' })
+    await whenFlushed()
+
+    const calls: import('./agent-admin-schema.ts').AdminTurnRequest[] = []
+    el.agentTurn = async (req) => {
+      calls.push(req)
+      return 'ok'
+    }
+    const composer = chatComposer(el)
+    referenceAndSend(composer, '/currency', 'convert this')
+    await waitFor(() => calls.length === 1, 'prose runner called')
+    expect(calls[0]!.integrations, 'the ambient id and the invoked one, exactly once each').toEqual(['weather', 'currency'])
+    expect(calls[0]!.text, 'a tool rides the wire, never the prose').toBe('convert this')
+
+    typeInto(composer, 'and again')
+    send(composer)
+    await waitFor(() => calls.length === 2, 'second turn')
+    expect(calls[1]!.integrations, 'nothing persists past the turn that invoked it').toEqual(['weather'])
+  })
+
+  it('SPEC-R4 AC2/AC3 on the SURFACE arm: same framed text, same union, same fail-closed drop', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    el.store = createMemoryStore({ initial: initialEntryValues() })
+    document.body.append(el)
+    mounted.push(el)
+    await whenFlushed()
+    addEntry(el, ENTRY_KINDS.resource, 'Menu PDF')
+    addEntry(el, ENTRY_KINDS.tool, 'currency')
+    setEntry(el, ENTRY_KINDS.resource, 'menu-pdf', { availability: 'invocable', content: 'soup 6' })
+    setEntry(el, ENTRY_KINDS.tool, 'currency', { availability: 'invocable' })
+    await whenFlushed()
+
+    const seen: Array<{ integrations?: string[]; turn: { kind: string; text?: string } }> = []
+    el.agentSurfaceTurn = async function* (req) {
+      seen.push(req as unknown as { integrations?: string[]; turn: { kind: string; text?: string } })
+      yield { kind: 'note' as const, note: 'ok' }
+    }
+    const composer = chatComposer(el)
+    typeInto(composer, '@Menu')
+    commitFirstOption(composer)
+    typeInto(composer, ' ') // a token boundary, so the next trigger reads as a token start
+    typeInto(composer, ' /currency')
+    commitFirstOption(composer)
+    typeInto(composer, 'total it')
+    send(composer)
+    await whenFlushed()
+    await new Promise((r) => setTimeout(r, 0))
+    await whenFlushed()
+
+    expect(seen, 'the surface runner ran').toHaveLength(1)
+    expect(seen[0]!.turn.text).toBe('## Referenced for this message\n### Menu PDF (resource)\n\nsoup 6\n\ntotal it')
+    expect(seen[0]!.integrations).toEqual(['currency'])
+  })
+
+  it('SPEC-R4 AC3: a reference whose entry is deleted between menu and send drops — the turn still sends', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.store!.set(SURFACE_A2UI_KEY, false)
+    addEntry(el, ENTRY_KINDS.resource, 'Menu PDF')
+    setEntry(el, ENTRY_KINDS.resource, 'menu-pdf', { availability: 'invocable', content: 'soup 6' })
+    await whenFlushed()
+
+    const calls: import('./agent-admin-schema.ts').AdminTurnRequest[] = []
+    el.agentTurn = async (req) => {
+      calls.push(req)
+      return 'ok'
+    }
+    const composer = chatComposer(el)
+    typeInto(composer, '@Menu')
+    commitFirstOption(composer)
+    typeInto(composer, 'Total the dinner order')
+    el.store!.set(entriesStoreKey(ENTRY_KINDS.resource), []) // deleted while the chip sits in the row
+    send(composer)
+
+    await waitFor(() => calls.length === 1, 'prose runner called')
+    expect(calls[0]!.text, 'the stale reference contributes nothing at all').toBe('Total the dinner order')
+    expect(calls[0]!.text).not.toContain('soup 6')
+  })
+})
+
 describe('UIAgentAdminElement — composeSystemPrompt (ADR-0132 cl.2)', () => {
   it('concatenates ENABLED sections in order, labeled, skipping disabled/empty ones', () => {
     const sections: Entry[] = [
