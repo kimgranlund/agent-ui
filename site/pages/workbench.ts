@@ -381,6 +381,14 @@ function applySummaryKey(key: SummaryViewKey): void {
   host.className = 'wb-summary-host'
   summarySection.append(host)
   summaryHost = host
+  // GH #810 — this replayed panel runs NO turn at all for any action a future payload might carry (a
+  // recorded fixture, never a live transport, `summaryLines` above): `host`'s own self-wired disable-on-
+  // action (surface-host.ts) still fires on a click regardless, since it has no notion of "no consumer is
+  // listening" — with no client-message wiring at all (the pre-#810 shape), that click would strand the
+  // card disabled forever, with nothing ever coming back to re-enable it. The minimal conforming wiring per
+  // Kim's 2026-08-13 ruling (fail arm everywhere, no click-once carve-out): a replay panel's action goes
+  // nowhere, so the card should just stay live — re-enable it the instant the click fires.
+  host.onClientMessage(() => host.setInteractiveDisabled(false))
   for (const line of summaryLines(key)) host.ingest(line)
   host.finalize()
 }
