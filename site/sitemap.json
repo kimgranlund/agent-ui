@@ -626,6 +626,13 @@
       "section": "Guides"
     },
     {
+      "name": "Workspace Shell",
+      "url": "./workspace-shell.html",
+      "description": "ui-workspace-shell is a thin ui-super-shell preset for the full outer-level workspace grammar: header, global-nav rail, nav-pane, section-nav, content, options-pane, options-section, global-options rail, footer.",
+      "level": "L2",
+      "section": "Guides"
+    },
+    {
       "name": "Master Detail",
       "url": "./master-detail.html",
       "description": "ui-master-detail is a docked list | detail arrangement over the shipped ui-split, drilling into one record.",
