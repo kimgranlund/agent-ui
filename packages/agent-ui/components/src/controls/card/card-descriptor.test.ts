@@ -112,12 +112,14 @@ describe('card.md descriptor — contract↔props trip-wire (part b)', () => {
 // `format` axis, documented above) + `card.test.ts`'s live-class probes (props shape, default, reflect, the
 // enum codec's out-of-enum snap — the SAME `Object.keys(...props)` + behavioural style `tab.ts`'s own
 // undocumented `key` prop is held to) + `card.browser.test.ts`'s real-DOM computed-style leg (the
-// cascade-dependent claim this ADR's Consequences owe). `UICardHeaderElement`/`UICardFooterElement` are
-// imported below only to keep this file's own drift-detection honest (a future prop rename here is still
-// caught structurally, even without a fenced bijection).
+// cascade-dependent claim this ADR's Consequences owe). `UICardHeaderElement` is imported below only to
+// keep THIS file's own drift-detection honest (a future prop rename here is still caught structurally,
+// even without a fenced bijection) — header-only: the symmetric `UICardFooterElement` half of the SAME
+// bijection is already covered by card.test.ts's own live-class assertion (`'header/footer carry ONLY
+// the ADR-0186 format prop'`, card.test.ts:118-125), so it is not duplicated here.
 
 describe('ui-card-header / ui-card-footer — format (ADR-0186), the equivalent contract check (no second {name}.md)', () => {
-  it('both carry ONLY the format prop — a reflected enum, default \'default\' (mirrors card.test.ts\'s own live-class assertion)', () => {
+  it('ui-card-header carries ONLY the format prop — a reflected enum, default \'default\' (the footer half of this SAME bijection is covered by card.test.ts:118-125, not duplicated here)', () => {
     expect(Object.keys(UICardHeaderElement.props)).toEqual(['format'])
     expect(UICardHeaderElement.props.format.default).toBe('default')
     expect(UICardHeaderElement.props.format.reflect).toBe(true)

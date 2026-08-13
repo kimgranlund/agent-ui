@@ -342,10 +342,13 @@
    text label with no <ui-text> wrapper required (cl.1's own text; the intake's §4c names this mechanism
    explicitly: "a <ui-text> child, if used, additionally inherits the mono font-family for free via cascade" —
    text.css never sets font-family, so a <ui-text> child composes with zero double-declaration conflict). A
-   leading/trailing adornment inherits the same cascade (an icon renders no text, so it is unaffected in
-   practice; a trailing badge's own --ui-badge-font already overrides the inherited SIZE, badge.css) — not
-   silently patched around; a future consumer wanting the adornments visually shielded is a design follow-up,
-   not a local deviation here.
+   leading/trailing adornment used to inherit the SAME cascade wholesale (an icon renders no text, so it was
+   unaffected in practice; a trailing badge's own --ui-badge-font already overrides the inherited SIZE,
+   badge.css) — GH #818 (Kim ruling, 2026-08-13) found the uppercase/tracking leg DOES leak visibly onto a
+   slotted badge's own casing and letter-spacing, and ruled it shielded: the shield rule below (cl.1's own
+   `> [slot]` selector) reverts `text-transform`/`letter-spacing` back to `none`/`normal` on any slotted
+   leading/trailing child. `font-family` (the mono typeface) stays inherited by design — a full badge-side
+   token shield was offered and Kim declined it; that is the accepted residual, not an oversight.
    cl.2 — the header/body divider: the EXISTING hairline border token (--ui-card-border, this file, → the
    --md-sys-color-neutral-outline-variant role) — no new colour role. Defined on the shared
    :where(ui-card-header, ui-card-footer) selector for symmetry (ADR-0186's Decision — ui-card-footer carries
@@ -363,6 +366,16 @@
   text-transform: uppercase;
 
   border-block-end: 1px solid var(--ui-card-border);
+}
+
+/* cl.1's adornment shield — GH #818 (Kim ruling, 2026-08-13): a slotted leading/trailing child (a badge, an
+   icon-button, etc.) does NOT keep the host's uppercase transform / kicker tracking above — the two loudest
+   inherited properties revert here. The default/label slot carries no `slot` attribute, so it never matches
+   this selector and keeps the full kicker treatment. `font-family` is deliberately left OUT of this shield —
+   it stays inherited (the mono typeface), the accepted residual per the ruling. */
+:where(ui-card-header, ui-card-footer)[format='structured'] > [slot] {
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 /* ════════════════ [ui-card-content] TOKEN + STYLES — the body + scroll ════════════════ */

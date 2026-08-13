@@ -494,6 +494,27 @@ describe('ui-card-header / ui-card-footer — format="structured" (ADR-0186, bot
     const badge = header.querySelector('[slot="trailing"]') as HTMLElement
     expect(leading.getBoundingClientRect().left, 'the leading adornment did not place in the start cell').toBeLessThan(badge.getBoundingClientRect().left)
   })
+
+  it('the adornment shield (GH #818): a slotted trailing badge does NOT inherit the header uppercase/tracking — the label column keeps both', () => {
+    const card = mount(
+      '<ui-card><ui-card-header format="structured">' +
+        'Date selection' +
+        '<ui-badge slot="trailing" intent="success" label="Confirmed"></ui-badge>' +
+        '</ui-card-header></ui-card>',
+    )
+    const header = card.querySelector('ui-card-header') as HTMLElement
+    const badge = header.querySelector('[slot="trailing"]') as HTMLElement
+    const hcs = getComputedStyle(header)
+    const bcs = getComputedStyle(badge)
+    // The label column (the host itself, cl.1) is unaffected by the shield — it keeps the full kicker
+    // treatment: uppercase + non-normal tracking.
+    expect(hcs.textTransform, 'the label column lost its uppercase treatment').toBe('uppercase')
+    expect(hcs.letterSpacing, 'the label column lost its kicker tracking').not.toBe('normal')
+    // The slotted trailing badge (a `> [slot]` child) is shielded — the two loudest inherited properties
+    // revert to their un-structured values.
+    expect(bcs.textTransform, 'the slotted badge leaked the header uppercase transform').toBe('none')
+    expect(bcs.letterSpacing, 'the slotted badge leaked the header kicker tracking').toBe('normal')
+  })
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
