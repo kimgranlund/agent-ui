@@ -12,6 +12,7 @@ import {
   entryAvailability,
   isAmbient,
   readEntries,
+  renameEntry,
   validateNewEntry,
   type Entry,
   type NewEntryInput,
@@ -215,5 +216,79 @@ describe('the availability mode — a store write/read round trip (SPEC-R1 AC1)'
     expect(entryAvailability(read)).toBe(ENTRY_AVAILABILITY.invocable)
     expect(isAmbient(read)).toBe(false)
     localStorage.clear()
+  })
+})
+
+// ── GH #848 — renameEntry: the DISPLAY-NAME write, ids never rewritten ────────────────────────────────────
+describe('renameEntry (GH #848)', () => {
+  /** A pack-added tool whose id is a FOREIGN KEY into an external registry and whose label is human text
+   *  (the `NewEntryInput.id` shape, LLD-C7) — the case a rename must not break, plus a plain hand-authored
+   *  sibling to prove the rename never leaks sideways. */
+  const seed = (): Entry[] => [
+    { id: 'weather', kind: 'tool', label: 'Weather (Open-Meteo)', description: 'Current conditions.', content: 'Keyless.', order: 0, enabled: true, builtin: false },
+    { id: 'rules', kind: 'tool', label: 'Rules', description: 'House rules.', content: 'Play fair.', order: 1, enabled: false, builtin: true },
+  ]
+
+  it('renames the named entry and NOTHING else — every other member, `id` above all, rides through untouched', () => {
+    const before = seed()
+    const after = renameEntry(before, 'weather', 'Local forecast')
+
+    expect(after[0]).toEqual({ ...before[0]!, label: 'Local forecast' })
+    expect(after[0]!.id, 'the foreign-key id is never rewritten by a rename').toBe('weather')
+    expect(after[1], 'a sibling entry is byte-identical').toEqual(before[1])
+    expect(before[0]!.label, 'the input list is never mutated').toBe('Weather (Open-Meteo)')
+  })
+
+  it('trims, and an empty/whitespace-only label is a fail-closed NO-OP (the "A name is required." law, rename side)', () => {
+    expect(renameEntry(seed(), 'weather', '  Local forecast  ')[0]!.label).toBe('Local forecast')
+    for (const blank of ['', '   ', '\n\t']) {
+      expect(renameEntry(seed(), 'weather', blank), `"${blank}" changes nothing`).toEqual(seed())
+    }
+  })
+
+  it('an id no entry carries changes nothing (and never appends a phantom row)', () => {
+    expect(renameEntry(seed(), 'nope', 'Whatever')).toEqual(seed())
+  })
+
+  it('a builtin entry IS renamable — ADR-0132 Fork 4 protects DELETION, not configuration', () => {
+    const after = renameEntry(seed(), 'rules', 'Table rules')
+    expect(after[1]).toEqual({ ...seed()[1]!, label: 'Table rules' })
+    expect(after[1]!.builtin, 'still builtin, still non-deletable').toBe(true)
+  })
+
+  it('a COLLIDING rename is allowed — labels may duplicate, ids stay unique (the validateNewEntry suffix law, other side)', () => {
+    // The design ruling: `validateNewEntry` above already lets two entries share a label and separates them
+    // by id ('rules' + 'rules-2'), so refusing the same collision on rename would be stricter than adding.
+    const after = renameEntry(seed(), 'weather', 'Rules')
+    expect(after.map((e) => e.label), 'two rows may legitimately read the same').toEqual(['Rules', 'Rules'])
+    expect(new Set(after.map((e) => e.id)).size, 'ids are still unique — nothing resolving by id is confused').toBe(2)
+  })
+
+  it('EXPORT/IMPORT ROUND-TRIP: a renamed entry survives a JSON store cycle with its new label and its old id', () => {
+    const renamed = renameEntry(seed(), 'weather', 'Local forecast')
+    const roundTripped = JSON.parse(JSON.stringify(renamed)) as Entry[]
+    expect(roundTripped, 'nothing about the entry is lost or coerced by serialization').toEqual(renamed)
+    expect(roundTripped[0]!.label).toBe('Local forecast')
+    expect(roundTripped[0]!.id).toBe('weather')
+    // And a rename applied to the RE-IMPORTED list behaves identically (no hidden state rode along).
+    expect(renameEntry(roundTripped, 'weather', 'Forecast')[0]!.label).toBe('Forecast')
+  })
+
+  // GH #850 reconciliation (SPEC-R1) — the two per-entry writes are ORTHOGONAL: a rename must carry the
+  // availability mode through untouched, or a renamed user-invocable entry would silently go ambient again
+  // (leaking exactly the bytes SPEC-R3 gates out). Asserted on both polarities, plus the field-less case.
+  it('carries `availability` through untouched — a renamed invocable entry stays invocable, a field-less one stays field-less', () => {
+    const invocable: Entry[] = [{ ...seed()[0]!, availability: ENTRY_AVAILABILITY.invocable }]
+    const renamed = renameEntry(invocable, 'weather', 'Local forecast')
+    expect(renamed[0]!.availability).toBe(ENTRY_AVAILABILITY.invocable)
+    expect(entryAvailability(renamed[0]!)).toBe(ENTRY_AVAILABILITY.invocable)
+    expect(isAmbient(renamed[0]!), 'still gated out of every ambient projection').toBe(false)
+
+    // A field-less entry (every entry written before #850) must not GAIN the key from a rename — the
+    // read-time-default law: no migration write, ever, so the stored JSON stays byte-compatible.
+    const fieldLess = renameEntry(seed(), 'weather', 'Local forecast')
+    expect('availability' in fieldLess[0]!, 'no key materialized by renaming').toBe(false)
+    expect(entryAvailability(fieldLess[0]!)).toBe(ENTRY_AVAILABILITY.context)
+    expect(JSON.parse(JSON.stringify(fieldLess[0]!))).toEqual({ ...seed()[0]!, label: 'Local forecast' })
   })
 })

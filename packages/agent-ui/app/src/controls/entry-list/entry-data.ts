@@ -189,3 +189,35 @@ export function validateNewEntry(
     },
   }
 }
+
+/** GH #848 — rename ONE entry by id: a DISPLAY-NAME write and nothing else. `label` is trimmed; every
+ *  other member — `id` above all — rides through untouched, so every FOREIGN-KEY id a pack supplied through
+ *  `NewEntryInput.id` (a registry id, an ADR-0185 namespaced service ref, whatever external vocabulary the
+ *  pack keys — this module stays opaque to all of them, SPEC-R6/N1) survives a rename, and everything that
+ *  resolves by id (`#enabledToolIds` on the `integrations` wire, the host-side registry intersection, the
+ *  catalog selection key) keeps working. The stored entry IS the display truth — no second "display
+ *  name" field, so every existing surface that renders `entry.label` (the live prompt's `### {label}`
+ *  blocks, the config snapshot's per-kind label lists, each row's own ARIA text) follows a rename with
+ *  ZERO repoint sites.
+ *
+ *  Two fail-closed no-ops, both returning the list unchanged: an empty/whitespace-only label (the
+ *  `validateNewEntry` "A name is required." law applied to the rename path — the caller's re-render then
+ *  snaps the row back to the stored name, the `#selectCatalog` VISIBLE-no-op precedent) and an `id` no
+ *  entry carries. Never mutates `entries` (a fresh array either way, so a caller can persist the result
+ *  unconditionally).
+ *
+ *  Duplicate labels are ALLOWED, never rejected: `validateNewEntry` already lets two entries share a label
+ *  and separates them by id (its own suffix-dedup case — "two same-name prose entries legitimately
+ *  coexist"), so a rename that lands on a sibling's name is exactly as legal as adding one. Ids stay
+ *  unique, so nothing downstream can confuse the two.
+ *
+ *  ORTHOGONAL to `availability` (GH #850/SPEC-R1) by construction: the spread copies whatever mode the entry
+ *  carries — a renamed user-invocable entry stays user-invocable, and a rename never writes the field on an
+ *  entry that omits it, so the read-time default (`entryAvailability`) and SPEC-R3's gated equivalence hold
+ *  across a rename. The two per-entry writes touch disjoint members; neither is a read-modify-write that
+ *  could drop the other's. */
+export function renameEntry(entries: readonly Entry[], id: string, label: string): Entry[] {
+  const next = label.trim()
+  if (next.length === 0) return [...entries]
+  return entries.map((entry) => (entry.id === id ? { ...entry, label: next } : entry))
+}

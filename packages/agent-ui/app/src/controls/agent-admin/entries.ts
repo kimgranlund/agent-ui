@@ -58,6 +58,26 @@ export function hasAvailabilityMode(kind: string): boolean {
   return AVAILABILITY_KINDS.includes(kind)
 }
 
+/** GH #848 — the kinds whose entry LABEL is free human display text, i.e. the kinds an operator may RENAME
+ *  (`entry-list.ts`'s `rename` option, wired in `agent-admin.ts`'s `#makeSection`). The other three are
+ *  excluded because their label is not display text at all: a `prompt-section` label IS the composed
+ *  prompt's own `## {label}` heading (`composeSystemPrompt`), a `catalog` label mirrors the registry entry
+ *  its id keys (ADR-0170 cl.1, read back through `readCatalogEntries`), and a `pattern-source` label names
+ *  the pack its content came from.
+ *
+ *  Its OWN list, deliberately not `AVAILABILITY_KINDS` reused and not a filter over `CAPABILITY_KINDS` —
+ *  the same reasoning `AVAILABILITY_KINDS` states above, applied once more: the three sets happen to
+ *  coincide today, but each exists for a DIFFERENT reason (what may be reached ambiently · what may be
+ *  renamed · what may be projected as prompt prose), and folding rules that merely agree today into one
+ *  expression is how the next kind silently inherits the wrong one. A future kind opts into each rule it
+ *  actually wants, one line at a time. */
+export const RENAMABLE_KINDS: readonly string[] = [ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool]
+
+/** `true` iff `kind`'s entry labels are free human display text, i.e. renamable (`RENAMABLE_KINDS`). */
+export function hasRenamableName(kind: string): boolean {
+  return RENAMABLE_KINDS.includes(kind)
+}
+
 /** The three built-in, non-deletable, toggle-on-by-default prompt sections (ADR-0132 cl.2). Order is the
  *  composition order `composeSystemPrompt` reads. */
 export const DEFAULT_PROMPT_SECTIONS: readonly Entry[] = [

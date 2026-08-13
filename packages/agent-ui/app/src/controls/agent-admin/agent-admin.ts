@@ -187,13 +187,14 @@ import {
   composeLiveSystemPrompt,
   pickedPatternSource,
   hasAvailabilityMode,
+  hasRenamableName,
   type LiveCapabilityGroup,
   type LiveBankrollState,
 } from './entries.ts'
 // ADR-0164 cl.2/cl.7 — the generic data core + the section-shell mount function both moved to the shared
 // `entry-list/` folder (a `settings/` sibling, public `./entry-data`/`./entry-list` subpaths); this
 // element is that extraction's first CONSUMER now, not its owner.
-import { entriesStoreKey, isAmbient, readEntries, validateNewEntry, type Entry, type EntryLibraryPack } from '../entry-list/entry-data.ts'
+import { entriesStoreKey, isAmbient, readEntries, renameEntry, validateNewEntry, type Entry, type EntryLibraryPack } from '../entry-list/entry-data.ts'
 import { mountEntryList, showAddError, type EntryListSection } from '../entry-list/entry-list.ts'
 import { lintPromptSections } from './prompt-lint.ts'
 // ADR-0178 cl.2 — the three-filter apply gate + the canonical key set it enumerates (LLD-C1). A pure
@@ -2305,6 +2306,15 @@ export class UIAgentAdminElement extends UIElement {
       // behave the same. Only offered for the four kinds availability is defined for (the option below).
       onAvailabilityChange: (id, availability) =>
         this.#updateEntries(kind, (entries) => entries.map((e) => (e.id === id ? { ...e, availability } : e))),
+      // GH #848 — the DISPLAY-NAME write, through that SAME one-writer seam. `renameEntry` (entry-data.ts)
+      // owns the whole law: the trim, the empty-label refusal, and above all leaving every OTHER member
+      // alone — `id` (so a renamed live tool keeps carrying its registry id on the `integrations` wire,
+      // `#enabledToolIds`, and an id that is an ADR-0185 namespaced service ref keeps that ref verbatim) and
+      // `availability` (a renamed invocable entry stays invocable — the two writes above and here are
+      // orthogonal by construction, never a read-modify-write that drops the other's field). Every label
+      // surface (the live prompt's `### {label}` blocks, the snapshot's per-kind lists, the Context: System
+      // view) follows on its own next FRESH read — nothing to repoint, because the store IS display truth.
+      onRename: (id, label) => this.#updateEntries(kind, (entries) => renameEntry(entries, id, label)),
       },
       // GH #47/#48 — this kind's library packs, captured at compose time (the sections' build-once law;
       // the `libraries` prop doc names the set-before-append requirement). The kind's master switch no
@@ -2322,12 +2332,18 @@ export class UIAgentAdminElement extends UIElement {
       // GH #850/SPEC-R2 — `availabilityToggle` is the FOUR capability kinds' opt-in (`hasAvailabilityMode`,
       // entries.ts): the prompt-section, pattern-source and catalog sections omit it and render exactly as
       // before, because availability semantics are defined for those four alone (SPEC-R1).
+      //
+      // GH #848 — `rename` is the same four kinds' opt-in through its OWN rule (`hasRenamableName`,
+      // entries.ts, minted beside `hasAvailabilityMode` rather than folded into it — see its doc for why two
+      // rules that coincide today stay two rules): those entries' labels are free human text, hand-authored
+      // or arrived from a library pack. The other three sections keep byte-identical rows.
       {
         libraries: this.libraries?.[kind],
         customAdd: !isCatalog,
         contentField: !isCatalog,
         rejectOnCollision: isCatalog,
         availabilityToggle: hasAvailabilityMode(kind),
+        rename: hasRenamableName(kind),
       },
     )
     this.#capabilitySections.set(kind, section)

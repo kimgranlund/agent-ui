@@ -118,6 +118,17 @@
     color: var(--ui-entry-list-ink);
   }
 
+  /* GH #848 — the inline rename field takes the label's place in the row (same [switch|…|spacer|actions]
+     anatomy, the label swapped for a field). Repoint the published floor, never the host property (the
+     TKT-0062 law this file already applies to `entry-content` above): a free-standing ui-text-field keeps
+     its 20ch typing floor, but a field composed INTO this row must shrink with the row — a 20ch floor plus
+     the two trailing buttons overflows the card in a narrow settings pane. It GROWS into the row's free
+     space instead (`flex: 1 1 auto`, the spacer's own posture), so the typing target is the whole row. */
+  [data-part='entry-rename-field'] {
+    --ui-text-field-min-inline-size: 0;
+    flex: 1 1 auto;
+  }
+
   [data-part='entry-spacer'] {
     flex: 1 1 auto;
     min-inline-size: var(--ui-entry-list-spacer-min-size);

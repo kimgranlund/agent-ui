@@ -25,7 +25,7 @@ import '@agent-ui/components/controls/switch'
 import '@agent-ui/components/controls/toggle' // GH #850 — the per-entry availability mode pill
 import '@agent-ui/code/editor'
 import { mountEntryList, showAddError, type EntryListSection } from './entry-list.ts'
-import { validateNewEntry, readEntries, entriesStoreKey, type Entry } from './entry-data.ts'
+import { validateNewEntry, renameEntry, readEntries, entriesStoreKey, ENTRY_AVAILABILITY, type Entry } from './entry-data.ts'
 import { createMemoryStore } from '../settings/memory-store.ts'
 import type { SettingsStore } from '../settings/store.ts'
 import type { UICodeEditorElement } from '@agent-ui/code/editor'
@@ -41,9 +41,26 @@ afterEach(() => {
 /** The cl.5 live-apply idiom (commit on change → store.set → subscribe re-render → fresh read at consume
  *  time), the exact shape `agent-admin.ts`'s own `#makeSection`/`#updateEntries` wire — proven here with a
  *  bare `createMemoryStore`, no agent-admin involved. */
-function mount(store: SettingsStore): EntryListSection {
+function mount(store: SettingsStore, options?: { rename?: boolean; withRenameHandler?: boolean; availabilityToggle?: boolean }): EntryListSection {
   let section!: EntryListSection
+  const withRenameHandler = options?.withRenameHandler !== false
   section = mountEntryList(KIND, 'Add item', {
+    // GH #848 — the rename handler is present by default here (a section's OWN store write, the same
+    // read → map → set shape every other handler uses); `withRenameHandler: false` drops it to prove the
+    // affordance's SECOND gate (no handler ⇒ no affordance, even with the option on).
+    ...(withRenameHandler
+      ? {
+          onRename: (id: string, label: string) => store.set(entriesStoreKey(KIND), renameEntry(readEntries(store, KIND), id, label)),
+        }
+      : {}),
+    // GH #850's writer, wired the same way — so ONE mount can carry both row affordances at once (the
+    // both-on case below is the reconciliation's real proof: two opt-ins on one row, neither breaking the
+    // other's control or the row's shape).
+    onAvailabilityChange: (id, availability) =>
+      store.set(
+        entriesStoreKey(KIND),
+        readEntries(store, KIND).map((e) => (e.id === id ? { ...e, availability } : e)),
+      ),
     onToggle: (id, enabled) =>
       store.set(
         entriesStoreKey(KIND),
@@ -68,7 +85,7 @@ function mount(store: SettingsStore): EntryListSection {
       store.set(entriesStoreKey(KIND), [...readEntries(store, KIND), result.entry])
       return true
     },
-  })
+  }, options === undefined ? undefined : { rename: options.rename === true, availabilityToggle: options.availabilityToggle === true })
   store.subscribe?.(() => section.render(readEntries(store, KIND)))
   document.body.append(section.host)
   mounted.push(section.host)
@@ -224,5 +241,211 @@ describe('mountEntryList — the user-invocable row marker is genuinely VISIBLE 
     expect(marked.getAttribute('data-availability')).toBe('invocable')
     expect(pill().pressed, 'the re-rendered row paints the new state').toBe(true)
     expect(pill().hasAttribute('pressed')).toBe(true)
+  })
+})
+
+// ── GH #848 — the per-row RENAME affordance, in a real engine ─────────────────────────────────────────────
+// jsdom can prove the store writes (entry-data.test.ts / agent-admin.test.ts do). Only a real engine can
+// prove the affordance is a LEGIBLE, non-collapsed row: that the inline field genuinely takes the label's
+// place at a real painted width instead of overflowing the card's trailing actions out of the row, that
+// focus actually lands in it, and that a real Enter/Escape keystroke on the editor part commits/cancels.
+
+/** The row's header parts, left-to-right, with real painted boxes — the WHOLE-shape read (a per-part
+ *  "it exists" probe passes just as happily on a row whose field has pushed Remove off the card edge). */
+function headerGeometry(row: HTMLElement): { part: string; left: number; right: number }[] {
+  // The row's ruled left-to-right order (entry-list.ts's own order note): state controls, then the action
+  // pair, destructive last — with `entry-availability` (GH #850's mode pill) between the spacer and Rename.
+  const parts = ['entry-toggle', 'entry-label', 'entry-rename-field', 'entry-spacer', 'entry-availability', 'entry-rename', 'entry-delete']
+  return parts.flatMap((part) => {
+    const node = row.querySelector(`[data-part="${part}"]`) as HTMLElement | null
+    if (node === null) return []
+    const box = node.getBoundingClientRect()
+    return [{ part, left: box.left, right: box.right }]
+  })
+}
+
+describe('mountEntryList — the rename affordance (GH #848)', () => {
+  const seeded = (): SettingsStore => createMemoryStore({ initial: { [entriesStoreKey(KIND)]: [SEED] } })
+  const row = (section: EntryListSection): HTMLElement => section.host.querySelector('[data-part="entry"]') as HTMLElement
+
+  it('BYTE-IDENTICAL DEFAULT: a section mounted without the option renders NO rename affordance', () => {
+    const section = mount(seeded())
+    expect(row(section).querySelector('[data-part="entry-rename"]'), 'no trigger').toBeNull()
+    expect(row(section).querySelector('[data-part="entry-rename-field"]'), 'no field').toBeNull()
+    expect((row(section).querySelector('[data-part="entry-label"]') as HTMLElement).textContent).toBe('Seeded item')
+  })
+
+  it('the SECOND gate: `rename: true` with no `onRename` handler renders no affordance either (nothing to commit through)', () => {
+    const section = mount(seeded(), { rename: true, withRenameHandler: false })
+    expect(row(section).querySelector('[data-part="entry-rename"]')).toBeNull()
+  })
+
+  it('the flagged row PAINTS the whole shape: [switch | field | spacer | Rename | Remove], every part inside the card', async () => {
+    const section = mount(seeded(), { rename: true })
+    const trigger = row(section).querySelector('[data-part="entry-rename"]') as HTMLElement
+    expect(trigger.tagName.toLowerCase(), 'a real ui-button, not a bespoke <button>').toBe('ui-button')
+    const triggerBox = trigger.getBoundingClientRect()
+    expect(triggerBox.width, 'a real painted trigger, not a collapsed stub').toBeGreaterThan(0)
+    expect(triggerBox.height).toBeGreaterThan(0)
+
+    trigger.click()
+    const field = row(section).querySelector('[data-part="entry-rename-field"]') as UITextFieldElement
+    expect(field, 'the trigger swapped the label for a field').not.toBeNull()
+    await field.updateComplete
+
+    expect(field.value, 'pre-filled with the name being changed').toBe('Seeded item')
+    expect(row(section).querySelector('[data-part="entry-label"]'), 'the label span yielded its place').toBeNull()
+    expect(field.getBoundingClientRect().width, 'a real typing target, not a zero-width sliver').toBeGreaterThan(0)
+    expect(field.contains(document.activeElement), 'focus landed inside the field').toBe(true)
+
+    // The whole rendered shape: left-to-right order intact, and NOTHING pushed out of the card by the
+    // field's own 20ch floor (the reason entry-list.css repoints --ui-text-field-min-inline-size to 0).
+    const geometry = headerGeometry(row(section))
+    expect(geometry.map((g) => g.part)).toEqual(['entry-toggle', 'entry-rename-field', 'entry-spacer', 'entry-rename', 'entry-delete'])
+    for (const [index, part] of geometry.entries()) {
+      if (index === 0) continue
+      expect(part.left, `${part.part} sits right of ${geometry[index - 1]!.part}`).toBeGreaterThanOrEqual(geometry[index - 1]!.left)
+    }
+    const rowRight = row(section).getBoundingClientRect().right
+    for (const part of geometry) expect(part.right, `${part.part} stays inside the card`).toBeLessThanOrEqual(Math.ceil(rowRight))
+  })
+
+  it('a REAL Enter keystroke on the editor part commits the new name to the store — the id UNCHANGED', async () => {
+    const store = seeded()
+    const section = mount(store, { rename: true })
+    ;(row(section).querySelector('[data-part="entry-rename"]') as HTMLElement).click()
+    const field = row(section).querySelector('[data-part="entry-rename-field"]') as UITextFieldElement
+    await field.updateComplete
+    field.value = 'Renamed item'
+    // The real keyboard path (the agent-admin.browser.test.ts idiom): dispatch on the internal editor part,
+    // so ui-text-field's OWN Enter-commit handler is what emits the `change` entry-list.ts listens for.
+    const editor = field.querySelector('[data-part="editor"]') as HTMLElement
+    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+
+    const stored = readEntries(store, KIND)
+    expect(stored).toHaveLength(1)
+    expect(stored[0]!.label, 'the display name changed').toBe('Renamed item')
+    expect(stored[0]!.id, 'the id is untouched — everything resolving by id keeps working').toBe(SEED.id)
+    expect(stored[0]!.content, 'and nothing else moved').toBe(SEED.content)
+
+    // The re-rendered row shows it, back as a plain label span (the field swapped out).
+    expect((row(section).querySelector('[data-part="entry-label"]') as HTMLElement).textContent).toBe('Renamed item')
+    expect(row(section).querySelector('[data-part="entry-rename-field"]')).toBeNull()
+    expect(row(section).getAttribute('data-entry-id')).toBe(SEED.id)
+  })
+
+  it('Escape CANCELS — the stored name is untouched and the label span comes back', async () => {
+    const store = seeded()
+    const section = mount(store, { rename: true })
+    ;(row(section).querySelector('[data-part="entry-rename"]') as HTMLElement).click()
+    const field = row(section).querySelector('[data-part="entry-rename-field"]') as UITextFieldElement
+    await field.updateComplete
+    field.value = 'Never committed'
+    const editor = field.querySelector('[data-part="editor"]') as HTMLElement
+    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+
+    expect(readEntries(store, KIND)[0]!.label, 'nothing was written').toBe('Seeded item')
+    expect(row(section).querySelector('[data-part="entry-rename-field"]'), 'the field closed').toBeNull()
+    expect((row(section).querySelector('[data-part="entry-label"]') as HTMLElement).textContent).toBe('Seeded item')
+  })
+
+  it('an EMPTY rename is a visible refusal: nothing written, the stored name back on screen', async () => {
+    const store = seeded()
+    const section = mount(store, { rename: true })
+    ;(row(section).querySelector('[data-part="entry-rename"]') as HTMLElement).click()
+    const field = row(section).querySelector('[data-part="entry-rename-field"]') as UITextFieldElement
+    await field.updateComplete
+    field.value = '   '
+    const editor = field.querySelector('[data-part="editor"]') as HTMLElement
+    editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+
+    expect(readEntries(store, KIND)[0]!.label).toBe('Seeded item')
+    expect(row(section).querySelector('[data-part="entry-rename-field"]')).toBeNull()
+    expect((row(section).querySelector('[data-part="entry-label"]') as HTMLElement).textContent).toBe('Seeded item')
+  })
+
+  // ── GH #848 × GH #850 — BOTH row affordances at once, the reconciliation's own proof ────────────────────
+  // The two opt-ins landed from two lanes onto the SAME row. Per-feature tests each pass with the other
+  // absent, so they cannot catch the pair breaking each other: the pill pushing Rename off the card, the
+  // rename field displacing the pill, one control's commit re-render eating the other's state. Measured on
+  // one real row with both flags on.
+
+  it('both opt-ins on ONE row: the ruled order paints left-to-right, every part inside the card, at real size', () => {
+    const section = mount(seeded(), { rename: true, availabilityToggle: true })
+    const parts = headerGeometry(row(section))
+    expect(parts.map((p) => p.part), 'the ruled order: state, then the action pair, destructive last').toEqual([
+      'entry-toggle',
+      'entry-label',
+      'entry-spacer',
+      'entry-availability',
+      'entry-rename',
+      'entry-delete',
+    ])
+    for (const [index, part] of parts.entries()) {
+      if (index === 0) continue
+      expect(part.left, `${part.part} sits right of ${parts[index - 1]!.part}`).toBeGreaterThanOrEqual(parts[index - 1]!.left)
+    }
+    const rowRight = row(section).getBoundingClientRect().right
+    for (const part of parts) expect(part.right, `${part.part} stays inside the card`).toBeLessThanOrEqual(Math.ceil(rowRight))
+    // Both controls are really hittable, not one squeezed to nothing by the other.
+    for (const part of ['entry-availability', 'entry-rename']) {
+      const box = (row(section).querySelector(`[data-part="${part}"]`) as HTMLElement).getBoundingClientRect()
+      expect(box.height, `${part} has a real control box`).toBeGreaterThan(16)
+      expect(box.width).toBeGreaterThan(40)
+    }
+  })
+
+  it('both opt-ins on ONE row: an OPEN rename field coexists with the mode pill — nothing pushed out of the card', async () => {
+    const section = mount(seeded(), { rename: true, availabilityToggle: true })
+    ;(row(section).querySelector('[data-part="entry-rename"]') as HTMLElement).click()
+    const field = row(section).querySelector('[data-part="entry-rename-field"]') as UITextFieldElement
+    await field.updateComplete
+
+    const parts = headerGeometry(row(section))
+    expect(parts.map((p) => p.part), 'the field took the LABEL\'s place; the pill and both buttons stay put').toEqual([
+      'entry-toggle',
+      'entry-rename-field',
+      'entry-spacer',
+      'entry-availability',
+      'entry-rename',
+      'entry-delete',
+    ])
+    const rowRight = row(section).getBoundingClientRect().right
+    for (const part of parts) expect(part.right, `${part.part} stays inside the card while renaming`).toBeLessThanOrEqual(Math.ceil(rowRight))
+    expect(field.getBoundingClientRect().width, 'and the field is still a real typing target').toBeGreaterThan(0)
+  })
+
+  it('both opt-ins on ONE row: rename an INVOCABLE entry — the new name lands, the mode and its marker survive', async () => {
+    const store = createMemoryStore({
+      initial: { [entriesStoreKey(KIND)]: [{ ...SEED, availability: ENTRY_AVAILABILITY.invocable }] satisfies Entry[] },
+    })
+    const section = mount(store, { rename: true, availabilityToggle: true })
+    expect(row(section).getAttribute('data-availability'), 'marked before the rename').toBe('invocable')
+
+    ;(row(section).querySelector('[data-part="entry-rename"]') as HTMLElement).click()
+    const field = row(section).querySelector('[data-part="entry-rename-field"]') as UITextFieldElement
+    await field.updateComplete
+    field.value = 'Renamed while invocable'
+    ;(field.querySelector('[data-part="editor"]') as HTMLElement).dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
+
+    const stored = readEntries(store, KIND)[0]!
+    expect(stored.label).toBe('Renamed while invocable')
+    expect(stored.availability, 'the rename carried the mode through (renameEntry spreads it)').toBe(ENTRY_AVAILABILITY.invocable)
+    // …and the re-rendered row still SHOWS the mode: the marker attribute and the pressed pill both.
+    const after = row(section)
+    expect(after.getAttribute('data-availability'), 'still marked after the rename').toBe('invocable')
+    expect((after.querySelector('[data-part="entry-availability"]') as HTMLElement & { pressed: boolean }).pressed).toBe(true)
+    expect((after.querySelector('[data-part="entry-label"]') as HTMLElement).textContent).toBe('Renamed while invocable')
+  })
+
+  it('both opt-ins on ONE row: pressing the mode pill keeps a RENAMED label (the other direction)', () => {
+    const store = createMemoryStore({ initial: { [entriesStoreKey(KIND)]: [{ ...SEED, label: 'Custom name' }] satisfies Entry[] } })
+    const section = mount(store, { rename: true, availabilityToggle: true })
+    ;(row(section).querySelector('[data-part="entry-availability"]') as HTMLElement).click()
+
+    const stored = readEntries(store, KIND)[0]!
+    expect(stored.availability).toBe(ENTRY_AVAILABILITY.invocable)
+    expect(stored.label, 'the mode write left the display name alone').toBe('Custom name')
+    expect((row(section).querySelector('[data-part="entry-label"]') as HTMLElement).textContent).toBe('Custom name')
   })
 })
