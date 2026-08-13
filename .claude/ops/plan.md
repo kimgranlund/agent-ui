@@ -95,6 +95,30 @@ Entries below kept for the record.
   issue-sorter's fresh 2026-08-13T00:07Z pass, committed + pushed by the host per the #125 split.
 - **Owner**: RESOLVED.
 
+## Overnight close-out (2026-08-13, the clear-the-board goal) — BOARD ZERO
+
+Everything cleared while Kim slept: **0 open issues · 0 open PRs · single worktree · origin
+main-only · gates green · docs deploy green.**
+
+- **#808 arc COMPLETE + closed**: SPEC #816 (doc-checked ×2) · S1 #820 (slot marks + label variant
+  + the ADR-0078 amendment drafted proposed) · S2 #819 (CONTAINMENT) · S3 #823 (format mark,
+  path-bindable per Kim's ruling) · S4 #824 (structured-container mini-skill, caption wall) ·
+  S5 #825 (judged exemplar PASS-5 + the mark-exercising fixture — HOST-BUILT after the seat died
+  on the API spend limit; its dry-run caught a real E_POINTER seed defect, fixed + re-judged).
+  The judged import's full-coverage law settled GH #729's frontier wave en passant: 3 admitted,
+  frontier-trip-card judged REJECT (D1/D2, repair path in disposition-allowlist.ts), stats-grid
+  REJECT re-issued (D5). Corpus shard 24→28.
+- **#815 + #821 (the two auto-filed booked-repairs trackers) closed**: ADR-0186's five repairs
+  verified shipped (PRs #817/#822); ADR-0178's amendment repairs BUILT (PR #826 — the builtin
+  update carve-out, updateTargetIndex as the whole fence, SPEC v0.16, LLD REV).
+- **Ratified tonight by Kim**: ADR-0186 · ADR-0178's amendment. **Awaiting Kim (doc-tier, not
+  board items)**: the ADR-0078 amendment (label wire-enum; on flip, S4's caption wall upgrades —
+  one mini-skill line + recapture, booked in the SPEC §7 fork row) · the
+  builder-builtin-section-update.lld.md status flip (proposed, ship-state now real).
+- **gen-ui-kit (0.8.35)**: handed off to a dedicated session per Kim's ruling — out of this
+  board's scope; the handoff prompt carries full state (review GO, repairs merged via the peer's
+  PR #1172, test-sync PR #1173 CI-green awaiting Kim's admin merge, then release-pack --go).
+
 ## Standing notes (not queue entries)
 
 - **Board shape (this landing)**: 5 open issues — #802/#804 (→3.1) · #810 (→3.2) · #807/#808
