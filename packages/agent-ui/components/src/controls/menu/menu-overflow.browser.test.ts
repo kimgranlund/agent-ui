@@ -9,7 +9,9 @@ import type { UIMenuElement } from './menu.ts'
 // single-line (breaking the `--ui-menu-item-block-size` single-line-row contract, menu.css:55-77),
 // and — per #134's own hypothesis — that post-measurement reflow could leave the overlay
 // controller's shift-clamp (overlay.ts:135-137) computed against a stale panel width.
-// Also GH #166 (hidden-scrollbar seam) — the panel's vertical scroller, same geometry surface.
+// Also GH #166 (hidden-scrollbar seam) — the panel's vertical scroller, same geometry surface —
+// SUPERSEDED by GH #906 (see the describe block below): the shipped default is now the #874 fleet
+// thin/auto-hiding idiom, not a fully hidden scrollbar.
 //
 // Real, deterministic geometry is asserted directly (computed style + getBoundingClientRect) rather
 // than simulating scroll/resize behaviour — see agent-admin-app-scroll.browser.test.ts's header
@@ -102,8 +104,8 @@ const MANY_ITEMS = `
     ${Array.from({ length: 20 }, (_, i) => `<div data-value="i${i}">Item ${i + 1}</div>`).join('\n    ')}
   </ui-menu>`
 
-describe('ui-menu — hidden-scrollbar seam (GH #166)', () => {
-  it('hides the native scrollbar on the scrolling panel (--ui-menu-scrollbar-width: none)', async () => {
+describe('ui-menu — thin, auto-hiding scrollbar seam (GH #906, superseding GH #166\'s fully-hidden default)', () => {
+  it('paints a thin (never platform-default chunky) scrollbar on the scrolling panel by default (--ui-menu-scrollbar-width: thin)', async () => {
     const { el } = mount(MANY_ITEMS)
     const trigger = el.querySelector('[data-part="trigger"]') as HTMLElement
     await userEvent.click(trigger)
@@ -113,11 +115,16 @@ describe('ui-menu — hidden-scrollbar seam (GH #166)', () => {
     // 20 items exceed the 12-row --ui-menu-max-block-size cap — the panel genuinely scrolls
     // (real geometry, not a simulated scroll: the seam only matters on an overflowing panel).
     expect(panel.scrollHeight).toBeGreaterThan(panel.clientHeight)
-    // The fleet convention (command-modal.css / card.css / surface-host.css): the native scrollbar
-    // is hidden via the consumer-overridable token; the scroll-fade (menu.ts, scrollFade) carries
-    // the affordance. Scrolling itself stays live (overflow-y: auto is untouched).
+    // GH #906 — Kim's live-pixel finding (the agent picker's dropdown) showed GH #166's `none`
+    // default still painting the platform's fat, chunky scrollbar on some engines; the shipped
+    // default converged onto the #874 fleet idiom instead (own-chain tokens off the shared
+    // dimensional constant + colour roles): thin, transparent at rest, revealing the thumb only on
+    // hover/focus-within (menu.browser.test.ts's own GH #906 describe block covers that reveal in
+    // full; this file only re-confirms the DEFAULT resolved value on the real overflow case above).
+    // The token stays consumer-overridable to `none`/`auto`; scrolling itself is untouched
+    // (overflow-y: auto).
     const style = getComputedStyle(panel) as CSSStyleDeclaration & { scrollbarWidth?: string }
-    expect(style.scrollbarWidth).toBe('none')
+    expect(style.scrollbarWidth).toBe('thin')
     expect(style.overflowY).toBe('auto')
   })
 })

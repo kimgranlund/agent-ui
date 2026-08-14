@@ -42,6 +42,14 @@
      option row here rendering at exactly --ui-multi-select-height (the row-height law below). */
   --ui-multi-select-max-block-size: min(50vh, calc(12 * var(--ui-multi-select-height) + 13 * var(--ui-multi-select-padding) + 2px));
 
+  /* GH #906 — the #874 fleet unobtrusive-scrollbar idiom (own-chain off the shared dimensional
+     constant + colour roles, TKT-0066 item 5 law): this always-visible listbox surface was fully
+     untreated before (raw platform default), painting the chunky always-visible scrollbar the issue
+     reports. */
+  --ui-multi-select-scrollbar-size: var(--md-sys-scrollbar-size);
+  --ui-multi-select-scrollbar-thumb: var(--md-sys-color-neutral-scrollbar-thumb);
+  --ui-multi-select-scrollbar-thumb-hover: var(--md-sys-color-neutral-scrollbar-thumb-hover);
+
   /* user-invalid (ADR-0051) — the danger outline, appearing only AFTER the first interaction (the
      trackUserInvalid controller owns that timing; multi-select.ts toggles :state(user-invalid)). Paints
      the LISTBOX'S OWN outline — unlike `ui-select` (whose danger border lives on the trigger, not the
@@ -105,6 +113,11 @@
     min-inline-size: var(--ui-multi-select-min-inline-size);
     max-block-size: var(--ui-multi-select-max-block-size); /* TKT-0027-style public dial */
     overflow-y: auto;
+    /* GH #906 — thin, auto-hiding scrollbar: transparent at rest, reveals the thumb only on
+       hover/focus-within — real DOM focus lands on option rows here via rovingFocus (multi-select.ts),
+       so :focus-within genuinely fires on keyboard nav (the ui-code-editor precedent). */
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
 
     background-color: var(--ui-multi-select-bg);
     color: var(--ui-multi-select-ink);
@@ -117,6 +130,30 @@
       background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
       border-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
       color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
+  }
+
+  :scope:hover,
+  :scope:focus-within {
+    scrollbar-color: var(--ui-multi-select-scrollbar-thumb) transparent;
+  }
+  :scope::-webkit-scrollbar {
+    width: var(--ui-multi-select-scrollbar-size);
+    height: var(--ui-multi-select-scrollbar-size);
+  }
+  :scope::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  :scope::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: calc(var(--ui-multi-select-scrollbar-size) / 2);
+  }
+  :scope:hover::-webkit-scrollbar-thumb,
+  :scope:focus-within::-webkit-scrollbar-thumb {
+    background: var(--ui-multi-select-scrollbar-thumb);
+  }
+  :scope:hover::-webkit-scrollbar-thumb:hover,
+  :scope:focus-within::-webkit-scrollbar-thumb:hover {
+    background: var(--ui-multi-select-scrollbar-thumb-hover);
   }
 
   @media (prefers-reduced-motion: reduce) {

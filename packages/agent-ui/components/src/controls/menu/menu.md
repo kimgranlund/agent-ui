@@ -92,7 +92,7 @@ geometry:
   panelRadius: var(--ui-menu-radius)               # = var(--md-sys-shape-corner-base), the shared fleet radius
   panelMinInlineSize: var(--ui-menu-min-inline-size)  # 10rem floor (ADR-0021 lesson)
   panelMaxBlockSize: var(--ui-menu-max-block-size) (scrolls) # PUBLIC dial (TKT-0027), default min(50vh, calc(12 * var(--ui-menu-item-block-size) + 13 * var(--ui-box-inset, 0.375rem) + 2px)) — 12 real item rows + their box-model insets + the panel's own 2px border (box-sizing: border-box) or half the viewport, whichever is smaller; gets the shared edge-aware scroll-fade by default (traits/scroll-fade.ts, container-box.css)
-  scrollbarSeam: var(--ui-menu-scrollbar-width)    # declared `none` in the token block (GH #166 — the --ui-surface-host-scrollbar-width "hidden scroller, live scroll" shape; app chrome shows no raw platform scrollbar; the scroll-fade stays the affordance); a consumer repoints it to restore a visible scrollbar
+  scrollbarSeam: var(--ui-menu-scrollbar-width)    # declared `thin` in the token block (GH #906, superseding GH #166's `none` default) — the #874 fleet idiom: transparent-at-rest, reveals --ui-menu-scrollbar-thumb{,-hover} on hover/focus-within; the scroll-fade stays a complementary affordance; a consumer repoints to `none`/`auto`
   panelSurface: var(--ui-menu-bg)                  # opaque neutral-surface plane
   itemPadBlock: var(--ui-menu-item-pad-block)      # = var(--md-sys-space-xs) — legacy item-pad block axis
   itemPadInline: var(--ui-menu-item-pad-inline)    # = var(--md-sys-space-md) — legacy item-pad inline axis
@@ -258,10 +258,12 @@ short list never over-reserves and a long list scrolls at a scannable page inste
 magic number. `--ui-menu-item-block-size` (`= font + 2×block-pad`) tracks the item-pad geometry
 directly, so a denser/spacious theme or a repointed item font repoints the cap for free.
 
-When the panel scrolls, the native scrollbar is hidden (`--ui-menu-scrollbar-width`, default `none`
-— GH #166, the fleet's "hidden scroller, live scroll" seam): the shared edge-aware scroll-fade
-carries the scroll affordance instead, and wheel/trackpad/keyboard scrolling is unchanged. A
-consumer repoints the token (e.g. `--ui-menu-scrollbar-width: thin`) to restore a visible scrollbar.
+When the panel scrolls, it uses the fleet's thin, auto-hiding scrollbar idiom (GH #906, superseding
+GH #166's `none` default): `--ui-menu-scrollbar-width` defaults to `thin`, transparent at rest and
+revealing the `--ui-menu-scrollbar-thumb{,-hover}` colour only on hover/focus-within — the shared
+edge-aware scroll-fade (menu.ts's `scrollFade`) still carries the scroll affordance alongside it.
+Wheel/trackpad/keyboard scrolling is unchanged. A consumer repoints `--ui-menu-scrollbar-width` to
+`none` to fully hide the scrollbar again, or `auto` to restore the raw platform default.
 
 ## Forced colors
 

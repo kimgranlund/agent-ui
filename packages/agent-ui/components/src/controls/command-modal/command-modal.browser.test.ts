@@ -379,3 +379,77 @@ describe('ui-command-modal — TKT-0017: the fixed frame (both engines)', () => 
     expect(r.width).toBeLessThan(32 * 16)
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  GH #906 (supersedes TKT-0084) — the results list scrolls with a thin, auto-hiding scrollbar, never
+//  the platform-default chunky bar. MEASURED (both engines under test fully expose the computed-style
+//  surface this probes — verified empirically, not assumed): a bare `overflow: auto` box renders with a
+//  ZERO-width overlay gutter in this headless harness regardless of any CSS, so a gutter-width COMPARISON
+//  against an untreated control cannot discriminate "thin" from "chunky" here — the honest,
+//  engine-capability-respecting probe is the computed STYLE itself: `scrollbar-width: thin` (the standard
+//  property) and the `::-webkit-scrollbar{,-thumb}` pseudo values this fix actually declares (the #874
+//  precedent, editor.browser.test.ts). This list uses aria-activedescendant, NOT roving focus — the
+//  search field keeps real DOM focus — so the reveal-on-focus leg checks a SIBLING selector, not
+//  :focus-within (a native <dialog>'s top-layer boundary blocks :focus-within from reaching an ancestor
+//  outside it — MEASURED both engines; see the next describe block + command-modal.css's own note).
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-command-modal cross-engine — GH #906: the results list scrolls with an unobtrusive (thin) scrollbar, never the platform-default chunky bar', () => {
+  it('overflows for real, scrolls, and computes the thin/at-rest-transparent/reveal-on-hover treatment', async () => {
+    const manyOptions = Array.from({ length: 40 }, (_, i) => `<div role="option" value="opt${i}">Command number ${i}</div>`).join('')
+    const { el } = mount(`<ui-command-modal label="Palette">${manyOptions}</ui-command-modal>`)
+    el.open = true
+    await el.updateComplete
+    const list = el.querySelector<HTMLElement>('[data-part="list"]')!
+    // The open effect auto-focuses the search field (requestAnimationFrame(() => search.focus())) —
+    // blur it away to get a genuine not-hovered/not-focused "at rest" baseline before asserting the
+    // transparent default (the focus reveal itself is covered by the next test in this file).
+    ;(document.activeElement as HTMLElement | null)?.blur()
+    expect(list.scrollHeight, 'a real overflow to actually scroll').toBeGreaterThan(list.clientHeight)
+
+    // scrollability itself is UNCHANGED by this fix — a real scrollTop move.
+    list.scrollTop = 0
+    list.scrollTop = 40
+    expect(list.scrollTop, `${server.browser}: still genuinely scrollable`).toBeGreaterThan(0)
+
+    // THIN, never the platform-default chunky bar.
+    expect(getComputedStyle(list).scrollbarWidth, `${server.browser}: scrollbar-width`).toBe('thin')
+    expect(getComputedStyle(list, '::-webkit-scrollbar').width, `${server.browser}: ::-webkit-scrollbar width`).toBe('8px')
+    // Nothing chunky AT REST — the thumb is transparent until interaction.
+    expect(
+      getComputedStyle(list, '::-webkit-scrollbar-thumb').backgroundColor,
+      `${server.browser}: thumb transparent at rest`,
+    ).toBe('rgba(0, 0, 0, 0)')
+
+    // Reveal-on-hover: the SAME thumb pseudo resolves to a REAL, non-transparent colour once hovered.
+    await userEvent.hover(list)
+    expect(
+      getComputedStyle(list, '::-webkit-scrollbar-thumb').backgroundColor,
+      `${server.browser}: thumb paints on hover`,
+    ).not.toBe('rgba(0, 0, 0, 0)')
+    await userEvent.unhover(list)
+  })
+
+  it('reveals the thumb while the search field holds focus (a sibling selector, NOT :focus-within — MEASURED: a native <dialog>\'s top-layer boundary blocks :focus-within from reaching an ancestor outside it, even though the focused field is a genuine DOM descendant)', async () => {
+    const manyOptions = Array.from({ length: 40 }, (_, i) => `<div role="option" value="opt${i}">Command number ${i}</div>`).join('')
+    const { el } = mount(`<ui-command-modal label="Palette">${manyOptions}</ui-command-modal>`)
+    el.open = true
+    await el.updateComplete
+    const list = el.querySelector<HTMLElement>('[data-part="list"]')!
+    const search = el.querySelector<HTMLElement>('[data-part="search"]')!
+    // The open effect's requestAnimationFrame(() => search.focus()) — poll rather than a single fixed
+    // frame wait (a heavier 40-option list can push the effect's own rAF past a single-frame race).
+    await expect.poll(() => document.activeElement === search, { timeout: 2000 }).toBe(true)
+    // Anti-vacuous, and documents the actual measured mechanism this fix relies on: the search field
+    // truly is a DOM descendant of the host (el.contains), yet the host itself does NOT match
+    // :focus-within while that focus lives inside the nested <dialog>'s top layer — command-modal.css
+    // therefore keys the reveal off a plain SIBLING selector ([data-part='search']:focus ~
+    // [data-part='list']) instead, which this assertion set proves actually paints.
+    expect(el.contains(document.activeElement), 'the search field must be a real DOM descendant of the host').toBe(true)
+    expect(document.activeElement, 'the search field, not the list, holds focus').not.toBe(list)
+    expect(
+      getComputedStyle(list, '::-webkit-scrollbar-thumb').backgroundColor,
+      `${server.browser}: thumb paints while the sibling search field has real focus, even though the list itself is never focused`,
+    ).not.toBe('rgba(0, 0, 0, 0)')
+  })
+})

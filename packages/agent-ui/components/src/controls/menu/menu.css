@@ -90,12 +90,19 @@
      exactly the 1px+1px border width (FIXED 2026-07-12, TKT-0027 browser-leg finding). */
   --ui-menu-max-block-size: min(50vh, calc(12 * var(--ui-menu-item-block-size) + 13 * var(--ui-box-inset, 0.375rem) + 2px));
 
-  /* Hidden-but-scrollable (GH #166), the fleet's --ui-surface-host-scrollbar-width "hidden scroller,
-     live scroll" seam (the command-modal.css / card.css shape): an overlay menu is app chrome, and a
-     raw platform scrollbar reads as broken chrome there — the scroll-fade edge treatment (wired in
-     menu.ts, scrollFade(this, { viewport: panel })) stays the scroll affordance. Consumer-overridable
-     (the same repoint pattern), never forced. */
-  --ui-menu-scrollbar-width: none;
+  /* GH #906 — supersedes GH #166's "hidden scroller" default: Kim's live-pixel finding (the agent
+     picker's Models/Effort dropdown screenshot) showed this panel painting the platform's fat, chunky
+     scrollbar — "none" was not actually landing everywhere, so this converges onto the #874 fleet
+     idiom instead: a thin, auto-hiding scrollbar, own-chain tokens off the shared dimensional constant
+     + colour roles (TKT-0066 item 5 law), the same shape as ui-code-editor / agent-admin's context-json
+     box. `--ui-menu-scrollbar-width` stays the PUBLIC, consumer-overridable dial (repoint to `none` to
+     fully hide again, or `auto` for the raw platform default) — only the shipped DEFAULT changes, thin
+     instead of none. The scroll-fade edge affordance (menu.ts, scrollFade(this, { viewport: panel }))
+     is unchanged and still complements it. */
+  --ui-menu-scrollbar-width: thin;
+  --ui-menu-scrollbar-size: var(--md-sys-scrollbar-size);
+  --ui-menu-scrollbar-thumb: var(--md-sys-color-neutral-scrollbar-thumb);
+  --ui-menu-scrollbar-thumb-hover: var(--md-sys-color-neutral-scrollbar-thumb-hover);
 
   /* One-level nested radius: item corners inset from the panel corner (ADR-0018). FIXED
      (2026-07-06): was subtracting --md-sys-space-xs (4px), a DIFFERENT value than the --ui-box-inset
@@ -161,15 +168,42 @@
     max-inline-size: var(--ui-menu-max-inline-size); /* GH #133/#134 — public dial, default min(90vw, 24rem) */
     max-block-size: var(--ui-menu-max-block-size); /* TKT-0027 — public dial, default min(50vh, 12 item rows) */
     overflow-y: auto;
-    /* Hidden scroller, live scroll (token block, above; GH #166) — both shipped engines support scrollbar-width
-       (Chromium 121+/Safari 18.2+), no ::-webkit-scrollbar leg (the split-pane.css note). */
+    /* GH #906 — thin, auto-hiding scrollbar by default (token block, above; --ui-menu-scrollbar-width
+       stays the public on/off/thin dial, GH #166). scrollbar-color starts fully transparent (invisible
+       at rest) and reveals the thumb only on hover/focus-within — rovingFocus (menu.ts) lands REAL DOM
+       focus on items inside this panel, so :focus-within genuinely fires on keyboard nav. */
     scrollbar-width: var(--ui-menu-scrollbar-width);
+    scrollbar-color: transparent transparent;
     padding: 0; /* the box-model menuitem margins provide the inset (container-box.css); no shell padding */
 
     background-color: var(--ui-menu-bg);
     color: var(--ui-menu-ink);
     border: 1px solid var(--ui-menu-outline);
     border-radius: var(--ui-menu-radius);
+  }
+
+  :scope > [data-part='panel']:hover,
+  :scope > [data-part='panel']:focus-within {
+    scrollbar-color: var(--ui-menu-scrollbar-thumb) transparent;
+  }
+  :scope > [data-part='panel']::-webkit-scrollbar {
+    width: var(--ui-menu-scrollbar-size); /* physical, not logical — see agent-admin.css's own note on this non-standard pseudo */
+    height: var(--ui-menu-scrollbar-size);
+  }
+  :scope > [data-part='panel']::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  :scope > [data-part='panel']::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: calc(var(--ui-menu-scrollbar-size) / 2);
+  }
+  :scope > [data-part='panel']:hover::-webkit-scrollbar-thumb,
+  :scope > [data-part='panel']:focus-within::-webkit-scrollbar-thumb {
+    background: var(--ui-menu-scrollbar-thumb);
+  }
+  :scope > [data-part='panel']:hover::-webkit-scrollbar-thumb:hover,
+  :scope > [data-part='panel']:focus-within::-webkit-scrollbar-thumb:hover {
+    background: var(--ui-menu-scrollbar-thumb-hover);
   }
 
   /* GH #705 (Kim's ruling) — a trigger's own trailing caret (button.css's `[data-role='caret']`

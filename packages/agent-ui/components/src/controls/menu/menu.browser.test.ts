@@ -910,3 +910,72 @@ describe('ui-menu — selectable items: real-engine roving + commit-managed aria
     ).toBeCloseTo(expectedInset, 1)
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  GH #906 (supersedes GH #166) — Kim's live-pixel finding: the panel painted the platform's fat, chunky
+//  scrollbar (the agent picker's dropdown screenshot). Converged onto the #874 fleet idiom instead: a
+//  thin, auto-hiding scrollbar. MEASURED (both engines under test fully expose the computed-style surface
+//  this probes — verified empirically, not assumed): a bare `overflow: auto` box renders with a
+//  ZERO-width overlay gutter in this headless harness regardless of any CSS, so a gutter-width COMPARISON
+//  against an untreated control cannot discriminate "thin" from "chunky" here — the honest,
+//  engine-capability-respecting probe is the computed STYLE itself: `scrollbar-width: thin` (the standard
+//  property) and the `::-webkit-scrollbar{,-thumb}` pseudo values this fix actually declares, both of
+//  which getComputedStyle resolves in Chromium AND WebKit here (the #874 precedent, editor.browser.test.ts).
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-menu cross-engine — GH #906: the panel scrolls with an unobtrusive (thin) scrollbar, never the platform-default chunky bar', () => {
+  it('overflows for real, scrolls, and computes the thin/at-rest-transparent/reveal-on-hover treatment', async () => {
+    const { el } = mount(TALL_ITEMS)
+    const panel = el.querySelector<HTMLElement>('[data-part="panel"]')!
+    el.open = true
+    await el.updateComplete
+    await nextFrames()
+    // menu.ts's overlay trait opens with focusOnOpen:true (LLD-C4) — moveFocusIn() lands REAL DOM
+    // focus on the first menuitem the instant the panel opens, so :focus-within is ALREADY true here
+    // by design (not a leftover/flake) — blur it away to get a genuine not-hovered/not-focused "at
+    // rest" baseline before asserting the transparent default (the focus-within reveal itself is
+    // covered by the next test in this file).
+    ;(document.activeElement as HTMLElement | null)?.blur()
+    await userEvent.unhover(panel)
+    expect(panel.matches(':focus-within'), 'test setup: focus must be clear before the at-rest check').toBe(false)
+    expect(panel.scrollHeight, 'a real overflow to actually scroll').toBeGreaterThan(panel.clientHeight)
+
+    // scrollability itself is UNCHANGED by this fix — a real scrollTop move.
+    panel.scrollTop = 0
+    panel.scrollTop = 40
+    expect(panel.scrollTop, `${server.browser}: still genuinely scrollable`).toBeGreaterThan(0)
+
+    // THIN, never the platform-default chunky bar.
+    expect(getComputedStyle(panel).scrollbarWidth, `${server.browser}: scrollbar-width`).toBe('thin')
+    expect(getComputedStyle(panel, '::-webkit-scrollbar').width, `${server.browser}: ::-webkit-scrollbar width`).toBe('8px')
+    // Nothing chunky AT REST — the thumb is transparent until interaction.
+    expect(
+      getComputedStyle(panel, '::-webkit-scrollbar-thumb').backgroundColor,
+      `${server.browser}: thumb transparent at rest`,
+    ).toBe('rgba(0, 0, 0, 0)')
+
+    // Reveal-on-hover: the SAME thumb pseudo resolves to a REAL, non-transparent colour once hovered.
+    await userEvent.hover(panel)
+    expect(
+      getComputedStyle(panel, '::-webkit-scrollbar-thumb').backgroundColor,
+      `${server.browser}: thumb paints on hover`,
+    ).not.toBe('rgba(0, 0, 0, 0)')
+    await userEvent.unhover(panel)
+  })
+
+  it('reveals the thumb on real keyboard focus too (rovingFocus lands DOM focus inside the panel)', async () => {
+    const { el } = mount(TALL_ITEMS)
+    const panel = el.querySelector<HTMLElement>('[data-part="panel"]')!
+    el.open = true
+    await el.updateComplete
+    await nextFrames()
+
+    const first = panel.querySelector<HTMLElement>('[role="menuitem"]')!
+    first.focus()
+    expect(panel.matches(':focus-within'), `${server.browser}: focus never landed inside the panel`).toBe(true)
+    expect(
+      getComputedStyle(panel, '::-webkit-scrollbar-thumb').backgroundColor,
+      `${server.browser}: thumb paints on focus-within`,
+    ).not.toBe('rgba(0, 0, 0, 0)')
+  })
+})

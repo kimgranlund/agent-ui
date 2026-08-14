@@ -104,6 +104,12 @@
   --ui-combo-box-panel-outline: var(--md-sys-color-neutral-outline-variant);
   --ui-combo-box-panel-radius: var(--md-sys-shape-corner-base);
   --ui-combo-box-panel-min-inline-size: 12rem; /* prevent empty-panel collapse (ADR-0021) */
+  /* GH #906 — the #874 fleet unobtrusive-scrollbar idiom (own-chain off the shared dimensional
+     constant + colour roles, TKT-0066 item 5 law): this panel was fully untreated before (raw
+     platform default), painting the chunky always-visible scrollbar the issue reports. */
+  --ui-combo-box-panel-scrollbar-size: var(--md-sys-scrollbar-size);
+  --ui-combo-box-panel-scrollbar-thumb: var(--md-sys-color-neutral-scrollbar-thumb);
+  --ui-combo-box-panel-scrollbar-thumb-hover: var(--md-sys-color-neutral-scrollbar-thumb-hover);
   /* Panel-edge inset (feeds --ui-box-inset below, same mechanism as ui-select, 2026-07-06):
      DERIVED off the editor's OWN inline text-pad (--ui-combo-box-padding-inline), which is now
      itself the fleet h/2 standard (2026-07-06 follow-up — see the token comment above), so
@@ -316,6 +322,36 @@
        carries [data-box], combo-box.ts — same mechanism as ui-select, 2026-07-06). */
     --ui-box-inset: var(--ui-combo-box-listbox-padding);
     font-size: var(--ui-combo-box-option-font); /* was unset (inherited ambient) — options now read the ramp */
+    /* GH #906 — thin, auto-hiding scrollbar: transparent at rest. combo-box uses aria-activedescendant
+       WITHOUT moving DOM focus into the panel (combo-box.ts's own note) — the editor keeps real focus
+       the whole time the panel is open — so the reveal keys off the WHOLE host's :focus-within (below),
+       not this part's own, plus a plain :hover for mouse/trackpad. */
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  :scope > [data-part='listbox']:hover,
+  :scope:focus-within > [data-part='listbox'] {
+    scrollbar-color: var(--ui-combo-box-panel-scrollbar-thumb) transparent;
+  }
+  :scope > [data-part='listbox']::-webkit-scrollbar {
+    width: var(--ui-combo-box-panel-scrollbar-size);
+    height: var(--ui-combo-box-panel-scrollbar-size);
+  }
+  :scope > [data-part='listbox']::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  :scope > [data-part='listbox']::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: calc(var(--ui-combo-box-panel-scrollbar-size) / 2);
+  }
+  :scope > [data-part='listbox']:hover::-webkit-scrollbar-thumb,
+  :scope:focus-within > [data-part='listbox']::-webkit-scrollbar-thumb {
+    background: var(--ui-combo-box-panel-scrollbar-thumb);
+  }
+  :scope > [data-part='listbox']:hover::-webkit-scrollbar-thumb:hover,
+  :scope:focus-within > [data-part='listbox']::-webkit-scrollbar-thumb:hover {
+    background: var(--ui-combo-box-panel-scrollbar-thumb-hover);
   }
 
   /* ── Option rows (legacy item-pad) ───────────────────────────────────── */

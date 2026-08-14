@@ -35,11 +35,16 @@
 
   /* The bounded scroll viewport (the list is the dialog's body; scroll-fade wired in .ts). */
   --ui-command-modal-list-max-block: 50vh;
-  /* Hidden-but-scrollable, the fleet's --ui-surface-host-scrollbar-width "hidden scroller, live scroll"
-     seam (TKT-0084 shape): a CMD-K overlay is app chrome, and a raw platform scrollbar reads as broken
-     chrome there — the scroll-fade edge treatment (wired in .ts, above) stays the scroll affordance.
-     Consumer-overridable (the same repoint pattern), never forced. */
-  --ui-command-modal-scrollbar-width: none;
+  /* GH #906 — supersedes TKT-0084's "hidden scroller" default: converged onto the #874 fleet idiom
+     instead (own-chain tokens off the shared dimensional constant + colour roles, TKT-0066 item 5
+     law) — a thin, auto-hiding scrollbar, same shape as ui-menu/ui-code-editor. `--ui-command-modal-
+     scrollbar-width` stays the PUBLIC, consumer-overridable dial (repoint to `none` to fully hide, or
+     `auto` for the raw platform default) — only the shipped DEFAULT changes, thin instead of none. The
+     scroll-fade edge affordance (wired in .ts, above) is unchanged and still complements it. */
+  --ui-command-modal-scrollbar-width: thin;
+  --ui-command-modal-scrollbar-size: var(--md-sys-scrollbar-size);
+  --ui-command-modal-scrollbar-thumb: var(--md-sys-color-neutral-scrollbar-thumb);
+  --ui-command-modal-scrollbar-thumb-hover: var(--md-sys-color-neutral-scrollbar-thumb-hover);
   /* TKT-0017 — the FIXED FRAME (the CMD-K convention): a set width and a top anchor so the search field
      never moves as filtering changes the result count; only the list below grows/shrinks (downward, the
      VS Code palette convention). command-modal.ts forwards these onto the nested ui-modal's frame dials. */
@@ -107,12 +112,45 @@
     box-sizing: border-box;
     max-block-size: var(--ui-command-modal-list-max-block);
     overflow-y: auto;
-    /* Hidden scroller, live scroll (token block, above) — both shipped engines support scrollbar-width
-       (Chromium 121+/Safari 18.2+), no ::-webkit-scrollbar leg (the split-pane.css note). */
+    /* GH #906 — thin, auto-hiding scrollbar by default (token block, above; --ui-command-modal-
+       scrollbar-width stays the public on/off/thin dial). Transparent at rest; the search field (NOT
+       this list) holds real DOM focus the whole time the palette is open — the list itself uses
+       aria-activedescendant, not roving focus (command-modal.ts). MEASURED (both engines): a native
+       `<dialog>` shown via showModal() does NOT propagate `:focus-within` past its own top-layer
+       boundary to an ANCESTOR outside the dialog, even though the focused search field is a genuine
+       DOM descendant of the host (`el.contains(activeElement)` true, `el:focus-within` false,
+       reproduced in both Chromium and WebKit) — so the reveal cannot key off the host's own
+       :focus-within. search and list are SIBLINGS under the SAME nested `<dialog>` (command-modal.ts's
+       `modal.append(search, status, list)`), so a plain sibling selector reaches across that boundary
+       instead, plus a plain :hover for mouse/trackpad. */
     scrollbar-width: var(--ui-command-modal-scrollbar-width);
+    scrollbar-color: transparent transparent;
     padding: 0;
     margin: 0;
     list-style: none;
+  }
+  :scope [data-part='list']:hover,
+  :scope [data-part='search']:focus ~ [data-part='list'] {
+    scrollbar-color: var(--ui-command-modal-scrollbar-thumb) transparent;
+  }
+  :scope [data-part='list']::-webkit-scrollbar {
+    width: var(--ui-command-modal-scrollbar-size);
+    height: var(--ui-command-modal-scrollbar-size);
+  }
+  :scope [data-part='list']::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  :scope [data-part='list']::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: calc(var(--ui-command-modal-scrollbar-size) / 2);
+  }
+  :scope [data-part='list']:hover::-webkit-scrollbar-thumb,
+  :scope [data-part='search']:focus ~ [data-part='list']::-webkit-scrollbar-thumb {
+    background: var(--ui-command-modal-scrollbar-thumb);
+  }
+  :scope [data-part='list']:hover::-webkit-scrollbar-thumb:hover,
+  :scope [data-part='search']:focus ~ [data-part='list']::-webkit-scrollbar-thumb:hover {
+    background: var(--ui-command-modal-scrollbar-thumb-hover);
   }
 
   /* ── Groups + their heading ───────────────────────────────────────────────────────────────────── */
