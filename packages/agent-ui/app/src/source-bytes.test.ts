@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 // Raw fs read, decoded as latin1 so ONE char === ONE byte (exact byte values, no transcoding) — the same
 // reverse-coupling fs-read pattern as layering.test.ts / descriptor/site-coverage.test.ts.
-import { readFileSync, readdirSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
+import { execSync } from 'node:child_process'
 declare const process: { cwd(): string }
 
 // Trip-wire (GH #899): no TEXT file under app/src may carry bytes that make a tool classify it as BINARY.
@@ -47,21 +48,19 @@ const BINARY_ASSET_EXTENSIONS: readonly string[] = ['.png']
 
 type Dirent = { name: string; isDirectory(): boolean; isFile(): boolean }
 
-/** Every file under `dir` (absolute paths, ANY extension); a missing dir yields []. */
+/** Every GIT-TRACKED file under `dir` (absolute paths, ANY extension). The fence's concern is
+ *  COMMITTED source — an operator checkout also carries untracked local artifacts (.DS_Store,
+ *  a visual run's __screenshots__/*.png) that no fence ever greps and no commit ever ships;
+ *  walking the filesystem instead of the git tree reds the gate on exactly that cruft (found
+ *  live on the operator checkout the day this gate landed). `git ls-files` is the honest scope. */
 function walk(dir: string): string[] {
-  let entries: Dirent[]
+  let listing: string
   try {
-    entries = readdirSync(dir, { withFileTypes: true }) as Dirent[]
+    listing = execSync(`git ls-files -z -- ${JSON.stringify(dir)}`, { encoding: 'latin1' })
   } catch {
     return []
   }
-  const out: string[] = []
-  for (const e of entries) {
-    const full = `${dir}/${e.name}`
-    if (e.isDirectory()) out.push(...walk(full))
-    else if (e.isFile()) out.push(full)
-  }
-  return out
+  return listing.split('\0').filter(Boolean).map((f) => `${process.cwd()}/${f}`)
 }
 
 const isBinaryAsset = (path: string): boolean => BINARY_ASSET_EXTENSIONS.some((ext) => path.toLowerCase().endsWith(ext))
