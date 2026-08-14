@@ -1314,5 +1314,12 @@
     "description": "Tool/MCP description standard: MCP's own tools/list JSON Schema plus the existing IntegrationManifest triple are the standard (no OpenAPI/Swagger); the admin w…",
     "level": "L3",
     "section": "Records"
+  },
+  {
+    "name": "ADR-0190",
+    "url": "./adr-index.html#adr-0190",
+    "description": "Capabilities-menu toggle semantics: per-turn inclusion, never a roster write",
+    "level": "L3",
+    "section": "Records"
   }
 ]
