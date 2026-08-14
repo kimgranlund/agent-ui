@@ -242,6 +242,77 @@ describe('agent-admin-app — the persona library (GH #406) via onImportRequest/
   })
 })
 
+// ── GH #889 — the dev-debug bundle, via onExportDebugBundleRequest ──────────────────────────────────────
+// The FORMAT (which files, what's in them, the manifest) is proven deterministically in
+// agent-admin-debug-export.test.ts; this leg proves the REAL page wiring — the overflow's fourth item is a
+// real menu row, clicking it reaches the real handler, and the handler hands the browser a real,
+// parseable zip Blob (captured off the same `URL.createObjectURL` seam the persona-export leg above uses).
+describe('agent-admin-app — the dev-debug bundle (GH #889) via onExportDebugBundleRequest', () => {
+  /** A minimal, INDEPENDENT central-directory walk — just the entry NAMES, no data-content re-check (the
+   *  bytes themselves are already proven in agent-admin-debug-export.test.ts/zip-writer.test.ts). Proves
+   *  this is a real, well-formed zip a real tool could open, not merely "a Blob got created". */
+  function zipEntryNames(bytes: Uint8Array): string[] {
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+    expect(view.getUint32(bytes.length - 22, true), 'ends with a real end-of-central-directory record').toBe(0x06054b50)
+    const total = view.getUint16(bytes.length - 22 + 10, true)
+    const centralOffset = view.getUint32(bytes.length - 22 + 16, true)
+    const decoder = new TextDecoder()
+    const names: string[] = []
+    let cursor = centralOffset
+    for (let i = 0; i < total; i += 1) {
+      expect(view.getUint32(cursor, true)).toBe(0x02014b50)
+      const nameLen = view.getUint16(cursor + 28, true)
+      const extraLen = view.getUint16(cursor + 30, true)
+      const commentLen = view.getUint16(cursor + 32, true)
+      names.push(decoder.decode(bytes.subarray(cursor + 46, cursor + 46 + nameLen)))
+      cursor += 46 + nameLen + extraLen + commentLen
+    }
+    return names
+  }
+
+  it('the overflow carries "Export debug bundle" as a real menu item, wired to a real zip download', async () => {
+    const overflow = await openOverflow()
+    const item = overflow.querySelector('[data-value="export-debug-bundle"]') as HTMLElement
+    expect(item, 'the fourth overflow item').not.toBeNull()
+    expect(item.textContent).toBe('Export debug bundle')
+
+    const realCreate = URL.createObjectURL.bind(URL)
+    const blobs: Blob[] = []
+    URL.createObjectURL = (obj: Blob | MediaSource): string => {
+      if (obj instanceof Blob) blobs.push(obj)
+      return realCreate(obj)
+    }
+    try {
+      item.click()
+      await raf()
+    } finally {
+      URL.createObjectURL = realCreate
+    }
+    expect(blobs, 'the click reached onExportDebugBundleRequest\'s registered callback — exactly one zip Blob').toHaveLength(1)
+    expect(blobs[0]!.type).toBe('application/zip')
+
+    const bytes = new Uint8Array(await blobs[0]!.arrayBuffer())
+    const names = zipEntryNames(bytes)
+    // The LIVE active id, read off the header's own select (`resolvedActive()`'s localStorage read is not
+    // reliable here — earlier describe blocks in this file switch the live page's active persona via real
+    // clicks and only reset localStorage in their own `afterAll`, never re-selecting for real).
+    const activeId = agentSelect().value
+    expect(names, 'one agent-settings entry per shipped preset').toEqual(
+      expect.arrayContaining(AGENT_PRESETS.map((p) => `agent-settings/${p.id}.json`)),
+    )
+    expect(names).toContain(`test-chat/${activeId}.json`)
+    expect(names).toContain(`builder-interview/${activeId}.json`)
+    expect(names).toContain('manifest.json')
+    // Scoped to the ACTIVE agent only — no OTHER preset's transcript files exist (GH #889's scope ruling:
+    // the transcripts are element-lifetime, per-active-draft, never persisted for an inactive agent).
+    const otherPresetIds = AGENT_PRESETS.map((p) => p.id).filter((id) => id !== activeId)
+    for (const id of otherPresetIds) {
+      expect(names).not.toContain(`test-chat/${id}.json`)
+      expect(names).not.toContain(`builder-interview/${id}.json`)
+    }
+  })
+})
+
 // ── GH #686 S7-d — New Agent's ONE verb is Generate (OQ-A) ─────────────────────────────────────────────
 // GH #637 S1's own dedicated "New agent → Blank" front door (an interview-less mint) had NO seam of the
 // six to route through once the page-level overflow retired, and is RETIRED here — the page-side
