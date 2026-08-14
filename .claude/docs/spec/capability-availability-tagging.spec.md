@@ -1,6 +1,20 @@
 # SPEC — Per-entry availability mode + composer tagging grammar (GH #850 · GH #849, one joint contract)
 
-> Status: proposed · v0.4 · 2026-08-14 (v0.3 2026-08-14 · v0.2, v0.1 2026-08-13) · Layer: SPEC (execution contract)
+> Status: proposed · v0.5 · 2026-08-14 (v0.4, v0.3 2026-08-14 · v0.2, v0.1 2026-08-13) · Layer: SPEC (execution contract)
+> v0.5 changelog (the ADR-0190 fork RULED — the owner's 2026-08-14 utterance, quoted in the ADR's
+> rev.2 Context and in §12): the capabilities-menu switch is a GLOBAL enable/disable over the
+> roster's `enabled` axis, not per-turn steering — §12 added, three new requirements. SPEC-R13 —
+> the ruled consumer wiring (the three-tier reach model: ever-present · invoke-only · off), minting
+> the ACs §11.4 deferred; §11.4's arm-A/arm-B fork text stays as the ship record, annotated ruled.
+> SPEC-R14 — poor-man's progressive disclosure: an ever-present capability entry contributes ONE
+> ambient index line (label + description), NEVER its content; full content rides only the express
+> invocation framing path (SPEC-R4, shipped). This deliberately supersedes-in-part SPEC-R3's
+> AC1/AC3 ambient-shape assertions (annotated in place; R3's gating LAWS — invocable = zero
+> ambient bytes, master/enabled precedence — stand unchanged). §7's worked example annotated the
+> same way. SPEC-R15 — the teaching block: the model is TOLD the index is an index and that only
+> the user can load an entry (tag it in the composer); host-owned, byte-pinned, gated on ≥1 index
+> line. New slice S8; S7's scope repointed at SPEC-R13. Both S7 and S8 gate on Kim ratifying the
+> REVISED ADR-0190 text.
 > v0.4 changelog (the GH #891 extension — the owner's UX delta on the shipped arc, same day): §11
 > added, four new requirements. SPEC-R9 — reference chips DROP the sigil prefix (the owner's
 > screenshot: a chip reading "/ itinerary-timeline ×"); kind identity moves to an optional
@@ -181,6 +195,14 @@ replacement.
   UNMODIFIED, plus one new explicit field-less-store equivalence assertion (gated equivalence,
   asserted, not assumed).
 
+*(v0.5 annotation — SUPERSEDED IN PART by SPEC-R14, §12: the ambient SHAPE this requirement's AC1
+("label+content appear") and AC3 (byte-identity to the pre-#850 composition) assert changes
+deliberately — an ambient capability entry contributes an index line, never content, once S8
+lands. What stands unchanged, and is restated as R14's own gating clauses: an invocable entry
+contributes ZERO ambient bytes on every arm, the master-switch → `enabled` → availability
+precedence, and the `integrations` wire projection (b) byte-for-byte. The v0.3 text above stays
+verbatim as the S1 ship record.)*
+
 **SPEC-R4 — Turn-time resolution: host-side, fresh-read, fail-closed, both arms, zero transport
 change.** A submitted turn MAY carry references (`{kind, id, label}[]`, SPEC-R6). At send,
 `ui-agent-admin` MUST resolve each against a FRESH store read by `id` (the live-apply law):
@@ -333,6 +355,11 @@ holds the bare question. On send: the user turn's text is the framed block for "
 content, verbatim) followed by the typed question; that request's `integrations` is
 `['mcp:calc:*']`, expanded server-side per ADR-0185 exactly as an ambient member would be. History
 records the framed text; the next turn's `integrations` is `[]` again.
+
+*(v0.5 annotation — under SPEC-R14 the ambient truth's first clause reads: the system prompt
+carries "House style" as ONE index line (label + description), its full content arriving only if
+the user tags `/House style`. Everything else in this example is unchanged — the framing path IS
+the full-content path.)*
 
 ## 8 · Non-goals (SPEC-N1)
 
@@ -547,6 +574,11 @@ Under EITHER arm: the composer never writes a store (R11), resolution stays by i
 its own until the ADR rules — S7 builds the ratified arm and mints the ACs from that arm's text.
 *(→ GH #891 ask 3; ADR-0190; SPEC-N1's seam; SPEC-R2/R3/R4)*
 
+*(v0.5 annotation — RULED: the owner's 2026-08-14 utterance (ADR-0190 rev.2, Context, verbatim)
+picked arm B, refined into the three-tier reach model. The ruled contract with its ACs is
+SPEC-R13, §12; S7 builds that. This section's two-arm text stays verbatim as the fork's ship
+record. The ADR remains `proposed` — the pending flip is Kim's ratification of its REVISED text.)*
+
 ### 11.5 · Non-goals (SPEC-N2) + slices + bookings
 
 Non-goals, this extension:
@@ -564,9 +596,10 @@ Non-goals, this extension:
 | **S4 — chip de-sigil + kind icon** | SPEC-R9 + its bookings | composer suite additions · `npm run check && npm test` | nothing (shipped arc) |
 | **S5 — sent-bubble reference tags** | SPEC-R10 + its bookings | conversation suite additions incl. R10 AC1's not-the-framed-text assertion · `npm run check && npm test` | nothing |
 | **S6 — capabilities menu, composer contract** | SPEC-R11 + its bookings | composer suite + ONE browser-shard case (R11 AC3) · `npm run check && npm test` | nothing |
-| **S7 — capabilities wiring** | SPEC-R12 (the ratified arm) | agent-admin suites + a dev-surface pixel proof (the S3 precedent) · `npm run check && npm test` | S6 + **ADR-0190 ratified** |
+| **S7 — capabilities wiring** | SPEC-R12 (the ratified arm) *(v0.5: → SPEC-R13, §12 — the RULED global-switch semantics)* | agent-admin suites + a dev-surface pixel proof (the S3 precedent) · `npm run check && npm test` | S6 + **ADR-0190 (rev.2) ratified** |
 
-S4/S5/S6 are mutually independent and fork-independent. S7 is the ONLY fork-gated work.
+S4/S5/S6 are mutually independent and fork-independent. S7 is the ONLY fork-gated work *(v0.5:
+S8, §12, joins it behind the same ratification — one ruling, one gate)*.
 
 Stale records this extension falsifies — repaired IN the landing slice, never a follow-up:
 
@@ -578,3 +611,174 @@ Stale records this extension falsifies — repaired IN the landing slice, never 
 | `conversation.md` + `conversation.lld.md` | single-arg `addUserMessage`, bubble anatomy | S5 |
 | `agent-admin.md` — the reach-path section | no capabilities-menu projection | S7 |
 | this SPEC's §10 chip-treatment bullet | annotated in place (v0.4) | done in this change ✔ |
+
+---
+
+## 12 · The ruled semantics + poor-man's progressive disclosure (v0.5 — the owner's 2026-08-14 ruling)
+
+The ADR-0190 fork is RULED (the utterance, verbatim, lives in that ADR's rev.2 Context): the
+capabilities switch is **a global enable/disable**, and — because the composed prompt has no
+dynamic frontmatter-style loading — "ever present" must be cheap. Two requirements carry the two
+halves; one carries the teaching. Everything here builds only after Kim ratifies the revised
+ADR-0190 text (the §11.5 gate, extended to S8).
+
+**The no-dynamic-loading fact, verified at HEAD (the ruling's stated assumption, confirmed):**
+`composeLiveSystemPrompt` (entries.ts) composes the ENTIRE live system prompt client-side at every
+turn — base sections + one `### {label}` + description + content block per ambient entry — and
+both arms consume that one string per request: the prose arm sends it as `AdminTurnRequest.system`,
+the surface arm threads it through the producer's ADR-0138 persona seam, where `buildSystemPrompt`
+(a2ui `system-prompt.ts`) appends it VERBATIM as the trailing `personaBlock`. Nothing model-side
+can pull text in later; the only paths that add capability bytes mid-conversation are the user's
+own invocation (SPEC-R4's framing, which then rides replayed history) — so ambient cost is paid on
+EVERY request, forever, and the ceiling has to be structural.
+
+**The byte survey (2026-08-14, the shipped library packs at this commit — the realistic corpus:
+`site/pages/agent-admin-libraries.ts` + the mini-skills registry; composition mirrors
+`composeLiveSystemPrompt`'s exact block grammar):**
+
+| Realistic agent | Entries | Ambient capability bytes, FULL content (today) | As index lines | Reduction |
+|---|---|---|---|---|
+| Hospitality concierge (idioms + hospitality packs, 3 live tools) | 24 | 10,167 B | 2,349 B | −76.9% |
+| Games croupier (idioms + games packs incl. 7 rules resources) | 29 | 12,685 B | 2,550 B | −79.9% |
+| Everything-added stress case (all packs) | 40 | 16,192 B | 3,499 B | −78.4% |
+
+Per-entry averages: a full block weighs ~470–504 B (skills), ~305–326 B (workflows), ~362 B
+(resources), ~218 B (tools); an index line weighs 65–102 B. The base persona (three default
+sections) is 361 B — ambient capability prose is ~28–45× the persona it rides behind, and it is
+unbounded in both entry count and per-entry content size, while the index composition is bounded
+by count × one line. That asymmetry is the whole case for R14.
+
+### 12.1 · SPEC-R13 — The switch, ruled: the global `enabled` write, three explicit tiers
+
+`ui-agent-admin` MUST wire the capabilities menu (SPEC-R11's composer-generic contract, unchanged)
+as a GLOBAL availability surface over the store's `enabled` truth:
+
+- **Rows** derive fresh per menu open (the live-apply law): entries of the four capability kinds
+  whose MASTER switch is on — BOTH availability modes AND both enabled states (a global off-switch
+  that hides what it switched off cannot be flipped back on), `included` mirroring the entry's
+  persisted `enabled`. Master-off kinds are absent (the admin surface owns the master switch).
+  Deliberately NOT `buildComposerRosters` (which is enabled-only by contract, SPEC-R8) — its own
+  projection beside it, same `ReferenceGroup` inputs.
+- **A flip is a persistent store write** by the consumer in `onCapabilityToggle`: the entry's
+  `enabled` set to the new state through the SAME store truth SPEC-R2's row toggle writes, visible
+  on the entry row after re-render and surviving reload. The composer stays store-blind (R11 —
+  the write lives entirely in `ui-agent-admin`).
+- **The three tiers, taught by construction** (the two axes stay orthogonal, SPEC-R1 — the switch
+  never touches `availability`): enabled + `context` = ever-present (ambient per R14, and still
+  invocable from the typeahead for a full-content load) · enabled + `invocable` = included ONLY on
+  express user invocation (the shipped R3/R4 semantics, byte-unchanged) · disabled = off
+  everywhere (zero ambient bytes, absent from the `@`/`/` rosters, fail-closed at resolution).
+- **A flip never invokes.** Toggling an invocable entry ON enables it — it mints no reference, no
+  chip, no framing; per-turn inclusion remains the typeahead's job (R5–R8, untouched).
+*(→ ADR-0190 rev.2 Decision; GH #891 ask 3; SPEC-R1/R2/R11; the `onModelChange`
+props-down/callbacks-up law)*
+- **AC1** *Given* an enabled in-context skill toggled OFF in the menu, *then* the store persists
+  `enabled: false`, the entry row renders OFF on re-mount, and the NEXT turn's composed prompt
+  carries nothing from it (index line included — a `not.toContain` on its label line).
+- **AC2** *Given* a disabled tool entry, *then* the menu lists it with `included: false`; toggled
+  ON, the store persists `enabled: true` and the next turn's `integrations` carries its id
+  (in-context) — while the typeahead rosters, rebuilt, now include it.
+- **AC3** *Given* an enabled invocable workflow toggled OFF then ON, *then* no reference or chip
+  is ever minted, `availability` is byte-unchanged in the store, and its ambient contribution is
+  zero throughout (the R3 invocable law).
+- **AC4** *Given* the composer suite, *then* it passes unmodified (R11's store-blind seam — the
+  diff touches `ui-agent-admin`, never the composer's own write paths).
+
+### 12.2 · SPEC-R14 — Index-line ambient disclosure: label + description ambient, content on invocation only
+
+An ambient (enabled + in-context) capability entry MUST contribute to `composeLiveSystemPrompt`'s
+output exactly ONE index line — its label and its description, on the order of one line — and
+NEVER its `content`, for all four capability kinds (a tool's real enablement is the
+`integrations` wire, R3(b), byte-unchanged; its prose block indexes like the rest). The exact
+line bytes are build-altitude inside these constraints: one line per entry, label then
+description, content bytes appearing NOWHERE ambiently, groups keeping their `## {heading}`
+homes and the R3 ordering/gating laws (master → `enabled` → availability, sort by
+`order`/`id`). Full content reaches the model ONLY on the user's express invocation — SPEC-R4's
+shipped framing path, which both availability modes already reach through the typeahead
+(SPEC-R8 lists both modes) — and thereafter rides replayed history (R4's owned trade), which is
+exactly the owner's "included once user expressly invoces/tags/triggers it".
+
+What stays FULL, always:
+- **`prompt-section` entries** — they ARE the agent (`composeSystemPrompt`, untouched). This is
+  also the ruled escape hatch: text that must be verbatim-ambient belongs in a prompt section,
+  not a capability entry. A per-entry "pin full" flag on capability entries is the named fork,
+  ruled DEFAULT-NO this arc (a second full-content path would re-open the unbounded ambient
+  growth the ruling closes; it returns to Kim only on real evidence, as its own fork).
+- **The invocation framing** (R4's byte grammar) — the load path stays whole-content, unchanged.
+- **`pattern-source` / `catalog`** — already excluded from this projection (their own semantics).
+
+GATED EQUIVALENCE, restated for the new shape: a store with zero ambient capability entries
+composes byte-identically to `composeSystemPrompt(sections)` (+ the R15 block never appears) —
+the ADR-0136 Fork 3 law, carried forward.
+*(→ ADR-0190 rev.2 Consequences; the §12 survey; SPEC-R3's surviving laws; SPEC-R4/R8;
+GH #525's `BANKROLL_PATH_LINE` pinned-prose precedent)*
+- **AC1** *Given* a store with one enabled in-context resource whose `content` is ≥ 2 KB, *then*
+  the composed live prompt contains its label and description and NOT its content (a
+  `not.toContain` byte assertion on a sentinel content substring), and a turn invoking it frames
+  the full content per R4's unmodified suite.
+- **AC2 (the byte budget, measured then asserted)** *Given* a fixture store seeded from the
+  shipped library packs (≥ 20 entries, ≥ 10 KB total ambient content — the survey's own corpus),
+  *then* the composed ambient capability weight is ≤ 30% of the same store's full-content
+  composition (the survey measured 77–80% reduction; the assertion computes both shapes in the
+  test and compares — a budget predicate, not a byte pin) AND every ambient entry's contribution
+  is ≤ 200 B.
+- **AC3** *Given* a store with zero ambient capability entries (all invocable, or none), *then*
+  the output is byte-identical to `composeSystemPrompt(sections)` — and *given* the invocable
+  half of R3's own suite, *then* it passes unmodified (invocable entries appear in no index).
+- **AC4** *Given* the Context tab's System snapshot, *then* it renders the SAME index-shaped
+  output (it renders `composeLiveSystemPrompt`'s string — inheritance by construction, asserted
+  once).
+
+### 12.3 · SPEC-R15 — The teaching block: the model is told the index is an index
+
+When ≥ 1 capability index line composes, `composeLiveSystemPrompt` MUST compose ONE host-owned,
+byte-pinned teaching block (the `BANKROLL_PATH_LINE` precedent: a module constant beside the
+projection it teaches — entries.ts, NOT the a2ui mini-skill registry, which is producer/A2UI-side
+and modality-wrong for the prose arm), ahead of the capability groups, stating three facts: the
+capability lists below are an INDEX (names and descriptions only — full text not loaded); the
+model CANNOT load an entry itself — only the USER can, by tagging it in the composer (`@name` for
+resources, `/name` for skills/workflows/tools); when a task needs an indexed capability's full
+text, ASK the user to tag it by name. Exact prose is build-altitude inside those three facts and
+a ≤ 500 B ceiling; zero index lines ⇒ zero teaching bytes (the gated equivalence R14 AC3
+asserts). Invocable entries stay OUT of the index and out of the teaching (R3's
+zero-ambient-bytes law: they are genuinely dark until invoked — the typeahead, not the model, is
+their discovery surface).
+*(→ the ruling's "poor-mans solution" clause; GH #525's bootstrap lesson — an affordance nobody
+is taught is an affordance that never fires; SPEC-R14)*
+- **AC1** *Given* one ambient capability entry, *then* the composed prompt contains the pinned
+  block exactly once, before the first capability `##` heading; *given* zero, *then* the block's
+  sentinel substring appears nowhere.
+- **AC2** *Given* the pinned constant, *then* a unit asserts it names the user-tagging mechanic
+  (both trigger characters) and weighs ≤ 500 B.
+
+### 12.4 · Non-goals (SPEC-N3)
+
+- **Dynamic / model-triggered loading** — no frontmatter-style lazy context, no "load skill X"
+  tool loop (that is the real fix, and it waits on the tool-execution loop ADR-0132 explicitly
+  defers — parameter schemas first). This section is the poor-man's bridge, named as such.
+- **A per-entry "pin full" flag** — default-no (R14's ruled escape hatch is the prompt-section
+  route); returns to Kim as its own fork only on real evidence.
+- **Index-line truncation / description caps** — none this arc: the description is user-authored,
+  short by observed practice (65–102 B lines in the survey), and a silent cap is a hidden
+  mechanism. R14 AC2's per-entry ceiling makes runaway descriptions VISIBLE in a red gate instead.
+- **Changing the invocation framing** — R4's byte grammar and history-replay trade stand verbatim.
+- **Per-turn ambient exclusion / session-sticky muting** — dead with the ruling (ADR-0190 rev.2
+  Consequences); the R4 AC4 empty-diff transport fence extends over every S7/S8 diff.
+
+### 12.5 · Slices + bookings
+
+| Slice | Scope | Gate (exit-code judged, foreground) | Depends on |
+|---|---|---|---|
+| **S7 — capabilities wiring** (repointed, §11.5) | SPEC-R13 | agent-admin suites (R13 AC1–AC4) + a dev-surface pixel proof (the S3 precedent) · `npm run check && npm test` | S6 + **ADR-0190 rev.2 ratified** |
+| **S8 — index-line disclosure + teaching** | SPEC-R14 · SPEC-R15 + the bookings below | `entries.test.ts`/`agent-admin.test.ts` additions incl. R14 AC2's budget assertion · `npm run check && npm test` | **ADR-0190 rev.2 ratified** (code-independent of S6/S7) |
+
+S7 and S8 are mutually independent; one ratification gates both (one ruling, one gate).
+
+Stale records S8 falsifies — repaired IN that slice, never a follow-up:
+
+| Record | Stale claim | Repair slice |
+|---|---|---|
+| `entries.ts` — the ALM-C1 section header + `composeLiveSystemPrompt`'s doc comment | "each such entry rendered as `### {label}` + description + content" / "the model genuinely receives every ambient entry" (whole-content phrasing) | S8 |
+| `entries.ts` — `resolveTurnReferences`' framing-grammar comment | "reuses the ambient projection's own `### {label}` block shape … the model meets an attachment in the same shape it already meets a capability" — the ambient shape becomes the index line; the framing keeps the block shape | S8 |
+| `agent-admin.md` — the system-view paragraph | ambient entries compose as full labeled prose | S8 |
+| `.claude/skills/agent-admin-library-kinds/SKILL.md` — the composition row | same whole-content claim (S1 added the availability conjunct; the SHAPE claim now drifts) | S8 |
