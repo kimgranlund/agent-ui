@@ -372,15 +372,17 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
 
   /** With the committed shard loaded, the admitted seeds short-circuit at dedup (`E_DUP`) and never
    *  reach the judge; the shelf seeds ABSENT from it — `stats-grid-dashboard`, plus the four GH #729
-   *  catalog-frontier seeds pending their own judged wave — reach a wired judge, which fails closed
-   *  unless the file rules on each (ADR-0068 clause 2). Refusing all five keeps the run at zero
-   *  admissions while still reaching `saveStore` — the archive's actual trigger. */
+   *  catalog-frontier seeds pending their own judged wave, plus `agent-roster-drawer` (ADR-0188 GH #863,
+   *  the same pending-judged-wave shape) — reach a wired judge, which fails closed unless the file rules
+   *  on each (ADR-0068 clause 2). Refusing all six keeps the run at zero admissions while still reaching
+   *  `saveStore` — the archive's actual trigger. */
   const SHARD_LOADED_VERDICTS = {
     'stats-grid-dashboard': { passed: false, qualityScore: 2 },
     'frontier-trip-card': { passed: false, qualityScore: 2 },
     'frontier-invite-modal': { passed: false, qualityScore: 2 },
     'frontier-review-split': { passed: false, qualityScore: 2 },
     'frontier-onboarding-tour': { passed: false, qualityScore: 2 },
+    'agent-roster-drawer': { passed: false, qualityScore: 2 },
   }
 
   it('clause 1 — a judged run that reaches saveStore archives its verdicts file BYTE-IDENTICALLY at <date>--<slug>.json, and a second identical run is a no-op', () => {
@@ -573,14 +575,16 @@ describe('import-seeds main() — the verdict archive (ADR-0165), real subproces
     )
     const verdictsPath = writeVerdicts('re-judged.json', {
       date: '2026-07-29',
-      // the four GH #729 frontier seeds also reach the wired judge here (absent from the shard) — refused
-      // so this test's claim stays exactly "the re-judged stats-grid name admits", nothing else moves.
+      // the four GH #729 frontier seeds + agent-roster-drawer (ADR-0188 GH #863) also reach the wired
+      // judge here (absent from the shard) — refused so this test's claim stays exactly "the re-judged
+      // stats-grid name admits", nothing else moves.
       verdicts: {
         'stats-grid-dashboard': { passed: true, qualityScore: 5 },
         'frontier-trip-card': { passed: false, qualityScore: 2 },
         'frontier-invite-modal': { passed: false, qualityScore: 2 },
         'frontier-review-split': { passed: false, qualityScore: 2 },
         'frontier-onboarding-tour': { passed: false, qualityScore: 2 },
+        'agent-roster-drawer': { passed: false, qualityScore: 2 },
       },
     })
 

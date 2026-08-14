@@ -118,6 +118,7 @@ import {
   agentTaskStatusSeed,
   brandPaletteSeed,
   colorPickerFormSeed,
+  agentRosterDrawerSeed,
 } from '../../src/examples/catalog-coverage.ts'
 import { kpiPanelLifecycleSeed } from '../../src/examples/message-lifecycle.ts'
 import { feedbackFormSeed, elevationScaleSeed, triviaRoundResumeSeed } from '../../src/examples/corpus-growth.ts'
@@ -237,6 +238,7 @@ const SEEDS_BY_MODULE: ReadonlyArray<{ module: string; seeds: readonly ExampleSe
       agentTaskStatusSeed,
       brandPaletteSeed,
       colorPickerFormSeed,
+      agentRosterDrawerSeed, // ADR-0188 GH #863 — admission pending the judged wave (disposition-allowlist.ts)
     ],
   },
   { module: 'message-lifecycle.ts', seeds: [kpiPanelLifecycleSeed] },

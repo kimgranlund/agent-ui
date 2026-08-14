@@ -205,6 +205,18 @@
       "children": "ChildList"
     },
 
+    "Drawer": {
+      "properties": {
+        "elevation": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "elevation" },
+        "brightness": { "type": { "type": "string", "enum": ["-3", "-2", "-1", "0", "1", "2", "3"] }, "mapsTo": "brightness" },
+        "open": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "open" },
+        "persistent": { "type": { "type": "boolean" }, "mapsTo": "persistent" },
+        "edge": { "type": { "type": "string", "enum": ["end", "start", "bottom"] }, "mapsTo": "edge" }
+      },
+      "value": { "prop": "open", "event": "toggle" },
+      "children": "ChildList"
+    },
+
     "Icon": {
       "properties": {
         "name": { "type": { "type": "string" }, "bindable": true, "mapsTo": "glyph" },
