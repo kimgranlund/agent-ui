@@ -336,10 +336,19 @@ fileInput.addEventListener('change', () => {
 // connect, once. So the shell (title · status · list · footer) is built and appended HERE, before
 // `root.append` below connects it; afterwards only the LIST's own children are ever replaced. Appending a
 // new child to the HOST after connect would land it beside the dialog, outside the top-layer surface.
+//
+// GH #918 — the drawer ADOPTS its own content layout system: `<header>` (title + hint + the in-drawer
+// status line) and `<footer>` (the Done row) are the drawer's SHARED [data-box] sticky regions (they stay
+// pinned while the roster scrolls); the roster list itself is the ONE scrolling `[data-region='content']`
+// region between them. Previously all five were flat children of the dialog's own single scroll viewport,
+// so the title/hint/status scrolled away WITH the list — the exact defect this ticket names.
 const drawer = document.createElement('ui-drawer') as UIDrawerElement
 drawer.setAttribute('edge', 'end')
 drawer.setAttribute('aria-label', 'Manage agents')
 drawer.className = 'roster-drawer'
+
+const drawerHeader = document.createElement('header')
+drawerHeader.className = 'roster-drawer-header'
 
 const drawerTitle = document.createElement('h2')
 drawerTitle.className = 'roster-drawer-title'
@@ -353,13 +362,22 @@ drawerHint.textContent =
 // The drawer opens MODAL, in the platform top layer: a `ui-toast-region` living in the normal layer paints
 // UNDER the ::backdrop while it is open, so a toast alone would be invisible feedback exactly when the user
 // is acting. This line is the in-drawer twin — the same sentence, inside the surface that is on top.
-// `role="status"` (an implicit aria-live="polite" region) announces it to AT without stealing focus.
+// `role="status"` (an implicit aria-live="polite" region) announces it to AT without stealing focus. It
+// lives in the STICKY header (not the scrolling content) — feedback for a list action must stay visible
+// regardless of where the list itself is scrolled to.
 const drawerStatus = document.createElement('p')
 drawerStatus.className = 'roster-drawer-status'
 drawerStatus.setAttribute('role', 'status')
 
+drawerHeader.append(drawerTitle, drawerHint, drawerStatus)
+
+// `rosterList` itself IS the drawer's one scrolling `[data-region='content']` region — no extra wrapper:
+// the region's own inline/block padding (the drawer's --ui-drawer-pad-inline/-block rhythm) lands directly
+// on the list, and the list's own flex/gap styling rides alongside it (a component's own @scope always wins
+// over the region model's specificity-0 defaults, container-box.css's own documented escape hatch).
 const rosterList = document.createElement('div')
 rosterList.className = 'roster-list'
+rosterList.setAttribute('data-region', 'content')
 
 const drawerDone = document.createElement('ui-button') as UIButtonElement
 drawerDone.setAttribute('variant', 'soft')
@@ -372,7 +390,7 @@ drawerDone.addEventListener('click', () => {
 const drawerFooter = document.createElement('footer')
 drawerFooter.className = 'roster-drawer-footer'
 drawerFooter.append(drawerDone)
-drawer.append(drawerTitle, drawerHint, drawerStatus, rosterList, drawerFooter)
+drawer.append(drawerHeader, rosterList, drawerFooter)
 
 /** Feedback for every drawer verb: the in-drawer status line FIRST (it is the one the user can actually see
  *  while a modal drawer holds the top layer), then the page's own toast — the record, and the only feedback

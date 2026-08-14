@@ -49,6 +49,17 @@ describe('drawer.css — structure + sectioning', () => {
     expect(tokenBlock).toMatch(/--ui-drawer-padding:\s*var\(--md-sys-space-/) // the density-responsive layout spacing
   })
 
+  it('GH #918 — declares the drawer’s OWN region spacing rhythm + the region hairline colour', () => {
+    for (const slot of ['pad-inline', 'pad-block', 'gap', 'region-border']) {
+      expect(tokenBlock).toMatch(new RegExp(`--ui-drawer-${slot}:`))
+    }
+    expect(tokenBlock).toMatch(/--ui-drawer-pad-inline:\s*var\(--md-sys-space-/)
+    expect(tokenBlock).toMatch(/--ui-drawer-pad-block:\s*var\(--md-sys-space-/)
+    expect(tokenBlock).toMatch(/--ui-drawer-gap:\s*var\(--md-sys-space-/)
+    // the hairline colour reuses the SAME frame role already declared for the dialog's own outline — no new role
+    expect(tokenBlock).toMatch(/--ui-drawer-region-border:\s*var\(--ui-drawer-outline\)/)
+  })
+
   it('NO control height — the drawer shell never reads --md-sys-height-* (geometry.md container class)', () => {
     expect(css).not.toMatch(/var\(--md-sys-height-/)
     expect(css).not.toContain('color-mix(') // a mix ratio is a component colour opinion (ADR-0008)
@@ -148,6 +159,36 @@ describe('drawer.css — the @scope dialog surface + ::backdrop', () => {
     const stripped = stylesBlock.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ''))
     expect(stripped).not.toMatch(/transform\s*:/)
     expect(stripped).not.toMatch(/:dir\(/) // the super-shell precedent — logical properties need no :dir() at all
+  })
+})
+
+describe('drawer.css — GH #918: the content layout system (region rhythm + scroll-conditional hairline)', () => {
+  it('the dialog part repoints the shared [data-box] region defaults to the drawer’s OWN --ui-drawer-* rhythm', () => {
+    const m = stylesBlock.match(/:scope > \[data-part='dialog'\]\s*\{([^}]*)\}/)
+    expect(m, 'the dialog part rule is missing').not.toBeNull()
+    const rule = (m as RegExpMatchArray)[1]
+    expect(rule).toMatch(/--ui-box-pad-inline:\s*var\(--ui-drawer-pad-inline\)/)
+    expect(rule).toMatch(/--ui-box-pad-block:\s*var\(--ui-drawer-pad-block\)/)
+    expect(rule).toMatch(/--ui-box-gap:\s*var\(--ui-drawer-gap\)/)
+  })
+
+  it('a header/footer hairline is SCROLL-CONDITIONAL — gated on the dialog’s own data-fade-top/-bottom flags, never a static rule', () => {
+    expect(stylesBlock).toMatch(
+      /:scope > \[data-part='dialog'\]\[data-fade-top\] > :is\(header, \[data-region='header'\]\)\s*\{\s*border-block-end:\s*1px solid var\(--ui-drawer-region-border\)/,
+    )
+    expect(stylesBlock).toMatch(
+      /:scope > \[data-part='dialog'\]\[data-fade-bottom\] > :is\(footer, \[data-region='footer'\]\)\s*\{\s*border-block-start:\s*1px solid var\(--ui-drawer-region-border\)/,
+    )
+    // NEGATIVE — an unconditional (non-flag-gated) header/footer border would be a static decoration,
+    // exactly what the ticket's own "border earns its keep once content scrolls beneath it" call rejects.
+    expect(stylesBlock).not.toMatch(/:scope > \[data-part='dialog'\] > :is\(header, \[data-region='header'\]\)\s*\{\s*border-block-end/)
+  })
+
+  it('the border selectors target the dialog’s DIRECT children only — never a nested [data-box]’s own region one level deeper', () => {
+    const headerRule = stylesBlock.match(/:scope > \[data-part='dialog'\]\[data-fade-top\] > :is\(header, \[data-region='header'\]\)/)
+    expect(headerRule).not.toBeNull()
+    const footerRule = stylesBlock.match(/:scope > \[data-part='dialog'\]\[data-fade-bottom\] > :is\(footer, \[data-region='footer'\]\)/)
+    expect(footerRule).not.toBeNull()
   })
 })
 

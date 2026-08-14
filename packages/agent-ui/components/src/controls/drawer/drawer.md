@@ -80,6 +80,8 @@ geometry:
   radius: var(--ui-drawer-radius)     # = var(--md-sys-shape-corner-base), zeroed on the DOCKED edge only, the fleet base on the exposed corners
   surface: var(--ui-container-bg) + var(--ui-container-tint)   # the elevation×brightness surface seam (ADR-0015), inherited from the host onto the dialog part
   scrollbarSeam: --ui-drawer-scrollbar-width   # GH #913 — declared `thin` in the token block (the #874/#911 fleet idiom, modal.css precedent verbatim): transparent-at-rest, reveals --ui-drawer-scrollbar-thumb{,-hover} on hover or while the dialog part itself is :focus-within (focus is TRAPPED inside by showModal()); the scroll-fade edge affordance stays a complementary treatment; a consumer repoints to `none`/`auto`
+  regionRhythm: --ui-drawer-pad-inline / --ui-drawer-pad-block / --ui-drawer-gap   # GH #918 — the drawer's OWN spacing rhythm, repointing the shared [data-box] region defaults (container-box.css's --ui-box-pad-inline/-pad-block/-gap) on the dialog part; a `<header>`/`[data-region='header']`, `[data-region='content']`/`main`, and `<footer>`/`[data-region='footer']` author region get it for free — no new slot grammar, structural light-DOM children (drawer.md's own example)
+  regionBorder: --ui-drawer-region-border   # GH #918 — the header/footer hairline colour; SCROLL-CONDITIONAL — painted only while the dialog's own `data-fade-top`/`data-fade-bottom` (scrollFade, always wired) shows real content scrolled behind that region, never a static border on an unscrolled drawer
 
 forcedColors: A `@media (forced-colors: active)` block keeps the dialog surface, frame, and ink visible as system colours (Canvas / CanvasText) and drops the tonal wash (a translucent overlay would defeat the forced Canvas base); the ::backdrop scrim is left to the scrim role / UA so the blocking layer still paints — the modal precedent verbatim (ADR-0017/ADR-0188).
 ---
@@ -104,6 +106,24 @@ nothing and carries no value (ADR-0014 / ADR-0017). The platform supplies the fo
 
 <ui-drawer edge="bottom" persistent><!-- a bottom sheet the agent owns the close of --></ui-drawer>
 ```
+
+## Content layout (header / content / footer)
+
+The dialog part is already a `[data-box]` (container-box.css, ADR-0046), so an author composing a
+**`<header>`**/**`[data-region='header']`**, a **`[data-region='content']`**/`main`, and a
+**`<footer>`**/**`[data-region='footer']`** as PLAIN structural children (no named slots, no shadow DOM — the
+fleet's light-DOM-by-default law) gets the shared region model for free: `header`/`footer` are
+**`position: sticky`** within the dialog's own scroll viewport (the dialog IS the single scrollport — its
+`overflow: auto`, GH #913's thin-scrollbar idiom), so they stay pinned while the content between them scrolls.
+The drawer repoints the region model's generic spacing to its **own** rhythm —
+`--ui-drawer-pad-inline`/`--ui-drawer-pad-block` (header/footer/content padding) and `--ui-drawer-gap` (the gap
+between a content region's own stacked children).
+
+The header/footer hairline is **scroll-conditional**, not a static rule: it paints only once the dialog's own
+`data-fade-top`/`data-fade-bottom` flags (`scrollFade`, wired unconditionally below) show that real content has
+scrolled BEHIND that region — an unscrolled drawer renders a clean header/footer with no border at all. This
+reuses the SAME flags the edge-fade affordance already maintains (pure CSS, no second scroll listener) —
+`--ui-drawer-region-border` supplies the colour (defaults to the shared `--ui-drawer-outline` role).
 
 ## Boundary: the overlay/docking vocabulary is a four-cell map
 

@@ -37,11 +37,24 @@ body {
   min-block-size: 0;
 }
 
-/* ── the Edit Agents drawer's page-owned content (GH #845, LLD-C16/§7) ─────────────────────────────────
- * `ui-drawer` (ADR-0188) supplies the docked surface, the scrim, the focus trap and the motion; everything
- * below styles only the ROWS this page puts inside it. Colour comes from `--md-sys-color-*` ROLES alone
+/* ── the Edit Agents drawer's page-owned content (GH #845, LLD-C16/§7; content layout GH #918) ──────────
+ * `ui-drawer` (ADR-0188) supplies the docked surface, the scrim, the focus trap and the motion; the drawer's
+ * OWN [data-box] region model (container-box.css, repointed to the drawer's --ui-drawer-pad-inline/-pad-block/
+ * -gap rhythm, drawer.css) supplies the sticky header/footer + the consistent region padding/gap for free —
+ * everything below styles only what that model does NOT own: the header's stacked (not row) layout, and the
+ * ROWS this page puts inside the scrolling content region. Colour comes from `--md-sys-color-*` ROLES alone
  * (never a raw value — tokens.md's consumption invariant), spacing from the `--md-sys-space-*` scale, the
  * page-sheet idiom every other site page CSS already uses. */
+
+/* GH #918 — container-box.css's generic header/footer rule is a ROW of controls by default (`display:flex`,
+   no direction set ⇒ row, `align-items:center`) — its own comment names this as the consumer's override
+   point. This header stacks THREE text lines (title/hint/status), so it overrides to a column; `align-items:
+   stretch` (not the generic `center`) keeps each line left-edge-aligned instead of horizontally centred. The
+   inter-line rhythm is the region's OWN `gap` (repointed to --ui-drawer-gap) — no per-child margin needed. */
+.roster-drawer-header {
+  flex-direction: column;
+  align-items: stretch;
+}
 
 .roster-drawer-title {
   margin: 0;
@@ -50,15 +63,16 @@ body {
 }
 
 .roster-drawer-hint {
-  margin: var(--md-sys-space-xs) 0 0;
+  margin: 0;
   color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: var(--md-sys-typescale-body-small-size);
 }
 
 /* The in-drawer feedback line: the drawer sits in the platform TOP LAYER, where a page-level toast paints
-   under the ::backdrop — so the same sentence is mirrored here, on top. Empty ⇒ no box at all. */
+   under the ::backdrop — so the same sentence is mirrored here, on top. Empty ⇒ no box at all. It lives in
+   the STICKY header (GH #918) — list-action feedback that stays visible regardless of scroll position. */
 .roster-drawer-status {
-  margin: var(--md-sys-space-sm) 0 0;
+  margin: 0;
   color: var(--md-sys-color-neutral-on-surface-variant);
   font-size: var(--md-sys-typescale-body-small-size);
 }
@@ -67,11 +81,13 @@ body {
   display: none;
 }
 
+/* `.roster-list` IS the drawer's `[data-region='content']` (GH #918) — the region's own padding-inline/
+   -block (the drawer's --ui-drawer-pad-inline/-pad-block rhythm) supplies the edge inset that a
+   margin-block-start used to fake here; only the ROW layout + inter-row gap are this page's own. */
 .roster-list {
   display: flex;
   flex-direction: column;
   gap: var(--md-sys-space-xs);
-  margin-block-start: var(--md-sys-space-md);
 }
 
 .roster-row {
@@ -147,8 +163,9 @@ body {
   --ui-button-ink: var(--md-sys-color-danger-high);
 }
 
+/* GH #918 — the footer's own sticky region padding + the [data-box] inset gutter (BFC-collapsed against the
+   content region above it) now supply the gap from the list a margin-block-start used to fake here. */
 .roster-drawer-footer {
   display: flex;
   justify-content: flex-end;
-  margin-block-start: var(--md-sys-space-md);
 }
