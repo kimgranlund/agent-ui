@@ -1870,7 +1870,9 @@ describe('UIAgentAdminElement — the per-entry availability mode (GH #850/SPEC-
     }
     submit(el, 'ping')
     await waitFor(() => calls.length === 1, 'prose runner called')
-    expect(calls[0]!.system).toContain('### House style')
+    // GH #891/SPEC-R14 UPDATES the ambient shape to the index line (the SPEC's own annotation on R3 AC1);
+    // what R3 asserts here — the invocable entry contributing NOTHING — is unchanged.
+    expect(calls[0]!.system).toContain('- House style')
     expect(calls[0]!.system, 'the invocable skill is nowhere in the prompt').not.toContain('Menu PDF')
     expect(calls[0]!.integrations, 'and the invocable tool forwards no id').toEqual(['weather'])
   })
@@ -1916,7 +1918,11 @@ describe('UIAgentAdminElement — the per-entry availability mode (GH #850/SPEC-
     const agentJson = JSON.parse(
       el.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]')!.textContent ?? '{}',
     ) as { systemPrompt: string }
-    expect(agentJson.systemPrompt).toContain('### House style')
+    // SPEC-R14 AC4 — the Context tab renders `composeLiveSystemPrompt`'s string, so the INDEX shape reaches
+    // it by construction (inheritance asserted once, here).
+    expect(agentJson.systemPrompt).toContain('- House style')
+    expect(agentJson.systemPrompt, 'the index shape, not the old labeled prose').not.toContain('### House style')
+    expect(agentJson.systemPrompt, 'and the teaching block rides the same string').toContain('are an INDEX')
     expect(agentJson.systemPrompt).not.toContain('Menu PDF')
   })
 
@@ -2515,7 +2521,7 @@ describe('UIAgentAdminElement — the DEV-only live-turn fork (TKT-0052/ADR-0136
     expect(req.model).toBe(target.id)
     expect(req.system).toContain('## Foundation') // the composed prompt is the base
     expect(req.system).toContain('## Skills available to you') // the capability projection is appended
-    expect(req.system).toContain('### Web search')
+    expect(req.system).toContain('- Web search') // …as index lines since GH #891/SPEC-R14
   })
 
   it('defaults `effort` to "medium" when the composer Effort picker was never touched', async () => {
@@ -2773,7 +2779,7 @@ describe('UIAgentAdminElement — the DEV-only live-turn fork (TKT-0052/ADR-0136
     el.agentTurn = runner.fn
     submit(el, 'weather in Oslo?')
     await waitFor(() => runner.calls.length === 1, 'runner called')
-    expect(runner.calls[0]!.system, 'the prompt teaches the RENAMED name').toContain('### Local forecast')
+    expect(runner.calls[0]!.system, 'the prompt teaches the RENAMED name').toContain('- Local forecast')
     expect(runner.calls[0]!.system, 'and never the old one').not.toContain('Weather (Open-Meteo)')
     expect(runner.calls[0]!.integrations, 'the wire still resolves by the original id').toEqual(['weather'])
   })

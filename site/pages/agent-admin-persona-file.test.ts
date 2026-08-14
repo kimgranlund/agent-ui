@@ -169,7 +169,7 @@ describe('the persona file — export → import round trip (GH #406, M-B DoD bo
     expect(promptA).toContain('## Foundation')
     expect(promptA).toContain('Speak in a low, unhurried night-desk register.') // the rewritten builtin
     expect(promptA).toContain('## Night desk') // the hand-authored section
-    expect(promptA).toContain('### night-turndown') // the added capability entry
+    expect(promptA).toContain('- night-turndown — The turndown card idiom.') // the added capability entry, as its GH #891/SPEC-R14 index line
     expect(promptA).not.toContain('## Workflows available to you') // the master switch gated the kind out
     expect(promptA.length).toBeGreaterThan(500)
 
@@ -360,7 +360,8 @@ describe('the persona file carries the per-entry availability mode (GH #850/SPEC
     const storeA = storeWithModes()
     const promptA = await composedPromptFor(storeA)
     // anti-vacuity: the in-context sibling IS in the prompt, the invocable one is nowhere in it.
-    expect(promptA).toContain('### Wine list')
+    expect(promptA).toContain('- Wine list — By the glass.') // GH #891/SPEC-R14 — the ambient shape is the index line
+    expect(promptA, 'even an ambient entry keeps its body out of the prompt now').not.toContain('Riesling, Barolo.')
     expect(promptA).not.toContain('Menu PDF')
     expect(promptA).not.toContain('Starters: soup, salad.')
 

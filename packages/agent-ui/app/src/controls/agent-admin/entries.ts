@@ -227,19 +227,30 @@ export function composeSystemPrompt(sections: readonly Entry[]): string {
 
 // ── The live system-prompt projection (ALM-C1, TKT-0052/ADR-0136 Fork 3) ───────────────────────────────
 // The DEV-only live turn's system prompt IS `composeSystemPrompt`'s output with every AMBIENT capability
-// entry projected after it as labeled prose (LLD Q2) — enabled AND in-context, since GH #850/SPEC-R3
-// widened the per-entry filter with the availability conjunct (`isAmbient`, entry-data.ts): a
-// user-invocable entry contributes NOTHING here, by design, until the user invokes it from the composer.
-// ADR-0132 Fork 3 made entries generic prose — label +
-// description + free-text content, NO parameter schema — so there is nothing machine-callable to declare as
-// API `tools`; system-prompt projection is the maximal FAITHFUL wire representation of what the user
-// authored (the model genuinely receives every ambient entry, so a capability edit changes the very next
-// live reply). A real tool-execution loop stays a future, separately-decomposed feature (ADR-0132's own
-// named deferral — it needs parameter schemas first).
+// entry projected after it as ONE INDEX LINE — its label and description, never its content (GH #891/
+// SPEC-R14, the owner's 2026-08-14 ruling / ADR-0190 rev.2). "Ambient" is enabled AND in-context, since
+// GH #850/SPEC-R3 widened the per-entry filter with the availability conjunct (`isAmbient`,
+// entry-data.ts): a user-invocable entry contributes NOTHING here, by design, until the user invokes it.
+// ADR-0132 Fork 3 made entries generic prose — label + description + free-text content, NO parameter
+// schema — so there is nothing machine-callable to declare as API `tools`; the index is the maximal
+// faithful CATALOGUE of what the user authored, and the full text arrives on the one path that can afford
+// it: the user's own express invocation (SPEC-R4's framing, which then rides replayed history).
+//
+// WHY an index and not the prose it used to be (the ruling's own reasoning, verified at HEAD): nothing
+// model-side can pull text in later — this whole string is composed client-side per turn and both arms
+// consume it as one blob — so ambient cost is paid on EVERY request, forever, and it is unbounded in both
+// entry count and per-entry content size. The measured corpus (SPEC §12's survey, the shipped library
+// packs): a realistic agent's ambient capability prose weighed 10–16 KB against a 361 B persona; as index
+// lines it is 2.3–3.5 KB, a 77–80% cut, bounded by count × one line. `prompt-section` entries stay FULL
+// always (`composeSystemPrompt` — they ARE the agent), and that is the ruled escape hatch for text which
+// must be verbatim-ambient. A real tool-execution loop — the actual fix, letting the model pull an entry
+// itself — stays a future, separately-decomposed feature (ADR-0132's own named deferral: parameter
+// schemas first); this is the poor-man's bridge, named as such (SPEC-N3).
 
 /** One capability kind's contribution to the live prompt: its `##` group heading + its entries (this
  *  function does the ambient-filter — enabled AND in-context, GH #850/SPEC-R3 — plus the sort and the
- *  master-switch gate itself, so the caller just hands over each kind's raw store slice). */
+ *  master-switch gate itself, so the caller just hands over each kind's raw store slice). Since GH #891/
+ *  SPEC-R14 each ambient entry contributes ONE index line, not its content. */
 export interface LiveCapabilityGroup {
   kind: string
   /** The `## {heading}` group header (e.g. "Skills available to you"). */
@@ -265,6 +276,28 @@ export interface LiveCapabilityGroup {
 const BANKROLL_PATH_LINE =
   "Keep your game's running chip count at the data-model path /bankroll — that exact key, never chips/stack/score; every settlement writes the new figure there."
 
+/**
+ * GH #891/SPEC-R15 — the INDEX teaching block: the model is told, in the prompt itself, that the capability
+ * lists are an index and that only the USER can load an entry. Host-owned and byte-pinned, living beside
+ * the projection it teaches (the `BANKROLL_PATH_LINE` precedent, and for its very lesson: GH #525 proved an
+ * affordance nobody is taught is an affordance that never fires — a model that cannot tell an index from
+ * the real thing will either invent the missing text or silently skip the capability).
+ *
+ * Deliberately NOT in the a2ui mini-skill registry: that is producer/A2UI-side and modality-wrong for the
+ * prose arm, while this string must ride EVERY arm that consumes `composeLiveSystemPrompt`.
+ *
+ * Three facts, in the ruling's own order, and nothing else (≤500 B — asserted in entries.test.ts): the
+ * lists are an index (names + descriptions, no full text) · the model cannot load an entry itself, only the
+ * user can, by tagging it in the composer (`@name` resources, `/name` skills/workflows/tools) · when a task
+ * needs an indexed capability's full text, ASK for it by name. Zero index lines ⇒ zero teaching bytes (the
+ * gated-equivalence law, SPEC-R14 AC3): a persona with no ambient capability entries composes exactly what
+ * it composed before this ruling.
+ */
+export const CAPABILITY_INDEX_TEACHING =
+  'The capability lists below are an INDEX: one line per item, its name and a short description — their full text is NOT loaded. ' +
+  'You cannot load an item yourself; only the user can, by tagging it in the composer (@name for a resource, /name for a skill, workflow or tool). ' +
+  "When a task needs an indexed item's full text, ask the user to tag it by name."
+
 /** The live prompt's bankroll-teaching input (GH #525). Presence of this object (vs. `undefined`) is the
  *  whole gate: a caller hands one over only for a persona that is BOTH capable (`isBankrollCapable`) AND
  *  currently on the A2UI modality (`SURFACE_A2UI_KEY` — the SAME condition the post-turn mirror itself
@@ -277,16 +310,32 @@ export interface LiveBankrollState {
 }
 
 /**
- * The live system prompt: `composeSystemPrompt(sections)` followed by one `## {heading}` block per
- * capability kind that has ≥1 AMBIENT entry (enabled AND in-context — GH #850/SPEC-R3), each such entry
- * rendered as `### {label}` + its
- * description + its content, in `order` (ties by `id`, the composeSystemPrompt law). A group whose
- * `enabled` master switch is `false` is gated out wholesale (vision rev.5 generalized the old tools-only
- * `toolsEnabled` boolean to EVERY kind's section-header switch — the master wins over per-entry toggles).
- * GATED EQUIVALENCE (ADR-0136 Fork 3): with no ambient capability entries the result is byte-identical
- * to `composeSystemPrompt(sections)` — the live prompt degrades exactly to today's composed prompt,
- * never a trailing empty header. GH #850/SPEC-R3 AC3 extends that law to the new field: a store in which
- * no entry carries `availability` composes byte-identically to the pre-#850 output.
+ * The live system prompt: `composeSystemPrompt(sections)` followed by the SPEC-R15 teaching block and one
+ * `## {heading}` block per capability kind that has ≥1 AMBIENT entry (enabled AND in-context — GH #850/
+ * SPEC-R3), each such entry rendered as ONE INDEX LINE — `- {label} — {description}` — in `order` (ties by
+ * `id`, the composeSystemPrompt law). A group whose `enabled` master switch is `false` is gated out
+ * wholesale (vision rev.5 generalized the old tools-only `toolsEnabled` boolean to EVERY kind's
+ * section-header switch — the master wins over per-entry toggles).
+ *
+ * GH #891/SPEC-R14 (the owner's ruling, ADR-0190 rev.2) — the INDEX LINE GRAMMAR, ruled here in code inside
+ * the requirement's stated constraints (one line per entry, label then description, content bytes NOWHERE
+ * ambient, groups keeping their `## {heading}` homes, the R3 ordering/gating laws untouched):
+ *
+ *     ## Skills available to you
+ *     - House style — The voice: warm, concise, never salesy.
+ *     - Menu reader                                  ← no description ⇒ the label alone, never a dangling dash
+ *
+ * A leading `- ` (the markdown list the rest of these prompts already speak) and a spaced em dash between
+ * label and description; the description is WHITESPACE-COLLAPSED so "one line per entry" is literally true
+ * even for a hand-edited multi-line description. `content` appears nowhere — it reaches the model only
+ * through SPEC-R4's invocation framing (`resolveTurnReferences`, unchanged, still whole-content), which
+ * BOTH availability modes reach through the typeahead. No truncation and no description cap (SPEC-N3): a
+ * runaway description is visible in R14 AC2's per-entry budget assertion instead of silently cut.
+ *
+ * GATED EQUIVALENCE (ADR-0136 Fork 3, carried forward by SPEC-R14 AC3): with no ambient capability entries
+ * the result is byte-identical to `composeSystemPrompt(sections)` — no teaching block, no trailing empty
+ * header. GH #850/SPEC-R3 AC3's own arm stands too: a store in which no entry carries `availability`
+ * composes exactly as an all-`context` one does.
  *
  * GH #525 — `bankroll`, when given (a capable, A2UI-on persona), always composes `BANKROLL_PATH_LINE`
  * right after the base prompt and ahead of the capability groups; `bankroll.stored`, when present, appends
@@ -314,15 +363,19 @@ export function composeLiveSystemPrompt(
     // master switch → `enabled` → availability, none of them collapsed into another.
     const ambient = [...group.entries].filter(isAmbient).sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
     if (ambient.length === 0) continue // a kind with nothing ambient contributes no header
-    const blocks = ambient.map((e) => {
-      const lines = [`### ${e.label}`]
-      if (e.description.trim().length > 0) lines.push(e.description.trim())
-      if (e.content.trim().length > 0) lines.push('', e.content.trim())
-      return lines.join('\n')
-    })
-    groups.push(`## ${group.heading}\n${blocks.join('\n\n')}`)
+    groups.push(`## ${group.heading}\n${ambient.map(capabilityIndexLine).join('\n')}`)
   }
-  return groups.length > 0 ? `${withBankroll}\n\n${groups.join('\n\n')}` : withBankroll
+  // SPEC-R15's gate is the INDEX itself: no lines composed ⇒ not one teaching byte (and the whole result
+  // degrades to the base prompt, SPEC-R14 AC3's gated equivalence).
+  return groups.length > 0 ? `${withBankroll}\n\n${CAPABILITY_INDEX_TEACHING}\n\n${groups.join('\n\n')}` : withBankroll
+}
+
+/** SPEC-R14's one ambient line for one entry: `- {label} — {description}`, the description
+ *  whitespace-collapsed to keep the line a line, and OMITTED (with its dash) when empty. The entry's
+ *  `content` is deliberately unread here — that is the whole requirement. */
+function capabilityIndexLine(entry: Entry): string {
+  const description = entry.description.trim().replace(/\s+/g, ' ')
+  return description.length > 0 ? `- ${entry.label} — ${description}` : `- ${entry.label}`
 }
 
 // ── the composer's reference rosters + turn-time resolution (GH #849, SPEC-R8/SPEC-R4) ─────────────────
@@ -536,10 +589,14 @@ export interface ResolvedTurnReferences {
  *
  *     {typed text}
  *
- * It deliberately reuses the ambient projection's own `### {label}` block shape (`composeLiveSystemPrompt`)
- * so the model meets an attachment in the same shape it already meets a capability, with ONE header naming
- * whose material it is and the kind in each block's own heading (a resource attached vs a skill invoked —
- * one deterministic line, no per-kind noun table to drift).
+ * The block shape was originally the ambient projection's own (`### {label}` + description + content, the
+ * S3 ruling: "the model meets an attachment in the same shape it already meets a capability"). Since
+ * GH #891/SPEC-R14 the AMBIENT shape is one index LINE, so the two have deliberately parted: this is the
+ * LOAD path and it stays whole-content — the framing block IS what an index line points at, which is
+ * exactly why the teaching block tells the model to ask for it by name. The grammar itself is unchanged
+ * byte-for-byte (SPEC-N3: R4's framing does not move), with ONE header naming whose material it is and the
+ * kind in each block's own heading (a resource attached vs a skill invoked — one deterministic line, no
+ * per-kind noun table to drift).
  *
  * The framed text is what BOTH arms send and what history records (SPEC-R4): the model-saw-it truth rides
  * the transcript, so a follow-up turn keeps the attachment without re-mentioning it. The COST is owned, not
