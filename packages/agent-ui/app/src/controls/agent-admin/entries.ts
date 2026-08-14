@@ -18,7 +18,7 @@
 
 import { A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID, sanitizeCatalog } from './agent-admin-schema.ts'
 import { entriesStoreKey, isAmbient, readEntries, type Entry } from '../entry-list/entry-data.ts'
-import type { ReferenceOption, TurnReference } from '../conversation/composer-options.ts'
+import type { CapabilityRow, ReferenceOption, TurnReference } from '../conversation/composer-options.ts'
 
 /** The known kinds this build seeds/instantiates. Not a closed enum — `Entry.kind` is a plain `string`
  *  (ADR-0132 Fork 2: extensible without a code change); these are the five known constants, not an
@@ -419,6 +419,78 @@ export function buildComposerRosters(groups: readonly ReferenceGroup[]): Compose
   const rosterFor = (kinds: readonly string[]): ReferenceOption[] =>
     groups.filter((g) => kinds.includes(g.kind)).flatMap((g) => reachableEntries(g).map(referenceOptionOf))
   return { mentionables: rosterFor(MENTIONABLE_KINDS), invocables: rosterFor(INVOCABLE_KINDS) }
+}
+
+// ── the capabilities MENU projection (GH #891/SPEC-R13, ADR-0190 rev.2 — the RULED global switch) ───────
+// The composer's third affordance (SPEC-R11) is a GLOBAL enable/disable over the roster's `enabled` axis:
+// its rows are this projection, its flips are a persistent store write (`agent-admin.ts`'s own handler).
+// Deliberately its OWN projection beside `buildComposerRosters` (SPEC-R13's own note), never a widening of
+// it: that roster is enabled-ONLY by contract (SPEC-R8 — a menu of what may be reached THIS turn), while
+// this one must list BOTH enabled states, because a global off-switch that hides what it switched off
+// cannot be flipped back on. Same `ReferenceGroup` input shape, so `agent-admin.ts` keeps doing the fresh
+// store reads and this module keeps doing the filter/sort/projection.
+
+/** SPEC-R13's row id: the `{kind}:{id}` PAIR, because `onCapabilityToggle(id, included)` hands back the row
+ *  id ALONE and the entry it names is only unique per kind — `validateNewEntry` dedupes ids WITHIN a kind's
+ *  list (an id is `slugify(label)`), so a resource and a skill both named "Notes" legitimately both hold
+ *  `notes`. The reference path already acknowledges the same truth by carrying `kind` beside `id` in every
+ *  `TurnReference` (`resolveTurnReferences`' per-kind lookup); here the one field that round-trips has to
+ *  carry both, or a flip on one row would silently write the other kind's entry.
+ *
+ *  The id is OPAQUE to the composer (SPEC-R11/§5's layering clause — it renders it into `data-id` and echoes
+ *  it back, nothing else), so encoding a pair in it costs the contract nothing. Kind names never contain a
+ *  colon; an entry id MAY (a namespaced service ref, ADR-0185), which is why the parse splits on the FIRST
+ *  colon only and is lossless for every id this store can hold. */
+export function capabilityRowId(entry: Entry): string {
+  return `${entry.kind}:${entry.id}`
+}
+
+/** `capabilityRowId`'s inverse — `undefined` for anything this projection could not have minted (no colon,
+ *  an empty half, or a kind availability semantics are not defined for): a fail-closed parse, so a stray or
+ *  hand-forged callback id can never be turned into a store write (SPEC-R4's drop law, applied to the
+ *  toggle seam). */
+export function parseCapabilityRowId(rowId: string): { kind: string; id: string } | undefined {
+  const split = rowId.indexOf(':')
+  if (split <= 0) return undefined
+  const kind = rowId.slice(0, split)
+  const id = rowId.slice(split + 1)
+  if (id.length === 0 || !hasAvailabilityMode(kind)) return undefined
+  return { kind, id }
+}
+
+/**
+ * SPEC-R13 — the capabilities menu's rows: every entry of the four capability kinds
+ * (`AVAILABILITY_KINDS`) whose kind's MASTER switch is on, in each kind's own `order` (ties by `id`, the
+ * `composeSystemPrompt` sort law), `included` mirroring the entry's PERSISTED `enabled`.
+ *
+ * What it deliberately does NOT filter:
+ *  · **`enabled`** — both states are listed. This surface IS the enable/disable dial, and a dial that drops
+ *    the rows it turned off is one-way (the ruling's own point).
+ *  · **`availability`** — both modes are listed, and the switch never touches that axis (SPEC-R1's
+ *    orthogonality): the three tiers a user reads off this panel are enabled+in-context (ever-present),
+ *    enabled+invocable (only on an express `@`/`/` invocation), and disabled (off everywhere).
+ * What it DOES gate is the MASTER switch, which stays the admin surface's own (a master-off kind's rows
+ * belong to a kind the user has switched off wholesale — SPEC-R3/R4's precedence, unchanged).
+ *
+ * The kind filter is `AVAILABILITY_KINDS` itself, not a fifth list beside it: this projection's rule IS
+ * that set's rule — the panel teaches the availability×enabled matrix, which is defined for exactly the
+ * kinds `Entry.availability` is defined for (SPEC-R1). A kind outside it contributes nothing even if a
+ * caller hands it over.
+ *
+ * PURE and fresh-read by construction, exactly like `buildComposerRosters`: it holds no state, so every
+ * build reflects whatever the store said when the caller read it (`agent-admin.ts`'s `#capabilityRowGroups`,
+ * rebuilt from the standing `#applyMasterStates` reflect path — which is what makes an add, a delete, a
+ * rename, an `enabled` flip, an availability flip and a master-switch flip all show without any
+ * open-notification callback from the composer).
+ */
+export function buildCapabilityRows(groups: readonly ReferenceGroup[]): CapabilityRow[] {
+  return groups
+    .filter((group) => hasAvailabilityMode(group.kind) && group.enabled)
+    .flatMap((group) =>
+      [...group.entries]
+        .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
+        .map((entry) => ({ ...referenceOptionOf(entry), id: capabilityRowId(entry), included: entry.enabled })),
+    )
 }
 
 /** SPEC-R4 — the reference kinds that frame into the outgoing user turn's TEXT. The `tool` kind is the one

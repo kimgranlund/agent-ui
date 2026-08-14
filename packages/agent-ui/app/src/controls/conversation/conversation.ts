@@ -91,7 +91,7 @@ import './conversation-dialog.ts'
 import type { UIConversationDialogElement } from './conversation-dialog.ts'
 import './conversation-header.ts'
 import type { UIConversationHeaderElement } from './conversation-header.ts'
-import type { PickerOption, ProviderOption, ContextItem, ReferenceOption, TurnReference } from './composer-options.ts'
+import type { PickerOption, ProviderOption, ContextItem, ReferenceOption, TurnReference, CapabilityRow } from './composer-options.ts'
 
 const props = {
   // OPT-IN raw-wire disclosure (ADR-0129 clause 3) — reflected, default false. Narration itself (below)
@@ -148,6 +148,12 @@ const props = {
   // widened second argument.
   mentionables: { ...prop.json<readonly ReferenceOption[] | undefined>(undefined), attribute: false as const },
   invocables: { ...prop.json<readonly ReferenceOption[] | undefined>(undefined), attribute: false as const },
+  // GH #891/SPEC-R11 — the composer's capabilities panel rows, forwarded pass-through exactly like the two
+  // rosters above: `CapabilityRow.kind`/`icon` stay opaque consumer strings all the way down, and what a
+  // flip MEANS is the consumer's (ADR-0190 rev.2 ruled it a global `enabled` write, wired in
+  // `ui-agent-admin`) — this element only carries rows down and `onCapabilityToggle` up. `undefined`
+  // (default) ⇒ no trigger, no panel, byte-identical for every existing consumer.
+  capabilities: { ...prop.json<readonly CapabilityRow[] | undefined>(undefined), attribute: false as const },
 } satisfies PropsSchema
 
 /** GH #291/ADR-0160 clause 3 (Kim's 2026-07-27 ruling) — a CONSUMER-DEFINED pre-hydrated inline-action
@@ -355,6 +361,8 @@ export class UIConversationElement extends UIElement {
   #onProviderChangeCb: ((id: string) => void) | undefined
   #onModeChangeCb: ((id: string) => void) | undefined
   #onContextDismissCb: ((id: string) => void) | undefined
+  // GH #891/SPEC-R11 — the capabilities panel's ONE callback up, forwarded verbatim (id, new state).
+  #onCapabilityToggleCb: ((id: string, included: boolean) => void) | undefined
   #onMicClickCb: (() => void) | undefined
   // SPEC-R12 (TKT-0071) — a consumer-supplied render hook for agent-turn note / system-bubble text.
   // `undefined` (default) ⇒ byte-identical plain `textContent`, no dependency. NEVER applied to
@@ -440,6 +448,7 @@ export class UIConversationElement extends UIElement {
       composer.onProviderChange((id) => this.#onProviderChangeCb?.(id))
       composer.onModeChange((id) => this.#onModeChangeCb?.(id))
       composer.onContextDismiss((id) => this.#onContextDismissCb?.(id))
+      composer.onCapabilityToggle((id, included) => this.#onCapabilityToggleCb?.(id, included))
       // `onMicClick` is DIFFERENT: the composer's own onMicClick has a visible side effect (revealing the
       // mic button) — forwarding it unconditionally here would un-hide the mic for every consumer
       // regardless of whether they ever asked for voice input. Only forward if a real callback is ALREADY
@@ -475,6 +484,7 @@ export class UIConversationElement extends UIElement {
       this.#composer.contextItems = this.contextItems
       this.#composer.mentionables = this.mentionables // GH #849 — the `@`/`/` rosters, pass-through only
       this.#composer.invocables = this.invocables
+      this.#composer.capabilities = this.capabilities // GH #891 — the capabilities rows, pass-through only
       this.#reflectBusy() // `disabled` reads here too — the effect re-runs on its change
     })
   }
@@ -983,6 +993,16 @@ export class UIConversationElement extends UIElement {
    *  actually removing it from `contextItems` (props down, callbacks up, the `onModelChange` precedent). */
   onContextDismiss(cb: (id: string) => void): void {
     this.#onContextDismissCb = cb
+  }
+
+  /** GH #891/SPEC-R11 — fires with a `capabilities` row's `id` and the NEW `included` state when its switch
+   *  is flipped. Pass-through of the composed child's own callback (`conversation-composer.md`): the panel
+   *  stays open, this element mutates nothing, and the consumer owns the meaning — under ADR-0190 rev.2's
+   *  ruling `ui-agent-admin` writes the named entry's persisted `enabled` and hands a fresh `capabilities`
+   *  array back down. Same props-down/callbacks-up law as `onModelChange`; safe to call before or after
+   *  connect. */
+  onCapabilityToggle(cb: (id: string, included: boolean) => void): void {
+    this.#onCapabilityToggleCb = cb
   }
 
   /** Fires when the mic button is clicked. OPT-IN: the button stays hidden until this is actually called —

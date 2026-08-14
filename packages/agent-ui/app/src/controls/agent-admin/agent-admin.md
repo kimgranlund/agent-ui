@@ -506,6 +506,35 @@ still sends):
 The transport carries zero new vocabulary for any of it — the whole mechanism is host-side, which is why
 `agent-transport.ts`, the dev proxy and the Worker were untouched by the feature.
 
+## The capabilities menu: a GLOBAL enable/disable from the chat composer (GH #891, SPEC-R13 / ADR-0190 rev.2)
+
+Beside the Models/Effort pickers the chat composer carries a third trigger, **Capabilities**, whose panel is
+this element's third projection of the same store truth: every entry of the four capability kinds whose
+master switch is on — **both** availability modes and **both** enabled states — each row a real switch
+mirroring the entry's persisted `enabled`. Deliberately not the `@`/`/` rosters above (those are
+enabled-only by contract): a global off-switch that hid what it just switched off could never be flipped
+back on. Master-off kinds stay absent — the master switch is the Settings surface's own dial.
+
+A flip is a **persistent store write** (the owner's 2026-08-14 ruling, ADR-0190 rev.2): the entry's
+`enabled` moves through the same one-writer seam its own row toggle uses, so the row in the Capabilities
+pane shows the new state and it survives reload. The composer never writes anything — rows down, one
+`onCapabilityToggle(id, included)` up (the row id carries `{kind}:{id}`, since an entry id is unique only
+within its kind).
+
+What the panel teaches, by construction, is the **three-tier reach model** — the two axes stay orthogonal,
+and the switch never touches availability:
+
+| Tier | State | What the model gets |
+|---|---|---|
+| **Ever-present** | enabled + in-context | the ambient projection, every turn — and still invocable from the typeahead |
+| **Invoke-only** | enabled + user-invocable | nothing ambient at all; the full text only when the user tags it |
+| **Off** | disabled | nothing, anywhere: no index line, absent from the `@`/`/` rosters, dropped at resolution |
+
+A flip never invokes: switching an invocable entry ON enables it and mints no reference, no chip, no framing
+— per-turn inclusion stays the typeahead's job. The panel is the CHAT composer's only; the Co-pilot
+composer steers the Builder's own persona, whose rows this surface does not render, so it keeps the prop
+default-off.
+
 ## Fail-closed everywhere
 
 An all-disabled/empty prompt-section set falls back to `DEFAULT_SYSTEM_PROMPT_FALLBACK` (`entries.ts`) —

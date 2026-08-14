@@ -17,10 +17,12 @@ import {
   ENTRY_KINDS,
   INVOCABLE_KINDS,
   MENTIONABLE_KINDS,
+  buildCapabilityRows,
   buildComposerRosters,
   composeSystemPrompt,
   composeLiveSystemPrompt,
   hasAvailabilityMode,
+  parseCapabilityRowId,
   pickedPatternSource,
   readCatalogEntries,
   resolveTurnReferences,
@@ -544,6 +546,105 @@ describe('buildComposerRosters (GH #849/SPEC-R8) — the menu roster projection'
     expect(MENTIONABLE_KINDS.filter((k) => INVOCABLE_KINDS.includes(k))).toEqual([])
     expect([...MENTIONABLE_KINDS, ...INVOCABLE_KINDS].every((k) => AVAILABILITY_KINDS.includes(k))).toBe(true)
     expect(AVAILABILITY_KINDS.every((k) => [...MENTIONABLE_KINDS, ...INVOCABLE_KINDS].includes(k))).toBe(true)
+  })
+})
+
+// ── the capabilities MENU projection (GH #891/SPEC-R13, ADR-0190 rev.2 — slice S7) ───────────────────────
+// The GLOBAL switch's row set: the same `ReferenceGroup` input as the rosters above, a deliberately
+// DIFFERENT filter — both enabled states listed (the whole point of a global off-switch), the master switch
+// still winning. The store WRITE a flip performs is agent-admin.test.ts's, through the real element.
+
+describe('buildCapabilityRows (GH #891/SPEC-R13) — the capabilities-menu projection', () => {
+  const groups = (): ReferenceGroup[] => [
+    refGroup(ENTRY_KINDS.skill, [
+      entry({ id: 'style', kind: ENTRY_KINDS.skill, label: 'House style', description: 'The voice.', order: 0 }),
+      entry({ id: 'retired', kind: ENTRY_KINDS.skill, label: 'Retired', enabled: false, order: 1 }),
+    ]),
+    refGroup(ENTRY_KINDS.workflow, [
+      entry({ id: 'review', kind: ENTRY_KINDS.workflow, label: 'Review flow', availability: ENTRY_AVAILABILITY.invocable, order: 0 }),
+    ]),
+    refGroup(ENTRY_KINDS.resource, [entry({ id: 'menu', kind: ENTRY_KINDS.resource, label: 'Menu PDF', order: 0 })]),
+    refGroup(ENTRY_KINDS.tool, [entry({ id: 'weather', kind: ENTRY_KINDS.tool, label: 'Weather', order: 0 })], false),
+  ]
+
+  it('lists BOTH enabled states and BOTH availability modes — `included` mirrors the persisted `enabled`', () => {
+    const rows = buildCapabilityRows(groups())
+    // The disabled skill is PRESENT (unlike in the `@`/`/` rosters): a global off-switch that hid what it
+    // switched off could never be flipped back on. The master-OFF tool kind is absent wholesale.
+    expect(rows.map((r) => r.id)).toEqual(['skill:style', 'skill:retired', 'workflow:review', 'resource:menu'])
+    expect(rows.map((r) => r.included)).toEqual([true, false, true, true])
+    // The row's full shape: the reference projection's own label/kind/description/glyph, plus `included`.
+    expect(rows[0]).toEqual({
+      id: 'skill:style',
+      label: 'House style',
+      kind: ENTRY_KINDS.skill,
+      description: 'The voice.',
+      icon: 'star',
+      included: true,
+    })
+    expect(rows[1], 'an empty description is omitted here too, never an empty second line').toEqual({
+      id: 'skill:retired',
+      label: 'Retired',
+      kind: ENTRY_KINDS.skill,
+      icon: 'star',
+      included: false,
+    })
+    // An enabled INVOCABLE entry reads `included: true` — the switch is the `enabled` axis, and availability
+    // is untouched by it (SPEC-R1's orthogonality; the tier is taught by the row's own kind/mode, not by
+    // pretending an invocable entry is off).
+    expect(rows.find((r) => r.id === 'workflow:review')?.included).toBe(true)
+  })
+
+  it('the master switch still wins, and a kind outside the four contributes nothing', () => {
+    expect(buildCapabilityRows(groups()).some((r) => r.kind === ENTRY_KINDS.tool), 'master-off ⇒ absent').toBe(false)
+    expect(buildCapabilityRows([refGroup(ENTRY_KINDS.tool, [entry({ id: 'weather', kind: ENTRY_KINDS.tool, label: 'Weather' })])])).toEqual([
+      { id: 'tool:weather', label: 'Weather', kind: ENTRY_KINDS.tool, icon: 'gear', included: true },
+    ])
+    expect(
+      buildCapabilityRows([
+        refGroup(ENTRY_KINDS.promptSection, [entry({ id: 'foundation', kind: ENTRY_KINDS.promptSection, label: 'Foundation' })]),
+        refGroup(ENTRY_KINDS.patternSource, [entry({ id: 'pack', kind: ENTRY_KINDS.patternSource, label: 'Pack' })]),
+        refGroup(ENTRY_KINDS.catalog, [entry({ id: 'agent-ui', kind: ENTRY_KINDS.catalog, label: 'Default' })]),
+      ]),
+      'availability semantics are defined for four kinds only (SPEC-R1)',
+    ).toEqual([])
+  })
+
+  it('sorts each kind by `order`, ties by `id` — the composeSystemPrompt sort law, disabled rows included', () => {
+    const rows = buildCapabilityRows([
+      refGroup(ENTRY_KINDS.skill, [
+        entry({ id: 'c', kind: ENTRY_KINDS.skill, label: 'C', order: 1 }),
+        entry({ id: 'a', kind: ENTRY_KINDS.skill, label: 'A', order: 0, enabled: false }),
+        entry({ id: 'b', kind: ENTRY_KINDS.skill, label: 'B', order: 0 }),
+      ]),
+    ])
+    expect(rows.map((r) => r.id)).toEqual(['skill:a', 'skill:b', 'skill:c'])
+  })
+
+  it('the row id is the {kind}:{id} PAIR, and it round-trips — including an id that itself carries colons', () => {
+    // `onCapabilityToggle` echoes the row id ALONE, and an entry id is unique only WITHIN its kind: two
+    // entries of different kinds may both be `notes` (an id is `slugify(label)`), so the pair is the key.
+    const collision = buildCapabilityRows([
+      refGroup(ENTRY_KINDS.skill, [entry({ id: 'notes', kind: ENTRY_KINDS.skill, label: 'Notes' })]),
+      refGroup(ENTRY_KINDS.resource, [entry({ id: 'notes', kind: ENTRY_KINDS.resource, label: 'Notes' })]),
+    ])
+    expect(collision.map((r) => r.id), 'same entry id, two kinds, two distinct rows').toEqual(['skill:notes', 'resource:notes'])
+    for (const row of collision) expect(parseCapabilityRowId(row.id)).toEqual({ kind: row.kind, id: 'notes' })
+
+    // A namespaced service ref (ADR-0185) is an entry id carrying its OWN colons — the parse splits on the
+    // FIRST one only, so it survives verbatim.
+    const namespaced = buildCapabilityRows([
+      refGroup(ENTRY_KINDS.tool, [entry({ id: 'svc:calc:*', kind: ENTRY_KINDS.tool, label: 'Calculator' })]),
+    ])
+    expect(namespaced[0]!.id).toBe('tool:svc:calc:*')
+    expect(parseCapabilityRowId(namespaced[0]!.id)).toEqual({ kind: ENTRY_KINDS.tool, id: 'svc:calc:*' })
+  })
+
+  it('parseCapabilityRowId is FAIL-CLOSED — nothing this projection could not have minted parses', () => {
+    for (const bad of ['', 'skill', ':style', 'skill:', 'prompt-section:foundation', 'nonsense:x']) {
+      expect(parseCapabilityRowId(bad), `${bad} must not parse`).toBeUndefined()
+    }
+    expect(parseCapabilityRowId('resource:menu')).toEqual({ kind: ENTRY_KINDS.resource, id: 'menu' })
   })
 })
 

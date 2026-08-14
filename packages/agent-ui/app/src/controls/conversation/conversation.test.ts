@@ -639,6 +639,34 @@ describe('ui-conversation — the composed ui-conversation-composer (TKT-0056): 
     expect([...bubble.querySelectorAll('[data-part="reference-tag-label"]')].map((n) => n.textContent)).toEqual(['Menu PDF'])
   })
 
+  it('capabilities forward straight through, and a flip fires ui-conversation\'s OWN onCapabilityToggle (GH #891/SPEC-R11)', async () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    // The default-off law first: nothing set ⇒ the composed child has no trigger and no panel at all.
+    await whenFlushed()
+    expect(composer(el).querySelector('[data-picker="capabilities"]')).toBeNull()
+    expect(composer(el).querySelector('[data-part="capabilities-panel"]')).toBeNull()
+
+    el.capabilities = [
+      { id: 'skill:style', label: 'House style', kind: 'skill', icon: 'star', included: true },
+      { id: 'tool:svc:calc:*', label: 'Calculator', kind: 'tool', included: false },
+    ]
+    await whenFlushed()
+    const child = composer(el)
+    expect(child.capabilities).toEqual(el.capabilities)
+
+    const toggles: [string, boolean][] = []
+    el.onCapabilityToggle((id, included) => toggles.push([id, included]))
+    ;(child.querySelector('[data-picker="capabilities"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    await whenFlushed()
+    const switches = [...child.querySelectorAll<HTMLElement>('[data-part="capability-switch"]')]
+    switches[1]!.dispatchEvent(new Event('click', { bubbles: true })) // the OFF row on
+    switches[0]!.dispatchEvent(new Event('click', { bubbles: true })) // the ON row off, same visit
+    // The row id (a `{kind}:{id}` pair the consumer minted, colons and all) rides back VERBATIM — this
+    // element never parses it — and nothing mutated locally: the prop is still the array handed down.
+    expect(toggles).toEqual([['tool:svc:calc:*', true], ['skill:style', false]])
+    expect(child.capabilities).toEqual(el.capabilities)
+  })
+
   it('committing a Provider/Mode picker choice in the composed child fires ui-conversation\'s OWN onProviderChange/onModeChange (GH #257)', async () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)
     el.providers = [
@@ -1265,7 +1293,7 @@ describe('conversation.md descriptor', () => {
   const parsed = parseDescriptor(fence)
   const ATTR_NAMES = [
     'disclosure', 'disabled', 'receipt', 'sources', 'models', 'model', 'efforts', 'effort',
-    'providers', 'provider', 'modes', 'mode', 'contextItems', 'mentionables', 'invocables',
+    'providers', 'provider', 'modes', 'mode', 'contextItems', 'mentionables', 'invocables', 'capabilities',
   ]
 
   it('has a leading frontmatter fence and a /site prose body', () => {
