@@ -491,13 +491,20 @@ describe('ui-drawer cross-engine — GH #913: the dialog scrolls with an unobtru
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
-//  GH #918 — the content LAYOUT SYSTEM: an author `<header>`/`[data-region='content']`/`<footer>` gets a
-//  STICKY header/footer (they stay pinned inside the dialog's own single scroll viewport) plus a
+//  GH #918/#920 — the content LAYOUT SYSTEM: an author `<header>`/`[data-region='content']`/`<footer>` gets
+//  a content region that owns its OWN independent scroll (GH #920 revision — see below) plus a
 //  scroll-conditional hairline that appears only once real content has scrolled behind that region — proven
 //  from computed style + real scrollTop moves, never source-grepped (the TKT-0002 class).
+//
+//  GH #920 root cause: `scrollFade` originally wired to the WHOLE dialog, so the shared mask
+//  (container-box.css's `[data-fade-top]`/`[data-fade-bottom]` rules) painted over the sticky header/footer
+//  too — they were the masked dialog's own descendants, and a CSS mask composites its entire rendered
+//  subtree with no per-descendant exemption. Fix (drawer.ts + drawer.css): the content region now owns its
+//  OWN scroll viewport; the dialog itself stops scrolling; header/footer become plain flex items OUTSIDE the
+//  scroller, structurally never a masked element's descendant.
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 
-describe('ui-drawer cross-engine — GH #918: sticky header/footer regions + the scroll-conditional hairline', () => {
+describe('ui-drawer cross-engine — GH #918/#920: the content-scoped scroll region + the scroll-conditional hairline', () => {
   const REGION_MARKUP = `<ui-drawer>
     <header id="hdr"><h2 style="margin:0">Title</h2></header>
     <div data-region="content" id="content"><div style="block-size: 3000px;">tall</div></div>
@@ -518,54 +525,59 @@ describe('ui-drawer cross-engine — GH #918: sticky header/footer regions + the
       el.scrollTop = top
     })
 
-  it('the header/footer regions compute position:sticky (they stay pinned to the dialog’s own scroll edges)', async () => {
+  it('GH #920 — the dialog itself stops scrolling once a distinct content region is composed; the content region is the sole scroller', async () => {
     const { drawer, dialog } = mount(REGION_MARKUP)
     drawer.open = true
     await drawer.updateComplete
 
+    const content = dialog.querySelector('#content') as HTMLElement
+    expect(getComputedStyle(dialog).overflow, `${server.browser}: the dialog still owns scrolling — content-scroll-mode did not engage`).toBe('hidden')
+    expect(getComputedStyle(content).overflowY, `${server.browser}: the content region is not its own scroll viewport`).toBe('auto')
+    expect(content.scrollHeight, 'a real overflow to actually scroll').toBeGreaterThan(content.clientHeight)
+  })
+
+  it('GH #920 — the header/footer are OUTSIDE the scroll viewport (plain flex items, not the scrolling dialog’s sticky descendants)', async () => {
+    const { drawer, dialog } = mount(REGION_MARKUP)
+    drawer.open = true
+    await drawer.updateComplete
+
+    expect(getComputedStyle(dialog).display, `${server.browser}: the dialog did not switch to the flex content-scroll layout`).toBe('flex')
     const header = dialog.querySelector('#hdr') as HTMLElement
     const footer = dialog.querySelector('#ftr') as HTMLElement
-    expect(getComputedStyle(header).position, `${server.browser}: the header region did not compute sticky`).toBe('sticky')
-    expect(getComputedStyle(footer).position, `${server.browser}: the footer region did not compute sticky`).toBe('sticky')
+    expect(getComputedStyle(header).flexShrink, `${server.browser}: the header is not a fixed-size flex item`).toBe('0')
+    expect(getComputedStyle(footer).flexShrink, `${server.browser}: the footer is not a fixed-size flex item`).toBe('0')
   })
 
-  it('the header stays pinned near the top of the dialog’s rect (at its own sticky inset gutter) after scrolling real content past it', async () => {
+  it('GH #920 — the header/footer render at FULL OPACITY regardless of scroll: the fade flag lands on the content region, never the dialog', async () => {
+    const { drawer, dialog } = mount(REGION_MARKUP)
+    drawer.open = true
+    await drawer.updateComplete
+
+    const content = dialog.querySelector('#content') as HTMLElement
+    // before any scroll
+    expect(dialog.hasAttribute('data-fade-top'), `${server.browser}: the dialog carried a fade flag at rest — it must never be the masked element`).toBe(false)
+    expect(dialog.hasAttribute('data-fade-bottom'), `${server.browser}: the dialog carried a fade flag at rest — it must never be the masked element`).toBe(false)
+
+    await scrollTo(content, 200)
+    // after scrolling: the flag must land on CONTENT (the actual scroller), never on the dialog (which would
+    // re-introduce the #920 bug — masking header/footer as its descendants).
+    expect(content.hasAttribute('data-fade-top'), `${server.browser}: scrollFade did not target the content region`).toBe(true)
+    expect(dialog.hasAttribute('data-fade-top'), `${server.browser}: the dialog itself carried the fade flag — header/footer would be masked again (the #920 regression)`).toBe(false)
+    expect(dialog.hasAttribute('data-fade-bottom'), `${server.browser}: the dialog itself carried the fade flag — header/footer would be masked again (the #920 regression)`).toBe(false)
+  })
+
+  it('the header hairline is ABSENT before any scroll and PAINTS once content has scrolled behind it (data-fade-top, now on the content region)', async () => {
     const { drawer, dialog } = mount(REGION_MARKUP)
     drawer.open = true
     await drawer.updateComplete
 
     const header = dialog.querySelector('#hdr') as HTMLElement
-    const dialogTop = dialog.getBoundingClientRect().top
-    // the STUCK resting offset is `--ui-box-inset` (container-box.css's own anti-jump fix — the stuck inset
-    // matches the at-rest margin exactly), never flush against the dialog's own top edge — read the real
-    // resolved inset off the header's own computed `top` rather than assuming a literal px figure.
-    const stuckInset = px(getComputedStyle(header).top)
-    const headerTopBefore = header.getBoundingClientRect().top
-
-    await scrollTo(dialog, 500)
-
-    const headerTopAfter = header.getBoundingClientRect().top
-    expect(headerTopAfter, `${server.browser}: the header drifted with the scroll instead of staying stuck`).toBeCloseTo(headerTopBefore, 0)
-    // within 2px of the dialog's own top edge + the sticky inset — the dialog's own 1px border (border-box
-    // rect vs. the sticky calc's padding-edge containing block) accounts for the sub-pixel of slack toBeCloseTo's
-    // integer-digit precision can't express directly.
-    expect(
-      Math.abs(headerTopAfter - (dialogTop + stuckInset)),
-      `${server.browser}: the stuck header did not settle at its own sticky inset gutter (header top ${headerTopAfter}, dialog top ${dialogTop}, inset ${stuckInset})`,
-    ).toBeLessThan(2)
-  })
-
-  it('the header hairline is ABSENT before any scroll and PAINTS once content has scrolled behind it (data-fade-top)', async () => {
-    const { drawer, dialog } = mount(REGION_MARKUP)
-    drawer.open = true
-    await drawer.updateComplete
-
-    const header = dialog.querySelector('#hdr') as HTMLElement
-    expect(dialog.hasAttribute('data-fade-top'), `${server.browser}: data-fade-top set before any scroll (at rest)`).toBe(false)
+    const content = dialog.querySelector('#content') as HTMLElement
+    expect(content.hasAttribute('data-fade-top'), `${server.browser}: data-fade-top set before any scroll (at rest)`).toBe(false)
     expect(getComputedStyle(header).borderBottomWidth, `${server.browser}: an unscrolled drawer painted a static header border`).toBe('0px')
 
-    await scrollTo(dialog, 200)
-    expect(dialog.hasAttribute('data-fade-top'), `${server.browser}: scrollFade did not set data-fade-top after scrolling`).toBe(true)
+    await scrollTo(content, 200)
+    expect(content.hasAttribute('data-fade-top'), `${server.browser}: scrollFade did not set data-fade-top after scrolling`).toBe(true)
     expect(px(getComputedStyle(header).borderBottomWidth), `${server.browser}: the header hairline did not paint once scrolled`).toBeGreaterThan(0)
   })
 
@@ -575,12 +587,13 @@ describe('ui-drawer cross-engine — GH #918: sticky header/footer regions + the
     await drawer.updateComplete
 
     const footer = dialog.querySelector('#ftr') as HTMLElement
-    await scrollTo(dialog, 200) // short of the end — content is still hidden past the footer
-    expect(dialog.hasAttribute('data-fade-bottom'), `${server.browser}: data-fade-bottom did not set mid-scroll`).toBe(true)
+    const content = dialog.querySelector('#content') as HTMLElement
+    await scrollTo(content, 200) // short of the end — content is still hidden past the footer
+    expect(content.hasAttribute('data-fade-bottom'), `${server.browser}: data-fade-bottom did not set mid-scroll`).toBe(true)
     expect(px(getComputedStyle(footer).borderTopWidth), `${server.browser}: the footer hairline did not paint mid-scroll`).toBeGreaterThan(0)
 
-    await scrollTo(dialog, dialog.scrollHeight) // the true end — nothing left hidden past the footer
-    expect(dialog.hasAttribute('data-fade-bottom'), `${server.browser}: data-fade-bottom stayed set at the true scroll end`).toBe(false)
+    await scrollTo(content, content.scrollHeight) // the true end — nothing left hidden past the footer
+    expect(content.hasAttribute('data-fade-bottom'), `${server.browser}: data-fade-bottom stayed set at the true scroll end`).toBe(false)
     expect(getComputedStyle(footer).borderTopWidth, `${server.browser}: the footer hairline stayed painted at the true scroll end`).toBe('0px')
   })
 
@@ -596,5 +609,17 @@ describe('ui-drawer cross-engine — GH #918: sticky header/footer regions + the
     // defaults; asserting they actually resolve (not just declared) proves the repoint reached the region.
     expect(px(cs.paddingInlineStart), `${server.browser}: the content region did not pick up the drawer's own inline padding`).toBeGreaterThan(0)
     expect(px(cs.paddingBlockStart), `${server.browser}: the content region did not pick up the drawer's own block padding`).toBeGreaterThan(0)
+  })
+
+  it('a PLAIN drawer with no distinct content region is unaffected: the dialog itself stays the sole scrollport (GH #913, unchanged)', async () => {
+    const { drawer, dialog } = mount(`<ui-drawer><div style="block-size: 3000px;">tall, no header/footer/content regions</div></ui-drawer>`)
+    drawer.open = true
+    await drawer.updateComplete
+
+    expect(getComputedStyle(dialog).display, `${server.browser}: a plain drawer's dialog must NOT switch to the flex content-scroll layout`).not.toBe('flex')
+    expect(getComputedStyle(dialog).overflow, `${server.browser}: a plain drawer's dialog must stay the scroller`).toBe('auto')
+    dialog.scrollTop = 0
+    dialog.scrollTop = 40
+    expect(dialog.scrollTop, `${server.browser}: still genuinely scrollable`).toBeGreaterThan(0)
   })
 })

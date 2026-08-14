@@ -172,16 +172,38 @@ describe('drawer.css — GH #918: the content layout system (region rhythm + scr
     expect(rule).toMatch(/--ui-box-gap:\s*var\(--ui-drawer-gap\)/)
   })
 
-  it('a header/footer hairline is SCROLL-CONDITIONAL — gated on the dialog’s own data-fade-top/-bottom flags, never a static rule', () => {
+  it('a header/footer hairline is SCROLL-CONDITIONAL — gated on the scroll viewport’s own data-fade-top/-bottom flags (the dialog, OR the content region in content-scroll-mode, GH #920), never a static rule', () => {
+    // the plain (no distinct content region) case — the flag lands on the dialog itself
+    expect(stylesBlock).toMatch(/:scope > \[data-part='dialog'\]\[data-fade-top\] > :is\(header, \[data-region='header'\]\),/)
+    expect(stylesBlock).toMatch(/:scope > \[data-part='dialog'\]\[data-fade-bottom\] > :is\(footer, \[data-region='footer'\]\),/)
+    // GH #920 — the content-scroll-mode case: the flag lands on the CONTENT region, matched via :has() off the
+    // dialog ancestor so the header/footer siblings can still react to it (they are OUTSIDE the masked element).
     expect(stylesBlock).toMatch(
-      /:scope > \[data-part='dialog'\]\[data-fade-top\] > :is\(header, \[data-region='header'\]\)\s*\{\s*border-block-end:\s*1px solid var\(--ui-drawer-region-border\)/,
+      /:scope > \[data-part='dialog'\]:has\(> :is\(\[data-region='content'\], main\)\[data-fade-top\]\) > :is\(header, \[data-region='header'\]\)\s*\{\s*border-block-end:\s*1px solid var\(--ui-drawer-region-border\)/,
     )
     expect(stylesBlock).toMatch(
-      /:scope > \[data-part='dialog'\]\[data-fade-bottom\] > :is\(footer, \[data-region='footer'\]\)\s*\{\s*border-block-start:\s*1px solid var\(--ui-drawer-region-border\)/,
+      /:scope > \[data-part='dialog'\]:has\(> :is\(\[data-region='content'\], main\)\[data-fade-bottom\]\) > :is\(footer, \[data-region='footer'\]\)\s*\{\s*border-block-start:\s*1px solid var\(--ui-drawer-region-border\)/,
     )
     // NEGATIVE — an unconditional (non-flag-gated) header/footer border would be a static decoration,
     // exactly what the ticket's own "border earns its keep once content scrolls beneath it" call rejects.
     expect(stylesBlock).not.toMatch(/:scope > \[data-part='dialog'\] > :is\(header, \[data-region='header'\]\)\s*\{\s*border-block-end/)
+  })
+
+  it('GH #920 — the content region owns its own scroll viewport once composed (content-scroll-mode), gated by :has() so a plain drawer is unaffected', () => {
+    const gate = ":scope > \\[data-part='dialog'\\]:has\\(> :is\\(\\[data-region='content'\\], main\\)\\)"
+    const dialogRule = new RegExp(`${gate}\\s*\\{([^}]*)\\}`)
+    const m = stylesBlock.match(dialogRule)
+    expect(m, 'the content-scroll-mode dialog rule is missing').not.toBeNull()
+    const rule = (m as RegExpMatchArray)[1]
+    expect(rule).toMatch(/display:\s*flex/)
+    expect(rule).toMatch(/flex-direction:\s*column/)
+    expect(rule).toMatch(/overflow:\s*hidden/) // the dialog itself stops scrolling — the content region is the sole scroller
+
+    const contentRule = new RegExp(`${gate} > :is\\(\\[data-region='content'\\], main\\)\\s*\\{([^}]*)\\}`)
+    const cm = stylesBlock.match(contentRule)
+    expect(cm, 'the content region’s own scroll rule is missing').not.toBeNull()
+    expect((cm as RegExpMatchArray)[1]).toMatch(/flex:\s*1 1 auto/)
+    expect((cm as RegExpMatchArray)[1]).toMatch(/overflow-y:\s*auto/)
   })
 
   it('the border selectors target the dialog’s DIRECT children only — never a nested [data-box]’s own region one level deeper', () => {

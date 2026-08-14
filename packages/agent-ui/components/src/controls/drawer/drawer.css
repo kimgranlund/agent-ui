@@ -66,6 +66,11 @@
   --ui-drawer-pad-block: var(--md-sys-space-sm); /* header/footer block padding */
   --ui-drawer-gap: var(--md-sys-space-sm); /* the vertical rhythm between a content region's own stacked children */
   --ui-drawer-region-border: var(--ui-drawer-outline); /* the header/footer hairline colour — the same frame role, one edge over */
+  /* GH #920 — content-scroll-mode's inter-region gap (header↔content, content↔footer): consumes the SAME
+     shared --ui-box-inset container-box.css already uses for the frame↔region/region↔region margin, minted
+     as the drawer's own chain so @scope (below) never reads a raw --ui-box-* directly (the token-hygiene law
+     this file's own test enforces) — a flex `gap` reproduces the BFC's collapsed 6px exactly. */
+  --ui-drawer-region-gap: var(--ui-box-inset, 0.375rem);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-drawer) consumes ONLY --ui-drawer-* + the --ui-container-* seam ════════════════ */
@@ -222,19 +227,80 @@
     background: var(--ui-drawer-scrollbar-thumb-hover);
   }
 
-  /* GH #918 — the scroll-conditional region hairline: `scrollFade` (wired unconditionally in .ts) toggles
-     `data-fade-top`/`data-fade-bottom` on THIS SAME dialog from its live scroll position — `data-fade-top`
-     means real content is scrolled out of view UNDER the sticky header, `data-fade-bottom` the mirror for
-     the footer. That is exactly the moment a bracket earns a demarcating edge: an unscrolled drawer (both
-     flags absent) shows a clean header/footer with no border at all — the ticket's own "border earns its
-     keep once content scrolls beneath it" call, realized as pure CSS off a flag the control already
-     maintains (no second scroll listener). Selectors are DIRECT children of the dialog only (never a nested
-     [data-box]'s own header/footer one level of content deeper). */
-  :scope > [data-part='dialog'][data-fade-top] > :is(header, [data-region='header']) {
+  /* GH #918 — the scroll-conditional region hairline: `scrollFade` toggles `data-fade-top`/`data-fade-bottom`
+     from the live scroll position — `data-fade-top` means real content is scrolled out of view UNDER the
+     sticky header, `data-fade-bottom` the mirror for the footer. That is exactly the moment a bracket earns a
+     demarcating edge: an unscrolled drawer (both flags absent) shows a clean header/footer with no border at
+     all. GH #920 revision: the flag now lands on the DIALOG for a plain drawer (no distinct content region —
+     unchanged, first selector below), or on the CONTENT region itself once the #918 recipe is composed (the
+     content-scroll-mode below — the `:has()` form matches the ancestor dialog off its content descendant's
+     flag so the header/footer siblings can still react to it). Selectors are DIRECT children of the dialog
+     only (never a nested [data-box]'s own header/footer one level of content deeper). */
+  :scope > [data-part='dialog'][data-fade-top] > :is(header, [data-region='header']),
+  :scope > [data-part='dialog']:has(> :is([data-region='content'], main)[data-fade-top]) > :is(header, [data-region='header']) {
     border-block-end: 1px solid var(--ui-drawer-region-border);
   }
-  :scope > [data-part='dialog'][data-fade-bottom] > :is(footer, [data-region='footer']) {
+  :scope > [data-part='dialog'][data-fade-bottom] > :is(footer, [data-region='footer']),
+  :scope > [data-part='dialog']:has(> :is([data-region='content'], main)[data-fade-bottom]) > :is(footer, [data-region='footer']) {
     border-block-start: 1px solid var(--ui-drawer-region-border);
+  }
+
+  /* ── GH #920 — CONTENT-SCOPED scroll mode ───────────────────────────────────────────────────────────────
+   * Root cause: `scrollFade` (drawer.ts) previously wired to the WHOLE dialog, so the shared
+   * `[data-fade-top]`/`[data-fade-bottom]` mask (container-box.css) painted over the sticky header/footer
+   * too — they were the masked dialog's own descendants, and a CSS mask composites its entire rendered
+   * subtree with no per-descendant exemption. Fix: gated by `:has()` on a distinct `[data-region='content']`/
+   * `main` child (the #918 recipe) — that region becomes its OWN independent scroll viewport (`overflow-y:
+   * auto`), and the dialog itself STOPS scrolling (`overflow: hidden`) so there is exactly one scroller, not
+   * two. header/footer become plain flex items OUTSIDE that scroller — structurally never a masked element's
+   * descendant, so they render at full opacity regardless of scroll position. A PLAIN drawer (loose children,
+   * no distinct content region — e.g. drawer-demo.ts) is COMPLETELY unaffected: this whole block is gated off
+   * by the same `:has()` selector its parent rule is, so the dialog stays the single BFC scrollport exactly
+   * as before. */
+  :scope > [data-part='dialog']:has(> :is([data-region='content'], main)) {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* the content region owns scrolling now, not the dialog box itself */
+    gap: var(--ui-drawer-region-gap); /* reproduce the BFC's collapsed inter-region gap (flexbox never collapses margins) */
+  }
+  :scope > [data-part='dialog']:has(> :is([data-region='content'], main)) > :is(header, [data-region='header']) {
+    flex: 0 0 auto;
+    margin-block-end: 0; /* the flex `gap` above supplies the header↔content gap instead — avoid doubling it */
+  }
+  :scope > [data-part='dialog']:has(> :is([data-region='content'], main)) > :is(footer, [data-region='footer']) {
+    flex: 0 0 auto;
+    margin-block-start: 0; /* the flex `gap` above supplies the content↔footer gap instead — avoid doubling it */
+  }
+  :scope > [data-part='dialog']:has(> :is([data-region='content'], main)) > :is([data-region='content'], main) {
+    flex: 1 1 auto;
+    min-block-size: 0; /* the flex-item overflow trap — without this the item refuses to shrink below its content's intrinsic size */
+    margin-block: 0; /* the flex `gap` above supplies both neighbouring gaps instead — avoid doubling them */
+    overflow-y: auto; /* THIS region is now the sole scroll viewport (GH #913's thin-scrollbar idiom, reapplied below) */
+    scrollbar-width: var(--ui-drawer-scrollbar-width);
+    scrollbar-color: transparent transparent;
+  }
+  :scope > [data-part='dialog']:has(> :is([data-region='content'], main)) > :is([data-region='content'], main):hover,
+  :scope > [data-part='dialog']:has(> :is([data-region='content'], main)) > :is([data-region='content'], main):focus-within {
+    scrollbar-color: var(--ui-drawer-scrollbar-thumb) transparent;
+  }
+  :scope > [data-part='dialog']:has(> :is([data-region='content'], main)) > :is([data-region='content'], main)::-webkit-scrollbar {
+    width: var(--ui-drawer-scrollbar-size);
+    height: var(--ui-drawer-scrollbar-size);
+  }
+  :scope > [data-part='dialog']:has(> :is([data-region='content'], main)) > :is([data-region='content'], main)::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  :scope > [data-part='dialog']:has(> :is([data-region='content'], main)) > :is([data-region='content'], main)::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: calc(var(--ui-drawer-scrollbar-size) / 2);
+  }
+  :scope > [data-part='dialog']:has(> :is([data-region='content'], main)) > :is([data-region='content'], main):hover::-webkit-scrollbar-thumb,
+  :scope > [data-part='dialog']:has(> :is([data-region='content'], main)) > :is([data-region='content'], main):focus-within::-webkit-scrollbar-thumb {
+    background: var(--ui-drawer-scrollbar-thumb);
+  }
+  :scope > [data-part='dialog']:has(> :is([data-region='content'], main)) > :is([data-region='content'], main):hover::-webkit-scrollbar-thumb:hover,
+  :scope > [data-part='dialog']:has(> :is([data-region='content'], main)) > :is([data-region='content'], main):focus-within::-webkit-scrollbar-thumb:hover {
+    background: var(--ui-drawer-scrollbar-thumb-hover);
   }
 
   /* the ::backdrop scrim — the platform-painted blocking layer behind the drawer (top layer). */
