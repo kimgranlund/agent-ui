@@ -2932,7 +2932,7 @@ describe('ui-agent-admin — the settings pane is a real flex column, so its dec
 
 // ── GH #844 — the Surface tab's help affordance, where it becomes TRUE ──────────────────────────────
 //
-// jsdom proves the wiring (`surface-help.test.ts`: an icon per group header and row, non-empty card
+// jsdom proves the wiring (`admin-help.test.ts`: an icon per group header and row, non-empty card
 // content, focusin driving `ui-tooltip` open, Escape dismissing, aria-describedby intact). None of the
 // REVEAL is provable there: `@scope`, `:hover`, `:focus`, computed opacity and the Popover top layer all
 // need a real engine. So this block measures exactly the three claims jsdom cannot hold —
@@ -2968,7 +2968,7 @@ describe('ui-agent-admin Surface tab — the help icons are hidden at rest and r
   /** The help affordance for `key`, its icon (ui-tooltip's own `anchor` part — it stamps that name over
    *  any bespoke one, the ui-menu trigger precedent) and its top-layer panel. */
   function help(el: HTMLElement, key: string): { host: HTMLElement & { open: boolean }; icon: HTMLElement; panel: HTMLElement } {
-    const host = el.querySelector(`[data-part="surface-help"][data-help="${key}"]`) as HTMLElement & { open: boolean }
+    const host = el.querySelector(`[data-part="admin-help"][data-help="${key}"]`) as HTMLElement & { open: boolean }
     return {
       host,
       icon: host.querySelector('[data-part="anchor"]') as HTMLElement,
@@ -2979,8 +2979,11 @@ describe('ui-agent-admin Surface tab — the help icons are hidden at rest and r
   it('at rest every icon is invisible but still LAID OUT — opacity 0 on a real box, never display:none', async () => {
     const { el } = mountAgentAdmin('Surface')
     await frames()
-    const icons = [...el.querySelectorAll('[data-part="surface-help"] > [data-part="anchor"]')] as HTMLElement[]
-    // Anti-vacuous: the whole ruled set is present before anything is asserted about it.
+    // GH #866 — scoped to the VISIBLE tab's own content: the widening put icons on every other tab too,
+    // and a hidden section's icons have no box to measure (that is the tab machinery working, not a
+    // defect). The Surface tab's own nine stay the anti-vacuous guard they were.
+    const surface = el.querySelector('[data-role="surface-content"]') as HTMLElement
+    const icons = [...surface.querySelectorAll('[data-part="admin-help"] > [data-part="anchor"]')] as HTMLElement[]
     expect(icons.length, `${server.browser}: the Surface tab paints one icon per group header and row`).toBe(9)
     for (const icon of icons) {
       const style = getComputedStyle(icon)
@@ -3049,10 +3052,10 @@ describe('ui-agent-admin Surface tab — the help icons are hidden at rest and r
     expect(parseFloat(panelStyle.opacity)).toBeGreaterThan(0)
 
     // Structured rich text, not a bare line: a heading, the gist, at least one expanded paragraph.
-    const card = panel.querySelector('[data-part="surface-help-card"]') as HTMLElement
+    const card = panel.querySelector('[data-part="admin-help-card"]') as HTMLElement
     expect(card, 'the card rode into the panel').not.toBeNull()
-    expect(card.querySelector('[data-part="surface-help-title"]')?.textContent).toBe('A2UI')
-    expect(card.querySelectorAll('[data-part="surface-help-body"]').length).toBeGreaterThanOrEqual(1)
+    expect(card.querySelector('[data-part="admin-help-title"]')?.textContent).toBe('A2UI')
+    expect(card.querySelectorAll('[data-part="admin-help-body"]').length).toBeGreaterThanOrEqual(1)
     expect((card.textContent ?? '').trim().length, 'real copy, not an empty shell').toBeGreaterThan(80)
     const cardBox = card.getBoundingClientRect()
     expect(cardBox.height, `${server.browser}: the card itself paints`).toBeGreaterThan(0)
@@ -3069,7 +3072,12 @@ describe('ui-agent-admin Surface tab — the help icons are hidden at rest and r
     const { el } = mountAgentAdmin('Surface')
     await frames()
     const seen = new Set<string>()
-    for (const host of [...el.querySelectorAll('[data-part="surface-help"]')] as HTMLElement[]) {
+    // Scoped to the Surface tab (GH #866): admin-wide, one CONCEPT deliberately has one card shown in two
+    // places — the Capabilities `Skills` fold and the Context: System `Skills` item open the identical
+    // explanation, by design — so document-wide distinctness is no longer the right law. Within one tab it
+    // still is: two icons on the same tab explaining the same thing would be a duplicated affordance.
+    const surface = el.querySelector('[data-role="surface-content"]') as HTMLElement
+    for (const host of [...surface.querySelectorAll('[data-part="admin-help"]')] as HTMLElement[]) {
       const key = host.getAttribute('data-help') ?? ''
       const panel = host.querySelector('[data-part="panel"]') as HTMLElement
       const text = (panel.textContent ?? '').trim()
@@ -3275,6 +3283,112 @@ describe('ui-agent-admin cross-engine smoke — GH #867: the context-json card s
       'thin',
     )
     expect(getComputedStyle(turnJson, '::-webkit-scrollbar').width, `${server.browser}: same webkit gutter width, one shared token`).toBe('8px')
+  })
+})
+
+// ── GH #866 — the admin-wide widening, where IT becomes true ────────────────────────────────────────
+//
+// Two claims jsdom cannot hold, both of them Kim's 2026-08-14 placement rulings measured as GEOMETRY
+// rather than as DOM order (order is pinned in `admin-help.test.ts`; whether the icon actually LANDS at
+// the trailing edge is a flex/layout fact only an engine can answer), plus the reveal proven on a tab
+// GH #844 never reached.
+describe('ui-agent-admin — the help affordance admin-wide: placement geometry and the reveal off the Surface tab (GH #866)', () => {
+  const frames = async (n = 3): Promise<void> => {
+    for (let i = 0; i < n; i += 1) await new Promise((r) => requestAnimationFrame(() => r(null)))
+  }
+
+  async function opacitySettlesTo(icon: HTMLElement, want: string, timeoutMs = 4000): Promise<string> {
+    const deadline = Date.now() + timeoutMs
+    let seen = getComputedStyle(icon).opacity
+    while (seen !== want && Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 25))
+      seen = getComputedStyle(icon).opacity
+    }
+    return seen
+  }
+
+  it('ruling 2 — on an ELEMENT row the icon is painted at the row’s TRAILING edge, not beside the label', async () => {
+    const { el } = mountAgentAdmin('Surface')
+    await frames()
+    for (const surface of ['markdown', 'a2ui', 'genui', 'planner', 'authoring'] as const) {
+      const row = el.querySelector(`[data-part="surface-row"][data-surface="${surface}"]`) as HTMLElement
+      const label = row.querySelector('[data-part="surface-label"]') as HTMLElement
+      const icon = row.querySelector('[data-part="admin-help"] > [data-part="anchor"]') as HTMLElement
+      const rowBox = row.getBoundingClientRect()
+      const labelBox = label.getBoundingClientRect()
+      const iconBox = icon.getBoundingClientRect()
+      expect(rowBox.width, `${server.browser}: ${surface} — a real row to measure against`).toBeGreaterThan(0)
+      // The whole arrangement, not one coordinate: the icon starts past the label AND finishes at the
+      // row's own inline end (within the row's padding), which is what "trailing edge" means.
+      expect(iconBox.left, `${surface}: past the label, never hugging it`).toBeGreaterThan(labelBox.right)
+      const trailingGap = rowBox.right - iconBox.right
+      expect(trailingGap, `${server.browser}: ${surface} — the icon sits AT the trailing edge`).toBeLessThanOrEqual(16)
+      expect(trailingGap, 'inside the row, not overhanging it').toBeGreaterThanOrEqual(0)
+      // And the gap it left behind is real: the label is nowhere near the icon any more.
+      expect(iconBox.left - labelBox.right, `${surface}: a genuine space-between arrangement`).toBeGreaterThan(16)
+    }
+  })
+
+  it('ruling 1 — on a HEADER row that also carries a master switch, the icon paints just BEFORE the switch', async () => {
+    const { el } = mountAgentAdmin('Capabilities')
+    await frames()
+    for (const item of ['skill', 'workflow', 'resource', 'tool'] as const) {
+      const summary = el.querySelector(
+        `[data-part="settings-item"][data-item="${item}"] > [data-part="details"] > [data-part="summary"]`,
+      ) as HTMLElement
+      const icon = summary.querySelector('[data-part="admin-help"] > [data-part="anchor"]') as HTMLElement
+      const master = summary.querySelector('[data-part="kind-enabled"]') as HTMLElement
+      const summaryBox = summary.getBoundingClientRect()
+      const iconBox = icon.getBoundingClientRect()
+      const masterBox = master.getBoundingClientRect()
+      expect(iconBox.width, `${server.browser}: ${item} — a real icon box`).toBeGreaterThan(0)
+      expect(iconBox.right, `${item}: the ? is on the switch's INBOARD side (Kim, ruling 1)`).toBeLessThanOrEqual(masterBox.left)
+      expect(summaryBox.right - masterBox.right, `${server.browser}: ${item} — the switch keeps the outermost position`).toBeLessThanOrEqual(16)
+      // Both live on the row's trailing half, not next to the heading text.
+      const label = summary.querySelector('[data-part="summary-text"]') as HTMLElement
+      expect(iconBox.left, `${item}: past the heading text`).toBeGreaterThan(label.getBoundingClientRect().right)
+    }
+  })
+
+  it('the reveal works on the Capabilities tab too — hidden at rest, revealed by hovering the section heading', async () => {
+    const { el } = mountAgentAdmin('Capabilities')
+    await frames()
+    const summary = el.querySelector(
+      '[data-part="settings-item"][data-item="skill"] > [data-part="details"] > [data-part="summary"]',
+    ) as HTMLElement
+    const icon = summary.querySelector('[data-part="admin-help"] > [data-part="anchor"]') as HTMLElement
+    expect(icon, `${server.browser}: the Skills section carries a help icon`).not.toBeNull()
+    expect(getComputedStyle(icon).opacity, 'hidden at rest, exactly as on the Surface tab').toBe('0')
+
+    await userEvent.hover(summary)
+    expect(await opacitySettlesTo(icon, '1'), `${server.browser}: hovering the section heading reveals it`).toBe('1')
+    await userEvent.unhover(summary)
+    expect(await opacitySettlesTo(icon, '0'), 'and back to rest when the pointer leaves').toBe('0')
+  })
+
+  it('FOCUS alone opens a Capabilities section’s card into the real top layer, with painted ink', async () => {
+    const { el } = mountAgentAdmin('Capabilities')
+    await frames()
+    const host = el.querySelector('[data-part="admin-help"][data-help="tool"]') as HTMLElement & { open: boolean }
+    const icon = host.querySelector('[data-part="anchor"]') as HTMLElement
+    const panel = host.querySelector('[data-part="panel"]') as HTMLElement
+    expect(panel.matches(':popover-open'), 'closed at rest').toBe(false)
+
+    icon.focus()
+    await frames()
+    expect(await opacitySettlesTo(icon, '1'), `${server.browser}: focus reveals it off the Surface tab too`).toBe('1')
+    expect(host.open, 'ui-tooltip shows on focusin immediately').toBe(true)
+    expect(panel.matches(':popover-open'), `${server.browser}: really in the Popover top layer`).toBe(true)
+
+    const box = panel.getBoundingClientRect()
+    expect(box.width, `${server.browser}: a real painted card`).toBeGreaterThan(0)
+    expect(box.height).toBeGreaterThan(0)
+    expect(box.right, 'inside the viewport — bottom-end keeps a trailing-edge card on screen').toBeLessThanOrEqual(window.innerWidth + 1)
+    expect((panel.textContent ?? '').trim().length, 'real copy, not an empty shell').toBeGreaterThan(80)
+
+    await userEvent.keyboard('{Escape}')
+    await frames()
+    expect(host.open, `${server.browser}: Escape dismisses`).toBe(false)
   })
 })
 

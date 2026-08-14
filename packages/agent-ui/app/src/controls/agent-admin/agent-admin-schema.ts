@@ -334,33 +334,53 @@ export function resolveEffectiveCatalogId(baseId: string, localPatternsSelection
   return DERIVED_A2UI_CATALOG_IDS.has(candidate) ? candidate : baseId
 }
 
-// ── the Surface tab's HELP COPY (GH #844) ─────────────────────────────────────────────────────────────
-// The ONE copy source for every explanation the Surface tab shows. Both consumers read THIS table:
+// ── the admin's HELP COPY (GH #844, widened admin-wide by GH #866) ────────────────────────────────────
+// The ONE copy source for every explanation `ui-agent-admin` shows — the Surface tab's group headers and
+// element rows (GH #844) AND, since GH #866, every section header on the Agent, Capabilities and Context
+// tabs. Both consumers read THIS table:
 //  - `agent-admin.ts`'s `surfaceRow(...)` takes each row's native `title` hint from `.summary` (those
 //    five literal strings used to live inline at the call sites — they are gone; the table is where
 //    they live now), and
-//  - `surface-help.ts` renders the whole entry — title, summary, expanded body, labeled facts — into the
+//  - `admin-help.ts` renders the whole entry — title, summary, expanded body, labeled facts — into the
 //    `ui-tooltip` help card the row's question-mark icon opens.
 // So the hover hint and the help card can never drift: they are the same record, projected twice at
 // different depths. This is DATA, like every other export in this file — no DOM, no copy in the view.
+//
+// ONE ENTRY PER CONCEPT, NOT PER PLACE (GH #866): the Capabilities tab's `Skills` fold and the Context:
+// System view's `Skills` item are the same THING seen twice — an editor and a read-only projection of what
+// the agent will actually be handed — so both read the SAME `skill` record rather than two near-identical
+// ones drifting apart. That is why the copy explains the concept ("what a skill IS, and what enabling one
+// does") instead of describing the widget under the icon.
 //
 // The catalog entry is a further degree of the same law: its facts are PROJECTED from
 // `A2UI_CATALOG_OPTIONS` above rather than restated, so registering a third catalog writes its
 // explanation into the help card with zero edits here (the "the pack IS this array, mapped" discipline
 // that array's own doc comment already states for the library pack).
 //
+// RECONCILED WITH THE SCHEMA, never a second copy of it: the `agent` entry's own summary IS
+// `agentConfigSchema()`'s section description, and its facts are that section's per-field `description`
+// strings — read from the schema at module init, so an edit up there lands in the card with no edit here
+// (GH #844's "sourced from / reconciled with the schema's description fields", now mechanical).
+//
 // The bodies are PLAIN structured prose — no markdown syntax (GH #844's ruled default: structured markup,
-// `ui-markdown` only if the copy genuinely needs it). Keep it that way: `surface-help.ts` renders each
+// `ui-markdown` only if the copy genuinely needs it). Keep it that way: `admin-help.ts` renders each
 // paragraph as textContent, so a stray `**bold**` here would paint its own asterisks.
 
+/** Dialog Turns retention cap (vision rev.5) — a bounded ring; the oldest records fall off. Session-
+ *  ephemeral by design (like the conversation history): the store persists the agent's CONFIG, never its
+ *  traffic. GH #866 moved it here from `agent-admin.ts`: the `context-turn` help card states the figure,
+ *  and a hand-copied "20" in prose beside a `const` in the view is exactly the drift this file's own
+ *  one-copy-source law exists to prevent. The view imports it back. */
+export const TURN_LOG_CAP = 20
+
 /** One labeled fact on a help card — "Default: Off", "Requires: the GenUI modality above, on". */
-export interface SurfaceHelpFact {
+export interface AdminHelpFact {
   term: string
   detail: string
 }
 
-/** One Surface-tab group header's or element row's whole explanation. */
-export interface SurfaceHelpEntry {
+/** One group header's, section header's or element row's whole explanation. */
+export interface AdminHelpEntry {
   /** The card's heading — the group/row's own display label, verbatim (also the icon's accessible name). */
   title: string
   /** The one-line gist. ALSO the row's native `title` hover hint — one string, two renderings. */
@@ -368,12 +388,14 @@ export interface SurfaceHelpEntry {
   /** The expanded explanation, one paragraph per member (at least one). Plain prose, no markup. */
   body: readonly string[]
   /** Optional labeled facts, rendered as a list under the prose. */
-  facts?: readonly SurfaceHelpFact[]
+  facts?: readonly AdminHelpFact[]
 }
 
-/** Every helped surface — the two group headers plus every element row the Surface tab paints. The
- *  union is what makes a typo a COMPILE error at the call site rather than a silently missing icon. */
-export const SURFACE_HELP_KEYS = [
+/** Every helped surface — the Surface tab's two group headers and every element row it paints (GH #844),
+ *  plus every section header on the Agent, Capabilities and Context tabs (GH #866). The union is what
+ *  makes a typo a COMPILE error at the call site rather than a silently missing icon. */
+export const ADMIN_HELP_KEYS = [
+  // — the Surface tab (GH #844) —
   'surface-options',
   'markdown',
   'a2ui',
@@ -383,11 +405,39 @@ export const SURFACE_HELP_KEYS = [
   'planner',
   'authoring',
   'pattern-source',
+  // — the Agent tab (GH #866) —
+  'agent',
+  'model',
+  'bankroll',
+  // — the Capabilities tab (GH #866); `a2ui-catalog`/`pattern-source` above serve the two kinds that
+  //   render on OTHER tabs, so this list is the five that actually live here —
+  'prompt-section',
+  'skill',
+  'workflow',
+  'resource',
+  'tool',
+  // — the Context tabs (GH #866). Every per-KIND item there reuses the kind's own entry above
+  //   (`helpKeyForKind`); these two are the items that have no editor counterpart at all: the compiled
+  //   Agent record, and one logged dialog turn —
+  'context-agent',
+  'context-turn',
 ] as const
 
-export type SurfaceHelpKey = (typeof SURFACE_HELP_KEYS)[number]
+export type AdminHelpKey = (typeof ADMIN_HELP_KEYS)[number]
 
-export const SURFACE_HELP: Readonly<Record<SurfaceHelpKey, SurfaceHelpEntry>> = {
+/** GH #866 — the Agent card's copy, READ OFF `agentConfigSchema()` instead of restated beside it: the
+ *  section's own `description` is the card's one-line gist, and each field's `description` becomes a
+ *  labeled fact. GH #844's acceptance asks for copy "sourced from / reconciled with the schema's
+ *  description fields"; projecting it is the only version of that which cannot drift. A field that
+ *  carries no description contributes no fact (rather than an empty row). */
+const AGENT_SCHEMA_SECTION = defaultAgentConfigSchema.sections[0]
+const AGENT_SCHEMA_SUMMARY: string =
+  AGENT_SCHEMA_SECTION?.description ?? 'The identity and generation behavior this preview reads before every turn.'
+const AGENT_SCHEMA_FACTS: readonly AdminHelpFact[] = (AGENT_SCHEMA_SECTION?.fields ?? [])
+  .filter((field) => (field.description ?? '').trim().length > 0)
+  .map((field) => ({ term: field.label, detail: field.description ?? '' }))
+
+export const ADMIN_HELP: Readonly<Record<AdminHelpKey, AdminHelpEntry>> = {
   'surface-options': {
     title: 'Surface Options',
     summary: 'Which output modalities this agent may use, and how each one is configured',
@@ -477,6 +527,133 @@ export const SURFACE_HELP: Readonly<Record<SurfaceHelpKey, SurfaceHelpEntry>> = 
     ],
     facts: [{ term: 'Read by', detail: 'the GenUI modality — with GenUI off, no source composes at all' }],
   },
+
+  // ── the Agent tab (GH #866) — who this agent IS ────────────────────────────────────────────────────
+  agent: {
+    title: 'Agent',
+    // PROJECTED from the schema, never restated — see this block's own header comment. Editing the
+    // section's `description` up in `agentConfigSchema()` edits this card.
+    summary: AGENT_SCHEMA_SUMMARY,
+    body: [
+      'This section is the agent itself: the name it answers to, and the dials that shape how a turn is generated. Every field is read FRESH at turn time, so an edit here applies to the next message without a reload and without a save step.',
+      'The master switch on this heading row is a different thing from the fields below it: it says whether this agent is available at all. Switched off, the composer stops accepting turns while everything here stays editable — it is a pause, not a delete.',
+    ],
+    facts: AGENT_SCHEMA_FACTS,
+  },
+  model: {
+    title: 'Model',
+    summary: 'Which models this agent may run on, and which one it starts with',
+    body: [
+      'Each row is one model, grouped by provider. Its switch decides whether the model is OFFERED for this agent at all; the radio beside it picks the one a fresh conversation starts on. Excluding a model never rewrites history — turns already taken keep the model they were taken with.',
+      'A model listed here is not necessarily reachable: the roster is this client’s, and whether a given provider actually answers depends on the host it is pointed at. An unreachable pick degrades visibly in the turn log rather than silently falling back to another model.',
+    ],
+    facts: [{ term: 'Reset Agent', detail: "clears this agent's whole configuration back to its seeded state — the roster included" }],
+  },
+  bankroll: {
+    title: 'Bankroll',
+    summary: 'The running figure a games persona carries between sessions',
+    body: [
+      'Some personas keep a score that must survive a reload — a chip count, a stake, a running total. When one of them plays a turn, the figure its surface holds is mirrored into this agent’s own storage, and the next session is told the stored figure instead of starting from a fresh seed stake.',
+      '"Reset" clears the stored figure and nothing else. The next game then opens on its own seed value, exactly as a first-ever session would.',
+    ],
+    facts: [{ term: 'Shown', detail: 'only for a persona that opts into keeping a bankroll — there is nothing to store otherwise' }],
+  },
+
+  // ── the Capabilities tab (GH #866) — what this agent can DO ────────────────────────────────────────
+  'prompt-section': {
+    title: 'Instructions',
+    summary: 'The composed system prompt, one titled section at a time',
+    body: [
+      'The agent’s system prompt is not one blob of text: it is this ordered list of titled sections, joined in order at turn time. Writing them separately is what makes one instruction editable, reorderable or switchable off without disturbing the rest.',
+      'A section’s switch decides whether it composes at all. Switched off it stays here, fully editable, and simply contributes nothing to the next turn — the way to try an instruction’s absence without losing the words.',
+    ],
+    facts: [{ term: 'Applies', detail: 'from the next turn — the prompt is composed fresh every time, never cached' }],
+  },
+  skill: {
+    title: 'Skills',
+    summary: 'Named procedures the agent is taught it knows how to carry out',
+    body: [
+      'A skill is a piece of know-how written as prose: how to run a review, how to draft a release note, what "done" means for a recurring task. Enabled skills are named to the agent in its composed prompt, so it can recognise when one applies.',
+      'Each row carries a mode. "In context" means the agent is told about the skill every turn, which is what you want for the handful it should always have in mind. "Invocable" keeps it out of the standing prompt and reachable on demand — the way to keep a long shelf without spending the whole prompt on it.',
+    ],
+    facts: [{ term: 'Master switch', detail: 'off ⇒ no skill composes at all, whatever the individual rows say' }],
+  },
+  workflow: {
+    title: 'Workflows',
+    summary: 'Multi-step procedures with an order the agent should keep',
+    body: [
+      'A workflow is a skill with a sequence: the steps, their order, and what has to be true before moving on. Enabled workflows are named to the agent the same way skills are, so it can follow one rather than improvising an order of its own.',
+      'The same per-row mode applies: keep the few it should always follow in context, and leave the rest invocable so a long shelf costs nothing until it is actually asked for.',
+    ],
+    facts: [{ term: 'Master switch', detail: 'off ⇒ no workflow composes at all, whatever the individual rows say' }],
+  },
+  resource: {
+    title: 'Resources',
+    summary: 'Reference material the agent may consult while answering',
+    body: [
+      'A resource is knowledge rather than know-how: a policy, a glossary, a specification, a page of house style. Enabled resources are made available to the agent so an answer can be grounded in them instead of in a guess.',
+      'Resources are usually the biggest thing on this tab, which is exactly what the per-row mode is for: keep the one or two that belong in every answer in context, and mark the reference shelf invocable.',
+    ],
+    facts: [{ term: 'Master switch', detail: 'off ⇒ no resource composes at all, whatever the individual rows say' }],
+  },
+  tool: {
+    title: 'Tools',
+    summary: 'Actions the agent may ask the host to take on its behalf',
+    body: [
+      'A tool is something the agent can DO rather than something it knows — look a record up, call a service, fetch a live figure. Enabled tool names ride the turn, and the host decides which of them it actually recognises and is willing to run.',
+      'A tool named here that the host does not recognise is ignored rather than failed: this list is the agent’s side of the contract, never the host’s registry. That is also why renaming a row is safe — the underlying identifier the host matches on is never rewritten.',
+    ],
+    facts: [{ term: 'Master switch', detail: 'off ⇒ no tool rides the turn at all, whatever the individual rows say' }],
+  },
+
+  // ── the Context tabs (GH #866) — what the agent actually receives, and what it answered ────────────
+  'context-agent': {
+    title: 'Agent',
+    summary: 'The compiled record a turn is actually built from — read-only',
+    body: [
+      'This is the whole configuration as the next turn will read it: the identity and generation dials, every surface modality’s live state, and the fully composed system prompt itself, verbatim. It is derived, never edited — the tabs to the left are where these values are set.',
+      'It updates the moment anything it reads changes, which makes it the place to answer "did that setting actually reach the agent?" without taking a turn to find out.',
+    ],
+    facts: [{ term: 'Read-only', detail: 'a projection of the store, rebuilt on every change' }],
+  },
+  'context-turn': {
+    title: 'Dialog turn',
+    summary: 'One exchange, recorded exactly as it went over the wire',
+    body: [
+      'Each entry is a single turn: which arm ran it, the request that was sent — system prompt, model, history and all — and the response that came back. Newest first, and the newest one opens by default.',
+      'This is a session-local trace kept to help you see what actually happened; it is bounded, so the oldest turns fall off as new ones arrive, and none of it is persisted with the agent’s configuration.',
+    ],
+    facts: [{ term: 'Retention', detail: `the last ${TURN_LOG_CAP} turns of this session — never saved with the agent` }],
+  },
+}
+
+/**
+ * GH #866 — the OPT-IN seam that decides whether an entry-list SECTION carries a help icon on its own
+ * heading row, and which record it opens: the `ADMIN_HELP` key explaining `kind`, or `undefined` for a
+ * kind that opts out (which mounts no icon at all).
+ *
+ * DEFAULT-OFF BY CONSTRUCTION, and deliberately here rather than inside `mountEntryList`: the entry-list
+ * primitive has been HEADLESS since GH #225 — a section's header IS the consuming fold's `ui-disclosure`
+ * summary row (ADR-0158), which the primitive neither owns nor can reach. Teaching it to mint a header
+ * would hand every one of its consumers a heading it deliberately does not have. So the seam is a pure
+ * lookup the CONSUMER applies to its own fold: a bare `mountEntryList(...)` mounts zero help icons,
+ * unchanged, and an unrecognised kind mounts none either.
+ *
+ * The `catalog` kind maps onto the SAME `a2ui-catalog` record its Surface-tab card already uses — one
+ * concept, one explanation (see this block's header comment).
+ */
+export function helpKeyForKind(kind: string): AdminHelpKey | undefined {
+  return KIND_HELP_KEYS[kind]
+}
+
+const KIND_HELP_KEYS: Readonly<Record<string, AdminHelpKey>> = {
+  'prompt-section': 'prompt-section',
+  skill: 'skill',
+  workflow: 'workflow',
+  resource: 'resource',
+  tool: 'tool',
+  'pattern-source': 'pattern-source',
+  catalog: 'a2ui-catalog',
 }
 
 // ── the persona's persisted BANKROLL (GH #525) ────────────────────────────────────────────────────────

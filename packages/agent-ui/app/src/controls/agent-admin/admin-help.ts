@@ -1,10 +1,23 @@
-// surface-help.ts — GH #844: the Surface tab's question-mark help affordance.
+// admin-help.ts — GH #844 (the Surface tab) / GH #866 (admin-wide): the question-mark help affordance.
 //
-// One factory, one shape. `buildSurfaceHelp(key)` returns a `<ui-tooltip>` carrying a focusable
+// One factory, one shape. `buildAdminHelp(key)` returns a `<ui-tooltip>` carrying a focusable
 // question-mark icon (the tooltip's ANCHOR — its first element child, per tooltip.md) plus the help CARD
 // the tooltip moves into its own top-layer panel at connect. `agent-admin.ts` appends the returned node
-// to a row (after its label) or, marked `slot="summary"`, to a fold — `ui-disclosure` adopts it onto the
-// heading row itself (ADR-0158). Nothing else about those rows changes.
+// to a row or, marked `slot="summary"`, to a fold — `ui-disclosure` adopts it onto the heading row itself
+// (ADR-0158). Nothing else about those rows changes.
+//
+// PLACEMENT LAW (Kim's two rulings, 2026-08-14, both from live screenshots — the file this factory feeds
+// obeys it, so it is stated once here):
+//   - the leading cluster sits at the row's START — `[switch | label]` on an element row, the section
+//     title on a group/section header;
+//   - the `?` sits at the row's TRAILING edge, never inline after the label (ruling 2: the row is
+//     space-between; an icon hugging the label reads as part of the label);
+//   - where that trailing edge ALSO carries a switch (a fold heading row with a master switch), the order
+//     is `[?] [switch]` — the `?` immediately before it, the switch keeping the outermost position
+//     (ruling 1: the icon must sit on the OTHER side of the switch).
+// Mechanically that is DOM order plus one flexible spacer: element rows append `[toggle, label, spacer,
+// help]`, and a fold appends `[help, switch]` as `slot="summary"` children (`ui-disclosure` adopts them in
+// DOM order after its own flex-grown label, which is what pushes both to the inline end).
 //
 // WHY the primitive, not a bespoke panel: `ui-tooltip` already owns everything the a11y floor needs —
 // `role="tooltip"` on the panel, `aria-describedby` from the anchor to it, focusin showing IMMEDIATELY
@@ -17,12 +30,12 @@
 // icon is hidden at REST but revealed by row hover AND by its own focus (agent-admin.css), so the
 // keyboard path is never a second-class copy of the pointer path.
 //
-// COPY lives in `agent-admin-schema.ts`'s `SURFACE_HELP` — the one source, shared with the rows' own
+// COPY lives in `agent-admin-schema.ts`'s `ADMIN_HELP` — the one source, shared with the rows' own
 // native `title` hints. This file authors NO prose; it only projects that record into DOM.
 
 import '@agent-ui/components/controls/tooltip'
 import '@agent-ui/components/controls/icon'
-import { SURFACE_HELP, type SurfaceHelpKey } from './agent-admin-schema.ts'
+import { ADMIN_HELP, type AdminHelpKey } from './agent-admin-schema.ts'
 
 /** The hover show-delay for a help icon, in ms. Shorter than `ui-tooltip`'s own 600 ms default: reaching
  *  this icon already costs a deliberate act (hover the row, then travel to the icon it revealed), so the
@@ -38,16 +51,17 @@ const HELP_SHOW_DELAY_MS = 200
  * anchor and relocates the rest into the panel at connect time, so a caller that appended children after
  * connection would strand them outside the panel. Every call site here builds detached and attaches once.
  */
-export function buildSurfaceHelp(key: SurfaceHelpKey): HTMLElement {
-  const entry = SURFACE_HELP[key]
+export function buildAdminHelp(key: AdminHelpKey): HTMLElement {
+  const entry = ADMIN_HELP[key]
 
   const tip = document.createElement('ui-tooltip')
-  tip.setAttribute('data-part', 'surface-help')
+  tip.setAttribute('data-part', 'admin-help')
   tip.setAttribute('data-help', key)
-  // The icon sits at a row's inline start (right after the label), so a card that grows to the inline END
-  // stays inside the settings column instead of overhanging it. The overlay controller flips/shifts at the
-  // viewport edge anyway — this is the PREFERRED side, not a guarantee.
-  tip.setAttribute('placement', 'bottom-start')
+  // GH #866 (Kim's placement rulings, see the file header) — the icon now sits at the row's TRAILING
+  // edge, so a card growing to the inline END would overhang the settings column. `bottom-end` grows it
+  // back toward the column instead. The overlay controller still flips/shifts at the viewport edge — this
+  // is the PREFERRED side, not a guarantee.
+  tip.setAttribute('placement', 'bottom-end')
   tip.setAttribute('delay', String(HELP_SHOW_DELAY_MS))
 
   const icon = document.createElement('button')
@@ -56,7 +70,7 @@ export function buildSurfaceHelp(key: SurfaceHelpKey): HTMLElement {
   // child `data-part="anchor"` unconditionally at connect (tooltip.ts), so any value set here is clobbered
   // the moment it lands in the document. This is the SAME platform fact `entry-list.ts` already documents
   // for `ui-menu`'s trigger, and the same answer: address it scoped through the HOST's own marker —
-  // `[data-part='surface-help'] > [data-part='anchor']` — never a second, losing attribute name. (Measured,
+  // `[data-part='admin-help'] > [data-part='anchor']` — never a second, losing attribute name. (Measured,
   // not assumed: an earlier revision of this file did set one, and every query for it returned null.)
   // The card IS the description (`ui-tooltip` wires `aria-describedby` to it), so the NAME stays short and
   // says only which thing is being explained — never a second copy of the prose.
@@ -76,28 +90,28 @@ export function buildSurfaceHelp(key: SurfaceHelpKey): HTMLElement {
   })
 
   const card = document.createElement('div')
-  card.setAttribute('data-part', 'surface-help-card')
+  card.setAttribute('data-part', 'admin-help-card')
 
   const title = document.createElement('strong')
-  title.setAttribute('data-part', 'surface-help-title')
+  title.setAttribute('data-part', 'admin-help-title')
   title.textContent = entry.title
 
   const summary = document.createElement('p')
-  summary.setAttribute('data-part', 'surface-help-summary')
+  summary.setAttribute('data-part', 'admin-help-summary')
   summary.textContent = entry.summary
 
   card.append(title, summary)
 
   for (const paragraph of entry.body) {
     const p = document.createElement('p')
-    p.setAttribute('data-part', 'surface-help-body')
+    p.setAttribute('data-part', 'admin-help-body')
     p.textContent = paragraph
     card.append(p)
   }
 
   if (entry.facts !== undefined && entry.facts.length > 0) {
     const facts = document.createElement('ul')
-    facts.setAttribute('data-part', 'surface-help-facts')
+    facts.setAttribute('data-part', 'admin-help-facts')
     for (const fact of entry.facts) {
       const row = document.createElement('li')
       const term = document.createElement('strong')
@@ -118,8 +132,8 @@ export function buildSurfaceHelp(key: SurfaceHelpKey): HTMLElement {
  *  adopts it into its summary part at connect, after the label. A separate entry point rather than an
  *  options bag so the two placements read differently at the call site — a group header and an element
  *  row are different things. */
-export function buildSurfaceHelpForSummary(key: SurfaceHelpKey): HTMLElement {
-  const tip = buildSurfaceHelp(key)
+export function buildAdminHelpForSummary(key: AdminHelpKey): HTMLElement {
+  const tip = buildAdminHelp(key)
   tip.setAttribute('slot', 'summary')
   return tip
 }

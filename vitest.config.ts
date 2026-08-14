@@ -170,7 +170,7 @@ export default defineConfig({
       // Vision rev.5 (Kim's Figma frame 33:1693) — `agent-admin.ts` side-effect-imports `disclosure` so
       // the Context tab's `document.createElement('ui-disclosure')` accordions resolve to the REAL class.
       '@agent-ui/components/controls/disclosure': r('./packages/agent-ui/components/src/controls/disclosure/disclosure.ts'),
-      // GH #844 — `@agent-ui/app`'s `agent-admin/surface-help.ts` side-effect-imports `tooltip` so the
+      // GH #844 — `@agent-ui/app`'s `agent-admin/admin-help.ts` side-effect-imports `tooltip` so the
       // Surface tab's help icons resolve `document.createElement('ui-tooltip')` to the REAL class (the
       // focusin/Escape/aria-describedby contract is the whole point of reusing the primitive). Same
       // alias-ordering necessity as `controls/disclosure` immediately above.
