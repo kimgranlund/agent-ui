@@ -5,7 +5,8 @@ import '@agent-ui/components/component-styles.css'
 // imports its OWN `doc-page.css` on import, below. Both are needed: the two GH #369 mechanisms live one in
 // each file, and the whole point is that they compose on a real page.
 import '../pages/_page.css'
-import { renderApiTable, renderMarkdownBody } from './doc-page.ts'
+import { renderApiTable, renderEventsTable, renderMarkdownBody } from './doc-page.ts'
+import { parseDoc } from './frontmatter.ts'
 
 // doc-page.browser.test.ts — the standing trip-wire for GH #369, the docs-site API-table chip contract.
 // A REAL browser file, never jsdom: both facts are RESOLVED LAYOUT + RESOLVED CASCADE (a flex item's
@@ -21,6 +22,12 @@ import { renderApiTable, renderMarkdownBody } from './doc-page.ts'
 //      label's 50.73px. `align-items: flex-start` (doc-page.css) is the fix. This leg is RED-THEN-GREEN
 //      PROVEN: with that one line reverted, `chipWidth < labelWidth` fails on both engines (measured
 //      2026-07-30 — the chip snaps back to exactly the label's width), and passes with it restored.
+//      GH #881 RETARGET: the Attributes table (the ORIGINAL site of this measurement, button-doc's `size`
+//      row) no longer uses `.api-field` at all — it renders a real shared-column-track grid instead
+//      (doc-page.ts's `attributeRow`), so `.api-field`/`.api-field-label` don't exist there anymore. The
+//      mechanism itself is still live for the sibling sequence tables that keep the flowing Form-B design
+//      (Events' "Detail" column is the one surviving `.api-field` consumer, per `renderEventsTable`), so
+//      this leg now measures a synthetic Events fixture instead of `renderApiTable`'s `size` attribute.
 //
 //  (b) THE CHIP WEIGHT. Kim's ruling: "mono font weight should be 400". The global rule declared no
 //      `font-weight`, so a chip inherited one from a bolded ancestor (measured: three `strong > code`
@@ -54,23 +61,37 @@ function textWidth(el: Element): number {
   return range.getBoundingClientRect().width
 }
 
-// Kim's exact reported row: a short `default` ("md") under a wider label ("DEFAULT"). The chipset on the
-// Type field is incidental — `renderApiTable` builds it from `values[]`.
+// GH #881 retarget: a synthetic Events fixture with a deliberately SHORT `detail` value ("x") under the
+// wider "DETAIL" label — the same shape Kim's original report measured (a short value, a wider uppercase
+// label), now on the one sequence-table column that still renders through `.api-field`.
+const CHIP_HUG_FENCE = `---
+tag: ui-fixture-chip-hug
+events:
+  - name: ping
+    detail: 'x'
+    description: A fixture event for the GH #369 chip-hug regression, retargeted onto Events post GH #881.
+---
+Body.`
+
+// Kim's original reported row (button-doc's `size` attribute — a short `default` ("md") under a wider
+// "DEFAULT" label): still the fixture for the font-weight leg below, which reads `.api-row-name code`
+// directly (a structural hook the GH #881 redesign left untouched).
 const SIZE_ATTR = { name: 'size', type: 'string', values: ['sm', 'md', 'lg'], default: 'md', reflect: true }
 
 describe('GH #369 — the API-table code chip hugs its text (a `.api-field` column-flex contract)', () => {
-  it('the DEFAULT chip is materially NARROWER than its own uppercase label sibling', () => {
-    const section = renderApiTable([SIZE_ATTR])
+  it('the DETAIL chip is materially NARROWER than its own uppercase label sibling', () => {
+    const { descriptor } = parseDoc(CHIP_HUG_FENCE)
+    const section = renderEventsTable(descriptor) as HTMLElement
     mount(section)
 
     const field = [...section.querySelectorAll('.api-field')].find(
-      (f) => f.querySelector('.api-field-label')?.textContent === 'Default',
+      (f) => f.querySelector('.api-field-label')?.textContent === 'Detail',
     ) as HTMLElement
-    expect(field, 'the Default field never rendered').toBeTruthy()
+    expect(field, 'the Detail field never rendered').toBeTruthy()
 
     const label = field.querySelector('.api-field-label') as HTMLElement
     const chip = field.querySelector('code') as HTMLElement
-    expect(chip.textContent, 'anti-vacuous: this is the short-default row the bug was reported on').toBe('md')
+    expect(chip.textContent, 'anti-vacuous: this is the deliberately short detail value').toBe('x')
 
     const labelWidth = label.getBoundingClientRect().width
     const chipWidth = chip.getBoundingClientRect().width
@@ -90,6 +111,54 @@ describe('GH #369 — the API-table code chip hugs its text (a `.api-field` colu
     // …and it really is hugging: the box exceeds its text only by its own padding + border, never by a
     // stretch. 10.31px measured; a 16px ceiling leaves room for cross-engine rounding.
     expect(chipWidth - textWidth(chip), 'the box should exceed its text only by padding + border').toBeLessThan(16)
+  })
+})
+
+// ── GH #881 — the Attributes table's shared column tracks ──────────────────────────────────────────────────
+// The reported defect: TYPE/DEFAULT columns "rag vertically" — each row previously sized its own fields off
+// its OWN content (a flex-wrap meta strip), so a row with a wide name or a wide enum chip-set pushed its
+// Type/Default fields to a different x-offset than the row above/below it. jsdom cannot discriminate this
+// (it reports 0-width boxes for everything), so — like the #369 chip-hug leg above — this is a REAL browser
+// layout read: every row's Type/Default/Flags cell must start at the SAME resolved x-offset as every other
+// row's (and the header's), regardless of how wide that row's own Name/Type content is.
+const RAGGED_ATTRS = [
+  // a short name, no chips — the narrow case
+  { name: 'id', type: 'string', reflect: true },
+  // a long name AND a wide enum chip-set — the wide case that used to drag its OWN Type/Default rightward
+  // under the old per-row-sized design, independent of the short row above
+  { name: 'a-very-long-attribute-name-indeed', type: 'enum', values: ['start', 'center', 'end', 'stretch', 'baseline'], default: 'start' },
+  { name: 'x', type: 'number', default: '0' },
+]
+
+describe('GH #881 — the Attributes table lays out on shared column tracks (never per-row-sized)', () => {
+  it('every row\'s Type/Default/Flags cell starts at the SAME x-offset as every other row\'s AND the header\'s', () => {
+    const section = renderApiTable(RAGGED_ATTRS)
+    mount(section)
+
+    const header = section.querySelector('.api-header') as HTMLElement
+    const rows = [...section.querySelectorAll('.api-row')] as HTMLElement[]
+    expect(rows, 'anti-vacuous: all three fixture rows must render').toHaveLength(3)
+
+    const headerCellFor: Record<string, number> = { '.api-row-name': 0, '.api-row-type': 1, '.api-row-default': 2, '.api-row-flags': 3 }
+    for (const cellClass of ['.api-row-name', '.api-row-type', '.api-row-default', '.api-row-flags']) {
+      const headerCell = header.children[headerCellFor[cellClass]] as HTMLElement
+      const lefts = [headerCell, ...rows.map((r) => r.querySelector(cellClass) as HTMLElement)].map(
+        (el) => el.getBoundingClientRect().left,
+      )
+      const [first, ...rest] = lefts
+      for (const left of rest) {
+        expect(left, `${cellClass} left-offsets: ${lefts.map((n) => n.toFixed(1)).join(', ')}`).toBeCloseTo(first, 0)
+      }
+    }
+
+    // ANTI-VACUOUS: the fixture's raw name TEXT genuinely varies in width — this is what would have dragged
+    // Type/Default/Flags to different x-offsets under the OLD per-row-sized design (each row's fields sized
+    // off that row's own content). The assertion above only means something because this disparity is real;
+    // a fixture where every row happened to render identically wide would pass vacuously either way. The
+    // CELL widths themselves are expected to be equal now (that IS the fix — shared tracks, not per-row
+    // sizing), so the anti-vacuous check reads the intrinsic TEXT width, not the rendered cell box.
+    const nameTextWidths = rows.map((r) => textWidth(r.querySelector('.api-row-name code') as HTMLElement))
+    expect(Math.max(...nameTextWidths) - Math.min(...nameTextWidths)).toBeGreaterThan(20)
   })
 })
 

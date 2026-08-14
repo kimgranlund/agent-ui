@@ -126,9 +126,14 @@ function apiBadge(label: string, title: string): HTMLElement {
 }
 
 /**
- * renderApiTable — one Form-B row per `attributes[]` entry (name · type[+enum chips] · default · reflect badge),
- * read straight from the parse so the published surface IS the contract, not a hand-transcribed copy. Wrapped in
- * a titled section.
+ * renderApiTable — GH #881: unlike the four sibling sequence tables (Properties/Events/Slots/Parts, which keep
+ * Form-B's flowing per-row fields because their column SET and a prose `description` vary row-to-row), the
+ * Attributes table has an exact, fixed 4-field shape on every row (name/type/default/reflect — ParsedAttribute
+ * carries no `description`), so it renders as a REAL table-like grid instead: `.api-rows--attributes` declares
+ * the four shared column tracks ONCE, a `.api-header` row labels them, and every `.api-row` opts into those SAME
+ * tracks via `grid-template-columns: subgrid` — so NAME/TYPE/DEFAULT/FLAGS align vertically down the whole page
+ * (doc-page.css), rather than each row sizing its own fields independently (the ragging the issue reported).
+ * `role="table"/"row"/"columnheader"/"cell"` keep it screen-reader-legible now that it visually reads as one.
  *
  * `level` is the section-title heading level (DEFAULT 2), so the standard control doc page (composeDocPage) is
  * byte-identical, while a bespoke page that nests these tables under its own sub-headings (the master-detail
@@ -139,19 +144,67 @@ export function renderApiTable(attributes: readonly ParsedAttribute[], level = 2
   section.append(heading(level, 'Attributes'))
 
   const rows = document.createElement('div')
-  rows.className = 'api-rows'
+  rows.className = 'api-rows api-rows--attributes'
+  rows.setAttribute('role', 'table')
+  rows.append(attributeTableHeader())
   for (const attr of attributes) rows.append(attributeRow(attr))
   section.append(rows)
   return section
 }
 
-/** attributeRow — one Attributes row: Type (chip-set when enum) + Default (code-or-dash) as flowing fields, plus
- *  a "reflects" badge ONLY when the descriptor marks `reflect: true` (false/undefined needs no footnote). */
+/** attributeTableHeader — the ONE column-label row (Name/Type/Default/Flags) `.api-rows--attributes`'s CSS pins
+ *  every data row's grid tracks against (subgrid) — hidden at narrow widths, where each cell instead labels
+ *  itself via `data-label` (doc-page.css), the same "stacked, never a dead gap" discipline the sequence tables'
+ *  narrow leg already follows. */
+function attributeTableHeader(): HTMLElement {
+  const header = document.createElement('div')
+  header.className = 'api-header'
+  header.setAttribute('role', 'row')
+  for (const label of ['Name', 'Type', 'Default', 'Flags']) {
+    const cell = document.createElement('span')
+    cell.setAttribute('role', 'columnheader')
+    cell.textContent = label
+    header.append(cell)
+  }
+  return header
+}
+
+/** attributeRow — one Attributes row as FOUR flat grid cells (name · type[+enum chips] · default · reflect
+ *  flag), each a direct child of `.api-row` so `grid-template-columns: subgrid` lines every cell up under the
+ *  shared header's tracks — never a nested "detail" wrapper sizing its own fields independently (the per-row
+ *  ragging GH #881 reported). `data-label` backs the narrow-width self-labelling leg (doc-page.css). */
 function attributeRow(attr: ParsedAttribute): HTMLElement {
-  const typeValue = attr.values && attr.values.length > 0 ? apiChipset(attr.values) : codeOrDash(attr.type)
-  const meta: Node[] = [apiField('Type', typeValue), apiField('Default', codeOrDash(attr.default))]
-  if (attr.reflect === true) meta.push(apiBadge('reflects', 'Reflects to a DOM attribute (JS-set values stay visible to CSS/attribute selectors)'))
-  return apiRow(attr.name ?? '—', meta)
+  const row = document.createElement('div')
+  row.className = 'api-row'
+  row.setAttribute('role', 'row')
+
+  const nameCell = document.createElement('div')
+  nameCell.className = 'api-row-name'
+  nameCell.setAttribute('role', 'cell')
+  const nameCode = document.createElement('code')
+  nameCode.textContent = attr.name ?? '—'
+  nameCell.append(nameCode)
+
+  const typeCell = document.createElement('div')
+  typeCell.className = 'api-row-type'
+  typeCell.setAttribute('role', 'cell')
+  typeCell.setAttribute('data-label', 'Type')
+  typeCell.append(attr.values && attr.values.length > 0 ? apiChipset(attr.values) : codeOrDash(attr.type))
+
+  const defaultCell = document.createElement('div')
+  defaultCell.className = 'api-row-default'
+  defaultCell.setAttribute('role', 'cell')
+  defaultCell.setAttribute('data-label', 'Default')
+  defaultCell.append(codeOrDash(attr.default))
+
+  const flagsCell = document.createElement('div')
+  flagsCell.className = 'api-row-flags'
+  flagsCell.setAttribute('role', 'cell')
+  flagsCell.setAttribute('data-label', 'Flags')
+  if (attr.reflect === true) flagsCell.append(apiBadge('reflects', 'Reflects to a DOM attribute (JS-set values stay visible to CSS/attribute selectors)'))
+
+  row.append(nameCell, typeCell, defaultCell, flagsCell)
+  return row
 }
 
 /** findAttr — the parsed attribute named `name`, or undefined; the seam doc pages iterate the enum off of. */
