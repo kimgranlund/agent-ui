@@ -153,6 +153,14 @@ const authorLogEmpty = (el: UIAgentAdminElement): boolean => authorLog(el).child
 const authorComposer = (el: UIAgentAdminElement): HTMLElement & { value: string; busy: boolean } =>
   el.querySelector('[data-part="copilot-pane"] > ui-conversation-composer') as HTMLElement & { value: string; busy: boolean }
 
+/** GH #880 REOPENED — which Models rows a pane's picker has MARKED selected, in menu order. `data-selected`
+ *  is the marker the composer's own picker rebuild sets (conversation-composer.ts), so this reads the
+ *  RENDERED menu, not a prop — the half of Kim's filing a `model` prop read alone would have missed. */
+const selectedModelRows = (el: UIAgentAdminElement, pane: 'chat' | 'copilot' = 'copilot'): (string | undefined)[] =>
+  [...el.querySelectorAll(`[data-part="${pane}-pane"] [data-part="models-menu"] [role="menuitem"][data-selected]`)].map(
+    (row) => (row as HTMLElement).dataset.value,
+  )
+
 /** Submit through the UNARMED card's composer — which is the SAME element `submit` above drives once the
  *  flow is armed (that is the point of GH #666's reopen: one composer, one card). The extra flush round is
  *  not padding: arming rides a signal effect, so the entry awaits it before the opening turn can land.
@@ -932,11 +940,19 @@ describe('GH #670 — the unarmed Author card’s Model/Effort pickers: picked b
     const menus = [...authorComposer(unarmed.el).querySelectorAll('[data-part$="-menu"]')].map((m) => m.getAttribute('data-part'))
     expect(menus, 'both menus are built into the unarmed card’s own composer').toEqual(['models-menu', 'effort-menu'])
 
-    // The ONE intended difference, stated rather than left implicit: unarmed there is no committed model to
-    // name (the store that owns it does not exist yet), so the trigger wears its neutral label. Effort IS
-    // knowable unarmed — it is this element's own dial — so it names the value the arm will carry over.
-    expect(trigger(unarmed.el, 'models').textContent).toContain('Models')
+    // GH #880 REOPENED (Kim's second 2026-08-14 ruling) — both triggers NAME a model, and the unarmed one
+    // names the AUTHORING default. This assertion used to pin the opposite (the unarmed trigger's neutral
+    // "Models" label, on the reasoning that no store owns a committed value yet); the owner's pixel-truth
+    // ruling overruled that, so the pin now reads the ruled shape. The two labels differ here, which is what
+    // keeps the claim non-vacuous: the ARMED store is `personaStore()`, an EXPLICIT Haiku choice.
+    expect(trigger(unarmed.el, 'models').textContent).toContain(labelOf(AUTHORING_DEFAULT_MODEL_ID))
     expect(trigger(armed.el, 'models').textContent).toContain(labelOf(DEFAULT_MODEL_ID))
+    expect(labelOf(AUTHORING_DEFAULT_MODEL_ID), 'anti-vacuous: two genuinely different labels').not.toBe(labelOf(DEFAULT_MODEL_ID))
+    // …and the MENU agrees with the trigger on both cards — one row marked, and it is that model's own row
+    // (the second half of the ruling: "the menu row carries the selected marker").
+    expect(selectedModelRows(unarmed.el)).toEqual([AUTHORING_DEFAULT_MODEL_ID])
+    expect(selectedModelRows(armed.el)).toEqual([DEFAULT_MODEL_ID])
+    // Effort IS knowable unarmed — it is this element's own dial — so it names the value the arm carries over.
     expect([trigger(unarmed.el, 'effort').textContent, trigger(armed.el, 'effort').textContent]).toEqual(['Medium', 'Medium'])
   })
 
@@ -948,6 +964,10 @@ describe('GH #670 — the unarmed Author card’s Model/Effort pickers: picked b
 
     pick(el, 'models', PICK)
     await whenFlushed()
+    // GH #880 REOPENED — this label claim no longer discriminates on its own (`PICK` is the one included
+    // non-Haiku model, which is exactly the id the unarmed card now shows by DEFAULT), so the seam + store
+    // reads below carry the "the pick stuck" weight here, and the probe under this one is the label's own
+    // discriminating arm (a pick the visible default is NOT).
     expect(trigger(el, 'models').textContent, 'the unarmed pick STICKS — the write that used to evaporate').toContain(labelOf(PICK))
 
     await submitFirst(el, 'a hotel concierge please')
@@ -956,6 +976,31 @@ describe('GH #670 — the unarmed Author card’s Model/Effort pickers: picked b
     expect(mint.builder().get('model'), 'and the store was MINTED with it — its first read is already the user’s').toBe(PICK)
     expect(pickerProps(el).model, 'which is what the armed composer reads back — nothing overwrote it').toBe(PICK)
     expect(el.store!.get('model'), 'the DRAFT’s own model is untouched: the pick chose the INTERVIEWER’s').toBe(DEFAULT_MODEL_ID)
+  })
+
+  it('GH #880 REOPENED — an explicit pre-arm pick still WINS over the now-visible authoring default, at trigger, marker and seam', async () => {
+    // The discriminator the ruling needs: the default is SHOWN, so "an explicit pick wins" must be proven
+    // with a pick the default is not. `DEFAULT_MODEL_ID` (Haiku) is offered, is not `AUTHORING_DEFAULT_MODEL_ID`,
+    // and — because an untouched card seeds NOTHING — is still visible at the mint SEAM, which is what makes
+    // this a real write of the user's choice rather than the mint path's own coincidental default.
+    const { el } = mountAdmin({ store: personaStore() })
+    await whenFlushed()
+    const mint = seedingMintPath(el)
+    await whenFlushed()
+    expect([trigger(el, 'models').textContent?.trim(), ...selectedModelRows(el)], 'the card opens on the ruled default').toEqual([
+      labelOf(AUTHORING_DEFAULT_MODEL_ID),
+      AUTHORING_DEFAULT_MODEL_ID,
+    ])
+
+    pick(el, 'models', DEFAULT_MODEL_ID)
+    await whenFlushed()
+    expect([trigger(el, 'models').textContent?.trim(), ...selectedModelRows(el)], 'and the pick REPLACES it — label and marker together').toEqual([
+      labelOf(DEFAULT_MODEL_ID),
+      DEFAULT_MODEL_ID,
+    ])
+
+    await submitFirst(el, 'a hotel concierge please')
+    expect(mint.seeds, 'the pick still crosses the seam — the visible default is a READ, never a seed').toEqual([{ model: DEFAULT_MODEL_ID }])
   })
 
   it('a pre-arm EFFORT pick gets the IDENTICAL treatment — it is the interview’s effort from its opening turn', async () => {
@@ -991,23 +1036,29 @@ describe('GH #670 — the unarmed Author card’s Model/Effort pickers: picked b
     await whenFlushed()
     const mint = seedingMintPath(el)
     await whenFlushed()
-    pick(el, 'models', PICK)
+    // The model half picks HAIKU deliberately (not `PICK`): GH #880 REOPENED made the authoring default
+    // visible, so a pick equal to that default could not show a repaint at all.
+    pick(el, 'models', DEFAULT_MODEL_ID)
     pick(el, 'effort', 'high')
     await whenFlushed()
+    expect([trigger(el, 'models').textContent?.trim(), trigger(el, 'effort').textContent], 'both picks are showing first').toEqual([
+      labelOf(DEFAULT_MODEL_ID),
+      'High',
+    ])
 
     el.store = personaStore() // a DIFFERENT store object — the GH #145 reset's own trigger
     await whenFlushed()
 
     expect(
-      [trigger(el, 'models').textContent, trigger(el, 'effort').textContent],
-      'the card repaints neutral: this persona was never described with those choices',
-    ).toEqual(['Models', 'Medium'])
+      [trigger(el, 'models').textContent?.trim(), trigger(el, 'effort').textContent, ...selectedModelRows(el)],
+      'the card repaints to its DEFAULTS: this persona was never described with those choices',
+    ).toEqual([labelOf(AUTHORING_DEFAULT_MODEL_ID), 'Medium', AUTHORING_DEFAULT_MODEL_ID])
     await submitFirst(el, 'a hotel concierge please')
     expect(mint.seeds[0]?.model, 'and the arm carries nothing stale across the switch').toBeUndefined()
     expect(requests.at(-1)!.effort).toBe('medium')
   })
 
-  it('arming EMPTIES the bridge — leaving the flow returns neutral pickers, and a re-arm carries no stale pick', async () => {
+  it('arming EMPTIES the bridge — leaving the flow returns DEFAULT pickers, and a re-arm carries no stale pick', async () => {
     // GH #681 — the in-card button that used to drive both arms here is gone; the card's own composer-first
     // entry (`submitFirst`) is the surviving in-card path that carries the pre-arm pick, so it drives both
     // the first arm and the re-arm below.
@@ -1015,14 +1066,20 @@ describe('GH #670 — the unarmed Author card’s Model/Effort pickers: picked b
     await whenFlushed()
     const mint = seedingMintPath(el)
     await whenFlushed()
-    pick(el, 'models', PICK)
+    // HAIKU again, not `PICK` (see the probe above): the post-arm repaint is only observable against a pick
+    // the visible authoring default is not.
+    pick(el, 'models', DEFAULT_MODEL_ID)
     await whenFlushed()
     await submitFirst(el, 'a hotel concierge please')
-    expect(mint.builder().get('model')).toBe(PICK)
+    expect(mint.seeds, 'the pick crossed the seam as the seed').toEqual([{ model: DEFAULT_MODEL_ID }])
+    expect(mint.builder().get('model')).toBe(DEFAULT_MODEL_ID)
 
     el.authoringStore = undefined // leave the flow — the card returns to its empty-log state
     await whenFlushed()
-    expect(trigger(el, 'models').textContent, 'the bridge is spent: from the arm on, the store was the truth').toContain('Models')
+    expect(
+      [trigger(el, 'models').textContent?.trim(), ...selectedModelRows(el)],
+      'the bridge is spent: the card is back on its own default, not the spent pick',
+    ).toEqual([labelOf(AUTHORING_DEFAULT_MODEL_ID), AUTHORING_DEFAULT_MODEL_ID])
 
     await submitFirst(el, 'a second concierge please')
     expect(mint.seeds[1]?.model, 'so the second arm seeds nothing it was not freshly told').toBeUndefined()
@@ -1102,6 +1159,13 @@ describe('the Authoring row in Surface Options (ADR-0178 cl.3)', () => {
 // the wrong one for the model conducting the interview that authors an agent. The fix is an ABSENT-VALUE
 // read-side default (`sanitizeAuthoringModel`, reached through the element's one `#modelFor` read law):
 // nothing is written, nothing migrates, and the test context is not touched.
+//
+// GH #880 REOPENED (Kim's second 2026-08-14 ruling, on his live screenshot) — the first build fixed the read
+// but left the PRE-ARM card (`#reflectPreArmPickers`) with no `model` prop at all, which the composer renders
+// as its neutral "Models" trigger with no row marked. That card is what the docs page paints at BOOT (the
+// interview arms only from "New agent → Generate"), so the default was invisible on the one surface the
+// filing was about. The ruling: the default is VISIBLE wherever this composer renders, pre-arm included —
+// trigger label AND selected menu row. Both halves are pinned here and in `agent-admin.browser.test.ts`.
 describe('GH #880 — a fresh Builder Interview opens on Sonnet 5; the test chat keeps Haiku', () => {
   const labelOf = (id: string): string => SUPPORTED_MODELS.find((m) => m.id === id)!.label
 
@@ -1164,6 +1228,10 @@ describe('GH #880 — a fresh Builder Interview opens on Sonnet 5; the test chat
       labelOf(DEFAULT_MODEL_ID),
     ])
     expect([committed(el, 'copilot'), committed(el, 'chat')]).toEqual([AUTHORING_DEFAULT_MODEL_ID, DEFAULT_MODEL_ID])
+    // GH #880 REOPENED — the MENUS agree with their triggers: exactly one marked row per pane, each naming
+    // its own context's default. The reopen was reported as "neither menu row selected", so the marker is a
+    // first-class part of the claim, not an implementation detail behind the label.
+    expect([selectedModelRows(el, 'copilot'), selectedModelRows(el, 'chat')]).toEqual([[AUTHORING_DEFAULT_MODEL_ID], [DEFAULT_MODEL_ID]])
 
     // The load-bearing half of "an ABSENT-value READ": neither store was migrated to make the default true.
     expect(builder.get('model'), 'the Builder store still carries NO model — a read-time default, never a write').toBeUndefined()
@@ -1205,13 +1273,23 @@ describe('GH #880 — a fresh Builder Interview opens on Sonnet 5; the test chat
     expect(trigger(el, 'copilot').textContent?.trim()).toBe('Models')
   })
 
-  it('the flow never armed at all is byte-unchanged — the test chat’s Haiku default, and no Sonnet anywhere', async () => {
+  it('THE REOPEN’S OWN SURFACE — never armed at all, the Co-pilot card still SHOWS Sonnet 5 (label + marked row) while the test chat keeps Haiku', async () => {
+    // This is the state the docs page paints at boot, and the state Kim screenshotted: `authoringStore` is
+    // undefined, so the card is the PRE-ARM one (`#reflectPreArmPickers`) and nothing in `#modelFor`'s read
+    // law is reached at all. The previous build pinned the OPPOSITE here (a neutral "Models" trigger, on the
+    // GH #670 reasoning that no store owns a committed value yet) — the owner's ruling overruled it.
     const { el, requests } = mountAdmin({ store: modellessDraft() })
     await whenFlushed()
-    expect(committed(el, 'chat')).toBe(DEFAULT_MODEL_ID)
-    // GH #670 — the unarmed Author card still names no committed model (the store that owns it does not
-    // exist yet); the read-side default must not have turned that honest gap into a printed label.
-    expect(trigger(el, 'copilot').textContent?.trim()).toBe('Models')
+    expect([trigger(el, 'copilot').textContent?.trim(), ...selectedModelRows(el, 'copilot')], 'the pre-arm card names the interview’s default').toEqual([
+      labelOf(AUTHORING_DEFAULT_MODEL_ID),
+      AUTHORING_DEFAULT_MODEL_ID,
+    ])
+    // …and the TEST chat beside it is untouched by that — still the global default, at label, marker and wire.
+    expect([committed(el, 'chat'), trigger(el, 'chat').textContent?.trim(), ...selectedModelRows(el, 'chat')]).toEqual([
+      DEFAULT_MODEL_ID,
+      labelOf(DEFAULT_MODEL_ID),
+      DEFAULT_MODEL_ID,
+    ])
     await submit(el, 'hello', 'test')
     expect(requests.at(-1)!.model).toBe(DEFAULT_MODEL_ID)
   })
@@ -1249,7 +1327,10 @@ describe('GH #880 — a fresh Builder Interview opens on Sonnet 5; the test chat
 
     el.store = modellessDraft() // a DIFFERENT store object — a real persona switch
     await whenFlushed()
-    expect(trigger(el, 'copilot').textContent?.trim(), 'the card repaints neutral: the pick did not survive the switch').toBe('Models')
+    expect(
+      [trigger(el, 'copilot').textContent?.trim(), ...selectedModelRows(el, 'copilot')],
+      'the card repaints to its DEFAULT: the pick did not survive the switch (GH #880 REOPENED — a default, not a neutral label)',
+    ).toEqual([labelOf(AUTHORING_DEFAULT_MODEL_ID), AUTHORING_DEFAULT_MODEL_ID])
 
     await submitFirst(el, 'a hotel concierge please')
     expect(seeds.map((s) => s?.model), 'the fence held — the stale pick seeded nothing').toEqual([undefined])

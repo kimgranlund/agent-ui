@@ -40,6 +40,9 @@ import { ENTRY_KINDS } from './entries.ts'
 import { entriesStoreKey } from '../entry-list/entry-data.ts'
 import { kindEnabledKey, A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID } from './agent-admin-schema.ts'
 import { SURFACE_AUTHORING_KEY } from './agent-admin-schema.ts'
+// GH #880 — the interview context's own model default, read from the schema so the probe cannot drift from
+// the roster (`SUPPORTED_MODELS` also carries the LABEL the trigger is asserted to print).
+import { AUTHORING_DEFAULT_MODEL_ID, DEFAULT_MODEL_ID, SUPPORTED_MODELS } from './agent-admin-schema.ts'
 import { createMemoryStore } from '../settings/memory-store.ts'
 
 const mounted: HTMLElement[] = []
@@ -2818,9 +2821,10 @@ describe('ui-agent-admin — the wide band (GH #662, re-ruled by GH #686\'s Amen
 
     // Compared against the sibling card rather than literals (this describe's own cross-card idiom): whatever
     // the fleet paints for a picker row, the unarmed entry must paint the same one. WIDTH is deliberately not
-    // in the comparison — the unarmed Models trigger reads its neutral "Models" label where Test chat's names
-    // a committed model, so the two pills are honestly different lengths. What must match is the ROW: same
-    // pill height, same vertical seat inside the action row, same leading edge to start from.
+    // in the comparison — since GH #880 REOPENED both triggers name a MODEL, but different ones (the
+    // interview's Sonnet default vs the test chat's global Haiku), so the two pills are honestly different
+    // lengths. What must match is the ROW: same pill height, same vertical seat inside the action row, same
+    // leading edge to start from.
     const pickerRow = (card: HTMLElement): (string | number)[] => {
       const composer = composerOf(card)
       const options = composer.querySelector('[data-part="options"]') as HTMLElement
@@ -2843,6 +2847,50 @@ describe('ui-agent-admin — the wide band (GH #662, re-ruled by GH #686\'s Amen
     // …and they sit in reading order with a real gap, not stacked on one another.
     const [models, effort] = ['models', 'effort'].map((p) => composerOf(author).querySelector(`[data-picker="${p}"]`) as HTMLElement)
     expect(effort!.getBoundingClientRect().left, 'Effort follows Models along the row').toBeGreaterThan(models!.getBoundingClientRect().right)
+  })
+
+  // GH #880 REOPENED (Kim's second 2026-08-14 ruling, from his own live screenshot): the interview's default
+  // model must be VISIBLE wherever this composer renders — pre-arm included — as a trigger LABEL and a MARKED
+  // menu row. The first build shipped the read-law fix with the pre-arm card still neutral, and the screenshot
+  // was of exactly that card (the docs page arms the interview only from "New agent → Generate", so an
+  // untouched page load IS the unarmed state). jsdom proves the attribute; only a real engine proves the mark
+  // is a visible fill and not an inert data attribute the cascade drops.
+  it('UNARMED at the triple: the Author card’s Models trigger NAMES the interview’s default, and the popover marks that row with a visibly different fill', async () => {
+    const el = await mountUnarmedTriple()
+    const { test, author } = cardsOf(el)
+    const composerOf = (card: HTMLElement): HTMLElement => card.querySelector(':scope > ui-conversation-composer') as HTMLElement
+    const labelOf = (id: string): string => SUPPORTED_MODELS.find((m) => m.id === id)!.label
+    const trigger = composerOf(author).querySelector('[data-picker="models"]') as HTMLElement
+
+    // The LABEL, as real text in a real box — the exact half Kim's screenshot showed reading "Models".
+    expect(trigger.textContent, 'the pre-arm trigger names the interview’s own default').toContain(labelOf(AUTHORING_DEFAULT_MODEL_ID))
+    expect(trigger.textContent, 'and no longer wears the neutral placeholder').not.toContain('Models')
+    expect(trigger.getBoundingClientRect().width, 'painted, not a collapsed sliver').toBeGreaterThan(0)
+    // The whole rendered shape of the pair: the sibling TEST chat is untouched, so the two pills disagree on
+    // purpose — an anti-vacuous premise a single-card read cannot carry.
+    expect(composerOf(test).querySelector('[data-picker="models"]')!.textContent, 'the test chat keeps the global default').toContain(
+      labelOf(DEFAULT_MODEL_ID),
+    )
+    expect(labelOf(AUTHORING_DEFAULT_MODEL_ID)).not.toBe(labelOf(DEFAULT_MODEL_ID))
+
+    // The MARKER, through the REAL overlay: open the popover and read the painted rows. `data-selected` is
+    // styled as a bg+ink swap (menu.css, GH #704), so the selected row's own computed fill is the proof the
+    // user can SEE which model is chosen — the reopen's "neither menu row selected" half.
+    trigger.click()
+    await el.updateComplete
+    await frames()
+    const rows = [...composerOf(author).querySelectorAll('[data-part="models-menu"] [role="menuitem"]')] as HTMLElement[]
+    expect(rows.length, 'the popup holds real options').toBeGreaterThan(1)
+    expect(
+      rows.filter((r) => r.hasAttribute('data-selected')).map((r) => r.dataset.value),
+      'exactly one row is marked, and it is the default’s own',
+    ).toEqual([AUTHORING_DEFAULT_MODEL_ID])
+    const marked = rows.find((r) => r.hasAttribute('data-selected'))!
+    const plain = rows.find((r) => !r.hasAttribute('data-selected'))!
+    expect(marked.getBoundingClientRect().height, 'the marked row is painted').toBeGreaterThan(0)
+    expect(getComputedStyle(marked).backgroundColor, 'and the mark READS as selected — a real fill, not a bare attribute').not.toBe(
+      getComputedStyle(plain).backgroundColor,
+    )
   })
 
   it('UNARMED at the triple: a Model picked through the real overlay sticks, then SEEDS the interviewer the first message mints', async () => {

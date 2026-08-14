@@ -2049,18 +2049,32 @@ export class UIAgentAdminElement extends UIElement {
    * with each model's own `includedByDefault` — the SAME set a freshly-minted Builder store yields, since
    * its seed carries no inclusion record either. Same roster before and after the arm, by construction.
    *
-   * The committed VALUE is whatever this element can honestly answer with no store to read:
-   *  - `model` is the pre-arm pick ALONE. Unpicked it stays `undefined`, which the composer renders as the
-   *    neutral "Models" trigger — and that is the truthful reading, not a gap: the model a fresh interviewer
-   *    runs on is its own store's default, which is page-owned (`builderStore()`) and unknowable from here,
-   *    so naming one would print a label the arm then contradicts.
+   * The committed VALUE both rows show:
+   *  - `model` is the pre-arm pick, falling back to the AUTHORING read-time default — GH #880 REOPENED
+   *    (Kim's second 2026-08-14 ruling, pixel-truth on his own live screenshot): the interview's default is
+   *    VISIBLE wherever this composer renders, trigger label AND selected menu row, "including any pre-arm
+   *    state". That OVERRULES the caution this line used to carry (leave it `undefined`, let the composer
+   *    paint its neutral "Models" trigger, on the GH #670 reasoning that a page-owned `builderStore()` could
+   *    seed a model the label would then contradict): an un-named default reads to the user as "no model
+   *    chosen", which is the defect he filed, and a contradicting seed is the page's own choice to make.
+   *    Still a READ and never a write — `#preArm` is untouched, so an unpicked card seeds the mint with
+   *    nothing and GH #670's fence (a pick never leaks past a persona switch) is mechanically unchanged.
    *  - `effort` IS knowable (`#effort` is element-local and is exactly what the arm will carry over), so the
    *    pre-arm pick falls back to the live value rather than to nothing.
+   *
+   * The fallback comes from `sanitizeAuthoringModel` — the SAME function `#modelFor` reaches for the ARMED
+   * interview, so the two authoring reads name one default and cannot drift. It is called directly rather
+   * than through `#modelFor` because that read law keys off DRIVING-STORE IDENTITY, and pre-arm there is no
+   * store to key on (`undefined` there is indistinguishable from the draft/test context). Its roster
+   * argument is the OFFERED list, not the full roster: this value exists only to be SHOWN (no wire reads it
+   * — no store exists, and the seed carries `#preArm.model` alone), so the guard that matters is "an id this
+   * picker can actually name", which is what makes the ruling's visible default structural rather than
+   * incidentally true for the shipped roster.
    */
   #reflectPreArmPickers(conversation: UIConversationElement): void {
-    const roster = modelRoster()
-    conversation.models = roster.filter((m) => isModelIncluded(undefined, m))
-    conversation.model = this.#preArm.model
+    const offered = modelRoster().filter((m) => isModelIncluded(undefined, m))
+    conversation.models = offered
+    conversation.model = sanitizeAuthoringModel(this.#preArm.model, offered)
     conversation.efforts = EFFORT_LEVELS
     conversation.effort = this.#preArm.effort ?? this.#effort
   }
@@ -2680,9 +2694,15 @@ export class UIAgentAdminElement extends UIElement {
    * READS as Sonnet (the `entryAvailability` read-time-default precedent), so a store minted before this
    * ruling, an imported persona file and a bring-your-own store are all unchanged byte-for-byte — and the
    * GH #670 fence is untouched, because a read-side default seeds nothing. That fence's own mechanism is a
-   * LOCAL pre-arm field the persona switch empties (`#resetConversationState`); an unarmed pick still
-   * carries into the mint SEED alone, and the unarmed card still paints its neutral "Models" trigger,
-   * because the store that owns the committed value genuinely does not exist yet (`#reflectPreArmPickers`).
+   * LOCAL pre-arm field the persona switch empties (`#resetConversationState`), and an unarmed pick still
+   * carries into the mint SEED alone.
+   *
+   * GH #880 REOPENED (Kim's second 2026-08-14 ruling) settled what this build first got wrong: the sentence
+   * that stood here judged the UNARMED card's neutral "Models" trigger correct (no store exists yet, so
+   * naming a model could print a label the arm contradicts). His live screenshot showed exactly that neutral
+   * trigger with no row marked and read it as the filed defect unfixed — the default is VISIBLE wherever the
+   * interview composer renders, pre-arm included. `#reflectPreArmPickers` now shows it, through this same
+   * `sanitizeAuthoringModel` fallback and still without a write of any kind.
    *
    * The context is decided by DRIVING-STORE IDENTITY, exactly as `#personaSystemFor` and the consumption
    * fence decide theirs — never by pane, origin or timing. So the two turn arms, which read whichever store
