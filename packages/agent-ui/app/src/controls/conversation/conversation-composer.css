@@ -97,7 +97,8 @@
   --ui-conversation-composer-menu-group-font: 0.68rem;
   --ui-conversation-composer-menu-gap: var(--md-sys-space-xs); /* the panel's own row/group rhythm */
   /* The reference chips share the context-chip pill shape (same row, same rhythm) and differ only by ink:
-     an accent-family sigil marks "this rides THIS turn" against the neutral consumer chips beside them. */
+     the accent family marks "this rides THIS turn" against the neutral consumer chips beside them
+     (GH #891/SPEC-R9 — the ink IS the family mark now; the `@`/`/` sigil node is gone). */
   --ui-conversation-composer-reference-chip-bg: var(--md-sys-color-primary-container-low);
   --ui-conversation-composer-reference-chip-ink: var(--md-sys-color-primary-high);
 }
@@ -235,8 +236,11 @@
 
   /* GH #849 — the committed-reference chips (SPEC-R6): the SAME pill geometry as the consumer context
      chips above (they cohabit one row, so one shape), retinted to the accent family so "this rides THIS
-     turn" reads distinct from a consumer-owned context tag. The `@`/`/` sigil is the mention-vs-invocation
-     marker — the character the user actually typed, not a second icon vocabulary. */
+     turn" reads distinct from a consumer-owned context tag.
+     GH #891 (SPEC-R9) — kind identity: the `data-kind` attribute (a themed consumer's own per-kind hook,
+     unchanged) plus an OPTIONAL leading `ui-icon` the CONSUMER supplies per roster entry. The `@`/`/`
+     sigil that used to carry it is REMOVED — the owner's screenshot ("/ itinerary-timeline ×") named the
+     prefix as the defect; a chip with no consumer glyph is simply label + dismiss. */
   [data-part='reference-chip'] {
     display: flex;
     align-items: center;
@@ -248,9 +252,12 @@
     color: var(--ui-conversation-composer-reference-chip-ink);
     cursor: default; /* a chip is not part of the click-to-focus text area (LLD CVC-C8) */
   }
-  [data-part='reference-chip-sigil'] {
-    font-weight: 600;
-    opacity: 0.75;
+  /* The optional kind glyph (GH #891/SPEC-R9). NO size declaration on purpose: `ui-icon` is a 1em×1em cell
+     by design (icon.css's Display-class law) and the chip's own `font-size: 0.72rem` above is the ambient
+     size, so the glyph lands on the pill's rhythm for free — and `color: inherit` (icon.css) already tracks
+     the chip's accent ink. Only the flex behaviour needs saying: never let a long label squeeze the mark. */
+  [data-part='reference-chip-icon'] {
+    flex: 0 0 auto;
   }
   [data-part='reference-chip-dismiss'] {
     --ui-button-ink: var(--ui-conversation-composer-reference-chip-ink);

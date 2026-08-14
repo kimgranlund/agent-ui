@@ -43,6 +43,12 @@ export interface ReferenceOption {
   label: string
   kind: string
   description?: string
+  /** GH #891 (SPEC-R9) — OPTIONAL: a `ui-icon` glyph name identifying this entry's KIND on the committed
+   *  chip (and, GH #891 ask 3, on a capabilities row). OPAQUE to the composer, exactly as `kind` is: this
+   *  element renders the glyph it is handed and never maps a kind to one — the CONSUMER owns that table
+   *  (`ui-agent-admin`'s `KIND_GLYPHS`), the SPEC's §5 layering clause. Absent ⇒ a label-only chip (the
+   *  generic-consumer default), never a placeholder box. */
+  icon?: string
 }
 
 /** GH #849 (SPEC-R6) — the STRUCTURED reference a committed mention/invocation attaches to a turn, and
@@ -54,6 +60,12 @@ export interface TurnReference {
   id: string
   label: string
   kind: string
+  /** GH #891 (SPEC-R9 AC2) — the `ReferenceOption.icon` this reference was committed from, round-tripped
+   *  VERBATIM exactly as `kind` is (absent when the roster entry carried none). It rides so a consumer can
+   *  render the same kind mark on the SENT turn (SPEC-R10's bubble tags) without re-deriving the mapping
+   *  it already owns; resolution is still by `id` alone (GH #402), and nothing here is load-bearing on the
+   *  wire (SPEC-R4's resolution never reads it). */
+  icon?: string
 }
 
 /** The reasoning-effort levels a live model call can be dialed to — the same low/medium/high/xhigh

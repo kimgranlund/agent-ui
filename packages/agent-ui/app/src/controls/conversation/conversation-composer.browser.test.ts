@@ -19,6 +19,14 @@ import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/component-styles.css'
 import './conversation-composer.css'
 import { UIConversationComposerElement } from './conversation-composer.ts'
+// GH #891 (SPEC-R9) — registers + activates the curated Phosphor pack (ADR-0066) AND defines the two
+// composed controls a chip is built from, so the chip's kind glyph resolves to a REAL <svg> here (the
+// entry-list.browser.test.ts import shape, reused). That is what makes the R9 icon leg a genuine proof
+// rather than a name comparison: an unknown glyph name would render `data-icon-missing` (resolve.ts), and
+// an UNDEFINED `ui-icon` would render nothing at all — both are visible failures of this assertion.
+import '@agent-ui/icons/phosphor'
+import '@agent-ui/components/controls/icon'
+import '@agent-ui/components/controls/button'
 
 const MENTIONABLES = [
   { id: 'res-menu', label: 'Menu PDF', kind: 'resource', description: 'Tonight’s menu' },
@@ -169,6 +177,61 @@ describe('ui-conversation-composer — GH #849 reference typeahead (both engines
     expect(menu.matches(':popover-open'), 'Escape leaves the top layer').toBe(false)
     expect(editor.textContent, 'the dismissed trigger stays as plain text').toBe('/')
     expect(document.activeElement, 'Escape never moves focus off the editor').toBe(editor)
+  })
+})
+
+describe('ui-conversation-composer — GH #891 SPEC-R9: the chip is label + a REAL kind glyph, never a sigil (both engines)', () => {
+  it('the committed chip paints its consumer glyph as a resolved svg, and no `/` character renders anywhere in it', async () => {
+    const { el } = mountComposer()
+    el.invocables = [{ id: 'skill-style', label: 'House style', kind: 'skill', icon: 'star' }]
+    await el.updateComplete
+    const editor = editorOf(el)
+
+    editor.focus()
+    await userEvent.type(editor, '/house')
+    await userEvent.keyboard('{Enter}')
+    await el.updateComplete
+
+    const chip = el.querySelector<HTMLElement>('[data-part="reference-chip"]')!
+    // WHOLE-SHAPE, on the real page: the pill paints, its rendered text is EXACTLY the label (no sigil), and
+    // the removed sigil part is nowhere in the DOM.
+    const chipBox = chip.getBoundingClientRect()
+    expect(chipBox.width, `${server.browser}: the chip must render a real box`).toBeGreaterThan(20)
+    expect(chip.innerText.trim(), 'the visible chip text is exactly the label').toBe('House style')
+    expect(el.querySelector('[data-part="reference-chip-sigil"]'), 'the sigil node is gone from the DOM').toBeNull()
+
+    const icon = chip.querySelector<HTMLElement>('[data-part="reference-chip-icon"]')!
+    expect(icon.getAttribute('glyph')).toBe('star')
+    // The glyph really RESOLVED against the curated pack (an unknown name renders data-icon-missing) and
+    // paints a non-zero box inside the pill, left of the label.
+    expect(icon.hasAttribute('data-icon-missing'), `${server.browser}: 'star' must exist in the curated set`).toBe(false)
+    const svg = icon.querySelector('svg')
+    expect(svg, 'the pack injected a real svg body').not.toBeNull()
+    const iconBox = icon.getBoundingClientRect()
+    expect(iconBox.width, 'the glyph cell is painted, not collapsed').toBeGreaterThan(4)
+    expect(iconBox.height).toBeGreaterThan(4)
+    const labelBox = chip.querySelector<HTMLElement>('[data-part="reference-chip-label"]')!.getBoundingClientRect()
+    expect(iconBox.right, 'the glyph leads the label').toBeLessThanOrEqual(labelBox.left + 1)
+    // ...and the glyph inherits the chip's accent ink rather than declaring its own colour (icon.css's
+    // `color: inherit` + the chip's own reference-chip ink token).
+    expect(getComputedStyle(icon).color).toBe(getComputedStyle(chip).color)
+  })
+
+  it('an icon-less roster entry commits a label-only chip — no glyph cell, no placeholder box', async () => {
+    const { el } = mountComposer()
+    el.mentionables = MENTIONABLES // no `icon` in this roster
+    await el.updateComplete
+    const editor = editorOf(el)
+
+    editor.focus()
+    await userEvent.type(editor, '@brand')
+    await userEvent.keyboard('{Enter}')
+    await el.updateComplete
+
+    const chip = el.querySelector<HTMLElement>('[data-part="reference-chip"]')!
+    expect(chip.querySelector('[data-part="reference-chip-icon"]')).toBeNull()
+    expect(chip.innerText.trim()).toBe('Brand guide')
+    expect(chip.getBoundingClientRect().width, `${server.browser}: still a real pill`).toBeGreaterThan(20)
   })
 })
 

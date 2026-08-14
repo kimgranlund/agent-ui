@@ -54,7 +54,7 @@ attributes:              # attributes-as-API — mirrors conversation-composer.t
     default: undefined    # undefined ⇒ no chip row (coalesced to [] at the one read site — an array literal default cannot round-trip through this token)
     reflect: false
   - name: mentionables
-    type: json            # readonly ReferenceOption[] (composer-options.ts — {id,label,kind,description?}) — GH #849, the '@' roster
+    type: json            # readonly ReferenceOption[] (composer-options.ts — {id,label,kind,description?,icon?}) — GH #849, the '@' roster (GH #891/SPEC-R9 added the optional `icon` glyph name)
     default: undefined    # undefined/empty ⇒ '@' is a PLAIN CHARACTER: no typeahead, no DOM, byte-identical to before
     reflect: false
   - name: invocables
@@ -90,7 +90,7 @@ properties:
   - name: contextItems
     description: A `readonly {id, label}[]` of dismissable chips shown above the text (e.g. "something selected elsewhere, attached to this turn's context"). Default `undefined` — no chip row. A dismiss click fires `onContextDismiss(id)`; the consumer owns actually removing it from this list.
   - name: mentionables
-    description: OPTIONAL `readonly ReferenceOption[]` (composer-options.ts — `{id, label, kind, description?}`) — GH #849's `@` mention roster. Typing `@` at a TOKEN START (start of text, or after whitespace) opens a typeahead over it; committing an item removes the token text and mints a reference chip. Default `undefined` ⇒ `@` is a plain character (no typeahead, no panel DOM at all). `kind` is an OPAQUE string here — this element groups and displays it, never interprets it; a consumer (e.g. `ui-agent-admin`) owns the domain projection, exactly as it already owns `PickerOption`'s.
+    description: OPTIONAL `readonly ReferenceOption[]` (composer-options.ts — `{id, label, kind, description?, icon?}`) — GH #849's `@` mention roster. Typing `@` at a TOKEN START (start of text, or after whitespace) opens a typeahead over it; committing an item removes the token text and mints a reference chip. Default `undefined` ⇒ `@` is a plain character (no typeahead, no panel DOM at all). `kind` is an OPAQUE string here — this element groups and displays it, never interprets it; a consumer (e.g. `ui-agent-admin`) owns the domain projection, exactly as it already owns `PickerOption`'s. GH #891 (SPEC-R9) — `icon` is an equally opaque `ui-icon` glyph NAME the consumer supplies per entry: it renders as the chip's leading kind mark and round-trips onto the committed `TurnReference`; this element never maps a `kind` to a glyph itself, and an entry without one renders a label-only chip.
   - name: invocables
     description: OPTIONAL `readonly ReferenceOption[]` — GH #849's `/` invocation roster, presented as ONE menu grouped by `kind` (group headers appear only when the visible set spans more than one kind), filtered directly by display name — never a two-stage `/tool <name>` grammar. Same default-off law as `mentionables`.
   - name: busy
@@ -126,7 +126,7 @@ parts:                    # NOT shadow-DOM ::part() (light-DOM only) — light-D
   - name: reference-option
     description: One selectable roster entry (`[data-part="reference-option"]`, `role="option"`, a stable `id` for `aria-activedescendant`, plus `data-id`/`data-kind`), holding a `[data-part="reference-option-label"]` and — when the roster entry supplies one — a `[data-part="reference-option-description"]`. `[data-active]` marks the Enter target without moving DOM focus. A click commits it (the panel's own `pointerdown` is preventDefaulted so the editor keeps focus).
   - name: reference-chip
-    description: A committed mention/invocation (`[data-part="reference-chip"]`, `data-kind` for per-kind treatment) living in the SAME chip row as the consumer's `contextItems` chips — consumer chips first, reference chips after. Each holds a `[data-part="reference-chip-sigil"]` (the `@`/`/` the user typed — the mention-vs-invocation marker), a `[data-part="reference-chip-label"]`, and a `[data-part="reference-chip-dismiss"]` `ui-button` that drops the reference from this turn. Composer-OWNED state (unlike `contextItems`): minted by a commit, cleared on a successful send.
+    description: A committed mention/invocation (`[data-part="reference-chip"]`, `data-kind` for per-kind treatment) living in the SAME chip row as the consumer's `contextItems` chips — consumer chips first, reference chips after. Each holds — GH #891 (SPEC-R9) — an OPTIONAL leading `[data-part="reference-chip-icon"]` `ui-icon` (`data-role="icon"`, the glyph the roster entry's own `icon` named; absent ⇒ label-only, never a placeholder box), a `[data-part="reference-chip-label"]`, and a `[data-part="reference-chip-dismiss"]` `ui-button` that drops the reference from this turn. The chip renders NO `@`/`/` sigil: the trigger character is not part of the label (the pre-R9 `[data-part="reference-chip-sigil"]` node is removed) — kind identity is the consumer's glyph + `data-kind`, family identity is the accent ink. Composer-OWNED state (unlike `contextItems`): minted by a commit, cleared on a successful send.
 
 customStates:          # :state() hooks the stylesheet keys off — set via internals.states, never host attrs
   - ready              # the motion gate (interaction-states standard): armed one frame past first paint so the upgrade SNAPS and only subsequent border/bg/ink/dim state changes animate
@@ -210,13 +210,13 @@ this element never imports the a2ui-owned `GenUiMode` type — a consumer builds
 ## GH #849 — `@` mentions, `/` invocations: chips + structured references
 
 ```ts
-composer.mentionables = [{ id: 'res-1', label: 'Menu PDF', kind: 'resource', description: 'Tonight’s menu' }]
+composer.mentionables = [{ id: 'res-1', label: 'Menu PDF', kind: 'resource', description: 'Tonight’s menu', icon: 'file-text' }]
 composer.invocables = [
-  { id: 'skill-1', label: 'House style', kind: 'skill' },
-  { id: 'svc:calc:*', label: 'Calculator', kind: 'tool' },
+  { id: 'skill-1', label: 'House style', kind: 'skill', icon: 'star' },
+  { id: 'svc:calc:*', label: 'Calculator', kind: 'tool', icon: 'gear' },
 ]
 composer.onSubmit((text, references) => {
-  // references: readonly TurnReference[] — [{ id: 'res-1', label: 'Menu PDF', kind: 'resource' }, …]
+  // references: readonly TurnReference[] — [{ id: 'res-1', label: 'Menu PDF', kind: 'resource', icon: 'file-text' }, …]
   // A single-argument consumer is byte-unaffected: the extra argument is simply ignored.
 })
 ```
@@ -234,6 +234,13 @@ are dismissable before send and clear on a successful send alongside the text; c
 chips keep the row's leading positions, composer-owned reference chips follow them. Both rosters default to
 `undefined`, and with neither set this element's DOM and behavior are exactly what they were before GH #849
 (the `models`/`providers` default-off law) — including a single-argument `onSubmit` consumer.
+
+**The chip's anatomy (GH #891/SPEC-R9).** A chip's visible text is exactly the entry's **label** — the `@`/`/`
+the user typed is never part of it. What identifies a chip: the accent **ink** (family — this rides THIS turn,
+against the neutral consumer context tags beside it), the `data-kind` attribute (a themed consumer's per-kind
+CSS hook), and an OPTIONAL leading `ui-icon` whose glyph the **consumer** supplied on the roster entry
+(`ReferenceOption.icon`, round-tripped onto the delivered `TurnReference`). No `icon` ⇒ label + dismiss only,
+never a placeholder box. The composer maps nothing: there is no kind→glyph table in this element, by design.
 
 The composer stays **generic**: it knows `ReferenceOption`/`TurnReference` and treats `kind` as an opaque
 string it groups and displays. It never learns `Entry`, a store, or a kind's semantics — a consumer

@@ -687,7 +687,6 @@ describe('ui-conversation-composer — GH #849 SPEC-R6: the commit shape (chip +
     expect(editorOf(el).textContent).toBe('total the order ')
     expect(chipLabelsOf(el)).toEqual(['Menu PDF'])
     expect((el.querySelector('[data-part="reference-chip"]') as HTMLElement).dataset.kind).toBe('resource')
-    expect((el.querySelector('[data-part="reference-chip-sigil"]') as HTMLElement).textContent).toBe('@')
     expect(sent, 'nothing was SENT by the committing Enter').toEqual([])
     pressEnter(el) // ...now a real send
     expect(sent).toEqual([['total the order', [{ id: 'res-menu', label: 'Menu PDF', kind: 'resource' }]]])
@@ -795,6 +794,93 @@ describe('ui-conversation-composer — GH #849 SPEC-R6: the commit shape (chip +
     expect(chipLabelsOf(el), 'the chip is rebuilt once per connect').toEqual(['Menu PDF'])
     ;(el.querySelector('[data-part="reference-chip-dismiss"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
     expect(chipLabelsOf(el)).toEqual([])
+  })
+})
+
+describe('ui-conversation-composer — GH #891 SPEC-R9: the chip drops its sigil; kind identity is an OPTIONAL consumer icon', () => {
+  it('AC1 — the committed chip renders NO trigger character and no sigil node; its visible text is exactly the label', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.mentionables = MENTIONABLES
+    el.invocables = INVOCABLES
+    typeInto(el, '@men')
+    pressEnter(el)
+    typeInto(el, '/calc')
+    pressEnter(el)
+    expect(el.querySelector('[data-part="reference-chip-sigil"]'), 'the sigil node is REMOVED, not restyled').toBeNull()
+    const chips = [...el.querySelectorAll<HTMLElement>('[data-part="reference-chip"]')]
+    expect(chips.length).toBe(2)
+    // WHOLE-CHIP text, not a per-part read: nothing in a chip's rendered text may be '@' or '/'. The dismiss
+    // ui-button contributes no text (icon-only), so the chip's textContent IS its visible label.
+    expect(chips.map((c) => c.textContent)).toEqual(['Menu PDF', 'Calculator'])
+    for (const chip of chips) {
+      expect([...chip.querySelectorAll('*')].some((n) => n.textContent === '@' || n.textContent === '/')).toBe(false)
+    }
+    // the family/kind hooks R9 keeps: accent ink (CSS, one token) + data-kind, unchanged
+    expect(chips.map((c) => c.dataset.kind)).toEqual(['resource', 'tool'])
+  })
+
+  it('AC2 — a roster entry with `icon` renders a leading ui-icon AND round-trips the glyph onto the reference', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.invocables = [
+      { id: 'skill-style', label: 'House style', kind: 'skill', icon: 'star' },
+      { id: 'svc:calc:*', label: 'Calculator', kind: 'tool', icon: 'gear' },
+    ]
+    const sent: [string, readonly { id: string; label: string; kind: string; icon?: string }[] | undefined][] = []
+    el.onSubmit((text, references) => sent.push([text, references]))
+    typeInto(el, '/house')
+    pressEnter(el)
+    const chip = el.querySelector<HTMLElement>('[data-part="reference-chip"]')!
+    const icon = chip.querySelector<HTMLElement>('[data-part="reference-chip-icon"]')!
+    expect(icon.tagName.toLowerCase()).toBe('ui-icon')
+    expect(icon.getAttribute('glyph')).toBe('star')
+    expect(icon.getAttribute('data-role'), 'the fleet adornment convention').toBe('icon')
+    expect(chip.firstElementChild, 'the glyph is LEADING — before the label').toBe(icon)
+    expect(chip.textContent, 'the icon adds no text: the visible text is still exactly the label').toBe('House style')
+    typeInto(el, 'q')
+    pressEnter(el)
+    expect(sent).toEqual([['q', [{ id: 'skill-style', label: 'House style', kind: 'skill', icon: 'star' }]]])
+  })
+
+  it('AC2 — an entry with NO icon is a label+dismiss chip: no ui-icon, no placeholder box, and no `icon` key on the reference', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.mentionables = MENTIONABLES // no `icon` anywhere in this roster (the generic-consumer default)
+    const sent: [string, readonly object[] | undefined][] = []
+    el.onSubmit((text, references) => sent.push([text, references]))
+    typeInto(el, '@men')
+    pressEnter(el)
+    const chip = el.querySelector<HTMLElement>('[data-part="reference-chip"]')!
+    expect(chip.querySelector('[data-part="reference-chip-icon"]')).toBeNull()
+    expect(chip.querySelector('ui-icon[data-role="icon"]:not([slot])'), 'no bare adornment glyph at all').toBeNull()
+    expect([...chip.children].map((c) => (c as HTMLElement).dataset.part)).toEqual(['reference-chip-label', 'reference-chip-dismiss'])
+    typeInto(el, 'q')
+    pressEnter(el)
+    expect(Object.keys(sent[0]![1]![0]!), 'the pre-R9 {id,label,kind} shape verbatim — never icon: undefined').toEqual([
+      'id', 'label', 'kind',
+    ])
+  })
+
+  it('AC3 — dismiss/dedupe/clear-on-send are untouched by the de-sigilled chip (icons included)', () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.mentionables = [
+      { id: 'res-menu', label: 'Menu PDF', kind: 'resource', icon: 'file-text' },
+      { id: 'res-brand', label: 'Brand guide', kind: 'resource', icon: 'file-text' },
+    ]
+    const sent: [string, readonly { id: string }[] | undefined][] = []
+    el.onSubmit((text, references) => sent.push([text, references]))
+    typeInto(el, '@men')
+    pressEnter(el)
+    typeInto(el, '@menu') // the SAME entry again — still one chip (dedupe by kind+id)
+    pressEnter(el)
+    typeInto(el, '@brand')
+    pressEnter(el)
+    expect(chipLabelsOf(el)).toEqual(['Menu PDF', 'Brand guide'])
+    expect(el.querySelectorAll('[data-part="reference-chip-icon"]').length).toBe(2)
+    ;[...el.querySelectorAll('[data-part="reference-chip-dismiss"]')][0]!.dispatchEvent(new Event('click', { bubbles: true }))
+    expect(chipLabelsOf(el)).toEqual(['Brand guide'])
+    typeInto(el, 'q')
+    pressEnter(el)
+    expect(sent[0]![1]!.map((r) => r.id)).toEqual(['res-brand'])
+    expect(el.querySelector('[data-part="reference-chip"]'), 'chips clear on a successful send').toBeNull()
   })
 })
 

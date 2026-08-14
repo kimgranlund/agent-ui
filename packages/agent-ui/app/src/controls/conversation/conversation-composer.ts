@@ -29,6 +29,12 @@
 // Enter-with-menu-open commits and never sends. Unset rosters ⇒ `@`/`/` are plain characters and this
 // element renders byte-identically to before (the `models`/`providers` default-off law).
 //
+// GH #891 (same SPEC, §11 — SPEC-R9, slice S4): the committed chip drops the sigil prefix. Kind identity
+// rides an OPTIONAL consumer-supplied glyph (`ReferenceOption.icon` → the chip's leading `ui-icon`, round-
+// tripped onto `TurnReference`) plus the shipped `data-kind` hook; the composer still maps NOTHING (§5's
+// layering clause — `ui-agent-admin` owns the kind→glyph table). A roster entry with no `icon` renders a
+// label-only chip, so every pre-R9 consumer keeps exactly the chip it had, minus the `@`/`/` character.
+//
 // The editable surface (LLD CVC-C3′, TKT-0058): the ADR-0014 contenteditable pattern via its multi-line
 // sibling `ui-textarea` (ADR-0134) — a stable `<div data-part="editor" contenteditable="plaintext-only"
 // role="textbox" aria-multiline="true">`, created ONCE and never re-rendered; surface→model on `input`
@@ -64,12 +70,6 @@ interface ActiveToken {
   start: number
   /** Offset just past the token (the caret). */
   end: number
-}
-
-/** A committed reference plus the trigger that minted it (the chip's sigil — mention vs invocation). */
-interface CommittedReference {
-  trigger: Trigger
-  ref: TurnReference
 }
 
 // Module-level id counter — stable, unique `[role="listbox"]`/`[role="option"]` ids for
@@ -222,8 +222,11 @@ export class UIConversationComposerElement extends UIElement {
   // must NOT reopen the menu — the characters are plain inert text from that point on.
   #dismissedToken: { trigger: Trigger; start: number } | undefined
   // The committed references — composer-OWNED state (NOT a prop, unlike consumer-owned `contextItems`):
-  // minted by a commit, dropped by a chip dismiss, cleared by a successful send.
-  #references: CommittedReference[] = []
+  // minted by a commit, dropped by a chip dismiss, cleared by a successful send. GH #891 (SPEC-R9): the
+  // list holds the `TurnReference`s THEMSELVES now. Until R9 each entry also carried the `Trigger` that
+  // minted it, for the chip's sigil prefix — that node is REMOVED (kind identity is the optional
+  // consumer-supplied `icon` + `data-kind`), and with its one reader gone the trigger had no consumer left.
+  #references: TurnReference[] = []
 
   #onSubmitCb: ((text: string, references?: readonly TurnReference[]) => void) | undefined
   #onModelChangeCb: ((id: string) => void) | undefined
@@ -525,7 +528,7 @@ export class UIConversationComposerElement extends UIElement {
     if (text === '') return
     // GH #849 (SPEC-R6) — the chips clear WITH the text on a successful send, and the references ride the
     // callback's second argument (a stable EMPTY array in the overwhelmingly common no-chips case).
-    const references = this.#references.length === 0 ? EMPTY_REFERENCES : this.#references.map((r) => r.ref)
+    const references = this.#references.length === 0 ? EMPTY_REFERENCES : [...this.#references]
     this.value = '' // the caret-guard effect wipes the editor surface on the next flush
     this.#closeReferenceMenu()
     if (this.#references.length > 0) {
@@ -1148,7 +1151,15 @@ export class UIConversationComposerElement extends UIElement {
     this.value = next
     editor.toggleAttribute('data-empty', next === '')
     this.#placeCaret(token.start)
-    this.#addReference(token.trigger, { id: chosen.id, label: chosen.label, kind: chosen.kind })
+    // GH #891 (SPEC-R9 AC2) — `icon` round-trips onto the reference exactly as `kind` does, and ONLY when
+    // the roster entry carried one (never an explicit `icon: undefined` key, so a no-icon consumer's
+    // delivered reference is byte-identical to the pre-R9 `{id,label,kind}` shape).
+    this.#addReference({
+      id: chosen.id,
+      label: chosen.label,
+      kind: chosen.kind,
+      ...(chosen.icon === undefined || chosen.icon === '' ? {} : { icon: chosen.icon }),
+    })
     this.#closeReferenceMenu()
     this.#dismissedToken = undefined
   }
@@ -1175,29 +1186,39 @@ export class UIConversationComposerElement extends UIElement {
 
   /** Add a committed reference, deduped by `kind`+`id`: mentioning the same entry twice is one attachment,
    *  not two identical chips (resolution is by id — a duplicate would resolve to the same bytes twice). */
-  #addReference(trigger: Trigger, ref: TurnReference): void {
-    if (this.#references.some((r) => r.ref.kind === ref.kind && r.ref.id === ref.id)) return
-    this.#references = [...this.#references, { trigger, ref }]
+  #addReference(ref: TurnReference): void {
+    if (this.#references.some((r) => r.kind === ref.kind && r.id === ref.id)) return
+    this.#references = [...this.#references, ref]
     this.#syncReferenceChips()
   }
 
   /** Rebuild the composer-owned reference chips at the END of the shared chip row (consumer `contextItems`
    *  chips keep the row's leading positions — `#syncContextChips`'s own insertion point). Each chip is
-   *  dismissable BEFORE send, which drops that reference from the turn entirely (SPEC-R6 AC2). */
+   *  dismissable BEFORE send, which drops that reference from the turn entirely (SPEC-R6 AC2).
+   *
+   *  GH #891 (SPEC-R9) — the chip carries NO sigil: the `@`/`/` the user typed is not part of the label
+   *  (the owner's screenshot read "/ itinerary-timeline ×"), so the `[data-part="reference-chip-sigil"]`
+   *  node is GONE, not restyled. What identifies the chip instead: the accent ink (family — rides-this-turn
+   *  vs a neutral consumer context tag, unchanged), the `data-kind` CSS hook (unchanged), and an OPTIONAL
+   *  leading `ui-icon` whose glyph the CONSUMER supplied on the roster entry (`ReferenceOption.icon` — the
+   *  composer renders it, never maps a kind to one). No icon ⇒ label + dismiss only, never a placeholder box. */
   #syncReferenceChips(): void {
     const row = this.#contextChips!
     for (const stale of [...row.querySelectorAll('[data-part="reference-chip"]')]) stale.remove()
-    for (const { trigger, ref } of this.#references) {
+    for (const ref of this.#references) {
       const chip = document.createElement('span')
       chip.dataset.part = 'reference-chip'
       chip.dataset.kind = ref.kind
-      // The trigger character IS the per-kind visual distinction (mention vs invocation) — no icon-set
-      // dependency, and it reads exactly like what the user typed. `aria-hidden`: the chip's dismiss button
-      // already carries the full accessible name ("Remove <label> from this turn").
-      const sigil = document.createElement('span')
-      sigil.dataset.part = 'reference-chip-sigil'
-      sigil.setAttribute('aria-hidden', 'true')
-      sigil.textContent = trigger
+      // `data-role="icon"` — the fleet adornment convention (every leading glyph in this file rides it).
+      // AX is unchanged by construction: `ui-icon` is decorative by default (its own `internals.ariaHidden`,
+      // icon.ts — no `aria-hidden` attribute to set from out here), and the dismiss button below still
+      // carries the chip's full accessible name ("Remove {label} from this turn").
+      const icon = ref.icon === undefined || ref.icon === '' ? undefined : document.createElement('ui-icon')
+      if (icon) {
+        icon.dataset.part = 'reference-chip-icon'
+        icon.setAttribute('data-role', 'icon')
+        icon.setAttribute('glyph', ref.icon!)
+      }
       const label = document.createElement('span')
       label.dataset.part = 'reference-chip-label'
       label.textContent = ref.label
@@ -1206,20 +1227,21 @@ export class UIConversationComposerElement extends UIElement {
       dismiss.setAttribute('icon-only', '')
       dismiss.setAttribute('aria-label', `Remove ${ref.label} from this turn`)
       dismiss.dataset.part = 'reference-chip-dismiss'
-      const icon = document.createElement('ui-icon')
-      icon.setAttribute('slot', 'leading')
-      icon.setAttribute('data-role', 'icon')
-      icon.setAttribute('glyph', 'x')
-      dismiss.append(icon)
+      const dismissIcon = document.createElement('ui-icon')
+      dismissIcon.setAttribute('slot', 'leading')
+      dismissIcon.setAttribute('data-role', 'icon')
+      dismissIcon.setAttribute('glyph', 'x')
+      dismiss.append(dismissIcon)
       this.listen(dismiss, 'click', () => this.#removeReference(ref.kind, ref.id))
-      chip.append(sigil, label, dismiss)
+      if (icon) chip.append(icon)
+      chip.append(label, dismiss)
       row.append(chip)
     }
     this.#syncChipRowVisibility()
   }
 
   #removeReference(kind: string, id: string): void {
-    this.#references = this.#references.filter((r) => !(r.ref.kind === kind && r.ref.id === id))
+    this.#references = this.#references.filter((r) => !(r.kind === kind && r.id === id))
     this.#syncReferenceChips()
   }
 }

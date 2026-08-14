@@ -349,7 +349,9 @@ function already shipped in `@agent-ui/components/traits/overlay`).
   keeps SPEC-R6 AC3's DOM byte-identity literally true. Per-kind visual treatment = the typed trigger
   character as a `[data-part="reference-chip-sigil"]` (mention vs invocation) plus `data-kind` for CSS, on
   the accent family so a turn attachment reads distinct from a neutral consumer context tag — no second icon
-  vocabulary. Reference chips are composer-OWNED state (there is no `references` prop): they survive a
+  vocabulary. *(That sigil sentence is SUPERSEDED by **CVC-C18** below — GH #891/SPEC-R9 removes the node and
+  moves kind identity to an optional consumer-supplied glyph; it stays here verbatim as the S2 ship record,
+  and every other clause in this bullet still holds.)* Reference chips are composer-OWNED state (there is no `references` prop): they survive a
   reconnect in the DOM while their listeners do not, so `connected()` rebuilds them once per connect (the
   `#contextItemsBuiltFrom` reset precedent).
 - **CVC-C16 — `onSubmit`, widened additively (SPEC-R6).** `onSubmit(cb: (text, references?) => void)`; the
@@ -366,3 +368,39 @@ function already shipped in `@agent-ui/components/traits/overlay`).
   out of an `overflow: hidden` chat shell (hit-tested at its own centre, the GH #260 clipping class) and the
   committed chip's real painted box. `conversation.test.ts` proves the pass-through seam only, never the
   composer's internals.
+
+---
+
+## v4 — the de-sigilled chip (GH #891 · the same SPEC's §11, SPEC-R9 — slice S4, 2026-08-14)
+
+Governed by [`capability-availability-tagging.spec.md`](../spec/capability-availability-tagging.spec.md)
+**SPEC-R9**; this section is the §11.5-booked repair of v3's own chip-anatomy record (CVC-C15's per-kind
+treatment clause) plus the build-level mechanism R9 leaves to this altitude. Everything else in v1/v2/v3
+stands unchanged. **No ADR flag**: no new event name, no new dependency, no new base/geometry — one node
+removed, one optional node added.
+
+- **CVC-C18 — the chip's anatomy, amended (supersedes CVC-C15's "per-kind visual treatment" sentence).**
+  The `[data-part="reference-chip-sigil"]` node is **REMOVED, not restyled** — the trigger character the user
+  typed is not part of the chip's label (the owner's screenshot: "/ itinerary-timeline ×"). What identifies a
+  chip now: (1) FAMILY — the shipped accent ink (`--ui-conversation-composer-reference-chip-*`), unchanged;
+  (2) KIND — the shipped `data-kind` attribute (a themed consumer's own hook) plus an OPTIONAL leading
+  `[data-part="reference-chip-icon"]` `ui-icon[data-role="icon"]` rendering the glyph the CONSUMER named on
+  the roster entry. `icon` absent ⇒ label + dismiss only, never a placeholder box. The composer maps NOTHING
+  (§5's layering clause holds verbatim: `icon` is as opaque to this element as `kind` — `ui-agent-admin`'s
+  `entries.ts` owns the kind→glyph table). AX is unchanged by construction: the sigil was decorative, the
+  glyph is decorative for free (`ui-icon`'s own `internals.ariaHidden`, icon.ts — no host `aria-hidden` to
+  set from here), and the dismiss button still carries the accessible name.
+- **CVC-C19 — the vocabulary widening + the dropped trigger.** `ReferenceOption` and `TurnReference` each
+  gain `icon?: string` (composer-options.ts), round-tripped verbatim exactly as `kind` is and OMITTED rather
+  than sent as `undefined`, so a no-icon consumer's delivered reference keeps the pre-R9 `{id,label,kind}`
+  key set byte-for-byte (asserted, not assumed — the R9 AC2 negative case reads `Object.keys`). The internal
+  `CommittedReference {trigger, ref}` wrapper is GONE: the sigil was `trigger`'s only reader, so
+  `#references` now holds `TurnReference`s themselves — dead state removed with the node that read it, never
+  left behind as a field nothing consumes.
+- **CVC-C20 — tests.** Four jsdom cases (`conversation-composer.test.ts`, the R9 block): AC1 asserts the
+  WHOLE chip's rendered text equals the label and that no descendant's text is a trigger character (never a
+  per-part read of a node the requirement deletes); AC2 covers both arms — glyph present (leading `ui-icon`,
+  `data-role="icon"`, the reference carrying the same glyph) and glyph absent (no icon node, no `icon` key);
+  AC3 re-proves dismiss/dedupe/clear-on-send over icon-carrying chips. The existing browser case's chip
+  assertions stand unmodified (a painted, non-zero pill) — R9 changes what is INSIDE the pill, not that it
+  paints.
