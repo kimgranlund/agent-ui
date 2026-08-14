@@ -98,6 +98,8 @@ class UIConversationElement extends UIElement {
   #onSubmit: ((text: string) => void) | undefined
   #onClientMessage: ClientMessageListener | undefined
 
+  // WIDENED by GH #891/SPEC-R10 — see the amendment section at the end of this LLD:
+  //   addUserMessage(text: string, references?: readonly TurnReference[]): void
   addUserMessage(text: string): void { /* append a user bubble; sample scroll guard first (LLD-C6) */ }
 
   beginAgentTurn(): AgentTurnHandle {
@@ -176,3 +178,38 @@ The `Category`/`LABEL`/`categoryOf`/`narrateCategories` functions from `a2ui-cha
 - **Shared-file races** — only C9 writes `measure-size.mjs`/`package.json` exports; C11/C12 are file-disjoint (different site pages) and parallel-safe.
 - **Negative-control discipline** — LLD-C8's layering NC (an upward/self `@agent-ui/app` import planted in `a2ui/src`) must still bite after `@agent-ui/a2ui` becomes a genuinely-exercised import, not just a declared one.
 - **Budget re-base is measured, not guessed** — SPEC-R11's re-based ceiling is set against the ACTUAL post-M2 tree at LLD-C9, mirroring the M1/M4 kickoff discipline; no number is picked in advance of a real build.
+
+---
+
+## 11. Amendment — the sent bubble's reference tags (GH #891 · `capability-availability-tagging.spec.md` SPEC-R10, slice S5, 2026-08-14)
+
+The §11.5-booked repair of this record's own `addUserMessage(text)` inventory (§5's LLD-C4 sketch), plus the
+build-level mechanism SPEC-R10 leaves to this altitude. Everything else in LLD-C4/C6 stands unchanged; the
+turn anatomy (`[data-part=turn]` → `who` → `bubble` → `body`) is untouched for a reference-less turn.
+
+- **The widened seam.** `addUserMessage(text: string, references?: readonly TurnReference[])` — additive, so
+  every existing single-argument caller (site pages, a2ui-chat, agent-admin, this LLD's own §5 sketch) is
+  byte-unaffected. `ui-conversation`'s composer→bubble forwarder passes the turn's committed references
+  straight through; it reads neither `kind` nor `icon` (the same opaque-string law the roster props already
+  follow — the domain mapping stays `ui-agent-admin`'s).
+- **The anatomy.** With a NON-EMPTY list the user bubble gains ONE extra child AFTER the body:
+  `[data-part="reference-tags"]` holding one `[data-part="reference-tag"][data-kind]` per reference —
+  an optional leading `[data-part="reference-tag-icon"]` `ui-icon[data-role="icon"]` (SPEC-R9's glyph, when
+  the reference carries one) plus a `[data-part="reference-tag-label"]`. **Dismiss-less**: the turn is sent,
+  so there is nothing to remove — the pre-send dismiss affordance was the composer chip's, and it cleared
+  with the text (SPEC-R6). An absent/empty list appends NOTHING (never a hidden empty row), which is what
+  makes SPEC-R10 AC2's byte-identity true by construction rather than by a CSS `:empty` rule.
+- **The division of truth (R4 untouched).** The bubble BODY stays the TYPED text verbatim; the FRAMED text
+  (`resolveTurnReferences`'s labeled block) remains the wire/history truth and renders only where R4 put it
+  — history, the turn log, the Context views. The tags are the visual record of the attachment, never its
+  bytes; asserted as a `not.toContain` on the framing header/block, not merely implied.
+- **Visual treatment.** Deliberately NOT the composer chip's accent pill: inside an already-accent user
+  bubble a second accent pill reads as a nested control, so a tag is a quieter annotation ON the bubble — a
+  translucent wash of the bubble's own ink (`color-mix`, one token in both schemes) with variant ink, and a
+  real `CanvasText` border under `forced-colors: active`, where the wash is overridden away.
+- **Tests.** `conversation.test.ts`'s R10 block: AC1 (body is typed text + the framing header is absent +
+  one tag per reference, tags after the body, no dismiss button), the glyph-present/glyph-absent pair, AC2
+  (three call shapes — single-arg, `[]`, `undefined` — each asserted as a WHOLE `outerHTML`, the one-child
+  bubble), plain-text tag labels, and the content-renderer non-interference case. `conversation.browser.
+  test.ts` carries the painted proof in both engines. AC3 (history still records the framed text) is the
+  existing `agent-admin.test.ts` R4 suite, unmodified — that is the fence, so it is deliberately NOT edited.

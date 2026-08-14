@@ -98,6 +98,92 @@ describe('ui-conversation — addUserMessage (SPEC-R4 AC1)', () => {
   })
 })
 
+describe('ui-conversation — GH #891 SPEC-R10: the sent bubble carries display-only reference tags', () => {
+  const REFS = [
+    { id: 'res-menu', label: 'Menu PDF', kind: 'resource', icon: 'file-text' },
+    { id: 'svc:calc:*', label: 'Calculator', kind: 'tool' }, // no icon — the mixed case, on purpose
+  ]
+
+  it('AC1 — the body is the TYPED text (never the framed text) and the bubble carries one tag per reference', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.addUserMessage('Total the dinner order', REFS)
+    const bubble = log(el).querySelector('[data-part="bubble"][data-role="user"]') as HTMLElement
+    const body = bubble.querySelector('[data-part="body"]') as HTMLElement
+    expect(body.textContent).toBe('Total the dinner order')
+    // The FRAMED text (SPEC-R4's wire/history truth, built by ui-agent-admin) must never reach a bubble.
+    expect(bubble.textContent).not.toContain('## Referenced for this message')
+    expect(bubble.textContent).not.toContain('### Menu PDF (resource)')
+
+    const row = bubble.querySelector('[data-part="reference-tags"]') as HTMLElement
+    expect(row, 'the tag row is attached to the bubble itself').not.toBeNull()
+    expect(row.parentElement).toBe(bubble)
+    expect(body.compareDocumentPosition(row) & Node.DOCUMENT_POSITION_FOLLOWING, 'the tags follow the body').toBeTruthy()
+    const tags = [...row.querySelectorAll<HTMLElement>('[data-part="reference-tag"]')]
+    expect(tags.map((t) => t.textContent)).toEqual(['Menu PDF', 'Calculator'])
+    expect(tags.map((t) => t.dataset.kind)).toEqual(['resource', 'tool'])
+    // DISMISS-LESS by contract: the turn is sent, so there is nothing to remove (unlike the composer chip).
+    expect(row.querySelector('ui-button')).toBeNull()
+    expect(row.querySelector('[data-part="reference-chip-dismiss"]')).toBeNull()
+  })
+
+  it('AC1 — the R9 glyph rides through when the reference carries one, and is simply absent when it does not', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.addUserMessage('q', REFS)
+    const tags = [...log(el).querySelectorAll<HTMLElement>('[data-part="reference-tag"]')]
+    const icon = tags[0]!.querySelector<HTMLElement>('[data-part="reference-tag-icon"]')!
+    expect(icon.tagName.toLowerCase()).toBe('ui-icon')
+    expect(icon.getAttribute('glyph')).toBe('file-text')
+    expect(icon.getAttribute('data-role')).toBe('icon')
+    expect(tags[0]!.firstElementChild, 'the glyph leads the label').toBe(icon)
+    expect(tags[1]!.querySelector('[data-part="reference-tag-icon"]'), 'no glyph, no cell').toBeNull()
+    expect([...tags[1]!.children].map((c) => (c as HTMLElement).dataset.part)).toEqual(['reference-tag-label'])
+  })
+
+  it('AC2 — a single-arg (or empty-list) addUserMessage renders the pre-R10 bubble byte-identically', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.addUserMessage('single arg') // the pre-R10 call shape, verbatim
+    el.addUserMessage('empty list', [])
+    el.addUserMessage('undefined', undefined)
+    const bubbles = [...log(el).querySelectorAll<HTMLElement>('[data-part="bubble"][data-role="user"]')]
+    expect(bubbles.length).toBe(3)
+    for (const bubble of bubbles) {
+      expect(bubble.querySelector('[data-part="reference-tags"]'), 'no empty row is ever appended').toBeNull()
+      // The WHOLE bubble shape, not just the absence of a row: one child, the body.
+      expect([...bubble.children].map((c) => (c as HTMLElement).dataset.part)).toEqual(['body'])
+    }
+    expect(bubbles.map((b) => b.outerHTML)).toEqual([
+      '<div data-part="bubble" data-role="user"><p data-part="body">single arg</p></div>',
+      '<div data-part="bubble" data-role="user"><p data-part="body">empty list</p></div>',
+      '<div data-part="bubble" data-role="user"><p data-part="body">undefined</p></div>',
+    ])
+  })
+
+  it('AC1 — tag text is plain text: a label carrying markup is never parsed (the addUserMessage escaping law, extended)', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.addUserMessage('q', [{ id: 'x', label: '<b>Menu</b> & more', kind: 'resource' }])
+    const tag = log(el).querySelector('[data-part="reference-tag-label"]') as HTMLElement
+    expect(tag.textContent).toBe('<b>Menu</b> & more')
+    expect(tag.querySelector('b')).toBeNull()
+  })
+
+  it('a registered content renderer never touches the tags (or the user body) — SPEC-R4 AC1 / R12 unchanged', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    el.setContentRenderer((text) => {
+      const marker = document.createElement('div')
+      marker.dataset.part = 'rendered'
+      marker.textContent = `RENDERED:${text}`
+      return marker
+    })
+    el.addUserMessage('**not rendered**', REFS)
+    const bubble = log(el).querySelector('[data-part="bubble"][data-role="user"]') as HTMLElement
+    expect(bubble.querySelector('[data-part="rendered"]')).toBeNull()
+    expect(bubble.querySelector('[data-part="body"]')!.textContent).toBe('**not rendered**')
+    expect([...bubble.querySelectorAll('[data-part="reference-tag-label"]')].map((n) => n.textContent)).toEqual([
+      'Menu PDF', 'Calculator',
+    ])
+  })
+})
+
 describe('ui-conversation — per-surface registry (SPEC-R7): persistent identity across turns', () => {
   it('a fresh surfaceId mounts a NEW ui-surface-host inline in that turn bubble; a KNOWN id (a later turn) routes to the SAME host/bubble', () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)
@@ -546,9 +632,11 @@ describe('ui-conversation — the composed ui-conversation-composer (TKT-0056): 
     expect(child.querySelectorAll('[data-part="reference-chip"]').length, 'the commit landed in the composer').toBe(1)
     editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }))
     expect(sent).toEqual([['total it', [{ id: 'res-menu', label: 'Menu PDF', kind: 'resource' }]]])
-    // The user BUBBLE shows the typed text only — the chips are the composer-side attachment affordance.
+    // The user bubble's BODY is the typed text (SPEC-R4's clause, unchanged) — and since GH #891/SPEC-R10 the
+    // attachment record rides the bubble as display-only tags, because the composer's chips clear on send.
     const bubble = log(el).querySelector('[data-part="bubble"][data-role="user"]') as HTMLElement
     expect(bubble.querySelector('[data-part="body"]')!.textContent).toBe('total it')
+    expect([...bubble.querySelectorAll('[data-part="reference-tag-label"]')].map((n) => n.textContent)).toEqual(['Menu PDF'])
   })
 
   it('committing a Provider/Mode picker choice in the composed child fires ui-conversation\'s OWN onProviderChange/onModeChange (GH #257)', async () => {

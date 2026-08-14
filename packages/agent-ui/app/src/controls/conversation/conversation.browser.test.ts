@@ -651,6 +651,56 @@ describe('ui-conversation cross-engine — chat-path chrome laws (GH #241 + GH #
       availableColumnWidth(log) - 24,
     )
   })
+
+  // GH #891/SPEC-R10 — the sent turn's attachment record, measured on the real page. jsdom resolves NONE of
+  // this: whether the tag row paints as a real pill row INSIDE the bubble, below the body, without widening
+  // the bubble past the column, and whether a reference-less turn's bubble box is left untouched.
+  it('the SENT user turn paints its reference tags inside the bubble, below the body — and a reference-less turn is unchanged', () => {
+    const el = mountConversation()
+    el.addUserMessage('Total the dinner order')
+    el.addUserMessage('Total the dinner order', [
+      { id: 'res-menu', label: 'Menu PDF', kind: 'resource', icon: 'file-text' },
+      { id: 'svc:calc:*', label: 'Calculator', kind: 'tool' },
+    ])
+
+    const log = logOf(el)
+    const bubbles = [...el.querySelectorAll<HTMLElement>('[data-part="bubble"][data-role="user"]')]
+    const [plain, tagged] = bubbles as [HTMLElement, HTMLElement]
+
+    // The reference-LESS bubble is untouched: no row in the DOM at all, and its painted box is the same
+    // shape as before this feature (one body child, hugging its own text).
+    expect(plain.querySelector('[data-part="reference-tags"]')).toBeNull()
+    const plainBox = plain.getBoundingClientRect()
+    const taggedBox = tagged.getBoundingClientRect()
+    expect(taggedBox.height, `${server.browser}: the tagged bubble must be TALLER — the row really paints`).toBeGreaterThan(
+      plainBox.height + 8,
+    )
+    expect(taggedBox.width, 'the tagged bubble still hugs the column').toBeLessThan(availableColumnWidth(log) - 24)
+
+    const row = tagged.querySelector('[data-part="reference-tags"]') as HTMLElement
+    const body = tagged.querySelector('[data-part="body"]') as HTMLElement
+    const rowBox = row.getBoundingClientRect()
+    const bodyBox = body.getBoundingClientRect()
+    // WHOLE-SHAPE: the row sits BELOW the body and strictly INSIDE the bubble's own padded box.
+    expect(rowBox.top, 'the tags render under the message text').toBeGreaterThanOrEqual(bodyBox.bottom - 0.5)
+    expect(rowBox.bottom).toBeLessThanOrEqual(taggedBox.bottom + 0.5)
+    expect(rowBox.left).toBeGreaterThanOrEqual(taggedBox.left - 0.5)
+    expect(rowBox.right).toBeLessThanOrEqual(taggedBox.right + 0.5)
+
+    const tags = [...row.querySelectorAll<HTMLElement>('[data-part="reference-tag"]')]
+    expect(tags.map((t) => t.innerText.trim())).toEqual(['Menu PDF', 'Calculator'])
+    for (const tag of tags) {
+      const tagBox = tag.getBoundingClientRect()
+      expect(tagBox.width, `${server.browser}: a tag must be a real pill, never a zero box`).toBeGreaterThan(12)
+      expect(tagBox.height).toBeGreaterThan(8)
+      // Its own painted pill treatment — a wash distinct from the bubble it annotates, and rounded.
+      expect(alphaOf(getComputedStyle(tag).backgroundColor), 'the tag lost its own background').toBeGreaterThan(0)
+      expect(Number.parseFloat(getComputedStyle(tag).borderTopLeftRadius)).toBeGreaterThan(4)
+      expect(tagBox.height, 'a tag reads as an annotation, never as tall as the body row').toBeLessThan(bodyBox.height + 8)
+    }
+    // Dismiss-less on the real page too (the composer chip's affordance never leaked into the sent bubble).
+    expect(row.querySelector('ui-button')).toBeNull()
+  })
 })
 
 // GH #313/ADR-0160 amendment (Kim's 2026-07-28 ruling — "no bubble unless there is content for it") —

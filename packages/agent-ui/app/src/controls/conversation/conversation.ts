@@ -423,12 +423,16 @@ export class UIConversationElement extends UIElement {
       // it works regardless of whether the consumer's own `onXChange(cb)` call happens before or after
       // THIS element connects (LLD CVC-C5, code-reviewer finding F1) — identical for an adopted composer,
       // the registration mechanism is path-blind by construction (ADR-0180 clause 4).
-      // GH #849 — `references` rides through ADDITIVELY: the user BUBBLE still shows the typed text only
-      // (the chips are the visible attachment affordance, composer-side), while the consumer's own callback
-      // receives the structured references it must resolve at send time.
+      // GH #849 — `references` rides through ADDITIVELY: the consumer's own callback receives the structured
+      // references it must resolve at send time.
+      // GH #891 (SPEC-R10) — and they now ride into the BUBBLE too, as display-only tags: the composer's
+      // pre-send chips clear on send (SPEC-R6), so without this the record of "what rode this turn" would
+      // vanish the instant it was sent. A PASS-THROUGH still: this element adds no semantics (it never reads
+      // `kind`/`icon`), and the bubble's BODY stays the typed text — the framed text R4 puts on the wire and
+      // in history never renders here.
       composer.onSubmit((text, references) => {
         if (this.disabled) return // belt to the composer's own busy-disable — no bubble, no callback
-        this.addUserMessage(text)
+        this.addUserMessage(text, references)
         this.#onSubmitCb?.(text, references)
       })
       composer.onModelChange((id) => this.#onModelChangeCb?.(id))
@@ -475,8 +479,17 @@ export class UIConversationElement extends UIElement {
     })
   }
 
-  /** A user bubble with `text`, unescaped/unmodified (SPEC-R4 AC1). A documented no-op pre-connect. */
-  addUserMessage(text: string): void {
+  /** A user bubble with `text`, unescaped/unmodified (SPEC-R4 AC1). A documented no-op pre-connect.
+   *
+   *  GH #891 (SPEC-R10) — WIDENED ADDITIVELY with the turn's committed `references`: the bubble gains one
+   *  DISPLAY-ONLY tag per reference (label + the R9 kind glyph when the roster supplied one), the record of
+   *  "what the user attached" now that the composer's pre-send chips clear on send. Absent/empty ⇒ the
+   *  bubble DOM is byte-identical to before (an existing single-argument caller is unaffected).
+   *
+   *  The division of truth is R4's, unchanged: the BODY is the TYPED text verbatim — the FRAMED text (the
+   *  labeled attachment block `ui-agent-admin` builds at send) is the wire/history truth and never renders
+   *  in any bubble; these tags are the visual record of the same attachment, never its bytes. */
+  addUserMessage(text: string, references?: readonly TurnReference[]): void {
     if (!this.#guard('addUserMessage')) return
     const wasNear = this.#log!.isNearBottom()
     const { outer, bubble } = this.#makeBubble('user')
@@ -484,8 +497,39 @@ export class UIConversationElement extends UIElement {
     body.dataset.part = 'body'
     body.textContent = text
     bubble.append(body)
+    // Only when there is something to show — an absent/empty list appends NOTHING, so the byte-identity
+    // default is enforced by construction rather than by a hidden empty row (the composer chip-row law).
+    if (references !== undefined && references.length > 0) bubble.append(this.#buildReferenceTags(references))
     this.#log!.append(outer)
     void this.#log!.followTail(wasNear)
+  }
+
+  /** GH #891 (SPEC-R10) — the sent turn's attachment record: one small, DISMISS-LESS tag per reference
+   *  (the turn is sent; there is nothing left to remove — the pre-send dismiss affordance is the composer
+   *  chip's, and it cleared with the text). Label plus the R9 glyph when the reference carries one; `kind`
+   *  rides as a `data-kind` CSS hook exactly as it does on the composer chip, and this element interprets
+   *  neither (the same opaque-string law — `ui-agent-admin` owns the mapping, conversation.md). */
+  #buildReferenceTags(references: readonly TurnReference[]): HTMLElement {
+    const row = document.createElement('div')
+    row.dataset.part = 'reference-tags'
+    for (const reference of references) {
+      const tag = document.createElement('span')
+      tag.dataset.part = 'reference-tag'
+      tag.dataset.kind = reference.kind
+      if (reference.icon !== undefined && reference.icon !== '') {
+        const icon = document.createElement('ui-icon')
+        icon.dataset.part = 'reference-tag-icon'
+        icon.setAttribute('data-role', 'icon')
+        icon.setAttribute('glyph', reference.icon)
+        tag.append(icon)
+      }
+      const label = document.createElement('span')
+      label.dataset.part = 'reference-tag-label'
+      label.textContent = reference.label
+      tag.append(label)
+      row.append(tag)
+    }
+    return row
   }
 
   /** Opens one agent turn: a fresh `[data-part='turn']` wrapper (who → narration → bubble, GH #306/

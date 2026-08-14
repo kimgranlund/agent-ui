@@ -615,7 +615,7 @@ Stale records this extension falsifies — repaired IN the landing slice, never 
 | `conversation-composer.ts` — `CommittedReference`'s doc ("the chip's sigil") + `#syncReferenceChips`'s sigil comment | the trigger character renders as the chip's per-kind mark | S4 ✔ (the `CommittedReference` wrapper itself went with the node — the sigil was its `trigger` field's only reader) |
 | `conversation-composer.css` — the reference-chip comment block's sigil prose | same claim, style-side | S4 ✔ |
 | `conversation-composer.md` + `conversation-composer.lld.md` | pre-R9/R11 chip anatomy + prop/callback inventory | S4 ✔ (chip — the LLD's v4/CVC-C18 section, with CVC-C15's sigil sentence annotated in place as the S2 ship record) · S6 (menu) |
-| `conversation.md` + `conversation.lld.md` | single-arg `addUserMessage`, bubble anatomy | S5 |
+| `conversation.md` + the conversation LLD (`app-surfaces-m2.lld.md` — the file this row's shorthand names; no `conversation.lld.md` exists) | single-arg `addUserMessage`, bubble anatomy | S5 ✔ (descriptor parts + contentModel + prose; the LLD's §5 sketch annotated in place and repaired by its new §11 amendment) |
 | `agent-admin.md` — the reach-path section | no capabilities-menu projection | S7 |
 | this SPEC's §10 chip-treatment bullet | annotated in place (v0.4) | done in this change ✔ |
 
