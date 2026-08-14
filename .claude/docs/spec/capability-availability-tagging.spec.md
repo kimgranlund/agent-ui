@@ -632,7 +632,7 @@ can pull text in later; the only paths that add capability bytes mid-conversatio
 own invocation (SPEC-R4's framing, which then rides replayed history) — so ambient cost is paid on
 EVERY request, forever, and the ceiling has to be structural.
 
-**The byte survey (2026-08-14, the shipped library packs at this commit — the realistic corpus:
+**The byte survey (2026-08-14, the shipped library packs at this commit (pinned to a9fc6f1e) — the realistic corpus:
 `site/pages/agent-admin-libraries.ts` + the mini-skills registry; composition mirrors
 `composeLiveSystemPrompt`'s exact block grammar):**
 
