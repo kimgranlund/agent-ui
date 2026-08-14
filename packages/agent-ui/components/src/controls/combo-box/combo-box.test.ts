@@ -1252,6 +1252,181 @@ describe('ui-combo-box — aria-selected on commit (combo-aria-selected-commit �
   })
 })
 
+// ── GH #912 (the #908 sibling) — the value-keyed aria-selected reflect ─────────────────────────
+//
+// `#commitOption`'s own aria-selected sweep (above) fires ONLY from a USER commit (click/Enter) —
+// ui-combo-box does not use the `selectionCommit` trait at all (a bespoke commit mechanism), so it
+// did not automatically inherit ui-select's GH #908 fix. A declarative `<ui-combo-box value="apple">`
+// or a programmatic `comboBox.value = 'apple'` write already moved the editor text (the model→surface
+// effect treats `value` as the panel's selection truth) but left every option unmarked.
+// `#syncSelectedOption` (combo-box.ts) closes the gap with a value-keyed reflect that runs on every
+// value write AND at every option-adoption pass — the select.ts precedent, adapted.
+
+describe('ui-combo-box — value-keyed aria-selected reflect (combo-aria-selected-reflect)', () => {
+  it('combo-aria-selected-reflect: a declarative value (set before connect) marks the matching option', async () => {
+    const { el, listbox } = makeCombo({ value: 'banana' })
+    await whenFlushed()
+
+    expect(listbox.querySelector('[value="apple"]')?.getAttribute('aria-selected')).toBe('false')
+    expect(listbox.querySelector('[value="banana"]')?.getAttribute('aria-selected')).toBe('true')
+    expect(listbox.querySelector('[value="cherry"]')?.getAttribute('aria-selected')).toBe('false')
+    el.remove()
+  })
+
+  it('combo-aria-selected-reflect: a programmatic value write moves the marker (old option false, new option true)', async () => {
+    const { el, listbox } = makeCombo()
+    await whenFlushed()
+    // Nothing committed yet — every option starts unmarked.
+    for (const opt of listbox.querySelectorAll('[role=option]')) {
+      expect(opt.getAttribute('aria-selected')).toBe('false')
+    }
+
+    el.value = 'apple'
+    await whenFlushed()
+    expect(listbox.querySelector('[value="apple"]')?.getAttribute('aria-selected')).toBe('true')
+    expect(listbox.querySelector('[value="banana"]')?.getAttribute('aria-selected')).toBe('false')
+
+    el.value = 'banana' // move the marker
+    await whenFlushed()
+    expect(listbox.querySelector('[value="apple"]')?.getAttribute('aria-selected')).toBe('false')
+    expect(listbox.querySelector('[value="banana"]')?.getAttribute('aria-selected')).toBe('true')
+    el.remove()
+  })
+
+  it('combo-aria-selected-reflect: a free-text programmatic value (no matching option) marks nothing selected', async () => {
+    const { el, listbox } = makeCombo({ value: 'apple' })
+    await whenFlushed()
+    expect(listbox.querySelector('[value="apple"]')?.getAttribute('aria-selected')).toBe('true')
+
+    el.value = 'pineapple' // not in the option set — free text
+    await whenFlushed()
+    for (const opt of listbox.querySelectorAll('[role=option]')) {
+      expect(opt.getAttribute('aria-selected'), 'no option key matches free text — none should read selected').toBe('false')
+    }
+    el.remove()
+  })
+
+  it('combo-aria-selected-reflect: no event fires on a declarative or programmatic value write (ADR-0019)', async () => {
+    const { el } = makeCombo({ value: 'apple' })
+    let events = 0
+    for (const name of ['select', 'change', 'toggle', 'close']) {
+      el.addEventListener(name, () => { events++ })
+    }
+    await whenFlushed()
+    expect(events, 'a declarative value must stay silent').toBe(0)
+
+    el.value = 'banana' // the programmatic write
+    await whenFlushed()
+    expect(events, 'a programmatic value write must stay silent').toBe(0)
+    el.remove()
+  })
+
+  it('combo-aria-selected-reflect: an option adopted AFTER the value is already set is marked at adoption time (the adoption leg)', async () => {
+    const { el, listbox } = makeCombo()
+    el.value = 'date' // no option with this key exists yet
+    await whenFlushed()
+
+    const late = document.createElement('div')
+    late.setAttribute('role', 'option')
+    late.setAttribute('value', 'date')
+    late.textContent = 'Date'
+    el.append(late)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(late.parentElement).toBe(listbox)
+    expect(late.getAttribute('aria-selected'), 'adopted under an ALREADY-set value must be marked immediately').toBe('true')
+    el.remove()
+  })
+
+  it('combo-aria-selected-reflect: a wholesale rebuild under an UNCHANGED value re-marks the freshly-minted option', async () => {
+    const { el, listbox } = makeCombo()
+    el.value = 'banana'
+    await whenFlushed()
+    expect(listbox.querySelector('[value="banana"]')?.getAttribute('aria-selected')).toBe('true')
+
+    // Simulate a consumer's wholesale rebuild — remove every option and re-mint a fresh set under
+    // the SAME `value` (no signal change for the value-tracking effect to react to).
+    for (const opt of [...listbox.querySelectorAll('[role=option]')]) opt.remove()
+    for (const [value, label] of [['apple', 'Apple'], ['banana', 'Banana'], ['cherry', 'Cherry']] as const) {
+      const opt = document.createElement('div')
+      opt.setAttribute('role', 'option')
+      opt.setAttribute('value', value)
+      opt.textContent = label
+      el.append(opt)
+    }
+    await Promise.resolve()
+    await Promise.resolve()
+
+    const fresh = listbox.querySelector<HTMLElement>('[value="banana"]')!
+    expect(fresh, 'the rebuild must have actually re-minted a fresh node').not.toBe(null)
+    expect(fresh.getAttribute('aria-selected'), 'a rebuild under an UNCHANGED value must still mark the matching fresh option').toBe('true')
+    el.remove()
+  })
+
+  it('combo-aria-selected-reflect: a user commit still marks the committed option and clears the previous one (existing behaviour unchanged)', async () => {
+    const { el, editor, listbox } = makeCombo()
+    el.open = true
+    await whenFlushed()
+
+    fireKey(editor, 'ArrowDown') // Apple
+    fireKey(editor, 'Enter')
+    expect(listbox.querySelector('[value="apple"]')?.getAttribute('aria-selected')).toBe('true')
+    expect(listbox.querySelector('[value="banana"]')?.getAttribute('aria-selected')).toBe('false')
+
+    el.open = true
+    await whenFlushed()
+    fireKey(editor, 'ArrowDown') // Apple (filter cleared on commit)
+    fireKey(editor, 'ArrowDown') // Banana
+    fireKey(editor, 'Enter')
+    expect(listbox.querySelector('[value="apple"]')?.getAttribute('aria-selected')).toBe('false')
+    expect(listbox.querySelector('[value="banana"]')?.getAttribute('aria-selected')).toBe('true')
+    el.remove()
+  })
+
+  // ── The FILTERED-OUT RULING (combo-box.ts's header comment + combo-box.md's own "Selection
+  // reflect" section) — a selected option currently hidden by the active filter still carries
+  // `aria-selected="true"`: the sweep operates on the FULL option set, never the filtered/visible
+  // subset. Selection state is independent of visibility (matches `#commitOption`'s own pre-existing
+  // full-set sweep); the row simply has no visible paint until the filter clears or reveals it again.
+  it('combo-aria-selected-reflect: a filtered-out (hidden) selected option still carries aria-selected="true"', async () => {
+    const { el, editor, listbox } = makeCombo({ value: 'banana' })
+    await whenFlushed()
+    const banana = listbox.querySelector<HTMLElement>('[value="banana"]')!
+    expect(banana.getAttribute('aria-selected'), 'sanity: banana starts selected').toBe('true')
+
+    // Type a filter that hides Banana (does not match "app").
+    editor.textContent = 'app'
+    editor.dispatchEvent(new Event('input', { bubbles: true }))
+    await whenFlushed()
+
+    expect(banana.hidden, 'sanity: the filter really did hide the selected option').toBe(true)
+    expect(
+      banana.getAttribute('aria-selected'),
+      'a filtered-out (hidden) selected option must still carry aria-selected="true" — selection state is independent of visibility',
+    ).toBe('true')
+    el.remove()
+  })
+
+  it('combo-aria-selected-reflect: clearing the filter reveals the still-selected option, still marked', async () => {
+    const { el, editor, listbox } = makeCombo({ value: 'banana' })
+    await whenFlushed()
+
+    editor.textContent = 'app'
+    editor.dispatchEvent(new Event('input', { bubbles: true }))
+    await whenFlushed()
+
+    editor.textContent = ''
+    editor.dispatchEvent(new Event('input', { bubbles: true }))
+    await whenFlushed()
+
+    const banana = listbox.querySelector<HTMLElement>('[value="banana"]')!
+    expect(banana.hidden).toBe(false)
+    expect(banana.getAttribute('aria-selected')).toBe('true')
+    el.remove()
+  })
+})
+
 // ── M2: disabled-option guard — aria-disabled options skip Arrow nav and commit ───────────────
 //
 // Options with `aria-disabled="true"` or the HTML `disabled` attribute must be excluded from
