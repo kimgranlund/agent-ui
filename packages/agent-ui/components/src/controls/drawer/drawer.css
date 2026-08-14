@@ -41,6 +41,15 @@
   --ui-drawer-scrim: var(--md-sys-color-dialog-backdrop); /* the ::backdrop blocking wash — modal's TKT-0019 wash, reused */
   --ui-drawer-inline-size: min(92vw, 26rem); /* the inline-edge (start/end) docked width */
   --ui-drawer-max-block-size: 85svh; /* the bottom-edge docked content-height cap */
+  /* GH #913 (#906's flagged adjacent gap) — the #874/#911 fleet unobtrusive-scrollbar idiom (own-chain
+     tokens off the shared dimensional constant + colour roles, TKT-0066 item 5 law): the dialog part IS
+     the drawer's scroll viewport (`overflow: auto` below, modal.css precedent) and was fully untreated
+     before this fix (raw platform default). The scroll-fade edge affordance (wired in .ts) stays a
+     complementary treatment, unchanged by this. */
+  --ui-drawer-scrollbar-width: thin;
+  --ui-drawer-scrollbar-size: var(--md-sys-scrollbar-size);
+  --ui-drawer-scrollbar-thumb: var(--md-sys-color-neutral-scrollbar-thumb);
+  --ui-drawer-scrollbar-thumb-hover: var(--md-sys-color-neutral-scrollbar-thumb-hover);
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-drawer) consumes ONLY --ui-drawer-* + the --ui-container-* seam ════════════════ */
@@ -61,6 +70,11 @@
     position: fixed;
     margin: 0; /* override the UA showModal() centring margin: auto — a drawer docks, it never centres */
     overflow: auto; /* the dialog IS the scroll viewport (scrollFade wires the edge-aware fade over it) */
+    /* GH #913 — thin, auto-hiding scrollbar: transparent at rest. Focus is TRAPPED inside this dialog by
+       showModal() (the platform), so :focus-within on the dialog part itself (below) is the correct reveal
+       key — the modal.css precedent verbatim. */
+    scrollbar-width: var(--ui-drawer-scrollbar-width);
+    scrollbar-color: transparent transparent;
 
     background-color: var(--ui-container-bg); /* the base plane (elevation) */
     background-image: linear-gradient(var(--ui-container-tint), var(--ui-container-tint)); /* the tonal wash (composition) */
@@ -160,6 +174,30 @@
     :scope > [data-part='dialog'] {
       transition: none;
     }
+  }
+
+  :scope > [data-part='dialog']:hover,
+  :scope > [data-part='dialog']:focus-within {
+    scrollbar-color: var(--ui-drawer-scrollbar-thumb) transparent;
+  }
+  :scope > [data-part='dialog']::-webkit-scrollbar {
+    width: var(--ui-drawer-scrollbar-size); /* physical, not logical — see agent-admin.css's own note on this non-standard pseudo */
+    height: var(--ui-drawer-scrollbar-size);
+  }
+  :scope > [data-part='dialog']::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  :scope > [data-part='dialog']::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: calc(var(--ui-drawer-scrollbar-size) / 2);
+  }
+  :scope > [data-part='dialog']:hover::-webkit-scrollbar-thumb,
+  :scope > [data-part='dialog']:focus-within::-webkit-scrollbar-thumb {
+    background: var(--ui-drawer-scrollbar-thumb);
+  }
+  :scope > [data-part='dialog']:hover::-webkit-scrollbar-thumb:hover,
+  :scope > [data-part='dialog']:focus-within::-webkit-scrollbar-thumb:hover {
+    background: var(--ui-drawer-scrollbar-thumb-hover);
   }
 
   /* the ::backdrop scrim — the platform-painted blocking layer behind the drawer (top layer). */

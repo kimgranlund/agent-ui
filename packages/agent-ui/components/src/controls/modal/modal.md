@@ -72,6 +72,7 @@ geometry:
   padding: var(--ui-modal-padding)   # the dialog shell pad = var(--md-sys-space-lg) (density-responsive layout spacing, NOT a control dimension)
   radius: var(--ui-modal-radius)     # = var(--md-sys-shape-corner-base), the shared fleet radius (ADR-0015 cl.5)
   surface: var(--ui-container-bg) + var(--ui-container-tint)   # the elevation×brightness surface seam (ADR-0015), inherited from the host onto the dialog part
+  scrollbarSeam: --ui-modal-scrollbar-width   # GH #913 — declared `thin` in the token block (the #874/#911 fleet idiom): transparent-at-rest, reveals --ui-modal-scrollbar-thumb{,-hover} on hover or while the dialog part itself is :focus-within (focus is TRAPPED inside by showModal(), so no sibling/host proxy is needed); the scroll-fade edge affordance stays a complementary treatment; a consumer repoints to `none`/`auto`
 
 forcedColors: A `@media (forced-colors: active)` block keeps the dialog surface, frame, and ink visible as system colours (Canvas / CanvasText) and drops the tonal wash (a translucent overlay would defeat the forced Canvas base); the ::backdrop scrim is left to the scrim role / UA so the blocking layer still paints — ADR-0017.
 ---
