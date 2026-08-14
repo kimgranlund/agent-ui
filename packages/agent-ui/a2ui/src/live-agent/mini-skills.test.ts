@@ -162,6 +162,28 @@ describe('form-rhythm — the ADR-0103 Lane C form-provider teaching module', ()
     expect(skill.body).toMatch(/one Field per control/)
     expect(skill.body).toMatch(/submit Button\s+rides inside the FormProvider/)
   })
+
+  // GH #902 (escalated from #888/#901's Findings) — a bare TextField.label is catalog-legal (declared
+  // bindable) but renders NO visible text: ADR-0051's bare-usage contract routes it to the editor's
+  // aria-label only. Visible labels come from wrapping the control in its own Field (the exemplar:
+  // generative-form.ts's `f_name`(Field,label='Full name')+`in_name`(TextField) pair, ADR-0051 seam).
+  it('GH #902 — fires on a label-specific USER intent (visible labels on form fields)', () => {
+    const result = selectMiniSkills('a form where every field has a visible label', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+    expect(result.map((m) => m.id)).toContain('form-rhythm')
+  })
+
+  it('GH #902 — teaches the Field-wrap idiom for visible labels, never a bare control label prop', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'form-rhythm')!
+    expect(skill.body).toMatch(/Visible labels come from Field, never from a bare control/)
+    expect(skill.body).toMatch(/TextField\/Select\/ComboBox\/MultiSelect\/Slider never paint an on-screen label/)
+    expect(skill.body).toMatch(/aria-only or absent, ADR-0051/)
+    expect(skill.body).toMatch(/set label on the wrapping Field instead/)
+  })
+
+  it('GH #902 — the exempted pair still names Checkbox\\/Switch as already-visible (no Field required for label visibility)', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'form-rhythm')!
+    expect(skill.body).toMatch(/Checkbox\/Switch's own label IS already visible \(slotted text\)/)
+  })
 })
 
 // GH #808 S4 (a2ui-container-vocabulary.spec.md SPEC-R8) — the structured-container taught tier:
