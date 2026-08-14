@@ -3823,14 +3823,23 @@ export class UIAgentAdminElement extends UIElement {
       // primary-container-low bg + primary-high ink — the identical register ui-menu's `data-selected`
       // rows use for the composer's Model picker), never a hand-painted class of this element's own.
       //
-      // WHY IT HAS TO HAPPEN HERE, not be left to the control: the only writer of that attribute inside
-      // `ui-select` is `selectionCommit`'s own reflect, which runs on a USER commit (click/Enter) — the
-      // trailing `select.value = activeId` below is a SILENT programmatic write (ADR-0019), so it moves
-      // the trigger label (that effect reads `value`) while leaving every freshly-minted option unmarked.
-      // That is the whole of GH #905: every row rendered identically and only the trigger told you where
-      // you were. Stamping at mint time also makes the marker survive the two pushes a commit-time-only
-      // reflect cannot: a re-push that REBUILDS the nodes under an UNCHANGED `activeId` (the Edit Agents
-      // drawer's rename/reorder → `refreshRoster`), and a page that switches agents programmatically
+      // WHY IT HAD TO HAPPEN HERE (GH #905, pre-#908): the only writer of that attribute inside
+      // `ui-select` used to be `selectionCommit`'s own reflect, which runs on a USER commit (click/Enter)
+      // only — the trailing `select.value = activeId` below is a SILENT programmatic write (ADR-0019), so
+      // it moved the trigger label (that effect reads `value`) while leaving every freshly-minted option
+      // unmarked. That was the whole of GH #905: every row rendered identically and only the trigger told
+      // you where you were.
+      //
+      // GH #908 update: `ui-select` now carries this reflection itself (a value-keyed sweep, PLUS one at
+      // option adoption) — the same two pushes named below (an unchanged-`activeId` rebuild, a no-click
+      // programmatic switch) are covered by the control's own mechanism today, making this page-level
+      // stamp REDUNDANT. Kept anyway, belt-and-braces: it is synchronous (present in the SAME call frame
+      // `setAgentRoster` returns, zero microtask-timing risk for a caller that reads the DOM immediately
+      // after), it is provably harmless (byte-identical final state — both agree, the multi-select.ts
+      // "harmless redundancy" precedent), and retiring it would be an edit to a control this ticket does
+      // not own. Stamping at mint time also makes the marker survive the two pushes a commit-time-only
+      // reflect ALONE cannot: a re-push that REBUILDS the nodes under an UNCHANGED `activeId` (the Edit
+      // Agents drawer's rename/reorder → `refreshRoster`), and a page that switches agents programmatically
       // without any click at all (boot, import, mint).
       //
       // Roster rows ONLY — the trailing Manage items are verbs, never a selectable "where you are", so
@@ -3878,10 +3887,14 @@ export class UIAgentAdminElement extends UIElement {
       item.setAttribute('value', value)
       item.setAttribute('data-part', 'roster-action')
       item.textContent = label
-      // GH #905 — NO `aria-selected` here, deliberately (the roster rows above carry it): these two are
-      // VERBS borrowing the option role for adoption's sake, and "where you are" is a statement only a
-      // roster row can make. Omitting the attribute (rather than stamping `"false"`) keeps that distinction
-      // legible in the DOM and can never paint select.css's selected fill on a management item.
+      // GH #905 — NO `aria-selected` stamped here, deliberately (the roster rows above carry it): these
+      // two are VERBS borrowing the option role for adoption's sake, and "where you are" is a statement
+      // only a roster row can make. GH #908 update: `ui-select` itself now sweeps `aria-selected` across
+      // EVERY `[role=option]` (verbs included) from its own `value`, so this item WILL carry the
+      // attribute as `"false"` moments after mint (the control's own fleet-wide reflect, not this
+      // method) — never `"true"`, never the selected fill, so the load-bearing invariant (never reads
+      // "where you are") survives; only the "never carries the attribute at all" claim is now the
+      // control's call, not this page's.
       group.append(item)
     }
     select.append(group)

@@ -55,7 +55,7 @@ properties:             # IDL beyond attributes-as-API
   - name: required
     description: Whether a selection is required (boolean). Reflects `required`. Drives formValidity() → valueMissing when nothing selected.
   - name: value
-    description: The selected option key (the `value` attribute of the committed [role=option] child). '' = nothing selected. Reflected + bindable (two-way via `select` event). Setting it programmatically updates the trigger label via a scope-owned effect.
+    description: The selected option key (the `value` attribute of the committed [role=option] child). '' = nothing selected. Reflected + bindable (two-way via `select` event). Setting it — declaratively, programmatically, or via a user commit — updates the trigger label AND marks the matching option `aria-selected="true"` in the panel (a value-keyed reflect, GH #908; silent on a declarative/programmatic write — no event fires, ADR-0019).
   - name: label
     description: The bare-usage accessible-name source (ADR-0085). '' = no label → the trigger's accessible name is content-only (the value text, back-compat). When set (and the control is NOT inside a `ui-field`), the trigger's `aria-labelledby` concatenates a control-created, visually-hidden `[data-part=aria-label]` span (holding this text) with the value span, e.g. "Scheme light". Inside a `ui-field`, the field's own visible label is merged in instead (`applyFieldLabelling`) and this prop is not consumed for naming.
   - name: open
@@ -201,7 +201,7 @@ is selected (`value = ''`), the placeholder is shown and the form entry is absen
 
 ## Accessibility
 
-The trigger has `aria-haspopup="listbox"` + `aria-expanded` (synced to `open`). The panel carries `role="listbox"`. Each option carries `aria-selected` (driven by `selectionCommit`). Focus is restored to the trigger on close. The host has no explicit role.
+The trigger has `aria-haspopup="listbox"` + `aria-expanded` (synced to `open`). The panel carries `role="listbox"`. Each option carries `aria-selected`, reflected from the current `value` on every write — declarative, programmatic, or a user commit alike (GH #908) — so a pre-selected or programmatically-set option is always marked in the panel, not only after a click. Focus is restored to the trigger on close. The host has no explicit role.
 
 ## The panel scroll cap (TKT-0027)
 

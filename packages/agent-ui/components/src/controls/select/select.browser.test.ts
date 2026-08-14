@@ -1036,6 +1036,123 @@ describe('ui-select — the trigger accessible-name seam (ADR-0085, both engines
   })
 })
 
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  GH #908/#905 — the value-keyed aria-selected reflect (both engines)
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//
+// selectionCommit's own aria-selected reflect fires ONLY from a user commit (click/Enter) — a
+// declarative `<ui-select value='pro'>` (select.md's own doc example) or a programmatic
+// `el.value = 'pro'` write moved the trigger label and rovingFocus's initialIndex (both already
+// treat `value` as the panel's selection truth) but left every option unmarked: the panel opened
+// with no row showing where you were. #syncSelectedOption (select.ts) closes the gap with a
+// value-keyed reflect (runs on every value write) PLUS one at option-adoption time.
+//
+// MEASUREMENT HAZARD (the agent-admin.browser.test.ts precedent, same control): opening the panel
+// focuses the current selection (`focusOnOpen: true`), and `--ui-select-option-bg-focus` resolves
+// to the SAME colour as `--ui-select-option-bg-selected` (select.css) — a fill read on a FOCUSED
+// row would prove nothing about selection. Every paint read below parks focus OUTSIDE the panel
+// first (blur + assert) before reading a background colour.
+describe('ui-select — value-keyed aria-selected reflect (GH #908/#905, both engines)', () => {
+  const isTransparent = (color: string): boolean =>
+    color === 'transparent' || /rgba\([^)]*,\s*0\)$/.test(color)
+
+  /** Park focus outside the panel so the fill read below is selection, not a focus ring. */
+  const parkFocus = async (el: UISelectElement, panel: HTMLElement): Promise<void> => {
+    const focused = document.activeElement as HTMLElement | null
+    if (focused !== null && panel.contains(focused)) focused.blur()
+    await el.updateComplete
+    expect(panel.contains(document.activeElement), `${server.browser}: focus must be outside the panel for a clean selected-fill read`).toBe(false)
+  }
+
+  it('a declarative value marks the matching option — attribute AND the shipped selected paint (select.md\'s own pre-selected example)', async () => {
+    const { el } = mount(`
+      <ui-select name="tier" value="pro">
+        <div role="option" value="free">Free</div>
+        <div role="option" value="pro">Pro</div>
+        <div role="option" value="enterprise">Enterprise</div>
+      </ui-select>
+    `)
+    await el.updateComplete
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    const pro = listbox.querySelector<HTMLElement>('[value="pro"]')!
+    const free = listbox.querySelector<HTMLElement>('[value="free"]')!
+    expect(pro.getAttribute('aria-selected'), `${server.browser}: the declaratively pre-selected option must be marked`).toBe('true')
+    expect(free.getAttribute('aria-selected')).toBe('false')
+
+    ;(el.querySelector('[data-part="trigger"]') as HTMLElement).click()
+    await el.updateComplete
+    await parkFocus(el, listbox)
+    expect(isTransparent(getComputedStyle(pro).backgroundColor), `${server.browser}: the declaratively-selected row must paint the selected fill`).toBe(false)
+    expect(isTransparent(getComputedStyle(free).backgroundColor), 'an unselected row keeps the plain panel surface').toBe(true)
+  })
+
+  it('a programmatic value write moves the marker — attribute AND paint move together, and NO event fires (ADR-0019)', async () => {
+    const { el } = mount(`
+      <ui-select name="fruit">
+        <div role="option" value="apple">Apple</div>
+        <div role="option" value="banana">Banana</div>
+      </ui-select>
+    `)
+    await el.updateComplete
+    let events = 0
+    for (const name of ['select', 'change', 'toggle', 'close']) el.addEventListener(name, () => { events++ })
+
+    el.value = 'banana'
+    await el.updateComplete
+    expect(events, `${server.browser}: a programmatic value write must stay silent (ADR-0019)`).toBe(0)
+
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    const banana = listbox.querySelector<HTMLElement>('[value="banana"]')!
+    const apple = listbox.querySelector<HTMLElement>('[value="apple"]')!
+    expect(banana.getAttribute('aria-selected')).toBe('true')
+    expect(apple.getAttribute('aria-selected')).toBe('false')
+
+    ;(el.querySelector('[data-part="trigger"]') as HTMLElement).click()
+    await el.updateComplete
+    await parkFocus(el, listbox)
+    expect(isTransparent(getComputedStyle(banana).backgroundColor), `${server.browser}: the programmatically-selected row must paint the selected fill`).toBe(false)
+    expect(isTransparent(getComputedStyle(apple).backgroundColor)).toBe(true)
+  })
+
+  it('an option adopted AFTER the value is already set is marked at adoption time (the adoption leg)', async () => {
+    const { el } = mount(`
+      <ui-select name="fruit" value="date">
+        <div role="option" value="apple">Apple</div>
+      </ui-select>
+    `)
+    await el.updateComplete
+    const late = document.createElement('div')
+    late.setAttribute('role', 'option')
+    late.setAttribute('value', 'date')
+    late.textContent = 'Date'
+    el.append(late)
+    await Promise.resolve()
+    await Promise.resolve()
+    await el.updateComplete
+
+    expect(late.getAttribute('data-part') === null && late.parentElement?.getAttribute('data-part'), `${server.browser}: the late option must be adopted into the panel`).toBe('listbox')
+    expect(late.getAttribute('aria-selected'), `${server.browser}: adopted under an ALREADY-set value, it must be marked immediately`).toBe('true')
+  })
+
+  it('a user commit still marks the clicked option and clears the previous one (existing behaviour unchanged)', async () => {
+    const { el } = mount(`
+      <ui-select name="fruit">
+        <div role="option" value="apple">Apple</div>
+        <div role="option" value="banana">Banana</div>
+      </ui-select>
+    `)
+    await el.updateComplete
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    ;(el.querySelector('[data-part="trigger"]') as HTMLElement).click()
+    await el.updateComplete
+    listbox.querySelector<HTMLElement>('[value="apple"]')!.click()
+    await el.updateComplete
+
+    expect(listbox.querySelector('[value="apple"]')?.getAttribute('aria-selected')).toBe('true')
+    expect(listbox.querySelector('[value="banana"]')?.getAttribute('aria-selected')).toBe('false')
+  })
+})
+
 // ── user-invalid leg (ADR-0051) — jsdom has no CustomStateSet, so :state(user-invalid) matching + the real
 // trigger border repaint can only be proven here (the text-field-states.browser.test.ts precedent).
 describe('ui-select — user-invalid leg (ADR-0051)', () => {

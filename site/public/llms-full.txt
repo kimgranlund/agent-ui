@@ -3246,7 +3246,7 @@ is selected (`value = ''`), the placeholder is shown and the form entry is absen
 
 ## Accessibility
 
-The trigger has `aria-haspopup="listbox"` + `aria-expanded` (synced to `open`). The panel carries `role="listbox"`. Each option carries `aria-selected` (driven by `selectionCommit`). Focus is restored to the trigger on close. The host has no explicit role.
+The trigger has `aria-haspopup="listbox"` + `aria-expanded` (synced to `open`). The panel carries `role="listbox"`. Each option carries `aria-selected`, reflected from the current `value` on every write — declarative, programmatic, or a user commit alike (GH #908) — so a pre-selected or programmatically-set option is always marked in the panel, not only after a click. Focus is restored to the trigger on close. The host has no explicit role.
 
 ## The panel scroll cap (TKT-0027)
 

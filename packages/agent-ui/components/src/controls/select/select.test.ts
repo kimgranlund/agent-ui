@@ -623,6 +623,139 @@ describe('ui-select — selection via click (select-selection-click · select-va
   })
 })
 
+// ── GH #908/#905 — the value-keyed aria-selected reflect ──────────────────────────────────────
+//
+// selectionCommit's own aria-selected reflect fires ONLY from a user commit (click/Enter) — a
+// declarative `<ui-select value='pro'>` or a programmatic `select.value = 'pro'` write moved the
+// trigger label and rovingFocus's initialIndex (both already treat `value` as the panel's
+// selection truth) but left every option unmarked. #syncSelectedOption (select.ts) closes the gap
+// with a value-keyed reflect that runs on every value write AND at every option-adoption pass.
+
+describe('ui-select — value-keyed aria-selected reflect (select-aria-selected-reflect)', () => {
+  it('select-aria-selected-reflect: a declarative value (set before connect) marks the matching option, ADR-0004 select.md\'s own example', async () => {
+    const el = new ProbeSelect()
+    el.setAttribute('value', 'pro')
+    el.innerHTML = `
+      <div role="option" value="free">Free</div>
+      <div role="option" value="pro">Pro</div>
+      <div role="option" value="enterprise">Enterprise</div>
+    `
+    stubFormAssoc(el.probeInternals)
+    document.body.append(el) // connect fires here — the value is already 'pro'
+    await whenFlushed()
+
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    expect(listbox.querySelector('[value="free"]')?.getAttribute('aria-selected')).toBe('false')
+    expect(listbox.querySelector('[value="pro"]')?.getAttribute('aria-selected')).toBe('true')
+    expect(listbox.querySelector('[value="enterprise"]')?.getAttribute('aria-selected')).toBe('false')
+    el.remove()
+  })
+
+  it('select-aria-selected-reflect: a programmatic value write moves the marker (old option false, new option true)', async () => {
+    const { el, listbox } = makeSelect()
+    await whenFlushed()
+    // Nothing selected yet — every option starts unmarked.
+    for (const opt of listbox.querySelectorAll('[role=option]')) {
+      expect(opt.getAttribute('aria-selected')).toBe('false')
+    }
+
+    el.value = 'apple'
+    await whenFlushed()
+    expect(listbox.querySelector('[value="apple"]')?.getAttribute('aria-selected')).toBe('true')
+    expect(listbox.querySelector('[value="banana"]')?.getAttribute('aria-selected')).toBe('false')
+
+    el.value = 'banana' // move the marker
+    await whenFlushed()
+    expect(listbox.querySelector('[value="apple"]')?.getAttribute('aria-selected')).toBe('false')
+    expect(listbox.querySelector('[value="banana"]')?.getAttribute('aria-selected')).toBe('true')
+    el.remove()
+  })
+
+  it('select-aria-selected-reflect: no event fires on a declarative or programmatic value write (ADR-0019)', async () => {
+    const el = new ProbeSelect()
+    el.setAttribute('value', 'pro')
+    el.innerHTML = `
+      <div role="option" value="free">Free</div>
+      <div role="option" value="pro">Pro</div>
+    `
+    stubFormAssoc(el.probeInternals)
+    let events = 0
+    for (const name of ['select', 'change', 'toggle', 'close']) {
+      el.addEventListener(name, () => { events++ })
+    }
+    document.body.append(el) // the declarative write settles here
+    await whenFlushed()
+    expect(events, 'a declarative value must stay silent').toBe(0)
+
+    el.value = 'free' // the programmatic write
+    await whenFlushed()
+    expect(events, 'a programmatic value write must stay silent').toBe(0)
+    el.remove()
+  })
+
+  it('select-aria-selected-reflect: an option adopted AFTER the value is already set is marked at adoption time (the adoption leg)', async () => {
+    const { el, listbox } = makeSelect()
+    el.value = 'date' // no option with this key exists yet
+    await whenFlushed()
+
+    const late = document.createElement('div')
+    late.setAttribute('role', 'option')
+    late.setAttribute('value', 'date')
+    late.textContent = 'Date'
+    el.append(late)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(late.parentElement).toBe(listbox)
+    expect(late.getAttribute('aria-selected'), 'adopted under an ALREADY-set value must be marked immediately').toBe('true')
+    el.remove()
+  })
+
+  it('select-aria-selected-reflect: a wholesale rebuild under an UNCHANGED value re-marks the freshly-minted option (the agent-admin re-push shape, GH #905)', async () => {
+    const { el, listbox } = makeSelect()
+    el.value = 'banana'
+    await whenFlushed()
+    expect(listbox.querySelector('[value="banana"]')?.getAttribute('aria-selected')).toBe('true')
+
+    // Simulate a consumer's wholesale rebuild (agent-admin's `#applyAgentRoster`) — remove every
+    // option and re-mint a fresh set under the SAME `value` (no signal change to react to).
+    for (const opt of [...listbox.querySelectorAll('[role=option]')]) opt.remove()
+    for (const [value, label] of [['apple', 'Apple'], ['banana', 'Banana'], ['cherry', 'Cherry']] as const) {
+      const opt = document.createElement('div')
+      opt.setAttribute('role', 'option')
+      opt.setAttribute('value', value)
+      opt.textContent = label
+      el.append(opt)
+    }
+    await Promise.resolve()
+    await Promise.resolve()
+
+    const fresh = listbox.querySelector<HTMLElement>('[value="banana"]')!
+    expect(fresh, 'the rebuild must have actually re-minted a fresh node').not.toBe(null)
+    expect(fresh.getAttribute('aria-selected'), 'a rebuild under an UNCHANGED value must still mark the matching fresh option').toBe('true')
+    el.remove()
+  })
+
+  it('select-aria-selected-reflect: a user commit still marks the clicked option and clears the previous one (existing behaviour unchanged)', async () => {
+    const { el, listbox } = makeSelect()
+    el.open = true
+    await whenFlushed()
+
+    listbox.querySelector<HTMLElement>('[value="apple"]')!.click()
+    await whenFlushed()
+    expect(listbox.querySelector('[value="apple"]')?.getAttribute('aria-selected')).toBe('true')
+    expect(listbox.querySelector('[value="banana"]')?.getAttribute('aria-selected')).toBe('false')
+
+    el.open = true
+    await whenFlushed()
+    listbox.querySelector<HTMLElement>('[value="banana"]')!.click()
+    await whenFlushed()
+    expect(listbox.querySelector('[value="apple"]')?.getAttribute('aria-selected')).toBe('false')
+    expect(listbox.querySelector('[value="banana"]')?.getAttribute('aria-selected')).toBe('true')
+    el.remove()
+  })
+})
+
 // ── Mouse-driven trigger open (the ADR-0101 erratum regression — the residual #28 defeat) ────────
 //
 // Every probe above opens via the PROGRAMMATIC prop (`el.open = true`), which never exercised the

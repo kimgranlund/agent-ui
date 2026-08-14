@@ -10,6 +10,17 @@
 // commits via its own click + Enter/Space path, which this trait also lacks a Space leg for), and
 // ui-tab items drive selection through ElementInternals, never host attributes (the fleet ARIA law).
 //
+// GH #908/#905 — this trait's OWN `aria-selected` reflect (below) is COMMIT-TIME ONLY: it fires from
+// a real user gesture (click/Enter), never from an external write. A host whose selection can ALSO
+// be set declaratively (an initial attribute) or programmatically (`el.value = …`, a two-way data
+// bind) must layer its OWN value-keyed reflect ON TOP — this trait has no visibility into a host's
+// value prop at all (it tracks its own internal `singleKey`/`multiKeys` cursor, seeded only by a
+// commit or by `syncSelection`'s re-seed at the START of the NEXT commit). `multi-select.ts` and
+// `select.ts` both do this today (their own `this.effect` reading `this.value` + a call at
+// option-adoption time) — harmless redundancy on a user commit (both this trait's reflect and the
+// host's own agree), load-bearing on every OTHER value write. Do not assume this trait's reflect
+// alone is sufficient for a host with an externally-settable value.
+//
 // `traits → dom` is the one allowed cross-layer direction; the host type only.
 
 import type { UIElement } from '../dom/index.ts'

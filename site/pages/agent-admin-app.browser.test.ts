@@ -99,7 +99,11 @@ describe("agent-admin-app — the header's agent-select (S7-d: setAgentRoster/on
     const marked = [...select.querySelectorAll('[role="option"][aria-selected="true"]')] as HTMLElement[]
     expect(marked.map((o) => o.getAttribute('value')), 'exactly one row is marked, and it is the committed agent').toEqual([select.value])
     for (const item of [...select.querySelectorAll('[data-part="roster-action"]')] as HTMLElement[]) {
-      expect(item.hasAttribute('aria-selected'), `${item.textContent} is a management VERB — never "where you are"`).toBe(false)
+      // GH #908 — `ui-select` now sweeps `aria-selected` across EVERY `[role=option]` from its own
+      // `value` (declarative/programmatic/commit alike), so a verb DOES carry the attribute (as
+      // "false") the moment the control's own fleet-wide reflect runs, not only after a first click.
+      // The real invariant this test protects is unchanged: never "true", never the selected fill.
+      expect(item.getAttribute('aria-selected'), `${item.textContent} is a management VERB — never "where you are"`).not.toBe('true')
     }
 
     // The PAINT leg on the real page. Read with focus parked outside the panel: the focus and selected
