@@ -19,10 +19,24 @@
 // transient state (SPEC-R4), so a per-message id-graph check would false-positive. The tree eager-guards
 // the *always*-invalid in-stream cases (2nd `root`, cycle). The finalize-only judgments (missing
 // `root`, dangling) are caught by `finalize()`, which runs the shared validator on the COMPLETE
-// component set (parity with corpus admission, N6) and emits only its id-graph verdict. ADR-0187/GH #829:
-// that finalize call now passes `{ atFinalize: true }`, which extends the finalize-only judgments to a
-// surface `createSurface`'d and never given ANY components — previously waved through by the validator's
-// empty-set exemption, leaving a permanently-blank host with no error to show (GH #802).
+// component set (parity with corpus admission, N6). ADR-0187/GH #829: that finalize call passes
+// `{ atFinalize: true }`, which extends the finalize-only judgments to a surface `createSurface`'d and
+// never given ANY components — previously waved through by the validator's empty-set exemption, leaving
+// a permanently-blank host with no error to show (GH #802).
+//
+// GH #887/#888 (SPEC-N6 validator-parity closure): finalize used to emit ONLY the id-graph verdict,
+// on the stated belief that "CATALOG/POINTER are render-time concerns already surfaced by the widget
+// resolver." Measured false for two real shapes: (1) `wireProps` (widget.ts) applies EVERY prop key an
+// incoming node carries — it never checks the prop is catalog-DECLARED, so an unknown/mismatched
+// property (e.g. a bare `label` on a component whose catalog row carries no such prop) is silently
+// `applyProp`'d and never reported; (2) the binding resolver (binding.ts) has no notion of "invalid" —
+// an out-of-scope relative `{path}` binding or a malformed pointer just resolves to `undefined`/a wrong
+// key, silently. Both shapes ALREADY fail `validateCatalogConformance`/the POINTER stage (corpus
+// admission would reject them, N6), so a payload that fails validation must not instead mount a
+// visually-blank control live with zero client-visible error (the same "fail loudly, never silently"
+// posture ADR-0187 already established for the emptiness case). `#finalizeSurface` below now also
+// surfaces CATALOG + POINTER, de-duped against the ONE CATALOG case the widget resolver DOES already
+// report live (an unknown component TYPE, SPEC-R9 AC2) via `#liveCatalogPaths`.
 //
 // Action wiring (the integration decision — see the build hand-back). The default catalog declares
 // Button's `action` prop with `mapsTo:'action'`. The host knows the catalog, so it knows which props
@@ -142,6 +156,12 @@ class Renderer implements RendererHost {
   readonly #trees = new Map<string, SurfaceTree>()
   readonly #attached = new Set<string>() // surfaceIds whose rendered root is in the mount DOM
   readonly #poisoned = new Set<string>() // surfaceIds the tree flagged with an in-stream IDGRAPH (skip at finalize)
+  // GH #887/#888 — per-surface CATALOG `path`s ALREADY reported live (the widget resolver's ONE live
+  // CATALOG emission site, `widget.ts#create`'s unknown-component-type branch, SPEC-R9 AC2). Finalize's
+  // shared-validator re-derives the SAME finding at the SAME `path` (`conformance.ts`'s `path:
+  // component.id` for that exact case) — this set is what lets `#finalizeSurface` surface every OTHER
+  // CATALOG finding (an unknown/mismatched PROPERTY, never live-reported) without double-reporting this one.
+  readonly #liveCatalogPaths = new Map<string, Set<string>>()
   readonly #listeners = new Set<ClientMessageListener>()
   readonly #actions: ActionDispatcher
   readonly #createWidget: CreateWidget
@@ -184,7 +204,21 @@ class Renderer implements RendererHost {
     // clause 1/2) so every outbound error carries the v1.0 two-code wire shape. Internal callers
     // (functions.ts / checks.ts) still receive and emit `A2uiError` (the 9-code internal taxonomy)
     // unchanged — the map is applied HERE, not at the emit sites.
-    this.#emitError = (error) => this.#emitInternalError(this.#versionFor(error.surfaceId), error)
+    //
+    // GH #887/#888 — records this call's `path` into `#liveCatalogPaths` when it's a live CATALOG
+    // emission (the ONE site: `widget.ts#create`'s unknown-component-type branch) so `#finalizeSurface`
+    // can recognize + skip re-reporting the SAME finding when its shared-validator pass re-derives it.
+    this.#emitError = (error) => {
+      if (error.code === 'CATALOG' && error.surfaceId !== undefined && error.path !== undefined) {
+        let paths = this.#liveCatalogPaths.get(error.surfaceId)
+        if (paths === undefined) {
+          paths = new Set()
+          this.#liveCatalogPaths.set(error.surfaceId, paths)
+        }
+        paths.add(error.path)
+      }
+      this.#emitInternalError(this.#versionFor(error.surfaceId), error)
+    }
     this.#widgetDeps = {
       registry: this.#registry,
       emitError: this.#emitError,
@@ -439,9 +473,11 @@ class Renderer implements RendererHost {
     const entry = surface && this.#registry.get(surface.catalogId)
     if (!surface || !entry) return
 
-    // Run the SHARED validator on the COMPLETE component set (parity, N6). Emit only its id-graph
-    // verdict: CATALOG/POINTER are render-time concerns already surfaced by the widget resolver, and the
-    // finalize-only id-graph judgments (missing `root`, dangling) are what this stage exists to catch.
+    // Run the SHARED validator on the COMPLETE component set (parity, N6): its id-graph verdict (missing
+    // `root`, dangling — the finalize-only judgments this stage exists to catch) PLUS, as of GH #887/#888,
+    // its CATALOG + POINTER verdicts — see the module header for why those are no longer assumed-covered
+    // by the widget resolver. CONTAINMENT stays finalize-silent for now (untouched by either issue; the
+    // renderer's own live rendering never gates on it either — a follow-up, not widened here).
     //
     // ADR-0187 / GH #829 — the CLIENT half of the finalize signal. This method exists precisely to judge
     // the COMPLETE set at finalize (LLD-C11 §8), so it is the one call site whose `atFinalize` assertion
@@ -449,19 +485,34 @@ class Renderer implements RendererHost {
     // `updateComponents { components: [] }` hit `checkIdGraph`'s empty-set early return and was waved
     // through — the empty `ui-surface-host` had no error to show, only its silent `:empty` placeholder
     // (GH #802). Now it fails `${id}:root-missing`, and because ADR-0187 REUSES the existing IDGRAPH code
-    // the filter just below passes it unmodified → `VALIDATION_FAILED` on the wire, zero widening.
+    // the loop below passes it through unmodified → `VALIDATION_FAILED` on the wire, zero widening — the
+    // SAME reuse-not-widen posture GH #887/#888's CATALOG/POINTER arm below follows.
     const complete: A2uiServerMessage = {
       version: surface.version,
       updateComponents: { surfaceId: id, components: [...surface.components.values()] },
     }
     for (const failure of validateA2ui(complete, entry.catalog, undefined, { atFinalize: true }).failures) {
-      if (failure.code !== 'IDGRAPH') continue
-      this.#emitInternalError(surface.version, {
-        code: 'IDGRAPH',
-        surfaceId: id,
-        path: failure.path,
-        message: `id-graph violation: ${failure.path}`,
-      })
+      if (failure.code === 'IDGRAPH') {
+        this.#emitInternalError(surface.version, {
+          code: 'IDGRAPH',
+          surfaceId: id,
+          path: failure.path,
+          message: `id-graph violation: ${failure.path}`,
+        })
+        continue
+      }
+      if (failure.code === 'CATALOG' || failure.code === 'POINTER') {
+        // Skip a CATALOG finding at a `path` the widget resolver ALREADY reported live (the unknown-
+        // component-type case, SPEC-R9 AC2) — everything else here (an unknown/mismatched PROPERTY, or
+        // any POINTER finding) has NEVER been live-reported, by construction (see the module header).
+        if (failure.code === 'CATALOG' && this.#liveCatalogPaths.get(id)?.has(failure.path)) continue
+        this.#emitInternalError(surface.version, {
+          code: failure.code,
+          surfaceId: id,
+          path: failure.path,
+          message: `${failure.code === 'CATALOG' ? 'catalog conformance' : 'binding pointer'} violation: ${failure.path}`,
+        })
+      }
     }
   }
 
@@ -481,6 +532,7 @@ class Renderer implements RendererHost {
     this.#trees.delete(id)
     this.#attached.delete(id)
     this.#poisoned.delete(id)
+    this.#liveCatalogPaths.delete(id) // a fresh createSurface at this id starts with a clean de-dupe set
   }
 
   /**

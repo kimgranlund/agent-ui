@@ -22,6 +22,18 @@ const isAction = (m: A2uiClientMessage): m is A2uiActionMessage => 'action' in m
 const isError = (m: A2uiClientMessage): m is A2uiErrorMessage => 'error' in m
 const isFunctionResponse = (m: A2uiClientMessage): m is A2uiFunctionResponseMessage => 'functionResponse' in m
 
+// jsdom lacks ElementInternals.setFormValue/setValidity entirely (the sanctioned stub pattern —
+// select.test.ts / text-field.test.ts). The GH #887/#888 probes below are the first in this file to
+// mount a REAL, connected `ui-select`/`ui-text-field` (not just `ui-button`), so this file needs the
+// same stub those component-level suites already carry.
+beforeAll(() => {
+  const proto = ElementInternals.prototype as unknown as Record<string, unknown>
+  if (typeof proto['setFormValue'] !== 'function') {
+    proto['setFormValue'] = function (): void {}
+    proto['setValidity'] = function (): void {}
+  }
+})
+
 /** A host wired to a capturing client-message sink + a real mount in the document. */
 function harness(): { r: RendererHost; mount: HTMLElement; sent: A2uiClientMessage[]; cleanup: () => void } {
   const sent: A2uiClientMessage[] = []
@@ -112,6 +124,27 @@ describe('renderer host — streamed render of the default catalog (renderer LLD
     expect(catalogErrors[0]!.error).toMatchObject({ code: 'VALIDATION_FAILED', surfaceId: 's2' })
     expect(catalogErrors[0]!.error.message).toContain('unknown') // node.id 'unknown' folded into message
     expect(catalogErrors[0]!.error).not.toHaveProperty('path') // v1.0 wire shape: no path field
+
+    cleanup()
+  })
+
+  it('GH #887/#888: finalize() does NOT double-report the SAME unknown-component-type CATALOG finding', () => {
+    // `#finalizeSurface` now also surfaces CATALOG/POINTER (GH #887/#888 below) — this proves it does not
+    // re-emit the ONE CATALOG case the widget resolver already reports live (`#liveCatalogPaths` de-dupe).
+    const { r, sent, cleanup } = harness()
+
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's2b', catalogId: 'agent-ui' } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: { surfaceId: 's2b', components: [{ id: 'root', component: 'Doohickey', label: 'Nope' }] },
+      }),
+    )
+    r.finalize() // the complete-set pass re-derives the SAME `root` unknown-component-type finding
+
+    const errors = sent.filter(isError).filter((m) => m.error.code === 'VALIDATION_FAILED')
+    expect(errors).toHaveLength(1) // still exactly one — not two
+    expect(errors[0]!.error.message).toContain('root')
 
     cleanup()
   })
@@ -216,6 +249,149 @@ describe('renderer host — stream faults + lifecycle (renderer LLD §9, SPEC-N3
     expect(sent.filter(isError)).toEqual([])
 
     cleanup()
+  })
+
+  // GH #887/#888 — a generated Select rendered a BLANK listbox (mounted `[role=option]` divs with no
+  // value/label text) and generated form fields rendered with NO visible labels, both with ZERO client-
+  // visible error. Root-caused: `wireProps` (widget.ts) applies ANY prop key a node carries without
+  // checking it is catalog-DECLARED, and the binding resolver (binding.ts) silently resolves an
+  // out-of-scope relative `{path}` to `undefined` — so a payload the SHARED validator already rejects
+  // (CATALOG/POINTER, corpus-admission parity, N6) used to render broken live with no error at all
+  // (`#finalizeSurface` filtered those codes out). Fixed by surfacing them at finalize, same posture as
+  // the ADR-0187/GH #829 emptiness fix: fail loudly, never mount silently.
+  describe('renderer host — GH #887/#888: CATALOG/POINTER now fail loudly at finalize (validator-parity, SPEC-N6)', () => {
+    it('#887: Option nodes statically childed under Select (no list template) but bound via a RELATIVE {path} — the exact blank-listbox repro', async () => {
+      const { r, mount, sent, cleanup } = harness()
+
+      r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's-opt', catalogId: 'agent-ui', sendDataModel: true } }))
+      r.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 's-opt', value: { table: { type: '' } } } }))
+      r.ingest(
+        line({
+          version: 'v1.0',
+          updateComponents: {
+            surfaceId: 's-opt',
+            components: [
+              { id: 'root', component: 'Select', name: 'tableType', value: { path: '/table/type' }, children: ['o1', 'o2'] },
+              // Statically-childed Option nodes (NOT a `children:{path,componentId}` template) carrying a
+              // RELATIVE {path} — there is no list-item scope here, so `binding.ts` resolves both to
+              // `undefined`: the option DIVs mount (role/tabindex/data-roving) with no value, no text.
+              { id: 'o1', component: 'Option', value: { path: 'value' }, label: { path: 'label' } },
+              { id: 'o2', component: 'Option', value: { path: 'value' }, label: { path: 'label' } },
+            ],
+          },
+        }),
+      )
+      r.finalize()
+      await whenFlushed()
+
+      // The blank options still mount (SPEC-R9 AC2 non-fatal posture — sibling content survives).
+      const options = mount.querySelectorAll('[role=option]')
+      expect(options).toHaveLength(2)
+      expect(options[0]!.textContent).toBe('')
+      expect(options[0]!.hasAttribute('value')).toBe(false)
+
+      // But it no longer renders SILENTLY: `Option.value` isn't `bindable` (catalog.json) — a {path} on it
+      // is a CATALOG conformance failure, and finalize now surfaces it (it never did before this fix).
+      const errors = sent.filter(isError)
+      expect(errors.length).toBeGreaterThan(0)
+      expect(errors.every((e) => e.error.code === 'VALIDATION_FAILED')).toBe(true)
+      expect(errors.some((e) => e.error.message.includes('o1.value'))).toBe(true)
+      expect(errors.some((e) => e.error.message.includes('o2.value'))).toBe(true)
+
+      cleanup()
+    })
+
+    it('#887 (alt shape): Select given an "options" array prop (the MultiSelect shape) instead of Option children — CATALOG, not silent', () => {
+      const { r, mount, sent, cleanup } = harness()
+
+      r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's-opt2', catalogId: 'agent-ui' } }))
+      r.ingest(
+        line({
+          version: 'v1.0',
+          updateComponents: {
+            surfaceId: 's-opt2',
+            components: [
+              {
+                // `A2uiComponent` carries an open `[prop: string]: unknown` index signature (protocol.ts) —
+                // `options` is not a TS-level error here, only a CATALOG-level one (Select has no `options`
+                // PropDef in catalog.json; MultiSelect does).
+                id: 'root', component: 'Select', name: 'tableType',
+                options: [{ value: 'window', label: 'Window' }, { value: 'patio', label: 'Patio' }],
+              },
+            ],
+          },
+        }),
+      )
+      r.finalize()
+
+      expect(mount.querySelectorAll('[role=option]')).toHaveLength(0) // nothing renders `options` — undeclared prop
+      const errors = sent.filter(isError)
+      expect(errors).toHaveLength(1)
+      expect(errors[0]!.error).toMatchObject({ code: 'VALIDATION_FAILED', surfaceId: 's-opt2' })
+      expect(errors[0]!.error.message).toContain('root.options')
+
+      cleanup()
+    })
+
+    it('#888: a bare Select.label (no catalog row — Select declares NO `label` PropDef) fails loudly instead of rendering an invisible aria-only label', () => {
+      const { r, mount, sent, cleanup } = harness()
+
+      r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's-lbl', catalogId: 'agent-ui' } }))
+      r.ingest(
+        line({
+          version: 'v1.0',
+          updateComponents: {
+            surfaceId: 's-lbl',
+            // NOT wrapped in `Field` — the taught, correct shape (see `booking-reservation`/every shipped
+            // form seed). `ui-select` DOES have its own `label` accessor (bare-usage aria-only, ADR-0085 —
+            // select.md), so the widget resolver happily sets it; the catalog deliberately declares NO
+            // `label` PropDef for Select (unlike TextField/ComboBox/MultiSelect), so this is CATALOG-invalid.
+            components: [{ id: 'root', component: 'Select', name: 'size', label: 'Party size', children: ['o1'] }, { id: 'o1', component: 'Option', value: '2', label: '2 people' }],
+          },
+        }),
+      )
+      r.finalize()
+
+      // Renders — but "Party size" lands ONLY in the control-created, visually-hidden aria-label span
+      // (select.md's `[data-part=aria-label]`, ADR-0085), never in the REAL visible trigger label
+      // (`[data-part=label]`, which shows the placeholder/selection text) — the reported "no labels" shape.
+      expect(mount.querySelector('ui-select')).not.toBeNull()
+      expect(mount.querySelector('[data-part="aria-label"]')?.textContent).toBe('Party size')
+      expect(mount.querySelector('[data-part="label"]')?.textContent).not.toContain('Party size')
+
+      const errors = sent.filter(isError)
+      expect(errors).toHaveLength(1)
+      expect(errors[0]!.error).toMatchObject({ code: 'VALIDATION_FAILED', surfaceId: 's-lbl' })
+      expect(errors[0]!.error.message).toContain('root.label')
+
+      cleanup()
+    })
+
+    it('#888 negative control: a catalog-legal bare TextField.label (declared bindable in catalog.json) does NOT spuriously fail — a producer-teaching gap, not a validator defect (ADR-0051)', () => {
+      // TextField.label IS a declared, bindable catalog prop (catalog.json) — setting it bare (not
+      // wrapped in `Field`) is catalog-CONFORMANT; it is simply aria-only by the control's own design
+      // (ADR-0051, text-field.md). This must stay silent: it is not a shape the shared validator can (or
+      // should) reject — closing it is a producer prompt/grammar teaching concern, out of this fix's scope.
+      const { r, mount, sent, cleanup } = harness()
+
+      r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's-tf', catalogId: 'agent-ui' } }))
+      r.ingest(
+        line({
+          version: 'v1.0',
+          updateComponents: {
+            surfaceId: 's-tf',
+            components: [{ id: 'root', component: 'TextField', name: 'guest', label: 'Guest name' }],
+          },
+        }),
+      )
+      r.finalize()
+
+      expect(mount.textContent).not.toContain('Guest name') // still invisible (aria-only) — unchanged behavior
+      expect(sent.filter(isError)).toEqual([]) // 0 errors — catalog-conformant, correctly not flagged
+      expect(mount.querySelector('ui-text-field')?.getAttribute('label')).toBe('Guest name') // aria-label seam, per ADR-0051
+
+      cleanup()
+    })
   })
 
   it('ADR-0031: FUNCTION (checks unknown fn) → VALIDATION_FAILED on the wire + surfaceId (corrected mapping)', async () => {
