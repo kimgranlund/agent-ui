@@ -97,3 +97,44 @@ longer entangled with the ratification act itself.
   decides for itself; this ADR binds only agent-ui.
 - **Not in scope:** auto-ratification of anything (merge, approval, labels); ratifying SPEC/LLD/PRD
   statuses (their own lag philosophy is untouched); retroactive re-recording of past ratifications.
+
+## Amendment (2026-08-14, **proposed** — Kim ratifies) — the flip triad loses its README-row element: F2's write sequence and F5's housekeeping enumeration re-rule to Status cell · Ratified-by cell · derived-index regen ([PR #854](https://github.com/kimgranlund/agent-ui/pull/854))
+
+> Append-only: the Status cell reads `accepted` for the record as a whole and stays byte-untouched
+> — agents never flip status (`.claude/hooks/adr-status-guard.py`). Every section above is
+> unedited. The ratification path is Kim's `ratify ADR-0149 amendment` utterance on the carrying
+> PR, executed by `scripts/adr_ratify.py`'s amendment mode (GH #664 — the `AMENDMENT_HEADER_RE`
+> path this heading's exact marker format exists for).
+
+**What changed upstream — already ratified and shipped; this amendment is the record catching up,
+not new work.** Kim's standing no-index-file rule (2026-08-13) — its verbatim home is
+`agent-ui-doc-standards` §1b; cite it there, this amendment deliberately does not re-quote it —
+deleted `.claude/docs/adr/README.md` outright
+([PR #854](https://github.com/kimgranlund/agent-ui/pull/854)). The same PR executed the tooling
+consequences in one change: `adr_ratify.py`'s README-index-row step was removed, and the derived
+indexes now read the DIRECTORY, not a table (`scripts/generate-sitemap.mjs`'s `generateAdrIndex`
+globs `NNNN-*.md` and takes each file's title + status from the file itself). This Decision's
+flip-triad prose is the last active description of the dead third element; the two sentences
+re-ruled below no longer read true against the shipped flip.
+
+**Re-ruled — F2's write sequence.** F2's enumeration of the script's mechanical pass — "verify
+(F3) → rewrite the Status cell … → fill the Ratified-by cell … → update the README index row's
+status column → regenerate the derived indexes" — retires its README-row element. The flip's
+writes are: **Status cell → Ratified-by cell → derived-index regen**
+(`node scripts/generate-sitemap.mjs`). Everything else in F2 stands: the deterministic script
+remains the only agent-side path, and no LLM composes ratification language at any point.
+
+**Re-ruled — F5's housekeeping enumeration.** F5's parenthetical "(Ratified-by cell, README row,
+derived indexes)" likewise retires the README row: the surrounding housekeeping inside
+`adr_ratify.py`'s single deterministic pass is the Ratified-by cell + the derived indexes. F5's
+split — script-knowable housekeeping in the pass, everything else ordinary agent doc repair in a
+follow-up commit — stands whole.
+
+**Everything else stands.** F1 (the signal), F3 (fail-closed verification), F4 (the absolute
+Edit-tool ban + the legal hand-flip), and every Consequence are untouched — none of them name the
+README row. The header table's Repairs cell was pointer-repaired and annotated in place by
+PR #854 (a REV-annotated mechanical repair, legal under `agent-ui-doc-standards` §2); this
+amendment is the substantive Decision-level record that annotation pointed toward.
+
+Nothing is booked on ratification: every tooling change named here shipped in PR #854 before this
+amendment was authored — ratifying it flips this header and changes no other byte.
