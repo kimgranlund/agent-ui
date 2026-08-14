@@ -423,3 +423,69 @@ describe('ui-drawer — built-output geometry (production CSS, both engines)', (
     }
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  GH #913 (#906's flagged adjacent gap) — the dialog part scrolls with a thin, auto-hiding scrollbar,
+//  never the platform-default chunky bar. MEASURED (both engines under test fully expose the computed-style
+//  surface this probes — verified empirically, not assumed): a bare `overflow: auto` box renders with a
+//  ZERO-width overlay gutter in this headless harness regardless of any CSS, so a gutter-width COMPARISON
+//  against an untreated control cannot discriminate "thin" from "chunky" here — the honest,
+//  engine-capability-respecting probe is the computed STYLE itself: `scrollbar-width: thin` (the standard
+//  property) and the `::-webkit-scrollbar{,-thumb}` pseudo values this fix actually declares (the #874/#911
+//  precedent, modal.browser.test.ts's own sibling suite). Focus is TRAPPED inside the dialog by showModal()
+//  (the platform), so the reveal-on-focus leg checks the dialog part's OWN :focus-within — no sibling/host
+//  proxy needed (unlike command-modal's nested-dialog case).
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-drawer cross-engine — GH #913: the dialog scrolls with an unobtrusive (thin) scrollbar, never the platform-default chunky bar', () => {
+  it('overflows for real, scrolls, and computes the thin/reveal-on-open treatment (transparent-at-rest MEASURED on the closed dialog — see the next test\'s own note)', async () => {
+    const { drawer, dialog } = mount(`<ui-drawer><div style="block-size: 3000px;">tall</div></ui-drawer>`)
+    // BEFORE open — the dialog exists in the DOM (created at connect) but carries no [open] attribute, so
+    // it is genuinely un-hovered and un-focused: the honest "at rest" baseline. MEASURED (both engines,
+    // modal.browser.test.ts's own sibling suite): a native <dialog>'s "dialog focusing steps" ALWAYS place
+    // focus somewhere inside it once showModal() is called (an autofocus/first-focusable descendant, else
+    // the dialog element itself, HTML §4.11.4) — so once OPEN, :focus-within is unconditionally true and a
+    // post-open "not focused" snapshot is not reachable via .blur() (a modal dialog's own focus cannot be
+    // relinquished to an inert page).
+    expect(
+      getComputedStyle(dialog, '::-webkit-scrollbar-thumb').backgroundColor,
+      `${server.browser}: thumb transparent at rest (closed, before showModal())`,
+    ).toBe('rgba(0, 0, 0, 0)')
+
+    drawer.open = true
+    await drawer.updateComplete
+    expect(dialog.scrollHeight, 'a real overflow to actually scroll').toBeGreaterThan(dialog.clientHeight)
+
+    // scrollability itself is UNCHANGED by this fix — a real scrollTop move.
+    dialog.scrollTop = 0
+    dialog.scrollTop = 40
+    expect(dialog.scrollTop, `${server.browser}: still genuinely scrollable`).toBeGreaterThan(0)
+
+    // THIN, never the platform-default chunky bar.
+    expect(getComputedStyle(dialog).scrollbarWidth, `${server.browser}: scrollbar-width`).toBe('thin')
+    expect(getComputedStyle(dialog, '::-webkit-scrollbar').width, `${server.browser}: ::-webkit-scrollbar width`).toBe('8px')
+
+    // This drawer has NO focusable descendant, so showModal()'s own focusing steps land focus on the
+    // DIALOG ITSELF — the thumb is already revealed the instant it opens (the next test proves the
+    // mechanism explicitly with a real focused descendant + a :focus-within assertion).
+    expect(
+      getComputedStyle(dialog, '::-webkit-scrollbar-thumb').backgroundColor,
+      `${server.browser}: thumb paints once open (the platform's own forced initial focus)`,
+    ).not.toBe('rgba(0, 0, 0, 0)')
+  })
+
+  it('reveals the thumb while the dialog itself is :focus-within (focus is TRAPPED inside by showModal() — no sibling/host proxy needed)', async () => {
+    const { drawer, dialog } = mount(`<ui-drawer><div style="block-size: 3000px;"><button>focus me</button></div></ui-drawer>`)
+    drawer.open = true
+    await drawer.updateComplete
+    const button = dialog.querySelector('button') as HTMLButtonElement
+    button.focus()
+    await drawer.updateComplete
+
+    expect(dialog.matches(':focus-within'), `${server.browser}: the dialog part did not register :focus-within`).toBe(true)
+    expect(
+      getComputedStyle(dialog, '::-webkit-scrollbar-thumb').backgroundColor,
+      `${server.browser}: thumb paints while the dialog is focus-within`,
+    ).not.toBe('rgba(0, 0, 0, 0)')
+  })
+})

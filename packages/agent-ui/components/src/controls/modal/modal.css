@@ -35,6 +35,15 @@
   --ui-modal-radius: var(--md-sys-shape-corner-base); /* the shared fleet radius (ADR-0015 cl.5) */
   --ui-modal-padding: var(--md-sys-space-lg); /* the shell pad off the density-responsive ladder (NOT a control height) */
   --ui-modal-scrim: var(--md-sys-color-dialog-backdrop); /* the ::backdrop blocking wash — black 80% opacity (TKT-0019; was --md-sys-color-neutral-scrim, too light) */
+  /* GH #913 (#906's flagged adjacent gap) — the #874/#911 fleet unobtrusive-scrollbar idiom (own-chain
+     tokens off the shared dimensional constant + colour roles, TKT-0066 item 5 law): the dialog part IS
+     the modal's scroll viewport (`overflow: auto` below, capped at 85svh) and was fully untreated before
+     this fix (raw platform default). The scroll-fade edge affordance (wired in .ts) stays a complementary
+     treatment, unchanged by this. */
+  --ui-modal-scrollbar-width: thin;
+  --ui-modal-scrollbar-size: var(--md-sys-scrollbar-size);
+  --ui-modal-scrollbar-thumb: var(--md-sys-color-neutral-scrollbar-thumb);
+  --ui-modal-scrollbar-thumb-hover: var(--md-sys-color-neutral-scrollbar-thumb-hover);
   /* The FRAME dials — ui-modal's public composition seam (TKT-0017): a composer that nests ui-modal (the
      command-modal precedent) pins these via inline style on the element it owns (the slider --value-pct
      JS-seam exemption, family-coherence B). Defaults reproduce the classic centered shrink-fit exactly. */
@@ -67,6 +76,12 @@
     max-inline-size: var(--ui-modal-max-inline-size);
     max-block-size: 85svh;
     overflow: auto; /* a tall modal scrolls within the cap, not off-screen */
+    /* GH #913 — thin, auto-hiding scrollbar: transparent at rest. Focus is TRAPPED inside this dialog by
+       showModal() (the platform), so :focus-within on the dialog part itself (below) is the correct reveal
+       key — no sibling/host proxy needed (unlike command-modal's nested-dialog case, whose search field
+       lives OUTSIDE the boundary :focus-within cannot cross). */
+    scrollbar-width: var(--ui-modal-scrollbar-width);
+    scrollbar-color: transparent transparent;
 
     background-color: var(--ui-container-bg); /* the base plane (elevation) */
     background-image: linear-gradient(var(--ui-container-tint), var(--ui-container-tint)); /* the tonal wash (composition) */
@@ -77,6 +92,30 @@
        children carry the inset (author header/content/footer regions get the 12/6 region padding PLUS a 6px
        positional margin — regions are inset, not full-bleed; loose content gets the 6px box inset margin). */
     padding: 0;
+  }
+
+  :scope > [data-part='dialog']:hover,
+  :scope > [data-part='dialog']:focus-within {
+    scrollbar-color: var(--ui-modal-scrollbar-thumb) transparent;
+  }
+  :scope > [data-part='dialog']::-webkit-scrollbar {
+    width: var(--ui-modal-scrollbar-size); /* physical, not logical — see agent-admin.css's own note on this non-standard pseudo */
+    height: var(--ui-modal-scrollbar-size);
+  }
+  :scope > [data-part='dialog']::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  :scope > [data-part='dialog']::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: calc(var(--ui-modal-scrollbar-size) / 2);
+  }
+  :scope > [data-part='dialog']:hover::-webkit-scrollbar-thumb,
+  :scope > [data-part='dialog']:focus-within::-webkit-scrollbar-thumb {
+    background: var(--ui-modal-scrollbar-thumb);
+  }
+  :scope > [data-part='dialog']:hover::-webkit-scrollbar-thumb:hover,
+  :scope > [data-part='dialog']:focus-within::-webkit-scrollbar-thumb:hover {
+    background: var(--ui-modal-scrollbar-thumb-hover);
   }
 
   /* the ::backdrop scrim — the platform-painted blocking layer behind the modal (top layer). A translucent
