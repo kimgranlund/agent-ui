@@ -27,6 +27,9 @@ import { UIConversationComposerElement } from './conversation-composer.ts'
 import '@agent-ui/icons/phosphor'
 import '@agent-ui/components/controls/icon'
 import '@agent-ui/components/controls/button'
+// GH #891 (SPEC-R11) — the capabilities rows are REAL `ui-switch` controls; the panel's real-engine case
+// needs them defined to click, focus and read `checked` at all.
+import '@agent-ui/components/controls/switch'
 
 const MENTIONABLES = [
   { id: 'res-menu', label: 'Menu PDF', kind: 'resource', description: 'Tonight’s menu' },
@@ -215,6 +218,75 @@ describe('ui-conversation-composer — GH #891 SPEC-R9: the chip is label + a RE
     // ...and the glyph inherits the chip's accent ink rather than declaring its own colour (icon.css's
     // `color: inherit` + the chip's own reference-chip ink token).
     expect(getComputedStyle(icon).color).toBe(getComputedStyle(chip).color)
+  })
+
+  it('SPEC-R11 AC3 — the capabilities panel: open → toggle → toggle → Escape, with real focus discipline', async () => {
+    const { wrap, el } = mountComposer()
+    const rows = [
+      { id: 'skill-style', label: 'House style', kind: 'skill', icon: 'star', included: true },
+      { id: 'svc:calc:*', label: 'Calculator', kind: 'tool', icon: 'gear', included: false },
+    ]
+    el.capabilities = rows
+    const toggles: [string, boolean][] = []
+    el.onCapabilityToggle((id, included) => toggles.push([id, included]))
+    await el.updateComplete
+
+    const trigger = el.querySelector<HTMLElement>('[data-picker="capabilities"]')!
+    await userEvent.click(trigger)
+    await el.updateComplete
+
+    const panel = el.querySelector<HTMLElement>('[data-part="capabilities-panel"]')!
+    expect(panel.matches(':popover-open'), `${server.browser}: the panel is in the top layer`).toBe(true)
+    // It ESCAPES the `overflow: hidden` chat shell (the GH #260 clipping class) and opens ABOVE the trigger.
+    const box = panel.getBoundingClientRect()
+    expect(box.width, 'the panel honours its own min-inline-size floor').toBeGreaterThan(150)
+    expect(box.height, 'two switch rows have real height').toBeGreaterThan(40)
+    const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)
+    expect(hit && (hit === panel || panel.contains(hit)), `${server.browser}: the panel paints above its clipping ancestor`).toBe(true)
+    expect(box.top, 'it opens ABOVE the options row').toBeLessThan(trigger.getBoundingClientRect().top)
+    expect(wrap.getBoundingClientRect().height, 'the clipping ancestor really is bounded').toBe(260)
+
+    const switches = [...panel.querySelectorAll<HTMLElement & { checked: boolean }>('[data-part="capability-switch"]')]
+    expect(switches.length).toBe(2)
+    for (const control of switches) {
+      const switchBox = control.getBoundingClientRect()
+      expect(switchBox.width, `${server.browser}: a switch must paint a real track`).toBeGreaterThan(12)
+      expect(switchBox.height).toBeGreaterThan(8)
+      // The switch is pinned to the row's trailing edge, past its label.
+      const row = control.closest<HTMLElement>('[data-part="capability-row"]')!
+      const label = row.querySelector<HTMLElement>('[data-part="capability-row-label"]')!
+      expect(switchBox.left).toBeGreaterThan(label.getBoundingClientRect().right - 1)
+      expect(switchBox.right).toBeLessThanOrEqual(row.getBoundingClientRect().right + 1)
+    }
+
+    // A REAL click on the OFF switch: it reports the new state, keeps the panel open, and — the props-down
+    // law under a real engine — snaps back to the prop's own value because no consumer answered.
+    await userEvent.click(switches[1]!)
+    await el.updateComplete
+    expect(toggles).toEqual([['svc:calc:*', true]])
+    expect(panel.matches(':popover-open'), 'the panel stays open across a toggle').toBe(true)
+    expect(switches[1]!.checked, 'zero local mutation: the row reverts to the prop truth').toBe(false)
+    // Focus is on the control the user actually clicked — never yanked to the editor (the click-to-focus
+    // exclusion), which is what makes the next keyboard interaction land where the user is looking.
+    expect(document.activeElement, `${server.browser}: the clicked switch keeps focus`).toBe(switches[1])
+
+    // A second flip in the SAME visit, from the keyboard this time (Space activates a switch, platform parity).
+    await userEvent.keyboard(' ')
+    await el.updateComplete
+    expect(toggles).toEqual([['svc:calc:*', true], ['svc:calc:*', true]])
+    expect(panel.matches(':popover-open')).toBe(true)
+
+    // The consumer answers — and the SAME switch node updates in place, so focus survives the answer.
+    el.capabilities = rows.map((r) => (r.id === 'svc:calc:*' ? { ...r, included: true } : r))
+    await el.updateComplete
+    expect(switches[1]!.checked).toBe(true)
+    expect(document.activeElement, 'an in-place answer never drops the user’s focus').toBe(switches[1])
+
+    await userEvent.keyboard('{Escape}')
+    await el.updateComplete
+    expect(panel.matches(':popover-open'), 'Escape leaves the top layer').toBe(false)
+    expect(document.activeElement, 'Escape returns focus to the trigger').toBe(trigger)
+    expect(trigger.getAttribute('aria-expanded')).toBe('false')
   })
 
   it('an icon-less roster entry commits a label-only chip — no glyph cell, no placeholder box', async () => {

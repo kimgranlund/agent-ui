@@ -988,6 +988,242 @@ describe('ui-conversation-composer — GH #849 SPEC-R7: keyboard, AX, and the ev
   })
 })
 
+describe('ui-conversation-composer — GH #891 SPEC-R11: the capabilities panel (third trigger, rows down, callback up)', () => {
+  const ROWS = [
+    { id: 'skill-style', label: 'House style', kind: 'skill', icon: 'star', description: 'House voice', included: true },
+    { id: 'wf-review', label: 'Review flow', kind: 'workflow', included: false },
+    { id: 'svc:calc:*', label: 'Calculator', kind: 'tool', icon: 'gear', included: false },
+  ]
+  // The real `ui-button`/`ui-switch` classes are the components package's; this suite only needs the two
+  // properties it actually drives, so it narrows structurally rather than importing element classes.
+  type TriggerLike = HTMLElement & { disabled: boolean }
+  const triggerOf = (el: UIConversationComposerElement): TriggerLike =>
+    el.querySelector('[data-picker="capabilities"]') as TriggerLike
+  const panelOf = (el: UIConversationComposerElement): HTMLElement | null => el.querySelector('[data-part="capabilities-panel"]')
+  const panelIsOpen = (el: UIConversationComposerElement): boolean => panelOf(el)?.hasAttribute('data-open') === true
+  const rowsOf = (el: UIConversationComposerElement): HTMLElement[] => [
+    ...(panelOf(el)?.querySelectorAll<HTMLElement>('[data-part="capability-row"]') ?? []),
+  ]
+  const switchesOf = (el: UIConversationComposerElement): (HTMLElement & { checked: boolean; disabled: boolean })[] =>
+    rowsOf(el).map((r) => r.querySelector('[data-part="capability-switch"]') as HTMLElement & { checked: boolean; disabled: boolean })
+  const open = async (el: UIConversationComposerElement): Promise<void> => {
+    triggerOf(el).dispatchEvent(new Event('click', { bubbles: true }))
+    await whenFlushed()
+  }
+
+  it('AC1 — no `capabilities` prop ⇒ NO trigger and NO panel DOM at all (the default-off law)', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.models = [{ id: 'a', label: 'A' }] // a fully-configured options row, minus this one prop
+    await whenFlushed()
+    expect(el.capabilities).toBeUndefined()
+    expect(triggerOf(el)).toBeNull()
+    expect(panelOf(el)).toBeNull()
+    // The leading cell holds exactly the shipped picker(s) — nothing new was appended beside them.
+    const leading = el.querySelector('[data-part="options-leading"]') as HTMLElement
+    expect([...leading.children].map((c) => (c as HTMLElement).dataset.part)).toEqual(['models-menu'])
+  })
+
+  it('AC1 — an EMPTY array is treated as unset (no trigger rendered); a later non-empty array reveals it', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.capabilities = []
+    await whenFlushed()
+    expect(triggerOf(el)).toBeNull()
+    el.capabilities = ROWS
+    await whenFlushed()
+    expect(triggerOf(el)?.hasAttribute('hidden')).toBe(false)
+    expect(triggerOf(el)!.textContent, 'the trigger names itself, never a count').toContain('Capabilities')
+  })
+
+  it('the trigger is a picker-pill sibling of Models/Effort — leading glyph + caret, LAST in the leading cell', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.models = [{ id: 'a', label: 'A' }]
+    el.efforts = [{ id: 'low', label: 'Low' }]
+    el.capabilities = ROWS
+    await whenFlushed()
+    const leading = el.querySelector('[data-part="options-leading"]') as HTMLElement
+    expect([...leading.children].map((c) => (c as HTMLElement).dataset.part ?? (c as HTMLElement).dataset.picker)).toEqual([
+      'models-menu', 'effort-menu', 'capabilities',
+    ])
+    const trigger = triggerOf(el)
+    expect(trigger.getAttribute('variant')).toBe('soft')
+    expect(trigger.querySelector('ui-icon[data-role="icon"]')?.getAttribute('glyph')).toBe('list')
+    expect(trigger.querySelector('ui-icon[data-role="caret"]')?.getAttribute('glyph')).toBe('caret-down')
+    expect(trigger.getAttribute('aria-expanded'), 'closed until clicked').toBe('false')
+  })
+
+  it('AC2 — the panel groups rows by kind, each switch reflects `included`, and the panel is a role=group popover', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.capabilities = ROWS
+    await whenFlushed()
+    await open(el)
+    const panel = panelOf(el) as HTMLElement
+    expect(panel.getAttribute('role'), 'switch rows are real controls — never a listbox/menu').toBe('group')
+    expect(panel.getAttribute('popover')).toBe('manual')
+    expect(panelIsOpen(el)).toBe(true)
+    expect(triggerOf(el).getAttribute('aria-expanded')).toBe('true')
+    expect(triggerOf(el).getAttribute('aria-controls')).toBe(panel.id)
+    expect([...panel.querySelectorAll('[data-part="capability-group"]')].map((g) => g.getAttribute('aria-label'))).toEqual([
+      'Skill', 'Workflow', 'Tool',
+    ])
+    expect(rowsOf(el).map((r) => r.dataset.id)).toEqual(['skill-style', 'wf-review', 'svc:calc:*'])
+    expect(switchesOf(el).map((s) => s.checked)).toEqual([true, false, false])
+    expect(switchesOf(el).map((s) => s.getAttribute('aria-label'))).toEqual(['House style', 'Review flow', 'Calculator'])
+    // the row's own anatomy: optional glyph, label (+description), switch
+    const [first, second] = rowsOf(el) as [HTMLElement, HTMLElement]
+    expect([...first.children].map((c) => (c as HTMLElement).dataset.part)).toEqual([
+      'capability-row-icon', 'capability-row-text', 'capability-switch',
+    ])
+    expect(first.querySelector('[data-part="capability-row-description"]')!.textContent).toBe('House voice')
+    expect([...second.children].map((c) => (c as HTMLElement).dataset.part), 'no glyph, no cell').toEqual([
+      'capability-row-text', 'capability-switch',
+    ])
+    expect(second.querySelector('[data-part="capability-row-description"]'), 'no description, no line').toBeNull()
+  })
+
+  it('a single-kind row set shows NO group header (the typeahead grouping law, reused)', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.capabilities = [{ id: 'a', label: 'A', kind: 'skill', included: true }]
+    await whenFlushed()
+    await open(el)
+    expect(panelOf(el)!.querySelector('[data-part="capability-group"]')).toBeNull()
+    expect(rowsOf(el).length).toBe(1)
+  })
+
+  it('AC2 — flipping a switch fires onCapabilityToggle(id, NEW state), keeps the panel open, and mutates NOTHING locally', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.capabilities = ROWS
+    const toggles: [string, boolean][] = []
+    el.onCapabilityToggle((id, included) => toggles.push([id, included]))
+    await whenFlushed()
+    await open(el)
+
+    // Flip the OFF row on (a real user click on the real ui-switch — it toggles ITSELF, then emits `change`).
+    switchesOf(el)[1]!.dispatchEvent(new Event('click', { bubbles: true }))
+    expect(toggles).toEqual([['wf-review', true]])
+    expect(panelIsOpen(el), 'a steering surface stays open across flips').toBe(true)
+    expect(switchesOf(el).map((s) => s.checked), 'the row reverts to the PROP truth — zero local mutation').toEqual([
+      true, false, false,
+    ])
+    expect(el.capabilities, 'the prop itself is untouched').toBe(ROWS)
+
+    // ...and flip the ON row off, in the SAME visit (multi-toggle without reopening).
+    switchesOf(el)[0]!.dispatchEvent(new Event('click', { bubbles: true }))
+    expect(toggles).toEqual([['wf-review', true], ['skill-style', false]])
+    expect(panelIsOpen(el)).toBe(true)
+
+    // The consumer answers by handing a NEW array down — THAT is what moves the visible state.
+    el.capabilities = ROWS.map((r) => (r.id === 'wf-review' ? { ...r, included: true } : r))
+    await whenFlushed()
+    expect(switchesOf(el).map((s) => s.checked)).toEqual([true, true, false])
+    expect(panelIsOpen(el), 'and the panel is still open — the answer never closed it').toBe(true)
+  })
+
+  it('the consumer\'s answer updates switches IN PLACE — the same row nodes survive, so keyboard focus does too', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.capabilities = ROWS
+    await whenFlushed()
+    await open(el)
+    const before = switchesOf(el)
+    el.capabilities = ROWS.map((r) => (r.id === 'svc:calc:*' ? { ...r, included: true } : r))
+    await whenFlushed()
+    const after = switchesOf(el)
+    expect(after[0]).toBe(before[0]) // same NODES, not replacements
+    expect(after[2]).toBe(before[2])
+    expect(after.map((s) => s.checked)).toEqual([true, false, true])
+    // A REAL roster change (a row added) does rebuild — the shape, not the state, moved.
+    el.capabilities = [...ROWS, { id: 'res-menu', label: 'Menu PDF', kind: 'resource', included: false }]
+    await whenFlushed()
+    expect(rowsOf(el).length).toBe(4)
+    expect(switchesOf(el)[0]).not.toBe(before[0])
+  })
+
+  it('AC3 — no switch event crosses the host boundary, and no new event name is minted', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.capabilities = ROWS
+    el.onCapabilityToggle(() => {})
+    await whenFlushed()
+    const leaked: string[] = []
+    for (const name of ['change', 'input', 'select', 'open', 'close', 'toggle', 'action']) {
+      el.addEventListener(name, () => leaked.push(name))
+    }
+    await open(el)
+    switchesOf(el)[0]!.dispatchEvent(new Event('click', { bubbles: true }))
+    switchesOf(el)[1]!.dispatchEvent(new Event('click', { bubbles: true }))
+    triggerOf(el).dispatchEvent(new Event('click', { bubbles: true })) // close
+    expect(leaked, 'the descriptor declares events: [] — the embedded switches must not escape').toEqual([])
+  })
+
+  it('every close path: the trigger, Escape (focus returns to it), an outside pointerdown, a send, busy, and disconnect', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.capabilities = ROWS
+    await whenFlushed()
+
+    await open(el)
+    expect(panelIsOpen(el)).toBe(true)
+    triggerOf(el).dispatchEvent(new Event('click', { bubbles: true })) // the trigger toggles it shut
+    expect(panelIsOpen(el)).toBe(false)
+    expect(triggerOf(el).getAttribute('aria-expanded')).toBe('false')
+    expect(triggerOf(el).hasAttribute('aria-controls')).toBe(false)
+
+    await open(el)
+    let focused = 0
+    triggerOf(el).focus = () => (focused += 1) // jsdom cannot really focus a ui-button — count the call
+    const escape = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+    panelOf(el)!.dispatchEvent(escape)
+    expect(panelIsOpen(el)).toBe(false)
+    expect(escape.defaultPrevented).toBe(true)
+    expect(focused, 'Escape returns focus to the affordance that opened it').toBe(1)
+
+    await open(el)
+    document.body.dispatchEvent(new Event('pointerdown', { bubbles: true })) // outside interaction
+    expect(panelIsOpen(el)).toBe(false)
+    await open(el)
+    panelOf(el)!.dispatchEvent(new Event('pointerdown', { bubbles: true })) // INSIDE — must NOT close
+    expect(panelIsOpen(el), 'interacting with the panel itself never closes it').toBe(true)
+
+    typeInto(el, 'send me')
+    pressEnter(el)
+    expect(panelIsOpen(el), 'a send closes the steering panel').toBe(false)
+
+    await open(el)
+    el.busy = true
+    await whenFlushed()
+    expect(panelIsOpen(el), 'busy closes it — never an orphan panel over an uneditable composer').toBe(false)
+    expect(triggerOf(el).disabled, 'and the trigger is busy-disabled with the other triggers').toBe(true)
+    el.busy = false
+    await whenFlushed()
+
+    await open(el)
+    el.remove()
+    await whenFlushed()
+    expect(panelOf(el)?.hasAttribute('data-open'), 'a disconnect never orphans a top-layer panel').toBe(false)
+  })
+
+  it('clearing the prop mid-visit closes the panel and hides the trigger (never an orphan over a gone affordance)', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.capabilities = ROWS
+    await whenFlushed()
+    await open(el)
+    el.capabilities = undefined
+    await whenFlushed()
+    expect(panelIsOpen(el)).toBe(false)
+    expect(triggerOf(el).hasAttribute('hidden')).toBe(true)
+  })
+
+  it('a click on the panel does NOT steal the editor focus-on-click behaviour, and the trigger click never focuses the editor', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.capabilities = ROWS
+    await whenFlushed()
+    const editor = editorOf(el)
+    let focused = 0
+    editor.focus = () => (focused += 1)
+    triggerOf(el).dispatchEvent(new Event('click', { bubbles: true }))
+    expect(focused, 'a ui-button click is excluded from click-to-focus (LLD CVC-C8)').toBe(0)
+    switchesOf(el)[0]!.dispatchEvent(new Event('click', { bubbles: true }))
+    expect(focused, 'so is a click on a control inside the panel').toBe(0)
+  })
+})
+
 // ── descriptor — ADR-0004 (structural + contract↔props + contract↔source) ──────────────────────────────
 
 const DIR = `${process.cwd()}/packages/agent-ui/app/src/controls/conversation`
@@ -1000,7 +1236,7 @@ describe('conversation-composer.md descriptor', () => {
   const parsed = parseDescriptor(fence)
   const ATTR_NAMES = [
     'value', 'placeholder', 'models', 'model', 'efforts', 'effort', 'providers', 'provider', 'modes', 'mode',
-    'contextItems', 'mentionables', 'invocables', 'busy',
+    'contextItems', 'mentionables', 'invocables', 'capabilities', 'busy',
   ]
 
   it('has a leading frontmatter fence and a /site prose body', () => {

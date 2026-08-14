@@ -29,7 +29,8 @@
 > later work, not derivable from existing law — so it is filed `proposed` for Kim rather than ruled
 > silently (the §3 table's own default-no doctrine cuts the other way here, deliberately). New
 > slices S4–S7 (§11.5); S4/S5/S6 are parallel and fork-independent, S7 alone waits on the ADR.
-> v0.4 build-fold (S4, 2026-08-14 — wording only, no clause changed): the doc-check's two polish items
+> v0.4 build-fold (S4's own commit, 2026-08-14 — wording only, no clause changed; authored against v0.4's
+> §11 text and landing alongside v0.5, whose §12 it does not touch): the doc-check's two polish items
 > landed with the slice that first built against them — R9's icon-AX sentence now reads as the NEW node
 > it is (MUST ride `data-role="icon"`) rather than describing shipped behavior, its `ui-agent-admin`
 > sentence is normative (MUST supply), and §11.4's + ADR-0190's "SPEC-N1's seam" anchors are sharpened to
@@ -614,7 +615,7 @@ Stale records this extension falsifies — repaired IN the landing slice, never 
 |---|---|---|
 | `conversation-composer.ts` — `CommittedReference`'s doc ("the chip's sigil") + `#syncReferenceChips`'s sigil comment | the trigger character renders as the chip's per-kind mark | S4 ✔ (the `CommittedReference` wrapper itself went with the node — the sigil was its `trigger` field's only reader) |
 | `conversation-composer.css` — the reference-chip comment block's sigil prose | same claim, style-side | S4 ✔ |
-| `conversation-composer.md` + `conversation-composer.lld.md` | pre-R9/R11 chip anatomy + prop/callback inventory | S4 ✔ (chip — the LLD's v4/CVC-C18 section, with CVC-C15's sigil sentence annotated in place as the S2 ship record) · S6 (menu) |
+| `conversation-composer.md` + `conversation-composer.lld.md` | pre-R9/R11 chip anatomy + prop/callback inventory | S4 ✔ (chip — the LLD's v4/CVC-C18 section, with CVC-C15's sigil sentence annotated in place as the S2 ship record) · S6 ✔ (menu — the descriptor's new `capabilities` attribute/property/parts + the LLD's v5/CVC-C21–C25 section) |
 | `conversation.md` + the conversation LLD (`app-surfaces-m2.lld.md` — the file this row's shorthand names; no `conversation.lld.md` exists) | single-arg `addUserMessage`, bubble anatomy | S5 ✔ (descriptor parts + contentModel + prose; the LLD's §5 sketch annotated in place and repaired by its new §11 amendment) |
 | `agent-admin.md` — the reach-path section | no capabilities-menu projection | S7 |
 | this SPEC's §10 chip-treatment bullet | annotated in place (v0.4) | done in this change ✔ |

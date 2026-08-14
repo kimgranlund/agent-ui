@@ -21,8 +21,24 @@ const ROOT = process.cwd()
 const APP_ENTRY = `${ROOT}/packages/agent-ui/app/src/index.ts`
 const DOGFOOD_SUBPATH = '@agent-ui/components/dogfood-frame'
 const DOGFOOD_MODULE = 'sandbox-frame/dogfood/dogfood-assets.ts'
-/** The committed fixture is 450 675 B on disk; anything holding it is unmistakably over 400 KB minified. */
+/** The committed fixture is 450 675 B of incompressible string data on disk, so the LAZY chunk that really
+ *  holds it clears this floor on its own (measured 520 371 B minified) while a stub never would. */
 const FIXTURE_FLOOR = 400_000
+/**
+ * The separate "this entry chunk cannot be holding the fixture" ceiling, in minified bytes: an entry chunk
+ * with the fixture inside would measure the app's own ~400 KB PLUS the fixture (~850 KB).
+ *
+ * SPLIT OUT of `FIXTURE_FLOOR` (GH #891 S6, 2026-08-14). One constant was serving two OPPOSITE roles — a
+ * lower bound on the lazy chunk and an upper bound on the entry chunk — so the entry side had silently
+ * become an accidental, unowned SIZE BUDGET pinned ~4 KB above the real entry size: measured at that slice,
+ * the entry chunk was 396 252 B before and 400 534 B after (+4 282 B, module count unchanged at 178 — no new
+ * dependency, just more code in modules already in the graph), which reddened this leg while the property it
+ * guards was never at risk. The EXACT gate is `holdsFixture` (the `moduleIds` membership test asserted
+ * alongside it, and the leg the negative control exercises); this size assertion is only its belt, and must
+ * be crossable ONLY by a genuine leak, never by a feature. Real byte BUDGETS live in
+ * `scripts/measure-size.mjs`, which owns per-package ceilings and re-bases them deliberately.
+ */
+const ENTRY_LEAK_CEILING = 600_000
 
 interface Chunk {
   isEntry: boolean
@@ -50,7 +66,7 @@ describe('@agent-ui/app public barrel — the dogfood fixture is LAZY (GH #354, 
       expect(entries.length, 'anti-vacuous: the bundle really produced an entry chunk').toBeGreaterThan(0)
       for (const entry of entries) {
         expect(holdsFixture(entry), 'the app entry chunk must carry ZERO dogfood-fixture bytes').toBe(false)
-        expect(Buffer.byteLength(entry.code)).toBeLessThan(FIXTURE_FLOOR)
+        expect(Buffer.byteLength(entry.code)).toBeLessThan(ENTRY_LEAK_CEILING)
       }
     },
     120_000,

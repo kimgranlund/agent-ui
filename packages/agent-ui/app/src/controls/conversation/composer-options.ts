@@ -68,6 +68,29 @@ export interface TurnReference {
   icon?: string
 }
 
+/** GH #891 (capability-availability-tagging.spec.md SPEC-R11) — ONE row of the composer's capabilities
+ *  panel: the BROWSE/STEER surface beside the `@`/`/` typeahead's keyboard-first quick path. GENERIC by the
+ *  same construction as `ReferenceOption` (the SPEC's §5 layering clause): `kind` and `icon` are OPAQUE
+ *  strings this element groups/renders and never interprets, and `included` is CONSUMER-OWNED state — the
+ *  composer renders it, reports a flip through `onCapabilityToggle`, and mutates nothing (props down,
+ *  callbacks up, the `onModelChange` law verbatim).
+ *
+ *  What `included` MEANS — a per-turn inclusion vs a persisted roster write — is deliberately NOT decided
+ *  here: it is the consumer-side fork of ADR-0190 (SPEC-R12), and this contract is identical under either
+ *  arm because the composer never writes a store under either. */
+export interface CapabilityRow {
+  id: string
+  label: string
+  kind: string
+  description?: string
+  /** A `ui-icon` glyph name, same opaque-string law as `ReferenceOption.icon` (SPEC-R9). */
+  icon?: string
+  /** Whether this capability is currently steered ON. Reflected onto the row's `ui-switch`; never written
+   *  by this element — a flip fires `onCapabilityToggle(id, included)` and the CONSUMER hands a new
+   *  `capabilities` array down. */
+  included: boolean
+}
+
 /** The reasoning-effort levels a live model call can be dialed to — the same low/medium/high/xhigh
  *  vocabulary this repo's own agent-authoring tooling already uses for a seat's reasoning tier, reused
  *  here rather than inventing a parallel scale. */

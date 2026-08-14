@@ -331,6 +331,84 @@
     color: var(--ui-conversation-composer-menu-item-ink-secondary);
   }
 
+  /* GH #891 (SPEC-R11) — the capabilities panel: the BROWSE/STEER surface behind the third trigger. Same
+     top-layer popover treatment as the reference menu above (same tokens, same `[data-open]` state truth,
+     same clipping-ancestor immunity) — one panel look in this control, not a second vocabulary. It differs
+     only in what it holds: switch ROWS, not `[role=option]`s, which is why there is no `[data-active]`
+     highlight rule here (DOM focus really does move into these controls). */
+  [data-part='capabilities-panel'] {
+    display: none;
+    box-sizing: border-box;
+    min-inline-size: var(--ui-conversation-composer-menu-min-inline-size);
+    max-inline-size: var(--ui-conversation-composer-menu-max-inline-size);
+    max-block-size: var(--ui-conversation-composer-menu-max-block-size);
+    overflow-y: auto;
+    padding: var(--ui-conversation-composer-menu-padding);
+    background: var(--ui-conversation-composer-menu-bg);
+    color: var(--ui-conversation-composer-menu-ink);
+    border: 1px solid var(--ui-conversation-composer-menu-outline);
+    border-radius: var(--ui-conversation-composer-menu-radius);
+    font-size: var(--ui-conversation-composer-font);
+    line-height: 1.35;
+    cursor: default; /* the panel is not part of the click-to-focus text area */
+  }
+  [data-part='capabilities-panel'][data-open] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-conversation-composer-menu-gap);
+  }
+  [data-part='capability-group'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-conversation-composer-menu-gap);
+  }
+  /* The kind header — same law as the typeahead's: rendered only when the set spans more than one kind, and
+     `aria-hidden` because the group's own `aria-label` is what AT announces. */
+  [data-part='capability-group-label'] {
+    padding-inline: var(--ui-conversation-composer-menu-item-pad-inline);
+    font-size: var(--ui-conversation-composer-menu-group-font);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ui-conversation-composer-menu-group-ink);
+  }
+  /* One row: [glyph] label/description ……… switch. The text column takes the slack (`1fr` via flex) so the
+     switch stays pinned to the trailing edge whatever the label's length, and `min-inline-size: 0` is what
+     lets the label actually ellipsize inside it (the flex-item floor, ADR-0021's collapse trap inverted). */
+  [data-part='capability-row'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-conversation-composer-menu-item-pad-inline);
+    padding: var(--ui-conversation-composer-menu-item-pad-block) var(--ui-conversation-composer-menu-item-pad-inline);
+    border-radius: var(--ui-conversation-composer-menu-item-radius);
+  }
+  [data-part='capability-row']:hover {
+    background: var(--ui-conversation-composer-menu-item-bg-active);
+  }
+  [data-part='capability-row-icon'] {
+    flex: 0 0 auto;
+  }
+  [data-part='capability-row-text'] {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-inline-size: 0;
+  }
+  [data-part='capability-row-label'] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  [data-part='capability-row-description'] {
+    overflow: hidden;
+    font-size: 0.72rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ui-conversation-composer-menu-item-ink-secondary);
+  }
+  [data-part='capability-switch'] {
+    flex: 0 0 auto;
+  }
+
   /* The options row — Models/Effort pickers (leading, opt-in) + mic/send (trailing, always present). */
   [data-part='options'] {
     display: flex;
@@ -379,7 +457,8 @@
   [data-picker='models'],
   [data-picker='effort'],
   [data-picker='providers'],
-  [data-picker='mode'] {
+  [data-picker='mode'],
+  [data-picker='capabilities'] { /* GH #891 — the third trigger reads as their sibling: same retint, same pill */
     --ui-button-bg: var(--md-sys-color-neutral-container-low);
     --ui-button-bg-hover: var(--md-sys-color-neutral-container);
     --ui-button-bg-active: var(--md-sys-color-neutral-container-high);
@@ -574,6 +653,19 @@
     }
     [data-part='reference-group-label'],
     [data-part='reference-option-description'] {
+      color: CanvasText;
+    }
+    /* GH #891 — the capabilities panel is the same class of top-layer app chrome, so it takes the same
+       frame/ink repoint. Its rows need NO Highlight pair (unlike the typeahead's active-descendant row):
+       each row's state is carried by a real `ui-switch`, which brings its own forced-colors handling, and
+       the row background is only a hover affordance. */
+    [data-part='capabilities-panel'] {
+      border-color: CanvasText;
+      background: Canvas;
+      color: CanvasText;
+    }
+    [data-part='capability-group-label'],
+    [data-part='capability-row-description'] {
       color: CanvasText;
     }
   }

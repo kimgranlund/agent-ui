@@ -6,7 +6,7 @@ tag: ui-conversation-composer
 tier: pattern            # a composed control with internal parts, no §1 control-height row of its own (the ui-command-modal precedent); the editor region rides ADR-0134's growable multi-line law instead
 extends: UIElement       # the coordinator base — NOT form-associated (nobody submits this in a form; ui-conversation drives it imperatively, SPEC-R4), even though since TKT-0058 the host paints the field frame itself
 # marginal: measured at the @agent-ui/app integration slice (scripts/measure-size.mjs), folded into ui-conversation's own family total (TKT-0056 extraction — no new package)
-composes: [ui-menu, ui-button, ui-icon]  # all JS-created internal children (the master-detail.ts → ui-split precedent), never author-composed — documentary only (component-descriptor.ts's FIELD_SHAPE has no `composes` key). The v1 ui-text-field child was unrolled (TKT-0058): the editor is this element's OWN contenteditable part now.
+composes: [ui-menu, ui-button, ui-icon, ui-switch]  # ui-switch = GH #891's capabilities rows (SPEC-R11) — all JS-created internal children (the master-detail.ts → ui-split precedent), never author-composed — documentary only (component-descriptor.ts's FIELD_SHAPE has no `composes` key). The v1 ui-text-field child was unrolled (TKT-0058): the editor is this element's OWN contenteditable part now.
 
 attributes:              # attributes-as-API — mirrors conversation-composer.ts `props`
   - name: value
@@ -61,6 +61,10 @@ attributes:              # attributes-as-API — mirrors conversation-composer.t
     type: json            # readonly ReferenceOption[] — GH #849, the '/' roster (one menu, grouped by kind)
     default: undefined    # undefined/empty ⇒ '/' is a plain character; same default-off law as `mentionables`
     reflect: false
+  - name: capabilities
+    type: json            # readonly CapabilityRow[] (composer-options.ts — {id,label,kind,description?,icon?,included}) — GH #891/SPEC-R11, the capabilities panel's rows
+    default: undefined    # undefined/empty ⇒ NO trigger, NO panel DOM: byte-identical to before (the models/mentionables default-off law)
+    reflect: false
   - name: busy
     type: boolean
     default: false
@@ -93,10 +97,12 @@ properties:
     description: OPTIONAL `readonly ReferenceOption[]` (composer-options.ts — `{id, label, kind, description?, icon?}`) — GH #849's `@` mention roster. Typing `@` at a TOKEN START (start of text, or after whitespace) opens a typeahead over it; committing an item removes the token text and mints a reference chip. Default `undefined` ⇒ `@` is a plain character (no typeahead, no panel DOM at all). `kind` is an OPAQUE string here — this element groups and displays it, never interprets it; a consumer (e.g. `ui-agent-admin`) owns the domain projection, exactly as it already owns `PickerOption`'s. GH #891 (SPEC-R9) — `icon` is an equally opaque `ui-icon` glyph NAME the consumer supplies per entry: it renders as the chip's leading kind mark and round-trips onto the committed `TurnReference`; this element never maps a `kind` to a glyph itself, and an entry without one renders a label-only chip.
   - name: invocables
     description: OPTIONAL `readonly ReferenceOption[]` — GH #849's `/` invocation roster, presented as ONE menu grouped by `kind` (group headers appear only when the visible set spans more than one kind), filtered directly by display name — never a two-stage `/tool <name>` grammar. Same default-off law as `mentionables`.
+  - name: capabilities
+    description: 'OPTIONAL `readonly CapabilityRow[]` (composer-options.ts — `{id, label, kind, description?, icon?, included}`) — GH #891''s capabilities panel: the BROWSE/STEER surface behind a third options-row trigger, sibling of the `@`/`/` typeahead''s keyboard-first quick path. Default `undefined` ⇒ no trigger and no panel DOM at all. Rows group by `kind` in first-appearance order; `kind`/`icon` are OPAQUE strings this element renders and never interprets (the `mentionables` law). `included` is CONSUMER-owned: each row renders a real `ui-switch` reflecting it, a flip fires `onCapabilityToggle(id, included)` and this element mutates NOTHING — the switch is re-asserted from the current prop, so the visible state moves only when the consumer hands a new array down. Handing back the same rows with one `included` changed updates the switches IN PLACE (no rebuild), so a keyboard user''s focus survives their own flip. What a flip MEANS (this turn only vs the persisted roster) is the consumer''s ruling, ADR-0190 — this contract is identical under either arm.'
   - name: busy
     description: Whether a turn is in flight (TKT-0034) — the editor becomes non-editable + pointer-inert, send/mic/picker-triggers disable, the whole composer dims via the reflected `[busy]`, and the host carries `ariaBusy`/`ariaDisabled` through `internals`. The composer's OWN send path also checks `busy` synchronously (not only via the batched disabling effect) as a backstop against a stray Enter racing the effect's flush — the guard is load-bearing behavior, not just styling.
 
-events: []               # no DOM events — onSubmit/onModelChange/onEffortChange/onProviderChange/onModeChange/onContextDismiss/onMicClick are ALL callback registrations, never CustomEvents (the fleet's CLOSED event vocabulary — owned solely by the ALLOWED_EVENTS constants in family-coherence.test.ts + naming-gates.test.ts, ADR-0153, never re-enumerated here — has no submission/picker-commit kind; inherited by lineage from ui-conversation, not re-derived). GH #849's reference typeahead adds NO event either: its internal listbox is control-created and no menu event escapes the host.
+events: []               # no DOM events — onSubmit/onModelChange/onEffortChange/onProviderChange/onModeChange/onContextDismiss/onCapabilityToggle/onMicClick are ALL callback registrations, never CustomEvents (the fleet's CLOSED event vocabulary — owned solely by the ALLOWED_EVENTS constants in family-coherence.test.ts + naming-gates.test.ts, ADR-0153, never re-enumerated here — has no submission/picker-commit kind; inherited by lineage from ui-conversation, not re-derived). GH #849's reference typeahead adds NO event either: its internal listbox is control-created and no menu event escapes the host. GH #891's capabilities panel likewise: its embedded `ui-switch`es really do emit `change`, and that event is stopped at the panel boundary (the editor-`input` suppression discipline) so nothing crosses the host.
 
 slots: []                 # content model is NOT author-composed — every part is built entirely by this element's own connect-time logic; no slotted children
 
@@ -125,6 +131,12 @@ parts:                    # NOT shadow-DOM ::part() (light-DOM only) — light-D
     description: One kind's group inside the panel (`[data-part="reference-group"]`, `role="group"` + `aria-label`), with a sighted `[data-part="reference-group-label"]` header (`aria-hidden` — the group's own label is what AT announces). Rendered ONLY when the visible option set spans more than one `kind`, so the Resources-only `@` menu shows no redundant single header while the `/` menu groups Skills/Workflows/Tools.
   - name: reference-option
     description: One selectable roster entry (`[data-part="reference-option"]`, `role="option"`, a stable `id` for `aria-activedescendant`, plus `data-id`/`data-kind`), holding a `[data-part="reference-option-label"]` and — when the roster entry supplies one — a `[data-part="reference-option-description"]`. `[data-active]` marks the Enter target without moving DOM focus. A click commits it (the panel's own `pointerdown` is preventDefaulted so the editor keeps focus).
+  - name: capabilities-trigger
+    description: 'GH #891/SPEC-R11 — the capabilities panel''s trigger pill (`[data-picker="capabilities"]`, a `ui-button variant="soft"` with the pickers'' own leading-glyph + caret shape), shown only when `capabilities` is set and non-empty, busy-disabled with the other triggers. Unlike the four pickers it is NOT wrapped in a `ui-menu` — it opens this element''s own control-created panel — so it carries `aria-expanded`/`aria-controls` itself. Clicking it toggles the panel.'
+  - name: capabilities-panel
+    description: 'GH #891/SPEC-R11 — the capabilities panel (`[data-part="capabilities-panel"]`, `role="group"`, `popover="manual"`, `aria-label="Capabilities"`), built lazily on the first non-empty `capabilities` and placed in the Popover API TOP LAYER with the typeahead''s own `computePosition` (anchored to its trigger, preferring ABOVE it). `[data-open]` is its own state truth. It STAYS OPEN across toggles — multi-toggle in one visit is the point (which is why it is not a `ui-menu`: menuitem action semantics close on activate). Escape, an outside pointerdown, a send, `busy`, and disconnect all close it; Escape returns focus to the trigger.'
+  - name: capability-row
+    description: 'GH #891/SPEC-R11 — one capability (`[data-part="capability-row"]`, with `data-id`/`data-kind`): an optional leading `[data-part="capability-row-icon"]` `ui-icon`, a `[data-part="capability-row-text"]` column holding `[data-part="capability-row-label"]` + an optional `[data-part="capability-row-description"]`, and a trailing `[data-part="capability-switch"]` `ui-switch` whose `checked` reflects the row''s `included` and whose accessible name is the row''s label. Rows sharing a `kind` sit inside a `[data-part="capability-group"]` (`role="group"` + `aria-label`, with an `aria-hidden` `[data-part="capability-group-label"]` header) — rendered only when the set spans more than one kind, the typeahead''s own grouping law.'
   - name: reference-chip
     description: A committed mention/invocation (`[data-part="reference-chip"]`, `data-kind` for per-kind treatment) living in the SAME chip row as the consumer's `contextItems` chips — consumer chips first, reference chips after. Each holds — GH #891 (SPEC-R9) — an OPTIONAL leading `[data-part="reference-chip-icon"]` `ui-icon` (`data-role="icon"`, the glyph the roster entry's own `icon` named; absent ⇒ label-only, never a placeholder box), a `[data-part="reference-chip-label"]`, and a `[data-part="reference-chip-dismiss"]` `ui-button` that drops the reference from this turn. The chip renders NO `@`/`/` sigil: the trigger character is not part of the label (the pre-R9 `[data-part="reference-chip-sigil"]` node is removed) — kind identity is the consumer's glyph + `data-kind`, family identity is the accent ink. Composer-OWNED state (unlike `contextItems`): minted by a commit, cleared on a successful send.
 
@@ -153,7 +165,7 @@ keyboard:
   - keys: ArrowDown / ArrowUp
     action: With the typeahead open, moves the highlight via `aria-activedescendant` on the editor, wrapping at both ends — DOM focus never leaves the editor (GH #849, the `ui-combo-box` active-descendant discipline).
   - keys: Escape
-    action: With the typeahead open, closes it and leaves the typed characters as plain inert text; further typing inside that same token does NOT reopen it. The keydown is also stopped from propagating, so an ancestor overlay never light-dismisses on a typeahead-only Escape (GH #849).
+    action: With the typeahead open, closes it and leaves the typed characters as plain inert text; further typing inside that same token does NOT reopen it. With the capabilities panel open instead, closes THAT and returns focus to its trigger (GH #891). Either way the keydown is also stopped from propagating, so an ancestor overlay never light-dismisses on a composer-only Escape (GH #849).
 
 geometry:
   sizeClass: pattern                # composed control, no §1 control-height row of its own
@@ -245,6 +257,37 @@ never a placeholder box. The composer maps nothing: there is no kind→glyph tab
 The composer stays **generic**: it knows `ReferenceOption`/`TurnReference` and treats `kind` as an opaque
 string it groups and displays. It never learns `Entry`, a store, or a kind's semantics — a consumer
 (`ui-agent-admin`) owns that projection, exactly as it already owns the `PickerOption` lists.
+
+## GH #891 — the capabilities panel: a third trigger, rows down, one callback up
+
+```ts
+composer.capabilities = [
+  { id: 'skill-style', label: 'House style', kind: 'skill', icon: 'star', included: true },
+  { id: 'svc:calc:*', label: 'Calculator', kind: 'tool', icon: 'gear', included: false },
+]
+composer.onCapabilityToggle((id, included) => {
+  // The CONSUMER owns the state: persist/steer however its own semantics require, then hand a NEW
+  // `capabilities` array down. This element wrote nothing — the switch is still showing the old value.
+})
+```
+
+The trigger sits beside the Models/Effort pills; the panel it opens lists every row with a real `ui-switch`,
+grouped by `kind`. It is the **browse/steer** surface — see everything's state at a glance, flip several in
+one visit — while the `@`/`/` typeahead stays the keyboard-first quick path; they are siblings over the same
+consumer-owned truth, not alternatives. The panel therefore **stays open** across toggles (deliberately not a
+`ui-menu`, whose menuitem semantics commit-and-close); Escape, an outside pointerdown, a send, `busy`, and
+disconnect close it, and a disconnect never orphans it in the top layer.
+
+**Props down, callbacks up, verbatim** (the `onModelChange` law): a flip fires the callback and this element
+mutates nothing — it re-asserts the switch from the current `capabilities`, so a row's visible state moves
+only when the consumer hands a new array down. Answering with the same rows and one `included` changed
+updates the switches in place, so the keyboard focus of the person who just flipped one survives. Unset
+`capabilities` ⇒ no trigger, no panel, no DOM: byte-identical to before this feature. No new event name is
+minted, and the embedded switches' own `change` never crosses the host (`events: []`).
+
+What a flip MEANS — steering only this turn, or writing the agent's persisted roster — is deliberately NOT
+this element's concern: it is the consumer-side fork of ADR-0190, and this contract is identical under either
+arm because the composer never touches a store under either.
 
 ## The composer IS the field (TKT-0058)
 

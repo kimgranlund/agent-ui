@@ -401,6 +401,64 @@ removed, one optional node added.
   WHOLE chip's rendered text equals the label and that no descendant's text is a trigger character (never a
   per-part read of a node the requirement deletes); AC2 covers both arms — glyph present (leading `ui-icon`,
   `data-role="icon"`, the reference carrying the same glyph) and glyph absent (no icon node, no `icon` key);
-  AC3 re-proves dismiss/dedupe/clear-on-send over icon-carrying chips. The existing browser case's chip
+  AC3 re-proves dismiss/dedupe/clear-on-send over icon-carrying chips. The pre-existing browser case's chip
   assertions stand unmodified (a painted, non-zero pill) — R9 changes what is INSIDE the pill, not that it
-  paints.
+  paints — and TWO real-engine cases join it (both engines): the glyph really resolves against the registered
+  curated pack to a painted `<svg>` LEADING the label and inheriting the chip's accent ink (an unknown name
+  would render `data-icon-missing`, resolve.ts — which is what makes this a proof rather than a name
+  comparison, and why an `ICON_NAMES` re-listing in a unit test was rejected: it would copy an enumerable set
+  AND open an app→icons edge the DAG does not grant), and an icon-less entry still commits a real pill.
+
+---
+
+## v5 — the capabilities panel (GH #891 · SPEC-R11 — slice S6, 2026-08-14)
+
+Governed by the same SPEC's **SPEC-R11**; the §11.5-booked repair of this record's prop/callback inventory
+(CVC-C1/C2) plus the build-level mechanism R11 leaves to this altitude. **Composer-only**: `ui-conversation`
+is deliberately NOT widened here and `ui-agent-admin` is not touched at all — that wiring is S7's, gated on
+ADR-0190 (this section is buildable and correct under EITHER arm). **No ADR flag**: no new event name (the
+`ALLOWED_EVENTS` constants are untouched), no new dependency, no geometry row; one already-shipped sibling
+control (`ui-switch`) joins the composed set.
+
+- **CVC-C21 — the prop + callback seam.** `composer-options.ts` gains `CapabilityRow {id, label, kind,
+  description?, icon?, included}`. One additive-optional prop, `capabilities` (`readonly CapabilityRow[] |
+  undefined`, `attribute: false`), sits between `invocables` and `busy` (the descriptor's `attributes[]`
+  bijection follows), plus one registration, `onCapabilityToggle(id, included)`. `kind`/`icon` are OPAQUE
+  (§5's layering clause, the `mentionables` law verbatim); `undefined` OR empty ⇒ no trigger, no panel DOM
+  ever built — AC1's byte-identity by construction, not by a hidden element.
+- **CVC-C22 — why NOT a `ui-menu` (the one real fork at this altitude).** The four shipped pickers are
+  `ui-menu`s. This panel is not: `ui-menu`'s items are `role=menuitem` — ACTION semantics that close on
+  activate — while a steering surface must stay open across several toggles in one visit, and its rows hold
+  real focusable controls rather than commit targets. So it reuses the REFERENCE MENU's discipline instead:
+  a control-created `<div role="group" popover="manual" aria-label="Capabilities">` in the top layer, placed
+  by the same pure `computePosition` (anchored to its own TRIGGER, preferring above — the composer sits at
+  the bottom of its surface), with `[data-open]` as the element's own state truth and THIS element owning
+  every close path: the trigger, Escape (which also returns focus to the trigger), an outside `pointerdown`
+  on the document, a send, `busy`, and the connection's disposer. `role="group"`, not `listbox`/`menu`:
+  DOM focus really does move into these switches, so the platform's own switch semantics are the AX story.
+- **CVC-C23 — zero local mutation, and the focus trap it opens.** A `ui-switch` toggles ITSELF on click
+  (`UIIndicatorElement`), so "the composer mutates nothing" is an active discipline, not an absence: the
+  panel's `change` handler reads the flipped value, RE-ASSERTS `checked` from the CURRENT prop, then reports
+  `onCapabilityToggle(id, next)`. The consumer's answer (a new array) is then the ONLY thing that moves the
+  visible state. That answer must NOT rebuild the panel: replacing the `ui-switch` a keyboard user just
+  Space-toggled drops DOM focus to the body mid-visit. Hence a STRUCTURAL signature (`#capabilityShapeOf` —
+  ids/labels/kinds/glyphs/descriptions, deliberately NOT `included`): shape unchanged ⇒ a state-only pass
+  over the existing nodes; shape changed (a real roster change) ⇒ a full rebuild. Both proven, jsdom AND
+  real-engine (same-node identity + `document.activeElement`).
+- **CVC-C24 — the event fence, widened by measurement.** SPEC-R11 names the switch's "`change`/`toggle`";
+  the shipped `UIIndicatorElement` actually emits **`input` AND `change`** (bubbling + composed), which this
+  slice's own `events: []` leak probe caught. Both are stopped at the panel boundary (the editor-`input`
+  suppression discipline, applied one level out) — the fence is "no switch event crosses the host", never a
+  name list. Also widened for the same reason: the click-to-focus exclusion now covers
+  `[data-part="capabilities-panel"]` WHOLESALE — without it, clicking a switch stole focus to the editor and
+  undid the interaction that landed there (a real defect, caught by its own probe, fixed at the region level
+  rather than by naming `ui-switch` so a future row adornment cannot fall outside it).
+- **CVC-C25 — tests.** Eleven jsdom cases (the R11 block): AC1 (unset AND empty ⇒ no trigger/panel, plus the
+  leading cell's exact child list), the trigger's pill anatomy + LAST position, AC2 (grouping, per-row
+  switch state, aria-labels, row anatomy with/without glyph+description), the single-kind no-header case,
+  AC2's flip semantics (callback with the NEW state · panel stays open · row reverts to prop truth · the
+  prop object itself untouched · a consumer answer moving it), the in-place-update/node-identity case, AC3's
+  leak probe, every close path in one case, the clear-mid-visit case, and the click-to-focus exclusion. ONE
+  browser case per R11 AC3 (both engines): open → real click toggle → keyboard Space toggle → consumer
+  answer → Escape, asserting the top layer out of an `overflow: hidden` shell, painted switch tracks pinned
+  to the row's trailing edge, `document.activeElement` at every step, and `aria-expanded` back to false.
