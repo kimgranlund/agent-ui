@@ -50,6 +50,22 @@
   --ui-drawer-scrollbar-size: var(--md-sys-scrollbar-size);
   --ui-drawer-scrollbar-thumb: var(--md-sys-color-neutral-scrollbar-thumb);
   --ui-drawer-scrollbar-thumb-hover: var(--md-sys-color-neutral-scrollbar-thumb-hover);
+
+  /* GH #918 — the content LAYOUT SYSTEM: an author-composed `<header>`/`[data-region='header']` +
+     `<footer>`/`[data-region='footer']` (drawer.md's own documented example) ride the SHARED [data-box]
+     region model the dialog part already opts into (below, ADR-0046) — sticky positioning + region padding
+     + the content gap all come from container-box.css for free once a consumer wraps its title/description
+     in a `<header>` and its scrolling body in `[data-region='content']` (the drawer imposes no NEW slot
+     grammar — light-DOM structural children, per the fleet's own light-DOM-by-default law). What THIS
+     control adds is its own spacing RHYTHM (repointing the generic --ui-box-* defaults, below) plus a
+     scroll-conditional hairline on the sticky regions — a bracket earns a border only once real content has
+     scrolled BEHIND it; a static border on an unscrolled drawer would be pure decoration. Cheap: it reuses
+     the `data-fade-top`/`data-fade-bottom` flags `scrollFade` already toggles on this same dialog
+     (unconditional, wired in .ts) rather than a second scroll listener — pure CSS, zero new JS. */
+  --ui-drawer-pad-inline: var(--md-sys-space-md); /* header/footer/content inline padding — the drawer's own rhythm */
+  --ui-drawer-pad-block: var(--md-sys-space-sm); /* header/footer block padding */
+  --ui-drawer-gap: var(--md-sys-space-sm); /* the vertical rhythm between a content region's own stacked children */
+  --ui-drawer-region-border: var(--ui-drawer-outline); /* the header/footer hairline colour — the same frame role, one edge over */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-drawer) consumes ONLY --ui-drawer-* + the --ui-container-* seam ════════════════ */
@@ -83,6 +99,12 @@
     /* Box-model (container-box.css): the dialog is a [data-box] — no shell padding; its children carry the
        inset (author header/content/footer regions get the region padding + the box inset margin). */
     padding: 0;
+    /* GH #918 — the drawer's OWN spacing rhythm: repoint the generic --ui-box-* region defaults (12/6/8px)
+       to the drawer's own --ui-drawer-* chain. A specificity-real selector on the [data-box] element itself
+       cleanly overrides the :where() defaults container-box.css declares (specificity 0). */
+    --ui-box-pad-inline: var(--ui-drawer-pad-inline);
+    --ui-box-pad-block: var(--ui-drawer-pad-block);
+    --ui-box-gap: var(--ui-drawer-gap);
 
     /* Motion — an edge-keyed inset transition over the EXISTING motion constants (ADR-0188 cl.5: zero new
        motion tokens). `overlay`/`display` ride `allow-discrete` so the top-layer/rendering flip is deferred
@@ -198,6 +220,21 @@
   :scope > [data-part='dialog']:hover::-webkit-scrollbar-thumb:hover,
   :scope > [data-part='dialog']:focus-within::-webkit-scrollbar-thumb:hover {
     background: var(--ui-drawer-scrollbar-thumb-hover);
+  }
+
+  /* GH #918 — the scroll-conditional region hairline: `scrollFade` (wired unconditionally in .ts) toggles
+     `data-fade-top`/`data-fade-bottom` on THIS SAME dialog from its live scroll position — `data-fade-top`
+     means real content is scrolled out of view UNDER the sticky header, `data-fade-bottom` the mirror for
+     the footer. That is exactly the moment a bracket earns a demarcating edge: an unscrolled drawer (both
+     flags absent) shows a clean header/footer with no border at all — the ticket's own "border earns its
+     keep once content scrolls beneath it" call, realized as pure CSS off a flag the control already
+     maintains (no second scroll listener). Selectors are DIRECT children of the dialog only (never a nested
+     [data-box]'s own header/footer one level of content deeper). */
+  :scope > [data-part='dialog'][data-fade-top] > :is(header, [data-region='header']) {
+    border-block-end: 1px solid var(--ui-drawer-region-border);
+  }
+  :scope > [data-part='dialog'][data-fade-bottom] > :is(footer, [data-region='footer']) {
+    border-block-start: 1px solid var(--ui-drawer-region-border);
   }
 
   /* the ::backdrop scrim — the platform-painted blocking layer behind the drawer (top layer). */
