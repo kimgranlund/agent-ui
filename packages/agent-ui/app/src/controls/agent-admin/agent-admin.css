@@ -460,6 +460,30 @@
     flex: 0 0 auto;
   }
 
+  /* GH #870 — `overflow="menu"` (GH #586) lays this strip's shell out as a two-column grid, "strip
+     trigger" (tabs.css §[overflow=menu]): the tablist part's own `border-block-end` (the baseline
+     hairline) is painted ONLY on the "strip" column, so at any width narrow enough to show the … trigger
+     the line visibly stopped one column short of it. Composition-side fix (never widen ui-tabs' own
+     contract — the shared control has no "trigger also carries the divider" case to generalize to; this
+     admin instance is the one consumer that visually abuts the trigger against other chrome): a
+     `box-shadow`, not a second `border` (a border would grow the trigger's own border-box and desync its
+     height from the tablist's, see below), painted OUTSIDE the trigger's box at the exact 1px offset the
+     tablist's own border occupies. Both grid items start flush at the row's block-start (tabs.ts pins the
+     trigger's `block-size` to `--ui-tabs-tab-height`, which — being a definite, non-auto size — opts it
+     out of the grid's default cross-axis stretch, the same reasoning `ui-tab-panel`'s own grid-area rule
+     above already leans on), and the trigger's `box-sizing: border-box` (tabs.css) makes its OWN
+     border-box height exactly `--ui-tabs-tab-height` with no border added — so a 1px `0 1px 0` shadow
+     lands pixel-identical to the tablist's border-block-end outer edge (that part's un-set box-sizing
+     makes ITS total height `--ui-tabs-tab-height` + the 1px border), one visually continuous line under
+     the whole header row at every pane width, including the overflow='menu' collapse (browser-measured,
+     agent-admin.browser.test.ts). The color is this file's OWN already-declared `--ui-agent-admin-border`
+     (never a cross-scope read into ui-tabs' `--ui-tabs-strip-line` chain) — it happens to mint from the
+     SAME system color role tabs.css's own token does (`--md-sys-color-neutral-outline-variant`), so the
+     two segments read as one line without either sheet reaching into the other's token scope. */
+  ui-tabs[data-part='settings-nav'] > [data-part='overflow'] > [data-part='trigger'] {
+    box-shadow: 0 1px 0 0 var(--ui-agent-admin-border);
+  }
+
   /* OQ4 / GH #666 / GH #684 — the Author card's EMPTY-LOG state carried a `data-part='author-empty'`
      headline + copy block here (`ui-conversation.setEmptyState`) until Kim's 2026-08-10 live pixel-truth
      ruling (GH #684) removed the headline + copy entirely: the unarmed card's log is now simply empty, so
