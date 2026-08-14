@@ -34,11 +34,19 @@
 // by this slice.
 //
 // LLD-C4 (S2, mcp-agent-config.lld.md §3.2, SPEC-R4, ADR-0185) — the body widens ADDITIVELY with a
-// SECOND array, `services`: one `{id, label, description}` row per roster server with ≥1 registered
-// `mcp:<sid>:`-prefixed manifest (`projectServiceRows`, below), same trio-only leak boundary as
-// `integrations`. `integrations` itself stays byte-identical — every pre-SPEC-R4 reader parses this
-// body unchanged. The factory's `mcpRoster` opt (test-only) stages a fabricated roster for a route
-// test without touching the committed (empty) `mcp-servers.json`.
+// SECOND array, `services`: one row per roster server with ≥1 registered `mcp:<sid>:`-prefixed
+// manifest (`projectServiceRows`, below), same trio-only leak boundary as `integrations`.
+// `integrations` itself stays byte-identical — every pre-SPEC-R4 reader parses this body unchanged.
+// The factory's `mcpRoster` opt (test-only) stages a fabricated roster for a route test without
+// touching the committed (empty) `mcp-servers.json`.
+//
+// ADR-0189 cl.3 (ratified 2026-08-14, GH #877) — each `services` row widens AGAIN, additively: a
+// `tools` array carries one real per-tool `{id, label, description}` trio per registered member
+// manifest — the SAME facts `mapMcpTool` already computed into that manifest's own `description`,
+// zero new capture. The row's own `description` field is UNCHANGED (still the boot-count aggregate,
+// kept as a compact summary/tooltip fact) — this is a widen, not a replace: `services[].tools` is
+// what lets an MCP service's Tools-panel entry show its member tools' real text instead of only
+// "N tools discovered at boot" alone (mcp-agent-config.spec.md SPEC-R4, this ADR's Repairs cell).
 
 import { readFileSync } from 'node:fs'
 import { loadEnv } from 'vite'
@@ -140,20 +148,28 @@ export function projectIntegrationTrios(
  *  a server with zero discovered tools contributes no row. Exported (not `registry.ts`, frozen)
  *  for the SAME fabricated-array testability `projectIntegrationTrios` above already has — no test
  *  needs the real `REGISTRY` or a real roster file. The description is registry-derived-only (LLD
- *  §6.4): no roster prose, no endpoint/envKey/key-value/JSON-RPC fact (the SPEC-R4 cl.2 boundary). */
+ *  §6.4): no roster prose, no endpoint/envKey/key-value/JSON-RPC fact (the SPEC-R4 cl.2 boundary).
+ *
+ *  ADR-0189 cl.3 (GH #877) — `tools` is the widened member: one `{id, label, description}` trio per
+ *  MEMBER manifest (the same manifests the `count` above already filters), in that same filter
+ *  order. `m.description` is `mapMcpTool`'s own real per-tool text (`tool.description ?? label` at
+ *  mapping time) — sourced from the SAME registered `IntegrationManifest` the aggregate `count`
+ *  already reads, zero new capture, a wire change only. */
 export function projectServiceRows(
   cfg: McpServersConfig,
   manifests: readonly IntegrationManifest[],
-): Array<{ id: string; label: string; description: string }> {
-  const rows: Array<{ id: string; label: string; description: string }> = []
+): Array<{ id: string; label: string; description: string; tools: Array<{ id: string; label: string; description: string }> }> {
+  const rows: Array<{ id: string; label: string; description: string; tools: Array<{ id: string; label: string; description: string }> }> = []
   for (const serverId of Object.keys(cfg.servers)) {
     const prefix = serviceRefPrefix(serverId)
-    const count = manifests.filter((m) => m.id.startsWith(prefix)).length
-    if (count === 0) continue
+    const members = manifests.filter((m) => m.id.startsWith(prefix))
+    if (members.length === 0) continue
+    const count = members.length
     rows.push({
       id: serviceRef(serverId),
       label: cfg.servers[serverId]!.label,
       description: `${count} ${count === 1 ? 'tool' : 'tools'} discovered at boot`,
+      tools: members.map((m) => ({ id: m.id, label: m.label, description: m.description })),
     })
   }
   return rows

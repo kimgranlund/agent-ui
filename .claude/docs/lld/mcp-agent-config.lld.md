@@ -1,12 +1,15 @@
 # LLD — per-agent MCP services (service-ref grammar · server-side expansion · services GET · the MCP-services pack · the one generic app widening)
 
-> Refines: [`../spec/mcp-agent-config.spec.md`](../spec/mcp-agent-config.spec.md) v0.2
+> Refines: [`../spec/mcp-agent-config.spec.md`](../spec/mcp-agent-config.spec.md) v0.2 (build baseline)
+> / v0.3 (§3.2/§3.4's `tools`/`content` widening, below — GH #877)
 > (SPEC-R1–R7 / SPEC-N1–N3 — the merged contract, PR #786) under
 > [ADR-0185](../adr/0185-enablement-wire-service-reference-grammar.md) (**ACCEPTED** 2026-08-12 —
 > the wire-grammar widening is RATIFIED; no fork in this doc waits on Kim). Build plan:
 > [`../decompositions/mcp-agent-config.decomp.md`](../decompositions/mcp-agent-config.decomp.md)
 > (GH [#783](https://github.com/kimgranlund/agent-ui/issues/783); repairs tracker GH
-> [#787](https://github.com/kimgranlund/agent-ui/issues/787)).
+> [#787](https://github.com/kimgranlund/agent-ui/issues/787)). §3.2/§3.4 carry a same-change
+> stale-context repair under [ADR-0189](../adr/0189-tool-description-standard-and-tools-panel-visibility.md)
+> cl.3/cl.5 (ratified + built 2026-08-14, GH [#877](https://github.com/kimgranlund/agent-ui/issues/877)).
 > · proposed · 2026-08-12 · planner (design seat) · Layer: LLD (implementation plan)
 >
 > **Composes on** (read, not rebuilt): `resolveIntegrations`/`MAX_ENABLED`/`isProvisioned`
@@ -117,12 +120,25 @@ fail-closed, zero Worker edit.
 export function projectServiceRows(
   cfg: McpServersConfig,
   manifests: readonly IntegrationManifest[],
-): Array<{ id: string; label: string; description: string }>
-// Per roster key (committed order): count = manifests whose id starts with serviceRefPrefix(sid);
-// count === 0 ⇒ no row. Row = { id: serviceRef(sid), label: cfg.servers[sid].label,
-//   description: `${count} ${count === 1 ? 'tool' : 'tools'} discovered at boot` }.
-// The SPEC-R4 boundary by shape: no endpoint, envKey, key value, or JSON-RPC fact CAN appear.
+): Array<{
+  id: string
+  label: string
+  description: string
+  tools: Array<{ id: string; label: string; description: string }> // ADR-0189 cl.3 (GH #877)
+}>
+// Per roster key (committed order): members = manifests whose id starts with serviceRefPrefix(sid);
+// members.length === 0 ⇒ no row. Row = { id: serviceRef(sid), label: cfg.servers[sid].label,
+//   description: `${count} ${count === 1 ? 'tool' : 'tools'} discovered at boot`,   // UNCHANGED by ADR-0189
+//   tools: members.map(m => ({ id: m.id, label: m.label, description: m.description })) }.  // ADR-0189 cl.3 — widened, additive
+// The SPEC-R4 boundary by shape: no endpoint, envKey, key value, or JSON-RPC fact CAN appear, at
+// either grain (the row or its `tools` entries).
 ```
+
+**Stale-context repair (GH #877, ADR-0189 cl.3, ratified+built 2026-08-14):** `tools` is the ONE
+member this arc's original build (S2, above) did not carry — booked by that later ADR as a
+same-change repair on this exact projection, not a second mechanism. `tools` reuses the SAME
+`{id, label, description}` shape `projectIntegrationTrios` already emits for `integrations`,
+sourced from the SAME registered `IntegrationManifest` fields (zero new capture).
 
 The GET branch becomes
 `sendJson(res, 200, { integrations: projectIntegrationTrios(listIntegrations()), services:
@@ -170,17 +186,26 @@ byte-identical when absent) applied to the handlers bag. Recorded as a non-decis
 ```ts
 // site/lib/admin-live-runner.ts — sibling of fetchLiveIntegrations, same degrade law:
 // not-ok / non-array / malformed row / thrown fetch ⇒ undefined, never a partial list.
-export interface LiveServiceRow { id: string; label: string; description: string }
+export interface LiveServiceTool { id: string; label: string; description: string } // ADR-0189 cl.3
+export interface LiveServiceRow { id: string; label: string; description: string; tools: LiveServiceTool[] }
 export async function fetchLiveServices(): Promise<LiveServiceRow[] | undefined>
-// GET `${PRODUCE_ENDPOINT}/integrations`, reads body.services; shape-validated the isTrio way.
-// A pre-S2 proxy (body.services absent) degrades to undefined — old proxy + new page is safe.
+// GET `${PRODUCE_ENDPOINT}/integrations`, reads body.services; shape-validated the isTrio way,
+// extended to also require every row's `tools` array and each of ITS entries to shape-check — a
+// row missing `tools` (a pre-ADR-0189 proxy) degrades the WHOLE array to undefined, same
+// all-or-nothing law a missing trio field already took. A pre-S2 proxy (body.services absent)
+// degrades to undefined too — old proxy + new page is safe either way.
 
 // site/pages/agent-admin-libraries.ts
 export function setLiveServices(rows: readonly LiveServiceRow[] | undefined): void
 // module-level `let liveServiceEntries: NewEntryInput[] | undefined`; rows map to
-// { id: row.id, label: row.label, description: row.description, content: '' } — the service
+// { id: row.id, label: row.label, description: row.description,
+//   content: row.tools.map(t => `**${t.label}** — ${t.description}`).join('\n\n') } — the service
 // ref rides NewEntryInput.id EXPLICIT (never slugged, the LLD-C7/GH #402 law); label is the
-// roster's human text, freely editable after add; content empty (the external-registry posture).
+// roster's human text, freely editable after add. `content` — ADR-0189 cl.5 (GH #877, ratified +
+// built 2026-08-14) — is NO LONGER forced empty: it is the joined REAL per-tool descriptions,
+// rendered as prose (the box is markdown-only, ADR-0139), retiring this doc's own original
+// "content empty (the external-registry posture)" ruling now that a real per-tool description
+// exists on the wire (SPEC-R5's sibling repair, `mcp-agent-config.spec.md`).
 ```
 
 The pack + its inclusion (both live-derived, both degrade to ABSENT — no static fallback

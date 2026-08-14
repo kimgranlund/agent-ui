@@ -314,11 +314,23 @@ describe('fetchLiveIntegrations', () => {
 // The sibling of fetchLiveIntegrations above, reading the SECOND, additive `services` array off the SAME
 // `GET /integrations` body (S2). Same degrade-to-`undefined` law, one extra rung: a body with NO `services`
 // key at all (a pre-S2 proxy) degrades too, so an old proxy + new page is safe.
+//
+// ADR-0189 cl.3 (GH #877, ratified 2026-08-14) — every row now also carries `tools`
+// (`Array<{id, label, description}>`); a row missing it (a pre-ADR-0189 proxy) degrades the WHOLE
+// array to `undefined`, same all-or-nothing law as a missing trio field.
 describe('fetchLiveServices', () => {
   it('resolves the served service rows (body.services) on a well-shaped 200', async () => {
     const services = [
-      { id: 'mcp:calc:*', label: 'Calc server', description: '2 tools discovered at boot' },
-      { id: 'mcp:notes:*', label: 'Notes server', description: '1 tool discovered at boot' },
+      {
+        id: 'mcp:calc:*',
+        label: 'Calc server',
+        description: '2 tools discovered at boot',
+        tools: [
+          { id: 'mcp:calc:add', label: 'Calc server: add', description: 'Add two numbers.' },
+          { id: 'mcp:calc:multiply', label: 'Calc server: multiply', description: 'Multiply two numbers.' },
+        ],
+      },
+      { id: 'mcp:notes:*', label: 'Notes server', description: '1 tool discovered at boot', tools: [{ id: 'mcp:notes:search', label: 'Notes server: search', description: 'Search notes.' }] },
     ]
     vi.stubGlobal('fetch', vi.fn(async (url: string) => {
       expect(url).toBe('/__a2ui/agent/integrations')
@@ -351,6 +363,24 @@ describe('fetchLiveServices', () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ services: 'not-an-array' }), { status: 200 })))
     await expect(fetchLiveServices()).resolves.toBeUndefined()
     vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ services: [{ id: 'mcp:calc:*', label: 'Calc' }] }), { status: 200 })))
+    await expect(fetchLiveServices()).resolves.toBeUndefined()
+  })
+
+  it('ADR-0189 cl.3 — degrades to undefined on a row missing `tools` (a pre-ADR-0189 proxy), or whose `tools` array carries a malformed trio', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ services: [{ id: 'mcp:calc:*', label: 'Calc', description: '1 tool discovered at boot' }] }), { status: 200 })),
+    )
+    await expect(fetchLiveServices()).resolves.toBeUndefined()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({ services: [{ id: 'mcp:calc:*', label: 'Calc', description: '1 tool discovered at boot', tools: [{ id: 'mcp:calc:add', label: 'add' }] }] }),
+          { status: 200 },
+        ),
+      ),
+    )
     await expect(fetchLiveServices()).resolves.toBeUndefined()
   })
 })

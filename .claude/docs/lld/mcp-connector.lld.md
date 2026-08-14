@@ -244,6 +244,43 @@ served AFTER the ready gate so `mcp:*` entries appear. Trios ONLY: no `endpoint`
 name, no key value, no `version`, no `tool`, no raw MCP fact (SPEC-R28's cl.2 boundary). Sits
 beside `/status` in the same handler (a `GET` + `url.startsWith('/integrations')` branch).
 
+**Stale-context repair (GH #877, this section brought current — it had drifted behind two later,
+additive widenings landed in sibling arcs):** the body above is the S6-vintage shape only.
+Two ADDITIVE widenings landed since, on the SAME route, both trio-only and both compatible with
+every reader of the body above (never a breaking change to it):
+
+```
+GET /__a2ui/agent/integrations  →  200 application/json  (current shape, both widenings applied)
+{
+  "integrations": [ { "id": string, "label": string, "description": string } ],   // SPEC-R28, byte-identical to the shape above
+  "services": [
+    {
+      "id": string,        // `mcp:<server-id>:*` — a service ref (ADR-0185's SERVICE_REF_PATTERN), never a registry key
+      "label": string,     // the roster's human label for the server
+      "description": string, // the boot-count aggregate, e.g. "2 tools discovered at boot" (SPEC-R4)
+      "tools": [ { "id": string, "label": string, "description": string } ] // ADR-0189 cl.3 — real per-tool trios
+    }
+  ]
+}
+```
+
+1. **`services`** (`mcp-agent-config.spec.md` SPEC-R4, ADR-0185, this repo's own `mcp-agent-config.lld.md`
+   §3.2/§3.4 — the owning LLD for that arc's build) — one row per allowlisted server with ≥1
+   registered `mcp:<sid>:`-prefixed manifest, via `projectServiceRows` (`dev-proxy-plugin.ts`,
+   beside `projectIntegrationTrios`). Additive: `integrations` stays byte-identical.
+2. **`services[].tools`** ([ADR-0189](../adr/0189-tool-description-standard-and-tools-panel-visibility.md)
+   cl.3, ratified 2026-08-14, GH #877) — widens EACH `services` row again, additively: one real
+   `{id, label, description}` trio per member manifest (the same manifests the row's own
+   boot-count `description` already counts), sourced from the SAME registered
+   `IntegrationManifest.description` `mapMcpTool` already computes at discovery time — zero new
+   capture, this wire shape only. The row's own `description` is UNCHANGED by this widening (kept
+   as a compact summary fact); `tools` is what lets an MCP service's Tools-panel entry show its
+   member tools' real text (`site/pages/agent-admin-libraries.ts`'s `setLiveServices`, which joins
+   `tools[].description` into the pack entry's `content` as prose). This route stays DEV-only —
+   `worker/index.ts` carries zero MCP bytes across both widenings, verified at the ADR-0189 build
+   (`grep -rn mcp packages/agent-ui/a2ui/tools/agent/worker/index.ts` — no matches); the same
+   stated temporary asymmetry ADR-0177 already accepts.
+
 ## 4 · Data & contracts (facts pinned)
 
 - **Frozen-file fence, mechanical:** every S1–S6 PR shows an empty `git diff` over `registry.ts`,

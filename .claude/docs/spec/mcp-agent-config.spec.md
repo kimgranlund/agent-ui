@@ -1,6 +1,13 @@
 # SPEC — Per-agent MCP services in the Agent Schema system
 
-> Status: proposed · v0.2 · 2026-08-12 (v0.1 2026-08-12) · Layer: SPEC (execution contract)
+> Status: proposed · v0.3 · 2026-08-14 (v0.2 2026-08-12, v0.1 2026-08-12) · Layer: SPEC (execution contract)
+> v0.3 changelog (GH #877, ADR-0189 ratified/built 2026-08-14): SPEC-R4 widens — the `services` row
+> gains the ADR-0189 cl.3 `tools: Array<{id, label, description}>` member (real per-tool
+> descriptions, sourced from the SAME registered `IntegrationManifest.description` `mapMcpTool`
+> already computes — zero new capture, a wire change only); the row's own `description` (the
+> boot-count aggregate) is UNCHANGED, kept as a compact summary fact. SPEC-R5's original "empty
+> `content`" ruling is RETIRED (ADR-0189 cl.5) now that a real per-tool description exists on the
+> wire — REV-annotated in place below, per doc-standards, rather than silently rewritten.
 > v0.2 changelog (the doc-checker fix-then-ship pass, same day): SPEC-R2's ref grammar anchored to
 > `SERVER_ID_PATTERN` + the `mcp:calc:add:*` discriminating vector · SPEC-R5's collision citation
 > repaired (GH #564 / `ValidateNewEntryOptions` own the law, not ADR-0170 cl.8) + the cl.8
@@ -179,21 +186,31 @@ additive expectation, confirmed.
   such fence, GH #850's own doc-check caught it) — and the shipped SPEC-R16–R19/R23–R28 suites pass
   unmodified — `npm test` green by exit code.
 
-**SPEC-R4 — Admin surfacing: an additive `services` array on the host GET.** The dev proxy's
-`GET /integrations` body MUST gain a second, additive array — `services` — carrying one trio-shaped
-row per allowlisted server with ≥1 registered manifest:
+**SPEC-R4 — Admin surfacing: an additive `services` array on the host GET.** *(Widened by
+[ADR-0189](../adr/0189-tool-description-standard-and-tools-panel-visibility.md) cl.3, ratified
+2026-08-14, GH #877 — the `tools` member below; the row's `description` field predates this
+widening and is UNCHANGED.)* The dev proxy's `GET /integrations` body MUST gain a second, additive
+array — `services` — carrying one row per allowlisted server with ≥1 registered manifest:
 `{ id: 'mcp:<server-id>:*', label: <roster label>, description: <derived from the registry — at
-minimum the tool count; exact copy is the LLD's> }`. The existing `integrations` trios array stays
-byte-identical (SPEC-R28's parity test untouched), so every reader written before this SPEC parses
-the body unchanged. The cl.2 boundary is inherited verbatim: no endpoint URL, no `envKey` name, no
-key value, no JSON-RPC fact in the body. The GET reflects the boot-time registry (SPEC-R27's
-accepted staleness — no refresh mechanism); the route remains dev-only with `worker/` frozen (the
-same stated temporary asymmetry ADR-0177 already accepts).
-*(→ SPEC-R28 of [a2ui-live-agent.spec.md](./a2ui-live-agent.spec.md); ADR-0177 cl.2/cl.4)*
+minimum the tool count; exact copy is the LLD's>, tools: Array<{ id: string; label: string;
+description: string }> }`. `tools` carries one REAL per-tool trio per registered
+`mcp:<server-id>:`-prefixed manifest, in that manifest set's own filter order — the SAME
+`{id, label, description}` shape `projectIntegrationTrios` already computes for `integrations`,
+sourced from the SAME registered `IntegrationManifest.description` `mapMcpTool` already computes
+(zero new capture, a wire change only), so an MCP service's Tools-panel entry can show its member
+tools' real text instead of the aggregate `description` count alone. The existing `integrations`
+trios array stays byte-identical (SPEC-R28's parity test untouched), so every reader written before
+this SPEC parses the body unchanged. The cl.2 boundary is inherited verbatim, extended to `tools`:
+no endpoint URL, no `envKey` name, no key value, no JSON-RPC fact in the body, at either grain. The
+GET reflects the boot-time registry (SPEC-R27's accepted staleness — no refresh mechanism); the
+route remains dev-only with `worker/` frozen (the same stated temporary asymmetry ADR-0177 already
+accepts — verified at the ADR-0189 build: `worker/index.ts` carries zero MCP bytes, DEV wire only).
+*(→ SPEC-R28 of [a2ui-live-agent.spec.md](./a2ui-live-agent.spec.md); ADR-0177 cl.2/cl.4; ADR-0189 cl.3)*
 - **AC1** *Given* the GET route test with fake-discovered manifests across two servers, *then*
-  `services` carries exactly two rows with the grammar above, `integrations` is byte-identical to
+  `services` carries exactly two rows with the grammar above (each row's `tools` array holding that
+  server's real per-tool trios, in manifest-filter order), `integrations` is byte-identical to
   its pre-SPEC projection, and the whole body contains no URL, `envKey`, key value, or JSON-RPC
-  fact — deterministic route test, no external network.
+  fact at either grain — deterministic route test, no external network.
 - **AC2** *Given* an empty roster, *then* `services` is `[]` and the body is otherwise identical to
   today's — the SPEC-R27 zero-cost-no-op law extended to this array.
 
@@ -201,8 +218,19 @@ same stated temporary asymmetry ADR-0177 already accepts).
 `site/pages/agent-admin-libraries.ts` MUST offer a second pack under `ENTRY_KINDS.tool`, populated
 exclusively from the GET's `services` rows via the `setLiveIntegrations` seam's pattern (a sibling
 setter or a widened one — LLD's choice): each pack entry carries the service ref as its explicit
-`NewEntryInput.id`, the server label as `label`, empty `content` (the external-registry posture the
-catalog and live-integration packs already take). The pack is GENERIC (absent from
+`NewEntryInput.id`, the server label as `label`, ~~empty `content` (the external-registry posture
+the catalog and live-integration packs already take)~~.
+**RETIRED by [ADR-0189](../adr/0189-tool-description-standard-and-tools-panel-visibility.md) cl.5
+(ratified + built 2026-08-14, GH #877):** `content` MUST instead be the joined REAL per-tool
+descriptions from SPEC-R4's widened `tools` array, rendered as prose (the box is
+`<ui-code-editor language="markdown">`, markdown-only — ADR-0139 — never a JSON dump of `tools`).
+The original "empty content" ruling held only while the wire carried no real per-tool description
+for a service row (only the synthetic boot-count aggregate) — a stated, bounded gap ADR-0189 names
+and closes, not a reversal of this clause's collision/genericness/absence rules below, which stand
+unchanged. A service row is guaranteed ≥1 member tool by construction (SPEC-R4's own "a server with
+zero discovered tools contributes no row"), so `content` is non-empty for every entry this pack
+ever offers.
+The pack is GENERIC (absent from
 `FLAVORED_PACK_CATEGORY` — services have no persona affinity), and ABSENT entirely when the GET
 degrades (`fetchLiveIntegrations`-style `undefined`: production, network fault, malformed body) —
 never a stale or hand-authored fallback, because unlike `INTEGRATION_TOOLS` no static service
@@ -217,9 +245,10 @@ permitted widening — the pack itself carries the flag, and the picker-disable 
 same signal (the GH #564 pairing: never clickable-but-silently-rejected). Custom authoring is NOT
 suppressed for this pack (see §8 — the ADR-0170 cl.8 question, answered).
 *(→ GH #47/#48/#143/#564; ADR-0170 cl.7 — the live-derived-pack precedent; ADR-0132 cl.1 —
-capability surfaces grow by data)*
+capability surfaces grow by data; ADR-0189 cl.3/cl.5)*
 - **AC1** *Given* the page tests with a fake `services` payload set, *then* the pack lists one
-  addable entry per service whose committed store row carries the service ref as `id`; *given* the
+  addable entry per service whose committed store row carries the service ref as `id` and whose
+  `content` is the joined real per-tool description prose (ADR-0189 cl.5); *given* the
   payload reset to `undefined`, *then* the pack is absent from `librariesForCategory`'s output for
   every category — both directions, deterministic.
 - **AC2** *Given* an agent that already holds a service entry, *when* the same service is added
@@ -300,7 +329,12 @@ type EnablementWire = string[]
 // GET /integrations — the body, additively widened (SPEC-R4). `integrations` byte-identical.
 interface IntegrationsGetBody {
   integrations: Array<{ id: string; label: string; description: string }> // SPEC-R28, untouched
-  services: Array<{ id: ServiceRef; label: string; description: string }> // NEW — one row per live server
+  services: Array<{
+    id: ServiceRef
+    label: string
+    description: string // the boot-count aggregate — unchanged by the ADR-0189 widening below
+    tools: Array<{ id: string; label: string; description: string }> // ADR-0189 cl.3 — real per-tool descriptions, zero new capture
+  }>
 }
 
 // The stored per-agent fact (SPEC-R1) — an ORDINARY Entry row; shown for shape, nothing new minted.
@@ -325,7 +359,9 @@ Roster (`mcp-servers.json` — illustrative; the committed file still ships empt
    `mcp:notes:create_note` — four ordinary manifests (SPEC-R25's three facts each). Nothing
    per-agent exists at this layer; the registry is global and boot-scoped, unchanged.
 2. **The GET.** `integrations` lists all four trios (as today); `services` (new) lists
-   `{ id: 'mcp:calc:*', label: 'Calc server', … }` and `{ id: 'mcp:notes:*', label: 'Notes server', … }`.
+   `{ id: 'mcp:calc:*', label: 'Calc server', … }` and `{ id: 'mcp:notes:*', label: 'Notes server', … }`
+   (ADR-0189 cl.3 — each row's `…` also carries `tools: [{id:'mcp:calc:add', …}, {id:'mcp:calc:multiply', …}]`
+   / `tools: [{id:'mcp:notes:search_notes', …}]` respectively — the real per-tool trios).
 3. **The admin.** Agent "Research Aide" adds the **Calc server** service from the MCP-services pack,
    and pins exactly one Notes tool (`mcp:notes:search_notes`) from the existing Integrations pack.
    Its store now holds, under `entries:tool`, two rows whose `id`s are `mcp:calc:*` and
