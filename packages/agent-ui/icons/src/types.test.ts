@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest'
 import { ICON_NAMES, type IconName, type IconPack } from './types.ts'
 
 describe('ICON_NAMES', () => {
-  it('has exactly seventy-nine names (32 pre-ADR-0169 + 44 ADR-0169 cl.9b Icon-table members + 3 ADR-0179 GH #686 Amendment S7-a members)', () => {
-    expect(ICON_NAMES.length).toBe(79)
+  it('has exactly eighty-one names (32 pre-ADR-0169 + 44 ADR-0169 cl.9b Icon-table members + 3 ADR-0179 GH #686 Amendment S7-a members + 2 GH #868 composer-trigger glyphs)', () => {
+    expect(ICON_NAMES.length).toBe(81)
   })
 
   it('is all distinct strings', () => {
@@ -14,7 +14,7 @@ describe('ICON_NAMES', () => {
     for (const name of ICON_NAMES) expect(typeof name).toBe('string')
   })
 
-  it('contains the curated audit set (ADR-0066 clause 2 + the feed-family LLD-C9 addition + the TKT-0048 plus glyph + the Figma chat-input refactor\'s arrow-up/microphone + the TKT-0083/ADR-0146 F7 warning glyph + the Claude Code Gateway reasoning-chain card\'s circle-notch/check-circle/x-circle group markers + ui-super-shell\'s list/hamburger glyph, M5 GH #83/#90 + the GH #147/ADR-0153 clock "Planned"/all-pending group marker + the GH #168 dots-three overflow/more-actions glyph + the GH #170/ADR-0155 narrow-header rework\'s circle-half/palette glyphs + ADR-0169 cl.9b\'s a2ui-basic Icon-table regeneration, 44 new glyphs + ADR-0179 GH #686 Amendment S7-a\'s chats-circle/gear-six/robot)', () => {
+  it('contains the curated audit set (ADR-0066 clause 2 + the feed-family LLD-C9 addition + the TKT-0048 plus glyph + the Figma chat-input refactor\'s arrow-up/microphone + the TKT-0083/ADR-0146 F7 warning glyph + the Claude Code Gateway reasoning-chain card\'s circle-notch/check-circle/x-circle group markers + ui-super-shell\'s list/hamburger glyph, M5 GH #83/#90 + the GH #147/ADR-0153 clock "Planned"/all-pending group marker + the GH #168 dots-three overflow/more-actions glyph + the GH #170/ADR-0155 narrow-header rework\'s circle-half/palette glyphs + ADR-0169 cl.9b\'s a2ui-basic Icon-table regeneration, 44 new glyphs + ADR-0179 GH #686 Amendment S7-a\'s chats-circle/gear-six/robot + GH #868\'s sparkle/brain composer-trigger glyphs)', () => {
     expect([...ICON_NAMES].sort()).toEqual(
       [
         'caret-down', 'caret-up', 'caret-left', 'caret-right',
@@ -35,6 +35,8 @@ describe('ICON_NAMES', () => {
         'speaker-slash', 'speaker-none', 'speaker-high',
         // ADR-0179 GH #686 Amendment S7-a — ui-toggle's downstream Chat/Settings/Co-pilot icon vocabulary.
         'chats-circle', 'gear-six', 'robot',
+        // GH #868 — conversation-composer's models/effort trigger glyphs.
+        'sparkle', 'brain',
       ].sort(),
     )
   })

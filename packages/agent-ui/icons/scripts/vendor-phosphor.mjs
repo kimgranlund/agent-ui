@@ -92,6 +92,9 @@ const NAME_MAP = {
   'chats-circle': 'chats-circle',
   'gear-six': 'gear-six',
   robot: 'robot',
+  // GH #868 — conversation-composer's models/effort trigger glyphs (identity: Phosphor's own names match).
+  sparkle: 'sparkle',
+  brain: 'brain',
 }
 
 const EXPECTED_VIEW_BOX = '0 0 256 256'

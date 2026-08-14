@@ -32,6 +32,12 @@ export const ICON_NAMES = [
   // vocabulary: chats-circle (Chat) · gear-six (Settings) · robot (Co-pilot). eye/eye-slash/plus/dots-three
   // (the state-icon + trailing-action glyphs the same wireframe names) are already vendored above.
   'chats-circle', 'gear-six', 'robot',
+  // GH #868 (owner ruling, 2026-08-14) — conversation-composer's two picker triggers get purpose-fit glyphs:
+  // `sparkle` (models trigger, replacing the borrowed `list`/hamburger — Phosphor's single 4-point sparkle
+  // reads as "AI choice" at trigger size; `lightning`/bolt was the alternative, rejected — a bolt reads as
+  // power/speed, not "pick a model") and `brain` (effort trigger, replacing the borrowed `fast-forward` —
+  // a literal reasoning-effort glyph, no runner-up needed).
+  'sparkle', 'brain',
 ] as const
 export type IconName = (typeof ICON_NAMES)[number]
 
