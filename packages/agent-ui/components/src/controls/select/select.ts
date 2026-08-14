@@ -51,7 +51,10 @@
 // unset). The trigger button has aria-haspopup="listbox" + aria-expanded (synced via a
 // scope-owned effect) + aria-controls pointing to the panel's stable id. The panel carries
 // role="listbox" as a direct child attribute (never on the host — the listbox is the PANEL
-// part, not the host). [role=option] children carry aria-selected (driven by selectionCommit).
+// part, not the host). [role=option] children carry aria-selected — reflected from the CURRENT
+// `value` on every write (declarative, programmatic, or a user commit alike, GH #908/#905:
+// #syncSelectedOption) AND at every option-adoption pass; selectionCommit's own commit-time
+// reflect still runs too (harmless redundancy — both agree, the multi-select.ts precedent).
 //
 // Form: formValue() = the selected key string (null when nothing is selected); formValidity()
 // = required && nothing selected → { valid: false, flags: { valueMissing: true } }.
@@ -391,6 +394,22 @@ export class UISelectElement extends UIFormElement {
     // Key extractor — the option's `value` attribute ('' = no key, skipped by selectionCommit).
     const keyOf = (el: HTMLElement): string => el.getAttribute('value') ?? ''
 
+    // GH #908/#905 — the value-KEYED aria-selected reflect (the multi-select.ts precedent: "this
+    // control owns the value→aria-selected reflection itself", decoupled from selectionCommit's own
+    // commit-time paint). `selectionCommit`'s reflect (below) only ever fires from a USER commit
+    // (click/Enter) — a declarative `<ui-select value='pro'>` (this control's own doc example) or a
+    // programmatic `select.value = 'pro'` write moved the trigger label and rovingFocus's
+    // initialIndex, both of which already treat `value` as the panel's selection truth, but left
+    // EVERY option unmarked: the panel opened with no row showing where you were. This effect tracks
+    // `this.value` reactively (runs once immediately on creation — the declarative-attribute case —
+    // and again on every later write, programmatic or committed) and sweeps `aria-selected` across
+    // the CURRENT option set to match. A user commit still runs THIS SAME sweep a moment later
+    // (`onSelect` below writes `this.value`, which re-triggers this effect) — harmless redundancy
+    // with `selectionCommit`'s own reflect, both agree (the multi-select.ts doc precedent again).
+    // ADR-0019: this only ever WRITES an attribute — it never calls `this.emit(...)`, so a
+    // declarative/programmatic value write stays silent (no `select` echo).
+    this.effect(() => this.#syncSelectedOption())
+
     // rovingFocus on the listbox panel (container: listbox) — the keydown listener attaches to
     // the listbox so arrow-key navigation is scoped to the panel and does NOT intercept arrows
     // in other regions. initialIndex seeds from the current selection so reconnect lands on the
@@ -407,8 +426,10 @@ export class UISelectElement extends UIFormElement {
     })
 
     // selectionCommit — single mode. onSelect updates `value` (which drives formValue() via the
-    // UIFormElement effect) and closes the overlay. selectionCommit also emits `select` on the
-    // host and sets aria-selected on each option.
+    // UIFormElement effect, AND re-triggers the value-keyed aria-selected reflect above) and closes
+    // the overlay. selectionCommit also emits `select` on the host and sets aria-selected on each
+    // option from its OWN internal cursor — redundant with the value-keyed reflect on a user commit
+    // (both agree), and the ONLY writer left for `select`'s emission (GH #908 changes no event law).
     selectionCommit(this, {
       mode: 'single',
       items,
@@ -551,6 +572,32 @@ export class UISelectElement extends UIFormElement {
       const role = child.getAttribute('role')
       if (role === 'option' || role === 'group') this.#adoptChild(child, listbox)
       child = next
+    }
+    // GH #908 — the OPTION-ADOPTION leg of the value-keyed reflect (see the `this.effect(...)` doc
+    // in connected()): a late-adopted option (appended after connect) or a wholesale rebuild under
+    // an UNCHANGED `value` (a consumer that removes+re-adds every option, e.g. a catalog re-push)
+    // produces NO signal change for the value-tracking effect to react to — this call is what stamps
+    // the freshly-adopted set from the CURRENT value regardless. Runs on every #syncOptions pass
+    // (first-connect AND every later mutation via #optionObserver), so it is a no-op repaint on the
+    // common case (nothing changed) and the load-bearing one on the two cases above.
+    this.#syncSelectedOption()
+  }
+
+  /**
+   * Sweep `aria-selected` across every current panel option from the CURRENT `this.value` — the
+   * value-keyed reflect's shared body (GH #908/#905), called both reactively (connected()'s
+   * `this.effect`, on any value write) and structurally (`#syncOptions`, on any option-adoption
+   * pass). Queries `this.#listbox` directly rather than depending on connected()'s local
+   * `items`/`keyOf` closures, so both call sites can share one method. Never emits — a pure
+   * attribute write (ADR-0019: silent on a declarative/programmatic value change).
+   */
+  #syncSelectedOption(): void {
+    const listbox = this.#listbox
+    if (!listbox) return
+    const val = this.value
+    for (const opt of listbox.querySelectorAll<HTMLElement>('[role=option]')) {
+      const key = opt.getAttribute('value') ?? ''
+      opt.setAttribute('aria-selected', String(val !== '' && key === val))
     }
   }
 

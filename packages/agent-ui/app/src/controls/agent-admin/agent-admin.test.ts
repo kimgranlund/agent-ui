@@ -1288,7 +1288,10 @@ describe("UIAgentAdminElement — the picker's selected row (GH #905)", () => {
     const actions = (): HTMLElement[] => [...selectOf(el).querySelectorAll('[data-part="roster-action"]')] as HTMLElement[]
     expect(actions(), 'both verbs are present to be judged').toHaveLength(2)
     for (const item of actions()) {
-      expect(item.hasAttribute('aria-selected'), `${item.textContent} is a VERB — it carries no selected state at all`).toBe(false)
+      // GH #908 — `ui-select`'s own fleet-wide value-keyed reflect now sweeps EVERY `[role=option]`
+      // (verbs included) from `value`, so the attribute IS present here (as "false") even before any
+      // click; the invariant this test protects is that it is never "true".
+      expect(item.getAttribute('aria-selected'), `${item.textContent} is a VERB — it never reads selected`).not.toBe('true')
     }
 
     // Commit one: selectionCommit's own reflect stamps every option, then the queued rebuild wipes it.

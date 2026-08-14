@@ -3392,7 +3392,10 @@ describe("ui-agent-admin cross-engine — the picker's selected row (GH #905)", 
     expect(items.map((i) => (i.textContent ?? '').trim()), 'both verbs are present to be judged').toEqual(['New Agent', 'Edit Agents'])
     const plainBg = bgOf(rowOf(panel, 'alpha'))
     for (const item of items) {
-      expect(item.hasAttribute('aria-selected'), `${item.textContent} is a VERB — no selected state at all`).toBe(false)
+      // GH #908 — `ui-select`'s own fleet-wide value-keyed reflect sweeps EVERY `[role=option]`
+      // (verbs included) from `value`, so the attribute is present here too (as "false"); the
+      // invariant this test protects — never "true", never the selected fill — is unchanged.
+      expect(item.getAttribute('aria-selected'), `${item.textContent} is a VERB — never reads selected`).not.toBe('true')
       expect(bgOf(item), `${server.browser}: ${item.textContent} paints like an unselected row, never the selected fill`).toBe(plainBg)
     }
 
