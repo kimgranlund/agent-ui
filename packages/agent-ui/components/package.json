@@ -25,6 +25,7 @@
     "./controls/combo-box": "./src/controls/combo-box/combo-box.ts",
     "./controls/command-modal": "./src/controls/command-modal/command-modal.ts",
     "./controls/disclosure": "./src/controls/disclosure/disclosure.ts",
+    "./controls/drawer": "./src/controls/drawer/drawer.ts",
     "./controls/field": "./src/controls/field/field.ts",
     "./controls/form-popover": "./src/controls/form-popover/form-popover.ts",
     "./controls/form-provider": "./src/controls/form-provider/form-provider.ts",

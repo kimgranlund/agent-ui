@@ -1,0 +1,181 @@
+/* drawer.css — ui-drawer, the single-file component stylesheet (ADR-0003 / ADR-0188). Two clearly-SECTIONED
+ * blocks, mirroring modal.css:
+ *
+ *   [1] TOKEN BLOCK  — `:where(ui-drawer)` (specificity 0,0,0) sets the drawer's OWN default surface and
+ *       DECLARES the `--ui-drawer-*` chain from the colour roles + dimensions — the modal.css precedent
+ *       verbatim (an opaque plane; the container base defaults transparent, ADR-0015 cl.1, so the drawer
+ *       repoints its own default). Each minted role consumes an EXISTING `--md-sys-*` role — zero new system
+ *       color/motion roles (ADR-0188 cl.5).
+ *   [2] STYLES BLOCK — `@scope (ui-drawer)` CONSUMES only the role-pure `--ui-container-*` surface seam + the
+ *       own `--ui-drawer-*` chain (never a raw `--md-sys-color-*`). The host is `display: contents`; only the
+ *       control-owned `<dialog data-part="dialog">` PART renders, in the platform TOP LAYER when `showModal()`
+ *       is called (ADR-0017 machinery, re-applied per ADR-0188). Geometry DOCKS to the `[edge]` attribute
+ *       (logical `'start'`/`'end'`, physical `'bottom'` — the block axis never bidi-mirrors, ADR-0188 cl.3):
+ *       inline edges get full viewport block-size × the inline-size token; the bottom edge gets content-height
+ *       capped by the max-block-size token. Radius zeroes on the DOCKED edge only (the fleet base elsewhere).
+ *       Positioning rides LOGICAL `inset-inline-*` properties exclusively (the super-shell precedent,
+ *       super-shell.css's own banner: "no `:dir()` selector needed anywhere in this file") — never a `transform:
+ *       translateX()`, which is NOT bidi-aware on its own. Motion: `@starting-style` (entry) + `transition-
+ *       behavior: allow-discrete` on `display`/`overlay` (exit, progressive enhancement — degrades to instant
+ *       hide where unsupported) over the EXISTING `--md-sys-motion-duration-fast` / `-easing-standard`
+ *       constants; `prefers-reduced-motion: reduce` suppresses the transition entirely (the split/tabs/radio
+ *       precedent).
+ *
+ * Standalone stylesheet — linked via the component-styles barrel; NEVER injected from drawer.ts (behaviour-only
+ * `.ts`, no runtime style injection). component-styles.css @imports container.css FIRST (the shared surface
+ * seam), then this sheet.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK — :where(ui-drawer) declares the surface default + --ui-drawer-* ════════════════ */
+
+:where(ui-drawer) {
+  /* The drawer's OWN default surface (the container base defaults transparent — ADR-0015 cl.1); a drawer is an
+     opaque plane, the modal precedent verbatim. */
+  --ui-container-bg: var(--md-sys-color-neutral-surface);
+
+  /* the own chain — @scope consumes ONLY these (+ the --ui-container-* seam), never a raw --md-sys-color-* role */
+  --ui-drawer-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-drawer-outline: var(--md-sys-color-neutral-outline-variant); /* the exposed-edge hairline */
+  --ui-drawer-radius: var(--md-sys-shape-corner-base); /* the shared fleet radius, on non-docked corners only */
+  --ui-drawer-padding: var(--md-sys-space-lg); /* the shell pad off the density-responsive ladder (NOT a control height) */
+  --ui-drawer-scrim: var(--md-sys-color-dialog-backdrop); /* the ::backdrop blocking wash — modal's TKT-0019 wash, reused */
+  --ui-drawer-inline-size: min(92vw, 26rem); /* the inline-edge (start/end) docked width */
+  --ui-drawer-max-block-size: 85svh; /* the bottom-edge docked content-height cap */
+}
+
+/* ════════════════ [2] STYLES BLOCK — @scope (ui-drawer) consumes ONLY --ui-drawer-* + the --ui-container-* seam ════════════════ */
+
+@scope (ui-drawer) {
+  /* the host is a logical wrapper — it generates no box; only the dialog PART renders (in the top layer when
+     shown). The surface custom props set on the host inherit through display:contents to the dialog. */
+  :scope {
+    display: contents;
+  }
+
+  /* the dialog surface — the docked plane. Base plane (elevation) + tonal wash (brightness) composite exactly
+     as modal.css's dialog part does; geometry/position are per-[edge] below. `position: fixed` restated
+     explicitly (not relied on from the UA `dialog:modal` default) so the docked insets below are unambiguous
+     across engines. */
+  :scope > [data-part='dialog'] {
+    box-sizing: border-box;
+    position: fixed;
+    margin: 0; /* override the UA showModal() centring margin: auto — a drawer docks, it never centres */
+    overflow: auto; /* the dialog IS the scroll viewport (scrollFade wires the edge-aware fade over it) */
+
+    background-color: var(--ui-container-bg); /* the base plane (elevation) */
+    background-image: linear-gradient(var(--ui-container-tint), var(--ui-container-tint)); /* the tonal wash (composition) */
+    color: var(--ui-drawer-ink);
+    border: 1px solid var(--ui-drawer-outline);
+    /* Box-model (container-box.css): the dialog is a [data-box] — no shell padding; its children carry the
+       inset (author header/content/footer regions get the region padding + the box inset margin). */
+    padding: 0;
+
+    /* Motion — an edge-keyed inset transition over the EXISTING motion constants (ADR-0188 cl.5: zero new
+       motion tokens). `overlay`/`display` ride `allow-discrete` so the top-layer/rendering flip is deferred
+       until the geometry transition finishes on EXIT (progressive enhancement — an engine without
+       `allow-discrete` support just snaps instantly, never breaks). */
+    transition:
+      inset-inline-start var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      inset-inline-end var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      inset-block-end var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      overlay var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard) allow-discrete,
+      display var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard) allow-discrete;
+  }
+
+  /* ── edge='end' (the default — the options-side case, #845's own) — dock to the INLINE-END edge ──
+     LOGICAL inset-inline-* only (no transform-based slide) so LTR/RTL both dock to the correct physical side
+     with no `:dir()` selector anywhere in this file (the super-shell precedent). Full viewport block-size ×
+     the inline-size token; radius zeros on the docked (inline-end) corners only. */
+  :scope:is([edge='end'], :not([edge])) > [data-part='dialog'] {
+    inset-block: 0;
+    block-size: 100svh;
+    max-block-size: none; /* the UA `dialog:modal` default max-height is a percentage cap SHY of 100% — reset it so the authored 100svh is not silently clamped */
+    inline-size: var(--ui-drawer-inline-size);
+    max-inline-size: var(--ui-drawer-inline-size);
+    inset-inline-start: auto;
+    inset-inline-end: calc(-1 * var(--ui-drawer-inline-size)); /* the CLOSED resting position — off-canvas */
+    border-start-end-radius: 0; /* docked edge — zeroed */
+    border-end-end-radius: 0;
+    border-start-start-radius: var(--ui-drawer-radius); /* exposed edge — the fleet base */
+    border-end-start-radius: var(--ui-drawer-radius);
+  }
+  :scope:is([edge='end'], :not([edge])) > [data-part='dialog'][open] {
+    inset-inline-end: 0; /* the OPEN resting position — flush against the edge */
+  }
+  @starting-style {
+    :scope:is([edge='end'], :not([edge])) > [data-part='dialog'][open] {
+      inset-inline-end: calc(-1 * var(--ui-drawer-inline-size)); /* ENTRY starts off-canvas, transitions to 0 */
+    }
+  }
+
+  /* ── edge='start' — dock to the INLINE-START edge (the mirror of 'end') ── */
+  :scope[edge='start'] > [data-part='dialog'] {
+    inset-block: 0;
+    block-size: 100svh;
+    max-block-size: none; /* the UA `dialog:modal` default max-height is a percentage cap SHY of 100% — reset it so the authored 100svh is not silently clamped */
+    inline-size: var(--ui-drawer-inline-size);
+    max-inline-size: var(--ui-drawer-inline-size);
+    inset-inline-end: auto;
+    inset-inline-start: calc(-1 * var(--ui-drawer-inline-size));
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+    border-start-end-radius: var(--ui-drawer-radius);
+    border-end-end-radius: var(--ui-drawer-radius);
+  }
+  :scope[edge='start'] > [data-part='dialog'][open] {
+    inset-inline-start: 0;
+  }
+  @starting-style {
+    :scope[edge='start'] > [data-part='dialog'][open] {
+      inset-inline-start: calc(-1 * var(--ui-drawer-inline-size));
+    }
+  }
+
+  /* ── edge='bottom' — PHYSICAL (the block axis never bidi-mirrors, ADR-0188 cl.3) — content-height × the
+       max-block-size cap, full inline-bleed. ── */
+  :scope[edge='bottom'] > [data-part='dialog'] {
+    inset-inline: 0;
+    inline-size: auto;
+    max-inline-size: none;
+    max-block-size: var(--ui-drawer-max-block-size);
+    inset-block-start: auto;
+    inset-block-end: calc(-1 * var(--ui-drawer-max-block-size));
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+    border-start-start-radius: var(--ui-drawer-radius);
+    border-start-end-radius: var(--ui-drawer-radius);
+  }
+  :scope[edge='bottom'] > [data-part='dialog'][open] {
+    inset-block-end: 0;
+  }
+  @starting-style {
+    :scope[edge='bottom'] > [data-part='dialog'][open] {
+      inset-block-end: calc(-1 * var(--ui-drawer-max-block-size));
+    }
+  }
+
+  /* reduced motion — suppress the slide entirely (the split/tabs/radio precedent); the dialog still
+     opens/closes, it just no longer transitions. */
+  @media (prefers-reduced-motion: reduce) {
+    :scope > [data-part='dialog'] {
+      transition: none;
+    }
+  }
+
+  /* the ::backdrop scrim — the platform-painted blocking layer behind the drawer (top layer). */
+  :scope > [data-part='dialog']::backdrop {
+    background-color: var(--ui-drawer-scrim);
+  }
+
+  /* forced-colors (WHCM) — keep the drawer surface + frame + ink visible as system colours (the wash drops; a
+     translucent overlay would paint over the forced Canvas base and defeat it). The ::backdrop is left to the
+     scrim role / UA so the blocking layer still paints (the modal precedent verbatim). */
+  @media (forced-colors: active) {
+    :scope > [data-part='dialog'] {
+      background-color: Canvas;
+      background-image: none;
+      border-color: CanvasText;
+      color: CanvasText;
+    }
+  }
+}
