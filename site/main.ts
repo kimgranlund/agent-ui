@@ -504,6 +504,21 @@ const CARD_GROUPS: readonly CardGroup[] = [
     ],
   },
   {
+    label: 'ui-drawer',
+    cards: [
+      {
+        href: './drawer-demo.html',
+        title: 'Demo',
+        blurb: 'The native-<dialog> edge-docked drawer — all three edges, dismissable vs persistent, focus restore, a long-list scroll specimen, with a close/toggle log.',
+      },
+      {
+        href: './drawer-doc.html',
+        title: 'API reference',
+        blurb: 'The ui-drawer attributes (surface + open/persistent/edge), generated from its drawer.md descriptor.',
+      },
+    ],
+  },
+  {
     label: 'ui-toolbar',
     cards: [
       {

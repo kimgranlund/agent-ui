@@ -121,6 +121,14 @@
       "section": "Components"
     },
     {
+      "name": "Drawer",
+      "tag": "ui-drawer",
+      "url": "./drawer-doc.html",
+      "description": "ui-drawer is an edge-docked modal container built on the native <dialog> element opened with showModal() (ADR-0188, re-applying the ADR-0017 <dialog> machinery…",
+      "level": "L1",
+      "section": "Components"
+    },
+    {
       "name": "Field",
       "tag": "ui-field",
       "url": "./field-doc.html",

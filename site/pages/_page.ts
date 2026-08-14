@@ -248,6 +248,13 @@ export const NAV: readonly NavGroup[] = [
     ],
   },
   {
+    label: 'ui-drawer',
+    links: [
+      { href: './drawer-demo.html', label: 'Demo' },
+      { href: './drawer-doc.html', label: 'API' },
+    ],
+  },
+  {
     label: 'ui-toolbar',
     links: [
       { href: './toolbar-demo.html', label: 'Demo' },

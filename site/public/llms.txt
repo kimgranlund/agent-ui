@@ -73,6 +73,7 @@
 - [ui-form-popover](./form-popover-doc.html): the packaged ui-popover + form-spine recipe — a control-created trigger carrying a consumer-authored summary label over a panel of real form content; [demo](./form-popover-demo.html).
 - [ui-tooltip](./tooltip-doc.html): the hover/focus hint panel; [demo](./tooltip-demo.html).
 - [ui-modal](./modal-doc.html): the top-layer dialog — persistent or dismissable; [demo](./modal-demo.html).
+- [ui-drawer](./drawer-doc.html): the edge-docked top-layer dialog — end/start/bottom, persistent or dismissable; [demo](./drawer-demo.html).
 - [ui-command-modal](./command-modal-doc.html): the CMD-K command palette — a search combobox filtering a grouped listbox nested inside a ui-modal; permanently catalog-excluded (app-owner launcher chrome); [demo](./command-modal-demo.html).
 
 ## Components — GenUI
