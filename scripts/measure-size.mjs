@@ -541,7 +541,16 @@ const appCssQuerySuffixPlugin = {
 // their own CSS reachable through the barrel, not a regression to chase); ~3.8% headroom reserved (90112 −
 // 86679 = 3433 B gz) for the next change, the SAME margin discipline every prior re-base in this file
 // leaves. GH #468 remains the standing app-diet follow-up, unchanged by this wave.
-const APP_MARGINAL_BUDGET = 88 * KB
+//
+// Re-based 88 KB -> 100 KB (102400 B gz) 2026-08-14 (GH #898, Kim ruling: "bump the budget to whatever
+// it needs to be"): the agent-admin surface grew legitimately across one week's shipped waves — the
+// availability axis + row markers (GH #850 S1), renamable entries (GH #848), admin-wide help tooltips
+// (GH #866), the capabilities trigger + chip icons + bubble reference tags (GH #891 S4-S6), the picker
+// management items + Edit Agents drawer wiring (GH #845), the debug-export seam (GH #889), disable-on-
+// answer + the ask-arm round routing (GH #805/#802). Measured 98638 B gz at the bump (pre-existing OVER
+// since mid-wave; the S4-S6 delta alone was ~0.9 KB). ~3.7% headroom reserved (102400 - 98638 = 3762 B
+// gz) — the SAME margin discipline as every prior re-base. GH #468 stays the standing diet follow-up.
+const APP_MARGINAL_BUDGET = 100 * KB
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })
