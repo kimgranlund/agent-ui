@@ -96,6 +96,25 @@ the reserved `mcp:server-id:tool` namespace separator). No browser- or model-sup
 EVER dialed (`McpServerEntry`, `mcp/servers-config.ts:26`); `envKey` is a NAME, resolved host-side
 exactly like law 3's `serverKey` (SPEC-R18, unchanged) — never a value, never in the roster.
 
+**The description standard is MCP's own `tools/list` schema + the `IntegrationManifest` triple —
+OpenAPI/Swagger is REJECTED, not merely unadopted** (ADR
+`.claude/docs/adr/0189-tool-description-standard-and-tools-panel-visibility.md` cl.1/cl.2, ratified
+2026-08-14). What documents an MCP tool is MCP's own `{name, description?,
+inputSchema}` at `tools/list` — already fully captured (law 1's three-fact split, above); what
+documents a non-MCP HTTP endpoint wrapped as an integration is the existing `IntegrationManifest`
+triple (`description`, `tool.description`, `tool.input_schema`) — the two paths already converge on
+ONE wire format (`mapMcpTool` maps INTO an `IntegrationManifest`, never a parallel type). OpenAPI is
+rejected as an ingest format or an internal standard for a stated reason: every integration this
+repo authors today is small and first-party (one endpoint, a handful of params), so hand-authoring
+the shipped triple is strictly cheaper than authoring/hosting/syncing a full OpenAPI document and
+then lossy-converting it down to `assertSupportedSchema`'s deliberately narrow subset — a second
+schema dialect with a drift-prone conversion step, for a capability nothing currently needs. Not a
+permanent rejection: an OpenAPI-to-`IntegrationManifest` **converter** (emitting ordinary manifests
+through the existing `registerIntegration`/`assertSupportedSchema` gate, the way `mapMcpTool` does
+for MCP) is the natural follow-up if the integration surface later grows to bulk-importing large,
+externally-authored, multi-endpoint APIs — a new *ingest path* onto the same standard, never a
+replacement of it.
+
 **Registry SOURCE, never a consumer mechanism — the frozen-file fence.** The connector calls the
 SAME `registerIntegration()` law 1 names; it never adds a second registry, validator, or dispatch
 path. `registry.ts`, `validate-input.ts`, `tool-dispatch.ts`, `integrations/index.ts`, and
@@ -135,6 +154,18 @@ wire itself stays `integrations: string[]` of ids — widened by ADR
 reference `mcp:<server-id>:*`, expanded server-side inside `resolveIntegrations`; that
 grammar/expansion contract is `mcp-agent-config.spec.md` SPEC-R2/R3, a separate law from this
 one. *(SPEC-R28 :1229-1248)*
+
+**The `services` array's rows widen once more with real per-tool trios.** The SAME `GET
+/integrations` body ALSO carries an additive `services` array (`projectServiceRows`,
+`dev-proxy-plugin.ts`, beside `projectIntegrationTrios` above) — one row per allowlisted server
+with ≥1 registered manifest, `{id, label, description}` at the SERVER grain (`description` a
+boot-count aggregate, e.g. "2 tools discovered at boot") PLUS — ADR
+`.claude/docs/adr/0189-tool-description-standard-and-tools-panel-visibility.md` cl.3, ratified
+2026-08-14 — a `tools: Array<{id, label, description}>` member: one real per-tool trio per
+member manifest, sourced from the SAME registered `IntegrationManifest.description` `mapMcpTool`
+already computes (zero new capture, a wire change only). Same cl.2 leak boundary as `integrations`
+at BOTH grains — no endpoint, `envKey`, key value, or JSON-RPC fact in the row or any `tools`
+entry. That widened trio shape is `mcp-agent-config.spec.md` SPEC-R4, this skill's own pointer.
 
 *(ADR-0177 cl.1 :101-132, cl.2 :133-161, cl.3 :162-211, cl.4 :212-256)*
 

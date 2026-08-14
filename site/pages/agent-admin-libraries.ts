@@ -406,19 +406,28 @@ export function setLiveIntegrations(trios: readonly { id: string; label: string;
 let liveServiceEntries: NewEntryInput[] | undefined
 
 /** Called by the site's live overlay (`site/lib/admin-live-runner.ts`'s `fetchLiveServices`) with the dev
- *  proxy's served `services` rows (`{id, label, description}`, `id` a `mcp:<server-id>:*` service ref). The
- *  ref rides `NewEntryInput.id` EXPLICIT — never slugged (LLD-C6/GH #402: the wire key survives a label
- *  edit) — the label is the roster's human text, freely editable after add, and `content` stays empty:
- *  a DELIBERATE SPEC-R5 ruling (`mcp-agent-config.spec.md`), not the GH #847 content-stomp bug
- *  `setLiveIntegrations` above just fixed — this row is SERVER-grain (one row per service, not per
- *  tool), and the wire's own `description` for it is today only a synthetic boot-count aggregate
- *  (`projectServiceRows`, dev-proxy-plugin.ts), never a real per-tool description. Populating `content`
- *  with that aggregate would read as "not empty" without being the real description the GH #847 ask
- *  wants; ADR-0189 (proposed) books the real fix — a widened per-tool `services[].tools` wire shape —
- *  for ratification+build rather than reversing SPEC-R5's ruled text mid-PR. Passing `undefined` reverts
- *  to pack ABSENCE (production, degrade, and this page's own test reset between cases). */
+ *  proxy's served `services` rows (`id` a `mcp:<server-id>:*` service ref, `description` the boot-count
+ *  aggregate, `tools` the ADR-0189 cl.3 real per-tool trio array). The ref rides `NewEntryInput.id`
+ *  EXPLICIT — never slugged (LLD-C6/GH #402: the wire key survives a label edit) — the label is the
+ *  roster's human text, freely editable after add.
+ *
+ *  `content` (ADR-0189 cl.5, ratified 2026-08-14, GH #877) is the joined REAL per-tool descriptions from
+ *  `r.tools`, rendered as prose (the box is `<ui-code-editor language="markdown">`, markdown-only —
+ *  ADR-0139 — never a JSON dump of `tools`). This RETIRES SPEC-R5's original "empty content — the
+ *  external-registry posture" ruling (`mcp-agent-config.spec.md`): that posture held only while the wire
+ *  carried no real per-tool description, a stated, bounded gap this ADR closes — not the GH #847
+ *  content-stomp bug `setLiveIntegrations` above already fixed (a different defect, a different row
+ *  grain: that one is per-TOOL, this one SERVER-grain, one row per service). A service row is guaranteed
+ *  ≥1 member tool by construction (`projectServiceRows` only emits a row once count > 0), so `content` is
+ *  non-empty for every row this function ever receives. Passing `undefined` reverts to pack ABSENCE
+ *  (production, degrade, and this page's own test reset between cases). */
 export function setLiveServices(rows: readonly LiveServiceRow[] | undefined): void {
-  liveServiceEntries = rows?.map((r) => ({ id: r.id, label: r.label, description: r.description, content: '' }))
+  liveServiceEntries = rows?.map((r) => ({
+    id: r.id,
+    label: r.label,
+    description: r.description,
+    content: r.tools.map((t) => `**${t.label}** — ${t.description}`).join('\n\n'),
+  }))
 }
 
 /** GH #143 — per-preset library scoping. Every OTHER preset (The Quant, The Curator, The Stylist —
@@ -489,8 +498,9 @@ const INTEGRATIONS_PACK: EntryLibraryPack = {
 // (LLD-C5's per-pack widening, GH #564's foreign-key law at pack grain): a service ref keys the registry's
 // namespace, so re-adding one already in the list is a DUPLICATE `validateNewEntry` rejects with
 // `Already in the list.` — never a suffixed `mcp:calc:*-2` phantom that looks armed and is wire-inert — and
-// the picker-disable affordance rides the same flag (entry-list.ts). `content` empty, id EXPLICIT (the
-// service ref), label the roster's human text — the external-registry posture setLiveServices already mints.
+// the picker-disable affordance rides the same flag (entry-list.ts). id EXPLICIT (the service ref), label
+// the roster's human text, `content` the joined real per-tool descriptions `setLiveServices` mints
+// (ADR-0189 cl.3/cl.5, GH #877 — no longer forced empty; see that function's own header comment).
 // GENERIC by construction: 'mcp-services' stays absent from FLAVORED_PACK_CATEGORY, so every persona sees it.
 const MCP_SERVICES_PACK: EntryLibraryPack = {
   id: 'mcp-services',

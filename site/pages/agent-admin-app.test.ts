@@ -719,12 +719,20 @@ describe('the MCP-services pack (GH #783 S4 — SPEC-R5)', () => {
     setLiveServices(undefined)
   })
 
-  it('AC1: a set `services` payload adds one pack entry per service (ref as explicit id, empty content); reset to `undefined` drops the pack for every category', async () => {
+  it('AC1: a set `services` payload adds one pack entry per service (ref as explicit id, real joined per-tool content — ADR-0189 cl.5); reset to `undefined` drops the pack for every category', async () => {
     const { ADMIN_LIBRARIES, setLiveServices, librariesForCategory } = await import('./agent-admin-libraries.ts')
     const { ENTRY_KINDS } = await import('@agent-ui/app')
     const services = [
-      { id: 'mcp:calc:*', label: 'Calc server', description: '2 tools discovered at boot' },
-      { id: 'mcp:notes:*', label: 'Notes server', description: '1 tool discovered at boot' },
+      {
+        id: 'mcp:calc:*',
+        label: 'Calc server',
+        description: '2 tools discovered at boot',
+        tools: [
+          { id: 'mcp:calc:add', label: 'Calc server: add', description: 'Add two numbers.' },
+          { id: 'mcp:calc:multiply', label: 'Calc server: multiply', description: 'Multiply two numbers.' },
+        ],
+      },
+      { id: 'mcp:notes:*', label: 'Notes server', description: '1 tool discovered at boot', tools: [{ id: 'mcp:notes:search', label: 'Notes server: search', description: 'Search notes.' }] },
     ]
     setLiveServices(services)
 
@@ -734,7 +742,11 @@ describe('the MCP-services pack (GH #783 S4 — SPEC-R5)', () => {
     expect(mcp.rejectOnCollision, 'the per-pack foreign-key flag (LLD-C5) is set').toBe(true)
     expect(mcp.entries.map((e) => e.id), 'the service ref rides the id EXPLICIT, never slugged').toEqual(['mcp:calc:*', 'mcp:notes:*'])
     expect(mcp.entries.map((e) => e.label)).toEqual(['Calc server', 'Notes server'])
-    for (const e of mcp.entries) expect(e.content, 'external-registry posture — no authored body').toBe('')
+    // ADR-0189 cl.5 (GH #877) — SPEC-R5's original "empty content" ruling is retired: `content` is now
+    // the joined REAL per-tool descriptions, rendered as prose (never a JSON dump — the box is
+    // markdown-only, ADR-0139).
+    expect(mcp.entries[0]!.content).toBe('**Calc server: add** — Add two numbers.\n\n**Calc server: multiply** — Multiply two numbers.')
+    expect(mcp.entries[1]!.content).toBe('**Notes server: search** — Search notes.')
 
     // GENERIC — present for every preset category (services have no persona affinity).
     for (const category of ['hospitality', 'games', undefined] as const) {
@@ -756,14 +768,14 @@ describe('the MCP-services pack (GH #783 S4 — SPEC-R5)', () => {
   it('AC1: a library add mints a store entry keyed to the service ref (the real validateNewEntry path, ref as id)', async () => {
     const { ADMIN_LIBRARIES, setLiveServices } = await import('./agent-admin-libraries.ts')
     const { validateNewEntry, ENTRY_KINDS } = await import('@agent-ui/app')
-    setLiveServices([{ id: 'mcp:calc:*', label: 'Calc server', description: '2 tools discovered at boot' }])
+    setLiveServices([{ id: 'mcp:calc:*', label: 'Calc server', description: '2 tools discovered at boot', tools: [{ id: 'mcp:calc:add', label: 'Calc server: add', description: 'Add two numbers.' }] }])
     const pack = ADMIN_LIBRARIES[ENTRY_KINDS.tool]!.find((p) => p.id === 'mcp-services')!
     const result = validateNewEntry([], ENTRY_KINDS.tool, pack.entries[0]!, { rejectOnCollision: pack.rejectOnCollision })
     expect(result.ok).toBe(true)
     const entry = (result as { ok: true; entry: { id: string; label: string; content: string } }).entry
     expect(entry.id, 'keyed to the wire vocabulary, not slugify(label)').toBe('mcp:calc:*')
     expect(entry.label).toBe('Calc server')
-    expect(entry.content).toBe('')
+    expect(entry.content, 'ADR-0189 cl.5 — the real joined per-tool content, no longer empty').toBe('**Calc server: add** — Add two numbers.')
   })
 
   it('AC2: re-adding a service already in the list is rejected VISIBLY (`Already in the list.`), the store unchanged, and its picker row disabled — end-to-end on the rendered ui-agent-admin', async () => {
@@ -771,7 +783,7 @@ describe('the MCP-services pack (GH #783 S4 — SPEC-R5)', () => {
     const { ENTRY_KINDS, entriesStoreKey } = await import('@agent-ui/app')
     const { createMemoryStore } = await import('@agent-ui/app/settings-memory-store')
 
-    setLiveServices([{ id: 'mcp:calc:*', label: 'Calc server', description: '2 tools discovered at boot' }])
+    setLiveServices([{ id: 'mcp:calc:*', label: 'Calc server', description: '2 tools discovered at boot', tools: [{ id: 'mcp:calc:add', label: 'Calc server: add', description: 'Add two numbers.' }] }])
 
     const admin = document.createElement('ui-agent-admin') as UIAgentAdminElement
     admin.libraries = librariesForCategory(undefined) // generic — the tool key carries [integrations, mcp-services]

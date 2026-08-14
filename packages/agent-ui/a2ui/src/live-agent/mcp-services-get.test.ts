@@ -17,6 +17,12 @@
 //      `services: []`, zero-cost-no-op extension;
 //   3. `projectServiceRows` itself, unit-tested over FABRICATED manifest arrays (the
 //      `projectIntegrationTrios` precedent) — no REGISTRY touched at all.
+//
+// ADR-0189 cl.3 (GH #877, ratified 2026-08-14) — every `services` row grain above widens with a
+// `tools: Array<{id, label, description}>` member (one real per-tool trio per member manifest, in
+// filter order); the row's own `description` (the boot-count aggregate) is UNCHANGED — a widen,
+// not a replace. This file's own header precedent (the SPEC-N2 same-change law) is what authorizes
+// amending these pinned-shape assertions in place rather than leaving them stale.
 
 import { describe, it, expect, beforeAll } from 'vitest'
 import { a2uiDevProxyPlugin, projectIntegrationTrios, projectServiceRows } from '../../tools/agent/dev-proxy-plugin.ts'
@@ -106,8 +112,21 @@ describe('GET /integrations — the additive services array (LLD-C4 §3.2, SPEC-
     const { status, body } = await getIntegrations(handler)
     expect(status).toBe(200)
     expect(body['services']).toEqual([
-      { id: serviceRef('acme'), label: 'Acme Docs', description: '2 tools discovered at boot' },
-      { id: serviceRef('calc'), label: 'Calc Tools', description: '1 tool discovered at boot' },
+      {
+        id: serviceRef('acme'),
+        label: 'Acme Docs',
+        description: '2 tools discovered at boot',
+        tools: [
+          { id: 'mcp:acme:lookup', label: 'mcp:acme:lookup', description: 'mcp:acme:lookup — a fabricated manifest' },
+          { id: 'mcp:acme:search', label: 'mcp:acme:search', description: 'mcp:acme:search — a fabricated manifest' },
+        ],
+      },
+      {
+        id: serviceRef('calc'),
+        label: 'Calc Tools',
+        description: '1 tool discovered at boot',
+        tools: [{ id: 'mcp:calc:add', label: 'mcp:calc:add', description: 'mcp:calc:add — a fabricated manifest' }],
+      },
     ])
     expect(body['integrations']).toEqual(projectIntegrationTrios(listIntegrations()))
   })
@@ -153,9 +172,30 @@ describe('projectServiceRows (LLD-C4 §3.2) — a fact-only projection over FABR
       },
     }
     expect(projectServiceRows(cfg, manifests)).toEqual([
-      { id: serviceRef('zebra'), label: 'Zebra', description: '2 tools discovered at boot' },
-      { id: serviceRef('alpha'), label: 'Alpha', description: '1 tool discovered at boot' },
+      {
+        id: serviceRef('zebra'),
+        label: 'Zebra',
+        description: '2 tools discovered at boot',
+        tools: [
+          { id: 'mcp:zebra:one', label: 'mcp:zebra:one', description: 'mcp:zebra:one — a fabricated manifest' },
+          { id: 'mcp:zebra:two', label: 'mcp:zebra:two', description: 'mcp:zebra:two — a fabricated manifest' },
+        ],
+      },
+      {
+        id: serviceRef('alpha'),
+        label: 'Alpha',
+        description: '1 tool discovered at boot',
+        tools: [{ id: 'mcp:alpha:one', label: 'mcp:alpha:one', description: 'mcp:alpha:one — a fabricated manifest' }],
+      },
     ])
+  })
+
+  it('ADR-0189 cl.3 — `tools` carries the SAME per-manifest {id, label, description} trio projectIntegrationTrios would, one entry per member manifest, in filter order (zero new capture)', () => {
+    const cfg: McpServersConfig = { servers: { zebra: { label: 'Zebra', endpoint: 'https://z.example.com/mcp', auth: 'none' } } }
+    const rows = projectServiceRows(cfg, manifests)
+    expect(rows[0]!.tools).toEqual(
+      manifests.filter((m) => m.id.startsWith('mcp:zebra:')).map((m) => ({ id: m.id, label: m.label, description: m.description })),
+    )
   })
 
   it('a server with zero matching manifests contributes no row', () => {
@@ -181,12 +221,15 @@ describe('projectServiceRows (LLD-C4 §3.2) — a fact-only projection over FABR
     ).toBe('2 tools discovered at boot')
   })
 
-  it('never leaks envKey or auth — a JSON round-trip proves only {id, label, description} survive', () => {
+  it('never leaks envKey or auth — a JSON round-trip proves only {id, label, description, tools} survive, and each tool trio is itself leak-proof', () => {
     const cfg: McpServersConfig = {
       servers: { acme: { label: 'Acme', endpoint: 'https://acme.example.com/mcp', auth: 'serverKey', envKey: 'SECRET_KEY_NAME' } },
     }
     const rows = projectServiceRows(cfg, [fakeManifest('mcp:acme:lookup', { auth: 'serverKey', envKey: 'SECRET_KEY_NAME' })])
-    for (const row of rows) expect(Object.keys(row).sort()).toEqual(['description', 'id', 'label'])
+    for (const row of rows) {
+      expect(Object.keys(row).sort()).toEqual(['description', 'id', 'label', 'tools'])
+      for (const tool of row.tools) expect(Object.keys(tool).sort()).toEqual(['description', 'id', 'label'])
+    }
     expect(JSON.stringify(rows)).not.toContain('SECRET_KEY_NAME')
   })
 })
