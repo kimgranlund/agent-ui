@@ -190,13 +190,16 @@ import {
 import { buildAdminHelp, buildAdminHelpForSummary } from './admin-help.ts'
 import { EFFORT_LEVELS, type EffortLevel, type TurnReference } from '../conversation/composer-options.ts'
 import {
+  AVAILABILITY_KINDS,
   ENTRY_KINDS,
   INVOCABLE_KINDS,
   MENTIONABLE_KINDS,
   initialEntryValues,
   readCatalogEntries,
   isRegisteredCatalog,
+  buildCapabilityRows,
   buildComposerRosters,
+  parseCapabilityRowId,
   composeSystemPrompt,
   composeLiveSystemPrompt,
   pickedPatternSource,
@@ -934,6 +937,11 @@ export class UIAgentAdminElement extends UIElement {
     // writes (one source of truth, TKT-0021's own external-store-write precedent) — `#syncConversationConfig`'s
     // subscription feeds the committed value back down into `conversation.model` (props down, callbacks up).
     conversation.onModelChange((id) => this.store?.set('model', id))
+    // GH #891/SPEC-R13 (ADR-0190 rev.2) — the capabilities panel's switch is a GLOBAL enable/disable: the
+    // flip writes the named entry's persisted `enabled` (`#toggleCapability`), the standing reflect path
+    // hands a fresh row set back down, and the entry row in the Capabilities pane shows the same state. Not
+    // per-turn steering: a flip never invokes anything (that stays the `@`/`/` typeahead's job).
+    conversation.onCapabilityToggle((id, included) => this.#toggleCapability(id, included))
     // Effort picker → ephemeral element state only (no persisted counterpart) — write-then-reflect
     // immediately, since nothing external can also change it the way another tab's store write could.
     conversation.onEffortChange((id) => {
@@ -3431,6 +3439,40 @@ export class UIAgentAdminElement extends UIElement {
     }))
   }
 
+  /** GH #891/SPEC-R13 — the capabilities MENU's groups: the same fresh-read division of labor as
+   *  `#referenceGroups` above (`entries.ts`'s `buildCapabilityRows` does the filter/sort/projection), over
+   *  its OWN kind list — `AVAILABILITY_KINDS`, the four kinds the enabled×availability matrix that panel
+   *  teaches is defined for (SPEC-R1). Not `#referenceGroups`' list: that one is the `@`/`/` GRAMMAR's two
+   *  halves (`MENTIONABLE_KINDS`+`INVOCABLE_KINDS`), a union that happens to equal the same four today —
+   *  the coincidence `entries.ts`' own kind-list docs warn against folding. */
+  #capabilityRowGroups(store: SettingsStore | undefined): ReferenceGroup[] {
+    return AVAILABILITY_KINDS.map((kind) => ({
+      kind,
+      entries: readEntries(store, kind),
+      enabled: isEnabledFlag(store?.get(kindEnabledKey(kind))),
+    }))
+  }
+
+  /** GH #891/SPEC-R13 (ADR-0190 rev.2's ruled arm) — the capabilities menu's flip: a PERSISTENT store write
+   *  of the named entry's `enabled`, through the SAME one-writer seam the entry row's own toggle uses
+   *  (`#updateEntries`), so the row re-renders OFF/ON, the value survives reload, and every ambient
+   *  projection follows on its next fresh read. The composer stays store-blind (SPEC-R11) — the whole write
+   *  lives here.
+   *
+   *  Three properties the ruling names, all by construction rather than by branch:
+   *   · **A flip never invokes.** This writes ONE field and nothing else: no reference, no chip, no framing
+   *     (per-turn inclusion stays the typeahead's job, SPEC-R5–R8 untouched).
+   *   · **`availability` is byte-unchanged.** The two axes stay orthogonal (SPEC-R1) — enabling an
+   *     invocable entry leaves it invocable, i.e. still ambient-dark until the user tags it.
+   *   · **Fail-closed on a row id it never minted.** `parseCapabilityRowId` returns `undefined` for a
+   *     malformed id or a kind outside the four, and an id no entry carries transforms to the identical
+   *     list (no write of a phantom row). */
+  #toggleCapability(rowId: string, included: boolean): void {
+    const parsed = parseCapabilityRowId(rowId)
+    if (parsed === undefined) return
+    this.#updateEntries(parsed.kind, (entries) => entries.map((e) => (e.id === parsed.id ? { ...e, enabled: included } : e)))
+  }
+
   /** GH #849/SPEC-R8 — (re-)hand each composer its `@`/`/` rosters, each read FRESH from the store of the
    *  context that composer submits into (`#contextFor`'s pairing: the Chat composer reads this element's
    *  store, the Co-pilot composer the Builder's). Called from `#applyMasterStates` — the ONE reflect point
@@ -3441,7 +3483,17 @@ export class UIAgentAdminElement extends UIElement {
    *  plain character, so an element with no capability entries behaves exactly as it did before this slice.
    *
    *  The rosters are display truth only. Resolution never trusts them — it re-reads the store by `id` at
-   *  send (SPEC-R4), so even a roster that went stale between two writes cannot attach the wrong bytes. */
+   *  send (SPEC-R4), so even a roster that went stale between two writes cannot attach the wrong bytes.
+   *
+   *  GH #891/SPEC-R13 — the capabilities PANEL's rows ride this same reflect point, and for a load-bearing
+   *  reason: the composer offers no open-notification callback (SPEC-R11's contract is rows down, one
+   *  callback up), so "rows derive fresh per menu open" is honoured by keeping them fresh at every write
+   *  instead — which this method already is. The rows go to the CHAT composer ONLY: they are a GLOBAL
+   *  enable/disable over the store whose entry rows this surface renders, and the Co-pilot composer submits
+   *  into the BUILDER's own persona store (`#contextFor`'s pairing) — putting a global off-switch for an
+   *  agent the user is not looking at behind the interview composer is a remote control nobody asked for
+   *  (SPEC-N1's "composers beyond the chat context keep the props default-off this arc", applied). Absent
+   *  ⇒ no trigger, no panel (the default-off law), so the interview composer is byte-unchanged. */
   #syncComposerRosters(): void {
     const apply = (conversation: UIConversationElement | null, store: SettingsStore | undefined): void => {
       if (!conversation) return
@@ -3451,6 +3503,7 @@ export class UIAgentAdminElement extends UIElement {
     }
     apply(this.#conversation, this.store)
     apply(this.#authoringConversation, this.authoringStore)
+    if (this.#conversation) this.#conversation.capabilities = buildCapabilityRows(this.#capabilityRowGroups(this.store))
   }
 
   // ── vision rev.5: master-state application + the Context tabs' renderers ────────────────────────────

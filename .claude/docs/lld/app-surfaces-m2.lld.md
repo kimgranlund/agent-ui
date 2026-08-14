@@ -100,6 +100,7 @@ class UIConversationElement extends UIElement {
 
   // WIDENED by GH #891/SPEC-R10 — see the amendment section at the end of this LLD:
   //   addUserMessage(text: string, references?: readonly TurnReference[]): void
+  // WIDENED by GH #891/SPEC-R11/R13 (§12): a `capabilities` prop + `onCapabilityToggle` pass-through
   addUserMessage(text: string): void { /* append a user bubble; sample scroll guard first (LLD-C6) */ }
 
   beginAgentTurn(): AgentTurnHandle {
@@ -213,3 +214,28 @@ turn anatomy (`[data-part=turn]` → `who` → `bubble` → `body`) is untouched
   bubble), plain-text tag labels, and the content-renderer non-interference case. `conversation.browser.
   test.ts` carries the painted proof in both engines. AC3 (history still records the framed text) is the
   existing `agent-admin.test.ts` R4 suite, unmodified — that is the fence, so it is deliberately NOT edited.
+
+## 12. Amendment — the capabilities pass-through (GH #891 · `capability-availability-tagging.spec.md` SPEC-R11/R13, slice S7, 2026-08-14)
+
+The composer's third options-row affordance (SPEC-R11, shipped in S6) reaches its consumer through THIS
+element, so this record's prop/callback inventory gains one of each. Nothing else in LLD-C4/C7 moves: no
+bubble anatomy, no turn lifecycle, no transport.
+
+- **The seam.** `capabilities?: readonly CapabilityRow[]` (`attribute: false`, default `undefined`) forwarded
+  in the SAME batched effect that already forwards `models`/…/`mentionables`/`invocables`, and
+  `onCapabilityToggle(cb: (id: string, included: boolean) => void)` registered onto the composed child at
+  connect beside `onContextDismiss` — the ninth callback registration on this element. `undefined` ⇒ the
+  composer renders no trigger and no panel, so every existing consumer is byte-identical (the
+  `models`/`mentionables` default-off law, unchanged).
+- **Pass-through, not semantics.** `kind`/`icon`/`id` stay OPAQUE strings here (the roster law): this element
+  never groups, never maps a kind to a glyph, and never writes a store. What a flip MEANS is entirely the
+  consumer's — ADR-0190 rev.2 ruled the GLOBAL arm, and `ui-agent-admin` (SPEC-R13) writes the named entry's
+  persisted `enabled`, then hands a fresh row array back down. Under the rejected per-turn arm this seam
+  would have been byte-identical, which is why S6/S7 could be built either side of the ratification.
+- **The row id is the consumer's key, not this element's.** `ui-agent-admin` mints `{kind}:{id}` because
+  `onCapabilityToggle` echoes the row id alone and entry ids are unique only per kind; nothing in this
+  element or the composer parses it (`data-id` + an equality lookup is its whole lifetime here).
+- **Tests.** `conversation.test.ts`: the descriptor bijection (`ATTR_NAMES` gains `capabilities`), the
+  pass-through onto the composed child, the callback forwarded verbatim with the new state, and the
+  default-off case (no trigger). The panel's own anatomy/keyboard/event-fence stays
+  `conversation-composer.test.ts`'s (S6, unmodified — the store-blind seam is the fence).

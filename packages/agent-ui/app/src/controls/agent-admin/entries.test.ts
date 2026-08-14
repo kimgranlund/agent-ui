@@ -14,13 +14,16 @@
 import { describe, it, expect } from 'vitest'
 import {
   AVAILABILITY_KINDS,
+  CAPABILITY_INDEX_TEACHING,
   ENTRY_KINDS,
   INVOCABLE_KINDS,
   MENTIONABLE_KINDS,
+  buildCapabilityRows,
   buildComposerRosters,
   composeSystemPrompt,
   composeLiveSystemPrompt,
   hasAvailabilityMode,
+  parseCapabilityRowId,
   pickedPatternSource,
   readCatalogEntries,
   resolveTurnReferences,
@@ -54,18 +57,22 @@ function group(kind: string, heading: string, entries: Entry[], enabled = true):
 }
 
 describe('composeLiveSystemPrompt (ALM-C1 / ADR-0136 Fork 3) — the capability projection', () => {
-  it('appends one `## heading` block per kind with ≥1 enabled entry, each entry `### label` + description + content, in order', () => {
+  it('appends one `## heading` block per kind with ≥1 ambient entry, each entry ONE index line, in order', () => {
     const skills = group(ENTRY_KINDS.skill, 'Skills available to you', [
       entry({ id: 'search', label: 'Web search', description: 'Searches the web', content: 'search(q)', order: 0 }),
       entry({ id: 'calc', label: 'Calculator', description: '', content: '', order: 1 }),
     ])
     const out = composeLiveSystemPrompt(SECTIONS, [skills])
+    // GH #891/SPEC-R14 — the ambient SHAPE is an INDEX LINE (label + description), never the content. This
+    // expectation deliberately REPLACES the pre-#891 `### {label}` + content pin; never restore that one.
     expect(out).toBe(
       '## Foundation\nYou are helpful.\n\n' +
+        `${CAPABILITY_INDEX_TEACHING}\n\n` +
         '## Skills available to you\n' +
-        '### Web search\nSearches the web\n\nsearch(q)\n\n' +
-        '### Calculator',
+        '- Web search — Searches the web\n' +
+        '- Calculator',
     )
+    expect(out, "the entry's own body reaches the model only through an invocation (SPEC-R4)").not.toContain('search(q)')
   })
 
   it('skips a DISABLED entry, and contributes NO header for a kind whose entries are all disabled', () => {
@@ -77,7 +84,7 @@ describe('composeLiveSystemPrompt (ALM-C1 / ADR-0136 Fork 3) — the capability 
       entry({ id: 'w', kind: ENTRY_KINDS.workflow, label: 'W', content: 'w', enabled: false }),
     ])
     const out = composeLiveSystemPrompt(SECTIONS, [skills, emptyKind])
-    expect(out).toContain('### Kept')
+    expect(out).toContain('- Kept')
     expect(out).not.toContain('Dropped')
     expect(out).not.toContain('## Workflows available to you')
   })
@@ -88,7 +95,7 @@ describe('composeLiveSystemPrompt (ALM-C1 / ADR-0136 Fork 3) — the capability 
       entry({ id: 'a', label: 'First', content: '', order: 5 }),
     ])
     const out = composeLiveSystemPrompt(SECTIONS, [skills])
-    expect(out.indexOf('### First')).toBeLessThan(out.indexOf('### Second'))
+    expect(out.indexOf('- First')).toBeLessThan(out.indexOf('- Second'))
   })
 
   it("a group's `enabled: false` MASTER switch gates the WHOLE kind out — every kind, not just tools (vision rev.5)", () => {
@@ -98,7 +105,7 @@ describe('composeLiveSystemPrompt (ALM-C1 / ADR-0136 Fork 3) — the capability 
     expect(composeLiveSystemPrompt(SECTIONS, [{ ...tools, enabled: false }])).not.toContain('## Tools available to you')
     const on = composeLiveSystemPrompt(SECTIONS, [tools])
     expect(on).toContain('## Tools available to you')
-    expect(on).toContain('### Calculator')
+    expect(on).toContain('- Calculator')
     // the master wins over per-entry toggles for ANY kind
     const skills = group(ENTRY_KINDS.skill, 'Skills available to you', [
       entry({ id: 's', label: 'S', content: 'x', enabled: true }),
@@ -139,9 +146,12 @@ describe('composeLiveSystemPrompt — the availability gate (SPEC-R3 AC1)', () =
       }),
     ])
     const out = composeLiveSystemPrompt(SECTIONS, [skills])
-    expect(out).toContain('### House style')
-    expect(out).toContain('Be brief.')
-    // The byte assertions the requirement names — label, description AND content, all absent.
+    // GH #891/SPEC-R14 UPDATES this assertion's ambient SHAPE (the SPEC's own annotation on R3 AC1): the
+    // in-context sibling composes as an INDEX LINE — label + description, never its content.
+    expect(out).toContain('- House style — The voice.')
+    expect(out, 'even an AMBIENT entry keeps its body out of the prompt now').not.toContain('Be brief.')
+    // What R3 AC1 asserts, unchanged and still the load-bearing law — an invocable entry contributes ZERO
+    // ambient bytes: label, description AND content, all absent.
     expect(out).not.toContain('Menu PDF')
     expect(out).not.toContain('The dinner menu.')
     expect(out).not.toContain('Starters: soup, salad.')
@@ -171,9 +181,10 @@ describe('composeLiveSystemPrompt — the availability gate (SPEC-R3 AC1)', () =
   })
 
   it('GATED EQUIVALENCE (SPEC-R3 AC3): a FIELD-LESS group composes byte-identically to an all-`context` one', () => {
-    // The explicit equivalence assertion the AC asks for, on the projection itself: absent ≡ 'context' ≡
-    // the pinned pre-#850 output (the literal below is the first test in this file's own expectation,
-    // unchanged by this slice — the two-sided proof that the widened filter moved no byte).
+    // The explicit equivalence assertion the AC asks for, on the projection itself: absent ≡ 'context', in
+    // whatever the CURRENT ambient shape is (GH #891/SPEC-R14 moved that shape to the index line and
+    // updated this pin with it — R3's own annotation; the two-sided absent-vs-explicit proof is the part
+    // that never changes).
     const fieldLess = group(ENTRY_KINDS.skill, 'Skills available to you', [
       entry({ id: 'search', label: 'Web search', description: 'Searches the web', content: 'search(q)', order: 0 }),
       entry({ id: 'calc', label: 'Calculator', description: '', content: '', order: 1 }),
@@ -185,11 +196,170 @@ describe('composeLiveSystemPrompt — the availability gate (SPEC-R3 AC1)', () =
     )
     const expected =
       '## Foundation\nYou are helpful.\n\n' +
+      `${CAPABILITY_INDEX_TEACHING}\n\n` +
       '## Skills available to you\n' +
-      '### Web search\nSearches the web\n\nsearch(q)\n\n' +
-      '### Calculator'
+      '- Web search — Searches the web\n' +
+      '- Calculator'
     expect(composeLiveSystemPrompt(SECTIONS, [fieldLess])).toBe(expected)
     expect(composeLiveSystemPrompt(SECTIONS, [explicitContext])).toBe(expected)
+  })
+})
+
+// ── the INDEX-LINE disclosure + its teaching block (GH #891/SPEC-R14/R15, slice S8) ───────────────────────
+// The owner's 2026-08-14 ruling (ADR-0190 rev.2): "ever present" has to be cheap, so an ambient capability
+// entry contributes label + description and NEVER its content; the full text rides the user's own express
+// invocation (SPEC-R4's framing, unchanged) and thereafter replayed history. The model is TOLD the list is
+// an index and that only the user can load an item.
+
+describe('composeLiveSystemPrompt — index-line disclosure (SPEC-R14)', () => {
+  const SENTINEL = 'SENTINEL-CONTENT-abcdef'
+  const bigResource = (): LiveCapabilityGroup =>
+    group(ENTRY_KINDS.resource, 'Resources available to you', [
+      entry({
+        id: 'rules',
+        kind: ENTRY_KINDS.resource,
+        label: 'Blackjack rules',
+        description: 'Deal, actions, settlement.',
+        content: `${SENTINEL}\n${'Dealer stands on 17. '.repeat(120)}`, // ≥ 2 KB (AC1's own floor)
+      }),
+    ])
+
+  it('AC1: a ≥2 KB ambient resource contributes its label + description and NOT one byte of its content', () => {
+    const group1 = bigResource()
+    expect(group1.entries[0]!.content.length, 'anti-vacuous: the fixture really is ≥ 2 KB').toBeGreaterThan(2048)
+    const out = composeLiveSystemPrompt(SECTIONS, [group1])
+    expect(out).toContain('## Resources available to you')
+    expect(out).toContain('- Blackjack rules — Deal, actions, settlement.')
+    expect(out, 'the content sentinel appears nowhere ambiently').not.toContain(SENTINEL)
+    expect(out.length, 'the whole prompt weighs less than that one entry did').toBeLessThan(group1.entries[0]!.content.length)
+    // …and the FULL content still reaches the model the one way it may: an express invocation (R4's own
+    // path, byte-unchanged — asserted here as the other half of the same law).
+    const framed = resolveTurnReferences('total it', [{ id: 'rules', label: 'Blackjack rules', kind: ENTRY_KINDS.resource }], [
+      refGroup(ENTRY_KINDS.resource, [...group1.entries]),
+    ])
+    expect(framed.text).toContain(SENTINEL)
+  })
+
+  it('AC1: every one of the FOUR capability kinds indexes — including the tool kind, whose wire is unchanged', () => {
+    const groups: LiveCapabilityGroup[] = [
+      group(ENTRY_KINDS.skill, 'Skills available to you', [entry({ id: 's', label: 'S', description: 'sd', content: 'BODY-SKILL' })]),
+      group(ENTRY_KINDS.workflow, 'Workflows available to you', [
+        entry({ id: 'w', kind: ENTRY_KINDS.workflow, label: 'W', description: 'wd', content: 'BODY-WORKFLOW' }),
+      ]),
+      group(ENTRY_KINDS.resource, 'Resources available to you', [
+        entry({ id: 'r', kind: ENTRY_KINDS.resource, label: 'R', description: 'rd', content: 'BODY-RESOURCE' }),
+      ]),
+      group(ENTRY_KINDS.tool, 'Tools available to you', [
+        entry({ id: 't', kind: ENTRY_KINDS.tool, label: 'T', description: 'td', content: 'BODY-TOOL' }),
+      ]),
+    ]
+    const out = composeLiveSystemPrompt(SECTIONS, groups)
+    expect(out).toContain('- S — sd')
+    expect(out).toContain('- W — wd')
+    expect(out).toContain('- R — rd')
+    expect(out).toContain('- T — td') // a tool's real enablement is the `integrations` wire (R3(b)); its prose indexes like the rest
+    for (const content of ['BODY-SKILL', 'BODY-WORKFLOW', 'BODY-RESOURCE', 'BODY-TOOL']) expect(out).not.toContain(content)
+  })
+
+  it('the line stays ONE line: a multi-line description collapses, an empty one leaves no dangling dash', () => {
+    const skills = group(ENTRY_KINDS.skill, 'Skills available to you', [
+      entry({ id: 'a', label: 'Wordy', description: '  First line.\n\nSecond   line.  ', order: 0 }),
+      entry({ id: 'b', label: 'Bare', description: '   ', order: 1 }),
+    ])
+    const lines = composeLiveSystemPrompt(SECTIONS, [skills]).split('\n')
+    expect(lines).toContain('- Wordy — First line. Second line.')
+    expect(lines).toContain('- Bare')
+    expect(lines.filter((l) => l.startsWith('- ')).length, 'exactly one line per ambient entry').toBe(2)
+  })
+
+  it('AC3 (gated equivalence): zero ambient capability entries ⇒ byte-identical to composeSystemPrompt, teaching included', () => {
+    const base = composeSystemPrompt(SECTIONS)
+    expect(composeLiveSystemPrompt(SECTIONS, [])).toBe(base)
+    const allInvocable = group(ENTRY_KINDS.skill, 'Skills available to you', [
+      entry({ id: 's', label: 'S', description: 'd', content: 'x', availability: ENTRY_AVAILABILITY.invocable }),
+    ])
+    expect(composeLiveSystemPrompt(SECTIONS, [allInvocable])).toBe(base)
+    expect(composeLiveSystemPrompt(SECTIONS, [allInvocable]), 'no index line ⇒ not one teaching byte').not.toContain(
+      'The capability lists below are an INDEX',
+    )
+  })
+
+  it('AC2 (the byte budget, computed both ways): the index is ≤30% of the full-content shape, ≤200 B per entry', () => {
+    // A 24-entry corpus in the survey's own proportions (SPEC §12: ~470–504 B skills, ~305–326 B workflows,
+    // ~362 B resources, ~218 B tools) — the SHIPPED-pack measurement itself is the site-side test
+    // (`site/pages/agent-admin-ambient-budget.test.ts`), which runs the real element over the real packs.
+    const make = (kind: string, n: number, contentBytes: number): Entry[] =>
+      Array.from({ length: n }, (_, i) =>
+        entry({
+          id: `${kind}-${i}`,
+          kind,
+          label: `${kind} number ${i}`,
+          description: `What ${kind} ${i} is for, in one line.`,
+          content: 'x'.repeat(contentBytes),
+          order: i,
+        }),
+      )
+    const groups: LiveCapabilityGroup[] = [
+      group(ENTRY_KINDS.skill, 'Skills available to you', make(ENTRY_KINDS.skill, 8, 560)),
+      group(ENTRY_KINDS.workflow, 'Workflows available to you', make(ENTRY_KINDS.workflow, 6, 400)),
+      group(ENTRY_KINDS.resource, 'Resources available to you', make(ENTRY_KINDS.resource, 7, 470)),
+      group(ENTRY_KINDS.tool, 'Tools available to you', make(ENTRY_KINDS.tool, 3, 300)),
+    ]
+    const entries = groups.flatMap((g) => [...g.entries])
+    expect(entries.length, 'the AC asks for ≥ 20 entries').toBeGreaterThanOrEqual(20)
+    expect(entries.reduce((n, e) => n + e.content.length, 0), 'and ≥ 10 KB of ambient content').toBeGreaterThan(10_000)
+
+    // Both shapes computed HERE (a budget predicate, never a byte pin): the real projection vs. the
+    // pre-#891 full-content grammar, spelled out so the comparison is honest rather than assumed.
+    const base = composeSystemPrompt(SECTIONS)
+    const indexShape = composeLiveSystemPrompt(SECTIONS, groups)
+    const fullShape = `${base}\n\n${groups
+      .map(
+        (g) =>
+          `## ${g.heading}\n${[...g.entries]
+            .map((e) => `### ${e.label}\n${e.description.trim()}\n\n${e.content.trim()}`)
+            .join('\n\n')}`,
+      )
+      .join('\n\n')}`
+    const ambient = (whole: string): number => whole.length - base.length
+    const ratio = ambient(indexShape) / ambient(fullShape)
+    expect(ratio, `index ${ambient(indexShape)} B vs full ${ambient(fullShape)} B`).toBeLessThanOrEqual(0.3)
+
+    // …and no single entry's ambient contribution exceeds 200 B (the runaway-description trip-wire, SPEC-N3
+    // — a red gate instead of a silent truncation).
+    for (const line of indexShape.split('\n').filter((l) => l.startsWith('- '))) {
+      expect(line.length + 1, `"${line}" must stay within the per-entry budget`).toBeLessThanOrEqual(200)
+    }
+  })
+})
+
+describe('the index teaching block (SPEC-R15)', () => {
+  it('AC1: composed exactly once, before the first capability heading — and absent when nothing indexes', () => {
+    const skills = group(ENTRY_KINDS.skill, 'Skills available to you', [entry({ id: 's', label: 'S', description: 'd' })])
+    const tools = group(ENTRY_KINDS.tool, 'Tools available to you', [
+      entry({ id: 't', kind: ENTRY_KINDS.tool, label: 'T', description: 'd' }),
+    ])
+    const out = composeLiveSystemPrompt(SECTIONS, [skills, tools])
+    expect(out.split(CAPABILITY_INDEX_TEACHING).length - 1, 'exactly once, however many groups compose').toBe(1)
+    expect(out.indexOf(CAPABILITY_INDEX_TEACHING)).toBeLessThan(out.indexOf('## Skills available to you'))
+    expect(composeLiveSystemPrompt(SECTIONS, [])).not.toContain(CAPABILITY_INDEX_TEACHING)
+  })
+
+  it('AC2: it names the index, BOTH trigger characters and the ask-the-user move, within 500 B', () => {
+    expect(new TextEncoder().encode(CAPABILITY_INDEX_TEACHING).length).toBeLessThanOrEqual(500)
+    expect(CAPABILITY_INDEX_TEACHING).toContain('INDEX')
+    expect(CAPABILITY_INDEX_TEACHING, 'the mention trigger, named').toContain('@name')
+    expect(CAPABILITY_INDEX_TEACHING, 'the invocation trigger, named').toContain('/name')
+    expect(CAPABILITY_INDEX_TEACHING).toMatch(/only the user can/i)
+    expect(CAPABILITY_INDEX_TEACHING).toMatch(/ask the user/i)
+    expect(CAPABILITY_INDEX_TEACHING, 'ONE line — it rides between two blank lines in the prompt').not.toContain('\n')
+  })
+
+  it('it lands after the GH #525 bankroll teaching and before the groups (one ordering, both blocks)', () => {
+    const skills = group(ENTRY_KINDS.skill, 'Skills available to you', [entry({ id: 's', label: 'S', description: 'd' })])
+    const out = composeLiveSystemPrompt(SECTIONS, [skills], { stored: 40 })
+    expect(out.indexOf('/bankroll')).toBeLessThan(out.indexOf(CAPABILITY_INDEX_TEACHING))
+    expect(out.indexOf(CAPABILITY_INDEX_TEACHING)).toBeLessThan(out.indexOf('## Skills available to you'))
   })
 })
 
@@ -544,6 +714,105 @@ describe('buildComposerRosters (GH #849/SPEC-R8) — the menu roster projection'
     expect(MENTIONABLE_KINDS.filter((k) => INVOCABLE_KINDS.includes(k))).toEqual([])
     expect([...MENTIONABLE_KINDS, ...INVOCABLE_KINDS].every((k) => AVAILABILITY_KINDS.includes(k))).toBe(true)
     expect(AVAILABILITY_KINDS.every((k) => [...MENTIONABLE_KINDS, ...INVOCABLE_KINDS].includes(k))).toBe(true)
+  })
+})
+
+// ── the capabilities MENU projection (GH #891/SPEC-R13, ADR-0190 rev.2 — slice S7) ───────────────────────
+// The GLOBAL switch's row set: the same `ReferenceGroup` input as the rosters above, a deliberately
+// DIFFERENT filter — both enabled states listed (the whole point of a global off-switch), the master switch
+// still winning. The store WRITE a flip performs is agent-admin.test.ts's, through the real element.
+
+describe('buildCapabilityRows (GH #891/SPEC-R13) — the capabilities-menu projection', () => {
+  const groups = (): ReferenceGroup[] => [
+    refGroup(ENTRY_KINDS.skill, [
+      entry({ id: 'style', kind: ENTRY_KINDS.skill, label: 'House style', description: 'The voice.', order: 0 }),
+      entry({ id: 'retired', kind: ENTRY_KINDS.skill, label: 'Retired', enabled: false, order: 1 }),
+    ]),
+    refGroup(ENTRY_KINDS.workflow, [
+      entry({ id: 'review', kind: ENTRY_KINDS.workflow, label: 'Review flow', availability: ENTRY_AVAILABILITY.invocable, order: 0 }),
+    ]),
+    refGroup(ENTRY_KINDS.resource, [entry({ id: 'menu', kind: ENTRY_KINDS.resource, label: 'Menu PDF', order: 0 })]),
+    refGroup(ENTRY_KINDS.tool, [entry({ id: 'weather', kind: ENTRY_KINDS.tool, label: 'Weather', order: 0 })], false),
+  ]
+
+  it('lists BOTH enabled states and BOTH availability modes — `included` mirrors the persisted `enabled`', () => {
+    const rows = buildCapabilityRows(groups())
+    // The disabled skill is PRESENT (unlike in the `@`/`/` rosters): a global off-switch that hid what it
+    // switched off could never be flipped back on. The master-OFF tool kind is absent wholesale.
+    expect(rows.map((r) => r.id)).toEqual(['skill:style', 'skill:retired', 'workflow:review', 'resource:menu'])
+    expect(rows.map((r) => r.included)).toEqual([true, false, true, true])
+    // The row's full shape: the reference projection's own label/kind/description/glyph, plus `included`.
+    expect(rows[0]).toEqual({
+      id: 'skill:style',
+      label: 'House style',
+      kind: ENTRY_KINDS.skill,
+      description: 'The voice.',
+      icon: 'star',
+      included: true,
+    })
+    expect(rows[1], 'an empty description is omitted here too, never an empty second line').toEqual({
+      id: 'skill:retired',
+      label: 'Retired',
+      kind: ENTRY_KINDS.skill,
+      icon: 'star',
+      included: false,
+    })
+    // An enabled INVOCABLE entry reads `included: true` — the switch is the `enabled` axis, and availability
+    // is untouched by it (SPEC-R1's orthogonality; the tier is taught by the row's own kind/mode, not by
+    // pretending an invocable entry is off).
+    expect(rows.find((r) => r.id === 'workflow:review')?.included).toBe(true)
+  })
+
+  it('the master switch still wins, and a kind outside the four contributes nothing', () => {
+    expect(buildCapabilityRows(groups()).some((r) => r.kind === ENTRY_KINDS.tool), 'master-off ⇒ absent').toBe(false)
+    expect(buildCapabilityRows([refGroup(ENTRY_KINDS.tool, [entry({ id: 'weather', kind: ENTRY_KINDS.tool, label: 'Weather' })])])).toEqual([
+      { id: 'tool:weather', label: 'Weather', kind: ENTRY_KINDS.tool, icon: 'gear', included: true },
+    ])
+    expect(
+      buildCapabilityRows([
+        refGroup(ENTRY_KINDS.promptSection, [entry({ id: 'foundation', kind: ENTRY_KINDS.promptSection, label: 'Foundation' })]),
+        refGroup(ENTRY_KINDS.patternSource, [entry({ id: 'pack', kind: ENTRY_KINDS.patternSource, label: 'Pack' })]),
+        refGroup(ENTRY_KINDS.catalog, [entry({ id: 'agent-ui', kind: ENTRY_KINDS.catalog, label: 'Default' })]),
+      ]),
+      'availability semantics are defined for four kinds only (SPEC-R1)',
+    ).toEqual([])
+  })
+
+  it('sorts each kind by `order`, ties by `id` — the composeSystemPrompt sort law, disabled rows included', () => {
+    const rows = buildCapabilityRows([
+      refGroup(ENTRY_KINDS.skill, [
+        entry({ id: 'c', kind: ENTRY_KINDS.skill, label: 'C', order: 1 }),
+        entry({ id: 'a', kind: ENTRY_KINDS.skill, label: 'A', order: 0, enabled: false }),
+        entry({ id: 'b', kind: ENTRY_KINDS.skill, label: 'B', order: 0 }),
+      ]),
+    ])
+    expect(rows.map((r) => r.id)).toEqual(['skill:a', 'skill:b', 'skill:c'])
+  })
+
+  it('the row id is the {kind}:{id} PAIR, and it round-trips — including an id that itself carries colons', () => {
+    // `onCapabilityToggle` echoes the row id ALONE, and an entry id is unique only WITHIN its kind: two
+    // entries of different kinds may both be `notes` (an id is `slugify(label)`), so the pair is the key.
+    const collision = buildCapabilityRows([
+      refGroup(ENTRY_KINDS.skill, [entry({ id: 'notes', kind: ENTRY_KINDS.skill, label: 'Notes' })]),
+      refGroup(ENTRY_KINDS.resource, [entry({ id: 'notes', kind: ENTRY_KINDS.resource, label: 'Notes' })]),
+    ])
+    expect(collision.map((r) => r.id), 'same entry id, two kinds, two distinct rows').toEqual(['skill:notes', 'resource:notes'])
+    for (const row of collision) expect(parseCapabilityRowId(row.id)).toEqual({ kind: row.kind, id: 'notes' })
+
+    // A namespaced service ref (ADR-0185) is an entry id carrying its OWN colons — the parse splits on the
+    // FIRST one only, so it survives verbatim.
+    const namespaced = buildCapabilityRows([
+      refGroup(ENTRY_KINDS.tool, [entry({ id: 'svc:calc:*', kind: ENTRY_KINDS.tool, label: 'Calculator' })]),
+    ])
+    expect(namespaced[0]!.id).toBe('tool:svc:calc:*')
+    expect(parseCapabilityRowId(namespaced[0]!.id)).toEqual({ kind: ENTRY_KINDS.tool, id: 'svc:calc:*' })
+  })
+
+  it('parseCapabilityRowId is FAIL-CLOSED — nothing this projection could not have minted parses', () => {
+    for (const bad of ['', 'skill', ':style', 'skill:', 'prompt-section:foundation', 'nonsense:x']) {
+      expect(parseCapabilityRowId(bad), `${bad} must not parse`).toBeUndefined()
+    }
+    expect(parseCapabilityRowId('resource:menu')).toEqual({ kind: ENTRY_KINDS.resource, id: 'menu' })
   })
 })
 

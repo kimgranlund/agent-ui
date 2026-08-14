@@ -469,11 +469,18 @@ real model integration. This is the ONLY path the static build carries, so the s
 
 Set the optional `agentTurn` property to swap that stub for a **real live model turn** (TKT-0052/ADR-0136):
 the request is projected fresh from the current config every turn — the selected model, the composed
-system prompt, and every AMBIENT capability entry (skills/workflows/resources/tools, projected as prose;
-the Tools kind gated by the `toolsEnabled` switch) — and replayed with the running multi-turn history.
+system prompt, and every AMBIENT capability entry (skills/workflows/resources/tools, each as ONE INDEX LINE
+— its name and description, never its body, GH #891/SPEC-R14; the Tools kind gated by the `toolsEnabled`
+switch) — and replayed with the running multi-turn history. An entry's full text reaches the model only when
+the USER tags it (`@name`/`/name`, the reach path below), and the prompt carries a short host-owned block
+telling the model exactly that, so it asks for a name instead of inventing the missing text. Why: this whole
+string is composed client-side per request with no way for the model to pull text in later, so ambient cost
+is paid on every turn forever — the measured shipped-pack corpus fell from ~14–20 KB of capability prose to
+~3.6–4.7 KB of index (−75/−77%). Prompt SECTIONS stay full always (they are the agent) — that is the ruled
+home for text which must be verbatim-ambient.
 "Ambient" is enabled AND in-context (GH #850): each of those four kinds' entries carries a per-entry
 availability mode, and a **user-invocable** one contributes nothing to any turn's ambient bytes — not the
-prompt, not the `integrations` wire, not the config snapshot — until the user invokes it from the
+index, not the `integrations` wire, not the config snapshot — until the user invokes it from the
 conversation (the reach path below). Its row stays visibly marked in the Settings place so the state is never a mystery. The
 docs site wires this ONLY under `import.meta.env.DEV`, through the reused `dev-proxy-plugin.ts` trust
 boundary (ADR-0073, the browser never holds a key), so a live call happens only in a local `vite dev`
@@ -505,6 +512,35 @@ still sends):
 
 The transport carries zero new vocabulary for any of it — the whole mechanism is host-side, which is why
 `agent-transport.ts`, the dev proxy and the Worker were untouched by the feature.
+
+## The capabilities menu: a GLOBAL enable/disable from the chat composer (GH #891, SPEC-R13 / ADR-0190 rev.2)
+
+Beside the Models/Effort pickers the chat composer carries a third trigger, **Capabilities**, whose panel is
+this element's third projection of the same store truth: every entry of the four capability kinds whose
+master switch is on — **both** availability modes and **both** enabled states — each row a real switch
+mirroring the entry's persisted `enabled`. Deliberately not the `@`/`/` rosters above (those are
+enabled-only by contract): a global off-switch that hid what it just switched off could never be flipped
+back on. Master-off kinds stay absent — the master switch is the Settings surface's own dial.
+
+A flip is a **persistent store write** (the owner's 2026-08-14 ruling, ADR-0190 rev.2): the entry's
+`enabled` moves through the same one-writer seam its own row toggle uses, so the row in the Capabilities
+pane shows the new state and it survives reload. The composer never writes anything — rows down, one
+`onCapabilityToggle(id, included)` up (the row id carries `{kind}:{id}`, since an entry id is unique only
+within its kind).
+
+What the panel teaches, by construction, is the **three-tier reach model** — the two axes stay orthogonal,
+and the switch never touches availability:
+
+| Tier | State | What the model gets |
+|---|---|---|
+| **Ever-present** | enabled + in-context | one ambient INDEX line (name + description) every turn; the full text on invocation |
+| **Invoke-only** | enabled + user-invocable | nothing ambient at all; the full text only when the user tags it |
+| **Off** | disabled | nothing, anywhere: no index line, absent from the `@`/`/` rosters, dropped at resolution |
+
+A flip never invokes: switching an invocable entry ON enables it and mints no reference, no chip, no framing
+— per-turn inclusion stays the typeahead's job. The panel is the CHAT composer's only; the Co-pilot
+composer steers the Builder's own persona, whose rows this surface does not render, so it keeps the prop
+default-off.
 
 ## Fail-closed everywhere
 

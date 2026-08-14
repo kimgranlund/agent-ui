@@ -73,6 +73,10 @@ attributes:              # attributes-as-API — mirrors conversation.ts `props`
     type: json            # readonly ReferenceOption[] — GH #849, the composer's '/' typeahead roster (one menu, grouped by kind)
     default: undefined
     reflect: false
+  - name: capabilities
+    type: json            # readonly CapabilityRow[] (composer-options.ts — {id,label,kind,description?,icon?,included}) — GH #891/SPEC-R11, forwarded to the composed composer's capabilities panel
+    default: undefined    # undefined ⇒ no trigger, no panel; byte-identical for every existing consumer
+    reflect: false
 
 properties:
   - name: disabled
@@ -105,8 +109,10 @@ properties:
     description: OPTIONAL `readonly ReferenceOption[]` (`{id, label, kind, description?}`) — GH #849's `@` mention roster, forwarded PASS-THROUGH to the composed composer (this element adds no semantics: `kind` stays the consumer's own opaque string). Default `undefined` ⇒ `@` is a plain character. Committed references come back up through `onSubmit`'s widened second argument. See `conversation-composer.md` for the grammar.
   - name: invocables
     description: OPTIONAL `readonly ReferenceOption[]` — GH #849's `/` invocation roster (ONE menu grouped by kind), forwarded pass-through like `mentionables`. Default `undefined` ⇒ `/` is a plain character.
+  - name: capabilities
+    description: 'OPTIONAL `readonly CapabilityRow[]` (`{id, label, kind, description?, icon?, included}`) — GH #891''s capabilities panel rows, forwarded PASS-THROUGH to the composed composer (this element adds no semantics: `kind`/`icon` stay opaque consumer strings). Default `undefined` ⇒ no trigger and no panel DOM at all. A flip fires `onCapabilityToggle(id, included)` and NOTHING mutates locally — the consumer owns the state and hands a new array down. What a flip MEANS is the consumer''s too: ADR-0190 rev.2 ruled it a GLOBAL enable/disable, and `ui-agent-admin` wires it to the named entry''s persisted `enabled` (SPEC-R13) — this contract is identical under either arm of that fork. See `conversation-composer.md` for the panel''s anatomy.'
 
-events:                   # onSubmit/onClientMessage/onModelChange/onEffortChange/onProviderChange/onModeChange/onContextDismiss/onMicClick/setContentRenderer/setEmptyState are ALL callback/hook registrations, never CustomEvents (SPEC-R5/SPEC-R12; the closed vocabulary has no submission/picker-commit/client-message/render-hook kind). GH #291/ADR-0160 clause 3 adds the ONE real DOM event: `action`, fired from the settled-turn action-chip row — the SAME closed-vocabulary member ui-status-stream's inline retry button already uses (ADR-0153's seventh member), never an eighth.
+events:                   # onSubmit/onClientMessage/onModelChange/onEffortChange/onProviderChange/onModeChange/onContextDismiss/onCapabilityToggle/onMicClick/setContentRenderer/setEmptyState are ALL callback/hook registrations, never CustomEvents (SPEC-R5/SPEC-R12; the closed vocabulary has no submission/picker-commit/client-message/render-hook kind). GH #291/ADR-0160 clause 3 adds the ONE real DOM event: `action`, fired from the settled-turn action-chip row — the SAME closed-vocabulary member ui-status-stream's inline retry button already uses (ADR-0153's seventh member), never an eighth.
   - name: action
     detail: '{ id: string }'
     description: Fired when the user clicks a settled agent turn's pre-hydrated action chip (rendered when `AgentTurnHandle.finalize()` was called with a non-empty `actions` list). `id` is the clicked `TurnAction.id` — the consumer's own vocabulary (e.g. `'helpful'`/`'not-helpful'`, or `'yes'`/`'no'`), never interpreted by this primitive. Clicking any chip in the row removes the WHOLE row first (one-shot commit — a settled turn's feedback/reply choice can never double-fire), then fires this event on `ui-conversation` itself (never on the button, never on the bubble). GH #291 review — a consumer must still discriminate by `event.target === conv` before treating an `action` event as this chip commit: a genui `ui-sandbox-frame`'s own game-loop `action` (SPEC-R8, `routeGenui`) is a DIFFERENT `action` shape (`{surfaceId, name, payload}`, not `{id}`) that this build stops from bubbling past its own frame (`stopPropagation()`), but a consumer listening directly on a mounted surface, or on any DOM ancestor of `ui-conversation`, can still observe it — `event.target` is the only reliable discriminant between the two closed-vocabulary `action` shapes sharing this fleet's seventh event name (ADR-0153/ADR-0160).
@@ -392,7 +398,7 @@ the same statement `reset()` already makes about turns. Safe before or after con
 `ui-conversation` seats exactly ONE `<ui-conversation-composer>` — adopted from an author-supplied
 `:scope > ui-conversation-composer` (ADR-0180) if present, else JS-created (the `master-detail.ts` →
 `ui-split` precedent, the byte-identical default) — forwarding `models`/`model`/`efforts`/`effort`/`providers`/`provider`/
-`modes`/`mode`/`contextItems`/`mentionables`/`invocables` down as props and forwarding its seven callback registrations up to whatever
+`modes`/`mode`/`contextItems`/`mentionables`/`invocables`/`capabilities` down as props and forwarding its eight callback registrations up to whatever
 THIS element's own consumer registered. See `conversation-composer.md` for the composer's own full
 contract (its parts, its `busy` prop, its opt-in mic/pickers/chips). Beyond the field + send button, the
 composer can carry a **Provider picker**, a **Models picker**, an **Effort picker**, a **Mode picker**,
@@ -428,6 +434,10 @@ conv.onSubmit((text, references) => { /* resolve `references` by id at send time
 // too, and the bubble shows the same display-only tags a live send produces (single-arg stays valid).
 conv.addUserMessage('Total the dinner order', [{ id: 'res-1', label: 'Menu PDF', kind: 'resource', icon: 'file-text' }])
 conv.onMicClick(() => { /* wire real voice input here — none is built in */ }) // ALSO reveals the mic button — hidden until this is called
+// GH #891/SPEC-R11 — the capabilities panel: the BROWSE/STEER sibling of the `@`/`/` quick path. Rows down,
+// one callback up, zero local mutation: the visible switch moves only when a new array comes back down.
+conv.capabilities = [{ id: 'skill:house-style', label: 'House style', kind: 'skill', icon: 'star', included: true }]
+conv.onCapabilityToggle((id, included) => { /* the consumer's own truth — e.g. persist it, then re-hand `capabilities` */ })
 ```
 
 Every picker follows **props down, callbacks up** (the `onSubmit` precedent) — `ui-conversation` never
@@ -435,9 +445,9 @@ writes `model`/`effort`/`provider`/`mode` itself; a consumer supplies the curren
 committed choice back through the matching callback. `models`/`efforts`/`modes` are generic `{id, label}`
 option lists; `providers` additionally carries each provider's own `models`/`defaultModel` — `ui-conversation`
 never hardcodes a model/provider catalog or invents Effort's/Mode's own semantics beyond the shared
-`EFFORT_LEVELS` constant a consumer may reuse. All eight new callbacks (`onModelChange`/`onEffortChange`/
-`onProviderChange`/`onModeChange`/`onContextDismiss`/`onMicClick`, alongside `onSubmit`/`onClientMessage`)
-are safe to register before or after connect.
+`EFFORT_LEVELS` constant a consumer may reuse. All nine new callbacks (`onModelChange`/`onEffortChange`/
+`onProviderChange`/`onModeChange`/`onContextDismiss`/`onCapabilityToggle`/`onMicClick`, alongside
+`onSubmit`/`onClientMessage`) are safe to register before or after connect.
 
 The send/mic/caret glyphs need a registered `@agent-ui/icons` pack (`ui-icon`'s own requirement, not new
 here) — a consumer that composes `ui-conversation` without one gets correctly-sized but BLANK icon-only

@@ -1870,7 +1870,9 @@ describe('UIAgentAdminElement — the per-entry availability mode (GH #850/SPEC-
     }
     submit(el, 'ping')
     await waitFor(() => calls.length === 1, 'prose runner called')
-    expect(calls[0]!.system).toContain('### House style')
+    // GH #891/SPEC-R14 UPDATES the ambient shape to the index line (the SPEC's own annotation on R3 AC1);
+    // what R3 asserts here — the invocable entry contributing NOTHING — is unchanged.
+    expect(calls[0]!.system).toContain('- House style')
     expect(calls[0]!.system, 'the invocable skill is nowhere in the prompt').not.toContain('Menu PDF')
     expect(calls[0]!.integrations, 'and the invocable tool forwards no id').toEqual(['weather'])
   })
@@ -1916,7 +1918,11 @@ describe('UIAgentAdminElement — the per-entry availability mode (GH #850/SPEC-
     const agentJson = JSON.parse(
       el.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]')!.textContent ?? '{}',
     ) as { systemPrompt: string }
-    expect(agentJson.systemPrompt).toContain('### House style')
+    // SPEC-R14 AC4 — the Context tab renders `composeLiveSystemPrompt`'s string, so the INDEX shape reaches
+    // it by construction (inheritance asserted once, here).
+    expect(agentJson.systemPrompt).toContain('- House style')
+    expect(agentJson.systemPrompt, 'the index shape, not the old labeled prose').not.toContain('### House style')
+    expect(agentJson.systemPrompt, 'and the teaching block rides the same string').toContain('are an INDEX')
     expect(agentJson.systemPrompt).not.toContain('Menu PDF')
   })
 
@@ -2166,6 +2172,210 @@ describe('UIAgentAdminElement — the composer reach path (GH #849/SPEC-R8/R4)',
   })
 })
 
+// ── GH #891 / SPEC-R13 (ADR-0190 rev.2, slice S7) — the capabilities menu, wired ─────────────────────────
+// The RULED arm: the composer's third panel is a GLOBAL enable/disable over the store's `enabled` truth. Its
+// row PROJECTION is entries.test.ts's pure unit; everything below drives the REAL composer panel and asserts
+// what a flip did to the store, to the entry row, and to the very next turn.
+
+describe('UIAgentAdminElement — the capabilities menu (GH #891/SPEC-R13)', () => {
+  function addEntry(el: UIAgentAdminElement, kind: string, label: string): void {
+    const section = el.querySelector(`[data-kind="${kind}"]`) as HTMLElement
+    ;(section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = label
+    ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
+  }
+  function setEntry(el: UIAgentAdminElement, kind: string, id: string, patch: Partial<Entry>): void {
+    el.store!.set(
+      entriesStoreKey(kind),
+      readEntries(el.store, kind).map((e) => (e.id === id ? { ...e, ...patch } : e)),
+    )
+  }
+  type Composer = HTMLElement & {
+    value: string
+    capabilities?: readonly { id: string; label: string; kind: string; included: boolean }[]
+    invocables?: readonly { id: string; label: string; kind: string }[]
+  }
+  const chatComposer = (el: UIAgentAdminElement): Composer =>
+    el.querySelector('[data-part="canvas"] ui-conversation-composer') as Composer
+  const copilotComposer = (el: UIAgentAdminElement): Composer =>
+    [...el.querySelectorAll<Composer>('ui-conversation-composer')][1]!
+  /** Open the panel the way a user does — a real click on the trigger pill. */
+  async function openPanel(el: UIAgentAdminElement): Promise<Composer> {
+    const composer = chatComposer(el)
+    ;(composer.querySelector('[data-picker="capabilities"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    await whenFlushed()
+    return composer
+  }
+  const rowsOf = (composer: Composer): HTMLElement[] => [
+    ...composer.querySelectorAll<HTMLElement>('[data-part="capabilities-panel"] [data-part="capability-row"]'),
+  ]
+  /** Flip one row's switch by row id — a real click on the real `ui-switch` (it toggles itself, then emits). */
+  async function flipRow(el: UIAgentAdminElement, rowId: string): Promise<void> {
+    const row = rowsOf(chatComposer(el)).find((r) => r.dataset.id === rowId)
+    if (row === undefined) throw new Error(`no capability row for ${rowId}`)
+    ;(row.querySelector('[data-part="capability-switch"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    await whenFlushed()
+  }
+  const rowState = (el: UIAgentAdminElement): [string, boolean][] =>
+    rowsOf(chatComposer(el)).map((r) => [
+      r.dataset.id ?? '',
+      (r.querySelector('[data-part="capability-switch"]') as HTMLElement & { checked: boolean }).checked,
+    ])
+  function submit(el: UIAgentAdminElement, text: string): void {
+    const composer = chatComposer(el)
+    composer.value = text
+    ;(composer.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+  }
+  async function waitFor(predicate: () => boolean, label: string): Promise<void> {
+    for (let i = 0; i < 100; i += 1) {
+      if (predicate()) return
+      await Promise.resolve()
+    }
+    throw new Error(`waitFor timed out: ${label}`)
+  }
+  /** One prose-arm turn's request, captured off the injected runner seam. */
+  async function turnRequest(el: UIAgentAdminElement, text: string): Promise<import('./agent-admin-schema.ts').AdminTurnRequest> {
+    const calls: import('./agent-admin-schema.ts').AdminTurnRequest[] = []
+    el.agentTurn = async (req) => {
+      calls.push(req)
+      return 'ok'
+    }
+    submit(el, text)
+    await waitFor(() => calls.length === 1, 'prose runner called')
+    return calls[0]!
+  }
+
+  it('the rows carry BOTH enabled states and BOTH modes; a master-off kind is absent; the Co-pilot has no panel', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    addEntry(el, ENTRY_KINDS.skill, 'House style')
+    addEntry(el, ENTRY_KINDS.skill, 'Retired')
+    addEntry(el, ENTRY_KINDS.workflow, 'Review flow')
+    addEntry(el, ENTRY_KINDS.tool, 'weather')
+    setEntry(el, ENTRY_KINDS.skill, 'retired', { enabled: false })
+    setEntry(el, ENTRY_KINDS.workflow, 'review-flow', { availability: 'invocable' })
+    await whenFlushed()
+
+    const composer = await openPanel(el)
+    expect(rowState(el), 'a disabled entry is LISTED (a global off-switch must be reversible)').toEqual([
+      ['skill:house-style', true],
+      ['skill:retired', false],
+      ['workflow:review-flow', true],
+      ['tool:weather', true],
+    ])
+    // The panel is the browse surface for the WHOLE roster — including entries the `/` menu also offers.
+    expect(composer.invocables?.map((o) => o.id)).toEqual(['house-style', 'review-flow', 'weather'])
+
+    el.store!.set('toolsEnabled', false) // the tool kind's MASTER switch stays the admin surface's own dial
+    await whenFlushed()
+    expect(rowState(el).map(([id]) => id), 'a master-off kind leaves the panel wholesale').toEqual([
+      'skill:house-style',
+      'skill:retired',
+      'workflow:review-flow',
+    ])
+    // SPEC-N1's composers-beyond-chat law: the interview composer steers the BUILDER's persona, not this
+    // store's — it gets no rows at all, so no trigger and no panel.
+    expect(copilotComposer(el).capabilities, 'the Co-pilot composer keeps the prop default-off').toBeUndefined()
+    expect(copilotComposer(el).querySelector('[data-picker="capabilities"]')).toBeNull()
+  })
+
+  it('AC1: an ever-present skill flipped OFF persists, renders OFF on the row, and leaves the NEXT turn', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.store!.set(SURFACE_A2UI_KEY, false) // the prose arm answers
+    addEntry(el, ENTRY_KINDS.skill, 'House style')
+    setEntry(el, ENTRY_KINDS.skill, 'house-style', { description: 'The voice.', content: 'Be brief.' })
+    await whenFlushed()
+
+    const before = await turnRequest(el, 'ping')
+    expect(before.system, 'anti-vacuous: it really composed before the flip').toContain('House style')
+
+    await openPanel(el)
+    await flipRow(el, 'skill:house-style')
+    // The store is the truth the ruling names — a persistent write, not per-turn steering.
+    expect(readEntries(el.store, ENTRY_KINDS.skill)[0]!.enabled).toBe(false)
+    // …the entry ROW in the Capabilities pane shows it (the same surface SPEC-R2's own toggle writes)…
+    expect(toggleOf(entryEl(el, ENTRY_KINDS.skill, 'house-style')).checked).toBe(false)
+    // …the panel row reflects the store's answer, handed back down…
+    expect(rowState(el)).toEqual([['skill:house-style', false]])
+    // …and the very next turn carries nothing from it.
+    const after = await turnRequest(el, 'ping again')
+    expect(after.system).not.toContain('House style')
+    expect(after.system).not.toContain('Be brief.')
+  })
+
+  it('AC1 (the reload leg): the flip survives a fresh element instance over the same store', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    addEntry(el, ENTRY_KINDS.skill, 'House style')
+    await whenFlushed()
+    await openPanel(el)
+    await flipRow(el, 'skill:house-style')
+    el.remove()
+    mounted.length = 0
+
+    const second = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement) // the default persisted store
+    await whenFlushed()
+    expect(toggleOf(entryEl(second, ENTRY_KINDS.skill, 'house-style')).checked, 'survives reload').toBe(false)
+    await openPanel(second)
+    expect(rowState(second)).toEqual([['skill:house-style', false]])
+  })
+
+  it('AC2: a DISABLED tool is listed off; flipped ON it persists, wires `integrations`, and joins the `/` roster', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.store!.set(SURFACE_A2UI_KEY, false)
+    addEntry(el, ENTRY_KINDS.tool, 'weather')
+    setEntry(el, ENTRY_KINDS.tool, 'weather', { enabled: false })
+    await whenFlushed()
+    expect(chatComposer(el).invocables?.map((o) => o.id), 'a disabled entry is absent from the typeahead').toEqual([])
+    const before = await turnRequest(el, 'ping')
+    expect(before.integrations, 'and forwards no id').toEqual([])
+
+    await openPanel(el)
+    expect(rowState(el)).toEqual([['tool:weather', false]])
+    await flipRow(el, 'tool:weather')
+    expect(readEntries(el.store, ENTRY_KINDS.tool)[0]!.enabled).toBe(true)
+    expect(rowState(el)).toEqual([['tool:weather', true]])
+    const after = await turnRequest(el, 'ping again')
+    expect(after.integrations, 'an ENABLED in-context tool rides the wire again').toEqual(['weather'])
+    // …and the rebuilt typeahead roster now offers it (one reflect path feeds every projection).
+    expect(chatComposer(el).invocables?.map((o) => o.id)).toEqual(['weather'])
+  })
+
+  it('AC3: flipping an INVOCABLE workflow OFF then ON mints no reference/chip, and never touches `availability`', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.store!.set(SURFACE_A2UI_KEY, false)
+    addEntry(el, ENTRY_KINDS.workflow, 'Review flow')
+    setEntry(el, ENTRY_KINDS.workflow, 'review-flow', { availability: 'invocable', content: 'Step 1 — read it.' })
+    await whenFlushed()
+    const composer = await openPanel(el)
+
+    await flipRow(el, 'workflow:review-flow')
+    await flipRow(el, 'workflow:review-flow')
+    expect(readEntries(el.store, ENTRY_KINDS.workflow)[0]!.enabled, 'off then on ⇒ back to enabled').toBe(true)
+    expect(readEntries(el.store, ENTRY_KINDS.workflow)[0]!.availability, 'the OTHER axis is byte-unchanged').toBe('invocable')
+    // A flip never invokes (the ruling's own clause): no chip in the composer's row, and no reference on the
+    // wire — per-turn inclusion stays the typeahead's job.
+    expect(composer.querySelectorAll('[data-part="reference-chip"]').length).toBe(0)
+    const request = await turnRequest(el, 'ping')
+    expect(request.text, 'no framing block was minted').toBe('ping')
+    expect(request.system, 'and an enabled INVOCABLE entry is still ambient-dark (the R3 law)').not.toContain('Step 1 — read it.')
+  })
+
+  it('a row id the projection never minted is a NO-OP write (fail-closed at the toggle seam)', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    addEntry(el, ENTRY_KINDS.skill, 'House style')
+    await whenFlushed()
+    await openPanel(el)
+    const before = JSON.stringify(readEntries(el.store, ENTRY_KINDS.skill))
+    // The composer echoes back whatever row id it was handed, so handing it a bad one and flipping it is
+    // exactly how a stale/forged id reaches the CONSUMER's guard: a malformed id (no kind half), a kind
+    // availability is not defined for, and a well-formed id no entry carries.
+    for (const bad of ['house-style', 'prompt-section:foundation', 'skill:ghost']) {
+      chatComposer(el).capabilities = [{ id: bad, label: 'Ghost', kind: ENTRY_KINDS.skill, included: true }]
+      await whenFlushed()
+      await flipRow(el, bad)
+    }
+    expect(JSON.stringify(readEntries(el.store, ENTRY_KINDS.skill)), 'not one byte of the store moved').toBe(before)
+  })
+})
+
 describe('UIAgentAdminElement — composeSystemPrompt (ADR-0132 cl.2)', () => {
   it('concatenates ENABLED sections in order, labeled, skipping disabled/empty ones', () => {
     const sections: Entry[] = [
@@ -2311,7 +2521,7 @@ describe('UIAgentAdminElement — the DEV-only live-turn fork (TKT-0052/ADR-0136
     expect(req.model).toBe(target.id)
     expect(req.system).toContain('## Foundation') // the composed prompt is the base
     expect(req.system).toContain('## Skills available to you') // the capability projection is appended
-    expect(req.system).toContain('### Web search')
+    expect(req.system).toContain('- Web search') // …as index lines since GH #891/SPEC-R14
   })
 
   it('defaults `effort` to "medium" when the composer Effort picker was never touched', async () => {
@@ -2569,7 +2779,7 @@ describe('UIAgentAdminElement — the DEV-only live-turn fork (TKT-0052/ADR-0136
     el.agentTurn = runner.fn
     submit(el, 'weather in Oslo?')
     await waitFor(() => runner.calls.length === 1, 'runner called')
-    expect(runner.calls[0]!.system, 'the prompt teaches the RENAMED name').toContain('### Local forecast')
+    expect(runner.calls[0]!.system, 'the prompt teaches the RENAMED name').toContain('- Local forecast')
     expect(runner.calls[0]!.system, 'and never the old one').not.toContain('Weather (Open-Meteo)')
     expect(runner.calls[0]!.integrations, 'the wire still resolves by the original id').toEqual(['weather'])
   })
