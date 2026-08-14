@@ -215,19 +215,29 @@ function slug(label: string): string {
  *  other persona's persisted store, which is the one failure mode library semantics must not have).
  *
  *  `tag` picks the uniquify WORDING only — the loop itself (base slug, taken-id/taken-label check,
- *  numeric suffix once both collide) is the ONE mechanism both a file import (`importedPersonaFrom`,
- *  `'imported'`) and a from-scratch mint (`mintBlankPersona`, GH #637 S1, `'new'`) run through, so a
- *  colliding blank agent gets the exact same collision-safety an imported one already has. */
+ *  numeric suffix once both collide) is the ONE mechanism a file import (`importedPersonaFrom`,
+ *  `'imported'`), a from-scratch mint (`mintBlankPersona`, GH #637 S1, `'new'`) and a duplicate
+ *  (`duplicatePersonaFrom`, GH #845, `'copy'`) all run through, so a colliding blank agent — or a second
+ *  copy of the same source — gets the exact same collision-safety an imported one already has. */
 function mintIdentity(
   label: string,
   taken: ReadonlySet<string>,
   takenLabels: ReadonlySet<string>,
-  tag: 'imported' | 'new',
+  tag: 'imported' | 'new' | 'copy',
 ): { id: string; label: string } {
   const base = slug(label)
-  const idFor = (n: number): string => (tag === 'imported' ? `${base}-imported${n > 1 ? `-${n}` : ''}` : `${base}${n > 1 ? `-${n}` : ''}`)
-  const labelFor = (n: number): string =>
-    tag === 'imported' ? `${label} (imported${n > 1 ? ` ${n}` : ''})` : `${label}${n > 1 ? ` ${n}` : ''}`
+  const suffix = (n: number): string => (n > 1 ? `-${n}` : '')
+  const idFor = (n: number): string => {
+    if (tag === 'imported') return `${base}-imported${suffix(n)}`
+    if (tag === 'copy') return `${base}-copy${suffix(n)}`
+    return `${base}${suffix(n)}`
+  }
+  const labelFor = (n: number): string => {
+    const count = n > 1 ? ` ${n}` : ''
+    if (tag === 'imported') return `${label} (imported${count})`
+    if (tag === 'copy') return `${label} (copy${count})`
+    return `${label}${count}`
+  }
   let n = 1
   let id = idFor(n)
   let display = labelFor(n)
@@ -269,6 +279,40 @@ export function importedPersonaFrom(file: PersonaFile, roster: readonly Persona[
  * never a fresh agent's default values (the page composes those from the SAME shipped defaults
  * `ui-agent-admin` itself falls back to when no store is set, `agent-admin.ts` connected()).
  */
+/**
+ * Duplicate ANY persona — a shipped preset included — into a fresh, editable CUSTOM copy (GH #845,
+ * LLD-C14/§8d). The source is never mutated and never loses its protection: duplication is how a preset
+ * becomes editable, which is exactly why "presets can never be deleted or renamed" costs the user nothing.
+ *
+ * The copy's SEED is the source's EXPORT SNAPSHOT — `exportPersonaFile`'s `readPersonaState(store)`, i.e.
+ * the state the live turn would read RIGHT NOW (seed ∪ every edit persisted since), not the pristine seed.
+ * That is the whole point: duplicating an agent you have been editing gives you the agent you have been
+ * editing. It is the same projection an export writes, so "duplicate" and "export → import" mint personas
+ * that behave identically by construction rather than by two hand-kept code paths.
+ *
+ * Identity comes from the ONE `mintIdentity` collision loop (`'copy'`): `${base}-copy[-n]` /
+ * `${label} (copy[ n])`. The caller persists it through `saveImportedPersona`, which stamps
+ * `imported: true` — so a duplicated preset arrives deletable and renamable by the same construction an
+ * imported persona gets, with zero special-casing anywhere.
+ */
+export function duplicatePersonaFrom(source: Persona, store: PersonaStateReader | undefined, taken: readonly Persona[]): Persona {
+  const snapshot = exportPersonaFile(source, store)
+  const { id, label } = mintIdentity(
+    source.label,
+    new Set(taken.map((p) => p.id)),
+    new Set(taken.map((p) => p.label)),
+    'copy',
+  )
+  return {
+    id,
+    label,
+    tagline: source.tagline,
+    ...(source.category === undefined ? {} : { category: source.category }),
+    seed: { ...snapshot.state },
+    imported: true, // a copy is a LIBRARY record, never a shipped preset — deletable/renamable like an import
+  }
+}
+
 export function mintBlankPersona(seed: Readonly<Record<string, unknown>>, roster: readonly Persona[]): Persona {
   const { id, label } = mintIdentity(
     'New agent',

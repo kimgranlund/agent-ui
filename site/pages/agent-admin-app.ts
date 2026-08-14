@@ -52,8 +52,24 @@ import '@agent-ui/app/agent-admin' // self-defines ui-agent-admin
 import './agent-admin-app.css' // page-local: full-viewport layout + the preset strip chrome
 import type { AgentRosterEntry, GenerateSeed, UIAgentAdminElement } from '@agent-ui/app/agent-admin'
 import type { UIToastRegionElement } from '@agent-ui/components/controls/toast-region'
-import { ACTIVE_PRESET_KEY, builderStore, personaRoster, personaStore, resetPersona, saveImportedPersona, type Persona } from './agent-admin-presets.ts'
-import { exportPersonaFile, importedPersonaFrom, mintBlankPersona, personaFileName, personaFileText, readPersonaFile } from './agent-admin-persona-file.ts'
+// GH #845 (LLD-C15/§7) — the Edit Agents drawer's vehicle: `ui-drawer` (ADR-0188), COMPOSED byte-unmodified.
+// Its content (the roster rows and every management verb on them) is page-owned by that control's own fence.
+import type { UIDrawerElement } from '@agent-ui/components/controls/drawer'
+import type { UIButtonElement } from '@agent-ui/components/controls/button'
+import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
+import {
+  ACTIVE_PRESET_KEY,
+  builderStore,
+  deleteImportedPersona,
+  personaRoster,
+  personaStore,
+  renameImportedPersona,
+  resetPersona,
+  saveImportedPersona,
+  saveRosterOrder,
+  type Persona,
+} from './agent-admin-presets.ts'
+import { duplicatePersonaFrom, exportPersonaFile, importedPersonaFrom, mintBlankPersona, personaFileName, personaFileText, readPersonaFile } from './agent-admin-persona-file.ts'
 import { librariesForCategory, setLiveIntegrations, setLiveServices } from './agent-admin-libraries.ts'
 // GH #637 S1 — the blank agent's seed: the EXACT shipped default `ui-agent-admin` itself falls back to
 // when no store prop is ever set (agent-admin.ts connected()'s own `initial` object) — pure reuse, so a
@@ -101,7 +117,12 @@ let armSurfaceTurn: (() => void) | undefined
  *  title/tagline zone + the agentMenu's own aria-checked loop) AND after every mint/import (a fresh row
  *  needs a fresh push — the seam's own re-callable contract, LLD §16.3). */
 function pushRoster(activeId: string): void {
-  const entries: AgentRosterEntry[] = roster.map((p) => ({ id: p.id, label: p.label }))
+  // GH #845 (LLD-C15) — `deletable` is the ONE new field, and its meaning is page-owned: a persona is
+  // deletable exactly when it is a LIBRARY record (`imported === true` — an import, a mint, or a duplicate),
+  // never when it is a shipped `AGENT_PRESETS` preset. The component reads it only as a visibility gate for
+  // its two Delete affordances (the overflow item + the config-surface row); ABSENT reads protected, so this
+  // one line is the whole reason a preset shows neither.
+  const entries: AgentRosterEntry[] = roster.map((p) => ({ id: p.id, label: p.label, deletable: p.imported === true }))
   admin.setAgentRoster(entries, activeId)
 }
 admin.onAgentSelect((id) => {
@@ -135,6 +156,15 @@ admin.onResetRequest(() => {
   resetPersona(active)
   applyPersona(active)
 })
+
+// GH #845 (LLD-C4/C5, LLD-C15/§7) — the two ADDITIVE seams this ticket registers, beside the six above.
+// `onEditAgentsRequest` opens this page's own roster-management drawer (the component neither builds nor
+// knows that surface — it only offers the picker item while the seam is registered). `onDeleteAgentRequest`
+// carries the ACTIVE entry's id from EITHER component-owned Delete home (the header's "•••" overflow item
+// and the config surface's `delete-agent-row`) into the ONE page-side handler the drawer rows call directly
+// as well — three affordances, one deletion path, so the persistence sweep can never diverge between them.
+admin.onEditAgentsRequest(() => openRosterDrawer())
+admin.onDeleteAgentRequest((id) => deleteAgent(id))
 
 // ADR-0179 OQ4 (admin-three-pane-ia.lld.md §2) — the Co-pilot place's empty state hosts the flow's OTHER
 // front door, where the user already is. It reaches this page's mint path through the component's
@@ -266,8 +296,291 @@ fileInput.addEventListener('change', () => {
     })
 })
 
+// ── the Edit Agents drawer (GH #845, LLD-C15/§7) ───────────────────────────────────────────────────────
+// `ui-drawer` (ADR-0188) is composed exactly as shipped — `edge="end"`, an author `aria-label` the control
+// forwards onto its dialog part, dismissible (no `persistent`), everything else default. The control is
+// OPAQUE to what is inside it (its intake §6 fence: "roster lists, danger rows, reorder/duplicate
+// affordances all page-owned"), so every row below is page markup driving page functions.
+//
+// THE ONE STRUCTURAL RULE the vehicle imposes: `ui-drawer` MOVES its children into the `<dialog>` part at
+// connect, once. So the shell (title · status · list · footer) is built and appended HERE, before
+// `root.append` below connects it; afterwards only the LIST's own children are ever replaced. Appending a
+// new child to the HOST after connect would land it beside the dialog, outside the top-layer surface.
+const drawer = document.createElement('ui-drawer') as UIDrawerElement
+drawer.setAttribute('edge', 'end')
+drawer.setAttribute('aria-label', 'Manage agents')
+drawer.className = 'roster-drawer'
+
+const drawerTitle = document.createElement('h2')
+drawerTitle.className = 'roster-drawer-title'
+drawerTitle.textContent = 'Manage agents'
+
+const drawerHint = document.createElement('p')
+drawerHint.className = 'roster-drawer-hint'
+drawerHint.textContent =
+  'Reorder the picker, rename or delete agents you made, and duplicate any agent — a shipped one included — into an editable copy.'
+
+// The drawer opens MODAL, in the platform top layer: a `ui-toast-region` living in the normal layer paints
+// UNDER the ::backdrop while it is open, so a toast alone would be invisible feedback exactly when the user
+// is acting. This line is the in-drawer twin — the same sentence, inside the surface that is on top.
+// `role="status"` (an implicit aria-live="polite" region) announces it to AT without stealing focus.
+const drawerStatus = document.createElement('p')
+drawerStatus.className = 'roster-drawer-status'
+drawerStatus.setAttribute('role', 'status')
+
+const rosterList = document.createElement('div')
+rosterList.className = 'roster-list'
+
+const drawerDone = document.createElement('ui-button') as UIButtonElement
+drawerDone.setAttribute('variant', 'soft')
+drawerDone.className = 'roster-drawer-done'
+drawerDone.textContent = 'Done'
+drawerDone.addEventListener('click', () => {
+  drawer.open = false
+})
+
+const drawerFooter = document.createElement('footer')
+drawerFooter.className = 'roster-drawer-footer'
+drawerFooter.append(drawerDone)
+drawer.append(drawerTitle, drawerHint, drawerStatus, rosterList, drawerFooter)
+
+/** Feedback for every drawer verb: the in-drawer status line FIRST (it is the one the user can actually see
+ *  while a modal drawer holds the top layer), then the page's own toast — the record, and the only feedback
+ *  when the SAME handler is reached from the header's overflow item or the config surface's Delete row with
+ *  no drawer open at all. */
+function announce(message: string, urgent = false): void {
+  drawerStatus.textContent = message
+  notify(message, urgent)
+}
+
+/** The ONE choke point after any roster mutation (LLD §7): re-read the ORDERED roster into the captured
+ *  `roster` array (its CONTENTS are replaced — the binding is a `const` every closure on this page already
+ *  holds), re-push it to the header (which is what makes reorder/rename/delete "drive picker order"), and
+ *  rebuild the drawer list when it is open. */
+function refreshRoster(): void {
+  roster.splice(0, roster.length, ...personaRoster())
+  pushRoster(active.id)
+  if (drawer.open) renderRosterRows()
+}
+
+function openRosterDrawer(): void {
+  drawerStatus.textContent = ''
+  renderRosterRows()
+  drawer.open = true
+}
+
+/** A ghost icon-only row button — a real `aria-label` NAMING THE AGENT is the whole accessible name here
+ *  (button.md's `icon-only` opt-in idiom, the header's own `new-agent-narrow`/overflow-trigger precedent). */
+function rowIconButton(glyph: string, label: string, disabled: boolean, onClick: () => void): UIButtonElement {
+  const button = document.createElement('ui-button') as UIButtonElement
+  button.setAttribute('variant', 'ghost')
+  button.setAttribute('icon-only', '')
+  button.setAttribute('aria-label', label)
+  if (disabled) button.setAttribute('disabled', '')
+  const icon = document.createElement('ui-icon')
+  icon.setAttribute('slot', 'leading')
+  icon.setAttribute('glyph', glyph)
+  button.append(icon)
+  button.addEventListener('click', onClick)
+  return button
+}
+
+/** A ghost row VERB button — the word is always present (ADR-0057: intent never travels by colour alone,
+ *  which is what lets the Delete button below be danger-styled by token repoint and still read correctly).
+ *  `glyph` is optional because the shipped Phosphor pack (icons.gen.ts) carries no copy/duplicate glyph —
+ *  Duplicate ships wordmark-only rather than borrowing a misleading one. */
+function rowVerbButton(text: string, className: string, ariaLabel: string, glyph: string | undefined, onClick: () => void): UIButtonElement {
+  const button = document.createElement('ui-button') as UIButtonElement
+  button.setAttribute('variant', 'ghost')
+  button.setAttribute('aria-label', ariaLabel)
+  button.className = className
+  if (glyph !== undefined) {
+    const icon = document.createElement('ui-icon')
+    icon.setAttribute('slot', 'leading')
+    icon.setAttribute('glyph', glyph)
+    button.append(icon)
+  }
+  button.append(document.createTextNode(text))
+  button.addEventListener('click', onClick)
+  return button
+}
+
+/** Rebuild the whole list from the CURRENT roster — rows are stateless between rebuilds (the one exception
+ *  is an in-flight rename field, which a rebuild drops; a short gesture re-typed, never state corrupted). */
+function renderRosterRows(): void {
+  const rows = roster.map((persona, index) => rosterRow(persona, index))
+  rosterList.replaceChildren(...rows)
+}
+
+/**
+ * One roster row, two lines: `[ ↑ ↓ · label (or the inline rename field) · Shipped? ]` over
+ * `[ Rename? · Duplicate · Delete? ]`. Two lines rather than one, because the drawer is
+ * `min(92vw, 26rem)` wide (drawer.css's own inline-size token) and four verbs plus a long persona label do
+ * not fit one line at that width without truncating the one thing the row exists to identify. The label
+ * takes the free space (`flex: 1 1 auto`) instead of a spacer element.
+ *
+ * PRESET PROTECTION IS STRUCTURAL, not disabled-with-a-tooltip (the `entry-delete`/TKT-0048 precedent —
+ * "present ONLY for a non-built-in entry"): a shipped preset's row never builds a Rename or a Delete button
+ * at all, so there is no destructive affordance to mis-fire, and a "Shipped" tag STATES the protection so
+ * the absence reads as a rule rather than as a missing feature. Duplicate is on every row — that is the
+ * escape hatch that makes the protection free: copy the preset, then edit/rename/delete the copy.
+ */
+function rosterRow(persona: Persona, index: number): HTMLElement {
+  const custom = persona.imported === true
+  const row = document.createElement('div')
+  row.className = 'roster-row'
+  row.dataset.agent = persona.id
+  if (persona.id === active.id) row.setAttribute('data-active', '')
+
+  const head = document.createElement('div')
+  head.className = 'roster-row-head'
+  head.append(
+    rowIconButton('caret-up', `Move ${persona.label} up`, index === 0, () => moveAgent(persona.id, -1)),
+    rowIconButton('caret-down', `Move ${persona.label} down`, index === roster.length - 1, () => moveAgent(persona.id, 1)),
+  )
+  const label = document.createElement('span')
+  label.className = 'roster-row-label'
+  label.textContent = persona.label
+  head.append(label)
+  if (!custom) {
+    const tag = document.createElement('span')
+    tag.className = 'roster-row-tag'
+    tag.textContent = 'Shipped'
+    tag.title = 'A shipped agent — it can be duplicated, but never renamed or deleted.'
+    head.append(tag)
+  }
+
+  const actions = document.createElement('div')
+  actions.className = 'roster-row-actions'
+  if (custom) {
+    actions.append(
+      rowVerbButton('Rename', 'roster-row-rename', `Rename ${persona.label}`, 'pencil-simple', () => beginRename(row, persona)),
+    )
+  }
+  actions.append(rowVerbButton('Duplicate', 'roster-row-duplicate', `Duplicate ${persona.label}`, undefined, () => duplicateAgent(persona)))
+  if (custom) {
+    actions.append(rowVerbButton('Delete', 'roster-row-delete', `Delete ${persona.label}`, 'trash', () => deleteAgent(persona.id)))
+  }
+
+  row.append(head, actions)
+  return row
+}
+
+/** Reorder — up/down buttons, ruled over drag-and-drop (LLD §7): keyboard-reachable with zero new
+ *  primitives (the fleet has no DnD trait, and inventing one is out of this ticket's scope). The WHOLE id
+ *  list is persisted, not just the swapped pair, so the stored order pins every entry from then on. */
+function moveAgent(id: string, delta: -1 | 1): void {
+  const ids = roster.map((p) => p.id)
+  const from = ids.indexOf(id)
+  const to = from + delta
+  if (from < 0 || to < 0 || to >= ids.length) return
+  const moved = ids[from]!
+  ids[from] = ids[to]!
+  ids[to] = moved
+  saveRosterOrder(ids)
+  refreshRoster() // the row visibly moves — no toast owed for a reorder
+}
+
+/** Duplicate ANY agent (a preset included) into a fresh editable copy of its CURRENT state — never the
+ *  pristine seed, and never a mutation of the source (LLD §8d). Lands at the roster's end. */
+function duplicateAgent(persona: Persona): void {
+  const copy = duplicatePersonaFrom(persona, personaStore(persona), [...personaRoster(), ...roster])
+  saveImportedPersona(copy) // stamps imported:true ⇒ the copy is deletable/renamable by construction
+  refreshRoster()
+  announce(`Duplicated “${persona.label}” as “${copy.label}”.`)
+}
+
+/** The ONE deletion path all three affordances share (the drawer row calls it directly; the header's
+ *  overflow item and the config surface's row reach it through `onDeleteAgentRequest`).
+ *
+ *  Order is load-bearing: sweep the records FIRST, then re-read the roster, and only then fall back — so
+ *  `applyPersona`'s own `pushRoster` reads a roster the deleted agent has already left. The fallback is the
+ *  fresh `personaRoster()[0]` (in the default order, the first shipped preset), which can never be the
+ *  deleted agent because presets are undeletable. Deleting a NON-active agent leaves the active store and
+ *  the conversation completely untouched. */
+function deleteAgent(id: string): void {
+  const persona = roster.find((p) => p.id === id)
+  if (persona === undefined) return
+  if (!deleteImportedPersona(persona)) {
+    // Defense in depth — no affordance for a preset is ever rendered, so this is a caller bug, not a path.
+    announce(`“${persona.label}” is a shipped agent and can’t be deleted. Duplicate it instead.`, true)
+    return
+  }
+  const label = persona.label
+  const wasActive = active.id === persona.id
+  roster.splice(0, roster.length, ...personaRoster())
+  const fallback = roster[0]
+  if (wasActive && fallback !== undefined) applyPersona(fallback) // rewrites ACTIVE_PRESET_KEY + re-pushes
+  else pushRoster(active.id)
+  if (drawer.open) renderRosterRows()
+  announce(`Deleted “${label}”.`)
+}
+
+/** Inline rename (custom rows only) — the label swaps for a `ui-text-field` seeded with the current label.
+ *  Enter (the field's own `change` on commit) or the Save button commits; Escape reverts. Native Tab order
+ *  inside a `ui-drawer` is exactly why an embedded field types freely here (drawer.md's Focus note).
+ *
+ *  DISPLAY-ONLY, ids stable (GH #848's shipped rename law): the persisted store keys are keyed on the id,
+ *  so a rename can never orphan an edit. Page-side validation rejects a blank or a colliding label VISIBLY
+ *  and leaves the field open — never a silent no-op. */
+function beginRename(row: HTMLElement, persona: Persona): void {
+  const label = row.querySelector('.roster-row-label')
+  if (label === null) return // already renaming this row
+
+  const field = document.createElement('ui-text-field') as UITextFieldElement
+  field.className = 'roster-row-field'
+  field.setAttribute('size', 'sm')
+  field.setAttribute('label', `Rename ${persona.label}`) // → the editor's aria-label (text-field's labelling seam)
+  field.value = persona.label
+
+  // `change` fires on Enter AND on blur-with-change, and the Save button's own click blurs the field first —
+  // so BOTH paths land here and `settled` is what keeps one gesture from committing (and toasting) twice.
+  let settled = false
+  const commit = (): void => {
+    if (settled) return
+    const next = field.value.trim()
+    if (next.length === 0) {
+      announce('An agent needs a name.', true)
+      return
+    }
+    if (roster.some((p) => p.id !== persona.id && p.label === next)) {
+      announce(`Another agent is already called “${next}”.`, true)
+      return
+    }
+    settled = true
+    if (next !== persona.label && renameImportedPersona(persona, next)) {
+      refreshRoster()
+      announce(`Renamed “${persona.label}” to “${next}”.`)
+      return
+    }
+    renderRosterRows() // unchanged (or a record that vanished under us) — just put the row back
+  }
+  const revert = (): void => {
+    if (settled) return
+    settled = true
+    renderRosterRows()
+  }
+
+  field.addEventListener('change', () => commit())
+  field.addEventListener('keydown', (event) => {
+    if ((event as KeyboardEvent).key !== 'Escape') return
+    // Escape inside a modal `<dialog>` is ALSO the platform's dismiss request: stop it here so the first
+    // Escape cancels the rename rather than closing the whole drawer out from under it.
+    event.preventDefault()
+    event.stopPropagation()
+    revert()
+  })
+
+  const editor = document.createElement('div')
+  editor.className = 'roster-row-edit'
+  const save = rowVerbButton('Save', 'roster-row-save', `Save the new name for ${persona.label}`, 'check', () => commit())
+  editor.append(field, save)
+  label.replaceWith(editor)
+  field.focus()
+}
+
 applyPersona(active) // also stages the header's own roster row (pushRoster, inside applyPersona)
-root.append(admin, toasts, fileInput)
+root.append(admin, toasts, fileInput, drawer)
 
 // GH #114 (review finding): this page uses the SAME site/lib/admin-live-runner.ts backend as
 // agent-admin.ts (identical /__a2ui/agent/chat + /__a2ui/agent endpoints), but was missed when that

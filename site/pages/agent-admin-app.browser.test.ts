@@ -17,7 +17,7 @@
 // cross-engine already; this file does not re-prove it).
 import { describe, it, expect, vi, afterAll } from 'vitest'
 import './agent-admin-app.ts' // side-effect import — mounts the real ui-agent-admin, no page-level header
-import { AGENT_PRESETS, ACTIVE_PRESET_KEY, IMPORTED_PERSONAS_KEY, loadImportedPersonas } from './agent-admin-presets.ts'
+import { AGENT_PRESETS, ACTIVE_PRESET_KEY, IMPORTED_PERSONAS_KEY, ROSTER_ORDER_KEY, loadImportedPersonas, personaRoster } from './agent-admin-presets.ts'
 import { readPersonaFile } from './agent-admin-persona-file.ts'
 
 /** The bytes the Export row handed the browser — captured by the first GH #406 leg, replayed by the
@@ -48,6 +48,15 @@ function admin(): HTMLElement & { store?: StoreLike } {
 function agentSelect(): HTMLElement & { value: string } {
   return admin().querySelector('[data-part="agent-select"]') as HTMLElement & { value: string }
 }
+/** The picker's ROSTER options — every `[role=option]` EXCEPT the two component-owned "Manage" items
+ *  (GH #845's `agent-admin:new-agent` / `agent-admin:edit-agents` sentinels, which are structure, not
+ *  agents). Every roster count/last-row assertion in this file goes through here: a bare
+ *  `[role="option"]` sweep now also collects those two and would answer "16 agents" for a 14-agent roster. */
+function rosterOptions(): HTMLElement[] {
+  return [...agentSelect().querySelectorAll('[role="option"]')].filter(
+    (option) => !(option.getAttribute('value') ?? '').startsWith('agent-admin:'),
+  ) as HTMLElement[]
+}
 async function openOverflow(): Promise<HTMLElement> {
   const overflow = admin().querySelector('[data-part="overflow-menu"]') as HTMLElement
   ;(overflow.querySelector('[data-part="trigger"]') as HTMLElement).click()
@@ -75,7 +84,7 @@ describe("agent-admin-app — the header's agent-select (S7-d: setAgentRoster/on
   it('seeds every preset as a real option, with the resolved active persona already selected', async () => {
     await raf()
     const select = agentSelect()
-    const options = [...select.querySelectorAll('[role="option"]')]
+    const options = rosterOptions()
     expect(options, 'one option per preset').toHaveLength(AGENT_PRESETS.length)
     expect(select.value).toBe(resolvedActive().id)
   })
@@ -148,7 +157,7 @@ describe('agent-admin-app — the persona library (GH #406) via onImportRequest/
 
   it('feeding those exact bytes back through the file input (onImportRequest → fileInput.click()) mints a NEW persona, makes it active, and persists it', async () => {
     expect(exported, 'the export leg above must have run first').not.toBe('')
-    const before = [...agentSelect().querySelectorAll('[role="option"]')].length
+    const before = rosterOptions().length
 
     // The real click path: onImportRequest's registered callback opens the hidden file input — spied,
     // not assumed, so a dead registration (the file input populated below regardless) cannot pass this
@@ -167,11 +176,11 @@ describe('agent-admin-app — the persona library (GH #406) via onImportRequest/
 
     // The handler reads the File asynchronously — poll rather than assume one frame is enough.
     for (let i = 0; i < 50; i += 1) {
-      if (agentSelect().querySelectorAll('[role="option"]').length > before) break
+      if (rosterOptions().length > before) break
       await raf()
     }
     const select = agentSelect()
-    const options = [...select.querySelectorAll('[role="option"]')]
+    const options = rosterOptions()
     expect(options, 'one NEW roster row — an import never overwrites a preset').toHaveLength(before + 1)
 
     const minted = options[options.length - 1]!
@@ -194,7 +203,7 @@ describe('agent-admin-app — the persona library (GH #406) via onImportRequest/
    *  entry-item validation removed this probe passed 20/20 until the clear was added. */
   async function expectRejected(bytes: string, name: string): Promise<void> {
     for (const stale of document.querySelectorAll('ui-toast-region ui-toast')) stale.remove()
-    const before = [...agentSelect().querySelectorAll('[role="option"]')].length
+    const before = rosterOptions().length
     const activeBefore = localStorage.getItem(ACTIVE_PRESET_KEY)
     const libraryBefore = JSON.stringify(loadImportedPersonas())
     const overflow = await openOverflow()
@@ -214,7 +223,7 @@ describe('agent-admin-app — the persona library (GH #406) via onImportRequest/
       await raf()
     }
     expect(lastToast(), `${name}: the failure is announced, never silent`).toContain('Import failed')
-    expect(agentSelect().querySelectorAll('[role="option"]'), `${name}: nothing was minted`).toHaveLength(before)
+    expect(rosterOptions(), `${name}: nothing was minted`).toHaveLength(before)
     expect(localStorage.getItem(ACTIVE_PRESET_KEY), `${name}: the active persona is untouched`).toBe(activeBefore)
     expect(JSON.stringify(loadImportedPersonas()), `${name}: nothing was persisted`).toBe(libraryBefore)
   }
@@ -261,7 +270,7 @@ describe('agent-admin-app — the header\'s New Agent button routes to Generate 
   })
 
   it('clicking the narrow "+" mints a fresh agent, activates it, persists it, AND arms the Builder over it (the Generate path, never a bare blank mint)', async () => {
-    const before = [...agentSelect().querySelectorAll('[role="option"]')].length
+    const before = rosterOptions().length
     const libraryBefore = loadImportedPersonas().length
 
     const newAgentBtn = admin().querySelector('[data-part="new-agent-narrow"]') as HTMLElement
@@ -270,7 +279,7 @@ describe('agent-admin-app — the header\'s New Agent button routes to Generate 
     await raf()
 
     const select = agentSelect()
-    const options = [...select.querySelectorAll('[role="option"]')]
+    const options = rosterOptions()
     expect(options, 'one NEW roster row, no preset overwritten').toHaveLength(before + 1)
     const minted = options[options.length - 1]!
     expect(minted.textContent, 'the mint law: "New agent", numbered only on a real collision').toMatch(/^New agent( \d+)?$/)
@@ -303,6 +312,122 @@ describe('agent-admin-app — the header\'s New Agent button routes to Generate 
 // source" (agent-admin-app.test.ts's own jsdom suite proves the seam's shape; this proves the real click's
 // real effect). Independent of WHICH persona is active at this point in the file (earlier describe blocks
 // switch/mint/import several) — it captures the seed value fresh, dirties it, and proves the exact revert.
+// ── GH #845 — roster management, end to end in a REAL engine ─────────────────────────────────────────────
+// The mechanics are unit-proven twice over (agent-admin-presets.test.ts / agent-admin-persona-file.test.ts
+// for the persistence, agent-admin-app-drawer.test.ts for the page wiring in jsdom). What ONLY a real engine
+// can prove is the part jsdom stubs away: the picker's own commit path (a real trigger-open + option click,
+// not a synthesized event on an un-opened listbox) and `ui-drawer`'s native `<dialog>` — a genuine top-layer
+// `:modal` the roster rows live inside. So this leg drives the WHOLE arc on the real page in one flow:
+// picker → Edit Agents → Duplicate a shipped preset → activate + dirty the copy → Delete it → the keys are
+// swept and the active agent falls back. The localStorage enumeration afterwards is the AC4 proof.
+describe('agent-admin-app — the Edit Agents drawer: duplicate, then delete the ACTIVE custom agent (GH #845)', () => {
+  afterAll(() => {
+    for (const persona of loadImportedPersonas()) {
+      for (const key of Object.keys(localStorage).filter((k) => k.startsWith(`agent-admin-app.${persona.id}.`))) {
+        localStorage.removeItem(key)
+      }
+    }
+    localStorage.removeItem(IMPORTED_PERSONAS_KEY)
+    localStorage.removeItem(ROSTER_ORDER_KEY)
+    localStorage.setItem(ACTIVE_PRESET_KEY, AGENT_PRESETS[0]!.id)
+  })
+
+  const drawerEl = (): HTMLElement & { open: boolean } => document.querySelector('ui-drawer') as HTMLElement & { open: boolean }
+  const dialogEl = (): HTMLDialogElement => drawerEl().querySelector('[data-part="dialog"]') as HTMLDialogElement
+  const rowFor = (id: string): HTMLElement | null => document.querySelector(`.roster-row[data-agent="${id}"]`)
+  const keysUnder = (id: string): string[] => Object.keys(localStorage).filter((k) => k.startsWith(`agent-admin-app.${id}.`))
+  /** The picker's own roster ids (the two `agent-admin:*` Manage sentinels excluded) — the order the drawer
+   *  rows must mirror. Read off the PICKER rather than off a fresh `personaRoster()`: earlier describes in
+   *  this file mint and then localStorage-clean their personas without re-syncing the live page, so storage
+   *  and the mounted page legitimately disagree until the next refresh. */
+  const pickerIds = (): string[] => rosterOptions().map((o) => o.getAttribute('value') ?? '')
+
+  /** Open the drawer through the picker's own "Edit Agents" item — the REAL commit path (`selectionCommit`
+   *  only commits while the panel is open, so the trigger click is not optional). */
+  async function openDrawerViaPicker(): Promise<void> {
+    const select = agentSelect()
+    ;(select.querySelector('[data-part="trigger"]') as HTMLElement).click()
+    await raf()
+    ;(select.querySelector('[data-part="roster-action"][value="agent-admin:edit-agents"]') as HTMLElement).click()
+    await raf()
+  }
+
+  /** Pick a roster entry through the picker (the same real gesture the file's own agent-select leg uses). */
+  async function pickAgent(id: string): Promise<void> {
+    const select = agentSelect()
+    ;(select.querySelector('[data-part="trigger"]') as HTMLElement).click()
+    await raf()
+    ;(select.querySelector(`[role="option"][value="${id}"]`) as HTMLElement).click()
+    await raf()
+  }
+
+  it('opens as a real top-layer :modal listing every roster entry, with the shipped presets structurally unarmed', async () => {
+    await raf()
+    expect(drawerEl(), 'the page mounts the drawer').not.toBeNull()
+    expect(dialogEl().hasAttribute('open'), 'closed until asked for').toBe(false)
+
+    await openDrawerViaPicker()
+
+    expect(dialogEl().hasAttribute('open'), 'the picker item reached the page seam').toBe(true)
+    expect(dialogEl().matches(':modal'), 'and the drawer really entered the platform top layer').toBe(true)
+    const listed = [...document.querySelectorAll('.roster-row')].map((row) => (row as HTMLElement).dataset.agent)
+    expect(listed, 'one row per roster entry, in picker order').toEqual(pickerIds())
+    expect(listed.length, 'every shipped preset at least').toBeGreaterThanOrEqual(AGENT_PRESETS.length)
+    const preset = rowFor(AGENT_PRESETS[0]!.id)!
+    expect(preset.querySelector('.roster-row-delete'), 'a shipped preset carries no delete affordance at all').toBeNull()
+    expect(preset.querySelector('.roster-row-rename'), 'nor a rename one').toBeNull()
+    expect(preset.querySelector('.roster-row-duplicate'), 'duplicate is the escape hatch, and it IS offered').not.toBeNull()
+  })
+
+  it('Duplicate on a preset row mints an editable copy; activating and dirtying it writes real persisted keys', async () => {
+    const source = AGENT_PRESETS[0]!
+    ;(rowFor(source.id)!.querySelector('.roster-row-duplicate') as HTMLElement).click()
+    await raf()
+
+    const copy = personaRoster().find((p) => p.label === `${source.label} (copy)`)
+    expect(copy, 'the copy joined the roster').toBeDefined()
+    expect(copy?.imported, 'as a LIBRARY record — deletable, unlike its source').toBe(true)
+    expect(rowFor(copy!.id)?.querySelector('.roster-row-delete'), 'and its row carries Delete').not.toBeNull()
+
+    // Close the drawer (the page behind a :modal is inert — the picker is unreachable until it closes).
+    ;(document.querySelector('.roster-drawer-done') as HTMLElement).click()
+    await raf()
+    expect(dialogEl().hasAttribute('open')).toBe(false)
+
+    await pickAgent(copy!.id)
+    expect(agentSelect().value, 'the copy is now the active agent').toBe(copy!.id)
+    const store = admin().store
+    store!.set('name', 'DIRTY-BEFORE-DELETE')
+    await raf()
+    expect(keysUnder(copy!.id).length, 'real persisted keys now exist under its namespace').toBeGreaterThan(0)
+    expect(localStorage.getItem(ACTIVE_PRESET_KEY)).toBe(copy!.id)
+  })
+
+  it('Delete on the ACTIVE copy sweeps EVERY key under its prefix, drops the record, and falls back to the first roster entry', async () => {
+    const copy = loadImportedPersonas().find((p) => p.label.endsWith('(copy)'))!
+    expect(copy, 'the previous leg minted it').toBeDefined()
+
+    await openDrawerViaPicker()
+    ;(rowFor(copy.id)!.querySelector('.roster-row-delete') as HTMLElement).click()
+    await raf()
+
+    expect(keysUnder(copy.id), 'zero orphaned agent-admin-app.<id>.* keys — enumerated in the page context').toEqual([])
+    expect(loadImportedPersonas().some((p) => p.id === copy.id), 'the library record is gone').toBe(false)
+    expect(rowFor(copy.id), 'and so is its drawer row').toBeNull()
+
+    const fallback = personaRoster()[0]!
+    expect(fallback.id, 'the fallback is a shipped preset — presets are undeletable, so it always exists').toBe(AGENT_PRESETS[0]!.id)
+    expect(localStorage.getItem(ACTIVE_PRESET_KEY), 'the persisted active id followed the fallback').toBe(fallback.id)
+    expect(admin().store!.get('name'), 'and the surface is showing the fallback persona, not the deleted one').toBe(AGENT_PRESETS[0]!.config.name)
+
+    ;(document.querySelector('.roster-drawer-done') as HTMLElement).click()
+    await raf()
+    expect(agentSelect().value, 'the picker moved to the fallback too').toBe(fallback.id)
+    expect((admin().querySelector('[data-part="delete-agent-row"]') as HTMLElement).hidden, 'and both Delete homes hid themselves — a preset is protected').toBe(true)
+    expect((admin().querySelector('[data-value="delete-agent"]') as HTMLElement).hidden).toBe(true)
+  })
+})
+
 describe("agent-admin-app — the Settings model-grid fold's Reset Agent button genuinely re-seeds the active persona (GH #686, S7-d)", () => {
   it('dirtying the active persona then clicking Reset Agent restores the seed value through a FRESH store instance', async () => {
     await raf()
