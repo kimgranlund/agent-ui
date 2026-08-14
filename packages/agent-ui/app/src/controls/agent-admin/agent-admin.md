@@ -114,19 +114,33 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
   - name: entry
     description: One entry row — `<div data-part="entry" data-entry-id="...">`, `[data-builtin]` present when non-deletable (ADR-0132 Fork 4).
   - name: entry-header
-    description: An entry's label + toggle + (if not built-in) delete affordance row.
+    description: An entry's row. TWO shapes, by kind. The four capability kinds (skill/workflow/resource/tool — `entries.ts`'s `DRAWER_CRUD_KINDS`, GH #917) render `[ entry-toggle | entry-label | entry-spacer | entry-badge? | entry-edit ]` — one affordance, opening the section's per-entry CRUD drawer. Every other kind keeps the inline shape `[ entry-toggle | entry-label | entry-spacer | entry-availability? | entry-rename? | entry-delete? ]` (the last three each opt-in; delete present only for a non-built-in entry).
   - name: entry-label
     description: An entry's display name.
   - name: entry-toggle
     description: An entry's `<ui-switch data-part="entry-toggle">` — enable/disable without deleting (ADR-0132 Fork 4).
   - name: entry-delete
-    description: An entry's remove affordance — a `<ui-button data-part="entry-delete">`, present ONLY for a non-built-in (custom) entry (TKT-0048).
+    description: An entry's remove affordance — a `<ui-button data-part="entry-delete">`, present ONLY for a non-built-in (custom) entry (TKT-0048; ADR-0132 Fork 4 — the protection is STRUCTURAL, never a disabled button). On an inline kind it sits last in the row; on a drawered kind (GH #917) it is the last block of the Edit drawer's scrolling content, inside `entry-form-danger` — never in the drawer footer, where it could sit beside the primary.
+  - name: entry-edit
+    description: GH #917 — a drawered kind's ONE per-entry affordance, a `<ui-button variant="soft" data-part="entry-edit">` ("Edit", `aria-label="Edit {label}"`) opening that entry's form in the section's `entry-drawer`. Replaces the inline Invocable/Rename/Remove cluster AND the row's content editor.
+  - name: entry-badge
+    description: GH #917 — a drawered row's at-a-glance state read ("Invocable"), present only while the entry is user-invocable. The word the mode pill used to carry, now that the CONTROL lives in the drawer; the row's own `data-availability` marker (the card edge) is unchanged.
+  - name: entry-drawer
+    description: GH #917 — one `<ui-drawer edge="end" data-part="entry-drawer">` per drawered SECTION (ADR-0188, composed unmodified), built before the section connects (the control moves its children into the dialog part once) and holding the three GH #918 regions — `entry-drawer-header` / `entry-drawer-content` (`[data-region='content']`) / `entry-drawer-footer`. Their CHILDREN are rebuilt on every open by `entry-form.ts`; the drawer holds no store subscription of its own. Its accessible name rides `aria-labelledby` → the header shell, whose title text changes per open.
   - name: entry-description
     description: An entry's optional one-line description, when non-empty.
   - name: entry-notice
     description: GH #419 — a NON-BLOCKING per-entry notice (`<p data-part="entry-notice" role="status">`), directly under the entry header, above the content it is about. Used today by the modality lint (`prompt-lint.ts`): an ENABLED prompt section whose content names a modality that is switched OFF in Surface Options ("A2UI"/"GenUI", the wire vocabulary, or a compound catalog type name) shows one here, and it clears when the toggle re-enables or the text is reworded. Composition and turns are byte-identical whether it shows or not — this never gates anything. Absent on a clean entry.
   - name: entry-content
-    description: An entry's `<ui-code-editor language="markdown" data-part="entry-content">` — the editable-first markdown source editor (ADR-0139, CodeMirror lazy-loaded), replacing the plain ui-textarea these blocks used before; the content is markdown by construction (composeSystemPrompt's `##`/`###` blocks).
+    description: An entry's `<ui-code-editor language="markdown" data-part="entry-content">` — the editable-first markdown source editor (ADR-0139, CodeMirror lazy-loaded), replacing the plain ui-textarea these blocks used before; the content is markdown by construction (composeSystemPrompt's `##`/`###` blocks). On an inline kind it is mounted on the ROW; on a drawered kind (GH #917) it is the Edit form's last field, taking the content region's remaining height.
+  - name: entry-edit-form
+    description: GH #917 — the per-entry EDIT form inside `entry-drawer`'s content region (`entry-form.ts`, the same builder the add form runs through): name → description → tier (`entry-form-tier` wrapping the `entry-availability` pill) → `entry-content`, then `entry-form-danger` when the entry is not built-in. Every field commits on its OWN `change` through the same handlers the row used inline, so the footer's `entry-form-done` is a dismiss, never a batch Save.
+  - name: entry-form-title
+    description: The drawer form's heading (`<h2>`) — the entry's label in edit mode, the section's add label in add mode. Followed by `entry-form-tag` ("Built-in") for a protected entry, which STATES why that form builds no delete affordance.
+  - name: entry-form-danger
+    description: GH #917 — the Edit form's separated danger block (a hint plus `entry-delete`), the LAST child of the drawer's scrolling content. Structurally absent for a `builtin` entry.
+  - name: entry-form-done
+    description: The Edit drawer footer's ONE primary ("Done") — it closes the drawer; every field already committed on its own change.
   - name: entry-add-toggle
     description: A section's `<ui-button data-part="entry-add-toggle">` ("Add ...", with a leading `plus` icon adornment — TKT-0048), revealing/hiding the add-form.
   - name: entry-add-form

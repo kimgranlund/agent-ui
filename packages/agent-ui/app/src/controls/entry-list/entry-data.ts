@@ -221,3 +221,22 @@ export function renameEntry(entries: readonly Entry[], id: string, label: string
   if (next.length === 0) return [...entries]
   return entries.map((entry) => (entry.id === id ? { ...entry, label: next } : entry))
 }
+
+/** GH #917 (the Phase 0 ruling's D2) — re-describe ONE entry by id: a DESCRIPTION write and nothing else, the
+ *  `renameEntry` shape one member over. Description was settable at ADD time only until the per-entry Edit
+ *  drawer made it a form field (`entry-form.ts`), so this is that field's law, in the same home as every other
+ *  entry write: trimmed (matching `validateNewEntry`'s own `description.trim()` at mint time, so an added and
+ *  an edited description are stored identically), never mutating `entries`, and a fail-closed no-op for an
+ *  `id` no entry carries.
+ *
+ *  The ONE deliberate asymmetry with `renameEntry`: an EMPTY description is legal and is committed. A label is
+ *  the entry's display identity (blank is a refusal, snapped back visibly); a description is optional
+ *  annotation — `validateNewEntry` already mints entries with `description: ''`, and clearing one must
+ *  therefore be as writable as setting it, or the field would be a one-way door.
+ *
+ *  ORTHOGONAL to `label`/`availability`/`enabled` by construction — the spread copies every other member
+ *  untouched, so no two per-entry writes are a read-modify-write that could drop the other's field. */
+export function describeEntry(entries: readonly Entry[], id: string, description: string): Entry[] {
+  const next = description.trim()
+  return entries.map((entry) => (entry.id === id ? { ...entry, description: next } : entry))
+}

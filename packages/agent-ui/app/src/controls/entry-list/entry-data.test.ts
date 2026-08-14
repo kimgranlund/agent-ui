@@ -13,6 +13,7 @@ import {
   isAmbient,
   readEntries,
   renameEntry,
+  describeEntry,
   validateNewEntry,
   type Entry,
   type NewEntryInput,
@@ -290,5 +291,56 @@ describe('renameEntry (GH #848)', () => {
     expect('availability' in fieldLess[0]!, 'no key materialized by renaming').toBe(false)
     expect(entryAvailability(fieldLess[0]!)).toBe(ENTRY_AVAILABILITY.context)
     expect(JSON.parse(JSON.stringify(fieldLess[0]!))).toEqual({ ...seed()[0]!, label: 'Local forecast' })
+  })
+})
+
+// ── GH #917 — describeEntry: the DESCRIPTION write, `renameEntry`'s shape one member over ─────────────────
+describe('describeEntry (GH #917)', () => {
+  const seed = (): Entry[] => [
+    { id: 'weather', kind: 'tool', label: 'Weather (Open-Meteo)', description: 'Current conditions.', content: 'Keyless.', order: 0, enabled: true, builtin: false },
+    { id: 'rules', kind: 'tool', label: 'Rules', description: 'House rules.', content: 'Play fair.', order: 1, enabled: false, builtin: true },
+  ]
+
+  it('re-describes the named entry and NOTHING else — label, id and every other member ride through untouched', () => {
+    const before = seed()
+    const after = describeEntry(before, 'weather', 'Forecasts, hourly.')
+
+    expect(after[0]).toEqual({ ...before[0]!, description: 'Forecasts, hourly.' })
+    expect(after[0]!.label, 'the display name is a DIFFERENT write').toBe('Weather (Open-Meteo)')
+    expect(after[1], 'a sibling entry is byte-identical').toEqual(before[1])
+    expect(before[0]!.description, 'the input list is never mutated').toBe('Current conditions.')
+  })
+
+  it('trims — an added and an edited description are stored identically (validateNewEntry mints trimmed too)', () => {
+    expect(describeEntry(seed(), 'weather', '  Forecasts.  ')[0]!.description).toBe('Forecasts.')
+    expect(validateNewEntry([], 'tool', { label: 'X', description: '  Forecasts.  ', content: '' })).toEqual({
+      ok: true,
+      entry: expect.objectContaining({ description: 'Forecasts.' }),
+    })
+  })
+
+  it('an EMPTY description is committed, not refused — the one deliberate asymmetry with renameEntry', () => {
+    // A label is identity (blank ⇒ a visible no-op); a description is optional annotation, so CLEARING one
+    // must be as writable as setting it, or the field would be a one-way door.
+    for (const blank of ['', '   ', '\n\t']) {
+      expect(describeEntry(seed(), 'weather', blank)[0]!.description, `"${blank}" clears it`).toBe('')
+    }
+    expect(renameEntry(seed(), 'weather', ''), 'while a blank LABEL still changes nothing').toEqual(seed())
+  })
+
+  it('an id no entry carries changes nothing (and never appends a phantom row)', () => {
+    expect(describeEntry(seed(), 'nope', 'Whatever')).toEqual(seed())
+  })
+
+  it('a builtin entry IS re-describable — ADR-0132 Fork 4 protects DELETION, not configuration', () => {
+    expect(describeEntry(seed(), 'rules', 'The table rules.')[1]).toEqual({ ...seed()[1]!, description: 'The table rules.' })
+  })
+
+  it('carries `availability` through untouched, and never materializes the key on a field-less entry', () => {
+    const invocable: Entry[] = [{ ...seed()[0]!, availability: ENTRY_AVAILABILITY.invocable }]
+    expect(describeEntry(invocable, 'weather', 'Edited.')[0]!.availability).toBe(ENTRY_AVAILABILITY.invocable)
+    const fieldLess = describeEntry(seed(), 'weather', 'Edited.')
+    expect('availability' in fieldLess[0]!, 'no key materialized by re-describing').toBe(false)
+    expect(entryAvailability(fieldLess[0]!)).toBe(ENTRY_AVAILABILITY.context)
   })
 })

@@ -47,6 +47,36 @@ beforeAll(() => {
     return internals as unknown as ElementInternals
   }
 })
+
+// GH #917 — the SECOND jsdom-reality stub this file needs, for the same reason as the one above: the four
+// capability sections route their per-entry CRUD through a `ui-drawer`, and jsdom carries no native
+// `<dialog>` modal surface at all (`showModal`/`close` undefined, no `open` IDL accessor, no auto-fired
+// `cancel`/`close`). This is drawer.test.ts's own sanctioned stub, re-applied verbatim in shape: a minimal
+// mirror of the platform contract, enough for `drawer.open = true` to actually reach the DOM here. The REAL
+// top-layer / focus-trap / Escape / backdrop behaviour is proven where it can be — drawer.browser.test.ts and
+// agent-admin.browser.test.ts, in real engines.
+const dialogOpen = new WeakMap<HTMLDialogElement, boolean>()
+beforeAll(() => {
+  const proto = HTMLDialogElement.prototype as unknown as { showModal?: () => void; close?: () => void }
+  if (typeof proto.showModal === 'function') return // a real engine — leave the platform alone
+  Object.defineProperty(HTMLDialogElement.prototype, 'open', {
+    configurable: true,
+    get(this: HTMLDialogElement): boolean {
+      return dialogOpen.get(this) ?? false
+    },
+    set(this: HTMLDialogElement, v: boolean): void {
+      dialogOpen.set(this, Boolean(v))
+    },
+  })
+  proto.showModal = function (this: HTMLDialogElement): void {
+    dialogOpen.set(this, true)
+  }
+  proto.close = function (this: HTMLDialogElement): void {
+    if (!(dialogOpen.get(this) ?? false)) return // already closed — a no-op, no event (platform parity)
+    dialogOpen.set(this, false)
+    this.dispatchEvent(new Event('close'))
+  }
+})
 afterAll(() => {
   HTMLElement.prototype.attachInternals = realAttachInternals
 })
@@ -63,9 +93,20 @@ function mount(el: UIAgentAdminElement): UIAgentAdminElement {
   return el
 }
 
+function sectionEl(el: Element, kind: string): HTMLElement {
+  return el.querySelector(`[data-part="entry-section"][data-kind="${kind}"]`) as HTMLElement
+}
+
 function entryEl(el: Element, kind: string, entryId: string): HTMLElement {
-  const section = el.querySelector(`[data-part="entry-section"][data-kind="${kind}"]`) as HTMLElement
-  return section.querySelector(`[data-part="entry"][data-entry-id="${entryId}"]`) as HTMLElement
+  return sectionEl(el, kind).querySelector(`[data-part="entry"][data-entry-id="${entryId}"]`) as HTMLElement
+}
+
+/** GH #917 — the four capability kinds' per-entry CRUD lives in the section's drawer now: click the row's ONE
+ *  affordance and hand back the form the drawer built for that entry (the Invocable pill, the name field, the
+ *  content editor and the danger row all live inside it). */
+function openEntryDrawer(el: Element, kind: string, entryId: string): HTMLElement {
+  ;(entryEl(el, kind, entryId).querySelector('[data-part="entry-edit"]') as HTMLElement).click()
+  return sectionEl(el, kind).querySelector('[data-part="entry-edit-form"]') as HTMLElement
 }
 
 function toggleOf(row: HTMLElement): HTMLElement & { checked: boolean } {
@@ -294,9 +335,173 @@ describe('mountEntryList — the rename option (GH #848)', () => {
   })
 })
 
+// ── GH #917 — the per-entry Edit DRAWER on the primitive itself (the ADR-0170 cl.8 discipline again: both
+// polarities, so the opt-in's own behaviour AND the byte-identical default are each proven where they live).
+describe('mountEntryList — the entryDrawer option, edit mode (GH #917)', () => {
+  const ROW: Entry = { id: 'a', kind: 'skill', label: 'A', description: 'about A', content: 'body', order: 0, enabled: true, builtin: false }
+  const BUILTIN: Entry = { ...ROW, id: 'b', label: 'B', order: 1, builtin: true }
+  const OPTS = { rename: true, availabilityToggle: true, entryDrawer: true }
+
+  interface Writes {
+    renames: Array<[string, string]>
+    descriptions: Array<[string, string]>
+    contents: Array<[string, string]>
+    modes: Array<[string, string]>
+    deletes: string[]
+  }
+
+  function mountDrawered(entries: readonly Entry[], options: Record<string, unknown> = {}): { section: ReturnType<typeof mountEntryList>; writes: Writes } {
+    const writes: Writes = { renames: [], descriptions: [], contents: [], modes: [], deletes: [] }
+    const handlers: EntryListHandlers = {
+      onToggle: () => {},
+      onAdd: () => true,
+      onContentChange: (id, content) => writes.contents.push([id, content]),
+      onDelete: (id) => writes.deletes.push(id),
+      onRename: (id, label) => writes.renames.push([id, label]),
+      onDescriptionChange: (id, description) => writes.descriptions.push([id, description]),
+      onAvailabilityChange: (id, availability) => writes.modes.push([id, availability]),
+      ...(options.dropDescriptionWriter === true ? { onDescriptionChange: undefined } : {}),
+    }
+    const section = mountEntryList('skill', 'Add skill', handlers, { ...OPTS, ...options })
+    document.body.append(section.host) // the drawer must CONNECT for its children to reach the dialog part
+    mounted.push(section.host)
+    section.render(entries)
+    return { section, writes }
+  }
+
+  const drawerOf = (section: { host: HTMLElement }): HTMLElement & { open: boolean } =>
+    section.host.querySelector('[data-part="entry-drawer"]') as HTMLElement & { open: boolean }
+  const formOf = (section: { host: HTMLElement }): HTMLElement => section.host.querySelector('[data-part="entry-edit-form"]') as HTMLElement
+  function openRow(section: { host: HTMLElement }, id: string): HTMLElement {
+    const row = section.host.querySelector(`[data-part="entry"][data-entry-id="${id}"]`) as HTMLElement
+    ;(row.querySelector('[data-part="entry-edit"]') as HTMLElement).click()
+    return formOf(section)
+  }
+
+  it('ABSENT ⇒ byte-identical: the inline cluster is intact, the row editor mounts, and no drawer exists at all', () => {
+    const { section } = mountDrawered([ROW], { entryDrawer: false })
+    const row = section.host.querySelector('[data-part="entry"]') as HTMLElement
+    expect(row.querySelector('[data-part="entry-rename"]'), 'inline Rename').not.toBeNull()
+    expect(row.querySelector('[data-part="entry-availability"]'), 'inline Invocable pill').not.toBeNull()
+    expect(row.querySelector('[data-part="entry-delete"]'), 'inline Remove').not.toBeNull()
+    expect(row.querySelector('[data-part="entry-content"]'), 'the row editor').not.toBeNull()
+    expect(row.querySelector('[data-part="entry-edit"]')).toBeNull()
+    expect(drawerOf(section)).toBeNull()
+  })
+
+  it('opt-in ⇒ the row collapses to [switch | label | badges | Edit], and the drawer starts closed', () => {
+    const { section } = mountDrawered([ROW, { ...ROW, id: 'c', label: 'C', order: 2, availability: 'invocable' }])
+    const row = section.host.querySelector('[data-part="entry"]') as HTMLElement
+    expect(row.querySelector('[data-part="entry-toggle"]'), 'the enabled switch STAYS — state, not CRUD').not.toBeNull()
+    expect(row.querySelector('[data-part="entry-edit"]')!.getAttribute('aria-label')).toBe('Edit A')
+    for (const part of ['entry-rename', 'entry-availability', 'entry-delete', 'entry-content']) {
+      expect(row.querySelector(`[data-part="${part}"]`), `${part} left the row`).toBeNull()
+    }
+    // The badge carries the state read the pill used to double as; the marker attribute is unchanged.
+    expect(row.querySelector('[data-part="entry-badge"]'), 'an in-context row carries no badge').toBeNull()
+    const invocableRow = section.host.querySelector('[data-part="entry"][data-entry-id="c"]') as HTMLElement
+    expect(invocableRow.getAttribute('data-availability')).toBe('invocable')
+    expect(invocableRow.querySelector('[data-part="entry-badge"]')!.textContent).toBe('Invocable')
+    expect(drawerOf(section).open, 'nothing opens until Edit is pressed').toBe(false)
+  })
+
+  it('the Edit drawer commits per field — name (raw), description (raw), content, tier — and Done just closes', () => {
+    const { section, writes } = mountDrawered([ROW])
+    const form = openRow(section, 'a')
+    expect(drawerOf(section).open).toBe(true)
+    // Field ORDER is the ruling's: name → description → tier → content, then the danger block.
+    expect([...form.querySelectorAll('[data-part^="entry-"]')].map((n) => n.getAttribute('data-part')).filter((p) => p !== 'entry-form-hint')).toEqual([
+      'entry-form-name',
+      'entry-form-description',
+      'entry-form-tier',
+      'entry-availability',
+      'entry-content',
+      'entry-form-danger',
+      'entry-delete',
+    ])
+
+    const name = form.querySelector('[data-part="entry-form-name"]') as UITextFieldElement
+    expect(name.value, 'pre-filled with the stored name').toBe('A')
+    name.value = '  Renamed  '
+    name.dispatchEvent(new Event('change'))
+    expect(writes.renames, 'RAW text — the trim is renameEntry\'s one home').toEqual([['a', '  Renamed  ']])
+    expect(section.host.querySelector('[data-part="entry-form-title"]')!.textContent, 'the drawer title follows the rename').toBe('Renamed')
+
+    const description = form.querySelector('[data-part="entry-form-description"]') as UITextFieldElement
+    expect(description.value).toBe('about A')
+    description.value = 'about A, edited'
+    description.dispatchEvent(new Event('change'))
+    expect(writes.descriptions).toEqual([['a', 'about A, edited']])
+
+    const content = form.querySelector('[data-part="entry-content"]') as HTMLTextAreaElement
+    expect(content.value).toBe('body')
+    content.value = 'new body'
+    content.dispatchEvent(new Event('change'))
+    expect(writes.contents).toEqual([['a', 'new body']])
+
+    const pill = form.querySelector('[data-part="entry-availability"]') as HTMLElement & { pressed: boolean }
+    expect(pill.pressed).toBe(false)
+    pill.dispatchEvent(new CustomEvent('toggle', { cancelable: true, bubbles: true }))
+    expect(writes.modes, 'the mode it is flipping TO').toEqual([['a', 'invocable']])
+
+    ;(section.host.querySelector('[data-part="entry-form-done"]') as HTMLElement).click()
+    expect(drawerOf(section).open, 'Done is a dismiss — every field already committed on its own change').toBe(false)
+  })
+
+  it('an EMPTY name commit writes nothing and puts the stored name back (the visible refusal, unchanged)', () => {
+    const { section, writes } = mountDrawered([ROW])
+    const name = openRow(section, 'a').querySelector('[data-part="entry-form-name"]') as UITextFieldElement
+    name.value = '   '
+    name.dispatchEvent(new Event('change'))
+    expect(writes.renames, 'no write attempt at all').toEqual([])
+    expect(name.value, 'snapped back to the stored name').toBe('A')
+  })
+
+  it('preset protection is STRUCTURAL in the drawer too: a builtin entry gets no Delete block, and a tag says why', () => {
+    const { section, writes } = mountDrawered([ROW, BUILTIN])
+    const form = openRow(section, 'b')
+    expect(form.querySelector('[data-part="entry-form-danger"]'), 'no danger block is built at all').toBeNull()
+    expect(form.querySelector('[data-part="entry-delete"]'), 'and no button to mis-fire').toBeNull()
+    expect(section.host.querySelector('[data-part="entry-form-tag"]')!.textContent).toBe('Built-in')
+    // …and everything Fork 4 does NOT protect stays editable (configuration, not deletion).
+    const name = form.querySelector('[data-part="entry-form-name"]') as UITextFieldElement
+    expect(name.readonly).toBe(false)
+    expect(form.querySelector('[data-part="entry-availability"]'), 'the tier control is there').not.toBeNull()
+    ;(form.querySelector('[data-part="entry-content"]') as HTMLTextAreaElement).dispatchEvent(new Event('change'))
+    expect(writes.contents).toEqual([['b', 'body']])
+  })
+
+  it('Remove commits the delete and closes the drawer — the surface never outlives its subject', () => {
+    const { section, writes } = mountDrawered([ROW])
+    const form = openRow(section, 'a')
+    expect(form.lastElementChild!.getAttribute('data-part'), 'the danger block is the LAST content block').toBe('entry-form-danger')
+    ;(form.querySelector('[data-part="entry-delete"]') as HTMLElement).click()
+    expect(writes.deletes).toEqual(['a'])
+    expect(drawerOf(section).open).toBe(false)
+  })
+
+  it('no onDescriptionChange writer ⇒ the description renders read-only (the additive-optional law)', () => {
+    const { section } = mountDrawered([ROW], { dropDescriptionWriter: true })
+    const description = openRow(section, 'a').querySelector('[data-part="entry-form-description"]') as UITextFieldElement
+    expect(description.readonly).toBe(true)
+    expect((openRow(section, 'a').querySelector('[data-part="entry-form-name"]') as UITextFieldElement).readonly, 'the name is unaffected').toBe(false)
+  })
+
+  it('the form is rebuilt ON OPEN, so it always shows the CURRENT entry — never a stale capture', () => {
+    const { section } = mountDrawered([ROW])
+    openRow(section, 'a')
+    ;(section.host.querySelector('[data-part="entry-form-done"]') as HTMLElement).click()
+    // An external store write lands while the drawer is closed (a sibling toggle, a reload, another surface).
+    section.render([{ ...ROW, label: 'A2', content: 'body2' }])
+    const form = openRow(section, 'a')
+    expect((form.querySelector('[data-part="entry-form-name"]') as UITextFieldElement).value).toBe('A2')
+    expect((form.querySelector('[data-part="entry-content"]') as HTMLTextAreaElement).value).toBe('body2')
+  })
+})
+
 // ── GH #848 — WHICH kinds the composed element flags (the four capability kinds, nothing else) ───────────
 describe('UIAgentAdminElement — the rename affordance is scoped to the four capability kinds (GH #848)', () => {
-  it('Skills/Workflows/Resources/Tools rows carry a rename trigger; prompt-section and catalog rows do NOT', async () => {
+  it('Skills/Workflows/Resources/Tools names are editable; prompt-section, pattern-source and catalog names are NOT', async () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     // One entry per capability kind, plus the seeded prompt sections and the ensured Default catalog row.
     for (const kind of [ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource]) {
@@ -306,18 +511,28 @@ describe('UIAgentAdminElement — the rename affordance is scoped to the four ca
     }
     await whenFlushed()
 
-    const hasRename = (kind: string): boolean =>
-      (el.querySelector(`[data-part="entry-section"][data-kind="${kind}"] [data-part="entry"] [data-part="entry-rename"]`) ?? null) !== null
+    // GH #917 — the QUESTION is unchanged ("may an operator retype this kind's display name?"); only where the
+    // affordance lives moved. A drawered kind answers it with an editable name FIELD inside its Edit drawer;
+    // a non-drawered kind still answers it with the inline `entry-rename` trigger. Asking it this way keeps
+    // one assertion for one rule across both row shapes.
+    const canRename = (kind: string): boolean => {
+      const row = el.querySelector(`[data-part="entry-section"][data-kind="${kind}"] [data-part="entry"]`) as HTMLElement | null
+      const edit = row?.querySelector('[data-part="entry-edit"]') as HTMLElement | null
+      if (!edit) return row?.querySelector('[data-part="entry-rename"]') != null
+      edit.click()
+      const name = sectionEl(el, kind).querySelector('[data-part="entry-form-name"]') as (HTMLElement & { readonly: boolean }) | null
+      return name !== null && !name.readonly
+    }
 
-    expect(hasRename(ENTRY_KINDS.skill)).toBe(true)
-    expect(hasRename(ENTRY_KINDS.workflow)).toBe(true)
-    expect(hasRename(ENTRY_KINDS.resource)).toBe(true)
-    expect(hasRename(ENTRY_KINDS.tool)).toBe(true)
+    expect(canRename(ENTRY_KINDS.skill)).toBe(true)
+    expect(canRename(ENTRY_KINDS.workflow)).toBe(true)
+    expect(canRename(ENTRY_KINDS.resource)).toBe(true)
+    expect(canRename(ENTRY_KINDS.tool)).toBe(true)
     // A prompt-section label IS the composed prompt's `## {label}` heading; a pattern-source/catalog row's
     // label mirrors the pack/registry entry its id keys — none of them free display text.
-    expect(hasRename(ENTRY_KINDS.promptSection), 'Instructions rows are unchanged').toBe(false)
-    expect(hasRename(ENTRY_KINDS.patternSource), 'Pattern sources rows are unchanged').toBe(false)
-    expect(hasRename(ENTRY_KINDS.catalog), 'Catalog rows are unchanged').toBe(false)
+    expect(canRename(ENTRY_KINDS.promptSection), 'Instructions rows are unchanged').toBe(false)
+    expect(canRename(ENTRY_KINDS.patternSource), 'Pattern sources rows are unchanged').toBe(false)
+    expect(canRename(ENTRY_KINDS.catalog), 'Catalog rows are unchanged').toBe(false)
   })
 
   it('a rename persists across a reload — a SECOND element instance on the same default store reads the new name', async () => {
@@ -327,9 +542,8 @@ describe('UIAgentAdminElement — the rename affordance is scoped to the four ca
     ] satisfies Entry[])
     await whenFlushed()
 
-    const row = entryEl(first, ENTRY_KINDS.skill, 'web-search')
-    ;(row.querySelector('[data-part="entry-rename"]') as HTMLElement).click()
-    const field = row.querySelector('[data-part="entry-rename-field"]') as UITextFieldElement
+    const field = openEntryDrawer(first, ENTRY_KINDS.skill, 'web-search').querySelector('[data-part="entry-form-name"]') as UITextFieldElement
+    expect(field.value, 'pre-filled with the name being changed').toBe('Web search')
     field.value = 'Research'
     field.dispatchEvent(new Event('change'))
     await whenFlushed()
@@ -341,11 +555,13 @@ describe('UIAgentAdminElement — the rename affordance is scoped to the four ca
     expect(entryEl(second, ENTRY_KINDS.skill, 'web-search').querySelector('[data-part="entry-label"]')!.textContent).toBe('Research')
   })
 
-  // GH #848 × GH #850 — the composed element hands BOTH opt-ins to the same four sections. Proven on the
-  // rendered DOM (not from the options object) that each capability row carries both controls, and that the
-  // three non-capability sections carry neither — one assertion pass over both features, so a future kind
-  // added to one list and not the other shows up here as a mismatch rather than as a silent asymmetry.
-  it('every capability row carries BOTH the rename trigger and the mode pill; the other three sections carry neither', async () => {
+  // GH #848 × GH #850 × GH #917 — the composed element hands the same four sections all three opt-ins. Proven
+  // on the rendered DOM (not from the options object): each capability row is the DRAWERED shape (one Edit
+  // button, no inline rename/mode/remove cluster) whose drawer carries both the name field and the mode pill,
+  // and the three non-capability sections carry none of it. One assertion pass over all three features, so a
+  // future kind added to one list and not the others shows up here as a mismatch rather than as a silent
+  // asymmetry.
+  it('every capability row is the drawered shape, and its drawer carries BOTH the name field and the mode pill; the other three sections carry neither', async () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     for (const kind of [ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource]) {
       el.store!.set(entriesStoreKey(kind), [
@@ -354,18 +570,42 @@ describe('UIAgentAdminElement — the rename affordance is scoped to the four ca
     }
     await whenFlushed()
 
-    const affordances = (kind: string): { rename: boolean; mode: boolean } => {
+    const affordances = (kind: string): Record<string, boolean> => {
       const row = el.querySelector(`[data-part="entry-section"][data-kind="${kind}"] [data-part="entry"]`) as HTMLElement | null
+      const edit = row?.querySelector('[data-part="entry-edit"]') as HTMLElement | null
+      edit?.click()
+      const form = sectionEl(el, kind).querySelector('[data-part="entry-edit-form"]')
       return {
-        rename: row?.querySelector('[data-part="entry-rename"]') != null,
-        mode: row?.querySelector('[data-part="entry-availability"]') != null,
+        edit: edit != null,
+        // The row's OLD trailing cluster: none of it may survive on a drawered row. (`inlineDelete` is
+        // asserted for the drawered kinds only — a NON-drawered kind's non-builtin row still carries its
+        // inline Remove, which is exactly the unchanged behaviour this half is fencing.)
+        inlineRename: row?.querySelector('[data-part="entry-rename"]') != null,
+        inlineMode: row?.querySelector('[data-part="entry-availability"]') != null,
+        inlineDelete: row?.querySelector('[data-part="entry-delete"]') != null,
+        formName: form?.querySelector('[data-part="entry-form-name"]') != null,
+        formMode: form?.querySelector('[data-part="entry-availability"]') != null,
       }
     }
     for (const kind of [ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool]) {
-      expect(affordances(kind), `${kind} rows carry both`).toEqual({ rename: true, mode: true })
+      expect(affordances(kind), `${kind} rows are drawered and their drawer carries both`).toEqual({
+        edit: true,
+        inlineRename: false,
+        inlineMode: false,
+        inlineDelete: false,
+        formName: true,
+        formMode: true,
+      })
     }
     for (const kind of [ENTRY_KINDS.promptSection, ENTRY_KINDS.patternSource, ENTRY_KINDS.catalog]) {
-      expect(affordances(kind), `${kind} rows carry neither`).toEqual({ rename: false, mode: false })
+      const { edit, inlineRename, inlineMode, formName, formMode } = affordances(kind)
+      expect({ edit, inlineRename, inlineMode, formName, formMode }, `${kind} rows carry neither`).toEqual({
+        edit: false,
+        inlineRename: false,
+        inlineMode: false,
+        formName: false,
+        formMode: false,
+      })
     }
   })
 })
@@ -1803,15 +2043,22 @@ describe('UIAgentAdminElement — custom entry authoring (ADR-0132 cl.4, fail-cl
     expect(stored.map((e) => e.id)).toEqual(['deploy', 'deploy-2'])
   })
 
-  it('a custom entry CAN be deleted (unlike a built-in)', () => {
+  // GH #917 — the verb is unchanged, its home is the Edit drawer's danger row (the LAST block of the
+  // scrolling content, never the footer beside the primary).
+  it('a custom entry CAN be deleted from its Edit drawer (unlike a built-in)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     const section = el.querySelector('[data-kind="resource"]') as HTMLElement
     ;(section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = 'Docs site'
     ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
-    const row = entryEl(el, ENTRY_KINDS.resource, 'docs-site')
-    expect(row.querySelector('[data-part="entry-delete"]')).not.toBeNull()
-    ;(row.querySelector('[data-part="entry-delete"]') as HTMLElement).click()
+    const form = openEntryDrawer(el, ENTRY_KINDS.resource, 'docs-site')
+    const remove = form.querySelector('[data-part="entry-delete"]') as HTMLElement
+    expect(remove, 'the danger row is built for a non-builtin entry').not.toBeNull()
+    expect(form.lastElementChild!.getAttribute('data-part'), 'the LAST block of the scrolling content').toBe('entry-form-danger')
+    expect(form.parentElement!.querySelector('[data-part="entry-form-done"]'), 'never in the footer beside the primary').toBeNull()
+    remove.click()
     expect(readEntries(el.store, ENTRY_KINDS.resource)).toHaveLength(0)
+    // The surface editing an entry must not outlive it.
+    expect((sectionEl(el, ENTRY_KINDS.resource).querySelector('[data-part="entry-drawer"]') as HTMLElement & { open: boolean }).open).toBe(false)
   })
 })
 
@@ -1889,12 +2136,14 @@ describe('UIAgentAdminElement — the per-entry availability mode (GH #850/SPEC-
     ;(section.querySelector('[data-part="entry-add-label"]') as UITextFieldElement).value = label
     ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
   }
-  const modePill = (row: HTMLElement): (HTMLElement & { pressed: boolean }) | null =>
-    row.querySelector('[data-part="entry-availability"]') as (HTMLElement & { pressed: boolean }) | null
-  /** The one user gesture: a real `toggle` from the row's mode pill (ui-toggle emits it BEFORE committing
-   *  `pressed`, so this is exactly what a click/Space lands on the wired listener). */
+  const modePill = (scope: HTMLElement): (HTMLElement & { pressed: boolean }) | null =>
+    scope.querySelector('[data-part="entry-availability"]') as (HTMLElement & { pressed: boolean }) | null
+  /** GH #917 — the pill lives in the entry's Edit drawer now, not on the row; the CONTROL and its write are
+   *  unchanged (the same `ui-toggle`, the same `onAvailabilityChange`), so this helper just opens the drawer
+   *  first. The one user gesture is still a real `toggle` (ui-toggle emits it BEFORE committing `pressed`, so
+   *  this is exactly what a click/Space lands on the wired listener). */
   function flipMode(el: UIAgentAdminElement, kind: string, id: string): void {
-    modePill(entryEl(el, kind, id))!.dispatchEvent(new CustomEvent('toggle', { cancelable: true, bubbles: true }))
+    modePill(openEntryDrawer(el, kind, id))!.dispatchEvent(new CustomEvent('toggle', { cancelable: true, bubbles: true }))
   }
   function submit(el: UIAgentAdminElement, text: string): void {
     const composer = el.querySelector('[data-part="canvas"] ui-conversation-composer') as HTMLElement & { value: string }
@@ -1913,7 +2162,9 @@ describe('UIAgentAdminElement — the per-entry availability mode (GH #850/SPEC-
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     for (const kind of [ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool]) {
       addEntry(el, kind, 'Item')
-      expect(modePill(entryEl(el, kind, 'item')), `${kind} offers the mode control`).not.toBeNull()
+      // GH #917 — offered by the entry's Edit drawer, and NOT by its row (where it used to sit inline).
+      expect(modePill(openEntryDrawer(el, kind, 'item')), `${kind} offers the mode control`).not.toBeNull()
+      expect(modePill(entryEl(el, kind, 'item')), `${kind}'s row is the collapsed shape`).toBeNull()
     }
     addEntry(el, ENTRY_KINDS.patternSource, 'Source')
     expect(modePill(entryEl(el, ENTRY_KINDS.patternSource, 'source')), 'pattern-source has its own single-pick semantics').toBeNull()
@@ -1934,7 +2185,9 @@ describe('UIAgentAdminElement — the per-entry availability mode (GH #850/SPEC-
     expect(readEntries(first.store, ENTRY_KINDS.resource)[0]!.availability, 'the store holds the mode').toBe('invocable')
     const flipped = entryEl(first, ENTRY_KINDS.resource, 'menu-pdf')
     expect(flipped.getAttribute('data-availability'), 'the row carries the at-a-glance marker').toBe('invocable')
-    expect(modePill(flipped)!.pressed).toBe(true)
+    // GH #917 — the marker's second half, now that the CONTROL left the row: the word the pill used to carry.
+    expect(flipped.querySelector('[data-part="entry-badge"]')!.textContent).toBe('Invocable')
+    expect(modePill(openEntryDrawer(first, ENTRY_KINDS.resource, 'menu-pdf'))!.pressed).toBe(true)
 
     // …and back again: nothing is one-way, and the returning value is the explicit 'context' literal.
     flipMode(first, ENTRY_KINDS.resource, 'menu-pdf')
@@ -1948,7 +2201,7 @@ describe('UIAgentAdminElement — the per-entry availability mode (GH #850/SPEC-
     const second = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement) // the default persisted store
     const reloaded = entryEl(second, ENTRY_KINDS.resource, 'menu-pdf')
     expect(reloaded.getAttribute('data-availability'), 'survives a reload').toBe('invocable')
-    expect(modePill(reloaded)!.pressed).toBe(true)
+    expect(modePill(openEntryDrawer(second, ENTRY_KINDS.resource, 'menu-pdf'))!.pressed).toBe(true)
   })
 
   it('SPEC-R3 AC1/AC2: the PROSE arm carries neither the invocable entry\'s prose nor its tool id', async () => {
@@ -2862,9 +3115,7 @@ describe('UIAgentAdminElement — the DEV-only live-turn fork (TKT-0052/ADR-0136
     ] satisfies Entry[])
     await whenFlushed()
 
-    const row = entryEl(el, ENTRY_KINDS.tool, 'weather')
-    ;(row.querySelector('[data-part="entry-rename"]') as HTMLElement).click()
-    const field = row.querySelector('[data-part="entry-rename-field"]') as UITextFieldElement
+    const field = openEntryDrawer(el, ENTRY_KINDS.tool, 'weather').querySelector('[data-part="entry-form-name"]') as UITextFieldElement
     field.value = 'Local forecast'
     field.dispatchEvent(new Event('change'))
     await whenFlushed()

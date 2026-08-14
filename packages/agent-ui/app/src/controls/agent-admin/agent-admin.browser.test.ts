@@ -603,15 +603,26 @@ describe('ui-agent-admin cross-engine smoke — the per-entry availability affor
     )
     expect(invocable.borderInlineStartColor).not.toBe(ambient.borderInlineStartColor)
 
-    // The mode control itself — a real ui-toggle with a real box, on BOTH rows (the mode is editable either
-    // way), pressed on the invocable one only.
+    // The invocable row's BADGE — GH #917 moved the CONTROL into the drawer, so the row's at-a-glance read is
+    // the marked edge above plus this word, and both must be really painted (a zero-box badge would pass a
+    // jsdom probe while showing the user nothing).
+    const badge = rowOf('menu-pdf').querySelector('[data-part="entry-badge"]') as HTMLElement
+    expect(badge.textContent).toBe('Invocable')
+    expect(badge.getBoundingClientRect().width, 'a real painted badge').toBeGreaterThan(0)
+    expect(rowOf('house-style').querySelector('[data-part="entry-badge"]'), 'an ambient row carries none').toBeNull()
+
+    // The mode control itself — a real ui-toggle with a real box, in EITHER row's Edit drawer (the mode is
+    // editable either way), pressed on the invocable one only.
+    const section = el.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.skill}"]`) as HTMLElement
     for (const id of ['house-style', 'menu-pdf']) {
-      const pill = rowOf(id).querySelector('[data-part="entry-availability"]') as HTMLElement & { pressed: boolean }
+      ;(rowOf(id).querySelector('[data-part="entry-edit"]') as HTMLElement).click()
+      const pill = section.querySelector('[data-part="entry-availability"]') as HTMLElement & { pressed: boolean }
       expect(pill.tagName.toLowerCase()).toBe('ui-toggle')
       const box = pill.getBoundingClientRect()
       expect(box.width, `${id} pill width`).toBeGreaterThan(0)
       expect(box.height, `${id} pill height`).toBeGreaterThan(0)
       expect(pill.pressed, `${id} pressed state`).toBe(id === 'menu-pdf')
+      ;(section.querySelector('[data-part="entry-form-done"]') as HTMLElement).click()
     }
 
     // …and the whole row is still a full card, not squeezed by the added control.
@@ -916,12 +927,24 @@ describe('ui-agent-admin cross-engine smoke — TKT-0048: entry-list action butt
     labelField.value = 'Web search'
     ;(section.querySelector('[data-part="entry-add-submit"]') as HTMLElement).click()
 
-    const deleteBtn = el.querySelector('[data-kind="skill"] [data-entry-id="web-search"] [data-part="entry-delete"]') as HTMLElement
+    // GH #917 — Remove lives in the entry's Edit drawer now (the danger row at the foot of the scrolling
+    // content), so a real engine has to OPEN the drawer to measure it. That the button paints a real box
+    // inside a `showModal()` top-layer surface is exactly what only a real engine can prove.
+    ;(el.querySelector('[data-kind="skill"] [data-entry-id="web-search"] [data-part="entry-edit"]') as HTMLElement).click()
+    const deleteBtn = section.querySelector('[data-part="entry-delete"]') as HTMLElement
     expect(deleteBtn.tagName.toLowerCase()).toBe('ui-button')
     expect(deleteBtn.textContent).toBe('Remove')
     const box = deleteBtn.getBoundingClientRect()
     expect(box.width).toBeGreaterThan(0)
     expect(box.height).toBeGreaterThan(0)
+    // …and the whole drawer is a real, painted surface around it (the "test the whole shape" discipline —
+    // a real box on the button alone cannot rule out a collapsed dialog).
+    const dialog = section.querySelector('[data-part="entry-drawer"] [data-part="dialog"]') as HTMLElement
+    const dialogBox = dialog.getBoundingClientRect()
+    expect(dialogBox.width).toBeGreaterThan(200)
+    expect(dialogBox.height).toBeGreaterThan(200)
+    expect(box.left).toBeGreaterThanOrEqual(dialogBox.left)
+    expect(box.right).toBeLessThanOrEqual(dialogBox.right)
   })
 })
 

@@ -23,6 +23,9 @@ import {
   composeSystemPrompt,
   composeLiveSystemPrompt,
   hasAvailabilityMode,
+  hasDrawerCrud,
+  DRAWER_CRUD_KINDS,
+  RENAMABLE_KINDS,
   parseCapabilityRowId,
   pickedPatternSource,
   readCatalogEntries,
@@ -360,6 +363,26 @@ describe('the index teaching block (SPEC-R15)', () => {
     const out = composeLiveSystemPrompt(SECTIONS, [skills], { stored: 40 })
     expect(out.indexOf('/bankroll')).toBeLessThan(out.indexOf(CAPABILITY_INDEX_TEACHING))
     expect(out.indexOf(CAPABILITY_INDEX_TEACHING)).toBeLessThan(out.indexOf('## Skills available to you'))
+  })
+})
+
+describe('DRAWER_CRUD_KINDS — the four kinds whose per-entry CRUD is drawered (GH #917)', () => {
+  it('exactly skill/workflow/resource/tool — prompt-section, pattern-source and catalog keep their inline rows', () => {
+    expect([...DRAWER_CRUD_KINDS].sort()).toEqual(['resource', 'skill', 'tool', 'workflow'])
+    for (const kind of [ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool]) {
+      expect(hasDrawerCrud(kind), `${kind} is drawered`).toBe(true)
+    }
+    for (const kind of [ENTRY_KINDS.promptSection, ENTRY_KINDS.patternSource, ENTRY_KINDS.catalog, 'some-future-kind']) {
+      expect(hasDrawerCrud(kind), `${kind} is not`).toBe(false)
+    }
+  })
+
+  it('is its OWN list — a future kind opting into one rule inherits neither of the others', () => {
+    // The three lists coincide TODAY and each exists for a different reason (what may be reached ambiently ·
+    // what may be renamed · whose CRUD is drawered). This is the fence that makes a future divergence a
+    // deliberate edit here rather than a silent inheritance: they are separate arrays, not one filter.
+    expect(DRAWER_CRUD_KINDS).not.toBe(AVAILABILITY_KINDS)
+    expect(DRAWER_CRUD_KINDS).not.toBe(RENAMABLE_KINDS)
   })
 })
 

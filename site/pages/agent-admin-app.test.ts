@@ -32,6 +32,33 @@ afterAll(() => {
   HTMLElement.prototype.attachInternals = realAttachInternals
 })
 
+// ── the jsdom native-`<dialog>` stub (drawer.test.ts verbatim, via agent-admin-app-drawer.test.ts) ────────
+// GH #917 — the mounted `ui-agent-admin`'s capability sections route per-entry CRUD through a `ui-drawer`,
+// and jsdom carries no modal-dialog surface at all (`showModal`/`close`/`open` all absent). The REAL
+// top-layer/focus behaviour is the cross-engine leg; this only makes `open = true` reach the DOM here.
+const dialogOpen = new WeakMap<HTMLDialogElement, boolean>()
+beforeAll(() => {
+  const proto = HTMLDialogElement.prototype as unknown as { showModal?: () => void; close?: () => void }
+  if (typeof proto.showModal === 'function') return
+  Object.defineProperty(HTMLDialogElement.prototype, 'open', {
+    configurable: true,
+    get(this: HTMLDialogElement): boolean {
+      return dialogOpen.get(this) ?? false
+    },
+    set(this: HTMLDialogElement, v: boolean): void {
+      dialogOpen.set(this, Boolean(v))
+    },
+  })
+  proto.showModal = function (this: HTMLDialogElement): void {
+    dialogOpen.set(this, true)
+  }
+  proto.close = function (this: HTMLDialogElement): void {
+    if (!(dialogOpen.get(this) ?? false)) return
+    dialogOpen.set(this, false)
+    this.dispatchEvent(new Event('close'))
+  }
+})
+
 const mounted: Element[] = []
 afterEach(() => {
   for (const el of mounted.splice(0)) el.remove()
@@ -668,11 +695,11 @@ describe('Integrations pack ↔ registry parity (GH #49/#567 S6)', () => {
     mounted.push(admin)
     await whenFlushed()
 
-    // Rename it through the real row affordance.
+    // Rename it through the real affordance — GH #917 moved that to the row's Edit drawer.
     const section = admin.querySelector(`[data-part="entry-section"][data-kind="${ENTRY_KINDS.tool}"]`) as HTMLElement
     const row = section.querySelector('[data-part="entry"][data-entry-id="weather"]') as HTMLElement
-    ;(row.querySelector('[data-part="entry-rename"]') as HTMLElement).click()
-    const field = row.querySelector('[data-part="entry-rename-field"]') as HTMLElement & { value: string }
+    ;(row.querySelector('[data-part="entry-edit"]') as HTMLElement).click()
+    const field = section.querySelector('[data-part="entry-form-name"]') as HTMLElement & { value: string }
     field.value = 'Local forecast'
     field.dispatchEvent(new Event('change'))
     await whenFlushed()
