@@ -24,21 +24,26 @@ import { mountPage, SITE_NAV_ENTRIES } from '../../../../site/pages/_page.ts'
 // re-drifts as the fleet grows. Anti-vacuous floor below guards an empty/failed import reading as 0.
 const RAIL_ENTRIES = SITE_NAV_ENTRIES.length
 
-// ── mount/cleanup ──────────────────────────────────────────────────────────────────────────────────────────
-const ROUTE = '/a2ui-list.html' // a Guides entry → its own name is the selected item + aria-current ("A2UI Dynamic List")
-
-let appRoot: HTMLElement
-beforeEach(() => {
-  history.replaceState(null, '', ROUTE)
+// mountAt — ONE mount helper shared by every describe below (never a bare top-level beforeEach/afterEach):
+// vitest hooks declared outside a `describe` apply to EVERY test in the file, so two independent describes
+// each wanting their own `#app` root would collide (both call `document.createElement('div'); div.id='app'`,
+// leaving two `#app` nodes live at once — `mountPage`'s own `querySelector('#app')` and this file's `rail()`
+// then silently resolve the FIRST one in document order, not the caller's own mount, and a sub-page test
+// reads the WRONG page's rail with no error). Each describe below calls `mountAt(route)` from its OWN
+// `beforeEach` and disposes its OWN root from its OWN `afterEach`, so only one `#app` ever exists at a time.
+let appRoot: HTMLElement | undefined
+function mountAt(route: string): void {
+  history.replaceState(null, '', route)
   appRoot = document.createElement('div')
   appRoot.id = 'app'
   document.body.append(appRoot)
   mountPage({ title: 'nav smoke', intro: 'vertical rail probe' })
-})
-afterEach(async () => {
+}
+async function unmount(): Promise<void> {
   await userEvent.unhover(document.body)
-  appRoot.remove()
-})
+  appRoot?.remove()
+  appRoot = undefined
+}
 
 const rail = (): HTMLElement => document.querySelector('ui-nav-rail[data-site-nav]') as HTMLElement
 const anchors = (): HTMLAnchorElement[] => [...rail().querySelectorAll('a')]
@@ -55,6 +60,10 @@ async function ready(): Promise<void> {
 // ── structure (both engines) ───────────────────────────────────────────────────────────────────────────────
 
 describe('site nav — ui-nav-rail structure (both engines)', () => {
+  const ROUTE = '/a2ui-list.html' // a Guides entry → its own name is the selected item + aria-current ("A2UI Dynamic List")
+  beforeEach(() => mountAt(ROUTE))
+  afterEach(() => unmount())
+
   it('composes a ui-nav-rail fed from the sitemap; one <a> per entry; the active page carries aria-current', async () => {
     await ready()
     expect(rail().tagName.toLowerCase()).toBe('ui-nav-rail')
@@ -68,6 +77,13 @@ describe('site nav — ui-nav-rail structure (both engines)', () => {
     expect(anchors().length).toBe(RAIL_ENTRIES) // every sitemap entry survives as one rail <a> (no drop/dup)
     const current = rail().querySelector('a[aria-current="page"]') as HTMLAnchorElement
     expect(current?.textContent).toContain('A2UI Dynamic List')
+    // GH #884 — aria-current alone isn't the visible signifier: the CSS keys off the item's own `[selected]`
+    // attribute (nav-rail.css:185, the border+ink treatment). A regression that stamps aria-current on the
+    // activator but drops `selected` on the host would still pass the assertion above while shipping the
+    // reported bug (no highlight) — so both are pinned together, one per current page, never zero/never > 1.
+    const selectedItems = [...rail().querySelectorAll('ui-nav-rail-item[selected]')]
+    expect(selectedItems, 'exactly one rail item carries the visible [selected] highlight').toHaveLength(1)
+    expect(selectedItems[0]?.textContent).toContain('A2UI Dynamic List')
   })
 
   it('renders section context-labels and the wide name|tag row (proper name + trailing data-role="tag")', async () => {
@@ -78,5 +94,27 @@ describe('site nav — ui-nav-rail structure (both engines)', () => {
     const tag = rail().querySelector('[data-role="tag"]') as HTMLElement
     expect(tag, 'no name|tag trailing cell rendered').not.toBeNull()
     expect(tag.textContent).toMatch(/^ui-[a-z-]+$/)
+  })
+})
+
+// ── GH #884 — the component-sub-page mapping (isNavCurrent's fallback arm) ─────────────────────────────────
+// A component's Permutations/States sub-pages are NOT their own sitemap entries (only `{tag}-doc.html` is,
+// per the NAV comment in _page.ts) — `isNavCurrent` maps the active NAV group back to that doc entry so the
+// rail still shows where you are while the tab strip carries the sub-pages themselves. This is the SECOND
+// half of #884's acceptance (a sitemap-absent page still selects its parent doc entry) and was previously
+// UNCOVERED by a browser test — a regression here would silently drop the highlight on every Permutations/
+// States page while `isCurrent`-only pages (tested above) kept passing.
+describe('site nav — component sub-page maps to its parent doc entry (GH #884)', () => {
+  const SUB_ROUTE = '/button-permutations.html' // not in SITE_NAV_ENTRIES — only button-doc.html is
+  beforeEach(() => mountAt(SUB_ROUTE))
+  afterEach(() => unmount())
+
+  it('a Permutations sub-page (absent from the sitemap) selects its component\'s -doc.html rail entry', async () => {
+    await ready()
+    const current = rail().querySelector('a[aria-current="page"]') as HTMLAnchorElement
+    expect(current?.getAttribute('href')).toBe('./button-doc.html')
+    const selectedItems = [...rail().querySelectorAll('ui-nav-rail-item[selected]')]
+    expect(selectedItems, 'the API entry — not zero, not the whole group — carries the highlight').toHaveLength(1)
+    expect(selectedItems[0]?.textContent).toContain('ui-button')
   })
 })

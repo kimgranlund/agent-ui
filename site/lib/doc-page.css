@@ -137,6 +137,78 @@
   }
 }
 
+/* ── Attributes — a REAL table-like grid, GH #881 ────────────────────────────────────────────────────────────
+ * The four sibling sequence tables (Properties/Events/Slots/Parts) keep the flowing Form-B fields above: their
+ * column SET varies per table and a prose `description` needs to wrap freely, so a fixed track grid would
+ * either clip it or force it into its own narrow cell. Attributes has no such prose column (ParsedAttribute
+ * carries no `description`) and an EXACT 4-field shape on every row, so it earns a real shared-column-track
+ * layout: `.api-rows--attributes` declares the four tracks ONCE (name/type/default/flags), and both the
+ * `.api-header` label row and every `.api-row` opt into those SAME tracks via `grid-template-columns: subgrid`
+ * — so a row's Type/Default cells align under the row above/below it down the WHOLE table, the exact "TYPE/
+ * DEFAULT columns rag vertically" defect the issue reported (the flowing `.api-row-meta` design above sizes
+ * each row's fields to that row's OWN content, with no shared track). Modern-evergreen-only (`subgrid`), the
+ * same posture the fleet already takes with `:has()`/`@scope`/container queries elsewhere on this site.
+ */
+.api-rows--attributes {
+  display: grid;
+  grid-template-columns: minmax(9rem, 13rem) minmax(7rem, 1fr) minmax(5rem, auto) minmax(6rem, 1fr);
+  column-gap: 1.25rem;
+}
+.api-rows--attributes .api-header,
+.api-rows--attributes .api-row {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  align-items: start;
+  padding: 0.75rem 1rem;
+}
+/* the column-label row — hidden at narrow widths, where each cell self-labels instead (below) */
+.api-rows--attributes .api-header {
+  padding-block-end: 0.4rem;
+  font-size: 0.65rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
+}
+.api-rows--attributes .api-row + .api-row {
+  border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
+}
+.api-rows--attributes .api-row-type,
+.api-rows--attributes .api-row-default,
+.api-rows--attributes .api-row-flags {
+  min-inline-size: 0; /* let a wide chip-set actually wrap inside its own track, not overflow it */
+}
+.api-rows--attributes .api-row-flags .api-badge {
+  align-self: start;
+}
+
+/* narrow — the shared tracks collapse to ONE column (subgrid inherits the parent's `1fr`): the header row (a
+ * column LABEL strip, meaningless stacked) hides, and each cell instead prints its own `data-label` above its
+ * value — the same "no dead horizontal gap, self-label instead" discipline the `.api-field-label` design above
+ * already follows for the sequence tables. */
+@media (max-inline-size: 32rem) {
+  .api-rows--attributes {
+    grid-template-columns: 1fr;
+  }
+  .api-rows--attributes .api-header {
+    display: none;
+  }
+  .api-rows--attributes .api-row {
+    row-gap: 0.3rem;
+  }
+  .api-rows--attributes [data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 650;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--md-sys-color-neutral-on-surface-variant);
+  }
+}
+
 /* ── the markdown-body prose reading design (TKT-0036, Kim's ruling: Direction B) ────────────────────────────
  * `.doc-body` is the class `renderMarkdownBody`'s returned `<article>` carries — the ONE wrapper every page
  * composing a control's `{name}.md` body renders through (composeDocPage AND the standalone callers:
