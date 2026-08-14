@@ -169,6 +169,8 @@ import {
   isModelIncluded,
   modelRoster,
   sanitizeModel,
+  sanitizeAuthoringModel,
+  type SupportedModel,
   runStubAgentTurn,
   sanitizeNumber,
   ADMIN_HELP,
@@ -2438,7 +2440,10 @@ export class UIAgentAdminElement extends UIElement {
     const render = (): void => {
       const roster = modelRoster()
       conversation.models = roster.filter((m) => isModelIncluded(store?.get(MODELS_INCLUDED_KEY), m))
-      conversation.model = sanitizeModel(store?.get('model'), roster)
+      // GH #880 — the interview's picker opens on Sonnet 5 unless this store names a model of its own
+      // (`#modelFor`'s per-context read-time default; the roster above is unchanged either way, since Sonnet
+      // ships INCLUDED and an off-roster/unset value was never offered).
+      conversation.model = this.#modelFor(store, roster)
       conversation.disabled = !isEnabledFlag(store?.get(AGENT_ENABLED_KEY))
     }
     render()
@@ -2664,6 +2669,31 @@ export class UIAgentAdminElement extends UIElement {
     }
   }
 
+  /**
+   * GH #880 (Kim's ruling, 2026-08-14) — THE model read, for every context and every consumer of it: the
+   * picker's committed value, the Model grid's default row, both live arms' request, and the Context: System
+   * projection all call this and nothing else. The per-context DEFAULT is applied HERE, at READ time — the
+   * Builder Interview falls back to Sonnet 5, the test chat keeps `DEFAULT_MODEL_ID` — and a stored choice
+   * still wins on either (`sanitizeAuthoringModel`'s own first clause is `sanitizeModel`'s, verbatim).
+   *
+   * NEVER a store write. Nothing migrates the Builder's store to make its default true: an unset key simply
+   * READS as Sonnet (the `entryAvailability` read-time-default precedent), so a store minted before this
+   * ruling, an imported persona file and a bring-your-own store are all unchanged byte-for-byte — and the
+   * GH #670 fence is untouched, because a read-side default seeds nothing. That fence's own mechanism is a
+   * LOCAL pre-arm field the persona switch empties (`#resetConversationState`); an unarmed pick still
+   * carries into the mint SEED alone, and the unarmed card still paints its neutral "Models" trigger,
+   * because the store that owns the committed value genuinely does not exist yet (`#reflectPreArmPickers`).
+   *
+   * The context is decided by DRIVING-STORE IDENTITY, exactly as `#personaSystemFor` and the consumption
+   * fence decide theirs — never by pane, origin or timing. So the two turn arms, which read whichever store
+   * `#contextFor` handed them, get the right default without threading a second parameter, and the two
+   * draft-only sites (the grid, the Context view) read `this.store` and are therefore byte-unchanged.
+   */
+  #modelFor(store: SettingsStore | undefined, roster: readonly SupportedModel[] = modelRoster()): string {
+    const isAuthoringContext = this.authoringStore !== undefined && store === this.authoringStore
+    return isAuthoringContext ? sanitizeAuthoringModel(store?.get('model'), roster) : sanitizeModel(store?.get('model'), roster)
+  }
+
   /** Feed the composer's Models/Effort pickers from THIS element's own current config (the Figma
    *  chat-input refactor) — `models`/`efforts` are static option lists (no re-render cost in setting them
    *  every call); `model` re-derives from `store`'s CURRENT value (the SAME `sanitizeSelect`/fail-closed
@@ -2684,7 +2714,7 @@ export class UIAgentAdminElement extends UIElement {
     if (!host) return
     const roster = modelRoster()
     const included = store?.get(MODELS_INCLUDED_KEY)
-    const current = sanitizeModel(store?.get('model'), roster)
+    const current = this.#modelFor(store, roster) // the DRAFT's store ⇒ `DEFAULT_MODEL_ID` (GH #880 leaves this read unchanged)
     host.replaceChildren()
     for (const provider of [...new Set(roster.map((m) => m.provider))]) {
       const providerLabel = document.createElement('div')
@@ -2758,7 +2788,7 @@ export class UIAgentAdminElement extends UIElement {
       const roster = modelRoster()
       const included = store?.get(MODELS_INCLUDED_KEY)
       conversation.models = roster.filter((m) => isModelIncluded(included, m))
-      conversation.model = sanitizeModel(store?.get('model'), roster)
+      conversation.model = this.#modelFor(store, roster) // the TEST context's store ⇒ Haiku stays its default (GH #880)
     }
     renderModel()
     const unsubscribe = store?.subscribe?.((key) => {
@@ -2826,7 +2856,9 @@ export class UIAgentAdminElement extends UIElement {
 
     const config: AgentConfigSnapshot = {
       name: typeof store?.get('name') === 'string' ? (store.get('name') as string) : 'Untitled agent',
-      model: sanitizeModel(store?.get('model'), modelRoster()),
+      // GH #880 — the DRIVING context's read: an authoring turn whose Builder store names no model runs on
+      // Sonnet 5, the same value its picker was already showing (one read law, no picker/wire drift).
+      model: this.#modelFor(store),
       temperature: sanitizeNumber(schema, 'temperature', store?.get('temperature'), 0.5),
       toolsEnabled: isEnabledFlag(store?.get(kindEnabledKey(ENTRY_KINDS.tool))),
       systemPrompt,
@@ -2994,7 +3026,8 @@ export class UIAgentAdminElement extends UIElement {
     const request = {
       turn,
       personaSystem: this.#personaSystemFor(store, sections),
-      model: sanitizeModel(store?.get('model'), modelRoster()),
+      // GH #880 — the DRIVING context's read, exactly as the prose arm's snapshot above does it.
+      model: this.#modelFor(store),
       // The composer's Effort picker selection (see AdminSurfaceTurnRequest.effort) — the same dial the
       // plain-chat arm (`#handleSubmit`'s `AdminTurnRequest`) already threads.
       effort: this.#effort,
@@ -3492,7 +3525,7 @@ export class UIAgentAdminElement extends UIElement {
         'Agent',
         {
           name: typeof store?.get('name') === 'string' ? (store.get('name') as string) : 'Untitled agent',
-          model: sanitizeModel(store?.get('model'), modelRoster()),
+          model: this.#modelFor(store), // the DRAFT's store ⇒ `DEFAULT_MODEL_ID` (GH #880 leaves this read unchanged)
           temperature: sanitizeNumber(schema, 'temperature', store?.get('temperature'), 0.5),
           effort: this.#effort,
           active: isEnabledFlag(store?.get(AGENT_ENABLED_KEY)),

@@ -92,6 +92,30 @@ export function sanitizeModel(value: unknown, roster: readonly SupportedModel[])
   return typeof value === 'string' && roster.some((m) => m.id === value) ? value : DEFAULT_MODEL_ID
 }
 
+/** GH #880 (Kim's ruling, 2026-08-14) — the AUTHORING (Builder Interview) context's own default: Sonnet 5,
+ *  not the roster-wide `DEFAULT_MODEL_ID` above. The rationale is the same one the Builder preset's own
+ *  Sonnet-class id already carries (agent-admin-presets.ts / LLD §15: interview quality IS the product) —
+ *  the cheap/fast tier is the right default for a TEST chat, not for the model conducting the interview
+ *  that authors an agent. The test context is untouched: it keeps `DEFAULT_MODEL_ID`. */
+export const AUTHORING_DEFAULT_MODEL_ID: string = 'claude-sonnet-5'
+
+/** The authoring context's model READ — `sanitizeModel`'s first clause verbatim, only the fallback differs.
+ *  A stored value naming a roster model still WINS (an explicit Haiku choice stays Haiku); everything the
+ *  roster does not name — the key absent, a non-string, an off-roster id — reads as Sonnet 5. That is a
+ *  READ-TIME default and never a migration write (the `entryAvailability` precedent, entry-data.ts): a
+ *  Builder store minted before this ruling, an exported/imported persona file, and a bring-your-own store
+ *  are all unchanged byte-for-byte, and no store is ever written to make the default true.
+ *
+ *  ONE fallback rather than two (absent⇒Sonnet, garbage⇒Haiku) on purpose: this function answers "what does
+ *  the interview run on when nothing valid says otherwise", and two answers to that question would be
+ *  arbitrary at exactly the moment a hand-edited config needs a predictable read. The roster-membership
+ *  guard keeps it honest if Sonnet ever leaves `SUPPORTED_MODELS` — an id the picker cannot offer is never
+ *  returned; the read degrades to the roster-wide default instead. */
+export function sanitizeAuthoringModel(value: unknown, roster: readonly SupportedModel[]): string {
+  if (typeof value === 'string' && roster.some((m) => m.id === value)) return value
+  return roster.some((m) => m.id === AUTHORING_DEFAULT_MODEL_ID) ? AUTHORING_DEFAULT_MODEL_ID : DEFAULT_MODEL_ID
+}
+
 /** A model id's display label for the stub reply's citation string — falls back to the raw id itself
  *  (never throws) if `id` isn't one `SUPPORTED_MODELS` names, matching this file's own fail-closed law
  *  for a bring-your-own store's out-of-range values. */
@@ -725,7 +749,9 @@ export interface AdminTurnRequest {
   text: string
   /** `composeLiveSystemPrompt(...)` output — the composed prompt + enabled-capability projection, fresh-read. */
   system: string
-  /** The sanitized `SUPPORTED_MODELS` id (`sanitizeSelect`, `DEFAULT_MODEL_ID` fallback). */
+  /** The sanitized `SUPPORTED_MODELS` id — the DRIVING context's own read (GH #880): `sanitizeModel`
+   *  (`DEFAULT_MODEL_ID` fallback) for the test chat, `sanitizeAuthoringModel` (Sonnet 5 fallback) for the
+   *  Builder Interview. A stored choice wins on either. */
   model: string
   /** The composer's Effort picker selection (the Figma chat-input refactor) — ephemeral, per-conversation
    *  state (unlike `model`, it has no persisted-settings counterpart; `undefined` if the picker was never
@@ -790,7 +816,8 @@ export interface AdminSurfaceTurnRequest {
   /** The composed persona (`composeLiveSystemPrompt(...)`) — rides the producer's ADR-0138 persona seam,
    *  appended AFTER the catalog law (voice/content only, never the wire format). */
   personaSystem: string
-  /** The sanitized `SUPPORTED_MODELS` id. */
+  /** The sanitized `SUPPORTED_MODELS` id — the DRIVING context's own read, exactly `AdminTurnRequest.model`
+   *  above (GH #880: Sonnet 5 is the Builder Interview's fallback, `DEFAULT_MODEL_ID` the test chat's). */
   model: string
   /** The composer's Effort picker selection (the Figma chat-input refactor) — same ephemeral,
    *  per-conversation dial as `AdminTurnRequest.effort` above; `undefined` if the picker was never

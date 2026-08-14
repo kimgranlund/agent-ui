@@ -52,7 +52,15 @@ import type { SettingsStore } from '../settings/store.ts'
 import type { AdminSurfaceTurnEvent, AdminSurfaceTurnRequest } from './agent-admin-schema.ts'
 import { ENTRY_KINDS, initialEntryValues } from './entries.ts'
 import { entriesStoreKey, readEntries } from '../entry-list/entry-data.ts'
-import { DEFAULT_MODEL_ID, SUPPORTED_MODELS, initialValuesFor, defaultAgentConfigSchema } from './agent-admin-schema.ts'
+import {
+  DEFAULT_MODEL_ID,
+  SUPPORTED_MODELS,
+  initialValuesFor,
+  defaultAgentConfigSchema,
+  AUTHORING_DEFAULT_MODEL_ID,
+  sanitizeAuthoringModel,
+  modelRoster,
+} from './agent-admin-schema.ts'
 
 // jsdom reality (the agent-admin.test.ts precedent, verbatim): jsdom's ElementInternals carries no real
 // setFormValue/setValidity, so every composed FACE form control would throw on connect without this stub.
@@ -1085,5 +1093,168 @@ describe('the Authoring row in Surface Options (ADR-0178 cl.3)', () => {
       checked: boolean
     }
     expect(toggle.checked).toBe(true)
+  })
+})
+
+// ── GH #880 — the Builder Interview's own model default: Sonnet 5 (Kim's ruling, 2026-08-14) ─────────────
+// Every model read went through `sanitizeModel(store?.get('model'), roster)`, whose fallback is the
+// ROSTER-WIDE `DEFAULT_MODEL_ID` — Haiku, the cheap/fast tier that is the right default for a TEST chat and
+// the wrong one for the model conducting the interview that authors an agent. The fix is an ABSENT-VALUE
+// read-side default (`sanitizeAuthoringModel`, reached through the element's one `#modelFor` read law):
+// nothing is written, nothing migrates, and the test context is not touched.
+describe('GH #880 — a fresh Builder Interview opens on Sonnet 5; the test chat keeps Haiku', () => {
+  const labelOf = (id: string): string => SUPPORTED_MODELS.find((m) => m.id === id)!.label
+
+  /** A Builder store the way a bring-your-own consumer mints one: the gate, a name, and NO `model` key —
+   *  the exact absent-value state this ruling is about. (`personaStore` above seeds `DEFAULT_MODEL_ID`, so
+   *  it is this file's STORED-CHOICE fixture, never its fresh-context one.) */
+  function modellessBuilder(extra: Record<string, unknown> = {}): SettingsStore {
+    return createMemoryStore({ initial: { [SURFACE_AUTHORING_KEY]: true, name: 'Builder', ...initialEntryValues(), ...extra } })
+  }
+
+  /** The DRAFT with no model of its own either — so "the test chat keeps Haiku" is proven against the same
+   *  absent-value state, not against a seeded value that would pass whatever the fallback did. */
+  function modellessDraft(): SettingsStore {
+    return createMemoryStore({ initial: { ...initialValuesFor(defaultAgentConfigSchema), ...initialEntryValues() } })
+  }
+
+  /** What a pane's Models trigger SAYS — the user-visible half of the claim (the GH #670 idiom, widened to
+   *  take the pane, because this block's whole point is the two panes answering differently at once). */
+  const trigger = (el: UIAgentAdminElement, pane: 'chat' | 'copilot'): HTMLElement =>
+    el.querySelector(`[data-part="${pane}-pane"] [data-picker="models"]`) as HTMLElement
+
+  /** …and the committed value the composer renders it from. */
+  const committed = (el: UIAgentAdminElement, pane: 'chat' | 'copilot'): string | undefined =>
+    (el.querySelector(`[data-part="${pane}-pane"] ui-conversation-composer`) as HTMLElement & { model?: string }).model
+
+  it('the two defaults are genuinely different ids — the anti-vacuous premise every arm below rests on', () => {
+    expect(AUTHORING_DEFAULT_MODEL_ID).toBe('claude-sonnet-5')
+    expect(DEFAULT_MODEL_ID).toBe('claude-haiku-4-5-20251001')
+    expect(AUTHORING_DEFAULT_MODEL_ID).not.toBe(DEFAULT_MODEL_ID)
+    // …and the interview's default is an OFFERED model, not a label the picker cannot commit to.
+    expect(SUPPORTED_MODELS.find((m) => m.id === AUTHORING_DEFAULT_MODEL_ID)?.includedByDefault).toBe(true)
+  })
+
+  it('sanitizeAuthoringModel: absent/garbage read as Sonnet 5, a roster id still WINS, and an absent Sonnet degrades', () => {
+    const roster = modelRoster()
+    expect(sanitizeAuthoringModel(undefined, roster)).toBe(AUTHORING_DEFAULT_MODEL_ID)
+    expect(sanitizeAuthoringModel(null, roster)).toBe(AUTHORING_DEFAULT_MODEL_ID)
+    expect(sanitizeAuthoringModel('', roster)).toBe(AUTHORING_DEFAULT_MODEL_ID)
+    expect(sanitizeAuthoringModel(7, roster)).toBe(AUTHORING_DEFAULT_MODEL_ID)
+    expect(sanitizeAuthoringModel('not-a-model', roster)).toBe(AUTHORING_DEFAULT_MODEL_ID)
+    // An explicit choice wins — INCLUDING one that happens to equal the roster-wide default: the read must
+    // not "correct" a deliberate Haiku interview into Sonnet.
+    expect(sanitizeAuthoringModel(DEFAULT_MODEL_ID, roster)).toBe(DEFAULT_MODEL_ID)
+    expect(sanitizeAuthoringModel('gpt-4.1', roster)).toBe('gpt-4.1')
+    // The roster-membership guard: a roster without Sonnet never returns an id the picker cannot offer.
+    expect(sanitizeAuthoringModel(undefined, [{ id: DEFAULT_MODEL_ID, label: 'Haiku 4.5', provider: 'Anthropic', includedByDefault: true }])).toBe(
+      DEFAULT_MODEL_ID,
+    )
+  })
+
+  it('a FRESH authoring context shows Sonnet 5 while the SAME element’s test chat shows Haiku — and writes nothing', async () => {
+    const draft = modellessDraft()
+    const builder = modellessBuilder()
+    const { el } = mountAdmin({ store: draft, authoringStore: builder })
+    await whenFlushed()
+
+    // The whole rendered shape, both panes at once: two contexts, two defaults, one element.
+    expect([trigger(el, 'copilot').textContent?.trim(), trigger(el, 'chat').textContent?.trim()]).toEqual([
+      labelOf(AUTHORING_DEFAULT_MODEL_ID),
+      labelOf(DEFAULT_MODEL_ID),
+    ])
+    expect([committed(el, 'copilot'), committed(el, 'chat')]).toEqual([AUTHORING_DEFAULT_MODEL_ID, DEFAULT_MODEL_ID])
+
+    // The load-bearing half of "an ABSENT-value READ": neither store was migrated to make the default true.
+    expect(builder.get('model'), 'the Builder store still carries NO model — a read-time default, never a write').toBeUndefined()
+    expect(draft.get('model'), 'and the draft was not written either').toBeUndefined()
+  })
+
+  it('an authoring TURN runs on Sonnet 5 — the wire, not just the trigger label', async () => {
+    const { el, requests } = mountAdmin({ store: modellessDraft(), authoringStore: modellessBuilder() })
+    await whenFlushed()
+    await submit(el, 'a hotel concierge please')
+    expect(requests.at(-1)!.model, 'the request the runner is handed carries the interview’s own default').toBe(AUTHORING_DEFAULT_MODEL_ID)
+
+    // …and a TEST-chat turn from the same element, with the flow still armed, is unmoved.
+    await submit(el, 'hello', 'test')
+    expect(requests.at(-1)!.model, 'the test context never inherits the interview’s default').toBe(DEFAULT_MODEL_ID)
+  })
+
+  it('an explicitly STORED Builder choice still wins — even when it is the roster-wide default', async () => {
+    // The discriminator: a stored Haiku is indistinguishable from "unset" only if the read is broken, so
+    // this is the arm that proves the default is a FALLBACK and not an override.
+    const builder = modellessBuilder({ model: DEFAULT_MODEL_ID })
+    const { el, requests } = mountAdmin({ store: modellessDraft(), authoringStore: builder })
+    await whenFlushed()
+    expect(committed(el, 'copilot')).toBe(DEFAULT_MODEL_ID)
+    expect(trigger(el, 'copilot').textContent?.trim()).toBe(labelOf(DEFAULT_MODEL_ID))
+    await submit(el, 'go')
+    expect(requests.at(-1)!.model).toBe(DEFAULT_MODEL_ID)
+
+    // A LIVE write keeps winning too (props down, callbacks up — the store is the truth from the arm
+    // onward, GH #670), including to an id the ruling's default is nowhere near.
+    builder.set('model', 'gpt-4.1')
+    await whenFlushed()
+    expect(committed(el, 'copilot')).toBe('gpt-4.1')
+    await submit(el, 'again')
+    expect(requests.at(-1)!.model, 'the wire follows the stored choice, never the authoring default').toBe('gpt-4.1')
+    // (Its TRIGGER reads the neutral label here — `gpt-4.1` ships switched OFF in the Model grid, so the
+    // picker does not OFFER it and has no label to name. Pre-existing inclusion behaviour, untouched by this
+    // ruling: the committed value and the wire above are what the default question is about.)
+    expect(trigger(el, 'copilot').textContent?.trim()).toBe('Models')
+  })
+
+  it('the flow never armed at all is byte-unchanged — the test chat’s Haiku default, and no Sonnet anywhere', async () => {
+    const { el, requests } = mountAdmin({ store: modellessDraft() })
+    await whenFlushed()
+    expect(committed(el, 'chat')).toBe(DEFAULT_MODEL_ID)
+    // GH #670 — the unarmed Author card still names no committed model (the store that owns it does not
+    // exist yet); the read-side default must not have turned that honest gap into a printed label.
+    expect(trigger(el, 'copilot').textContent?.trim()).toBe('Models')
+    await submit(el, 'hello', 'test')
+    expect(requests.at(-1)!.model).toBe(DEFAULT_MODEL_ID)
+  })
+
+  it('the default holds across a REWIRE — a second fresh interviewer opens on Sonnet 5 again', async () => {
+    const { el } = mountAdmin({ store: modellessDraft(), authoringStore: modellessBuilder() })
+    await whenFlushed()
+    expect(committed(el, 'copilot')).toBe(AUTHORING_DEFAULT_MODEL_ID)
+
+    // Leave the flow, then re-arm with a DIFFERENT modelless store — the authoring re-read path.
+    el.authoringStore = undefined
+    await whenFlushed()
+    el.authoringStore = modellessBuilder()
+    await whenFlushed()
+    expect(committed(el, 'copilot'), 'the re-armed interview reads the same default, not the spent one').toBe(AUTHORING_DEFAULT_MODEL_ID)
+  })
+
+  it('the GH #670 fence survives — an unarmed pick is cleared by a persona switch, and the next interview opens on Sonnet 5', async () => {
+    const { el } = mountAdmin({ store: modellessDraft() })
+    await whenFlushed()
+    // The page's seed-aware mint, in miniature (the GH #670 idiom): a seed's model rides the MINT, never a
+    // later write, and an absent seed mints a modelless store — exactly the fresh-context state.
+    const seeds: ({ model?: string } | undefined)[] = []
+    el.onGenerateRequest((seed) => {
+      seeds.push(seed)
+      el.authoringStore = modellessBuilder(seed?.model === undefined ? {} : { model: seed.model })
+    })
+    await whenFlushed()
+
+    // Pick a model on the UNARMED card, then switch persona — GH #145's reset empties the pre-arm bridge.
+    const menuItem = el.querySelector(`[data-part="copilot-pane"] [data-part="models-menu"] [data-value="${DEFAULT_MODEL_ID}"]`) as HTMLElement
+    menuItem.dispatchEvent(new Event('click', { bubbles: true }))
+    await whenFlushed()
+    expect(trigger(el, 'copilot').textContent?.trim(), 'the unarmed pick sticks while it is still this persona’s').toBe(labelOf(DEFAULT_MODEL_ID))
+
+    el.store = modellessDraft() // a DIFFERENT store object — a real persona switch
+    await whenFlushed()
+    expect(trigger(el, 'copilot').textContent?.trim(), 'the card repaints neutral: the pick did not survive the switch').toBe('Models')
+
+    await submitFirst(el, 'a hotel concierge please')
+    expect(seeds.map((s) => s?.model), 'the fence held — the stale pick seeded nothing').toEqual([undefined])
+    expect(committed(el, 'copilot'), 'so the next persona’s interview opens on the authoring default, not the stale pick').toBe(
+      AUTHORING_DEFAULT_MODEL_ID,
+    )
   })
 })
