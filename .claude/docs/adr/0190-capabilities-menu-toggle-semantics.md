@@ -14,10 +14,10 @@
 >
 > | Field | Value |
 > |---|---|
-> | **Status** | proposed |
+> | **Status** | accepted |
 > | **Date** | 2026-08-14 |
 > | **Proposed by** | planner seat, GH #891 design dispatch; rev.2 same day, revised to the owner's 2026-08-14 ruling (quoted verbatim in Context) — a proposed ADR's text is revisable before ratification |
-> | **Ratified by** | — (Kim, on accepting the REVISED text) |
+> | **Ratified by** | kimgranlund (repo owner), 2026-08-14, via the [`ratify ADR-0190` utterance](https://github.com/kimgranlund/agent-ui/issues/891#issuecomment-5295370816) — verified + flipped by `scripts/adr_ratify.py` (ADR-0149) |
 > | **Repairs** | `SPEC-R12` (capability-availability-tagging.spec.md §11.4 — the gated requirement this ruling unblocks, now ruled into §12's SPEC-R13; the disclosure constraint lands as SPEC-R14/R15) |
 > | **Supersedes / Superseded by** | — |
 
