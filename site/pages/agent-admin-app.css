@@ -36,3 +36,119 @@ body {
   min-inline-size: 0;
   min-block-size: 0;
 }
+
+/* ── the Edit Agents drawer's page-owned content (GH #845, LLD-C16/§7) ─────────────────────────────────
+ * `ui-drawer` (ADR-0188) supplies the docked surface, the scrim, the focus trap and the motion; everything
+ * below styles only the ROWS this page puts inside it. Colour comes from `--md-sys-color-*` ROLES alone
+ * (never a raw value — tokens.md's consumption invariant), spacing from the `--md-sys-space-*` scale, the
+ * page-sheet idiom every other site page CSS already uses. */
+
+.roster-drawer-title {
+  margin: 0;
+  font-size: var(--md-sys-typescale-title-medium-size);
+  line-height: var(--md-sys-typescale-title-medium-line);
+}
+
+.roster-drawer-hint {
+  margin: var(--md-sys-space-xs) 0 0;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: var(--md-sys-typescale-body-small-size);
+}
+
+/* The in-drawer feedback line: the drawer sits in the platform TOP LAYER, where a page-level toast paints
+   under the ::backdrop — so the same sentence is mirrored here, on top. Empty ⇒ no box at all. */
+.roster-drawer-status {
+  margin: var(--md-sys-space-sm) 0 0;
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: var(--md-sys-typescale-body-small-size);
+}
+
+.roster-drawer-status:empty {
+  display: none;
+}
+
+.roster-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--md-sys-space-xs);
+  margin-block-start: var(--md-sys-space-md);
+}
+
+.roster-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--md-sys-space-xs);
+  padding: var(--md-sys-space-xs) var(--md-sys-space-sm);
+  border: 1px solid var(--md-sys-color-neutral-outline-variant);
+  border-radius: var(--md-sys-shape-corner-base);
+  background: var(--md-sys-color-neutral-surface);
+}
+
+/* The agent currently on screen — a border-side accent, never colour alone (ADR-0057): its Move/Rename
+   labels already name it, and the picker itself carries the same selection. */
+.roster-row[data-active] {
+  border-color: var(--md-sys-color-primary);
+}
+
+.roster-row-head {
+  display: flex;
+  align-items: center;
+  gap: var(--md-sys-space-xs);
+  min-inline-size: 0;
+}
+
+.roster-row-label {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+
+/* States the protection the missing Rename/Delete buttons imply — the absence reads as a rule, not a gap. */
+.roster-row-tag {
+  flex: 0 0 auto;
+  padding-inline: var(--md-sys-space-xs);
+  border-radius: var(--md-sys-shape-corner-base);
+  background: var(--md-sys-color-neutral-surface-high);
+  color: var(--md-sys-color-neutral-on-surface-variant);
+  font-size: var(--md-sys-typescale-label-small-size);
+}
+
+.roster-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--md-sys-space-xs);
+}
+
+.roster-row-edit {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: var(--md-sys-space-xs);
+  min-inline-size: 0;
+}
+
+.roster-row-field {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+/* DANGER INTENT BY TOKEN REPOINT (LLD §6) — the same consumer-side mapping `agent-admin.css` uses for the
+   config surface's Delete button, one family over (primary → danger), keyed here on this page's own row
+   class. `button.css` declares `--ui-button-{bg,bg-hover,bg-active,ink}` at `:where(ui-button)`
+   (specificity 0,0,0) precisely so a consumer can repoint them, so `ui-button`'s three-member variant enum
+   stays untouched. The row keeps the GHOST geometry (transparent at rest, a wash on hover); ADR-0057's
+   non-colour signifier is the verb itself — the button reads "Delete" in words. */
+.roster-row-delete {
+  --ui-button-bg: transparent;
+  --ui-button-bg-hover: var(--md-sys-color-danger-container-low);
+  --ui-button-bg-active: var(--md-sys-color-danger-container);
+  --ui-button-ink: var(--md-sys-color-danger-high);
+}
+
+.roster-drawer-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-block-start: var(--md-sys-space-md);
+}

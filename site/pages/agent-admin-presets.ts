@@ -837,10 +837,116 @@ export function saveImportedPersona(persona: Persona): void {
   localStorage.setItem(IMPORTED_PERSONAS_KEY, JSON.stringify(next))
 }
 
-/** The full roster the page offers: the shipped presets first, then the imported library in import
- *  order. Read FRESH (never cached) — the page rebuilds nothing else when an import lands. */
+// ── roster management: order · delete · rename (GH #845, LLD-C11/C12/C13) ─────────────────────────────
+// The three verbs the Edit Agents drawer needs that the library record alone cannot express. All three are
+// PAGE-OWNED persistence detail (the drawer itself is page composition, agent-admin-app.ts) — nothing here
+// changes what a persona IS, only which ones exist, what they are called, and in what order they are shown.
+//
+// PRESET PROTECTION IS STRUCTURAL, twice over: the page never renders a delete/rename affordance for a
+// shipped preset, and both functions ALSO guard on `imported === true` and return `false` — defense in
+// depth, so a future caller (or a hand-crafted `Persona` object) can never sweep a shipped preset's keys.
+
+/** The persisted display order: an explicit array of persona ids (GH #845, LLD-C11/§8a).
+ *
+ *  Why an ORDER ARRAY rather than an index on the library record: a record-side order cannot order PRESETS
+ *  relative to imported entries (presets never live in `IMPORTED_PERSONAS_KEY`), and the drawer reorders the
+ *  WHOLE roster. It lives beside the other page records under `PERSIST_PREFIX`, deliberately OUTSIDE any
+ *  `agent-admin-app.<id>.` namespace, so `resetPersona`'s prefix sweep can never take it with it. */
+export const ROSTER_ORDER_KEY = `${PERSIST_PREFIX}.rosterOrder`
+
+/** The persisted order, fail-closed exactly like `loadImportedPersonas`: a corrupt/foreign record reads as
+ *  NO order (⇒ today's natural order), never a throw at page boot. */
+export function loadRosterOrder(): string[] {
+  if (typeof localStorage === 'undefined') return []
+  const raw = localStorage.getItem(ROSTER_ORDER_KEY)
+  if (raw === null) return []
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter((id): id is string => typeof id === 'string')
+  } catch {
+    return []
+  }
+}
+
+/** Persist the display order (ids, in display order). Ids that no longer resolve are harmless — the read
+ *  side skips them (`personaRoster`), so a ghost can never resurrect a deleted persona. */
+export function saveRosterOrder(ids: readonly string[]): void {
+  if (typeof localStorage === 'undefined') return
+  localStorage.setItem(ROSTER_ORDER_KEY, JSON.stringify([...ids]))
+}
+
+/** The full roster the page offers: the shipped presets first, then the imported library in import order —
+ *  THEN the persisted display order applied on top (GH #845, LLD-C11/§8a).
+ *
+ *  `personaRoster()` itself is the ONE choke point that applies the order, so every caller (this page or
+ *  another) sees one order rather than each re-deriving it. The rule: ids named by the stored order come
+ *  first, in stored order (an id no longer on the roster is SKIPPED — a ghost from a delete elsewhere, or a
+ *  corrupt record); everything unlisted follows in the natural order above (presets, then imports in import
+ *  order), so a fresh mint/import lands at the end and an absent/empty order record reproduces today's
+ *  order byte for byte. Read FRESH (never cached) — the page rebuilds nothing else when an import lands. */
 export function personaRoster(): Persona[] {
-  return [...AGENT_PRESETS.map(personaFromPreset), ...loadImportedPersonas()]
+  const natural = [...AGENT_PRESETS.map(personaFromPreset), ...loadImportedPersonas()]
+  const order = loadRosterOrder()
+  if (order.length === 0) return natural
+  // A Map keeps insertion (= natural) order for whatever the stored order never names, and deleting as we
+  // go is also what makes a REPEATED id in the record harmless (it can only match once).
+  const unlisted = new Map(natural.map((persona) => [persona.id, persona]))
+  const listed: Persona[] = []
+  for (const id of order) {
+    const persona = unlisted.get(id)
+    if (persona === undefined) continue
+    unlisted.delete(id)
+    listed.push(persona)
+  }
+  return [...listed, ...unlisted.values()]
+}
+
+/** Delete an IMPORTED persona — the roster record, every persisted key it owns, and its slot in the order
+ *  array (GH #845, LLD-C12/§8b). Returns `false` (and touches NOTHING) for a shipped preset.
+ *
+ *  Delete = reset + forget the records, stated as such rather than re-implementing a second sweep:
+ *  (1) `resetPersona` — the tested prefix sweep that drops every `agent-admin-app.<id>.*` key (INCLUDING
+ *      the seedVersion marker, which lives inside that namespace by design) plus the cached store instance;
+ *  (2) the `IMPORTED_PERSONAS_KEY` record — the one thing reset deliberately does NOT touch, because reset
+ *      means "back to how it shipped", not "gone";
+ *  (3) the order array's mention of the id, so a later mint reusing the slug cannot inherit its position.
+ *  `ACTIVE_PRESET_KEY` is deliberately NOT this function's concern — the page's own fallback (`applyPersona`
+ *  on the fresh `personaRoster()[0]`) rewrites it, and doing it here would fight that. */
+export function deleteImportedPersona(persona: Persona): boolean {
+  if (persona.imported !== true) return false
+  resetPersona(persona)
+  if (typeof localStorage !== 'undefined') {
+    const next = loadImportedPersonas().filter((p) => p.id !== persona.id)
+    localStorage.setItem(IMPORTED_PERSONAS_KEY, JSON.stringify(next))
+    const order = loadRosterOrder()
+    if (order.includes(persona.id)) saveRosterOrder(order.filter((id) => id !== persona.id))
+  }
+  return true
+}
+
+/** Rename an IMPORTED persona — DISPLAY ONLY, ids stay stable (GH #845, LLD-C13/§8c; the GH #848 rename
+ *  law). Returns `false` (and touches nothing) for a preset, a blank label, or an id no library record
+ *  answers to.
+ *
+ *  The record is re-read LIVE (`loadImportedPersonas`) rather than trusting the caller's possibly-stale
+ *  object, and only its `label` changes — the `seed` bytes are untouched, and no store key is written at
+ *  all (edits live under the `agent-admin-app.<id>.*` keys, not in the record), so a rename has no
+ *  reload semantics and cannot lose an edit.
+ *
+ *  IN-PLACE rewrite, not `saveImportedPersona`: that helper's append-after-filter shape (correct for a
+ *  fresh import) would move the renamed record to the END of the library, silently reordering the picker
+ *  on a rename. Order is the reorder verb's business alone (LLD-C11), so the rewrite preserves position. */
+export function renameImportedPersona(persona: Persona, label: string): boolean {
+  if (persona.imported !== true) return false
+  const next = label.trim()
+  if (next.length === 0) return false
+  if (typeof localStorage === 'undefined') return false
+  const library = loadImportedPersonas()
+  if (!library.some((p) => p.id === persona.id)) return false
+  const rewritten = library.map((p) => (p.id === persona.id ? { ...p, label: next, imported: true } : p))
+  localStorage.setItem(IMPORTED_PERSONAS_KEY, JSON.stringify(rewritten))
+  return true
 }
 
 // ── the Builder (ADR-0178 cl.4 / LLD-C7, GH #633) ─────────────────────────────────────────────────────

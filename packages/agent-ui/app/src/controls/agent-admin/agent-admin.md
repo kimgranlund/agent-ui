@@ -60,7 +60,11 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
   - name: admin-header
     description: S7-c (admin-three-pane-ia.lld.md §16.1/§16.3) — `<div data-part="admin-header" data-slot="header">`, the `header` slot's one authored child (`#composeHeader`). Three zones in DOM order — `agent-select`, the pane-visibility pair (`pane-pills` wide / `pane-segments` narrow, one CSS band swap, never two copies of the truth), and `header-actions` — landmark role is the slot's own default (`banner`, super-shell.ts's `roleFor`; no `data-landmark` override, matching the anatomy's "no landmark override; the nav retired"). Paints at every band (unlike the retired nav, which used to hide itself wide at ≥54rem — this element reuses that SAME line to swap which of its two pane-visibility/actions renderings paints, never to hide the bar itself).
   - name: agent-select
-    description: S7-c — `<ui-select data-part="agent-select">`, the roster picker `setAgentRoster`/`onAgentSelect` drive. Options are rebuilt wholesale on every `setAgentRoster` call (re-callable — a page re-pushes after a mint/import); the committed value is a silent programmatic write (`value =`, ADR-0019 — no `select` re-emission). The control's own internal `select`/`change` events stay contained (`stopPropagation`) — the closed seven-event set is untouched.
+    description: S7-c — `<ui-select data-part="agent-select">`, the roster picker `setAgentRoster`/`onAgentSelect` drive. Options are rebuilt wholesale on every `setAgentRoster` call (re-callable — a page re-pushes after a mint/import); the committed value is a silent programmatic write (`value =`, ADR-0019 — no `select` re-emission). The control's own internal `select`/`change` events stay contained (`stopPropagation`) — the closed seven-event set is untouched. GH #845 — the rebuild also re-composes the trailing `roster-actions` group at the panel's TAIL (see that part).
+  - name: roster-actions
+    description: GH #845 — the picker's trailing management group, `<div role="group" label="Manage" data-part="roster-actions">`, holding "New Agent" then "Edit Agents" (`roster-action`) in that order. COMPONENT-OWNED structure, never page content. RE-COMPOSED at the tail of EVERY `#applyAgentRoster` run (the wipe widened to remove the previous group), because `ui-select` adopts a newly-appended `[role=option]`/`[role=group]` child at the panel's TAIL — a group built once would sit ABOVE options re-adopted by the next push. The `role="group"` optgroup is the divider VEHICLE (ruled over a separator: select.ts's `#adoptChild` gate adopts only `option`/`group` roles, so a `role="separator"` node would never enter the panel without a `ui-select` change) and its control-created `group-label` header ("Manage", non-interactive, non-focusable, `aria-labelledby`'d) IS the divider + label. Degrade is STRUCTURAL OMISSION, not `[hidden]` — the select's live `items()` accessor does not filter `[hidden]` options, so a hidden sentinel would stay arrow-key reachable onto a `display:none` node (a dead stop in the roving order): each item is composed only while its own seam is registered, and the whole group is absent when neither is.
+  - name: roster-action
+    description: GH #845 — one item of `roster-actions`: a `[role="option"]` child whose `value` is a RESERVED sentinel (see "Registration seams" — `agent-admin:new-agent` / `agent-admin:edit-agents`), interpreted INSIDE this element's own select listener and NEVER forwarded to `onAgentSelect` (a page can never see a fake id). "New Agent" invokes the EXISTING `onNewAgentRequest` seam — a SECOND ENTRY POINT to the one mint flow, never a new one; "Edit Agents" invokes `onEditAgentsRequest`. The pick restores `value` to the active id FIRST (silent, ADR-0019 — the trigger label reverts) and invokes the seam SECOND, so a callback that re-pushes the roster wins last; a queued `#applyAgentRoster` re-run then clears the commit trait's residual internal key + the sentinel's `aria-selected`. Rides the SAME `select` event every other option emits — no new event joins the closed set.
   - name: pane-pills
     description: S7-c — `<div data-part="pane-pills">` holding three `<ui-toggle data-pane="chat|settings|copilot">` (S7-a), the WIDE rendering of the shared shown-set/primary truth (§16.2): icon (identity glyph) + label + a state-icon (Eye/EyeSlash, mirroring membership). A press refuses via `ui-toggle`'s own cancelable-before-commit `toggle` event when it would empty the shown set (the min-one invariant); an accepted press funnels through the SAME `#setPanesShown` mutator the narrow segments and the guided-authoring arm already use. Hidden (CSS, `@container (inline-size < 54rem)`) in favor of `pane-segments` below that line.
   - name: pane-segments
@@ -76,7 +80,7 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
   - name: export-action
     description: S7-c — the wide `onExportRequest` affordance, the `import-action` shape mirrored.
   - name: overflow-menu
-    description: S7-c — the narrow `<ui-menu data-part="overflow-menu" placement="bottom-end">` holding Import/Export as plain menu items (LLD §16.6 OQ-B — Reset stays Settings-only, out of this menu). Its own trigger is icon-only (`dots-three`, `aria-label="More actions"`) and carries NO `data-part` of its own — `ui-menu`'s own connect-time `#ensureParts` stamps `data-part="trigger"` on its first child unconditionally, so this button is addressed scoped through the menu's own part (`[data-part='overflow-menu'] [data-part='trigger']`), never a second, losing attribute name. Each item independently `[hidden]`+`aria-disabled` per its own seam's registration, and the trigger itself hides only when BOTH are gone (an openable-but-empty menu is not a real affordance).
+    description: S7-c — the narrow `<ui-menu data-part="overflow-menu" placement="bottom-end">` holding Import/Export as plain menu items (LLD §16.6 OQ-B — Reset stays Settings-only, out of this menu). Its own trigger is icon-only (`dots-three`, `aria-label="More actions"`) and carries NO `data-part` of its own — `ui-menu`'s own connect-time `#ensureParts` stamps `data-part="trigger"` on its first child unconditionally, so this button is addressed scoped through the menu's own part (`[data-part='overflow-menu'] [data-part='trigger']`), never a second, losing attribute name. Each item independently `[hidden]`+`aria-disabled` per its own seam's registration, and the trigger itself hides only when ALL are gone (an openable-but-empty menu is not a real affordance). GH #845 added a THIRD item, `[data-value="delete-agent"]` ("Delete Agent") — the same `[hidden]`+`aria-disabled` idiom, but gated on the TWO-AXIS rule (`onDeleteAgentRequest` registered AND the ACTIVE entry `deletable`), and danger-inked by a consumer-side repoint (`--ui-agent-admin-danger-item-ink`, plus `--ui-menu-item-bg-hover` repointed on the item itself) with no `ui-menu` source change. The trigger's hide rule widened accordingly: Import AND Export AND Delete all hidden.
   - name: chat-pane
     description: LLD §16.1 — the Chat place's region: `#conversation`, the test `<ui-conversation data-part="chat-pane">`, byte-unchanged in substance from every earlier revision. A direct child of `pane-holder`, first in `PANE_ORDER`.
   - name: settings-pane
@@ -99,6 +103,12 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
     description: S7-d (LLD §16.4) — `<div data-part="reset-agent-row">`, a SIBLING of `model-grid` at the SAME `model` fold's content end (never a child of `model-grid` — that node is wholesale-`replaceChildren`d on every `model`/`modelsIncluded` store change, which would wipe a child on the next re-render). The `bankroll-row` shape verbatim — `[ reset-agent-label | surface-spacer | reset-agent-button ]`, incl. its NOUN-label/VERB-button pairing ("Agent configuration" | Reset Agent) — never the same verb phrase twice at two casings. GH #709 — this WHOLE ROW is `[hidden]` while `onResetRequest` is unregistered, never just its button: the row's label has no standalone value once the one action it names is gone, so a buttonless labeled card was the wrong degrade — reflected through the SAME `#applyActionAvailability` funnel the header's own five action affordances use.
   - name: reset-agent-button
     description: S7-d — the row's `<ui-button data-part="reset-agent-button">` ("Reset Agent"), driving the `onResetRequest` seam. Never hidden or disabled on its own (GH #709) — its ROW is what hides while unregistered.
+  - name: delete-agent-row
+    description: GH #845 — `<div data-part="delete-agent-row">`, `reset-agent-row`'s exact anatomy (`[ delete-agent-label | surface-spacer | delete-agent-button ]`, the NOUN-label/VERB-button pairing "This agent" | Delete Agent) as a FURTHER sibling in the SAME `model` fold's content end — never inside `model-grid` (wholesale-`replaceChildren`d per re-render). The WHOLE ROW is `[hidden]` per GH #709, through the SAME `#applyActionAvailability` funnel, on the TWO-AXIS rule: `onDeleteAgentRequest` registered AND the ACTIVE `AgentRosterEntry.deletable === true`. Presets (field absent ⇒ protected, fail-closed) and unregistered-seam consumers converge on the same hidden state.
+  - name: delete-agent-label
+    description: GH #845 — the row's `<span data-part="delete-agent-label">` ("This agent"), naming the THING the button acts on (`reset-agent-label`'s law verbatim).
+  - name: delete-agent-button
+    description: GH #845 — the row's `<ui-button variant="soft" data-part="delete-agent-button">` ("Delete Agent"), driving `onDeleteAgentRequest` with the ACTIVE entry's id read at CLICK time. Never hidden or disabled on its own — its ROW is what hides (GH #709). DANGER INTENT IS A REPOINT, not a fourth `ui-button` variant: agent-admin.css re-points `--ui-button-{bg,bg-hover,bg-active,ink}` on this part to the element's own `--ui-agent-admin-danger-*` roles, mirroring `[variant='soft']`'s container ladder one family over — `ui-button`'s `[solid, soft, ghost]` enum, its generated props, and its drift gate are all untouched. ADR-0057 — the VERB is the non-color signifier (the `entry-delete` wordmark precedent); no icon owed.
   - name: entry-list
     description: A section's `<div data-part="entry-list">` — the entries themselves, in order.
   - name: entry
@@ -315,6 +325,43 @@ affordance either). `onResetRequest`'s own consumer (S7-d) is the Settings model
 `onAgentSelect`'s callback fires from the header select's own commit; the select's internal `select`/
 `change` events stay contained (`stopPropagation`) — the closed seven-event set (naming.md §4) is
 untouched by this slice, same as every other composed child's events elsewhere in this element.
+
+### GH #845 — two ADDITIVE members of the same family (roster management)
+
+```ts
+onEditAgentsRequest(callback: () => void): void
+onDeleteAgentRequest(callback: (id: string) => void): void
+```
+
+Same semantics as the six above, stated rather than assumed: a callback registration, never a
+CustomEvent; last registration wins; safe before OR after connect. No ADR was owed — this is the
+`onResetRequest` (GH #709) precedent, an additive member inside a frozen shape, not a contract fork.
+
+- **`onEditAgentsRequest`** carries no argument: the management surface is ONE page surface, not a
+  per-agent one, and what it IS stays page-owned (a `ui-drawer` of roster rows in the shipped
+  composition — this element never knows it). Its consumer is the picker's `roster-action` "Edit Agents".
+- **`onDeleteAgentRequest`** carries the ACTIVE entry's id, read from the pushed roster at INVOKE time —
+  so a roster re-push that changes the active agent is honoured with no re-registration. Reset passes
+  nothing because "reset" can only mean the active agent; delete hands the id over so a page's ONE
+  `deleteAgent(id)` handler is shared verbatim by every delete affordance: this element's two homes (the
+  `overflow-menu`'s Delete item and `delete-agent-row`) reach it through this seam, and a page's own
+  management rows call the same handler directly.
+- **New Agent is NOT duplicated as a seam.** The picker's "New Agent" item invokes the EXISTING
+  `onNewAgentRequest` registration — a second entry point to the one mint flow, never a new flow. That
+  seam therefore drives THREE renderings now (the wide button, the narrow `+`, and the picker item),
+  which is why registering it re-composes the picker group as well as flipping the buttons' `[hidden]`.
+
+**`AgentRosterEntry.deletable?: boolean`** (optional) — ABSENT reads PROTECTED. It is read ONLY as a
+visibility gate, never as an instruction: with `onDeleteAgentRequest` registered, a Delete affordance
+paints iff the ACTIVE entry has `deletable === true`. What "deletable" MEANS is page-owned (the shipped
+page maps it to "an imported/minted library persona, not a shipped preset"), exactly as `id`/`label`
+already are.
+
+**Reserved values.** `'agent-admin:new-agent'` and `'agent-admin:edit-agents'` are RESERVED
+`AgentRosterEntry.id`s: they are this element's own `roster-action` sentinels, interpreted in its select
+listener and never forwarded to `onAgentSelect`. A consumer must not use either string as a roster
+entry's id. (Non-colliding by construction with the shipped page's slug-minted `[a-z0-9-]` ids — a colon
+cannot survive the slug.)
 
 ## One primitive, seven instantiations (ADR-0132; genui-surface SPEC-R11 added pattern-source, ADR-0170 added catalog)
 

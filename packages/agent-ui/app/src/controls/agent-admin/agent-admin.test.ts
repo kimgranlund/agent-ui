@@ -982,6 +982,301 @@ describe('UIAgentAdminElement — the unified header bar (S7-c, ADR-0179 GH #686
   })
 })
 
+// ── GH #845 (LLD-C10) — roster management: the picker's trailing group, the sentinel no-leak, and the
+// two-axis Delete gate. jsdom cannot paint the panel, but every mechanic under test here is DOM/state
+// truth: adoption ORDER (ui-select's own MutationObserver relocation — microtask-deferred, hence the
+// double `await Promise.resolve()` the select's own suite established), which nodes exist at all
+// (structural omission is the ruled degrade, never `[hidden]`), and who receives what. The real-engine
+// leg (open the picker, click Edit Agents, the trigger label reverts) lives in agent-admin.browser.test.ts.
+describe("UIAgentAdminElement — the picker's roster-actions group + the two-axis Delete gate (GH #845)", () => {
+  /** ui-select adopts newly-appended [role=option]/[role=group] children into its listbox panel on a
+   *  MutationObserver callback (microtask-deferred) — select.test.ts's own dynamic-options idiom. */
+  const adopted = async (): Promise<void> => {
+    await Promise.resolve()
+    await Promise.resolve()
+  }
+  function selectOf(el: UIAgentAdminElement): HTMLElement & { value: string } {
+    return el.querySelector('[data-part="agent-select"]') as HTMLElement & { value: string }
+  }
+  function panelOf(el: UIAgentAdminElement): HTMLElement {
+    return selectOf(el).querySelector('[data-part="listbox"]') as HTMLElement
+  }
+
+  it("THE TAIL-ADOPTION REGRESSION: after a SECOND setAgentRoster the panel's LAST block is STILL the Manage group, New Agent then Edit Agents", async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.onNewAgentRequest(() => {})
+    el.onEditAgentsRequest(() => {})
+    el.setAgentRoster([{ id: 'a', label: 'Agent A' }], 'a')
+    await adopted()
+    const panel = panelOf(el)
+    expect(panel.lastElementChild?.getAttribute('data-part'), 'the group lands last on the FIRST push').toBe('roster-actions')
+
+    // The whole point of the rebuild ruling: a re-push re-adopts its options at the panel's TAIL, so a
+    // one-time static group would end up ABOVE them. The group must be rebuilt and re-appended too.
+    el.setAgentRoster([{ id: 'a', label: 'Agent A' }, { id: 'b', label: 'Agent B' }], 'b')
+    await adopted()
+    expect(panel.lastElementChild?.getAttribute('data-part'), 'STILL last after a re-push').toBe('roster-actions')
+    expect(panel.querySelectorAll('[data-part="roster-actions"]'), 'exactly one group — the previous one was wiped, never orphaned').toHaveLength(1)
+    const group = panel.lastElementChild as HTMLElement
+    expect([...group.querySelectorAll('[role="option"]')].map((o) => o.textContent)).toEqual(['New Agent', 'Edit Agents'])
+    // The roster options come FIRST, in entry order, and none of them is a sentinel.
+    const values = [...panel.querySelectorAll('[role="option"]')].map((o) => o.getAttribute('value'))
+    expect(values).toEqual(['a', 'b', 'agent-admin:new-agent', 'agent-admin:edit-agents'])
+  })
+
+  it('the group is a real optgroup: role=group, a control-created "Manage" header, aria-labelledby — the divider IS the group label', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.onEditAgentsRequest(() => {})
+    el.setAgentRoster([{ id: 'a', label: 'Agent A' }], 'a')
+    await adopted()
+    const group = panelOf(el).querySelector('[data-part="roster-actions"]') as HTMLElement
+    expect(group.getAttribute('role')).toBe('group')
+    const header = group.querySelector('[data-part="group-label"]') as HTMLElement
+    expect(header.textContent, 'ui-select mints the header from the `label` attribute it then consumes').toBe('Manage')
+    expect(group.getAttribute('aria-labelledby')).toBe(header.id)
+    expect(group.hasAttribute('label'), 'consumed by the control — never left as a stray attribute').toBe(false)
+  })
+
+  it('STRUCTURAL OMISSION, not [hidden]: neither seam registered ⇒ NO group in the DOM at all; each item appears only with its own seam; a late registration composes without a re-push', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.setAgentRoster([{ id: 'a', label: 'Agent A' }], 'a')
+    await adopted()
+    expect(selectOf(el).querySelector('[data-part="roster-actions"]'), 'no seam ⇒ absent, never a hidden node the roving order would stop on').toBeNull()
+
+    el.onEditAgentsRequest(() => {}) // registered AFTER connect, with NO re-push
+    await adopted()
+    let items = [...selectOf(el).querySelectorAll('[data-part="roster-action"]')]
+    expect(items.map((i) => i.textContent), "only the registered seam's item is composed").toEqual(['Edit Agents'])
+
+    el.onNewAgentRequest(() => {})
+    await adopted()
+    items = [...selectOf(el).querySelectorAll('[data-part="roster-action"]')]
+    expect(items.map((i) => i.textContent), 'the second registration joins it, in the ruled order').toEqual(['New Agent', 'Edit Agents'])
+  })
+
+  it('"always present": a registered consumer that NEVER pushed a roster still gets the group (the loosened early-return guard)', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.onNewAgentRequest(() => {})
+    el.onEditAgentsRequest(() => {})
+    await adopted()
+    const group = selectOf(el).querySelector('[data-part="roster-actions"]') as HTMLElement
+    expect(group, 'no setAgentRoster call has ever happened — the group still composes').not.toBeNull()
+    expect([...group.querySelectorAll('[role="option"]')]).toHaveLength(2)
+  })
+
+  it('SENTINEL NO-LEAK: committing "New Agent"/"Edit Agents" invokes ONLY its own seam, restores value to the active id, and reaches #agentSelectCallback ZERO times', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const picks: string[] = []
+    let news = 0
+    let edits = 0
+    el.onAgentSelect((id) => picks.push(id))
+    el.onNewAgentRequest(() => { news += 1 })
+    el.onEditAgentsRequest(() => { edits += 1 })
+    el.setAgentRoster([{ id: 'a', label: 'Agent A' }, { id: 'b', label: 'Agent B' }], 'b')
+    await adopted()
+    const select = selectOf(el)
+    const item = (value: string): HTMLElement =>
+      select.querySelector(`[data-part="roster-action"][value="${value}"]`) as HTMLElement
+
+    item('agent-admin:new-agent').dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(news, 'the pick reached onNewAgentRequest — the EXISTING mint seam, not a second one').toBe(1)
+    expect(picks, "a sentinel NEVER reaches the page's roster-pick callback").toEqual([])
+    expect(select.value, 'the displayed choice reverts to the real active agent').toBe('b')
+
+    item('agent-admin:edit-agents').dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(edits).toBe(1)
+    expect(news, 'the two sentinels never cross-fire').toBe(1)
+    expect(picks).toEqual([])
+    expect(select.value).toBe('b')
+
+    // The queued rebuild clears the commit trait's own residue — no sentinel is left marked selected.
+    await adopted()
+    const marked = [...select.querySelectorAll('[aria-selected="true"]')].map((o) => o.getAttribute('value'))
+    expect(marked, 'only a REAL entry can read selected after the queued re-run').not.toContain('agent-admin:edit-agents')
+
+    // A real entry id still forwards, unchanged — the interpretation is narrow, not a swallow-everything.
+    ;(select.querySelector('[role="option"][value="a"]') as HTMLElement).dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(picks).toEqual(['a'])
+  })
+
+  it('ORDER IS LOAD-BEARING: a seam callback that re-pushes the roster wins last (restore FIRST, invoke SECOND)', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.setAgentRoster([{ id: 'a', label: 'Agent A' }], 'a')
+    // The shipped page's exact shape: New Agent mints a persona and re-pushes with the mint active.
+    el.onNewAgentRequest(() => {
+      el.setAgentRoster([{ id: 'a', label: 'Agent A' }, { id: 'minted', label: 'New agent' }], 'minted')
+    })
+    await adopted()
+    const select = selectOf(el)
+    ;(select.querySelector('[value="agent-admin:new-agent"]') as HTMLElement).dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(select.value, "the callback's own re-push wins — never clobbered by the restore").toBe('minted')
+    await adopted()
+    expect(select.value, 'and the queued rebuild re-applies the SAME active id, not the pre-click one').toBe('minted')
+  })
+
+  it('the two-axis Delete gate, all four states — {seam registered?} × {active entry deletable?} — in BOTH homes', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const item = (): HTMLElement => el.querySelector('[data-value="delete-agent"]') as HTMLElement
+    const row = (): HTMLElement => el.querySelector('[data-part="delete-agent-row"]') as HTMLElement
+    const shown = (): [boolean, boolean] => [!item().hidden, !row().hidden]
+
+    // (1) unregistered × deletable
+    el.setAgentRoster([{ id: 'custom', label: 'Custom', deletable: true }], 'custom')
+    expect(shown(), 'no handler ⇒ nothing to offer').toEqual([false, false])
+
+    // (2) registered × deletable
+    el.onDeleteAgentRequest(() => {})
+    expect(shown(), 'both axes true ⇒ BOTH homes paint').toEqual([true, true])
+    expect(item().getAttribute('aria-disabled')).toBe('false')
+
+    // (3) registered × NOT deletable (a shipped preset — the field ABSENT, fail-closed)
+    el.setAgentRoster([{ id: 'preset', label: 'Preset' }, { id: 'custom', label: 'Custom', deletable: true }], 'preset')
+    expect(shown(), 'a preset shows NEITHER — the axis, not a special case').toEqual([false, false])
+    expect(item().getAttribute('aria-disabled')).toBe('true')
+
+    // (4) an explicit `deletable: false` reads exactly like the absent field
+    el.setAgentRoster([{ id: 'preset', label: 'Preset', deletable: false }], 'preset')
+    expect(shown()).toEqual([false, false])
+
+    // A bare setAgentRoster ALONE flips visibility — no other call, no re-registration.
+    el.setAgentRoster([{ id: 'preset', label: 'Preset' }, { id: 'custom', label: 'Custom', deletable: true }], 'custom')
+    expect(shown(), 'switching the ACTIVE entry to a deletable one reveals both').toEqual([true, true])
+  })
+
+  it('the ••• trigger hides only when Import AND Export AND Delete are all hidden — Delete alone is enough to open onto', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const trigger = el.querySelector('[data-part="overflow-menu"] [data-part="trigger"]') as HTMLElement
+    expect(trigger.hidden, 'nothing registered ⇒ hidden').toBe(true)
+    el.onDeleteAgentRequest(() => {})
+    expect(trigger.hidden, 'registered but the active entry is protected ⇒ still nothing to open onto').toBe(true)
+    el.setAgentRoster([{ id: 'custom', label: 'Custom', deletable: true }], 'custom')
+    expect(trigger.hidden, 'Delete alone makes the menu a real affordance').toBe(false)
+  })
+
+  it('BOTH delete homes hand the callback the CURRENT active id, read at INVOKE time (a re-push changes what the next click sends)', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const deleted: string[] = []
+    el.onDeleteAgentRequest((id) => deleted.push(id))
+    el.setAgentRoster([{ id: 'one', label: 'One', deletable: true }], 'one')
+    ;(el.querySelector('[data-value="delete-agent"]') as HTMLElement).dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(deleted, 'the overflow item carries the id').toEqual(['one'])
+
+    el.setAgentRoster([{ id: 'two', label: 'Two', deletable: true }], 'two')
+    ;(el.querySelector('[data-part="delete-agent-button"]') as HTMLElement).dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(deleted, 'the config row carries the NEW active id — read at invoke, never captured at build').toEqual(['one', 'two'])
+  })
+
+  it('delete-agent-row is a SIBLING of model-grid inside the model fold — a grid re-render must not wipe it (GH #709/#845)', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.onDeleteAgentRequest(() => {})
+    el.setAgentRoster([{ id: 'custom', label: 'Custom', deletable: true }], 'custom')
+    const modelFold = el.querySelector('[data-part="settings-item"][data-item="model"]') as HTMLElement
+    const grid = modelFold.querySelector('[data-part="model-grid"]') as HTMLElement
+    const row = modelFold.querySelector('[data-part="delete-agent-row"]') as HTMLElement
+    expect(grid.contains(row), "never inside the wholesale-replaceChildren'd grid").toBe(false)
+    expect(modelFold.contains(row), "still at the SAME fold's content end").toBe(true)
+    expect(row.previousElementSibling?.getAttribute('data-part'), 'it lands after Reset, the ruled order').toBe('reset-agent-row')
+    el.store?.set('model', el.store.get('model'))
+    expect(el.querySelector('[data-part="delete-agent-button"]'), 'survives a model-grid re-render').not.toBeNull()
+    // The row's own label is never removed — [hidden] on the ROW is what hides it (GH #709's law).
+    expect(el.querySelector('[data-part="delete-agent-label"]')?.textContent).toBe('This agent')
+  })
+
+  it('onEditAgentsRequest/onDeleteAgentRequest: last registration wins, and both are safe BEFORE first connect', async () => {
+    const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    let firstEdit = 0
+    let secondEdit = 0
+    el.onEditAgentsRequest(() => { firstEdit += 1 })
+    el.onEditAgentsRequest(() => { secondEdit += 1 })
+    el.onDeleteAgentRequest(() => {})
+    el.setAgentRoster([{ id: 'custom', label: 'Custom', deletable: true }], 'custom')
+    mount(el)
+    await adopted()
+    expect((el.querySelector('[data-part="delete-agent-row"]') as HTMLElement).hidden, 'pre-connect registration is honest at build time').toBe(false)
+    ;(el.querySelector('[value="agent-admin:edit-agents"]') as HTMLElement).dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect([firstEdit, secondEdit], 'last registration wins — a bare field reassignment').toEqual([0, 1])
+  })
+
+  it('no CustomEvent joins the closed seven-event set — a sentinel pick and a delete both stay contained', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const seen: string[] = []
+    for (const name of ['select', 'change', 'action', 'open', 'close', 'toggle', 'input']) {
+      el.addEventListener(name, () => seen.push(name))
+    }
+    el.onEditAgentsRequest(() => {})
+    el.onDeleteAgentRequest(() => {})
+    el.setAgentRoster([{ id: 'custom', label: 'Custom', deletable: true }], 'custom')
+    await adopted()
+    ;(el.querySelector('[value="agent-admin:edit-agents"]') as HTMLElement).dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    ;(el.querySelector('[data-part="delete-agent-button"]') as HTMLElement).dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await adopted()
+    expect(seen, "the composed children's events stay contained — this element re-emits nothing").toEqual([])
+  })
+})
+
+// ── GH #845 (LLD-C8/C9) — the danger repoint's own text-level gates: role-purity in the CSS, and the
+// descriptor mirroring the parts/seams/reserved values it documents (the descriptor-mirrors-source law).
+// Reads its own file text (not the module-level consts further down this file — those initialize AFTER
+// this describe body runs at collection time).
+describe('GH #845 — danger styling is role-pure, and the descriptor names what shipped', () => {
+  const HERE = `${process.cwd()}/packages/agent-ui/app/src/controls/agent-admin`
+  const cssText = readFileSync(`${HERE}/agent-admin.css`, 'utf8') as string
+  const mdText = readFileSync(`${HERE}/agent-admin.md`, 'utf8') as string
+  const tsText = readFileSync(`${HERE}/agent-admin.ts`, 'utf8') as string
+  /** One declaration block's body, by selector — comments stripped so a rationale never reads as a rule. */
+  function blockFor(selector: string): string {
+    const stripped = cssText.replace(/\/\*[\s\S]*?\*\//g, '')
+    const at = stripped.indexOf(`${selector} {`)
+    expect(at, `${selector} exists in agent-admin.css`).toBeGreaterThan(-1)
+    return stripped.slice(at, stripped.indexOf('}', at))
+  }
+
+  it('every added danger declaration resolves to a role — zero raw colour values (oklch/hex/rgb/hsl)', () => {
+    const RAW_COLOUR = /(oklch|rgba?|hsla?|color-mix)\(|#[0-9a-f]{3,8}\b/i
+    const dangerDecls = cssText
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .split('\n')
+      .filter((line) =>
+        line.includes('--ui-agent-admin-danger') ||
+        line.includes('--ui-button-bg') ||
+        line.includes('--ui-button-ink') ||
+        line.includes('--ui-menu-item-bg-hover'))
+    expect(dangerDecls.length, 'anti-vacuous: the danger chain really is in this sheet').toBeGreaterThan(6)
+    for (const line of dangerDecls) expect(RAW_COLOUR.test(line), line.trim()).toBe(false)
+    // The token block mints from --md-sys-color-danger-* roles, nothing else.
+    for (const role of ['danger-container-low', 'danger-container', 'danger-container-high', 'danger-high', 'danger-on-surface-variant']) {
+      expect(cssText, `the danger chain reads --md-sys-color-${role}`).toContain(`var(--md-sys-color-${role})`)
+    }
+  })
+
+  it("the button repoint consumes the element's OWN danger chain (never a --md-sys-* read at the consuming selector), and ui-button's variant enum is untouched", () => {
+    const block = blockFor("[data-part='delete-agent-button']")
+    for (const prop of ['--ui-button-bg:', '--ui-button-bg-hover:', '--ui-button-bg-active:', '--ui-button-ink:']) {
+      expect(block, `${prop} repointed`).toContain(prop)
+    }
+    expect(block).not.toContain('--md-sys-color')
+    // The fork NOT taken: no fourth variant anywhere in this element's source or sheet.
+    expect(cssText).not.toContain("variant='danger'")
+    expect(tsText).not.toContain("setAttribute('variant', 'danger')")
+  })
+
+  it('the descriptor mirrors the new parts, both seam signatures, `deletable`, and the RESERVED sentinel values', () => {
+    for (const part of ['roster-actions', 'roster-action', 'delete-agent-row', 'delete-agent-label', 'delete-agent-button']) {
+      expect(mdText, `parts[] declares ${part}`).toContain(`  - name: ${part}\n`)
+    }
+    expect(mdText).toContain('onEditAgentsRequest(callback: () => void): void')
+    expect(mdText).toContain('onDeleteAgentRequest(callback: (id: string) => void): void')
+    expect(mdText).toContain('`AgentRosterEntry.deletable?: boolean`')
+    // The reserved values are documented where their own contract lives (the seams fence), verbatim.
+    expect(mdText).toContain("'agent-admin:new-agent'")
+    expect(mdText).toContain("'agent-admin:edit-agents'")
+    expect(mdText.toLowerCase()).toContain('reserved')
+    // And the descriptor's values are the ones the SOURCE actually ships (the mirror, not a claim).
+    expect(tsText).toContain("const AGENT_SELECT_NEW = 'agent-admin:new-agent'")
+    expect(tsText).toContain("const AGENT_SELECT_EDIT = 'agent-admin:edit-agents'")
+  })
+})
+
 describe('UIAgentAdminElement — upgrade + defaults', () => {
   it('upgrades to the class; schema/store both start undefined pre-connect (the ui-settings precedent)', () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement

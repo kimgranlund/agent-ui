@@ -48,6 +48,7 @@ import {
   PERSONA_FILE_KIND,
   PERSONA_FILE_VERSION,
   PERSONA_STATE_KEYS,
+  duplicatePersonaFrom,
   exportPersonaFile,
   importedPersonaFrom,
   mintBlankPersona,
@@ -664,6 +665,60 @@ describe('mintBlankPersona — the roster "New agent → Blank" mint (GH #637 S1
     const persona = mintBlankPersona(blankDefaultSeed(), [])
     const mintedSubset = Object.fromEntries(PERSONA_STATE_KEYS.map((k) => [k, persona.seed[k]]).filter(([, v]) => v !== undefined))
     expect(mintedSubset).toEqual(bareDefault)
+  })
+})
+
+// ── GH #845 (LLD-C14/§8d) — duplicate: any agent, including a shipped preset, into an editable copy ─────
+// The verb that makes "presets can never be deleted or renamed" cost the user nothing. Two claims carry it,
+// and both are asserted against real state rather than shape: the copy's seed is the source's CURRENT
+// EDITED state (the export snapshot, not the pristine seed), and the source — persona object AND persisted
+// store — comes out byte-untouched.
+describe('duplicatePersonaFrom — an editable copy of the CURRENT state (GH #845)', () => {
+  it('the copy’s seed IS the source’s export snapshot (edits included), and the source is never mutated', () => {
+    const source = personaFromPreset(SOURCE_PRESET)
+    const store = authoredStore() // seeded from the preset, then edited the way an admin would
+    const snapshot = readPersonaState(store)
+    const frozenSourceSeed = JSON.stringify(source.seed)
+
+    const copy = duplicatePersonaFrom(source, store, [source])
+
+    expect(copy.seed, 'the copy carries what the live turn would read RIGHT NOW, not the pristine seed').toEqual(snapshot)
+    expect(copy.seed.name, "including the admin's own edit").toBe('Meridian Night Concierge')
+    expect(copy.seed, 'a preset seed would NOT carry the edits — this is the discriminating check').not.toEqual(source.seed)
+    expect(JSON.stringify(source.seed), 'the SOURCE persona is byte-untouched').toBe(frozenSourceSeed)
+    expect(store.get('name'), 'and so is its store').toBe('Meridian Night Concierge')
+  })
+
+  it('a duplicated PRESET is a LIBRARY record — imported:true ⇒ deletable/renamable by the same construction an import gets', () => {
+    const source = personaFromPreset(SOURCE_PRESET)
+    const copy = duplicatePersonaFrom(source, authoredStore(), [source])
+    expect(copy.imported, 'the protection stays on the ORIGINAL; the copy is an ordinary custom agent').toBe(true)
+    expect(source.imported, 'the shipped preset is still a preset').toBeUndefined()
+    expect(copy.tagline).toBe(source.tagline)
+    expect(copy.category, 'the copy inherits the source’s library-pack scope').toBe(source.category)
+  })
+
+  it('identity comes from the ONE collision loop: `-copy` then `-copy-2`, "(copy)" then "(copy 2)" — never a second scheme', () => {
+    const source = personaFromPreset(SOURCE_PRESET)
+    const store = authoredStore()
+    const first = duplicatePersonaFrom(source, store, [source])
+    const second = duplicatePersonaFrom(source, store, [source, first])
+    // The id is slug(label) + the tag — spelled out literally, never derived from the value under test.
+    expect(source.label).toBe('The Hotel Concierge')
+    expect(first.id).toBe('the-hotel-concierge-copy')
+    expect(first.label).toBe(`${source.label} (copy)`)
+    expect(second.id).toBe('the-hotel-concierge-copy-2')
+    expect(second.label).toBe(`${source.label} (copy 2)`)
+    expect(first.id, 'the id is slug-minted off the LABEL, so a colon-bearing sentinel can never be produced').toMatch(/^[a-z0-9-]+$/)
+  })
+
+  it('round-trips as a real persona: saved through saveImportedPersona it joins the roster with its snapshot intact', () => {
+    const source = personaFromPreset(SOURCE_PRESET)
+    const copy = duplicatePersonaFrom(source, authoredStore(), personaRoster())
+    saveImportedPersona(copy)
+    const restored = loadImportedPersonas().find((p) => p.id === copy.id)
+    expect(restored?.seed, 'what a reload reads back').toEqual(copy.seed)
+    expect(personaRoster().some((p) => p.id === copy.id), 'and the page’s roster read carries it').toBe(true)
   })
 })
 
