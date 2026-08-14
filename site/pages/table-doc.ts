@@ -59,7 +59,9 @@ const { content } = mountPage({
 
 composeDocPage(content, descriptor, body, renderSpecimens())
 
-function renderSpecimens(): HTMLElement {
+// EXPORTED (GH #882) so the width-drift gate (table-doc.browser.test.ts) mounts the SAME specimens this page
+// renders — never a hand-rebuilt copy that could quietly diverge from what a reader actually sees.
+export function renderSpecimens(): HTMLElement {
   const section = document.createElement('section')
   section.append(
     heading(2, 'Examples'),
@@ -79,7 +81,13 @@ function labelledTable(title: string, description: string, columns: readonly Col
   table.setAttribute('columns', JSON.stringify(columns))
   table.setAttribute('rows', JSON.stringify(rows))
   table.setAttribute('label', label)
-  table.setAttribute('style', 'max-inline-size:32rem;')
+  // GH #882 — NO width cap here: an artificial `max-inline-size:32rem` used to clip these specimens well
+  // short of the real content column, contradicting the control's own SPEC-R5 fill-the-host contract
+  // (table.css: `table { inline-size: 100% }` — "a narrow table fills the host, no orphaned gutter"). The
+  // cap had no site-wide precedent (no other page's specimen constrains a control's own intrinsic width)
+  // and no documented rationale — a docs-example gap, not a deliberate presentation choice (issue Findings).
+  // A representative specimen demonstrates the control's REAL behaviour: full width, same as a consuming
+  // app's own content column would give it.
 
   wrap.append(heading(3, title), desc, table)
   return wrap
