@@ -610,12 +610,12 @@ export class UIConversationComposerElement extends UIElement {
       this.#markPickerSelection(this.#modelsMenu, selected)
     }
     this.#modelsTrigger!.textContent = options.find((o) => o.id === selected)?.label ?? 'Models'
-    // GH #665 (Kim's ruling) — the leading glyph the composer's own narrow-host compact mode collapses
-    // to (conversation-composer.css's `21rem` container query): `list` is the closest fit the fleet's
-    // curated Phosphor subset (icons.gen.ts, ADR-0066) ships today for "choose from a set" — there is no
-    // dedicated model/cpu glyph in that set. Re-appended every rewrite, matching `#appendCaret`'s own
+    // GH #868 (owner ruling, 2026-08-14, superseding GH #665's borrowed `list`/hamburger) — the leading
+    // glyph the composer's own narrow-host compact mode collapses to (conversation-composer.css's `21rem`
+    // container query): `sparkle` is the curated Phosphor set's (icons.gen.ts, ADR-0066) purpose-fit
+    // "AI choice" glyph for the models picker. Re-appended every rewrite, matching `#appendCaret`'s own
     // documented reason (`trigger.textContent =` above wipes every prior child, this one included).
-    this.#appendLeadingIcon(this.#modelsTrigger!, 'list')
+    this.#appendLeadingIcon(this.#modelsTrigger!, 'sparkle')
     this.#appendCaret(this.#modelsTrigger!)
   }
 
@@ -645,9 +645,9 @@ export class UIConversationComposerElement extends UIElement {
       this.#markPickerSelection(this.#effortMenu, selected)
     }
     this.#effortTrigger!.textContent = options.find((o) => o.id === selected)?.label ?? 'Effort'
-    // GH #665 — see `#syncModelsPicker`'s identical comment. `fast-forward` (intensity/push-harder) is the
-    // closest fit the curated set ships for a reasoning-effort dial; there is no dedicated gauge glyph.
-    this.#appendLeadingIcon(this.#effortTrigger!, 'fast-forward')
+    // GH #868 (owner ruling, 2026-08-14, superseding GH #665's borrowed `fast-forward`/intensity glyph) —
+    // see `#syncModelsPicker`'s identical comment. `brain` is a literal reasoning-effort glyph.
+    this.#appendLeadingIcon(this.#effortTrigger!, 'brain')
     this.#appendCaret(this.#effortTrigger!)
   }
 
