@@ -4,6 +4,7 @@
 // Canvas tab AND the component-preview element's right column — mount the identical artboard instead of a
 // hand-copied divergent one. The CSS derived from a2ui-live's rules lives in the sibling `.css`.
 import './canvas-surface.css'
+import { UIContainerElement } from '@agent-ui/components'
 
 /** The artboard pair: the checkered `stage` box and the translate-centered `surface` that renderer roots mount under. */
 export interface CanvasSurface {
@@ -23,11 +24,19 @@ export function createCanvasSurface(): CanvasSurface {
   return { stage, surface }
 }
 
-// applyRootStretch — when the rendered surface roots at a `ui-column`, stretch it to FILL the artboard: a column
-// shrink-wraps to its content, but as the ROOT of the canvas it should fill the artboard width (Kim's `stretch`
-// attribute on ui-column, ADR-0075). Mirrors a2ui-live's `applyRootStretch`; call after every (re)render, since a
-// rebuild can replace the root node.
+// applyRootStretch — the rendered surface's ROOT should fill the artboard's available width (up to its
+// definite cap, min(32rem, …) above — the checkered artboard's own deliberate aesthetic, GH #892 Findings):
+// a layout primitive otherwise shrink-wraps to its content. `ui-column` owns a dedicated `stretch` PROP
+// (Kim's ADR-0016/ADR-0030 reflected opt-in) so it gets the semantic attribute. The sibling primitives
+// (ui-row/ui-card/ui-list/ui-grid, …) carry no equivalent prop — `UIContainerElement` is the "layout
+// primitive, not an intrinsic control" discriminator the fleet already draws (row/column/card/list/grid all
+// extend it; button/badge/pill/etc. extend `UIElement` directly), so an imperative `align-self: stretch` is
+// the width-fill for those without minting a `stretch` prop on each (GH #892). A root that IS an intrinsic
+// control (e.g. a lone Button) is untouched by either branch and keeps its own natural width — the named
+// exception. Mirrored in `@agent-ui/app`'s `surface-host.ts` (packages can't import site code); call after
+// every (re)render, since a rebuild can replace the root node.
 export function applyRootStretch(surface: HTMLElement): void {
   const root = surface.firstElementChild
   if (root && root.tagName.toLowerCase() === 'ui-column') root.setAttribute('stretch', '')
+  else if (root instanceof UIContainerElement) root.style.alignSelf = 'stretch'
 }
