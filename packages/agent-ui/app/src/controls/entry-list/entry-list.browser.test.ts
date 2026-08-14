@@ -252,7 +252,7 @@ describe('mountEntryList — the user-invocable row marker is genuinely VISIBLE 
 
 /** The row's header parts, left-to-right, with real painted boxes — the WHOLE-shape read (a per-part
  *  "it exists" probe passes just as happily on a row whose field has pushed Remove off the card edge). */
-function headerGeometry(row: HTMLElement): { part: string; left: number; right: number }[] {
+function headerGeometry(row: HTMLElement): { part: string; left: number; right: number; top: number; centerY: number }[] {
   // The row's ruled left-to-right order (entry-list.ts's own order note): state controls, then the action
   // pair, destructive last — with `entry-availability` (GH #850's mode pill) between the spacer and Rename.
   const parts = ['entry-toggle', 'entry-label', 'entry-rename-field', 'entry-spacer', 'entry-availability', 'entry-rename', 'entry-delete']
@@ -260,7 +260,11 @@ function headerGeometry(row: HTMLElement): { part: string; left: number; right: 
     const node = row.querySelector(`[data-part="${part}"]`) as HTMLElement | null
     if (node === null) return []
     const box = node.getBoundingClientRect()
-    return [{ part, left: box.left, right: box.right }]
+    // `centerY`, not `top`: `entry-header`'s `align-items: center` vertically centers parts of DIFFERENT
+    // heights (the empty entry-spacer vs. the 28px Invocable pill) around a shared line CENTER, not a
+    // shared top — center-Y is what actually identifies "the same flex line" once `flex-wrap` (GH #865)
+    // means a row can paint on more than one.
+    return [{ part, left: box.left, right: box.right, top: box.top, centerY: (box.top + box.bottom) / 2 }]
   })
 }
 
@@ -381,12 +385,30 @@ describe('mountEntryList — the rename affordance (GH #848)', () => {
       'entry-rename',
       'entry-delete',
     ])
+    // GH #865 — `entry-header`'s own `flex-wrap` fallback means DOM order is READING order (top-to-bottom,
+    // left-to-right WITHIN a line), not always strict single-line left-to-right: at this file's own default
+    // 414px mobile-sized test viewport (vitest.browser.config.ts), this exact both-opt-ins row sits at the
+    // genuine edge of one line's worth of room — the correct, deliberate outcome is Remove wrapping to its
+    // own line rather than the pre-fix behaviour of silently compressing it a few px below its real content
+    // width (a latent, invisible near-clip this ticket's `flex-shrink: 0` rule now forecloses on purpose).
+    // A part on a LATER line never sits above an earlier one (centerY is non-decreasing in DOM order);
+    // WITHIN the same line (centerY within 4px — `align-items: center` puts parts of different heights, e.g.
+    // the empty spacer vs. the 28px pill, at different TOPS but the same CENTER), left-to-right still holds.
     for (const [index, part] of parts.entries()) {
       if (index === 0) continue
-      expect(part.left, `${part.part} sits right of ${parts[index - 1]!.part}`).toBeGreaterThanOrEqual(parts[index - 1]!.left)
+      const prev = parts[index - 1]!
+      const sameLine = Math.abs(part.centerY - prev.centerY) <= 4
+      if (sameLine) {
+        expect(part.left, `${part.part} sits right of ${prev.part} (same line)`).toBeGreaterThanOrEqual(prev.left)
+      } else {
+        expect(part.centerY, `${part.part} sits on a LOWER line than ${prev.part} (wrapped), never higher`).toBeGreaterThan(prev.centerY)
+      }
     }
-    const rowRight = row(section).getBoundingClientRect().right
-    for (const part of parts) expect(part.right, `${part.part} stays inside the card`).toBeLessThanOrEqual(Math.ceil(rowRight))
+    const cardBox = row(section).getBoundingClientRect()
+    for (const part of parts) {
+      expect(part.left, `${part.part} stays inside the card (left)`).toBeGreaterThanOrEqual(Math.floor(cardBox.left))
+      expect(part.right, `${part.part} stays inside the card (right)`).toBeLessThanOrEqual(Math.ceil(cardBox.right))
+    }
     // Both controls are really hittable, not one squeezed to nothing by the other.
     for (const part of ['entry-availability', 'entry-rename']) {
       const box = (row(section).querySelector(`[data-part="${part}"]`) as HTMLElement).getBoundingClientRect()
@@ -447,5 +469,101 @@ describe('mountEntryList — the rename affordance (GH #848)', () => {
     expect(stored.availability).toBe(ENTRY_AVAILABILITY.invocable)
     expect(stored.label, 'the mode write left the display name alone').toBe('Custom name')
     expect((row(section).querySelector('[data-part="entry-label"]') as HTMLElement).textContent).toBe('Custom name')
+  })
+})
+
+// ── GH #865 — the row's affordances fit the CARD at the settings pane's real narrow width ─────────────────
+// The pane floor is measured, not guessed: `super-shell.css`'s `--ui-super-shell-pane-min-size` (20rem,
+// agent-admin.css's repoint) is a real drag-clamp (`super-shell.ts`'s `paneMin`, `super-shell.md` — "the pane
+// never shrinks below" it) — 320px. `ui-settings`' own `[data-part='panel']` padding
+// (`--ui-settings-panel-pad` = `--md-sys-space-lg` = 16px/side) and the composed `ui-disclosure`'s body
+// padding (`--ui-disclosure-body-pad-inline` = `--md-sys-space-md` = 12px/side) are the two ancestors between
+// that pane and this section (`agent-admin.ts`'s `settingsItem` → `foldItem`, a `ui-disclosure`) — 320 − 32 −
+// 24 = 264px is what a real Tools-panel row gets at the floor, verbatim what this wrapper reproduces; this
+// module's own `--ui-entry-list-card-pad` (12px/side) then narrows the header row itself to ~238px, exactly
+// as measured below.
+describe('mountEntryList — GH #865: affordances fit the card at the settings pane\'s real narrow floor', () => {
+  /** Reproduces the ONE fixed width a real Tools-panel row receives at the pane's measured floor (see the
+   *  block comment above) — the section mounts inside it exactly as `agent-admin.ts` hands it a pane-width
+   *  ancestor, never document.body's unconstrained width the rest of this file's tests use. */
+  function mountNarrow(label: string): { host: HTMLElement; card: HTMLElement } {
+    const wrapper = document.createElement('div')
+    wrapper.style.inlineSize = '264px' // the measured pane-floor content width (see above)
+    wrapper.style.boxSizing = 'border-box'
+    document.body.append(wrapper)
+    mounted.push(wrapper)
+    const store = createMemoryStore({ initial: { [entriesStoreKey(KIND)]: [{ ...SEED, label }] satisfies Entry[] } })
+    const section = mountEntryList(
+      KIND,
+      'Add item',
+      {
+        onToggle: (id, enabled) => store.set(entriesStoreKey(KIND), readEntries(store, KIND).map((e) => (e.id === id ? { ...e, enabled } : e))),
+        onContentChange: (id, content) => store.set(entriesStoreKey(KIND), readEntries(store, KIND).map((e) => (e.id === id ? { ...e, content } : e))),
+        onDelete: (id) => store.set(entriesStoreKey(KIND), readEntries(store, KIND).filter((e) => e.id !== id)),
+        onAdd: () => true,
+        onAvailabilityChange: (id, availability) =>
+          store.set(entriesStoreKey(KIND), readEntries(store, KIND).map((e) => (e.id === id ? { ...e, availability } : e))),
+        onRename: (id, renamed) => store.set(entriesStoreKey(KIND), renameEntry(readEntries(store, KIND), id, renamed)),
+      },
+      { rename: true, availabilityToggle: true },
+    )
+    wrapper.append(section.host)
+    mounted.push(section.host)
+    section.render(readEntries(store, KIND))
+    return { host: section.host, card: section.host.querySelector('[data-part="entry"]') as HTMLElement }
+  }
+
+  /** The test-the-whole-shape assertion (not a per-part probe): every header part's WHOLE painted box —
+   *  every side, not just "does it exist" — stays inside the card's own bounding box. A part that wrapped to
+   *  a second (or third) line must still land inside the SAME card, never spill past its right/left/bottom
+   *  edge — the exact failure mode the screenshot showed (the pill "torn at the boundary"). */
+  function assertNothingEscapesTheCard(card: HTMLElement): void {
+    const cardBox = card.getBoundingClientRect()
+    const parts = ['entry-toggle', 'entry-label', 'entry-rename-field', 'entry-spacer', 'entry-availability', 'entry-rename', 'entry-delete']
+    let sawAnyPart = false
+    for (const part of parts) {
+      const el = card.querySelector(`[data-part="${part}"]`) as HTMLElement | null
+      if (el === null) continue
+      sawAnyPart = true
+      const box = el.getBoundingClientRect()
+      expect(box.left, `${part} stays at/right of the card's left edge`).toBeGreaterThanOrEqual(Math.floor(cardBox.left))
+      expect(box.right, `${part} stays at/left of the card's right edge`).toBeLessThanOrEqual(Math.ceil(cardBox.right))
+      expect(box.top, `${part} stays at/below the card's top edge`).toBeGreaterThanOrEqual(Math.floor(cardBox.top))
+      expect(box.bottom, `${part} stays at/above the card's bottom edge`).toBeLessThanOrEqual(Math.ceil(cardBox.bottom))
+    }
+    expect(sawAnyPart, 'the probe actually found real parts to check (not vacuously true)').toBe(true)
+  }
+
+  it('a TYPICAL short label: the trailing cluster wraps to its own line, nothing escapes the card', () => {
+    const { card } = mountNarrow('Weather')
+    assertNothingEscapesTheCard(card)
+    // The clean 2-line outcome measured for a realistic label: switch+label+spacer share line one (the
+    // label painted at its full natural width — no truncation was even needed once the cluster wrapped),
+    // Rename+Remove share a second line below it (a REAL wrap, not a lucky single-line fit).
+    const toggleTop = (card.querySelector('[data-part="entry-toggle"]') as HTMLElement).getBoundingClientRect().top
+    const deleteTop = (card.querySelector('[data-part="entry-delete"]') as HTMLElement).getBoundingClientRect().top
+    expect(deleteTop, 'Remove landed on a LOWER line than the switch — the row actually wrapped').toBeGreaterThan(toggleTop)
+    expect((card.querySelector('[data-part="entry-label"]') as HTMLElement).textContent).toBe('Weather')
+  })
+
+  it('a LONG compound label: still truncates/wraps to fit — nothing escapes the card, and the full name survives on `title`', () => {
+    const LONG = 'Weather / Open-Meteo'
+    const { card } = mountNarrow(LONG)
+    assertNothingEscapesTheCard(card)
+    const label = card.querySelector('[data-part="entry-label"]') as HTMLElement
+    // The unconditional title mirror (GH #865): the FULL name is always a hover away, however the visible
+    // text is laid out (this card's own width leaves enough room for it to render unclipped in full here —
+    // the title mirror is unconditional specifically so a narrower real-world pane, or a longer real-world
+    // name, never depends on that).
+    expect(label.title).toBe(LONG)
+  })
+
+  it('the fixed affordances never shrink — Invocable/Rename/Remove all measure their real, unclipped width', () => {
+    const { card } = mountNarrow('Weather')
+    for (const part of ['entry-availability', 'entry-rename', 'entry-delete']) {
+      const box = (card.querySelector(`[data-part="${part}"]`) as HTMLElement).getBoundingClientRect()
+      expect(box.width, `${part} is a real, unshrunk control`).toBeGreaterThan(40)
+      expect(box.height, `${part} is a real, unshrunk control`).toBeGreaterThan(16)
+    }
   })
 })

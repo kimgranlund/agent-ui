@@ -46,6 +46,16 @@
      row-gap instead, at the same rendered value (8px × 0.75 = 6px = today's module/3 value, verbatim). */
   --ui-entry-list-compact-gap: calc(var(--ui-entry-list-row-gap) * 0.75);
   --ui-entry-list-spacer-min-size: var(--md-sys-space-sm); /* SPEC-R11c/AC19 — the entry-spacer flex-spacer floor */
+  /* GH #865 — the entry-label truncation floor: at the settings pane's real narrow width (measured: the
+     super-shell `--ui-super-shell-pane-min-size` 20rem floor, minus `ui-settings`'s own panel padding and
+     `ui-disclosure`'s body padding, minus this card's own `--ui-entry-list-card-pad`, leaves ~238px for the
+     WHOLE header row) the fixed affordance cluster (switch + spacer floor + the Invocable pill + Rename +
+     Remove, plus four inter-part gaps) alone measures ~222px — leaving only ~16px for the label if it were
+     allowed to truncate to near-zero. A label shrunk to one glyph is not a legible row, so this floor
+     (the multi-select.css `12ch` listbox-floor idiom, one size down: a ROW label reads shorter items than a
+     listbox option) sets the line where truncation stops and `entry-header`'s `flex-wrap` (below) takes over
+     instead — the ruled fallback for the genuinely-cannot-fit case, never a clipped/crushed control. */
+  --ui-entry-list-label-min-inline-size: 8ch;
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope ([data-part='entry-section']) consumes ONLY --ui-entry-list-* ═══ */
@@ -105,15 +115,34 @@
   }
 
   /* GH #138 (Kim's option-A ruling): [switch|label|spacer|action] — switch leads, label next, a
-     flexible spacer, then trailing action content (the Remove button) pinned to the right edge. */
+     flexible spacer, then trailing action content (the Remove button) pinned to the right edge.
+     GH #865 — `flex-wrap: wrap` is the row's OWN overflow fallback, never a per-consumer concern: at the
+     settings pane's real narrow floor the fixed affordance cluster (switch + spacer floor + Invocable +
+     Rename + Remove) plus the label's own truncation floor (`--ui-entry-list-label-min-inline-size` below)
+     can together exceed the available width even with the label as short as it is ever allowed to get —
+     wrapping the trailing action cluster onto its own line is what stands in for a clipped/overflowing row
+     at that width (measured: 264px card at the pane floor vs. ~222px for the fixed cluster alone leaves only
+     ~16px for the label, well under its 8ch floor). A WIDE row never wraps — nothing here changes the
+     common case, `flex-wrap` only engages once content actually can't fit one line. */
   [data-part='entry-header'] {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: var(--ui-entry-list-row-gap);
   }
 
+  /* GH #865 — the label is the row's ONE flexible-and-shrinkable cell (the fixed affordances below never
+     shrink): `min-inline-size` overrides the flex item's automatic min-content size (the ADR-0021
+     text-field-floor precedent, the same override shape) down to a legible floor, and single-line ellipsis
+     takes it from there — never a clipped glyph, a shortened word instead. `entry-list.ts` mirrors the full
+     name onto `title` unconditionally (the `ui-text[truncate]` ADR-0106 idiom) so the untruncated name is
+     always a hover away. */
   [data-part='entry-label'] {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    min-inline-size: var(--ui-entry-list-label-min-inline-size);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-weight: 600;
     color: var(--ui-entry-list-ink);
   }
@@ -132,6 +161,22 @@
   [data-part='entry-spacer'] {
     flex: 1 1 auto;
     min-inline-size: var(--ui-entry-list-spacer-min-size);
+  }
+
+  /* GH #865 — the row's STATE controls + BUTTON pair (switch, the Invocable mode pill, Rename, Remove):
+     fixed-width, explicit `flex-shrink: 0`. Before this rule these had the flex default (`flex-shrink: 1`)
+     with no explicit floor — invisible MOST of the time (their own nowrap single-word content keeps the
+     browser's automatic min-content size close to their natural width), but not ALWAYS: measured, at
+     exactly this file's own 414px default browser-test viewport with both row opt-ins on, the trailing
+     buttons were being compressed a few px below their real content width — a latent near-clip this rule
+     forecloses on purpose, never leaving these controls' own fitness to a browser's automatic-minimum-size
+     computation. The label above (and the rename field, GH #848) are the row's only shrinkable cells;
+     `entry-header`'s `flex-wrap` is the fallback once even that isn't enough. */
+  [data-part='entry-toggle'],
+  [data-part='entry-availability'],
+  [data-part='entry-rename'],
+  [data-part='entry-delete'] {
+    flex-shrink: 0;
   }
 
   [data-part='entry-description'] {

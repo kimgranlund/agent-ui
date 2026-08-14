@@ -400,6 +400,11 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
       const entryLabel = document.createElement('span')
       entryLabel.setAttribute('data-part', 'entry-label')
       entryLabel.textContent = entry.label
+      // GH #865 — entry-list.css's own truncation floor (`min-inline-size` + single-line ellipsis) can
+      // shorten this at a narrow pane width; `title` mirrors the FULL name unconditionally (the
+      // `ui-text[truncate]`/ADR-0106 idiom, done here by hand since this is a plain `<span>`, not a
+      // `ui-text`), so the untruncated name is always a hover away regardless of how much the row shrinks.
+      entryLabel.title = entry.label
 
       const entrySpacer = document.createElement('span')
       entrySpacer.setAttribute('data-part', 'entry-spacer')
@@ -516,6 +521,7 @@ export function mountEntryList(kind: string, addLabel: string, handlers: EntryLi
             // re-render is the truth).
             if (typed.trim().length === 0) return
             entryLabel.textContent = typed.trim()
+            entryLabel.title = typed.trim() // GH #865 — the title mirror follows every rename, never stale
             handlers.onRename?.(entry.id, typed)
           }
 
