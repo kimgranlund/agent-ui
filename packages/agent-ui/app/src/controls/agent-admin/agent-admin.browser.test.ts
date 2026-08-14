@@ -1938,6 +1938,74 @@ describe('ui-agent-admin cross-engine smoke — the settings sub-nav grouping (L
   // tabs.md/tabs.test.ts already own it at the control level.
 })
 
+// GH #870 — the settings-nav strip's own baseline hairline (tabs.css's `[data-part='tablist']`
+// border-block-end) is painted only on the "strip" grid column `overflow="menu"` lays out (tabs.css
+// §[overflow=menu]); the … trigger sits in the adjacent "trigger" column with no border of its own, so at
+// any width narrow enough to show the trigger the line visibly stopped one column short of it. The fix
+// (agent-admin.css) is composition-side — a `box-shadow` on the trigger, landing pixel-identical to the
+// tablist's own border's outer edge — never a `tabs.css` contract change. Whole-shape: this asserts the
+// RENDERED EXTENT of the combined line (not just "a box-shadow declaration exists") reaches from the
+// strip's own left edge to the trigger's own right edge, at both the overflow-collapsed AND the
+// all-fit bands (a hidden trigger has no gap to close in the first place).
+describe('ui-agent-admin — GH #870: the settings-nav baseline hairline spans the full header row (tabs + the … trigger)', () => {
+  const frames = async (n = 2): Promise<void> => {
+    for (let i = 0; i < n; i++) await new Promise((r) => requestAnimationFrame(r))
+  }
+
+  for (const widthPx of [414, 800, 1200]) {
+    it(`at ${widthPx}px: the tablist's own border and the trigger's composed baseline meet edge-to-edge on the SAME line (or there is no trigger to close a gap under)`, async () => {
+      const { el } = mountAgentAdminAt(widthPx)
+      await frames()
+      goToPlace(el, 'Settings')
+      await frames(3)
+
+      const strip = el.querySelector('[data-part="settings-nav"]') as HTMLElement
+      const tablist = strip.querySelector('[data-part="tablist"]') as HTMLElement
+      const menuEl = strip.querySelector('[data-part="overflow"]') as HTMLElement
+      const stripRect = strip.getBoundingClientRect()
+      const tablistRect = tablist.getBoundingClientRect()
+
+      // The tablist's own hairline — unconditional at every width (GH #586's own shipped baseline).
+      const tablistStyle = getComputedStyle(tablist)
+      expect(tablistStyle.borderBottomStyle, `${widthPx}px: tablist border style`).toBe('solid')
+      expect(parseFloat(tablistStyle.borderBottomWidth), `${widthPx}px: tablist border width`).toBeGreaterThan(0)
+
+      if (menuEl.hidden) {
+        // All five tabs fit — no trigger paints, so the tablist's own track already spans the whole row
+        // (GH #870's fix only has work to do once a trigger exists to fall short of).
+        expect(Math.round(tablistRect.right), `${widthPx}px: no trigger — the strip alone reaches the row's own right edge`).toBeGreaterThanOrEqual(
+          Math.round(stripRect.right) - 1,
+        )
+        return
+      }
+
+      const trigger = menuEl.querySelector('[data-part="trigger"]') as HTMLElement
+      const triggerRect = trigger.getBoundingClientRect()
+      expect(triggerRect.width, `${widthPx}px: the … trigger genuinely paints`).toBeGreaterThan(0)
+
+      // Whole-shape: the two segments meet edge to edge — no horizontal gap between where the tablist's
+      // own track ends and where the trigger begins (the GH #870 bug was exactly this gap).
+      expect(Math.round(triggerRect.left) - Math.round(tablistRect.right), `${widthPx}px: no horizontal gap between strip and trigger`).toBeLessThanOrEqual(1)
+
+      // The composed baseline continuation (box-shadow, agent-admin.css) is a real declaration, and its
+      // rendered bottom edge lands exactly where the tablist's own border's bottom edge lands — the SAME
+      // horizontal line, not one a pixel higher or lower (both grid items start flush at the row's own
+      // block-start; agent-admin.css's own comment on this rule has the full box-model proof).
+      const triggerStyle = getComputedStyle(trigger)
+      expect(triggerStyle.boxShadow, `${widthPx}px: the composed baseline continuation is a real declaration`).not.toBe('none')
+      expect(Math.round(triggerRect.bottom) + 1, `${widthPx}px: the trigger's box-shadow lands on the SAME line as the tablist's own border`).toBe(
+        Math.round(tablistRect.bottom),
+      )
+
+      // The combined line reaches the row's full width — the GH #870 acceptance line itself.
+      expect(Math.round(tablistRect.left), `${widthPx}px: the line starts at the row's own left edge`).toBeLessThanOrEqual(Math.round(stripRect.left) + 1)
+      expect(Math.round(triggerRect.right), `${widthPx}px: the line reaches the row's own right edge (under the trigger too)`).toBeGreaterThanOrEqual(
+        Math.round(stripRect.right) - 1,
+      )
+    })
+  }
+})
+
 // ── LLD-P7 (GH #658, S3-a) — the WIDE live-fill proof + density evidence, in BOTH real engines ────────
 // The pairing's ANATOMY shipped in S1-b and its cl.3 dock geometry is already probed above. What S3 owes
 // is #651's own acceptance line, exercised rather than cited: with the pair genuinely DOCKED, a gate-ON
