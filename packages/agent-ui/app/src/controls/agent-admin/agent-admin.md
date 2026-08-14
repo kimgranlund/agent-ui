@@ -80,7 +80,7 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
   - name: export-action
     description: S7-c — the wide `onExportRequest` affordance, the `import-action` shape mirrored.
   - name: overflow-menu
-    description: S7-c — the narrow `<ui-menu data-part="overflow-menu" placement="bottom-end">` holding Import/Export as plain menu items (LLD §16.6 OQ-B — Reset stays Settings-only, out of this menu). Its own trigger is icon-only (`dots-three`, `aria-label="More actions"`) and carries NO `data-part` of its own — `ui-menu`'s own connect-time `#ensureParts` stamps `data-part="trigger"` on its first child unconditionally, so this button is addressed scoped through the menu's own part (`[data-part='overflow-menu'] [data-part='trigger']`), never a second, losing attribute name. Each item independently `[hidden]`+`aria-disabled` per its own seam's registration, and the trigger itself hides only when ALL are gone (an openable-but-empty menu is not a real affordance). GH #845 added a THIRD item, `[data-value="delete-agent"]` ("Delete Agent") — the same `[hidden]`+`aria-disabled` idiom, but gated on the TWO-AXIS rule (`onDeleteAgentRequest` registered AND the ACTIVE entry `deletable`), and danger-inked by a consumer-side repoint (`--ui-agent-admin-danger-item-ink`, plus `--ui-menu-item-bg-hover` repointed on the item itself) with no `ui-menu` source change. The trigger's hide rule widened accordingly: Import AND Export AND Delete all hidden.
+    description: S7-c — the narrow `<ui-menu data-part="overflow-menu" placement="bottom-end">` holding Import/Export as plain menu items (LLD §16.6 OQ-B — Reset stays Settings-only, out of this menu). Its own trigger is icon-only (`dots-three`, `aria-label="More actions"`) and carries NO `data-part` of its own — `ui-menu`'s own connect-time `#ensureParts` stamps `data-part="trigger"` on its first child unconditionally, so this button is addressed scoped through the menu's own part (`[data-part='overflow-menu'] [data-part='trigger']`), never a second, losing attribute name. Each item independently `[hidden]`+`aria-disabled` per its own seam's registration, and the trigger itself hides only when ALL are gone (an openable-but-empty menu is not a real affordance). GH #845 added a THIRD item, `[data-value="delete-agent"]` ("Delete Agent") — the same `[hidden]`+`aria-disabled` idiom, but gated on the TWO-AXIS rule (`onDeleteAgentRequest` registered AND the ACTIVE entry `deletable`), and danger-inked by a consumer-side repoint (`--ui-agent-admin-danger-item-ink`, plus `--ui-menu-item-bg-hover` repointed on the item itself) with no `ui-menu` source change. GH #889 added a FOURTH item, `[data-value="export-debug-bundle"]` ("Export debug bundle") — the registration-only `[hidden]`+`aria-disabled` idiom (no two-axis gate; see "Registration seams" §GH #889). The trigger's hide rule widens accordingly: Import AND Export AND Delete AND the debug export all hidden.
   - name: chat-pane
     description: LLD §16.1 — the Chat place's region: `#conversation`, the test `<ui-conversation data-part="chat-pane">`, byte-unchanged in substance from every earlier revision. A direct child of `pane-holder`, first in `PANE_ORDER`.
   - name: settings-pane
@@ -362,6 +362,34 @@ already are.
 listener and never forwarded to `onAgentSelect`. A consumer must not use either string as a roster
 entry's id. (Non-colliding by construction with the shipped page's slug-minted `[a-z0-9-]` ids — a colon
 cannot survive the slug.)
+
+### GH #889 — the dev-debug export: one FOURTH overflow item + two read-only transcript accessors
+
+```ts
+onExportDebugBundleRequest(callback: () => void): void
+testChatTranscript(): readonly AdminTurn[]
+builderInterviewTranscript(): readonly AdminTurn[]
+```
+
+`onExportDebugBundleRequest` is the Import/Export seam shape verbatim — a bare callback, last
+registration wins, safe before or after connect — consumed by ONE new `overflow-menu` item,
+`[data-value="export-debug-bundle"]` ("Export debug bundle"), appended after Delete Agent. Menu-only by
+design: unlike New Agent/Import/Export it never earns a wide header rendering (a dev-debug affordance,
+not a primary action). It degrades on registration alone, the Import/Export rule — no two-axis gate the
+way Delete's `deletable` check has, since a debug export never depends on the active entry's protection
+status. The overflow trigger's own hide rule widens again: it hides only when all FOUR items
+(Import/Export/Delete/debug-export) are gone.
+
+`testChatTranscript()`/`builderInterviewTranscript()` are plain READ-ONLY accessors, not registration
+seams — the first public "pull a live snapshot" methods this element carries (every prior public method is
+either a callback registration or `setAgentRoster`'s data-in push). Each returns a fresh COPY of the
+element's own per-context turn array (`#history` for the test-chat "chat" pane, `#authoringHistory` for the
+Builder-interview "copilot" pane, GH #644's context split) — never the live array, so a caller cannot mutate
+turn-loop state through it. Both are ELEMENT-lifetime and PER-ACTIVE-DRAFT: `#resetConversationState`
+(GH #145) clears both on a real persona switch, so a page reading them mid-session sees exactly the active
+draft's own transcripts, and an inactive persona's transcript is unreachable through this element by
+construction (it was never persisted — the export page's own scope ruling follows from this). Purely
+additive: no existing call site reads or writes through either accessor.
 
 ## One primitive, seven instantiations (ADR-0132; genui-surface SPEC-R11 added pattern-source, ADR-0170 added catalog)
 

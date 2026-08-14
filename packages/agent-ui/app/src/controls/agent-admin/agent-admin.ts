@@ -568,6 +568,9 @@ export class UIAgentAdminElement extends UIElement {
   // changes `activeId` is honoured without re-registering anything.
   #editAgentsRequest: (() => void) | undefined
   #deleteAgentRequest: ((id: string) => void) | undefined
+  // GH #889 — the dev-debug export's OWN registration seam, the Import/Export shape verbatim (a bare
+  // callback, menu-only consumer).
+  #exportDebugBundleRequest: (() => void) | undefined
   // `setAgentRoster` is data-in, not a callback — but the SAME "safe before or after connect" law applies
   // (LLD §16.3), so a pre-connect call is held here and applied once `#agentSelectEl` exists
   // (`#applyAgentRoster`), exactly the `#generateRequest`/`#reflectAuthorEntry` build-time-reflect shape.
@@ -588,6 +591,11 @@ export class UIAgentAdminElement extends UIElement {
   // GH #845 (LLD-C6) — the overflow's THIRD item, "Delete Agent". Gated on the two-axis rule (§5), not on
   // registration alone: a registered seam over a PROTECTED active entry still hides it.
   #overflowDeleteItem: HTMLElement | null = null
+  // GH #889 — the overflow's FOURTH item, "Export debug bundle" (the dev-debug zip: agent-settings + this
+  // draft's test-chat + Builder-interview JSON, page-composed). Menu-only by design — unlike Import/Export
+  // it never earns a wide header rendering (a dev-debug affordance, not a primary action); it degrades the
+  // SAME registration-only way Import/Export do, no two-axis gate.
+  #overflowDebugExportItem: HTMLElement | null = null
   // S7-d (LLD §16.4) — "Reset Agent"'s own consumer, at the model-grid fold's content end. GH #709 — the
   // WHOLE ROW hides (not just the button) while `onResetRequest` is unregistered: unlike the header's five
   // bare-action seams, this row also carries a label ("Agent configuration") — but that label has no
@@ -1762,13 +1770,19 @@ export class UIAgentAdminElement extends UIElement {
     overflowDeleteItem.dataset.value = 'delete-agent'
     overflowDeleteItem.textContent = 'Delete Agent'
     this.#overflowDeleteItem = overflowDeleteItem
-    overflowMenu.append(overflowTrigger, overflowImportItem, overflowExportItem, overflowDeleteItem)
+    // GH #889 — the FOURTH item, menu-only (no wide twin): the dev-debug zip export.
+    const overflowDebugExportItem = document.createElement('div')
+    overflowDebugExportItem.dataset.value = 'export-debug-bundle'
+    overflowDebugExportItem.textContent = 'Export debug bundle'
+    this.#overflowDebugExportItem = overflowDebugExportItem
+    overflowMenu.append(overflowTrigger, overflowImportItem, overflowExportItem, overflowDeleteItem, overflowDebugExportItem)
     overflowMenu.addEventListener('select', (event) => {
       event.stopPropagation()
       const { value } = (event as CustomEvent<{ value: string; index: number }>).detail
       if (value === 'import-agent') this.#importRequest?.()
       else if (value === 'export-agent') this.#exportRequest?.()
       else if (value === 'delete-agent') this.#requestDeleteActiveAgent()
+      else if (value === 'export-debug-bundle') this.#exportDebugBundleRequest?.()
     })
 
     headerActions.append(newAgentWide, importAction, exportAction, newAgentNarrow, overflowMenu)
@@ -3880,6 +3894,37 @@ export class UIAgentAdminElement extends UIElement {
     this.#applyActionAvailability()
   }
 
+  /** GH #889 — register the overflow's "Export debug bundle" affordance. The Import/Export seam shape
+   *  verbatim (a bare callback, last registration wins, safe before or after connect); unregistered ⇒ the
+   *  menu item hides on the SAME registration-only rule Import/Export use — no two-axis gate, unlike
+   *  Delete's `deletable` check, because a debug export never depends on the active entry's protection
+   *  status. */
+  onExportDebugBundleRequest(callback: () => void): void {
+    this.#exportDebugBundleRequest = callback
+    this.#applyActionAvailability()
+  }
+
+  /**
+   * GH #889 — the minimal READ-ONLY accessor the dev-debug export needs: the ACTIVE draft's test-chat
+   * transcript (`#history`, GH #644's TEST-context array — every completed user/assistant exchange run
+   * through the "chat" pane, i.e. the persona under configuration, NOT the Builder interview). A copy, never
+   * the live array, so a caller can never mutate turn-loop state through it. Additive only — no existing
+   * behavior reads or writes through this seam; `#resetConversationState` (GH #145) still owns clearing it.
+   */
+  testChatTranscript(): readonly AdminTurn[] {
+    return [...this.#history]
+  }
+
+  /**
+   * GH #889 — the Builder-interview counterpart to `testChatTranscript()` above: `#authoringHistory`
+   * (GH #644's AUTHORING-context array, the "copilot" pane's own transcript). Empty whenever no interview
+   * has run against the currently active draft (a shipped preset opened directly, or a draft whose
+   * interview finished and reset) — that is the true state, not a gap this accessor should paper over.
+   */
+  builderInterviewTranscript(): readonly AdminTurn[] {
+    return [...this.#authoringHistory]
+  }
+
   /**
    * The action-seam HIDE degrade (LLD §16.3/§16.4), applied per affordance — never a blanket disable. New
    * Agent's two renderings share one registration; Import/Export each degrade independently (a wide
@@ -3915,9 +3960,18 @@ export class UIAgentAdminElement extends UIElement {
       this.#overflowDeleteItem.hidden = deleteHidden
       this.#overflowDeleteItem.setAttribute('aria-disabled', String(deleteHidden))
     }
-    // The trigger's own hide rule WIDENS with the third item — an openable-but-empty menu is still not a
-    // real affordance, but Delete alone is now enough to make it a real one.
-    if (this.#overflowTriggerBtn) this.#overflowTriggerBtn.hidden = importHidden && exportHidden && deleteHidden
+    // GH #889 — the fourth item, registration-only (no two-axis gate — a debug export never depends on
+    // the active entry's `deletable` status).
+    const debugExportHidden = this.#exportDebugBundleRequest === undefined
+    if (this.#overflowDebugExportItem) {
+      this.#overflowDebugExportItem.hidden = debugExportHidden
+      this.#overflowDebugExportItem.setAttribute('aria-disabled', String(debugExportHidden))
+    }
+    // The trigger's own hide rule WIDENS with each item — an openable-but-empty menu is still not a real
+    // affordance, but any ONE of the four being live is now enough to make it a real one.
+    if (this.#overflowTriggerBtn) {
+      this.#overflowTriggerBtn.hidden = importHidden && exportHidden && deleteHidden && debugExportHidden
+    }
     // GH #709 — the WHOLE ROW hides, not just the button (its label has no standalone value once the
     // action it names is gone). `#resetAgentBtn` itself is never toggled here anymore.
     if (this.#resetAgentRow) this.#resetAgentRow.hidden = this.#resetRequest === undefined

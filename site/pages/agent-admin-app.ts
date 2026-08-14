@@ -70,6 +70,8 @@ import {
   type Persona,
 } from './agent-admin-presets.ts'
 import { duplicatePersonaFrom, exportPersonaFile, importedPersonaFrom, mintBlankPersona, personaFileName, personaFileText, readPersonaFile } from './agent-admin-persona-file.ts'
+import { buildDebugBundle, debugBundleFileName } from './agent-admin-debug-export.ts'
+import { buildZip } from '../lib/zip-writer.ts'
 import { librariesForCategory, setLiveIntegrations, setLiveServices } from './agent-admin-libraries.ts'
 // GH #637 S1 — the blank agent's seed: the EXACT shipped default `ui-agent-admin` itself falls back to
 // when no store prop is ever set (agent-admin.ts connected()'s own `initial` object) — pure reuse, so a
@@ -152,6 +154,7 @@ admin.onAgentSelect((id) => {
 admin.onNewAgentRequest(() => createGeneratedAgent())
 admin.onImportRequest(() => fileInput.click())
 admin.onExportRequest(() => exportActivePersona())
+admin.onExportDebugBundleRequest(() => exportDebugBundle())
 admin.onResetRequest(() => {
   resetPersona(active)
   applyPersona(active)
@@ -225,6 +228,33 @@ function exportActivePersona(): void {
   // Revoke on the next task — revoking synchronously can cancel the download the click just started.
   setTimeout(() => URL.revokeObjectURL(url), 0)
   notify(`Exported “${active.label}” as ${link.download}.`)
+}
+
+// ── the dev-debug bundle (GH #889) ────────────────────────────────────────────────────────────────────
+// One zip: agent-settings for EVERY roster agent (each agent's own persisted store, the exportActivePersona
+// idiom above run once per agent) + the ACTIVE agent's test-chat and Builder-interview transcripts (the
+// only ones that exist — see agent-admin-debug-export.ts's header for why that is a scope FACT, not a
+// narrowing). The zip mechanism itself (`buildZip`, STORE/uncompressed) lives in the zero-dep-adjacent
+// `site/lib/zip-writer.ts`; this function is pure browser I/O, the `exportActivePersona` shape mirrored.
+
+function exportDebugBundle(): void {
+  const agents = roster.map((persona) => ({ persona, store: personaStore(persona) }))
+  const { entries } = buildDebugBundle({
+    agents,
+    activeAgentId: active.id,
+    testChatTranscript: admin.testChatTranscript(),
+    builderInterviewTranscript: admin.builderInterviewTranscript(),
+  })
+  const zip = buildZip(entries)
+  const url = URL.createObjectURL(new Blob([zip], { type: 'application/zip' }))
+  const link = document.createElement('a')
+  link.href = url
+  link.download = debugBundleFileName()
+  document.body.append(link)
+  link.click()
+  link.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 0)
+  notify(`Exported dev-debug bundle as ${link.download} (${agents.length} agent${agents.length === 1 ? '' : 's'}).`)
 }
 
 /** Import one persona file's TEXT: validate → mint a NEW persona (collision-safe id) → register it in
