@@ -3013,6 +3013,127 @@ describe('ui-agent-admin Surface tab — the help icons are hidden at rest and r
   })
 })
 
+// ── GH #845 (LLD-C10, the real-engine leg) — the picker's trailing "Manage" group, driven for real ─────
+// jsdom proves the DOM/state mechanics; only a real engine proves the two things this feature is actually
+// judged on when a person uses it: that the items PAINT inside the opened listbox panel (a real box, in
+// the viewport, below the roster options), and that committing one leaves the trigger reading the ACTIVE
+// AGENT'S OWN LABEL — not the sentinel the user just clicked. The label revert rides ui-select's own
+// reactive label effect over a value the commit trait wrote first, which is precisely the ordering a
+// synthetic environment cannot vouch for.
+describe('ui-agent-admin cross-engine — the picker\'s New Agent / Edit Agents items (GH #845)', () => {
+  const frames = async (n = 3): Promise<void> => {
+    for (let i = 0; i < n; i++) await new Promise((r) => requestAnimationFrame(r))
+  }
+
+  /** A mounted admin with BOTH picker seams registered and a two-entry roster, its panel OPEN — the state
+   *  every probe below measures. Returns the seam counters so "a click did something" is provable. */
+  async function mountPicker(): Promise<{
+    el: UIAgentAdminElement
+    select: HTMLElement & { value: string; open: boolean }
+    calls: { news: number; edits: number; picks: string[] }
+  }> {
+    const { el } = mountAgentAdminAt(1200)
+    const calls = { news: 0, edits: 0, picks: [] as string[] }
+    el.onNewAgentRequest(() => { calls.news += 1 })
+    el.onEditAgentsRequest(() => { calls.edits += 1 })
+    el.onAgentSelect((id) => calls.picks.push(id))
+    el.setAgentRoster([{ id: 'alpha', label: 'Alpha' }, { id: 'fable', label: 'Fable' }], 'fable')
+    await frames()
+    const select = el.querySelector('[data-part="agent-select"]') as HTMLElement & { value: string; open: boolean }
+    ;(select.querySelector('[data-part="trigger"]') as HTMLElement).click()
+    await frames()
+    return { el, select, calls }
+  }
+
+  const triggerLabel = (select: HTMLElement): string =>
+    (select.querySelector('[data-part="trigger"] [data-part="label"]')?.textContent ?? '').trim()
+
+  it('the opened panel PAINTS the Manage group last — a real "Manage" header + two real item boxes, below the roster options', async () => {
+    const { select } = await mountPicker()
+    const panel = select.querySelector('[data-part="listbox"]') as HTMLElement
+    expect(panel.matches(':popover-open'), `${server.browser}: the panel is really in the top layer`).toBe(true)
+
+    const group = panel.querySelector('[data-part="roster-actions"]') as HTMLElement
+    expect(group, 'the group survived adoption into the panel').not.toBeNull()
+    expect(panel.lastElementChild, 'and it is the panel\'s LAST block — the tail-adoption ruling, in a real engine').toBe(group)
+
+    // The divider IS the control-created group header — a real, visible, non-interactive box.
+    const header = group.querySelector('[data-part="group-label"]') as HTMLElement
+    expect(header.textContent).toBe('Manage')
+    const headerBox = header.getBoundingClientRect()
+    expect(headerBox.height, `${server.browser}: the "Manage" divider really paints`).toBeGreaterThan(0)
+    expect(headerBox.width).toBeGreaterThan(0)
+
+    const items = [...group.querySelectorAll('[data-part="roster-action"]')] as HTMLElement[]
+    expect(items.map((i) => (i.textContent ?? '').trim())).toEqual(['New Agent', 'Edit Agents'])
+    const lastRosterOption = panel.querySelector('[role="option"][value="fable"]') as HTMLElement
+    for (const item of items) {
+      const box = item.getBoundingClientRect()
+      expect(box.height, `${server.browser}: ${item.textContent} paints a real row`).toBeGreaterThan(0)
+      expect(box.width).toBeGreaterThan(0)
+      expect(box.top, 'the management items sit BELOW the roster options, never above them')
+        .toBeGreaterThanOrEqual(lastRosterOption.getBoundingClientRect().bottom - 1)
+      expect(box.top).toBeGreaterThanOrEqual(0)
+      expect(box.bottom).toBeLessThanOrEqual(window.innerHeight + 1)
+    }
+  })
+
+  it('clicking "Edit Agents" fires the seam and the trigger reverts to the ACTIVE AGENT\'S label — never the sentinel\'s', async () => {
+    const { select, calls } = await mountPicker()
+    expect(triggerLabel(select), 'before: the trigger reads the active agent').toBe('Fable')
+
+    const edit = select.querySelector('[data-part="roster-action"][value="agent-admin:edit-agents"]') as HTMLElement
+    edit.click()
+    await frames()
+
+    expect(calls.edits, `${server.browser}: the real click reached onEditAgentsRequest`).toBe(1)
+    expect(calls.picks, 'and NOTHING leaked to the page\'s roster-pick callback').toEqual([])
+    expect(select.value, 'the control\'s own value is restored to the active id').toBe('fable')
+    expect(triggerLabel(select), `${server.browser}: the VISIBLE trigger text is the active agent's label, not "Edit Agents"`).toBe('Fable')
+  })
+
+  it('clicking "New Agent" drives the EXISTING mint seam, and a real roster option still commits normally afterwards', async () => {
+    const { el, select, calls } = await mountPicker()
+    ;(select.querySelector('[data-part="roster-action"][value="agent-admin:new-agent"]') as HTMLElement).click()
+    await frames()
+    expect(calls.news, `${server.browser}: New Agent invokes onNewAgentRequest — the one mint flow, a second door onto it`).toBe(1)
+    expect(triggerLabel(select)).toBe('Fable')
+
+    // The picker still works as a picker: re-open and commit a REAL entry.
+    ;(select.querySelector('[data-part="trigger"]') as HTMLElement).click()
+    await frames()
+    ;(select.querySelector('[role="option"][value="alpha"]') as HTMLElement).click()
+    await frames()
+    expect(calls.picks, 'a real id still reaches the page unchanged').toEqual(['alpha'])
+    expect(el.querySelector('[data-part="agent-select"]')).toBe(select)
+    expect(triggerLabel(select), 'and the trigger follows the real commit').toBe('Alpha')
+  })
+
+  it('the Delete affordances paint danger ink in a real engine — and are structurally absent for a preset', async () => {
+    const { el } = mountAgentAdminAt(1200)
+    el.onDeleteAgentRequest(() => {})
+    el.setAgentRoster([{ id: 'preset', label: 'Preset' }, { id: 'mine', label: 'Mine', deletable: true }], 'preset')
+    await frames()
+    const row = el.querySelector('[data-part="delete-agent-row"]') as HTMLElement
+    expect(row.getBoundingClientRect().height, `${server.browser}: a protected agent's Delete row has NO box`).toBe(0)
+
+    el.setAgentRoster([{ id: 'preset', label: 'Preset' }, { id: 'mine', label: 'Mine', deletable: true }], 'mine')
+    activateTab(el, 'Agent')
+    await frames()
+    const box = row.getBoundingClientRect()
+    expect(box.height, `${server.browser}: a deletable agent's Delete row paints`).toBeGreaterThan(0)
+    const button = el.querySelector('[data-part="delete-agent-button"]') as HTMLElement
+    // The repoint really lands: the button's own computed ink/background differ from the soft variant's
+    // primary mapping a sibling button (Reset Agent, same variant) resolves to.
+    const reset = el.querySelector('[data-part="reset-agent-button"]') as HTMLElement
+    const dangerInk = getComputedStyle(button).color
+    expect(dangerInk, 'a real resolved colour, not an unresolved custom property').toMatch(/^(rgb|color|oklch|lab)/)
+    expect(dangerInk, `${server.browser}: Delete does not read as the primary-family action beside it`).not.toBe(getComputedStyle(reset).color)
+    // ADR-0057 — intent never travels by colour alone: the VERB is the non-colour signifier.
+    expect((button.textContent ?? '').trim()).toBe('Delete Agent')
+  })
+})
+
 
 
 

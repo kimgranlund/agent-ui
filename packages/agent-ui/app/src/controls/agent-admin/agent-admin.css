@@ -64,6 +64,16 @@
      entry-notice) moved to ../entry-list/entry-list.css, which mints its own --ui-entry-list-{error,
      warning}-ink at the identical default expression (removed rather than left as dead, unconsumed CSS —
      the file's own established convention, TKT-0050/TKT-0060's dead-CSS removals). */
+  /* GH #845 (LLD-C8/§6) — this element's own DANGER roles, minted here in the own chain exactly as
+     entry-list.css mints its error-ink (`var(--md-sys-color-danger-…)`, a role, never a value): consumed
+     by the `delete-agent-button` `--ui-button-*` repoint and the overflow Delete item's ink/hover, both in
+     the [2] STYLES BLOCK. The three bg steps mirror `button.css [variant='soft']`'s container ladder one
+     family over (primary → danger), so the repointed button keeps its shipped state ladder exactly. */
+  --ui-agent-admin-danger-bg: var(--md-sys-color-danger-container-low);
+  --ui-agent-admin-danger-bg-hover: var(--md-sys-color-danger-container);
+  --ui-agent-admin-danger-bg-active: var(--md-sys-color-danger-container-high);
+  --ui-agent-admin-danger-ink: var(--md-sys-color-danger-high);
+  --ui-agent-admin-danger-item-ink: var(--md-sys-color-danger-on-surface-variant);
   --ui-agent-admin-scrollbar-width: none; /* the app-chrome look: NO visible scrollbars in this surface's panes (scrolling stays live) */
   --ui-agent-admin-code-surface: var(--md-sys-color-neutral-container-low, var(--md-sys-color-neutral-surface)); /* vision rev.5 — the Context tabs' mono JSON preview plane (the frame's containerLow tint) */
   /* TKT-0066 item 5 ruling: dimensional constants route through the own chain — the STYLES block below
@@ -878,6 +888,58 @@
   [data-part='reset-agent-label'] {
     flex: 0 0 auto;
     font-weight: 600;
+  }
+
+  /* GH #845 (LLD-C7/C8) — "Delete Agent"'s config-surface row: `reset-agent-row`'s anatomy verbatim,
+     including the GH #709 whole-row [hidden] override (same failure class, same cure). */
+  [data-part='delete-agent-row'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-agent-admin-row-gap);
+    box-sizing: border-box;
+    padding: var(--ui-agent-admin-card-pad);
+    border: 1px solid var(--ui-agent-admin-border);
+    border-radius: var(--ui-agent-admin-entry-radius);
+    background: var(--ui-agent-admin-surface);
+  }
+
+  [data-part='delete-agent-row'][hidden] {
+    display: none;
+  }
+
+  [data-part='delete-agent-label'] {
+    flex: 0 0 auto;
+    font-weight: 600;
+  }
+
+  /* GH #845 (LLD §6) — DANGER INTENT BY REPOINT, never a fourth `ui-button` variant. `button.md`'s variant
+     enum is `[solid, soft, ghost]` and `button.props.gen.ts` is GENERATED from it (ADR-0173), so a fourth
+     member would be a real primitive contract change (generator + drift gate + per-variant CSS) — out of
+     this ticket's blast radius, and unneeded: `button.css` declares `--ui-button-{bg,bg-hover,bg-active,ink}`
+     at `:where(ui-button)` (specificity 0,0,0) precisely so a consumer can repoint them. This mirrors
+     `[variant='soft']`'s own container-ladder mapping exactly, ONE FAMILY OVER (primary → danger), so the
+     button keeps its shipped geometry and state ladder and only the family changes. ADR-0057 — intent never
+     travels by colour alone: the VERB ("Delete Agent") is the non-color signifier, the `entry-delete`
+     wordmark precedent. THE FIRST danger-styled button in the fleet, deliberately shipped consumer-side so
+     no primitive contract moves; a SECOND consumer wanting it promotes the mapping to a real variant under
+     that wave's own ADR, not this one's. */
+  [data-part='delete-agent-button'] {
+    --ui-button-bg: var(--ui-agent-admin-danger-bg);
+    --ui-button-bg-hover: var(--ui-agent-admin-danger-bg-hover);
+    --ui-button-bg-active: var(--ui-agent-admin-danger-bg-active);
+    --ui-button-ink: var(--ui-agent-admin-danger-ink);
+  }
+
+  /* GH #845 (LLD §6) — the overflow menu's own Delete item. VERIFIED against menu.css at build time (the
+     LLD's own "builder verifies and states which" instruction): `ui-menu` DOES expose a per-item hover
+     custom property — `--ui-menu-item-bg-hover`, declared at `:where(ui-menu)` and read by the item hover
+     rule as `background-color: var(--ui-menu-item-bg-hover)`. A custom property resolves at the element
+     that USES it, so declaring it on the item itself repoints that item's hover alone, at any specificity,
+     with zero `ui-menu` source change. Ink carries the resting intent (the `entry-list` error-ink
+     precedent); the wash carries the hover. */
+  [data-part='overflow-menu'] [data-value='delete-agent'] {
+    color: var(--ui-agent-admin-danger-item-ink);
+    --ui-menu-item-bg-hover: var(--ui-agent-admin-danger-bg);
   }
 
   /* The mono JSON preview — GH #222: the section's ONE card of content (the shared card chrome recipe —

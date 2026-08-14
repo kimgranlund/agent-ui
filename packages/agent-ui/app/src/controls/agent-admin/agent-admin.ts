@@ -230,6 +230,18 @@ const PANE_IDENTITY: Record<Pane, { glyph: string; label: string }> = {
   copilot: { glyph: 'robot', label: 'Co-pilot' },
 }
 
+/**
+ * GH #845 (LLD-C2/§4) — the picker's trailing "Manage" group carries two COMPONENT-OWNED items whose
+ * `value`s are RESERVED sentinels, never real roster ids. They are interpreted inside `#composeHeader`'s
+ * own `select` listener and never forwarded to `onAgentSelect`, so a page can never see a fake id.
+ *
+ * Non-colliding BY CONSTRUCTION against the shipped page's id grammar (persona ids are `slug()`-minted
+ * `[a-z0-9-]` — a colon cannot survive the slug), and documented as RESERVED in `agent-admin.md`'s
+ * "Registration seams" fence: a consumer must not use either string as an `AgentRosterEntry.id`.
+ */
+const AGENT_SELECT_NEW = 'agent-admin:new-agent'
+const AGENT_SELECT_EDIT = 'agent-admin:edit-agents'
+
 const agentAdminProps = {
   // Non-reflected properties — too structured for an attribute (the `ui-split` `sizes` / `ui-settings`
   // `schema`/`store` precedent). Both default to `undefined` at the PROP level (matching `ui-settings`'
@@ -442,6 +454,17 @@ export interface GenerateSeed {
 export interface AgentRosterEntry {
   id: string
   label: string
+  /**
+   * GH #845 (LLD-C1) — OPTIONAL: may this entry be DELETED from the page's own roster? ABSENT reads
+   * PROTECTED (fail-closed), so every consumer written before this field existed keeps its exact prior
+   * behaviour and a future one that forgets it degrades to "no delete affordance", never to a destructive
+   * one. What "deletable" MEANS stays page-owned, exactly like `id`/`label`: the shipped page maps it to
+   * `persona.imported === true` (a shipped preset is undeletable by construction — AGENT_PRESETS are not
+   * library records), and this component neither knows nor asks. It is read ONLY as a visibility gate —
+   * one axis of `#applyActionAvailability`'s two-axis Delete rule (LLD §5), never as an instruction to
+   * delete anything: deletion itself is the page's, reached through `onDeleteAgentRequest`.
+   */
+  deletable?: boolean
 }
 
 export interface UIAgentAdminElement extends ReactiveProps<typeof agentAdminProps> {}
@@ -533,6 +556,13 @@ export class UIAgentAdminElement extends UIElement {
   // slice builds only the registration seam itself, unconsumed by any header affordance yet (LLD §16.4's
   // own S7-c/S7-d split).
   #resetRequest: (() => void) | undefined
+  // GH #845 (LLD-C4/C5) — two ADDITIVE members of the SAME S7-c family, byte-per-byte the shape above:
+  // callback registration, last-wins, safe before OR after connect (each setter's own reflect call).
+  // `#editAgentsRequest` carries no argument (the drawer is ONE page surface, not a per-agent one);
+  // `#deleteAgentRequest` carries the ACTIVE entry's id, read at INVOKE time so a roster re-push that
+  // changes `activeId` is honoured without re-registering anything.
+  #editAgentsRequest: (() => void) | undefined
+  #deleteAgentRequest: ((id: string) => void) | undefined
   // `setAgentRoster` is data-in, not a callback — but the SAME "safe before or after connect" law applies
   // (LLD §16.3), so a pre-connect call is held here and applied once `#agentSelectEl` exists
   // (`#applyAgentRoster`), exactly the `#generateRequest`/`#reflectAuthorEntry` build-time-reflect shape.
@@ -550,6 +580,9 @@ export class UIAgentAdminElement extends UIElement {
   #overflowTriggerBtn: HTMLElement | null = null
   #overflowImportItem: HTMLElement | null = null
   #overflowExportItem: HTMLElement | null = null
+  // GH #845 (LLD-C6) — the overflow's THIRD item, "Delete Agent". Gated on the two-axis rule (§5), not on
+  // registration alone: a registered seam over a PROTECTED active entry still hides it.
+  #overflowDeleteItem: HTMLElement | null = null
   // S7-d (LLD §16.4) — "Reset Agent"'s own consumer, at the model-grid fold's content end. GH #709 — the
   // WHOLE ROW hides (not just the button) while `onResetRequest` is unregistered: unlike the header's five
   // bare-action seams, this row also carries a label ("Agent configuration") — but that label has no
@@ -559,6 +592,11 @@ export class UIAgentAdminElement extends UIElement {
   // handler binds directly on the local variable at construction, `#compose` below) once hiding moved up
   // one level.
   #resetAgentRow: HTMLElement | null = null
+  // GH #845 (LLD-C7) — "Delete Agent"'s config-surface home: `reset-agent-row`'s exact anatomy, a FURTHER
+  // sibling in the same `settingsItem('model', …)` call. Same GH #709 law — the WHOLE ROW hides (its
+  // "This agent" label has no standalone value without the one action it names), through the same
+  // `#applyActionAvailability` funnel, on the two-axis rule (§5).
+  #deleteAgentRow: HTMLElement | null = null
   /**
    * GH #670 — the Author card's Model/Effort pick made BEFORE the flow is armed, held here until there is
    * somewhere real to put it. It exists because the pickers are props-down/callbacks-up: armed, a pick
@@ -1219,10 +1257,39 @@ export class UIAgentAdminElement extends UIElement {
     this.#resetAgentRow = resetAgentRow
     resetAgentRow.append(resetAgentLabel, resetAgentSpacer, resetAgentBtn)
 
+    // GH #845 (LLD-C7) — "Delete Agent"'s CONFIG-SURFACE home, beside Reset: the row above's exact
+    // anatomy (`[ label | spacer | button ]`), a FURTHER sibling in the SAME `settingsItem('model', …)`
+    // call below — never inside `modelGrid` (wholesale-`replaceChildren`d per re-render, which would wipe
+    // it), the identical reasoning `resetAgentRow` states one comment up. Copy per the NOUN-label/
+    // VERB-button law: the label names the THING ("This agent"), the button the ACTION ("Delete Agent").
+    // Danger intent is a CONSUMER-SIDE token repoint on `[data-part='delete-agent-button']`
+    // (agent-admin.css, LLD §6) — `variant="soft"`'s own geometry with the danger family swapped in, so
+    // `ui-button`'s three-member variant enum is untouched. ADR-0057 (intent never travels by colour
+    // alone): the VERB is the non-color signifier, matching `entry-delete`'s wordmark precedent.
+    // Hidden by the TWO-AXIS rule (§5), whole-row per GH #709 — see `#applyActionAvailability`.
+    const deleteAgentRow = document.createElement('div')
+    deleteAgentRow.setAttribute('data-part', 'delete-agent-row')
+    const deleteAgentLabel = document.createElement('span')
+    deleteAgentLabel.setAttribute('data-part', 'delete-agent-label')
+    deleteAgentLabel.textContent = 'This agent'
+    const deleteAgentSpacer = document.createElement('span')
+    deleteAgentSpacer.setAttribute('data-part', 'surface-spacer')
+    const deleteAgentBtn = document.createElement('ui-button') as UIButtonElement
+    deleteAgentBtn.setAttribute('variant', 'soft')
+    deleteAgentBtn.setAttribute('data-part', 'delete-agent-button')
+    deleteAgentBtn.textContent = 'Delete Agent'
+    // The id is read at CLICK time, never captured at build time (LLD-C5's read-at-invoke law): the active
+    // entry changes with every roster push, and this row outlives all of them.
+    deleteAgentBtn.addEventListener('click', () => this.#requestDeleteActiveAgent())
+    this.#deleteAgentRow = deleteAgentRow
+    deleteAgentRow.append(deleteAgentLabel, deleteAgentSpacer, deleteAgentBtn)
+
     // GH #574 — Agent tab: who it is (Agent · Model · Bankroll — persona state lives with the persona).
     agentContent.append(
       agentItem,
-      settingsItem('model', 'Model', modelGrid, resetAgentRow),
+      // GH #845 (LLD-C7) — `delete-agent-row` joins as a FURTHER sibling in this same variadic call
+      // (`...content`), after Reset: both are model-fold content-end rows, neither is grid content.
+      settingsItem('model', 'Model', modelGrid, resetAgentRow, deleteAgentRow),
       // GH #541 — Bankroll sits adjacent to Surface Options (the modality choices it reads alongside),
       // as its own group rather than a row inside them; GH #574 moved the WHOLE Surface Options fold to
       // its own tab, so Bankroll now closes out the Agent tab instead.
@@ -1472,7 +1539,30 @@ export class UIAgentAdminElement extends UIElement {
     // vocabulary for "the user picked an agent".
     agentSelect.addEventListener('select', (event) => {
       event.stopPropagation()
-      this.#agentSelectCallback?.((event as CustomEvent<string>).detail)
+      const id = (event as CustomEvent<string>).detail
+      // GH #845 (LLD-C3/§4) — the trailing "Manage" group's two items are COMPONENT-OWNED structure, so
+      // their sentinel values are interpreted HERE and never forwarded: `#agentSelectCallback` sees only
+      // real roster ids, and a page can never receive an id no persona answers to.
+      //
+      // ORDERING IS LOAD-BEARING — restore FIRST, invoke SECOND. A callback may itself re-push the roster
+      // (New Agent mints → `applyPersona` → `pushRoster`), and whoever writes last must win; restoring
+      // afterwards would clobber the freshly-minted agent's own selection with the previous active id.
+      if (id === AGENT_SELECT_NEW || id === AGENT_SELECT_EDIT) {
+        // A silent programmatic write (ADR-0019 — no `select` re-emission): the trigger label reverts to
+        // the real active agent through the control's own reactive label effect. `selectionCommit`'s
+        // `publish()` has ALREADY run the control's `onSelect` (`this.value = key`, select.ts) by the time
+        // this listener sees the event, so this write lands after it and wins.
+        agentSelect.value = this.#pendingRoster?.activeId ?? ''
+        if (id === AGENT_SELECT_NEW) this.#newAgentRequest?.()
+        else this.#editAgentsRequest?.()
+        // What the restore does NOT rewrite is the commit trait's own internal committed key and the
+        // sentinel option's `aria-selected` reflection. A queued full re-run clears both wholesale — fresh
+        // nodes in the exact state a fresh roster push produces (the shipped baseline). QUEUED, never
+        // inline: an inline wipe would yank the clicked option out from under the still-dispatching commit.
+        queueMicrotask(() => this.#applyAgentRoster())
+        return
+      }
+      this.#agentSelectCallback?.(id)
     })
     this.#agentSelectEl = agentSelect
 
@@ -1626,12 +1716,22 @@ export class UIAgentAdminElement extends UIElement {
     overflowExportItem.dataset.value = 'export-agent'
     overflowExportItem.textContent = 'Export'
     this.#overflowExportItem = overflowExportItem
-    overflowMenu.append(overflowTrigger, overflowImportItem, overflowExportItem)
+    // GH #845 (LLD-C6) — the THIRD item, the header's own home for "Delete Agent" (the config surface's
+    // `delete-agent-row` is the other, both driving the ONE `onDeleteAgentRequest` seam). It keeps this
+    // menu's shipped `hidden`+`aria-disabled` idiom verbatim — that rides `ui-menu`, and it is shipped,
+    // probed behaviour — but its gate is the TWO-AXIS rule (§5), not registration alone. Danger intent is
+    // the ink repoint in agent-admin.css (LLD §6); the VERB carries it without colour (ADR-0057).
+    const overflowDeleteItem = document.createElement('div')
+    overflowDeleteItem.dataset.value = 'delete-agent'
+    overflowDeleteItem.textContent = 'Delete Agent'
+    this.#overflowDeleteItem = overflowDeleteItem
+    overflowMenu.append(overflowTrigger, overflowImportItem, overflowExportItem, overflowDeleteItem)
     overflowMenu.addEventListener('select', (event) => {
       event.stopPropagation()
       const { value } = (event as CustomEvent<{ value: string; index: number }>).detail
       if (value === 'import-agent') this.#importRequest?.()
       else if (value === 'export-agent') this.#exportRequest?.()
+      else if (value === 'delete-agent') this.#requestDeleteActiveAgent()
     })
 
     headerActions.append(newAgentWide, importAction, exportAction, newAgentNarrow, overflowMenu)
@@ -3476,7 +3576,10 @@ export class UIAgentAdminElement extends UIElement {
   }
 
   // ── S7-c (LLD §16.3, frozen seam shapes) — the unified header bar's six registration seams ───────────
-  // All six follow `onGenerateRequest`'s shipped semantics verbatim: callback registration, never a
+  // GH #845 extends the family ADDITIVELY with two more of the identical shape (`onEditAgentsRequest`/
+  // `onDeleteAgentRequest`, below) — the `onResetRequest` precedent (GH #709), which earned no ADR either:
+  // nothing about the family's contract forks, one more member joins it.
+  // All of them follow `onGenerateRequest`'s shipped semantics verbatim: callback registration, never a
   // CustomEvent (SPEC-R5); last registration wins (a bare field reassignment); safe before OR after
   // connect (the GH #666 order rule — each setter's own reflect call, mirrored by `#compose`'s build-time
   // call, covers both orders). The DEGRADE diverges deliberately from `onGenerateRequest`'s own precedent
@@ -3495,6 +3598,10 @@ export class UIAgentAdminElement extends UIElement {
   setAgentRoster(entries: readonly AgentRosterEntry[], activeId?: string): void {
     this.#pendingRoster = { entries, activeId }
     this.#applyAgentRoster()
+    // GH #845 (LLD-C6) — the Delete affordances' `deletable` axis (§5) is roster DATA, so it changes with
+    // every push and every active switch, not only at seam registration: this funnel call is what makes a
+    // bare `setAgentRoster` alone flip Delete's visibility. (`#compose`'s tail already calls both.)
+    this.#applyActionAvailability()
   }
 
   /**
@@ -3516,17 +3623,80 @@ export class UIAgentAdminElement extends UIElement {
    */
   #applyAgentRoster(): void {
     const select = this.#agentSelectEl
+    if (select === null) return
+    // GH #845 (§4's "always present", read precisely) — the guard LOOSENS from "no pending roster ⇒ do
+    // nothing" to "no pending roster ⇒ entries = []": the trailing Manage group is a structural part of
+    // this element for every consumer, so a registered consumer that never pushed a roster still shows it.
     const pending = this.#pendingRoster
-    if (select === null || pending === undefined) return
+    const entries = pending?.entries ?? []
     for (const option of [...select.querySelectorAll('[role="option"]')]) option.remove()
-    for (const entry of pending.entries) {
+    // GH #845 (LLD-C2/§4, the tail-adoption fork RESOLVED) — the wipe WIDENS to the previous Manage group
+    // as well. `ui-select` adopts a newly-appended `[role=option]`/`[role=group]` child at the panel's
+    // TAIL (select.md's Slots note; select.ts's `#syncOptions` — an already-adopted sibling's parent is
+    // the listbox, so no host-level insert can ever splice ahead of it), which means a group built ONCE
+    // would sit ABOVE every option re-adopted by the NEXT push. Joining the wipe-and-rebuild is what keeps
+    // it last: the same mechanism that would otherwise break the order is what delivers it.
+    select.querySelector('[data-part="roster-actions"]')?.remove()
+    for (const entry of entries) {
       const option = document.createElement('div')
       option.setAttribute('role', 'option')
       option.setAttribute('value', entry.id)
       option.textContent = entry.label
       select.append(option)
     }
-    select.value = pending.activeId ?? ''
+    this.#appendRosterActions(select)
+    select.value = pending?.activeId ?? ''
+  }
+
+  /**
+   * GH #845 (LLD-C2/§4) — build a FRESH trailing "Manage" group and append it LAST, on every
+   * `#applyAgentRoster` run.
+   *
+   * The DIVIDER VEHICLE is the `role="group"` optgroup, ruled over a separator: `select.ts`'s `#adoptChild`
+   * gate adopts ONLY `option`/`group` roles, so a bare `role="separator"` node would never enter the panel
+   * without a `ui-select` change this ticket does not earn. The control-created `group-label` header
+   * ("Manage", non-interactive, non-focusable, `aria-labelledby`'d) IS the divider + label.
+   *
+   * DEGRADE IS STRUCTURAL OMISSION, not `[hidden]` — a stated divergence from this element's own overflow
+   * items, with a mechanical reason: the select's live `items()` accessor (select.ts) does not filter
+   * `[hidden]` options, so a hidden sentinel would stay arrow-key reachable and focusing a `display:none`
+   * node no-ops — a dead stop in the roving order. Since the group is re-composed on EVERY run anyway, the
+   * availability law becomes: compose each item only while its seam is registered, and omit the whole group
+   * when neither is. Both registration setters re-run this path, so late registration still composes.
+   */
+  #appendRosterActions(select: UISelectElement): void {
+    const wantsNew = this.#newAgentRequest !== undefined
+    const wantsEdit = this.#editAgentsRequest !== undefined
+    if (!wantsNew && !wantsEdit) return
+    const group = document.createElement('div')
+    group.setAttribute('role', 'group')
+    // Consumed by `#adoptChild` into a real `group-label` header + `aria-labelledby` at adoption time.
+    group.setAttribute('label', 'Manage')
+    group.setAttribute('data-part', 'roster-actions')
+    for (const [wanted, value, label] of [
+      [wantsNew, AGENT_SELECT_NEW, 'New Agent'],
+      [wantsEdit, AGENT_SELECT_EDIT, 'Edit Agents'],
+    ] as const) {
+      if (!wanted) continue
+      const item = document.createElement('div')
+      item.setAttribute('role', 'option')
+      item.setAttribute('value', value)
+      item.setAttribute('data-part', 'roster-action')
+      item.textContent = label
+      group.append(item)
+    }
+    select.append(group)
+  }
+
+  /** GH #845 (LLD-C5) — the ONE invoke path both component-owned Delete affordances share: read the ACTIVE
+   *  entry's id off `#pendingRoster` AT INVOKE TIME (never a build-time capture) and hand it to the seam,
+   *  so the page's single `deleteAgent(id)` handler is shared verbatim by the overflow item, the config
+   *  row, and the page's own drawer rows. A no-op while unregistered or before any roster push — the same
+   *  affordances are hidden in both states anyway (§5), so this is defense in depth, not the gate. */
+  #requestDeleteActiveAgent(): void {
+    const activeId = this.#pendingRoster?.activeId
+    if (activeId === undefined || activeId === '') return
+    this.#deleteAgentRequest?.(activeId)
   }
 
   /** Register the header roster's own pick handler — the select's `select` event stays CONTAINED
@@ -3541,6 +3711,11 @@ export class UIAgentAdminElement extends UIElement {
    *  button is. */
   onNewAgentRequest(callback: () => void): void {
     this.#newAgentRequest = callback
+    // GH #845 (§4) — this seam now drives THREE renderings, not two: the wide button, the narrow "+", and
+    // the picker's own "New Agent" item, which is composed only while the seam is registered (structural
+    // omission, never `[hidden]`). Registration setters therefore re-run the roster build, so registering
+    // late still composes the item without the page re-pushing anything.
+    this.#applyAgentRoster()
     this.#applyActionAvailability()
   }
 
@@ -3570,6 +3745,39 @@ export class UIAgentAdminElement extends UIElement {
   }
 
   /**
+   * GH #845 (LLD-C4) — register the page's "open the roster-management surface" path. The S7-c family
+   * shape verbatim: a callback, never a CustomEvent; last registration wins; safe before OR after connect
+   * (this setter's own reflect calls cover both orders, mirrored by `#compose`'s build-time pair).
+   *
+   * NO ARGUMENT — the drawer is ONE page surface, not a per-agent one. What the surface IS stays entirely
+   * page-owned (a `ui-drawer` of roster rows in the shipped composition; this element neither builds nor
+   * knows it). Its CONSUMER is the picker's trailing "Manage" group item "Edit Agents", composed only
+   * while this seam is registered (§4's structural-omission degrade — hence the `#applyAgentRoster` reflect
+   * beside the availability one).
+   */
+  onEditAgentsRequest(callback: () => void): void {
+    this.#editAgentsRequest = callback
+    this.#applyAgentRoster()
+    this.#applyActionAvailability()
+  }
+
+  /**
+   * GH #845 (LLD-C5) — register the page's "delete this agent" path. Same family shape, with ONE argument:
+   * the ACTIVE entry's id, read at invoke time (`#requestDeleteActiveAgent`). Reset passes nothing because
+   * "reset" can only ever mean the active agent; delete hands the id over so the page's ONE `deleteAgent(id)`
+   * handler is shared verbatim by all three delete affordances — this element's two homes (the overflow
+   * item and the config surface's `delete-agent-row`) reach it through this seam, and the page's own
+   * drawer rows call the same handler directly (page-owned content, no seam owed).
+   *
+   * Registration is only ONE axis of the affordances' visibility (§5): the ACTIVE entry must also be
+   * `deletable`. A registered seam over a protected entry (a shipped preset) shows nothing.
+   */
+  onDeleteAgentRequest(callback: (id: string) => void): void {
+    this.#deleteAgentRequest = callback
+    this.#applyActionAvailability()
+  }
+
+  /**
    * The action-seam HIDE degrade (LLD §16.3/§16.4), applied per affordance — never a blanket disable. New
    * Agent's two renderings share one registration; Import/Export each degrade independently (a wide
    * button AND its own narrow menu item); the `•••` trigger itself hides only when BOTH narrow items it
@@ -3594,10 +3802,24 @@ export class UIAgentAdminElement extends UIElement {
       this.#overflowExportItem.hidden = exportHidden
       this.#overflowExportItem.setAttribute('aria-disabled', String(exportHidden))
     }
-    if (this.#overflowTriggerBtn) this.#overflowTriggerBtn.hidden = importHidden && exportHidden
+    // GH #845 (LLD-C6, §5) — the TWO-AXIS Delete gate, the one derived input this funnel gained: a Delete
+    // affordance paints only when a handler EXISTS and the ACTIVE entry is `deletable`. Presets (the field
+    // absent ⇒ protected, fail-closed) and unregistered-seam consumers converge on the SAME hidden state,
+    // so AC5's "presets show neither" falls out of the axis rather than a special case.
+    const active = this.#pendingRoster?.entries.find((entry) => entry.id === this.#pendingRoster?.activeId)
+    const deleteHidden = this.#deleteAgentRequest === undefined || active?.deletable !== true
+    if (this.#overflowDeleteItem) {
+      this.#overflowDeleteItem.hidden = deleteHidden
+      this.#overflowDeleteItem.setAttribute('aria-disabled', String(deleteHidden))
+    }
+    // The trigger's own hide rule WIDENS with the third item — an openable-but-empty menu is still not a
+    // real affordance, but Delete alone is now enough to make it a real one.
+    if (this.#overflowTriggerBtn) this.#overflowTriggerBtn.hidden = importHidden && exportHidden && deleteHidden
     // GH #709 — the WHOLE ROW hides, not just the button (its label has no standalone value once the
     // action it names is gone). `#resetAgentBtn` itself is never toggled here anymore.
     if (this.#resetAgentRow) this.#resetAgentRow.hidden = this.#resetRequest === undefined
+    // GH #845 (LLD-C7) — the same GH #709 law for Delete's own row, on the two-axis rule above.
+    if (this.#deleteAgentRow) this.#deleteAgentRow.hidden = deleteHidden
   }
 
   // ── protected test seams (the split.ts/slider-multi.ts precedent) ────────────────────────────────────
