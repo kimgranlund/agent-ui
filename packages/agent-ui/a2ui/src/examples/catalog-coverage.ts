@@ -622,6 +622,50 @@ export const colorPickerFormSeed: ExampleSeed = {
   ],
 }
 
+const AGENT_ROSTER_ID = 'agent-roster-drawer'
+/** ui-drawer catalog coverage (ADR-0188) — the exact GH #845 motivating case: an "Edit agents" roster
+ *  managed inside an edge-docked Drawer (a management/list task too tall for a centered Modal), opened
+ *  from a Button and dismissed via the drawer's own bindable `open` (ADR-0019's two-way idiom, the SAME
+ *  shape Modal's own coverage seed uses in catalog-frontier.ts's inviteModalSeed). */
+export const agentRosterDrawerSeed: ExampleSeed = {
+  name: 'agent-roster-drawer',
+  description: 'An "Edit agents" roster — a Button opens an end-docked Drawer (bindable open) listing agents, each removable.',
+  promptText: 'Let me manage my agents: a button that opens a side panel listing them, each with a remove action.',
+  surfaceId: AGENT_ROSTER_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: AGENT_ROSTER_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: AGENT_ROSTER_ID,
+        value: { rosterOpen: false, agents: ['Researcher', 'Drafter', 'Reviewer'] },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: AGENT_ROSTER_ID,
+        components: [
+          { id: 'root', component: 'Row', gap: 'md', children: ['btn_open', 'roster_drawer'] },
+          { id: 'btn_open', component: 'Button', variant: 'solid', label: 'Edit agents…', action: { action: 'open_roster' } },
+          {
+            id: 'roster_drawer', component: 'Drawer', edge: 'end', open: { path: '/rosterOpen' },
+            children: ['drawer_col'],
+          },
+          { id: 'drawer_col', component: 'Column', gap: 'md', children: ['drawer_title', 'agent_list'] },
+          { id: 'drawer_title', component: 'Text', variant: 'h4', text: 'Your agents' },
+          { id: 'agent_list', component: 'List', children: { path: '/agents', componentId: 'agent_row' } },
+          { id: 'agent_row', component: 'Row', gap: 'md', justify: 'between', align: 'center', children: ['agent_name', 'agent_remove'] },
+          { id: 'agent_name', component: 'Text', text: { path: '' } },
+          { id: 'agent_remove', component: 'Button', variant: 'ghost', label: 'Remove', action: { action: 'remove_agent' } },
+        ],
+      },
+    },
+  ],
+}
+
 /** Every seed this module defines — the barrel's family-array precedent (index.ts derives `allSeeds`
  *  length from these, never a hand-counted literal). */
 export const catalogCoverageSeeds: readonly ExampleSeed[] = [
@@ -635,4 +679,5 @@ export const catalogCoverageSeeds: readonly ExampleSeed[] = [
   agentTaskStatusSeed,
   brandPaletteSeed,
   colorPickerFormSeed,
+  agentRosterDrawerSeed,
 ]

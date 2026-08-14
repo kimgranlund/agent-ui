@@ -290,6 +290,11 @@ export const tabPanelFactory: WidgetFactory = accessorFactory('ui-tab-panel')
 // so the agent learns of a platform dismissal (Escape / backdrop).
 export const modalFactory: WidgetFactory = accessorFactory('ui-modal', { prop: 'open', event: 'toggle' })
 
+// Drawer (native <dialog>, edge-docked — ADR-0188) — the SAME two-way bind shape as Modal (`open`/`toggle`);
+// `edge`/`persistent` are 1:1 reflecting accessors, riding accessorFactory generically like Modal's own
+// `persistent`. No bespoke mapping needed — the drawer's catalog surface is Modal's row shape plus one enum.
+export const drawerFactory: WidgetFactory = accessorFactory('ui-drawer', { prop: 'open', event: 'toggle' })
+
 // TextField (G6) — the deferred value bind goes live through the same LLD-C8 controller (ADR-0019 cl.3):
 // `value` commits on the control's `change` event (blur / Enter), zero text-field code change. The
 // Wave-5 reach (ADR-0047/0048) + the ADR-0053 catalog widening (`type`/`currency`/`unit`/`step`/`min`/
@@ -928,6 +933,7 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   Tab: tabFactory,
   TabPanel: tabPanelFactory,
   Modal: modalFactory,
+  Drawer: drawerFactory,
   Icon: iconFactory,
   Menu: menuFactory,
   MenuItem: menuItemFactory,

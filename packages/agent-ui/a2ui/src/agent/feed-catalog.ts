@@ -88,7 +88,7 @@ export interface FeedExclusion {
 }
 
 /**
- * The 29 catalog types a feed ask MAY NEVER host (ADR-0097 §3's ratified 11 + the chart-family pair —
+ * The 30 catalog types a feed ask MAY NEVER host (ADR-0097 §3's ratified 11 + the chart-family pair —
  * the ADR-0097 Amendment / ADR-0107 Amendment 2 — + the report/content/feed catalog wave's five:
  * `Stat`/`Table` [ADR-0111], `Disclosure` [ADR-0113], `Progress`/`Attachment` [ADR-0112] — + the
  * token-surface family's three: `Swatch`/`Ramp`/`Ladder` [ADR-0118 cl.6] — + the M4 app-surfaces panes
@@ -96,7 +96,9 @@ export interface FeedExclusion {
  * wave's two: `Timeline`/`TimelineItem` [ADR-0122 F5, timeline-family.spec.md] — + the swiper-family
  * wave's two: `Swiper`/`SwiperItem` [ADR-0124 F5, swiper-family.spec.md] — + the color-picker wave's one:
  * `ColorPicker` [ADR-0123 cl.6] — + the form-popover wave's one: `FormPopover` [GH #294 F4,
- * form-popover.spec.md SPEC-R9 — the same disclosure-overlay reasoning as Popover/Menu/Tooltip]).
+ * form-popover.spec.md SPEC-R9 — the same disclosure-overlay reasoning as Popover/Menu/Tooltip] —
+ * + the ui-drawer wave's one: `Drawer` [ADR-0188 cl.2 — the SAME focus-stealing top-layer class as
+ * Modal, edge-docked rather than centred]).
  * Composite-closure note: a composite's children are excluded ALONGSIDE their parent for the SAME
  * reason (Tab/TabPanel with Tabs; MenuItem with Menu) — `feed-catalog.test.ts` asserts this closure
  * holds, both here and for the IN composites (RadioGroup/Radio, SegmentedControl/Segment, Card/its
@@ -106,6 +108,10 @@ export const FEED_EXCLUDED: readonly FeedExclusion[] = [
   {
     type: 'Modal',
     reason: 'a focus-stealing overlay inside a chat bubble — the ask IS the interruption; nesting one defeats the point.',
+  },
+  {
+    type: 'Drawer',
+    reason: 'the SAME focus-stealing top-layer overlay class as Modal (ADR-0188 cl.2 — edge-docked, not centred, but equally modal) — nesting one inside a chat bubble defeats the point exactly as Modal would.',
   },
   {
     type: 'Tabs',

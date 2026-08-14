@@ -163,6 +163,7 @@ const A2UI_INITIAL: Record<string, Record<string, string>> = {
   Option: { label: 'Option', value: 'a' },
   // Modal is deliberately NOT seeded open: an auto-opened dialog throws a top-layer overlay over the whole
   // gallery on load. It starts closed; the `open` knob reveals it on demand (its sample content is ready).
+  // Drawer (ADR-0188) follows the SAME reasoning — also absent, also starts closed.
 }
 
 /** A sensible default-slot label for a component-mode control — its title-cased tag stem (`ui-button` → `Button`). */
@@ -244,6 +245,10 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
   Modal: () => ({
     rootRef: { children: ['s_mtext'] },
     extras: [{ id: 's_mtext', component: 'Text', variant: 'body', text: 'Modal content' }],
+  }),
+  Drawer: () => ({
+    rootRef: { children: ['s_dtext'] },
+    extras: [{ id: 's_dtext', component: 'Text', variant: 'body', text: 'Drawer content' }],
   }),
 }
 
@@ -496,6 +501,22 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
     actions.append(close)
     return [heading, body, actions]
   },
+  // ui-drawer (ADR-0188): the SAME do-NOT-auto-open reasoning as ui-modal above — the `open` knob stays the
+  // reveal mechanism (an auto-opened top-layer dialog would throw a scrim over the whole gallery on load).
+  'ui-drawer': () => {
+    const heading = document.createElement('h2')
+    heading.textContent = 'Example drawer'
+    const body = document.createElement('p')
+    body.textContent = 'A representative drawer body.'
+    const actions = document.createElement('ui-row')
+    actions.setAttribute('gap', 'sm')
+    actions.setAttribute('justify', 'end')
+    const close = document.createElement('ui-button')
+    close.setAttribute('variant', 'soft')
+    close.textContent = 'Close'
+    actions.append(close)
+    return [heading, body, actions]
+  },
   // ui-command-modal (ADR-0125): the palette's real job — a populated, GROUPED command list (not a one-child
   // stub), the whole-shape/representative-specimen law. Also do NOT auto-open (the ui-modal precedent, above);
   // the `open` knob reveals it, so the viewer sees the trigger-to-palette flow rather than a pre-opened dialog.
@@ -731,6 +752,7 @@ export const NO_SLOT_TEXT = new Set([
   'ui-icon', // setIcon() injects a real <svg> child whenever `name` is non-empty (icon.ts:38-41) — a name-driven slot, not authored text
   'ui-menu', // #ensureParts(): trigger (COMPONENT_SAMPLE_CHILDREN) + panel
   'ui-modal', // #ensureDialog(): the control-owned <dialog> part
+  'ui-drawer', // #ensureDialog(): the control-owned <dialog> part (ADR-0188, the modal precedent re-applied)
   'ui-popover', // #ensureParts(): trigger (COMPONENT_SAMPLE_CHILDREN) + panel
   'ui-select', // #ensureParts(): a control-created trigger button + listbox
   'ui-slider', // ::before/::after track only — no text slot at all (batch C); seeded an aria-label via COMPONENT_SAMPLE_ATTRS instead

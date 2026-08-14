@@ -571,11 +571,13 @@ describe("Lifecycle — an `open` attribute always pairs with BOTH toggle and cl
   it('finds the open-bearing controls to check, split into overlay vs the documented exception (anti-vacuous)', () => {
     expect(openBearing.length).toBeGreaterThan(0)
     expect(openBearing.map((c) => c.name).sort()).toEqual(
-      ['combo-box', 'command-modal', 'disclosure', 'form-popover', 'menu', 'modal', 'popover', 'select', 'tooltip'].filter((n) =>
+      ['combo-box', 'command-modal', 'disclosure', 'drawer', 'form-popover', 'menu', 'modal', 'popover', 'select', 'tooltip'].filter((n) =>
         openBearing.some((c) => c.name === n),
       ),
     )
-    expect(overlays.map((c) => c.name).sort()).toEqual(['combo-box', 'command-modal', 'form-popover', 'menu', 'modal', 'popover', 'select', 'tooltip'])
+    // ui-drawer (ADR-0188) is exactly the same overlay class as ui-modal (top-layer + scrim + focus-contained,
+    // ADR-0188 cl.2 — never a KNOWN_NON_OVERLAY_OPEN exception) — it pairs open with BOTH toggle and close.
+    expect(overlays.map((c) => c.name).sort()).toEqual(['combo-box', 'command-modal', 'drawer', 'form-popover', 'menu', 'modal', 'popover', 'select', 'tooltip'])
   })
 
   for (const c of overlays) {

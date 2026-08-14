@@ -53,4 +53,14 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // dated record of that pending state (category 1's no-verdict-sought shape, temporarily): run the
   // judged pipeline (`import-seeds.ts` with real VerdictsFiles) and DELETE these entries when the wave
   // lands — an entry surviving after admission is the drift this map's gate exists to catch.
+  [
+    'agent-roster-drawer',
+    'ADR-0188 (2026-08-13) — the ui-drawer catalog-coverage seed: NO VERDICT SOUGHT YET, not a refusal, ' +
+      'the SAME pending-state shape as the GH #729 four above. Added by the drawer component build ' +
+      '(catalog-coverage.ts, GH #863) to close the standing GH #729 example-coverage gate for the ' +
+      'newly-admitted `Drawer` catalog type; admission is a PENDING judged import wave this build could ' +
+      'not run itself (a dispatched component build judging its own new seed is the same manufactured ' +
+      'judgment ADR-0068\'s Alternatives ban). Run the judged pipeline (`import-seeds.ts` with a real ' +
+      'VerdictsFile) and DELETE this entry when the wave lands.',
+  ],
 ])

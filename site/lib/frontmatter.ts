@@ -30,6 +30,8 @@ import gridMd from '../../packages/agent-ui/components/src/controls/grid/grid.md
 import cardMd from '../../packages/agent-ui/components/src/controls/card/card.md?raw'
 import tabsMd from '../../packages/agent-ui/components/src/controls/tabs/tabs.md?raw'
 import modalMd from '../../packages/agent-ui/components/src/controls/modal/modal.md?raw'
+// ADR-0188 — ui-drawer, the edge-docked modal container (tier=container ⇒ {doc,demo}).
+import drawerMd from '../../packages/agent-ui/components/src/controls/drawer/drawer.md?raw'
 // ADR-0121 — ui-toolbar, a Pattern-class action bar (role=toolbar + roving focus, posture via elevation/brightness).
 import toolbarMd from '../../packages/agent-ui/components/src/controls/toolbar/toolbar.md?raw'
 import checkboxMd from '../../packages/agent-ui/components/src/controls/checkbox/checkbox.md?raw'
@@ -151,6 +153,8 @@ export const loadGridDoc = (): ComponentDoc => parseDoc(gridMd)
 export const loadCardDoc = (): ComponentDoc => parseDoc(cardMd)
 export const loadTabsDoc = (): ComponentDoc => parseDoc(tabsMd)
 export const loadModalDoc = (): ComponentDoc => parseDoc(modalMd)
+// ADR-0188 — ui-drawer (tier=container ⇒ {doc,demo}).
+export const loadDrawerDoc = (): ComponentDoc => parseDoc(drawerMd)
 export const loadToolbarDoc = (): ComponentDoc => parseDoc(toolbarMd)
 export const loadCheckboxDoc = (): ComponentDoc => parseDoc(checkboxMd)
 export const loadSwitchDoc = (): ComponentDoc => parseDoc(switchMd)
