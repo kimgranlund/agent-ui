@@ -1082,6 +1082,17 @@
         exact stops the ramp change forced to move; the visual shift is one step darker in light mode. */
   --md-sys-color-primary-selected: light-dark(var(--md-sys-color-primary-600), var(--md-sys-color-primary-600));
 
+  /* ④ Scrollbar-thumb affordance (GH #867) — the shared unobtrusive-scroll idiom: a thumb painted only on
+        hover/focus-within (transparent at rest, so nothing chunky ever paints while idle), reusing the ②
+        rail role's own ≥3:1 SC 1.4.11 contrast target rather than minting a new ramp step — a scrollbar
+        thumb is the same "off-track, low-emphasis affordance" role as a switch/slider rail. Named under the
+        `neutral` family (`--md-sys-color-neutral-scrollbar-*`), NOT a bare `--md-sys-color-scrollbar-*` —
+        the family/role parse (site/lib/token-parse.ts's `familiesOf`) would otherwise mint a genuinely NEW
+        11th palette family for what is really just two more neutral roles (the tokens-doc.test.ts "exactly
+        ten families" gate is the live proof this reasoning is load-bearing, not stylistic). */
+  --md-sys-color-neutral-scrollbar-thumb: var(--md-sys-color-neutral-track);
+  --md-sys-color-neutral-scrollbar-thumb-hover: var(--md-sys-color-neutral-track-hover);
+
 }
 
 /* Forced-colors (WHCM) — roles carry the WHCM mapping in the token layer (tokens.md), so components survive

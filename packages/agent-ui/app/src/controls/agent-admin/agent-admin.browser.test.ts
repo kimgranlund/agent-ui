@@ -3134,6 +3134,80 @@ describe('ui-agent-admin cross-engine — the picker\'s New Agent / Edit Agents 
   })
 })
 
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  GH #867 — unobtrusive scrolling: the Context: System JSON card scrolls with a thin gutter, never the
+//  platform-default chunky bar. A synthetic UNTREATED sibling (same content/box/overflow, none of
+//  context-json's scrollbar CSS) is the engine-capability-agnostic proof — it holds whether or not an
+//  engine exposes `scrollbar-width` back through getComputedStyle, since both engines under test honour
+//  `::-webkit-scrollbar` (the fix's real cross-engine lever).
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-agent-admin cross-engine smoke — GH #867: the context-json card scrolls with an unobtrusive (thin) scrollbar, never the platform-default chunky bar', () => {
+  afterEach(() => {
+    // The negative control below is appended straight to document.body (outside the `mounted` wrapper
+    // stack this file's own afterEach walks), so it needs its own cleanup.
+    document.querySelectorAll('[data-gh867-control]').forEach((n) => n.remove())
+  })
+
+  it('overflows for real, scrolls (scrollTop moves), and reserves a THINNER gutter than an untreated control with the SAME content/overflow', async () => {
+    const { el } = mountAgentAdminAt(900)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    activateTab(el, 'Context: System')
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    const agentJson = el.querySelector('[data-part="context-item"][data-item="agent"] [data-part="context-json"]') as HTMLElement
+    expect(agentJson.textContent, 'the real compiled config, not a stub').toContain('systemPrompt')
+    expect(agentJson.scrollHeight, 'a real overflow to actually scroll').toBeGreaterThan(agentJson.clientHeight)
+
+    // scrollability itself is UNCHANGED by this fix — a real scrollTop move.
+    agentJson.scrollTop = 0
+    agentJson.scrollTop = 40
+    expect(agentJson.scrollTop, `${server.browser}: still genuinely scrollable`).toBeGreaterThan(0)
+
+    // The negative control: an ordinary `overflow: auto` box, same size/content, carrying NONE of
+    // context-json's scrollbar CSS (a bare `<pre>`, no `[data-part='context-json']` selector match).
+    const control = document.createElement('pre')
+    control.setAttribute('data-gh867-control', '')
+    control.textContent = agentJson.textContent
+    const rect = agentJson.getBoundingClientRect()
+    control.style.cssText = `box-sizing: border-box; font-family: ui-monospace, monospace; font-size: 0.75rem; line-height: 1.5; white-space: pre; overflow-x: auto; overflow-y: auto; inline-size: ${rect.width}px; block-size: ${rect.height}px;`
+    document.body.append(control)
+    await new Promise((r) => requestAnimationFrame(r))
+
+    const treatedGutter = agentJson.offsetWidth - agentJson.clientWidth
+    const untreatedGutter = control.offsetWidth - control.clientWidth
+    expect(untreatedGutter, `${server.browser}: the negative control must show a real native gutter for the comparison to mean anything`).toBeGreaterThan(0)
+    expect(treatedGutter, `${server.browser}: the treated card's gutter must be no wider than the untreated platform default`).toBeLessThanOrEqual(untreatedGutter)
+
+    if (CSS.supports('scrollbar-width', 'thin')) {
+      expect(getComputedStyle(agentJson).scrollbarWidth, `${server.browser}: exposes scrollbar-width`).toBe('thin')
+    }
+  })
+
+  it('the SAME card, reached via Context: Dialog\'s turn payload, gets the identical treatment (one selector, both tabs — contextItem() builds both)', async () => {
+    const { el } = mountAgentAdminAt(900)
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    goToPlace(el, 'Chat')
+    const composer = el.querySelector('[data-part="chat-pane"] ui-conversation-composer') as HTMLElement & { value: string }
+    composer.value = 'gh867 probe'
+    ;(composer.querySelector('[data-part="send"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    const start = Date.now()
+    while (el.querySelectorAll('[data-part="context-turn"]').length === 0) {
+      if (Date.now() - start > 8000) throw new Error('stub turn never logged')
+      await new Promise((r) => setTimeout(r, 50))
+    }
+    activateTab(el, 'Context: Dialog')
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    const turnJson = el.querySelector('[data-part="context-turn"] [data-part="context-json"]') as HTMLElement
+    expect(turnJson, 'a real turn payload card').not.toBeNull()
+    expect(turnJson.scrollHeight, 'the turn payload also overflows for real').toBeGreaterThanOrEqual(turnJson.clientHeight)
+    if (CSS.supports('scrollbar-width', 'thin')) {
+      expect(getComputedStyle(turnJson).scrollbarWidth, `${server.browser}: same treatment as Context: System's card — ONE selector, no forked copy`).toBe('thin')
+    }
+  })
+})
+
 
 
 

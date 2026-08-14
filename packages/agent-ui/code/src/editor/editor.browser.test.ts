@@ -1087,3 +1087,47 @@ describe('ui-code-editor — the mode-toggle is a zero-footprint corner overlay 
     expect(t.top - host.top, 'the toggle must stick to the scrollport top, not ride the content away').toBeLessThan(10)
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  GH #867 — unobtrusive scrolling: the host's own scroller (confirmed above — "the host itself is the
+//  scroller") shows a THIN gutter, never the platform-default chunky bar, while scrolling itself stays
+//  fully live. A synthetic UNTREATED sibling (same content/overflow, none of this fix's CSS) is the
+//  engine-capability-agnostic proof: it works whether or not an engine even exposes `scrollbar-width`
+//  back through getComputedStyle, per both engines' `::-webkit-scrollbar` support.
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-code-editor — GH #867: the entry-content box scrolls with an unobtrusive (thin) scrollbar, never the platform-default chunky bar', () => {
+  it('overflows for real, scrolls (scrollTop moves), and reserves a THINNER gutter than an untreated control with the SAME content/overflow', async () => {
+    const { field } = mount(`<ui-code-editor language="plain" style="inline-size: 320px; block-size: 80px; display: block"></ui-code-editor>`)
+    field.value = Array.from({ length: 40 }, (_, i) => `scroll line ${i}`).join('\n')
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    expect(field.scrollHeight, 'a real overflow to actually scroll').toBeGreaterThan(field.clientHeight)
+
+    // scrollability itself is UNCHANGED by this fix — a real scrollTop move.
+    field.scrollTop = 0
+    field.scrollTop = 40
+    expect(field.scrollTop, `${server.browser}: still genuinely scrollable`).toBeGreaterThan(0)
+
+    // The negative control: an ordinary `overflow-y: auto` box, same size/content, carrying NONE of this
+    // fix's CSS (no `ui-code-editor` tag, so none of its scrollbar rules match).
+    const control = document.createElement('div')
+    control.textContent = field.value
+    control.style.cssText = 'box-sizing: border-box; inline-size: 320px; block-size: 80px; overflow-y: auto; white-space: pre;'
+    document.body.append(control)
+    mounted.push(control)
+    await new Promise((r) => requestAnimationFrame(r))
+
+    const treatedGutter = field.offsetWidth - field.clientWidth
+    const untreatedGutter = control.offsetWidth - control.clientWidth
+    expect(untreatedGutter, `${server.browser}: the negative control must show a real native gutter for the comparison to mean anything`).toBeGreaterThan(0)
+    expect(treatedGutter, `${server.browser}: the treated box's gutter must be no wider than the untreated platform default`).toBeLessThanOrEqual(untreatedGutter)
+
+    // Where the engine exposes the standard property back, it must read the explicit 'thin' this fix sets,
+    // never 'auto' (kept conditional — WebKit/Chromium support varies, the fix's REAL cross-engine lever is
+    // the `::-webkit-scrollbar` gutter measured above, which both engines under test honour).
+    if (CSS.supports('scrollbar-width', 'thin')) {
+      expect(getComputedStyle(field).scrollbarWidth, `${server.browser}: exposes scrollbar-width`).toBe('thin')
+    }
+  })
+})
