@@ -98,7 +98,7 @@ longer entangled with the ratification act itself.
 - **Not in scope:** auto-ratification of anything (merge, approval, labels); ratifying SPEC/LLD/PRD
   statuses (their own lag philosophy is untouched); retroactive re-recording of past ratifications.
 
-## Amendment (2026-08-14, **proposed** — Kim ratifies) — the flip triad loses its README-row element: F2's write sequence and F5's housekeeping enumeration re-rule to Status cell · Ratified-by cell · derived-index regen ([PR #854](https://github.com/kimgranlund/agent-ui/pull/854))
+## Amendment (2026-08-14, **ratified** — kimgranlund, [utterance](https://github.com/kimgranlund/agent-ui/pull/878#issuecomment-5293227174), verified 2026-08-14) — the flip triad loses its README-row element: F2's write sequence and F5's housekeeping enumeration re-rule to Status cell · Ratified-by cell · derived-index regen ([PR #854](https://github.com/kimgranlund/agent-ui/pull/854))
 
 > Append-only: the Status cell reads `accepted` for the record as a whole and stays byte-untouched
 > — agents never flip status (`.claude/hooks/adr-status-guard.py`). Every section above is
