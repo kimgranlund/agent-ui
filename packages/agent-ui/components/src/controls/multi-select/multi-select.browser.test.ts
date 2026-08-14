@@ -298,3 +298,61 @@ describe('ui-multi-select — custom-state paint (both engines)', () => {
     expect(invalidOutline, `${server.browser}: the outline colour did not repaint under :state(user-invalid)`).not.toBe(idleOutline)
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  GH #906 — the host's own scroll surface (fully untreated before this fix — raw platform default)
+//  scrolls with a thin, auto-hiding scrollbar, never the platform-default chunky bar. MEASURED (both
+//  engines under test fully expose the computed-style surface this probes — verified empirically, not
+//  assumed): a bare `overflow: auto` box renders with a ZERO-width overlay gutter in this headless
+//  harness regardless of any CSS, so a gutter-width COMPARISON against an untreated control cannot
+//  discriminate "thin" from "chunky" here — the honest, engine-capability-respecting probe is the
+//  computed STYLE itself: `scrollbar-width: thin` (the standard property) and the
+//  `::-webkit-scrollbar{,-thumb}` pseudo values this fix actually declares (the #874 precedent,
+//  editor.browser.test.ts).
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-multi-select cross-engine — GH #906: the host scrolls with an unobtrusive (thin) scrollbar, never the platform-default chunky bar', () => {
+  it('overflows for real, scrolls, and computes the thin/at-rest-transparent/reveal-on-hover treatment', async () => {
+    const manyOptions = Array.from({ length: 40 }, (_, i) => `<div role="option" value="opt-${i}">Option ${i}</div>`).join('\n')
+    const { el } = mount(`<ui-multi-select>${manyOptions}</ui-multi-select>`)
+    await el.updateComplete
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    expect(el.scrollHeight, 'a real overflow to actually scroll').toBeGreaterThan(el.clientHeight)
+
+    // scrollability itself is UNCHANGED by this fix — a real scrollTop move.
+    el.scrollTop = 0
+    el.scrollTop = 40
+    expect(el.scrollTop, `${server.browser}: still genuinely scrollable`).toBeGreaterThan(0)
+
+    // THIN, never the platform-default chunky bar.
+    expect(getComputedStyle(el).scrollbarWidth, `${server.browser}: scrollbar-width`).toBe('thin')
+    expect(getComputedStyle(el, '::-webkit-scrollbar').width, `${server.browser}: ::-webkit-scrollbar width`).toBe('8px')
+    // Nothing chunky AT REST — the thumb is transparent until interaction.
+    expect(
+      getComputedStyle(el, '::-webkit-scrollbar-thumb').backgroundColor,
+      `${server.browser}: thumb transparent at rest`,
+    ).toBe('rgba(0, 0, 0, 0)')
+
+    // Reveal-on-hover: the SAME thumb pseudo resolves to a REAL, non-transparent colour once hovered.
+    await userEvent.hover(el)
+    expect(
+      getComputedStyle(el, '::-webkit-scrollbar-thumb').backgroundColor,
+      `${server.browser}: thumb paints on hover`,
+    ).not.toBe('rgba(0, 0, 0, 0)')
+    await userEvent.unhover(el)
+  })
+
+  it('reveals the thumb on real keyboard focus too (rovingFocus lands DOM focus on the host\'s own option children)', async () => {
+    const manyOptions = Array.from({ length: 40 }, (_, i) => `<div role="option" value="opt-${i}">Option ${i}</div>`).join('\n')
+    const { el } = mount(`<ui-multi-select>${manyOptions}</ui-multi-select>`)
+    await el.updateComplete
+
+    const first = el.querySelector<HTMLElement>('[role="option"]')!
+    first.focus()
+    expect(el.matches(':focus-within'), `${server.browser}: focus never landed inside the host`).toBe(true)
+    expect(
+      getComputedStyle(el, '::-webkit-scrollbar-thumb').backgroundColor,
+      `${server.browser}: thumb paints on focus-within`,
+    ).not.toBe('rgba(0, 0, 0, 0)')
+  })
+})

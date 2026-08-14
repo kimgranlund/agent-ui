@@ -88,6 +88,12 @@
   --ui-select-listbox-ink: var(--md-sys-color-neutral-on-surface);
   --ui-select-listbox-outline: var(--md-sys-color-neutral-outline-variant);
   --ui-select-listbox-radius: var(--md-sys-shape-corner-base);
+  /* GH #906 — the #874 fleet unobtrusive-scrollbar idiom (own-chain off the shared dimensional
+     constant + colour roles, TKT-0066 item 5 law): this panel was fully untreated before (raw
+     platform default), painting the chunky always-visible scrollbar the issue reports. */
+  --ui-select-listbox-scrollbar-size: var(--md-sys-scrollbar-size);
+  --ui-select-listbox-scrollbar-thumb: var(--md-sys-color-neutral-scrollbar-thumb);
+  --ui-select-listbox-scrollbar-thumb-hover: var(--md-sys-color-neutral-scrollbar-thumb-hover);
   /* ── The size-carrying derivation (supersedes the fixed "legacy item-pad" px, 2026-07-06) ──────
      ROV-C5/ADR-0043 cl.5 keep options OUT of the h/2 "comfortable control" model and the
      `--md-sys-compact` widget box — that boundary is unchanged. What changes: the item-pad's OWN
@@ -326,6 +332,11 @@
        select.ts stamps `listbox.style.minInlineSize = triggerWidth + 'px'` before showPopover(). */
     max-block-size: var(--ui-select-listbox-max-block-size); /* TKT-0027 — public dial, default min(50vh, 12 option rows) */
     overflow-y: auto;
+    /* GH #906 — thin, auto-hiding scrollbar: transparent at rest, reveals the thumb only on
+       hover/focus-within — real DOM focus lands on option rows here via rovingFocus (select.ts),
+       so :focus-within genuinely fires on keyboard nav (the ui-code-editor precedent). */
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
 
     background-color: var(--ui-select-listbox-bg);
     color: var(--ui-select-listbox-ink);
@@ -339,6 +350,30 @@
        below, instead of the shared fleet-wide 6px fallback every [data-box] otherwise gets). */
     --ui-box-inset: var(--ui-select-listbox-padding);
     font-size: var(--ui-select-option-font); /* was unset (inherited ambient) — options + the group label now read the ramp */
+  }
+
+  :scope > [data-part='listbox']:hover,
+  :scope > [data-part='listbox']:focus-within {
+    scrollbar-color: var(--ui-select-listbox-scrollbar-thumb) transparent;
+  }
+  :scope > [data-part='listbox']::-webkit-scrollbar {
+    width: var(--ui-select-listbox-scrollbar-size);
+    height: var(--ui-select-listbox-scrollbar-size);
+  }
+  :scope > [data-part='listbox']::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  :scope > [data-part='listbox']::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: calc(var(--ui-select-listbox-scrollbar-size) / 2);
+  }
+  :scope > [data-part='listbox']:hover::-webkit-scrollbar-thumb,
+  :scope > [data-part='listbox']:focus-within::-webkit-scrollbar-thumb {
+    background: var(--ui-select-listbox-scrollbar-thumb);
+  }
+  :scope > [data-part='listbox']:hover::-webkit-scrollbar-thumb:hover,
+  :scope > [data-part='listbox']:focus-within::-webkit-scrollbar-thumb:hover {
+    background: var(--ui-select-listbox-scrollbar-thumb-hover);
   }
 
   /* ── Option rows (legacy item-pad — §5.1 / ROV-C5) ──────────────────────────────────────────

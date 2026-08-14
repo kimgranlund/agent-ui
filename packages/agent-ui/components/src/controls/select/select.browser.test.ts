@@ -1326,3 +1326,78 @@ describe('ui-select — dynamic options: a late Option adopts into the panel (TK
     expect(el.value, `${server.browser}: clicking the live-adopted option did not commit it`).toBe('cherry')
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  GH #906 — the listbox panel (fully untreated before this fix — raw platform default) scrolls with a
+//  thin, auto-hiding scrollbar, never the platform-default chunky bar. MEASURED (both engines under test
+//  fully expose the computed-style surface this probes — verified empirically, not assumed): a bare
+//  `overflow: auto` box renders with a ZERO-width overlay gutter in this headless harness regardless of
+//  any CSS, so a gutter-width COMPARISON against an untreated control cannot discriminate "thin" from
+//  "chunky" here — the honest, engine-capability-respecting probe is the computed STYLE itself:
+//  `scrollbar-width: thin` (the standard property) and the `::-webkit-scrollbar{,-thumb}` pseudo values
+//  this fix actually declares (the #874 precedent, editor.browser.test.ts).
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-select cross-engine — GH #906: the listbox scrolls with an unobtrusive (thin) scrollbar, never the platform-default chunky bar', () => {
+  it('overflows for real, scrolls, and computes the thin/at-rest-transparent/reveal-on-hover treatment', async () => {
+    const { el } = mount(`
+      <ui-select placeholder="Choose…">
+        ${Array.from({ length: 13 }, (_, i) => `<div role="option" value="opt-${i}">Option ${i}</div>`).join('\n')}
+      </ui-select>
+    `)
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    el.open = true
+    await el.updateComplete
+    await nextFrames()
+    // select.ts's overlay trait opens with focusOnOpen:true — moveFocusIn() lands REAL DOM focus on
+    // the first option the instant the panel opens, so :focus-within is ALREADY true here by design
+    // (not a leftover/flake) — blur it away to get a genuine not-hovered/not-focused "at rest"
+    // baseline before asserting the transparent default (the focus-within reveal itself is covered
+    // by the next test in this file).
+    ;(document.activeElement as HTMLElement | null)?.blur()
+    expect(listbox.matches(':focus-within'), 'test setup: focus must be clear before the at-rest check').toBe(false)
+    expect(listbox.scrollHeight, 'a real overflow to actually scroll').toBeGreaterThan(listbox.clientHeight)
+
+    // scrollability itself is UNCHANGED by this fix — a real scrollTop move.
+    listbox.scrollTop = 0
+    listbox.scrollTop = 40
+    expect(listbox.scrollTop, `${server.browser}: still genuinely scrollable`).toBeGreaterThan(0)
+
+    // THIN, never the platform-default chunky bar.
+    expect(getComputedStyle(listbox).scrollbarWidth, `${server.browser}: scrollbar-width`).toBe('thin')
+    expect(getComputedStyle(listbox, '::-webkit-scrollbar').width, `${server.browser}: ::-webkit-scrollbar width`).toBe('8px')
+    // Nothing chunky AT REST — the thumb is transparent until interaction.
+    expect(
+      getComputedStyle(listbox, '::-webkit-scrollbar-thumb').backgroundColor,
+      `${server.browser}: thumb transparent at rest`,
+    ).toBe('rgba(0, 0, 0, 0)')
+
+    // Reveal-on-hover: the SAME thumb pseudo resolves to a REAL, non-transparent colour once hovered.
+    await userEvent.hover(listbox)
+    expect(
+      getComputedStyle(listbox, '::-webkit-scrollbar-thumb').backgroundColor,
+      `${server.browser}: thumb paints on hover`,
+    ).not.toBe('rgba(0, 0, 0, 0)')
+    await userEvent.unhover(listbox)
+  })
+
+  it('reveals the thumb on real keyboard focus too (rovingFocus lands DOM focus inside the listbox)', async () => {
+    const { el } = mount(`
+      <ui-select placeholder="Choose…">
+        ${Array.from({ length: 13 }, (_, i) => `<div role="option" value="opt-${i}">Option ${i}</div>`).join('\n')}
+      </ui-select>
+    `)
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    el.open = true
+    await el.updateComplete
+    await nextFrames()
+
+    const first = listbox.querySelector<HTMLElement>('[role="option"]')!
+    first.focus()
+    expect(listbox.matches(':focus-within'), `${server.browser}: focus never landed inside the listbox`).toBe(true)
+    expect(
+      getComputedStyle(listbox, '::-webkit-scrollbar-thumb').backgroundColor,
+      `${server.browser}: thumb paints on focus-within`,
+    ).not.toBe('rgba(0, 0, 0, 0)')
+  })
+})
