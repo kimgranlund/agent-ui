@@ -166,7 +166,11 @@ const AGENT_CONFIG_SNAPSHOT_SAMPLE: AgentConfigSnapshot = {
 
 const AGENT_CONFIG_SNAPSHOT_DOCS: Record<keyof AgentConfigSnapshot, string> = {
   name: 'The agent’s display name — the schema’s own name field, read verbatim (§1).',
-  model: 'The sanitized SUPPORTED_MODELS id (sanitizeModel) — from the Model GRID’s store keys, not the schema (§2).',
+  model:
+    'The sanitized SUPPORTED_MODELS id — from the Model GRID’s store keys, not the schema (§2). The fallback ' +
+    'is per CONTEXT (GH #880): sanitizeModel’s DEFAULT_MODEL_ID for a test chat, sanitizeAuthoringModel’s ' +
+    'AUTHORING_DEFAULT_MODEL_ID (Sonnet 5) for the Builder Interview. A stored choice wins on either, and the ' +
+    'default is a READ — no store is ever written to make it true.',
   temperature: 'The schema’s own temperature field, fail-closed sanitized against its own min/max (§1).',
   toolsEnabled: 'Whether the tool kind’s section-header MASTER switch is on (kindEnabledKey("tool")) — not a schema field.',
   systemPrompt: 'The COMPOSED multi-section prompt (entries.ts composeSystemPrompt) — not a single flat key.',
