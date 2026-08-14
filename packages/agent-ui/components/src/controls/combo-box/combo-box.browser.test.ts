@@ -442,6 +442,139 @@ describe('ui-combo-box — type-to-filter + commit (both engines)', () => {
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
+//  GH #912 (the #908 sibling) — the value-keyed aria-selected reflect (both engines)
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//
+// `#commitOption`'s own aria-selected sweep fires ONLY from a USER commit (click/Enter) —
+// ui-combo-box does not use the `selectionCommit` trait (a bespoke commit mechanism), so it did
+// not automatically inherit ui-select's GH #908 fix. A declarative `<ui-combo-box value="apple">`
+// or a programmatic `comboBox.value = 'apple'` write already moved the editor text (the
+// model→surface effect treats `value` as the panel's selection truth) but left every option
+// unmarked. `#syncSelectedOption` (combo-box.ts) closes the gap. Unlike ui-select's rovingFocus
+// (which moves real DOM focus into the panel and risks a focus-vs-selected paint collision, hence
+// select.browser.test.ts's `parkFocus` helper), combo-box's active-descendant highlight
+// (`[data-active]`) is a SEPARATE attribute from `[aria-selected]` — no focus parking needed here.
+describe('ui-combo-box — value-keyed aria-selected reflect (GH #912, the #908 sibling, both engines)', () => {
+  const isTransparent = (color: string): boolean =>
+    color === 'transparent' || /rgba\([^)]*,\s*0\)$/.test(color)
+
+  it('a declarative value marks the matching option — attribute AND the shipped selected paint', async () => {
+    const { el } = mount(`
+      <ui-combo-box name="fruit" value="banana">
+        <div role="option" value="apple">Apple</div>
+        <div role="option" value="banana">Banana</div>
+        <div role="option" value="cherry">Cherry</div>
+      </ui-combo-box>
+    `)
+    await el.updateComplete
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    const banana = listbox.querySelector<HTMLElement>('[value="banana"]')!
+    const apple = listbox.querySelector<HTMLElement>('[value="apple"]')!
+    expect(banana.getAttribute('aria-selected'), `${server.browser}: the declaratively pre-selected option must be marked`).toBe('true')
+    expect(apple.getAttribute('aria-selected')).toBe('false')
+
+    el.open = true
+    await el.updateComplete
+    expect(isTransparent(getComputedStyle(banana).backgroundColor), `${server.browser}: the declaratively-selected row must paint the selected fill`).toBe(false)
+    expect(isTransparent(getComputedStyle(apple).backgroundColor), 'an unselected row keeps the plain panel surface').toBe(true)
+  })
+
+  it('a programmatic value write moves the marker — attribute AND paint move together, and NO event fires (ADR-0019)', async () => {
+    const { el } = mount(`
+      <ui-combo-box name="fruit">
+        <div role="option" value="apple">Apple</div>
+        <div role="option" value="banana">Banana</div>
+      </ui-combo-box>
+    `)
+    await el.updateComplete
+    let events = 0
+    for (const name of ['select', 'change', 'toggle', 'close']) el.addEventListener(name, () => { events++ })
+
+    el.value = 'banana'
+    await el.updateComplete
+    expect(events, `${server.browser}: a programmatic value write must stay silent (ADR-0019)`).toBe(0)
+
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    const banana = listbox.querySelector<HTMLElement>('[value="banana"]')!
+    const apple = listbox.querySelector<HTMLElement>('[value="apple"]')!
+    expect(banana.getAttribute('aria-selected')).toBe('true')
+    expect(apple.getAttribute('aria-selected')).toBe('false')
+
+    el.open = true
+    await el.updateComplete
+    expect(isTransparent(getComputedStyle(banana).backgroundColor), `${server.browser}: the programmatically-selected row must paint the selected fill`).toBe(false)
+    expect(isTransparent(getComputedStyle(apple).backgroundColor)).toBe(true)
+  })
+
+  it('an option adopted AFTER the value is already set is marked at adoption time (the adoption leg)', async () => {
+    const { el } = mount(`
+      <ui-combo-box name="fruit" value="date">
+        <div role="option" value="apple">Apple</div>
+      </ui-combo-box>
+    `)
+    await el.updateComplete
+    const late = document.createElement('div')
+    late.setAttribute('role', 'option')
+    late.setAttribute('value', 'date')
+    late.textContent = 'Date'
+    el.append(late)
+    await Promise.resolve()
+    await Promise.resolve()
+    await el.updateComplete
+
+    expect(late.parentElement?.getAttribute('data-part'), `${server.browser}: the late option must be adopted into the panel`).toBe('listbox')
+    expect(late.getAttribute('aria-selected'), `${server.browser}: adopted under an ALREADY-set value, it must be marked immediately`).toBe('true')
+  })
+
+  it('a user commit still marks the committed option and clears the previous one (existing behaviour unchanged)', async () => {
+    const { el } = mount(`
+      <ui-combo-box name="fruit">
+        <div role="option" value="apple">Apple</div>
+        <div role="option" value="banana">Banana</div>
+      </ui-combo-box>
+    `)
+    await el.updateComplete
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    el.open = true
+    await el.updateComplete
+    await userEvent.click(listbox.querySelector<HTMLElement>('[value="apple"]')!)
+    await el.updateComplete
+
+    expect(listbox.querySelector('[value="apple"]')?.getAttribute('aria-selected')).toBe('true')
+    expect(listbox.querySelector('[value="banana"]')?.getAttribute('aria-selected')).toBe('false')
+  })
+
+  // The FILTERED-OUT RULING (combo-box.ts's header comment + combo-box.md's own "Selection reflect"
+  // section): a selected option currently hidden by the active filter still carries
+  // `aria-selected="true"` — selection state is independent of visibility. No visible paint is
+  // asserted here (the row is `display:none`, hence not painting anything by definition) — this
+  // proves the ATTRIBUTE survives filtering in a real engine, complementing the jsdom-level probe.
+  it('a filtered-out (hidden) selected option still carries aria-selected="true" (the filtered-out ruling)', async () => {
+    const { el } = mount(`
+      <ui-combo-box name="fruit" value="banana">
+        <div role="option" value="apple">Apple</div>
+        <div role="option" value="banana">Banana</div>
+      </ui-combo-box>
+    `)
+    await el.updateComplete
+    const editor = el.querySelector<HTMLElement>('[data-part="editor"]')!
+    const listbox = el.querySelector<HTMLElement>('[data-part="listbox"]')!
+    const banana = listbox.querySelector<HTMLElement>('[value="banana"]')!
+    expect(banana.getAttribute('aria-selected'), 'sanity: banana starts selected').toBe('true')
+
+    editor.focus()
+    await userEvent.type(editor, 'app') // filters out Banana
+    await el.updateComplete
+
+    expect(banana.hidden, 'sanity: the filter really did hide the selected option').toBe(true)
+    expect(
+      banana.getAttribute('aria-selected'),
+      `${server.browser}: a filtered-out (hidden) selected option must still carry aria-selected="true"`,
+    ).toBe('true')
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
 //  [5] form round-trip — value round-trips through a <form> (both engines)
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 

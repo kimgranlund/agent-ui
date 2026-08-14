@@ -23,6 +23,17 @@
 //   - overlay(this, { popup: listbox, anchor: editor, focusOnOpen: false }) — focus NEVER
 //     leaves the editor. Two-way `open` (ADR-0019): scope-owned effect drives model→overlay;
 //     the overlay's `close` event drives overlay→model.
+//   - GH #912 (the #908 sibling) — the value-KEYED aria-selected reflect, adapted to this control's
+//     bespoke commit mechanism (it does not use the `selectionCommit` trait): a `#syncSelectedOption()`
+//     sweep, wired into the existing value-tracking effect (declarative + programmatic `value` writes)
+//     AND into `#syncOptions` (a late-adopted option / a wholesale rebuild under an unchanged value).
+//     `#commitOption`'s own commit-time sweep is untouched (harmless redundancy — both agree, the
+//     select.ts/multi-select.ts precedent). Pure attribute write, never `this.emit(...)` — ADR-0019
+//     holds: a declarative/programmatic value write stays silent. FILTERED-OUT RULING: the sweep marks
+//     `aria-selected` from the FULL option set (`this.#getOptions()`), never the filtered/visible subset
+//     — a selected option currently hidden by the filter still carries `aria-selected="true"` (matching
+//     `#commitOption`'s own full-set sweep, and the ARIA semantic: selection state is independent of
+//     visibility). It simply has no visible paint until the filter clears or the option is revealed.
 //   - form: formValue() = value || null; formValidity() enforces required + strict.
 //   - Labelling (ADR-0085, text-field ADR-0014 parity): a `label` prop → the editor's `aria-label`
 //     (bare usage — the editor has a DISTINCT accessible value, so aria-label does not erase it, unlike
@@ -283,6 +294,20 @@ export class UIComboBoxElement extends UIFormElement {
       editor.toggleAttribute('data-empty', editor.textContent === '')
     })
 
+    // GH #912 (the #908 sibling) — the value-KEYED aria-selected reflect, decoupled from
+    // `#commitOption`'s own commit-time sweep (a USER commit only — click/Enter). A declarative
+    // `<ui-combo-box value="apple">` or a programmatic `comboBox.value = 'apple'` write already moved
+    // the editor text (the effect above — it treats `value` as the panel's selection truth) but left
+    // EVERY option unmarked: the panel opened with no row showing where you are. This effect tracks
+    // `this.value` reactively (runs once immediately on creation — the declarative-attribute case —
+    // and again on every later write, programmatic or committed, since `#commitOption`/`#commitFreeText`
+    // both write `this.value` too) and sweeps `aria-selected` across the CURRENT option set to match.
+    // A user commit still runs THIS SAME sweep a moment later — harmless redundancy with
+    // `#commitOption`'s own sweep, both agree (the select.ts/multi-select.ts doc precedent). ADR-0019:
+    // this only ever WRITES an attribute — it never calls `this.emit(...)`, so a declarative/programmatic
+    // value write stays silent (no `change`/`select` echo).
+    this.effect(() => this.#syncSelectedOption())
+
     // ── Placeholder text + the label seam + disabled channel ─────────────────────────────────
 
     this.effect(() => {
@@ -431,6 +456,12 @@ export class UIComboBoxElement extends UIFormElement {
    * A late adoption re-runs the CURRENT filter (`#filterOptions`, which also refreshes the empty-state
    * row) against the whole option set — a freshly-adopted option must obey whatever the user has
    * already typed, not bypass it by arriving after the fact.
+   *
+   * GH #912 — also re-runs `#syncSelectedOption()` UNCONDITIONALLY (not gated behind `adopted`): a
+   * late-adopted option matching an ALREADY-set `value` (the `#ensureParts()`-time call, before any
+   * option exists yet, or a genuinely late append) is marked immediately, and a wholesale rebuild
+   * under an UNCHANGED `value` (author removes+re-adds every option) still marks the fresh nodes — a
+   * value-change-only effect would be an `Object.is` no-op for that case (the select.ts precedent).
    */
   #syncOptions(): void {
     const listbox = this.#listbox
@@ -448,6 +479,27 @@ export class UIComboBoxElement extends UIFormElement {
       node = next
     }
     if (adopted && editor) this.#filterOptions(editor.textContent ?? '')
+    this.#syncSelectedOption()
+  }
+
+  /**
+   * Sweep `aria-selected` across every CURRENT panel option from the CURRENT `this.value` — the
+   * value-keyed reflect's shared body (GH #912, the #908 sibling), called both reactively
+   * (`connected()`'s `this.effect`, on any value write) and structurally (`#syncOptions`, on any
+   * option-adoption pass). Key derivation matches `#commitOption`'s own (`value` attribute, falling
+   * back to `textContent` for an option with no explicit `value`) so every writer of `aria-selected`
+   * agrees on what identifies "this option". Operates on the FULL option set (`#getOptions()`), never
+   * the filtered/visible subset — see the FILTERED-OUT RULING in this file's header comment: a
+   * selected option currently hidden by the filter still carries `aria-selected="true"`, it just has
+   * no visible paint until revealed. Never emits — a pure attribute write (ADR-0019: silent on a
+   * declarative/programmatic value change).
+   */
+  #syncSelectedOption(): void {
+    const val = this.value
+    for (const opt of this.#getOptions()) {
+      const key = opt.getAttribute('value') ?? opt.textContent ?? ''
+      opt.setAttribute('aria-selected', String(val !== '' && key === val))
+    }
   }
 
   // ── Active-descendant helpers ──────────────────────────────────────────────────────────────

@@ -14,7 +14,7 @@ attributes:            # attributes-as-API — mirrors UIComboBoxElement.props (
   - name: value
     type: string
     default: ''
-    reflect: false     # NOT reflected — the live committed value is not a host attribute; the attribute seeds the reset baseline (native parity for value-carrying form controls)
+    reflect: false     # NOT reflected — the live committed value is not a host attribute; the attribute seeds the reset baseline (native parity for value-carrying form controls). Setting it — declaratively, programmatically, or via a user commit — updates the editor text AND marks the matching [role=option] `aria-selected="true"` in the panel (a value-keyed reflect, GH #912, the #908 sibling; silent on a declarative/programmatic write — no event fires, ADR-0019). A selected option currently hidden by the filter still carries the attribute (selection state is independent of visibility) — see "Selection reflect" below.
   - name: label
     type: string
     default: ''
@@ -199,6 +199,19 @@ Typing in the editor filters the visible options (options whose label does not m
 text get `hidden=true`). The panel opens automatically on the first keystroke. The filter clears
 on commit. When the filter matches zero options, the panel shows a "No matches" row (the `empty`
 part) instead of collapsing to an empty, contentless panel.
+
+## Selection reflect (GH #912, the #908 sibling)
+
+Every `[role=option]` carries `aria-selected`, reflected from the CURRENT `value` on every write —
+declarative, programmatic, or a user commit alike — so a pre-selected or programmatically-set value
+always marks the matching row in the panel, not only after a click or Enter (the `#syncSelectedOption`
+sweep, generalized from `ui-select`'s GH #908 fix to this control's own bespoke commit mechanism).
+The sweep never emits `change`/`select` on a declarative/programmatic write (ADR-0019 stays pinned —
+only a real user commit fires those). **Filtered-out ruling:** the sweep marks `aria-selected` across
+the FULL option set, never the filtered/visible subset — a selected option currently `hidden` by the
+filter still carries `aria-selected="true"`; it simply has no visible paint until the filter clears or
+the option scrolls into view. This matches `#commitOption`'s own pre-existing full-set sweep and the
+ARIA semantic that selection state is independent of visibility.
 
 ## Strict mode
 
