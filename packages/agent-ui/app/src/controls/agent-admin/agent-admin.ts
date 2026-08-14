@@ -3764,6 +3764,10 @@ export class UIAgentAdminElement extends UIElement {
    * handles a later call without a disconnect/reconnect) and sets `value` to `activeId` (or '' — nothing
    * selected) as a silent programmatic write (no `select` emission, ADR-0019 — only a real user pick
    * fires that).
+   *
+   * GH #905 — `activeId` also marks its own row inside the OPENED panel: the matching option is minted
+   * carrying `aria-selected="true"` (the select's own selected mechanism, painted by select.css), so the
+   * picker shows WHERE YOU ARE and not only what the trigger reads. Never the Manage items.
    */
   setAgentRoster(entries: readonly AgentRosterEntry[], activeId?: string): void {
     this.#pendingRoster = { entries, activeId }
@@ -3799,6 +3803,7 @@ export class UIAgentAdminElement extends UIElement {
     // this element for every consumer, so a registered consumer that never pushed a roster still shows it.
     const pending = this.#pendingRoster
     const entries = pending?.entries ?? []
+    const activeId = pending?.activeId ?? ''
     for (const option of [...select.querySelectorAll('[role="option"]')]) option.remove()
     // GH #845 (LLD-C2/§4, the tail-adoption fork RESOLVED) — the wipe WIDENS to the previous Manage group
     // as well. `ui-select` adopts a newly-appended `[role=option]`/`[role=group]` child at the panel's
@@ -3812,10 +3817,30 @@ export class UIAgentAdminElement extends UIElement {
       option.setAttribute('role', 'option')
       option.setAttribute('value', entry.id)
       option.textContent = entry.label
+      // GH #905 — the ACTIVE row's selected state, stamped in the SAME breath the node is minted. The
+      // vehicle is `ui-select`'s OWN selected mechanism (`aria-selected` on each `[role=option]`,
+      // select.md's ARIA note; select.css already paints `[aria-selected='true']` with the fleet's
+      // primary-container-low bg + primary-high ink — the identical register ui-menu's `data-selected`
+      // rows use for the composer's Model picker), never a hand-painted class of this element's own.
+      //
+      // WHY IT HAS TO HAPPEN HERE, not be left to the control: the only writer of that attribute inside
+      // `ui-select` is `selectionCommit`'s own reflect, which runs on a USER commit (click/Enter) — the
+      // trailing `select.value = activeId` below is a SILENT programmatic write (ADR-0019), so it moves
+      // the trigger label (that effect reads `value`) while leaving every freshly-minted option unmarked.
+      // That is the whole of GH #905: every row rendered identically and only the trigger told you where
+      // you were. Stamping at mint time also makes the marker survive the two pushes a commit-time-only
+      // reflect cannot: a re-push that REBUILDS the nodes under an UNCHANGED `activeId` (the Edit Agents
+      // drawer's rename/reorder → `refreshRoster`), and a page that switches agents programmatically
+      // without any click at all (boot, import, mint).
+      //
+      // Roster rows ONLY — the trailing Manage items are verbs, never a selectable "where you are", so
+      // `#appendRosterActions` deliberately stamps nothing (GH #845's own reading of them, kept honest
+      // here: a commit on a sentinel gets its residual reflection wiped by the queued rebuild).
+      option.setAttribute('aria-selected', String(activeId !== '' && entry.id === activeId))
       select.append(option)
     }
     this.#appendRosterActions(select)
-    select.value = pending?.activeId ?? ''
+    select.value = activeId
   }
 
   /**
@@ -3853,6 +3878,10 @@ export class UIAgentAdminElement extends UIElement {
       item.setAttribute('value', value)
       item.setAttribute('data-part', 'roster-action')
       item.textContent = label
+      // GH #905 — NO `aria-selected` here, deliberately (the roster rows above carry it): these two are
+      // VERBS borrowing the option role for adoption's sake, and "where you are" is a statement only a
+      // roster row can make. Omitting the attribute (rather than stamping `"false"`) keeps that distinction
+      // legible in the DOM and can never paint select.css's selected fill on a management item.
       group.append(item)
     }
     select.append(group)
