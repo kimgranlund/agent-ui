@@ -197,7 +197,7 @@ replacement.
 
 *(v0.5 annotation — SUPERSEDED IN PART by SPEC-R14, §12: the ambient SHAPE this requirement's AC1
 ("label+content appear") and AC3 (byte-identity to the pre-#850 composition) assert changes
-deliberately — an ambient capability entry contributes an index line, never content, once S8
+deliberately — an ambient capability entry contributes an index line, never content, once S8 (S8 updates R3 AC1/AC3's assertions to the index shape; NEVER restore the content assertions.)
 lands. What stands unchanged, and is restated as R14's own gating clauses: an invocable entry
 contributes ZERO ambient bytes on every arm, the master-switch → `enabled` → availability
 precedence, and the `integrations` wire projection (b) byte-for-byte. The v0.3 text above stays
